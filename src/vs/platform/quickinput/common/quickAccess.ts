@@ -3,12 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { coalesce } from '../../../base/common/arrays.js';
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { IDisposable, toDisposable } from '../../../base/common/lifecycle.js';
-import { ContextKeyExpression, IContextKeyService } from '../../contextkey/common/contextkey.js';
-import { ItemActivation, IQuickNavigateConfiguration, IQuickPick, IQuickPickItem, QuickPickItem, IQuickPickSeparator } from './quickInput.js';
-import { Registry } from '../../registry/common/platform.js';
+import { coalesce } from "../../../base/common/arrays.js";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { IDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { ContextKeyExpression, IContextKeyService } from "../../contextkey/common/contextkey.js";
+import {
+  ItemActivation,
+  IQuickNavigateConfiguration,
+  IQuickPick,
+  IQuickPickItem,
+  QuickPickItem,
+  IQuickPickSeparator,
+} from "./quickInput.js";
+import { Registry } from "../../registry/common/platform.js";
 
 /**
  * Provider specific options for this particular showing of the
@@ -204,7 +211,7 @@ export interface IQuickAccessProviderDescriptor {
 }
 
 export const Extensions = {
-	Quickaccess: 'workbench.contributions.quickaccess'
+  Quickaccess: "workbench.contributions.quickaccess",
 };
 
 export interface IQuickAccessRegistry {
@@ -241,7 +248,9 @@ export class QuickAccessRegistry implements IQuickAccessRegistry {
 
 		// sort the providers by decreasing prefix length, such that longer
 		// prefixes take priority: 'ext' vs 'ext install' - the latter should win
-		this.providers.sort((providerA, providerB) => providerB.prefix.length - providerA.prefix.length);
+		this.providers.sort(
+      (providerA, providerB) => providerB.prefix.length - providerA.prefix.length,
+    );
 
 		return toDisposable(() => {
 			this.providers.splice(this.providers.indexOf(provider), 1);
@@ -259,7 +268,9 @@ export class QuickAccessRegistry implements IQuickAccessRegistry {
 
 	getQuickAccessProvider(prefix: string, contextKeyService: IContextKeyService): IQuickAccessProviderDescriptor | undefined {
 		const result = prefix
-			? this.providers.find(provider => prefix.startsWith(provider.prefix) && (!provider.when || contextKeyService.contextMatchesRules(provider.when)))
+			? this.providers.find(
+          provider => prefix.startsWith(provider.prefix) && (!provider.when || contextKeyService.contextMatchesRules(provider.when)),
+        )
 			: undefined;
 
 		return result || this.defaultProvider;

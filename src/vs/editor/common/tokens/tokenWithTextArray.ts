@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { OffsetRange } from '../core/ranges/offsetRange.js';
-import { ILanguageIdCodec } from '../languages.js';
-import { LineTokens } from './lineTokens.js';
+import { OffsetRange } from "../core/ranges/offsetRange.js";
+import { ILanguageIdCodec } from "../languages.js";
+import { LineTokens } from "./lineTokens.js";
 
 /**
  * This class represents a sequence of tokens.
@@ -19,7 +19,12 @@ export class TokenWithTextArray {
 	public static fromLineTokens(lineTokens: LineTokens): TokenWithTextArray {
 		const tokenInfo: TokenWithTextInfo[] = [];
 		for (let i = 0; i < lineTokens.getCount(); i++) {
-			tokenInfo.push(new TokenWithTextInfo(lineTokens.getTokenText(i), lineTokens.getMetadata(i)));
+			tokenInfo.push(
+        new TokenWithTextInfo(
+          lineTokens.getTokenText(i),
+          lineTokens.getMetadata(i),
+        ),
+      );
 		}
 		return TokenWithTextArray.create(tokenInfo);
 	}
@@ -33,13 +38,19 @@ export class TokenWithTextArray {
 	) { }
 
 	public toLineTokens(decoder: ILanguageIdCodec): LineTokens {
-		return LineTokens.createFromTextAndMetadata(this.map((_r, t) => ({ text: t.text, metadata: t.metadata })), decoder);
+		return LineTokens.createFromTextAndMetadata(
+      this.map((_r, t) => ({ text: t.text, metadata: t.metadata })),
+      decoder,
+    );
 	}
 
 	public forEach(cb: (range: OffsetRange, tokenInfo: TokenWithTextInfo) => void): void {
 		let lengthSum = 0;
 		for (const tokenInfo of this._tokenInfo) {
-			const range = new OffsetRange(lengthSum, lengthSum + tokenInfo.text.length);
+			const range = new OffsetRange(
+        lengthSum,
+        lengthSum + tokenInfo.text.length,
+      );
 			cb(range, tokenInfo);
 			lengthSum += tokenInfo.text.length;
 		}
@@ -49,7 +60,10 @@ export class TokenWithTextArray {
 		const result: T[] = [];
 		let lengthSum = 0;
 		for (const tokenInfo of this._tokenInfo) {
-			const range = new OffsetRange(lengthSum, lengthSum + tokenInfo.text.length);
+			const range = new OffsetRange(
+        lengthSum,
+        lengthSum + tokenInfo.text.length,
+      );
 			result.push(cb(range, tokenInfo));
 			lengthSum += tokenInfo.text.length;
 		}
@@ -70,7 +84,15 @@ export class TokenWithTextArray {
 				const deltaBefore = Math.max(0, range.start - tokenStart);
 				const deltaAfter = Math.max(0, tokenEndEx - range.endExclusive);
 
-				result.push(new TokenWithTextInfo(tokenInfo.text.slice(deltaBefore, tokenInfo.text.length - deltaAfter), tokenInfo.metadata));
+				result.push(
+          new TokenWithTextInfo(
+            tokenInfo.text.slice(
+              deltaBefore,
+              tokenInfo.text.length - deltaAfter,
+            ),
+            tokenInfo.metadata,
+          ),
+        );
 			}
 
 			lengthSum += tokenInfo.text.length;
@@ -79,7 +101,9 @@ export class TokenWithTextArray {
 	}
 
 	public append(other: TokenWithTextArray): TokenWithTextArray {
-		const result: TokenWithTextInfo[] = this._tokenInfo.concat(other._tokenInfo);
+		const result: TokenWithTextInfo[] = this._tokenInfo.concat(
+      other._tokenInfo,
+    );
 		return TokenWithTextArray.create(result);
 	}
 }

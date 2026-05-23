@@ -3,21 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IRemoteAgentService } from './remoteAgentService.js';
-import { IRemoteExtensionsScannerService, RemoteExtensionsScannerChannelName } from '../../../../platform/remote/common/remoteExtensionsScanner.js';
-import * as platform from '../../../../base/common/platform.js';
-import { IChannel } from '../../../../base/parts/ipc/common/ipc.js';
-import { IExtensionDescription } from '../../../../platform/extensions/common/extensions.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IUserDataProfileService } from '../../userDataProfile/common/userDataProfile.js';
-import { IRemoteUserDataProfilesService } from '../../userDataProfile/common/remoteUserDataProfiles.js';
-import { IWorkbenchEnvironmentService } from '../../environment/common/environmentService.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { IActiveLanguagePackService } from '../../localization/common/locale.js';
-import { IWorkbenchExtensionManagementService } from '../../extensionManagement/common/extensionManagement.js';
-import { Mutable } from '../../../../base/common/types.js';
-import { InstallExtensionSummary } from '../../../../platform/extensionManagement/common/extensionManagement.js';
+import { IRemoteAgentService } from "./remoteAgentService.js";
+import { IRemoteExtensionsScannerService, RemoteExtensionsScannerChannelName } from "../../../../platform/remote/common/remoteExtensionsScanner.js";
+import * as platform from "../../../../base/common/platform.js";
+import { IChannel } from "../../../../base/parts/ipc/common/ipc.js";
+import { IExtensionDescription } from "../../../../platform/extensions/common/extensions.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IUserDataProfileService } from "../../userDataProfile/common/userDataProfile.js";
+import { IRemoteUserDataProfilesService } from "../../userDataProfile/common/remoteUserDataProfiles.js";
+import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IActiveLanguagePackService } from "../../localization/common/locale.js";
+import { IWorkbenchExtensionManagementService } from "../../extensionManagement/common/extensionManagement.js";
+import { Mutable } from "../../../../base/common/types.js";
+import { InstallExtensionSummary } from "../../../../platform/extensionManagement/common/extensionManagement.js";
 
 class RemoteExtensionsScannerService implements IRemoteExtensionsScannerService {
 
@@ -35,9 +35,9 @@ class RemoteExtensionsScannerService implements IRemoteExtensionsScannerService 
 
 	whenExtensionsReady(): Promise<InstallExtensionSummary> {
 		return this.withChannel(
-			channel => channel.call<InstallExtensionSummary>('whenExtensionsReady'),
-			{ failed: [] }
-		);
+      channel => channel.call<InstallExtensionSummary>("whenExtensionsReady"),
+      { failed: [] },
+    );
 	}
 
 	async scanExtensions(): Promise<IExtensionDescription[]> {
@@ -46,19 +46,19 @@ class RemoteExtensionsScannerService implements IRemoteExtensionsScannerService 
 			return await this.withChannel(
 				async (channel) => {
 					const profileLocation = this.userDataProfileService.currentProfile.isDefault ? undefined : (await this.remoteUserDataProfilesService.getRemoteProfile(this.userDataProfileService.currentProfile)).extensionsResource;
-					const scannedExtensions = await channel.call<Mutable<IExtensionDescription>[]>('scanExtensions', [
+					const scannedExtensions = await channel.call<Mutable<IExtensionDescription>[]>("scanExtensions", [
 						platform.language,
 						profileLocation,
 						this.extensionManagementService.getInstalledWorkspaceExtensionLocations(),
 						this.environmentService.extensionDevelopmentLocationURI,
-						languagePack
+						languagePack,
 					]);
 					scannedExtensions.forEach((extension) => {
 						extension.extensionLocation = URI.revive(extension.extensionLocation);
 					});
 					return scannedExtensions;
 				},
-				[]
+				[],
 			);
 		} catch (error) {
 			this.logService.error(error);
@@ -71,8 +71,15 @@ class RemoteExtensionsScannerService implements IRemoteExtensionsScannerService 
 		if (!connection) {
 			return Promise.resolve(fallback);
 		}
-		return connection.withChannel(RemoteExtensionsScannerChannelName, (channel) => callback(channel));
+		return connection.withChannel(
+      RemoteExtensionsScannerChannelName,
+      (channel) => callback(channel),
+    );
 	}
 }
 
-registerSingleton(IRemoteExtensionsScannerService, RemoteExtensionsScannerService, InstantiationType.Delayed);
+registerSingleton(
+  IRemoteExtensionsScannerService,
+  RemoteExtensionsScannerService,
+  InstantiationType.Delayed,
+);

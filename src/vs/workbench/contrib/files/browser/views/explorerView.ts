@@ -3,59 +3,89 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as nls from '../../../../../nls.js';
-import { URI } from '../../../../../base/common/uri.js';
-import * as perf from '../../../../../base/common/performance.js';
-import { WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification } from '../../../../../base/common/actions.js';
-import { memoize } from '../../../../../base/common/decorators.js';
-import { IFilesConfiguration, ExplorerFolderContext, FilesExplorerFocusedContext, ExplorerFocusedContext, ExplorerRootContext, ExplorerResourceReadonlyContext, ExplorerResourceCut, ExplorerResourceMoveableToTrash, ExplorerCompressedFocusContext, ExplorerCompressedFirstFocusContext, ExplorerCompressedLastFocusContext, ExplorerResourceAvailableEditorIdsContext, VIEW_ID, ExplorerResourceWritableContext, ViewHasSomeCollapsibleRootItemContext, FoldersViewVisibleContext, ExplorerResourceParentReadOnlyContext, ExplorerFindProviderActive } from '../../common/files.js';
-import { FileCopiedContext, NEW_FILE_COMMAND_ID, NEW_FOLDER_COMMAND_ID } from '../fileActions.js';
-import * as DOM from '../../../../../base/browser/dom.js';
-import { IWorkbenchLayoutService } from '../../../../services/layout/browser/layoutService.js';
-import { ExplorerDecorationsProvider } from './explorerDecorationsProvider.js';
-import { IWorkspaceContextService, WorkbenchState } from '../../../../../platform/workspace/common/workspace.js';
-import { IConfigurationService, IConfigurationChangeEvent } from '../../../../../platform/configuration/common/configuration.js';
-import { IKeybindingService } from '../../../../../platform/keybinding/common/keybinding.js';
-import { IInstantiationService, ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IProgressService, ProgressLocation } from '../../../../../platform/progress/common/progress.js';
-import { IContextMenuService } from '../../../../../platform/contextview/browser/contextView.js';
-import { IContextKeyService, IContextKey, ContextKeyExpr } from '../../../../../platform/contextkey/common/contextkey.js';
-import { ResourceContextKey } from '../../../../common/contextkeys.js';
-import { IDecorationsService } from '../../../../services/decorations/common/decorations.js';
-import { WorkbenchCompressibleAsyncDataTree } from '../../../../../platform/list/browser/listService.js';
-import { DelayedDragHandler } from '../../../../../base/browser/dnd.js';
-import { IEditorService, SIDE_GROUP, ACTIVE_GROUP } from '../../../../services/editor/common/editorService.js';
-import { IViewPaneOptions, ViewPane } from '../../../../browser/parts/views/viewPane.js';
-import { ILabelService } from '../../../../../platform/label/common/label.js';
-import { ExplorerDelegate, ExplorerDataSource, FilesRenderer, ICompressedNavigationController, FilesFilter, FileSorter, FileDragAndDrop, ExplorerCompressionDelegate, isCompressedFolderName, ExplorerFindProvider } from './explorerViewer.js';
-import { IThemeService, IFileIconTheme } from '../../../../../platform/theme/common/themeService.js';
-import { IWorkbenchThemeService } from '../../../../services/themes/common/workbenchThemeService.js';
-import { ITreeContextMenuEvent, TreeVisibility } from '../../../../../base/browser/ui/tree/tree.js';
-import { MenuId, Action2, registerAction2 } from '../../../../../platform/actions/common/actions.js';
-import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
-import { ExplorerItem, NewExplorerItem } from '../../common/explorerModel.js';
-import { ResourceLabels } from '../../../../browser/labels.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../../platform/storage/common/storage.js';
-import { IAsyncDataTreeViewState } from '../../../../../base/browser/ui/tree/asyncDataTree.js';
-import { FuzzyScore } from '../../../../../base/common/filters.js';
-import { IClipboardService } from '../../../../../platform/clipboard/common/clipboardService.js';
-import { IFileService, FileSystemProviderCapabilities } from '../../../../../platform/files/common/files.js';
-import { IDisposable } from '../../../../../base/common/lifecycle.js';
-import { Event } from '../../../../../base/common/event.js';
-import { IViewDescriptorService } from '../../../../common/views.js';
-import { IViewsService } from '../../../../services/views/common/viewsService.js';
-import { IOpenerService } from '../../../../../platform/opener/common/opener.js';
-import { IUriIdentityService } from '../../../../../platform/uriIdentity/common/uriIdentity.js';
-import { EditorResourceAccessor, SideBySideEditor } from '../../../../common/editor.js';
-import { IExplorerService, IExplorerView } from '../files.js';
-import { Codicon } from '../../../../../base/common/codicons.js';
-import { ICommandService } from '../../../../../platform/commands/common/commands.js';
-import { IEditorResolverService } from '../../../../services/editor/common/editorResolverService.js';
-import { EditorOpenSource } from '../../../../../platform/editor/common/editor.js';
-import { ResourceMap } from '../../../../../base/common/map.js';
-import { AbstractTreePart } from '../../../../../base/browser/ui/tree/abstractTree.js';
-import { IHoverService } from '../../../../../platform/hover/browser/hover.js';
-import { IAccessibilityService } from '../../../../../platform/accessibility/common/accessibility.js';
+import * as nls from "../../../../../nls.js";
+import { URI } from "../../../../../base/common/uri.js";
+import * as perf from "../../../../../base/common/performance.js";
+import { WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification } from "../../../../../base/common/actions.js";
+import { memoize } from "../../../../../base/common/decorators.js";
+import {
+  IFilesConfiguration,
+  ExplorerFolderContext,
+  FilesExplorerFocusedContext,
+  ExplorerFocusedContext,
+  ExplorerRootContext,
+  ExplorerResourceReadonlyContext,
+  ExplorerResourceCut,
+  ExplorerResourceMoveableToTrash,
+  ExplorerCompressedFocusContext,
+  ExplorerCompressedFirstFocusContext,
+  ExplorerCompressedLastFocusContext,
+  ExplorerResourceAvailableEditorIdsContext,
+  VIEW_ID,
+  ExplorerResourceWritableContext,
+  ViewHasSomeCollapsibleRootItemContext,
+  FoldersViewVisibleContext,
+  ExplorerResourceParentReadOnlyContext,
+  ExplorerFindProviderActive,
+} from "../../common/files.js";
+import { FileCopiedContext, NEW_FILE_COMMAND_ID, NEW_FOLDER_COMMAND_ID } from "../fileActions.js";
+import * as DOM from "../../../../../base/browser/dom.js";
+import { IWorkbenchLayoutService } from "../../../../services/layout/browser/layoutService.js";
+import { ExplorerDecorationsProvider } from "./explorerDecorationsProvider.js";
+import { IWorkspaceContextService, WorkbenchState } from "../../../../../platform/workspace/common/workspace.js";
+import { IConfigurationService, IConfigurationChangeEvent } from "../../../../../platform/configuration/common/configuration.js";
+import { IKeybindingService } from "../../../../../platform/keybinding/common/keybinding.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IProgressService, ProgressLocation } from "../../../../../platform/progress/common/progress.js";
+import { IContextMenuService } from "../../../../../platform/contextview/browser/contextView.js";
+import { IContextKeyService, IContextKey, ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { ResourceContextKey } from "../../../../common/contextkeys.js";
+import { IDecorationsService } from "../../../../services/decorations/common/decorations.js";
+import { WorkbenchCompressibleAsyncDataTree } from "../../../../../platform/list/browser/listService.js";
+import { DelayedDragHandler } from "../../../../../base/browser/dnd.js";
+import { IEditorService, SIDE_GROUP, ACTIVE_GROUP } from "../../../../services/editor/common/editorService.js";
+import { IViewPaneOptions, ViewPane } from "../../../../browser/parts/views/viewPane.js";
+import { ILabelService } from "../../../../../platform/label/common/label.js";
+import {
+  ExplorerDelegate,
+  ExplorerDataSource,
+  FilesRenderer,
+  ICompressedNavigationController,
+  FilesFilter,
+  FileSorter,
+  FileDragAndDrop,
+  ExplorerCompressionDelegate,
+  isCompressedFolderName,
+  ExplorerFindProvider,
+} from "./explorerViewer.js";
+import { IThemeService, IFileIconTheme } from "../../../../../platform/theme/common/themeService.js";
+import { IWorkbenchThemeService } from "../../../../services/themes/common/workbenchThemeService.js";
+import { ITreeContextMenuEvent, TreeVisibility } from "../../../../../base/browser/ui/tree/tree.js";
+import { MenuId, Action2, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
+import { ExplorerItem, NewExplorerItem } from "../../common/explorerModel.js";
+import { ResourceLabels } from "../../../../browser/labels.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../../platform/storage/common/storage.js";
+import { IAsyncDataTreeViewState } from "../../../../../base/browser/ui/tree/asyncDataTree.js";
+import { FuzzyScore } from "../../../../../base/common/filters.js";
+import { IClipboardService } from "../../../../../platform/clipboard/common/clipboardService.js";
+import { IFileService, FileSystemProviderCapabilities } from "../../../../../platform/files/common/files.js";
+import { IDisposable } from "../../../../../base/common/lifecycle.js";
+import { Event } from "../../../../../base/common/event.js";
+import { IViewDescriptorService } from "../../../../common/views.js";
+import { IViewsService } from "../../../../services/views/common/viewsService.js";
+import { IOpenerService } from "../../../../../platform/opener/common/opener.js";
+import { IUriIdentityService } from "../../../../../platform/uriIdentity/common/uriIdentity.js";
+import { EditorResourceAccessor, SideBySideEditor } from "../../../../common/editor.js";
+import { IExplorerService, IExplorerView } from "../files.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { IEditorResolverService } from "../../../../services/editor/common/editorResolverService.js";
+import { EditorOpenSource } from "../../../../../platform/editor/common/editor.js";
+import { ResourceMap } from "../../../../../base/common/map.js";
+import { AbstractTreePart } from "../../../../../base/browser/ui/tree/abstractTree.js";
+import { IHoverService } from "../../../../../platform/hover/browser/hover.js";
+import { IAccessibilityService } from "../../../../../platform/accessibility/common/accessibility.js";
 
 
 function hasExpandedRootChild(tree: WorkbenchCompressibleAsyncDataTree<ExplorerItem | ExplorerItem[], ExplorerItem, FuzzyScore>, treeInput: ExplorerItem[]): boolean {
@@ -90,7 +120,7 @@ const identityProvider = {
 		}
 
 		return stat.getId();
-	}
+	},
 };
 
 export function getContext(focus: ExplorerItem[], selection: ExplorerItem[], respectMultiSelection: boolean,
@@ -104,14 +134,18 @@ export function getContext(focus: ExplorerItem[], selection: ExplorerItem[], res
 		focusedStat = undefined;
 	}
 
-	const compressedNavigationControllers = focusedStat && compressedNavigationControllerProvider.getCompressedNavigationController(focusedStat);
+	const compressedNavigationControllers = focusedStat && compressedNavigationControllerProvider.getCompressedNavigationController(
+    focusedStat,
+  );
 	const compressedNavigationController = compressedNavigationControllers?.length ? compressedNavigationControllers[0] : undefined;
 	focusedStat = compressedNavigationController ? compressedNavigationController.current : focusedStat;
 
 	const selectedStats: ExplorerItem[] = [];
 
 	for (const stat of selection) {
-		const controllers = compressedNavigationControllerProvider.getCompressedNavigationController(stat);
+		const controllers = compressedNavigationControllerProvider.getCompressedNavigationController(
+      stat,
+    );
 		const controller = controllers?.at(0);
 		if (controller && focusedStat && controller === compressedNavigationController) {
 			if (stat === focusedStat) {
@@ -152,7 +186,7 @@ export interface IExplorerViewPaneOptions extends IViewPaneOptions {
 }
 
 export class ExplorerView extends ViewPane implements IExplorerView {
-	static readonly TREE_VIEW_STATE_STORAGE_KEY: string = 'workbench.explorer.treeViewState';
+	static readonly TREE_VIEW_STATE_STORAGE_KEY: string = "workbench.explorer.treeViewState";
 
 	private tree!: WorkbenchCompressibleAsyncDataTree<ExplorerItem | ExplorerItem[], ExplorerItem, FuzzyScore>;
 	private filter!: FilesFilter;
@@ -182,7 +216,7 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 	private horizontalScrolling: boolean | undefined;
 
 	private dragHandler!: DelayedDragHandler;
-	private _autoReveal: boolean | 'force' | 'focusNoScroll' = false;
+	private _autoReveal: boolean | "force" | "focusNoScroll" = false;
 	private decorationsProvider: ExplorerDecorationsProvider | undefined;
 	private readonly delegate: IExplorerViewContainerDelegate | undefined;
 
@@ -215,25 +249,56 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 		@IUriIdentityService private readonly uriIdentityService: IUriIdentityService,
 		@ICommandService private readonly commandService: ICommandService,
 		@IOpenerService openerService: IOpenerService,
-		@IAccessibilityService private readonly accessibilityService: IAccessibilityService
+		@IAccessibilityService private readonly accessibilityService: IAccessibilityService,
 	) {
-		super(options, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, instantiationService, openerService, themeService, hoverService);
+		super(
+      options,
+      keybindingService,
+      contextMenuService,
+      configurationService,
+      contextKeyService,
+      viewDescriptorService,
+      instantiationService,
+      openerService,
+      themeService,
+      hoverService,
+    );
 
 		this.delegate = options.delegate;
-		this.resourceContext = instantiationService.createInstance(ResourceContextKey);
+		this.resourceContext = instantiationService.createInstance(
+      ResourceContextKey,
+    );
 		this._register(this.resourceContext);
 
-		this.parentReadonlyContext = ExplorerResourceParentReadOnlyContext.bindTo(contextKeyService);
+		this.parentReadonlyContext = ExplorerResourceParentReadOnlyContext.bindTo(
+      contextKeyService,
+    );
 		this.folderContext = ExplorerFolderContext.bindTo(contextKeyService);
-		this.readonlyContext = ExplorerResourceReadonlyContext.bindTo(contextKeyService);
-		this.availableEditorIdsContext = ExplorerResourceAvailableEditorIdsContext.bindTo(contextKeyService);
+		this.readonlyContext = ExplorerResourceReadonlyContext.bindTo(
+      contextKeyService,
+    );
+		this.availableEditorIdsContext = ExplorerResourceAvailableEditorIdsContext.bindTo(
+      contextKeyService,
+    );
 		this.rootContext = ExplorerRootContext.bindTo(contextKeyService);
-		this.resourceMoveableToTrash = ExplorerResourceMoveableToTrash.bindTo(contextKeyService);
-		this.compressedFocusContext = ExplorerCompressedFocusContext.bindTo(contextKeyService);
-		this.compressedFocusFirstContext = ExplorerCompressedFirstFocusContext.bindTo(contextKeyService);
-		this.compressedFocusLastContext = ExplorerCompressedLastFocusContext.bindTo(contextKeyService);
-		this.viewHasSomeCollapsibleRootItem = ViewHasSomeCollapsibleRootItemContext.bindTo(contextKeyService);
-		this.viewVisibleContextKey = FoldersViewVisibleContext.bindTo(contextKeyService);
+		this.resourceMoveableToTrash = ExplorerResourceMoveableToTrash.bindTo(
+      contextKeyService,
+    );
+		this.compressedFocusContext = ExplorerCompressedFocusContext.bindTo(
+      contextKeyService,
+    );
+		this.compressedFocusFirstContext = ExplorerCompressedFirstFocusContext.bindTo(
+      contextKeyService,
+    );
+		this.compressedFocusLastContext = ExplorerCompressedLastFocusContext.bindTo(
+      contextKeyService,
+    );
+		this.viewHasSomeCollapsibleRootItem = ViewHasSomeCollapsibleRootItemContext.bindTo(
+      contextKeyService,
+    );
+		this.viewVisibleContextKey = FoldersViewVisibleContext.bindTo(
+      contextKeyService,
+    );
 
 
 		this.explorerService.registerView(this);
@@ -243,12 +308,14 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 		return this._autoReveal;
 	}
 
-	set autoReveal(autoReveal: boolean | 'force' | 'focusNoScroll') {
+	set autoReveal(autoReveal: boolean | "force" | "focusNoScroll") {
 		this._autoReveal = autoReveal;
 	}
 
 	get name(): string {
-		return this.labelService.getWorkspaceLabel(this.contextService.getWorkspace());
+		return this.labelService.getWorkspaceLabel(
+      this.contextService.getWorkspace(),
+    );
 	}
 
 	override get title(): string {
@@ -278,15 +345,22 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 		super.renderHeader(container);
 
 		// Expand on drag over
-		this.dragHandler = new DelayedDragHandler(container, () => this.setExpanded(true));
+		this.dragHandler = new DelayedDragHandler(
+      container,
+      () => this.setExpanded(true),
+    );
 
 		// eslint-disable-next-line no-restricted-syntax
-		const titleElement = container.querySelector('.title') as HTMLElement;
+		const titleElement = container.querySelector(".title") as HTMLElement;
 		const setHeader = () => {
 			titleElement.textContent = this.name;
 			this.updateTitle(this.name);
-			this.ariaHeaderLabel = nls.localize('explorerSection', "Explorer Section: {0}", this.name);
-			titleElement.setAttribute('aria-label', this.ariaHeaderLabel);
+			this.ariaHeaderLabel = nls.localize(
+        "explorerSection",
+        "Explorer Section: {0}",
+        this.name,
+      );
+			titleElement.setAttribute("aria-label", this.ariaHeaderLabel);
 		};
 
 		this._register(this.contextService.onDidChangeWorkspaceName(setHeader));
@@ -303,24 +377,32 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 		super.renderBody(container);
 
 		this.container = container;
-		this.treeContainer = DOM.append(container, DOM.$('.explorer-folders-view'));
+		this.treeContainer = DOM.append(container, DOM.$(".explorer-folders-view"));
 
 		this.createTree(this.treeContainer);
 
-		this._register(this.labelService.onDidChangeFormatters(() => {
-			this._onDidChangeTitleArea.fire();
-		}));
+		this._register(
+      this.labelService.onDidChangeFormatters(() => {
+        this._onDidChangeTitleArea.fire();
+      }),
+    );
 
 		// Update configuration
 		this.onConfigurationUpdated(undefined);
 
 		// When the explorer viewer is loaded, listen to changes to the editor input
-		this._register(this.editorService.onDidActiveEditorChange(() => {
-			this.selectActiveFile();
-		}));
+		this._register(
+      this.editorService.onDidActiveEditorChange(() => {
+        this.selectActiveFile();
+      }),
+    );
 
 		// Also handle configuration updates
-		this._register(this.configurationService.onDidChangeConfiguration(e => this.onConfigurationUpdated(e)));
+		this._register(
+      this.configurationService.onDidChangeConfiguration(
+        e => this.onConfigurationUpdated(e),
+      ),
+    );
 
 		this._register(this.onDidChangeBodyVisibility(async visible => {
 			if (visible) {
@@ -339,7 +421,7 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 				return;
 			}
 			if (event.clipboardData?.files?.length) {
-				await this.commandService.executeCommand('filesExplorer.paste', event.clipboardData?.files);
+				await this.commandService.executeCommand("filesExplorer.paste", event.clipboardData?.files);
 			}
 		}));
 	}
@@ -376,7 +458,12 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 		const focusedItems = this.tree.getFocusedPart() === AbstractTreePart.StickyScroll ?
 			this.tree.getStickyScrollFocus() :
 			this.tree.getFocus();
-		return getContext(focusedItems, this.tree.getSelection(), respectMultiSelection, this.renderer);
+		return getContext(
+      focusedItems,
+      this.tree.getSelection(),
+      respectMultiSelection,
+      this.renderer,
+    );
 	}
 
 	isItemVisible(item: ExplorerItem): boolean {
@@ -402,17 +489,19 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 			await this.tree.expand(stat.parent!);
 		} else {
 			if (this.horizontalScrolling !== undefined) {
-				this.tree.updateOptions({ horizontalScrolling: this.horizontalScrolling });
+				this.tree.updateOptions({
+          horizontalScrolling: this.horizontalScrolling,
+        });
 			}
 
 			this.horizontalScrolling = undefined;
-			this.treeContainer.classList.remove('highlight');
+			this.treeContainer.classList.remove("highlight");
 		}
 
 		await this.refresh(false, stat.parent, false);
 
 		if (isEditing) {
-			this.treeContainer.classList.add('highlight');
+			this.treeContainer.classList.add("highlight");
 			this.tree.reveal(stat);
 		} else {
 			this.tree.domFocus();
@@ -421,12 +510,21 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 
 	private async selectActiveFile(reveal = this._autoReveal): Promise<void> {
 		if (this._autoReveal) {
-			const activeFile = EditorResourceAccessor.getCanonicalUri(this.editorService.activeEditor, { supportSideBySide: SideBySideEditor.PRIMARY });
+			const activeFile = EditorResourceAccessor.getCanonicalUri(
+        this.editorService.activeEditor,
+        { supportSideBySide: SideBySideEditor.PRIMARY },
+      );
 
 			if (activeFile) {
 				const focus = this.tree.getFocus();
 				const selection = this.tree.getSelection();
-				if (focus.length === 1 && this.uriIdentityService.extUri.isEqual(focus[0].resource, activeFile) && selection.length === 1 && this.uriIdentityService.extUri.isEqual(selection[0].resource, activeFile)) {
+				if (focus.length === 1 && this.uriIdentityService.extUri.isEqual(
+          focus[0].resource,
+          activeFile,
+        ) && selection.length === 1 && this.uriIdentityService.extUri.isEqual(
+          selection[0].resource,
+          activeFile,
+        )) {
 					// No action needed, active file is already focused and selected
 					return;
 				}
@@ -439,19 +537,36 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 		this.filter = this.instantiationService.createInstance(FilesFilter);
 		this._register(this.filter);
 		this._register(this.filter.onDidChange(() => this.refresh(true)));
-		const explorerLabels = this.instantiationService.createInstance(ResourceLabels, { onDidChangeVisibility: this.onDidChangeBodyVisibility });
+		const explorerLabels = this.instantiationService.createInstance(
+      ResourceLabels,
+      { onDidChangeVisibility: this.onDidChangeBodyVisibility },
+    );
 		this._register(explorerLabels);
 
-		this.findProvider = this.instantiationService.createInstance(ExplorerFindProvider, this.filter, () => this.tree);
+		this.findProvider = this.instantiationService.createInstance(
+      ExplorerFindProvider,
+      this.filter,
+      () => this.tree,
+    );
 
 		const updateWidth = (stat: ExplorerItem) => this.tree.updateWidth(stat);
-		this.renderer = this.instantiationService.createInstance(FilesRenderer, container, explorerLabels, this.findProvider.highlightTree, updateWidth);
+		this.renderer = this.instantiationService.createInstance(
+      FilesRenderer,
+      container,
+      explorerLabels,
+      this.findProvider.highlightTree,
+      updateWidth,
+    );
 		this._register(this.renderer);
 
-		this._register(createFileIconThemableTreeContainerScope(container, this.themeService));
+		this._register(
+      createFileIconThemableTreeContainerScope(container, this.themeService),
+    );
 
 		const isCompressionEnabled = () => {
-			const configValue = this.configurationService.getValue<boolean>('explorer.compactFolders');
+			const configValue = this.configurationService.getValue<boolean>(
+        "explorer.compactFolders",
+      );
 			// Disable compact folders when screen reader is optimized for better accessibility
 			if (this.accessibilityService.isScreenReaderOptimized()) {
 				return false;
@@ -459,9 +574,11 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 			return configValue;
 		};
 
-		const getFileNestingSettings = (item?: ExplorerItem) => this.configurationService.getValue<IFilesConfiguration>({ resource: item?.root.resource }).explorer.fileNesting;
+		const getFileNestingSettings = (item?: ExplorerItem) => this.configurationService.getValue<IFilesConfiguration>(
+      { resource: item?.root.resource },
+    ).explorer.fileNesting;
 
-		this.tree = this.instantiationService.createInstance(WorkbenchCompressibleAsyncDataTree<ExplorerItem | ExplorerItem[], ExplorerItem, FuzzyScore>, 'FileExplorer', container, new ExplorerDelegate(), new ExplorerCompressionDelegate(), [this.renderer],
+		this.tree = this.instantiationService.createInstance(WorkbenchCompressibleAsyncDataTree<ExplorerItem | ExplorerItem[], ExplorerItem, FuzzyScore>, "FileExplorer", container, new ExplorerDelegate(), new ExplorerCompressionDelegate(), [this.renderer],
 			this.instantiationService.createInstance(ExplorerDataSource, this.filter, this.findProvider), {
 			compressionEnabled: isCompressionEnabled(),
 			accessibilityProvider: this.renderer,
@@ -479,8 +596,8 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 						return undefined;
 					}
 
-					return stats.map(stat => stat.name).join('/');
-				}
+					return stats.map(stat => stat.name).join("/");
+				},
 			},
 			multipleSelectionSupport: true,
 			filter: this.filter,
@@ -503,7 +620,7 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 					if (e.hasNests) {
 						return true;
 					}
-					else if (this.configurationService.getValue<'singleClick' | 'doubleClick'>('workbench.tree.expandMode') === 'doubleClick') {
+					else if (this.configurationService.getValue<"singleClick" | "doubleClick">("workbench.tree.expandMode") === "doubleClick") {
 						return true;
 					}
 				}
@@ -514,23 +631,38 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 			findProvider: this.findProvider,
 		});
 		this._register(this.tree);
-		this._register(this.themeService.onDidColorThemeChange(() => this.tree.rerender()));
+		this._register(
+      this.themeService.onDidColorThemeChange(() => this.tree.rerender()),
+    );
 
 		// Bind configuration
-		const onDidChangeCompressionConfiguration = Event.filter(this.configurationService.onDidChangeConfiguration, e => e.affectsConfiguration('explorer.compactFolders'));
-		this._register(onDidChangeCompressionConfiguration(_ => this.tree.updateOptions({ compressionEnabled: isCompressionEnabled() })));
+		const onDidChangeCompressionConfiguration = Event.filter(
+      this.configurationService.onDidChangeConfiguration,
+      e => e.affectsConfiguration("explorer.compactFolders"),
+    );
+		this._register(
+      onDidChangeCompressionConfiguration(
+        _ => this.tree.updateOptions({
+          compressionEnabled: isCompressionEnabled(),
+        }),
+      ),
+    );
 
 		// Update compression when screen reader mode changes
-		this._register(this.accessibilityService.onDidChangeScreenReaderOptimized(() => {
-			this.tree.updateOptions({ compressionEnabled: isCompressionEnabled() });
-		}));
+		this._register(
+      this.accessibilityService.onDidChangeScreenReaderOptimized(() => {
+        this.tree.updateOptions({ compressionEnabled: isCompressionEnabled() });
+      }),
+    );
 
 		// Bind context keys
 		FilesExplorerFocusedContext.bindTo(this.tree.contextKeyService);
 		ExplorerFocusedContext.bindTo(this.tree.contextKeyService);
 
 		// Update resource context based on focused element
-		this._register(this.tree.onDidChangeFocus(e => this.onFocusChanged(e.elements)));
+		this._register(
+      this.tree.onDidChangeFocus(e => this.onFocusChanged(e.elements)),
+    );
 		this.onFocusChanged([]);
 		// Open when selecting via keyboard
 		this._register(this.tree.onDidOpen(async e => {
@@ -547,7 +679,7 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 					// Do not react if clicking on directories
 					return;
 				}
-				this.telemetryService.publicLog2<WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification>('workbenchActionExecuted', { id: 'workbench.files.openFile', from: 'explorer' });
+				this.telemetryService.publicLog2<WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification>("workbenchActionExecuted", { id: "workbench.files.openFile", from: "explorer" });
 				try {
 					this.delegate?.willOpenElement(e.browserEvent);
 					await this.editorService.openEditor({ resource: element.resource, options: { preserveFocus: e.editorOptions.preserveFocus, pinned: e.editorOptions.pinned, source: EditorOpenSource.USER } }, e.sideBySide ? SIDE_GROUP : ACTIVE_GROUP);
@@ -562,7 +694,7 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 		this._register(this.tree.onDidScroll(async e => {
 			const editable = this.explorerService.getEditable();
 			if (e.scrollTopChanged && editable && this.tree.getRelativeTop(editable.stat) === null) {
-				await editable.data.onFinish('', false);
+				await editable.data.onFinish("", false);
 			}
 		}));
 
@@ -580,7 +712,7 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 
 		this._register(this.tree.onMouseDblClick(e => {
 			// If empty space is clicked, and not scrolling by page enabled #173261
-			const scrollingByPage = this.configurationService.getValue<boolean>('workbench.list.scrollByPage');
+			const scrollingByPage = this.configurationService.getValue<boolean>("workbench.list.scrollByPage");
 			if (e.element === null && !scrollingByPage) {
 				// click in empty area -> create a new file #116676
 				this.commandService.executeCommand(NEW_FILE_COMMAND_ID);
@@ -588,27 +720,36 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 		}));
 
 		// save view state
-		this._register(this.storageService.onWillSaveState(() => {
-			this.storeTreeViewState();
-		}));
+		this._register(
+      this.storageService.onWillSaveState(() => {
+        this.storeTreeViewState();
+      }),
+    );
 	}
 
 	// React on events
 
 	private onConfigurationUpdated(event: IConfigurationChangeEvent | undefined): void {
-		if (!event || event.affectsConfiguration('explorer.autoReveal')) {
+		if (!event || event.affectsConfiguration("explorer.autoReveal")) {
 			const configuration = this.configurationService.getValue<IFilesConfiguration>();
 			this._autoReveal = configuration?.explorer?.autoReveal;
 		}
 
 		// Push down config updates to components of viewer
-		if (event && (event.affectsConfiguration('explorer.decorations.colors') || event.affectsConfiguration('explorer.decorations.badges'))) {
+		if (event && (event.affectsConfiguration(
+      "explorer.decorations.colors",
+    ) || event.affectsConfiguration("explorer.decorations.badges"))) {
 			this.refresh(true);
 		}
 	}
 
 	private storeTreeViewState() {
-		this.storageService.store(ExplorerView.TREE_VIEW_STATE_STORAGE_KEY, JSON.stringify(this.tree.getViewState()), StorageScope.WORKSPACE, StorageTarget.MACHINE);
+		this.storageService.store(
+      ExplorerView.TREE_VIEW_STATE_STORAGE_KEY,
+      JSON.stringify(this.tree.getViewState()),
+      StorageScope.WORKSPACE,
+      StorageTarget.MACHINE,
+    );
 	}
 
 	private setContextKeys(stat: ExplorerItem | null | undefined): void {
@@ -622,8 +763,10 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 		this.rootContext.set(!!stat && stat.isRoot);
 
 		if (resource) {
-			const overrides = resource ? this.editorResolverService.getEditors(resource).map(editor => editor.id) : [];
-			this.availableEditorIdsContext.set(overrides.join(','));
+			const overrides = resource ? this.editorResolverService.getEditors(resource).map(
+        editor => editor.id,
+      ) : [];
+			this.availableEditorIdsContext.set(overrides.join(","));
 		} else {
 			this.availableEditorIdsContext.reset();
 		}
@@ -640,7 +783,9 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 		// Adjust for compressed folders (except when mouse is used)
 		if (DOM.isHTMLElement(anchor)) {
 			if (stat) {
-				const controllers = this.renderer.getCompressedNavigationController(stat);
+				const controllers = this.renderer.getCompressedNavigationController(
+          stat,
+        );
 
 				if (controllers && controllers.length > 0) {
 					if (DOM.isKeyboardEvent(e.browserEvent) || isCompressedFolderName(e.browserEvent.target)) {
@@ -661,7 +806,9 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 		const roots = this.explorerService.roots; // If the click is outside of the elements pass the root resource if there is only one root. If there are multiple roots pass empty object.
 		let arg: URI | {};
 		if (stat instanceof ExplorerItem) {
-			const compressedControllers = this.renderer.getCompressedNavigationController(stat);
+			const compressedControllers = this.renderer.getCompressedNavigationController(
+        stat,
+      );
 			arg = compressedControllers?.length ? compressedControllers[0].current.resource : stat.resource;
 		} else {
 			arg = roots.length === 1 ? roots[0].resource : {};
@@ -679,7 +826,7 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 			},
 			getActionsContext: () => stat && selection && selection.indexOf(stat) >= 0
 				? selection.map((fs: ExplorerItem) => fs.resource)
-				: stat instanceof ExplorerItem ? [stat.resource] : []
+				: stat instanceof ExplorerItem ? [stat.resource] : [],
 		});
 	}
 
@@ -688,14 +835,21 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 		this.setContextKeys(stat);
 
 		if (stat) {
-			const enableTrash = Boolean(this.configurationService.getValue<IFilesConfiguration>().files?.enableTrash);
-			const hasCapability = this.fileService.hasCapability(stat.resource, FileSystemProviderCapabilities.Trash);
+			const enableTrash = Boolean(
+        this.configurationService.getValue<IFilesConfiguration>().files?.enableTrash,
+      );
+			const hasCapability = this.fileService.hasCapability(
+        stat.resource,
+        FileSystemProviderCapabilities.Trash,
+      );
 			this.resourceMoveableToTrash.set(enableTrash && hasCapability);
 		} else {
 			this.resourceMoveableToTrash.reset();
 		}
 
-		const compressedNavigationControllers = stat && this.renderer.getCompressedNavigationController(stat);
+		const compressedNavigationControllers = stat && this.renderer.getCompressedNavigationController(
+      stat,
+    );
 
 		if (!compressedNavigationControllers) {
 			this.compressedFocusContext.set(false);
@@ -704,8 +858,8 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 
 		this.compressedFocusContext.set(true);
 		compressedNavigationControllers.forEach(controller => {
-			this.updateCompressedNavigationContextKeys(controller);
-		});
+      this.updateCompressedNavigationContextKeys(controller);
+    });
 	}
 
 	// General methods
@@ -715,7 +869,9 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 	 * If the item is passed we refresh only that level of the tree, otherwise we do a full refresh.
 	 */
 	refresh(recursive: boolean, item?: ExplorerItem, cancelEditing: boolean = true): Promise<void> {
-		if (!this.tree || !this.isBodyVisible() || (item && !this.tree.hasNode(item)) || (this.findProvider?.isShowingFilterResults() && recursive)) {
+		if (!this.tree || !this.isBodyVisible() || (item && !this.tree.hasNode(
+      item,
+    )) || (this.findProvider?.isShowingFilterResults() && recursive)) {
 			// Tree node doesn't exist yet, when it becomes visible we will refresh
 			return Promise.resolve(undefined);
 		}
@@ -731,7 +887,9 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 	override getOptimalWidth(): number {
 		const parentNode = this.tree.getHTMLElement();
 		// eslint-disable-next-line no-restricted-syntax
-		const childNodes = ([] as HTMLElement[]).slice.call(parentNode.querySelectorAll('.explorer-item .label-name')); // select all file labels
+		const childNodes = ([] as HTMLElement[]).slice.call(
+      parentNode.querySelectorAll(".explorer-item .label-name"),
+    ); // select all file labels
 
 		return DOM.getLargestChildWidth(parentNode, childNodes);
 	}
@@ -748,7 +906,7 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 
 		const initialInputSetup = !this.tree.getInput();
 		if (initialInputSetup) {
-			perf.mark('code/willResolveExplorer');
+			perf.mark("code/willResolveExplorer");
 		}
 		const roots = this.explorerService.roots;
 		let input: ExplorerItem | ExplorerItem[] = roots[0];
@@ -761,7 +919,10 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 		if (this.tree?.getInput()) {
 			viewState = this.tree.getViewState();
 		} else {
-			const rawViewState = this.storageService.get(ExplorerView.TREE_VIEW_STATE_STORAGE_KEY, StorageScope.WORKSPACE);
+			const rawViewState = this.storageService.get(
+        ExplorerView.TREE_VIEW_STATE_STORAGE_KEY,
+        StorageScope.WORKSPACE,
+      );
 			if (rawViewState) {
 				viewState = JSON.parse(rawViewState);
 			}
@@ -798,19 +959,29 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 				}
 			}
 			if (initialInputSetup) {
-				perf.mark('code/didResolveExplorer');
+				perf.mark("code/didResolveExplorer");
 			}
 		});
 
-		this.progressService.withProgress({
-			location: ProgressLocation.Explorer,
-			delay: this.layoutService.isRestored() ? 800 : 1500 // reduce progress visibility when still restoring
-		}, _progress => promise);
+		this.progressService.withProgress(
+      {
+        location: ProgressLocation.Explorer,
+        delay: this.layoutService.isRestored() ? 800 : 1500,
+      },
+      _progress => promise,
+    );
 
 		await promise;
 		if (!this.decorationsProvider) {
-			this.decorationsProvider = new ExplorerDecorationsProvider(this.explorerService, this.contextService);
-			this._register(this.decorationService.registerDecorationsProvider(this.decorationsProvider));
+			this.decorationsProvider = new ExplorerDecorationsProvider(
+        this.explorerService,
+        this.contextService,
+      );
+			this._register(
+        this.decorationService.registerDecorationsProvider(
+          this.decorationsProvider,
+        ),
+      );
 		}
 	}
 
@@ -830,7 +1001,9 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 		}
 
 		// Expand all stats in the parent chain.
-		let item: ExplorerItem | null = this.explorerService.findClosestRoot(resource);
+		let item: ExplorerItem | null = this.explorerService.findClosestRoot(
+      resource,
+    );
 
 		while (item && item.resource.toString() !== resource.toString()) {
 			try {
@@ -842,7 +1015,10 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 				item = null;
 			} else {
 				for (const child of item.children.values()) {
-					if (this.uriIdentityService.extUri.isEqualOrParent(resource, child.resource)) {
+					if (this.uriIdentityService.extUri.isEqualOrParent(
+            resource,
+            child.resource,
+          )) {
 						item = child;
 						break;
 					}
@@ -864,7 +1040,9 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 					await this.tree.expand(item.nestedParent);
 				}
 
-				if ((reveal === true || reveal === 'force') && this.tree.getRelativeTop(item) === null) {
+				if ((reveal === true || reveal === "force") && this.tree.getRelativeTop(
+          item,
+        ) === null) {
 					// Don't scroll to the item if it's already visible, or if set not to.
 					this.tree.reveal(item, 0.5);
 				}
@@ -904,8 +1082,10 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 		if (Array.isArray(treeInput)) {
 			if (hasExpandedRootChild(this.tree, treeInput)) {
 				treeInput.forEach(folder => {
-					folder.children.forEach(child => this.tree.hasNode(child) && this.tree.collapse(child, true));
-				});
+          folder.children.forEach(
+            child => this.tree.hasNode(child) && this.tree.collapse(child, true),
+          );
+        });
 
 				return;
 			}
@@ -920,11 +1100,13 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 			return;
 		}
 
-		const compressedNavigationControllers = this.renderer.getCompressedNavigationController(focused[0])!;
+		const compressedNavigationControllers = this.renderer.getCompressedNavigationController(
+      focused[0],
+    )!;
 		compressedNavigationControllers.forEach(controller => {
-			controller.previous();
-			this.updateCompressedNavigationContextKeys(controller);
-		});
+      controller.previous();
+      this.updateCompressedNavigationContextKeys(controller);
+    });
 	}
 
 	nextCompressedStat(): void {
@@ -933,11 +1115,13 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 			return;
 		}
 
-		const compressedNavigationControllers = this.renderer.getCompressedNavigationController(focused[0])!;
+		const compressedNavigationControllers = this.renderer.getCompressedNavigationController(
+      focused[0],
+    )!;
 		compressedNavigationControllers.forEach(controller => {
-			controller.next();
-			this.updateCompressedNavigationContextKeys(controller);
-		});
+      controller.next();
+      this.updateCompressedNavigationContextKeys(controller);
+    });
 	}
 
 	firstCompressedStat(): void {
@@ -946,11 +1130,13 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 			return;
 		}
 
-		const compressedNavigationControllers = this.renderer.getCompressedNavigationController(focused[0])!;
+		const compressedNavigationControllers = this.renderer.getCompressedNavigationController(
+      focused[0],
+    )!;
 		compressedNavigationControllers.forEach(controller => {
-			controller.first();
-			this.updateCompressedNavigationContextKeys(controller);
-		});
+      controller.first();
+      this.updateCompressedNavigationContextKeys(controller);
+    });
 	}
 
 	lastCompressedStat(): void {
@@ -959,16 +1145,20 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 			return;
 		}
 
-		const compressedNavigationControllers = this.renderer.getCompressedNavigationController(focused[0])!;
+		const compressedNavigationControllers = this.renderer.getCompressedNavigationController(
+      focused[0],
+    )!;
 		compressedNavigationControllers.forEach(controller => {
-			controller.last();
-			this.updateCompressedNavigationContextKeys(controller);
-		});
+      controller.last();
+      this.updateCompressedNavigationContextKeys(controller);
+    });
 	}
 
 	private updateCompressedNavigationContextKeys(controller: ICompressedNavigationController): void {
 		this.compressedFocusFirstContext.set(controller.index === 0);
-		this.compressedFocusLastContext.set(controller.index === controller.count - 1);
+		this.compressedFocusLastContext.set(
+      controller.index === controller.count - 1,
+    );
 	}
 
 	private updateAnyCollapsedContext(): void {
@@ -978,7 +1168,9 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 		}
 		const treeInputArray = Array.isArray(treeInput) ? treeInput : Array.from(treeInput.children.values());
 		// Has collapsible root when anything is expanded
-		this.viewHasSomeCollapsibleRootItem.set(hasExpandedNode(this.tree, treeInputArray));
+		this.viewHasSomeCollapsibleRootItem.set(
+      hasExpandedNode(this.tree, treeInputArray),
+    );
 		// synchronize state to cache
 		this.storeTreeViewState();
 	}
@@ -994,12 +1186,18 @@ export class ExplorerView extends ViewPane implements IExplorerView {
 }
 
 export function createFileIconThemableTreeContainerScope(container: HTMLElement, themeService: IThemeService): IDisposable {
-	container.classList.add('file-icon-themable-tree');
-	container.classList.add('show-file-icons');
+	container.classList.add("file-icon-themable-tree");
+	container.classList.add("show-file-icons");
 
 	const onDidChangeFileIconTheme = (theme: IFileIconTheme) => {
-		container.classList.toggle('align-icons-and-twisties', theme.hasFileIcons && !theme.hasFolderIcons);
-		container.classList.toggle('hide-arrows', theme.hidesExplorerArrows === true);
+		container.classList.toggle(
+      "align-icons-and-twisties",
+      theme.hasFileIcons && !theme.hasFolderIcons,
+    );
+		container.classList.toggle(
+      "hide-arrows",
+      theme.hidesExplorerArrows === true,
+    );
 	};
 
 	onDidChangeFileIconTheme(themeService.getFileIconTheme());
@@ -1010,23 +1208,23 @@ const CanCreateContext = ContextKeyExpr.or(
 	// Folder: can create unless readonly
 	ContextKeyExpr.and(ExplorerFolderContext, ExplorerResourceWritableContext),
 	// File: can create unless parent is readonly
-	ContextKeyExpr.and(ExplorerFolderContext.toNegated(), ExplorerResourceParentReadOnlyContext.toNegated())
+	ContextKeyExpr.and(ExplorerFolderContext.toNegated(), ExplorerResourceParentReadOnlyContext.toNegated()),
 );
 
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'workbench.files.action.createFileFromExplorer',
-			title: nls.localize('createNewFile', "New File..."),
+			id: "workbench.files.action.createFileFromExplorer",
+			title: nls.localize("createNewFile", "New File..."),
 			f1: false,
 			icon: Codicon.newFile,
 			precondition: CanCreateContext,
 			menu: {
 				id: MenuId.ViewTitle,
-				group: 'navigation',
-				when: ContextKeyExpr.equals('view', VIEW_ID),
-				order: 10
-			}
+				group: "navigation",
+				when: ContextKeyExpr.equals("view", VIEW_ID),
+				order: 10,
+			},
 		});
 	}
 
@@ -1039,17 +1237,17 @@ registerAction2(class extends Action2 {
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'workbench.files.action.createFolderFromExplorer',
-			title: nls.localize('createNewFolder', "New Folder..."),
+			id: "workbench.files.action.createFolderFromExplorer",
+			title: nls.localize("createNewFolder", "New Folder..."),
 			f1: false,
 			icon: Codicon.newFolder,
 			precondition: CanCreateContext,
 			menu: {
 				id: MenuId.ViewTitle,
-				group: 'navigation',
-				when: ContextKeyExpr.equals('view', VIEW_ID),
-				order: 20
-			}
+				group: "navigation",
+				when: ContextKeyExpr.equals("view", VIEW_ID),
+				order: 20,
+			},
 		});
 	}
 
@@ -1062,20 +1260,20 @@ registerAction2(class extends Action2 {
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'workbench.files.action.refreshFilesExplorer',
-			title: nls.localize2('refreshExplorer', "Refresh Explorer"),
+			id: "workbench.files.action.refreshFilesExplorer",
+			title: nls.localize2("refreshExplorer", "Refresh Explorer"),
 			f1: true,
 			icon: Codicon.refresh,
 			menu: {
 				id: MenuId.ViewTitle,
-				group: 'navigation',
-				when: ContextKeyExpr.equals('view', VIEW_ID),
+				group: "navigation",
+				when: ContextKeyExpr.equals("view", VIEW_ID),
 				order: 30,
 			},
 			metadata: {
-				description: nls.localize2('refreshExplorerMetadata', "Forces a refresh of the Explorer.")
+				description: nls.localize2("refreshExplorerMetadata", "Forces a refresh of the Explorer."),
 			},
-			precondition: ExplorerFindProviderActive.negate()
+			precondition: ExplorerFindProviderActive.negate(),
 		});
 	}
 
@@ -1090,19 +1288,19 @@ registerAction2(class extends Action2 {
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'workbench.files.action.collapseExplorerFolders',
-			title: nls.localize2('collapseExplorerFolders', "Collapse Folders in Explorer"),
+			id: "workbench.files.action.collapseExplorerFolders",
+			title: nls.localize2("collapseExplorerFolders", "Collapse Folders in Explorer"),
 			f1: true,
 			icon: Codicon.collapseAll,
 			menu: {
 				id: MenuId.ViewTitle,
-				group: 'navigation',
-				when: ContextKeyExpr.equals('view', VIEW_ID),
-				order: 40
+				group: "navigation",
+				when: ContextKeyExpr.equals("view", VIEW_ID),
+				order: 40,
 			},
 			metadata: {
-				description: nls.localize2('collapseExplorerFoldersMetadata', "Folds all folders in the Explorer.")
-			}
+				description: nls.localize2("collapseExplorerFoldersMetadata", "Folds all folders in the Explorer."),
+			},
 		});
 	}
 

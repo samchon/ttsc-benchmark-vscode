@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Iterable } from '../../../../base/common/iterator.js';
-import { TestResultState } from './testTypes.js';
-import { makeEmptyCounts, maxPriority, statePriority } from './testingStates.js';
+import { Iterable } from "../../../../base/common/iterator.js";
+import { TestResultState } from "./testTypes.js";
+import { makeEmptyCounts, maxPriority, statePriority } from "./testingStates.js";
 
 /**
  * Accessor for nodes in get and refresh computed state.
@@ -24,7 +24,7 @@ export interface IComputedStateAndDurationAccessor<T> extends IComputedStateAcce
 	setComputedDuration(item: T, duration: number | undefined): void;
 }
 
-const isDurationAccessor = <T>(accessor: IComputedStateAccessor<T>): accessor is IComputedStateAndDurationAccessor<T> => 'getOwnDuration' in accessor;
+const isDurationAccessor = <T>(accessor: IComputedStateAccessor<T>): accessor is IComputedStateAndDurationAccessor<T> => "getOwnDuration" in accessor;
 
 /**
  * Gets the computed state for the node.
@@ -102,7 +102,11 @@ export const refreshComputedState = <T extends object>(
 ) => {
 	const oldState = accessor.getCurrentComputedState(node);
 	const oldPriority = statePriority[oldState];
-	const newState = explicitNewComputedState ?? getComputedState(accessor, node, true);
+	const newState = explicitNewComputedState ?? getComputedState(
+    accessor,
+    node,
+    true,
+  );
 	const newPriority = statePriority[newState];
 	const toUpdate = new Set<T>();
 
@@ -154,7 +158,10 @@ export const refreshComputedState = <T extends object>(
 	}
 
 	if (isDurationAccessor(accessor) && refreshDuration) {
-		for (const parent of Iterable.concat(Iterable.single(node), accessor.getParents(node))) {
+		for (const parent of Iterable.concat(
+      Iterable.single(node),
+      accessor.getParents(node),
+    )) {
 			const oldDuration = accessor.getCurrentComputedDuration(parent);
 			const newDuration = getComputedDuration(accessor, parent, true);
 			if (oldDuration === newDuration) {

@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { ICellViewModel } from '../../browser/notebookBrowser.js';
-import { CellKind } from '../../common/notebookCommon.js';
-import { ICellRange } from '../../common/notebookRange.js';
+import assert from "assert";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { ICellViewModel } from "../../browser/notebookBrowser.js";
+import { CellKind } from "../../common/notebookCommon.js";
+import { ICellRange } from "../../common/notebookRange.js";
 
 /**
  * Return a set of ranges for the cells matching the given predicate
@@ -33,13 +33,13 @@ function getRanges(cells: ICellViewModel[], included: (cell: ICellViewModel) => 
 }
 
 
-suite('notebookBrowser', () => {
+suite("notebookBrowser", () => {
 	ensureNoDisposablesAreLeakedInTestSuite();
 
-	suite('getRanges', function () {
+	suite("getRanges", function () {
 		const predicate = (cell: ICellViewModel) => cell.cellKind === CellKind.Code;
 
-		test('all code', function () {
+		test("all code", function () {
 			const cells = [
 				{ cellKind: CellKind.Code },
 				{ cellKind: CellKind.Code },
@@ -47,7 +47,7 @@ suite('notebookBrowser', () => {
 			assert.deepStrictEqual(getRanges(cells as ICellViewModel[], predicate), [{ start: 0, end: 2 }]);
 		});
 
-		test('none code', function () {
+		test("none code", function () {
 			const cells = [
 				{ cellKind: CellKind.Markup },
 				{ cellKind: CellKind.Markup },
@@ -55,7 +55,7 @@ suite('notebookBrowser', () => {
 			assert.deepStrictEqual(getRanges(cells as ICellViewModel[], predicate), []);
 		});
 
-		test('start code', function () {
+		test("start code", function () {
 			const cells = [
 				{ cellKind: CellKind.Code },
 				{ cellKind: CellKind.Markup },
@@ -63,7 +63,7 @@ suite('notebookBrowser', () => {
 			assert.deepStrictEqual(getRanges(cells as ICellViewModel[], predicate), [{ start: 0, end: 1 }]);
 		});
 
-		test('random', function () {
+		test("random", function () {
 			const cells = [
 				{ cellKind: CellKind.Code },
 				{ cellKind: CellKind.Code },

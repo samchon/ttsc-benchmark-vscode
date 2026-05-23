@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as fs from 'fs';
-import { SequencerByKey } from '../../../base/common/async.js';
-import type { Database, RunResult } from '@vscode/sqlite3';
-import type { IFileEditContent, IFileEditRecord, ISessionDatabase } from '../common/sessionDataService.js';
-import { dirname } from '../../../base/common/path.js';
+import * as fs from "fs";
+import { SequencerByKey } from "../../../base/common/async.js";
+import type { Database, RunResult } from "@vscode/sqlite3";
+import type { IFileEditContent, IFileEditRecord, ISessionDatabase } from "../common/sessionDataService.js";
+import { dirname } from "../../../base/common/path.js";
 
 /**
  * A single numbered migration. Migrations are applied in order of
@@ -42,7 +42,7 @@ export const sessionDatabaseMigrations: readonly ISessionDatabaseMigration[] = [
 				removed_lines  INTEGER,
 				PRIMARY KEY (tool_call_id, file_path)
 			)`,
-		].join(';\n'),
+		].join(";\n"),
 	},
 	{
 		version: 2,
@@ -72,14 +72,14 @@ export const sessionDatabaseMigrations: readonly ISessionDatabaseMigration[] = [
 				SELECT turn_id, tool_call_id, file_path, 'edit', before_content, after_content, added_lines, removed_lines FROM file_edits`,
 			`DROP TABLE file_edits`,
 			`ALTER TABLE file_edits_v3 RENAME TO file_edits`,
-		].join(';\n'),
+		].join(";\n"),
 	},
 	{
 		version: 4,
 		sql: [
 			`ALTER TABLE turns ADD COLUMN event_id TEXT`,
 			`CREATE INDEX IF NOT EXISTS idx_turns_event_id ON turns(event_id)`,
-		].join(';\n'),
+		].join(";\n"),
 	},
 	{
 		version: 5,
@@ -91,8 +91,8 @@ export const sessionDatabaseMigrations: readonly ISessionDatabaseMigration[] = [
 
 function dbExec(db: Database, sql: string): Promise<void> {
 	return new Promise((resolve, reject) => {
-		db.exec(sql, err => err ? reject(err) : resolve());
-	});
+    db.exec(sql, err => err ? reject(err) : resolve());
+  });
 }
 
 function dbRun(db: Database, sql: string, params: unknown[]): Promise<{ changes: number; lastID: number }> {
@@ -130,13 +130,13 @@ function dbAll(db: Database, sql: string, params: unknown[]): Promise<Record<str
 
 function dbClose(db: Database): Promise<void> {
 	return new Promise((resolve, reject) => {
-		db.close(err => err ? reject(err) : resolve());
-	});
+    db.close(err => err ? reject(err) : resolve());
+  });
 }
 
 function dbOpen(path: string): Promise<Database> {
 	return new Promise((resolve, reject) => {
-		import('@vscode/sqlite3').then(sqlite3 => {
+		import("@vscode/sqlite3").then(sqlite3 => {
 			const db = new sqlite3.default.Database(path, (err: Error | null) => {
 				if (err) {
 					return reject(err);
@@ -156,9 +156,9 @@ function dbOpen(path: string): Promise<Database> {
 export async function runMigrations(db: Database, migrations: readonly ISessionDatabaseMigration[]): Promise<void> {
 	// Enable foreign key enforcement — must be set outside a transaction
 	// and every time a connection is opened.
-	await dbExec(db, 'PRAGMA foreign_keys = ON');
+	await dbExec(db, "PRAGMA foreign_keys = ON");
 
-	const row = await dbGet(db, 'PRAGMA user_version', []);
+	const row = await dbGet(db, "PRAGMA user_version", []);
 	const currentVersion = (row?.user_version as number | undefined) ?? 0;
 
 	const pending = migrations
@@ -169,16 +169,16 @@ export async function runMigrations(db: Database, migrations: readonly ISessionD
 		return;
 	}
 
-	await dbExec(db, 'BEGIN TRANSACTION');
+	await dbExec(db, "BEGIN TRANSACTION");
 	try {
 		for (const migration of pending) {
 			await dbExec(db, migration.sql);
 			// PRAGMA cannot be parameterized; the version is a trusted literal.
 			await dbExec(db, `PRAGMA user_version = ${migration.version}`);
 		}
-		await dbExec(db, 'COMMIT');
+		await dbExec(db, "COMMIT");
 	} catch (err) {
-		await dbExec(db, 'ROLLBACK');
+		await dbExec(db, "ROLLBACK");
 		throw err;
 	}
 }
@@ -241,7 +241,7 @@ export class SessionDatabase implements ISessionDatabase {
 
 	protected _ensureDb(): Promise<Database> {
 		if (this._closed) {
-			return Promise.reject(new Error('SessionDatabase has been disposed'));
+			return Promise.reject(new Error("SessionDatabase has been disposed"));
 		}
 		if (!this._dbPromise) {
 			this._dbPromise = (async () => {
@@ -259,7 +259,7 @@ export class SessionDatabase implements ISessionDatabase {
 				// If dispose() was called while we were opening, close immediately.
 				if (this._closed) {
 					await dbClose(db);
-					throw new Error('SessionDatabase has been disposed');
+					throw new Error("SessionDatabase has been disposed");
 				}
 				return db;
 			})();
@@ -273,7 +273,11 @@ export class SessionDatabase implements ISessionDatabase {
 	 */
 	async getAllTables(): Promise<string[]> {
 		const db = await this._ensureDb();
-		const rows = await dbAll(db, `SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`, []);
+		const rows = await dbAll(
+      db,
+      `SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`,
+      [],
+    );
 		return rows.map(r => r.name as string);
 	}
 
@@ -281,62 +285,72 @@ export class SessionDatabase implements ISessionDatabase {
 
 	createTurn(turnId: string): Promise<void> {
 		return this._track(async () => {
-			const db = await this._ensureDb();
-			await dbRun(db, 'INSERT OR IGNORE INTO turns (id) VALUES (?)', [turnId]);
-		});
+      const db = await this._ensureDb();
+      await dbRun(db, "INSERT OR IGNORE INTO turns (id) VALUES (?)", [turnId]);
+    });
 	}
 
 	deleteTurn(turnId: string): Promise<void> {
 		return this._track(async () => {
-			const db = await this._ensureDb();
-			await dbRun(db, 'DELETE FROM turns WHERE id = ?', [turnId]);
-		});
+      const db = await this._ensureDb();
+      await dbRun(db, "DELETE FROM turns WHERE id = ?", [turnId]);
+    });
 	}
 
 	setTurnEventId(turnId: string, eventId: string): Promise<void> {
 		return this._track(async () => {
 			const db = await this._ensureDb();
-			await dbRun(db, 'INSERT OR IGNORE INTO turns (id) VALUES (?)', [turnId]);
+			await dbRun(db, "INSERT OR IGNORE INTO turns (id) VALUES (?)", [turnId]);
 			// Only set the event ID if not already set — steering messages
 			// trigger additional user.message events within the same turn,
 			// and we must preserve the first (boundary) event ID.
-			await dbRun(db, 'UPDATE turns SET event_id = ? WHERE id = ? AND event_id IS NULL', [eventId, turnId]);
+			await dbRun(db, "UPDATE turns SET event_id = ? WHERE id = ? AND event_id IS NULL", [eventId, turnId]);
 		});
 	}
 
 	async getTurnEventId(turnId: string): Promise<string | undefined> {
 		const db = await this._ensureDb();
-		const row = await dbGet(db, 'SELECT event_id FROM turns WHERE id = ?', [turnId]);
+		const row = await dbGet(db, "SELECT event_id FROM turns WHERE id = ?", [
+      turnId,
+    ]);
 		return row?.event_id as string | undefined ?? undefined;
 	}
 
 	async getNextTurnEventId(turnId: string): Promise<string | undefined> {
 		const db = await this._ensureDb();
 		const row = await dbGet(
-			db,
-			`SELECT event_id FROM turns WHERE rowid > (SELECT rowid FROM turns WHERE id = ?) ORDER BY rowid LIMIT 1`,
-			[turnId],
-		);
+      db,
+      `SELECT event_id FROM turns WHERE rowid > (SELECT rowid FROM turns WHERE id = ?) ORDER BY rowid LIMIT 1`,
+      [turnId],
+    );
 		return row?.event_id as string | undefined ?? undefined;
 	}
 
 	async getFirstTurnEventId(): Promise<string | undefined> {
 		const db = await this._ensureDb();
-		const row = await dbGet(db, 'SELECT event_id FROM turns ORDER BY rowid LIMIT 1', []);
+		const row = await dbGet(
+      db,
+      "SELECT event_id FROM turns ORDER BY rowid LIMIT 1",
+      [],
+    );
 		return row?.event_id as string | undefined ?? undefined;
 	}
 
 	setTurnCheckpointRef(turnId: string, ref: string): Promise<void> {
 		return this._track(async () => {
-			const db = await this._ensureDb();
-			await dbRun(db, 'INSERT OR IGNORE INTO turns (id) VALUES (?)', [turnId]);
-			await dbRun(db, 'UPDATE turns SET checkpoint_ref = ? WHERE id = ?', [ref, turnId]);
-		});
+      const db = await this._ensureDb();
+      await dbRun(db, "INSERT OR IGNORE INTO turns (id) VALUES (?)", [turnId]);
+      await dbRun(db, "UPDATE turns SET checkpoint_ref = ? WHERE id = ?", [ref, turnId]);
+    });
 	}
 
 	async getTurnCheckpointRef(turnId: string): Promise<string | undefined> {
 		const db = await this._ensureDb();
-		const row = await dbGet(db, 'SELECT checkpoint_ref FROM turns WHERE id = ?', [turnId]);
+		const row = await dbGet(
+      db,
+      "SELECT checkpoint_ref FROM turns WHERE id = ?",
+      [turnId],
+    );
 		return row?.checkpoint_ref as string | undefined ?? undefined;
 	}
 
@@ -355,7 +369,11 @@ export class SessionDatabase implements ISessionDatabase {
 
 	async getAllCheckpointRefs(): Promise<string[]> {
 		const db = await this._ensureDb();
-		const rows = await dbAll(db, 'SELECT checkpoint_ref FROM turns WHERE checkpoint_ref IS NOT NULL ORDER BY rowid', []);
+		const rows = await dbAll(
+      db,
+      "SELECT checkpoint_ref FROM turns WHERE checkpoint_ref IS NOT NULL ORDER BY rowid",
+      [],
+    );
 		return rows.map(r => r.checkpoint_ref as string);
 	}
 
@@ -386,9 +404,9 @@ export class SessionDatabase implements ISessionDatabase {
 
 	deleteAllTurns(): Promise<void> {
 		return this._track(async () => {
-			const db = await this._ensureDb();
-			await dbExec(db, 'DELETE FROM turns');
-		});
+      const db = await this._ensureDb();
+      await dbExec(db, "DELETE FROM turns");
+    });
 	}
 
 	// ---- File edits -----------------------------------------------------
@@ -398,7 +416,7 @@ export class SessionDatabase implements ISessionDatabase {
 			const db = await this._ensureDb();
 			// Ensure the turn exists — lazily insert since the turn record
 			// may not have been created by an explicit createTurn() call.
-			await dbRun(db, 'INSERT OR IGNORE INTO turns (id) VALUES (?)', [edit.turnId]);
+			await dbRun(db, "INSERT OR IGNORE INTO turns (id) VALUES (?)", [edit.turnId]);
 			await dbRun(
 				db,
 				`INSERT OR REPLACE INTO file_edits
@@ -424,7 +442,7 @@ export class SessionDatabase implements ISessionDatabase {
 			return [];
 		}
 		const db = await this._ensureDb();
-		const placeholders = toolCallIds.map(() => '?').join(',');
+		const placeholders = toolCallIds.map(() => "?").join(",");
 		const rows = await dbAll(
 			db,
 			`SELECT turn_id, tool_call_id, file_path, edit_type, original_path, added_lines, removed_lines
@@ -434,14 +452,14 @@ export class SessionDatabase implements ISessionDatabase {
 			toolCallIds,
 		);
 		return rows.map(row => ({
-			turnId: row.turn_id as string,
-			toolCallId: row.tool_call_id as string,
-			filePath: row.file_path as string,
-			kind: (row.edit_type as IFileEditRecord['kind']) ?? 'edit',
-			originalPath: row.original_path as string | undefined ?? undefined,
-			addedLines: row.added_lines as number | undefined ?? undefined,
-			removedLines: row.removed_lines as number | undefined ?? undefined,
-		}));
+      turnId: row.turn_id as string,
+      toolCallId: row.tool_call_id as string,
+      filePath: row.file_path as string,
+      kind: (row.edit_type as IFileEditRecord["kind"]) ?? "edit",
+      originalPath: row.original_path as string | undefined ?? undefined,
+      addedLines: row.added_lines as number | undefined ?? undefined,
+      removedLines: row.removed_lines as number | undefined ?? undefined,
+    }));
 	}
 
 	async getAllFileEdits(): Promise<IFileEditRecord[]> {
@@ -454,14 +472,14 @@ export class SessionDatabase implements ISessionDatabase {
 			[],
 		);
 		return rows.map(row => ({
-			turnId: row.turn_id as string,
-			toolCallId: row.tool_call_id as string,
-			filePath: row.file_path as string,
-			kind: (row.edit_type as IFileEditRecord['kind']) ?? 'edit',
-			originalPath: row.original_path as string | undefined ?? undefined,
-			addedLines: row.added_lines as number | undefined ?? undefined,
-			removedLines: row.removed_lines as number | undefined ?? undefined,
-		}));
+      turnId: row.turn_id as string,
+      toolCallId: row.tool_call_id as string,
+      filePath: row.file_path as string,
+      kind: (row.edit_type as IFileEditRecord["kind"]) ?? "edit",
+      originalPath: row.original_path as string | undefined ?? undefined,
+      addedLines: row.added_lines as number | undefined ?? undefined,
+      removedLines: row.removed_lines as number | undefined ?? undefined,
+    }));
 	}
 
 	async getFileEditsByTurn(turnId: string): Promise<IFileEditRecord[]> {
@@ -475,14 +493,14 @@ export class SessionDatabase implements ISessionDatabase {
 			[turnId],
 		);
 		return rows.map(row => ({
-			turnId: row.turn_id as string,
-			toolCallId: row.tool_call_id as string,
-			filePath: row.file_path as string,
-			kind: (row.edit_type as IFileEditRecord['kind']) ?? 'edit',
-			originalPath: row.original_path as string | undefined ?? undefined,
-			addedLines: row.added_lines as number | undefined ?? undefined,
-			removedLines: row.removed_lines as number | undefined ?? undefined,
-		}));
+      turnId: row.turn_id as string,
+      toolCallId: row.tool_call_id as string,
+      filePath: row.file_path as string,
+      kind: (row.edit_type as IFileEditRecord["kind"]) ?? "edit",
+      originalPath: row.original_path as string | undefined ?? undefined,
+      addedLines: row.added_lines as number | undefined ?? undefined,
+      removedLines: row.removed_lines as number | undefined ?? undefined,
+    }));
 	}
 
 	async readFileEditContent(toolCallId: string, filePath: string): Promise<IFileEditContent | undefined> {
@@ -509,7 +527,11 @@ export class SessionDatabase implements ISessionDatabase {
 
 	async getMetadata(key: string): Promise<string | undefined> {
 		const db = await this._ensureDb();
-		const row = await dbGet(db, 'SELECT value FROM session_metadata WHERE key = ?', [key]);
+		const row = await dbGet(
+      db,
+      "SELECT value FROM session_metadata WHERE key = ?",
+      [key],
+    );
 		return row?.value as string | undefined;
 	}
 
@@ -521,8 +543,12 @@ export class SessionDatabase implements ISessionDatabase {
 			return result;
 		}
 		const db = await this._ensureDb();
-		const placeholders = keys.map(() => '?').join(',');
-		const rows = await dbAll(db, `SELECT key, value FROM session_metadata WHERE key IN (${placeholders})`, keys);
+		const placeholders = keys.map(() => "?").join(",");
+		const rows = await dbAll(
+      db,
+      `SELECT key, value FROM session_metadata WHERE key IN (${placeholders})`,
+      keys,
+    );
 		for (const key of keys) {
 			result[key] = undefined;
 		}
@@ -535,7 +561,7 @@ export class SessionDatabase implements ISessionDatabase {
 	setMetadata(key: string, value: string): Promise<void> {
 		return this._track(() => this._metadataSequencer.queue(key, async () => {
 			const db = await this._ensureDb();
-			await dbRun(db, 'INSERT OR REPLACE INTO session_metadata (key, value) VALUES (?, ?)', [key, value]);
+			await dbRun(db, "INSERT OR REPLACE INTO session_metadata (key, value) VALUES (?, ?)", [key, value]);
 		}));
 	}
 
@@ -545,14 +571,14 @@ export class SessionDatabase implements ISessionDatabase {
 			// Defer FK checks to commit time so we can update turns.id and
 			// file_edits.turn_id in any order without mid-statement violations.
 			// This pragma auto-resets after the transaction ends.
-			await dbExec(db, 'PRAGMA defer_foreign_keys = ON');
-			await dbExec(db, 'BEGIN TRANSACTION');
+			await dbExec(db, "PRAGMA defer_foreign_keys = ON");
+			await dbExec(db, "BEGIN TRANSACTION");
 			try {
 				// Delete turns not present in the mapping (e.g. turns beyond
 				// the fork point). File edits cascade-delete via FK.
 				const oldIds = [...mapping.keys()];
 				if (oldIds.length > 0) {
-					const placeholders = oldIds.map(() => '?').join(',');
+					const placeholders = oldIds.map(() => "?").join(",");
 					await dbRun(db,
 						`DELETE FROM turns WHERE id NOT IN (${placeholders})`,
 						oldIds,
@@ -561,12 +587,12 @@ export class SessionDatabase implements ISessionDatabase {
 
 				// Remap the remaining turn IDs to their new values
 				for (const [oldId, newId] of mapping) {
-					await dbRun(db, 'UPDATE turns SET id = ? WHERE id = ?', [newId, oldId]);
-					await dbRun(db, 'UPDATE file_edits SET turn_id = ? WHERE turn_id = ?', [newId, oldId]);
+					await dbRun(db, "UPDATE turns SET id = ? WHERE id = ?", [newId, oldId]);
+					await dbRun(db, "UPDATE file_edits SET turn_id = ? WHERE turn_id = ?", [newId, oldId]);
 				}
-				await dbExec(db, 'COMMIT');
+				await dbExec(db, "COMMIT");
 			} catch (err) {
-				await dbExec(db, 'ROLLBACK');
+				await dbExec(db, "ROLLBACK");
 				throw err;
 			}
 		});
@@ -587,7 +613,7 @@ export class SessionDatabase implements ISessionDatabase {
 
 	async vacuumInto(targetPath: string) {
 		const db = await this._ensureDb();
-		await dbRun(db, 'VACUUM INTO ?', [targetPath]);
+		await dbRun(db, "VACUUM INTO ?", [targetPath]);
 	}
 
 	/**
@@ -606,7 +632,9 @@ export class SessionDatabase implements ISessionDatabase {
 	}
 
 	async close() {
-		await (this._closed ??= this._dbPromise?.then(db => dbClose(db)).catch(() => { }) || true);
+		await (this._closed ??= this._dbPromise?.then(db => dbClose(db)).catch(
+      () => {},
+    ) || true);
 	}
 
 	dispose(): void {
@@ -621,7 +649,7 @@ function toUint8Array(value: unknown): Uint8Array {
 	if (value instanceof Uint8Array) {
 		return value;
 	}
-	if (typeof value === 'string') {
+	if (typeof value === "string") {
 		return new TextEncoder().encode(value);
 	}
 	return new Uint8Array(0);

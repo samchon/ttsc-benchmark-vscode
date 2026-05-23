@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { MainContext, MainThreadStorageShape, ExtHostStorageShape } from './extHost.protocol.js';
-import { Emitter } from '../../../base/common/event.js';
-import { IExtHostRpcService } from './extHostRpcService.js';
-import { createDecorator } from '../../../platform/instantiation/common/instantiation.js';
-import { IExtensionIdWithVersion } from '../../../platform/extensionManagement/common/extensionStorage.js';
-import { ILogService } from '../../../platform/log/common/log.js';
+import { MainContext, MainThreadStorageShape, ExtHostStorageShape } from "./extHost.protocol.js";
+import { Emitter } from "../../../base/common/event.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { IExtensionIdWithVersion } from "../../../platform/extensionManagement/common/extensionStorage.js";
+import { ILogService } from "../../../platform/log/common/log.js";
 
 export interface IStorageChangeEvent {
 	shared: boolean;
@@ -27,7 +27,7 @@ export class ExtHostStorage implements ExtHostStorageShape {
 
 	constructor(
 		mainContext: IExtHostRpcService,
-		private readonly _logService: ILogService
+		private readonly _logService: ILogService,
 	) {
 		this._proxy = mainContext.getProxy(MainContext.MainThreadStorage);
 	}
@@ -64,7 +64,9 @@ export class ExtHostStorage implements ExtHostStorageShape {
 		} catch (error) {
 			// Do not fail this call but log it for diagnostics
 			// https://github.com/microsoft/vscode/issues/132777
-			this._logService.error(`[extHostStorage] unexpected error parsing storage contents (extensionId: ${key}, global: ${shared}): ${error}`);
+			this._logService.error(
+        `[extHostStorage] unexpected error parsing storage contents (extensionId: ${key}, global: ${shared}): ${error}`,
+      );
 		}
 
 		return undefined;
@@ -72,4 +74,6 @@ export class ExtHostStorage implements ExtHostStorageShape {
 }
 
 export interface IExtHostStorage extends ExtHostStorage { }
-export const IExtHostStorage = createDecorator<IExtHostStorage>('IExtHostStorage');
+export const IExtHostStorage = createDecorator<IExtHostStorage>(
+  "IExtHostStorage",
+);

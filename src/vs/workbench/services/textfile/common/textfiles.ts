@@ -3,24 +3,34 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../../base/common/uri.js';
-import { Event } from '../../../../base/common/event.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { ISaveOptions, IRevertOptions, SaveReason } from '../../../common/editor.js';
-import { ReadableStream } from '../../../../base/common/stream.js';
-import { IBaseFileStatWithMetadata, IFileStatWithMetadata, IWriteFileOptions, FileOperationError, FileOperationResult, IReadFileStreamOptions, IFileReadLimits } from '../../../../platform/files/common/files.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { ITextEditorModel } from '../../../../editor/common/services/resolverService.js';
-import { ITextBufferFactory, ITextModel, ITextSnapshot } from '../../../../editor/common/model.js';
-import { VSBuffer, VSBufferReadable, VSBufferReadableStream } from '../../../../base/common/buffer.js';
-import { areFunctions, isUndefinedOrNull } from '../../../../base/common/types.js';
-import { IWorkingCopy, IWorkingCopySaveEvent } from '../../workingCopy/common/workingCopy.js';
-import { IUntitledTextEditorModelManager } from '../../untitled/common/untitledTextEditorService.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { IProgress, IProgressStep } from '../../../../platform/progress/common/progress.js';
-import { IFileOperationUndoRedoInfo } from '../../workingCopy/common/workingCopyFileService.js';
+import { URI } from "../../../../base/common/uri.js";
+import { Event } from "../../../../base/common/event.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { ISaveOptions, IRevertOptions, SaveReason } from "../../../common/editor.js";
+import { ReadableStream } from "../../../../base/common/stream.js";
+import {
+  IBaseFileStatWithMetadata,
+  IFileStatWithMetadata,
+  IWriteFileOptions,
+  FileOperationError,
+  FileOperationResult,
+  IReadFileStreamOptions,
+  IFileReadLimits,
+} from "../../../../platform/files/common/files.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { ITextEditorModel } from "../../../../editor/common/services/resolverService.js";
+import { ITextBufferFactory, ITextModel, ITextSnapshot } from "../../../../editor/common/model.js";
+import { VSBuffer, VSBufferReadable, VSBufferReadableStream } from "../../../../base/common/buffer.js";
+import { areFunctions, isUndefinedOrNull } from "../../../../base/common/types.js";
+import { IWorkingCopy, IWorkingCopySaveEvent } from "../../workingCopy/common/workingCopy.js";
+import { IUntitledTextEditorModelManager } from "../../untitled/common/untitledTextEditorService.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { IProgress, IProgressStep } from "../../../../platform/progress/common/progress.js";
+import { IFileOperationUndoRedoInfo } from "../../workingCopy/common/workingCopyFileService.js";
 
-export const ITextFileService = createDecorator<ITextFileService>('textFileService');
+export const ITextFileService = createDecorator<ITextFileService>(
+  "textFileService",
+);
 
 export interface ITextFileService extends IDisposable {
 
@@ -187,7 +197,9 @@ export const enum TextFileOperationResult {
 export class TextFileOperationError extends FileOperationError {
 
 	static isTextFileOperationError(obj: unknown): obj is TextFileOperationError {
-		return obj instanceof Error && !isUndefinedOrNull((obj as TextFileOperationError).textFileOperationResult);
+		return obj instanceof Error && !isUndefinedOrNull(
+      (obj as TextFileOperationError).textFileOperationResult,
+    );
 	}
 
 	override readonly options?: IReadTextFileOptions & IWriteTextFileOptions;
@@ -195,7 +207,7 @@ export class TextFileOperationError extends FileOperationError {
 	constructor(
 		message: string,
 		public textFileOperationResult: TextFileOperationResult,
-		options?: IReadTextFileOptions & IWriteTextFileOptions
+		options?: IReadTextFileOptions & IWriteTextFileOptions,
 	) {
 		super(message, FileOperationResult.FILE_OTHER_ERROR);
 
@@ -371,7 +383,7 @@ export interface ITextFileSaveParticipant {
 		model: ITextFileEditorModel,
 		context: ITextFileSaveParticipantContext,
 		progress: IProgress<IProgressStep>,
-		token: CancellationToken
+		token: CancellationToken,
 	): Promise<void>;
 }
 
@@ -566,7 +578,14 @@ export interface ITextFileEditorModel extends ITextEditorModel, IEncodingSupport
 export function isTextFileEditorModel(model: ITextEditorModel): model is ITextFileEditorModel {
 	const candidate = model as ITextFileEditorModel;
 
-	return areFunctions(candidate.setEncoding, candidate.getEncoding, candidate.save, candidate.revert, candidate.isDirty, candidate.getLanguageId);
+	return areFunctions(
+    candidate.setEncoding,
+    candidate.getEncoding,
+    candidate.save,
+    candidate.revert,
+    candidate.isDirty,
+    candidate.getLanguageId,
+  );
 }
 
 export interface IResolvedTextFileEditorModel extends ITextFileEditorModel {
@@ -580,11 +599,11 @@ export function snapshotToString(snapshot: ITextSnapshot): string {
 	const chunks: string[] = [];
 
 	let chunk: string | null;
-	while (typeof (chunk = snapshot.read()) === 'string') {
+	while (typeof (chunk = snapshot.read()) === "string") {
 		chunks.push(chunk);
 	}
 
-	return chunks.join('');
+	return chunks.join("");
 }
 
 export function stringToSnapshot(value: string): ITextSnapshot {
@@ -599,7 +618,7 @@ export function stringToSnapshot(value: string): ITextSnapshot {
 			}
 
 			return null;
-		}
+		},
 	};
 }
 
@@ -608,22 +627,22 @@ export function toBufferOrReadable(value: ITextSnapshot): VSBufferReadable;
 export function toBufferOrReadable(value: string | ITextSnapshot): VSBuffer | VSBufferReadable;
 export function toBufferOrReadable(value: string | ITextSnapshot | undefined): VSBuffer | VSBufferReadable | undefined;
 export function toBufferOrReadable(value: string | ITextSnapshot | undefined): VSBuffer | VSBufferReadable | undefined {
-	if (typeof value === 'undefined') {
+	if (typeof value === "undefined") {
 		return undefined;
 	}
 
-	if (typeof value === 'string') {
+	if (typeof value === "string") {
 		return VSBuffer.fromString(value);
 	}
 
 	return {
 		read: () => {
 			const chunk = value.read();
-			if (typeof chunk === 'string') {
+			if (typeof chunk === "string") {
 				return VSBuffer.fromString(chunk);
 			}
 
 			return null;
-		}
+		},
 	};
 }

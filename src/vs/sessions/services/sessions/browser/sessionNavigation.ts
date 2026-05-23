@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { autorun, derived, IObservable, observableValue } from '../../../../base/common/observable.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IContextKey, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { CanGoBackContext, CanGoForwardContext } from '../../../common/contextkeys.js';
-import { SessionStatus } from '../common/session.js';
-import { ISessionsChangeEvent, ISessionsManagementService } from '../common/sessionsManagement.js';
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { autorun, derived, IObservable, observableValue } from "../../../../base/common/observable.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IContextKey, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { CanGoBackContext, CanGoForwardContext } from "../../../common/contextkeys.js";
+import { SessionStatus } from "../common/session.js";
+import { ISessionsChangeEvent, ISessionsManagementService } from "../common/sessionsManagement.js";
 
 const MAX_HISTORY_SIZE = 50;
 
@@ -47,10 +47,10 @@ export class SessionsNavigation extends Disposable {
 	private readonly _canGoForwardCtx: IContextKey<boolean>;
 
 	private readonly _canGoBack: IObservable<boolean> = derived(this, reader => {
-		const idx = this._currentIndex.read(reader);
-		const beyond = this._beyondHistory.read(reader);
-		return idx > 0 || (beyond && idx >= 0);
-	});
+    const idx = this._currentIndex.read(reader);
+    const beyond = this._beyondHistory.read(reader);
+    return idx > 0 || (beyond && idx >= 0);
+  });
 
 	private readonly _canGoForward: IObservable<boolean> = derived(this, reader => {
 		if (this._beyondHistory.read(reader)) {
@@ -102,10 +102,12 @@ export class SessionsNavigation extends Disposable {
 		}));
 
 		// Sync context keys with observables
-		this._register(autorun(reader => {
-			this._canGoBackCtx.set(this._canGoBack.read(reader));
-			this._canGoForwardCtx.set(this._canGoForward.read(reader));
-		}));
+		this._register(
+      autorun(reader => {
+        this._canGoBackCtx.set(this._canGoBack.read(reader));
+        this._canGoForwardCtx.set(this._canGoForward.read(reader));
+      }),
+    );
 	}
 
 	onDidRemoveSessions(e: ISessionsChangeEvent): void {
@@ -155,7 +157,9 @@ export class SessionsNavigation extends Disposable {
 		}
 
 		// Remove any existing entry for the same session to avoid duplicates
-		const existingIdx = this._history.findIndex(e => this._isSameEntry(e, entry));
+		const existingIdx = this._history.findIndex(
+      e => this._isSameEntry(e, entry),
+    );
 		if (existingIdx >= 0) {
 			this._history.splice(existingIdx, 1);
 		}
@@ -169,7 +173,9 @@ export class SessionsNavigation extends Disposable {
 		this._currentIndex.set(this._history.length - 1, undefined);
 		this._historySize.set(this._history.length, undefined);
 
-		this._logService.trace(`[SessionNavigation] pushed entry idx=${this._history.length - 1} session=${entry.sessionResource.toString()} chat=${entry.chatResource?.toString()} historySize=${this._history.length}`);
+		this._logService.trace(
+      `[SessionNavigation] pushed entry idx=${this._history.length - 1} session=${entry.sessionResource.toString()} chat=${entry.chatResource?.toString()} historySize=${this._history.length}`,
+    );
 	}
 
 	private async _navigateTo(targetIdx: number): Promise<void> {
@@ -178,30 +184,46 @@ export class SessionsNavigation extends Disposable {
 			return;
 		}
 
-		this._logService.trace(`[SessionNavigation] navigating to idx=${targetIdx} session=${entry.sessionResource.toString()} chat=${entry.chatResource?.toString()}`);
+		this._logService.trace(
+      `[SessionNavigation] navigating to idx=${targetIdx} session=${entry.sessionResource.toString()} chat=${entry.chatResource?.toString()}`,
+    );
 
 		this._navigating = true;
 		try {
 			this._currentIndex.set(targetIdx, undefined);
 
-			const session = this._sessionsManagementService.getSession(entry.sessionResource);
+			const session = this._sessionsManagementService.getSession(
+        entry.sessionResource,
+      );
 			if (session) {
 				if (entry.chatResource) {
-					const chatExists = session.chats.get().some(c => c.resource.toString() === entry.chatResource!.toString());
+					const chatExists = session.chats.get().some(
+            c => c.resource.toString() === entry.chatResource!.toString(),
+          );
 					if (chatExists) {
-						await this._sessionsManagementService.openChat(session, entry.chatResource);
+						await this._sessionsManagementService.openChat(
+              session,
+              entry.chatResource,
+            );
 					} else {
-						await this._sessionsManagementService.openSession(entry.sessionResource);
+						await this._sessionsManagementService.openSession(
+              entry.sessionResource,
+            );
 					}
 				} else {
-					await this._sessionsManagementService.openSession(entry.sessionResource);
+					await this._sessionsManagementService.openSession(
+            entry.sessionResource,
+          );
 				}
 			} else {
 				// Session no longer exists, remove from history
 				this._history.splice(targetIdx, 1);
 				this._historySize.set(this._history.length, undefined);
 				if (targetIdx <= this._currentIndex.get()) {
-					this._currentIndex.set(Math.max(0, this._currentIndex.get() - 1), undefined);
+					this._currentIndex.set(
+            Math.max(0, this._currentIndex.get() - 1),
+            undefined,
+          );
 				}
 			}
 		} finally {

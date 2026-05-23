@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { IDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { LinkedList } from '../../../../base/common/linkedList.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { IEditorPane } from '../../../common/editor.js';
-import { IOutline, IOutlineCreator, IOutlineService, OutlineTarget } from './outline.js';
-import { Event, Emitter } from '../../../../base/common/event.js';
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { LinkedList } from "../../../../base/common/linkedList.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IEditorPane } from "../../../common/editor.js";
+import { IOutline, IOutlineCreator, IOutlineService, OutlineTarget } from "./outline.js";
+import { Event, Emitter } from "../../../../base/common/event.js";
 
 class OutlineService implements IOutlineService {
 
@@ -42,9 +42,9 @@ class OutlineService implements IOutlineService {
 		const rm = this._factories.push(creator);
 		this._onDidChange.fire();
 		return toDisposable(() => {
-			rm();
-			this._onDidChange.fire();
-		});
+      rm();
+      this._onDidChange.fire();
+    });
 	}
 }
 

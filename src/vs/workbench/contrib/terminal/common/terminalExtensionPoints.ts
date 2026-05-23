@@ -3,17 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as extensionsRegistry from '../../../services/extensions/common/extensionsRegistry.js';
-import { terminalContributionsDescriptor } from './terminal.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { IExtensionTerminalProfile, ITerminalCompletionProviderContribution, ITerminalContributions, ITerminalProfileContribution } from '../../../../platform/terminal/common/terminal.js';
-import { URI } from '../../../../base/common/uri.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { isProposedApiEnabled } from '../../../services/extensions/common/extensions.js';
-import { isObject, isString } from '../../../../base/common/types.js';
+import * as extensionsRegistry from "../../../services/extensions/common/extensionsRegistry.js";
+import { terminalContributionsDescriptor } from "./terminal.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import {
+  IExtensionTerminalProfile,
+  ITerminalCompletionProviderContribution,
+  ITerminalContributions,
+  ITerminalProfileContribution,
+} from "../../../../platform/terminal/common/terminal.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { isProposedApiEnabled } from "../../../services/extensions/common/extensions.js";
+import { isObject, isString } from "../../../../base/common/types.js";
 
 // terminal extension point
-const terminalsExtPoint = extensionsRegistry.ExtensionsRegistry.registerExtensionPoint<ITerminalContributions>(terminalContributionsDescriptor);
+const terminalsExtPoint = extensionsRegistry.ExtensionsRegistry.registerExtensionPoint<ITerminalContributions>(
+  terminalContributionsDescriptor,
+);
 
 export interface IExtensionTerminalCompletionProvider extends ITerminalCompletionProviderContribution {
 	extensionIdentifier: string;
@@ -27,7 +34,9 @@ export interface ITerminalContributionService {
 	readonly onDidChangeTerminalCompletionProviders: Event<void>;
 }
 
-export const ITerminalContributionService = createDecorator<ITerminalContributionService>('terminalContributionsService');
+export const ITerminalContributionService = createDecorator<ITerminalContributionService>(
+  "terminalContributionsService",
+);
 
 export class TerminalContributionService implements ITerminalContributionService {
 	declare _serviceBrand: undefined;
@@ -50,7 +59,7 @@ export class TerminalContributionService implements ITerminalContributionService
 			}).flat();
 
 			this._terminalCompletionProviders = contributions.map(c => {
-				if (!isProposedApiEnabled(c.description, 'terminalCompletionProvider')) {
+				if (!isProposedApiEnabled(c.description, "terminalCompletionProvider")) {
 					return [];
 				}
 				return c.value?.completionProviders?.map(p => {
@@ -67,8 +76,8 @@ function hasValidTerminalIcon(profile: ITerminalProfileContribution): boolean {
 	function isValidDarkLightIcon(obj: unknown): obj is { light: URI; dark: URI } {
 		return (
 			isObject(obj) &&
-			'light' in obj && URI.isUri(obj.light) &&
-			'dark' in obj && URI.isUri(obj.dark)
+			"light" in obj && URI.isUri(obj.light) &&
+			"dark" in obj && URI.isUri(obj.dark)
 		);
 	}
 	return !profile.icon || (

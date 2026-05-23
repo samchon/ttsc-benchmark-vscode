@@ -3,28 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Codicon } from '../../../../base/common/codicons.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { randomPort } from '../../../../base/common/ports.js';
-import * as nls from '../../../../nls.js';
-import { Categories } from '../../../../platform/action/common/actionCommonCategories.js';
-import { Action2, MenuId } from '../../../../platform/actions/common/actions.js';
-import { IExtensionHostDebugService } from '../../../../platform/debug/common/extensionHostDebug.js';
-import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
-import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { INativeHostService } from '../../../../platform/native/common/native.js';
-import { IProductService } from '../../../../platform/product/common/productService.js';
-import { IProgressService, ProgressLocation } from '../../../../platform/progress/common/progress.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { ActiveEditorContext } from '../../../common/contextkeys.js';
-import { IWorkbenchContribution } from '../../../common/contributions.js';
-import { INativeWorkbenchEnvironmentService } from '../../../services/environment/electron-browser/environmentService.js';
-import { ExtensionHostKind } from '../../../services/extensions/common/extensionHostKind.js';
-import { IExtensionService, IExtensionInspectInfo } from '../../../services/extensions/common/extensions.js';
-import { IHostService } from '../../../services/host/browser/host.js';
-import { IConfig, IDebugService } from '../../debug/common/debug.js';
-import { RuntimeExtensionsEditor } from './runtimeExtensionsEditor.js';
-import { IQuickInputService, IQuickPickItem } from '../../../../platform/quickinput/common/quickInput.js';
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { randomPort } from "../../../../base/common/ports.js";
+import * as nls from "../../../../nls.js";
+import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
+import { Action2, MenuId } from "../../../../platform/actions/common/actions.js";
+import { IExtensionHostDebugService } from "../../../../platform/debug/common/extensionHostDebug.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { INativeHostService } from "../../../../platform/native/common/native.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IProgressService, ProgressLocation } from "../../../../platform/progress/common/progress.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { ActiveEditorContext } from "../../../common/contextkeys.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { INativeWorkbenchEnvironmentService } from "../../../services/environment/electron-browser/environmentService.js";
+import { ExtensionHostKind } from "../../../services/extensions/common/extensionHostKind.js";
+import { IExtensionService, IExtensionInspectInfo } from "../../../services/extensions/common/extensions.js";
+import { IHostService } from "../../../services/host/browser/host.js";
+import { IConfig, IDebugService } from "../../debug/common/debug.js";
+import { RuntimeExtensionsEditor } from "./runtimeExtensionsEditor.js";
+import { IQuickInputService, IQuickPickItem } from "../../../../platform/quickinput/common/quickInput.js";
 
 interface IExtensionHostQuickPickItem extends IQuickPickItem {
 	portInfo: IExtensionInspectInfo;
@@ -37,20 +37,27 @@ async function getExtensionHostPort(
 	dialogService: IDialogService,
 	productService: IProductService,
 ): Promise<number | undefined> {
-	const inspectPorts = await extensionService.getInspectPorts(ExtensionHostKind.LocalProcess, false);
+	const inspectPorts = await extensionService.getInspectPorts(
+    ExtensionHostKind.LocalProcess,
+    false,
+  );
 	if (inspectPorts.length === 0) {
 		const res = await dialogService.confirm({
-			message: nls.localize('restart1', "Debug Extensions"),
-			detail: nls.localize('restart2', "In order to debug extensions a restart is required. Do you want to restart '{0}' now?", productService.nameLong),
-			primaryButton: nls.localize({ key: 'restart3', comment: ['&& denotes a mnemonic'] }, "&&Restart")
-		});
+      message: nls.localize("restart1", "Debug Extensions"),
+      detail: nls.localize("restart2", "In order to debug extensions a restart is required. Do you want to restart '{0}' now?", productService.nameLong),
+      primaryButton: nls.localize({ key: "restart3", comment: ["&& denotes a mnemonic"] }, "&&Restart"),
+    });
 		if (res.confirmed) {
-			await nativeHostService.relaunch({ addArgs: [`--inspect-extensions=${randomPort()}`] });
+			await nativeHostService.relaunch({
+        addArgs: [`--inspect-extensions=${randomPort()}`],
+      });
 		}
 		return undefined;
 	}
 	if (inspectPorts.length > 1) {
-		console.warn(`There are multiple extension hosts available for debugging. Picking the first one...`);
+		console.warn(
+      `There are multiple extension hosts available for debugging. Picking the first one...`,
+    );
 	}
 	return inspectPorts[0].port;
 }
@@ -59,19 +66,21 @@ async function getRendererDebugPort(
 	extensionHostDebugService: IExtensionHostDebugService,
 	windowId: number,
 ): Promise<number | undefined> {
-	const result = await extensionHostDebugService.attachToCurrentWindowRenderer(windowId);
+	const result = await extensionHostDebugService.attachToCurrentWindowRenderer(
+    windowId,
+  );
 	return result.success ? result.port : undefined;
 }
 
 export class DebugExtensionHostInDevToolsAction extends Action2 {
 	constructor() {
 		super({
-			id: 'workbench.extensions.action.devtoolsExtensionHost',
-			title: nls.localize2('openDevToolsForExtensionHost', 'Debug Extension Host In Dev Tools'),
-			category: Categories.Developer,
-			f1: true,
-			icon: Codicon.debugStart,
-		});
+      id: "workbench.extensions.action.devtoolsExtensionHost",
+      title: nls.localize2("openDevToolsForExtensionHost", "Debug Extension Host In Dev Tools"),
+      category: Categories.Developer,
+      f1: true,
+      icon: Codicon.debugStart,
+    });
 	}
 
 	async run(accessor: ServicesAccessor): Promise<void> {
@@ -79,18 +88,25 @@ export class DebugExtensionHostInDevToolsAction extends Action2 {
 		const nativeHostService = accessor.get(INativeHostService);
 		const quickInputService = accessor.get(IQuickInputService);
 
-		const inspectPorts = await extensionService.getInspectPorts(ExtensionHostKind.LocalProcess, true);
+		const inspectPorts = await extensionService.getInspectPorts(
+      ExtensionHostKind.LocalProcess,
+      true,
+    );
 
 		if (inspectPorts.length === 0) {
-			console.log('[devtoolsExtensionHost] No extension host inspect ports found.');
+			console.log(
+        "[devtoolsExtensionHost] No extension host inspect ports found.",
+      );
 			return;
 		}
 
-		const items: IExtensionHostQuickPickItem[] = inspectPorts.filter(portInfo => portInfo.devtoolsUrl).map(portInfo => ({
-			label: portInfo.devtoolsLabel ?? `${portInfo.host}:${portInfo.port}`,
-			detail: `${portInfo.host}:${portInfo.port}`,
-			portInfo: portInfo
-		}));
+		const items: IExtensionHostQuickPickItem[] = inspectPorts.filter(portInfo => portInfo.devtoolsUrl).map(
+      portInfo => ({
+        label: portInfo.devtoolsLabel ?? `${portInfo.host}:${portInfo.port}`,
+        detail: `${portInfo.host}:${portInfo.port}`,
+        portInfo: portInfo,
+      }),
+    );
 
 		if (items.length === 1) {
 			const portInfo = items[0].portInfo;
@@ -98,10 +114,13 @@ export class DebugExtensionHostInDevToolsAction extends Action2 {
 			return;
 		}
 
-		const selected = await quickInputService.pick<IExtensionHostQuickPickItem>(items, {
-			placeHolder: nls.localize('selectExtensionHost', "Pick extension host"),
-			matchOnDetail: true,
-		});
+		const selected = await quickInputService.pick<IExtensionHostQuickPickItem>(
+      items,
+      {
+        placeHolder: nls.localize("selectExtensionHost", "Pick extension host"),
+        matchOnDetail: true,
+      },
+    );
 
 		if (selected) {
 			const portInfo = selected.portInfo;
@@ -113,16 +132,16 @@ export class DebugExtensionHostInDevToolsAction extends Action2 {
 export class DebugExtensionHostInNewWindowAction extends Action2 {
 	constructor() {
 		super({
-			id: 'workbench.extensions.action.debugExtensionHost',
-			title: nls.localize2('debugExtensionHost', "Debug Extension Host In New Window"),
+			id: "workbench.extensions.action.debugExtensionHost",
+			title: nls.localize2("debugExtensionHost", "Debug Extension Host In New Window"),
 			category: Categories.Developer,
 			f1: true,
 			icon: Codicon.debugStart,
 			menu: {
 				id: MenuId.EditorTitle,
 				when: ActiveEditorContext.isEqualTo(RuntimeExtensionsEditor.ID),
-				group: 'navigation',
-			}
+				group: "navigation",
+			},
 		});
 	}
 
@@ -134,7 +153,12 @@ export class DebugExtensionHostInNewWindowAction extends Action2 {
 		const instantiationService = accessor.get(IInstantiationService);
 		const hostService = accessor.get(IHostService);
 
-		const port = await getExtensionHostPort(extensionService, nativeHostService, dialogService, productService);
+		const port = await getExtensionHostPort(
+      extensionService,
+      nativeHostService,
+      dialogService,
+      productService,
+    );
 		if (port === undefined) {
 			return;
 		}
@@ -148,11 +172,11 @@ export class DebugExtensionHostInNewWindowAction extends Action2 {
 export class DebugRendererInNewWindowAction extends Action2 {
 	constructor() {
 		super({
-			id: 'workbench.action.debugRenderer',
-			title: nls.localize2('debugRenderer', "Debug Renderer In New Window"),
-			category: Categories.Developer,
-			f1: true,
-		});
+      id: "workbench.action.debugRenderer",
+      title: nls.localize2("debugRenderer", "Debug Renderer In New Window"),
+      category: Categories.Developer,
+      f1: true,
+    });
 	}
 
 	async run(accessor: ServicesAccessor): Promise<void> {
@@ -161,7 +185,10 @@ export class DebugRendererInNewWindowAction extends Action2 {
 		const instantiationService = accessor.get(IInstantiationService);
 		const hostService = accessor.get(IHostService);
 
-		const port = await getRendererDebugPort(extensionHostDebugService, environmentService.window.id);
+		const port = await getRendererDebugPort(
+      extensionHostDebugService,
+      environmentService.window.id,
+    );
 		if (port === undefined) {
 			return;
 		}
@@ -176,11 +203,11 @@ export class DebugRendererInNewWindowAction extends Action2 {
 export class DebugExtensionHostAndRendererAction extends Action2 {
 	constructor() {
 		super({
-			id: 'workbench.action.debugExtensionHostAndRenderer',
-			title: nls.localize2('debugExtensionHostAndRenderer', "Debug Extension Host and Renderer In New Window"),
-			category: Categories.Developer,
-			f1: true,
-		});
+      id: "workbench.action.debugExtensionHostAndRenderer",
+      title: nls.localize2("debugExtensionHostAndRenderer", "Debug Extension Host and Renderer In New Window"),
+      category: Categories.Developer,
+      f1: true,
+    });
 	}
 
 	async run(accessor: ServicesAccessor): Promise<void> {
@@ -194,9 +221,17 @@ export class DebugExtensionHostAndRendererAction extends Action2 {
 		const hostService = accessor.get(IHostService);
 
 		const [extHostPort, rendererPort] = await Promise.all([
-			getExtensionHostPort(extensionService, nativeHostService, dialogService, productService),
-			getRendererDebugPort(extensionHostDebugService, environmentService.window.id)
-		]);
+      getExtensionHostPort(
+        extensionService,
+        nativeHostService,
+        dialogService,
+        productService,
+      ),
+      getRendererDebugPort(
+        extensionHostDebugService,
+        environmentService.window.id,
+      ),
+    ]);
 
 		if (extHostPort === undefined || rendererPort === undefined) {
 			return;
@@ -215,25 +250,47 @@ class Storage {
 	}
 
 	storeDebugOnNewWindow(targetPort: number) {
-		this._storageService.store('debugExtensionHost.debugPort', targetPort, StorageScope.APPLICATION, StorageTarget.MACHINE);
+		this._storageService.store(
+      "debugExtensionHost.debugPort",
+      targetPort,
+      StorageScope.APPLICATION,
+      StorageTarget.MACHINE,
+    );
 	}
 
 	getAndDeleteDebugPortIfSet(): number | undefined {
-		const port = this._storageService.getNumber('debugExtensionHost.debugPort', StorageScope.APPLICATION);
+		const port = this._storageService.getNumber(
+      "debugExtensionHost.debugPort",
+      StorageScope.APPLICATION,
+    );
 		if (port !== undefined) {
-			this._storageService.remove('debugExtensionHost.debugPort', StorageScope.APPLICATION);
+			this._storageService.remove(
+        "debugExtensionHost.debugPort",
+        StorageScope.APPLICATION,
+      );
 		}
 		return port;
 	}
 
 	storeRendererDebugOnNewWindow(targetPort: number) {
-		this._storageService.store('debugRenderer.debugPort', targetPort, StorageScope.APPLICATION, StorageTarget.MACHINE);
+		this._storageService.store(
+      "debugRenderer.debugPort",
+      targetPort,
+      StorageScope.APPLICATION,
+      StorageTarget.MACHINE,
+    );
 	}
 
 	getAndDeleteRendererDebugPortIfSet(): number | undefined {
-		const port = this._storageService.getNumber('debugRenderer.debugPort', StorageScope.APPLICATION);
+		const port = this._storageService.getNumber(
+      "debugRenderer.debugPort",
+      StorageScope.APPLICATION,
+    );
 		if (port !== undefined) {
-			this._storageService.remove('debugRenderer.debugPort', StorageScope.APPLICATION);
+			this._storageService.remove(
+        "debugRenderer.debugPort",
+        StorageScope.APPLICATION,
+      );
 		}
 		return port;
 	}
@@ -267,13 +324,13 @@ export class DebugExtensionsContribution extends Disposable implements IWorkbenc
 		if (extHostPort !== undefined) {
 			debugPromises.push(_progressService.withProgress({
 				location: ProgressLocation.Notification,
-				title: nls.localize('debugExtensionHost.progress', "Attaching Debugger To Extension Host"),
+				title: nls.localize("debugExtensionHost.progress", "Attaching Debugger To Extension Host"),
 			}, async () => {
 				// eslint-disable-next-line local/code-no-dangerous-type-assertions
 				await this._debugService.startDebugging(undefined, {
-					type: 'node',
-					name: nls.localize('debugExtensionHost.launch.name', "Attach Extension Host"),
-					request: 'attach',
+					type: "node",
+					name: nls.localize("debugExtensionHost.launch.name", "Attach Extension Host"),
+					request: "attach",
 					port: extHostPort,
 					...defaultDebugConfig,
 				} as IConfig);
@@ -283,12 +340,12 @@ export class DebugExtensionsContribution extends Disposable implements IWorkbenc
 		if (rendererPort !== undefined) {
 			debugPromises.push(_progressService.withProgress({
 				location: ProgressLocation.Notification,
-				title: nls.localize('debugRenderer.progress', "Attaching Debugger To Renderer"),
+				title: nls.localize("debugRenderer.progress", "Attaching Debugger To Renderer"),
 			}, async () => {
 				await this._debugService.startDebugging(undefined, {
-					type: 'chrome',
-					name: nls.localize('debugRenderer.launch.name', "Attach Renderer"),
-					request: 'attach',
+					type: "chrome",
+					name: nls.localize("debugRenderer.launch.name", "Attach Renderer"),
+					request: "attach",
 					port: rendererPort,
 					...defaultDebugConfig,
 				});

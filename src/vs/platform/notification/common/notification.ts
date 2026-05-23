@@ -3,15 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../../nls.js';
-import { IAction } from '../../../base/common/actions.js';
-import { Event } from '../../../base/common/event.js';
-import BaseSeverity from '../../../base/common/severity.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
+import { localize } from "../../../nls.js";
+import { IAction } from "../../../base/common/actions.js";
+import { Event } from "../../../base/common/event.js";
+import BaseSeverity from "../../../base/common/severity.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
 
 export import Severity = BaseSeverity;
 
-export const INotificationService = createDecorator<INotificationService>('notificationService');
+export const INotificationService = createDecorator<INotificationService>(
+  "notificationService",
+);
 
 export type NotificationMessage = string | Error;
 
@@ -119,7 +121,7 @@ export function isNotificationSource(thing: unknown): thing is INotificationSour
 	if (thing) {
 		const candidate = thing as INotificationSource;
 
-		return typeof candidate.id === 'string' && typeof candidate.label === 'string';
+		return typeof candidate.id === "string" && typeof candidate.label === "string";
 	}
 
 	return false;
@@ -480,12 +482,12 @@ export function withSeverityPrefix(label: string, severity: Severity): string {
 	// Messages requirements.
 
 	if (severity === Severity.Error) {
-		return localize('severityPrefix.error', "Error: {0}", label);
+		return localize("severityPrefix.error", "Error: {0}", label);
 	}
 
 	if (severity === Severity.Warning) {
-		return localize('severityPrefix.warning', "Warning: {0}", label);
+		return localize("severityPrefix.warning", "Warning: {0}", label);
 	}
 
-	return localize('severityPrefix.info', "Info: {0}", label);
+	return localize("severityPrefix.info", "Info: {0}", label);
 }

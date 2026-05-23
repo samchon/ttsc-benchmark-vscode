@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, DisposableStore, IDisposable } from '../../../../../../../base/common/lifecycle.js';
-import { Emitter, Event } from '../../../../../../../base/common/event.js';
-import { disposableTimeout } from '../../../../../../../base/common/async.js';
+import { Disposable, DisposableStore, IDisposable } from "../../../../../../../base/common/lifecycle.js";
+import { Emitter, Event } from "../../../../../../../base/common/event.js";
+import { disposableTimeout } from "../../../../../../../base/common/async.js";
 
 /**
  * The auto-expand algorithm for terminal tool progress parts.
@@ -124,10 +124,12 @@ export class TerminalToolAutoExpand extends Disposable {
 			}
 		}));
 
-		store.add(this._options.onCommandFinished(() => {
-			this._commandFinished = true;
-			this._clearAutoExpandTimeouts();
-		}));
+		store.add(
+      this._options.onCommandFinished(() => {
+        this._commandFinished = true;
+        this._clearAutoExpandTimeouts();
+      }),
+    );
 	}
 
 	private _clearAutoExpandTimeouts(): void {

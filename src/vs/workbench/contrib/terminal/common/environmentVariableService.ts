@@ -3,16 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event, Emitter } from '../../../../base/common/event.js';
-import { debounce, throttle } from '../../../../base/common/decorators.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { IExtensionService } from '../../../services/extensions/common/extensions.js';
-import { MergedEnvironmentVariableCollection } from '../../../../platform/terminal/common/environmentVariableCollection.js';
-import { deserializeEnvironmentDescriptionMap, deserializeEnvironmentVariableCollection, serializeEnvironmentDescriptionMap, serializeEnvironmentVariableCollection } from '../../../../platform/terminal/common/environmentVariableShared.js';
-import { IEnvironmentVariableCollectionWithPersistence, IEnvironmentVariableService } from './environmentVariable.js';
-import { TerminalStorageKeys } from './terminalStorageKeys.js';
-import { IMergedEnvironmentVariableCollection, ISerializableEnvironmentDescriptionMap, ISerializableEnvironmentVariableCollection } from '../../../../platform/terminal/common/environmentVariable.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
+import { Event, Emitter } from "../../../../base/common/event.js";
+import { debounce, throttle } from "../../../../base/common/decorators.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { MergedEnvironmentVariableCollection } from "../../../../platform/terminal/common/environmentVariableCollection.js";
+import {
+  deserializeEnvironmentDescriptionMap,
+  deserializeEnvironmentVariableCollection,
+  serializeEnvironmentDescriptionMap,
+  serializeEnvironmentVariableCollection,
+} from "../../../../platform/terminal/common/environmentVariableShared.js";
+import {
+  IEnvironmentVariableCollectionWithPersistence,
+  IEnvironmentVariableService,
+} from "./environmentVariable.js";
+import { TerminalStorageKeys } from "./terminalStorageKeys.js";
+import {
+  IMergedEnvironmentVariableCollection,
+  ISerializableEnvironmentDescriptionMap,
+  ISerializableEnvironmentVariableCollection,
+} from "../../../../platform/terminal/common/environmentVariable.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
 
 interface ISerializableExtensionEnvironmentVariableCollection {
 	extensionIdentifier: string;
@@ -29,24 +41,36 @@ export class EnvironmentVariableService extends Disposable implements IEnvironme
 	collections: Map<string, IEnvironmentVariableCollectionWithPersistence> = new Map();
 	mergedCollection: IMergedEnvironmentVariableCollection;
 
-	private readonly _onDidChangeCollections = this._register(new Emitter<IMergedEnvironmentVariableCollection>());
+	private readonly _onDidChangeCollections = this._register(
+    new Emitter<IMergedEnvironmentVariableCollection>(),
+  );
 	get onDidChangeCollections(): Event<IMergedEnvironmentVariableCollection> { return this._onDidChangeCollections.event; }
 
 	constructor(
 		@IExtensionService private readonly _extensionService: IExtensionService,
-		@IStorageService private readonly _storageService: IStorageService
+		@IStorageService private readonly _storageService: IStorageService,
 	) {
 		super();
 
-		this._storageService.remove(TerminalStorageKeys.DeprecatedEnvironmentVariableCollections, StorageScope.WORKSPACE);
-		const serializedPersistedCollections = this._storageService.get(TerminalStorageKeys.EnvironmentVariableCollections, StorageScope.WORKSPACE);
+		this._storageService.remove(
+      TerminalStorageKeys.DeprecatedEnvironmentVariableCollections,
+      StorageScope.WORKSPACE,
+    );
+		const serializedPersistedCollections = this._storageService.get(
+      TerminalStorageKeys.EnvironmentVariableCollections,
+      StorageScope.WORKSPACE,
+    );
 		if (serializedPersistedCollections) {
-			const collectionsJson: ISerializableExtensionEnvironmentVariableCollection[] = JSON.parse(serializedPersistedCollections);
-			collectionsJson.forEach(c => this.collections.set(c.extensionIdentifier, {
-				persistent: true,
-				map: deserializeEnvironmentVariableCollection(c.collection),
-				descriptionMap: deserializeEnvironmentDescriptionMap(c.description)
-			}));
+			const collectionsJson: ISerializableExtensionEnvironmentVariableCollection[] = JSON.parse(
+        serializedPersistedCollections,
+      );
+			collectionsJson.forEach(
+        c => this.collections.set(c.extensionIdentifier, {
+          persistent: true,
+          map: deserializeEnvironmentVariableCollection(c.collection),
+          descriptionMap: deserializeEnvironmentDescriptionMap(c.description),
+        }),
+      );
 
 			// Asynchronously invalidate collections where extensions have been uninstalled, this is
 			// async to avoid making all functions on the service synchronous and because extensions
@@ -56,7 +80,11 @@ export class EnvironmentVariableService extends Disposable implements IEnvironme
 		this.mergedCollection = this._resolveMergedCollection();
 
 		// Listen for uninstalled/disabled extensions
-		this._register(this._extensionService.onDidChangeExtensions(() => this._invalidateExtensionCollections()));
+		this._register(
+      this._extensionService.onDidChangeExtensions(
+        () => this._invalidateExtensionCollections(),
+      ),
+    );
 	}
 
 	set(extensionIdentifier: string, collection: IEnvironmentVariableCollectionWithPersistence): void {
@@ -87,12 +115,17 @@ export class EnvironmentVariableService extends Disposable implements IEnvironme
 				collectionsJson.push({
 					extensionIdentifier,
 					collection: serializeEnvironmentVariableCollection(this.collections.get(extensionIdentifier)!.map),
-					description: serializeEnvironmentDescriptionMap(collection.descriptionMap)
+					description: serializeEnvironmentDescriptionMap(collection.descriptionMap),
 				});
 			}
 		});
 		const stringifiedJson = JSON.stringify(collectionsJson);
-		this._storageService.store(TerminalStorageKeys.EnvironmentVariableCollections, stringifiedJson, StorageScope.WORKSPACE, StorageTarget.MACHINE);
+		this._storageService.store(
+      TerminalStorageKeys.EnvironmentVariableCollections,
+      stringifiedJson,
+      StorageScope.WORKSPACE,
+      StorageTarget.MACHINE,
+    );
 	}
 
 	@debounce(1000)

@@ -3,16 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter } from '../../../../base/common/event.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { CodeEditorWidget } from '../codeEditor/codeEditorWidget.js';
-import { IEditorOptions } from '../../../common/config/editorOptions.js';
-import { IDimension } from '../../../common/core/2d/dimension.js';
-import { IPosition, Position } from '../../../common/core/position.js';
-import { IRange, Range } from '../../../common/core/range.js';
-import { ISelection, Selection } from '../../../common/core/selection.js';
-import { IDiffEditorViewModel, IEditor, IEditorAction, IEditorDecorationsCollection, IEditorModel, IEditorViewState, ScrollType } from '../../../common/editorCommon.js';
-import { IModelDecorationsChangeAccessor, IModelDeltaDecoration } from '../../../common/model.js';
+import { Emitter } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { CodeEditorWidget } from "../codeEditor/codeEditorWidget.js";
+import { IEditorOptions } from "../../../common/config/editorOptions.js";
+import { IDimension } from "../../../common/core/2d/dimension.js";
+import { IPosition, Position } from "../../../common/core/position.js";
+import { IRange, Range } from "../../../common/core/range.js";
+import { ISelection, Selection } from "../../../common/core/selection.js";
+import {
+  IDiffEditorViewModel,
+  IEditor,
+  IEditorAction,
+  IEditorDecorationsCollection,
+  IEditorModel,
+  IEditorViewState,
+  ScrollType,
+} from "../../../common/editorCommon.js";
+import { IModelDecorationsChangeAccessor, IModelDeltaDecoration } from "../../../common/model.js";
 
 export abstract class DelegatingEditor extends Disposable implements IEditor {
 	private static idCounter = 0;
@@ -23,7 +31,7 @@ export abstract class DelegatingEditor extends Disposable implements IEditor {
 
 	protected abstract get _targetEditor(): CodeEditorWidget;
 
-	getId(): string { return this.getEditorType() + ':v2:' + this._id; }
+	getId(): string { return this.getEditorType() + ":v2:" + this._id; }
 
 	abstract getEditorType(): string;
 	abstract updateOptions(newOptions: IEditorOptions): void;
@@ -50,7 +58,7 @@ export abstract class DelegatingEditor extends Disposable implements IEditor {
 		return this._targetEditor.getPosition();
 	}
 
-	public setPosition(position: IPosition, source: string = 'api'): void {
+	public setPosition(position: IPosition, source: string = "api"): void {
 		this._targetEditor.setPosition(position, source);
 	}
 
@@ -63,7 +71,10 @@ export abstract class DelegatingEditor extends Disposable implements IEditor {
 	}
 
 	public revealLineInCenterIfOutsideViewport(lineNumber: number, scrollType: ScrollType = ScrollType.Smooth): void {
-		this._targetEditor.revealLineInCenterIfOutsideViewport(lineNumber, scrollType);
+		this._targetEditor.revealLineInCenterIfOutsideViewport(
+      lineNumber,
+      scrollType,
+    );
 	}
 
 	public revealLineNearTop(lineNumber: number, scrollType: ScrollType = ScrollType.Smooth): void {
@@ -79,7 +90,10 @@ export abstract class DelegatingEditor extends Disposable implements IEditor {
 	}
 
 	public revealPositionInCenterIfOutsideViewport(position: IPosition, scrollType: ScrollType = ScrollType.Smooth): void {
-		this._targetEditor.revealPositionInCenterIfOutsideViewport(position, scrollType);
+		this._targetEditor.revealPositionInCenterIfOutsideViewport(
+      position,
+      scrollType,
+    );
 	}
 
 	public revealPositionNearTop(position: IPosition, scrollType: ScrollType = ScrollType.Smooth): void {
@@ -98,11 +112,11 @@ export abstract class DelegatingEditor extends Disposable implements IEditor {
 	public setSelection(editorRange: Range, source?: string): void;
 	public setSelection(selection: ISelection, source?: string): void;
 	public setSelection(editorSelection: Selection, source?: string): void;
-	public setSelection(something: unknown, source: string = 'api'): void {
+	public setSelection(something: unknown, source: string = "api"): void {
 		this._targetEditor.setSelection(something, source);
 	}
 
-	public setSelections(ranges: readonly ISelection[], source: string = 'api'): void {
+	public setSelections(ranges: readonly ISelection[], source: string = "api"): void {
 		this._targetEditor.setSelections(ranges, source);
 	}
 
@@ -111,19 +125,36 @@ export abstract class DelegatingEditor extends Disposable implements IEditor {
 	}
 
 	public revealLinesInCenter(startLineNumber: number, endLineNumber: number, scrollType: ScrollType = ScrollType.Smooth): void {
-		this._targetEditor.revealLinesInCenter(startLineNumber, endLineNumber, scrollType);
+		this._targetEditor.revealLinesInCenter(
+      startLineNumber,
+      endLineNumber,
+      scrollType,
+    );
 	}
 
 	public revealLinesInCenterIfOutsideViewport(startLineNumber: number, endLineNumber: number, scrollType: ScrollType = ScrollType.Smooth): void {
-		this._targetEditor.revealLinesInCenterIfOutsideViewport(startLineNumber, endLineNumber, scrollType);
+		this._targetEditor.revealLinesInCenterIfOutsideViewport(
+      startLineNumber,
+      endLineNumber,
+      scrollType,
+    );
 	}
 
 	public revealLinesNearTop(startLineNumber: number, endLineNumber: number, scrollType: ScrollType = ScrollType.Smooth): void {
-		this._targetEditor.revealLinesNearTop(startLineNumber, endLineNumber, scrollType);
+		this._targetEditor.revealLinesNearTop(
+      startLineNumber,
+      endLineNumber,
+      scrollType,
+    );
 	}
 
 	public revealRange(range: IRange, scrollType: ScrollType = ScrollType.Smooth, revealVerticalInCenter: boolean = false, revealHorizontal: boolean = true): void {
-		this._targetEditor.revealRange(range, scrollType, revealVerticalInCenter, revealHorizontal);
+		this._targetEditor.revealRange(
+      range,
+      scrollType,
+      revealVerticalInCenter,
+      revealHorizontal,
+    );
 	}
 
 	public revealRangeInCenter(range: IRange, scrollType: ScrollType = ScrollType.Smooth): void {

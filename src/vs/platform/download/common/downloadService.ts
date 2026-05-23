@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { Schemas } from '../../../base/common/network.js';
-import { URI } from '../../../base/common/uri.js';
-import { IDownloadService } from './download.js';
-import { IFileService } from '../../files/common/files.js';
-import { asTextOrError, IRequestService } from '../../request/common/request.js';
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { Schemas } from "../../../base/common/network.js";
+import { URI } from "../../../base/common/uri.js";
+import { IDownloadService } from "./download.js";
+import { IFileService } from "../../files/common/files.js";
+import { asTextOrError, IRequestService } from "../../request/common/request.js";
 
 export class DownloadService implements IDownloadService {
 
@@ -16,7 +16,7 @@ export class DownloadService implements IDownloadService {
 
 	constructor(
 		@IRequestService private readonly requestService: IRequestService,
-		@IFileService private readonly fileService: IFileService
+		@IFileService private readonly fileService: IFileService,
 	) { }
 
 	async download(resource: URI, target: URI, callSite: string, cancellationToken: CancellationToken = CancellationToken.None): Promise<void> {
@@ -25,13 +25,22 @@ export class DownloadService implements IDownloadService {
 			await this.fileService.copy(resource, target);
 			return;
 		}
-		const options = { type: 'GET' as const, url: resource.toString(true), callSite };
-		const context = await this.requestService.request(options, cancellationToken);
+		const options = {
+      type: "GET" as const,
+      url: resource.toString(true),
+      callSite,
+    };
+		const context = await this.requestService.request(
+      options,
+      cancellationToken,
+    );
 		if (context.res.statusCode === 200) {
 			await this.fileService.writeFile(target, context.stream);
 		} else {
 			const message = await asTextOrError(context);
-			throw new Error(`Expected 200, got back ${context.res.statusCode} instead.\n\n${message}`);
+			throw new Error(
+        `Expected 200, got back ${context.res.statusCode} instead.\n\n${message}`,
+      );
 		}
 	}
 }

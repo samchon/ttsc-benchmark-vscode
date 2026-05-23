@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { Disposable, MutableDisposable } from '../../../../base/common/lifecycle.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { ChatContextKeys } from '../common/actions/chatContextKeys.js';
-import { AgentInstructionFileType, IPromptsService } from '../common/promptSyntax/service/promptsService.js';
-import { PromptsType } from '../common/promptSyntax/promptTypes.js';
-import { ILanguageModelToolsService } from '../common/tools/languageModelToolsService.js';
-import { TipEligibilityStorageKeys } from './chatTipStorageKeys.js';
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Disposable, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { ChatContextKeys } from "../common/actions/chatContextKeys.js";
+import { AgentInstructionFileType, IPromptsService } from "../common/promptSyntax/service/promptsService.js";
+import { PromptsType } from "../common/promptSyntax/promptTypes.js";
+import { ILanguageModelToolsService } from "../common/tools/languageModelToolsService.js";
+import { TipEligibilityStorageKeys } from "./chatTipStorageKeys.js";
 
 /**
  * Interface for tip definitions that have exclusion criteria tracked by this class.
@@ -78,14 +78,26 @@ export class TipEligibilityTracker extends Disposable {
 
 		// --- Restore persisted state -------------------------------------------
 
-		const storedCmds = this._readApplicationWithProfileFallback(TipEligibilityStorageKeys.ExecutedCommands);
-		this._executedCommands = new Set<string>(storedCmds ? JSON.parse(storedCmds) : []);
+		const storedCmds = this._readApplicationWithProfileFallback(
+      TipEligibilityStorageKeys.ExecutedCommands,
+    );
+		this._executedCommands = new Set<string>(
+      storedCmds ? JSON.parse(storedCmds) : [],
+    );
 
-		const storedModes = this._readApplicationWithProfileFallback(TipEligibilityStorageKeys.UsedModes);
-		this._usedModes = new Set<string>(storedModes ? JSON.parse(storedModes) : []);
+		const storedModes = this._readApplicationWithProfileFallback(
+      TipEligibilityStorageKeys.UsedModes,
+    );
+		this._usedModes = new Set<string>(
+      storedModes ? JSON.parse(storedModes) : [],
+    );
 
-		const storedTools = this._readApplicationWithProfileFallback(TipEligibilityStorageKeys.InvokedTools);
-		this._invokedTools = new Set<string>(storedTools ? JSON.parse(storedTools) : []);
+		const storedTools = this._readApplicationWithProfileFallback(
+      TipEligibilityStorageKeys.InvokedTools,
+    );
+		this._invokedTools = new Set<string>(
+      storedTools ? JSON.parse(storedTools) : [],
+    );
 
 		// --- Derive what still needs tracking ----------------------------------
 
@@ -120,8 +132,8 @@ export class TipEligibilityTracker extends Disposable {
 
 		if (this._pendingCommands.size > 0) {
 			this._commandListener.value = commandService.onDidExecuteCommand(e => {
-				this.recordCommandExecuted(e.commandId);
-			});
+        this.recordCommandExecuted(e.commandId);
+      });
 		}
 
 		// --- Set up tool listener (auto-disposes when all seen) -----------------
@@ -144,7 +156,9 @@ export class TipEligibilityTracker extends Disposable {
 
 		// --- Async file checks -------------------------------------------------
 
-		this._tipsWithFileExclusions = tips.filter(t => t.excludeWhenPromptFilesExist);
+		this._tipsWithFileExclusions = tips.filter(
+      t => t.excludeWhenPromptFilesExist,
+    );
 		for (const tip of this._tipsWithFileExclusions) {
 			if (tip.excludeWhenPromptFilesExist!.excludeUntilChecked) {
 				this._excludedByFiles.add(tip.id);
@@ -168,7 +182,10 @@ export class TipEligibilityTracker extends Disposable {
 		}
 
 		this._executedCommands.add(commandId);
-		this._persistSet(TipEligibilityStorageKeys.ExecutedCommands, this._executedCommands);
+		this._persistSet(
+      TipEligibilityStorageKeys.ExecutedCommands,
+      this._executedCommands,
+    );
 		this._pendingCommands.delete(commandId);
 
 		if (this._pendingCommands.size === 0) {
@@ -187,13 +204,17 @@ export class TipEligibilityTracker extends Disposable {
 		}
 
 		let changed = false;
-		const kind = contextKeyService.getContextKeyValue<string>(ChatContextKeys.chatModeKind.key);
+		const kind = contextKeyService.getContextKeyValue<string>(
+      ChatContextKeys.chatModeKind.key,
+    );
 		if (kind && !this._usedModes.has(kind)) {
 			this._usedModes.add(kind);
 			this._pendingModes.delete(kind);
 			changed = true;
 		}
-		const name = contextKeyService.getContextKeyValue<string>(ChatContextKeys.chatModeName.key);
+		const name = contextKeyService.getContextKeyValue<string>(
+      ChatContextKeys.chatModeName.key,
+    );
 		if (name && !this._usedModes.has(name)) {
 			this._usedModes.add(name);
 			this._pendingModes.delete(name);
@@ -211,7 +232,11 @@ export class TipEligibilityTracker extends Disposable {
 		if (tip.excludeWhenCommandsExecuted) {
 			for (const cmd of tip.excludeWhenCommandsExecuted) {
 				if (this._executedCommands.has(cmd)) {
-					this._logService.debug('#ChatTips: tip excluded because command was executed', tip.id, cmd);
+					this._logService.debug(
+            "#ChatTips: tip excluded because command was executed",
+            tip.id,
+            cmd,
+          );
 					return true;
 				}
 			}
@@ -219,7 +244,11 @@ export class TipEligibilityTracker extends Disposable {
 		if (tip.excludeWhenModesUsed) {
 			for (const mode of tip.excludeWhenModesUsed) {
 				if (this._usedModes.has(mode)) {
-					this._logService.debug('#ChatTips: tip excluded because mode was used', tip.id, mode);
+					this._logService.debug(
+            "#ChatTips: tip excluded because mode was used",
+            tip.id,
+            mode,
+          );
 					return true;
 				}
 			}
@@ -227,13 +256,20 @@ export class TipEligibilityTracker extends Disposable {
 		if (tip.excludeWhenToolsInvoked) {
 			for (const toolId of tip.excludeWhenToolsInvoked) {
 				if (this._invokedTools.has(toolId)) {
-					this._logService.debug('#ChatTips: tip excluded because tool was invoked', tip.id, toolId);
+					this._logService.debug(
+            "#ChatTips: tip excluded because tool was invoked",
+            tip.id,
+            toolId,
+          );
 					return true;
 				}
 			}
 		}
 		if (tip.excludeWhenPromptFilesExist && this._excludedByFiles.has(tip.id)) {
-			this._logService.debug('#ChatTips: tip excluded because prompt files exist', tip.id);
+			this._logService.debug(
+        "#ChatTips: tip excluded because prompt files exist",
+        tip.id,
+      );
 			return true;
 		}
 		return false;
@@ -277,9 +313,12 @@ export class TipEligibilityTracker extends Disposable {
 
 		try {
 			const [promptFiles, agentInstructions] = await Promise.all([
-				this._promptsService.listPromptFiles(config.promptType, CancellationToken.None),
-				config.agentFileType ? this._promptsService.listAgentInstructions(CancellationToken.None) : Promise.resolve([]),
-			]);
+        this._promptsService.listPromptFiles(
+          config.promptType,
+          CancellationToken.None,
+        ),
+        config.agentFileType ? this._promptsService.listAgentInstructions(CancellationToken.None) : Promise.resolve([]),
+      ]);
 
 			// Discard stale result if a newer check was started while we were awaiting
 			if (this._fileCheckGeneration.get(tip.id) !== generation) {
@@ -308,18 +347,31 @@ export class TipEligibilityTracker extends Disposable {
 	}
 
 	private _persistSet(key: string, set: Set<string>): void {
-		this._storageService.store(key, JSON.stringify([...set]), StorageScope.APPLICATION, StorageTarget.MACHINE);
+		this._storageService.store(
+      key,
+      JSON.stringify([...set]),
+      StorageScope.APPLICATION,
+      StorageTarget.MACHINE,
+    );
 	}
 
 	private _readApplicationWithProfileFallback(key: string): string | undefined {
-		const applicationValue = this._storageService.get(key, StorageScope.APPLICATION);
+		const applicationValue = this._storageService.get(
+      key,
+      StorageScope.APPLICATION,
+    );
 		if (applicationValue) {
 			return applicationValue;
 		}
 
 		const profileValue = this._storageService.get(key, StorageScope.PROFILE);
 		if (profileValue) {
-			this._storageService.store(key, profileValue, StorageScope.APPLICATION, StorageTarget.MACHINE);
+			this._storageService.store(
+        key,
+        profileValue,
+        StorageScope.APPLICATION,
+        StorageTarget.MACHINE,
+      );
 		}
 
 		return profileValue;

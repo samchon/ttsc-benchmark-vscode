@@ -3,32 +3,42 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IMouseWheelEvent } from '../../../../base/browser/mouseEvent.js';
-import { Event } from '../../../../base/common/event.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { URI } from '../../../../base/common/uri.js';
-import { ICodeEditor } from '../../../../editor/browser/editorBrowser.js';
-import { Selection } from '../../../../editor/common/core/selection.js';
-import { EditDeltaInfo } from '../../../../editor/common/textModelEditSource.js';
-import { MenuId } from '../../../../platform/actions/common/actions.js';
-import { IContextKeyService, RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { PreferredGroup } from '../../../services/editor/common/editorService.js';
-import { IChatAgentAttachmentCapabilities, IChatAgentCommand, IChatAgentData } from '../common/participants/chatAgents.js';
-import { IChatResponseModel, IChatModelInputState } from '../common/model/chatModel.js';
-import { IChatMode } from '../common/chatModes.js';
-import { IParsedChatRequest } from '../common/requestParser/chatParserTypes.js';
-import { IHandOff } from '../common/promptSyntax/promptFileParser.js';
-import { CHAT_PROVIDER_ID } from '../common/participants/chatParticipantContribTypes.js';
-import { ChatRequestQueueKind, IChatElicitationRequest, IChatLocationData, IChatSendRequestOptions } from '../common/chatService/chatService.js';
-import { IChatRequestViewModel, IChatResponseViewModel, IChatViewModel, IChatPendingDividerViewModel } from '../common/model/chatViewModel.js';
-import { ChatAgentLocation, ChatModeKind } from '../common/constants.js';
-import { ChatAttachmentModel } from './attachments/chatAttachmentModel.js';
-import { IChatEditorOptions } from './widgetHosts/editor/chatEditor.js';
-import { ChatInputPart } from './widget/input/chatInputPart.js';
-import { ChatWidget, IChatWidgetContrib } from './widget/chatWidget.js';
-import { ICodeBlockActionContext } from './widget/chatContentParts/codeBlockPart.js';
-import { AgentSessionTarget } from './agentSessions/agentSessions.js';
+import { IMouseWheelEvent } from "../../../../base/browser/mouseEvent.js";
+import { Event } from "../../../../base/common/event.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ICodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { Selection } from "../../../../editor/common/core/selection.js";
+import { EditDeltaInfo } from "../../../../editor/common/textModelEditSource.js";
+import { MenuId } from "../../../../platform/actions/common/actions.js";
+import { IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { PreferredGroup } from "../../../services/editor/common/editorService.js";
+import { IChatAgentAttachmentCapabilities, IChatAgentCommand, IChatAgentData } from "../common/participants/chatAgents.js";
+import { IChatResponseModel, IChatModelInputState } from "../common/model/chatModel.js";
+import { IChatMode } from "../common/chatModes.js";
+import { IParsedChatRequest } from "../common/requestParser/chatParserTypes.js";
+import { IHandOff } from "../common/promptSyntax/promptFileParser.js";
+import { CHAT_PROVIDER_ID } from "../common/participants/chatParticipantContribTypes.js";
+import {
+  ChatRequestQueueKind,
+  IChatElicitationRequest,
+  IChatLocationData,
+  IChatSendRequestOptions,
+} from "../common/chatService/chatService.js";
+import {
+  IChatRequestViewModel,
+  IChatResponseViewModel,
+  IChatViewModel,
+  IChatPendingDividerViewModel,
+} from "../common/model/chatViewModel.js";
+import { ChatAgentLocation, ChatModeKind } from "../common/constants.js";
+import { ChatAttachmentModel } from "./attachments/chatAttachmentModel.js";
+import { IChatEditorOptions } from "./widgetHosts/editor/chatEditor.js";
+import { ChatInputPart } from "./widget/input/chatInputPart.js";
+import { ChatWidget, IChatWidgetContrib } from "./widget/chatWidget.js";
+import { ICodeBlockActionContext } from "./widget/chatContentParts/codeBlockPart.js";
+import { AgentSessionTarget } from "./agentSessions/agentSessions.js";
 
 /**
  * A workspace item that can be selected in the workspace picker.
@@ -105,7 +115,9 @@ export interface ISessionTypePickerDelegate {
 	hasGitRepository?(): boolean;
 }
 
-export const IChatWidgetService = createDecorator<IChatWidgetService>('chatWidgetService');
+export const IChatWidgetService = createDecorator<IChatWidgetService>(
+  "chatWidgetService",
+);
 
 export interface IChatWidgetService {
 
@@ -164,9 +176,11 @@ export interface IChatWidgetService {
 	register(newWidget: IChatWidget): IDisposable;
 }
 
-export const ChatViewPaneTarget = Symbol('ChatViewPaneTarget');
+export const ChatViewPaneTarget = Symbol("ChatViewPaneTarget");
 
-export const IQuickChatService = createDecorator<IQuickChatService>('quickChatService');
+export const IQuickChatService = createDecorator<IQuickChatService>(
+  "quickChatService",
+);
 export interface IQuickChatService {
 	readonly _serviceBrand: undefined;
 	readonly onDidClose: Event<void>;
@@ -196,7 +210,9 @@ export interface IQuickChatOpenOptions {
 	selection?: Selection;
 }
 
-export const IChatAccessibilityService = createDecorator<IChatAccessibilityService>('chatAccessibilityService');
+export const IChatAccessibilityService = createDecorator<IChatAccessibilityService>(
+  "chatAccessibilityService",
+);
 export interface IChatAccessibilityService {
 	readonly _serviceBrand: undefined;
 	acceptRequest(uri: URI, skipRequestSignal?: boolean): void;
@@ -226,7 +242,7 @@ export interface IChatFileTreeInfo {
 export type ChatTreeItem = IChatRequestViewModel | IChatResponseViewModel | IChatPendingDividerViewModel;
 
 export interface IChatListItemRendererOptions {
-	readonly renderStyle?: 'compact' | 'minimal';
+	readonly renderStyle?: "compact" | "minimal";
 	readonly noHeader?: boolean;
 	readonly noFooter?: boolean;
 	readonly renderDetectedCommandsWithRequest?: boolean;
@@ -242,7 +258,7 @@ export interface IChatWidgetViewOptions {
 	autoScroll?: boolean | ((mode: ChatModeKind) => boolean);
 	renderInputOnTop?: boolean;
 	renderFollowups?: boolean;
-	renderStyle?: 'compact' | 'minimal';
+	renderStyle?: "compact" | "minimal";
 	renderInputToolbarBelowInput?: boolean;
 	supportsFileReferences?: boolean;
 	filter?: (item: ChatTreeItem) => boolean;
@@ -266,7 +282,7 @@ export interface IChatWidgetViewOptions {
 	defaultElementHeight?: number;
 	editorOverflowWidgetsDomNode?: HTMLElement;
 	enableImplicitContext?: boolean;
-	enableWorkingSet?: 'explicit' | 'implicit';
+	enableWorkingSet?: "explicit" | "implicit";
 	supportsChangingModes?: boolean;
 	dndContainer?: HTMLElement;
 	inputEditorMinLines?: number;
@@ -308,7 +324,7 @@ export interface IChatViewViewContext {
 }
 
 export function isIChatViewViewContext(context: IChatWidgetViewContext): context is IChatViewViewContext {
-	return typeof (context as IChatViewViewContext).viewId === 'string';
+	return typeof (context as IChatViewViewContext).viewId === "string";
 }
 
 export interface IChatResourceViewContext {
@@ -375,7 +391,7 @@ export interface IChatWidget {
 	getContrib<T extends IChatWidgetContrib>(id: string): T | undefined;
 	reveal(item: ChatTreeItem): void;
 	focus(item: ChatTreeItem): void;
-	getSibling(item: ChatTreeItem, type: 'next' | 'previous'): ChatTreeItem | undefined;
+	getSibling(item: ChatTreeItem, type: "next" | "previous"): ChatTreeItem | undefined;
 	getFocus(): ChatTreeItem | undefined;
 	setInput(query?: string): void;
 	getInput(): string;
@@ -444,7 +460,7 @@ export interface IChatWidget {
 	getViewState(): IChatModelInputState | undefined;
 	lockToCodingAgent(name: string, displayName: string, agentId?: string): void;
 	unlockFromCodingAgent(): void;
-	handleDelegationExitIfNeeded(sourceAgent: Pick<IChatAgentData, 'id' | 'name'> | undefined, targetAgent: IChatAgentData | undefined): Promise<void>;
+	handleDelegationExitIfNeeded(sourceAgent: Pick<IChatAgentData, "id" | "name"> | undefined, targetAgent: IChatAgentData | undefined): Promise<void>;
 	executeHandoff(handoff: IHandOff, agentId?: string): Promise<void>;
 
 	delegateScrollFromMouseWheelEvent(event: IMouseWheelEvent): void;
@@ -455,7 +471,9 @@ export interface ICodeBlockActionContextProvider {
 	getCodeBlockContext(editor?: ICodeEditor): ICodeBlockActionContext | undefined;
 }
 
-export const IChatCodeBlockContextProviderService = createDecorator<IChatCodeBlockContextProviderService>('chatCodeBlockContextProviderService');
+export const IChatCodeBlockContextProviderService = createDecorator<IChatCodeBlockContextProviderService>(
+  "chatCodeBlockContextProviderService",
+);
 export interface IChatCodeBlockContextProviderService {
 	readonly _serviceBrand: undefined;
 	readonly providers: ICodeBlockActionContextProvider[];
@@ -463,7 +481,10 @@ export interface IChatCodeBlockContextProviderService {
 }
 
 export const ChatViewId = `workbench.panel.chat.view.${CHAT_PROVIDER_ID}`;
-export const ChatViewContainerId = 'workbench.panel.chat';
+export const ChatViewContainerId = "workbench.panel.chat";
 
-export const HasInstalledAgentPluginsContext = new RawContextKey<boolean>('hasInstalledAgentPlugins', false);
-export const InstalledAgentPluginsViewId = 'workbench.views.agentPlugins.installed';
+export const HasInstalledAgentPluginsContext = new RawContextKey<boolean>(
+  "hasInstalledAgentPlugins",
+  false,
+);
+export const InstalledAgentPluginsViewId = "workbench.views.agentPlugins.installed";

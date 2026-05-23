@@ -3,18 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IAction, Separator } from '../../../../base/common/actions.js';
-import { Disposable, IDisposable } from '../../../../base/common/lifecycle.js';
-import { isMacintosh } from '../../../../base/common/platform.js';
-import { ICodeEditor, IEditorMouseEvent, MouseTargetType } from '../../../../editor/browser/editorBrowser.js';
-import { registerEditorContribution, EditorContributionInstantiation } from '../../../../editor/browser/editorExtensions.js';
-import { IEditorContribution } from '../../../../editor/common/editorCommon.js';
-import { IMenuService, MenuId, MenuItemAction, SubmenuItemAction } from '../../../../platform/actions/common/actions.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { IContextMenuService } from '../../../../platform/contextview/browser/contextView.js';
-import { TextEditorSelectionSource } from '../../../../platform/editor/common/editor.js';
-import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { Registry } from '../../../../platform/registry/common/platform.js';
+import { IAction, Separator } from "../../../../base/common/actions.js";
+import { Disposable, IDisposable } from "../../../../base/common/lifecycle.js";
+import { isMacintosh } from "../../../../base/common/platform.js";
+import { ICodeEditor, IEditorMouseEvent, MouseTargetType } from "../../../../editor/browser/editorBrowser.js";
+import { registerEditorContribution, EditorContributionInstantiation } from "../../../../editor/browser/editorExtensions.js";
+import { IEditorContribution } from "../../../../editor/common/editorCommon.js";
+import { IMenuService, MenuId, MenuItemAction, SubmenuItemAction } from "../../../../platform/actions/common/actions.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { TextEditorSelectionSource } from "../../../../platform/editor/common/editor.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
 
 export interface IGutterActionsGenerator {
 	(context: { lineNumber: number; editor: ICodeEditor; accessor: ServicesAccessor }, result: { push(action: IAction, group?: string): void }): void;
@@ -34,7 +34,7 @@ export class GutterActionsRegistryImpl {
 		return {
 			dispose: () => {
 				this._registeredGutterActionsGenerators.delete(gutterActionsGenerator);
-			}
+			},
 		};
 	}
 
@@ -43,11 +43,13 @@ export class GutterActionsRegistryImpl {
 	}
 }
 
-Registry.add('gutterActionsRegistry', new GutterActionsRegistryImpl());
-export const GutterActionsRegistry: GutterActionsRegistryImpl = Registry.as('gutterActionsRegistry');
+Registry.add("gutterActionsRegistry", new GutterActionsRegistryImpl());
+export const GutterActionsRegistry: GutterActionsRegistryImpl = Registry.as(
+  "gutterActionsRegistry",
+);
 
 export class EditorLineNumberContextMenu extends Disposable implements IEditorContribution {
-	static readonly ID = 'workbench.contrib.editorLineNumberContextMenu';
+	static readonly ID = "workbench.contrib.editorLineNumberContextMenu";
 
 	constructor(
 		private readonly editor: ICodeEditor,
@@ -58,7 +60,9 @@ export class EditorLineNumberContextMenu extends Disposable implements IEditorCo
 	) {
 		super();
 
-		this._register(this.editor.onMouseDown((e: IEditorMouseEvent) => this.doShow(e, false)));
+		this._register(
+      this.editor.onMouseDown((e: IEditorMouseEvent) => this.doShow(e, false)),
+    );
 
 	}
 
@@ -79,8 +83,13 @@ export class EditorLineNumberContextMenu extends Disposable implements IEditorCo
 
 		const lineNumber = e.target.position.lineNumber;
 
-		const contextKeyService = this.contextKeyService.createOverlay([['editorLineNumber', lineNumber]]);
-		const menu = this.menuService.createMenu(MenuId.EditorLineNumberContext, contextKeyService);
+		const contextKeyService = this.contextKeyService.createOverlay([
+      ["editorLineNumber", lineNumber],
+    ]);
+		const menu = this.menuService.createMenu(
+      MenuId.EditorLineNumberContext,
+      contextKeyService,
+    );
 
 		const allActions: [string, (IAction | MenuItemAction | SubmenuItemAction)[]][] = [];
 
@@ -88,11 +97,11 @@ export class EditorLineNumberContextMenu extends Disposable implements IEditorCo
 			for (const generator of GutterActionsRegistry.getGutterActionsGenerators()) {
 				const collectedActions = new Map<string, IAction[]>();
 				generator({ lineNumber, editor: this.editor, accessor }, {
-					push: (action: IAction, group: string = 'navigation') => {
+					push: (action: IAction, group: string = "navigation") => {
 						const actions = (collectedActions.get(group) ?? []);
 						actions.push(action);
 						collectedActions.set(group, actions);
-					}
+					},
 				});
 				for (const [group, actions] of collectedActions.entries()) {
 					allActions.push([group, actions]);
@@ -112,7 +121,7 @@ export class EditorLineNumberContextMenu extends Disposable implements IEditorCo
 					startLineNumber: lineNumber,
 					endLineNumber: lineNumber,
 					startColumn: 1,
-					endColumn: model.getLineLength(lineNumber) + 1
+					endColumn: model.getLineLength(lineNumber) + 1,
 				};
 				const containsSelection = currentSelections?.some(selection => !selection.isEmpty() && selection.intersectRanges(lineRange) !== null);
 				if (!containsSelection) {
@@ -129,4 +138,8 @@ export class EditorLineNumberContextMenu extends Disposable implements IEditorCo
 	}
 }
 
-registerEditorContribution(EditorLineNumberContextMenu.ID, EditorLineNumberContextMenu, EditorContributionInstantiation.AfterFirstRender);
+registerEditorContribution(
+  EditorLineNumberContextMenu.ID,
+  EditorLineNumberContextMenu,
+  EditorContributionInstantiation.AfterFirstRender,
+);

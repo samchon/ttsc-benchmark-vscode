@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../base/common/uri.js';
-import { IWebWorkerService } from '../../../platform/webWorker/browser/webWorkerService.js';
-import { EditorWorkerClient } from '../../browser/services/editorWorkerService.js';
-import { IModelService } from '../../common/services/model.js';
+import { URI } from "../../../base/common/uri.js";
+import { IWebWorkerService } from "../../../platform/webWorker/browser/webWorkerService.js";
+import { EditorWorkerClient } from "../../browser/services/editorWorkerService.js";
+import { IModelService } from "../../common/services/model.js";
 
 /**
  * Create a new web worker that has model syncing capabilities built in.
@@ -57,34 +57,45 @@ class MonacoWebWorkerImpl<T extends object> extends EditorWorkerClient implement
 	private _foreignProxy: Promise<T>;
 
 	constructor(modelService: IModelService, webWorkerService: IWebWorkerService, opts: IInternalWebWorkerOptions) {
-		super(opts.worker, opts.keepIdleModels || false, modelService, webWorkerService);
+		super(
+      opts.worker,
+      opts.keepIdleModels || false,
+      modelService,
+      webWorkerService,
+    );
 		this._foreignModuleHost = opts.host || null;
 		this._foreignProxy = this._getProxy().then(proxy => {
 			return new Proxy({}, {
 				get(target, prop, receiver) {
-					if (prop === 'then') {
+					if (prop === "then") {
 						// Don't forward the call when the proxy is returned in an async function and the runtime tries to .then it.
 						return undefined;
 					}
-					if (typeof prop !== 'string') {
+					if (typeof prop !== "string") {
 						throw new Error(`Not supported`);
 					}
 					return (...args: unknown[]) => {
 						return proxy.$fmr(prop, args);
 					};
-				}
+				},
 			}) as T;
 		});
 	}
 
 	// foreign host request
 	public override fhr(method: string, args: unknown[]): Promise<unknown> {
-		if (!this._foreignModuleHost || typeof this._foreignModuleHost[method] !== 'function') {
-			return Promise.reject(new Error('Missing method ' + method + ' or missing main thread foreign host.'));
+		if (!this._foreignModuleHost || typeof this._foreignModuleHost[method] !== "function") {
+			return Promise.reject(
+        new Error(
+          "Missing method " + method + " or missing main thread foreign host.",
+        ),
+      );
 		}
 
 		try {
-			return Promise.resolve(this._foreignModuleHost[method].apply(this._foreignModuleHost, args));
+			return Promise.resolve(
+        this._foreignModuleHost[method].apply(this._foreignModuleHost, args),
+      );
 		} catch (e) {
 			return Promise.reject(e);
 		}

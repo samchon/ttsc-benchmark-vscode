@@ -3,18 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../../../base/common/cancellation.js';
-import { DocumentSemanticTokensProvider, ProviderResult, SemanticTokens, SemanticTokensLegend } from '../../../../../../editor/common/languages.js';
-import { ITextModel } from '../../../../../../editor/common/model.js';
-import { getPromptsTypeForLanguageId } from '../promptTypes.js';
-import { IPromptsService } from '../service/promptsService.js';
-import { getTarget, isVSCodeOrDefaultTarget } from './promptFileAttributes.js';
+import { CancellationToken } from "../../../../../../base/common/cancellation.js";
+import {
+  DocumentSemanticTokensProvider,
+  ProviderResult,
+  SemanticTokens,
+  SemanticTokensLegend,
+} from "../../../../../../editor/common/languages.js";
+import { ITextModel } from "../../../../../../editor/common/model.js";
+import { getPromptsTypeForLanguageId } from "../promptTypes.js";
+import { IPromptsService } from "../service/promptsService.js";
+import { getTarget, isVSCodeOrDefaultTarget } from "./promptFileAttributes.js";
 
 export class PromptDocumentSemanticTokensProvider implements DocumentSemanticTokensProvider {
 	/**
 	 * Debug display name for this provider.
 	 */
-	public readonly _debugDisplayName: string = 'PromptDocumentSemanticTokensProvider';
+	public readonly _debugDisplayName: string = "PromptDocumentSemanticTokensProvider";
 
 	constructor(
 		@IPromptsService private readonly promptsService: IPromptsService,
@@ -57,7 +62,7 @@ export class PromptDocumentSemanticTokensProvider implements DocumentSemanticTok
 
 		for (const ref of ordered) {
 			// Also include the '#tool:' prefix for syntax highlighting purposes, even if it's not originally part of the variable name itself.
-			const extraCharCount = '#tool:'.length;
+			const extraCharCount = "#tool:".length;
 			const line = ref.range.startLineNumber - 1; // zero-based
 			const char = ref.range.startColumn - extraCharCount - 1; // zero-based
 			const length = ref.range.endColumn - ref.range.startColumn + extraCharCount;
@@ -75,7 +80,7 @@ export class PromptDocumentSemanticTokensProvider implements DocumentSemanticTok
 	}
 
 	getLegend(): SemanticTokensLegend {
-		return { tokenTypes: ['variable'], tokenModifiers: [] };
+		return { tokenTypes: ["variable"], tokenModifiers: [] };
 	}
 
 	releaseDocumentSemanticTokens(resultId: string | undefined): void {

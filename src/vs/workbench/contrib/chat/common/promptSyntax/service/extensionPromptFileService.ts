@@ -3,32 +3,32 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../../../base/common/cancellation.js';
-import { CancellationError } from '../../../../../../base/common/errors.js';
-import { Emitter, Event } from '../../../../../../base/common/event.js';
-import { Disposable, DisposableStore, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { ResourceMap } from '../../../../../../base/common/map.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { IModelService } from '../../../../../../editor/common/services/model.js';
-import { ContextKeyExpr, IContextKeyService } from '../../../../../../platform/contextkey/common/contextkey.js';
-import { IExtensionDescription } from '../../../../../../platform/extensions/common/extensions.js';
-import { IFileService } from '../../../../../../platform/files/common/files.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { IExtensionService } from '../../../../../services/extensions/common/extensions.js';
-import { IFilesConfigurationService } from '../../../../../services/filesConfiguration/common/filesConfigurationService.js';
-import { getSkillFolderName } from '../config/promptFileLocations.js';
-import { ParsedPromptFile, PromptFileParser } from '../promptFileParser.js';
-import { PromptFileSource, PromptsType } from '../promptTypes.js';
+import { CancellationToken } from "../../../../../../base/common/cancellation.js";
+import { CancellationError } from "../../../../../../base/common/errors.js";
+import { Emitter, Event } from "../../../../../../base/common/event.js";
+import { Disposable, DisposableStore, IDisposable } from "../../../../../../base/common/lifecycle.js";
+import { ResourceMap } from "../../../../../../base/common/map.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { IModelService } from "../../../../../../editor/common/services/model.js";
+import { ContextKeyExpr, IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { IExtensionDescription } from "../../../../../../platform/extensions/common/extensions.js";
+import { IFileService } from "../../../../../../platform/files/common/files.js";
+import { ILogService } from "../../../../../../platform/log/common/log.js";
+import { IExtensionService } from "../../../../../services/extensions/common/extensions.js";
+import { IFilesConfigurationService } from "../../../../../services/filesConfiguration/common/filesConfigurationService.js";
+import { getSkillFolderName } from "../config/promptFileLocations.js";
+import { ParsedPromptFile, PromptFileParser } from "../promptFileParser.js";
+import { PromptFileSource, PromptsType } from "../promptTypes.js";
 import {
-	CUSTOM_AGENT_PROVIDER_ACTIVATION_EVENT,
-	IExtensionPromptPath,
-	INSTRUCTIONS_PROVIDER_ACTIVATION_EVENT,
-	IPromptFileContext,
-	IPromptFileResource,
-	PROMPT_FILE_PROVIDER_ACTIVATION_EVENT,
-	PromptsStorage,
-	SKILL_PROVIDER_ACTIVATION_EVENT,
-} from './promptsService.js';
+  CUSTOM_AGENT_PROVIDER_ACTIVATION_EVENT,
+  IExtensionPromptPath,
+  INSTRUCTIONS_PROVIDER_ACTIVATION_EVENT,
+  IPromptFileContext,
+  IPromptFileResource,
+  PROMPT_FILE_PROVIDER_ACTIVATION_EVENT,
+  PromptsStorage,
+  SKILL_PROVIDER_ACTIVATION_EVENT,
+} from "./promptsService.js";
 
 /**
  * Event payload emitted by {@link ExtensionPromptFileService.onDidChange}.
@@ -45,11 +45,11 @@ type PromptFileProviderEntry = {
 };
 
 const ALL_PROMPT_TYPES: readonly PromptsType[] = [
-	PromptsType.prompt,
-	PromptsType.instructions,
-	PromptsType.agent,
-	PromptsType.skill,
-	PromptsType.hook,
+  PromptsType.prompt,
+  PromptsType.instructions,
+  PromptsType.agent,
+  PromptsType.skill,
+  PromptsType.hook,
 ];
 
 /**
@@ -68,12 +68,12 @@ export class ExtensionPromptFileService extends Disposable {
 	 * Files contributed via extension contribution points, keyed by type then URI.
 	 */
 	private readonly contributedFiles = {
-		[PromptsType.prompt]: new ResourceMap<Promise<IExtensionPromptPath>>(),
-		[PromptsType.instructions]: new ResourceMap<Promise<IExtensionPromptPath>>(),
-		[PromptsType.agent]: new ResourceMap<Promise<IExtensionPromptPath>>(),
-		[PromptsType.skill]: new ResourceMap<Promise<IExtensionPromptPath>>(),
-		[PromptsType.hook]: new ResourceMap<Promise<IExtensionPromptPath>>(),
-	};
+    [PromptsType.prompt]: new ResourceMap<Promise<IExtensionPromptPath>>(),
+    [PromptsType.instructions]: new ResourceMap<Promise<IExtensionPromptPath>>(),
+    [PromptsType.agent]: new ResourceMap<Promise<IExtensionPromptPath>>(),
+    [PromptsType.skill]: new ResourceMap<Promise<IExtensionPromptPath>>(),
+    [PromptsType.hook]: new ResourceMap<Promise<IExtensionPromptPath>>(),
+  };
 
 	/**
 	 * Providers registered via the proposed extension API.
@@ -88,7 +88,9 @@ export class ExtensionPromptFileService extends Disposable {
 	private readonly _contributedWhenClauses = new Map<string, string>();
 	private readonly _providerWhenClauses = new Map<PromptFileProviderEntry, readonly string[]>();
 
-	private readonly _onDidChange = this._register(new Emitter<IExtensionPromptFilesChangeEvent>());
+	private readonly _onDidChange = this._register(
+    new Emitter<IExtensionPromptFilesChangeEvent>(),
+  );
 	public readonly onDidChange: Event<IExtensionPromptFilesChangeEvent> = this._onDidChange.event;
 
 	/**
@@ -128,13 +130,19 @@ export class ExtensionPromptFileService extends Disposable {
 	 */
 	public async getExtensionPromptFiles(type: PromptsType, token: CancellationToken): Promise<readonly IExtensionPromptPath[]> {
 		await this.extensionService.whenInstalledExtensionsRegistered();
-		const settledResults = await Promise.allSettled(this.contributedFiles[type].values());
+		const settledResults = await Promise.allSettled(
+      this.contributedFiles[type].values(),
+    );
 		const contributedFiles = settledResults
-			.filter((result): result is PromiseFulfilledResult<IExtensionPromptPath> => result.status === 'fulfilled')
+			.filter((result): result is PromiseFulfilledResult<IExtensionPromptPath> => result.status === "fulfilled")
 			.map(result => result.value);
 
 		const activationEvent = this._getProviderActivationEvent(type);
-		const providerFiles = activationEvent ? await this._listFromProviders(type, activationEvent, token) : [];
+		const providerFiles = activationEvent ? await this._listFromProviders(
+      type,
+      activationEvent,
+      token,
+    ) : [];
 
 		return [...contributedFiles, ...providerFiles].filter(file => {
 			if (!file.when) {
@@ -194,7 +202,7 @@ export class ExtensionPromptFileService extends Disposable {
 					this._updateContributedWhenKeys();
 				}
 				this._onDidChange.fire({ type });
-			}
+			},
 		};
 	}
 
@@ -208,15 +216,21 @@ export class ExtensionPromptFileService extends Disposable {
 		onDidChangePromptFiles?: Event<void>;
 		providePromptFiles: (context: IPromptFileContext, token: CancellationToken) => Promise<IPromptFileResource[] | undefined>;
 	}): IDisposable {
-		const providerEntry: PromptFileProviderEntry = { extension, type, ...provider };
+		const providerEntry: PromptFileProviderEntry = {
+      extension,
+      type,
+      ...provider,
+    };
 		this._promptFileProviders.push(providerEntry);
 
 		const disposables = new DisposableStore();
 
 		if (provider.onDidChangePromptFiles) {
-			disposables.add(provider.onDidChangePromptFiles(() => {
-				this._onDidChange.fire({ type });
-			}));
+			disposables.add(
+        provider.onDidChangePromptFiles(() => {
+          this._onDidChange.fire({ type });
+        }),
+      );
 		}
 
 		this._onDidChange.fire({ type });
@@ -230,7 +244,7 @@ export class ExtensionPromptFileService extends Disposable {
 					this._updateContributedWhenKeys();
 					this._onDidChange.fire({ type });
 				}
-			}
+			},
 		});
 
 		return disposables;
@@ -251,7 +265,10 @@ export class ExtensionPromptFileService extends Disposable {
 		for (const providerEntry of providers) {
 			try {
 				const files = await providerEntry.providePromptFiles({}, token);
-				this._providerWhenClauses.set(providerEntry, files?.flatMap(file => file.when ? [file.when] : []) ?? []);
+				this._providerWhenClauses.set(
+          providerEntry,
+          files?.flatMap(file => file.when ? [file.when] : []) ?? [],
+        );
 				this._updateContributedWhenKeys();
 				if (!files || token.isCancellationRequested) {
 					continue;
@@ -272,7 +289,10 @@ export class ExtensionPromptFileService extends Disposable {
 					} satisfies IExtensionPromptPath);
 				}
 			} catch (e) {
-				this.logger.error(`[listFromProviders] Failed to get ${type} files from provider`, e instanceof Error ? e.message : String(e));
+				this.logger.error(
+          `[listFromProviders] Failed to get ${type} files from provider`,
+          e instanceof Error ? e.message : String(e),
+        );
 			}
 		}
 
@@ -304,11 +324,11 @@ export class ExtensionPromptFileService extends Disposable {
 		if (!this._pendingReadonlyFlush) {
 			this._pendingReadonlyFlush = true;
 			queueMicrotask(() => {
-				const uris = this._pendingReadonlyUris;
-				this._pendingReadonlyUris = [];
-				this._pendingReadonlyFlush = false;
-				void this.filesConfigService.updateReadonly(uris, true);
-			});
+        const uris = this._pendingReadonlyUris;
+        this._pendingReadonlyUris = [];
+        this._pendingReadonlyFlush = false;
+        void this.filesConfigService.updateReadonly(uris, true);
+      });
 		}
 	}
 
@@ -338,7 +358,9 @@ export class ExtensionPromptFileService extends Disposable {
 
 		let name = parsedFile.header?.name;
 		if (!name) {
-			this.logger.debug(`[validateAndSanitizeSkillFile] Agent skill file missing name attribute, using folder name "${folderName}": ${uri}`);
+			this.logger.debug(
+        `[validateAndSanitizeSkillFile] Agent skill file missing name attribute, using folder name "${folderName}": ${uri}`,
+      );
 			name = folderName;
 		}
 
@@ -349,11 +371,16 @@ export class ExtensionPromptFileService extends Disposable {
 
 		// If sanitized name doesn't match folder name, use folder name (consistent with computeSkillDiscoveryInfo)
 		if (sanitizedName !== folderName) {
-			this.logger.debug(`[validateAndSanitizeSkillFile] Agent skill name "${sanitizedName}" does not match folder name "${folderName}", using folder name: ${uri}`);
+			this.logger.debug(
+        `[validateAndSanitizeSkillFile] Agent skill name "${sanitizedName}" does not match folder name "${folderName}", using folder name: ${uri}`,
+      );
 			sanitizedName = folderName;
 		}
 
-		const sanitizedDescription = description ? this._truncateAgentSkillDescription(description, uri) : undefined;
+		const sanitizedDescription = description ? this._truncateAgentSkillDescription(
+      description,
+      uri,
+    ) : undefined;
 		return { name: sanitizedName, description: sanitizedDescription };
 	}
 
@@ -371,17 +398,21 @@ export class ExtensionPromptFileService extends Disposable {
 
 	private _sanitizeAgentSkillText(text: string): string {
 		// Remove XML tags
-		return text.replace(/<[^>]+>/g, '');
+		return text.replace(/<[^>]+>/g, "");
 	}
 
 	private _truncateAgentSkillName(name: string, uri: URI): string {
 		const MAX_NAME_LENGTH = 64;
 		const sanitized = this._sanitizeAgentSkillText(name);
 		if (sanitized !== name) {
-			this.logger.debug(`[findAgentSkills] Agent skill name contains XML tags, removed: ${uri}`);
+			this.logger.debug(
+        `[findAgentSkills] Agent skill name contains XML tags, removed: ${uri}`,
+      );
 		}
 		if (sanitized.length > MAX_NAME_LENGTH) {
-			this.logger.debug(`[findAgentSkills] Agent skill name exceeds ${MAX_NAME_LENGTH} characters, truncated: ${uri}`);
+			this.logger.debug(
+        `[findAgentSkills] Agent skill name exceeds ${MAX_NAME_LENGTH} characters, truncated: ${uri}`,
+      );
 			return sanitized.substring(0, MAX_NAME_LENGTH);
 		}
 		return sanitized;
@@ -391,10 +422,14 @@ export class ExtensionPromptFileService extends Disposable {
 		const MAX_DESCRIPTION_LENGTH = 1024;
 		const sanitized = this._sanitizeAgentSkillText(description);
 		if (sanitized !== description) {
-			this.logger.debug(`[findAgentSkills] Agent skill description contains XML tags, removed: ${uri}`);
+			this.logger.debug(
+        `[findAgentSkills] Agent skill description contains XML tags, removed: ${uri}`,
+      );
 		}
 		if (sanitized.length > MAX_DESCRIPTION_LENGTH) {
-			this.logger.debug(`[findAgentSkills] Agent skill description exceeds ${MAX_DESCRIPTION_LENGTH} characters, truncated: ${uri}`);
+			this.logger.debug(
+        `[findAgentSkills] Agent skill description exceeds ${MAX_DESCRIPTION_LENGTH} characters, truncated: ${uri}`,
+      );
 			return sanitized.substring(0, MAX_DESCRIPTION_LENGTH);
 		}
 		return sanitized;

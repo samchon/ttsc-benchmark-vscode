@@ -3,31 +3,58 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IKeyboardEvent } from '../../base/browser/keyboardEvent.js';
-import { IMouseEvent, IMouseWheelEvent } from '../../base/browser/mouseEvent.js';
-import { IBoundarySashes } from '../../base/browser/ui/sash/sash.js';
-import { Event } from '../../base/common/event.js';
-import { MenuId } from '../../platform/actions/common/actions.js';
-import { IContextKeyService } from '../../platform/contextkey/common/contextkey.js';
-import { ServicesAccessor } from '../../platform/instantiation/common/instantiation.js';
-import { ConfigurationChangedEvent, EditorLayoutInfo, EditorOption, FindComputedEditorOptionValueById, IComputedEditorOptions, IDiffEditorOptions, IEditorOptions, OverviewRulerPosition } from '../common/config/editorOptions.js';
-import { IDimension } from '../common/core/2d/dimension.js';
-import { TextEdit } from '../common/core/edits/textEdit.js';
-import { IPosition, Position } from '../common/core/position.js';
-import { IRange, Range } from '../common/core/range.js';
-import { Selection } from '../common/core/selection.js';
-import { IWordAtPosition } from '../common/core/wordHelper.js';
-import { ICursorPositionChangedEvent, ICursorSelectionChangedEvent } from '../common/cursorEvents.js';
-import { IDiffComputationResult, ILineChange } from '../common/diff/legacyLinesDiffComputer.js';
-import * as editorCommon from '../common/editorCommon.js';
-import { GlyphMarginLane, ICursorStateComputer, IIdentifiedSingleEditOperation, IModelDecoration, IModelDecorationsChangeAccessor, IModelDeltaDecoration, ITextModel, PositionAffinity } from '../common/model.js';
-import { InjectedText } from '../common/modelLineProjectionData.js';
-import { TextModelEditSource } from '../common/textModelEditSource.js';
-import { IModelContentChangedEvent, IModelDecorationsChangedEvent, IModelLanguageChangedEvent, IModelLanguageConfigurationChangedEvent, IModelOptionsChangedEvent, IModelTokensChangedEvent, ModelFontChangedEvent, ModelLineHeightChangedEvent } from '../common/textModelEvents.js';
-import { IEditorWhitespace, IViewModel } from '../common/viewModel.js';
-import { OverviewRulerZone } from '../common/viewModel/overviewZoneManager.js';
-import { IEditorConstructionOptions } from './config/editorConfiguration.js';
-import { IClipboardCopyEvent, IClipboardPasteEvent } from './controller/editContext/clipboardUtils.js';
+import { IKeyboardEvent } from "../../base/browser/keyboardEvent.js";
+import { IMouseEvent, IMouseWheelEvent } from "../../base/browser/mouseEvent.js";
+import { IBoundarySashes } from "../../base/browser/ui/sash/sash.js";
+import { Event } from "../../base/common/event.js";
+import { MenuId } from "../../platform/actions/common/actions.js";
+import { IContextKeyService } from "../../platform/contextkey/common/contextkey.js";
+import { ServicesAccessor } from "../../platform/instantiation/common/instantiation.js";
+import {
+  ConfigurationChangedEvent,
+  EditorLayoutInfo,
+  EditorOption,
+  FindComputedEditorOptionValueById,
+  IComputedEditorOptions,
+  IDiffEditorOptions,
+  IEditorOptions,
+  OverviewRulerPosition,
+} from "../common/config/editorOptions.js";
+import { IDimension } from "../common/core/2d/dimension.js";
+import { TextEdit } from "../common/core/edits/textEdit.js";
+import { IPosition, Position } from "../common/core/position.js";
+import { IRange, Range } from "../common/core/range.js";
+import { Selection } from "../common/core/selection.js";
+import { IWordAtPosition } from "../common/core/wordHelper.js";
+import { ICursorPositionChangedEvent, ICursorSelectionChangedEvent } from "../common/cursorEvents.js";
+import { IDiffComputationResult, ILineChange } from "../common/diff/legacyLinesDiffComputer.js";
+import * as editorCommon from "../common/editorCommon.js";
+import {
+  GlyphMarginLane,
+  ICursorStateComputer,
+  IIdentifiedSingleEditOperation,
+  IModelDecoration,
+  IModelDecorationsChangeAccessor,
+  IModelDeltaDecoration,
+  ITextModel,
+  PositionAffinity,
+} from "../common/model.js";
+import { InjectedText } from "../common/modelLineProjectionData.js";
+import { TextModelEditSource } from "../common/textModelEditSource.js";
+import {
+  IModelContentChangedEvent,
+  IModelDecorationsChangedEvent,
+  IModelLanguageChangedEvent,
+  IModelLanguageConfigurationChangedEvent,
+  IModelOptionsChangedEvent,
+  IModelTokensChangedEvent,
+  ModelFontChangedEvent,
+  ModelLineHeightChangedEvent,
+} from "../common/textModelEvents.js";
+import { IEditorWhitespace, IViewModel } from "../common/viewModel.js";
+import { OverviewRulerZone } from "../common/viewModel/overviewZoneManager.js";
+import { IEditorConstructionOptions } from "./config/editorConfiguration.js";
+import { IClipboardCopyEvent, IClipboardPasteEvent } from "./controller/editContext/clipboardUtils.js";
 
 /**
  * A view zone is a full horizontal rectangle that 'pushes' text down.
@@ -511,7 +538,7 @@ export interface IMouseTargetOverviewRuler extends IBaseMouseTarget {
 }
 export interface IMouseTargetOutsideEditor extends IBaseMouseTarget {
 	readonly type: MouseTargetType.OUTSIDE_EDITOR;
-	readonly outsidePosition: 'above' | 'below' | 'left' | 'right';
+	readonly outsidePosition: "above" | "below" | "left" | "right";
 	readonly outsideDistance: number;
 }
 /**
@@ -1450,7 +1477,7 @@ export interface IDiffEditor extends editorCommon.IEditor {
 	/**
 	 * Jumps to the next or previous diff.
 	 */
-	goToDiff(target: 'next' | 'previous'): void;
+	goToDiff(target: "next" | "previous"): void;
 
 	/**
 	 * Scrolls to the first diff.
@@ -1469,7 +1496,7 @@ export interface IDiffEditor extends editorCommon.IEditor {
  *@internal
  */
 export function isCodeEditor(thing: unknown): thing is ICodeEditor {
-	if (thing && typeof (<ICodeEditor>thing).getEditorType === 'function') {
+	if (thing && typeof (<ICodeEditor>thing).getEditorType === "function") {
 		return (<ICodeEditor>thing).getEditorType() === editorCommon.EditorType.ICodeEditor;
 	} else {
 		return false;
@@ -1480,7 +1507,7 @@ export function isCodeEditor(thing: unknown): thing is ICodeEditor {
  *@internal
  */
 export function isDiffEditor(thing: unknown): thing is IDiffEditor {
-	if (thing && typeof (<IDiffEditor>thing).getEditorType === 'function') {
+	if (thing && typeof (<IDiffEditor>thing).getEditorType === "function") {
 		return (<IDiffEditor>thing).getEditorType() === editorCommon.EditorType.IDiffEditor;
 	} else {
 		return false;
@@ -1492,8 +1519,8 @@ export function isDiffEditor(thing: unknown): thing is IDiffEditor {
  */
 export function isCompositeEditor(thing: unknown): thing is editorCommon.ICompositeCodeEditor {
 	return !!thing
-		&& typeof thing === 'object'
-		&& typeof (<editorCommon.ICompositeCodeEditor>thing).onDidChangeActiveEditor === 'function';
+		&& typeof thing === "object"
+		&& typeof (<editorCommon.ICompositeCodeEditor>thing).onDidChangeActiveEditor === "function";
 
 }
 
@@ -1532,7 +1559,7 @@ export function getIEditor(thing: unknown): editorCommon.IEditor | null {
  */
 export function isIOverlayWidgetPositionCoordinates(thing: unknown): thing is IOverlayWidgetPositionCoordinates {
 	return !!thing
-		&& typeof thing === 'object'
-		&& typeof (<IOverlayWidgetPositionCoordinates>thing).top === 'number'
-		&& typeof (<IOverlayWidgetPositionCoordinates>thing).left === 'number';
+		&& typeof thing === "object"
+		&& typeof (<IOverlayWidgetPositionCoordinates>thing).top === "number"
+		&& typeof (<IOverlayWidgetPositionCoordinates>thing).left === "number";
 }

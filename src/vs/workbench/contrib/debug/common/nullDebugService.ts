@@ -3,53 +3,75 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import { Disposable, IDisposable, IReference } from '../../../../base/common/lifecycle.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IAdapterManager, IBreakpoint, IConfig, IConfigurationManager, IDebugModel, IDebugService, IDebugSession, IDebugSessionOptions, IEnablement, IExceptionBreakpoint, IExpression, IExpressionContainer, ILaunch, IStackFrame, IThread, IViewModel, State } from './debug.js';
-import type { IDataBreakpointOptions, IFunctionBreakpointOptions, IInstructionBreakpointOptions } from './debugModel.js';
-import { DebugVisualizer, IDebugVisualizerService } from './debugVisualizers.js';
+import { Event } from "../../../../base/common/event.js";
+import { Disposable, IDisposable, IReference } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import {
+  IAdapterManager,
+  IBreakpoint,
+  IConfig,
+  IConfigurationManager,
+  IDebugModel,
+  IDebugService,
+  IDebugSession,
+  IDebugSessionOptions,
+  IEnablement,
+  IExceptionBreakpoint,
+  IExpression,
+  IExpressionContainer,
+  ILaunch,
+  IStackFrame,
+  IThread,
+  IViewModel,
+  State,
+} from "./debug.js";
+import type {
+  IDataBreakpointOptions,
+  IFunctionBreakpointOptions,
+  IInstructionBreakpointOptions,
+} from "./debugModel.js";
+import { DebugVisualizer, IDebugVisualizerService } from "./debugVisualizers.js";
 
 const nullViewModel: IViewModel = {
-	getId(): string { return 'root'; },
-	focusedSession: undefined,
-	focusedThread: undefined,
-	focusedStackFrame: undefined,
-	setVisualizedExpression(): void { },
-	getVisualizedExpression(): IExpression | string | undefined { return undefined; },
-	getSelectedExpression(): undefined { return undefined; },
-	setSelectedExpression(): void { },
-	updateViews(): void { },
-	isMultiSessionView(): boolean { return false; },
-	onDidFocusSession: Event.None,
-	onDidFocusThread: Event.None,
-	onDidFocusStackFrame: Event.None,
-	onDidSelectExpression: Event.None,
-	onDidEvaluateLazyExpression: Event.None,
-	onDidChangeVisualization: Event.None,
-	onWillUpdateViews: Event.None,
-	evaluateLazyExpression(_expression: IExpressionContainer): void { },
+  getId(): string { return "root"; },
+  focusedSession: undefined,
+  focusedThread: undefined,
+  focusedStackFrame: undefined,
+  setVisualizedExpression(): void { },
+  getVisualizedExpression(): IExpression | string | undefined { return undefined; },
+  getSelectedExpression(): undefined { return undefined; },
+  setSelectedExpression(): void { },
+  updateViews(): void { },
+  isMultiSessionView(): boolean { return false; },
+  onDidFocusSession: Event.None,
+  onDidFocusThread: Event.None,
+  onDidFocusStackFrame: Event.None,
+  onDidSelectExpression: Event.None,
+  onDidEvaluateLazyExpression: Event.None,
+  onDidChangeVisualization: Event.None,
+  onWillUpdateViews: Event.None,
+  evaluateLazyExpression(_expression: IExpressionContainer): void { },
 };
 
 const nullDebugModel: IDebugModel = {
-	getId(): string { return 'root'; },
-	getSession(): undefined { return undefined; },
-	getSessions(): IDebugSession[] { return []; },
-	getBreakpoints(): readonly IBreakpoint[] { return []; },
-	areBreakpointsActivated(): boolean { return false; },
-	getFunctionBreakpoints() { return []; },
-	getDataBreakpoints() { return []; },
-	getExceptionBreakpoints() { return []; },
-	getExceptionBreakpointsForSession() { return []; },
-	getInstructionBreakpoints() { return []; },
-	getWatchExpressions() { return []; },
-	registerBreakpointModes(): void { },
-	getBreakpointModes() { return []; },
-	onDidChangeBreakpoints: Event.None,
-	onDidChangeCallStack: Event.None,
-	onDidChangeWatchExpressions: Event.None,
-	onDidChangeWatchExpressionValue: Event.None,
-	async fetchCallstack(): Promise<void> { },
+  getId(): string { return "root"; },
+  getSession(): undefined { return undefined; },
+  getSessions(): IDebugSession[] { return []; },
+  getBreakpoints(): readonly IBreakpoint[] { return []; },
+  areBreakpointsActivated(): boolean { return false; },
+  getFunctionBreakpoints() { return []; },
+  getDataBreakpoints() { return []; },
+  getExceptionBreakpoints() { return []; },
+  getExceptionBreakpointsForSession() { return []; },
+  getInstructionBreakpoints() { return []; },
+  getWatchExpressions() { return []; },
+  registerBreakpointModes(): void { },
+  getBreakpointModes() { return []; },
+  onDidChangeBreakpoints: Event.None,
+  onDidChangeCallStack: Event.None,
+  onDidChangeWatchExpressions: Event.None,
+  onDidChangeWatchExpressionValue: Event.None,
+  async fetchCallstack(): Promise<void> { },
 };
 
 const nullConfigurationManager: IConfigurationManager = {
@@ -76,22 +98,22 @@ const nullConfigurationManager: IConfigurationManager = {
 };
 
 const nullAdapterManager: IAdapterManager = {
-	onDidRegisterDebugger: Event.None,
-	hasEnabledDebuggers(): boolean { return false; },
-	async getDebugAdapterDescriptor() { return undefined; },
-	getDebuggerLabel() { return undefined; },
-	someDebuggerInterestedInLanguage(): boolean { return false; },
-	getDebugger() { return undefined; },
-	async activateDebuggers(): Promise<void> { },
-	registerDebugAdapterFactory() { return Disposable.None; },
-	createDebugAdapter() { return undefined; },
-	registerDebugAdapterDescriptorFactory() { return Disposable.None; },
-	unregisterDebugAdapterDescriptorFactory(): void { },
-	async substituteVariables(_debugType: string, _folder: undefined, config: IConfig) { return config; },
-	async runInTerminal() { return undefined; },
-	getEnabledDebugger() { return undefined; },
-	async guessDebugger() { return undefined; },
-	get onDidDebuggersExtPointRead() { return Event.None; },
+  onDidRegisterDebugger: Event.None,
+  hasEnabledDebuggers(): boolean { return false; },
+  async getDebugAdapterDescriptor() { return undefined; },
+  getDebuggerLabel() { return undefined; },
+  someDebuggerInterestedInLanguage(): boolean { return false; },
+  getDebugger() { return undefined; },
+  async activateDebuggers(): Promise<void> { },
+  registerDebugAdapterFactory() { return Disposable.None; },
+  createDebugAdapter() { return undefined; },
+  registerDebugAdapterDescriptorFactory() { return Disposable.None; },
+  unregisterDebugAdapterDescriptorFactory(): void { },
+  async substituteVariables(_debugType: string, _folder: undefined, config: IConfig) { return config; },
+  async runInTerminal() { return undefined; },
+  getEnabledDebugger() { return undefined; },
+  async guessDebugger() { return undefined; },
+  get onDidDebuggersExtPointRead() { return Event.None; },
 };
 
 export class NullDebugService implements IDebugService {
@@ -145,7 +167,10 @@ export class NullDebugVisualizerService implements IDebugVisualizerService {
 
 	declare readonly _serviceBrand: undefined;
 
-	async getApplicableFor(): Promise<IReference<DebugVisualizer[]>> { return { object: [], dispose() { } }; }
+	async getApplicableFor(): Promise<IReference<DebugVisualizer[]>> { return {
+    object: [],
+    dispose() { },
+  }; }
 	register(): IDisposable { return Disposable.None; }
 	registerTree(): IDisposable { return Disposable.None; }
 	async getVisualizedNodeFor(): Promise<undefined> { return undefined; }

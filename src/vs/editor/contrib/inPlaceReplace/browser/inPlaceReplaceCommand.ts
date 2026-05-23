@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Range } from '../../../common/core/range.js';
-import { Selection } from '../../../common/core/selection.js';
-import { ICommand, ICursorStateComputerData, IEditOperationBuilder } from '../../../common/editorCommon.js';
-import { ITextModel } from '../../../common/model.js';
+import { Range } from "../../../common/core/range.js";
+import { Selection } from "../../../common/core/selection.js";
+import { ICommand, ICursorStateComputerData, IEditOperationBuilder } from "../../../common/editorCommon.js";
+import { ITextModel } from "../../../common/model.js";
 
 export class InPlaceReplaceCommand implements ICommand {
 
@@ -31,18 +31,18 @@ export class InPlaceReplaceCommand implements ICommand {
 		if (!this._originalSelection.isEmpty()) {
 			// Preserve selection and extends to typed text
 			return new Selection(
-				srcRange.endLineNumber,
-				srcRange.endColumn - this._text.length,
-				srcRange.endLineNumber,
-				srcRange.endColumn
-			);
+        srcRange.endLineNumber,
+        srcRange.endColumn - this._text.length,
+        srcRange.endLineNumber,
+        srcRange.endColumn,
+      );
 		}
 
 		return new Selection(
-			srcRange.endLineNumber,
-			Math.min(this._originalSelection.positionColumn, srcRange.endColumn),
-			srcRange.endLineNumber,
-			Math.min(this._originalSelection.positionColumn, srcRange.endColumn)
-		);
+      srcRange.endLineNumber,
+      Math.min(this._originalSelection.positionColumn, srcRange.endColumn),
+      srcRange.endLineNumber,
+      Math.min(this._originalSelection.positionColumn, srcRange.endColumn),
+    );
 	}
 }

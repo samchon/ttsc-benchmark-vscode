@@ -3,11 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { registerSingleton, InstantiationType } from '../../../../platform/instantiation/common/extensions.js';
-import { IBrowserViewWorkbenchService, IBrowserViewCDPService, IBrowserViewModel, IBrowserEditorViewState } from '../common/browserView.js';
-import { Event } from '../../../../base/common/event.js';
-import { CDPEvent, CDPRequest, CDPResponse } from '../../../../platform/browserView/common/cdp/types.js';
-import { BrowserEditorInput } from '../common/browserEditorInput.js';
+import { registerSingleton, InstantiationType } from "../../../../platform/instantiation/common/extensions.js";
+import {
+  IBrowserViewWorkbenchService,
+  IBrowserViewCDPService,
+  IBrowserViewModel,
+  IBrowserEditorViewState,
+} from "../common/browserView.js";
+import { Event } from "../../../../base/common/event.js";
+import { CDPEvent, CDPRequest, CDPResponse } from "../../../../platform/browserView/common/cdp/types.js";
+import { BrowserEditorInput } from "../common/browserEditorInput.js";
 
 class WebBrowserViewWorkbenchService implements IBrowserViewWorkbenchService {
 	declare readonly _serviceBrand: undefined;
@@ -23,7 +28,7 @@ class WebBrowserViewWorkbenchService implements IBrowserViewWorkbenchService {
 	}
 
 	getOrCreateLazy(_id: string, _state: IBrowserEditorViewState): BrowserEditorInput {
-		throw new Error('Integrated Browser is not available in web.');
+		throw new Error("Integrated Browser is not available in web.");
 	}
 
 	getBrowserViewModel(_id: string): IBrowserViewModel | undefined {
@@ -38,7 +43,7 @@ class WebBrowserViewCDPService implements IBrowserViewCDPService {
 	declare readonly _serviceBrand: undefined;
 
 	async createSessionGroup(_browserId: string): Promise<string> {
-		throw new Error('Integrated Browser is not available in web.');
+		throw new Error("Integrated Browser is not available in web.");
 	}
 
 	async destroySessionGroup(_groupId: string): Promise<void> { }
@@ -54,5 +59,13 @@ class WebBrowserViewCDPService implements IBrowserViewCDPService {
 	}
 }
 
-registerSingleton(IBrowserViewWorkbenchService, WebBrowserViewWorkbenchService, InstantiationType.Delayed);
-registerSingleton(IBrowserViewCDPService, WebBrowserViewCDPService, InstantiationType.Delayed);
+registerSingleton(
+  IBrowserViewWorkbenchService,
+  WebBrowserViewWorkbenchService,
+  InstantiationType.Delayed,
+);
+registerSingleton(
+  IBrowserViewCDPService,
+  WebBrowserViewCDPService,
+  InstantiationType.Delayed,
+);

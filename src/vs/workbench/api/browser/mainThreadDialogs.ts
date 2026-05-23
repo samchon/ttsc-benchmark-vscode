@@ -3,10 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../base/common/uri.js';
-import { MainThreadDiaglogsShape, MainContext, MainThreadDialogOpenOptions, MainThreadDialogSaveOptions } from '../common/extHost.protocol.js';
-import { extHostNamedCustomer, IExtHostContext } from '../../services/extensions/common/extHostCustomers.js';
-import { IFileDialogService, IOpenDialogOptions, ISaveDialogOptions } from '../../../platform/dialogs/common/dialogs.js';
+import { URI } from "../../../base/common/uri.js";
+import {
+  MainThreadDiaglogsShape,
+  MainContext,
+  MainThreadDialogOpenOptions,
+  MainThreadDialogSaveOptions,
+} from "../common/extHost.protocol.js";
+import { extHostNamedCustomer, IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+import { IFileDialogService, IOpenDialogOptions, ISaveDialogOptions } from "../../../platform/dialogs/common/dialogs.js";
 
 @extHostNamedCustomer(MainContext.MainThreadDialogs)
 export class MainThreadDialogs implements MainThreadDiaglogsShape {
@@ -27,7 +32,9 @@ export class MainThreadDialogs implements MainThreadDiaglogsShape {
 		if (!convertedOptions.defaultUri) {
 			convertedOptions.defaultUri = await this._fileDialogService.defaultFilePath();
 		}
-		return Promise.resolve(this._fileDialogService.showOpenDialog(convertedOptions));
+		return Promise.resolve(
+      this._fileDialogService.showOpenDialog(convertedOptions),
+    );
 	}
 
 	async $showSaveDialog(options?: MainThreadDialogSaveOptions): Promise<URI | undefined> {
@@ -35,19 +42,21 @@ export class MainThreadDialogs implements MainThreadDiaglogsShape {
 		if (!convertedOptions.defaultUri) {
 			convertedOptions.defaultUri = await this._fileDialogService.defaultFilePath();
 		}
-		return Promise.resolve(this._fileDialogService.showSaveDialog(convertedOptions));
+		return Promise.resolve(
+      this._fileDialogService.showSaveDialog(convertedOptions),
+    );
 	}
 
 	private static _convertOpenOptions(options?: MainThreadDialogOpenOptions): IOpenDialogOptions {
 		const result: IOpenDialogOptions = {
-			openLabel: options?.openLabel || undefined,
-			canSelectFiles: options?.canSelectFiles || (!options?.canSelectFiles && !options?.canSelectFolders),
-			canSelectFolders: options?.canSelectFolders,
-			canSelectMany: options?.canSelectMany,
-			defaultUri: options?.defaultUri ? URI.revive(options.defaultUri) : undefined,
-			title: options?.title || undefined,
-			availableFileSystems: []
-		};
+      openLabel: options?.openLabel || undefined,
+      canSelectFiles: options?.canSelectFiles || (!options?.canSelectFiles && !options?.canSelectFolders),
+      canSelectFolders: options?.canSelectFolders,
+      canSelectMany: options?.canSelectMany,
+      defaultUri: options?.defaultUri ? URI.revive(options.defaultUri) : undefined,
+      title: options?.title || undefined,
+      availableFileSystems: [],
+    };
 		if (options?.filters) {
 			result.filters = [];
 			for (const [key, value] of Object.entries(options.filters)) {
@@ -59,10 +68,10 @@ export class MainThreadDialogs implements MainThreadDiaglogsShape {
 
 	private static _convertSaveOptions(options?: MainThreadDialogSaveOptions): ISaveDialogOptions {
 		const result: ISaveDialogOptions = {
-			defaultUri: options?.defaultUri ? URI.revive(options.defaultUri) : undefined,
-			saveLabel: options?.saveLabel || undefined,
-			title: options?.title || undefined
-		};
+      defaultUri: options?.defaultUri ? URI.revive(options.defaultUri) : undefined,
+      saveLabel: options?.saveLabel || undefined,
+      title: options?.title || undefined,
+    };
 		if (options?.filters) {
 			result.filters = [];
 			for (const [key, value] of Object.entries(options.filters)) {

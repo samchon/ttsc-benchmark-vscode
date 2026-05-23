@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './media/style.css';
-import { registerThemingParticipant } from '../../platform/theme/common/themeService.js';
-import { WORKBENCH_BACKGROUND, TITLE_BAR_ACTIVE_BACKGROUND } from '../common/theme.js';
-import { isWeb, isIOS } from '../../base/common/platform.js';
-import { createMetaElement } from '../../base/browser/dom.js';
-import { isSafari, isStandalone } from '../../base/browser/browser.js';
-import { selectionBackground } from '../../platform/theme/common/colorRegistry.js';
-import { mainWindow } from '../../base/browser/window.js';
+import "./media/style.css";
+import { registerThemingParticipant } from "../../platform/theme/common/themeService.js";
+import { WORKBENCH_BACKGROUND, TITLE_BAR_ACTIVE_BACKGROUND } from "../common/theme.js";
+import { isWeb, isIOS } from "../../base/common/platform.js";
+import { createMetaElement } from "../../base/browser/dom.js";
+import { isSafari, isStandalone } from "../../base/browser/browser.js";
+import { selectionBackground } from "../../platform/theme/common/colorRegistry.js";
+import { mainWindow } from "../../base/browser/window.js";
 
 registerThemingParticipant((theme, collector) => {
 
@@ -28,12 +28,12 @@ registerThemingParticipant((theme, collector) => {
 	if (isWeb) {
 		const titleBackground = theme.getColor(TITLE_BAR_ACTIVE_BACKGROUND);
 		if (titleBackground) {
-			const metaElementId = 'monaco-workbench-meta-theme-color';
+			const metaElementId = "monaco-workbench-meta-theme-color";
 			// eslint-disable-next-line no-restricted-syntax
 			let metaElement = mainWindow.document.getElementById(metaElementId) as HTMLMetaElement | null;
 			if (!metaElement) {
 				metaElement = createMetaElement();
-				metaElement.name = 'theme-color';
+				metaElement.name = "theme-color";
 				metaElement.id = metaElementId;
 			}
 

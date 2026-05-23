@@ -3,11 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { autorunWithStore, observableFromEvent } from '../../../../base/common/observable.js';
-import { IAccessibilitySignalService, AccessibilitySignal, AccessibilitySignalService } from '../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js';
-import { IWorkbenchContribution } from '../../../common/contributions.js';
-import { IDebugService, IDebugSession } from '../../debug/common/debug.js';
+import { Disposable, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { autorunWithStore, observableFromEvent } from "../../../../base/common/observable.js";
+import {
+  IAccessibilitySignalService,
+  AccessibilitySignal,
+  AccessibilitySignalService,
+} from "../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { IDebugService, IDebugSession } from "../../debug/common/debug.js";
 
 export class AccessibilitySignalLineDebuggerContribution
 	extends Disposable
@@ -19,10 +23,15 @@ export class AccessibilitySignalLineDebuggerContribution
 	) {
 		super();
 
-		const isEnabled = observableFromEvent(this,
-			accessibilitySignalService.onSoundEnabledChanged(AccessibilitySignal.onDebugBreak),
-			() => accessibilitySignalService.isSoundEnabled(AccessibilitySignal.onDebugBreak)
-		);
+		const isEnabled = observableFromEvent(
+      this,
+      accessibilitySignalService.onSoundEnabledChanged(
+        AccessibilitySignal.onDebugBreak,
+      ),
+      () => accessibilitySignalService.isSoundEnabled(
+        AccessibilitySignal.onDebugBreak,
+      ),
+    );
 		this._register(autorunWithStore((reader, store) => {
 			/** @description subscribe to debug sessions */
 			if (!isEnabled.read(reader)) {
@@ -37,8 +46,8 @@ export class AccessibilitySignalLineDebuggerContribution
 
 			store.add(
 				debugService.onDidNewSession((session) =>
-					sessionDisposables.set(session, this.handleSession(session))
-				)
+					sessionDisposables.set(session, this.handleSession(session)),
+				),
 			);
 
 			store.add(debugService.onDidEndSession(({ session }) => {
@@ -50,7 +59,7 @@ export class AccessibilitySignalLineDebuggerContribution
 				.getModel()
 				.getSessions()
 				.forEach((session) =>
-					sessionDisposables.set(session, this.handleSession(session))
+					sessionDisposables.set(session, this.handleSession(session)),
 				);
 		}));
 	}
@@ -58,7 +67,7 @@ export class AccessibilitySignalLineDebuggerContribution
 	private handleSession(session: IDebugSession): IDisposable {
 		return session.onDidChangeState(e => {
 			const stoppedDetails = session.getStoppedDetails();
-			const BREAKPOINT_STOP_REASON = 'breakpoint';
+			const BREAKPOINT_STOP_REASON = "breakpoint";
 			if (stoppedDetails && stoppedDetails.reason === BREAKPOINT_STOP_REASON) {
 				this.accessibilitySignalService.playSignal(AccessibilitySignal.onDebugBreak);
 			}

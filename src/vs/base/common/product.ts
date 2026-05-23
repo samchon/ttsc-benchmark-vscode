@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IStringDictionary } from './collections.js';
-import { PlatformName } from './platform.js';
-import { IPolicy } from './policy.js';
+import { IStringDictionary } from "./collections.js";
+import { PlatformName } from "./platform.js";
+import { IPolicy } from "./policy.js";
 
 export interface IBuiltInExtension {
 	readonly name: string;
@@ -25,9 +25,9 @@ export interface IProductWalkthroughStep {
 	when: string;
 	description: string;
 	media:
-	| { type: 'image'; path: string | { hc: string; hcLight?: string; light: string; dark: string }; altText: string }
-	| { type: 'svg'; path: string; altText: string }
-	| { type: 'markdown'; path: string };
+	| { type: "image"; path: string | { hc: string; hcLight?: string; light: string; dark: string }; altText: string }
+	| { type: "svg"; path: string; altText: string }
+	| { type: "markdown"; path: string };
 }
 
 export interface IFeaturedExtension {
@@ -55,8 +55,8 @@ export type ConfigurationSyncStore = {
 };
 
 export type ExtensionUntrustedWorkspaceSupport = {
-	readonly default?: boolean | 'limited';
-	readonly override?: boolean | 'limited';
+	readonly default?: boolean | "limited";
+	readonly override?: boolean | "limited";
 };
 
 export type ExtensionVirtualWorkspaceSupport = {
@@ -198,8 +198,8 @@ export interface IProductConfiguration {
 
 	readonly portable?: string;
 
-	readonly extensionKind?: { readonly [extensionId: string]: ('ui' | 'workspace' | 'web')[] };
-	readonly extensionPointExtensionKind?: { readonly [extensionPointId: string]: ('ui' | 'workspace' | 'web')[] };
+	readonly extensionKind?: { readonly [extensionId: string]: ("ui" | "workspace" | "web")[] };
+	readonly extensionPointExtensionKind?: { readonly [extensionPointId: string]: ("ui" | "workspace" | "web")[] };
 	readonly extensionSyncedKeys?: { readonly [extensionId: string]: string[] };
 
 	readonly extensionsEnabledWithApiProposalVersion?: string[];
@@ -219,9 +219,9 @@ export interface IProductConfiguration {
 
 	readonly authClientIdMetadataUrl?: string;
 
-	readonly 'configurationSync.store'?: ConfigurationSyncStore;
+	readonly "configurationSync.store"?: ConfigurationSyncStore;
 
-	readonly 'editSessions.store'?: Omit<ConfigurationSyncStore, 'insidersUrl' | 'stableUrl'>;
+	readonly "editSessions.store"?: Omit<ConfigurationSyncStore, "insidersUrl" | "stableUrl">;
 	readonly darwinUniversalAssetId?: string;
 	readonly darwinBundleIdentifier?: string;
 	readonly profileTemplatesUrl?: string;
@@ -264,7 +264,7 @@ export interface IProductOnboardingTheme {
 	readonly id: string;
 	readonly label: string;
 	readonly themeId: string;
-	readonly type: 'dark' | 'light' | 'hcDark' | 'hcLight';
+	readonly type: "dark" | "light" | "hcDark" | "hcLight";
 }
 
 export interface ITunnelApplicationConfig {
@@ -302,12 +302,12 @@ export interface IFilePathCondition extends IExtensionRecommendationCondition {
 export type IFileContentCondition = (IFileLanguageCondition | IFilePathCondition) & { readonly contentPattern: string };
 
 export interface IAppCenterConfiguration {
-	readonly 'win32-x64': string;
-	readonly 'win32-arm64': string;
-	readonly 'linux-x64': string;
-	readonly 'darwin': string;
-	readonly 'darwin-universal': string;
-	readonly 'darwin-arm64': string;
+	readonly "win32-x64": string;
+	readonly "win32-arm64": string;
+	readonly "linux-x64": string;
+	readonly "darwin": string;
+	readonly "darwin-universal": string;
+	readonly "darwin-arm64": string;
 }
 
 export interface IConfigBasedExtensionTip {

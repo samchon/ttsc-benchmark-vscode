@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ITreeFilter, ITreeFilterDataResult, TreeVisibility } from '../../../../base/browser/ui/tree/tree.js';
-import { matchesFuzzyIconAware, parseLabelWithIcons } from '../../../../base/common/iconLabels.js';
-import { IQuickTreeItem } from '../../common/quickInput.js';
-import { IQuickTreeFilterData } from './quickInputTree.js';
+import { ITreeFilter, ITreeFilterDataResult, TreeVisibility } from "../../../../base/browser/ui/tree/tree.js";
+import { matchesFuzzyIconAware, parseLabelWithIcons } from "../../../../base/common/iconLabels.js";
+import { IQuickTreeItem } from "../../common/quickInput.js";
+import { IQuickTreeFilterData } from "./quickInputTree.js";
 
 export class QuickInputTreeFilter implements ITreeFilter<IQuickTreeItem, IQuickTreeFilterData> {
-	filterValue: string = '';
+	filterValue: string = "";
 	matchOnLabel: boolean = true;
 	matchOnDescription: boolean = false;
 
@@ -20,8 +20,14 @@ export class QuickInputTreeFilter implements ITreeFilter<IQuickTreeItem, IQuickT
 				: { visibility: TreeVisibility.Visible, data: {} };
 		}
 
-		const labelHighlights = this.matchOnLabel ? matchesFuzzyIconAware(this.filterValue, parseLabelWithIcons(element.label)) ?? undefined : undefined;
-		const descriptionHighlights = this.matchOnDescription ? matchesFuzzyIconAware(this.filterValue, parseLabelWithIcons(element.description || '')) ?? undefined : undefined;
+		const labelHighlights = this.matchOnLabel ? matchesFuzzyIconAware(
+      this.filterValue,
+      parseLabelWithIcons(element.label),
+    ) ?? undefined : undefined;
+		const descriptionHighlights = this.matchOnDescription ? matchesFuzzyIconAware(
+      this.filterValue,
+      parseLabelWithIcons(element.description || ""),
+    ) ?? undefined : undefined;
 
 		const visibility = parentVisibility === TreeVisibility.Visible
 			// Parent is visible because it had matches, so we show all children
@@ -39,8 +45,8 @@ export class QuickInputTreeFilter implements ITreeFilter<IQuickTreeItem, IQuickT
 			visibility,
 			data: {
 				labelHighlights,
-				descriptionHighlights
-			}
+				descriptionHighlights,
+			},
 		};
 	}
 }

@@ -5,143 +5,168 @@
 
 // This should be the only place that is allowed to import from @vscode/component-explorer
 // eslint-disable-next-line local/code-import-patterns
-import { defineFixture, defineFixtureGroup, defineFixtureVariants } from '@vscode/component-explorer';
-import { DisposableStore, DisposableTracker, IDisposable, IReference, setDisposableTracker, toDisposable } from '../../../../base/common/lifecycle.js';
-import { URI } from '../../../../base/common/uri.js';
-import { ModifierKeyEmitter } from '../../../../base/browser/dom.js';
+import { defineFixture, defineFixtureGroup, defineFixtureVariants } from "@vscode/component-explorer";
+import {
+  DisposableStore,
+  DisposableTracker,
+  IDisposable,
+  IReference,
+  setDisposableTracker,
+  toDisposable,
+} from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ModifierKeyEmitter } from "../../../../base/browser/dom.js";
 // eslint-disable-next-line local/code-import-patterns
-import '../../../../../../build/vite/style.css';
-import '../../../browser/media/style.css';
+import "../../../../../../build/vite/style.css";
+import "../../../browser/media/style.css";
 // Import auxiliaryBarPart.css here (before any contrib/chat CSS) so the cascade
 // matches the product: chat.css loads later and overrides the auxiliarybar
 // rules where applicable. Fixtures that wrap content in `.part.auxiliarybar`
 // rely on these rules to recolor inline editors with `--vscode-sideBar-background`.
-import '../../../browser/parts/auxiliarybar/media/auxiliaryBarPart.css';
+import "../../../browser/parts/auxiliarybar/media/auxiliaryBarPart.css";
 
 // Theme
-import { IEnvironmentService } from '../../../../platform/environment/common/environment.js';
-import { IExtensionResourceLoaderService } from '../../../../platform/extensionResourceLoader/common/extensionResourceLoader.js';
-import { Registry } from '../../../../platform/registry/common/platform.js';
-import { getIconsStyleSheet } from '../../../../platform/theme/browser/iconsStyleSheet.js';
-import { ColorScheme, ThemeTypeSelector } from '../../../../platform/theme/common/theme.js';
-import { IColorTheme, IThemeService, IThemingRegistry, Extensions as ThemingExtensions } from '../../../../platform/theme/common/themeService.js';
-import { generateColorThemeCSS } from '../../../services/themes/browser/colorThemeCss.js';
-import { ColorThemeData } from '../../../services/themes/common/colorThemeData.js';
-import { ExtensionData } from '../../../services/themes/common/workbenchThemeService.js';
+import { IEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { IExtensionResourceLoaderService } from "../../../../platform/extensionResourceLoader/common/extensionResourceLoader.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { getIconsStyleSheet } from "../../../../platform/theme/browser/iconsStyleSheet.js";
+import { ColorScheme, ThemeTypeSelector } from "../../../../platform/theme/common/theme.js";
+import {
+  IColorTheme,
+  IThemeService,
+  IThemingRegistry,
+  Extensions as ThemingExtensions,
+} from "../../../../platform/theme/common/themeService.js";
+import { generateColorThemeCSS } from "../../../services/themes/browser/colorThemeCss.js";
+import { ColorThemeData } from "../../../services/themes/common/colorThemeData.js";
+import { ExtensionData } from "../../../services/themes/common/workbenchThemeService.js";
 
 // Instantiation
-import { SyncDescriptor } from '../../../../platform/instantiation/common/descriptors.js';
-import { ServiceIdentifier } from '../../../../platform/instantiation/common/instantiation.js';
-import { ServiceCollection } from '../../../../platform/instantiation/common/serviceCollection.js';
-import { TestInstantiationService } from '../../../../platform/instantiation/test/common/instantiationServiceMock.js';
+import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
+import { ServiceIdentifier } from "../../../../platform/instantiation/common/instantiation.js";
+import { ServiceCollection } from "../../../../platform/instantiation/common/serviceCollection.js";
+import { TestInstantiationService } from "../../../../platform/instantiation/test/common/instantiationServiceMock.js";
 
 // Test service implementations
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { mock } from '../../../../base/test/common/mock.js';
-import { ICodeEditorService } from '../../../../editor/browser/services/codeEditorService.js';
-import { IInlineCompletionsService, InlineCompletionsService } from '../../../../editor/browser/services/inlineCompletionsService.js';
-import { ILanguageService } from '../../../../editor/common/languages/language.js';
-import { ILanguageConfigurationService } from '../../../../editor/common/languages/languageConfigurationRegistry.js';
-import { IEditorWorkerService } from '../../../../editor/common/services/editorWorker.js';
-import { ILanguageFeatureDebounceService, LanguageFeatureDebounceService } from '../../../../editor/common/services/languageFeatureDebounce.js';
-import { ILanguageFeaturesService } from '../../../../editor/common/services/languageFeatures.js';
-import { LanguageFeaturesService } from '../../../../editor/common/services/languageFeaturesService.js';
-import { LanguageService } from '../../../../editor/common/services/languageService.js';
-import { IModelService } from '../../../../editor/common/services/model.js';
-import { ModelService } from '../../../../editor/common/services/modelService.js';
-import { ITextResourcePropertiesService } from '../../../../editor/common/services/textResourceConfiguration.js';
-import { ITreeSitterLibraryService } from '../../../../editor/common/services/treeSitter/treeSitterLibraryService.js';
-import { ICodeLensCache } from '../../../../editor/contrib/codelens/browser/codeLensCache.js';
-import { TestCodeEditorService, TestCommandService } from '../../../../editor/test/browser/editorTestServices.js';
-import { TestLanguageConfigurationService } from '../../../../editor/test/common/modes/testLanguageConfigurationService.js';
-import { TestEditorWorkerService } from '../../../../editor/test/common/services/testEditorWorkerService.js';
-import { TestTextResourcePropertiesService } from '../../../../editor/test/common/services/testTextResourcePropertiesService.js';
-import { TestTreeSitterLibraryService } from '../../../../editor/test/common/services/testTreeSitterLibraryService.js';
-import { IAccessibilityService } from '../../../../platform/accessibility/common/accessibility.js';
-import { TestAccessibilityService } from '../../../../platform/accessibility/test/common/testAccessibilityService.js';
-import { IActionViewItemService, NullActionViewItemService } from '../../../../platform/actions/browser/actionViewItemService.js';
-import { IChatPhoneInputPresenter } from '../../../contrib/chat/browser/widget/input/chatPhoneInputPresenter.js';
-import { IMenuService } from '../../../../platform/actions/common/actions.js';
-import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
-import { TestClipboardService } from '../../../../platform/clipboard/test/common/testClipboardService.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { TestConfigurationService } from '../../../../platform/configuration/test/common/testConfigurationService.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { IContextMenuService, IContextViewService } from '../../../../platform/contextview/browser/contextView.js';
-import { IDataChannelService, NullDataChannelService } from '../../../../platform/dataChannel/common/dataChannel.js';
-import { IDefaultAccountService } from '../../../../platform/defaultAccount/common/defaultAccount.js';
-import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
-import { TestDialogService } from '../../../../platform/dialogs/test/common/testDialogService.js';
-import { IHoverService } from '../../../../platform/hover/browser/hover.js';
-import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
-import { MockContextKeyService, MockKeybindingService } from '../../../../platform/keybinding/test/common/mockKeybindingService.js';
-import { ILabelService } from '../../../../platform/label/common/label.js';
-import { ILoggerService, ILogService, NullLoggerService, NullLogService } from '../../../../platform/log/common/log.js';
-import { INotificationService } from '../../../../platform/notification/common/notification.js';
-import { TestNotificationService } from '../../../../platform/notification/test/common/testNotificationService.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
-import { NullOpenerService } from '../../../../platform/opener/test/common/nullOpenerService.js';
-import { IApplicationSharedStorageValueChangeEvent, IApplicationStorageValueChangeEvent, IProfileStorageValueChangeEvent, IStorageEntry, IStorageService, IStorageTargetChangeEvent, IStorageValueChangeEvent, IWillSaveStateEvent, IWorkspaceStorageValueChangeEvent, StorageScope, StorageTarget, WillSaveStateReason } from '../../../../platform/storage/common/storage.js';
-import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
-import { NullTelemetryServiceShape } from '../../../../platform/telemetry/common/telemetryUtils.js';
-import { TestThemeService } from '../../../../platform/theme/test/common/testThemeService.js';
-import { IUndoRedoService } from '../../../../platform/undoRedo/common/undoRedo.js';
-import { UndoRedoService } from '../../../../platform/undoRedo/common/undoRedoService.js';
-import { IUserDataProfile } from '../../../../platform/userDataProfile/common/userDataProfile.js';
-import { IUserInteractionService, MockUserInteractionService } from '../../../../platform/userInteraction/browser/userInteractionService.js';
-import { IActionWidgetService } from '../../../../platform/actionWidget/browser/actionWidget.js';
-import { IAnyWorkspaceIdentifier } from '../../../../platform/workspace/common/workspace.js';
-import { TestMenuService } from '../workbenchTestServices.js';
-import { IAccessibilitySignalService } from '../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js';
-import { IResolvedTextEditorModel, ITextModelService } from '../../../../editor/common/services/resolverService.js';
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { mock } from "../../../../base/test/common/mock.js";
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { IInlineCompletionsService, InlineCompletionsService } from "../../../../editor/browser/services/inlineCompletionsService.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { ILanguageConfigurationService } from "../../../../editor/common/languages/languageConfigurationRegistry.js";
+import { IEditorWorkerService } from "../../../../editor/common/services/editorWorker.js";
+import { ILanguageFeatureDebounceService, LanguageFeatureDebounceService } from "../../../../editor/common/services/languageFeatureDebounce.js";
+import { ILanguageFeaturesService } from "../../../../editor/common/services/languageFeatures.js";
+import { LanguageFeaturesService } from "../../../../editor/common/services/languageFeaturesService.js";
+import { LanguageService } from "../../../../editor/common/services/languageService.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { ModelService } from "../../../../editor/common/services/modelService.js";
+import { ITextResourcePropertiesService } from "../../../../editor/common/services/textResourceConfiguration.js";
+import { ITreeSitterLibraryService } from "../../../../editor/common/services/treeSitter/treeSitterLibraryService.js";
+import { ICodeLensCache } from "../../../../editor/contrib/codelens/browser/codeLensCache.js";
+import { TestCodeEditorService, TestCommandService } from "../../../../editor/test/browser/editorTestServices.js";
+import { TestLanguageConfigurationService } from "../../../../editor/test/common/modes/testLanguageConfigurationService.js";
+import { TestEditorWorkerService } from "../../../../editor/test/common/services/testEditorWorkerService.js";
+import { TestTextResourcePropertiesService } from "../../../../editor/test/common/services/testTextResourcePropertiesService.js";
+import { TestTreeSitterLibraryService } from "../../../../editor/test/common/services/testTreeSitterLibraryService.js";
+import { IAccessibilityService } from "../../../../platform/accessibility/common/accessibility.js";
+import { TestAccessibilityService } from "../../../../platform/accessibility/test/common/testAccessibilityService.js";
+import { IActionViewItemService, NullActionViewItemService } from "../../../../platform/actions/browser/actionViewItemService.js";
+import { IChatPhoneInputPresenter } from "../../../contrib/chat/browser/widget/input/chatPhoneInputPresenter.js";
+import { IMenuService } from "../../../../platform/actions/common/actions.js";
+import { IClipboardService } from "../../../../platform/clipboard/common/clipboardService.js";
+import { TestClipboardService } from "../../../../platform/clipboard/test/common/testClipboardService.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { TestConfigurationService } from "../../../../platform/configuration/test/common/testConfigurationService.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService, IContextViewService } from "../../../../platform/contextview/browser/contextView.js";
+import { IDataChannelService, NullDataChannelService } from "../../../../platform/dataChannel/common/dataChannel.js";
+import { IDefaultAccountService } from "../../../../platform/defaultAccount/common/defaultAccount.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { TestDialogService } from "../../../../platform/dialogs/test/common/testDialogService.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { MockContextKeyService, MockKeybindingService } from "../../../../platform/keybinding/test/common/mockKeybindingService.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { ILoggerService, ILogService, NullLoggerService, NullLogService } from "../../../../platform/log/common/log.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { TestNotificationService } from "../../../../platform/notification/test/common/testNotificationService.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { NullOpenerService } from "../../../../platform/opener/test/common/nullOpenerService.js";
+import {
+  IApplicationSharedStorageValueChangeEvent,
+  IApplicationStorageValueChangeEvent,
+  IProfileStorageValueChangeEvent,
+  IStorageEntry,
+  IStorageService,
+  IStorageTargetChangeEvent,
+  IStorageValueChangeEvent,
+  IWillSaveStateEvent,
+  IWorkspaceStorageValueChangeEvent,
+  StorageScope,
+  StorageTarget,
+  WillSaveStateReason,
+} from "../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { NullTelemetryServiceShape } from "../../../../platform/telemetry/common/telemetryUtils.js";
+import { TestThemeService } from "../../../../platform/theme/test/common/testThemeService.js";
+import { IUndoRedoService } from "../../../../platform/undoRedo/common/undoRedo.js";
+import { UndoRedoService } from "../../../../platform/undoRedo/common/undoRedoService.js";
+import { IUserDataProfile } from "../../../../platform/userDataProfile/common/userDataProfile.js";
+import { IUserInteractionService, MockUserInteractionService } from "../../../../platform/userInteraction/browser/userInteractionService.js";
+import { IActionWidgetService } from "../../../../platform/actionWidget/browser/actionWidget.js";
+import { IAnyWorkspaceIdentifier } from "../../../../platform/workspace/common/workspace.js";
+import { TestMenuService } from "../workbenchTestServices.js";
+import { IAccessibilitySignalService } from "../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";
+import { IResolvedTextEditorModel, ITextModelService } from "../../../../editor/common/services/resolverService.js";
 // eslint-disable-next-line local/code-import-patterns
-import { IAgentFeedbackService } from '../../../../sessions/contrib/agentFeedback/browser/agentFeedbackService.js';
-import { IChatEditingService } from '../../../contrib/chat/common/editing/chatEditingService.js';
+import { IAgentFeedbackService } from "../../../../sessions/contrib/agentFeedback/browser/agentFeedbackService.js";
+import { IChatEditingService } from "../../../contrib/chat/common/editing/chatEditingService.js";
 // eslint-disable-next-line local/code-import-patterns
-import { ISessionsManagementService } from '../../../../sessions/services/sessions/common/sessionsManagement.js';
+import { ISessionsManagementService } from "../../../../sessions/services/sessions/common/sessionsManagement.js";
 // eslint-disable-next-line local/code-import-patterns
-import { ICodeReviewService, CodeReviewStateKind, PRReviewStateKind } from '../../../../sessions/contrib/codeReview/browser/codeReviewService.js';
-import { constObservable } from '../../../../base/common/observable.js';
+import { ICodeReviewService, CodeReviewStateKind, PRReviewStateKind } from "../../../../sessions/contrib/codeReview/browser/codeReviewService.js";
+import { constObservable } from "../../../../base/common/observable.js";
 
 // Editor
-import { ITextModel } from '../../../../editor/common/model.js';
+import { ITextModel } from "../../../../editor/common/model.js";
 
-import './fixtures.css';
+import "./fixtures.css";
 
 // Import color registrations to ensure colors are available
-import { IdleDeadline, installFakeRunWhenIdle } from '../../../../base/common/async.js';
-import { buildHistoryFromTasks, renderSwimlanes } from '../../../../base/test/common/executionGraph.js';
-import { pushRandomOverwrite } from '../../../../base/test/common/randomOverwrite.js';
+import { IdleDeadline, installFakeRunWhenIdle } from "../../../../base/common/async.js";
+import { buildHistoryFromTasks, renderSwimlanes } from "../../../../base/test/common/executionGraph.js";
+import { pushRandomOverwrite } from "../../../../base/test/common/randomOverwrite.js";
 import {
-	captureGlobalTimeApi,
-	createLoggingTimeApi,
-	createTraceRoot,
-	createVirtualTimeApi,
-	drainMicrotasksEmbedding,
-	nextMacrotask,
-	pushGlobalTimeApi,
-	TraceContext,
-	untilTime,
-	VirtualClock,
-	VirtualTimeProcessor,
-} from '../../../../base/test/common/virtualScheduling/index.js';
-import '../../../../platform/theme/common/colors/baseColors.js';
-import '../../../../platform/theme/common/colors/editorColors.js';
-import '../../../../platform/theme/common/colors/listColors.js';
-import '../../../../platform/theme/common/colors/miscColors.js';
-import '../../../common/theme.js';
+  captureGlobalTimeApi,
+  createLoggingTimeApi,
+  createTraceRoot,
+  createVirtualTimeApi,
+  drainMicrotasksEmbedding,
+  nextMacrotask,
+  pushGlobalTimeApi,
+  TraceContext,
+  untilTime,
+  VirtualClock,
+  VirtualTimeProcessor,
+} from "../../../../base/test/common/virtualScheduling/index.js";
+import "../../../../platform/theme/common/colors/baseColors.js";
+import "../../../../platform/theme/common/colors/editorColors.js";
+import "../../../../platform/theme/common/colors/listColors.js";
+import "../../../../platform/theme/common/colors/miscColors.js";
+import "../../../common/theme.js";
 
 // eslint-disable-next-line local/code-import-patterns
-import sourceMapSupport from 'source-map-support';
+import sourceMapSupport from "source-map-support";
 sourceMapSupport.install({
-	environment: 'browser',
+	environment: "browser",
 	handleUncaughtExceptions: false,
 	retrieveSourceMap: (source: string) => {
-		const mapUrl = source + '.map';
+		const mapUrl = source + ".map";
 		try {
 			const xhr = new XMLHttpRequest();
-			xhr.open('GET', mapUrl, false);
+			xhr.open("GET", mapUrl, false);
 			xhr.send();
 			if (xhr.status === 200) {
 				return { url: null as never, map: xhr.responseText };
@@ -165,7 +190,11 @@ class NullStorageService implements IStorageService {
 	onDidChangeValue(scope: StorageScope.APPLICATION, key: string | undefined, disposable: DisposableStore): Event<IApplicationStorageValueChangeEvent>;
 	onDidChangeValue(scope: StorageScope.APPLICATION_SHARED, key: string | undefined, disposable: DisposableStore): Event<IApplicationSharedStorageValueChangeEvent>;
 	onDidChangeValue(scope: StorageScope, key: string | undefined, disposable: DisposableStore): Event<IStorageValueChangeEvent> {
-		return Event.filter(this._onDidChangeValue.event, e => e.scope === scope && (key === undefined || e.key === key), disposable);
+		return Event.filter(
+      this._onDidChangeValue.event,
+      e => e.scope === scope && (key === undefined || e.key === key),
+      disposable,
+    );
 	}
 
 	private readonly _onDidChangeTarget = new Emitter<IStorageTargetChangeEvent>();
@@ -244,7 +273,9 @@ class NullStorageService implements IStorageService {
 // Themes
 // ============================================================================
 
-const themingRegistry = Registry.as<IThemingRegistry>(ThemingExtensions.ThemingContribution);
+const themingRegistry = Registry.as<IThemingRegistry>(
+  ThemingExtensions.ThemingContribution,
+);
 const mockEnvironmentService: IEnvironmentService = Object.create(null);
 
 // Eagerly bundle all built-in theme JSON files so they can be served to
@@ -253,21 +284,21 @@ const mockEnvironmentService: IEnvironmentService = Object.create(null);
 // as raw text (not parsed JSON) — this lets VS Code's JSONC parser handle
 // comments and trailing commas the way it does in the real product.
 /* eslint-disable local/code-import-patterns */
-import dark_modern from '../../../../../../extensions/theme-defaults/themes/dark_modern.json' with { type: 'json' };
-import dark_plus from '../../../../../../extensions/theme-defaults/themes/dark_plus.json' with { type: 'json' };
-import dark_vs from '../../../../../../extensions/theme-defaults/themes/dark_vs.json' with { type: 'json' };
-import light_modern from '../../../../../../extensions/theme-defaults/themes/light_modern.json' with { type: 'json' };
-import light_plus from '../../../../../../extensions/theme-defaults/themes/light_plus.json' with { type: 'json' };
-import light_vs from '../../../../../../extensions/theme-defaults/themes/light_vs.json' with { type: 'json' };
+import dark_modern from "../../../../../../extensions/theme-defaults/themes/dark_modern.json" with { type: "json" };
+import dark_plus from "../../../../../../extensions/theme-defaults/themes/dark_plus.json" with { type: "json" };
+import dark_vs from "../../../../../../extensions/theme-defaults/themes/dark_vs.json" with { type: "json" };
+import light_modern from "../../../../../../extensions/theme-defaults/themes/light_modern.json" with { type: "json" };
+import light_plus from "../../../../../../extensions/theme-defaults/themes/light_plus.json" with { type: "json" };
+import light_vs from "../../../../../../extensions/theme-defaults/themes/light_vs.json" with { type: "json" };
 /* eslint-enable local/code-import-patterns */
 
 const themeJsonModules: Record<string, string> = {
-	'/extensions/theme-defaults/themes/dark_modern.json': dark_modern as unknown as string,
-	'/extensions/theme-defaults/themes/dark_plus.json': dark_plus as unknown as string,
-	'/extensions/theme-defaults/themes/dark_vs.json': dark_vs as unknown as string,
-	'/extensions/theme-defaults/themes/light_modern.json': light_modern as unknown as string,
-	'/extensions/theme-defaults/themes/light_plus.json': light_plus as unknown as string,
-	'/extensions/theme-defaults/themes/light_vs.json': light_vs as unknown as string,
+  "/extensions/theme-defaults/themes/dark_modern.json": dark_modern as unknown as string,
+  "/extensions/theme-defaults/themes/dark_plus.json": dark_plus as unknown as string,
+  "/extensions/theme-defaults/themes/dark_vs.json": dark_vs as unknown as string,
+  "/extensions/theme-defaults/themes/light_modern.json": light_modern as unknown as string,
+  "/extensions/theme-defaults/themes/light_plus.json": light_plus as unknown as string,
+  "/extensions/theme-defaults/themes/light_vs.json": light_vs as unknown as string,
 };
 
 const fixtureExtensionResourceLoaderService = new class implements IExtensionResourceLoaderService {
@@ -287,14 +318,20 @@ const fixtureExtensionResourceLoaderService = new class implements IExtensionRes
 function createBuiltInTheme(themePath: string, uiTheme: ThemeTypeSelector): ColorThemeData {
 	const location = URI.parse(`file://${themePath}`);
 	return ColorThemeData.fromExtensionTheme(
-		{ id: themePath, path: themePath, uiTheme, _watch: false },
-		location,
-		ExtensionData.fromName('vscode', 'theme-defaults', true)
-	);
+    { id: themePath, path: themePath, uiTheme, _watch: false },
+    location,
+    ExtensionData.fromName("vscode", "theme-defaults", true),
+  );
 }
 
-export const darkTheme = createBuiltInTheme('/extensions/theme-defaults/themes/dark_modern.json', ThemeTypeSelector.VS_DARK);
-export const lightTheme = createBuiltInTheme('/extensions/theme-defaults/themes/light_modern.json', ThemeTypeSelector.VS);
+export const darkTheme = createBuiltInTheme(
+  "/extensions/theme-defaults/themes/dark_modern.json",
+  ThemeTypeSelector.VS_DARK,
+);
+export const lightTheme = createBuiltInTheme(
+  "/extensions/theme-defaults/themes/light_modern.json",
+  ThemeTypeSelector.VS,
+);
 
 let globalStyleSheet: CSSStyleSheet | undefined;
 let iconsStyleSheetCache: CSSStyleSheet | undefined;
@@ -314,7 +351,7 @@ function getGlobalStyleSheet(): CSSStyleSheet {
 				// Cross-origin stylesheets can't be read
 			}
 		}
-		globalStyleSheet.replaceSync(globalRules.join('\n'));
+		globalStyleSheet.replaceSync(globalRules.join("\n"));
 	}
 	return globalStyleSheet;
 }
@@ -338,14 +375,14 @@ function getThemeStyleSheet(theme: ColorThemeData): CSSStyleSheet {
 		return lightThemeStyleSheet;
 	}
 
-	const scopeSelector = '.' + theme.classNames[0];
+	const scopeSelector = "." + theme.classNames[0];
 	const sheet = new CSSStyleSheet();
 	const css = generateColorThemeCSS(
-		theme,
-		scopeSelector,
-		themingRegistry.getThemingParticipants(),
-		mockEnvironmentService
-	);
+    theme,
+    scopeSelector,
+    themingRegistry.getThemingParticipants(),
+    mockEnvironmentService,
+  );
 	sheet.replaceSync(css.code);
 
 	if (isDark) {
@@ -375,33 +412,38 @@ function installGlobalStyles(): void {
 	}
 	globalStylesInstalled = true;
 	document.adoptedStyleSheets = [
-		...document.adoptedStyleSheets,
-		getGlobalStyleSheet(),
-		getIconsStyleSheetCached(),
-		getThemeStyleSheet(darkTheme),
-		getThemeStyleSheet(lightTheme),
-	];
+    ...document.adoptedStyleSheets,
+    getGlobalStyleSheet(),
+    getIconsStyleSheetCached(),
+    getThemeStyleSheet(darkTheme),
+    getThemeStyleSheet(lightTheme),
+  ];
 }
 
 export async function setupTheme(container: HTMLElement, theme: ColorThemeData): Promise<void> {
 	await ensureThemesLoaded();
 	installGlobalStyles();
-	container.classList.add('monaco-workbench', getPlatformClass(), 'disable-animations', ...theme.classNames);
+	container.classList.add(
+    "monaco-workbench",
+    getPlatformClass(),
+    "disable-animations",
+    ...theme.classNames,
+  );
 }
 
 function getPlatformClass(): string {
 	const alwaysUseMac = true;
 	if (alwaysUseMac) {
-		return 'mac';
+		return "mac";
 	} else {
 		const ua = navigator.userAgent;
-		if (ua.includes('Macintosh')) {
-			return 'mac';
+		if (ua.includes("Macintosh")) {
+			return "mac";
 		}
-		if (ua.includes('Linux')) {
-			return 'linux';
+		if (ua.includes("Linux")) {
+			return "linux";
 		}
-		return 'windows';
+		return "windows";
 	}
 }
 
@@ -477,7 +519,9 @@ export class FixtureTextModelService extends mock<ITextModelService>() {
 	override async createModelReference(resource: URI): Promise<IReference<IResolvedTextEditorModel>> {
 		const model = this._modelService.getModel(resource);
 		if (!model) {
-			throw new Error(`FixtureTextModelService: no model registered for ${resource.toString()}`);
+			throw new Error(
+        `FixtureTextModelService: no model registered for ${resource.toString()}`,
+      );
 		}
 		return {
 			// eslint-disable-next-line local/code-no-dangerous-type-assertions
@@ -560,109 +604,112 @@ export function createEditorServices(disposables: DisposableStore, options?: Cre
 	define(ITreeSitterLibraryService, TestTreeSitterLibraryService);
 	define(IInlineCompletionsService, InlineCompletionsService);
 	defineInstance(ICodeLensCache, {
-		_serviceBrand: undefined,
-		put: () => { },
-		get: () => undefined,
-		delete: () => { },
-	});
+    _serviceBrand: undefined,
+    put: () => { },
+    get: () => undefined,
+    delete: () => { },
+  });
 	defineInstance(IHoverService, {
-		_serviceBrand: undefined,
-		showDelayedHover: () => undefined,
-		setupDelayedHover: () => ({ dispose: () => { } }),
-		setupDelayedHoverAtMouse: () => ({ dispose: () => { } }),
-		showInstantHover: () => undefined,
-		hideHover: () => { },
-		showAndFocusLastHover: () => { },
-		setupManagedHover: () => ({ dispose: () => { }, show: () => { }, hide: () => { }, update: () => { } }),
-		showManagedHover: () => { },
-	});
+    _serviceBrand: undefined,
+    showDelayedHover: () => undefined,
+    setupDelayedHover: () => ({ dispose: () => { } }),
+    setupDelayedHoverAtMouse: () => ({ dispose: () => { } }),
+    showInstantHover: () => undefined,
+    hideHover: () => { },
+    showAndFocusLastHover: () => { },
+    setupManagedHover: () => ({ dispose: () => { }, show: () => { }, hide: () => { }, update: () => { } }),
+    showManagedHover: () => { },
+  });
 	defineInstance(IDefaultAccountService, {
-		_serviceBrand: undefined,
-		onDidChangeDefaultAccount: new Emitter<null>().event,
-		onDidChangePolicyData: new Emitter<null>().event,
-		policyData: null,
-		currentDefaultAccount: null,
-		copilotTokenInfo: null,
-		onDidChangeCopilotTokenInfo: new Emitter<null>().event,
-		getDefaultAccount: async () => null,
-		getDefaultAccountAuthenticationProvider: () => ({ id: 'test', name: 'Test', scopes: [], enterprise: false }),
-		resolveGitHubUrl: (path: string) => `https://github.com/${path}`,
-		setDefaultAccountProvider: () => { },
-		refresh: async () => null,
-		signIn: async () => null,
-		signOut: async () => { },
-	});
+    _serviceBrand: undefined,
+    onDidChangeDefaultAccount: new Emitter<null>().event,
+    onDidChangePolicyData: new Emitter<null>().event,
+    policyData: null,
+    currentDefaultAccount: null,
+    copilotTokenInfo: null,
+    onDidChangeCopilotTokenInfo: new Emitter<null>().event,
+    getDefaultAccount: async () => null,
+    getDefaultAccountAuthenticationProvider: () => ({ id: "test", name: "Test", scopes: [], enterprise: false }),
+    resolveGitHubUrl: (path: string) => `https://github.com/${path}`,
+    setDefaultAccountProvider: () => { },
+    refresh: async () => null,
+    signIn: async () => null,
+    signOut: async () => { },
+  });
 
 	// User interaction service with focus simulation enabled (all elements appear focused in fixtures)
-	defineInstance(IUserInteractionService, new MockUserInteractionService(true, false));
+	defineInstance(
+    IUserInteractionService,
+    new MockUserInteractionService(true, false),
+  );
 
 	definePartialInstance(IActionWidgetService, {
-		_serviceBrand: undefined,
-		show: () => { },
-		hide: () => { },
-		get isVisible() { return false; },
-	});
+    _serviceBrand: undefined,
+    show: () => { },
+    hide: () => { },
+    get isVisible() { return false; },
+  });
 
 	defineInstance(IAccessibilitySignalService, {
-		_serviceBrand: undefined,
-		playSignal: async () => { },
-		playSignals: async () => { },
-		playSignalLoop: () => ({ dispose: () => { } }),
-		getEnabledState: () => ({ value: false, onDidChange: Event.None, onChange: () => ({ dispose: () => { } }) }),
-		getDelayMs: () => 0,
-		playSound: async () => { },
-		isSoundEnabled: () => false,
-		isAnnouncementEnabled: () => false,
-		onSoundEnabledChanged: () => Event.None,
-	});
+    _serviceBrand: undefined,
+    playSignal: async () => { },
+    playSignals: async () => { },
+    playSignalLoop: () => ({ dispose: () => { } }),
+    getEnabledState: () => ({ value: false, onDidChange: Event.None, onChange: () => ({ dispose: () => { } }) }),
+    getDelayMs: () => 0,
+    playSound: async () => { },
+    isSoundEnabled: () => false,
+    isAnnouncementEnabled: () => false,
+    onSoundEnabledChanged: () => Event.None,
+  });
 
 	define(ITextModelService, FixtureTextModelService);
 
 	defineInstance(IAgentFeedbackService, {
-		_serviceBrand: undefined,
-		onDidChangeFeedback: Event.None,
-		onDidChangeNavigation: Event.None,
-		addFeedback: () => undefined!,
-		removeFeedback: () => { },
-		updateFeedback: () => { },
-		getFeedback: () => [],
-		getMostRecentSessionForResource: () => undefined,
-		revealFeedback: async () => { },
-		revealSessionComment: async () => { },
-		getNextFeedback: () => undefined,
-		getNextNavigableItem: () => undefined,
-		setNavigationAnchor: () => { },
-		getNavigationBearing: () => ({ activeIdx: -1, totalCount: 0 }),
-		clearFeedback: () => { },
-		addFeedbackAndSubmit: async () => { },
-	});
+    _serviceBrand: undefined,
+    onDidChangeFeedback: Event.None,
+    onDidChangeNavigation: Event.None,
+    addFeedback: () => undefined!,
+    removeFeedback: () => { },
+    updateFeedback: () => { },
+    getFeedback: () => [],
+    getMostRecentSessionForResource: () => undefined,
+    revealFeedback: async () => { },
+    revealSessionComment: async () => { },
+    getNextFeedback: () => undefined,
+    getNextNavigableItem: () => undefined,
+    setNavigationAnchor: () => { },
+    getNavigationBearing: () => ({ activeIdx: -1, totalCount: 0 }),
+    clearFeedback: () => { },
+    addFeedbackAndSubmit: async () => { },
+  });
 
 	definePartialInstance(IChatEditingService, {
-		_serviceBrand: undefined,
-		editingSessionsObs: constObservable([]),
-		startOrContinueGlobalEditingSession: () => undefined!,
-		getEditingSession: () => undefined,
-	});
+    _serviceBrand: undefined,
+    editingSessionsObs: constObservable([]),
+    startOrContinueGlobalEditingSession: () => undefined!,
+    getEditingSession: () => undefined,
+  });
 
 	definePartialInstance(ISessionsManagementService, {
-		_serviceBrand: undefined,
-		activeSession: constObservable(undefined),
-		getSession: () => undefined,
-		getSessions: () => [],
-	});
+    _serviceBrand: undefined,
+    activeSession: constObservable(undefined),
+    getSession: () => undefined,
+    getSessions: () => [],
+  });
 
 	definePartialInstance(ICodeReviewService, {
-		_serviceBrand: undefined,
-		getReviewState: () => constObservable({ kind: CodeReviewStateKind.Idle }),
-		getPRReviewState: () => constObservable({ kind: PRReviewStateKind.None }),
-		hasReview: () => false,
-		requestReview: () => { },
-		removeComment: () => { },
-		updateComment: () => { },
-		dismissReview: () => { },
-		resolvePRReviewThread: async () => { },
-		markPRReviewCommentConverted: () => { },
-	});
+    _serviceBrand: undefined,
+    getReviewState: () => constObservable({ kind: CodeReviewStateKind.Idle }),
+    getPRReviewState: () => constObservable({ kind: PRReviewStateKind.None }),
+    hasReview: () => false,
+    requestReview: () => { },
+    removeComment: () => { },
+    updateComment: () => { },
+    dismissReview: () => { },
+    resolvePRReviewThread: async () => { },
+    markPRReviewCommentConverted: () => { },
+  });
 
 	// Allow additional services to override defaults
 	options?.additionalServices?.({
@@ -690,12 +737,14 @@ export function createEditorServices(disposables: DisposableStore, options?: Cre
 	// dispose runs, which disposes services it instantiated lazily from
 	// `SyncDescriptor`s (e.g. MenuService, ContextKeyService). Without this,
 	// production services with internal Disposables leak past the fixture.
-	const instantiationService = disposables.add(new TestInstantiationService(services, true, undefined, true));
+	const instantiationService = disposables.add(
+    new TestInstantiationService(services, true, undefined, true),
+  );
 
 	disposables.add(toDisposable(() => {
 		for (const id of serviceIdentifiers) {
 			const instanceOrDescriptor = services.get(id);
-			if (typeof instanceOrDescriptor?.dispose === 'function') {
+			if (typeof instanceOrDescriptor?.dispose === "function") {
 				instanceOrDescriptor.dispose();
 			}
 		}
@@ -710,33 +759,33 @@ export function createEditorServices(disposables: DisposableStore, options?: Cre
  */
 export function registerWorkbenchServices(registration: ServiceRegistration): void {
 	registration.defineInstance(IContextMenuService, {
-		showContextMenu: () => { },
-		onDidShowContextMenu: () => ({ dispose: () => { } }),
-		onDidHideContextMenu: () => ({ dispose: () => { } }),
-		_serviceBrand: undefined,
-	});
+    showContextMenu: () => { },
+    onDidShowContextMenu: () => ({ dispose: () => { } }),
+    onDidHideContextMenu: () => ({ dispose: () => { } }),
+    _serviceBrand: undefined,
+  });
 
 	registration.defineInstance(IContextViewService, {
-		showContextView: () => ({ close: () => { } }),
-		hideContextView: () => { },
-		getContextViewElement: () => { throw new Error('Not implemented'); },
-		layout: () => { },
-		anchorAlignment: 0,
-		_serviceBrand: undefined,
-	});
+    showContextView: () => ({ close: () => { } }),
+    hideContextView: () => { },
+    getContextViewElement: () => { throw new Error("Not implemented"); },
+    layout: () => { },
+    anchorAlignment: 0,
+    _serviceBrand: undefined,
+  });
 
 	registration.defineInstance(ILabelService, {
-		getUriLabel: (uri: URI) => uri.path,
-		getUriBasenameLabel: (uri: URI) => uri.path.split('/').pop() ?? '',
-		getWorkspaceLabel: () => '',
-		getHostLabel: () => '',
-		getSeparator: () => '/',
-		registerFormatter: () => ({ dispose: () => { } }),
-		onDidChangeFormatters: () => ({ dispose: () => { } }),
-		registerCachedFormatter: () => ({ dispose: () => { } }),
-		_serviceBrand: undefined,
-		getHostTooltip: () => '',
-	});
+    getUriLabel: (uri: URI) => uri.path,
+    getUriBasenameLabel: (uri: URI) => uri.path.split("/").pop() ?? "",
+    getWorkspaceLabel: () => "",
+    getHostLabel: () => "",
+    getSeparator: () => "/",
+    registerFormatter: () => ({ dispose: () => { } }),
+    onDidChangeFormatters: () => ({ dispose: () => { } }),
+    registerCachedFormatter: () => ({ dispose: () => { } }),
+    _serviceBrand: undefined,
+    getHostTooltip: () => "",
+  });
 
 	registration.define(IMenuService, TestMenuService);
 	registration.define(IActionViewItemService, NullActionViewItemService);
@@ -747,11 +796,11 @@ export function registerWorkbenchServices(registration: ServiceRegistration): vo
 	// fixtures see the no-op (`enabled === false`, sheet calls resolve
 	// immediately) which matches desktop runtime behavior.
 	registration.defineInstance(IChatPhoneInputPresenter, {
-		_serviceBrand: undefined,
-		enabled: constObservable(false),
-		showCombinedModeAndModelSheet: () => Promise.resolve(),
-		setImpl: () => ({ dispose: () => { } }),
-	});
+    _serviceBrand: undefined,
+    enabled: constObservable(false),
+    showCombinedModeAndModelSheet: () => Promise.resolve(),
+    setImpl: () => ({ dispose: () => { } }),
+  });
 }
 
 
@@ -766,11 +815,13 @@ export function createTextModel(
 	instantiationService: TestInstantiationService,
 	text: string,
 	uri: URI,
-	languageId?: string
+	languageId?: string,
 ): ITextModel {
 	const modelService = instantiationService.get(IModelService);
 	const languageService = instantiationService.get(ILanguageService);
-	const languageSelection = languageId ? languageService.createById(languageId) : null;
+	const languageSelection = languageId ? languageService.createById(
+    languageId,
+  ) : null;
 	return modelService.createModel(text, languageSelection, uri);
 }
 
@@ -780,23 +831,23 @@ export function createTextModel(
 // ============================================================================
 
 export interface ThemedFixtureGroupLabels {
-	readonly kind?: 'screenshot' | 'animated';
+	readonly kind?: "screenshot" | "animated";
 	readonly blocksCi?: true;
 	readonly flaky?: true;
 }
 
 function resolveLabels(labels: ThemedFixtureGroupLabels | undefined): string[] {
 	const result: string[] = [];
-	if (labels?.kind === 'screenshot') {
-		result.push('.screenshot');
-	} else if (labels?.kind === 'animated') {
-		result.push('animated');
+	if (labels?.kind === "screenshot") {
+		result.push(".screenshot");
+	} else if (labels?.kind === "animated") {
+		result.push("animated");
 	}
 	if (labels?.blocksCi) {
-		result.push('blocks-ci');
+		result.push("blocks-ci");
 	}
 	if (labels?.flaky) {
-		result.push('flaky');
+		result.push("flaky");
 	}
 	return result;
 }
@@ -808,7 +859,7 @@ export class DisposableStackStore implements IDisposable {
 	add<T extends IDisposable>(item: T): T {
 		if (this._isDisposed) {
 			item.dispose();
-			console.warn('Adding to a disposed DisposableStackStore');
+			console.warn("Adding to a disposed DisposableStackStore");
 		} else {
 			this._items.push(item);
 		}
@@ -843,10 +894,15 @@ type ThemedFixtures = ReturnType<typeof defineFixtureVariants>;
 const realTimeApi = captureGlobalTimeApi();
 const logOutsideTime = false;
 if (logOutsideTime) {
-	const loggingTimeApi = createLoggingTimeApi(realTimeApi, (name, stack, handler) => {
-		const handlerStr = typeof handler === 'function' ? handler.toString().slice(0, 500) : String(handler);
-		console.warn(`[ComponentFixture] Real ${name} called outside of virtual time.\nHandler: ${handlerStr}\nStack: ${stack}`);
-	});
+	const loggingTimeApi = createLoggingTimeApi(
+    realTimeApi,
+    (name, stack, handler) => {
+      const handlerStr = typeof handler === "function" ? handler.toString().slice(0, 500) : String(handler);
+      console.warn(
+        `[ComponentFixture] Real ${name} called outside of virtual time.\nHandler: ${handlerStr}\nStack: ${stack}`,
+      );
+    },
+  );
 	pushGlobalTimeApi(loggingTimeApi);
 }
 
@@ -862,9 +918,9 @@ let fixtureRenderCounter = 0;
  */
 export function defineComponentFixture(options: ComponentFixtureOptions): ThemedFixtures {
 	const createFixture = (theme: typeof darkTheme | typeof lightTheme) => defineFixture({
-		isolation: 'none',
-		displayMode: { type: 'component' },
-		background: theme === darkTheme ? 'dark' : 'light',
+		isolation: "none",
+		displayMode: { type: "component" },
+		background: theme === darkTheme ? "dark" : "light",
 		render: async (container: HTMLElement, context) => {
 			const disposableStore = new DisposableStore();
 
@@ -872,11 +928,11 @@ export function defineComponentFixture(options: ComponentFixtureOptions): Themed
 			disposableStore.add(pushRandomOverwrite(42));
 
 			// Do not enable virtual time in explorer ui, as multiple fixtures are rendered in parallel.
-			const virtualTimeEnabled = (options.virtualTime?.enabled ?? true) && context.host.kind !== 'explorer-ui';
+			const virtualTimeEnabled = (options.virtualTime?.enabled ?? true) && context.host.kind !== "explorer-ui";
 			// Detect disposable leaks the same way unit tests do (`ensureNoDisposablesAreLeakedInTestSuite`).
 			// The tracker is global and therefore unsafe when fixtures render in parallel,
 			// so it is only enabled outside the explorer UI (e.g. in screenshot/CI mode).
-			const leakDetectionEnabled = true && context.host.kind !== 'explorer-ui';
+			const leakDetectionEnabled = true && context.host.kind !== "explorer-ui";
 			// Warm up the `ModifierKeyEmitter` singleton before the leak tracker
 			// starts so its long-lived `DisposableStore` (created on first
 			// `MenuEntryActionViewItem.render`) doesn't show up as a leak in
@@ -901,7 +957,7 @@ export function defineComponentFixture(options: ComponentFixtureOptions): Themed
 			// through this seed and make screenshots that include
 			// time-derived labels (e.g. "1 hour ago", "Today") drift
 			// across days, hour boundaries, and DST changes.
-			const clock = new VirtualClock(new Date('2026-05-14T12:00:00Z').getTime());
+			const clock = new VirtualClock(new Date("2026-05-14T12:00:00Z").getTime());
 			const p = new VirtualTimeProcessor(
 				clock,
 				drainMicrotasksEmbedding(realTimeApi),
@@ -971,7 +1027,7 @@ export function defineComponentFixture(options: ComponentFixtureOptions): Themed
 
 					disposableStore.add(installFakeRunWhenIdle((_targetWindow, callback, _timeout?) => {
 						const stackTrace = new Error().stack;
-						const trace = TraceContext.instance.currentTrace().child('runWhenIdle', stackTrace);
+						const trace = TraceContext.instance.currentTrace().child("runWhenIdle", stackTrace);
 						return clock.schedule({
 							time: clock.now,
 							run: () => {
@@ -982,7 +1038,7 @@ export function defineComponentFixture(options: ComponentFixtureOptions): Themed
 								callback(deadline);
 							},
 							source: {
-								toString() { return 'runWhenIdle'; },
+								toString() { return "runWhenIdle"; },
 								stackTrace,
 							},
 							trace,
@@ -1010,7 +1066,7 @@ export function defineComponentFixture(options: ComponentFixtureOptions): Themed
 					if (virtualTimeEnabled && p.history.length > 0) {
 						const startTime = p.history[0].time;
 						const history = buildHistoryFromTasks(p.history, startTime);
-						console.error(`[ComponentFixture] ${theme === darkTheme ? 'Dark' : 'Light'} virtual-time history (${p.history.length} tasks):\n${renderSwimlanes(history)}`);
+						console.error(`[ComponentFixture] ${theme === darkTheme ? "Dark" : "Light"} virtual-time history (${p.history.length} tasks):\n${renderSwimlanes(history)}`);
 					}
 					throw e;
 				} finally {
@@ -1024,7 +1080,7 @@ export function defineComponentFixture(options: ComponentFixtureOptions): Themed
 			// output by the scheduler / processor shows exactly which fixture
 			// caused each queued or historical timer, plus the full chain of
 			// setTimeout/rAF calls that led to it.
-			const themeLabel = theme === darkTheme ? 'Dark' : 'Light';
+			const themeLabel = theme === darkTheme ? "Dark" : "Light";
 			const fixtureRoot = createTraceRoot(`render#${++fixtureRenderCounter}(${themeLabel})`);
 
 			await TraceContext.instance.runAsHandler(fixtureRoot, actualRender, {
@@ -1032,7 +1088,7 @@ export function defineComponentFixture(options: ComponentFixtureOptions): Themed
 				afterMicrotaskClosure: cb => nextMacrotask(realTimeApi, cb),
 			});
 
-			const wantsTimeTrace = !!context.input && typeof context.input === 'object' && !!(context.input as Record<string, unknown>).outputTimeTrace;
+			const wantsTimeTrace = !!context.input && typeof context.input === "object" && !!(context.input as Record<string, unknown>).outputTimeTrace;
 
 			if (wantsTimeTrace && virtualTimeEnabled && p.history.length > 0) {
 				const startTime = p.history[0].time;
@@ -1045,9 +1101,9 @@ export function defineComponentFixture(options: ComponentFixtureOptions): Themed
 
 	const labels = resolveLabels(options.labels);
 	return defineFixtureVariants(labels.length > 0 ? { labels } : {}, {
-		Dark: createFixture(darkTheme),
-		Light: createFixture(lightTheme),
-	});
+    Dark: createFixture(darkTheme),
+    Light: createFixture(lightTheme),
+  });
 }
 
 interface ThemedFixtureGroupOptions {
@@ -1066,10 +1122,13 @@ export function defineThemedFixtureGroup(fixtures: ThemedFixtureGroupFixtures): 
 export function defineThemedFixtureGroup(optionsOrFixtures: ThemedFixtureGroupOptions | ThemedFixtureGroupFixtures, fixtures?: ThemedFixtureGroupFixtures): ReturnType<typeof defineFixtureGroup> {
 	if (fixtures) {
 		const options = optionsOrFixtures as ThemedFixtureGroupOptions;
-		return defineFixtureGroup({
-			labels: resolveLabels(options.labels),
-			path: options.path,
-		}, fixtures as ThemedFixtureGroupFixtures);
+		return defineFixtureGroup(
+      {
+        labels: resolveLabels(options.labels),
+        path: options.path,
+      },
+      fixtures as ThemedFixtureGroupFixtures,
+    );
 	}
 	return defineFixtureGroup(optionsOrFixtures as ThemedFixtureGroupFixtures);
 }

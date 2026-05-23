@@ -3,12 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as platform from '../../../../../base/common/platform.js';
-import { ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IWorkbenchEnvironmentService } from '../../../../services/environment/common/environmentService.js';
+import * as platform from "../../../../../base/common/platform.js";
+import { ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IWorkbenchEnvironmentService } from "../../../../services/environment/common/environmentService.js";
 
 export default function content(accessor: ServicesAccessor) {
-	const isServerless = platform.isWeb && !accessor.get(IWorkbenchEnvironmentService).remoteAuthority;
+	const isServerless = platform.isWeb && !accessor.get(
+    IWorkbenchEnvironmentService,
+  ).remoteAuthority;
 	return `
 ## Interactive Editor Playground
 The core editor in VS Code is packed with features.  This page highlights a number of them and lets you interactively try them out through the use of a number of embedded editors.  For full details on the editor features for VS Code and more head over to our [documentation](https://code.visualstudio.com/docs).
@@ -16,7 +18,7 @@ The core editor in VS Code is packed with features.  This page highlights a numb
 * [Multi-cursor Editing](#multi-cursor-editing) - block selection, select all occurrences, add additional cursors and more.
 * [IntelliSense](#intellisense) - get code assistance and parameter suggestions for your code and external modules.
 * [Line Actions](#line-actions) - quickly move lines around to re-order your code.${!isServerless ? `
-* [Rename Refactoring](#rename-refactoring) - quickly rename symbols across your code base.` : ''}
+* [Rename Refactoring](#rename-refactoring) - quickly rename symbols across your code base.` : ""}
 * [Formatting](#formatting) - keep your code looking great with inbuilt document & selection formatting.
 * [Code Folding](#code-folding) - focus on the most relevant parts of your code by folding other areas.
 * [Errors and Warnings](#errors-and-warnings) - see errors and warnings as you type.
@@ -97,7 +99,7 @@ function Book(title, author) {
 
 > **JSDoc Tip:** VS Code's IntelliSense uses JSDoc comments to provide richer suggestions. The types and documentation from JSDoc comments show up when you hover over a reference to |Book| or in IntelliSense when you create a new instance of |Book|.
 
-` : ''}
+` : ""}
 ### Formatting
 Keeping your code looking great is hard without a good formatter.  Luckily it's easy to format content, either for the entire document with kb(editor.action.formatDocument) or for the current selection with kb(editor.action.formatSelection).  Both of these options are also available through the right-click context menu.
 
@@ -190,5 +192,5 @@ That's all for now,
 
 Happy Coding! 🎉
 
-`.replace(/\|/g, '`');
+`.replace(/\|/g, "`");
 }

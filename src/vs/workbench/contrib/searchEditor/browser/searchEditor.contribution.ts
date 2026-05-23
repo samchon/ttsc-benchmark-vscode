@@ -3,150 +3,175 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { KeyCode, KeyMod } from '../../../../base/common/keyCodes.js';
-import { extname, isEqual } from '../../../../base/common/resources.js';
-import { URI } from '../../../../base/common/uri.js';
-import { ServicesAccessor } from '../../../../editor/browser/editorExtensions.js';
-import { Range } from '../../../../editor/common/core/range.js';
-import { ToggleCaseSensitiveKeybinding, ToggleRegexKeybinding, ToggleWholeWordKeybinding } from '../../../../editor/contrib/find/browser/findModel.js';
-import { localize, localize2 } from '../../../../nls.js';
-import { Action2, MenuId, registerAction2 } from '../../../../platform/actions/common/actions.js';
-import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
-import { ContextKeyExpr, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { SyncDescriptor } from '../../../../platform/instantiation/common/descriptors.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { KeybindingWeight } from '../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { Registry } from '../../../../platform/registry/common/platform.js';
-import { EditorPaneDescriptor, IEditorPaneRegistry } from '../../../browser/editor.js';
-import { IWorkbenchContribution, WorkbenchPhase, registerWorkbenchContribution2 } from '../../../common/contributions.js';
-import { IEditorSerializer, IEditorFactoryRegistry, EditorExtensions, DEFAULT_EDITOR_ASSOCIATION } from '../../../common/editor.js';
-import { ActiveEditorContext } from '../../../common/contextkeys.js';
-import { IViewsService } from '../../../services/views/common/viewsService.js';
-import { getSearchView } from '../../search/browser/searchActionsBase.js';
-import { searchNewEditorIcon, searchRefreshIcon } from '../../search/browser/searchIcons.js';
-import * as SearchConstants from '../../search/common/constants.js';
-import * as SearchEditorConstants from './constants.js';
-import { SearchEditor } from './searchEditor.js';
-import { createEditorFromSearchResult, modifySearchEditorContextLinesCommand, openNewSearchEditor, openSearchEditor, selectAllSearchEditorMatchesCommand, toggleSearchEditorCaseSensitiveCommand, toggleSearchEditorContextLinesCommand, toggleSearchEditorRegexCommand, toggleSearchEditorWholeWordCommand } from './searchEditorActions.js';
-import { getOrMakeSearchEditorInput, SearchEditorInput, SEARCH_EDITOR_EXT } from './searchEditorInput.js';
-import { IEditorService } from '../../../services/editor/common/editorService.js';
-import { VIEW_ID } from '../../../services/search/common/search.js';
-import { searchConfigurationNode } from '../../search/common/search.js';
-import { RegisteredEditorPriority, IEditorResolverService } from '../../../services/editor/common/editorResolverService.js';
-import { IWorkingCopyEditorHandler, IWorkingCopyEditorService } from '../../../services/workingCopy/common/workingCopyEditorService.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { IWorkingCopyIdentifier } from '../../../services/workingCopy/common/workingCopy.js';
-import { EditorInput } from '../../../common/editor/editorInput.js';
-import { getActiveElement } from '../../../../base/browser/dom.js';
-import * as nls from '../../../../nls.js';
-import { Extensions as ConfigurationExtensions, IConfigurationRegistry } from '../../../../platform/configuration/common/configurationRegistry.js';
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { extname, isEqual } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ServicesAccessor } from "../../../../editor/browser/editorExtensions.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import {
+  ToggleCaseSensitiveKeybinding,
+  ToggleRegexKeybinding,
+  ToggleWholeWordKeybinding,
+} from "../../../../editor/contrib/find/browser/findModel.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { Action2, MenuId, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+import { ContextKeyExpr, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { EditorPaneDescriptor, IEditorPaneRegistry } from "../../../browser/editor.js";
+import {
+  IWorkbenchContribution,
+  WorkbenchPhase,
+  registerWorkbenchContribution2,
+} from "../../../common/contributions.js";
+import {
+  IEditorSerializer,
+  IEditorFactoryRegistry,
+  EditorExtensions,
+  DEFAULT_EDITOR_ASSOCIATION,
+} from "../../../common/editor.js";
+import { ActiveEditorContext } from "../../../common/contextkeys.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import { getSearchView } from "../../search/browser/searchActionsBase.js";
+import { searchNewEditorIcon, searchRefreshIcon } from "../../search/browser/searchIcons.js";
+import * as SearchConstants from "../../search/common/constants.js";
+import * as SearchEditorConstants from "./constants.js";
+import { SearchEditor } from "./searchEditor.js";
+import {
+  createEditorFromSearchResult,
+  modifySearchEditorContextLinesCommand,
+  openNewSearchEditor,
+  openSearchEditor,
+  selectAllSearchEditorMatchesCommand,
+  toggleSearchEditorCaseSensitiveCommand,
+  toggleSearchEditorContextLinesCommand,
+  toggleSearchEditorRegexCommand,
+  toggleSearchEditorWholeWordCommand,
+} from "./searchEditorActions.js";
+import { getOrMakeSearchEditorInput, SearchEditorInput, SEARCH_EDITOR_EXT } from "./searchEditorInput.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { VIEW_ID } from "../../../services/search/common/search.js";
+import { searchConfigurationNode } from "../../search/common/search.js";
+import { RegisteredEditorPriority, IEditorResolverService } from "../../../services/editor/common/editorResolverService.js";
+import { IWorkingCopyEditorHandler, IWorkingCopyEditorService } from "../../../services/workingCopy/common/workingCopyEditorService.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IWorkingCopyIdentifier } from "../../../services/workingCopy/common/workingCopy.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { getActiveElement } from "../../../../base/browser/dom.js";
+import * as nls from "../../../../nls.js";
+import { Extensions as ConfigurationExtensions, IConfigurationRegistry } from "../../../../platform/configuration/common/configurationRegistry.js";
 
 
-const OpenInEditorCommandId = 'search.action.openInEditor';
-const OpenNewEditorToSideCommandId = 'search.action.openNewEditorToSide';
-const FocusQueryEditorWidgetCommandId = 'search.action.focusQueryEditorWidget';
-const FocusQueryEditorFilesToIncludeCommandId = 'search.action.focusFilesToInclude';
-const FocusQueryEditorFilesToExcludeCommandId = 'search.action.focusFilesToExclude';
+const OpenInEditorCommandId = "search.action.openInEditor";
+const OpenNewEditorToSideCommandId = "search.action.openNewEditorToSide";
+const FocusQueryEditorWidgetCommandId = "search.action.focusQueryEditorWidget";
+const FocusQueryEditorFilesToIncludeCommandId = "search.action.focusFilesToInclude";
+const FocusQueryEditorFilesToExcludeCommandId = "search.action.focusFilesToExclude";
 
-const ToggleSearchEditorCaseSensitiveCommandId = 'toggleSearchEditorCaseSensitive';
-const ToggleSearchEditorWholeWordCommandId = 'toggleSearchEditorWholeWord';
-const ToggleSearchEditorRegexCommandId = 'toggleSearchEditorRegex';
-const IncreaseSearchEditorContextLinesCommandId = 'increaseSearchEditorContextLines';
-const DecreaseSearchEditorContextLinesCommandId = 'decreaseSearchEditorContextLines';
+const ToggleSearchEditorCaseSensitiveCommandId = "toggleSearchEditorCaseSensitive";
+const ToggleSearchEditorWholeWordCommandId = "toggleSearchEditorWholeWord";
+const ToggleSearchEditorRegexCommandId = "toggleSearchEditorRegex";
+const IncreaseSearchEditorContextLinesCommandId = "increaseSearchEditorContextLines";
+const DecreaseSearchEditorContextLinesCommandId = "decreaseSearchEditorContextLines";
 
-const RerunSearchEditorSearchCommandId = 'rerunSearchEditorSearch';
-const CleanSearchEditorStateCommandId = 'cleanSearchEditorState';
-const SelectAllSearchEditorMatchesCommandId = 'selectAllSearchEditorMatches';
+const RerunSearchEditorSearchCommandId = "rerunSearchEditorSearch";
+const CleanSearchEditorStateCommandId = "cleanSearchEditorState";
+const SelectAllSearchEditorMatchesCommandId = "selectAllSearchEditorMatches";
 
 
 //#region Search Editor Configuration
 Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).registerConfiguration({
 	...searchConfigurationNode,
 	properties: {
-		'search.searchEditor.doubleClickBehaviour': {
-			type: 'string',
-			enum: ['selectWord', 'goToLocation', 'openLocationToSide'],
-			default: 'goToLocation',
+		"search.searchEditor.doubleClickBehaviour": {
+			type: "string",
+			enum: ["selectWord", "goToLocation", "openLocationToSide"],
+			default: "goToLocation",
 			enumDescriptions: [
-				nls.localize('search.searchEditor.doubleClickBehaviour.selectWord', "Double-clicking selects the word under the cursor."),
-				nls.localize('search.searchEditor.doubleClickBehaviour.goToLocation', "Double-clicking opens the result in the active editor group."),
-				nls.localize('search.searchEditor.doubleClickBehaviour.openLocationToSide', "Double-clicking opens the result in the editor group to the side, creating one if it does not yet exist."),
+				nls.localize("search.searchEditor.doubleClickBehaviour.selectWord", "Double-clicking selects the word under the cursor."),
+				nls.localize("search.searchEditor.doubleClickBehaviour.goToLocation", "Double-clicking opens the result in the active editor group."),
+				nls.localize("search.searchEditor.doubleClickBehaviour.openLocationToSide", "Double-clicking opens the result in the editor group to the side, creating one if it does not yet exist."),
 			],
-			markdownDescription: nls.localize('search.searchEditor.doubleClickBehaviour', "Configure effect of double-clicking a result in a search editor.")
+			markdownDescription: nls.localize("search.searchEditor.doubleClickBehaviour", "Configure effect of double-clicking a result in a search editor."),
 		},
-		'search.searchEditor.singleClickBehaviour': {
-			type: 'string',
-			enum: ['default', 'peekDefinition'],
-			default: 'default',
+		"search.searchEditor.singleClickBehaviour": {
+			type: "string",
+			enum: ["default", "peekDefinition"],
+			default: "default",
 			enumDescriptions: [
-				nls.localize('search.searchEditor.singleClickBehaviour.default', "Single-clicking does nothing."),
-				nls.localize('search.searchEditor.singleClickBehaviour.peekDefinition', "Single-clicking opens a Peek Definition window."),
+				nls.localize("search.searchEditor.singleClickBehaviour.default", "Single-clicking does nothing."),
+				nls.localize("search.searchEditor.singleClickBehaviour.peekDefinition", "Single-clicking opens a Peek Definition window."),
 			],
-			markdownDescription: nls.localize('search.searchEditor.singleClickBehaviour', "Configure effect of single-clicking a result in a search editor.")
+			markdownDescription: nls.localize("search.searchEditor.singleClickBehaviour", "Configure effect of single-clicking a result in a search editor."),
 		},
-		'search.searchEditor.reusePriorSearchConfiguration': {
-			type: 'boolean',
+		"search.searchEditor.reusePriorSearchConfiguration": {
+			type: "boolean",
 			default: false,
-			markdownDescription: nls.localize({ key: 'search.searchEditor.reusePriorSearchConfiguration', comment: ['"Search Editor" is a type of editor that can display search results. "includes, excludes, and flags" refers to the "files to include" and "files to exclude" input boxes, and the flags that control whether a query is case-sensitive or a regex.'] }, "When enabled, new Search Editors will reuse the includes, excludes, and flags of the previously opened Search Editor.")
+			markdownDescription: nls.localize({ key: "search.searchEditor.reusePriorSearchConfiguration", comment: ['"Search Editor" is a type of editor that can display search results. "includes, excludes, and flags" refers to the "files to include" and "files to exclude" input boxes, and the flags that control whether a query is case-sensitive or a regex.'] }, "When enabled, new Search Editors will reuse the includes, excludes, and flags of the previously opened Search Editor."),
 		},
-		'search.searchEditor.defaultNumberOfContextLines': {
-			type: ['number', 'null'],
+		"search.searchEditor.defaultNumberOfContextLines": {
+			type: ["number", "null"],
 			default: 1,
-			markdownDescription: nls.localize('search.searchEditor.defaultNumberOfContextLines', "The default number of surrounding context lines to use when creating new Search Editors. If using `#search.searchEditor.reusePriorSearchConfiguration#`, this can be set to `null` (empty) to use the prior Search Editor's configuration.")
+			markdownDescription: nls.localize("search.searchEditor.defaultNumberOfContextLines", "The default number of surrounding context lines to use when creating new Search Editors. If using `#search.searchEditor.reusePriorSearchConfiguration#`, this can be set to `null` (empty) to use the prior Search Editor's configuration."),
 		},
-		'search.searchEditor.focusResultsOnSearch': {
-			type: 'boolean',
+		"search.searchEditor.focusResultsOnSearch": {
+			type: "boolean",
 			default: false,
-			markdownDescription: nls.localize('search.searchEditor.focusResultsOnSearch', "When a search is triggered, focus the Search Editor results instead of the Search Editor input.")
+			markdownDescription: nls.localize("search.searchEditor.focusResultsOnSearch", "When a search is triggered, focus the Search Editor results instead of the Search Editor input."),
 		},
-	}
+	},
 });
 //#endregion
 
 //#region Editor Descriptior
 Registry.as<IEditorPaneRegistry>(EditorExtensions.EditorPane).registerEditorPane(
-	EditorPaneDescriptor.create(
-		SearchEditor,
-		SearchEditor.ID,
-		localize('searchEditor', "Search Editor")
-	),
-	[
-		new SyncDescriptor(SearchEditorInput)
-	]
+  EditorPaneDescriptor.create(
+    SearchEditor,
+    SearchEditor.ID,
+    localize("searchEditor", "Search Editor"),
+  ),
+  [new SyncDescriptor(SearchEditorInput)],
 );
 //#endregion
 
 //#region Startup Contribution
 class SearchEditorContribution implements IWorkbenchContribution {
 
-	static readonly ID = 'workbench.contrib.searchEditor';
+	static readonly ID = "workbench.contrib.searchEditor";
 
 	constructor(
 		@IEditorResolverService editorResolverService: IEditorResolverService,
 		@IInstantiationService instantiationService: IInstantiationService,
 	) {
 		editorResolverService.registerEditor(
-			'*' + SEARCH_EDITOR_EXT,
+			"*" + SEARCH_EDITOR_EXT,
 			{
 				id: SearchEditorInput.ID,
-				label: localize('promptOpenWith.searchEditor.displayName', "Search Editor"),
+				label: localize("promptOpenWith.searchEditor.displayName", "Search Editor"),
 				detail: DEFAULT_EDITOR_ASSOCIATION.providerDisplayName,
 				priority: RegisteredEditorPriority.default,
 			},
 			{
 				singlePerResource: true,
-				canSupportResource: resource => (extname(resource) === SEARCH_EDITOR_EXT)
+				canSupportResource: resource => (extname(resource) === SEARCH_EDITOR_EXT),
 			},
 			{
 				createEditorInput: ({ resource }) => {
-					return { editor: instantiationService.invokeFunction(getOrMakeSearchEditorInput, { from: 'existingFile', fileUri: resource }) };
-				}
-			}
+					return { editor: instantiationService.invokeFunction(getOrMakeSearchEditorInput, { from: "existingFile", fileUri: resource }) };
+				},
+			},
 		);
 	}
 }
 
-registerWorkbenchContribution2(SearchEditorContribution.ID, SearchEditorContribution, WorkbenchPhase.BlockStartup);
+registerWorkbenchContribution2(
+  SearchEditorContribution.ID,
+  SearchEditorContribution,
+  WorkbenchPhase.BlockStartup,
+);
 //#endregion
 
 //#region Input Serializer
@@ -164,7 +189,9 @@ class SearchEditorInputSerializer implements IEditorSerializer {
 		}
 
 		if (input.isDisposed()) {
-			return JSON.stringify({ modelUri: undefined, dirty: false, config: input.tryReadConfigSync(), name: input.getName(), matchRanges: [], backingUri: input.backingUri?.toString() } satisfies SerializedSearchEditor);
+			return JSON.stringify(
+        { modelUri: undefined, dirty: false, config: input.tryReadConfigSync(), name: input.getName(), matchRanges: [], backingUri: input.backingUri?.toString() } satisfies SerializedSearchEditor,
+      );
 		}
 
 		let modelUri = undefined;
@@ -177,25 +204,40 @@ class SearchEditorInputSerializer implements IEditorSerializer {
 		const matchRanges = dirty ? input.getMatchRanges() : [];
 		const backingUri = input.backingUri;
 
-		return JSON.stringify({ modelUri, dirty, config, name: input.getName(), matchRanges, backingUri: backingUri?.toString() } satisfies SerializedSearchEditor);
+		return JSON.stringify(
+      { modelUri, dirty, config, name: input.getName(), matchRanges, backingUri: backingUri?.toString() } satisfies SerializedSearchEditor,
+    );
 	}
 
 	deserialize(instantiationService: IInstantiationService, serializedEditorInput: string): SearchEditorInput | undefined {
-		const { modelUri, dirty, config, matchRanges, backingUri } = JSON.parse(serializedEditorInput) as SerializedSearchEditor;
+		const { modelUri, dirty, config, matchRanges, backingUri } = JSON.parse(
+      serializedEditorInput,
+    ) as SerializedSearchEditor;
 		if (config && (config.query !== undefined)) {
 			if (modelUri) {
-				const input = instantiationService.invokeFunction(getOrMakeSearchEditorInput,
-					{ from: 'model', modelUri: URI.parse(modelUri), config, backupOf: backingUri ? URI.parse(backingUri) : undefined });
+				const input = instantiationService.invokeFunction(
+          getOrMakeSearchEditorInput,
+          {
+            from: "model",
+            modelUri: URI.parse(modelUri),
+            config,
+            backupOf: backingUri ? URI.parse(backingUri) : undefined,
+          },
+        );
 				input.setDirty(dirty);
 				input.setMatchRanges(matchRanges);
 				return input;
 			} else {
 				if (backingUri) {
-					return instantiationService.invokeFunction(getOrMakeSearchEditorInput,
-						{ from: 'existingFile', fileUri: URI.parse(backingUri) });
+					return instantiationService.invokeFunction(
+            getOrMakeSearchEditorInput,
+            { from: "existingFile", fileUri: URI.parse(backingUri) },
+          );
 				} else {
-					return instantiationService.invokeFunction(getOrMakeSearchEditorInput,
-						{ from: 'rawData', resultsContents: '', config });
+					return instantiationService.invokeFunction(
+            getOrMakeSearchEditorInput,
+            { from: "rawData", resultsContents: "", config },
+          );
 				}
 			}
 		}
@@ -204,8 +246,9 @@ class SearchEditorInputSerializer implements IEditorSerializer {
 }
 
 Registry.as<IEditorFactoryRegistry>(EditorExtensions.EditorFactory).registerEditorSerializer(
-	SearchEditorInput.ID,
-	SearchEditorInputSerializer);
+  SearchEditorInput.ID,
+  SearchEditorInputSerializer,
+);
 //#endregion
 
 //#region Commands
@@ -220,7 +263,7 @@ CommandsRegistry.registerCommand(
 //#endregion
 
 //#region Actions
-const category = localize2('search', 'Search Editor');
+const category = localize2("search", "Search Editor");
 
 export type LegacySearchEditorArgs = Partial<{
 	query: string;
@@ -234,19 +277,19 @@ export type LegacySearchEditorArgs = Partial<{
 	showIncludesExcludes: boolean;
 	triggerSearch: boolean;
 	focusResults: boolean;
-	location: 'reuse' | 'new';
+	location: "reuse" | "new";
 }>;
 
 const translateLegacyConfig = (legacyConfig: LegacySearchEditorArgs & OpenSearchEditorArgs = {}): OpenSearchEditorArgs => {
 	const config: OpenSearchEditorArgs = {};
 	const overrides: { [K in keyof LegacySearchEditorArgs]: keyof OpenSearchEditorArgs } = {
-		includes: 'filesToInclude',
-		excludes: 'filesToExclude',
-		wholeWord: 'matchWholeWord',
-		caseSensitive: 'isCaseSensitive',
-		regexp: 'isRegexp',
-		useIgnores: 'useExcludeSettingsAndIgnoreFiles',
-	};
+    includes: "filesToInclude",
+    excludes: "filesToExclude",
+    wholeWord: "matchWholeWord",
+    caseSensitive: "isCaseSensitive",
+    regexp: "isRegexp",
+    useIgnores: "useExcludeSettingsAndIgnoreFiles",
+  };
 	Object.entries(legacyConfig).forEach(([key, value]) => {
 		// eslint-disable-next-line local/code-no-any-casts
 		(config as any)[(overrides as any)[key] ?? key] = value;
@@ -254,35 +297,35 @@ const translateLegacyConfig = (legacyConfig: LegacySearchEditorArgs & OpenSearch
 	return config;
 };
 
-export type OpenSearchEditorArgs = Partial<SearchEditorConstants.SearchConfiguration & { triggerSearch: boolean; focusResults: boolean; location: 'reuse' | 'new' }>;
+export type OpenSearchEditorArgs = Partial<SearchEditorConstants.SearchConfiguration & { triggerSearch: boolean; focusResults: boolean; location: "reuse" | "new" }>;
 const openArgMetadata = {
-	description: 'Open a new search editor. Arguments passed can include variables like ${relativeFileDirname}.',
+	description: "Open a new search editor. Arguments passed can include variables like ${relativeFileDirname}.",
 	args: [{
-		name: 'Open new Search Editor args',
+		name: "Open new Search Editor args",
 		schema: {
 			properties: {
-				query: { type: 'string' },
-				filesToInclude: { type: 'string' },
-				filesToExclude: { type: 'string' },
-				contextLines: { type: 'number' },
-				matchWholeWord: { type: 'boolean' },
-				isCaseSensitive: { type: 'boolean' },
-				isRegexp: { type: 'boolean' },
-				useExcludeSettingsAndIgnoreFiles: { type: 'boolean' },
-				showIncludesExcludes: { type: 'boolean' },
-				triggerSearch: { type: 'boolean' },
-				focusResults: { type: 'boolean' },
-				onlyOpenEditors: { type: 'boolean' },
-			}
-		}
-	}]
+				query: { type: "string" },
+				filesToInclude: { type: "string" },
+				filesToExclude: { type: "string" },
+				contextLines: { type: "number" },
+				matchWholeWord: { type: "boolean" },
+				isCaseSensitive: { type: "boolean" },
+				isRegexp: { type: "boolean" },
+				useExcludeSettingsAndIgnoreFiles: { type: "boolean" },
+				showIncludesExcludes: { type: "boolean" },
+				triggerSearch: { type: "boolean" },
+				focusResults: { type: "boolean" },
+				onlyOpenEditors: { type: "boolean" },
+			},
+		},
+	}],
 } as const;
 
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'search.searchEditor.action.deleteFileResults',
-			title: localize2('searchEditor.deleteResultBlock', 'Delete File Results'),
+			id: "search.searchEditor.action.deleteFileResults",
+			title: localize2("searchEditor.deleteResultBlock", "Delete File Results"),
 			keybinding: {
 				weight: KeybindingWeight.EditorContrib,
 				primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.Backspace,
@@ -305,14 +348,14 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: SearchEditorConstants.OpenNewEditorCommandId,
-			title: localize2('search.openNewSearchEditor', 'New Search Editor'),
+			title: localize2("search.openNewSearchEditor", "New Search Editor"),
 			category,
 			f1: true,
-			metadata: openArgMetadata
+			metadata: openArgMetadata,
 		});
 	}
 	async run(accessor: ServicesAccessor, args: LegacySearchEditorArgs | OpenSearchEditorArgs) {
-		await accessor.get(IInstantiationService).invokeFunction(openNewSearchEditor, translateLegacyConfig({ location: 'new', ...args }));
+		await accessor.get(IInstantiationService).invokeFunction(openNewSearchEditor, translateLegacyConfig({ location: "new", ...args }));
 	}
 });
 
@@ -320,14 +363,14 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: SearchEditorConstants.OpenEditorCommandId,
-			title: localize2('search.openSearchEditor', 'Open Search Editor'),
+			title: localize2("search.openSearchEditor", "Open Search Editor"),
 			category,
 			f1: true,
-			metadata: openArgMetadata
+			metadata: openArgMetadata,
 		});
 	}
 	async run(accessor: ServicesAccessor, args: LegacySearchEditorArgs | OpenSearchEditorArgs) {
-		await accessor.get(IInstantiationService).invokeFunction(openNewSearchEditor, translateLegacyConfig({ location: 'reuse', ...args }));
+		await accessor.get(IInstantiationService).invokeFunction(openNewSearchEditor, translateLegacyConfig({ location: "reuse", ...args }));
 	}
 });
 
@@ -335,10 +378,10 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: OpenNewEditorToSideCommandId,
-			title: localize2('search.openNewEditorToSide', 'Open New Search Editor to the Side'),
+			title: localize2("search.openNewEditorToSide", "Open New Search Editor to the Side"),
 			category,
 			f1: true,
-			metadata: openArgMetadata
+			metadata: openArgMetadata,
 		});
 	}
 	async run(accessor: ServicesAccessor, args: LegacySearchEditorArgs | OpenSearchEditorArgs) {
@@ -350,7 +393,7 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: OpenInEditorCommandId,
-			title: localize2('search.openResultsInEditor', 'Open Results in Editor'),
+			title: localize2("search.openResultsInEditor", "Open Results in Editor"),
 			category,
 			f1: true,
 			keybinding: {
@@ -358,8 +401,8 @@ registerAction2(class extends Action2 {
 				when: ContextKeyExpr.and(SearchConstants.SearchContext.HasSearchResults, SearchConstants.SearchContext.SearchViewFocusedKey),
 				weight: KeybindingWeight.WorkbenchContrib,
 				mac: {
-					primary: KeyMod.CtrlCmd | KeyCode.Enter
-				}
+					primary: KeyMod.CtrlCmd | KeyCode.Enter,
+				},
 			},
 		});
 	}
@@ -377,23 +420,23 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: RerunSearchEditorSearchCommandId,
-			title: localize2('search.rerunSearchInEditor', 'Search Again'),
+			title: localize2("search.rerunSearchInEditor", "Search Again"),
 			category,
 			keybinding: {
 				primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyR,
 				when: SearchEditorConstants.InSearchEditor,
-				weight: KeybindingWeight.EditorContrib
+				weight: KeybindingWeight.EditorContrib,
 			},
 			icon: searchRefreshIcon,
 			menu: [...[MenuId.EditorTitle, MenuId.CompactWindowEditorTitle].map(id => ({
 				id,
-				group: 'navigation',
-				when: ActiveEditorContext.isEqualTo(SearchEditorConstants.SearchEditorID)
+				group: "navigation",
+				when: ActiveEditorContext.isEqualTo(SearchEditorConstants.SearchEditorID),
 			})),
 			{
 				id: MenuId.CommandPalette,
-				when: ActiveEditorContext.isEqualTo(SearchEditorConstants.SearchEditorID)
-			}]
+				when: ActiveEditorContext.isEqualTo(SearchEditorConstants.SearchEditorID),
+			}],
 		});
 	}
 	async run(accessor: ServicesAccessor) {
@@ -409,14 +452,14 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: FocusQueryEditorWidgetCommandId,
-			title: localize2('search.action.focusQueryEditorWidget', 'Focus Search Editor Input'),
+			title: localize2("search.action.focusQueryEditorWidget", "Focus Search Editor Input"),
 			category,
 			f1: true,
 			precondition: SearchEditorConstants.InSearchEditor,
 			keybinding: {
 				primary: KeyCode.Escape,
-				weight: KeybindingWeight.EditorContrib
-			}
+				weight: KeybindingWeight.EditorContrib,
+			},
 		});
 	}
 	async run(accessor: ServicesAccessor) {
@@ -432,7 +475,7 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: FocusQueryEditorFilesToIncludeCommandId,
-			title: localize2('search.action.focusFilesToInclude', 'Focus Search Editor Files to Include'),
+			title: localize2("search.action.focusFilesToInclude", "Focus Search Editor Files to Include"),
 			category,
 			f1: true,
 			precondition: SearchEditorConstants.InSearchEditor,
@@ -451,7 +494,7 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: FocusQueryEditorFilesToExcludeCommandId,
-			title: localize2('search.action.focusFilesToExclude', 'Focus Search Editor Files to Exclude'),
+			title: localize2("search.action.focusFilesToExclude", "Focus Search Editor Files to Exclude"),
 			category,
 			f1: true,
 			precondition: SearchEditorConstants.InSearchEditor,
@@ -470,14 +513,14 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: ToggleSearchEditorCaseSensitiveCommandId,
-			title: localize2('searchEditor.action.toggleSearchEditorCaseSensitive', 'Toggle Match Case'),
+			title: localize2("searchEditor.action.toggleSearchEditorCaseSensitive", "Toggle Match Case"),
 			category,
 			f1: true,
 			precondition: SearchEditorConstants.InSearchEditor,
 			keybinding: Object.assign({
 				weight: KeybindingWeight.WorkbenchContrib,
 				when: SearchConstants.SearchContext.SearchInputBoxFocusedKey,
-			}, ToggleCaseSensitiveKeybinding)
+			}, ToggleCaseSensitiveKeybinding),
 		});
 	}
 	run(accessor: ServicesAccessor) {
@@ -489,14 +532,14 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: ToggleSearchEditorWholeWordCommandId,
-			title: localize2('searchEditor.action.toggleSearchEditorWholeWord', 'Toggle Match Whole Word'),
+			title: localize2("searchEditor.action.toggleSearchEditorWholeWord", "Toggle Match Whole Word"),
 			category,
 			f1: true,
 			precondition: SearchEditorConstants.InSearchEditor,
 			keybinding: Object.assign({
 				weight: KeybindingWeight.WorkbenchContrib,
 				when: SearchConstants.SearchContext.SearchInputBoxFocusedKey,
-			}, ToggleWholeWordKeybinding)
+			}, ToggleWholeWordKeybinding),
 		});
 	}
 	run(accessor: ServicesAccessor) {
@@ -508,14 +551,14 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: ToggleSearchEditorRegexCommandId,
-			title: localize2('searchEditor.action.toggleSearchEditorRegex', "Toggle Use Regular Expression"),
+			title: localize2("searchEditor.action.toggleSearchEditorRegex", "Toggle Use Regular Expression"),
 			category,
 			f1: true,
 			precondition: SearchEditorConstants.InSearchEditor,
 			keybinding: Object.assign({
 				weight: KeybindingWeight.WorkbenchContrib,
 				when: SearchConstants.SearchContext.SearchInputBoxFocusedKey,
-			}, ToggleRegexKeybinding)
+			}, ToggleRegexKeybinding),
 		});
 	}
 	run(accessor: ServicesAccessor) {
@@ -527,15 +570,15 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: SearchEditorConstants.ToggleSearchEditorContextLinesCommandId,
-			title: localize2('searchEditor.action.toggleSearchEditorContextLines', "Toggle Context Lines"),
+			title: localize2("searchEditor.action.toggleSearchEditorContextLines", "Toggle Context Lines"),
 			category,
 			f1: true,
 			precondition: SearchEditorConstants.InSearchEditor,
 			keybinding: {
 				weight: KeybindingWeight.WorkbenchContrib,
 				primary: KeyMod.Alt | KeyCode.KeyL,
-				mac: { primary: KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.KeyL }
-			}
+				mac: { primary: KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.KeyL },
+			},
 		});
 	}
 	run(accessor: ServicesAccessor) {
@@ -547,14 +590,14 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: IncreaseSearchEditorContextLinesCommandId,
-			title: localize2('searchEditor.action.increaseSearchEditorContextLines', "Increase Context Lines"),
+			title: localize2("searchEditor.action.increaseSearchEditorContextLines", "Increase Context Lines"),
 			category,
 			f1: true,
 			precondition: SearchEditorConstants.InSearchEditor,
 			keybinding: {
 				weight: KeybindingWeight.WorkbenchContrib,
-				primary: KeyMod.Alt | KeyCode.Equal
-			}
+				primary: KeyMod.Alt | KeyCode.Equal,
+			},
 		});
 	}
 	run(accessor: ServicesAccessor) { modifySearchEditorContextLinesCommand(accessor, true); }
@@ -564,14 +607,14 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: DecreaseSearchEditorContextLinesCommandId,
-			title: localize2('searchEditor.action.decreaseSearchEditorContextLines', "Decrease Context Lines"),
+			title: localize2("searchEditor.action.decreaseSearchEditorContextLines", "Decrease Context Lines"),
 			category,
 			f1: true,
 			precondition: SearchEditorConstants.InSearchEditor,
 			keybinding: {
 				weight: KeybindingWeight.WorkbenchContrib,
-				primary: KeyMod.Alt | KeyCode.Minus
-			}
+				primary: KeyMod.Alt | KeyCode.Minus,
+			},
 		});
 	}
 	run(accessor: ServicesAccessor) { modifySearchEditorContextLinesCommand(accessor, false); }
@@ -581,14 +624,14 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: SelectAllSearchEditorMatchesCommandId,
-			title: localize2('searchEditor.action.selectAllSearchEditorMatches', "Select All Matches"),
+			title: localize2("searchEditor.action.selectAllSearchEditorMatches", "Select All Matches"),
 			category,
 			f1: true,
 			precondition: SearchEditorConstants.InSearchEditor,
 			keybinding: {
 				weight: KeybindingWeight.WorkbenchContrib,
 				primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyL,
-			}
+			},
 		});
 	}
 	run(accessor: ServicesAccessor) {
@@ -599,16 +642,16 @@ registerAction2(class extends Action2 {
 registerAction2(class OpenSearchEditorAction extends Action2 {
 	constructor() {
 		super({
-			id: 'search.action.openNewEditorFromView',
-			title: localize('search.openNewEditor', "Open New Search Editor"),
+			id: "search.action.openNewEditorFromView",
+			title: localize("search.openNewEditor", "Open New Search Editor"),
 			category,
 			icon: searchNewEditorIcon,
 			menu: [{
 				id: MenuId.ViewTitle,
-				group: 'navigation',
+				group: "navigation",
 				order: 2,
-				when: ContextKeyExpr.equals('view', VIEW_ID),
-			}]
+				when: ContextKeyExpr.equals("view", VIEW_ID),
+			}],
 		});
 	}
 	run(accessor: ServicesAccessor, ...args: unknown[]) {
@@ -620,7 +663,7 @@ registerAction2(class OpenSearchEditorAction extends Action2 {
 //#region Search Editor Working Copy Editor Handler
 class SearchEditorWorkingCopyEditorHandler extends Disposable implements IWorkbenchContribution, IWorkingCopyEditorHandler {
 
-	static readonly ID = 'workbench.contrib.searchEditorWorkingCopyEditorHandler';
+	static readonly ID = "workbench.contrib.searchEditorWorkingCopyEditorHandler";
 
 	constructor(
 		@IInstantiationService private readonly instantiationService: IInstantiationService,
@@ -640,16 +683,26 @@ class SearchEditorWorkingCopyEditorHandler extends Disposable implements IWorkbe
 			return false;
 		}
 
-		return editor instanceof SearchEditorInput && isEqual(workingCopy.resource, editor.modelUri);
+		return editor instanceof SearchEditorInput && isEqual(
+      workingCopy.resource,
+      editor.modelUri,
+    );
 	}
 
 	createEditor(workingCopy: IWorkingCopyIdentifier): EditorInput {
-		const input = this.instantiationService.invokeFunction(getOrMakeSearchEditorInput, { from: 'model', modelUri: workingCopy.resource });
+		const input = this.instantiationService.invokeFunction(
+      getOrMakeSearchEditorInput,
+      { from: "model", modelUri: workingCopy.resource },
+    );
 		input.setDirty(true);
 
 		return input;
 	}
 }
 
-registerWorkbenchContribution2(SearchEditorWorkingCopyEditorHandler.ID, SearchEditorWorkingCopyEditorHandler, WorkbenchPhase.BlockRestore);
+registerWorkbenchContribution2(
+  SearchEditorWorkingCopyEditorHandler.ID,
+  SearchEditorWorkingCopyEditorHandler,
+  WorkbenchPhase.BlockRestore,
+);
 //#endregion

@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type * as spdlog from '@vscode/spdlog';
-import { ByteSize } from '../../files/common/files.js';
-import { AbstractMessageLogger, ILogger, LogLevel } from '../common/log.js';
+import type * as spdlog from "@vscode/spdlog";
+import { ByteSize } from "../../files/common/files.js";
+import { AbstractMessageLogger, ILogger, LogLevel } from "../common/log.js";
 
 enum SpdLogLevel {
 	Trace,
@@ -20,13 +20,18 @@ enum SpdLogLevel {
 async function createSpdLogLogger(name: string, logfilePath: string, filesize: number, filecount: number, donotUseFormatters: boolean): Promise<spdlog.Logger | null> {
 	// Do not crash if spdlog cannot be loaded
 	try {
-		const _spdlog = await import('@vscode/spdlog');
+		const _spdlog = await import("@vscode/spdlog");
 		_spdlog.setFlushOn(SpdLogLevel.Trace);
-		const logger = await _spdlog.createAsyncRotatingLogger(name, logfilePath, filesize, filecount);
+		const logger = await _spdlog.createAsyncRotatingLogger(
+      name,
+      logfilePath,
+      filesize,
+      filecount,
+    );
 		if (donotUseFormatters) {
 			logger.clearFormatters();
 		} else {
-			logger.setPattern('%Y-%m-%d %H:%M:%S.%e [%l] %v');
+			logger.setPattern("%Y-%m-%d %H:%M:%S.%e [%l] %v");
 		}
 		return logger;
 	} catch (e) {
@@ -79,7 +84,12 @@ export class SpdLogLogger extends AbstractMessageLogger implements ILogger {
 	) {
 		super();
 		this.setLevel(level);
-		this._loggerCreationPromise = this._createSpdLogLogger(name, filepath, rotating, donotUseFormatters);
+		this._loggerCreationPromise = this._createSpdLogLogger(
+      name,
+      filepath,
+      rotating,
+      donotUseFormatters,
+    );
 		this._register(this.onDidChangeLogLevel(level => {
 			if (this._logger) {
 				setLogLevel(this._logger, level);
@@ -90,7 +100,13 @@ export class SpdLogLogger extends AbstractMessageLogger implements ILogger {
 	private async _createSpdLogLogger(name: string, filepath: string, rotating: boolean, donotUseFormatters: boolean): Promise<void> {
 		const filecount = rotating ? 6 : 1;
 		const filesize = (30 / filecount) * ByteSize.MB;
-		const logger = await createSpdLogLogger(name, filepath, filesize, filecount, donotUseFormatters);
+		const logger = await createSpdLogLogger(
+      name,
+      filepath,
+      filesize,
+      filecount,
+      donotUseFormatters,
+    );
 		if (logger) {
 			this._logger = logger;
 			setLogLevel(this._logger, this.getLevel());

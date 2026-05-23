@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CharCode } from '../../../base/common/charCode.js';
-import { CharacterClassifier } from '../core/characterClassifier.js';
-import { ILink } from '../languages.js';
+import { CharCode } from "../../../base/common/charCode.js";
+import { CharacterClassifier } from "../core/characterClassifier.js";
+import { ILink } from "../languages.js";
 
 export interface ILinkComputerTarget {
 	getLineCount(): number;
@@ -105,39 +105,29 @@ let _stateMachine: StateMachine | null = null;
 function getStateMachine(): StateMachine {
 	if (_stateMachine === null) {
 		_stateMachine = new StateMachine([
-			[State.Start, CharCode.h, State.H],
-			[State.Start, CharCode.H, State.H],
-			[State.Start, CharCode.f, State.F],
-			[State.Start, CharCode.F, State.F],
-
-			[State.H, CharCode.t, State.HT],
-			[State.H, CharCode.T, State.HT],
-
-			[State.HT, CharCode.t, State.HTT],
-			[State.HT, CharCode.T, State.HTT],
-
-			[State.HTT, CharCode.p, State.HTTP],
-			[State.HTT, CharCode.P, State.HTTP],
-
-			[State.HTTP, CharCode.s, State.BeforeColon],
-			[State.HTTP, CharCode.S, State.BeforeColon],
-			[State.HTTP, CharCode.Colon, State.AfterColon],
-
-			[State.F, CharCode.i, State.FI],
-			[State.F, CharCode.I, State.FI],
-
-			[State.FI, CharCode.l, State.FIL],
-			[State.FI, CharCode.L, State.FIL],
-
-			[State.FIL, CharCode.e, State.BeforeColon],
-			[State.FIL, CharCode.E, State.BeforeColon],
-
-			[State.BeforeColon, CharCode.Colon, State.AfterColon],
-
-			[State.AfterColon, CharCode.Slash, State.AlmostThere],
-
-			[State.AlmostThere, CharCode.Slash, State.End],
-		]);
+      [State.Start, CharCode.h, State.H],
+      [State.Start, CharCode.H, State.H],
+      [State.Start, CharCode.f, State.F],
+      [State.Start, CharCode.F, State.F],
+      [State.H, CharCode.t, State.HT],
+      [State.H, CharCode.T, State.HT],
+      [State.HT, CharCode.t, State.HTT],
+      [State.HT, CharCode.T, State.HTT],
+      [State.HTT, CharCode.p, State.HTTP],
+      [State.HTT, CharCode.P, State.HTTP],
+      [State.HTTP, CharCode.s, State.BeforeColon],
+      [State.HTTP, CharCode.S, State.BeforeColon],
+      [State.HTTP, CharCode.Colon, State.AfterColon],
+      [State.F, CharCode.i, State.FI],
+      [State.F, CharCode.I, State.FI],
+      [State.FI, CharCode.l, State.FIL],
+      [State.FI, CharCode.L, State.FIL],
+      [State.FIL, CharCode.e, State.BeforeColon],
+      [State.FIL, CharCode.E, State.BeforeColon],
+      [State.BeforeColon, CharCode.Colon, State.AfterColon],
+      [State.AfterColon, CharCode.Slash, State.AlmostThere],
+      [State.AlmostThere, CharCode.Slash, State.End],
+    ]);
 	}
 	return _stateMachine;
 }
@@ -155,14 +145,20 @@ function getClassifier(): CharacterClassifier<CharacterClass> {
 		_classifier = new CharacterClassifier<CharacterClass>(CharacterClass.None);
 
 		// allow-any-unicode-next-line
-		const FORCE_TERMINATION_CHARACTERS = ' \t<>\'\"、。｡､，．：；‘〈「『〔（［｛｢｣｝］）〕』」〉’｀～…|';
+		const FORCE_TERMINATION_CHARACTERS = " \t<>'\"、。｡､，．：；‘〈「『〔（［｛｢｣｝］）〕』」〉’｀～…|";
 		for (let i = 0; i < FORCE_TERMINATION_CHARACTERS.length; i++) {
-			_classifier.set(FORCE_TERMINATION_CHARACTERS.charCodeAt(i), CharacterClass.ForceTermination);
+			_classifier.set(
+        FORCE_TERMINATION_CHARACTERS.charCodeAt(i),
+        CharacterClass.ForceTermination,
+      );
 		}
 
-		const CANNOT_END_WITH_CHARACTERS = '.,;:';
+		const CANNOT_END_WITH_CHARACTERS = ".,;:";
 		for (let i = 0; i < CANNOT_END_WITH_CHARACTERS.length; i++) {
-			_classifier.set(CANNOT_END_WITH_CHARACTERS.charCodeAt(i), CharacterClass.CannotEndIn);
+			_classifier.set(
+        CANNOT_END_WITH_CHARACTERS.charCodeAt(i),
+        CharacterClass.CannotEndIn,
+      );
 		}
 	}
 	return _classifier;
@@ -204,9 +200,9 @@ export class LinkComputer {
 				startLineNumber: lineNumber,
 				startColumn: linkBeginIndex + 1,
 				endLineNumber: lineNumber,
-				endColumn: lastIncludedCharIndex + 2
+				endColumn: lastIncludedCharIndex + 2,
 			},
-			url: line.substring(linkBeginIndex, lastIncludedCharIndex + 1)
+			url: line.substring(linkBeginIndex, lastIncludedCharIndex + 1),
 		};
 	}
 
@@ -286,7 +282,9 @@ export class LinkComputer {
 
 					// Check if character terminates link
 					if (chClass === CharacterClass.ForceTermination) {
-						result.push(LinkComputer._createLink(classifier, line, i, linkBeginIndex, j));
+						result.push(
+              LinkComputer._createLink(classifier, line, i, linkBeginIndex, j),
+            );
 						resetStateMachine = true;
 					}
 				} else if (state === State.End) {
@@ -328,7 +326,9 @@ export class LinkComputer {
 			}
 
 			if (state === State.Accept) {
-				result.push(LinkComputer._createLink(classifier, line, i, linkBeginIndex, len));
+				result.push(
+          LinkComputer._createLink(classifier, line, i, linkBeginIndex, len),
+        );
 			}
 
 		}
@@ -343,7 +343,7 @@ export class LinkComputer {
  * expensive and should not run in the UI thread.
  */
 export function computeLinks(model: ILinkComputerTarget | null): ILink[] {
-	if (!model || typeof model.getLineCount !== 'function' || typeof model.getLineContent !== 'function') {
+	if (!model || typeof model.getLineCount !== "function" || typeof model.getLineContent !== "function") {
 		// Unknown caller!
 		return [];
 	}

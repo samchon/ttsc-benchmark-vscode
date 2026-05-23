@@ -3,10 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Range } from '../../../core/range.js';
-import { Length, lengthAdd, lengthDiffNonNegative, lengthLessThanEqual, lengthOfString, lengthToObj, positionToLength, toLength } from './length.js';
-import { TextLength } from '../../../core/text/textLength.js';
-import { IModelContentChange } from '../../mirrorTextModel.js';
+import { Range } from "../../../core/range.js";
+import {
+  Length,
+  lengthAdd,
+  lengthDiffNonNegative,
+  lengthLessThanEqual,
+  lengthOfString,
+  lengthToObj,
+  positionToLength,
+  toLength,
+} from "./length.js";
+import { TextLength } from "../../../core/text/textLength.js";
+import { IModelContentChange } from "../../mirrorTextModel.js";
 
 export class TextEditInfo {
 	public static fromModelContentChanges(changes: IModelContentChange[]): TextEditInfo[] {
@@ -16,7 +25,7 @@ export class TextEditInfo {
 			return new TextEditInfo(
 				positionToLength(range.getStartPosition()),
 				positionToLength(range.getEndPosition()),
-				lengthOfString(c.text)
+				lengthOfString(c.text),
 			);
 		}).reverse();
 		return edits;
@@ -25,7 +34,7 @@ export class TextEditInfo {
 	constructor(
 		public readonly startOffset: Length,
 		public readonly endOffset: Length,
-		public readonly newLength: Length
+		public readonly newLength: Length,
 	) {
 	}
 
@@ -66,7 +75,9 @@ export class BeforeEditPositionMapper {
 		this.adjustNextEdit(offset);
 
 		const nextEdit = this.edits[this.nextEditIdx];
-		const nextChangeOffset = nextEdit ? this.translateOldToCur(nextEdit.offsetObj) : null;
+		const nextChangeOffset = nextEdit ? this.translateOldToCur(
+      nextEdit.offsetObj,
+    ) : null;
 		if (nextChangeOffset === null) {
 			return null;
 		}
@@ -76,18 +87,30 @@ export class BeforeEditPositionMapper {
 
 	private translateOldToCur(oldOffsetObj: TextLength): Length {
 		if (oldOffsetObj.lineCount === this.deltaLineIdxInOld) {
-			return toLength(oldOffsetObj.lineCount + this.deltaOldToNewLineCount, oldOffsetObj.columnCount + this.deltaOldToNewColumnCount);
+			return toLength(
+        oldOffsetObj.lineCount + this.deltaOldToNewLineCount,
+        oldOffsetObj.columnCount + this.deltaOldToNewColumnCount,
+      );
 		} else {
-			return toLength(oldOffsetObj.lineCount + this.deltaOldToNewLineCount, oldOffsetObj.columnCount);
+			return toLength(
+        oldOffsetObj.lineCount + this.deltaOldToNewLineCount,
+        oldOffsetObj.columnCount,
+      );
 		}
 	}
 
 	private translateCurToOld(newOffset: Length): Length {
 		const offsetObj = lengthToObj(newOffset);
 		if (offsetObj.lineCount - this.deltaOldToNewLineCount === this.deltaLineIdxInOld) {
-			return toLength(offsetObj.lineCount - this.deltaOldToNewLineCount, offsetObj.columnCount - this.deltaOldToNewColumnCount);
+			return toLength(
+        offsetObj.lineCount - this.deltaOldToNewLineCount,
+        offsetObj.columnCount - this.deltaOldToNewColumnCount,
+      );
 		} else {
-			return toLength(offsetObj.lineCount - this.deltaOldToNewLineCount, offsetObj.columnCount);
+			return toLength(
+        offsetObj.lineCount - this.deltaOldToNewLineCount,
+        offsetObj.columnCount,
+      );
 		}
 	}
 
@@ -96,7 +119,9 @@ export class BeforeEditPositionMapper {
 			const nextEdit = this.edits[this.nextEditIdx];
 
 			// After applying the edit, what is its end offset (considering all previous edits)?
-			const nextEditEndOffsetInCur = this.translateOldToCur(nextEdit.endOffsetAfterObj);
+			const nextEditEndOffsetInCur = this.translateOldToCur(
+        nextEdit.endOffsetAfterObj,
+      );
 
 			if (lengthLessThanEqual(nextEditEndOffsetInCur, offset)) {
 				// We are after the edit, skip it
@@ -105,7 +130,9 @@ export class BeforeEditPositionMapper {
 				const nextEditEndOffsetInCurObj = lengthToObj(nextEditEndOffsetInCur);
 
 				// Before applying the edit, what is its end offset (considering all previous edits)?
-				const nextEditEndOffsetBeforeInCurObj = lengthToObj(this.translateOldToCur(nextEdit.endOffsetBeforeObj));
+				const nextEditEndOffsetBeforeInCurObj = lengthToObj(
+          this.translateOldToCur(nextEdit.endOffsetBeforeObj),
+        );
 
 				const lineDelta = nextEditEndOffsetInCurObj.lineCount - nextEditEndOffsetBeforeInCurObj.lineCount;
 				this.deltaOldToNewLineCount += lineDelta;
@@ -124,7 +151,11 @@ export class BeforeEditPositionMapper {
 
 class TextEditInfoCache {
 	static from(edit: TextEditInfo): TextEditInfoCache {
-		return new TextEditInfoCache(edit.startOffset, edit.endOffset, edit.newLength);
+		return new TextEditInfoCache(
+      edit.startOffset,
+      edit.endOffset,
+      edit.newLength,
+    );
 	}
 
 	public readonly endOffsetBeforeObj: TextLength;

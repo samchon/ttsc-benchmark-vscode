@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { equals } from '../../../../../base/common/arrays.js';
-import { Range } from '../../../../../editor/common/core/range.js';
-import { IIdentifiedSingleEditOperation } from '../../../../../editor/common/model.js';
-import { MergeEditorLineRange } from './lineRange.js';
+import { equals } from "../../../../../base/common/arrays.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import { IIdentifiedSingleEditOperation } from "../../../../../editor/common/model.js";
+import { MergeEditorLineRange } from "./lineRange.js";
 
 /**
  * Represents an edit, expressed in whole lines:
@@ -15,7 +15,7 @@ import { MergeEditorLineRange } from './lineRange.js';
 export class LineRangeEdit {
 	constructor(
 		public readonly range: MergeEditorLineRange,
-		public readonly newLines: string[]
+		public readonly newLines: string[],
 	) { }
 
 	public equals(other: LineRangeEdit): boolean {
@@ -30,11 +30,14 @@ export class LineRangeEdit {
 export class RangeEdit {
 	constructor(
 		public readonly range: Range,
-		public readonly newText: string
+		public readonly newText: string,
 	) { }
 
 	public equals(other: RangeEdit): boolean {
-		return Range.equalsRange(this.range, other.range) && this.newText === other.newText;
+		return Range.equalsRange(
+      this.range,
+      other.range,
+    ) && this.newText === other.newText;
 	}
 }
 
@@ -46,20 +49,20 @@ export class LineEdits {
 			if (e.range.endLineNumberExclusive <= modelLineCount) {
 				return {
 					range: new Range(e.range.startLineNumber, 1, e.range.endLineNumberExclusive, 1),
-					text: e.newLines.map(s => s + '\n').join(''),
+					text: e.newLines.map(s => s + "\n").join(""),
 				};
 			}
 
 			if (e.range.startLineNumber === 1) {
 				return {
 					range: new Range(1, 1, modelLineCount, Number.MAX_SAFE_INTEGER),
-					text: e.newLines.join('\n'),
+					text: e.newLines.join("\n"),
 				};
 			}
 
 			return {
 				range: new Range(e.range.startLineNumber - 1, Number.MAX_SAFE_INTEGER, modelLineCount, Number.MAX_SAFE_INTEGER),
-				text: e.newLines.map(s => '\n' + s).join(''),
+				text: e.newLines.map(s => "\n" + s).join(""),
 			};
 		});
 	}

@@ -3,36 +3,36 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './share.css';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { Codicon } from '../../../../base/common/codicons.js';
-import { MarkdownString } from '../../../../base/common/htmlContent.js';
-import { KeyCode, KeyMod } from '../../../../base/common/keyCodes.js';
-import { localize, localize2 } from '../../../../nls.js';
-import { Action2, MenuId, MenuRegistry, registerAction2 } from '../../../../platform/actions/common/actions.js';
-import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
-import { EditorResourceAccessor, SideBySideEditor } from '../../../common/editor.js';
-import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { KeybindingWeight } from '../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { Severity } from '../../../../platform/notification/common/notification.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
-import { Registry } from '../../../../platform/registry/common/platform.js';
-import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
-import { WorkspaceFolderCountContext } from '../../../common/contextkeys.js';
-import { Extensions, IWorkbenchContributionsRegistry } from '../../../common/contributions.js';
-import { ShareProviderCountContext, ShareService } from './shareService.js';
-import { IShareService } from '../common/share.js';
-import { LifecyclePhase } from '../../../services/lifecycle/common/lifecycle.js';
-import { IEditorService } from '../../../services/editor/common/editorService.js';
-import { IProgressService, ProgressLocation } from '../../../../platform/progress/common/progress.js';
-import { ICodeEditorService } from '../../../../editor/browser/services/codeEditorService.js';
-import { IConfigurationRegistry, Extensions as ConfigurationExtensions } from '../../../../platform/configuration/common/configurationRegistry.js';
-import { workbenchConfigurationNodeBase } from '../../../common/configuration.js';
-import { Disposable, DisposableStore } from '../../../../base/common/lifecycle.js';
+import "./share.css";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { MarkdownString } from "../../../../base/common/htmlContent.js";
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { Action2, MenuId, MenuRegistry, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { IClipboardService } from "../../../../platform/clipboard/common/clipboardService.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { EditorResourceAccessor, SideBySideEditor } from "../../../common/editor.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { Severity } from "../../../../platform/notification/common/notification.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { WorkspaceFolderCountContext } from "../../../common/contextkeys.js";
+import { Extensions, IWorkbenchContributionsRegistry } from "../../../common/contributions.js";
+import { ShareProviderCountContext, ShareService } from "./shareService.js";
+import { IShareService } from "../common/share.js";
+import { LifecyclePhase } from "../../../services/lifecycle/common/lifecycle.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IProgressService, ProgressLocation } from "../../../../platform/progress/common/progress.js";
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { IConfigurationRegistry, Extensions as ConfigurationExtensions } from "../../../../platform/configuration/common/configurationRegistry.js";
+import { workbenchConfigurationNodeBase } from "../../../common/configuration.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
 
 const targetMenus = [
 	MenuId.EditorContextShare,
@@ -41,21 +41,23 @@ const targetMenus = [
 	MenuId.EditorTitleContextShare,
 	MenuId.MenubarShare,
 	// MenuId.EditorLineNumberContext, // todo@joyceerhl add share
-	MenuId.ExplorerContextShare
+	MenuId.ExplorerContextShare,
 ];
 
 class ShareWorkbenchContribution extends Disposable {
-	private static SHARE_ENABLED_SETTING = 'workbench.experimental.share.enabled';
+	private static SHARE_ENABLED_SETTING = "workbench.experimental.share.enabled";
 
 	private _disposables: DisposableStore | undefined;
 
 	constructor(
 		@IShareService private readonly shareService: IShareService,
-		@IConfigurationService private readonly configurationService: IConfigurationService
+		@IConfigurationService private readonly configurationService: IConfigurationService,
 	) {
 		super();
 
-		if (this.configurationService.getValue<boolean>(ShareWorkbenchContribution.SHARE_ENABLED_SETTING)) {
+		if (this.configurationService.getValue<boolean>(
+      ShareWorkbenchContribution.SHARE_ENABLED_SETTING,
+    )) {
 			this.registerActions();
 		}
 		this._register(this.configurationService.onDidChangeConfiguration(e => {
@@ -83,8 +85,8 @@ class ShareWorkbenchContribution extends Disposable {
 
 		this._disposables.add(
 			registerAction2(class ShareAction extends Action2 {
-				static readonly ID = 'workbench.action.share';
-				static readonly LABEL = localize2('share', 'Share...');
+				static readonly ID = "workbench.action.share";
+				static readonly LABEL = localize2("share", "Share...");
 
 				constructor() {
 					super({
@@ -98,8 +100,8 @@ class ShareWorkbenchContribution extends Disposable {
 							primary: KeyMod.Alt | KeyMod.CtrlCmd | KeyCode.KeyS,
 						},
 						menu: [
-							{ id: MenuId.CommandCenter, order: 3 }
-						]
+							{ id: MenuId.CommandCenter, order: 3 },
+						],
 					});
 				}
 
@@ -116,32 +118,32 @@ class ShareWorkbenchContribution extends Disposable {
 
 					const result = await progressService.withProgress({
 						location: ProgressLocation.Window,
-						detail: localize('generating link', 'Generating link...')
+						detail: localize("generating link", "Generating link..."),
 					}, async () => shareService.provideShare({ resourceUri, selection }, CancellationToken.None));
 
 					if (result) {
 						const uriText = result.toString();
-						const isResultText = typeof result === 'string';
+						const isResultText = typeof result === "string";
 						await clipboardService.writeText(uriText);
 
 						dialogService.prompt(
 							{
 								type: Severity.Info,
-								message: isResultText ? localize('shareTextSuccess', 'Copied text to clipboard!') : localize('shareSuccess', 'Copied link to clipboard!'),
+								message: isResultText ? localize("shareTextSuccess", "Copied text to clipboard!") : localize("shareSuccess", "Copied link to clipboard!"),
 								custom: {
 									icon: Codicon.check,
 									markdownDetails: [{
 										markdown: new MarkdownString(`<div aria-label='${uriText}'>${uriText}</div>`, { supportHtml: true }),
-										classes: [isResultText ? 'share-dialog-input-text' : 'share-dialog-input-link']
-									}]
+										classes: [isResultText ? "share-dialog-input-text" : "share-dialog-input-link"],
+									}],
 								},
-								cancelButton: localize('close', 'Close'),
-								buttons: isResultText ? [] : [{ label: localize('open link', 'Open Link'), run: () => { urlService.open(result, { openExternal: true }); } }]
-							}
+								cancelButton: localize("close", "Close"),
+								buttons: isResultText ? [] : [{ label: localize("open link", "Open Link"), run: () => { urlService.open(result, { openExternal: true }); } }],
+							},
 						);
 					}
 				}
-			})
+			}),
 		);
 
 		const actions = this.shareService.getShareActions();
@@ -155,18 +157,23 @@ class ShareWorkbenchContribution extends Disposable {
 }
 
 registerSingleton(IShareService, ShareService, InstantiationType.Delayed);
-const workbenchContributionsRegistry = Registry.as<IWorkbenchContributionsRegistry>(Extensions.Workbench);
-workbenchContributionsRegistry.registerWorkbenchContribution(ShareWorkbenchContribution, LifecyclePhase.Eventually);
+const workbenchContributionsRegistry = Registry.as<IWorkbenchContributionsRegistry>(
+  Extensions.Workbench,
+);
+workbenchContributionsRegistry.registerWorkbenchContribution(
+  ShareWorkbenchContribution,
+  LifecyclePhase.Eventually,
+);
 
 Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).registerConfiguration({
 	...workbenchConfigurationNodeBase,
 	properties: {
-		'workbench.experimental.share.enabled': {
-			type: 'boolean',
+		"workbench.experimental.share.enabled": {
+			type: "boolean",
 			default: false,
-			tags: ['experimental'],
-			markdownDescription: localize('experimental.share.enabled', "Controls whether to render the Share action next to the command center when {0} is {1}.", '`#window.commandCenter#`', '`true`'),
+			tags: ["experimental"],
+			markdownDescription: localize("experimental.share.enabled", "Controls whether to render the Share action next to the command center when {0} is {1}.", "`#window.commandCenter#`", "`true`"),
 			restricted: false,
-		}
-	}
+		},
+	},
 });

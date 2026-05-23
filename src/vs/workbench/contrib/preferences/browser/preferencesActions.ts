@@ -3,34 +3,41 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Action } from '../../../../base/common/actions.js';
-import { URI } from '../../../../base/common/uri.js';
-import { getIconClasses } from '../../../../editor/common/services/getIconClasses.js';
-import { IModelService } from '../../../../editor/common/services/model.js';
-import { ILanguageService } from '../../../../editor/common/languages/language.js';
-import * as nls from '../../../../nls.js';
-import { IQuickInputService, IQuickPickItem } from '../../../../platform/quickinput/common/quickInput.js';
-import { IPreferencesService } from '../../../services/preferences/common/preferences.js';
-import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
-import { Registry } from '../../../../platform/registry/common/platform.js';
-import { Extensions, IConfigurationRegistry } from '../../../../platform/configuration/common/configurationRegistry.js';
-import { VSBuffer } from '../../../../base/common/buffer.js';
-import { EditorExtensionsRegistry } from '../../../../editor/browser/editorExtensions.js';
-import { MenuId, MenuRegistry, isIMenuItem } from '../../../../platform/actions/common/actions.js';
-import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
-import { isLocalizedString } from '../../../../platform/action/common/action.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { IExtensionService } from '../../../services/extensions/common/extensions.js';
-import { EnablementState, IWorkbenchExtensionEnablementService, IWorkbenchExtensionManagementService } from '../../../services/extensionManagement/common/extensionManagement.js';
-import { timeout } from '../../../../base/common/async.js';
-import { ExtensionIdentifierSet } from '../../../../platform/extensions/common/extensions.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
+import { Action } from "../../../../base/common/actions.js";
+import { URI } from "../../../../base/common/uri.js";
+import { getIconClasses } from "../../../../editor/common/services/getIconClasses.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import * as nls from "../../../../nls.js";
+import { IQuickInputService, IQuickPickItem } from "../../../../platform/quickinput/common/quickInput.js";
+import { IPreferencesService } from "../../../services/preferences/common/preferences.js";
+import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { Extensions, IConfigurationRegistry } from "../../../../platform/configuration/common/configurationRegistry.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { EditorExtensionsRegistry } from "../../../../editor/browser/editorExtensions.js";
+import { MenuId, MenuRegistry, isIMenuItem } from "../../../../platform/actions/common/actions.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { isLocalizedString } from "../../../../platform/action/common/action.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import {
+  EnablementState,
+  IWorkbenchExtensionEnablementService,
+  IWorkbenchExtensionManagementService,
+} from "../../../services/extensionManagement/common/extensionManagement.js";
+import { timeout } from "../../../../base/common/async.js";
+import { ExtensionIdentifierSet } from "../../../../platform/extensions/common/extensions.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
 
 export class ConfigureLanguageBasedSettingsAction extends Action {
 
-	static readonly ID = 'workbench.action.configureLanguageBasedSettings';
-	static readonly LABEL = nls.localize2('configureLanguageBasedSettings', "Configure Language Specific Settings...");
+	static readonly ID = "workbench.action.configureLanguageBasedSettings";
+	static readonly LABEL = nls.localize2(
+    "configureLanguageBasedSettings",
+    "Configure Language Specific Settings...",
+  );
 
 	constructor(
 		id: string,
@@ -38,7 +45,7 @@ export class ConfigureLanguageBasedSettingsAction extends Action {
 		@IModelService private readonly modelService: IModelService,
 		@ILanguageService private readonly languageService: ILanguageService,
 		@IQuickInputService private readonly quickInputService: IQuickInputService,
-		@IPreferencesService private readonly preferencesService: IPreferencesService
+		@IPreferencesService private readonly preferencesService: IPreferencesService,
 	) {
 		super(id, label);
 	}
@@ -46,7 +53,7 @@ export class ConfigureLanguageBasedSettingsAction extends Action {
 	override async run(): Promise<void> {
 		const languages = this.languageService.getSortedRegisteredLanguageNames();
 		const picks: IQuickPickItem[] = languages.map(({ languageName, languageId }): IQuickPickItem => {
-			const description: string = nls.localize('languageDescriptionConfigured', "({0})", languageId);
+			const description: string = nls.localize("languageDescriptionConfigured", "({0})", languageId);
 			// construct a fake resource to be able to show nice icons if any
 			let fakeResource: URI | undefined;
 			const extensions = this.languageService.getExtensions(languageId);
@@ -61,15 +68,15 @@ export class ConfigureLanguageBasedSettingsAction extends Action {
 			return {
 				label: languageName,
 				iconClasses: getIconClasses(this.modelService, this.languageService, fakeResource),
-				description
+				description,
 			};
 		});
 
-		await this.quickInputService.pick(picks, { placeHolder: nls.localize('pickLanguage', "Select Language") })
+		await this.quickInputService.pick(picks, { placeHolder: nls.localize("pickLanguage", "Select Language") })
 			.then(pick => {
 				if (pick) {
 					const languageId = this.languageService.getLanguageIdByLanguageName(pick.label);
-					if (typeof languageId === 'string') {
+					if (typeof languageId === "string") {
 						return this.preferencesService.openLanguageSpecificSettings(languageId);
 					}
 				}
@@ -81,12 +88,12 @@ export class ConfigureLanguageBasedSettingsAction extends Action {
 
 // Register a command that gets all settings
 CommandsRegistry.registerCommand({
-	id: '_getAllSettings',
+	id: "_getAllSettings",
 	handler: () => {
 		const configRegistry = Registry.as<IConfigurationRegistry>(Extensions.Configuration);
 		const allSettings = configRegistry.getConfigurationProperties();
 		return allSettings;
-	}
+	},
 });
 
 /**
@@ -124,7 +131,7 @@ export interface IConfigurationPropertyInformation {
 		defaultValue?: string | number;
 	};
 	experiment?: {
-		mode: 'startup' | 'auto';
+		mode: "startup" | "auto";
 		name?: string;
 	};
 	agentsWindow?: {
@@ -158,7 +165,7 @@ export interface IConfigurationInformation {
 }
 
 CommandsRegistry.registerCommand({
-	id: '_developer.getConfigurationInformation',
+	id: "_developer.getConfigurationInformation",
 	handler: async (accessor, path?: string | URI): Promise<string | URI> => {
 		const configRegistry = Registry.as<IConfigurationRegistry>(Extensions.Configuration);
 		const fileService = accessor.get(IFileService);
@@ -228,11 +235,11 @@ CommandsRegistry.registerCommand({
 
 		await fileService.writeFile(targetUri, VSBuffer.fromString(content));
 		return targetUri;
-	}
+	},
 });
 
 //#region --- Register a command to get all actions from the command palette
-CommandsRegistry.registerCommand('_getAllCommands', function (accessor, filterByPrecondition?: boolean) {
+CommandsRegistry.registerCommand("_getAllCommands", function (accessor, filterByPrecondition?: boolean) {
 	const keybindingService = accessor.get(IKeybindingService);
 	const contextKeyService = accessor.get(IContextKeyService);
 	const actions: { command: string; label: string; keybinding: string; description?: string; precondition?: string }[] = [];
@@ -246,7 +253,7 @@ CommandsRegistry.registerCommand('_getAllCommands', function (accessor, filterBy
 			label: editorAction.label,
 			description: isLocalizedString(editorAction.metadata?.description) ? editorAction.metadata.description.value : editorAction.metadata?.description,
 			precondition: editorAction.precondition?.serialize(),
-			keybinding: keybinding?.getLabel() ?? 'Not set'
+			keybinding: keybinding?.getLabel() ?? "Not set",
 		});
 	}
 	for (const menuItem of MenuRegistry.getMenuItems(MenuId.CommandPalette)) {
@@ -254,8 +261,8 @@ CommandsRegistry.registerCommand('_getAllCommands', function (accessor, filterBy
 			if (filterByPrecondition && !contextKeyService.contextMatchesRules(menuItem.when)) {
 				continue;
 			}
-			const title = typeof menuItem.command.title === 'string' ? menuItem.command.title : menuItem.command.title.value;
-			const category = menuItem.command.category ? typeof menuItem.command.category === 'string' ? menuItem.command.category : menuItem.command.category.value : undefined;
+			const title = typeof menuItem.command.title === "string" ? menuItem.command.title : menuItem.command.title.value;
+			const category = menuItem.command.category ? typeof menuItem.command.category === "string" ? menuItem.command.category : menuItem.command.category.value : undefined;
 			const label = category ? `${category}: ${title}` : title;
 			const description = isLocalizedString(menuItem.command.metadata?.description) ? menuItem.command.metadata.description.value : menuItem.command.metadata?.description;
 			const keybinding = keybindingService.lookupKeybinding(menuItem.command.id);
@@ -264,7 +271,7 @@ CommandsRegistry.registerCommand('_getAllCommands', function (accessor, filterBy
 				label,
 				description,
 				precondition: menuItem.when?.serialize(),
-				keybinding: keybinding?.getLabel() ?? 'Not set'
+				keybinding: keybinding?.getLabel() ?? "Not set",
 			});
 		}
 	}

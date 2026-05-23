@@ -3,16 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { LRUCache } from './map.js';
+import { LRUCache } from "./map.js";
 
-const nfcCache = new LRUCache<string, string>(10000); // bounded to 10000 elements
+const nfcCache = new LRUCache<string, string>(
+  10000,
+); // bounded to 10000 elements
 export function normalizeNFC(str: string): string {
-	return normalize(str, 'NFC', nfcCache);
+	return normalize(str, "NFC", nfcCache);
 }
 
-const nfdCache = new LRUCache<string, string>(10000); // bounded to 10000 elements
+const nfdCache = new LRUCache<string, string>(
+  10000,
+); // bounded to 10000 elements
 export function normalizeNFD(str: string): string {
-	return normalize(str, 'NFD', nfdCache);
+	return normalize(str, "NFD", nfdCache);
 }
 
 const nonAsciiCharactersPattern = /[^\u0000-\u0080]/;
@@ -55,7 +59,7 @@ export const tryNormalizeToBase: (str: string) => string = function () {
 			return cached;
 		}
 
-		const noAccents = normalizeNFD(str).replace(accentsRegex, '');
+		const noAccents = normalizeNFD(str).replace(accentsRegex, "");
 		const result = (noAccents.length === str.length ? noAccents : str).toLowerCase();
 		cache.set(str, result);
 		return result;

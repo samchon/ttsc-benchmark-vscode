@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
-import { MinimapCharRendererFactory } from '../../../browser/viewParts/minimap/minimapCharRendererFactory.js';
-import { Constants } from '../../../browser/viewParts/minimap/minimapCharSheet.js';
-import { RGBA8 } from '../../../common/core/misc/rgba.js';
+import assert from "assert";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
+import { MinimapCharRendererFactory } from "../../../browser/viewParts/minimap/minimapCharRendererFactory.js";
+import { Constants } from "../../../browser/viewParts/minimap/minimapCharSheet.js";
+import { RGBA8 } from "../../../common/core/misc/rgba.js";
 
-suite('MinimapCharRenderer', () => {
+suite("MinimapCharRenderer", () => {
 
 	ensureNoDisposablesAreLeakedInTestSuite();
 
@@ -33,7 +33,7 @@ suite('MinimapCharRenderer', () => {
 	];
 
 	function getSampleData() {
-		const charCode = 'd'.charCodeAt(0);
+		const charCode = "d".charCodeAt(0);
 		const result = new Uint8ClampedArray(Constants.SAMPLED_CHAR_HEIGHT * Constants.SAMPLED_CHAR_WIDTH * Constants.RGBA_CHANNELS_CNT * Constants.CHAR_COUNT);
 		for (let i = 0; i < result.length; i++) {
 			result[i] = 0;
@@ -61,14 +61,14 @@ suite('MinimapCharRenderer', () => {
 
 	function createFakeImageData(width: number, height: number): ImageData {
 		return {
-			colorSpace: 'srgb',
+			colorSpace: "srgb",
 			width: width,
 			height: height,
-			data: new Uint8ClampedArray(width * height * Constants.RGBA_CHANNELS_CNT)
+			data: new Uint8ClampedArray(width * height * Constants.RGBA_CHANNELS_CNT),
 		};
 	}
 
-	test('letter d @ 2x', () => {
+	test("letter d @ 2x", () => {
 		const sampleData = getSampleData();
 		const renderer = MinimapCharRendererFactory.createFromSampleData(sampleData, 2);
 
@@ -82,7 +82,7 @@ suite('MinimapCharRenderer', () => {
 			imageData.data[4 * i + 2] = background.b;
 			imageData.data[4 * i + 3] = 255;
 		}
-		renderer.renderChar(imageData, 0, 0, 'd'.charCodeAt(0), color, 255, background, 255, 2, false, false);
+		renderer.renderChar(imageData, 0, 0, "d".charCodeAt(0), color, 255, background, 255, 2, false, false);
 
 		const actual: number[] = [];
 		for (let i = 0; i < imageData.data.length; i++) {
@@ -97,7 +97,7 @@ suite('MinimapCharRenderer', () => {
 		]);
 	});
 
-	test('letter d @ 1x', () => {
+	test("letter d @ 1x", () => {
 		const sampleData = getSampleData();
 		const renderer = MinimapCharRendererFactory.createFromSampleData(sampleData, 1);
 
@@ -112,7 +112,7 @@ suite('MinimapCharRenderer', () => {
 			imageData.data[4 * i + 3] = 255;
 		}
 
-		renderer.renderChar(imageData, 0, 0, 'd'.charCodeAt(0), color, 255, background, 255, 1, false, false);
+		renderer.renderChar(imageData, 0, 0, "d".charCodeAt(0), color, 255, background, 255, 1, false, false);
 
 		const actual: number[] = [];
 		for (let i = 0; i < imageData.data.length; i++) {

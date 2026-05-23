@@ -3,54 +3,79 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter } from '../../../../base/common/event.js';
-import { IProcessEnvironment, isMacintosh, isWindows, OperatingSystem } from '../../../../base/common/platform.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { ILabelService } from '../../../../platform/label/common/label.js';
-import { Registry } from '../../../../platform/registry/common/platform.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { ILocalPtyService, IProcessPropertyMap, IPtyHostLatencyMeasurement, IPtyService, IShellLaunchConfig, ITerminalBackend, ITerminalBackendRegistry, ITerminalChildProcess, ITerminalEnvironment, ITerminalLogService, ITerminalProcessOptions, ITerminalsLayoutInfo, ITerminalsLayoutInfoById, ProcessPropertyType, TerminalExtensions, TerminalIpcChannels, TerminalSettingId, TitleEventSource } from '../../../../platform/terminal/common/terminal.js';
-import { IGetTerminalLayoutInfoArgs, IProcessDetails, ISetTerminalLayoutInfoArgs } from '../../../../platform/terminal/common/terminalProcess.js';
-import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
-import { IWorkbenchContribution } from '../../../common/contributions.js';
-import { ITerminalInstanceService } from '../browser/terminal.js';
-import { ITerminalProfileResolverService } from '../common/terminal.js';
-import { TerminalStorageKeys } from '../common/terminalStorageKeys.js';
-import { LocalPty } from './localPty.js';
-import { IConfigurationResolverService } from '../../../services/configurationResolver/common/configurationResolver.js';
-import { IShellEnvironmentService } from '../../../services/environment/electron-browser/shellEnvironmentService.js';
-import { IHistoryService } from '../../../services/history/common/history.js';
-import * as terminalEnvironment from '../common/terminalEnvironment.js';
-import { IProductService } from '../../../../platform/product/common/productService.js';
-import { IEnvironmentVariableService } from '../common/environmentVariable.js';
-import { BaseTerminalBackend } from '../browser/baseTerminalBackend.js';
-import { INativeHostService } from '../../../../platform/native/common/native.js';
-import { Client as MessagePortClient } from '../../../../base/parts/ipc/common/ipc.mp.js';
-import { acquirePort } from '../../../../base/parts/ipc/electron-browser/ipc.mp.js';
-import { getDelayedChannel, ProxyChannel } from '../../../../base/parts/ipc/common/ipc.js';
-import { mark, PerformanceMark } from '../../../../base/common/performance.js';
-import { ILifecycleService, LifecyclePhase } from '../../../services/lifecycle/common/lifecycle.js';
-import { DeferredPromise } from '../../../../base/common/async.js';
-import { IStatusbarService } from '../../../services/statusbar/browser/statusbar.js';
-import { memoize } from '../../../../base/common/decorators.js';
-import { StopWatch } from '../../../../base/common/stopwatch.js';
-import { IRemoteAgentService } from '../../../services/remote/common/remoteAgentService.js';
-import { INativeWorkbenchEnvironmentService } from '../../../services/environment/electron-browser/environmentService.js';
-import { shouldUseEnvironmentVariableCollection } from '../../../../platform/terminal/common/terminalEnvironment.js';
-import { DisposableStore, MutableDisposable } from '../../../../base/common/lifecycle.js';
+import { Emitter } from "../../../../base/common/event.js";
+import { IProcessEnvironment, isMacintosh, isWindows, OperatingSystem } from "../../../../base/common/platform.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import {
+  ILocalPtyService,
+  IProcessPropertyMap,
+  IPtyHostLatencyMeasurement,
+  IPtyService,
+  IShellLaunchConfig,
+  ITerminalBackend,
+  ITerminalBackendRegistry,
+  ITerminalChildProcess,
+  ITerminalEnvironment,
+  ITerminalLogService,
+  ITerminalProcessOptions,
+  ITerminalsLayoutInfo,
+  ITerminalsLayoutInfoById,
+  ProcessPropertyType,
+  TerminalExtensions,
+  TerminalIpcChannels,
+  TerminalSettingId,
+  TitleEventSource,
+} from "../../../../platform/terminal/common/terminal.js";
+import {
+  IGetTerminalLayoutInfoArgs,
+  IProcessDetails,
+  ISetTerminalLayoutInfoArgs,
+} from "../../../../platform/terminal/common/terminalProcess.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { ITerminalInstanceService } from "../browser/terminal.js";
+import { ITerminalProfileResolverService } from "../common/terminal.js";
+import { TerminalStorageKeys } from "../common/terminalStorageKeys.js";
+import { LocalPty } from "./localPty.js";
+import { IConfigurationResolverService } from "../../../services/configurationResolver/common/configurationResolver.js";
+import { IShellEnvironmentService } from "../../../services/environment/electron-browser/shellEnvironmentService.js";
+import { IHistoryService } from "../../../services/history/common/history.js";
+import * as terminalEnvironment from "../common/terminalEnvironment.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IEnvironmentVariableService } from "../common/environmentVariable.js";
+import { BaseTerminalBackend } from "../browser/baseTerminalBackend.js";
+import { INativeHostService } from "../../../../platform/native/common/native.js";
+import { Client as MessagePortClient } from "../../../../base/parts/ipc/common/ipc.mp.js";
+import { acquirePort } from "../../../../base/parts/ipc/electron-browser/ipc.mp.js";
+import { getDelayedChannel, ProxyChannel } from "../../../../base/parts/ipc/common/ipc.js";
+import { mark, PerformanceMark } from "../../../../base/common/performance.js";
+import { ILifecycleService, LifecyclePhase } from "../../../services/lifecycle/common/lifecycle.js";
+import { DeferredPromise } from "../../../../base/common/async.js";
+import { IStatusbarService } from "../../../services/statusbar/browser/statusbar.js";
+import { memoize } from "../../../../base/common/decorators.js";
+import { StopWatch } from "../../../../base/common/stopwatch.js";
+import { IRemoteAgentService } from "../../../services/remote/common/remoteAgentService.js";
+import { INativeWorkbenchEnvironmentService } from "../../../services/environment/electron-browser/environmentService.js";
+import { shouldUseEnvironmentVariableCollection } from "../../../../platform/terminal/common/terminalEnvironment.js";
+import { DisposableStore, MutableDisposable } from "../../../../base/common/lifecycle.js";
 
 export class LocalTerminalBackendContribution implements IWorkbenchContribution {
 
-	static readonly ID = 'workbench.contrib.localTerminalBackend';
+	static readonly ID = "workbench.contrib.localTerminalBackend";
 
 	constructor(
 		@IInstantiationService instantiationService: IInstantiationService,
-		@ITerminalInstanceService terminalInstanceService: ITerminalInstanceService
+		@ITerminalInstanceService terminalInstanceService: ITerminalInstanceService,
 	) {
 		const backend = instantiationService.createInstance(LocalTerminalBackend);
-		Registry.as<ITerminalBackendRegistry>(TerminalExtensions.Backend).registerTerminalBackend(backend);
+		Registry.as<ITerminalBackendRegistry>(TerminalExtensions.Backend).registerTerminalBackend(
+      backend,
+    );
 		terminalInstanceService.didRegisterBackend(backend);
 	}
 }
@@ -62,7 +87,9 @@ class LocalTerminalBackend extends BaseTerminalBackend implements ITerminalBacke
 
 	private _directProxyClientEventually: DeferredPromise<MessagePortClient> | undefined;
 	private _directProxy: IPtyService | undefined;
-	private readonly _directProxyDisposables = this._register(new MutableDisposable());
+	private readonly _directProxyDisposables = this._register(
+    new MutableDisposable(),
+  );
 
 	/**
 	 * Communicate to the direct proxy (renderer<->ptyhost) if it's available, otherwise use the
@@ -75,7 +102,9 @@ class LocalTerminalBackend extends BaseTerminalBackend implements ITerminalBacke
 	get whenReady(): Promise<void> { return this._whenReady.p; }
 	setReady(): void { this._whenReady.complete(); }
 
-	private readonly _onDidRequestDetach = this._register(new Emitter<{ requestId: number; workspaceId: string; instanceId: number }>());
+	private readonly _onDidRequestDetach = this._register(
+    new Emitter<{ requestId: number; workspaceId: string; instanceId: number }>(),
+  );
 	readonly onDidRequestDetach = this._onDidRequestDetach.event;
 
 	constructor(
@@ -98,13 +127,22 @@ class LocalTerminalBackend extends BaseTerminalBackend implements ITerminalBacke
 		@IRemoteAgentService private readonly _remoteAgentService: IRemoteAgentService,
 		@INativeWorkbenchEnvironmentService private readonly _environmentService: INativeWorkbenchEnvironmentService,
 	) {
-		super(_localPtyService, logService, historyService, _configurationResolverService, statusBarService, workspaceContextService);
+		super(
+      _localPtyService,
+      logService,
+      historyService,
+      _configurationResolverService,
+      statusBarService,
+      workspaceContextService,
+    );
 
-		this._register(this.onPtyHostRestart(() => {
-			this._directProxy = undefined;
-			this._directProxyClientEventually = undefined;
-			this._connectToDirectProxy();
-		}));
+		this._register(
+      this.onPtyHostRestart(() => {
+        this._directProxy = undefined;
+        this._directProxyClientEventually = undefined;
+        this._connectToDirectProxy();
+      }),
+    );
 	}
 
 	/**
@@ -117,10 +155,16 @@ class LocalTerminalBackend extends BaseTerminalBackend implements ITerminalBacke
 			return;
 		}
 
-		this._logService.debug('Starting pty host');
+		this._logService.debug("Starting pty host");
 		const directProxyClientEventually = new DeferredPromise<MessagePortClient>();
 		this._directProxyClientEventually = directProxyClientEventually;
-		const directProxy = ProxyChannel.toService<IPtyService>(getDelayedChannel(this._directProxyClientEventually.p.then(client => client.getChannel(TerminalIpcChannels.PtyHostWindow))));
+		const directProxy = ProxyChannel.toService<IPtyService>(
+      getDelayedChannel(
+        this._directProxyClientEventually.p.then(
+          client => client.getChannel(TerminalIpcChannels.PtyHostWindow),
+        ),
+      ),
+    );
 		this._directProxy = directProxy;
 		this._directProxyDisposables.clear();
 
@@ -130,11 +174,11 @@ class LocalTerminalBackend extends BaseTerminalBackend implements ITerminalBacke
 			await this._lifecycleService.when(LifecyclePhase.Restored);
 		}
 
-		mark('code/terminal/willConnectPtyHost');
-		this._logService.trace('Renderer->PtyHost#connect: before acquirePort');
-		acquirePort('vscode:createPtyHostMessageChannel', 'vscode:createPtyHostMessageChannelResult').then(port => {
-			mark('code/terminal/didConnectPtyHost');
-			this._logService.trace('Renderer->PtyHost#connect: connection established');
+		mark("code/terminal/willConnectPtyHost");
+		this._logService.trace("Renderer->PtyHost#connect: before acquirePort");
+		acquirePort("vscode:createPtyHostMessageChannel", "vscode:createPtyHostMessageChannelResult").then(port => {
+			mark("code/terminal/didConnectPtyHost");
+			this._logService.trace("Renderer->PtyHost#connect: connection established");
 
 			const store = new DisposableStore();
 			this._directProxyDisposables.value = store;
@@ -174,16 +218,26 @@ class LocalTerminalBackend extends BaseTerminalBackend implements ITerminalBacke
 
 	async acceptDetachInstanceReply(requestId: number, persistentProcessId?: number): Promise<void> {
 		if (!persistentProcessId) {
-			this._logService.warn('Cannot attach to feature terminals, custom pty terminals, or those without a persistentProcessId');
+			this._logService.warn(
+        "Cannot attach to feature terminals, custom pty terminals, or those without a persistentProcessId",
+      );
 			return;
 		}
-		return this._proxy.acceptDetachInstanceReply(requestId, persistentProcessId);
+		return this._proxy.acceptDetachInstanceReply(
+      requestId,
+      persistentProcessId,
+    );
 	}
 
 	async persistTerminalState(): Promise<void> {
 		const ids = Array.from(this._ptys.keys());
 		const serialized = await this._proxy.serializeTerminalState(ids);
-		this._storageService.store(TerminalStorageKeys.TerminalBufferState, serialized, StorageScope.WORKSPACE, StorageTarget.MACHINE);
+		this._storageService.store(
+      TerminalStorageKeys.TerminalBufferState,
+      serialized,
+      StorageScope.WORKSPACE,
+      StorageTarget.MACHINE,
+    );
 	}
 
 	async updateTitle(id: number, title: string, titleSource: TitleEventSource): Promise<void> {
@@ -207,14 +261,26 @@ class LocalTerminalBackend extends BaseTerminalBackend implements ITerminalBacke
 		cwd: string,
 		cols: number,
 		rows: number,
-		unicodeVersion: '6' | '11',
+		unicodeVersion: "6" | "11",
 		env: IProcessEnvironment,
 		options: ITerminalProcessOptions,
-		shouldPersist: boolean
+		shouldPersist: boolean,
 	): Promise<ITerminalChildProcess> {
 		await this._connectToDirectProxy();
 		const executableEnv = await this._shellEnvironmentService.getShellEnv();
-		const id = await this._proxy.createProcess(shellLaunchConfig, cwd, cols, rows, unicodeVersion, env, executableEnv, options, shouldPersist, this._getWorkspaceId(), this._getWorkspaceName());
+		const id = await this._proxy.createProcess(
+      shellLaunchConfig,
+      cwd,
+      cols,
+      rows,
+      unicodeVersion,
+      env,
+      executableEnv,
+      options,
+      shouldPersist,
+      this._getWorkspaceId(),
+      this._getWorkspaceName(),
+    );
 		const pty = new LocalPty(id, shouldPersist, this._proxy);
 		this._ptys.set(id, pty);
 		return pty;
@@ -236,7 +302,10 @@ class LocalTerminalBackend extends BaseTerminalBackend implements ITerminalBacke
 	async attachToRevivedProcess(id: number): Promise<ITerminalChildProcess | undefined> {
 		await this._connectToDirectProxy();
 		try {
-			const newId = await this._proxy.getRevivedPtyNewId(this._getWorkspaceId(), id) ?? id;
+			const newId = await this._proxy.getRevivedPtyNewId(
+        this._getWorkspaceId(),
+        id,
+      ) ?? id;
 			return await this.attachToProcess(newId);
 		} catch (e) {
 			this._logService.warn(`Couldn't attach to process ${e.message}`);
@@ -256,21 +325,18 @@ class LocalTerminalBackend extends BaseTerminalBackend implements ITerminalBacke
 			await this._directProxy.getLatency();
 			sw.stop();
 			measurements.push({
-				label: 'window<->ptyhost (message port)',
-				latency: sw.elapsed()
-			});
+        label: "window<->ptyhost (message port)",
+        latency: sw.elapsed(),
+      });
 			sw.reset();
 		}
 		const results = await this._localPtyService.getLatency();
 		sw.stop();
 		measurements.push({
-			label: 'window<->ptyhostservice<->ptyhost',
-			latency: sw.elapsed()
-		});
-		return [
-			...measurements,
-			...results
-		];
+      label: "window<->ptyhostservice<->ptyhost",
+      latency: sw.elapsed(),
+    });
+		return [...measurements, ...results];
 	}
 
 	async getPerformanceMarks(): Promise<PerformanceMark[]> {
@@ -286,7 +352,12 @@ class LocalTerminalBackend extends BaseTerminalBackend implements ITerminalBacke
 	}
 
 	async getProfiles(profiles: unknown, defaultProfile: unknown, includeDetectedProfiles?: boolean) {
-		return this._localPtyService.getProfiles(this._workspaceContextService.getWorkspace().id, profiles, defaultProfile, includeDetectedProfiles) || [];
+		return this._localPtyService.getProfiles(
+      this._workspaceContextService.getWorkspace().id,
+      profiles,
+      defaultProfile,
+      includeDetectedProfiles,
+    ) || [];
 	}
 
 	@memoize
@@ -300,26 +371,34 @@ class LocalTerminalBackend extends BaseTerminalBackend implements ITerminalBacke
 
 		// If running in the context of an extension development host, include the environment derived from the launch configuration
 		if (this._environmentService.debugExtensionHost.env) {
-			terminalEnvironment.mergeEnvironments(env, this._environmentService.debugExtensionHost.env);
+			terminalEnvironment.mergeEnvironments(
+        env,
+        this._environmentService.debugExtensionHost.env,
+      );
 		}
 
 		return env;
 	}
 
-	async getWslPath(original: string, direction: 'unix-to-win' | 'win-to-unix'): Promise<string> {
+	async getWslPath(original: string, direction: "unix-to-win" | "win-to-unix"): Promise<string> {
 		return this._proxy.getWslPath(original, direction);
 	}
 
 	async setTerminalLayoutInfo(layoutInfo?: ITerminalsLayoutInfoById): Promise<void> {
 		const args: ISetTerminalLayoutInfoArgs = {
-			workspaceId: this._getWorkspaceId(),
-			tabs: layoutInfo ? layoutInfo.tabs : [],
-			background: layoutInfo ? layoutInfo.background : null
-		};
+      workspaceId: this._getWorkspaceId(),
+      tabs: layoutInfo ? layoutInfo.tabs : [],
+      background: layoutInfo ? layoutInfo.background : null,
+    };
 		await this._proxy.setTerminalLayoutInfo(args);
 		// Store in the storage service as well to be used when reviving processes as normally this
 		// is stored in memory on the pty host
-		this._storageService.store(TerminalStorageKeys.TerminalLayoutInfo, JSON.stringify(args), StorageScope.WORKSPACE, StorageTarget.MACHINE);
+		this._storageService.store(
+      TerminalStorageKeys.TerminalLayoutInfo,
+      JSON.stringify(args),
+      StorageScope.WORKSPACE,
+      StorageTarget.MACHINE,
+    );
 	}
 
 	async getTerminalLayoutInfo(): Promise<ITerminalsLayoutInfo | undefined> {
@@ -327,41 +406,72 @@ class LocalTerminalBackend extends BaseTerminalBackend implements ITerminalBacke
 		const layoutArgs: IGetTerminalLayoutInfoArgs = { workspaceId };
 
 		// Revive processes if needed
-		const serializedState = this._storageService.get(TerminalStorageKeys.TerminalBufferState, StorageScope.WORKSPACE);
+		const serializedState = this._storageService.get(
+      TerminalStorageKeys.TerminalBufferState,
+      StorageScope.WORKSPACE,
+    );
 		const reviveBufferState = this._deserializeTerminalState(serializedState);
 		if (reviveBufferState && reviveBufferState.length > 0) {
 			try {
 				// Create variable resolver
 				const activeWorkspaceRootUri = this._historyService.getLastActiveWorkspaceRoot();
-				const lastActiveWorkspace = activeWorkspaceRootUri ? this._workspaceContextService.getWorkspaceFolder(activeWorkspaceRootUri) ?? undefined : undefined;
-				const variableResolver = terminalEnvironment.createVariableResolver(lastActiveWorkspace, await this._terminalProfileResolverService.getEnvironment(this.remoteAuthority), this._configurationResolverService);
+				const lastActiveWorkspace = activeWorkspaceRootUri ? this._workspaceContextService.getWorkspaceFolder(
+          activeWorkspaceRootUri,
+        ) ?? undefined : undefined;
+				const variableResolver = terminalEnvironment.createVariableResolver(
+          lastActiveWorkspace,
+          await this._terminalProfileResolverService.getEnvironment(this.remoteAuthority),
+          this._configurationResolverService,
+        );
 
 				// Re-resolve the environments and replace it on the state so local terminals use a fresh
 				// environment
-				mark('code/terminal/willGetReviveEnvironments');
-				await Promise.all(reviveBufferState.map(state => new Promise<void>(r => {
-					this._resolveEnvironmentForRevive(variableResolver, state.shellLaunchConfig).then(freshEnv => {
-						state.processLaunchConfig.env = freshEnv;
-						r();
-					});
-				})));
-				mark('code/terminal/didGetReviveEnvironments');
+				mark("code/terminal/willGetReviveEnvironments");
+				await Promise.all(
+          reviveBufferState.map(
+            state => new Promise<void>(r => {
+              this._resolveEnvironmentForRevive(variableResolver, state.shellLaunchConfig).then(
+                freshEnv => {
+                  state.processLaunchConfig.env = freshEnv;
+                  r();
+                },
+              );
+            }),
+          ),
+        );
+				mark("code/terminal/didGetReviveEnvironments");
 
-				mark('code/terminal/willReviveTerminalProcesses');
-				await this._proxy.reviveTerminalProcesses(workspaceId, reviveBufferState, Intl.DateTimeFormat().resolvedOptions().locale);
-				mark('code/terminal/didReviveTerminalProcesses');
-				this._storageService.remove(TerminalStorageKeys.TerminalBufferState, StorageScope.WORKSPACE);
+				mark("code/terminal/willReviveTerminalProcesses");
+				await this._proxy.reviveTerminalProcesses(
+          workspaceId,
+          reviveBufferState,
+          Intl.DateTimeFormat().resolvedOptions().locale,
+        );
+				mark("code/terminal/didReviveTerminalProcesses");
+				this._storageService.remove(
+          TerminalStorageKeys.TerminalBufferState,
+          StorageScope.WORKSPACE,
+        );
 				// If reviving processes, send the terminal layout info back to the pty host as it
 				// will not have been persisted on application exit
-				const layoutInfo = this._storageService.get(TerminalStorageKeys.TerminalLayoutInfo, StorageScope.WORKSPACE);
+				const layoutInfo = this._storageService.get(
+          TerminalStorageKeys.TerminalLayoutInfo,
+          StorageScope.WORKSPACE,
+        );
 				if (layoutInfo) {
-					mark('code/terminal/willSetTerminalLayoutInfo');
+					mark("code/terminal/willSetTerminalLayoutInfo");
 					await this._proxy.setTerminalLayoutInfo(JSON.parse(layoutInfo));
-					mark('code/terminal/didSetTerminalLayoutInfo');
-					this._storageService.remove(TerminalStorageKeys.TerminalLayoutInfo, StorageScope.WORKSPACE);
+					mark("code/terminal/didSetTerminalLayoutInfo");
+					this._storageService.remove(
+            TerminalStorageKeys.TerminalLayoutInfo,
+            StorageScope.WORKSPACE,
+          );
 				}
 			} catch (e: unknown) {
-				this._logService.warn('LocalTerminalBackend#getTerminalLayoutInfo Error', (<{ message?: string }>e).message ?? e);
+				this._logService.warn(
+          "LocalTerminalBackend#getTerminalLayoutInfo Error",
+          (<{ message?: string }>e).message ?? e,
+        );
 			}
 		}
 
@@ -369,19 +479,38 @@ class LocalTerminalBackend extends BaseTerminalBackend implements ITerminalBacke
 	}
 
 	private async _resolveEnvironmentForRevive(variableResolver: terminalEnvironment.VariableResolver | undefined, shellLaunchConfig: IShellLaunchConfig): Promise<IProcessEnvironment> {
-		const platformKey = isWindows ? 'windows' : (isMacintosh ? 'osx' : 'linux');
-		const envFromConfigValue = this._configurationService.getValue<ITerminalEnvironment | undefined>(`terminal.integrated.env.${platformKey}`);
+		const platformKey = isWindows ? "windows" : (isMacintosh ? "osx" : "linux");
+		const envFromConfigValue = this._configurationService.getValue<ITerminalEnvironment | undefined>(
+      `terminal.integrated.env.${platformKey}`,
+    );
 		const baseEnv = await (shellLaunchConfig.useShellEnvironment ? this.getShellEnvironment() : this.getEnvironment());
-		const env = await terminalEnvironment.createTerminalEnvironment(shellLaunchConfig, envFromConfigValue, variableResolver, this._productService.version, this._configurationService.getValue(TerminalSettingId.DetectLocale), baseEnv);
+		const env = await terminalEnvironment.createTerminalEnvironment(
+      shellLaunchConfig,
+      envFromConfigValue,
+      variableResolver,
+      this._productService.version,
+      this._configurationService.getValue(TerminalSettingId.DetectLocale),
+      baseEnv,
+    );
 		if (shouldUseEnvironmentVariableCollection(shellLaunchConfig)) {
-			const workspaceFolder = terminalEnvironment.getWorkspaceForTerminal(shellLaunchConfig.cwd, this._workspaceContextService, this._historyService);
-			await this._environmentVariableService.mergedCollection.applyToProcessEnvironment(env, { workspaceFolder }, variableResolver);
+			const workspaceFolder = terminalEnvironment.getWorkspaceForTerminal(
+        shellLaunchConfig.cwd,
+        this._workspaceContextService,
+        this._historyService,
+      );
+			await this._environmentVariableService.mergedCollection.applyToProcessEnvironment(
+        env,
+        { workspaceFolder },
+        variableResolver,
+      );
 		}
 		return env;
 	}
 
 	private _getWorkspaceName(): string {
-		return this._labelService.getWorkspaceLabel(this._workspaceContextService.getWorkspace());
+		return this._labelService.getWorkspaceLabel(
+      this._workspaceContextService.getWorkspace(),
+    );
 	}
 
 	// #region Pty service contribution RPC calls

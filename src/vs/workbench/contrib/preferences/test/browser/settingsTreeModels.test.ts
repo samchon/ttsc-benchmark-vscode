@@ -3,346 +3,346 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { settingKeyToDisplayFormat, parseQuery, IParsedQuery, sanitizeId } from '../../browser/settingsTreeModels.js';
+import assert from "assert";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { settingKeyToDisplayFormat, parseQuery, IParsedQuery, sanitizeId } from "../../browser/settingsTreeModels.js";
 
-suite('SettingsTree', () => {
-	test('settingKeyToDisplayFormat', () => {
+suite("SettingsTree", () => {
+	test("settingKeyToDisplayFormat", () => {
 		assert.deepStrictEqual(
-			settingKeyToDisplayFormat('foo.bar'),
+			settingKeyToDisplayFormat("foo.bar"),
 			{
-				category: 'Foo',
-				label: 'Bar'
+				category: "Foo",
+				label: "Bar",
 			});
 
 		assert.deepStrictEqual(
-			settingKeyToDisplayFormat('foo.bar.etc'),
+			settingKeyToDisplayFormat("foo.bar.etc"),
 			{
-				category: 'Foo › Bar',
-				label: 'Etc'
+				category: "Foo › Bar",
+				label: "Etc",
 			});
 
 		assert.deepStrictEqual(
-			settingKeyToDisplayFormat('fooBar.etcSomething'),
+			settingKeyToDisplayFormat("fooBar.etcSomething"),
 			{
-				category: 'Foo Bar',
-				label: 'Etc Something'
+				category: "Foo Bar",
+				label: "Etc Something",
 			});
 
 		assert.deepStrictEqual(
-			settingKeyToDisplayFormat('foo'),
+			settingKeyToDisplayFormat("foo"),
 			{
-				category: '',
-				label: 'Foo'
+				category: "",
+				label: "Foo",
 			});
 
 		assert.deepStrictEqual(
-			settingKeyToDisplayFormat('foo.1leading.number'),
+			settingKeyToDisplayFormat("foo.1leading.number"),
 			{
-				category: 'Foo › 1leading',
-				label: 'Number'
+				category: "Foo › 1leading",
+				label: "Number",
 			});
 
 		assert.deepStrictEqual(
-			settingKeyToDisplayFormat('foo.1Leading.number'),
+			settingKeyToDisplayFormat("foo.1Leading.number"),
 			{
-				category: 'Foo › 1 Leading',
-				label: 'Number'
-			});
-	});
-
-	test('settingKeyToDisplayFormat - with category', () => {
-		assert.deepStrictEqual(
-			settingKeyToDisplayFormat('foo.bar', 'foo'),
-			{
-				category: '',
-				label: 'Bar'
-			});
-
-		assert.deepStrictEqual(
-			settingKeyToDisplayFormat('disableligatures.ligatures', 'disableligatures'),
-			{
-				category: '',
-				label: 'Ligatures'
-			});
-
-		assert.deepStrictEqual(
-			settingKeyToDisplayFormat('foo.bar.etc', 'foo'),
-			{
-				category: 'Bar',
-				label: 'Etc'
-			});
-
-		assert.deepStrictEqual(
-			settingKeyToDisplayFormat('fooBar.etcSomething', 'foo'),
-			{
-				category: 'Foo Bar',
-				label: 'Etc Something'
-			});
-
-		assert.deepStrictEqual(
-			settingKeyToDisplayFormat('foo.bar.etc', 'foo/bar'),
-			{
-				category: '',
-				label: 'Etc'
-			});
-
-		assert.deepStrictEqual(
-			settingKeyToDisplayFormat('foo.bar.etc', 'something/foo'),
-			{
-				category: 'Bar',
-				label: 'Etc'
-			});
-
-		assert.deepStrictEqual(
-			settingKeyToDisplayFormat('bar.etc', 'something.bar'),
-			{
-				category: '',
-				label: 'Etc'
-			});
-
-		assert.deepStrictEqual(
-			settingKeyToDisplayFormat('fooBar.etc', 'fooBar'),
-			{
-				category: '',
-				label: 'Etc'
-			});
-
-
-		assert.deepStrictEqual(
-			settingKeyToDisplayFormat('fooBar.somethingElse.etc', 'fooBar'),
-			{
-				category: 'Something Else',
-				label: 'Etc'
+				category: "Foo › 1 Leading",
+				label: "Number",
 			});
 	});
 
-	test('settingKeyToDisplayFormat - known acronym/term', () => {
+	test("settingKeyToDisplayFormat - with category", () => {
 		assert.deepStrictEqual(
-			settingKeyToDisplayFormat('css.someCssSetting'),
+			settingKeyToDisplayFormat("foo.bar", "foo"),
 			{
-				category: 'CSS',
-				label: 'Some CSS Setting'
+				category: "",
+				label: "Bar",
 			});
 
 		assert.deepStrictEqual(
-			settingKeyToDisplayFormat('powershell.somePowerShellSetting'),
+			settingKeyToDisplayFormat("disableligatures.ligatures", "disableligatures"),
 			{
-				category: 'PowerShell',
-				label: 'Some PowerShell Setting'
+				category: "",
+				label: "Ligatures",
+			});
+
+		assert.deepStrictEqual(
+			settingKeyToDisplayFormat("foo.bar.etc", "foo"),
+			{
+				category: "Bar",
+				label: "Etc",
+			});
+
+		assert.deepStrictEqual(
+			settingKeyToDisplayFormat("fooBar.etcSomething", "foo"),
+			{
+				category: "Foo Bar",
+				label: "Etc Something",
+			});
+
+		assert.deepStrictEqual(
+			settingKeyToDisplayFormat("foo.bar.etc", "foo/bar"),
+			{
+				category: "",
+				label: "Etc",
+			});
+
+		assert.deepStrictEqual(
+			settingKeyToDisplayFormat("foo.bar.etc", "something/foo"),
+			{
+				category: "Bar",
+				label: "Etc",
+			});
+
+		assert.deepStrictEqual(
+			settingKeyToDisplayFormat("bar.etc", "something.bar"),
+			{
+				category: "",
+				label: "Etc",
+			});
+
+		assert.deepStrictEqual(
+			settingKeyToDisplayFormat("fooBar.etc", "fooBar"),
+			{
+				category: "",
+				label: "Etc",
+			});
+
+
+		assert.deepStrictEqual(
+			settingKeyToDisplayFormat("fooBar.somethingElse.etc", "fooBar"),
+			{
+				category: "Something Else",
+				label: "Etc",
 			});
 	});
 
-	test('parseQuery', () => {
+	test("settingKeyToDisplayFormat - known acronym/term", () => {
+		assert.deepStrictEqual(
+			settingKeyToDisplayFormat("css.someCssSetting"),
+			{
+				category: "CSS",
+				label: "Some CSS Setting",
+			});
+
+		assert.deepStrictEqual(
+			settingKeyToDisplayFormat("powershell.somePowerShellSetting"),
+			{
+				category: "PowerShell",
+				label: "Some PowerShell Setting",
+			});
+	});
+
+	test("parseQuery", () => {
 		function testParseQuery(input: string, expected: IParsedQuery) {
 			assert.deepStrictEqual(
 				parseQuery(input),
 				expected,
-				input
+				input,
 			);
 		}
 
 		testParseQuery(
-			'',
+			"",
 			<IParsedQuery>{
 				tags: [],
 				extensionFilters: [],
-				query: '',
+				query: "",
 				featureFilters: [],
 				idFilters: [],
-				languageFilter: undefined
+				languageFilter: undefined,
 			});
 
 		testParseQuery(
-			'@modified',
+			"@modified",
 			<IParsedQuery>{
-				tags: ['modified'],
+				tags: ["modified"],
 				extensionFilters: [],
-				query: '',
+				query: "",
 				featureFilters: [],
 				idFilters: [],
-				languageFilter: undefined
+				languageFilter: undefined,
 			});
 
 		testParseQuery(
-			'@tag:foo',
+			"@tag:foo",
 			<IParsedQuery>{
-				tags: ['foo'],
+				tags: ["foo"],
 				extensionFilters: [],
-				query: '',
+				query: "",
 				featureFilters: [],
 				idFilters: [],
-				languageFilter: undefined
+				languageFilter: undefined,
 			});
 
 		testParseQuery(
-			'@modified foo',
+			"@modified foo",
 			<IParsedQuery>{
-				tags: ['modified'],
+				tags: ["modified"],
 				extensionFilters: [],
-				query: 'foo',
+				query: "foo",
 				featureFilters: [],
 				idFilters: [],
-				languageFilter: undefined
+				languageFilter: undefined,
 			});
 
 		testParseQuery(
-			'@tag:foo @modified',
+			"@tag:foo @modified",
 			<IParsedQuery>{
-				tags: ['foo', 'modified'],
+				tags: ["foo", "modified"],
 				extensionFilters: [],
-				query: '',
+				query: "",
 				featureFilters: [],
 				idFilters: [],
-				languageFilter: undefined
+				languageFilter: undefined,
 			});
 
 		testParseQuery(
-			'@tag:foo @modified my query',
+			"@tag:foo @modified my query",
 			<IParsedQuery>{
-				tags: ['foo', 'modified'],
+				tags: ["foo", "modified"],
 				extensionFilters: [],
-				query: 'my query',
+				query: "my query",
 				featureFilters: [],
 				idFilters: [],
-				languageFilter: undefined
+				languageFilter: undefined,
 			});
 
 		testParseQuery(
-			'test @modified query',
+			"test @modified query",
 			<IParsedQuery>{
-				tags: ['modified'],
+				tags: ["modified"],
 				extensionFilters: [],
-				query: 'test  query',
+				query: "test  query",
 				featureFilters: [],
 				idFilters: [],
-				languageFilter: undefined
+				languageFilter: undefined,
 			});
 
 		testParseQuery(
-			'test @modified',
+			"test @modified",
 			<IParsedQuery>{
-				tags: ['modified'],
+				tags: ["modified"],
 				extensionFilters: [],
-				query: 'test',
+				query: "test",
 				featureFilters: [],
 				idFilters: [],
-				languageFilter: undefined
+				languageFilter: undefined,
 			});
 
 		testParseQuery(
-			'query has @ for some reason',
+			"query has @ for some reason",
 			<IParsedQuery>{
 				tags: [],
 				extensionFilters: [],
-				query: 'query has @ for some reason',
+				query: "query has @ for some reason",
 				featureFilters: [],
 				idFilters: [],
-				languageFilter: undefined
+				languageFilter: undefined,
 			});
 
 		testParseQuery(
-			'@ext:github.vscode-pull-request-github',
+			"@ext:github.vscode-pull-request-github",
 			<IParsedQuery>{
 				tags: [],
-				extensionFilters: ['github.vscode-pull-request-github'],
-				query: '',
+				extensionFilters: ["github.vscode-pull-request-github"],
+				query: "",
 				featureFilters: [],
 				idFilters: [],
-				languageFilter: undefined
+				languageFilter: undefined,
 			});
 
 		testParseQuery(
-			'@ext:github.vscode-pull-request-github,vscode.git',
+			"@ext:github.vscode-pull-request-github,vscode.git",
 			<IParsedQuery>{
 				tags: [],
-				extensionFilters: ['github.vscode-pull-request-github', 'vscode.git'],
-				query: '',
+				extensionFilters: ["github.vscode-pull-request-github", "vscode.git"],
+				query: "",
 				featureFilters: [],
 				idFilters: [],
-				languageFilter: undefined
+				languageFilter: undefined,
 			});
 		testParseQuery(
-			'@feature:scm',
+			"@feature:scm",
 			<IParsedQuery>{
 				tags: [],
 				extensionFilters: [],
-				featureFilters: ['scm'],
-				query: '',
+				featureFilters: ["scm"],
+				query: "",
 				idFilters: [],
-				languageFilter: undefined
+				languageFilter: undefined,
 			});
 
 		testParseQuery(
-			'@feature:scm,terminal',
+			"@feature:scm,terminal",
 			<IParsedQuery>{
 				tags: [],
 				extensionFilters: [],
-				featureFilters: ['scm', 'terminal'],
-				query: '',
+				featureFilters: ["scm", "terminal"],
+				query: "",
 				idFilters: [],
-				languageFilter: undefined
+				languageFilter: undefined,
 			});
 		testParseQuery(
-			'@id:files.autoSave',
-			<IParsedQuery>{
-				tags: [],
-				extensionFilters: [],
-				featureFilters: [],
-				query: '',
-				idFilters: ['files.autoSave'],
-				languageFilter: undefined
-			});
-
-		testParseQuery(
-			'@id:files.autoSave,terminal.integrated.commandsToSkipShell',
+			"@id:files.autoSave",
 			<IParsedQuery>{
 				tags: [],
 				extensionFilters: [],
 				featureFilters: [],
-				query: '',
-				idFilters: ['files.autoSave', 'terminal.integrated.commandsToSkipShell'],
-				languageFilter: undefined
+				query: "",
+				idFilters: ["files.autoSave"],
+				languageFilter: undefined,
 			});
 
 		testParseQuery(
-			'@lang:cpp',
+			"@id:files.autoSave,terminal.integrated.commandsToSkipShell",
 			<IParsedQuery>{
 				tags: [],
 				extensionFilters: [],
 				featureFilters: [],
-				query: '',
-				idFilters: [],
-				languageFilter: 'cpp'
+				query: "",
+				idFilters: ["files.autoSave", "terminal.integrated.commandsToSkipShell"],
+				languageFilter: undefined,
 			});
 
 		testParseQuery(
-			'@lang:cpp,python',
+			"@lang:cpp",
 			<IParsedQuery>{
 				tags: [],
 				extensionFilters: [],
 				featureFilters: [],
-				query: '',
+				query: "",
 				idFilters: [],
-				languageFilter: 'cpp'
+				languageFilter: "cpp",
+			});
+
+		testParseQuery(
+			"@lang:cpp,python",
+			<IParsedQuery>{
+				tags: [],
+				extensionFilters: [],
+				featureFilters: [],
+				query: "",
+				idFilters: [],
+				languageFilter: "cpp",
 			});
 	});
 
-	test('sanitizeId replaces all dots and slashes', () => {
+	test("sanitizeId replaces all dots and slashes", () => {
 		assert.deepStrictEqual(
 			[
-				sanitizeId('root.editor.font.size'),
-				sanitizeId('group/subgroup/setting.key'),
-				sanitizeId('no-special-chars'),
-				sanitizeId('single.dot'),
+				sanitizeId("root.editor.font.size"),
+				sanitizeId("group/subgroup/setting.key"),
+				sanitizeId("no-special-chars"),
+				sanitizeId("single.dot"),
 			],
 			[
-				'root_editor_font_size',
-				'group_subgroup_setting_key',
-				'no-special-chars',
-				'single_dot',
-			]
+				"root_editor_font_size",
+				"group_subgroup_setting_key",
+				"no-special-chars",
+				"single_dot",
+			],
 		);
 	});
 

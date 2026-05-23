@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import { URI } from '../../../../base/common/uri.js';
-import { ISaveOptions, IRevertOptions, SaveReason, SaveSource } from '../../../common/editor.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { VSBufferReadable, VSBufferReadableStream } from '../../../../base/common/buffer.js';
+import { Event } from "../../../../base/common/event.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ISaveOptions, IRevertOptions, SaveReason, SaveSource } from "../../../common/editor.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { VSBufferReadable, VSBufferReadableStream } from "../../../../base/common/buffer.js";
 
 export const enum WorkingCopyCapabilities {
 
@@ -75,7 +75,7 @@ export interface IWorkingCopyBackupMeta {
  * @deprecated it is important to provide a type identifier
  * for working copies to enable all capabilities.
  */
-export const NO_TYPE_ID = '';
+export const NO_TYPE_ID = "";
 
 /**
  * Every working copy has in common that it is identified by

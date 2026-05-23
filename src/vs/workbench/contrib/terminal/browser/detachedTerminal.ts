@@ -3,30 +3,38 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../base/browser/dom.js';
-import { Delayer } from '../../../../base/common/async.js';
-import { onUnexpectedError } from '../../../../base/common/errors.js';
-import { Disposable, DisposableStore, MutableDisposable } from '../../../../base/common/lifecycle.js';
-import { OperatingSystem } from '../../../../base/common/platform.js';
-import { MicrotaskDelay } from '../../../../base/common/symbols.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { ITerminalCapabilityStore } from '../../../../platform/terminal/common/capabilities/capabilities.js';
-import { TerminalCapabilityStore } from '../../../../platform/terminal/common/capabilities/terminalCapabilityStore.js';
-import { IMergedEnvironmentVariableCollection } from '../../../../platform/terminal/common/environmentVariable.js';
-import { ITerminalBackend } from '../../../../platform/terminal/common/terminal.js';
-import { IDetachedTerminalInstance, IDetachedXTermOptions, IDetachedXtermTerminal, ITerminalContribution, IXtermAttachToElementOptions } from './terminal.js';
-import { TerminalExtensionsRegistry } from './terminalExtensions.js';
-import { TerminalWidgetManager } from './widgets/widgetManager.js';
-import { XtermTerminal } from './xterm/xtermTerminal.js';
-import { IEnvironmentVariableInfo } from '../common/environmentVariable.js';
-import { ITerminalProcessInfo, ProcessState } from '../common/terminal.js';
-import { Event } from '../../../../base/common/event.js';
+import * as dom from "../../../../base/browser/dom.js";
+import { Delayer } from "../../../../base/common/async.js";
+import { onUnexpectedError } from "../../../../base/common/errors.js";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { OperatingSystem } from "../../../../base/common/platform.js";
+import { MicrotaskDelay } from "../../../../base/common/symbols.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ITerminalCapabilityStore } from "../../../../platform/terminal/common/capabilities/capabilities.js";
+import { TerminalCapabilityStore } from "../../../../platform/terminal/common/capabilities/terminalCapabilityStore.js";
+import { IMergedEnvironmentVariableCollection } from "../../../../platform/terminal/common/environmentVariable.js";
+import { ITerminalBackend } from "../../../../platform/terminal/common/terminal.js";
+import {
+  IDetachedTerminalInstance,
+  IDetachedXTermOptions,
+  IDetachedXtermTerminal,
+  ITerminalContribution,
+  IXtermAttachToElementOptions,
+} from "./terminal.js";
+import { TerminalExtensionsRegistry } from "./terminalExtensions.js";
+import { TerminalWidgetManager } from "./widgets/widgetManager.js";
+import { XtermTerminal } from "./xterm/xtermTerminal.js";
+import { IEnvironmentVariableInfo } from "../common/environmentVariable.js";
+import { ITerminalProcessInfo, ProcessState } from "../common/terminal.js";
+import { Event } from "../../../../base/common/event.js";
 
 export class DetachedTerminal extends Disposable implements IDetachedTerminalInstance {
 	private readonly _widgets = this._register(new TerminalWidgetManager());
 	public readonly capabilities: ITerminalCapabilityStore;
 	private readonly _contributions: Map<string, ITerminalContribution> = new Map();
-	private readonly _attachDisposables = this._register(new MutableDisposable<DisposableStore>());
+	private readonly _attachDisposables = this._register(
+    new MutableDisposable<DisposableStore>(),
+  );
 
 	public domElement?: HTMLElement;
 
@@ -51,7 +59,11 @@ export class DetachedTerminal extends Disposable implements IDetachedTerminalIns
 		const contributionDescs = TerminalExtensionsRegistry.getTerminalContributions();
 		for (const desc of contributionDescs) {
 			if (this._contributions.has(desc.id)) {
-				onUnexpectedError(new Error(`Cannot have two terminal contributions with the same id ${desc.id}`));
+				onUnexpectedError(
+          new Error(
+            `Cannot have two terminal contributions with the same id ${desc.id}`,
+          ),
+        );
 				continue;
 			}
 			if (desc.canRunInDetachedTerminals === false) {
@@ -61,10 +73,10 @@ export class DetachedTerminal extends Disposable implements IDetachedTerminalIns
 			let contribution: ITerminalContribution;
 			try {
 				contribution = instantiationService.createInstance(desc.ctor, {
-					instance: this,
-					processManager: options.processInfo,
-					widgetManager: this._widgets
-				});
+          instance: this,
+          processManager: options.processInfo,
+          widgetManager: this._widgets,
+        });
 				this._contributions.set(desc.id, contribution);
 				this._register(contribution);
 			} catch (err) {
@@ -109,16 +121,22 @@ export class DetachedTerminal extends Disposable implements IDetachedTerminalIns
 			// Defer so scrollable containers can handle focus first; ensures textarea focus sticks
 			setTimeout(() => this.focus(true), 0);
 		};
-		attachStore.add(dom.addDisposableListener(container, dom.EventType.MOUSE_DOWN, scheduleFocus));
+		attachStore.add(
+      dom.addDisposableListener(
+        container,
+        dom.EventType.MOUSE_DOWN,
+        scheduleFocus,
+      ),
+    );
 		this._attachDisposables.value = attachStore;
 	}
 
 	forceScrollbarVisibility(): void {
-		this.domElement?.classList.add('force-scrollbar');
+		this.domElement?.classList.add("force-scrollbar");
 	}
 
 	resetScrollbarVisibility(): void {
-		this.domElement?.classList.remove('force-scrollbar');
+		this.domElement?.classList.remove("force-scrollbar");
 	}
 
 	getContribution<T extends ITerminalContribution>(id: string): T | null {
@@ -138,7 +156,7 @@ export class DetachedProcessInfo extends Disposable implements ITerminalProcessI
 	remoteAuthority: string | undefined;
 	os: OperatingSystem | undefined;
 	userHome: string | undefined;
-	initialCwd = '';
+	initialCwd = "";
 	environmentVariableInfo: IEnvironmentVariableInfo | undefined;
 	persistentProcessId: number | undefined;
 	shouldPersist = false;
@@ -146,7 +164,7 @@ export class DetachedProcessInfo extends Disposable implements ITerminalProcessI
 	hasChildProcesses = false;
 	backend: ITerminalBackend | undefined;
 	capabilities: ITerminalCapabilityStore;
-	shellIntegrationNonce = '';
+	shellIntegrationNonce = "";
 	extEnvironmentVariableCollection: IMergedEnvironmentVariableCollection | undefined;
 
 	constructor(initialValues: Partial<ITerminalProcessInfo>) {

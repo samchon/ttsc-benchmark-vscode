@@ -3,18 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IURLService, IURLHandler, IOpenURLOptions } from '../../../../platform/url/common/url.js';
-import { URI, UriComponents } from '../../../../base/common/uri.js';
-import { IMainProcessService } from '../../../../platform/ipc/common/mainProcessService.js';
-import { URLHandlerChannel } from '../../../../platform/url/common/urlIpc.js';
-import { IOpenerService, IOpener } from '../../../../platform/opener/common/opener.js';
-import { matchesScheme } from '../../../../base/common/network.js';
-import { IProductService } from '../../../../platform/product/common/productService.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { ProxyChannel } from '../../../../base/parts/ipc/common/ipc.js';
-import { FocusMode, INativeHostService } from '../../../../platform/native/common/native.js';
-import { NativeURLService } from '../../../../platform/url/common/urlService.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
+import { IURLService, IURLHandler, IOpenURLOptions } from "../../../../platform/url/common/url.js";
+import { URI, UriComponents } from "../../../../base/common/uri.js";
+import { IMainProcessService } from "../../../../platform/ipc/common/mainProcessService.js";
+import { URLHandlerChannel } from "../../../../platform/url/common/urlIpc.js";
+import { IOpenerService, IOpener } from "../../../../platform/opener/common/opener.js";
+import { matchesScheme } from "../../../../base/common/network.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { ProxyChannel } from "../../../../base/parts/ipc/common/ipc.js";
+import { FocusMode, INativeHostService } from "../../../../platform/native/common/native.js";
+import { NativeURLService } from "../../../../platform/url/common/urlService.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
 
 export interface IRelayOpenURLOptions extends IOpenURLOptions {
 	openToSide?: boolean;
@@ -30,13 +30,18 @@ export class RelayURLService extends NativeURLService implements IURLHandler, IO
 		@IOpenerService openerService: IOpenerService,
 		@INativeHostService private readonly nativeHostService: INativeHostService,
 		@IProductService productService: IProductService,
-		@ILogService private readonly logService: ILogService
+		@ILogService private readonly logService: ILogService,
 	) {
 		super(productService);
 
-		this.urlService = ProxyChannel.toService<IURLService>(mainProcessService.getChannel('url'));
+		this.urlService = ProxyChannel.toService<IURLService>(
+      mainProcessService.getChannel("url"),
+    );
 
-		mainProcessService.registerChannel('urlHandler', new URLHandlerChannel(this));
+		mainProcessService.registerChannel(
+      "urlHandler",
+      new URLHandlerChannel(this),
+    );
 		openerService.registerOpener(this);
 	}
 
@@ -59,7 +64,7 @@ export class RelayURLService extends NativeURLService implements IURLHandler, IO
 			return false;
 		}
 
-		if (typeof resource === 'string') {
+		if (typeof resource === "string") {
 			resource = URI.parse(resource);
 		}
 		return await this.urlService.open(resource, options);
@@ -69,11 +74,20 @@ export class RelayURLService extends NativeURLService implements IURLHandler, IO
 		const result = await super.open(uri, options);
 
 		if (result) {
-			this.logService.trace('URLService#handleURL(): handled', uri.toString(true));
+			this.logService.trace(
+        "URLService#handleURL(): handled",
+        uri.toString(true),
+      );
 
-			await this.nativeHostService.focusWindow({ mode: FocusMode.Force /* Application may not be active */, targetWindowId: this.nativeHostService.windowId });
+			await this.nativeHostService.focusWindow({
+        mode: FocusMode.Force,
+        targetWindowId: this.nativeHostService.windowId,
+      });
 		} else {
-			this.logService.trace('URLService#handleURL(): not handled', uri.toString(true));
+			this.logService.trace(
+        "URLService#handleURL(): not handled",
+        uri.toString(true),
+      );
 		}
 
 		return result;

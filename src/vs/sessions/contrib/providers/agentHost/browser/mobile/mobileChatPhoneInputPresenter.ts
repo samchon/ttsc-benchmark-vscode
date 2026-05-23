@@ -3,39 +3,43 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Codicon } from '../../../../../../base/common/codicons.js';
-import { ThemeIcon } from '../../../../../../base/common/themables.js';
-import { Disposable, IDisposable, MutableDisposable } from '../../../../../../base/common/lifecycle.js';
-import { derived, IObservable } from '../../../../../../base/common/observable.js';
-import { localize } from '../../../../../../nls.js';
-import { SessionConfigKey } from '../../../../../../platform/agentHost/common/sessionConfigKeys.js';
-import { ICommandService } from '../../../../../../platform/commands/common/commands.js';
-import { IContextKeyService } from '../../../../../../platform/contextkey/common/contextkey.js';
-import { observableContextKey } from '../../../../../../platform/observable/common/platformObservableUtils.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../../../platform/storage/common/storage.js';
-import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../../../../workbench/common/contributions.js';
-import { IToggleChatModeArgs, ToggleAgentModeActionId } from '../../../../../../workbench/contrib/chat/browser/actions/chatExecuteActions.js';
-import { IChatPhoneInputPresenter, IChatPhonePresenterImpl } from '../../../../../../workbench/contrib/chat/browser/widget/input/chatPhoneInputPresenter.js';
-import { IModePickerDelegate } from '../../../../../../workbench/contrib/chat/browser/widget/input/modePickerActionItem.js';
-import { IModelPickerDelegate } from '../../../../../../workbench/contrib/chat/browser/widget/input/modelPickerActionItem.js';
-import { IChatMode } from '../../../../../../workbench/contrib/chat/common/chatModes.js';
-import { ILanguageModelChatMetadataAndIdentifier, ILanguageModelsService } from '../../../../../../workbench/contrib/chat/common/languageModels.js';
-import { IWorkbenchLayoutService } from '../../../../../../workbench/services/layout/browser/layoutService.js';
-import { IChatWidgetService } from '../../../../../../workbench/contrib/chat/browser/chat.js';
-import { isAgentHostProvider } from '../../../../../common/agentHostSessionsProvider.js';
-import { ISessionsManagementService } from '../../../../../services/sessions/common/sessionsManagement.js';
-import { SessionStatus } from '../../../../../services/sessions/common/session.js';
-import { ISessionsProvidersService } from '../../../../../services/sessions/browser/sessionsProvidersService.js';
-import { showMobilePickerSheet, IMobilePickerSheetItem } from '../../../../../browser/parts/mobile/mobilePickerSheet.js';
-import { agentHostModelPickerStorageKey } from '../agentHostModelPicker.js';
-import { isWellKnownModeSchema } from '../agentHostPermissionPickerDelegate.js';
+import { Codicon } from "../../../../../../base/common/codicons.js";
+import { ThemeIcon } from "../../../../../../base/common/themables.js";
+import { Disposable, IDisposable, MutableDisposable } from "../../../../../../base/common/lifecycle.js";
+import { derived, IObservable } from "../../../../../../base/common/observable.js";
+import { localize } from "../../../../../../nls.js";
+import { SessionConfigKey } from "../../../../../../platform/agentHost/common/sessionConfigKeys.js";
+import { ICommandService } from "../../../../../../platform/commands/common/commands.js";
+import { IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { observableContextKey } from "../../../../../../platform/observable/common/platformObservableUtils.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../../../platform/storage/common/storage.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import {
+  IWorkbenchContribution,
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../../../../../workbench/common/contributions.js";
+import { IToggleChatModeArgs, ToggleAgentModeActionId } from "../../../../../../workbench/contrib/chat/browser/actions/chatExecuteActions.js";
+import { IChatPhoneInputPresenter, IChatPhonePresenterImpl } from "../../../../../../workbench/contrib/chat/browser/widget/input/chatPhoneInputPresenter.js";
+import { IModePickerDelegate } from "../../../../../../workbench/contrib/chat/browser/widget/input/modePickerActionItem.js";
+import { IModelPickerDelegate } from "../../../../../../workbench/contrib/chat/browser/widget/input/modelPickerActionItem.js";
+import { IChatMode } from "../../../../../../workbench/contrib/chat/common/chatModes.js";
+import { ILanguageModelChatMetadataAndIdentifier, ILanguageModelsService } from "../../../../../../workbench/contrib/chat/common/languageModels.js";
+import { IWorkbenchLayoutService } from "../../../../../../workbench/services/layout/browser/layoutService.js";
+import { IChatWidgetService } from "../../../../../../workbench/contrib/chat/browser/chat.js";
+import { isAgentHostProvider } from "../../../../../common/agentHostSessionsProvider.js";
+import { ISessionsManagementService } from "../../../../../services/sessions/common/sessionsManagement.js";
+import { SessionStatus } from "../../../../../services/sessions/common/session.js";
+import { ISessionsProvidersService } from "../../../../../services/sessions/browser/sessionsProvidersService.js";
+import { showMobilePickerSheet, IMobilePickerSheetItem } from "../../../../../browser/parts/mobile/mobilePickerSheet.js";
+import { agentHostModelPickerStorageKey } from "../agentHostModelPicker.js";
+import { isWellKnownModeSchema } from "../agentHostPermissionPickerDelegate.js";
 
 function getAgentHostModeIcon(value: string | undefined): ThemeIcon | undefined {
 	switch (value) {
-		case 'plan': return Codicon.checklist;
-		case 'autopilot': return Codicon.rocket;
-		case 'interactive': return Codicon.comment;
+		case "plan": return Codicon.checklist;
+		case "autopilot": return Codicon.rocket;
+		case "interactive": return Codicon.comment;
 		default: return undefined;
 	}
 }
@@ -46,10 +50,10 @@ function getAgentHostModeIcon(value: string | undefined): ThemeIcon | undefined 
  * {@link IToggleChatModeArgs}.
  */
 type ChatPhonePickerAction =
-	| { kind: 'mode'; mode: IChatMode }
-	| { kind: 'model'; model: ILanguageModelChatMetadataAndIdentifier }
-	| { kind: 'agentHostMode'; value: string }
-	| { kind: 'agentHostModel'; model: ILanguageModelChatMetadataAndIdentifier };
+	| { kind: "mode"; mode: IChatMode }
+	| { kind: "model"; model: ILanguageModelChatMetadataAndIdentifier }
+	| { kind: "agentHostMode"; value: string }
+	| { kind: "agentHostModel"; model: ILanguageModelChatMetadataAndIdentifier };
 
 /**
  * Sessions-side implementation of {@link IChatPhoneInputPresenter}.
@@ -83,7 +87,10 @@ class MobileChatPhoneInputPresenter extends Disposable implements IChatPhonePres
 		// we cross the phone breakpoint. This key is the source of truth
 		// for "is this viewport phone-classified" — the layout policy
 		// updates it through the workbench's main `layout()` pass.
-		const isPhoneCtx = observableContextKey<boolean>('sessionsIsPhoneLayout', contextKeyService);
+		const isPhoneCtx = observableContextKey<boolean>(
+      "sessionsIsPhoneLayout",
+      contextKeyService,
+    );
 		this.enabled = derived(this, reader => isPhoneCtx.read(reader) === true);
 	}
 
@@ -116,33 +123,41 @@ class MobileChatPhoneInputPresenter extends Disposable implements IChatPhonePres
 		// default Copilot chat protocol and are wrong for agent-host
 		// sessions.
 		const activeSession = this._sessionsManagementService.activeSession.get();
-		const rawProvider = activeSession ? this._sessionsProvidersService.getProvider(activeSession.providerId) : undefined;
-		const agentHostProvider = rawProvider && isAgentHostProvider(rawProvider) ? rawProvider : undefined;
+		const rawProvider = activeSession ? this._sessionsProvidersService.getProvider(
+      activeSession.providerId,
+    ) : undefined;
+		const agentHostProvider = rawProvider && isAgentHostProvider(
+      rawProvider,
+    ) ? rawProvider : undefined;
 
 		if (activeSession && agentHostProvider) {
-			const config = agentHostProvider.getSessionConfig(activeSession.sessionId);
+			const config = agentHostProvider.getSessionConfig(
+        activeSession.sessionId,
+      );
 			const modeSchema = config?.schema.properties[SessionConfigKey.Mode];
 			const modeItems = (modeSchema && isWellKnownModeSchema(modeSchema))
 				? (modeSchema.enum ?? []).map((value, index) => ({
-					value,
-					label: modeSchema.enumLabels?.[index] ?? value,
-					description: modeSchema.enumDescriptions?.[index],
-				}))
+            value,
+            label: modeSchema.enumLabels?.[index] ?? value,
+            description: modeSchema.enumDescriptions?.[index],
+          }))
 				: [];
 			const rawCurrentMode = config?.values[SessionConfigKey.Mode] ?? modeSchema?.default;
-			const currentModeValue = (typeof rawCurrentMode === 'string' && modeItems.some(i => i.value === rawCurrentMode))
+			const currentModeValue = (typeof rawCurrentMode === "string" && modeItems.some(
+        i => i.value === rawCurrentMode,
+      ))
 				? rawCurrentMode
 				: modeItems[0]?.value;
 
 			modeItems.forEach((item, index) => {
 				sheetItems.push({
-					id: registerAction({ kind: 'agentHostMode', value: item.value }),
+					id: registerAction({ kind: "agentHostMode", value: item.value }),
 					label: item.label,
 					description: item.description,
 					icon: getAgentHostModeIcon(item.value),
 					checked: item.value === currentModeValue,
 					sectionTitle: index === 0
-						? localize('chatPhoneInput.modeSection', "Agent Mode")
+						? localize("chatPhoneInput.modeSection", "Agent Mode")
 						: undefined,
 				});
 			});
@@ -162,17 +177,20 @@ class MobileChatPhoneInputPresenter extends Disposable implements IChatPhonePres
 			// session has its own `modelId`.
 			const isUntitled = activeSession.status.get() === SessionStatus.Untitled;
 			const storedModelId = isUntitled
-				? this._storageService.get(agentHostModelPickerStorageKey(resourceScheme), StorageScope.PROFILE)
+				? this._storageService.get(
+            agentHostModelPickerStorageKey(resourceScheme),
+            StorageScope.PROFILE,
+          )
 				: undefined;
 			const currentModelId = activeSession.modelId.get() ?? storedModelId;
 
 			agentHostModels.forEach((model, index) => {
 				sheetItems.push({
-					id: registerAction({ kind: 'agentHostModel', model }),
+					id: registerAction({ kind: "agentHostModel", model }),
 					label: model.metadata.name,
 					checked: model.identifier === currentModelId,
 					sectionTitle: index === 0
-						? localize('chatPhoneInput.modelSection', "Model")
+						? localize("chatPhoneInput.modelSection", "Model")
 						: undefined,
 				});
 			});
@@ -193,23 +211,23 @@ class MobileChatPhoneInputPresenter extends Disposable implements IChatPhonePres
 			allModes.forEach((mode, index) => {
 				const icon = mode.icon.get();
 				sheetItems.push({
-					id: registerAction({ kind: 'mode', mode }),
+					id: registerAction({ kind: "mode", mode }),
 					label: mode.label.get(),
 					icon: ThemeIcon.isThemeIcon(icon) ? icon : undefined,
 					checked: mode.id === currentMode.id,
 					sectionTitle: index === 0
-						? localize('chatPhoneInput.modeSection', "Agent Mode")
+						? localize("chatPhoneInput.modeSection", "Agent Mode")
 						: undefined,
 				});
 			});
 
 			modelItems.forEach((model, index) => {
 				sheetItems.push({
-					id: registerAction({ kind: 'model', model }),
+					id: registerAction({ kind: "model", model }),
 					label: model.metadata.name,
 					checked: model.identifier === currentModel?.identifier,
 					sectionTitle: index === 0
-						? localize('chatPhoneInput.modelSection', "Model")
+						? localize("chatPhoneInput.modelSection", "Model")
 						: undefined,
 				});
 			});
@@ -227,11 +245,15 @@ class MobileChatPhoneInputPresenter extends Disposable implements IChatPhonePres
 			// at sheet-open would silently apply later writes to the
 			// stale session.
 			const session = this._sessionsManagementService.activeSession.get();
-			const provider = session ? this._sessionsProvidersService.getProvider(session.providerId) : undefined;
-			const ahProvider = provider && isAgentHostProvider(provider) ? provider : undefined;
+			const provider = session ? this._sessionsProvidersService.getProvider(
+        session.providerId,
+      ) : undefined;
+			const ahProvider = provider && isAgentHostProvider(
+        provider,
+      ) ? provider : undefined;
 
 			switch (action.kind) {
-				case 'mode':
+				case "mode":
 					// Same dispatch the desktop mode picker uses (see
 					// `modePickerActionItem.ts` — the row's `run()` invokes
 					// `ToggleAgentModeActionId` with `{ modeId, sessionResource }`).
@@ -240,13 +262,13 @@ class MobileChatPhoneInputPresenter extends Disposable implements IChatPhonePres
 						{ modeId: action.mode.id, sessionResource: modeDelegate?.sessionResource() } satisfies IToggleChatModeArgs,
 					).catch(() => { /* best-effort */ });
 					break;
-				case 'model':
+				case "model":
 					// Same dispatch the desktop model picker uses (see
 					// `ModelPickerActionItem` — `onDidChangeSelection` routes to
 					// `delegate.setModel`).
 					modelDelegate?.setModel(action.model);
 					break;
-				case 'agentHostMode':
+				case "agentHostMode":
 					// Same write path as `MobileChatInputConfigPicker` and
 					// `AgentHostModePicker._showPicker`'s `onSelect`.
 					if (session && ahProvider) {
@@ -254,7 +276,7 @@ class MobileChatPhoneInputPresenter extends Disposable implements IChatPhonePres
 							.catch(() => { /* best-effort */ });
 					}
 					break;
-				case 'agentHostModel':
+				case "agentHostModel":
 					// Drive the workbench delegate (when present) so the
 					// chip's `currentModel` observable updates immediately
 					// and the input toolbar repaints.
@@ -278,7 +300,12 @@ class MobileChatPhoneInputPresenter extends Disposable implements IChatPhonePres
 						// remembers the same selection across surfaces,
 						// and push to the agent-host provider so the
 						// next send goes out with the picked model.
-						this._storageService.store(agentHostModelPickerStorageKey(session.resource.scheme), action.model.identifier, StorageScope.PROFILE, StorageTarget.MACHINE);
+						this._storageService.store(
+              agentHostModelPickerStorageKey(session.resource.scheme),
+              action.model.identifier,
+              StorageScope.PROFILE,
+              StorageTarget.MACHINE,
+            );
 						ahProvider.setModel(session.sessionId, action.model.identifier);
 					}
 					break;
@@ -292,7 +319,7 @@ class MobileChatPhoneInputPresenter extends Disposable implements IChatPhonePres
 		// in one session.
 		await showMobilePickerSheet(
 			this._layoutService.mainContainer,
-			localize('chatPhoneInput.title', "Configure Session"),
+			localize("chatPhoneInput.title", "Configure Session"),
 			sheetItems,
 			{
 				stayOpenOnSelect: true,
@@ -309,9 +336,11 @@ class MobileChatPhoneInputPresenter extends Disposable implements IChatPhonePres
 
 class MobileChatPhoneInputPresenterContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'sessions.contrib.mobileChatPhoneInputPresenter';
+	static readonly ID = "sessions.contrib.mobileChatPhoneInputPresenter";
 
-	private readonly _registration = this._register(new MutableDisposable<IDisposable>());
+	private readonly _registration = this._register(
+    new MutableDisposable<IDisposable>(),
+  );
 
 	constructor(
 		@IChatPhoneInputPresenter presenter: IChatPhoneInputPresenter,
@@ -319,7 +348,9 @@ class MobileChatPhoneInputPresenterContribution extends Disposable implements IW
 	) {
 		super();
 
-		const impl = this._register(instantiationService.createInstance(MobileChatPhoneInputPresenter));
+		const impl = this._register(
+      instantiationService.createInstance(MobileChatPhoneInputPresenter),
+    );
 
 		// Keep the registration mounted for the lifetime of the
 		// contribution. The workbench presenter's `enabled` observable
@@ -330,7 +361,7 @@ class MobileChatPhoneInputPresenterContribution extends Disposable implements IW
 }
 
 registerWorkbenchContribution2(
-	MobileChatPhoneInputPresenterContribution.ID,
-	MobileChatPhoneInputPresenterContribution,
-	WorkbenchPhase.AfterRestored,
+  MobileChatPhoneInputPresenterContribution.ID,
+  MobileChatPhoneInputPresenterContribution,
+  WorkbenchPhase.AfterRestored,
 );

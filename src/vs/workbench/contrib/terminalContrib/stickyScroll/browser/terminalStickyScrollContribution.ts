@@ -3,35 +3,41 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { Terminal as RawXtermTerminal } from '@xterm/xterm';
-import { Event } from '../../../../../base/common/event.js';
-import { Disposable, MutableDisposable } from '../../../../../base/common/lifecycle.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { IContextKeyService } from '../../../../../platform/contextkey/common/contextkey.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IKeybindingService } from '../../../../../platform/keybinding/common/keybinding.js';
-import { TerminalCapability } from '../../../../../platform/terminal/common/capabilities/capabilities.js';
-import { ITerminalContribution, ITerminalInstance, IXtermTerminal } from '../../../terminal/browser/terminal.js';
-import type { ITerminalContributionContext } from '../../../terminal/browser/terminalExtensions.js';
-import { TerminalInstance, TerminalInstanceColorProvider } from '../../../terminal/browser/terminalInstance.js';
-import { TerminalStickyScrollSettingId } from '../common/terminalStickyScrollConfiguration.js';
-import './media/stickyScroll.css';
-import { TerminalStickyScrollOverlay } from './terminalStickyScrollOverlay.js';
+import type { Terminal as RawXtermTerminal } from "@xterm/xterm";
+import { Event } from "../../../../../base/common/event.js";
+import { Disposable, MutableDisposable } from "../../../../../base/common/lifecycle.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../../platform/keybinding/common/keybinding.js";
+import { TerminalCapability } from "../../../../../platform/terminal/common/capabilities/capabilities.js";
+import { ITerminalContribution, ITerminalInstance, IXtermTerminal } from "../../../terminal/browser/terminal.js";
+import type { ITerminalContributionContext } from "../../../terminal/browser/terminalExtensions.js";
+import { TerminalInstance, TerminalInstanceColorProvider } from "../../../terminal/browser/terminalInstance.js";
+import { TerminalStickyScrollSettingId } from "../common/terminalStickyScrollConfiguration.js";
+import "./media/stickyScroll.css";
+import { TerminalStickyScrollOverlay } from "./terminalStickyScrollOverlay.js";
 
 export class TerminalStickyScrollContribution extends Disposable implements ITerminalContribution {
-	static readonly ID = 'terminal.stickyScroll';
+	static readonly ID = "terminal.stickyScroll";
 
 	static get(instance: ITerminalInstance): TerminalStickyScrollContribution | null {
-		return instance.getContribution<TerminalStickyScrollContribution>(TerminalStickyScrollContribution.ID);
+		return instance.getContribution<TerminalStickyScrollContribution>(
+      TerminalStickyScrollContribution.ID,
+    );
 	}
 
 	private _xterm?: IXtermTerminal & { raw: RawXtermTerminal };
 
-	private readonly _overlay = this._register(new MutableDisposable<TerminalStickyScrollOverlay>());
+	private readonly _overlay = this._register(
+    new MutableDisposable<TerminalStickyScrollOverlay>(),
+  );
 
 	private readonly _enableListeners = this._register(new MutableDisposable());
 	private readonly _disableListeners = this._register(new MutableDisposable());
-	private readonly _richCommandDetectionListeners = this._register(new MutableDisposable());
+	private readonly _richCommandDetectionListeners = this._register(
+    new MutableDisposable(),
+  );
 
 	constructor(
 		private readonly _ctx: ITerminalContributionContext,
@@ -95,22 +101,32 @@ export class TerminalStickyScrollContribution extends Disposable implements ITer
 	}
 
 	private _tryEnable(): void {
-		const capability = this._ctx.instance.capabilities.get(TerminalCapability.CommandDetection);
+		const capability = this._ctx.instance.capabilities.get(
+      TerminalCapability.CommandDetection,
+    );
 		if (this._shouldBeEnabled()) {
-			const xtermCtorEventually = TerminalInstance.getXtermConstructor(this._keybindingService, this._contextKeyService);
+			const xtermCtorEventually = TerminalInstance.getXtermConstructor(
+        this._keybindingService,
+        this._contextKeyService,
+      );
 			this._overlay.value = this._instantiationService.createInstance(
-				TerminalStickyScrollOverlay,
-				this._ctx.instance,
-				this._xterm!,
-				this._instantiationService.createInstance(TerminalInstanceColorProvider, this._ctx.instance.targetRef),
-				capability!,
-				xtermCtorEventually
-			);
+        TerminalStickyScrollOverlay,
+        this._ctx.instance,
+        this._xterm!,
+        this._instantiationService.createInstance(
+          TerminalInstanceColorProvider,
+          this._ctx.instance.targetRef,
+        ),
+        capability!,
+        xtermCtorEventually,
+      );
 			this._richCommandDetectionListeners.clear();
 		} else if (capability && !capability.hasRichCommandDetection) {
-			this._richCommandDetectionListeners.value = capability.onSetRichCommandDetection(() => {
-				this._refreshState();
-			});
+			this._richCommandDetectionListeners.value = capability.onSetRichCommandDetection(
+        () => {
+          this._refreshState();
+        },
+      );
 		} else {
 			// No or Rich shell integration does not need listener
 			this._richCommandDetectionListeners.clear();
@@ -125,8 +141,12 @@ export class TerminalStickyScrollContribution extends Disposable implements ITer
 	}
 
 	private _shouldBeEnabled(): boolean {
-		const capability = this._ctx.instance.capabilities.get(TerminalCapability.CommandDetection);
-		const result = !!(this._configurationService.getValue(TerminalStickyScrollSettingId.Enabled) && capability && capability.hasRichCommandDetection && this._xterm?.raw?.element);
+		const capability = this._ctx.instance.capabilities.get(
+      TerminalCapability.CommandDetection,
+    );
+		const result = !!(this._configurationService.getValue(
+      TerminalStickyScrollSettingId.Enabled,
+    ) && capability && capability.hasRichCommandDetection && this._xterm?.raw?.element);
 		return result;
 	}
 }

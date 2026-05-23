@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../base/common/event.js';
-import { Disposable, IDisposable, MutableDisposable } from '../../../base/common/lifecycle.js';
-import { IElementData, IBrowserViewTheme } from '../common/browserView.js';
-import { ICDPConnection } from '../common/cdp/types.js';
-import type { BrowserView } from './browserView.js';
-import { BrowserViewFrameInspector } from './browserViewFrameInspector.js';
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable, IDisposable, MutableDisposable } from "../../../base/common/lifecycle.js";
+import { IElementData, IBrowserViewTheme } from "../common/browserView.js";
+import { ICDPConnection } from "../common/cdp/types.js";
+import type { BrowserView } from "./browserView.js";
+import { BrowserViewFrameInspector } from "./browserViewFrameInspector.js";
 
 interface IActiveSelection extends IDisposable {
 }
@@ -26,9 +26,9 @@ export interface IElementHandle extends IDisposable {
  */
 export const enum BrowserViewInspectElementId {
 	/** The page's `document.activeElement`. */
-	Active = 'active',
+	Active = "active",
 	/** The element targeted by the most recent `contextmenu` event. */
-	ContextMenuTarget = 'context-menu-target',
+	ContextMenuTarget = "context-menu-target",
 }
 
 /**
@@ -45,16 +45,22 @@ export const enum BrowserViewInspectElementId {
  */
 export class BrowserViewInspector extends Disposable {
 
-	private readonly _onDidSelectElement = this._register(new Emitter<IElementData>());
+	private readonly _onDidSelectElement = this._register(
+    new Emitter<IElementData>(),
+  );
 	readonly onDidSelectElement: Event<IElementData> = this._onDidSelectElement.event;
 
-	private readonly _onDidChangeElementSelectionActive = this._register(new Emitter<boolean>());
+	private readonly _onDidChangeElementSelectionActive = this._register(
+    new Emitter<boolean>(),
+  );
 	readonly onDidChangeElementSelectionActive: Event<boolean> = this._onDidChangeElementSelectionActive.event;
 
 	private _elementSelectionActive = false;
 	get isElementSelectionActive(): boolean { return this._elementSelectionActive; }
 
-	private readonly _activeSelection = this._register(new MutableDisposable<IActiveSelection>());
+	private readonly _activeSelection = this._register(
+    new MutableDisposable<IActiveSelection>(),
+  );
 	private _theme: IBrowserViewTheme = {};
 
 	private readonly _registry = this._register(new FrameInspectorRegistry());
@@ -65,18 +71,24 @@ export class BrowserViewInspector extends Disposable {
 		const webContents = this.browser.webContents;
 
 		// Wire up inspector adoption from the registry
-		this._register(this._registry.onDidAdopt(inspector => this._onInspectorAdopted(inspector)));
+		this._register(
+      this._registry.onDidAdopt(
+        inspector => this._onInspectorAdopted(inspector),
+      ),
+    );
 
 		// Navigation destroys preload overlays and CDP state
 		const onNavigated = () => {
 			this._activeSelection.clear();
 		};
-		webContents.on('did-navigate', onNavigated);
-		this._register({ dispose: () => webContents.removeListener('did-navigate', onNavigated) });
+		webContents.on("did-navigate", onNavigated);
+		this._register({
+      dispose: () => webContents.removeListener("did-navigate", onNavigated),
+    });
 
 		// Preload ready — the key correlation point between WebFrameMain and CDP target
 		const onIpcMessage = (_event: Electron.Event, channel: string, ...args: unknown[]) => {
-			if (channel !== 'vscode:browserView:preloadReady') {
+			if (channel !== "vscode:browserView:preloadReady") {
 				return;
 			}
 			const senderFrame = (_event as { senderFrame?: Electron.WebFrameMain }).senderFrame;
@@ -89,16 +101,18 @@ export class BrowserViewInspector extends Disposable {
 			}
 
 			// Apply theme immediately regardless of inspector state
-			senderFrame.postMessage('vscode:browserView:setTheme', this._theme);
+			senderFrame.postMessage("vscode:browserView:setTheme", this._theme);
 
 			this._registry.notifyFrameReady(senderFrame, frameToken);
 		};
-		webContents.on('ipc-message', onIpcMessage);
-		this._register({ dispose: () => webContents.removeListener('ipc-message', onIpcMessage) });
+		webContents.on("ipc-message", onIpcMessage);
+		this._register({
+      dispose: () => webContents.removeListener("ipc-message", onIpcMessage),
+    });
 
 		// Cross-origin (OOPIF) targets get their own session — watch it for contexts
 		this._register(this.browser.debugger.onTargetDiscovered(async ({ targetId, type }) => {
-			if (type === 'iframe') {
+			if (type === "iframe") {
 				try {
 					const session = await this.browser.debugger.attachToTarget(targetId);
 					this._watchSession(session);
@@ -109,7 +123,9 @@ export class BrowserViewInspector extends Disposable {
 		}));
 
 		// Attach the main debugger session and watch it for contexts
-		this.browser.debugger.attach().then(conn => this._watchSession(conn)).catch(() => { });
+		this.browser.debugger.attach().then(conn => this._watchSession(conn)).catch(
+      () => {},
+    );
 	}
 
 	/**
@@ -121,7 +137,7 @@ export class BrowserViewInspector extends Disposable {
 	 */
 	private _watchSession(session: ICDPConnection): void {
 		this._register(session.onEvent(async event => {
-			if (event.method === 'Runtime.executionContextCreated') {
+			if (event.method === "Runtime.executionContextCreated") {
 				const context = (event.params as {
 					context: {
 						uniqueId: string;
@@ -138,8 +154,8 @@ export class BrowserViewInspector extends Disposable {
 
 				// Probe for the preload token in this context
 				try {
-					const { result } = await session.sendCommand('Runtime.evaluate', {
-						expression: 'window.__vscode_helpers?.getFrameToken?.()',
+					const { result } = await session.sendCommand("Runtime.evaluate", {
+						expression: "window.__vscode_helpers?.getFrameToken?.()",
 						returnByValue: true,
 						uniqueContextId,
 					}) as { result: { value?: string } };
@@ -153,24 +169,24 @@ export class BrowserViewInspector extends Disposable {
 				} catch {
 					// Context may have been destroyed by now — ignore.
 				}
-			} else if (event.method === 'Page.frameDetached') {
+			} else if (event.method === "Page.frameDetached") {
 				const frameId = (event.params as { frameId?: string })?.frameId;
 				if (frameId) {
 					this._registry.disposeByFrameId(frameId);
 				}
-			} else if (event.method === 'Runtime.executionContextsCleared') {
+			} else if (event.method === "Runtime.executionContextsCleared") {
 				// Navigation cleared all contexts — dispose inspectors owned by this session
 				this._registry.disposeBySession(session);
 			}
 		}));
 
 		Event.once(session.onClose)(() => {
-			this._registry.disposeBySession(session);
-		});
+      this._registry.disposeBySession(session);
+    });
 
 		// Enable Runtime + Page to start receiving context and frame events
-		session.sendCommand('Runtime.enable').catch(() => { });
-		session.sendCommand('Page.enable').catch(() => { });
+		session.sendCommand("Runtime.enable").catch(() => { });
+		session.sendCommand("Page.enable").catch(() => { });
 	}
 
 	/**
@@ -191,8 +207,8 @@ export class BrowserViewInspector extends Disposable {
 
 		// When a frame's preload stops picking, stop all other frames too
 		inspector.onDidStopPicking(() => {
-			this._activeSelection.clear();
-		});
+      this._activeSelection.clear();
+    });
 
 		// If element selection is currently active, start it on the new frame
 		if (this._activeSelection.value) {
@@ -224,8 +240,12 @@ export class BrowserViewInspector extends Disposable {
 			return;
 		}
 
-		const start = () => Promise.all([...this._registry.inspectors].map(i => i.startInspection()));
-		const stop = () => Promise.all([...this._registry.inspectors].map(i => i.stopInspection()));
+		const start = () => Promise.all(
+      [...this._registry.inspectors].map(i => i.startInspection()),
+    );
+		const stop = () => Promise.all(
+      [...this._registry.inspectors].map(i => i.stopInspection()),
+    );
 
 		const selection: IActiveSelection = {
 			dispose: () => {
@@ -235,7 +255,7 @@ export class BrowserViewInspector extends Disposable {
 					this._activeSelection.clearAndLeak();
 					void stop().catch(() => { });
 				}
-			}
+			},
 		};
 		this._activeSelection.value = selection;
 
@@ -289,14 +309,20 @@ export class BrowserViewInspector extends Disposable {
 				const childFrameId = childInspector.frameId;
 
 				// Ask the parent session for the iframe element that owns this frame
-				const frameOwner = await parentInspector.connection.sendCommand('DOM.getFrameOwner', {
-					frameId: childFrameId,
-				}) as { backendNodeId: number };
+				const frameOwner = await parentInspector.connection.sendCommand(
+          "DOM.getFrameOwner",
+          {
+            frameId: childFrameId,
+          },
+        ) as { backendNodeId: number };
 
 				// Get the iframe element's box model in the parent's coordinate space
-				const boxModel = await parentInspector.connection.sendCommand('DOM.getBoxModel', {
-					backendNodeId: frameOwner.backendNodeId,
-				}) as { model: { content: number[] } };
+				const boxModel = await parentInspector.connection.sendCommand(
+          "DOM.getBoxModel",
+          {
+            backendNodeId: frameOwner.backendNodeId,
+          },
+        ) as { model: { content: number[] } };
 
 				// content quad: [x1,y1, x2,y2, x3,y3, x4,y4] — top-left is first pair
 				const content = boxModel.model.content;
@@ -326,7 +352,7 @@ export class BrowserViewInspector extends Disposable {
 				y: data.bounds.y + offset.y,
 				width: data.bounds.width,
 				height: data.bounds.height,
-			}
+			},
 		};
 	}
 }
@@ -345,7 +371,9 @@ interface IPendingContext {
  */
 class FrameInspectorRegistry extends Disposable {
 
-	private readonly _onDidAdopt = this._register(new Emitter<BrowserViewFrameInspector>());
+	private readonly _onDidAdopt = this._register(
+    new Emitter<BrowserViewFrameInspector>(),
+  );
 	readonly onDidAdopt: Event<BrowserViewFrameInspector> = this._onDidAdopt.event;
 
 	/** Pending halves waiting for their counterpart. */
@@ -372,7 +400,12 @@ class FrameInspectorRegistry extends Disposable {
 		const pending = this._pendingSessions.get(token);
 		if (pending) {
 			this._pendingSessions.delete(token);
-			this._adopt(pending.session, pending.uniqueContextId, pending.frameId, frame);
+			this._adopt(
+        pending.session,
+        pending.uniqueContextId,
+        pending.frameId,
+        frame,
+      );
 		} else {
 			this._pendingFrames.set(token, frame);
 		}
@@ -435,7 +468,12 @@ class FrameInspectorRegistry extends Disposable {
 			return;
 		}
 
-		const inspector = new BrowserViewFrameInspector(session, frame, uniqueContextId, frameId);
+		const inspector = new BrowserViewFrameInspector(
+      session,
+      frame,
+      uniqueContextId,
+      frameId,
+    );
 
 		this._all.add(inspector);
 		this._byFrame.set(frame, inspector);

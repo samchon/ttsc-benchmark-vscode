@@ -3,18 +3,32 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { softAssertNever } from '../../../../../base/common/assert.js';
-import { isMarkdownString } from '../../../../../base/common/htmlContent.js';
-import { equals as objectsEqual } from '../../../../../base/common/objects.js';
-import { isEqual as _urisEqual } from '../../../../../base/common/resources.js';
-import { hasKey } from '../../../../../base/common/types.js';
-import { URI, UriComponents } from '../../../../../base/common/uri.js';
-import { IChatRequestVariableEntry } from '../attachments/chatVariableEntries.js';
-import { IChatMarkdownContent, ResponseModelState } from '../chatService/chatService.js';
-import { ModifiedFileEntryState } from '../editing/chatEditingService.js';
-import { IParsedChatRequest } from '../requestParser/chatParserTypes.js';
-import { IChatAgentEditedFileEvent, IChatDataSerializerLog, IChatModel, IChatPendingRequest, IChatProgressResponseContent, IChatRequestModel, IChatRequestVariableData, ISerializableChatData, ISerializableChatModelInputState, ISerializableChatRequestData, ISerializablePendingRequestData, SerializedChatResponsePart, serializeSendOptions } from './chatModel.js';
-import * as Adapt from './objectMutationLog.js';
+import { softAssertNever } from "../../../../../base/common/assert.js";
+import { isMarkdownString } from "../../../../../base/common/htmlContent.js";
+import { equals as objectsEqual } from "../../../../../base/common/objects.js";
+import { isEqual as _urisEqual } from "../../../../../base/common/resources.js";
+import { hasKey } from "../../../../../base/common/types.js";
+import { URI, UriComponents } from "../../../../../base/common/uri.js";
+import { IChatRequestVariableEntry } from "../attachments/chatVariableEntries.js";
+import { IChatMarkdownContent, ResponseModelState } from "../chatService/chatService.js";
+import { ModifiedFileEntryState } from "../editing/chatEditingService.js";
+import { IParsedChatRequest } from "../requestParser/chatParserTypes.js";
+import {
+  IChatAgentEditedFileEvent,
+  IChatDataSerializerLog,
+  IChatModel,
+  IChatPendingRequest,
+  IChatProgressResponseContent,
+  IChatRequestModel,
+  IChatRequestVariableData,
+  ISerializableChatData,
+  ISerializableChatModelInputState,
+  ISerializableChatRequestData,
+  ISerializablePendingRequestData,
+  SerializedChatResponsePart,
+  serializeSendOptions,
+} from "./chatModel.js";
+import * as Adapt from "./objectMutationLog.js";
 
 /**
  * ChatModel has lots of properties and lots of ways those properties can mutate.
@@ -35,11 +49,11 @@ import * as Adapt from './objectMutationLog.js';
 const toJson = <T>(obj: T): T extends { toJSON?(): infer R } ? R : T => {
 	const cast = obj as { toJSON?: () => T };
 	// eslint-disable-next-line local/code-no-any-casts, @typescript-eslint/no-explicit-any
-	return (cast && typeof cast.toJSON === 'function' ? cast.toJSON() : obj) as any;
+	return (cast && typeof cast.toJSON === "function" ? cast.toJSON() : obj) as any;
 };
 
 const responsePartSchema = Adapt.v<IChatProgressResponseContent, SerializedChatResponsePart>(
-	(obj): SerializedChatResponsePart => obj.kind === 'markdownContent' ? obj.content : toJson(obj),
+	(obj): SerializedChatResponsePart => obj.kind === "markdownContent" ? obj.content : toJson(obj),
 	(a, b) => {
 		if (isMarkdownString(a) && isMarkdownString(b)) {
 			return a.value === b.value;
@@ -51,40 +65,40 @@ const responsePartSchema = Adapt.v<IChatProgressResponseContent, SerializedChatR
 			}
 
 			switch (a.kind) {
-				case 'markdownContent':
+				case "markdownContent":
 					return a.content === (b as IChatMarkdownContent).content;
 
 				// Dynamic types that can change after initial push need deep equality
 				// Note: these are the *serialized* kind names (e.g. toolInvocationSerialized not toolInvocation)
-				case 'toolInvocationSerialized':
-				case 'elicitationSerialized':
-				case 'progressTaskSerialized':
-				case 'textEditGroup':
-				case 'multiDiffData':
-				case 'mcpServersStarting':
-				case 'thinking':
+				case "toolInvocationSerialized":
+				case "elicitationSerialized":
+				case "progressTaskSerialized":
+				case "textEditGroup":
+				case "multiDiffData":
+				case "mcpServersStarting":
+				case "thinking":
 					return objectsEqual(a, b);
 
 				// Static types that won't change after being pushed can use strict equality.
-				case 'clearToPreviousToolInvocation':
-				case 'codeblockUri':
-				case 'command':
-				case 'confirmation':
-				case 'extensions':
-				case 'hook':
-				case 'inlineReference':
-				case 'markdownVuln':
-				case 'notebookEditGroup':
-				case 'progressMessage':
-				case 'pullRequest':
-				case 'questionCarousel':
-				case 'planReview':
-				case 'undoStop':
-				case 'warning':
-				case 'info':
-				case 'treeData':
-				case 'workspaceEdit':
-				case 'disabledClaudeHooks':
+				case "clearToPreviousToolInvocation":
+				case "codeblockUri":
+				case "command":
+				case "confirmation":
+				case "extensions":
+				case "hook":
+				case "inlineReference":
+				case "markdownVuln":
+				case "notebookEditGroup":
+				case "progressMessage":
+				case "pullRequest":
+				case "questionCarousel":
+				case "planReview":
+				case "undoStop":
+				case "warning":
+				case "info":
+				case "treeData":
+				case "workspaceEdit":
+				case "disabledClaudeHooks":
 					return a.kind === b.kind;
 
 				default: {
@@ -101,7 +115,7 @@ const responsePartSchema = Adapt.v<IChatProgressResponseContent, SerializedChatR
 		}
 
 		return false;
-	}
+	},
 );
 
 const urisEqual = (a: UriComponents, b: UriComponents): boolean => {
@@ -109,14 +123,16 @@ const urisEqual = (a: UriComponents, b: UriComponents): boolean => {
 };
 
 const messageSchema = Adapt.object<IParsedChatRequest, IParsedChatRequest>({
-	text: Adapt.v(m => m.text),
-	parts: Adapt.v(m => m.parts, (a, b) => a.length === b.length && a.every((part, i) => part.text === b[i].text)),
+  text: Adapt.v(m => m.text),
+  parts: Adapt.v(m => m.parts, (a, b) => a.length === b.length && a.every((part, i) => part.text === b[i].text)),
 });
 
-const agentEditedFileEventSchema = Adapt.object<IChatAgentEditedFileEvent, IChatAgentEditedFileEvent>({
-	uri: Adapt.v(e => e.uri, urisEqual),
-	eventKind: Adapt.v(e => e.eventKind),
-});
+const agentEditedFileEventSchema = Adapt.object<IChatAgentEditedFileEvent, IChatAgentEditedFileEvent>(
+  {
+    uri: Adapt.v(e => e.uri, urisEqual),
+    eventKind: Adapt.v(e => e.eventKind),
+  },
+);
 
 const chatVariableSchema = Adapt.object<IChatRequestVariableData, IChatRequestVariableData>({
 	variables: Adapt.t(v => v.variables.map(IChatRequestVariableEntry.toExport), Adapt.array(Adapt.value((a, b) => a.name === b.name))),
@@ -162,36 +178,40 @@ const requestSchema = Adapt.object<IChatRequestModel, ISerializableChatRequestDa
 	sealed: (o) => o.modelState?.value === ResponseModelState.Cancelled || o.modelState?.value === ResponseModelState.Failed || o.modelState?.value === ResponseModelState.Complete,
 });
 
-const inputStateSchema = Adapt.object<ISerializableChatModelInputState, ISerializableChatModelInputState>({
-	attachments: Adapt.v(i => i.attachments.map(IChatRequestVariableEntry.toExport), objectsEqual),
-	mode: Adapt.v(i => i.mode, (a, b) => a.id === b.id),
-	selectedModel: Adapt.v(i => i.selectedModel, (a, b) => a?.identifier === b?.identifier),
-	inputText: Adapt.v(i => i.inputText),
-	selections: Adapt.v(i => i.selections, objectsEqual),
-	permissionLevel: Adapt.v(i => i.permissionLevel),
-	contrib: Adapt.v(i => i.contrib, objectsEqual),
-});
+const inputStateSchema = Adapt.object<ISerializableChatModelInputState, ISerializableChatModelInputState>(
+  {
+    attachments: Adapt.v(i => i.attachments.map(IChatRequestVariableEntry.toExport), objectsEqual),
+    mode: Adapt.v(i => i.mode, (a, b) => a.id === b.id),
+    selectedModel: Adapt.v(i => i.selectedModel, (a, b) => a?.identifier === b?.identifier),
+    inputText: Adapt.v(i => i.inputText),
+    selections: Adapt.v(i => i.selections, objectsEqual),
+    permissionLevel: Adapt.v(i => i.permissionLevel),
+    contrib: Adapt.v(i => i.contrib, objectsEqual),
+  },
+);
 
-const pendingRequestSchema = Adapt.object<IChatPendingRequest, ISerializablePendingRequestData>({
-	id: Adapt.t(p => p.request.id, Adapt.key()),
-	request: Adapt.t(p => p.request, requestSchema),
-	kind: Adapt.v(p => p.kind),
-	sendOptions: Adapt.v(p => serializeSendOptions(p.sendOptions), objectsEqual),
-});
+const pendingRequestSchema = Adapt.object<IChatPendingRequest, ISerializablePendingRequestData>(
+  {
+    id: Adapt.t(p => p.request.id, Adapt.key()),
+    request: Adapt.t(p => p.request, requestSchema),
+    kind: Adapt.v(p => p.kind),
+    sendOptions: Adapt.v(p => serializeSendOptions(p.sendOptions), objectsEqual),
+  },
+);
 
 export const storageSchema = Adapt.object<IChatModel, ISerializableChatData>({
-	version: Adapt.v(() => 3),
-	creationDate: Adapt.v(m => m.timestamp),
-	customTitle: Adapt.v(m => m.hasCustomTitle ? m.title : undefined),
-	initialLocation: Adapt.v(m => m.initialLocation),
-	inputState: Adapt.t(m => m.inputModel.toJSON(), inputStateSchema),
-	responderUsername: Adapt.v(m => m.responderUsername),
-	sessionId: Adapt.v(m => m.sessionId),
-	requests: Adapt.t(m => m.getRequests(), Adapt.array(requestSchema)),
-	hasPendingEdits: Adapt.v(m => m.editingSession?.entries.get().some(e => e.state.get() === ModifiedFileEntryState.Modified)),
-	repoData: Adapt.v(m => m.repoData, objectsEqual),
-	pendingRequests: Adapt.t(m => m.getPendingRequests(), Adapt.array(pendingRequestSchema)),
-	workingDirectory: Adapt.v(m => m.workingDirectory?.toString()),
+  version: Adapt.v(() => 3),
+  creationDate: Adapt.v(m => m.timestamp),
+  customTitle: Adapt.v(m => m.hasCustomTitle ? m.title : undefined),
+  initialLocation: Adapt.v(m => m.initialLocation),
+  inputState: Adapt.t(m => m.inputModel.toJSON(), inputStateSchema),
+  responderUsername: Adapt.v(m => m.responderUsername),
+  sessionId: Adapt.v(m => m.sessionId),
+  requests: Adapt.t(m => m.getRequests(), Adapt.array(requestSchema)),
+  hasPendingEdits: Adapt.v(m => m.editingSession?.entries.get().some(e => e.state.get() === ModifiedFileEntryState.Modified)),
+  repoData: Adapt.v(m => m.repoData, objectsEqual),
+  pendingRequests: Adapt.t(m => m.getPendingRequests(), Adapt.array(pendingRequestSchema)),
+  workingDirectory: Adapt.v(m => m.workingDirectory?.toString()),
 });
 
 export class ChatSessionOperationLog extends Adapt.ObjectMutationLog<IChatModel, ISerializableChatData> implements IChatDataSerializerLog {

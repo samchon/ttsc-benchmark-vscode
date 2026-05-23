@@ -4,12 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { observableSignal, runOnChange, IReader } from '../../../../../base/common/observable.js';
-import { AnnotatedStringEdit } from '../../../../../editor/common/core/edits/stringEdit.js';
-import { OffsetRange } from '../../../../../editor/common/core/ranges/offsetRange.js';
-import { TextModelEditSource } from '../../../../../editor/common/textModelEditSource.js';
-import { IDocumentWithAnnotatedEdits, EditKeySourceData, EditSource } from '../helpers/documentWithAnnotatedEdits.js';
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { observableSignal, runOnChange, IReader } from "../../../../../base/common/observable.js";
+import { AnnotatedStringEdit } from "../../../../../editor/common/core/edits/stringEdit.js";
+import { OffsetRange } from "../../../../../editor/common/core/ranges/offsetRange.js";
+import { TextModelEditSource } from "../../../../../editor/common/textModelEditSource.js";
+import { IDocumentWithAnnotatedEdits, EditKeySourceData, EditSource } from "../helpers/documentWithAnnotatedEdits.js";
 
 /**
  * Tracks a single document.
@@ -30,7 +30,7 @@ export class DocumentEditSourceTracker<T = void> extends Disposable {
 
 		this._register(runOnChange(this._doc.value, (_val, _prevVal, edits) => {
 			const eComposed = AnnotatedStringEdit.compose(edits.map(e => e.edit));
-			if (eComposed.replacements.every(e => e.data.source.category === 'external')) {
+			if (eComposed.replacements.every(e => e.data.source.category === "external")) {
 				if (this._edits.isEmpty()) {
 					// Ignore initial external edits
 				} else {
@@ -84,10 +84,10 @@ export class DocumentEditSourceTracker<T = void> extends Disposable {
 		this._update.read(reader);
 		const ranges = this._edits.getNewRanges();
 		return ranges.map((r, idx) => {
-			const e = this._edits.replacements[idx];
-			const te = new TrackedEdit(e.replaceRange, r, e.data.key, e.data.source, e.data.representative);
-			return te;
-		});
+      const e = this._edits.replacements[idx];
+      const te = new TrackedEdit(e.replaceRange, r, e.data.key, e.data.source, e.data.representative);
+      return te;
+    });
 	}
 
 	public isEmpty(): boolean {
@@ -99,14 +99,14 @@ export class DocumentEditSourceTracker<T = void> extends Disposable {
 		const txt = this._doc.value.get().value;
 
 		return {
-			...{ $fileExtension: 'text.w' },
-			'value': txt,
-			'decorations': ranges.map(r => {
+			...{ $fileExtension: "text.w" },
+			"value": txt,
+			"decorations": ranges.map(r => {
 				return {
 					range: [r.range.start, r.range.endExclusive],
 					color: r.source.getColor(),
 				};
-			})
+			}),
 		};
 	}
 }

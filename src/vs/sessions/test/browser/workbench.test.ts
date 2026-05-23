@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../base/test/common/utils.js';
-import { Workbench } from '../../browser/workbench.js';
+import assert from "assert";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../base/test/common/utils.js";
+import { Workbench } from "../../browser/workbench.js";
 
 interface IWorkbenchTestHarness {
 	partVisibility: {
@@ -22,12 +22,12 @@ interface IWorkbenchTestHarness {
 	_savePartVisibility(): void;
 }
 
-suite('Sessions - Workbench', () => {
+suite("Sessions - Workbench", () => {
 	ensureNoDisposablesAreLeakedInTestSuite();
 
-	const rememberAttachedEditorMaximizedState = Reflect.get(Workbench.prototype, 'rememberAttachedEditorMaximizedState') as (this: IWorkbenchTestHarness) => void;
-	const restoreAttachedEditorMaximizedState = Reflect.get(Workbench.prototype, 'restoreAttachedEditorMaximizedState') as (this: IWorkbenchTestHarness) => void;
-	const setAuxiliaryBarHidden = Reflect.get(Workbench.prototype, 'setAuxiliaryBarHidden') as (this: IWorkbenchTestHarness, hidden: boolean) => void;
+	const rememberAttachedEditorMaximizedState = Reflect.get(Workbench.prototype, "rememberAttachedEditorMaximizedState") as (this: IWorkbenchTestHarness) => void;
+	const restoreAttachedEditorMaximizedState = Reflect.get(Workbench.prototype, "restoreAttachedEditorMaximizedState") as (this: IWorkbenchTestHarness) => void;
+	const setAuxiliaryBarHidden = Reflect.get(Workbench.prototype, "setAuxiliaryBarHidden") as (this: IWorkbenchTestHarness, hidden: boolean) => void;
 
 	function createWorkbenchHarness(): IWorkbenchTestHarness {
 		return {
@@ -46,7 +46,7 @@ suite('Sessions - Workbench', () => {
 		};
 	}
 
-	test('restores attached editor maximized state when the auxiliary bar stays visible', () => {
+	test("restores attached editor maximized state when the auxiliary bar stays visible", () => {
 		const maximizedStates: boolean[] = [];
 		const workbench = createWorkbenchHarness();
 		workbench._editorMaximized = true;
@@ -61,7 +61,7 @@ suite('Sessions - Workbench', () => {
 		assert.strictEqual(workbench._restoreAttachedEditorMaximizedOnShow, false);
 	});
 
-	test('does not restore attached editor maximized state once the auxiliary bar is hidden', () => {
+	test("does not restore attached editor maximized state once the auxiliary bar is hidden", () => {
 		const maximizedStates: boolean[] = [];
 		const workbench = createWorkbenchHarness();
 		workbench._editorMaximized = true;
@@ -77,7 +77,7 @@ suite('Sessions - Workbench', () => {
 		assert.strictEqual(workbench._restoreAttachedEditorMaximizedOnShow, false);
 	});
 
-	test('does not restore after the auxiliary bar is hidden and shown again before reopen', () => {
+	test("does not restore after the auxiliary bar is hidden and shown again before reopen", () => {
 		const maximizedStates: boolean[] = [];
 		const workbench = createWorkbenchHarness();
 		workbench._editorMaximized = true;

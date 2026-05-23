@@ -3,25 +3,39 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as glob from '../../../../base/common/glob.js';
-import { Event } from '../../../../base/common/event.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { Schemas } from '../../../../base/common/network.js';
-import { posix } from '../../../../base/common/path.js';
-import { basename } from '../../../../base/common/resources.js';
-import { URI } from '../../../../base/common/uri.js';
-import { localize } from '../../../../nls.js';
-import { workbenchConfigurationNodeBase } from '../../../common/configuration.js';
-import { Extensions as ConfigurationExtensions, IConfigurationNode, IConfigurationRegistry } from '../../../../platform/configuration/common/configurationRegistry.js';
-import { IResourceEditorInput, ITextResourceEditorInput } from '../../../../platform/editor/common/editor.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { Registry } from '../../../../platform/registry/common/platform.js';
-import { EditorInputWithOptions, EditorInputWithOptionsAndGroup, IResourceDiffEditorInput, IResourceMultiDiffEditorInput, IResourceMergeEditorInput, IUntitledTextResourceEditorInput, IUntypedEditorInput } from '../../../common/editor.js';
-import { IEditorGroup } from './editorGroupsService.js';
-import { PreferredGroup } from './editorService.js';
-import { AtLeastOne } from '../../../../base/common/types.js';
+import * as glob from "../../../../base/common/glob.js";
+import { Event } from "../../../../base/common/event.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { posix } from "../../../../base/common/path.js";
+import { basename } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { localize } from "../../../../nls.js";
+import { workbenchConfigurationNodeBase } from "../../../common/configuration.js";
+import {
+  Extensions as ConfigurationExtensions,
+  IConfigurationNode,
+  IConfigurationRegistry,
+} from "../../../../platform/configuration/common/configurationRegistry.js";
+import { IResourceEditorInput, ITextResourceEditorInput } from "../../../../platform/editor/common/editor.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import {
+  EditorInputWithOptions,
+  EditorInputWithOptionsAndGroup,
+  IResourceDiffEditorInput,
+  IResourceMultiDiffEditorInput,
+  IResourceMergeEditorInput,
+  IUntitledTextResourceEditorInput,
+  IUntypedEditorInput,
+} from "../../../common/editor.js";
+import { IEditorGroup } from "./editorGroupsService.js";
+import { PreferredGroup } from "./editorService.js";
+import { AtLeastOne } from "../../../../base/common/types.js";
 
-export const IEditorResolverService = createDecorator<IEditorResolverService>('editorResolverService');
+export const IEditorResolverService = createDecorator<IEditorResolverService>(
+  "editorResolverService",
+);
 
 //#region Editor Associations
 
@@ -34,40 +48,44 @@ export type EditorAssociation = {
 
 export type EditorAssociations = readonly EditorAssociation[];
 
-export const editorsAssociationsSettingId = 'workbench.editorAssociations';
-export const diffEditorsAssociationsSettingId = 'workbench.diffEditorAssociations';
+export const editorsAssociationsSettingId = "workbench.editorAssociations";
+export const diffEditorsAssociationsSettingId = "workbench.diffEditorAssociations";
 
 /**
  * Default value for `workbench.editorAssociations` in the Agents window.
  * Shared so that dynamic re-registrations of the setting preserve the override.
  */
-export const editorsAssociationsAgentsWindowDefault: Readonly<Record<string, string>> = Object.freeze({
-	'*.md': 'vscode.markdown.preview.editor'
-});
+export const editorsAssociationsAgentsWindowDefault: Readonly<Record<string, string>> = Object.freeze(
+  {
+    "*.md": "vscode.markdown.preview.editor",
+  },
+);
 
-const configurationRegistry = Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration);
+const configurationRegistry = Registry.as<IConfigurationRegistry>(
+  ConfigurationExtensions.Configuration,
+);
 
 const editorAssociationsConfigurationNode: IConfigurationNode = {
 	...workbenchConfigurationNodeBase,
 	properties: {
 		[editorsAssociationsSettingId]: {
-			type: 'object',
-			markdownDescription: localize('editor.editorAssociations', "Configure [glob patterns](https://aka.ms/vscode-glob-patterns) to editors (for example `\"*.hex\": \"hexEditor.hexedit\"`). These have precedence over the default behavior."),
+			type: "object",
+			markdownDescription: localize("editor.editorAssociations", "Configure [glob patterns](https://aka.ms/vscode-glob-patterns) to editors (for example `\"*.hex\": \"hexEditor.hexedit\"`). These have precedence over the default behavior."),
 			additionalProperties: {
-				type: 'string'
+				type: "string",
 			},
 			agentsWindow: {
-				default: editorsAssociationsAgentsWindowDefault
-			}
+				default: editorsAssociationsAgentsWindowDefault,
+			},
 		},
 		[diffEditorsAssociationsSettingId]: {
-			type: 'object',
-			markdownDescription: localize('editor.diffEditorAssociations', "Configure [glob patterns](https://aka.ms/vscode-glob-patterns) to editors for diff views (for example `\"*.md\": \"vscode.markdown.preview.editor\"`). These override `workbench.editorAssociations` for diffs."),
+			type: "object",
+			markdownDescription: localize("editor.diffEditorAssociations", "Configure [glob patterns](https://aka.ms/vscode-glob-patterns) to editors for diff views (for example `\"*.md\": \"vscode.markdown.preview.editor\"`). These override `workbench.editorAssociations` for diffs."),
 			additionalProperties: {
-				type: 'string'
-			}
-		}
-	}
+				type: "string",
+			},
+		},
+	},
 };
 
 export interface IEditorType {
@@ -76,15 +94,17 @@ export interface IEditorType {
 	readonly providerDisplayName: string;
 }
 
-configurationRegistry.registerConfiguration(editorAssociationsConfigurationNode);
+configurationRegistry.registerConfiguration(
+  editorAssociationsConfigurationNode,
+);
 //#endregion
 
 //#region EditorResolverService types
 export enum RegisteredEditorPriority {
-	builtin = 'builtin',
-	option = 'option',
-	exclusive = 'exclusive',
-	default = 'default'
+	builtin = "builtin",
+	option = "option",
+	exclusive = "exclusive",
+	default = "default"
 }
 
 /**
@@ -125,19 +145,19 @@ export type RegisteredEditorInfo = {
 	readonly priority: RegisteredEditorPriorityInfo;
 };
 
-export type RegisteredEditorRegistrationInfo = Omit<RegisteredEditorInfo, 'priority'> & {
+export type RegisteredEditorRegistrationInfo = Omit<RegisteredEditorInfo, "priority"> & {
 	readonly priority: RegisteredEditorPriority | RegisteredEditorPriorityInfo;
 };
 
 export function toRegisteredEditorPriorityInfo(priority: RegisteredEditorPriority | RegisteredEditorPriorityInfo): RegisteredEditorPriorityInfo {
-	if (typeof priority !== 'string') {
+	if (typeof priority !== "string") {
 		return priority;
 	}
 	return {
-		editor: priority,
-		diff: priority,
-		merge: priority,
-	};
+    editor: priority,
+    diff: priority,
+    merge: priority,
+  };
 }
 
 type EditorInputFactoryResult = EditorInputWithOptions | Promise<EditorInputWithOptions>;
@@ -200,7 +220,7 @@ export interface IEditorResolverService {
 		globPattern: string | glob.IRelativePattern,
 		editorInfo: RegisteredEditorRegistrationInfo,
 		options: RegisteredEditorOptions,
-		editorFactoryObject: EditorInputFactoryObject
+		editorFactoryObject: EditorInputFactoryObject,
 	): IDisposable;
 
 	/**
@@ -249,17 +269,21 @@ export function priorityToRank(priority: RegisteredEditorPriority): number {
 
 export function globMatchesResource(globPattern: string | glob.IRelativePattern, resource: URI): boolean {
 	const excludedSchemes = new Set([
-		Schemas.extension,
-		Schemas.webviewPanel,
-		Schemas.vscodeWorkspaceTrust,
-		Schemas.vscodeSettings
-	]);
+    Schemas.extension,
+    Schemas.webviewPanel,
+    Schemas.vscodeWorkspaceTrust,
+    Schemas.vscodeSettings,
+  ]);
 	// We want to say that the above schemes match no glob patterns
 	if (excludedSchemes.has(resource.scheme)) {
 		return false;
 	}
-	const matchOnPath = typeof globPattern === 'string' && globPattern.indexOf(posix.sep) >= 0;
-	const target = matchOnPath ? `${resource.scheme}:${resource.path}` : basename(resource);
+	const matchOnPath = typeof globPattern === "string" && globPattern.indexOf(
+    posix.sep,
+  ) >= 0;
+	const target = matchOnPath ? `${resource.scheme}:${resource.path}` : basename(
+    resource,
+  );
 	return glob.match(globPattern, target, { ignoreCase: true });
 }
 //#endregion

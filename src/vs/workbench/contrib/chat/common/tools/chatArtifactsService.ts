@@ -3,17 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, DisposableMap } from '../../../../../base/common/lifecycle.js';
-import { derived, IObservable, observableFromEvent, observableSignalFromEvent, observableValueOpts } from '../../../../../base/common/observable.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../../platform/storage/common/storage.js';
-import { Memento } from '../../../../common/memento.js';
-import { extractArtifactsFromResponse } from '../chatArtifactExtraction.js';
-import { IChatToolInvocation, IChatService } from '../chatService/chatService.js';
-import { ChatConfiguration } from '../constants.js';
-import { chatSessionResourceToId } from '../model/chatUri.js';
+import { Disposable, DisposableMap } from "../../../../../base/common/lifecycle.js";
+import {
+  derived,
+  IObservable,
+  observableFromEvent,
+  observableSignalFromEvent,
+  observableValueOpts,
+} from "../../../../../base/common/observable.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../../platform/storage/common/storage.js";
+import { Memento } from "../../../../common/memento.js";
+import { extractArtifactsFromResponse } from "../chatArtifactExtraction.js";
+import { IChatToolInvocation, IChatService } from "../chatService/chatService.js";
+import { ChatConfiguration } from "../constants.js";
+import { chatSessionResourceToId } from "../model/chatUri.js";
 
 export interface IArtifactGroupConfig {
 	readonly groupName: string;
@@ -25,15 +31,15 @@ export interface IChatArtifact {
 	readonly uri: string;
 	readonly toolCallId?: string;
 	readonly dataPartIndex?: number;
-	readonly type: 'devServer' | 'screenshot' | 'plan' | undefined;
+	readonly type: "devServer" | "screenshot" | "plan" | undefined;
 	readonly groupName?: string;
 	readonly onlyShowGroup?: boolean;
 }
 
 export type ArtifactSource =
-	| { readonly kind: 'rules' }
-	| { readonly kind: 'agent' }
-	| { readonly kind: 'subagent'; readonly invocationId: string; readonly name: string | undefined };
+	| { readonly kind: "rules" }
+	| { readonly kind: "agent" }
+	| { readonly kind: "subagent"; readonly invocationId: string; readonly name: string | undefined };
 
 export interface IArtifactSourceGroup {
 	readonly source: ArtifactSource;
@@ -46,7 +52,9 @@ export interface IArtifactRuleOverrides {
 	readonly byMemoryFilePath?: Record<string, IArtifactGroupConfig>;
 }
 
-export const IChatArtifactsService = createDecorator<IChatArtifactsService>('chatArtifactsService');
+export const IChatArtifactsService = createDecorator<IChatArtifactsService>(
+  "chatArtifactsService",
+);
 
 export interface IChatArtifactsService {
 	readonly _serviceBrand: undefined;
@@ -76,22 +84,31 @@ class ChatArtifactsStorage {
 	private readonly _memento: Memento<Record<string, IChatArtifact[]>>;
 
 	constructor(@IStorageService storageService: IStorageService) {
-		this._memento = new Memento('chat-artifacts', storageService);
+		this._memento = new Memento("chat-artifacts", storageService);
 	}
 
 	get(key: string): IChatArtifact[] {
-		const storage = this._memento.getMemento(StorageScope.WORKSPACE, StorageTarget.MACHINE);
+		const storage = this._memento.getMemento(
+      StorageScope.WORKSPACE,
+      StorageTarget.MACHINE,
+    );
 		return storage[key] || [];
 	}
 
 	set(key: string, artifacts: IChatArtifact[]): void {
-		const storage = this._memento.getMemento(StorageScope.WORKSPACE, StorageTarget.MACHINE);
+		const storage = this._memento.getMemento(
+      StorageScope.WORKSPACE,
+      StorageTarget.MACHINE,
+    );
 		storage[key] = artifacts;
 		this._memento.saveMemento();
 	}
 
 	delete(key: string): void {
-		const storage = this._memento.getMemento(StorageScope.WORKSPACE, StorageTarget.MACHINE);
+		const storage = this._memento.getMemento(
+      StorageScope.WORKSPACE,
+      StorageTarget.MACHINE,
+    );
 		delete storage[key];
 		this._memento.saveMemento();
 	}
@@ -102,19 +119,19 @@ class UnifiedChatArtifacts extends Disposable implements IChatArtifacts {
 	private readonly _responseCache = new Map<string, IResponseCache>();
 
 	private readonly _ruleOverrides = observableValueOpts<IArtifactRuleOverrides | undefined>(
-		{ owner: this, equalsFn: () => false },
-		undefined,
-	);
+    { owner: this, equalsFn: () => false },
+    undefined,
+  );
 
 	private readonly _agentArtifacts = observableValueOpts<readonly IChatArtifact[]>(
-		{ owner: this, equalsFn: () => false },
-		[],
-	);
+    { owner: this, equalsFn: () => false },
+    [],
+  );
 
 	private readonly _subagentArtifacts = observableValueOpts<ReadonlyMap<string, { readonly name: string | undefined; readonly artifacts: readonly IChatArtifact[] }>>(
-		{ owner: this, equalsFn: () => false },
-		new Map(),
-	);
+    { owner: this, equalsFn: () => false },
+    new Map(),
+  );
 
 	/** Sequence counter for ordering sources by first-set time. */
 	private _nextSequence = 1; // 0 is reserved for rules
@@ -134,35 +151,35 @@ class UnifiedChatArtifacts extends Disposable implements IChatArtifacts {
 		// Restore persisted agent artifacts
 		const restored = this._storage.get(this._storageKey);
 		this._agentArtifacts.set(restored, undefined);
-		this._sourceSequences.set('rules', 0);
+		this._sourceSequences.set("rules", 0);
 		if (restored.length > 0) {
-			this._sourceSequences.set('agent', this._nextSequence++);
+			this._sourceSequences.set("agent", this._nextSequence++);
 		}
 
 		// Config-based rules (defaults)
 		const configByMimeType = observableFromEvent<Record<string, IArtifactGroupConfig>>(
-			this,
-			configurationService.onDidChangeConfiguration,
-			() => configurationService.getValue<Record<string, IArtifactGroupConfig>>(ChatConfiguration.ArtifactsRulesByMimeType) ?? {},
-		);
+      this,
+      configurationService.onDidChangeConfiguration,
+      () => configurationService.getValue<Record<string, IArtifactGroupConfig>>(ChatConfiguration.ArtifactsRulesByMimeType) ?? {},
+    );
 
 		const configByFilePath = observableFromEvent<Record<string, IArtifactGroupConfig>>(
-			this,
-			configurationService.onDidChangeConfiguration,
-			() => configurationService.getValue<Record<string, IArtifactGroupConfig>>(ChatConfiguration.ArtifactsRulesByFilePath) ?? {},
-		);
+      this,
+      configurationService.onDidChangeConfiguration,
+      () => configurationService.getValue<Record<string, IArtifactGroupConfig>>(ChatConfiguration.ArtifactsRulesByFilePath) ?? {},
+    );
 
 		const configByMemoryFilePath = observableFromEvent<Record<string, IArtifactGroupConfig>>(
-			this,
-			configurationService.onDidChangeConfiguration,
-			() => configurationService.getValue<Record<string, IArtifactGroupConfig>>(ChatConfiguration.ArtifactsRulesByMemoryFilePath) ?? {},
-		);
+      this,
+      configurationService.onDidChangeConfiguration,
+      () => configurationService.getValue<Record<string, IArtifactGroupConfig>>(ChatConfiguration.ArtifactsRulesByMemoryFilePath) ?? {},
+    );
 
 		const modelSignal = observableFromEvent(
-			this,
-			chatService.onDidCreateModel,
-			() => chatService.getSession(sessionResource),
-		);
+      this,
+      chatService.onDidCreateModel,
+      () => chatService.getSession(sessionResource),
+    );
 
 		// Derived: rules-based artifacts
 		const rulesArtifacts = derived<readonly IChatArtifact[]>(reader => {
@@ -195,7 +212,7 @@ class UnifiedChatArtifacts extends Disposable implements IChatArtifacts {
 
 				let completedToolCount = 0;
 				for (const part of responseValue.value) {
-					if ((part.kind === 'toolInvocation' || part.kind === 'toolInvocationSerialized') && IChatToolInvocation.resultDetails(part) !== undefined) {
+					if ((part.kind === "toolInvocation" || part.kind === "toolInvocationSerialized") && IChatToolInvocation.resultDetails(part) !== undefined) {
 						completedToolCount++;
 					}
 				}
@@ -215,7 +232,7 @@ class UnifiedChatArtifacts extends Disposable implements IChatArtifacts {
 						: artifact.uri;
 					if (seenKeys.has(key)) {
 						const idx = allArtifacts.findIndex(a =>
-							a.toolCallId ? `${a.toolCallId}:${a.dataPartIndex}` === key : a.uri === key
+							a.toolCallId ? `${a.toolCallId}:${a.dataPartIndex}` === key : a.uri === key,
 						);
 						if (idx !== -1) {
 							allArtifacts.splice(idx, 1);
@@ -241,12 +258,12 @@ class UnifiedChatArtifacts extends Disposable implements IChatArtifacts {
 
 			const rules = rulesArtifacts.read(reader);
 			if (rules.length > 0) {
-				entries.push({ key: 'rules', seq: this._sourceSequences.get('rules') ?? 0, group: { source: { kind: 'rules' }, artifacts: rules } });
+				entries.push({ key: "rules", seq: this._sourceSequences.get("rules") ?? 0, group: { source: { kind: "rules" }, artifacts: rules } });
 			}
 
 			const agent = this._agentArtifacts.read(reader);
 			if (agent.length > 0) {
-				entries.push({ key: 'agent', seq: this._sourceSequences.get('agent') ?? Infinity, group: { source: { kind: 'agent' }, artifacts: agent } });
+				entries.push({ key: "agent", seq: this._sourceSequences.get("agent") ?? Infinity, group: { source: { kind: "agent" }, artifacts: agent } });
 			}
 
 			const subagents = this._subagentArtifacts.read(reader);
@@ -256,7 +273,7 @@ class UnifiedChatArtifacts extends Disposable implements IChatArtifacts {
 					entries.push({
 						key,
 						seq: this._sourceSequences.get(key) ?? Infinity,
-						group: { source: { kind: 'subagent', invocationId, name: entry.name }, artifacts: entry.artifacts },
+						group: { source: { kind: "subagent", invocationId, name: entry.name }, artifacts: entry.artifacts },
 					});
 				}
 			}
@@ -290,8 +307,8 @@ class UnifiedChatArtifacts extends Disposable implements IChatArtifacts {
 	}
 
 	setAgentArtifacts(artifacts: IChatArtifact[]): void {
-		if (!this._sourceSequences.has('agent')) {
-			this._sourceSequences.set('agent', this._nextSequence++);
+		if (!this._sourceSequences.has("agent")) {
+			this._sourceSequences.set("agent", this._nextSequence++);
 		}
 		this._agentArtifacts.set(artifacts, undefined);
 		this._storage.set(this._storageKey, artifacts);
@@ -340,7 +357,9 @@ export class ChatArtifactsService extends Disposable implements IChatArtifactsSe
 	declare readonly _serviceBrand: undefined;
 
 	private readonly _storage: ChatArtifactsStorage;
-	private readonly _instances = this._register(new DisposableMap<string, UnifiedChatArtifacts>());
+	private readonly _instances = this._register(
+    new DisposableMap<string, UnifiedChatArtifacts>(),
+  );
 
 	constructor(
 		@IStorageService storageService: IStorageService,
@@ -355,7 +374,13 @@ export class ChatArtifactsService extends Disposable implements IChatArtifactsSe
 		const key = chatSessionResourceToId(sessionResource);
 		let instance = this._instances.get(key);
 		if (!instance) {
-			instance = new UnifiedChatArtifacts(sessionResource, key, this._storage, this._chatService, this._configurationService);
+			instance = new UnifiedChatArtifacts(
+        sessionResource,
+        key,
+        this._storage,
+        this._chatService,
+        this._configurationService,
+      );
 			this._instances.set(key, instance);
 		}
 		return instance;

@@ -3,22 +3,26 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as assert from '../../../base/common/assert.js';
-import * as vscode from 'vscode';
-import { Emitter, Event } from '../../../base/common/event.js';
-import { dispose } from '../../../base/common/lifecycle.js';
-import { URI } from '../../../base/common/uri.js';
-import { createDecorator } from '../../../platform/instantiation/common/instantiation.js';
-import { ExtHostDocumentsAndEditorsShape, IDocumentsAndEditorsDelta, MainContext } from './extHost.protocol.js';
-import { ExtHostDocumentData } from './extHostDocumentData.js';
-import { IExtHostRpcService } from './extHostRpcService.js';
-import { ExtHostTextEditor } from './extHostTextEditor.js';
-import * as typeConverters from './extHostTypeConverters.js';
-import { ILogService } from '../../../platform/log/common/log.js';
-import { ResourceMap } from '../../../base/common/map.js';
-import { Schemas } from '../../../base/common/network.js';
-import { Iterable } from '../../../base/common/iterator.js';
-import { Lazy } from '../../../base/common/lazy.js';
+import * as assert from "../../../base/common/assert.js";
+import * as vscode from "vscode";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { dispose } from "../../../base/common/lifecycle.js";
+import { URI } from "../../../base/common/uri.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import {
+  ExtHostDocumentsAndEditorsShape,
+  IDocumentsAndEditorsDelta,
+  MainContext,
+} from "./extHost.protocol.js";
+import { ExtHostDocumentData } from "./extHostDocumentData.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
+import { ExtHostTextEditor } from "./extHostTextEditor.js";
+import * as typeConverters from "./extHostTypeConverters.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { ResourceMap } from "../../../base/common/map.js";
+import { Schemas } from "../../../base/common/network.js";
+import { Iterable } from "../../../base/common/iterator.js";
+import { Lazy } from "../../../base/common/lazy.js";
 
 class Reference<T> {
 	private _count = 0;
@@ -52,7 +56,7 @@ export class ExtHostDocumentsAndEditors implements ExtHostDocumentsAndEditorsSha
 
 	constructor(
 		@IExtHostRpcService private readonly _extHostRpc: IExtHostRpcService,
-		@ILogService private readonly _logService: ILogService
+		@ILogService private readonly _logService: ILogService,
 	) { }
 
 	$acceptDocumentsAndEditorsDelta(delta: IDocumentsAndEditorsDelta): void {
@@ -89,16 +93,18 @@ export class ExtHostDocumentsAndEditors implements ExtHostDocumentsAndEditorsSha
 					}
 				}
 				if (!ref) {
-					ref = new Reference(new ExtHostDocumentData(
-						this._extHostRpc.getProxy(MainContext.MainThreadDocuments),
-						resource,
-						data.lines,
-						data.EOL,
-						data.versionId,
-						data.languageId,
-						data.isDirty,
-						data.encoding
-					));
+					ref = new Reference(
+            new ExtHostDocumentData(
+              this._extHostRpc.getProxy(MainContext.MainThreadDocuments),
+              resource,
+              data.lines,
+              data.EOL,
+              data.versionId,
+              data.languageId,
+              data.isDirty,
+              data.encoding,
+            ),
+          );
 					this._documents.set(resource, ref);
 					addedDocuments.push(ref.value);
 				}
@@ -120,26 +126,35 @@ export class ExtHostDocumentsAndEditors implements ExtHostDocumentsAndEditorsSha
 		if (delta.addedEditors) {
 			for (const data of delta.addedEditors) {
 				const resource = URI.revive(data.documentUri);
-				assert.ok(this._documents.has(resource), `document '${resource}' does not exist`);
-				assert.ok(!this._editors.has(data.id), `editor '${data.id}' already exists!`);
+				assert.ok(
+          this._documents.has(resource),
+          `document '${resource}' does not exist`,
+        );
+				assert.ok(
+          !this._editors.has(data.id),
+          `editor '${data.id}' already exists!`,
+        );
 
 				const documentData = this._documents.get(resource)!.value;
 				const editor = new ExtHostTextEditor(
-					data.id,
-					this._extHostRpc.getProxy(MainContext.MainThreadTextEditors),
-					this._logService,
-					new Lazy(() => documentData.document),
-					data.selections.map(typeConverters.Selection.to),
-					data.options,
-					data.visibleRanges.map(range => typeConverters.Range.to(range)),
-					typeof data.editorPosition === 'number' ? typeConverters.ViewColumn.to(data.editorPosition) : undefined
-				);
+          data.id,
+          this._extHostRpc.getProxy(MainContext.MainThreadTextEditors),
+          this._logService,
+          new Lazy(() => documentData.document),
+          data.selections.map(typeConverters.Selection.to),
+          data.options,
+          data.visibleRanges.map(range => typeConverters.Range.to(range)),
+          typeof data.editorPosition === "number" ? typeConverters.ViewColumn.to(data.editorPosition) : undefined,
+        );
 				this._editors.set(data.id, editor);
 			}
 		}
 
 		if (delta.newActiveEditor !== undefined) {
-			assert.ok(delta.newActiveEditor === null || this._editors.has(delta.newActiveEditor), `active editor '${delta.newActiveEditor}' does not exist`);
+			assert.ok(
+        delta.newActiveEditor === null || this._editors.has(delta.newActiveEditor),
+        `active editor '${delta.newActiveEditor}' does not exist`,
+      );
 			this._activeEditorId = delta.newActiveEditor;
 		}
 
@@ -155,7 +170,9 @@ export class ExtHostDocumentsAndEditors implements ExtHostDocumentsAndEditorsSha
 		}
 
 		if (delta.removedEditors || delta.addedEditors) {
-			this._onDidChangeVisibleTextEditors.fire(this.allEditors().map(editor => editor.value));
+			this._onDidChangeVisibleTextEditors.fire(
+        this.allEditors().map(editor => editor.value),
+      );
 		}
 		if (delta.newActiveEditor !== undefined) {
 			this._onDidChangeActiveTextEditor.fire(this.activeEditor());
@@ -194,4 +211,6 @@ export class ExtHostDocumentsAndEditors implements ExtHostDocumentsAndEditorsSha
 }
 
 export interface IExtHostDocumentsAndEditors extends ExtHostDocumentsAndEditors { }
-export const IExtHostDocumentsAndEditors = createDecorator<IExtHostDocumentsAndEditors>('IExtHostDocumentsAndEditors');
+export const IExtHostDocumentsAndEditors = createDecorator<IExtHostDocumentsAndEditors>(
+  "IExtHostDocumentsAndEditors",
+);

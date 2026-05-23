@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDebugModel, IDebugSession, AdapterEndEvent } from './debug.js';
-import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
-import { Debugger } from './debugger.js';
+import { IDebugModel, IDebugSession, AdapterEndEvent } from "./debug.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { Debugger } from "./debugger.js";
 
 export class DebugTelemetry {
 
@@ -28,15 +28,15 @@ export class DebugTelemetry {
 				"launchJsonExists": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
 			}
 		*/
-		this.telemetryService.publicLog('debugSessionStart', {
-			type: dbgr.type,
-			breakpointCount: this.model.getBreakpoints().length,
-			exceptionBreakpoints: this.model.getExceptionBreakpoints(),
-			watchExpressionsCount: this.model.getWatchExpressions().length,
-			extensionName: extension.identifier.value,
-			isBuiltin: extension.isBuiltin,
-			launchJsonExists
-		});
+		this.telemetryService.publicLog("debugSessionStart", {
+      type: dbgr.type,
+      breakpointCount: this.model.getBreakpoints().length,
+      exceptionBreakpoints: this.model.getExceptionBreakpoints(),
+      watchExpressionsCount: this.model.getWatchExpressions().length,
+      extensionName: extension.identifier.value,
+      isBuiltin: extension.isBuiltin,
+      launchJsonExists,
+    });
 	}
 
 	logDebugSessionStop(session: IDebugSession, adapterExitEvent: AdapterEndEvent) {
@@ -53,12 +53,12 @@ export class DebugTelemetry {
 				"watchExpressionsCount": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
 			}
 		*/
-		this.telemetryService.publicLog('debugSessionStop', {
-			type: session && session.configuration.type,
-			success: adapterExitEvent.emittedStopped || breakpoints.length === 0,
-			sessionLengthInSeconds: adapterExitEvent.sessionLengthInSeconds,
-			breakpointCount: breakpoints.length,
-			watchExpressionsCount: this.model.getWatchExpressions().length
-		});
+		this.telemetryService.publicLog("debugSessionStop", {
+      type: session && session.configuration.type,
+      success: adapterExitEvent.emittedStopped || breakpoints.length === 0,
+      sessionLengthInSeconds: adapterExitEvent.sessionLengthInSeconds,
+      breakpointCount: breakpoints.length,
+      watchExpressionsCount: this.model.getWatchExpressions().length,
+    });
 	}
 }

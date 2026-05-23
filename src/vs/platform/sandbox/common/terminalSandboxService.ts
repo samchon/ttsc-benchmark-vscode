@@ -3,14 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { Event } from '../../../base/common/event.js';
-import { URI } from '../../../base/common/uri.js';
-import { OperatingSystem, OS } from '../../../base/common/platform.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import { TerminalCapability } from '../../terminal/common/capabilities/capabilities.js';
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { Event } from "../../../base/common/event.js";
+import { URI } from "../../../base/common/uri.js";
+import { OperatingSystem, OS } from "../../../base/common/platform.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { TerminalCapability } from "../../terminal/common/capabilities/capabilities.js";
 
-export const ITerminalSandboxService = createDecorator<ITerminalSandboxService>('terminalSandboxService');
+export const ITerminalSandboxService = createDecorator<ITerminalSandboxService>(
+  "terminalSandboxService",
+);
 
 export interface ITerminalSandboxResolvedNetworkDomains {
 	allowedDomains: string[];
@@ -18,8 +20,8 @@ export interface ITerminalSandboxResolvedNetworkDomains {
 }
 
 export const enum TerminalSandboxPrerequisiteCheck {
-	Config = 'config',
-	Dependencies = 'dependencies',
+	Config = "config",
+	Dependencies = "dependencies",
 }
 
 export interface ITerminalSandboxPrerequisiteCheckResult {
@@ -118,7 +120,11 @@ export class NullTerminalSandboxService implements ITerminalSandboxService {
 	}
 
 	async checkForSandboxingPrereqs(): Promise<ITerminalSandboxPrerequisiteCheckResult> {
-		return { enabled: false, sandboxConfigPath: undefined, failedCheck: undefined };
+		return {
+      enabled: false,
+      sandboxConfigPath: undefined,
+      failedCheck: undefined,
+    };
 	}
 
 	async wrapCommand(command: string): Promise<ITerminalSandboxWrapResult> {

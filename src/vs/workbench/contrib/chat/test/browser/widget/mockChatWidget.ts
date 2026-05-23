@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../../../base/common/event.js';
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { IChatWidget, IChatWidgetService } from '../../../browser/chat.js';
-import { ChatAgentLocation } from '../../../common/constants.js';
+import { Event } from "../../../../../../base/common/event.js";
+import { Disposable, IDisposable } from "../../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { IChatWidget, IChatWidgetService } from "../../../browser/chat.js";
+import { ChatAgentLocation } from "../../../common/constants.js";
 
 export class MockChatWidgetService implements IChatWidgetService {
 	readonly onDidAddWidget: Event<IChatWidget> = Event.None;
@@ -43,11 +43,11 @@ export class MockChatWidgetService implements IChatWidgetService {
 	}
 
 	getAllWidgets(): ReadonlyArray<IChatWidget> {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 
 	openSession(sessionResource: URI): Promise<IChatWidget | undefined> {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 
 	register(newWidget: IChatWidget): IDisposable {

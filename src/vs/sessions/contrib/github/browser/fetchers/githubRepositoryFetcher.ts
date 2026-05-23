@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IGitHubRepository } from '../../common/types.js';
-import { GitHubApiClient, IGitHubApiResponse } from '../githubApiClient.js';
+import { IGitHubRepository } from "../../common/types.js";
+import { GitHubApiClient, IGitHubApiResponse } from "../githubApiClient.js";
 
 interface IGitHubRepoResponse {
 	readonly name: string;
@@ -27,11 +27,11 @@ export class GitHubRepositoryFetcher {
 
 	async getRepository(owner: string, repo: string, etag?: string): Promise<IGitHubApiResponse<IGitHubRepository>> {
 		const response = await this._apiClient.request<IGitHubRepoResponse>(
-			'GET',
-			`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,
-			'githubApi.getRepository',
-			{ etag }
-		);
+      "GET",
+      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,
+      "githubApi.getRepository",
+      { etag },
+    );
 
 		return {
 			...response,
@@ -42,9 +42,9 @@ export class GitHubRepositoryFetcher {
 					fullName: response.data.full_name,
 					defaultBranch: response.data.default_branch,
 					isPrivate: response.data.private,
-					description: response.data.description ?? '',
+					description: response.data.description ?? "",
 				}
-				: undefined
+				: undefined,
 		};
 	}
 }

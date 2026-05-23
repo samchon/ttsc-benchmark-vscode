@@ -2,21 +2,21 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import assert from 'assert';
-import '../../browser/keyboardLayouts/en.darwin.js';
-import '../../browser/keyboardLayouts/de.darwin.js';
-import { KeyboardLayoutContribution } from '../../browser/keyboardLayouts/_.contribution.js';
-import { BrowserKeyboardMapperFactoryBase } from '../../browser/keyboardLayoutService.js';
-import { KeymapInfo, IKeymapInfo } from '../../common/keymapInfo.js';
-import { TestInstantiationService } from '../../../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { INotificationService } from '../../../../../platform/notification/common/notification.js';
-import { ICommandService } from '../../../../../platform/commands/common/commands.js';
-import { IStorageService } from '../../../../../platform/storage/common/storage.js';
-import { TestNotificationService } from '../../../../../platform/notification/test/common/testNotificationService.js';
-import { TestStorageService } from '../../../../test/common/workbenchTestServices.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { TestConfigurationService } from '../../../../../platform/configuration/test/common/testConfigurationService.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
+import assert from "assert";
+import "../../browser/keyboardLayouts/en.darwin.js";
+import "../../browser/keyboardLayouts/de.darwin.js";
+import { KeyboardLayoutContribution } from "../../browser/keyboardLayouts/_.contribution.js";
+import { BrowserKeyboardMapperFactoryBase } from "../../browser/keyboardLayoutService.js";
+import { KeymapInfo, IKeymapInfo } from "../../common/keymapInfo.js";
+import { TestInstantiationService } from "../../../../../platform/instantiation/test/common/instantiationServiceMock.js";
+import { INotificationService } from "../../../../../platform/notification/common/notification.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { IStorageService } from "../../../../../platform/storage/common/storage.js";
+import { TestNotificationService } from "../../../../../platform/notification/test/common/testNotificationService.js";
+import { TestStorageService } from "../../../../test/common/workbenchTestServices.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { TestConfigurationService } from "../../../../../platform/configuration/test/common/testConfigurationService.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
 
 class TestKeyboardMapperFactory extends BrowserKeyboardMapperFactoryBase {
 	constructor(configurationService: IConfigurationService, notificationService: INotificationService, storageService: IStorageService, commandService: ICommandService) {
@@ -24,7 +24,9 @@ class TestKeyboardMapperFactory extends BrowserKeyboardMapperFactoryBase {
 		super(configurationService);
 
 		const keymapInfos: IKeymapInfo[] = KeyboardLayoutContribution.INSTANCE.layoutInfos;
-		this._keymapInfos.push(...keymapInfos.map(info => (new KeymapInfo(info.layout, info.secondaryLayouts, info.mapping, info.isUserKeyboardLayout))));
+		this._keymapInfos.push(
+      ...keymapInfos.map(info => (new KeymapInfo(info.layout, info.secondaryLayouts, info.mapping, info.isUserKeyboardLayout))),
+    );
 		this._mru = this._keymapInfos;
 		this._initialized = true;
 		this.setLayoutFromBrowserAPI();
@@ -35,7 +37,7 @@ class TestKeyboardMapperFactory extends BrowserKeyboardMapperFactoryBase {
 	}
 }
 
-suite('keyboard layout loader', () => {
+suite("keyboard layout loader", () => {
 	const ds = ensureNoDisposablesAreLeakedInTestSuite();
 	let instantiationService: TestInstantiationService;
 	let instance: TestKeyboardMapperFactory;
@@ -58,87 +60,87 @@ suite('keyboard layout loader', () => {
 		instantiationService.dispose();
 	});
 
-	test('load default US keyboard layout', () => {
+	test("load default US keyboard layout", () => {
 		assert.notStrictEqual(instance.activeKeyboardLayout, null);
 	});
 
-	test('isKeyMappingActive', () => {
+	test("isKeyMappingActive", () => {
 		instance.setUSKeyboardLayout();
 		assert.strictEqual(instance.isKeyMappingActive({
 			KeyA: {
-				value: 'a',
+				value: "a",
 				valueIsDeadKey: false,
-				withShift: 'A',
+				withShift: "A",
 				withShiftIsDeadKey: false,
-				withAltGr: 'å',
+				withAltGr: "å",
 				withAltGrIsDeadKey: false,
-				withShiftAltGr: 'Å',
-				withShiftAltGrIsDeadKey: false
-			}
+				withShiftAltGr: "Å",
+				withShiftAltGrIsDeadKey: false,
+			},
 		}), true);
 
 		assert.strictEqual(instance.isKeyMappingActive({
 			KeyA: {
-				value: 'a',
+				value: "a",
 				valueIsDeadKey: false,
-				withShift: 'A',
+				withShift: "A",
 				withShiftIsDeadKey: false,
-				withAltGr: 'å',
+				withAltGr: "å",
 				withAltGrIsDeadKey: false,
-				withShiftAltGr: 'Å',
-				withShiftAltGrIsDeadKey: false
+				withShiftAltGr: "Å",
+				withShiftAltGrIsDeadKey: false,
 			},
 			KeyZ: {
-				value: 'z',
+				value: "z",
 				valueIsDeadKey: false,
-				withShift: 'Z',
+				withShift: "Z",
 				withShiftIsDeadKey: false,
-				withAltGr: 'Ω',
+				withAltGr: "Ω",
 				withAltGrIsDeadKey: false,
-				withShiftAltGr: '¸',
-				withShiftAltGrIsDeadKey: false
-			}
+				withShiftAltGr: "¸",
+				withShiftAltGrIsDeadKey: false,
+			},
 		}), true);
 
 		assert.strictEqual(instance.isKeyMappingActive({
 			KeyZ: {
-				value: 'y',
+				value: "y",
 				valueIsDeadKey: false,
-				withShift: 'Y',
+				withShift: "Y",
 				withShiftIsDeadKey: false,
-				withAltGr: '¥',
+				withAltGr: "¥",
 				withAltGrIsDeadKey: false,
-				withShiftAltGr: 'Ÿ',
-				withShiftAltGrIsDeadKey: false
+				withShiftAltGr: "Ÿ",
+				withShiftAltGrIsDeadKey: false,
 			},
 		}), false);
 
 	});
 
-	test('Switch keymapping', () => {
+	test("Switch keymapping", () => {
 		instance.setActiveKeyMapping({
 			KeyZ: {
-				value: 'y',
+				value: "y",
 				valueIsDeadKey: false,
-				withShift: 'Y',
+				withShift: "Y",
 				withShiftIsDeadKey: false,
-				withAltGr: '¥',
+				withAltGr: "¥",
 				withAltGrIsDeadKey: false,
-				withShiftAltGr: 'Ÿ',
-				withShiftAltGrIsDeadKey: false
-			}
+				withShiftAltGr: "Ÿ",
+				withShiftAltGrIsDeadKey: false,
+			},
 		});
 		assert.strictEqual(!!instance.activeKeyboardLayout!.isUSStandard, false);
 		assert.strictEqual(instance.isKeyMappingActive({
 			KeyZ: {
-				value: 'y',
+				value: "y",
 				valueIsDeadKey: false,
-				withShift: 'Y',
+				withShift: "Y",
 				withShiftIsDeadKey: false,
-				withAltGr: '¥',
+				withAltGr: "¥",
 				withAltGrIsDeadKey: false,
-				withShiftAltGr: 'Ÿ',
-				withShiftAltGrIsDeadKey: false
+				withShiftAltGr: "Ÿ",
+				withShiftAltGrIsDeadKey: false,
 			},
 		}), true);
 
@@ -146,19 +148,19 @@ suite('keyboard layout loader', () => {
 		assert.strictEqual(instance.activeKeyboardLayout!.isUSStandard, true);
 	});
 
-	test('Switch keyboard layout info', () => {
-		instance.setKeyboardLayout('com.apple.keylayout.German');
+	test("Switch keyboard layout info", () => {
+		instance.setKeyboardLayout("com.apple.keylayout.German");
 		assert.strictEqual(!!instance.activeKeyboardLayout!.isUSStandard, false);
 		assert.strictEqual(instance.isKeyMappingActive({
 			KeyZ: {
-				value: 'y',
+				value: "y",
 				valueIsDeadKey: false,
-				withShift: 'Y',
+				withShift: "Y",
 				withShiftIsDeadKey: false,
-				withAltGr: '¥',
+				withAltGr: "¥",
 				withAltGrIsDeadKey: false,
-				withShiftAltGr: 'Ÿ',
-				withShiftAltGrIsDeadKey: false
+				withShiftAltGr: "Ÿ",
+				withShiftAltGrIsDeadKey: false,
 			},
 		}), true);
 

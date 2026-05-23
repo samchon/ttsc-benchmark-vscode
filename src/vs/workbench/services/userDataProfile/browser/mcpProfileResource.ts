@@ -3,16 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from '../../../../base/common/buffer.js';
-import { localize } from '../../../../nls.js';
-import { FileOperationError, FileOperationResult, IFileService } from '../../../../platform/files/common/files.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
-import { IUserDataProfile, ProfileResourceType } from '../../../../platform/userDataProfile/common/userDataProfile.js';
-import { API_OPEN_EDITOR_COMMAND_ID } from '../../../browser/parts/editor/editorCommands.js';
-import { ITreeItemCheckboxState, TreeItemCollapsibleState } from '../../../common/views.js';
-import { IProfileResource, IProfileResourceChildTreeItem, IProfileResourceInitializer, IProfileResourceTreeItem, IUserDataProfileService } from '../common/userDataProfile.js';
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { localize } from "../../../../nls.js";
+import { FileOperationError, FileOperationResult, IFileService } from "../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IUserDataProfile, ProfileResourceType } from "../../../../platform/userDataProfile/common/userDataProfile.js";
+import { API_OPEN_EDITOR_COMMAND_ID } from "../../../browser/parts/editor/editorCommands.js";
+import { ITreeItemCheckboxState, TreeItemCollapsibleState } from "../../../common/views.js";
+import {
+  IProfileResource,
+  IProfileResourceChildTreeItem,
+  IProfileResourceInitializer,
+  IProfileResourceTreeItem,
+  IUserDataProfileService,
+} from "../common/userDataProfile.js";
 
 interface IMcpResourceContent {
 	readonly mcp: string | null;
@@ -33,7 +39,10 @@ export class McpResourceInitializer implements IProfileResourceInitializer {
 			this.logService.info(`Initializing Profile: No MCP servers to apply...`);
 			return;
 		}
-		await this.fileService.writeFile(this.userDataProfileService.currentProfile.mcpResource, VSBuffer.fromString(mcpContent.mcp));
+		await this.fileService.writeFile(
+      this.userDataProfileService.currentProfile.mcpResource,
+      VSBuffer.fromString(mcpContent.mcp),
+    );
 	}
 }
 
@@ -58,10 +67,15 @@ export class McpProfileResource implements IProfileResource {
 	async apply(content: string, profile: IUserDataProfile): Promise<void> {
 		const mcpContent: IMcpResourceContent = JSON.parse(content);
 		if (!mcpContent.mcp) {
-			this.logService.info(`Importing Profile (${profile.name}): No MCP servers to apply...`);
+			this.logService.info(
+        `Importing Profile (${profile.name}): No MCP servers to apply...`,
+      );
 			return;
 		}
-		await this.fileService.writeFile(profile.mcpResource, VSBuffer.fromString(mcpContent.mcp));
+		await this.fileService.writeFile(
+      profile.mcpResource,
+      VSBuffer.fromString(mcpContent.mcp),
+    );
 	}
 
 	private async getMcpContent(profile: IUserDataProfile): Promise<string | null> {
@@ -83,14 +97,14 @@ export class McpResourceTreeItem implements IProfileResourceTreeItem {
 
 	readonly type = ProfileResourceType.Mcp;
 	readonly handle = ProfileResourceType.Mcp;
-	readonly label = { label: localize('mcp', "MCP Servers") };
+	readonly label = { label: localize("mcp", "MCP Servers") };
 	readonly collapsibleState = TreeItemCollapsibleState.Expanded;
 	checkbox: ITreeItemCheckboxState | undefined;
 
 	constructor(
 		private readonly profile: IUserDataProfile,
 		@IUriIdentityService private readonly uriIdentityService: IUriIdentityService,
-		@IInstantiationService private readonly instantiationService: IInstantiationService
+		@IInstantiationService private readonly instantiationService: IInstantiationService,
 	) { }
 
 	async getChildren(): Promise<IProfileResourceChildTreeItem[]> {
@@ -100,23 +114,27 @@ export class McpResourceTreeItem implements IProfileResourceTreeItem {
 			collapsibleState: TreeItemCollapsibleState.None,
 			parent: this,
 			accessibilityInformation: {
-				label: this.uriIdentityService.extUri.basename(this.profile.mcpResource)
+				label: this.uriIdentityService.extUri.basename(this.profile.mcpResource),
 			},
 			command: {
 				id: API_OPEN_EDITOR_COMMAND_ID,
-				title: '',
-				arguments: [this.profile.mcpResource, undefined, undefined]
-			}
+				title: "",
+				arguments: [this.profile.mcpResource, undefined, undefined],
+			},
 		}];
 	}
 
 	async hasContent(): Promise<boolean> {
-		const mcpContent = await this.instantiationService.createInstance(McpProfileResource).getMcpResourceContent(this.profile);
+		const mcpContent = await this.instantiationService.createInstance(McpProfileResource).getMcpResourceContent(
+      this.profile,
+    );
 		return mcpContent.mcp !== null;
 	}
 
 	async getContent(): Promise<string> {
-		return this.instantiationService.createInstance(McpProfileResource).getContent(this.profile);
+		return this.instantiationService.createInstance(McpProfileResource).getContent(
+      this.profile,
+    );
 	}
 
 	isFromDefaultProfile(): boolean {

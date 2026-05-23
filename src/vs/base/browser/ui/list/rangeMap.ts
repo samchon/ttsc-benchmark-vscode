@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IRange, Range } from '../../../common/range.js';
+import { IRange, Range } from "../../../common/range.js";
 
 export interface IItem {
 	size: number;
@@ -37,9 +37,9 @@ export function groupIntersect(range: IRange, groups: IRangedGroup[]): IRangedGr
 		}
 
 		result.push({
-			range: intersection,
-			size: r.size
-		});
+      range: intersection,
+      size: r.size,
+    });
 	}
 
 	return result;
@@ -124,12 +124,15 @@ export class RangeMap implements IRangeMap {
 			.map<IRangedGroup>(g => ({ range: shift(g.range, diff), size: g.size }));
 
 		const middle = items.map<IRangedGroup>((item, i) => ({
-			range: { start: index + i, end: index + i + 1 },
-			size: item.size
-		}));
+      range: { start: index + i, end: index + i + 1 },
+      size: item.size,
+    }));
 
 		this.groups = concat(before, middle, after);
-		this._size = this._paddingTop + this.groups.reduce((t, g) => t + (g.size * (g.range.end - g.range.start)), 0);
+		this._size = this._paddingTop + this.groups.reduce(
+      (t, g) => t + (g.size * (g.range.end - g.range.start)),
+      0,
+    );
 	}
 
 	/**

@@ -3,14 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { extHostNamedCustomer, IExtHostContext } from '../../services/extensions/common/extHostCustomers.js';
-import { ILoggerOptions, ILoggerResource, ILoggerService, ILogService, isLogLevel, log, LogLevel, LogLevelToString, parseLogLevel } from '../../../platform/log/common/log.js';
-import { DisposableStore } from '../../../base/common/lifecycle.js';
-import { ExtHostContext, MainThreadLoggerShape, MainContext } from '../common/extHost.protocol.js';
-import { UriComponents, URI, UriDto } from '../../../base/common/uri.js';
-import { ServicesAccessor } from '../../../platform/instantiation/common/instantiation.js';
-import { CommandsRegistry } from '../../../platform/commands/common/commands.js';
-import { IEnvironmentService } from '../../../platform/environment/common/environment.js';
+import { extHostNamedCustomer, IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+import {
+  ILoggerOptions,
+  ILoggerResource,
+  ILoggerService,
+  ILogService,
+  isLogLevel,
+  log,
+  LogLevel,
+  LogLevelToString,
+  parseLogLevel,
+} from "../../../platform/log/common/log.js";
+import { DisposableStore } from "../../../base/common/lifecycle.js";
+import { ExtHostContext, MainThreadLoggerShape, MainContext } from "../common/extHost.protocol.js";
+import { UriComponents, URI, UriDto } from "../../../base/common/uri.js";
+import { ServicesAccessor } from "../../../platform/instantiation/common/instantiation.js";
+import { CommandsRegistry } from "../../../platform/commands/common/commands.js";
+import { IEnvironmentService } from "../../../platform/environment/common/environment.js";
 
 @extHostNamedCustomer(MainContext.MainThreadLogger)
 export class MainThreadLoggerService implements MainThreadLoggerShape {
@@ -21,7 +31,9 @@ export class MainThreadLoggerService implements MainThreadLoggerShape {
 		extHostContext: IExtHostContext,
 		@ILoggerService private readonly loggerService: ILoggerService,
 	) {
-		const proxy = extHostContext.getProxy(ExtHostContext.ExtHostLogLevelServiceShape);
+		const proxy = extHostContext.getProxy(
+      ExtHostContext.ExtHostLogLevelServiceShape,
+    );
 		this.disposables.add(loggerService.onDidChangeLogLevel(arg => {
 			if (isLogLevel(arg)) {
 				proxy.$setLogLevel(arg);
@@ -34,7 +46,7 @@ export class MainThreadLoggerService implements MainThreadLoggerShape {
 	$log(file: UriComponents, messages: [LogLevel, string][]): void {
 		const logger = this.loggerService.getLogger(URI.revive(file));
 		if (!logger) {
-			throw new Error('Create the logger before logging');
+			throw new Error("Create the logger before logging");
 		}
 		for (const [level, message] of messages) {
 			log(logger, level, message);
@@ -47,9 +59,9 @@ export class MainThreadLoggerService implements MainThreadLoggerShape {
 
 	async $registerLogger(logResource: UriDto<ILoggerResource>): Promise<void> {
 		this.loggerService.registerLogger({
-			...logResource,
-			resource: URI.revive(logResource.resource)
-		});
+      ...logResource,
+      resource: URI.revive(logResource.resource),
+    });
 	}
 
 	async $deregisterLogger(resource: UriComponents): Promise<void> {
@@ -63,7 +75,7 @@ export class MainThreadLoggerService implements MainThreadLoggerShape {
 	$flush(file: UriComponents): void {
 		const logger = this.loggerService.getLogger(URI.revive(file));
 		if (!logger) {
-			throw new Error('Create the logger before flushing');
+			throw new Error("Create the logger before flushing");
 		}
 		logger.flush();
 	}
@@ -75,7 +87,7 @@ export class MainThreadLoggerService implements MainThreadLoggerShape {
 
 // --- Internal commands to improve extension test runs
 
-CommandsRegistry.registerCommand('_extensionTests.setLogLevel', function (accessor: ServicesAccessor, level: string) {
+CommandsRegistry.registerCommand("_extensionTests.setLogLevel", function (accessor: ServicesAccessor, level: string) {
 	const loggerService = accessor.get(ILoggerService);
 	const environmentService = accessor.get(IEnvironmentService);
 
@@ -87,8 +99,11 @@ CommandsRegistry.registerCommand('_extensionTests.setLogLevel', function (access
 	}
 });
 
-CommandsRegistry.registerCommand('_extensionTests.getLogLevel', function (accessor: ServicesAccessor) {
-	const logService = accessor.get(ILogService);
+CommandsRegistry.registerCommand(
+  "_extensionTests.getLogLevel",
+  function (accessor: ServicesAccessor) {
+    const logService = accessor.get(ILogService);
 
-	return LogLevelToString(logService.getLevel());
-});
+    return LogLevelToString(logService.getLevel());
+  },
+);

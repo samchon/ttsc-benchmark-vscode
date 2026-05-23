@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { MarkdownString, type IMarkdownString } from '../../../../../../../../base/common/htmlContent.js';
-import { visit, type JSONVisitor } from '../../../../../../../../base/common/json.js';
-import { Disposable } from '../../../../../../../../base/common/lifecycle.js';
-import { URI } from '../../../../../../../../base/common/uri.js';
-import { IUriIdentityService } from '../../../../../../../../platform/uriIdentity/common/uriIdentity.js';
-import { localize } from '../../../../../../../../nls.js';
-import { IConfigurationService } from '../../../../../../../../platform/configuration/common/configuration.js';
-import { IFileService } from '../../../../../../../../platform/files/common/files.js';
-import { IWorkspaceContextService, type IWorkspaceFolder } from '../../../../../../../../platform/workspace/common/workspace.js';
-import { TerminalChatAgentToolsSettingId } from '../../../../common/terminalChatAgentToolsConfiguration.js';
+import { MarkdownString, type IMarkdownString } from "../../../../../../../../base/common/htmlContent.js";
+import { visit, type JSONVisitor } from "../../../../../../../../base/common/json.js";
+import { Disposable } from "../../../../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../../../../base/common/uri.js";
+import { IUriIdentityService } from "../../../../../../../../platform/uriIdentity/common/uriIdentity.js";
+import { localize } from "../../../../../../../../nls.js";
+import { IConfigurationService } from "../../../../../../../../platform/configuration/common/configuration.js";
+import { IFileService } from "../../../../../../../../platform/files/common/files.js";
+import { IWorkspaceContextService, type IWorkspaceFolder } from "../../../../../../../../platform/workspace/common/workspace.js";
+import { TerminalChatAgentToolsSettingId } from "../../../../common/terminalChatAgentToolsConfiguration.js";
 
 /**
  * Regex patterns to match npm/yarn/pnpm run commands and extract the script name.
@@ -39,14 +39,57 @@ const npmRunPatterns = [
  * is often used to run the 'test' script from package.json.
  */
 const yarnBuiltinCommands = new Set([
-	'add', 'audit', 'autoclean', 'bin', 'cache', 'check', 'config',
-	'create', 'dedupe', 'dlx', 'exec', 'explain', 'generate-lock-entry',
-	'global', 'help', 'import', 'info', 'init', 'install', 'licenses',
-	'link', 'list', 'login', 'logout', 'node', 'outdated', 'owner',
-	'pack', 'patch', 'patch-commit', 'plugin', 'policies', 'publish',
-	'rebuild', 'remove', 'run', 'search', 'set', 'stage', 'tag', 'team',
-	'unlink', 'unplug', 'up', 'upgrade', 'upgrade-interactive',
-	'version', 'versions', 'why', 'workspace', 'workspaces',
+  "add",
+  "audit",
+  "autoclean",
+  "bin",
+  "cache",
+  "check",
+  "config",
+  "create",
+  "dedupe",
+  "dlx",
+  "exec",
+  "explain",
+  "generate-lock-entry",
+  "global",
+  "help",
+  "import",
+  "info",
+  "init",
+  "install",
+  "licenses",
+  "link",
+  "list",
+  "login",
+  "logout",
+  "node",
+  "outdated",
+  "owner",
+  "pack",
+  "patch",
+  "patch-commit",
+  "plugin",
+  "policies",
+  "publish",
+  "rebuild",
+  "remove",
+  "run",
+  "search",
+  "set",
+  "stage",
+  "tag",
+  "team",
+  "unlink",
+  "unplug",
+  "up",
+  "upgrade",
+  "upgrade-interactive",
+  "version",
+  "versions",
+  "why",
+  "workspace",
+  "workspaces",
 ]);
 
 /**
@@ -55,12 +98,48 @@ const yarnBuiltinCommands = new Set([
  * is often used to run the 'test' script from package.json.
  */
 const pnpmBuiltinCommands = new Set([
-	'add', 'audit', 'bin', 'config', 'dedupe', 'deploy', 'dlx', 'doctor',
-	'env', 'exec', 'fetch', 'import', 'init', 'install', 'install-test',
-	'licenses', 'link', 'list', 'ln', 'ls', 'outdated', 'pack', 'patch',
-	'patch-commit', 'patch-remove', 'prune', 'publish', 'rb', 'rebuild',
-	'remove', 'rm', 'root', 'run', 'server', 'setup', 'store',
-	'un', 'uninstall', 'unlink', 'up', 'update', 'why',
+  "add",
+  "audit",
+  "bin",
+  "config",
+  "dedupe",
+  "deploy",
+  "dlx",
+  "doctor",
+  "env",
+  "exec",
+  "fetch",
+  "import",
+  "init",
+  "install",
+  "install-test",
+  "licenses",
+  "link",
+  "list",
+  "ln",
+  "ls",
+  "outdated",
+  "pack",
+  "patch",
+  "patch-commit",
+  "patch-remove",
+  "prune",
+  "publish",
+  "rb",
+  "rebuild",
+  "remove",
+  "rm",
+  "root",
+  "run",
+  "server",
+  "setup",
+  "store",
+  "un",
+  "uninstall",
+  "unlink",
+  "up",
+  "update",
+  "why",
 ]);
 
 interface IPackageJsonScripts {
@@ -91,7 +170,9 @@ export class NpmScriptAutoApprover extends Disposable {
 	 */
 	async isCommandAutoApproved(command: string, cwd: URI | undefined): Promise<INpmScriptAutoApproveResult> {
 		// Check if the feature is enabled
-		const isNpmScriptAutoApproveEnabled = this._configurationService.getValue(TerminalChatAgentToolsSettingId.AutoApproveWorkspaceNpmScripts) === true;
+		const isNpmScriptAutoApproveEnabled = this._configurationService.getValue(
+      TerminalChatAgentToolsSettingId.AutoApproveWorkspaceNpmScripts,
+    ) === true;
 		if (!isNpmScriptAutoApproveEnabled) {
 			return { isAutoApproved: false };
 		}
@@ -118,7 +199,7 @@ export class NpmScriptAutoApprover extends Disposable {
 			isAutoApproved: true,
 			scriptName,
 			autoApproveInfo: new MarkdownString(
-				localize('autoApprove.npmScript', 'Auto approved as {0} is defined in package.json', `\`${scriptName}\``)
+				localize("autoApprove.npmScript", "Auto approved as {0} is defined in package.json", `\`${scriptName}\``),
 			),
 		};
 	}
@@ -135,10 +216,14 @@ export class NpmScriptAutoApprover extends Disposable {
 				const { command: pkgManager, scriptName } = match.groups;
 
 				// Check if this is a yarn/pnpm shorthand that matches a built-in command
-				if (pkgManager.toLowerCase() === 'yarn' && yarnBuiltinCommands.has(scriptName.toLowerCase())) {
+				if (pkgManager.toLowerCase() === "yarn" && yarnBuiltinCommands.has(
+          scriptName.toLowerCase(),
+        )) {
 					continue;
 				}
-				if (pkgManager.toLowerCase() === 'pnpm' && pnpmBuiltinCommands.has(scriptName.toLowerCase())) {
+				if (pkgManager.toLowerCase() === "pnpm" && pnpmBuiltinCommands.has(
+          scriptName.toLowerCase(),
+        )) {
 					continue;
 				}
 
@@ -154,7 +239,12 @@ export class NpmScriptAutoApprover extends Disposable {
 	 */
 	private _isWithinWorkspace(uri: URI): boolean {
 		const workspaceFolders = this._workspaceContextService.getWorkspace().folders;
-		return workspaceFolders.some((folder: IWorkspaceFolder) => this._uriIdentityService.extUri.isEqualOrParent(uri, folder.uri));
+		return workspaceFolders.some(
+      (folder: IWorkspaceFolder) => this._uriIdentityService.extUri.isEqualOrParent(
+        uri,
+        folder.uri,
+      ),
+    );
 	}
 
 	/**
@@ -167,7 +257,7 @@ export class NpmScriptAutoApprover extends Disposable {
 			return undefined;
 		}
 
-		const packageJsonUri = URI.joinPath(cwd, 'package.json');
+		const packageJsonUri = URI.joinPath(cwd, "package.json");
 		const scripts = await this._readPackageJsonScripts(packageJsonUri);
 		if (scripts) {
 			return { uri: packageJsonUri, scripts };
@@ -217,7 +307,7 @@ export class NpmScriptAutoApprover extends Disposable {
 				level--;
 			},
 			onObjectProperty(property: string) {
-				if (level === 1 && property === 'scripts') {
+				if (level === 1 && property === "scripts") {
 					inScripts = true;
 				} else if (inScripts && level === 2) {
 					scripts.add(property);

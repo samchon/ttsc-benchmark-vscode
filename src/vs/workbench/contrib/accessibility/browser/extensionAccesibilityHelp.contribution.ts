@@ -3,19 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DisposableMap, IDisposable, DisposableStore, Disposable } from '../../../../base/common/lifecycle.js';
-import { ServicesAccessor } from '../../../../editor/browser/editorExtensions.js';
-import { AccessibleViewType, ExtensionContentProvider } from '../../../../platform/accessibility/browser/accessibleView.js';
-import { AccessibleViewRegistry } from '../../../../platform/accessibility/browser/accessibleViewRegistry.js';
-import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
-import { Registry } from '../../../../platform/registry/common/platform.js';
-import { FocusedViewContext } from '../../../common/contextkeys.js';
-import { IViewsRegistry, Extensions, IViewDescriptor } from '../../../common/views.js';
-import { IViewsService } from '../../../services/views/common/viewsService.js';
+import { DisposableMap, IDisposable, DisposableStore, Disposable } from "../../../../base/common/lifecycle.js";
+import { ServicesAccessor } from "../../../../editor/browser/editorExtensions.js";
+import { AccessibleViewType, ExtensionContentProvider } from "../../../../platform/accessibility/browser/accessibleView.js";
+import { AccessibleViewRegistry } from "../../../../platform/accessibility/browser/accessibleViewRegistry.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { FocusedViewContext } from "../../../common/contextkeys.js";
+import { IViewsRegistry, Extensions, IViewDescriptor } from "../../../common/views.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
 
 export class ExtensionAccessibilityHelpDialogContribution extends Disposable {
-	static ID = 'extensionAccessibilityHelpDialogContribution';
-	private _viewHelpDialogMap = this._register(new DisposableMap<string, IDisposable>());
+	static ID = "extensionAccessibilityHelpDialogContribution";
+	private _viewHelpDialogMap = this._register(
+    new DisposableMap<string, IDisposable>(),
+  );
 	constructor(@IKeybindingService keybindingService: IKeybindingService) {
 		super();
 		this._register(Registry.as<IViewsRegistry>(Extensions.ViewsRegistry).onViewsRegistered(e => {
@@ -41,7 +43,7 @@ function registerAccessibilityHelpAction(keybindingService: IKeybindingService, 
 	const disposableStore = new DisposableStore();
 	const content = viewDescriptor.accessibilityHelpContent?.value;
 	if (!content) {
-		throw new Error('No content provided for the accessibility help dialog');
+		throw new Error("No content provided for the accessibility help dialog");
 	}
 	disposableStore.add(AccessibleViewRegistry.register({
 		priority: 95,
@@ -59,9 +61,13 @@ function registerAccessibilityHelpAction(keybindingService: IKeybindingService, 
 		},
 	}));
 
-	disposableStore.add(keybindingService.onDidUpdateKeybindings(() => {
-		disposableStore.clear();
-		disposableStore.add(registerAccessibilityHelpAction(keybindingService, viewDescriptor));
-	}));
+	disposableStore.add(
+    keybindingService.onDidUpdateKeybindings(() => {
+      disposableStore.clear();
+      disposableStore.add(
+        registerAccessibilityHelpAction(keybindingService, viewDescriptor),
+      );
+    }),
+  );
 	return disposableStore;
 }

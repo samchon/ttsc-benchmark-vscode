@@ -3,35 +3,55 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { toAction } from '../../../../../base/common/actions.js';
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { derived, IObservable, observableValue } from '../../../../../base/common/observable.js';
-import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { mock } from '../../../../../base/test/common/mock.js';
-import { IActionViewItemFactory, IActionViewItemService } from '../../../../../platform/actions/browser/actionViewItemService.js';
-import { IMenu, IMenuActionOptions, IMenuService, isIMenuItem, MenuId, MenuItemAction, MenuRegistry, SubmenuItemAction } from '../../../../../platform/actions/common/actions.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { TestConfigurationService } from '../../../../../platform/configuration/test/common/testConfigurationService.js';
-import { IStorageService, StorageScope } from '../../../../../platform/storage/common/storage.js';
-import { IMcpServer, IMcpService } from '../../../../../workbench/contrib/mcp/common/mcpTypes.js';
-import { IAgentPluginService } from '../../../../../workbench/contrib/chat/common/plugins/agentPluginService.js';
-import { IAICustomizationItemsModel, ItemsModelSection } from '../../../../../workbench/contrib/chat/browser/aiCustomization/aiCustomizationItemsModel.js';
-import { ICustomizationHarnessService, IHarnessDescriptor } from '../../../../../workbench/contrib/chat/common/customizationHarnessService.js';
-import { getChatSessionType } from '../../../../../workbench/contrib/chat/common/model/chatUri.js';
-import { AICustomizationManagementSection, AICustomizationSources } from '../../../../../workbench/contrib/chat/common/aiCustomizationWorkspaceService.js';
-import { IAICustomizationListItem } from '../../../../../workbench/contrib/chat/browser/aiCustomization/aiCustomizationItemSource.js';
-import { AICustomizationShortcutsWidget } from '../../browser/aiCustomizationShortcutsWidget.js';
-import { CUSTOMIZATION_ITEMS, CustomizationLinkViewItem, SESSIONS_CUSTOMIZATIONS_SIDEBAR_MODE_SETTING, SessionsCustomizationsSidebarMode } from '../../browser/customizationsToolbar.contribution.js';
-import { IEditorService } from '../../../../../workbench/services/editor/common/editorService.js';
-import { ComponentFixtureContext, createEditorServices, defineComponentFixture, defineThemedFixtureGroup, registerWorkbenchServices } from '../../../../../workbench/test/browser/componentFixtures/fixtureUtils.js';
-import { Menus } from '../../../../browser/menus.js';
-import { ISessionsManagementService } from '../../../../services/sessions/common/sessionsManagement.js';
-import { URI } from '../../../../../base/common/uri.js';
+import { toAction } from "../../../../../base/common/actions.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { derived, IObservable, observableValue } from "../../../../../base/common/observable.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { mock } from "../../../../../base/test/common/mock.js";
+import { IActionViewItemFactory, IActionViewItemService } from "../../../../../platform/actions/browser/actionViewItemService.js";
+import {
+  IMenu,
+  IMenuActionOptions,
+  IMenuService,
+  isIMenuItem,
+  MenuId,
+  MenuItemAction,
+  MenuRegistry,
+  SubmenuItemAction,
+} from "../../../../../platform/actions/common/actions.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { TestConfigurationService } from "../../../../../platform/configuration/test/common/testConfigurationService.js";
+import { IStorageService, StorageScope } from "../../../../../platform/storage/common/storage.js";
+import { IMcpServer, IMcpService } from "../../../../../workbench/contrib/mcp/common/mcpTypes.js";
+import { IAgentPluginService } from "../../../../../workbench/contrib/chat/common/plugins/agentPluginService.js";
+import { IAICustomizationItemsModel, ItemsModelSection } from "../../../../../workbench/contrib/chat/browser/aiCustomization/aiCustomizationItemsModel.js";
+import { ICustomizationHarnessService, IHarnessDescriptor } from "../../../../../workbench/contrib/chat/common/customizationHarnessService.js";
+import { getChatSessionType } from "../../../../../workbench/contrib/chat/common/model/chatUri.js";
+import { AICustomizationManagementSection, AICustomizationSources } from "../../../../../workbench/contrib/chat/common/aiCustomizationWorkspaceService.js";
+import { IAICustomizationListItem } from "../../../../../workbench/contrib/chat/browser/aiCustomization/aiCustomizationItemSource.js";
+import { AICustomizationShortcutsWidget } from "../../browser/aiCustomizationShortcutsWidget.js";
+import {
+  CUSTOMIZATION_ITEMS,
+  CustomizationLinkViewItem,
+  SESSIONS_CUSTOMIZATIONS_SIDEBAR_MODE_SETTING,
+  SessionsCustomizationsSidebarMode,
+} from "../../browser/customizationsToolbar.contribution.js";
+import { IEditorService } from "../../../../../workbench/services/editor/common/editorService.js";
+import {
+  ComponentFixtureContext,
+  createEditorServices,
+  defineComponentFixture,
+  defineThemedFixtureGroup,
+  registerWorkbenchServices,
+} from "../../../../../workbench/test/browser/componentFixtures/fixtureUtils.js";
+import { Menus } from "../../../../browser/menus.js";
+import { ISessionsManagementService } from "../../../../services/sessions/common/sessionsManagement.js";
+import { URI } from "../../../../../base/common/uri.js";
 
 // Ensure color registrations are loaded
-import '../../../../common/theme.js';
-import '../../../../../platform/theme/common/colors/inputColors.js';
+import "../../../../common/theme.js";
+import "../../../../../platform/theme/common/colors/inputColors.js";
 
 
 // ============================================================================
@@ -42,11 +62,13 @@ import '../../../../../platform/theme/common/colors/inputColors.js';
 
 const menuRegistrations = new DisposableStore();
 for (const [index, config] of CUSTOMIZATION_ITEMS.entries()) {
-	menuRegistrations.add(MenuRegistry.appendMenuItem(Menus.SidebarCustomizations, {
-		command: { id: config.id, title: config.label },
-		group: 'navigation',
-		order: index + 1,
-	}));
+	menuRegistrations.add(
+    MenuRegistry.appendMenuItem(Menus.SidebarCustomizations, {
+      command: { id: config.id, title: config.label },
+      group: "navigation",
+      order: index + 1,
+    }),
+  );
 }
 
 // ============================================================================
@@ -64,10 +86,10 @@ class FixtureMenuService implements IMenuService {
 				const items = MenuRegistry.getMenuItems(id).filter(isIMenuItem);
 				items.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 				const actions = items.map(item => {
-					const title = typeof item.command.title === 'string' ? item.command.title : item.command.title.value;
+					const title = typeof item.command.title === "string" ? item.command.title : item.command.title.value;
 					return toAction({ id: item.command.id, label: title, run: () => { } });
 				});
-				return actions.length ? [['navigation', actions as unknown as (MenuItemAction | SubmenuItemAction)[]]] : [];
+				return actions.length ? [["navigation", actions as unknown as (MenuItemAction | SubmenuItemAction)[]]] : [];
 			},
 		};
 	}
@@ -117,16 +139,39 @@ interface ICustomizationCounts {
 
 function createMockItemsModel(counts?: ICustomizationCounts): IAICustomizationItemsModel {
 	const fakeItems = (n: number): readonly IAICustomizationListItem[] =>
-		Array.from({ length: n }, (): IAICustomizationListItem => Object.create(null));
+		Array.from(
+      { length: n },
+      (): IAICustomizationListItem => Object.create(null),
+    );
 
-	const sectionItems = new Map<ItemsModelSection, IObservable<readonly IAICustomizationListItem[]>>([
-		[AICustomizationManagementSection.Agents, observableValue('agentsItems', fakeItems(counts?.agents ?? 0))],
-		[AICustomizationManagementSection.Skills, observableValue('skillsItems', fakeItems(counts?.skills ?? 0))],
-		[AICustomizationManagementSection.Instructions, observableValue('instructionsItems', fakeItems(counts?.instructions ?? 0))],
-		[AICustomizationManagementSection.Prompts, observableValue('promptsItems', fakeItems(counts?.prompts ?? 0))],
-		[AICustomizationManagementSection.Hooks, observableValue('hooksItems', fakeItems(counts?.hooks ?? 0))],
-	]);
-	const pluginCount = observableValue('pluginsCount', counts?.plugins ?? 0);
+	const sectionItems = new Map<ItemsModelSection, IObservable<readonly IAICustomizationListItem[]>>(
+    [
+      [
+        AICustomizationManagementSection.Agents,
+        observableValue("agentsItems", fakeItems(counts?.agents ?? 0)),
+      ],
+      [
+        AICustomizationManagementSection.Skills,
+        observableValue("skillsItems", fakeItems(counts?.skills ?? 0)),
+      ],
+      [
+        AICustomizationManagementSection.Instructions,
+        observableValue(
+          "instructionsItems",
+          fakeItems(counts?.instructions ?? 0),
+        ),
+      ],
+      [
+        AICustomizationManagementSection.Prompts,
+        observableValue("promptsItems", fakeItems(counts?.prompts ?? 0)),
+      ],
+      [
+        AICustomizationManagementSection.Hooks,
+        observableValue("hooksItems", fakeItems(counts?.hooks ?? 0)),
+      ],
+    ],
+  );
+	const pluginCount = observableValue("pluginsCount", counts?.plugins ?? 0);
 
 	return new class extends mock<IAICustomizationItemsModel>() {
 		override getItems(section: ItemsModelSection) {
@@ -144,7 +189,10 @@ function createMockItemsModel(counts?: ICustomizationCounts): IAICustomizationIt
 
 function createMockMcpService(serverCount: number = 0): IMcpService {
 	const MockServer = mock<IMcpServer>();
-	const servers = observableValue<readonly IMcpServer[]>('mockMcpServers', Array.from({ length: serverCount }, () => new MockServer()));
+	const servers = observableValue<readonly IMcpServer[]>(
+    "mockMcpServers",
+    Array.from({ length: serverCount }, () => new MockServer()),
+  );
 	return new class extends mock<IMcpService>() {
 		override readonly servers = servers;
 	}();
@@ -152,16 +200,16 @@ function createMockMcpService(serverCount: number = 0): IMcpService {
 
 function createMockHarnessService(hiddenSections: readonly string[] = []): ICustomizationHarnessService {
 	const descriptor: IHarnessDescriptor = {
-		id: 'fixture',
-		label: 'Fixture',
-		icon: ThemeIcon.fromId('vm'),
-		hiddenSections,
-		getStorageSourceFilter: () => ({ sources: AICustomizationSources.all }),
-	};
+    id: "fixture",
+    label: "Fixture",
+    icon: ThemeIcon.fromId("vm"),
+    hiddenSections,
+    getStorageSourceFilter: () => ({ sources: AICustomizationSources.all }),
+  };
 	return new class extends mock<ICustomizationHarnessService>() {
-		override readonly activeSessionResource = observableValue('mockActiveSessionResource', URI.parse(`${descriptor.id}:///session`));
+		override readonly activeSessionResource = observableValue("mockActiveSessionResource", URI.parse(`${descriptor.id}:///session`));
 		override readonly activeHarness = derived(reader => getChatSessionType(this.activeSessionResource.read(reader)));
-		override readonly availableHarnesses = observableValue<readonly IHarnessDescriptor[]>('mockAvailableHarnesses', [descriptor]);
+		override readonly availableHarnesses = observableValue<readonly IHarnessDescriptor[]>("mockAvailableHarnesses", [descriptor]);
 		override findHarnessById(id: string) { return id === descriptor.id ? descriptor : undefined; }
 		override getActiveDescriptor() { return descriptor; }
 	}();
@@ -172,14 +220,17 @@ function createMockHarnessService(hiddenSections: readonly string[] = []): ICust
 // ============================================================================
 
 function renderWidget(ctx: ComponentFixtureContext, options?: { mcpServerCount?: number; collapsed?: boolean; counts?: ICustomizationCounts; hiddenSections?: readonly string[]; mode?: SessionsCustomizationsSidebarMode }): void {
-	ctx.container.style.width = '300px';
-	ctx.container.style.backgroundColor = 'var(--vscode-sideBar-background)';
+	ctx.container.style.width = "300px";
+	ctx.container.style.backgroundColor = "var(--vscode-sideBar-background)";
 
 	const actionViewItemService = new FixtureActionViewItemService();
 
 	const configurationService = new TestConfigurationService();
 	if (options?.mode !== undefined) {
-		configurationService.setUserConfiguration(SESSIONS_CUSTOMIZATIONS_SIDEBAR_MODE_SETTING, options.mode);
+		configurationService.setUserConfiguration(
+      SESSIONS_CUSTOMIZATIONS_SIDEBAR_MODE_SETTING,
+      options.mode,
+    );
 	}
 
 	const instantiationService = createEditorServices(ctx.disposableStore, {
@@ -196,22 +247,33 @@ function renderWidget(ctx: ComponentFixtureContext, options?: { mcpServerCount?:
 				override readonly onDidEditorsChange = Event.None;
 			}());
 			reg.defineInstance(ISessionsManagementService, new class extends mock<ISessionsManagementService>() {
-				override readonly activeSession = observableValue('mockActiveSession', undefined);
+				override readonly activeSession = observableValue("mockActiveSession", undefined);
 			}());
 			reg.defineInstance(IAICustomizationItemsModel, createMockItemsModel(options?.counts));
 			reg.defineInstance(ICustomizationHarnessService, createMockHarnessService(options?.hiddenSections));
 			reg.defineInstance(IMcpService, createMockMcpService(options?.mcpServerCount ?? 0));
 			reg.defineInstance(IAgentPluginService, new class extends mock<IAgentPluginService>() {
-				override readonly plugins = observableValue<readonly never[]>('mockPlugins', []);
+				override readonly plugins = observableValue<readonly never[]>("mockPlugins", []);
 			}());
 		},
 	});
 
 	// Register view item factories from the real CustomizationLinkViewItem
 	for (const config of CUSTOMIZATION_ITEMS) {
-		ctx.disposableStore.add(actionViewItemService.register(Menus.SidebarCustomizations, config.id, (action, options) => {
-			return instantiationService.createInstance(CustomizationLinkViewItem, action, options, config);
-		}));
+		ctx.disposableStore.add(
+      actionViewItemService.register(
+        Menus.SidebarCustomizations,
+        config.id,
+        (action, options) => {
+          return instantiationService.createInstance(
+            CustomizationLinkViewItem,
+            action,
+            options,
+            config,
+          );
+        },
+      ),
+    );
 	}
 
 	// Override storage to set initial collapsed state
@@ -219,7 +281,7 @@ function renderWidget(ctx: ComponentFixtureContext, options?: { mcpServerCount?:
 		const storageService = instantiationService.get(IStorageService);
 		instantiationService.set(IStorageService, new class extends mock<IStorageService>() {
 			override getBoolean(key: string, scope: StorageScope, fallbackValue?: boolean) {
-				if (key === 'agentSessions.customizationsCollapsed') {
+				if (key === "agentSessions.customizationsCollapsed") {
 					return true;
 				}
 				return storageService.getBoolean(key, scope, fallbackValue!);
@@ -229,38 +291,42 @@ function renderWidget(ctx: ComponentFixtureContext, options?: { mcpServerCount?:
 	}
 
 	ctx.disposableStore.add(
-		instantiationService.createInstance(AICustomizationShortcutsWidget, ctx.container, undefined)
-	);
+    instantiationService.createInstance(
+      AICustomizationShortcutsWidget,
+      ctx.container,
+      undefined,
+    ),
+  );
 }
 
 // ============================================================================
 // Fixtures
 // ============================================================================
 
-export default defineThemedFixtureGroup({ path: 'sessions/' }, {
+export default defineThemedFixtureGroup({ path: "sessions/" }, {
 
 	Expanded: defineComponentFixture({
-		labels: { kind: 'screenshot' },
+		labels: { kind: "screenshot" },
 		render: (ctx) => renderWidget(ctx),
 	}),
 
 	Collapsed: defineComponentFixture({
-		labels: { kind: 'screenshot' },
+		labels: { kind: "screenshot" },
 		render: (ctx) => renderWidget(ctx, { collapsed: true }),
 	}),
 
 	WithMcpServers: defineComponentFixture({
-		labels: { kind: 'screenshot' },
+		labels: { kind: "screenshot" },
 		render: (ctx) => renderWidget(ctx, { mcpServerCount: 3 }),
 	}),
 
 	CollapsedWithMcpServers: defineComponentFixture({
-		labels: { kind: 'screenshot' },
+		labels: { kind: "screenshot" },
 		render: (ctx) => renderWidget(ctx, { mcpServerCount: 3, collapsed: true }),
 	}),
 
 	WithCounts: defineComponentFixture({
-		labels: { kind: 'screenshot' },
+		labels: { kind: "screenshot" },
 		render: (ctx) => renderWidget(ctx, {
 			mcpServerCount: 2,
 			counts: { agents: 2, skills: 30, instructions: 16, hooks: 4 },
@@ -270,7 +336,7 @@ export default defineThemedFixtureGroup({ path: 'sessions/' }, {
 	// --- Sidebar mode variations ---
 
 	ModeWelcome: defineComponentFixture({
-		labels: { kind: 'screenshot' },
+		labels: { kind: "screenshot" },
 		render: (ctx) => renderWidget(ctx, {
 			mode: SessionsCustomizationsSidebarMode.Welcome,
 			mcpServerCount: 2,
@@ -279,7 +345,7 @@ export default defineThemedFixtureGroup({ path: 'sessions/' }, {
 	}),
 
 	ModeSection: defineComponentFixture({
-		labels: { kind: 'screenshot' },
+		labels: { kind: "screenshot" },
 		render: (ctx) => renderWidget(ctx, {
 			mode: SessionsCustomizationsSidebarMode.Section,
 			mcpServerCount: 2,
@@ -288,7 +354,7 @@ export default defineThemedFixtureGroup({ path: 'sessions/' }, {
 	}),
 
 	ModeSingle: defineComponentFixture({
-		labels: { kind: 'screenshot' },
+		labels: { kind: "screenshot" },
 		render: (ctx) => renderWidget(ctx, {
 			mode: SessionsCustomizationsSidebarMode.Single,
 			mcpServerCount: 2,
@@ -297,7 +363,7 @@ export default defineThemedFixtureGroup({ path: 'sessions/' }, {
 	}),
 
 	ModeSingleEmpty: defineComponentFixture({
-		labels: { kind: 'screenshot' },
+		labels: { kind: "screenshot" },
 		render: (ctx) => renderWidget(ctx, {
 			mode: SessionsCustomizationsSidebarMode.Single,
 		}),

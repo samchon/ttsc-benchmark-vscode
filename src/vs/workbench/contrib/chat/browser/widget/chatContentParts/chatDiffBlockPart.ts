@@ -3,46 +3,52 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationTokenSource } from '../../../../../../base/common/cancellation.js';
-import { hashAsync } from '../../../../../../base/common/hash.js';
-import { Disposable, IReference, MutableDisposable, toDisposable } from '../../../../../../base/common/lifecycle.js';
-import { Schemas } from '../../../../../../base/common/network.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { generateUuid } from '../../../../../../base/common/uuid.js';
-import { ILanguageService } from '../../../../../../editor/common/languages/language.js';
-import { ITextModel } from '../../../../../../editor/common/model.js';
-import { IModelService } from '../../../../../../editor/common/services/model.js';
-import { IResolvedTextEditorModel, ITextModelService } from '../../../../../../editor/common/services/resolverService.js';
-import { EditorModel } from '../../../../../common/editor/editorModel.js';
-import { IChatResponseViewModel } from '../../../common/model/chatViewModel.js';
-import { IDisposableReference } from './chatCollections.js';
-import { DiffEditorPool } from './chatContentCodePools.js';
-import { CodeCompareBlockPart, ICodeCompareBlockData, ICodeCompareBlockDiffData } from './codeBlockPart.js';
+import { CancellationTokenSource } from "../../../../../../base/common/cancellation.js";
+import { hashAsync } from "../../../../../../base/common/hash.js";
+import { Disposable, IReference, MutableDisposable, toDisposable } from "../../../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../../../base/common/network.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { generateUuid } from "../../../../../../base/common/uuid.js";
+import { ILanguageService } from "../../../../../../editor/common/languages/language.js";
+import { ITextModel } from "../../../../../../editor/common/model.js";
+import { IModelService } from "../../../../../../editor/common/services/model.js";
+import { IResolvedTextEditorModel, ITextModelService } from "../../../../../../editor/common/services/resolverService.js";
+import { EditorModel } from "../../../../../common/editor/editorModel.js";
+import { IChatResponseViewModel } from "../../../common/model/chatViewModel.js";
+import { IDisposableReference } from "./chatCollections.js";
+import { DiffEditorPool } from "./chatContentCodePools.js";
+import {
+  CodeCompareBlockPart,
+  ICodeCompareBlockData,
+  ICodeCompareBlockDiffData,
+} from "./codeBlockPart.js";
 
 /**
  * Parses unified diff format into before/after content.
  * Supports standard unified diff format with - and + prefixes.
  */
 export function parseUnifiedDiff(diffText: string): { before: string; after: string } {
-	const lines = diffText.split('\n');
+	const lines = diffText.split("\n");
 	const beforeLines: string[] = [];
 	const afterLines: string[] = [];
 
 	for (const line of lines) {
-		if (line.startsWith('- ')) {
+		if (line.startsWith("- ")) {
 			beforeLines.push(line.substring(2));
-		} else if (line.startsWith('-')) {
+		} else if (line.startsWith("-")) {
 			beforeLines.push(line.substring(1));
-		} else if (line.startsWith('+ ')) {
+		} else if (line.startsWith("+ ")) {
 			afterLines.push(line.substring(2));
-		} else if (line.startsWith('+')) {
+		} else if (line.startsWith("+")) {
 			afterLines.push(line.substring(1));
-		} else if (line.startsWith(' ')) {
+		} else if (line.startsWith(" ")) {
 			// Context line - appears in both
 			const content = line.substring(1);
 			beforeLines.push(content);
 			afterLines.push(content);
-		} else if (!line.startsWith('@@') && !line.startsWith('---') && !line.startsWith('+++') && !line.startsWith('diff ')) {
+		} else if (!line.startsWith("@@") && !line.startsWith(
+      "---",
+    ) && !line.startsWith("+++") && !line.startsWith("diff ")) {
 			// Regular line without prefix - treat as context
 			beforeLines.push(line);
 			afterLines.push(line);
@@ -50,9 +56,9 @@ export function parseUnifiedDiff(diffText: string): { before: string; after: str
 	}
 
 	return {
-		before: beforeLines.join('\n'),
-		after: afterLines.join('\n')
-	};
+    before: beforeLines.join("\n"),
+    after: afterLines.join("\n"),
+  };
 }
 
 /**
@@ -96,7 +102,9 @@ export interface IMarkdownDiffBlockData {
 export class MarkdownDiffBlockPart extends Disposable {
 	readonly element: HTMLElement;
 	private readonly comparePart: IDisposableReference<CodeCompareBlockPart>;
-	private readonly modelRef = this._register(new MutableDisposable<SimpleDiffEditorModel>());
+	private readonly modelRef = this._register(
+    new MutableDisposable<SimpleDiffEditorModel>(),
+  );
 
 	constructor(
 		data: IMarkdownDiffBlockData,
@@ -112,18 +120,28 @@ export class MarkdownDiffBlockPart extends Disposable {
 
 		// Create in-memory models for the diff
 		const originalUri = URI.from({
-			scheme: Schemas.vscodeChatCodeBlock,
-			path: `/chat-diff-original-${data.codeBlockIndex}-${generateUuid()}`,
-		});
+      scheme: Schemas.vscodeChatCodeBlock,
+      path: `/chat-diff-original-${data.codeBlockIndex}-${generateUuid()}`,
+    });
 		const modifiedUri = URI.from({
-			scheme: Schemas.vscodeChatCodeBlock,
-			path: `/chat-diff-modified-${data.codeBlockIndex}-${generateUuid()}`,
-		});
+      scheme: Schemas.vscodeChatCodeBlock,
+      path: `/chat-diff-modified-${data.codeBlockIndex}-${generateUuid()}`,
+    });
 
 		const languageSelection = this.languageService.createById(data.languageId);
 
-		const originalModel = this.modelService.createModel(data.beforeContent, languageSelection, originalUri, false);
-		const modifiedModel = this.modelService.createModel(data.afterContent, languageSelection, modifiedUri, false);
+		const originalModel = this.modelService.createModel(
+      data.beforeContent,
+      languageSelection,
+      originalUri,
+      false,
+    );
+		const modifiedModel = this.modelService.createModel(
+      data.afterContent,
+      languageSelection,
+      modifiedUri,
+      false,
+    );
 		const cts = new CancellationTokenSource();
 		let referencesSettled = false;
 		let disposeRequested = false;
@@ -147,7 +165,7 @@ export class MarkdownDiffBlockPart extends Disposable {
 
 		const modelsPromise = Promise.all([
 			this.textModelService.createModelReference(originalUri),
-			this.textModelService.createModelReference(modifiedUri)
+			this.textModelService.createModelReference(modifiedUri),
 		]).then(([originalRef, modifiedRef]) => {
 			referencesSettled = true;
 			const model = new SimpleDiffEditorModel(originalRef, modifiedRef);
@@ -175,8 +193,8 @@ export class MarkdownDiffBlockPart extends Disposable {
 			edit: {
 				uri: data.codeBlockResource || modifiedUri,
 				edits: [],
-				kind: 'textEditGroup',
-				done: true
+				kind: "textEditGroup",
+				done: true,
 			},
 			diffData: modelsPromise.then(async model => {
 				if (!model) {
@@ -190,7 +208,7 @@ export class MarkdownDiffBlockPart extends Disposable {
 					originalSha1: await hashAsync(model.original.getValue()),
 				};
 				return diffData;
-			})
+			}),
 		};
 
 		this.comparePart.object.render(compareData, currentWidth, cts.token);

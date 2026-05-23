@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { extUriBiasedIgnorePathCase } from '../../../base/common/resources.js';
-import { URI } from '../../../base/common/uri.js';
+import { extUriBiasedIgnorePathCase } from "../../../base/common/resources.js";
+import { URI } from "../../../base/common/uri.js";
 
 /**
  * Result of {@link extractCdPrefix}: the directory the `cd` jumps to and the
@@ -33,7 +33,7 @@ export function extractCdPrefix(commandLine: string, isPowerShell: boolean): IEx
 	const cdPrefixMatch = commandLine.match(
 		isPowerShell
 			? /^(?:cd(?: \/d)?|Set-Location(?: -Path)?) (?<dir>"[^"]*"|[^\s]+) ?(?:&&|;)\s+(?<suffix>.+)$/i
-			: /^cd (?<dir>"[^"]*"|[^\s]+) &&\s+(?<suffix>.+)$/
+			: /^cd (?<dir>"[^"]*"|[^\s]+) &&\s+(?<suffix>.+)$/,
 	);
 	const cdDir = cdPrefixMatch?.groups?.dir;
 	const cdSuffix = cdPrefixMatch?.groups?.suffix;
@@ -64,13 +64,13 @@ export function stripRedundantCdPrefix(
 	if (!workingDirectory || !parameters) {
 		return false;
 	}
-	const isBash = toolName === 'bash';
-	const isPowerShell = toolName === 'powershell';
+	const isBash = toolName === "bash";
+	const isPowerShell = toolName === "powershell";
 	if (!isBash && !isPowerShell) {
 		return false;
 	}
 	const command = parameters.command;
-	if (typeof command !== 'string') {
+	if (typeof command !== "string") {
 		return false;
 	}
 	const extracted = extractCdPrefix(command, isPowerShell);
@@ -102,7 +102,7 @@ function sameDirectory(extractedDir: string, workingDirectory: URI): boolean {
 	// matches `/repo/project`. Without this, URI.file would preserve the
 	// trailing slash and the URIs would not compare equal. We do this for
 	// both sides because the working directory may also end in a separator.
-	const trim = (p: string) => p.replace(/[\\/]+$/, '');
+	const trim = (p: string) => p.replace(/[\\/]+$/, "");
 	const trimmedExtracted = trim(extractedDir);
 	const trimmedWd = trim(workingDirectory.fsPath);
 	if (!trimmedExtracted || !trimmedWd) {

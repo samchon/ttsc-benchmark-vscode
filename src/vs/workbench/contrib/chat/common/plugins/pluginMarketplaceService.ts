@@ -3,49 +3,60 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { runWhenGlobalIdle } from '../../../../../base/common/async.js';
-import { CancellationToken } from '../../../../../base/common/cancellation.js';
-import { Event } from '../../../../../base/common/event.js';
-import { parse as parseJSONC } from '../../../../../base/common/json.js';
-import { Lazy } from '../../../../../base/common/lazy.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { revive } from '../../../../../base/common/marshalling.js';
-import { autorun, derived, IObservable, observableFromEvent, observableValue } from '../../../../../base/common/observable.js';
-import { isEqual, isEqualOrParent, joinPath, normalizePath, relativePath } from '../../../../../base/common/resources.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { IEnvironmentService } from '../../../../../platform/environment/common/environment.js';
-import { IFileService } from '../../../../../platform/files/common/files.js';
-import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../platform/log/common/log.js';
-import { ObservableMemento, observableMemento } from '../../../../../platform/observable/common/observableMemento.js';
-import { asJson, IRequestService } from '../../../../../platform/request/common/request.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../../platform/storage/common/storage.js';
-import type { Dto } from '../../../../services/extensions/common/proxyIdentifier.js';
-import { AutoUpdateConfigurationKey, AutoUpdateConfigurationValue } from '../../../extensions/common/extensions.js';
-import { ChatConfiguration } from '../constants.js';
-import { IAgentPluginRepositoryService } from './agentPluginRepositoryService.js';
-import { FileBackedInstalledPluginsStore, IStoredInstalledPlugin } from './fileBackedInstalledPluginsStore.js';
-import { IWorkspacePluginSettingsService } from './workspacePluginSettingsService.js';
-import { IWorkspaceTrustManagementService } from '../../../../../platform/workspace/common/workspaceTrust.js';
-import { type IMarketplaceReference, deduplicateMarketplaceReferences, MarketplaceReferenceKind, parseMarketplaceReference, parseMarketplaceReferences } from './marketplaceReference.js';
+import { runWhenGlobalIdle } from "../../../../../base/common/async.js";
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { Event } from "../../../../../base/common/event.js";
+import { parse as parseJSONC } from "../../../../../base/common/json.js";
+import { Lazy } from "../../../../../base/common/lazy.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { revive } from "../../../../../base/common/marshalling.js";
+import { autorun, derived, IObservable, observableFromEvent, observableValue } from "../../../../../base/common/observable.js";
+import { isEqual, isEqualOrParent, joinPath, normalizePath, relativePath } from "../../../../../base/common/resources.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IEnvironmentService } from "../../../../../platform/environment/common/environment.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { ObservableMemento, observableMemento } from "../../../../../platform/observable/common/observableMemento.js";
+import { asJson, IRequestService } from "../../../../../platform/request/common/request.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../../platform/storage/common/storage.js";
+import type { Dto } from "../../../../services/extensions/common/proxyIdentifier.js";
+import { AutoUpdateConfigurationKey, AutoUpdateConfigurationValue } from "../../../extensions/common/extensions.js";
+import { ChatConfiguration } from "../constants.js";
+import { IAgentPluginRepositoryService } from "./agentPluginRepositoryService.js";
+import { FileBackedInstalledPluginsStore, IStoredInstalledPlugin } from "./fileBackedInstalledPluginsStore.js";
+import { IWorkspacePluginSettingsService } from "./workspacePluginSettingsService.js";
+import { IWorkspaceTrustManagementService } from "../../../../../platform/workspace/common/workspaceTrust.js";
+import {
+  type IMarketplaceReference,
+  deduplicateMarketplaceReferences,
+  MarketplaceReferenceKind,
+  parseMarketplaceReference,
+  parseMarketplaceReferences,
+} from "./marketplaceReference.js";
 
 // Re-export marketplace reference types for downstream consumers.
-export { deduplicateMarketplaceReferences, MarketplaceReferenceKind, parseMarketplaceReference, parseMarketplaceReferences } from './marketplaceReference.js';
-export type { IMarketplaceReference } from './marketplaceReference.js';
+export {
+  deduplicateMarketplaceReferences,
+  MarketplaceReferenceKind,
+  parseMarketplaceReference,
+  parseMarketplaceReferences,
+} from "./marketplaceReference.js";
+export type { IMarketplaceReference } from "./marketplaceReference.js";
 
 export const enum MarketplaceType {
-	Copilot = 'copilot',
-	Claude = 'claude',
-	OpenPlugin = 'openPlugin',
+	Copilot = "copilot",
+	Claude = "claude",
+	OpenPlugin = "openPlugin",
 }
 
 export const enum PluginSourceKind {
-	RelativePath = 'relativePath',
-	GitHub = 'github',
-	GitUrl = 'url',
-	Npm = 'npm',
-	Pip = 'pip',
+	RelativePath = "relativePath",
+	GitHub = "github",
+	GitUrl = "url",
+	Npm = "npm",
+	Pip = "pip",
 }
 
 export interface IRelativePathPluginSource {
@@ -140,7 +151,9 @@ export interface IMarketplaceInstalledPlugin {
 	readonly plugin: IMarketplacePlugin;
 }
 
-export const IPluginMarketplaceService = createDecorator<IPluginMarketplaceService>('pluginMarketplaceService');
+export const IPluginMarketplaceService = createDecorator<IPluginMarketplaceService>(
+  "pluginMarketplaceService",
+);
 
 export interface IPluginMarketplaceService {
 	readonly _serviceBrand: undefined;
@@ -199,10 +212,10 @@ export interface IPluginMarketplaceService {
  * The first match determines the marketplace type.
  */
 const MARKETPLACE_DEFINITIONS: { type: MarketplaceType; path: string }[] = [
-	{ type: MarketplaceType.OpenPlugin, path: 'marketplace.json' },
-	{ type: MarketplaceType.OpenPlugin, path: '.plugin/marketplace.json' },
-	{ type: MarketplaceType.Copilot, path: '.github/plugin/marketplace.json' },
-	{ type: MarketplaceType.Claude, path: '.claude-plugin/marketplace.json' },
+  { type: MarketplaceType.OpenPlugin, path: "marketplace.json" },
+  { type: MarketplaceType.OpenPlugin, path: ".plugin/marketplace.json" },
+  { type: MarketplaceType.Copilot, path: ".github/plugin/marketplace.json" },
+  { type: MarketplaceType.Claude, path: ".claude-plugin/marketplace.json" },
 ];
 
 /**
@@ -212,17 +225,17 @@ const MARKETPLACE_DEFINITIONS: { type: MarketplaceType; path: string }[] = [
  * detection later agrees with the marketplace type chosen here.
  */
 const SINGLE_PLUGIN_MANIFEST_DEFINITIONS: { type: MarketplaceType; path: string }[] = [
-	{ type: MarketplaceType.OpenPlugin, path: '.plugin/plugin.json' },
-	{ type: MarketplaceType.Claude, path: '.claude-plugin/plugin.json' },
-	{ type: MarketplaceType.Copilot, path: 'plugin.json' },
+  { type: MarketplaceType.OpenPlugin, path: ".plugin/plugin.json" },
+  { type: MarketplaceType.Claude, path: ".claude-plugin/plugin.json" },
+  { type: MarketplaceType.Copilot, path: "plugin.json" },
 ];
 
 const GITHUB_MARKETPLACE_CACHE_TTL_MS = 8 * 60 * 60 * 1000;
-const GITHUB_MARKETPLACE_CACHE_STORAGE_KEY = 'chat.plugins.marketplaces.githubCache.v1';
+const GITHUB_MARKETPLACE_CACHE_STORAGE_KEY = "chat.plugins.marketplaces.githubCache.v1";
 
 /** Interval between periodic plugin update checks (24 hours). */
 const PLUGIN_UPDATE_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
-const PLUGIN_UPDATE_LAST_CHECK_STORAGE_KEY = 'chat.plugins.lastUpdateCheck.v1';
+const PLUGIN_UPDATE_LAST_CHECK_STORAGE_KEY = "chat.plugins.lastUpdateCheck.v1";
 
 interface IGitHubMarketplaceCacheEntry {
 	readonly plugins: readonly IMarketplacePlugin[];
@@ -244,14 +257,14 @@ function ensureSourceDescriptor(plugin: IMarketplacePlugin): IMarketplacePlugin 
 		return plugin;
 	}
 	return {
-		...plugin,
-		sourceDescriptor: { kind: PluginSourceKind.RelativePath, path: plugin.source },
-	};
+    ...plugin,
+    sourceDescriptor: { kind: PluginSourceKind.RelativePath, path: plugin.source },
+  };
 }
 
 const trustedMarketplacesMemento = observableMemento<readonly string[]>({
 	defaultValue: [],
-	key: 'chat.plugins.trustedMarketplaces.v1',
+	key: "chat.plugins.trustedMarketplaces.v1",
 	toStorage: value => JSON.stringify(value),
 	fromStorage: value => {
 		const parsed = JSON.parse(value);
@@ -266,7 +279,7 @@ interface IStoredLastFetchedPlugins {
 
 const lastFetchedPluginsMemento = observableMemento<IStoredLastFetchedPlugins>({
 	defaultValue: { plugins: [], fetchedAt: 0 },
-	key: 'chat.plugins.lastFetchedPlugins.v2',
+	key: "chat.plugins.lastFetchedPlugins.v2",
 	toStorage: value => JSON.stringify(value),
 	fromStorage: value => {
 		const parsed = JSON.parse(value);
@@ -279,12 +292,17 @@ const lastFetchedPluginsMemento = observableMemento<IStoredLastFetchedPlugins>({
 
 export class PluginMarketplaceService extends Disposable implements IPluginMarketplaceService {
 	declare readonly _serviceBrand: undefined;
-	private readonly _gitHubMarketplaceCache = new Lazy<Map<string, IGitHubMarketplaceCacheEntry>>(() => this._loadPersistedGitHubMarketplaceCache());
+	private readonly _gitHubMarketplaceCache = new Lazy<Map<string, IGitHubMarketplaceCacheEntry>>(
+    () => this._loadPersistedGitHubMarketplaceCache(),
+  );
 	private readonly _installedPluginsStore: FileBackedInstalledPluginsStore;
 	private readonly _pluginMetadata = new Map<string, IMarketplacePlugin>();
 	private readonly _trustedMarketplacesStore: ObservableMemento<readonly string[]>;
 	private readonly _lastFetchedPluginsStore: ObservableMemento<IStoredLastFetchedPlugins>;
-	private readonly _hasUpdatesAvailable = observableValue<boolean>('hasUpdatesAvailable', false);
+	private readonly _hasUpdatesAvailable = observableValue<boolean>(
+    "hasUpdatesAvailable",
+    false,
+  );
 	private _updateCheckTimer: ReturnType<typeof setTimeout> | undefined;
 
 	readonly onDidChangeMarketplaces: Event<void>;
@@ -309,29 +327,37 @@ export class PluginMarketplaceService extends Disposable implements IPluginMarke
 
 		// File-backed store for installed plugins. The old cache location
 		// is passed so the store can rebase URIs during migration.
-		const oldCacheRoot = joinPath(environmentService.cacheHome, 'agentPlugins');
+		const oldCacheRoot = joinPath(environmentService.cacheHome, "agentPlugins");
 		this._installedPluginsStore = this._register(
-			new FileBackedInstalledPluginsStore(
-				_pluginRepositoryService.agentPluginsHome,
-				oldCacheRoot,
-				_fileService,
-				_logService,
-				_storageService,
-			)
-		);
+      new FileBackedInstalledPluginsStore(
+        _pluginRepositoryService.agentPluginsHome,
+        oldCacheRoot,
+        _fileService,
+        _logService,
+        _storageService,
+      ),
+    );
 
 		this._trustedMarketplacesStore = this._register(
-			trustedMarketplacesMemento(StorageScope.APPLICATION, StorageTarget.MACHINE, _storageService)
-		);
+      trustedMarketplacesMemento(
+        StorageScope.APPLICATION,
+        StorageTarget.MACHINE,
+        _storageService,
+      ),
+    );
 
 		this._lastFetchedPluginsStore = this._register(
-			lastFetchedPluginsMemento(StorageScope.APPLICATION, StorageTarget.MACHINE, _storageService)
-		);
+      lastFetchedPluginsMemento(
+        StorageScope.APPLICATION,
+        StorageTarget.MACHINE,
+        _storageService,
+      ),
+    );
 
 		this.lastFetchedPlugins = this._lastFetchedPluginsStore.map(s => {
-			const revived = revive(s) as IStoredLastFetchedPlugins;
-			return revived.plugins.map(ensureSourceDescriptor);
-		});
+      const revived = revive(s) as IStoredLastFetchedPlugins;
+      return revived.plugins.map(ensureSourceDescriptor);
+    });
 
 		this.installedPlugins = this._installedPluginsStore.value.map(entries => {
 			const result: IMarketplaceInstalledPlugin[] = [];
@@ -348,7 +374,11 @@ export class PluginMarketplaceService extends Disposable implements IPluginMarke
 		// Currently sourced from Claude workspace settings; more providers can be
 		// added here via additional observables in the derived computation.
 		// Only expose recommendations when the workspace is trusted.
-		const workspaceTrusted = observableFromEvent(this, this._workspaceTrustService.onDidChangeTrust, () => this._workspaceTrustService.isWorkspaceTrusted());
+		const workspaceTrusted = observableFromEvent(
+      this,
+      this._workspaceTrustService.onDidChangeTrust,
+      () => this._workspaceTrustService.isWorkspaceTrusted(),
+    );
 		this.recommendedPlugins = derived(reader => {
 			if (!workspaceTrusted.read(reader)) {
 				return new Set<string>();
@@ -407,11 +437,15 @@ export class PluginMarketplaceService extends Disposable implements IPluginMarke
 	}
 
 	async fetchMarketplacePlugins(token: CancellationToken): Promise<IMarketplacePlugin[]> {
-		if (!this._configurationService.getValue<boolean>(ChatConfiguration.PluginsEnabled)) {
+		if (!this._configurationService.getValue<boolean>(
+      ChatConfiguration.PluginsEnabled,
+    )) {
 			return [];
 		}
 
-		const configuredRefs = this._configurationService.getValue<unknown[]>(ChatConfiguration.PluginMarketplaces) ?? [];
+		const configuredRefs = this._configurationService.getValue<unknown[]>(
+      ChatConfiguration.PluginMarketplaces,
+    ) ?? [];
 		const configRefs = parseMarketplaceReferences(configuredRefs);
 
 		// Merge marketplace references from Claude workspace settings.
@@ -421,14 +455,19 @@ export class PluginMarketplaceService extends Disposable implements IPluginMarke
 		let allRefs: IMarketplaceReference[];
 		if (this._workspaceTrustService.isWorkspaceTrusted()) {
 			const workspaceEntries = this._workspacePluginSettingsService.extraMarketplaces.get();
-			allRefs = deduplicateMarketplaceReferences(workspaceEntries.map(e => e.reference), configRefs);
+			allRefs = deduplicateMarketplaceReferences(
+        workspaceEntries.map(e => e.reference),
+        configRefs,
+      );
 		} else {
 			allRefs = configRefs;
 		}
 
 		for (const value of configuredRefs) {
-			if (typeof value !== 'string' || !parseMarketplaceReference(value)) {
-				this._logService.debug(`[PluginMarketplaceService] Ignoring invalid marketplace entry: ${String(value)}`);
+			if (typeof value !== "string" || !parseMarketplaceReference(value)) {
+				this._logService.debug(
+          `[PluginMarketplaceService] Ignoring invalid marketplace entry: ${String(value)}`,
+        );
 			}
 		}
 
@@ -438,23 +477,29 @@ export class PluginMarketplaceService extends Disposable implements IPluginMarke
 					return this._fetchFromGitHubRepo(ref, ref.githubRepo, token);
 				}
 				return this._fetchFromClonedRepo(ref, token);
-			})
+			}),
 		);
 		const plugins = results.flat();
-		this._lastFetchedPluginsStore.set({ plugins, fetchedAt: Date.now() }, undefined);
+		this._lastFetchedPluginsStore.set(
+      { plugins, fetchedAt: Date.now() },
+      undefined,
+    );
 		return plugins;
 	}
 
 	private async _fetchFromGitHubRepo(reference: IMarketplaceReference, repo: string, token: CancellationToken): Promise<IMarketplacePlugin[]> {
 		const cache = this._gitHubMarketplaceCache.value;
 
-		const cached = this._getCachedGitHubMarketplacePlugins(cache, reference.canonicalId);
+		const cached = this._getCachedGitHubMarketplacePlugins(
+      cache,
+      reference.canonicalId,
+    );
 		if (cached) {
 			return cached.map(c => ({
-				...c,
-				marketplace: reference.displayLabel,
-				marketplaceReference: reference,
-			}));
+        ...c,
+        marketplace: reference.displayLabel,
+        marketplaceReference: reference,
+      }));
 		}
 
 		let repoMayBePrivate = true;
@@ -465,7 +510,7 @@ export class PluginMarketplaceService extends Disposable implements IPluginMarke
 			}
 			const url = `https://raw.githubusercontent.com/${repo}/main/${defPath}`;
 			try {
-				const context = await this._requestService.request({ type: 'GET', url, callSite: 'pluginMarketplaceService.fetchPluginList' }, token);
+				const context = await this._requestService.request({ type: "GET", url, callSite: "pluginMarketplaceService.fetchPluginList" }, token);
 				const statusCode = context.res.statusCode;
 				if (statusCode !== 200) {
 					repoMayBePrivate &&= statusCode !== undefined && statusCode >= 400 && statusCode < 500;
@@ -481,20 +526,24 @@ export class PluginMarketplaceService extends Disposable implements IPluginMarke
 
 		if (plugins.length > 0) {
 			cache.set(reference.canonicalId, {
-				plugins,
-				expiresAt: Date.now() + GITHUB_MARKETPLACE_CACHE_TTL_MS,
-				referenceRawValue: reference.rawValue,
-			});
+        plugins,
+        expiresAt: Date.now() + GITHUB_MARKETPLACE_CACHE_TTL_MS,
+        referenceRawValue: reference.rawValue,
+      });
 			this._savePersistedGitHubMarketplaceCache(cache);
 			return plugins;
 		}
 
 		if (repoMayBePrivate) {
-			this._logService.debug(`[PluginMarketplaceService] ${repo} may be private, attempting clone-based marketplace discovery`);
+			this._logService.debug(
+        `[PluginMarketplaceService] ${repo} may be private, attempting clone-based marketplace discovery`,
+      );
 			return this._fetchFromClonedRepo(reference, token);
 		}
 
-		this._logService.debug(`[PluginMarketplaceService] No marketplace.json found in ${repo}`);
+		this._logService.debug(
+      `[PluginMarketplaceService] No marketplace.json found in ${repo}`,
+    );
 		return [];
 	}
 
@@ -516,7 +565,10 @@ export class PluginMarketplaceService extends Disposable implements IPluginMarke
 	private _loadPersistedGitHubMarketplaceCache(): Map<string, IGitHubMarketplaceCacheEntry> {
 		const cache = new Map<string, IGitHubMarketplaceCacheEntry>();
 		const now = Date.now();
-		const stored = this._storageService.getObject<IStoredGitHubMarketplaceCache>(GITHUB_MARKETPLACE_CACHE_STORAGE_KEY, StorageScope.APPLICATION);
+		const stored = this._storageService.getObject<IStoredGitHubMarketplaceCache>(
+      GITHUB_MARKETPLACE_CACHE_STORAGE_KEY,
+      StorageScope.APPLICATION,
+    );
 		if (!stored) {
 			return cache;
 		}
@@ -524,7 +576,7 @@ export class PluginMarketplaceService extends Disposable implements IPluginMarke
 		const revived = revive<IStoredGitHubMarketplaceCache>(stored);
 
 		for (const [cacheKey, entry] of Object.entries(revived)) {
-			if (!entry || !Array.isArray(entry.plugins) || typeof entry.expiresAt !== 'number' || entry.expiresAt <= now || typeof entry.referenceRawValue !== 'string') {
+			if (!entry || !Array.isArray(entry.plugins) || typeof entry.expiresAt !== "number" || entry.expiresAt <= now || typeof entry.referenceRawValue !== "string") {
 				continue;
 			}
 
@@ -533,17 +585,19 @@ export class PluginMarketplaceService extends Disposable implements IPluginMarke
 				continue;
 			}
 
-			const plugins = entry.plugins.map(plugin => ensureSourceDescriptor({
-				...plugin,
-				marketplace: reference.displayLabel,
-				marketplaceReference: reference,
-			}));
+			const plugins = entry.plugins.map(
+        plugin => ensureSourceDescriptor({
+          ...plugin,
+          marketplace: reference.displayLabel,
+          marketplaceReference: reference,
+        }),
+      );
 
 			cache.set(cacheKey, {
-				plugins,
-				expiresAt: entry.expiresAt,
-				referenceRawValue: entry.referenceRawValue,
-			});
+        plugins,
+        expiresAt: entry.expiresAt,
+        referenceRawValue: entry.referenceRawValue,
+      });
 		}
 
 		return cache;
@@ -557,42 +611,50 @@ export class PluginMarketplaceService extends Disposable implements IPluginMarke
 			}
 
 			serialized[cacheKey] = {
-				expiresAt: entry.expiresAt,
-				referenceRawValue: entry.referenceRawValue,
-				plugins: entry.plugins,
-			};
+        expiresAt: entry.expiresAt,
+        referenceRawValue: entry.referenceRawValue,
+        plugins: entry.plugins,
+      };
 		}
 
 		if (Object.keys(serialized).length === 0) {
-			this._storageService.remove(GITHUB_MARKETPLACE_CACHE_STORAGE_KEY, StorageScope.APPLICATION);
+			this._storageService.remove(
+        GITHUB_MARKETPLACE_CACHE_STORAGE_KEY,
+        StorageScope.APPLICATION,
+      );
 			return;
 		}
 
 		this._storageService.store(
-			GITHUB_MARKETPLACE_CACHE_STORAGE_KEY,
-			JSON.stringify(serialized),
-			StorageScope.APPLICATION,
-			StorageTarget.MACHINE,
-		);
+      GITHUB_MARKETPLACE_CACHE_STORAGE_KEY,
+      JSON.stringify(serialized),
+      StorageScope.APPLICATION,
+      StorageTarget.MACHINE,
+    );
 	}
 
 	getMarketplacePluginMetadata(pluginUri: URI): IMarketplacePlugin | undefined {
 		return this._pluginMetadata.get(pluginUri.toString())
-			?? [...this._pluginMetadata.entries()].find(([key]) => isEqualOrParent(pluginUri, URI.parse(key)))?.[1];
+			?? [...this._pluginMetadata.entries()].find(
+        ([key]) => isEqualOrParent(pluginUri, URI.parse(key)),
+      )?.[1];
 	}
 
 	addInstalledPlugin(pluginUri: URI, plugin: IMarketplacePlugin): void {
 		this._pluginMetadata.set(pluginUri.toString(), plugin);
 		const entry: IStoredInstalledPlugin = {
-			pluginUri,
-			marketplace: plugin.marketplaceReference.rawValue,
-			name: plugin.name,
-		};
+      pluginUri,
+      marketplace: plugin.marketplaceReference.rawValue,
+      name: plugin.name,
+    };
 		const current = this._installedPluginsStore.get();
 		const existing = current.find(e => isEqual(e.pluginUri, pluginUri));
 		if (existing) {
 			// Still update to trigger watchers to re-check, something might have happened that we want to know about
-			this._installedPluginsStore.set(current.map(c => c === existing ? entry : c), undefined);
+			this._installedPluginsStore.set(
+        current.map(c => c === existing ? entry : c),
+        undefined,
+      );
 		} else {
 			this._installedPluginsStore.set([...current, entry], undefined);
 		}
@@ -601,7 +663,10 @@ export class PluginMarketplaceService extends Disposable implements IPluginMarke
 	removeInstalledPlugin(pluginUri: URI): void {
 		this._pluginMetadata.delete(pluginUri.toString());
 		const current = this._installedPluginsStore.get();
-		this._installedPluginsStore.set(current.filter(e => !isEqual(e.pluginUri, pluginUri)), undefined);
+		this._installedPluginsStore.set(
+      current.filter(e => !isEqual(e.pluginUri, pluginUri)),
+      undefined,
+    );
 	}
 
 	isMarketplaceTrusted(ref: IMarketplaceReference): boolean {
@@ -631,19 +696,29 @@ export class PluginMarketplaceService extends Disposable implements IPluginMarke
 
 			const reference = parseMarketplaceReference(entry.marketplace);
 			if (!reference) {
-				this._logService.debug(`[PluginMarketplaceService] Cannot parse marketplace reference '${entry.marketplace}' for ${key}`);
+				this._logService.debug(
+          `[PluginMarketplaceService] Cannot parse marketplace reference '${entry.marketplace}' for ${key}`,
+        );
 				continue;
 			}
 
 			try {
-				const plugins = await this._readPluginsForInstalledEntry(reference, CancellationToken.None);
-				const match = plugins.find(p => entry.name ? p.name === entry.name : isEqual(this._pluginRepositoryService.getPluginInstallUri(p), entry.pluginUri));
+				const plugins = await this._readPluginsForInstalledEntry(
+          reference,
+          CancellationToken.None,
+        );
+				const match = plugins.find(
+          p => entry.name ? p.name === entry.name : isEqual(this._pluginRepositoryService.getPluginInstallUri(p), entry.pluginUri),
+        );
 				if (match) {
 					this._pluginMetadata.set(key, match);
 					hydrated++;
 				}
 			} catch (err) {
-				this._logService.debug(`[PluginMarketplaceService] Failed to hydrate metadata for ${key}:`, err);
+				this._logService.debug(
+          `[PluginMarketplaceService] Failed to hydrate metadata for ${key}:`,
+          err,
+        );
 			}
 		}
 
@@ -661,7 +736,11 @@ export class PluginMarketplaceService extends Disposable implements IPluginMarke
 		}
 
 		const repoDir = this._pluginRepositoryService.getRepositoryUri(reference);
-		let plugins = await this._readPluginsFromDirectory(repoDir, reference, token);
+		let plugins = await this._readPluginsFromDirectory(
+      repoDir,
+      reference,
+      token,
+    );
 		if (plugins.length === 0) {
 			// The entry may have come from a single-plugin repo installed
 			// via `installPluginFromSource` (no marketplace.json). Try the
@@ -685,30 +764,30 @@ export class PluginMarketplaceService extends Disposable implements IPluginMarke
 
 		return json.plugins
 			.filter((p): p is { name: string; description?: string; version?: string; source?: string | IJsonPluginSource } =>
-				typeof p.name === 'string' && !!p.name
+				typeof p.name === "string" && !!p.name,
 			)
 			.flatMap(p => {
 				const sourceDescriptor = parsePluginSource(p.source, json.metadata?.pluginRoot, {
 					pluginName: p.name,
 					logService: this._logService,
-					logPrefix: '[PluginMarketplaceService]',
+					logPrefix: "[PluginMarketplaceService]",
 				});
 				if (!sourceDescriptor) {
 					return [];
 				}
 
-				const source = sourceDescriptor.kind === PluginSourceKind.RelativePath ? sourceDescriptor.path : '';
+				const source = sourceDescriptor.kind === PluginSourceKind.RelativePath ? sourceDescriptor.path : "";
 
 				return [{
 					name: p.name,
-					description: p.description ?? '',
-					version: p.version ?? '',
+					description: p.description ?? "",
+					version: p.version ?? "",
 					source,
 					sourceDescriptor,
 					marketplace: reference.displayLabel,
 					marketplaceReference: reference,
 					marketplaceType,
-					readmeUri: repoDir ? getMarketplaceReadmeFileUri(repoDir, source) : getMarketplaceReadmeUri(reference.githubRepo ?? '', source),
+					readmeUri: repoDir ? getMarketplaceReadmeFileUri(repoDir, source) : getMarketplaceReadmeUri(reference.githubRepo ?? "", source),
 				}];
 			});
 	}
@@ -716,14 +795,19 @@ export class PluginMarketplaceService extends Disposable implements IPluginMarke
 	trustMarketplace(ref: IMarketplaceReference): void {
 		const current = this._trustedMarketplacesStore.get();
 		if (!current.includes(ref.canonicalId)) {
-			this._trustedMarketplacesStore.set([...current, ref.canonicalId], undefined);
+			this._trustedMarketplacesStore.set(
+        [...current, ref.canonicalId],
+        undefined,
+      );
 		}
 	}
 
 	// --- Periodic update check ------------------------------------------------
 
 	private _isAutoUpdateEnabled(): AutoUpdateConfigurationValue {
-		return this._configurationService.getValue<AutoUpdateConfigurationValue>(AutoUpdateConfigurationKey);
+		return this._configurationService.getValue<AutoUpdateConfigurationValue>(
+      AutoUpdateConfigurationKey,
+    );
 	}
 
 	/**
@@ -741,10 +825,10 @@ export class PluginMarketplaceService extends Disposable implements IPluginMarke
 		}
 
 		const lastCheck = this._storageService.getNumber(
-			PLUGIN_UPDATE_LAST_CHECK_STORAGE_KEY,
-			StorageScope.APPLICATION,
-			0,
-		);
+      PLUGIN_UPDATE_LAST_CHECK_STORAGE_KEY,
+      StorageScope.APPLICATION,
+      0,
+    );
 		const elapsed = Date.now() - lastCheck;
 		const delay = Math.max(0, PLUGIN_UPDATE_CHECK_INTERVAL_MS - elapsed);
 
@@ -771,29 +855,40 @@ export class PluginMarketplaceService extends Disposable implements IPluginMarke
 				seenMarketplaces.add(ref.canonicalId);
 
 				try {
-					const behind = await this._pluginRepositoryService.fetchRepository(ref);
+					const behind = await this._pluginRepositoryService.fetchRepository(
+            ref,
+          );
 					if (behind) {
 						hasUpdates = true;
 						break;
 					}
 				} catch (err) {
-					this._logService.debug(`[PluginMarketplaceService] Update check failed for ${ref.displayLabel}:`, err);
+					this._logService.debug(
+            `[PluginMarketplaceService] Update check failed for ${ref.displayLabel}:`,
+            err,
+          );
 				}
 			}
 
 			this._hasUpdatesAvailable.set(hasUpdates, undefined);
 			this._storageService.store(
-				PLUGIN_UPDATE_LAST_CHECK_STORAGE_KEY,
-				Date.now(),
-				StorageScope.APPLICATION,
-				StorageTarget.MACHINE,
-			);
+        PLUGIN_UPDATE_LAST_CHECK_STORAGE_KEY,
+        Date.now(),
+        StorageScope.APPLICATION,
+        StorageTarget.MACHINE,
+      );
 		} catch (err) {
-			this._logService.debug('[PluginMarketplaceService] Periodic update check failed:', err);
+			this._logService.debug(
+        "[PluginMarketplaceService] Periodic update check failed:",
+        err,
+      );
 		} finally {
 			// Reschedule for the next check
 			if (this._isAutoUpdateEnabled()) {
-				this._updateCheckTimer = setTimeout(() => this._runUpdateCheck(), PLUGIN_UPDATE_CHECK_INTERVAL_MS);
+				this._updateCheckTimer = setTimeout(
+          () => this._runUpdateCheck(),
+          PLUGIN_UPDATE_CHECK_INTERVAL_MS,
+        );
 			}
 		}
 	}
@@ -803,7 +898,10 @@ export class PluginMarketplaceService extends Disposable implements IPluginMarke
 		try {
 			repoDir = await this._pluginRepositoryService.ensureRepository(reference);
 		} catch (err) {
-			this._logService.debug(`[PluginMarketplaceService] Failed to prepare marketplace repository ${reference.rawValue}:`, err);
+			this._logService.debug(
+        `[PluginMarketplaceService] Failed to prepare marketplace repository ${reference.rawValue}:`,
+        err,
+      );
 			return [];
 		}
 
@@ -827,7 +925,7 @@ export class PluginMarketplaceService extends Disposable implements IPluginMarke
 			try {
 				const contents = await this._fileService.readFile(manifestUri);
 				const parsed = parseJSONC(contents.value.toString());
-				if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+				if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
 					manifest = parsed as Record<string, unknown>;
 				}
 			} catch {
@@ -841,23 +939,25 @@ export class PluginMarketplaceService extends Disposable implements IPluginMarke
 				? { kind: PluginSourceKind.GitHub, repo: reference.githubRepo! }
 				: { kind: PluginSourceKind.GitUrl, url: reference.cloneUrl };
 
-			const manifestName = typeof manifest['name'] === 'string' && manifest['name'] ? manifest['name'] as string : reference.displayLabel;
-			const manifestDescription = typeof manifest['description'] === 'string' ? manifest['description'] as string : '';
-			const manifestVersion = typeof manifest['version'] === 'string' ? manifest['version'] as string : '';
+			const manifestName = typeof manifest["name"] === "string" && manifest["name"] ? manifest["name"] as string : reference.displayLabel;
+			const manifestDescription = typeof manifest["description"] === "string" ? manifest["description"] as string : "";
+			const manifestVersion = typeof manifest["version"] === "string" ? manifest["version"] as string : "";
 
 			return {
-				name: manifestName,
-				description: manifestDescription,
-				version: manifestVersion,
-				source: '',
-				sourceDescriptor,
-				marketplace: reference.displayLabel,
-				marketplaceReference: reference,
-				marketplaceType: def.type,
-			};
+        name: manifestName,
+        description: manifestDescription,
+        version: manifestVersion,
+        source: "",
+        sourceDescriptor,
+        marketplace: reference.displayLabel,
+        marketplaceReference: reference,
+        marketplaceType: def.type,
+      };
 		}
 
-		this._logService.debug(`[PluginMarketplaceService] No single-plugin manifest found in ${reference.rawValue}`);
+		this._logService.debug(
+      `[PluginMarketplaceService] No single-plugin manifest found in ${reference.rawValue}`,
+    );
 		return undefined;
 	}
 
@@ -894,14 +994,16 @@ export class PluginMarketplaceService extends Disposable implements IPluginMarke
 			return this._parseMarketplacePlugins(json, reference, def.type, repoDir);
 		}
 
-		this._logService.debug(`[PluginMarketplaceService] No marketplace.json found in ${reference.rawValue}`);
+		this._logService.debug(
+      `[PluginMarketplaceService] No marketplace.json found in ${reference.rawValue}`,
+    );
 		return [];
 	}
 }
 
 function normalizeMarketplacePath(value: string): string {
-	let normalized = value.trim().replace(/\\/g, '/');
-	normalized = normalized.replace(/^\.?\/+/, '').replace(/\/+$/g, '');
+	let normalized = value.trim().replace(/\\/g, "/");
+	normalized = normalized.replace(/^\.?\/+/, "").replace(/\/+$/g, "");
 	return normalized;
 }
 
@@ -912,12 +1014,16 @@ function normalizeMarketplacePath(value: string): string {
  * Validation of whether the final path is allowed is performed by the install service.
  */
 function resolvePluginSource(pluginRoot: string | undefined, source: string): string | undefined {
-	const normalizedRoot = pluginRoot ? normalizeMarketplacePath(pluginRoot) : '';
+	const normalizedRoot = pluginRoot ? normalizeMarketplacePath(pluginRoot) : "";
 	const normalizedSource = normalizeMarketplacePath(source);
-	const repoRoot = URI.file('/');
-	const pluginRootUri = normalizedRoot ? normalizePath(joinPath(repoRoot, normalizedRoot)) : repoRoot;
+	const repoRoot = URI.file("/");
+	const pluginRootUri = normalizedRoot ? normalizePath(
+    joinPath(repoRoot, normalizedRoot),
+  ) : repoRoot;
 
-	if (normalizedRoot && (normalizedSource === normalizedRoot || normalizedSource.startsWith(`${normalizedRoot}/`))) {
+	if (normalizedRoot && (normalizedSource === normalizedRoot || normalizedSource.startsWith(
+    `${normalizedRoot}/`,
+  ))) {
 		return normalizedSource;
 	}
 
@@ -937,7 +1043,7 @@ export function parsePluginSource(
 ): IPluginSourceDescriptor | undefined {
 	if (rawSource === undefined || rawSource === null) {
 		// Treat missing source the same as empty string → pluginRoot or repo root.
-		const resolved = resolvePluginSource(pluginRoot, '');
+		const resolved = resolvePluginSource(pluginRoot, "");
 		if (resolved === undefined) {
 			return undefined;
 		}
@@ -945,7 +1051,7 @@ export function parsePluginSource(
 	}
 
 	// String source → legacy relative-path behaviour.
-	if (typeof rawSource === 'string') {
+	if (typeof rawSource === "string") {
 		const resolved = resolvePluginSource(pluginRoot, rawSource);
 		if (resolved === undefined) {
 			return undefined;
@@ -954,120 +1060,158 @@ export function parsePluginSource(
 	}
 
 	// Object source → discriminated by `rawSource.source`.
-	if (typeof rawSource !== 'object' || typeof rawSource.source !== 'string') {
-		logContext.logService.warn(`${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': source object is missing a 'source' discriminant`);
+	if (typeof rawSource !== "object" || typeof rawSource.source !== "string") {
+		logContext.logService.warn(
+      `${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': source object is missing a 'source' discriminant`,
+    );
 		return undefined;
 	}
 
 	switch (rawSource.source) {
-		case 'github': {
-			if (typeof rawSource.repo !== 'string' || !rawSource.repo) {
-				logContext.logService.warn(`${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': github source is missing required 'repo' field`);
+		case "github": {
+			if (typeof rawSource.repo !== "string" || !rawSource.repo) {
+				logContext.logService.warn(
+          `${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': github source is missing required 'repo' field`,
+        );
 				return undefined;
 			}
 			if (!isValidGitHubRepo(rawSource.repo)) {
-				logContext.logService.warn(`${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': github source repo must be in 'owner/repo' format`);
+				logContext.logService.warn(
+          `${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': github source repo must be in 'owner/repo' format`,
+        );
 				return undefined;
 			}
 			if (!isOptionalString(rawSource.ref)) {
-				logContext.logService.warn(`${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': github source 'ref' must be a string when provided`);
+				logContext.logService.warn(
+          `${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': github source 'ref' must be a string when provided`,
+        );
 				return undefined;
 			}
 			if (!isOptionalGitSha(rawSource.sha)) {
-				logContext.logService.warn(`${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': github source 'sha' must be a full 40-character commit hash when provided`);
+				logContext.logService.warn(
+          `${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': github source 'sha' must be a full 40-character commit hash when provided`,
+        );
 				return undefined;
 			}
 			if (!isOptionalString(rawSource.path)) {
-				logContext.logService.warn(`${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': github source 'path' must be a string when provided`);
+				logContext.logService.warn(
+          `${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': github source 'path' must be a string when provided`,
+        );
 				return undefined;
 			}
 			return {
-				kind: PluginSourceKind.GitHub,
-				repo: rawSource.repo,
-				ref: rawSource.ref,
-				sha: rawSource.sha,
-				path: rawSource.path,
-			};
+        kind: PluginSourceKind.GitHub,
+        repo: rawSource.repo,
+        ref: rawSource.ref,
+        sha: rawSource.sha,
+        path: rawSource.path,
+      };
 		}
-		case 'url':
-		case 'git-subdir': {
-			if (typeof rawSource.url !== 'string' || !rawSource.url) {
-				logContext.logService.warn(`${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': ${rawSource.source} source is missing required 'url' field`);
+		case "url":
+		case "git-subdir": {
+			if (typeof rawSource.url !== "string" || !rawSource.url) {
+				logContext.logService.warn(
+          `${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': ${rawSource.source} source is missing required 'url' field`,
+        );
 				return undefined;
 			}
-			if (rawSource.source === 'url' && !rawSource.url.toLowerCase().endsWith('.git')) {
-				logContext.logService.warn(`${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': url source must end with '.git'`);
+			if (rawSource.source === "url" && !rawSource.url.toLowerCase().endsWith(
+        ".git",
+      )) {
+				logContext.logService.warn(
+          `${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': url source must end with '.git'`,
+        );
 				return undefined;
 			}
 			if (!isOptionalString(rawSource.ref)) {
-				logContext.logService.warn(`${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': ${rawSource.source} source 'ref' must be a string when provided`);
+				logContext.logService.warn(
+          `${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': ${rawSource.source} source 'ref' must be a string when provided`,
+        );
 				return undefined;
 			}
 			if (!isOptionalGitSha(rawSource.sha)) {
-				logContext.logService.warn(`${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': ${rawSource.source} source 'sha' must be a full 40-character commit hash when provided`);
+				logContext.logService.warn(
+          `${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': ${rawSource.source} source 'sha' must be a full 40-character commit hash when provided`,
+        );
 				return undefined;
 			}
-			if (rawSource.source === 'git-subdir') {
-				if (typeof rawSource.path !== 'string' || !rawSource.path) {
-					logContext.logService.warn(`${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': git-subdir source is missing required 'path' field`);
+			if (rawSource.source === "git-subdir") {
+				if (typeof rawSource.path !== "string" || !rawSource.path) {
+					logContext.logService.warn(
+            `${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': git-subdir source is missing required 'path' field`,
+          );
 					return undefined;
 				}
 			} else if (!isOptionalString(rawSource.path)) {
-				logContext.logService.warn(`${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': url source 'path' must be a string when provided`);
+				logContext.logService.warn(
+          `${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': url source 'path' must be a string when provided`,
+        );
 				return undefined;
 			}
 			return {
-				kind: PluginSourceKind.GitUrl,
-				url: rawSource.url,
-				ref: rawSource.ref,
-				sha: rawSource.sha,
-				path: rawSource.path,
-			};
+        kind: PluginSourceKind.GitUrl,
+        url: rawSource.url,
+        ref: rawSource.ref,
+        sha: rawSource.sha,
+        path: rawSource.path,
+      };
 		}
-		case 'npm': {
-			if (typeof rawSource.package !== 'string' || !rawSource.package) {
-				logContext.logService.warn(`${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': npm source is missing required 'package' field`);
+		case "npm": {
+			if (typeof rawSource.package !== "string" || !rawSource.package) {
+				logContext.logService.warn(
+          `${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': npm source is missing required 'package' field`,
+        );
 				return undefined;
 			}
 			if (!isOptionalString(rawSource.version) || !isOptionalString(rawSource.registry)) {
-				logContext.logService.warn(`${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': npm source 'version' and 'registry' must be strings when provided`);
+				logContext.logService.warn(
+          `${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': npm source 'version' and 'registry' must be strings when provided`,
+        );
 				return undefined;
 			}
 			return {
-				kind: PluginSourceKind.Npm,
-				package: rawSource.package,
-				version: rawSource.version,
-				registry: rawSource.registry,
-			};
+        kind: PluginSourceKind.Npm,
+        package: rawSource.package,
+        version: rawSource.version,
+        registry: rawSource.registry,
+      };
 		}
-		case 'pip': {
-			if (typeof rawSource.package !== 'string' || !rawSource.package) {
-				logContext.logService.warn(`${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': pip source is missing required 'package' field`);
+		case "pip": {
+			if (typeof rawSource.package !== "string" || !rawSource.package) {
+				logContext.logService.warn(
+          `${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': pip source is missing required 'package' field`,
+        );
 				return undefined;
 			}
 			if (!isOptionalString(rawSource.version) || !isOptionalString(rawSource.registry)) {
-				logContext.logService.warn(`${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': pip source 'version' and 'registry' must be strings when provided`);
+				logContext.logService.warn(
+          `${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': pip source 'version' and 'registry' must be strings when provided`,
+        );
 				return undefined;
 			}
 			return {
-				kind: PluginSourceKind.Pip,
-				package: rawSource.package,
-				version: rawSource.version,
-				registry: rawSource.registry,
-			};
+        kind: PluginSourceKind.Pip,
+        package: rawSource.package,
+        version: rawSource.version,
+        registry: rawSource.registry,
+      };
 		}
 		default:
-			logContext.logService.warn(`${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': unknown source kind '${rawSource.source}'`);
+			logContext.logService.warn(
+        `${logContext.logPrefix} Skipping plugin '${logContext.pluginName}': unknown source kind '${rawSource.source}'`,
+      );
 			return undefined;
 	}
 }
 
 function isOptionalString(value: unknown): value is string | undefined {
-	return value === undefined || typeof value === 'string';
+	return value === undefined || typeof value === "string";
 }
 
 function isOptionalGitSha(value: unknown): value is string | undefined {
-	return value === undefined || (typeof value === 'string' && /^[0-9a-fA-F]{40}$/.test(value));
+	return value === undefined || (typeof value === "string" && /^[0-9a-fA-F]{40}$/.test(
+    value,
+  ));
 }
 
 function isValidGitHubRepo(repo: string): boolean {
@@ -1081,7 +1225,7 @@ function isValidGitHubRepo(repo: string): boolean {
 export function getPluginSourceLabel(descriptor: IPluginSourceDescriptor): string {
 	switch (descriptor.kind) {
 		case PluginSourceKind.RelativePath:
-			return descriptor.path || '.';
+			return descriptor.path || ".";
 		case PluginSourceKind.GitHub:
 			return descriptor.path ? `${descriptor.repo}/${descriptor.path}` : descriptor.repo;
 		case PluginSourceKind.GitUrl:
@@ -1121,12 +1265,16 @@ export function hasSourceChanged(installed: IPluginSourceDescriptor, marketplace
 }
 
 function getMarketplaceReadmeUri(repo: string, source: string): URI {
-	const normalizedSource = source.trim().replace(/^\.?\/+|\/+$/g, '');
-	const readmePath = normalizedSource ? `${normalizedSource}/README.md` : 'README.md';
+	const normalizedSource = source.trim().replace(/^\.?\/+|\/+$/g, "");
+	const readmePath = normalizedSource ? `${normalizedSource}/README.md` : "README.md";
 	return URI.parse(`https://github.com/${repo}/blob/main/${readmePath}`);
 }
 
 function getMarketplaceReadmeFileUri(repoDir: URI, source: string): URI {
-	const normalizedSource = source.trim().replace(/^\.?\/+|\/+$/g, '');
-	return normalizedSource ? joinPath(repoDir, normalizedSource, 'README.md') : joinPath(repoDir, 'README.md');
+	const normalizedSource = source.trim().replace(/^\.?\/+|\/+$/g, "");
+	return normalizedSource ? joinPath(
+    repoDir,
+    normalizedSource,
+    "README.md",
+  ) : joinPath(repoDir, "README.md");
 }

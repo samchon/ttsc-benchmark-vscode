@@ -3,17 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ICopilotTokenInfo, IDefaultAccount, IDefaultAccountAuthenticationProvider, IPolicyData } from '../../../base/common/defaultAccount.js';
-import { Event } from '../../../base/common/event.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
+import {
+  ICopilotTokenInfo,
+  IDefaultAccount,
+  IDefaultAccountAuthenticationProvider,
+  IPolicyData,
+} from "../../../base/common/defaultAccount.js";
+import { Event } from "../../../base/common/event.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
 
 /**
  * Well-known GitHub URL paths used with {@link IDefaultAccountService.resolveGitHubUrl}.
  */
 export const GitHubPaths = {
-	copilotSettings: 'settings/copilot/features',
-	billingBudgets: 'settings/copilot/features?utm_source=vscode',
-	copilotUpgrade: 'github-copilot/upgrade?utm_source=vscode',
+  copilotSettings: "settings/copilot/features",
+  billingBudgets: "settings/copilot/features?utm_source=vscode",
+  copilotUpgrade: "github-copilot/upgrade?utm_source=vscode",
 } as const;
 
 export interface IDefaultAccountProvider {
@@ -39,7 +44,9 @@ export interface IDefaultAccountProvider {
 	signOut(): Promise<void>;
 }
 
-export const IDefaultAccountService = createDecorator<IDefaultAccountService>('defaultAccountService');
+export const IDefaultAccountService = createDecorator<IDefaultAccountService>(
+  "defaultAccountService",
+);
 
 export interface IDefaultAccountService {
 	readonly _serviceBrand: undefined;

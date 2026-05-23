@@ -3,15 +3,35 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type * as vscode from 'vscode';
-import { VSBuffer } from '../../../base/common/buffer.js';
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { Emitter } from '../../../base/common/event.js';
-import { Disposable, DisposableStore, toDisposable } from '../../../base/common/lifecycle.js';
-import { URI, UriComponents } from '../../../base/common/uri.js';
-import { ExtHostChatDebugShape, IChatDebugEventDto, IChatDebugResolvedEventContentDto, MainContext, MainThreadChatDebugShape } from './extHost.protocol.js';
-import { ChatDebugGenericEvent, ChatDebugHookResult, ChatDebugLogLevel, ChatDebugMessageContentType, ChatDebugMessageSection, ChatDebugModelTurnEvent, ChatDebugSubagentInvocationEvent, ChatDebugSubagentStatus, ChatDebugToolCallEvent, ChatDebugToolCallResult, ChatDebugUserMessageEvent, ChatDebugAgentResponseEvent, ChatDebugEventHookContent } from './extHostTypes.js';
-import { IExtHostRpcService } from './extHostRpcService.js';
+import type * as vscode from "vscode";
+import { VSBuffer } from "../../../base/common/buffer.js";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable, DisposableStore, toDisposable } from "../../../base/common/lifecycle.js";
+import { URI, UriComponents } from "../../../base/common/uri.js";
+import {
+  ExtHostChatDebugShape,
+  IChatDebugEventDto,
+  IChatDebugResolvedEventContentDto,
+  MainContext,
+  MainThreadChatDebugShape,
+} from "./extHost.protocol.js";
+import {
+  ChatDebugGenericEvent,
+  ChatDebugHookResult,
+  ChatDebugLogLevel,
+  ChatDebugMessageContentType,
+  ChatDebugMessageSection,
+  ChatDebugModelTurnEvent,
+  ChatDebugSubagentInvocationEvent,
+  ChatDebugSubagentStatus,
+  ChatDebugToolCallEvent,
+  ChatDebugToolCallResult,
+  ChatDebugUserMessageEvent,
+  ChatDebugAgentResponseEvent,
+  ChatDebugEventHookContent,
+} from "./extHostTypes.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
 
 export class ExtHostChatDebug extends Disposable implements ExtHostChatDebugShape {
 	declare _serviceBrand: undefined;
@@ -22,10 +42,12 @@ export class ExtHostChatDebug extends Disposable implements ExtHostChatDebugShap
 	/** Progress pipelines keyed by `${handle}:${sessionResource}` so multiple sessions can stream concurrently. */
 	private readonly _activeProgress = new Map<string, DisposableStore>();
 
-	private readonly _onDidAddCoreEvent = this._register(new Emitter<vscode.ChatDebugEvent>({
-		onWillAddFirstListener: () => this._proxy.$subscribeToCoreDebugEvents(),
-		onDidRemoveLastListener: () => this._proxy.$unsubscribeFromCoreDebugEvents(),
-	}));
+	private readonly _onDidAddCoreEvent = this._register(
+    new Emitter<vscode.ChatDebugEvent>({
+      onWillAddFirstListener: () => this._proxy.$subscribeToCoreDebugEvents(),
+      onDidRemoveLastListener: () => this._proxy.$unsubscribeFromCoreDebugEvents(),
+    }),
+  );
 	readonly onDidAddCoreEvent = this._onDidAddCoreEvent.event;
 
 	constructor(
@@ -49,7 +71,7 @@ export class ExtHostChatDebug extends Disposable implements ExtHostChatDebugShap
 
 	registerChatDebugLogProvider(provider: vscode.ChatDebugLogProvider): vscode.Disposable {
 		if (this._provider) {
-			throw new Error('A ChatDebugLogProvider is already registered.');
+			throw new Error("A ChatDebugLogProvider is already registered.");
 		}
 		this._provider = provider;
 		const handle = this._nextHandle++;
@@ -92,17 +114,23 @@ export class ExtHostChatDebug extends Disposable implements ExtHostChatDebugShap
 		}));
 
 		// Clean up when the token is cancelled
-		store.add(token.onCancellationRequested(() => {
-			this._cleanupProgress(key);
-		}));
+		store.add(
+      token.onCancellationRequested(() => {
+        this._cleanupProgress(key);
+      }),
+    );
 
 		try {
 			const progress: vscode.Progress<vscode.ChatDebugEvent> = {
-				report: (value) => emitter.fire(value)
-			};
+        report: (value) => emitter.fire(value),
+      };
 
 			const sessionUri = URI.revive(sessionResource);
-			const result = await this._provider.provideChatDebugLog(sessionUri, progress, token);
+			const result = await this._provider.provideChatDebugLog(
+        sessionUri,
+        progress,
+        token,
+      );
 			if (!result) {
 				return undefined;
 			}
@@ -120,104 +148,104 @@ export class ExtHostChatDebug extends Disposable implements ExtHostChatDebugShap
 
 	private _serializeEvent(event: vscode.ChatDebugEvent): IChatDebugEventDto {
 		const base = {
-			id: event.id,
-			sessionResource: (event as { sessionResource?: vscode.Uri }).sessionResource,
-			created: event.created.getTime(),
-			parentEventId: event.parentEventId,
-		};
+      id: event.id,
+      sessionResource: (event as { sessionResource?: vscode.Uri }).sessionResource,
+      created: event.created.getTime(),
+      parentEventId: event.parentEventId,
+    };
 
 		// Use the _kind discriminant set by all event class constructors.
 		// This works both for direct instances and when extensions bundle
 		// their own copy of the API types (where instanceof would fail).
 		const kind = (event as { _kind?: string })._kind;
 		switch (kind) {
-			case 'toolCall': {
+			case "toolCall": {
 				const e = event as vscode.ChatDebugToolCallEvent;
 				return {
 					...base,
-					kind: 'toolCall',
+					kind: "toolCall",
 					toolName: e.toolName,
 					toolCallId: e.toolCallId,
 					input: e.input,
 					output: e.output,
-					result: e.result === ChatDebugToolCallResult.Success ? 'success'
-						: e.result === ChatDebugToolCallResult.Error ? 'error'
+					result: e.result === ChatDebugToolCallResult.Success ? "success"
+						: e.result === ChatDebugToolCallResult.Error ? "error"
 							: undefined,
 					durationInMillis: e.durationInMillis,
 				};
 			}
-			case 'modelTurn': {
+			case "modelTurn": {
 				const e = event as vscode.ChatDebugModelTurnEvent;
 				return {
-					...base,
-					kind: 'modelTurn',
-					model: e.model,
-					requestName: e.requestName,
-					inputTokens: e.inputTokens,
-					outputTokens: e.outputTokens,
-					cachedTokens: e.cachedTokens,
-					totalTokens: e.totalTokens,
-					copilotUsageNanoAiu: e.copilotUsageNanoAiu,
-					durationInMillis: e.durationInMillis,
-				};
+          ...base,
+          kind: "modelTurn",
+          model: e.model,
+          requestName: e.requestName,
+          inputTokens: e.inputTokens,
+          outputTokens: e.outputTokens,
+          cachedTokens: e.cachedTokens,
+          totalTokens: e.totalTokens,
+          copilotUsageNanoAiu: e.copilotUsageNanoAiu,
+          durationInMillis: e.durationInMillis,
+        };
 			}
-			case 'generic': {
+			case "generic": {
 				const e = event as vscode.ChatDebugGenericEvent;
 				return {
-					...base,
-					kind: 'generic',
-					name: e.name,
-					details: e.details,
-					level: e.level,
-					category: e.category,
-				};
+          ...base,
+          kind: "generic",
+          name: e.name,
+          details: e.details,
+          level: e.level,
+          category: e.category,
+        };
 			}
-			case 'subagentInvocation': {
+			case "subagentInvocation": {
 				const e = event as vscode.ChatDebugSubagentInvocationEvent;
 				return {
 					...base,
-					kind: 'subagentInvocation',
+					kind: "subagentInvocation",
 					agentName: e.agentName,
 					description: e.description,
-					status: e.status === ChatDebugSubagentStatus.Running ? 'running'
-						: e.status === ChatDebugSubagentStatus.Completed ? 'completed'
-							: e.status === ChatDebugSubagentStatus.Failed ? 'failed'
+					status: e.status === ChatDebugSubagentStatus.Running ? "running"
+						: e.status === ChatDebugSubagentStatus.Completed ? "completed"
+							: e.status === ChatDebugSubagentStatus.Failed ? "failed"
 								: undefined,
 					durationInMillis: e.durationInMillis,
 					toolCallCount: e.toolCallCount,
 					modelTurnCount: e.modelTurnCount,
 				};
 			}
-			case 'userMessage': {
+			case "userMessage": {
 				const e = event as vscode.ChatDebugUserMessageEvent;
 				return {
-					...base,
-					kind: 'userMessage',
-					message: e.message,
-					sections: e.sections.map(s => ({ name: s.name, content: s.content })),
-				};
+          ...base,
+          kind: "userMessage",
+          message: e.message,
+          sections: e.sections.map(s => ({ name: s.name, content: s.content })),
+        };
 			}
-			case 'agentResponse': {
+			case "agentResponse": {
 				const e = event as vscode.ChatDebugAgentResponseEvent;
 				return {
-					...base,
-					kind: 'agentResponse',
-					message: e.message,
-					sections: e.sections.map(s => ({ name: s.name, content: s.content })),
-				};
+          ...base,
+          kind: "agentResponse",
+          message: e.message,
+          sections: e.sections.map(s => ({ name: s.name, content: s.content })),
+        };
 			}
 			default: {
 				const generic = event as vscode.ChatDebugGenericEvent;
 				const rawName = generic.name;
 				const rawDetails = generic.details;
 				return {
-					...base,
-					kind: 'generic',
-					name: typeof rawName === 'string' ? rawName : '',
-					details: typeof rawDetails === 'string' ? rawDetails : undefined,
-					level: generic.level ?? 1,
-					category: generic.category,
-				};
+          ...base,
+          kind: "generic",
+          name: typeof rawName === "string" ? rawName : "",
+          details: typeof rawDetails === "string" ? rawDetails : undefined,
+          level: generic.level ?? 1,
+          category: generic.category,
+        };
 			}
 		}
 	}
@@ -226,7 +254,10 @@ export class ExtHostChatDebug extends Disposable implements ExtHostChatDebugShap
 		if (!this._provider?.resolveChatDebugLogEvent) {
 			return undefined;
 		}
-		const result = await this._provider.resolveChatDebugLogEvent(eventId, token);
+		const result = await this._provider.resolveChatDebugLogEvent(
+      eventId,
+      token,
+    );
 		if (!result) {
 			return undefined;
 		}
@@ -234,78 +265,81 @@ export class ExtHostChatDebug extends Disposable implements ExtHostChatDebugShap
 		// Use the _kind discriminant set by all content class constructors.
 		const kind = (result as { _kind?: string })._kind;
 		switch (kind) {
-			case 'text':
-				return { kind: 'text', value: (result as vscode.ChatDebugEventTextContent).value };
-			case 'messageContent': {
+			case "text":
+				return {
+          kind: "text",
+          value: (result as vscode.ChatDebugEventTextContent).value,
+        };
+			case "messageContent": {
 				const msg = result as vscode.ChatDebugEventMessageContent;
 				return {
-					kind: 'message',
-					type: msg.type === ChatDebugMessageContentType.User ? 'user' : 'agent',
-					message: msg.message,
-					sections: msg.sections.map(s => ({ name: s.name, content: s.content })),
-				};
+          kind: "message",
+          type: msg.type === ChatDebugMessageContentType.User ? "user" : "agent",
+          message: msg.message,
+          sections: msg.sections.map(s => ({ name: s.name, content: s.content })),
+        };
 			}
-			case 'userMessage': {
+			case "userMessage": {
 				const msg = result as vscode.ChatDebugUserMessageEvent;
 				return {
-					kind: 'message',
-					type: 'user',
-					message: msg.message,
-					sections: msg.sections.map(s => ({ name: s.name, content: s.content })),
-				};
+          kind: "message",
+          type: "user",
+          message: msg.message,
+          sections: msg.sections.map(s => ({ name: s.name, content: s.content })),
+        };
 			}
-			case 'agentResponse': {
+			case "agentResponse": {
 				const msg = result as vscode.ChatDebugAgentResponseEvent;
 				return {
-					kind: 'message',
-					type: 'agent',
-					message: msg.message,
-					sections: msg.sections.map(s => ({ name: s.name, content: s.content })),
-				};
+          kind: "message",
+          type: "agent",
+          message: msg.message,
+          sections: msg.sections.map(s => ({ name: s.name, content: s.content })),
+        };
 			}
-			case 'toolCallContent': {
+			case "toolCallContent": {
 				const tc = result as vscode.ChatDebugEventToolCallContent;
 				return {
-					kind: 'toolCall',
+					kind: "toolCall",
 					toolName: tc.toolName,
-					result: tc.result === ChatDebugToolCallResult.Success ? 'success'
-						: tc.result === ChatDebugToolCallResult.Error ? 'error'
+					result: tc.result === ChatDebugToolCallResult.Success ? "success"
+						: tc.result === ChatDebugToolCallResult.Error ? "error"
 							: undefined,
 					durationInMillis: tc.durationInMillis,
 					input: tc.input,
 					output: tc.output,
 				};
 			}
-			case 'modelTurnContent': {
+			case "modelTurnContent": {
 				const mt = result as vscode.ChatDebugEventModelTurnContent;
 				return {
-					kind: 'modelTurn',
-					requestName: mt.requestName,
-					model: mt.model,
-					status: mt.status,
-					durationInMillis: mt.durationInMillis,
-					timeToFirstTokenInMillis: mt.timeToFirstTokenInMillis,
-					requestId: mt.requestId,
-					maxInputTokens: mt.maxInputTokens,
-					maxOutputTokens: mt.maxOutputTokens,
-					inputTokens: mt.inputTokens,
-					outputTokens: mt.outputTokens,
-					cachedTokens: mt.cachedTokens,
-					totalTokens: mt.totalTokens,
-					requestOptions: mt.requestOptions,
-					errorMessage: mt.errorMessage,
-					sections: mt.sections?.map(s => ({ name: s.name, content: s.content })),
-				};
+          kind: "modelTurn",
+          requestName: mt.requestName,
+          model: mt.model,
+          status: mt.status,
+          durationInMillis: mt.durationInMillis,
+          timeToFirstTokenInMillis: mt.timeToFirstTokenInMillis,
+          requestId: mt.requestId,
+          maxInputTokens: mt.maxInputTokens,
+          maxOutputTokens: mt.maxOutputTokens,
+          inputTokens: mt.inputTokens,
+          outputTokens: mt.outputTokens,
+          cachedTokens: mt.cachedTokens,
+          totalTokens: mt.totalTokens,
+          requestOptions: mt.requestOptions,
+          errorMessage: mt.errorMessage,
+          sections: mt.sections?.map(s => ({ name: s.name, content: s.content })),
+        };
 			}
-			case 'hookContent': {
+			case "hookContent": {
 				const hk = result as unknown as ChatDebugEventHookContent;
 				return {
-					kind: 'hook',
+					kind: "hook",
 					hookType: hk.hookType,
 					command: hk.command,
-					result: hk.result === ChatDebugHookResult.Success ? 'success'
-						: hk.result === ChatDebugHookResult.Error ? 'error'
-							: hk.result === ChatDebugHookResult.NonBlockingError ? 'nonBlockingError'
+					result: hk.result === ChatDebugHookResult.Success ? "success"
+						: hk.result === ChatDebugHookResult.Error ? "error"
+							: hk.result === ChatDebugHookResult.NonBlockingError ? "nonBlockingError"
 								: undefined,
 					durationInMillis: hk.durationInMillis,
 					input: hk.input,
@@ -321,9 +355,11 @@ export class ExtHostChatDebug extends Disposable implements ExtHostChatDebugShap
 
 	private _deserializeEvent(dto: IChatDebugEventDto): vscode.ChatDebugEvent | undefined {
 		const created = new Date(dto.created);
-		const sessionResource = dto.sessionResource ? URI.revive(dto.sessionResource) : undefined;
+		const sessionResource = dto.sessionResource ? URI.revive(
+      dto.sessionResource,
+    ) : undefined;
 		switch (dto.kind) {
-			case 'toolCall': {
+			case "toolCall": {
 				const evt = new ChatDebugToolCallEvent(dto.toolName, created);
 				evt.id = dto.id;
 				evt.sessionResource = sessionResource;
@@ -331,13 +367,13 @@ export class ExtHostChatDebug extends Disposable implements ExtHostChatDebugShap
 				evt.toolCallId = dto.toolCallId;
 				evt.input = dto.input;
 				evt.output = dto.output;
-				evt.result = dto.result === 'success' ? ChatDebugToolCallResult.Success
-					: dto.result === 'error' ? ChatDebugToolCallResult.Error
+				evt.result = dto.result === "success" ? ChatDebugToolCallResult.Success
+					: dto.result === "error" ? ChatDebugToolCallResult.Error
 						: undefined;
 				evt.durationInMillis = dto.durationInMillis;
 				return evt;
 			}
-			case 'modelTurn': {
+			case "modelTurn": {
 				const evt = new ChatDebugModelTurnEvent(created);
 				evt.id = dto.id;
 				evt.sessionResource = sessionResource;
@@ -352,8 +388,12 @@ export class ExtHostChatDebug extends Disposable implements ExtHostChatDebugShap
 				evt.durationInMillis = dto.durationInMillis;
 				return evt;
 			}
-			case 'generic': {
-				const evt = new ChatDebugGenericEvent(dto.name, dto.level as ChatDebugLogLevel, created);
+			case "generic": {
+				const evt = new ChatDebugGenericEvent(
+          dto.name,
+          dto.level as ChatDebugLogLevel,
+          created,
+        );
 				evt.id = dto.id;
 				evt.sessionResource = sessionResource;
 				evt.parentEventId = dto.parentEventId;
@@ -361,35 +401,42 @@ export class ExtHostChatDebug extends Disposable implements ExtHostChatDebugShap
 				evt.category = dto.category;
 				return evt;
 			}
-			case 'subagentInvocation': {
-				const evt = new ChatDebugSubagentInvocationEvent(dto.agentName, created);
+			case "subagentInvocation": {
+				const evt = new ChatDebugSubagentInvocationEvent(
+          dto.agentName,
+          created,
+        );
 				evt.id = dto.id;
 				evt.sessionResource = sessionResource;
 				evt.parentEventId = dto.parentEventId;
 				evt.description = dto.description;
-				evt.status = dto.status === 'running' ? ChatDebugSubagentStatus.Running
-					: dto.status === 'completed' ? ChatDebugSubagentStatus.Completed
-						: dto.status === 'failed' ? ChatDebugSubagentStatus.Failed
+				evt.status = dto.status === "running" ? ChatDebugSubagentStatus.Running
+					: dto.status === "completed" ? ChatDebugSubagentStatus.Completed
+						: dto.status === "failed" ? ChatDebugSubagentStatus.Failed
 							: undefined;
 				evt.durationInMillis = dto.durationInMillis;
 				evt.toolCallCount = dto.toolCallCount;
 				evt.modelTurnCount = dto.modelTurnCount;
 				return evt;
 			}
-			case 'userMessage': {
+			case "userMessage": {
 				const evt = new ChatDebugUserMessageEvent(dto.message, created);
 				evt.id = dto.id;
 				evt.sessionResource = sessionResource;
 				evt.parentEventId = dto.parentEventId;
-				evt.sections = dto.sections.map(s => new ChatDebugMessageSection(s.name, s.content));
+				evt.sections = dto.sections.map(
+          s => new ChatDebugMessageSection(s.name, s.content),
+        );
 				return evt;
 			}
-			case 'agentResponse': {
+			case "agentResponse": {
 				const evt = new ChatDebugAgentResponseEvent(dto.message, created);
 				evt.id = dto.id;
 				evt.sessionResource = sessionResource;
 				evt.parentEventId = dto.parentEventId;
-				evt.sections = dto.sections.map(s => new ChatDebugMessageSection(s.name, s.content));
+				evt.sections = dto.sections.map(
+          s => new ChatDebugMessageSection(s.name, s.content),
+        );
 				return evt;
 			}
 			default:
@@ -409,9 +456,18 @@ export class ExtHostChatDebug extends Disposable implements ExtHostChatDebugShap
 			return undefined;
 		}
 		const sessionUri = URI.revive(sessionResource);
-		const coreEvents = coreEventDtos.map(dto => this._deserializeEvent(dto)).filter((e): e is vscode.ChatDebugEvent => e !== undefined);
-		const options: vscode.ChatDebugLogExportOptions = { coreEvents, sessionTitle };
-		const result = await this._provider.provideChatDebugLogExport(sessionUri, options, token);
+		const coreEvents = coreEventDtos.map(dto => this._deserializeEvent(dto)).filter(
+      (e): e is vscode.ChatDebugEvent => e !== undefined,
+    );
+		const options: vscode.ChatDebugLogExportOptions = {
+      coreEvents,
+      sessionTitle,
+    };
+		const result = await this._provider.provideChatDebugLogExport(
+      sessionUri,
+      options,
+      token,
+    );
 		if (!result) {
 			return undefined;
 		}
@@ -422,7 +478,10 @@ export class ExtHostChatDebug extends Disposable implements ExtHostChatDebugShap
 		if (!this._provider?.resolveChatDebugLogImport) {
 			return undefined;
 		}
-		const result = await this._provider.resolveChatDebugLogImport(data.buffer, token);
+		const result = await this._provider.resolveChatDebugLogImport(
+      data.buffer,
+      token,
+    );
 		if (!result) {
 			return undefined;
 		}
@@ -433,7 +492,9 @@ export class ExtHostChatDebug extends Disposable implements ExtHostChatDebugShap
 		if (!this._provider?.provideAvailableDebugSessionResources) {
 			return [];
 		}
-		const result = await this._provider.provideAvailableDebugSessionResources(token);
+		const result = await this._provider.provideAvailableDebugSessionResources(
+      token,
+    );
 		return result ?? [];
 	}
 

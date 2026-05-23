@@ -3,11 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IIdentityProvider } from '../list/list.js';
-import { IIndexTreeModelOptions, IIndexTreeModelSpliceOptions, IndexTreeModel } from './indexTreeModel.js';
-import { ICollapseStateChangeEvent, IObjectTreeElement, ITreeElement, ITreeListSpliceData, ITreeModel, ITreeModelSpliceEvent, ITreeNode, ITreeSorter, ObjectTreeElementCollapseState, TreeError } from './tree.js';
-import { Event } from '../../../common/event.js';
-import { Iterable } from '../../../common/iterator.js';
+import { IIdentityProvider } from "../list/list.js";
+import { IIndexTreeModelOptions, IIndexTreeModelSpliceOptions, IndexTreeModel } from "./indexTreeModel.js";
+import {
+  ICollapseStateChangeEvent,
+  IObjectTreeElement,
+  ITreeElement,
+  ITreeListSpliceData,
+  ITreeModel,
+  ITreeModelSpliceEvent,
+  ITreeNode,
+  ITreeSorter,
+  ObjectTreeElementCollapseState,
+  TreeError,
+} from "./tree.js";
+import { Event } from "../../../common/event.js";
+import { Iterable } from "../../../common/iterator.js";
 
 export type ITreeNodeCallback<T, TFilterData> = (node: ITreeNode<T, TFilterData>) => void;
 
@@ -43,7 +54,7 @@ export class ObjectTreeModel<T, TFilterData = void> implements IObjectTreeModel<
 
 	constructor(
 		private user: string,
-		options: IObjectTreeModelOptions<T, TFilterData> = {}
+		options: IObjectTreeModelOptions<T, TFilterData> = {},
 	) {
 		this.model = new IndexTreeModel(user, null, options);
 		this.onDidSpliceModel = this.model.onDidSpliceModel;
@@ -55,7 +66,7 @@ export class ObjectTreeModel<T, TFilterData = void> implements IObjectTreeModel<
 			this.sorter = {
 				compare(a, b) {
 					return options.sorter!.compare(a.element, b.element);
-				}
+				},
 			};
 		}
 
@@ -119,12 +130,11 @@ export class ObjectTreeModel<T, TFilterData = void> implements IObjectTreeModel<
 			options.onDidDeleteNode?.(tnode);
 		};
 
-		this.model.splice(
-			[...location, 0],
-			Number.MAX_VALUE,
-			children,
-			{ ...options, onDidCreateNode, onDidDeleteNode }
-		);
+		this.model.splice([...location, 0], Number.MAX_VALUE, children, {
+      ...options,
+      onDidCreateNode,
+      onDidDeleteNode,
+    });
 	}
 
 	private preserveCollapseState(elements: Iterable<IObjectTreeElement<T>> = Iterable.empty()): Iterable<ITreeElement<T>> {
@@ -143,7 +153,7 @@ export class ObjectTreeModel<T, TFilterData = void> implements IObjectTreeModel<
 			if (!node) {
 				let collapsed: boolean | undefined;
 
-				if (typeof treeElement.collapsed === 'undefined') {
+				if (typeof treeElement.collapsed === "undefined") {
 					collapsed = undefined;
 				} else if (treeElement.collapsed === ObjectTreeElementCollapseState.Collapsed || treeElement.collapsed === ObjectTreeElementCollapseState.PreserveOrCollapsed) {
 					collapsed = true;
@@ -156,14 +166,14 @@ export class ObjectTreeModel<T, TFilterData = void> implements IObjectTreeModel<
 				return {
 					...treeElement,
 					children: this.preserveCollapseState(treeElement.children),
-					collapsed
+					collapsed,
 				};
 			}
 
-			const collapsible = typeof treeElement.collapsible === 'boolean' ? treeElement.collapsible : node.collapsible;
+			const collapsible = typeof treeElement.collapsible === "boolean" ? treeElement.collapsible : node.collapsible;
 			let collapsed: boolean | undefined;
 
-			if (typeof treeElement.collapsed === 'undefined' || treeElement.collapsed === ObjectTreeElementCollapseState.PreserveOrCollapsed || treeElement.collapsed === ObjectTreeElementCollapseState.PreserveOrExpanded) {
+			if (typeof treeElement.collapsed === "undefined" || treeElement.collapsed === ObjectTreeElementCollapseState.PreserveOrCollapsed || treeElement.collapsed === ObjectTreeElementCollapseState.PreserveOrExpanded) {
 				collapsed = node.collapsed;
 			} else if (treeElement.collapsed === ObjectTreeElementCollapseState.Collapsed) {
 				collapsed = true;
@@ -177,7 +187,7 @@ export class ObjectTreeModel<T, TFilterData = void> implements IObjectTreeModel<
 				...treeElement,
 				collapsible,
 				collapsed,
-				children: this.preserveCollapseState(treeElement.children)
+				children: this.preserveCollapseState(treeElement.children),
 			};
 		});
 	}
@@ -202,15 +212,20 @@ export class ObjectTreeModel<T, TFilterData = void> implements IObjectTreeModel<
 		let childrenNodes = [...node.children] as ITreeNode<T, TFilterData>[];
 
 		if (recursive || first) {
-			childrenNodes = childrenNodes.sort(this.sorter!.compare.bind(this.sorter));
+			childrenNodes = childrenNodes.sort(
+        this.sorter!.compare.bind(this.sorter),
+      );
 		}
 
-		return Iterable.map<ITreeNode<T | null, TFilterData>, ITreeElement<T>>(childrenNodes, node => ({
-			element: node.element as T,
-			collapsible: node.collapsible,
-			collapsed: node.collapsed,
-			children: this.resortChildren(node, recursive, false)
-		}));
+		return Iterable.map<ITreeNode<T | null, TFilterData>, ITreeElement<T>>(
+      childrenNodes,
+      node => ({
+        element: node.element as T,
+        collapsible: node.collapsible,
+        collapsed: node.collapsed,
+        children: this.resortChildren(node, recursive, false),
+      }),
+    );
 	}
 
 	getFirstElementChild(ref: T | null = null): T | null | undefined {

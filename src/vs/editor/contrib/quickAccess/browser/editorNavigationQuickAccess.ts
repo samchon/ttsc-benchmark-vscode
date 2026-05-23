@@ -3,21 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { Event } from '../../../../base/common/event.js';
-import { createSingleCallFunction } from '../../../../base/common/functional.js';
-import { DisposableStore, IDisposable, MutableDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { localize } from '../../../../nls.js';
-import { getCodeEditor, isDiffEditor } from '../../../browser/editorBrowser.js';
-import { IRange } from '../../../common/core/range.js';
-import { IDiffEditor, IEditor, ScrollType } from '../../../common/editorCommon.js';
-import { IModelDeltaDecoration, ITextModel, OverviewRulerLane } from '../../../common/model.js';
-import { overviewRulerRangeHighlight } from '../../../common/core/editorColorRegistry.js';
-import { IQuickAccessProvider, IQuickAccessProviderRunOptions } from '../../../../platform/quickinput/common/quickAccess.js';
-import { IKeyMods, IQuickPick, IQuickPickItem } from '../../../../platform/quickinput/common/quickInput.js';
-import { themeColorFromId } from '../../../../platform/theme/common/themeService.js';
-import { status } from '../../../../base/browser/ui/aria/aria.js';
-import { TextEditorSelectionSource } from '../../../../platform/editor/common/editor.js';
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Event } from "../../../../base/common/event.js";
+import { createSingleCallFunction } from "../../../../base/common/functional.js";
+import { DisposableStore, IDisposable, MutableDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { localize } from "../../../../nls.js";
+import { getCodeEditor, isDiffEditor } from "../../../browser/editorBrowser.js";
+import { IRange } from "../../../common/core/range.js";
+import { IDiffEditor, IEditor, ScrollType } from "../../../common/editorCommon.js";
+import { IModelDeltaDecoration, ITextModel, OverviewRulerLane } from "../../../common/model.js";
+import { overviewRulerRangeHighlight } from "../../../common/core/editorColorRegistry.js";
+import { IQuickAccessProvider, IQuickAccessProviderRunOptions } from "../../../../platform/quickinput/common/quickAccess.js";
+import { IKeyMods, IQuickPick, IQuickPickItem } from "../../../../platform/quickinput/common/quickInput.js";
+import { themeColorFromId } from "../../../../platform/theme/common/themeService.js";
+import { status } from "../../../../base/browser/ui/aria/aria.js";
+import { TextEditorSelectionSource } from "../../../../platform/editor/common/editor.js";
 
 interface IEditorLineDecoration {
 	readonly rangeHighlightId: string;
@@ -97,9 +97,11 @@ export abstract class AbstractEditorNavigationQuickAccessProvider implements IQu
 				// configured quick access to remain open when focus is lost and
 				// we always want to restore the current location.
 				let lastKnownEditorViewState = editor.saveViewState() ?? undefined;
-				disposables.add(codeEditor.onDidChangeCursorPosition(() => {
-					lastKnownEditorViewState = editor.saveViewState() ?? undefined;
-				}));
+				disposables.add(
+          codeEditor.onDidChangeCursorPosition(() => {
+            lastKnownEditorViewState = editor.saveViewState() ?? undefined;
+          }),
+        );
 
 				context.restoreViewState = () => {
 					if (lastKnownEditorViewState && editor === this.activeTextEditorControl) {
@@ -107,14 +109,20 @@ export abstract class AbstractEditorNavigationQuickAccessProvider implements IQu
 					}
 				};
 
-				disposables.add(createSingleCallFunction(token.onCancellationRequested)(() => context.restoreViewState?.()));
+				disposables.add(
+          createSingleCallFunction(token.onCancellationRequested)(
+            () => context.restoreViewState?.(),
+          ),
+        );
 			}
 
 			// Clean up decorations on dispose
 			disposables.add(toDisposable(() => this.clearDecorations(editor)));
 
 			// Ask subclass for entries
-			disposables.add(this.provideWithTextEditor(context, picker, token, runOptions));
+			disposables.add(
+        this.provideWithTextEditor(context, picker, token, runOptions),
+      );
 		}
 
 		// Without text control
@@ -152,7 +160,15 @@ export abstract class AbstractEditorNavigationQuickAccessProvider implements IQu
 		const model = this.getModel(editor);
 		if (model) {
 			const lineContent = model.getLineContent(options.range.startLineNumber);
-			status(localize('gotoLocation.status', "Line {0}, column {1}: {2}", options.range.startLineNumber, options.range.startColumn, lineContent));
+			status(
+        localize(
+          "gotoLocation.status",
+          "Line {0}, column {1}: {2}",
+          options.range.startLineNumber,
+          options.range.startColumn,
+          lineContent,
+        ),
+      );
 		}
 	}
 
@@ -203,23 +219,23 @@ export abstract class AbstractEditorNavigationQuickAccessProvider implements IQu
 				{
 					range,
 					options: {
-						description: 'quick-access-range-highlight',
-						className: 'rangeHighlight',
-						isWholeLine: true
-					}
+						description: "quick-access-range-highlight",
+						className: "rangeHighlight",
+						isWholeLine: true,
+					},
 				},
 
 				// also add overview ruler highlight
 				{
 					range,
 					options: {
-						description: 'quick-access-range-highlight-overview',
+						description: "quick-access-range-highlight-overview",
 						overviewRuler: {
 							color: themeColorFromId(overviewRulerRangeHighlight),
-							position: OverviewRulerLane.Full
-						}
-					}
-				}
+							position: OverviewRulerLane.Full,
+						},
+					},
+				},
 			];
 
 			const [rangeHighlightId, overviewRulerDecorationId] = changeAccessor.deltaDecorations(deleteDecorations, newDecorations);
@@ -232,11 +248,14 @@ export abstract class AbstractEditorNavigationQuickAccessProvider implements IQu
 		const rangeHighlightDecorationId = this.rangeHighlightDecorationId;
 		if (rangeHighlightDecorationId) {
 			editor.changeDecorations(changeAccessor => {
-				changeAccessor.deltaDecorations([
-					rangeHighlightDecorationId.overviewRulerDecorationId,
-					rangeHighlightDecorationId.rangeHighlightId
-				], []);
-			});
+        changeAccessor.deltaDecorations(
+          [
+            rangeHighlightDecorationId.overviewRulerDecorationId,
+            rangeHighlightDecorationId.rangeHighlightId,
+          ],
+          [],
+        );
+      });
 
 			this.rangeHighlightDecorationId = undefined;
 		}

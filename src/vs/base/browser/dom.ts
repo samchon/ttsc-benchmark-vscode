@@ -3,22 +3,41 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as browser from './browser.js';
-import { BrowserFeatures } from './canIUse.js';
-import { hasModifierKeys, IKeyboardEvent, StandardKeyboardEvent } from './keyboardEvent.js';
-import { IMouseEvent, StandardMouseEvent } from './mouseEvent.js';
-import { AbstractIdleValue, IntervalTimer, TimeoutTimer, _runWhenIdle, IdleDeadline } from '../common/async.js';
-import { BugIndicatingError, onUnexpectedError } from '../common/errors.js';
-import * as event from '../common/event.js';
-import { KeyCode } from '../common/keyCodes.js';
-import { Disposable, DisposableStore, IDisposable, MutableDisposable, toDisposable } from '../common/lifecycle.js';
-import { RemoteAuthorities } from '../common/network.js';
-import * as platform from '../common/platform.js';
-import { URI } from '../common/uri.js';
-import { hash } from '../common/hash.js';
-import { CodeWindow, ensureCodeWindow, mainWindow } from './window.js';
-import { isPointWithinTriangle } from '../common/numbers.js';
-import { IObservable, derived, derivedOpts, IReader, observableValue, isObservable } from '../common/observable.js';
+import * as browser from "./browser.js";
+import { BrowserFeatures } from "./canIUse.js";
+import { hasModifierKeys, IKeyboardEvent, StandardKeyboardEvent } from "./keyboardEvent.js";
+import { IMouseEvent, StandardMouseEvent } from "./mouseEvent.js";
+import {
+  AbstractIdleValue,
+  IntervalTimer,
+  TimeoutTimer,
+  _runWhenIdle,
+  IdleDeadline,
+} from "../common/async.js";
+import { BugIndicatingError, onUnexpectedError } from "../common/errors.js";
+import * as event from "../common/event.js";
+import { KeyCode } from "../common/keyCodes.js";
+import {
+  Disposable,
+  DisposableStore,
+  IDisposable,
+  MutableDisposable,
+  toDisposable,
+} from "../common/lifecycle.js";
+import { RemoteAuthorities } from "../common/network.js";
+import * as platform from "../common/platform.js";
+import { URI } from "../common/uri.js";
+import { hash } from "../common/hash.js";
+import { CodeWindow, ensureCodeWindow, mainWindow } from "./window.js";
+import { isPointWithinTriangle } from "../common/numbers.js";
+import {
+  IObservable,
+  derived,
+  derivedOpts,
+  IReader,
+  observableValue,
+  isObservable,
+} from "../common/observable.js";
 
 export interface IRegisteredCodeWindow {
 	readonly window: CodeWindow;
@@ -53,7 +72,7 @@ export const {
 	function getWindowById(windowId: number): IRegisteredCodeWindow | undefined;
 	function getWindowById(windowId: number | undefined, fallbackToMain: true): IRegisteredCodeWindow;
 	function getWindowById(windowId: number | undefined, fallbackToMain?: boolean): IRegisteredCodeWindow | undefined {
-		const window = typeof windowId === 'number' ? windows.get(windowId) : undefined;
+		const window = typeof windowId === "number" ? windows.get(windowId) : undefined;
 
 		return window ?? (fallbackToMain ? mainWindowRegistration : undefined);
 	}
@@ -71,7 +90,7 @@ export const {
 
 			const registeredWindow = {
 				window,
-				disposables: disposables.add(new DisposableStore())
+				disposables: disposables.add(new DisposableStore()),
 			};
 			windows.set(window.vscodeWindowId, registeredWindow);
 
@@ -117,7 +136,7 @@ export const {
 		getDocument(e: Node | UIEvent | undefined | null): Document {
 			const candidateNode = e as Node | undefined | null;
 			return getWindow(candidateNode).document;
-		}
+		},
 	};
 })();
 
@@ -158,8 +177,8 @@ export function registerExternalFocusChecker(checker: ExternalFocusChecker): IDi
 	externalFocusCheckers.add(checker);
 
 	return toDisposable(() => {
-		externalFocusCheckers.delete(checker);
-	});
+    externalFocusCheckers.delete(checker);
+  });
 }
 
 /**
@@ -258,14 +277,14 @@ export function addDisposableListener(node: EventTarget, type: string, handler: 
 }
 
 export interface IAddStandardDisposableListenerSignature {
-	(node: HTMLElement | Element | Document, type: 'click', handler: (event: IMouseEvent) => void, useCapture?: boolean): IDisposable;
-	(node: HTMLElement | Element | Document, type: 'mousedown', handler: (event: IMouseEvent) => void, useCapture?: boolean): IDisposable;
-	(node: HTMLElement | Element | Document, type: 'keydown', handler: (event: IKeyboardEvent) => void, useCapture?: boolean): IDisposable;
-	(node: HTMLElement | Element | Document, type: 'keypress', handler: (event: IKeyboardEvent) => void, useCapture?: boolean): IDisposable;
-	(node: HTMLElement | Element | Document, type: 'keyup', handler: (event: IKeyboardEvent) => void, useCapture?: boolean): IDisposable;
-	(node: HTMLElement | Element | Document, type: 'pointerdown', handler: (event: PointerEvent) => void, useCapture?: boolean): IDisposable;
-	(node: HTMLElement | Element | Document, type: 'pointermove', handler: (event: PointerEvent) => void, useCapture?: boolean): IDisposable;
-	(node: HTMLElement | Element | Document, type: 'pointerup', handler: (event: PointerEvent) => void, useCapture?: boolean): IDisposable;
+	(node: HTMLElement | Element | Document, type: "click", handler: (event: IMouseEvent) => void, useCapture?: boolean): IDisposable;
+	(node: HTMLElement | Element | Document, type: "mousedown", handler: (event: IMouseEvent) => void, useCapture?: boolean): IDisposable;
+	(node: HTMLElement | Element | Document, type: "keydown", handler: (event: IKeyboardEvent) => void, useCapture?: boolean): IDisposable;
+	(node: HTMLElement | Element | Document, type: "keypress", handler: (event: IKeyboardEvent) => void, useCapture?: boolean): IDisposable;
+	(node: HTMLElement | Element | Document, type: "keyup", handler: (event: IKeyboardEvent) => void, useCapture?: boolean): IDisposable;
+	(node: HTMLElement | Element | Document, type: "pointerdown", handler: (event: PointerEvent) => void, useCapture?: boolean): IDisposable;
+	(node: HTMLElement | Element | Document, type: "pointermove", handler: (event: PointerEvent) => void, useCapture?: boolean): IDisposable;
+	(node: HTMLElement | Element | Document, type: "pointerup", handler: (event: PointerEvent) => void, useCapture?: boolean): IDisposable;
 	(node: HTMLElement | Element | Document, type: string, handler: (event: any) => void, useCapture?: boolean): IDisposable;
 }
 function _wrapAsStandardMouseEvent(targetWindow: Window, handler: (e: IMouseEvent) => void): (e: MouseEvent) => void {
@@ -281,9 +300,9 @@ function _wrapAsStandardKeyboardEvent(handler: (e: IKeyboardEvent) => void): (e:
 export const addStandardDisposableListener: IAddStandardDisposableListenerSignature = function addStandardDisposableListener(node: HTMLElement | Element | Document, type: string, handler: (event: any) => void, useCapture?: boolean): IDisposable {
 	let wrapHandler = handler;
 
-	if (type === 'click' || type === 'mousedown' || type === 'contextmenu') {
+	if (type === "click" || type === "mousedown" || type === "contextmenu") {
 		wrapHandler = _wrapAsStandardMouseEvent(getWindow(node), handler);
-	} else if (type === 'keydown' || type === 'keypress' || type === 'keyup') {
+	} else if (type === "keydown" || type === "keypress" || type === "keyup") {
 		wrapHandler = _wrapAsStandardKeyboardEvent(handler);
 	}
 
@@ -302,15 +321,30 @@ export const addStandardDisposableGenericMouseUpListener = function addStandardD
 	return addDisposableGenericMouseUpListener(node, wrapHandler, useCapture);
 };
 export function addDisposableGenericMouseDownListener(node: EventTarget, handler: (event: any) => void, useCapture?: boolean): IDisposable {
-	return addDisposableListener(node, platform.isIOS && BrowserFeatures.pointerEvents ? EventType.POINTER_DOWN : EventType.MOUSE_DOWN, handler, useCapture);
+	return addDisposableListener(
+    node,
+    platform.isIOS && BrowserFeatures.pointerEvents ? EventType.POINTER_DOWN : EventType.MOUSE_DOWN,
+    handler,
+    useCapture,
+  );
 }
 
 export function addDisposableGenericMouseMoveListener(node: EventTarget, handler: (event: any) => void, useCapture?: boolean): IDisposable {
-	return addDisposableListener(node, platform.isIOS && BrowserFeatures.pointerEvents ? EventType.POINTER_MOVE : EventType.MOUSE_MOVE, handler, useCapture);
+	return addDisposableListener(
+    node,
+    platform.isIOS && BrowserFeatures.pointerEvents ? EventType.POINTER_MOVE : EventType.MOUSE_MOVE,
+    handler,
+    useCapture,
+  );
 }
 
 export function addDisposableGenericMouseUpListener(node: EventTarget, handler: (event: any) => void, useCapture?: boolean): IDisposable {
-	return addDisposableListener(node, platform.isIOS && BrowserFeatures.pointerEvents ? EventType.POINTER_UP : EventType.MOUSE_UP, handler, useCapture);
+	return addDisposableListener(
+    node,
+    platform.isIOS && BrowserFeatures.pointerEvents ? EventType.POINTER_UP : EventType.MOUSE_UP,
+    handler,
+    useCapture,
+  );
 }
 
 /**
@@ -365,13 +399,13 @@ export function disposableWindowInterval(targetWindow: Window, handler: () => vo
 	let iteration = 0;
 	const timer = targetWindow.setInterval(() => {
 		iteration++;
-		if ((typeof iterations === 'number' && iteration >= iterations) || handler() === true) {
+		if ((typeof iterations === "number" && iteration >= iterations) || handler() === true) {
 			disposable.dispose();
 		}
 	}, interval);
 	const disposable = toDisposable(() => {
-		targetWindow.clearInterval(timer);
-	});
+    targetWindow.clearInterval(timer);
+  });
 	return disposable;
 }
 
@@ -389,7 +423,11 @@ export class WindowIntervalTimer extends IntervalTimer {
 	}
 
 	override cancelAndSet(runner: () => void, interval: number, targetWindow?: Window & typeof globalThis): void {
-		return super.cancelAndSet(runner, interval, targetWindow ?? this.defaultTarget);
+		return super.cancelAndSet(
+      runner,
+      interval,
+      targetWindow ?? this.defaultTarget,
+    );
 	}
 }
 
@@ -542,10 +580,13 @@ export class AnimationFrameScheduler implements IDisposable {
 			return; // Already scheduled
 		}
 
-		this.pendingRunner.value = runAtThisOrScheduleAtNextAnimationFrame(getWindow(this.node), () => {
-			this.pendingRunner.clear();
-			this.runner();
-		});
+		this.pendingRunner.value = runAtThisOrScheduleAtNextAnimationFrame(
+      getWindow(this.node),
+      () => {
+        this.pendingRunner.clear();
+        this.runner();
+      },
+    );
 	}
 
 	/**
@@ -599,7 +640,13 @@ class TimeoutThrottledDomListener<R, E extends Event> extends Disposable {
 }
 
 export function addDisposableThrottledListener<R, E extends Event = Event>(node: any, type: string, handler: (event: R) => void, eventMerger?: IEventMerger<R, E>, minimumTimeMs?: number): IDisposable {
-	return new TimeoutThrottledDomListener<R, E>(node, type, handler, eventMerger, minimumTimeMs);
+	return new TimeoutThrottledDomListener<R, E>(
+    node,
+    type,
+    handler,
+    eventMerger,
+    minimumTimeMs,
+  );
 }
 
 export function getComputedStyle(el: HTMLElement): CSSStyleDeclaration {
@@ -617,7 +664,10 @@ export function getClientArea(element: HTMLElement, defaultValue?: Dimension, fa
 
 	// If visual view port exits and it's on mobile, it should be used instead of window innerWidth / innerHeight, or document.body.clientWidth / document.body.clientHeight
 	if (platform.isIOS && elWindow?.visualViewport) {
-		return new Dimension(elWindow.visualViewport.width, elWindow.visualViewport.height);
+		return new Dimension(
+      elWindow.visualViewport.width,
+      elWindow.visualViewport.height,
+    );
 	}
 
 	// Try innerWidth / innerHeight
@@ -627,12 +677,18 @@ export function getClientArea(element: HTMLElement, defaultValue?: Dimension, fa
 
 	// Try with document.body.clientWidth / document.body.clientHeight
 	if (elDocument.body && elDocument.body.clientWidth && elDocument.body.clientHeight) {
-		return new Dimension(elDocument.body.clientWidth, elDocument.body.clientHeight);
+		return new Dimension(
+      elDocument.body.clientWidth,
+      elDocument.body.clientHeight,
+    );
 	}
 
 	// Try with document.documentElement.clientWidth / document.documentElement.clientHeight
 	if (elDocument.documentElement && elDocument.documentElement.clientWidth && elDocument.documentElement.clientHeight) {
-		return new Dimension(elDocument.documentElement.clientWidth, elDocument.documentElement.clientHeight);
+		return new Dimension(
+      elDocument.documentElement.clientWidth,
+      elDocument.documentElement.clientHeight,
+    );
 	}
 
 	if (fallbackElement) {
@@ -643,7 +699,7 @@ export function getClientArea(element: HTMLElement, defaultValue?: Dimension, fa
 		return defaultValue;
 	}
 
-	throw new Error('Unable to figure out browser width and height');
+	throw new Error("Unable to figure out browser width and height");
 }
 
 class SizeUtils {
@@ -655,47 +711,49 @@ class SizeUtils {
 
 	private static getDimension(element: HTMLElement, cssPropertyName: string): number {
 		const computedStyle = getComputedStyle(element);
-		const value = computedStyle ? computedStyle.getPropertyValue(cssPropertyName) : '0';
+		const value = computedStyle ? computedStyle.getPropertyValue(
+      cssPropertyName,
+    ) : "0";
 		return SizeUtils.convertToPixels(element, value);
 	}
 
 	static getBorderLeftWidth(element: HTMLElement): number {
-		return SizeUtils.getDimension(element, 'border-left-width');
+		return SizeUtils.getDimension(element, "border-left-width");
 	}
 	static getBorderRightWidth(element: HTMLElement): number {
-		return SizeUtils.getDimension(element, 'border-right-width');
+		return SizeUtils.getDimension(element, "border-right-width");
 	}
 	static getBorderTopWidth(element: HTMLElement): number {
-		return SizeUtils.getDimension(element, 'border-top-width');
+		return SizeUtils.getDimension(element, "border-top-width");
 	}
 	static getBorderBottomWidth(element: HTMLElement): number {
-		return SizeUtils.getDimension(element, 'border-bottom-width');
+		return SizeUtils.getDimension(element, "border-bottom-width");
 	}
 
 	static getPaddingLeft(element: HTMLElement): number {
-		return SizeUtils.getDimension(element, 'padding-left');
+		return SizeUtils.getDimension(element, "padding-left");
 	}
 	static getPaddingRight(element: HTMLElement): number {
-		return SizeUtils.getDimension(element, 'padding-right');
+		return SizeUtils.getDimension(element, "padding-right");
 	}
 	static getPaddingTop(element: HTMLElement): number {
-		return SizeUtils.getDimension(element, 'padding-top');
+		return SizeUtils.getDimension(element, "padding-top");
 	}
 	static getPaddingBottom(element: HTMLElement): number {
-		return SizeUtils.getDimension(element, 'padding-bottom');
+		return SizeUtils.getDimension(element, "padding-bottom");
 	}
 
 	static getMarginLeft(element: HTMLElement): number {
-		return SizeUtils.getDimension(element, 'margin-left');
+		return SizeUtils.getDimension(element, "margin-left");
 	}
 	static getMarginTop(element: HTMLElement): number {
-		return SizeUtils.getDimension(element, 'margin-top');
+		return SizeUtils.getDimension(element, "margin-top");
 	}
 	static getMarginRight(element: HTMLElement): number {
-		return SizeUtils.getDimension(element, 'margin-right');
+		return SizeUtils.getDimension(element, "margin-right");
 	}
 	static getMarginBottom(element: HTMLElement): number {
-		return SizeUtils.getDimension(element, 'margin-bottom');
+		return SizeUtils.getDimension(element, "margin-bottom");
 	}
 }
 
@@ -725,7 +783,7 @@ export class Dimension implements IDimension {
 	}
 
 	static is(obj: unknown): obj is IDimension {
-		return typeof obj === 'object' && typeof (<IDimension>obj).height === 'number' && typeof (<IDimension>obj).width === 'number';
+		return typeof obj === "object" && typeof (<IDimension>obj).height === "number" && typeof (<IDimension>obj).width === "number";
 	}
 
 	static lift(obj: IDimension): Dimension {
@@ -768,7 +826,7 @@ export function getTopLeftOffset(element: HTMLElement): IDomPosition {
 		top -= element.scrollTop;
 		const c = isShadowRoot(element) ? null : getComputedStyle(element);
 		if (c) {
-			left -= c.direction !== 'rtl' ? element.scrollLeft : -element.scrollLeft;
+			left -= c.direction !== "rtl" ? element.scrollLeft : -element.scrollLeft;
 		}
 
 		if (element === offsetParent) {
@@ -781,9 +839,9 @@ export function getTopLeftOffset(element: HTMLElement): IDomPosition {
 	}
 
 	return {
-		left: left,
-		top: top
-	};
+    left: left,
+    top: top,
+  };
 }
 
 export interface IDomNodePagePosition {
@@ -794,29 +852,29 @@ export interface IDomNodePagePosition {
 }
 
 export function size(element: HTMLElement, width: number | null, height: number | null): void {
-	if (typeof width === 'number') {
+	if (typeof width === "number") {
 		element.style.width = `${width}px`;
 	}
 
-	if (typeof height === 'number') {
+	if (typeof height === "number") {
 		element.style.height = `${height}px`;
 	}
 }
 
-export function position(element: HTMLElement, top: number, right?: number, bottom?: number, left?: number, position: string = 'absolute'): void {
-	if (typeof top === 'number') {
+export function position(element: HTMLElement, top: number, right?: number, bottom?: number, left?: number, position: string = "absolute"): void {
+	if (typeof top === "number") {
 		element.style.top = `${top}px`;
 	}
 
-	if (typeof right === 'number') {
+	if (typeof right === "number") {
 		element.style.right = `${right}px`;
 	}
 
-	if (typeof bottom === 'number') {
+	if (typeof bottom === "number") {
 		element.style.bottom = `${bottom}px`;
 	}
 
-	if (typeof left === 'number') {
+	if (typeof left === "number") {
 		element.style.left = `${left}px`;
 	}
 
@@ -830,11 +888,11 @@ export function getDomNodePagePosition(domNode: HTMLElement): IDomNodePagePositi
 	const bb = domNode.getBoundingClientRect();
 	const window = getWindow(domNode);
 	return {
-		left: bb.left + window.scrollX,
-		top: bb.top + window.scrollY,
-		width: bb.width,
-		height: bb.height
-	};
+    left: bb.left + window.scrollX,
+    top: bb.top + window.scrollY,
+    width: bb.width,
+    height: bb.height,
+  };
 }
 
 /**
@@ -846,7 +904,7 @@ export function getDomNodeZoomLevel(domNode: HTMLElement): number {
 	do {
 		// eslint-disable-next-line local/code-no-any-casts
 		const elementZoomLevel = (getComputedStyle(testElement) as any).zoom;
-		if (elementZoomLevel !== null && elementZoomLevel !== undefined && elementZoomLevel !== '1') {
+		if (elementZoomLevel !== null && elementZoomLevel !== undefined && elementZoomLevel !== "1") {
 			zoom *= elementZoomLevel;
 		}
 
@@ -865,7 +923,9 @@ export function getTotalWidth(element: HTMLElement): number {
 }
 
 export function getContentWidth(element: HTMLElement): number {
-	const border = SizeUtils.getBorderLeftWidth(element) + SizeUtils.getBorderRightWidth(element);
+	const border = SizeUtils.getBorderLeftWidth(
+    element,
+  ) + SizeUtils.getBorderRightWidth(element);
 	const padding = SizeUtils.getPaddingLeft(element) + SizeUtils.getPaddingRight(element);
 	return element.offsetWidth - border - padding;
 }
@@ -878,7 +938,9 @@ export function getTotalScrollWidth(element: HTMLElement): number {
 // Adapted from WinJS
 // Gets the height of the content of the specified element. The content height does not include borders or padding.
 export function getContentHeight(element: HTMLElement): number {
-	const border = SizeUtils.getBorderTopWidth(element) + SizeUtils.getBorderBottomWidth(element);
+	const border = SizeUtils.getBorderTopWidth(
+    element,
+  ) + SizeUtils.getBorderBottomWidth(element);
 	const padding = SizeUtils.getPaddingTop(element) + SizeUtils.getPaddingBottom(element);
 	return element.offsetHeight - border - padding;
 }
@@ -903,8 +965,8 @@ function getRelativeLeft(element: HTMLElement, parent: HTMLElement): number {
 
 export function getLargestChildWidth(parent: HTMLElement, children: HTMLElement[]): number {
 	const childWidths = children.map((child) => {
-		return Math.max(getTotalScrollWidth(child), getTotalWidth(child)) + getRelativeLeft(child, parent) || 0;
-	});
+    return Math.max(getTotalScrollWidth(child), getTotalWidth(child)) + getRelativeLeft(child, parent) || 0;
+  });
 	const maxWidth = Math.max(...childWidths);
 	return maxWidth;
 }
@@ -915,7 +977,7 @@ export function isAncestor(testChild: Node | null, testAncestor: Node | null): b
 	return Boolean(testAncestor?.contains(testChild));
 }
 
-const parentFlowToDataKey = 'parentFlowToElementId';
+const parentFlowToDataKey = "parentFlowToElementId";
 
 /**
  * Set an explicit parent to use for nodes that are not part of the
@@ -927,7 +989,7 @@ export function setParentFlowTo(fromChildElement: HTMLElement, toParentElement: 
 
 function getParentFlowToElement(node: HTMLElement): HTMLElement | null {
 	const flowToParentId = node.dataset[parentFlowToDataKey];
-	if (typeof flowToParentId === 'string') {
+	if (typeof flowToParentId === "string") {
 		// eslint-disable-next-line no-restricted-syntax
 		return node.ownerDocument.getElementById(flowToParentId);
 	}
@@ -965,7 +1027,7 @@ export function findParentWithClass(node: HTMLElement, clazz: string, stopAtClaz
 		}
 
 		if (stopAtClazzOrNode) {
-			if (typeof stopAtClazzOrNode === 'string') {
+			if (typeof stopAtClazzOrNode === "string") {
 				if (node.classList.contains(stopAtClazzOrNode)) {
 					return null;
 				}
@@ -1057,7 +1119,9 @@ export function getActiveDocument(): Document {
 		return mainWindow.document;
 	}
 
-	const documents = Array.from(getWindows()).map(({ window }) => window.document);
+	const documents = Array.from(getWindows()).map(
+    ({ window }) => window.document,
+  );
 	const focusedDoc = documents.find(doc => doc.hasFocus());
 	if (focusedDoc) {
 		return focusedDoc;
@@ -1109,7 +1173,7 @@ export const sharedMutationObserver = new class {
 			const resolvedMutationObserverPerOptions = mutationObserverPerOptions = {
 				users: 1,
 				observer,
-				onDidMutate: onDidMutate.event
+				onDidMutate: onDidMutate.event,
 			};
 
 			disposables.add(toDisposable(() => {
@@ -1136,11 +1200,11 @@ export const sharedMutationObserver = new class {
 };
 
 export function createMetaElement(container: HTMLElement = mainWindow.document.head): HTMLMetaElement {
-	return createHeadElement('meta', container);
+	return createHeadElement("meta", container);
 }
 
 export function createLinkElement(container: HTMLElement = mainWindow.document.head): HTMLLinkElement {
-	return createHeadElement('link', container);
+	return createHeadElement("link", container);
 }
 
 function createHeadElement<K extends keyof HTMLElementTagNameMap>(tagName: K, container: HTMLElement = mainWindow.document.head): HTMLElementTagNameMap[K] {
@@ -1151,124 +1215,148 @@ function createHeadElement<K extends keyof HTMLElementTagNameMap>(tagName: K, co
 
 export function isHTMLElement(e: unknown): e is HTMLElement {
 	// eslint-disable-next-line no-restricted-syntax
-	return e instanceof HTMLElement || e instanceof getWindow(e as Node).HTMLElement;
+	return e instanceof HTMLElement || e instanceof getWindow(
+    e as Node,
+  ).HTMLElement;
 }
 
 export function isHTMLAnchorElement(e: unknown): e is HTMLAnchorElement {
 	// eslint-disable-next-line no-restricted-syntax
-	return e instanceof HTMLAnchorElement || e instanceof getWindow(e as Node).HTMLAnchorElement;
+	return e instanceof HTMLAnchorElement || e instanceof getWindow(
+    e as Node,
+  ).HTMLAnchorElement;
 }
 
 export function isHTMLSpanElement(e: unknown): e is HTMLSpanElement {
 	// eslint-disable-next-line no-restricted-syntax
-	return e instanceof HTMLSpanElement || e instanceof getWindow(e as Node).HTMLSpanElement;
+	return e instanceof HTMLSpanElement || e instanceof getWindow(
+    e as Node,
+  ).HTMLSpanElement;
 }
 
 export function isHTMLTextAreaElement(e: unknown): e is HTMLTextAreaElement {
 	// eslint-disable-next-line no-restricted-syntax
-	return e instanceof HTMLTextAreaElement || e instanceof getWindow(e as Node).HTMLTextAreaElement;
+	return e instanceof HTMLTextAreaElement || e instanceof getWindow(
+    e as Node,
+  ).HTMLTextAreaElement;
 }
 
 export function isHTMLInputElement(e: unknown): e is HTMLInputElement {
 	// eslint-disable-next-line no-restricted-syntax
-	return e instanceof HTMLInputElement || e instanceof getWindow(e as Node).HTMLInputElement;
+	return e instanceof HTMLInputElement || e instanceof getWindow(
+    e as Node,
+  ).HTMLInputElement;
 }
 
 export function isHTMLButtonElement(e: unknown): e is HTMLButtonElement {
 	// eslint-disable-next-line no-restricted-syntax
-	return e instanceof HTMLButtonElement || e instanceof getWindow(e as Node).HTMLButtonElement;
+	return e instanceof HTMLButtonElement || e instanceof getWindow(
+    e as Node,
+  ).HTMLButtonElement;
 }
 
 export function isHTMLDivElement(e: unknown): e is HTMLDivElement {
 	// eslint-disable-next-line no-restricted-syntax
-	return e instanceof HTMLDivElement || e instanceof getWindow(e as Node).HTMLDivElement;
+	return e instanceof HTMLDivElement || e instanceof getWindow(
+    e as Node,
+  ).HTMLDivElement;
 }
 
 export function isSVGElement(e: unknown): e is SVGElement {
 	// eslint-disable-next-line no-restricted-syntax
-	return e instanceof SVGElement || e instanceof getWindow(e as Node).SVGElement;
+	return e instanceof SVGElement || e instanceof getWindow(
+    e as Node,
+  ).SVGElement;
 }
 
 export function isMouseEvent(e: unknown): e is MouseEvent {
 	// eslint-disable-next-line no-restricted-syntax
-	return e instanceof MouseEvent || e instanceof getWindow(e as UIEvent).MouseEvent;
+	return e instanceof MouseEvent || e instanceof getWindow(
+    e as UIEvent,
+  ).MouseEvent;
 }
 
 export function isKeyboardEvent(e: unknown): e is KeyboardEvent {
 	// eslint-disable-next-line no-restricted-syntax
-	return e instanceof KeyboardEvent || e instanceof getWindow(e as UIEvent).KeyboardEvent;
+	return e instanceof KeyboardEvent || e instanceof getWindow(
+    e as UIEvent,
+  ).KeyboardEvent;
 }
 
 export function isPointerEvent(e: unknown): e is PointerEvent {
 	// eslint-disable-next-line no-restricted-syntax
-	return e instanceof PointerEvent || e instanceof getWindow(e as UIEvent).PointerEvent;
+	return e instanceof PointerEvent || e instanceof getWindow(
+    e as UIEvent,
+  ).PointerEvent;
 }
 
 export function isDragEvent(e: unknown): e is DragEvent {
 	// eslint-disable-next-line no-restricted-syntax
-	return e instanceof DragEvent || e instanceof getWindow(e as UIEvent).DragEvent;
+	return e instanceof DragEvent || e instanceof getWindow(
+    e as UIEvent,
+  ).DragEvent;
 }
 
 export const EventType = {
 	// Mouse
-	CLICK: 'click',
-	AUXCLICK: 'auxclick',
-	DBLCLICK: 'dblclick',
-	MOUSE_UP: 'mouseup',
-	MOUSE_DOWN: 'mousedown',
-	MOUSE_OVER: 'mouseover',
-	MOUSE_MOVE: 'mousemove',
-	MOUSE_OUT: 'mouseout',
-	MOUSE_ENTER: 'mouseenter',
-	MOUSE_LEAVE: 'mouseleave',
-	MOUSE_WHEEL: 'wheel',
-	POINTER_UP: 'pointerup',
-	POINTER_DOWN: 'pointerdown',
-	POINTER_MOVE: 'pointermove',
-	POINTER_LEAVE: 'pointerleave',
-	CONTEXT_MENU: 'contextmenu',
-	WHEEL: 'wheel',
+	CLICK: "click",
+	AUXCLICK: "auxclick",
+	DBLCLICK: "dblclick",
+	MOUSE_UP: "mouseup",
+	MOUSE_DOWN: "mousedown",
+	MOUSE_OVER: "mouseover",
+	MOUSE_MOVE: "mousemove",
+	MOUSE_OUT: "mouseout",
+	MOUSE_ENTER: "mouseenter",
+	MOUSE_LEAVE: "mouseleave",
+	MOUSE_WHEEL: "wheel",
+	POINTER_UP: "pointerup",
+	POINTER_DOWN: "pointerdown",
+	POINTER_MOVE: "pointermove",
+	POINTER_LEAVE: "pointerleave",
+	CONTEXT_MENU: "contextmenu",
+	WHEEL: "wheel",
 	// Keyboard
-	KEY_DOWN: 'keydown',
-	KEY_PRESS: 'keypress',
-	KEY_UP: 'keyup',
+	KEY_DOWN: "keydown",
+	KEY_PRESS: "keypress",
+	KEY_UP: "keyup",
 	// HTML Document
-	LOAD: 'load',
-	BEFORE_UNLOAD: 'beforeunload',
-	UNLOAD: 'unload',
-	PAGE_SHOW: 'pageshow',
-	PAGE_HIDE: 'pagehide',
-	PASTE: 'paste',
-	ABORT: 'abort',
-	ERROR: 'error',
-	RESIZE: 'resize',
-	SCROLL: 'scroll',
-	FULLSCREEN_CHANGE: 'fullscreenchange',
-	WK_FULLSCREEN_CHANGE: 'webkitfullscreenchange',
+	LOAD: "load",
+	BEFORE_UNLOAD: "beforeunload",
+	UNLOAD: "unload",
+	PAGE_SHOW: "pageshow",
+	PAGE_HIDE: "pagehide",
+	PASTE: "paste",
+	ABORT: "abort",
+	ERROR: "error",
+	RESIZE: "resize",
+	SCROLL: "scroll",
+	FULLSCREEN_CHANGE: "fullscreenchange",
+	WK_FULLSCREEN_CHANGE: "webkitfullscreenchange",
 	// Form
-	SELECT: 'select',
-	CHANGE: 'change',
-	SUBMIT: 'submit',
-	RESET: 'reset',
-	FOCUS: 'focus',
-	FOCUS_IN: 'focusin',
-	FOCUS_OUT: 'focusout',
-	BLUR: 'blur',
-	INPUT: 'input',
+	SELECT: "select",
+	CHANGE: "change",
+	SUBMIT: "submit",
+	RESET: "reset",
+	FOCUS: "focus",
+	FOCUS_IN: "focusin",
+	FOCUS_OUT: "focusout",
+	BLUR: "blur",
+	INPUT: "input",
 	// Local Storage
-	STORAGE: 'storage',
+	STORAGE: "storage",
 	// Drag
-	DRAG_START: 'dragstart',
-	DRAG: 'drag',
-	DRAG_ENTER: 'dragenter',
-	DRAG_LEAVE: 'dragleave',
-	DRAG_OVER: 'dragover',
-	DROP: 'drop',
-	DRAG_END: 'dragend',
+	DRAG_START: "dragstart",
+	DRAG: "drag",
+	DRAG_ENTER: "dragenter",
+	DRAG_LEAVE: "dragleave",
+	DRAG_OVER: "dragover",
+	DROP: "drop",
+	DRAG_END: "dragend",
 	// Animation
-	ANIMATION_START: browser.isWebKit ? 'webkitAnimationStart' : 'animationstart',
-	ANIMATION_END: browser.isWebKit ? 'webkitAnimationEnd' : 'animationend',
-	ANIMATION_ITERATION: browser.isWebKit ? 'webkitAnimationIteration' : 'animationiteration'
+	ANIMATION_START: browser.isWebKit ? "webkitAnimationStart" : "animationstart",
+	ANIMATION_END: browser.isWebKit ? "webkitAnimationEnd" : "animationend",
+	ANIMATION_ITERATION: browser.isWebKit ? "webkitAnimationIteration" : "animationiteration",
 } as const;
 
 export interface EventLike {
@@ -1279,7 +1367,7 @@ export interface EventLike {
 export function isEventLike(obj: unknown): obj is EventLike {
 	const candidate = obj as EventLike | undefined;
 
-	return !!(candidate && typeof candidate.preventDefault === 'function' && typeof candidate.stopPropagation === 'function');
+	return !!(candidate && typeof candidate.preventDefault === "function" && typeof candidate.stopPropagation === "function");
 }
 
 export const EventHelper = {
@@ -1289,7 +1377,7 @@ export const EventHelper = {
 			e.stopPropagation();
 		}
 		return e;
-	}
+	},
 };
 
 export interface IFocusTracker extends Disposable {
@@ -1364,7 +1452,9 @@ class FocusTracker extends Disposable implements IFocusTracker {
 		};
 
 		this._refreshStateHandler = () => {
-			const currentNodeHasFocus = FocusTracker.hasFocusWithin(<HTMLElement>element);
+			const currentNodeHasFocus = FocusTracker.hasFocusWithin(
+        <HTMLElement>element,
+      );
 			if (currentNodeHasFocus !== hasFocus) {
 				if (hasFocus) {
 					onBlur();
@@ -1374,11 +1464,27 @@ class FocusTracker extends Disposable implements IFocusTracker {
 			}
 		};
 
-		this._register(addDisposableListener(element, EventType.FOCUS, onFocus, true));
-		this._register(addDisposableListener(element, EventType.BLUR, onBlur, true));
+		this._register(
+      addDisposableListener(element, EventType.FOCUS, onFocus, true),
+    );
+		this._register(
+      addDisposableListener(element, EventType.BLUR, onBlur, true),
+    );
 		if (isHTMLElement(element)) {
-			this._register(addDisposableListener(element, EventType.FOCUS_IN, () => this._refreshStateHandler()));
-			this._register(addDisposableListener(element, EventType.FOCUS_OUT, () => this._refreshStateHandler()));
+			this._register(
+        addDisposableListener(
+          element,
+          EventType.FOCUS_IN,
+          () => this._refreshStateHandler(),
+        ),
+      );
+			this._register(
+        addDisposableListener(
+          element,
+          EventType.FOCUS_OUT,
+          () => this._refreshStateHandler(),
+        ),
+      );
 		}
 
 	}
@@ -1407,7 +1513,7 @@ export function append<T extends Node>(parent: HTMLElement, child: T): T;
 export function append<T extends Node>(parent: HTMLElement, ...children: (T | string)[]): void;
 export function append<T extends Node>(parent: HTMLElement, ...children: (T | string)[]): T | void {
 	parent.append(...children);
-	if (children.length === 1 && typeof children[0] !== 'string') {
+	if (children.length === 1 && typeof children[0] !== "string") {
 		return children[0];
 	}
 }
@@ -1421,25 +1527,25 @@ export function prepend<T extends Node>(parent: HTMLElement, child: T): T {
  * Removes all children from `parent` and appends `children`
  */
 export function reset(parent: HTMLElement, ...children: Array<Node | string>): void {
-	parent.textContent = '';
+	parent.textContent = "";
 	append(parent, ...children);
 }
 
 const SELECTOR_REGEX = /([\w\-]+)?(#([\w\-]+))?((\.([\w\-]+))*)/;
 
 export enum Namespace {
-	HTML = 'http://www.w3.org/1999/xhtml',
-	SVG = 'http://www.w3.org/2000/svg'
+	HTML = "http://www.w3.org/1999/xhtml",
+	SVG = "http://www.w3.org/2000/svg"
 }
 
 function _$<T extends Element>(namespace: Namespace, description: string, attrs?: { [key: string]: any }, ...children: Array<Node | string>): T {
 	const match = SELECTOR_REGEX.exec(description);
 
 	if (!match) {
-		throw new Error('Bad use of emmet');
+		throw new Error("Bad use of emmet");
 	}
 
-	const tagName = match[1] || 'div';
+	const tagName = match[1] || "div";
 	let result: T;
 
 	if (namespace !== Namespace.HTML) {
@@ -1452,21 +1558,21 @@ function _$<T extends Element>(namespace: Namespace, description: string, attrs?
 		result.id = match[3];
 	}
 	if (match[4]) {
-		result.className = match[4].replace(/\./g, ' ').trim();
+		result.className = match[4].replace(/\./g, " ").trim();
 	}
 
 	if (attrs) {
 		Object.entries(attrs).forEach(([name, value]) => {
-			if (typeof value === 'undefined') {
+			if (typeof value === "undefined") {
 				return;
 			}
 
 			if (/^on\w+$/.test(name)) {
 				// eslint-disable-next-line local/code-no-any-casts
 				(<any>result)[name] = value;
-			} else if (name === 'selected') {
+			} else if (name === "selected") {
 				if (value) {
-					result.setAttribute(name, 'true');
+					result.setAttribute(name, "true");
 				}
 
 			} else {
@@ -1516,15 +1622,15 @@ export function setVisibility(visible: boolean, ...elements: HTMLElement[]): voi
 
 export function show(...elements: HTMLElement[]): void {
 	for (const element of elements) {
-		element.style.display = '';
-		element.removeAttribute('aria-hidden');
+		element.style.display = "";
+		element.removeAttribute("aria-hidden");
 	}
 }
 
 export function hide(...elements: HTMLElement[]): void {
 	for (const element of elements) {
-		element.style.display = 'none';
-		element.setAttribute('aria-hidden', 'true');
+		element.style.display = "none";
+		element.setAttribute("aria-hidden", "true");
 	}
 }
 
@@ -1541,7 +1647,7 @@ function findParentWithAttribute(node: Node | null, attribute: string): HTMLElem
 }
 
 export function removeTabIndexAndUpdateFocus(node: HTMLElement): void {
-	if (!node || !node.hasAttribute('tabIndex')) {
+	if (!node || !node.hasAttribute("tabIndex")) {
 		return;
 	}
 
@@ -1550,11 +1656,14 @@ export function removeTabIndexAndUpdateFocus(node: HTMLElement): void {
 	// typically never want that, rather put focus to the closest element
 	// in the hierarchy of the parent DOM nodes.
 	if (node.ownerDocument.activeElement === node) {
-		const parentFocusable = findParentWithAttribute(node.parentElement, 'tabIndex');
+		const parentFocusable = findParentWithAttribute(
+      node.parentElement,
+      "tabIndex",
+    );
 		parentFocusable?.focus();
 	}
 
-	node.removeAttribute('tabindex');
+	node.removeAttribute("tabindex");
 }
 
 export function finalHandler<T extends Event>(fn: (event: T) => unknown): (event: T) => unknown {
@@ -1568,15 +1677,15 @@ export function finalHandler<T extends Event>(fn: (event: T) => unknown): (event
 export function domContentLoaded(targetWindow: Window): Promise<void> {
 	return new Promise<void>(resolve => {
 		const readyState = targetWindow.document.readyState;
-		if (readyState === 'complete' || (targetWindow.document && targetWindow.document.body !== null)) {
+		if (readyState === "complete" || (targetWindow.document && targetWindow.document.body !== null)) {
 			resolve(undefined);
 		} else {
 			const listener = () => {
-				targetWindow.window.removeEventListener('DOMContentLoaded', listener, false);
+				targetWindow.window.removeEventListener("DOMContentLoaded", listener, false);
 				resolve();
 			};
 
-			targetWindow.window.addEventListener('DOMContentLoaded', listener, false);
+			targetWindow.window.addEventListener("DOMContentLoaded", listener, false);
 		}
 	});
 }
@@ -1612,7 +1721,7 @@ export function windowOpenNoOpener(url: string): void {
 	// See https://developer.mozilla.org/en-US/docs/Web/API/Window/open#noopener
 	// However, this also doesn't allow us to realize if the browser blocked
 	// the creation of the window.
-	mainWindow.open(url, '_blank', 'noopener');
+	mainWindow.open(url, "_blank", "noopener");
 }
 
 /**
@@ -1628,13 +1737,17 @@ export function windowOpenNoOpener(url: string): void {
  */
 const popupWidth = 780, popupHeight = 640;
 export function windowOpenPopup(url: string): void {
-	const left = Math.floor(mainWindow.screenLeft + mainWindow.innerWidth / 2 - popupWidth / 2);
-	const top = Math.floor(mainWindow.screenTop + mainWindow.innerHeight / 2 - popupHeight / 2);
+	const left = Math.floor(
+    mainWindow.screenLeft + mainWindow.innerWidth / 2 - popupWidth / 2,
+  );
+	const top = Math.floor(
+    mainWindow.screenTop + mainWindow.innerHeight / 2 - popupHeight / 2,
+  );
 	mainWindow.open(
-		url,
-		'_blank',
-		`width=${popupWidth},height=${popupHeight},top=${top},left=${left}`
-	);
+    url,
+    "_blank",
+    `width=${popupWidth},height=${popupHeight},top=${top},left=${left}`,
+  );
 }
 
 /**
@@ -1676,7 +1789,9 @@ export function animate(targetWindow: Window, fn: () => void): IDisposable {
 	return toDisposable(() => stepDisposable.dispose());
 }
 
-RemoteAuthorities.setPreferredWebSchema(/^https:/.test(mainWindow.location.href) ? 'https' : 'http');
+RemoteAuthorities.setPreferredWebSchema(
+  /^https:/.test(mainWindow.location.href) ? "https" : "http",
+);
 
 export function triggerDownload(dataOrUri: Uint8Array | URI, name: string): void {
 
@@ -1698,7 +1813,7 @@ export function triggerDownload(dataOrUri: Uint8Array | URI, name: string): void
 	// points to the file to download.
 	// See also https://developers.google.com/web/updates/2011/08/Downloading-resources-in-HTML5-a-download
 	const activeWindow = getActiveWindow();
-	const anchor = document.createElement('a');
+	const anchor = document.createElement("a");
 	activeWindow.document.body.appendChild(anchor);
 	anchor.download = name;
 	anchor.href = url;
@@ -1715,13 +1830,13 @@ export function triggerUpload(): Promise<FileList | undefined> {
 		// input element of type `file` and click it
 		// to gather the selected files
 		const activeWindow = getActiveWindow();
-		const input = document.createElement('input');
+		const input = document.createElement("input");
 		activeWindow.document.body.appendChild(input);
-		input.type = 'file';
+		input.type = "file";
 		input.multiple = true;
 
 		// Resolve once the input event has fired once
-		event.Event.once(event.Event.fromDOMEventEmitter(input, 'input'))(() => {
+		event.Event.once(event.Event.fromDOMEventEmitter(input, "input"))(() => {
 			resolve(input.files ?? undefined);
 		});
 
@@ -1796,7 +1911,7 @@ export function detectFullscreen(targetWindow: Window): IDetectedFullscreen | nu
 	return null;
 }
 
-type ModifierKey = 'alt' | 'ctrl' | 'shift' | 'meta';
+type ModifierKey = "alt" | "ctrl" | "shift" | "meta";
 
 export interface IModifierKeyStatus {
 	altKey: boolean;
@@ -1818,17 +1933,23 @@ export class ModifierKeyEmitter extends event.Emitter<IModifierKeyStatus> {
 		super();
 
 		this._keyStatus = {
-			altKey: false,
-			shiftKey: false,
-			ctrlKey: false,
-			metaKey: false
-		};
+      altKey: false,
+      shiftKey: false,
+      ctrlKey: false,
+      metaKey: false,
+    };
 
-		this._subscriptions.add(event.Event.runAndSubscribe(onDidRegisterWindow, ({ window, disposables }) => this.registerListeners(window, disposables), { window: mainWindow, disposables: this._subscriptions }));
+		this._subscriptions.add(
+      event.Event.runAndSubscribe(
+        onDidRegisterWindow,
+        ({ window, disposables }) => this.registerListeners(window, disposables),
+        { window: mainWindow, disposables: this._subscriptions },
+      ),
+    );
 	}
 
 	private registerListeners(window: Window, disposables: DisposableStore): void {
-		disposables.add(addDisposableListener(window, 'keydown', e => {
+		disposables.add(addDisposableListener(window, "keydown", e => {
 			if (e.defaultPrevented) {
 				return;
 			}
@@ -1841,13 +1962,13 @@ export class ModifierKeyEmitter extends event.Emitter<IModifierKeyStatus> {
 			}
 
 			if (e.altKey && !this._keyStatus.altKey) {
-				this._keyStatus.lastKeyPressed = 'alt';
+				this._keyStatus.lastKeyPressed = "alt";
 			} else if (e.ctrlKey && !this._keyStatus.ctrlKey) {
-				this._keyStatus.lastKeyPressed = 'ctrl';
+				this._keyStatus.lastKeyPressed = "ctrl";
 			} else if (e.metaKey && !this._keyStatus.metaKey) {
-				this._keyStatus.lastKeyPressed = 'meta';
+				this._keyStatus.lastKeyPressed = "meta";
 			} else if (e.shiftKey && !this._keyStatus.shiftKey) {
-				this._keyStatus.lastKeyPressed = 'shift';
+				this._keyStatus.lastKeyPressed = "shift";
 			} else if (event.keyCode !== KeyCode.Alt) {
 				this._keyStatus.lastKeyPressed = undefined;
 			} else {
@@ -1865,19 +1986,19 @@ export class ModifierKeyEmitter extends event.Emitter<IModifierKeyStatus> {
 			}
 		}, true));
 
-		disposables.add(addDisposableListener(window, 'keyup', e => {
+		disposables.add(addDisposableListener(window, "keyup", e => {
 			if (e.defaultPrevented) {
 				return;
 			}
 
 			if (!e.altKey && this._keyStatus.altKey) {
-				this._keyStatus.lastKeyReleased = 'alt';
+				this._keyStatus.lastKeyReleased = "alt";
 			} else if (!e.ctrlKey && this._keyStatus.ctrlKey) {
-				this._keyStatus.lastKeyReleased = 'ctrl';
+				this._keyStatus.lastKeyReleased = "ctrl";
 			} else if (!e.metaKey && this._keyStatus.metaKey) {
-				this._keyStatus.lastKeyReleased = 'meta';
+				this._keyStatus.lastKeyReleased = "meta";
 			} else if (!e.shiftKey && this._keyStatus.shiftKey) {
-				this._keyStatus.lastKeyReleased = 'shift';
+				this._keyStatus.lastKeyReleased = "shift";
 			} else {
 				this._keyStatus.lastKeyReleased = undefined;
 			}
@@ -1897,23 +2018,39 @@ export class ModifierKeyEmitter extends event.Emitter<IModifierKeyStatus> {
 			}
 		}, true));
 
-		disposables.add(addDisposableListener(window.document.body, 'mousedown', () => {
-			this._keyStatus.lastKeyPressed = undefined;
-		}, true));
+		disposables.add(
+      addDisposableListener(
+        window.document.body,
+        "mousedown",
+        () => {
+          this._keyStatus.lastKeyPressed = undefined;
+        },
+        true,
+      ),
+    );
 
-		disposables.add(addDisposableListener(window.document.body, 'mouseup', () => {
-			this._keyStatus.lastKeyPressed = undefined;
-		}, true));
+		disposables.add(
+      addDisposableListener(
+        window.document.body,
+        "mouseup",
+        () => {
+          this._keyStatus.lastKeyPressed = undefined;
+        },
+        true,
+      ),
+    );
 
-		disposables.add(addDisposableListener(window.document.body, 'mousemove', e => {
+		disposables.add(addDisposableListener(window.document.body, "mousemove", e => {
 			if (e.buttons) {
 				this._keyStatus.lastKeyPressed = undefined;
 			}
 		}, true));
 
-		disposables.add(addDisposableListener(window, 'blur', () => {
-			this.resetKeyStatus();
-		}));
+		disposables.add(
+      addDisposableListener(window, "blur", () => {
+        this.resetKeyStatus();
+      }),
+    );
 	}
 
 	get keyStatus(): IModifierKeyStatus {
@@ -1934,11 +2071,11 @@ export class ModifierKeyEmitter extends event.Emitter<IModifierKeyStatus> {
 
 	private doResetKeyStatus(): void {
 		this._keyStatus = {
-			altKey: false,
-			shiftKey: false,
-			ctrlKey: false,
-			metaKey: false
-		};
+      altKey: false,
+      shiftKey: false,
+      ctrlKey: false,
+      metaKey: false,
+    };
 	}
 
 	static getInstance() {
@@ -1963,7 +2100,9 @@ export class ModifierKeyEmitter extends event.Emitter<IModifierKeyStatus> {
 }
 
 export function getCookieValue(name: string): string | undefined {
-	const match = document.cookie.match('(^|[^;]+)\\s*' + name + '\\s*=\\s*([^;]+)'); // See https://stackoverflow.com/a/25490531
+	const match = document.cookie.match(
+    "(^|[^;]+)\\s*" + name + "\\s*=\\s*([^;]+)",
+  ); // See https://stackoverflow.com/a/25490531
 
 	return match ? match.pop() : undefined;
 }
@@ -1997,23 +2136,37 @@ export class DragAndDropObserver extends Disposable {
 
 	private registerListeners(): void {
 		if (this.callbacks.onDragStart) {
-			this._register(addDisposableListener(this.element, EventType.DRAG_START, (e: DragEvent) => {
-				this.callbacks.onDragStart?.(e);
-			}));
+			this._register(
+        addDisposableListener(
+          this.element,
+          EventType.DRAG_START,
+          (e: DragEvent) => {
+            this.callbacks.onDragStart?.(e);
+          },
+        ),
+      );
 		}
 
 		if (this.callbacks.onDrag) {
-			this._register(addDisposableListener(this.element, EventType.DRAG, (e: DragEvent) => {
-				this.callbacks.onDrag?.(e);
-			}));
+			this._register(
+        addDisposableListener(this.element, EventType.DRAG, (e: DragEvent) => {
+          this.callbacks.onDrag?.(e);
+        }),
+      );
 		}
 
-		this._register(addDisposableListener(this.element, EventType.DRAG_ENTER, (e: DragEvent) => {
-			this.counter++;
-			this.dragStartTime = e.timeStamp;
+		this._register(
+      addDisposableListener(
+        this.element,
+        EventType.DRAG_ENTER,
+        (e: DragEvent) => {
+          this.counter++;
+          this.dragStartTime = e.timeStamp;
 
-			this.callbacks.onDragEnter?.(e);
-		}));
+          this.callbacks.onDragEnter?.(e);
+        },
+      ),
+    );
 
 		this._register(addDisposableListener(this.element, EventType.DRAG_OVER, (e: DragEvent) => {
 			e.preventDefault(); // needed so that the drop event fires (https://stackoverflow.com/questions/21339924/drop-event-not-firing-in-chrome)
@@ -2031,19 +2184,27 @@ export class DragAndDropObserver extends Disposable {
 			}
 		}));
 
-		this._register(addDisposableListener(this.element, EventType.DRAG_END, (e: DragEvent) => {
-			this.counter = 0;
-			this.dragStartTime = 0;
+		this._register(
+      addDisposableListener(
+        this.element,
+        EventType.DRAG_END,
+        (e: DragEvent) => {
+          this.counter = 0;
+          this.dragStartTime = 0;
 
-			this.callbacks.onDragEnd?.(e);
-		}));
+          this.callbacks.onDragEnd?.(e);
+        },
+      ),
+    );
 
-		this._register(addDisposableListener(this.element, EventType.DROP, (e: DragEvent) => {
-			this.counter = 0;
-			this.dragStartTime = 0;
+		this._register(
+      addDisposableListener(this.element, EventType.DROP, (e: DragEvent) => {
+        this.counter = 0;
+        this.dragStartTime = 0;
 
-			this.callbacks.onDrop?.(e);
-		}));
+        this.callbacks.onDrop?.(e);
+      }),
+    );
 	}
 }
 
@@ -2146,7 +2307,7 @@ let _lastInvokedDisposableResizeObserver: DisposableResizeObserver | undefined;
  * `undefined` for unrelated messages or when no observer has fired yet.
  */
 export function getRecentDisposableResizeObserverAttributionForLoopError(message: string | undefined | null): string | undefined {
-	if (typeof message !== 'string' || !message.includes('ResizeObserver loop')) {
+	if (typeof message !== "string" || !message.includes("ResizeObserver loop")) {
 		return undefined;
 	}
 	const observer = _lastInvokedDisposableResizeObserver;
@@ -2161,7 +2322,7 @@ type ElementAttributes<T> = HTMLElementAttributeKeys<T> & Record<string, any>;
 type RemoveHTMLElement<T> = T extends HTMLElement ? never : T;
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends ((k: infer I) => void) ? I : never;
 type ArrayToObj<T extends readonly any[]> = UnionToIntersection<RemoveHTMLElement<T[number]>>;
-type HHTMLElementTagNameMap = HTMLElementTagNameMap & { '': HTMLDivElement };
+type HHTMLElementTagNameMap = HTMLElementTagNameMap & { "": HTMLDivElement };
 
 type TagToElement<T> = T extends `${infer TStart}#${string}`
 	? TStart extends keyof HHTMLElementTagNameMap
@@ -2177,10 +2338,10 @@ type TagToElement<T> = T extends `${infer TStart}#${string}`
 
 type TagToElementAndId<TTag> = TTag extends `${infer TTag}@${infer TId}`
 	? { element: TagToElement<TTag>; id: TId }
-	: { element: TagToElement<TTag>; id: 'root' };
+	: { element: TagToElement<TTag>; id: "root" };
 
 type TagToRecord<TTag> = TagToElementAndId<TTag> extends { element: infer TElement; id: infer TId }
-	? Record<(TId extends string ? TId : never) | 'root', TElement>
+	? Record<(TId extends string ? TId : never) | "root", TElement>
 	: never;
 
 type Child = HTMLElement | string | Record<string, HTMLElement>;
@@ -2234,48 +2395,48 @@ export function h(tag: string, ...args: [] | [attributes: { $: string } & Partia
 	const match = H_REGEX.exec(tag);
 
 	if (!match || !match.groups) {
-		throw new Error('Bad use of h');
+		throw new Error("Bad use of h");
 	}
 
-	const tagName = match.groups['tag'] || 'div';
+	const tagName = match.groups["tag"] || "div";
 	const el = document.createElement(tagName);
 
-	if (match.groups['id']) {
-		el.id = match.groups['id'];
+	if (match.groups["id"]) {
+		el.id = match.groups["id"];
 	}
 
 	const classNames = [];
-	if (match.groups['class']) {
-		for (const className of match.groups['class'].split('.')) {
-			if (className !== '') {
+	if (match.groups["class"]) {
+		for (const className of match.groups["class"].split(".")) {
+			if (className !== "") {
 				classNames.push(className);
 			}
 		}
 	}
 	if (attributes.className !== undefined) {
-		for (const className of attributes.className.split('.')) {
-			if (className !== '') {
+		for (const className of attributes.className.split(".")) {
+			if (className !== "") {
 				classNames.push(className);
 			}
 		}
 	}
 	if (classNames.length > 0) {
-		el.className = classNames.join(' ');
+		el.className = classNames.join(" ");
 	}
 
 	const result: Record<string, HTMLElement> = {};
 
-	if (match.groups['name']) {
-		result[match.groups['name']] = el;
+	if (match.groups["name"]) {
+		result[match.groups["name"]] = el;
 	}
 
 	if (children) {
 		for (const c of children) {
 			if (isHTMLElement(c)) {
 				el.appendChild(c);
-			} else if (typeof c === 'string') {
+			} else if (typeof c === "string") {
 				el.append(c);
-			} else if ('root' in c) {
+			} else if ("root" in c) {
 				Object.assign(result, c);
 				el.appendChild(c.root);
 			}
@@ -2283,23 +2444,23 @@ export function h(tag: string, ...args: [] | [attributes: { $: string } & Partia
 	}
 
 	for (const [key, value] of Object.entries(attributes)) {
-		if (key === 'className') {
+		if (key === "className") {
 			continue;
-		} else if (key === 'style') {
+		} else if (key === "style") {
 			for (const [cssKey, cssValue] of Object.entries(value)) {
 				el.style.setProperty(
-					camelCaseToHyphenCase(cssKey),
-					typeof cssValue === 'number' ? cssValue + 'px' : '' + cssValue
-				);
+          camelCaseToHyphenCase(cssKey),
+          typeof cssValue === "number" ? cssValue + "px" : "" + cssValue,
+        );
 			}
-		} else if (key === 'tabIndex') {
+		} else if (key === "tabIndex") {
 			el.tabIndex = value;
 		} else {
 			el.setAttribute(camelCaseToHyphenCase(key), value.toString());
 		}
 	}
 
-	result['root'] = el;
+	result["root"] = el;
 
 	return result;
 }
@@ -2337,49 +2498,52 @@ export function svgElem(tag: string, ...args: [] | [attributes: { $: string } & 
 	const match = H_REGEX.exec(tag);
 
 	if (!match || !match.groups) {
-		throw new Error('Bad use of h');
+		throw new Error("Bad use of h");
 	}
 
-	const tagName = match.groups['tag'] || 'div';
+	const tagName = match.groups["tag"] || "div";
 	// eslint-disable-next-line local/code-no-any-casts
-	const el = document.createElementNS('http://www.w3.org/2000/svg', tagName) as any as HTMLElement;
+	const el = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    tagName,
+  ) as any as HTMLElement;
 
-	if (match.groups['id']) {
-		el.id = match.groups['id'];
+	if (match.groups["id"]) {
+		el.id = match.groups["id"];
 	}
 
 	const classNames = [];
-	if (match.groups['class']) {
-		for (const className of match.groups['class'].split('.')) {
-			if (className !== '') {
+	if (match.groups["class"]) {
+		for (const className of match.groups["class"].split(".")) {
+			if (className !== "") {
 				classNames.push(className);
 			}
 		}
 	}
 	if (attributes.className !== undefined) {
-		for (const className of attributes.className.split('.')) {
-			if (className !== '') {
+		for (const className of attributes.className.split(".")) {
+			if (className !== "") {
 				classNames.push(className);
 			}
 		}
 	}
 	if (classNames.length > 0) {
-		el.className = classNames.join(' ');
+		el.className = classNames.join(" ");
 	}
 
 	const result: Record<string, HTMLElement> = {};
 
-	if (match.groups['name']) {
-		result[match.groups['name']] = el;
+	if (match.groups["name"]) {
+		result[match.groups["name"]] = el;
 	}
 
 	if (children) {
 		for (const c of children) {
 			if (isHTMLElement(c)) {
 				el.appendChild(c);
-			} else if (typeof c === 'string') {
+			} else if (typeof c === "string") {
 				el.append(c);
-			} else if ('root' in c) {
+			} else if ("root" in c) {
 				Object.assign(result, c);
 				el.appendChild(c.root);
 			}
@@ -2387,29 +2551,29 @@ export function svgElem(tag: string, ...args: [] | [attributes: { $: string } & 
 	}
 
 	for (const [key, value] of Object.entries(attributes)) {
-		if (key === 'className') {
+		if (key === "className") {
 			continue;
-		} else if (key === 'style') {
+		} else if (key === "style") {
 			for (const [cssKey, cssValue] of Object.entries(value)) {
 				el.style.setProperty(
-					camelCaseToHyphenCase(cssKey),
-					typeof cssValue === 'number' ? cssValue + 'px' : '' + cssValue
-				);
+          camelCaseToHyphenCase(cssKey),
+          typeof cssValue === "number" ? cssValue + "px" : "" + cssValue,
+        );
 			}
-		} else if (key === 'tabIndex') {
+		} else if (key === "tabIndex") {
 			el.tabIndex = value;
 		} else {
 			el.setAttribute(camelCaseToHyphenCase(key), value.toString());
 		}
 	}
 
-	result['root'] = el;
+	result["root"] = el;
 
 	return result;
 }
 
 function camelCaseToHyphenCase(str: string) {
-	return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+	return str.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
 }
 
 export function copyAttributes(from: Element, to: Element, filter?: string[]): void {
@@ -2436,7 +2600,7 @@ export function trackAttributes(from: Element, to: Element, filter?: string[]): 
 
 	disposables.add(sharedMutationObserver.observe(from, disposables, { attributes: true, attributeFilter: filter })(mutations => {
 		for (const mutation of mutations) {
-			if (mutation.type === 'attributes' && mutation.attributeName) {
+			if (mutation.type === "attributes" && mutation.attributeName) {
 				copyAttribute(from, to, mutation.attributeName);
 			}
 		}
@@ -2446,7 +2610,9 @@ export function trackAttributes(from: Element, to: Element, filter?: string[]): 
 }
 
 export function isEditableElement(element: Element): boolean {
-	return element.tagName.toLowerCase() === 'input' || element.tagName.toLowerCase() === 'textarea' || isHTMLElement(element) && !!element.editContext;
+	return element.tagName.toLowerCase() === "input" || element.tagName.toLowerCase() === "textarea" || isHTMLElement(
+    element,
+  ) && !!element.editContext;
 }
 
 /**
@@ -2460,7 +2626,7 @@ export class SafeTriangle {
 	constructor(
 		private readonly originX: number,
 		private readonly originY: number,
-		target: HTMLElement
+		target: HTMLElement,
 	) {
 		const { top, left, right, bottom } = target.getBoundingClientRect();
 		const t = this.points;
@@ -2484,7 +2650,16 @@ export class SafeTriangle {
 		for (let i = 0; i < 4; i++) {
 			const p1 = 2 * i;
 			const p2 = 2 * ((i + 1) % 4);
-			if (isPointWithinTriangle(x, y, originX, originY, points[p1], points[p1 + 1], points[p2], points[p2 + 1])) {
+			if (isPointWithinTriangle(
+        x,
+        y,
+        originX,
+        originY,
+        points[p1],
+        points[p1 + 1],
+        points[p2],
+        points[p2 + 1],
+      )) {
 				return true;
 			}
 		}
@@ -2505,7 +2680,15 @@ export namespace n {
 			delete attributes.obsRef;
 
 			// eslint-disable-next-line local/code-no-any-casts
-			return new ObserverNodeWithElement(tag as any, ref, obsRef, elementNs, className, attributes, children);
+			return new ObserverNodeWithElement(
+        tag as any,
+        ref,
+        obsRef,
+        elementNs,
+        className,
+        attributes,
+        children,
+      );
 		};
 	}
 
@@ -2517,26 +2700,33 @@ export namespace n {
 		};
 	}
 
-	export const div: DomCreateFn<HTMLDivElement, HTMLDivElement> = node<HTMLElementTagNameMap, 'div'>('div');
+	export const div: DomCreateFn<HTMLDivElement, HTMLDivElement> = node<HTMLElementTagNameMap, "div">(
+    "div",
+  );
 
 	export const elem = nodeNs<HTMLElementTagNameMap>(undefined);
 
-	export const svg: DomCreateFn<SVGElementTagNameMap2['svg'], SVGElement> = node<SVGElementTagNameMap2, 'svg'>('svg', 'http://www.w3.org/2000/svg');
+	export const svg: DomCreateFn<SVGElementTagNameMap2["svg"], SVGElement> = node<SVGElementTagNameMap2, "svg">(
+    "svg",
+    "http://www.w3.org/2000/svg",
+  );
 
-	export const svgElem = nodeNs<SVGElementTagNameMap2>('http://www.w3.org/2000/svg');
+	export const svgElem = nodeNs<SVGElementTagNameMap2>(
+    "http://www.w3.org/2000/svg",
+  );
 
 	export function ref<T = HTMLOrSVGElement>(): IRefWithVal<T> {
 		let value: T | undefined = undefined;
 		const result: IRef<T> = function (val: T) {
 			value = val;
 		};
-		Object.defineProperty(result, 'element', {
+		Object.defineProperty(result, "element", {
 			get() {
 				if (!value) {
-					throw new BugIndicatingError('Make sure the ref is set before accessing the element. Maybe wrong initialization order?');
+					throw new BugIndicatingError("Make sure the ref is set before accessing the element. Maybe wrong initialization order?");
 				}
 				return value;
-			}
+			},
 		});
 		// eslint-disable-next-line local/code-no-any-casts
 		return result as any;
@@ -2579,11 +2769,11 @@ type SVGElementTagNameMap2 = {
 type DomTagCreateFn<TMap extends Record<string, any>> = <TTag extends keyof TMap>(
 	tag: TTag,
 	attributes: ElementAttributeKeys<TMap[TTag]> & { class?: ValueOrList<string | false | undefined>; ref?: IRef<TMap[TTag]>; obsRef?: IRef<ObserverNodeWithElement<TMap[TTag]> | null> },
-	children?: ChildNode
+	children?: ChildNode,
 ) => ObserverNode<TMap[TTag]>;
 type DomCreateFn<TAttributes, TResult extends HTMLOrSVGElement> = (
 	attributes: ElementAttributeKeys<TAttributes> & { class?: ValueOrList<string | false | undefined>; ref?: IRef<TResult>; obsRef?: IRef<ObserverNodeWithElement<TResult> | null> },
-	children?: ChildNode
+	children?: ChildNode,
 ) => ObserverNode<TResult>;
 
 export type ChildNode = ValueOrList2<HTMLOrSVGElement | string | ObserverNode | undefined>;
@@ -2606,9 +2796,12 @@ export abstract class ObserverNode<T extends HTMLOrSVGElement = HTMLOrSVGElement
 		ns: string | undefined,
 		className: ValueOrList<string | undefined | false> | undefined,
 		attributes: ElementAttributeKeys<T>,
-		children: ChildNode
+		children: ChildNode,
 	) {
-		this._element = (ns ? document.createElementNS(ns, tag) : document.createElement(tag)) as unknown as T;
+		this._element = (ns ? document.createElementNS(
+      ns,
+      tag,
+    ) : document.createElement(tag)) as unknown as T;
 		if (ref) {
 			ref(this._element);
 		}
@@ -2618,7 +2811,7 @@ export abstract class ObserverNode<T extends HTMLOrSVGElement = HTMLOrSVGElement
 				_reader.store.add({
 					dispose: () => {
 						obsRef(null);
-					}
+					},
 				});
 			}));
 		}
@@ -2635,18 +2828,26 @@ export abstract class ObserverNode<T extends HTMLOrSVGElement = HTMLOrSVGElement
 		}
 
 		for (const [key, value] of Object.entries(attributes)) {
-			if (key === 'style') {
+			if (key === "style") {
 				for (const [cssKey, cssValue] of Object.entries(value)) {
 					const key = camelCaseToHyphenCase(cssKey);
 					if (isObservable(cssValue)) {
-						this._deriveds.push(derivedOpts({ owner: this, debugName: () => `set.style.${key}` }, reader => {
-							this._element.style.setProperty(key, convertCssValue(cssValue.read(reader)));
-						}));
+						this._deriveds.push(
+              derivedOpts(
+                { owner: this, debugName: () => `set.style.${key}` },
+                reader => {
+                  this._element.style.setProperty(
+                    key,
+                    convertCssValue(cssValue.read(reader)),
+                  );
+                },
+              ),
+            );
 					} else {
 						this._element.style.setProperty(key, convertCssValue(cssValue));
 					}
 				}
-			} else if (key === 'tabIndex') {
+			} else if (key === "tabIndex") {
 				if (isObservable(value)) {
 					this._deriveds.push(derived(this, reader => {
 						/** @description set.tabIndex */
@@ -2656,14 +2857,19 @@ export abstract class ObserverNode<T extends HTMLOrSVGElement = HTMLOrSVGElement
 				} else {
 					this._element.tabIndex = value;
 				}
-			} else if (key.startsWith('on')) {
+			} else if (key.startsWith("on")) {
 				// eslint-disable-next-line local/code-no-any-casts
 				(this._element as any)[key] = value;
 			} else {
 				if (isObservable(value)) {
-					this._deriveds.push(derivedOpts({ owner: this, debugName: () => `set.${key}` }, reader => {
-						setOrRemoveAttribute(this._element, key, value.read(reader));
-					}));
+					this._deriveds.push(
+            derivedOpts(
+              { owner: this, debugName: () => `set.${key}` },
+              reader => {
+                setOrRemoveAttribute(this._element, key, value.read(reader));
+              },
+            ),
+          );
 				} else {
 					setOrRemoveAttribute(this._element, key, value);
 				}
@@ -2728,9 +2934,15 @@ export abstract class ObserverNode<T extends HTMLOrSVGElement = HTMLOrSVGElement
 
 	get isHovered(): IObservable<boolean> {
 		if (!this._isHovered) {
-			const hovered = observableValue<boolean>('hovered', false);
-			this._element.addEventListener('mouseenter', (_e) => hovered.set(true, undefined));
-			this._element.addEventListener('mouseleave', (_e) => hovered.set(false, undefined));
+			const hovered = observableValue<boolean>("hovered", false);
+			this._element.addEventListener(
+        "mouseenter",
+        (_e) => hovered.set(true, undefined),
+      );
+			this._element.addEventListener(
+        "mouseleave",
+        (_e) => hovered.set(false, undefined),
+      );
 			this._isHovered = hovered;
 		}
 		return this._isHovered;
@@ -2741,19 +2953,22 @@ export abstract class ObserverNode<T extends HTMLOrSVGElement = HTMLOrSVGElement
 	get didMouseMoveDuringHover(): IObservable<boolean> {
 		if (!this._didMouseMoveDuringHover) {
 			let _hovering = false;
-			const hovered = observableValue<boolean>('didMouseMoveDuringHover', false);
-			this._element.addEventListener('mouseenter', (_e) => {
-				_hovering = true;
-			});
-			this._element.addEventListener('mousemove', (_e) => {
+			const hovered = observableValue<boolean>(
+        "didMouseMoveDuringHover",
+        false,
+      );
+			this._element.addEventListener("mouseenter", (_e) => {
+        _hovering = true;
+      });
+			this._element.addEventListener("mousemove", (_e) => {
 				if (_hovering) {
 					hovered.set(true, undefined);
 				}
 			});
-			this._element.addEventListener('mouseleave', (_e) => {
-				_hovering = false;
-				hovered.set(false, undefined);
-			});
+			this._element.addEventListener("mouseleave", (_e) => {
+        _hovering = false;
+        hovered.set(false, undefined);
+      });
 			this._didMouseMoveDuringHover = hovered;
 		}
 		return this._didMouseMoveDuringHover;
@@ -2762,7 +2977,7 @@ export abstract class ObserverNode<T extends HTMLOrSVGElement = HTMLOrSVGElement
 
 function setClassName(domNode: HTMLOrSVGElement, className: string) {
 	if (isSVGElement(domNode)) {
-		domNode.setAttribute('class', className);
+		domNode.setAttribute("class", className);
 	} else {
 		domNode.className = className;
 	}
@@ -2783,13 +2998,13 @@ function resolve<T>(value: ValueOrList<T>, reader: IReader | undefined, cb: (val
 	cb(value as any);
 }
 function getClassName(className: ValueOrList<string | undefined | false> | undefined, reader: IReader | undefined): string {
-	let result = '';
+	let result = "";
 	resolve(className, reader, val => {
 		if (val) {
 			if (result.length === 0) {
 				result = val;
 			} else {
-				result += ' ' + val;
+				result += " " + val;
 			}
 		}
 	});
@@ -2805,8 +3020,8 @@ function hasObservable(value: ValueOrList<unknown>): boolean {
 	return false;
 }
 function convertCssValue(value: any): string {
-	if (typeof value === 'number') {
-		return value + 'px';
+	if (typeof value === "number") {
+		return value + "px";
 	}
 	return value;
 }
@@ -2823,7 +3038,7 @@ function childrenIsObservable(children: ValueOrList2<HTMLOrSVGElement | string |
 export class LiveElement<T extends HTMLOrSVGElement = HTMLElement> {
 	constructor(
 		public readonly element: T,
-		private readonly _disposable: IDisposable
+		private readonly _disposable: IDisposable,
 	) { }
 
 	dispose() {
@@ -2874,6 +3089,6 @@ export class ConnectionObserverElement extends HTMLElement {
 	}
 }
 
-if (!customElements.get('connection-observer')) {
-	customElements.define('connection-observer', ConnectionObserverElement);
+if (!customElements.get("connection-observer")) {
+	customElements.define("connection-observer", ConnectionObserverElement);
 }

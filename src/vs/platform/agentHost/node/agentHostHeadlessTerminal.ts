@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../base/common/event.js';
-import { DeferredPromise } from '../../../base/common/async.js';
-import { Disposable, DisposableStore } from '../../../base/common/lifecycle.js';
-import type { ILogService } from '../../log/common/log.js';
-import pkg from '@xterm/headless';
+import { Emitter, Event } from "../../../base/common/event.js";
+import { DeferredPromise } from "../../../base/common/async.js";
+import { Disposable, DisposableStore } from "../../../base/common/lifecycle.js";
+import type { ILogService } from "../../log/common/log.js";
+import pkg from "@xterm/headless";
 
 type XtermTerminal = pkg.Terminal;
 const { Terminal: XtermTerminal } = pkg;
@@ -41,12 +41,14 @@ export class AgentHostHeadlessTerminal extends Disposable {
 		super();
 		this._logService = options.logService;
 		const terminalOptions: IXtermTerminalOptions = {
-			cols: options.cols,
-			rows: options.rows,
-			scrollback: options.scrollback,
-			allowProposedApi: true,
-		};
-		this._terminal = options.terminalFactory?.(terminalOptions) ?? new XtermTerminal(terminalOptions);
+      cols: options.cols,
+      rows: options.rows,
+      scrollback: options.scrollback,
+      allowProposedApi: true,
+    };
+		this._terminal = options.terminalFactory?.(
+      terminalOptions,
+    ) ?? new XtermTerminal(terminalOptions);
 
 		this._register(this._terminal.onData(data => {
 			if (this._isCursorPositionReportResponse(data)) {
@@ -60,7 +62,7 @@ export class AgentHostHeadlessTerminal extends Disposable {
 			dispose: () => {
 				this._isDisposed = true;
 				this._terminal.dispose();
-			}
+			},
 		});
 	}
 
@@ -100,7 +102,9 @@ export class AgentHostHeadlessTerminal extends Disposable {
 		const deferred = new DeferredPromise<void>();
 		const complete = () => {
 			if (!deferred.isSettled) {
-				this._logService.debug('[AgentHostHeadlessTerminal] Detected alternate buffer entry');
+				this._logService.debug(
+          "[AgentHostHeadlessTerminal] Detected alternate buffer entry",
+        );
 				deferred.complete();
 			}
 		};
@@ -121,7 +125,7 @@ export class AgentHostHeadlessTerminal extends Disposable {
 	clear(): void {
 		// xterm.clear() preserves the visible line content; emulate a terminal
 		// clear sequence so future terminal-state reads match a user-visible clear.
-		void this.writePtyData('\x1b[2J\x1b[3J\x1b[H');
+		void this.writePtyData("\x1b[2J\x1b[3J\x1b[H");
 	}
 
 	override dispose(): void {

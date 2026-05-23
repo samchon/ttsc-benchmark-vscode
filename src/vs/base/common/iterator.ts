@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { isIterable } from './types.js';
+import { isIterable } from "./types.js";
 
 export namespace Iterable {
 
 	export function is<T = unknown>(thing: unknown): thing is Iterable<T> {
-		return !!thing && typeof thing === 'object' && typeof (thing as Iterable<T>)[Symbol.iterator] === 'function';
+		return !!thing && typeof thing === "object" && typeof (thing as Iterable<T>)[Symbol.iterator] === "function";
 	}
 
 	const _empty: Iterable<never> = Object.freeze([]);

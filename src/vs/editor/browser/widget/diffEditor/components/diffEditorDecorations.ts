@@ -3,17 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { IObservable, derived } from '../../../../../base/common/observable.js';
-import { DiffEditorEditors } from './diffEditorEditors.js';
-import { allowsTrueInlineDiffRendering } from './diffEditorViewZones/diffEditorViewZones.js';
-import { DiffEditorOptions } from '../diffEditorOptions.js';
-import { DiffEditorViewModel } from '../diffEditorViewModel.js';
-import { DiffEditorWidget } from '../diffEditorWidget.js';
-import { MovedBlocksLinesFeature } from '../features/movedBlocksLinesFeature.js';
-import { diffAddDecoration, diffAddDecorationEmpty, diffDeleteDecoration, diffDeleteDecorationEmpty, diffLineAddDecorationBackground, diffLineAddDecorationBackgroundWithIndicator, diffLineDeleteDecorationBackground, diffLineDeleteDecorationBackgroundWithIndicator, diffWholeLineAddDecoration, diffWholeLineDeleteDecoration } from '../registrations.contribution.js';
-import { applyObservableDecorations } from '../utils.js';
-import { IModelDeltaDecoration } from '../../../../common/model.js';
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { IObservable, derived } from "../../../../../base/common/observable.js";
+import { DiffEditorEditors } from "./diffEditorEditors.js";
+import { allowsTrueInlineDiffRendering } from "./diffEditorViewZones/diffEditorViewZones.js";
+import { DiffEditorOptions } from "../diffEditorOptions.js";
+import { DiffEditorViewModel } from "../diffEditorViewModel.js";
+import { DiffEditorWidget } from "../diffEditorWidget.js";
+import { MovedBlocksLinesFeature } from "../features/movedBlocksLinesFeature.js";
+import {
+  diffAddDecoration,
+  diffAddDecorationEmpty,
+  diffDeleteDecoration,
+  diffDeleteDecorationEmpty,
+  diffLineAddDecorationBackground,
+  diffLineAddDecorationBackgroundWithIndicator,
+  diffLineDeleteDecorationBackground,
+  diffLineDeleteDecorationBackgroundWithIndicator,
+  diffWholeLineAddDecoration,
+  diffWholeLineDeleteDecoration,
+} from "../registrations.contribution.js";
+import { applyObservableDecorations } from "../utils.js";
+import { IModelDeltaDecoration } from "../../../../common/model.js";
 
 export class DiffEditorDecorations extends Disposable {
 	constructor(
@@ -24,8 +35,18 @@ export class DiffEditorDecorations extends Disposable {
 	) {
 		super();
 
-		this._register(applyObservableDecorations(this._editors.original, this._decorations.map(d => d?.originalDecorations || [])));
-		this._register(applyObservableDecorations(this._editors.modified, this._decorations.map(d => d?.modifiedDecorations || [])));
+		this._register(
+      applyObservableDecorations(
+        this._editors.original,
+        this._decorations.map(d => d?.originalDecorations || []),
+      ),
+    );
+		this._register(
+      applyObservableDecorations(
+        this._editors.modified,
+        this._decorations.map(d => d?.modifiedDecorations || []),
+      ),
+    );
 	}
 
 	private readonly _decorations = derived(this, (reader) => {
@@ -72,14 +93,14 @@ export class DiffEditorDecorations extends Disposable {
 							modifiedDecorations.push({
 								range: i.modifiedRange,
 								options: {
-									description: 'deleted-text',
+									description: "deleted-text",
 									before: {
 										content: deletedText,
-										inlineClassName: 'inline-deleted-text',
+										inlineClassName: "inline-deleted-text",
 									},
 									zIndex: 100000,
 									showIfCollapsed: true,
-								}
+								},
 							});
 						}
 					}
@@ -109,18 +130,18 @@ export class DiffEditorDecorations extends Disposable {
 		for (const m of diff.movedTexts) {
 			originalDecorations.push({
 				range: m.lineRangeMapping.original.toInclusiveRange()!, options: {
-					description: 'moved',
-					blockClassName: 'movedOriginal' + (m === activeMovedText ? ' currentMove' : ''),
+					description: "moved",
+					blockClassName: "movedOriginal" + (m === activeMovedText ? " currentMove" : ""),
 					blockPadding: [MovedBlocksLinesFeature.movedCodeBlockPadding, 0, MovedBlocksLinesFeature.movedCodeBlockPadding, MovedBlocksLinesFeature.movedCodeBlockPadding],
-				}
+				},
 			});
 
 			modifiedDecorations.push({
 				range: m.lineRangeMapping.modified.toInclusiveRange()!, options: {
-					description: 'moved',
-					blockClassName: 'movedModified' + (m === activeMovedText ? ' currentMove' : ''),
+					description: "moved",
+					blockClassName: "movedModified" + (m === activeMovedText ? " currentMove" : ""),
 					blockPadding: [4, 0, 4, 4],
-				}
+				},
 			});
 		}
 

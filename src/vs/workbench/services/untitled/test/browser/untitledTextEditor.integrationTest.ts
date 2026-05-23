@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { workbenchInstantiationService, TestServiceAccessor } from '../../../../test/browser/workbenchTestServices.js';
-import { UntitledTextEditorInput } from '../../common/untitledTextEditorInput.js';
-import { CancellationToken } from '../../../../../base/common/cancellation.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
+import assert from "assert";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { workbenchInstantiationService, TestServiceAccessor } from "../../../../test/browser/workbenchTestServices.js";
+import { UntitledTextEditorInput } from "../../common/untitledTextEditorInput.js";
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
 
-suite('Untitled text editors', () => {
+suite("Untitled text editors", () => {
 
 	const disposables = new DisposableStore();
 
@@ -28,12 +28,12 @@ suite('Untitled text editors', () => {
 		disposables.clear();
 	});
 
-	test('backup and restore (simple)', async function () {
-		return testBackupAndRestore('Some very small file text content.');
+	test("backup and restore (simple)", async function () {
+		return testBackupAndRestore("Some very small file text content.");
 	});
 
-	test('backup and restore (large, #121347)', async function () {
-		const largeContent = '국어한\n'.repeat(100000);
+	test("backup and restore (large, #121347)", async function () {
+		const largeContent = "국어한\n".repeat(100000);
 		return testBackupAndRestore(largeContent);
 	});
 

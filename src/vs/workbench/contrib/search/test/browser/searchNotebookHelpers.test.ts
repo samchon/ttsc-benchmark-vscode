@@ -3,26 +3,34 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { Range } from '../../../../../editor/common/core/range.js';
-import { FindMatch, IReadonlyTextBuffer } from '../../../../../editor/common/model.js';
-import { IFileMatch, ISearchRange, ITextSearchMatch, QueryType } from '../../../../services/search/common/search.js';
-import { ICellViewModel } from '../../../notebook/browser/notebookBrowser.js';
-import { CellKind } from '../../../notebook/common/notebookCommon.js';
-import { contentMatchesToTextSearchMatches, webviewMatchesToTextSearchMatches } from '../../browser/notebookSearch/searchNotebookHelpers.js';
-import { CellFindMatchModel } from '../../../notebook/browser/contrib/find/findModel.js';
-import { SearchModelImpl } from '../../browser/searchTreeModel/searchModel.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { TestInstantiationService } from '../../../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { createFileUriFromPathFromRoot, stubModelService, stubNotebookEditorService } from './searchTestCommon.js';
-import { IModelService } from '../../../../../editor/common/services/model.js';
-import { INotebookEditorService } from '../../../notebook/browser/services/notebookEditorService.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { CellMatch, NotebookCompatibleFileMatch, textSearchMatchesToNotebookMatches } from '../../browser/notebookSearch/notebookSearchModel.js';
-import { FolderMatchImpl } from '../../browser/searchTreeModel/folderMatch.js';
-import { INotebookFileInstanceMatch } from '../../browser/notebookSearch/notebookSearchModelBase.js';
+import assert from "assert";
+import { Range } from "../../../../../editor/common/core/range.js";
+import { FindMatch, IReadonlyTextBuffer } from "../../../../../editor/common/model.js";
+import { IFileMatch, ISearchRange, ITextSearchMatch, QueryType } from "../../../../services/search/common/search.js";
+import { ICellViewModel } from "../../../notebook/browser/notebookBrowser.js";
+import { CellKind } from "../../../notebook/common/notebookCommon.js";
+import { contentMatchesToTextSearchMatches, webviewMatchesToTextSearchMatches } from "../../browser/notebookSearch/searchNotebookHelpers.js";
+import { CellFindMatchModel } from "../../../notebook/browser/contrib/find/findModel.js";
+import { SearchModelImpl } from "../../browser/searchTreeModel/searchModel.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { TestInstantiationService } from "../../../../../platform/instantiation/test/common/instantiationServiceMock.js";
+import {
+  createFileUriFromPathFromRoot,
+  stubModelService,
+  stubNotebookEditorService,
+} from "./searchTestCommon.js";
+import { IModelService } from "../../../../../editor/common/services/model.js";
+import { INotebookEditorService } from "../../../notebook/browser/services/notebookEditorService.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import {
+  CellMatch,
+  NotebookCompatibleFileMatch,
+  textSearchMatchesToNotebookMatches,
+} from "../../browser/notebookSearch/notebookSearchModel.js";
+import { FolderMatchImpl } from "../../browser/searchTreeModel/folderMatch.js";
+import { INotebookFileInstanceMatch } from "../../browser/notebookSearch/notebookSearchModelBase.js";
 
-suite('searchNotebookHelpers', () => {
+suite("searchNotebookHelpers", () => {
 	let instantiationService: TestInstantiationService;
 	let mdCellFindMatch: CellFindMatchModel;
 	let codeCellFindMatch: CellFindMatchModel;
@@ -43,21 +51,21 @@ suite('searchNotebookHelpers', () => {
 		instantiationService.stub(IModelService, modelService);
 		instantiationService.stub(INotebookEditorService, notebookEditorService);
 		mdInputCell = {
-			id: 'mdCell',
+			id: "mdCell",
 			cellKind: CellKind.Markup, textBuffer: <IReadonlyTextBuffer>{
 				getLineContent(lineNumber: number): string {
 					if (lineNumber === 1) {
-						return '# Hello World Test';
+						return "# Hello World Test";
 					} else {
-						return '';
+						return "";
 					}
-				}
-			}
+				},
+			},
 		} as ICellViewModel;
 
-		const findMatchMds = [new FindMatch(new Range(1, 15, 1, 19), ['Test'])];
+		const findMatchMds = [new FindMatch(new Range(1, 15, 1, 19), ["Test"])];
 		codeCell = {
-			id: 'codeCell',
+			id: "codeCell",
 			cellKind: CellKind.Code, textBuffer: <IReadonlyTextBuffer>{
 				getLineContent(lineNumber: number): string {
 					if (lineNumber === 1) {
@@ -65,47 +73,47 @@ suite('searchNotebookHelpers', () => {
 					} else if (lineNumber === 2) {
 						return 'print("this is a Test")';
 					} else {
-						return '';
+						return "";
 					}
-				}
-			}
+				},
+			},
 		} as ICellViewModel;
 		const findMatchCodeCells =
-			[new FindMatch(new Range(1, 8, 1, 12), ['test']),
-			new FindMatch(new Range(1, 14, 1, 18), ['test']),
-			new FindMatch(new Range(2, 18, 2, 22), ['Test'])
+			[new FindMatch(new Range(1, 8, 1, 12), ["test"]),
+			new FindMatch(new Range(1, 14, 1, 18), ["test"]),
+			new FindMatch(new Range(2, 18, 2, 22), ["Test"]),
 			];
 
 		const webviewMatches = [{
 			index: 0,
 			searchPreviewInfo: {
-				line: 'test! testing!!',
+				line: "test! testing!!",
 				range: {
 					start: 1,
-					end: 5
-				}
-			}
+					end: 5,
+				},
+			},
 		},
 		{
 			index: 1,
 			searchPreviewInfo: {
-				line: 'test! testing!!',
+				line: "test! testing!!",
 				range: {
 					start: 7,
-					end: 11
-				}
-			}
+					end: 11,
+				},
+			},
 		},
 		{
 			index: 3,
 			searchPreviewInfo: {
-				line: 'this is a Test',
+				line: "this is a Test",
 				range: {
 					start: 11,
-					end: 15
-				}
-			}
-		}
+					end: 15,
+				},
+			},
+		},
 
 		];
 
@@ -121,7 +129,7 @@ suite('searchNotebookHelpers', () => {
 			codeCell,
 			5,
 			findMatchCodeCells,
-			webviewMatches
+			webviewMatches,
 		);
 
 	});
@@ -130,7 +138,7 @@ suite('searchNotebookHelpers', () => {
 		instantiationService.dispose();
 	});
 
-	suite('notebookEditorMatchesToTextSearchResults', () => {
+	suite("notebookEditorMatchesToTextSearchResults", () => {
 
 		function assertRangesEqual(actual: ISearchRange | ISearchRange[], expected: ISearchRange[]) {
 			if (!Array.isArray(actual)) {
@@ -146,13 +154,13 @@ suite('searchNotebookHelpers', () => {
 			});
 		}
 
-		test('convert CellFindMatchModel to ITextSearchMatch and check results', () => {
+		test("convert CellFindMatchModel to ITextSearchMatch and check results", () => {
 			markdownContentResults = contentMatchesToTextSearchMatches(mdCellFindMatch.contentMatches, mdInputCell);
 			codeContentResults = contentMatchesToTextSearchMatches(codeCellFindMatch.contentMatches, codeCell);
 			codeWebviewResults = webviewMatchesToTextSearchMatches(codeCellFindMatch.webviewMatches);
 
 			assert.strictEqual(markdownContentResults.length, 1);
-			assert.strictEqual(markdownContentResults[0].previewText, '# Hello World Test\n');
+			assert.strictEqual(markdownContentResults[0].previewText, "# Hello World Test\n");
 			assertRangesEqual(markdownContentResults[0].rangeLocations.map(e => e.preview), [new Range(0, 14, 0, 18)]);
 			assertRangesEqual(markdownContentResults[0].rangeLocations.map(e => e.source), [new Range(0, 14, 0, 18)]);
 
@@ -164,9 +172,9 @@ suite('searchNotebookHelpers', () => {
 			assertRangesEqual(codeContentResults[0].rangeLocations.map(e => e.source), [new Range(0, 7, 0, 11), new Range(0, 13, 0, 17)]);
 
 			assert.strictEqual(codeWebviewResults.length, 3);
-			assert.strictEqual(codeWebviewResults[0].previewText, 'test! testing!!');
-			assert.strictEqual(codeWebviewResults[1].previewText, 'test! testing!!');
-			assert.strictEqual(codeWebviewResults[2].previewText, 'this is a Test');
+			assert.strictEqual(codeWebviewResults[0].previewText, "test! testing!!");
+			assert.strictEqual(codeWebviewResults[1].previewText, "test! testing!!");
+			assert.strictEqual(codeWebviewResults[2].previewText, "this is a Test");
 
 			assertRangesEqual(codeWebviewResults[0].rangeLocations.map(e => e.preview), [new Range(0, 1, 0, 5)]);
 			assertRangesEqual(codeWebviewResults[1].rangeLocations.map(e => e.preview), [new Range(0, 7, 0, 11)]);
@@ -176,7 +184,7 @@ suite('searchNotebookHelpers', () => {
 			assertRangesEqual(codeWebviewResults[2].rangeLocations.map(e => e.source), [new Range(0, 11, 0, 15)]);
 		});
 
-		test('convert ITextSearchMatch to MatchInNotebook', () => {
+		test("convert ITextSearchMatch to MatchInNotebook", () => {
 			const mdCellMatch = new CellMatch(aFileMatch(), mdInputCell, 0);
 			const markdownCellContentMatchObjs = textSearchMatchesToNotebookMatches(markdownContentResults, mdCellMatch);
 
@@ -206,20 +214,20 @@ suite('searchNotebookHelpers', () => {
 
 		function aFileMatch(): INotebookFileInstanceMatch {
 			const rawMatch: IFileMatch = {
-				resource: URI.file('somepath' + ++counter),
-				results: []
+				resource: URI.file("somepath" + ++counter),
+				results: [],
 			};
 
 			const searchModel = instantiationService.createInstance(SearchModelImpl);
 			store.add(searchModel);
-			const folderMatch = instantiationService.createInstance(FolderMatchImpl, URI.file('somepath'), '', 0, {
+			const folderMatch = instantiationService.createInstance(FolderMatchImpl, URI.file("somepath"), "", 0, {
 				type: QueryType.Text, folderQueries: [{ folder: createFileUriFromPathFromRoot() }], contentPattern: {
-					pattern: ''
-				}
+					pattern: "",
+				},
 			}, searchModel.searchResult.plainTextSearchResult, searchModel.searchResult, null);
 			const fileMatch = instantiationService.createInstance(NotebookCompatibleFileMatch, {
-				pattern: ''
-			}, undefined, undefined, folderMatch, rawMatch, null, '');
+				pattern: "",
+			}, undefined, undefined, folderMatch, rawMatch, null, "");
 			fileMatch.createMatches();
 			store.add(folderMatch);
 			store.add(fileMatch);

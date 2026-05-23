@@ -3,34 +3,41 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import * as vscode from 'vscode';
-import { ExtHostDocumentsAndEditors } from '../../common/extHostDocumentsAndEditors.js';
-import { TestRPCProtocol } from '../common/testRPCProtocol.js';
-import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { NullLogService } from '../../../../platform/log/common/log.js';
-import { mock } from '../../../../base/test/common/mock.js';
-import { IModelAddedData, MainContext, MainThreadCommandsShape, MainThreadNotebookShape, NotebookCellsChangedEventDto, NotebookOutputItemDto } from '../../common/extHost.protocol.js';
-import { ExtHostNotebookController } from '../../common/extHostNotebook.js';
-import { ExtHostNotebookDocument } from '../../common/extHostNotebookDocument.js';
-import { CellKind, CellUri, NotebookCellsChangeType } from '../../../contrib/notebook/common/notebookCommon.js';
-import { URI } from '../../../../base/common/uri.js';
-import { ExtHostDocuments } from '../../common/extHostDocuments.js';
-import { ExtHostCommands } from '../../common/extHostCommands.js';
-import { nullExtensionDescription } from '../../../services/extensions/common/extensions.js';
-import { isEqual } from '../../../../base/common/resources.js';
-import { Event } from '../../../../base/common/event.js';
-import { ExtHostNotebookDocuments } from '../../common/extHostNotebookDocuments.js';
-import { SerializableObjectWithBuffers } from '../../../services/extensions/common/proxyIdentifier.js';
-import { VSBuffer } from '../../../../base/common/buffer.js';
-import { IExtHostTelemetry } from '../../common/extHostTelemetry.js';
-import { ExtHostConsumerFileSystem } from '../../common/extHostFileSystemConsumer.js';
-import { ExtHostFileSystemInfo } from '../../common/extHostFileSystemInfo.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
-import { ExtHostSearch } from '../../common/extHostSearch.js';
-import { URITransformerService } from '../../common/extHostUriTransformerService.js';
+import assert from "assert";
+import * as vscode from "vscode";
+import { ExtHostDocumentsAndEditors } from "../../common/extHostDocumentsAndEditors.js";
+import { TestRPCProtocol } from "../common/testRPCProtocol.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { NullLogService } from "../../../../platform/log/common/log.js";
+import { mock } from "../../../../base/test/common/mock.js";
+import {
+  IModelAddedData,
+  MainContext,
+  MainThreadCommandsShape,
+  MainThreadNotebookShape,
+  NotebookCellsChangedEventDto,
+  NotebookOutputItemDto,
+} from "../../common/extHost.protocol.js";
+import { ExtHostNotebookController } from "../../common/extHostNotebook.js";
+import { ExtHostNotebookDocument } from "../../common/extHostNotebookDocument.js";
+import { CellKind, CellUri, NotebookCellsChangeType } from "../../../contrib/notebook/common/notebookCommon.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ExtHostDocuments } from "../../common/extHostDocuments.js";
+import { ExtHostCommands } from "../../common/extHostCommands.js";
+import { nullExtensionDescription } from "../../../services/extensions/common/extensions.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { Event } from "../../../../base/common/event.js";
+import { ExtHostNotebookDocuments } from "../../common/extHostNotebookDocuments.js";
+import { SerializableObjectWithBuffers } from "../../../services/extensions/common/proxyIdentifier.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { IExtHostTelemetry } from "../../common/extHostTelemetry.js";
+import { ExtHostConsumerFileSystem } from "../../common/extHostFileSystemConsumer.js";
+import { ExtHostFileSystemInfo } from "../../common/extHostFileSystemInfo.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
+import { ExtHostSearch } from "../../common/extHostSearch.js";
+import { URITransformerService } from "../../common/extHostUriTransformerService.js";
 
-suite('NotebookCell#Document', function () {
+suite("NotebookCell#Document", function () {
 	let rpcProtocol: TestRPCProtocol;
 	let notebook: ExtHostNotebookDocument;
 	let extHostDocumentsAndEditors: ExtHostDocumentsAndEditors;
@@ -40,7 +47,7 @@ suite('NotebookCell#Document', function () {
 	let extHostConsumerFileSystem: ExtHostConsumerFileSystem;
 	let extHostSearch: ExtHostSearch;
 
-	const notebookUri = URI.parse('test:///notebook.file');
+	const notebookUri = URI.parse("test:///notebook.file");
 	const disposables = new DisposableStore();
 
 	teardown(function () {
@@ -69,39 +76,39 @@ suite('NotebookCell#Document', function () {
 		}), extHostDocumentsAndEditors, extHostDocuments, extHostConsumerFileSystem, extHostSearch, new NullLogService());
 		extHostNotebookDocuments = new ExtHostNotebookDocuments(extHostNotebooks);
 
-		const reg = extHostNotebooks.registerNotebookSerializer(nullExtensionDescription, 'test', new class extends mock<vscode.NotebookSerializer>() { });
+		const reg = extHostNotebooks.registerNotebookSerializer(nullExtensionDescription, "test", new class extends mock<vscode.NotebookSerializer>() { });
 		extHostNotebooks.$acceptDocumentAndEditorsDelta(new SerializableObjectWithBuffers({
 			addedDocuments: [{
 				uri: notebookUri,
-				viewType: 'test',
+				viewType: "test",
 				versionId: 0,
 				cells: [{
 					handle: 0,
 					uri: CellUri.generate(notebookUri, 0),
-					source: ['### Heading'],
-					eol: '\n',
-					language: 'markdown',
+					source: ["### Heading"],
+					eol: "\n",
+					language: "markdown",
 					cellKind: CellKind.Markup,
 					outputs: [],
 				}, {
 					handle: 1,
 					uri: CellUri.generate(notebookUri, 1),
 					source: ['console.log("aaa")', 'console.log("bbb")'],
-					eol: '\n',
-					language: 'javascript',
+					eol: "\n",
+					language: "javascript",
 					cellKind: CellKind.Code,
 					outputs: [],
 				}],
 			}],
 			addedEditors: [{
 				documentUri: notebookUri,
-				id: '_notebook_editor_0',
+				id: "_notebook_editor_0",
 				selections: [{ start: 0, end: 1 }],
 				visibleRanges: [],
-				viewType: 'test'
-			}]
+				viewType: "test",
+			}],
 		}));
-		extHostNotebooks.$acceptDocumentAndEditorsDelta(new SerializableObjectWithBuffers({ newActiveEditor: '_notebook_editor_0' }));
+		extHostNotebooks.$acceptDocumentAndEditorsDelta(new SerializableObjectWithBuffers({ newActiveEditor: "_notebook_editor_0" }));
 
 		notebook = extHostNotebooks.notebookDocuments[0]!;
 
@@ -111,7 +118,7 @@ suite('NotebookCell#Document', function () {
 	});
 
 
-	test('cell document is vscode.TextDocument', async function () {
+	test("cell document is vscode.TextDocument", async function () {
 
 		assert.strictEqual(notebook.apiNotebook.cellCount, 2);
 
@@ -128,7 +135,7 @@ suite('NotebookCell#Document', function () {
 		assert.strictEqual(d2.version, 1);
 	});
 
-	test('cell document goes when notebook closes', async function () {
+	test("cell document goes when notebook closes", async function () {
 		const cellUris: string[] = [];
 		for (const cell of notebook.apiNotebook.getCells()) {
 			assert.ok(extHostDocuments.getDocument(cell.document.uri));
@@ -147,7 +154,7 @@ suite('NotebookCell#Document', function () {
 		assert.deepStrictEqual(removedCellUris.sort(), cellUris.sort());
 	});
 
-	test('cell document is vscode.TextDocument after changing it', async function () {
+	test("cell document is vscode.TextDocument after changing it", async function () {
 
 		const p = new Promise<void>((resolve, reject) => {
 
@@ -183,29 +190,29 @@ suite('NotebookCell#Document', function () {
 					changes: [[0, 0, [{
 						handle: 2,
 						uri: CellUri.generate(notebookUri, 2),
-						source: ['Hello', 'World', 'Hello World!'],
-						eol: '\n',
-						language: 'test',
+						source: ["Hello", "World", "Hello World!"],
+						eol: "\n",
+						language: "test",
 						cellKind: CellKind.Code,
 						outputs: [],
 					}, {
 						handle: 3,
 						uri: CellUri.generate(notebookUri, 3),
-						source: ['Hallo', 'Welt', 'Hallo Welt!'],
-						eol: '\n',
-						language: 'test',
+						source: ["Hallo", "Welt", "Hallo Welt!"],
+						eol: "\n",
+						language: "test",
 						cellKind: CellKind.Code,
 						outputs: [],
-					}]]]
-				}
-			]
+					}]]],
+				},
+			],
 		}), false);
 
 		await p;
 
 	});
 
-	test('cell document stays open when notebook is still open', async function () {
+	test("cell document stays open when notebook is still open", async function () {
 
 		const docs: vscode.TextDocument[] = [];
 		const addData: IModelAddedData[] = [];
@@ -215,13 +222,13 @@ suite('NotebookCell#Document', function () {
 			assert.strictEqual(extHostDocuments.getDocument(cell.document.uri).isClosed, false);
 			docs.push(doc);
 			addData.push({
-				EOL: '\n',
+				EOL: "\n",
 				isDirty: doc.isDirty,
-				lines: doc.getText().split('\n'),
+				lines: doc.getText().split("\n"),
 				languageId: doc.languageId,
 				uri: doc.uri,
 				versionId: doc.version,
-				encoding: 'utf8'
+				encoding: "utf8",
 			});
 		}
 
@@ -247,7 +254,7 @@ suite('NotebookCell#Document', function () {
 		}
 	});
 
-	test('cell document goes when cell is removed', async function () {
+	test("cell document goes when cell is removed", async function () {
 
 		assert.strictEqual(notebook.apiNotebook.cellCount, 2);
 		const [cell1, cell2] = notebook.apiNotebook.getCells();
@@ -257,9 +264,9 @@ suite('NotebookCell#Document', function () {
 			rawEvents: [
 				{
 					kind: NotebookCellsChangeType.ModelChange,
-					changes: [[0, 1, []]]
-				}
-			]
+					changes: [[0, 1, []]],
+				},
+			],
 		}), false);
 
 		assert.strictEqual(notebook.apiNotebook.cellCount, 1);
@@ -269,7 +276,7 @@ suite('NotebookCell#Document', function () {
 		assert.throws(() => extHostDocuments.getDocument(cell1.document.uri));
 	});
 
-	test('cell#index', function () {
+	test("cell#index", function () {
 
 		assert.strictEqual(notebook.apiNotebook.cellCount, 2);
 		const [first, second] = notebook.apiNotebook.getCells();
@@ -281,8 +288,8 @@ suite('NotebookCell#Document', function () {
 			versionId: notebook.apiNotebook.version + 1,
 			rawEvents: [{
 				kind: NotebookCellsChangeType.ModelChange,
-				changes: [[0, 1, []]]
-			}]
+				changes: [[0, 1, []]],
+			}],
 		}), false);
 
 		assert.strictEqual(notebook.apiNotebook.cellCount, 1);
@@ -295,28 +302,28 @@ suite('NotebookCell#Document', function () {
 				changes: [[0, 0, [{
 					handle: 2,
 					uri: CellUri.generate(notebookUri, 2),
-					source: ['Hello', 'World', 'Hello World!'],
-					eol: '\n',
-					language: 'test',
+					source: ["Hello", "World", "Hello World!"],
+					eol: "\n",
+					language: "test",
 					cellKind: CellKind.Code,
 					outputs: [],
 				}, {
 					handle: 3,
 					uri: CellUri.generate(notebookUri, 3),
-					source: ['Hallo', 'Welt', 'Hallo Welt!'],
-					eol: '\n',
-					language: 'test',
+					source: ["Hallo", "Welt", "Hallo Welt!"],
+					eol: "\n",
+					language: "test",
 					cellKind: CellKind.Code,
 					outputs: [],
-				}]]]
-			}]
+				}]]],
+			}],
 		}), false);
 
 		assert.strictEqual(notebook.apiNotebook.cellCount, 3);
 		assert.strictEqual(second.index, 2);
 	});
 
-	test('ERR MISSING extHostDocument for notebook cell: #116711', async function () {
+	test("ERR MISSING extHostDocument for notebook cell: #116711", async function () {
 
 		const p = Event.toPromise(extHostNotebookDocuments.onDidChangeNotebookDocument);
 
@@ -330,21 +337,21 @@ suite('NotebookCell#Document', function () {
 				changes: [[0, 2, [{
 					handle: 3,
 					uri: CellUri.generate(notebookUri, 3),
-					source: ['### Heading'],
-					eol: '\n',
-					language: 'markdown',
+					source: ["### Heading"],
+					eol: "\n",
+					language: "markdown",
 					cellKind: CellKind.Markup,
 					outputs: [],
 				}, {
 					handle: 4,
 					uri: CellUri.generate(notebookUri, 4),
 					source: ['console.log("aaa")', 'console.log("bbb")'],
-					eol: '\n',
-					language: 'javascript',
+					eol: "\n",
+					language: "javascript",
 					cellKind: CellKind.Code,
 					outputs: [],
-				}]]]
-			}]
+				}]]],
+			}],
 		}), false);
 
 		assert.strictEqual(notebook.apiNotebook.cellCount, 2);
@@ -362,28 +369,28 @@ suite('NotebookCell#Document', function () {
 	});
 
 
-	test('Opening a notebook results in VS Code firing the event onDidChangeActiveNotebookEditor twice #118470', function () {
+	test("Opening a notebook results in VS Code firing the event onDidChangeActiveNotebookEditor twice #118470", function () {
 		let count = 0;
 		disposables.add(extHostNotebooks.onDidChangeActiveNotebookEditor(() => count += 1));
 
 		extHostNotebooks.$acceptDocumentAndEditorsDelta(new SerializableObjectWithBuffers({
 			addedEditors: [{
 				documentUri: notebookUri,
-				id: '_notebook_editor_2',
+				id: "_notebook_editor_2",
 				selections: [{ start: 0, end: 1 }],
 				visibleRanges: [],
-				viewType: 'test'
-			}]
+				viewType: "test",
+			}],
 		}));
 
 		extHostNotebooks.$acceptDocumentAndEditorsDelta(new SerializableObjectWithBuffers({
-			newActiveEditor: '_notebook_editor_2'
+			newActiveEditor: "_notebook_editor_2",
 		}));
 
 		assert.strictEqual(count, 1);
 	});
 
-	test('unset active notebook editor', function () {
+	test("unset active notebook editor", function () {
 
 		const editor = extHostNotebooks.activeNotebookEditor;
 		assert.ok(editor !== undefined);
@@ -398,11 +405,11 @@ suite('NotebookCell#Document', function () {
 		assert.ok(extHostNotebooks.activeNotebookEditor === undefined);
 	});
 
-	test('change cell language triggers onDidChange events', async function () {
+	test("change cell language triggers onDidChange events", async function () {
 
 		const first = notebook.apiNotebook.cellAt(0);
 
-		assert.strictEqual(first.document.languageId, 'markdown');
+		assert.strictEqual(first.document.languageId, "markdown");
 
 		const removed = Event.toPromise(extHostDocuments.onDidRemoveDocument);
 		const added = Event.toPromise(extHostDocuments.onDidAddDocument);
@@ -411,18 +418,18 @@ suite('NotebookCell#Document', function () {
 			versionId: 12, rawEvents: [{
 				kind: NotebookCellsChangeType.ChangeCellLanguage,
 				index: 0,
-				language: 'fooLang'
-			}]
+				language: "fooLang",
+			}],
 		}), false);
 
 		const removedDoc = await removed;
 		const addedDoc = await added;
 
-		assert.strictEqual(first.document.languageId, 'fooLang');
+		assert.strictEqual(first.document.languageId, "fooLang");
 		assert.ok(removedDoc === addedDoc);
 	});
 
-	test('onDidChangeNotebook-event, cell changes', async function () {
+	test("onDidChangeNotebook-event, cell changes", async function () {
 
 		const p = Event.toPromise(extHostNotebookDocuments.onDidChangeNotebookDocument);
 
@@ -430,7 +437,7 @@ suite('NotebookCell#Document', function () {
 			versionId: 12, rawEvents: [{
 				kind: NotebookCellsChangeType.ChangeCellMetadata,
 				index: 0,
-				metadata: { foo: 1 }
+				metadata: { foo: 1 },
 			}, {
 				kind: NotebookCellsChangeType.ChangeCellMetadata,
 				index: 1,
@@ -442,12 +449,12 @@ suite('NotebookCell#Document', function () {
 					{
 						items: [{
 							valueBytes: VSBuffer.fromByteArray([0, 2, 3]),
-							mime: 'text/plain'
+							mime: "text/plain",
 						}],
-						outputId: '1'
-					}
-				]
-			}]
+						outputId: "1",
+					},
+				],
+			}],
 		}), false, undefined);
 
 
@@ -469,7 +476,7 @@ suite('NotebookCell#Document', function () {
 		assert.deepStrictEqual(second.document, undefined);
 	});
 
-	test('onDidChangeNotebook-event, notebook metadata', async function () {
+	test("onDidChangeNotebook-event, notebook metadata", async function () {
 
 		const p = Event.toPromise(extHostNotebookDocuments.onDidChangeNotebookDocument);
 
@@ -483,7 +490,7 @@ suite('NotebookCell#Document', function () {
 		assert.deepStrictEqual(event.metadata, { foo: 2 });
 	});
 
-	test('onDidChangeNotebook-event, froozen data', async function () {
+	test("onDidChangeNotebook-event, froozen data", async function () {
 
 		const p = Event.toPromise(extHostNotebookDocuments.onDidChangeNotebookDocument);
 
@@ -498,20 +505,20 @@ suite('NotebookCell#Document', function () {
 		assert.ok(!Object.isFrozen(event.metadata));
 	});
 
-	test('change cell language and onDidChangeNotebookDocument', async function () {
+	test("change cell language and onDidChangeNotebookDocument", async function () {
 
 		const p = Event.toPromise(extHostNotebookDocuments.onDidChangeNotebookDocument);
 
 		const first = notebook.apiNotebook.cellAt(0);
-		assert.strictEqual(first.document.languageId, 'markdown');
+		assert.strictEqual(first.document.languageId, "markdown");
 
 		extHostNotebookDocuments.$acceptModelChanged(notebook.uri, new SerializableObjectWithBuffers({
 			versionId: 12,
 			rawEvents: [{
 				kind: NotebookCellsChangeType.ChangeCellLanguage,
 				index: 0,
-				language: 'fooLang'
-			}]
+				language: "fooLang",
+			}],
 		}), false);
 
 		const event = await p;
@@ -529,7 +536,7 @@ suite('NotebookCell#Document', function () {
 		assert.ok(cellChange.outputs === undefined);
 	});
 
-	test('change notebook cell document and onDidChangeNotebookDocument', async function () {
+	test("change notebook cell document and onDidChangeNotebookDocument", async function () {
 
 		const p = Event.toPromise(extHostNotebookDocuments.onDidChangeNotebookDocument);
 
@@ -539,8 +546,8 @@ suite('NotebookCell#Document', function () {
 			versionId: 12,
 			rawEvents: [{
 				kind: NotebookCellsChangeType.ChangeCellContent,
-				index: 0
-			}]
+				index: 0,
+			}],
 		}), false);
 
 		const event = await p;
@@ -565,8 +572,8 @@ suite('NotebookCell#Document', function () {
 			rawEvents: [{
 				kind: NotebookCellsChangeType.Output,
 				index: cellIndex,
-				outputs: [{ outputId, items: outputItems }]
-			}]
+				outputs: [{ outputId, items: outputItems }],
+			}],
 		}), false);
 		await changeEvent;
 	}
@@ -579,73 +586,73 @@ suite('NotebookCell#Document', function () {
 				index: cellIndex,
 				append: true,
 				outputId,
-				outputItems
-			}]
+				outputItems,
+			}],
 		}), false);
 		await changeEvent;
 	}
-	test('Append multiple text/plain output items', async function () {
-		await replaceOutputs(1, '1', [{ mime: 'text/plain', valueBytes: VSBuffer.fromString('foo') }]);
-		await appendOutputItem(1, '1', [{ mime: 'text/plain', valueBytes: VSBuffer.fromString('bar') }]);
-		await appendOutputItem(1, '1', [{ mime: 'text/plain', valueBytes: VSBuffer.fromString('baz') }]);
+	test("Append multiple text/plain output items", async function () {
+		await replaceOutputs(1, "1", [{ mime: "text/plain", valueBytes: VSBuffer.fromString("foo") }]);
+		await appendOutputItem(1, "1", [{ mime: "text/plain", valueBytes: VSBuffer.fromString("bar") }]);
+		await appendOutputItem(1, "1", [{ mime: "text/plain", valueBytes: VSBuffer.fromString("baz") }]);
 
 
 		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs.length, 1);
 		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items.length, 3);
-		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items[0].mime, 'text/plain');
-		assert.strictEqual(VSBuffer.wrap(notebook.apiNotebook.cellAt(1).outputs[0].items[0].data).toString(), 'foo');
-		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items[1].mime, 'text/plain');
-		assert.strictEqual(VSBuffer.wrap(notebook.apiNotebook.cellAt(1).outputs[0].items[1].data).toString(), 'bar');
-		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items[2].mime, 'text/plain');
-		assert.strictEqual(VSBuffer.wrap(notebook.apiNotebook.cellAt(1).outputs[0].items[2].data).toString(), 'baz');
+		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items[0].mime, "text/plain");
+		assert.strictEqual(VSBuffer.wrap(notebook.apiNotebook.cellAt(1).outputs[0].items[0].data).toString(), "foo");
+		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items[1].mime, "text/plain");
+		assert.strictEqual(VSBuffer.wrap(notebook.apiNotebook.cellAt(1).outputs[0].items[1].data).toString(), "bar");
+		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items[2].mime, "text/plain");
+		assert.strictEqual(VSBuffer.wrap(notebook.apiNotebook.cellAt(1).outputs[0].items[2].data).toString(), "baz");
 	});
-	test('Append multiple stdout stream output items to an output with another mime', async function () {
-		await replaceOutputs(1, '1', [{ mime: 'text/plain', valueBytes: VSBuffer.fromString('foo') }]);
-		await appendOutputItem(1, '1', [{ mime: 'application/vnd.code.notebook.stdout', valueBytes: VSBuffer.fromString('bar') }]);
-		await appendOutputItem(1, '1', [{ mime: 'application/vnd.code.notebook.stdout', valueBytes: VSBuffer.fromString('baz') }]);
+	test("Append multiple stdout stream output items to an output with another mime", async function () {
+		await replaceOutputs(1, "1", [{ mime: "text/plain", valueBytes: VSBuffer.fromString("foo") }]);
+		await appendOutputItem(1, "1", [{ mime: "application/vnd.code.notebook.stdout", valueBytes: VSBuffer.fromString("bar") }]);
+		await appendOutputItem(1, "1", [{ mime: "application/vnd.code.notebook.stdout", valueBytes: VSBuffer.fromString("baz") }]);
 
 		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs.length, 1);
 		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items.length, 3);
-		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items[0].mime, 'text/plain');
-		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items[1].mime, 'application/vnd.code.notebook.stdout');
-		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items[2].mime, 'application/vnd.code.notebook.stdout');
+		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items[0].mime, "text/plain");
+		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items[1].mime, "application/vnd.code.notebook.stdout");
+		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items[2].mime, "application/vnd.code.notebook.stdout");
 	});
-	test('Compress multiple stdout stream output items', async function () {
-		await replaceOutputs(1, '1', [{ mime: 'application/vnd.code.notebook.stdout', valueBytes: VSBuffer.fromString('foo') }]);
-		await appendOutputItem(1, '1', [{ mime: 'application/vnd.code.notebook.stdout', valueBytes: VSBuffer.fromString('bar') }]);
-		await appendOutputItem(1, '1', [{ mime: 'application/vnd.code.notebook.stdout', valueBytes: VSBuffer.fromString('baz') }]);
+	test("Compress multiple stdout stream output items", async function () {
+		await replaceOutputs(1, "1", [{ mime: "application/vnd.code.notebook.stdout", valueBytes: VSBuffer.fromString("foo") }]);
+		await appendOutputItem(1, "1", [{ mime: "application/vnd.code.notebook.stdout", valueBytes: VSBuffer.fromString("bar") }]);
+		await appendOutputItem(1, "1", [{ mime: "application/vnd.code.notebook.stdout", valueBytes: VSBuffer.fromString("baz") }]);
 
 		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs.length, 1);
 		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items.length, 1);
-		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items[0].mime, 'application/vnd.code.notebook.stdout');
-		assert.strictEqual(VSBuffer.wrap(notebook.apiNotebook.cellAt(1).outputs[0].items[0].data).toString(), 'foobarbaz');
+		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items[0].mime, "application/vnd.code.notebook.stdout");
+		assert.strictEqual(VSBuffer.wrap(notebook.apiNotebook.cellAt(1).outputs[0].items[0].data).toString(), "foobarbaz");
 	});
-	test('Compress multiple stdout stream output items (with support for terminal escape code -> \u001b[A)', async function () {
-		await replaceOutputs(1, '1', [{ mime: 'application/vnd.code.notebook.stdout', valueBytes: VSBuffer.fromString('\nfoo') }]);
-		await appendOutputItem(1, '1', [{ mime: 'application/vnd.code.notebook.stdout', valueBytes: VSBuffer.fromString(`${String.fromCharCode(27)}[Abar`) }]);
+	test("Compress multiple stdout stream output items (with support for terminal escape code -> \u001b[A)", async function () {
+		await replaceOutputs(1, "1", [{ mime: "application/vnd.code.notebook.stdout", valueBytes: VSBuffer.fromString("\nfoo") }]);
+		await appendOutputItem(1, "1", [{ mime: "application/vnd.code.notebook.stdout", valueBytes: VSBuffer.fromString(`${String.fromCharCode(27)}[Abar`) }]);
 
 		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs.length, 1);
 		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items.length, 1);
-		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items[0].mime, 'application/vnd.code.notebook.stdout');
-		assert.strictEqual(VSBuffer.wrap(notebook.apiNotebook.cellAt(1).outputs[0].items[0].data).toString(), 'bar');
+		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items[0].mime, "application/vnd.code.notebook.stdout");
+		assert.strictEqual(VSBuffer.wrap(notebook.apiNotebook.cellAt(1).outputs[0].items[0].data).toString(), "bar");
 	});
-	test('Compress multiple stdout stream output items (with support for terminal escape code -> \r character)', async function () {
-		await replaceOutputs(1, '1', [{ mime: 'application/vnd.code.notebook.stdout', valueBytes: VSBuffer.fromString('foo') }]);
-		await appendOutputItem(1, '1', [{ mime: 'application/vnd.code.notebook.stdout', valueBytes: VSBuffer.fromString(`\rbar`) }]);
+	test("Compress multiple stdout stream output items (with support for terminal escape code -> \r character)", async function () {
+		await replaceOutputs(1, "1", [{ mime: "application/vnd.code.notebook.stdout", valueBytes: VSBuffer.fromString("foo") }]);
+		await appendOutputItem(1, "1", [{ mime: "application/vnd.code.notebook.stdout", valueBytes: VSBuffer.fromString(`\rbar`) }]);
 
 		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs.length, 1);
 		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items.length, 1);
-		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items[0].mime, 'application/vnd.code.notebook.stdout');
-		assert.strictEqual(VSBuffer.wrap(notebook.apiNotebook.cellAt(1).outputs[0].items[0].data).toString(), 'bar');
+		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items[0].mime, "application/vnd.code.notebook.stdout");
+		assert.strictEqual(VSBuffer.wrap(notebook.apiNotebook.cellAt(1).outputs[0].items[0].data).toString(), "bar");
 	});
-	test('Compress multiple stderr stream output items', async function () {
-		await replaceOutputs(1, '1', [{ mime: 'application/vnd.code.notebook.stderr', valueBytes: VSBuffer.fromString('foo') }]);
-		await appendOutputItem(1, '1', [{ mime: 'application/vnd.code.notebook.stderr', valueBytes: VSBuffer.fromString('bar') }]);
-		await appendOutputItem(1, '1', [{ mime: 'application/vnd.code.notebook.stderr', valueBytes: VSBuffer.fromString('baz') }]);
+	test("Compress multiple stderr stream output items", async function () {
+		await replaceOutputs(1, "1", [{ mime: "application/vnd.code.notebook.stderr", valueBytes: VSBuffer.fromString("foo") }]);
+		await appendOutputItem(1, "1", [{ mime: "application/vnd.code.notebook.stderr", valueBytes: VSBuffer.fromString("bar") }]);
+		await appendOutputItem(1, "1", [{ mime: "application/vnd.code.notebook.stderr", valueBytes: VSBuffer.fromString("baz") }]);
 
 		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs.length, 1);
 		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items.length, 1);
-		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items[0].mime, 'application/vnd.code.notebook.stderr');
-		assert.strictEqual(VSBuffer.wrap(notebook.apiNotebook.cellAt(1).outputs[0].items[0].data).toString(), 'foobarbaz');
+		assert.strictEqual(notebook.apiNotebook.cellAt(1).outputs[0].items[0].mime, "application/vnd.code.notebook.stderr");
+		assert.strictEqual(VSBuffer.wrap(notebook.apiNotebook.cellAt(1).outputs[0].items[0].data).toString(), "foobarbaz");
 	});
 });

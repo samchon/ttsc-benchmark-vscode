@@ -3,20 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './iconlabel.css';
-import * as dom from '../../dom.js';
-import * as css from '../../cssValue.js';
-import { HighlightedLabel } from '../highlightedlabel/highlightedLabel.js';
-import { IHoverDelegate } from '../hover/hoverDelegate.js';
-import { IMatch } from '../../../common/filters.js';
-import { Disposable, DisposableStore, IDisposable } from '../../../common/lifecycle.js';
-import { equals } from '../../../common/objects.js';
-import { Range } from '../../../common/range.js';
-import { getDefaultHoverDelegate } from '../hover/hoverDelegateFactory.js';
-import type { IManagedHoverTooltipMarkdownString } from '../hover/hover.js';
-import { getBaseLayerHoverDelegate } from '../hover/hoverDelegate2.js';
-import { URI } from '../../../common/uri.js';
-import { ThemeIcon } from '../../../common/themables.js';
+import "./iconlabel.css";
+import * as dom from "../../dom.js";
+import * as css from "../../cssValue.js";
+import { HighlightedLabel } from "../highlightedlabel/highlightedLabel.js";
+import { IHoverDelegate } from "../hover/hoverDelegate.js";
+import { IMatch } from "../../../common/filters.js";
+import { Disposable, DisposableStore, IDisposable } from "../../../common/lifecycle.js";
+import { equals } from "../../../common/objects.js";
+import { Range } from "../../../common/range.js";
+import { getDefaultHoverDelegate } from "../hover/hoverDelegateFactory.js";
+import type { IManagedHoverTooltipMarkdownString } from "../hover/hover.js";
+import { getBaseLayerHoverDelegate } from "../hover/hoverDelegate2.js";
+import { URI } from "../../../common/uri.js";
+import { ThemeIcon } from "../../../common/themables.js";
 
 export interface IIconLabelCreationOptions {
 	readonly supportHighlights?: boolean;
@@ -73,7 +73,7 @@ class FastLabelNode {
 		}
 
 		this._classNames = classNames;
-		this._element.classList.value = '';
+		this._element.classList.value = "";
 		this._element.classList.add(...classNames);
 	}
 
@@ -83,7 +83,7 @@ class FastLabelNode {
 		}
 
 		this._empty = empty;
-		this._element.style.marginLeft = empty ? '0' : '';
+		this._element.style.marginLeft = empty ? "0" : "";
 	}
 
 	dispose(): void {
@@ -111,19 +111,31 @@ export class IconLabel extends Disposable {
 		super();
 		this.creationOptions = options;
 
-		this.domNode = this._register(new FastLabelNode(dom.append(container, dom.$('.monaco-icon-label'))));
+		this.domNode = this._register(
+      new FastLabelNode(dom.append(container, dom.$(".monaco-icon-label"))),
+    );
 
-		this.labelContainer = dom.append(this.domNode.element, dom.$('.monaco-icon-label-container'));
+		this.labelContainer = dom.append(
+      this.domNode.element,
+      dom.$(".monaco-icon-label-container"),
+    );
 
-		this.nameContainer = dom.append(this.labelContainer, dom.$('span.monaco-icon-name-container'));
+		this.nameContainer = dom.append(
+      this.labelContainer,
+      dom.$("span.monaco-icon-name-container"),
+    );
 
 		if (options?.supportHighlights || options?.supportIcons) {
-			this.nameNode = this._register(new LabelWithHighlights(this.nameContainer, !!options.supportIcons));
+			this.nameNode = this._register(
+        new LabelWithHighlights(this.nameContainer, !!options.supportIcons),
+      );
 		} else {
 			this.nameNode = new Label(this.nameContainer);
 		}
 
-		this.hoverDelegate = options?.hoverDelegate ?? getDefaultHoverDelegate('mouse');
+		this.hoverDelegate = options?.hoverDelegate ?? getDefaultHoverDelegate(
+      "mouse",
+    );
 	}
 
 	get element(): HTMLElement {
@@ -131,31 +143,31 @@ export class IconLabel extends Disposable {
 	}
 
 	setLabel(label: string | string[], description?: string, options?: IIconLabelValueOptions): void {
-		const labelClasses = ['monaco-icon-label'];
-		const containerClasses = ['monaco-icon-label-container'];
-		let ariaLabel: string = '';
+		const labelClasses = ["monaco-icon-label"];
+		const containerClasses = ["monaco-icon-label-container"];
+		let ariaLabel: string = "";
 		if (options) {
 			if (options.extraClasses) {
 				labelClasses.push(...options.extraClasses);
 			}
 
 			if (options.bold) {
-				labelClasses.push('bold');
+				labelClasses.push("bold");
 			}
 
 			if (options.italic) {
-				labelClasses.push('italic');
+				labelClasses.push("italic");
 			}
 
 			if (options.strikethrough) {
-				labelClasses.push('strikethrough');
+				labelClasses.push("strikethrough");
 			}
 
 			if (options.disabledCommand) {
-				containerClasses.push('disabled');
+				containerClasses.push("disabled");
 			}
 			if (options.title) {
-				if (typeof options.title === 'string') {
+				if (typeof options.title === "string") {
 					ariaLabel += options.title;
 				} else {
 					ariaLabel += label;
@@ -164,11 +176,13 @@ export class IconLabel extends Disposable {
 		}
 
 		// eslint-disable-next-line no-restricted-syntax
-		const existingIconNode = this.domNode.element.querySelector('.monaco-icon-label-iconpath');
+		const existingIconNode = this.domNode.element.querySelector(
+      ".monaco-icon-label-iconpath",
+    );
 		if (options?.iconPath) {
 			let iconNode;
 			if (!existingIconNode || !(dom.isHTMLElement(existingIconNode))) {
-				iconNode = dom.$('.monaco-icon-label-iconpath');
+				iconNode = dom.$(".monaco-icon-label-iconpath");
 				this.domNode.element.prepend(iconNode);
 			} else {
 				iconNode = existingIconNode;
@@ -176,23 +190,26 @@ export class IconLabel extends Disposable {
 			if (ThemeIcon.isThemeIcon(options.iconPath)) {
 				const iconClass = ThemeIcon.asClassName(options.iconPath);
 				iconNode.className = `monaco-icon-label-iconpath ${iconClass}`;
-				iconNode.style.backgroundImage = '';
+				iconNode.style.backgroundImage = "";
 			} else {
 				iconNode.style.backgroundImage = css.asCSSUrl(options?.iconPath);
 			}
-			iconNode.style.backgroundRepeat = 'no-repeat';
-			iconNode.style.backgroundPosition = 'center';
-			iconNode.style.backgroundSize = 'contain';
+			iconNode.style.backgroundRepeat = "no-repeat";
+			iconNode.style.backgroundPosition = "center";
+			iconNode.style.backgroundSize = "contain";
 
 		} else if (existingIconNode) {
 			existingIconNode.remove();
 		}
 
 		this.domNode.classNames = labelClasses;
-		this.domNode.element.setAttribute('aria-label', ariaLabel);
-		this.labelContainer.classList.value = '';
+		this.domNode.element.setAttribute("aria-label", ariaLabel);
+		this.labelContainer.classList.value = "";
 		this.labelContainer.classList.add(...containerClasses);
-		this.setupHover(options?.descriptionTitle ? this.labelContainer : this.element, options?.title);
+		this.setupHover(
+      options?.descriptionTitle ? this.labelContainer : this.element,
+      options?.title,
+    );
 
 		this.nameNode.setLabel(label, options);
 
@@ -200,18 +217,30 @@ export class IconLabel extends Disposable {
 			const descriptionNode = this.getOrCreateDescriptionNode();
 			if (descriptionNode instanceof HighlightedLabel) {
 				const supportIcons = options?.supportIcons ?? this.creationOptions?.supportIcons;
-				descriptionNode.set(description || '', options ? options.descriptionMatches : undefined, undefined, options?.labelEscapeNewLines, supportIcons);
+				descriptionNode.set(
+          description || "",
+          options ? options.descriptionMatches : undefined,
+          undefined,
+          options?.labelEscapeNewLines,
+          supportIcons,
+        );
 				this.setupHover(descriptionNode.element, options?.descriptionTitle);
 			} else {
-				descriptionNode.textContent = description && options?.labelEscapeNewLines ? HighlightedLabel.escapeNewLines(description, []) : (description || '');
-				this.setupHover(descriptionNode.element, options?.descriptionTitle || '');
+				descriptionNode.textContent = description && options?.labelEscapeNewLines ? HighlightedLabel.escapeNewLines(
+          description,
+          [],
+        ) : (description || "");
+				this.setupHover(
+          descriptionNode.element,
+          options?.descriptionTitle || "",
+        );
 				descriptionNode.empty = !description;
 			}
 		}
 
 		if (options?.suffix || this.suffixNode) {
 			const suffixNode = this.getOrCreateSuffixNode();
-			suffixNode.textContent = options?.suffix ?? '';
+			suffixNode.textContent = options?.suffix ?? "";
 		}
 	}
 
@@ -223,19 +252,28 @@ export class IconLabel extends Disposable {
 		}
 
 		if (!tooltip) {
-			htmlElement.removeAttribute('title');
+			htmlElement.removeAttribute("title");
 			return;
 		}
 
 		let hoverTarget = htmlElement;
 		if (this.creationOptions?.hoverTargetOverride) {
-			if (!dom.isAncestor(htmlElement, this.creationOptions.hoverTargetOverride)) {
-				throw new Error('hoverTargetOverrride must be an ancestor of the htmlElement');
+			if (!dom.isAncestor(
+        htmlElement,
+        this.creationOptions.hoverTargetOverride,
+      )) {
+				throw new Error(
+          "hoverTargetOverrride must be an ancestor of the htmlElement",
+        );
 			}
 			hoverTarget = this.creationOptions.hoverTargetOverride;
 		}
 
-		const hoverDisposable = getBaseLayerHoverDelegate().setupManagedHover(this.hoverDelegate, hoverTarget, tooltip);
+		const hoverDisposable = getBaseLayerHoverDelegate().setupManagedHover(
+      this.hoverDelegate,
+      hoverTarget,
+      tooltip,
+    );
 		if (hoverDisposable) {
 			this.customHovers.set(htmlElement, hoverDisposable);
 		}
@@ -251,8 +289,19 @@ export class IconLabel extends Disposable {
 
 	private getOrCreateSuffixNode() {
 		if (!this.suffixNode) {
-			const suffixContainer = this._register(new FastLabelNode(dom.after(this.nameContainer, dom.$('span.monaco-icon-suffix-container'))));
-			this.suffixNode = this._register(new FastLabelNode(dom.append(suffixContainer.element, dom.$('span.label-suffix'))));
+			const suffixContainer = this._register(
+        new FastLabelNode(
+          dom.after(
+            this.nameContainer,
+            dom.$("span.monaco-icon-suffix-container"),
+          ),
+        ),
+      );
+			this.suffixNode = this._register(
+        new FastLabelNode(
+          dom.append(suffixContainer.element, dom.$("span.label-suffix")),
+        ),
+      );
 		}
 
 		return this.suffixNode;
@@ -260,11 +309,32 @@ export class IconLabel extends Disposable {
 
 	private getOrCreateDescriptionNode() {
 		if (!this.descriptionNode) {
-			const descriptionContainer = this._register(new FastLabelNode(dom.append(this.labelContainer, dom.$('span.monaco-icon-description-container'))));
+			const descriptionContainer = this._register(
+        new FastLabelNode(
+          dom.append(
+            this.labelContainer,
+            dom.$("span.monaco-icon-description-container"),
+          ),
+        ),
+      );
 			if (this.creationOptions?.supportDescriptionHighlights) {
-				this.descriptionNode = this._register(new HighlightedLabel(dom.append(descriptionContainer.element, dom.$('span.label-description'))));
+				this.descriptionNode = this._register(
+          new HighlightedLabel(
+            dom.append(
+              descriptionContainer.element,
+              dom.$("span.label-description"),
+            ),
+          ),
+        );
 			} else {
-				this.descriptionNode = this._register(new FastLabelNode(dom.append(descriptionContainer.element, dom.$('span.label-description'))));
+				this.descriptionNode = this._register(
+          new FastLabelNode(
+            dom.append(
+              descriptionContainer.element,
+              dom.$("span.label-description"),
+            ),
+          ),
+        );
 			}
 		}
 
@@ -288,27 +358,45 @@ class Label {
 		this.label = label;
 		this.options = options;
 
-		if (typeof label === 'string') {
+		if (typeof label === "string") {
 			if (!this.singleLabel) {
-				this.container.textContent = '';
-				this.container.classList.remove('multiple');
-				this.singleLabel = dom.append(this.container, dom.$('a.label-name', { id: options?.domId }));
+				this.container.textContent = "";
+				this.container.classList.remove("multiple");
+				this.singleLabel = dom.append(
+          this.container,
+          dom.$("a.label-name", { id: options?.domId }),
+        );
 			}
 
 			this.singleLabel.textContent = label;
 		} else {
-			this.container.textContent = '';
-			this.container.classList.add('multiple');
+			this.container.textContent = "";
+			this.container.classList.add("multiple");
 			this.singleLabel = undefined;
 
 			for (let i = 0; i < label.length; i++) {
 				const l = label[i];
 				const id = options?.domId && `${options?.domId}_${i}`;
 
-				dom.append(this.container, dom.$('a.label-name', { id, 'data-icon-label-count': label.length, 'data-icon-label-index': i, 'role': 'treeitem' }, l));
+				dom.append(
+          this.container,
+          dom.$(
+            "a.label-name",
+            {
+              id,
+              "data-icon-label-count": label.length,
+              "data-icon-label-index": i,
+              "role": "treeitem",
+            },
+            l,
+          ),
+        );
 
 				if (i < label.length - 1) {
-					dom.append(this.container, dom.$('span.label-separator', undefined, options?.separator || '/'));
+					dom.append(
+            this.container,
+            dom.$("span.label-separator", undefined, options?.separator || "/"),
+          );
 				}
 			}
 		}
@@ -357,22 +445,35 @@ class LabelWithHighlights extends Disposable {
 		// Determine supportIcons: use option if provided, otherwise use constructor value
 		const supportIcons = options?.supportIcons ?? this.supportIcons;
 
-		if (typeof label === 'string') {
+		if (typeof label === "string") {
 			if (!this.singleLabel) {
 				this._labelDisposables.clear();
-				this.container.textContent = '';
-				this.container.classList.remove('multiple');
-				this.singleLabel = this._labelDisposables.add(new HighlightedLabel(dom.append(this.container, dom.$('a.label-name', { id: options?.domId }))));
+				this.container.textContent = "";
+				this.container.classList.remove("multiple");
+				this.singleLabel = this._labelDisposables.add(
+          new HighlightedLabel(
+            dom.append(
+              this.container,
+              dom.$("a.label-name", { id: options?.domId }),
+            ),
+          ),
+        );
 			}
 
-			this.singleLabel.set(label, options?.matches, undefined, options?.labelEscapeNewLines, supportIcons);
+			this.singleLabel.set(
+        label,
+        options?.matches,
+        undefined,
+        options?.labelEscapeNewLines,
+        supportIcons,
+      );
 		} else {
 			this._labelDisposables.clear();
-			this.container.textContent = '';
-			this.container.classList.add('multiple');
+			this.container.textContent = "";
+			this.container.classList.add("multiple");
 			this.singleLabel = undefined;
 
-			const separator = options?.separator || '/';
+			const separator = options?.separator || "/";
 			const matches = splitMatches(label, separator, options?.matches);
 
 			for (let i = 0; i < label.length; i++) {
@@ -380,12 +481,25 @@ class LabelWithHighlights extends Disposable {
 				const m = matches ? matches[i] : undefined;
 				const id = options?.domId && `${options?.domId}_${i}`;
 
-				const name = dom.$('a.label-name', { id, 'data-icon-label-count': label.length, 'data-icon-label-index': i, 'role': 'treeitem' });
-				const highlightedLabel = this._labelDisposables.add(new HighlightedLabel(dom.append(this.container, name)));
-				highlightedLabel.set(l, m, undefined, options?.labelEscapeNewLines, supportIcons);
+				const name = dom.$("a.label-name", {
+          id,
+          "data-icon-label-count": label.length,
+          "data-icon-label-index": i,
+          "role": "treeitem",
+        });
+				const highlightedLabel = this._labelDisposables.add(
+          new HighlightedLabel(dom.append(this.container, name)),
+        );
+				highlightedLabel.set(
+          l,
+          m,
+          undefined,
+          options?.labelEscapeNewLines,
+          supportIcons,
+        );
 
 				if (i < label.length - 1) {
-					dom.append(name, dom.$('span.label-separator', undefined, separator));
+					dom.append(name, dom.$("span.label-separator", undefined, separator));
 				}
 			}
 		}

@@ -3,16 +3,47 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { isThenable } from '../../../../base/common/async.js';
-import { CancellationToken, CancellationTokenSource } from '../../../../base/common/cancellation.js';
-import { toErrorMessage } from '../../../../base/common/errorMessage.js';
-import { Schemas } from '../../../../base/common/network.js';
-import * as path from '../../../../base/common/path.js';
-import * as resources from '../../../../base/common/resources.js';
-import { URI } from '../../../../base/common/uri.js';
-import { FolderQuerySearchTree } from './folderQuerySearchTree.js';
-import { DEFAULT_MAX_SEARCH_RESULTS, hasSiblingPromiseFn, IAITextQuery, IExtendedExtensionSearchOptions, IFileMatch, IFolderQuery, excludeToGlobPattern, IPatternInfo, ISearchCompleteStats, ITextQuery, ITextSearchContext, ITextSearchMatch, ITextSearchResult, ITextSearchStats, QueryGlobTester, QueryType, resolvePatternsForProvider, ISearchRange, DEFAULT_TEXT_SEARCH_PREVIEW_OPTIONS } from './search.js';
-import { TextSearchComplete2, TextSearchMatch2, TextSearchProviderFolderOptions, TextSearchProvider2, TextSearchProviderOptions, TextSearchQuery2, TextSearchResult2, AITextSearchProvider, AISearchResult, AISearchKeyword } from './searchExtTypes.js';
+import { isThenable } from "../../../../base/common/async.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { toErrorMessage } from "../../../../base/common/errorMessage.js";
+import { Schemas } from "../../../../base/common/network.js";
+import * as path from "../../../../base/common/path.js";
+import * as resources from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { FolderQuerySearchTree } from "./folderQuerySearchTree.js";
+import {
+  DEFAULT_MAX_SEARCH_RESULTS,
+  hasSiblingPromiseFn,
+  IAITextQuery,
+  IExtendedExtensionSearchOptions,
+  IFileMatch,
+  IFolderQuery,
+  excludeToGlobPattern,
+  IPatternInfo,
+  ISearchCompleteStats,
+  ITextQuery,
+  ITextSearchContext,
+  ITextSearchMatch,
+  ITextSearchResult,
+  ITextSearchStats,
+  QueryGlobTester,
+  QueryType,
+  resolvePatternsForProvider,
+  ISearchRange,
+  DEFAULT_TEXT_SEARCH_PREVIEW_OPTIONS,
+} from "./search.js";
+import {
+  TextSearchComplete2,
+  TextSearchMatch2,
+  TextSearchProviderFolderOptions,
+  TextSearchProvider2,
+  TextSearchProviderOptions,
+  TextSearchQuery2,
+  TextSearchResult2,
+  AITextSearchProvider,
+  AISearchResult,
+  AISearchKeyword,
+} from "./searchExtTypes.js";
 
 export interface IFileUtils {
 	readdir: (resource: URI) => Promise<string[]>;
@@ -40,7 +71,7 @@ export class TextSearchManager {
 
 	constructor(private queryProviderPair: IAITextQueryProviderPair | ITextQueryProviderPair,
 		private fileUtils: IFileUtils,
-		private processType: ITextSearchStats['type']) { }
+		private processType: ITextSearchStats["type"]) { }
 
 	private get query() {
 		return this.queryProviderPair.query;
@@ -65,7 +96,7 @@ export class TextSearchManager {
 
 				if (!this.isLimitHit) {
 					const resultSize = this.resultSize(result);
-					if (result instanceof TextSearchMatch2 && typeof this.query.maxResults === 'number' && this.resultCount + resultSize > this.query.maxResults) {
+					if (result instanceof TextSearchMatch2 && typeof this.query.maxResults === "number" && this.resultCount + resultSize > this.query.maxResults) {
 						this.isLimitHit = true;
 						isCanceled = true;
 						tokenSource.cancel();
@@ -92,8 +123,8 @@ export class TextSearchManager {
 					limitHit: this.isLimitHit || result?.limitHit,
 					messages: this.getMessagesFromResults(result),
 					stats: {
-						type: this.processType
-					}
+						type: this.processType,
+					},
 				});
 			}, (err: Error) => {
 				tokenSource.dispose();
@@ -122,18 +153,22 @@ export class TextSearchManager {
 	}
 
 	private trimResultToSize(result: TextSearchMatch2, size: number): TextSearchMatch2 {
-		return new TextSearchMatch2(result.uri, result.ranges.slice(0, size), result.previewText);
+		return new TextSearchMatch2(
+      result.uri,
+      result.ranges.slice(0, size),
+      result.previewText,
+    );
 	}
 
 	private async doSearch(folderQueries: IFolderQuery<URI>[], onResult: (result: TextSearchResult2, folderIdx: number) => void, token: CancellationToken, onKeywordResult?: (keyword: AISearchKeyword) => void): Promise<TextSearchComplete2 | null | undefined> {
 		const folderMappings: FolderQuerySearchTree<FolderQueryInfo> = new FolderQuerySearchTree<FolderQueryInfo>(
-			folderQueries,
-			(fq, i) => {
-				const queryTester = new QueryGlobTester(this.query, fq);
-				return { queryTester, folder: fq.folder, folderIdx: i };
-			},
-			() => true
-		);
+      folderQueries,
+      (fq, i) => {
+        const queryTester = new QueryGlobTester(this.query, fq);
+        return { queryTester, folder: fq.folder, folderIdx: i };
+      },
+      () => true,
+    );
 
 		const testingPs: Promise<void>[] = [];
 		const progress = {
@@ -142,7 +177,7 @@ export class TextSearchManager {
 					onKeywordResult?.(result);
 				} else {
 					if (result.uri === undefined) {
-						throw Error('Text search result URI is undefined. Please check provider implementation.');
+						throw Error("Text search result URI is undefined. Please check provider implementation.");
 					}
 					const folderQuery = folderMappings.findQueryFragmentAwareSubstr(result.uri);
 					if (folderQuery?.folder?.scheme) {
@@ -169,26 +204,38 @@ export class TextSearchManager {
 						}
 					}
 				}
-			}
+			},
 		};
 
-		const folderOptions = folderQueries.map(fq => this.getSearchOptionsForFolder(fq));
+		const folderOptions = folderQueries.map(
+      fq => this.getSearchOptionsForFolder(fq),
+    );
 		const searchOptions: TextSearchProviderOptions = {
-			folderOptions,
-			maxFileSize: this.query.maxFileSize,
-			maxResults: this.query.maxResults ?? DEFAULT_MAX_SEARCH_RESULTS,
-			previewOptions: this.query.previewOptions ?? DEFAULT_TEXT_SEARCH_PREVIEW_OPTIONS,
-			surroundingContext: this.query.surroundingContext ?? 0,
-		};
-		if ('usePCRE2' in this.query) {
+      folderOptions,
+      maxFileSize: this.query.maxFileSize,
+      maxResults: this.query.maxResults ?? DEFAULT_MAX_SEARCH_RESULTS,
+      previewOptions: this.query.previewOptions ?? DEFAULT_TEXT_SEARCH_PREVIEW_OPTIONS,
+      surroundingContext: this.query.surroundingContext ?? 0,
+    };
+		if ("usePCRE2" in this.query) {
 			(<IExtendedExtensionSearchOptions>searchOptions).usePCRE2 = this.query.usePCRE2;
 		}
 
 		let result;
 		if (this.queryProviderPair.query.type === QueryType.aiText) {
-			result = await (this.queryProviderPair as IAITextQueryProviderPair).provider.provideAITextSearchResults(this.queryProviderPair.query.contentPattern, searchOptions, progress, token);
+			result = await (this.queryProviderPair as IAITextQueryProviderPair).provider.provideAITextSearchResults(
+        this.queryProviderPair.query.contentPattern,
+        searchOptions,
+        progress,
+        token,
+      );
 		} else {
-			result = await (this.queryProviderPair as ITextQueryProviderPair).provider.provideTextSearchResults(patternInfoToQuery(this.queryProviderPair.query.contentPattern), searchOptions, progress, token);
+			result = await (this.queryProviderPair as ITextQueryProviderPair).provider.provideTextSearchResults(
+        patternInfoToQuery(this.queryProviderPair.query.contentPattern),
+        searchOptions,
+        progress,
+        token,
+      );
 		}
 		if (testingPs.length) {
 			await Promise.all(testingPs);
@@ -198,17 +245,20 @@ export class TextSearchManager {
 	}
 
 	private getSearchOptionsForFolder(fq: IFolderQuery<URI>): TextSearchProviderFolderOptions {
-		const includes = resolvePatternsForProvider(this.query.includePattern, fq.includePattern);
+		const includes = resolvePatternsForProvider(
+      this.query.includePattern,
+      fq.includePattern,
+    );
 
 		let excludePattern = fq.excludePattern?.map(e => ({
-			folder: e.folder,
-			patterns: resolvePatternsForProvider(this.query.excludePattern, e.pattern)
-		}));
+      folder: e.folder,
+      patterns: resolvePatternsForProvider(this.query.excludePattern, e.pattern),
+    }));
 
 		if (!excludePattern || excludePattern.length === 0) {
 			excludePattern = [{
 				folder: undefined,
-				patterns: resolvePatternsForProvider(this.query.excludePattern, undefined)
+				patterns: resolvePatternsForProvider(this.query.excludePattern, undefined),
 			}];
 		}
 		const excludes = excludeToGlobPattern(excludePattern);
@@ -220,10 +270,10 @@ export class TextSearchManager {
 			useIgnoreFiles: {
 				local: !fq.disregardIgnoreFiles,
 				parent: !fq.disregardParentIgnoreFiles,
-				global: !fq.disregardGlobalIgnoreFiles
+				global: !fq.disregardGlobalIgnoreFiles,
 			},
 			followSymlinks: !fq.ignoreSymlinks,
-			encoding: (fq.fileEncoding && this.fileUtils.toCanonicalName(fq.fileEncoding)) ?? '',
+			encoding: (fq.fileEncoding && this.fileUtils.toCanonicalName(fq.fileEncoding)) ?? "",
 			ignoreGlobCase: this.query.ignoreGlobCase || fq.ignoreGlobCase,
 		};
 		return options;
@@ -232,12 +282,12 @@ export class TextSearchManager {
 
 function patternInfoToQuery(patternInfo: IPatternInfo): TextSearchQuery2 {
 	return {
-		isCaseSensitive: patternInfo.isCaseSensitive || false,
-		isRegExp: patternInfo.isRegExp || false,
-		isWordMatch: patternInfo.isWordMatch || false,
-		isMultiline: patternInfo.isMultiline || false,
-		pattern: patternInfo.pattern
-	};
+    isCaseSensitive: patternInfo.isCaseSensitive || false,
+    isRegExp: patternInfo.isRegExp || false,
+    isWordMatch: patternInfo.isWordMatch || false,
+    isMultiline: patternInfo.isMultiline || false,
+    pattern: patternInfo.pattern,
+  };
 }
 
 export class TextSearchResultsCollector {
@@ -248,14 +298,20 @@ export class TextSearchResultsCollector {
 	private _currentFileMatch: IFileMatch | null = null;
 
 	constructor(private _onResult: (result: IFileMatch[]) => void) {
-		this._batchedCollector = new BatchedCollector<IFileMatch>(512, items => this.sendItems(items));
+		this._batchedCollector = new BatchedCollector<IFileMatch>(
+      512,
+      items => this.sendItems(items),
+    );
 	}
 
 	add(data: TextSearchResult2, folderIdx: number): void {
 		// Collects TextSearchResults into IInternalFileMatches and collates using BatchedCollector.
 		// This is efficient for ripgrep which sends results back one file at a time. It wouldn't be efficient for other search
 		// providers that send results in random order. We could do this step afterwards instead.
-		if (this._currentFileMatch && (this._currentFolderIdx !== folderIdx || !resources.isEqual(this._currentUri, data.uri))) {
+		if (this._currentFileMatch && (this._currentFolderIdx !== folderIdx || !resources.isEqual(
+      this._currentUri,
+      data.uri,
+    ))) {
 			this.pushToCollector();
 			this._currentFileMatch = null;
 		}
@@ -264,9 +320,9 @@ export class TextSearchResultsCollector {
 			this._currentFolderIdx = folderIdx;
 			this._currentUri = data.uri;
 			this._currentFileMatch = {
-				resource: data.uri,
-				results: []
-			};
+        resource: data.uri,
+        results: [],
+      };
 		}
 
 		this._currentFileMatch.results!.push(extensionResultToFrontendResult(data));
@@ -299,21 +355,21 @@ function extensionResultToFrontendResult(data: TextSearchResult2): ITextSearchRe
 					startLineNumber: r.previewRange.start.line,
 					startColumn: r.previewRange.start.character,
 					endLineNumber: r.previewRange.end.line,
-					endColumn: r.previewRange.end.character
+					endColumn: r.previewRange.end.character,
 				} satisfies ISearchRange,
 				source: {
 					startLineNumber: r.sourceRange.start.line,
 					startColumn: r.sourceRange.start.character,
 					endLineNumber: r.sourceRange.end.line,
-					endColumn: r.sourceRange.end.character
+					endColumn: r.sourceRange.end.character,
 				} satisfies ISearchRange,
 			})),
 		} satisfies ITextSearchMatch;
 	} else {
 		return {
-			text: data.text,
-			lineNumber: data.lineNumber
-		} satisfies ITextSearchContext;
+      text: data.text,
+      lineNumber: data.lineNumber,
+    } satisfies ITextSearchContext;
 	}
 }
 
@@ -375,9 +431,12 @@ export class BatchedCollector<T> {
 			this.flush();
 		} else if (!this.timeoutHandle) {
 			// No timeout running, start a timeout to flush
-			this.timeoutHandle = setTimeout(() => {
-				this.flush();
-			}, BatchedCollector.TIMEOUT);
+			this.timeoutHandle = setTimeout(
+        () => {
+          this.flush();
+        },
+        BatchedCollector.TIMEOUT,
+      );
 		}
 	}
 

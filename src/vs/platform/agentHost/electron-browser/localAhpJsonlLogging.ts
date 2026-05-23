@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AhpJsonlLogger } from '../common/ahpJsonlLogger.js';
-import type { AuthenticateParams, IAgentService } from '../common/agentService.js';
+import { AhpJsonlLogger } from "../common/ahpJsonlLogger.js";
+import type { AuthenticateParams, IAgentService } from "../common/agentService.js";
 
-const REDACTED_VALUE = '<redacted>';
+const REDACTED_VALUE = "<redacted>";
 
 /**
  * IAgentService methods that semantically correspond to JSON-RPC requests
@@ -15,24 +15,24 @@ const REDACTED_VALUE = '<redacted>';
  * matching `s2c` response frames.
  */
 const REQUEST_METHODS: ReadonlySet<string> = new Set<keyof IAgentService>([
-	'authenticate',
-	'listSessions',
-	'createSession',
-	'resolveSessionConfig',
-	'sessionConfigCompletions',
-	'completions',
-	'getCompletionTriggerCharacters',
-	'disposeSession',
-	'createTerminal',
-	'disposeTerminal',
-	'shutdown',
-	'subscribe',
-	'resourceList',
-	'resourceRead',
-	'resourceWrite',
-	'resourceCopy',
-	'resourceDelete',
-	'resourceMove',
+	"authenticate",
+	"listSessions",
+	"createSession",
+	"resolveSessionConfig",
+	"sessionConfigCompletions",
+	"completions",
+	"getCompletionTriggerCharacters",
+	"disposeSession",
+	"createTerminal",
+	"disposeTerminal",
+	"shutdown",
+	"subscribe",
+	"resourceList",
+	"resourceRead",
+	"resourceWrite",
+	"resourceCopy",
+	"resourceDelete",
+	"resourceMove",
 ] satisfies (keyof IAgentService)[]);
 
 /**
@@ -41,9 +41,9 @@ const REQUEST_METHODS: ReadonlySet<string> = new Set<keyof IAgentService>([
  * with no id.
  */
 const NOTIFICATION_METHODS: ReadonlySet<string> = new Set<keyof IAgentService>([
-	'unsubscribe',
-	'addSubscriber',
-	'dispatchAction',
+	"unsubscribe",
+	"addSubscriber",
+	"dispatchAction",
 ] satisfies (keyof IAgentService)[]);
 
 /**
@@ -63,7 +63,7 @@ export function wrapAgentServiceWithAhpLogging(target: IAgentService, logger: Ah
 	return new Proxy(target, {
 		get(t, prop, receiver) {
 			const value = Reflect.get(t, prop, receiver);
-			if (typeof prop !== 'string' || typeof value !== 'function') {
+			if (typeof prop !== "string" || typeof value !== "function") {
 				return value;
 			}
 			const isRequest = REQUEST_METHODS.has(prop);
@@ -75,31 +75,31 @@ export function wrapAgentServiceWithAhpLogging(target: IAgentService, logger: Ah
 			return function (this: unknown, ...args: unknown[]) {
 				const logArgs = redactParams(method, args);
 				if (isNotification) {
-					const frame = { jsonrpc: '2.0' as const, method, params: logArgs };
-					logger.log(frame, 'c2s');
+					const frame = { jsonrpc: "2.0" as const, method, params: logArgs };
+					logger.log(frame, "c2s");
 					return value.apply(t, args);
 				}
 				const id = nextId++;
-				const requestFrame = { jsonrpc: '2.0' as const, id, method, params: logArgs };
-				logger.log(requestFrame, 'c2s');
+				const requestFrame = { jsonrpc: "2.0" as const, id, method, params: logArgs };
+				logger.log(requestFrame, "c2s");
 				const result = value.apply(t, args) as Promise<unknown> | unknown;
-				if (result && typeof (result as Promise<unknown>).then === 'function') {
+				if (result && typeof (result as Promise<unknown>).then === "function") {
 					return (result as Promise<unknown>).then(
 						res => {
-							const responseFrame = { jsonrpc: '2.0' as const, id, result: res ?? null };
-							logger.log(responseFrame, 's2c');
+							const responseFrame = { jsonrpc: "2.0" as const, id, result: res ?? null };
+							logger.log(responseFrame, "s2c");
 							return res;
 						},
 						err => {
 							const errorFrame = {
-								jsonrpc: '2.0' as const,
+								jsonrpc: "2.0" as const,
 								id,
 								error: {
 									code: -32603,
 									message: err instanceof Error ? err.message : String(err),
 								},
 							};
-							logger.log(errorFrame, 's2c');
+							logger.log(errorFrame, "s2c");
 							throw err;
 						},
 					);
@@ -111,7 +111,7 @@ export function wrapAgentServiceWithAhpLogging(target: IAgentService, logger: Ah
 }
 
 function redactParams(method: string, args: readonly unknown[]): readonly unknown[] {
-	if (method !== 'authenticate') {
+	if (method !== "authenticate") {
 		return args;
 	}
 	const [params, ...rest] = args;
@@ -122,10 +122,10 @@ function redactParams(method: string, args: readonly unknown[]): readonly unknow
 }
 
 function isAuthenticateParams(value: unknown): value is AuthenticateParams {
-	return typeof value === 'object'
+	return typeof value === "object"
 		&& value !== null
-		&& 'resource' in value
-		&& 'token' in value
-		&& typeof value.resource === 'string'
-		&& typeof value.token === 'string';
+		&& "resource" in value
+		&& "token" in value
+		&& typeof value.resource === "string"
+		&& typeof value.token === "string";
 }

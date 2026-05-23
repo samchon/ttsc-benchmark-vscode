@@ -3,48 +3,70 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IBulkEditService, ResourceTextEdit } from '../../../../../editor/browser/services/bulkEditService.js';
-import { localize, localize2 } from '../../../../../nls.js';
-import { Action2, MenuId, registerAction2 } from '../../../../../platform/actions/common/actions.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { ContextKeyExpr, ContextKeyExpression } from '../../../../../platform/contextkey/common/contextkey.js';
-import { ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
-import { ActiveEditorContext } from '../../../../common/contextkeys.js';
-import { DiffElementCellViewModelBase, NotebookDocumentMetadataViewModel, SideBySideDiffElementViewModel } from './diffElementViewModel.js';
-import { INotebookTextDiffEditor, NOTEBOOK_DIFF_CELL_IGNORE_WHITESPACE_KEY, NOTEBOOK_DIFF_CELL_INPUT, NOTEBOOK_DIFF_CELL_PROPERTY, NOTEBOOK_DIFF_CELL_PROPERTY_EXPANDED, NOTEBOOK_DIFF_HAS_UNCHANGED_CELLS, NOTEBOOK_DIFF_ITEM_DIFF_STATE, NOTEBOOK_DIFF_ITEM_KIND, NOTEBOOK_DIFF_METADATA, NOTEBOOK_DIFF_UNCHANGED_CELLS_HIDDEN } from './notebookDiffEditorBrowser.js';
-import { NotebookTextDiffEditor } from './notebookDiffEditor.js';
-import { NotebookDiffEditorInput } from '../../common/notebookDiffEditorInput.js';
-import { nextChangeIcon, openAsTextIcon, previousChangeIcon, renderOutputIcon, revertIcon, toggleWhitespace } from '../notebookIcons.js';
-import { IEditorService } from '../../../../services/editor/common/editorService.js';
-import { Registry } from '../../../../../platform/registry/common/platform.js';
-import { IConfigurationRegistry, Extensions as ConfigurationExtensions } from '../../../../../platform/configuration/common/configurationRegistry.js';
-import { ICommandActionTitle } from '../../../../../platform/action/common/action.js';
-import { DEFAULT_EDITOR_ASSOCIATION } from '../../../../common/editor.js';
-import { KeybindingWeight } from '../../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { KeyCode, KeyMod } from '../../../../../base/common/keyCodes.js';
-import { CellEditType, ICellEditOperation, NOTEBOOK_DIFF_EDITOR_ID } from '../../common/notebookCommon.js';
-import { ITextResourceConfigurationService } from '../../../../../editor/common/services/textResourceConfiguration.js';
-import { NotebookMultiTextDiffEditor } from './notebookMultiDiffEditor.js';
-import { Codicon } from '../../../../../base/common/codicons.js';
-import type { URI } from '../../../../../base/common/uri.js';
-import { TextEditorSelectionRevealType, type ITextEditorOptions } from '../../../../../platform/editor/common/editor.js';
-import product from '../../../../../platform/product/common/product.js';
-import { ctxHasEditorModification, ctxHasRequestInProgress } from '../../../chat/browser/chatEditing/chatEditingEditorContextKeys.js';
+import { IBulkEditService, ResourceTextEdit } from "../../../../../editor/browser/services/bulkEditService.js";
+import { localize, localize2 } from "../../../../../nls.js";
+import { Action2, MenuId, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { ContextKeyExpr, ContextKeyExpression } from "../../../../../platform/contextkey/common/contextkey.js";
+import { ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ActiveEditorContext } from "../../../../common/contextkeys.js";
+import {
+  DiffElementCellViewModelBase,
+  NotebookDocumentMetadataViewModel,
+  SideBySideDiffElementViewModel,
+} from "./diffElementViewModel.js";
+import {
+  INotebookTextDiffEditor,
+  NOTEBOOK_DIFF_CELL_IGNORE_WHITESPACE_KEY,
+  NOTEBOOK_DIFF_CELL_INPUT,
+  NOTEBOOK_DIFF_CELL_PROPERTY,
+  NOTEBOOK_DIFF_CELL_PROPERTY_EXPANDED,
+  NOTEBOOK_DIFF_HAS_UNCHANGED_CELLS,
+  NOTEBOOK_DIFF_ITEM_DIFF_STATE,
+  NOTEBOOK_DIFF_ITEM_KIND,
+  NOTEBOOK_DIFF_METADATA,
+  NOTEBOOK_DIFF_UNCHANGED_CELLS_HIDDEN,
+} from "./notebookDiffEditorBrowser.js";
+import { NotebookTextDiffEditor } from "./notebookDiffEditor.js";
+import { NotebookDiffEditorInput } from "../../common/notebookDiffEditorInput.js";
+import {
+  nextChangeIcon,
+  openAsTextIcon,
+  previousChangeIcon,
+  renderOutputIcon,
+  revertIcon,
+  toggleWhitespace,
+} from "../notebookIcons.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+import { Registry } from "../../../../../platform/registry/common/platform.js";
+import { IConfigurationRegistry, Extensions as ConfigurationExtensions } from "../../../../../platform/configuration/common/configurationRegistry.js";
+import { ICommandActionTitle } from "../../../../../platform/action/common/action.js";
+import { DEFAULT_EDITOR_ASSOCIATION } from "../../../../common/editor.js";
+import { KeybindingWeight } from "../../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { KeyCode, KeyMod } from "../../../../../base/common/keyCodes.js";
+import { CellEditType, ICellEditOperation, NOTEBOOK_DIFF_EDITOR_ID } from "../../common/notebookCommon.js";
+import { ITextResourceConfigurationService } from "../../../../../editor/common/services/textResourceConfiguration.js";
+import { NotebookMultiTextDiffEditor } from "./notebookMultiDiffEditor.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import type { URI } from "../../../../../base/common/uri.js";
+import { TextEditorSelectionRevealType, type ITextEditorOptions } from "../../../../../platform/editor/common/editor.js";
+import product from "../../../../../platform/product/common/product.js";
+import { ctxHasEditorModification, ctxHasRequestInProgress } from "../../../chat/browser/chatEditing/chatEditingEditorContextKeys.js";
 
 // ActiveEditorContext.isEqualTo(SearchEditorConstants.SearchEditorID)
 
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'notebook.diff.openFile',
+			id: "notebook.diff.openFile",
 			icon: Codicon.goToFile,
-			title: localize2('notebook.diff.openFile', 'Open File'),
+			title: localize2("notebook.diff.openFile", "Open File"),
 			precondition: ContextKeyExpr.or(ActiveEditorContext.isEqualTo(NotebookTextDiffEditor.ID), ActiveEditorContext.isEqualTo(NotebookMultiTextDiffEditor.ID)),
 			menu: [{
 				id: MenuId.EditorTitle,
-				group: 'navigation',
+				group: "navigation",
 				when: ContextKeyExpr.or(ActiveEditorContext.isEqualTo(NotebookTextDiffEditor.ID), ActiveEditorContext.isEqualTo(NotebookMultiTextDiffEditor.ID)),
-			}]
+			}],
 		});
 	}
 
@@ -66,14 +88,14 @@ registerAction2(class extends Action2 {
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'notebook.diff.cell.toggleCollapseUnchangedRegions',
-			title: localize2('notebook.diff.cell.toggleCollapseUnchangedRegions', 'Toggle Collapse Unchanged Regions'),
+			id: "notebook.diff.cell.toggleCollapseUnchangedRegions",
+			title: localize2("notebook.diff.cell.toggleCollapseUnchangedRegions", "Toggle Collapse Unchanged Regions"),
 			icon: Codicon.map,
-			toggled: ContextKeyExpr.has('config.diffEditor.hideUnchangedRegions.enabled'),
+			toggled: ContextKeyExpr.has("config.diffEditor.hideUnchangedRegions.enabled"),
 			precondition: ActiveEditorContext.isEqualTo(NotebookTextDiffEditor.ID),
 			menu: {
 				id: MenuId.EditorTitle,
-				group: 'navigation',
+				group: "navigation",
 				when: ActiveEditorContext.isEqualTo(NotebookTextDiffEditor.ID),
 			},
 		});
@@ -81,8 +103,8 @@ registerAction2(class extends Action2 {
 
 	run(accessor: ServicesAccessor, ...args: unknown[]): void {
 		const configurationService = accessor.get(IConfigurationService);
-		const newValue = !configurationService.getValue<boolean>('diffEditor.hideUnchangedRegions.enabled');
-		configurationService.updateValue('diffEditor.hideUnchangedRegions.enabled', newValue);
+		const newValue = !configurationService.getValue<boolean>("diffEditor.hideUnchangedRegions.enabled");
+		configurationService.updateValue("diffEditor.hideUnchangedRegions.enabled", newValue);
 	}
 });
 
@@ -90,15 +112,15 @@ registerAction2(class extends Action2 {
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'notebook.diff.switchToText',
+			id: "notebook.diff.switchToText",
 			icon: openAsTextIcon,
-			title: localize2('notebook.diff.switchToText', 'Open Text Diff Editor'),
+			title: localize2("notebook.diff.switchToText", "Open Text Diff Editor"),
 			precondition: ContextKeyExpr.or(ActiveEditorContext.isEqualTo(NotebookTextDiffEditor.ID), ActiveEditorContext.isEqualTo(NotebookMultiTextDiffEditor.ID)),
 			menu: [{
 				id: MenuId.EditorTitle,
-				group: 'navigation',
+				group: "navigation",
 				when: ContextKeyExpr.or(ActiveEditorContext.isEqualTo(NotebookTextDiffEditor.ID), ActiveEditorContext.isEqualTo(NotebookMultiTextDiffEditor.ID)),
-			}]
+			}],
 		});
 	}
 
@@ -119,8 +141,8 @@ registerAction2(class extends Action2 {
 					label: diffEditorInput.getName(),
 					options: {
 						preserveFocus: false,
-						override: DEFAULT_EDITOR_ASSOCIATION.id
-					}
+						override: DEFAULT_EDITOR_ASSOCIATION.id,
+					},
 				});
 		}
 	}
@@ -130,15 +152,15 @@ registerAction2(class extends Action2 {
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'notebook.diffEditor.showUnchangedCells',
-			title: localize2('showUnchangedCells', 'Show Unchanged Cells'),
+			id: "notebook.diffEditor.showUnchangedCells",
+			title: localize2("showUnchangedCells", "Show Unchanged Cells"),
 			icon: Codicon.unfold,
 			precondition: ContextKeyExpr.and(ActiveEditorContext.isEqualTo(NotebookMultiTextDiffEditor.ID), ContextKeyExpr.has(NOTEBOOK_DIFF_HAS_UNCHANGED_CELLS.key)),
 			menu: {
 				when: ContextKeyExpr.and(ActiveEditorContext.isEqualTo(NotebookMultiTextDiffEditor.ID), ContextKeyExpr.has(NOTEBOOK_DIFF_HAS_UNCHANGED_CELLS.key), ContextKeyExpr.equals(NOTEBOOK_DIFF_UNCHANGED_CELLS_HIDDEN.key, true)),
 				id: MenuId.EditorTitle,
 				order: 22,
-				group: 'navigation',
+				group: "navigation",
 			},
 		});
 	}
@@ -157,15 +179,15 @@ registerAction2(class extends Action2 {
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'notebook.diffEditor.hideUnchangedCells',
-			title: localize2('hideUnchangedCells', 'Hide Unchanged Cells'),
+			id: "notebook.diffEditor.hideUnchangedCells",
+			title: localize2("hideUnchangedCells", "Hide Unchanged Cells"),
 			icon: Codicon.fold,
 			precondition: ContextKeyExpr.and(ActiveEditorContext.isEqualTo(NotebookMultiTextDiffEditor.ID), ContextKeyExpr.has(NOTEBOOK_DIFF_HAS_UNCHANGED_CELLS.key)),
 			menu: {
 				when: ContextKeyExpr.and(ActiveEditorContext.isEqualTo(NotebookMultiTextDiffEditor.ID), ContextKeyExpr.has(NOTEBOOK_DIFF_HAS_UNCHANGED_CELLS.key), ContextKeyExpr.equals(NOTEBOOK_DIFF_UNCHANGED_CELLS_HIDDEN.key, false)),
 				id: MenuId.EditorTitle,
 				order: 22,
-				group: 'navigation',
+				group: "navigation",
 			},
 		});
 	}
@@ -184,14 +206,14 @@ registerAction2(class extends Action2 {
 registerAction2(class GoToFileAction extends Action2 {
 	constructor() {
 		super({
-			id: 'notebook.diffEditor.2.goToCell',
-			title: localize2('goToCell', 'Go To Cell'),
+			id: "notebook.diffEditor.2.goToCell",
+			title: localize2("goToCell", "Go To Cell"),
 			icon: Codicon.goToFile,
 			menu: {
-				when: ContextKeyExpr.and(ActiveEditorContext.isEqualTo(NotebookMultiTextDiffEditor.ID), ContextKeyExpr.equals(NOTEBOOK_DIFF_ITEM_KIND.key, 'Cell'), ContextKeyExpr.notEquals(NOTEBOOK_DIFF_ITEM_DIFF_STATE.key, 'delete')),
+				when: ContextKeyExpr.and(ActiveEditorContext.isEqualTo(NotebookMultiTextDiffEditor.ID), ContextKeyExpr.equals(NOTEBOOK_DIFF_ITEM_KIND.key, "Cell"), ContextKeyExpr.notEquals(NOTEBOOK_DIFF_ITEM_DIFF_STATE.key, "delete")),
 				id: MenuId.MultiDiffEditorFileToolbar,
 				order: 0,
-				group: 'navigation',
+				group: "navigation",
 			},
 		});
 	}
@@ -218,17 +240,17 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super(
 			{
-				id: 'notebook.diff.revertMetadata',
-				title: localize('notebook.diff.revertMetadata', "Revert Notebook Metadata"),
+				id: "notebook.diff.revertMetadata",
+				title: localize("notebook.diff.revertMetadata", "Revert Notebook Metadata"),
 				icon: revertIcon,
 				f1: false,
 				menu: {
 					id: MenuId.NotebookDiffDocumentMetadata,
 					when: NOTEBOOK_DIFF_METADATA,
 				},
-				precondition: NOTEBOOK_DIFF_METADATA
+				precondition: NOTEBOOK_DIFF_METADATA,
 
-			}
+			},
 		);
 	}
 	run(accessor: ServicesAccessor, context?: NotebookDocumentMetadataViewModel) {
@@ -249,19 +271,19 @@ registerAction2(class extends Action2 {
 	}
 });
 
-const revertInput = localize('notebook.diff.cell.revertInput', "Revert Input");
+const revertInput = localize("notebook.diff.cell.revertInput", "Revert Input");
 
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'notebook.diffEditor.2.cell.revertInput',
+			id: "notebook.diffEditor.2.cell.revertInput",
 			title: revertInput,
 			icon: revertIcon,
 			menu: {
-				when: ContextKeyExpr.and(ActiveEditorContext.isEqualTo(NotebookMultiTextDiffEditor.ID), ContextKeyExpr.equals(NOTEBOOK_DIFF_ITEM_KIND.key, 'Cell'), ContextKeyExpr.equals(NOTEBOOK_DIFF_ITEM_DIFF_STATE.key, 'modified')),
+				when: ContextKeyExpr.and(ActiveEditorContext.isEqualTo(NotebookMultiTextDiffEditor.ID), ContextKeyExpr.equals(NOTEBOOK_DIFF_ITEM_KIND.key, "Cell"), ContextKeyExpr.equals(NOTEBOOK_DIFF_ITEM_DIFF_STATE.key, "modified")),
 				id: MenuId.MultiDiffEditorFileToolbar,
 				order: 2,
-				group: 'navigation',
+				group: "navigation",
 			},
 		});
 	}
@@ -286,28 +308,31 @@ registerAction2(class extends Action2 {
 			const bulkEditService = accessor.get(IBulkEditService);
 			await bulkEditService.apply([
 				new ResourceTextEdit(modified.uri, { range: modified.textModel.getFullModelRange(), text: original.textModel.getValue() }),
-			], { quotableLabel: 'Revert Notebook Cell Content Change' });
+			], { quotableLabel: "Revert Notebook Cell Content Change" });
 		}
 	}
 });
 
-const revertOutputs = localize('notebook.diff.cell.revertOutputs', "Revert Outputs");
+const revertOutputs = localize(
+  "notebook.diff.cell.revertOutputs",
+  "Revert Outputs",
+);
 
 registerAction2(class extends Action2 {
 	constructor() {
 		super(
 			{
-				id: 'notebook.diffEditor.2.cell.revertOutputs',
+				id: "notebook.diffEditor.2.cell.revertOutputs",
 				title: revertOutputs,
 				icon: revertIcon,
 				f1: false,
 				menu: {
-					when: ContextKeyExpr.and(ActiveEditorContext.isEqualTo(NotebookMultiTextDiffEditor.ID), ContextKeyExpr.equals(NOTEBOOK_DIFF_ITEM_KIND.key, 'Output'), ContextKeyExpr.equals(NOTEBOOK_DIFF_ITEM_DIFF_STATE.key, 'modified')),
+					when: ContextKeyExpr.and(ActiveEditorContext.isEqualTo(NotebookMultiTextDiffEditor.ID), ContextKeyExpr.equals(NOTEBOOK_DIFF_ITEM_KIND.key, "Output"), ContextKeyExpr.equals(NOTEBOOK_DIFF_ITEM_DIFF_STATE.key, "modified")),
 					id: MenuId.MultiDiffEditorFileToolbar,
 					order: 2,
-					group: 'navigation',
+					group: "navigation",
 				},
-			}
+			},
 		);
 	}
 	async run(accessor: ServicesAccessor, ...args: unknown[]): Promise<void> {
@@ -328,29 +353,32 @@ registerAction2(class extends Action2 {
 			}
 
 			item.mainDocumentTextModel.applyEdits([{
-				editType: CellEditType.Output, index: modifiedCellIndex, outputs: original.outputs
+				editType: CellEditType.Output, index: modifiedCellIndex, outputs: original.outputs,
 			}], true, undefined, () => undefined, undefined, true);
 		}
 	}
 });
 
-const revertMetadata = localize('notebook.diff.cell.revertMetadata', "Revert Metadata");
+const revertMetadata = localize(
+  "notebook.diff.cell.revertMetadata",
+  "Revert Metadata",
+);
 
 registerAction2(class extends Action2 {
 	constructor() {
 		super(
 			{
-				id: 'notebook.diffEditor.2.cell.revertMetadata',
+				id: "notebook.diffEditor.2.cell.revertMetadata",
 				title: revertMetadata,
 				icon: revertIcon,
 				f1: false,
 				menu: {
-					when: ContextKeyExpr.and(ActiveEditorContext.isEqualTo(NotebookMultiTextDiffEditor.ID), ContextKeyExpr.equals(NOTEBOOK_DIFF_ITEM_KIND.key, 'Metadata'), ContextKeyExpr.equals(NOTEBOOK_DIFF_ITEM_DIFF_STATE.key, 'modified')),
+					when: ContextKeyExpr.and(ActiveEditorContext.isEqualTo(NotebookMultiTextDiffEditor.ID), ContextKeyExpr.equals(NOTEBOOK_DIFF_ITEM_KIND.key, "Metadata"), ContextKeyExpr.equals(NOTEBOOK_DIFF_ITEM_DIFF_STATE.key, "modified")),
 					id: MenuId.MultiDiffEditorFileToolbar,
 					order: 2,
-					group: 'navigation',
+					group: "navigation",
 				},
-			}
+			},
 		);
 	}
 	async run(accessor: ServicesAccessor, ...args: unknown[]): Promise<void> {
@@ -371,7 +399,7 @@ registerAction2(class extends Action2 {
 			}
 
 			item.mainDocumentTextModel.applyEdits([{
-				editType: CellEditType.Metadata, index: modifiedCellIndex, metadata: original.metadata
+				editType: CellEditType.Metadata, index: modifiedCellIndex, metadata: original.metadata,
 			}], true, undefined, () => undefined, undefined, true);
 		}
 	}
@@ -382,16 +410,16 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super(
 			{
-				id: 'notebook.diff.cell.revertMetadata',
+				id: "notebook.diff.cell.revertMetadata",
 				title: revertMetadata,
 				icon: revertIcon,
 				f1: false,
 				menu: {
 					id: MenuId.NotebookDiffCellMetadataTitle,
-					when: NOTEBOOK_DIFF_CELL_PROPERTY
+					when: NOTEBOOK_DIFF_CELL_PROPERTY,
 				},
-				precondition: NOTEBOOK_DIFF_CELL_PROPERTY
-			}
+				precondition: NOTEBOOK_DIFF_CELL_PROPERTY,
+			},
 		);
 	}
 	run(accessor: ServicesAccessor, context?: DiffElementCellViewModelBase) {
@@ -448,15 +476,15 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super(
 			{
-				id: 'notebook.diff.cell.switchOutputRenderingStyleToText',
-				title: localize('notebook.diff.cell.switchOutputRenderingStyleToText', "Switch Output Rendering"),
+				id: "notebook.diff.cell.switchOutputRenderingStyleToText",
+				title: localize("notebook.diff.cell.switchOutputRenderingStyleToText", "Switch Output Rendering"),
 				icon: renderOutputIcon,
 				f1: false,
 				menu: {
 					id: MenuId.NotebookDiffCellOutputsTitle,
-					when: NOTEBOOK_DIFF_CELL_PROPERTY_EXPANDED
-				}
-			}
+					when: NOTEBOOK_DIFF_CELL_PROPERTY_EXPANDED,
+				},
+			},
 		);
 	}
 	run(accessor: ServicesAccessor, context?: DiffElementCellViewModelBase) {
@@ -472,16 +500,16 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super(
 			{
-				id: 'notebook.diff.cell.revertOutputs',
-				title: localize('notebook.diff.cell.revertOutputs', "Revert Outputs"),
+				id: "notebook.diff.cell.revertOutputs",
+				title: localize("notebook.diff.cell.revertOutputs", "Revert Outputs"),
 				icon: revertIcon,
 				f1: false,
 				menu: {
 					id: MenuId.NotebookDiffCellOutputsTitle,
-					when: NOTEBOOK_DIFF_CELL_PROPERTY
+					when: NOTEBOOK_DIFF_CELL_PROPERTY,
 				},
-				precondition: NOTEBOOK_DIFF_CELL_PROPERTY
-			}
+				precondition: NOTEBOOK_DIFF_CELL_PROPERTY,
+			},
 		);
 	}
 	run(accessor: ServicesAccessor, context?: DiffElementCellViewModelBase) {
@@ -502,7 +530,7 @@ registerAction2(class extends Action2 {
 		}
 
 		context.mainDocumentTextModel.applyEdits([{
-			editType: CellEditType.Output, index: modifiedCellIndex, outputs: original.outputs
+			editType: CellEditType.Output, index: modifiedCellIndex, outputs: original.outputs,
 		}], true, undefined, () => undefined, undefined, true);
 	}
 });
@@ -512,8 +540,8 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super(
 			{
-				id: 'notebook.toggle.diff.cell.ignoreTrimWhitespace',
-				title: localize('ignoreTrimWhitespace.label', "Show Leading/Trailing Whitespace Differences"),
+				id: "notebook.toggle.diff.cell.ignoreTrimWhitespace",
+				title: localize("ignoreTrimWhitespace.label", "Show Leading/Trailing Whitespace Differences"),
 				icon: toggleWhitespace,
 				f1: false,
 				menu: {
@@ -523,7 +551,7 @@ registerAction2(class extends Action2 {
 				},
 				precondition: NOTEBOOK_DIFF_CELL_INPUT,
 				toggled: ContextKeyExpr.equals(NOTEBOOK_DIFF_CELL_IGNORE_WHITESPACE_KEY, false),
-			}
+			},
 		);
 	}
 	run(accessor: ServicesAccessor, context?: DiffElementCellViewModelBase) {
@@ -533,7 +561,7 @@ registerAction2(class extends Action2 {
 		}
 		const uri = cell.modified.uri;
 		const configService = accessor.get(ITextResourceConfigurationService);
-		const key = 'diffEditor.ignoreTrimWhitespace';
+		const key = "diffEditor.ignoreTrimWhitespace";
 		const val = configService.getValue(uri, key);
 		configService.updateValue(uri, key, !val);
 	}
@@ -543,18 +571,18 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super(
 			{
-				id: 'notebook.diff.cell.revertInput',
+				id: "notebook.diff.cell.revertInput",
 				title: revertInput,
 				icon: revertIcon,
 				f1: false,
 				menu: {
 					id: MenuId.NotebookDiffCellInputTitle,
 					when: NOTEBOOK_DIFF_CELL_INPUT,
-					order: 2
+					order: 2,
 				},
-				precondition: NOTEBOOK_DIFF_CELL_INPUT
+				precondition: NOTEBOOK_DIFF_CELL_INPUT,
 
-			}
+			},
 		);
 	}
 	run(accessor: ServicesAccessor, context?: DiffElementCellViewModelBase) {
@@ -572,7 +600,7 @@ registerAction2(class extends Action2 {
 		const bulkEditService = accessor.get(IBulkEditService);
 		return bulkEditService.apply([
 			new ResourceTextEdit(modified.uri, { range: modified.textModel.getFullModelRange(), text: original.textModel.getValue() }),
-		], { quotableLabel: 'Revert Notebook Cell Content Change' });
+		], { quotableLabel: "Revert Notebook Cell Content Change" });
 	}
 });
 
@@ -584,11 +612,11 @@ class ToggleRenderAction extends Action2 {
 			precondition: precondition,
 			menu: [{
 				id: MenuId.EditorTitle,
-				group: 'notebook',
+				group: "notebook",
 				when: precondition,
 				order: order,
 			}],
-			toggled: toggled
+			toggled: toggled,
 		});
 	}
 
@@ -596,39 +624,49 @@ class ToggleRenderAction extends Action2 {
 		const configurationService = accessor.get(IConfigurationService);
 
 		if (this.toggleOutputs !== undefined) {
-			const oldValue = configurationService.getValue('notebook.diff.ignoreOutputs');
-			configurationService.updateValue('notebook.diff.ignoreOutputs', !oldValue);
+			const oldValue = configurationService.getValue(
+        "notebook.diff.ignoreOutputs",
+      );
+			configurationService.updateValue(
+        "notebook.diff.ignoreOutputs",
+        !oldValue,
+      );
 		}
 
 		if (this.toggleMetadata !== undefined) {
-			const oldValue = configurationService.getValue('notebook.diff.ignoreMetadata');
-			configurationService.updateValue('notebook.diff.ignoreMetadata', !oldValue);
+			const oldValue = configurationService.getValue(
+        "notebook.diff.ignoreMetadata",
+      );
+			configurationService.updateValue(
+        "notebook.diff.ignoreMetadata",
+        !oldValue,
+      );
 		}
 	}
 }
 
 registerAction2(class extends ToggleRenderAction {
 	constructor() {
-		super('notebook.diff.showOutputs',
-			localize2('notebook.diff.showOutputs', 'Show Outputs Differences'),
+		super("notebook.diff.showOutputs",
+			localize2("notebook.diff.showOutputs", "Show Outputs Differences"),
 			ContextKeyExpr.or(ActiveEditorContext.isEqualTo(NotebookTextDiffEditor.ID), ActiveEditorContext.isEqualTo(NotebookMultiTextDiffEditor.ID)),
-			ContextKeyExpr.notEquals('config.notebook.diff.ignoreOutputs', true),
+			ContextKeyExpr.notEquals("config.notebook.diff.ignoreOutputs", true),
 			2,
 			true,
-			undefined
+			undefined,
 		);
 	}
 });
 
 registerAction2(class extends ToggleRenderAction {
 	constructor() {
-		super('notebook.diff.showMetadata',
-			localize2('notebook.diff.showMetadata', 'Show Metadata Differences'),
+		super("notebook.diff.showMetadata",
+			localize2("notebook.diff.showMetadata", "Show Metadata Differences"),
 			ContextKeyExpr.or(ActiveEditorContext.isEqualTo(NotebookTextDiffEditor.ID), ActiveEditorContext.isEqualTo(NotebookMultiTextDiffEditor.ID)),
-			ContextKeyExpr.notEquals('config.notebook.diff.ignoreMetadata', true),
+			ContextKeyExpr.notEquals("config.notebook.diff.ignoreMetadata", true),
 			1,
 			undefined,
-			true
+			true,
 		);
 	}
 });
@@ -637,21 +675,21 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super(
 			{
-				id: 'notebook.diff.action.previous',
-				title: localize('notebook.diff.action.previous.title', "Show Previous Change"),
+				id: "notebook.diff.action.previous",
+				title: localize("notebook.diff.action.previous.title", "Show Previous Change"),
 				icon: previousChangeIcon,
 				f1: false,
 				keybinding: {
 					primary: KeyMod.Shift | KeyMod.Alt | KeyCode.F3,
 					weight: KeybindingWeight.WorkbenchContrib,
-					when: ActiveEditorContext.isEqualTo(NotebookTextDiffEditor.ID)
+					when: ActiveEditorContext.isEqualTo(NotebookTextDiffEditor.ID),
 				},
 				menu: {
 					id: MenuId.EditorTitle,
-					group: 'navigation',
-					when: ActiveEditorContext.isEqualTo(NotebookTextDiffEditor.ID)
-				}
-			}
+					group: "navigation",
+					when: ActiveEditorContext.isEqualTo(NotebookTextDiffEditor.ID),
+				},
+			},
 		);
 	}
 	run(accessor: ServicesAccessor) {
@@ -669,21 +707,21 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super(
 			{
-				id: 'notebook.diff.action.next',
-				title: localize('notebook.diff.action.next.title', "Show Next Change"),
+				id: "notebook.diff.action.next",
+				title: localize("notebook.diff.action.next.title", "Show Next Change"),
 				icon: nextChangeIcon,
 				f1: false,
 				keybinding: {
 					primary: KeyMod.Alt | KeyCode.F3,
 					weight: KeybindingWeight.WorkbenchContrib,
-					when: ActiveEditorContext.isEqualTo(NotebookTextDiffEditor.ID)
+					when: ActiveEditorContext.isEqualTo(NotebookTextDiffEditor.ID),
 				},
 				menu: {
 					id: MenuId.EditorTitle,
-					group: 'navigation',
-					when: ActiveEditorContext.isEqualTo(NotebookTextDiffEditor.ID)
-				}
-			}
+					group: "navigation",
+					when: ActiveEditorContext.isEqualTo(NotebookTextDiffEditor.ID),
+				},
+			},
 		);
 	}
 	run(accessor: ServicesAccessor) {
@@ -701,17 +739,17 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super(
 			{
-				id: 'notebook.diff.inline.toggle',
-				title: localize('notebook.diff.inline.toggle.title', "Toggle Inline View"),
+				id: "notebook.diff.inline.toggle",
+				title: localize("notebook.diff.inline.toggle.title", "Toggle Inline View"),
 				menu: {
 					id: MenuId.EditorTitle,
-					group: '1_diff',
+					group: "1_diff",
 					order: 10,
 					when: ContextKeyExpr.and(ActiveEditorContext.isEqualTo(NotebookTextDiffEditor.ID),
-						ContextKeyExpr.equals('config.notebook.diff.experimental.toggleInline', true),
-						ctxHasEditorModification.negate(), ctxHasRequestInProgress.negate())
-				}
-			}
+						ContextKeyExpr.equals("config.notebook.diff.experimental.toggleInline", true),
+						ctxHasEditorModification.negate(), ctxHasRequestInProgress.negate()),
+				},
+			},
 		);
 	}
 	run(accessor: ServicesAccessor) {
@@ -728,24 +766,24 @@ registerAction2(class extends Action2 {
 
 
 Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).registerConfiguration({
-	id: 'notebook',
+	id: "notebook",
 	order: 100,
-	type: 'object',
-	'properties': {
-		'notebook.diff.ignoreMetadata': {
-			type: 'boolean',
+	type: "object",
+	"properties": {
+		"notebook.diff.ignoreMetadata": {
+			type: "boolean",
 			default: false,
-			markdownDescription: localize('notebook.diff.ignoreMetadata', "Hide Metadata Differences")
+			markdownDescription: localize("notebook.diff.ignoreMetadata", "Hide Metadata Differences"),
 		},
-		'notebook.diff.ignoreOutputs': {
-			type: 'boolean',
+		"notebook.diff.ignoreOutputs": {
+			type: "boolean",
 			default: false,
-			markdownDescription: localize('notebook.diff.ignoreOutputs', "Hide Outputs Differences")
+			markdownDescription: localize("notebook.diff.ignoreOutputs", "Hide Outputs Differences"),
 		},
-		'notebook.diff.experimental.toggleInline': {
-			type: 'boolean',
-			default: typeof product.quality === 'string' && product.quality !== 'stable', // only enable as default in insiders
-			markdownDescription: localize('notebook.diff.toggleInline', "Enable the command to toggle the experimental notebook inline diff editor.")
+		"notebook.diff.experimental.toggleInline": {
+			type: "boolean",
+			default: typeof product.quality === "string" && product.quality !== "stable", // only enable as default in insiders
+			markdownDescription: localize("notebook.diff.toggleInline", "Enable the command to toggle the experimental notebook inline diff editor."),
 		},
-	}
+	},
 });

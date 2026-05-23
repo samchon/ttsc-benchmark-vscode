@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CallbackIterable } from '../../base/common/arrays.js';
-import { Event } from '../../base/common/event.js';
-import { IPosition } from './core/position.js';
-import { IRange, Range } from './core/range.js';
-import { ClosingBracketKind, OpeningBracketKind } from './languages/supports/languageBracketsConfiguration.js';
-import { PairAstNode } from './model/bracketPairsTextModelPart/bracketPairsTree/ast.js';
+import { CallbackIterable } from "../../base/common/arrays.js";
+import { Event } from "../../base/common/event.js";
+import { IPosition } from "./core/position.js";
+import { IRange, Range } from "./core/range.js";
+import { ClosingBracketKind, OpeningBracketKind } from "./languages/supports/languageBracketsConfiguration.js";
+import { PairAstNode } from "./model/bracketPairsTextModelPart/bracketPairsTree/ast.js";
 
 export interface IBracketPairsTextModelPart {
 	/**
@@ -119,6 +119,13 @@ export class BracketPairWithMinIndentationInfo extends BracketPairInfo {
 		*/
 		public readonly minVisibleColumnIndentation: number,
 	) {
-		super(range, openingBracketRange, closingBracketRange, nestingLevel, nestingLevelOfEqualBracketType, bracketPairNode);
+		super(
+      range,
+      openingBracketRange,
+      closingBracketRange,
+      nestingLevel,
+      nestingLevelOfEqualBracketType,
+      bracketPairNode,
+    );
 	}
 }

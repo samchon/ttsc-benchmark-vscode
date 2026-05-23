@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { equals } from '../../../base/common/objects.js';
-import { IUserDataProfile, UseDefaultProfileFlags } from '../../userDataProfile/common/userDataProfile.js';
-import { ISyncUserDataProfile } from './userDataSync.js';
+import { equals } from "../../../base/common/objects.js";
+import { IUserDataProfile, UseDefaultProfileFlags } from "../../userDataProfile/common/userDataProfile.js";
+import { ISyncUserDataProfile } from "./userDataSync.js";
 
 interface IRelaxedMergeResult {
 	local: { added: ISyncUserDataProfile[]; removed: IUserDataProfile[]; updated: ISyncUserDataProfile[] };
@@ -22,8 +22,16 @@ interface IUserDataProfileInfo {
 }
 
 export function merge(local: IUserDataProfile[], remote: ISyncUserDataProfile[] | null, lastSync: ISyncUserDataProfile[] | null, ignored: string[]): IMergeResult {
-	const localResult: { added: ISyncUserDataProfile[]; removed: IUserDataProfile[]; updated: ISyncUserDataProfile[] } = { added: [], removed: [], updated: [] };
-	let remoteResult: { added: IUserDataProfile[]; removed: ISyncUserDataProfile[]; updated: IUserDataProfile[] } | null = { added: [], removed: [], updated: [] };
+	const localResult: { added: ISyncUserDataProfile[]; removed: IUserDataProfile[]; updated: ISyncUserDataProfile[] } = {
+    added: [],
+    removed: [],
+    updated: [],
+  };
+	let remoteResult: { added: IUserDataProfile[]; removed: ISyncUserDataProfile[]; updated: IUserDataProfile[] } | null = {
+    added: [],
+    removed: [],
+    updated: [],
+  };
 
 	if (!remote) {
 		const added = local.filter(({ id }) => !ignored.includes(id));
@@ -33,9 +41,9 @@ export function merge(local: IUserDataProfile[], remote: ISyncUserDataProfile[] 
 			remoteResult = null;
 		}
 		return {
-			local: localResult,
-			remote: remoteResult
-		};
+      local: localResult,
+      remote: remoteResult,
+    };
 	}
 
 	const localToRemote = compare(local, remote, ignored);

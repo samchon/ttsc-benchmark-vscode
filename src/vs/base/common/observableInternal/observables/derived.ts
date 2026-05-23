@@ -3,13 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IObservable, IReader, ITransaction, ISettableObservable, IObservableWithChange } from '../base.js';
-import { IChangeTracker } from '../changeTracker.js';
-import { DisposableStore, EqualityComparer, IDisposable, strictEquals } from '../commonFacade/deps.js';
-import { DebugLocation } from '../debugLocation.js';
-import { DebugOwner, DebugNameData, IDebugNameData } from '../debugName.js';
-import { _setDerivedOpts } from './baseObservable.js';
-import { IDerivedReader, Derived, DerivedWithSetter } from './derivedImpl.js';
+import {
+  IObservable,
+  IReader,
+  ITransaction,
+  ISettableObservable,
+  IObservableWithChange,
+} from "../base.js";
+import { IChangeTracker } from "../changeTracker.js";
+import { DisposableStore, EqualityComparer, IDisposable, strictEquals } from "../commonFacade/deps.js";
+import { DebugLocation } from "../debugLocation.js";
+import { DebugOwner, DebugNameData, IDebugNameData } from "../debugName.js";
+import { _setDerivedOpts } from "./baseObservable.js";
+import { IDerivedReader, Derived, DerivedWithSetter } from "./derivedImpl.js";
 
 /**
  * Creates an observable that is derived from other observables.
@@ -22,17 +28,17 @@ export function derived<T, TChange = void>(owner: DebugOwner, computeFn: (reader
 export function derived<T, TChange = void>(
 	computeFnOrOwner: ((reader: IDerivedReader<TChange>) => T) | DebugOwner,
 	computeFn?: ((reader: IDerivedReader<TChange>) => T) | undefined,
-	debugLocation = DebugLocation.ofCaller()
+	debugLocation = DebugLocation.ofCaller(),
 ): IObservable<T> {
 	if (computeFn !== undefined) {
 		return new Derived(
-			new DebugNameData(computeFnOrOwner, undefined, computeFn),
-			computeFn,
-			undefined,
-			undefined,
-			strictEquals,
-			debugLocation,
-		);
+      new DebugNameData(computeFnOrOwner, undefined, computeFn),
+      computeFn,
+      undefined,
+      undefined,
+      strictEquals,
+      debugLocation,
+    );
 	}
 	return new Derived(
 		// eslint-disable-next-line local/code-no-any-casts
@@ -48,14 +54,14 @@ export function derived<T, TChange = void>(
 
 export function derivedWithSetter<T>(owner: DebugOwner | undefined, computeFn: (reader: IReader) => T, setter: (value: T, transaction: ITransaction | undefined) => void, debugLocation = DebugLocation.ofCaller()): ISettableObservable<T> {
 	return new DerivedWithSetter(
-		new DebugNameData(owner, undefined, computeFn),
-		computeFn,
-		undefined,
-		undefined,
-		strictEquals,
-		setter,
-		debugLocation
-	);
+    new DebugNameData(owner, undefined, computeFn),
+    computeFn,
+    undefined,
+    undefined,
+    strictEquals,
+    setter,
+    debugLocation,
+  );
 }
 
 export function derivedOpts<T>(
@@ -64,16 +70,20 @@ export function derivedOpts<T>(
 		onLastObserverRemoved?: (() => void);
 	},
 	computeFn: (reader: IReader) => T,
-	debugLocation = DebugLocation.ofCaller()
+	debugLocation = DebugLocation.ofCaller(),
 ): IObservable<T> {
 	return new Derived(
-		new DebugNameData(options.owner, options.debugName, options.debugReferenceFn),
-		computeFn,
-		undefined,
-		options.onLastObserverRemoved,
-		options.equalsFn ?? strictEquals,
-		debugLocation
-	);
+    new DebugNameData(
+      options.owner,
+      options.debugName,
+      options.debugReferenceFn,
+    ),
+    computeFn,
+    undefined,
+    options.onLastObserverRemoved,
+    options.equalsFn ?? strictEquals,
+    debugLocation,
+  );
 }
 _setDerivedOpts(derivedOpts);
 
@@ -96,16 +106,16 @@ export function derivedHandleChanges<T, TDelta, TChangeSummary>(
 		equalityComparer?: EqualityComparer<T>;
 	},
 	computeFn: (reader: IDerivedReader<TDelta>, changeSummary: TChangeSummary) => T,
-	debugLocation = DebugLocation.ofCaller()
+	debugLocation = DebugLocation.ofCaller(),
 ): IObservableWithChange<T, TDelta> {
 	return new Derived(
-		new DebugNameData(options.owner, options.debugName, undefined),
-		computeFn,
-		options.changeTracker,
-		undefined,
-		options.equalityComparer ?? strictEquals,
-		debugLocation
-	);
+    new DebugNameData(options.owner, options.debugName, undefined),
+    computeFn,
+    options.changeTracker,
+    undefined,
+    options.equalityComparer ?? strictEquals,
+    debugLocation,
+  );
 }
 
 /**
@@ -147,7 +157,7 @@ export function derivedWithStore<T>(computeFnOrOwner: ((reader: IReader, store: 
 		undefined,
 		() => store.dispose(),
 		strictEquals,
-		debugLocation
+		debugLocation,
 	);
 }
 
@@ -189,6 +199,6 @@ export function derivedDisposable<T extends IDisposable | undefined>(computeFnOr
 			}
 		},
 		strictEquals,
-		debugLocation
+		debugLocation,
 	);
 }

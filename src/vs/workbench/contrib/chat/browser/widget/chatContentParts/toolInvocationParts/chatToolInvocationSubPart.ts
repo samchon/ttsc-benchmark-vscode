@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Codicon } from '../../../../../../../base/common/codicons.js';
-import { Emitter } from '../../../../../../../base/common/event.js';
-import { Disposable } from '../../../../../../../base/common/lifecycle.js';
-import { ThemeIcon } from '../../../../../../../base/common/themables.js';
-import { IChatToolInvocation, IChatToolInvocationSerialized, ToolConfirmKind } from '../../../../common/chatService/chatService.js';
-import { IChatCodeBlockInfo } from '../../../chat.js';
+import { Codicon } from "../../../../../../../base/common/codicons.js";
+import { Emitter } from "../../../../../../../base/common/event.js";
+import { Disposable } from "../../../../../../../base/common/lifecycle.js";
+import { ThemeIcon } from "../../../../../../../base/common/themables.js";
+import { IChatToolInvocation, IChatToolInvocationSerialized, ToolConfirmKind } from "../../../../common/chatService/chatService.js";
+import { IChatCodeBlockInfo } from "../../../chat.js";
 
 export abstract class BaseChatToolInvocationSubPart extends Disposable {
 	protected static idPool = 0;
@@ -19,7 +19,7 @@ export abstract class BaseChatToolInvocationSubPart extends Disposable {
 
 	public abstract codeblocks: IChatCodeBlockInfo[];
 
-	private readonly _codeBlocksPartId = 'tool-' + (BaseChatToolInvocationSubPart.idPool++);
+	private readonly _codeBlocksPartId = "tool-" + (BaseChatToolInvocationSubPart.idPool++);
 
 	public get codeblocksPartId() {
 		return this._codeBlocksPartId;
@@ -33,7 +33,9 @@ export abstract class BaseChatToolInvocationSubPart extends Disposable {
 
 	protected getIcon() {
 		const toolInvocation = this.toolInvocation;
-		const confirmState = IChatToolInvocation.executionConfirmedOrDenied(toolInvocation);
+		const confirmState = IChatToolInvocation.executionConfirmedOrDenied(
+      toolInvocation,
+    );
 		const isSkipped = confirmState?.type === ToolConfirmKind.Skipped;
 		if (isSkipped) {
 			return Codicon.circleSlash;
@@ -42,6 +44,6 @@ export abstract class BaseChatToolInvocationSubPart extends Disposable {
 		return confirmState?.type === ToolConfirmKind.Denied ?
 			Codicon.error :
 			IChatToolInvocation.isComplete(toolInvocation) ?
-				Codicon.check : ThemeIcon.modify(Codicon.loading, 'spin');
+				Codicon.check : ThemeIcon.modify(Codicon.loading, "spin");
 	}
 }

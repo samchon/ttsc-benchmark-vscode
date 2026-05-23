@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { IProductService } from '../../../../platform/product/common/productService.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
 
 export interface AllowedMcpServer {
 	id: string;
@@ -24,7 +24,9 @@ export interface AllowedMcpServer {
 	trusted?: boolean;
 }
 
-export const IAuthenticationMcpAccessService = createDecorator<IAuthenticationMcpAccessService>('IAuthenticationMcpAccessService');
+export const IAuthenticationMcpAccessService = createDecorator<IAuthenticationMcpAccessService>(
+  "IAuthenticationMcpAccessService",
+);
 export interface IAuthenticationMcpAccessService {
 	readonly _serviceBrand: undefined;
 
@@ -48,12 +50,14 @@ export interface IAuthenticationMcpAccessService {
 export class AuthenticationMcpAccessService extends Disposable implements IAuthenticationMcpAccessService {
 	_serviceBrand: undefined;
 
-	private _onDidChangeMcpSessionAccess: Emitter<{ providerId: string; accountName: string }> = this._register(new Emitter<{ providerId: string; accountName: string }>());
+	private _onDidChangeMcpSessionAccess: Emitter<{ providerId: string; accountName: string }> = this._register(
+    new Emitter<{ providerId: string; accountName: string }>(),
+  );
 	readonly onDidChangeMcpSessionAccess: Event<{ providerId: string; accountName: string }> = this._onDidChangeMcpSessionAccess.event;
 
 	constructor(
 		@IStorageService private readonly _storageService: IStorageService,
-		@IProductService private readonly _productService: IProductService
+		@IProductService private readonly _productService: IProductService,
 	) {
 		super();
 	}
@@ -64,12 +68,16 @@ export class AuthenticationMcpAccessService extends Disposable implements IAuthe
 			if (trustedMCPServerAuthAccess.includes(mcpServerId)) {
 				return true;
 			}
-		} else if (trustedMCPServerAuthAccess?.[providerId]?.includes(mcpServerId)) {
+		} else if (trustedMCPServerAuthAccess?.[providerId]?.includes(
+      mcpServerId,
+    )) {
 			return true;
 		}
 
 		const allowList = this.readAllowedMcpServers(providerId, accountName);
-		const mcpServerData = allowList.find(mcpServer => mcpServer.id === mcpServerId);
+		const mcpServerData = allowList.find(
+      mcpServer => mcpServer.id === mcpServerId,
+    );
 		if (!mcpServerData) {
 			return undefined;
 		}
@@ -82,7 +90,10 @@ export class AuthenticationMcpAccessService extends Disposable implements IAuthe
 	readAllowedMcpServers(providerId: string, accountName: string): AllowedMcpServer[] {
 		let trustedMCPServers: AllowedMcpServer[] = [];
 		try {
-			const trustedMCPServerSrc = this._storageService.get(`mcpserver-${providerId}-${accountName}`, StorageScope.APPLICATION);
+			const trustedMCPServerSrc = this._storageService.get(
+        `mcpserver-${providerId}-${accountName}`,
+        StorageScope.APPLICATION,
+      );
 			if (trustedMCPServerSrc) {
 				trustedMCPServers = JSON.parse(trustedMCPServerSrc);
 			}
@@ -95,20 +106,22 @@ export class AuthenticationMcpAccessService extends Disposable implements IAuthe
 			Array.isArray(trustedMcpServerAuthAccess)
 				? trustedMcpServerAuthAccess
 				// Case 2: trustedMcpServerAuthAccess is an object
-				: typeof trustedMcpServerAuthAccess === 'object'
+				: typeof trustedMcpServerAuthAccess === "object"
 					? trustedMcpServerAuthAccess[providerId] ?? []
 					: [];
 
 		for (const mcpServerId of trustedMcpServerIds) {
-			const existingServer = trustedMCPServers.find(server => server.id === mcpServerId);
+			const existingServer = trustedMCPServers.find(
+        server => server.id === mcpServerId,
+      );
 			if (!existingServer) {
 				// Add new trusted server (name will be set by caller if they have server info)
 				trustedMCPServers.push({
-					id: mcpServerId,
-					name: mcpServerId, // Default to ID, caller can update with proper name
-					allowed: true,
-					trusted: true
-				});
+          id: mcpServerId,
+          name: mcpServerId,
+          allowed: true,
+          trusted: true,
+        });
 			} else {
 				// Update existing server to be trusted
 				existingServer.allowed = true;
@@ -136,14 +149,26 @@ export class AuthenticationMcpAccessService extends Disposable implements IAuthe
 
 		// Filter out trusted servers before storing - they should only come from product.json, not user storage
 		const userManagedServers = allowList.filter(server => !server.trusted);
-		this._storageService.store(`mcpserver-${providerId}-${accountName}`, JSON.stringify(userManagedServers), StorageScope.APPLICATION, StorageTarget.USER);
+		this._storageService.store(
+      `mcpserver-${providerId}-${accountName}`,
+      JSON.stringify(userManagedServers),
+      StorageScope.APPLICATION,
+      StorageTarget.USER,
+    );
 		this._onDidChangeMcpSessionAccess.fire({ providerId, accountName });
 	}
 
 	removeAllowedMcpServers(providerId: string, accountName: string): void {
-		this._storageService.remove(`mcpserver-${providerId}-${accountName}`, StorageScope.APPLICATION);
+		this._storageService.remove(
+      `mcpserver-${providerId}-${accountName}`,
+      StorageScope.APPLICATION,
+    );
 		this._onDidChangeMcpSessionAccess.fire({ providerId, accountName });
 	}
 }
 
-registerSingleton(IAuthenticationMcpAccessService, AuthenticationMcpAccessService, InstantiationType.Delayed);
+registerSingleton(
+  IAuthenticationMcpAccessService,
+  AuthenticationMcpAccessService,
+  InstantiationType.Delayed,
+);

@@ -2,19 +2,30 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import * as nls from '../../../../nls.js';
-import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
-import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { ILabelService } from '../../../../platform/label/common/label.js';
-import { IViewsService } from '../../../services/views/common/viewsService.js';
-import * as Constants from '../common/constants.js';
-import { Action2, MenuId, registerAction2 } from '../../../../platform/actions/common/actions.js';
-import { KeybindingWeight } from '../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { KeyCode, KeyMod } from '../../../../base/common/keyCodes.js';
-import { category, getSearchView } from './searchActionsBase.js';
-import { isWindows } from '../../../../base/common/platform.js';
-import { searchMatchComparer } from './searchCompare.js';
-import { RenderableMatch, ISearchTreeMatch, isSearchTreeMatch, ISearchTreeFileMatch, ISearchTreeFolderMatch, ISearchTreeFolderMatchWithResource, isSearchTreeFileMatch, isSearchTreeFolderMatch, isSearchTreeFolderMatchWithResource, isTextSearchHeading } from './searchTreeModel/searchTreeCommon.js';
+import * as nls from "../../../../nls.js";
+import { IClipboardService } from "../../../../platform/clipboard/common/clipboardService.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import * as Constants from "../common/constants.js";
+import { Action2, MenuId, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { category, getSearchView } from "./searchActionsBase.js";
+import { isWindows } from "../../../../base/common/platform.js";
+import { searchMatchComparer } from "./searchCompare.js";
+import {
+  RenderableMatch,
+  ISearchTreeMatch,
+  isSearchTreeMatch,
+  ISearchTreeFileMatch,
+  ISearchTreeFolderMatch,
+  ISearchTreeFolderMatchWithResource,
+  isSearchTreeFileMatch,
+  isSearchTreeFolderMatch,
+  isSearchTreeFolderMatchWithResource,
+  isTextSearchHeading,
+} from "./searchTreeModel/searchTreeCommon.js";
 
 //#region Actions
 registerAction2(class CopyMatchCommandAction extends Action2 {
@@ -23,7 +34,7 @@ registerAction2(class CopyMatchCommandAction extends Action2 {
 	) {
 		super({
 			id: Constants.SearchCommandIds.CopyMatchCommandId,
-			title: nls.localize2('copyMatchLabel', "Copy"),
+			title: nls.localize2("copyMatchLabel", "Copy"),
 			category,
 			keybinding: {
 				weight: KeybindingWeight.WorkbenchContrib,
@@ -33,9 +44,9 @@ registerAction2(class CopyMatchCommandAction extends Action2 {
 			menu: [{
 				id: MenuId.SearchContext,
 				when: Constants.SearchContext.FileMatchOrMatchFocusKey,
-				group: 'search_2',
-				order: 1
-			}]
+				group: "search_2",
+				order: 1,
+			}],
 		});
 
 	}
@@ -51,22 +62,22 @@ registerAction2(class CopyPathCommandAction extends Action2 {
 	) {
 		super({
 			id: Constants.SearchCommandIds.CopyPathCommandId,
-			title: nls.localize2('copyPathLabel', "Copy Path"),
+			title: nls.localize2("copyPathLabel", "Copy Path"),
 			category,
 			keybinding: {
 				weight: KeybindingWeight.WorkbenchContrib,
 				when: Constants.SearchContext.FileMatchOrFolderMatchWithResourceFocusKey,
 				primary: KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.KeyC,
 				win: {
-					primary: KeyMod.Shift | KeyMod.Alt | KeyCode.KeyC
+					primary: KeyMod.Shift | KeyMod.Alt | KeyCode.KeyC,
 				},
 			},
 			menu: [{
 				id: MenuId.SearchContext,
 				when: Constants.SearchContext.FileMatchOrFolderMatchWithResourceFocusKey,
-				group: 'search_2',
-				order: 2
-			}]
+				group: "search_2",
+				order: 2,
+			}],
 		});
 
 	}
@@ -82,14 +93,14 @@ registerAction2(class CopyAllCommandAction extends Action2 {
 	) {
 		super({
 			id: Constants.SearchCommandIds.CopyAllCommandId,
-			title: nls.localize2('copyAllLabel', "Copy All"),
+			title: nls.localize2("copyAllLabel", "Copy All"),
 			category,
 			menu: [{
 				id: MenuId.SearchContext,
 				when: Constants.SearchContext.HasSearchResults,
-				group: 'search_2',
-				order: 3
-			}]
+				group: "search_2",
+				order: 3,
+			}],
 		});
 
 	}
@@ -103,9 +114,9 @@ registerAction2(class GetSearchResultsAction extends Action2 {
 	constructor() {
 		super({
 			id: Constants.SearchCommandIds.GetSearchResultsActionId,
-			title: nls.localize2('getSearchResultsLabel', "Get Search Results"),
+			title: nls.localize2("getSearchResultsLabel", "Get Search Results"),
 			category,
-			f1: false
+			f1: false,
 		});
 	}
 
@@ -131,12 +142,14 @@ registerAction2(class GetSearchResultsAction extends Action2 {
 //#endregion
 
 //#region Helpers
-export const lineDelimiter = isWindows ? '\r\n' : '\n';
+export const lineDelimiter = isWindows ? "\r\n" : "\n";
 
 async function copyPathCommand(accessor: ServicesAccessor, fileMatch: ISearchTreeFileMatch | ISearchTreeFolderMatchWithResource | undefined) {
 	if (!fileMatch) {
 		const selection = getSelectedRow(accessor);
-		if (!isSearchTreeFileMatch(selection) || isSearchTreeFolderMatchWithResource(selection)) {
+		if (!isSearchTreeFileMatch(
+      selection,
+    ) || isSearchTreeFolderMatchWithResource(selection)) {
 			return;
 		}
 
@@ -191,14 +204,17 @@ async function copyAllCommand(accessor: ServicesAccessor, match: RenderableMatch
 			match = getSelectedRow(accessor);
 		}
 
-		const text = allFolderMatchesToString(root.folderMatches(isAISearchElement), labelService);
+		const text = allFolderMatchesToString(
+      root.folderMatches(isAISearchElement),
+      labelService,
+    );
 		await clipboardService.writeText(text);
 	}
 }
 
 function matchToString(match: ISearchTreeMatch, indent = 0): string {
 	const getFirstLinePrefix = () => `${match.range().startLineNumber},${match.range().startColumn}`;
-	const getOtherLinePrefix = (i: number) => match.range().startLineNumber + i + '';
+	const getOtherLinePrefix = (i: number) => match.range().startLineNumber + i + "";
 
 	const fullMatchLines = match.fullPreviewLines();
 	const largestPrefixSize = fullMatchLines.reduce((largest, _, i) => {
@@ -215,12 +231,12 @@ function matchToString(match: ISearchTreeMatch, indent = 0): string {
 				getFirstLinePrefix() :
 				getOtherLinePrefix(i);
 
-			const paddingStr = ' '.repeat(largestPrefixSize - prefix.length);
-			const indentStr = ' '.repeat(indent);
+			const paddingStr = " ".repeat(largestPrefixSize - prefix.length);
+			const indentStr = " ".repeat(indent);
 			return `${indentStr}${prefix}: ${paddingStr}${line}`;
 		});
 
-	return formattedLines.join('\n');
+	return formattedLines.join("\n");
 }
 
 function fileFolderMatchToString(match: ISearchTreeFileMatch | ISearchTreeFolderMatch | ISearchTreeFolderMatchWithResource, labelService: ILabelService): { text: string; count: number } {
@@ -235,11 +251,13 @@ function fileMatchToString(fileMatch: ISearchTreeFileMatch, labelService: ILabel
 	const matchTextRows = fileMatch.matches()
 		.sort(searchMatchComparer)
 		.map(match => matchToString(match, 2));
-	const uriString = labelService.getUriLabel(fileMatch.resource, { noPrefix: true });
+	const uriString = labelService.getUriLabel(fileMatch.resource, {
+    noPrefix: true,
+  });
 	return {
-		text: `${uriString}${lineDelimiter}${matchTextRows.join(lineDelimiter)}`,
-		count: matchTextRows.length
-	};
+    text: `${uriString}${lineDelimiter}${matchTextRows.join(lineDelimiter)}`,
+    count: matchTextRows.length,
+  };
 }
 
 function folderMatchToString(folderMatch: ISearchTreeFolderMatchWithResource | ISearchTreeFolderMatch, labelService: ILabelService): { text: string; count: number } {
@@ -249,15 +267,15 @@ function folderMatchToString(folderMatch: ISearchTreeFolderMatchWithResource | I
 	const matches = folderMatch.matches().sort(searchMatchComparer);
 
 	matches.forEach(match => {
-		const result = fileFolderMatchToString(match, labelService);
-		numMatches += result.count;
-		results.push(result.text);
-	});
+    const result = fileFolderMatchToString(match, labelService);
+    numMatches += result.count;
+    results.push(result.text);
+  });
 
 	return {
-		text: results.join(lineDelimiter + lineDelimiter),
-		count: numMatches
-	};
+    text: results.join(lineDelimiter + lineDelimiter),
+    count: numMatches,
+  };
 }
 
 function allFolderMatchesToString(folderMatches: Array<ISearchTreeFolderMatchWithResource | ISearchTreeFolderMatch>, labelService: ILabelService): string {

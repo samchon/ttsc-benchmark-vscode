@@ -3,78 +3,148 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as nls from '../../../../nls.js';
-import * as semver from '../../../../base/common/semver/semver.js';
-import { Event, Emitter } from '../../../../base/common/event.js';
-import { index } from '../../../../base/common/arrays.js';
-import { CancelablePromise, Promises, ThrottledDelayer, createCancelablePromise } from '../../../../base/common/async.js';
-import { CancellationError, getErrorMessage, isCancellationError } from '../../../../base/common/errors.js';
-import { Disposable, MutableDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { IPager, singlePagePager } from '../../../../base/common/paging.js';
-import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
+import * as nls from "../../../../nls.js";
+import * as semver from "../../../../base/common/semver/semver.js";
+import { Event, Emitter } from "../../../../base/common/event.js";
+import { index } from "../../../../base/common/arrays.js";
 import {
-	IExtensionGalleryService, ILocalExtension, IGalleryExtension, IQueryOptions,
-	InstallExtensionEvent, DidUninstallExtensionEvent, InstallOperation, WEB_EXTENSION_TAG, InstallExtensionResult,
-	IExtensionsControlManifest, IExtensionInfo, IExtensionQueryOptions, IDeprecationInfo, isTargetPlatformCompatible, InstallExtensionInfo, EXTENSION_IDENTIFIER_REGEX,
-	InstallOptions, IProductVersion,
-	UninstallExtensionInfo,
-	TargetPlatformToString,
-	IAllowedExtensionsService,
-	AllowedExtensionsConfigKey,
-	EXTENSION_INSTALL_SKIP_PUBLISHER_TRUST_CONTEXT,
-	ExtensionManagementError,
-	ExtensionManagementErrorCode,
-	MaliciousExtensionInfo,
-	shouldRequireRepositorySignatureFor,
-	IGalleryExtensionVersion
-} from '../../../../platform/extensionManagement/common/extensionManagement.js';
-import { IWorkbenchExtensionEnablementService, EnablementState, IExtensionManagementServerService, IExtensionManagementServer, IWorkbenchExtensionManagementService, IResourceExtension } from '../../../services/extensionManagement/common/extensionManagement.js';
-import { getGalleryExtensionTelemetryData, getLocalExtensionTelemetryData, areSameExtensions, groupByExtension, getGalleryExtensionId, findMatchingMaliciousEntry } from '../../../../platform/extensionManagement/common/extensionManagementUtil.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IHostService } from '../../../services/host/browser/host.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IExtension, ExtensionState, IExtensionsWorkbenchService, AutoUpdateConfigurationKey, AutoCheckUpdatesConfigurationKey, HasOutdatedExtensionsContext, AutoUpdateConfigurationValue, InstallExtensionOptions, ExtensionRuntimeState, ExtensionRuntimeActionType, AutoRestartConfigurationKey, VIEWLET_ID, IExtensionsViewPaneContainer, IExtensionsNotification } from '../common/extensions.js';
-import { ACTIVE_GROUP, IEditorService, MODAL_GROUP, SIDE_GROUP } from '../../../services/editor/common/editorService.js';
-import { IURLService, IURLHandler, IOpenURLOptions } from '../../../../platform/url/common/url.js';
-import { ExtensionsInput, IExtensionEditorOptions } from '../common/extensionsInput.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { IProgressOptions, IProgressService, ProgressLocation } from '../../../../platform/progress/common/progress.js';
-import { INotificationService, NotificationPriority, Severity } from '../../../../platform/notification/common/notification.js';
-import * as resources from '../../../../base/common/resources.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { IExtensionManifest, ExtensionType, IExtension as IPlatformExtension, TargetPlatform, ExtensionIdentifier, IExtensionIdentifier, IExtensionDescription, isApplicationScopedExtension } from '../../../../platform/extensions/common/extensions.js';
-import { ILanguageService } from '../../../../editor/common/languages/language.js';
-import { IProductService } from '../../../../platform/product/common/productService.js';
-import { FileAccess } from '../../../../base/common/network.js';
-import { IIgnoredExtensionsManagementService } from '../../../../platform/userDataSync/common/ignoredExtensions.js';
-import { IUserDataAutoSyncService, IUserDataSyncEnablementService, SyncResource } from '../../../../platform/userDataSync/common/userDataSync.js';
-import { IContextKey, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { isBoolean, isDefined, isString, isUndefined } from '../../../../base/common/types.js';
-import { IExtensionManifestPropertiesService } from '../../../services/extensions/common/extensionManifestPropertiesService.js';
-import { IExtensionService, IExtensionsStatus as IExtensionRuntimeStatus, toExtension, toExtensionDescription } from '../../../services/extensions/common/extensions.js';
-import { isWeb, language } from '../../../../base/common/platform.js';
-import { getLocale } from '../../../../platform/languagePacks/common/languagePacks.js';
-import { ILocaleService } from '../../../services/localization/common/locale.js';
-import { TelemetryTrustedValue } from '../../../../platform/telemetry/common/telemetryUtils.js';
-import { ILifecycleService, LifecyclePhase } from '../../../services/lifecycle/common/lifecycle.js';
-import { IUserDataProfileService } from '../../../services/userDataProfile/common/userDataProfile.js';
-import { mainWindow } from '../../../../base/browser/window.js';
-import { IDialogService, IFileDialogService, IPromptButton } from '../../../../platform/dialogs/common/dialogs.js';
-import { IUpdateService, StateType } from '../../../../platform/update/common/update.js';
-import { areApiProposalsCompatible, isEngineValid } from '../../../../platform/extensions/common/extensionValidator.js';
-import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
-import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
-import { ShowCurrentReleaseNotesActionId } from '../../update/common/update.js';
-import { IViewsService } from '../../../services/views/common/viewsService.js';
-import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
-import { IMarkdownString, MarkdownString } from '../../../../base/common/htmlContent.js';
-import { ExtensionGalleryResourceType, getExtensionGalleryManifestResourceUri, IExtensionGalleryManifestService } from '../../../../platform/extensionManagement/common/extensionGalleryManifest.js';
-import { fromNow } from '../../../../base/common/date.js';
-import { IUserDataProfilesService } from '../../../../platform/userDataProfile/common/userDataProfile.js';
-import { IMeteredConnectionService } from '../../../../platform/meteredConnection/common/meteredConnection.js';
+  CancelablePromise,
+  Promises,
+  ThrottledDelayer,
+  createCancelablePromise,
+} from "../../../../base/common/async.js";
+import { CancellationError, getErrorMessage, isCancellationError } from "../../../../base/common/errors.js";
+import { Disposable, MutableDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { IPager, singlePagePager } from "../../../../base/common/paging.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import {
+  IExtensionGalleryService,
+  ILocalExtension,
+  IGalleryExtension,
+  IQueryOptions,
+  InstallExtensionEvent,
+  DidUninstallExtensionEvent,
+  InstallOperation,
+  WEB_EXTENSION_TAG,
+  InstallExtensionResult,
+  IExtensionsControlManifest,
+  IExtensionInfo,
+  IExtensionQueryOptions,
+  IDeprecationInfo,
+  isTargetPlatformCompatible,
+  InstallExtensionInfo,
+  EXTENSION_IDENTIFIER_REGEX,
+  InstallOptions,
+  IProductVersion,
+  UninstallExtensionInfo,
+  TargetPlatformToString,
+  IAllowedExtensionsService,
+  AllowedExtensionsConfigKey,
+  EXTENSION_INSTALL_SKIP_PUBLISHER_TRUST_CONTEXT,
+  ExtensionManagementError,
+  ExtensionManagementErrorCode,
+  MaliciousExtensionInfo,
+  shouldRequireRepositorySignatureFor,
+  IGalleryExtensionVersion,
+} from "../../../../platform/extensionManagement/common/extensionManagement.js";
+import {
+  IWorkbenchExtensionEnablementService,
+  EnablementState,
+  IExtensionManagementServerService,
+  IExtensionManagementServer,
+  IWorkbenchExtensionManagementService,
+  IResourceExtension,
+} from "../../../services/extensionManagement/common/extensionManagement.js";
+import {
+  getGalleryExtensionTelemetryData,
+  getLocalExtensionTelemetryData,
+  areSameExtensions,
+  groupByExtension,
+  getGalleryExtensionId,
+  findMatchingMaliciousEntry,
+} from "../../../../platform/extensionManagement/common/extensionManagementUtil.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IHostService } from "../../../services/host/browser/host.js";
+import { URI } from "../../../../base/common/uri.js";
+import {
+  IExtension,
+  ExtensionState,
+  IExtensionsWorkbenchService,
+  AutoUpdateConfigurationKey,
+  AutoCheckUpdatesConfigurationKey,
+  HasOutdatedExtensionsContext,
+  AutoUpdateConfigurationValue,
+  InstallExtensionOptions,
+  ExtensionRuntimeState,
+  ExtensionRuntimeActionType,
+  AutoRestartConfigurationKey,
+  VIEWLET_ID,
+  IExtensionsViewPaneContainer,
+  IExtensionsNotification,
+} from "../common/extensions.js";
+import { ACTIVE_GROUP, IEditorService, MODAL_GROUP, SIDE_GROUP } from "../../../services/editor/common/editorService.js";
+import { IURLService, IURLHandler, IOpenURLOptions } from "../../../../platform/url/common/url.js";
+import { ExtensionsInput, IExtensionEditorOptions } from "../common/extensionsInput.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IProgressOptions, IProgressService, ProgressLocation } from "../../../../platform/progress/common/progress.js";
+import { INotificationService, NotificationPriority, Severity } from "../../../../platform/notification/common/notification.js";
+import * as resources from "../../../../base/common/resources.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import {
+  IExtensionManifest,
+  ExtensionType,
+  IExtension as IPlatformExtension,
+  TargetPlatform,
+  ExtensionIdentifier,
+  IExtensionIdentifier,
+  IExtensionDescription,
+  isApplicationScopedExtension,
+} from "../../../../platform/extensions/common/extensions.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { FileAccess } from "../../../../base/common/network.js";
+import { IIgnoredExtensionsManagementService } from "../../../../platform/userDataSync/common/ignoredExtensions.js";
+import {
+  IUserDataAutoSyncService,
+  IUserDataSyncEnablementService,
+  SyncResource,
+} from "../../../../platform/userDataSync/common/userDataSync.js";
+import { IContextKey, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { isBoolean, isDefined, isString, isUndefined } from "../../../../base/common/types.js";
+import { IExtensionManifestPropertiesService } from "../../../services/extensions/common/extensionManifestPropertiesService.js";
+import {
+  IExtensionService,
+  IExtensionsStatus as IExtensionRuntimeStatus,
+  toExtension,
+  toExtensionDescription,
+} from "../../../services/extensions/common/extensions.js";
+import { isWeb, language } from "../../../../base/common/platform.js";
+import { getLocale } from "../../../../platform/languagePacks/common/languagePacks.js";
+import { ILocaleService } from "../../../services/localization/common/locale.js";
+import { TelemetryTrustedValue } from "../../../../platform/telemetry/common/telemetryUtils.js";
+import { ILifecycleService, LifecyclePhase } from "../../../services/lifecycle/common/lifecycle.js";
+import { IUserDataProfileService } from "../../../services/userDataProfile/common/userDataProfile.js";
+import { mainWindow } from "../../../../base/browser/window.js";
+import { IDialogService, IFileDialogService, IPromptButton } from "../../../../platform/dialogs/common/dialogs.js";
+import { IUpdateService, StateType } from "../../../../platform/update/common/update.js";
+import { areApiProposalsCompatible, isEngineValid } from "../../../../platform/extensions/common/extensionValidator.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { ShowCurrentReleaseNotesActionId } from "../../update/common/update.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
+import { IMarkdownString, MarkdownString } from "../../../../base/common/htmlContent.js";
+import {
+  ExtensionGalleryResourceType,
+  getExtensionGalleryManifestResourceUri,
+  IExtensionGalleryManifestService,
+} from "../../../../platform/extensionManagement/common/extensionGalleryManifest.js";
+import { fromNow } from "../../../../base/common/date.js";
+import { IUserDataProfilesService } from "../../../../platform/userDataProfile/common/userDataProfile.js";
+import { IMeteredConnectionService } from "../../../../platform/meteredConnection/common/meteredConnection.js";
 
 interface IExtensionStateProvider<T> {
 	(extension: Extension): T;
@@ -85,10 +155,10 @@ interface InstalledExtensionsEvent {
 	readonly count: number;
 }
 type ExtensionsLoadClassification = {
-	owner: 'digitarald';
-	comment: 'Helps to understand which extensions are the most actively used.';
-	readonly extensionIds: { classification: 'PublicNonPersonalData'; purpose: 'FeatureInsight'; comment: 'The list of extension ids that are installed.' };
-	readonly count: { classification: 'PublicNonPersonalData'; purpose: 'FeatureInsight'; comment: 'The number of extensions that are installed.' };
+	owner: "digitarald";
+	comment: "Helps to understand which extensions are the most actively used.";
+	readonly extensionIds: { classification: "PublicNonPersonalData"; purpose: "FeatureInsight"; comment: "The list of extension ids that are installed." };
+	readonly count: { classification: "PublicNonPersonalData"; purpose: "FeatureInsight"; comment: "The number of extensions that are installed." };
 };
 
 export class Extension implements IExtension {
@@ -110,7 +180,7 @@ export class Extension implements IExtension {
 		@ITelemetryService private readonly telemetryService: ITelemetryService,
 		@ILogService private readonly logService: ILogService,
 		@IFileService private readonly fileService: IFileService,
-		@IProductService private readonly productService: IProductService
+		@IProductService private readonly productService: IProductService,
 	) {
 	}
 
@@ -120,13 +190,13 @@ export class Extension implements IExtension {
 		}
 		if (this.local?.isWorkspaceScoped) {
 			return {
-				type: 'resource',
-				identifier: this.local.identifier,
-				location: this.local.location,
-				manifest: this.local.manifest,
-				changelogUri: this.local.changelogUrl,
-				readmeUri: this.local.readmeUrl,
-			};
+        type: "resource",
+        identifier: this.local.identifier,
+        location: this.local.location,
+        manifest: this.local.manifest,
+        changelogUri: this.local.changelogUrl,
+        readmeUri: this.local.readmeUrl,
+      };
 		}
 		return undefined;
 	}
@@ -170,7 +240,7 @@ export class Extension implements IExtension {
 		if (this.gallery) {
 			return this.gallery.name;
 		}
-		return this.getManifestFromLocalOrResource()?.name ?? '';
+		return this.getManifestFromLocalOrResource()?.name ?? "";
 	}
 
 	get displayName(): string {
@@ -188,7 +258,7 @@ export class Extension implements IExtension {
 		if (this.resourceExtension) {
 			return this.resourceExtension.identifier;
 		}
-		return this.local?.identifier ?? { id: '' };
+		return this.local?.identifier ?? { id: "" };
 	}
 
 	get uuid(): string | undefined {
@@ -199,7 +269,7 @@ export class Extension implements IExtension {
 		if (this.gallery) {
 			return this.gallery.publisher;
 		}
-		return this.getManifestFromLocalOrResource()?.publisher ?? '';
+		return this.getManifestFromLocalOrResource()?.publisher ?? "";
 	}
 
 	get publisherDisplayName(): string {
@@ -215,7 +285,9 @@ export class Extension implements IExtension {
 	}
 
 	get publisherUrl(): URI | undefined {
-		return this.gallery?.publisherLink ? URI.parse(this.gallery.publisherLink) : undefined;
+		return this.gallery?.publisherLink ? URI.parse(
+      this.gallery.publisherLink,
+    ) : undefined;
 	}
 
 	get publisherDomain(): { link: string; verified: boolean } | undefined {
@@ -223,7 +295,9 @@ export class Extension implements IExtension {
 	}
 
 	get publisherSponsorLink(): URI | undefined {
-		return this.gallery?.publisherSponsorLink ? URI.parse(this.gallery.publisherSponsorLink) : undefined;
+		return this.gallery?.publisherSponsorLink ? URI.parse(
+      this.gallery.publisherSponsorLink,
+    ) : undefined;
 	}
 
 	get version(): string {
@@ -239,11 +313,11 @@ export class Extension implements IExtension {
 	}
 
 	get latestVersion(): string {
-		return this.gallery ? this.gallery.version : this.getManifestFromLocalOrResource()?.version ?? '';
+		return this.gallery ? this.gallery.version : this.getManifestFromLocalOrResource()?.version ?? "";
 	}
 
 	get description(): string {
-		return this.gallery ? this.gallery.description : this.getManifestFromLocalOrResource()?.description ?? '';
+		return this.gallery ? this.gallery.description : this.getManifestFromLocalOrResource()?.description ?? "";
 	}
 
 	get url(): string | undefined {
@@ -260,14 +334,18 @@ export class Extension implements IExtension {
 
 	private get localIconUrl(): string | undefined {
 		if (this.local && this.local.manifest.icon) {
-			return FileAccess.uriToBrowserUri(resources.joinPath(this.local.location, this.local.manifest.icon)).toString(true);
+			return FileAccess.uriToBrowserUri(resources.joinPath(this.local.location, this.local.manifest.icon)).toString(
+        true,
+      );
 		}
 		return undefined;
 	}
 
 	private get resourceExtensionIconUrl(): string | undefined {
 		if (this.resourceExtension?.manifest.icon) {
-			return FileAccess.uriToBrowserUri(resources.joinPath(this.resourceExtension.location, this.resourceExtension.manifest.icon)).toString(true);
+			return FileAccess.uriToBrowserUri(resources.joinPath(this.resourceExtension.location, this.resourceExtension.manifest.icon)).toString(
+        true,
+      );
 		}
 		return undefined;
 	}
@@ -279,11 +357,19 @@ export class Extension implements IExtension {
 	private get defaultIconUrl(): string | undefined {
 		if (this.type === ExtensionType.System && this.local) {
 			if (this.local.manifest && this.local.manifest.contributes) {
-				if (Array.isArray(this.local.manifest.contributes.themes) && this.local.manifest.contributes.themes.length) {
-					return FileAccess.asBrowserUri('vs/workbench/contrib/extensions/browser/media/theme-icon.png').toString(true);
+				if (Array.isArray(
+          this.local.manifest.contributes.themes,
+        ) && this.local.manifest.contributes.themes.length) {
+					return FileAccess.asBrowserUri("vs/workbench/contrib/extensions/browser/media/theme-icon.png").toString(
+            true,
+          );
 				}
-				if (Array.isArray(this.local.manifest.contributes.grammars) && this.local.manifest.contributes.grammars.length) {
-					return FileAccess.asBrowserUri('vs/workbench/contrib/extensions/browser/media/language-icon.svg').toString(true);
+				if (Array.isArray(
+          this.local.manifest.contributes.grammars,
+        ) && this.local.manifest.contributes.grammars.length) {
+					return FileAccess.asBrowserUri("vs/workbench/contrib/extensions/browser/media/language-icon.svg").toString(
+            true,
+          );
 				}
 			}
 		}
@@ -339,7 +425,9 @@ export class Extension implements IExtension {
 				return false;
 			}
 			// Do not allow updating system extensions in stable
-			if (this.type === ExtensionType.System && this.productService.quality === 'stable' && !this.productService.builtInExtensionsEnabledWithAutoUpdates?.some(id => id.toLowerCase() === this.identifier.id.toLowerCase())) {
+			if (this.type === ExtensionType.System && this.productService.quality === "stable" && !this.productService.builtInExtensionsEnabledWithAutoUpdates?.some(
+        id => id.toLowerCase() === this.identifier.id.toLowerCase(),
+      )) {
 				return false;
 			}
 			if (!this.local.preRelease && this.gallery.properties.isPreReleaseVersion) {
@@ -359,7 +447,9 @@ export class Extension implements IExtension {
 
 	get outdatedTargetPlatform(): boolean {
 		return !!this.local && !!this.gallery
-			&& ![TargetPlatform.UNDEFINED, TargetPlatform.WEB].includes(this.local.targetPlatform)
+			&& ![TargetPlatform.UNDEFINED, TargetPlatform.WEB].includes(
+        this.local.targetPlatform,
+      )
 			&& this.gallery.properties.targetPlatform !== TargetPlatform.WEB
 			&& this.local.targetPlatform !== this.gallery.properties.targetPlatform
 			&& semver.eq(this.latestVersion, this.version);
@@ -427,16 +517,19 @@ export class Extension implements IExtension {
 
 	async getGalleryManifest(token: CancellationToken = CancellationToken.None): Promise<IExtensionManifest | null> {
 		if (this.gallery) {
-			let cache = this.galleryResourcesCache.get('manifest');
+			let cache = this.galleryResourcesCache.get("manifest");
 			if (!cache) {
 				if (this.gallery.assets.manifest) {
-					this.galleryResourcesCache.set('manifest', cache = this.galleryService.getManifest(this.gallery, token)
+					this.galleryResourcesCache.set("manifest", cache = this.galleryService.getManifest(this.gallery, token)
 						.catch(e => {
-							this.galleryResourcesCache.delete('manifest');
+							this.galleryResourcesCache.delete("manifest");
 							throw e;
 						}));
 				} else {
-					this.logService.error(nls.localize('Manifest is not found', "Manifest is not found"), this.identifier.id);
+					this.logService.error(
+            nls.localize("Manifest is not found", "Manifest is not found"),
+            this.identifier.id,
+          );
 				}
 			}
 			return cache;
@@ -471,7 +564,10 @@ export class Extension implements IExtension {
 			if (this.gallery.assets.readme) {
 				return this.galleryService.getReadme(this.gallery, token);
 			}
-			this.telemetryService.publicLog('extensions:NotFoundReadMe', this.telemetryData);
+			this.telemetryService.publicLog(
+        "extensions:NotFoundReadMe",
+        this.telemetryData,
+      );
 		}
 
 		if (this.type === ExtensionType.System) {
@@ -483,11 +579,13 @@ ${this.description}
 		}
 
 		if (this.resourceExtension?.readmeUri) {
-			const content = await this.fileService.readFile(this.resourceExtension?.readmeUri);
+			const content = await this.fileService.readFile(
+        this.resourceExtension?.readmeUri,
+      );
 			return content.value.toString();
 		}
 
-		return Promise.reject(new Error('not available'));
+		return Promise.reject(new Error("not available"));
 	}
 
 	hasChangelog(): boolean {
@@ -514,10 +612,12 @@ ${this.description}
 		}
 
 		if (this.type === ExtensionType.System) {
-			return Promise.resolve(`Please check the [VS Code Release Notes](command:${ShowCurrentReleaseNotesActionId}) for changes to the built-in extensions.`);
+			return Promise.resolve(
+        `Please check the [VS Code Release Notes](command:${ShowCurrentReleaseNotesActionId}) for changes to the built-in extensions.`,
+      );
 		}
 
-		return Promise.reject(new Error('not available'));
+		return Promise.reject(new Error("not available"));
 	}
 
 	get categories(): readonly string[] {
@@ -537,7 +637,7 @@ ${this.description}
 	get tags(): readonly string[] {
 		const { gallery } = this;
 		if (gallery) {
-			return gallery.tags.filter(tag => !tag.startsWith('_'));
+			return gallery.tags.filter(tag => !tag.startsWith("_"));
 		}
 		return [];
 	}
@@ -571,7 +671,10 @@ ${this.description}
 	}
 
 	setExtensionsControlManifest(extensionsControlManifest: IExtensionsControlManifest): void {
-		this.malicious = findMatchingMaliciousEntry(this.identifier, extensionsControlManifest.malicious);
+		this.malicious = findMatchingMaliciousEntry(
+      this.identifier,
+      extensionsControlManifest.malicious,
+    );
 		this.deprecationInfo = extensionsControlManifest.deprecated ? extensionsControlManifest.deprecated[this.identifier.id.toLowerCase()] : undefined;
 	}
 
@@ -586,13 +689,15 @@ ${this.description}
 	}
 }
 
-const EXTENSIONS_AUTO_UPDATE_KEY = 'extensions.autoUpdate';
-const EXTENSIONS_DONOT_AUTO_UPDATE_KEY = 'extensions.donotAutoUpdate';
-const EXTENSIONS_DISMISSED_NOTIFICATIONS_KEY = 'extensions.dismissedNotifications';
+const EXTENSIONS_AUTO_UPDATE_KEY = "extensions.autoUpdate";
+const EXTENSIONS_DONOT_AUTO_UPDATE_KEY = "extensions.donotAutoUpdate";
+const EXTENSIONS_DISMISSED_NOTIFICATIONS_KEY = "extensions.dismissedNotifications";
 
 class Extensions extends Disposable {
 
-	private readonly _onChange = this._register(new Emitter<{ extension: Extension; operation?: InstallOperation } | undefined>());
+	private readonly _onChange = this._register(
+    new Emitter<{ extension: Extension; operation?: InstallOperation } | undefined>(),
+  );
 	get onChange() { return this._onChange.event; }
 
 	private readonly _onReset = this._register(new Emitter<void>());
@@ -611,17 +716,45 @@ class Extensions extends Disposable {
 		@IWorkbenchExtensionEnablementService private readonly extensionEnablementService: IWorkbenchExtensionEnablementService,
 		@IWorkbenchExtensionManagementService private readonly workbenchExtensionManagementService: IWorkbenchExtensionManagementService,
 		@ITelemetryService private readonly telemetryService: ITelemetryService,
-		@IInstantiationService private readonly instantiationService: IInstantiationService
+		@IInstantiationService private readonly instantiationService: IInstantiationService,
 	) {
 		super();
-		this._register(server.extensionManagementService.onInstallExtension(e => this.onInstallExtension(e)));
-		this._register(server.extensionManagementService.onDidInstallExtensions(e => this.onDidInstallExtensions(e)));
-		this._register(server.extensionManagementService.onUninstallExtension(e => this.onUninstallExtension(e.identifier)));
-		this._register(server.extensionManagementService.onDidUninstallExtension(e => this.onDidUninstallExtension(e)));
-		this._register(server.extensionManagementService.onDidUpdateExtensionMetadata(e => this.onDidUpdateExtensionMetadata(e.local)));
-		this._register(server.extensionManagementService.onDidChangeProfile(() => this.reset()));
-		this._register(extensionEnablementService.onEnablementChanged(e => this.onEnablementChanged(e)));
-		this._register(Event.any(this.onChange, this.onReset)(() => this._local = undefined));
+		this._register(
+      server.extensionManagementService.onInstallExtension(
+        e => this.onInstallExtension(e),
+      ),
+    );
+		this._register(
+      server.extensionManagementService.onDidInstallExtensions(
+        e => this.onDidInstallExtensions(e),
+      ),
+    );
+		this._register(
+      server.extensionManagementService.onUninstallExtension(
+        e => this.onUninstallExtension(e.identifier),
+      ),
+    );
+		this._register(
+      server.extensionManagementService.onDidUninstallExtension(
+        e => this.onDidUninstallExtension(e),
+      ),
+    );
+		this._register(
+      server.extensionManagementService.onDidUpdateExtensionMetadata(
+        e => this.onDidUpdateExtensionMetadata(e.local),
+      ),
+    );
+		this._register(
+      server.extensionManagementService.onDidChangeProfile(() => this.reset()),
+    );
+		this._register(
+      extensionEnablementService.onEnablementChanged(
+        e => this.onEnablementChanged(e),
+      ),
+    );
+		this._register(
+      Event.any(this.onChange, this.onReset)(() => this._local = undefined),
+    );
 		if (this.isWorkspaceServer) {
 			this._register(this.workbenchExtensionManagementService.onInstallExtension(e => {
 				if (e.workspaceScoped) {
@@ -655,7 +788,12 @@ class Extensions extends Disposable {
 				this._local.push(extension);
 			}
 			for (const extension of this.installing) {
-				if (!this.installed.some(installed => areSameExtensions(installed.identifier, extension.identifier))) {
+				if (!this.installed.some(
+          installed => areSameExtensions(
+            installed.identifier,
+            extension.identifier,
+          ),
+        )) {
 					this._local.push(extension);
 				}
 			}
@@ -670,7 +808,10 @@ class Extensions extends Disposable {
 	}
 
 	async syncInstalledExtensionsWithGallery(galleryExtensions: IGalleryExtension[], productVersion: IProductVersion, flagExtensionsMissingFromGallery?: IExtensionInfo[]): Promise<void> {
-		const extensions = await this.mapInstalledExtensionWithCompatibleGalleryExtension(galleryExtensions, productVersion);
+		const extensions = await this.mapInstalledExtensionWithCompatibleGalleryExtension(
+      galleryExtensions,
+      productVersion,
+    );
 		for (const [extension, gallery] of extensions) {
 			// update metadata of the extension if it does not exist
 			if (extension.local && extension.local.type !== ExtensionType.System && !extension.local.identifier.uuid) {
@@ -698,18 +839,25 @@ class Extensions extends Disposable {
 					continue;
 				}
 				// Extension is not present in the set we are concerned about
-				if (!flagExtensionsMissingFromGallery.some(f => areSameExtensions(f, extension.identifier))) {
+				if (!flagExtensionsMissingFromGallery.some(
+          f => areSameExtensions(f, extension.identifier),
+        )) {
 					continue;
 				}
 				extensionsToQuery.push(extension);
 			}
 			if (extensionsToQuery.length) {
-				const queryResult = await this.galleryService.getExtensions(extensionsToQuery.map(e => ({ ...e.identifier, version: e.version })), CancellationToken.None);
+				const queryResult = await this.galleryService.getExtensions(
+          extensionsToQuery.map(e => ({ ...e.identifier, version: e.version })),
+          CancellationToken.None,
+        );
 				const queriedIds: string[] = [];
 				const missingIds: string[] = [];
 				for (const extension of extensionsToQuery) {
 					queriedIds.push(extension.identifier.id);
-					const gallery = queryResult.find(g => areSameExtensions(g.identifier, extension.identifier));
+					const gallery = queryResult.find(
+            g => areSameExtensions(g.identifier, extension.identifier),
+          );
 					if (gallery) {
 						extension.gallery = gallery;
 					} else {
@@ -719,25 +867,30 @@ class Extensions extends Disposable {
 					this._onChange.fire({ extension });
 				}
 				type MissingFromGalleryClassification = {
-					owner: 'joshspicer';
-					comment: 'Report when installed extensions are no longer available in the gallery';
-					queriedIds: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Extensions queried as potentially missing from gallery' };
-					missingIds: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Extensions determined missing from gallery' };
+					owner: "joshspicer";
+					comment: "Report when installed extensions are no longer available in the gallery";
+					queriedIds: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Extensions queried as potentially missing from gallery" };
+					missingIds: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Extensions determined missing from gallery" };
 				};
 				type MissingFromGalleryEvent = {
 					readonly queriedIds: TelemetryTrustedValue<string>;
 					readonly missingIds: TelemetryTrustedValue<string>;
 				};
-				this.telemetryService.publicLog2<MissingFromGalleryEvent, MissingFromGalleryClassification>('extensions:missingFromGallery', {
-					queriedIds: new TelemetryTrustedValue(queriedIds.join(';')),
-					missingIds: new TelemetryTrustedValue(missingIds.join(';'))
-				});
+				this.telemetryService.publicLog2<MissingFromGalleryEvent, MissingFromGalleryClassification>(
+          "extensions:missingFromGallery",
+          {
+            queriedIds: new TelemetryTrustedValue(queriedIds.join(";")),
+            missingIds: new TelemetryTrustedValue(missingIds.join(";")),
+          },
+        );
 			}
 		}
 	}
 
 	private async mapInstalledExtensionWithCompatibleGalleryExtension(galleryExtensions: IGalleryExtension[], productVersion: IProductVersion): Promise<[Extension, IGalleryExtension][]> {
-		const mappedExtensions = this.mapInstalledExtensionWithGalleryExtension(galleryExtensions);
+		const mappedExtensions = this.mapInstalledExtensionWithGalleryExtension(
+      galleryExtensions,
+    );
 		const targetPlatform = await this.server.extensionManagementService.getTargetPlatform();
 		const compatibleGalleryExtensions: IGalleryExtension[] = [];
 		const compatibleGalleryExtensionsToFetch: IExtensionInfo[] = [];
@@ -751,10 +904,21 @@ class Extensions extends Disposable {
 			}
 		}));
 		if (compatibleGalleryExtensionsToFetch.length) {
-			const result = await this.galleryService.getExtensions(compatibleGalleryExtensionsToFetch, { targetPlatform, compatible: true, queryAllVersions: true, productVersion }, CancellationToken.None);
+			const result = await this.galleryService.getExtensions(
+        compatibleGalleryExtensionsToFetch,
+        {
+          targetPlatform,
+          compatible: true,
+          queryAllVersions: true,
+          productVersion,
+        },
+        CancellationToken.None,
+      );
 			compatibleGalleryExtensions.push(...result);
 		}
-		return this.mapInstalledExtensionWithGalleryExtension(compatibleGalleryExtensions);
+		return this.mapInstalledExtensionWithGalleryExtension(
+      compatibleGalleryExtensions,
+    );
 	}
 
 	private mapInstalledExtensionWithGalleryExtension(galleryExtensions: IGalleryExtension[]): [Extension, IGalleryExtension][] {
@@ -772,7 +936,7 @@ class Extensions extends Disposable {
 					continue;
 				}
 			}
-			if (installed.local?.source !== 'resource') {
+			if (installed.local?.source !== "resource") {
 				const gallery = byID.get(installed.identifier.id.toLowerCase());
 				if (gallery) {
 					mappedExtensions.push([installed, gallery]);
@@ -786,14 +950,32 @@ class Extensions extends Disposable {
 		let isPreReleaseVersion = false;
 		if (localExtension.manifest.version !== gallery.version) {
 			type GalleryServiceMatchInstalledExtensionClassification = {
-				owner: 'sandy081';
-				comment: 'Report when a request is made to update metadata of an installed extension';
+				owner: "sandy081";
+				comment: "Report when a request is made to update metadata of an installed extension";
 			};
-			this.telemetryService.publicLog2<{}, GalleryServiceMatchInstalledExtensionClassification>('galleryService:updateMetadata');
-			const galleryWithLocalVersion: IGalleryExtension | undefined = (await this.galleryService.getExtensions([{ ...localExtension.identifier, version: localExtension.manifest.version }], CancellationToken.None))[0];
+			this.telemetryService.publicLog2<{}, GalleryServiceMatchInstalledExtensionClassification>(
+        "galleryService:updateMetadata",
+      );
+			const galleryWithLocalVersion: IGalleryExtension | undefined = (await this.galleryService.getExtensions(
+        [
+          {
+            ...localExtension.identifier,
+            version: localExtension.manifest.version,
+          },
+        ],
+        CancellationToken.None,
+      ))[0];
 			isPreReleaseVersion = !!galleryWithLocalVersion?.properties?.isPreReleaseVersion;
 		}
-		return this.workbenchExtensionManagementService.updateMetadata(localExtension, { id: gallery.identifier.uuid, publisherDisplayName: gallery.publisherDisplayName, publisherId: gallery.publisherId, isPreReleaseVersion });
+		return this.workbenchExtensionManagementService.updateMetadata(
+      localExtension,
+      {
+        id: gallery.identifier.uuid,
+        publisherDisplayName: gallery.publisherDisplayName,
+        publisherId: gallery.publisherId,
+        isPreReleaseVersion,
+      },
+    );
 	}
 
 	canInstall(galleryExtension: IGalleryExtension): Promise<true | IMarkdownString> {
@@ -803,8 +985,18 @@ class Extensions extends Disposable {
 	private onInstallExtension(event: InstallExtensionEvent): void {
 		const { source } = event;
 		if (source && !URI.isUri(source)) {
-			const extension = this.installed.find(e => areSameExtensions(e.identifier, source.identifier))
-				?? this.instantiationService.createInstance(Extension, this.stateProvider, this.runtimeStateProvider, this.server, undefined, source, undefined);
+			const extension = this.installed.find(
+        e => areSameExtensions(e.identifier, source.identifier),
+      )
+				?? this.instantiationService.createInstance(
+          Extension,
+          this.stateProvider,
+          this.runtimeStateProvider,
+          this.server,
+          undefined,
+          source,
+          undefined,
+        );
 			this.installing.push(extension);
 			this._onChange.fire({ extension });
 		}
@@ -812,9 +1004,15 @@ class Extensions extends Disposable {
 
 	private async fetchInstalledExtensions(productVersion?: IProductVersion): Promise<void> {
 		const extensionsControlManifest = await this.server.extensionManagementService.getExtensionsControlManifest();
-		const all = await this.server.extensionManagementService.getInstalled(undefined, undefined, productVersion);
+		const all = await this.server.extensionManagementService.getInstalled(
+      undefined,
+      undefined,
+      productVersion,
+    );
 		if (this.isWorkspaceServer) {
-			all.push(...await this.workbenchExtensionManagementService.getInstalledWorkspaceExtensions(true));
+			all.push(
+        ...await this.workbenchExtensionManagementService.getInstalledWorkspaceExtensions(true),
+      );
 		}
 
 		// dedup workspace, user and system extensions by giving priority to workspace first and then to user extension.
@@ -842,14 +1040,17 @@ class Extensions extends Disposable {
 			return result;
 		}, []);
 
-		const byId = index(this.installed, e => e.local ? e.local.identifier.id : e.identifier.id);
+		const byId = index(
+      this.installed,
+      e => e.local ? e.local.identifier.id : e.identifier.id,
+    );
 		this.installed = installed.map(local => {
-			const extension = byId[local.identifier.id] || this.instantiationService.createInstance(Extension, this.stateProvider, this.runtimeStateProvider, this.server, local, undefined, undefined);
-			extension.local = local;
-			extension.enablementState = this.extensionEnablementService.getEnablementState(local);
-			extension.setExtensionsControlManifest(extensionsControlManifest);
-			return extension;
-		});
+      const extension = byId[local.identifier.id] || this.instantiationService.createInstance(Extension, this.stateProvider, this.runtimeStateProvider, this.server, local, undefined, undefined);
+      extension.local = local;
+      extension.enablementState = this.extensionEnablementService.getEnablementState(local);
+      extension.setExtensionsControlManifest(extensionsControlManifest);
+      return extension;
+    });
 	}
 
 	private async reset(): Promise<void> {
@@ -866,15 +1067,29 @@ class Extensions extends Disposable {
 			const { local, source } = event;
 			const gallery = source && !URI.isUri(source) ? source : undefined;
 			const location = source && URI.isUri(source) ? source : undefined;
-			const installingExtension = gallery ? this.installing.filter(e => areSameExtensions(e.identifier, gallery.identifier))[0] : null;
-			this.installing = installingExtension ? this.installing.filter(e => e !== installingExtension) : this.installing;
+			const installingExtension = gallery ? this.installing.filter(
+        e => areSameExtensions(e.identifier, gallery.identifier),
+      )[0] : null;
+			this.installing = installingExtension ? this.installing.filter(
+        e => e !== installingExtension,
+      ) : this.installing;
 
 			let extension: Extension | undefined = installingExtension ? installingExtension
-				: (location || local) ? this.instantiationService.createInstance(Extension, this.stateProvider, this.runtimeStateProvider, this.server, local, undefined, undefined)
+				: (location || local) ? this.instantiationService.createInstance(
+            Extension,
+            this.stateProvider,
+            this.runtimeStateProvider,
+            this.server,
+            local,
+            undefined,
+            undefined,
+          )
 					: undefined;
 			if (extension) {
 				if (local) {
-					const installed = this.installed.filter(e => areSameExtensions(e.identifier, extension!.identifier))[0];
+					const installed = this.installed.filter(
+            e => areSameExtensions(e.identifier, extension!.identifier),
+          )[0];
 					if (installed) {
 						extension = installed;
 					} else {
@@ -884,11 +1099,15 @@ class Extensions extends Disposable {
 					if (!extension.gallery) {
 						extension.gallery = gallery;
 					}
-					extension.enablementState = this.extensionEnablementService.getEnablementState(local);
+					extension.enablementState = this.extensionEnablementService.getEnablementState(
+            local,
+          );
 				}
 				extensions.push(extension);
 			}
-			this._onChange.fire(!local || !extension ? undefined : { extension, operation: event.operation });
+			this._onChange.fire(
+        !local || !extension ? undefined : { extension, operation: event.operation },
+      );
 		}
 
 		if (extensions.length) {
@@ -901,7 +1120,9 @@ class Extensions extends Disposable {
 	}
 
 	private async onDidUpdateExtensionMetadata(local: ILocalExtension): Promise<void> {
-		const extension = this.installed.find(e => areSameExtensions(e.identifier, local.identifier));
+		const extension = this.installed.find(
+      e => areSameExtensions(e.identifier, local.identifier),
+    );
 		if (extension?.local) {
 			extension.local = local;
 			this._onChange.fire({ extension });
@@ -909,16 +1130,27 @@ class Extensions extends Disposable {
 	}
 
 	private async matchInstalledExtensionsWithGallery(extensions: Extension[]): Promise<void> {
-		const toMatch = extensions.filter(e => e.local && !e.gallery && e.local.source !== 'resource');
+		const toMatch = extensions.filter(
+      e => e.local && !e.gallery && e.local.source !== "resource",
+    );
 		if (!toMatch.length) {
 			return;
 		}
 		if (!this.galleryService.isEnabled()) {
 			return;
 		}
-		const galleryExtensions = await this.galleryService.getExtensions(toMatch.map(e => ({ ...e.identifier, preRelease: e.local?.preRelease })), { compatible: true, targetPlatform: await this.server.extensionManagementService.getTargetPlatform() }, CancellationToken.None);
+		const galleryExtensions = await this.galleryService.getExtensions(
+      toMatch.map(e => ({ ...e.identifier, preRelease: e.local?.preRelease })),
+      {
+        compatible: true,
+        targetPlatform: await this.server.extensionManagementService.getTargetPlatform(),
+      },
+      CancellationToken.None,
+    );
 		for (const extension of extensions) {
-			const compatible = galleryExtensions.find(e => areSameExtensions(e.identifier, extension.identifier));
+			const compatible = galleryExtensions.find(
+        e => areSameExtensions(e.identifier, extension.identifier),
+      );
 			if (compatible) {
 				extension.gallery = compatible;
 				this._onChange.fire({ extension });
@@ -927,19 +1159,34 @@ class Extensions extends Disposable {
 	}
 
 	private onUninstallExtension(identifier: IExtensionIdentifier): void {
-		const extension = this.installed.filter(e => areSameExtensions(e.identifier, identifier))[0];
+		const extension = this.installed.filter(
+      e => areSameExtensions(e.identifier, identifier),
+    )[0];
 		if (extension) {
-			const uninstalling = this.uninstalling.filter(e => areSameExtensions(e.identifier, identifier))[0] || extension;
-			this.uninstalling = [uninstalling, ...this.uninstalling.filter(e => !areSameExtensions(e.identifier, identifier))];
-			this._onChange.fire(uninstalling ? { extension: uninstalling } : undefined);
+			const uninstalling = this.uninstalling.filter(
+        e => areSameExtensions(e.identifier, identifier),
+      )[0] || extension;
+			this.uninstalling = [
+        uninstalling,
+        ...this.uninstalling.filter(e => !areSameExtensions(e.identifier, identifier)),
+      ];
+			this._onChange.fire(
+        uninstalling ? { extension: uninstalling } : undefined,
+      );
 		}
 	}
 
 	private onDidUninstallExtension({ identifier, error }: DidUninstallExtensionEvent): void {
-		const uninstalled = this.uninstalling.find(e => areSameExtensions(e.identifier, identifier)) || this.installed.find(e => areSameExtensions(e.identifier, identifier));
-		this.uninstalling = this.uninstalling.filter(e => !areSameExtensions(e.identifier, identifier));
+		const uninstalled = this.uninstalling.find(
+      e => areSameExtensions(e.identifier, identifier),
+    ) || this.installed.find(e => areSameExtensions(e.identifier, identifier));
+		this.uninstalling = this.uninstalling.filter(
+      e => !areSameExtensions(e.identifier, identifier),
+    );
 		if (!error) {
-			this.installed = this.installed.filter(e => !areSameExtensions(e.identifier, identifier));
+			this.installed = this.installed.filter(
+        e => !areSameExtensions(e.identifier, identifier),
+      );
 		}
 		if (uninstalled) {
 			this._onChange.fire({ extension: uninstalled });
@@ -947,10 +1194,16 @@ class Extensions extends Disposable {
 	}
 
 	private onEnablementChanged(platformExtensions: readonly IPlatformExtension[]) {
-		const extensions = this.local.filter(e => platformExtensions.some(p => areSameExtensions(e.identifier, p.identifier)));
+		const extensions = this.local.filter(
+      e => platformExtensions.some(
+        p => areSameExtensions(e.identifier, p.identifier),
+      ),
+    );
 		for (const extension of extensions) {
 			if (extension.local) {
-				const enablementState = this.extensionEnablementService.getEnablementState(extension.local);
+				const enablementState = this.extensionEnablementService.getEnablementState(
+          extension.local,
+        );
 				if (enablementState !== extension.enablementState) {
 					extension.enablementState = enablementState;
 					this._onChange.fire({ extension });
@@ -960,13 +1213,19 @@ class Extensions extends Disposable {
 	}
 
 	getExtensionState(extension: Extension): ExtensionState {
-		if (extension.gallery && this.installing.some(e => !!e.gallery && areSameExtensions(e.gallery.identifier, extension.gallery!.identifier))) {
+		if (extension.gallery && this.installing.some(
+      e => !!e.gallery && areSameExtensions(e.gallery.identifier, extension.gallery!.identifier),
+    )) {
 			return ExtensionState.Installing;
 		}
-		if (this.uninstalling.some(e => areSameExtensions(e.identifier, extension.identifier))) {
+		if (this.uninstalling.some(
+      e => areSameExtensions(e.identifier, extension.identifier),
+    )) {
 			return ExtensionState.Uninstalling;
 		}
-		const local = this.installed.filter(e => e === extension || (e.gallery && extension.gallery && areSameExtensions(e.gallery.identifier, extension.gallery.identifier)))[0];
+		const local = this.installed.filter(
+      e => e === extension || (e.gallery && extension.gallery && areSameExtensions(e.gallery.identifier, extension.gallery.identifier)),
+    )[0];
 		return local ? ExtensionState.Installed : ExtensionState.Uninstalled;
 	}
 }
@@ -986,11 +1245,15 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 	private updatesCheckDelayer: ThrottledDelayer<void>;
 	private autoUpdateDelayer: ThrottledDelayer<void>;
 
-	private readonly _onChange = this._register(new Emitter<IExtension | undefined>());
+	private readonly _onChange = this._register(
+    new Emitter<IExtension | undefined>(),
+  );
 	get onChange(): Event<IExtension | undefined> { return this._onChange.event; }
 
 	private extensionsNotification: IExtensionsNotification & { readonly key: string } | undefined;
-	private readonly _onDidChangeExtensionsNotification = this._register(new Emitter<IExtensionsNotification | undefined>());
+	private readonly _onDidChangeExtensionsNotification = this._register(
+    new Emitter<IExtensionsNotification | undefined>(),
+  );
 	readonly onDidChangeExtensionsNotification = this._onDidChangeExtensionsNotification.event;
 
 	private readonly _onReset = this._register(new Emitter<void>());
@@ -1038,30 +1301,46 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 		@IFileDialogService private readonly fileDialogService: IFileDialogService,
 		@IQuickInputService private readonly quickInputService: IQuickInputService,
 		@IAllowedExtensionsService private readonly allowedExtensionsService: IAllowedExtensionsService,
-		@IMeteredConnectionService private readonly meteredConnectionService: IMeteredConnectionService
+		@IMeteredConnectionService private readonly meteredConnectionService: IMeteredConnectionService,
 	) {
 		super();
 
-		this.hasOutdatedExtensionsContextKey = HasOutdatedExtensionsContext.bindTo(contextKeyService);
+		this.hasOutdatedExtensionsContextKey = HasOutdatedExtensionsContext.bindTo(
+      contextKeyService,
+    );
 		if (extensionManagementServerService.localExtensionManagementServer) {
-			this.localExtensions = this._register(instantiationService.createInstance(Extensions,
-				extensionManagementServerService.localExtensionManagementServer,
-				ext => this.getExtensionState(ext),
-				ext => this.getRuntimeState(ext),
-				!extensionManagementServerService.remoteExtensionManagementServer
-			));
-			this._register(this.localExtensions.onChange(e => this.onDidChangeExtensions(e?.extension)));
+			this.localExtensions = this._register(
+        instantiationService.createInstance(
+          Extensions,
+          extensionManagementServerService.localExtensionManagementServer,
+          ext => this.getExtensionState(ext),
+          ext => this.getRuntimeState(ext),
+          !extensionManagementServerService.remoteExtensionManagementServer,
+        ),
+      );
+			this._register(
+        this.localExtensions.onChange(
+          e => this.onDidChangeExtensions(e?.extension),
+        ),
+      );
 			this._register(this.localExtensions.onReset(e => this.reset()));
 			this.extensionsServers.push(this.localExtensions);
 		}
 		if (extensionManagementServerService.remoteExtensionManagementServer) {
-			this.remoteExtensions = this._register(instantiationService.createInstance(Extensions,
-				extensionManagementServerService.remoteExtensionManagementServer,
-				ext => this.getExtensionState(ext),
-				ext => this.getRuntimeState(ext),
-				true
-			));
-			this._register(this.remoteExtensions.onChange(e => this.onDidChangeExtensions(e?.extension)));
+			this.remoteExtensions = this._register(
+        instantiationService.createInstance(
+          Extensions,
+          extensionManagementServerService.remoteExtensionManagementServer,
+          ext => this.getExtensionState(ext),
+          ext => this.getRuntimeState(ext),
+          true,
+        ),
+      );
+			this._register(
+        this.remoteExtensions.onChange(
+          e => this.onDidChangeExtensions(e?.extension),
+        ),
+      );
 			this._register(this.remoteExtensions.onReset(e => this.reset()));
 			this.extensionsServers.push(this.remoteExtensions);
 		}
@@ -1070,19 +1349,27 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 				extensionManagementServerService.webExtensionManagementServer,
 				ext => this.getExtensionState(ext),
 				ext => this.getRuntimeState(ext),
-				!(extensionManagementServerService.remoteExtensionManagementServer || extensionManagementServerService.localExtensionManagementServer)
+				!(extensionManagementServerService.remoteExtensionManagementServer || extensionManagementServerService.localExtensionManagementServer),
 			));
-			this._register(this.webExtensions.onChange(e => this.onDidChangeExtensions(e?.extension)));
+			this._register(
+        this.webExtensions.onChange(
+          e => this.onDidChangeExtensions(e?.extension),
+        ),
+      );
 			this._register(this.webExtensions.onReset(e => this.reset()));
 			this.extensionsServers.push(this.webExtensions);
 		}
 
-		this.updatesCheckDelayer = new ThrottledDelayer<void>(ExtensionsWorkbenchService.UpdatesCheckInterval);
+		this.updatesCheckDelayer = new ThrottledDelayer<void>(
+      ExtensionsWorkbenchService.UpdatesCheckInterval,
+    );
 		this.autoUpdateDelayer = new ThrottledDelayer<void>(1000);
-		this._register(toDisposable(() => {
-			this.updatesCheckDelayer.cancel();
-			this.autoUpdateDelayer.cancel();
-		}));
+		this._register(
+      toDisposable(() => {
+        this.updatesCheckDelayer.cancel();
+        this.autoUpdateDelayer.cancel();
+      }),
+    );
 
 		urlService.registerHandler(this);
 
@@ -1091,12 +1378,22 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 
 	private async initialize(): Promise<void> {
 		// initialize local extensions
-		await Promise.all([this.queryLocal(), this.extensionService.whenInstalledExtensionsRegistered()]);
+		await Promise.all([
+      this.queryLocal(),
+      this.extensionService.whenInstalledExtensionsRegistered(),
+    ]);
 		if (this._store.isDisposed) {
 			return;
 		}
 		this.onDidChangeRunningExtensions(this.extensionService.extensions, []);
-		this._register(this.extensionService.onDidChangeExtensions(({ added, removed }) => this.onDidChangeRunningExtensions(added, removed)));
+		this._register(
+      this.extensionService.onDidChangeExtensions(
+        ({ added, removed }) => this.onDidChangeRunningExtensions(
+          added,
+          removed,
+        ),
+      ),
+    );
 
 		await this.lifecycleService.when(LifecyclePhase.Eventually);
 		if (this._store.isDisposed) {
@@ -1106,13 +1403,27 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 		this.initializeAutoUpdate();
 		this.updateExtensionsNotificaiton();
 		this.reportInstalledExtensionsTelemetry();
-		this._register(this.storageService.onDidChangeValue(StorageScope.PROFILE, EXTENSIONS_DISMISSED_NOTIFICATIONS_KEY, this._store)(e => this.onDidDismissedNotificationsValueChange()));
-		this._register(this.storageService.onDidChangeValue(StorageScope.APPLICATION, EXTENSIONS_AUTO_UPDATE_KEY, this._store)(e => this.onDidSelectedExtensionToAutoUpdateValueChange()));
-		this._register(this.storageService.onDidChangeValue(StorageScope.APPLICATION, EXTENSIONS_DONOT_AUTO_UPDATE_KEY, this._store)(e => this.onDidSelectedExtensionToAutoUpdateValueChange()));
-		this._register(Event.debounce(this.onChange, () => undefined, 100)(() => {
-			this.updateExtensionsNotificaiton();
-			this.reportProgressFromOtherSources();
-		}));
+		this._register(
+      this.storageService.onDidChangeValue(StorageScope.PROFILE, EXTENSIONS_DISMISSED_NOTIFICATIONS_KEY, this._store)(
+        e => this.onDidDismissedNotificationsValueChange(),
+      ),
+    );
+		this._register(
+      this.storageService.onDidChangeValue(StorageScope.APPLICATION, EXTENSIONS_AUTO_UPDATE_KEY, this._store)(
+        e => this.onDidSelectedExtensionToAutoUpdateValueChange(),
+      ),
+    );
+		this._register(
+      this.storageService.onDidChangeValue(StorageScope.APPLICATION, EXTENSIONS_DONOT_AUTO_UPDATE_KEY, this._store)(
+        e => this.onDidSelectedExtensionToAutoUpdateValueChange(),
+      ),
+    );
+		this._register(
+      Event.debounce(this.onChange, () => undefined, 100)(() => {
+        this.updateExtensionsNotificaiton();
+        this.reportProgressFromOtherSources();
+      }),
+    );
 	}
 
 	private initializeAutoUpdate(): void {
@@ -1130,32 +1441,36 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 			}
 		}));
 		this._register(this.extensionEnablementService.onEnablementChanged(platformExtensions => {
-			if (this.isAutoCheckUpdatesEnabled() && this.getAutoUpdateValue() === 'onlyEnabledExtensions' && platformExtensions.some(e => this.extensionEnablementService.isEnabled(e))) {
-				this.checkForUpdates('Extension enablement changed');
+			if (this.isAutoCheckUpdatesEnabled() && this.getAutoUpdateValue() === "onlyEnabledExtensions" && platformExtensions.some(e => this.extensionEnablementService.isEnabled(e))) {
+				this.checkForUpdates("Extension enablement changed");
 			}
 		}));
-		this._register(Event.debounce(this.onChange, () => undefined, 100)(() => this.hasOutdatedExtensionsContextKey.set(this.outdated.length > 0)));
+		this._register(
+      Event.debounce(this.onChange, () => undefined, 100)(
+        () => this.hasOutdatedExtensionsContextKey.set(this.outdated.length > 0),
+      ),
+    );
 		this._register(this.updateService.onStateChange(e => {
 			if ((e.type === StateType.CheckingForUpdates && e.explicit) || e.type === StateType.AvailableForDownload || e.type === StateType.Downloaded) {
 				this.telemetryService.publicLog2<{}, {
-					owner: 'sandy081';
-					comment: 'Report when update check is triggered on product update';
-				}>('extensions:updatecheckonproductupdate');
+					owner: "sandy081";
+					comment: "Report when update check is triggered on product update";
+				}>("extensions:updatecheckonproductupdate");
 				if (this.isAutoCheckUpdatesEnabled()) {
-					this.checkForUpdates('Product update');
+					this.checkForUpdates("Product update");
 				}
 			}
 		}));
 
 		this._register(this.allowedExtensionsService.onDidChangeAllowedExtensionsConfigValue(() => {
 			if (this.isAutoCheckUpdatesEnabled()) {
-				this.checkForUpdates('Allowed extensions changed');
+				this.checkForUpdates("Allowed extensions changed");
 			}
 		}));
 
 		this._register(this.meteredConnectionService.onDidChangeIsConnectionMetered(() => {
 			if (this.isAutoCheckUpdatesEnabled()) {
-				this.checkForUpdates('Connection is no longer metered');
+				this.checkForUpdates("Connection is no longer metered");
 			}
 			if (isWeb && !this.isAutoUpdateEnabled()) {
 				this.autoUpdateBuiltinExtensions();
@@ -1192,12 +1507,16 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 	}
 
 	getAutoUpdateValue(): AutoUpdateConfigurationValue {
-		const autoUpdate = this.configurationService.getValue<AutoUpdateConfigurationValue>(AutoUpdateConfigurationKey);
+		const autoUpdate = this.configurationService.getValue<AutoUpdateConfigurationValue>(
+      AutoUpdateConfigurationKey,
+    );
 		// eslint-disable-next-line local/code-no-any-casts
-		if (<any>autoUpdate === 'onlySelectedExtensions') {
+		if (<any>autoUpdate === "onlySelectedExtensions") {
 			return false;
 		}
-		return isBoolean(autoUpdate) || autoUpdate === 'onlyEnabledExtensions' ? autoUpdate : true;
+		return isBoolean(
+      autoUpdate,
+    ) || autoUpdate === "onlyEnabledExtensions" ? autoUpdate : true;
 	}
 
 	async updateAutoUpdateForAllExtensions(isAutoUpdateEnabled: boolean): Promise<void> {
@@ -1207,11 +1526,11 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 		}
 
 		const result = await this.dialogService.confirm({
-			title: nls.localize('confirmEnableDisableAutoUpdate', "Auto Update Extensions"),
+			title: nls.localize("confirmEnableDisableAutoUpdate", "Auto Update Extensions"),
 			message: isAutoUpdateEnabled
-				? nls.localize('confirmEnableAutoUpdate', "Do you want to enable auto update for all extensions?")
-				: nls.localize('confirmDisableAutoUpdate', "Do you want to disable auto update for all extensions?"),
-			detail: nls.localize('confirmEnableDisableAutoUpdateDetail', "This will reset any auto update settings you have set for individual extensions."),
+				? nls.localize("confirmEnableAutoUpdate", "Do you want to enable auto update for all extensions?")
+				: nls.localize("confirmDisableAutoUpdate", "Do you want to disable auto update for all extensions?"),
+			detail: nls.localize("confirmEnableDisableAutoUpdateDetail", "This will reset any auto update settings you have set for individual extensions."),
 		});
 		if (!result.confirmed) {
 			return;
@@ -1220,17 +1539,24 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 		// Reset extensions enabled for auto update first to prevent them from being updated
 		this.setEnabledAutoUpdateExtensions([]);
 
-		await this.configurationService.updateValue(AutoUpdateConfigurationKey, isAutoUpdateEnabled);
+		await this.configurationService.updateValue(
+      AutoUpdateConfigurationKey,
+      isAutoUpdateEnabled,
+    );
 
 		this.setDisabledAutoUpdateExtensions([]);
 		await this.updateExtensionsPinnedState(!isAutoUpdateEnabled);
 		this._onChange.fire(undefined);
 	}
 
-	private readonly autoRestartListenerDisposable = this._register(new MutableDisposable());
+	private readonly autoRestartListenerDisposable = this._register(
+    new MutableDisposable(),
+  );
 	private registerAutoRestartListener(): void {
 		this.autoRestartListenerDisposable.value = undefined;
-		if (this.configurationService.getValue(AutoRestartConfigurationKey) === true) {
+		if (this.configurationService.getValue(
+      AutoRestartConfigurationKey,
+    ) === true) {
 			this.autoRestartListenerDisposable.value = this.hostService.onDidChangeFocus(focus => {
 				if (!focus && this.configurationService.getValue(AutoRestartConfigurationKey) === true) {
 					this.updateRunningExtensions(undefined, true);
@@ -1245,14 +1571,25 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 			(extension.enablementState === EnablementState.EnabledWorkspace ||
 				extension.enablementState === EnablementState.EnabledGlobally))
 			.map(extension => ExtensionIdentifier.toKey(extension.identifier.id));
-		this.telemetryService.publicLog2<InstalledExtensionsEvent, ExtensionsLoadClassification>('installedExtensions', { extensionIds: new TelemetryTrustedValue(extensionIds.join(';')), count: extensionIds.length });
+		this.telemetryService.publicLog2<InstalledExtensionsEvent, ExtensionsLoadClassification>(
+      "installedExtensions",
+      {
+        extensionIds: new TelemetryTrustedValue(extensionIds.join(";")),
+        count: extensionIds.length,
+      },
+    );
 	}
 
 	private async onDidChangeRunningExtensions(added: ReadonlyArray<IExtensionDescription>, removed: ReadonlyArray<IExtensionDescription>): Promise<void> {
 		const changedExtensions: IExtension[] = [];
 		const extensionsToFetch: IExtensionDescription[] = [];
 		for (const desc of added) {
-			const extension = this.installed.find(e => areSameExtensions({ id: desc.identifier.value, uuid: desc.uuid }, e.identifier));
+			const extension = this.installed.find(
+        e => areSameExtensions(
+          { id: desc.identifier.value, uuid: desc.uuid },
+          e.identifier,
+        ),
+      );
 			if (extension) {
 				changedExtensions.push(extension);
 			} else {
@@ -1261,18 +1598,26 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 		}
 		const workspaceExtensions: IExtensionDescription[] = [];
 		for (const desc of removed) {
-			if (this.workspaceContextService.isInsideWorkspace(desc.extensionLocation)) {
+			if (this.workspaceContextService.isInsideWorkspace(
+        desc.extensionLocation,
+      )) {
 				workspaceExtensions.push(desc);
 			} else {
 				extensionsToFetch.push(desc);
 			}
 		}
 		if (extensionsToFetch.length) {
-			const extensions = await this.getExtensions(extensionsToFetch.map(e => ({ id: e.identifier.value, uuid: e.uuid })), CancellationToken.None);
+			const extensions = await this.getExtensions(
+        extensionsToFetch.map(e => ({ id: e.identifier.value, uuid: e.uuid })),
+        CancellationToken.None,
+      );
 			changedExtensions.push(...extensions);
 		}
 		if (workspaceExtensions.length) {
-			const extensions = await this.getResourceExtensions(workspaceExtensions.map(e => e.extensionLocation), true);
+			const extensions = await this.getResourceExtensions(
+        workspaceExtensions.map(e => e.extensionLocation),
+        true,
+      );
 			changedExtensions.push(...extensions);
 		}
 		for (const changedExtension of changedExtensions) {
@@ -1281,10 +1626,15 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 	}
 
 	private updateExtensionsPinnedState(pinned: boolean): Promise<void> {
-		return this.progressService.withProgress({
-			location: ProgressLocation.Extensions,
-			title: nls.localize('updatingExtensions', "Updating Extensions Auto Update State"),
-		}, () => this.extensionManagementService.resetPinnedStateForAllUserExtensions(pinned));
+		return this.progressService.withProgress(
+      {
+        location: ProgressLocation.Extensions,
+        title: nls.localize("updatingExtensions", "Updating Extensions Auto Update State"),
+      },
+      () => this.extensionManagementService.resetPinnedStateForAllUserExtensions(
+        pinned,
+      ),
+    );
 	}
 
 	private reset(): void {
@@ -1333,7 +1683,9 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 	}
 
 	get outdated(): IExtension[] {
-		return this.installed.filter(e => e.outdated && e.local && e.state === ExtensionState.Installed);
+		return this.installed.filter(
+      e => e.outdated && e.local && e.state === ExtensionState.Installed,
+    );
 	}
 
 	async queryLocal(server?: IExtensionManagementServer): Promise<IExtension[]> {
@@ -1383,9 +1735,15 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 			return singlePagePager([]);
 		}
 
-		const options: IQueryOptions = CancellationToken.isCancellationToken(arg1) ? {} : arg1;
-		const token: CancellationToken = CancellationToken.isCancellationToken(arg1) ? arg1 : arg2;
-		options.text = options.text ? this.resolveQueryText(options.text) : options.text;
+		const options: IQueryOptions = CancellationToken.isCancellationToken(
+      arg1,
+    ) ? {} : arg1;
+		const token: CancellationToken = CancellationToken.isCancellationToken(
+      arg1,
+    ) ? arg1 : arg2;
+		options.text = options.text ? this.resolveQueryText(
+      options.text,
+    ) : options.text;
 		options.includePreRelease = isUndefined(options.includePreRelease) ? this.extensionManagementService.preferPreReleases : options.includePreRelease;
 
 		const extensionsControlManifest = await this.extensionManagementService.getExtensionsControlManifest();
@@ -1399,7 +1757,7 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 				const page = await pager.getPage(pageIndex, token);
 				this.syncInstalledExtensionsWithGallery(page);
 				return page.map(gallery => this.fromGallery(gallery, extensionsControlManifest));
-			}
+			},
 		};
 	}
 
@@ -1410,15 +1768,25 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 			return [];
 		}
 
-		extensionInfos.forEach(e => e.preRelease = e.preRelease ?? this.extensionManagementService.preferPreReleases);
+		extensionInfos.forEach(
+      e => e.preRelease = e.preRelease ?? this.extensionManagementService.preferPreReleases,
+    );
 		const extensionsControlManifest = await this.extensionManagementService.getExtensionsControlManifest();
-		const galleryExtensions = await this.galleryService.getExtensions(extensionInfos, arg1, arg2);
+		const galleryExtensions = await this.galleryService.getExtensions(
+      extensionInfos,
+      arg1,
+      arg2,
+    );
 		this.syncInstalledExtensionsWithGallery(galleryExtensions);
-		return galleryExtensions.map(gallery => this.fromGallery(gallery, extensionsControlManifest));
+		return galleryExtensions.map(
+      gallery => this.fromGallery(gallery, extensionsControlManifest),
+    );
 	}
 
 	async getResourceExtensions(locations: URI[], isWorkspaceScoped: boolean): Promise<IExtension[]> {
-		const resourceExtensions = await this.extensionManagementService.getExtensions(locations);
+		const resourceExtensions = await this.extensionManagementService.getExtensions(
+      locations,
+    );
 		return resourceExtensions.map(resourceExtension => this.getInstalledExtensionMatchingLocation(resourceExtension.location)
 			?? this.instantiationService.createInstance(Extension, ext => this.getExtensionState(ext), ext => this.getRuntimeState(ext), undefined, undefined, undefined, { resourceExtension, isWorkspaceScoped }));
 	}
@@ -1467,78 +1835,88 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 		}
 	}
 
-	private computeExtensionsNotifications(): Array<Omit<IExtensionsNotification, 'dismiss'> & { key: string }> {
-		const computedNotificiations: Array<Omit<IExtensionsNotification, 'dismiss'> & { key: string }> = [];
+	private computeExtensionsNotifications(): Array<Omit<IExtensionsNotification, "dismiss"> & { key: string }> {
+		const computedNotificiations: Array<Omit<IExtensionsNotification, "dismiss"> & { key: string }> = [];
 
-		const disallowedExtensions = this.local.filter(e => e.enablementState === EnablementState.DisabledByAllowlist);
+		const disallowedExtensions = this.local.filter(
+      e => e.enablementState === EnablementState.DisabledByAllowlist,
+    );
 		if (disallowedExtensions.length) {
 			computedNotificiations.push({
 				message: this.configurationService.inspect(AllowedExtensionsConfigKey).policy
-					? nls.localize('disallowed extensions by policy', "Some extensions are disabled because they are not allowed by your system administrator.")
-					: nls.localize('disallowed extensions', "Some extensions are disabled because they are configured not to be allowed."),
+					? nls.localize("disallowed extensions by policy", "Some extensions are disabled because they are not allowed by your system administrator.")
+					: nls.localize("disallowed extensions", "Some extensions are disabled because they are configured not to be allowed."),
 				severity: Severity.Warning,
 				extensions: disallowedExtensions,
-				key: 'disallowedExtensions:' + disallowedExtensions.sort((a, b) => a.identifier.id.localeCompare(b.identifier.id)).map(e => e.identifier.id.toLowerCase()).join('-'),
+				key: "disallowedExtensions:" + disallowedExtensions.sort((a, b) => a.identifier.id.localeCompare(b.identifier.id)).map(e => e.identifier.id.toLowerCase()).join("-"),
 			});
 		}
 
-		const invalidExtensions = this.local.filter(e => e.enablementState === EnablementState.DisabledByInvalidExtension && !e.isWorkspaceScoped);
+		const invalidExtensions = this.local.filter(
+      e => e.enablementState === EnablementState.DisabledByInvalidExtension && !e.isWorkspaceScoped,
+    );
 		if (invalidExtensions.length) {
 			if (invalidExtensions.some(e => e.local && e.local.manifest.engines?.vscode &&
-				(!isEngineValid(e.local.manifest.engines.vscode, this.productService.version, this.productService.date) || areApiProposalsCompatible([...e.local.manifest.enabledApiProposals ?? []]))
+				(!isEngineValid(e.local.manifest.engines.vscode, this.productService.version, this.productService.date) || areApiProposalsCompatible([...e.local.manifest.enabledApiProposals ?? []])),
 			)) {
 				computedNotificiations.push({
-					message: nls.localize('incompatibleExtensions', "Some extensions are disabled due to version incompatibility. Review and update them."),
-					severity: Severity.Warning,
-					extensions: invalidExtensions,
-					key: 'incompatibleExtensions:' + invalidExtensions.sort((a, b) => a.identifier.id.localeCompare(b.identifier.id)).map(e => `${e.identifier.id.toLowerCase()}@${e.local?.manifest.version}`).join('-'),
-				});
+          message: nls.localize("incompatibleExtensions", "Some extensions are disabled due to version incompatibility. Review and update them."),
+          severity: Severity.Warning,
+          extensions: invalidExtensions,
+          key: "incompatibleExtensions:" + invalidExtensions.sort((a, b) => a.identifier.id.localeCompare(b.identifier.id)).map(e => `${e.identifier.id.toLowerCase()}@${e.local?.manifest.version}`).join("-"),
+        });
 			} else {
 				computedNotificiations.push({
-					message: nls.localize('invalidExtensions', "Invalid extensions detected. Review them."),
-					severity: Severity.Warning,
-					extensions: invalidExtensions,
-					key: 'invalidExtensions:' + invalidExtensions.sort((a, b) => a.identifier.id.localeCompare(b.identifier.id)).map(e => `${e.identifier.id.toLowerCase()}@${e.local?.manifest.version}`).join('-'),
-				});
+          message: nls.localize("invalidExtensions", "Invalid extensions detected. Review them."),
+          severity: Severity.Warning,
+          extensions: invalidExtensions,
+          key: "invalidExtensions:" + invalidExtensions.sort((a, b) => a.identifier.id.localeCompare(b.identifier.id)).map(e => `${e.identifier.id.toLowerCase()}@${e.local?.manifest.version}`).join("-"),
+        });
 			}
 		}
 
 		if (!this.configurationService.getValue(AutoRestartConfigurationKey)) {
-			const restartRequiredExtensions = this.local.filter(e => e.runtimeState !== undefined && (e.runtimeState.action === ExtensionRuntimeActionType.RestartExtensions || e.runtimeState.action === ExtensionRuntimeActionType.ReloadWindow));
+			const restartRequiredExtensions = this.local.filter(
+        e => e.runtimeState !== undefined && (e.runtimeState.action === ExtensionRuntimeActionType.RestartExtensions || e.runtimeState.action === ExtensionRuntimeActionType.ReloadWindow),
+      );
 			if (restartRequiredExtensions.length) {
-				const needsReload = restartRequiredExtensions.some(e => e.runtimeState?.action === ExtensionRuntimeActionType.ReloadWindow);
+				const needsReload = restartRequiredExtensions.some(
+          e => e.runtimeState?.action === ExtensionRuntimeActionType.ReloadWindow,
+        );
 				computedNotificiations.push({
 					message: needsReload
-						? nls.localize('extensions need reload', "Extensions require a window reload to take effect.")
-						: nls.localize('extensions need restart', "Extensions require a restart to take effect."),
+						? nls.localize("extensions need reload", "Extensions require a window reload to take effect.")
+						: nls.localize("extensions need restart", "Extensions require a restart to take effect."),
 					severity: Severity.Info,
 					extensions: restartRequiredExtensions,
-					query: '@restartrequired',
+					query: "@restartrequired",
 					action: {
 						label: needsReload
-							? nls.localize('reload window', "Reload Window")
-							: nls.localize('restart extensions action', "Restart Extensions"),
+							? nls.localize("reload window", "Reload Window")
+							: nls.localize("restart extensions action", "Restart Extensions"),
 						run: () => {
 							if (needsReload) {
 								this.hostService.reload();
 							} else {
 								this.updateRunningExtensions();
 							}
-						}
+						},
 					},
-					key: 'restartRequired:' + restartRequiredExtensions.sort((a, b) => a.identifier.id.localeCompare(b.identifier.id)).map(e => e.identifier.id.toLowerCase()).join('-'),
+					key: "restartRequired:" + restartRequiredExtensions.sort((a, b) => a.identifier.id.localeCompare(b.identifier.id)).map(e => e.identifier.id.toLowerCase()).join("-"),
 				});
 			}
 		}
 
-		const deprecatedExtensions = this.local.filter(e => !!e.deprecationInfo && e.local && this.extensionEnablementService.isEnabled(e.local));
+		const deprecatedExtensions = this.local.filter(
+      e => !!e.deprecationInfo && e.local && this.extensionEnablementService.isEnabled(e.local),
+    );
 		if (deprecatedExtensions.length) {
 			computedNotificiations.push({
-				message: nls.localize('deprecated extensions', "Deprecated extensions detected. Review them and migrate to alternatives."),
-				severity: Severity.Warning,
-				extensions: deprecatedExtensions,
-				key: 'deprecatedExtensions:' + deprecatedExtensions.sort((a, b) => a.identifier.id.localeCompare(b.identifier.id)).map(e => e.identifier.id.toLowerCase()).join('-'),
-			});
+        message: nls.localize("deprecated extensions", "Deprecated extensions detected. Review them and migrate to alternatives."),
+        severity: Severity.Warning,
+        extensions: deprecatedExtensions,
+        key: "deprecatedExtensions:" + deprecatedExtensions.sort((a, b) => a.identifier.id.localeCompare(b.identifier.id)).map(e => e.identifier.id.toLowerCase()).join("-"),
+      });
 		}
 
 		return computedNotificiations;
@@ -1562,10 +1940,10 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 				// Get mode name
 				const languageId = this.languageService.guessLanguageIdByFilepathOrFirstLine(URI.file(`.${ext}`));
 				const languageName = languageId && this.languageService.getLanguageName(languageId);
-				const languageTag = languageName ? ` tag:"${languageName}"` : '';
+				const languageTag = languageName ? ` tag:"${languageName}"` : "";
 
 				// Construct a rich query
-				return `tag:"__ext_${ext}" tag:"__ext_.${ext}" ${keywords.map(tag => `tag:"${tag}"`).join(' ')}${languageTag} tag:"${ext}"`;
+				return `tag:"__ext_${ext}" tag:"__ext_.${ext}" ${keywords.map(tag => `tag:"${tag}"`).join(" ")}${languageTag} tag:"${ext}"`;
 			});
 		}
 		return text.substr(0, 350);
@@ -1574,8 +1952,18 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 	private fromGallery(gallery: IGalleryExtension, extensionsControlManifest: IExtensionsControlManifest): IExtension {
 		let extension = this.getInstalledExtensionMatchingGallery(gallery);
 		if (!extension) {
-			extension = this.instantiationService.createInstance(Extension, ext => this.getExtensionState(ext), ext => this.getRuntimeState(ext), undefined, undefined, gallery, undefined);
-			(<Extension>extension).setExtensionsControlManifest(extensionsControlManifest);
+			extension = this.instantiationService.createInstance(
+        Extension,
+        ext => this.getExtensionState(ext),
+        ext => this.getRuntimeState(ext),
+        undefined,
+        undefined,
+        gallery,
+        undefined,
+      );
+			(<Extension>extension).setExtensionsControlManifest(
+        extensionsControlManifest,
+      );
 		}
 		return extension;
 	}
@@ -1586,8 +1974,11 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 				if (installed.identifier.uuid === gallery.identifier.uuid) {
 					return installed;
 				}
-			} else if (installed.local?.source !== 'resource') {
-				if (areSameExtensions(installed.identifier, gallery.identifier)) { // Installed from other sources
+			} else if (installed.local?.source !== "resource") {
+				if (areSameExtensions(
+          installed.identifier,
+          gallery.identifier,
+        )) { // Installed from other sources
 					return installed;
 				}
 			}
@@ -1596,25 +1987,40 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 	}
 
 	private getInstalledExtensionMatchingLocation(location: URI): IExtension | null {
-		return this.local.find(e => e.local && this.uriIdentityService.extUri.isEqualOrParent(location, e.local?.location)) ?? null;
+		return this.local.find(
+      e => e.local && this.uriIdentityService.extUri.isEqualOrParent(location, e.local?.location),
+    ) ?? null;
 	}
 
 	async open(extension: IExtension | string, options?: IExtensionEditorOptions): Promise<void> {
-		if (typeof extension === 'string') {
+		if (typeof extension === "string") {
 			const id = extension;
-			extension = this.installed.find(e => areSameExtensions(e.identifier, { id })) ?? (await this.getExtensions([{ id: extension }], CancellationToken.None))[0];
+			extension = this.installed.find(
+        e => areSameExtensions(e.identifier, { id }),
+      ) ?? (await this.getExtensions(
+        [{ id: extension }],
+        CancellationToken.None,
+      ))[0];
 		}
 		if (!extension) {
 			throw new Error(`Extension not found. ${extension}`);
 		}
-		const useModal = this.configurationService.getValue<boolean>('extensions.allowOpenInModalEditor');
-		await this.editorService.openEditor(this.instantiationService.createInstance(ExtensionsInput, extension), options, options?.sideByside ? SIDE_GROUP : useModal ? MODAL_GROUP : ACTIVE_GROUP);
+		const useModal = this.configurationService.getValue<boolean>(
+      "extensions.allowOpenInModalEditor",
+    );
+		await this.editorService.openEditor(
+      this.instantiationService.createInstance(ExtensionsInput, extension),
+      options,
+      options?.sideByside ? SIDE_GROUP : useModal ? MODAL_GROUP : ACTIVE_GROUP,
+    );
 	}
 
 	async openSearch(searchValue: string, preserveFocus?: boolean): Promise<void> {
 		const viewPaneContainer = (await this.viewsService.openViewContainer(VIEWLET_ID, true))?.getViewPaneContainer() as IExtensionsViewPaneContainer | undefined;
 		if (!viewPaneContainer) {
-			this.logService.trace('ExtensionsWorkbenchService#openSearch: extension view pane container was not available');
+			this.logService.trace(
+        "ExtensionsWorkbenchService#openSearch: extension view pane container was not available",
+      );
 			return;
 		}
 		viewPaneContainer.search(searchValue);
@@ -1633,7 +2039,10 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 		return undefined;
 	}
 
-	async updateRunningExtensions(message = nls.localize('restart', "Changing extension enablement"), auto: boolean = false): Promise<void> {
+	async updateRunningExtensions(message = nls.localize(
+    "restart",
+    "Changing extension enablement",
+  ), auto: boolean = false): Promise<void> {
 		const toAdd: ILocalExtension[] = [];
 		const toRemove: string[] = [];
 
@@ -1650,9 +2059,16 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 			if (!extension.local) {
 				continue;
 			}
-			const isEnabled = this.extensionEnablementService.isEnabled(extension.local);
+			const isEnabled = this.extensionEnablementService.isEnabled(
+        extension.local,
+      );
 			if (isEnabled) {
-				const runningExtension = this.extensionService.extensions.find(e => areSameExtensions({ id: e.identifier.value, uuid: e.uuid }, extension.identifier));
+				const runningExtension = this.extensionService.extensions.find(
+          e => areSameExtensions(
+            { id: e.identifier.value, uuid: e.uuid },
+            extension.identifier,
+          ),
+        );
 				if (runningExtension) {
 					toRemove.push(runningExtension.identifier.value);
 				}
@@ -1666,7 +2082,12 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 			if (extension.isUnderDevelopment) {
 				continue;
 			}
-			if (extensionsToCheck.some(e => areSameExtensions({ id: extension.identifier.value, uuid: extension.uuid }, e.local?.identifier ?? e.identifier))) {
+			if (extensionsToCheck.some(
+        e => areSameExtensions(
+          { id: extension.identifier.value, uuid: extension.uuid },
+          e.local?.identifier ?? e.identifier,
+        ),
+      )) {
 				continue;
 			}
 			// Extension is running but doesn't exist locally. Remove it from running extensions.
@@ -1678,54 +2099,80 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 				await this.extensionService.startExtensionHosts({ toAdd, toRemove });
 				if (auto) {
 					this.notificationService.notify({
-						severity: Severity.Info,
-						message: nls.localize('extensionsAutoRestart', "Extensions were auto restarted to enable updates."),
-						priority: NotificationPriority.SILENT
-					});
+            severity: Severity.Info,
+            message: nls.localize("extensionsAutoRestart", "Extensions were auto restarted to enable updates."),
+            priority: NotificationPriority.SILENT,
+          });
 				}
 				type ExtensionsAutoRestartClassification = {
-					owner: 'sandy081';
-					comment: 'Report when extensions are auto restarted';
-					count: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Number of extensions auto restarted' };
-					auto: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Whether the restart was triggered automatically' };
+					owner: "sandy081";
+					comment: "Report when extensions are auto restarted";
+					count: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Number of extensions auto restarted" };
+					auto: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Whether the restart was triggered automatically" };
 				};
 				type ExtensionsAutoRestartEvent = {
 					count: number;
 					auto: boolean;
 				};
-				this.telemetryService.publicLog2<ExtensionsAutoRestartEvent, ExtensionsAutoRestartClassification>('extensions:autorestart', { count: toAdd.length + toRemove.length, auto });
+				this.telemetryService.publicLog2<ExtensionsAutoRestartEvent, ExtensionsAutoRestartClassification>(
+          "extensions:autorestart",
+          { count: toAdd.length + toRemove.length, auto },
+        );
 			}
 		}
 	}
 
 	private getRuntimeState(extension: IExtension): ExtensionRuntimeState | undefined {
 		const isUninstalled = extension.state === ExtensionState.Uninstalled;
-		const runningExtension = this.extensionService.extensions.find(e => areSameExtensions({ id: e.identifier.value }, extension.identifier));
+		const runningExtension = this.extensionService.extensions.find(
+      e => areSameExtensions({ id: e.identifier.value }, extension.identifier),
+    );
 		const reloadAction = this.extensionManagementServerService.remoteExtensionManagementServer ? ExtensionRuntimeActionType.ReloadWindow : ExtensionRuntimeActionType.RestartExtensions;
-		const reloadActionLabel = reloadAction === ExtensionRuntimeActionType.ReloadWindow ? nls.localize('reload', "reload window") : nls.localize('restart extensions', "restart extensions");
+		const reloadActionLabel = reloadAction === ExtensionRuntimeActionType.ReloadWindow ? nls.localize(
+      "reload",
+      "reload window",
+    ) : nls.localize("restart extensions", "restart extensions");
 
 		if (isUninstalled) {
-			const canRemoveRunningExtension = runningExtension && this.extensionService.canRemoveExtension(runningExtension);
+			const canRemoveRunningExtension = runningExtension && this.extensionService.canRemoveExtension(
+        runningExtension,
+      );
 			const isSameExtensionRunning = runningExtension
-				&& (!extension.server || extension.server === this.extensionManagementServerService.getExtensionManagementServer(toExtension(runningExtension)))
-				&& (!extension.resourceExtension || this.uriIdentityService.extUri.isEqual(extension.resourceExtension.location, runningExtension.extensionLocation));
+				&& (!extension.server || extension.server === this.extensionManagementServerService.getExtensionManagementServer(
+          toExtension(runningExtension),
+        ))
+				&& (!extension.resourceExtension || this.uriIdentityService.extUri.isEqual(
+          extension.resourceExtension.location,
+          runningExtension.extensionLocation,
+        ));
 			if (!canRemoveRunningExtension && isSameExtensionRunning && !runningExtension.isUnderDevelopment) {
-				return { action: reloadAction, reason: nls.localize('postUninstallTooltip', "Please {0} to complete the uninstallation of this extension.", reloadActionLabel) };
+				return {
+          action: reloadAction,
+          reason: nls.localize("postUninstallTooltip", "Please {0} to complete the uninstallation of this extension.", reloadActionLabel),
+        };
 			}
 			return undefined;
 		}
 		if (extension.local) {
-			const isSameExtensionRunning = runningExtension && extension.server === this.extensionManagementServerService.getExtensionManagementServer(toExtension(runningExtension));
-			const isEnabled = this.extensionEnablementService.isEnabled(extension.local);
+			const isSameExtensionRunning = runningExtension && extension.server === this.extensionManagementServerService.getExtensionManagementServer(
+        toExtension(runningExtension),
+      );
+			const isEnabled = this.extensionEnablementService.isEnabled(
+        extension.local,
+      );
 
 			// Extension is running
 			if (runningExtension) {
 				if (isEnabled) {
 					// No Reload is required if extension can run without reload
-					if (this.extensionService.canAddExtension(toExtensionDescription(extension.local))) {
+					if (this.extensionService.canAddExtension(
+            toExtensionDescription(extension.local),
+          )) {
 						return undefined;
 					}
-					const runningExtensionServer = this.extensionManagementServerService.getExtensionManagementServer(toExtension(runningExtension));
+					const runningExtensionServer = this.extensionManagementServerService.getExtensionManagementServer(
+            toExtension(runningExtension),
+          );
 
 					if (isSameExtensionRunning) {
 						// Different version or target platform of same extension is running. Requires reload to run the current version
@@ -1733,35 +2180,67 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 							const productCurrentVersion = this.getProductCurrentVersion();
 							const productUpdateVersion = this.getProductUpdateVersion();
 							if (productUpdateVersion
-								&& !isEngineValid(extension.local.manifest.engines.vscode, productCurrentVersion.version, productCurrentVersion.date)
-								&& isEngineValid(extension.local.manifest.engines.vscode, productUpdateVersion.version, productUpdateVersion.date)
+								&& !isEngineValid(
+                  extension.local.manifest.engines.vscode,
+                  productCurrentVersion.version,
+                  productCurrentVersion.date,
+                )
+								&& isEngineValid(
+                  extension.local.manifest.engines.vscode,
+                  productUpdateVersion.version,
+                  productUpdateVersion.date,
+                )
 							) {
 								const state = this.updateService.state;
 								if (state.type === StateType.AvailableForDownload) {
-									return { action: ExtensionRuntimeActionType.DownloadUpdate, reason: nls.localize('postUpdateDownloadTooltip', "Please update {0} to enable the updated extension.", this.productService.nameLong) };
+									return {
+                    action: ExtensionRuntimeActionType.DownloadUpdate,
+                    reason: nls.localize("postUpdateDownloadTooltip", "Please update {0} to enable the updated extension.", this.productService.nameLong),
+                  };
 								}
 								if (state.type === StateType.Downloaded) {
-									return { action: ExtensionRuntimeActionType.ApplyUpdate, reason: nls.localize('postUpdateUpdateTooltip', "Please update {0} to enable the updated extension.", this.productService.nameLong) };
+									return {
+                    action: ExtensionRuntimeActionType.ApplyUpdate,
+                    reason: nls.localize("postUpdateUpdateTooltip", "Please update {0} to enable the updated extension.", this.productService.nameLong),
+                  };
 								}
 								if (state.type === StateType.Ready) {
-									return { action: ExtensionRuntimeActionType.QuitAndInstall, reason: nls.localize('postUpdateRestartTooltip', "Please restart {0} to enable the updated extension.", this.productService.nameLong) };
+									return {
+                    action: ExtensionRuntimeActionType.QuitAndInstall,
+                    reason: nls.localize("postUpdateRestartTooltip", "Please restart {0} to enable the updated extension.", this.productService.nameLong),
+                  };
 								}
 								return undefined;
 							}
-							return { action: reloadAction, reason: nls.localize('postUpdateTooltip', "Please {0} to enable the updated extension.", reloadActionLabel) };
+							return {
+                action: reloadAction,
+                reason: nls.localize("postUpdateTooltip", "Please {0} to enable the updated extension.", reloadActionLabel),
+              };
 						}
 
 						if (this.extensionsServers.length > 1) {
-							const extensionInOtherServer = this.installed.filter(e => areSameExtensions(e.identifier, extension.identifier) && e.server !== extension.server)[0];
+							const extensionInOtherServer = this.installed.filter(
+                e => areSameExtensions(e.identifier, extension.identifier) && e.server !== extension.server,
+              )[0];
 							if (extensionInOtherServer) {
 								// This extension prefers to run on UI/Local side but is running in remote
-								if (runningExtensionServer === this.extensionManagementServerService.remoteExtensionManagementServer && this.extensionManifestPropertiesService.prefersExecuteOnUI(extension.local.manifest) && extensionInOtherServer.server === this.extensionManagementServerService.localExtensionManagementServer) {
-									return { action: reloadAction, reason: nls.localize('enable locally', "Please {0} to enable this extension locally.", reloadActionLabel) };
+								if (runningExtensionServer === this.extensionManagementServerService.remoteExtensionManagementServer && this.extensionManifestPropertiesService.prefersExecuteOnUI(
+                  extension.local.manifest,
+                ) && extensionInOtherServer.server === this.extensionManagementServerService.localExtensionManagementServer) {
+									return {
+                    action: reloadAction,
+                    reason: nls.localize("enable locally", "Please {0} to enable this extension locally.", reloadActionLabel),
+                  };
 								}
 
 								// This extension prefers to run on Workspace/Remote side but is running in local
-								if (runningExtensionServer === this.extensionManagementServerService.localExtensionManagementServer && this.extensionManifestPropertiesService.prefersExecuteOnWorkspace(extension.local.manifest) && extensionInOtherServer.server === this.extensionManagementServerService.remoteExtensionManagementServer) {
-									return { action: reloadAction, reason: nls.localize('enable remote', "Please {0} to enable this extension in {1}.", reloadActionLabel, this.extensionManagementServerService.remoteExtensionManagementServer?.label) };
+								if (runningExtensionServer === this.extensionManagementServerService.localExtensionManagementServer && this.extensionManifestPropertiesService.prefersExecuteOnWorkspace(
+                  extension.local.manifest,
+                ) && extensionInOtherServer.server === this.extensionManagementServerService.remoteExtensionManagementServer) {
+									return {
+                    action: reloadAction,
+                    reason: nls.localize("enable remote", "Please {0} to enable this extension in {1}.", reloadActionLabel, this.extensionManagementServerService.remoteExtensionManagementServer?.label),
+                  };
 								}
 							}
 						}
@@ -1770,21 +2249,34 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 
 						if (extension.server === this.extensionManagementServerService.localExtensionManagementServer && runningExtensionServer === this.extensionManagementServerService.remoteExtensionManagementServer) {
 							// This extension prefers to run on UI/Local side but is running in remote
-							if (this.extensionManifestPropertiesService.prefersExecuteOnUI(extension.local.manifest)) {
-								return { action: reloadAction, reason: nls.localize('postEnableTooltip', "Please {0} to enable this extension.", reloadActionLabel) };
+							if (this.extensionManifestPropertiesService.prefersExecuteOnUI(
+                extension.local.manifest,
+              )) {
+								return {
+                  action: reloadAction,
+                  reason: nls.localize("postEnableTooltip", "Please {0} to enable this extension.", reloadActionLabel),
+                };
 							}
 						}
 						if (extension.server === this.extensionManagementServerService.remoteExtensionManagementServer && runningExtensionServer === this.extensionManagementServerService.localExtensionManagementServer) {
 							// This extension prefers to run on Workspace/Remote side but is running in local
-							if (this.extensionManifestPropertiesService.prefersExecuteOnWorkspace(extension.local.manifest)) {
-								return { action: reloadAction, reason: nls.localize('postEnableTooltip', "Please {0} to enable this extension.", reloadActionLabel) };
+							if (this.extensionManifestPropertiesService.prefersExecuteOnWorkspace(
+                extension.local.manifest,
+              )) {
+								return {
+                  action: reloadAction,
+                  reason: nls.localize("postEnableTooltip", "Please {0} to enable this extension.", reloadActionLabel),
+                };
 							}
 						}
 					}
 					return undefined;
 				} else {
 					if (isSameExtensionRunning && !runningExtension.isUnderDevelopment) {
-						return { action: reloadAction, reason: nls.localize('postDisableTooltip', "Please {0} to disable this extension.", reloadActionLabel) };
+						return {
+              action: reloadAction,
+              reason: nls.localize("postDisableTooltip", "Please {0} to disable this extension.", reloadActionLabel),
+            };
 					}
 				}
 				return undefined;
@@ -1792,16 +2284,28 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 
 			// Extension is not running
 			else {
-				if (isEnabled && !this.extensionService.canAddExtension(toExtensionDescription(extension.local))) {
-					return { action: reloadAction, reason: nls.localize('postEnableTooltip', "Please {0} to enable this extension.", reloadActionLabel) };
+				if (isEnabled && !this.extensionService.canAddExtension(
+          toExtensionDescription(extension.local),
+        )) {
+					return {
+            action: reloadAction,
+            reason: nls.localize("postEnableTooltip", "Please {0} to enable this extension.", reloadActionLabel),
+          };
 				}
 
 				const otherServer = extension.server ? extension.server === this.extensionManagementServerService.localExtensionManagementServer ? this.extensionManagementServerService.remoteExtensionManagementServer : this.extensionManagementServerService.localExtensionManagementServer : null;
 				if (otherServer && extension.enablementState === EnablementState.DisabledByExtensionKind) {
-					const extensionInOtherServer = this.local.filter(e => areSameExtensions(e.identifier, extension.identifier) && e.server === otherServer)[0];
+					const extensionInOtherServer = this.local.filter(
+            e => areSameExtensions(e.identifier, extension.identifier) && e.server === otherServer,
+          )[0];
 					// Same extension in other server exists and
-					if (extensionInOtherServer && extensionInOtherServer.local && this.extensionEnablementService.isEnabled(extensionInOtherServer.local)) {
-						return { action: reloadAction, reason: nls.localize('postEnableTooltip', "Please {0} to enable this extension.", reloadActionLabel) };
+					if (extensionInOtherServer && extensionInOtherServer.local && this.extensionEnablementService.isEnabled(
+            extensionInOtherServer.local,
+          )) {
+						return {
+              action: reloadAction,
+              reason: nls.localize("postEnableTooltip", "Please {0} to enable this extension.", reloadActionLabel),
+            };
 					}
 				}
 			}
@@ -1814,13 +2318,17 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 			return extensions[0];
 		}
 
-		const enabledExtensions = extensions.filter(e => e.local && this.extensionEnablementService.isEnabled(e.local));
+		const enabledExtensions = extensions.filter(
+      e => e.local && this.extensionEnablementService.isEnabled(e.local),
+    );
 		if (enabledExtensions.length === 1) {
 			return enabledExtensions[0];
 		}
 
 		const extensionsToChoose = enabledExtensions.length ? enabledExtensions : extensions;
-		const manifest = extensionsToChoose.find(e => e.local && e.local.manifest)?.local?.manifest;
+		const manifest = extensionsToChoose.find(
+      e => e.local && e.local.manifest,
+    )?.local?.manifest;
 
 		// Manifest is not found which should not happen.
 		// In which case return the first extension.
@@ -1828,24 +2336,26 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 			return extensionsToChoose[0];
 		}
 
-		const extensionKinds = this.extensionManifestPropertiesService.getExtensionKind(manifest);
+		const extensionKinds = this.extensionManifestPropertiesService.getExtensionKind(
+      manifest,
+    );
 
 		let extension = extensionsToChoose.find(extension => {
 			for (const extensionKind of extensionKinds) {
 				switch (extensionKind) {
-					case 'ui':
+					case "ui":
 						/* UI extension is chosen only if it is installed locally */
 						if (extension.server === this.extensionManagementServerService.localExtensionManagementServer) {
 							return true;
 						}
 						return false;
-					case 'workspace':
+					case "workspace":
 						/* Choose remote workspace extension if exists */
 						if (extension.server === this.extensionManagementServerService.remoteExtensionManagementServer) {
 							return true;
 						}
 						return false;
-					case 'web':
+					case "web":
 						/* Choose web extension if exists */
 						if (extension.server === this.extensionManagementServerService.webExtensionManagementServer) {
 							return true;
@@ -1860,13 +2370,13 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 			extension = extensionsToChoose.find(extension => {
 				for (const extensionKind of extensionKinds) {
 					switch (extensionKind) {
-						case 'workspace':
+						case "workspace":
 							/* Choose local workspace extension if exists */
 							if (extension.server === this.extensionManagementServerService.localExtensionManagementServer) {
 								return true;
 							}
 							return false;
-						case 'web':
+						case "web":
 							/* Choose local web extension if exists */
 							if (extension.server === this.extensionManagementServerService.localExtensionManagementServer) {
 								return true;
@@ -1882,7 +2392,7 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 			extension = extensionsToChoose.find(extension => {
 				for (const extensionKind of extensionKinds) {
 					switch (extensionKind) {
-						case 'web':
+						case "web":
 							/* Choose web extension if exists */
 							if (extension.server === this.extensionManagementServerService.webExtensionManagementServer) {
 								return true;
@@ -1898,7 +2408,7 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 			extension = extensionsToChoose.find(extension => {
 				for (const extensionKind of extensionKinds) {
 					switch (extensionKind) {
-						case 'web':
+						case "web":
 							/* Choose remote web extension if exists */
 							if (extension.server === this.extensionManagementServerService.remoteExtensionManagementServer) {
 								return true;
@@ -1914,7 +2424,9 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 	}
 
 	private getExtensionState(extension: Extension): ExtensionState {
-		if (this.installing.some(i => areSameExtensions(i.identifier, extension.identifier) && (!extension.server || i.server === extension.server))) {
+		if (this.installing.some(
+      i => areSameExtensions(i.identifier, extension.identifier) && (!extension.server || i.server === extension.server),
+    )) {
 			return ExtensionState.Installing;
 		}
 		if (this.remoteExtensions) {
@@ -1937,7 +2449,9 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 
 	async checkForUpdates(reason?: string, onlyBuiltin?: boolean): Promise<void> {
 		if (reason) {
-			this.logService.trace(`[Extensions]: Checking for updates. Reason: ${reason}`);
+			this.logService.trace(
+        `[Extensions]: Checking for updates. Reason: ${reason}`,
+      );
 		} else {
 			this.logService.trace(`[Extensions]: Checking for updates`);
 		}
@@ -1967,26 +2481,44 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 				// Skip checking updates for a builtin extension if it is a system extension or if it does not have a Marketplace identifier
 				continue;
 			}
-			if (installed.local?.source === 'resource') {
+			if (installed.local?.source === "resource") {
 				continue;
 			}
-			infos.push({ ...installed.identifier, preRelease: !!installed.local?.preRelease, currentVersion: installed.isBuiltin ? installed.version : undefined });
+			infos.push({
+        ...installed.identifier,
+        preRelease: !!installed.local?.preRelease,
+        currentVersion: installed.isBuiltin ? installed.version : undefined,
+      });
 		}
 		if (infos.length) {
 			const targetPlatform = await extensions[0].server.extensionManagementService.getTargetPlatform();
 			type GalleryServiceUpdatesCheckClassification = {
-				owner: 'sandy081';
-				comment: 'Report when a request is made to check for updates of extensions';
-				count: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Number of extensions to check update' };
+				owner: "sandy081";
+				comment: "Report when a request is made to check for updates of extensions";
+				count: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Number of extensions to check update" };
 			};
 			type GalleryServiceUpdatesCheckEvent = {
 				count: number;
 			};
-			this.telemetryService.publicLog2<GalleryServiceUpdatesCheckEvent, GalleryServiceUpdatesCheckClassification>('galleryService:checkingForUpdates', {
-				count: infos.length,
-			});
-			this.logService.trace(`Checking updates for extensions`, infos.map(e => e.id).join(', '));
-			const galleryExtensions = await this.galleryService.getExtensions(infos, { targetPlatform, compatible: true, productVersion: this.getProductVersion() }, CancellationToken.None);
+			this.telemetryService.publicLog2<GalleryServiceUpdatesCheckEvent, GalleryServiceUpdatesCheckClassification>(
+        "galleryService:checkingForUpdates",
+        {
+          count: infos.length,
+        },
+      );
+			this.logService.trace(
+        `Checking updates for extensions`,
+        infos.map(e => e.id).join(", "),
+      );
+			const galleryExtensions = await this.galleryService.getExtensions(
+        infos,
+        {
+          targetPlatform,
+          compatible: true,
+          productVersion: this.getProductVersion(),
+        },
+        CancellationToken.None,
+      );
 			if (galleryExtensions.length) {
 				await this.syncInstalledExtensionsWithGallery(galleryExtensions, infos);
 			}
@@ -2004,29 +2536,47 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 						installPreReleaseVersion: extension.local?.isPreReleaseVersion,
 						profileLocation: this.userDataProfileService.currentProfile.extensionsResource,
 						isApplicationScoped: extension.local?.isApplicationScoped,
-						context: { [EXTENSION_INSTALL_SKIP_PUBLISHER_TRUST_CONTEXT]: true }
-					}
+						context: { [EXTENSION_INSTALL_SKIP_PUBLISHER_TRUST_CONTEXT]: true },
+					},
 				});
 			}
 		});
 		return this.extensionManagementService.installGalleryExtensions(toUpdate);
 	}
 
-	async downloadVSIX(extensionId: string, versionKind: 'prerelease' | 'release' | 'any'): Promise<void> {
+	async downloadVSIX(extensionId: string, versionKind: "prerelease" | "release" | "any"): Promise<void> {
 		let version: IGalleryExtensionVersion | undefined;
-		if (versionKind === 'any') {
+		if (versionKind === "any") {
 			version = await this.pickVersionToDownload(extensionId);
 			if (!version) {
 				return;
 			}
 		}
 
-		const extensionInfo = version ? { id: extensionId, version: version.version } : { id: extensionId, preRelease: versionKind === 'prerelease' };
-		const queryOptions: IExtensionQueryOptions = version ? {} : { compatible: true };
+		const extensionInfo = version ? {
+      id: extensionId,
+      version: version.version,
+    } : {
+      id: extensionId,
+      preRelease: versionKind === "prerelease",
+    };
+		const queryOptions: IExtensionQueryOptions = version ? {} : {
+      compatible: true,
+    };
 
-		let [galleryExtension] = await this.galleryService.getExtensions([extensionInfo], queryOptions, CancellationToken.None);
+		let [galleryExtension] = await this.galleryService.getExtensions(
+      [extensionInfo],
+      queryOptions,
+      CancellationToken.None,
+    );
 		if (!galleryExtension) {
-			throw new Error(nls.localize('extension not found', "Extension '{0}' not found.", extensionId));
+			throw new Error(
+        nls.localize(
+          "extension not found",
+          "Extension '{0}' not found.",
+          extensionId,
+        ),
+      );
 		}
 
 		let targetPlatform = galleryExtension.properties.targetPlatform;
@@ -2034,14 +2584,20 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 		for (const targetPlatform of version?.targetPlatforms ?? galleryExtension.allTargetPlatforms) {
 			if (targetPlatform !== TargetPlatform.UNKNOWN && targetPlatform !== TargetPlatform.UNIVERSAL) {
 				options.push({
-					label: targetPlatform === TargetPlatform.UNDEFINED ? nls.localize('allplatforms', "All Platforms") : TargetPlatformToString(targetPlatform),
-					id: targetPlatform
-				});
+          label: targetPlatform === TargetPlatform.UNDEFINED ? nls.localize("allplatforms", "All Platforms") : TargetPlatformToString(targetPlatform),
+          id: targetPlatform,
+        });
 			}
 		}
 		if (options.length > 1) {
-			const message = nls.localize('platform placeholder', "Please select the platform for which you want to download the VSIX");
-			const option = await this.quickInputService.pick(options.sort((a, b) => a.label.localeCompare(b.label)), { placeHolder: message });
+			const message = nls.localize(
+        "platform placeholder",
+        "Please select the platform for which you want to download the VSIX",
+      );
+			const option = await this.quickInputService.pick(
+        options.sort((a, b) => a.label.localeCompare(b.label)),
+        { placeHolder: message },
+      );
 			if (!option) {
 				return;
 			}
@@ -2049,16 +2605,20 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 		}
 
 		if (targetPlatform !== galleryExtension.properties.targetPlatform) {
-			[galleryExtension] = await this.galleryService.getExtensions([extensionInfo], { ...queryOptions, targetPlatform }, CancellationToken.None);
+			[galleryExtension] = await this.galleryService.getExtensions(
+        [extensionInfo],
+        { ...queryOptions, targetPlatform },
+        CancellationToken.None,
+      );
 		}
 
 		const result = await this.fileDialogService.showOpenDialog({
-			title: nls.localize('download title', "Select folder to download the VSIX"),
-			canSelectFiles: false,
-			canSelectFolders: true,
-			canSelectMany: false,
-			openLabel: nls.localize('download', "Download"),
-		});
+      title: nls.localize("download title", "Select folder to download the VSIX"),
+      canSelectFiles: false,
+      canSelectFolders: true,
+      canSelectMany: false,
+      openLabel: nls.localize("download", "Download"),
+    });
 
 		if (!result?.[0]) {
 			return;
@@ -2066,37 +2626,40 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 
 		this.progressService.withProgress({ location: ProgressLocation.Notification }, async progress => {
 			try {
-				progress.report({ message: nls.localize('downloading...', "Downloading VSIX...") });
-				const name = `${galleryExtension.identifier.id}-${galleryExtension.version}${targetPlatform !== TargetPlatform.UNDEFINED && targetPlatform !== TargetPlatform.UNIVERSAL && targetPlatform !== TargetPlatform.UNKNOWN ? `-${targetPlatform}` : ''}.vsix`;
+				progress.report({ message: nls.localize("downloading...", "Downloading VSIX...") });
+				const name = `${galleryExtension.identifier.id}-${galleryExtension.version}${targetPlatform !== TargetPlatform.UNDEFINED && targetPlatform !== TargetPlatform.UNIVERSAL && targetPlatform !== TargetPlatform.UNKNOWN ? `-${targetPlatform}` : ""}.vsix`;
 				await this.galleryService.download(galleryExtension, this.uriIdentityService.extUri.joinPath(result[0], name), InstallOperation.None);
-				this.notificationService.info(nls.localize('download.completed', "Successfully downloaded the VSIX"));
+				this.notificationService.info(nls.localize("download.completed", "Successfully downloaded the VSIX"));
 			} catch (error) {
-				this.notificationService.error(nls.localize('download.failed', "Error while downloading the VSIX: {0}", getErrorMessage(error)));
+				this.notificationService.error(nls.localize("download.failed", "Error while downloading the VSIX: {0}", getErrorMessage(error)));
 			}
 		});
 	}
 
 	private async pickVersionToDownload(extensionId: string): Promise<IGalleryExtensionVersion | undefined> {
-		const allVersions = await this.galleryService.getAllVersions({ id: extensionId });
+		const allVersions = await this.galleryService.getAllVersions({
+      id: extensionId,
+    });
 		if (!allVersions.length) {
-			await this.dialogService.info(nls.localize('no versions', "This extension has no other versions."));
+			await this.dialogService.info(
+        nls.localize("no versions", "This extension has no other versions."),
+      );
 			return;
 		}
 
 		const picks = allVersions.map((v, i) => {
-			return {
-				id: v.version,
-				label: v.version,
-				description: `${fromNow(new Date(Date.parse(v.date)), true)}${v.isPreReleaseVersion ? ` (${nls.localize('pre-release', "pre-release")})` : ''}`,
-				ariaLabel: `${v.isPreReleaseVersion ? 'Pre-Release version' : 'Release version'} ${v.version}`,
-				data: v,
-			};
-		});
-		const pick = await this.quickInputService.pick(picks,
-			{
-				placeHolder: nls.localize('selectVersion', "Select Version to Download"),
-				matchOnDetail: true
-			});
+      return {
+        id: v.version,
+        label: v.version,
+        description: `${fromNow(new Date(Date.parse(v.date)), true)}${v.isPreReleaseVersion ? ` (${nls.localize("pre-release", "pre-release")})` : ""}`,
+        ariaLabel: `${v.isPreReleaseVersion ? "Pre-Release version" : "Release version"} ${v.version}`,
+        data: v,
+      };
+    });
+		const pick = await this.quickInputService.pick(picks, {
+      placeHolder: nls.localize("selectVersion", "Select Version to Download"),
+      matchOnDetail: true,
+    });
 		return pick?.data;
 	}
 
@@ -2114,9 +2677,20 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 		if (!extensions.length) {
 			return;
 		}
-		await Promise.allSettled(extensions.map(extensions => extensions.syncInstalledExtensionsWithGallery(gallery, this.getProductVersion(), flagExtensionsMissingFromGallery)));
+		await Promise.allSettled(
+      extensions.map(
+        extensions => extensions.syncInstalledExtensionsWithGallery(
+          gallery,
+          this.getProductVersion(),
+          flagExtensionsMissingFromGallery,
+        ),
+      ),
+    );
 		if (this.outdated.length) {
-			this.logService.info(`Auto updating outdated extensions.`, this.outdated.map(e => e.identifier.id).join(', '));
+			this.logService.info(
+        `Auto updating outdated extensions.`,
+        this.outdated.map(e => e.identifier.id).join(", "),
+      );
 			this.eventuallyAutoUpdateExtensions();
 		}
 	}
@@ -2139,7 +2713,7 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 	}
 
 	private getUpdatesCheckInterval(): number {
-		if (this.productService.quality === 'insider' && this.getProductUpdateVersion()) {
+		if (this.productService.quality === "insider" && this.getProductUpdateVersion()) {
 			return 1000 * 60 * 60 * 1; // 1 hour
 		}
 		return ExtensionsWorkbenchService.UpdatesCheckInterval;
@@ -2156,7 +2730,14 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 		}
 		await this.checkForUpdates(undefined, true);
 		const toUpdate = this.outdated.filter(e => e.isBuiltin);
-		await Promises.settled(toUpdate.map(e => this.install(e, e.local?.preRelease ? { installPreReleaseVersion: true } : undefined)));
+		await Promises.settled(
+      toUpdate.map(
+        e => this.install(
+          e,
+          e.local?.preRelease ? { installPreReleaseVersion: true } : undefined,
+        ),
+      ),
+    );
 	}
 
 	private async syncPinnedBuiltinExtensions(): Promise<void> {
@@ -2167,7 +2748,10 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 			}
 		}
 		if (infos.length) {
-			const galleryExtensions = await this.galleryService.getExtensions(infos, CancellationToken.None);
+			const galleryExtensions = await this.galleryService.getExtensions(
+        infos,
+        CancellationToken.None,
+      );
 			if (galleryExtensions.length) {
 				await this.syncInstalledExtensionsWithGallery(galleryExtensions);
 			}
@@ -2176,7 +2760,9 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 
 	private async autoUpdateExtensions(): Promise<void> {
 		if (this.meteredConnectionService.isConnectionMetered) {
-			this.logService.trace('[Extensions]: Skipping auto-update because connection is metered');
+			this.logService.trace(
+        "[Extensions]: Skipping auto-update because connection is metered",
+      );
 			return;
 		}
 
@@ -2196,11 +2782,17 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 		}
 
 		if (disabledAutoUpdate.length) {
-			this.logService.trace('Auto update disabled for extensions', disabledAutoUpdate.join(', '));
+			this.logService.trace(
+        "Auto update disabled for extensions",
+        disabledAutoUpdate.join(", "),
+      );
 		}
 
 		if (consentRequired.length) {
-			this.logService.info('Auto update consent required for extensions', consentRequired.join(', '));
+			this.logService.info(
+        "Auto update consent required for extensions",
+        consentRequired.join(", "),
+      );
 		}
 
 		if (!toUpdate.length) {
@@ -2208,7 +2800,14 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 		}
 
 		const productVersion = this.getProductVersion();
-		await Promises.settled(toUpdate.map(e => this.install(e, e.local?.preRelease ? { installPreReleaseVersion: true, productVersion } : { productVersion })));
+		await Promises.settled(
+      toUpdate.map(
+        e => this.install(
+          e,
+          e.local?.preRelease ? { installPreReleaseVersion: true, productVersion } : { productVersion },
+        ),
+      ),
+    );
 	}
 
 	private getProductVersion(): IProductVersion {
@@ -2216,7 +2815,10 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 	}
 
 	private getProductCurrentVersion(): IProductVersion {
-		return { version: this.productService.version, date: this.productService.date };
+		return {
+      version: this.productService.version,
+      date: this.productService.date,
+    };
 	}
 
 	private getProductUpdateVersion(): IProductVersion | undefined {
@@ -2227,7 +2829,10 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 			case StateType.Ready: {
 				const version = this.updateService.state.update.productVersion;
 				if (version && semver.valid(version)) {
-					return { version, date: this.updateService.state.update.timestamp ? new Date(this.updateService.state.update.timestamp).toISOString() : undefined };
+					return {
+            version,
+            date: this.updateService.state.update.timestamp ? new Date(this.updateService.state.update.timestamp).toISOString() : undefined,
+          };
 				}
 			}
 		}
@@ -2252,7 +2857,9 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 			if (extensionsToAutoUpdate.includes(extensionId)) {
 				return true;
 			}
-			if (this.isAutoUpdateEnabledForPublisher(extension.publisher) && !extensionsToAutoUpdate.includes(`-${extensionId}`)) {
+			if (this.isAutoUpdateEnabledForPublisher(
+        extension.publisher,
+      ) && !extensionsToAutoUpdate.includes(`-${extensionId}`)) {
 				return true;
 			}
 			return false;
@@ -2263,7 +2870,9 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 		}
 
 		const disabledAutoUpdateExtensions = this.getDisabledAutoUpdateExtensions();
-		if (disabledAutoUpdateExtensions.includes(extension.identifier.id.toLowerCase())) {
+		if (disabledAutoUpdateExtensions.includes(
+      extension.identifier.id.toLowerCase(),
+    )) {
 			return false;
 		}
 
@@ -2271,7 +2880,7 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 			return true;
 		}
 
-		if (autoUpdateValue === 'onlyEnabledExtensions') {
+		if (autoUpdateValue === "onlyEnabledExtensions") {
 			return extension.enablementState !== EnablementState.DisabledGlobally && extension.enablementState !== EnablementState.DisabledWorkspace;
 		}
 
@@ -2288,7 +2897,10 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 		}
 
 		if (extension.local.identifier.uuid && extension.local.identifier.uuid !== extension.gallery.identifier.uuid) {
-			return nls.localize('consentRequiredToUpdateRepublishedExtension', "The marketplace metadata of this extension changed, likely due to a re-publish.");
+			return nls.localize(
+        "consentRequiredToUpdateRepublishedExtension",
+        "The marketplace metadata of this extension changed, likely due to a re-publish.",
+      );
 		}
 
 		if (!extension.local.manifest.engines.vscode || extension.local.manifest.main || extension.local.manifest.browser) {
@@ -2302,19 +2914,28 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 		} else {
 			const manifest = extension instanceof Extension
 				? await extension.getGalleryManifest()
-				: await this.galleryService.getManifest(extension.gallery, CancellationToken.None);
+				: await this.galleryService.getManifest(
+            extension.gallery,
+            CancellationToken.None,
+          );
 			if (!manifest?.main && !manifest?.browser) {
 				return;
 			}
 		}
 
-		return nls.localize('consentRequiredToUpdate', "The update for {0} extension introduces executable code, which is not present in the currently installed version.", extension.displayName);
+		return nls.localize(
+      "consentRequiredToUpdate",
+      "The update for {0} extension introduces executable code, which is not present in the currently installed version.",
+      extension.displayName,
+    );
 	}
 
 	isAutoUpdateEnabledFor(extensionOrPublisher: IExtension | string): boolean {
 		if (isString(extensionOrPublisher)) {
 			if (EXTENSION_IDENTIFIER_REGEX.test(extensionOrPublisher)) {
-				throw new Error('Expected publisher string, found extension identifier');
+				throw new Error(
+          "Expected publisher string, found extension identifier",
+        );
 			}
 			if (this.isAutoUpdateEnabled()) {
 				return true;
@@ -2332,7 +2953,7 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 	async updateAutoUpdateEnablementFor(extensionOrPublisher: IExtension | string, enable: boolean): Promise<void> {
 		if (this.isAutoUpdateEnabled()) {
 			if (isString(extensionOrPublisher)) {
-				throw new Error('Expected extension, found publisher string');
+				throw new Error("Expected extension, found publisher string");
 			}
 			const disabledAutoUpdateExtensions = this.getDisabledAutoUpdateExtensions();
 			const extensionId = extensionOrPublisher.identifier.id.toLowerCase();
@@ -2349,7 +2970,10 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 			}
 			this.setDisabledAutoUpdateExtensions(disabledAutoUpdateExtensions);
 			if (enable && extensionOrPublisher.local && extensionOrPublisher.pinned) {
-				await this.extensionManagementService.updateMetadata(extensionOrPublisher.local, { pinned: false });
+				await this.extensionManagementService.updateMetadata(
+          extensionOrPublisher.local,
+          { pinned: false },
+        );
 			}
 			this._onChange.fire(extensionOrPublisher);
 		}
@@ -2358,7 +2982,9 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 			const enabledAutoUpdateExtensions = this.getEnabledAutoUpdateExtensions();
 			if (isString(extensionOrPublisher)) {
 				if (EXTENSION_IDENTIFIER_REGEX.test(extensionOrPublisher)) {
-					throw new Error('Expected publisher string, found extension identifier');
+					throw new Error(
+            "Expected publisher string, found extension identifier",
+          );
 				}
 				extensionOrPublisher = extensionOrPublisher.toLowerCase();
 				if (this.isAutoUpdateEnabledFor(extensionOrPublisher) !== enable) {
@@ -2366,7 +2992,10 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 						enabledAutoUpdateExtensions.push(extensionOrPublisher);
 					} else {
 						if (enabledAutoUpdateExtensions.includes(extensionOrPublisher)) {
-							enabledAutoUpdateExtensions.splice(enabledAutoUpdateExtensions.indexOf(extensionOrPublisher), 1);
+							enabledAutoUpdateExtensions.splice(
+                enabledAutoUpdateExtensions.indexOf(extensionOrPublisher),
+                1,
+              );
 						}
 					}
 				}
@@ -2378,17 +3007,29 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 				}
 			} else {
 				const extensionId = extensionOrPublisher.identifier.id.toLowerCase();
-				const enableAutoUpdatesForPublisher = this.isAutoUpdateEnabledFor(extensionOrPublisher.publisher.toLowerCase());
-				const enableAutoUpdatesForExtension = enabledAutoUpdateExtensions.includes(extensionId);
-				const disableAutoUpdatesForExtension = enabledAutoUpdateExtensions.includes(`-${extensionId}`);
+				const enableAutoUpdatesForPublisher = this.isAutoUpdateEnabledFor(
+          extensionOrPublisher.publisher.toLowerCase(),
+        );
+				const enableAutoUpdatesForExtension = enabledAutoUpdateExtensions.includes(
+          extensionId,
+        );
+				const disableAutoUpdatesForExtension = enabledAutoUpdateExtensions.includes(
+          `-${extensionId}`,
+        );
 
 				if (enable) {
 					if (disableAutoUpdatesForExtension) {
-						enabledAutoUpdateExtensions.splice(enabledAutoUpdateExtensions.indexOf(`-${extensionId}`), 1);
+						enabledAutoUpdateExtensions.splice(
+              enabledAutoUpdateExtensions.indexOf(`-${extensionId}`),
+              1,
+            );
 					}
 					if (enableAutoUpdatesForPublisher) {
 						if (enableAutoUpdatesForExtension) {
-							enabledAutoUpdateExtensions.splice(enabledAutoUpdateExtensions.indexOf(extensionId), 1);
+							enabledAutoUpdateExtensions.splice(
+                enabledAutoUpdateExtensions.indexOf(extensionId),
+                1,
+              );
 						}
 					} else {
 						if (!enableAutoUpdatesForExtension) {
@@ -2399,7 +3040,10 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 				// Disable Auto Updates
 				else {
 					if (enableAutoUpdatesForExtension) {
-						enabledAutoUpdateExtensions.splice(enabledAutoUpdateExtensions.indexOf(extensionId), 1);
+						enabledAutoUpdateExtensions.splice(
+              enabledAutoUpdateExtensions.indexOf(extensionId),
+              1,
+            );
 					}
 					if (enableAutoUpdatesForPublisher) {
 						if (!disableAutoUpdatesForExtension) {
@@ -2407,7 +3051,10 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 						}
 					} else {
 						if (disableAutoUpdatesForExtension) {
-							enabledAutoUpdateExtensions.splice(enabledAutoUpdateExtensions.indexOf(`-${extensionId}`), 1);
+							enabledAutoUpdateExtensions.splice(
+                enabledAutoUpdateExtensions.indexOf(`-${extensionId}`),
+                1,
+              );
 						}
 					}
 				}
@@ -2440,7 +3087,9 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 				return [shouldAutoUpdate, shouldNotAutoUpdate];
 			};
 
-			const [wasShouldAutoUpdate, wasShouldNotAutoUpdate] = groupBy(userExtensions);
+			const [wasShouldAutoUpdate, wasShouldNotAutoUpdate] = groupBy(
+        userExtensions,
+      );
 			this._enabledAutoUpdateExtensionsValue = undefined;
 			this._disabledAutoUpdateExtensionsValue = undefined;
 			const [shouldAutoUpdate, shouldNotAutoUpdate] = groupBy(userExtensions);
@@ -2460,68 +3109,115 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 
 	async canInstall(extension: IExtension): Promise<true | IMarkdownString> {
 		if (!(extension instanceof Extension)) {
-			return new MarkdownString().appendText(nls.localize('not an extension', "The provided object is not an extension."));
+			return new MarkdownString().appendText(
+        nls.localize(
+          "not an extension",
+          "The provided object is not an extension.",
+        ),
+      );
 		}
 
 		if (extension.isMalicious) {
-			return new MarkdownString().appendText(nls.localize('malicious', "This extension is reported to be problematic."));
+			return new MarkdownString().appendText(
+        nls.localize(
+          "malicious",
+          "This extension is reported to be problematic.",
+        ),
+      );
 		}
 
 		if (extension.deprecationInfo?.disallowInstall) {
-			return new MarkdownString().appendText(nls.localize('disallowed', "This extension is disallowed to be installed."));
+			return new MarkdownString().appendText(
+        nls.localize(
+          "disallowed",
+          "This extension is disallowed to be installed.",
+        ),
+      );
 		}
 
 		if (extension.gallery) {
-			if (!extension.gallery.isSigned && shouldRequireRepositorySignatureFor(extension.private, await this.extensionGalleryManifestService.getExtensionGalleryManifest())) {
-				return new MarkdownString().appendText(nls.localize('not signed', "This extension is not signed."));
+			if (!extension.gallery.isSigned && shouldRequireRepositorySignatureFor(
+        extension.private,
+        await this.extensionGalleryManifestService.getExtensionGalleryManifest(),
+      )) {
+				return new MarkdownString().appendText(
+          nls.localize("not signed", "This extension is not signed."),
+        );
 			}
 
-			const localResult = this.localExtensions ? await this.localExtensions.canInstall(extension.gallery) : undefined;
+			const localResult = this.localExtensions ? await this.localExtensions.canInstall(
+        extension.gallery,
+      ) : undefined;
 			if (localResult === true) {
 				return true;
 			}
 
-			const remoteResult = this.remoteExtensions ? await this.remoteExtensions.canInstall(extension.gallery) : undefined;
+			const remoteResult = this.remoteExtensions ? await this.remoteExtensions.canInstall(
+        extension.gallery,
+      ) : undefined;
 			if (remoteResult === true) {
 				return true;
 			}
 
-			const webResult = this.webExtensions ? await this.webExtensions.canInstall(extension.gallery) : undefined;
+			const webResult = this.webExtensions ? await this.webExtensions.canInstall(
+        extension.gallery,
+      ) : undefined;
 			if (webResult === true) {
 				return true;
 			}
 
-			return localResult ?? remoteResult ?? webResult ?? new MarkdownString().appendText(nls.localize('cannot be installed', "Cannot install the '{0}' extension because it is not available in this setup.", extension.displayName ?? extension.identifier.id));
+			return localResult ?? remoteResult ?? webResult ?? new MarkdownString().appendText(
+        nls.localize(
+          "cannot be installed",
+          "Cannot install the '{0}' extension because it is not available in this setup.",
+          extension.displayName ?? extension.identifier.id,
+        ),
+      );
 		}
 
-		if (extension.resourceExtension && await this.extensionManagementService.canInstall(extension.resourceExtension) === true) {
+		if (extension.resourceExtension && await this.extensionManagementService.canInstall(
+      extension.resourceExtension,
+    ) === true) {
 			return true;
 		}
 
-		return new MarkdownString().appendText(nls.localize('cannot be installed', "Cannot install the '{0}' extension because it is not available in this setup.", extension.displayName ?? extension.identifier.id));
+		return new MarkdownString().appendText(
+      nls.localize(
+        "cannot be installed",
+        "Cannot install the '{0}' extension because it is not available in this setup.",
+        extension.displayName ?? extension.identifier.id,
+      ),
+    );
 	}
 
 	async install(arg: string | URI | IExtension, installOptions: InstallExtensionOptions = {}, progressLocation?: ProgressLocation | string): Promise<IExtension> {
-		const extension = await this._install(arg, installOptions, progressLocation);
+		const extension = await this._install(
+      arg,
+      installOptions,
+      progressLocation,
+    );
 
 		if (!extension) {
-			throw new Error(nls.localize('unknown', "Unable to install extension"));
+			throw new Error(nls.localize("unknown", "Unable to install extension"));
 		}
 
 		if (installOptions.enable) {
 			if (extension.enablementState === EnablementState.DisabledWorkspace || extension.enablementState === EnablementState.DisabledGlobally) {
 				if (installOptions.justification) {
 					const result = await this.dialogService.confirm({
-						title: nls.localize('enableExtensionTitle', "Enable Extension"),
-						message: nls.localize('enableExtensionMessage', "Would you like to enable '{0}' extension?", extension.displayName),
-						detail: isString(installOptions.justification) ? installOptions.justification : installOptions.justification.reason,
-						primaryButton: isString(installOptions.justification) ? nls.localize({ key: 'enableButtonLabel', comment: ['&& denotes a mnemonic'] }, "&&Enable Extension") : nls.localize({ key: 'enableButtonLabelWithAction', comment: ['&& denotes a mnemonic'] }, "&&Enable Extension and {0}", installOptions.justification.action),
-					});
+            title: nls.localize("enableExtensionTitle", "Enable Extension"),
+            message: nls.localize("enableExtensionMessage", "Would you like to enable '{0}' extension?", extension.displayName),
+            detail: isString(installOptions.justification) ? installOptions.justification : installOptions.justification.reason,
+            primaryButton: isString(installOptions.justification) ? nls.localize({ key: "enableButtonLabel", comment: ["&& denotes a mnemonic"] }, "&&Enable Extension") : nls.localize({ key: "enableButtonLabelWithAction", comment: ["&& denotes a mnemonic"] }, "&&Enable Extension and {0}", installOptions.justification.action),
+          });
 					if (!result.confirmed) {
 						throw new CancellationError();
 					}
 				}
-				await this.setEnablement(extension, extension.enablementState === EnablementState.DisabledWorkspace ? EnablementState.EnabledWorkspace : EnablementState.EnabledGlobally);
+				await this.setEnablement(
+          extension,
+          extension.enablementState === EnablementState.DisabledWorkspace ? EnablementState.EnabledWorkspace : EnablementState.EnabledGlobally,
+        );
 			}
 			await this.waitUntilExtensionIsEnabled(extension);
 		}
@@ -2542,13 +3238,21 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 
 			// Install by id
 			if (isString(arg)) {
-				extension = this.local.find(e => areSameExtensions(e.identifier, { id: arg }));
+				extension = this.local.find(
+          e => areSameExtensions(e.identifier, { id: arg }),
+        );
 				if (extension?.isBuiltin) {
-					if (this.productService.builtInExtensionsEnabledWithAutoUpdates?.some(id => id.toLowerCase() === arg.toLowerCase())) {
+					if (this.productService.builtInExtensionsEnabledWithAutoUpdates?.some(
+            id => id.toLowerCase() === arg.toLowerCase(),
+          )) {
 						return extension;
 					}
 				} else {
-					installableInfo = { id: arg, version: installOptions.version, preRelease: installOptions.installPreReleaseVersion ?? this.extensionManagementService.preferPreReleases };
+					installableInfo = {
+            id: arg,
+            version: installOptions.version,
+            preRelease: installOptions.installPreReleaseVersion ?? this.extensionManagementService.preferPreReleases,
+          };
 				}
 			}
 			// Install by gallery
@@ -2556,7 +3260,10 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 				extension = arg;
 				gallery = arg.gallery;
 				if (installOptions.version && installOptions.version !== gallery?.version) {
-					installableInfo = { id: extension.identifier.id, version: installOptions.version };
+					installableInfo = {
+            id: extension.identifier.id,
+            version: installOptions.version,
+          };
 				}
 			}
 			// Install by resource
@@ -2567,16 +3274,33 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 
 			if (installableInfo) {
 				const targetPlatform = extension?.server ? await extension.server.extensionManagementService.getTargetPlatform() : undefined;
-				gallery = (await this.galleryService.getExtensions([installableInfo], { targetPlatform }, CancellationToken.None)).at(0);
+				gallery = (await this.galleryService.getExtensions([installableInfo], { targetPlatform }, CancellationToken.None)).at(
+          0,
+        );
 			}
 
 			if (!extension && gallery) {
-				extension = this.instantiationService.createInstance(Extension, ext => this.getExtensionState(ext), ext => this.getRuntimeState(ext), undefined, undefined, gallery, undefined);
-				(<Extension>extension).setExtensionsControlManifest(await this.extensionManagementService.getExtensionsControlManifest());
+				extension = this.instantiationService.createInstance(
+          Extension,
+          ext => this.getExtensionState(ext),
+          ext => this.getRuntimeState(ext),
+          undefined,
+          undefined,
+          gallery,
+          undefined,
+        );
+				(<Extension>extension).setExtensionsControlManifest(
+          await this.extensionManagementService.getExtensionsControlManifest(),
+        );
 			}
 
 			if (extension?.isMalicious) {
-				throw new Error(nls.localize('malicious', "This extension is reported to be problematic."));
+				throw new Error(
+          nls.localize(
+            "malicious",
+            "This extension is reported to be problematic.",
+          ),
+        );
 			}
 
 			if (gallery) {
@@ -2584,9 +3308,15 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 				// then install the extension in all the servers where it is not installed
 				if (installOptions.installEverywhere) {
 					servers = [];
-					const installableServers = await this.extensionManagementService.getInstallableServers(gallery);
+					const installableServers = await this.extensionManagementService.getInstallableServers(
+            gallery,
+          );
 					for (const extensionsServer of this.extensionsServers) {
-						if (installableServers.includes(extensionsServer.server) && !extensionsServer.local.find(e => areSameExtensions(e.identifier, gallery.identifier))) {
+						if (installableServers.includes(
+              extensionsServer.server,
+            ) && !extensionsServer.local.find(
+              e => areSameExtensions(e.identifier, gallery.identifier),
+            )) {
 							servers.push(extensionsServer.server);
 						}
 					}
@@ -2597,7 +3327,9 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 				else if (installOptions.enable && extension?.local) {
 					servers = [];
 					if (extension.enablementState === EnablementState.DisabledByExtensionKind) {
-						const [installableServer] = await this.extensionManagementService.getInstallableServers(gallery);
+						const [installableServer] = await this.extensionManagementService.getInstallableServers(
+              gallery,
+            );
 						if (installableServer) {
 							servers.push(installableServer);
 						}
@@ -2610,14 +3342,36 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 					if (!gallery) {
 						const id = isString(arg) ? arg : (<IExtension>arg).identifier.id;
 						const manifest = await this.extensionGalleryManifestService.getExtensionGalleryManifest();
-						const reportIssueUri = manifest ? getExtensionGalleryManifestResourceUri(manifest, ExtensionGalleryResourceType.ContactSupportUri) : undefined;
-						const reportIssueMessage = reportIssueUri ? nls.localize('report issue', "If this issue persists, please report it at {0}", reportIssueUri.toString()) : '';
+						const reportIssueUri = manifest ? getExtensionGalleryManifestResourceUri(
+              manifest,
+              ExtensionGalleryResourceType.ContactSupportUri,
+            ) : undefined;
+						const reportIssueMessage = reportIssueUri ? nls.localize(
+              "report issue",
+              "If this issue persists, please report it at {0}",
+              reportIssueUri.toString(),
+            ) : "";
 						if (installOptions.version) {
-							const message = nls.localize('not found version', "The extension '{0}' cannot be installed because the requested version '{1}' was not found.", id, installOptions.version);
-							throw new ExtensionManagementError(reportIssueMessage ? `${message} ${reportIssueMessage}` : message, ExtensionManagementErrorCode.NotFound);
+							const message = nls.localize(
+                "not found version",
+                "The extension '{0}' cannot be installed because the requested version '{1}' was not found.",
+                id,
+                installOptions.version,
+              );
+							throw new ExtensionManagementError(
+                reportIssueMessage ? `${message} ${reportIssueMessage}` : message,
+                ExtensionManagementErrorCode.NotFound,
+              );
 						} else {
-							const message = nls.localize('not found', "The extension '{0}' cannot be installed because it was not found.", id);
-							throw new ExtensionManagementError(reportIssueMessage ? `${message} ${reportIssueMessage}` : message, ExtensionManagementErrorCode.NotFound);
+							const message = nls.localize(
+                "not found",
+                "The extension '{0}' cannot be installed because it was not found.",
+                id,
+              );
+							throw new ExtensionManagementError(
+                reportIssueMessage ? `${message} ${reportIssueMessage}` : message,
+                ExtensionManagementErrorCode.NotFound,
+              );
 						}
 					}
 					installable = gallery;
@@ -2633,24 +3387,29 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 
 		if (installable) {
 			if (installOptions.justification) {
-				const syncCheck = isUndefined(installOptions.isMachineScoped) && this.userDataSyncEnablementService.isEnabled() && this.userDataSyncEnablementService.isResourceEnabled(SyncResource.Extensions);
+				const syncCheck = isUndefined(installOptions.isMachineScoped) && this.userDataSyncEnablementService.isEnabled() && this.userDataSyncEnablementService.isResourceEnabled(
+          SyncResource.Extensions,
+        );
 				const buttons: IPromptButton<boolean>[] = [];
 				buttons.push({
 					label: isString(installOptions.justification) || !installOptions.justification.action
-						? nls.localize({ key: 'installButtonLabel', comment: ['&& denotes a mnemonic'] }, "&&Install Extension")
-						: nls.localize({ key: 'installButtonLabelWithAction', comment: ['&& denotes a mnemonic'] }, "&&Install Extension and {0}", installOptions.justification.action), run: () => true
+						? nls.localize({ key: "installButtonLabel", comment: ["&& denotes a mnemonic"] }, "&&Install Extension")
+						: nls.localize({ key: "installButtonLabelWithAction", comment: ["&& denotes a mnemonic"] }, "&&Install Extension and {0}", installOptions.justification.action), run: () => true,
 				});
 				if (!extension) {
-					buttons.push({ label: nls.localize('open', "Open Extension"), run: () => { this.open(extension!); return false; } });
+					buttons.push({
+            label: nls.localize("open", "Open Extension"),
+            run: () => { this.open(extension!); return false; },
+          });
 				}
 				const result = await this.dialogService.prompt<boolean>({
-					title: nls.localize('installExtensionTitle', "Install Extension"),
-					message: extension ? nls.localize('installExtensionMessage', "Would you like to install '{0}' extension from '{1}'?", extension.displayName, extension.publisherDisplayName) : nls.localize('installVSIXMessage', "Would you like to install the extension?"),
+					title: nls.localize("installExtensionTitle", "Install Extension"),
+					message: extension ? nls.localize("installExtensionMessage", "Would you like to install '{0}' extension from '{1}'?", extension.displayName, extension.publisherDisplayName) : nls.localize("installVSIXMessage", "Would you like to install the extension?"),
 					detail: isString(installOptions.justification) ? installOptions.justification : installOptions.justification.reason,
 					cancelButton: true,
 					buttons,
 					checkbox: syncCheck ? {
-						label: nls.localize('sync extension', "Sync this extension"),
+						label: nls.localize("sync extension", "Sync this extension"),
 						checked: true,
 					} : undefined,
 				});
@@ -2662,12 +3421,32 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 				}
 			}
 			if (installable instanceof URI) {
-				extension = await this.doInstall(undefined, () => this.installFromVSIX(installable, installOptions), progressLocation);
+				extension = await this.doInstall(
+          undefined,
+          () => this.installFromVSIX(installable, installOptions),
+          progressLocation,
+        );
 			} else if (extension) {
 				if (extension.resourceExtension) {
-					extension = await this.doInstall(extension, () => this.extensionManagementService.installResourceExtension(installable as IResourceExtension, installOptions), progressLocation);
+					extension = await this.doInstall(
+            extension,
+            () => this.extensionManagementService.installResourceExtension(
+              installable as IResourceExtension,
+              installOptions,
+            ),
+            progressLocation,
+          );
 				} else {
-					extension = await this.doInstall(extension, () => this.installFromGallery(extension!, installable as IGalleryExtension, installOptions, servers), progressLocation);
+					extension = await this.doInstall(
+            extension,
+            () => this.installFromGallery(
+              extension!,
+              installable as IGalleryExtension,
+              installOptions,
+              servers,
+            ),
+            progressLocation,
+          );
 				}
 			}
 		}
@@ -2678,7 +3457,7 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 		await this.doInstall(extension, async () => {
 			const local = extension.local;
 			if (!local) {
-				throw new Error('Extension not found');
+				throw new Error("Extension not found");
 			}
 			if (!extension.gallery) {
 				extension = (await this.getExtensions([{ ...extension.identifier, preRelease: local.preRelease }], CancellationToken.None))[0] ?? extension;
@@ -2689,7 +3468,7 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 
 			const targetPlatform = await server.extensionManagementService.getTargetPlatform();
 			if (!isTargetPlatformCompatible(local.targetPlatform, [local.targetPlatform], targetPlatform)) {
-				throw new Error(nls.localize('incompatible', "Can't install '{0}' extension because it is not compatible.", extension.identifier.id));
+				throw new Error(nls.localize("incompatible", "Can't install '{0}' extension because it is not compatible.", extension.identifier.id));
 			}
 
 			const vsix = await this.extensionManagementService.zip(local);
@@ -2724,14 +3503,19 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 
 	async setLanguage(extension: IExtension): Promise<void> {
 		if (!this.canSetLanguage(extension)) {
-			throw new Error('Can not set language');
+			throw new Error("Can not set language");
 		}
 		const locale = getLocale(extension.gallery!);
 		if (locale === language) {
 			return;
 		}
 		const localizedLanguageName = extension.gallery?.properties?.localizedLanguages?.[0];
-		return this.localeService.setLocale({ id: locale, galleryExtension: extension.gallery, extensionId: extension.identifier.id, label: localizedLanguageName ?? extension.displayName });
+		return this.localeService.setLocale({
+      id: locale,
+      galleryExtension: extension.gallery,
+      extensionId: extension.identifier.id,
+      label: localizedLanguageName ?? extension.displayName,
+    });
 	}
 
 	setEnablement(extensions: IExtension | IExtension[], enablementState: EnablementState): Promise<void> {
@@ -2740,27 +3524,41 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 	}
 
 	async uninstall(e: IExtension): Promise<void> {
-		const extension = e.local ? e : this.local.find(local => areSameExtensions(local.identifier, e.identifier));
+		const extension = e.local ? e : this.local.find(
+      local => areSameExtensions(local.identifier, e.identifier),
+    );
 		if (!extension?.local) {
-			throw new Error('Missing local');
+			throw new Error("Missing local");
 		}
 
 		if (extension.local.isApplicationScoped && this.userDataProfilesService.profiles.length > 1) {
 			const { confirmed } = await this.dialogService.confirm({
-				title: nls.localize('uninstallApplicationScoped', "Uninstall Extension"),
-				type: Severity.Info,
-				message: nls.localize('uninstallApplicationScopedMessage', "Would you like to Uninstall {0} from all profiles?", extension.displayName),
-				primaryButton: nls.localize('uninstallAllProfiles', "Uninstall (All Profiles)")
-			});
+        title: nls.localize("uninstallApplicationScoped", "Uninstall Extension"),
+        type: Severity.Info,
+        message: nls.localize("uninstallApplicationScopedMessage", "Would you like to Uninstall {0} from all profiles?", extension.displayName),
+        primaryButton: nls.localize("uninstallAllProfiles", "Uninstall (All Profiles)"),
+      });
 			if (!confirmed) {
 				throw new CancellationError();
 			}
 		}
 
-		const extensionsToUninstall: UninstallExtensionInfo[] = [{ extension: extension.local }];
-		if (!areSameExtensions(extension.identifier, { id: this.productService.defaultChatAgent.extensionId })) {
-			for (const packExtension of this.getAllPackedExtensions(extension, this.local)) {
-				if (packExtension.local && !extensionsToUninstall.some(e => areSameExtensions(e.extension.identifier, packExtension.identifier))) {
+		const extensionsToUninstall: UninstallExtensionInfo[] = [
+      { extension: extension.local },
+    ];
+		if (!areSameExtensions(extension.identifier, {
+      id: this.productService.defaultChatAgent.extensionId,
+    })) {
+			for (const packExtension of this.getAllPackedExtensions(
+        extension,
+        this.local,
+      )) {
+				if (packExtension.local && !extensionsToUninstall.some(
+          e => areSameExtensions(
+            e.extension.identifier,
+            packExtension.identifier,
+          ),
+        )) {
 					extensionsToUninstall.push({ extension: packExtension.local });
 				}
 			}
@@ -2795,46 +3593,64 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 				if (!local.manifest.extensionDependencies || local.manifest.extensionDependencies.length === 0) {
 					continue;
 				}
-				if (extension.manifest.extensionPack?.some(id => areSameExtensions({ id }, local.identifier))) {
+				if (extension.manifest.extensionPack?.some(
+          id => areSameExtensions({ id }, local.identifier),
+        )) {
 					continue;
 				}
-				if (dependents.some(d => d.manifest.extensionPack?.some(id => areSameExtensions({ id }, local.identifier)))) {
+				if (dependents.some(
+          d => d.manifest.extensionPack?.some(
+            id => areSameExtensions({ id }, local.identifier),
+          ),
+        )) {
 					continue;
 				}
-				if (local.manifest.extensionDependencies.some(dep => areSameExtensions(extension.identifier, { id: dep }))) {
+				if (local.manifest.extensionDependencies.some(
+          dep => areSameExtensions(extension.identifier, { id: dep }),
+        )) {
 					dependents.push(local);
-					extensionsToUninstall.push({ extension: local, options: { profileLocation } });
+					extensionsToUninstall.push({
+            extension: local,
+            options: { profileLocation },
+          });
 				}
 			}
 		}
 
 		if (dependents.length) {
 			const { result } = await this.dialogService.prompt({
-				title: nls.localize('uninstallDependents', "Uninstall Extension with Dependents"),
+				title: nls.localize("uninstallDependents", "Uninstall Extension with Dependents"),
 				type: Severity.Warning,
 				message: this.getErrorMessageForUninstallingAnExtensionWithDependents(extension, dependents),
 				buttons: [{
-					label: nls.localize('uninstallAll', "Uninstall All"),
-					run: () => true
+					label: nls.localize("uninstallAll", "Uninstall All"),
+					run: () => true,
 				}],
 				cancelButton: {
-					run: () => false
-				}
+					run: () => false,
+				},
 			});
 			if (!result) {
 				throw new CancellationError();
 			}
 		}
 
-		return this.withProgress({
-			location: ProgressLocation.Extensions,
-			title: nls.localize('uninstallingExtension', 'Uninstalling extension...'),
-			source: `${extension.identifier.id}`
-		}, () => this.extensionManagementService.uninstallExtensions(extensionsToUninstall).then(() => undefined));
+		return this.withProgress(
+      {
+        location: ProgressLocation.Extensions,
+        title: nls.localize("uninstallingExtension", "Uninstalling extension..."),
+        source: `${extension.identifier.id}`,
+      },
+      () => this.extensionManagementService.uninstallExtensions(extensionsToUninstall).then(
+        () => undefined,
+      ),
+    );
 	}
 
 	private getAllPackedExtensions(extension: IExtension, installed: IExtension[], checked: IExtension[] = []): IExtension[] {
-		if (checked.some(e => areSameExtensions(e.identifier, extension.identifier))) {
+		if (checked.some(
+      e => areSameExtensions(e.identifier, extension.identifier),
+    )) {
 			return [];
 		}
 		checked.push(extension);
@@ -2842,13 +3658,17 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 		if (extensionsPack.length) {
 			const packedExtensions: IExtension[] = [];
 			for (const i of installed) {
-				if (!i.isBuiltin && extensionsPack.some(id => areSameExtensions({ id }, i.identifier))) {
+				if (!i.isBuiltin && extensionsPack.some(
+          id => areSameExtensions({ id }, i.identifier),
+        )) {
 					packedExtensions.push(i);
 				}
 			}
 			const packOfPackedExtensions: IExtension[] = [];
 			for (const packedExtension of packedExtensions) {
-				packOfPackedExtensions.push(...this.getAllPackedExtensions(packedExtension, installed, checked));
+				packOfPackedExtensions.push(
+          ...this.getAllPackedExtensions(packedExtension, installed, checked),
+        );
 			}
 			return [...packedExtensions, ...packOfPackedExtensions];
 		}
@@ -2857,19 +3677,36 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 
 	private getErrorMessageForUninstallingAnExtensionWithDependents(extension: IExtension, dependents: ILocalExtension[]): string {
 		if (dependents.length === 1) {
-			return nls.localize('singleDependentUninstallError', "Cannot uninstall '{0}' extension alone. '{1}' extension depends on this. Do you want to uninstall all these extensions?", extension.displayName, dependents[0].manifest.displayName);
+			return nls.localize(
+        "singleDependentUninstallError",
+        "Cannot uninstall '{0}' extension alone. '{1}' extension depends on this. Do you want to uninstall all these extensions?",
+        extension.displayName,
+        dependents[0].manifest.displayName,
+      );
 		}
 		if (dependents.length === 2) {
-			return nls.localize('twoDependentsUninstallError', "Cannot uninstall '{0}' extension alone. '{1}' and '{2}' extensions depend on this. Do you want to uninstall all these extensions?",
-				extension.displayName, dependents[0].manifest.displayName, dependents[1].manifest.displayName);
+			return nls.localize(
+        "twoDependentsUninstallError",
+        "Cannot uninstall '{0}' extension alone. '{1}' and '{2}' extensions depend on this. Do you want to uninstall all these extensions?",
+        extension.displayName,
+        dependents[0].manifest.displayName,
+        dependents[1].manifest.displayName,
+      );
 		}
-		return nls.localize('multipleDependentsUninstallError', "Cannot uninstall '{0}' extension alone. '{1}', '{2}' and other extensions depend on this. Do you want to uninstall all these extensions?",
-			extension.displayName, dependents[0].manifest.displayName, dependents[1].manifest.displayName);
+		return nls.localize(
+      "multipleDependentsUninstallError",
+      "Cannot uninstall '{0}' extension alone. '{1}', '{2}' and other extensions depend on this. Do you want to uninstall all these extensions?",
+      extension.displayName,
+      dependents[0].manifest.displayName,
+      dependents[1].manifest.displayName,
+    );
 	}
 
 	isExtensionIgnoredToSync(extension: IExtension): boolean {
 		return extension.local ? !this.isInstalledExtensionSynced(extension.local)
-			: this.extensionsSyncManagementService.hasToNeverSyncExtension(extension.identifier.id);
+			: this.extensionsSyncManagementService.hasToNeverSyncExtension(
+          extension.identifier.id,
+        );
 	}
 
 	async togglePreRelease(extension: IExtension): Promise<void> {
@@ -2877,28 +3714,46 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 			return;
 		}
 		if (extension.preRelease !== extension.isPreReleaseVersion) {
-			await this.extensionManagementService.updateMetadata(extension.local, { preRelease: !extension.preRelease });
+			await this.extensionManagementService.updateMetadata(extension.local, {
+        preRelease: !extension.preRelease,
+      });
 			return;
 		}
-		await this.install(extension, { installPreReleaseVersion: !extension.preRelease, preRelease: !extension.preRelease });
+		await this.install(extension, {
+      installPreReleaseVersion: !extension.preRelease,
+      preRelease: !extension.preRelease,
+    });
 	}
 
 	async toggleExtensionIgnoredToSync(extension: IExtension): Promise<void> {
-		const extensionsIncludingPackedExtensions = [extension, ...this.getAllPackedExtensions(extension, this.local)];
+		const extensionsIncludingPackedExtensions = [
+      extension,
+      ...this.getAllPackedExtensions(extension, this.local),
+    ];
 		// Updated in sync to prevent race conditions
 		for (const e of extensionsIncludingPackedExtensions) {
 			const isIgnored = this.isExtensionIgnoredToSync(e);
 			if (e.local && isIgnored && e.local.isMachineScoped) {
-				await this.extensionManagementService.updateMetadata(e.local, { isMachineScoped: false });
+				await this.extensionManagementService.updateMetadata(e.local, {
+          isMachineScoped: false,
+        });
 			} else {
-				await this.extensionsSyncManagementService.updateIgnoredExtensions(e.identifier.id, !isIgnored);
+				await this.extensionsSyncManagementService.updateIgnoredExtensions(
+          e.identifier.id,
+          !isIgnored,
+        );
 			}
 		}
-		await this.userDataAutoSyncService.triggerSync(['IgnoredExtensionsUpdated']);
+		await this.userDataAutoSyncService.triggerSync([
+      "IgnoredExtensionsUpdated",
+    ]);
 	}
 
 	async toggleApplyExtensionToAllProfiles(extension: IExtension): Promise<void> {
-		const extensionsIncludingPackedExtensions = [extension, ...this.getAllPackedExtensions(extension, this.local)];
+		const extensionsIncludingPackedExtensions = [
+      extension,
+      ...this.getAllPackedExtensions(extension, this.local),
+    ];
 		const allExtensionServers = this.getAllExtensionServers();
 		await Promise.allSettled(extensionsIncludingPackedExtensions.map(async e => {
 			if (!e.local || isApplicationScopedExtension(e.local.manifest) || e.isBuiltin) {
@@ -2932,17 +3787,25 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 		if (extension.isMachineScoped) {
 			return false;
 		}
-		if (this.extensionsSyncManagementService.hasToAlwaysSyncExtension(extension.identifier.id)) {
+		if (this.extensionsSyncManagementService.hasToAlwaysSyncExtension(
+      extension.identifier.id,
+    )) {
 			return true;
 		}
-		return !this.extensionsSyncManagementService.hasToNeverSyncExtension(extension.identifier.id);
+		return !this.extensionsSyncManagementService.hasToNeverSyncExtension(
+      extension.identifier.id,
+    );
 	}
 
 	private doInstall(extension: IExtension | undefined, installTask: () => Promise<ILocalExtension>, progressLocation?: ProgressLocation | string): Promise<IExtension> {
-		const title = extension ? nls.localize('installing named extension', "Installing '{0}' extension...", extension.displayName) : nls.localize('installing extension', 'Installing extension...');
+		const title = extension ? nls.localize(
+      "installing named extension",
+      "Installing '{0}' extension...",
+      extension.displayName,
+    ) : nls.localize("installing extension", "Installing extension...");
 		return this.withProgress({
 			location: progressLocation ?? ProgressLocation.Extensions,
-			title
+			title,
 		}, async () => {
 			try {
 				if (extension) {
@@ -2963,48 +3826,81 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 
 	private async installFromVSIX(vsix: URI, installOptions: InstallOptions): Promise<ILocalExtension> {
 		const manifest = await this.extensionManagementService.getManifest(vsix);
-		const existingExtension = this.local.find(local => areSameExtensions(local.identifier, { id: getGalleryExtensionId(manifest.publisher, manifest.name) }));
+		const existingExtension = this.local.find(
+      local => areSameExtensions(local.identifier, {
+        id: getGalleryExtensionId(manifest.publisher, manifest.name),
+      }),
+    );
 		if (existingExtension) {
 			installOptions = installOptions || {};
 			if (existingExtension.latestVersion === manifest.version) {
-				installOptions.pinned = installOptions.pinned ?? (existingExtension.local?.pinned || !this.shouldAutoUpdateExtension(existingExtension));
+				installOptions.pinned = installOptions.pinned ?? (existingExtension.local?.pinned || !this.shouldAutoUpdateExtension(
+          existingExtension,
+        ));
 			} else {
 				installOptions.installGivenVersion = true;
 			}
 		}
-		return this.extensionManagementService.installVSIX(vsix, manifest, installOptions);
+		return this.extensionManagementService.installVSIX(
+      vsix,
+      manifest,
+      installOptions,
+    );
 	}
 
 	private installFromGallery(extension: IExtension, gallery: IGalleryExtension, installOptions: InstallExtensionOptions, servers: IExtensionManagementServer[] | undefined): Promise<ILocalExtension> {
 		installOptions = installOptions ?? {};
-		installOptions.pinned = installOptions.pinned ?? (extension.local?.pinned || !this.shouldAutoUpdateExtension(extension));
+		installOptions.pinned = installOptions.pinned ?? (extension.local?.pinned || !this.shouldAutoUpdateExtension(
+      extension,
+    ));
 		if (extension.local && !servers) {
 			installOptions.productVersion = this.getProductVersion();
 			installOptions.operation = InstallOperation.Update;
-			return this.extensionManagementService.updateFromGallery(gallery, extension.local, installOptions);
+			return this.extensionManagementService.updateFromGallery(
+        gallery,
+        extension.local,
+        installOptions,
+      );
 		} else {
-			return this.extensionManagementService.installFromGallery(gallery, installOptions, servers);
+			return this.extensionManagementService.installFromGallery(
+        gallery,
+        installOptions,
+        servers,
+      );
 		}
 	}
 
 	private async waitAndGetInstalledExtension(identifier: IExtensionIdentifier): Promise<IExtension> {
-		let installedExtension = this.local.find(local => areSameExtensions(local.identifier, identifier));
+		let installedExtension = this.local.find(
+      local => areSameExtensions(local.identifier, identifier),
+    );
 		if (!installedExtension) {
-			await Event.toPromise(Event.filter(this.onChange, e => !!e && this.local.some(local => areSameExtensions(local.identifier, identifier))));
+			await Event.toPromise(
+        Event.filter(
+          this.onChange,
+          e => !!e && this.local.some(local => areSameExtensions(local.identifier, identifier)),
+        ),
+      );
 		}
-		installedExtension = this.local.find(local => areSameExtensions(local.identifier, identifier));
+		installedExtension = this.local.find(
+      local => areSameExtensions(local.identifier, identifier),
+    );
 		if (!installedExtension) {
 			// This should not happen
-			throw new Error('Extension should have been installed');
+			throw new Error("Extension should have been installed");
 		}
 		return installedExtension;
 	}
 
 	private async waitUntilExtensionIsEnabled(extension: IExtension): Promise<void> {
-		if (this.extensionService.extensions.find(e => ExtensionIdentifier.equals(e.identifier, extension.identifier.id))) {
+		if (this.extensionService.extensions.find(
+      e => ExtensionIdentifier.equals(e.identifier, extension.identifier.id),
+    )) {
 			return;
 		}
-		if (!extension.local || !this.extensionService.canAddExtension(toExtensionDescription(extension.local))) {
+		if (!extension.local || !this.extensionService.canAddExtension(
+      toExtensionDescription(extension.local),
+    )) {
 			return;
 		}
 		await new Promise<void>((c, e) => {
@@ -3024,12 +3920,30 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 	private promptAndSetEnablement(extensions: IExtension[], enablementState: EnablementState): Promise<any> {
 		const enable = enablementState === EnablementState.EnabledGlobally || enablementState === EnablementState.EnabledWorkspace;
 		if (enable) {
-			const allDependenciesAndPackedExtensions = this.getExtensionsRecursively(extensions, this.local, enablementState, { dependencies: true, pack: true });
-			return this.checkAndSetEnablement(extensions, allDependenciesAndPackedExtensions, enablementState);
+			const allDependenciesAndPackedExtensions = this.getExtensionsRecursively(
+        extensions,
+        this.local,
+        enablementState,
+        { dependencies: true, pack: true },
+      );
+			return this.checkAndSetEnablement(
+        extensions,
+        allDependenciesAndPackedExtensions,
+        enablementState,
+      );
 		} else {
-			const packedExtensions = this.getExtensionsRecursively(extensions, this.local, enablementState, { dependencies: false, pack: true });
+			const packedExtensions = this.getExtensionsRecursively(
+        extensions,
+        this.local,
+        enablementState,
+        { dependencies: false, pack: true },
+      );
 			if (packedExtensions.length) {
-				return this.checkAndSetEnablement(extensions, packedExtensions, enablementState);
+				return this.checkAndSetEnablement(
+          extensions,
+          packedExtensions,
+          enablementState,
+        );
 			}
 			return this.checkAndSetEnablement(extensions, [], enablementState);
 		}
@@ -3040,24 +3954,32 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 		const enable = enablementState === EnablementState.EnabledGlobally || enablementState === EnablementState.EnabledWorkspace;
 		if (!enable) {
 			for (const extension of extensions) {
-				const dependents = this.getDependentsAfterDisablement(extension, allExtensions, this.local);
+				const dependents = this.getDependentsAfterDisablement(
+          extension,
+          allExtensions,
+          this.local,
+        );
 				if (dependents.length) {
 					const { result } = await this.dialogService.prompt({
-						title: nls.localize('disableDependents', "Disable Extension with Dependents"),
+						title: nls.localize("disableDependents", "Disable Extension with Dependents"),
 						type: Severity.Warning,
 						message: this.getDependentsErrorMessageForDisablement(extension, allExtensions, dependents),
 						buttons: [{
-							label: nls.localize('disable all', 'Disable All'),
-							run: () => true
+							label: nls.localize("disable all", "Disable All"),
+							run: () => true,
 						}],
 						cancelButton: {
-							run: () => false
-						}
+							run: () => false,
+						},
 					});
 					if (!result) {
 						throw new CancellationError();
 					}
-					await this.checkAndSetEnablement(dependents, [extension], enablementState);
+					await this.checkAndSetEnablement(
+            dependents,
+            [extension],
+            enablementState,
+          );
 				}
 			}
 		}
@@ -3083,11 +4005,13 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 					&& (options.dependencies || options.pack)
 					&& extensions.some(extension =>
 						(options.dependencies && extension.dependencies.some(id => areSameExtensions({ id }, i.identifier)))
-						|| (options.pack && extension.extensionPack.some(id => areSameExtensions({ id }, i.identifier)))
+						|| (options.pack && extension.extensionPack.some(id => areSameExtensions({ id }, i.identifier))),
 					);
 			});
 			if (extensionsToEanbleOrDisable.length) {
-				extensionsToEanbleOrDisable.push(...this.getExtensionsRecursively(extensionsToEanbleOrDisable, installed, enablementState, options, checked));
+				extensionsToEanbleOrDisable.push(
+          ...this.getExtensionsRecursively(extensionsToEanbleOrDisable, installed, enablementState, options, checked),
+        );
 			}
 			return extensionsToEanbleOrDisable;
 		}
@@ -3114,28 +4038,51 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 
 	private getDependentsErrorMessageForDisablement(extension: IExtension, allDisabledExtensions: IExtension[], dependents: IExtension[]): string {
 		for (const e of [extension, ...allDisabledExtensions]) {
-			const dependentsOfTheExtension = dependents.filter(d => d.dependencies.some(id => areSameExtensions({ id }, e.identifier)));
+			const dependentsOfTheExtension = dependents.filter(
+        d => d.dependencies.some(id => areSameExtensions({ id }, e.identifier)),
+      );
 			if (dependentsOfTheExtension.length) {
-				return this.getErrorMessageForDisablingAnExtensionWithDependents(e, dependentsOfTheExtension);
+				return this.getErrorMessageForDisablingAnExtensionWithDependents(
+          e,
+          dependentsOfTheExtension,
+        );
 			}
 		}
-		return '';
+		return "";
 	}
 
 	private getErrorMessageForDisablingAnExtensionWithDependents(extension: IExtension, dependents: IExtension[]): string {
 		if (dependents.length === 1) {
-			return nls.localize('singleDependentError', "Cannot disable '{0}' extension alone. '{1}' extension depends on this. Do you want to disable all these extensions?", extension.displayName, dependents[0].displayName);
+			return nls.localize(
+        "singleDependentError",
+        "Cannot disable '{0}' extension alone. '{1}' extension depends on this. Do you want to disable all these extensions?",
+        extension.displayName,
+        dependents[0].displayName,
+      );
 		}
 		if (dependents.length === 2) {
-			return nls.localize('twoDependentsError', "Cannot disable '{0}' extension alone. '{1}' and '{2}' extensions depend on this. Do you want to disable all these extensions?",
-				extension.displayName, dependents[0].displayName, dependents[1].displayName);
+			return nls.localize(
+        "twoDependentsError",
+        "Cannot disable '{0}' extension alone. '{1}' and '{2}' extensions depend on this. Do you want to disable all these extensions?",
+        extension.displayName,
+        dependents[0].displayName,
+        dependents[1].displayName,
+      );
 		}
-		return nls.localize('multipleDependentsError', "Cannot disable '{0}' extension alone. '{1}', '{2}' and other extensions depend on this. Do you want to disable all these extensions?",
-			extension.displayName, dependents[0].displayName, dependents[1].displayName);
+		return nls.localize(
+      "multipleDependentsError",
+      "Cannot disable '{0}' extension alone. '{1}', '{2}' and other extensions depend on this. Do you want to disable all these extensions?",
+      extension.displayName,
+      dependents[0].displayName,
+      dependents[1].displayName,
+    );
 	}
 
 	private async doSetEnablement(extensions: IExtension[], enablementState: EnablementState): Promise<boolean[]> {
-		return await this.extensionEnablementService.setEnablement(extensions.map(e => e.local!), enablementState);
+		return await this.extensionEnablementService.setEnablement(
+      extensions.map(e => e.local!),
+      enablementState,
+    );
 	}
 
 	// Current service reports progress when installing/uninstalling extensions
@@ -3143,9 +4090,14 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 	// Since we cannot differentiate between the two, we report progress for all extension install/uninstall changes
 	private _activityCallBack: ((value: void) => void) | undefined;
 	private reportProgressFromOtherSources(): void {
-		if (this.installed.some(e => e.state === ExtensionState.Installing || e.state === ExtensionState.Uninstalling)) {
+		if (this.installed.some(
+      e => e.state === ExtensionState.Installing || e.state === ExtensionState.Uninstalling,
+    )) {
 			if (!this._activityCallBack) {
-				this.withProgress({ location: ProgressLocation.Extensions }, () => new Promise(resolve => this._activityCallBack = resolve));
+				this.withProgress(
+          { location: ProgressLocation.Extensions },
+          () => new Promise(resolve => this._activityCallBack = resolve),
+        );
 			}
 		} else {
 			this._activityCallBack?.();
@@ -3173,9 +4125,11 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 			return;
 		}
 
-		const message = err && err.message || '';
+		const message = err && err.message || "";
 
-		if (/getaddrinfo ENOTFOUND|getaddrinfo ENOENT|connect EACCES|connect ECONNREFUSED/.test(message)) {
+		if (/getaddrinfo ENOTFOUND|getaddrinfo ENOENT|connect EACCES|connect ECONNREFUSED/.test(
+      message,
+    )) {
 			return;
 		}
 
@@ -3203,7 +4157,7 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 		this.queryLocal().then(async local => {
 			let extension = local.find(local => areSameExtensions(local.identifier, { id: extensionId }));
 			if (!extension) {
-				[extension] = await this.getExtensions([{ id: extensionId }], { source: 'uri' }, CancellationToken.None);
+				[extension] = await this.getExtensions([{ id: extensionId }], { source: "uri" }, CancellationToken.None);
 			}
 			if (extension) {
 				await this.hostService.focus(mainWindow);
@@ -3213,7 +4167,9 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 	}
 
 	private getPublishersToAutoUpdate(): string[] {
-		return this.getEnabledAutoUpdateExtensions().filter(id => !EXTENSION_IDENTIFIER_REGEX.test(id));
+		return this.getEnabledAutoUpdateExtensions().filter(
+      id => !EXTENSION_IDENTIFIER_REGEX.test(id),
+    );
 	}
 
 	getEnabledAutoUpdateExtensions(): string[] {
@@ -3227,7 +4183,9 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 	}
 
 	private setEnabledAutoUpdateExtensions(enabledAutoUpdateExtensions: string[]): void {
-		this.enabledAuotUpdateExtensionsValue = JSON.stringify(enabledAutoUpdateExtensions);
+		this.enabledAuotUpdateExtensionsValue = JSON.stringify(
+      enabledAutoUpdateExtensions,
+    );
 	}
 
 	private _enabledAutoUpdateExtensionsValue: string | undefined;
@@ -3242,16 +4200,27 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 	private set enabledAuotUpdateExtensionsValue(enabledAuotUpdateExtensionsValue: string) {
 		if (this.enabledAuotUpdateExtensionsValue !== enabledAuotUpdateExtensionsValue) {
 			this._enabledAutoUpdateExtensionsValue = enabledAuotUpdateExtensionsValue;
-			this.setEnabledAutoUpdateExtensionsValue(enabledAuotUpdateExtensionsValue);
+			this.setEnabledAutoUpdateExtensionsValue(
+        enabledAuotUpdateExtensionsValue,
+      );
 		}
 	}
 
 	private getEnabledAutoUpdateExtensionsValue(): string {
-		return this.storageService.get(EXTENSIONS_AUTO_UPDATE_KEY, StorageScope.APPLICATION, '[]');
+		return this.storageService.get(
+      EXTENSIONS_AUTO_UPDATE_KEY,
+      StorageScope.APPLICATION,
+      "[]",
+    );
 	}
 
 	private setEnabledAutoUpdateExtensionsValue(value: string): void {
-		this.storageService.store(EXTENSIONS_AUTO_UPDATE_KEY, value, StorageScope.APPLICATION, StorageTarget.USER);
+		this.storageService.store(
+      EXTENSIONS_AUTO_UPDATE_KEY,
+      value,
+      StorageScope.APPLICATION,
+      StorageTarget.USER,
+    );
 	}
 
 	getDisabledAutoUpdateExtensions(): string[] {
@@ -3265,7 +4234,9 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 	}
 
 	private setDisabledAutoUpdateExtensions(disabledAutoUpdateExtensions: string[]): void {
-		this.disabledAutoUpdateExtensionsValue = JSON.stringify(disabledAutoUpdateExtensions);
+		this.disabledAutoUpdateExtensionsValue = JSON.stringify(
+      disabledAutoUpdateExtensions,
+    );
 	}
 
 	private _disabledAutoUpdateExtensionsValue: string | undefined;
@@ -3280,16 +4251,27 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 	private set disabledAutoUpdateExtensionsValue(disabledAutoUpdateExtensionsValue: string) {
 		if (this.disabledAutoUpdateExtensionsValue !== disabledAutoUpdateExtensionsValue) {
 			this._disabledAutoUpdateExtensionsValue = disabledAutoUpdateExtensionsValue;
-			this.setDisabledAutoUpdateExtensionsValue(disabledAutoUpdateExtensionsValue);
+			this.setDisabledAutoUpdateExtensionsValue(
+        disabledAutoUpdateExtensionsValue,
+      );
 		}
 	}
 
 	private getDisabledAutoUpdateExtensionsValue(): string {
-		return this.storageService.get(EXTENSIONS_DONOT_AUTO_UPDATE_KEY, StorageScope.APPLICATION, '[]');
+		return this.storageService.get(
+      EXTENSIONS_DONOT_AUTO_UPDATE_KEY,
+      StorageScope.APPLICATION,
+      "[]",
+    );
 	}
 
 	private setDisabledAutoUpdateExtensionsValue(value: string): void {
-		this.storageService.store(EXTENSIONS_DONOT_AUTO_UPDATE_KEY, value, StorageScope.APPLICATION, StorageTarget.USER);
+		this.storageService.store(
+      EXTENSIONS_DONOT_AUTO_UPDATE_KEY,
+      value,
+      StorageScope.APPLICATION,
+      StorageTarget.USER,
+    );
 	}
 
 	private getDismissedNotifications(): string[] {
@@ -3323,11 +4305,20 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 	}
 
 	private getDismissedNotificationsValue(): string {
-		return this.storageService.get(EXTENSIONS_DISMISSED_NOTIFICATIONS_KEY, StorageScope.PROFILE, '[]');
+		return this.storageService.get(
+      EXTENSIONS_DISMISSED_NOTIFICATIONS_KEY,
+      StorageScope.PROFILE,
+      "[]",
+    );
 	}
 
 	private setDismissedNotificationsValue(value: string): void {
-		this.storageService.store(EXTENSIONS_DISMISSED_NOTIFICATIONS_KEY, value, StorageScope.PROFILE, StorageTarget.USER);
+		this.storageService.store(
+      EXTENSIONS_DISMISSED_NOTIFICATIONS_KEY,
+      value,
+      StorageScope.PROFILE,
+      StorageTarget.USER,
+    );
 	}
 
 }

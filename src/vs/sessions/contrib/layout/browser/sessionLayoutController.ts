@@ -3,29 +3,36 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { mainWindow } from '../../../../base/browser/window.js';
-import { Sequencer } from '../../../../base/common/async.js';
-import { autorun, derived, derivedObservableWithCache, derivedOpts, observableFromEvent, runOnChange } from '../../../../base/common/observable.js';
-import { isEqual } from '../../../../base/common/resources.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { ResourceMap } from '../../../../base/common/map.js';
-import { isMobile, isWeb } from '../../../../base/common/platform.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { observableConfigValue } from '../../../../platform/observable/common/platformObservableUtils.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
-import { IChatService } from '../../../../workbench/contrib/chat/common/chatService/chatService.js';
-import { ViewContainerLocation } from '../../../../workbench/common/views.js';
-import { IEditorGroupsService, IEditorWorkingSet } from '../../../../workbench/services/editor/common/editorGroupsService.js';
-import { IEditorService } from '../../../../workbench/services/editor/common/editorService.js';
-import { IWorkbenchLayoutService, Parts } from '../../../../workbench/services/layout/browser/layoutService.js';
-import { IPaneCompositePartService } from '../../../../workbench/services/panecomposite/browser/panecomposite.js';
-import { IViewsService } from '../../../../workbench/services/views/common/viewsService.js';
-import { IActiveSession, ISessionsManagementService } from '../../../services/sessions/common/sessionsManagement.js';
-import { SessionStatus } from '../../../services/sessions/common/session.js';
-import { CHANGES_VIEW_ID } from '../../changes/common/changes.js';
-import { SESSIONS_FILES_CONTAINER_ID } from '../../files/browser/files.contribution.js';
+import { mainWindow } from "../../../../base/browser/window.js";
+import { Sequencer } from "../../../../base/common/async.js";
+import {
+  autorun,
+  derived,
+  derivedObservableWithCache,
+  derivedOpts,
+  observableFromEvent,
+  runOnChange,
+} from "../../../../base/common/observable.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { isMobile, isWeb } from "../../../../base/common/platform.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { observableConfigValue } from "../../../../platform/observable/common/platformObservableUtils.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { IChatService } from "../../../../workbench/contrib/chat/common/chatService/chatService.js";
+import { ViewContainerLocation } from "../../../../workbench/common/views.js";
+import { IEditorGroupsService, IEditorWorkingSet } from "../../../../workbench/services/editor/common/editorGroupsService.js";
+import { IEditorService } from "../../../../workbench/services/editor/common/editorService.js";
+import { IWorkbenchLayoutService, Parts } from "../../../../workbench/services/layout/browser/layoutService.js";
+import { IPaneCompositePartService } from "../../../../workbench/services/panecomposite/browser/panecomposite.js";
+import { IViewsService } from "../../../../workbench/services/views/common/viewsService.js";
+import { IActiveSession, ISessionsManagementService } from "../../../services/sessions/common/sessionsManagement.js";
+import { SessionStatus } from "../../../services/sessions/common/session.js";
+import { CHANGES_VIEW_ID } from "../../changes/common/changes.js";
+import { SESSIONS_FILES_CONTAINER_ID } from "../../files/browser/files.contribution.js";
 
 interface IPendingTurnState {
 	readonly hadChangesBeforeSend: boolean;
@@ -50,13 +57,13 @@ interface ISessionLayoutEntry {
 }
 
 /** New unified storage key for all per-session layout state. */
-const SESSION_LAYOUT_STATE_KEY = 'sessions.layoutState';
+const SESSION_LAYOUT_STATE_KEY = "sessions.layoutState";
 /** Legacy key — read on startup for migration only. */
-const WORKING_SETS_STORAGE_KEY = 'sessions.workingSets';
+const WORKING_SETS_STORAGE_KEY = "sessions.workingSets";
 
 export class LayoutController extends Disposable {
 
-	static readonly ID = 'workbench.contrib.sessionsLayoutController';
+	static readonly ID = "workbench.contrib.sessionsLayoutController";
 
 	private readonly _pendingTurnStateByResource = new ResourceMap<IPendingTurnState>();
 	private readonly _panelVisibilityBySession = new ResourceMap<boolean>();
@@ -82,14 +89,16 @@ export class LayoutController extends Disposable {
 		this._workingSets = new ResourceMap<IEditorWorkingSet>();
 		this._loadState();
 
-		this._register(this._storageService.onWillSaveState(() => this._saveState()));
+		this._register(
+      this._storageService.onWillSaveState(() => this._saveState()),
+    );
 
 		const activeSessionResourceObs = derivedOpts<URI | undefined>({
-			equalsFn: isEqual
-		}, reader => {
-			const activeSession = this._sessionManagementService.activeSession.read(reader);
-			return activeSession?.resource;
-		});
+      equalsFn: isEqual,
+    }, reader => {
+      const activeSession = this._sessionManagementService.activeSession.read(reader);
+      return activeSession?.resource;
+    });
 
 		const activeSessionHasChangesObs = derived<boolean>(reader => {
 			const activeSession = this._sessionManagementService.activeSession.read(reader);
@@ -101,16 +110,16 @@ export class LayoutController extends Disposable {
 		});
 
 		const activeSessionIsUntitledObs = derived<boolean>(reader => {
-			const activeSession = this._sessionManagementService.activeSession.read(reader);
-			const activeSessionStatus = activeSession?.status.read(reader);
+      const activeSession = this._sessionManagementService.activeSession.read(reader);
+      const activeSessionStatus = activeSession?.status.read(reader);
 
-			return activeSessionStatus === SessionStatus.Untitled;
-		});
+      return activeSessionStatus === SessionStatus.Untitled;
+    });
 
 		const activeSessionHasWorkspaceObs = derived<boolean>(reader => {
-			const activeSession = this._sessionManagementService.activeSession.read(reader);
-			return activeSession?.workspace.read(reader)?.folders?.[0]?.root !== undefined;
-		});
+      const activeSession = this._sessionManagementService.activeSession.read(reader);
+      return activeSession?.workspace.read(reader)?.folders?.[0]?.root !== undefined;
+    });
 
 		// Switch between sessions — sync auxiliary bar (skip on mobile to avoid
 		// disruptive auto-expand on narrow viewports)
@@ -134,10 +143,12 @@ export class LayoutController extends Disposable {
 		}
 
 		// Switch between sessions — sync panel visibility
-		this._register(autorun(reader => {
-			const activeSessionResource = activeSessionResourceObs.read(reader);
-			this._syncPanelVisibility(activeSessionResource);
-		}));
+		this._register(
+      autorun(reader => {
+        const activeSessionResource = activeSessionResourceObs.read(reader);
+        this._syncPanelVisibility(activeSessionResource);
+      }),
+    );
 
 		// When a turn is completed, check if there were changes before the turn and
 		// if there are changes after the turn. If there were no changes before the
@@ -171,12 +182,14 @@ export class LayoutController extends Disposable {
 				this._pendingTurnStateByResource.delete(activeSession.resource);
 			}));
 
-			this._register(this._chatService.onDidSubmitRequest(({ chatSessionResource }) => {
-				this._pendingTurnStateByResource.set(chatSessionResource, {
-					hadChangesBeforeSend: activeSessionHasChangesObs.get(),
-					submittedAt: Date.now(),
-				});
-			}));
+			this._register(
+        this._chatService.onDidSubmitRequest(({ chatSessionResource }) => {
+          this._pendingTurnStateByResource.set(chatSessionResource, {
+            hadChangesBeforeSend: activeSessionHasChangesObs.get(),
+            submittedAt: Date.now(),
+          });
+        }),
+      );
 		}
 
 		// Track panel visibility changes by the user
@@ -192,12 +205,17 @@ export class LayoutController extends Disposable {
 
 		// --- Editor working sets ---
 
-		const useModalConfigObs = observableConfigValue<'off' | 'some' | 'all'>('workbench.editor.useModal', 'all', this._configurationService);
+		const useModalConfigObs = observableConfigValue<"off" | "some" | "all">(
+      "workbench.editor.useModal",
+      "all",
+      this._configurationService,
+    );
 
 		// Workspace folders — used to defer session switch until workspace is ready
 		const workspaceFoldersObs = observableFromEvent(
-			this._workspaceContextService.onDidChangeWorkspaceFolders,
-			() => this._workspaceContextService.getWorkspace().folders);
+      this._workspaceContextService.onDidChangeWorkspaceFolders,
+      () => this._workspaceContextService.getWorkspace().folders,
+    );
 
 		const activeSessionForWorkingSet = derivedObservableWithCache<IActiveSession | undefined>(this, (reader, lastValue) => {
 			const workspaceFolders = workspaceFoldersObs.read(reader);
@@ -223,7 +241,7 @@ export class LayoutController extends Disposable {
 
 		this._register(autorun(reader => {
 			const useModalConfig = useModalConfigObs.read(reader);
-			if (useModalConfig === 'all') {
+			if (useModalConfig === "all") {
 				return;
 			}
 
@@ -255,12 +273,14 @@ export class LayoutController extends Disposable {
 	// --- Auxiliary bar ---
 
 	private _captureViewState(sessionResource: URI): void {
-		const auxiliaryBarVisible = this._layoutService.isVisible(Parts.AUXILIARYBAR_PART);
+		const auxiliaryBarVisible = this._layoutService.isVisible(
+      Parts.AUXILIARYBAR_PART,
+    );
 		const activeViewContainerId = this._paneCompositePartService.getActivePaneComposite(ViewContainerLocation.AuxiliaryBar)?.getId();
 		this._viewStateBySession.set(sessionResource, {
-			auxiliaryBarVisible,
-			auxiliaryBarActiveViewContainerId: activeViewContainerId,
-		});
+      auxiliaryBarVisible,
+      auxiliaryBarActiveViewContainerId: activeViewContainerId,
+    });
 	}
 
 	private _syncAuxiliaryBarVisibility(sessionResource: URI | undefined, hasWorkspace: boolean, isUntitled: boolean, hasChanges: boolean): void {
@@ -281,7 +301,10 @@ export class LayoutController extends Disposable {
 				return;
 			}
 			if (savedState.auxiliaryBarActiveViewContainerId) {
-				this._viewsService.openViewContainer(savedState.auxiliaryBarActiveViewContainerId, false);
+				this._viewsService.openViewContainer(
+          savedState.auxiliaryBarActiveViewContainerId,
+          false,
+        );
 				return;
 			}
 		}
@@ -295,7 +318,10 @@ export class LayoutController extends Disposable {
 
 	private _loadState(): void {
 		// Load from new key first
-		const raw = this._storageService.get(SESSION_LAYOUT_STATE_KEY, StorageScope.WORKSPACE);
+		const raw = this._storageService.get(
+      SESSION_LAYOUT_STATE_KEY,
+      StorageScope.WORKSPACE,
+    );
 		if (raw) {
 			try {
 				for (const entry of JSON.parse(raw) as ISessionLayoutEntry[]) {
@@ -310,12 +336,18 @@ export class LayoutController extends Disposable {
 				return;
 			} catch {
 				// Corrupted data — remove the bad key so we don't keep failing, then fall through to legacy migration
-				this._storageService.remove(SESSION_LAYOUT_STATE_KEY, StorageScope.WORKSPACE);
+				this._storageService.remove(
+          SESSION_LAYOUT_STATE_KEY,
+          StorageScope.WORKSPACE,
+        );
 			}
 		}
 
 		// Migrate from legacy key (sessions.workingSets)
-		const legacyRaw = this._storageService.get(WORKING_SETS_STORAGE_KEY, StorageScope.WORKSPACE);
+		const legacyRaw = this._storageService.get(
+      WORKING_SETS_STORAGE_KEY,
+      StorageScope.WORKSPACE,
+    );
 		if (legacyRaw) {
 			try {
 				type LegacyEntry = { sessionResource: string; editorWorkingSet?: IEditorWorkingSet; auxiliaryBarState?: { visible: boolean; activeViewContainerId: string | undefined } };
@@ -326,16 +358,19 @@ export class LayoutController extends Disposable {
 					}
 					if (entry.auxiliaryBarState) {
 						this._viewStateBySession.set(resource, {
-							auxiliaryBarVisible: entry.auxiliaryBarState.visible,
-							auxiliaryBarActiveViewContainerId: entry.auxiliaryBarState.activeViewContainerId,
-						});
+              auxiliaryBarVisible: entry.auxiliaryBarState.visible,
+              auxiliaryBarActiveViewContainerId: entry.auxiliaryBarState.activeViewContainerId,
+            });
 					}
 				}
 			} catch {
 				// ignore corrupted data
 			}
 			// Remove legacy key after migration
-			this._storageService.remove(WORKING_SETS_STORAGE_KEY, StorageScope.WORKSPACE);
+			this._storageService.remove(
+        WORKING_SETS_STORAGE_KEY,
+        StorageScope.WORKSPACE,
+      );
 		}
 	}
 
@@ -348,7 +383,9 @@ export class LayoutController extends Disposable {
 		}
 
 		// Capture working set for the active session (skip untitled)
-		if (activeSession && activeSession.status.read(undefined) !== SessionStatus.Untitled) {
+		if (activeSession && activeSession.status.read(
+      undefined,
+    ) !== SessionStatus.Untitled) {
 			this._saveWorkingSet(activeSession.resource);
 		}
 
@@ -358,19 +395,27 @@ export class LayoutController extends Disposable {
 		this._viewStateBySession.forEach((_, r) => allResources.set(r, true));
 
 		if (allResources.size === 0) {
-			this._storageService.remove(SESSION_LAYOUT_STATE_KEY, StorageScope.WORKSPACE);
+			this._storageService.remove(
+        SESSION_LAYOUT_STATE_KEY,
+        StorageScope.WORKSPACE,
+      );
 			return;
 		}
 
 		const entries: ISessionLayoutEntry[] = [];
 		allResources.forEach((_, resource) => {
-			entries.push({
-				sessionResource: resource.toString(),
-				editorWorkingSet: this._workingSets.get(resource),
-				viewState: this._viewStateBySession.get(resource),
-			});
-		});
-		this._storageService.store(SESSION_LAYOUT_STATE_KEY, JSON.stringify(entries), StorageScope.WORKSPACE, StorageTarget.MACHINE);
+      entries.push({
+        sessionResource: resource.toString(),
+        editorWorkingSet: this._workingSets.get(resource),
+        viewState: this._viewStateBySession.get(resource),
+      });
+    });
+		this._storageService.store(
+      SESSION_LAYOUT_STATE_KEY,
+      JSON.stringify(entries),
+      StorageScope.WORKSPACE,
+      StorageTarget.MACHINE,
+    );
 	}
 
 	// --- Panel ---
@@ -390,12 +435,12 @@ export class LayoutController extends Disposable {
 
 	private async _applyWorkingSet(sessionResource: URI | undefined): Promise<void> {
 		const preserveFocus = this._layoutService.hasFocus(Parts.PANEL_PART);
-		const workingSet: IEditorWorkingSet | 'empty' = sessionResource
-			? (this._workingSets.get(sessionResource) ?? 'empty')
-			: 'empty';
+		const workingSet: IEditorWorkingSet | "empty" = sessionResource
+			? (this._workingSets.get(sessionResource) ?? "empty")
+			: "empty";
 
 		return this._workingSetSequencer.queue(async () => {
-			if (workingSet === 'empty') {
+			if (workingSet === "empty") {
 				await this._editorGroupsService.applyWorkingSet(workingSet, { preserveFocus });
 				return;
 			}
@@ -416,7 +461,9 @@ export class LayoutController extends Disposable {
 
 		if (this._editorService.visibleEditors.length > 0) {
 			const workingSetName = `session-working-set:${sessionResource.toString()}`;
-			const workingSet = this._editorGroupsService.saveWorkingSet(workingSetName);
+			const workingSet = this._editorGroupsService.saveWorkingSet(
+        workingSetName,
+      );
 			this._workingSets.set(sessionResource, workingSet);
 		}
 	}

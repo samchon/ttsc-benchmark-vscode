@@ -3,22 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ITelemetryService, ITelemetryData, TelemetryLevel } from '../../../../platform/telemetry/common/telemetry.js';
-import { supportsTelemetry, NullTelemetryService, getPiiPathsFromEnvironment, isInternalTelemetry } from '../../../../platform/telemetry/common/telemetryUtils.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { INativeWorkbenchEnvironmentService } from '../../environment/electron-browser/environmentService.js';
-import { IProductService } from '../../../../platform/product/common/productService.js';
-import { ISharedProcessService } from '../../../../platform/ipc/electron-browser/services.js';
-import { TelemetryAppenderClient } from '../../../../platform/telemetry/common/telemetryIpc.js';
-import { IStorageService } from '../../../../platform/storage/common/storage.js';
-import { resolveWorkbenchCommonProperties } from '../common/workbenchCommonProperties.js';
-import { TelemetryService as BaseTelemetryService, ITelemetryServiceConfig } from '../../../../platform/telemetry/common/telemetryService.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { ClassifiedEvent, StrictPropertyCheck, OmitMetadata, IGDPRProperty } from '../../../../platform/telemetry/common/gdprTypings.js';
-import { process } from '../../../../base/parts/sandbox/electron-browser/globals.js';
-import { experimentsEnabled } from '../common/workbenchTelemetryUtils.js';
-import { IRequestService, NO_FETCH_TELEMETRY } from '../../../../platform/request/common/request.js';
+import { ITelemetryService, ITelemetryData, TelemetryLevel } from "../../../../platform/telemetry/common/telemetry.js";
+import {
+  supportsTelemetry,
+  NullTelemetryService,
+  getPiiPathsFromEnvironment,
+  isInternalTelemetry,
+} from "../../../../platform/telemetry/common/telemetryUtils.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { INativeWorkbenchEnvironmentService } from "../../environment/electron-browser/environmentService.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { ISharedProcessService } from "../../../../platform/ipc/electron-browser/services.js";
+import { TelemetryAppenderClient } from "../../../../platform/telemetry/common/telemetryIpc.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { resolveWorkbenchCommonProperties } from "../common/workbenchCommonProperties.js";
+import { TelemetryService as BaseTelemetryService, ITelemetryServiceConfig } from "../../../../platform/telemetry/common/telemetryService.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { ClassifiedEvent, StrictPropertyCheck, OmitMetadata, IGDPRProperty } from "../../../../platform/telemetry/common/gdprTypings.js";
+import { process } from "../../../../base/parts/sandbox/electron-browser/globals.js";
+import { experimentsEnabled } from "../common/workbenchTelemetryUtils.js";
+import { IRequestService, NO_FETCH_TELEMETRY } from "../../../../platform/request/common/request.js";
 
 export class TelemetryService extends Disposable implements ITelemetryService {
 
@@ -40,13 +45,16 @@ export class TelemetryService extends Disposable implements ITelemetryService {
 		@ISharedProcessService sharedProcessService: ISharedProcessService,
 		@IStorageService storageService: IStorageService,
 		@IConfigurationService configurationService: IConfigurationService,
-		@IRequestService requestService: IRequestService
+		@IRequestService requestService: IRequestService,
 	) {
 		super();
 
 		if (supportsTelemetry(productService, environmentService)) {
-			const isInternal = isInternalTelemetry(productService, configurationService);
-			const channel = sharedProcessService.getChannel('telemetryAppender');
+			const isInternal = isInternalTelemetry(
+        productService,
+        configurationService,
+      );
+			const channel = sharedProcessService.getChannel("telemetryAppender");
 			const config: ITelemetryServiceConfig = {
 				appenders: [new TelemetryAppenderClient(channel)],
 				commonProperties: resolveWorkbenchCommonProperties(
@@ -66,7 +74,9 @@ export class TelemetryService extends Disposable implements ITelemetryService {
 				waitForExperimentProperties: experimentsEnabled(configurationService, productService, environmentService),
 			};
 
-			this.impl = this._register(new BaseTelemetryService(config, configurationService, productService));
+			this.impl = this._register(
+        new BaseTelemetryService(config, configurationService, productService),
+      );
 		} else {
 			this.impl = NullTelemetryService;
 		}
@@ -74,22 +84,22 @@ export class TelemetryService extends Disposable implements ITelemetryService {
 		this.sendErrorTelemetry = this.impl.sendErrorTelemetry;
 
 		this._register(requestService.onDidCompleteRequest(e => {
-			if (e.callSite === NO_FETCH_TELEMETRY || productService.quality === 'stable') {
+			if (e.callSite === NO_FETCH_TELEMETRY || productService.quality === "stable") {
 				return;
 			}
 			type FetchCallClassification = {
-				owner: 'lramos15';
-				comment: 'Tracks fetch requests made through the request service';
-				callSite: { classification: 'SystemMetaData'; purpose: 'PerformanceAndHealth'; comment: 'The call site that initiated the request.' };
-				latency: { classification: 'SystemMetaData'; purpose: 'PerformanceAndHealth'; isMeasurement: true; comment: 'Time in milliseconds for the request to complete.' };
-				statusCode: { classification: 'SystemMetaData'; purpose: 'PerformanceAndHealth'; isMeasurement: true; comment: 'HTTP status code of the response.' };
+				owner: "lramos15";
+				comment: "Tracks fetch requests made through the request service";
+				callSite: { classification: "SystemMetaData"; purpose: "PerformanceAndHealth"; comment: "The call site that initiated the request." };
+				latency: { classification: "SystemMetaData"; purpose: "PerformanceAndHealth"; isMeasurement: true; comment: "Time in milliseconds for the request to complete." };
+				statusCode: { classification: "SystemMetaData"; purpose: "PerformanceAndHealth"; isMeasurement: true; comment: "HTTP status code of the response." };
 			};
 			type FetchCallEvent = {
 				callSite: string;
 				latency: number;
 				statusCode: number | undefined;
 			};
-			this.publicLog2<FetchCallEvent, FetchCallClassification>('fetchCall', {
+			this.publicLog2<FetchCallEvent, FetchCallClassification>("fetchCall", {
 				callSite: e.callSite,
 				latency: e.latency,
 				statusCode: e.statusCode,
@@ -126,4 +136,8 @@ export class TelemetryService extends Disposable implements ITelemetryService {
 	}
 }
 
-registerSingleton(ITelemetryService, TelemetryService, InstantiationType.Delayed);
+registerSingleton(
+  ITelemetryService,
+  TelemetryService,
+  InstantiationType.Delayed,
+);

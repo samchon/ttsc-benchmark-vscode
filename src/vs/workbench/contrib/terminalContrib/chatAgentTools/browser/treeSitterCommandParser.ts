@@ -3,20 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { Parser, Query, QueryCapture, Tree } from '@vscode/tree-sitter-wasm';
-import { RunOnceScheduler } from '../../../../../base/common/async.js';
-import { BugIndicatingError, ErrorNoTelemetry } from '../../../../../base/common/errors.js';
-import { Lazy } from '../../../../../base/common/lazy.js';
-import { Disposable, MutableDisposable, toDisposable } from '../../../../../base/common/lifecycle.js';
-import { posix, win32 } from '../../../../../base/common/path.js';
-import { ITreeSitterLibraryService } from '../../../../../editor/common/services/treeSitter/treeSitterLibraryService.js';
-import type { ITerminalSandboxCommand } from '../../../../../platform/sandbox/common/terminalSandboxService.js';
-import { ICommandFileWriteParser } from './commandParsers/commandFileWriteParser.js';
-import { SedFileWriteParser } from './commandParsers/sedFileWriteParser.js';
+import type { Parser, Query, QueryCapture, Tree } from "@vscode/tree-sitter-wasm";
+import { RunOnceScheduler } from "../../../../../base/common/async.js";
+import { BugIndicatingError, ErrorNoTelemetry } from "../../../../../base/common/errors.js";
+import { Lazy } from "../../../../../base/common/lazy.js";
+import { Disposable, MutableDisposable, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { posix, win32 } from "../../../../../base/common/path.js";
+import { ITreeSitterLibraryService } from "../../../../../editor/common/services/treeSitter/treeSitterLibraryService.js";
+import type { ITerminalSandboxCommand } from "../../../../../platform/sandbox/common/terminalSandboxService.js";
+import { ICommandFileWriteParser } from "./commandParsers/commandFileWriteParser.js";
+import { SedFileWriteParser } from "./commandParsers/sedFileWriteParser.js";
 
 export const enum TreeSitterCommandParserLanguage {
-	Bash = 'bash',
-	PowerShell = 'powershell',
+	Bash = "bash",
+	PowerShell = "powershell",
 }
 
 /**
@@ -33,44 +33,61 @@ const pwshFlagEqualsRegex = /(^|\s)(-{1,2}[\w-]+)=/g;
 
 // TODO: Remove once upstream tree-sitter PowerShell grammer is updated.
 function maskPwshFlagEquals(commandLine: string): string {
-	return commandLine.replace(pwshFlagEqualsRegex, (_, pre, flag) => `${pre}${flag} `);
+	return commandLine.replace(
+    pwshFlagEqualsRegex,
+    (_, pre, flag) => `${pre}${flag} `,
+  );
 }
 
 export class TreeSitterCommandParser extends Disposable {
 	private readonly _parser: Lazy<Promise<Parser>>;
 	private readonly _treeCache = this._register(new TreeCache());
 	private readonly _commandFileWriteParsers: ICommandFileWriteParser[] = [
-		new SedFileWriteParser(),
-	];
+    new SedFileWriteParser(),
+  ];
 
 	constructor(
 		@ITreeSitterLibraryService private readonly _treeSitterLibraryService: ITreeSitterLibraryService,
 	) {
 		super();
-		this._parser = new Lazy(() => this._treeSitterLibraryService.getParserClass().then(ParserCtor => new ParserCtor()));
+		this._parser = new Lazy(
+      () => this._treeSitterLibraryService.getParserClass().then(
+        ParserCtor => new ParserCtor(),
+      ),
+    );
 	}
 
 	async extractSubCommands(languageId: TreeSitterCommandParserLanguage, commandLine: string): Promise<string[]> {
 		if (languageId === TreeSitterCommandParserLanguage.PowerShell) {
 			const masked = maskPwshFlagEquals(commandLine);
 			if (masked !== commandLine) {
-				const captures = await this._queryTree(languageId, masked, '(command) @command');
+				const captures = await this._queryTree(
+          languageId,
+          masked,
+          "(command) @command",
+        );
 				// Masked command line has identical character positions, so slice the original
 				// to preserve the user-visible text (including the `=` characters).
-				return captures.map(e => commandLine.substring(e.node.startIndex, e.node.endIndex));
+				return captures.map(
+          e => commandLine.substring(e.node.startIndex, e.node.endIndex),
+        );
 			}
 		}
-		const captures = await this._queryTree(languageId, commandLine, '(command) @command');
+		const captures = await this._queryTree(
+      languageId,
+      commandLine,
+      "(command) @command",
+    );
 		return captures.map(e => e.node.text);
 	}
 
 	async extractPwshDoubleAmpersandChainOperators(commandLine: string): Promise<QueryCapture[]> {
 		const captures = await this._queryTree(TreeSitterCommandParserLanguage.PowerShell, commandLine, [
-			'(',
-			'  (pipeline',
-			'    (pipeline_chain_tail) @double.ampersand)',
-			')',
-		].join('\n'));
+			"(",
+			"  (pipeline",
+			"    (pipeline_chain_tail) @double.ampersand)",
+			")",
+		].join("\n"));
 		return captures;
 	}
 
@@ -87,7 +104,10 @@ export class TreeSitterCommandParser extends Disposable {
 	 */
 	async extractCommands(languageId: TreeSitterCommandParserLanguage, commandLine: string): Promise<ITerminalSandboxCommand[]> {
 		const commands: ITerminalSandboxCommand[] = [];
-		for (const commandText of await this.extractSubCommands(languageId, commandLine)) {
+		for (const commandText of await this.extractSubCommands(
+      languageId,
+      commandLine,
+    )) {
 			const command = this._parseCommand(commandText);
 			if (command) {
 				commands.push(command);
@@ -101,15 +121,15 @@ export class TreeSitterCommandParser extends Disposable {
 		switch (languageId) {
 			case TreeSitterCommandParserLanguage.Bash:
 				query = [
-					'(file_redirect',
-					'  destination: [(word) (string (string_content)) (raw_string) (concatenation)] @file)',
-				].join('\n');
+					"(file_redirect",
+					"  destination: [(word) (string (string_content)) (raw_string) (concatenation)] @file)",
+				].join("\n");
 				break;
 			case TreeSitterCommandParserLanguage.PowerShell:
 				query = [
-					'(redirection',
-					'  (redirected_file_name) @file)',
-				].join('\n');
+					"(redirection",
+					"  (redirected_file_name) @file)",
+				].join("\n");
 				break;
 		}
 		const captures = await this._queryTree(languageId, commandLine, query);
@@ -128,7 +148,7 @@ export class TreeSitterCommandParser extends Disposable {
 		}
 
 		// Query for all commands
-		const query = '(command) @command';
+		const query = "(command) @command";
 		const captures = await this._queryTree(languageId, commandLine, query);
 
 		const result: string[] = [];
@@ -144,7 +164,11 @@ export class TreeSitterCommandParser extends Disposable {
 	}
 
 	private async _queryTree(languageId: TreeSitterCommandParserLanguage, commandLine: string, querySource: string): Promise<QueryCapture[]> {
-		const { tree, query } = await this._doQuery(languageId, commandLine, querySource);
+		const { tree, query } = await this._doQuery(
+      languageId,
+      commandLine,
+      querySource,
+    );
 		return query.captures(tree.rootNode);
 	}
 
@@ -153,13 +177,16 @@ export class TreeSitterCommandParser extends Disposable {
 	 * rules by stripping quotes, path segments, and common executable suffixes.
 	 */
 	private _normalizeCommandKeyword(token: string): string | undefined {
-		const unquoted = token.replace(/^['"]|['"]$/g, '');
+		const unquoted = token.replace(/^['"]|['"]$/g, "");
 		if (!unquoted) {
 			return undefined;
 		}
 
 		const pathBase = unquoted.includes('\\') ? win32.basename(unquoted) : posix.basename(unquoted);
-		const normalized = pathBase.toLowerCase().replace(/\.(?:exe|cmd|bat|ps1)$/i, '');
+		const normalized = pathBase.toLowerCase().replace(
+      /\.(?:exe|cmd|bat|ps1)$/i,
+      "",
+    );
 		return normalized || undefined;
 	}
 
@@ -170,19 +197,21 @@ export class TreeSitterCommandParser extends Disposable {
 	private _parseCommand(commandText: string): ITerminalSandboxCommand | undefined {
 		const tokens = this._splitCommandTokens(commandText);
 		let commandIndex = 0;
-		while (commandIndex < tokens.length && this._isVariableAssignment(tokens[commandIndex])) {
+		while (commandIndex < tokens.length && this._isVariableAssignment(
+      tokens[commandIndex],
+    )) {
 			commandIndex++;
 		}
 
-		const keyword = this._normalizeCommandKeyword(tokens[commandIndex] ?? '');
+		const keyword = this._normalizeCommandKeyword(tokens[commandIndex] ?? "");
 		if (!keyword) {
 			return undefined;
 		}
 
 		return {
-			keyword,
-			args: tokens.slice(commandIndex + 1),
-		};
+      keyword,
+      args: tokens.slice(commandIndex + 1),
+    };
 	}
 
 	/**
@@ -191,8 +220,8 @@ export class TreeSitterCommandParser extends Disposable {
 	 */
 	private _splitCommandTokens(commandText: string): string[] {
 		const tokens: string[] = [];
-		let current = '';
-		let quote: '\'' | '"' | undefined;
+		let current = "";
+		let quote: "'" | '"' | undefined;
 		let escaping = false;
 
 		for (const char of commandText.trim()) {
@@ -202,7 +231,7 @@ export class TreeSitterCommandParser extends Disposable {
 				continue;
 			}
 
-			if (char === '\\' && quote !== '\'') {
+			if (char === "\\" && quote !== "'") {
 				escaping = true;
 				continue;
 			}
@@ -216,7 +245,7 @@ export class TreeSitterCommandParser extends Disposable {
 				continue;
 			}
 
-			if (char === '\'' || char === '"') {
+			if (char === "'" || char === '"') {
 				quote = char;
 				continue;
 			}
@@ -224,7 +253,7 @@ export class TreeSitterCommandParser extends Disposable {
 			if (/\s/.test(char)) {
 				if (current) {
 					tokens.push(current);
-					current = '';
+					current = "";
 				}
 				continue;
 			}
@@ -233,7 +262,7 @@ export class TreeSitterCommandParser extends Disposable {
 		}
 
 		if (escaping) {
-			current += '\\';
+			current += "\\";
 		}
 
 		if (current) {
@@ -252,9 +281,11 @@ export class TreeSitterCommandParser extends Disposable {
 	}
 
 	private async _doQuery(languageId: TreeSitterCommandParserLanguage, commandLine: string, querySource: string): Promise<{ tree: Tree; query: Query }> {
-		const language = await this._treeSitterLibraryService.getLanguagePromise(languageId);
+		const language = await this._treeSitterLibraryService.getLanguagePromise(
+      languageId,
+    );
 		if (!language) {
-			throw new BugIndicatingError('Failed to fetch language grammar');
+			throw new BugIndicatingError("Failed to fetch language grammar");
 		}
 
 		let tree = this._treeCache.get(languageId, commandLine);
@@ -263,16 +294,19 @@ export class TreeSitterCommandParser extends Disposable {
 			parser.setLanguage(language);
 			const parsedTree = parser.parse(commandLine);
 			if (!parsedTree) {
-				throw new ErrorNoTelemetry('Failed to parse tree');
+				throw new ErrorNoTelemetry("Failed to parse tree");
 			}
 
 			tree = parsedTree;
 			this._treeCache.set(languageId, commandLine, tree);
 		}
 
-		const query = await this._treeSitterLibraryService.createQuery(language, querySource);
+		const query = await this._treeSitterLibraryService.createQuery(
+      language,
+      querySource,
+    );
 		if (!query) {
-			throw new BugIndicatingError('Failed to create tree sitter query');
+			throw new BugIndicatingError("Failed to create tree sitter query");
 		}
 
 		return { tree, query };
@@ -285,7 +319,9 @@ export class TreeSitterCommandParser extends Disposable {
  */
 class TreeCache extends Disposable {
 	private readonly _cache = new Map<string, Tree>();
-	private readonly _clearScheduler = this._register(new MutableDisposable<RunOnceScheduler>());
+	private readonly _clearScheduler = this._register(
+    new MutableDisposable<RunOnceScheduler>(),
+  );
 
 	constructor() {
 		super();
@@ -307,9 +343,12 @@ class TreeCache extends Disposable {
 	}
 
 	private _resetClearTimer(): void {
-		this._clearScheduler.value = new RunOnceScheduler(() => {
-			this._cache.clear();
-		}, 10000);
+		this._clearScheduler.value = new RunOnceScheduler(
+      () => {
+        this._cache.clear();
+      },
+      10000,
+    );
 		this._clearScheduler.value.schedule();
 	}
 }

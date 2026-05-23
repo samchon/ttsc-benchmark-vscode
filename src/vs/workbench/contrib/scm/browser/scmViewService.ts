@@ -3,33 +3,53 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { ISCMViewService, ISCMRepository, ISCMService, ISCMViewVisibleRepositoryChangeEvent, ISCMMenus, ISCMProvider, ISCMRepositorySortKey, ISCMRepositorySelectionMode } from '../common/scm.js';
-import { Iterable } from '../../../../base/common/iterator.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { SCMMenus } from './menus.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { debounce } from '../../../../base/common/decorators.js';
-import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
-import { compareFileNames, comparePaths } from '../../../../base/common/comparers.js';
-import { basename } from '../../../../base/common/resources.js';
-import { binarySearch } from '../../../../base/common/arrays.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IContextKey, IContextKeyService, RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
-import { IExtensionService } from '../../../services/extensions/common/extensions.js';
-import { autorun, derived, derivedObservableWithCache, derivedOpts, IObservable, ISettableObservable, latestChangedValue, observableFromEventOpts, observableValue, runOnChange } from '../../../../base/common/observable.js';
-import { IEditorService } from '../../../services/editor/common/editorService.js';
-import { EditorResourceAccessor } from '../../../common/editor.js';
-import { EditorInput } from '../../../common/editor/editorInput.js';
-import { IQuickInputService, IQuickPickItem, IQuickPickSeparator } from '../../../../platform/quickinput/common/quickInput.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
-import { localize } from '../../../../nls.js';
-import { observableConfigValue } from '../../../../platform/observable/common/platformObservableUtils.js';
-import { getSCMRepositoryIcon } from './util.js';
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import {
+  ISCMViewService,
+  ISCMRepository,
+  ISCMService,
+  ISCMViewVisibleRepositoryChangeEvent,
+  ISCMMenus,
+  ISCMProvider,
+  ISCMRepositorySortKey,
+  ISCMRepositorySelectionMode,
+} from "../common/scm.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { SCMMenus } from "./menus.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { debounce } from "../../../../base/common/decorators.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { compareFileNames, comparePaths } from "../../../../base/common/comparers.js";
+import { basename } from "../../../../base/common/resources.js";
+import { binarySearch } from "../../../../base/common/arrays.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKey, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import {
+  autorun,
+  derived,
+  derivedObservableWithCache,
+  derivedOpts,
+  IObservable,
+  ISettableObservable,
+  latestChangedValue,
+  observableFromEventOpts,
+  observableValue,
+  runOnChange,
+} from "../../../../base/common/observable.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { EditorResourceAccessor } from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { IQuickInputService, IQuickPickItem, IQuickPickSeparator } from "../../../../platform/quickinput/common/quickInput.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { localize } from "../../../../nls.js";
+import { observableConfigValue } from "../../../../platform/observable/common/platformObservableUtils.js";
+import { getSCMRepositoryIcon } from "./util.js";
 
 function getProviderStorageKey(provider: ISCMProvider): string {
-	return `${provider.providerId}:${provider.label}${provider.rootUri ? `:${provider.rootUri.toString()}` : ''}`;
+	return `${provider.providerId}:${provider.label}${provider.rootUri ? `:${provider.rootUri.toString()}` : ""}`;
 }
 
 function getRepositoryName(workspaceContextService: IWorkspaceContextService, repository: ISCMRepository): string {
@@ -37,16 +57,20 @@ function getRepositoryName(workspaceContextService: IWorkspaceContextService, re
 		return repository.provider.label;
 	}
 
-	const folder = workspaceContextService.getWorkspaceFolder(repository.provider.rootUri);
-	return folder?.uri.toString() === repository.provider.rootUri.toString() ? folder.name : basename(repository.provider.rootUri);
+	const folder = workspaceContextService.getWorkspaceFolder(
+    repository.provider.rootUri,
+  );
+	return folder?.uri.toString() === repository.provider.rootUri.toString() ? folder.name : basename(
+    repository.provider.rootUri,
+  );
 }
 
 export const RepositoryContextKeys = {
-	RepositorySortKey: new RawContextKey<ISCMRepositorySortKey>('scmRepositorySortKey', ISCMRepositorySortKey.DiscoveryTime),
-	RepositorySelectionMode: new RawContextKey<ISCMRepositorySelectionMode>('scmRepositorySelectionMode', ISCMRepositorySelectionMode.Single),
+  RepositorySortKey: new RawContextKey<ISCMRepositorySortKey>("scmRepositorySortKey", ISCMRepositorySortKey.DiscoveryTime),
+  RepositorySelectionMode: new RawContextKey<ISCMRepositorySelectionMode>("scmRepositorySelectionMode", ISCMRepositorySelectionMode.Single),
 };
 
-export type RepositoryQuickPickItem = IQuickPickItem & { repository: 'auto' | ISCMRepository };
+export type RepositoryQuickPickItem = IQuickPickItem & { repository: "auto" | ISCMRepository };
 
 export class RepositoryPicker {
 	private readonly _autoQuickPickItem: RepositoryQuickPickItem;
@@ -55,20 +79,20 @@ export class RepositoryPicker {
 		private readonly _placeHolder: string,
 		private readonly _autoQuickItemDescription: string,
 		@IQuickInputService private readonly _quickInputService: IQuickInputService,
-		@ISCMViewService private readonly _scmViewService: ISCMViewService
+		@ISCMViewService private readonly _scmViewService: ISCMViewService,
 	) {
 		this._autoQuickPickItem = {
-			label: localize('auto', "Auto"),
-			description: this._autoQuickItemDescription,
-			repository: 'auto'
-		} satisfies RepositoryQuickPickItem;
+      label: localize("auto", "Auto"),
+      description: this._autoQuickItemDescription,
+      repository: "auto",
+    } satisfies RepositoryQuickPickItem;
 	}
 
 	async pickRepository(): Promise<RepositoryQuickPickItem | undefined> {
 		const picks: (RepositoryQuickPickItem | IQuickPickSeparator)[] = [
-			this._autoQuickPickItem,
-			{ type: 'separator' }
-		];
+      this._autoQuickPickItem,
+      { type: "separator" },
+    ];
 
 		const activeRepository = this._scmViewService.activeRepository.get();
 		const repository = activeRepository?.repository;
@@ -81,15 +105,20 @@ export class RepositoryPicker {
 				label: r.provider.name,
 				description: r.provider.rootUri?.fsPath,
 				iconClass: ThemeIcon.asClassName(icon),
-				repository: r
+				repository: r,
 			};
 		}));
 
 		const activeItem = pinned
-			? picks.find(p => p.type !== 'separator' && p.repository === repository) as RepositoryQuickPickItem | undefined
+			? picks.find(
+          p => p.type !== "separator" && p.repository === repository,
+        ) as RepositoryQuickPickItem | undefined
 			: this._autoQuickPickItem;
 
-		return this._quickInputService.pick(picks, { placeHolder: this._placeHolder, activeItem });
+		return this._quickInputService.pick(picks, {
+      placeHolder: this._placeHolder,
+      activeItem,
+    });
 	}
 }
 
@@ -152,7 +181,9 @@ export class SCMViewService implements ISCMViewService {
 
 		for (const repositoryView of this._repositories) {
 			// Selected -> !Selected
-			if (!set.has(repositoryView.repository) && repositoryView.selectionIndex !== -1) {
+			if (!set.has(
+        repositoryView.repository,
+      ) && repositoryView.selectionIndex !== -1) {
 				repositoryView.selectionIndex = -1;
 				removed.add(repositoryView.repository);
 			}
@@ -161,7 +192,9 @@ export class SCMViewService implements ISCMViewService {
 				if (repositoryView.selectionIndex === -1) {
 					added.add(repositoryView.repository);
 				}
-				repositoryView.selectionIndex = visibleRepositories.indexOf(repositoryView.repository);
+				repositoryView.selectionIndex = visibleRepositories.indexOf(
+          repositoryView.repository,
+        );
 			}
 		}
 
@@ -173,7 +206,9 @@ export class SCMViewService implements ISCMViewService {
 
 		// Update focus if the focused repository is not visible anymore
 		if (this._repositories.find(r => r.focused && r.selectionIndex === -1)) {
-			this.focus(this._repositories.find(r => r.selectionIndex !== -1)?.repository);
+			this.focus(
+        this._repositories.find(r => r.selectionIndex !== -1)?.repository,
+      );
 		}
 	}
 
@@ -205,7 +240,7 @@ export class SCMViewService implements ISCMViewService {
 				}
 
 				return { added, removed };
-			}, 0, undefined, undefined, undefined, this.disposables)
+			}, 0, undefined, undefined, undefined, this.disposables),
 	);
 
 	get focusedRepository(): ISCMRepository | undefined {
@@ -240,43 +275,72 @@ export class SCMViewService implements ISCMViewService {
 		@IInstantiationService instantiationService: IInstantiationService,
 		@IConfigurationService private readonly configurationService: IConfigurationService,
 		@IStorageService private readonly storageService: IStorageService,
-		@IWorkspaceContextService private readonly workspaceContextService: IWorkspaceContextService
+		@IWorkspaceContextService private readonly workspaceContextService: IWorkspaceContextService,
 	) {
 		this.menus = instantiationService.createInstance(SCMMenus);
 
-		const explorerEnabledConfig = observableConfigValue<boolean>('scm.repositories.explorer', false, this.configurationService);
-		this.graphShowIncomingChangesConfig = observableConfigValue<boolean>('scm.graph.showIncomingChanges', true, this.configurationService);
-		this.graphShowOutgoingChangesConfig = observableConfigValue<boolean>('scm.graph.showOutgoingChanges', true, this.configurationService);
-		this.selectionModeConfig = observableConfigValue<ISCMRepositorySelectionMode>('scm.repositories.selectionMode', ISCMRepositorySelectionMode.Multiple, this.configurationService);
+		const explorerEnabledConfig = observableConfigValue<boolean>(
+      "scm.repositories.explorer",
+      false,
+      this.configurationService,
+    );
+		this.graphShowIncomingChangesConfig = observableConfigValue<boolean>(
+      "scm.graph.showIncomingChanges",
+      true,
+      this.configurationService,
+    );
+		this.graphShowOutgoingChangesConfig = observableConfigValue<boolean>(
+      "scm.graph.showOutgoingChanges",
+      true,
+      this.configurationService,
+    );
+		this.selectionModeConfig = observableConfigValue<ISCMRepositorySelectionMode>(
+      "scm.repositories.selectionMode",
+      ISCMRepositorySelectionMode.Multiple,
+      this.configurationService,
+    );
 		this.explorerEnabledConfig = derived(reader => {
-			return explorerEnabledConfig.read(reader) === true && this.selectionModeConfig.read(reader) === ISCMRepositorySelectionMode.Single;
-		});
+      return explorerEnabledConfig.read(reader) === true && this.selectionModeConfig.read(reader) === ISCMRepositorySelectionMode.Single;
+    });
 
 		try {
-			this.previousState = JSON.parse(storageService.get('scm:view:visibleRepositories', StorageScope.WORKSPACE, ''));
+			this.previousState = JSON.parse(
+        storageService.get(
+          "scm:view:visibleRepositories",
+          StorageScope.WORKSPACE,
+          "",
+        ),
+      );
 
 			// If previously there were multiple visible repositories but the
 			// view mode is `single`, only restore the first visible repository.
 			if (this.previousState && this.previousState.visible.length > 1 && this.selectionModeConfig.get() === ISCMRepositorySelectionMode.Single) {
 				this.previousState = {
-					...this.previousState,
-					visible: [this.previousState.visible[0]]
-				};
+          ...this.previousState,
+          visible: [this.previousState.visible[0]],
+        };
 			}
 		} catch {
 			// noop
 		}
 
 		this._focusedRepositoryObs = observableFromEventOpts<ISCMRepository | undefined>(
-			{
-				owner: this,
-				equalsFn: () => false
-			}, this.onDidFocusRepository, () => this.focusedRepository);
+      {
+        owner: this,
+        equalsFn: () => false,
+      },
+      this.onDidFocusRepository,
+      () => this.focusedRepository,
+    );
 
-		this._activeEditorObs = observableFromEventOpts({
-			owner: this,
-			equalsFn: () => false
-		}, this.editorService.onDidActiveEditorChange, () => this.editorService.activeEditor);
+		this._activeEditorObs = observableFromEventOpts(
+      {
+        owner: this,
+        equalsFn: () => false,
+      },
+      this.editorService.onDidActiveEditorChange,
+      () => this.editorService.activeEditor,
+    );
 
 		this._activeEditorRepositoryObs = derivedObservableWithCache<ISCMRepository | undefined>(this,
 			(reader, lastValue) => {
@@ -294,21 +358,30 @@ export class SCMViewService implements ISCMViewService {
 				return Object.create(repository);
 			});
 
-		this._activeRepositoryPinnedObs = observableValue<ISCMRepository | undefined>(this, undefined);
-		this._activeRepositoryObs = latestChangedValue(this, [this._activeEditorRepositoryObs, this._focusedRepositoryObs]);
+		this._activeRepositoryPinnedObs = observableValue<ISCMRepository | undefined>(
+      this,
+      undefined,
+    );
+		this._activeRepositoryObs = latestChangedValue(this, [
+      this._activeEditorRepositoryObs,
+      this._focusedRepositoryObs,
+    ]);
 
-		this.activeRepository = derivedOpts<{ repository: ISCMRepository; pinned: boolean } | undefined>({
-			owner: this,
-			equalsFn: (r1, r2) => r1?.repository.id === r2?.repository.id && r1?.pinned === r2?.pinned
-		}, reader => {
-			const activeRepository = this._activeRepositoryObs.read(reader);
-			const activeRepositoryPinned = this._activeRepositoryPinnedObs.read(reader);
+		this.activeRepository = derivedOpts<{ repository: ISCMRepository; pinned: boolean } | undefined>(
+      {
+        owner: this,
+        equalsFn: (r1, r2) => r1?.repository.id === r2?.repository.id && r1?.pinned === r2?.pinned,
+      },
+      reader => {
+        const activeRepository = this._activeRepositoryObs.read(reader);
+        const activeRepositoryPinned = this._activeRepositoryPinnedObs.read(reader);
 
-			const repository = activeRepositoryPinned ?? activeRepository;
-			const pinned = !!activeRepositoryPinned;
+        const repository = activeRepositoryPinned ?? activeRepository;
+        const pinned = !!activeRepositoryPinned;
 
-			return repository ? { repository, pinned } : undefined;
-		});
+        return repository ? { repository, pinned } : undefined;
+      },
+    );
 
 		this.disposables.add(runOnChange(this.selectionModeConfig, selectionMode => {
 			if (selectionMode === ISCMRepositorySelectionMode.Single && this.visibleRepositories.length > 1) {
@@ -320,31 +393,53 @@ export class SCMViewService implements ISCMViewService {
 		}));
 
 		this._repositoriesSortKey = this.previousState?.sortKey ?? this.getViewSortOrder();
-		this._sortKeyContextKey = RepositoryContextKeys.RepositorySortKey.bindTo(contextKeyService);
+		this._sortKeyContextKey = RepositoryContextKeys.RepositorySortKey.bindTo(
+      contextKeyService,
+    );
 		this._sortKeyContextKey.set(this._repositoriesSortKey);
 
-		this._selectionModelContextKey = RepositoryContextKeys.RepositorySelectionMode.bindTo(contextKeyService);
-		this.disposables.add(autorun(reader => {
-			const selectionMode = this.selectionModeConfig.read(reader);
-			this._selectionModelContextKey.set(selectionMode);
-		}));
+		this._selectionModelContextKey = RepositoryContextKeys.RepositorySelectionMode.bindTo(
+      contextKeyService,
+    );
+		this.disposables.add(
+      autorun(reader => {
+        const selectionMode = this.selectionModeConfig.read(reader);
+        this._selectionModelContextKey.set(selectionMode);
+      }),
+    );
 
-		scmService.onDidAddRepository(this.onDidAddRepository, this, this.disposables);
-		scmService.onDidRemoveRepository(this.onDidRemoveRepository, this, this.disposables);
+		scmService.onDidAddRepository(
+      this.onDidAddRepository,
+      this,
+      this.disposables,
+    );
+		scmService.onDidRemoveRepository(
+      this.onDidRemoveRepository,
+      this,
+      this.disposables,
+    );
 
 		for (const repository of scmService.repositories) {
 			this.onDidAddRepository(repository);
 		}
 
-		storageService.onWillSaveState(this.onWillSaveState, this, this.disposables);
+		storageService.onWillSaveState(
+      this.onWillSaveState,
+      this,
+      this.disposables,
+    );
 
 		// Maintain repository selection when the extension host restarts.
 		// Extension host is restarted after installing an extension update
 		// or during a profile switch.
-		extensionService.onWillStop(() => {
-			this.onWillSaveState();
-			this.didFinishLoadingRepositories.set(false, undefined);
-		}, this, this.disposables);
+		extensionService.onWillStop(
+      () => {
+        this.onWillSaveState();
+        this.didFinishLoadingRepositories.set(false, undefined);
+      },
+      this,
+      this.disposables,
+    );
 	}
 
 	private onDidAddRepository(repository: ISCMRepository): void {
@@ -353,13 +448,18 @@ export class SCMViewService implements ISCMViewService {
 		}
 
 		const repositoryView = {
-			repository, discoveryTime: Date.now(), focused: false, selectionIndex: -1
-		} satisfies ISCMRepositoryView;
+      repository,
+      discoveryTime: Date.now(),
+      focused: false,
+      selectionIndex: -1,
+    } satisfies ISCMRepositoryView;
 
 		let removed: Iterable<ISCMRepository> = Iterable.empty();
 
 		if (this.previousState && !this.didFinishLoadingRepositories.get()) {
-			const index = this.previousState.all.indexOf(getProviderStorageKey(repository.provider));
+			const index = this.previousState.all.indexOf(
+        getProviderStorageKey(repository.provider),
+      );
 
 			if (index === -1) {
 				// This repository is not part of the previous state which means that it
@@ -370,7 +470,9 @@ export class SCMViewService implements ISCMViewService {
 
 				this.insertRepositoryView(this._repositories, repositoryView);
 
-				if (this.selectionModeConfig.get() === ISCMRepositorySelectionMode.Multiple || !this._repositories.find(r => r.selectionIndex !== -1)) {
+				if (this.selectionModeConfig.get() === ISCMRepositorySelectionMode.Multiple || !this._repositories.find(
+          r => r.selectionIndex !== -1,
+        )) {
 					// Multiple selection mode or single selection mode (select first repository)
 					this._repositories.forEach((repositoryView, index) => {
 						if (repositoryView.selectionIndex === -1) {
@@ -379,7 +481,10 @@ export class SCMViewService implements ISCMViewService {
 						repositoryView.selectionIndex = index;
 					});
 
-					this._onDidChangeRepositories.fire({ added, removed: Iterable.empty() });
+					this._onDidChangeRepositories.fire({
+            added,
+            removed: Iterable.empty(),
+          });
 				}
 
 				this.didSelectRepository = false;
@@ -390,7 +495,10 @@ export class SCMViewService implements ISCMViewService {
 				// Explicit selection started
 				if (this.didSelectRepository) {
 					this.insertRepositoryView(this._repositories, repositoryView);
-					this._onDidChangeRepositories.fire({ added: Iterable.empty(), removed: Iterable.empty() });
+					this._onDidChangeRepositories.fire({
+            added: Iterable.empty(),
+            removed: Iterable.empty(),
+          });
 					return;
 				}
 			} else {
@@ -398,20 +506,28 @@ export class SCMViewService implements ISCMViewService {
 				if (!this.didSelectRepository) {
 					removed = [...this.visibleRepositories];
 					this._repositories.forEach(r => {
-						r.focused = false;
-						r.selectionIndex = -1;
-					});
+            r.focused = false;
+            r.selectionIndex = -1;
+          });
 
 					this.didSelectRepository = true;
 				}
 			}
 		}
 
-		if (this.selectionModeConfig.get() === ISCMRepositorySelectionMode.Multiple || !this._repositories.find(r => r.selectionIndex !== -1)) {
+		if (this.selectionModeConfig.get() === ISCMRepositorySelectionMode.Multiple || !this._repositories.find(
+      r => r.selectionIndex !== -1,
+    )) {
 			// Multiple selection mode or single selection mode (select first repository)
 			const maxSelectionIndex = this.getMaxSelectionIndex();
-			this.insertRepositoryView(this._repositories, { ...repositoryView, selectionIndex: maxSelectionIndex + 1 });
-			this._onDidChangeRepositories.fire({ added: [repositoryView.repository], removed });
+			this.insertRepositoryView(this._repositories, {
+        ...repositoryView,
+        selectionIndex: maxSelectionIndex + 1,
+      });
+			this._onDidChangeRepositories.fire({
+        added: [repositoryView.repository],
+        removed,
+      });
 		} else {
 			// Single selection mode (add subsequent repository)
 			this.insertRepositoryView(this._repositories, repositoryView);
@@ -429,7 +545,9 @@ export class SCMViewService implements ISCMViewService {
 			this.eventuallyFinishLoading();
 		}
 
-		const repositoriesIndex = this._repositories.findIndex(r => r.repository === repository);
+		const repositoriesIndex = this._repositories.findIndex(
+      r => r.repository === repository,
+    );
 
 		if (repositoriesIndex === -1) {
 			return;
@@ -443,7 +561,10 @@ export class SCMViewService implements ISCMViewService {
 			added = [this._repositories[0].repository];
 		}
 
-		this._onDidChangeRepositories.fire({ added, removed: removed.map(r => r.repository) });
+		this._onDidChangeRepositories.fire({
+      added,
+      removed: removed.map(r => r.repository),
+    });
 
 		// Check if the focused repository was removed
 		if (removed.length === 1 && removed[0].focused && this.visibleRepositories.length > 0) {
@@ -462,11 +583,13 @@ export class SCMViewService implements ISCMViewService {
 	}
 
 	isVisible(repository: ISCMRepository): boolean {
-		return this._repositories.find(r => r.repository === repository)?.selectionIndex !== -1;
+		return this._repositories.find(
+      r => r.repository === repository,
+    )?.selectionIndex !== -1;
 	}
 
 	toggleVisibility(repository: ISCMRepository, visible?: boolean): void {
-		if (typeof visible === 'undefined') {
+		if (typeof visible === "undefined") {
 			visible = !this.isVisible(repository);
 		} else if (this.isVisible(repository) === visible) {
 			return;
@@ -483,9 +606,9 @@ export class SCMViewService implements ISCMViewService {
 
 			if (index > -1) {
 				this.visibleRepositories = [
-					...this.visibleRepositories.slice(0, index),
-					...this.visibleRepositories.slice(index + 1)
-				];
+          ...this.visibleRepositories.slice(0, index),
+          ...this.visibleRepositories.slice(index + 1),
+        ];
 			}
 		}
 	}
@@ -495,11 +618,17 @@ export class SCMViewService implements ISCMViewService {
 		this._sortKeyContextKey.set(this._repositoriesSortKey);
 		this._repositories.sort(this.compareRepositories.bind(this));
 
-		this._onDidChangeRepositories.fire({ added: Iterable.empty(), removed: Iterable.empty() });
+		this._onDidChangeRepositories.fire({
+      added: Iterable.empty(),
+      removed: Iterable.empty(),
+    });
 	}
 
-	toggleSelectionMode(selectionMode: 'multiple' | 'single'): void {
-		this.configurationService.updateValue('scm.repositories.selectionMode', selectionMode);
+	toggleSelectionMode(selectionMode: "multiple" | "single"): void {
+		this.configurationService.updateValue(
+      "scm.repositories.selectionMode",
+      selectionMode,
+    );
 	}
 
 	focus(repository: ISCMRepository | undefined): void {
@@ -525,17 +654,29 @@ export class SCMViewService implements ISCMViewService {
 		}
 
 		// Sort by path
-		if (this._repositoriesSortKey === 'path' && op1.repository.provider.rootUri && op2.repository.provider.rootUri) {
-			return comparePaths(op1.repository.provider.rootUri.fsPath, op2.repository.provider.rootUri.fsPath);
+		if (this._repositoriesSortKey === "path" && op1.repository.provider.rootUri && op2.repository.provider.rootUri) {
+			return comparePaths(
+        op1.repository.provider.rootUri.fsPath,
+        op2.repository.provider.rootUri.fsPath,
+      );
 		}
 
 		// Sort by name, path
-		const name1 = getRepositoryName(this.workspaceContextService, op1.repository);
-		const name2 = getRepositoryName(this.workspaceContextService, op2.repository);
+		const name1 = getRepositoryName(
+      this.workspaceContextService,
+      op1.repository,
+    );
+		const name2 = getRepositoryName(
+      this.workspaceContextService,
+      op2.repository,
+    );
 
 		const nameComparison = compareFileNames(name1, name2);
 		if (nameComparison === 0 && op1.repository.provider.rootUri && op2.repository.provider.rootUri) {
-			return comparePaths(op1.repository.provider.rootUri.fsPath, op2.repository.provider.rootUri.fsPath);
+			return comparePaths(
+        op1.repository.provider.rootUri.fsPath,
+        op2.repository.provider.rootUri.fsPath,
+      );
 		}
 
 		return nameComparison;
@@ -547,13 +688,15 @@ export class SCMViewService implements ISCMViewService {
 	}
 
 	private getViewSortOrder(): ISCMRepositorySortKey {
-		const sortOder = this.configurationService.getValue<'discovery time' | 'name' | 'path'>('scm.repositories.sortOrder');
+		const sortOder = this.configurationService.getValue<"discovery time" | "name" | "path">(
+      "scm.repositories.sortOrder",
+    );
 		switch (sortOder) {
-			case 'discovery time':
+			case "discovery time":
 				return ISCMRepositorySortKey.DiscoveryTime;
-			case 'name':
+			case "name":
 				return ISCMRepositorySortKey.Name;
-			case 'path':
+			case "path":
 				return ISCMRepositorySortKey.Path;
 			default:
 				return ISCMRepositorySortKey.DiscoveryTime;
@@ -561,7 +704,11 @@ export class SCMViewService implements ISCMViewService {
 	}
 
 	private insertRepositoryView(repositories: ISCMRepositoryView[], repositoryView: ISCMRepositoryView): void {
-		const index = binarySearch(repositories, repositoryView, this.compareRepositories.bind(this));
+		const index = binarySearch(
+      repositories,
+      repositoryView,
+      this.compareRepositories.bind(this),
+    );
 		repositories.splice(index < 0 ? ~index : index, 0, repositoryView);
 	}
 
@@ -572,10 +719,21 @@ export class SCMViewService implements ISCMViewService {
 		}
 
 		const all = this.repositories.map(r => getProviderStorageKey(r.provider));
-		const visible = this.visibleRepositories.map(r => all.indexOf(getProviderStorageKey(r.provider)));
-		this.previousState = { all, visible, sortKey: this._repositoriesSortKey } satisfies ISCMViewServiceState;
+		const visible = this.visibleRepositories.map(
+      r => all.indexOf(getProviderStorageKey(r.provider)),
+    );
+		this.previousState = {
+      all,
+      visible,
+      sortKey: this._repositoriesSortKey,
+    } satisfies ISCMViewServiceState;
 
-		this.storageService.store('scm:view:visibleRepositories', JSON.stringify(this.previousState), StorageScope.WORKSPACE, StorageTarget.MACHINE);
+		this.storageService.store(
+      "scm:view:visibleRepositories",
+      JSON.stringify(this.previousState),
+      StorageScope.WORKSPACE,
+      StorageTarget.MACHINE,
+    );
 	}
 
 	@debounce(5000)

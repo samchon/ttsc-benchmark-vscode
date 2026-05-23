@@ -3,20 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { Event } from '../../../../base/common/event.js';
-import { IMarkdownString } from '../../../../base/common/htmlContent.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { IObservable } from '../../../../base/common/observable.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IPosition } from '../../../../editor/common/core/position.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { IChatAgentAttachmentCapabilities, IChatAgentRequest } from './participants/chatAgents.js';
-import { IChatEditingSession } from './editing/chatEditingService.js';
-import { IChatRequestModeInstructions, IChatRequestVariableData, ISerializableChatModelInputState } from './model/chatModel.js';
-import { IChatProgress, IChatSessionTiming } from './chatService/chatService.js';
-import { Target } from './promptSyntax/promptTypes.js';
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Event } from "../../../../base/common/event.js";
+import { IMarkdownString } from "../../../../base/common/htmlContent.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { IObservable } from "../../../../base/common/observable.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IPosition } from "../../../../editor/common/core/position.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IChatAgentAttachmentCapabilities, IChatAgentRequest } from "./participants/chatAgents.js";
+import { IChatEditingSession } from "./editing/chatEditingService.js";
+import {
+  IChatRequestModeInstructions,
+  IChatRequestVariableData,
+  ISerializableChatModelInputState,
+} from "./model/chatModel.js";
+import { IChatProgress, IChatSessionTiming } from "./chatService/chatService.js";
+import { Target } from "./promptSyntax/promptTypes.js";
 
 export const enum ChatSessionStatus {
 	Failed = 0,
@@ -78,7 +82,7 @@ export interface IChatSessionProviderOptionGroup {
 	 *   wins. The group has no UI of its own — it is invisible when the permission
 	 *   picker is hidden by its own `when` clauses.
 	 */
-	readonly kind?: 'permissions';
+	readonly kind?: "permissions";
 }
 
 export interface IChatSessionsExtensionPoint {
@@ -177,7 +181,7 @@ export interface IChatSessionFileChange2 {
 
 export type IChatSessionHistoryItem = {
 	id?: string;
-	type: 'request';
+	type: "request";
 	prompt: string;
 	participant: string;
 	command?: string;
@@ -185,26 +189,26 @@ export type IChatSessionHistoryItem = {
 	modelId?: string;
 	modeInstructions?: IChatRequestModeInstructions;
 } | {
-	type: 'response';
+	type: "response";
 	parts: IChatProgress[];
 	participant: string;
 	details?: string;
 };
 
-export type IChatSessionRequestHistoryItem = Extract<IChatSessionHistoryItem, { type: 'request' }>;
+export type IChatSessionRequestHistoryItem = Extract<IChatSessionHistoryItem, { type: "request" }>;
 
 
 /**
  * A set of well-known session types
  */
 export namespace SessionType {
-	export const CopilotCLI = 'copilotcli';
-	export const CopilotCloud = 'copilot-cloud-agent';
-	export const Local = 'local';
-	export const ClaudeCode = 'claude-code';
-	export const Codex = 'openai-codex';
-	export const Growth = 'copilot-growth';
-	export const AgentHostCopilot = 'agent-host-copilotcli';
+	export const CopilotCLI = "copilotcli";
+	export const CopilotCloud = "copilot-cloud-agent";
+	export const Local = "local";
+	export const ClaudeCode = "claude-code";
+	export const Codex = "openai-codex";
+	export const Growth = "copilot-growth";
+	export const AgentHostCopilot = "agent-host-copilotcli";
 }
 
 /**
@@ -218,8 +222,8 @@ export namespace SessionType {
  */
 export function isAgentHostTarget(target: string): boolean {
 	return target === SessionType.AgentHostCopilot ||
-		target.startsWith('agent-host-') ||
-		target.startsWith('remote-');
+		target.startsWith("agent-host-") ||
+		target.startsWith("remote-");
 }
 
 /**
@@ -263,7 +267,7 @@ export interface IChatSession extends IDisposable {
 		progress: (progress: IChatProgress[]) => void,
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		history: any[], // TODO: Nail down types
-		token: CancellationToken
+		token: CancellationToken,
 	) => Promise<void>;
 
 	/**
@@ -338,7 +342,7 @@ export interface IChatInputCompletionItem {
  * adds it to the input's variable model when the item is accepted.
  */
 export interface IChatInputCompletionResourceAttachment {
-	readonly kind: 'resource';
+	readonly kind: "resource";
 	readonly uri: URI;
 	readonly displayName?: string;
 	readonly isDirectory?: boolean;
@@ -354,7 +358,7 @@ export interface IChatInputCompletionResourceAttachment {
  * Command attachment associated with a completion item.
  */
 export interface IChatInputCompletionCommandAttachment {
-	readonly kind: 'command';
+	readonly kind: "command";
 	readonly command: string;
 	readonly description: string;
 	/**
@@ -370,7 +374,7 @@ export interface IChatInputCompletionCommandAttachment {
  * adds it to the input's variable model when the item is accepted.
  */
 export interface IChatInputCompletionSkillAttachment {
-	readonly kind: 'skill';
+	readonly kind: "skill";
 	readonly uri: URI;
 	readonly displayName?: string;
 	readonly description?: string;
@@ -431,7 +435,7 @@ export interface IChatSessionOptionsChangeEvent {
 	readonly updates: ReadonlyMap<string, string | IChatSessionProviderOptionItem | undefined>;
 }
 
-export type ResolvedChatSessionsExtensionPoint = Omit<IChatSessionsExtensionPoint, 'icon'> & {
+export type ResolvedChatSessionsExtensionPoint = Omit<IChatSessionsExtensionPoint, "icon"> & {
 	readonly icon: ThemeIcon | URI | undefined;
 };
 
@@ -448,7 +452,9 @@ export namespace ChatSessionOptionsMap {
 	}
 
 	export function toRecord(map: ReadonlyChatSessionOptionsMap): Record<string, string | IChatSessionProviderOptionItem> {
-		const record: Record<string, string | IChatSessionProviderOptionItem> = Object.create(null);
+		const record: Record<string, string | IChatSessionProviderOptionItem> = Object.create(
+      null,
+    );
 		const entries = ensureIterable(map);
 		for (const [key, value] of entries) {
 			record[key] = value;
@@ -461,7 +467,10 @@ export namespace ChatSessionOptionsMap {
 			return undefined;
 		}
 		const entries = ensureIterable(map);
-		return Array.from(entries, ([optionId, value]) => ({ optionId, value: typeof value === 'string' ? value : value.id }));
+		return Array.from(entries, ([optionId, value]) => ({
+      optionId,
+      value: typeof value === "string" ? value : value.id,
+    }));
 	}
 
 	/**
@@ -474,7 +483,9 @@ export namespace ChatSessionOptionsMap {
 			return map;
 		}
 		// Fallback: treat as a plain record (e.g. from JSON deserialization)
-		return Object.entries(map as unknown as Record<string, string | IChatSessionProviderOptionItem>);
+		return Object.entries(
+      map as unknown as Record<string, string | IChatSessionProviderOptionItem>,
+    );
 	}
 }
 
@@ -511,7 +522,9 @@ export interface IChatSessionCommitEvent {
 	readonly committed: URI;
 }
 
-export const IChatSessionsService = createDecorator<IChatSessionsService>('chatSessionsService');
+export const IChatSessionsService = createDecorator<IChatSessionsService>(
+  "chatSessionsService",
+);
 
 export interface IChatSessionsService {
 	readonly _serviceBrand: undefined;
@@ -684,5 +697,5 @@ export function isSessionInProgressStatus(state: ChatSessionStatus): boolean {
 
 export function isIChatSessionFileChange2(obj: unknown): obj is IChatSessionFileChange2 {
 	const candidate = obj as IChatSessionFileChange2;
-	return candidate && candidate.uri instanceof URI && typeof candidate.insertions === 'number' && typeof candidate.deletions === 'number';
+	return candidate && candidate.uri instanceof URI && typeof candidate.insertions === "number" && typeof candidate.deletions === "number";
 }

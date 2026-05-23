@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { escapeRegExpCharacters } from '../../../../base/common/strings.js';
+import { escapeRegExpCharacters } from "../../../../base/common/strings.js";
 
 /*
  * This module exports common types and functionality shared between
@@ -62,7 +62,7 @@ export function isFuzzyAction(what: FuzzyAction | FuzzyAction[]): what is FuzzyA
 }
 
 export function isString(what: FuzzyAction): what is string {
-	return (typeof what === 'string');
+	return (typeof what === "string");
 }
 
 export function isIAction(what: FuzzyAction): what is IAction {
@@ -122,7 +122,7 @@ export function fixCase(lexer: ILexerMin, str: string): string {
  * Ensures there are no bad characters in a CSS token class.
  */
 export function sanitize(s: string) {
-	return s.replace(/[&<>'"_]/g, '-'); // used on all output token CSS classes
+	return s.replace(/[&<>'"_]/g, "-"); // used on all output token CSS classes
 }
 
 // Logging
@@ -156,7 +156,7 @@ export function substituteMatches(lexer: ILexerMin, str: string, id: string, mat
 	let stateMatches: string[] | null = null;
 	return str.replace(re, function (full, sub?, dollar?, hash?, n?, s?, attr?, ofs?, total?) {
 		if (!empty(dollar)) {
-			return '$'; // $$
+			return "$"; // $$
 		}
 		if (!empty(hash)) {
 			return fixCase(lexer, id);   // default $#
@@ -164,17 +164,17 @@ export function substituteMatches(lexer: ILexerMin, str: string, id: string, mat
 		if (!empty(n) && n < matches.length) {
 			return fixCase(lexer, matches[n]); // $n
 		}
-		if (!empty(attr) && lexer && typeof (lexer[attr]) === 'string') {
+		if (!empty(attr) && lexer && typeof (lexer[attr]) === "string") {
 			return lexer[attr]; //@attribute
 		}
 		if (stateMatches === null) { // split state on demand
-			stateMatches = state.split('.');
+			stateMatches = state.split(".");
 			stateMatches.unshift(state);
 		}
 		if (!empty(s) && s < stateMatches.length) {
 			return fixCase(lexer, stateMatches[s]); //$Sn
 		}
-		return '';
+		return "";
 	});
 }
 
@@ -188,13 +188,13 @@ export function substituteMatchesRe(lexer: ILexerMin, str: string, state: string
 	let stateMatches: string[] | null = null;
 	return str.replace(re, function (full, s) {
 		if (stateMatches === null) { // split state on demand
-			stateMatches = state.split('.');
+			stateMatches = state.split(".");
 			stateMatches.unshift(state);
 		}
 		if (!empty(s) && s < stateMatches.length) {
 			return escapeRegExpCharacters(fixCase(lexer, stateMatches[s])); //$Sn
 		}
-		return '';
+		return "";
 	});
 }
 
@@ -209,7 +209,7 @@ export function findRules(lexer: ILexer, inState: string): IRule[] | null {
 			return rules;
 		}
 
-		const idx = state.lastIndexOf('.');
+		const idx = state.lastIndexOf(".");
 		if (idx < 0) {
 			state = null; // no further parent
 		} else {
@@ -232,7 +232,7 @@ export function stateExists(lexer: ILexerMin, inState: string): boolean {
 			return true;
 		}
 
-		const idx = state.lastIndexOf('.');
+		const idx = state.lastIndexOf(".");
 		if (idx < 0) {
 			state = null; // no further parent
 		} else {

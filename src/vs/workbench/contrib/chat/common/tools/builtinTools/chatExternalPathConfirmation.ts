@@ -3,24 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { ResourceMap, ResourceSet } from '../../../../../../base/common/map.js';
-import { dirname, extUriBiasedIgnorePathCase } from '../../../../../../base/common/resources.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { localize } from '../../../../../../nls.js';
-import { ILabelService } from '../../../../../../platform/label/common/label.js';
-import { ObservableMemento, observableMemento } from '../../../../../../platform/observable/common/observableMemento.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../../../platform/storage/common/storage.js';
-import { ConfirmedReason, ToolConfirmKind } from '../../chatService/chatService.js';
+import { IDisposable } from "../../../../../../base/common/lifecycle.js";
+import { ResourceMap, ResourceSet } from "../../../../../../base/common/map.js";
+import { dirname, extUriBiasedIgnorePathCase } from "../../../../../../base/common/resources.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { localize } from "../../../../../../nls.js";
+import { ILabelService } from "../../../../../../platform/label/common/label.js";
+import { ObservableMemento, observableMemento } from "../../../../../../platform/observable/common/observableMemento.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../../../platform/storage/common/storage.js";
+import { ConfirmedReason, ToolConfirmKind } from "../../chatService/chatService.js";
 import {
-	ILanguageModelToolConfirmationActions,
-	ILanguageModelToolConfirmationContribution,
-	ILanguageModelToolConfirmationContributionQuickTreeItem,
-	ILanguageModelToolConfirmationRef
-} from '../languageModelToolsConfirmationService.js';
+  ILanguageModelToolConfirmationActions,
+  ILanguageModelToolConfirmationContribution,
+  ILanguageModelToolConfirmationContributionQuickTreeItem,
+  ILanguageModelToolConfirmationRef,
+} from "../languageModelToolsConfirmationService.js";
 
 const workspaceAllowlistMemento = observableMemento<readonly string[]>({
-	key: 'chat.externalPath.workspaceAllowlist',
+	key: "chat.externalPath.workspaceAllowlist",
 	defaultValue: [],
 	toStorage: value => JSON.stringify(value),
 	fromStorage: value => {
@@ -55,7 +55,11 @@ export class ChatExternalPathConfirmationContribution implements ILanguageModelT
 		private readonly _pickFolder?: () => Promise<URI | undefined>,
 	) {
 		if (storageService) {
-			this._workspaceAllowlist = workspaceAllowlistMemento(StorageScope.WORKSPACE, StorageTarget.MACHINE, storageService);
+			this._workspaceAllowlist = workspaceAllowlistMemento(
+        StorageScope.WORKSPACE,
+        StorageTarget.MACHINE,
+        storageService,
+      );
 		}
 	}
 
@@ -107,7 +111,10 @@ export class ChatExternalPathConfirmationContribution implements ILanguageModelT
 		// for determining whether a path is workspace-internal. Only fall back to the
 		// workspace-level allowlist when no working directory is specified.
 		if (ref.workingDirectory) {
-			if (extUriBiasedIgnorePathCase.isEqualOrParent(pathUri, ref.workingDirectory)) {
+			if (extUriBiasedIgnorePathCase.isEqualOrParent(
+        pathUri,
+        ref.workingDirectory,
+      )) {
 				return { type: ToolConfirmKind.UserAction };
 			}
 		} else {
@@ -121,7 +128,9 @@ export class ChatExternalPathConfirmationContribution implements ILanguageModelT
 
 		// Check session-level allowlist
 		if (ref.chatSessionResource) {
-			const sessionFolders = this._sessionFolderAllowlist.get(ref.chatSessionResource);
+			const sessionFolders = this._sessionFolderAllowlist.get(
+        ref.chatSessionResource,
+      );
 			if (sessionFolders) {
 				for (const folderUri of sessionFolders) {
 					if (extUriBiasedIgnorePathCase.isEqualOrParent(pathUri, folderUri)) {
@@ -154,8 +163,8 @@ export class ChatExternalPathConfirmationContribution implements ILanguageModelT
 
 		const actions: ILanguageModelToolConfirmationActions[] = [
 			{
-				label: localize('allowFolderSession', 'Allow this folder in this session'),
-				detail: localize('allowFolderSessionDetail', 'Allow reading files from this folder without further confirmation in this chat session'),
+				label: localize("allowFolderSession", "Allow this folder in this session"),
+				detail: localize("allowFolderSessionDetail", "Allow reading files from this folder without further confirmation in this chat session"),
 				select: async () => {
 					let folders = this._sessionFolderAllowlist.get(sessionResource);
 					if (!folders) {
@@ -164,8 +173,8 @@ export class ChatExternalPathConfirmationContribution implements ILanguageModelT
 					}
 					folders.add(folderUri);
 					return true;
-				}
-			}
+				},
+			},
 		];
 
 		// If a git root finder is available, offer to allow the entire repository
@@ -181,8 +190,8 @@ export class ChatExternalPathConfirmationContribution implements ILanguageModelT
 			} else if (cached) {
 				// Previously resolved: show with the known repo path
 				actions.push({
-					label: localize('allowRepoSession', 'Allow all files in this repository for this session'),
-					detail: localize('allowRepoSessionDetail', 'Allow reading files from {0}', cached.fsPath),
+					label: localize("allowRepoSession", "Allow all files in this repository for this session"),
+					detail: localize("allowRepoSessionDetail", "Allow reading files from {0}", cached.fsPath),
 					select: async () => {
 						let folders = allowlist.get(sessionResource);
 						if (!folders) {
@@ -191,13 +200,13 @@ export class ChatExternalPathConfirmationContribution implements ILanguageModelT
 						}
 						folders.add(cached);
 						return true;
-					}
+					},
 				});
 			} else {
 				// Not yet resolved: show the option and resolve on selection
 				actions.push({
-					label: localize('allowRepoSession', 'Allow all files in this repository for this session'),
-					detail: localize('allowRepoSessionDetailLookup', 'Looks up the containing git repository for this path'),
+					label: localize("allowRepoSession", "Allow all files in this repository for this session"),
+					detail: localize("allowRepoSessionDetailLookup", "Looks up the containing git repository for this path"),
 					select: async () => {
 						const gitRootUri = await findGitRoot(pathUri);
 						gitRootCache.set(pathUri, gitRootUri ?? null);
@@ -209,7 +218,7 @@ export class ChatExternalPathConfirmationContribution implements ILanguageModelT
 						// If we found the git root, allow the entire repo; otherwise fall back to just this folder
 						folders.add(gitRootUri ?? folderUri);
 						return true;
-					}
+					},
 				});
 			}
 		}
@@ -225,7 +234,7 @@ export class ChatExternalPathConfirmationContribution implements ILanguageModelT
 		for (const folderUri of workspaceFolders) {
 			items.push({
 				label: this._labelService.getUriLabel(folderUri),
-				description: localize('workspaceScope', "Workspace"),
+				description: localize("workspaceScope", "Workspace"),
 				checked: true,
 				onDidChangeChecked: (checked) => {
 					if (!checked) {
@@ -247,10 +256,12 @@ export class ChatExternalPathConfirmationContribution implements ILanguageModelT
 			}
 		}
 		for (const folderUri of allSessionFolders) {
-			const wasInSessions = [...this._sessionFolderAllowlist].filter(([, folders]) => folders.has(folderUri));
+			const wasInSessions = [...this._sessionFolderAllowlist].filter(
+        ([, folders]) => folders.has(folderUri),
+      );
 			items.push({
 				label: this._labelService.getUriLabel(folderUri),
-				description: localize('sessionScope', "Session"),
+				description: localize("sessionScope", "Session"),
 				checked: true,
 				onDidChangeChecked: (checked) => {
 					if (!checked) {
@@ -271,8 +282,8 @@ export class ChatExternalPathConfirmationContribution implements ILanguageModelT
 			const pickFolder = this._pickFolder;
 			items.push({
 				pickable: false,
-				label: localize('addPath', "Add Path..."),
-				description: localize('addPathDescription', "Allow a folder in this workspace"),
+				label: localize("addPath", "Add Path..."),
+				description: localize("addPathDescription", "Allow a folder in this workspace"),
 				onDidOpen: async () => {
 					const uri = await pickFolder();
 					if (uri) {
@@ -280,7 +291,7 @@ export class ChatExternalPathConfirmationContribution implements ILanguageModelT
 						folders.add(uri);
 						this._setWorkspaceFolders(folders);
 					}
-				}
+				},
 			});
 		}
 

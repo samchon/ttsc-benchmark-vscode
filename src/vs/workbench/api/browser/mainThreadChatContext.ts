@@ -3,20 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { IChatContextItem } from '../../contrib/chat/common/contextContrib/chatContext.js';
-import { extHostNamedCustomer, IExtHostContext } from '../../services/extensions/common/extHostCustomers.js';
-import { ExtHostChatContextShape, ExtHostContext, IChatContextItemDto, IDocumentFilterDto, MainContext, MainThreadChatContextShape } from '../common/extHost.protocol.js';
-import { IChatContextService } from '../../contrib/chat/browser/contextContrib/chatContextService.js';
-import { URI } from '../../../base/common/uri.js';
-import { Proxied } from '../../services/extensions/common/proxyIdentifier.js';
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { IChatContextItem } from "../../contrib/chat/common/contextContrib/chatContext.js";
+import { extHostNamedCustomer, IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+import {
+  ExtHostChatContextShape,
+  ExtHostContext,
+  IChatContextItemDto,
+  IDocumentFilterDto,
+  MainContext,
+  MainThreadChatContextShape,
+} from "../common/extHost.protocol.js";
+import { IChatContextService } from "../../contrib/chat/browser/contextContrib/chatContextService.js";
+import { URI } from "../../../base/common/uri.js";
+import { Proxied } from "../../services/extensions/common/proxyIdentifier.js";
 
 function reviveContextItem(item: IChatContextItemDto): IChatContextItem {
 	return {
-		...item,
-		resourceUri: item.resourceUri ? URI.revive(item.resourceUri) : undefined
-	};
+    ...item,
+    resourceUri: item.resourceUri ? URI.revive(item.resourceUri) : undefined,
+  };
 }
 
 function reviveContextItems(items: IChatContextItemDto[]): IChatContextItem[] {
@@ -30,11 +37,13 @@ export class MainThreadChatContext extends Disposable implements MainThreadChatC
 
 	constructor(
 		extHostContext: IExtHostContext,
-		@IChatContextService private readonly _chatContextService: IChatContextService
+		@IChatContextService private readonly _chatContextService: IChatContextService,
 	) {
 		super();
 		this._proxy = extHostContext.getProxy(ExtHostContext.ExtHostChatContext);
-		this._chatContextService.setExecuteCommandCallback((itemHandle) => this._proxy.$executeChatContextItemCommand(itemHandle));
+		this._chatContextService.setExecuteCommandCallback(
+      (itemHandle) => this._proxy.$executeChatContextItemCommand(itemHandle),
+    );
 	}
 
 	$registerChatWorkspaceContextProvider(handle: number, id: string): void {
@@ -43,7 +52,7 @@ export class MainThreadChatContext extends Disposable implements MainThreadChatC
 			provideWorkspaceChatContext: async (token: CancellationToken) => {
 				const items = await this._proxy.$provideWorkspaceChatContext(handle, token);
 				return reviveContextItems(items);
-			}
+			},
 		});
 	}
 
@@ -57,7 +66,7 @@ export class MainThreadChatContext extends Disposable implements MainThreadChatC
 			resolveChatContext: async (context: IChatContextItem, token: CancellationToken) => {
 				const result = await this._proxy.$resolveExplicitChatContext(handle, context, token);
 				return reviveContextItem(result);
-			}
+			},
 		});
 	}
 
@@ -71,7 +80,7 @@ export class MainThreadChatContext extends Disposable implements MainThreadChatC
 			resolveChatContext: async (context: IChatContextItem, token: CancellationToken) => {
 				const result = await this._proxy.$resolveResourceChatContext(handle, context, token);
 				return reviveContextItem(result);
-			}
+			},
 		});
 	}
 
@@ -89,7 +98,10 @@ export class MainThreadChatContext extends Disposable implements MainThreadChatC
 		if (!provider) {
 			return;
 		}
-		this._chatContextService.updateWorkspaceContextItems(provider.id, reviveContextItems(items));
+		this._chatContextService.updateWorkspaceContextItems(
+      provider.id,
+      reviveContextItems(items),
+    );
 	}
 
 	$executeChatContextItemCommand(itemHandle: number): Promise<void> {

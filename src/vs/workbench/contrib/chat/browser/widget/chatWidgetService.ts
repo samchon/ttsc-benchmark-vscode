@@ -3,23 +3,30 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../../base/browser/dom.js';
-import { timeout } from '../../../../../base/common/async.js';
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { combinedDisposable, Disposable, IDisposable, toDisposable } from '../../../../../base/common/lifecycle.js';
-import { isEqual } from '../../../../../base/common/resources.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { ILayoutService } from '../../../../../platform/layout/browser/layoutService.js';
-import { ILogService } from '../../../../../platform/log/common/log.js';
-import { ACTIVE_GROUP, IEditorService, type PreferredGroup } from '../../../../services/editor/common/editorService.js';
-import { IEditorGroup, IEditorGroupsService, isEditorGroup } from '../../../../services/editor/common/editorGroupsService.js';
-import { IViewsService } from '../../../../services/views/common/viewsService.js';
-import { IChatService } from '../../common/chatService/chatService.js';
-import { ChatAgentLocation } from '../../common/constants.js';
-import { ChatViewId, ChatViewPaneTarget, IChatWidget, IChatWidgetService, IQuickChatService, isIChatViewViewContext } from '../chat.js';
-import { ChatEditor, IChatEditorOptions } from '../widgetHosts/editor/chatEditor.js';
-import { ChatEditorInput } from '../widgetHosts/editor/chatEditorInput.js';
-import { ChatViewPane } from '../widgetHosts/viewPane/chatViewPane.js';
+import * as dom from "../../../../../base/browser/dom.js";
+import { timeout } from "../../../../../base/common/async.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { combinedDisposable, Disposable, IDisposable, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { isEqual } from "../../../../../base/common/resources.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ILayoutService } from "../../../../../platform/layout/browser/layoutService.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { ACTIVE_GROUP, IEditorService, type PreferredGroup } from "../../../../services/editor/common/editorService.js";
+import { IEditorGroup, IEditorGroupsService, isEditorGroup } from "../../../../services/editor/common/editorGroupsService.js";
+import { IViewsService } from "../../../../services/views/common/viewsService.js";
+import { IChatService } from "../../common/chatService/chatService.js";
+import { ChatAgentLocation } from "../../common/constants.js";
+import {
+  ChatViewId,
+  ChatViewPaneTarget,
+  IChatWidget,
+  IChatWidgetService,
+  IQuickChatService,
+  isIChatViewViewContext,
+} from "../chat.js";
+import { ChatEditor, IChatEditorOptions } from "../widgetHosts/editor/chatEditor.js";
+import { ChatEditorInput } from "../widgetHosts/editor/chatEditorInput.js";
+import { ChatViewPane } from "../widgetHosts/viewPane/chatViewPane.js";
 
 export class ChatWidgetService extends Disposable implements IChatWidgetService {
 
@@ -34,10 +41,14 @@ export class ChatWidgetService extends Disposable implements IChatWidgetService 
 	private readonly _onDidBackgroundSession = this._register(new Emitter<URI>());
 	readonly onDidBackgroundSession = this._onDidBackgroundSession.event;
 
-	private readonly _onDidChangeFocusedWidget = this._register(new Emitter<IChatWidget | undefined>());
+	private readonly _onDidChangeFocusedWidget = this._register(
+    new Emitter<IChatWidget | undefined>(),
+  );
 	readonly onDidChangeFocusedWidget = this._onDidChangeFocusedWidget.event;
 
-	private readonly _onDidChangeFocusedSession = this._register(new Emitter<void>());
+	private readonly _onDidChangeFocusedSession = this._register(
+    new Emitter<void>(),
+  );
 	readonly onDidChangeFocusedSession = this._onDidChangeFocusedSession.event;
 
 	constructor(
@@ -69,7 +80,9 @@ export class ChatWidgetService extends Disposable implements IChatWidgetService 
 	}
 
 	getWidgetBySessionResource(sessionResource: URI): IChatWidget | undefined {
-		return this._widgets.find(w => isEqual(w.viewModel?.sessionResource, sessionResource));
+		return this._widgets.find(
+      w => isEqual(w.viewModel?.sessionResource, sessionResource),
+    );
 	}
 
 	async revealWidget(preserveFocus?: boolean): Promise<IChatWidget | undefined> {
@@ -78,19 +91,28 @@ export class ChatWidgetService extends Disposable implements IChatWidgetService 
 			return last;
 		}
 
-		return (await this.viewsService.openView<ChatViewPane>(ChatViewId, !preserveFocus))?.widget;
+		return (await this.viewsService.openView<ChatViewPane>(
+      ChatViewId,
+      !preserveFocus,
+    ))?.widget;
 	}
 
 	async reveal(widget: IChatWidget, preserveFocus?: boolean): Promise<boolean> {
 		if (widget.viewModel?.sessionResource) {
-			const alreadyOpenWidget = await this.revealSessionIfAlreadyOpen(widget.viewModel.sessionResource, { preserveFocus });
+			const alreadyOpenWidget = await this.revealSessionIfAlreadyOpen(
+        widget.viewModel.sessionResource,
+        { preserveFocus },
+      );
 			if (alreadyOpenWidget) {
 				return true;
 			}
 		}
 
 		if (isIChatViewViewContext(widget.viewContext)) {
-			const view = await this.viewsService.openView(widget.viewContext.viewId, !preserveFocus);
+			const view = await this.viewsService.openView(
+        widget.viewContext.viewId,
+        !preserveFocus,
+      );
 			if (!preserveFocus) {
 				view?.focus();
 			}
@@ -107,14 +129,21 @@ export class ChatWidgetService extends Disposable implements IChatWidgetService 
 	openSession(sessionResource: URI, target?: PreferredGroup, options?: IChatEditorOptions): Promise<IChatWidget | undefined>;
 	async openSession(sessionResource: URI, target?: typeof ChatViewPaneTarget | PreferredGroup, options?: IChatEditorOptions): Promise<IChatWidget | undefined> {
 		const t0 = Date.now();
-		const targetKind = target === ChatViewPaneTarget ? 'view' : (typeof target === 'undefined' ? 'undefined' : 'editor');
-		this.logService.trace(`[ChatWidgetService] openSession start uri=${sessionResource.toString()} target=${targetKind}`);
+		const targetKind = target === ChatViewPaneTarget ? "view" : (typeof target === "undefined" ? "undefined" : "editor");
+		this.logService.trace(
+      `[ChatWidgetService] openSession start uri=${sessionResource.toString()} target=${targetKind}`,
+    );
 
 		// Reveal if already open unless instructed otherwise
-		if (typeof target === 'undefined' || options?.revealIfOpened) {
-			const alreadyOpenWidget = await this.revealSessionIfAlreadyOpen(sessionResource, options);
+		if (typeof target === "undefined" || options?.revealIfOpened) {
+			const alreadyOpenWidget = await this.revealSessionIfAlreadyOpen(
+        sessionResource,
+        options,
+      );
 			if (alreadyOpenWidget) {
-				this.logService.trace(`[ChatWidgetService] openSession done total=${Date.now() - t0}ms uri=${sessionResource.toString()} path=reveal`);
+				this.logService.trace(
+          `[ChatWidgetService] openSession done total=${Date.now() - t0}ms uri=${sessionResource.toString()} path=reveal`,
+        );
 				return alreadyOpenWidget;
 			}
 		} else {
@@ -122,15 +151,20 @@ export class ChatWidgetService extends Disposable implements IChatWidgetService 
 		}
 
 		// Load this session in chat view (preferred)
-		if (target === ChatViewPaneTarget || typeof target === 'undefined') {
-			const chatView = await this.viewsService.openView<ChatViewPane>(ChatViewId, !options?.preserveFocus);
+		if (target === ChatViewPaneTarget || typeof target === "undefined") {
+			const chatView = await this.viewsService.openView<ChatViewPane>(
+        ChatViewId,
+        !options?.preserveFocus,
+      );
 			if (chatView) {
 				await chatView.loadSession(sessionResource);
 				if (!options?.preserveFocus) {
 					chatView.focusInput();
 				}
 			}
-			this.logService.trace(`[ChatWidgetService] openSession done total=${Date.now() - t0}ms uri=${sessionResource.toString()} path=view`);
+			this.logService.trace(
+        `[ChatWidgetService] openSession done total=${Date.now() - t0}ms uri=${sessionResource.toString()} path=view`,
+      );
 			return chatView?.widget;
 		}
 
@@ -139,18 +173,26 @@ export class ChatWidgetService extends Disposable implements IChatWidgetService 
 			resource: sessionResource,
 			options: {
 				...options,
-				revealIfOpened: options?.revealIfOpened ?? true // always try to reveal if already opened unless explicitly told not to
-			}
+				revealIfOpened: options?.revealIfOpened ?? true, // always try to reveal if already opened unless explicitly told not to
+			},
 		}, target);
-		this.logService.trace(`[ChatWidgetService] openSession done total=${Date.now() - t0}ms uri=${sessionResource.toString()} path=editor`);
+		this.logService.trace(
+      `[ChatWidgetService] openSession done total=${Date.now() - t0}ms uri=${sessionResource.toString()} path=editor`,
+    );
 		return pane instanceof ChatEditor ? pane.widget : undefined;
 	}
 
 	private async revealSessionIfAlreadyOpen(sessionResource: URI, options?: IChatEditorOptions): Promise<IChatWidget | undefined> {
 		// Already open in chat view?
 		const chatView = this.viewsService.getViewWithId<ChatViewPane>(ChatViewId);
-		if (chatView?.widget.viewModel?.sessionResource && isEqual(chatView.widget.viewModel.sessionResource, sessionResource)) {
-			const view = await this.viewsService.openView(ChatViewId, !options?.preserveFocus);
+		if (chatView?.widget.viewModel?.sessionResource && isEqual(
+      chatView.widget.viewModel.sessionResource,
+      sessionResource,
+    )) {
+			const view = await this.viewsService.openView(
+        ChatViewId,
+        !options?.preserveFocus,
+      );
 			if (!options?.preserveFocus) {
 				view?.focus();
 			}
@@ -165,14 +207,26 @@ export class ChatWidgetService extends Disposable implements IChatWidgetService 
 			// focus transfer to other documents is async. If we depend on the focus
 			// being synchronously transferred in consuming code, this can fail, so
 			// wait for it to propagate
-			const isGroupActive = () => dom.getWindow(this.layoutService.activeContainer).vscodeWindowId === existingEditorWindowId;
+			const isGroupActive = () => dom.getWindow(
+        this.layoutService.activeContainer,
+      ).vscodeWindowId === existingEditorWindowId;
 
 			let ensureFocusTransfer: Promise<void> | undefined;
 			if (!isGroupActive() && !options?.preserveFocus) {
-				ensureFocusTransfer = Event.toPromise(Event.once(Event.filter(this.layoutService.onDidChangeActiveContainer, isGroupActive)));
+				ensureFocusTransfer = Event.toPromise(
+          Event.once(
+            Event.filter(
+              this.layoutService.onDidChangeActiveContainer,
+              isGroupActive,
+            ),
+          ),
+        );
 			}
 
-			const pane = await existingEditor.group.openEditor(existingEditor.editor, options);
+			const pane = await existingEditor.group.openEditor(
+        existingEditor.editor,
+        options,
+      );
 			await ensureFocusTransfer;
 			return pane instanceof ChatEditor ? pane.widget : undefined;
 		}
@@ -189,21 +243,33 @@ export class ChatWidgetService extends Disposable implements IChatWidgetService 
 	private async prepareSessionForMove(sessionResource: URI, target: typeof ChatViewPaneTarget | PreferredGroup | undefined): Promise<void> {
 		const existingWidget = this.getWidgetBySessionResource(sessionResource);
 		if (existingWidget) {
-			const existingEditor = isIChatViewViewContext(existingWidget.viewContext) ?
+			const existingEditor = isIChatViewViewContext(
+        existingWidget.viewContext,
+      ) ?
 				undefined :
 				this.findExistingChatEditorByUri(sessionResource);
 
-			if (isIChatViewViewContext(existingWidget.viewContext) && target === ChatViewPaneTarget) {
+			if (isIChatViewViewContext(
+        existingWidget.viewContext,
+      ) && target === ChatViewPaneTarget) {
 				return;
 			}
 
-			if (!isIChatViewViewContext(existingWidget.viewContext) && target !== ChatViewPaneTarget && existingEditor && this.isSameEditorTarget(existingEditor.group.id, target)) {
+			if (!isIChatViewViewContext(
+        existingWidget.viewContext,
+      ) && target !== ChatViewPaneTarget && existingEditor && this.isSameEditorTarget(
+        existingEditor.group.id,
+        target,
+      )) {
 				return;
 			}
 
 			if (existingEditor) {
 				// widget.clear() on an editor leaves behind an empty chat editor
-				await this.editorService.closeEditor({ editor: existingEditor.editor, groupId: existingEditor.group.id }, { preserveFocus: true });
+				await this.editorService.closeEditor(
+          { editor: existingEditor.editor, groupId: existingEditor.group.id },
+          { preserveFocus: true },
+        );
 			} else {
 				await existingWidget.clear();
 			}
@@ -213,7 +279,10 @@ export class ChatWidgetService extends Disposable implements IChatWidgetService 
 	private findExistingChatEditorByUri(sessionUri: URI): { editor: ChatEditorInput; group: IEditorGroup } | undefined {
 		for (const group of this.editorGroupsService.groups) {
 			for (const editor of group.editors) {
-				if (editor instanceof ChatEditorInput && isEqual(editor.sessionResource, sessionUri)) {
+				if (editor instanceof ChatEditorInput && isEqual(
+          editor.sessionResource,
+          sessionUri,
+        )) {
 					return { editor, group };
 				}
 			}
@@ -222,7 +291,7 @@ export class ChatWidgetService extends Disposable implements IChatWidgetService 
 	}
 
 	private isSameEditorTarget(currentGroupId: number, target?: PreferredGroup): boolean {
-		return typeof target === 'number' && target === currentGroupId ||
+		return typeof target === "number" && target === currentGroupId ||
 			target === ACTIVE_GROUP && this.editorGroupsService.activeGroup?.id === currentGroupId ||
 			isEditorGroup(target) && target.id === currentGroupId;
 	}
@@ -239,7 +308,7 @@ export class ChatWidgetService extends Disposable implements IChatWidgetService 
 
 	register(newWidget: IChatWidget): IDisposable {
 		if (this._widgets.some(widget => widget === newWidget)) {
-			throw new Error('Cannot register the same widget multiple times');
+			throw new Error("Cannot register the same widget multiple times");
 		}
 
 		this._widgets.push(newWidget);
@@ -272,7 +341,7 @@ export class ChatWidgetService extends Disposable implements IChatWidgetService 
 				if (this._lastFocusedWidget === newWidget) {
 					this.setLastFocusedWidget(undefined);
 				}
-			})
+			}),
 		);
 	}
 }

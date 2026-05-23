@@ -3,24 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { getWindow } from '../../../../../../base/browser/dom.js';
-import { IMouseEvent, StandardMouseEvent } from '../../../../../../base/browser/mouseEvent.js';
-import { Event } from '../../../../../../base/common/event.js';
-import { IObservable } from '../../../../../../base/common/observable.js';
+import { getWindow } from "../../../../../../base/browser/dom.js";
+import { IMouseEvent, StandardMouseEvent } from "../../../../../../base/browser/mouseEvent.js";
+import { Event } from "../../../../../../base/common/event.js";
+import { IObservable } from "../../../../../../base/common/observable.js";
 
 export enum InlineEditTabAction {
-	Jump = 'jump',
-	Accept = 'accept',
-	Inactive = 'inactive'
+	Jump = "jump",
+	Accept = "accept",
+	Inactive = "inactive"
 }
 
 export class InlineEditClickEvent {
 	static create(event: PointerEvent | MouseEvent, alternativeAction: boolean = false) {
-		return new InlineEditClickEvent(new StandardMouseEvent(getWindow(event), event), alternativeAction);
+		return new InlineEditClickEvent(
+      new StandardMouseEvent(getWindow(event), event),
+      alternativeAction,
+    );
 	}
 	constructor(
 		public readonly event: IMouseEvent,
-		public readonly alternativeAction: boolean = false
+		public readonly alternativeAction: boolean = false,
 	) { }
 }
 
@@ -32,16 +35,16 @@ export interface IInlineEditsView {
 
 // TODO: Move this out of here as it is also includes ghosttext
 export enum InlineCompletionViewKind {
-	GhostText = 'ghostText',
-	Custom = 'custom',
-	SideBySide = 'sideBySide',
-	Deletion = 'deletion',
-	InsertionInline = 'insertionInline',
-	InsertionMultiLine = 'insertionMultiLine',
-	WordReplacements = 'wordReplacements',
-	LineReplacement = 'lineReplacement',
-	Collapsed = 'collapsed',
-	JumpTo = 'jumpTo'
+	GhostText = "ghostText",
+	Custom = "custom",
+	SideBySide = "sideBySide",
+	Deletion = "deletion",
+	InsertionInline = "insertionInline",
+	InsertionMultiLine = "insertionMultiLine",
+	WordReplacements = "wordReplacements",
+	LineReplacement = "lineReplacement",
+	Collapsed = "collapsed",
+	JumpTo = "jumpTo"
 }
 
 export class InlineCompletionViewData {
@@ -57,7 +60,7 @@ export class InlineCompletionViewData {
 		public readonly characterCountOriginal: number,
 		public readonly characterCountModified: number,
 		public readonly disjointReplacements: number,
-		public readonly sameShapeReplacements?: boolean
+		public readonly sameShapeReplacements?: boolean,
 	) { }
 
 	setLongDistanceViewData(lineNumber: number, inlineEditLineNumber: number): void {
@@ -67,16 +70,16 @@ export class InlineCompletionViewData {
 
 	getData() {
 		return {
-			cursorColumnDistance: this.cursorColumnDistance,
-			cursorLineDistance: this.cursorLineDistance,
-			lineCountOriginal: this.lineCountOriginal,
-			lineCountModified: this.lineCountModified,
-			characterCountOriginal: this.characterCountOriginal,
-			characterCountModified: this.characterCountModified,
-			disjointReplacements: this.disjointReplacements,
-			sameShapeReplacements: this.sameShapeReplacements,
-			longDistanceHintVisible: this.longDistanceHintVisible,
-			longDistanceHintDistance: this.longDistanceHintDistance
-		};
+      cursorColumnDistance: this.cursorColumnDistance,
+      cursorLineDistance: this.cursorLineDistance,
+      lineCountOriginal: this.lineCountOriginal,
+      lineCountModified: this.lineCountModified,
+      characterCountOriginal: this.characterCountOriginal,
+      characterCountModified: this.characterCountModified,
+      disjointReplacements: this.disjointReplacements,
+      sameShapeReplacements: this.sameShapeReplacements,
+      longDistanceHintVisible: this.longDistanceHintVisible,
+      longDistanceHintDistance: this.longDistanceHintDistance,
+    };
 	}
 }

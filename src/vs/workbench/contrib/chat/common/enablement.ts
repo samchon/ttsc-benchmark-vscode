@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { IReader, ITransaction } from '../../../../base/common/observable.js';
-import { ObservableMemento, observableMemento } from '../../../../platform/observable/common/observableMemento.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IReader, ITransaction } from "../../../../base/common/observable.js";
+import { ObservableMemento, observableMemento } from "../../../../platform/observable/common/observableMemento.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
 
 export const enum ContributionEnablementState {
 	DisabledProfile,
@@ -60,19 +60,19 @@ export class EnablementModel extends Disposable implements IEnablementModel {
 		super();
 
 		const mapMemento = observableMemento<EnablementMap>({
-			key: storageKey,
-			defaultValue: new Map(),
-			toStorage: mapToStorage,
-			fromStorage: mapFromStorage,
-		});
+      key: storageKey,
+      defaultValue: new Map(),
+      toStorage: mapToStorage,
+      fromStorage: mapFromStorage,
+    });
 
 		this._profileState = this._register(
-			mapMemento(StorageScope.PROFILE, StorageTarget.MACHINE, storageService)
-		);
+      mapMemento(StorageScope.PROFILE, StorageTarget.MACHINE, storageService),
+    );
 
 		this._workspaceState = this._register(
-			mapMemento(StorageScope.WORKSPACE, StorageTarget.MACHINE, storageService)
-		);
+      mapMemento(StorageScope.WORKSPACE, StorageTarget.MACHINE, storageService),
+    );
 	}
 
 	readEnabled(key: string, reader?: IReader): ContributionEnablementState {

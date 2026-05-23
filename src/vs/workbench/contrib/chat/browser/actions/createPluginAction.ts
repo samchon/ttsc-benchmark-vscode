@@ -3,51 +3,65 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from '../../../../../base/common/buffer.js';
-import { CancellationTokenSource } from '../../../../../base/common/cancellation.js';
-import { Codicon } from '../../../../../base/common/codicons.js';
-import { parse as parseJSONC } from '../../../../../base/common/jsonc.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { basename, dirname, joinPath } from '../../../../../base/common/resources.js';
-import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { isUriComponents, URI } from '../../../../../base/common/uri.js';
-import { localize, localize2 } from '../../../../../nls.js';
-import { Action2, MenuId, registerAction2 } from '../../../../../platform/actions/common/actions.js';
-import { ICommandService } from '../../../../../platform/commands/common/commands.js';
-import { IFileDialogService } from '../../../../../platform/dialogs/common/dialogs.js';
-import { IFileService } from '../../../../../platform/files/common/files.js';
-import { ContextKeyExpr } from '../../../../../platform/contextkey/common/contextkey.js';
-import { ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
-import { INotificationService } from '../../../../../platform/notification/common/notification.js';
-import { IQuickInputButton, IQuickInputService, IQuickTreeItem } from '../../../../../platform/quickinput/common/quickInput.js';
-import { InstalledAgentPluginsViewId } from '../chat.js';
-import { ChatContextKeys } from '../../common/actions/chatContextKeys.js';
-import { PromptsType } from '../../common/promptSyntax/promptTypes.js';
-import { IPromptPath, IPromptsService, PromptsStorage } from '../../common/promptSyntax/service/promptsService.js';
-import { IMcpRegistry } from '../../../mcp/common/mcpRegistryTypes.js';
-import { McpCollectionDefinition, McpCollectionSortOrder, McpServerDefinition, McpServerTransportType } from '../../../mcp/common/mcpTypes.js';
-import { CHAT_CATEGORY } from './chatActions.js';
+import { VSBuffer } from "../../../../../base/common/buffer.js";
+import { CancellationTokenSource } from "../../../../../base/common/cancellation.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { parse as parseJSONC } from "../../../../../base/common/jsonc.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { basename, dirname, joinPath } from "../../../../../base/common/resources.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { isUriComponents, URI } from "../../../../../base/common/uri.js";
+import { localize, localize2 } from "../../../../../nls.js";
+import { Action2, MenuId, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { IFileDialogService } from "../../../../../platform/dialogs/common/dialogs.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
+import { INotificationService } from "../../../../../platform/notification/common/notification.js";
+import { IQuickInputButton, IQuickInputService, IQuickTreeItem } from "../../../../../platform/quickinput/common/quickInput.js";
+import { InstalledAgentPluginsViewId } from "../chat.js";
+import { ChatContextKeys } from "../../common/actions/chatContextKeys.js";
+import { PromptsType } from "../../common/promptSyntax/promptTypes.js";
+import { IPromptPath, IPromptsService, PromptsStorage } from "../../common/promptSyntax/service/promptsService.js";
+import { IMcpRegistry } from "../../../mcp/common/mcpRegistryTypes.js";
+import {
+  McpCollectionDefinition,
+  McpCollectionSortOrder,
+  McpServerDefinition,
+  McpServerTransportType,
+} from "../../../mcp/common/mcpTypes.js";
+import { CHAT_CATEGORY } from "./chatActions.js";
 
 const VALID_PLUGIN_NAME = /^[a-z0-9]([a-z0-9\-.]*[a-z0-9])?$/;
 const INVALID_CONSECUTIVE = /--|[.][.]/;
 
 export function validatePluginName(name: string): string | undefined {
 	if (!name) {
-		return localize('pluginNameRequired', "Plugin name is required.");
+		return localize("pluginNameRequired", "Plugin name is required.");
 	}
 	if (name.length > 64) {
-		return localize('pluginNameTooLong', "Plugin name must be at most 64 characters.");
+		return localize(
+      "pluginNameTooLong",
+      "Plugin name must be at most 64 characters.",
+    );
 	}
 	if (!VALID_PLUGIN_NAME.test(name)) {
-		return localize('pluginNameInvalid', "Plugin name must contain only lowercase alphanumeric characters, hyphens, and periods, and must start and end with an alphanumeric character.");
+		return localize(
+      "pluginNameInvalid",
+      "Plugin name must contain only lowercase alphanumeric characters, hyphens, and periods, and must start and end with an alphanumeric character.",
+    );
 	}
 	if (INVALID_CONSECUTIVE.test(name)) {
-		return localize('pluginNameConsecutive', "Plugin name must not contain consecutive hyphens or periods.");
+		return localize(
+      "pluginNameConsecutive",
+      "Plugin name must not contain consecutive hyphens or periods.",
+    );
 	}
 	return undefined;
 }
 
-type ResourceType = 'instruction' | 'prompt' | 'agent' | 'skill' | 'hook' | 'mcp';
+type ResourceType = "instruction" | "prompt" | "agent" | "skill" | "hook" | "mcp";
 
 export interface IResourceTreeItem extends IQuickTreeItem {
 	readonly resourceType: ResourceType;
@@ -80,7 +94,7 @@ export function getResourceLabel(r: IPromptPath): string {
 	if (r.name) {
 		return r.name;
 	}
-	if (r.type === PromptsType.skill && basename(r.uri).toLowerCase() === 'skill.md') {
+	if (r.type === PromptsType.skill && basename(r.uri).toLowerCase() === "skill.md") {
 		return basename(dirname(r.uri));
 	}
 	return basename(r.uri);
@@ -92,18 +106,18 @@ export function getResourceLabel(r: IPromptPath): string {
  */
 export function getResourceFileName(r: IPromptPath): string {
 	const label = getResourceLabel(r);
-	const colonIndex = label.indexOf(':');
+	const colonIndex = label.indexOf(":");
 	return colonIndex >= 0 ? label.substring(colonIndex + 1) : label;
 }
 
 class CreatePluginAction extends Action2 {
 
-	static readonly ID = 'workbench.action.chat.createPlugin';
+	static readonly ID = "workbench.action.chat.createPlugin";
 
 	constructor() {
 		super({
 			id: CreatePluginAction.ID,
-			title: localize2('chat.createPlugin', "Create Plugin"),
+			title: localize2("chat.createPlugin", "Create Plugin"),
 			category: CHAT_CATEGORY,
 			f1: true,
 			precondition: ChatContextKeys.enabled,
@@ -111,11 +125,11 @@ class CreatePluginAction extends Action2 {
 			menu: [{
 				id: MenuId.ViewTitle,
 				when: ContextKeyExpr.and(
-					ContextKeyExpr.equals('view', InstalledAgentPluginsViewId),
+					ContextKeyExpr.equals("view", InstalledAgentPluginsViewId),
 					ChatContextKeys.Setup.hidden.negate(),
 					ChatContextKeys.Setup.disabledInWorkspace.negate(),
 				),
-				group: 'navigation',
+				group: "navigation",
 				order: 2,
 			}],
 		});
@@ -160,32 +174,49 @@ class CreatePluginAction extends Action2 {
 				groupLabel: string,
 				icon: ThemeIcon,
 			) => {
-				const filtered = showAll ? resources : resources.filter(r => isUserDefined(r.storage));
+				const filtered = showAll ? resources : resources.filter(
+          r => isUserDefined(r.storage),
+        );
 				if (filtered.length === 0) {
 					return;
 				}
 				const children: IResourceTreeItem[] = filtered.map(r => ({
-					label: getResourceLabel(r),
-					description: r.storage,
-					resourceType,
-					promptPath: r,
-					checked: false,
-				}));
+          label: getResourceLabel(r),
+          description: r.storage,
+          resourceType,
+          promptPath: r,
+          checked: false,
+        }));
 				groups.push({
-					label: groupLabel,
-					iconClass: ThemeIcon.asClassName(icon),
-					checked: undefined,
-					collapsed: false,
-					pickable: false,
-					children,
-				});
+          label: groupLabel,
+          iconClass: ThemeIcon.asClassName(icon),
+          checked: undefined,
+          collapsed: false,
+          pickable: false,
+          children,
+        });
 			};
 
-			addGroup(instructions, 'instruction', localize('instructions', "Instructions"), Codicon.book);
-			addGroup(prompts, 'prompt', localize('prompts', "Prompts"), Codicon.comment);
-			addGroup(agents, 'agent', localize('agents', "Agents"), Codicon.copilot);
-			addGroup(skills, 'skill', localize('skills', "Skills"), Codicon.lightbulb);
-			addGroup(hooks, 'hook', localize('hooks', "Hooks"), Codicon.zap);
+			addGroup(
+        instructions,
+        "instruction",
+        localize("instructions", "Instructions"),
+        Codicon.book,
+      );
+			addGroup(
+        prompts,
+        "prompt",
+        localize("prompts", "Prompts"),
+        Codicon.comment,
+      );
+			addGroup(agents, "agent", localize("agents", "Agents"), Codicon.copilot);
+			addGroup(
+        skills,
+        "skill",
+        localize("skills", "Skills"),
+        Codicon.lightbulb,
+      );
+			addGroup(hooks, "hook", localize("hooks", "Hooks"), Codicon.zap);
 
 			// MCP servers
 			const mcpChildren: IResourceTreeItem[] = [];
@@ -196,23 +227,23 @@ class CreatePluginAction extends Action2 {
 				const defs = collection.serverDefinitions.get();
 				for (const def of defs) {
 					mcpChildren.push({
-						label: def.label,
-						description: collection.label,
-						resourceType: 'mcp',
-						mcpServer: { collection, definition: def },
-						checked: false,
-					});
+            label: def.label,
+            description: collection.label,
+            resourceType: "mcp",
+            mcpServer: { collection, definition: def },
+            checked: false,
+          });
 				}
 			}
 			if (mcpChildren.length > 0) {
 				groups.push({
-					label: localize('mcpServers', "MCP Servers"),
-					iconClass: ThemeIcon.asClassName(Codicon.mcp),
-					checked: undefined,
-					collapsed: false,
-					pickable: false,
-					children: mcpChildren,
-				});
+          label: localize("mcpServers", "MCP Servers"),
+          iconClass: ThemeIcon.asClassName(Codicon.mcp),
+          checked: undefined,
+          collapsed: false,
+          pickable: false,
+          children: mcpChildren,
+        });
 			}
 
 			return groups;
@@ -220,15 +251,23 @@ class CreatePluginAction extends Action2 {
 
 		// Step 3: Show QuickTree for multi-select with groupings
 		const disposables = new DisposableStore();
-		const tree = disposables.add(quickInputService.createQuickTree<IGroupTreeItem | IResourceTreeItem>());
-		tree.placeholder = localize('selectResources', "Select resources to include in the plugin");
+		const tree = disposables.add(
+      quickInputService.createQuickTree<IGroupTreeItem | IResourceTreeItem>(),
+    );
+		tree.placeholder = localize(
+      "selectResources",
+      "Select resources to include in the plugin",
+    );
 		tree.matchOnDescription = true;
 		tree.matchOnLabel = true;
 		tree.sortByLabel = false;
-		tree.title = localize('createPluginTitle', "Create Plugin");
+		tree.title = localize("createPluginTitle", "Create Plugin");
 		tree.setItemTree(buildTree());
 
-		const toggleButton: IQuickInputButton = { iconClass: ThemeIcon.asClassName(Codicon.filter), tooltip: localize('showAll', "Show Built-in, Extension, and Plugin Resources") };
+		const toggleButton: IQuickInputButton = {
+      iconClass: ThemeIcon.asClassName(Codicon.filter),
+      tooltip: localize("showAll", "Show Built-in, Extension, and Plugin Resources"),
+    };
 		tree.buttons = [toggleButton];
 
 		disposables.add(tree.onDidTriggerButton((button: IQuickInputButton) => {
@@ -238,16 +277,22 @@ class CreatePluginAction extends Action2 {
 			}
 		}));
 
-		const selectedItems = await new Promise<readonly (IGroupTreeItem | IResourceTreeItem)[] | undefined>(resolve => {
-			disposables.add(tree.onDidAccept(() => {
-				resolve(tree.checkedLeafItems);
-				tree.hide();
-			}));
-			disposables.add(tree.onDidHide(() => {
-				resolve(undefined);
-			}));
-			tree.show();
-		});
+		const selectedItems = await new Promise<readonly (IGroupTreeItem | IResourceTreeItem)[] | undefined>(
+      resolve => {
+        disposables.add(
+          tree.onDidAccept(() => {
+            resolve(tree.checkedLeafItems);
+            tree.hide();
+          }),
+        );
+        disposables.add(
+          tree.onDidHide(() => {
+            resolve(undefined);
+          }),
+        );
+        tree.show();
+      },
+    );
 
 		disposables.dispose();
 
@@ -255,14 +300,16 @@ class CreatePluginAction extends Action2 {
 			return;
 		}
 
-		const selected = selectedItems.filter((i): i is IResourceTreeItem => !!i.resourceType);
+		const selected = selectedItems.filter(
+      (i): i is IResourceTreeItem => !!i.resourceType,
+    );
 
 		// Step 4: Ask for plugin name
 		const pluginName = await quickInputService.input({
-			prompt: localize('pluginNamePrompt', "Enter a name for the plugin"),
-			placeHolder: 'my-plugin',
-			validateInput: async (value: string) => validatePluginName(value),
-		});
+      prompt: localize("pluginNamePrompt", "Enter a name for the plugin"),
+      placeHolder: "my-plugin",
+      validateInput: async (value: string) => validatePluginName(value),
+    });
 
 		if (!pluginName) {
 			return;
@@ -270,12 +317,12 @@ class CreatePluginAction extends Action2 {
 
 		// Step 5: Ask where to save
 		const folderUris = await fileDialogService.showOpenDialog({
-			canSelectFiles: false,
-			canSelectFolders: true,
-			canSelectMany: false,
-			title: localize('selectPluginLocation', "Select Plugin Save Location"),
-			openLabel: localize('selectFolder', "Select Folder"),
-		});
+      canSelectFiles: false,
+      canSelectFolders: true,
+      canSelectMany: false,
+      title: localize("selectPluginLocation", "Select Plugin Save Location"),
+      openLabel: localize("selectFolder", "Select Folder"),
+    });
 
 		if (!folderUris || folderUris.length === 0) {
 			return;
@@ -286,7 +333,13 @@ class CreatePluginAction extends Action2 {
 
 		// Check if plugin directory already exists
 		if (await fileService.exists(pluginRoot)) {
-			notificationService.error(localize('pluginExists', "A directory named '{0}' already exists at this location. Please choose a different name or location.", pluginName));
+			notificationService.error(
+        localize(
+          "pluginExists",
+          "A directory named '{0}' already exists at this location. Please choose a different name or location.",
+          pluginName,
+        ),
+      );
 			return;
 		}
 
@@ -299,15 +352,27 @@ class CreatePluginAction extends Action2 {
 
 			// Step 8: Reveal the plugin directory in the OS file explorer
 			try {
-				await commandService.executeCommand('revealFileInOS', pluginRoot);
+				await commandService.executeCommand("revealFileInOS", pluginRoot);
 			} catch {
 				// revealFileInOS may not be available for all URI schemes
 			}
 
-			notificationService.info(localize('pluginCreated', "Plugin '{0}' created successfully.", pluginName));
+			notificationService.info(
+        localize(
+          "pluginCreated",
+          "Plugin '{0}' created successfully.",
+          pluginName,
+        ),
+      );
 
 		} catch (err) {
-			notificationService.error(localize('pluginCreateError', "Failed to create plugin: {0}", String(err)));
+			notificationService.error(
+        localize(
+          "pluginCreateError",
+          "Failed to create plugin: {0}",
+          String(err),
+        ),
+      );
 		}
 	}
 }
@@ -324,28 +389,31 @@ export async function writePluginToDisk(
 	await fileService.createFolder(pluginRoot);
 
 	// Create .plugin/plugin.json
-	const manifestDir = joinPath(pluginRoot, '.plugin');
+	const manifestDir = joinPath(pluginRoot, ".plugin");
 	await fileService.createFolder(manifestDir);
 	const manifest = {
-		name: pluginName,
-		version: '1.0.0',
-		description: '',
-	};
-	await fileService.writeFile(joinPath(manifestDir, 'plugin.json'), VSBuffer.fromString(JSON.stringify(manifest, null, '\t')));
+    name: pluginName,
+    version: "1.0.0",
+    description: "",
+  };
+	await fileService.writeFile(
+    joinPath(manifestDir, "plugin.json"),
+    VSBuffer.fromString(JSON.stringify(manifest, null, "\t")),
+  );
 
 	// Group selected items by type
 	const byType = {
-		instruction: selected.filter(i => i.resourceType === 'instruction'),
-		prompt: selected.filter(i => i.resourceType === 'prompt'),
-		agent: selected.filter(i => i.resourceType === 'agent'),
-		skill: selected.filter(i => i.resourceType === 'skill'),
-		hook: selected.filter(i => i.resourceType === 'hook'),
-		mcp: selected.filter(i => i.resourceType === 'mcp'),
-	};
+    instruction: selected.filter(i => i.resourceType === "instruction"),
+    prompt: selected.filter(i => i.resourceType === "prompt"),
+    agent: selected.filter(i => i.resourceType === "agent"),
+    skill: selected.filter(i => i.resourceType === "skill"),
+    hook: selected.filter(i => i.resourceType === "hook"),
+    mcp: selected.filter(i => i.resourceType === "mcp"),
+  };
 
 	// Copy instructions → rules/
 	if (byType.instruction.length > 0) {
-		const rulesDir = joinPath(pluginRoot, 'rules');
+		const rulesDir = joinPath(pluginRoot, "rules");
 		await fileService.createFolder(rulesDir);
 		for (const item of byType.instruction) {
 			if (!item.promptPath) {
@@ -354,7 +422,7 @@ export async function writePluginToDisk(
 			const name = getResourceFileName(item.promptPath);
 			const fileName = name.endsWith('.instructions.md') || name.endsWith('.mdc') || name.endsWith('.md')
 				? name
-				: name + '.instructions.md';
+				: name + ".instructions.md";
 			const content = await fileService.readFile(item.promptPath.uri);
 			await fileService.writeFile(joinPath(rulesDir, fileName), content.value);
 		}
@@ -362,29 +430,32 @@ export async function writePluginToDisk(
 
 	// Copy prompts → commands/
 	if (byType.prompt.length > 0) {
-		const commandsDir = joinPath(pluginRoot, 'commands');
+		const commandsDir = joinPath(pluginRoot, "commands");
 		await fileService.createFolder(commandsDir);
 		for (const item of byType.prompt) {
 			if (!item.promptPath) {
 				continue;
 			}
 			const name = getResourceFileName(item.promptPath);
-			const fileName = name.endsWith('.md') ? name : name + '.md';
+			const fileName = name.endsWith(".md") ? name : name + ".md";
 			const content = await fileService.readFile(item.promptPath.uri);
-			await fileService.writeFile(joinPath(commandsDir, fileName), content.value);
+			await fileService.writeFile(
+        joinPath(commandsDir, fileName),
+        content.value,
+      );
 		}
 	}
 
 	// Copy agents → agents/
 	if (byType.agent.length > 0) {
-		const agentsDir = joinPath(pluginRoot, 'agents');
+		const agentsDir = joinPath(pluginRoot, "agents");
 		await fileService.createFolder(agentsDir);
 		for (const item of byType.agent) {
 			if (!item.promptPath) {
 				continue;
 			}
 			const name = getResourceFileName(item.promptPath);
-			const fileName = name.endsWith('.md') ? name : name + '.md';
+			const fileName = name.endsWith(".md") ? name : name + ".md";
 			const content = await fileService.readFile(item.promptPath.uri);
 			await fileService.writeFile(joinPath(agentsDir, fileName), content.value);
 		}
@@ -392,7 +463,7 @@ export async function writePluginToDisk(
 
 	// Copy skills → skills/ (recursive directory copy)
 	if (byType.skill.length > 0) {
-		const skillsDir = joinPath(pluginRoot, 'skills');
+		const skillsDir = joinPath(pluginRoot, "skills");
 		await fileService.createFolder(skillsDir);
 		for (const item of byType.skill) {
 			if (!item.promptPath) {
@@ -403,8 +474,8 @@ export async function writePluginToDisk(
 
 			// The URI for a skill might point to the SKILL.md file or to the directory
 			const sourceName = basename(sourceUri);
-			const isFile = sourceName.toLowerCase() === 'skill.md';
-			const skillSourceDir = isFile ? joinPath(sourceUri, '..') : sourceUri;
+			const isFile = sourceName.toLowerCase() === "skill.md";
+			const skillSourceDir = isFile ? joinPath(sourceUri, "..") : sourceUri;
 
 			const destSkillDir = joinPath(skillsDir, skillName);
 			await copyDirectory(fileService, skillSourceDir, destSkillDir);
@@ -413,7 +484,7 @@ export async function writePluginToDisk(
 
 	// Copy hooks → hooks/hooks.json (merge all selected hook files)
 	if (byType.hook.length > 0) {
-		const hooksDir = joinPath(pluginRoot, 'hooks');
+		const hooksDir = joinPath(pluginRoot, "hooks");
 		await fileService.createFolder(hooksDir);
 
 		const mergedHooks: Record<string, Record<string, unknown>[]> = {};
@@ -423,9 +494,11 @@ export async function writePluginToDisk(
 			}
 			try {
 				const content = await fileService.readFile(item.promptPath.uri);
-				const parsed = parseJSONC<Record<string, unknown>>(content.value.toString());
+				const parsed = parseJSONC<Record<string, unknown>>(
+          content.value.toString(),
+        );
 				const hooksObj = (parsed?.hooks ?? parsed) as Record<string, unknown> | undefined;
-				if (hooksObj && typeof hooksObj === 'object') {
+				if (hooksObj && typeof hooksObj === "object") {
 					for (const [hookType, commands] of Object.entries(hooksObj)) {
 						if (Array.isArray(commands)) {
 							if (!mergedHooks[hookType]) {
@@ -444,9 +517,9 @@ export async function writePluginToDisk(
 
 		const hooksJson = { hooks: mergedHooks };
 		await fileService.writeFile(
-			joinPath(hooksDir, 'hooks.json'),
-			VSBuffer.fromString(JSON.stringify(hooksJson, null, '\t'))
-		);
+      joinPath(hooksDir, "hooks.json"),
+      VSBuffer.fromString(JSON.stringify(hooksJson, null, "\t")),
+    );
 	}
 
 	// Export MCP servers → .mcp.json
@@ -461,65 +534,67 @@ export async function writePluginToDisk(
 		}
 		const mcpJson = { mcpServers };
 		await fileService.writeFile(
-			joinPath(pluginRoot, '.mcp.json'),
-			VSBuffer.fromString(JSON.stringify(mcpJson, null, '\t'))
-		);
+      joinPath(pluginRoot, ".mcp.json"),
+      VSBuffer.fromString(JSON.stringify(mcpJson, null, "\t")),
+    );
 	}
 }
 
 export function serializeHookCommand(cmd: Record<string, unknown>): Record<string, unknown> {
-	const result: Record<string, unknown> = { type: 'command' };
-	if (typeof cmd.command === 'string') {
-		result['command'] = cmd.command;
+	const result: Record<string, unknown> = { type: "command" };
+	if (typeof cmd.command === "string") {
+		result["command"] = cmd.command;
 	}
-	if (typeof cmd.windows === 'string') {
-		result['windows'] = cmd.windows;
+	if (typeof cmd.windows === "string") {
+		result["windows"] = cmd.windows;
 	}
-	if (typeof cmd.linux === 'string') {
-		result['linux'] = cmd.linux;
+	if (typeof cmd.linux === "string") {
+		result["linux"] = cmd.linux;
 	}
-	if (typeof cmd.osx === 'string') {
-		result['osx'] = cmd.osx;
+	if (typeof cmd.osx === "string") {
+		result["osx"] = cmd.osx;
 	}
 	if (cmd.cwd !== undefined) {
-		result['cwd'] = isUriComponents(cmd.cwd) ? URI.revive(cmd.cwd).fsPath : String(cmd.cwd);
+		result["cwd"] = isUriComponents(cmd.cwd) ? URI.revive(cmd.cwd).fsPath : String(cmd.cwd);
 	}
-	if (cmd.env && typeof cmd.env === 'object' && Object.keys(cmd.env as Record<string, unknown>).length > 0) {
-		result['env'] = cmd.env;
+	if (cmd.env && typeof cmd.env === "object" && Object.keys(
+    cmd.env as Record<string, unknown>,
+  ).length > 0) {
+		result["env"] = cmd.env;
 	}
-	if (typeof cmd.timeout === 'number') {
-		result['timeout'] = cmd.timeout;
+	if (typeof cmd.timeout === "number") {
+		result["timeout"] = cmd.timeout;
 	}
 	return result;
 }
 
-export function serializeMcpLaunch(launch: McpServerDefinition['launch']): object {
+export function serializeMcpLaunch(launch: McpServerDefinition["launch"]): object {
 	if (launch.type === McpServerTransportType.Stdio) {
 		const result: Record<string, unknown> = {
-			type: 'stdio',
-			command: launch.command,
-		};
+      type: "stdio",
+      command: launch.command,
+    };
 		if (launch.args.length > 0) {
-			result['args'] = [...launch.args];
+			result["args"] = [...launch.args];
 		}
 		if (launch.cwd) {
-			result['cwd'] = launch.cwd;
+			result["cwd"] = launch.cwd;
 		}
 		if (Object.keys(launch.env).length > 0) {
-			result['env'] = { ...launch.env };
+			result["env"] = { ...launch.env };
 		}
 		return result;
 	} else {
 		const result: Record<string, unknown> = {
-			type: 'http',
-			url: launch.uri.toString(),
-		};
+      type: "http",
+      url: launch.uri.toString(),
+    };
 		if (launch.headers.length > 0) {
 			const headers: Record<string, string> = {};
 			for (const [key, value] of launch.headers) {
 				headers[key] = value;
 			}
-			result['headers'] = headers;
+			result["headers"] = headers;
 		}
 		return result;
 	}
@@ -532,7 +607,11 @@ export async function copyDirectory(fileService: IFileService, source: URI, targ
 		if (stat.children) {
 			for (const child of stat.children) {
 				const childName = basename(child.resource);
-				await copyDirectory(fileService, child.resource, joinPath(target, childName));
+				await copyDirectory(
+          fileService,
+          child.resource,
+          joinPath(target, childName),
+        );
 			}
 		}
 	} else {
@@ -541,10 +620,7 @@ export async function copyDirectory(fileService: IFileService, source: URI, targ
 	}
 }
 
-const MARKETPLACE_PATHS = [
-	'marketplace.json',
-	'.plugin/marketplace.json',
-];
+const MARKETPLACE_PATHS = ["marketplace.json", ".plugin/marketplace.json"];
 
 export async function updateMarketplaceIfNeeded(fileService: IFileService, targetDir: URI, pluginName: string): Promise<void> {
 	for (const relPath of MARKETPLACE_PATHS) {
@@ -552,13 +628,15 @@ export async function updateMarketplaceIfNeeded(fileService: IFileService, targe
 		if (await fileService.exists(marketplaceUri)) {
 			try {
 				const content = await fileService.readFile(marketplaceUri);
-				const marketplace = parseJSONC<Record<string, unknown>>(content.value.toString());
-				if (marketplace && typeof marketplace === 'object') {
-					if (!Array.isArray(marketplace['plugins'])) {
-						marketplace['plugins'] = [];
+				const marketplace = parseJSONC<Record<string, unknown>>(
+          content.value.toString(),
+        );
+				if (marketplace && typeof marketplace === "object") {
+					if (!Array.isArray(marketplace["plugins"])) {
+						marketplace["plugins"] = [];
 					}
 
-					const plugins = marketplace['plugins'] as { name?: string; source?: string }[];
+					const plugins = marketplace["plugins"] as { name?: string; source?: string }[];
 
 					// Skip if a plugin with this name already exists
 					if (plugins.some(p => p.name === pluginName)) {
@@ -566,14 +644,14 @@ export async function updateMarketplaceIfNeeded(fileService: IFileService, targe
 					}
 
 					plugins.push({
-						name: pluginName,
-						source: `./${pluginName}/`,
-					});
+            name: pluginName,
+            source: `./${pluginName}/`,
+          });
 
 					await fileService.writeFile(
-						marketplaceUri,
-						VSBuffer.fromString(JSON.stringify(marketplace, null, '\t'))
-					);
+            marketplaceUri,
+            VSBuffer.fromString(JSON.stringify(marketplace, null, "\t")),
+          );
 				}
 			} catch {
 				// Skip if marketplace.json is unparseable

@@ -3,23 +3,25 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { protocol } from 'electron';
-import { IDisposable } from '../../../base/common/lifecycle.js';
-import { AppResourcePath, COI, FileAccess, Schemas } from '../../../base/common/network.js';
-import { URI } from '../../../base/common/uri.js';
-import { IFileService } from '../../files/common/files.js';
+import { protocol } from "electron";
+import { IDisposable } from "../../../base/common/lifecycle.js";
+import { AppResourcePath, COI, FileAccess, Schemas } from "../../../base/common/network.js";
+import { URI } from "../../../base/common/uri.js";
+import { IFileService } from "../../files/common/files.js";
 
 
 export class WebviewProtocolProvider implements IDisposable {
 
-	private static validWebviewFilePaths = new Map<string, { readonly mime: string }>([
-		['/index.html', { mime: 'text/html' }],
-		['/fake.html', { mime: 'text/html' }],
-		['/service-worker.js', { mime: 'application/javascript' }],
-	]);
+	private static validWebviewFilePaths = new Map<string, { readonly mime: string }>(
+    [
+      ["/index.html", { mime: "text/html" }],
+      ["/fake.html", { mime: "text/html" }],
+      ["/service-worker.js", { mime: "application/javascript" }],
+    ],
+  );
 
 	constructor(
-		@IFileService private readonly _fileService: IFileService
+		@IFileService private readonly _fileService: IFileService,
 	) {
 		// Register the protocol for loading webview html
 		const webviewHandler = this.handleWebviewRequest.bind(this);
@@ -41,10 +43,10 @@ export class WebviewProtocolProvider implements IDisposable {
 				const content = await this._fileService.readFile(url);
 				return new Response(content.value.buffer as ArrayBufferView<ArrayBuffer>, {
 					headers: {
-						'Content-Type': entry.mime,
+						"Content-Type": entry.mime,
 						...COI.getHeadersFromQuery(request.url),
-						'Cross-Origin-Resource-Policy': 'cross-origin',
-					}
+						"Cross-Origin-Resource-Policy": "cross-origin",
+					},
 				});
 			} else {
 				return new Response(null, { status: 403 });

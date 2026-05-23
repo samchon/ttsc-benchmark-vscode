@@ -3,22 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ChildProcess, fork } from 'child_process';
-import { fileURLToPath } from 'url';
-import { WebSocket } from 'ws';
-import { URI } from '../../../../../base/common/uri.js';
-import { SubscribeResult } from '../../../common/state/protocol/commands.js';
-import type { ActionEnvelope } from '../../../common/state/sessionActions.js';
-import type { SessionAddedParams } from '../../../common/state/protocol/notifications.js';
-import { PROTOCOL_VERSION } from '../../../common/state/protocol/version/registry.js';
+import { ChildProcess, fork } from "child_process";
+import { fileURLToPath } from "url";
+import { WebSocket } from "ws";
+import { URI } from "../../../../../base/common/uri.js";
+import { SubscribeResult } from "../../../common/state/protocol/commands.js";
+import type { ActionEnvelope } from "../../../common/state/sessionActions.js";
+import type { SessionAddedParams } from "../../../common/state/protocol/notifications.js";
+import { PROTOCOL_VERSION } from "../../../common/state/protocol/version/registry.js";
 import {
-	isJsonRpcNotification,
-	isJsonRpcResponse,
-	type AhpNotification,
-	type JsonRpcErrorResponse,
-	type JsonRpcSuccessResponse,
-	type ProtocolMessage,
-} from '../../../common/state/sessionProtocol.js';
+  isJsonRpcNotification,
+  isJsonRpcResponse,
+  type AhpNotification,
+  type JsonRpcErrorResponse,
+  type JsonRpcSuccessResponse,
+  type ProtocolMessage,
+} from "../../../common/state/sessionProtocol.js";
 
 // ---- JSON-RPC test client ---------------------------------------------------
 
@@ -40,16 +40,16 @@ export class TestProtocolClient {
 
 	async connect(): Promise<void> {
 		return new Promise<void>((resolve, reject) => {
-			this._ws.on('open', () => {
-				this._ws.on('message', (data: Buffer | string) => {
-					const text = typeof data === 'string' ? data : data.toString('utf-8');
-					const msg = JSON.parse(text);
-					this._handleMessage(msg);
-				});
-				resolve();
-			});
-			this._ws.on('error', reject);
-		});
+      this._ws.on("open", () => {
+        this._ws.on("message", (data: Buffer | string) => {
+          const text = typeof data === "string" ? data : data.toString("utf-8");
+          const msg = JSON.parse(text);
+          this._handleMessage(msg);
+        });
+        resolve();
+      });
+      this._ws.on("error", reject);
+    });
 	}
 
 	private _handleMessage(msg: ProtocolMessage): void {
@@ -78,13 +78,13 @@ export class TestProtocolClient {
 
 	/** Send a JSON-RPC notification (fire-and-forget). */
 	notify(method: string, params?: unknown): void {
-		this._ws.send(JSON.stringify({ jsonrpc: '2.0', method, params }));
+		this._ws.send(JSON.stringify({ jsonrpc: "2.0", method, params }));
 	}
 
 	/** Send a JSON-RPC request and await the response. */
 	call<T>(method: string, params?: unknown, timeoutMs = 5000): Promise<T> {
 		const id = this._nextId++;
-		this._ws.send(JSON.stringify({ jsonrpc: '2.0', id, method, params }));
+		this._ws.send(JSON.stringify({ jsonrpc: "2.0", id, method, params }));
 		return new Promise<T>((resolve, reject) => {
 			const timer = setTimeout(() => {
 				this._pendingCalls.delete(id);
@@ -141,24 +141,24 @@ export class TestProtocolClient {
 			}, timeoutMs);
 			const onMsg = (data: Buffer | string) => {
 				cleanup();
-				const text = typeof data === 'string' ? data : data.toString('utf-8');
+				const text = typeof data === "string" ? data : data.toString("utf-8");
 				resolve(JSON.parse(text));
 			};
 			const cleanup = () => {
 				clearTimeout(timer);
-				this._ws.removeListener('message', onMsg);
+				this._ws.removeListener("message", onMsg);
 			};
-			this._ws.on('message', onMsg);
+			this._ws.on("message", onMsg);
 		});
 	}
 
 	close(): void {
 		for (const w of this._notifWaiters) {
-			w.reject(new Error('Client closed'));
+			w.reject(new Error("Client closed"));
 		}
 		this._notifWaiters.length = 0;
 		for (const [, p] of this._pendingCalls) {
-			p.reject(new Error('Client closed'));
+			p.reject(new Error("Client closed"));
 		}
 		this._pendingCalls.clear();
 		this._ws.close();
@@ -178,25 +178,25 @@ export interface IServerHandle {
 
 export async function startServer(options?: { readonly quiet?: boolean; readonly userDataDir?: string; readonly env?: NodeJS.ProcessEnv }): Promise<IServerHandle> {
 	return new Promise((resolve, reject) => {
-		const serverPath = fileURLToPath(new URL('../../../node/agentHostServerMain.js', import.meta.url));
-		const args = ['--enable-mock-agent', '--port', '0', '--without-connection-token'];
+		const serverPath = fileURLToPath(new URL("../../../node/agentHostServerMain.js", import.meta.url));
+		const args = ["--enable-mock-agent", "--port", "0", "--without-connection-token"];
 		if (options?.quiet ?? true) {
-			args.push('--quiet');
+			args.push("--quiet");
 		}
 		if (options?.userDataDir) {
-			args.push('--user-data-dir', options.userDataDir);
+			args.push("--user-data-dir", options.userDataDir);
 		}
 		const child = fork(serverPath, args, {
-			stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+			stdio: ["pipe", "pipe", "pipe", "ipc"],
 			env: options?.env ? { ...process.env, ...options.env } : process.env,
 		});
 
 		const timer = setTimeout(() => {
 			child.kill();
-			reject(new Error('Server startup timed out'));
+			reject(new Error("Server startup timed out"));
 		}, 10_000);
 
-		child.stdout!.on('data', (data: Buffer) => {
+		child.stdout!.on("data", (data: Buffer) => {
 			const text = data.toString();
 			const match = text.match(/READY:(\d+)/);
 			if (match) {
@@ -205,16 +205,16 @@ export async function startServer(options?: { readonly quiet?: boolean; readonly
 			}
 		});
 
-		child.stderr!.on('data', () => {
+		child.stderr!.on("data", () => {
 			// Intentionally swallowed - the test runner fails if console.error is used.
 		});
 
-		child.on('error', err => {
+		child.on("error", err => {
 			clearTimeout(timer);
 			reject(err);
 		});
 
-		child.on('exit', code => {
+		child.on("exit", code => {
 			clearTimeout(timer);
 			reject(new Error(`Server exited prematurely with code ${code}`));
 		});
@@ -227,21 +227,21 @@ export async function startServer(options?: { readonly quiet?: boolean; readonly
  */
 export async function startRealServer(options?: { readonly claudeSdkPath?: string }): Promise<IServerHandle> {
 	return new Promise((resolve, reject) => {
-		const serverPath = fileURLToPath(new URL('../../../node/agentHostServerMain.js', import.meta.url));
-		const args = ['--port', '0', '--without-connection-token'];
+		const serverPath = fileURLToPath(new URL("../../../node/agentHostServerMain.js", import.meta.url));
+		const args = ["--port", "0", "--without-connection-token"];
 		if (options?.claudeSdkPath) {
-			args.push('--claude-sdk-path', options.claudeSdkPath);
+			args.push("--claude-sdk-path", options.claudeSdkPath);
 		}
 		const child = fork(serverPath, args, {
-			stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+			stdio: ["pipe", "pipe", "pipe", "ipc"],
 		});
 
 		const timer = setTimeout(() => {
 			child.kill();
-			reject(new Error('Real server startup timed out'));
+			reject(new Error("Real server startup timed out"));
 		}, 30_000);
 
-		child.stdout!.on('data', (data: Buffer) => {
+		child.stdout!.on("data", (data: Buffer) => {
 			const text = data.toString();
 			const match = text.match(/READY:(\d+)/);
 			if (match) {
@@ -250,19 +250,19 @@ export async function startRealServer(options?: { readonly claudeSdkPath?: strin
 			}
 		});
 
-		child.stderr!.on('data', () => {
+		child.stderr!.on("data", () => {
 			// Intentionally swallowed - the test runner fails if console.error is used.
 			// Server logs go to the agent host's logger (under
 			// `<userDataPath>/logs/<timestamp>/agenthost-server.log`); check
 			// there when investigating real-SDK test failures.
 		});
 
-		child.on('error', err => {
+		child.on("error", err => {
 			clearTimeout(timer);
 			reject(err);
 		});
 
-		child.on('exit', code => {
+		child.on("exit", code => {
 			clearTimeout(timer);
 			reject(new Error(`Real server exited prematurely with code ${code}`));
 		});
@@ -274,11 +274,11 @@ export async function startRealServer(options?: { readonly claudeSdkPath?: strin
 let sessionCounter = 0;
 
 export function nextSessionUri(): string {
-	return URI.from({ scheme: 'mock', path: `/test-session-${++sessionCounter}` }).toString();
+	return URI.from({ scheme: "mock", path: `/test-session-${++sessionCounter}` }).toString();
 }
 
 export function isActionNotification(n: AhpNotification, actionType: string): boolean {
-	if (n.method !== 'action') {
+	if (n.method !== "action") {
 		return false;
 	}
 	const envelope = n.params as unknown as ActionEnvelope;
@@ -291,27 +291,35 @@ export function getActionEnvelope(n: AhpNotification): ActionEnvelope {
 
 /** Perform handshake, create a session, subscribe, and return its URI. */
 export async function createAndSubscribeSession(c: TestProtocolClient, clientId: string, workingDirectory?: string): Promise<string> {
-	await c.call('initialize', { channel: 'ahp-root://', protocolVersions: [PROTOCOL_VERSION], clientId });
+	await c.call("initialize", {
+    channel: "ahp-root://",
+    protocolVersions: [PROTOCOL_VERSION],
+    clientId,
+  });
 
-	await c.call('createSession', { channel: nextSessionUri(), provider: 'mock', workingDirectory });
+	await c.call("createSession", {
+    channel: nextSessionUri(),
+    provider: "mock",
+    workingDirectory,
+  });
 
 	const notif = await c.waitForNotification(n =>
-		n.method === 'root/sessionAdded'
+		n.method === "root/sessionAdded",
 	);
 	const realSessionUri = (notif.params as SessionAddedParams).summary.resource;
 
-	await c.call<SubscribeResult>('subscribe', { channel: realSessionUri });
+	await c.call<SubscribeResult>("subscribe", { channel: realSessionUri });
 	c.clearReceived();
 
 	return realSessionUri;
 }
 
 export function dispatchTurnStarted(c: TestProtocolClient, session: string, turnId: string, text: string, clientSeq: number): void {
-	c.notify('dispatchAction', {
+	c.notify("dispatchAction", {
 		channel: session,
 		clientSeq,
 		action: {
-			type: 'session/turnStarted',
+			type: "session/turnStarted",
 			turnId,
 			userMessage: { text },
 		},

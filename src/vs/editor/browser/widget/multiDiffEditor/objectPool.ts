@@ -2,7 +2,7 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { IDisposable, IReference } from '../../../../base/common/lifecycle.js';
+import { IDisposable, IReference } from "../../../../base/common/lifecycle.js";
 
 export class ObjectPool<TData extends IObjectData, T extends IPooledObject<TData>> implements IDisposable {
 	private readonly _unused = new Set<T>();
@@ -21,7 +21,9 @@ export class ObjectPool<TData extends IObjectData, T extends IPooledObject<TData
 			this._itemData.set(obj, data);
 		} else {
 			const values = [...this._unused.values()];
-			obj = values.find(obj => this._itemData.get(obj)!.getId() === data.getId()) ?? values[0];
+			obj = values.find(
+        obj => this._itemData.get(obj)!.getId() === data.getId(),
+      ) ?? values[0];
 			this._unused.delete(obj);
 			this._itemData.set(obj, data);
 			obj.setData(data);
@@ -36,7 +38,7 @@ export class ObjectPool<TData extends IObjectData, T extends IPooledObject<TData
 				} else {
 					this._unused.add(obj);
 				}
-			}
+			},
 		};
 	}
 

@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ILanguageModelToolsService } from '../../../chat/common/tools/languageModelToolsService.js';
+import type { ILanguageModelToolsService } from "../../../chat/common/tools/languageModelToolsService.js";
 
 let previouslyRecommededInSession = false;
 
@@ -13,7 +13,7 @@ const terminalCommands: { commands: RegExp[]; tags: string[] }[] = [
 			new RegExp(/^python3? -m pip install(\b)/),
 			new RegExp(/^pip3? install(\b)/),
 		],
-		tags: ['python environment'],
+		tags: ["python environment"],
 	},
 	{
 		commands: [
@@ -22,8 +22,8 @@ const terminalCommands: { commands: RegExp[]; tags: string[] }[] = [
 			new RegExp(/^pip3? install\b.*jupyter\b.*/),
 			new RegExp(/^jupyter(\b)/), // jupyter lab, jupyer notebook, jupyter nbconvert, etc.
 		],
-		tags: ['python environment', 'jupyter environment'],
-	}
+		tags: ["python environment", "jupyter environment"],
+	},
 ];
 
 export function getRecommendedToolsOverRunInTerminal(commandLine: string, languageModelToolsService: ILanguageModelToolsService): string | undefined {
@@ -34,11 +34,13 @@ export function getRecommendedToolsOverRunInTerminal(commandLine: string, langua
 
 	const recommendedTools = new Set<string>();
 	const messages: string[] = [
-		`The terminal command '${commandLine}' was not executed.`,
-		`Try using some of the following tools instead of running a Terminal Command (if unable to use one of these tools as an alternative then run the same terminal command again):`,
-	];
+    `The terminal command '${commandLine}' was not executed.`,
+    `Try using some of the following tools instead of running a Terminal Command (if unable to use one of these tools as an alternative then run the same terminal command again):`,
+  ];
 	for (const terminalCommand of terminalCommands) {
-		if (!terminalCommand.commands.some((condition) => condition.test(commandLine))) {
+		if (!terminalCommand.commands.some(
+      (condition) => condition.test(commandLine),
+    )) {
 			continue;
 		}
 		const tagsToSearchFor = terminalCommand.tags;
@@ -50,12 +52,12 @@ export function getRecommendedToolsOverRunInTerminal(commandLine: string, langua
 
 	}
 	recommendedTools.forEach(toolName => {
-		messages.push(`- ${toolName}`);
-	});
+    messages.push(`- ${toolName}`);
+  });
 
 	if (recommendedTools.size) {
 		previouslyRecommededInSession = true;
-		return messages.join('  \n');
+		return messages.join("  \n");
 	}
 
 	return undefined;

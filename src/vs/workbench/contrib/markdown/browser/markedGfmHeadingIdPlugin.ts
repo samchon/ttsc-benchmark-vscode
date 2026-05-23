@@ -2,7 +2,7 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import * as marked from '../../../../base/common/marked/marked.js';
+import * as marked from "../../../../base/common/marked/marked.js";
 
 // Copied from https://github.com/Flet/github-slugger since we can't use esm yet.
 // eslint-disable-next-line no-misleading-character-class
@@ -11,8 +11,8 @@ const githubSlugReplaceRegex = /[\0-\x1F!-,\.\/:-@\[-\^`\{-\xA9\xAB-\xB4\xB6-\xB
 function slugify(heading: string): string {
 	const slugifiedHeading = heading.trim()
 		.toLowerCase()
-		.replace(githubSlugReplaceRegex, '')
-		.replace(/\s/g, '-'); // Replace whitespace with -
+		.replace(githubSlugReplaceRegex, "")
+		.replace(/\s/g, "-"); // Replace whitespace with -
 
 	return slugifiedHeading;
 }
@@ -26,17 +26,17 @@ function unescape(html: string) {
 	// explicitly match decimal, hex, and named HTML entities
 	return html.replace(unescapeTest, (_, n) => {
 		n = n.toLowerCase();
-		if (n === 'colon') { return ':'; }
-		if (n.charAt(0) === '#') {
-			return n.charAt(1) === 'x'
+		if (n === "colon") { return ":"; }
+		if (n.charAt(0) === "#") {
+			return n.charAt(1) === "x"
 				? String.fromCharCode(parseInt(n.substring(2), 16))
 				: String.fromCharCode(+n.substring(1));
 		}
-		return '';
+		return "";
 	});
 }
 
-export function markedGfmHeadingIdPlugin({ prefix = '', globalSlugs = false } = {}): marked.MarkedExtension {
+export function markedGfmHeadingIdPlugin({ prefix = "", globalSlugs = false } = {}): marked.MarkedExtension {
 	return {
 		// hooks: {
 		// 	preprocess(src: string) {
@@ -51,7 +51,7 @@ export function markedGfmHeadingIdPlugin({ prefix = '', globalSlugs = false } = 
 				const text = this.parser.parseInline(tokens);
 				const raw = unescape(this.parser.parseInline(tokens, this.parser.textRenderer))
 					.trim()
-					.replace(/<[!\/a-z].*?>/gi, '');
+					.replace(/<[!\/a-z].*?>/gi, "");
 				const level = depth;
 				const id = `${prefix}${slugify(raw)}`;
 				// const heading = { level, text, id, raw };

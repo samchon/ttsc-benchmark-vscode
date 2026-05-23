@@ -3,27 +3,43 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Codicon } from '../../../../base/common/codicons.js';
-import { derived, IObservable, ISettableObservable, observableValue } from '../../../../base/common/observable.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { joinPath } from '../../../../base/common/resources.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
-import { URI } from '../../../../base/common/uri.js';
-import { localize } from '../../../../nls.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { AICustomizationManagementSection, AICustomizationSource, AICustomizationSources, BUILTIN_STORAGE, IStorageSourceFilter } from './aiCustomizationWorkspaceService.js';
-import { PromptsType } from './promptSyntax/promptTypes.js';
-import { AGENT_MD_FILENAME } from './promptSyntax/config/promptFileLocations.js';
-import { IAgentSource, IChatPromptSlashCommand, ICustomAgent, IPromptsService, IResolvedChatPromptSlashCommand, matchesSessionType, PromptsStorage } from './promptSyntax/service/promptsService.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { SessionType } from './chatSessionsService.js';
-import { CustomAgent } from './promptSyntax/service/promptsServiceImpl.js';
-import { ExtensionIdentifier } from '../../../../platform/extensions/common/extensions.js';
-import { getCanonicalPluginCommandId } from './plugins/agentPluginService.js';
-import { getChatSessionType, LocalChatSessionUri } from './model/chatUri.js';
+import { Codicon } from "../../../../base/common/codicons.js";
+import { derived, IObservable, ISettableObservable, observableValue } from "../../../../base/common/observable.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { joinPath } from "../../../../base/common/resources.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { URI } from "../../../../base/common/uri.js";
+import { localize } from "../../../../nls.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import {
+  AICustomizationManagementSection,
+  AICustomizationSource,
+  AICustomizationSources,
+  BUILTIN_STORAGE,
+  IStorageSourceFilter,
+} from "./aiCustomizationWorkspaceService.js";
+import { PromptsType } from "./promptSyntax/promptTypes.js";
+import { AGENT_MD_FILENAME } from "./promptSyntax/config/promptFileLocations.js";
+import {
+  IAgentSource,
+  IChatPromptSlashCommand,
+  ICustomAgent,
+  IPromptsService,
+  IResolvedChatPromptSlashCommand,
+  matchesSessionType,
+  PromptsStorage,
+} from "./promptSyntax/service/promptsService.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { SessionType } from "./chatSessionsService.js";
+import { CustomAgent } from "./promptSyntax/service/promptsServiceImpl.js";
+import { ExtensionIdentifier } from "../../../../platform/extensions/common/extensions.js";
+import { getCanonicalPluginCommandId } from "./plugins/agentPluginService.js";
+import { getChatSessionType, LocalChatSessionUri } from "./model/chatUri.js";
 
-export const ICustomizationHarnessService = createDecorator<ICustomizationHarnessService>('customizationHarnessService');
+export const ICustomizationHarnessService = createDecorator<ICustomizationHarnessService>(
+  "customizationHarnessService",
+);
 
 /**
  * Override for a management section's create-button behavior.
@@ -171,7 +187,7 @@ export interface ICustomizationItem {
 	/** The URI of the plugin that contributed this customization, if any. */
 	readonly pluginUri: URI | undefined;
 	/** Server-reported loading status for this customization. */
-	readonly status?: 'loading' | 'loaded' | 'degraded' | 'error';
+	readonly status?: "loading" | "loaded" | "degraded" | "error";
 	/** Human-readable status detail (e.g. error message or warning). */
 	readonly statusMessage?: string;
 	/** Whether this customization is currently enabled. */
@@ -192,7 +208,7 @@ export interface ICustomizationItem {
 }
 
 export function isPluginCustomizationItem(item: { readonly type: string }): boolean {
-	return item.type === 'plugin' || item.type === AICustomizationManagementSection.Plugins;
+	return item.type === "plugin" || item.type === AICustomizationManagementSection.Plugins;
 }
 
 /**
@@ -353,17 +369,17 @@ export interface ICustomizationSlashCommand {
  * Empty filter returned when no harness is registered yet.
  */
 const EMPTY_FILTER: IStorageSourceFilter = {
-	sources: [],
+  sources: [],
 };
 
 /**
  * Empty descriptor returned when no harness is registered yet.
  */
 const EMPTY_DESCRIPTOR: IHarnessDescriptor = {
-	id: '',
-	label: '',
-	icon: Codicon.sparkle,
-	getStorageSourceFilter: () => ({ sources: [] }),
+  id: "",
+  label: "",
+  icon: Codicon.sparkle,
+  getStorageSourceFilter: () => ({ sources: [] }),
 };
 
 
@@ -371,7 +387,7 @@ const EMPTY_DESCRIPTOR: IHarnessDescriptor = {
  * Hooks filter — local, user, and plugin sources.
  */
 const HOOKS_FILTER: IStorageSourceFilter = {
-	sources: [PromptsStorage.local, PromptsStorage.user, PromptsStorage.plugin],
+  sources: [PromptsStorage.local, PromptsStorage.user, PromptsStorage.plugin],
 };
 
 // #endregion
@@ -383,10 +399,10 @@ const HOOKS_FILTER: IStorageSourceFilter = {
  */
 export function getCliUserRoots(userHome: URI): readonly URI[] {
 	return [
-		joinPath(userHome, '.copilot'),
-		joinPath(userHome, '.claude'),
-		joinPath(userHome, '.agents'),
-	];
+    joinPath(userHome, ".copilot"),
+    joinPath(userHome, ".claude"),
+    joinPath(userHome, ".agents"),
+  ];
 }
 
 // #endregion
@@ -401,7 +417,12 @@ export function getCliUserRoots(userHome: URI): readonly URI[] {
  * BUILTIN_STORAGE constant.
  */
 function buildAllSources(extras: readonly AICustomizationSource[]): readonly AICustomizationSource[] {
-	return [AICustomizationSources.local, AICustomizationSources.user, AICustomizationSources.plugin, ...extras];
+	return [
+    AICustomizationSources.local,
+    AICustomizationSources.user,
+    AICustomizationSources.plugin,
+    ...extras,
+  ];
 }
 
 /**
@@ -412,7 +433,7 @@ export function createVSCodeHarnessDescriptor(sources: readonly AICustomizationS
 	const filter: IStorageSourceFilter = { sources: buildAllSources(sources) };
 	return {
 		id: SessionType.Local,
-		label: localize('harness.local', "Local"),
+		label: localize("harness.local", "Local"),
 		icon: ThemeIcon.fromId(Codicon.vm.id),
 		supportsTroubleshoot: true,
 		sectionOverrides: new Map([
@@ -448,7 +469,10 @@ function createRestrictedHarnessDescriptor(
 ): IHarnessDescriptor {
 	const allSources = buildAllSources(extras);
 	const allRootsFilter: IStorageSourceFilter = { sources: allSources };
-	const restrictedFilter: IStorageSourceFilter = { sources: allSources, includedUserFileRoots: restrictedUserRoots };
+	const restrictedFilter: IStorageSourceFilter = {
+    sources: allSources,
+    includedUserFileRoots: restrictedUserRoots,
+  };
 	return {
 		id,
 		label,
@@ -477,14 +501,14 @@ function createRestrictedHarnessDescriptor(
 export function createCliHarnessDescriptor(cliUserRoots: readonly URI[], extras: readonly AICustomizationSource[]): IHarnessDescriptor {
 	return createRestrictedHarnessDescriptor(
 		SessionType.CopilotCLI,
-		localize('harness.cli', "Copilot CLI"),
+		localize("harness.cli", "Copilot CLI"),
 		ThemeIcon.fromId(Codicon.copilot.id),
 		cliUserRoots,
 		extras,
 		{
 			hideGenerateButton: true,
-			requiredAgentId: 'copilotcli',
-			workspaceSubpaths: ['.github', '.copilot', '.agents', '.claude'],
+			requiredAgentId: "copilotcli",
+			workspaceSubpaths: [".github", ".copilot", ".agents", ".claude"],
 			sectionOverrides: new Map([
 				[AICustomizationManagementSection.Instructions, {
 					rootFileShortcuts: [AGENT_MD_FILENAME],
@@ -505,7 +529,9 @@ export function createCliHarnessDescriptor(cliUserRoots: readonly URI[], extras:
  * a longer segment like `not.claude`).
  */
 export function matchesWorkspaceSubpath(filePath: string, subpaths: readonly string[]): boolean {
-	return subpaths.some(sp => filePath.includes(`/${sp}/`) || filePath.endsWith(`/${sp}`));
+	return subpaths.some(
+    sp => filePath.includes(`/${sp}/`) || filePath.endsWith(`/${sp}`),
+  );
 }
 
 /**
@@ -514,9 +540,9 @@ export function matchesWorkspaceSubpath(filePath: string, subpaths: readonly str
  * or path prefixes ending with `/` (e.g. `.claude/rules/`).
  */
 export function matchesInstructionFileFilter(filePath: string, filters: readonly string[]): boolean {
-	const name = filePath.substring(filePath.lastIndexOf('/') + 1);
+	const name = filePath.substring(filePath.lastIndexOf("/") + 1);
 	return filters.some(f => {
-		if (f.endsWith('/')) {
+		if (f.endsWith("/")) {
 			// Path prefix: check if the file is under this directory
 			return filePath.includes(`/${f}`) || filePath.startsWith(f);
 		}
@@ -560,11 +586,20 @@ export class CustomizationHarnessServiceBase implements ICustomizationHarnessSer
 	) {
 		this._staticHarnesses = staticHarnesses;
 		this.promptsService = promptsService;
-		this._activeSessionResource = observableValue<URI>(this, this.getSessionResourceForHarness(defaultHarness));
+		this._activeSessionResource = observableValue<URI>(
+      this,
+      this.getSessionResourceForHarness(defaultHarness),
+    );
 		this.activeSessionResource = this._activeSessionResource;
-		this._activeHarness = derived(this, reader => getChatSessionType(this._activeSessionResource.read(reader)));
+		this._activeHarness = derived(
+      this,
+      reader => getChatSessionType(this._activeSessionResource.read(reader)),
+    );
 		this.activeHarness = this._activeHarness;
-		this._availableHarnesses = observableValue<readonly IHarnessDescriptor[]>(this, [...this._staticHarnesses]);
+		this._availableHarnesses = observableValue<readonly IHarnessDescriptor[]>(
+      this,
+      [...this._staticHarnesses],
+    );
 		this.availableHarnesses = this._availableHarnesses;
 		this._rebindProviderListeners();
 	}
@@ -574,9 +609,9 @@ export class CustomizationHarnessServiceBase implements ICustomizationHarnessSer
 		// extension-contributed harnesses can upgrade a built-in entry.
 		const externalIds = new Set(this._externalHarnesses.map(h => h.id));
 		return [
-			...this._staticHarnesses.filter(h => !externalIds.has(h.id)),
-			...this._externalHarnesses,
-		];
+      ...this._staticHarnesses.filter(h => !externalIds.has(h.id)),
+      ...this._externalHarnesses,
+    ];
 	}
 
 	private _refreshAvailableHarnesses(): void {
@@ -595,11 +630,35 @@ export class CustomizationHarnessServiceBase implements ICustomizationHarnessSer
 		for (const harness of this._getAllHarnesses()) {
 			const provider = harness.itemProvider;
 			if (!provider) {
-				this._providerListeners.push(this.promptsService.onDidChangeSlashCommands(() => this._onDidChangeSlashCommands.fire({ sessionType: harness.id })));
-				this._providerListeners.push(this.promptsService.onDidChangeCustomAgents(() => this._onDidChangeCustomAgents.fire({ sessionType: harness.id })));
+				this._providerListeners.push(
+          this.promptsService.onDidChangeSlashCommands(
+            () => this._onDidChangeSlashCommands.fire({
+              sessionType: harness.id,
+            }),
+          ),
+        );
+				this._providerListeners.push(
+          this.promptsService.onDidChangeCustomAgents(
+            () => this._onDidChangeCustomAgents.fire({
+              sessionType: harness.id,
+            }),
+          ),
+        );
 			} else {
-				this._providerListeners.push(provider.onDidChange(() => this._onDidChangeSlashCommands.fire({ sessionType: harness.id })));
-				this._providerListeners.push(provider.onDidChange(() => this._onDidChangeCustomAgents.fire({ sessionType: harness.id })));
+				this._providerListeners.push(
+          provider.onDidChange(
+            () => this._onDidChangeSlashCommands.fire({
+              sessionType: harness.id,
+            }),
+          ),
+        );
+				this._providerListeners.push(
+          provider.onDidChange(
+            () => this._onDidChangeCustomAgents.fire({
+              sessionType: harness.id,
+            }),
+          ),
+        );
 			}
 		}
 	}
@@ -627,7 +686,7 @@ export class CustomizationHarnessServiceBase implements ICustomizationHarnessSer
 					this._externalHarnesses.splice(idx, 1);
 					this._refreshAvailableHarnesses();
 				}
-			}
+			},
 		};
 	}
 
@@ -656,10 +715,15 @@ export class CustomizationHarnessServiceBase implements ICustomizationHarnessSer
 		const harness = this.findHarnessById(sessionType);
 		if (!harness || !harness.itemProvider) {
 			const commands = await this.promptsService.getPromptSlashCommands(token);
-			return commands.filter(command => matchesSessionType(command.sessionTypes, sessionType));
+			return commands.filter(
+        command => matchesSessionType(command.sessionTypes, sessionType),
+      );
 		}
 
-		const items = await harness.itemProvider.provideChatSessionCustomizations(sessionResource, token);
+		const items = await harness.itemProvider.provideChatSessionCustomizations(
+      sessionResource,
+      token,
+    );
 		if (!items) {
 			return [];
 		}
@@ -674,14 +738,14 @@ export class CustomizationHarnessServiceBase implements ICustomizationHarnessSer
 					? storage as PromptsStorage
 					: PromptsStorage.local;
 				result.push({
-					uri: item.uri,
-					type: item.type as PromptsType.prompt | PromptsType.skill,
-					name: item.pluginUri ? getCanonicalPluginCommandId({ uri: item.pluginUri }, item.name) : item.name,
-					description: item.description,
-					userInvocable: item.userInvocable ?? true,
-					storage: narrowStorage,
-					sessionTypes: [sessionType],
-				});
+          uri: item.uri,
+          type: item.type as PromptsType.prompt | PromptsType.skill,
+          name: item.pluginUri ? getCanonicalPluginCommandId({ uri: item.pluginUri }, item.name) : item.name,
+          description: item.description,
+          userInvocable: item.userInvocable ?? true,
+          storage: narrowStorage,
+          sessionTypes: [sessionType],
+        });
 			}
 		}
 		return result;
@@ -692,17 +756,25 @@ export class CustomizationHarnessServiceBase implements ICustomizationHarnessSer
 		const harness = this.findHarnessById(sessionType);
 		if (!harness || !harness.itemProvider) {
 			const allAgents = await this.promptsService.getCustomAgents(token);
-			return allAgents.filter(agent => matchesSessionType(agent.sessionTypes, sessionType));
+			return allAgents.filter(
+        agent => matchesSessionType(agent.sessionTypes, sessionType),
+      );
 		}
 
-		const items = await harness.itemProvider.provideChatSessionCustomizations(sessionResource, token);
+		const items = await harness.itemProvider.provideChatSessionCustomizations(
+      sessionResource,
+      token,
+    );
 		if (!items) {
 			return [];
 		}
 
 		const getSource = (item: ICustomizationItem): IAgentSource => {
 			if (item.source === PromptsStorage.extension && item.extensionId) {
-				return { storage: PromptsStorage.extension, extensionId: new ExtensionIdentifier(item.extensionId) };
+				return {
+          storage: PromptsStorage.extension,
+          extensionId: new ExtensionIdentifier(item.extensionId),
+        };
 			} else if (item.source === PromptsStorage.plugin && item.pluginUri) {
 				return { storage: PromptsStorage.plugin, pluginUri: item.pluginUri };
 			} else if (item.source === PromptsStorage.user) {
@@ -716,14 +788,14 @@ export class CustomizationHarnessServiceBase implements ICustomizationHarnessSer
 			if (item.type === PromptsType.agent) {
 				const promptFile = await this.promptsService.parseNew(item.uri, token);
 				const extra = {
-					name: item.name,
-					description: item.description,
-					sessionTypes: [sessionType],
-					hooks: undefined,
-					source: getSource(item),
-					type: PromptsType.agent,
-					enabled: item.enabled !== false,
-				};
+          name: item.name,
+          description: item.description,
+          sessionTypes: [sessionType],
+          hooks: undefined,
+          source: getSource(item),
+          type: PromptsType.agent,
+          enabled: item.enabled !== false,
+        };
 				result.push(CustomAgent.fromParsedPromptFile(promptFile, extra));
 			}
 		}
@@ -734,12 +806,15 @@ export class CustomizationHarnessServiceBase implements ICustomizationHarnessSer
 		const commands = await this.getSlashCommands(sessionResource, token);
 		const command = commands.find(cmd => cmd.name === name);
 		if (command) {
-			const parsedPromptFile = await this.promptsService.parseNew(command.uri, token);
+			const parsedPromptFile = await this.promptsService.parseNew(
+        command.uri,
+        token,
+      );
 			return {
-				...command,
-				userInvocable: parsedPromptFile.header?.userInvocable ?? command.userInvocable,
-				parsedPromptFile,
-			};
+        ...command,
+        userInvocable: parsedPromptFile.header?.userInvocable ?? command.userInvocable,
+        parsedPromptFile,
+      };
 		}
 		return undefined;
 	}
@@ -749,7 +824,7 @@ export class CustomizationHarnessServiceBase implements ICustomizationHarnessSer
 			return LocalChatSessionUri.getNewSessionUri();
 		}
 
-		return URI.from({ scheme: sessionType, path: '/untitled-2' });
+		return URI.from({ scheme: sessionType, path: "/untitled-2" });
 	}
 }
 

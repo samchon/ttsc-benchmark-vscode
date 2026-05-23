@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../nls.js';
-import { IPolicyData } from './defaultAccount.js';
+import { localize } from "../../nls.js";
+import { IPolicyData } from "./defaultAccount.js";
 
 /**
  * System-wide policy file path for Linux systems.
  */
-export const LINUX_SYSTEM_POLICY_FILE_PATH = '/etc/vscode/policy.json';
+export const LINUX_SYSTEM_POLICY_FILE_PATH = "/etc/vscode/policy.json";
 
 export type PolicyName = string;
 export type LocalizedValue = {
@@ -18,11 +18,11 @@ export type LocalizedValue = {
 };
 
 export enum PolicyCategory {
-	Extensions = 'Extensions',
-	IntegratedTerminal = 'IntegratedTerminal',
-	InteractiveSession = 'InteractiveSession',
-	Telemetry = 'Telemetry',
-	Update = 'Update',
+	Extensions = "Extensions",
+	IntegratedTerminal = "IntegratedTerminal",
+	InteractiveSession = "InteractiveSession",
+	Telemetry = "Telemetry",
+	Update = "Update",
 }
 
 export const PolicyCategoryData: {
@@ -30,29 +30,29 @@ export const PolicyCategoryData: {
 } = {
 	[PolicyCategory.Extensions]: {
 		name: {
-			key: 'extensionsConfigurationTitle', value: localize('extensionsConfigurationTitle', "Extensions"),
-		}
+			key: "extensionsConfigurationTitle", value: localize("extensionsConfigurationTitle", "Extensions"),
+		},
 	},
 	[PolicyCategory.IntegratedTerminal]: {
 		name: {
-			key: 'terminalIntegratedConfigurationTitle', value: localize('terminalIntegratedConfigurationTitle', "Integrated Terminal"),
-		}
+			key: "terminalIntegratedConfigurationTitle", value: localize("terminalIntegratedConfigurationTitle", "Integrated Terminal"),
+		},
 	},
 	[PolicyCategory.InteractiveSession]: {
 		name: {
-			key: 'interactiveSessionConfigurationTitle', value: localize('interactiveSessionConfigurationTitle', "Chat"),
-		}
+			key: "interactiveSessionConfigurationTitle", value: localize("interactiveSessionConfigurationTitle", "Chat"),
+		},
 	},
 	[PolicyCategory.Telemetry]: {
 		name: {
-			key: 'telemetryConfigurationTitle', value: localize('telemetryConfigurationTitle', "Telemetry"),
-		}
+			key: "telemetryConfigurationTitle", value: localize("telemetryConfigurationTitle", "Telemetry"),
+		},
 	},
 	[PolicyCategory.Update]: {
 		name: {
-			key: 'updateConfigurationTitle', value: localize('updateConfigurationTitle', "Update"),
-		}
-	}
+			key: "updateConfigurationTitle", value: localize("updateConfigurationTitle", "Update"),
+		},
+	},
 };
 
 export interface IPolicy {

@@ -3,59 +3,72 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../base/browser/dom.js';
-import { ActionBar } from '../../../../base/browser/ui/actionbar/actionbar.js';
-import { IIdentityProvider, IListVirtualDelegate } from '../../../../base/browser/ui/list/list.js';
-import { ICompressedTreeElement, ICompressedTreeNode } from '../../../../base/browser/ui/tree/compressedObjectTreeModel.js';
-import { ICompressibleTreeRenderer } from '../../../../base/browser/ui/tree/objectTree.js';
-import { ITreeNode, ITreeSorter } from '../../../../base/browser/ui/tree/tree.js';
-import { findLast } from '../../../../base/common/arraysFind.js';
-import { assertNever } from '../../../../base/common/assert.js';
-import { Codicon } from '../../../../base/common/codicons.js';
-import { memoize } from '../../../../base/common/decorators.js';
-import { FuzzyScore, createMatches } from '../../../../base/common/filters.js';
-import { Iterable } from '../../../../base/common/iterator.js';
-import { Disposable, DisposableStore, MutableDisposable } from '../../../../base/common/lifecycle.js';
-import { IObservable, autorun, observableValue } from '../../../../base/common/observable.js';
-import { IPrefixTreeNode } from '../../../../base/common/prefixTree.js';
-import { basenameOrAuthority } from '../../../../base/common/resources.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
-import { URI } from '../../../../base/common/uri.js';
-import { Position } from '../../../../editor/common/core/position.js';
-import { Range } from '../../../../editor/common/core/range.js';
-import { localize, localize2 } from '../../../../nls.js';
-import { Categories } from '../../../../platform/action/common/actionCommonCategories.js';
-import { getActionBarActions } from '../../../../platform/actions/browser/menuEntryActionViewItem.js';
-import { Action2, IMenuService, MenuId, registerAction2 } from '../../../../platform/actions/common/actions.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { ContextKeyExpr, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { IContextMenuService } from '../../../../platform/contextview/browser/contextView.js';
-import { EditorOpenSource, TextEditorSelectionRevealType } from '../../../../platform/editor/common/editor.js';
-import { FileKind } from '../../../../platform/files/common/files.js';
-import { IHoverService } from '../../../../platform/hover/browser/hover.js';
-import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
-import { ILabelService } from '../../../../platform/label/common/label.js';
-import { WorkbenchCompressibleObjectTree } from '../../../../platform/list/browser/listService.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { IQuickInputService, IQuickPickItem, QuickPickInput } from '../../../../platform/quickinput/common/quickInput.js';
-import { IThemeService } from '../../../../platform/theme/common/themeService.js';
-import { IResourceLabel, ResourceLabels } from '../../../browser/labels.js';
-import { IViewPaneOptions, ViewAction, ViewPane } from '../../../browser/parts/views/viewPane.js';
-import { IViewDescriptorService } from '../../../common/views.js';
-import { ACTIVE_GROUP, IEditorService, SIDE_GROUP } from '../../../services/editor/common/editorService.js';
-import { TestCommandId, Testing } from '../common/constants.js';
-import { onObservableChange } from '../common/observableUtils.js';
-import { BypassedFileCoverage, ComputedFileCoverage, FileCoverage, TestCoverage, getTotalCoveragePercent } from '../common/testCoverage.js';
-import { ITestCoverageService } from '../common/testCoverageService.js';
-import { TestId } from '../common/testId.js';
-import { TestingContextKeys } from '../common/testingContextKeys.js';
-import { CoverageDetails, DetailType, ICoverageCount, IDeclarationCoverage, ITestItem, TestResultState } from '../common/testTypes.js';
-import * as coverUtils from './codeCoverageDisplayUtils.js';
-import { testingStatesToIcons, testingWasCovered } from './icons.js';
-import { CoverageBarSource, ManagedTestCoverageBars } from './testCoverageBars.js';
+import * as dom from "../../../../base/browser/dom.js";
+import { ActionBar } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { IIdentityProvider, IListVirtualDelegate } from "../../../../base/browser/ui/list/list.js";
+import { ICompressedTreeElement, ICompressedTreeNode } from "../../../../base/browser/ui/tree/compressedObjectTreeModel.js";
+import { ICompressibleTreeRenderer } from "../../../../base/browser/ui/tree/objectTree.js";
+import { ITreeNode, ITreeSorter } from "../../../../base/browser/ui/tree/tree.js";
+import { findLast } from "../../../../base/common/arraysFind.js";
+import { assertNever } from "../../../../base/common/assert.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { memoize } from "../../../../base/common/decorators.js";
+import { FuzzyScore, createMatches } from "../../../../base/common/filters.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { IObservable, autorun, observableValue } from "../../../../base/common/observable.js";
+import { IPrefixTreeNode } from "../../../../base/common/prefixTree.js";
+import { basenameOrAuthority } from "../../../../base/common/resources.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Position } from "../../../../editor/common/core/position.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
+import { getActionBarActions } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { Action2, IMenuService, MenuId, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ContextKeyExpr, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { EditorOpenSource, TextEditorSelectionRevealType } from "../../../../platform/editor/common/editor.js";
+import { FileKind } from "../../../../platform/files/common/files.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { WorkbenchCompressibleObjectTree } from "../../../../platform/list/browser/listService.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IQuickInputService, IQuickPickItem, QuickPickInput } from "../../../../platform/quickinput/common/quickInput.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { IResourceLabel, ResourceLabels } from "../../../browser/labels.js";
+import { IViewPaneOptions, ViewAction, ViewPane } from "../../../browser/parts/views/viewPane.js";
+import { IViewDescriptorService } from "../../../common/views.js";
+import { ACTIVE_GROUP, IEditorService, SIDE_GROUP } from "../../../services/editor/common/editorService.js";
+import { TestCommandId, Testing } from "../common/constants.js";
+import { onObservableChange } from "../common/observableUtils.js";
+import {
+  BypassedFileCoverage,
+  ComputedFileCoverage,
+  FileCoverage,
+  TestCoverage,
+  getTotalCoveragePercent,
+} from "../common/testCoverage.js";
+import { ITestCoverageService } from "../common/testCoverageService.js";
+import { TestId } from "../common/testId.js";
+import { TestingContextKeys } from "../common/testingContextKeys.js";
+import {
+  CoverageDetails,
+  DetailType,
+  ICoverageCount,
+  IDeclarationCoverage,
+  ITestItem,
+  TestResultState,
+} from "../common/testTypes.js";
+import * as coverUtils from "./codeCoverageDisplayUtils.js";
+import { testingStatesToIcons, testingWasCovered } from "./icons.js";
+import { CoverageBarSource, ManagedTestCoverageBars } from "./testCoverageBars.js";
 
 const enum CoverageSortOrder {
 	Coverage,
@@ -64,8 +77,13 @@ const enum CoverageSortOrder {
 }
 
 export class TestCoverageView extends ViewPane {
-	private readonly tree = this._register(new MutableDisposable<TestCoverageTree>());
-	public readonly sortOrder = observableValue('sortOrder', CoverageSortOrder.Location);
+	private readonly tree = this._register(
+    new MutableDisposable<TestCoverageTree>(),
+  );
+	public readonly sortOrder = observableValue(
+    "sortOrder",
+    CoverageSortOrder.Location,
+  );
 
 	constructor(
 		options: IViewPaneOptions,
@@ -81,8 +99,22 @@ export class TestCoverageView extends ViewPane {
 		@ITestCoverageService private readonly coverageService: ITestCoverageService,
 		@IStorageService private readonly storageService: IStorageService,
 	) {
-		super(options, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, instantiationService, openerService, themeService, hoverService);
-		const storedOrder = this.storageService.getNumber('testing.coverageSortOrder', StorageScope.WORKSPACE);
+		super(
+      options,
+      keybindingService,
+      contextMenuService,
+      configurationService,
+      contextKeyService,
+      viewDescriptorService,
+      instantiationService,
+      openerService,
+      themeService,
+      hoverService,
+    );
+		const storedOrder = this.storageService.getNumber(
+      "testing.coverageSortOrder",
+      StorageScope.WORKSPACE,
+    );
 		if (storedOrder !== undefined && storedOrder >= CoverageSortOrder.Coverage && storedOrder <= CoverageSortOrder.Name) {
 			this.sortOrder.set(storedOrder, undefined);
 		}
@@ -91,12 +123,23 @@ export class TestCoverageView extends ViewPane {
 	protected override renderBody(container: HTMLElement): void {
 		super.renderBody(container);
 
-		this._register(autorun(reader => {
-			const order = this.sortOrder.read(reader);
-			this.storageService.store('testing.coverageSortOrder', order, StorageScope.WORKSPACE, StorageTarget.MACHINE);
-		}));
+		this._register(
+      autorun(reader => {
+        const order = this.sortOrder.read(reader);
+        this.storageService.store(
+          "testing.coverageSortOrder",
+          order,
+          StorageScope.WORKSPACE,
+          StorageTarget.MACHINE,
+        );
+      }),
+    );
 
-		const labels = this._register(this.instantiationService.createInstance(ResourceLabels, { onDidChangeVisibility: this.onDidChangeBodyVisibility }));
+		const labels = this._register(
+      this.instantiationService.createInstance(ResourceLabels, {
+        onDidChangeVisibility: this.onDidChangeBodyVisibility,
+      }),
+    );
 
 		this._register(autorun(reader => {
 			const coverage = this.coverageService.selected.read(reader);
@@ -140,7 +183,11 @@ class DeclarationCoverageNode {
 
 	public get tpc() {
 		const attr = this.attributableCoverage();
-		return attr && getTotalCoveragePercent(attr.statement, attr.branch, undefined);
+		return attr && getTotalCoveragePercent(
+      attr.statement,
+      attr.branch,
+      undefined,
+    );
 	}
 
 	constructor(
@@ -160,7 +207,9 @@ class DeclarationCoverageNode {
 	/** Gets whether this function has a defined range and contains the given range. */
 	public contains(location: Range | Position) {
 		const own = this.data.location;
-		return own instanceof Range && (location instanceof Range ? own.containsRange(location) : own.containsPosition(location));
+		return own instanceof Range && (location instanceof Range ? own.containsRange(
+      location,
+    ) : own.containsPosition(location));
 	}
 
 	/**
@@ -200,7 +249,11 @@ class RevealUncoveredDeclarations {
 	public readonly id = String(fnNodeId++);
 
 	public get label() {
-		return localize('functionsWithoutCoverage', "{0} declarations without coverage...", this.n);
+		return localize(
+      "functionsWithoutCoverage",
+      "{0} declarations without coverage...",
+      this.n,
+    );
 	}
 
 	constructor(public readonly n: number) { }
@@ -210,7 +263,11 @@ class CurrentlyFilteredTo {
 	public readonly id = String(fnNodeId++);
 
 	public get label() {
-		return localize('filteredToTest', "Showing coverage for \"{0}\"", this.testItem.label);
+		return localize(
+      "filteredToTest",
+      "Showing coverage for \"{0}\"",
+      this.testItem.label,
+    );
 	}
 
 	constructor(public readonly testItem: ITestItem) { }
@@ -218,17 +275,22 @@ class CurrentlyFilteredTo {
 
 class LoadingDetails {
 	public readonly id = String(fnNodeId++);
-	public readonly label = localize('loadingCoverageDetails', "Loading Coverage Details...");
+	public readonly label = localize(
+    "loadingCoverageDetails",
+    "Loading Coverage Details...",
+  );
 }
 
 /** Type of nodes returned from {@link TestCoverage}. Note: value is *always* defined. */
 type TestCoverageFileNode = IPrefixTreeNode<ComputedFileCoverage | FileCoverage>;
 type CoverageTreeElement = TestCoverageFileNode | DeclarationCoverageNode | LoadingDetails | RevealUncoveredDeclarations | CurrentlyFilteredTo;
 
-const isFileCoverage = (c: CoverageTreeElement): c is TestCoverageFileNode => typeof c === 'object' && 'value' in c;
+const isFileCoverage = (c: CoverageTreeElement): c is TestCoverageFileNode => typeof c === "object" && "value" in c;
 const isDeclarationCoverage = (c: CoverageTreeElement): c is DeclarationCoverageNode => c instanceof DeclarationCoverageNode;
 const shouldShowDeclDetailsOnExpand = (c: CoverageTreeElement): c is IPrefixTreeNode<FileCoverage> =>
-	isFileCoverage(c) && c.value instanceof FileCoverage && !!c.value.declaration?.total;
+	isFileCoverage(
+    c,
+  ) && c.value instanceof FileCoverage && !!c.value.declaration?.total;
 
 class TestCoverageTree extends Disposable {
 	private readonly tree: WorkbenchCompressibleObjectTree<CoverageTreeElement, void>;
@@ -244,11 +306,11 @@ class TestCoverageTree extends Disposable {
 	) {
 		super();
 
-		container.classList.add('testing-stdtree');
+		container.classList.add("testing-stdtree");
 
 		this.tree = instantiationService.createInstance(
 			WorkbenchCompressibleObjectTree<CoverageTreeElement, void>,
-			'TestCoverageView',
+			"TestCoverageView",
 			container,
 			new TestCoverageTreeListDelegate(),
 			[
@@ -262,7 +324,7 @@ class TestCoverageTree extends Disposable {
 				sorter: new Sorter(sortOrder),
 				keyboardNavigationLabelProvider: {
 					getCompressedNodeKeyboardNavigationLabel(elements: CoverageTreeElement[]) {
-						return elements.map(e => this.getKeyboardNavigationLabel(e)).join('/');
+						return elements.map(e => this.getKeyboardNavigationLabel(e)).join("/");
 					},
 					getKeyboardNavigationLabel(e: CoverageTreeElement) {
 						return isFileCoverage(e)
@@ -274,23 +336,25 @@ class TestCoverageTree extends Disposable {
 					getAriaLabel(element: CoverageTreeElement) {
 						if (isFileCoverage(element)) {
 							const name = basenameOrAuthority(element.value!.uri);
-							return localize('testCoverageItemLabel', "{0} coverage: {0}%", name, (element.value!.tpc * 100).toFixed(2));
+							return localize("testCoverageItemLabel", "{0} coverage: {0}%", name, (element.value!.tpc * 100).toFixed(2));
 						} else {
 							return element.label;
 						}
 					},
 					getWidgetAriaLabel() {
-						return localize('testCoverageTreeLabel', "Test Coverage Explorer");
-					}
+						return localize("testCoverageTreeLabel", "Test Coverage Explorer");
+					},
 				},
 				identityProvider: new TestCoverageIdentityProvider(),
-			}
+			},
 		);
 
-		this._register(autorun(reader => {
-			sortOrder.read(reader);
-			this.tree.resort(null, true);
-		}));
+		this._register(
+      autorun(reader => {
+        sortOrder.read(reader);
+        this.tree.resort(null, true);
+      }),
+    );
 
 		this._register(this.tree);
 		this._register(this.tree.onDidChangeCollapseState(e => {
@@ -362,7 +426,7 @@ class TestCoverageTree extends Disposable {
 				collapsed: isFile,
 				// directories can be expanded, and items with function info can be expanded
 				collapsible: !isFile || !!value.value?.declaration?.total,
-				children: value.children && Iterable.map(value.children?.values(), toChild)
+				children: value.children && Iterable.map(value.children?.values(), toChild),
 			};
 		};
 
@@ -372,21 +436,23 @@ class TestCoverageTree extends Disposable {
 				this.tree.setChildren(
 					toRender,
 					Iterable.map(toRender.children?.values() || [], toChild),
-					{ diffIdentityProvider: { getId: el => (el as TestCoverageFileNode).value!.id } }
+					{ diffIdentityProvider: { getId: el => (el as TestCoverageFileNode).value!.id } },
 				);
 			}
 		}));
 
 		let children = Iterable.map(files, toChild);
-		const filteredTo = showOnlyTest && coverage.result.getTestById(showOnlyTest.toString());
+		const filteredTo = showOnlyTest && coverage.result.getTestById(
+      showOnlyTest.toString(),
+    );
 		if (filteredTo) {
 			children = Iterable.concat(
-				Iterable.single<ICompressedTreeElement<CoverageTreeElement>>({
-					element: new CurrentlyFilteredTo(filteredTo),
-					incompressible: true,
-				}),
-				children,
-			);
+        Iterable.single<ICompressedTreeElement<CoverageTreeElement>>({
+          element: new CurrentlyFilteredTo(filteredTo),
+          incompressible: true,
+        }),
+        children,
+      );
 		}
 
 		this.tree.setChildren(null, children);
@@ -425,12 +491,12 @@ class TestCoverageTree extends Disposable {
 		}
 
 		const makeChild = (fn: DeclarationCoverageNode): ICompressedTreeElement<CoverageTreeElement> => ({
-			element: fn,
-			incompressible: true,
-			collapsed: true,
-			collapsible: fn.children.length > 0,
-			children: fn.children.map(makeChild)
-		});
+      element: fn,
+      incompressible: true,
+      collapsed: true,
+      collapsible: fn.children.length > 0,
+      children: fn.children.map(makeChild),
+    });
 
 		this.tree.setChildren(el, decl.map(makeChild));
 	}
@@ -474,9 +540,9 @@ class Sorter implements ITreeSorter<CoverageTreeElement> {
 			switch (order) {
 				case CoverageSortOrder.Location:
 					return Position.compare(
-						a.location instanceof Range ? a.location.getStartPosition() : a.location,
-						b.location instanceof Range ? b.location.getStartPosition() : b.location,
-					);
+            a.location instanceof Range ? a.location.getStartPosition() : a.location,
+            b.location instanceof Range ? b.location.getStartPosition() : b.location,
+          );
 				case CoverageSortOrder.Name:
 					return a.label.localeCompare(b.label);
 				case CoverageSortOrder.Coverage: {
@@ -499,7 +565,7 @@ interface IFilteredToTemplate {
 }
 
 class CurrentlyFilteredToRenderer implements ICompressibleTreeRenderer<CoverageTreeElement, FuzzyScore, IFilteredToTemplate> {
-	public static readonly ID = 'C';
+	public static readonly ID = "C";
 	public readonly templateId = CurrentlyFilteredToRenderer.ID;
 
 	constructor(
@@ -508,19 +574,29 @@ class CurrentlyFilteredToRenderer implements ICompressibleTreeRenderer<CoverageT
 	) { }
 
 	renderCompressedElements(node: ITreeNode<ICompressedTreeNode<CoverageTreeElement>, FuzzyScore>, index: number, templateData: IFilteredToTemplate): void {
-		this.renderInner(node.element.elements[node.element.elements.length - 1] as CurrentlyFilteredTo, templateData);
+		this.renderInner(
+      node.element.elements[node.element.elements.length - 1] as CurrentlyFilteredTo,
+      templateData,
+    );
 	}
 
 	renderTemplate(container: HTMLElement): IFilteredToTemplate {
-		container.classList.add('testing-stdtree-container');
-		const label = dom.append(container, dom.$('.label'));
-		const menu = this.menuService.getMenuActions(MenuId.TestCoverageFilterItem, this.contextKeyService, {
-			shouldForwardArgs: true,
-		});
+		container.classList.add("testing-stdtree-container");
+		const label = dom.append(container, dom.$(".label"));
+		const menu = this.menuService.getMenuActions(
+      MenuId.TestCoverageFilterItem,
+      this.contextKeyService,
+      {
+        shouldForwardArgs: true,
+      },
+    );
 
 		const actions = new ActionBar(container);
-		actions.push(getActionBarActions(menu, 'inline').primary, { icon: true, label: false });
-		actions.domNode.style.display = 'block';
+		actions.push(getActionBarActions(menu, "inline").primary, {
+      icon: true,
+      label: false,
+    });
+		actions.domNode.style.display = "block";
 
 		return { label, actions };
 	}
@@ -547,7 +623,7 @@ interface FileTemplateData {
 }
 
 class FileCoverageRenderer implements ICompressibleTreeRenderer<CoverageTreeElement, FuzzyScore, FileTemplateData> {
-	public static readonly ID = 'F';
+	public static readonly ID = "F";
 	public readonly templateId = FileCoverageRenderer.ID;
 
 	constructor(
@@ -559,7 +635,10 @@ class FileCoverageRenderer implements ICompressibleTreeRenderer<CoverageTreeElem
 	/** @inheritdoc */
 	public renderTemplate(container: HTMLElement): FileTemplateData {
 		const templateDisposables = new DisposableStore();
-		container.classList.add('testing-stdtree-container', 'test-coverage-list-item');
+		container.classList.add(
+      "testing-stdtree-container",
+      "test-coverage-list-item",
+    );
 
 		return {
 			container,
@@ -574,7 +653,11 @@ class FileCoverageRenderer implements ICompressibleTreeRenderer<CoverageTreeElem
 
 	/** @inheritdoc */
 	public renderElement(node: ITreeNode<CoverageTreeElement, FuzzyScore>, _index: number, templateData: FileTemplateData): void {
-		this.doRender(node.element as TestCoverageFileNode, templateData, node.filterData);
+		this.doRender(
+      node.element as TestCoverageFileNode,
+      templateData,
+      node.filterData,
+    );
 	}
 
 	/** @inheritdoc */
@@ -592,24 +675,28 @@ class FileCoverageRenderer implements ICompressibleTreeRenderer<CoverageTreeElem
 
 		const stat = (element instanceof Array ? element[element.length - 1] : element) as TestCoverageFileNode;
 		const file = stat.value!;
-		const name = element instanceof Array ? element.map(e => basenameOrAuthority((e as TestCoverageFileNode).value!.uri)) : basenameOrAuthority(file.uri);
+		const name = element instanceof Array ? element.map(
+      e => basenameOrAuthority((e as TestCoverageFileNode).value!.uri),
+    ) : basenameOrAuthority(file.uri);
 		if (file instanceof BypassedFileCoverage) {
 			templateData.bars.setCoverageInfo(undefined);
 		} else {
-			templateData.elementsDisposables.add(autorun(reader => {
-				stat.value?.didChange.read(reader);
-				templateData.bars.setCoverageInfo(file);
-			}));
+			templateData.elementsDisposables.add(
+        autorun(reader => {
+          stat.value?.didChange.read(reader);
+          templateData.bars.setCoverageInfo(file);
+        }),
+      );
 
 			templateData.bars.setCoverageInfo(file);
 		}
 
 		templateData.label.setResource({ resource: file.uri, name }, {
-			fileKind: stat.children?.size ? FileKind.FOLDER : FileKind.FILE,
-			matches: createMatches(filterData),
-			separator: this.labelService.getSeparator(file.uri.scheme, file.uri.authority),
-			extraClasses: ['label'],
-		});
+      fileKind: stat.children?.size ? FileKind.FOLDER : FileKind.FILE,
+      matches: createMatches(filterData),
+      separator: this.labelService.getSeparator(file.uri.scheme, file.uri.authority),
+      extraClasses: ["label"],
+    });
 	}
 }
 
@@ -622,7 +709,7 @@ interface DeclarationTemplateData {
 }
 
 class DeclarationCoverageRenderer implements ICompressibleTreeRenderer<CoverageTreeElement, FuzzyScore, DeclarationTemplateData> {
-	public static readonly ID = 'N';
+	public static readonly ID = "N";
 	public readonly templateId = DeclarationCoverageRenderer.ID;
 
 	constructor(
@@ -632,28 +719,39 @@ class DeclarationCoverageRenderer implements ICompressibleTreeRenderer<CoverageT
 	/** @inheritdoc */
 	public renderTemplate(container: HTMLElement): DeclarationTemplateData {
 		const templateDisposables = new DisposableStore();
-		container.classList.add('test-coverage-list-item', 'testing-stdtree-container');
+		container.classList.add(
+      "test-coverage-list-item",
+      "testing-stdtree-container",
+    );
 
-		const icon = dom.append(container, dom.$('.state'));
-		const label = dom.append(container, dom.$('.label'));
+		const icon = dom.append(container, dom.$(".state"));
+		const label = dom.append(container, dom.$(".label"));
 
 		return {
-			container,
-			bars: templateDisposables.add(this.instantiationService.createInstance(ManagedTestCoverageBars, { compact: false, container })),
-			templateDisposables,
-			icon,
-			label,
-		};
+      container,
+      bars: templateDisposables.add(this.instantiationService.createInstance(ManagedTestCoverageBars, { compact: false, container })),
+      templateDisposables,
+      icon,
+      label,
+    };
 	}
 
 	/** @inheritdoc */
 	public renderElement(node: ITreeNode<CoverageTreeElement, FuzzyScore>, _index: number, templateData: DeclarationTemplateData): void {
-		this.doRender(node.element as DeclarationCoverageNode, templateData, node.filterData);
+		this.doRender(
+      node.element as DeclarationCoverageNode,
+      templateData,
+      node.filterData,
+    );
 	}
 
 	/** @inheritdoc */
 	public renderCompressedElements(node: ITreeNode<ICompressedTreeNode<CoverageTreeElement>, FuzzyScore>, _index: number, templateData: DeclarationTemplateData): void {
-		this.doRender(node.element.elements[node.element.elements.length - 1] as DeclarationCoverageNode, templateData, node.filterData);
+		this.doRender(
+      node.element.elements[node.element.elements.length - 1] as DeclarationCoverageNode,
+      templateData,
+      node.filterData,
+    );
 	}
 
 	public disposeTemplate(templateData: DeclarationTemplateData) {
@@ -663,8 +761,10 @@ class DeclarationCoverageRenderer implements ICompressibleTreeRenderer<CoverageT
 	/** @inheritdoc */
 	private doRender(element: DeclarationCoverageNode, templateData: DeclarationTemplateData, _filterData: FuzzyScore | undefined) {
 		const covered = !!element.hits;
-		const icon = covered ? testingWasCovered : testingStatesToIcons.get(TestResultState.Unset);
-		templateData.container.classList.toggle('not-covered', !covered);
+		const icon = covered ? testingWasCovered : testingStatesToIcons.get(
+      TestResultState.Unset,
+    );
+		templateData.container.classList.toggle("not-covered", !covered);
 		templateData.icon.className = `computed-state ${ThemeIcon.asClassName(icon!)}`;
 		templateData.label.innerText = element.label;
 		templateData.bars.setCoverageInfo(element.attributableCoverage());
@@ -672,11 +772,14 @@ class DeclarationCoverageRenderer implements ICompressibleTreeRenderer<CoverageT
 }
 
 class BasicRenderer implements ICompressibleTreeRenderer<CoverageTreeElement, FuzzyScore, HTMLElement> {
-	public static readonly ID = 'B';
+	public static readonly ID = "B";
 	public readonly templateId = BasicRenderer.ID;
 
 	renderCompressedElements(node: ITreeNode<ICompressedTreeNode<CoverageTreeElement>, FuzzyScore>, _index: number, container: HTMLElement): void {
-		this.renderInner(node.element.elements[node.element.elements.length - 1], container);
+		this.renderInner(
+      node.element.elements[node.element.elements.length - 1],
+      container,
+    );
 	}
 
 	renderTemplate(container: HTMLElement): HTMLElement {
@@ -709,7 +812,7 @@ registerAction2(class TestCoverageChangePerTestFilterAction extends Action2 {
 		super({
 			id: TestCommandId.CoverageFilterToTest,
 			category: Categories.Test,
-			title: localize2('testing.changeCoverageFilter', 'Filter Coverage by Test'),
+			title: localize2("testing.changeCoverageFilter", "Filter Coverage by Test"),
 			icon: Codicon.filter,
 			toggled: {
 				icon: Codicon.filterFilled,
@@ -717,13 +820,13 @@ registerAction2(class TestCoverageChangePerTestFilterAction extends Action2 {
 			},
 			menu: [
 				{ id: MenuId.CommandPalette, when: TestingContextKeys.hasPerTestCoverage },
-				{ id: MenuId.TestCoverageFilterItem, group: 'inline' },
+				{ id: MenuId.TestCoverageFilterItem, group: "inline" },
 				{
 					id: MenuId.ViewTitle,
-					when: ContextKeyExpr.and(TestingContextKeys.hasPerTestCoverage, ContextKeyExpr.equals('view', Testing.CoverageViewId)),
-					group: 'navigation',
+					when: ContextKeyExpr.and(TestingContextKeys.hasPerTestCoverage, ContextKeyExpr.equals("view", Testing.CoverageViewId)),
+					group: "navigation",
 				},
-			]
+			],
 		});
 	}
 
@@ -745,12 +848,12 @@ registerAction2(class TestCoverageChangePerTestFilterAction extends Action2 {
 
 		const items: QuickPickInput<TItem>[] = [
 			{ label: coverUtils.labels.allTests, id: undefined },
-			{ type: 'separator' },
+			{ type: "separator" },
 			...tests.map(testId => ({ ...coverUtils.getLabelForItem(result, testId, commonPrefix), testId })),
 		];
 
 		quickInputService.pick(items, {
-			activeItem: items.find((item): item is TItem => 'testId' in item && item.testId?.toString() === previousSelectionStr),
+			activeItem: items.find((item): item is TItem => "testId" in item && item.testId?.toString() === previousSelectionStr),
 			placeHolder: coverUtils.labels.pickShowCoverage,
 			onDidFocus: (entry) => {
 				coverageService.filterToTest.set(entry.testId, undefined);
@@ -766,14 +869,14 @@ registerAction2(class TestCoverageChangeSortingAction extends ViewAction<TestCov
 		super({
 			id: TestCommandId.CoverageViewChangeSorting,
 			viewId: Testing.CoverageViewId,
-			title: localize2('testing.changeCoverageSort', 'Change Sort Order'),
+			title: localize2("testing.changeCoverageSort", "Change Sort Order"),
 			icon: Codicon.sortPrecedence,
 			menu: {
 				id: MenuId.ViewTitle,
-				when: ContextKeyExpr.equals('view', Testing.CoverageViewId),
-				group: 'navigation',
+				when: ContextKeyExpr.equals("view", Testing.CoverageViewId),
+				group: "navigation",
 				order: 1,
-			}
+			},
 		});
 	}
 
@@ -783,12 +886,12 @@ registerAction2(class TestCoverageChangeSortingAction extends ViewAction<TestCov
 		const disposables = new DisposableStore();
 		const quickInput = disposables.add(accessor.get(IQuickInputService).createQuickPick<Item>());
 		const items: Item[] = [
-			{ label: localize('testing.coverageSortByLocation', 'Sort by Location'), value: CoverageSortOrder.Location, description: localize('testing.coverageSortByLocationDescription', 'Files are sorted alphabetically, declarations are sorted by position') },
-			{ label: localize('testing.coverageSortByCoverage', 'Sort by Coverage'), value: CoverageSortOrder.Coverage, description: localize('testing.coverageSortByCoverageDescription', 'Files and declarations are sorted by total coverage') },
-			{ label: localize('testing.coverageSortByName', 'Sort by Name'), value: CoverageSortOrder.Name, description: localize('testing.coverageSortByNameDescription', 'Files and declarations are sorted alphabetically') },
+			{ label: localize("testing.coverageSortByLocation", "Sort by Location"), value: CoverageSortOrder.Location, description: localize("testing.coverageSortByLocationDescription", "Files are sorted alphabetically, declarations are sorted by position") },
+			{ label: localize("testing.coverageSortByCoverage", "Sort by Coverage"), value: CoverageSortOrder.Coverage, description: localize("testing.coverageSortByCoverageDescription", "Files and declarations are sorted by total coverage") },
+			{ label: localize("testing.coverageSortByName", "Sort by Name"), value: CoverageSortOrder.Name, description: localize("testing.coverageSortByNameDescription", "Files and declarations are sorted alphabetically") },
 		];
 
-		quickInput.placeholder = localize('testing.coverageSortPlaceholder', 'Sort the Test Coverage view...');
+		quickInput.placeholder = localize("testing.coverageSortPlaceholder", "Sort the Test Coverage view...");
 		quickInput.items = items;
 		quickInput.show();
 		disposables.add(quickInput.onDidHide(() => disposables.dispose()));
@@ -807,14 +910,14 @@ registerAction2(class TestCoverageCollapseAllAction extends ViewAction<TestCover
 		super({
 			id: TestCommandId.CoverageViewCollapseAll,
 			viewId: Testing.CoverageViewId,
-			title: localize2('testing.coverageCollapseAll', 'Collapse All Coverage'),
+			title: localize2("testing.coverageCollapseAll", "Collapse All Coverage"),
 			icon: Codicon.collapseAll,
 			menu: {
 				id: MenuId.ViewTitle,
-				when: ContextKeyExpr.equals('view', Testing.CoverageViewId),
-				group: 'navigation',
+				when: ContextKeyExpr.equals("view", Testing.CoverageViewId),
+				group: "navigation",
 				order: 2,
-			}
+			},
 		});
 	}
 

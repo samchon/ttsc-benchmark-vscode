@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IActionWidgetService } from '../../../../../../platform/actionWidget/browser/actionWidget.js';
-import { ITelemetryService } from '../../../../../../platform/telemetry/common/telemetry.js';
-import { IChatPhoneInputPresenter } from '../../../../../../workbench/contrib/chat/browser/widget/input/chatPhoneInputPresenter.js';
-import { ISessionsProvidersService } from '../../../../../services/sessions/browser/sessionsProvidersService.js';
-import { ISessionsManagementService } from '../../../../../services/sessions/common/sessionsManagement.js';
-import { AgentHostModePicker } from '../agentHostModePicker.js';
+import { IActionWidgetService } from "../../../../../../platform/actionWidget/browser/actionWidget.js";
+import { ITelemetryService } from "../../../../../../platform/telemetry/common/telemetry.js";
+import { IChatPhoneInputPresenter } from "../../../../../../workbench/contrib/chat/browser/widget/input/chatPhoneInputPresenter.js";
+import { ISessionsProvidersService } from "../../../../../services/sessions/browser/sessionsProvidersService.js";
+import { ISessionsManagementService } from "../../../../../services/sessions/common/sessionsManagement.js";
+import { AgentHostModePicker } from "../agentHostModePicker.js";
 
 /**
  * Phone-aware variant of {@link AgentHostModePicker}. On phone-layout
@@ -28,7 +28,12 @@ export class MobileAgentHostModePicker extends AgentHostModePicker {
 		@ITelemetryService telemetryService: ITelemetryService,
 		@IChatPhoneInputPresenter private readonly _phonePresenter: IChatPhoneInputPresenter,
 	) {
-		super(actionWidgetService, sessionsManagementService, sessionsProvidersService, telemetryService);
+		super(
+      actionWidgetService,
+      sessionsManagementService,
+      sessionsProvidersService,
+      telemetryService,
+    );
 	}
 
 	protected override _showPicker(): void {

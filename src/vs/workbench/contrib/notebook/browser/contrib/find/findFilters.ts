@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../../../../base/common/event.js';
-import { Disposable } from '../../../../../../base/common/lifecycle.js';
-import { INotebookFindScope, NotebookFindScopeType } from '../../../common/notebookCommon.js';
+import { Emitter, Event } from "../../../../../../base/common/event.js";
+import { Disposable } from "../../../../../../base/common/lifecycle.js";
+import { INotebookFindScope, NotebookFindScopeType } from "../../../common/notebookCommon.js";
 
 export interface INotebookFindChangeEvent {
 	markupInput?: boolean;
@@ -16,7 +16,9 @@ export interface INotebookFindChangeEvent {
 }
 
 export class NotebookFindFilters extends Disposable {
-	private readonly _onDidChange: Emitter<INotebookFindChangeEvent> = this._register(new Emitter<INotebookFindChangeEvent>());
+	private readonly _onDidChange: Emitter<INotebookFindChangeEvent> = this._register(
+    new Emitter<INotebookFindChangeEvent>(),
+  );
 	readonly onDidChange: Event<INotebookFindChangeEvent> = this._onDidChange.event;
 
 	private _markupInput: boolean = true;
@@ -70,7 +72,9 @@ export class NotebookFindFilters extends Disposable {
 		}
 	}
 
-	private _findScope: INotebookFindScope = { findScopeType: NotebookFindScopeType.None };
+	private _findScope: INotebookFindScope = {
+    findScopeType: NotebookFindScopeType.None,
+  };
 
 	get findScope(): INotebookFindScope {
 		return this._findScope;
@@ -94,7 +98,7 @@ export class NotebookFindFilters extends Disposable {
 		markupPreview: boolean,
 		codeInput: boolean,
 		codeOutput: boolean,
-		findScope: INotebookFindScope
+		findScope: INotebookFindScope,
 	) {
 		super();
 

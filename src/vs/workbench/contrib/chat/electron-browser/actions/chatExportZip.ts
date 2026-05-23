@@ -3,30 +3,30 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { joinPath } from '../../../../../base/common/resources.js';
-import { ServicesAccessor } from '../../../../../editor/browser/editorExtensions.js';
-import { localize, localize2 } from '../../../../../nls.js';
-import { Action2, registerAction2 } from '../../../../../platform/actions/common/actions.js';
-import { ContextKeyExpr } from '../../../../../platform/contextkey/common/contextkey.js';
-import { IFileDialogService } from '../../../../../platform/dialogs/common/dialogs.js';
-import { IFileService } from '../../../../../platform/files/common/files.js';
-import { INativeHostService } from '../../../../../platform/native/common/native.js';
-import { INotificationService, Severity } from '../../../../../platform/notification/common/notification.js';
-import { ChatEntitlementContextKeys } from '../../../../services/chat/common/chatEntitlementService.js';
-import { CHAT_CATEGORY } from '../../browser/actions/chatActions.js';
-import { IChatWidgetService } from '../../browser/chat.js';
-import { captureRepoInfo } from '../../browser/chatRepoInfo.js';
-import { ChatContextKeys } from '../../common/actions/chatContextKeys.js';
-import { IChatService } from '../../common/chatService/chatService.js';
-import { ISCMService } from '../../../scm/common/scm.js';
+import { joinPath } from "../../../../../base/common/resources.js";
+import { ServicesAccessor } from "../../../../../editor/browser/editorExtensions.js";
+import { localize, localize2 } from "../../../../../nls.js";
+import { Action2, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IFileDialogService } from "../../../../../platform/dialogs/common/dialogs.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { INativeHostService } from "../../../../../platform/native/common/native.js";
+import { INotificationService, Severity } from "../../../../../platform/notification/common/notification.js";
+import { ChatEntitlementContextKeys } from "../../../../services/chat/common/chatEntitlementService.js";
+import { CHAT_CATEGORY } from "../../browser/actions/chatActions.js";
+import { IChatWidgetService } from "../../browser/chat.js";
+import { captureRepoInfo } from "../../browser/chatRepoInfo.js";
+import { ChatContextKeys } from "../../common/actions/chatContextKeys.js";
+import { IChatService } from "../../common/chatService/chatService.js";
+import { ISCMService } from "../../../scm/common/scm.js";
 
 export function registerChatExportZipAction() {
 	registerAction2(class ExportChatAsZipAction extends Action2 {
 		constructor() {
 			super({
-				id: 'workbench.action.chat.exportAsZip',
+				id: "workbench.action.chat.exportAsZip",
 				category: CHAT_CATEGORY,
-				title: localize2('chat.exportAsZip.label', "Export Chat as Zip..."),
+				title: localize2("chat.exportAsZip.label", "Export Chat as Zip..."),
 				precondition: ContextKeyExpr.and(ChatContextKeys.enabled, ChatEntitlementContextKeys.Entitlement.internal),
 				f1: true,
 			});
@@ -46,10 +46,10 @@ export function registerChatExportZipAction() {
 				return;
 			}
 
-			const defaultUri = joinPath(await fileDialogService.defaultFilePath(), 'chat.zip');
+			const defaultUri = joinPath(await fileDialogService.defaultFilePath(), "chat.zip");
 			const result = await fileDialogService.showSaveDialog({
 				defaultUri,
-				filters: [{ name: 'Zip Archive', extensions: ['zip'] }]
+				filters: [{ name: "Zip Archive", extensions: ["zip"] }],
 			});
 
 			if (!result) {
@@ -63,9 +63,9 @@ export function registerChatExportZipAction() {
 
 			const files: { path: string; contents: string }[] = [
 				{
-					path: 'chat.json',
-					contents: JSON.stringify(model.toExport(), undefined, 2)
-				}
+					path: "chat.json",
+					contents: JSON.stringify(model.toExport(), undefined, 2),
+				},
 			];
 
 			const hasMessages = model.getRequests().length > 0;
@@ -73,36 +73,36 @@ export function registerChatExportZipAction() {
 			if (hasMessages) {
 				if (model.repoData) {
 					files.push({
-						path: 'chat.repo.begin.json',
-						contents: JSON.stringify(model.repoData, undefined, 2)
+						path: "chat.repo.begin.json",
+						contents: JSON.stringify(model.repoData, undefined, 2),
 					});
 				}
 
 				const currentRepoData = await captureRepoInfo(scmService, fileService);
 				if (currentRepoData) {
 					files.push({
-						path: 'chat.repo.end.json',
-						contents: JSON.stringify(currentRepoData, undefined, 2)
+						path: "chat.repo.end.json",
+						contents: JSON.stringify(currentRepoData, undefined, 2),
 					});
 				}
 
 				if (!model.repoData && !currentRepoData) {
 					notificationService.notify({
 						severity: Severity.Warning,
-						message: localize('chatExportZip.noRepoData', "Exported chat without repository context. No Git repository was detected.")
+						message: localize("chatExportZip.noRepoData", "Exported chat without repository context. No Git repository was detected."),
 					});
 				}
 			} else {
 				const currentRepoData = await captureRepoInfo(scmService, fileService);
 				if (currentRepoData) {
 					files.push({
-						path: 'chat.repo.begin.json',
-						contents: JSON.stringify(currentRepoData, undefined, 2)
+						path: "chat.repo.begin.json",
+						contents: JSON.stringify(currentRepoData, undefined, 2),
 					});
 				} else {
 					notificationService.notify({
 						severity: Severity.Warning,
-						message: localize('chatExportZip.noRepoData', "Exported chat without repository context. No Git repository was detected.")
+						message: localize("chatExportZip.noRepoData", "Exported chat without repository context. No Git repository was detected."),
 					});
 				}
 			}
@@ -112,7 +112,7 @@ export function registerChatExportZipAction() {
 			} catch (error) {
 				notificationService.notify({
 					severity: Severity.Error,
-					message: localize('chatExportZip.error', "Failed to export chat as zip: {0}", error instanceof Error ? error.message : String(error))
+					message: localize("chatExportZip.error", "Failed to export chat as zip: {0}", error instanceof Error ? error.message : String(error)),
 				});
 			}
 		}

@@ -2,27 +2,42 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { CancellationToken } from '../../../../../base/common/cancellation.js';
-import * as glob from '../../../../../base/common/glob.js';
-import { ResourceSet, ResourceMap } from '../../../../../base/common/map.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { ILogService } from '../../../../../platform/log/common/log.js';
-import { IUriIdentityService } from '../../../../../platform/uriIdentity/common/uriIdentity.js';
-import { NotebookEditorWidget } from '../../../notebook/browser/notebookEditorWidget.js';
-import { INotebookService } from '../../../notebook/common/notebookService.js';
-import { INotebookSearchService } from '../../common/notebookSearch.js';
-import { INotebookCellMatchWithModel, INotebookFileMatchWithModel, contentMatchesToTextSearchMatches, webviewMatchesToTextSearchMatches } from './searchNotebookHelpers.js';
-import { ITextQuery, QueryType, ISearchProgressItem, ISearchComplete, ISearchConfigurationProperties, pathIncludedInQuery, ISearchService, IFolderQuery, DEFAULT_MAX_SEARCH_RESULTS } from '../../../../services/search/common/search.js';
-import * as arrays from '../../../../../base/common/arrays.js';
-import { isNumber } from '../../../../../base/common/types.js';
-import { IEditorResolverService } from '../../../../services/editor/common/editorResolverService.js';
-import { INotebookFileMatchNoModel } from '../../common/searchNotebookHelpers.js';
-import { INotebookEditorService } from '../../../notebook/browser/services/notebookEditorService.js';
-import { NotebookPriorityInfo } from '../../common/search.js';
-import { INotebookExclusiveDocumentFilter } from '../../../notebook/common/notebookCommon.js';
-import { QueryBuilder } from '../../../../services/search/common/queryBuilder.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import * as glob from "../../../../../base/common/glob.js";
+import { ResourceSet, ResourceMap } from "../../../../../base/common/map.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { IUriIdentityService } from "../../../../../platform/uriIdentity/common/uriIdentity.js";
+import { NotebookEditorWidget } from "../../../notebook/browser/notebookEditorWidget.js";
+import { INotebookService } from "../../../notebook/common/notebookService.js";
+import { INotebookSearchService } from "../../common/notebookSearch.js";
+import {
+  INotebookCellMatchWithModel,
+  INotebookFileMatchWithModel,
+  contentMatchesToTextSearchMatches,
+  webviewMatchesToTextSearchMatches,
+} from "./searchNotebookHelpers.js";
+import {
+  ITextQuery,
+  QueryType,
+  ISearchProgressItem,
+  ISearchComplete,
+  ISearchConfigurationProperties,
+  pathIncludedInQuery,
+  ISearchService,
+  IFolderQuery,
+  DEFAULT_MAX_SEARCH_RESULTS,
+} from "../../../../services/search/common/search.js";
+import * as arrays from "../../../../../base/common/arrays.js";
+import { isNumber } from "../../../../../base/common/types.js";
+import { IEditorResolverService } from "../../../../services/editor/common/editorResolverService.js";
+import { INotebookFileMatchNoModel } from "../../common/searchNotebookHelpers.js";
+import { INotebookEditorService } from "../../../notebook/browser/services/notebookEditorService.js";
+import { NotebookPriorityInfo } from "../../common/search.js";
+import { INotebookExclusiveDocumentFilter } from "../../../notebook/common/notebookCommon.js";
+import { QueryBuilder } from "../../../../services/search/common/queryBuilder.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
 
 interface IOpenNotebookSearchResults {
 	results: ResourceMap<INotebookFileMatchWithModel | null>;
@@ -43,7 +58,7 @@ export class NotebookSearchService implements INotebookSearchService {
 		@IConfigurationService private readonly configurationService: IConfigurationService,
 		@IEditorResolverService private readonly editorResolverService: IEditorResolverService,
 		@ISearchService private readonly searchService: ISearchService,
-		@IInstantiationService instantiationService: IInstantiationService
+		@IInstantiationService instantiationService: IInstantiationService,
 	) {
 		this.queryBuilder = instantiationService.createInstance(QueryBuilder);
 	}
@@ -67,18 +82,36 @@ export class NotebookSearchService implements INotebookSearchService {
 		}
 
 		const localNotebookWidgets = this.getLocalNotebookWidgets();
-		const localNotebookFiles = localNotebookWidgets.map(widget => widget.viewModel!.uri);
+		const localNotebookFiles = localNotebookWidgets.map(
+      widget => widget.viewModel!.uri,
+    );
 		const getAllResults = (): { completeData: Promise<ISearchComplete>; allScannedFiles: Promise<ResourceSet> } => {
 			const searchStart = Date.now();
 
-			const localResultPromise = this.getLocalNotebookResults(query, token ?? CancellationToken.None, localNotebookWidgets, searchInstanceID);
+			const localResultPromise = this.getLocalNotebookResults(
+        query,
+        token ?? CancellationToken.None,
+        localNotebookWidgets,
+        searchInstanceID,
+      );
 			const searchLocalEnd = Date.now();
 
-			const experimentalNotebooksEnabled = this.configurationService.getValue<ISearchConfigurationProperties>('search').experimental?.closedNotebookRichContentResults ?? false;
+			const experimentalNotebooksEnabled = this.configurationService.getValue<ISearchConfigurationProperties>(
+        "search",
+      ).experimental?.closedNotebookRichContentResults ?? false;
 
-			let closedResultsPromise: Promise<IClosedNotebookSearchResults | undefined> = Promise.resolve(undefined);
+			let closedResultsPromise: Promise<IClosedNotebookSearchResults | undefined> = Promise.resolve(
+        undefined,
+      );
 			if (experimentalNotebooksEnabled) {
-				closedResultsPromise = this.getClosedNotebookResults(query, new ResourceSet(localNotebookFiles, uri => this.uriIdentityService.extUri.getComparisonKey(uri)), token ?? CancellationToken.None);
+				closedResultsPromise = this.getClosedNotebookResults(
+          query,
+          new ResourceSet(
+            localNotebookFiles,
+            uri => this.uriIdentityService.extUri.getComparisonKey(uri),
+          ),
+          token ?? CancellationToken.None,
+        );
 			}
 
 			const promise = Promise.all([localResultPromise, closedResultsPromise]);
@@ -105,27 +138,27 @@ export class NotebookSearchService implements INotebookSearchService {
 					const closedNotebookResults = resolvedPromise[1];
 					const results = arrays.coalesce([...openNotebookResults.results.keys(), ...closedNotebookResults?.results.keys() ?? []]);
 					return new ResourceSet(results, uri => this.uriIdentityService.extUri.getComparisonKey(uri));
-				})
+				}),
 			};
 		};
 		const promiseResults = getAllResults();
 		return {
-			openFilesToScan: new ResourceSet(localNotebookFiles),
-			completeData: promiseResults.completeData,
-			allScannedFiles: promiseResults.allScannedFiles
-		};
+      openFilesToScan: new ResourceSet(localNotebookFiles),
+      completeData: promiseResults.completeData,
+      allScannedFiles: promiseResults.allScannedFiles,
+    };
 	}
 
 	private async doesFileExist(includes: string[], folderQueries: IFolderQuery<URI>[], token: CancellationToken): Promise<boolean> {
 		const promises: Promise<boolean>[] = includes.map(async includePattern => {
 			const query = this.queryBuilder.file(folderQueries.map(e => e.folder), {
-				includePattern: includePattern.startsWith('/') ? includePattern : '**/' + includePattern, // todo: find cleaner way to ensure that globs match all appropriate filetypes
+				includePattern: includePattern.startsWith("/") ? includePattern : "**/" + includePattern, // todo: find cleaner way to ensure that globs match all appropriate filetypes
 				exists: true,
 				onlyFileScheme: true,
 			});
 			return this.searchService.fileSearch(
 				query,
-				token
+				token,
 			).then((ret) => {
 				return !!ret.limitHit;
 			});
@@ -153,7 +186,7 @@ export class NotebookSearchService implements INotebookSearchService {
 
 			const info: NotebookPriorityInfo = {
 				isFromSettings: true,
-				filenamePatterns: [association.filenamePattern]
+				filenamePatterns: [association.filenamePattern],
 			};
 
 			const existingEntry = allPriorityInfo.get(association.viewType);
@@ -198,7 +231,9 @@ export class NotebookSearchService implements INotebookSearchService {
 		let limitHit = searchComplete.some(e => e.limitHit);
 
 		// results are already sorted with high priority first, filter out duplicates.
-		const uniqueResults = new ResourceMap<INotebookFileMatchNoModel | null>(uri => this.uriIdentityService.extUri.getComparisonKey(uri));
+		const uniqueResults = new ResourceMap<INotebookFileMatchNoModel | null>(
+      uri => this.uriIdentityService.extUri.getComparisonKey(uri),
+    );
 
 		let numResults = 0;
 		for (const result of results) {
@@ -208,7 +243,10 @@ export class NotebookSearchService implements INotebookSearchService {
 			}
 
 			if (!scannedFiles.has(result.resource) && !uniqueResults.has(result.resource)) {
-				uniqueResults.set(result.resource, result.cellResults.length > 0 ? result : null);
+				uniqueResults.set(
+          result.resource,
+          result.cellResults.length > 0 ? result : null,
+        );
 				numResults++;
 			}
 		}
@@ -218,20 +256,24 @@ export class NotebookSearchService implements INotebookSearchService {
 		this.logService.trace(`closed notebook search time | ${end - start}ms`);
 
 		return {
-			results: uniqueResults,
-			limitHit
-		};
+      results: uniqueResults,
+      limitHit,
+    };
 	}
 
 	private async getLocalNotebookResults(query: ITextQuery, token: CancellationToken, widgets: Array<NotebookEditorWidget>, searchID: string): Promise<IOpenNotebookSearchResults> {
-		const localResults = new ResourceMap<INotebookFileMatchWithModel | null>(uri => this.uriIdentityService.extUri.getComparisonKey(uri));
+		const localResults = new ResourceMap<INotebookFileMatchWithModel | null>(
+      uri => this.uriIdentityService.extUri.getComparisonKey(uri),
+    );
 		let limitHit = false;
 
 		for (const widget of widgets) {
 			if (!widget.hasModel()) {
 				continue;
 			}
-			const askMax = (isNumber(query.maxResults) ? query.maxResults : DEFAULT_MAX_SEARCH_RESULTS) + 1;
+			const askMax = (isNumber(
+        query.maxResults,
+      ) ? query.maxResults : DEFAULT_MAX_SEARCH_RESULTS) + 1;
 			const uri = widget.viewModel!.uri;
 
 			if (!pathIncludedInQuery(query, uri.fsPath)) {
@@ -267,8 +309,9 @@ export class NotebookSearchService implements INotebookSearchService {
 				});
 
 				const fileMatch: INotebookFileMatchWithModel = {
-					resource: uri, cellResults: cellResults
-				};
+          resource: uri,
+          cellResults: cellResults,
+        };
 				localResults.set(uri, fileMatch);
 			} else {
 				localResults.set(uri, null);
@@ -276,9 +319,9 @@ export class NotebookSearchService implements INotebookSearchService {
 		}
 
 		return {
-			results: localResults,
-			limitHit
-		};
+      results: localResults,
+      limitHit,
+    };
 	}
 
 

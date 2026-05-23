@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable } from '../../../../../base/common/lifecycle.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IQuickInputButton, IQuickTreeItem } from '../../../../../platform/quickinput/common/quickInput.js';
-import { ConfirmedReason } from '../chatService/chatService.js';
-import { IToolData, ToolDataSource } from './languageModelToolsService.js';
+import { IDisposable } from "../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IQuickInputButton, IQuickTreeItem } from "../../../../../platform/quickinput/common/quickInput.js";
+import { ConfirmedReason } from "../chatService/chatService.js";
+import { IToolData, ToolDataSource } from "./languageModelToolsService.js";
 
 /**
  * Computes a stable, bounded key for a tool+parameters combination
@@ -16,11 +16,13 @@ import { IToolData, ToolDataSource } from './languageModelToolsService.js';
  * raw parameter values are never leaked into storage.
  */
 export async function computeCombinationKey(toolId: string, parameters: unknown): Promise<string> {
-	const input = toolId + ':' + JSON.stringify(parameters);
+	const input = toolId + ":" + JSON.stringify(parameters);
 	const encoded = new TextEncoder().encode(input);
-	const buffer = await crypto.subtle.digest('SHA-256', encoded);
-	const hashHex = Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-	return toolId + ':combination:' + hashHex;
+	const buffer = await crypto.subtle.digest("SHA-256", encoded);
+	const hashHex = Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, "0")).join(
+    "",
+  );
+	return toolId + ":combination:" + hashHex;
 }
 
 export interface ILanguageModelToolConfirmationActions {
@@ -31,7 +33,7 @@ export interface ILanguageModelToolConfirmationActions {
 	/** Show a separator before this action */
 	divider?: boolean;
 	/** The scope of this action, if applicable */
-	scope?: 'session' | 'workspace' | 'profile';
+	scope?: "session" | "workspace" | "profile";
 	/** Selects this action. Resolves true if the action should be confirmed after selection */
 	select(): Promise<boolean>;
 }
@@ -113,7 +115,7 @@ export interface ILanguageModelToolsConfirmationService extends ILanguageModelTo
 	readonly _serviceBrand: undefined;
 
 	/** Opens an IQuickTree to let the user manage their preferences.  */
-	manageConfirmationPreferences(tools: readonly IToolData[], options?: { defaultScope?: 'workspace' | 'profile' | 'session'; focusToolId?: string }): void;
+	manageConfirmationPreferences(tools: readonly IToolData[], options?: { defaultScope?: "workspace" | "profile" | "session"; focusToolId?: string }): void;
 
 	/**
 	 * Registers a contribution that provides more specific confirmation logic
@@ -134,4 +136,6 @@ export interface ILanguageModelToolsConfirmationService extends ILanguageModelTo
 	resetToolAutoConfirmation(): void;
 }
 
-export const ILanguageModelToolsConfirmationService = createDecorator<ILanguageModelToolsConfirmationService>('ILanguageModelToolsConfirmationService');
+export const ILanguageModelToolsConfirmationService = createDecorator<ILanguageModelToolsConfirmationService>(
+  "ILanguageModelToolsConfirmationService",
+);

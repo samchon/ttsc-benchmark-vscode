@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BaseTextEditorModel } from './textEditorModel.js';
-import { URI } from '../../../base/common/uri.js';
-import { ILanguageService } from '../../../editor/common/languages/language.js';
-import { IModelService } from '../../../editor/common/services/model.js';
-import { ILanguageDetectionService } from '../../services/languageDetection/common/languageDetectionWorkerService.js';
-import { IAccessibilityService } from '../../../platform/accessibility/common/accessibility.js';
+import { BaseTextEditorModel } from "./textEditorModel.js";
+import { URI } from "../../../base/common/uri.js";
+import { ILanguageService } from "../../../editor/common/languages/language.js";
+import { IModelService } from "../../../editor/common/services/model.js";
+import { ILanguageDetectionService } from "../../services/languageDetection/common/languageDetectionWorkerService.js";
+import { IAccessibilityService } from "../../../platform/accessibility/common/accessibility.js";
 
 /**
  * An editor model for in-memory, readonly text content that
@@ -23,7 +23,13 @@ export class TextResourceEditorModel extends BaseTextEditorModel {
 		@ILanguageDetectionService languageDetectionService: ILanguageDetectionService,
 		@IAccessibilityService accessibilityService: IAccessibilityService,
 	) {
-		super(modelService, languageService, languageDetectionService, accessibilityService, resource);
+		super(
+      modelService,
+      languageService,
+      languageDetectionService,
+      accessibilityService,
+      resource,
+    );
 	}
 
 	override dispose(): void {

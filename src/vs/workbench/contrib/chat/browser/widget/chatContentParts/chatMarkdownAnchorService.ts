@@ -3,13 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { addDisposableListener, isActiveElement } from '../../../../../../base/browser/dom.js';
-import { Disposable, IDisposable, combinedDisposable, toDisposable } from '../../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { InlineAnchorWidget } from './chatInlineAnchorWidget.js';
+import { addDisposableListener, isActiveElement } from "../../../../../../base/browser/dom.js";
+import { Disposable, IDisposable, combinedDisposable, toDisposable } from "../../../../../../base/common/lifecycle.js";
+import { createDecorator } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { InlineAnchorWidget } from "./chatInlineAnchorWidget.js";
 
 
-export const IChatMarkdownAnchorService = createDecorator<IChatMarkdownAnchorService>('chatMarkdownAnchorService');
+export const IChatMarkdownAnchorService = createDecorator<IChatMarkdownAnchorService>(
+  "chatMarkdownAnchorService",
+);
 
 export interface IChatMarkdownAnchorService {
 
@@ -40,7 +42,7 @@ export class ChatMarkdownAnchorService extends Disposable implements IChatMarkdo
 
 	register(widget: InlineAnchorWidget): IDisposable {
 		if (this._widgets.some(other => other === widget)) {
-			throw new Error('Cannot register the same widget multiple times');
+			throw new Error("Cannot register the same widget multiple times");
 		}
 
 		// Keep in our lists list
@@ -54,9 +56,9 @@ export class ChatMarkdownAnchorService extends Disposable implements IChatMarkdo
 		}
 
 		return combinedDisposable(
-			addDisposableListener(element, 'focus', () => this.setLastFocusedList(widget)),
+			addDisposableListener(element, "focus", () => this.setLastFocusedList(widget)),
 			toDisposable(() => this._widgets.splice(this._widgets.indexOf(widget), 1)),
-			addDisposableListener(element, 'blur', () => {
+			addDisposableListener(element, "blur", () => {
 				if (this._lastFocusedWidget === widget) {
 					this.setLastFocusedList(undefined);
 				}

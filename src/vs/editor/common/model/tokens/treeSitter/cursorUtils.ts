@@ -2,13 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import type * as TreeSitter from '@vscode/tree-sitter-wasm';
+import type * as TreeSitter from "@vscode/tree-sitter-wasm";
 
 export function gotoNextSibling(newCursor: TreeSitter.TreeCursor, oldCursor: TreeSitter.TreeCursor) {
 	const n = newCursor.gotoNextSibling();
 	const o = oldCursor.gotoNextSibling();
 	if (n !== o) {
-		throw new Error('Trees are out of sync');
+		throw new Error("Trees are out of sync");
 	}
 	return n && o;
 }
@@ -17,7 +17,7 @@ export function gotoParent(newCursor: TreeSitter.TreeCursor, oldCursor: TreeSitt
 	const n = newCursor.gotoParent();
 	const o = oldCursor.gotoParent();
 	if (n !== o) {
-		throw new Error('Trees are out of sync');
+		throw new Error("Trees are out of sync");
 	}
 	return n && o;
 }
@@ -26,7 +26,7 @@ export function gotoNthChild(newCursor: TreeSitter.TreeCursor, oldCursor: TreeSi
 	const n = newCursor.gotoFirstChild();
 	const o = oldCursor.gotoFirstChild();
 	if (n !== o) {
-		throw new Error('Trees are out of sync');
+		throw new Error("Trees are out of sync");
 	}
 	if (index === 0) {
 		return n && o;
@@ -35,7 +35,7 @@ export function gotoNthChild(newCursor: TreeSitter.TreeCursor, oldCursor: TreeSi
 		const nn = newCursor.gotoNextSibling();
 		const oo = oldCursor.gotoNextSibling();
 		if (nn !== oo) {
-			throw new Error('Trees are out of sync');
+			throw new Error("Trees are out of sync");
 		}
 		if (!nn || !oo) {
 			return false;

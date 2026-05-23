@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IRelativePattern, match as matchGlobPattern } from '../../base/common/glob.js';
-import { URI } from '../../base/common/uri.js';
-import { normalize } from '../../base/common/path.js';
+import { IRelativePattern, match as matchGlobPattern } from "../../base/common/glob.js";
+import { URI } from "../../base/common/uri.js";
+import { normalize } from "../../base/common/path.js";
 
 export interface LanguageFilter {
 	readonly language?: string;
@@ -32,7 +32,14 @@ export function score(selector: LanguageSelector | undefined, candidateUri: URI,
 		// array -> take max individual value
 		let ret = 0;
 		for (const filter of selector) {
-			const value = score(filter, candidateUri, candidateLanguage, candidateIsSynchronized, candidateNotebookUri, candidateNotebookType);
+			const value = score(
+        filter,
+        candidateUri,
+        candidateLanguage,
+        candidateIsSynchronized,
+        candidateNotebookUri,
+        candidateNotebookType,
+      );
 			if (value === 10) {
 				return value; // already at the highest
 			}
@@ -42,7 +49,7 @@ export function score(selector: LanguageSelector | undefined, candidateUri: URI,
 		}
 		return ret;
 
-	} else if (typeof selector === 'string') {
+	} else if (typeof selector === "string") {
 
 		if (!candidateIsSynchronized) {
 			return 0;
@@ -51,7 +58,7 @@ export function score(selector: LanguageSelector | undefined, candidateUri: URI,
 		// short-hand notion, desugars to
 		// 'fooLang' -> { language: 'fooLang'}
 		// '*' -> { language: '*' }
-		if (selector === '*') {
+		if (selector === "*") {
 			return 5;
 		} else if (selector === candidateLanguage) {
 			return 10;
@@ -78,7 +85,7 @@ export function score(selector: LanguageSelector | undefined, candidateUri: URI,
 		if (scheme) {
 			if (scheme === candidateUri.scheme) {
 				ret = 10;
-			} else if (scheme === '*') {
+			} else if (scheme === "*") {
 				ret = 5;
 			} else {
 				return 0;
@@ -88,7 +95,7 @@ export function score(selector: LanguageSelector | undefined, candidateUri: URI,
 		if (language) {
 			if (language === candidateLanguage) {
 				ret = 10;
-			} else if (language === '*') {
+			} else if (language === "*") {
 				ret = Math.max(ret, 5);
 			} else {
 				return 0;
@@ -98,7 +105,7 @@ export function score(selector: LanguageSelector | undefined, candidateUri: URI,
 		if (notebookType) {
 			if (notebookType === candidateNotebookType) {
 				ret = 10;
-			} else if (notebookType === '*' && candidateNotebookType !== undefined) {
+			} else if (notebookType === "*" && candidateNotebookType !== undefined) {
 				ret = Math.max(ret, 5);
 			} else {
 				return 0;
@@ -107,7 +114,7 @@ export function score(selector: LanguageSelector | undefined, candidateUri: URI,
 
 		if (pattern) {
 			let normalizedPattern: string | IRelativePattern;
-			if (typeof pattern === 'string') {
+			if (typeof pattern === "string") {
 				normalizedPattern = pattern;
 			} else {
 				// Since this pattern has a `base` property, we need
@@ -118,7 +125,10 @@ export function score(selector: LanguageSelector | undefined, candidateUri: URI,
 				normalizedPattern = { ...pattern, base: normalize(pattern.base) };
 			}
 
-			if (normalizedPattern === candidateUri.fsPath || matchGlobPattern(normalizedPattern, candidateUri.fsPath)) {
+			if (normalizedPattern === candidateUri.fsPath || matchGlobPattern(
+        normalizedPattern,
+        candidateUri.fsPath,
+      )) {
 				ret = 10;
 			} else {
 				return 0;
@@ -134,7 +144,7 @@ export function score(selector: LanguageSelector | undefined, candidateUri: URI,
 
 
 export function targetsNotebooks(selector: LanguageSelector): boolean {
-	if (typeof selector === 'string') {
+	if (typeof selector === "string") {
 		return false;
 	} else if (Array.isArray(selector)) {
 		return selector.some(targetsNotebooks);
@@ -144,7 +154,7 @@ export function targetsNotebooks(selector: LanguageSelector): boolean {
 }
 
 export function selectLanguageIds(selector: LanguageSelector, into: Set<string>): void {
-	if (typeof selector === 'string') {
+	if (typeof selector === "string") {
 		into.add(selector);
 	} else if (Array.isArray(selector)) {
 		for (const item of selector) {

@@ -3,14 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { IMarkdownString } from '../../../../base/common/htmlContent.js';
-import { IObservable } from '../../../../base/common/observable.js';
-import { isEqual } from '../../../../base/common/resources.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
-import { URI } from '../../../../base/common/uri.js';
-import { localize } from '../../../../nls.js';
-import { IChatSessionFileChange, IChatSessionFileChange2, isIChatSessionFileChange2 } from '../../../../workbench/contrib/chat/common/chatSessionsService.js';
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { IMarkdownString } from "../../../../base/common/htmlContent.js";
+import { IObservable } from "../../../../base/common/observable.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { URI } from "../../../../base/common/uri.js";
+import { localize } from "../../../../nls.js";
+import {
+  IChatSessionFileChange,
+  IChatSessionFileChange2,
+  isIChatSessionFileChange2,
+} from "../../../../workbench/contrib/chat/common/chatSessionsService.js";
 
 export interface ISessionType {
 	/** Unique identifier (e.g., 'copilot-cli', 'copilot-cloud', 'claude-code'). */
@@ -21,7 +25,7 @@ export interface ISessionType {
 	readonly icon: ThemeIcon;
 }
 
-export const GITHUB_REMOTE_FILE_SCHEME = 'github-remote-file';
+export const GITHUB_REMOTE_FILE_SCHEME = "github-remote-file";
 
 /**
  * Status of an agent session as reported by the sessions provider.
@@ -316,8 +320,14 @@ export interface ISessionCapabilities {
  * `ISessionWorkspaceBrowseAction`; the picker discovers tabs from the union
  * of contributed values.
  */
-export const SESSION_WORKSPACE_GROUP_LOCAL = localize('sessionWorkspaceGroup.local', "Local");
-export const SESSION_WORKSPACE_GROUP_REMOTE = localize('sessionWorkspaceGroup.remote', "Remote");
+export const SESSION_WORKSPACE_GROUP_LOCAL = localize(
+  "sessionWorkspaceGroup.local",
+  "Local",
+);
+export const SESSION_WORKSPACE_GROUP_REMOTE = localize(
+  "sessionWorkspaceGroup.remote",
+  "Remote",
+);
 
 export interface ISessionWorkspaceBrowseAction {
 	/** Display label for the browse action. */
@@ -422,7 +432,10 @@ export function gitHubInfoEqual(a: IGitHubInfo | undefined, b: IGitHubInfo | und
 		a.repo === b.repo &&
 		a.pullRequest?.number === b.pullRequest?.number &&
 		isEqual(a.pullRequest?.uri, b.pullRequest?.uri) &&
-		(aIcon === bIcon || (!!aIcon && !!bIcon && ThemeIcon.isEqual(aIcon, bIcon))) &&
+		(aIcon === bIcon || (!!aIcon && !!bIcon && ThemeIcon.isEqual(
+      aIcon,
+      bIcon,
+    ))) &&
 		a.pullRequest?.baseRefOid === b.pullRequest?.baseRefOid &&
 		a.pullRequest?.headRefOid === b.pullRequest?.headRefOid;
 }

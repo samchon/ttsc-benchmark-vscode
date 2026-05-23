@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable } from '../../../../../base/common/lifecycle.js';
-import { NativeEditContext } from './nativeEditContext.js';
+import { IDisposable } from "../../../../../base/common/lifecycle.js";
+import { NativeEditContext } from "./nativeEditContext.js";
 
 class NativeEditContextRegistryImpl {
 
@@ -15,7 +15,7 @@ class NativeEditContextRegistryImpl {
 		return {
 			dispose: () => {
 				this._nativeEditContextMapping.delete(ownerID);
-			}
+			},
 		};
 	}
 

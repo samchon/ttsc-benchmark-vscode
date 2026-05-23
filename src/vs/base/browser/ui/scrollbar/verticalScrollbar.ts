@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { StandardWheelEvent } from '../../mouseEvent.js';
-import { AbstractScrollbar, ISimplifiedPointerEvent, ScrollbarHost } from './abstractScrollbar.js';
-import { ScrollableElementResolvedOptions } from './scrollableElementOptions.js';
-import { ARROW_IMG_SIZE } from './scrollbarArrow.js';
-import { ScrollbarState } from './scrollbarState.js';
-import { Codicon } from '../../../common/codicons.js';
-import { INewScrollPosition, Scrollable, ScrollbarVisibility, ScrollEvent } from '../../../common/scrollable.js';
+import { StandardWheelEvent } from "../../mouseEvent.js";
+import { AbstractScrollbar, ISimplifiedPointerEvent, ScrollbarHost } from "./abstractScrollbar.js";
+import { ScrollableElementResolvedOptions } from "./scrollableElementOptions.js";
+import { ARROW_IMG_SIZE } from "./scrollbarArrow.js";
+import { ScrollbarState } from "./scrollbarState.js";
+import { Codicon } from "../../../common/codicons.js";
+import { INewScrollPosition, Scrollable, ScrollbarVisibility, ScrollEvent } from "../../../common/scrollable.js";
 
 
 
@@ -28,12 +28,12 @@ export class VerticalScrollbar extends AbstractScrollbar {
 				0,
 				scrollDimensions.height,
 				scrollDimensions.scrollHeight,
-				scrollPosition.scrollTop
+				scrollPosition.scrollTop,
 			),
 			visibility: options.vertical,
-			extraScrollbarClassName: 'vertical',
+			extraScrollbarClassName: "vertical",
 			scrollable: scrollable,
-			scrollByPage: options.scrollByPage
+			scrollByPage: options.scrollByPage,
 		});
 
 		if (options.verticalHasArrows) {
@@ -41,31 +41,38 @@ export class VerticalScrollbar extends AbstractScrollbar {
 			const scrollbarDelta = (options.verticalScrollbarSize - ARROW_IMG_SIZE) / 2;
 
 			this._createArrow({
-				className: 'scra',
-				icon: Codicon.scrollbarButtonUp,
-				top: arrowDelta,
-				left: scrollbarDelta,
-				bottom: undefined,
-				right: undefined,
-				bgWidth: options.verticalScrollbarSize,
-				bgHeight: options.arrowSize,
-				onActivate: () => this._host.onMouseWheel(new StandardWheelEvent(null, 0, 1)),
-			});
+        className: "scra",
+        icon: Codicon.scrollbarButtonUp,
+        top: arrowDelta,
+        left: scrollbarDelta,
+        bottom: undefined,
+        right: undefined,
+        bgWidth: options.verticalScrollbarSize,
+        bgHeight: options.arrowSize,
+        onActivate: () => this._host.onMouseWheel(new StandardWheelEvent(null, 0, 1)),
+      });
 
 			this._createArrow({
-				className: 'scra',
-				icon: Codicon.scrollbarButtonDown,
-				top: undefined,
-				left: scrollbarDelta,
-				bottom: arrowDelta,
-				right: undefined,
-				bgWidth: options.verticalScrollbarSize,
-				bgHeight: options.arrowSize,
-				onActivate: () => this._host.onMouseWheel(new StandardWheelEvent(null, 0, -1)),
-			});
+        className: "scra",
+        icon: Codicon.scrollbarButtonDown,
+        top: undefined,
+        left: scrollbarDelta,
+        bottom: arrowDelta,
+        right: undefined,
+        bgWidth: options.verticalScrollbarSize,
+        bgHeight: options.arrowSize,
+        onActivate: () => this._host.onMouseWheel(new StandardWheelEvent(null, 0, -1)),
+      });
 		}
 
-		this._createSlider(0, Math.floor((options.verticalScrollbarSize - options.verticalSliderSize) / 2), options.verticalSliderSize, undefined);
+		this._createSlider(
+      0,
+      Math.floor(
+        (options.verticalScrollbarSize - options.verticalSliderSize) / 2,
+      ),
+      options.verticalSliderSize,
+      undefined,
+    );
 	}
 
 	protected _updateSlider(sliderSize: number, sliderPosition: number): void {
@@ -81,8 +88,12 @@ export class VerticalScrollbar extends AbstractScrollbar {
 	}
 
 	public onDidScroll(e: ScrollEvent): boolean {
-		this._shouldRender = this._onElementScrollSize(e.scrollHeight) || this._shouldRender;
-		this._shouldRender = this._onElementScrollPosition(e.scrollTop) || this._shouldRender;
+		this._shouldRender = this._onElementScrollSize(
+      e.scrollHeight,
+    ) || this._shouldRender;
+		this._shouldRender = this._onElementScrollPosition(
+      e.scrollTop,
+    ) || this._shouldRender;
 		this._shouldRender = this._onElementSize(e.height) || this._shouldRender;
 		return this._shouldRender;
 	}
@@ -108,7 +119,9 @@ export class VerticalScrollbar extends AbstractScrollbar {
 	}
 
 	public updateOptions(options: ScrollableElementResolvedOptions): void {
-		this.updateScrollbarSize(options.vertical === ScrollbarVisibility.Hidden ? 0 : options.verticalScrollbarSize);
+		this.updateScrollbarSize(
+      options.vertical === ScrollbarVisibility.Hidden ? 0 : options.verticalScrollbarSize,
+    );
 		// give priority to vertical scroll bar over horizontal and let it scroll all the way to the bottom
 		this._scrollbarState.setOppositeScrollbarSize(0);
 		this._visibilityController.setVisibility(options.vertical);

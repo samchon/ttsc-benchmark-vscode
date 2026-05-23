@@ -3,29 +3,33 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { VSBuffer } from '../../../../../../base/common/buffer.js';
-import { Emitter } from '../../../../../../base/common/event.js';
-import { DisposableStore } from '../../../../../../base/common/lifecycle.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../../base/test/common/utils.js';
-import type { ResolveSessionConfigResult } from '../../../../../../platform/agentHost/common/state/protocol/commands.js';
-import { TestInstantiationService } from '../../../../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { ServiceCollection } from '../../../../../../platform/instantiation/common/serviceCollection.js';
-import { NullLogService, ILogService } from '../../../../../../platform/log/common/log.js';
-import { Extensions as JSONExtensions, IJSONContributionRegistry } from '../../../../../../platform/jsonschemas/common/jsonContributionRegistry.js';
-import { Registry } from '../../../../../../platform/registry/common/platform.js';
-import type { IAgentHostSessionsProvider } from '../../../../../common/agentHostSessionsProvider.js';
-import { ISessionsProvidersService } from '../../../../../services/sessions/browser/sessionsProvidersService.js';
-import type { ISession } from '../../../../../services/sessions/common/session.js';
-import type { ISessionsProvider } from '../../../../../services/sessions/common/sessionsProvider.js';
-import { agentSessionSettingsUri, AgentSessionSettingsFileSystemProvider, AgentSessionSettingsSchemaRegistrar } from '../../browser/agentSessionSettingsFileSystemProvider.js';
+import assert from "assert";
+import { VSBuffer } from "../../../../../../base/common/buffer.js";
+import { Emitter } from "../../../../../../base/common/event.js";
+import { DisposableStore } from "../../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../../base/test/common/utils.js";
+import type { ResolveSessionConfigResult } from "../../../../../../platform/agentHost/common/state/protocol/commands.js";
+import { TestInstantiationService } from "../../../../../../platform/instantiation/test/common/instantiationServiceMock.js";
+import { ServiceCollection } from "../../../../../../platform/instantiation/common/serviceCollection.js";
+import { NullLogService, ILogService } from "../../../../../../platform/log/common/log.js";
+import { Extensions as JSONExtensions, IJSONContributionRegistry } from "../../../../../../platform/jsonschemas/common/jsonContributionRegistry.js";
+import { Registry } from "../../../../../../platform/registry/common/platform.js";
+import type { IAgentHostSessionsProvider } from "../../../../../common/agentHostSessionsProvider.js";
+import { ISessionsProvidersService } from "../../../../../services/sessions/browser/sessionsProvidersService.js";
+import type { ISession } from "../../../../../services/sessions/common/session.js";
+import type { ISessionsProvider } from "../../../../../services/sessions/common/sessionsProvider.js";
+import {
+  agentSessionSettingsUri,
+  AgentSessionSettingsFileSystemProvider,
+  AgentSessionSettingsSchemaRegistrar,
+} from "../../browser/agentSessionSettingsFileSystemProvider.js";
 
-const PROVIDER_ID = 'local-agent-host';
-const RESOURCE_SCHEME = 'agent-host-copilot';
-const RAW_ID = 'abc-123';
+const PROVIDER_ID = "local-agent-host";
+const RESOURCE_SCHEME = "agent-host-copilot";
+const RAW_ID = "abc-123";
 
-suite('AgentSessionSettingsFileSystemProvider', () => {
+suite("AgentSessionSettingsFileSystemProvider", () => {
 
 	const store = ensureNoDisposablesAreLeakedInTestSuite();
 
@@ -107,35 +111,35 @@ suite('AgentSessionSettingsFileSystemProvider', () => {
 		return { fs, session, uri: agentSessionSettingsUri(session), sessionProvider };
 	}
 
-	test('readFile returns mutable, non-readOnly config values as JSON', async () => {
+	test("readFile returns mutable, non-readOnly config values as JSON", async () => {
 		const { fs, uri } = createHarness({
 			schema: {
-				type: 'object',
+				type: "object",
 				properties: {
-					autoApprove: { type: 'string', title: 'Auto Approve', sessionMutable: true, enum: ['default', 'autoApprove'] },
-					isolation: { type: 'string', title: 'Isolation', enum: ['worktree'] }, // non-mutable — omitted
-					branch: { type: 'string', title: 'Branch', sessionMutable: true, readOnly: true, enum: ['main'] }, // readOnly — omitted
+					autoApprove: { type: "string", title: "Auto Approve", sessionMutable: true, enum: ["default", "autoApprove"] },
+					isolation: { type: "string", title: "Isolation", enum: ["worktree"] }, // non-mutable — omitted
+					branch: { type: "string", title: "Branch", sessionMutable: true, readOnly: true, enum: ["main"] }, // readOnly — omitted
 				},
 			},
-			values: { autoApprove: 'default', isolation: 'worktree', branch: 'main' },
+			values: { autoApprove: "default", isolation: "worktree", branch: "main" },
 		});
 
 		const buf = await fs.readFile(uri);
 		const text = VSBuffer.wrap(buf).toString();
-		const jsonStart = text.indexOf('{');
+		const jsonStart = text.indexOf("{");
 		const parsed = JSON.parse(text.substring(jsonStart));
-		assert.deepStrictEqual(parsed, { autoApprove: 'default' });
+		assert.deepStrictEqual(parsed, { autoApprove: "default" });
 	});
 
-	test('writeFile with unchanged content still forwards raw input (provider guards/short-circuits)', async () => {
+	test("writeFile with unchanged content still forwards raw input (provider guards/short-circuits)", async () => {
 		const { fs, uri, session, sessionProvider } = createHarness({
 			schema: {
-				type: 'object',
+				type: "object",
 				properties: {
-					autoApprove: { type: 'string', title: 'Auto Approve', sessionMutable: true, enum: ['default', 'autoApprove'] },
+					autoApprove: { type: "string", title: "Auto Approve", sessionMutable: true, enum: ["default", "autoApprove"] },
 				},
 			},
-			values: { autoApprove: 'default' },
+			values: { autoApprove: "default" },
 		});
 
 		const current = await fs.readFile(uri);
@@ -144,22 +148,22 @@ suite('AgentSessionSettingsFileSystemProvider', () => {
 		// is the provider's responsibility (covered in the provider test).
 		assert.deepStrictEqual(sessionProvider.replaceCalls, [{
 			sessionId: session.sessionId,
-			values: { autoApprove: 'default' },
+			values: { autoApprove: "default" },
 		}]);
 	});
 
-	test('writeFile forwards the user\'s parsed JSON as the replace payload', async () => {
+	test("writeFile forwards the user's parsed JSON as the replace payload", async () => {
 		const { fs, uri, session, sessionProvider } = createHarness({
 			schema: {
-				type: 'object',
+				type: "object",
 				properties: {
-					autoApprove: { type: 'string', title: 'Auto Approve', sessionMutable: true, enum: ['default', 'autoApprove'] },
-					mode: { type: 'string', title: 'Mode', sessionMutable: true, enum: ['a', 'b'] },
-					isolation: { type: 'string', title: 'Isolation', enum: ['worktree'] }, // non-mutable
-					branch: { type: 'string', title: 'Branch', sessionMutable: true, readOnly: true, enum: ['main'] }, // readOnly
+					autoApprove: { type: "string", title: "Auto Approve", sessionMutable: true, enum: ["default", "autoApprove"] },
+					mode: { type: "string", title: "Mode", sessionMutable: true, enum: ["a", "b"] },
+					isolation: { type: "string", title: "Isolation", enum: ["worktree"] }, // non-mutable
+					branch: { type: "string", title: "Branch", sessionMutable: true, readOnly: true, enum: ["main"] }, // readOnly
 				},
 			},
-			values: { autoApprove: 'default', mode: 'a', isolation: 'worktree', branch: 'main' },
+			values: { autoApprove: "default", mode: "a", isolation: "worktree", branch: "main" },
 		});
 
 		// User edits: only editable keys are exposed and round-tripped through
@@ -169,21 +173,21 @@ suite('AgentSessionSettingsFileSystemProvider', () => {
 
 		assert.deepStrictEqual(sessionProvider.replaceCalls, [{
 			sessionId: session.sessionId,
-			values: { autoApprove: 'autoApprove', mode: 'b' },
+			values: { autoApprove: "autoApprove", mode: "b" },
 		}]);
 	});
 
-	test('writeFile forwards a partial edit set, supporting unset via omission', async () => {
+	test("writeFile forwards a partial edit set, supporting unset via omission", async () => {
 		const { fs, uri, session, sessionProvider } = createHarness({
 			schema: {
-				type: 'object',
+				type: "object",
 				properties: {
-					autoApprove: { type: 'string', title: 'Auto Approve', sessionMutable: true, enum: ['default', 'autoApprove'] },
-					mode: { type: 'string', title: 'Mode', sessionMutable: true, enum: ['a', 'b'] },
-					isolation: { type: 'string', title: 'Isolation', enum: ['worktree'] },
+					autoApprove: { type: "string", title: "Auto Approve", sessionMutable: true, enum: ["default", "autoApprove"] },
+					mode: { type: "string", title: "Mode", sessionMutable: true, enum: ["a", "b"] },
+					isolation: { type: "string", title: "Isolation", enum: ["worktree"] },
 				},
 			},
-			values: { autoApprove: 'autoApprove', mode: 'a', isolation: 'worktree' },
+			values: { autoApprove: "autoApprove", mode: "a", isolation: "worktree" },
 		});
 
 		const newContent = VSBuffer.fromString('{ "autoApprove": "default" }\n').buffer;
@@ -191,13 +195,13 @@ suite('AgentSessionSettingsFileSystemProvider', () => {
 
 		assert.deepStrictEqual(sessionProvider.replaceCalls, [{
 			sessionId: session.sessionId,
-			values: { autoApprove: 'default' },
+			values: { autoApprove: "default" },
 		}]);
 	});
 
-	test('onDidChangeFile fires when provider config changes', async () => {
+	test("onDidChangeFile fires when provider config changes", async () => {
 		const { fs, uri, session, sessionProvider } = createHarness({
-			schema: { type: 'object', properties: {} },
+			schema: { type: "object", properties: {} },
 			values: {},
 		});
 
@@ -218,7 +222,7 @@ suite('AgentSessionSettingsFileSystemProvider', () => {
 		assert.strictEqual(events[0].toString(), uri.toString());
 	});
 
-	test('readFile on unknown provider throws FileNotFound', async () => {
+	test("readFile on unknown provider throws FileNotFound", async () => {
 		const { fs, uri } = createHarness(undefined, /*registerProvider*/ false);
 
 		await assert.rejects(async () => {
@@ -226,22 +230,22 @@ suite('AgentSessionSettingsFileSystemProvider', () => {
 		});
 	});
 
-	suite('schema registration', () => {
+	suite("schema registration", () => {
 		const schemaRegistry = Registry.as<IJSONContributionRegistry>(JSONExtensions.JSONContribution);
 
 		function expectedSchemaId(session: ISession): string {
 			return `vscode://schemas/agent-session-settings/${session.providerId}/${session.resource.scheme}/${session.resource.path}.jsonc`;
 		}
 
-		test('readFile lazily registers a schema + association for the session', async () => {
+		test("readFile lazily registers a schema + association for the session", async () => {
 			const { fs, uri, session } = createHarness({
 				schema: {
-					type: 'object',
+					type: "object",
 					properties: {
-						autoApprove: { type: 'string', title: 'Auto Approve', sessionMutable: true, enum: ['default', 'autoApprove'] },
+						autoApprove: { type: "string", title: "Auto Approve", sessionMutable: true, enum: ["default", "autoApprove"] },
 					},
 				},
-				values: { autoApprove: 'default' },
+				values: { autoApprove: "default" },
 			});
 			const schemaId = expectedSchemaId(session);
 
@@ -255,15 +259,15 @@ suite('AgentSessionSettingsFileSystemProvider', () => {
 			assert.deepStrictEqual(schemaRegistry.getSchemaAssociations()[schemaId], [uri.toString()]);
 		});
 
-		test('schema is refreshed when onDidChangeSessionConfig fires with a new schema identity', async () => {
+		test("schema is refreshed when onDidChangeSessionConfig fires with a new schema identity", async () => {
 			const { fs, uri, session, sessionProvider } = createHarness({
 				schema: {
-					type: 'object',
+					type: "object",
 					properties: {
-						autoApprove: { type: 'string', title: 'Auto Approve', sessionMutable: true, enum: ['default'] },
+						autoApprove: { type: "string", title: "Auto Approve", sessionMutable: true, enum: ["default"] },
 					},
 				},
-				values: { autoApprove: 'default' },
+				values: { autoApprove: "default" },
 			});
 			const schemaId = expectedSchemaId(session);
 
@@ -275,30 +279,30 @@ suite('AgentSessionSettingsFileSystemProvider', () => {
 			// Swap in a new schema (identity change) and notify.
 			sessionProvider.config = {
 				schema: {
-					type: 'object',
+					type: "object",
 					properties: {
-						autoApprove: { type: 'string', title: 'Auto Approve', sessionMutable: true, enum: ['default', 'autoApprove'] },
-						mode: { type: 'string', title: 'Mode', sessionMutable: true, enum: ['a', 'b'] },
+						autoApprove: { type: "string", title: "Auto Approve", sessionMutable: true, enum: ["default", "autoApprove"] },
+						mode: { type: "string", title: "Mode", sessionMutable: true, enum: ["a", "b"] },
 					},
 				},
-				values: { autoApprove: 'default', mode: 'a' },
+				values: { autoApprove: "default", mode: "a" },
 			};
 			sessionProvider.onDidChangeSessionConfigEmitter.fire(session.sessionId);
 
 			const refreshed = schemaRegistry.getSchemaContributions().schemas[schemaId];
 			assert.notStrictEqual(refreshed, initial);
-			assert.ok(refreshed.properties?.['mode'], 'refreshed schema should include the newly added property');
+			assert.ok(refreshed.properties?.["mode"], "refreshed schema should include the newly added property");
 		});
 
-		test('schema is disposed when the session is removed', async () => {
+		test("schema is disposed when the session is removed", async () => {
 			const { fs, uri, session, sessionProvider } = createHarness({
 				schema: {
-					type: 'object',
+					type: "object",
 					properties: {
-						autoApprove: { type: 'string', title: 'Auto Approve', sessionMutable: true, enum: ['default'] },
+						autoApprove: { type: "string", title: "Auto Approve", sessionMutable: true, enum: ["default"] },
 					},
 				},
-				values: { autoApprove: 'default' },
+				values: { autoApprove: "default" },
 			});
 			const schemaId = expectedSchemaId(session);
 

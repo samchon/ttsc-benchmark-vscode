@@ -3,39 +3,51 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../../base/common/event.js';
-import { localize, localize2 } from '../../../../../nls.js';
-import { IKeyMods, IQuickPickSeparator, IQuickInputService, IQuickPick, ItemActivation } from '../../../../../platform/quickinput/common/quickInput.js';
-import { IEditorService, SIDE_GROUP } from '../../../../services/editor/common/editorService.js';
-import { IRange } from '../../../../../editor/common/core/range.js';
-import { Registry } from '../../../../../platform/registry/common/platform.js';
-import { IQuickAccessRegistry, Extensions as QuickaccessExtensions } from '../../../../../platform/quickinput/common/quickAccess.js';
-import { AbstractGotoSymbolQuickAccessProvider, IGotoSymbolQuickPickItem } from '../../../../../editor/contrib/quickAccess/browser/gotoSymbolQuickAccess.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { IWorkbenchEditorConfiguration } from '../../../../common/editor.js';
-import { ITextModel } from '../../../../../editor/common/model.js';
-import { DisposableStore, IDisposable, toDisposable, Disposable, MutableDisposable } from '../../../../../base/common/lifecycle.js';
-import { timeout } from '../../../../../base/common/async.js';
-import { CancellationToken, CancellationTokenSource } from '../../../../../base/common/cancellation.js';
-import { registerAction2, Action2, MenuId } from '../../../../../platform/actions/common/actions.js';
-import { KeyMod, KeyCode } from '../../../../../base/common/keyCodes.js';
-import { prepareQuery, IPreparedQuery } from '../../../../../base/common/fuzzyScorer.js';
-import { DocumentSymbol, SymbolKind } from '../../../../../editor/common/languages.js';
-import { fuzzyScore } from '../../../../../base/common/filters.js';
-import { onUnexpectedError } from '../../../../../base/common/errors.js';
-import { ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
-import { KeybindingWeight } from '../../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { IQuickAccessTextEditorContext } from '../../../../../editor/contrib/quickAccess/browser/editorNavigationQuickAccess.js';
-import { IOutlineService, OutlineTarget } from '../../../../services/outline/browser/outline.js';
-import { isCompositeEditor } from '../../../../../editor/browser/editorBrowser.js';
-import { ITextEditorOptions } from '../../../../../platform/editor/common/editor.js';
-import { IOutlineModelService } from '../../../../../editor/contrib/documentSymbols/browser/outlineModel.js';
-import { ILanguageFeaturesService } from '../../../../../editor/common/services/languageFeatures.js';
-import { ContextKeyExpr } from '../../../../../platform/contextkey/common/contextkey.js';
-import { accessibilityHelpIsShown, accessibleViewIsShown } from '../../../accessibility/browser/accessibilityConfiguration.js';
-import { matchesFuzzyIconAware, parseLabelWithIcons } from '../../../../../base/common/iconLabels.js';
-import { IChatWidgetService } from '../../../chat/browser/chat.js';
-import { ISymbolVariableEntry } from '../../../chat/common/attachments/chatVariableEntries.js';
+import { Event } from "../../../../../base/common/event.js";
+import { localize, localize2 } from "../../../../../nls.js";
+import {
+  IKeyMods,
+  IQuickPickSeparator,
+  IQuickInputService,
+  IQuickPick,
+  ItemActivation,
+} from "../../../../../platform/quickinput/common/quickInput.js";
+import { IEditorService, SIDE_GROUP } from "../../../../services/editor/common/editorService.js";
+import { IRange } from "../../../../../editor/common/core/range.js";
+import { Registry } from "../../../../../platform/registry/common/platform.js";
+import { IQuickAccessRegistry, Extensions as QuickaccessExtensions } from "../../../../../platform/quickinput/common/quickAccess.js";
+import { AbstractGotoSymbolQuickAccessProvider, IGotoSymbolQuickPickItem } from "../../../../../editor/contrib/quickAccess/browser/gotoSymbolQuickAccess.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IWorkbenchEditorConfiguration } from "../../../../common/editor.js";
+import { ITextModel } from "../../../../../editor/common/model.js";
+import {
+  DisposableStore,
+  IDisposable,
+  toDisposable,
+  Disposable,
+  MutableDisposable,
+} from "../../../../../base/common/lifecycle.js";
+import { timeout } from "../../../../../base/common/async.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../../base/common/cancellation.js";
+import { registerAction2, Action2, MenuId } from "../../../../../platform/actions/common/actions.js";
+import { KeyMod, KeyCode } from "../../../../../base/common/keyCodes.js";
+import { prepareQuery, IPreparedQuery } from "../../../../../base/common/fuzzyScorer.js";
+import { DocumentSymbol, SymbolKind } from "../../../../../editor/common/languages.js";
+import { fuzzyScore } from "../../../../../base/common/filters.js";
+import { onUnexpectedError } from "../../../../../base/common/errors.js";
+import { ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingWeight } from "../../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { IQuickAccessTextEditorContext } from "../../../../../editor/contrib/quickAccess/browser/editorNavigationQuickAccess.js";
+import { IOutlineService, OutlineTarget } from "../../../../services/outline/browser/outline.js";
+import { isCompositeEditor } from "../../../../../editor/browser/editorBrowser.js";
+import { ITextEditorOptions } from "../../../../../platform/editor/common/editor.js";
+import { IOutlineModelService } from "../../../../../editor/contrib/documentSymbols/browser/outlineModel.js";
+import { ILanguageFeaturesService } from "../../../../../editor/common/services/languageFeatures.js";
+import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { accessibilityHelpIsShown, accessibleViewIsShown } from "../../../accessibility/browser/accessibilityConfiguration.js";
+import { matchesFuzzyIconAware, parseLabelWithIcons } from "../../../../../base/common/iconLabels.js";
+import { IChatWidgetService } from "../../../chat/browser/chat.js";
+import { ISymbolVariableEntry } from "../../../chat/common/attachments/chatVariableEntries.js";
 
 export class GotoSymbolQuickAccessProvider extends AbstractGotoSymbolQuickAccessProvider {
 
@@ -50,8 +62,8 @@ export class GotoSymbolQuickAccessProvider extends AbstractGotoSymbolQuickAccess
 		@IChatWidgetService private readonly chatWidgetService: IChatWidgetService,
 	) {
 		super(languageFeaturesService, outlineModelService, {
-			openSideBySideDirection: () => this.configuration.openSideBySideDirection
-		});
+      openSideBySideDirection: () => this.configuration.openSideBySideDirection,
+    });
 		this.onDidActiveTextEditorControlChange = this.editorService.onDidActiveEditorChange;
 	}
 
@@ -61,9 +73,9 @@ export class GotoSymbolQuickAccessProvider extends AbstractGotoSymbolQuickAccess
 		const editorConfig = this.configurationService.getValue<IWorkbenchEditorConfiguration>().workbench?.editor;
 
 		return {
-			openEditorPinned: !editorConfig?.enablePreviewFromQuickOpen || !editorConfig?.enablePreview,
-			openSideBySideDirection: editorConfig?.openSideBySideDirection
-		};
+      openEditorPinned: !editorConfig?.enablePreviewFromQuickOpen || !editorConfig?.enablePreview,
+      openSideBySideDirection: editorConfig?.openSideBySideDirection,
+    };
 	}
 
 	protected get activeTextEditorControl() {
@@ -86,12 +98,16 @@ export class GotoSymbolQuickAccessProvider extends AbstractGotoSymbolQuickAccess
 			context.restoreViewState?.(); // since we open to the side, restore view state in this editor
 
 			const editorOptions: ITextEditorOptions = {
-				selection: options.range,
-				pinned: options.keyMods.ctrlCmd || this.configuration.openEditorPinned,
-				preserveFocus: options.preserveFocus
-			};
+        selection: options.range,
+        pinned: options.keyMods.ctrlCmd || this.configuration.openEditorPinned,
+        preserveFocus: options.preserveFocus,
+      };
 
-			this.editorService.openEditor(this.editorService.activeEditor, editorOptions, SIDE_GROUP);
+			this.editorService.openEditor(
+        this.editorService.activeEditor,
+        editorOptions,
+        SIDE_GROUP,
+      );
 		}
 
 		// Otherwise let parent handle it
@@ -113,19 +129,31 @@ export class GotoSymbolQuickAccessProvider extends AbstractGotoSymbolQuickAccess
 		// registry was not activated yet for providing any symbols.
 		// To not wait forever, we eventually timeout though.
 		const result = await Promise.race([
-			this.waitForLanguageSymbolRegistry(model, disposables),
-			timeout(GotoSymbolQuickAccessProvider.SYMBOL_PICKS_TIMEOUT)
-		]);
+      this.waitForLanguageSymbolRegistry(model, disposables),
+      timeout(GotoSymbolQuickAccessProvider.SYMBOL_PICKS_TIMEOUT),
+    ]);
 
 		if (!result || token.isCancellationRequested) {
 			return [];
 		}
 
-		return this.doGetSymbolPicks(this.getDocumentSymbols(model, token), prepareQuery(filter), options, token, model);
+		return this.doGetSymbolPicks(
+      this.getDocumentSymbols(model, token),
+      prepareQuery(filter),
+      options,
+      token,
+      model,
+    );
 	}
 
 	protected override async doGetSymbolPicks(symbolsPromise: Promise<DocumentSymbol[]>, query: IPreparedQuery, options: { extraContainerLabel?: string } | undefined, token: CancellationToken, model: ITextModel): Promise<Array<IGotoSymbolQuickPickItem | IQuickPickSeparator>> {
-		const picks = await super.doGetSymbolPicks(symbolsPromise, query, options, token, model);
+		const picks = await super.doGetSymbolPicks(
+      symbolsPromise,
+      query,
+      options,
+      token,
+      model,
+    );
 		const modelUri = model.uri;
 		for (const pick of picks) {
 			const symbolPick = pick as IGotoSymbolQuickPickItem;
@@ -136,12 +164,12 @@ export class GotoSymbolQuickAccessProvider extends AbstractGotoSymbolQuickAccess
 						return;
 					}
 					const entry: ISymbolVariableEntry = {
-						kind: 'symbol',
-						id: JSON.stringify({ uri: modelUri.toString(), range: symbolPick.range!.decoration }),
-						name: symbolPick.symbolName ?? symbolPick.label,
-						value: { uri: modelUri, range: symbolPick.range!.decoration },
-						symbolKind: symbolPick.kind,
-					};
+            kind: "symbol",
+            id: JSON.stringify({ uri: modelUri.toString(), range: symbolPick.range!.decoration }),
+            name: symbolPick.symbolName ?? symbolPick.label,
+            value: { uri: modelUri, range: symbolPick.range!.decoration },
+            symbolKind: symbolPick.kind,
+          };
 					widget.attachmentModel.addContext(entry);
 				};
 			}
@@ -159,7 +187,9 @@ export class GotoSymbolQuickAccessProvider extends AbstractGotoSymbolQuickAccess
 	}
 
 	private canPickWithOutlineService(): boolean {
-		return this.editorService.activeEditorPane ? this.outlineService.canCreateOutline(this.editorService.activeEditorPane) : false;
+		return this.editorService.activeEditorPane ? this.outlineService.canCreateOutline(
+      this.editorService.activeEditorPane,
+    ) : false;
 	}
 
 	private doGetOutlinePicks(picker: IQuickPick<IGotoSymbolQuickPickItem, { useSeparators: true }>): IDisposable {
@@ -203,7 +233,7 @@ export class GotoSymbolQuickAccessProvider extends AbstractGotoSymbolQuickAccess
 					label: entry.label,
 					description: entry.description,
 					ariaLabel: entry.ariaLabel,
-					iconClasses: entry.iconClasses
+					iconClasses: entry.iconClasses,
 				};
 			});
 
@@ -217,7 +247,7 @@ export class GotoSymbolQuickAccessProvider extends AbstractGotoSymbolQuickAccess
 
 			const updatePickerItems = () => {
 				const filteredItems = items.filter(item => {
-					if (picker.value === '@') {
+					if (picker.value === "@") {
 						// default, no filtering, scoring...
 						item.score = 0;
 						item.highlights = undefined;
@@ -240,7 +270,7 @@ export class GotoSymbolQuickAccessProvider extends AbstractGotoSymbolQuickAccess
 				});
 
 				if (filteredItems.length === 0) {
-					const label = localize('empty', 'No matching entries');
+					const label = localize("empty", "No matching entries");
 					picker.items = [{ label, index: -1, kind: SymbolKind.String }];
 					picker.ariaLabel = label;
 				} else {
@@ -275,31 +305,34 @@ export class GotoSymbolQuickAccessProvider extends AbstractGotoSymbolQuickAccess
 
 class GotoSymbolAction extends Action2 {
 
-	static readonly ID = 'workbench.action.gotoSymbol';
+	static readonly ID = "workbench.action.gotoSymbol";
 
 	constructor() {
 		super({
 			id: GotoSymbolAction.ID,
 			title: {
-				...localize2('gotoSymbol', "Go to Symbol in Editor..."),
-				mnemonicTitle: localize({ key: 'miGotoSymbolInEditor', comment: ['&& denotes a mnemonic'] }, "Go to &&Symbol in Editor..."),
+				...localize2("gotoSymbol", "Go to Symbol in Editor..."),
+				mnemonicTitle: localize({ key: "miGotoSymbolInEditor", comment: ["&& denotes a mnemonic"] }, "Go to &&Symbol in Editor..."),
 			},
 			f1: true,
 			keybinding: {
 				when: ContextKeyExpr.and(accessibleViewIsShown.negate(), accessibilityHelpIsShown.negate()),
 				weight: KeybindingWeight.WorkbenchContrib,
-				primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyO
+				primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyO,
 			},
 			menu: [{
 				id: MenuId.MenubarGoMenu,
-				group: '4_symbol_nav',
-				order: 1
-			}]
+				group: "4_symbol_nav",
+				order: 1,
+			}],
 		});
 	}
 
 	run(accessor: ServicesAccessor) {
-		accessor.get(IQuickInputService).quickAccess.show(GotoSymbolQuickAccessProvider.PREFIX, { itemActivation: ItemActivation.NONE });
+		accessor.get(IQuickInputService).quickAccess.show(
+      GotoSymbolQuickAccessProvider.PREFIX,
+      { itemActivation: ItemActivation.NONE },
+    );
 	}
 }
 
@@ -308,18 +341,18 @@ registerAction2(GotoSymbolAction);
 Registry.as<IQuickAccessRegistry>(QuickaccessExtensions.Quickaccess).registerQuickAccessProvider({
 	ctor: GotoSymbolQuickAccessProvider,
 	prefix: AbstractGotoSymbolQuickAccessProvider.PREFIX,
-	contextKey: 'inFileSymbolsPicker',
-	placeholder: localize('gotoSymbolQuickAccessPlaceholder', "Type the name of a symbol to go to."),
+	contextKey: "inFileSymbolsPicker",
+	placeholder: localize("gotoSymbolQuickAccessPlaceholder", "Type the name of a symbol to go to."),
 	helpEntries: [
 		{
-			description: localize('gotoSymbolQuickAccess', "Go to Symbol in Editor"),
+			description: localize("gotoSymbolQuickAccess", "Go to Symbol in Editor"),
 			prefix: AbstractGotoSymbolQuickAccessProvider.PREFIX,
 			commandId: GotoSymbolAction.ID,
-			commandCenterOrder: 40
+			commandCenterOrder: 40,
 		},
 		{
-			description: localize('gotoSymbolByCategoryQuickAccess', "Go to Symbol in Editor by Category"),
-			prefix: AbstractGotoSymbolQuickAccessProvider.PREFIX_BY_CATEGORY
-		}
-	]
+			description: localize("gotoSymbolByCategoryQuickAccess", "Go to Symbol in Editor by Category"),
+			prefix: AbstractGotoSymbolQuickAccessProvider.PREFIX_BY_CATEGORY,
+		},
+	],
 });

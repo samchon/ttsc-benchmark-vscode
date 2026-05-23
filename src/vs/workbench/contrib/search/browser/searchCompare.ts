@@ -3,12 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IMatchInNotebook, isIMatchInNotebook } from './notebookSearch/notebookSearchModelBase.js';
-import { compareFileExtensions, compareFileNames, comparePaths } from '../../../../base/common/comparers.js';
-import { SearchSortOrder } from '../../../services/search/common/search.js';
-import { Range } from '../../../../editor/common/core/range.js';
-import { createParentList, isSearchTreeFileMatch, isSearchTreeFolderMatch, isSearchTreeMatch, RenderableMatch } from './searchTreeModel/searchTreeCommon.js';
-import { isSearchTreeAIFileMatch } from './AISearch/aiSearchModelBase.js';
+import { IMatchInNotebook, isIMatchInNotebook } from "./notebookSearch/notebookSearchModelBase.js";
+import { compareFileExtensions, compareFileNames, comparePaths } from "../../../../base/common/comparers.js";
+import { SearchSortOrder } from "../../../services/search/common/search.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import {
+  createParentList,
+  isSearchTreeFileMatch,
+  isSearchTreeFolderMatch,
+  isSearchTreeMatch,
+  RenderableMatch,
+} from "./searchTreeModel/searchTreeCommon.js";
+import { isSearchTreeAIFileMatch } from "./AISearch/aiSearchModelBase.js";
 
 
 let elemAIndex: number = -1;
@@ -51,7 +57,10 @@ export function searchMatchComparer(elementA: RenderableMatch, elementB: Rendera
 				if (!elementA.resource || !elementB.resource) {
 					return 0;
 				}
-				return comparePaths(elementA.resource.fsPath, elementB.resource.fsPath) || compareFileNames(elementA.name(), elementB.name());
+				return comparePaths(
+          elementA.resource.fsPath,
+          elementB.resource.fsPath,
+        ) || compareFileNames(elementA.name(), elementB.name());
 		}
 	}
 
@@ -75,7 +84,10 @@ export function searchMatchComparer(elementA: RenderableMatch, elementB: Rendera
 			}
 			// Fall through otherwise
 			default:
-				return comparePaths(elementA.resource.fsPath, elementB.resource.fsPath) || compareFileNames(elementA.name(), elementB.name());
+				return comparePaths(
+          elementA.resource.fsPath,
+          elementB.resource.fsPath,
+        ) || compareFileNames(elementA.name(), elementB.name());
 		}
 	}
 

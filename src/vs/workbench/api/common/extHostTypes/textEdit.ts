@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { illegalArgument } from '../../../../base/common/errors.js';
-import { es5ClassCompat } from './es5ClassCompat.js';
-import { Position } from './position.js';
-import { Range } from './range.js';
+import { illegalArgument } from "../../../../base/common/errors.js";
+import { es5ClassCompat } from "./es5ClassCompat.js";
+import { Position } from "./position.js";
+import { Range } from "./range.js";
 
 export enum EndOfLine {
 	LF = 1,
@@ -20,11 +20,11 @@ export class TextEdit {
 		if (thing instanceof TextEdit) {
 			return true;
 		}
-		if (!thing || typeof thing !== 'object') {
+		if (!thing || typeof thing !== "object") {
 			return false;
 		}
 		return Range.isRange((<TextEdit>thing))
-			&& typeof (<TextEdit>thing).newText === 'string';
+			&& typeof (<TextEdit>thing).newText === "string";
 	}
 
 	static replace(range: Range, newText: string): TextEdit {
@@ -36,11 +36,14 @@ export class TextEdit {
 	}
 
 	static delete(range: Range): TextEdit {
-		return TextEdit.replace(range, '');
+		return TextEdit.replace(range, "");
 	}
 
 	static setEndOfLine(eol: EndOfLine): TextEdit {
-		const ret = new TextEdit(new Range(new Position(0, 0), new Position(0, 0)), '');
+		const ret = new TextEdit(
+      new Range(new Position(0, 0), new Position(0, 0)),
+      "",
+    );
 		ret.newEol = eol;
 		return ret;
 	}
@@ -55,18 +58,18 @@ export class TextEdit {
 
 	set range(value: Range) {
 		if (value && !Range.isRange(value)) {
-			throw illegalArgument('range');
+			throw illegalArgument("range");
 		}
 		this._range = value;
 	}
 
 	get newText(): string {
-		return this._newText || '';
+		return this._newText || "";
 	}
 
 	set newText(value: string) {
-		if (value && typeof value !== 'string') {
-			throw illegalArgument('newText');
+		if (value && typeof value !== "string") {
+			throw illegalArgument("newText");
 		}
 		this._newText = value;
 	}
@@ -76,8 +79,8 @@ export class TextEdit {
 	}
 
 	set newEol(value: EndOfLine | undefined) {
-		if (value && typeof value !== 'number') {
-			throw illegalArgument('newEol');
+		if (value && typeof value !== "number") {
+			throw illegalArgument("newEol");
 		}
 		this._newEol = value;
 	}
@@ -89,9 +92,9 @@ export class TextEdit {
 
 	toJSON(): { range: Range; newText: string; newEol: EndOfLine | undefined } {
 		return {
-			range: this.range,
-			newText: this.newText,
-			newEol: this._newEol
-		};
+      range: this.range,
+      newText: this.newText,
+      newEol: this._newEol,
+    };
 	}
 }

@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { addDisposableListener, getActiveElement, getShadowRoot } from '../../../../../base/browser/dom.js';
-import { IDisposable, Disposable } from '../../../../../base/common/lifecycle.js';
-import { ILogService } from '../../../../../platform/log/common/log.js';
+import { addDisposableListener, getActiveElement, getShadowRoot } from "../../../../../base/browser/dom.js";
+import { IDisposable, Disposable } from "../../../../../base/common/lifecycle.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
 
 export interface ITypeData {
 	text: string;
@@ -24,8 +24,8 @@ export class FocusTracker extends Disposable {
 		private readonly _onFocusChange: (newFocusValue: boolean) => void,
 	) {
 		super();
-		this._register(addDisposableListener(this._domNode, 'focus', () => {
-			_logService.trace('NativeEditContext.focus');
+		this._register(addDisposableListener(this._domNode, "focus", () => {
+			_logService.trace("NativeEditContext.focus");
 			if (this._isPaused) {
 				return;
 			}
@@ -34,8 +34,8 @@ export class FocusTracker extends Disposable {
 			// (this happens when cmd+tab is used to switch apps)
 			this.refreshFocusState();
 		}));
-		this._register(addDisposableListener(this._domNode, 'blur', () => {
-			_logService.trace('NativeEditContext.blur');
+		this._register(addDisposableListener(this._domNode, "blur", () => {
+			_logService.trace("NativeEditContext.blur");
 			if (this._isPaused) {
 				return;
 			}
@@ -84,6 +84,6 @@ export function editContextAddDisposableListener<K extends keyof EditContextEven
 		dispose() {
 			// eslint-disable-next-line local/code-no-any-casts, @typescript-eslint/no-explicit-any
 			target.removeEventListener(type, listener as any);
-		}
+		},
 	};
 }

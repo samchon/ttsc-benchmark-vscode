@@ -3,51 +3,65 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type * as vscode from 'vscode';
-import { asArray } from '../../../base/common/arrays.js';
-import { encodeBase64, VSBuffer } from '../../../base/common/buffer.js';
-import { illegalArgument, SerializedError } from '../../../base/common/errors.js';
-import { IRelativePattern } from '../../../base/common/glob.js';
-import { MarshalledId } from '../../../base/common/marshallingIds.js';
-import { Mimes } from '../../../base/common/mime.js';
-import { nextCharLength } from '../../../base/common/strings.js';
-import { isNumber, isObject, isString, isStringArray } from '../../../base/common/types.js';
-import { isUriComponents, URI } from '../../../base/common/uri.js';
-import { generateUuid } from '../../../base/common/uuid.js';
-import { TextEditorSelectionSource } from '../../../platform/editor/common/editor.js';
-import { ExtensionIdentifier, IExtensionDescription } from '../../../platform/extensions/common/extensions.js';
-import { FileSystemProviderErrorCode, markAsFileSystemProviderError } from '../../../platform/files/common/files.js';
-import { RemoteAuthorityResolverErrorCode } from '../../../platform/remote/common/remoteAuthorityResolver.js';
-import { IRelativePatternDto } from './extHost.protocol.js';
-import { CodeActionKind } from './extHostTypes/codeActionKind.js';
-import { Diagnostic } from './extHostTypes/diagnostic.js';
-import { es5ClassCompat } from './extHostTypes/es5ClassCompat.js';
-import { Location } from './extHostTypes/location.js';
-import { MarkdownString } from './extHostTypes/markdownString.js';
-import { Position } from './extHostTypes/position.js';
-import { Range } from './extHostTypes/range.js';
-import { SnippetString } from './extHostTypes/snippetString.js';
-import { SymbolKind, SymbolTag } from './extHostTypes/symbolInformation.js';
-import { TextEdit } from './extHostTypes/textEdit.js';
-import { WorkspaceEdit } from './extHostTypes/workspaceEdit.js';
-import { HookTypeValue } from '../../contrib/chat/common/promptSyntax/hookTypes.js';
+import type * as vscode from "vscode";
+import { asArray } from "../../../base/common/arrays.js";
+import { encodeBase64, VSBuffer } from "../../../base/common/buffer.js";
+import { illegalArgument, SerializedError } from "../../../base/common/errors.js";
+import { IRelativePattern } from "../../../base/common/glob.js";
+import { MarshalledId } from "../../../base/common/marshallingIds.js";
+import { Mimes } from "../../../base/common/mime.js";
+import { nextCharLength } from "../../../base/common/strings.js";
+import { isNumber, isObject, isString, isStringArray } from "../../../base/common/types.js";
+import { isUriComponents, URI } from "../../../base/common/uri.js";
+import { generateUuid } from "../../../base/common/uuid.js";
+import { TextEditorSelectionSource } from "../../../platform/editor/common/editor.js";
+import { ExtensionIdentifier, IExtensionDescription } from "../../../platform/extensions/common/extensions.js";
+import { FileSystemProviderErrorCode, markAsFileSystemProviderError } from "../../../platform/files/common/files.js";
+import { RemoteAuthorityResolverErrorCode } from "../../../platform/remote/common/remoteAuthorityResolver.js";
+import { IRelativePatternDto } from "./extHost.protocol.js";
+import { CodeActionKind } from "./extHostTypes/codeActionKind.js";
+import { Diagnostic } from "./extHostTypes/diagnostic.js";
+import { es5ClassCompat } from "./extHostTypes/es5ClassCompat.js";
+import { Location } from "./extHostTypes/location.js";
+import { MarkdownString } from "./extHostTypes/markdownString.js";
+import { Position } from "./extHostTypes/position.js";
+import { Range } from "./extHostTypes/range.js";
+import { SnippetString } from "./extHostTypes/snippetString.js";
+import { SymbolKind, SymbolTag } from "./extHostTypes/symbolInformation.js";
+import { TextEdit } from "./extHostTypes/textEdit.js";
+import { WorkspaceEdit } from "./extHostTypes/workspaceEdit.js";
+import { HookTypeValue } from "../../contrib/chat/common/promptSyntax/hookTypes.js";
 
-export { CodeActionKind } from './extHostTypes/codeActionKind.js';
+export { CodeActionKind } from "./extHostTypes/codeActionKind.js";
 export {
-	Diagnostic, DiagnosticRelatedInformation,
-	DiagnosticSeverity, DiagnosticTag
-} from './extHostTypes/diagnostic.js';
-export { Location } from './extHostTypes/location.js';
-export { MarkdownString } from './extHostTypes/markdownString.js';
-export { NotebookCellData, NotebookCellKind, NotebookCellOutput, NotebookCellOutputItem, NotebookData, NotebookEdit, NotebookRange } from './extHostTypes/notebooks.js';
-export { Position } from './extHostTypes/position.js';
-export { Range } from './extHostTypes/range.js';
-export { Selection } from './extHostTypes/selection.js';
-export { SnippetString } from './extHostTypes/snippetString.js';
-export { SnippetTextEdit } from './extHostTypes/snippetTextEdit.js';
-export { SymbolInformation, SymbolKind, SymbolTag } from './extHostTypes/symbolInformation.js';
-export { EndOfLine, TextEdit } from './extHostTypes/textEdit.js';
-export { FileEditType, WorkspaceEdit } from './extHostTypes/workspaceEdit.js';
+  Diagnostic,
+  DiagnosticRelatedInformation,
+  DiagnosticSeverity,
+  DiagnosticTag,
+} from "./extHostTypes/diagnostic.js";
+export { Location } from "./extHostTypes/location.js";
+export { MarkdownString } from "./extHostTypes/markdownString.js";
+export {
+  NotebookCellData,
+  NotebookCellKind,
+  NotebookCellOutput,
+  NotebookCellOutputItem,
+  NotebookData,
+  NotebookEdit,
+  NotebookRange,
+} from "./extHostTypes/notebooks.js";
+export { Position } from "./extHostTypes/position.js";
+export { Range } from "./extHostTypes/range.js";
+export { Selection } from "./extHostTypes/selection.js";
+export { SnippetString } from "./extHostTypes/snippetString.js";
+export { SnippetTextEdit } from "./extHostTypes/snippetTextEdit.js";
+export {
+  SymbolInformation,
+  SymbolKind,
+  SymbolTag,
+} from "./extHostTypes/symbolInformation.js";
+export { EndOfLine, TextEdit } from "./extHostTypes/textEdit.js";
+export { FileEditType, WorkspaceEdit } from "./extHostTypes/workspaceEdit.js";
 
 export enum TerminalOutputAnchor {
 	Top = 0,
@@ -68,7 +82,7 @@ export class Disposable {
 		return new Disposable(function () {
 			if (disposables) {
 				for (const disposable of disposables) {
-					if (disposable && typeof disposable.dispose === 'function') {
+					if (disposable && typeof disposable.dispose === "function") {
 						disposable.dispose();
 					}
 				}
@@ -84,7 +98,7 @@ export class Disposable {
 	}
 
 	dispose(): any {
-		if (typeof this.#callOnDispose === 'function') {
+		if (typeof this.#callOnDispose === "function") {
 			this.#callOnDispose();
 			this.#callOnDispose = undefined;
 		}
@@ -92,8 +106,10 @@ export class Disposable {
 }
 
 const validateConnectionToken = (connectionToken: string) => {
-	if (typeof connectionToken !== 'string' || connectionToken.length === 0 || !/^[0-9A-Za-z_\-]+$/.test(connectionToken)) {
-		throw illegalArgument('connectionToken');
+	if (typeof connectionToken !== "string" || connectionToken.length === 0 || !/^[0-9A-Za-z_\-]+$/.test(
+    connectionToken,
+  )) {
+		throw illegalArgument("connectionToken");
 	}
 };
 
@@ -101,10 +117,10 @@ const validateConnectionToken = (connectionToken: string) => {
 export class ResolvedAuthority {
 	public static isResolvedAuthority(resolvedAuthority: any): resolvedAuthority is ResolvedAuthority {
 		return resolvedAuthority
-			&& typeof resolvedAuthority === 'object'
-			&& typeof resolvedAuthority.host === 'string'
-			&& typeof resolvedAuthority.port === 'number'
-			&& (resolvedAuthority.connectionToken === undefined || typeof resolvedAuthority.connectionToken === 'string');
+			&& typeof resolvedAuthority === "object"
+			&& typeof resolvedAuthority.host === "string"
+			&& typeof resolvedAuthority.port === "number"
+			&& (resolvedAuthority.connectionToken === undefined || typeof resolvedAuthority.connectionToken === "string");
 	}
 
 	readonly host: string;
@@ -112,13 +128,13 @@ export class ResolvedAuthority {
 	readonly connectionToken: string | undefined;
 
 	constructor(host: string, port: number, connectionToken?: string) {
-		if (typeof host !== 'string' || host.length === 0) {
-			throw illegalArgument('host');
+		if (typeof host !== "string" || host.length === 0) {
+			throw illegalArgument("host");
 		}
-		if (typeof port !== 'number' || port === 0 || Math.round(port) !== port) {
-			throw illegalArgument('port');
+		if (typeof port !== "number" || port === 0 || Math.round(port) !== port) {
+			throw illegalArgument("port");
 		}
-		if (typeof connectionToken !== 'undefined') {
+		if (typeof connectionToken !== "undefined") {
 			validateConnectionToken(connectionToken);
 		}
 		this.host = host;
@@ -132,13 +148,13 @@ export class ManagedResolvedAuthority {
 
 	public static isManagedResolvedAuthority(resolvedAuthority: any): resolvedAuthority is ManagedResolvedAuthority {
 		return resolvedAuthority
-			&& typeof resolvedAuthority === 'object'
-			&& typeof resolvedAuthority.makeConnection === 'function'
-			&& (resolvedAuthority.connectionToken === undefined || typeof resolvedAuthority.connectionToken === 'string');
+			&& typeof resolvedAuthority === "object"
+			&& typeof resolvedAuthority.makeConnection === "function"
+			&& (resolvedAuthority.connectionToken === undefined || typeof resolvedAuthority.connectionToken === "string");
 	}
 
 	constructor(public readonly makeConnection: () => Thenable<vscode.ManagedMessagePassing>, public readonly connectionToken?: string) {
-		if (typeof connectionToken !== 'undefined') {
+		if (typeof connectionToken !== "undefined") {
 			validateConnectionToken(connectionToken);
 		}
 	}
@@ -147,11 +163,18 @@ export class ManagedResolvedAuthority {
 export class RemoteAuthorityResolverError extends Error {
 
 	static NotAvailable(message?: string, handled?: boolean): RemoteAuthorityResolverError {
-		return new RemoteAuthorityResolverError(message, RemoteAuthorityResolverErrorCode.NotAvailable, handled);
+		return new RemoteAuthorityResolverError(
+      message,
+      RemoteAuthorityResolverErrorCode.NotAvailable,
+      handled,
+    );
 	}
 
 	static TemporarilyNotAvailable(message?: string): RemoteAuthorityResolverError {
-		return new RemoteAuthorityResolverError(message, RemoteAuthorityResolverErrorCode.TemporarilyNotAvailable);
+		return new RemoteAuthorityResolverError(
+      message,
+      RemoteAuthorityResolverErrorCode.TemporarilyNotAvailable,
+    );
 	}
 
 	public readonly _message: string | undefined;
@@ -185,10 +208,10 @@ export class Hover {
 
 	constructor(
 		contents: vscode.MarkdownString | vscode.MarkedString | (vscode.MarkdownString | vscode.MarkedString)[],
-		range?: Range
+		range?: Range,
 	) {
 		if (!contents) {
-			throw new Error('Illegal argument, contents must be defined');
+			throw new Error("Illegal argument, contents must be defined");
 		}
 		if (Array.isArray(contents)) {
 			this.contents = contents;
@@ -241,9 +264,9 @@ export class DocumentHighlight {
 
 	toJSON(): any {
 		return {
-			range: this.range,
-			kind: DocumentHighlightKind[this.kind]
-		};
+      range: this.range,
+      kind: DocumentHighlightKind[this.kind],
+    };
 	}
 }
 
@@ -260,9 +283,9 @@ export class MultiDocumentHighlight {
 
 	toJSON(): any {
 		return {
-			uri: this.uri,
-			highlights: this.highlights.map(h => h.toJSON())
-		};
+      uri: this.uri,
+      highlights: this.highlights.map(h => h.toJSON()),
+    };
 	}
 }
 
@@ -271,10 +294,10 @@ export class DocumentSymbol {
 
 	static validate(candidate: DocumentSymbol): void {
 		if (!candidate.name) {
-			throw new Error('name must not be falsy');
+			throw new Error("name must not be falsy");
 		}
 		if (!candidate.range.contains(candidate.selectionRange)) {
-			throw new Error('selectionRange must be contained in fullRange');
+			throw new Error("selectionRange must be contained in fullRange");
 		}
 		candidate.children?.forEach(DocumentSymbol.validate);
 	}
@@ -336,7 +359,7 @@ export class SelectionRange {
 		this.parent = parent;
 
 		if (parent && !parent.range.contains(this.range)) {
-			throw new Error('Invalid argument: parent must contain this range');
+			throw new Error("Invalid argument: parent must contain this range");
 		}
 	}
 }
@@ -568,16 +591,16 @@ export class CompletionItem implements vscode.CompletionItem {
 
 	toJSON(): any {
 		return {
-			label: this.label,
-			kind: this.kind && CompletionItemKind[this.kind],
-			detail: this.detail,
-			documentation: this.documentation,
-			sortText: this.sortText,
-			filterText: this.filterText,
-			preselect: this.preselect,
-			insertText: this.insertText,
-			textEdit: this.textEdit
-		};
+      label: this.label,
+      kind: this.kind && CompletionItemKind[this.kind],
+      detail: this.detail,
+      documentation: this.documentation,
+      sortText: this.sortText,
+      filterText: this.filterText,
+      preselect: this.preselect,
+      insertText: this.insertText,
+      textEdit: this.textEdit,
+    };
 	}
 }
 
@@ -729,8 +752,8 @@ export enum DecorationRangeBehavior {
 export namespace TextEditorSelectionChangeKind {
 	export function fromValue(s: TextEditorSelectionSource | string | undefined) {
 		switch (s) {
-			case 'keyboard': return TextEditorSelectionChangeKind.Keyboard;
-			case 'mouse': return TextEditorSelectionChangeKind.Mouse;
+			case "keyboard": return TextEditorSelectionChangeKind.Keyboard;
+			case "mouse": return TextEditorSelectionChangeKind.Mouse;
 			case TextEditorSelectionSource.PROGRAMMATIC:
 			case TextEditorSelectionSource.JUMP:
 			case TextEditorSelectionSource.NAVIGATION:
@@ -747,14 +770,14 @@ export enum SyntaxTokenType {
 	RegEx = 3
 }
 export namespace SyntaxTokenType {
-	export function toString(v: SyntaxTokenType | unknown): 'other' | 'comment' | 'string' | 'regex' {
+	export function toString(v: SyntaxTokenType | unknown): "other" | "comment" | "string" | "regex" {
 		switch (v) {
-			case SyntaxTokenType.Other: return 'other';
-			case SyntaxTokenType.Comment: return 'comment';
-			case SyntaxTokenType.String: return 'string';
-			case SyntaxTokenType.RegEx: return 'regex';
+			case SyntaxTokenType.Other: return "other";
+			case SyntaxTokenType.Comment: return "comment";
+			case SyntaxTokenType.String: return "string";
+			case SyntaxTokenType.RegEx: return "regex";
 		}
-		return 'other';
+		return "other";
 	}
 }
 
@@ -769,10 +792,10 @@ export class DocumentLink {
 
 	constructor(range: Range, target: URI | undefined) {
 		if (target && !(URI.isUri(target))) {
-			throw illegalArgument('target');
+			throw illegalArgument("target");
 		}
 		if (!Range.isRange(range) || range.isEmpty) {
-			throw illegalArgument('range');
+			throw illegalArgument("range");
 		}
 		this.range = range;
 		this.target = target;
@@ -804,10 +827,10 @@ export class ColorInformation {
 
 	constructor(range: Range, color: Color) {
 		if (color && !(color instanceof Color)) {
-			throw illegalArgument('color');
+			throw illegalArgument("color");
 		}
 		if (!Range.isRange(range) || range.isEmpty) {
-			throw illegalArgument('range');
+			throw illegalArgument("range");
 		}
 		this.range = range;
 		this.color = color;
@@ -821,8 +844,8 @@ export class ColorPresentation {
 	additionalTextEdits?: TextEdit[];
 
 	constructor(label: string) {
-		if (!label || typeof label !== 'string') {
-			throw illegalArgument('label');
+		if (!label || typeof label !== "string") {
+			throw illegalArgument("label");
 		}
 		this.label = label;
 	}
@@ -875,16 +898,16 @@ export class TerminalLink implements vscode.TerminalLink {
 	constructor(
 		public startIndex: number,
 		public length: number,
-		public tooltip?: string
+		public tooltip?: string,
 	) {
-		if (typeof startIndex !== 'number' || startIndex < 0) {
-			throw illegalArgument('startIndex');
+		if (typeof startIndex !== "number" || startIndex < 0) {
+			throw illegalArgument("startIndex");
 		}
-		if (typeof length !== 'number' || length < 1) {
-			throw illegalArgument('length');
+		if (typeof length !== "number" || length < 1) {
+			throw illegalArgument("length");
 		}
-		if (tooltip !== undefined && typeof tooltip !== 'string') {
-			throw illegalArgument('tooltip');
+		if (tooltip !== undefined && typeof tooltip !== "string") {
+			throw illegalArgument("tooltip");
 		}
 	}
 }
@@ -910,10 +933,10 @@ export enum TerminalLocation {
 
 export class TerminalProfile implements vscode.TerminalProfile {
 	constructor(
-		public options: vscode.TerminalOptions | vscode.ExtensionTerminalOptions
+		public options: vscode.TerminalOptions | vscode.ExtensionTerminalOptions,
 	) {
-		if (typeof options !== 'object') {
-			throw illegalArgument('options');
+		if (typeof options !== "object") {
+			throw illegalArgument("options");
 		}
 	}
 }
@@ -1005,43 +1028,43 @@ export enum TaskRevealKind {
 
 export enum TaskEventKind {
 	/** Indicates a task's properties or configuration have changed */
-	Changed = 'changed',
+	Changed = "changed",
 
 	/** Indicates a task has begun executing */
-	ProcessStarted = 'processStarted',
+	ProcessStarted = "processStarted",
 
 	/** Indicates a task process has completed */
-	ProcessEnded = 'processEnded',
+	ProcessEnded = "processEnded",
 
 	/** Indicates a task was terminated, either by user action or by the system */
-	Terminated = 'terminated',
+	Terminated = "terminated",
 
 	/** Indicates a task has started running */
-	Start = 'start',
+	Start = "start",
 
 	/** Indicates a task has acquired all needed input/variables to execute */
-	AcquiredInput = 'acquiredInput',
+	AcquiredInput = "acquiredInput",
 
 	/** Indicates a dependent task has started */
-	DependsOnStarted = 'dependsOnStarted',
+	DependsOnStarted = "dependsOnStarted",
 
 	/** Indicates a task is actively running/processing */
-	Active = 'active',
+	Active = "active",
 
 	/** Indicates a task is paused/waiting but not complete */
-	Inactive = 'inactive',
+	Inactive = "inactive",
 
 	/** Indicates a task has completed fully */
-	End = 'end',
+	End = "end",
 
 	/** Indicates the task's problem matcher has started */
-	ProblemMatcherStarted = 'problemMatcherStarted',
+	ProblemMatcherStarted = "problemMatcherStarted",
 
 	/** Indicates the task's problem matcher has ended without errors */
-	ProblemMatcherEnded = 'problemMatcherEnded',
+	ProblemMatcherEnded = "problemMatcherEnded",
 
 	/** Indicates the task's problem matcher has ended with errors */
-	ProblemMatcherFoundErrors = 'problemMatcherFoundErrors'
+	ProblemMatcherFoundErrors = "problemMatcherFoundErrors"
 }
 
 
@@ -1059,23 +1082,23 @@ export class TaskGroup implements vscode.TaskGroup {
 	isDefault: boolean | undefined;
 	private _id: string;
 
-	public static Clean: TaskGroup = new TaskGroup('clean', 'Clean');
+	public static Clean: TaskGroup = new TaskGroup("clean", "Clean");
 
-	public static Build: TaskGroup = new TaskGroup('build', 'Build');
+	public static Build: TaskGroup = new TaskGroup("build", "Build");
 
-	public static Rebuild: TaskGroup = new TaskGroup('rebuild', 'Rebuild');
+	public static Rebuild: TaskGroup = new TaskGroup("rebuild", "Rebuild");
 
-	public static Test: TaskGroup = new TaskGroup('test', 'Test');
+	public static Test: TaskGroup = new TaskGroup("test", "Test");
 
 	public static from(value: string) {
 		switch (value) {
-			case 'clean':
+			case "clean":
 				return TaskGroup.Clean;
-			case 'build':
+			case "build":
 				return TaskGroup.Build;
-			case 'rebuild':
+			case "rebuild":
 				return TaskGroup.Rebuild;
-			case 'test':
+			case "test":
 				return TaskGroup.Test;
 			default:
 				return undefined;
@@ -1083,11 +1106,11 @@ export class TaskGroup implements vscode.TaskGroup {
 	}
 
 	constructor(id: string, public readonly label: string) {
-		if (typeof id !== 'string') {
-			throw illegalArgument('name');
+		if (typeof id !== "string") {
+			throw illegalArgument("name");
 		}
-		if (typeof label !== 'string') {
-			throw illegalArgument('name');
+		if (typeof label !== "string") {
+			throw illegalArgument("name");
 		}
 		this._id = id;
 	}
@@ -1098,9 +1121,9 @@ export class TaskGroup implements vscode.TaskGroup {
 }
 
 function computeTaskExecutionId(values: string[]): string {
-	let id: string = '';
+	let id: string = "";
 	for (let i = 0; i < values.length; i++) {
-		id += values[i].replace(/,/g, ',,') + ',';
+		id += values[i].replace(/,/g, ",,") + ",";
 	}
 	return id;
 }
@@ -1115,8 +1138,8 @@ export class ProcessExecution implements vscode.ProcessExecution {
 	constructor(process: string, options?: vscode.ProcessExecutionOptions);
 	constructor(process: string, args: string[], options?: vscode.ProcessExecutionOptions);
 	constructor(process: string, varg1?: string[] | vscode.ProcessExecutionOptions, varg2?: vscode.ProcessExecutionOptions) {
-		if (typeof process !== 'string') {
-			throw illegalArgument('process');
+		if (typeof process !== "string") {
+			throw illegalArgument("process");
 		}
 		this._args = [];
 		this._process = process;
@@ -1136,8 +1159,8 @@ export class ProcessExecution implements vscode.ProcessExecution {
 	}
 
 	set process(value: string) {
-		if (typeof value !== 'string') {
-			throw illegalArgument('process');
+		if (typeof value !== "string") {
+			throw illegalArgument("process");
 		}
 		this._process = value;
 	}
@@ -1163,7 +1186,7 @@ export class ProcessExecution implements vscode.ProcessExecution {
 
 	public computeId(): string {
 		const props: string[] = [];
-		props.push('process');
+		props.push("process");
 		if (this._process !== undefined) {
 			props.push(this._process);
 		}
@@ -1189,10 +1212,10 @@ export class ShellExecution implements vscode.ShellExecution {
 	constructor(arg0: string | vscode.ShellQuotedString, arg1?: vscode.ShellExecutionOptions | (string | vscode.ShellQuotedString)[], arg2?: vscode.ShellExecutionOptions) {
 		if (Array.isArray(arg1)) {
 			if (!arg0) {
-				throw illegalArgument('command can\'t be undefined or null');
+				throw illegalArgument("command can't be undefined or null");
 			}
-			if (typeof arg0 !== 'string' && typeof arg0.value !== 'string') {
-				throw illegalArgument('command');
+			if (typeof arg0 !== "string" && typeof arg0.value !== "string") {
+				throw illegalArgument("command");
 			}
 			this._command = arg0;
 			if (arg1) {
@@ -1200,8 +1223,8 @@ export class ShellExecution implements vscode.ShellExecution {
 			}
 			this._options = arg2;
 		} else {
-			if (typeof arg0 !== 'string') {
-				throw illegalArgument('commandLine');
+			if (typeof arg0 !== "string") {
+				throw illegalArgument("commandLine");
 			}
 			this._commandLine = arg0;
 			this._options = arg1;
@@ -1213,19 +1236,19 @@ export class ShellExecution implements vscode.ShellExecution {
 	}
 
 	set commandLine(value: string | undefined) {
-		if (typeof value !== 'string') {
-			throw illegalArgument('commandLine');
+		if (typeof value !== "string") {
+			throw illegalArgument("commandLine");
 		}
 		this._commandLine = value;
 	}
 
 	get command(): string | vscode.ShellQuotedString {
-		return this._command ? this._command : '';
+		return this._command ? this._command : "";
 	}
 
 	set command(value: string | vscode.ShellQuotedString) {
-		if (typeof value !== 'string' && typeof value.value !== 'string') {
-			throw illegalArgument('command');
+		if (typeof value !== "string" && typeof value.value !== "string") {
+			throw illegalArgument("command");
 		}
 		this._command = value;
 	}
@@ -1248,16 +1271,18 @@ export class ShellExecution implements vscode.ShellExecution {
 
 	public computeId(): string {
 		const props: string[] = [];
-		props.push('shell');
+		props.push("shell");
 		if (this._commandLine !== undefined) {
 			props.push(this._commandLine);
 		}
 		if (this._command !== undefined) {
-			props.push(typeof this._command === 'string' ? this._command : this._command.value);
+			props.push(
+        typeof this._command === "string" ? this._command : this._command.value,
+      );
 		}
 		if (this._args && this._args.length > 0) {
 			for (const arg of this._args) {
-				props.push(typeof arg === 'string' ? arg : arg.value);
+				props.push(typeof arg === "string" ? arg : arg.value);
 			}
 		}
 		return computeTaskExecutionId(props);
@@ -1287,7 +1312,7 @@ export class CustomExecution implements vscode.CustomExecution {
 		this._callback = callback;
 	}
 	public computeId(): string {
-		return 'customExecution' + generateUuid();
+		return "customExecution" + generateUuid();
 	}
 
 	public set callback(value: (resolvedDefinition: vscode.TaskDefinition) => Thenable<vscode.Pseudoterminal>) {
@@ -1302,10 +1327,10 @@ export class CustomExecution implements vscode.CustomExecution {
 @es5ClassCompat
 export class Task implements vscode.Task {
 
-	private static ExtensionCallbackType: string = 'customExecution';
-	private static ProcessType: string = 'process';
-	private static ShellType: string = 'shell';
-	private static EmptyType: string = '$empty';
+	private static ExtensionCallbackType: string = "customExecution";
+	private static ProcessType: string = "process";
+	private static ShellType: string = "shell";
+	private static EmptyType: string = "$empty";
 
 	private __id: string | undefined;
 	private __deprecated: boolean = false;
@@ -1328,7 +1353,7 @@ export class Task implements vscode.Task {
 	constructor(definition: vscode.TaskDefinition, arg2: string | (vscode.TaskScope.Global | vscode.TaskScope.Workspace) | vscode.WorkspaceFolder, arg3: any, arg4?: any, arg5?: any, arg6?: any) {
 		this._definition = this.definition = definition;
 		let problemMatchers: string | string[];
-		if (typeof arg2 === 'string') {
+		if (typeof arg2 === "string") {
 			this._name = this.name = arg2;
 			this._source = this.source = arg3;
 			this.execution = arg4;
@@ -1347,7 +1372,7 @@ export class Task implements vscode.Task {
 			this.execution = arg5;
 			problemMatchers = arg6;
 		}
-		if (typeof problemMatchers === 'string') {
+		if (typeof problemMatchers === "string") {
 			this._problemMatchers = [problemMatchers];
 			this._hasDefinedMatchers = true;
 		} else if (Array.isArray(problemMatchers)) {
@@ -1386,24 +1411,24 @@ export class Task implements vscode.Task {
 	private computeDefinitionBasedOnExecution(): void {
 		if (this._execution instanceof ProcessExecution) {
 			this._definition = {
-				type: Task.ProcessType,
-				id: this._execution.computeId()
-			};
+        type: Task.ProcessType,
+        id: this._execution.computeId(),
+      };
 		} else if (this._execution instanceof ShellExecution) {
 			this._definition = {
-				type: Task.ShellType,
-				id: this._execution.computeId()
-			};
+        type: Task.ShellType,
+        id: this._execution.computeId(),
+      };
 		} else if (this._execution instanceof CustomExecution) {
 			this._definition = {
-				type: Task.ExtensionCallbackType,
-				id: this._execution.computeId()
-			};
+        type: Task.ExtensionCallbackType,
+        id: this._execution.computeId(),
+      };
 		} else {
 			this._definition = {
-				type: Task.EmptyType,
-				id: generateUuid()
-			};
+        type: Task.EmptyType,
+        id: generateUuid(),
+      };
 		}
 	}
 
@@ -1413,7 +1438,7 @@ export class Task implements vscode.Task {
 
 	set definition(value: vscode.TaskDefinition) {
 		if (value === undefined || value === null) {
-			throw illegalArgument('Kind can\'t be undefined or null');
+			throw illegalArgument("Kind can't be undefined or null");
 		}
 		this.clear();
 		this._definition = value;
@@ -1433,8 +1458,8 @@ export class Task implements vscode.Task {
 	}
 
 	set name(value: string) {
-		if (typeof value !== 'string') {
-			throw illegalArgument('name');
+		if (typeof value !== "string") {
+			throw illegalArgument("name");
 		}
 		this.clear();
 		this._name = value;
@@ -1494,8 +1519,8 @@ export class Task implements vscode.Task {
 	}
 
 	set source(value: string) {
-		if (typeof value !== 'string' || value.length === 0) {
-			throw illegalArgument('source must be a string of length > 0');
+		if (typeof value !== "string" || value.length === 0) {
+			throw illegalArgument("source must be a string of length > 0");
 		}
 		this.clear();
 		this._source = value;
@@ -1561,11 +1586,14 @@ export namespace ViewBadge {
 		const viewBadgeThing = thing as vscode.ViewBadge;
 
 		if (!isNumber(viewBadgeThing.value)) {
-			console.log('INVALID view badge, invalid value', viewBadgeThing.value);
+			console.log("INVALID view badge, invalid value", viewBadgeThing.value);
 			return false;
 		}
 		if (viewBadgeThing.tooltip && !isString(viewBadgeThing.tooltip)) {
-			console.log('INVALID view badge, invalid tooltip', viewBadgeThing.tooltip);
+			console.log(
+        "INVALID view badge, invalid tooltip",
+        viewBadgeThing.tooltip,
+      );
 			return false;
 		}
 		return true;
@@ -1587,11 +1615,22 @@ export class TreeItem {
 		const treeItemThing = thing as vscode.TreeItem;
 
 		if (treeItemThing.checkboxState !== undefined) {
-			const checkbox = isNumber(treeItemThing.checkboxState) ? treeItemThing.checkboxState :
-				isObject(treeItemThing.checkboxState) && isNumber(treeItemThing.checkboxState.state) ? treeItemThing.checkboxState.state : undefined;
-			const tooltip = !isNumber(treeItemThing.checkboxState) && isObject(treeItemThing.checkboxState) ? treeItemThing.checkboxState.tooltip : undefined;
-			if (checkbox === undefined || (checkbox !== TreeItemCheckboxState.Checked && checkbox !== TreeItemCheckboxState.Unchecked) || (tooltip !== undefined && !isString(tooltip))) {
-				console.log('INVALID tree item, invalid checkboxState', treeItemThing.checkboxState);
+			const checkbox = isNumber(
+        treeItemThing.checkboxState,
+      ) ? treeItemThing.checkboxState :
+				isObject(treeItemThing.checkboxState) && isNumber(
+          treeItemThing.checkboxState.state,
+        ) ? treeItemThing.checkboxState.state : undefined;
+			const tooltip = !isNumber(treeItemThing.checkboxState) && isObject(
+        treeItemThing.checkboxState,
+      ) ? treeItemThing.checkboxState.tooltip : undefined;
+			if (checkbox === undefined || (checkbox !== TreeItemCheckboxState.Checked && checkbox !== TreeItemCheckboxState.Unchecked) || (tooltip !== undefined && !isString(
+        tooltip,
+      ))) {
+				console.log(
+          "INVALID tree item, invalid checkboxState",
+          treeItemThing.checkboxState,
+        );
 				return false;
 			}
 		}
@@ -1600,47 +1639,85 @@ export class TreeItem {
 			return true;
 		}
 
-		if (treeItemThing.label !== undefined && !isString(treeItemThing.label) && !(treeItemThing.label?.label)) {
-			console.log('INVALID tree item, invalid label', treeItemThing.label);
+		if (treeItemThing.label !== undefined && !isString(
+      treeItemThing.label,
+    ) && !(treeItemThing.label?.label)) {
+			console.log("INVALID tree item, invalid label", treeItemThing.label);
 			return false;
 		}
 		if ((treeItemThing.id !== undefined) && !isString(treeItemThing.id)) {
-			console.log('INVALID tree item, invalid id', treeItemThing.id);
+			console.log("INVALID tree item, invalid id", treeItemThing.id);
 			return false;
 		}
-		if ((treeItemThing.iconPath !== undefined) && !isString(treeItemThing.iconPath) && !URI.isUri(treeItemThing.iconPath) && (!treeItemThing.iconPath || !isString((treeItemThing.iconPath as vscode.ThemeIcon).id))) {
+		if ((treeItemThing.iconPath !== undefined) && !isString(
+      treeItemThing.iconPath,
+    ) && !URI.isUri(
+      treeItemThing.iconPath,
+    ) && (!treeItemThing.iconPath || !isString(
+      (treeItemThing.iconPath as vscode.ThemeIcon).id,
+    ))) {
 			const asLightAndDarkThing = treeItemThing.iconPath as { light: string | URI; dark: string | URI } | null;
-			if (!asLightAndDarkThing || (!isString(asLightAndDarkThing.light) && !URI.isUri(asLightAndDarkThing.light) && !isString(asLightAndDarkThing.dark) && !URI.isUri(asLightAndDarkThing.dark))) {
-				console.log('INVALID tree item, invalid iconPath', treeItemThing.iconPath);
+			if (!asLightAndDarkThing || (!isString(
+        asLightAndDarkThing.light,
+      ) && !URI.isUri(asLightAndDarkThing.light) && !isString(
+        asLightAndDarkThing.dark,
+      ) && !URI.isUri(asLightAndDarkThing.dark))) {
+				console.log(
+          "INVALID tree item, invalid iconPath",
+          treeItemThing.iconPath,
+        );
 				return false;
 			}
 		}
-		if ((treeItemThing.description !== undefined) && !isString(treeItemThing.description) && (typeof treeItemThing.description !== 'boolean')) {
-			console.log('INVALID tree item, invalid description', treeItemThing.description);
+		if ((treeItemThing.description !== undefined) && !isString(
+      treeItemThing.description,
+    ) && (typeof treeItemThing.description !== "boolean")) {
+			console.log(
+        "INVALID tree item, invalid description",
+        treeItemThing.description,
+      );
 			return false;
 		}
-		if ((treeItemThing.resourceUri !== undefined) && !URI.isUri(treeItemThing.resourceUri)) {
-			console.log('INVALID tree item, invalid resourceUri', treeItemThing.resourceUri);
+		if ((treeItemThing.resourceUri !== undefined) && !URI.isUri(
+      treeItemThing.resourceUri,
+    )) {
+			console.log(
+        "INVALID tree item, invalid resourceUri",
+        treeItemThing.resourceUri,
+      );
 			return false;
 		}
-		if ((treeItemThing.tooltip !== undefined) && !isString(treeItemThing.tooltip) && !(treeItemThing.tooltip instanceof MarkdownString)) {
-			console.log('INVALID tree item, invalid tooltip', treeItemThing.tooltip);
+		if ((treeItemThing.tooltip !== undefined) && !isString(
+      treeItemThing.tooltip,
+    ) && !(treeItemThing.tooltip instanceof MarkdownString)) {
+			console.log("INVALID tree item, invalid tooltip", treeItemThing.tooltip);
 			return false;
 		}
 		if ((treeItemThing.command !== undefined) && !treeItemThing.command.command) {
-			console.log('INVALID tree item, invalid command', treeItemThing.command);
+			console.log("INVALID tree item, invalid command", treeItemThing.command);
 			return false;
 		}
 		if ((treeItemThing.collapsibleState !== undefined) && (treeItemThing.collapsibleState < TreeItemCollapsibleState.None) && (treeItemThing.collapsibleState > TreeItemCollapsibleState.Expanded)) {
-			console.log('INVALID tree item, invalid collapsibleState', treeItemThing.collapsibleState);
+			console.log(
+        "INVALID tree item, invalid collapsibleState",
+        treeItemThing.collapsibleState,
+      );
 			return false;
 		}
-		if ((treeItemThing.contextValue !== undefined) && !isString(treeItemThing.contextValue)) {
-			console.log('INVALID tree item, invalid contextValue', treeItemThing.contextValue);
+		if ((treeItemThing.contextValue !== undefined) && !isString(
+      treeItemThing.contextValue,
+    )) {
+			console.log(
+        "INVALID tree item, invalid contextValue",
+        treeItemThing.contextValue,
+      );
 			return false;
 		}
 		if ((treeItemThing.accessibilityInformation !== undefined) && !treeItemThing.accessibilityInformation?.label) {
-			console.log('INVALID tree item, invalid accessibilityInformation', treeItemThing.accessibilityInformation);
+			console.log(
+        "INVALID tree item, invalid accessibilityInformation",
+        treeItemThing.accessibilityInformation,
+      );
 			return false;
 		}
 
@@ -1674,7 +1751,9 @@ export enum TreeItemCheckboxState {
 export class DataTransferItem implements vscode.DataTransferItem {
 
 	async asString(): Promise<string> {
-		return typeof this.value === 'string' ? this.value : JSON.stringify(this.value);
+		return typeof this.value === "string" ? this.value : JSON.stringify(
+      this.value,
+    );
 	}
 
 	asFile(): undefined | vscode.DataTransferFile {
@@ -1703,7 +1782,7 @@ export class InternalFileDataTransferItem extends InternalDataTransferItem {
 	readonly #file: vscode.DataTransferFile;
 
 	constructor(file: vscode.DataTransferFile) {
-		super('');
+		super("");
 		this.#file = file;
 	}
 
@@ -1810,14 +1889,18 @@ export class DocumentDropOrPasteEditKind {
 	static Text: DocumentDropOrPasteEditKind;
 	static TextUpdateImports: DocumentDropOrPasteEditKind;
 
-	private static sep = '.';
+	private static sep = ".";
 
 	constructor(
-		public readonly value: string
+		public readonly value: string,
 	) { }
 
 	public append(...parts: string[]): DocumentDropOrPasteEditKind {
-		return new DocumentDropOrPasteEditKind((this.value ? [this.value, ...parts] : parts).join(DocumentDropOrPasteEditKind.sep));
+		return new DocumentDropOrPasteEditKind(
+      (this.value ? [this.value, ...parts] : parts).join(
+        DocumentDropOrPasteEditKind.sep,
+      ),
+    );
 	}
 
 	public intersects(other: DocumentDropOrPasteEditKind): boolean {
@@ -1825,12 +1908,16 @@ export class DocumentDropOrPasteEditKind {
 	}
 
 	public contains(other: DocumentDropOrPasteEditKind): boolean {
-		return this.value === other.value || other.value.startsWith(this.value + DocumentDropOrPasteEditKind.sep);
+		return this.value === other.value || other.value.startsWith(
+      this.value + DocumentDropOrPasteEditKind.sep,
+    );
 	}
 }
-DocumentDropOrPasteEditKind.Empty = new DocumentDropOrPasteEditKind('');
-DocumentDropOrPasteEditKind.Text = new DocumentDropOrPasteEditKind('text');
-DocumentDropOrPasteEditKind.TextUpdateImports = DocumentDropOrPasteEditKind.Text.append('updateImports');
+DocumentDropOrPasteEditKind.Empty = new DocumentDropOrPasteEditKind("");
+DocumentDropOrPasteEditKind.Text = new DocumentDropOrPasteEditKind("text");
+DocumentDropOrPasteEditKind.TextUpdateImports = DocumentDropOrPasteEditKind.Text.append(
+  "updateImports",
+);
 
 export class DocumentPasteEdit {
 
@@ -1861,15 +1948,15 @@ export class ThemeIcon {
 	}
 
 	static isThemeIcon(thing: any) {
-		if (typeof thing.id !== 'string') {
-			console.log('INVALID ThemeIcon, invalid id', thing.id);
+		if (typeof thing.id !== "string") {
+			console.log("INVALID ThemeIcon, invalid id", thing.id);
 			return false;
 		}
 		return true;
 	}
 }
-ThemeIcon.File = new ThemeIcon('file');
-ThemeIcon.Folder = new ThemeIcon('folder');
+ThemeIcon.File = new ThemeIcon("file");
+ThemeIcon.Folder = new ThemeIcon("folder");
 
 
 @es5ClassCompat
@@ -1912,17 +1999,17 @@ export class RelativePattern implements IRelativePattern {
 	}
 
 	constructor(base: vscode.WorkspaceFolder | URI | string, pattern: string) {
-		if (typeof base !== 'string') {
+		if (typeof base !== "string") {
 			if (!base || !URI.isUri(base) && !URI.isUri(base.uri)) {
-				throw illegalArgument('base');
+				throw illegalArgument("base");
 			}
 		}
 
-		if (typeof pattern !== 'string') {
-			throw illegalArgument('pattern');
+		if (typeof pattern !== "string") {
+			throw illegalArgument("pattern");
 		}
 
-		if (typeof base === 'string') {
+		if (typeof base === "string") {
 			this.baseUri = URI.file(base);
 		} else if (URI.isUri(base)) {
 			this.baseUri = base;
@@ -1935,10 +2022,10 @@ export class RelativePattern implements IRelativePattern {
 
 	toJSON(): IRelativePatternDto {
 		return {
-			pattern: this.pattern,
-			base: this.base,
-			baseUri: this.baseUri.toJSON()
-		};
+      pattern: this.pattern,
+      base: this.base,
+      baseUri: this.baseUri.toJSON(),
+    };
 	}
 }
 
@@ -1968,17 +2055,17 @@ export class Breakpoint {
 	readonly mode?: string;
 
 	protected constructor(enabled?: boolean, condition?: string, hitCondition?: string, logMessage?: string, mode?: string) {
-		this.enabled = typeof enabled === 'boolean' ? enabled : true;
-		if (typeof condition === 'string') {
+		this.enabled = typeof enabled === "boolean" ? enabled : true;
+		if (typeof condition === "string") {
 			this.condition = condition;
 		}
-		if (typeof hitCondition === 'string') {
+		if (typeof hitCondition === "string") {
 			this.hitCondition = hitCondition;
 		}
-		if (typeof logMessage === 'string') {
+		if (typeof logMessage === "string") {
 			this.logMessage = logMessage;
 		}
-		if (typeof mode === 'string') {
+		if (typeof mode === "string") {
 			this.mode = mode;
 		}
 	}
@@ -1998,7 +2085,7 @@ export class SourceBreakpoint extends Breakpoint {
 	constructor(location: Location, enabled?: boolean, condition?: string, hitCondition?: string, logMessage?: string, mode?: string) {
 		super(enabled, condition, hitCondition, logMessage, mode);
 		if (location === null) {
-			throw illegalArgument('location');
+			throw illegalArgument("location");
 		}
 		this.location = location;
 	}
@@ -2023,7 +2110,7 @@ export class DataBreakpoint extends Breakpoint {
 	constructor(label: string, dataId: string, canPersist: boolean, enabled?: boolean, condition?: string, hitCondition?: string, logMessage?: string, mode?: string) {
 		super(enabled, condition, hitCondition, logMessage, mode);
 		if (!dataId) {
-			throw illegalArgument('dataId');
+			throw illegalArgument("dataId");
 		}
 		this.label = label;
 		this.dataId = dataId;
@@ -2171,7 +2258,7 @@ export class NewSymbolName implements vscode.NewSymbolName {
 
 	constructor(
 		newSymbolName: string,
-		tags?: readonly NewSymbolNameTag[]
+		tags?: readonly NewSymbolNameTag[],
 	) {
 		this.newSymbolName = newSymbolName;
 		this.tags = tags;
@@ -2190,22 +2277,46 @@ export enum FileChangeType {
 export class FileSystemError extends Error {
 
 	static FileExists(messageOrUri?: string | URI): FileSystemError {
-		return new FileSystemError(messageOrUri, FileSystemProviderErrorCode.FileExists, FileSystemError.FileExists);
+		return new FileSystemError(
+      messageOrUri,
+      FileSystemProviderErrorCode.FileExists,
+      FileSystemError.FileExists,
+    );
 	}
 	static FileNotFound(messageOrUri?: string | URI): FileSystemError {
-		return new FileSystemError(messageOrUri, FileSystemProviderErrorCode.FileNotFound, FileSystemError.FileNotFound);
+		return new FileSystemError(
+      messageOrUri,
+      FileSystemProviderErrorCode.FileNotFound,
+      FileSystemError.FileNotFound,
+    );
 	}
 	static FileNotADirectory(messageOrUri?: string | URI): FileSystemError {
-		return new FileSystemError(messageOrUri, FileSystemProviderErrorCode.FileNotADirectory, FileSystemError.FileNotADirectory);
+		return new FileSystemError(
+      messageOrUri,
+      FileSystemProviderErrorCode.FileNotADirectory,
+      FileSystemError.FileNotADirectory,
+    );
 	}
 	static FileIsADirectory(messageOrUri?: string | URI): FileSystemError {
-		return new FileSystemError(messageOrUri, FileSystemProviderErrorCode.FileIsADirectory, FileSystemError.FileIsADirectory);
+		return new FileSystemError(
+      messageOrUri,
+      FileSystemProviderErrorCode.FileIsADirectory,
+      FileSystemError.FileIsADirectory,
+    );
 	}
 	static NoPermissions(messageOrUri?: string | URI): FileSystemError {
-		return new FileSystemError(messageOrUri, FileSystemProviderErrorCode.NoPermissions, FileSystemError.NoPermissions);
+		return new FileSystemError(
+      messageOrUri,
+      FileSystemProviderErrorCode.NoPermissions,
+      FileSystemError.NoPermissions,
+    );
 	}
 	static Unavailable(messageOrUri?: string | URI): FileSystemError {
-		return new FileSystemError(messageOrUri, FileSystemProviderErrorCode.Unavailable, FileSystemError.Unavailable);
+		return new FileSystemError(
+      messageOrUri,
+      FileSystemProviderErrorCode.Unavailable,
+      FileSystemError.Unavailable,
+    );
 	}
 
 	readonly code: string;
@@ -2213,7 +2324,7 @@ export class FileSystemError extends Error {
 	constructor(uriOrMessage?: string | URI, code: FileSystemProviderErrorCode = FileSystemProviderErrorCode.Unknown, terminator?: Function) {
 		super(URI.isUri(uriOrMessage) ? uriOrMessage.toString(true) : uriOrMessage);
 
-		this.code = terminator?.name ?? 'Unknown';
+		this.code = terminator?.name ?? "Unknown";
 
 		// mark the error as file system provider error so that
 		// we can extract the error code on the receiving side
@@ -2223,7 +2334,7 @@ export class FileSystemError extends Error {
 		// https://github.com/microsoft/TypeScript-wiki/blob/master/Breaking-Changes.md#extending-built-ins-like-error-array-and-map-may-no-longer-work
 		Object.setPrototypeOf(this, FileSystemError.prototype);
 
-		if (typeof Error.captureStackTrace === 'function' && typeof terminator === 'function') {
+		if (typeof Error.captureStackTrace === "function" && typeof terminator === "function") {
 			// nice stack traces
 			Error.captureStackTrace(this, terminator);
 		}
@@ -2310,7 +2421,7 @@ export class SemanticTokensLegend {
 }
 
 function isStrArrayOrUndefined(arg: any): arg is string[] | undefined {
-	return ((typeof arg === 'undefined') || isStringArray(arg));
+	return ((typeof arg === "undefined") || isStringArray(arg));
 }
 
 export class SemanticTokensBuilder {
@@ -2347,14 +2458,16 @@ export class SemanticTokensBuilder {
 	public push(line: number, char: number, length: number, tokenType: number, tokenModifiers?: number): void;
 	public push(range: Range, tokenType: string, tokenModifiers?: string[]): void;
 	public push(arg0: any, arg1: any, arg2: any, arg3?: any, arg4?: any): void {
-		if (typeof arg0 === 'number' && typeof arg1 === 'number' && typeof arg2 === 'number' && typeof arg3 === 'number' && (typeof arg4 === 'number' || typeof arg4 === 'undefined')) {
-			if (typeof arg4 === 'undefined') {
+		if (typeof arg0 === "number" && typeof arg1 === "number" && typeof arg2 === "number" && typeof arg3 === "number" && (typeof arg4 === "number" || typeof arg4 === "undefined")) {
+			if (typeof arg4 === "undefined") {
 				arg4 = 0;
 			}
 			// 1st overload
 			return this._pushEncoded(arg0, arg1, arg2, arg3, arg4);
 		}
-		if (Range.isRange(arg0) && typeof arg1 === 'string' && isStrArrayOrUndefined(arg2)) {
+		if (Range.isRange(
+      arg0,
+    ) && typeof arg1 === "string" && isStrArrayOrUndefined(arg2)) {
 			// 2nd overload
 			return this._push(arg0, arg1, arg2);
 		}
@@ -2363,13 +2476,13 @@ export class SemanticTokensBuilder {
 
 	private _push(range: vscode.Range, tokenType: string, tokenModifiers?: string[]): void {
 		if (!this._hasLegend) {
-			throw new Error('Legend must be provided in constructor');
+			throw new Error("Legend must be provided in constructor");
 		}
 		if (range.start.line !== range.end.line) {
-			throw new Error('`range` cannot span multiple lines');
+			throw new Error("`range` cannot span multiple lines");
 		}
 		if (!this._tokenTypeStrToInt.has(tokenType)) {
-			throw new Error('`tokenType` is not in the provided legend');
+			throw new Error("`tokenType` is not in the provided legend");
 		}
 		const line = range.start.line;
 		const char = range.start.character;
@@ -2379,7 +2492,7 @@ export class SemanticTokensBuilder {
 		if (tokenModifiers) {
 			for (const tokenModifier of tokenModifiers) {
 				if (!this._tokenModifierStrToInt.has(tokenModifier)) {
-					throw new Error('`tokenModifier` is not in the provided legend');
+					throw new Error("`tokenModifier` is not in the provided legend");
 				}
 				const nTokenModifier = this._tokenModifierStrToInt.get(tokenModifier)!;
 				nTokenModifiers |= (1 << nTokenModifier) >>> 0;
@@ -2483,7 +2596,10 @@ export class SemanticTokensBuilder {
 
 	public build(resultId?: string): SemanticTokens {
 		if (!this._dataIsSortedAndDeltaEncoded) {
-			return new SemanticTokens(SemanticTokensBuilder._sortAndDeltaEncode(this._data), resultId);
+			return new SemanticTokens(
+        SemanticTokensBuilder._sortAndDeltaEncode(this._data),
+        resultId,
+      );
 		}
 		return new SemanticTokens(new Uint32Array(this._data), resultId);
 	}
@@ -2555,7 +2671,9 @@ export enum QuickInputButtonLocation {
 @es5ClassCompat
 export class QuickInputButtons {
 
-	static readonly Back: vscode.QuickInputButton = { iconPath: new ThemeIcon('arrow-left') };
+	static readonly Back: vscode.QuickInputButton = {
+    iconPath: new ThemeIcon("arrow-left"),
+  };
 
 	private constructor() { }
 }
@@ -2579,13 +2697,15 @@ export enum ExtensionKind {
 export class FileDecoration {
 
 	static validate(d: FileDecoration): boolean {
-		if (typeof d.badge === 'string') {
+		if (typeof d.badge === "string") {
 			let len = nextCharLength(d.badge, 0);
 			if (len < d.badge.length) {
 				len += nextCharLength(d.badge, len);
 			}
 			if (d.badge.length > len) {
-				throw new Error(`The 'badge'-property must be undefined or a short character`);
+				throw new Error(
+          `The 'badge'-property must be undefined or a short character`,
+        );
 			}
 		} else if (d.badge) {
 			if (!ThemeIcon.isThemeIcon(d.badge)) {
@@ -2683,7 +2803,7 @@ export class NotebookRendererScript {
 
 	constructor(
 		public uri: vscode.Uri,
-		provides: string | readonly string[] = []
+		provides: string | readonly string[] = [],
 	) {
 		this.provides = asArray(provides);
 	}
@@ -2694,7 +2814,7 @@ export class NotebookKernelSourceAction {
 	detail?: string;
 	command?: vscode.Command;
 	constructor(
-		public label: string
+		public label: string,
 	) { }
 }
 
@@ -2864,11 +2984,15 @@ export function validateTestCoverageCount(cc?: vscode.TestCoverageCount) {
 	}
 
 	if (cc.covered > cc.total) {
-		throw new Error(`The total number of covered items (${cc.covered}) cannot be greater than the total (${cc.total})`);
+		throw new Error(
+      `The total number of covered items (${cc.covered}) cannot be greater than the total (${cc.total})`,
+    );
 	}
 
 	if (cc.total < 0) {
-		throw new Error(`The number of covered items (${cc.total}) cannot be negative`);
+		throw new Error(
+      `The number of covered items (${cc.total}) cannot be negative`,
+    );
 	}
 }
 
@@ -2879,7 +3003,7 @@ export class FileCoverage implements vscode.FileCoverage {
 		const decl = new TestCoverageCount(0, 0);
 
 		for (const detail of details) {
-			if ('branches' in detail) {
+			if ("branches" in detail) {
 				statements.total += 1;
 				statements.covered += detail.executed ? 1 : 0;
 
@@ -2894,11 +3018,11 @@ export class FileCoverage implements vscode.FileCoverage {
 		}
 
 		const coverage = new FileCoverage(
-			uri,
-			statements,
-			branches.total > 0 ? branches : undefined,
-			decl.total > 0 ? decl : undefined,
-		);
+      uri,
+      statements,
+      branches.total > 0 ? branches : undefined,
+      decl.total > 0 ? decl : undefined,
+    );
 
 		coverage.detailedCoverage = details;
 
@@ -3112,11 +3236,13 @@ export enum ChatResultFeedbackKind {
 export class ChatResponseMarkdownPart {
 	value: vscode.MarkdownString;
 	constructor(value: string | vscode.MarkdownString) {
-		if (typeof value !== 'string' && value.isTrusted === true) {
-			throw new Error('The boolean form of MarkdownString.isTrusted is NOT supported for chat participants.');
+		if (typeof value !== "string" && value.isTrusted === true) {
+			throw new Error(
+        "The boolean form of MarkdownString.isTrusted is NOT supported for chat participants.",
+      );
 		}
 
-		this.value = typeof value === 'string' ? new MarkdownString(value) : value;
+		this.value = typeof value === "string" ? new MarkdownString(value) : value;
 	}
 }
 
@@ -3128,11 +3254,13 @@ export class ChatResponseMarkdownWithVulnerabilitiesPart {
 	value: vscode.MarkdownString;
 	vulnerabilities: vscode.ChatVulnerability[];
 	constructor(value: string | vscode.MarkdownString, vulnerabilities: vscode.ChatVulnerability[]) {
-		if (typeof value !== 'string' && value.isTrusted === true) {
-			throw new Error('The boolean form of MarkdownString.isTrusted is NOT supported for chat participants.');
+		if (typeof value !== "string" && value.isTrusted === true) {
+			throw new Error(
+        "The boolean form of MarkdownString.isTrusted is NOT supported for chat participants.",
+      );
 		}
 
-		this.value = typeof value === 'string' ? new MarkdownString(value) : value;
+		this.value = typeof value === "string" ? new MarkdownString(value) : value;
 		this.vulnerabilities = vulnerabilities;
 	}
 }
@@ -3202,8 +3330,8 @@ export class ChatResponseExternalEditPart {
 		public callback: () => Thenable<unknown>,
 	) {
 		this.applied = new Promise<string>((resolve) => {
-			this.didGetApplied = resolve;
-		});
+      this.didGetApplied = resolve;
+    });
 	}
 }
 
@@ -3265,22 +3393,26 @@ export class ChatResponseHookPart {
 export class ChatResponseWarningPart {
 	value: vscode.MarkdownString;
 	constructor(value: string | vscode.MarkdownString) {
-		if (typeof value !== 'string' && value.isTrusted === true) {
-			throw new Error('The boolean form of MarkdownString.isTrusted is NOT supported for chat participants.');
+		if (typeof value !== "string" && value.isTrusted === true) {
+			throw new Error(
+        "The boolean form of MarkdownString.isTrusted is NOT supported for chat participants.",
+      );
 		}
 
-		this.value = typeof value === 'string' ? new MarkdownString(value) : value;
+		this.value = typeof value === "string" ? new MarkdownString(value) : value;
 	}
 }
 
 export class ChatResponseInfoPart {
 	value: vscode.MarkdownString;
 	constructor(value: string | vscode.MarkdownString) {
-		if (typeof value !== 'string' && value.isTrusted === true) {
-			throw new Error('The boolean form of MarkdownString.isTrusted is NOT supported for chat participants.');
+		if (typeof value !== "string" && value.isTrusted === true) {
+			throw new Error(
+        "The boolean form of MarkdownString.isTrusted is NOT supported for chat participants.",
+      );
 		}
 
-		this.value = typeof value === 'string' ? new MarkdownString(value) : value;
+		this.value = typeof value === "string" ? new MarkdownString(value) : value;
 	}
 }
 
@@ -3348,15 +3480,15 @@ export class ChatResponsePullRequestPart {
 		public readonly title: string,
 		public readonly description: string,
 		public readonly author: string,
-		public readonly linkTag: string
+		public readonly linkTag: string,
 	) {
 		if (isUriComponents(uriOrCommand)) {
 			this.uri = uriOrCommand as vscode.Uri;
 			this.command = {
-				title: 'Open Pull Request',
-				command: 'vscode.open',
-				arguments: [uriOrCommand]
-			};
+        title: "Open Pull Request",
+        command: "vscode.open",
+        arguments: [uriOrCommand],
+      };
 		} else {
 			this.command = uriOrCommand;
 		}
@@ -3364,12 +3496,12 @@ export class ChatResponsePullRequestPart {
 
 	toJSON() {
 		return {
-			$mid: MarshalledId.ChatResponsePullRequestPart,
-			uri: this.uri,
-			title: this.title,
-			description: this.description,
-			author: this.author
-		};
+      $mid: MarshalledId.ChatResponsePullRequestPart,
+      uri: this.uri,
+      title: this.title,
+      description: this.description,
+      author: this.author,
+    };
 	}
 }
 
@@ -3421,7 +3553,7 @@ export class ChatQuestion {
 			options?: { id: string; label: string; value: unknown }[];
 			defaultValue?: string | string[];
 			allowFreeformInput?: boolean;
-		}
+		},
 	) {
 		this.id = id;
 		this.type = type;
@@ -3520,7 +3652,7 @@ export class ChatToolInvocationPart {
 	toolSpecificData?: ChatTerminalToolInvocationData2;
 	subAgentInvocationId?: string;
 	subAgentName?: string;
-	presentation?: 'hidden' | 'hiddenAfterComplete' | undefined;
+	presentation?: "hidden" | "hiddenAfterComplete" | undefined;
 
 	constructor(toolName: string,
 		toolCallId: string,
@@ -3551,7 +3683,7 @@ export class ChatResponseTurn implements vscode.ChatResponseTurn {
 		readonly response: ReadonlyArray<ChatResponseMarkdownPart | ChatResponseFileTreePart | ChatResponseAnchorPart | ChatResponseCommandButtonPart>,
 		readonly result: vscode.ChatResult,
 		readonly participant: string,
-		readonly command?: string
+		readonly command?: string,
 	) { }
 }
 
@@ -3561,7 +3693,7 @@ export class ChatResponseTurn2 implements vscode.ChatResponseTurn2 {
 		readonly response: ReadonlyArray<ChatResponseMarkdownPart | ChatResponseFileTreePart | ChatResponseAnchorPart | ChatResponseCommandButtonPart | ChatResponseExtensionsPart | ChatToolInvocationPart>,
 		readonly result: vscode.ChatResult,
 		readonly participant: string,
-		readonly command?: string
+		readonly command?: string,
 	) { }
 }
 
@@ -3580,12 +3712,14 @@ export enum ChatSessionStatus {
 }
 
 export class ChatSessionCustomizationType {
-	static readonly Agent = new ChatSessionCustomizationType('agent');
-	static readonly Skill = new ChatSessionCustomizationType('skill');
-	static readonly Instructions = new ChatSessionCustomizationType('instructions');
-	static readonly Prompt = new ChatSessionCustomizationType('prompt');
-	static readonly Hook = new ChatSessionCustomizationType('hook');
-	static readonly Plugins = new ChatSessionCustomizationType('plugins');
+	static readonly Agent = new ChatSessionCustomizationType("agent");
+	static readonly Skill = new ChatSessionCustomizationType("skill");
+	static readonly Instructions = new ChatSessionCustomizationType(
+    "instructions",
+  );
+	static readonly Prompt = new ChatSessionCustomizationType("prompt");
+	static readonly Hook = new ChatSessionCustomizationType("hook");
+	static readonly Plugins = new ChatSessionCustomizationType("plugins");
 
 	constructor(public readonly id: string) { }
 }
@@ -3609,7 +3743,7 @@ export enum ChatDebugHookResult {
 }
 
 export class ChatDebugToolCallEvent {
-	readonly _kind = 'toolCall';
+	readonly _kind = "toolCall";
 	id?: string;
 	sessionResource?: vscode.Uri;
 	created: Date;
@@ -3628,7 +3762,7 @@ export class ChatDebugToolCallEvent {
 }
 
 export class ChatDebugModelTurnEvent {
-	readonly _kind = 'modelTurn';
+	readonly _kind = "modelTurn";
 	id?: string;
 	sessionResource?: vscode.Uri;
 	created: Date;
@@ -3649,7 +3783,7 @@ export class ChatDebugModelTurnEvent {
 }
 
 export class ChatDebugGenericEvent {
-	readonly _kind = 'generic';
+	readonly _kind = "generic";
 	id?: string;
 	sessionResource?: vscode.Uri;
 	created: Date;
@@ -3667,7 +3801,7 @@ export class ChatDebugGenericEvent {
 }
 
 export class ChatDebugSubagentInvocationEvent {
-	readonly _kind = 'subagentInvocation';
+	readonly _kind = "subagentInvocation";
 	id?: string;
 	sessionResource?: vscode.Uri;
 	created: Date;
@@ -3696,7 +3830,7 @@ export class ChatDebugMessageSection {
 }
 
 export class ChatDebugUserMessageEvent {
-	readonly _kind = 'userMessage';
+	readonly _kind = "userMessage";
 	id?: string;
 	sessionResource?: vscode.Uri;
 	created: Date;
@@ -3712,7 +3846,7 @@ export class ChatDebugUserMessageEvent {
 }
 
 export class ChatDebugAgentResponseEvent {
-	readonly _kind = 'agentResponse';
+	readonly _kind = "agentResponse";
 	id?: string;
 	sessionResource?: vscode.Uri;
 	created: Date;
@@ -3728,7 +3862,7 @@ export class ChatDebugAgentResponseEvent {
 }
 
 export class ChatDebugEventTextContent {
-	readonly _kind = 'text';
+	readonly _kind = "text";
 	value: string;
 
 	constructor(value: string) {
@@ -3742,7 +3876,7 @@ export enum ChatDebugMessageContentType {
 }
 
 export class ChatDebugEventMessageContent {
-	readonly _kind = 'messageContent';
+	readonly _kind = "messageContent";
 	type: ChatDebugMessageContentType;
 	message: string;
 	sections: ChatDebugMessageSection[];
@@ -3755,7 +3889,7 @@ export class ChatDebugEventMessageContent {
 }
 
 export class ChatDebugEventToolCallContent {
-	readonly _kind = 'toolCallContent';
+	readonly _kind = "toolCallContent";
 	toolName: string;
 	result?: ChatDebugToolCallResult;
 	durationInMillis?: number;
@@ -3768,7 +3902,7 @@ export class ChatDebugEventToolCallContent {
 }
 
 export class ChatDebugEventModelTurnContent {
-	readonly _kind = 'modelTurnContent';
+	readonly _kind = "modelTurnContent";
 	requestName: string;
 	model?: string;
 	status?: string;
@@ -3791,7 +3925,7 @@ export class ChatDebugEventModelTurnContent {
 }
 
 export class ChatDebugEventHookContent {
-	readonly _kind = 'hookContent';
+	readonly _kind = "hookContent";
 	hookType: string;
 	command?: string;
 	result?: ChatDebugHookResult;
@@ -3833,7 +3967,7 @@ export class ChatRequestEditorData implements vscode.ChatRequestEditorData {
 
 export class ChatRequestNotebookData implements vscode.ChatRequestNotebookData {
 	constructor(
-		readonly cell: vscode.TextDocument
+		readonly cell: vscode.TextDocument,
 	) { }
 }
 
@@ -3887,11 +4021,19 @@ export enum ChatInputNotificationSeverity {
 export class LanguageModelChatMessage implements vscode.LanguageModelChatMessage {
 
 	static User(content: string | (LanguageModelTextPart | LanguageModelToolResultPart | LanguageModelToolCallPart | LanguageModelDataPart)[], name?: string): LanguageModelChatMessage {
-		return new LanguageModelChatMessage(LanguageModelChatMessageRole.User, content, name);
+		return new LanguageModelChatMessage(
+      LanguageModelChatMessageRole.User,
+      content,
+      name,
+    );
 	}
 
 	static Assistant(content: string | (LanguageModelTextPart | LanguageModelToolResultPart | LanguageModelToolCallPart | LanguageModelDataPart)[], name?: string): LanguageModelChatMessage {
-		return new LanguageModelChatMessage(LanguageModelChatMessageRole.Assistant, content, name);
+		return new LanguageModelChatMessage(
+      LanguageModelChatMessageRole.Assistant,
+      content,
+      name,
+    );
 	}
 
 	role: vscode.LanguageModelChatMessageRole;
@@ -3899,7 +4041,7 @@ export class LanguageModelChatMessage implements vscode.LanguageModelChatMessage
 	private _content: (LanguageModelTextPart | LanguageModelToolResultPart | LanguageModelToolCallPart | LanguageModelDataPart)[] = [];
 
 	set content(value: string | (LanguageModelTextPart | LanguageModelToolResultPart | LanguageModelToolCallPart | LanguageModelDataPart)[]) {
-		if (typeof value === 'string') {
+		if (typeof value === "string") {
 			// we changed this and still support setting content with a string property. this keep the API runtime stable
 			// despite the breaking change in the type definition.
 			this._content = [new LanguageModelTextPart(value)];
@@ -3924,11 +4066,19 @@ export class LanguageModelChatMessage implements vscode.LanguageModelChatMessage
 export class LanguageModelChatMessage2 implements vscode.LanguageModelChatMessage2 {
 
 	static User(content: string | (LanguageModelTextPart | LanguageModelToolResultPart | LanguageModelToolCallPart | LanguageModelDataPart)[], name?: string): LanguageModelChatMessage2 {
-		return new LanguageModelChatMessage2(LanguageModelChatMessageRole.User, content, name);
+		return new LanguageModelChatMessage2(
+      LanguageModelChatMessageRole.User,
+      content,
+      name,
+    );
 	}
 
 	static Assistant(content: string | (LanguageModelTextPart | LanguageModelToolResultPart | LanguageModelToolCallPart | LanguageModelDataPart)[], name?: string): LanguageModelChatMessage2 {
-		return new LanguageModelChatMessage2(LanguageModelChatMessageRole.Assistant, content, name);
+		return new LanguageModelChatMessage2(
+      LanguageModelChatMessageRole.Assistant,
+      content,
+      name,
+    );
 	}
 
 	role: vscode.LanguageModelChatMessageRole;
@@ -3936,7 +4086,7 @@ export class LanguageModelChatMessage2 implements vscode.LanguageModelChatMessag
 	private _content: (LanguageModelTextPart | LanguageModelToolResultPart | LanguageModelToolCallPart | LanguageModelDataPart | LanguageModelThinkingPart)[] = [];
 
 	set content(value: string | (LanguageModelTextPart | LanguageModelToolResultPart | LanguageModelToolCallPart | LanguageModelDataPart | LanguageModelThinkingPart)[]) {
-		if (typeof value === 'string') {
+		if (typeof value === "string") {
 			// we changed this and still support setting content with a string property. this keep the API runtime stable
 			// despite the breaking change in the type definition.
 			this._content = [new LanguageModelTextPart(value)];
@@ -3953,7 +4103,7 @@ export class LanguageModelChatMessage2 implements vscode.LanguageModelChatMessag
 	set content2(value: (string | LanguageModelToolResultPart | LanguageModelToolCallPart | LanguageModelDataPart)[] | undefined) {
 		if (value) {
 			this.content = value.map(part => {
-				if (typeof part === 'string') {
+				if (typeof part === "string") {
 					return new LanguageModelTextPart(part);
 				}
 				return part;
@@ -4010,10 +4160,10 @@ export class LanguageModelTextPart implements vscode.LanguageModelTextPart2 {
 
 	toJSON() {
 		return {
-			$mid: MarshalledId.LanguageModelTextPart,
-			value: this.value,
-			audience: this.audience,
-		};
+      $mid: MarshalledId.LanguageModelTextPart,
+      value: this.value,
+      audience: this.audience,
+    };
 	}
 }
 
@@ -4032,8 +4182,8 @@ export class LanguageModelDataPart implements vscode.LanguageModelDataPart2 {
 		return new LanguageModelDataPart(data, mimeType);
 	}
 
-	static json(value: object, mime: string = 'text/x-json'): vscode.LanguageModelDataPart {
-		const rawStr = JSON.stringify(value, undefined, '\t');
+	static json(value: object, mime: string = "text/x-json"): vscode.LanguageModelDataPart {
+		const rawStr = JSON.stringify(value, undefined, "\t");
 		return new LanguageModelDataPart(VSBuffer.fromString(rawStr).buffer, mime);
 	}
 
@@ -4043,20 +4193,20 @@ export class LanguageModelDataPart implements vscode.LanguageModelDataPart2 {
 
 	toJSON() {
 		return {
-			$mid: MarshalledId.LanguageModelDataPart,
-			mimeType: this.mimeType,
-			data: encodeBase64(VSBuffer.wrap(this.data)),
-			audience: this.audience
-		};
+      $mid: MarshalledId.LanguageModelDataPart,
+      mimeType: this.mimeType,
+      data: encodeBase64(VSBuffer.wrap(this.data)),
+      audience: this.audience,
+    };
 	}
 }
 
 export enum ChatImageMimeType {
-	PNG = 'image/png',
-	JPEG = 'image/jpeg',
-	GIF = 'image/gif',
-	WEBP = 'image/webp',
-	BMP = 'image/bmp',
+	PNG = "image/png",
+	JPEG = "image/jpeg",
+	GIF = "image/gif",
+	WEBP = "image/webp",
+	BMP = "image/bmp",
 }
 
 export class LanguageModelThinkingPart implements vscode.LanguageModelThinkingPart {
@@ -4072,11 +4222,11 @@ export class LanguageModelThinkingPart implements vscode.LanguageModelThinkingPa
 
 	toJSON() {
 		return {
-			$mid: MarshalledId.LanguageModelThinkingPart,
-			value: this.value,
-			id: this.id,
-			metadata: this.metadata,
-		};
+      $mid: MarshalledId.LanguageModelThinkingPart,
+      value: this.value,
+      id: this.id,
+      metadata: this.metadata,
+    };
 	}
 }
 
@@ -4091,9 +4241,9 @@ export class LanguageModelPromptTsxPart {
 
 	toJSON() {
 		return {
-			$mid: MarshalledId.LanguageModelPromptTsxPart,
-			value: this.value,
-		};
+      $mid: MarshalledId.LanguageModelPromptTsxPart,
+      value: this.value,
+    };
 	}
 }
 
@@ -4136,14 +4286,17 @@ export class LanguageModelChatAssistantMessage {
 
 export class LanguageModelError extends Error {
 
-	static readonly #name = 'LanguageModelError';
+	static readonly #name = "LanguageModelError";
 
 	static NotFound(message?: string): LanguageModelError {
 		return new LanguageModelError(message, LanguageModelError.NotFound.name);
 	}
 
 	static NoPermissions(message?: string): LanguageModelError {
-		return new LanguageModelError(message, LanguageModelError.NoPermissions.name);
+		return new LanguageModelError(
+      message,
+      LanguageModelError.NoPermissions.name,
+    );
 	}
 
 	static Blocked(message?: string): LanguageModelError {
@@ -4162,7 +4315,7 @@ export class LanguageModelError extends Error {
 	constructor(message?: string, code?: string, cause?: Error) {
 		super(message, { cause });
 		this.name = LanguageModelError.#name;
-		this.code = code ?? '';
+		this.code = code ?? "";
 	}
 
 }
@@ -4172,9 +4325,9 @@ export class LanguageModelToolResult {
 
 	toJSON() {
 		return {
-			$mid: MarshalledId.LanguageModelToolResult,
-			content: this.content,
-		};
+      $mid: MarshalledId.LanguageModelToolResult,
+      content: this.content,
+    };
 	}
 }
 
@@ -4183,9 +4336,9 @@ export class LanguageModelToolResult2 {
 
 	toJSON() {
 		return {
-			$mid: MarshalledId.LanguageModelToolResult,
-			content: this.content,
-		};
+      $mid: MarshalledId.LanguageModelToolResult,
+      content: this.content,
+    };
 	}
 }
 

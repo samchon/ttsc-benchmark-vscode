@@ -3,38 +3,42 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as DOM from '../../../../../base/browser/dom.js';
-import { Disposable, DisposableStore, MutableDisposable } from '../../../../../base/common/lifecycle.js';
-import { HiddenItemStrategy, MenuWorkbenchToolBar } from '../../../../../platform/actions/browser/toolbar.js';
-import { IMenuService, MenuItemAction } from '../../../../../platform/actions/common/actions.js';
-import { IContextMenuService } from '../../../../../platform/contextview/browser/contextView.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { INotebookActionContext } from '../controller/coreActions.js';
-import { INotebookEditorDelegate } from '../notebookBrowser.js';
-import { NotebookOptions } from '../notebookOptions.js';
-import { CodiconActionViewItem } from '../view/cellParts/cellActionView.js';
+import * as DOM from "../../../../../base/browser/dom.js";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../../../base/common/lifecycle.js";
+import { HiddenItemStrategy, MenuWorkbenchToolBar } from "../../../../../platform/actions/browser/toolbar.js";
+import { IMenuService, MenuItemAction } from "../../../../../platform/actions/common/actions.js";
+import { IContextMenuService } from "../../../../../platform/contextview/browser/contextView.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { INotebookActionContext } from "../controller/coreActions.js";
+import { INotebookEditorDelegate } from "../notebookBrowser.js";
+import { NotebookOptions } from "../notebookOptions.js";
+import { CodiconActionViewItem } from "../view/cellParts/cellActionView.js";
 
 export class ListTopCellToolbar extends Disposable {
 	private readonly topCellToolbarContainer: HTMLElement;
 	private topCellToolbar: HTMLElement;
-	private readonly viewZone: MutableDisposable<DisposableStore> = this._register(new MutableDisposable());
+	private readonly viewZone: MutableDisposable<DisposableStore> = this._register(
+    new MutableDisposable(),
+  );
 	private readonly _modelDisposables = this._register(new DisposableStore());
 	constructor(
 		protected readonly notebookEditor: INotebookEditorDelegate,
 		private readonly notebookOptions: NotebookOptions,
 		@IInstantiationService protected readonly instantiationService: IInstantiationService,
 		@IContextMenuService protected readonly contextMenuService: IContextMenuService,
-		@IMenuService protected readonly menuService: IMenuService
+		@IMenuService protected readonly menuService: IMenuService,
 	) {
 		super();
 
-		this.topCellToolbarContainer = DOM.$('div');
-		this.topCellToolbar = DOM.$('.cell-list-top-cell-toolbar-container');
+		this.topCellToolbarContainer = DOM.$("div");
+		this.topCellToolbar = DOM.$(".cell-list-top-cell-toolbar-container");
 		this.topCellToolbarContainer.appendChild(this.topCellToolbar);
 
-		this._register(this.notebookEditor.onDidAttachViewModel(() => {
-			this.updateTopToolbar();
-		}));
+		this._register(
+      this.notebookEditor.onDidAttachViewModel(() => {
+        this.updateTopToolbar();
+      }),
+    );
 
 		this._register(this.notebookOptions.onDidChangeOptions(e => {
 			if (e.insertToolbarAlignment || e.insertToolbarPosition || e.cellToolbarLocation) {
@@ -47,8 +51,10 @@ export class ListTopCellToolbar extends Disposable {
 		const layoutInfo = this.notebookOptions.getLayoutConfiguration();
 		this.viewZone.value = new DisposableStore();
 
-		if (layoutInfo.insertToolbarPosition === 'hidden' || layoutInfo.insertToolbarPosition === 'notebookToolbar') {
-			const height = this.notebookOptions.computeTopInsertToolbarHeight(this.notebookEditor.textModel?.viewType);
+		if (layoutInfo.insertToolbarPosition === "hidden" || layoutInfo.insertToolbarPosition === "notebookToolbar") {
+			const height = this.notebookOptions.computeTopInsertToolbarHeight(
+        this.notebookEditor.textModel?.viewType,
+      );
 
 			if (height !== 0) {
 				// reserve whitespace to avoid overlap with cell toolbar
@@ -56,7 +62,7 @@ export class ListTopCellToolbar extends Disposable {
 					const id = accessor.addZone({
 						afterModelPosition: 0,
 						heightInPx: height,
-						domNode: DOM.$('div')
+						domNode: DOM.$("div"),
 					});
 					accessor.layoutZone(id);
 					this.viewZone.value?.add({
@@ -66,7 +72,7 @@ export class ListTopCellToolbar extends Disposable {
 									accessor.removeZone(id);
 								});
 							}
-						}
+						},
 					});
 				});
 			}
@@ -79,7 +85,7 @@ export class ListTopCellToolbar extends Disposable {
 			const id = accessor.addZone({
 				afterModelPosition: 0,
 				heightInPx: height,
-				domNode: this.topCellToolbarContainer
+				domNode: this.topCellToolbarContainer,
 			});
 			accessor.layoutZone(id);
 
@@ -90,7 +96,7 @@ export class ListTopCellToolbar extends Disposable {
 							accessor.removeZone(id);
 						});
 					}
-				}
+				},
 			});
 
 			DOM.clearNode(this.topCellToolbar);
@@ -105,7 +111,7 @@ export class ListTopCellToolbar extends Disposable {
 					return undefined;
 				},
 				menuOptions: {
-					shouldForwardArgs: true
+					shouldForwardArgs: true,
 				},
 				toolbarOptions: {
 					primaryGroup: (g: string) => /^inline/.test(g),
@@ -115,7 +121,7 @@ export class ListTopCellToolbar extends Disposable {
 
 			if (this.notebookEditor.hasModel()) {
 				toolbar.context = {
-					notebookEditor: this.notebookEditor
+					notebookEditor: this.notebookEditor,
 				} satisfies INotebookActionContext;
 			}
 
@@ -140,9 +146,9 @@ export class ListTopCellToolbar extends Disposable {
 
 	private updateClass() {
 		if (this.notebookEditor.hasModel() && this.notebookEditor.getLength() === 0) {
-			this.topCellToolbar.classList.add('emptyNotebook');
+			this.topCellToolbar.classList.add("emptyNotebook");
 		} else {
-			this.topCellToolbar.classList.remove('emptyNotebook');
+			this.topCellToolbar.classList.remove("emptyNotebook");
 		}
 	}
 }

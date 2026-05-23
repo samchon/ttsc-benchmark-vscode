@@ -45,19 +45,19 @@ export class ExplorerFileNestingTrie {
 	}
 
 	private getAttributes(filename: string, dirname: string): FilenameAttributes {
-		const lastDot = filename.lastIndexOf('.');
+		const lastDot = filename.lastIndexOf(".");
 		if (lastDot < 1) {
 			return {
-				dirname,
-				basename: filename,
-				extname: ''
-			};
+        dirname,
+        basename: filename,
+        extname: "",
+      };
 		} else {
 			return {
-				dirname,
-				basename: filename.substring(0, lastDot),
-				extname: filename.substring(lastDot + 1)
-			};
+        dirname,
+        basename: filename.substring(0, lastDot),
+        extname: filename.substring(lastDot + 1),
+      };
 		}
 	}
 
@@ -111,9 +111,9 @@ export class PreTrie {
 	private map: Map<string, PreTrie> = new Map();
 
 	add(key: string, value: string) {
-		if (key === '') {
+		if (key === "") {
 			this.value.add(key, value);
-		} else if (key[0] === '*') {
+		} else if (key[0] === "*") {
 			this.value.add(key, value);
 		} else {
 			const head = key[0];
@@ -140,14 +140,14 @@ export class PreTrie {
 		return results;
 	}
 
-	toString(indentation = ''): string {
+	toString(indentation = ""): string {
 		const lines = [];
 		if (this.value.hasItems) {
-			lines.push('* => \n' + this.value.toString(indentation + '  '));
+			lines.push("* => \n" + this.value.toString(indentation + "  "));
 		}
 		[...this.map.entries()].map(([key, trie]) =>
-			lines.push('^' + key + ' => \n' + trie.toString(indentation + '  ')));
-		return lines.map(l => indentation + l).join('\n');
+			lines.push("^" + key + " => \n" + trie.toString(indentation + "  ")));
+		return lines.map(l => indentation + l).join("\n");
 	}
 }
 
@@ -161,15 +161,15 @@ export class SufTrie {
 
 	add(key: string, value: string) {
 		this.hasItems = true;
-		if (key === '*') {
+		if (key === "*") {
 			this.star.push(new SubstitutionString(value));
-		} else if (key === '') {
+		} else if (key === "") {
 			this.epsilon.push(new SubstitutionString(value));
 		} else {
 			const tail = key[key.length - 1];
 			const rest = key.slice(0, key.length - 1);
-			if (tail === '*') {
-				throw Error('Unexpected star in SufTrie key: ' + key);
+			if (tail === "*") {
+				throw Error("Unexpected star in SufTrie key: " + key);
 			} else {
 				let existing = this.map.get(tail);
 				if (!existing) {
@@ -182,7 +182,7 @@ export class SufTrie {
 
 	get(key: string, attributes: FilenameAttributes): string[] {
 		const results: string[] = [];
-		if (key === '') {
+		if (key === "") {
 			results.push(...this.epsilon.map(ss => ss.substitute(attributes)));
 		}
 		if (this.star.length) {
@@ -199,29 +199,29 @@ export class SufTrie {
 		return results;
 	}
 
-	toString(indentation = ''): string {
+	toString(indentation = ""): string {
 		const lines = [];
 		if (this.star.length) {
-			lines.push('* => ' + this.star.join('; '));
+			lines.push("* => " + this.star.join("; "));
 		}
 
 		if (this.epsilon.length) {
 			// allow-any-unicode-next-line
-			lines.push('ε => ' + this.epsilon.join('; '));
+			lines.push("ε => " + this.epsilon.join("; "));
 		}
 
 		[...this.map.entries()].map(([key, trie]) =>
-			lines.push(key + '$' + ' => \n' + trie.toString(indentation + '  ')));
+			lines.push(key + "$" + " => \n" + trie.toString(indentation + "  ")));
 
-		return lines.map(l => indentation + l).join('\n');
+		return lines.map(l => indentation + l).join("\n");
 	}
 }
 
 const enum SubstitutionType {
-	capture = 'capture',
-	basename = 'basename',
-	dirname = 'dirname',
-	extname = 'extname',
+	capture = "capture",
+	basename = "basename",
+	dirname = "dirname",
+	extname = "extname",
 }
 
 const substitutionStringTokenizer = /\$[({](capture|basename|dirname|extname)[)}]/g;
@@ -246,7 +246,7 @@ class SubstitutionString {
 				case SubstitutionType.capture:
 					this.tokens.push({ capture: type });
 					break;
-				default: throw Error('unknown substitution type: ' + type);
+				default: throw Error("unknown substitution type: " + type);
 			}
 			lastIndex = token.index + token[0].length;
 		}
@@ -259,13 +259,13 @@ class SubstitutionString {
 
 	substitute(attributes: FilenameAttributes, capture?: string): string {
 		return this.tokens.map(t => {
-			if (typeof t === 'string') { return t; }
+			if (typeof t === "string") { return t; }
 			switch (t.capture) {
 				case SubstitutionType.basename: return attributes.basename;
 				case SubstitutionType.dirname: return attributes.dirname;
 				case SubstitutionType.extname: return attributes.extname;
-				case SubstitutionType.capture: return capture || '';
+				case SubstitutionType.capture: return capture || "";
 			}
-		}).join('');
+		}).join("");
 	}
 }

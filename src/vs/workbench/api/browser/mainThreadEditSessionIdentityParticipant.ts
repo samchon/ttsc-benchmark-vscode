@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { localize } from '../../../nls.js';
-import { IInstantiationService } from '../../../platform/instantiation/common/instantiation.js';
-import { extHostCustomer, IExtHostContext } from '../../services/extensions/common/extHostCustomers.js';
-import { IDisposable } from '../../../base/common/lifecycle.js';
-import { raceCancellationError } from '../../../base/common/async.js';
-import { IEditSessionIdentityCreateParticipant, IEditSessionIdentityService } from '../../../platform/workspace/common/editSessions.js';
-import { ExtHostContext, ExtHostWorkspaceShape } from '../common/extHost.protocol.js';
-import { WorkspaceFolder } from '../../../platform/workspace/common/workspace.js';
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { localize } from "../../../nls.js";
+import { IInstantiationService } from "../../../platform/instantiation/common/instantiation.js";
+import { extHostCustomer, IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+import { IDisposable } from "../../../base/common/lifecycle.js";
+import { raceCancellationError } from "../../../base/common/async.js";
+import { IEditSessionIdentityCreateParticipant, IEditSessionIdentityService } from "../../../platform/workspace/common/editSessions.js";
+import { ExtHostContext, ExtHostWorkspaceShape } from "../common/extHost.protocol.js";
+import { WorkspaceFolder } from "../../../platform/workspace/common/workspace.js";
 
 class ExtHostEditSessionIdentityCreateParticipant implements IEditSessionIdentityCreateParticipant {
 
@@ -24,13 +24,22 @@ class ExtHostEditSessionIdentityCreateParticipant implements IEditSessionIdentit
 
 	async participate(workspaceFolder: WorkspaceFolder, token: CancellationToken): Promise<void> {
 		const p = new Promise<void>((resolve, reject) => {
-
-			setTimeout(
-				() => reject(new Error(localize('timeout.onWillCreateEditSessionIdentity', "Aborted onWillCreateEditSessionIdentity-event after 10000ms"))),
-				this.timeout
-			);
-			this._proxy.$onWillCreateEditSessionIdentity(workspaceFolder.uri, token, this.timeout).then(resolve, reject);
-		});
+      setTimeout(
+        () => reject(
+          new Error(
+            localize(
+              "timeout.onWillCreateEditSessionIdentity",
+              "Aborted onWillCreateEditSessionIdentity-event after 10000ms",
+            ),
+          ),
+        ),
+        this.timeout,
+      );
+      this._proxy.$onWillCreateEditSessionIdentity(workspaceFolder.uri, token, this.timeout).then(
+        resolve,
+        reject,
+      );
+    });
 
 		return raceCancellationError(p, token);
 	}
@@ -44,9 +53,14 @@ export class EditSessionIdentityCreateParticipant {
 	constructor(
 		extHostContext: IExtHostContext,
 		@IInstantiationService instantiationService: IInstantiationService,
-		@IEditSessionIdentityService private readonly _editSessionIdentityService: IEditSessionIdentityService
+		@IEditSessionIdentityService private readonly _editSessionIdentityService: IEditSessionIdentityService,
 	) {
-		this._saveParticipantDisposable = this._editSessionIdentityService.addEditSessionIdentityCreateParticipant(instantiationService.createInstance(ExtHostEditSessionIdentityCreateParticipant, extHostContext));
+		this._saveParticipantDisposable = this._editSessionIdentityService.addEditSessionIdentityCreateParticipant(
+      instantiationService.createInstance(
+        ExtHostEditSessionIdentityCreateParticipant,
+        extHostContext,
+      ),
+    );
 	}
 
 	dispose(): void {

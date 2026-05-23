@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { MCP } from './modelContextProtocol.js';
+import { MCP } from "./modelContextProtocol.js";
 
 type CallToolResult = MCP.CallToolResult;
 type ContentBlock = MCP.ContentBlock;
@@ -55,7 +55,7 @@ export namespace McpApps {
 
 	/** Custom notification used for bubbling up sandbox wheel events. */
 	export interface CustomSandboxWheelNotification {
-		method: 'ui/notifications/sandbox-wheel';
+		method: "ui/notifications/sandbox-wheel";
 		params: {
 			deltaMode: number;
 			deltaX: number;

@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../../../base/common/cancellation.js';
-import { isEqualOrParent } from '../../../../../../base/common/resources.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { type URI as ProtocolURI } from '../../../../../../platform/agentHost/common/state/protocol/state.js';
-import { type CustomizationRef } from '../../../../../../platform/agentHost/common/state/sessionState.js';
-import { AICustomizationSource, AICustomizationSources, BUILTIN_STORAGE } from '../../../common/aiCustomizationWorkspaceService.js';
-import { PromptsType } from '../../../common/promptSyntax/promptTypes.js';
-import { IPromptPath, IPromptsService, matchesSessionType, PromptsStorage } from '../../../common/promptSyntax/service/promptsService.js';
-import { type ICustomizationSyncProvider } from '../../../common/customizationHarnessService.js';
-import { IAgentPluginService } from '../../../common/plugins/agentPluginService.js';
-import type { SyncedCustomizationBundler } from './syncedCustomizationBundler.js';
+import { CancellationToken } from "../../../../../../base/common/cancellation.js";
+import { isEqualOrParent } from "../../../../../../base/common/resources.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { type URI as ProtocolURI } from "../../../../../../platform/agentHost/common/state/protocol/state.js";
+import { type CustomizationRef } from "../../../../../../platform/agentHost/common/state/sessionState.js";
+import { AICustomizationSource, AICustomizationSources, BUILTIN_STORAGE } from "../../../common/aiCustomizationWorkspaceService.js";
+import { PromptsType } from "../../../common/promptSyntax/promptTypes.js";
+import { IPromptPath, IPromptsService, matchesSessionType, PromptsStorage } from "../../../common/promptSyntax/service/promptsService.js";
+import { type ICustomizationSyncProvider } from "../../../common/customizationHarnessService.js";
+import { IAgentPluginService } from "../../../common/plugins/agentPluginService.js";
+import type { SyncedCustomizationBundler } from "./syncedCustomizationBundler.js";
 
 /**
  * Prompt types that participate in auto-sync to an agent host harness.
@@ -22,10 +22,10 @@ import type { SyncedCustomizationBundler } from './syncedCustomizationBundler.js
  * `hooks/hooks.json` (see {@link SyncedCustomizationBundler}).
  */
 export const SYNCABLE_PROMPT_TYPES: readonly PromptsType[] = [
-	PromptsType.agent,
-	PromptsType.skill,
-	PromptsType.instructions,
-	PromptsType.prompt,
+  PromptsType.agent,
+  PromptsType.skill,
+  PromptsType.instructions,
+  PromptsType.prompt,
 ];
 
 /**
@@ -34,8 +34,8 @@ export const SYNCABLE_PROMPT_TYPES: readonly PromptsType[] = [
  * instructions, and agents available as the local VS Code client.
  */
 export const SYNCABLE_STORAGE_SOURCES: readonly PromptsStorage[] = [
-	PromptsStorage.plugin,
-	PromptsStorage.extension,
+  PromptsStorage.plugin,
+  PromptsStorage.extension,
 ];
 
 export interface ILocalCustomizationFile {
@@ -70,20 +70,26 @@ export async function enumerateLocalCustomizationsForHarness(
 	const result: ILocalCustomizationFile[] = [];
 	for (const type of SYNCABLE_PROMPT_TYPES) {
 		const lists = await Promise.all(
-			SYNCABLE_STORAGE_SOURCES.map(storage => promptsService.listPromptFilesForStorage(type, storage, token)),
-		);
+      SYNCABLE_STORAGE_SOURCES.map(
+        storage => promptsService.listPromptFilesForStorage(
+          type,
+          storage,
+          token,
+        ),
+      ),
+    );
 		for (let i = 0; i < lists.length; i++) {
 			const source = SYNCABLE_STORAGE_SOURCES[i];
 			for (const file of lists[i]) {
 				if (matchesSessionType(file.sessionTypes, sessionType)) {
 					result.push({
-						uri: file.uri,
-						type,
-						source,
-						pluginUri: file.pluginUri,
-						extensionId: file.extension?.identifier.value,
-						disabled: syncProvider.isDisabled(file.uri),
-					});
+            uri: file.uri,
+            type,
+            source,
+            pluginUri: file.pluginUri,
+            extensionId: file.extension?.identifier.value,
+            disabled: syncProvider.isDisabled(file.uri),
+          });
 				}
 			}
 		}
@@ -98,21 +104,21 @@ export async function enumerateLocalCustomizationsForHarness(
 	let builtinSkills: readonly IPromptPath[] = [];
 	try {
 		builtinSkills = await promptsService.listPromptFilesForStorage(
-			PromptsType.skill,
-			BUILTIN_STORAGE as unknown as PromptsStorage,
-			token,
-		);
+      PromptsType.skill,
+      BUILTIN_STORAGE as unknown as PromptsStorage,
+      token,
+    );
 	} catch {
 		builtinSkills = [];
 	}
 	for (const file of builtinSkills) {
 		if (matchesSessionType(file.sessionTypes, sessionType)) {
 			result.push({
-				uri: file.uri,
-				type: PromptsType.skill,
-				source: BUILTIN_STORAGE,
-				disabled: syncProvider.isDisabled(file.uri),
-			});
+        uri: file.uri,
+        type: PromptsType.skill,
+        source: BUILTIN_STORAGE,
+        disabled: syncProvider.isDisabled(file.uri),
+      });
 		}
 	}
 
@@ -134,7 +140,12 @@ export async function resolveCustomizationRefs(
 	bundler: SyncedCustomizationBundler,
 	sessionType: string,
 ): Promise<CustomizationRef[]> {
-	const enumerated = await enumerateLocalCustomizationsForHarness(promptsService, syncProvider, sessionType, CancellationToken.None);
+	const enumerated = await enumerateLocalCustomizationsForHarness(
+    promptsService,
+    syncProvider,
+    sessionType,
+    CancellationToken.None,
+  );
 	const enabled = enumerated.filter(e => !e.disabled);
 	if (enabled.length === 0) {
 		return [];
@@ -155,7 +166,10 @@ export async function resolveCustomizationRefs(
 			}
 			const key = plugin.uri.toString();
 			if (!pluginRefs.has(key)) {
-				pluginRefs.set(key, { uri: key as ProtocolURI, displayName: plugin.label });
+				pluginRefs.set(key, {
+          uri: key as ProtocolURI,
+          displayName: plugin.label,
+        });
 			}
 		} else {
 			looseFiles.push({ uri: entry.uri, type: entry.type });

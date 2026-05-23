@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { importAMDNodeModule, resolveAmdNodeModulePath } from '../../../../amdX.js';
-import * as domSanitize from '../../../../base/browser/domSanitize.js';
-import { MarkdownSanitizerConfig } from '../../../../base/browser/markdownRenderer.js';
-import { CodeWindow } from '../../../../base/browser/window.js';
-import { Lazy } from '../../../../base/common/lazy.js';
-import type * as marked from '../../../../base/common/marked/marked.js';
-import { katexContainerLatexAttributeName, MarkedKatexExtension } from '../common/markedKatexExtension.js';
+import { importAMDNodeModule, resolveAmdNodeModulePath } from "../../../../amdX.js";
+import * as domSanitize from "../../../../base/browser/domSanitize.js";
+import { MarkdownSanitizerConfig } from "../../../../base/browser/markdownRenderer.js";
+import { CodeWindow } from "../../../../base/browser/window.js";
+import { Lazy } from "../../../../base/common/lazy.js";
+import type * as marked from "../../../../base/common/marked/marked.js";
+import { katexContainerLatexAttributeName, MarkedKatexExtension } from "../common/markedKatexExtension.js";
 
 export class MarkedKatexSupport {
 
@@ -22,32 +22,32 @@ export class MarkedKatexSupport {
 				override: [
 					...baseConfig.allowedTags,
 					...trustedMathMlTags,
-				]
+				],
 			},
 			allowedAttributes: {
 				override: [
 					...baseConfig.allowedAttributes,
 
 					// Math
-					'stretchy',
-					'encoding',
-					'accent',
+					"stretchy",
+					"encoding",
+					"accent",
 					katexContainerLatexAttributeName,
 
 					// SVG
-					'd',
-					'viewBox',
-					'preserveAspectRatio',
+					"d",
+					"viewBox",
+					"preserveAspectRatio",
 
 					// Allow all classes since we don't have a list of allowed katex classes
-					'class',
+					"class",
 
 					// Sanitize allowed styles for katex
 					{
-						attributeName: 'style',
+						attributeName: "style",
 						shouldKeep: (_el, data) => this.sanitizeKatexStyles(data.attrValue),
 					},
-				]
+				],
 			},
 		};
 	}
@@ -58,7 +58,7 @@ export class MarkedKatexSupport {
 		styleSheet.insertRule(`.temp{}`);
 		const rule = styleSheet.cssRules[0];
 		if (!(rule instanceof CSSStyleRule)) {
-			throw new Error('Invalid CSS rule');
+			throw new Error("Invalid CSS rule");
 		}
 		return rule.style;
 	});
@@ -81,59 +81,59 @@ export class MarkedKatexSupport {
 			}
 		}
 
-		return sanitizedProps.join('; ');
+		return sanitizedProps.join("; ");
 	}
 
 	private static sanitizeKatexStyles(styleString: string): string {
 		const allowedProperties = [
-			'display',
-			'position',
-			'font-family',
-			'font-style',
-			'font-weight',
-			'font-size',
-			'height',
-			'min-height',
-			'max-height',
-			'width',
-			'min-width',
-			'max-width',
-			'margin',
-			'margin-top',
-			'margin-right',
-			'margin-bottom',
-			'margin-left',
-			'padding',
-			'padding-top',
-			'padding-right',
-			'padding-bottom',
-			'padding-left',
-			'top',
-			'left',
-			'right',
-			'bottom',
-			'vertical-align',
-			'transform',
-			'border',
-			'border-top-width',
-			'border-right-width',
-			'border-bottom-width',
-			'border-left-width',
-			'color',
-			'white-space',
-			'text-align',
-			'line-height',
-			'float',
-			'clear',
-		];
+      "display",
+      "position",
+      "font-family",
+      "font-style",
+      "font-weight",
+      "font-size",
+      "height",
+      "min-height",
+      "max-height",
+      "width",
+      "min-width",
+      "max-width",
+      "margin",
+      "margin-top",
+      "margin-right",
+      "margin-bottom",
+      "margin-left",
+      "padding",
+      "padding-top",
+      "padding-right",
+      "padding-bottom",
+      "padding-left",
+      "top",
+      "left",
+      "right",
+      "bottom",
+      "vertical-align",
+      "transform",
+      "border",
+      "border-top-width",
+      "border-right-width",
+      "border-bottom-width",
+      "border-left-width",
+      "color",
+      "white-space",
+      "text-align",
+      "line-height",
+      "float",
+      "clear",
+    ];
 		return this.sanitizeStyles(styleString, allowedProperties);
 	}
 
-	private static _katex?: typeof import('katex').default;
+	private static _katex?: typeof import("katex").default;
 	private static _katexPromise = new Lazy(async () => {
-		this._katex = await importAMDNodeModule<typeof import('katex').default>('katex', 'dist/katex.min.js');
-		return this._katex;
-	});
+    this._katex = await importAMDNodeModule<typeof import("katex").default>("katex", "dist/katex.min.js");
+    return this._katex;
+  });
 
 	public static getExtension(window: CodeWindow, options: MarkedKatexExtension.MarkedKatexOptions = {}): marked.MarkedExtension | undefined {
 		if (!this._katex) {
@@ -153,88 +153,86 @@ export class MarkedKatexSupport {
 	public static ensureKatexStyles(window: CodeWindow) {
 		const doc = window.document;
 		// eslint-disable-next-line no-restricted-syntax
-		if (!doc.querySelector('link.katex')) {
-			const katexStyle = document.createElement('link');
-			katexStyle.classList.add('katex');
-			katexStyle.rel = 'stylesheet';
-			katexStyle.href = resolveAmdNodeModulePath('katex', 'dist/katex.min.css');
+		if (!doc.querySelector("link.katex")) {
+			const katexStyle = document.createElement("link");
+			katexStyle.classList.add("katex");
+			katexStyle.rel = "stylesheet";
+			katexStyle.href = resolveAmdNodeModulePath("katex", "dist/katex.min.css");
 			doc.head.appendChild(katexStyle);
 		}
 	}
 }
 
 const trustedMathMlTags = Object.freeze([
-	'semantics',
-	'annotation',
-	'math',
-	'menclose',
-	'merror',
-	'mfenced',
-	'mfrac',
-	'mglyph',
-	'mi',
-	'mlabeledtr',
-	'mmultiscripts',
-	'mn',
-	'mo',
-	'mover',
-	'mpadded',
-	'mphantom',
-	'mroot',
-	'mrow',
-	'ms',
-	'mspace',
-	'msqrt',
-	'mstyle',
-	'msub',
-	'msup',
-	'msubsup',
-	'mtable',
-	'mtd',
-	'mtext',
-	'mtr',
-	'munder',
-	'munderover',
-	'mprescripts',
-
-	// svg tags
-	'svg',
-	'altglyph',
-	'altglyphdef',
-	'altglyphitem',
-	'circle',
-	'clippath',
-	'defs',
-	'desc',
-	'ellipse',
-	'filter',
-	'font',
-	'g',
-	'glyph',
-	'glyphref',
-	'hkern',
-	'line',
-	'lineargradient',
-	'marker',
-	'mask',
-	'metadata',
-	'mpath',
-	'path',
-	'pattern',
-	'polygon',
-	'polyline',
-	'radialgradient',
-	'rect',
-	'stop',
-	'style',
-	'switch',
-	'symbol',
-	'text',
-	'textpath',
-	'title',
-	'tref',
-	'tspan',
-	'view',
-	'vkern',
+  "semantics",
+  "annotation",
+  "math",
+  "menclose",
+  "merror",
+  "mfenced",
+  "mfrac",
+  "mglyph",
+  "mi",
+  "mlabeledtr",
+  "mmultiscripts",
+  "mn",
+  "mo",
+  "mover",
+  "mpadded",
+  "mphantom",
+  "mroot",
+  "mrow",
+  "ms",
+  "mspace",
+  "msqrt",
+  "mstyle",
+  "msub",
+  "msup",
+  "msubsup",
+  "mtable",
+  "mtd",
+  "mtext",
+  "mtr",
+  "munder",
+  "munderover",
+  "mprescripts",
+  "svg",
+  "altglyph",
+  "altglyphdef",
+  "altglyphitem",
+  "circle",
+  "clippath",
+  "defs",
+  "desc",
+  "ellipse",
+  "filter",
+  "font",
+  "g",
+  "glyph",
+  "glyphref",
+  "hkern",
+  "line",
+  "lineargradient",
+  "marker",
+  "mask",
+  "metadata",
+  "mpath",
+  "path",
+  "pattern",
+  "polygon",
+  "polyline",
+  "radialgradient",
+  "rect",
+  "stop",
+  "style",
+  "switch",
+  "symbol",
+  "text",
+  "textpath",
+  "title",
+  "tref",
+  "tspan",
+  "view",
+  "vkern",
 ]);
 

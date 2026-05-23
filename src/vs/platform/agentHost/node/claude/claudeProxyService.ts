@@ -3,29 +3,29 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type Anthropic from '@anthropic-ai/sdk';
-import type { CCAModel } from '@vscode/copilot-api';
-import type * as http from 'http';
-import { once } from 'events';
-import { AddressInfo } from 'net';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../instantiation/common/instantiation.js';
-import { ILogService } from '../../../log/common/log.js';
+import type Anthropic from "@anthropic-ai/sdk";
+import type { CCAModel } from "@vscode/copilot-api";
+import type * as http from "http";
+import { once } from "events";
+import { AddressInfo } from "net";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { createDecorator } from "../../../instantiation/common/instantiation.js";
+import { ILogService } from "../../../log/common/log.js";
 import {
-	COPILOT_API_ERROR_STATUS_STREAMING,
-	CopilotApiError,
-	ICopilotApiService,
-	type ICopilotApiServiceRequestOptions,
-} from '../shared/copilotApiService.js';
-import { filterSupportedBetas } from './anthropicBetas.js';
+  COPILOT_API_ERROR_STATUS_STREAMING,
+  CopilotApiError,
+  ICopilotApiService,
+  type ICopilotApiServiceRequestOptions,
+} from "../shared/copilotApiService.js";
+import { filterSupportedBetas } from "./anthropicBetas.js";
 import {
-	buildErrorEnvelope,
-	formatSseErrorFrame,
-	writeJsonError,
-	writeUpstreamJsonError,
-} from './anthropicErrors.js';
-import { tryParseClaudeModelId } from './claudeModelId.js';
-import { parseProxyBearer } from './claudeProxyAuth.js';
+  buildErrorEnvelope,
+  formatSseErrorFrame,
+  writeJsonError,
+  writeUpstreamJsonError,
+} from "./anthropicErrors.js";
+import { tryParseClaudeModelId } from "./claudeModelId.js";
+import { parseProxyBearer } from "./claudeProxyAuth.js";
 
 // #region Public types
 
@@ -67,7 +67,9 @@ export interface IClaudeProxyService {
 	dispose(): void;
 }
 
-export const IClaudeProxyService = createDecorator<IClaudeProxyService>('claudeProxyService');
+export const IClaudeProxyService = createDecorator<IClaudeProxyService>(
+  "claudeProxyService",
+);
 
 // #endregion
 
@@ -102,9 +104,9 @@ interface IProxyRuntime {
 
 // #region Implementation
 
-const KNOWN_CLAUDE_VENDORS = new Set(['anthropic']);
-const ANTHROPIC_MESSAGES_ENDPOINT = '/v1/messages';
-const PROXY_USER_FACING_NAME = 'ClaudeProxyService';
+const KNOWN_CLAUDE_VENDORS = new Set(["anthropic"]);
+const ANTHROPIC_MESSAGES_ENDPOINT = "/v1/messages";
+const PROXY_USER_FACING_NAME = "ClaudeProxyService";
 
 /**
  * Build the 256-bit hex nonce embedded in the `Bearer <nonce>.<sessionId>`
@@ -114,9 +116,9 @@ const PROXY_USER_FACING_NAME = 'ClaudeProxyService';
 function generateNonce(): string {
 	const bytes = new Uint8Array(32);
 	crypto.getRandomValues(bytes);
-	let out = '';
+	let out = "";
 	for (let i = 0; i < bytes.length; i++) {
-		out += bytes[i].toString(16).padStart(2, '0');
+		out += bytes[i].toString(16).padStart(2, "0");
 	}
 	return out;
 }
@@ -146,7 +148,7 @@ export class ClaudeProxyService implements IClaudeProxyService {
 
 	async start(githubToken: string): Promise<IClaudeProxyHandle> {
 		if (this._disposed) {
-			throw new Error('ClaudeProxyService has been disposed');
+			throw new Error("ClaudeProxyService has been disposed");
 		}
 
 		const runtime = await this._ensureRuntime(githubToken);
@@ -156,7 +158,7 @@ export class ClaudeProxyService implements IClaudeProxyService {
 		// _ensureRuntime) — but a fresh start() in between is also
 		// possible, so verify the active runtime hasn't moved.
 		if (this._disposed || this._runtime !== runtime) {
-			throw new Error('ClaudeProxyService has been disposed');
+			throw new Error("ClaudeProxyService has been disposed");
 		}
 		// Late-binding token update covers the case where multiple
 		// concurrent callers awaited the same _ensureRuntime — last
@@ -212,7 +214,7 @@ export class ClaudeProxyService implements IClaudeProxyService {
 						// undefined, so close what we just created.
 						rt.server.closeAllConnections();
 						rt.server.close();
-						throw new Error('ClaudeProxyService has been disposed');
+						throw new Error("ClaudeProxyService has been disposed");
 					}
 					this._runtime = rt;
 					return rt;
@@ -259,48 +261,52 @@ export class ClaudeProxyService implements IClaudeProxyService {
 	private async _startServer(githubToken: string): Promise<IProxyRuntime> {
 		const nonce = generateNonce();
 		const inFlight = new Set<IInFlight>();
-		const httpModule = await import('http');
+		const httpModule = await import("http");
 		const server = httpModule.createServer();
 
 		await new Promise<void>((resolve, reject) => {
-			const onError = (err: Error) => { reject(err); };
-			server.once('error', onError);
-			server.listen(0, '127.0.0.1', () => {
-				server.removeListener('error', onError);
-				resolve();
-			});
-		});
+      const onError = (err: Error) => { reject(err); };
+      server.once("error", onError);
+      server.listen(0, "127.0.0.1", () => {
+        server.removeListener("error", onError);
+        resolve();
+      });
+    });
 
 		const address = server.address();
-		if (!address || typeof address === 'string') {
+		if (!address || typeof address === "string") {
 			server.close();
-			throw new Error(`${PROXY_USER_FACING_NAME} failed to bind: unexpected address ${String(address)}`);
+			throw new Error(
+        `${PROXY_USER_FACING_NAME} failed to bind: unexpected address ${String(address)}`,
+      );
 		}
 		const baseUrl = `http://127.0.0.1:${(address as AddressInfo).port}`;
-		this._logService.info(`[${PROXY_USER_FACING_NAME}] listening on ${baseUrl}`);
+		this._logService.info(
+      `[${PROXY_USER_FACING_NAME}] listening on ${baseUrl}`,
+    );
 
 		const runtime: IProxyRuntime = {
-			server,
-			baseUrl,
-			nonce,
-			inFlight,
-			githubToken,
-			refcount: 0,
-		};
+      server,
+      baseUrl,
+      nonce,
+      inFlight,
+      githubToken,
+      refcount: 0,
+    };
 
 		// Attach the request handler only after `runtime` is fully
 		// built. Node's single-threaded event loop guarantees no
 		// `request` event can be parsed and dispatched between
 		// `listen` resolving and this synchronous registration, so
 		// the handler can safely close over `runtime` as a `const`.
-		server.on('request', (req, res) => {
+		server.on("request", (req, res) => {
 			this._handleRequest(req, res, runtime).catch(err => {
 				// Last-resort safety net. All known throw paths are
 				// already handled inside `_handleRequest`.
 				this._logService.error(`[${PROXY_USER_FACING_NAME}] unhandled request error: ${stringifyError(err)}`);
 				if (!res.headersSent) {
 					try {
-						writeJsonError(res, 500, 'api_error', 'Internal proxy error');
+						writeJsonError(res, 500, "api_error", "Internal proxy error");
 					} catch {
 						// nothing else we can do
 					}
@@ -322,39 +328,54 @@ export class ClaudeProxyService implements IClaudeProxyService {
 		res: http.ServerResponse,
 		runtime: IProxyRuntime,
 	): Promise<void> {
-		const method = req.method ?? 'GET';
-		const pathname = new URL(req.url ?? '/', 'http://127.0.0.1').pathname;
+		const method = req.method ?? "GET";
+		const pathname = new URL(req.url ?? "/", "http://127.0.0.1").pathname;
 		this._logService.trace(`[${PROXY_USER_FACING_NAME}] ${method} ${pathname}`);
 
 		// Health check is the only unauthenticated route.
-		if (method === 'GET' && pathname === '/') {
-			res.writeHead(200, { 'Content-Type': 'text/plain' });
-			res.end('ok');
+		if (method === "GET" && pathname === "/") {
+			res.writeHead(200, { "Content-Type": "text/plain" });
+			res.end("ok");
 			return;
 		}
 
 		const auth = parseProxyBearer(req.headers, runtime.nonce);
 		if (!auth.valid) {
-			writeJsonError(res, 401, 'authentication_error', 'Invalid authentication');
+			writeJsonError(
+        res,
+        401,
+        "authentication_error",
+        "Invalid authentication",
+      );
 			return;
 		}
 
-		if (method === 'GET' && pathname === '/v1/models') {
+		if (method === "GET" && pathname === "/v1/models") {
 			await this._handleModels(res, runtime);
 			return;
 		}
 
-		if (method === 'POST' && pathname === '/v1/messages') {
+		if (method === "POST" && pathname === "/v1/messages") {
 			await this._handleMessages(req, res, runtime);
 			return;
 		}
 
-		if (method === 'POST' && pathname === '/v1/messages/count_tokens') {
-			writeJsonError(res, 501, 'api_error', 'count_tokens not supported by CAPI');
+		if (method === "POST" && pathname === "/v1/messages/count_tokens") {
+			writeJsonError(
+        res,
+        501,
+        "api_error",
+        "count_tokens not supported by CAPI",
+      );
 			return;
 		}
 
-		writeJsonError(res, 404, 'not_found_error', `No route for ${method} ${pathname}`);
+		writeJsonError(
+      res,
+      404,
+      "not_found_error",
+      `No route for ${method} ${pathname}`,
+    );
 	}
 
 	// #endregion
@@ -378,23 +399,23 @@ export class ClaudeProxyService implements IClaudeProxyService {
 			const parsed = tryParseClaudeModelId(m.id);
 			const sdkId = parsed ? parsed.toSdkModelId() : m.id;
 			data.push({
-				id: sdkId,
-				type: 'model',
-				display_name: m.name || sdkId,
-				created_at: '1970-01-01T00:00:00Z',
-				capabilities: null,
-				max_input_tokens: null,
-				max_tokens: null,
-			});
+        id: sdkId,
+        type: "model",
+        display_name: m.name || sdkId,
+        created_at: "1970-01-01T00:00:00Z",
+        capabilities: null,
+        max_input_tokens: null,
+        max_tokens: null,
+      });
 		}
 
 		const body = {
-			data,
-			has_more: false,
-			first_id: data.length > 0 ? data[0].id : null,
-			last_id: data.length > 0 ? data[data.length - 1].id : null,
-		};
-		res.writeHead(200, { 'Content-Type': 'application/json' });
+      data,
+      has_more: false,
+      first_id: data.length > 0 ? data[0].id : null,
+      last_id: data.length > 0 ? data[data.length - 1].id : null,
+    };
+		res.writeHead(200, { "Content-Type": "application/json" });
 		res.end(JSON.stringify(body));
 	}
 
@@ -411,7 +432,12 @@ export class ClaudeProxyService implements IClaudeProxyService {
 		try {
 			bodyString = await readRequestBody(req);
 		} catch (err) {
-			writeJsonError(res, 400, 'invalid_request_error', `Failed to read request body: ${stringifyError(err)}`);
+			writeJsonError(
+        res,
+        400,
+        "invalid_request_error",
+        `Failed to read request body: ${stringifyError(err)}`,
+      );
 			return;
 		}
 
@@ -419,28 +445,53 @@ export class ClaudeProxyService implements IClaudeProxyService {
 		try {
 			parsed = JSON.parse(bodyString);
 		} catch {
-			writeJsonError(res, 400, 'invalid_request_error', 'Request body is not valid JSON');
+			writeJsonError(
+        res,
+        400,
+        "invalid_request_error",
+        "Request body is not valid JSON",
+      );
 			return;
 		}
-		if (!parsed || typeof parsed !== 'object') {
-			writeJsonError(res, 400, 'invalid_request_error', 'Request body must be a JSON object');
+		if (!parsed || typeof parsed !== "object") {
+			writeJsonError(
+        res,
+        400,
+        "invalid_request_error",
+        "Request body must be a JSON object",
+      );
 			return;
 		}
 
 		const body = parsed as Record<string, unknown>;
 		const sdkModelId = body.model;
-		if (typeof sdkModelId !== 'string' || sdkModelId.length === 0) {
-			writeJsonError(res, 400, 'invalid_request_error', 'Missing required field: model');
+		if (typeof sdkModelId !== "string" || sdkModelId.length === 0) {
+			writeJsonError(
+        res,
+        400,
+        "invalid_request_error",
+        "Missing required field: model",
+      );
 			return;
 		}
 		if (!Array.isArray(body.messages)) {
-			writeJsonError(res, 400, 'invalid_request_error', 'Missing required field: messages');
+			writeJsonError(
+        res,
+        400,
+        "invalid_request_error",
+        "Missing required field: messages",
+      );
 			return;
 		}
 
 		const parsedModel = tryParseClaudeModelId(sdkModelId);
 		if (!parsedModel) {
-			writeJsonError(res, 404, 'not_found_error', `Unknown model: ${sdkModelId}`);
+			writeJsonError(
+        res,
+        404,
+        "not_found_error",
+        `Unknown model: ${sdkModelId}`,
+      );
 			return;
 		}
 		const endpointModelId = parsedModel.toEndpointModelId();
@@ -450,39 +501,39 @@ export class ClaudeProxyService implements IClaudeProxyService {
 		const headers = buildOutboundHeaders(req.headers);
 
 		const entry: IInFlight = {
-			ac: new AbortController(),
-			res,
-			clientGone: false,
-		};
+      ac: new AbortController(),
+      res,
+      clientGone: false,
+    };
 		runtime.inFlight.add(entry);
 		const onClose = () => {
 			entry.clientGone = true;
 			entry.ac.abort();
 		};
-		res.on('close', onClose);
+		res.on("close", onClose);
 
 		try {
 			if (stream) {
 				await this._streamMessages(
-					body as unknown as Anthropic.MessageCreateParamsStreaming,
-					headers,
-					res,
-					entry,
-					runtime,
-					sdkModelId,
-				);
+          body as unknown as Anthropic.MessageCreateParamsStreaming,
+          headers,
+          res,
+          entry,
+          runtime,
+          sdkModelId,
+        );
 			} else {
 				await this._sendNonStreamingMessage(
-					body as unknown as Anthropic.MessageCreateParamsNonStreaming,
-					headers,
-					res,
-					entry,
-					runtime,
-					sdkModelId,
-				);
+          body as unknown as Anthropic.MessageCreateParamsNonStreaming,
+          headers,
+          res,
+          entry,
+          runtime,
+          sdkModelId,
+        );
 			}
 		} finally {
-			res.removeListener('close', onClose);
+			res.removeListener("close", onClose);
 			runtime.inFlight.delete(entry);
 		}
 	}
@@ -495,10 +546,17 @@ export class ClaudeProxyService implements IClaudeProxyService {
 		runtime: IProxyRuntime,
 		originalSdkModelId: string,
 	): Promise<void> {
-		const options: ICopilotApiServiceRequestOptions = { headers, signal: entry.ac.signal };
+		const options: ICopilotApiServiceRequestOptions = {
+      headers,
+      signal: entry.ac.signal,
+    };
 		let message: Anthropic.Message;
 		try {
-			message = await this._copilotApiService.messages(runtime.githubToken, body, options);
+			message = await this._copilotApiService.messages(
+        runtime.githubToken,
+        body,
+        options,
+      );
 		} catch (err) {
 			if (entry.ac.signal.aborted) {
 				if (!entry.clientGone && !res.writableEnded) {
@@ -513,10 +571,16 @@ export class ClaudeProxyService implements IClaudeProxyService {
 		// Rewrite outbound `model` to SDK format. Failure to re-parse
 		// shouldn't normally happen because we just translated it on
 		// the way in, but log + passthrough rather than dropping.
-		const outboundModel = rewriteModelToSdk(message.model, this._logService) ?? originalSdkModelId;
-		const responseBody: Anthropic.Message = { ...message, model: outboundModel };
+		const outboundModel = rewriteModelToSdk(
+      message.model,
+      this._logService,
+    ) ?? originalSdkModelId;
+		const responseBody: Anthropic.Message = {
+      ...message,
+      model: outboundModel,
+    };
 
-		res.writeHead(200, { 'Content-Type': 'application/json' });
+		res.writeHead(200, { "Content-Type": "application/json" });
 		res.end(JSON.stringify(responseBody));
 	}
 
@@ -528,10 +592,17 @@ export class ClaudeProxyService implements IClaudeProxyService {
 		runtime: IProxyRuntime,
 		_originalSdkModelId: string,
 	): Promise<void> {
-		const options: ICopilotApiServiceRequestOptions = { headers, signal: entry.ac.signal };
+		const options: ICopilotApiServiceRequestOptions = {
+      headers,
+      signal: entry.ac.signal,
+    };
 		let stream: AsyncGenerator<Anthropic.MessageStreamEvent>;
 		try {
-			stream = this._copilotApiService.messages(runtime.githubToken, body, options);
+			stream = this._copilotApiService.messages(
+        runtime.githubToken,
+        body,
+        options,
+      );
 		} catch (err) {
 			// Synchronous throws from the generator factory (rare —
 			// CAPI errors come from the first iteration).
@@ -563,10 +634,10 @@ export class ClaudeProxyService implements IClaudeProxyService {
 
 		// Commit to streaming response now.
 		res.writeHead(200, {
-			'Content-Type': 'text/event-stream',
-			'Cache-Control': 'no-cache',
-			'Connection': 'keep-alive',
-		});
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      "Connection": "keep-alive",
+    });
 		res.flushHeaders();
 		req_setNoDelay(res);
 
@@ -576,7 +647,7 @@ export class ClaudeProxyService implements IClaudeProxyService {
 			const ok = res.write(frame);
 			if (!ok) {
 				try {
-					await once(res, 'drain', { signal: entry.ac.signal });
+					await once(res, "drain", { signal: entry.ac.signal });
 				} catch {
 					// signal aborted while waiting on drain — bail out
 					return false;
@@ -606,7 +677,7 @@ export class ClaudeProxyService implements IClaudeProxyService {
 					// Mid-stream error: emit Anthropic SSE error frame, then end.
 					const envelope = err instanceof CopilotApiError
 						? err.envelope
-						: buildErrorEnvelope('api_error', stringifyError(err));
+						: buildErrorEnvelope("api_error", stringifyError(err));
 					if (!res.writableEnded) {
 						try {
 							res.write(formatSseErrorFrame(envelope));
@@ -630,7 +701,9 @@ export class ClaudeProxyService implements IClaudeProxyService {
 			}
 		} catch (err) {
 			// Defense in depth — should not be reached.
-			this._logService.warn(`[${PROXY_USER_FACING_NAME}] stream loop unexpected error: ${stringifyError(err)}`);
+			this._logService.warn(
+        `[${PROXY_USER_FACING_NAME}] stream loop unexpected error: ${stringifyError(err)}`,
+      );
 			if (!res.writableEnded) {
 				try { res.end(); } catch { /* ignore */ }
 			}
@@ -645,7 +718,9 @@ export class ClaudeProxyService implements IClaudeProxyService {
 		if (res.headersSent) {
 			// Headers are already sent — caller should have routed to
 			// the SSE error path. This is a defensive log.
-			this._logService.warn(`[${PROXY_USER_FACING_NAME}] cannot write upstream error after headers sent: ${stringifyError(err)}`);
+			this._logService.warn(
+        `[${PROXY_USER_FACING_NAME}] cannot write upstream error after headers sent: ${stringifyError(err)}`,
+      );
 			if (!res.writableEnded) {
 				try { res.end(); } catch { /* ignore */ }
 			}
@@ -660,7 +735,12 @@ export class ClaudeProxyService implements IClaudeProxyService {
 			writeUpstreamJsonError(res, status, err.envelope);
 			return;
 		}
-		writeJsonError(res, 502, 'api_error', err instanceof Error ? err.message : String(err));
+		writeJsonError(
+      res,
+      502,
+      "api_error",
+      err instanceof Error ? err.message : String(err),
+    );
 	}
 
 	// #endregion
@@ -680,7 +760,9 @@ function isAnthropicMessagesModel(m: CCAModel): boolean {
 function rewriteModelToSdk(modelId: string, logService: ILogService): string | undefined {
 	const parsed = tryParseClaudeModelId(modelId);
 	if (!parsed) {
-		logService.warn(`[${PROXY_USER_FACING_NAME}] outbound model ID could not be parsed for SDK rewrite: ${modelId}`);
+		logService.warn(
+      `[${PROXY_USER_FACING_NAME}] outbound model ID could not be parsed for SDK rewrite: ${modelId}`,
+    );
 		return undefined;
 	}
 	return parsed.toSdkModelId();
@@ -696,7 +778,7 @@ function rewriteEventModel(
 	event: Anthropic.MessageStreamEvent,
 	logService: ILogService,
 ): Anthropic.MessageStreamEvent {
-	if (event.type !== 'message_start') {
+	if (event.type !== "message_start") {
 		return event;
 	}
 	const sdkModel = rewriteModelToSdk(event.message.model, logService);
@@ -704,9 +786,9 @@ function rewriteEventModel(
 		return event;
 	}
 	return {
-		...event,
-		message: { ...event.message, model: sdkModel },
-	};
+    ...event,
+    message: { ...event.message, model: sdkModel },
+  };
 }
 
 /**
@@ -717,15 +799,15 @@ function rewriteEventModel(
  */
 function buildOutboundHeaders(inbound: http.IncomingHttpHeaders): Record<string, string> {
 	const out: Record<string, string> = {};
-	const version = inbound['anthropic-version'];
-	if (typeof version === 'string' && version.length > 0) {
-		out['anthropic-version'] = version;
+	const version = inbound["anthropic-version"];
+	if (typeof version === "string" && version.length > 0) {
+		out["anthropic-version"] = version;
 	}
-	const beta = inbound['anthropic-beta'];
-	if (typeof beta === 'string' && beta.length > 0) {
+	const beta = inbound["anthropic-beta"];
+	if (typeof beta === "string" && beta.length > 0) {
 		const filtered = filterSupportedBetas(beta);
 		if (filtered !== undefined) {
-			out['anthropic-beta'] = filtered;
+			out["anthropic-beta"] = filtered;
 		}
 	}
 	return out;
@@ -733,16 +815,19 @@ function buildOutboundHeaders(inbound: http.IncomingHttpHeaders): Record<string,
 
 function readRequestBody(req: http.IncomingMessage): Promise<string> {
 	return new Promise((resolve, reject) => {
-		const chunks: Buffer[] = [];
-		req.on('data', chunk => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
-		req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
-		req.on('error', reject);
-	});
+    const chunks: Buffer[] = [];
+    req.on(
+      "data",
+      chunk => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)),
+    );
+    req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+    req.on("error", reject);
+  });
 }
 
 function req_setNoDelay(res: http.ServerResponse): void {
 	const socket = res.socket;
-	if (socket && typeof socket.setNoDelay === 'function') {
+	if (socket && typeof socket.setNoDelay === "function") {
 		try {
 			socket.setNoDelay(true);
 		} catch {

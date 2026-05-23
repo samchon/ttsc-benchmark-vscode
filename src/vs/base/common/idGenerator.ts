@@ -18,4 +18,4 @@ export class IdGenerator {
 	}
 }
 
-export const defaultGenerator = new IdGenerator('id#');
+export const defaultGenerator = new IdGenerator("id#");

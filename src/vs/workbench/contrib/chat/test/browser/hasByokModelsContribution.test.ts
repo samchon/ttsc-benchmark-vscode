@@ -3,30 +3,30 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { Emitter } from '../../../../../base/common/event.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { TestConfigurationService } from '../../../../../platform/configuration/test/common/testConfigurationService.js';
-import { ContextKeyService } from '../../../../../platform/contextkey/browser/contextKeyService.js';
-import { IContextKey, IContextKeyService } from '../../../../../platform/contextkey/common/contextkey.js';
-import { TestInstantiationService } from '../../../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { InMemoryStorageService, IStorageService, StorageScope, StorageTarget } from '../../../../../platform/storage/common/storage.js';
-import { ChatEntitlementContextKeys } from '../../../../services/chat/common/chatEntitlementService.js';
-import { IExtensionService } from '../../../../services/extensions/common/extensions.js';
-import { TestExtensionService } from '../../../../test/common/workbenchTestServices.js';
-import { HasByokModelsContribution } from '../../browser/hasByokModelsContribution.js';
-import { ChatContextKeys } from '../../common/actions/chatContextKeys.js';
-import { ChatConfiguration } from '../../common/constants.js';
-import { COPILOT_VENDOR_ID } from '../../common/languageModels.js';
-import { ILanguageModelsConfigurationService, ILanguageModelsProviderGroup } from '../../common/languageModelsConfiguration.js';
+import assert from "assert";
+import { Emitter } from "../../../../../base/common/event.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { TestConfigurationService } from "../../../../../platform/configuration/test/common/testConfigurationService.js";
+import { ContextKeyService } from "../../../../../platform/contextkey/browser/contextKeyService.js";
+import { IContextKey, IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { TestInstantiationService } from "../../../../../platform/instantiation/test/common/instantiationServiceMock.js";
+import { InMemoryStorageService, IStorageService, StorageScope, StorageTarget } from "../../../../../platform/storage/common/storage.js";
+import { ChatEntitlementContextKeys } from "../../../../services/chat/common/chatEntitlementService.js";
+import { IExtensionService } from "../../../../services/extensions/common/extensions.js";
+import { TestExtensionService } from "../../../../test/common/workbenchTestServices.js";
+import { HasByokModelsContribution } from "../../browser/hasByokModelsContribution.js";
+import { ChatContextKeys } from "../../common/actions/chatContextKeys.js";
+import { ChatConfiguration } from "../../common/constants.js";
+import { COPILOT_VENDOR_ID } from "../../common/languageModels.js";
+import { ILanguageModelsConfigurationService, ILanguageModelsProviderGroup } from "../../common/languageModelsConfiguration.js";
 
-suite('HasByokModelsContribution', () => {
+suite("HasByokModelsContribution", () => {
 
 	const disposables = ensureNoDisposablesAreLeakedInTestSuite();
 
-	type FakeProviderGroup = Pick<ILanguageModelsProviderGroup, 'vendor' | 'name'>;
+	type FakeProviderGroup = Pick<ILanguageModelsProviderGroup, "vendor" | "name">;
 
 	interface IScenarioOptions {
 		readonly groups?: readonly FakeProviderGroup[];
@@ -59,10 +59,10 @@ suite('HasByokModelsContribution', () => {
 			return this._groups as readonly ILanguageModelsProviderGroup[];
 		}
 
-		addLanguageModelsProviderGroup(): never { throw new Error('not implemented'); }
-		updateLanguageModelsProviderGroup(): never { throw new Error('not implemented'); }
-		removeLanguageModelsProviderGroup(): never { throw new Error('not implemented'); }
-		configureLanguageModels(): never { throw new Error('not implemented'); }
+		addLanguageModelsProviderGroup(): never { throw new Error("not implemented"); }
+		updateLanguageModelsProviderGroup(): never { throw new Error("not implemented"); }
+		removeLanguageModelsProviderGroup(): never { throw new Error("not implemented"); }
+		configureLanguageModels(): never { throw new Error("not implemented"); }
 
 		dispose(): void {
 			this._onDidChangeLanguageModelGroups.dispose();
@@ -91,7 +91,7 @@ suite('HasByokModelsContribution', () => {
 
 		const storage = store.add(new InMemoryStorageService());
 		if (options.storage?.lastKnown !== undefined) {
-			storage.store('chat.hasByokModels.lastKnown', options.storage.lastKnown, StorageScope.APPLICATION, StorageTarget.MACHINE);
+			storage.store("chat.hasByokModels.lastKnown", options.storage.lastKnown, StorageScope.APPLICATION, StorageTarget.MACHINE);
 		}
 
 		const configService = new FakeLanguageModelsConfigurationService();
@@ -123,14 +123,14 @@ suite('HasByokModelsContribution', () => {
 	function snapshot(scenario: IScenario, persistedDefault = false) {
 		return {
 			hasByokModels: scenario.hasByokModels.get(),
-			persistedLastKnown: scenario.storage.getBoolean('chat.hasByokModels.lastKnown', StorageScope.APPLICATION, persistedDefault),
+			persistedLastKnown: scenario.storage.getBoolean("chat.hasByokModels.lastKnown", StorageScope.APPLICATION, persistedDefault),
 		};
 	}
 
-	test('feature disabled (clientByokEnabled=false) → result is false', async () => {
+	test("feature disabled (clientByokEnabled=false) → result is false", async () => {
 		const store = disposables.add(new DisposableStore());
 		const scenario = createScenario(store, {
-			groups: [{ vendor: 'ollama', name: 'Ollama' }],
+			groups: [{ vendor: "ollama", name: "Ollama" }],
 			contextKeys: { clientByokEnabled: false },
 			storage: { lastKnown: true },
 		});
@@ -139,10 +139,10 @@ suite('HasByokModelsContribution', () => {
 		assert.deepStrictEqual(snapshot(scenario, true), { hasByokModels: false, persistedLastKnown: false });
 	});
 
-	test('feature disabled (aiDisabled=true) → result is false', async () => {
+	test("feature disabled (aiDisabled=true) → result is false", async () => {
 		const store = disposables.add(new DisposableStore());
 		const scenario = createScenario(store, {
-			groups: [{ vendor: 'ollama', name: 'Ollama' }],
+			groups: [{ vendor: "ollama", name: "Ollama" }],
 			configuration: { aiDisabled: true },
 			storage: { lastKnown: true },
 		});
@@ -151,10 +151,10 @@ suite('HasByokModelsContribution', () => {
 		assert.deepStrictEqual(snapshot(scenario, true), { hasByokModels: false, persistedLastKnown: false });
 	});
 
-	test('feature disabled (offlineByok=false) → result is false', async () => {
+	test("feature disabled (offlineByok=false) → result is false", async () => {
 		const store = disposables.add(new DisposableStore());
 		const scenario = createScenario(store, {
-			groups: [{ vendor: 'ollama', name: 'Ollama' }],
+			groups: [{ vendor: "ollama", name: "Ollama" }],
 			configuration: { offlineByok: false },
 			storage: { lastKnown: true },
 		});
@@ -163,10 +163,10 @@ suite('HasByokModelsContribution', () => {
 		assert.deepStrictEqual(snapshot(scenario, true), { hasByokModels: false, persistedLastKnown: false });
 	});
 
-	test('signal already on → result true and persisted', async () => {
+	test("signal already on → result true and persisted", async () => {
 		const store = disposables.add(new DisposableStore());
 		const scenario = createScenario(store, {
-			groups: [{ vendor: 'ollama', name: 'Ollama' }],
+			groups: [{ vendor: "ollama", name: "Ollama" }],
 			contextKeys: { nonCopilotUserSelectable: true },
 		});
 		await flush();
@@ -174,10 +174,10 @@ suite('HasByokModelsContribution', () => {
 		assert.deepStrictEqual(snapshot(scenario), { hasByokModels: true, persistedLastKnown: true });
 	});
 
-	test('optimistic restore: persisted true is preserved before signal flips', () => {
+	test("optimistic restore: persisted true is preserved before signal flips", () => {
 		const store = disposables.add(new DisposableStore());
 		const scenario = createScenario(store, {
-			groups: [{ vendor: 'ollama', name: 'Ollama' }],
+			groups: [{ vendor: "ollama", name: "Ollama" }],
 			storage: { lastKnown: true },
 		});
 
@@ -186,10 +186,10 @@ suite('HasByokModelsContribution', () => {
 		assert.strictEqual(scenario.hasByokModels.get(), true);
 	});
 
-	test('optimistic true preserved when extensions register and BYOK groups exist', async () => {
+	test("optimistic true preserved when extensions register and BYOK groups exist", async () => {
 		const store = disposables.add(new DisposableStore());
 		const scenario = createScenario(store, {
-			groups: [{ vendor: 'ollama', name: 'Ollama' }],
+			groups: [{ vendor: "ollama", name: "Ollama" }],
 			storage: { lastKnown: true },
 		});
 		await flush();
@@ -197,10 +197,10 @@ suite('HasByokModelsContribution', () => {
 		assert.deepStrictEqual(snapshot(scenario, true), { hasByokModels: true, persistedLastKnown: true });
 	});
 
-	test('optimistic true cleared when extensions register and there are no BYOK groups', async () => {
+	test("optimistic true cleared when extensions register and there are no BYOK groups", async () => {
 		const store = disposables.add(new DisposableStore());
 		const scenario = createScenario(store, {
-			groups: [{ vendor: COPILOT_VENDOR_ID, name: 'Copilot' }],
+			groups: [{ vendor: COPILOT_VENDOR_ID, name: "Copilot" }],
 			storage: { lastKnown: true },
 		});
 		await flush();
@@ -208,10 +208,10 @@ suite('HasByokModelsContribution', () => {
 		assert.deepStrictEqual(snapshot(scenario, true), { hasByokModels: false, persistedLastKnown: false });
 	});
 
-	test('signal flipping on later updates the persisted value', async () => {
+	test("signal flipping on later updates the persisted value", async () => {
 		const store = disposables.add(new DisposableStore());
 		const scenario = createScenario(store, {
-			groups: [{ vendor: 'ollama', name: 'Ollama' }],
+			groups: [{ vendor: "ollama", name: "Ollama" }],
 		});
 		await flush();
 		assert.deepStrictEqual(snapshot(scenario), { hasByokModels: false, persistedLastKnown: false });
@@ -222,10 +222,10 @@ suite('HasByokModelsContribution', () => {
 		assert.deepStrictEqual(snapshot(scenario), { hasByokModels: true, persistedLastKnown: true });
 	});
 
-	test('removing all BYOK groups at runtime → result false', async () => {
+	test("removing all BYOK groups at runtime → result false", async () => {
 		const store = disposables.add(new DisposableStore());
 		const scenario = createScenario(store, {
-			groups: [{ vendor: 'ollama', name: 'Ollama' }],
+			groups: [{ vendor: "ollama", name: "Ollama" }],
 			storage: { lastKnown: true },
 		});
 		await flush();
@@ -237,10 +237,10 @@ suite('HasByokModelsContribution', () => {
 		assert.deepStrictEqual(snapshot(scenario, true), { hasByokModels: false, persistedLastKnown: false });
 	});
 
-	test('toggling feature off then on respects current signal', async () => {
+	test("toggling feature off then on respects current signal", async () => {
 		const store = disposables.add(new DisposableStore());
 		const scenario = createScenario(store, {
-			groups: [{ vendor: 'ollama', name: 'Ollama' }],
+			groups: [{ vendor: "ollama", name: "Ollama" }],
 			contextKeys: { nonCopilotUserSelectable: true },
 		});
 		await flush();

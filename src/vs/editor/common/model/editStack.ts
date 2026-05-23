@@ -3,19 +3,30 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as nls from '../../../nls.js';
-import { onUnexpectedError } from '../../../base/common/errors.js';
-import { Selection } from '../core/selection.js';
-import { EndOfLineSequence, ICursorStateComputer, IValidEditOperation, ITextModel } from '../model.js';
-import { TextModel } from './textModel.js';
-import { IUndoRedoService, IResourceUndoRedoElement, UndoRedoElementType, IWorkspaceUndoRedoElement, UndoRedoGroup } from '../../../platform/undoRedo/common/undoRedo.js';
-import { URI } from '../../../base/common/uri.js';
-import { TextChange, compressConsecutiveTextChanges } from '../core/textChange.js';
-import * as buffer from '../../../base/common/buffer.js';
-import { IDisposable } from '../../../base/common/lifecycle.js';
-import { basename } from '../../../base/common/resources.js';
-import { ISingleEditOperation } from '../core/editOperation.js';
-import { EditSources, TextModelEditSource } from '../textModelEditSource.js';
+import * as nls from "../../../nls.js";
+import { onUnexpectedError } from "../../../base/common/errors.js";
+import { Selection } from "../core/selection.js";
+import {
+  EndOfLineSequence,
+  ICursorStateComputer,
+  IValidEditOperation,
+  ITextModel,
+} from "../model.js";
+import { TextModel } from "./textModel.js";
+import {
+  IUndoRedoService,
+  IResourceUndoRedoElement,
+  UndoRedoElementType,
+  IWorkspaceUndoRedoElement,
+  UndoRedoGroup,
+} from "../../../platform/undoRedo/common/undoRedo.js";
+import { URI } from "../../../base/common/uri.js";
+import { TextChange, compressConsecutiveTextChanges } from "../core/textChange.js";
+import * as buffer from "../../../base/common/buffer.js";
+import { IDisposable } from "../../../base/common/lifecycle.js";
+import { basename } from "../../../base/common/resources.js";
+import { ISingleEditOperation } from "../core/editOperation.js";
+import { EditSources, TextModelEditSource } from "../textModelEditSource.js";
 
 function uriGetComparisonKey(resource: URI): string {
 	return resource.toString();
@@ -27,14 +38,14 @@ export class SingleModelEditStackData {
 		const alternativeVersionId = model.getAlternativeVersionId();
 		const eol = getModelEOL(model);
 		return new SingleModelEditStackData(
-			alternativeVersionId,
-			alternativeVersionId,
-			eol,
-			eol,
-			beforeCursorState,
-			beforeCursorState,
-			[]
-		);
+      alternativeVersionId,
+      alternativeVersionId,
+      eol,
+      eol,
+      beforeCursorState,
+      beforeCursorState,
+      [],
+    );
 	}
 
 	constructor(
@@ -44,7 +55,7 @@ export class SingleModelEditStackData {
 		public afterEOL: EndOfLineSequence,
 		public readonly beforeCursorState: Selection[] | null,
 		public afterCursorState: Selection[] | null,
-		public changes: TextChange[]
+		public changes: TextChange[],
 	) { }
 
 	public append(model: ITextModel, textChanges: TextChange[], afterEOL: EndOfLineSequence, afterVersionId: number, afterCursorState: Selection[] | null): void {
@@ -61,12 +72,28 @@ export class SingleModelEditStackData {
 	}
 
 	private static _writeSelections(b: Uint8Array, selections: Selection[] | null, offset: number): number {
-		buffer.writeUInt32BE(b, (selections ? selections.length : 0), offset); offset += 4;
+		buffer.writeUInt32BE(
+      b,
+      (selections ? selections.length : 0),
+      offset,
+    ); offset += 4;
 		if (selections) {
 			for (const selection of selections) {
-				buffer.writeUInt32BE(b, selection.selectionStartLineNumber, offset); offset += 4;
-				buffer.writeUInt32BE(b, selection.selectionStartColumn, offset); offset += 4;
-				buffer.writeUInt32BE(b, selection.positionLineNumber, offset); offset += 4;
+				buffer.writeUInt32BE(
+          b,
+          selection.selectionStartLineNumber,
+          offset,
+        ); offset += 4;
+				buffer.writeUInt32BE(
+          b,
+          selection.selectionStartColumn,
+          offset,
+        ); offset += 4;
+				buffer.writeUInt32BE(
+          b,
+          selection.positionLineNumber,
+          offset,
+        ); offset += 4;
 				buffer.writeUInt32BE(b, selection.positionColumn, offset); offset += 4;
 			}
 		}
@@ -76,11 +103,21 @@ export class SingleModelEditStackData {
 	private static _readSelections(b: Uint8Array, offset: number, dest: Selection[]): number {
 		const count = buffer.readUInt32BE(b, offset); offset += 4;
 		for (let i = 0; i < count; i++) {
-			const selectionStartLineNumber = buffer.readUInt32BE(b, offset); offset += 4;
+			const selectionStartLineNumber = buffer.readUInt32BE(
+        b,
+        offset,
+      ); offset += 4;
 			const selectionStartColumn = buffer.readUInt32BE(b, offset); offset += 4;
 			const positionLineNumber = buffer.readUInt32BE(b, offset); offset += 4;
 			const positionColumn = buffer.readUInt32BE(b, offset); offset += 4;
-			dest.push(new Selection(selectionStartLineNumber, selectionStartColumn, positionLineNumber, positionColumn));
+			dest.push(
+        new Selection(
+          selectionStartLineNumber,
+          selectionStartColumn,
+          positionLineNumber,
+          positionColumn,
+        ),
+      );
 		}
 		return offset;
 	}
@@ -105,8 +142,16 @@ export class SingleModelEditStackData {
 		buffer.writeUInt32BE(b, this.afterVersionId, offset); offset += 4;
 		buffer.writeUInt8(b, this.beforeEOL, offset); offset += 1;
 		buffer.writeUInt8(b, this.afterEOL, offset); offset += 1;
-		offset = SingleModelEditStackData._writeSelections(b, this.beforeCursorState, offset);
-		offset = SingleModelEditStackData._writeSelections(b, this.afterCursorState, offset);
+		offset = SingleModelEditStackData._writeSelections(
+      b,
+      this.beforeCursorState,
+      offset,
+    );
+		offset = SingleModelEditStackData._writeSelections(
+      b,
+      this.afterCursorState,
+      offset,
+    );
 		buffer.writeUInt32BE(b, this.changes.length, offset); offset += 4;
 		for (const change of this.changes) {
 			offset = change.write(b, offset);
@@ -122,23 +167,31 @@ export class SingleModelEditStackData {
 		const beforeEOL = buffer.readUInt8(b, offset); offset += 1;
 		const afterEOL = buffer.readUInt8(b, offset); offset += 1;
 		const beforeCursorState: Selection[] = [];
-		offset = SingleModelEditStackData._readSelections(b, offset, beforeCursorState);
+		offset = SingleModelEditStackData._readSelections(
+      b,
+      offset,
+      beforeCursorState,
+    );
 		const afterCursorState: Selection[] = [];
-		offset = SingleModelEditStackData._readSelections(b, offset, afterCursorState);
+		offset = SingleModelEditStackData._readSelections(
+      b,
+      offset,
+      afterCursorState,
+    );
 		const changeCount = buffer.readUInt32BE(b, offset); offset += 4;
 		const changes: TextChange[] = [];
 		for (let i = 0; i < changeCount; i++) {
 			offset = TextChange.read(b, offset, changes);
 		}
 		return new SingleModelEditStackData(
-			beforeVersionId,
-			afterVersionId,
-			beforeEOL,
-			afterEOL,
-			beforeCursorState,
-			afterCursorState,
-			changes
-		);
+      beforeVersionId,
+      afterVersionId,
+      beforeEOL,
+      afterEOL,
+      beforeCursorState,
+      afterCursorState,
+      changes,
+    );
 	}
 }
 
@@ -166,15 +219,17 @@ export class SingleModelEditStackElement implements IResourceUndoRedoElement {
 		public readonly label: string,
 		public readonly code: string,
 		model: ITextModel,
-		beforeCursorState: Selection[] | null
+		beforeCursorState: Selection[] | null,
 	) {
 		this.model = model;
 		this._data = SingleModelEditStackData.create(model, beforeCursorState);
 	}
 
 	public toString(): string {
-		const data = (this._data instanceof SingleModelEditStackData ? this._data : SingleModelEditStackData.deserialize(this._data));
-		return data.changes.map(change => change.toString()).join(', ');
+		const data = (this._data instanceof SingleModelEditStackData ? this._data : SingleModelEditStackData.deserialize(
+      this._data,
+    ));
+		return data.changes.map(change => change.toString()).join(", ");
 	}
 
 	public matchesResource(resource: URI): boolean {
@@ -192,7 +247,13 @@ export class SingleModelEditStackElement implements IResourceUndoRedoElement {
 
 	public append(model: ITextModel, textChanges: TextChange[], afterEOL: EndOfLineSequence, afterVersionId: number, afterCursorState: Selection[] | null): void {
 		if (this._data instanceof SingleModelEditStackData) {
-			this._data.append(model, textChanges, afterEOL, afterVersionId, afterCursorState);
+			this._data.append(
+        model,
+        textChanges,
+        afterEOL,
+        afterVersionId,
+        afterCursorState,
+      );
 		}
 	}
 
@@ -217,7 +278,12 @@ export class SingleModelEditStackElement implements IResourceUndoRedoElement {
 			this._data = this._data.serialize();
 		}
 		const data = SingleModelEditStackData.deserialize(this._data);
-		this.model._applyUndo(data.changes, data.beforeEOL, data.beforeVersionId, data.beforeCursorState);
+		this.model._applyUndo(
+      data.changes,
+      data.beforeEOL,
+      data.beforeVersionId,
+      data.beforeCursorState,
+    );
 	}
 
 	public redo(): void {
@@ -229,7 +295,12 @@ export class SingleModelEditStackElement implements IResourceUndoRedoElement {
 			this._data = this._data.serialize();
 		}
 		const data = SingleModelEditStackData.deserialize(this._data);
-		this.model._applyRedo(data.changes, data.afterEOL, data.afterVersionId, data.afterCursorState);
+		this.model._applyRedo(
+      data.changes,
+      data.afterEOL,
+      data.afterVersionId,
+      data.afterCursorState,
+    );
 	}
 
 	public heapSize(): number {
@@ -251,13 +322,15 @@ export class MultiModelEditStackElement implements IWorkspaceUndoRedoElement {
 	private _delegate: IUndoRedoDelegate | null;
 
 	public get resources(): readonly URI[] {
-		return this._editStackElementsArr.map(editStackElement => editStackElement.resource);
+		return this._editStackElementsArr.map(
+      editStackElement => editStackElement.resource,
+    );
 	}
 
 	constructor(
 		public readonly label: string,
 		public readonly code: string,
-		editStackElements: SingleModelEditStackElement[]
+		editStackElements: SingleModelEditStackElement[],
 	) {
 		this._isOpen = true;
 		this._editStackElementsArr = editStackElements.slice(0);
@@ -316,7 +389,13 @@ export class MultiModelEditStackElement implements IWorkspaceUndoRedoElement {
 	public append(model: ITextModel, textChanges: TextChange[], afterEOL: EndOfLineSequence, afterVersionId: number, afterCursorState: Selection[] | null): void {
 		const key = uriGetComparisonKey(model.uri);
 		const editStackElement = this._editStackElementsMap.get(key)!;
-		editStackElement.append(model, textChanges, afterEOL, afterVersionId, afterCursorState);
+		editStackElement.append(
+      model,
+      textChanges,
+      afterEOL,
+      afterVersionId,
+      afterCursorState,
+    );
 	}
 
 	public close(): void {
@@ -357,9 +436,11 @@ export class MultiModelEditStackElement implements IWorkspaceUndoRedoElement {
 	public toString(): string {
 		const result: string[] = [];
 		for (const editStackElement of this._editStackElementsArr) {
-			result.push(`${basename(editStackElement.resource)}: ${editStackElement}`);
+			result.push(
+        `${basename(editStackElement.resource)}: ${editStackElement}`,
+      );
 		}
-		return `{${result.join(', ')}}`;
+		return `{${result.join(", ")}}`;
 	}
 }
 
@@ -367,7 +448,7 @@ export type EditStackElement = SingleModelEditStackElement | MultiModelEditStack
 
 function getModelEOL(model: ITextModel): EndOfLineSequence {
 	const eol = model.getEOL();
-	if (eol === '\n') {
+	if (eol === "\n") {
 		return EndOfLineSequence.LF;
 	} else {
 		return EndOfLineSequence.CRLF;
@@ -414,7 +495,12 @@ export class EditStack {
 		if (isEditStackElement(lastElement) && lastElement.canAppend(this._model)) {
 			return lastElement;
 		}
-		const newElement = new SingleModelEditStackElement(nls.localize('edit', "Typing"), 'undoredo.textBufferEdit', this._model, beforeCursorState);
+		const newElement = new SingleModelEditStackElement(
+      nls.localize("edit", "Typing"),
+      "undoredo.textBufferEdit",
+      this._model,
+      beforeCursorState,
+    );
 		this._undoRedoService.pushElement(newElement, group);
 		return newElement;
 	}
@@ -422,27 +508,56 @@ export class EditStack {
 	public pushEOL(eol: EndOfLineSequence): void {
 		const editStackElement = this._getOrCreateEditStackElement(null, undefined);
 		this._model.setEOL(eol);
-		editStackElement.append(this._model, [], getModelEOL(this._model), this._model.getAlternativeVersionId(), null);
+		editStackElement.append(
+      this._model,
+      [],
+      getModelEOL(this._model),
+      this._model.getAlternativeVersionId(),
+      null,
+    );
 	}
 
-	public pushEditOperation(beforeCursorState: Selection[] | null, editOperations: ISingleEditOperation[], cursorStateComputer: ICursorStateComputer | null, group?: UndoRedoGroup, reason: TextModelEditSource = EditSources.unknown({ name: 'pushEditOperation' })): Selection[] | null {
-		const editStackElement = this._getOrCreateEditStackElement(beforeCursorState, group);
-		const inverseEditOperations = this._model.applyEdits(editOperations, true, reason);
-		const afterCursorState = EditStack._computeCursorState(cursorStateComputer, inverseEditOperations);
-		const textChanges = inverseEditOperations.map((op, index) => ({ index: index, textChange: op.textChange }));
+	public pushEditOperation(beforeCursorState: Selection[] | null, editOperations: ISingleEditOperation[], cursorStateComputer: ICursorStateComputer | null, group?: UndoRedoGroup, reason: TextModelEditSource = EditSources.unknown(
+    { name: "pushEditOperation" },
+  )): Selection[] | null {
+		const editStackElement = this._getOrCreateEditStackElement(
+      beforeCursorState,
+      group,
+    );
+		const inverseEditOperations = this._model.applyEdits(
+      editOperations,
+      true,
+      reason,
+    );
+		const afterCursorState = EditStack._computeCursorState(
+      cursorStateComputer,
+      inverseEditOperations,
+    );
+		const textChanges = inverseEditOperations.map((op, index) => ({
+      index: index,
+      textChange: op.textChange,
+    }));
 		textChanges.sort((a, b) => {
 			if (a.textChange.oldPosition === b.textChange.oldPosition) {
 				return a.index - b.index;
 			}
 			return a.textChange.oldPosition - b.textChange.oldPosition;
 		});
-		editStackElement.append(this._model, textChanges.map(op => op.textChange), getModelEOL(this._model), this._model.getAlternativeVersionId(), afterCursorState);
+		editStackElement.append(
+      this._model,
+      textChanges.map(op => op.textChange),
+      getModelEOL(this._model),
+      this._model.getAlternativeVersionId(),
+      afterCursorState,
+    );
 		return afterCursorState;
 	}
 
 	private static _computeCursorState(cursorStateComputer: ICursorStateComputer | null, inverseEditOperations: IValidEditOperation[]): Selection[] | null {
 		try {
-			return cursorStateComputer ? cursorStateComputer(inverseEditOperations) : null;
+			return cursorStateComputer ? cursorStateComputer(
+        inverseEditOperations,
+      ) : null;
 		} catch (e) {
 			onUnexpectedError(e);
 			return null;

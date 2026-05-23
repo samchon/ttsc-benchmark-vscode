@@ -3,16 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createDecorator, IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { DisposableStore, IDisposable } from '../../../../base/common/lifecycle.js';
-import { ThemeColor } from '../../../../base/common/themables.js';
-import { Command } from '../../../../editor/common/languages.js';
-import { IMarkdownString } from '../../../../base/common/htmlContent.js';
-import { IManagedHoverTooltipHTMLElement, IManagedHoverTooltipMarkdownString } from '../../../../base/browser/ui/hover/hover.js';
-import { ColorIdentifier } from '../../../../platform/theme/common/colorRegistry.js';
-import { IAuxiliaryStatusbarPart, IStatusbarEntryContainer } from '../../../browser/parts/statusbar/statusbarPart.js';
+import { createDecorator, IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { DisposableStore, IDisposable } from "../../../../base/common/lifecycle.js";
+import { ThemeColor } from "../../../../base/common/themables.js";
+import { Command } from "../../../../editor/common/languages.js";
+import { IMarkdownString } from "../../../../base/common/htmlContent.js";
+import { IManagedHoverTooltipHTMLElement, IManagedHoverTooltipMarkdownString } from "../../../../base/browser/ui/hover/hover.js";
+import { ColorIdentifier } from "../../../../platform/theme/common/colorRegistry.js";
+import { IAuxiliaryStatusbarPart, IStatusbarEntryContainer } from "../../../browser/parts/statusbar/statusbarPart.js";
 
-export const IStatusbarService = createDecorator<IStatusbarService>('statusbarService');
+export const IStatusbarService = createDecorator<IStatusbarService>(
+  "statusbarService",
+);
 
 export interface IStatusbarService extends IStatusbarEntryContainer {
 
@@ -69,7 +71,7 @@ export interface IStatusbarEntryLocation {
 export function isStatusbarEntryLocation(thing: unknown): thing is IStatusbarEntryLocation {
 	const candidate = thing as IStatusbarEntryLocation | undefined;
 
-	return typeof candidate?.location?.id === 'string' && typeof candidate.alignment === 'number';
+	return typeof candidate?.location?.id === "string" && typeof candidate.alignment === "number";
 }
 
 export interface IStatusbarEntryPriority {
@@ -98,12 +100,14 @@ export interface IStatusbarEntryPriority {
 export function isStatusbarEntryPriority(thing: unknown): thing is IStatusbarEntryPriority {
 	const candidate = thing as IStatusbarEntryPriority | undefined;
 
-	return (typeof candidate?.primary === 'number' || isStatusbarEntryLocation(candidate?.primary)) && typeof candidate?.secondary === 'number';
+	return (typeof candidate?.primary === "number" || isStatusbarEntryLocation(
+    candidate?.primary,
+  )) && typeof candidate?.secondary === "number";
 }
 
 export const ShowTooltipCommand: Command = {
-	id: 'statusBar.entry.showTooltip',
-	title: ''
+  id: "statusBar.entry.showTooltip",
+  title: "",
 };
 
 export interface IStatusbarStyleOverride {
@@ -113,8 +117,15 @@ export interface IStatusbarStyleOverride {
 	readonly border?: ColorIdentifier;
 }
 
-export type StatusbarEntryKind = 'standard' | 'warning' | 'error' | 'prominent' | 'remote' | 'offline';
-export const StatusbarEntryKinds: StatusbarEntryKind[] = ['standard', 'warning', 'error', 'prominent', 'remote', 'offline'];
+export type StatusbarEntryKind = "standard" | "warning" | "error" | "prominent" | "remote" | "offline";
+export const StatusbarEntryKinds: StatusbarEntryKind[] = [
+  "standard",
+  "warning",
+  "error",
+  "prominent",
+  "remote",
+  "offline",
+];
 
 export type TooltipContent = string | IMarkdownString | HTMLElement | IManagedHoverTooltipMarkdownString | IManagedHoverTooltipHTMLElement;
 
@@ -196,7 +207,7 @@ export interface IStatusbarEntry {
 	 * Will enable a spinning icon in front of the text to indicate progress. When `true` is
 	 * specified, `loading` will be used.
 	 */
-	readonly showProgress?: boolean | 'loading' | 'syncing';
+	readonly showProgress?: boolean | "loading" | "syncing";
 
 	/**
 	 * The kind of status bar entry. This applies different colors to the entry.

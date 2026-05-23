@@ -3,24 +3,33 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { KeyCode, KeyMod } from '../../../../base/common/keyCodes.js';
-import { EditorContextKeys } from '../../../../editor/common/editorContextKeys.js';
-import * as nls from '../../../../nls.js';
-import { Action2, MenuId } from '../../../../platform/actions/common/actions.js';
-import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
-import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { KeybindingWeight } from '../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { Categories } from '../../../../platform/action/common/actionCommonCategories.js';
-import { IWebviewService, KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_ENABLED, KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_FOCUSED, KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_VISIBLE, IWebview } from '../../webview/browser/webview.js';
-import { WebviewEditor } from './webviewEditor.js';
-import { WebviewInput } from './webviewEditorInput.js';
-import { IEditorService } from '../../../services/editor/common/editorService.js';
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { EditorContextKeys } from "../../../../editor/common/editorContextKeys.js";
+import * as nls from "../../../../nls.js";
+import { Action2, MenuId } from "../../../../platform/actions/common/actions.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
+import {
+  IWebviewService,
+  KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_ENABLED,
+  KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_FOCUSED,
+  KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_VISIBLE,
+  IWebview,
+} from "../../webview/browser/webview.js";
+import { WebviewEditor } from "./webviewEditor.js";
+import { WebviewInput } from "./webviewEditorInput.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
 
-const webviewActiveContextKeyExpr = ContextKeyExpr.and(ContextKeyExpr.equals('activeEditor', WebviewEditor.ID), EditorContextKeys.focus.toNegated() /* https://github.com/microsoft/vscode/issues/58668 */)!;
+const webviewActiveContextKeyExpr = ContextKeyExpr.and(ContextKeyExpr.equals("activeEditor", WebviewEditor.ID), EditorContextKeys.focus.toNegated() /* https://github.com/microsoft/vscode/issues/58668 */)!;
 
 export class ShowWebViewEditorFindWidgetAction extends Action2 {
-	public static readonly ID = 'editor.action.webvieweditor.showFind';
-	public static readonly LABEL = nls.localize('editor.action.webvieweditor.showFind', "Show find");
+	public static readonly ID = "editor.action.webvieweditor.showFind";
+	public static readonly LABEL = nls.localize(
+    "editor.action.webvieweditor.showFind",
+    "Show find",
+  );
 
 	constructor() {
 		super({
@@ -29,8 +38,8 @@ export class ShowWebViewEditorFindWidgetAction extends Action2 {
 			keybinding: {
 				when: ContextKeyExpr.and(webviewActiveContextKeyExpr, KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_ENABLED),
 				primary: KeyMod.CtrlCmd | KeyCode.KeyF,
-				weight: KeybindingWeight.EditorContrib
-			}
+				weight: KeybindingWeight.EditorContrib,
+			},
 		});
 	}
 
@@ -40,8 +49,11 @@ export class ShowWebViewEditorFindWidgetAction extends Action2 {
 }
 
 export class HideWebViewEditorFindCommand extends Action2 {
-	public static readonly ID = 'editor.action.webvieweditor.hideFind';
-	public static readonly LABEL = nls.localize('editor.action.webvieweditor.hideFind', "Stop find");
+	public static readonly ID = "editor.action.webvieweditor.hideFind";
+	public static readonly LABEL = nls.localize(
+    "editor.action.webvieweditor.hideFind",
+    "Stop find",
+  );
 
 	constructor() {
 		super({
@@ -50,8 +62,8 @@ export class HideWebViewEditorFindCommand extends Action2 {
 			keybinding: {
 				when: ContextKeyExpr.and(webviewActiveContextKeyExpr, KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_VISIBLE),
 				primary: KeyCode.Escape,
-				weight: KeybindingWeight.EditorContrib
-			}
+				weight: KeybindingWeight.EditorContrib,
+			},
 		});
 	}
 
@@ -61,8 +73,11 @@ export class HideWebViewEditorFindCommand extends Action2 {
 }
 
 export class WebViewEditorFindNextCommand extends Action2 {
-	public static readonly ID = 'editor.action.webvieweditor.findNext';
-	public static readonly LABEL = nls.localize('editor.action.webvieweditor.findNext', 'Find next');
+	public static readonly ID = "editor.action.webvieweditor.findNext";
+	public static readonly LABEL = nls.localize(
+    "editor.action.webvieweditor.findNext",
+    "Find next",
+  );
 
 	constructor() {
 		super({
@@ -71,8 +86,8 @@ export class WebViewEditorFindNextCommand extends Action2 {
 			keybinding: {
 				when: ContextKeyExpr.and(webviewActiveContextKeyExpr, KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_FOCUSED),
 				primary: KeyCode.Enter,
-				weight: KeybindingWeight.EditorContrib
-			}
+				weight: KeybindingWeight.EditorContrib,
+			},
 		});
 	}
 
@@ -82,8 +97,11 @@ export class WebViewEditorFindNextCommand extends Action2 {
 }
 
 export class WebViewEditorFindPreviousCommand extends Action2 {
-	public static readonly ID = 'editor.action.webvieweditor.findPrevious';
-	public static readonly LABEL = nls.localize('editor.action.webvieweditor.findPrevious', 'Find previous');
+	public static readonly ID = "editor.action.webvieweditor.findPrevious";
+	public static readonly LABEL = nls.localize(
+    "editor.action.webvieweditor.findPrevious",
+    "Find previous",
+  );
 
 	constructor() {
 		super({
@@ -92,8 +110,8 @@ export class WebViewEditorFindPreviousCommand extends Action2 {
 			keybinding: {
 				when: ContextKeyExpr.and(webviewActiveContextKeyExpr, KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_FOCUSED),
 				primary: KeyMod.Shift | KeyCode.Enter,
-				weight: KeybindingWeight.EditorContrib
-			}
+				weight: KeybindingWeight.EditorContrib,
+			},
 		});
 	}
 
@@ -103,8 +121,11 @@ export class WebViewEditorFindPreviousCommand extends Action2 {
 }
 
 export class ReloadWebviewAction extends Action2 {
-	static readonly ID = 'workbench.action.webview.reloadWebviewAction';
-	static readonly LABEL = nls.localize2('refreshWebviewLabel', "Reload Webviews");
+	static readonly ID = "workbench.action.webview.reloadWebviewAction";
+	static readonly LABEL = nls.localize2(
+    "refreshWebviewLabel",
+    "Reload Webviews",
+  );
 
 	public constructor() {
 		super({
@@ -112,8 +133,8 @@ export class ReloadWebviewAction extends Action2 {
 			title: ReloadWebviewAction.LABEL,
 			category: Categories.Developer,
 			menu: [{
-				id: MenuId.CommandPalette
-			}]
+				id: MenuId.CommandPalette,
+			}],
 		});
 	}
 

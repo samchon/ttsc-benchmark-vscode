@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { renderAsPlaintext } from '../../../../../base/browser/markdownRenderer.js';
-import { IMarkdownString } from '../../../../../base/common/htmlContent.js';
-import { localize } from '../../../../../nls.js';
-import { IChatToolInvocation } from '../../common/chatService/chatService.js';
-import { IChatModel } from '../../common/model/chatModel.js';
+import { renderAsPlaintext } from "../../../../../base/browser/markdownRenderer.js";
+import { IMarkdownString } from "../../../../../base/common/htmlContent.js";
+import { localize } from "../../../../../nls.js";
+import { IChatToolInvocation } from "../../common/chatService/chatService.js";
+import { IChatModel } from "../../common/model/chatModel.js";
 
 export function getInProgressSessionDescription(chatModel: IChatModel): string | undefined {
 	const requests = chatModel.getRequests();
@@ -29,7 +29,7 @@ export function getInProgressSessionDescription(chatModel: IChatModel): string |
 
 	// Get the response parts to find tool invocations and progress messages
 	const responseParts = response.response.value;
-	let description: string | IMarkdownString | undefined = '';
+	let description: string | IMarkdownString | undefined = "";
 
 	for (let i = responseParts.length - 1; i >= 0; i--) {
 		const part = responseParts[i];
@@ -37,28 +37,37 @@ export function getInProgressSessionDescription(chatModel: IChatModel): string |
 			break;
 		}
 
-		if (part.kind === 'confirmation' && typeof part.message === 'string') {
+		if (part.kind === "confirmation" && typeof part.message === "string") {
 			description = part.message;
-		} else if (part.kind === 'toolInvocation') {
+		} else if (part.kind === "toolInvocation") {
 			const toolInvocation = part as IChatToolInvocation;
 			const state = toolInvocation.state.get();
 			description = toolInvocation.generatedTitle || toolInvocation.pastTenseMessage || toolInvocation.invocationMessage;
 			if (state.type === IChatToolInvocation.StateKind.WaitingForConfirmation) {
 				const confirmationTitle = state.confirmationMessages?.title;
-				const titleMessage = confirmationTitle && (typeof confirmationTitle === 'string'
+				const titleMessage = confirmationTitle && (typeof confirmationTitle === "string"
 					? confirmationTitle
 					: confirmationTitle.value);
-				const descriptionValue = typeof description === 'string' ? description : description.value;
-				description = titleMessage ?? localize('chat.sessions.description.waitingForConfirmation', "Waiting for confirmation: {0}", descriptionValue);
+				const descriptionValue = typeof description === "string" ? description : description.value;
+				description = titleMessage ?? localize(
+          "chat.sessions.description.waitingForConfirmation",
+          "Waiting for confirmation: {0}",
+          descriptionValue,
+        );
 			}
-		} else if (part.kind === 'toolInvocationSerialized') {
+		} else if (part.kind === "toolInvocationSerialized") {
 			description = part.invocationMessage;
-		} else if (part.kind === 'progressMessage') {
+		} else if (part.kind === "progressMessage") {
 			description = part.content;
-		} else if (part.kind === 'thinking') {
-			description = localize('chat.sessions.description.thinking', 'Thinking...');
+		} else if (part.kind === "thinking") {
+			description = localize(
+        "chat.sessions.description.thinking",
+        "Thinking...",
+      );
 		}
 	}
 
-	return description ? renderAsPlaintext(description, { useLinkFormatter: true }) : '';
+	return description ? renderAsPlaintext(description, {
+    useLinkFormatter: true,
+  }) : "";
 }

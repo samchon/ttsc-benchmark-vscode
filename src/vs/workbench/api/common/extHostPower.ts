@@ -3,11 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../base/common/event.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../platform/instantiation/common/instantiation.js';
-import { IExtHostRpcService } from './extHostRpcService.js';
-import { ExtHostPowerShape, MainContext, MainThreadPowerShape, PowerSaveBlockerType, PowerSystemIdleState, PowerThermalState } from './extHost.protocol.js';
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
+import {
+  ExtHostPowerShape,
+  MainContext,
+  MainThreadPowerShape,
+  PowerSaveBlockerType,
+  PowerSystemIdleState,
+  PowerThermalState,
+} from "./extHost.protocol.js";
 
 export class ExtHostPower extends Disposable implements ExtHostPowerShape {
 
@@ -22,13 +29,19 @@ export class ExtHostPower extends Disposable implements ExtHostPowerShape {
 	private readonly _onDidResume = this._register(new Emitter<void>());
 	readonly onDidResume: Event<void> = this._onDidResume.event;
 
-	private readonly _onDidChangeOnBatteryPower = this._register(new Emitter<boolean>());
+	private readonly _onDidChangeOnBatteryPower = this._register(
+    new Emitter<boolean>(),
+  );
 	readonly onDidChangeOnBatteryPower: Event<boolean> = this._onDidChangeOnBatteryPower.event;
 
-	private readonly _onDidChangeThermalState = this._register(new Emitter<PowerThermalState>());
+	private readonly _onDidChangeThermalState = this._register(
+    new Emitter<PowerThermalState>(),
+  );
 	readonly onDidChangeThermalState: Event<PowerThermalState> = this._onDidChangeThermalState.event;
 
-	private readonly _onDidChangeSpeedLimit = this._register(new Emitter<number>());
+	private readonly _onDidChangeSpeedLimit = this._register(
+    new Emitter<number>(),
+  );
 	readonly onDidChangeSpeedLimit: Event<number> = this._onDidChangeSpeedLimit.event;
 
 	private readonly _onWillShutdown = this._register(new Emitter<void>());
@@ -115,10 +128,10 @@ export class ExtHostPower extends Disposable implements ExtHostPowerShape {
 					disposed = true;
 					proxy.$stopPowerSaveBlocker(id);
 				}
-			}
+			},
 		};
 	}
 }
 
-export const IExtHostPower = createDecorator<IExtHostPower>('IExtHostPower');
+export const IExtHostPower = createDecorator<IExtHostPower>("IExtHostPower");
 export interface IExtHostPower extends ExtHostPower, ExtHostPowerShape { }

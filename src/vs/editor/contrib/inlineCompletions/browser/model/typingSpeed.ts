@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { sum } from '../../../../../base/common/arrays.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { ITextModel } from '../../../../common/model.js';
-import { IModelContentChangedEvent } from '../../../../common/textModelEvents.js';
+import { sum } from "../../../../../base/common/arrays.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { ITextModel } from "../../../../common/model.js";
+import { IModelContentChangedEvent } from "../../../../common/textModelEvents.js";
 
 interface TypingSession {
 	startTime: number;
@@ -55,7 +55,9 @@ export class TypingInterval extends Disposable {
 	constructor(private readonly _textModel: ITextModel) {
 		super();
 
-		this._register(this._textModel.onDidChangeContent(e => this._updateTypingSpeed(e)));
+		this._register(
+      this._textModel.onDidChangeContent(e => this._updateTypingSpeed(e)),
+    );
 	}
 
 	private _updateTypingSpeed(change: IModelContentChangedEvent): void {
@@ -74,15 +76,17 @@ export class TypingInterval extends Disposable {
 		// Start new session if none exists
 		if (!this._currentSession) {
 			this._currentSession = {
-				startTime: now,
-				endTime: now,
-				characterCount: 0
-			};
+        startTime: now,
+        endTime: now,
+        characterCount: 0,
+      };
 		}
 
 		// Update current session
 		this._currentSession.endTime = now;
-		this._currentSession.characterCount += this._getActualCharacterCount(change);
+		this._currentSession.characterCount += this._getActualCharacterCount(
+      change,
+    );
 
 		this._lastChangeTime = now;
 		this._cacheInvalidated = true;
@@ -121,10 +125,10 @@ export class TypingInterval extends Disposable {
 
 		// Handle different source types
 		switch (reason.metadata.source) {
-			case 'cursor': {
+			case "cursor": {
 				// Direct user input via cursor
 				const kind = reason.metadata.kind;
-				return kind === 'type' || kind === 'compositionType' || kind === 'compositionEnd';
+				return kind === "type" || kind === "compositionType" || kind === "compositionEnd";
 			}
 
 			default:
@@ -177,7 +181,9 @@ export class TypingInterval extends Disposable {
 
 		// First, try the standard window
 		const cutoffTime = Date.now() - TypingInterval.TYPING_SPEED_WINDOW_MS;
-		const recentSessions = sortedSessions.filter(session => session.endTime > cutoffTime);
+		const recentSessions = sortedSessions.filter(
+      session => session.endTime > cutoffTime,
+    );
 		const olderSessions = sortedSessions.splice(recentSessions.length);
 
 		let totalChars = sum(recentSessions.map(session => session.characterCount));
@@ -188,7 +194,9 @@ export class TypingInterval extends Disposable {
 			totalChars += olderSessions[i].characterCount;
 		}
 
-		const totalTime = sum(recentSessions.map(session => session.endTime - session.startTime));
+		const totalTime = sum(
+      recentSessions.map(session => session.endTime - session.startTime),
+    );
 		if (totalTime === 0 || totalChars <= 1) {
 			return { averageInterval: 0, characterCount: totalChars };
 		}
@@ -198,9 +206,9 @@ export class TypingInterval extends Disposable {
 		const avgMsBetweenKeystrokes = totalTime / keystrokeIntervals;
 
 		return {
-			averageInterval: Math.round(avgMsBetweenKeystrokes),
-			characterCount: totalChars
-		};
+      averageInterval: Math.round(avgMsBetweenKeystrokes),
+      characterCount: totalChars,
+    };
 	}
 
 	/**

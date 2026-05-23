@@ -3,21 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, DisposableMap } from '../../../../../base/common/lifecycle.js';
-import { derived, IObservable, IReader, observableSignal } from '../../../../../base/common/observable.js';
-import { KNOWN_AUTO_APPROVE_VALUES, SessionConfigKey } from '../../../../../platform/agentHost/common/sessionConfigKeys.js';
-import { narrowClaudePermissionMode } from '../../../../../platform/agentHost/common/claudeSessionConfigKeys.js';
-import { SessionConfigPropertySchema } from '../../../../../platform/agentHost/common/state/protocol/commands.js';
-import { ChatPermissionLevel, isChatPermissionLevel } from '../../../../../workbench/contrib/chat/common/constants.js';
-import { IPermissionPickerDelegate } from '../../copilotChatSessions/browser/permissionPicker.js';
-import { IAgentHostSessionsProvider, isAgentHostProvider } from '../../../../common/agentHostSessionsProvider.js';
-import { ISessionsProvider } from '../../../../services/sessions/common/sessionsProvider.js';
-import { ISessionsProvidersService } from '../../../../services/sessions/browser/sessionsProvidersService.js';
-import { ISessionsManagementService } from '../../../../services/sessions/common/sessionsManagement.js';
+import { Disposable, DisposableMap } from "../../../../../base/common/lifecycle.js";
+import { derived, IObservable, IReader, observableSignal } from "../../../../../base/common/observable.js";
+import { KNOWN_AUTO_APPROVE_VALUES, SessionConfigKey } from "../../../../../platform/agentHost/common/sessionConfigKeys.js";
+import { narrowClaudePermissionMode } from "../../../../../platform/agentHost/common/claudeSessionConfigKeys.js";
+import { SessionConfigPropertySchema } from "../../../../../platform/agentHost/common/state/protocol/commands.js";
+import { ChatPermissionLevel, isChatPermissionLevel } from "../../../../../workbench/contrib/chat/common/constants.js";
+import { IPermissionPickerDelegate } from "../../copilotChatSessions/browser/permissionPicker.js";
+import { IAgentHostSessionsProvider, isAgentHostProvider } from "../../../../common/agentHostSessionsProvider.js";
+import { ISessionsProvider } from "../../../../services/sessions/common/sessionsProvider.js";
+import { ISessionsProvidersService } from "../../../../services/sessions/browser/sessionsProvidersService.js";
+import { ISessionsManagementService } from "../../../../services/sessions/common/sessionsManagement.js";
 
-const REQUIRED_AUTO_APPROVE_VALUE = 'default';
-const REQUIRED_MODE_VALUE = 'interactive';
-const REQUIRED_PERMISSION_MODE_VALUE = 'default';
+const REQUIRED_AUTO_APPROVE_VALUE = "default";
+const REQUIRED_MODE_VALUE = "interactive";
+const REQUIRED_PERMISSION_MODE_VALUE = "default";
 
 /**
  * Returns `true` when an `autoApprove` session-config property uses the
@@ -31,7 +31,9 @@ const REQUIRED_PERMISSION_MODE_VALUE = 'default';
  * picker.
  */
 export function isWellKnownAutoApproveSchema(schema: SessionConfigPropertySchema): boolean {
-	if (schema.type !== 'string' || !Array.isArray(schema.enum) || schema.enum.length === 0) {
+	if (schema.type !== "string" || !Array.isArray(
+    schema.enum,
+  ) || schema.enum.length === 0) {
 		return false;
 	}
 	if (!schema.enum.includes(REQUIRED_AUTO_APPROVE_VALUE)) {
@@ -58,8 +60,12 @@ export function isWellKnownAutoApproveSchema(schema: SessionConfigPropertySchema
 export class AgentHostPermissionPickerDelegate extends Disposable implements IPermissionPickerDelegate {
 
 	/** Fires every time any agent-host provider's session config changes. */
-	private readonly _configChangedSignal = observableSignal('agentHostPermissionPicker.configChanged');
-	private readonly _providerSubscriptions = this._register(new DisposableMap<string>());
+	private readonly _configChangedSignal = observableSignal(
+    "agentHostPermissionPicker.configChanged",
+  );
+	private readonly _providerSubscriptions = this._register(
+    new DisposableMap<string>(),
+  );
 
 	readonly currentPermissionLevel: IObservable<ChatPermissionLevel>;
 	readonly isApplicable: IObservable<boolean>;
@@ -79,7 +85,10 @@ export class AgentHostPermissionPickerDelegate extends Disposable implements IPe
 			this._configChangedSignal.trigger(undefined);
 		}));
 
-		this.currentPermissionLevel = derived(this, reader => this._readLevel(reader));
+		this.currentPermissionLevel = derived(
+      this,
+      reader => this._readLevel(reader),
+    );
 		this.isApplicable = derived(this, reader => this._readIsWellKnown(reader));
 	}
 
@@ -111,7 +120,9 @@ export class AgentHostPermissionPickerDelegate extends Disposable implements IPe
 		if (!provider) {
 			return ChatPermissionLevel.Default;
 		}
-		const value = provider.getSessionConfig(session.sessionId)?.values[SessionConfigKey.AutoApprove];
+		const value = provider.getSessionConfig(
+      session.sessionId,
+    )?.values[SessionConfigKey.AutoApprove];
 		return isChatPermissionLevel(value) ? value : ChatPermissionLevel.Default;
 	}
 
@@ -125,7 +136,9 @@ export class AgentHostPermissionPickerDelegate extends Disposable implements IPe
 		if (!provider) {
 			return false;
 		}
-		const schema = provider.getSessionConfig(session.sessionId)?.schema.properties[SessionConfigKey.AutoApprove];
+		const schema = provider.getSessionConfig(
+      session.sessionId,
+    )?.schema.properties[SessionConfigKey.AutoApprove];
 		return !!schema && isWellKnownAutoApproveSchema(schema);
 	}
 
@@ -139,9 +152,12 @@ export class AgentHostPermissionPickerDelegate extends Disposable implements IPe
 			if (!isAgentHostProvider(provider) || this._providerSubscriptions.has(provider.id)) {
 				continue;
 			}
-			this._providerSubscriptions.set(provider.id, provider.onDidChangeSessionConfig(() => {
-				this._configChangedSignal.trigger(undefined);
-			}));
+			this._providerSubscriptions.set(
+        provider.id,
+        provider.onDidChangeSessionConfig(() => {
+          this._configChangedSignal.trigger(undefined);
+        }),
+      );
 		}
 	}
 }
@@ -156,7 +172,9 @@ export class AgentHostPermissionPickerDelegate extends Disposable implements IPe
  * per-property picker.
  */
 export function isWellKnownModeSchema(schema: SessionConfigPropertySchema): boolean {
-	if (schema.type !== 'string' || !Array.isArray(schema.enum) || schema.enum.length === 0) {
+	if (schema.type !== "string" || !Array.isArray(
+    schema.enum,
+  ) || schema.enum.length === 0) {
 		return false;
 	}
 	if (!schema.enum.includes(REQUIRED_MODE_VALUE)) {
@@ -170,11 +188,15 @@ export function isWellKnownModeSchema(schema: SessionConfigPropertySchema): bool
  * Claude SDK's well-known permission-mode value set and includes `default`.
  */
 export function isWellKnownClaudePermissionModeSchema(schema: SessionConfigPropertySchema): boolean {
-	if (schema.type !== 'string' || !Array.isArray(schema.enum) || schema.enum.length === 0) {
+	if (schema.type !== "string" || !Array.isArray(
+    schema.enum,
+  ) || schema.enum.length === 0) {
 		return false;
 	}
 	if (!schema.enum.includes(REQUIRED_PERMISSION_MODE_VALUE)) {
 		return false;
 	}
-	return schema.enum.every(value => narrowClaudePermissionMode(value) !== undefined);
+	return schema.enum.every(
+    value => narrowClaudePermissionMode(value) !== undefined,
+  );
 }

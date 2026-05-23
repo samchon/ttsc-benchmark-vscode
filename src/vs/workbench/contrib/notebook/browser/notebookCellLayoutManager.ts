@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DeferredPromise } from '../../../../base/common/async.js';
-import { Disposable, IDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { ICellViewModel } from './notebookBrowser.js';
-import { NotebookEditorWidget } from './notebookEditorWidget.js';
-import { INotebookCellList } from './view/notebookRenderingCommon.js';
-import * as DOM from '../../../../base/browser/dom.js';
-import { INotebookLoggingService } from '../common/notebookLoggingService.js';
+import { DeferredPromise } from "../../../../base/common/async.js";
+import { Disposable, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { ICellViewModel } from "./notebookBrowser.js";
+import { NotebookEditorWidget } from "./notebookEditorWidget.js";
+import { INotebookCellList } from "./view/notebookRenderingCommon.js";
+import * as DOM from "../../../../base/browser/dom.js";
+import { INotebookLoggingService } from "../common/notebookLoggingService.js";
 
 export class NotebookCellLayoutManager extends Disposable {
 	private _pendingLayouts: WeakMap<ICellViewModel, IDisposable> | null = new WeakMap<ICellViewModel, IDisposable>();
@@ -19,21 +19,23 @@ export class NotebookCellLayoutManager extends Disposable {
 	constructor(
 		private notebookWidget: NotebookEditorWidget,
 		private _list: INotebookCellList,
-		private loggingService: INotebookLoggingService
+		private loggingService: INotebookLoggingService,
 	) {
 		super();
 	}
 
 	private checkStackDepth() {
 		if (this._layoutStack.length > 30) {
-			const layoutTrace = this._layoutStack.join(' -> ');
-			throw new Error('NotebookCellLayoutManager: layout stack is too deep: ' + layoutTrace);
+			const layoutTrace = this._layoutStack.join(" -> ");
+			throw new Error(
+        "NotebookCellLayoutManager: layout stack is too deep: " + layoutTrace,
+      );
 		}
 	}
 
 	async layoutNotebookCell(cell: ICellViewModel, height: number): Promise<void> {
 		const layoutTag = `cell:${cell.handle}, height:${height}`;
-		this.loggingService.debug('cell layout', layoutTag);
+		this.loggingService.debug("cell layout", layoutTag);
 		const viewIndex = this._list.getViewIndex(cell);
 		if (viewIndex === undefined) {
 			// the cell is hidden
@@ -81,9 +83,15 @@ export class NotebookCellLayoutManager extends Disposable {
 					if (cellIndex !== undefined
 						&& visibleRanges && visibleRanges.length && visibleRanges[0].start === cellIndex
 						// cell is partially visible
-						&& this._list.scrollTop > this.notebookWidget.getAbsoluteTopOfElement(cell)
+						&& this._list.scrollTop > this.notebookWidget.getAbsoluteTopOfElement(
+              cell,
+            )
 					) {
-						return this._list.updateElementHeight2(cell, height, Math.min(cellIndex + 1, this.notebookWidget.getLength() - 1));
+						return this._list.updateElementHeight2(
+              cell,
+              height,
+              Math.min(cellIndex + 1, this.notebookWidget.getLength() - 1),
+            );
 					}
 				}
 
@@ -100,12 +108,15 @@ export class NotebookCellLayoutManager extends Disposable {
 		};
 
 		if (this._list.inRenderingTransaction) {
-			const layoutDisposable = DOM.scheduleAtNextAnimationFrame(DOM.getWindow(this.notebookWidget.getDomNode()), doLayout);
+			const layoutDisposable = DOM.scheduleAtNextAnimationFrame(
+        DOM.getWindow(this.notebookWidget.getDomNode()),
+        doLayout,
+      );
 
 			const disposable = toDisposable(() => {
-				layoutDisposable.dispose();
-				deferred.complete(undefined);
-			});
+        layoutDisposable.dispose();
+        deferred.complete(undefined);
+      });
 			this._pendingLayouts?.set(cell, disposable);
 			this._layoutDisposables.add(disposable);
 		} else {

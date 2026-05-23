@@ -3,16 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ExtensionIdentifier, ExtensionIdentifierMap, ExtensionIdentifierSet, IExtensionDescription } from '../../../../platform/extensions/common/extensions.js';
-import { Emitter } from '../../../../base/common/event.js';
-import * as path from '../../../../base/common/path.js';
-import { Disposable, IDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { promiseWithResolvers } from '../../../../base/common/async.js';
+import {
+  ExtensionIdentifier,
+  ExtensionIdentifierMap,
+  ExtensionIdentifierSet,
+  IExtensionDescription,
+} from "../../../../platform/extensions/common/extensions.js";
+import { Emitter } from "../../../../base/common/event.js";
+import * as path from "../../../../base/common/path.js";
+import { Disposable, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { promiseWithResolvers } from "../../../../base/common/async.js";
 
 export class DeltaExtensionsResult {
 	constructor(
 		public readonly versionId: number,
-		public readonly removedDueToLooping: IExtensionDescription[]
+		public readonly removedDueToLooping: IExtensionDescription[],
 	) { }
 }
 
@@ -33,12 +38,14 @@ export class ExtensionDescriptionRegistry extends Disposable implements IReadOnl
 			// I have this extension
 			return false;
 		}
-		const extensionDescription = globalRegistry.getExtensionDescription(extensionId);
+		const extensionDescription = globalRegistry.getExtensionDescription(
+      extensionId,
+    );
 		if (!extensionDescription) {
 			// unknown extension
 			return false;
 		}
-		if ((extensionDescription.main || extensionDescription.browser) && extensionDescription.api === 'none') {
+		if ((extensionDescription.main || extensionDescription.browser) && extensionDescription.api === "none") {
 			return true;
 		}
 		return false;
@@ -55,7 +62,7 @@ export class ExtensionDescriptionRegistry extends Disposable implements IReadOnl
 
 	constructor(
 		private readonly _activationEventsReader: IActivationEventsReader,
-		extensionDescriptions: IExtensionDescription[]
+		extensionDescriptions: IExtensionDescription[],
 	) {
 		super();
 		this._extensionDescriptions = extensionDescriptions;
@@ -73,14 +80,21 @@ export class ExtensionDescriptionRegistry extends Disposable implements IReadOnl
 		for (const extensionDescription of this._extensionDescriptions) {
 			if (this._extensionsMap.has(extensionDescription.identifier)) {
 				// No overwriting allowed!
-				console.error('Extension `' + extensionDescription.identifier.value + '` is already registered');
+				console.error(
+          "Extension `" + extensionDescription.identifier.value + "` is already registered",
+        );
 				continue;
 			}
 
-			this._extensionsMap.set(extensionDescription.identifier, extensionDescription);
+			this._extensionsMap.set(
+        extensionDescription.identifier,
+        extensionDescription,
+      );
 			this._extensionsArr.push(extensionDescription);
 
-			const activationEvents = this._activationEventsReader.readActivationEvents(extensionDescription);
+			const activationEvents = this._activationEventsReader.readActivationEvents(
+        extensionDescription,
+      );
 			for (const activationEvent of activationEvents) {
 				if (!this._activationMap.has(activationEvent)) {
 					this._activationMap.set(activationEvent, []);
@@ -96,21 +110,29 @@ export class ExtensionDescriptionRegistry extends Disposable implements IReadOnl
 		this._versionId++;
 		this._onDidChange.fire(undefined);
 		return {
-			versionId: this._versionId
-		};
+      versionId: this._versionId,
+    };
 	}
 
 	public deltaExtensions(toAdd: IExtensionDescription[], toRemove: ExtensionIdentifier[]): DeltaExtensionsResult {
 		// It is possible that an extension is removed, only to be added again at a different version
 		// so we will first handle removals
-		this._extensionDescriptions = removeExtensions(this._extensionDescriptions, toRemove);
+		this._extensionDescriptions = removeExtensions(
+      this._extensionDescriptions,
+      toRemove,
+    );
 
 		// Then, handle the extensions to add
 		this._extensionDescriptions = this._extensionDescriptions.concat(toAdd);
 
 		// Immediately remove looping extensions!
-		const looping = ExtensionDescriptionRegistry._findLoopingExtensions(this._extensionDescriptions);
-		this._extensionDescriptions = removeExtensions(this._extensionDescriptions, looping.map(ext => ext.identifier));
+		const looping = ExtensionDescriptionRegistry._findLoopingExtensions(
+      this._extensionDescriptions,
+    );
+		this._extensionDescriptions = removeExtensions(
+      this._extensionDescriptions,
+      looping.map(ext => ext.identifier),
+    );
 
 		this._initialize();
 		this._versionId++;
@@ -169,14 +191,19 @@ export class ExtensionDescriptionRegistry extends Disposable implements IReadOnl
 			descs.set(extensionDescription.identifier, extensionDescription);
 			if (extensionDescription.extensionDependencies) {
 				for (const depId of extensionDescription.extensionDependencies) {
-					G.addArc(ExtensionIdentifier.toKey(extensionDescription.identifier), ExtensionIdentifier.toKey(depId));
+					G.addArc(
+            ExtensionIdentifier.toKey(extensionDescription.identifier),
+            ExtensionIdentifier.toKey(depId),
+          );
 				}
 			}
 		}
 
 		// initialize with all extensions with no dependencies.
 		const good = new Set<string>();
-		G.getNodes().filter(id => G.getArcs(id).length === 0).forEach(id => good.add(id));
+		G.getNodes().filter(id => G.getArcs(id).length === 0).forEach(
+      id => good.add(id),
+    );
 
 		// all other extensions will be processed below.
 		const nodes = G.getNodes().filter(id => !good.has(id));
@@ -221,9 +248,9 @@ export class ExtensionDescriptionRegistry extends Disposable implements IReadOnl
 
 	public getSnapshot(): ExtensionDescriptionRegistrySnapshot {
 		return new ExtensionDescriptionRegistrySnapshot(
-			this._versionId,
-			this.getAllExtensionDescriptions()
-		);
+      this._versionId,
+      this.getAllExtensionDescriptions(),
+    );
 	}
 
 	public getExtensionDescription(extensionId: ExtensionIdentifier | string): IExtensionDescription | undefined {
@@ -251,7 +278,7 @@ export class ExtensionDescriptionRegistry extends Disposable implements IReadOnl
 export class ExtensionDescriptionRegistrySnapshot {
 	constructor(
 		public readonly versionId: number,
-		public readonly extensions: readonly IExtensionDescription[]
+		public readonly extensions: readonly IExtensionDescription[],
 	) { }
 }
 
@@ -275,7 +302,7 @@ export class LockableExtensionDescriptionRegistry implements IReadOnlyExtensionD
 
 	public deltaExtensions(acquiredLock: ExtensionDescriptionRegistryLock, toAdd: IExtensionDescription[], toRemove: ExtensionIdentifier[]): DeltaExtensionsResult {
 		if (!acquiredLock.isAcquiredFor(this)) {
-			throw new Error('Lock is not held');
+			throw new Error("Lock is not held");
 		}
 		return this._actual.deltaExtensions(toAdd, toRemove);
 	}
@@ -287,7 +314,9 @@ export class LockableExtensionDescriptionRegistry implements IReadOnlyExtensionD
 		return this._actual.containsExtension(extensionId);
 	}
 	public getExtensionDescriptionsForActivationEvent(activationEvent: string): IExtensionDescription[] {
-		return this._actual.getExtensionDescriptionsForActivationEvent(activationEvent);
+		return this._actual.getExtensionDescriptionsForActivationEvent(
+      activationEvent,
+    );
 	}
 	public getAllExtensionDescriptions(): IExtensionDescription[] {
 		return this._actual.getAllExtensionDescriptions();
@@ -312,7 +341,7 @@ export class ExtensionDescriptionRegistryLock extends Disposable {
 
 	constructor(
 		private readonly _registry: LockableExtensionDescriptionRegistry,
-		lock: IDisposable
+		lock: IDisposable,
 	) {
 		super();
 		this._register(lock);
@@ -328,7 +357,7 @@ class LockCustomer {
 	private readonly _resolve: (value: IDisposable) => void;
 
 	constructor(
-		public readonly name: string
+		public readonly name: string,
 	) {
 		const withResolvers = promiseWithResolvers<IDisposable>();
 		this.promise = withResolvers.promise;

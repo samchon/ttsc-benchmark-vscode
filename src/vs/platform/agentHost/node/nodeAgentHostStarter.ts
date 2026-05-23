@@ -3,17 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter } from '../../../base/common/event.js';
-import { Disposable, DisposableStore } from '../../../base/common/lifecycle.js';
-import { FileAccess, Schemas } from '../../../base/common/network.js';
-import { Client, IIPCOptions } from '../../../base/parts/ipc/node/ipc.cp.js';
-import { IConfigurationService } from '../../configuration/common/configuration.js';
-import { IEnvironmentService, INativeEnvironmentService } from '../../environment/common/environment.js';
-import { parseAgentHostDebugPort } from '../../environment/node/environmentService.js';
-import { ILogService } from '../../log/common/log.js';
-import { getResolvedShellEnv } from '../../shell/node/shellEnv.js';
-import { IAgentHostConnection, IAgentHostStarter } from '../common/agent.js';
-import { AgentHostClaudeAgentSdkPathSettingId, AgentHostClaudeSdkPathEnvVar, AgentHostOTelCaptureContentSettingId, AgentHostOTelDbSpanExporterEnabledSettingId, AgentHostOTelEnabledSettingId, AgentHostOTelExporterTypeSettingId, AgentHostOTelOtlpEndpointSettingId, AgentHostOTelOutfileSettingId, buildAgentHostOTelEnv } from '../common/agentService.js';
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable, DisposableStore } from "../../../base/common/lifecycle.js";
+import { FileAccess, Schemas } from "../../../base/common/network.js";
+import { Client, IIPCOptions } from "../../../base/parts/ipc/node/ipc.cp.js";
+import { IConfigurationService } from "../../configuration/common/configuration.js";
+import { IEnvironmentService, INativeEnvironmentService } from "../../environment/common/environment.js";
+import { parseAgentHostDebugPort } from "../../environment/node/environmentService.js";
+import { ILogService } from "../../log/common/log.js";
+import { getResolvedShellEnv } from "../../shell/node/shellEnv.js";
+import { IAgentHostConnection, IAgentHostStarter } from "../common/agent.js";
+import {
+  AgentHostClaudeAgentSdkPathSettingId,
+  AgentHostClaudeSdkPathEnvVar,
+  AgentHostOTelCaptureContentSettingId,
+  AgentHostOTelDbSpanExporterEnabledSettingId,
+  AgentHostOTelEnabledSettingId,
+  AgentHostOTelExporterTypeSettingId,
+  AgentHostOTelOtlpEndpointSettingId,
+  AgentHostOTelOutfileSettingId,
+  buildAgentHostOTelEnv,
+} from "../common/agentService.js";
 
 /**
  * Options for configuring the agent host WebSocket server in the child process.
@@ -67,20 +77,22 @@ export class NodeAgentHostStarter extends Disposable implements IAgentHostStarte
 		const shellEnv = await this._resolveShellEnv();
 
 		const env: Record<string, string> = {
-			...shellEnv as Record<string, string>,
-			VSCODE_ESM_ENTRYPOINT: 'vs/platform/agentHost/node/agentHostMain',
-			VSCODE_PIPE_LOGGING: 'true',
-			VSCODE_VERBOSE_LOGGING: 'true',
-		};
+      ...shellEnv as Record<string, string>,
+      VSCODE_ESM_ENTRYPOINT: "vs/platform/agentHost/node/agentHostMain",
+      VSCODE_PIPE_LOGGING: "true",
+      VSCODE_VERBOSE_LOGGING: "true",
+    };
 
 		// Gate optional providers via env vars consumed by `agentHostMain.ts`.
 		// The Claude agent is opt-in: enabled when the user points the SDK path
 		// setting at a locally-installed `@anthropic-ai/claude-agent-sdk` package,
 		// or when the env var is already set on the parent process (developer
 		// override). The SDK itself is intentionally not bundled with VS Code.
-		const claudeSdkPath = this._configurationService.getValue<string>(AgentHostClaudeAgentSdkPathSettingId)
+		const claudeSdkPath = this._configurationService.getValue<string>(
+      AgentHostClaudeAgentSdkPathSettingId,
+    )
 			|| process.env[AgentHostClaudeSdkPathEnvVar]
-			|| '';
+			|| "";
 		if (claudeSdkPath) {
 			env[AgentHostClaudeSdkPathEnvVar] = claudeSdkPath;
 		}
@@ -101,35 +113,40 @@ export class NodeAgentHostStarter extends Disposable implements IAgentHostStarte
 		// Forward WebSocket server configuration to the child process via env vars
 		if (this._wsConfig) {
 			if (this._wsConfig.port) {
-				env['VSCODE_AGENT_HOST_PORT'] = this._wsConfig.port;
+				env["VSCODE_AGENT_HOST_PORT"] = this._wsConfig.port;
 			}
 			if (this._wsConfig.socketPath) {
-				env['VSCODE_AGENT_HOST_SOCKET_PATH'] = this._wsConfig.socketPath;
+				env["VSCODE_AGENT_HOST_SOCKET_PATH"] = this._wsConfig.socketPath;
 			}
 			if (this._wsConfig.host) {
-				env['VSCODE_AGENT_HOST_HOST'] = this._wsConfig.host;
+				env["VSCODE_AGENT_HOST_HOST"] = this._wsConfig.host;
 			}
 			if (this._wsConfig.connectionToken) {
-				env['VSCODE_AGENT_HOST_CONNECTION_TOKEN'] = this._wsConfig.connectionToken;
+				env["VSCODE_AGENT_HOST_CONNECTION_TOKEN"] = this._wsConfig.connectionToken;
 			}
 		}
 
 		const args = [
-			'--type=agentHost',
-			'--logsPath', this._environmentService.logsHome.with({ scheme: Schemas.file }).fsPath,
-			'--user-data-dir', this._environmentService.userDataPath,
-		];
+      "--type=agentHost",
+      "--logsPath",
+      this._environmentService.logsHome.with({ scheme: Schemas.file }).fsPath,
+      "--user-data-dir",
+      this._environmentService.userDataPath,
+    ];
 		if (this._environmentService.disableTelemetry) {
-			args.push('--disable-telemetry');
+			args.push("--disable-telemetry");
 		}
 
 		const opts: IIPCOptions = {
-			serverName: 'Agent Host',
-			args,
-			env,
-		};
+      serverName: "Agent Host",
+      args,
+      env,
+    };
 
-		const agentHostDebug = parseAgentHostDebugPort(this._environmentService.args, this._environmentService.isBuilt);
+		const agentHostDebug = parseAgentHostDebugPort(
+      this._environmentService.args,
+      this._environmentService.isBuilt,
+    );
 		if (agentHostDebug) {
 			if (agentHostDebug.break && agentHostDebug.port) {
 				opts.debugBrk = agentHostDebug.port;
@@ -138,23 +155,34 @@ export class NodeAgentHostStarter extends Disposable implements IAgentHostStarte
 			}
 		}
 
-		const client = new Client(FileAccess.asFileUri('bootstrap-fork').fsPath, opts);
+		const client = new Client(
+      FileAccess.asFileUri("bootstrap-fork").fsPath,
+      opts,
+    );
 
 		const store = new DisposableStore();
 		store.add(client);
 
 		return {
-			client,
-			store,
-			onDidProcessExit: client.onDidProcessExit
-		};
+      client,
+      store,
+      onDidProcessExit: client.onDidProcessExit,
+    };
 	}
 
 	private async _resolveShellEnv(): Promise<typeof process.env> {
 		try {
-			return await getResolvedShellEnv(this._configurationService, this._logService, this._environmentService.args, process.env);
+			return await getResolvedShellEnv(
+        this._configurationService,
+        this._logService,
+        this._environmentService.args,
+        process.env,
+      );
 		} catch (error) {
-			this._logService.error('AgentHostStarter was unable to resolve shell environment', error);
+			this._logService.error(
+        "AgentHostStarter was unable to resolve shell environment",
+        error,
+      );
 			return {};
 		}
 	}

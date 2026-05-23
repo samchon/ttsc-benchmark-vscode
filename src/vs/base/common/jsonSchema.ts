@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export type JSONSchemaType = 'string' | 'number' | 'integer' | 'boolean' | 'null' | 'array' | 'object';
+export type JSONSchemaType = "string" | "number" | "integer" | "boolean" | "null" | "array" | "object";
 
 export interface IJSONSchema {
 	id?: string;
@@ -111,18 +111,18 @@ export type TypeFromJsonSchema<T> =
 
 	// Object with list of required properties.
 	// Values are required or optional based on `required` list.
-	: T extends { type: 'object'; properties: infer P; required: infer RequiredList }
+	: T extends { type: "object"; properties: infer P; required: infer RequiredList }
 	? {
 		[K in keyof P]: IsRequired<K, RequiredList> extends true ? TypeFromJsonSchema<P[K]> : TypeFromJsonSchema<P[K]> | undefined;
 	} & AdditionalPropertiesType<T>
 
 	// Object with no required properties.
 	// All values are optional
-	: T extends { type: 'object'; properties: infer P }
+	: T extends { type: "object"; properties: infer P }
 	? { [K in keyof P]: TypeFromJsonSchema<P[K]> | undefined } & AdditionalPropertiesType<T>
 
 	// Array
-	: T extends { type: 'array'; items: infer Items }
+	: T extends { type: "array"; items: infer Items }
 	? Items extends [...infer R]
 	// If items is an array, we treat it like a tuple
 	? { [K in keyof R]: TypeFromJsonSchema<Items[K]> }
@@ -139,7 +139,7 @@ export type TypeFromJsonSchema<T> =
 	// Primitive types
 	: T extends { type: infer Type }
 	// Basic type
-	? Type extends 'string' | 'number' | 'integer' | 'boolean' | 'null'
+	? Type extends "string" | "number" | "integer" | "boolean" | "null"
 	? SchemaPrimitiveTypeNameToType<Type>
 	// Union of primitive types
 	: Type extends [...infer R]
@@ -150,10 +150,10 @@ export type TypeFromJsonSchema<T> =
 	: never;
 
 type SchemaPrimitiveTypeNameToType<T> =
-	T extends 'string' ? string :
-	T extends 'number' | 'integer' ? number :
-	T extends 'boolean' ? boolean :
-	T extends 'null' ? null :
+	T extends "string" ? string :
+	T extends "number" | "integer" ? number :
+	T extends "boolean" ? boolean :
+	T extends "null" ? null :
 	never;
 
 type UnionOf<T> =
@@ -175,7 +175,7 @@ type IsRequired<K, RequiredList> =
 
 type AdditionalPropertiesType<Schema> =
 	Schema extends { additionalProperties: infer AP }
-	? AP extends false ? {} : { [key: string]: TypeFromJsonSchema<Schema['additionalProperties']> }
+	? AP extends false ? {} : { [key: string]: TypeFromJsonSchema<Schema["additionalProperties"]> }
 	: {};
 
 type MapSchemaToType<T> = T extends [infer First, ...infer Rest]
@@ -219,9 +219,9 @@ export function getCompressedContent(schema: IJSONSchema): string {
 		return JSON.stringify(schema);
 	}
 
-	let defNodeName = '$defs';
+	let defNodeName = "$defs";
 	while (schema.hasOwnProperty(defNodeName)) {
-		defNodeName += '_';
+		defNodeName += "_";
 	}
 
 	// used to collect all schemas that are later put in `$defs`. The index in the array is the id of the schema.
@@ -253,7 +253,7 @@ export function getCompressedContent(schema: IJSONSchema): string {
 		defStrings.push(`"_${i}":${stringify(definitions[i])}`);
 	}
 	if (defStrings.length) {
-		return `${str.substring(0, str.length - 1)},"${defNodeName}":{${defStrings.join(',')}}}`;
+		return `${str.substring(0, str.length - 1)},"${defNodeName}":{${defStrings.join(",")}}}`;
 	}
 	return str;
 }
@@ -261,14 +261,14 @@ export function getCompressedContent(schema: IJSONSchema): string {
 type IJSONSchemaRef = IJSONSchema | boolean;
 
 function isObject(thing: unknown): thing is object {
-	return typeof thing === 'object' && thing !== null;
+	return typeof thing === "object" && thing !== null;
 }
 
 /*
  * Traverse a JSON schema and visit each schema node
 */
 function traverseNodes(root: IJSONSchema, visit: (schema: IJSONSchema) => boolean) {
-	if (!root || typeof root !== 'object') {
+	if (!root || typeof root !== "object") {
 		return;
 	}
 	const collectEntries = (...entries: (IJSONSchemaRef | undefined)[]) => {
@@ -319,8 +319,26 @@ function traverseNodes(root: IJSONSchema, visit: (schema: IJSONSchema) => boolea
 	while (next) {
 		const visitChildern = visit(next);
 		if (visitChildern) {
-			collectEntries(next.additionalItems, next.additionalProperties, next.not, next.contains, next.propertyNames, next.if, next.then, next.else, next.unevaluatedItems, next.unevaluatedProperties);
-			collectMapEntries(next.definitions, next.$defs, next.properties, next.patternProperties, <IJSONSchemaMap>next.dependencies, next.dependentSchemas);
+			collectEntries(
+        next.additionalItems,
+        next.additionalProperties,
+        next.not,
+        next.contains,
+        next.propertyNames,
+        next.if,
+        next.then,
+        next.else,
+        next.unevaluatedItems,
+        next.unevaluatedProperties,
+      );
+			collectMapEntries(
+        next.definitions,
+        next.$defs,
+        next.properties,
+        next.patternProperties,
+        <IJSONSchemaMap>next.dependencies,
+        next.dependentSchemas,
+      );
 			collectArrayEntries(next.anyOf, next.allOf, next.oneOf, next.prefixItems);
 			collectEntryOrArrayEntries(next.items);
 		}

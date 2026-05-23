@@ -3,19 +3,30 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { getMediaMime } from '../../../../base/common/mime.js';
-import { isEqual } from '../../../../base/common/resources.js';
-import { URI } from '../../../../base/common/uri.js';
-import { VSBuffer } from '../../../../base/common/buffer.js';
-import { localize } from '../../../../nls.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { extractImagesFromChatRequest, extractImagesFromChatResponse, IChatExtractedImage } from '../common/chatImageExtraction.js';
-import { IChatRequestViewModel, IChatResponseViewModel, isRequestVM, isResponseVM } from '../common/model/chatViewModel.js';
-import { IChatWidgetService } from './chat.js';
+import { getMediaMime } from "../../../../base/common/mime.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { localize } from "../../../../nls.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import {
+  extractImagesFromChatRequest,
+  extractImagesFromChatResponse,
+  IChatExtractedImage,
+} from "../common/chatImageExtraction.js";
+import {
+  IChatRequestViewModel,
+  IChatResponseViewModel,
+  isRequestVM,
+  isResponseVM,
+} from "../common/model/chatViewModel.js";
+import { IChatWidgetService } from "./chat.js";
 
-export const IChatImageCarouselService = createDecorator<IChatImageCarouselService>('chatImageCarouselService');
+export const IChatImageCarouselService = createDecorator<IChatImageCarouselService>(
+  "chatImageCarouselService",
+);
 
 export interface IChatImageCarouselService {
 	readonly _serviceBrand: undefined;
@@ -89,7 +100,10 @@ export async function collectCarouselSections(
 			continue;
 		}
 
-		const { title: extractedTitle, images: responseImages } = await extractImagesFromChatResponse(item, async uri => VSBuffer.wrap(await readFile(uri)));
+		const { title: extractedTitle, images: responseImages } = await extractImagesFromChatResponse(
+      item,
+      async uri => VSBuffer.wrap(await readFile(uri)),
+    );
 
 		// Also collect images from the corresponding user request
 		const request = requestMap.get(item.requestId);
@@ -99,16 +113,16 @@ export async function collectCarouselSections(
 		const dedupedImages = deduplicateConsecutiveImages(allImages);
 		if (dedupedImages.length > 0) {
 			sections.push({
-				title: request?.messageText ?? extractedTitle,
-				images: dedupedImages.map(({ uri, name, mimeType, data, caption }) => ({ id: uri.toString(), name, mimeType, data: data.buffer, caption }))
-			});
+        title: request?.messageText ?? extractedTitle,
+        images: dedupedImages.map(({ uri, name, mimeType, data, caption }) => ({ id: uri.toString(), name, mimeType, data: data.buffer, caption })),
+      });
 		}
 	}
 
 	// Handle requests that have no response yet (e.g. pending requests with image attachments)
 	const respondedRequestIds = new Set(
-		items.filter(isResponseVM).map(r => r.requestId)
-	);
+    items.filter(isResponseVM).map(r => r.requestId),
+  );
 	for (const item of items) {
 		if (!isRequestVM(item) || respondedRequestIds.has(item.id)) {
 			continue;
@@ -117,9 +131,9 @@ export async function collectCarouselSections(
 		const dedupedImages = deduplicateConsecutiveImages(requestImages);
 		if (dedupedImages.length > 0) {
 			sections.push({
-				title: item.messageText,
-				images: dedupedImages.map(({ uri, name, mimeType, data, caption }) => ({ id: uri.toString(), name, mimeType, data: data.buffer, caption }))
-			});
+        title: item.messageText,
+        images: dedupedImages.map(({ uri, name, mimeType, data, caption }) => ({ id: uri.toString(), name, mimeType, data: data.buffer, caption })),
+      });
 		}
 	}
 
@@ -213,8 +227,11 @@ export function buildCollectionArgs(
 	clickedGlobalIndex: number,
 	sessionResource: URI,
 ): ICarouselCollectionArgs {
-	const collectionId = sessionResource.toString() + '_carousel';
-	const defaultTitle = localize('chatImageCarousel.allImages', "Conversation Images");
+	const collectionId = sessionResource.toString() + "_carousel";
+	const defaultTitle = localize(
+    "chatImageCarousel.allImages",
+    "Conversation Images",
+  );
 	return {
 		collection: {
 			id: collectionId,
@@ -231,14 +248,14 @@ export function buildCollectionArgs(
  * Builds the single-image arguments for the carousel command.
  */
 export function buildSingleImageArgs(resource: URI, data: Uint8Array): ICarouselSingleImageArgs {
-	const name = resource.path.split('/').pop() ?? 'image';
-	const mimeType = getMediaMime(resource.path) ?? getMediaMime(name) ?? 'image/png';
+	const name = resource.path.split("/").pop() ?? "image";
+	const mimeType = getMediaMime(resource.path) ?? getMediaMime(name) ?? "image/png";
 	return { name, mimeType, data, title: name };
 }
 
 //#endregion
 
-const CAROUSEL_COMMAND = 'workbench.action.chat.openImageInCarousel';
+const CAROUSEL_COMMAND = "workbench.action.chat.openImageInCarousel";
 
 export class ChatImageCarouselService implements IChatImageCarouselService {
 
@@ -258,9 +275,11 @@ export class ChatImageCarouselService implements IChatImageCarouselService {
 		}
 
 		const items = widget.viewModel.getItems().filter(
-			(item): item is IChatRequestViewModel | IChatResponseViewModel => isRequestVM(item) || isResponseVM(item)
-		);
-		const readFile = async (uri: URI) => (await this.fileService.readFile(uri)).value.buffer;
+      (item): item is IChatRequestViewModel | IChatResponseViewModel => isRequestVM(item) || isResponseVM(item),
+    );
+		const readFile = async (uri: URI) => (await this.fileService.readFile(
+      uri,
+    )).value.buffer;
 		const sections = await collectCarouselSections(items, readFile);
 		const clickedGlobalIndex = findClickedImageIndex(sections, resource, data);
 
@@ -269,7 +288,11 @@ export class ChatImageCarouselService implements IChatImageCarouselService {
 			return;
 		}
 
-		const args = buildCollectionArgs(sections, clickedGlobalIndex, widget.viewModel.sessionResource);
+		const args = buildCollectionArgs(
+      sections,
+      clickedGlobalIndex,
+      widget.viewModel.sessionResource,
+    );
 		await this.commandService.executeCommand(CAROUSEL_COMMAND, args);
 	}
 

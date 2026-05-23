@@ -4,18 +4,18 @@
  *--------------------------------------------------------------------------------------------*/
 
 
-import { RunOnceScheduler } from '../../../../base/common/async.js';
-import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { LRUCache } from '../../../../base/common/map.js';
-import { TernarySearchTree } from '../../../../base/common/ternarySearchTree.js';
-import { IPosition } from '../../../common/core/position.js';
-import { ITextModel } from '../../../common/model.js';
-import { CompletionItemKind, CompletionItemKinds } from '../../../common/languages.js';
-import { CompletionItem } from './suggest.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { IStorageService, StorageScope, StorageTarget, WillSaveStateReason } from '../../../../platform/storage/common/storage.js';
+import { RunOnceScheduler } from "../../../../base/common/async.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { LRUCache } from "../../../../base/common/map.js";
+import { TernarySearchTree } from "../../../../base/common/ternarySearchTree.js";
+import { IPosition } from "../../../common/core/position.js";
+import { ITextModel } from "../../../common/model.js";
+import { CompletionItemKind, CompletionItemKinds } from "../../../common/languages.js";
+import { CompletionItem } from "./suggest.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IStorageService, StorageScope, StorageTarget, WillSaveStateReason } from "../../../../platform/storage/common/storage.js";
 
 export abstract class Memory {
 
@@ -50,7 +50,7 @@ export abstract class Memory {
 export class NoMemory extends Memory {
 
 	constructor() {
-		super('first');
+		super("first");
 	}
 
 	memorize(model: ITextModel, pos: IPosition, item: CompletionItem): void {
@@ -75,7 +75,7 @@ export interface MemItem {
 export class LRUMemory extends Memory {
 
 	constructor() {
-		super('recentlyUsed');
+		super("recentlyUsed");
 	}
 
 	private _cache = new LRUCache<string, MemItem>(300, 0.66);
@@ -84,10 +84,10 @@ export class LRUMemory extends Memory {
 	memorize(model: ITextModel, pos: IPosition, item: CompletionItem): void {
 		const key = `${model.getLanguageId()}/${item.textLabel}`;
 		this._cache.set(key, {
-			touch: this._seq++,
-			type: item.completion.kind,
-			insertText: item.completion.insertText
-		});
+      touch: this._seq++,
+      type: item.completion.kind,
+      insertText: item.completion.insertText,
+    });
 	}
 
 	override select(model: ITextModel, pos: IPosition, items: CompletionItem[]): number {
@@ -96,7 +96,10 @@ export class LRUMemory extends Memory {
 			return 0;
 		}
 
-		const lineSuffix = model.getLineContent(pos.lineNumber).substr(pos.column - 10, pos.column - 1);
+		const lineSuffix = model.getLineContent(pos.lineNumber).substr(
+      pos.column - 10,
+      pos.column - 1,
+    );
 		if (/\s$/.test(lineSuffix)) {
 			return super.select(model, pos, items);
 		}
@@ -139,7 +142,9 @@ export class LRUMemory extends Memory {
 		const seq = 0;
 		for (const [key, value] of data) {
 			value.touch = seq;
-			value.type = typeof value.type === 'number' ? value.type : CompletionItemKinds.fromString(value.type);
+			value.type = typeof value.type === "number" ? value.type : CompletionItemKinds.fromString(
+        value.type,
+      );
 			this._cache.set(key, value);
 		}
 		this._seq = this._cache.size;
@@ -150,7 +155,7 @@ export class LRUMemory extends Memory {
 export class PrefixMemory extends Memory {
 
 	constructor() {
-		super('recentlyUsedByPrefix');
+		super("recentlyUsedByPrefix");
 	}
 
 	private _trie = TernarySearchTree.forStrings<MemItem>();
@@ -160,10 +165,10 @@ export class PrefixMemory extends Memory {
 		const { word } = model.getWordUntilPosition(pos);
 		const key = `${model.getLanguageId()}/${word}`;
 		this._trie.set(key, {
-			type: item.completion.kind,
-			insertText: item.completion.insertText,
-			touch: this._seq++
-		});
+      type: item.completion.kind,
+      insertText: item.completion.insertText,
+      touch: this._seq++,
+    });
 	}
 
 	override select(model: ITextModel, pos: IPosition, items: CompletionItem[]): number {
@@ -207,24 +212,26 @@ export class PrefixMemory extends Memory {
 		if (data.length > 0) {
 			this._seq = data[0][1].touch + 1;
 			for (const [key, value] of data) {
-				value.type = typeof value.type === 'number' ? value.type : CompletionItemKinds.fromString(value.type);
+				value.type = typeof value.type === "number" ? value.type : CompletionItemKinds.fromString(
+          value.type,
+        );
 				this._trie.set(key, value);
 			}
 		}
 	}
 }
 
-export type MemMode = 'first' | 'recentlyUsed' | 'recentlyUsedByPrefix';
+export type MemMode = "first" | "recentlyUsed" | "recentlyUsedByPrefix";
 
 export class SuggestMemoryService implements ISuggestMemoryService {
 
 	private static readonly _strategyCtors = new Map<MemMode, { new(): Memory }>([
-		['recentlyUsedByPrefix', PrefixMemory],
-		['recentlyUsed', LRUMemory],
-		['first', NoMemory]
-	]);
+    ["recentlyUsedByPrefix", PrefixMemory],
+    ["recentlyUsed", LRUMemory],
+    ["first", NoMemory],
+  ]);
 
-	private static readonly _storagePrefix = 'suggest/memories';
+	private static readonly _storagePrefix = "suggest/memories";
 
 	readonly _serviceBrand: undefined;
 
@@ -262,9 +269,9 @@ export class SuggestMemoryService implements ISuggestMemoryService {
 
 	private _withStrategy(model: ITextModel, pos: IPosition): Memory {
 
-		const mode = this._configService.getValue<MemMode>('editor.suggestSelection', {
+		const mode = this._configService.getValue<MemMode>("editor.suggestSelection", {
 			overrideIdentifier: model.getLanguageIdAtPosition(pos.lineNumber, pos.column),
-			resource: model.uri
+			resource: model.uri,
 		});
 
 		if (this._strategy?.name !== mode) {
@@ -274,9 +281,14 @@ export class SuggestMemoryService implements ISuggestMemoryService {
 			this._strategy = new ctor();
 
 			try {
-				const share = this._configService.getValue<boolean>('editor.suggest.shareSuggestSelections');
+				const share = this._configService.getValue<boolean>(
+          "editor.suggest.shareSuggestSelections",
+        );
 				const scope = share ? StorageScope.PROFILE : StorageScope.WORKSPACE;
-				const raw = this._storageService.get(`${SuggestMemoryService._storagePrefix}/${mode}`, scope);
+				const raw = this._storageService.get(
+          `${SuggestMemoryService._storagePrefix}/${mode}`,
+          scope,
+        );
 				if (raw) {
 					this._strategy.fromJSON(JSON.parse(raw));
 				}
@@ -290,16 +302,25 @@ export class SuggestMemoryService implements ISuggestMemoryService {
 
 	private _saveState() {
 		if (this._strategy) {
-			const share = this._configService.getValue<boolean>('editor.suggest.shareSuggestSelections');
+			const share = this._configService.getValue<boolean>(
+        "editor.suggest.shareSuggestSelections",
+      );
 			const scope = share ? StorageScope.PROFILE : StorageScope.WORKSPACE;
 			const raw = JSON.stringify(this._strategy);
-			this._storageService.store(`${SuggestMemoryService._storagePrefix}/${this._strategy.name}`, raw, scope, StorageTarget.MACHINE);
+			this._storageService.store(
+        `${SuggestMemoryService._storagePrefix}/${this._strategy.name}`,
+        raw,
+        scope,
+        StorageTarget.MACHINE,
+      );
 		}
 	}
 }
 
 
-export const ISuggestMemoryService = createDecorator<ISuggestMemoryService>('ISuggestMemories');
+export const ISuggestMemoryService = createDecorator<ISuggestMemoryService>(
+  "ISuggestMemories",
+);
 
 export interface ISuggestMemoryService {
 	readonly _serviceBrand: undefined;
@@ -307,4 +328,8 @@ export interface ISuggestMemoryService {
 	select(model: ITextModel, pos: IPosition, items: CompletionItem[]): number;
 }
 
-registerSingleton(ISuggestMemoryService, SuggestMemoryService, InstantiationType.Delayed);
+registerSingleton(
+  ISuggestMemoryService,
+  SuggestMemoryService,
+  InstantiationType.Delayed,
+);

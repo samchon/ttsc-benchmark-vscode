@@ -3,18 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ICodeEditor } from '../editorBrowser.js';
-import { TextEdit, WorkspaceEdit, WorkspaceEditMetadata, IWorkspaceFileEdit, WorkspaceFileEditOptions, IWorkspaceTextEdit } from '../../common/languages.js';
-import { createDecorator } from '../../../platform/instantiation/common/instantiation.js';
-import { IProgress, IProgressStep } from '../../../platform/progress/common/progress.js';
-import { IDisposable } from '../../../base/common/lifecycle.js';
-import { URI } from '../../../base/common/uri.js';
-import { isObject } from '../../../base/common/types.js';
-import { UndoRedoSource } from '../../../platform/undoRedo/common/undoRedo.js';
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { TextModelEditSource } from '../../common/textModelEditSource.js';
+import { ICodeEditor } from "../editorBrowser.js";
+import {
+  TextEdit,
+  WorkspaceEdit,
+  WorkspaceEditMetadata,
+  IWorkspaceFileEdit,
+  WorkspaceFileEditOptions,
+  IWorkspaceTextEdit,
+} from "../../common/languages.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { IProgress, IProgressStep } from "../../../platform/progress/common/progress.js";
+import { IDisposable } from "../../../base/common/lifecycle.js";
+import { URI } from "../../../base/common/uri.js";
+import { isObject } from "../../../base/common/types.js";
+import { UndoRedoSource } from "../../../platform/undoRedo/common/undoRedo.js";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { TextModelEditSource } from "../../common/textModelEditSource.js";
 
-export const IBulkEditService = createDecorator<IBulkEditService>('IWorkspaceEditService');
+export const IBulkEditService = createDecorator<IBulkEditService>(
+  "IWorkspaceEditService",
+);
 
 export class ResourceEdit {
 
@@ -30,7 +39,7 @@ export class ResourceEdit {
 			if (ResourceFileEdit.is(edit)) {
 				return ResourceFileEdit.lift(edit);
 			}
-			throw new Error('Unsupported edit');
+			throw new Error("Unsupported edit");
 		});
 	}
 }
@@ -50,7 +59,12 @@ export class ResourceTextEdit extends ResourceEdit implements IWorkspaceTextEdit
 		if (edit instanceof ResourceTextEdit) {
 			return edit;
 		} else {
-			return new ResourceTextEdit(edit.resource, edit.textEdit, edit.versionId, edit.metadata);
+			return new ResourceTextEdit(
+        edit.resource,
+        edit.textEdit,
+        edit.versionId,
+        edit.metadata,
+      );
 		}
 	}
 
@@ -79,7 +93,12 @@ export class ResourceFileEdit extends ResourceEdit implements IWorkspaceFileEdit
 		if (edit instanceof ResourceFileEdit) {
 			return edit;
 		} else {
-			return new ResourceFileEdit(edit.oldResource, edit.newResource, edit.options, edit.metadata);
+			return new ResourceFileEdit(
+        edit.oldResource,
+        edit.newResource,
+        edit.options,
+        edit.metadata,
+      );
 		}
 	}
 
@@ -87,7 +106,7 @@ export class ResourceFileEdit extends ResourceEdit implements IWorkspaceFileEdit
 		readonly oldResource: URI | undefined,
 		readonly newResource: URI | undefined,
 		readonly options: WorkspaceFileEditOptions = {},
-		metadata?: WorkspaceEditMetadata
+		metadata?: WorkspaceEditMetadata,
 	) {
 		super(metadata);
 	}

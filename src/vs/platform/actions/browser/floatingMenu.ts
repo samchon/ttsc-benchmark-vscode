@@ -3,16 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { $, append, clearNode } from '../../../base/browser/dom.js';
-import { Widget } from '../../../base/browser/ui/widget.js';
-import { IAction } from '../../../base/common/actions.js';
-import { Emitter } from '../../../base/common/event.js';
-import { Disposable, DisposableStore, toDisposable } from '../../../base/common/lifecycle.js';
-import { getFlatActionBarActions } from './menuEntryActionViewItem.js';
-import { IMenu, IMenuService, MenuId } from '../common/actions.js';
-import { IContextKeyService } from '../../contextkey/common/contextkey.js';
-import { IInstantiationService } from '../../instantiation/common/instantiation.js';
-import { asCssVariable, asCssVariableWithDefault, buttonBackground, buttonForeground, contrastBorder, editorBackground, editorForeground } from '../../theme/common/colorRegistry.js';
+import { $, append, clearNode } from "../../../base/browser/dom.js";
+import { Widget } from "../../../base/browser/ui/widget.js";
+import { IAction } from "../../../base/common/actions.js";
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable, DisposableStore, toDisposable } from "../../../base/common/lifecycle.js";
+import { getFlatActionBarActions } from "./menuEntryActionViewItem.js";
+import { IMenu, IMenuService, MenuId } from "../common/actions.js";
+import { IContextKeyService } from "../../contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../instantiation/common/instantiation.js";
+import {
+  asCssVariable,
+  asCssVariableWithDefault,
+  buttonBackground,
+  buttonForeground,
+  contrastBorder,
+  editorBackground,
+  editorForeground,
+} from "../../theme/common/colorRegistry.js";
 
 export class FloatingClickWidget extends Widget {
 
@@ -24,11 +32,11 @@ export class FloatingClickWidget extends Widget {
 	constructor(private label: string) {
 		super();
 
-		this._domNode = $('.floating-click-widget');
-		this._domNode.style.padding = '6px 11px';
-		this._domNode.style.borderRadius = '2px';
-		this._domNode.style.cursor = 'pointer';
-		this._domNode.style.zIndex = '1';
+		this._domNode = $(".floating-click-widget");
+		this._domNode.style.padding = "6px 11px";
+		this._domNode.style.borderRadius = "2px";
+		this._domNode.style.cursor = "pointer";
+		this._domNode.style.zIndex = "1";
 	}
 
 	getDomNode(): HTMLElement {
@@ -37,28 +45,38 @@ export class FloatingClickWidget extends Widget {
 
 	render() {
 		clearNode(this._domNode);
-		this._domNode.style.backgroundColor = asCssVariableWithDefault(buttonBackground, asCssVariable(editorBackground));
-		this._domNode.style.color = asCssVariableWithDefault(buttonForeground, asCssVariable(editorForeground));
+		this._domNode.style.backgroundColor = asCssVariableWithDefault(
+      buttonBackground,
+      asCssVariable(editorBackground),
+    );
+		this._domNode.style.color = asCssVariableWithDefault(
+      buttonForeground,
+      asCssVariable(editorForeground),
+    );
 		this._domNode.style.border = `1px solid ${asCssVariable(contrastBorder)}`;
 
-		append(this._domNode, $('')).textContent = this.label;
+		append(this._domNode, $("")).textContent = this.label;
 
 		this.onclick(this._domNode, () => this._onClick.fire());
 	}
 }
 
 export abstract class AbstractFloatingClickMenu extends Disposable {
-	private readonly renderEmitter = this._register(new Emitter<FloatingClickWidget>());
+	private readonly renderEmitter = this._register(
+    new Emitter<FloatingClickWidget>(),
+  );
 	protected get onDidRender() { return this.renderEmitter.event; }
 	private readonly menu: IMenu;
 
 	constructor(
 		menuId: MenuId,
 		@IMenuService menuService: IMenuService,
-		@IContextKeyService contextKeyService: IContextKeyService
+		@IContextKeyService contextKeyService: IContextKeyService,
 	) {
 		super();
-		this.menu = this._register(menuService.createMenu(menuId, contextKeyService));
+		this.menu = this._register(
+      menuService.createMenu(menuId, contextKeyService),
+    );
 	}
 
 	/** Should be called in implementation constructors after they initialized */
@@ -69,7 +87,12 @@ export abstract class AbstractFloatingClickMenu extends Disposable {
 			if (!this.isVisible()) {
 				return;
 			}
-			const actions = getFlatActionBarActions(this.menu.getActions({ renderShortTitle: true, shouldForwardArgs: true }));
+			const actions = getFlatActionBarActions(
+        this.menu.getActions({
+          renderShortTitle: true,
+          shouldForwardArgs: true,
+        }),
+      );
 			if (actions.length === 0) {
 				return;
 			}
@@ -108,14 +131,17 @@ export class FloatingClickMenu extends AbstractFloatingClickMenu {
 		},
 		@IInstantiationService private readonly instantiationService: IInstantiationService,
 		@IMenuService menuService: IMenuService,
-		@IContextKeyService contextKeyService: IContextKeyService
+		@IContextKeyService contextKeyService: IContextKeyService,
 	) {
 		super(options.menuId, menuService, contextKeyService);
 		this.render();
 	}
 
 	protected override createWidget(action: IAction, disposable: DisposableStore): FloatingClickWidget {
-		const w = this.instantiationService.createInstance(FloatingClickWidget, action.label);
+		const w = this.instantiationService.createInstance(
+      FloatingClickWidget,
+      action.label,
+    );
 		const node = w.getDomNode();
 		this.options.container.appendChild(node);
 		disposable.add(toDisposable(() => node.remove()));

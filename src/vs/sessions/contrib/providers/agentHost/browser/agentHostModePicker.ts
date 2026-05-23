@@ -3,25 +3,25 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../../base/browser/dom.js';
-import { renderIcon } from '../../../../../base/browser/ui/iconLabel/iconLabels.js';
-import { Gesture, EventType as TouchEventType } from '../../../../../base/browser/touch.js';
-import { Codicon } from '../../../../../base/common/codicons.js';
-import { Disposable, DisposableMap, DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { autorun } from '../../../../../base/common/observable.js';
-import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { localize } from '../../../../../nls.js';
-import { ActionListItemKind, IActionListDelegate, IActionListItem } from '../../../../../platform/actionWidget/browser/actionList.js';
-import { IActionWidgetService } from '../../../../../platform/actionWidget/browser/actionWidget.js';
-import { SessionConfigKey } from '../../../../../platform/agentHost/common/sessionConfigKeys.js';
-import { SessionConfigPropertySchema } from '../../../../../platform/agentHost/common/state/protocol/commands.js';
-import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
-import { type IAgentHostSessionsProvider, isAgentHostProvider } from '../../../../common/agentHostSessionsProvider.js';
-import { ISessionsProvidersService } from '../../../../services/sessions/browser/sessionsProvidersService.js';
-import { ISessionsManagementService } from '../../../../services/sessions/common/sessionsManagement.js';
-import { type ISessionsProvider } from '../../../../services/sessions/common/sessionsProvider.js';
-import { reportNewChatPickerClosed } from '../../../chat/browser/newChatPickerTelemetry.js';
-import { isWellKnownModeSchema } from './agentHostPermissionPickerDelegate.js';
+import * as dom from "../../../../../base/browser/dom.js";
+import { renderIcon } from "../../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { Gesture, EventType as TouchEventType } from "../../../../../base/browser/touch.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { Disposable, DisposableMap, DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { autorun } from "../../../../../base/common/observable.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { localize } from "../../../../../nls.js";
+import { ActionListItemKind, IActionListDelegate, IActionListItem } from "../../../../../platform/actionWidget/browser/actionList.js";
+import { IActionWidgetService } from "../../../../../platform/actionWidget/browser/actionWidget.js";
+import { SessionConfigKey } from "../../../../../platform/agentHost/common/sessionConfigKeys.js";
+import { SessionConfigPropertySchema } from "../../../../../platform/agentHost/common/state/protocol/commands.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
+import { type IAgentHostSessionsProvider, isAgentHostProvider } from "../../../../common/agentHostSessionsProvider.js";
+import { ISessionsProvidersService } from "../../../../services/sessions/browser/sessionsProvidersService.js";
+import { ISessionsManagementService } from "../../../../services/sessions/common/sessionsManagement.js";
+import { type ISessionsProvider } from "../../../../services/sessions/common/sessionsProvider.js";
+import { reportNewChatPickerClosed } from "../../../chat/browser/newChatPickerTelemetry.js";
+import { isWellKnownModeSchema } from "./agentHostPermissionPickerDelegate.js";
 
 export interface IAgentHostSessionEnumPickerItem {
 	readonly value: string;
@@ -31,9 +31,9 @@ export interface IAgentHostSessionEnumPickerItem {
 
 function getModeIcon(value: string | undefined): ThemeIcon | undefined {
 	switch (value) {
-		case 'plan': return Codicon.checklist;
-		case 'autopilot': return Codicon.rocket;
-		case 'interactive': return Codicon.comment;
+		case "plan": return Codicon.checklist;
+		case "autopilot": return Codicon.rocket;
+		case "interactive": return Codicon.comment;
 		default: return undefined;
 	}
 }
@@ -46,7 +46,9 @@ function getModeIcon(value: string | undefined): ThemeIcon | undefined {
 export abstract class AgentHostSessionEnumPicker extends Disposable {
 
 	private readonly _renderDisposables = this._register(new DisposableStore());
-	private readonly _providerListeners = this._register(new DisposableMap<string>());
+	private readonly _providerListeners = this._register(
+    new DisposableMap<string>(),
+  );
 	private _slotElement: HTMLElement | undefined;
 	protected _triggerElement: HTMLElement | undefined;
 
@@ -62,10 +64,12 @@ export abstract class AgentHostSessionEnumPicker extends Disposable {
 	) {
 		super();
 
-		this._register(autorun(reader => {
-			this._sessionsManagementService.activeSession.read(reader);
-			this._updateTrigger();
-		}));
+		this._register(
+      autorun(reader => {
+        this._sessionsManagementService.activeSession.read(reader);
+        this._updateTrigger();
+      }),
+    );
 
 		this._register(this._sessionsProvidersService.onDidChangeProviders(e => {
 			for (const provider of e.removed) {
@@ -80,25 +84,27 @@ export abstract class AgentHostSessionEnumPicker extends Disposable {
 	render(container: HTMLElement): void {
 		this._renderDisposables.clear();
 
-		const slot = dom.append(container, dom.$('.sessions-chat-picker-slot'));
+		const slot = dom.append(container, dom.$(".sessions-chat-picker-slot"));
 		this._renderDisposables.add({ dispose: () => slot.remove() });
 		this._slotElement = slot;
 
-		const trigger = dom.append(slot, dom.$('a.action-label'));
+		const trigger = dom.append(slot, dom.$("a.action-label"));
 		trigger.tabIndex = 0;
-		trigger.role = 'button';
+		trigger.role = "button";
 		this._triggerElement = trigger;
 
 		this._renderDisposables.add(Gesture.addTarget(trigger));
 		for (const eventType of [dom.EventType.CLICK, TouchEventType.Tap]) {
-			this._renderDisposables.add(dom.addDisposableListener(trigger, eventType, e => {
-				dom.EventHelper.stop(e, true);
-				this._showPicker();
-			}));
+			this._renderDisposables.add(
+        dom.addDisposableListener(trigger, eventType, e => {
+          dom.EventHelper.stop(e, true);
+          this._showPicker();
+        }),
+      );
 		}
 
 		this._renderDisposables.add(dom.addDisposableListener(trigger, dom.EventType.KEY_DOWN, e => {
-			if (e.key === 'Enter' || e.key === ' ') {
+			if (e.key === "Enter" || e.key === " ") {
 				dom.EventHelper.stop(e, true);
 				this._showPicker();
 			}
@@ -112,7 +118,10 @@ export abstract class AgentHostSessionEnumPicker extends Disposable {
 			if (!isAgentHostProvider(provider) || this._providerListeners.has(provider.id)) {
 				continue;
 			}
-			this._providerListeners.set(provider.id, provider.onDidChangeSessionConfig(() => this._updateTrigger()));
+			this._providerListeners.set(
+        provider.id,
+        provider.onDidChangeSessionConfig(() => this._updateTrigger()),
+      );
 		}
 	}
 
@@ -134,7 +143,9 @@ export abstract class AgentHostSessionEnumPicker extends Disposable {
 		if (!session) {
 			return false;
 		}
-		const provider = this._sessionsProvidersService.getProvider(session.providerId);
+		const provider = this._sessionsProvidersService.getProvider(
+      session.providerId,
+    );
 		if (!provider || !isAgentHostProvider(provider)) {
 			return false;
 		}
@@ -146,7 +157,9 @@ export abstract class AgentHostSessionEnumPicker extends Disposable {
 		if (!session) {
 			return undefined;
 		}
-		const rawProvider = this._sessionsProvidersService.getProvider(session.providerId);
+		const rawProvider = this._sessionsProvidersService.getProvider(
+      session.providerId,
+    );
 		if (!rawProvider || !isAgentHostProvider(rawProvider)) {
 			return undefined;
 		}
@@ -158,14 +171,23 @@ export abstract class AgentHostSessionEnumPicker extends Disposable {
 		const enumValues = schema.enum ?? [];
 		const enumLabels = schema.enumLabels ?? [];
 		const enumDescriptions = schema.enumDescriptions ?? [];
-		const items: IAgentHostSessionEnumPickerItem[] = enumValues.map((value, index) => ({
-			value,
-			label: enumLabels[index] ?? value,
-			description: enumDescriptions[index],
-		}));
+		const items: IAgentHostSessionEnumPickerItem[] = enumValues.map(
+      (value, index) => ({
+        value,
+        label: enumLabels[index] ?? value,
+        description: enumDescriptions[index],
+      }),
+    );
 		const rawCurrent = config?.values[this._property] ?? schema.default;
-		const currentValue = typeof rawCurrent === 'string' && enumValues.includes(rawCurrent) ? rawCurrent : enumValues[0] ?? '';
-		return { provider: rawProvider, sessionId: session.sessionId, currentValue, items };
+		const currentValue = typeof rawCurrent === "string" && enumValues.includes(
+      rawCurrent,
+    ) ? rawCurrent : enumValues[0] ?? "";
+		return {
+      provider: rawProvider,
+      sessionId: session.sessionId,
+      currentValue,
+      items,
+    };
 	}
 
 	private _updateTrigger(): void {
@@ -175,10 +197,10 @@ export abstract class AgentHostSessionEnumPicker extends Disposable {
 
 		const ctx = this._getActiveContext();
 		if (!ctx) {
-			this._slotElement.style.display = 'none';
+			this._slotElement.style.display = "none";
 			return;
 		}
-		this._slotElement.style.display = '';
+		this._slotElement.style.display = "";
 
 		dom.clearNode(this._triggerElement);
 
@@ -190,7 +212,10 @@ export abstract class AgentHostSessionEnumPicker extends Disposable {
 			dom.append(this._triggerElement, renderIcon(icon));
 		}
 
-		const labelSpan = dom.append(this._triggerElement, dom.$('span.sessions-chat-dropdown-label'));
+		const labelSpan = dom.append(
+      this._triggerElement,
+      dom.$("span.sessions-chat-dropdown-label"),
+    );
 		labelSpan.textContent = label;
 
 		this._triggerElement.ariaLabel = this._getTriggerAriaLabel(label);
@@ -199,8 +224,11 @@ export abstract class AgentHostSessionEnumPicker extends Disposable {
 		// round-trip so the chip keeps its label; toggling `.disabled`
 		// on the slot blocks pointer events (see chatWidget.css).
 		const isResolving = ctx.provider.isSessionConfigResolving(ctx.sessionId).get();
-		this._slotElement.classList.toggle('disabled', isResolving);
-		this._triggerElement.setAttribute('aria-disabled', isResolving ? 'true' : 'false');
+		this._slotElement.classList.toggle("disabled", isResolving);
+		this._triggerElement.setAttribute(
+      "aria-disabled",
+      isResolving ? "true" : "false",
+    );
 	}
 
 	protected _showPicker(): void {
@@ -217,13 +245,15 @@ export abstract class AgentHostSessionEnumPicker extends Disposable {
 		}
 
 		const triggerElement = this._triggerElement;
-		const actionItems: IActionListItem<IAgentHostSessionEnumPickerItem>[] = ctx.items.map(item => ({
-			kind: ActionListItemKind.Action,
-			label: item.label,
-			description: item.description,
-			group: { title: '', icon: this._getActionItemIcon(item, ctx.currentValue) },
-			item,
-		}));
+		const actionItems: IActionListItem<IAgentHostSessionEnumPickerItem>[] = ctx.items.map(
+      item => ({
+        kind: ActionListItemKind.Action,
+        label: item.label,
+        description: item.description,
+        group: { title: "", icon: this._getActionItemIcon(item, ctx.currentValue) },
+        item,
+      }),
+    );
 		actionItems.push(...this._getFooterActionItems());
 
 		const delegate: IActionListDelegate<IAgentHostSessionEnumPickerItem> = {
@@ -251,18 +281,18 @@ export abstract class AgentHostSessionEnumPicker extends Disposable {
 		};
 
 		this._actionWidgetService.show<IAgentHostSessionEnumPickerItem>(
-			this._pickerId,
-			false,
-			actionItems,
-			delegate,
-			this._triggerElement,
-			undefined,
-			[],
-			{
-				getAriaLabel: i => i.label ?? '',
-				getWidgetAriaLabel: () => this._getWidgetAriaLabel(),
-			},
-		);
+      this._pickerId,
+      false,
+      actionItems,
+      delegate,
+      this._triggerElement,
+      undefined,
+      [],
+      {
+        getAriaLabel: i => i.label ?? "",
+        getWidgetAriaLabel: () => this._getWidgetAriaLabel(),
+      },
+    );
 	}
 }
 
@@ -273,8 +303,8 @@ export abstract class AgentHostSessionEnumPicker extends Disposable {
 export class AgentHostModePicker extends AgentHostSessionEnumPicker {
 
 	protected readonly _property = SessionConfigKey.Mode;
-	protected readonly _pickerId = 'agentHostModePicker';
-	protected readonly _telemetryId = 'NewChatAgentHostModePicker';
+	protected readonly _pickerId = "agentHostModePicker";
+	protected readonly _telemetryId = "NewChatAgentHostModePicker";
 
 	protected _isWellKnownSchema(schema: SessionConfigPropertySchema): boolean {
 		return isWellKnownModeSchema(schema);
@@ -289,10 +319,14 @@ export class AgentHostModePicker extends AgentHostSessionEnumPicker {
 	}
 
 	protected _getTriggerAriaLabel(label: string): string {
-		return localize('agentHostModePicker.triggerAriaLabel', "Pick Agent Mode, {0}", label);
+		return localize(
+      "agentHostModePicker.triggerAriaLabel",
+      "Pick Agent Mode, {0}",
+      label,
+    );
 	}
 
 	protected _getWidgetAriaLabel(): string {
-		return localize('agentHostModePicker.ariaLabel', "Agent Mode Picker");
+		return localize("agentHostModePicker.ariaLabel", "Agent Mode Picker");
 	}
 }

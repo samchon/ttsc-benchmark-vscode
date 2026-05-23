@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { promises } from 'fs';
-import { RunOnceScheduler } from '../../../../base/common/async.js';
-import { onUnexpectedError } from '../../../../base/common/errors.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { basename, dirname, join } from '../../../../base/common/path.js';
-import { Promises } from '../../../../base/node/pfs.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { IProductService } from '../../../../platform/product/common/productService.js';
+import { promises } from "fs";
+import { RunOnceScheduler } from "../../../../base/common/async.js";
+import { onUnexpectedError } from "../../../../base/common/errors.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { basename, dirname, join } from "../../../../base/common/path.js";
+import { Promises } from "../../../../base/node/pfs.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
 
 export class CodeCacheCleaner extends Disposable {
 
@@ -19,11 +19,11 @@ export class CodeCacheCleaner extends Disposable {
 	constructor(
 		currentCodeCachePath: string | undefined,
 		@IProductService productService: IProductService,
-		@ILogService private readonly logService: ILogService
+		@ILogService private readonly logService: ILogService,
 	) {
 		super();
 
-		this.dataMaxAge = productService.quality !== 'stable'
+		this.dataMaxAge = productService.quality !== "stable"
 			? 1000 * 60 * 60 * 24 * 7 		// roughly 1 week (insiders)
 			: 1000 * 60 * 60 * 24 * 30 * 3; // roughly 3 months (stable)
 
@@ -31,15 +31,22 @@ export class CodeCacheCleaner extends Disposable {
 		// the editor starts. The strategy is to delete all files that are older than
 		// 3 months (1 week respectively)
 		if (currentCodeCachePath) {
-			const scheduler = this._register(new RunOnceScheduler(() => {
-				this.cleanUpCodeCaches(currentCodeCachePath);
-			}, 30 * 1000 /* after 30s */));
+			const scheduler = this._register(
+        new RunOnceScheduler(
+          () => {
+            this.cleanUpCodeCaches(currentCodeCachePath);
+          },
+          30 * 1000,
+        ),
+      );
 			scheduler.schedule();
 		}
 	}
 
 	private async cleanUpCodeCaches(currentCodeCachePath: string): Promise<void> {
-		this.logService.trace('[code cache cleanup]: Starting to clean up old code cache folders.');
+		this.logService.trace(
+      "[code cache cleanup]: Starting to clean up old code cache folders.",
+    );
 
 		try {
 			const now = Date.now();

@@ -2,14 +2,14 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import assert from 'assert';
-import { CancellationToken } from '../../../../../base/common/cancellation.js';
-import { ITextModel } from '../../../../common/model.js';
-import { FoldingContext, FoldingRange, FoldingRangeProvider, ProviderResult } from '../../../../common/languages.js';
-import { SyntaxRangeProvider } from '../../browser/syntaxRangeProvider.js';
-import { createTextModel } from '../../../../test/common/testTextModel.js';
-import { FoldingLimitReporter } from '../../browser/folding.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
+import assert from "assert";
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { ITextModel } from "../../../../common/model.js";
+import { FoldingContext, FoldingRange, FoldingRangeProvider, ProviderResult } from "../../../../common/languages.js";
+import { SyntaxRangeProvider } from "../../browser/syntaxRangeProvider.js";
+import { createTextModel } from "../../../../test/common/testTextModel.js";
+import { FoldingLimitReporter } from "../../browser/folding.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
 
 interface IndentRange {
 	start: number;
@@ -28,39 +28,39 @@ class TestFoldingRangeProvider implements FoldingRangeProvider {
 	}
 }
 
-suite('Syntax folding', () => {
+suite("Syntax folding", () => {
 	ensureNoDisposablesAreLeakedInTestSuite();
 
 	function r(start: number, end: number): IndentRange {
 		return { start, end };
 	}
 
-	test('Limit by nesting level', async () => {
+	test("Limit by nesting level", async () => {
 		const lines = [
-			/* 1*/	'{',
-			/* 2*/	'  A',
-			/* 3*/	'  {',
-			/* 4*/	'    {',
-			/* 5*/	'      B',
-			/* 6*/	'    }',
-			/* 7*/	'    {',
-			/* 8*/	'      A',
-			/* 9*/	'      {',
-			/* 10*/	'         A',
-			/* 11*/	'      }',
-			/* 12*/	'      {',
-			/* 13*/	'        {',
-			/* 14*/	'          {',
-			/* 15*/	'             A',
-			/* 16*/	'          }',
-			/* 17*/	'        }',
-			/* 18*/	'      }',
-			/* 19*/	'    }',
-			/* 20*/	'  }',
-			/* 21*/	'}',
-			/* 22*/	'{',
-			/* 23*/	'  A',
-			/* 24*/	'}',
+			/* 1*/	"{",
+			/* 2*/	"  A",
+			/* 3*/	"  {",
+			/* 4*/	"    {",
+			/* 5*/	"      B",
+			/* 6*/	"    }",
+			/* 7*/	"    {",
+			/* 8*/	"      A",
+			/* 9*/	"      {",
+			/* 10*/	"         A",
+			/* 11*/	"      }",
+			/* 12*/	"      {",
+			/* 13*/	"        {",
+			/* 14*/	"          {",
+			/* 15*/	"             A",
+			/* 16*/	"          }",
+			/* 17*/	"        }",
+			/* 18*/	"      }",
+			/* 19*/	"    }",
+			/* 20*/	"  }",
+			/* 21*/	"}",
+			/* 22*/	"{",
+			/* 23*/	"  A",
+			/* 24*/	"}",
 		];
 
 		const r1 = r(1, 20);  //0
@@ -73,7 +73,7 @@ suite('Syntax folding', () => {
 		const r8 = r(14, 15); //6
 		const r9 = r(22, 23); //0
 
-		const model = createTextModel(lines.join('\n'));
+		const model = createTextModel(lines.join("\n"));
 		const ranges = [r1, r2, r3, r4, r5, r6, r7, r8, r9];
 		const providers = [new TestFoldingRangeProvider(model, ranges)];
 
@@ -88,7 +88,7 @@ suite('Syntax folding', () => {
 					for (let i = 0; i < indentRanges.length; i++) {
 						actual.push({ start: indentRanges.getStartLineNumber(i), end: indentRanges.getEndLineNumber(i) });
 					}
-					assert.equal(reported, 9 <= maxEntries ? false : maxEntries, 'limited');
+					assert.equal(reported, 9 <= maxEntries ? false : maxEntries, "limited");
 				}
 				assert.deepStrictEqual(actual, expectedRanges, message);
 			} finally {
@@ -97,17 +97,17 @@ suite('Syntax folding', () => {
 
 		}
 
-		await assertLimit(1000, [r1, r2, r3, r4, r5, r6, r7, r8, r9], '1000');
-		await assertLimit(9, [r1, r2, r3, r4, r5, r6, r7, r8, r9], '9');
-		await assertLimit(8, [r1, r2, r3, r4, r5, r6, r7, r9], '8');
-		await assertLimit(7, [r1, r2, r3, r4, r5, r6, r9], '7');
-		await assertLimit(6, [r1, r2, r3, r4, r5, r9], '6');
-		await assertLimit(5, [r1, r2, r3, r4, r9], '5');
-		await assertLimit(4, [r1, r2, r3, r9], '4');
-		await assertLimit(3, [r1, r2, r9], '3');
-		await assertLimit(2, [r1, r9], '2');
-		await assertLimit(1, [r1], '1');
-		await assertLimit(0, [], '0');
+		await assertLimit(1000, [r1, r2, r3, r4, r5, r6, r7, r8, r9], "1000");
+		await assertLimit(9, [r1, r2, r3, r4, r5, r6, r7, r8, r9], "9");
+		await assertLimit(8, [r1, r2, r3, r4, r5, r6, r7, r9], "8");
+		await assertLimit(7, [r1, r2, r3, r4, r5, r6, r9], "7");
+		await assertLimit(6, [r1, r2, r3, r4, r5, r9], "6");
+		await assertLimit(5, [r1, r2, r3, r4, r9], "5");
+		await assertLimit(4, [r1, r2, r3, r9], "4");
+		await assertLimit(3, [r1, r2, r9], "3");
+		await assertLimit(2, [r1, r9], "2");
+		await assertLimit(1, [r1], "1");
+		await assertLimit(0, [], "0");
 
 		model.dispose();
 	});

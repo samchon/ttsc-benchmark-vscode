@@ -3,33 +3,33 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Codicon } from '../../../../base/common/codicons.js';
-import { fromNow } from '../../../../base/common/date.js';
-import { KeyCode, KeyMod } from '../../../../base/common/keyCodes.js';
-import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
-import { localize, localize2 } from '../../../../nls.js';
-import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
-import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
-import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { KeybindingWeight } from '../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { IQuickInputService, IQuickPickItem, IQuickPickSeparator } from '../../../../platform/quickinput/common/quickInput.js';
-import { IsAuxiliaryWindowContext, IsSessionsWindowContext } from '../../../../workbench/common/contextkeys.js';
-import { Menus } from '../../../browser/menus.js';
-import { SessionsCategories } from '../../../common/categories.js';
-import { CanGoBackContext, CanGoForwardContext, SessionsWelcomeVisibleContext } from '../../../common/contextkeys.js';
-import { ISessionsManagementService } from '../../../services/sessions/common/sessionsManagement.js';
-import { ISession } from '../../../services/sessions/common/session.js';
+import { Codicon } from "../../../../base/common/codicons.js";
+import { fromNow } from "../../../../base/common/date.js";
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { Action2, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { IQuickInputService, IQuickPickItem, IQuickPickSeparator } from "../../../../platform/quickinput/common/quickInput.js";
+import { IsAuxiliaryWindowContext, IsSessionsWindowContext } from "../../../../workbench/common/contextkeys.js";
+import { Menus } from "../../../browser/menus.js";
+import { SessionsCategories } from "../../../common/categories.js";
+import { CanGoBackContext, CanGoForwardContext, SessionsWelcomeVisibleContext } from "../../../common/contextkeys.js";
+import { ISessionsManagementService } from "../../../services/sessions/common/sessionsManagement.js";
+import { ISession } from "../../../services/sessions/common/session.js";
 
 // -- Show Sessions Picker --
 
-export const SHOW_SESSIONS_PICKER_COMMAND_ID = 'sessions.showSessionsPicker';
+export const SHOW_SESSIONS_PICKER_COMMAND_ID = "sessions.showSessionsPicker";
 
 registerAction2(class ShowSessionsPickerAction extends Action2 {
 	constructor() {
 		super({
 			id: SHOW_SESSIONS_PICKER_COMMAND_ID,
-			title: localize2('showSessionsPicker', "Show Sessions Picker"),
+			title: localize2("showSessionsPicker", "Show Sessions Picker"),
 			f1: true,
 			category: SessionsCategories.Sessions,
 			keybinding: {
@@ -59,15 +59,15 @@ registerAction2(class ShowSessionsPickerAction extends Action2 {
 
 		// New session item
 		items.push({
-			label: `$(add) ${localize('newSession', "New Session")}`,
+			label: `$(add) ${localize("newSession", "New Session")}`,
 			session: undefined,
 		});
 
 		if (sessions.length > 0) {
-			items.push({ type: 'separator', label: localize('recentSessions', "Recent Sessions") });
+			items.push({ type: "separator", label: localize("recentSessions", "Recent Sessions") });
 
 			for (const session of sessions) {
-				const title = session.title.get() || localize('untitledSession', "New Session");
+				const title = session.title.get() || localize("untitledSession", "New Session");
 				const workspace = session.workspace.get();
 				const parts: string[] = [];
 				if (workspace) {
@@ -77,7 +77,7 @@ registerAction2(class ShowSessionsPickerAction extends Action2 {
 
 				items.push({
 					label: title,
-					description: parts.join(' \u00B7 '),
+					description: parts.join(" \u00B7 "),
 					iconClass: ThemeIcon.asClassName(session.icon),
 					session,
 					picked: activeSessionId !== undefined && session.sessionId === activeSessionId,
@@ -87,7 +87,7 @@ registerAction2(class ShowSessionsPickerAction extends Action2 {
 
 		const picker = quickInputService.createQuickPick<ISessionPickItem>({ useSeparators: true });
 		picker.items = items;
-		picker.placeholder = localize('searchSessions', "Search sessions by name");
+		picker.placeholder = localize("searchSessions", "Search sessions by name");
 		picker.canAcceptInBackground = true;
 
 		const disposables = new DisposableStore();
@@ -115,10 +115,10 @@ registerAction2(class ShowSessionsPickerAction extends Action2 {
 registerAction2(class GoBackAction extends Action2 {
 	constructor() {
 		super({
-			id: 'sessions.goBack',
+			id: "sessions.goBack",
 			title: {
-				...localize2('sessionsGoBack', "Go Back"),
-				mnemonicTitle: localize({ key: 'miSessionsBack', comment: ['&& denotes a mnemonic'] }, "&&Back")
+				...localize2("sessionsGoBack", "Go Back"),
+				mnemonicTitle: localize({ key: "miSessionsBack", comment: ["&& denotes a mnemonic"] }, "&&Back"),
 			},
 			f1: true,
 			icon: Codicon.arrowLeft,
@@ -133,14 +133,14 @@ registerAction2(class GoBackAction extends Action2 {
 			},
 			menu: [{
 				id: Menus.TitleBarLeftLayout,
-				group: 'navigation',
+				group: "navigation",
 				order: 1,
 				when: ContextKeyExpr.and(IsAuxiliaryWindowContext.toNegated(), SessionsWelcomeVisibleContext.toNegated()),
 			}, {
 				id: Menus.GoMenu,
-				group: '1_history_nav',
+				group: "1_history_nav",
 				order: 1,
-			}]
+			}],
 		});
 	}
 
@@ -155,10 +155,10 @@ registerAction2(class GoBackAction extends Action2 {
 registerAction2(class GoForwardAction extends Action2 {
 	constructor() {
 		super({
-			id: 'sessions.goForward',
+			id: "sessions.goForward",
 			title: {
-				...localize2('sessionsGoForward', "Go Forward"),
-				mnemonicTitle: localize({ key: 'miSessionsForward', comment: ['&& denotes a mnemonic'] }, "&&Forward")
+				...localize2("sessionsGoForward", "Go Forward"),
+				mnemonicTitle: localize({ key: "miSessionsForward", comment: ["&& denotes a mnemonic"] }, "&&Forward"),
 			},
 			f1: true,
 			icon: Codicon.arrowRight,
@@ -173,14 +173,14 @@ registerAction2(class GoForwardAction extends Action2 {
 			},
 			menu: [{
 				id: Menus.TitleBarLeftLayout,
-				group: 'navigation',
+				group: "navigation",
 				order: 2,
 				when: ContextKeyExpr.and(IsAuxiliaryWindowContext.toNegated(), SessionsWelcomeVisibleContext.toNegated()),
 			}, {
 				id: Menus.GoMenu,
-				group: '1_history_nav',
+				group: "1_history_nav",
 				order: 2,
-			}]
+			}],
 		});
 	}
 

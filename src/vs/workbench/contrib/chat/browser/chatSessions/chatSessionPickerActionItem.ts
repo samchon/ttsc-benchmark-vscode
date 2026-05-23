@@ -3,25 +3,25 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './media/chatSessionPickerActionItem.css';
-import { IAction } from '../../../../../base/common/actions.js';
-import { Event } from '../../../../../base/common/event.js';
-import * as dom from '../../../../../base/browser/dom.js';
-import { getActiveWindow } from '../../../../../base/browser/dom.js';
-import { IActionWidgetService } from '../../../../../platform/actionWidget/browser/actionWidget.js';
-import { IActionWidgetDropdownAction, IActionWidgetDropdownOptions } from '../../../../../platform/actionWidget/browser/actionWidgetDropdown.js';
-import { IContextKeyService } from '../../../../../platform/contextkey/common/contextkey.js';
-import { IKeybindingService } from '../../../../../platform/keybinding/common/keybinding.js';
-import { ActionWidgetDropdownActionViewItem } from '../../../../../platform/actions/browser/actionWidgetDropdownActionViewItem.js';
-import { IChatSessionProviderOptionGroup, IChatSessionProviderOptionItem } from '../../common/chatSessionsService.js';
-import { ICommandService } from '../../../../../platform/commands/common/commands.js';
-import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
-import { IDisposable } from '../../../../../base/common/lifecycle.js';
-import { renderIcon } from '../../../../../base/browser/ui/iconLabel/iconLabels.js';
-import { localize } from '../../../../../nls.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { IChatInputPickerOptions } from '../widget/input/chatInputPickerActionItem.js';
-import { autorun } from '../../../../../base/common/observable.js';
+import "./media/chatSessionPickerActionItem.css";
+import { IAction } from "../../../../../base/common/actions.js";
+import { Event } from "../../../../../base/common/event.js";
+import * as dom from "../../../../../base/browser/dom.js";
+import { getActiveWindow } from "../../../../../base/browser/dom.js";
+import { IActionWidgetService } from "../../../../../platform/actionWidget/browser/actionWidget.js";
+import { IActionWidgetDropdownAction, IActionWidgetDropdownOptions } from "../../../../../platform/actionWidget/browser/actionWidgetDropdown.js";
+import { IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IKeybindingService } from "../../../../../platform/keybinding/common/keybinding.js";
+import { ActionWidgetDropdownActionViewItem } from "../../../../../platform/actions/browser/actionWidgetDropdownActionViewItem.js";
+import { IChatSessionProviderOptionGroup, IChatSessionProviderOptionItem } from "../../common/chatSessionsService.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
+import { IDisposable } from "../../../../../base/common/lifecycle.js";
+import { renderIcon } from "../../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { localize } from "../../../../../nls.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { IChatInputPickerOptions } from "../widget/input/chatInputPickerActionItem.js";
+import { autorun } from "../../../../../base/common/observable.js";
 
 
 export interface IChatSessionPickerDelegate {
@@ -53,22 +53,29 @@ export class ChatSessionPickerActionItem extends ActionWidgetDropdownActionViewI
 	) {
 		const { group, item } = initialState;
 		const actionWithLabel: IAction = {
-			...action,
-			label: item?.name || group.name,
-			tooltip: item?.description ?? group.description ?? group.name,
-			run: () => { }
-		};
+      ...action,
+      label: item?.name || group.name,
+      tooltip: item?.description ?? group.description ?? group.name,
+      run: () => { },
+    };
 
-		const sessionPickerActionWidgetOptions: Omit<IActionWidgetDropdownOptions, 'label' | 'labelRenderer'> = {
+		const sessionPickerActionWidgetOptions: Omit<IActionWidgetDropdownOptions, "label" | "labelRenderer"> = {
 			actionProvider: {
-				getActions: () => this.getDropdownActions()
+				getActions: () => this.getDropdownActions(),
 			},
 			actionBarActionProvider: undefined,
 			reporter: { id: group.id, name: `ChatSession:${group.name}`, includeOptions: false },
 			getAnchor: () => this._getAnchorElement(),
 		};
 
-		super(actionWithLabel, sessionPickerActionWidgetOptions, actionWidgetService, keybindingService, contextKeyService, telemetryService);
+		super(
+      actionWithLabel,
+      sessionPickerActionWidgetOptions,
+      actionWidgetService,
+      keybindingService,
+      contextKeyService,
+      telemetryService,
+    );
 		this.currentOption = item;
 
 		this._register(this.delegate.onDidChangeOption(newOption => {
@@ -118,7 +125,7 @@ export class ChatSessionPickerActionItem extends ActionWidgetDropdownActionViewI
 				label: optionItem.name,
 				run: () => {
 					this.delegate.setOption(optionItem);
-				}
+				},
 			} satisfies IActionWidgetDropdownAction;
 		});
 
@@ -140,10 +147,10 @@ export class ChatSessionPickerActionItem extends ActionWidgetDropdownActionViewI
 					tooltip: command.tooltip ?? command.title,
 					label: command.title,
 					// Use category to create a separator before commands (only if there are options)
-					category: addSeparator ? { label: '', order: Number.MAX_SAFE_INTEGER } : undefined,
+					category: addSeparator ? { label: "", order: Number.MAX_SAFE_INTEGER } : undefined,
 					run: () => {
 						this.commandService.executeCommand(command.command, ...args);
-					}
+					},
 				} satisfies IActionWidgetDropdownAction);
 			}
 		}
@@ -156,16 +163,16 @@ export class ChatSessionPickerActionItem extends ActionWidgetDropdownActionViewI
 	 */
 	protected createLockedOptionAction(option: IChatSessionProviderOptionItem): IActionWidgetDropdownAction {
 		return {
-			id: option.id,
-			enabled: false,
-			icon: option.icon,
-			checked: true,
-			class: undefined,
-			description: option.description,
-			tooltip: option.description ?? option.name,
-			label: option.name,
-			run: () => { }
-		};
+      id: option.id,
+      enabled: false,
+      icon: option.icon,
+      checked: true,
+      class: undefined,
+      description: option.description,
+      tooltip: option.description ?? option.name,
+      label: option.name,
+      run: () => { },
+    };
 	}
 
 	/**
@@ -181,7 +188,7 @@ export class ChatSessionPickerActionItem extends ActionWidgetDropdownActionViewI
 
 	protected override renderLabel(element: HTMLElement): IDisposable | null {
 		const domChildren = [];
-		element.classList.add('chat-session-option-picker');
+		element.classList.add("chat-session-option-picker");
 		const group = this.delegate.getOptionGroup();
 		// If the current option is the default and has an icon, collapse the text and show only the icon
 		const isDefaultWithIcon = this.currentOption?.default && this.currentOption?.icon;
@@ -191,7 +198,13 @@ export class ChatSessionPickerActionItem extends ActionWidgetDropdownActionViewI
 		}
 
 		if (!isDefaultWithIcon) {
-			domChildren.push(dom.$('span.chat-session-option-label', undefined, this.currentOption?.name ?? group?.description ?? localize('chat.sessionPicker.label', "Pick Option")));
+			domChildren.push(
+        dom.$(
+          "span.chat-session-option-label",
+          undefined,
+          this.currentOption?.name ?? group?.description ?? localize("chat.sessionPicker.label", "Pick Option"),
+        ),
+      );
 		}
 
 		dom.reset(element, ...domChildren);
@@ -206,7 +219,7 @@ export class ChatSessionPickerActionItem extends ActionWidgetDropdownActionViewI
 
 		// Set initial locked state on container
 		if (this.currentOption?.locked) {
-			container.classList.add('locked');
+			container.classList.add("locked");
 		}
 	}
 
@@ -214,7 +227,7 @@ export class ChatSessionPickerActionItem extends ActionWidgetDropdownActionViewI
 	 * Returns the CSS class to add to the container. Can be overridden by subclasses.
 	 */
 	protected getContainerClass(): string {
-		return 'chat-sessionPicker-item';
+		return "chat-sessionPicker-item";
 	}
 
 	protected override updateEnabled(): void {
@@ -225,7 +238,7 @@ export class ChatSessionPickerActionItem extends ActionWidgetDropdownActionViewI
 		super.updateEnabled();
 		this.action.enabled = originalEnabled;
 		if (this.container) {
-			this.container.classList.toggle('locked', !!this.currentOption?.locked);
+			this.container.classList.toggle("locked", !!this.currentOption?.locked);
 		}
 	}
 }

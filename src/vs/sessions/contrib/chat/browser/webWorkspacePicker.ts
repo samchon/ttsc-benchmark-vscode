@@ -3,26 +3,26 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Codicon } from '../../../../base/common/codicons.js';
-import { localize } from '../../../../nls.js';
-import { IActionWidgetService } from '../../../../platform/actionWidget/browser/actionWidget.js';
-import { ActionListItemKind, IActionListItem } from '../../../../platform/actionWidget/browser/actionList.js';
-import { IMenuService } from '../../../../platform/actions/common/actions.js';
-import { IRemoteAgentHostService } from '../../../../platform/agentHost/common/remoteAgentHostService.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { IStorageService } from '../../../../platform/storage/common/storage.js';
-import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
-import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
-import { IWorkbenchLayoutService } from '../../../../workbench/services/layout/browser/layoutService.js';
-import { ISessionsProvidersService } from '../../../services/sessions/browser/sessionsProvidersService.js';
-import { IAgentHostFilterService } from '../../../services/agentHostFilter/common/agentHostFilter.js';
-import { IWorkspacePickerItem, WorkspacePicker } from './sessionWorkspacePicker.js';
-import { showMobileWorkspacePickerSheet, shouldUseMobileWorkspacePickerSheet } from './mobile/mobileWorkspacePickerSheet.js';
-import { IWorkspacesService } from '../../../../platform/workspaces/common/workspaces.js';
+import { Codicon } from "../../../../base/common/codicons.js";
+import { localize } from "../../../../nls.js";
+import { IActionWidgetService } from "../../../../platform/actionWidget/browser/actionWidget.js";
+import { ActionListItemKind, IActionListItem } from "../../../../platform/actionWidget/browser/actionList.js";
+import { IMenuService } from "../../../../platform/actions/common/actions.js";
+import { IRemoteAgentHostService } from "../../../../platform/agentHost/common/remoteAgentHostService.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IFileDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IWorkbenchLayoutService } from "../../../../workbench/services/layout/browser/layoutService.js";
+import { ISessionsProvidersService } from "../../../services/sessions/browser/sessionsProvidersService.js";
+import { IAgentHostFilterService } from "../../../services/agentHostFilter/common/agentHostFilter.js";
+import { IWorkspacePickerItem, WorkspacePicker } from "./sessionWorkspacePicker.js";
+import { showMobileWorkspacePickerSheet, shouldUseMobileWorkspacePickerSheet } from "./mobile/mobileWorkspacePickerSheet.js";
+import { IWorkspacesService } from "../../../../platform/workspaces/common/workspaces.js";
 
 /**
  * Web variant of {@link WorkspacePicker} for the Agents window's
@@ -62,25 +62,29 @@ export class WebWorkspacePicker extends WorkspacePicker {
 		@IWorkbenchLayoutService private readonly _layoutService: IWorkbenchLayoutService,
 	) {
 		super(
-			actionWidgetService,
-			storageService,
-			uriIdentityService,
-			sessionsProvidersService,
-			remoteAgentHostService,
-			configurationService,
-			commandService,
-			workspacesService,
-			menuService,
-			contextKeyService,
-			instantiationService,
-			fileDialogService,
-			telemetryService,
-		);
+      actionWidgetService,
+      storageService,
+      uriIdentityService,
+      sessionsProvidersService,
+      remoteAgentHostService,
+      configurationService,
+      commandService,
+      workspacesService,
+      menuService,
+      contextKeyService,
+      instantiationService,
+      fileDialogService,
+      telemetryService,
+    );
 
 		// When the scoped host changes, if the current selection no longer
 		// belongs to the selected host, reset it: prefer the most recent
 		// workspace for the new host, otherwise clear the selection.
-		this._register(this._agentHostFilterService.onDidChange(() => this._onScopedHostChanged()));
+		this._register(
+      this._agentHostFilterService.onDidChange(
+        () => this._onScopedHostChanged(),
+      ),
+    );
 	}
 
 	protected override _showTabs(): boolean {
@@ -103,12 +107,12 @@ export class WebWorkspacePicker extends WorkspacePicker {
 		}
 		const items = this._buildItems();
 		showMobileWorkspacePickerSheet(
-			this._layoutService,
-			this._triggerElement,
-			items,
-			item => this._dispatchPickerItem(item),
-			this._getAllBrowseActions(),
-		);
+      this._layoutService,
+      this._triggerElement,
+      items,
+      item => this._dispatchPickerItem(item),
+      this._getAllBrowseActions(),
+    );
 	}
 
 	private _onScopedHostChanged(): void {
@@ -141,13 +145,17 @@ export class WebWorkspacePicker extends WorkspacePicker {
 		if (scopedProviderId === undefined) {
 			return [];
 		}
-		const provider = this.sessionsProvidersService.getProvider(scopedProviderId);
+		const provider = this.sessionsProvidersService.getProvider(
+      scopedProviderId,
+    );
 		if (!provider) {
 			return items;
 		}
 
 		// 1. Recent workspaces for the scoped provider
-		const recents = this._getRecentWorkspaces().filter(w => w.providerId === scopedProviderId);
+		const recents = this._getRecentWorkspaces().filter(
+      w => w.providerId === scopedProviderId,
+    );
 		for (const { workspace, providerId } of recents) {
 			const folderUri = workspace.folders[0]?.root;
 			if (!folderUri) {
@@ -155,28 +163,30 @@ export class WebWorkspacePicker extends WorkspacePicker {
 			}
 			const checked = this._isSelectedFolder(folderUri);
 			items.push({
-				kind: ActionListItemKind.Action,
-				label: workspace.label,
-				description: workspace.description,
-				group: { title: '', icon: workspace.icon },
-				item: { folderUri, providerId, checked: checked || undefined },
-				onRemove: () => this._removeRecentWorkspace(folderUri),
-			});
+        kind: ActionListItemKind.Action,
+        label: workspace.label,
+        description: workspace.description,
+        group: { title: "", icon: workspace.icon },
+        item: { folderUri, providerId, checked: checked || undefined },
+        onRemove: () => this._removeRecentWorkspace(folderUri),
+      });
 		}
 
 		// 2. "Select Folder..." — dispatches the scoped provider's first browse action
 		const allBrowseActions = this._getAllBrowseActions();
-		const browseIndex = allBrowseActions.findIndex(a => a.providerId === scopedProviderId);
+		const browseIndex = allBrowseActions.findIndex(
+      a => a.providerId === scopedProviderId,
+    );
 		if (browseIndex >= 0 && !this._isProviderUnavailable(scopedProviderId)) {
 			if (items.length > 0) {
-				items.push({ kind: ActionListItemKind.Separator, label: '' });
+				items.push({ kind: ActionListItemKind.Separator, label: "" });
 			}
 			items.push({
-				kind: ActionListItemKind.Action,
-				label: localize('scopedWorkspacePicker.selectFolder', "Select Folder..."),
-				group: { title: '', icon: Codicon.folderOpened },
-				item: { browseActionIndex: browseIndex },
-			});
+        kind: ActionListItemKind.Action,
+        label: localize("scopedWorkspacePicker.selectFolder", "Select Folder..."),
+        group: { title: "", icon: Codicon.folderOpened },
+        item: { browseActionIndex: browseIndex },
+      });
 		}
 
 		return items;

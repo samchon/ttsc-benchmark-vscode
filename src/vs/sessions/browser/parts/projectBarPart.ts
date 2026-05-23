@@ -3,46 +3,62 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './media/projectBarPart.css';
-import { Part } from '../../../workbench/browser/part.js';
-import { IWorkbenchLayoutService, Position } from '../../../workbench/services/layout/browser/layoutService.js';
-import { IColorTheme, IThemeService } from '../../../platform/theme/common/themeService.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../platform/storage/common/storage.js';
-import { IWorkspaceContextService } from '../../../platform/workspace/common/workspace.js';
-import { IHoverService } from '../../../platform/hover/browser/hover.js';
-import { DisposableStore, MutableDisposable } from '../../../base/common/lifecycle.js';
-import { $, addDisposableListener, append, clearNode, Dimension, EventType, getActiveDocument, getWindow } from '../../../base/browser/dom.js';
-import { Emitter, Event } from '../../../base/common/event.js';
-import { ACTIVITY_BAR_BACKGROUND, ACTIVITY_BAR_BADGE_BACKGROUND, ACTIVITY_BAR_BADGE_FOREGROUND, ACTIVITY_BAR_BORDER, ACTIVITY_BAR_FOREGROUND, ACTIVITY_BAR_INACTIVE_FOREGROUND } from '../../../workbench/common/theme.js';
-import { contrastBorder } from '../../../platform/theme/common/colorRegistry.js';
-import { assertReturnsDefined } from '../../../base/common/types.js';
-import { ThemeIcon } from '../../../base/common/themables.js';
-import { Codicon } from '../../../base/common/codicons.js';
-import { codiconsLibrary } from '../../../base/common/codiconsLibrary.js';
-import { Lazy } from '../../../base/common/lazy.js';
-import { HoverPosition } from '../../../base/browser/ui/hover/hoverWidget.js';
-import { GlobalCompositeBar } from '../../../workbench/browser/parts/globalCompositeBar.js';
-import { IInstantiationService } from '../../../platform/instantiation/common/instantiation.js';
-import { IAction, Action, Separator } from '../../../base/common/actions.js';
-import { URI } from '../../../base/common/uri.js';
-import { IFileDialogService } from '../../../platform/dialogs/common/dialogs.js';
-import { IPathService } from '../../../workbench/services/path/common/pathService.js';
-import { IWorkspaceEditingService } from '../../../workbench/services/workspaces/common/workspaceEditing.js';
-import { ILabelService } from '../../../platform/label/common/label.js';
-import { basename } from '../../../base/common/resources.js';
-import { IContextMenuService } from '../../../platform/contextview/browser/contextView.js';
-import { StandardMouseEvent } from '../../../base/browser/mouseEvent.js';
-import { IQuickInputService, IQuickPickItem } from '../../../platform/quickinput/common/quickInput.js';
-import { getIconRegistry, IconContribution } from '../../../platform/theme/common/iconRegistry.js';
-import { defaultInputBoxStyles } from '../../../platform/theme/browser/defaultStyles.js';
-import { WorkbenchIconSelectBox } from '../../../workbench/services/userDataProfile/browser/iconSelectBox.js';
-import { localize } from '../../../nls.js';
-import { AgenticParts } from './parts.js';
+import "./media/projectBarPart.css";
+import { Part } from "../../../workbench/browser/part.js";
+import { IWorkbenchLayoutService, Position } from "../../../workbench/services/layout/browser/layoutService.js";
+import { IColorTheme, IThemeService } from "../../../platform/theme/common/themeService.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../platform/storage/common/storage.js";
+import { IWorkspaceContextService } from "../../../platform/workspace/common/workspace.js";
+import { IHoverService } from "../../../platform/hover/browser/hover.js";
+import { DisposableStore, MutableDisposable } from "../../../base/common/lifecycle.js";
+import {
+  $,
+  addDisposableListener,
+  append,
+  clearNode,
+  Dimension,
+  EventType,
+  getActiveDocument,
+  getWindow,
+} from "../../../base/browser/dom.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import {
+  ACTIVITY_BAR_BACKGROUND,
+  ACTIVITY_BAR_BADGE_BACKGROUND,
+  ACTIVITY_BAR_BADGE_FOREGROUND,
+  ACTIVITY_BAR_BORDER,
+  ACTIVITY_BAR_FOREGROUND,
+  ACTIVITY_BAR_INACTIVE_FOREGROUND,
+} from "../../../workbench/common/theme.js";
+import { contrastBorder } from "../../../platform/theme/common/colorRegistry.js";
+import { assertReturnsDefined } from "../../../base/common/types.js";
+import { ThemeIcon } from "../../../base/common/themables.js";
+import { Codicon } from "../../../base/common/codicons.js";
+import { codiconsLibrary } from "../../../base/common/codiconsLibrary.js";
+import { Lazy } from "../../../base/common/lazy.js";
+import { HoverPosition } from "../../../base/browser/ui/hover/hoverWidget.js";
+import { GlobalCompositeBar } from "../../../workbench/browser/parts/globalCompositeBar.js";
+import { IInstantiationService } from "../../../platform/instantiation/common/instantiation.js";
+import { IAction, Action, Separator } from "../../../base/common/actions.js";
+import { URI } from "../../../base/common/uri.js";
+import { IFileDialogService } from "../../../platform/dialogs/common/dialogs.js";
+import { IPathService } from "../../../workbench/services/path/common/pathService.js";
+import { IWorkspaceEditingService } from "../../../workbench/services/workspaces/common/workspaceEditing.js";
+import { ILabelService } from "../../../platform/label/common/label.js";
+import { basename } from "../../../base/common/resources.js";
+import { IContextMenuService } from "../../../platform/contextview/browser/contextView.js";
+import { StandardMouseEvent } from "../../../base/browser/mouseEvent.js";
+import { IQuickInputService, IQuickPickItem } from "../../../platform/quickinput/common/quickInput.js";
+import { getIconRegistry, IconContribution } from "../../../platform/theme/common/iconRegistry.js";
+import { defaultInputBoxStyles } from "../../../platform/theme/browser/defaultStyles.js";
+import { WorkbenchIconSelectBox } from "../../../workbench/services/userDataProfile/browser/iconSelectBox.js";
+import { localize } from "../../../nls.js";
+import { AgenticParts } from "./parts.js";
 
-const HOVER_GROUP_ID = 'projectbar';
-const PROJECT_BAR_FOLDERS_KEY = 'workbench.agentsession.projectbar.folders';
+const HOVER_GROUP_ID = "projectbar";
+const PROJECT_BAR_FOLDERS_KEY = "workbench.agentsession.projectbar.folders";
 
-type ProjectBarEntryDisplayType = 'letter' | 'icon';
+type ProjectBarEntryDisplayType = "letter" | "icon";
 
 interface IProjectBarEntryData {
 	readonly uri: string;
@@ -102,9 +118,13 @@ export class ProjectBarPart extends Part {
 	private _selectedFolderUri: URI | undefined;
 	private readonly globalCompositeBar: GlobalCompositeBar;
 
-	private readonly workspaceEntryDisposables = this._register(new MutableDisposable<DisposableStore>());
+	private readonly workspaceEntryDisposables = this._register(
+    new MutableDisposable<DisposableStore>(),
+  );
 
-	private readonly _onDidSelectWorkspace = this._register(new Emitter<URI | undefined>());
+	private readonly _onDidSelectWorkspace = this._register(
+    new Emitter<URI | undefined>(),
+  );
 	readonly onDidSelectWorkspace: Event<URI | undefined> = this._onDidSelectWorkspace.event;
 
 	constructor(
@@ -121,7 +141,13 @@ export class ProjectBarPart extends Part {
 		@IQuickInputService private readonly quickInputService: IQuickInputService,
 		@IInstantiationService private readonly instantiationService: IInstantiationService,
 	) {
-		super(AgenticParts.PROJECTBAR_PART, { hasTitle: false }, themeService, storageService, layoutService);
+		super(
+      AgenticParts.PROJECTBAR_PART,
+      { hasTitle: false },
+      themeService,
+      storageService,
+      layoutService,
+    );
 
 		// Create the global composite bar for accounts and settings at the bottom
 		this.globalCompositeBar = this._register(instantiationService.createInstance(
@@ -138,7 +164,7 @@ export class ProjectBarPart extends Part {
 			}),
 			{
 				position: () => this.layoutService.getSideBarPosition() === Position.LEFT ? HoverPosition.RIGHT : HoverPosition.LEFT,
-			}
+			},
 		));
 
 		// Load entries from storage
@@ -150,22 +176,25 @@ export class ProjectBarPart extends Part {
 	}
 
 	private loadEntriesFromStorage(): void {
-		const raw = this.storageService.get(PROJECT_BAR_FOLDERS_KEY, StorageScope.WORKSPACE);
+		const raw = this.storageService.get(
+      PROJECT_BAR_FOLDERS_KEY,
+      StorageScope.WORKSPACE,
+    );
 		if (raw) {
 			try {
 				const data: (string | IProjectBarEntryData)[] = JSON.parse(raw);
 				this.entries = data.map(item => {
 					// Support legacy format (just URIs as strings) and new format (objects with display settings)
-					if (typeof item === 'string') {
+					if (typeof item === "string") {
 						const uri = URI.parse(item);
-						return { uri, name: basename(uri), displayType: 'letter' as ProjectBarEntryDisplayType };
+						return { uri, name: basename(uri), displayType: "letter" as ProjectBarEntryDisplayType };
 					} else {
 						const uri = URI.parse(item.uri);
 						return {
 							uri,
 							name: basename(uri),
-							displayType: item.displayType ?? 'letter',
-							iconId: item.iconId
+							displayType: item.displayType ?? "letter",
+							iconId: item.iconId,
 						};
 					}
 				});
@@ -183,11 +212,16 @@ export class ProjectBarPart extends Part {
 
 	private saveEntriesToStorage(): void {
 		const data: IProjectBarEntryData[] = this.entries.map(e => ({
-			uri: e.uri.toString(),
-			displayType: e.displayType,
-			iconId: e.iconId
-		}));
-		this.storageService.store(PROJECT_BAR_FOLDERS_KEY, JSON.stringify(data), StorageScope.WORKSPACE, StorageTarget.MACHINE);
+      uri: e.uri.toString(),
+      displayType: e.displayType,
+      iconId: e.iconId,
+    }));
+		this.storageService.store(
+      PROJECT_BAR_FOLDERS_KEY,
+      JSON.stringify(data),
+      StorageScope.WORKSPACE,
+      StorageTarget.MACHINE,
+    );
 	}
 
 	private addFolderEntry(uri: URI): void {
@@ -196,7 +230,7 @@ export class ProjectBarPart extends Part {
 			return;
 		}
 
-		this.entries.push({ uri, name: basename(uri), displayType: 'letter' });
+		this.entries.push({ uri, name: basename(uri), displayType: "letter" });
 		this.saveEntriesToStorage();
 
 		// Select the newly added folder
@@ -218,18 +252,18 @@ export class ProjectBarPart extends Part {
 
 		// Remove existing workspace folders and add the selected one
 		await this.workspaceEditingService.updateFolders(
-			0,
-			foldersToRemove.length,
-			[{ uri: this._selectedFolderUri }]
-		);
+      0,
+      foldersToRemove.length,
+      [{ uri: this._selectedFolderUri }],
+    );
 	}
 
 	protected override createContentArea(parent: HTMLElement): HTMLElement {
 		this.element = parent;
-		this.content = append(this.element, $('.content'));
+		this.content = append(this.element, $(".content"));
 
 		// Create actions container for workspace folders and add button
-		this.actionsContainer = append(this.content, $('.actions-container'));
+		this.actionsContainer = append(this.content, $(".actions-container"));
 
 		// Create the UI for workspace folders
 		this.renderContent();
@@ -257,55 +291,53 @@ export class ProjectBarPart extends Part {
 	}
 
 	private createAddFolderButton(container: HTMLElement): void {
-		this.addFolderButton = append(container, $('.action-item.add-folder'));
-		const actionLabel = append(this.addFolderButton, $('span.action-label'));
+		this.addFolderButton = append(container, $(".action-item.add-folder"));
+		const actionLabel = append(this.addFolderButton, $("span.action-label"));
 
 		// Add the plus icon using codicon
 		actionLabel.classList.add(...ThemeIcon.asClassNameArray(Codicon.add));
 
 		// Add hover tooltip
 		this.workspaceEntryDisposables.value?.add(
-			this.hoverService.setupDelayedHover(
-				this.addFolderButton,
-				{
-					appearance: { showPointer: true },
-					position: { hoverPosition: HoverPosition.RIGHT },
-					content: 'Add Folder to Project'
-				},
-				{ groupId: HOVER_GROUP_ID }
-			)
-		);
+      this.hoverService.setupDelayedHover(this.addFolderButton, {
+        appearance: { showPointer: true },
+        position: { hoverPosition: HoverPosition.RIGHT },
+        content: "Add Folder to Project",
+      }, {
+        groupId: HOVER_GROUP_ID,
+      }),
+    );
 
 		// Click handler to add folder
 		this.workspaceEntryDisposables.value?.add(
-			addDisposableListener(this.addFolderButton, EventType.CLICK, () => {
-				this.pickAndAddFolder();
-			})
-		);
+      addDisposableListener(this.addFolderButton, EventType.CLICK, () => {
+        this.pickAndAddFolder();
+      }),
+    );
 
 		// Keyboard support
-		this.addFolderButton.setAttribute('tabindex', '0');
-		this.addFolderButton.setAttribute('role', 'button');
-		this.addFolderButton.setAttribute('aria-label', 'Add Folder to Project');
+		this.addFolderButton.setAttribute("tabindex", "0");
+		this.addFolderButton.setAttribute("role", "button");
+		this.addFolderButton.setAttribute("aria-label", "Add Folder to Project");
 		this.workspaceEntryDisposables.value?.add(
 			addDisposableListener(this.addFolderButton, EventType.KEY_DOWN, (e: KeyboardEvent) => {
-				if (e.key === 'Enter' || e.key === ' ') {
+				if (e.key === "Enter" || e.key === " ") {
 					e.preventDefault();
 					this.pickAndAddFolder();
 				}
-			})
+			}),
 		);
 	}
 
 	private async pickAndAddFolder(): Promise<void> {
 		const folders = await this.fileDialogService.showOpenDialog({
-			openLabel: 'Add',
-			title: 'Add Folder to Project',
-			canSelectFolders: true,
-			canSelectMany: false,
-			defaultUri: await this.fileDialogService.defaultFolderPath(),
-			availableFileSystems: [this.pathService.defaultUriScheme]
-		});
+      openLabel: "Add",
+      title: "Add Folder to Project",
+      canSelectFolders: true,
+      canSelectMany: false,
+      defaultUri: await this.fileDialogService.defaultFolderPath(),
+      availableFileSystems: [this.pathService.defaultUriScheme],
+    });
 
 		if (folders?.length) {
 			this.addFolderEntry(folders[0]);
@@ -326,18 +358,21 @@ export class ProjectBarPart extends Part {
 	private createWorkspaceEntry(container: HTMLElement, entry: IProjectBarEntry, index: number): void {
 		const entryDisposables = this.workspaceEntryDisposables.value!;
 
-		const entryElement = append(container, $('.action-item.workspace-entry'));
-		const actionLabel = append(entryElement, $('span.action-label.workspace-icon'));
-		append(entryElement, $('span.active-item-indicator'));
+		const entryElement = append(container, $(".action-item.workspace-entry"));
+		const actionLabel = append(
+      entryElement,
+      $("span.action-label.workspace-icon"),
+    );
+		append(entryElement, $("span.active-item-indicator"));
 
 		// Render based on display type
 		const folderName = entry.name;
-		if (entry.displayType === 'icon' && entry.iconId) {
+		if (entry.displayType === "icon" && entry.iconId) {
 			// Render codicon
 			const icon = ThemeIcon.fromId(entry.iconId);
 			actionLabel.classList.add(...ThemeIcon.asClassNameArray(icon));
-			actionLabel.classList.add('codicon-icon');
-			actionLabel.textContent = '';
+			actionLabel.classList.add("codicon-icon");
+			actionLabel.textContent = "";
 		} else {
 			// Default: render first letter of folder name
 			const firstLetter = folderName.charAt(0).toUpperCase();
@@ -347,44 +382,44 @@ export class ProjectBarPart extends Part {
 		// Set selected state
 		const isSelected = this._selectedFolderUri?.toString() === entry.uri.toString();
 		if (isSelected) {
-			entryElement.classList.add('checked');
+			entryElement.classList.add("checked");
 		}
 
 		// Build hover content with full path
-		const folderPath = this.labelService.getUriLabel(entry.uri, { relative: false });
+		const folderPath = this.labelService.getUriLabel(entry.uri, {
+      relative: false,
+    });
 
 		// Add hover tooltip with folder name
 		entryDisposables.add(
-			this.hoverService.setupDelayedHover(
-				entryElement,
-				{
-					appearance: { showPointer: true },
-					position: { hoverPosition: HoverPosition.RIGHT },
-					content: folderPath
-				},
-				{ groupId: HOVER_GROUP_ID }
-			)
-		);
+      this.hoverService.setupDelayedHover(entryElement, {
+        appearance: { showPointer: true },
+        position: { hoverPosition: HoverPosition.RIGHT },
+        content: folderPath,
+      }, {
+        groupId: HOVER_GROUP_ID,
+      }),
+    );
 
 		// Click handler to select workspace
 		entryDisposables.add(
-			addDisposableListener(entryElement, EventType.CLICK, () => {
-				this.selectWorkspace(index);
-			})
-		);
+      addDisposableListener(entryElement, EventType.CLICK, () => {
+        this.selectWorkspace(index);
+      }),
+    );
 
 		// Keyboard support
-		entryElement.setAttribute('tabindex', '0');
-		entryElement.setAttribute('role', 'button');
-		entryElement.setAttribute('aria-label', folderName);
-		entryElement.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+		entryElement.setAttribute("tabindex", "0");
+		entryElement.setAttribute("role", "button");
+		entryElement.setAttribute("aria-label", folderName);
+		entryElement.setAttribute("aria-pressed", isSelected ? "true" : "false");
 		entryDisposables.add(
 			addDisposableListener(entryElement, EventType.KEY_DOWN, (e: KeyboardEvent) => {
-				if (e.key === 'Enter' || e.key === ' ') {
+				if (e.key === "Enter" || e.key === " ") {
 					e.preventDefault();
 					this.selectWorkspace(index);
 				}
-			})
+			}),
 		);
 
 		// Context menu with customize and remove actions
@@ -396,12 +431,12 @@ export class ProjectBarPart extends Part {
 				this.contextMenuService.showContextMenu({
 					getAnchor: () => event,
 					getActions: () => [
-						new Action('projectbar.customize', localize('projectbar.customize', "Customize"), undefined, true, () => this.showCustomizeQuickPick(index)),
+						new Action("projectbar.customize", localize("projectbar.customize", "Customize"), undefined, true, () => this.showCustomizeQuickPick(index)),
 						new Separator(),
-						new Action('projectbar.removeFolder', localize('projectbar.removeFolder', "Remove Folder"), undefined, true, () => this.removeFolderEntry(index))
-					]
+						new Action("projectbar.removeFolder", localize("projectbar.removeFolder", "Remove Folder"), undefined, true, () => this.removeFolderEntry(index)),
+					],
 				});
-			})
+			}),
 		);
 	}
 
@@ -460,40 +495,40 @@ export class ProjectBarPart extends Part {
 		const entry = this.entries[index];
 
 		interface ICustomizeQuickPickItem extends IQuickPickItem {
-			customType: 'letter' | 'icon';
+			customType: "letter" | "icon";
 		}
 
 		const items: ICustomizeQuickPickItem[] = [
-			{
-				customType: 'letter',
-				label: localize('projectbar.customize.letter', "Letter"),
-				description: localize('projectbar.customize.letter.description', "Show the first letter of the workspace name")
-			},
-			{
-				customType: 'icon',
-				label: localize('projectbar.customize.icon', "Icon"),
-				description: localize('projectbar.customize.icon.description', "Choose a codicon to represent the workspace")
-			}
-		];
+      {
+        customType: "letter",
+        label: localize("projectbar.customize.letter", "Letter"),
+        description: localize("projectbar.customize.letter.description", "Show the first letter of the workspace name"),
+      },
+      {
+        customType: "icon",
+        label: localize("projectbar.customize.icon", "Icon"),
+        description: localize("projectbar.customize.icon.description", "Choose a codicon to represent the workspace"),
+      },
+    ];
 
 		const picked = await this.quickInputService.pick(items, {
-			placeHolder: localize('projectbar.customize.placeholder', "Choose how to display the workspace in the project bar"),
-			title: localize('projectbar.customize.title', "Customize Workspace Appearance")
-		});
+      placeHolder: localize("projectbar.customize.placeholder", "Choose how to display the workspace in the project bar"),
+      title: localize("projectbar.customize.title", "Customize Workspace Appearance"),
+    });
 
 		if (!picked) {
 			return;
 		}
 
-		if (picked.customType === 'letter') {
-			entry.displayType = 'letter';
+		if (picked.customType === "letter") {
+			entry.displayType = "letter";
 			entry.iconId = undefined;
 			this.saveEntriesToStorage();
 			this.renderContent();
-		} else if (picked.customType === 'icon') {
+		} else if (picked.customType === "icon") {
 			const icon = await this.pickIcon();
 			if (icon) {
-				entry.displayType = 'icon';
+				entry.displayType = "icon";
 				entry.iconId = icon.id;
 				this.saveEntriesToStorage();
 				this.renderContent();
@@ -502,10 +537,13 @@ export class ProjectBarPart extends Part {
 	}
 
 	private async pickIcon(): Promise<ThemeIcon | undefined> {
-		const iconSelectBox = this.instantiationService.createInstance(WorkbenchIconSelectBox, {
-			icons: icons.value,
-			inputBoxStyles: defaultInputBoxStyles
-		});
+		const iconSelectBox = this.instantiationService.createInstance(
+      WorkbenchIconSelectBox,
+      {
+        icons: icons.value,
+        inputBoxStyles: defaultInputBoxStyles,
+      },
+    );
 
 		const dimension = new Dimension(486, 260);
 		return new Promise<ThemeIcon | undefined>(resolve => {
@@ -525,7 +563,7 @@ export class ProjectBarPart extends Part {
 				target: {
 					targetElements: [body],
 					x: bodyRect.left + (bodyRect.width - dimension.width) / 2,
-					y: bodyRect.top + this.layoutService.activeContainerOffset.top
+					y: bodyRect.top + this.layoutService.activeContainerOffset.top,
 				},
 				position: {
 					hoverPosition: HoverPosition.BELOW,
@@ -552,12 +590,12 @@ export class ProjectBarPart extends Part {
 		super.updateStyles();
 
 		const container = assertReturnsDefined(this.getContainer());
-		const background = this.getColor(ACTIVITY_BAR_BACKGROUND) || '';
+		const background = this.getColor(ACTIVITY_BAR_BACKGROUND) || "";
 		container.style.backgroundColor = background;
 
-		const borderColor = this.getColor(ACTIVITY_BAR_BORDER) || this.getColor(contrastBorder) || '';
-		container.classList.toggle('bordered', !!borderColor);
-		container.style.borderColor = borderColor ? borderColor : '';
+		const borderColor = this.getColor(ACTIVITY_BAR_BORDER) || this.getColor(contrastBorder) || "";
+		container.classList.toggle("bordered", !!borderColor);
+		container.style.borderColor = borderColor ? borderColor : "";
 	}
 
 	focus(): void {
@@ -578,7 +616,7 @@ export class ProjectBarPart extends Part {
 
 	toJSON(): object {
 		return {
-			type: AgenticParts.PROJECTBAR_PART
-		};
+      type: AgenticParts.PROJECTBAR_PART,
+    };
 	}
 }

@@ -3,11 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IEmptyWindowBackupInfo } from '../node/backup.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import { IFolderBackupInfo, IWorkspaceBackupInfo } from '../common/backup.js';
+import { IEmptyWindowBackupInfo } from "../node/backup.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { IFolderBackupInfo, IWorkspaceBackupInfo } from "../common/backup.js";
 
-export const IBackupMainService = createDecorator<IBackupMainService>('backupMainService');
+export const IBackupMainService = createDecorator<IBackupMainService>(
+  "backupMainService",
+);
 
 export interface IBackupMainService {
 

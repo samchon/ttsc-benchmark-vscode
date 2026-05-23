@@ -3,19 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../../../base/common/lifecycle.js';
-import { derived, IObservable } from '../../../../../../base/common/observable.js';
-import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ICodeEditor } from '../../../../../browser/editorBrowser.js';
-import { ObservableCodeEditor, observableCodeEditor } from '../../../../../browser/observableCodeEditor.js';
-import { Range } from '../../../../../common/core/range.js';
-import { TextReplacement, TextEdit } from '../../../../../common/core/edits/textEdit.js';
-import { InlineCompletionsModel } from '../../model/inlineCompletionsModel.js';
-import { InlineEditWithChanges } from './inlineEditWithChanges.js';
-import { ModelPerInlineEdit } from './inlineEditsModel.js';
-import { InlineEditsView } from './inlineEditsView.js';
-import { InlineEditTabAction } from './inlineEditsViewInterface.js';
-import { InlineSuggestionGutterMenuData, SimpleInlineSuggestModel } from './components/gutterIndicatorView.js';
+import { Disposable } from "../../../../../../base/common/lifecycle.js";
+import { derived, IObservable } from "../../../../../../base/common/observable.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { ICodeEditor } from "../../../../../browser/editorBrowser.js";
+import { ObservableCodeEditor, observableCodeEditor } from "../../../../../browser/observableCodeEditor.js";
+import { Range } from "../../../../../common/core/range.js";
+import { TextReplacement, TextEdit } from "../../../../../common/core/edits/textEdit.js";
+import { InlineCompletionsModel } from "../../model/inlineCompletionsModel.js";
+import { InlineEditWithChanges } from "./inlineEditWithChanges.js";
+import { ModelPerInlineEdit } from "./inlineEditsModel.js";
+import { InlineEditsView } from "./inlineEditsView.js";
+import { InlineEditTabAction } from "./inlineEditsViewInterface.js";
+import { InlineSuggestionGutterMenuData, SimpleInlineSuggestModel } from "./components/gutterIndicatorView.js";
 
 export class InlineEditsViewAndDiffProducer extends Disposable { // TODO: This class is no longer a diff producer. Rename it or get rid of it
 	private readonly _editorObs: ObservableCodeEditor;
@@ -32,13 +32,13 @@ export class InlineEditsViewAndDiffProducer extends Disposable { // TODO: This c
 
 		let diffEdits: TextEdit | undefined;
 
-		if (action?.kind === 'edit') {
+		if (action?.kind === "edit") {
 			const editOffset = action.stringEdit;
 			const t = state.inlineSuggestion.originalTextRef.getTransformer();
 			const edits = editOffset.replacements.map(e => {
 				const innerEditRange = Range.fromPositions(
 					t.getPosition(e.replaceRange.start),
-					t.getPosition(e.replaceRange.endExclusive)
+					t.getPosition(e.replaceRange.endExclusive),
 				);
 				return new TextReplacement(innerEditRange, e.newText);
 			});
@@ -54,7 +54,7 @@ export class InlineEditsViewAndDiffProducer extends Disposable { // TODO: This c
 			model.primaryPosition.read(undefined),
 			model.allPositions.read(undefined),
 			state.inlineSuggestion.source.inlineSuggestions.commands ?? [],
-			state.inlineSuggestion
+			state.inlineSuggestion,
 		);
 	});
 
@@ -88,10 +88,19 @@ export class InlineEditsViewAndDiffProducer extends Disposable { // TODO: This c
 
 		this._editorObs = observableCodeEditor(this._editor);
 
-		this.view = this._register(instantiationService.createInstance(InlineEditsView, this._editor, this._inlineEditModel,
-			this._model.map(model => model ? SimpleInlineSuggestModel.fromInlineCompletionModel(model) : undefined),
-			this._inlineEdit.map(e => e ? InlineSuggestionGutterMenuData.fromInlineSuggestion(e.inlineCompletion) : undefined),
-			this._showCollapsed,
-		));
+		this.view = this._register(
+      instantiationService.createInstance(
+        InlineEditsView,
+        this._editor,
+        this._inlineEditModel,
+        this._model.map(
+          model => model ? SimpleInlineSuggestModel.fromInlineCompletionModel(model) : undefined,
+        ),
+        this._inlineEdit.map(
+          e => e ? InlineSuggestionGutterMenuData.fromInlineSuggestion(e.inlineCompletion) : undefined,
+        ),
+        this._showCollapsed,
+      ),
+    );
 	}
 }

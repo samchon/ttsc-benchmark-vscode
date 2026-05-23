@@ -3,27 +3,32 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../base/browser/dom.js';
-import { RenderIndentGuides } from '../../../../base/browser/ui/tree/abstractTree.js';
-import { IHoverDelegate } from '../../../../base/browser/ui/hover/hoverDelegate.js';
-import { IObjectTreeElement, ObjectTreeElementCollapseState } from '../../../../base/browser/ui/tree/tree.js';
-import { IIdentityProvider } from '../../../../base/browser/ui/list/list.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { IInstantiationService } from '../../../instantiation/common/instantiation.js';
-import { WorkbenchObjectTree } from '../../../list/browser/listService.js';
-import { IQuickTreeCheckboxEvent, IQuickTreeItem, IQuickTreeItemButtonEvent, QuickPickFocus } from '../../common/quickInput.js';
-import { QuickInputTreeDelegate } from './quickInputDelegate.js';
-import { getParentNodeState, IQuickTreeFilterData } from './quickInputTree.js';
-import { QuickTreeAccessibilityProvider } from './quickInputTreeAccessibilityProvider.js';
-import { QuickInputTreeFilter } from './quickInputTreeFilter.js';
-import { QuickInputCheckboxStateHandler, QuickInputTreeRenderer } from './quickInputTreeRenderer.js';
-import { QuickInputTreeSorter } from './quickInputTreeSorter.js';
-import { Checkbox } from '../../../../base/browser/ui/toggle/toggle.js';
-import { IQuickInputStyles } from '../quickInput.js';
+import * as dom from "../../../../base/browser/dom.js";
+import { RenderIndentGuides } from "../../../../base/browser/ui/tree/abstractTree.js";
+import { IHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegate.js";
+import { IObjectTreeElement, ObjectTreeElementCollapseState } from "../../../../base/browser/ui/tree/tree.js";
+import { IIdentityProvider } from "../../../../base/browser/ui/list/list.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IInstantiationService } from "../../../instantiation/common/instantiation.js";
+import { WorkbenchObjectTree } from "../../../list/browser/listService.js";
+import {
+  IQuickTreeCheckboxEvent,
+  IQuickTreeItem,
+  IQuickTreeItemButtonEvent,
+  QuickPickFocus,
+} from "../../common/quickInput.js";
+import { QuickInputTreeDelegate } from "./quickInputDelegate.js";
+import { getParentNodeState, IQuickTreeFilterData } from "./quickInputTree.js";
+import { QuickTreeAccessibilityProvider } from "./quickInputTreeAccessibilityProvider.js";
+import { QuickInputTreeFilter } from "./quickInputTreeFilter.js";
+import { QuickInputCheckboxStateHandler, QuickInputTreeRenderer } from "./quickInputTreeRenderer.js";
+import { QuickInputTreeSorter } from "./quickInputTreeSorter.js";
+import { Checkbox } from "../../../../base/browser/ui/toggle/toggle.js";
+import { IQuickInputStyles } from "../quickInput.js";
 
 const $ = dom.$;
-const flatHierarchyClass = 'quick-input-tree-flat';
+const flatHierarchyClass = "quick-input-tree-flat";
 
 class QuickInputTreeIdentityProvider implements IIdentityProvider<IQuickTreeItem> {
 	private readonly _elementIds = new WeakMap<IQuickTreeItem, string>();
@@ -53,13 +58,19 @@ export class QuickInputTreeController extends Disposable {
 	private readonly _sorter: QuickInputTreeSorter;
 	private readonly _tree: WorkbenchObjectTree<IQuickTreeItem, IQuickTreeFilterData>;
 
-	private readonly _onDidTriggerButton = this._register(new Emitter<IQuickTreeItemButtonEvent<IQuickTreeItem>>());
+	private readonly _onDidTriggerButton = this._register(
+    new Emitter<IQuickTreeItemButtonEvent<IQuickTreeItem>>(),
+  );
 	readonly onDidTriggerButton = this._onDidTriggerButton.event;
 
-	private readonly _onDidChangeCheckboxState = this._register(new Emitter<IQuickTreeCheckboxEvent<IQuickTreeItem>>());
+	private readonly _onDidChangeCheckboxState = this._register(
+    new Emitter<IQuickTreeCheckboxEvent<IQuickTreeItem>>(),
+  );
 	readonly onDidChangeCheckboxState = this._onDidChangeCheckboxState.event;
 
-	private readonly _onDidCheckedLeafItemsChange = this._register(new Emitter<ReadonlyArray<IQuickTreeItem>>());
+	private readonly _onDidCheckedLeafItemsChange = this._register(
+    new Emitter<ReadonlyArray<IQuickTreeItem>>(),
+  );
 	readonly onDidChangeCheckedLeafItems = this._onDidCheckedLeafItemsChange.event;
 
 	private readonly _onLeave = this._register(new Emitter<void>());
@@ -83,21 +94,27 @@ export class QuickInputTreeController extends Disposable {
 		@IInstantiationService private readonly instantiationService: IInstantiationService,
 	) {
 		super();
-		this._container = dom.append(container, $('.quick-input-tree'));
-		this._checkboxStateHandler = this._register(new QuickInputCheckboxStateHandler<IQuickTreeItem>());
-		this._renderer = this._register(this.instantiationService.createInstance(
-			QuickInputTreeRenderer,
-			hoverDelegate,
-			this._onDidTriggerButton,
-			this.onDidChangeCheckboxState,
-			this._checkboxStateHandler,
-			styles.toggle
-		));
-		this._filter = this.instantiationService.createInstance(QuickInputTreeFilter);
+		this._container = dom.append(container, $(".quick-input-tree"));
+		this._checkboxStateHandler = this._register(
+      new QuickInputCheckboxStateHandler<IQuickTreeItem>(),
+    );
+		this._renderer = this._register(
+      this.instantiationService.createInstance(
+        QuickInputTreeRenderer,
+        hoverDelegate,
+        this._onDidTriggerButton,
+        this.onDidChangeCheckboxState,
+        this._checkboxStateHandler,
+        styles.toggle,
+      ),
+    );
+		this._filter = this.instantiationService.createInstance(
+      QuickInputTreeFilter,
+    );
 		this._sorter = this._register(new QuickInputTreeSorter());
 		this._tree = this._register(this.instantiationService.createInstance(
 			WorkbenchObjectTree<IQuickTreeItem, IQuickTreeFilterData>,
-			'QuickInputTree',
+			"QuickInputTree",
 			this._container,
 			new QuickInputTreeDelegate(),
 			[this._renderer],
@@ -114,12 +131,14 @@ export class QuickInputTreeController extends Disposable {
 				disableExpandOnSpacebar: true,
 				sorter: this._sorter,
 				filter: this._filter,
-				identityProvider: new QuickInputTreeIdentityProvider()
-			}
+				identityProvider: new QuickInputTreeIdentityProvider(),
+			},
 		));
-		this._register(this._renderer.onDidDisposeFocusedElement(() => {
-			this._tree.domFocus();
-		}));
+		this._register(
+      this._renderer.onDidDisposeFocusedElement(() => {
+        this._tree.domFocus();
+      }),
+    );
 		this.registerCheckboxStateListeners();
 		this.registerOnDidChangeFocus();
 	}
@@ -133,11 +152,11 @@ export class QuickInputTreeController extends Disposable {
 	}
 
 	get displayed() {
-		return this._container.style.display !== 'none';
+		return this._container.style.display !== "none";
 	}
 
 	set displayed(value: boolean) {
-		this._container.style.display = value ? '' : 'none';
+		this._container.style.display = value ? "" : "none";
 	}
 
 	get sortByLabel() {
@@ -150,7 +169,7 @@ export class QuickInputTreeController extends Disposable {
 	}
 
 	getActiveDescendant() {
-		return this._tree.getHTMLElement().getAttribute('aria-activedescendant');
+		return this._tree.getHTMLElement().getAttribute("aria-activedescendant");
 	}
 
 	filter(input: string): void {
@@ -186,7 +205,7 @@ export class QuickInputTreeController extends Disposable {
 				collapsible: !!children,
 				collapsed: item.collapsed ?
 					ObjectTreeElementCollapseState.PreserveOrCollapsed :
-					ObjectTreeElementCollapseState.PreserveOrExpanded
+					ObjectTreeElementCollapseState.PreserveOrExpanded,
 			};
 		};
 
@@ -201,7 +220,7 @@ export class QuickInputTreeController extends Disposable {
 			Math.floor(maxHeight / 44) * 44
 			// Add some extra height so that it's clear there's more to scroll
 			+ 6
-			}px` : '';
+			}px` : "";
 		this._tree.layout();
 	}
 
@@ -230,9 +249,9 @@ export class QuickInputTreeController extends Disposable {
 			case QuickPickFocus.Next: {
 				const prevFocus = this._tree.getFocus();
 				this._tree.focusNext(undefined, false, undefined, (e) => {
-					this._tree.reveal(e.element);
-					return true;
-				});
+          this._tree.reveal(e.element);
+          return true;
+        });
 				const currentFocus = this._tree.getFocus();
 				if (prevFocus.length && prevFocus[0] === currentFocus[0]) {
 					this._onLeave.fire();
@@ -254,9 +273,9 @@ export class QuickInputTreeController extends Disposable {
 			}
 			case QuickPickFocus.NextPage:
 				this._tree.focusNextPage(undefined, (e) => {
-					this._tree.reveal(e.element);
-					return true;
-				});
+          this._tree.reveal(e.element);
+          return true;
+        });
 				break;
 			case QuickPickFocus.PreviousPage:
 				this._tree.focusPreviousPage(undefined, (e) => {
@@ -299,11 +318,13 @@ export class QuickInputTreeController extends Disposable {
 			this.updateCheckboxState(item, item.checked === true);
 		}));
 
-		this._register(this._checkboxStateHandler.onDidChangeCheckboxState(e => {
-			this.updateCheckboxState(e.item, e.checked === true, true);
-			this._tree.setFocus([e.item]);
-			this._tree.setSelection([e.item]);
-		}));
+		this._register(
+      this._checkboxStateHandler.onDidChangeCheckboxState(e => {
+        this.updateCheckboxState(e.item, e.checked === true, true);
+        this._tree.setFocus([e.item]);
+        this._tree.setSelection([e.item]);
+      }),
+    );
 	}
 
 	private updateCheckboxState(item: IQuickTreeItem, newState: boolean, skipItemRerender = false): void {
@@ -346,18 +367,20 @@ export class QuickInputTreeController extends Disposable {
 		}
 
 		this._onDidChangeCheckboxState.fire({
-			item,
-			checked: item.checked ?? false
-		});
+      item,
+      checked: item.checked ?? false,
+    });
 		this._onDidCheckedLeafItemsChange.fire(this.getCheckedLeafItems());
 	}
 
 	registerOnDidChangeFocus() {
 		// Ensure that selection follows focus
-		this._register(this._tree.onDidChangeFocus(e => {
-			const item = this._tree.getFocus().findLast(item => item !== null);
-			this._tree.setSelection(item ? [item] : [], e.browserEvent);
-		}));
+		this._register(
+      this._tree.onDidChangeFocus(e => {
+        const item = this._tree.getFocus().findLast(item => item !== null);
+        this._tree.setSelection(item ? [item] : [], e.browserEvent);
+      }),
+    );
 	}
 
 	getCheckedLeafItems() {
@@ -381,7 +404,9 @@ export class QuickInputTreeController extends Disposable {
 	}
 
 	getActiveItems(): readonly IQuickTreeItem[] {
-		return this._tree.getFocus().filter((item): item is IQuickTreeItem => item !== null);
+		return this._tree.getFocus().filter(
+      (item): item is IQuickTreeItem => item !== null,
+    );
 	}
 
 	toggleCheckbox() {
@@ -392,7 +417,7 @@ export class QuickInputTreeController extends Disposable {
 		}
 	}
 
-	checkAll(checked: boolean | 'mixed') {
+	checkAll(checked: boolean | "mixed") {
 		const updated = new Set<IQuickTreeItem>();
 		const toUpdate = [...this._tree.getNode().children];
 		let fireCheckedChangeEvent = false;
@@ -408,9 +433,9 @@ export class QuickInputTreeController extends Disposable {
 				updated.add(update.element);
 				this._tree.rerender(update.element);
 				this._onDidChangeCheckboxState.fire({
-					item: update.element,
-					checked: update.element.checked
-				});
+          item: update.element,
+          checked: update.element.checked,
+        });
 			}
 		}
 		if (fireCheckedChangeEvent) {

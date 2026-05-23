@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IModelService } from '../../../../editor/common/services/model.js';
-import { ResourceMap } from '../../../../base/common/map.js';
-import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { ITextModel } from '../../../../editor/common/model.js';
-import { ResourceEdit, ResourceFileEdit, ResourceTextEdit } from '../../../../editor/browser/services/bulkEditService.js';
-import { ResourceNotebookCellEdit } from './bulkCellEdits.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+import { ResourceEdit, ResourceFileEdit, ResourceTextEdit } from "../../../../editor/browser/services/bulkEditService.js";
+import { ResourceNotebookCellEdit } from "./bulkCellEdits.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
 
 export class ConflictDetector {
 
@@ -34,7 +34,7 @@ export class ConflictDetector {
 		for (const edit of edits) {
 			if (edit instanceof ResourceTextEdit) {
 				_workspaceEditResources.set(edit.resource, true);
-				if (typeof edit.versionId === 'number') {
+				if (typeof edit.versionId === "number") {
 					const model = modelService.getModel(edit.resource);
 					if (model && model.getVersionId() !== edit.versionId) {
 						this._conflicts.set(edit.resource, true);
@@ -53,7 +53,7 @@ export class ConflictDetector {
 				_workspaceEditResources.set(edit.resource, true);
 
 			} else {
-				logService.warn('UNKNOWN edit type', edit);
+				logService.warn("UNKNOWN edit type", edit);
 			}
 		}
 
@@ -82,7 +82,9 @@ export class ConflictDetector {
 			}
 		};
 		for (const model of modelService.getModels()) {
-			this._disposables.add(model.onDidChangeContent(() => onDidChangeModel(model)));
+			this._disposables.add(
+        model.onDidChangeContent(() => onDidChangeModel(model)),
+      );
 		}
 	}
 

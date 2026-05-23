@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CharCode } from '../../../base/common/charCode.js';
-import { ITextBuffer } from '../model.js';
+import { CharCode } from "../../../base/common/charCode.js";
+import { ITextBuffer } from "../model.js";
 
 class SpacesDiffResult {
 	public spacesDiff: number = 0;
@@ -109,10 +109,18 @@ export function guessIndentation(source: ITextBuffer, defaultTabSize: number, de
 	let linesIndentedWithTabsCount = 0;				// number of lines that contain at least one tab in indentation
 	let linesIndentedWithSpacesCount = 0;			// number of lines that contain only spaces in indentation
 
-	let previousLineText = '';						// content of latest line that contained non-whitespace chars
+	let previousLineText = "";						// content of latest line that contained non-whitespace chars
 	let previousLineIndentation = 0;				// index at which latest line contained the first non-whitespace char
 
-	const ALLOWED_TAB_SIZE_GUESSES = [2, 4, 6, 8, 3, 5, 7];	// prefer even guesses for `tabSize`, limit to [2, 8].
+	const ALLOWED_TAB_SIZE_GUESSES = [
+    2,
+    4,
+    6,
+    8,
+    3,
+    5,
+    7,
+  ];	// prefer even guesses for `tabSize`, limit to [2, 8].
 	const MAX_ALLOWED_TAB_SIZE_GUESS = 8;			// max(ALLOWED_TAB_SIZE_GUESSES) = 8
 
 	const spacesDiffCount = [0, 0, 0, 0, 0, 0, 0, 0, 0];		// `tabSize` scores
@@ -131,7 +139,9 @@ export function guessIndentation(source: ITextBuffer, defaultTabSize: number, de
 		let currentLineSpacesCount = 0;				// count of spaces found in `currentLineText` indentation
 		let currentLineTabsCount = 0;				// count of tabs found in `currentLineText` indentation
 		for (let j = 0, lenJ = currentLineLength; j < lenJ; j++) {
-			const charCode = (useCurrentLineText ? currentLineText.charCodeAt(j) : source.getLineCharCode(lineNumber, j));
+			const charCode = (useCurrentLineText ? currentLineText.charCodeAt(
+        j,
+      ) : source.getLineCharCode(lineNumber, j));
 
 			if (charCode === CharCode.Tab) {
 				currentLineTabsCount++;
@@ -156,7 +166,13 @@ export function guessIndentation(source: ITextBuffer, defaultTabSize: number, de
 			linesIndentedWithSpacesCount++;
 		}
 
-		spacesDiff(previousLineText, previousLineIndentation, currentLineText, currentLineIndentation, tmp);
+		spacesDiff(
+      previousLineText,
+      previousLineIndentation,
+      currentLineText,
+      currentLineIndentation,
+      tmp,
+    );
 
 		if (tmp.looksLikeAlignment) {
 			// if defaultInsertSpaces === true && the spaces count == tabSize, we may want to count it as valid indentation
@@ -215,7 +231,7 @@ export function guessIndentation(source: ITextBuffer, defaultTabSize: number, de
 	// console.log('tabSize: ' + tabSize + ', tabSizeScore: ' + tabSizeScore);
 
 	return {
-		insertSpaces: insertSpaces,
-		tabSize: tabSize
-	};
+    insertSpaces: insertSpaces,
+    tabSize: tabSize,
+  };
 }

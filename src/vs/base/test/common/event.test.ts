@@ -2,18 +2,39 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import assert from 'assert';
-import { stub } from 'sinon';
-import { timeout } from '../../common/async.js';
-import { CancellationToken } from '../../common/cancellation.js';
-import { errorHandler, setUnexpectedErrorHandler } from '../../common/errors.js';
-import { AsyncEmitter, DebounceEmitter, DynamicListEventMultiplexer, Emitter, Event, EventBufferer, EventMultiplexer, IWaitUntil, ListenerLeakError, ListenerRefusalError, MicrotaskEmitter, PauseableEmitter, Relay, createEventDeliveryQueue } from '../../common/event.js';
-import { DisposableStore, IDisposable, isDisposable, setDisposableTracker, DisposableTracker } from '../../common/lifecycle.js';
-import { observableValue, transaction } from '../../common/observable.js';
-import { MicrotaskDelay } from '../../common/symbols.js';
-import { runWithFakedTimers } from './timeTravelScheduler.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from './utils.js';
-import { tail } from '../../common/arrays.js';
+import assert from "assert";
+import { stub } from "sinon";
+import { timeout } from "../../common/async.js";
+import { CancellationToken } from "../../common/cancellation.js";
+import { errorHandler, setUnexpectedErrorHandler } from "../../common/errors.js";
+import {
+  AsyncEmitter,
+  DebounceEmitter,
+  DynamicListEventMultiplexer,
+  Emitter,
+  Event,
+  EventBufferer,
+  EventMultiplexer,
+  IWaitUntil,
+  ListenerLeakError,
+  ListenerRefusalError,
+  MicrotaskEmitter,
+  PauseableEmitter,
+  Relay,
+  createEventDeliveryQueue,
+} from "../../common/event.js";
+import {
+  DisposableStore,
+  IDisposable,
+  isDisposable,
+  setDisposableTracker,
+  DisposableTracker,
+} from "../../common/lifecycle.js";
+import { observableValue, transaction } from "../../common/observable.js";
+import { MicrotaskDelay } from "../../common/symbols.js";
+import { runWithFakedTimers } from "./timeTravelScheduler.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "./utils.js";
+import { tail } from "../../common/arrays.js";
 
 namespace Samples {
 
@@ -48,7 +69,7 @@ namespace Samples {
 	}
 }
 
-suite('Event utils dispose', function () {
+suite("Event utils dispose", function () {
 
 	const ds = ensureNoDisposablesAreLeakedInTestSuite();
 
@@ -79,7 +100,7 @@ suite('Event utils dispose', function () {
 		setDisposableTracker(null);
 	});
 
-	test('no leak with snapshot-utils', function () {
+	test("no leak with snapshot-utils", function () {
 
 		const store = new DisposableStore();
 		const emitter = ds.add(new Emitter<number>());
@@ -96,7 +117,7 @@ suite('Event utils dispose', function () {
 		assertDisposablesCount([leaked]); // leaked is still there
 	});
 
-	test('no leak with debounce-util', function () {
+	test("no leak with debounce-util", function () {
 		const store = new DisposableStore();
 		const emitter = ds.add(new Emitter<number>());
 		const debounced = Event.debounce(emitter.event, (l) => 0, undefined, undefined, undefined, undefined, store);
@@ -114,7 +135,7 @@ suite('Event utils dispose', function () {
 	});
 });
 
-suite('Event', function () {
+suite("Event", function () {
 
 	const ds = ensureNoDisposablesAreLeakedInTestSuite();
 
@@ -122,22 +143,22 @@ suite('Event', function () {
 
 	setup(() => counter.reset());
 
-	test('Emitter plain', function () {
+	test("Emitter plain", function () {
 
 		const doc = ds.add(new Samples.Document3());
 
 		const subscription = doc.onDidChange(counter.onEvent, counter);
 
-		doc.setText('far');
-		doc.setText('boo');
+		doc.setText("far");
+		doc.setText("boo");
 
 		// unhook listener
 		subscription.dispose();
-		doc.setText('boo');
+		doc.setText("boo");
 		assert.strictEqual(counter.count, 2);
 	});
 
-	test('Emitter duplicate functions', () => {
+	test("Emitter duplicate functions", () => {
 		const calls: string[] = [];
 		const a = (v: string) => calls.push(`a${v}`);
 		const b = (v: string) => calls.push(`b${v}`);
@@ -148,16 +169,16 @@ suite('Event', function () {
 		ds.add(emitter.event(b));
 		const s2 = emitter.event(a);
 
-		emitter.fire('1');
-		assert.deepStrictEqual(calls, ['a1', 'b1', 'a1']);
+		emitter.fire("1");
+		assert.deepStrictEqual(calls, ["a1", "b1", "a1"]);
 
 		s2.dispose();
 		calls.length = 0;
-		emitter.fire('2');
-		assert.deepStrictEqual(calls, ['a2', 'b2']);
+		emitter.fire("2");
+		assert.deepStrictEqual(calls, ["a2", "b2"]);
 	});
 
-	test('Emitter, dispose listener during emission', () => {
+	test("Emitter, dispose listener during emission", () => {
 		for (let keepFirstMod = 1; keepFirstMod < 4; keepFirstMod++) {
 			const emitter = ds.add(new Emitter<void>());
 			const calls: number[] = [];
@@ -173,7 +194,7 @@ suite('Event', function () {
 		}
 	});
 
-	test('Emitter, dispose emitter during emission', () => {
+	test("Emitter, dispose emitter during emission", () => {
 		const emitter = ds.add(new Emitter<void>());
 		const calls: number[] = [];
 		const disposables = Array.from({ length: 25 }, (_, n) => ds.add(emitter.event(() => {
@@ -188,7 +209,7 @@ suite('Event', function () {
 		assert.deepStrictEqual(calls, Array.from({ length: 11 }, (_, n) => n));
 	});
 
-	test('Emitter, shared delivery queue', () => {
+	test("Emitter, shared delivery queue", () => {
 		const deliveryQueue = createEventDeliveryQueue();
 		const emitter1 = ds.add(new Emitter<number>({ deliveryQueue }));
 		const emitter2 = ds.add(new Emitter<number>({ deliveryQueue }));
@@ -204,10 +225,10 @@ suite('Event', function () {
 
 		// 1. Check that 2 is not delivered before 1 finishes
 		// 2. Check that 2 finishes getting delivered even if one emitter is disposed
-		assert.deepStrictEqual(calls, ['1a', '1b', '2c', '2d']);
+		assert.deepStrictEqual(calls, ["1a", "1b", "2c", "2d"]);
 	});
 
-	test('Emitter, handles removal during 3', () => {
+	test("Emitter, handles removal during 3", () => {
 		const fn1 = stub();
 		const fn2 = stub();
 		const emitter = ds.add(new Emitter<string>());
@@ -217,13 +238,13 @@ suite('Event', function () {
 			h.dispose();
 		});
 		ds.add(emitter.event(fn2));
-		emitter.fire('foo');
+		emitter.fire("foo");
 
-		assert.deepStrictEqual(fn2.args, [['foo']]);
-		assert.deepStrictEqual(fn1.args, [['foo']]);
+		assert.deepStrictEqual(fn2.args, [["foo"]]);
+		assert.deepStrictEqual(fn1.args, [["foo"]]);
 	});
 
-	test('Emitter, handles removal during 2', () => {
+	test("Emitter, handles removal during 2", () => {
 		const fn1 = stub();
 		const emitter = ds.add(new Emitter<string>());
 
@@ -231,60 +252,60 @@ suite('Event', function () {
 		const h = emitter.event(() => {
 			h.dispose();
 		});
-		emitter.fire('foo');
+		emitter.fire("foo");
 
-		assert.deepStrictEqual(fn1.args, [['foo']]);
+		assert.deepStrictEqual(fn1.args, [["foo"]]);
 	});
 
-	test('Emitter, bucket', function () {
+	test("Emitter, bucket", function () {
 
 		const bucket: IDisposable[] = [];
 		const doc = ds.add(new Samples.Document3());
 		const subscription = doc.onDidChange(counter.onEvent, counter, bucket);
 
-		doc.setText('far');
-		doc.setText('boo');
+		doc.setText("far");
+		doc.setText("boo");
 
 		// unhook listener
 		while (bucket.length) {
 			bucket.pop()!.dispose();
 		}
-		doc.setText('boo');
+		doc.setText("boo");
 
 		// noop
 		subscription.dispose();
 
-		doc.setText('boo');
+		doc.setText("boo");
 		assert.strictEqual(counter.count, 2);
 	});
 
-	test('Emitter, store', function () {
+	test("Emitter, store", function () {
 
 		const bucket = ds.add(new DisposableStore());
 		const doc = ds.add(new Samples.Document3());
 		const subscription = doc.onDidChange(counter.onEvent, counter, bucket);
 
-		doc.setText('far');
-		doc.setText('boo');
+		doc.setText("far");
+		doc.setText("boo");
 
 		// unhook listener
 		bucket.clear();
-		doc.setText('boo');
+		doc.setText("boo");
 
 		// noop
 		subscription.dispose();
 
-		doc.setText('boo');
+		doc.setText("boo");
 		assert.strictEqual(counter.count, 2);
 	});
 
-	test('onFirstAdd|onLastRemove', () => {
+	test("onFirstAdd|onLastRemove", () => {
 
 		let firstCount = 0;
 		let lastCount = 0;
 		const a = ds.add(new Emitter({
 			onWillAddFirstListener() { firstCount += 1; },
-			onDidRemoveLastListener() { lastCount += 1; }
+			onDidRemoveLastListener() { lastCount += 1; },
 		}));
 
 		assert.strictEqual(firstCount, 0);
@@ -308,10 +329,10 @@ suite('Event', function () {
 		assert.strictEqual(lastCount, 1);
 	});
 
-	test('onDidAddListener', () => {
+	test("onDidAddListener", () => {
 		let count = 0;
 		const a = ds.add(new Emitter({
-			onDidAddListener() { count += 1; }
+			onDidAddListener() { count += 1; },
 		}));
 
 		assert.strictEqual(count, 0);
@@ -329,10 +350,10 @@ suite('Event', function () {
 		assert.strictEqual(count, 2);
 	});
 
-	test('onWillRemoveListener', () => {
+	test("onWillRemoveListener", () => {
 		let count = 0;
 		const a = ds.add(new Emitter({
-			onWillRemoveListener() { count += 1; }
+			onWillRemoveListener() { count += 1; },
 		}));
 
 		assert.strictEqual(count, 0);
@@ -347,7 +368,7 @@ suite('Event', function () {
 		assert.strictEqual(count, 1);
 	});
 
-	test('throwingListener', () => {
+	test("throwingListener", () => {
 		const origErrorHandler = errorHandler.getUnexpectedErrorHandler();
 		setUnexpectedErrorHandler(() => null);
 
@@ -369,12 +390,12 @@ suite('Event', function () {
 		}
 	});
 
-	test('throwingListener (custom handler)', () => {
+	test("throwingListener (custom handler)", () => {
 
 		const allError: any[] = [];
 
 		const a = ds.add(new Emitter<undefined>({
-			onListenerError(e) { allError.push(e); }
+			onListenerError(e) { allError.push(e); },
 		}));
 		let hit = false;
 		ds.add(a.event(function () {
@@ -390,7 +411,7 @@ suite('Event', function () {
 
 	});
 
-	test('throw ListenerLeakError', () => {
+	test("throw ListenerLeakError", () => {
 
 		const store = new DisposableStore();
 		const allError: any[] = [];
@@ -415,7 +436,7 @@ suite('Event', function () {
 		store.dispose();
 	});
 
-	test('reusing event function and context', function () {
+	test("reusing event function and context", function () {
 		let counter = 0;
 		function listener() {
 			counter += 1;
@@ -438,7 +459,7 @@ suite('Event', function () {
 		assert.strictEqual(counter, 3);
 	});
 
-	test('DebounceEmitter', async function () {
+	test("DebounceEmitter", async function () {
 		return runWithFakedTimers({}, async function () {
 
 			let callCount = 0;
@@ -447,7 +468,7 @@ suite('Event', function () {
 				merge: arr => {
 					callCount += 1;
 					return arr.reduce((p, c) => p + c);
-				}
+				},
 			});
 
 			ds.add(emitter.event(e => { sum = e; }));
@@ -464,7 +485,7 @@ suite('Event', function () {
 		});
 	});
 
-	suite('Event.toPromise', () => {
+	suite("Event.toPromise", () => {
 		class DisposableStoreWithSize extends DisposableStore {
 			public size = 0;
 			public override add<T extends IDisposable>(o: T): T {
@@ -477,7 +498,7 @@ suite('Event', function () {
 				return super.delete(o);
 			}
 		}
-		test('resolves on first event', async () => {
+		test("resolves on first event", async () => {
 			const emitter = ds.add(new Emitter<number>());
 			const promise = Event.toPromise(emitter.event);
 
@@ -487,7 +508,7 @@ suite('Event', function () {
 			assert.strictEqual(result, 42);
 		});
 
-		test('disposes listener after resolution', async () => {
+		test("disposes listener after resolution", async () => {
 			const emitter = ds.add(new Emitter<number>());
 			const promise = Event.toPromise(emitter.event);
 
@@ -499,7 +520,7 @@ suite('Event', function () {
 			assert.ok(true); // No errors
 		});
 
-		test('adds to DisposableStore', async () => {
+		test("adds to DisposableStore", async () => {
 			const emitter = ds.add(new Emitter<number>());
 			const store = ds.add(new DisposableStoreWithSize());
 			const promise = Event.toPromise(emitter.event, store);
@@ -513,7 +534,7 @@ suite('Event', function () {
 			assert.strictEqual(store.size, 0);
 		});
 
-		test('adds to disposables array', async () => {
+		test("adds to disposables array", async () => {
 			const emitter = ds.add(new Emitter<number>());
 			const disposables: IDisposable[] = [];
 			const promise = Event.toPromise(emitter.event, disposables);
@@ -527,7 +548,7 @@ suite('Event', function () {
 			assert.strictEqual(disposables.length, 0);
 		});
 
-		test('cancel removes from DisposableStore', () => {
+		test("cancel removes from DisposableStore", () => {
 			const emitter = ds.add(new Emitter<number>());
 			const store = ds.add(new DisposableStoreWithSize());
 			const promise = Event.toPromise(emitter.event, store);
@@ -540,7 +561,7 @@ suite('Event', function () {
 			assert.strictEqual(store.size, 0);
 		});
 
-		test('cancel removes from disposables array', () => {
+		test("cancel removes from disposables array", () => {
 			const emitter = ds.add(new Emitter<number>());
 			const disposables: IDisposable[] = [];
 			const promise = Event.toPromise(emitter.event, disposables);
@@ -553,7 +574,7 @@ suite('Event', function () {
 			assert.strictEqual(disposables.length, 0);
 		});
 
-		test('cancel does not resolve promise', async () => {
+		test("cancel does not resolve promise", async () => {
 			const emitter = ds.add(new Emitter<number>());
 			const promise = Event.toPromise(emitter.event);
 
@@ -569,7 +590,7 @@ suite('Event', function () {
 		});
 	});
 
-	test('Microtask Emitter', (done) => {
+	test("Microtask Emitter", (done) => {
 		let count = 0;
 		assert.strictEqual(count, 0);
 		const emitter = new MicrotaskEmitter<void>();
@@ -592,57 +613,57 @@ suite('Event', function () {
 		});
 	});
 
-	test('Emitter - In Order Delivery', function () {
+	test("Emitter - In Order Delivery", function () {
 		const a = ds.add(new Emitter<string>());
 		const listener2Events: string[] = [];
 		ds.add(a.event(function listener1(event) {
-			if (event === 'e1') {
-				a.fire('e2');
+			if (event === "e1") {
+				a.fire("e2");
 				// assert that all events are delivered at this point
-				assert.deepStrictEqual(listener2Events, ['e1', 'e2']);
+				assert.deepStrictEqual(listener2Events, ["e1", "e2"]);
 			}
 		}));
 		ds.add(a.event(function listener2(event) {
 			listener2Events.push(event);
 		}));
-		a.fire('e1');
+		a.fire("e1");
 
 		// assert that all events are delivered in order
-		assert.deepStrictEqual(listener2Events, ['e1', 'e2']);
+		assert.deepStrictEqual(listener2Events, ["e1", "e2"]);
 	});
 
-	test('Emitter, - In Order Delivery 3x', function () {
+	test("Emitter, - In Order Delivery 3x", function () {
 		const a = ds.add(new Emitter<string>());
 		const listener2Events: string[] = [];
 		ds.add(a.event(function listener1(event) {
-			if (event === 'e2') {
-				a.fire('e3');
+			if (event === "e2") {
+				a.fire("e3");
 				// assert that all events are delivered at this point
-				assert.deepStrictEqual(listener2Events, ['e1', 'e2', 'e3']);
+				assert.deepStrictEqual(listener2Events, ["e1", "e2", "e3"]);
 			}
 		}));
 		ds.add(a.event(function listener1(event) {
-			if (event === 'e1') {
-				a.fire('e2');
+			if (event === "e1") {
+				a.fire("e2");
 				// assert that all events are delivered at this point
-				assert.deepStrictEqual(listener2Events, ['e1', 'e2', 'e3']);
+				assert.deepStrictEqual(listener2Events, ["e1", "e2", "e3"]);
 			}
 		}));
 		ds.add(a.event(function listener2(event) {
 			listener2Events.push(event);
 		}));
-		a.fire('e1');
+		a.fire("e1");
 
 		// assert that all events are delivered in order
-		assert.deepStrictEqual(listener2Events, ['e1', 'e2', 'e3']);
+		assert.deepStrictEqual(listener2Events, ["e1", "e2", "e3"]);
 	});
 });
 
-suite('AsyncEmitter', function () {
+suite("AsyncEmitter", function () {
 
 	const ds = ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('event has waitUntil-function', async function () {
+	test("event has waitUntil-function", async function () {
 
 		interface E extends IWaitUntil {
 			foo: boolean;
@@ -654,14 +675,14 @@ suite('AsyncEmitter', function () {
 		ds.add(emitter.event(e => {
 			assert.strictEqual(e.foo, true);
 			assert.strictEqual(e.bar, 1);
-			assert.strictEqual(typeof e.waitUntil, 'function');
+			assert.strictEqual(typeof e.waitUntil, "function");
 		}));
 
 		emitter.fireAsync({ foo: true, bar: 1, }, CancellationToken.None);
 		emitter.dispose();
 	});
 
-	test('sequential delivery', async function () {
+	test("sequential delivery", async function () {
 		return runWithFakedTimers({}, async function () {
 
 			interface E extends IWaitUntil {
@@ -690,7 +711,7 @@ suite('AsyncEmitter', function () {
 		});
 	});
 
-	test('sequential, in-order delivery', async function () {
+	test("sequential, in-order delivery", async function () {
 		return runWithFakedTimers({}, async function () {
 
 			interface E extends IWaitUntil {
@@ -722,7 +743,7 @@ suite('AsyncEmitter', function () {
 		});
 	});
 
-	test('catch errors', async function () {
+	test("catch errors", async function () {
 		const origErrorHandler = errorHandler.getUnexpectedErrorHandler();
 		setUnexpectedErrorHandler(() => null);
 
@@ -755,11 +776,11 @@ suite('AsyncEmitter', function () {
 	});
 });
 
-suite('PausableEmitter', function () {
+suite("PausableEmitter", function () {
 
 	const ds = ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('basic', function () {
+	test("basic", function () {
 		const data: number[] = [];
 		const emitter = ds.add(new PauseableEmitter<number>());
 
@@ -770,7 +791,7 @@ suite('PausableEmitter', function () {
 		assert.deepStrictEqual(data, [1, 2]);
 	});
 
-	test('pause/resume - no merge', function () {
+	test("pause/resume - no merge", function () {
 		const data: number[] = [];
 		const emitter = ds.add(new PauseableEmitter<number>());
 
@@ -790,7 +811,7 @@ suite('PausableEmitter', function () {
 		assert.deepStrictEqual(data, [1, 2, 3, 4, 5]);
 	});
 
-	test('pause/resume - merge', function () {
+	test("pause/resume - merge", function () {
 		const data: number[] = [];
 		const emitter = ds.add(new PauseableEmitter<number>({ merge: (a) => a.reduce((p, c) => p + c, 0) }));
 
@@ -811,7 +832,7 @@ suite('PausableEmitter', function () {
 		assert.deepStrictEqual(data, [1, 2, 7, 5]);
 	});
 
-	test('double pause/resume', function () {
+	test("double pause/resume", function () {
 		const data: number[] = [];
 		const emitter = ds.add(new PauseableEmitter<number>());
 
@@ -836,7 +857,7 @@ suite('PausableEmitter', function () {
 		assert.deepStrictEqual(data, [1, 2, 3, 4]);
 	});
 
-	test('resume, no pause', function () {
+	test("resume, no pause", function () {
 		const data: number[] = [];
 		const emitter = ds.add(new PauseableEmitter<number>());
 
@@ -850,7 +871,7 @@ suite('PausableEmitter', function () {
 		assert.deepStrictEqual(data, [1, 2, 3]);
 	});
 
-	test('nested pause', function () {
+	test("nested pause", function () {
 		const data: number[] = [];
 		const emitter = ds.add(new PauseableEmitter<number>());
 
@@ -883,7 +904,7 @@ suite('PausableEmitter', function () {
 
 	});
 
-	test('empty pause with merge', function () {
+	test("empty pause with merge", function () {
 		const data: number[] = [];
 		const emitter = ds.add(new PauseableEmitter<number>({ merge: a => a[0] }));
 		ds.add(emitter.event(e => data.push(1)));
@@ -895,40 +916,39 @@ suite('PausableEmitter', function () {
 
 });
 
-suite('Event utils - ensureNoDisposablesAreLeakedInTestSuite', function () {
-	ensureNoDisposablesAreLeakedInTestSuite();
+suite("Event utils - ensureNoDisposablesAreLeakedInTestSuite", function () {
+  ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('fromObservable', function () {
+  test("fromObservable", function () {
+    const obs = observableValue("test", 12);
+    const event = Event.fromObservable(obs);
 
-		const obs = observableValue('test', 12);
-		const event = Event.fromObservable(obs);
+    const values: number[] = [];
+    const d = event(n => { values.push(n); });
 
-		const values: number[] = [];
-		const d = event(n => { values.push(n); });
+    obs.set(3, undefined);
+    obs.set(13, undefined);
+    obs.set(3, undefined);
+    obs.set(33, undefined);
+    obs.set(1, undefined);
 
-		obs.set(3, undefined);
-		obs.set(13, undefined);
-		obs.set(3, undefined);
-		obs.set(33, undefined);
-		obs.set(1, undefined);
+    transaction(tx => {
+      obs.set(334, tx);
+      obs.set(99, tx);
+    });
 
-		transaction(tx => {
-			obs.set(334, tx);
-			obs.set(99, tx);
-		});
-
-		assert.deepStrictEqual(values, ([3, 13, 3, 33, 1, 99]));
-		d.dispose();
-	});
+    assert.deepStrictEqual(values, ([3, 13, 3, 33, 1, 99]));
+    d.dispose();
+  });
 });
 
-suite('Event utils', () => {
+suite("Event utils", () => {
 
 	const ds = ensureNoDisposablesAreLeakedInTestSuite();
 
-	suite('EventBufferer', () => {
+	suite("EventBufferer", () => {
 
-		test('should not buffer when not wrapped', () => {
+		test("should not buffer when not wrapped", () => {
 			const bufferer = new EventBufferer();
 			const counter = new Samples.EventCounter();
 			const emitter = ds.add(new Emitter<void>());
@@ -946,7 +966,7 @@ suite('Event utils', () => {
 			listener.dispose();
 		});
 
-		test('should buffer when wrapped', () => {
+		test("should buffer when wrapped", () => {
 			const bufferer = new EventBufferer();
 			const counter = new Samples.EventCounter();
 			const emitter = ds.add(new Emitter<void>());
@@ -971,7 +991,7 @@ suite('Event utils', () => {
 			listener.dispose();
 		});
 
-		test('once', () => {
+		test("once", () => {
 			const emitter = ds.add(new Emitter<void>());
 
 			let counter1 = 0, counter2 = 0, counter3 = 0;
@@ -1000,13 +1020,13 @@ suite('Event utils', () => {
 		});
 	});
 
-	suite('buffer', () => {
+	suite("buffer", () => {
 
-		test('should buffer events', () => {
+		test("should buffer events", () => {
 			const result: number[] = [];
 			const emitter = ds.add(new Emitter<number>());
 			const event = emitter.event;
-			const bufferedEvent = Event.buffer(event, 'test');
+			const bufferedEvent = Event.buffer(event, "test");
 
 			emitter.fire(1);
 			emitter.fire(2);
@@ -1024,11 +1044,11 @@ suite('Event utils', () => {
 			assert.deepStrictEqual(result, [1, 2, 3, 4]);
 		});
 
-		test('should buffer events on next tick', async () => {
+		test("should buffer events on next tick", async () => {
 			const result: number[] = [];
 			const emitter = ds.add(new Emitter<number>());
 			const event = emitter.event;
-			const bufferedEvent = Event.buffer(event, 'test', true);
+			const bufferedEvent = Event.buffer(event, "test", true);
 
 			emitter.fire(1);
 			emitter.fire(2);
@@ -1046,11 +1066,11 @@ suite('Event utils', () => {
 			assert.deepStrictEqual(result, [1, 2, 3, 4]);
 		});
 
-		test('should fire initial buffer events', () => {
+		test("should fire initial buffer events", () => {
 			const result: number[] = [];
 			const emitter = ds.add(new Emitter<number>());
 			const event = emitter.event;
-			const bufferedEvent = Event.buffer(event, 'test', false, [-2, -1, 0]);
+			const bufferedEvent = Event.buffer(event, "test", false, [-2, -1, 0]);
 
 			emitter.fire(1);
 			emitter.fire(2);
@@ -1062,9 +1082,9 @@ suite('Event utils', () => {
 		});
 	});
 
-	suite('EventMultiplexer', () => {
+	suite("EventMultiplexer", () => {
 
-		test('works', () => {
+		test("works", () => {
 			const result: number[] = [];
 			const m = new EventMultiplexer<number>();
 			ds.add(m.event(r => result.push(r)));
@@ -1078,7 +1098,7 @@ suite('Event utils', () => {
 			assert.deepStrictEqual(result, [0]);
 		});
 
-		test('multiplexer dispose works', () => {
+		test("multiplexer dispose works", () => {
 			const result: number[] = [];
 			const m = new EventMultiplexer<number>();
 			ds.add(m.event(r => result.push(r)));
@@ -1098,7 +1118,7 @@ suite('Event utils', () => {
 			assert.deepStrictEqual(result, [0]);
 		});
 
-		test('event dispose works', () => {
+		test("event dispose works", () => {
 			const result: number[] = [];
 			const m = new EventMultiplexer<number>();
 			ds.add(m.event(r => result.push(r)));
@@ -1118,7 +1138,7 @@ suite('Event utils', () => {
 			assert.deepStrictEqual(result, [0]);
 		});
 
-		test('mutliplexer event dispose works', () => {
+		test("mutliplexer event dispose works", () => {
 			const result: number[] = [];
 			const m = new EventMultiplexer<number>();
 			ds.add(m.event(r => result.push(r)));
@@ -1138,7 +1158,7 @@ suite('Event utils', () => {
 			assert.deepStrictEqual(result, [0]);
 		});
 
-		test('hot start works', () => {
+		test("hot start works", () => {
 			const result: number[] = [];
 			const m = new EventMultiplexer<number>();
 			ds.add(m.event(r => result.push(r)));
@@ -1156,7 +1176,7 @@ suite('Event utils', () => {
 			assert.deepStrictEqual(result, [1, 2, 3]);
 		});
 
-		test('cold start works', () => {
+		test("cold start works", () => {
 			const result: number[] = [];
 			const m = new EventMultiplexer<number>();
 
@@ -1175,7 +1195,7 @@ suite('Event utils', () => {
 			assert.deepStrictEqual(result, [1, 2, 3]);
 		});
 
-		test('late add works', () => {
+		test("late add works", () => {
 			const result: number[] = [];
 			const m = new EventMultiplexer<number>();
 
@@ -1196,7 +1216,7 @@ suite('Event utils', () => {
 			assert.deepStrictEqual(result, [1, 2, 3]);
 		});
 
-		test('add dispose works', () => {
+		test("add dispose works", () => {
 			const result: number[] = [];
 			const m = new EventMultiplexer<number>();
 
@@ -1225,7 +1245,7 @@ suite('Event utils', () => {
 		});
 	});
 
-	suite('DynamicListEventMultiplexer', () => {
+	suite("DynamicListEventMultiplexer", () => {
 		let addEmitter: Emitter<TestItem>;
 		let removeEmitter: Emitter<TestItem>;
 		const recordedEvents: number[] = [];
@@ -1247,14 +1267,14 @@ suite('Event utils', () => {
 			recordedEvents.length = 0;
 		});
 		teardown(() => m.dispose());
-		test('should fire events for initial items', () => {
+		test("should fire events for initial items", () => {
 			items[0].onTestEventEmitter.fire(1);
 			items[1].onTestEventEmitter.fire(2);
 			items[0].onTestEventEmitter.fire(3);
 			items[1].onTestEventEmitter.fire(4);
 			assert.deepStrictEqual(recordedEvents, [1, 2, 3, 4]);
 		});
-		test('should fire events for added items', () => {
+		test("should fire events for added items", () => {
 			const addedItem = new TestItem();
 			addEmitter.fire(addedItem);
 			addedItem.onTestEventEmitter.fire(1);
@@ -1263,7 +1283,7 @@ suite('Event utils', () => {
 			addedItem.onTestEventEmitter.fire(4);
 			assert.deepStrictEqual(recordedEvents, [1, 2, 3, 4]);
 		});
-		test('should not fire events for removed items', () => {
+		test("should not fire events for removed items", () => {
 			removeEmitter.fire(items[0]);
 			items[0].onTestEventEmitter.fire(1);
 			items[1].onTestEventEmitter.fire(2);
@@ -1273,7 +1293,7 @@ suite('Event utils', () => {
 		});
 	});
 
-	test('latch', () => {
+	test("latch", () => {
 		const emitter = ds.add(new Emitter<number>());
 		const event = Event.latch(emitter.event);
 
@@ -1309,19 +1329,19 @@ suite('Event utils', () => {
 		listener.dispose();
 	});
 
-	test('dispose is reentrant', () => {
+	test("dispose is reentrant", () => {
 		const emitter = ds.add(new Emitter<number>({
 			onDidRemoveLastListener: () => {
 				emitter.dispose();
-			}
+			},
 		}));
 
 		const listener = emitter.event(() => undefined);
 		listener.dispose(); // should not crash
 	});
 
-	suite('Relay', () => {
-		test('should input work', () => {
+	suite("Relay", () => {
+		test("should input work", () => {
 			const e1 = ds.add(new Emitter<number>());
 			const e2 = ds.add(new Emitter<number>());
 			const relay = new Relay<number>();
@@ -1348,7 +1368,7 @@ suite('Event utils', () => {
 			assert.deepStrictEqual(result, [2, 4]);
 		});
 
-		test('should Relay dispose work', () => {
+		test("should Relay dispose work", () => {
 			const e1 = ds.add(new Emitter<number>());
 			const e2 = ds.add(new Emitter<number>());
 			const relay = new Relay<number>();
@@ -1376,8 +1396,8 @@ suite('Event utils', () => {
 		});
 	});
 
-	suite('accumulate', () => {
-		test('should not fire after a listener is disposed with undefined or []', async () => {
+	suite("accumulate", () => {
+		test("should not fire after a listener is disposed with undefined or []", async () => {
 			const eventEmitter = ds.add(new Emitter<number>());
 			const event = eventEmitter.event;
 			const accumulated = Event.accumulate(event, 0);
@@ -1395,9 +1415,9 @@ suite('Event utils', () => {
 			listener1.dispose();
 			await timeout(1);
 			assert.deepStrictEqual(calls1, [[1]]);
-			assert.deepStrictEqual(calls2, [[1]], 'should not fire after a listener is disposed with undefined or []');
+			assert.deepStrictEqual(calls2, [[1]], "should not fire after a listener is disposed with undefined or []");
 		});
-		test('should accumulate a single event', async () => {
+		test("should accumulate a single event", async () => {
 			const eventEmitter = ds.add(new Emitter<number>());
 			const event = eventEmitter.event;
 			const accumulated = Event.accumulate(event, 0);
@@ -1414,7 +1434,7 @@ suite('Event utils', () => {
 			});
 			assert.deepStrictEqual(results2, [2]);
 		});
-		test('should accumulate multiple events', async () => {
+		test("should accumulate multiple events", async () => {
 			const eventEmitter = ds.add(new Emitter<number>());
 			const event = eventEmitter.event;
 			const accumulated = Event.accumulate(event, 0);
@@ -1439,8 +1459,8 @@ suite('Event utils', () => {
 		});
 	});
 
-	suite('debounce', () => {
-		test('simple', function (done: () => void) {
+	suite("debounce", () => {
+		test("simple", function (done: () => void) {
 			const doc = ds.add(new Samples.Document3());
 
 			const onDocDidChange = Event.debounce(doc.onDidChange, (prev: string[] | undefined, cur) => {
@@ -1456,23 +1476,23 @@ suite('Event utils', () => {
 
 			ds.add(onDocDidChange(keys => {
 				count++;
-				assert.ok(keys, 'was not expecting keys.');
+				assert.ok(keys, "was not expecting keys.");
 				if (count === 1) {
-					doc.setText('4');
-					assert.deepStrictEqual(keys, ['1', '2', '3']);
+					doc.setText("4");
+					assert.deepStrictEqual(keys, ["1", "2", "3"]);
 				} else if (count === 2) {
-					assert.deepStrictEqual(keys, ['4']);
+					assert.deepStrictEqual(keys, ["4"]);
 					done();
 				}
 			}));
 
-			doc.setText('1');
-			doc.setText('2');
-			doc.setText('3');
+			doc.setText("1");
+			doc.setText("2");
+			doc.setText("3");
 		});
 
 
-		test('microtask', function (done: () => void) {
+		test("microtask", function (done: () => void) {
 			const doc = ds.add(new Samples.Document3());
 
 			const onDocDidChange = Event.debounce(doc.onDidChange, (prev: string[] | undefined, cur) => {
@@ -1488,23 +1508,23 @@ suite('Event utils', () => {
 
 			ds.add(onDocDidChange(keys => {
 				count++;
-				assert.ok(keys, 'was not expecting keys.');
+				assert.ok(keys, "was not expecting keys.");
 				if (count === 1) {
-					doc.setText('4');
-					assert.deepStrictEqual(keys, ['1', '2', '3']);
+					doc.setText("4");
+					assert.deepStrictEqual(keys, ["1", "2", "3"]);
 				} else if (count === 2) {
-					assert.deepStrictEqual(keys, ['4']);
+					assert.deepStrictEqual(keys, ["4"]);
 					done();
 				}
 			}));
 
-			doc.setText('1');
-			doc.setText('2');
-			doc.setText('3');
+			doc.setText("1");
+			doc.setText("2");
+			doc.setText("3");
 		});
 
 
-		test('leading', async function () {
+		test("leading", async function () {
 			const emitter = ds.add(new Emitter<void>());
 			const debounced = Event.debounce(emitter.event, (l, e) => e, 0, /*leading=*/true);
 
@@ -1520,7 +1540,7 @@ suite('Event utils', () => {
 			assert.strictEqual(calls, 1);
 		});
 
-		test('leading (2)', async function () {
+		test("leading (2)", async function () {
 			const emitter = ds.add(new Emitter<void>());
 			const debounced = Event.debounce(emitter.event, (l, e) => e, 0, /*leading=*/true);
 
@@ -1537,7 +1557,7 @@ suite('Event utils', () => {
 			assert.strictEqual(calls, 2);
 		});
 
-		test('leading reset', async function () {
+		test("leading reset", async function () {
 			const emitter = ds.add(new Emitter<number>());
 			const debounced = Event.debounce(emitter.event, (l, e) => l ? l + 1 : 1, 0, /*leading=*/true);
 
@@ -1551,7 +1571,7 @@ suite('Event utils', () => {
 			assert.deepStrictEqual(calls, [1, 1]);
 		});
 
-		test('should not flush events when a listener is disposed', async () => {
+		test("should not flush events when a listener is disposed", async () => {
 			const emitter = ds.add(new Emitter<number>());
 			const debounced = Event.debounce(emitter.event, (l, e) => l ? l + 1 : 1, 0);
 
@@ -1567,7 +1587,7 @@ suite('Event utils', () => {
 			assert.deepStrictEqual(calls, []);
 		});
 
-		test('flushOnListenerRemove - should flush events when a listener is disposed', async () => {
+		test("flushOnListenerRemove - should flush events when a listener is disposed", async () => {
 			const emitter = ds.add(new Emitter<number>());
 			const debounced = Event.debounce(emitter.event, (l, e) => l ? l + 1 : 1, 0, undefined, true);
 
@@ -1580,10 +1600,10 @@ suite('Event utils', () => {
 			emitter.fire(1);
 
 			await timeout(1);
-			assert.deepStrictEqual(calls, [1], 'should fire with the first event, not the second (after listener dispose)');
+			assert.deepStrictEqual(calls, [1], "should fire with the first event, not the second (after listener dispose)");
 		});
 
-		test('should flush events when the emitter is disposed', async () => {
+		test("should flush events when the emitter is disposed", async () => {
 			const emitter = ds.add(new Emitter<number>());
 			const debounced = Event.debounce(emitter.event, (l, e) => l ? l + 1 : 1, 0);
 
@@ -1598,8 +1618,8 @@ suite('Event utils', () => {
 		});
 	});
 
-	suite('throttle', () => {
-		test('leading only', async function () {
+	suite("throttle", () => {
+		test("leading only", async function () {
 			return runWithFakedTimers({}, async function () {
 				const emitter = ds.add(new Emitter<number>());
 				const throttled = Event.throttle(emitter.event, (l, e) => l ? l + 1 : 1, 10, /*leading=*/true, /*trailing=*/false);
@@ -1618,7 +1638,7 @@ suite('Event utils', () => {
 
 				// Wait for throttle period to end
 				await timeout(15);
-				assert.deepStrictEqual(calls, [1], 'no trailing edge fire with trailing=false');
+				assert.deepStrictEqual(calls, [1], "no trailing edge fire with trailing=false");
 
 				// After throttle period, next event fires immediately
 				emitter.fire(4);
@@ -1626,7 +1646,7 @@ suite('Event utils', () => {
 			});
 		});
 
-		test('trailing only', async function () {
+		test("trailing only", async function () {
 			return runWithFakedTimers({}, async function () {
 				const emitter = ds.add(new Emitter<number>());
 				const throttled = Event.throttle(emitter.event, (l, e) => l ? l + 1 : 1, 10, /*leading=*/false, /*trailing=*/true);
@@ -1657,7 +1677,7 @@ suite('Event utils', () => {
 			});
 		});
 
-		test('both leading and trailing', async function () {
+		test("both leading and trailing", async function () {
 			return runWithFakedTimers({}, async function () {
 				const emitter = ds.add(new Emitter<number>());
 				const throttled = Event.throttle(emitter.event, (l, e) => l ? l + 1 : 1, 10, /*leading=*/true, /*trailing=*/true);
@@ -1680,7 +1700,7 @@ suite('Event utils', () => {
 			});
 		});
 
-		test('only leading edge if no subsequent events', async function () {
+		test("only leading edge if no subsequent events", async function () {
 			return runWithFakedTimers({}, async function () {
 				const emitter = ds.add(new Emitter<number>());
 				const throttled = Event.throttle(emitter.event, (l, e) => l ? l + 1 : 1, 10, /*leading=*/true, /*trailing=*/true);
@@ -1699,7 +1719,7 @@ suite('Event utils', () => {
 			});
 		});
 
-		test('microtask delay', function (done: () => void) {
+		test("microtask delay", function (done: () => void) {
 			const emitter = ds.add(new Emitter<number>());
 			const throttled = Event.throttle(emitter.event, (l, e) => l ? l + 1 : 1, MicrotaskDelay);
 
@@ -1723,7 +1743,7 @@ suite('Event utils', () => {
 			});
 		});
 
-		test('merge function accumulates values', async function () {
+		test("merge function accumulates values", async function () {
 			return runWithFakedTimers({}, async function () {
 				const emitter = ds.add(new Emitter<number>());
 				const throttled = Event.throttle(
@@ -1731,7 +1751,7 @@ suite('Event utils', () => {
 					(last, cur) => (last || 0) + cur,
 					10,
 					/*leading=*/true,
-					/*trailing=*/true
+					/*trailing=*/true,
 				);
 
 				const calls: number[] = [];
@@ -1752,7 +1772,7 @@ suite('Event utils', () => {
 			});
 		});
 
-		test('rapid consecutive throttle periods', async function () {
+		test("rapid consecutive throttle periods", async function () {
 			return runWithFakedTimers({}, async function () {
 				const emitter = ds.add(new Emitter<number>());
 				const throttled = Event.throttle(emitter.event, (l, e) => e, 10, /*leading=*/true, /*trailing=*/true);
@@ -1786,7 +1806,7 @@ suite('Event utils', () => {
 			});
 		});
 
-		test('default parameters', async function () {
+		test("default parameters", async function () {
 			return runWithFakedTimers({}, async function () {
 				const emitter = ds.add(new Emitter<number>());
 				// Default: delay=100, leading=true, trailing=true
@@ -1796,15 +1816,15 @@ suite('Event utils', () => {
 				ds.add(throttled((e) => calls.push(e)));
 
 				emitter.fire(1);
-				assert.deepStrictEqual(calls, [1], 'should fire leading edge by default');
+				assert.deepStrictEqual(calls, [1], "should fire leading edge by default");
 
 				emitter.fire(2);
 				await timeout(110);
-				assert.deepStrictEqual(calls, [1, 2], 'should fire trailing edge by default');
+				assert.deepStrictEqual(calls, [1, 2], "should fire trailing edge by default");
 			});
 		});
 
-		test('disposal cleans up', async function () {
+		test("disposal cleans up", async function () {
 			return runWithFakedTimers({}, async function () {
 				const emitter = ds.add(new Emitter<number>());
 				const throttled = Event.throttle(emitter.event, (l, e) => e, 10);
@@ -1825,7 +1845,7 @@ suite('Event utils', () => {
 			});
 		});
 
-		test('no events during throttle with trailing=false', async function () {
+		test("no events during throttle with trailing=false", async function () {
 			return runWithFakedTimers({}, async function () {
 				const emitter = ds.add(new Emitter<number>());
 				const throttled = Event.throttle(emitter.event, (l, e) => l ? l + 1 : 1, 10, /*leading=*/true, /*trailing=*/false);
@@ -1846,7 +1866,7 @@ suite('Event utils', () => {
 			});
 		});
 
-		test('neither leading nor trailing', async function () {
+		test("neither leading nor trailing", async function () {
 			return runWithFakedTimers({}, async function () {
 				const emitter = ds.add(new Emitter<number>());
 				const throttled = Event.throttle(emitter.event, (l, e) => e, 10, /*leading=*/false, /*trailing=*/false);
@@ -1860,12 +1880,12 @@ suite('Event utils', () => {
 				assert.deepStrictEqual(calls, []);
 
 				await timeout(15);
-				assert.deepStrictEqual(calls, [], 'no events should fire with both leading and trailing false');
+				assert.deepStrictEqual(calls, [], "no events should fire with both leading and trailing false");
 			});
 		});
 	});
 
-	test('issue #230401', () => {
+	test("issue #230401", () => {
 		let count = 0;
 		const emitter = ds.add(new Emitter<void>());
 		const disposables = ds.add(new DisposableStore());
@@ -1886,7 +1906,7 @@ suite('Event utils', () => {
 		assert.deepStrictEqual(count, 2);
 	});
 
-	suite('chain2', () => {
+	suite("chain2", () => {
 		let em: Emitter<number>;
 		let calls: number[];
 
@@ -1895,7 +1915,7 @@ suite('Event utils', () => {
 			calls = [];
 		});
 
-		test('maps', () => {
+		test("maps", () => {
 			const ev = Event.chain(em.event, $ => $.map(v => v * 2));
 			ds.add(ev(v => calls.push(v)));
 			em.fire(1);
@@ -1904,7 +1924,7 @@ suite('Event utils', () => {
 			assert.deepStrictEqual(calls, [2, 4, 6]);
 		});
 
-		test('filters', () => {
+		test("filters", () => {
 			const ev = Event.chain(em.event, $ => $.filter(v => v % 2 === 0));
 			ds.add(ev(v => calls.push(v)));
 			em.fire(1);
@@ -1914,7 +1934,7 @@ suite('Event utils', () => {
 			assert.deepStrictEqual(calls, [2, 4]);
 		});
 
-		test('reduces', () => {
+		test("reduces", () => {
 			const ev = Event.chain(em.event, $ => $.reduce((acc, v) => acc + v, 0));
 			ds.add(ev(v => calls.push(v)));
 			em.fire(1);
@@ -1924,7 +1944,7 @@ suite('Event utils', () => {
 			assert.deepStrictEqual(calls, [1, 3, 6, 10]);
 		});
 
-		test('latches', () => {
+		test("latches", () => {
 			const ev = Event.chain(em.event, $ => $.latch());
 			ds.add(ev(v => calls.push(v)));
 			em.fire(1);
@@ -1937,12 +1957,12 @@ suite('Event utils', () => {
 			assert.deepStrictEqual(calls, [1, 2, 3, 1]);
 		});
 
-		test('does everything', () => {
+		test("does everything", () => {
 			const ev = Event.chain(em.event, $ => $
 				.filter(v => v % 2 === 0)
 				.map(v => v * 2)
 				.reduce((acc, v) => acc + v, 0)
-				.latch()
+				.latch(),
 			);
 
 			ds.add(ev(v => calls.push(v)));

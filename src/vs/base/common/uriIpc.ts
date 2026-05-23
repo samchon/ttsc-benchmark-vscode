@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from './buffer.js';
-import { MarshalledObject } from './marshalling.js';
-import { MarshalledId } from './marshallingIds.js';
-import { URI, UriComponents } from './uri.js';
+import { VSBuffer } from "./buffer.js";
+import { MarshalledObject } from "./marshalling.js";
+import { MarshalledId } from "./marshallingIds.js";
+import { URI, UriComponents } from "./uri.js";
 
 export interface IURITransformer {
 	transformIncoming(uri: UriComponents): UriComponents;
@@ -85,7 +85,7 @@ function _transformOutgoingURIs(obj: any, transformer: IURITransformer, depth: n
 		return null;
 	}
 
-	if (typeof obj === 'object') {
+	if (typeof obj === "object") {
 		if (obj instanceof URI) {
 			return transformer.transformOutgoing(obj);
 		}
@@ -120,10 +120,12 @@ function _transformIncomingURIs(obj: any, transformer: IURITransformer, revive: 
 		return null;
 	}
 
-	if (typeof obj === 'object') {
+	if (typeof obj === "object") {
 
 		if ((<MarshalledObject>obj).$mid === MarshalledId.Uri) {
-			return revive ? URI.revive(transformer.transformIncoming(obj)) : transformer.transformIncoming(obj);
+			return revive ? URI.revive(
+        transformer.transformIncoming(obj),
+      ) : transformer.transformIncoming(obj);
 		}
 
 		if (obj instanceof VSBuffer) {
@@ -133,7 +135,12 @@ function _transformIncomingURIs(obj: any, transformer: IURITransformer, revive: 
 		// walk object (or array)
 		for (const key in obj) {
 			if (Object.hasOwnProperty.call(obj, key)) {
-				const r = _transformIncomingURIs(obj[key], transformer, revive, depth + 1);
+				const r = _transformIncomingURIs(
+          obj[key],
+          transformer,
+          revive,
+          depth + 1,
+        );
 				if (r !== null) {
 					obj[key] = r;
 				}

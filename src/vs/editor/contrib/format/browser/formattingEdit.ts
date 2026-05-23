@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ICodeEditor } from '../../../browser/editorBrowser.js';
-import { EditOperation, ISingleEditOperation } from '../../../common/core/editOperation.js';
-import { Range } from '../../../common/core/range.js';
-import { EndOfLineSequence } from '../../../common/model.js';
-import { TextEdit } from '../../../common/languages.js';
-import { StableEditorScrollState } from '../../../browser/stableEditorScroll.js';
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { EditOperation, ISingleEditOperation } from "../../../common/core/editOperation.js";
+import { Range } from "../../../common/core/range.js";
+import { EndOfLineSequence } from "../../../common/model.js";
+import { TextEdit } from "../../../common/languages.js";
+import { StableEditorScrollState } from "../../../browser/stableEditorScroll.js";
 
 export class FormattingEdit {
 
@@ -17,15 +17,15 @@ export class FormattingEdit {
 		const singleEdits: ISingleEditOperation[] = [];
 
 		for (const edit of edits) {
-			if (typeof edit.eol === 'number') {
+			if (typeof edit.eol === "number") {
 				newEol = edit.eol;
 			}
-			if (edit.range && typeof edit.text === 'string') {
+			if (edit.range && typeof edit.text === "string") {
 				singleEdits.push(edit);
 			}
 		}
 
-		if (typeof newEol === 'number') {
+		if (typeof newEol === "number") {
 			if (editor.hasModel()) {
 				editor.getModel().pushEOL(newEol);
 			}
@@ -50,11 +50,24 @@ export class FormattingEdit {
 		}
 		const scrollState = StableEditorScrollState.capture(editor);
 		const edits = FormattingEdit._handleEolEdits(editor, _edits);
-		if (edits.length === 1 && FormattingEdit._isFullModelReplaceEdit(editor, edits[0])) {
+		if (edits.length === 1 && FormattingEdit._isFullModelReplaceEdit(
+      editor,
+      edits[0],
+    )) {
 			// We use replace semantics and hope that markers stay put...
-			editor.executeEdits('formatEditsCommand', edits.map(edit => EditOperation.replace(Range.lift(edit.range), edit.text)));
+			editor.executeEdits(
+        "formatEditsCommand",
+        edits.map(
+          edit => EditOperation.replace(Range.lift(edit.range), edit.text),
+        ),
+      );
 		} else {
-			editor.executeEdits('formatEditsCommand', edits.map(edit => EditOperation.replaceMove(Range.lift(edit.range), edit.text)));
+			editor.executeEdits(
+        "formatEditsCommand",
+        edits.map(
+          edit => EditOperation.replaceMove(Range.lift(edit.range), edit.text),
+        ),
+      );
 		}
 		if (addUndoStops) {
 			editor.pushUndoStop();

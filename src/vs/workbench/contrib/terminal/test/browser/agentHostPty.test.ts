@@ -3,26 +3,57 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { DisposableStore, IReference } from '../../../../../base/common/lifecycle.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { IAgentConnection, IAgentCreateSessionConfig, IAgentResolveSessionConfigParams, IAgentSessionConfigCompletionsParams, IAgentSessionMetadata, AuthenticateParams, AuthenticateResult } from '../../../../../platform/agentHost/common/agentService.js';
-import { ActionType, StateAction } from '../../../../../platform/agentHost/common/state/protocol/actions.js';
-import { RootState, TerminalClaimKind, type TerminalState } from '../../../../../platform/agentHost/common/state/protocol/state.js';
-import type { CompletionsParams, CompletionsResult, CreateTerminalParams, ResolveSessionConfigResult, SessionConfigCompletionsResult } from '../../../../../platform/agentHost/common/state/protocol/commands.js';
-import type { ActionEnvelope, IRootConfigChangedAction, SessionAction, TerminalAction, INotification } from '../../../../../platform/agentHost/common/state/sessionActions.js';
-import type { ResourceCopyParams, ResourceCopyResult, ResourceDeleteParams, ResourceDeleteResult, ResourceListResult, ResourceMoveParams, ResourceMoveResult, ResourceReadResult, ResourceWriteParams, ResourceWriteResult } from '../../../../../platform/agentHost/common/state/sessionProtocol.js';
+import assert from "assert";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { DisposableStore, IReference } from "../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import {
+  IAgentConnection,
+  IAgentCreateSessionConfig,
+  IAgentResolveSessionConfigParams,
+  IAgentSessionConfigCompletionsParams,
+  IAgentSessionMetadata,
+  AuthenticateParams,
+  AuthenticateResult,
+} from "../../../../../platform/agentHost/common/agentService.js";
+import { ActionType, StateAction } from "../../../../../platform/agentHost/common/state/protocol/actions.js";
+import { RootState, TerminalClaimKind, type TerminalState } from "../../../../../platform/agentHost/common/state/protocol/state.js";
+import type {
+  CompletionsParams,
+  CompletionsResult,
+  CreateTerminalParams,
+  ResolveSessionConfigResult,
+  SessionConfigCompletionsResult,
+} from "../../../../../platform/agentHost/common/state/protocol/commands.js";
+import type {
+  ActionEnvelope,
+  IRootConfigChangedAction,
+  SessionAction,
+  TerminalAction,
+  INotification,
+} from "../../../../../platform/agentHost/common/state/sessionActions.js";
+import type {
+  ResourceCopyParams,
+  ResourceCopyResult,
+  ResourceDeleteParams,
+  ResourceDeleteResult,
+  ResourceListResult,
+  ResourceMoveParams,
+  ResourceMoveResult,
+  ResourceReadResult,
+  ResourceWriteParams,
+  ResourceWriteResult,
+} from "../../../../../platform/agentHost/common/state/sessionProtocol.js";
 
-import { AgentHostPty } from '../../browser/agentHostPty.js';
-import { IAgentSubscription } from '../../../../../platform/agentHost/common/state/agentSubscription.js';
-import { StateComponents } from '../../../../../platform/agentHost/common/state/sessionState.js';
+import { AgentHostPty } from "../../browser/agentHostPty.js";
+import { IAgentSubscription } from "../../../../../platform/agentHost/common/state/agentSubscription.js";
+import { StateComponents } from "../../../../../platform/agentHost/common/state/sessionState.js";
 // ---- Mock IAgentConnection --------------------------------------------------
 
 class MockAgentConnection implements IAgentConnection {
 	declare readonly _serviceBrand: undefined;
-	readonly clientId = 'test-client';
+	readonly clientId = "test-client";
 
 	private _seq = 0;
 	private readonly _onDidAction = new Emitter<ActionEnvelope>();
@@ -36,8 +67,10 @@ class MockAgentConnection implements IAgentConnection {
 	readonly subscribedResources: URI[] = [];
 
 	private _terminalState: TerminalState = {
-		title: 'Test Terminal', content: [], claim: { kind: TerminalClaimKind.Client, clientId: 'test-client' },
-	};
+    title: "Test Terminal",
+    content: [],
+    claim: { kind: TerminalClaimKind.Client, clientId: "test-client" },
+  };
 
 	constructor(initialState?: Partial<TerminalState>) {
 		if (initialState) {
@@ -59,21 +92,42 @@ class MockAgentConnection implements IAgentConnection {
 
 	/** Simulate the server sending an action to the client */
 	fireAction(channel: URI, action: StateAction, serverSeq = 1): void {
-		this._onDidAction.fire({ channel: channel.toString(), action, serverSeq, origin: { clientId: 'server', clientSeq: 0 } });
+		this._onDidAction.fire({
+      channel: channel.toString(),
+      action,
+      serverSeq,
+      origin: { clientId: "server", clientSeq: 0 },
+    });
 	}
 
 	// ---- Unused IAgentService methods (stubs) -----
-	async authenticate(_params: AuthenticateParams): Promise<AuthenticateResult> { return { authenticated: true }; }
+	async authenticate(_params: AuthenticateParams): Promise<AuthenticateResult> { return {
+    authenticated: true,
+  }; }
 	async listSessions(): Promise<IAgentSessionMetadata[]> { return []; }
-	async createSession(_config?: IAgentCreateSessionConfig): Promise<URI> { return URI.parse('copilot:///test'); }
-	async resolveSessionConfig(_params: IAgentResolveSessionConfigParams): Promise<ResolveSessionConfigResult> { return { schema: { type: 'object', properties: {} }, values: {} }; }
-	async sessionConfigCompletions(_params: IAgentSessionConfigCompletionsParams): Promise<SessionConfigCompletionsResult> { return { items: [] }; }
-	async completions(_params: CompletionsParams): Promise<CompletionsResult> { return { items: [] }; }
+	async createSession(_config?: IAgentCreateSessionConfig): Promise<URI> { return URI.parse(
+    "copilot:///test",
+  ); }
+	async resolveSessionConfig(_params: IAgentResolveSessionConfigParams): Promise<ResolveSessionConfigResult> { return {
+    schema: { type: "object", properties: {} },
+    values: {},
+  }; }
+	async sessionConfigCompletions(_params: IAgentSessionConfigCompletionsParams): Promise<SessionConfigCompletionsResult> { return {
+    items: [],
+  }; }
+	async completions(_params: CompletionsParams): Promise<CompletionsResult> { return {
+    items: [],
+  }; }
 	async getCompletionTriggerCharacters(): Promise<readonly string[]> { return []; }
 	async disposeSession(_session: URI): Promise<void> { }
 	async shutdown(): Promise<void> { }
-	async resourceList(_uri: URI): Promise<ResourceListResult> { return { entries: [] }; }
-	async resourceRead(_uri: URI): Promise<ResourceReadResult> { return { data: '', encoding: 'utf-8' } as ResourceReadResult; }
+	async resourceList(_uri: URI): Promise<ResourceListResult> { return {
+    entries: [],
+  }; }
+	async resourceRead(_uri: URI): Promise<ResourceReadResult> { return {
+    data: "",
+    encoding: "utf-8",
+  } as ResourceReadResult; }
 	async resourceWrite(_params: ResourceWriteParams): Promise<ResourceWriteResult> { return {}; }
 	async resourceCopy(_params: ResourceCopyParams): Promise<ResourceCopyResult> { return {}; }
 	async resourceDelete(_params: ResourceDeleteParams): Promise<ResourceDeleteResult> { return {}; }
@@ -81,15 +135,23 @@ class MockAgentConnection implements IAgentConnection {
 
 	// ---- IAgentConnection new API (stubs for tests) -----
 	readonly rootState: IAgentSubscription<RootState> = {
-		value: undefined, verifiedValue: undefined, onDidChange: Event.None, onWillApplyAction: Event.None, onDidApplyAction: Event.None,
-	};
+    value: undefined,
+    verifiedValue: undefined,
+    onDidChange: Event.None,
+    onWillApplyAction: Event.None,
+    onDidApplyAction: Event.None,
+  };
 	getSubscription<T>(_kind: StateComponents, _resource: URI): IReference<IAgentSubscription<T>> {
 		const onDidChange = new Emitter<TerminalState>();
 		const onWillApplyAction = new Emitter<ActionEnvelope>();
 		const onDidApplyAction = new Emitter<ActionEnvelope>();
 		const sub: IAgentSubscription<TerminalState> = {
-			value: this._terminalState, verifiedValue: this._terminalState, onDidChange: onDidChange.event, onWillApplyAction: onWillApplyAction.event, onDidApplyAction: onDidApplyAction.event,
-		};
+      value: this._terminalState,
+      verifiedValue: this._terminalState,
+      onDidChange: onDidChange.event,
+      onWillApplyAction: onWillApplyAction.event,
+      onDidApplyAction: onDidApplyAction.event,
+    };
 		// Wire onDidAction to the subscription's events
 		const listener = this._onDidAction.event(envelope => {
 			if (envelope.channel === _resource.toString()) {
@@ -98,8 +160,9 @@ class MockAgentConnection implements IAgentConnection {
 			}
 		});
 		return {
-			object: sub as IAgentSubscription<T>, dispose: () => { listener.dispose(); onDidChange.dispose(); onWillApplyAction.dispose(); onDidApplyAction.dispose(); },
-		};
+      object: sub as IAgentSubscription<T>,
+      dispose: () => { listener.dispose(); onDidChange.dispose(); onWillApplyAction.dispose(); onDidApplyAction.dispose(); },
+    };
 	}
 	getSubscriptionUnmanaged<T>(_kind: StateComponents, _resource: URI): IAgentSubscription<T> | undefined {
 		return undefined;
@@ -116,10 +179,10 @@ class MockAgentConnection implements IAgentConnection {
 
 // ---- Tests ------------------------------------------------------------------
 
-suite('AgentHostPty', () => {
+suite("AgentHostPty", () => {
 
 	const disposables = new DisposableStore();
-	const terminalUri = URI.parse('agenthost-terminal:///test-term-1');
+	const terminalUri = URI.parse("agenthost-terminal:///test-term-1");
 
 	setup(() => {
 		disposables.clear();
@@ -131,21 +194,21 @@ suite('AgentHostPty', () => {
 
 	ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('start() creates terminal and subscribes', async () => {
+	test("start() creates terminal and subscribes", async () => {
 		const conn = new MockAgentConnection();
 		disposables.add(conn);
-		const pty = disposables.add(new AgentHostPty(1, conn, terminalUri, { name: 'test' }));
+		const pty = disposables.add(new AgentHostPty(1, conn, terminalUri, { name: "test" }));
 
 		const result = await pty.start();
 
-		assert.strictEqual(result, undefined, 'start() should succeed');
+		assert.strictEqual(result, undefined, "start() should succeed");
 		assert.strictEqual(conn.createdTerminals.length, 1);
 		assert.strictEqual(conn.createdTerminals[0].channel, terminalUri.toString());
-		assert.strictEqual(conn.createdTerminals[0].name, 'test');
-		assert.deepStrictEqual(conn.createdTerminals[0].claim, { kind: TerminalClaimKind.Client, clientId: 'test-client' });
+		assert.strictEqual(conn.createdTerminals[0].name, "test");
+		assert.deepStrictEqual(conn.createdTerminals[0].claim, { kind: TerminalClaimKind.Client, clientId: "test-client" });
 	});
 
-	test('start() fires onProcessReady', async () => {
+	test("start() fires onProcessReady", async () => {
 		const conn = new MockAgentConnection();
 		disposables.add(conn);
 		const pty = disposables.add(new AgentHostPty(1, conn, terminalUri));
@@ -157,37 +220,37 @@ suite('AgentHostPty', () => {
 		assert.ok(ready);
 	});
 
-	test('replays existing content from snapshot', async () => {
-		const conn = new MockAgentConnection({ content: [{ type: 'unclassified', value: 'existing output\n' }] });
+	test("replays existing content from snapshot", async () => {
+		const conn = new MockAgentConnection({ content: [{ type: "unclassified", value: "existing output\n" }] });
 		disposables.add(conn);
 		const pty = disposables.add(new AgentHostPty(1, conn, terminalUri));
 
 		const dataReceived: string[] = [];
 		disposables.add(pty.onProcessData!(e => {
-			dataReceived.push(typeof e === 'string' ? e : e.data);
+			dataReceived.push(typeof e === "string" ? e : e.data);
 		}));
 
 		await pty.start();
-		assert.deepStrictEqual(dataReceived, ['existing output\n']);
+		assert.deepStrictEqual(dataReceived, ["existing output\n"]);
 	});
 
-	test('input() dispatches terminal/input action', async () => {
+	test("input() dispatches terminal/input action", async () => {
 		const conn = new MockAgentConnection();
 		disposables.add(conn);
 		const pty = disposables.add(new AgentHostPty(1, conn, terminalUri));
 
 		await pty.start();
-		pty.input('hello');
+		pty.input("hello");
 
 		// Wait for the async barrier
 		await new Promise(resolve => setTimeout(resolve, 10));
 
 		const inputActions = conn.dispatchedActions.filter(a => a.action.type === ActionType.TerminalInput);
 		assert.strictEqual(inputActions.length, 1);
-		assert.strictEqual((inputActions[0].action as { data: string }).data, 'hello');
+		assert.strictEqual((inputActions[0].action as { data: string }).data, "hello");
 	});
 
-	test('resize() dispatches terminal/resized action', async () => {
+	test("resize() dispatches terminal/resized action", async () => {
 		const conn = new MockAgentConnection();
 		disposables.add(conn);
 		const pty = disposables.add(new AgentHostPty(1, conn, terminalUri));
@@ -203,7 +266,7 @@ suite('AgentHostPty', () => {
 		assert.strictEqual((resizeActions[0].action as { cols: number; rows: number }).rows, 40);
 	});
 
-	test('resize() skips duplicate dimensions', async () => {
+	test("resize() skips duplicate dimensions", async () => {
 		const conn = new MockAgentConnection();
 		disposables.add(conn);
 		const pty = disposables.add(new AgentHostPty(1, conn, terminalUri));
@@ -218,25 +281,25 @@ suite('AgentHostPty', () => {
 		assert.strictEqual(resizeActions.length, 1);
 	});
 
-	test('terminal/data action fires onProcessData', async () => {
+	test("terminal/data action fires onProcessData", async () => {
 		const conn = new MockAgentConnection();
 		disposables.add(conn);
 		const pty = disposables.add(new AgentHostPty(1, conn, terminalUri));
 
 		const dataReceived: string[] = [];
 		disposables.add(pty.onProcessData!(e => {
-			dataReceived.push(typeof e === 'string' ? e : e.data);
+			dataReceived.push(typeof e === "string" ? e : e.data);
 		}));
 
 		await pty.start();
-		conn.fireAction(terminalUri, { type: ActionType.TerminalData, data: 'hello world\r\n' });
+		conn.fireAction(terminalUri, { type: ActionType.TerminalData, data: "hello world\r\n" });
 
-		assert.deepStrictEqual(dataReceived, ['existing output\n' /* skip replay since content is '' */, 'hello world\r\n'].filter(x => x !== 'existing output\n'));
+		assert.deepStrictEqual(dataReceived, ["existing output\n" /* skip replay since content is '' */, "hello world\r\n"].filter(x => x !== "existing output\n"));
 		// Since initial content is empty, only the streamed data should be received
-		assert.deepStrictEqual(dataReceived, ['hello world\r\n']);
+		assert.deepStrictEqual(dataReceived, ["hello world\r\n"]);
 	});
 
-	test('terminal/exited action fires onProcessExit', async () => {
+	test("terminal/exited action fires onProcessExit", async () => {
 		const conn = new MockAgentConnection();
 		disposables.add(conn);
 		const pty = disposables.add(new AgentHostPty(1, conn, terminalUri));
@@ -250,53 +313,53 @@ suite('AgentHostPty', () => {
 		assert.strictEqual(exitCode, 42);
 	});
 
-	test('terminal/cwdChanged updates cwd property', async () => {
+	test("terminal/cwdChanged updates cwd property", async () => {
 		const conn = new MockAgentConnection();
 		disposables.add(conn);
 		const pty = disposables.add(new AgentHostPty(1, conn, terminalUri));
 
 		await pty.start();
-		conn.fireAction(terminalUri, { type: ActionType.TerminalCwdChanged, cwd: '/home/user/project' });
+		conn.fireAction(terminalUri, { type: ActionType.TerminalCwdChanged, cwd: "/home/user/project" });
 
 		const cwd = await pty.getCwd();
-		assert.strictEqual(cwd, '/home/user/project');
+		assert.strictEqual(cwd, "/home/user/project");
 	});
 
-	test('terminal/titleChanged updates title property', async () => {
+	test("terminal/titleChanged updates title property", async () => {
 		const conn = new MockAgentConnection();
 		disposables.add(conn);
 		const pty = disposables.add(new AgentHostPty(1, conn, terminalUri));
 
-		let changedTitle = '';
+		let changedTitle = "";
 		disposables.add(pty.onDidChangeProperty!(e => {
-			if (e.type === 'title') {
+			if (e.type === "title") {
 				changedTitle = e.value as string;
 			}
 		}));
 
 		await pty.start();
-		conn.fireAction(terminalUri, { type: ActionType.TerminalTitleChanged, title: 'npm test' });
+		conn.fireAction(terminalUri, { type: ActionType.TerminalTitleChanged, title: "npm test" });
 
-		assert.strictEqual(changedTitle, 'npm test');
+		assert.strictEqual(changedTitle, "npm test");
 	});
 
-	test('ignores actions for other terminals', async () => {
+	test("ignores actions for other terminals", async () => {
 		const conn = new MockAgentConnection();
 		disposables.add(conn);
 		const pty = disposables.add(new AgentHostPty(1, conn, terminalUri));
 
 		const dataReceived: string[] = [];
 		disposables.add(pty.onProcessData!(e => {
-			dataReceived.push(typeof e === 'string' ? e : e.data);
+			dataReceived.push(typeof e === "string" ? e : e.data);
 		}));
 
 		await pty.start();
-		conn.fireAction(URI.parse('agenthost-terminal:///other'), { type: ActionType.TerminalData, data: 'should not appear' });
+		conn.fireAction(URI.parse("agenthost-terminal:///other"), { type: ActionType.TerminalData, data: "should not appear" });
 
 		assert.deepStrictEqual(dataReceived, []);
 	});
 
-	test('shutdown() disposes terminal and unsubscribes', async () => {
+	test("shutdown() disposes terminal and unsubscribes", async () => {
 		const conn = new MockAgentConnection();
 		disposables.add(conn);
 		const pty = disposables.add(new AgentHostPty(1, conn, terminalUri));
@@ -314,25 +377,25 @@ suite('AgentHostPty', () => {
 		assert.ok(exitFired);
 	});
 
-	test('shouldPersist is false', () => {
+	test("shouldPersist is false", () => {
 		const conn = new MockAgentConnection();
 		disposables.add(conn);
 		const pty = disposables.add(new AgentHostPty(1, conn, terminalUri));
 		assert.strictEqual(pty.shouldPersist, false);
 	});
 
-	test('getInitialCwd returns cwd from snapshot', async () => {
-		const conn = new MockAgentConnection({ cwd: '/home/user' });
+	test("getInitialCwd returns cwd from snapshot", async () => {
+		const conn = new MockAgentConnection({ cwd: "/home/user" });
 		disposables.add(conn);
 		const pty = disposables.add(new AgentHostPty(1, conn, terminalUri));
 
 		await pty.start();
 		const cwd = await pty.getInitialCwd();
-		assert.strictEqual(cwd, '/home/user');
+		assert.strictEqual(cwd, "/home/user");
 	});
 
-	test('reconnect() re-subscribes with new connection and replays content', async () => {
-		const conn1 = new MockAgentConnection({ content: [{ type: 'unclassified', value: 'old output\n' }] });
+	test("reconnect() re-subscribes with new connection and replays content", async () => {
+		const conn1 = new MockAgentConnection({ content: [{ type: "unclassified", value: "old output\n" }] });
 		disposables.add(conn1);
 		const pty = disposables.add(new AgentHostPty(1, conn1, terminalUri));
 
@@ -340,27 +403,27 @@ suite('AgentHostPty', () => {
 
 		// Create a new connection with different content (simulating server-side changes during disconnect)
 		const conn2 = new MockAgentConnection({
-			content: [{ type: 'unclassified', value: 'old output\nnew output after reconnect\n' }], cwd: '/home/reconnected', title: 'Reconnected Terminal',
+			content: [{ type: "unclassified", value: "old output\nnew output after reconnect\n" }], cwd: "/home/reconnected", title: "Reconnected Terminal",
 		});
 		disposables.add(conn2);
 
 		const dataReceived: string[] = [];
 		disposables.add(pty.onProcessData!(e => {
-			dataReceived.push(typeof e === 'string' ? e : e.data);
+			dataReceived.push(typeof e === "string" ? e : e.data);
 		}));
 
 		const result = await pty.reconnect(conn2);
 
-		assert.strictEqual(result, true, 'reconnect() should succeed');
+		assert.strictEqual(result, true, "reconnect() should succeed");
 		// Should have clear sequence + replayed content
-		assert.ok(dataReceived.some(d => d.includes('\x1b[2J')), 'should clear buffer before replay');
-		assert.ok(dataReceived.some(d => d.includes('new output after reconnect')), 'should replay new content');
+		assert.ok(dataReceived.some(d => d.includes("\x1b[2J")), "should clear buffer before replay");
+		assert.ok(dataReceived.some(d => d.includes("new output after reconnect")), "should replay new content");
 
 		const cwd = await pty.getCwd();
-		assert.strictEqual(cwd, '/home/reconnected');
+		assert.strictEqual(cwd, "/home/reconnected");
 	});
 
-	test('reconnect() streams new actions from new connection', async () => {
+	test("reconnect() streams new actions from new connection", async () => {
 		const conn1 = new MockAgentConnection();
 		disposables.add(conn1);
 		const pty = disposables.add(new AgentHostPty(1, conn1, terminalUri));
@@ -371,23 +434,23 @@ suite('AgentHostPty', () => {
 
 		const dataReceived: string[] = [];
 		disposables.add(pty.onProcessData!(e => {
-			dataReceived.push(typeof e === 'string' ? e : e.data);
+			dataReceived.push(typeof e === "string" ? e : e.data);
 		}));
 
 		await pty.reconnect(conn2);
 		dataReceived.length = 0; // clear replay data
 
 		// New actions from conn2 should be received
-		conn2.fireAction(terminalUri, { type: ActionType.TerminalData, data: 'post-reconnect data' });
+		conn2.fireAction(terminalUri, { type: ActionType.TerminalData, data: "post-reconnect data" });
 
-		assert.deepStrictEqual(dataReceived, ['post-reconnect data']);
+		assert.deepStrictEqual(dataReceived, ["post-reconnect data"]);
 
 		// Old connection actions should NOT be received
-		conn1.fireAction(terminalUri, { type: ActionType.TerminalData, data: 'stale data' });
-		assert.deepStrictEqual(dataReceived, ['post-reconnect data']);
+		conn1.fireAction(terminalUri, { type: ActionType.TerminalData, data: "stale data" });
+		assert.deepStrictEqual(dataReceived, ["post-reconnect data"]);
 	});
 
-	test('reconnect() times out when subscription never hydrates', async () => {
+	test("reconnect() times out when subscription never hydrates", async () => {
 		const conn1 = new MockAgentConnection();
 		disposables.add(conn1);
 		const pty = disposables.add(new AgentHostPty(1, conn1, terminalUri));
@@ -416,13 +479,13 @@ suite('AgentHostPty', () => {
 		console.warn = () => { };
 		try {
 			const result = await pty.reconnect(conn2);
-			assert.strictEqual(result, false, 'reconnect() should fail on timeout');
+			assert.strictEqual(result, false, "reconnect() should fail on timeout");
 		} finally {
 			console.warn = origWarn;
 		}
 	}).timeout(15000); // Allow for the 10s hydration timeout
 
-	test('reconnect() dispatches input to new connection', async () => {
+	test("reconnect() dispatches input to new connection", async () => {
 		const conn1 = new MockAgentConnection();
 		disposables.add(conn1);
 		const pty = disposables.add(new AgentHostPty(1, conn1, terminalUri));
@@ -432,12 +495,12 @@ suite('AgentHostPty', () => {
 		disposables.add(conn2);
 		await pty.reconnect(conn2);
 
-		pty.input('after reconnect');
+		pty.input("after reconnect");
 		await new Promise(resolve => setTimeout(resolve, 10));
 
 		const inputActions = conn2.dispatchedActions.filter(a => a.action.type === ActionType.TerminalInput);
 		assert.strictEqual(inputActions.length, 1);
-		assert.strictEqual((inputActions[0].action as { data: string }).data, 'after reconnect');
+		assert.strictEqual((inputActions[0].action as { data: string }).data, "after reconnect");
 
 		// conn1 should not have received the input
 		const oldInputActions = conn1.dispatchedActions.filter(a => a.action.type === ActionType.TerminalInput);

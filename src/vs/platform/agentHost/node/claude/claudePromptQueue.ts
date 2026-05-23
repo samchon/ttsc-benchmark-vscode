@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { SDKUserMessage } from '@anthropic-ai/claude-agent-sdk';
-import { DeferredPromise } from '../../../../base/common/async.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { ILogService } from '../../../log/common/log.js';
+import type { SDKUserMessage } from "@anthropic-ai/claude-agent-sdk";
+import { DeferredPromise } from "../../../../base/common/async.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { ILogService } from "../../../log/common/log.js";
 
 /**
  * One {@link SDKUserMessage} the queue has handed to (or is about to
@@ -67,7 +67,7 @@ export class ClaudePromptQueue extends Disposable {
 					if (this._toYield.length > 0) {
 						const entry = this._toYield.shift()!;
 						this._yielded.push(entry);
-						this._logService.info(`[Claude:${this._sessionId}] queue yielded sdkUuid=${entry.sdkUuid} turnId=${entry.turnId}${entry.steeringPendingId ? ` steeringPendingId=${entry.steeringPendingId}` : ''}`);
+						this._logService.info(`[Claude:${this._sessionId}] queue yielded sdkUuid=${entry.sdkUuid} turnId=${entry.turnId}${entry.steeringPendingId ? ` steeringPendingId=${entry.steeringPendingId}` : ""}`);
 						if (entry.steeringPendingId) {
 							this._onSteeringYielded(entry.steeringPendingId);
 						}

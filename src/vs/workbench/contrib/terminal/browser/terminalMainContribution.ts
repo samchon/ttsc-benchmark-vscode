@@ -3,18 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { Schemas } from '../../../../base/common/network.js';
-import { ILabelService } from '../../../../platform/label/common/label.js';
-import { TerminalLocation } from '../../../../platform/terminal/common/terminal.js';
-import { IWorkbenchContribution } from '../../../common/contributions.js';
-import { ITerminalEditorService, ITerminalGroupService, ITerminalInstanceService, ITerminalService, terminalEditorId } from './terminal.js';
-import { parseTerminalUri } from './terminalUri.js';
-import { terminalStrings } from '../common/terminalStrings.js';
-import { IEditorResolverService, RegisteredEditorPriority } from '../../../services/editor/common/editorResolverService.js';
-import { IWorkbenchEnvironmentService } from '../../../services/environment/common/environmentService.js';
-import { ILifecycleService, LifecyclePhase } from '../../../services/lifecycle/common/lifecycle.js';
-import { IEmbedderTerminalService } from '../../../services/terminal/common/embedderTerminalService.js';
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { TerminalLocation } from "../../../../platform/terminal/common/terminal.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import {
+  ITerminalEditorService,
+  ITerminalGroupService,
+  ITerminalInstanceService,
+  ITerminalService,
+  terminalEditorId,
+} from "./terminal.js";
+import { parseTerminalUri } from "./terminalUri.js";
+import { terminalStrings } from "../common/terminalStrings.js";
+import { IEditorResolverService, RegisteredEditorPriority } from "../../../services/editor/common/editorResolverService.js";
+import { IWorkbenchEnvironmentService } from "../../../services/environment/common/environmentService.js";
+import { ILifecycleService, LifecyclePhase } from "../../../services/lifecycle/common/lifecycle.js";
+import { IEmbedderTerminalService } from "../../../services/terminal/common/embedderTerminalService.js";
 
 /**
  * The main contribution for the terminal contrib. This contains calls to other components necessary
@@ -22,7 +28,7 @@ import { IEmbedderTerminalService } from '../../../services/terminal/common/embe
  * be more relevant).
  */
 export class TerminalMainContribution extends Disposable implements IWorkbenchContribution {
-	static ID = 'terminalMain';
+	static ID = "terminalMain";
 
 	constructor(
 		@IEditorResolverService editorResolverService: IEditorResolverService,
@@ -33,21 +39,21 @@ export class TerminalMainContribution extends Disposable implements IWorkbenchCo
 		@ITerminalService terminalService: ITerminalService,
 		@ITerminalEditorService terminalEditorService: ITerminalEditorService,
 		@ITerminalGroupService terminalGroupService: ITerminalGroupService,
-		@ITerminalInstanceService terminalInstanceService: ITerminalInstanceService
+		@ITerminalInstanceService terminalInstanceService: ITerminalInstanceService,
 	) {
 		super();
 
 		this._init(
-			editorResolverService,
-			embedderTerminalService,
-			workbenchEnvironmentService,
-			labelService,
-			lifecycleService,
-			terminalService,
-			terminalEditorService,
-			terminalGroupService,
-			terminalInstanceService
-		);
+      editorResolverService,
+      embedderTerminalService,
+      workbenchEnvironmentService,
+      labelService,
+      lifecycleService,
+      terminalService,
+      terminalEditorService,
+      terminalGroupService,
+      terminalInstanceService,
+    );
 	}
 
 	private async _init(
@@ -59,7 +65,7 @@ export class TerminalMainContribution extends Disposable implements IWorkbenchCo
 		terminalService: ITerminalService,
 		terminalEditorService: ITerminalEditorService,
 		terminalGroupService: ITerminalGroupService,
-		terminalInstanceService: ITerminalInstanceService
+		terminalInstanceService: ITerminalInstanceService,
 	) {
 		// IMPORTANT: This listener needs to be set up before the workbench is ready to support
 		// embedder terminals.
@@ -81,11 +87,11 @@ export class TerminalMainContribution extends Disposable implements IWorkbenchCo
 			{
 				id: terminalEditorId,
 				label: terminalStrings.terminal,
-				priority: RegisteredEditorPriority.exclusive
+				priority: RegisteredEditorPriority.exclusive,
 			},
 			{
 				canSupportResource: uri => uri.scheme === Schemas.vscodeTerminal,
-				singlePerResource: true
+				singlePerResource: true,
 			},
 			{
 				createEditorInput: async ({ resource, options }) => {
@@ -96,17 +102,17 @@ export class TerminalMainContribution extends Disposable implements IWorkbenchCo
 					} else { // Terminal from a different window
 						const terminalIdentifier = parseTerminalUri(resource);
 						if (!terminalIdentifier.instanceId) {
-							throw new Error('Terminal identifier without instanceId');
+							throw new Error("Terminal identifier without instanceId");
 						}
 
 						const primaryBackend = terminalService.getPrimaryBackend();
 						if (!primaryBackend) {
-							throw new Error('No terminal primary backend');
+							throw new Error("No terminal primary backend");
 						}
 
 						const attachPersistentProcess = await primaryBackend.requestDetachInstance(terminalIdentifier.workspaceId, terminalIdentifier.instanceId);
 						if (!attachPersistentProcess) {
-							throw new Error('No terminal persistent process to attach');
+							throw new Error("No terminal persistent process to attach");
 						}
 						instance = terminalInstanceService.createInstance({ attachPersistentProcess }, TerminalLocation.Editor);
 					}
@@ -119,20 +125,20 @@ export class TerminalMainContribution extends Disposable implements IWorkbenchCo
 							...options,
 							pinned: true,
 							forceReload: true,
-							override: terminalEditorId
-						}
+							override: terminalEditorId,
+						},
 					};
-				}
-			}
+				},
+			},
 		));
 
 		// Register a resource formatter for terminal URIs
 		this._register(labelService.registerFormatter({
 			scheme: Schemas.vscodeTerminal,
 			formatting: {
-				label: '${path}',
-				separator: ''
-			}
+				label: "${path}",
+				separator: "",
+			},
 		}));
 	}
 }

@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { FontInfo } from '../../../../editor/common/config/fontInfo.js';
-import { NotebookCellTextModel } from '../common/model/notebookCellTextModel.js';
-import { NotebookDocumentMetadata } from '../common/notebookCommon.js';
+import { FontInfo } from "../../../../editor/common/config/fontInfo.js";
+import { NotebookCellTextModel } from "../common/model/notebookCellTextModel.js";
+import { NotebookDocumentMetadata } from "../common/notebookCommon.js";
 
 export interface NotebookLayoutInfo {
 	width: number;

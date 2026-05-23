@@ -3,23 +3,29 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { spawn } from 'child_process';
-import type { CustomAgentConfig, MCPServerConfig, SessionConfig } from '@github/copilot-sdk';
-import { OperatingSystem, OS } from '../../../../base/common/platform.js';
-import { parseFrontMatter } from '../../../../base/common/yaml.js';
-import { IFileService } from '../../../files/common/files.js';
-import { McpServerType } from '../../../mcp/common/mcpPlatformTypes.js';
-import type { IMcpServerDefinition, INamedPluginResource, IParsedHookCommand, IParsedHookGroup, IParsedPlugin } from '../../../agentPlugins/common/pluginParsers.js';
-import type { CustomizationAgentRef } from '../../common/state/protocol/state.js';
-import { dirname } from '../../../../base/common/path.js';
+import { spawn } from "child_process";
+import type { CustomAgentConfig, MCPServerConfig, SessionConfig } from "@github/copilot-sdk";
+import { OperatingSystem, OS } from "../../../../base/common/platform.js";
+import { parseFrontMatter } from "../../../../base/common/yaml.js";
+import { IFileService } from "../../../files/common/files.js";
+import { McpServerType } from "../../../mcp/common/mcpPlatformTypes.js";
+import type {
+  IMcpServerDefinition,
+  INamedPluginResource,
+  IParsedHookCommand,
+  IParsedHookGroup,
+  IParsedPlugin,
+} from "../../../agentPlugins/common/pluginParsers.js";
+import type { CustomizationAgentRef } from "../../common/state/protocol/state.js";
+import { dirname } from "../../../../base/common/path.js";
 
-type SessionHooks = NonNullable<SessionConfig['hooks']>;
-type PreToolUseHookInput = Parameters<NonNullable<SessionHooks['onPreToolUse']>>[0];
-type PostToolUseHookInput = Parameters<NonNullable<SessionHooks['onPostToolUse']>>[0];
-type UserPromptSubmittedHookInput = Parameters<NonNullable<SessionHooks['onUserPromptSubmitted']>>[0];
-type SessionStartHookInput = Parameters<NonNullable<SessionHooks['onSessionStart']>>[0];
-type SessionEndHookInput = Parameters<NonNullable<SessionHooks['onSessionEnd']>>[0];
-type ErrorOccurredHookInput = Parameters<NonNullable<SessionHooks['onErrorOccurred']>>[0];
+type SessionHooks = NonNullable<SessionConfig["hooks"]>;
+type PreToolUseHookInput = Parameters<NonNullable<SessionHooks["onPreToolUse"]>>[0];
+type PostToolUseHookInput = Parameters<NonNullable<SessionHooks["onPostToolUse"]>>[0];
+type UserPromptSubmittedHookInput = Parameters<NonNullable<SessionHooks["onUserPromptSubmitted"]>>[0];
+type SessionStartHookInput = Parameters<NonNullable<SessionHooks["onSessionStart"]>>[0];
+type SessionEndHookInput = Parameters<NonNullable<SessionHooks["onSessionEnd"]>>[0];
+type ErrorOccurredHookInput = Parameters<NonNullable<SessionHooks["onErrorOccurred"]>>[0];
 
 // ---------------------------------------------------------------------------
 // MCP servers
@@ -34,20 +40,20 @@ export function toSdkMcpServers(defs: readonly IMcpServerDefinition[]): Record<s
 		const config = def.configuration;
 		if (config.type === McpServerType.LOCAL) {
 			result[def.name] = {
-				type: 'local',
-				command: config.command,
-				args: config.args ? [...config.args] : [],
-				tools: ['*'],
-				...(config.env && { env: toStringEnv(config.env) }),
-				...(config.cwd && { cwd: config.cwd }),
-			};
+        type: "local",
+        command: config.command,
+        args: config.args ? [...config.args] : [],
+        tools: ["*"],
+        ...(config.env && { env: toStringEnv(config.env) }),
+        ...(config.cwd && { cwd: config.cwd }),
+      };
 		} else {
 			result[def.name] = {
-				type: 'http',
-				url: config.url,
-				tools: ['*'],
-				...(config.headers && { headers: { ...config.headers } }),
-			};
+        type: "http",
+        url: config.url,
+        tools: ["*"],
+        ...(config.headers && { headers: { ...config.headers } }),
+      };
 		}
 	}
 	return result;
@@ -88,16 +94,16 @@ export async function toSdkCustomAgents(agents: readonly INamedPluginResource[],
 			const content = await fileService.readFile(agent.uri);
 			const raw = content.value.toString();
 			const md = parseFrontMatter(raw);
-			const name = md?.getStringValue('name') ?? agent.name;
-			const description = md?.getStringValue('description');
-			const tools = md?.getStringArrayValue('tools');
+			const name = md?.getStringValue("name") ?? agent.name;
+			const description = md?.getStringValue("description");
+			const tools = md?.getStringArrayValue("tools");
 			const prompt = md?.body ?? raw;
 			configs.push({
-				name,
-				...(description ? { description } : {}),
-				tools: tools && tools.length > 0 ? tools : null,
-				prompt,
-			});
+        name,
+        ...(description ? { description } : {}),
+        tools: tools && tools.length > 0 ? tools : null,
+        prompt,
+      });
 		} catch {
 			// Skip agents whose file cannot be read
 		}
@@ -111,10 +117,10 @@ export async function toSdkCustomAgents(agents: readonly INamedPluginResource[],
  */
 export function toCustomizationAgentRefs(agents: readonly INamedPluginResource[]): CustomizationAgentRef[] {
 	return agents.map(a => ({
-		uri: a.uri.toString(),
-		name: a.name,
-		...(a.description ? { description: a.description } : {}),
-	}));
+    uri: a.uri.toString(),
+    name: a.name,
+    ...(a.description ? { description: a.description } : {}),
+  }));
 }
 
 // ---------------------------------------------------------------------------
@@ -164,7 +170,7 @@ function resolveEffectiveCommand(hook: IParsedHookCommand, os: OperatingSystem):
 function executeHookCommand(hook: IParsedHookCommand, stdin?: string): Promise<string> {
 	const command = resolveEffectiveCommand(hook, OS);
 	if (!command) {
-		return Promise.resolve('');
+		return Promise.resolve("");
 	}
 
 	const timeout = (hook.timeout ?? 30) * 1000;
@@ -172,21 +178,21 @@ function executeHookCommand(hook: IParsedHookCommand, stdin?: string): Promise<s
 
 	return new Promise<string>((resolve, reject) => {
 		const isWindows = OS === OperatingSystem.Windows;
-		const shell = isWindows ? 'cmd.exe' : '/bin/sh';
-		const shellArgs = isWindows ? ['/c', command] : ['-c', command];
+		const shell = isWindows ? "cmd.exe" : "/bin/sh";
+		const shellArgs = isWindows ? ["/c", command] : ["-c", command];
 
 		const child = spawn(shell, shellArgs, {
 			cwd,
 			env: { ...process.env, ...hook.env },
-			stdio: ['pipe', 'pipe', 'pipe'],
+			stdio: ["pipe", "pipe", "pipe"],
 			timeout,
 		});
 
-		let stdout = '';
-		let stderr = '';
+		let stdout = "";
+		let stderr = "";
 
-		child.stdout.on('data', (data: Buffer) => { stdout += data.toString(); });
-		child.stderr.on('data', (data: Buffer) => { stderr += data.toString(); });
+		child.stdout.on("data", (data: Buffer) => { stdout += data.toString(); });
+		child.stderr.on("data", (data: Buffer) => { stderr += data.toString(); });
 
 		if (stdin) {
 			child.stdin.write(stdin);
@@ -195,8 +201,8 @@ function executeHookCommand(hook: IParsedHookCommand, stdin?: string): Promise<s
 			child.stdin.end();
 		}
 
-		child.on('error', reject);
-		child.on('close', (code) => {
+		child.on("error", reject);
+		child.on("close", (code) => {
 			if (code === 0) {
 				resolve(stdout);
 			} else {
@@ -223,7 +229,7 @@ async function runHookCommands(commands: readonly IParsedHookCommand[] | undefin
 			if (output.trim()) {
 				try {
 					const parsed = JSON.parse(output);
-					if (parsed && typeof parsed === 'object') {
+					if (parsed && typeof parsed === "object") {
 						return parsed;
 					}
 				} catch {
@@ -241,12 +247,12 @@ async function runHookCommands(commands: readonly IParsedHookCommand[] | undefin
  * Mapping from canonical hook type identifiers to SDK SessionHooks handler keys.
  */
 const HOOK_TYPE_TO_SDK_KEY: Record<string, keyof SessionHooks> = {
-	'PreToolUse': 'onPreToolUse',
-	'PostToolUse': 'onPostToolUse',
-	'UserPromptSubmit': 'onUserPromptSubmitted',
-	'SessionStart': 'onSessionStart',
-	'SessionEnd': 'onSessionEnd',
-	'ErrorOccurred': 'onErrorOccurred',
+  "PreToolUse": "onPreToolUse",
+  "PostToolUse": "onPostToolUse",
+  "UserPromptSubmit": "onUserPromptSubmitted",
+  "SessionStart": "onSessionStart",
+  "SessionEnd": "onSessionEnd",
+  "ErrorOccurred": "onErrorOccurred",
 };
 
 /**
@@ -280,7 +286,7 @@ export function toSdkHooks(
 	const hooks: SessionHooks = {};
 
 	// Pre-tool-use handler
-	const preToolCommands = commandsByKey.get('onPreToolUse');
+	const preToolCommands = commandsByKey.get("onPreToolUse");
 	if (preToolCommands?.length || editTrackingHooks) {
 		hooks.onPreToolUse = async (input: PreToolUseHookInput) => {
 			await editTrackingHooks?.onPreToolUse(input);
@@ -289,7 +295,7 @@ export function toSdkHooks(
 	}
 
 	// Post-tool-use handler
-	const postToolCommands = commandsByKey.get('onPostToolUse');
+	const postToolCommands = commandsByKey.get("onPostToolUse");
 	if (postToolCommands?.length || editTrackingHooks) {
 		hooks.onPostToolUse = async (input: PostToolUseHookInput) => {
 			await editTrackingHooks?.onPostToolUse(input);
@@ -298,7 +304,7 @@ export function toSdkHooks(
 	}
 
 	// User-prompt-submitted handler
-	const promptCommands = commandsByKey.get('onUserPromptSubmitted');
+	const promptCommands = commandsByKey.get("onUserPromptSubmitted");
 	if (promptCommands?.length) {
 		hooks.onUserPromptSubmitted = async (input: UserPromptSubmittedHookInput) => {
 			const stdin = JSON.stringify(input);
@@ -313,7 +319,7 @@ export function toSdkHooks(
 	}
 
 	// Session-start handler
-	const startCommands = commandsByKey.get('onSessionStart');
+	const startCommands = commandsByKey.get("onSessionStart");
 	if (startCommands?.length) {
 		hooks.onSessionStart = async (input: SessionStartHookInput) => {
 			const stdin = JSON.stringify(input);
@@ -328,7 +334,7 @@ export function toSdkHooks(
 	}
 
 	// Session-end handler
-	const endCommands = commandsByKey.get('onSessionEnd');
+	const endCommands = commandsByKey.get("onSessionEnd");
 	if (endCommands?.length) {
 		hooks.onSessionEnd = async (input: SessionEndHookInput) => {
 			const stdin = JSON.stringify(input);
@@ -343,7 +349,7 @@ export function toSdkHooks(
 	}
 
 	// Error-occurred handler
-	const errorCommands = commandsByKey.get('onErrorOccurred');
+	const errorCommands = commandsByKey.get("onErrorOccurred");
 	if (errorCommands?.length) {
 		hooks.onErrorOccurred = async (input: ErrorOccurredHookInput) => {
 			const stdin = JSON.stringify(input);

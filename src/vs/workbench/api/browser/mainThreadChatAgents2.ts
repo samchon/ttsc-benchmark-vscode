@@ -3,53 +3,102 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DeferredPromise } from '../../../base/common/async.js';
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { Emitter, Event } from '../../../base/common/event.js';
-import { IMarkdownString } from '../../../base/common/htmlContent.js';
-import { Disposable, DisposableMap, IDisposable } from '../../../base/common/lifecycle.js';
-import { autorun } from '../../../base/common/observable.js';
-import { revive } from '../../../base/common/marshalling.js';
-import { Schemas } from '../../../base/common/network.js';
-import { escapeRegExpCharacters } from '../../../base/common/strings.js';
-import { ThemeIcon } from '../../../base/common/themables.js';
-import { URI, UriComponents } from '../../../base/common/uri.js';
-import { Codicon } from '../../../base/common/codicons.js';
-import { Position } from '../../../editor/common/core/position.js';
-import { Range } from '../../../editor/common/core/range.js';
-import { getWordAtText } from '../../../editor/common/core/wordHelper.js';
-import { CompletionContext, CompletionItem, CompletionItemKind, CompletionList } from '../../../editor/common/languages.js';
-import { ITextModel } from '../../../editor/common/model.js';
-import { ILanguageFeaturesService } from '../../../editor/common/services/languageFeatures.js';
-import { ExtensionIdentifier } from '../../../platform/extensions/common/extensions.js';
-import { IInstantiationService } from '../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../platform/log/common/log.js';
-import { ITelemetryService } from '../../../platform/telemetry/common/telemetry.js';
-import { IUriIdentityService } from '../../../platform/uriIdentity/common/uriIdentity.js';
-import { IChatWidget, IChatWidgetService } from '../../contrib/chat/browser/chat.js';
-import { AgentSessionProviders, getAgentSessionProvider } from '../../contrib/chat/browser/agentSessions/agentSessions.js';
-import { AddDynamicVariableAction, IAddDynamicVariableContext } from '../../contrib/chat/browser/attachments/chatDynamicVariables.js';
-import { IChatAgentHistoryEntry, IChatAgentImplementation, IChatAgentRequest, IChatAgentService } from '../../contrib/chat/common/participants/chatAgents.js';
-import { IAgentSkill, IChatPromptSlashCommand, ICustomAgent, IInstructionFile, IPromptFileContext, IPromptPath, IPromptsService, PromptsStorage } from '../../contrib/chat/common/promptSyntax/service/promptsService.js';
-import { isValidPromptType, PromptsType } from '../../contrib/chat/common/promptSyntax/promptTypes.js';
-import { IChatModel, IChatResponseModel } from '../../contrib/chat/common/model/chatModel.js';
-import { ChatRequestAgentPart } from '../../contrib/chat/common/requestParser/chatParserTypes.js';
-import { ChatRequestParser, IChatParserContext } from '../../contrib/chat/common/requestParser/chatRequestParser.js';
-import { getDynamicVariablesForWidget, getSelectedToolAndToolSetsForWidget } from '../../contrib/chat/browser/attachments/chatVariables.js';
-import { IChatContentInlineReference, IChatContentReference, IChatFollowup, IChatNotebookEdit, IChatProgress, IChatService, IChatTask, IChatTaskSerialized, IChatWarningMessage } from '../../contrib/chat/common/chatService/chatService.js';
-import { ChatSessionOptionsMap, IChatSessionsService } from '../../contrib/chat/common/chatSessionsService.js';
-import { ChatAgentLocation, ChatModeKind } from '../../contrib/chat/common/constants.js';
-import { ILanguageModelToolsService } from '../../contrib/chat/common/tools/languageModelToolsService.js';
-import { IExtHostContext, extHostNamedCustomer } from '../../services/extensions/common/extHostCustomers.js';
-import { IExtensionService } from '../../services/extensions/common/extensions.js';
-import { Dto } from '../../services/extensions/common/proxyIdentifier.js';
-import { ExtHostChatAgentsShape2, ExtHostContext, IChatAgentInvokeResult, IChatSessionCustomizationItemDto, IChatSessionCustomizationProviderMetadataDto, IChatNotebookEditDto, IChatParticipantMetadata, IChatProgressDto, IChatSessionContextDto, ICustomAgentDto, IDynamicChatAgentProps, IExtensionChatAgentMetadata, IHookDto, IInstructionDto, IPluginDto, ISkillDto, ISlashCommandDto, MainContext, MainThreadChatAgentsShape2 } from '../common/extHost.protocol.js';
-import { NotebookDto } from './mainThreadNotebookDto.js';
-import { getChatSessionType, isUntitledChatSession } from '../../contrib/chat/common/model/chatUri.js';
-import { ICustomizationHarnessService, ICustomizationItem, ICustomizationItemProvider, IHarnessDescriptor } from '../../contrib/chat/common/customizationHarnessService.js';
-import { AICustomizationManagementSection, AICustomizationSources } from '../../contrib/chat/common/aiCustomizationWorkspaceService.js';
-import { IAgentPlugin, IAgentPluginService } from '../../contrib/chat/common/plugins/agentPluginService.js';
-import { IWorkbenchEnvironmentService } from '../../services/environment/common/environmentService.js';
+import { DeferredPromise } from "../../../base/common/async.js";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { IMarkdownString } from "../../../base/common/htmlContent.js";
+import { Disposable, DisposableMap, IDisposable } from "../../../base/common/lifecycle.js";
+import { autorun } from "../../../base/common/observable.js";
+import { revive } from "../../../base/common/marshalling.js";
+import { Schemas } from "../../../base/common/network.js";
+import { escapeRegExpCharacters } from "../../../base/common/strings.js";
+import { ThemeIcon } from "../../../base/common/themables.js";
+import { URI, UriComponents } from "../../../base/common/uri.js";
+import { Codicon } from "../../../base/common/codicons.js";
+import { Position } from "../../../editor/common/core/position.js";
+import { Range } from "../../../editor/common/core/range.js";
+import { getWordAtText } from "../../../editor/common/core/wordHelper.js";
+import { CompletionContext, CompletionItem, CompletionItemKind, CompletionList } from "../../../editor/common/languages.js";
+import { ITextModel } from "../../../editor/common/model.js";
+import { ILanguageFeaturesService } from "../../../editor/common/services/languageFeatures.js";
+import { ExtensionIdentifier } from "../../../platform/extensions/common/extensions.js";
+import { IInstantiationService } from "../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { ITelemetryService } from "../../../platform/telemetry/common/telemetry.js";
+import { IUriIdentityService } from "../../../platform/uriIdentity/common/uriIdentity.js";
+import { IChatWidget, IChatWidgetService } from "../../contrib/chat/browser/chat.js";
+import { AgentSessionProviders, getAgentSessionProvider } from "../../contrib/chat/browser/agentSessions/agentSessions.js";
+import { AddDynamicVariableAction, IAddDynamicVariableContext } from "../../contrib/chat/browser/attachments/chatDynamicVariables.js";
+import {
+  IChatAgentHistoryEntry,
+  IChatAgentImplementation,
+  IChatAgentRequest,
+  IChatAgentService,
+} from "../../contrib/chat/common/participants/chatAgents.js";
+import {
+  IAgentSkill,
+  IChatPromptSlashCommand,
+  ICustomAgent,
+  IInstructionFile,
+  IPromptFileContext,
+  IPromptPath,
+  IPromptsService,
+  PromptsStorage,
+} from "../../contrib/chat/common/promptSyntax/service/promptsService.js";
+import { isValidPromptType, PromptsType } from "../../contrib/chat/common/promptSyntax/promptTypes.js";
+import { IChatModel, IChatResponseModel } from "../../contrib/chat/common/model/chatModel.js";
+import { ChatRequestAgentPart } from "../../contrib/chat/common/requestParser/chatParserTypes.js";
+import { ChatRequestParser, IChatParserContext } from "../../contrib/chat/common/requestParser/chatRequestParser.js";
+import { getDynamicVariablesForWidget, getSelectedToolAndToolSetsForWidget } from "../../contrib/chat/browser/attachments/chatVariables.js";
+import {
+  IChatContentInlineReference,
+  IChatContentReference,
+  IChatFollowup,
+  IChatNotebookEdit,
+  IChatProgress,
+  IChatService,
+  IChatTask,
+  IChatTaskSerialized,
+  IChatWarningMessage,
+} from "../../contrib/chat/common/chatService/chatService.js";
+import { ChatSessionOptionsMap, IChatSessionsService } from "../../contrib/chat/common/chatSessionsService.js";
+import { ChatAgentLocation, ChatModeKind } from "../../contrib/chat/common/constants.js";
+import { ILanguageModelToolsService } from "../../contrib/chat/common/tools/languageModelToolsService.js";
+import { IExtHostContext, extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
+import { IExtensionService } from "../../services/extensions/common/extensions.js";
+import { Dto } from "../../services/extensions/common/proxyIdentifier.js";
+import {
+  ExtHostChatAgentsShape2,
+  ExtHostContext,
+  IChatAgentInvokeResult,
+  IChatSessionCustomizationItemDto,
+  IChatSessionCustomizationProviderMetadataDto,
+  IChatNotebookEditDto,
+  IChatParticipantMetadata,
+  IChatProgressDto,
+  IChatSessionContextDto,
+  ICustomAgentDto,
+  IDynamicChatAgentProps,
+  IExtensionChatAgentMetadata,
+  IHookDto,
+  IInstructionDto,
+  IPluginDto,
+  ISkillDto,
+  ISlashCommandDto,
+  MainContext,
+  MainThreadChatAgentsShape2,
+} from "../common/extHost.protocol.js";
+import { NotebookDto } from "./mainThreadNotebookDto.js";
+import { getChatSessionType, isUntitledChatSession } from "../../contrib/chat/common/model/chatUri.js";
+import {
+  ICustomizationHarnessService,
+  ICustomizationItem,
+  ICustomizationItemProvider,
+  IHarnessDescriptor,
+} from "../../contrib/chat/common/customizationHarnessService.js";
+import { AICustomizationManagementSection, AICustomizationSources } from "../../contrib/chat/common/aiCustomizationWorkspaceService.js";
+import { IAgentPlugin, IAgentPluginService } from "../../contrib/chat/common/plugins/agentPluginService.js";
+import { IWorkbenchEnvironmentService } from "../../services/environment/common/environmentService.js";
 
 interface AgentData {
 	dispose: () => void;
@@ -63,7 +112,7 @@ interface UnresolvedAnchor {
 }
 
 export class MainThreadChatTask implements IChatTask {
-	public readonly kind = 'progressTask';
+	public readonly kind = "progressTask";
 
 	public readonly deferred = new DeferredPromise<string | void>();
 
@@ -93,28 +142,46 @@ export class MainThreadChatTask implements IChatTask {
 
 	toJSON(): IChatTaskSerialized {
 		return {
-			kind: 'progressTaskSerialized',
-			content: this.content,
-			progress: this.progress
-		};
+      kind: "progressTaskSerialized",
+      content: this.content,
+      progress: this.progress,
+    };
 	}
 }
 
 @extHostNamedCustomer(MainContext.MainThreadChatAgents2)
 export class MainThreadChatAgents2 extends Disposable implements MainThreadChatAgentsShape2 {
 
-	private readonly _agents = this._register(new DisposableMap<number, AgentData>());
-	private readonly _agentCompletionProviders = this._register(new DisposableMap<number, IDisposable>());
-	private readonly _agentIdsToCompletionProviders = this._register(new DisposableMap<string, IDisposable>);
+	private readonly _agents = this._register(
+    new DisposableMap<number, AgentData>(),
+  );
+	private readonly _agentCompletionProviders = this._register(
+    new DisposableMap<number, IDisposable>(),
+  );
+	private readonly _agentIdsToCompletionProviders = this._register(
+    new DisposableMap<string, IDisposable>,
+  );
 
-	private readonly _chatParticipantDetectionProviders = this._register(new DisposableMap<number, IDisposable>());
+	private readonly _chatParticipantDetectionProviders = this._register(
+    new DisposableMap<number, IDisposable>(),
+  );
 
-	private readonly _promptFileProviders = this._register(new DisposableMap<number, IDisposable>());
-	private readonly _promptFileProviderEmitters = this._register(new DisposableMap<number, Emitter<void>>());
-	private readonly _promptFileContentRegistrations = this._register(new DisposableMap<number, DisposableMap<string, IDisposable>>());
+	private readonly _promptFileProviders = this._register(
+    new DisposableMap<number, IDisposable>(),
+  );
+	private readonly _promptFileProviderEmitters = this._register(
+    new DisposableMap<number, Emitter<void>>(),
+  );
+	private readonly _promptFileContentRegistrations = this._register(
+    new DisposableMap<number, DisposableMap<string, IDisposable>>(),
+  );
 
-	private readonly _customizationProviders = this._register(new DisposableMap<number, IDisposable>());
-	private readonly _customizationProviderEmitters = this._register(new DisposableMap<number, Emitter<void>>());
+	private readonly _customizationProviders = this._register(
+    new DisposableMap<number, IDisposable>(),
+  );
+	private readonly _customizationProviderEmitters = this._register(
+    new DisposableMap<number, Emitter<void>>(),
+  );
 
 	private readonly _pendingProgress = new Map<string, { progress: (parts: IChatProgress[]) => void; chatSession: IChatModel | undefined }>();
 	private readonly _proxy: ExtHostChatAgentsShape2;
@@ -150,10 +217,10 @@ export class MainThreadChatAgents2 extends Disposable implements MainThreadChatA
 			}
 		}));
 		this._register(this._chatService.onDidPerformUserAction(e => {
-			if (typeof e.agentId === 'string') {
+			if (typeof e.agentId === "string") {
 				for (const [handle, agent] of this._agents) {
 					if (agent.id === e.agentId) {
-						if (e.action.kind === 'vote') {
+						if (e.action.kind === "vote") {
 							this._proxy.$acceptFeedback(handle, e.result ?? {}, e.action);
 						} else {
 							this._proxy.$acceptAction(handle, e.result || {}, e);
@@ -163,9 +230,15 @@ export class MainThreadChatAgents2 extends Disposable implements MainThreadChatA
 				}
 			}
 		}));
-		this._register(this._chatService.onDidReceiveQuestionCarouselAnswer(e => {
-			this._proxy.$handleQuestionCarouselAnswer(e.requestId, e.resolveId, e.answers);
-		}));
+		this._register(
+      this._chatService.onDidReceiveQuestionCarouselAnswer(e => {
+        this._proxy.$handleQuestionCarouselAnswer(
+          e.requestId,
+          e.resolveId,
+          e.answers,
+        );
+      }),
+    );
 		this._register(this._chatWidgetService.onDidChangeFocusedSession(() => {
 			this._acceptActiveChatSession(this._chatWidgetService.lastFocusedWidget);
 		}));
@@ -173,120 +246,134 @@ export class MainThreadChatAgents2 extends Disposable implements MainThreadChatA
 		// Push the initial active session if there is already a focused widget
 		this._acceptActiveChatSession(this._chatWidgetService.lastFocusedWidget);
 
-		this._register(this._promptsService.onDidChangeCustomAgents(() => {
-			this._proxy.$onDidChangeCustomAgents();
-		}));
-		this._register(this._promptsService.onDidChangeInstructions(() => {
-			this._proxy.$onDidChangeInstructions();
-		}));
-		this._register(this._promptsService.onDidChangeSkills(() => {
-			this._proxy.$onDidChangeSkills();
-		}));
-		this._register(this._promptsService.onDidChangeSlashCommands(() => {
-			this._proxy.$onDidChangeSlashCommands();
-		}));
-		this._register(this._promptsService.onDidChangeHooks(() => {
-			this._proxy.$onDidChangeHooks();
-		}));
+		this._register(
+      this._promptsService.onDidChangeCustomAgents(() => {
+        this._proxy.$onDidChangeCustomAgents();
+      }),
+    );
+		this._register(
+      this._promptsService.onDidChangeInstructions(() => {
+        this._proxy.$onDidChangeInstructions();
+      }),
+    );
+		this._register(
+      this._promptsService.onDidChangeSkills(() => {
+        this._proxy.$onDidChangeSkills();
+      }),
+    );
+		this._register(
+      this._promptsService.onDidChangeSlashCommands(() => {
+        this._proxy.$onDidChangeSlashCommands();
+      }),
+    );
+		this._register(
+      this._promptsService.onDidChangeHooks(() => {
+        this._proxy.$onDidChangeHooks();
+      }),
+    );
 
-		this._register(autorun(reader => {
-			this._agentPluginService.plugins.read(reader);
-			this._proxy.$onDidChangePlugins();
-		}));
+		this._register(
+      autorun(reader => {
+        this._agentPluginService.plugins.read(reader);
+        this._proxy.$onDidChangePlugins();
+      }),
+    );
 	}
 
 	private _acceptActiveChatSession(widget: IChatWidget | undefined): void {
 		const sessionResource = widget?.viewModel?.sessionResource;
-		const isLocal = sessionResource && getAgentSessionProvider(sessionResource) === AgentSessionProviders.Local;
+		const isLocal = sessionResource && getAgentSessionProvider(
+      sessionResource,
+    ) === AgentSessionProviders.Local;
 		this._proxy.$acceptActiveChatSession(isLocal ? sessionResource : undefined);
 	}
 
-	private _toChatResourceSource(storage: PromptsStorage): ICustomAgentDto['source'] {
+	private _toChatResourceSource(storage: PromptsStorage): ICustomAgentDto["source"] {
 		switch (storage) {
 			case PromptsStorage.local:
-				return 'local';
+				return "local";
 			case PromptsStorage.user:
-				return 'user';
+				return "user";
 			case PromptsStorage.extension:
-				return 'extension';
+				return "extension";
 			case PromptsStorage.plugin:
-				return 'plugin';
+				return "plugin";
 		}
 	}
 
 	private _toCustomAgentDto(agent: ICustomAgent): ICustomAgentDto {
 		return {
-			uri: agent.uri,
-			name: agent.name,
-			description: agent.description,
-			source: this._toChatResourceSource(agent.source.storage),
-			extensionId: agent.source.storage === PromptsStorage.extension ? agent.source.extensionId.value : undefined,
-			pluginUri: agent.source.storage === PromptsStorage.plugin ? agent.source.pluginUri : undefined,
-			sessionTypes: agent.sessionTypes,
-			argumentHint: agent.argumentHint,
-			tools: agent.tools,
-			model: agent.model,
-			userInvocable: agent.visibility.userInvocable,
-			disableModelInvocation: !agent.visibility.agentInvocable,
-			enabled: agent.enabled,
-		};
+      uri: agent.uri,
+      name: agent.name,
+      description: agent.description,
+      source: this._toChatResourceSource(agent.source.storage),
+      extensionId: agent.source.storage === PromptsStorage.extension ? agent.source.extensionId.value : undefined,
+      pluginUri: agent.source.storage === PromptsStorage.plugin ? agent.source.pluginUri : undefined,
+      sessionTypes: agent.sessionTypes,
+      argumentHint: agent.argumentHint,
+      tools: agent.tools,
+      model: agent.model,
+      userInvocable: agent.visibility.userInvocable,
+      disableModelInvocation: !agent.visibility.agentInvocable,
+      enabled: agent.enabled,
+    };
 	}
 
 	private _toInstructionDto(instruction: IInstructionFile): IInstructionDto {
 		return {
-			uri: instruction.uri,
-			name: instruction.name,
-			description: instruction.description,
-			source: this._toChatResourceSource(instruction.storage),
-			extensionId: instruction.extension?.identifier.value,
-			pluginUri: instruction.pluginUri,
-			sessionTypes: instruction.sessionTypes,
-			pattern: instruction.pattern,
-		};
+      uri: instruction.uri,
+      name: instruction.name,
+      description: instruction.description,
+      source: this._toChatResourceSource(instruction.storage),
+      extensionId: instruction.extension?.identifier.value,
+      pluginUri: instruction.pluginUri,
+      sessionTypes: instruction.sessionTypes,
+      pattern: instruction.pattern,
+    };
 	}
 
 	private _toSkillDto(skill: IAgentSkill): ISkillDto {
 		return {
-			uri: skill.uri,
-			name: skill.name,
-			description: skill.description,
-			source: this._toChatResourceSource(skill.storage),
-			extensionId: skill.extension?.identifier.value,
-			pluginUri: skill.pluginUri,
-			sessionTypes: skill.sessionTypes,
-			userInvocable: skill.userInvocable,
-			disableModelInvocation: skill.disableModelInvocation,
-		};
+      uri: skill.uri,
+      name: skill.name,
+      description: skill.description,
+      source: this._toChatResourceSource(skill.storage),
+      extensionId: skill.extension?.identifier.value,
+      pluginUri: skill.pluginUri,
+      sessionTypes: skill.sessionTypes,
+      userInvocable: skill.userInvocable,
+      disableModelInvocation: skill.disableModelInvocation,
+    };
 	}
 
 	private _toSlashCommandDto(slashCommand: IChatPromptSlashCommand): ISlashCommandDto {
 		return {
-			uri: slashCommand.uri,
-			name: slashCommand.name,
-			description: slashCommand.description,
-			source: this._toChatResourceSource(slashCommand.storage),
-			extensionId: slashCommand.extension?.identifier.value,
-			pluginUri: slashCommand.pluginUri,
-			sessionTypes: slashCommand.sessionTypes,
-			argumentHint: slashCommand.argumentHint,
-			userInvocable: slashCommand.userInvocable,
-		};
+      uri: slashCommand.uri,
+      name: slashCommand.name,
+      description: slashCommand.description,
+      source: this._toChatResourceSource(slashCommand.storage),
+      extensionId: slashCommand.extension?.identifier.value,
+      pluginUri: slashCommand.pluginUri,
+      sessionTypes: slashCommand.sessionTypes,
+      argumentHint: slashCommand.argumentHint,
+      userInvocable: slashCommand.userInvocable,
+    };
 	}
 
 	private _toHookDto(hookFile: IPromptPath): IHookDto {
 		return {
-			uri: hookFile.uri,
-			sessionTypes: hookFile.sessionTypes,
-			source: this._toChatResourceSource(hookFile.storage),
-			extensionId: hookFile.extension?.identifier.value,
-			pluginUri: hookFile.pluginUri,
-		};
+      uri: hookFile.uri,
+      sessionTypes: hookFile.sessionTypes,
+      source: this._toChatResourceSource(hookFile.storage),
+      extensionId: hookFile.extension?.identifier.value,
+      pluginUri: hookFile.pluginUri,
+    };
 	}
 
 	private _toPluginDto(plugin: IAgentPlugin): IPluginDto {
 		return {
-			uri: plugin.uri,
-		};
+      uri: plugin.uri,
+    };
 	}
 
 	async $provideCustomAgents(token: CancellationToken): Promise<ICustomAgentDto[]> {
@@ -305,12 +392,19 @@ export class MainThreadChatAgents2 extends Disposable implements MainThreadChatA
 	}
 
 	async $provideSlashCommands(token: CancellationToken): Promise<ISlashCommandDto[]> {
-		const slashCommands = await this._promptsService.getPromptSlashCommands(token);
-		return slashCommands.map(slashCommand => this._toSlashCommandDto(slashCommand));
+		const slashCommands = await this._promptsService.getPromptSlashCommands(
+      token,
+    );
+		return slashCommands.map(
+      slashCommand => this._toSlashCommandDto(slashCommand),
+    );
 	}
 
 	async $provideHooks(token: CancellationToken): Promise<IHookDto[]> {
-		const hookFiles = await this._promptsService.listPromptFiles(PromptsType.hook, token);
+		const hookFiles = await this._promptsService.listPromptFiles(
+      PromptsType.hook,
+      token,
+    );
 		return hookFiles.map(hookFile => this._toHookDto(hookFile));
 	}
 
@@ -328,25 +422,36 @@ export class MainThreadChatAgents2 extends Disposable implements MainThreadChatA
 		const widget = this._chatWidgetService.lastFocusedWidget;
 		const model = widget?.viewModel?.model;
 		if (!model) {
-			this._logService.error(`MainThreadChat#$transferActiveChatSession: No active chat session found`);
+			this._logService.error(
+        `MainThreadChat#$transferActiveChatSession: No active chat session found`,
+      );
 			return;
 		}
 
-		await this._chatService.transferChatSession(model.sessionResource, URI.revive(toWorkspace));
+		await this._chatService.transferChatSession(
+      model.sessionResource,
+      URI.revive(toWorkspace),
+    );
 	}
 
 	async $registerAgent(handle: number, extension: ExtensionIdentifier, id: string, metadata: IExtensionChatAgentMetadata, dynamicProps: IDynamicChatAgentProps | undefined): Promise<void> {
 		await this._extensionService.whenInstalledExtensionsRegistered();
 		const staticAgentRegistration = this._chatAgentService.getAgent(id, true);
-		const chatSessionRegistration = this._chatSessionService.getAllChatSessionContributions().find(c => c.type === id || c.alternativeIds?.includes(id));
+		const chatSessionRegistration = this._chatSessionService.getAllChatSessionContributions().find(
+      c => c.type === id || c.alternativeIds?.includes(id),
+    );
 		if (!staticAgentRegistration && !chatSessionRegistration && !dynamicProps) {
 			if (this._chatAgentService.getAgentsByName(id).length) {
 				// Likely some extension authors will not adopt the new ID, so give a hint if they register a
 				// participant by name instead of ID.
-				throw new Error(`chatParticipant must be declared with an ID in package.json. The "id" property may be missing! "${id}"`);
+				throw new Error(
+          `chatParticipant must be declared with an ID in package.json. The "id" property may be missing! "${id}"`,
+        );
 			}
 
-			throw new Error(`chatParticipant must be declared in package.json: ${id}`);
+			throw new Error(
+        `chatParticipant must be declared in package.json: ${id}`,
+      );
 		}
 
 		const impl: IChatAgentImplementation = {
@@ -378,18 +483,18 @@ export class MainThreadChatAgents2 extends Disposable implements MainThreadChatA
 					if (rpcResult?.errorCallstack && !rpcResult.errorDetails?.isRateLimited && !rpcResult.errorDetails?.isQuotaExceeded && !rpcResult.errorDetails?.isExpectedError) {
 						type ChatAgentErrorEvent = { callstack: string; msg: string; errorName: string; agent: string; agentExtensionId: string };
 						type ChatAgentErrorClassification = {
-							owner: 'bryanchen-d';
-							comment: 'Logged when a chat agent handler throws an error with a callstack.';
-							callstack: { classification: 'CallstackOrException'; purpose: 'PerformanceAndHealth'; comment: 'The callstack of the error.' };
-							msg: { classification: 'CallstackOrException'; purpose: 'PerformanceAndHealth'; comment: 'The error message.' };
-							errorName: { classification: 'SystemMetaData'; purpose: 'PerformanceAndHealth'; comment: 'The error name (e.g. TypeError, ChatQuotaExceeded).' };
-							agent: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The agent that threw the error.' };
-							agentExtensionId: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The extension that contributed the agent.' };
+							owner: "bryanchen-d";
+							comment: "Logged when a chat agent handler throws an error with a callstack.";
+							callstack: { classification: "CallstackOrException"; purpose: "PerformanceAndHealth"; comment: "The callstack of the error." };
+							msg: { classification: "CallstackOrException"; purpose: "PerformanceAndHealth"; comment: "The error message." };
+							errorName: { classification: "SystemMetaData"; purpose: "PerformanceAndHealth"; comment: "The error name (e.g. TypeError, ChatQuotaExceeded)." };
+							agent: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The agent that threw the error." };
+							agentExtensionId: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The extension that contributed the agent." };
 						};
-						this._telemetryService.publicLogError2<ChatAgentErrorEvent, ChatAgentErrorClassification>('chatAgentError', {
+						this._telemetryService.publicLogError2<ChatAgentErrorEvent, ChatAgentErrorClassification>("chatAgentError", {
 							callstack: rpcResult.errorCallstack,
-							msg: rpcResult.errorDetails?.message ?? '',
-							errorName: rpcResult.errorName ?? '',
+							msg: rpcResult.errorDetails?.message ?? "",
+							errorName: rpcResult.errorName ?? "",
 							agent: id,
 							agentExtensionId: extension.value,
 						});
@@ -433,42 +538,47 @@ export class MainThreadChatAgents2 extends Disposable implements MainThreadChatA
 
 		let disposable: IDisposable;
 		if (!staticAgentRegistration && dynamicProps) {
-			const extensionDescription = this._extensionService.extensions.find(e => ExtensionIdentifier.equals(e.identifier, extension));
+			const extensionDescription = this._extensionService.extensions.find(
+        e => ExtensionIdentifier.equals(e.identifier, extension),
+      );
 			disposable = this._chatAgentService.registerDynamicAgent(
-				{
-					id,
-					name: dynamicProps.name,
-					description: dynamicProps.description,
-					extensionId: extension,
-					extensionVersion: extensionDescription?.version,
-					extensionDisplayName: extensionDescription?.displayName ?? extension.value,
-					extensionPublisherId: extensionDescription?.publisher ?? '',
-					publisherDisplayName: dynamicProps.publisherName,
-					fullName: dynamicProps.fullName,
-					metadata: revive(metadata),
-					slashCommands: [],
-					disambiguation: [],
-					locations: [ChatAgentLocation.Chat],
-					modes: [ChatModeKind.Ask, ChatModeKind.Agent, ChatModeKind.Edit],
-				},
-				impl);
+        {
+          id,
+          name: dynamicProps.name,
+          description: dynamicProps.description,
+          extensionId: extension,
+          extensionVersion: extensionDescription?.version,
+          extensionDisplayName: extensionDescription?.displayName ?? extension.value,
+          extensionPublisherId: extensionDescription?.publisher ?? "",
+          publisherDisplayName: dynamicProps.publisherName,
+          fullName: dynamicProps.fullName,
+          metadata: revive(metadata),
+          slashCommands: [],
+          disambiguation: [],
+          locations: [ChatAgentLocation.Chat],
+          modes: [ChatModeKind.Ask, ChatModeKind.Agent, ChatModeKind.Edit],
+        },
+        impl,
+      );
 		} else {
 			disposable = this._chatAgentService.registerAgentImplementation(id, impl);
 		}
 
 		this._agents.set(handle, {
-			id: id,
-			extensionId: extension,
-			dispose: () => disposable.dispose(),
-			hasFollowups: metadata.hasFollowups
-		});
+      id: id,
+      extensionId: extension,
+      dispose: () => disposable.dispose(),
+      hasFollowups: metadata.hasFollowups,
+    });
 	}
 
 	async $updateAgent(handle: number, metadataUpdate: IExtensionChatAgentMetadata): Promise<void> {
 		await this._extensionService.whenInstalledExtensionsRegistered();
 		const data = this._agents.get(handle);
 		if (!data) {
-			this._logService.error(`MainThreadChatAgents2#$updateAgent: No agent with handle ${handle} registered`);
+			this._logService.error(
+        `MainThreadChatAgents2#$updateAgent: No agent with handle ${handle} registered`,
+      );
 			return;
 		}
 		data.hasFollowups = metadataUpdate.hasFollowups;
@@ -478,74 +588,92 @@ export class MainThreadChatAgents2 extends Disposable implements MainThreadChatA
 	async $handleProgressChunk(requestId: string, chunks: (IChatProgressDto | [IChatProgressDto, number])[]): Promise<void> {
 		const pendingProgress = this._pendingProgress.get(requestId);
 		if (!pendingProgress) {
-			this._logService.warn(`MainThreadChatAgents2#$handleProgressChunk: No pending progress for requestId ${requestId}`);
+			this._logService.warn(
+        `MainThreadChatAgents2#$handleProgressChunk: No pending progress for requestId ${requestId}`,
+      );
 			return;
 		}
 
 		const { progress, chatSession } = pendingProgress;
 		const chatProgressParts: IChatProgress[] = [];
 
-		const response = chatSession?.getRequests().find(req => req.id === requestId)?.response;
+		const response = chatSession?.getRequests().find(
+      req => req.id === requestId,
+    )?.response;
 
 		for (const item of chunks) {
 			const [progress, responsePartHandle] = Array.isArray(item) ? item : [item];
 
-			if (progress.kind === 'externalEdits') {
+			if (progress.kind === "externalEdits") {
 				if (chatSession?.editingSession && responsePartHandle !== undefined && response) {
 					const parts = progress.start
-						? await chatSession.editingSession.startExternalEdits(response, responsePartHandle, revive(progress.resources), progress.undoStopId)
-						: await chatSession.editingSession.stopExternalEdits(response, responsePartHandle);
+						? await chatSession.editingSession.startExternalEdits(
+                response,
+                responsePartHandle,
+                revive(progress.resources),
+                progress.undoStopId,
+              )
+						: await chatSession.editingSession.stopExternalEdits(
+                response,
+                responsePartHandle,
+              );
 					chatProgressParts.push(...parts);
 				}
 				continue;
 			}
 
-			if (progress.kind === 'beginToolInvocation') {
+			if (progress.kind === "beginToolInvocation") {
 				// Begin a streaming tool invocation
 				this._languageModelToolsService.beginToolCall({
-					toolCallId: progress.toolCallId,
-					toolId: progress.toolName,
-					chatRequestId: requestId,
-					sessionResource: chatSession?.sessionResource,
-					subagentInvocationId: progress.subagentInvocationId,
-				});
+          toolCallId: progress.toolCallId,
+          toolId: progress.toolName,
+          chatRequestId: requestId,
+          sessionResource: chatSession?.sessionResource,
+          subagentInvocationId: progress.subagentInvocationId,
+        });
 				continue;
 			}
 
-			if (progress.kind === 'updateToolInvocation') {
+			if (progress.kind === "updateToolInvocation") {
 				// Update the streaming data for an existing tool invocation
-				this._languageModelToolsService.updateToolStream(progress.toolCallId, progress.streamData?.partialInput, CancellationToken.None);
+				this._languageModelToolsService.updateToolStream(
+          progress.toolCallId,
+          progress.streamData?.partialInput,
+          CancellationToken.None,
+        );
 				continue;
 			}
 
-			if (progress.kind === 'usage') {
+			if (progress.kind === "usage") {
 				if (response) {
 					response.setUsage({
-						kind: 'usage',
-						promptTokens: progress.promptTokens,
-						completionTokens: progress.completionTokens,
-						outputBuffer: progress.outputBuffer,
-						promptTokenDetails: progress.promptTokenDetails
-					});
+            kind: "usage",
+            promptTokens: progress.promptTokens,
+            completionTokens: progress.completionTokens,
+            outputBuffer: progress.outputBuffer,
+            promptTokenDetails: progress.promptTokenDetails,
+          });
 				}
 				continue;
 			}
 
-			const revivedProgress = progress.kind === 'notebookEdit'
+			const revivedProgress = progress.kind === "notebookEdit"
 				? ChatNotebookEdit.fromChatEdit(progress)
 				: revive(progress) as IChatProgress;
 
-			if (revivedProgress.kind === 'notebookEdit'
-				|| revivedProgress.kind === 'textEdit'
-				|| revivedProgress.kind === 'codeblockUri'
+			if (revivedProgress.kind === "notebookEdit"
+				|| revivedProgress.kind === "textEdit"
+				|| revivedProgress.kind === "codeblockUri"
 			) {
 				// make sure to use the canonical uri
-				revivedProgress.uri = this._uriIdentityService.asCanonicalUri(revivedProgress.uri);
+				revivedProgress.uri = this._uriIdentityService.asCanonicalUri(
+          revivedProgress.uri,
+        );
 			}
 
 			if (responsePartHandle !== undefined) {
 
-				if (revivedProgress.kind === 'progressTask') {
+				if (revivedProgress.kind === "progressTask") {
 					const handle = responsePartHandle;
 					const responsePartId = `${requestId}_${handle}`;
 					const task = new MainThreadChatTask(revivedProgress.content);
@@ -555,7 +683,7 @@ export class MainThreadChatAgents2 extends Disposable implements MainThreadChatA
 					const responsePartId = `${requestId}_${responsePartHandle}`;
 					const task = this._activeTasks.get(responsePartId);
 					switch (revivedProgress.kind) {
-						case 'progressTaskResult':
+						case "progressTaskResult":
 							if (task && revivedProgress.content) {
 								task.complete(revivedProgress.content.value);
 								this._activeTasks.delete(responsePartId);
@@ -563,8 +691,8 @@ export class MainThreadChatAgents2 extends Disposable implements MainThreadChatA
 								task?.complete(undefined);
 							}
 							break;
-						case 'warning':
-						case 'reference':
+						case "warning":
+						case "reference":
 							task?.add(revivedProgress);
 							break;
 					}
@@ -572,11 +700,13 @@ export class MainThreadChatAgents2 extends Disposable implements MainThreadChatA
 				continue;
 			}
 
-			if (revivedProgress.kind === 'inlineReference' && revivedProgress.resolveId && response) {
+			if (revivedProgress.kind === "inlineReference" && revivedProgress.resolveId && response) {
 				if (!this._unresolvedAnchors.has(requestId)) {
 					this._unresolvedAnchors.set(requestId, new Map());
 				}
-				this._unresolvedAnchors.get(requestId)?.set(revivedProgress.resolveId, { response });
+				this._unresolvedAnchors.get(requestId)?.set(revivedProgress.resolveId, {
+          response,
+        });
 			}
 
 			chatProgressParts.push(revivedProgress);
@@ -602,20 +732,32 @@ export class MainThreadChatAgents2 extends Disposable implements MainThreadChatA
 		}
 
 		if (resolveAnchor) {
-			const revivedAnchor = revive(resolveAnchor) as IChatContentInlineReference;
+			const revivedAnchor = revive(
+        resolveAnchor,
+      ) as IChatContentInlineReference;
 			unresolvedAnchor.response.resolveInlineReference(handle, revivedAnchor);
 		}
 	}
 
 	$registerAgentCompletionsProvider(handle: number, id: string, triggerCharacters: string[]): void {
 		const provide = async (query: string, token: CancellationToken) => {
-			const completions = await this._proxy.$invokeCompletionProvider(handle, query, token);
-			return completions.map((c) => ({ ...c, icon: c.icon ? ThemeIcon.fromId(c.icon) : undefined }));
+			const completions = await this._proxy.$invokeCompletionProvider(
+        handle,
+        query,
+        token,
+      );
+			return completions.map((c) => ({
+        ...c,
+        icon: c.icon ? ThemeIcon.fromId(c.icon) : undefined,
+      }));
 		};
-		this._agentIdsToCompletionProviders.set(id, this._chatAgentService.registerAgentCompletionProvider(id, provide));
+		this._agentIdsToCompletionProviders.set(
+      id,
+      this._chatAgentService.registerAgentCompletionProvider(id, provide),
+    );
 
 		this._agentCompletionProviders.set(handle, this._languageFeaturesService.completionProvider.register({ scheme: Schemas.vscodeChatInput, hasAccessToAllModels: true }, {
-			_debugDisplayName: 'chatAgentCompletions:' + handle,
+			_debugDisplayName: "chatAgentCompletions:" + handle,
 			triggerCharacters,
 			provideCompletionItems: async (model: ITextModel, position: Position, _context: CompletionContext, token: CancellationToken) => {
 				const widget = this._chatWidgetService.getWidgetByInputUri(model.uri);
@@ -623,9 +765,9 @@ export class MainThreadChatAgents2 extends Disposable implements MainThreadChatA
 					return;
 				}
 
-				const triggerCharsPart = triggerCharacters.map(c => escapeRegExpCharacters(c)).join('');
-				const wordRegex = new RegExp(`[${triggerCharsPart}]\\S*`, 'g');
-				const query = getWordAtText(position.column, wordRegex, model.getLineContent(position.lineNumber), 0)?.word ?? '';
+				const triggerCharsPart = triggerCharacters.map(c => escapeRegExpCharacters(c)).join("");
+				const wordRegex = new RegExp(`[${triggerCharsPart}]\\S*`, "g");
+				const query = getWordAtText(position.column, wordRegex, model.getLineContent(position.lineNumber), 0)?.word ?? "";
 
 				if (query && !triggerCharacters.some(c => query.startsWith(c))) {
 					return;
@@ -648,23 +790,23 @@ export class MainThreadChatAgents2 extends Disposable implements MainThreadChatA
 
 				const result = await provide(query, token);
 				const variableItems = result.map(v => {
-					const insertText = v.insertText ?? (typeof v.label === 'string' ? v.label : v.label.label);
+					const insertText = v.insertText ?? (typeof v.label === "string" ? v.label : v.label.label);
 					const rangeAfterInsert = new Range(range.insert.startLineNumber, range.insert.startColumn, range.insert.endLineNumber, range.insert.startColumn + insertText.length);
 					return {
 						label: v.label,
 						range,
-						insertText: insertText + ' ',
+						insertText: insertText + " ",
 						kind: CompletionItemKind.Text,
 						detail: v.detail,
 						documentation: v.documentation,
-						command: { id: AddDynamicVariableAction.ID, title: '', arguments: [{ id: v.id, widget, range: rangeAfterInsert, variableData: revive(v.value), command: v.command } satisfies IAddDynamicVariableContext] }
+						command: { id: AddDynamicVariableAction.ID, title: "", arguments: [{ id: v.id, widget, range: rangeAfterInsert, variableData: revive(v.value), command: v.command } satisfies IAddDynamicVariableContext] },
 					} satisfies CompletionItem;
 				});
 
 				return {
-					suggestions: variableItems
+					suggestions: variableItems,
 				} satisfies CompletionList;
-			}
+			},
 		}));
 	}
 
@@ -678,8 +820,8 @@ export class MainThreadChatAgents2 extends Disposable implements MainThreadChatA
 			{
 				provideParticipantDetection: async (request: IChatAgentRequest, history: IChatAgentHistoryEntry[], options: { location: ChatAgentLocation; participants: IChatParticipantMetadata[] }, token: CancellationToken) => {
 					return await this._proxy.$detectChatParticipant(handle, request, { history }, options, token);
-				}
-			}
+				},
+			},
 		));
 	}
 
@@ -688,14 +830,20 @@ export class MainThreadChatAgents2 extends Disposable implements MainThreadChatA
 	}
 
 	async $registerPromptFileProvider(handle: number, type: string, extensionId: ExtensionIdentifier): Promise<void> {
-		const extension = await this._extensionService.getExtension(extensionId.value);
+		const extension = await this._extensionService.getExtension(
+      extensionId.value,
+    );
 		if (!extension) {
-			this._logService.error(`[MainThreadChatAgents2] Could not find extension for prompt file provider: ${extensionId.value}`);
+			this._logService.error(
+        `[MainThreadChatAgents2] Could not find extension for prompt file provider: ${extensionId.value}`,
+      );
 			return;
 		}
 
 		if (!isValidPromptType(type)) {
-			this._logService.error(`[MainThreadChatAgents2] Invalid contribution type: ${type}`);
+			this._logService.error(
+        `[MainThreadChatAgents2] Invalid contribution type: ${type}`,
+      );
 			return;
 		}
 
@@ -719,7 +867,7 @@ export class MainThreadChatAgents2 extends Disposable implements MainThreadChatA
 						uri: URI.revive(c.uri),
 					};
 				});
-			}
+			},
 		});
 
 		this._promptFileProviders.set(handle, disposable);
@@ -742,13 +890,19 @@ export class MainThreadChatAgents2 extends Disposable implements MainThreadChatA
 		// In the sessions window, only accept harnesses for session types that
 		// have a registered content provider (i.e., can actually run sessions).
 		// AHP remote servers register directly via registerExternalHarness.
-		if (this._environmentService.isSessionsWindow && !this._chatSessionService.getContentProviderSchemes().includes(chatSessionType)) {
+		if (this._environmentService.isSessionsWindow && !this._chatSessionService.getContentProviderSchemes().includes(
+      chatSessionType,
+    )) {
 			return;
 		}
 
-		const extension = await this._extensionService.getExtension(extensionId.value);
+		const extension = await this._extensionService.getExtension(
+      extensionId.value,
+    );
 		if (!extension) {
-			this._logService.error(`[MainThreadChatAgents2] Could not find extension for customization provider: ${extensionId.value}`);
+			this._logService.error(
+        `[MainThreadChatAgents2] Could not find extension for customization provider: ${extensionId.value}`,
+      );
 			return;
 		}
 
@@ -783,13 +937,13 @@ export class MainThreadChatAgents2 extends Disposable implements MainThreadChatA
 		// Sections not in the supported list are hidden. When supportedTypes
 		// is omitted, all sections are shown.
 		const typeToSection: Record<string, string> = {
-			'agent': AICustomizationManagementSection.Agents,
-			'skill': AICustomizationManagementSection.Skills,
-			'instructions': AICustomizationManagementSection.Instructions,
-			'prompt': AICustomizationManagementSection.Prompts,
-			'hook': AICustomizationManagementSection.Hooks,
-			'plugins': AICustomizationManagementSection.Plugins,
-		};
+      "agent": AICustomizationManagementSection.Agents,
+      "skill": AICustomizationManagementSection.Skills,
+      "instructions": AICustomizationManagementSection.Instructions,
+      "prompt": AICustomizationManagementSection.Prompts,
+      "hook": AICustomizationManagementSection.Hooks,
+      "plugins": AICustomizationManagementSection.Plugins,
+    };
 		let hiddenSections: string[] | undefined;
 		if (metadata.supportedTypes) {
 			const supportedSections = new Set<string>();
@@ -799,7 +953,9 @@ export class MainThreadChatAgents2 extends Disposable implements MainThreadChatA
 					supportedSections.add(section);
 				}
 			}
-			hiddenSections = Object.values(typeToSection).filter(section => !supportedSections.has(section));
+			hiddenSections = Object.values(typeToSection).filter(
+        section => !supportedSections.has(section),
+      );
 		}
 
 		const descriptor: IHarnessDescriptor = {
@@ -810,12 +966,14 @@ export class MainThreadChatAgents2 extends Disposable implements MainThreadChatA
 			getStorageSourceFilter: () => ({
 				// Extension-provided harnesses manage their own items via the provider,
 				// so we show all sources for storage-filter-based flows.
-				sources: AICustomizationSources.all
+				sources: AICustomizationSources.all,
 			}),
 			itemProvider,
 		};
 
-		const registration = this._customizationHarnessService.registerExternalHarness(descriptor);
+		const registration = this._customizationHarnessService.registerExternalHarness(
+      descriptor,
+    );
 		this._customizationProviders.set(handle, registration);
 	}
 
@@ -834,7 +992,12 @@ export class MainThreadChatAgents2 extends Disposable implements MainThreadChatA
 
 
 function computeCompletionRanges(model: ITextModel, position: Position, reg: RegExp): { insert: Range; replace: Range } | undefined {
-	const varWord = getWordAtText(position.column, reg, model.getLineContent(position.lineNumber), 0);
+	const varWord = getWordAtText(
+    position.column,
+    reg,
+    model.getLineContent(position.lineNumber),
+    0,
+  );
 	if (!varWord && model.getWordUntilPosition(position).word) {
 		// inside a "normal" word
 		return;
@@ -845,8 +1008,18 @@ function computeCompletionRanges(model: ITextModel, position: Position, reg: Reg
 	if (!varWord) {
 		insert = replace = Range.fromPositions(position);
 	} else {
-		insert = new Range(position.lineNumber, varWord.startColumn, position.lineNumber, position.column);
-		replace = new Range(position.lineNumber, varWord.startColumn, position.lineNumber, varWord.endColumn);
+		insert = new Range(
+      position.lineNumber,
+      varWord.startColumn,
+      position.lineNumber,
+      position.column,
+    );
+		replace = new Range(
+      position.lineNumber,
+      varWord.startColumn,
+      position.lineNumber,
+      varWord.endColumn,
+    );
 	}
 
 	return { insert, replace };
@@ -855,10 +1028,10 @@ function computeCompletionRanges(model: ITextModel, position: Position, reg: Reg
 namespace ChatNotebookEdit {
 	export function fromChatEdit(part: IChatNotebookEditDto): IChatNotebookEdit {
 		return {
-			kind: 'notebookEdit',
-			uri: URI.revive(part.uri),
-			done: part.done,
-			edits: part.edits.map(NotebookDto.fromCellEditOperationDto)
-		};
+      kind: "notebookEdit",
+      uri: URI.revive(part.uri),
+      done: part.done,
+      edits: part.edits.map(NotebookDto.fromCellEditOperationDto),
+    };
 	}
 }

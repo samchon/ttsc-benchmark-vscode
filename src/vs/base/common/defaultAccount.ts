@@ -52,7 +52,7 @@ export interface IPolicyData {
 	readonly chat_agent_enabled?: boolean;
 	readonly cloud_session_storage_enabled?: boolean;
 	readonly mcpRegistryUrl?: string;
-	readonly mcpAccess?: 'allow_all' | 'registry_only';
+	readonly mcpAccess?: "allow_all" | "registry_only";
 }
 
 export interface ICopilotTokenInfo {

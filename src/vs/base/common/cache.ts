@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken, CancellationTokenSource } from './cancellation.js';
-import { IDisposable } from './lifecycle.js';
+import { CancellationToken, CancellationTokenSource } from "./cancellation.js";
+import { IDisposable } from "./lifecycle.js";
 
 export interface CacheResult<T> extends IDisposable {
 	promise: Promise<T>;
@@ -29,7 +29,7 @@ export class Cache<T> {
 				this.result = null;
 				cts.cancel();
 				cts.dispose();
-			}
+			},
 		};
 
 		return this.result;
@@ -62,7 +62,7 @@ export class LRUCachedFunction<TArg, TComputed> {
 	constructor(fn: (arg: TArg) => TComputed);
 	constructor(options: ICacheOptions<TArg>, fn: (arg: TArg) => TComputed);
 	constructor(arg1: ICacheOptions<TArg> | ((arg: TArg) => TComputed), arg2?: (arg: TArg) => TComputed) {
-		if (typeof arg1 === 'function') {
+		if (typeof arg1 === "function") {
 			this._fn = arg1;
 			this._computeKey = identity;
 		} else {
@@ -97,7 +97,7 @@ export class CachedFunction<TArg, TComputed> {
 	constructor(fn: (arg: TArg) => TComputed);
 	constructor(options: ICacheOptions<TArg>, fn: (arg: TArg) => TComputed);
 	constructor(arg1: ICacheOptions<TArg> | ((arg: TArg) => TComputed), arg2?: (arg: TArg) => TComputed) {
-		if (typeof arg1 === 'function') {
+		if (typeof arg1 === "function") {
 			this._fn = arg1;
 			this._computeKey = identity;
 		} else {
@@ -131,7 +131,7 @@ export class WeakCachedFunction<TArg, TComputed> {
 	constructor(fn: (arg: TArg) => TComputed);
 	constructor(options: ICacheOptions<TArg>, fn: (arg: TArg) => TComputed);
 	constructor(arg1: ICacheOptions<TArg> | ((arg: TArg) => TComputed), arg2?: (arg: TArg) => TComputed) {
-		if (typeof arg1 === 'function') {
+		if (typeof arg1 === "function") {
 			this._fn = arg1;
 			this._computeKey = identity;
 		} else {

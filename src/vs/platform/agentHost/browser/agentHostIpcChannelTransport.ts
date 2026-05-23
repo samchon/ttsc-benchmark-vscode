@@ -12,12 +12,12 @@
 // upstream to the local agent host process and pipes raw JSON frames over
 // the IPC channel.
 
-import { Emitter } from '../../../base/common/event.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import type { IChannel } from '../../../base/parts/ipc/common/ipc.js';
-import type { AhpServerNotification, JsonRpcResponse, ProtocolMessage } from '../common/state/sessionProtocol.js';
-import type { IClientTransport } from '../common/state/sessionTransport.js';
-import { MALFORMED_FRAMES_FORCE_CLOSE_THRESHOLD, MALFORMED_FRAMES_LOG_CAP } from '../common/transportConstants.js';
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import type { IChannel } from "../../../base/parts/ipc/common/ipc.js";
+import type { AhpServerNotification, JsonRpcResponse, ProtocolMessage } from "../common/state/sessionProtocol.js";
+import type { IClientTransport } from "../common/state/sessionTransport.js";
+import { MALFORMED_FRAMES_FORCE_CLOSE_THRESHOLD, MALFORMED_FRAMES_LOG_CAP } from "../common/transportConstants.js";
 
 /**
  * Wraps an {@link IChannel} as an {@link IClientTransport} for the agent
@@ -52,13 +52,17 @@ export class AgentHostIpcChannelTransport extends Disposable implements IClientT
 
 	async connect(): Promise<void> {
 		if (this._store.isDisposed) {
-			throw new Error('Transport is disposed');
+			throw new Error("Transport is disposed");
 		}
 		// Subscribe before connecting so we don't miss any frames the upstream
 		// host emits between open and our listener attaching.
-		this._register(this._channel.listen<string>('frame')(text => this._handleFrame(text)));
-		this._register(this._channel.listen<void>('close')(() => this._fireClose()));
-		await this._channel.call('connect');
+		this._register(
+      this._channel.listen<string>("frame")(text => this._handleFrame(text)),
+    );
+		this._register(
+      this._channel.listen<void>("close")(() => this._fireClose()),
+    );
+		await this._channel.call("connect");
 		this._isOpen = true;
 	}
 
@@ -70,13 +74,15 @@ export class AgentHostIpcChannelTransport extends Disposable implements IClientT
 		}
 		// Fire-and-forget. The channel call resolves asynchronously; failures
 		// are surfaced via the close event from the server side.
-		this._channel.call('send', JSON.stringify(message)).catch(() => this._fireClose());
+		this._channel.call("send", JSON.stringify(message)).catch(
+      () => this._fireClose(),
+    );
 	}
 
 	override dispose(): void {
 		if (this._isOpen && !this._closeFired) {
 			// Best-effort close — ignore any rejection since we're tearing down.
-			this._channel.call('close').catch(() => { });
+			this._channel.call("close").catch(() => { });
 		}
 		this._fireClose();
 		super.dispose();
@@ -89,14 +95,16 @@ export class AgentHostIpcChannelTransport extends Disposable implements IClientT
 		} catch (err) {
 			this._malformedFrames++;
 			if (this._malformedFrames <= MALFORMED_FRAMES_LOG_CAP) {
-				const preview = text.length > 80 ? text.slice(0, 80) + '…' : text;
+				const preview = text.length > 80 ? text.slice(0, 80) + "…" : text;
 				console.warn(
-					`[AgentHostIpcChannelTransport] Malformed frame #${this._malformedFrames} (len=${text.length}): ${preview}`,
-					err instanceof Error ? err.message : String(err)
-				);
+          `[AgentHostIpcChannelTransport] Malformed frame #${this._malformedFrames} (len=${text.length}): ${preview}`,
+          err instanceof Error ? err.message : String(err),
+        );
 			}
 			if (this._malformedFrames > MALFORMED_FRAMES_FORCE_CLOSE_THRESHOLD) {
-				console.warn('[AgentHostIpcChannelTransport] Malformed frame threshold exceeded; closing transport.');
+				console.warn(
+          "[AgentHostIpcChannelTransport] Malformed frame threshold exceeded; closing transport.",
+        );
 				this._fireClose();
 			}
 			return;

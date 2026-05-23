@@ -3,19 +3,33 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IEditorFactoryRegistry, IEditorIdentifier, GroupIdentifier, EditorExtensions, IEditorPartOptionsChangeEvent, EditorsOrder, GroupModelChangeKind, EditorInputCapabilities } from '../../../common/editor.js';
-import { EditorInput } from '../../../common/editor/editorInput.js';
-import { SideBySideEditorInput } from '../../../common/editor/sideBySideEditorInput.js';
-import { dispose, Disposable, DisposableStore } from '../../../../base/common/lifecycle.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { Registry } from '../../../../platform/registry/common/platform.js';
-import { Event, Emitter } from '../../../../base/common/event.js';
-import { IEditorGroupsService, IEditorGroup, GroupsOrder, IEditorGroupsContainer } from '../../../services/editor/common/editorGroupsService.js';
-import { coalesce } from '../../../../base/common/arrays.js';
-import { LinkedMap, Touch, ResourceMap } from '../../../../base/common/map.js';
-import { equals } from '../../../../base/common/objects.js';
-import { IResourceEditorInputIdentifier } from '../../../../platform/editor/common/editor.js';
-import { URI } from '../../../../base/common/uri.js';
+import {
+  IEditorFactoryRegistry,
+  IEditorIdentifier,
+  GroupIdentifier,
+  EditorExtensions,
+  IEditorPartOptionsChangeEvent,
+  EditorsOrder,
+  GroupModelChangeKind,
+  EditorInputCapabilities,
+} from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { SideBySideEditorInput } from "../../../common/editor/sideBySideEditorInput.js";
+import { dispose, Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { Event, Emitter } from "../../../../base/common/event.js";
+import {
+  IEditorGroupsService,
+  IEditorGroup,
+  GroupsOrder,
+  IEditorGroupsContainer,
+} from "../../../services/editor/common/editorGroupsService.js";
+import { coalesce } from "../../../../base/common/arrays.js";
+import { LinkedMap, Touch, ResourceMap } from "../../../../base/common/map.js";
+import { equals } from "../../../../base/common/objects.js";
+import { IResourceEditorInputIdentifier } from "../../../../platform/editor/common/editor.js";
+import { URI } from "../../../../base/common/uri.js";
 
 interface ISerializedEditorsList {
 	entries: ISerializedEditorIdentifier[];
@@ -37,13 +51,15 @@ interface ISerializedEditorIdentifier {
  */
 export class EditorsObserver extends Disposable {
 
-	private static readonly STORAGE_KEY = 'editors.mru';
+	private static readonly STORAGE_KEY = "editors.mru";
 
 	private readonly keyMap = new Map<GroupIdentifier, Map<EditorInput, IEditorIdentifier>>();
 	private readonly mostRecentEditorsMap = new LinkedMap<IEditorIdentifier, IEditorIdentifier>();
 	private readonly editorsPerResourceCounter = new ResourceMap<Map<string /* typeId/editorId */, number /* counter */>>();
 
-	private readonly _onDidMostRecentlyActiveEditorsChange = this._register(new Emitter<void>());
+	private readonly _onDidMostRecentlyActiveEditorsChange = this._register(
+    new Emitter<void>(),
+  );
 	readonly onDidMostRecentlyActiveEditorsChange = this._onDidMostRecentlyActiveEditorsChange.event;
 
 	get count(): number {
@@ -67,7 +83,7 @@ export class EditorsObserver extends Disposable {
 	private toIdentifier(typeId: string, editorId: string | undefined): string;
 	private toIdentifier(editor: IResourceEditorInputIdentifier): string;
 	private toIdentifier(arg1: string | IResourceEditorInputIdentifier, editorId?: string | undefined): string {
-		if (typeof arg1 !== 'string') {
+		if (typeof arg1 !== "string") {
 			return this.toIdentifier(arg1.typeId, arg1.editorId);
 		}
 
@@ -84,7 +100,7 @@ export class EditorsObserver extends Disposable {
 	constructor(
 		editorGroupsContainer: IEditorGroupsContainer | undefined,
 		@IEditorGroupsService private editorGroupService: IEditorGroupsService,
-		@IStorageService private readonly storageService: IStorageService
+		@IStorageService private readonly storageService: IStorageService,
 	) {
 		super();
 
@@ -96,8 +112,16 @@ export class EditorsObserver extends Disposable {
 	}
 
 	private registerListeners(): void {
-		this._register(this.editorGroupsContainer.onDidAddGroup(group => this.onGroupAdded(group)));
-		this._register(this.editorGroupService.onDidChangeEditorPartOptions(e => this.onDidChangeEditorPartOptions(e)));
+		this._register(
+      this.editorGroupsContainer.onDidAddGroup(
+        group => this.onGroupAdded(group),
+      ),
+    );
+		this._register(
+      this.editorGroupService.onDidChangeEditorPartOptions(
+        e => this.onDidChangeEditorPartOptions(e),
+      ),
+    );
 		this._register(this.storageService.onWillSaveState(() => this.saveState()));
 	}
 
@@ -149,9 +173,11 @@ export class EditorsObserver extends Disposable {
 		}));
 
 		// Editor closes: remove from recently opened
-		groupDisposables.add(group.onDidCloseEditor(e => {
-			this.removeMostRecentEditor(group, e.editor);
-		}));
+		groupDisposables.add(
+      group.onDidCloseEditor(e => {
+        this.removeMostRecentEditor(group, e.editor);
+      }),
+    );
 
 		// Editor gets active: put active editor as most recent
 		// if group is active, otherwise second most recent
@@ -183,7 +209,11 @@ export class EditorsObserver extends Disposable {
 
 		// Active or first entry: add to end of map
 		if (isActive || !mostRecentEditor) {
-			this.mostRecentEditorsMap.set(key, key, mostRecentEditor ? Touch.AsOld /* make first */ : undefined);
+			this.mostRecentEditorsMap.set(
+        key,
+        key,
+        mostRecentEditor ? Touch.AsOld /* make first */ : undefined,
+      );
 		}
 
 		// Otherwise: insert before most recent
@@ -238,7 +268,10 @@ export class EditorsObserver extends Disposable {
 				this.editorsPerResourceCounter.set(resource, editorsPerResource);
 			}
 
-			editorsPerResource.set(identifier, (editorsPerResource.get(identifier) ?? 0) + 1);
+			editorsPerResource.set(
+        identifier,
+        (editorsPerResource.get(identifier) ?? 0) + 1,
+      );
 		}
 
 		// Remove entry
@@ -311,7 +344,7 @@ export class EditorsObserver extends Disposable {
 	private async ensureOpenedEditorsLimit(exclude: IEditorIdentifier | undefined, groupId?: GroupIdentifier): Promise<void> {
 		if (
 			!this.editorGroupService.partOptions.limit?.enabled ||
-			typeof this.editorGroupService.partOptions.limit.value !== 'number' ||
+			typeof this.editorGroupService.partOptions.limit.value !== "number" ||
 			this.editorGroupService.partOptions.limit.value <= 0
 		) {
 			return; // return early if not enabled or invalid
@@ -323,10 +356,17 @@ export class EditorsObserver extends Disposable {
 		if (this.editorGroupService.partOptions.limit?.perEditorGroup) {
 
 			// For specific editor groups
-			if (typeof groupId === 'number') {
+			if (typeof groupId === "number") {
 				const group = this.editorGroupsContainer.getGroup(groupId);
 				if (group) {
-					await this.doEnsureOpenedEditorsLimit(limit, group.getEditors(EditorsOrder.MOST_RECENTLY_ACTIVE).map(editor => ({ editor, groupId })), exclude);
+					await this.doEnsureOpenedEditorsLimit(
+            limit,
+            group.getEditors(EditorsOrder.MOST_RECENTLY_ACTIVE).map(editor => ({
+              editor,
+              groupId,
+            })),
+            exclude,
+          );
 				}
 			}
 
@@ -340,7 +380,11 @@ export class EditorsObserver extends Disposable {
 
 		// Across all editor groups
 		else {
-			await this.doEnsureOpenedEditorsLimit(limit, [...this.mostRecentEditorsMap.values()], exclude);
+			await this.doEnsureOpenedEditorsLimit(
+        limit,
+        [...this.mostRecentEditorsMap.values()],
+        exclude,
+      );
 		}
 	}
 
@@ -414,14 +458,24 @@ export class EditorsObserver extends Disposable {
 		}
 
 		if (this.mostRecentEditorsMap.isEmpty()) {
-			this.storageService.remove(EditorsObserver.STORAGE_KEY, StorageScope.WORKSPACE);
+			this.storageService.remove(
+        EditorsObserver.STORAGE_KEY,
+        StorageScope.WORKSPACE,
+      );
 		} else {
-			this.storageService.store(EditorsObserver.STORAGE_KEY, JSON.stringify(this.serialize()), StorageScope.WORKSPACE, StorageTarget.MACHINE);
+			this.storageService.store(
+        EditorsObserver.STORAGE_KEY,
+        JSON.stringify(this.serialize()),
+        StorageScope.WORKSPACE,
+        StorageTarget.MACHINE,
+      );
 		}
 	}
 
 	private serialize(): ISerializedEditorsList {
-		const registry = Registry.as<IEditorFactoryRegistry>(EditorExtensions.EditorFactory);
+		const registry = Registry.as<IEditorFactoryRegistry>(
+      EditorExtensions.EditorFactory,
+    );
 
 		const entries = [...this.mostRecentEditorsMap.values()];
 		const mapGroupToSerializableEditorsOfGroup = new Map<IEditorGroup, EditorInput[]>();
@@ -454,7 +508,7 @@ export class EditorsObserver extends Disposable {
 				}
 
 				return { groupId, index };
-			}))
+			})),
 		};
 	}
 
@@ -467,7 +521,10 @@ export class EditorsObserver extends Disposable {
 		// unless we are running in scoped mode
 		let hasRestorableState = false;
 		if (!this.isScoped) {
-			const serialized = this.storageService.get(EditorsObserver.STORAGE_KEY, StorageScope.WORKSPACE);
+			const serialized = this.storageService.get(
+        EditorsObserver.STORAGE_KEY,
+        StorageScope.WORKSPACE,
+      );
 			if (serialized) {
 				hasRestorableState = true;
 				this.deserialize(JSON.parse(serialized));
@@ -477,10 +534,14 @@ export class EditorsObserver extends Disposable {
 		// No previous state: best we can do is add each editor
 		// from oldest to most recently used editor group
 		if (!hasRestorableState) {
-			const groups = this.editorGroupsContainer.getGroups(GroupsOrder.MOST_RECENTLY_ACTIVE);
+			const groups = this.editorGroupsContainer.getGroups(
+        GroupsOrder.MOST_RECENTLY_ACTIVE,
+      );
 			for (let i = groups.length - 1; i >= 0; i--) {
 				const group = groups[i];
-				const groupEditorsMru = group.getEditors(EditorsOrder.MOST_RECENTLY_ACTIVE);
+				const groupEditorsMru = group.getEditors(
+          EditorsOrder.MOST_RECENTLY_ACTIVE,
+        );
 				for (let i = groupEditorsMru.length - 1; i >= 0; i--) {
 					this.addMostRecentEditor(group, groupEditorsMru[i], true /* enforce as active to preserve order */, true /* is new */);
 				}

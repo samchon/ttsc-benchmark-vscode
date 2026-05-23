@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { bufferToStream, VSBuffer } from '../../../common/buffer.js';
-import { CancellationToken } from '../../../common/cancellation.js';
-import { canceled } from '../../../common/errors.js';
-import { IHeaders, IRequestContext, IRequestOptions, OfflineError } from './request.js';
+import { bufferToStream, VSBuffer } from "../../../common/buffer.js";
+import { CancellationToken } from "../../../common/cancellation.js";
+import { canceled } from "../../../common/errors.js";
+import { IHeaders, IRequestContext, IRequestOptions, OfflineError } from "./request.js";
 
 export async function request(options: IRequestOptions, token: CancellationToken, isOnline?: () => boolean): Promise<IRequestContext> {
 	if (token.isCancellationRequested) {
@@ -16,21 +16,21 @@ export async function request(options: IRequestOptions, token: CancellationToken
 	const cancellation = new AbortController();
 	const disposable = token.onCancellationRequested(() => cancellation.abort());
 	const signal = options.timeout ? AbortSignal.any([
-		cancellation.signal,
-		AbortSignal.timeout(options.timeout),
-	]) : cancellation.signal;
+    cancellation.signal,
+    AbortSignal.timeout(options.timeout),
+  ]) : cancellation.signal;
 
 	try {
 		const fetchInit: RequestInit = {
-			method: options.type || 'GET',
-			headers: getRequestHeaders(options),
-			body: options.data,
-			signal
-		};
+      method: options.type || "GET",
+      headers: getRequestHeaders(options),
+      body: options.data,
+      signal,
+    };
 		if (options.disableCache) {
-			fetchInit.cache = 'no-store';
+			fetchInit.cache = "no-store";
 		}
-		const res = await fetch(options.url || '', fetchInit);
+		const res = await fetch(options.url || "", fetchInit);
 		return {
 			res: {
 				statusCode: res.status,
@@ -42,10 +42,10 @@ export async function request(options: IRequestOptions, token: CancellationToken
 		if (isOnline && !isOnline()) {
 			throw new OfflineError();
 		}
-		if (err?.name === 'AbortError') {
+		if (err?.name === "AbortError") {
 			throw canceled();
 		}
-		if (err?.name === 'TimeoutError') {
+		if (err?.name === "TimeoutError") {
 			throw new Error(`Fetch timeout: ${options.timeout}ms`);
 		}
 		throw err;
@@ -59,14 +59,14 @@ function getRequestHeaders(options: IRequestOptions) {
 		const headers = new Headers();
 		outer: for (const k in options.headers) {
 			switch (k.toLowerCase()) {
-				case 'user-agent':
-				case 'accept-encoding':
-				case 'content-length':
+				case "user-agent":
+				case "accept-encoding":
+				case "content-length":
 					// unsafe headers
 					continue outer;
 			}
 			const header = options.headers[k];
-			if (typeof header === 'string') {
+			if (typeof header === "string") {
 				headers.set(k, header);
 			} else if (Array.isArray(header)) {
 				for (const h of header) {
@@ -75,10 +75,13 @@ function getRequestHeaders(options: IRequestOptions) {
 			}
 		}
 		if (options.user || options.password) {
-			headers.set('Authorization', 'Basic ' + btoa(`${options.user || ''}:${options.password || ''}`));
+			headers.set(
+        "Authorization",
+        "Basic " + btoa(`${options.user || ""}:${options.password || ""}`),
+      );
 		}
 		if (options.proxyAuthorization) {
-			headers.set('Proxy-Authorization', options.proxyAuthorization);
+			headers.set("Proxy-Authorization", options.proxyAuthorization);
 		}
 		return headers;
 	}

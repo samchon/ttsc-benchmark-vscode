@@ -3,34 +3,34 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from '../../../../../base/common/buffer.js';
-import { Emitter } from '../../../../../base/common/event.js';
-import { parse, ParseError } from '../../../../../base/common/json.js';
-import { IJSONSchema } from '../../../../../base/common/jsonSchema.js';
-import { Disposable, DisposableMap, DisposableStore, IDisposable, toDisposable } from '../../../../../base/common/lifecycle.js';
-import { URI } from '../../../../../base/common/uri.js';
+import { VSBuffer } from "../../../../../base/common/buffer.js";
+import { Emitter } from "../../../../../base/common/event.js";
+import { parse, ParseError } from "../../../../../base/common/json.js";
+import { IJSONSchema } from "../../../../../base/common/jsonSchema.js";
+import { Disposable, DisposableMap, DisposableStore, IDisposable, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../base/common/uri.js";
 import {
-	createFileSystemProviderError,
-	FileChangeType,
-	FilePermission,
-	FileSystemProviderCapabilities,
-	FileSystemProviderErrorCode,
-	FileType,
-	IFileChange,
-	IFileDeleteOptions,
-	IFileOverwriteOptions,
-	IFileSystemProviderWithFileReadWriteCapability,
-	IFileWriteOptions,
-	IStat,
-	IWatchOptions,
-} from '../../../../../platform/files/common/files.js';
-import { Extensions as JSONExtensions, IJSONContributionRegistry } from '../../../../../platform/jsonschemas/common/jsonContributionRegistry.js';
-import { ILogService } from '../../../../../platform/log/common/log.js';
-import { Registry } from '../../../../../platform/registry/common/platform.js';
-import { ConfigPropertySchema, ConfigSchema } from '../../../../../platform/agentHost/common/state/protocol/state.js';
-import { ISessionsProvidersService } from '../../../../services/sessions/browser/sessionsProvidersService.js';
-import { IAgentHostSessionsProvider, isAgentHostProvider } from '../../../../common/agentHostSessionsProvider.js';
-import { ISessionsProvider } from '../../../../services/sessions/common/sessionsProvider.js';
+  createFileSystemProviderError,
+  FileChangeType,
+  FilePermission,
+  FileSystemProviderCapabilities,
+  FileSystemProviderErrorCode,
+  FileType,
+  IFileChange,
+  IFileDeleteOptions,
+  IFileOverwriteOptions,
+  IFileSystemProviderWithFileReadWriteCapability,
+  IFileWriteOptions,
+  IStat,
+  IWatchOptions,
+} from "../../../../../platform/files/common/files.js";
+import { Extensions as JSONExtensions, IJSONContributionRegistry } from "../../../../../platform/jsonschemas/common/jsonContributionRegistry.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { Registry } from "../../../../../platform/registry/common/platform.js";
+import { ConfigPropertySchema, ConfigSchema } from "../../../../../platform/agentHost/common/state/protocol/state.js";
+import { ISessionsProvidersService } from "../../../../services/sessions/browser/sessionsProvidersService.js";
+import { IAgentHostSessionsProvider, isAgentHostProvider } from "../../../../common/agentHostSessionsProvider.js";
+import { ISessionsProvider } from "../../../../services/sessions/common/sessionsProvider.js";
 
 // ============================================================================
 // Shared helpers for agent-host config settings filesystem providers.
@@ -82,21 +82,21 @@ export interface IAgentHostSettingsLocale {
  */
 export function convertPropertySchema(schema: ConfigPropertySchema): IJSONSchema {
 	const out: IJSONSchema = {
-		type: schema.type,
-		title: schema.title,
-		description: schema.description,
-		default: schema.default,
-	};
+    type: schema.type,
+    title: schema.title,
+    description: schema.description,
+    default: schema.default,
+  };
 	if (schema.enum && schema.enum.length > 0) {
 		out.enum = [...schema.enum];
 		if (schema.enumDescriptions && schema.enumDescriptions.length > 0) {
 			out.enumDescriptions = [...schema.enumDescriptions];
 		}
 	}
-	if (schema.type === 'array' && schema.items) {
+	if (schema.type === "array" && schema.items) {
 		out.items = convertPropertySchema(schema.items);
 	}
-	if (schema.type === 'object' && schema.properties) {
+	if (schema.type === "object" && schema.properties) {
 		const properties: Record<string, IJSONSchema> = {};
 		for (const [key, value] of Object.entries(schema.properties)) {
 			properties[key] = convertPropertySchema(value);
@@ -128,10 +128,10 @@ export function buildAgentHostConfigJsonSchema(config: IAgentHostConfigLike, fil
 		}
 	}
 	const result: IJSONSchema = {
-		type: 'object',
-		properties,
-		additionalProperties: true,
-	};
+    type: "object",
+    properties,
+    additionalProperties: true,
+  };
 	if (required.length > 0) {
 		result.required = required;
 	}
@@ -146,9 +146,9 @@ function buildHeaderComment(
 	lines.push(`// ${locale.header}`);
 	lines.push(`// ${locale.saveHint}`);
 	if (props && props.length > 0) {
-		lines.push('//');
+		lines.push("//");
 		for (const [key, schema] of props) {
-			const suffix = schema.enum && schema.enum.length > 0 ? ` (${schema.enum.join(' | ')})` : '';
+			const suffix = schema.enum && schema.enum.length > 0 ? ` (${schema.enum.join(" | ")})` : "";
 			const title = schema.title || key;
 			lines.push(`// ${key}: ${title}${suffix}`);
 			if (schema.description) {
@@ -156,8 +156,8 @@ function buildHeaderComment(
 			}
 		}
 	}
-	lines.push('');
-	return lines.join('\n');
+	lines.push("");
+	return lines.join("\n");
 }
 
 /**
@@ -173,7 +173,9 @@ export function serializeAgentHostConfigDocument(
 		return `${buildHeaderComment(locale, undefined)}{}\n`;
 	}
 
-	const editableProps = Object.entries(config.schema.properties).filter(([key, schema]) => filter(key, schema));
+	const editableProps = Object.entries(config.schema.properties).filter(
+    ([key, schema]) => filter(key, schema),
+  );
 	const values: Record<string, unknown> = {};
 	for (const [key] of editableProps) {
 		if (config.values[key] !== undefined) {
@@ -206,10 +208,14 @@ export abstract class AbstractAgentHostConfigFileSystemProvider<TContext extends
 
 	readonly capabilities = FileSystemProviderCapabilities.FileReadWrite | FileSystemProviderCapabilities.PathCaseSensitive;
 
-	private readonly _onDidChangeCapabilities = this._register(new Emitter<void>());
+	private readonly _onDidChangeCapabilities = this._register(
+    new Emitter<void>(),
+  );
 	readonly onDidChangeCapabilities = this._onDidChangeCapabilities.event;
 
-	protected readonly _onDidChangeFile = this._register(new Emitter<readonly IFileChange[]>());
+	protected readonly _onDidChangeFile = this._register(
+    new Emitter<readonly IFileChange[]>(),
+  );
 	readonly onDidChangeFile = this._onDidChangeFile.event;
 
 	constructor(
@@ -269,24 +275,27 @@ export abstract class AbstractAgentHostConfigFileSystemProvider<TContext extends
 			return Disposable.None;
 		}
 		return this._watchChanges(provider, parsed, () => {
-			this._onDidChangeFile.fire([{ type: FileChangeType.UPDATED, resource }]);
-		});
+      this._onDidChangeFile.fire([{ type: FileChangeType.UPDATED, resource }]);
+    });
 	}
 
 	async stat(resource: URI): Promise<IStat> {
 		const { provider, ctx } = this._resolveOrThrow(resource);
 		const content = this._serialize(provider, ctx);
 		return {
-			type: FileType.File,
-			ctime: 0,
-			mtime: 0,
-			size: VSBuffer.fromString(content).byteLength,
-			permissions: 0 as FilePermission,
-		};
+      type: FileType.File,
+      ctime: 0,
+      mtime: 0,
+      size: VSBuffer.fromString(content).byteLength,
+      permissions: 0 as FilePermission,
+    };
 	}
 
 	async readdir(): Promise<[string, FileType][]> {
-		throw createFileSystemProviderError('readdir not supported', FileSystemProviderErrorCode.NoPermissions);
+		throw createFileSystemProviderError(
+      "readdir not supported",
+      FileSystemProviderErrorCode.NoPermissions,
+    );
 	}
 
 	async readFile(resource: URI): Promise<Uint8Array> {
@@ -307,33 +316,56 @@ export abstract class AbstractAgentHostConfigFileSystemProvider<TContext extends
 		const errors: ParseError[] = [];
 		const parsed_json = parse(text, errors);
 		if (errors.length > 0) {
-			throw createFileSystemProviderError(this._locale.parseError, FileSystemProviderErrorCode.Unavailable);
+			throw createFileSystemProviderError(
+        this._locale.parseError,
+        FileSystemProviderErrorCode.Unavailable,
+      );
 		}
-		if (parsed_json === null || typeof parsed_json !== 'object' || Array.isArray(parsed_json)) {
-			throw createFileSystemProviderError(this._locale.notObject, FileSystemProviderErrorCode.Unavailable);
+		if (parsed_json === null || typeof parsed_json !== "object" || Array.isArray(
+      parsed_json,
+    )) {
+			throw createFileSystemProviderError(
+        this._locale.notObject,
+        FileSystemProviderErrorCode.Unavailable,
+      );
 		}
 
 		if (!this._hasConfig(provider, ctx)) {
-			this._logService.trace(`[${this._traceTag}] No config state for ${this._describeForTrace(ctx)}; ignoring write.`);
+			this._logService.trace(
+        `[${this._traceTag}] No config state for ${this._describeForTrace(ctx)}; ignoring write.`,
+      );
 			this._onDidChangeFile.fire([{ type: FileChangeType.UPDATED, resource }]);
 			return;
 		}
 
-		await this._replaceConfig(provider, ctx, parsed_json as Record<string, unknown>);
+		await this._replaceConfig(
+      provider,
+      ctx,
+      parsed_json as Record<string, unknown>,
+    );
 
 		this._onDidChangeFile.fire([{ type: FileChangeType.UPDATED, resource }]);
 	}
 
 	async mkdir(): Promise<void> {
-		throw createFileSystemProviderError('mkdir not supported', FileSystemProviderErrorCode.NoPermissions);
+		throw createFileSystemProviderError(
+      "mkdir not supported",
+      FileSystemProviderErrorCode.NoPermissions,
+    );
 	}
 
 	async delete(_resource: URI, _opts: IFileDeleteOptions): Promise<void> {
-		throw createFileSystemProviderError('delete not supported', FileSystemProviderErrorCode.NoPermissions);
+		throw createFileSystemProviderError(
+      "delete not supported",
+      FileSystemProviderErrorCode.NoPermissions,
+    );
 	}
 
 	async rename(_from: URI, _to: URI, _opts: IFileOverwriteOptions): Promise<void> {
-		throw createFileSystemProviderError('rename not supported', FileSystemProviderErrorCode.NoPermissions);
+		throw createFileSystemProviderError(
+      "rename not supported",
+      FileSystemProviderErrorCode.NoPermissions,
+    );
 	}
 
 	// ---- Helpers ------------------------------------------------------------
@@ -349,11 +381,17 @@ export abstract class AbstractAgentHostConfigFileSystemProvider<TContext extends
 	private _resolveOrThrow(resource: URI): { provider: IAgentHostSessionsProvider; ctx: TContext } {
 		const ctx = this._parseUri(resource);
 		if (!ctx) {
-			throw createFileSystemProviderError(`Invalid ${this._schemeLabel} URI: ${resource.toString()}`, FileSystemProviderErrorCode.FileNotFound);
+			throw createFileSystemProviderError(
+        `Invalid ${this._schemeLabel} URI: ${resource.toString()}`,
+        FileSystemProviderErrorCode.FileNotFound,
+      );
 		}
 		const provider = this._lookupProvider(ctx.providerId);
 		if (!provider) {
-			throw createFileSystemProviderError(`Unknown agent host provider: ${ctx.providerId}`, FileSystemProviderErrorCode.FileNotFound);
+			throw createFileSystemProviderError(
+        `Unknown agent host provider: ${ctx.providerId}`,
+        FileSystemProviderErrorCode.FileNotFound,
+      );
 		}
 		return { provider, ctx };
 	}
@@ -377,13 +415,19 @@ export abstract class AbstractAgentHostConfigFileSystemProvider<TContext extends
  */
 export abstract class AbstractAgentHostConfigSchemaRegistrar<TTarget> extends Disposable {
 
-	private readonly _schemaRegistry = Registry.as<IJSONContributionRegistry>(JSONExtensions.JSONContribution);
+	private readonly _schemaRegistry = Registry.as<IJSONContributionRegistry>(
+    JSONExtensions.JSONContribution,
+  );
 
 	/** Per-provider subscriptions. */
-	private readonly _providerSubscriptions = this._register(new DisposableMap<string /* providerId */>());
+	private readonly _providerSubscriptions = this._register(
+    new DisposableMap<string /* providerId */>(),
+  );
 
 	/** Per-target registered-schema disposables, keyed by the settings URI string. */
-	private readonly _targetSchemas = this._register(new DisposableMap<string /* settingsUri */>());
+	private readonly _targetSchemas = this._register(
+    new DisposableMap<string /* settingsUri */>(),
+  );
 
 	/**
 	 * Tracks the {@link ConfigSchema} identity last used to register a schema
@@ -490,7 +534,10 @@ export abstract class AbstractAgentHostConfigSchemaRegistrar<TTarget> extends Di
 			return;
 		}
 
-		const schema = buildAgentHostConfigJsonSchema(config, this._propertyFilter());
+		const schema = buildAgentHostConfigJsonSchema(
+      config,
+      this._propertyFilter(),
+    );
 		const schemaId = this._schemaId(target);
 
 		// Dispose any prior registration first, otherwise the old cleanup
@@ -499,7 +546,9 @@ export abstract class AbstractAgentHostConfigSchemaRegistrar<TTarget> extends Di
 
 		const store = new DisposableStore();
 		this._schemaRegistry.registerSchema(schemaId, schema, store);
-		store.add(this._schemaRegistry.registerSchemaAssociation(schemaId, settingsUri));
+		store.add(
+      this._schemaRegistry.registerSchemaAssociation(schemaId, settingsUri),
+    );
 		store.add(toDisposable(() => this._lastSchemaIdentity.delete(settingsUri)));
 
 		this._targetSchemas.set(settingsUri, store);

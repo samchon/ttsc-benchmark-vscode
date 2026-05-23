@@ -2,8 +2,8 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { Transform } from 'stream';
-import { binaryIndexOf } from '../common/buffer.js';
+import { Transform } from "stream";
+import { binaryIndexOf } from "../common/buffer.js";
 
 /**
  * A Transform stream that splits the input on the "splitter" substring.
@@ -18,7 +18,7 @@ export class StreamSplitter extends Transform {
 
 	constructor(splitter: string | number | Buffer) {
 		super();
-		if (typeof splitter === 'number') {
+		if (typeof splitter === "number") {
 			this.splitter = splitter;
 			this.spitterLen = 1;
 		} else {
@@ -37,7 +37,7 @@ export class StreamSplitter extends Transform {
 
 		let offset = 0;
 		while (offset < this.buffer.length) {
-			const index = typeof this.splitter === 'number'
+			const index = typeof this.splitter === "number"
 				? this.buffer.indexOf(this.splitter, offset)
 				: binaryIndexOf(this.buffer, this.splitter, offset);
 			if (index === -1) {
@@ -48,7 +48,9 @@ export class StreamSplitter extends Transform {
 			offset = index + this.spitterLen;
 		}
 
-		this.buffer = offset === this.buffer.length ? undefined : this.buffer.slice(offset);
+		this.buffer = offset === this.buffer.length ? undefined : this.buffer.slice(
+      offset,
+    );
 		callback();
 	}
 

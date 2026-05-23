@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../../nls.js';
-import { TelemetryConfiguration, TelemetryLevel } from '../../telemetry/common/telemetry.js';
-import { SessionConfigKey } from './sessionConfigKeys.js';
-import type { SessionConfigPropertySchema, SessionConfigSchema } from './state/protocol/commands.js';
-import { JsonRpcErrorCodes, ProtocolError } from './state/sessionProtocol.js';
+import { localize } from "../../../nls.js";
+import { TelemetryConfiguration, TelemetryLevel } from "../../telemetry/common/telemetry.js";
+import { SessionConfigKey } from "./sessionConfigKeys.js";
+import type { SessionConfigPropertySchema, SessionConfigSchema } from "./state/protocol/commands.js";
+import { JsonRpcErrorCodes, ProtocolError } from "./state/sessionProtocol.js";
 
 // ---- Schema builder --------------------------------------------------------
 
@@ -47,10 +47,13 @@ export interface ISchemaProperty<T> {
  */
 export function schemaProperty<T>(protocol: SessionConfigPropertySchema): ISchemaProperty<T> {
 	const assertFn = buildAssert(protocol);
-	const assertValid = (value: unknown, path: string = ''): asserts value is T => assertFn(value, path);
+	const assertValid = (value: unknown, path: string = ""): asserts value is T => assertFn(
+    value,
+    path,
+  );
 	const validate = (value: unknown): value is T => {
 		try {
-			assertFn(value, '');
+			assertFn(value, "");
 			return true;
 		} catch {
 			return false;
@@ -129,7 +132,7 @@ export function createSchema<D extends SchemaDefinition>(definition: D): ISchema
 			for (const key of Object.keys(definition)) {
 				properties[key] = definition[key].protocol;
 			}
-			return { type: 'object', properties };
+			return { type: "object", properties };
 		},
 		values(values) {
 			const raw = values as Record<string, unknown>;
@@ -188,22 +191,27 @@ export function createSchema<D extends SchemaDefinition>(definition: D): ISchema
 type AssertValidator = (value: unknown, path: string) => void;
 
 function buildAssert(schema: SessionConfigPropertySchema): AssertValidator {
-	if (schema.type === 'object' && schema.properties) {
+	if (schema.type === "object" && schema.properties) {
 		const propAsserts: Record<string, AssertValidator> = {};
 		for (const key of Object.keys(schema.properties)) {
-			propAsserts[key] = buildAssert(schema.properties[key] as SessionConfigPropertySchema);
+			propAsserts[key] = buildAssert(
+        schema.properties[key] as SessionConfigPropertySchema,
+      );
 		}
 		const required = new Set(schema.required ?? []);
 		return (value, path) => {
-			if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-				throw invalidParams(path, 'object', value);
+			if (typeof value !== "object" || value === null || Array.isArray(value)) {
+				throw invalidParams(path, "object", value);
 			}
 			const obj = value as Record<string, unknown>;
 			for (const key of Object.keys(propAsserts)) {
 				const childPath = joinPath(path, key);
 				if (obj[key] === undefined) {
 					if (required.has(key)) {
-						throw new ProtocolError(JsonRpcErrorCodes.InvalidParams, `Missing required property at '${childPath}'`);
+						throw new ProtocolError(
+              JsonRpcErrorCodes.InvalidParams,
+              `Missing required property at '${childPath}'`,
+            );
 					}
 					continue;
 				}
@@ -211,11 +219,11 @@ function buildAssert(schema: SessionConfigPropertySchema): AssertValidator {
 			}
 		};
 	}
-	if (schema.type === 'array' && schema.items) {
+	if (schema.type === "array" && schema.items) {
 		const itemAssert = buildAssert(schema.items as SessionConfigPropertySchema);
 		return (value, path) => {
 			if (!Array.isArray(value)) {
-				throw invalidParams(path, 'array', value);
+				throw invalidParams(path, "array", value);
 			}
 			for (let i = 0; i < value.length; i++) {
 				itemAssert(value[i], `${path}[${i}]`);
@@ -229,20 +237,40 @@ function buildPrimitiveAssert(schema: SessionConfigPropertySchema): AssertValida
 	const enumDynamic = schema.enumDynamic === true;
 	return (value, path) => {
 		switch (schema.type) {
-			case 'string': if (typeof value !== 'string') { throw invalidParams(path, 'string', value); } break;
-			case 'number': if (typeof value !== 'number') { throw invalidParams(path, 'number', value); } break;
-			case 'boolean': if (typeof value !== 'boolean') { throw invalidParams(path, 'boolean', value); } break;
-			case 'array': if (!Array.isArray(value)) { throw invalidParams(path, 'array', value); } break;
-			case 'object': if (typeof value !== 'object' || value === null || Array.isArray(value)) { throw invalidParams(path, 'object', value); } break;
+			case "string": if (typeof value !== "string") { throw invalidParams(
+        path,
+        "string",
+        value,
+      ); } break;
+			case "number": if (typeof value !== "number") { throw invalidParams(
+        path,
+        "number",
+        value,
+      ); } break;
+			case "boolean": if (typeof value !== "boolean") { throw invalidParams(
+        path,
+        "boolean",
+        value,
+      ); } break;
+			case "array": if (!Array.isArray(value)) { throw invalidParams(path, 'array', value); } break;
+			case "object": if (typeof value !== "object" || value === null || Array.isArray(
+        value,
+      )) { throw invalidParams(path, "object", value); } break;
 		}
 		if (schema.enum && !enumDynamic && !schema.enum.includes(value as string)) {
-			throw new ProtocolError(JsonRpcErrorCodes.InvalidParams, `Invalid value at '${path || '<root>'}': ${safeStringify(value)} is not one of [${schema.enum.map(v => JSON.stringify(v)).join(', ')}]`);
+			throw new ProtocolError(
+        JsonRpcErrorCodes.InvalidParams,
+        `Invalid value at '${path || "<root>"}': ${safeStringify(value)} is not one of [${schema.enum.map(v => JSON.stringify(v)).join(", ")}]`,
+      );
 		}
 	};
 }
 
 function invalidParams(path: string, expected: string, value: unknown): ProtocolError {
-	return new ProtocolError(JsonRpcErrorCodes.InvalidParams, `Invalid value at '${path || '<root>'}': expected ${expected}, got ${safeStringify(value)}`);
+	return new ProtocolError(
+    JsonRpcErrorCodes.InvalidParams,
+    `Invalid value at '${path || "<root>"}': expected ${expected}, got ${safeStringify(value)}`,
+  );
 }
 
 function joinPath(parent: string, key: string): string {
@@ -259,9 +287,9 @@ function safeStringify(value: unknown): string {
 
 // ---- Platform-owned schema -------------------------------------------------
 
-export type AutoApproveLevel = 'default' | 'autoApprove' | 'autopilot';
+export type AutoApproveLevel = "default" | "autoApprove" | "autopilot";
 
-export type SessionMode = 'interactive' | 'plan';
+export type SessionMode = "interactive" | "plan";
 
 export interface IPermissionsValue {
 	readonly allow: readonly string[];
@@ -269,24 +297,24 @@ export interface IPermissionsValue {
 }
 
 const permissionsProperty = schemaProperty<IPermissionsValue>({
-	type: 'object',
-	title: localize('agentHost.sessionConfig.permissions', "Permissions"),
-	description: localize('agentHost.sessionConfig.permissionsDescription', "Per-tool session permissions. Updated automatically when approving a tool \"in this Session\"."),
+	type: "object",
+	title: localize("agentHost.sessionConfig.permissions", "Permissions"),
+	description: localize("agentHost.sessionConfig.permissionsDescription", "Per-tool session permissions. Updated automatically when approving a tool \"in this Session\"."),
 	properties: {
 		allow: {
-			type: 'array',
-			title: localize('agentHost.sessionConfig.permissions.allow', "Allowed tools"),
+			type: "array",
+			title: localize("agentHost.sessionConfig.permissions.allow", "Allowed tools"),
 			items: {
-				type: 'string',
-				title: localize('agentHost.sessionConfig.permissions.toolName', "Tool name"),
+				type: "string",
+				title: localize("agentHost.sessionConfig.permissions.toolName", "Tool name"),
 			},
 		},
 		deny: {
-			type: 'array',
-			title: localize('agentHost.sessionConfig.permissions.deny', "Denied tools"),
+			type: "array",
+			title: localize("agentHost.sessionConfig.permissions.deny", "Denied tools"),
 			items: {
-				type: 'string',
-				title: localize('agentHost.sessionConfig.permissions.toolName', "Tool name"),
+				type: "string",
+				title: localize("agentHost.sessionConfig.permissions.toolName", "Tool name"),
 			},
 		},
 	},
@@ -304,38 +332,38 @@ const permissionsProperty = schemaProperty<IPermissionsValue>({
  */
 export const platformSessionSchema = createSchema({
 	[SessionConfigKey.AutoApprove]: schemaProperty<AutoApproveLevel>({
-		type: 'string',
-		title: localize('agentHost.sessionConfig.autoApprove', "Approvals"),
-		description: localize('agentHost.sessionConfig.autoApproveDescription', "Tool approval behavior for this session"),
-		enum: ['default', 'autoApprove', 'autopilot'],
+		type: "string",
+		title: localize("agentHost.sessionConfig.autoApprove", "Approvals"),
+		description: localize("agentHost.sessionConfig.autoApproveDescription", "Tool approval behavior for this session"),
+		enum: ["default", "autoApprove", "autopilot"],
 		enumLabels: [
-			localize('agentHost.sessionConfig.autoApprove.default', "Default Approvals"),
-			localize('agentHost.sessionConfig.autoApprove.bypass', "Bypass Approvals"),
-			localize('agentHost.sessionConfig.autoApprove.autopilot', "Autopilot (Preview)"),
+			localize("agentHost.sessionConfig.autoApprove.default", "Default Approvals"),
+			localize("agentHost.sessionConfig.autoApprove.bypass", "Bypass Approvals"),
+			localize("agentHost.sessionConfig.autoApprove.autopilot", "Autopilot (Preview)"),
 		],
 		enumDescriptions: [
-			localize('agentHost.sessionConfig.autoApprove.defaultDescription', "Copilot uses your configured settings"),
-			localize('agentHost.sessionConfig.autoApprove.bypassDescription', "All tool calls are auto-approved"),
-			localize('agentHost.sessionConfig.autoApprove.autopilotDescription', "Autonomously iterates from start to finish"),
+			localize("agentHost.sessionConfig.autoApprove.defaultDescription", "Copilot uses your configured settings"),
+			localize("agentHost.sessionConfig.autoApprove.bypassDescription", "All tool calls are auto-approved"),
+			localize("agentHost.sessionConfig.autoApprove.autopilotDescription", "Autonomously iterates from start to finish"),
 		],
-		default: 'default',
+		default: "default",
 		sessionMutable: true,
 	}),
 	[SessionConfigKey.Permissions]: permissionsProperty,
 	[SessionConfigKey.Mode]: schemaProperty<SessionMode>({
-		type: 'string',
-		title: localize('agentHost.sessionConfig.mode', "Agent Mode"),
-		description: localize('agentHost.sessionConfig.modeDescription', "How the agent should approach this turn"),
-		enum: ['interactive', 'plan'],
+		type: "string",
+		title: localize("agentHost.sessionConfig.mode", "Agent Mode"),
+		description: localize("agentHost.sessionConfig.modeDescription", "How the agent should approach this turn"),
+		enum: ["interactive", "plan"],
 		enumLabels: [
-			localize('agentHost.sessionConfig.mode.interactive', "Interactive"),
-			localize('agentHost.sessionConfig.mode.plan', "Plan"),
+			localize("agentHost.sessionConfig.mode.interactive", "Interactive"),
+			localize("agentHost.sessionConfig.mode.plan", "Plan"),
 		],
 		enumDescriptions: [
-			localize('agentHost.sessionConfig.mode.interactiveDescription', "Ask for input and approval for each action"),
-			localize('agentHost.sessionConfig.mode.planDescription', "Generate a plan first, then choose how to execute it"),
+			localize("agentHost.sessionConfig.mode.interactiveDescription", "Ask for input and approval for each action"),
+			localize("agentHost.sessionConfig.mode.planDescription", "Generate a plan first, then choose how to execute it"),
 		],
-		default: 'interactive',
+		default: "interactive",
 		sessionMutable: true,
 	}),
 });
@@ -350,7 +378,7 @@ export const platformSessionSchema = createSchema({
  *   auto-approval. See `SessionPermissionManager` for the evaluation
  *   rules.
  */
-export const AgentHostTelemetryLevelConfigKey = 'telemetryLevel';
+export const AgentHostTelemetryLevelConfigKey = "telemetryLevel";
 
 export function telemetryLevelToAgentHostConfigValue(telemetryLevel: TelemetryLevel): TelemetryConfiguration {
 	switch (telemetryLevel) {
@@ -383,9 +411,9 @@ export function agentHostConfigValueToTelemetryLevel(value: unknown): TelemetryL
 export const platformRootSchema = createSchema({
 	[SessionConfigKey.Permissions]: permissionsProperty,
 	[AgentHostTelemetryLevelConfigKey]: schemaProperty<TelemetryConfiguration>({
-		type: 'string',
-		title: localize('agentHost.config.telemetryLevel.title', "Telemetry Level"),
-		description: localize('agentHost.config.telemetryLevel.description', "Most restrictive telemetry level requested by connected clients."),
+		type: "string",
+		title: localize("agentHost.config.telemetryLevel.title", "Telemetry Level"),
+		description: localize("agentHost.config.telemetryLevel.description", "Most restrictive telemetry level requested by connected clients."),
 		enum: [TelemetryConfiguration.ON, TelemetryConfiguration.ERROR, TelemetryConfiguration.CRASH, TelemetryConfiguration.OFF],
 		default: TelemetryConfiguration.ON,
 	}),

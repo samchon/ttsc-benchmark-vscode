@@ -3,17 +3,25 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { constObservable, derived, derivedOpts, IObservable, ObservablePromise } from '../../../../../base/common/observable.js';
-import { isEqual } from '../../../../../base/common/resources.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { localize } from '../../../../../nls.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { AgentSessionProviders } from '../../../../../workbench/contrib/chat/browser/agentSessions/agentSessions.js';
-import { IChatSessionFileChange2 } from '../../../../../workbench/contrib/chat/common/chatSessionsService.js';
-import { GitDiffChange, IGitService } from '../../../../../workbench/contrib/git/common/gitService.js';
-import { gitHubInfoEqual, IChat, IGitHubInfo, ISessionChangeset, ISessionFileChange, ISessionWorkspace, sessionFileChangesEqual } from '../../../../services/sessions/common/session.js';
-import { IGitHubService } from '../../../github/browser/githubService.js';
-import { toPRContentUri } from '../../../github/common/utils.js';
+import { constObservable, derived, derivedOpts, IObservable, ObservablePromise } from "../../../../../base/common/observable.js";
+import { isEqual } from "../../../../../base/common/resources.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { localize } from "../../../../../nls.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { AgentSessionProviders } from "../../../../../workbench/contrib/chat/browser/agentSessions/agentSessions.js";
+import { IChatSessionFileChange2 } from "../../../../../workbench/contrib/chat/common/chatSessionsService.js";
+import { GitDiffChange, IGitService } from "../../../../../workbench/contrib/git/common/gitService.js";
+import {
+  gitHubInfoEqual,
+  IChat,
+  IGitHubInfo,
+  ISessionChangeset,
+  ISessionFileChange,
+  ISessionWorkspace,
+  sessionFileChangesEqual,
+} from "../../../../services/sessions/common/session.js";
+import { IGitHubService } from "../../../github/browser/githubService.js";
+import { toPRContentUri } from "../../../github/common/utils.js";
 
 interface IChangesetResolver {
 	resolve(firstCheckpointRef: string, lastCheckpointRef: string | undefined): Promise<IChatSessionFileChange2[] | undefined>;
@@ -24,12 +32,12 @@ class GitRepositoryChangesetResolver implements IChangesetResolver {
 
 	constructor(
 		workspace: IObservable<ISessionWorkspace | undefined>,
-		@IGitService private readonly _gitService: IGitService
+		@IGitService private readonly _gitService: IGitService,
 	) {
 		this._repositoryUriObs = derivedOpts({ equalsFn: isEqual }, reader => {
-			const gitRepository = workspace.read(reader)?.folders[0].gitRepository;
-			return gitRepository?.workTreeUri ?? gitRepository?.uri;
-		});
+      const gitRepository = workspace.read(reader)?.folders[0].gitRepository;
+      return gitRepository?.workTreeUri ?? gitRepository?.uri;
+    });
 	}
 
 	async resolve(firstCheckpointRef: string, lastCheckpointRef: string | undefined): Promise<IChatSessionFileChange2[] | undefined> {
@@ -45,7 +53,11 @@ class GitRepositoryChangesetResolver implements IChangesetResolver {
 			: firstCheckpointRef;
 
 		const changes = await repository?.diffBetweenWithStats2(ref) ?? [];
-		return toIChatSessionFileChange2(changes, firstCheckpointRef, lastCheckpointRef);
+		return toIChatSessionFileChange2(
+      changes,
+      firstCheckpointRef,
+      lastCheckpointRef,
+    );
 	}
 }
 
@@ -54,12 +66,12 @@ class GitHubRepositoryChangesetResolver implements IChangesetResolver {
 
 	constructor(
 		workspace: IObservable<ISessionWorkspace | undefined>,
-		@IGitHubService private readonly _gitHubService: IGitHubService
+		@IGitHubService private readonly _gitHubService: IGitHubService,
 	) {
 		this._gitHubInfoObs = derivedOpts({ equalsFn: gitHubInfoEqual }, reader => {
-			const gitRepository = workspace.read(reader)?.folders[0].gitRepository;
-			return gitRepository?.gitHubInfo.read(reader);
-		});
+      const gitRepository = workspace.read(reader)?.folders[0].gitRepository;
+      return gitRepository?.gitHubInfo.read(reader);
+    });
 	}
 
 	async resolve(firstCheckpointRef: string, lastCheckpointRef: string): Promise<IChatSessionFileChange2[] | undefined> {
@@ -69,31 +81,36 @@ class GitHubRepositoryChangesetResolver implements IChangesetResolver {
 		}
 
 		const params = {
-			owner: gitHubInfo.owner,
-			repo: gitHubInfo.repo,
-			prNumber: gitHubInfo.pullRequest.number,
-		} as const;
+      owner: gitHubInfo.owner,
+      repo: gitHubInfo.repo,
+      prNumber: gitHubInfo.pullRequest.number,
+    } as const;
 
-		const changes = await this._gitHubService.getChangedFiles(params.owner, params.repo, firstCheckpointRef, lastCheckpointRef);
+		const changes = await this._gitHubService.getChangedFiles(
+      params.owner,
+      params.repo,
+      firstCheckpointRef,
+      lastCheckpointRef,
+    );
 		return changes.map(change => {
 			const uri = toPRContentUri(change.filename, {
 				...params,
 				commitSha: lastCheckpointRef,
 				status: change.status,
-				isBase: false
+				isBase: false,
 			});
 
-			const originalUri = change.status !== 'added'
+			const originalUri = change.status !== "added"
 				? toPRContentUri(change.previous_filename || change.filename, {
 					...params,
 					commitSha: firstCheckpointRef,
 					previousFileName: change.previous_filename,
 					status: change.status,
-					isBase: true
+					isBase: true,
 				})
 				: undefined;
 
-			const modifiedUri = change.status !== 'removed'
+			const modifiedUri = change.status !== "removed"
 				? uri
 				: undefined;
 
@@ -102,7 +119,7 @@ class GitHubRepositoryChangesetResolver implements IChangesetResolver {
 				originalUri,
 				modifiedUri,
 				insertions: change.additions,
-				deletions: change.deletions
+				deletions: change.deletions,
 			} satisfies IChatSessionFileChange2;
 		});
 	}
@@ -115,12 +132,22 @@ export function createChangesets(
 	instantiationService: IInstantiationService,
 ): IObservable<readonly ISessionChangeset[]> {
 	const changesetResolver = sessionType === AgentSessionProviders.Cloud
-		? instantiationService.createInstance(GitHubRepositoryChangesetResolver, workspaceObs)
-		: instantiationService.createInstance(GitRepositoryChangesetResolver, workspaceObs);
+		? instantiationService.createInstance(
+        GitHubRepositoryChangesetResolver,
+        workspaceObs,
+      )
+		: instantiationService.createInstance(
+        GitRepositoryChangesetResolver,
+        workspaceObs,
+      );
 
-	const changesets: ISessionChangeset[] = [new BranchChangesChangeset(workspaceObs, chatsObs)];
+	const changesets: ISessionChangeset[] = [
+    new BranchChangesChangeset(workspaceObs, chatsObs),
+  ];
 	if (sessionType !== AgentSessionProviders.Cloud) {
-		changesets.push(new UncommittedChangesChangeset(workspaceObs, chatsObs, changesetResolver));
+		changesets.push(
+      new UncommittedChangesChangeset(workspaceObs, chatsObs, changesetResolver),
+    );
 	}
 
 	changesets.push(new AllChangesChangeset(chatsObs, changesetResolver));
@@ -160,12 +187,12 @@ abstract class AbstractChangeset implements ISessionChangeset {
  * semi-static — refresh on new commits to either ref.
  */
 export class BranchChangesChangeset extends AbstractChangeset {
-	static readonly ID = 'branchChanges';
+	static readonly ID = "branchChanges";
 
 	readonly id = BranchChangesChangeset.ID;
-	readonly label = localize('branchChanges', "Branch Changes");
+	readonly label = localize("branchChanges", "Branch Changes");
 	readonly description: string | undefined;
-	readonly category = localize('changesCategory', "Changes");
+	readonly category = localize("changesCategory", "Changes");
 
 	readonly isEnabled: IObservable<boolean>;
 	readonly isDefault: IObservable<boolean>;
@@ -173,7 +200,9 @@ export class BranchChangesChangeset extends AbstractChangeset {
 	readonly isLoadingChanges = constObservable(false);
 	readonly changes: IObservable<readonly ISessionFileChange[]>;
 	readonly originalCheckpointRef: IObservable<string | undefined>;
-	readonly modifiedCheckpointRef = constObservable<string | undefined>(undefined);
+	readonly modifiedCheckpointRef = constObservable<string | undefined>(
+    undefined,
+  );
 
 	constructor(
 		workspaceObs: IObservable<ISessionWorkspace | undefined>,
@@ -190,16 +219,18 @@ export class BranchChangesChangeset extends AbstractChangeset {
 			: branchName;
 
 		this.originalCheckpointRef = derived(reader => {
-			return chatsObs.read(reader)[0]?.checkpoints.read(reader)?.firstCheckpointRef;
-		});
+      return chatsObs.read(reader)[0]?.checkpoints.read(reader)?.firstCheckpointRef;
+    });
 
-		const isArchivedObs = derived(reader => chatsObs.read(reader)[0]?.isArchived.read(reader) === true);
+		const isArchivedObs = derived(
+      reader => chatsObs.read(reader)[0]?.isArchived.read(reader) === true,
+    );
 		this.isDefault = derived(reader => !isArchivedObs.read(reader));
 		this.isEnabled = derived(reader => !isArchivedObs.read(reader));
 
 		this.changes = derived(reader => {
-			return chatsObs.read(reader)[0]?.changes.read(reader) ?? [];
-		});
+      return chatsObs.read(reader)[0]?.changes.read(reader) ?? [];
+    });
 	}
 }
 
@@ -208,20 +239,25 @@ export class BranchChangesChangeset extends AbstractChangeset {
  * untracked + merge).
  */
 export class UncommittedChangesChangeset extends AbstractChangeset {
-	static readonly ID = 'uncommittedChanges';
+	static readonly ID = "uncommittedChanges";
 
 	readonly id = UncommittedChangesChangeset.ID;
-	readonly label = localize('uncommittedChanges', "Uncommitted Changes");
-	readonly description = localize('uncommittedChangesDescription', "Show uncommitted changes in this session");
-	readonly category = localize('changesCategory', "Changes");
+	readonly label = localize("uncommittedChanges", "Uncommitted Changes");
+	readonly description = localize(
+    "uncommittedChangesDescription",
+    "Show uncommitted changes in this session",
+  );
+	readonly category = localize("changesCategory", "Changes");
 
 	readonly isEnabled: IObservable<boolean>;
 	readonly isDefault = constObservable(false);
 
 	readonly isLoadingChanges: IObservable<boolean>;
 	readonly changes: IObservable<readonly ISessionFileChange[]>;
-	readonly originalCheckpointRef = constObservable('HEAD');
-	readonly modifiedCheckpointRef = constObservable<string | undefined>(undefined);
+	readonly originalCheckpointRef = constObservable("HEAD");
+	readonly modifiedCheckpointRef = constObservable<string | undefined>(
+    undefined,
+  );
 
 	constructor(
 		workspaceObs: IObservable<ISessionWorkspace | undefined>,
@@ -230,12 +266,14 @@ export class UncommittedChangesChangeset extends AbstractChangeset {
 	) {
 		super(chatsObs);
 
-		this.isEnabled = derived(reader => chatsObs.read(reader)[0]?.isArchived.read(reader) !== true);
+		this.isEnabled = derived(
+      reader => chatsObs.read(reader)[0]?.isArchived.read(reader) !== true,
+    );
 
 		const uncommittedChangesCountObs = derived(reader => {
-			const gitRepository = workspaceObs.read(reader)?.folders[0].gitRepository;
-			return gitRepository?.uncommittedChanges ?? 0;
-		});
+      const gitRepository = workspaceObs.read(reader)?.folders[0].gitRepository;
+      return gitRepository?.uncommittedChanges ?? 0;
+    });
 
 		const changesPromiseObs = derived(reader => {
 			const originalCheckpointRef = this.originalCheckpointRef.read(reader);
@@ -249,12 +287,15 @@ export class UncommittedChangesChangeset extends AbstractChangeset {
 		});
 
 		this.isLoadingChanges = derived(reader => {
-			return changesPromiseObs.read(reader).read(reader) === undefined;
-		});
+      return changesPromiseObs.read(reader).read(reader) === undefined;
+    });
 
-		this.changes = derivedOpts({ equalsFn: sessionFileChangesEqual }, reader => {
-			return changesPromiseObs.read(reader).read(reader) ?? [];
-		});
+		this.changes = derivedOpts(
+      { equalsFn: sessionFileChangesEqual },
+      reader => {
+        return changesPromiseObs.read(reader).read(reader) ?? [];
+      },
+    );
 	}
 }
 
@@ -262,12 +303,15 @@ export class UncommittedChangesChangeset extends AbstractChangeset {
  * Aggregate of every file the session has touched.
  */
 export class AllChangesChangeset extends AbstractChangeset {
-	static readonly ID = 'allChanges';
+	static readonly ID = "allChanges";
 
 	readonly id = AllChangesChangeset.ID;
-	readonly label = localize('allChanges', "All Changes");
-	readonly description = localize('allChangesDescription', "Show all changes made in this session");
-	readonly category = localize('checkpointsCategory', "Checkpoints");
+	readonly label = localize("allChanges", "All Changes");
+	readonly description = localize(
+    "allChangesDescription",
+    "Show all changes made in this session",
+  );
+	readonly category = localize("checkpointsCategory", "Checkpoints");
 	readonly isEnabled: IObservable<boolean>;
 	readonly isDefault: IObservable<boolean>;
 
@@ -278,13 +322,13 @@ export class AllChangesChangeset extends AbstractChangeset {
 
 	constructor(
 		chatsObs: IObservable<readonly IChat[]>,
-		changesetResolver: IChangesetResolver
+		changesetResolver: IChangesetResolver,
 	) {
 		super(chatsObs);
 
 		this.originalCheckpointRef = derived<string | undefined>(reader => {
-			return chatsObs.read(reader)[0]?.checkpoints.read(reader)?.firstCheckpointRef;
-		});
+      return chatsObs.read(reader)[0]?.checkpoints.read(reader)?.firstCheckpointRef;
+    });
 
 		this.modifiedCheckpointRef = derived<string | undefined>(reader => {
 			const chats = chatsObs.read(reader);
@@ -319,14 +363,19 @@ export class AllChangesChangeset extends AbstractChangeset {
 		});
 
 		this.isLoadingChanges = derived(reader => {
-			return changesPromiseObs.read(reader).read(reader) === undefined;
-		});
+      return changesPromiseObs.read(reader).read(reader) === undefined;
+    });
 
-		this.changes = derivedOpts({ equalsFn: sessionFileChangesEqual }, reader => {
-			return changesPromiseObs.read(reader).read(reader) ?? [];
-		});
+		this.changes = derivedOpts(
+      { equalsFn: sessionFileChangesEqual },
+      reader => {
+        return changesPromiseObs.read(reader).read(reader) ?? [];
+      },
+    );
 
-		this.isDefault = derived(reader => chatsObs.read(reader)[0]?.isArchived.read(reader) === true);
+		this.isDefault = derived(
+      reader => chatsObs.read(reader)[0]?.isArchived.read(reader) === true,
+    );
 
 		this.isEnabled = derived(reader =>
 			this.originalCheckpointRef.read(reader) !== undefined &&
@@ -338,12 +387,15 @@ export class AllChangesChangeset extends AbstractChangeset {
  * Files touched by the most recent agent turn.
  */
 export class LastTurnChangesChangeset extends AbstractChangeset {
-	static readonly ID = 'lastTurnChanges';
+	static readonly ID = "lastTurnChanges";
 
 	readonly id = LastTurnChangesChangeset.ID;
-	readonly label = localize('lastTurnChanges', "Last Turn Changes");
-	readonly description = localize('lastTurnChangesDescription', "Show only changes made in the last turn");
-	readonly category = localize('checkpointsCategory', "Checkpoints");
+	readonly label = localize("lastTurnChanges", "Last Turn Changes");
+	readonly description = localize(
+    "lastTurnChangesDescription",
+    "Show only changes made in the last turn",
+  );
+	readonly category = localize("checkpointsCategory", "Checkpoints");
 
 	readonly isEnabled: IObservable<boolean>;
 	readonly isDefault = constObservable(false);
@@ -355,7 +407,7 @@ export class LastTurnChangesChangeset extends AbstractChangeset {
 
 	constructor(
 		chatsObs: IObservable<readonly IChat[]>,
-		changesetResolver: IChangesetResolver
+		changesetResolver: IChangesetResolver,
 	) {
 		super(chatsObs);
 
@@ -380,9 +432,9 @@ export class LastTurnChangesChangeset extends AbstractChangeset {
 		});
 
 		this.originalCheckpointRef = derived(reader => {
-			const modifiedCheckpointRef = this.modifiedCheckpointRef.read(reader);
-			return modifiedCheckpointRef ? `${modifiedCheckpointRef}^` : undefined;
-		});
+      const modifiedCheckpointRef = this.modifiedCheckpointRef.read(reader);
+      return modifiedCheckpointRef ? `${modifiedCheckpointRef}^` : undefined;
+    });
 
 		const changesPromiseObs = derived(reader => {
 			const originalCheckpointRef = this.originalCheckpointRef.read(reader);
@@ -397,12 +449,15 @@ export class LastTurnChangesChangeset extends AbstractChangeset {
 		});
 
 		this.isLoadingChanges = derived(reader => {
-			return changesPromiseObs.read(reader).read(reader) === undefined;
-		});
+      return changesPromiseObs.read(reader).read(reader) === undefined;
+    });
 
-		this.changes = derivedOpts({ equalsFn: sessionFileChangesEqual }, reader => {
-			return changesPromiseObs.read(reader).read(reader) ?? [];
-		});
+		this.changes = derivedOpts(
+      { equalsFn: sessionFileChangesEqual },
+      reader => {
+        return changesPromiseObs.read(reader).read(reader) ?? [];
+      },
+    );
 
 		this.isEnabled = derived(reader =>
 			this.originalCheckpointRef.read(reader) !== undefined &&
@@ -434,12 +489,12 @@ function toIChatSessionFileChange2(changes: GitDiffChange[], originalRef: string
 		uri: change.uri,
 		originalUri: change.originalUri
 			? originalRef
-				? change.originalUri.with({ scheme: 'git', query: JSON.stringify({ path: change.originalUri.fsPath, ref: originalRef }) })
+				? change.originalUri.with({ scheme: "git", query: JSON.stringify({ path: change.originalUri.fsPath, ref: originalRef }) })
 				: change.originalUri
 			: undefined,
 		modifiedUri: change.modifiedUri
 			? modifiedRef
-				? change.modifiedUri.with({ scheme: 'git', query: JSON.stringify({ path: change.modifiedUri.fsPath, ref: modifiedRef }) })
+				? change.modifiedUri.with({ scheme: "git", query: JSON.stringify({ path: change.modifiedUri.fsPath, ref: modifiedRef }) })
 				: change.modifiedUri
 			: undefined,
 		insertions: change.insertions,

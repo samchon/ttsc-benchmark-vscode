@@ -3,36 +3,42 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { KeybindingLabel } from '../../../../base/browser/ui/keybindingLabel/keybindingLabel.js';
-import { ResolvedKeybinding } from '../../../../base/common/keybindings.js';
-import { OS } from '../../../../base/common/platform.js';
-import './media/issueReporterOverlay.css';
-import { $, addDisposableListener, append, EventType, getWindow } from '../../../../base/browser/dom.js';
-import { StandardKeyboardEvent } from '../../../../base/browser/keyboardEvent.js';
-import { Button } from '../../../../base/browser/ui/button/button.js';
-import { IContextMenuProvider } from '../../../../base/browser/contextmenu.js';
-import { renderIcon } from '../../../../base/browser/ui/iconLabel/iconLabels.js';
-import { InputBox } from '../../../../base/browser/ui/inputbox/inputBox.js';
-import { ISelectOptionItem, SelectBox } from '../../../../base/browser/ui/selectBox/selectBox.js';
-import { Checkbox } from '../../../../base/browser/ui/toggle/toggle.js';
-import { Action, Separator } from '../../../../base/common/actions.js';
-import { Codicon } from '../../../../base/common/codicons.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { MarkdownString } from '../../../../base/common/htmlContent.js';
-import { KeyCode } from '../../../../base/common/keyCodes.js';
-import { DisposableStore, toDisposable } from '../../../../base/common/lifecycle.js';
-import { localize } from '../../../../nls.js';
-import { IMarkdownRendererService } from '../../../../platform/markdown/browser/markdownRenderer.js';
-import { IContextViewService } from '../../../../platform/contextview/browser/contextView.js';
-import { isRemoteDiagnosticError } from '../../../../platform/diagnostics/common/diagnostics.js';
-import { defaultButtonStyles, defaultCheckboxStyles, defaultInputBoxStyles, defaultKeybindingLabelStyles, defaultSelectBoxStyles } from '../../../../platform/theme/browser/defaultStyles.js';
-import product from '../../../../platform/product/common/product.js';
-import { URI } from '../../../../base/common/uri.js';
-import { normalizeGitHubUrl } from '../common/issueReporterUtil.js';
-import { IssueReporterData, IssueReporterExtensionData, IssueSource, IssueType } from '../common/issue.js';
-import { IssueReporterModel } from './issueReporterModel.js';
-import { RecordingState } from './recordingService.js';
-import { IAnnotationEditorState, ScreenshotAnnotationEditor } from './screenshotAnnotation.js';
+import { KeybindingLabel } from "../../../../base/browser/ui/keybindingLabel/keybindingLabel.js";
+import { ResolvedKeybinding } from "../../../../base/common/keybindings.js";
+import { OS } from "../../../../base/common/platform.js";
+import "./media/issueReporterOverlay.css";
+import { $, addDisposableListener, append, EventType, getWindow } from "../../../../base/browser/dom.js";
+import { StandardKeyboardEvent } from "../../../../base/browser/keyboardEvent.js";
+import { Button } from "../../../../base/browser/ui/button/button.js";
+import { IContextMenuProvider } from "../../../../base/browser/contextmenu.js";
+import { renderIcon } from "../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { InputBox } from "../../../../base/browser/ui/inputbox/inputBox.js";
+import { ISelectOptionItem, SelectBox } from "../../../../base/browser/ui/selectBox/selectBox.js";
+import { Checkbox } from "../../../../base/browser/ui/toggle/toggle.js";
+import { Action, Separator } from "../../../../base/common/actions.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { MarkdownString } from "../../../../base/common/htmlContent.js";
+import { KeyCode } from "../../../../base/common/keyCodes.js";
+import { DisposableStore, toDisposable } from "../../../../base/common/lifecycle.js";
+import { localize } from "../../../../nls.js";
+import { IMarkdownRendererService } from "../../../../platform/markdown/browser/markdownRenderer.js";
+import { IContextViewService } from "../../../../platform/contextview/browser/contextView.js";
+import { isRemoteDiagnosticError } from "../../../../platform/diagnostics/common/diagnostics.js";
+import {
+  defaultButtonStyles,
+  defaultCheckboxStyles,
+  defaultInputBoxStyles,
+  defaultKeybindingLabelStyles,
+  defaultSelectBoxStyles,
+} from "../../../../platform/theme/browser/defaultStyles.js";
+import product from "../../../../platform/product/common/product.js";
+import { URI } from "../../../../base/common/uri.js";
+import { normalizeGitHubUrl } from "../common/issueReporterUtil.js";
+import { IssueReporterData, IssueReporterExtensionData, IssueSource, IssueType } from "../common/issue.js";
+import { IssueReporterModel } from "./issueReporterModel.js";
+import { RecordingState } from "./recordingService.js";
+import { IAnnotationEditorState, ScreenshotAnnotationEditor } from "./screenshotAnnotation.js";
 
 const MAX_ATTACHMENTS = 5;
 const MAX_SIMILAR_ISSUES = 5;
@@ -175,16 +181,16 @@ export class IssueReporterOverlay {
 	) {
 		this._hideToolbarInScreenshots = initialHideToolbar;
 		this.model = new IssueReporterModel({
-			...data,
-			issueType: data.issueType || IssueType.Bug,
-			allExtensions: data.enabledExtensions,
-			includeSystemInfo: true,
-			includeWorkspaceInfo: true,
-			includeProcessInfo: true,
-			includeExtensions: true,
-			includeExperiments: true,
-			includeExtensionData: false,
-		});
+      ...data,
+      issueType: data.issueType || IssueType.Bug,
+      allExtensions: data.enabledExtensions,
+      includeSystemInfo: true,
+      includeWorkspaceInfo: true,
+      includeProcessInfo: true,
+      includeExtensions: true,
+      includeExperiments: true,
+      includeExtensionData: false,
+    });
 		this.selectedIssueType = data.issueType;
 		this.selectedIssueSource = data.issueSource ?? (data.extensionId ? IssueSource.Extension : undefined);
 
@@ -192,51 +198,68 @@ export class IssueReporterOverlay {
 	}
 
 	private createWizard(): void {
-		this.wizardPanel = $('div.issue-reporter-wizard');
-		this.wizardPanel.setAttribute('role', 'dialog');
-		this.wizardPanel.setAttribute('aria-label', localize('reportIssue', "Report Issue"));
-		this.wizardPanel.setAttribute('tabindex', '-1');
+		this.wizardPanel = $("div.issue-reporter-wizard");
+		this.wizardPanel.setAttribute("role", "dialog");
+		this.wizardPanel.setAttribute(
+      "aria-label",
+      localize("reportIssue", "Report Issue"),
+    );
+		this.wizardPanel.setAttribute("tabindex", "-1");
 
 		// Toolbar (drag region + step indicator + discard)
-		const toolbar = append(this.wizardPanel, $('div.wizard-toolbar'));
+		const toolbar = append(this.wizardPanel, $("div.wizard-toolbar"));
 
 		// Progress indicator area
-		const progressArea = append(toolbar, $('div.wizard-progress-area'));
-		const progressDotsContainer = append(progressArea, $('div.wizard-progress-dots'));
+		const progressArea = append(toolbar, $("div.wizard-progress-area"));
+		const progressDotsContainer = append(
+      progressArea,
+      $("div.wizard-progress-dots"),
+    );
 		for (let i = 0; i < STEP_COUNT; i++) {
-			const dot = append(progressDotsContainer, $('div.wizard-progress-dot'));
+			const dot = append(progressDotsContainer, $("div.wizard-progress-dot"));
 			this.progressDots.push(dot);
 		}
-		this.stepIndicator = append(progressArea, $('span.wizard-step-indicator'));
-		append(progressArea, $('span.wizard-step-separator'));
-		this.stepLabel = append(progressArea, $('span.wizard-step-label'));
+		this.stepIndicator = append(progressArea, $("span.wizard-step-indicator"));
+		append(progressArea, $("span.wizard-step-separator"));
+		this.stepLabel = append(progressArea, $("span.wizard-step-label"));
 
-		append(toolbar, $('div.wizard-toolbar-spacer'));
+		append(toolbar, $("div.wizard-toolbar-spacer"));
 
-		this.updateBanner = append(this.wizardPanel, $('div.wizard-update-banner'));
-		this.updateBanner.setAttribute('role', 'status');
-		this.updateBanner.setAttribute('aria-live', 'polite');
-		this.updateBanner.textContent = localize('updateAvailable', "A new version of {0} is available.", product.nameLong);
+		this.updateBanner = append(this.wizardPanel, $("div.wizard-update-banner"));
+		this.updateBanner.setAttribute("role", "status");
+		this.updateBanner.setAttribute("aria-live", "polite");
+		this.updateBanner.textContent = localize(
+      "updateAvailable",
+      "A new version of {0} is available.",
+      product.nameLong,
+    );
 		this.setUpdateAvailable(this.showUpdateBanner);
 
 		// Step content area
-		this.stepContainer = append(this.wizardPanel, $('div.wizard-step-container'));
+		this.stepContainer = append(
+      this.wizardPanel,
+      $("div.wizard-step-container"),
+    );
 		this.createStep0Attachments();
 		this.createStep1Describe();
 		this.createStep2Review();
 
 		// Bottom navigation
-		const nav = append(this.wizardPanel, $('div.wizard-nav'));
+		const nav = append(this.wizardPanel, $("div.wizard-nav"));
 
-		this.backButton = this.disposables.add(new Button(nav, { ...defaultButtonStyles, secondary: true }));
-		this.backButton.label = localize('back', "Back");
-		this.backButton.element.classList.add('wizard-back');
-		this.backButton.element.title = localize('back', "Back");
+		this.backButton = this.disposables.add(
+      new Button(nav, { ...defaultButtonStyles, secondary: true }),
+    );
+		this.backButton.label = localize("back", "Back");
+		this.backButton.element.classList.add("wizard-back");
+		this.backButton.element.title = localize("back", "Back");
 
-		this.nextButton = this.disposables.add(new Button(nav, { ...defaultButtonStyles, supportIcons: true }));
-		this.nextButton.label = localize('next', "Next");
-		this.nextButton.element.classList.add('wizard-next');
-		this.nextButton.element.title = localize('next', "Next");
+		this.nextButton = this.disposables.add(
+      new Button(nav, { ...defaultButtonStyles, supportIcons: true }),
+    );
+		this.nextButton.label = localize("next", "Next");
+		this.nextButton.element.classList.add("wizard-next");
+		this.nextButton.element.title = localize("next", "Next");
 
 		this.registerEventHandlers();
 		if (this.data.extensionId) {
@@ -247,37 +270,61 @@ export class IssueReporterOverlay {
 
 	// Step 0: Attachments
 	private createStep0Attachments(): void {
-		const page = append(this.stepContainer, $('div.wizard-step'));
+		const page = append(this.stepContainer, $("div.wizard-step"));
 		this.stepPages.push(page);
 
-		const heading = append(page, $('h2.wizard-heading'));
-		heading.textContent = localize('screenshotsHeading', "Add attachments for better context");
+		const heading = append(page, $("h2.wizard-heading"));
+		heading.textContent = localize(
+      "screenshotsHeading",
+      "Add attachments for better context",
+    );
 
-		const subtitle = append(page, $('p.wizard-subtitle'));
-		subtitle.textContent = localize('screenshotsSubtitle', "You can add up to {0} screenshots or videos. Navigate VS Code and choose when to capture.", MAX_ATTACHMENTS);
+		const subtitle = append(page, $("p.wizard-subtitle"));
+		subtitle.textContent = localize(
+      "screenshotsSubtitle",
+      "You can add up to {0} screenshots or videos. Navigate VS Code and choose when to capture.",
+      MAX_ATTACHMENTS,
+    );
 
-		const captureShortcut = this.resolveKeybinding?.('workbench.action.issueReporter.captureScreenshot');
-		const recordShortcut = this.recordingSupported ? this.resolveKeybinding?.('workbench.action.issueReporter.toggleRecording') : undefined;
+		const captureShortcut = this.resolveKeybinding?.(
+      "workbench.action.issueReporter.captureScreenshot",
+    );
+		const recordShortcut = this.recordingSupported ? this.resolveKeybinding?.(
+      "workbench.action.issueReporter.toggleRecording",
+    ) : undefined;
 		if (captureShortcut || recordShortcut) {
 			const targetDocument = getWindow(this.container).document;
-			const hint = append(page, $('p.wizard-subtitle.wizard-shortcut-hint'));
-			const intro = localize('shortcutHintIntro', "Use the floating capture bar, or press");
+			const hint = append(page, $("p.wizard-subtitle.wizard-shortcut-hint"));
+			const intro = localize(
+        "shortcutHintIntro",
+        "Use the floating capture bar, or press",
+      );
 			hint.appendChild(targetDocument.createTextNode(`${intro} `));
 			if (captureShortcut) {
 				this.renderShortcutKeycap(hint, captureShortcut);
-				hint.appendChild(targetDocument.createTextNode(` ${localize('toCapture', "to capture a screenshot")}`));
+				hint.appendChild(
+          targetDocument.createTextNode(
+            ` ${localize("toCapture", "to capture a screenshot")}`,
+          ),
+        );
 			}
 			if (captureShortcut && recordShortcut) {
-				hint.appendChild(targetDocument.createTextNode(` ${localize('or', "or")} `));
+				hint.appendChild(
+          targetDocument.createTextNode(` ${localize("or", "or")} `),
+        );
 			}
 			if (recordShortcut) {
 				this.renderShortcutKeycap(hint, recordShortcut);
-				hint.appendChild(targetDocument.createTextNode(` ${localize('toRecord', "to start or stop recording")}`));
+				hint.appendChild(
+          targetDocument.createTextNode(
+            ` ${localize("toRecord", "to start or stop recording")}`,
+          ),
+        );
 			}
-			hint.appendChild(targetDocument.createTextNode('.'));
+			hint.appendChild(targetDocument.createTextNode("."));
 		}
 
-		this.screenshotContainer = append(page, $('div.wizard-screenshots'));
+		this.screenshotContainer = append(page, $("div.wizard-screenshots"));
 		this.updateScreenshotThumbnails();
 
 		this.createFloatingCaptureBar();
@@ -293,31 +340,43 @@ export class IssueReporterOverlay {
 		// (--vscode-debugToolBar-background, etc.) cascade and the bar matches the
 		// active theme. body is outside that scope and the vars wouldn't resolve.
 		// eslint-disable-next-line no-restricted-syntax
-		const workbench = targetWindow.document.querySelector('.monaco-workbench') as HTMLElement | null;
+		const workbench = targetWindow.document.querySelector(
+      ".monaco-workbench",
+    ) as HTMLElement | null;
 		const mountTarget = workbench ?? targetWindow.document.body;
 
-		this.floatingBar = $('div.issue-reporter-floating-bar');
+		this.floatingBar = $("div.issue-reporter-floating-bar");
 
 		// Drag handle
-		const dragArea = append(this.floatingBar, $('div.wizard-floating-drag'));
+		const dragArea = append(this.floatingBar, $("div.wizard-floating-drag"));
 		dragArea.appendChild(renderIcon(Codicon.gripper));
 
 		// Segmented screenshot button: [Screenshot | options]
-		const segmented = append(this.floatingBar, $('div.wizard-segmented-btn'));
+		const segmented = append(this.floatingBar, $("div.wizard-segmented-btn"));
 		const floatingButtonStyles = this.getFloatingBarButtonStyles(targetWindow);
 
-		const captureBtn = this.disposables.add(new Button(segmented, { ...floatingButtonStyles, supportIcons: true }));
-		captureBtn.element.classList.add('wizard-segmented-main');
-		captureBtn.label = `$(device-camera) ${localize('screenshot', "Screenshot")}`;
+		const captureBtn = this.disposables.add(
+      new Button(segmented, { ...floatingButtonStyles, supportIcons: true }),
+    );
+		captureBtn.element.classList.add("wizard-segmented-main");
+		captureBtn.label = `$(device-camera) ${localize("screenshot", "Screenshot")}`;
 		this.captureStripCaptureBtn = captureBtn;
 
 		// Delay/options dropdown using VS Code's context menu
 		const delayOptions = this.getScreenshotDelayOptions();
-		const delayDropdownButton = this.disposables.add(new Button(segmented, { ...floatingButtonStyles, supportIcons: true }));
-		delayDropdownButton.element.classList.add('wizard-segmented-dropdown');
-		delayDropdownButton.element.title = localize('captureOptions', "Capture options");
-		delayDropdownButton.element.setAttribute('aria-label', localize('captureOptions', "Capture options"));
-		delayDropdownButton.label = '$(chevron-down)';
+		const delayDropdownButton = this.disposables.add(
+      new Button(segmented, { ...floatingButtonStyles, supportIcons: true }),
+    );
+		delayDropdownButton.element.classList.add("wizard-segmented-dropdown");
+		delayDropdownButton.element.title = localize(
+      "captureOptions",
+      "Capture options",
+    );
+		delayDropdownButton.element.setAttribute(
+      "aria-label",
+      localize("captureOptions", "Capture options"),
+    );
+		delayDropdownButton.label = "$(chevron-down)";
 		this.captureStripDelayBtn = delayDropdownButton;
 
 		if (this.contextMenuProvider) {
@@ -328,13 +387,13 @@ export class IssueReporterOverlay {
 				}
 				// Hide-toolbar-in-screenshots toggle (first)
 				const hideAction = new Action(
-					'hide-toolbar',
-					localize('hideToolbarInScreenshots', "Hide Toolbar in Screenshots"),
+					"hide-toolbar",
+					localize("hideToolbarInScreenshots", "Hide Toolbar in Screenshots"),
 					undefined,
 					true,
 					async () => {
 						this._hideToolbarInScreenshots = !this._hideToolbarInScreenshots;
-					}
+					},
 				);
 				hideAction.checked = this._hideToolbarInScreenshots;
 
@@ -344,7 +403,7 @@ export class IssueReporterOverlay {
 						opt.label,
 						undefined,
 						true,
-						async () => { this.screenshotDelay = opt.value; }
+						async () => { this.screenshotDelay = opt.value; },
 					);
 					action.checked = opt.value === this.screenshotDelay;
 					return action;
@@ -368,9 +427,11 @@ export class IssueReporterOverlay {
 			// The drag handler calls e.preventDefault() on pointerdown which
 			// suppresses the mousedown event that the context menu uses for
 			// outside-click detection, so we dispatch a synthetic one.
-			this.disposables.add(addDisposableListener(dragArea, EventType.POINTER_DOWN, () => {
-				dragArea.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
-			}));
+			this.disposables.add(
+        addDisposableListener(dragArea, EventType.POINTER_DOWN, () => {
+          dragArea.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+        }),
+      );
 		}
 
 		this.disposables.add(captureBtn.onDidClick(() => {
@@ -393,8 +454,8 @@ export class IssueReporterOverlay {
 						captureBtn.label = `${remaining}...`;
 					} else {
 						targetWindow.clearInterval(interval);
-						captureBtn.label = `$(device-camera) ${localize('screenshot', "Screenshot")}`;
-						captureBtn.element.style.minWidth = '';
+						captureBtn.label = `$(device-camera) ${localize("screenshot", "Screenshot")}`;
+						captureBtn.element.style.minWidth = "";
 						captureBtn.enabled = true;
 						this.delayedScreenshotPending = false;
 						this.updateScreenshotThumbnails();
@@ -409,9 +470,15 @@ export class IssueReporterOverlay {
 
 		// Record button
 		if (this.recordingSupported) {
-			this.captureStripRecordBtn = this.disposables.add(new Button(this.floatingBar, { ...defaultButtonStyles, secondary: true, supportIcons: true }));
-			this.captureStripRecordBtn.label = `$(record) ${localize('recordVideo', "Record video")}`;
-			this.captureStripRecordBtn.element.classList.add('wizard-record-btn');
+			this.captureStripRecordBtn = this.disposables.add(
+        new Button(this.floatingBar, {
+          ...defaultButtonStyles,
+          secondary: true,
+          supportIcons: true,
+        }),
+      );
+			this.captureStripRecordBtn.label = `$(record) ${localize("recordVideo", "Record video")}`;
+			this.captureStripRecordBtn.element.classList.add("wizard-record-btn");
 			this.disposables.add(this.captureStripRecordBtn.onDidClick(() => {
 				if (this.currentRecordingState === RecordingState.Recording) {
 					this._onDidRequestStopRecording.fire();
@@ -440,26 +507,32 @@ export class IssueReporterOverlay {
 			const newY = Math.max(0, Math.min(barStartY + dy, maxY));
 			this.floatingBar!.style.left = `${newX}px`;
 			this.floatingBar!.style.top = `${newY}px`;
-			this.floatingBar!.style.right = 'auto';
+			this.floatingBar!.style.right = "auto";
 		};
 
 		const onPointerUp = () => {
-			dragArea.classList.remove('dragged');
-			targetWindow.document.removeEventListener('pointermove', onPointerMove);
-			targetWindow.document.removeEventListener('pointerup', onPointerUp);
+			dragArea.classList.remove("dragged");
+			targetWindow.document.removeEventListener("pointermove", onPointerMove);
+			targetWindow.document.removeEventListener("pointerup", onPointerUp);
 		};
 
-		this.disposables.add(addDisposableListener(dragArea, EventType.POINTER_DOWN, (e: PointerEvent) => {
-			e.preventDefault();
-			dragArea.classList.add('dragged');
-			dragStartX = e.clientX;
-			dragStartY = e.clientY;
-			const rect = this.floatingBar!.getBoundingClientRect();
-			barStartX = rect.left;
-			barStartY = rect.top;
-			targetWindow.document.addEventListener('pointermove', onPointerMove);
-			targetWindow.document.addEventListener('pointerup', onPointerUp);
-		}));
+		this.disposables.add(
+      addDisposableListener(
+        dragArea,
+        EventType.POINTER_DOWN,
+        (e: PointerEvent) => {
+          e.preventDefault();
+          dragArea.classList.add("dragged");
+          dragStartX = e.clientX;
+          dragStartY = e.clientY;
+          const rect = this.floatingBar!.getBoundingClientRect();
+          barStartX = rect.left;
+          barStartY = rect.top;
+          targetWindow.document.addEventListener("pointermove", onPointerMove);
+          targetWindow.document.addEventListener("pointerup", onPointerUp);
+        },
+      ),
+    );
 
 		// Keep the bar fully within the visible viewport when the window is
 		// resized. Without this, narrowing the window can clip the bar off the
@@ -496,14 +569,18 @@ export class IssueReporterOverlay {
 			if (needsClamp) {
 				this.floatingBar.style.left = `${nextLeft}px`;
 				this.floatingBar.style.top = `${nextTop}px`;
-				this.floatingBar.style.right = 'auto';
+				this.floatingBar.style.right = "auto";
 			}
 		};
-		this.disposables.add(addDisposableListener(targetWindow, 'resize', clampIntoView));
+		this.disposables.add(
+      addDisposableListener(targetWindow, "resize", clampIntoView),
+    );
 
-		this.disposables.add(toDisposable(() => {
-			this.floatingBar?.remove();
-		}));
+		this.disposables.add(
+      toDisposable(() => {
+        this.floatingBar?.remove();
+      }),
+    );
 	}
 
 	private updateCaptureStripVisibility(): void {
@@ -511,28 +588,39 @@ export class IssueReporterOverlay {
 			return;
 		}
 		// Show on all steps so the user can capture screenshots of the wizard itself
-		this.floatingBar.style.display = '';
+		this.floatingBar.style.display = "";
 	}
 
 	// Step 1: Describe (category + description + title)
 	private createStep1Describe(): void {
-		const page = append(this.stepContainer, $('div.wizard-step'));
+		const page = append(this.stepContainer, $("div.wizard-step"));
 		this.stepPages.push(page);
 
-		const heading = append(page, $('h2.wizard-heading'));
-		heading.textContent = localize('describeHeading', "Describe your feedback");
+		const heading = append(page, $("h2.wizard-heading"));
+		heading.textContent = localize("describeHeading", "Describe your feedback");
 
 		// Issue source selection + extension dropdown share a row when both are visible
-		const targetRow = append(page, $('div.wizard-target-row'));
-		const sourceField = append(targetRow, $('div.wizard-field.wizard-source-field'));
-		const sourceLabel = append(sourceField, $('label.wizard-field-label'));
-		sourceLabel.textContent = localize('target', "Target");
-		this.sourceButtonGroup = append(sourceField, $('div.wizard-type-buttons.wizard-source-buttons'));
+		const targetRow = append(page, $("div.wizard-target-row"));
+		const sourceField = append(
+      targetRow,
+      $("div.wizard-field.wizard-source-field"),
+    );
+		const sourceLabel = append(sourceField, $("label.wizard-field-label"));
+		sourceLabel.textContent = localize("target", "Target");
+		this.sourceButtonGroup = append(
+      sourceField,
+      $("div.wizard-type-buttons.wizard-source-buttons"),
+    );
 		for (const option of this.getSourceOptions()) {
-			const btn = this.disposables.add(new Button(this.sourceButtonGroup, { ...defaultButtonStyles, secondary: true }));
-			btn.element.classList.add('wizard-type-btn', 'wizard-source-btn');
-			btn.element.setAttribute('data-source', option.value);
-			btn.element.setAttribute('aria-pressed', 'false');
+			const btn = this.disposables.add(
+        new Button(this.sourceButtonGroup, {
+          ...defaultButtonStyles,
+          secondary: true,
+        }),
+      );
+			btn.element.classList.add("wizard-type-btn", "wizard-source-btn");
+			btn.element.setAttribute("data-source", option.value);
+			btn.element.setAttribute("aria-pressed", "false");
 			btn.label = option.label;
 			this.issueSourceButtons.push(btn);
 			this.disposables.add(btn.onDidClick(() => {
@@ -542,50 +630,82 @@ export class IssueReporterOverlay {
 				}
 			}));
 		}
-		this.sourceError = this.createFieldError(sourceField, localize('targetRequired', "Select a target to continue."));
-		this.targetStatus = append(sourceField, $('div.wizard-target-status'));
+		this.sourceError = this.createFieldError(
+      sourceField,
+      localize("targetRequired", "Select a target to continue."),
+    );
+		this.targetStatus = append(sourceField, $("div.wizard-target-status"));
 
-		this.extensionField = append(targetRow, $('div.wizard-field.wizard-extension-field'));
-		const extensionLabel = append(this.extensionField, $('label.wizard-field-label'));
-		extensionLabel.textContent = localize('extension', "Extension");
-		const extensionSelectContainer = append(this.extensionField, $('div.wizard-extension-select'));
+		this.extensionField = append(
+      targetRow,
+      $("div.wizard-field.wizard-extension-field"),
+    );
+		const extensionLabel = append(
+      this.extensionField,
+      $("label.wizard-field-label"),
+    );
+		extensionLabel.textContent = localize("extension", "Extension");
+		const extensionSelectContainer = append(
+      this.extensionField,
+      $("div.wizard-extension-select"),
+    );
 		this.extensionOptions = this.getExtensionOptions();
-		this.extensionSelect = this.disposables.add(new SelectBox(
-			this.getExtensionSelectItems(),
-			this.getSelectedExtensionIndex(),
-			this.contextViewService,
-			defaultSelectBoxStyles,
-			{ ariaLabel: localize('extension', "Extension"), useCustomDrawn: true, optionsAsChildren: true }
-		));
+		this.extensionSelect = this.disposables.add(
+      new SelectBox(
+        this.getExtensionSelectItems(),
+        this.getSelectedExtensionIndex(),
+        this.contextViewService,
+        defaultSelectBoxStyles,
+        {
+          ariaLabel: localize("extension", "Extension"),
+          useCustomDrawn: true,
+          optionsAsChildren: true,
+        },
+      ),
+    );
 		this.extensionSelect.render(extensionSelectContainer);
 		this.disposables.add(this.extensionSelect.onDidSelect(e => {
 			void this.updateSelectedExtension(this.extensionOptions[e.index]?.value);
 		}));
-		this.extensionError = this.createFieldError(this.extensionField, localize('extensionRequired', "Select an extension to continue."));
-		this.extensionStatus = append(this.extensionField, $('div.wizard-extension-status'));
+		this.extensionError = this.createFieldError(
+      this.extensionField,
+      localize("extensionRequired", "Select an extension to continue."),
+    );
+		this.extensionStatus = append(
+      this.extensionField,
+      $("div.wizard-extension-status"),
+    );
 		this.updateExtensionOptions();
 		this.updateExtensionFieldVisibility();
 		this.updateIssueSourceButtons();
 
 		// Category selection
-		const catLabel = append(page, $('label.wizard-field-label'));
-		catLabel.textContent = localize('feedbackCategory', "Category");
+		const catLabel = append(page, $("label.wizard-field-label"));
+		catLabel.textContent = localize("feedbackCategory", "Category");
 
-		this.typeButtonGroup = append(page, $('div.wizard-type-buttons'));
+		this.typeButtonGroup = append(page, $("div.wizard-type-buttons"));
 		const types = [
-			{ type: IssueType.Bug, label: localize('bug', "Bug"), icon: Codicon.bug },
-			{ type: IssueType.FeatureRequest, label: localize('featureRequest', "Feature Request"), icon: Codicon.lightbulb },
-			{ type: IssueType.PerformanceIssue, label: localize('performanceIssue', "Performance Issue"), icon: Codicon.dashboard },
-		];
+      { type: IssueType.Bug, label: localize("bug", "Bug"), icon: Codicon.bug },
+      {
+        type: IssueType.FeatureRequest,
+        label: localize("featureRequest", "Feature Request"),
+        icon: Codicon.lightbulb,
+      },
+      {
+        type: IssueType.PerformanceIssue,
+        label: localize("performanceIssue", "Performance Issue"),
+        icon: Codicon.dashboard,
+      },
+    ];
 
 		const selectType = (type: IssueType) => {
 			this.selectedIssueType = type;
 			this.model.update({ issueType: type });
 			this.setFieldError(this.typeButtonGroup, this.typeError, false);
 			for (const b of this.issueTypeButtons) {
-				const isSelected = b.element.getAttribute('data-type') === String(type);
-				b.element.classList.toggle('selected', isSelected);
-				b.element.setAttribute('aria-pressed', String(isSelected));
+				const isSelected = b.element.getAttribute("data-type") === String(type);
+				b.element.classList.toggle("selected", isSelected);
+				b.element.setAttribute("aria-pressed", String(isSelected));
 			}
 			this.updateDescriptionGuidance();
 			this.updateIssueSourceButtons();
@@ -596,42 +716,60 @@ export class IssueReporterOverlay {
 		};
 
 		for (const { type, label, icon } of types) {
-			const btn = this.disposables.add(new Button(this.typeButtonGroup, { ...defaultButtonStyles, secondary: true, supportIcons: true }));
-			btn.element.classList.add('wizard-type-btn');
-			btn.element.setAttribute('data-type', String(type));
-			btn.element.setAttribute('aria-pressed', 'false');
+			const btn = this.disposables.add(
+        new Button(this.typeButtonGroup, {
+          ...defaultButtonStyles,
+          secondary: true,
+          supportIcons: true,
+        }),
+      );
+			btn.element.classList.add("wizard-type-btn");
+			btn.element.setAttribute("data-type", String(type));
+			btn.element.setAttribute("aria-pressed", "false");
 			btn.label = `$(${icon.id}) ${label}`;
 			this.issueTypeButtons.push(btn);
 			this.disposables.add(btn.onDidClick(() => selectType(type)));
 		}
-		this.typeError = this.createFieldError(page, localize('categoryRequired', "Select a category to continue."));
+		this.typeError = this.createFieldError(
+      page,
+      localize("categoryRequired", "Select a category to continue."),
+    );
 
 		// Title field with AI generate button next to label
-		const titleGroup = append(page, $('div.wizard-field.wizard-title-field'));
-		const titleLabelRow = append(titleGroup, $('div.wizard-title-label-row'));
-		const titleLabel = append(titleLabelRow, $('label.wizard-field-label'));
-		titleLabel.textContent = localize('issueTitle', "Title");
+		const titleGroup = append(page, $("div.wizard-field.wizard-title-field"));
+		const titleLabelRow = append(titleGroup, $("div.wizard-title-label-row"));
+		const titleLabel = append(titleLabelRow, $("label.wizard-field-label"));
+		titleLabel.textContent = localize("issueTitle", "Title");
 
-		const aiBtn = this.disposables.add(new Button(titleLabelRow, { ...defaultButtonStyles, secondary: true, supportIcons: true }));
-		aiBtn.label = `$(sparkle) ${localize('generateTitleBtn', "Generate from description")}`;
-		aiBtn.element.classList.add('wizard-ai-title-btn');
-		aiBtn.element.title = localize('generateTitle', "Generate title from description");
+		const aiBtn = this.disposables.add(
+      new Button(titleLabelRow, {
+        ...defaultButtonStyles,
+        secondary: true,
+        supportIcons: true,
+      }),
+    );
+		aiBtn.label = `$(sparkle) ${localize("generateTitleBtn", "Generate from description")}`;
+		aiBtn.element.classList.add("wizard-ai-title-btn");
+		aiBtn.element.title = localize(
+      "generateTitle",
+      "Generate title from description",
+    );
 		aiBtn.enabled = !!this.data.issueBody?.trim();
 		this.disposables.add(aiBtn.onDidClick(() => {
 			const desc = this.descriptionTextarea.value.trim();
-			if (desc && !aiBtn.element.classList.contains('loading')) {
+			if (desc && !aiBtn.element.classList.contains("loading")) {
 				// Lock width to prevent layout shift during loading
 				aiBtn.element.style.minWidth = `${aiBtn.element.offsetWidth}px`;
 				aiBtn.enabled = false;
-				aiBtn.label = `$(loading~spin) ${localize('generatingTitle', "Generating...")}`;
-				aiBtn.element.classList.add('loading');
+				aiBtn.label = `$(loading~spin) ${localize("generatingTitle", "Generating...")}`;
+				aiBtn.element.classList.add("loading");
 				this._onDidRequestGenerateTitle.fire(desc);
 			}
 		}));
 		this.generateTitleBtn = aiBtn;
 
 		this.titleInput = this.disposables.add(new InputBox(titleGroup, undefined, {
-			placeholder: localize('issueTitlePlaceholder', "Brief summary of the issue"),
+			placeholder: localize("issueTitlePlaceholder", "Brief summary of the issue"),
 			inputBoxStyles: defaultInputBoxStyles,
 		}));
 		this.updateTitlePlaceholder();
@@ -644,24 +782,36 @@ export class IssueReporterOverlay {
 			}
 			this.searchSimilarIssues();
 		}));
-		this.titleError = this.createFieldError(titleGroup, localize('titleRequired', "Enter a title to continue."));
+		this.titleError = this.createFieldError(
+      titleGroup,
+      localize("titleRequired", "Enter a title to continue."),
+    );
 
 		// Description field with guidance and auto-growing textarea
-		const descriptionGroup = append(page, $('div.wizard-field'));
-		const descLabel = append(descriptionGroup, $('label.wizard-field-label'));
-		descLabel.textContent = localize('description', "Description");
+		const descriptionGroup = append(page, $("div.wizard-field"));
+		const descLabel = append(descriptionGroup, $("label.wizard-field-label"));
+		descLabel.textContent = localize("description", "Description");
 
-		this.descriptionGuidance = append(descriptionGroup, $('p.wizard-subtitle.wizard-description-guidance'));
+		this.descriptionGuidance = append(
+      descriptionGroup,
+      $("p.wizard-subtitle.wizard-description-guidance"),
+    );
 		this.updateDescriptionGuidance();
 
-		this.descriptionTextarea = append(descriptionGroup, $('textarea.wizard-textarea')) as HTMLTextAreaElement;
-		this.descriptionTextarea.placeholder = localize('descriptionPlaceholder', "Describe the issue in detail...");
+		this.descriptionTextarea = append(
+      descriptionGroup,
+      $("textarea.wizard-textarea"),
+    ) as HTMLTextAreaElement;
+		this.descriptionTextarea.placeholder = localize(
+      "descriptionPlaceholder",
+      "Describe the issue in detail...",
+    );
 		this.descriptionTextarea.rows = 6;
 		if (this.data.issueBody) {
 			this.descriptionTextarea.value = this.data.issueBody;
 		}
 		const autoGrowTextarea = () => {
-			this.descriptionTextarea.style.height = '0';
+			this.descriptionTextarea.style.height = "0";
 			const newHeight = Math.max(this.descriptionTextarea.scrollHeight, 120);
 			this.descriptionTextarea.style.height = `${newHeight}px`;
 		};
@@ -674,7 +824,10 @@ export class IssueReporterOverlay {
 			this.searchSimilarIssues();
 			this.updateGenerateTitleButtonState();
 		}));
-		this.descriptionError = this.createFieldError(descriptionGroup, localize('descriptionRequired', "Enter a description to continue."));
+		this.descriptionError = this.createFieldError(
+      descriptionGroup,
+      localize("descriptionRequired", "Enter a description to continue."),
+    );
 
 		this.updateIssueSourceFlags();
 		this.updateTargetStatus();
@@ -682,28 +835,41 @@ export class IssueReporterOverlay {
 
 	private getSourceOptions(): { label: string; value: IssueSource }[] {
 		const options: { label: string; value: IssueSource }[] = [
-			{ label: product.nameLong || localize('vscode', "Visual Studio Code"), value: IssueSource.VSCode },
-			{ label: localize('extensionSource', "A VS Code extension"), value: IssueSource.Extension },
-			{ label: localize('marketplace', "Extensions Marketplace"), value: IssueSource.Marketplace },
-		];
+      {
+        label: product.nameLong || localize("vscode", "Visual Studio Code"),
+        value: IssueSource.VSCode,
+      },
+      {
+        label: localize("extensionSource", "A VS Code extension"),
+        value: IssueSource.Extension,
+      },
+      {
+        label: localize("marketplace", "Extensions Marketplace"),
+        value: IssueSource.Marketplace,
+      },
+    ];
 		return options;
 	}
 
 	private updateIssueSourceButtons(): void {
-		const availableSources = new Set(this.getSourceOptions().map(option => option.value));
-		if (this.selectedIssueSource && !availableSources.has(this.selectedIssueSource)) {
+		const availableSources = new Set(
+      this.getSourceOptions().map(option => option.value),
+    );
+		if (this.selectedIssueSource && !availableSources.has(
+      this.selectedIssueSource,
+    )) {
 			this.selectedIssueSource = undefined;
 			this.updateIssueSourceFlags();
 			this.updateExtensionValidation();
 		}
 
 		for (const button of this.issueSourceButtons) {
-			const source = button.element.getAttribute('data-source') as IssueSource;
+			const source = button.element.getAttribute("data-source") as IssueSource;
 			const isAvailable = availableSources.has(source);
 			const isSelected = source === this.selectedIssueSource;
-			button.element.classList.toggle('hidden', !isAvailable);
-			button.element.classList.toggle('selected', isSelected);
-			button.element.setAttribute('aria-pressed', String(isSelected));
+			button.element.classList.toggle("hidden", !isAvailable);
+			button.element.classList.toggle("selected", isSelected);
+			button.element.setAttribute("aria-pressed", String(isSelected));
 		}
 
 		this.updateExtensionFieldVisibility();
@@ -711,7 +877,11 @@ export class IssueReporterOverlay {
 
 	private setIssueSource(source: IssueSource | undefined): void {
 		this.selectedIssueSource = source;
-		this.setFieldError(this.sourceButtonGroup, this.sourceError, this.didAttemptDescribeSubmit && !source);
+		this.setFieldError(
+      this.sourceButtonGroup,
+      this.sourceError,
+      this.didAttemptDescribeSubmit && !source,
+    );
 		this.updateIssueSourceFlags();
 		this.updateIssueSourceButtons();
 		this.updateExtensionValidation();
@@ -725,12 +895,12 @@ export class IssueReporterOverlay {
 		const fileOnMarketplace = this.selectedIssueSource === IssueSource.Marketplace;
 		const fileOnProduct = this.selectedIssueSource === IssueSource.VSCode || this.selectedIssueSource === IssueSource.Unknown;
 		this.model.update({
-			issueSource: this.selectedIssueSource,
-			fileOnExtension,
-			fileOnMarketplace,
-			fileOnProduct,
-			selectedExtension: this.selectedExtension,
-		});
+      issueSource: this.selectedIssueSource,
+      fileOnExtension,
+      fileOnMarketplace,
+      fileOnProduct,
+      selectedExtension: this.selectedExtension,
+    });
 		this.data.issueSource = this.selectedIssueSource;
 		this.data.extensionId = fileOnExtension ? this.selectedExtension?.id : undefined;
 	}
@@ -738,16 +908,33 @@ export class IssueReporterOverlay {
 	private updateTitlePlaceholder(): void {
 		switch (this.selectedIssueSource) {
 			case IssueSource.Extension:
-				this.titleInput.setPlaceHolder(localize('extensionPlaceholder', "E.g. Missing alt text on extension readme image"));
+				this.titleInput.setPlaceHolder(
+          localize(
+            "extensionPlaceholder",
+            "E.g. Missing alt text on extension readme image",
+          ),
+        );
 				break;
 			case IssueSource.Marketplace:
-				this.titleInput.setPlaceHolder(localize('marketplacePlaceholder', "E.g. Cannot disable installed extension"));
+				this.titleInput.setPlaceHolder(
+          localize(
+            "marketplacePlaceholder",
+            "E.g. Cannot disable installed extension",
+          ),
+        );
 				break;
 			case IssueSource.VSCode:
-				this.titleInput.setPlaceHolder(localize('vscodePlaceholder', "E.g. Workbench is missing problems panel"));
+				this.titleInput.setPlaceHolder(
+          localize(
+            "vscodePlaceholder",
+            "E.g. Workbench is missing problems panel",
+          ),
+        );
 				break;
 			default:
-				this.titleInput.setPlaceHolder(localize('issueTitlePlaceholder', "Brief summary of the issue"));
+				this.titleInput.setPlaceHolder(
+          localize("issueTitlePlaceholder", "Brief summary of the issue"),
+        );
 				break;
 		}
 	}
@@ -759,40 +946,64 @@ export class IssueReporterOverlay {
 			.filter(extension => !extension.isTheme && !extension.isBuiltin)
 			.sort((a, b) => (a.displayName || a.name || a.id).localeCompare(b.displayName || b.name || b.id));
 		return [
-			{ label: localize('selectExtension', "Select extension"), value: undefined, hidden: true },
-			...extensions.map(extension => ({ label: extension.displayName || extension.name || extension.id, value: extension.id })),
-		];
+      {
+        label: localize("selectExtension", "Select extension"),
+        value: undefined,
+        hidden: true,
+      },
+      ...extensions.map(extension => ({ label: extension.displayName || extension.name || extension.id, value: extension.id })),
+    ];
 	}
 
 	private getExtensionSelectItems(): ISelectOptionItem[] {
-		return this.extensionOptions.map(option => ({ text: option.label, isDisabled: option.hidden }));
+		return this.extensionOptions.map(option => ({
+      text: option.label,
+      isDisabled: option.hidden,
+    }));
 	}
 
 	private getSelectedExtensionIndex(): number {
-		return Math.max(0, this.extensionOptions.findIndex(option => option.value === this.selectedExtension?.id || option.value === this.data.extensionId));
+		return Math.max(
+      0,
+      this.extensionOptions.findIndex(
+        option => option.value === this.selectedExtension?.id || option.value === this.data.extensionId,
+      ),
+    );
 	}
 
 	private updateExtensionOptions(): void {
 		this.extensionOptions = this.getExtensionOptions();
-		this.extensionSelect.setOptions(this.getExtensionSelectItems(), this.getSelectedExtensionIndex());
+		this.extensionSelect.setOptions(
+      this.getExtensionSelectItems(),
+      this.getSelectedExtensionIndex(),
+    );
 		if (!this.selectedExtension && this.data.extensionId) {
 			void this.updateSelectedExtension(this.data.extensionId, false);
 		}
 	}
 
 	private updateExtensionFieldVisibility(): void {
-		this.extensionField.classList.toggle('hidden', this.selectedIssueSource !== IssueSource.Extension);
+		this.extensionField.classList.toggle(
+      "hidden",
+      this.selectedIssueSource !== IssueSource.Extension,
+    );
 	}
 
 	private updateExtensionValidation(): void {
 		const hasExtension = this.selectedIssueSource !== IssueSource.Extension || !!this.selectedExtension;
 		const hasExtensionIssueUrl = this.selectedIssueSource !== IssueSource.Extension || !this.selectedExtension || !!this.getSelectedExtensionIssueUrl();
-		this.setFieldError(this.extensionField, this.extensionError, this.didAttemptDescribeSubmit && (!hasExtension || !hasExtensionIssueUrl));
+		this.setFieldError(
+      this.extensionField,
+      this.extensionError,
+      this.didAttemptDescribeSubmit && (!hasExtension || !hasExtensionIssueUrl),
+    );
 	}
 
 	private async updateSelectedExtension(extensionId: string | undefined, loadExtensionData = true): Promise<void> {
 		const extension = extensionId
-			? this.model.getData().allExtensions.find(candidate => candidate.id.toLowerCase() === extensionId.toLowerCase())
+			? this.model.getData().allExtensions.find(
+          candidate => candidate.id.toLowerCase() === extensionId.toLowerCase(),
+        )
 			: undefined;
 		this.selectedExtension = extension;
 		this.data.extensionId = extension?.id;
@@ -813,7 +1024,10 @@ export class IssueReporterOverlay {
 
 		if (loadExtensionData && this.resolveExtensionIssueData) {
 			const request = ++this.extensionDataRequest;
-			this.extensionStatus.textContent = localize('loadingExtensionData', "Loading extension issue data...");
+			this.extensionStatus.textContent = localize(
+        "loadingExtensionData",
+        "Loading extension issue data...",
+      );
 			const issueData = await this.resolveExtensionIssueData(extension.id);
 			if (request !== this.extensionDataRequest) {
 				return;
@@ -839,21 +1053,26 @@ export class IssueReporterOverlay {
 		if (issueData.issueTitle && !this.titleInput.value.trim()) {
 			this.titleInput.value = issueData.issueTitle;
 		}
-		if (issueData.issueBody && !this.descriptionTextarea.value.includes(issueData.issueBody)) {
+		if (issueData.issueBody && !this.descriptionTextarea.value.includes(
+      issueData.issueBody,
+    )) {
 			this.descriptionTextarea.value = this.descriptionTextarea.value
 				? `${this.descriptionTextarea.value}\n${issueData.issueBody}`
 				: issueData.issueBody;
 		}
 		if (issueData.data) {
 			extension.extensionData = issueData.data;
-			this.model.update({ extensionData: issueData.data, includeExtensionData: true });
+			this.model.update({
+        extensionData: issueData.data,
+        includeExtensionData: true,
+      });
 			this.includeExtensionData = true;
 		}
 	}
 
 	private updateTargetStatus(): void {
-		this.targetStatus.textContent = '';
-		this.extensionStatus.textContent = '';
+		this.targetStatus.textContent = "";
+		this.extensionStatus.textContent = "";
 		if (!this.selectedIssueSource) {
 			return;
 		}
@@ -861,8 +1080,13 @@ export class IssueReporterOverlay {
 		if (this.selectedIssueSource !== IssueSource.Extension) {
 			const repo = this.getIssueTargetRepo();
 			this.targetStatus.textContent = repo
-				? localize('issueTargetRepo', "Issue will be created in {0}/{1}.", repo.owner, repo.repositoryName)
-				: '';
+				? localize(
+            "issueTargetRepo",
+            "Issue will be created in {0}/{1}.",
+            repo.owner,
+            repo.repositoryName,
+          )
+				: "";
 			return;
 		}
 
@@ -872,14 +1096,25 @@ export class IssueReporterOverlay {
 
 		const issueUrl = this.getSelectedExtensionIssueUrl();
 		if (!issueUrl) {
-			this.extensionStatus.textContent = localize('extensionNoIssueUrl', "This extension does not provide an issue reporting URL.");
+			this.extensionStatus.textContent = localize(
+        "extensionNoIssueUrl",
+        "This extension does not provide an issue reporting URL.",
+      );
 		} else if (!this.isGitHubUrl(issueUrl)) {
-			this.extensionStatus.textContent = localize('extensionExternalIssueUrl', "This extension uses an external issue reporter. Preview will open that issue reporter.");
+			this.extensionStatus.textContent = localize(
+        "extensionExternalIssueUrl",
+        "This extension uses an external issue reporter. Preview will open that issue reporter.",
+      );
 		} else {
 			const repo = this.getIssueTargetRepo();
 			this.extensionStatus.textContent = repo
-				? localize('issueTargetRepo', "Issue will be created in {0}/{1}.", repo.owner, repo.repositoryName)
-				: '';
+				? localize(
+            "issueTargetRepo",
+            "Issue will be created in {0}/{1}.",
+            repo.owner,
+            repo.repositoryName,
+          )
+				: "";
 		}
 	}
 
@@ -896,10 +1131,14 @@ export class IssueReporterOverlay {
 		if (extension.uri) {
 			return URI.revive(extension.uri).toString();
 		}
-		if (extension.bugsUrl && /^https?:\/\/github\.com\/([^\/]*)\/([^\/]*)\/?(\/issues)?\/?$/.test(extension.bugsUrl)) {
+		if (extension.bugsUrl && /^https?:\/\/github\.com\/([^\/]*)\/([^\/]*)\/?(\/issues)?\/?$/.test(
+      extension.bugsUrl,
+    )) {
 			return `${normalizeGitHubUrl(extension.bugsUrl)}/issues/new`;
 		}
-		if (extension.repositoryUrl && /^https?:\/\/github\.com\/([^\/]*)\/([^\/]*)\/?$/.test(extension.repositoryUrl)) {
+		if (extension.repositoryUrl && /^https?:\/\/github\.com\/([^\/]*)\/([^\/]*)\/?$/.test(
+      extension.repositoryUrl,
+    )) {
 			return `${normalizeGitHubUrl(extension.repositoryUrl)}/issues/new`;
 		}
 		return extension.bugsUrl || extension.repositoryUrl;
@@ -908,15 +1147,18 @@ export class IssueReporterOverlay {
 	private getIssueSourceLabel(): string {
 		switch (this.selectedIssueSource) {
 			case IssueSource.VSCode:
-				return product.nameLong || localize('vscode', "Visual Studio Code");
+				return product.nameLong || localize("vscode", "Visual Studio Code");
 			case IssueSource.Extension:
-				return this.selectedExtension?.displayName || this.selectedExtension?.name || localize('extensionSource', "A VS Code extension");
+				return this.selectedExtension?.displayName || this.selectedExtension?.name || localize(
+          "extensionSource",
+          "A VS Code extension",
+        );
 			case IssueSource.Marketplace:
-				return localize('marketplace', "Extensions Marketplace");
+				return localize("marketplace", "Extensions Marketplace");
 			case IssueSource.Unknown:
-				return localize('unknownSource', "Don't know");
+				return localize("unknownSource", "Don't know");
 			default:
-				return localize('unknown', "Unknown");
+				return localize("unknown", "Unknown");
 		}
 	}
 
@@ -941,7 +1183,9 @@ export class IssueReporterOverlay {
 	}
 
 	private parseGitHubUrl(url: string): { owner: string; repositoryName: string } | undefined {
-		const match = /^https?:\/\/github\.com\/([^\/?#]+)\/([^\/?#]+).*/i.exec(url);
+		const match = /^https?:\/\/github\.com\/([^\/?#]+)\/([^\/?#]+).*/i.exec(
+      url,
+    );
 		if (!match) {
 			return undefined;
 		}
@@ -955,55 +1199,90 @@ export class IssueReporterOverlay {
 		if (this.similarIssuesHandle) {
 			clearTimeout(this.similarIssuesHandle);
 		}
-		this.renderSimilarIssuesMessage(localize('searchingSimilarIssues', "Searching similar issues..."));
-		this.similarIssuesHandle = setTimeout(() => this.doSearchSimilarIssues(), 300);
+		this.renderSimilarIssuesMessage(
+      localize("searchingSimilarIssues", "Searching similar issues..."),
+    );
+		this.similarIssuesHandle = setTimeout(
+      () => this.doSearchSimilarIssues(),
+      300,
+    );
 	}
 
 	private async doSearchSimilarIssues(): Promise<void> {
 		const title = this.titleInput.value.trim();
 		const request = ++this.similarIssuesRequest;
 		if (!title || !this.selectedIssueSource) {
-			this.renderSimilarIssuesMessage(localize('similarIssuesNeedsTitle', "Enter a title to search for similar issues."));
+			this.renderSimilarIssuesMessage(
+        localize(
+          "similarIssuesNeedsTitle",
+          "Enter a title to search for similar issues.",
+        ),
+      );
 			return;
 		}
 
-		this.renderSimilarIssuesMessage(localize('searchingSimilarIssues', "Searching similar issues..."));
+		this.renderSimilarIssuesMessage(
+      localize("searchingSimilarIssues", "Searching similar issues..."),
+    );
 		try {
 			let results: ISimilarIssue[] = [];
 			if (this.selectedIssueSource === IssueSource.Extension) {
 				const extensionIssueUrl = this.getSelectedExtensionIssueUrl();
-				const repo = extensionIssueUrl && this.parseGitHubUrl(extensionIssueUrl);
-				results = repo ? await this.searchGitHubIssues(`${repo.owner}/${repo.repositoryName}`, title) : [];
+				const repo = extensionIssueUrl && this.parseGitHubUrl(
+          extensionIssueUrl,
+        );
+				results = repo ? await this.searchGitHubIssues(
+          `${repo.owner}/${repo.repositoryName}`,
+          title,
+        ) : [];
 			} else if (this.selectedIssueSource === IssueSource.Marketplace) {
 				const marketplaceIssueUrl = product.reportMarketplaceIssueUrl ?? product.reportIssueUrl;
-				const repo = marketplaceIssueUrl && this.parseGitHubUrl(marketplaceIssueUrl);
-				results = repo ? await this.searchGitHubIssues(`${repo.owner}/${repo.repositoryName}`, title) : [];
+				const repo = marketplaceIssueUrl && this.parseGitHubUrl(
+          marketplaceIssueUrl,
+        );
+				results = repo ? await this.searchGitHubIssues(
+          `${repo.owner}/${repo.repositoryName}`,
+          title,
+        ) : [];
 			} else {
-				results = await this.searchVSCodeSimilarIssues(title, this.descriptionTextarea.value.trim());
+				results = await this.searchVSCodeSimilarIssues(
+          title,
+          this.descriptionTextarea.value.trim(),
+        );
 			}
 			if (request === this.similarIssuesRequest) {
 				this.renderSimilarIssues(results);
 			}
 		} catch {
 			if (request === this.similarIssuesRequest) {
-				this.renderSimilarIssuesMessage(localize('similarIssuesSearchFailed', "Unable to search for similar issues."));
+				this.renderSimilarIssuesMessage(
+          localize(
+            "similarIssuesSearchFailed",
+            "Unable to search for similar issues.",
+          ),
+        );
 			}
 		}
 	}
 
 	private async searchGitHubIssues(repo: string, title: string): Promise<ISimilarIssue[]> {
 		const query = `is:issue repo:${repo} ${title}`;
-		const response = await fetch(`https://api.github.com/search/issues?q=${encodeURIComponent(query)}`);
+		const response = await fetch(
+      `https://api.github.com/search/issues?q=${encodeURIComponent(query)}`,
+    );
 		const result = await response.json();
 		return Array.isArray(result?.items) ? result.items : [];
 	}
 
 	private async searchVSCodeDuplicates(title: string, body: string): Promise<ISimilarIssue[]> {
-		const response = await fetch('https://vscode-probot.westus.cloudapp.azure.com:7890/duplicate_candidates', {
-			method: 'POST',
-			body: JSON.stringify({ title, body }),
-			headers: new Headers({ 'Content-Type': 'application/json' }),
-		});
+		const response = await fetch(
+      "https://vscode-probot.westus.cloudapp.azure.com:7890/duplicate_candidates",
+      {
+        method: "POST",
+        body: JSON.stringify({ title, body }),
+        headers: new Headers({ "Content-Type": "application/json" }),
+      },
+    );
 		const result = await response.json();
 		return Array.isArray(result?.candidates) ? result.candidates : [];
 	}
@@ -1019,35 +1298,51 @@ export class IssueReporterOverlay {
 		}
 
 		const repo = this.getIssueTargetRepo();
-		return repo ? this.searchGitHubIssues(`${repo.owner}/${repo.repositoryName}`, title) : [];
+		return repo ? this.searchGitHubIssues(
+      `${repo.owner}/${repo.repositoryName}`,
+      title,
+    ) : [];
 	}
 
 	private renderSimilarIssuesMessage(message: string): void {
 		this.resetSimilarIssuesContainer();
-		const status = append(this.similarIssuesContainer, $('div.wizard-similar-status'));
+		const status = append(
+      this.similarIssuesContainer,
+      $("div.wizard-similar-status"),
+    );
 		status.textContent = message;
 	}
 
 	private renderSimilarIssues(results: ISimilarIssue[]): void {
 		if (!results.length) {
-			this.renderSimilarIssuesMessage(localize('noSimilarIssues', "No similar issues found."));
+			this.renderSimilarIssuesMessage(
+        localize("noSimilarIssues", "No similar issues found."),
+      );
 			return;
 		}
 
 		this.resetSimilarIssuesContainer();
-		const list = append(this.similarIssuesContainer, $('ul.wizard-similar-list'));
+		const list = append(
+      this.similarIssuesContainer,
+      $("ul.wizard-similar-list"),
+    );
 		for (const issue of results.slice(0, MAX_SIMILAR_ISSUES)) {
-			const item = append(list, $('li.wizard-similar-item'));
-			const link = append(item, $('a.wizard-similar-link')) as HTMLAnchorElement;
+			const item = append(list, $("li.wizard-similar-item"));
+			const link = append(
+        item,
+        $("a.wizard-similar-link"),
+      ) as HTMLAnchorElement;
 			link.href = issue.html_url;
 			link.textContent = issue.title;
 			link.title = issue.title;
-			this.similarIssuesDisposables.add(addDisposableListener(link, EventType.CLICK, e => {
-				e.preventDefault();
-				this.openExternalLink?.(issue.html_url);
-			}));
+			this.similarIssuesDisposables.add(
+        addDisposableListener(link, EventType.CLICK, e => {
+          e.preventDefault();
+          this.openExternalLink?.(issue.html_url);
+        }),
+      );
 			if (issue.state) {
-				const state = append(item, $('span.wizard-similar-state'));
+				const state = append(item, $("span.wizard-similar-state"));
 				state.textContent = issue.state;
 			}
 		}
@@ -1056,29 +1351,35 @@ export class IssueReporterOverlay {
 	/** Clear the similar-issues container and re-render the section heading. */
 	private resetSimilarIssuesContainer(): void {
 		this.similarIssuesDisposables.clear();
-		this.similarIssuesContainer.textContent = '';
-		const heading = append(this.similarIssuesContainer, $('div.wizard-similar-heading'));
-		heading.textContent = localize('similarIssues', "Similar Issues");
+		this.similarIssuesContainer.textContent = "";
+		const heading = append(
+      this.similarIssuesContainer,
+      $("div.wizard-similar-heading"),
+    );
+		heading.textContent = localize("similarIssues", "Similar Issues");
 	}
 
 	/** Update the guidance text above the description based on selected category */
 	private updateDescriptionGuidance(): void {
-		const markdownHint = localize('markdownSupported', "Markdown formatting is supported.");
+		const markdownHint = localize(
+      "markdownSupported",
+      "Markdown formatting is supported.",
+    );
 		switch (this.selectedIssueType) {
 			case IssueType.Bug:
-				this.descriptionGuidance.textContent = `${localize('bugGuidance',
+				this.descriptionGuidance.textContent = `${localize("bugGuidance",
 					"Describe what happened, the steps to reproduce, what you expected, and what you observed instead.")}\n${markdownHint}`;
 				break;
 			case IssueType.FeatureRequest:
-				this.descriptionGuidance.textContent = `${localize('featureGuidance',
+				this.descriptionGuidance.textContent = `${localize("featureGuidance",
 					"Describe the feature you'd like to see, what problem it would solve, and any alternatives you've considered.")}\n${markdownHint}`;
 				break;
 			case IssueType.PerformanceIssue:
-				this.descriptionGuidance.textContent = `${localize('perfGuidance',
+				this.descriptionGuidance.textContent = `${localize("perfGuidance",
 					"Describe what is slow, when it happens, whether it's consistent or intermittent, and any patterns you've noticed.")}\n${markdownHint}`;
 				break;
 			default:
-				this.descriptionGuidance.textContent = `${localize('defaultGuidance',
+				this.descriptionGuidance.textContent = `${localize("defaultGuidance",
 					"Select a category above, then describe your feedback in detail.")}\n${markdownHint}`;
 				break;
 		}
@@ -1089,34 +1390,39 @@ export class IssueReporterOverlay {
 	}
 
 	private updateGenerateTitleButtonState(): void {
-		if (!this.generateTitleBtn || this.generateTitleBtn.element.classList.contains('loading')) {
+		if (!this.generateTitleBtn || this.generateTitleBtn.element.classList.contains(
+      "loading",
+    )) {
 			return;
 		}
 		this.generateTitleBtn.enabled = this.hasDescriptionContent();
 	}
 
 	private createFieldError(parent: HTMLElement, message: string): HTMLElement {
-		const error = append(parent, $('div.wizard-field-error.hidden'));
+		const error = append(parent, $("div.wizard-field-error.hidden"));
 		error.textContent = message;
-		error.setAttribute('role', 'alert');
+		error.setAttribute("role", "alert");
 		return error;
 	}
 
 	private setFieldError(field: HTMLElement, error: HTMLElement, hasError: boolean): void {
-		field.classList.toggle('invalid-input', hasError);
-		error.classList.toggle('hidden', !hasError);
+		field.classList.toggle("invalid-input", hasError);
+		error.classList.toggle("hidden", !hasError);
 	}
 
 	// Step 2: Review & Submit
 	private createStep2Review(): void {
-		const page = append(this.stepContainer, $('div.wizard-step.wizard-step-review'));
+		const page = append(
+      this.stepContainer,
+      $("div.wizard-step.wizard-step-review"),
+    );
 		this.stepPages.push(page);
 
-		const heading = append(page, $('h2.wizard-heading'));
-		heading.textContent = localize('reviewSubmit', "Review and submit");
+		const heading = append(page, $("h2.wizard-heading"));
+		heading.textContent = localize("reviewSubmit", "Review and submit");
 
 		// Review details (filled dynamically) with compact horizontal layout
-		append(page, $('div.wizard-review-details'));
+		append(page, $("div.wizard-review-details"));
 	}
 
 	private registerEventHandlers(): void {
@@ -1143,15 +1449,27 @@ export class IssueReporterOverlay {
 			const hasDescription = this.hasDescriptionContent();
 			const title = this.titleInput.value.trim();
 
-			this.setFieldError(this.sourceButtonGroup, this.sourceError, !hasIssueSource);
-			this.setFieldError(this.extensionField, this.extensionError, !hasExtension || !hasExtensionIssueUrl);
+			this.setFieldError(
+        this.sourceButtonGroup,
+        this.sourceError,
+        !hasIssueSource,
+      );
+			this.setFieldError(
+        this.extensionField,
+        this.extensionError,
+        !hasExtension || !hasExtensionIssueUrl,
+      );
 			this.setFieldError(this.typeButtonGroup, this.typeError, !hasIssueType);
-			this.setFieldError(this.descriptionTextarea, this.descriptionError, !hasDescription);
+			this.setFieldError(
+        this.descriptionTextarea,
+        this.descriptionError,
+        !hasDescription,
+      );
 			this.setFieldError(this.titleInput.element, this.titleError, !title);
 
 			if (!hasIssueSource || !hasExtension || !hasExtensionIssueUrl || !hasIssueType || !hasDescription || !title) {
 				if (!hasIssueSource) {
-					this.issueSourceButtons.find(button => !button.element.classList.contains('hidden'))?.element.focus();
+					this.issueSourceButtons.find(button => !button.element.classList.contains("hidden"))?.element.focus();
 				} else if (!hasExtension || !hasExtensionIssueUrl) {
 					this.extensionSelect.focus();
 				} else if (!hasIssueType) {
@@ -1164,7 +1482,9 @@ export class IssueReporterOverlay {
 				return;
 			}
 			this.updateIssueSourceFlags();
-			this.model.update({ issueDescription: this.descriptionTextarea.value.trim() });
+			this.model.update({
+        issueDescription: this.descriptionTextarea.value.trim(),
+      });
 		}
 
 		if (this.currentStep === WizardStep.Review) {
@@ -1191,8 +1511,8 @@ export class IssueReporterOverlay {
 		const newPage = this.stepPages[step];
 
 		// Immediate transition with no animation
-		oldPage.style.display = 'none';
-		newPage.style.display = 'flex';
+		oldPage.style.display = "none";
+		newPage.style.display = "flex";
 
 		this.updateStepUI();
 
@@ -1210,60 +1530,75 @@ export class IssueReporterOverlay {
 
 	private updateStepUI(): void {
 		const stepNum = this.currentStep + 1;
-		this.stepIndicator.textContent = localize('stepOf', "Step {0} of {1}", stepNum, STEP_COUNT);
+		this.stepIndicator.textContent = localize(
+      "stepOf",
+      "Step {0} of {1}",
+      stepNum,
+      STEP_COUNT,
+    );
 
 		const stepNames = [
-			localize('screenshots', "Attachments"),
-			localize('composeMessage', "Describe"),
-			localize('submit', "Review"),
-		];
+      localize("screenshots", "Attachments"),
+      localize("composeMessage", "Describe"),
+      localize("submit", "Review"),
+    ];
 		this.stepLabel.textContent = stepNames[this.currentStep];
 
 		// Update progress dots
 		for (let i = 0; i < this.progressDots.length; i++) {
-			this.progressDots[i].classList.toggle('active', i === this.currentStep);
-			this.progressDots[i].classList.toggle('completed', i < this.currentStep);
+			this.progressDots[i].classList.toggle("active", i === this.currentStep);
+			this.progressDots[i].classList.toggle("completed", i < this.currentStep);
 		}
 
 		// Show/hide pages
 		for (let i = 0; i < this.stepPages.length; i++) {
 			if (i === this.currentStep) {
-				this.stepPages[i].style.display = 'flex';
-			} else if (!this.stepPages[i].classList.contains('slide-out-left') && !this.stepPages[i].classList.contains('slide-out-right')) {
-				this.stepPages[i].style.display = 'none';
+				this.stepPages[i].style.display = "flex";
+			} else if (!this.stepPages[i].classList.contains(
+        "slide-out-left",
+      ) && !this.stepPages[i].classList.contains("slide-out-right")) {
+				this.stepPages[i].style.display = "none";
 			}
 		}
 
 		// Back button visibility
-		this.backButton.element.style.display = this.currentStep === WizardStep.Attachments ? 'none' : '';
+		this.backButton.element.style.display = this.currentStep === WizardStep.Attachments ? "none" : "";
 		if (this.closeButton) {
 			const currentDraftPreviewed = this.previewedDraftKey === this.getDraftKey();
-			this.closeButton.element.style.display = this.previewOpened && currentDraftPreviewed && this.currentStep === WizardStep.Review ? '' : 'none';
+			this.closeButton.element.style.display = this.previewOpened && currentDraftPreviewed && this.currentStep === WizardStep.Review ? "" : "none";
 		}
 
 		// Next button label
 		if (this.currentStep === WizardStep.Review) {
-			const externalExtensionUrl = this.selectedIssueSource === IssueSource.Extension && this.getIssueTargetUrl() && !this.isGitHubUrl(this.getIssueTargetUrl()!);
+			const externalExtensionUrl = this.selectedIssueSource === IssueSource.Extension && this.getIssueTargetUrl() && !this.isGitHubUrl(
+        this.getIssueTargetUrl()!,
+      );
 			const waitingForData = this.selectedIssueType === IssueType.PerformanceIssue && (!this.performanceInfoLoaded || this.performanceInfoRefreshing);
 			if (waitingForData) {
-				this.nextButton.label = `$(loading~spin) ${localize('loadingDiagnostics', "Loading diagnostics...")}`;
-				this.nextButton.element.title = localize('waitingForDiagnostics', "Waiting for performance diagnostics to finish loading");
+				this.nextButton.label = `$(loading~spin) ${localize("loadingDiagnostics", "Loading diagnostics...")}`;
+				this.nextButton.element.title = localize(
+          "waitingForDiagnostics",
+          "Waiting for performance diagnostics to finish loading",
+        );
 				this.nextButton.enabled = false;
 			} else {
 				this.nextButton.label = externalExtensionUrl
-					? localize('openExternalIssueReporter', "Open External Issue Reporter")
-					: localize('previewOnGitHub', "Preview on GitHub");
+					? localize(
+              "openExternalIssueReporter",
+              "Open External Issue Reporter",
+            )
+					: localize("previewOnGitHub", "Preview on GitHub");
 				this.nextButton.element.title = this.nextButton.label;
 				this.nextButton.enabled = true;
 			}
 		} else if (this.currentStep === WizardStep.Attachments) {
 			this.nextButton.label = this.getTotalAttachments() === 0
-				? localize('skip', "Skip")
-				: localize('next', "Next");
+				? localize("skip", "Skip")
+				: localize("next", "Next");
 			this.nextButton.element.title = this.nextButton.label;
 		} else {
-			this.nextButton.label = localize('next', "Next");
-			this.nextButton.element.title = localize('next', "Next");
+			this.nextButton.label = localize("next", "Next");
+			this.nextButton.element.title = localize("next", "Next");
 		}
 
 		// Show/hide capture strip (only on attachments step)
@@ -1275,76 +1610,112 @@ export class IssueReporterOverlay {
 	private updateReviewDetails(): void {
 		const page = this.stepPages[WizardStep.Review];
 		// eslint-disable-next-line no-restricted-syntax
-		const details = page.querySelector('.wizard-review-details');
+		const details = page.querySelector(".wizard-review-details");
 		if (!details) {
 			return;
 		}
 		this.reviewRenderDisposables.clear();
-		details.textContent = '';
+		details.textContent = "";
 
-		const similarSection = append(details as HTMLElement, $('div.review-section.wizard-review-similar-section'));
-		this.similarIssuesContainer = append(similarSection, $('div.wizard-similar-issues'));
-		this.similarIssuesContainer.setAttribute('aria-live', 'polite');
-		this.renderSimilarIssuesMessage(localize('searchingSimilarIssues', "Searching similar issues..."));
+		const similarSection = append(
+      details as HTMLElement,
+      $("div.review-section.wizard-review-similar-section"),
+    );
+		this.similarIssuesContainer = append(
+      similarSection,
+      $("div.wizard-similar-issues"),
+    );
+		this.similarIssuesContainer.setAttribute("aria-live", "polite");
+		this.renderSimilarIssuesMessage(
+      localize("searchingSimilarIssues", "Searching similar issues..."),
+    );
 
-		const sourceSection = append(details as HTMLElement, $('div.review-section'));
-		const sourceLabel = append(sourceSection, $('div.review-label'));
-		sourceLabel.textContent = localize('target', "Target");
-		const sourceValue = append(sourceSection, $('div.review-value'));
+		const sourceSection = append(
+      details as HTMLElement,
+      $("div.review-section"),
+    );
+		const sourceLabel = append(sourceSection, $("div.review-label"));
+		sourceLabel.textContent = localize("target", "Target");
+		const sourceValue = append(sourceSection, $("div.review-value"));
 		sourceValue.textContent = this.getIssueSourceLabel();
 
-		const catSection = append(details as HTMLElement, $('div.review-section'));
-		const catLabel = append(catSection, $('div.review-label'));
-		catLabel.textContent = localize('category', "Category");
-		const catValue = append(catSection, $('div.review-value'));
+		const catSection = append(details as HTMLElement, $("div.review-section"));
+		const catLabel = append(catSection, $("div.review-label"));
+		catLabel.textContent = localize("category", "Category");
+		const catValue = append(catSection, $("div.review-value"));
 		const typeLabels: Record<number, string> = {
-			[IssueType.Bug]: localize('bug', "Bug"),
-			[IssueType.FeatureRequest]: localize('featureRequest', "Feature Request"),
-			[IssueType.PerformanceIssue]: localize('performanceIssue', "Performance Issue"),
-		};
-		catValue.textContent = (this.selectedIssueType !== undefined ? typeLabels[this.selectedIssueType] : undefined) ?? localize('unknown', "Unknown");
+      [IssueType.Bug]: localize("bug", "Bug"),
+      [IssueType.FeatureRequest]: localize("featureRequest", "Feature Request"),
+      [IssueType.PerformanceIssue]: localize("performanceIssue", "Performance Issue"),
+    };
+		catValue.textContent = (this.selectedIssueType !== undefined ? typeLabels[this.selectedIssueType] : undefined) ?? localize(
+      "unknown",
+      "Unknown",
+    );
 
-		const titleSection = append(details as HTMLElement, $('div.review-section'));
-		const titleLabel = append(titleSection, $('div.review-label'));
-		titleLabel.textContent = localize('issueTitle', "Title");
-		const titleValue = append(titleSection, $('div.review-value'));
-		titleValue.textContent = this.titleInput.value.trim() || localize('noTitle', "(no title)");
+		const titleSection = append(
+      details as HTMLElement,
+      $("div.review-section"),
+    );
+		const titleLabel = append(titleSection, $("div.review-label"));
+		titleLabel.textContent = localize("issueTitle", "Title");
+		const titleValue = append(titleSection, $("div.review-value"));
+		titleValue.textContent = this.titleInput.value.trim() || localize(
+      "noTitle",
+      "(no title)",
+    );
 
-		const descSection = append(details as HTMLElement, $('div.review-section'));
-		const descLabel = append(descSection, $('div.review-label'));
-		descLabel.textContent = localize('description', "Description");
-		const descValue = append(descSection, $('div.review-value.review-description'));
+		const descSection = append(details as HTMLElement, $("div.review-section"));
+		const descLabel = append(descSection, $("div.review-label"));
+		descLabel.textContent = localize("description", "Description");
+		const descValue = append(
+      descSection,
+      $("div.review-value.review-description"),
+    );
 		const description = this.descriptionTextarea.value.trim();
 		if (description && this.markdownRendererService) {
 			const renderedMarkdown = this.markdownRendererService.render(
-				new MarkdownString(description),
-				{ markedOptions: { breaks: true } },
-			);
+        new MarkdownString(description),
+        { markedOptions: { breaks: true } },
+      );
 			append(descValue, renderedMarkdown.element);
 			this.reviewRenderDisposables.add(renderedMarkdown);
 		} else {
-			descValue.textContent = description || localize('noDescription', "(no description)");
+			descValue.textContent = description || localize(
+        "noDescription",
+        "(no description)",
+      );
 		}
 
 		// Attachments row with full-size clickable thumbnails
 		const totalAttachments = this.screenshots.length + this.recordings.length;
 		if (totalAttachments > 0) {
-			const attachSection = append(details as HTMLElement, $('div.review-section'));
-			const attachLabel = append(attachSection, $('div.review-label'));
-			attachLabel.textContent = localize('attachments', "Attachments ({0})", totalAttachments);
-			const thumbRow = append(attachSection, $('div.review-thumbnails'));
+			const attachSection = append(
+        details as HTMLElement,
+        $("div.review-section"),
+      );
+			const attachLabel = append(attachSection, $("div.review-label"));
+			attachLabel.textContent = localize(
+        "attachments",
+        "Attachments ({0})",
+        totalAttachments,
+      );
+			const thumbRow = append(attachSection, $("div.review-thumbnails"));
 			this.reviewThumbCards = [];
 
 			for (let i = 0; i < this.screenshots.length; i++) {
 				const s = this.screenshots[i];
-				const card = append(thumbRow, $('div.wizard-screenshot-card.review-attachment-card'));
-				const img = append(card, $('img')) as HTMLImageElement;
+				const card = append(
+          thumbRow,
+          $("div.wizard-screenshot-card.review-attachment-card"),
+        );
+				const img = append(card, $("img")) as HTMLImageElement;
 				img.src = s.annotatedDataUrl ?? s.dataUrl;
-				img.alt = localize('screenshotAlt', "Screenshot {0}", i + 1);
+				img.alt = localize("screenshotAlt", "Screenshot {0}", i + 1);
 
 				// Progress overlay (hidden initially)
-				const progressOverlay = append(card, $('div.review-progress-overlay'));
-				append(progressOverlay, $('div.review-progress-ring'));
+				const progressOverlay = append(card, $("div.review-progress-overlay"));
+				append(progressOverlay, $("div.review-progress-ring"));
 
 				this.disposables.add(addDisposableListener(card, EventType.CLICK, () => {
 					if (!this.uploading) {
@@ -1357,10 +1728,10 @@ export class IssueReporterOverlay {
 			for (let i = 0; i < this.recordings.length; i++) {
 				const rec = this.recordings[i];
 				const card = this.renderRecordingCard(thumbRow, rec, i);
-				card.classList.add('review-attachment-card');
+				card.classList.add("review-attachment-card");
 
-				const progressOverlay = append(card, $('div.review-progress-overlay'));
-				append(progressOverlay, $('div.review-progress-ring'));
+				const progressOverlay = append(card, $("div.review-progress-overlay"));
+				append(progressOverlay, $("div.review-progress-ring"));
 
 				this.disposables.add(addDisposableListener(card, EventType.CLICK, () => {
 					if (!this.uploading) {
@@ -1372,7 +1743,10 @@ export class IssueReporterOverlay {
 		}
 
 		// Diagnostic data sections with checkboxes and collapsible details
-		const diagContainer = append(details as HTMLElement, $('div.review-diagnostics'));
+		const diagContainer = append(
+      details as HTMLElement,
+      $("div.review-diagnostics"),
+    );
 
 		const modelData = this.model.getData();
 		let diagnosticSectionCount = 0;
@@ -1385,81 +1759,86 @@ export class IssueReporterOverlay {
 			diagnosticSectionCount++;
 			diagnosticSectionStates.push(() => this.includeSystemInfo);
 			this.createDiagSection(diagContainer, {
-				id: 'system-info',
-				label: localize('systemInformation', "System Information"),
+				id: "system-info",
+				label: localize("systemInformation", "System Information"),
 				checked: this.includeSystemInfo,
 				onToggle: (checked) => {
 					this.includeSystemInfo = checked;
 					this.model.update({ includeSystemInfo: checked });
 				},
 				renderContent: (container) => {
-					const sysTable = append(container, $('table.review-diag-table'));
+					const sysTable = append(container, $("table.review-diag-table"));
 					if (modelData.versionInfo) {
-						this.addDiagRow(sysTable, 'VS Code', modelData.versionInfo.vscodeVersion);
-						this.addDiagRow(sysTable, 'OS', modelData.versionInfo.os);
+						this.addDiagRow(sysTable, "VS Code", modelData.versionInfo.vscodeVersion);
+						this.addDiagRow(sysTable, "OS", modelData.versionInfo.os);
 					}
 					if (modelData.systemInfo) {
-						this.addDiagRow(sysTable, 'CPUs', modelData.systemInfo.cpus ?? '');
-						this.addDiagRow(sysTable, 'Memory', modelData.systemInfo.memory);
-						this.addDiagRow(sysTable, 'VM', modelData.systemInfo.vmHint);
-						this.addDiagRow(sysTable, 'Screen Reader', modelData.systemInfo.screenReader);
+						this.addDiagRow(sysTable, "CPUs", modelData.systemInfo.cpus ?? "");
+						this.addDiagRow(sysTable, "Memory", modelData.systemInfo.memory);
+						this.addDiagRow(sysTable, "VM", modelData.systemInfo.vmHint);
+						this.addDiagRow(sysTable, "Screen Reader", modelData.systemInfo.screenReader);
 					}
-					this.addDiagRow(sysTable, 'User Agent', navigator.userAgent);
-					this.addDiagRow(sysTable, 'Installation pure', String(modelData.isInstallationPure ?? true));
+					this.addDiagRow(sysTable, "User Agent", navigator.userAgent);
+					this.addDiagRow(sysTable, "Installation pure", String(modelData.isInstallationPure ?? true));
 					if (modelData.restrictedMode) {
-						this.addDiagRow(sysTable, 'Mode', 'Restricted');
+						this.addDiagRow(sysTable, "Mode", "Restricted");
 					}
 				},
 			});
 		} else {
-			const loading = append(diagContainer, $('div.review-diag-loading'));
-			loading.textContent = localize('loadingSystemInfo', "Loading system information...");
+			const loading = append(diagContainer, $("div.review-diag-loading"));
+			loading.textContent = localize(
+        "loadingSystemInfo",
+        "Loading system information...",
+      );
 		}
 
 		if (modelData.fileOnExtension && modelData.extensionData) {
 			diagnosticSectionCount++;
 			diagnosticSectionStates.push(() => this.includeExtensionData);
 			this.createDiagSection(diagContainer, {
-				id: 'extension-data',
-				label: localize('extensionData', "Extension Data"),
+				id: "extension-data",
+				label: localize("extensionData", "Extension Data"),
 				checked: this.includeExtensionData,
 				onToggle: (checked) => {
 					this.includeExtensionData = checked;
 					this.model.update({ includeExtensionData: checked });
 				},
 				renderContent: (container) => {
-					const pre = append(container, $('pre.review-diag-pre'));
+					const pre = append(container, $("pre.review-diag-pre"));
 					pre.textContent = modelData.extensionData!;
 				},
 			});
 		}
 
 		// Extensions (non-theme only)
-		const nonThemeExtensions = (modelData.allExtensions ?? []).filter(e => !e.isTheme && !e.isBuiltin);
+		const nonThemeExtensions = (modelData.allExtensions ?? []).filter(
+      e => !e.isTheme && !e.isBuiltin,
+    );
 		if (!modelData.fileOnExtension && !modelData.fileOnMarketplace && nonThemeExtensions.length > 0) {
 			diagnosticSectionCount++;
 			diagnosticSectionStates.push(() => this.includeExtensions);
 			this.createDiagSection(diagContainer, {
-				id: 'extensions',
-				label: localize('extensions', "Extensions ({0})", nonThemeExtensions.length),
+				id: "extensions",
+				label: localize("extensions", "Extensions ({0})", nonThemeExtensions.length),
 				checked: this.includeExtensions,
 				onToggle: (checked) => {
 					this.includeExtensions = checked;
 					this.model.update({ includeExtensions: checked });
 				},
 				renderContent: (container) => {
-					const extTable = append(container, $('table.review-diag-table.review-ext-table'));
-					const header = append(extTable, $('tr'));
-					for (const h of ['Name', 'Identifier', 'Author', 'Version']) {
-						const th = append(header, $('th.review-ext-th'));
+					const extTable = append(container, $("table.review-diag-table.review-ext-table"));
+					const header = append(extTable, $("tr"));
+					for (const h of ["Name", "Identifier", "Author", "Version"]) {
+						const th = append(header, $("th.review-ext-th"));
 						th.textContent = h;
 					}
 					for (const ext of nonThemeExtensions) {
-						const row = append(extTable, $('tr'));
-						append(row, $('td')).textContent = ext.displayName || ext.name;
-						append(row, $('td')).textContent = ext.id;
-						append(row, $('td')).textContent = ext.publisher ?? '';
-						append(row, $('td')).textContent = ext.version;
+						const row = append(extTable, $("tr"));
+						append(row, $("td")).textContent = ext.displayName || ext.name;
+						append(row, $("td")).textContent = ext.id;
+						append(row, $("td")).textContent = ext.publisher ?? "";
+						append(row, $("td")).textContent = ext.version;
 					}
 				},
 			});
@@ -1470,15 +1849,15 @@ export class IssueReporterOverlay {
 			diagnosticSectionCount++;
 			diagnosticSectionStates.push(() => this.includeExperiments);
 			this.createDiagSection(diagContainer, {
-				id: 'experiments',
-				label: localize('abExperiments', "A/B Experiments"),
+				id: "experiments",
+				label: localize("abExperiments", "A/B Experiments"),
 				checked: this.includeExperiments,
 				onToggle: (checked) => {
 					this.includeExperiments = checked;
 					this.model.update({ includeExperiments: checked });
 				},
 				renderContent: (container) => {
-					const pre = append(container, $('pre.review-diag-pre'));
+					const pre = append(container, $("pre.review-diag-pre"));
 					pre.textContent = modelData.experimentInfo!;
 				},
 			});
@@ -1489,34 +1868,55 @@ export class IssueReporterOverlay {
 			diagnosticSectionCount++;
 			diagnosticSectionStates.push(() => this.includeSettings);
 			this.createDiagSection(diagContainer, {
-				id: 'settings',
-				label: localize('settings', "Settings"),
+				id: "settings",
+				label: localize("settings", "Settings"),
 				checked: this.includeSettings,
 				onToggle: (checked) => {
 					this.includeSettings = checked;
 				},
 				renderContent: (container) => {
-					const userLabel = append(container, $('div.review-diag-sublabel'));
-					userLabel.textContent = localize('userSettings', "User Settings");
-					const userPre = append(container, $('pre.review-diag-pre'));
+					const userLabel = append(container, $("div.review-diag-sublabel"));
+					userLabel.textContent = localize("userSettings", "User Settings");
+					const userPre = append(container, $("pre.review-diag-pre"));
 					userPre.textContent = this.settingsContent!;
 				},
 			});
 		}
 
 		if (this.selectedIssueType === IssueType.PerformanceIssue && !modelData.fileOnMarketplace) {
-			const performanceContainer = append(diagContainer, $('div.review-performance-data'));
+			const performanceContainer = append(
+        diagContainer,
+        $("div.review-performance-data"),
+      );
 			if (this.performanceInfoRefreshing) {
-				performanceContainer.classList.add('refreshing');
+				performanceContainer.classList.add("refreshing");
 			}
-			const performanceTitleRow = append(performanceContainer, $('div.review-performance-title-row'));
-			const performanceTitle = append(performanceTitleRow, $('div.review-performance-title'));
-			performanceTitle.textContent = localize('additionalPerformanceData', "Additional Performance Data");
+			const performanceTitleRow = append(
+        performanceContainer,
+        $("div.review-performance-title-row"),
+      );
+			const performanceTitle = append(
+        performanceTitleRow,
+        $("div.review-performance-title"),
+      );
+			performanceTitle.textContent = localize(
+        "additionalPerformanceData",
+        "Additional Performance Data",
+      );
 			if (this.refreshPerformanceInfo) {
-				const refreshBtn = this.disposables.add(new Button(performanceTitleRow, { ...defaultButtonStyles, secondary: true, supportIcons: true }));
-				refreshBtn.element.classList.add('review-performance-refresh');
-				refreshBtn.label = `$(refresh) ${localize('refresh', "Refresh")}`;
-				refreshBtn.element.title = localize('refreshPerformanceData', "Reload running processes and workspace metadata");
+				const refreshBtn = this.disposables.add(
+          new Button(performanceTitleRow, {
+            ...defaultButtonStyles,
+            secondary: true,
+            supportIcons: true,
+          }),
+        );
+				refreshBtn.element.classList.add("review-performance-refresh");
+				refreshBtn.label = `$(refresh) ${localize("refresh", "Refresh")}`;
+				refreshBtn.element.title = localize(
+          "refreshPerformanceData",
+          "Reload running processes and workspace metadata",
+        );
 				refreshBtn.enabled = !this.performanceInfoRefreshing;
 				this.disposables.add(refreshBtn.onDidClick(async () => {
 					if (!this.refreshPerformanceInfo || this.performanceInfoRefreshing) {
@@ -1524,7 +1924,7 @@ export class IssueReporterOverlay {
 					}
 					this.performanceInfoRefreshing = true;
 					refreshBtn.enabled = false;
-					performanceContainer.classList.add('refreshing');
+					performanceContainer.classList.add("refreshing");
 					this.updateStepUI();
 					try {
 						await this.refreshPerformanceInfo();
@@ -1542,76 +1942,103 @@ export class IssueReporterOverlay {
 					}
 				}));
 			}
-			const performanceDescription = append(performanceContainer, $('div.review-performance-description'));
-			performanceDescription.textContent = localize('additionalPerformanceDataDescription', "Optionally include currently running processes and workspace metadata to help diagnose performance issues.");
+			const performanceDescription = append(
+        performanceContainer,
+        $("div.review-performance-description"),
+      );
+			performanceDescription.textContent = localize(
+        "additionalPerformanceDataDescription",
+        "Optionally include currently running processes and workspace metadata to help diagnose performance issues.",
+      );
 
 			if (modelData.processInfo) {
 				diagnosticSectionCount++;
 				diagnosticSectionStates.push(() => this.includeProcessInfo);
 				this.createDiagSection(performanceContainer, {
-					id: 'process-info',
-					label: localize('runningProcesses', "Running Processes"),
+					id: "process-info",
+					label: localize("runningProcesses", "Running Processes"),
 					checked: this.includeProcessInfo,
 					onToggle: (checked) => {
 						this.includeProcessInfo = checked;
 						this.model.update({ includeProcessInfo: checked });
 					},
 					renderContent: (container) => {
-						const pre = append(container, $('pre.review-diag-pre'));
+						const pre = append(container, $("pre.review-diag-pre"));
 						pre.textContent = modelData.processInfo!;
 					},
 				});
 			} else if (!this.performanceInfoLoaded) {
-				const loading = append(performanceContainer, $('div.review-diag-loading'));
-				loading.textContent = localize('loadingProcessInfo', "Loading currently running processes...");
+				const loading = append(
+          performanceContainer,
+          $("div.review-diag-loading"),
+        );
+				loading.textContent = localize(
+          "loadingProcessInfo",
+          "Loading currently running processes...",
+        );
 			}
 
 			if (modelData.workspaceInfo) {
 				diagnosticSectionCount++;
 				diagnosticSectionStates.push(() => this.includeWorkspaceInfo);
 				this.createDiagSection(performanceContainer, {
-					id: 'workspace-info',
-					label: localize('workspaceMetadata', "Workspace Metadata"),
+					id: "workspace-info",
+					label: localize("workspaceMetadata", "Workspace Metadata"),
 					checked: this.includeWorkspaceInfo,
 					onToggle: (checked) => {
 						this.includeWorkspaceInfo = checked;
 						this.model.update({ includeWorkspaceInfo: checked });
 					},
 					renderContent: (container) => {
-						const pre = append(container, $('pre.review-diag-pre'));
+						const pre = append(container, $("pre.review-diag-pre"));
 						pre.textContent = modelData.workspaceInfo!;
 					},
 				});
 			} else if (!this.performanceInfoLoaded) {
-				const loading = append(performanceContainer, $('div.review-diag-loading'));
-				loading.textContent = localize('loadingWorkspaceInfo', "Loading workspace metadata...");
+				const loading = append(
+          performanceContainer,
+          $("div.review-diag-loading"),
+        );
+				loading.textContent = localize(
+          "loadingWorkspaceInfo",
+          "Loading workspace metadata...",
+        );
 			}
 		}
 
 		if (diagnosticSectionCount > 0) {
-			const heading = document.createElement('div');
-			heading.className = 'review-diag-heading';
-			const title = append(heading, $('h3.review-diag-heading-title'));
-			title.textContent = localize('additionalInformation', "Additional Information");
+			const heading = document.createElement("div");
+			heading.className = "review-diag-heading";
+			const title = append(heading, $("h3.review-diag-heading-title"));
+			title.textContent = localize(
+        "additionalInformation",
+        "Additional Information",
+      );
 			if (diagnosticSectionCount > 1) {
-				const bulkActions = append(heading, $('div.review-diag-bulk-actions'));
-				const toggleAllButton = this.disposables.add(new Button(bulkActions, { ...defaultButtonStyles, secondary: true }));
-				toggleAllButton.element.classList.add('review-diag-toggle-all');
+				const bulkActions = append(heading, $("div.review-diag-bulk-actions"));
+				const toggleAllButton = this.disposables.add(
+          new Button(bulkActions, { ...defaultButtonStyles, secondary: true }),
+        );
+				toggleAllButton.element.classList.add("review-diag-toggle-all");
 				this.diagnosticBulkToggleButton = toggleAllButton;
 				this.updateDiagnosticBulkToggleButton();
-				this.disposables.add(toggleAllButton.onDidClick(() => {
-					this.setAllDiagnosticSectionsIncluded(!this.areAllVisibleDiagnosticSectionsIncluded());
-				}));
+				this.disposables.add(
+          toggleAllButton.onDidClick(() => {
+            this.setAllDiagnosticSectionsIncluded(
+              !this.areAllVisibleDiagnosticSectionsIncluded(),
+            );
+          }),
+        );
 			}
 			diagContainer.prepend(heading);
 		}
 
 		// Align all title widths dynamically to the widest title
 		// eslint-disable-next-line no-restricted-syntax
-		const titles = diagContainer.querySelectorAll('.review-diag-title');
+		const titles = diagContainer.querySelectorAll(".review-diag-title");
 		let maxWidth = 0;
 		for (const t of titles) {
-			(t as HTMLElement).style.minWidth = '';
+			(t as HTMLElement).style.minWidth = "";
 		}
 		for (const t of titles) {
 			maxWidth = Math.max(maxWidth, (t as HTMLElement).offsetWidth);
@@ -1624,10 +2051,10 @@ export class IssueReporterOverlay {
 
 		// Align all toggle button widths to the widest
 		// eslint-disable-next-line no-restricted-syntax
-		const toggles = diagContainer.querySelectorAll('.review-diag-toggle');
+		const toggles = diagContainer.querySelectorAll(".review-diag-toggle");
 		let maxToggleWidth = 0;
 		for (const t of toggles) {
-			(t as HTMLElement).style.minWidth = '';
+			(t as HTMLElement).style.minWidth = "";
 		}
 		for (const t of toggles) {
 			maxToggleWidth = Math.max(maxToggleWidth, (t as HTMLElement).offsetWidth);
@@ -1640,7 +2067,9 @@ export class IssueReporterOverlay {
 	}
 
 	private areAllVisibleDiagnosticSectionsIncluded(): boolean {
-		return this.diagnosticSectionStates.length > 0 && this.diagnosticSectionStates.every(getState => getState());
+		return this.diagnosticSectionStates.length > 0 && this.diagnosticSectionStates.every(
+      getState => getState(),
+    );
 	}
 
 	private updateDiagnosticBulkToggleButton(): void {
@@ -1649,11 +2078,11 @@ export class IssueReporterOverlay {
 		}
 		const allChecked = this.areAllVisibleDiagnosticSectionsIncluded();
 		this.diagnosticBulkToggleButton.label = allChecked
-			? localize('excludeAllExtraAttachments', "Exclude All")
-			: localize('includeAllExtraAttachments', "Include All");
-		this.diagnosticBulkToggleButton.element.setAttribute('aria-label', allChecked
-			? localize('excludeAllExtraAttachmentsAria', "Exclude all additional issue data from this issue")
-			: localize('includeAllExtraAttachmentsAria', "Include all additional issue data in this issue"));
+			? localize("excludeAllExtraAttachments", "Exclude All")
+			: localize("includeAllExtraAttachments", "Include All");
+		this.diagnosticBulkToggleButton.element.setAttribute("aria-label", allChecked
+			? localize("excludeAllExtraAttachmentsAria", "Exclude all additional issue data from this issue")
+			: localize("includeAllExtraAttachmentsAria", "Include all additional issue data in this issue"));
 	}
 
 	private setAllDiagnosticSectionsIncluded(included: boolean): void {
@@ -1665,13 +2094,13 @@ export class IssueReporterOverlay {
 		this.includeProcessInfo = included;
 		this.includeWorkspaceInfo = included;
 		this.model.update({
-			includeSystemInfo: included,
-			includeExtensionData: included,
-			includeExtensions: included,
-			includeExperiments: included,
-			includeProcessInfo: included,
-			includeWorkspaceInfo: included,
-		});
+      includeSystemInfo: included,
+      includeExtensionData: included,
+      includeExtensions: included,
+      includeExperiments: included,
+      includeProcessInfo: included,
+      includeWorkspaceInfo: included,
+    });
 		this.updateReviewDetails();
 	}
 
@@ -1682,48 +2111,62 @@ export class IssueReporterOverlay {
 		onToggle: (checked: boolean) => void;
 		renderContent: (container: HTMLElement) => void;
 	}): void {
-		const group = append(parent, $('div.review-diag-group'));
+		const group = append(parent, $("div.review-diag-group"));
 
 		// Header: title | "Include in issue" checkbox | Minimize/Expand button
-		const header = append(group, $('div.review-diag-header'));
+		const header = append(group, $("div.review-diag-header"));
 
-		const title = append(header, $('span.review-diag-title'));
+		const title = append(header, $("span.review-diag-title"));
 		title.textContent = opts.label;
 
-		const checkWrap = append(header, $('div.review-diag-check-wrap'));
-		const checkbox = this.disposables.add(new Checkbox(localize('includeInIssue', "Include in issue"), opts.checked, defaultCheckboxStyles));
+		const checkWrap = append(header, $("div.review-diag-check-wrap"));
+		const checkbox = this.disposables.add(
+      new Checkbox(
+        localize("includeInIssue", "Include in issue"),
+        opts.checked,
+        defaultCheckboxStyles,
+      ),
+    );
 		checkWrap.appendChild(checkbox.domNode);
-		const checkLabel = append(checkWrap, $('label.review-diag-check-label'));
-		checkLabel.textContent = localize('includeInIssue', "Include in issue");
-		this.disposables.add(checkbox.onChange(() => {
-			opts.onToggle(checkbox.checked);
-			this.updateDiagnosticBulkToggleButton();
-			this.updateStepUI();
-		}));
+		const checkLabel = append(checkWrap, $("label.review-diag-check-label"));
+		checkLabel.textContent = localize("includeInIssue", "Include in issue");
+		this.disposables.add(
+      checkbox.onChange(() => {
+        opts.onToggle(checkbox.checked);
+        this.updateDiagnosticBulkToggleButton();
+        this.updateStepUI();
+      }),
+    );
 
-		const toggleBtn = this.disposables.add(new Button(header, { ...defaultButtonStyles, secondary: true, supportIcons: true }));
-		toggleBtn.label = `$(chevron-up) ${localize('minimize', "Minimize")}`;
-		toggleBtn.element.classList.add('review-diag-toggle');
+		const toggleBtn = this.disposables.add(
+      new Button(header, {
+        ...defaultButtonStyles,
+        secondary: true,
+        supportIcons: true,
+      }),
+    );
+		toggleBtn.label = `$(chevron-up) ${localize("minimize", "Minimize")}`;
+		toggleBtn.element.classList.add("review-diag-toggle");
 
 		// Content
-		const content = append(group, $('div.review-diag-content'));
+		const content = append(group, $("div.review-diag-content"));
 		opts.renderContent(content);
 
 		let expanded = true;
 		this.disposables.add(toggleBtn.onDidClick(() => {
 			expanded = !expanded;
-			content.style.display = expanded ? '' : 'none';
+			content.style.display = expanded ? "" : "none";
 			toggleBtn.label = expanded
-				? `$(chevron-up) ${localize('minimize', "Minimize")}`
-				: `$(chevron-down) ${localize('expand', "Expand")}`;
+				? `$(chevron-up) ${localize("minimize", "Minimize")}`
+				: `$(chevron-down) ${localize("expand", "Expand")}`;
 		}));
 	}
 
 	private addDiagRow(table: HTMLElement, label: string, value: string): void {
-		const row = append(table, $('tr'));
-		const th = append(row, $('td.review-diag-key'));
+		const row = append(table, $("tr"));
+		const th = append(row, $("td.review-diag-key"));
 		th.textContent = label;
-		const td = append(row, $('td.review-diag-val'));
+		const td = append(row, $("td.review-diag-val"));
 		td.textContent = value;
 	}
 
@@ -1732,36 +2175,38 @@ export class IssueReporterOverlay {
 		this.uploading = uploading;
 
 		if (uploading) {
-			this.nextButton.element.classList.add('uploading');
-			this.nextButton.label = localize('uploading', "Uploading...");
+			this.nextButton.element.classList.add("uploading");
+			this.nextButton.label = localize("uploading", "Uploading...");
 			this.nextButton.enabled = false;
-			this.backButton.element.style.display = 'none';
+			this.backButton.element.style.display = "none";
 		} else {
-			this.nextButton.element.classList.remove('uploading');
+			this.nextButton.element.classList.remove("uploading");
 			this.nextButton.enabled = true;
 			this.updateStepUI();
 		}
 	}
 
 	/** Mark a specific attachment as uploading / done */
-	setAttachmentUploadState(index: number, state: 'pending' | 'uploading' | 'done'): void {
+	setAttachmentUploadState(index: number, state: "pending" | "uploading" | "done"): void {
 		if (index < 0 || index >= this.reviewThumbCards.length) {
 			return;
 		}
 		const card = this.reviewThumbCards[index];
-		card.classList.remove('upload-pending', 'upload-uploading', 'upload-done');
+		card.classList.remove("upload-pending", "upload-uploading", "upload-done");
 		card.classList.add(`upload-${state}`);
 
 		// eslint-disable-next-line no-restricted-syntax
-		const overlay = card.querySelector('.review-progress-overlay') as HTMLElement | null;
+		const overlay = card.querySelector(
+      ".review-progress-overlay",
+    ) as HTMLElement | null;
 		if (!overlay) {
 			return;
 		}
 
-		if (state === 'done') {
+		if (state === "done") {
 			// Replace ring with checkmark
-			overlay.textContent = '';
-			const check = $('span.review-progress-check');
+			overlay.textContent = "";
+			const check = $("span.review-progress-check");
 			check.appendChild(renderIcon(Codicon.check));
 			overlay.appendChild(check);
 		}
@@ -1776,7 +2221,11 @@ export class IssueReporterOverlay {
 
 		const description = this.descriptionTextarea.value.trim();
 		this.updateIssueSourceFlags();
-		this.model.update({ issueDescription: description, issueTitle: title, ...(this.selectedIssueType !== undefined ? { issueType: this.selectedIssueType } : {}) });
+		this.model.update({
+      issueDescription: description,
+      issueTitle: title,
+      ...(this.selectedIssueType !== undefined ? { issueType: this.selectedIssueType } : {}),
+    });
 
 		const body = this.buildIssueBody();
 		this._onDidSubmit.fire({ title, body });
@@ -1788,8 +2237,8 @@ export class IssueReporterOverlay {
 		}
 		this.visible = true;
 
-		this.wizardPanel.classList.add('open', 'wizard-embedded');
-		this.wizardPanel.style.maxHeight = 'none';
+		this.wizardPanel.classList.add("open", "wizard-embedded");
+		this.wizardPanel.style.maxHeight = "none";
 		append(this.container, this.wizardPanel);
 		this.wizardPanel.focus();
 	}
@@ -1800,23 +2249,23 @@ export class IssueReporterOverlay {
 
 	private getScreenshotDelayOptions(): { label: string; value: number }[] {
 		return [
-			{ label: localize('noDelay', "No delay"), value: 0 },
-			{ label: localize('threeSeconds', "3 seconds"), value: 3 },
-			{ label: localize('fiveSeconds', "5 seconds"), value: 5 },
-			{ label: localize('tenSeconds', "10 seconds"), value: 10 },
-		];
+      { label: localize("noDelay", "No delay"), value: 0 },
+      { label: localize("threeSeconds", "3 seconds"), value: 3 },
+      { label: localize("fiveSeconds", "5 seconds"), value: 5 },
+      { label: localize("tenSeconds", "10 seconds"), value: 10 },
+    ];
 	}
 
 	private getFloatingBarButtonStyles(targetWindow: Window): typeof defaultButtonStyles {
 		const containerStyles = targetWindow.getComputedStyle(this.container);
 		const cssVar = (name: string, fallback: string): string => containerStyles.getPropertyValue(name).trim() || fallback;
 		return {
-			...defaultButtonStyles,
-			buttonForeground: cssVar('--vscode-button-foreground', '#fff'),
-			buttonBackground: cssVar('--vscode-button-background', '#0e639c'),
-			buttonHoverBackground: cssVar('--vscode-button-hoverBackground', '#1177bb'),
-			buttonBorder: cssVar('--vscode-button-border', 'transparent'),
-		};
+      ...defaultButtonStyles,
+      buttonForeground: cssVar("--vscode-button-foreground", "#fff"),
+      buttonBackground: cssVar("--vscode-button-background", "#0e639c"),
+      buttonHoverBackground: cssVar("--vscode-button-hoverBackground", "#1177bb"),
+      buttonBorder: cssVar("--vscode-button-border", "transparent"),
+    };
 	}
 
 	addScreenshot(screenshot: IScreenshot): void {
@@ -1834,7 +2283,7 @@ export class IssueReporterOverlay {
 
 	private updateAttachmentButtons(): void {
 		const atMax = this.getTotalAttachments() >= MAX_ATTACHMENTS;
-		const maxMsg = localize('maxAttachmentsReached', "Max attachments reached");
+		const maxMsg = localize("maxAttachmentsReached", "Max attachments reached");
 		const wouldReachMax = this.getTotalAttachments() >= MAX_ATTACHMENTS - 1;
 
 		// Screenshot disabled when: at max, OR recording will fill the last slot, OR delayed screenshot pending
@@ -1844,17 +2293,26 @@ export class IssueReporterOverlay {
 
 		if (this.captureStripCaptureBtn) {
 			this.captureStripCaptureBtn.enabled = !screenshotDisabled;
-			this.captureStripCaptureBtn.element.title = screenshotDisabled ? maxMsg : localize('screenshot', "Screenshot");
+			this.captureStripCaptureBtn.element.title = screenshotDisabled ? maxMsg : localize(
+        "screenshot",
+        "Screenshot",
+      );
 		}
 		if (this.captureStripDelayBtn) {
 			// Delay dropdown also disabled while countdown is running
 			this.captureStripDelayBtn.enabled = !screenshotDisabled;
-			this.captureStripDelayBtn.element.title = screenshotDisabled ? maxMsg : localize('captureOptions', "Capture options");
+			this.captureStripDelayBtn.element.title = screenshotDisabled ? maxMsg : localize(
+        "captureOptions",
+        "Capture options",
+      );
 		}
 		if (this.captureStripRecordBtn) {
 			if (this.currentRecordingState !== RecordingState.Recording) {
 				this.captureStripRecordBtn.enabled = !recordDisabled;
-				this.captureStripRecordBtn.element.title = recordDisabled ? maxMsg : localize('recordVideo', "Record video");
+				this.captureStripRecordBtn.element.title = recordDisabled ? maxMsg : localize(
+          "recordVideo",
+          "Record video",
+        );
 			}
 		}
 
@@ -1869,46 +2327,61 @@ export class IssueReporterOverlay {
 		const recording = this.currentRecordingState === RecordingState.Recording;
 		this.nextButton.enabled = !recording;
 		this.nextButton.element.title = recording
-			? localize('recordingActive', "Recording active")
-			: localize('previewOnGitHub', "Preview on GitHub");
+			? localize("recordingActive", "Recording active")
+			: localize("previewOnGitHub", "Preview on GitHub");
 	}
 
 	private renderRecordingCard(parent: HTMLElement, rec: { filePath: string; durationMs: number; thumbnailDataUrl?: string }, index: number): HTMLElement {
-		const card = append(parent, $('div.wizard-screenshot-card.wizard-recording-card'));
+		const card = append(
+      parent,
+      $("div.wizard-screenshot-card.wizard-recording-card"),
+    );
 
 		if (rec.thumbnailDataUrl) {
-			const thumbImg = append(card, $('img.wizard-screenshot-img')) as HTMLImageElement;
-			thumbImg.setAttribute('src', rec.thumbnailDataUrl);
-			thumbImg.alt = localize('recordingThumbnailAlt', "Recording {0}", index + 1);
-			thumbImg.setAttribute('draggable', 'false');
+			const thumbImg = append(
+        card,
+        $("img.wizard-screenshot-img"),
+      ) as HTMLImageElement;
+			thumbImg.setAttribute("src", rec.thumbnailDataUrl);
+			thumbImg.alt = localize(
+        "recordingThumbnailAlt",
+        "Recording {0}",
+        index + 1,
+      );
+			thumbImg.setAttribute("draggable", "false");
 		}
 
-		const playOverlay = append(card, $('div.wizard-recording-play'));
+		const playOverlay = append(card, $("div.wizard-recording-play"));
 		playOverlay.appendChild(renderIcon(Codicon.play));
 
 		const durSec = Math.floor(rec.durationMs / 1000);
-		const durLabel = append(card, $('div.wizard-recording-duration'));
-		durLabel.textContent = `${Math.floor(durSec / 60)}:${(durSec % 60).toString().padStart(2, '0')}`;
+		const durLabel = append(card, $("div.wizard-recording-duration"));
+		durLabel.textContent = `${Math.floor(durSec / 60)}:${(durSec % 60).toString().padStart(2, "0")}`;
 
 		return card;
 	}
 
 	private updateScreenshotThumbnails(): void {
-		this.screenshotContainer.textContent = '';
+		this.screenshotContainer.textContent = "";
 
 		for (let i = 0; i < this.screenshots.length; i++) {
 			const screenshot = this.screenshots[i];
-			const card = append(this.screenshotContainer, $('div.wizard-screenshot-card'));
+			const card = append(
+        this.screenshotContainer,
+        $("div.wizard-screenshot-card"),
+      );
 
-			const img = append(card, $('img')) as HTMLImageElement;
+			const img = append(card, $("img")) as HTMLImageElement;
 			img.src = screenshot.annotatedDataUrl ?? screenshot.dataUrl;
-			img.alt = localize('screenshotAlt', "Screenshot {0}", i + 1);
+			img.alt = localize("screenshotAlt", "Screenshot {0}", i + 1);
 
-			card.setAttribute('role', 'button');
-			card.setAttribute('tabindex', '0');
-			card.title = localize('editScreenshot', "Click to edit screenshot");
+			card.setAttribute("role", "button");
+			card.setAttribute("tabindex", "0");
+			card.title = localize("editScreenshot", "Click to edit screenshot");
 			const openEditor = () => this.openAnnotationEditor(i);
-			this.disposables.add(addDisposableListener(card, EventType.CLICK, openEditor));
+			this.disposables.add(
+        addDisposableListener(card, EventType.CLICK, openEditor),
+      );
 			this.disposables.add(addDisposableListener(card, EventType.KEY_DOWN, e => {
 				const event = new StandardKeyboardEvent(e);
 				if (event.equals(KeyCode.Enter) || event.equals(KeyCode.Space)) {
@@ -1917,17 +2390,22 @@ export class IssueReporterOverlay {
 				}
 			}));
 
-			const deleteBtn = append(card, $('div.wizard-screenshot-delete'));
-			deleteBtn.setAttribute('role', 'button');
-			deleteBtn.setAttribute('aria-label', localize('deleteScreenshot', "Delete screenshot"));
+			const deleteBtn = append(card, $("div.wizard-screenshot-delete"));
+			deleteBtn.setAttribute("role", "button");
+			deleteBtn.setAttribute(
+        "aria-label",
+        localize("deleteScreenshot", "Delete screenshot"),
+      );
 			deleteBtn.appendChild(renderIcon(Codicon.close));
-			this.disposables.add(addDisposableListener(deleteBtn, EventType.CLICK, e => {
-				e.stopPropagation();
-				this.screenshots.splice(i, 1);
-				this.updateScreenshotThumbnails();
-				this.updateAttachmentButtons();
-				this.updateStepUI();
-			}));
+			this.disposables.add(
+        addDisposableListener(deleteBtn, EventType.CLICK, e => {
+          e.stopPropagation();
+          this.screenshots.splice(i, 1);
+          this.updateScreenshotThumbnails();
+          this.updateAttachmentButtons();
+          this.updateStepUI();
+        }),
+      );
 		}
 
 		// Recording thumbnails
@@ -1936,35 +2414,48 @@ export class IssueReporterOverlay {
 			const card = this.renderRecordingCard(this.screenshotContainer, rec, i);
 
 			// Click to open from OS
-			this.disposables.add(addDisposableListener(card, EventType.CLICK, () => {
-				this._onDidRequestOpenRecording.fire(rec.filePath);
-			}));
+			this.disposables.add(
+        addDisposableListener(card, EventType.CLICK, () => {
+          this._onDidRequestOpenRecording.fire(rec.filePath);
+        }),
+      );
 
-			const deleteBtn = append(card, $('div.wizard-screenshot-delete'));
-			deleteBtn.setAttribute('role', 'button');
-			deleteBtn.setAttribute('aria-label', localize('deleteRecording', "Remove recording"));
+			const deleteBtn = append(card, $("div.wizard-screenshot-delete"));
+			deleteBtn.setAttribute("role", "button");
+			deleteBtn.setAttribute(
+        "aria-label",
+        localize("deleteRecording", "Remove recording"),
+      );
 			deleteBtn.appendChild(renderIcon(Codicon.close));
-			this.disposables.add(addDisposableListener(deleteBtn, EventType.CLICK, e => {
-				e.stopPropagation();
-				this.recordings.splice(i, 1);
-				this.updateScreenshotThumbnails();
-				this.updateAttachmentButtons();
-				this.updateStepUI();
-			}));
+			this.disposables.add(
+        addDisposableListener(deleteBtn, EventType.CLICK, e => {
+          e.stopPropagation();
+          this.recordings.splice(i, 1);
+          this.updateScreenshotThumbnails();
+          this.updateAttachmentButtons();
+          this.updateStepUI();
+        }),
+      );
 		}
 
 		if (this.getTotalAttachments() < MAX_ATTACHMENTS) {
 			const wouldReachMax = this.getTotalAttachments() >= MAX_ATTACHMENTS - 1;
 			const addDisabled = wouldReachMax && (this.currentRecordingState === RecordingState.Recording || this.delayedScreenshotPending);
-			const addCard = append(this.screenshotContainer, $('div.wizard-screenshot-card.wizard-screenshot-add'));
+			const addCard = append(
+        this.screenshotContainer,
+        $("div.wizard-screenshot-card.wizard-screenshot-add"),
+      );
 			if (addDisabled) {
-				addCard.classList.add('disabled');
-				addCard.title = localize('maxAttachmentsReached', "Max attachments reached");
+				addCard.classList.add("disabled");
+				addCard.title = localize(
+          "maxAttachmentsReached",
+          "Max attachments reached",
+        );
 			}
-			const plus = append(addCard, $('div.wizard-screenshot-plus'));
+			const plus = append(addCard, $("div.wizard-screenshot-plus"));
 			plus.appendChild(renderIcon(Codicon.add));
 			this.disposables.add(addDisposableListener(addCard, EventType.CLICK, () => {
-				if (!addCard.classList.contains('disabled')) {
+				if (!addCard.classList.contains("disabled")) {
 					this._onDidRequestScreenshot.fire();
 				}
 			}));
@@ -1983,14 +2474,20 @@ export class IssueReporterOverlay {
 		// editor handles save/cancel, then the previous one becomes visible
 		// again.
 		const screenshot = this.screenshots[index];
-		const editor = new ScreenshotAnnotationEditor(screenshot, this.wizardPanel, screenshot.annotationState);
+		const editor = new ScreenshotAnnotationEditor(
+      screenshot,
+      this.wizardPanel,
+      screenshot.annotationState,
+    );
 		this.disposables.add(editor);
 
-		this.disposables.add(editor.onDidSave(({ dataUrl, state }) => {
-			screenshot.annotatedDataUrl = dataUrl;
-			screenshot.annotationState = state;
-			this.updateAttachmentViews();
-		}));
+		this.disposables.add(
+      editor.onDidSave(({ dataUrl, state }) => {
+        screenshot.annotatedDataUrl = dataUrl;
+        screenshot.annotationState = state;
+        this.updateAttachmentViews();
+      }),
+    );
 
 		this.disposables.add(editor.onDidCancel(() => {
 			// nothing to do, editor disposes itself
@@ -2008,24 +2505,29 @@ export class IssueReporterOverlay {
 	private buildIssueBody(): string {
 		const description = this.descriptionTextarea.value.trim();
 		this.model.update({
-			issueDescription: description,
-			issueType: this.selectedIssueType ?? IssueType.Bug,
-			includeSystemInfo: this.includeSystemInfo,
-			includeProcessInfo: this.includeProcessInfo,
-			includeWorkspaceInfo: this.includeWorkspaceInfo,
-			includeExtensions: this.includeExtensions,
-			includeExperiments: this.includeExperiments,
-			includeExtensionData: this.includeExtensionData,
-		});
+      issueDescription: description,
+      issueType: this.selectedIssueType ?? IssueType.Bug,
+      includeSystemInfo: this.includeSystemInfo,
+      includeProcessInfo: this.includeProcessInfo,
+      includeWorkspaceInfo: this.includeWorkspaceInfo,
+      includeExtensions: this.includeExtensions,
+      includeExperiments: this.includeExperiments,
+      includeExtensionData: this.includeExtensionData,
+    });
 
 		const modelData = this.model.getData();
 		const sections: string[] = [
-			`### Description\n\n${description}`,
-			this.generateIssueDetailsMd(),
-		];
+      `### Description\n\n${description}`,
+      this.generateIssueDetailsMd(),
+    ];
 
 		if (this.includeExtensionData && modelData.extensionData) {
-			sections.push(this.createDetails('Extension Data', this.createCodeBlock(modelData.extensionData)));
+			sections.push(
+        this.createDetails(
+          "Extension Data",
+          this.createCodeBlock(modelData.extensionData),
+        ),
+      );
 		}
 
 		if (this.includeSystemInfo && (modelData.versionInfo || modelData.systemInfo || modelData.systemInfoWeb)) {
@@ -2037,7 +2539,12 @@ export class IssueReporterOverlay {
 		}
 
 		if (this.includeExperiments && modelData.experimentInfo) {
-			sections.push(this.createDetails('A/B Experiments', this.createCodeBlock(modelData.experimentInfo)));
+			sections.push(
+        this.createDetails(
+          "A/B Experiments",
+          this.createCodeBlock(modelData.experimentInfo),
+        ),
+      );
 		}
 
 		if (this.includeSettings && this.settingsContent) {
@@ -2046,33 +2553,49 @@ export class IssueReporterOverlay {
 
 		if (this.selectedIssueType === IssueType.PerformanceIssue && !modelData.fileOnMarketplace) {
 			if (this.includeProcessInfo && modelData.processInfo) {
-				sections.push(this.createDetails('Running Processes', this.createCodeBlock(modelData.processInfo)));
+				sections.push(
+          this.createDetails(
+            "Running Processes",
+            this.createCodeBlock(modelData.processInfo),
+          ),
+        );
 			}
 			if (this.includeWorkspaceInfo && modelData.workspaceInfo) {
-				sections.push(this.createDetails('Workspace Metadata', this.createCodeBlock(modelData.workspaceInfo)));
+				sections.push(
+          this.createDetails(
+            "Workspace Metadata",
+            this.createCodeBlock(modelData.workspaceInfo),
+          ),
+        );
 			}
 		}
 
-		sections.push('<!-- generated by issue reporter -->');
+		sections.push("<!-- generated by issue reporter -->");
 
-		return sections.join('\n\n');
+		return sections.join("\n\n");
 	}
 
 	private generateIssueDetailsMd(): string {
 		const modelData = this.model.getData();
 		const rows: [string, string | undefined][] = [
-			['Issue Category', this.getIssueTypeTitle(this.selectedIssueType ?? IssueType.Bug)],
-			['Target', this.getIssueSourceLabel()],
-			['VS Code Version', modelData.versionInfo?.vscodeVersion ?? product.version],
-			['OS Version', modelData.versionInfo?.os ?? modelData.systemInfo?.os],
-		];
+      [
+        "Issue Category",
+        this.getIssueTypeTitle(this.selectedIssueType ?? IssueType.Bug),
+      ],
+      ["Target", this.getIssueSourceLabel()],
+      [
+        "VS Code Version",
+        modelData.versionInfo?.vscodeVersion ?? product.version,
+      ],
+      ["OS Version", modelData.versionInfo?.os ?? modelData.systemInfo?.os],
+    ];
 
 		if (this.selectedIssueSource === IssueSource.Extension && this.selectedExtension) {
 			rows.push(
-				['Extension Identifier', this.selectedExtension.id],
-				['Extension Version', this.selectedExtension.version],
-				['Extension Publisher', this.selectedExtension.publisher],
-			);
+        ["Extension Identifier", this.selectedExtension.id],
+        ["Extension Version", this.selectedExtension.version],
+        ["Extension Publisher", this.selectedExtension.publisher],
+      );
 		}
 
 		return `### Issue Details\n\n${this.createMarkdownTable(rows)}`;
@@ -2083,96 +2606,127 @@ export class IssueReporterOverlay {
 		const rows: [string, string | undefined][] = [];
 
 		if (modelData.versionInfo) {
-			rows.push(
-				['VS Code Version', modelData.versionInfo.vscodeVersion],
-				['OS Version', modelData.versionInfo.os],
-			);
+			rows.push(["VS Code Version", modelData.versionInfo.vscodeVersion], [
+        "OS Version",
+        modelData.versionInfo.os,
+      ]);
 		}
 
 		if (modelData.systemInfo) {
 			rows.push(
-				['CPUs', modelData.systemInfo.cpus],
-				['GPU Status', Object.keys(modelData.systemInfo.gpuStatus).map(key => `${key}: ${modelData.systemInfo!.gpuStatus[key]}`).join('<br>')],
-				['Load (avg)', modelData.systemInfo.load],
-				['Memory (System)', modelData.systemInfo.memory],
-				['Process Argv', modelData.systemInfo.processArgs],
-				['Screen Reader', modelData.systemInfo.screenReader],
-				['VM', modelData.systemInfo.vmHint],
-			);
+        ["CPUs", modelData.systemInfo.cpus],
+        [
+          "GPU Status",
+          Object.keys(modelData.systemInfo.gpuStatus).map(key => `${key}: ${modelData.systemInfo!.gpuStatus[key]}`).join(
+            "<br>",
+          ),
+        ],
+        ["Load (avg)", modelData.systemInfo.load],
+        ["Memory (System)", modelData.systemInfo.memory],
+        ["Process Argv", modelData.systemInfo.processArgs],
+        ["Screen Reader", modelData.systemInfo.screenReader],
+        ["VM", modelData.systemInfo.vmHint],
+      );
 
 			if (modelData.systemInfo.linuxEnv) {
 				rows.push(
-					['DESKTOP_SESSION', modelData.systemInfo.linuxEnv.desktopSession],
-					['XDG_CURRENT_DESKTOP', modelData.systemInfo.linuxEnv.xdgCurrentDesktop],
-					['XDG_SESSION_DESKTOP', modelData.systemInfo.linuxEnv.xdgSessionDesktop],
-					['XDG_SESSION_TYPE', modelData.systemInfo.linuxEnv.xdgSessionType],
-				);
+          ["DESKTOP_SESSION", modelData.systemInfo.linuxEnv.desktopSession],
+          [
+            "XDG_CURRENT_DESKTOP",
+            modelData.systemInfo.linuxEnv.xdgCurrentDesktop,
+          ],
+          [
+            "XDG_SESSION_DESKTOP",
+            modelData.systemInfo.linuxEnv.xdgSessionDesktop,
+          ],
+          ["XDG_SESSION_TYPE", modelData.systemInfo.linuxEnv.xdgSessionType],
+        );
 			}
 
 			for (const remote of modelData.systemInfo.remoteData) {
 				if (isRemoteDiagnosticError(remote)) {
-					rows.push(['Remote Error', remote.errorMessage]);
+					rows.push(["Remote Error", remote.errorMessage]);
 				} else {
 					rows.push(
-						['Remote', remote.latency ? `${remote.hostName} (latency: ${remote.latency.current.toFixed(2)}ms last, ${remote.latency.average.toFixed(2)}ms average)` : remote.hostName],
-						['Remote OS', remote.machineInfo.os],
-						['Remote CPUs', remote.machineInfo.cpus],
-						['Remote Memory (System)', remote.machineInfo.memory],
-						['Remote VM', remote.machineInfo.vmHint],
-					);
+            [
+              "Remote",
+              remote.latency ? `${remote.hostName} (latency: ${remote.latency.current.toFixed(2)}ms last, ${remote.latency.average.toFixed(2)}ms average)` : remote.hostName,
+            ],
+            ["Remote OS", remote.machineInfo.os],
+            ["Remote CPUs", remote.machineInfo.cpus],
+            ["Remote Memory (System)", remote.machineInfo.memory],
+            ["Remote VM", remote.machineInfo.vmHint],
+          );
 				}
 			}
 		}
 
 		if (modelData.systemInfoWeb) {
-			rows.push(['User Agent', modelData.systemInfoWeb]);
+			rows.push(["User Agent", modelData.systemInfoWeb]);
 		}
-		rows.push(['Installation pure', String(modelData.isInstallationPure ?? true)]);
+		rows.push([
+      "Installation pure",
+      String(modelData.isInstallationPure ?? true),
+    ]);
 
-		return this.createDetails('System Info', this.createMarkdownTable(rows));
+		return this.createDetails("System Info", this.createMarkdownTable(rows));
 	}
 
 	private generateExtensionsMd(): string {
 		const modelData = this.model.getData();
-		const nonThemeExtensions = (modelData.enabledNonThemeExtesions ?? modelData.allExtensions.filter(extension => !extension.isTheme && !extension.isBuiltin));
+		const nonThemeExtensions = (modelData.enabledNonThemeExtesions ?? modelData.allExtensions.filter(
+      extension => !extension.isTheme && !extension.isBuiltin,
+    ));
 		if (modelData.extensionsDisabled) {
-			return '### Extensions\n\nExtensions disabled.';
+			return "### Extensions\n\nExtensions disabled.";
 		}
 
 		if (!nonThemeExtensions.length && !modelData.numberOfThemeExtesions) {
-			return '### Extensions\n\nExtensions: none';
+			return "### Extensions\n\nExtensions: none";
 		}
 
 		const rows = nonThemeExtensions.map(extension => [
 			extension.displayName || extension.name,
 			extension.id,
-			extension.publisher ?? 'N/A',
+			extension.publisher ?? "N/A",
 			extension.version,
 		] as [string, string, string, string]);
 		const details: string[] = [];
 		if (rows.length) {
-			details.push(this.createMarkdownTable(rows, ['Name', 'Identifier', 'Author', 'Version']));
+			details.push(
+        this.createMarkdownTable(rows, [
+          "Name",
+          "Identifier",
+          "Author",
+          "Version",
+        ]),
+      );
 		}
 		if (modelData.numberOfThemeExtesions) {
 			details.push(`Theme extensions: ${modelData.numberOfThemeExtesions}`);
 		}
 
-		return this.createDetails(`Extensions (${nonThemeExtensions.length})`, details.join('\n\n'));
+		return this.createDetails(
+      `Extensions (${nonThemeExtensions.length})`,
+      details.join("\n\n"),
+    );
 	}
 
 	private generateSettingsMd(): string {
-		const details = [`#### User Settings\n\n${this.createCodeBlock(this.settingsContent ?? '', 'json')}`];
-		return this.createDetails('Settings', details.join('\n\n'));
+		const details = [
+      `#### User Settings\n\n${this.createCodeBlock(this.settingsContent ?? "", "json")}`,
+    ];
+		return this.createDetails("Settings", details.join("\n\n"));
 	}
 
 	private getIssueTypeTitle(issueType: IssueType): string {
 		switch (issueType) {
 			case IssueType.Bug:
-				return 'Bug';
+				return "Bug";
 			case IssueType.PerformanceIssue:
-				return 'Performance Issue';
+				return "Performance Issue";
 			case IssueType.FeatureRequest:
-				return 'Feature Request';
+				return "Feature Request";
 		}
 	}
 
@@ -2185,25 +2739,28 @@ ${content}
 </details>`;
 	}
 
-	private createCodeBlock(content: string, language = ''): string {
+	private createCodeBlock(content: string, language = ""): string {
 		return `\`\`\`${language}
 ${content.trimEnd()}
 \`\`\``;
 	}
 
-	private createMarkdownTable(rows: readonly (readonly (string | undefined)[])[], headers: readonly string[] = ['Item', 'Value']): string {
-		return `${headers.map(header => this.escapeMarkdownTableCell(header)).join('|')}
-${headers.map(() => '---').join('|')}
-${rows.map(row => row.map(value => this.escapeMarkdownTableCell(value ?? '')).join('|')).join('\n')}`;
+	private createMarkdownTable(rows: readonly (readonly (string | undefined)[])[], headers: readonly string[] = [
+    "Item",
+    "Value",
+  ]): string {
+		return `${headers.map(header => this.escapeMarkdownTableCell(header)).join("|")}
+${headers.map(() => "---").join("|")}
+${rows.map(row => row.map(value => this.escapeMarkdownTableCell(value ?? "")).join("|")).join("\n")}`;
 	}
 
 	private escapeMarkdownTableCell(value: string): string {
-		return value.replace(/\r?\n/g, '<br>').replace(/\|/g, '\\|');
+		return value.replace(/\r?\n/g, "<br>").replace(/\|/g, "\\|");
 	}
 
 	setUpdateAvailable(showUpdateBanner: boolean): void {
 		this.showUpdateBanner = showUpdateBanner;
-		this.updateBanner.style.display = showUpdateBanner ? '' : 'none';
+		this.updateBanner.style.display = showUpdateBanner ? "" : "none";
 	}
 
 	focus(): void {
@@ -2220,13 +2777,13 @@ ${rows.map(row => row.map(value => this.escapeMarkdownTableCell(value ?? '')).jo
 
 	hideFloatingBar(): void {
 		if (this.floatingBar) {
-			this.floatingBar.style.display = 'none';
+			this.floatingBar.style.display = "none";
 		}
 	}
 
 	showFloatingBar(): void {
 		if (this.floatingBar) {
-			this.floatingBar.style.display = '';
+			this.floatingBar.style.display = "";
 		}
 	}
 
@@ -2244,15 +2801,17 @@ ${rows.map(row => row.map(value => this.escapeMarkdownTableCell(value ?? '')).jo
 		// document.body when no workbench root is present (shouldn't happen in
 		// practice but keeps the bar visible regardless).
 		// eslint-disable-next-line no-restricted-syntax
-		const workbench = targetWindow.document.querySelector('.monaco-workbench') as HTMLElement | null;
+		const workbench = targetWindow.document.querySelector(
+      ".monaco-workbench",
+    ) as HTMLElement | null;
 		const mountTarget = workbench ?? targetWindow.document.body;
 		if (this.floatingBar.parentElement !== mountTarget) {
 			this.floatingBar.remove();
 			mountTarget.appendChild(this.floatingBar);
 			// Reset position so it appears in the new window
-			this.floatingBar.style.left = '';
-			this.floatingBar.style.top = '';
-			this.floatingBar.style.right = '30%';
+			this.floatingBar.style.left = "";
+			this.floatingBar.style.top = "";
+			this.floatingBar.style.right = "30%";
 		}
 	}
 
@@ -2312,22 +2871,22 @@ ${rows.map(row => row.map(value => this.escapeMarkdownTableCell(value ?? '')).jo
 
 	private getDraftKey(): string {
 		return JSON.stringify({
-			title: this.titleInput.value.trim(),
-			description: this.descriptionTextarea.value.trim(),
-			issueType: this.selectedIssueType,
-			issueSource: this.selectedIssueSource,
-			extensionId: this.selectedExtension?.id,
-			includeSystemInfo: this.includeSystemInfo,
-			includeProcessInfo: this.includeProcessInfo,
-			includeWorkspaceInfo: this.includeWorkspaceInfo,
-			includeExtensions: this.includeExtensions,
-			includeExperiments: this.includeExperiments,
-			includeExtensionData: this.includeExtensionData,
-			includeSettings: this.includeSettings,
-			settingsContent: this.settingsContent,
-			screenshots: this.screenshots.map(screenshot => screenshot.annotatedDataUrl ?? screenshot.dataUrl),
-			recordings: this.recordings.map(recording => recording.filePath),
-		});
+      title: this.titleInput.value.trim(),
+      description: this.descriptionTextarea.value.trim(),
+      issueType: this.selectedIssueType,
+      issueSource: this.selectedIssueSource,
+      extensionId: this.selectedExtension?.id,
+      includeSystemInfo: this.includeSystemInfo,
+      includeProcessInfo: this.includeProcessInfo,
+      includeWorkspaceInfo: this.includeWorkspaceInfo,
+      includeExtensions: this.includeExtensions,
+      includeExperiments: this.includeExperiments,
+      includeExtensionData: this.includeExtensionData,
+      includeSettings: this.includeSettings,
+      settingsContent: this.settingsContent,
+      screenshots: this.screenshots.map(screenshot => screenshot.annotatedDataUrl ?? screenshot.dataUrl),
+      recordings: this.recordings.map(recording => recording.filePath),
+    });
 	}
 
 	/** Set the title input value (e.g., from AI generation) */
@@ -2340,9 +2899,9 @@ ${rows.map(row => row.map(value => this.escapeMarkdownTableCell(value ?? '')).jo
 	}
 
 	resetGenerateButton(): void {
-		this.generateTitleBtn.label = `$(sparkle) ${localize('generateTitleBtn', "Generate from description")}`;
-		this.generateTitleBtn.element.classList.remove('loading');
-		this.generateTitleBtn.element.style.minWidth = '';
+		this.generateTitleBtn.label = `$(sparkle) ${localize("generateTitleBtn", "Generate from description")}`;
+		this.generateTitleBtn.element.classList.remove("loading");
+		this.generateTitleBtn.element.style.minWidth = "";
 		this.generateTitleBtn.enabled = this.hasDescriptionContent();
 	}
 
@@ -2351,13 +2910,17 @@ ${rows.map(row => row.map(value => this.escapeMarkdownTableCell(value ?? '')).jo
 		// Add close button next to the existing preview button
 		const nav = this.nextButton.element.parentElement;
 		// eslint-disable-next-line no-restricted-syntax
-		if (nav && !nav.querySelector('.wizard-close-btn')) {
-			this.closeButton = this.disposables.add(new Button(nav, { ...defaultButtonStyles, secondary: true }));
-			this.closeButton.label = localize('closeTab', "Close");
-			this.closeButton.element.classList.add('wizard-close-btn');
-			this.disposables.add(this.closeButton.onDidClick(() => {
-				this._onDidClose.fire();
-			}));
+		if (nav && !nav.querySelector(".wizard-close-btn")) {
+			this.closeButton = this.disposables.add(
+        new Button(nav, { ...defaultButtonStyles, secondary: true }),
+      );
+			this.closeButton.label = localize("closeTab", "Close");
+			this.closeButton.element.classList.add("wizard-close-btn");
+			this.disposables.add(
+        this.closeButton.onDidClick(() => {
+          this._onDidClose.fire();
+        }),
+      );
 		}
 		this.updateStepUI();
 	}
@@ -2369,17 +2932,19 @@ ${rows.map(row => row.map(value => this.escapeMarkdownTableCell(value ?? '')).jo
 			this.recordingStartTime = Date.now();
 
 			const formatTime = () => {
-				const elapsed = Math.floor((Date.now() - this.recordingStartTime) / 1000);
-				const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
-				const secs = (elapsed % 60).toString().padStart(2, '0');
+				const elapsed = Math.floor(
+          (Date.now() - this.recordingStartTime) / 1000,
+        );
+				const mins = Math.floor(elapsed / 60).toString().padStart(2, "0");
+				const secs = (elapsed % 60).toString().padStart(2, "0");
 				return `${mins}:${secs}`;
 			};
 
-			const stopLabel = localize('stopRecording', "Stop recording");
+			const stopLabel = localize("stopRecording", "Stop recording");
 			const makeLabel = () => `$(stop-circle) ${stopLabel} ${formatTime()}`;
 
 			if (this.captureStripRecordBtn) {
-				this.captureStripRecordBtn.element.classList.add('recording');
+				this.captureStripRecordBtn.element.classList.add("recording");
 				this.captureStripRecordBtn.element.title = stopLabel;
 				this.captureStripRecordBtn.label = makeLabel();
 			}
@@ -2397,9 +2962,12 @@ ${rows.map(row => row.map(value => this.escapeMarkdownTableCell(value ?? '')).jo
 			}
 
 			if (this.captureStripRecordBtn) {
-				this.captureStripRecordBtn.element.classList.remove('recording');
-				this.captureStripRecordBtn.element.title = localize('recordVideo', "Record video");
-				this.captureStripRecordBtn.label = `$(record) ${localize('recordVideo', "Record video")}`;
+				this.captureStripRecordBtn.element.classList.remove("recording");
+				this.captureStripRecordBtn.element.title = localize(
+          "recordVideo",
+          "Record video",
+        );
+				this.captureStripRecordBtn.label = `$(record) ${localize("recordVideo", "Record video")}`;
 			}
 		}
 
@@ -2456,9 +3024,11 @@ ${rows.map(row => row.map(value => this.escapeMarkdownTableCell(value ?? '')).jo
 	}
 
 	private renderShortcutKeycap(parent: HTMLElement, keybinding: ResolvedKeybinding): void {
-		const label = this.disposables.add(new KeybindingLabel(parent, OS, { ...defaultKeybindingLabelStyles }));
+		const label = this.disposables.add(
+      new KeybindingLabel(parent, OS, { ...defaultKeybindingLabelStyles }),
+    );
 		label.set(keybinding);
-		label.element.classList.add('wizard-shortcut');
+		label.element.classList.add("wizard-shortcut");
 	}
 
 	dispose(): void {

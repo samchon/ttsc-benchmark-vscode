@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DeferredPromise } from '../../../../../../base/common/async.js';
-import { DisposableStore, MutableDisposable, toDisposable, type IDisposable } from '../../../../../../base/common/lifecycle.js';
-import type { IMarker as IXtermMarker } from '@xterm/xterm';
+import { DeferredPromise } from "../../../../../../base/common/async.js";
+import { DisposableStore, MutableDisposable, toDisposable, type IDisposable } from "../../../../../../base/common/lifecycle.js";
+import type { IMarker as IXtermMarker } from "@xterm/xterm";
 
 /**
  * Sets up a recreating start marker which is resilient to prompts that clear/re-render (eg. transient
@@ -32,16 +32,18 @@ export function setupRecreatingStartMarker(
 			return;
 		}
 		markerListener.value = marker.onDispose(() => {
-			log?.('Start marker was disposed, recreating');
-			recreateStartMarker();
-		});
+      log?.("Start marker was disposed, recreating");
+      recreateStartMarker();
+    });
 	};
 	recreateStartMarker();
-	store.add(toDisposable(() => {
-		markerListener.dispose();
-		startMarker.clear();
-		fire(undefined);
-	}));
+	store.add(
+    toDisposable(() => {
+      markerListener.dispose();
+      startMarker.clear();
+      fire(undefined);
+    }),
+  );
 	store.add(startMarker);
 
 	// Return a disposable that stops the recreation loop without clearing
@@ -59,7 +61,7 @@ export function createAltBufferPromise(
 	const deferred = new DeferredPromise<void>();
 	const complete = () => {
 		if (!deferred.isSettled) {
-			log?.('Detected alternate buffer entry');
+			log?.("Detected alternate buffer entry");
 			deferred.complete();
 		}
 	};
@@ -88,7 +90,9 @@ export function createAltBufferPromise(
  * This function removes (1) and (3) to isolate the actual output.
  */
 export function stripCommandEchoAndPrompt(output: string, commandLine: string, log?: (message: string) => void): string {
-	log?.(`stripCommandEchoAndPrompt input: output length=${output.length}, commandLine length=${commandLine.length}`);
+	log?.(
+    `stripCommandEchoAndPrompt input: output length=${output.length}, commandLine length=${commandLine.length}`,
+  );
 
 	const result = _stripCommandEchoAndPromptOnce(output, commandLine, log);
 
@@ -109,12 +113,12 @@ function _stripCommandEchoAndPromptOnce(output: string, commandLine: string, log
 	// Allow suffix matching to handle partial command echoes from getOutput()
 	// where the prompt line is not included.
 	const echoResult = findCommandEcho(output, commandLine, /*allowSuffixMatch*/ true);
-	const lines = echoResult ? echoResult.linesAfter : output.split('\n');
+	const lines = echoResult ? echoResult.linesAfter : output.split("\n");
 	const startIndex = 0;
 
 	// Use evidence from the prompt prefix (content before the command echo)
 	// to narrow down which trailing prompt patterns to check.
-	const promptBefore = echoResult?.contentBefore ?? '';
+	const promptBefore = echoResult?.contentBefore ?? "";
 	const isUnixAt = /\w+@[\w.-]+:/.test(promptBefore);
 	const isUnixHost = !isUnixAt && /[\w.-]+:\S/.test(promptBefore);
 	const isUnix = isUnixAt || isUnixHost;
@@ -152,7 +156,9 @@ function _stripCommandEchoAndPromptOnce(output: string, commandLine: string, log
 			((!knownPrompt || isUnixAt) && /^\s*\w+@[\w.-]+:.*[#$]\s*$/.test(line)) ||
 			// hostname:path user$ or hostname:path user#
 			// e.g., "dsm12-be220-abc:testWorkspace runner$"
-			((!knownPrompt || isUnixHost) && /^\s*[\w.-]+:\S.*\s\w+[#$]\s*$/.test(line)) ||
+			((!knownPrompt || isUnixHost) && /^\s*[\w.-]+:\S.*\s\w+[#$]\s*$/.test(
+        line,
+      )) ||
 			// PowerShell: PS C:\path>
 			((!knownPrompt || isPowerShell) && /^PS\s+[A-Z]:\\.*>\s*$/.test(line)) ||
 			// Windows cmd: C:\path>
@@ -171,11 +177,15 @@ function _stripCommandEchoAndPromptOnce(output: string, commandLine: string, log
 			// Bracketed prompt start: [ hostname:/path or [ user@host:/path
 			// e.g., "[ alex@MacBook-Pro:/Users/alex/src/vscode4/extensions/vscode-api-test"
 			// e.g., "[W007DV9PF9-1:~/vss/_work/1/s/extensions/vscode-api-tests/testWorkspace] cloudte"
-			((!knownPrompt || isUnix) && /^\[\s*[\w.-]+(@[\w.-]+)?:[~\/]/.test(line)) ||
+			((!knownPrompt || isUnix) && /^\[\s*[\w.-]+(@[\w.-]+)?:[~\/]/.test(
+        line,
+      )) ||
 			// Wrapped continuation: user@host:path or hostname:path (no trailing $)
 			// Only matched after we've already stripped a prompt fragment below.
 			// e.g., "cloudtest@host:/mnt/vss/.../vscode-api-tes" or "dsm12-abc:testWorkspace runn"
-			((!knownPrompt || isUnix) && trailingStrippedCount > 0 && /^\s*[\w][-\w.]*(@[\w.-]+)?:\S/.test(line)) ||
+			((!knownPrompt || isUnix) && trailingStrippedCount > 0 && /^\s*[\w][-\w.]*(@[\w.-]+)?:\S/.test(
+        line,
+      )) ||
 			// Bracketed prompt end: ...] $ or ...] #
 			// e.g., "s/testWorkspace (main**) ] $ "
 			((!knownPrompt || isUnix) && /\]\s*[#$]\s*$/.test(line));
@@ -192,8 +202,10 @@ function _stripCommandEchoAndPromptOnce(output: string, commandLine: string, log
 		}
 	}
 
-	const result = lines.slice(startIndex, endIndex).join('\n');
-	log?.(`stripCommandEchoAndPrompt result: length=${result.length} (startIndex=${startIndex}, endIndex=${endIndex}, totalLines=${lines.length})`);
+	const result = lines.slice(startIndex, endIndex).join("\n");
+	log?.(
+    `stripCommandEchoAndPrompt result: length=${result.length} (startIndex=${startIndex}, endIndex=${endIndex}, totalLines=${lines.length})`,
+  );
 	return result;
 }
 
@@ -229,7 +241,7 @@ export function findCommandEcho(output: string, commandLine: string, allowSuffix
 				// matching the tail of "echo MARKER_123" is almost certainly
 				// actual output, not a wrapped command continuation.
 				const charBefore = trimmedCommand[trimmedCommand.length - len - 1];
-				if (charBefore !== undefined && charBefore !== ' ' && charBefore !== '\t') {
+				if (charBefore !== undefined && charBefore !== " " && charBefore !== "\t") {
 					suffixLen = len;
 				}
 				break;
@@ -238,7 +250,7 @@ export function findCommandEcho(output: string, commandLine: string, allowSuffix
 		if (suffixLen === 0) {
 			return undefined;
 		}
-		contentBefore = '';
+		contentBefore = "";
 		matchEndInStripped = suffixLen - 1;
 	} else {
 		return undefined;
@@ -248,7 +260,7 @@ export function findCommandEcho(output: string, commandLine: string, allowSuffix
 	// which line it falls on to split linesAfter.
 	const originalEnd = indexMapping[matchEndInStripped];
 
-	const lines = output.split('\n');
+	const lines = output.split("\n");
 	let echoEndLine = 0;
 	let offset = 0;
 	for (let i = 0; i < lines.length; i++) {
@@ -261,19 +273,19 @@ export function findCommandEcho(output: string, commandLine: string, allowSuffix
 	}
 
 	return {
-		contentBefore,
-		linesAfter: lines.slice(echoEndLine),
-	};
+    contentBefore,
+    linesAfter: lines.slice(echoEndLine),
+  };
 }
 
 export function stripNewLinesAndBuildMapping(output: string): { strippedOutput: string; indexMapping: number[] } {
 	const indexMapping: number[] = [];
 	const strippedChars: string[] = [];
 	for (let i = 0; i < output.length; i++) {
-		if (output[i] !== '\n') {
+		if (output[i] !== "\n") {
 			strippedChars.push(output[i]);
 			indexMapping.push(i);
 		}
 	}
-	return { strippedOutput: strippedChars.join(''), indexMapping };
+	return { strippedOutput: strippedChars.join(""), indexMapping };
 }

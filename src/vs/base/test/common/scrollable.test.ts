@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { SmoothScrollingOperation, SmoothScrollingUpdate } from '../../common/scrollable.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from './utils.js';
+import assert from "assert";
+import { SmoothScrollingOperation, SmoothScrollingUpdate } from "../../common/scrollable.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "./utils.js";
 
 class TestSmoothScrollingOperation extends SmoothScrollingOperation {
 
@@ -14,11 +14,11 @@ class TestSmoothScrollingOperation extends SmoothScrollingOperation {
 		startTime = startTime - 10;
 
 		super(
-			{ scrollLeft: 0, scrollTop: from, width: 0, height: viewportSize },
-			{ scrollLeft: 0, scrollTop: to, width: 0, height: viewportSize },
-			startTime,
-			duration
-		);
+      { scrollLeft: 0, scrollTop: from, width: 0, height: viewportSize },
+      { scrollLeft: 0, scrollTop: to, width: 0, height: viewportSize },
+      startTime,
+      duration,
+    );
 	}
 
 	public testTick(now: number): SmoothScrollingUpdate {
@@ -27,7 +27,7 @@ class TestSmoothScrollingOperation extends SmoothScrollingOperation {
 
 }
 
-suite('SmoothScrollingOperation', () => {
+suite("SmoothScrollingOperation", () => {
 
 	const VIEWPORT_HEIGHT = 800;
 	const ANIMATION_DURATION = 125;
@@ -64,7 +64,7 @@ suite('SmoothScrollingOperation', () => {
 		assert.deepStrictEqual(actual, expected);
 	}
 
-	test('scroll 25 lines (40 fit)', () => {
+	test("scroll 25 lines (40 fit)", () => {
 		assertSmoothScroll(0, 500, [
 			[5, 46],
 			[14, 55],
@@ -75,7 +75,7 @@ suite('SmoothScrollingOperation', () => {
 		]);
 	});
 
-	test('scroll 75 lines (40 fit)', () => {
+	test("scroll 75 lines (40 fit)", () => {
 		assertSmoothScroll(0, 1500, [
 			[15, 56],
 			[44, 85],
@@ -86,7 +86,7 @@ suite('SmoothScrollingOperation', () => {
 		]);
 	});
 
-	test('scroll 100 lines (40 fit)', () => {
+	test("scroll 100 lines (40 fit)", () => {
 		assertSmoothScroll(0, 2000, [
 			[20, 61],
 			[59, 100],
@@ -97,7 +97,7 @@ suite('SmoothScrollingOperation', () => {
 		]);
 	});
 
-	test('scroll 125 lines (40 fit)', () => {
+	test("scroll 125 lines (40 fit)", () => {
 		assertSmoothScroll(0, 2500, [
 			[16, 57],
 			[29, 70],
@@ -108,7 +108,7 @@ suite('SmoothScrollingOperation', () => {
 		]);
 	});
 
-	test('scroll 500 lines (40 fit)', () => {
+	test("scroll 500 lines (40 fit)", () => {
 		assertSmoothScroll(0, 10000, [
 			[16, 57],
 			[29, 70],

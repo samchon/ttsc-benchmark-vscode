@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { IDiffChange, LcsDiff, StringDiffSequence } from '../../../common/diff/diff.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../utils.js';
+import assert from "assert";
+import { IDiffChange, LcsDiff, StringDiffSequence } from "../../../common/diff/diff.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../utils.js";
 
 function createArray<T>(length: number, value: T): T[] {
 	const r: T[] = [];
@@ -16,7 +16,7 @@ function createArray<T>(length: number, value: T): T[] {
 }
 
 function maskBasedSubstring(str: string, mask: boolean[]): string {
-	let r = '';
+	let r = "";
 	for (let i = 0; i < str.length; i++) {
 		if (mask[i]) {
 			r += str.charAt(i);
@@ -59,7 +59,10 @@ function assertAnswer(originalStr: string, modifiedStr: string, changes: IDiffCh
 }
 
 function lcsInnerTest(originalStr: string, modifiedStr: string, answerStr: string, onlyLength: boolean = false): void {
-	const diff = new LcsDiff(new StringDiffSequence(originalStr), new StringDiffSequence(modifiedStr));
+	const diff = new LcsDiff(
+    new StringDiffSequence(originalStr),
+    new StringDiffSequence(modifiedStr),
+  );
 	const changes = diff.ComputeDiff(false).changes;
 	assertAnswer(originalStr, modifiedStr, changes, answerStr, onlyLength);
 }
@@ -75,36 +78,41 @@ function stringPower(str: string, power: number): string {
 function lcsTest(originalStr: string, modifiedStr: string, answerStr: string) {
 	lcsInnerTest(originalStr, modifiedStr, answerStr);
 	for (let i = 2; i <= 5; i++) {
-		lcsInnerTest(stringPower(originalStr, i), stringPower(modifiedStr, i), stringPower(answerStr, i), true);
+		lcsInnerTest(
+      stringPower(originalStr, i),
+      stringPower(modifiedStr, i),
+      stringPower(answerStr, i),
+      true,
+    );
 	}
 }
 
-suite('Diff', () => {
+suite("Diff", () => {
 	ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('LcsDiff - different strings tests', function () {
+	test("LcsDiff - different strings tests", function () {
 		this.timeout(10000);
-		lcsTest('heLLo world', 'hello orlando', 'heo orld');
-		lcsTest('abcde', 'acd', 'acd'); // simple
-		lcsTest('abcdbce', 'bcede', 'bcde'); // skip
-		lcsTest('abcdefgabcdefg', 'bcehafg', 'bceafg'); // long
-		lcsTest('abcde', 'fgh', ''); // no match
-		lcsTest('abcfabc', 'fabc', 'fabc');
-		lcsTest('0azby0', '9axbzby9', 'azby');
-		lcsTest('0abc00000', '9a1b2c399999', 'abc');
+		lcsTest("heLLo world", "hello orlando", "heo orld");
+		lcsTest("abcde", "acd", "acd"); // simple
+		lcsTest("abcdbce", "bcede", "bcde"); // skip
+		lcsTest("abcdefgabcdefg", "bcehafg", "bceafg"); // long
+		lcsTest("abcde", "fgh", ""); // no match
+		lcsTest("abcfabc", "fabc", "fabc");
+		lcsTest("0azby0", "9axbzby9", "azby");
+		lcsTest("0abc00000", "9a1b2c399999", "abc");
 
-		lcsTest('fooBar', 'myfooBar', 'fooBar'); // all insertions
-		lcsTest('fooBar', 'fooMyBar', 'fooBar'); // all insertions
-		lcsTest('fooBar', 'fooBar', 'fooBar'); // identical sequences
+		lcsTest("fooBar", "myfooBar", "fooBar"); // all insertions
+		lcsTest("fooBar", "fooMyBar", "fooBar"); // all insertions
+		lcsTest("fooBar", "fooBar", "fooBar"); // identical sequences
 	});
 });
 
-suite('Diff - Ported from VS', () => {
+suite("Diff - Ported from VS", () => {
 	ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('using continue processing predicate to quit early', function () {
-		const left = 'abcdef';
-		const right = 'abxxcyyydzzzzezzzzzzzzzzzzzzzzzzzzf';
+	test("using continue processing predicate to quit early", function () {
+		const left = "abcdef";
+		const right = "abxxcyyydzzzzezzzzzzzzzzzzzzzzzzzzf";
 
 		// We use a long non-matching portion at the end of the right-side string, so the backwards tracking logic
 		// doesn't get there first.
@@ -125,7 +133,7 @@ suite('Diff - Ported from VS', () => {
 		assert.strictEqual(predicateCallCount, 1);
 
 		// Doesn't include 'c', 'd', or 'e', since we quit on the first request
-		assertAnswer(left, right, changes, 'abf');
+		assertAnswer(left, right, changes, "abf");
 
 
 
@@ -138,7 +146,7 @@ suite('Diff - Ported from VS', () => {
 		});
 		changes = diff.ComputeDiff(true).changes;
 
-		assertAnswer(left, right, changes, 'abcf');
+		assertAnswer(left, right, changes, "abcf");
 
 
 
@@ -151,7 +159,7 @@ suite('Diff - Ported from VS', () => {
 		});
 		changes = diff.ComputeDiff(true).changes;
 
-		assertAnswer(left, right, changes, 'abcdf');
+		assertAnswer(left, right, changes, "abcdf");
 
 
 
@@ -167,7 +175,7 @@ suite('Diff - Ported from VS', () => {
 		});
 		changes = diff.ComputeDiff(true).changes;
 
-		assertAnswer(left, right, changes, 'abcdf');
+		assertAnswer(left, right, changes, "abcdf");
 
 
 
@@ -180,6 +188,6 @@ suite('Diff - Ported from VS', () => {
 		});
 		changes = diff.ComputeDiff(true).changes;
 
-		assertAnswer(left, right, changes, 'abcdef');
+		assertAnswer(left, right, changes, "abcdef");
 	});
 });

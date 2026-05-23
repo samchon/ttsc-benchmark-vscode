@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Schemas } from '../../../base/common/network.js';
-import { ExtUri, IExtUri } from '../../../base/common/resources.js';
-import { UriComponents } from '../../../base/common/uri.js';
-import { FileSystemProviderCapabilities } from '../../../platform/files/common/files.js';
-import { createDecorator } from '../../../platform/instantiation/common/instantiation.js';
-import { ExtHostFileSystemInfoShape } from './extHost.protocol.js';
+import { Schemas } from "../../../base/common/network.js";
+import { ExtUri, IExtUri } from "../../../base/common/resources.js";
+import { UriComponents } from "../../../base/common/uri.js";
+import { FileSystemProviderCapabilities } from "../../../platform/files/common/files.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { ExtHostFileSystemInfoShape } from "./extHost.protocol.js";
 
 export class ExtHostFileSystemInfo implements ExtHostFileSystemInfoShape {
 
@@ -54,4 +54,6 @@ export class ExtHostFileSystemInfo implements ExtHostFileSystemInfoShape {
 export interface IExtHostFileSystemInfo extends ExtHostFileSystemInfo {
 	readonly extUri: IExtUri;
 }
-export const IExtHostFileSystemInfo = createDecorator<IExtHostFileSystemInfo>('IExtHostFileSystemInfo');
+export const IExtHostFileSystemInfo = createDecorator<IExtHostFileSystemInfo>(
+  "IExtHostFileSystemInfo",
+);

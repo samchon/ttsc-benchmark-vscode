@@ -3,9 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createDecorator } from '../../instantiation/common/instantiation.js';
+import { createDecorator } from "../../instantiation/common/instantiation.js";
 
-export const ILocalGitService = createDecorator<ILocalGitService>('localGitService');
+export const ILocalGitService = createDecorator<ILocalGitService>(
+  "localGitService",
+);
 
 /**
  * Low-level service for executing git commands on the local machine.

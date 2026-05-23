@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../../../base/common/uri.js';
-import { IEnsureRepositoryOptions, IPullRepositoryOptions } from './agentPluginRepositoryService.js';
-import { IMarketplacePlugin, IPluginSourceDescriptor, PluginSourceKind } from './pluginMarketplaceService.js';
+import { URI } from "../../../../../base/common/uri.js";
+import { IEnsureRepositoryOptions, IPullRepositoryOptions } from "./agentPluginRepositoryService.js";
+import { IMarketplacePlugin, IPluginSourceDescriptor, PluginSourceKind } from "./pluginMarketplaceService.js";
 
 /**
  * Per-kind strategy that centralizes install-path computation, source

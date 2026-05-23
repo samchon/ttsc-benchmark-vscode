@@ -2,30 +2,53 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { $, getWindow, n } from '../../../../../../../base/browser/dom.js';
-import { Color } from '../../../../../../../base/common/color.js';
-import { Emitter } from '../../../../../../../base/common/event.js';
-import { Disposable } from '../../../../../../../base/common/lifecycle.js';
-import { IObservable, IReader, autorun, constObservable, derived, derivedObservableWithCache, observableFromEvent } from '../../../../../../../base/common/observable.js';
-import { IInstantiationService } from '../../../../../../../platform/instantiation/common/instantiation.js';
-import { asCssVariable } from '../../../../../../../platform/theme/common/colorUtils.js';
-import { IThemeService } from '../../../../../../../platform/theme/common/themeService.js';
-import { IUserInteractionService } from '../../../../../../../platform/userInteraction/browser/userInteractionService.js';
-import { ICodeEditor } from '../../../../../../browser/editorBrowser.js';
-import { observableCodeEditor } from '../../../../../../browser/observableCodeEditor.js';
-import { Rect } from '../../../../../../common/core/2d/rect.js';
-import { EmbeddedCodeEditorWidget } from '../../../../../../browser/widget/codeEditor/embeddedCodeEditorWidget.js';
-import { OffsetRange } from '../../../../../../common/core/ranges/offsetRange.js';
-import { Position } from '../../../../../../common/core/position.js';
-import { Range } from '../../../../../../common/core/range.js';
-import { ITextModel } from '../../../../../../common/model.js';
-import { StickyScrollController } from '../../../../../stickyScroll/browser/stickyScrollController.js';
-import { InlineCompletionContextKeys } from '../../../controller/inlineCompletionContextKeys.js';
-import { IInlineEditsView, InlineEditClickEvent, InlineEditTabAction } from '../inlineEditsViewInterface.js';
-import { InlineEditWithChanges } from '../inlineEditWithChanges.js';
-import { getEditorBackgroundColor, getEditorBlendedColor, getModifiedBorderColor, getOriginalBorderColor, INLINE_EDITS_BORDER_RADIUS, modifiedBackgroundColor, originalBackgroundColor } from '../theme.js';
-import { PathBuilder, getContentRenderWidth, getOffsetForPos, mapOutFalsy, maxContentWidthInRange, observeEditorBoundingClientRect } from '../utils/utils.js';
-import { InlineCompletionEditorType } from '../../../model/provideInlineCompletions.js';
+import { $, getWindow, n } from "../../../../../../../base/browser/dom.js";
+import { Color } from "../../../../../../../base/common/color.js";
+import { Emitter } from "../../../../../../../base/common/event.js";
+import { Disposable } from "../../../../../../../base/common/lifecycle.js";
+import {
+  IObservable,
+  IReader,
+  autorun,
+  constObservable,
+  derived,
+  derivedObservableWithCache,
+  observableFromEvent,
+} from "../../../../../../../base/common/observable.js";
+import { IInstantiationService } from "../../../../../../../platform/instantiation/common/instantiation.js";
+import { asCssVariable } from "../../../../../../../platform/theme/common/colorUtils.js";
+import { IThemeService } from "../../../../../../../platform/theme/common/themeService.js";
+import { IUserInteractionService } from "../../../../../../../platform/userInteraction/browser/userInteractionService.js";
+import { ICodeEditor } from "../../../../../../browser/editorBrowser.js";
+import { observableCodeEditor } from "../../../../../../browser/observableCodeEditor.js";
+import { Rect } from "../../../../../../common/core/2d/rect.js";
+import { EmbeddedCodeEditorWidget } from "../../../../../../browser/widget/codeEditor/embeddedCodeEditorWidget.js";
+import { OffsetRange } from "../../../../../../common/core/ranges/offsetRange.js";
+import { Position } from "../../../../../../common/core/position.js";
+import { Range } from "../../../../../../common/core/range.js";
+import { ITextModel } from "../../../../../../common/model.js";
+import { StickyScrollController } from "../../../../../stickyScroll/browser/stickyScrollController.js";
+import { InlineCompletionContextKeys } from "../../../controller/inlineCompletionContextKeys.js";
+import { IInlineEditsView, InlineEditClickEvent, InlineEditTabAction } from "../inlineEditsViewInterface.js";
+import { InlineEditWithChanges } from "../inlineEditWithChanges.js";
+import {
+  getEditorBackgroundColor,
+  getEditorBlendedColor,
+  getModifiedBorderColor,
+  getOriginalBorderColor,
+  INLINE_EDITS_BORDER_RADIUS,
+  modifiedBackgroundColor,
+  originalBackgroundColor,
+} from "../theme.js";
+import {
+  PathBuilder,
+  getContentRenderWidth,
+  getOffsetForPos,
+  mapOutFalsy,
+  maxContentWidthInRange,
+  observeEditorBoundingClientRect,
+} from "../utils/utils.js";
+import { InlineCompletionEditorType } from "../../../model/provideInlineCompletions.js";
 
 const HORIZONTAL_PADDING = 0;
 const VERTICAL_PADDING = 0;
@@ -46,10 +69,20 @@ export class InlineEditsSideBySideView extends Disposable implements IInlineEdit
 		const editorWidth = editorObs.layoutInfoWidth.read(reader);
 		const editorContentLeft = editorObs.layoutInfoContentLeft.read(reader);
 		const editorVerticalScrollbar = editor.getLayoutInfo().verticalScrollbarWidth;
-		const minimapWidth = editorObs.layoutInfoMinimap.read(reader).minimapLeft !== 0 ? editorObs.layoutInfoMinimap.read(reader).minimapWidth : 0;
+		const minimapWidth = editorObs.layoutInfoMinimap.read(
+      reader,
+    ).minimapLeft !== 0 ? editorObs.layoutInfoMinimap.read(
+      reader,
+    ).minimapWidth : 0;
 
 		const maxOriginalContent = maxContentWidthInRange(editorObs, edit.displayRange, undefined/* do not reconsider on each layout info change */);
-		const maxModifiedContent = edit.lineEdit.newLines.reduce((max, line) => Math.max(max, getContentRenderWidth(line, editor, textModel)), 0);
+		const maxModifiedContent = edit.lineEdit.newLines.reduce(
+      (max, line) => Math.max(
+        max,
+        getContentRenderWidth(line, editor, textModel),
+      ),
+      0,
+    );
 		const originalPadding = ORIGINAL_END_PADDING; // padding after last line of original editor
 		const modifiedPadding = MODIFIED_END_PADDING + 2 * BORDER_WIDTH; // padding after last line of modified editor
 
@@ -58,7 +91,9 @@ export class InlineEditsSideBySideView extends Disposable implements IInlineEdit
 
 	private readonly _editorObs;
 
-	private readonly _onDidClick = this._register(new Emitter<InlineEditClickEvent>());
+	private readonly _onDidClick = this._register(
+    new Emitter<InlineEditClickEvent>(),
+  );
 	readonly onDidClick = this._onDidClick.event;
 
 	constructor(
@@ -76,28 +111,36 @@ export class InlineEditsSideBySideView extends Disposable implements IInlineEdit
 	) {
 		super();
 		this._editorObs = observableCodeEditor(this._editor);
-		this._display = derived(this, reader => !!this._uiState.read(reader) ? 'block' : 'none');
+		this._display = derived(
+      this,
+      reader => !!this._uiState.read(reader) ? "block" : "none",
+    );
 		this.previewRef = n.ref<HTMLDivElement>();
-		const separatorWidthObs = this._uiState.map(s => s?.editorType === InlineCompletionEditorType.DiffEditor ? WIDGET_SEPARATOR_DIFF_EDITOR_WIDTH : WIDGET_SEPARATOR_WIDTH);
+		const separatorWidthObs = this._uiState.map(
+      s => s?.editorType === InlineCompletionEditorType.DiffEditor ? WIDGET_SEPARATOR_DIFF_EDITOR_WIDTH : WIDGET_SEPARATOR_WIDTH,
+    );
 		this._editorContainer = n.div({
-			class: ['editorContainer'],
-			style: { position: 'absolute', overflow: 'hidden', cursor: 'pointer' },
+			class: ["editorContainer"],
+			style: { position: "absolute", overflow: "hidden", cursor: "pointer" },
 			onmousedown: e => {
 				e.preventDefault(); // This prevents that the editor loses focus
 			},
 			onclick: (e) => {
 				this._onDidClick.fire(InlineEditClickEvent.create(e));
-			}
+			},
 		}, [
-			n.div({ class: 'preview', style: { pointerEvents: 'none' }, ref: this.previewRef }),
+			n.div({ class: "preview", style: { pointerEvents: "none" }, ref: this.previewRef }),
 		]).keepUpdated(this._store);
-		this.isHovered = this._userInteractionService.createHoverTracker(this._editorContainer.element, this._store);
+		this.isHovered = this._userInteractionService.createHoverTracker(
+      this._editorContainer.element,
+      this._store,
+    );
 		this.previewEditor = this._register(this._instantiationService.createInstance(
 			EmbeddedCodeEditorWidget,
 			this.previewRef.element,
 			{
 				glyphMargin: false,
-				lineNumbers: 'off',
+				lineNumbers: "off",
 				minimap: { enabled: false },
 				guides: {
 					indentation: false,
@@ -120,14 +163,14 @@ export class InlineEditsSideBySideView extends Disposable implements IInlineEdit
 				bracketPairColorization: { enabled: true, independentColorPoolPerBracketType: false },
 				scrollBeyondLastLine: false,
 				scrollbar: {
-					vertical: 'hidden',
-					horizontal: 'hidden',
+					vertical: "hidden",
+					horizontal: "hidden",
 					handleMouseWheel: false,
 				},
 				readOnly: true,
-				wordWrap: 'off',
-				wordWrapOverride1: 'off',
-				wordWrapOverride2: 'off',
+				wordWrap: "off",
+				wordWrapOverride1: "off",
+				wordWrapOverride2: "off",
 			},
 			{
 				contextKeyValues: {
@@ -135,7 +178,7 @@ export class InlineEditsSideBySideView extends Disposable implements IInlineEdit
 				},
 				contributions: [],
 			},
-			this._editor
+			this._editor,
 		));
 		this._previewEditorObs = observableCodeEditor(this.previewEditor);
 		this._activeViewZones = [];
@@ -183,34 +226,42 @@ export class InlineEditsSideBySideView extends Disposable implements IInlineEdit
 						afterLineNumber: range.startLineNumber + uiState.newTextLineCount - 1,
 						heightInLines: reducedLinesCount,
 						showInHiddenAreas: true,
-						domNode: $('div.diagonal-fill.inline-edits-view-zone'),
+						domNode: $("div.diagonal-fill.inline-edits-view-zone"),
 					}));
 				}
 			});
 		});
 		this._previewEditorWidth = derived(this, reader => {
-			const edit = this._edit.read(reader);
-			if (!edit) { return 0; }
-			this._updatePreviewEditor.read(reader);
+      const edit = this._edit.read(reader);
+      if (!edit) { return 0; }
+      this._updatePreviewEditor.read(reader);
 
-			return maxContentWidthInRange(this._previewEditorObs, edit.modifiedLineRange, reader);
-		});
+      return maxContentWidthInRange(
+        this._previewEditorObs,
+        edit.modifiedLineRange,
+        reader,
+      );
+    });
 		this._cursorPosIfTouchesEdit = derived(this, reader => {
-			const cursorPos = this._editorObs.cursorPosition.read(reader);
-			const edit = this._edit.read(reader);
-			if (!edit || !cursorPos) { return undefined; }
-			return edit.modifiedLineRange.contains(cursorPos.lineNumber) ? cursorPos : undefined;
-		});
+      const cursorPos = this._editorObs.cursorPosition.read(reader);
+      const edit = this._edit.read(reader);
+      if (!edit || !cursorPos) { return undefined; }
+      return edit.modifiedLineRange.contains(cursorPos.lineNumber) ? cursorPos : undefined;
+    });
 		this._originalStartPosition = derived(this, (reader) => {
-			const inlineEdit = this._edit.read(reader);
-			return inlineEdit ? new Position(inlineEdit.originalLineRange.startLineNumber, 1) : null;
-		});
+      const inlineEdit = this._edit.read(reader);
+      return inlineEdit ? new Position(inlineEdit.originalLineRange.startLineNumber, 1) : null;
+    });
 		this._originalEndPosition = derived(this, (reader) => {
-			const inlineEdit = this._edit.read(reader);
-			return inlineEdit ? new Position(inlineEdit.originalLineRange.endLineNumberExclusive, 1) : null;
-		});
-		this._originalVerticalStartPosition = this._editorObs.observePosition(this._originalStartPosition, this._store).map(p => p?.y);
-		this._originalVerticalEndPosition = this._editorObs.observePosition(this._originalEndPosition, this._store).map(p => p?.y);
+      const inlineEdit = this._edit.read(reader);
+      return inlineEdit ? new Position(inlineEdit.originalLineRange.endLineNumberExclusive, 1) : null;
+    });
+		this._originalVerticalStartPosition = this._editorObs.observePosition(this._originalStartPosition, this._store).map(
+      p => p?.y,
+    );
+		this._originalVerticalEndPosition = this._editorObs.observePosition(this._originalEndPosition, this._store).map(
+      p => p?.y,
+    );
 		this._originalDisplayRange = this._edit.map(e => e?.displayRange);
 		this._editorMaxContentWidthInRange = derived(this, reader => {
 			const originalDisplayRange = this._originalDisplayRange.read(reader);
@@ -227,7 +278,10 @@ export class InlineEditsSideBySideView extends Disposable implements IInlineEdit
 			});
 		}).map((v, r) => v.read(r));
 
-		const editorDomContentRect = observeEditorBoundingClientRect(this._editor, this._store);
+		const editorDomContentRect = observeEditorBoundingClientRect(
+      this._editor,
+      this._store,
+    );
 
 		this._previewEditorLayoutInfo = derived(this, (reader) => {
 			const inlineEdit = this._edit.read(reader);
@@ -263,8 +317,8 @@ export class InlineEditsSideBySideView extends Disposable implements IInlineEdit
 				// But we don't want that the moving left ends up covering the cursor, so this will push it to the right again
 				Math.min(
 					cursorPos ? getOffsetForPos(this._editorObs, cursorPos, reader) + 50 : 0,
-					editorContentAreaWidth + horizontalScrollOffset
-				)
+					editorContentAreaWidth + horizontalScrollOffset,
+				),
 			);
 			const previewEditorLeftInTextArea = Math.min(editorContentMaxWidthInRange + ORIGINAL_END_PADDING, maxPreviewEditorLeft);
 
@@ -326,8 +380,13 @@ export class InlineEditsSideBySideView extends Disposable implements IInlineEdit
 				previewEditorWidth,
 			};
 		});
-		this._stickyScrollController = StickyScrollController.get(this._editorObs.editor);
-		this._stickyScrollHeight = this._stickyScrollController ? observableFromEvent(this._stickyScrollController.onDidChangeStickyScrollHeight, () => this._stickyScrollController!.stickyScrollWidgetHeight) : constObservable(0);
+		this._stickyScrollController = StickyScrollController.get(
+      this._editorObs.editor,
+    );
+		this._stickyScrollHeight = this._stickyScrollController ? observableFromEvent(
+      this._stickyScrollController.onDidChangeStickyScrollHeight,
+      () => this._stickyScrollController!.stickyScrollWidgetHeight,
+    ) : constObservable(0);
 		this._shouldOverflow = derived(this, reader => {
 			if (!ENABLE_OVERFLOW) {
 				return false;
@@ -347,18 +406,24 @@ export class InlineEditsSideBySideView extends Disposable implements IInlineEdit
 			}
 			return true;
 		});
-		this._originalBackgroundColor = observableFromEvent(this, this._themeService.onDidColorThemeChange, () => {
-			return this._themeService.getColorTheme().getColor(originalBackgroundColor) ?? Color.transparent;
-		});
+		this._originalBackgroundColor = observableFromEvent(
+      this,
+      this._themeService.onDidColorThemeChange,
+      () => {
+        return this._themeService.getColorTheme().getColor(originalBackgroundColor) ?? Color.transparent;
+      },
+    );
 		this._editorBackgroundColor = this._uiState.map(s => {
-			return getEditorBackgroundColor(s?.editorType ?? InlineCompletionEditorType.TextEditor);
-		});
+      return getEditorBackgroundColor(
+        s?.editorType ?? InlineCompletionEditorType.TextEditor,
+      );
+    });
 		this._backgroundSvg = n.svg({
-			transform: 'translate(-0.5 -0.5)',
-			style: { overflow: 'visible', pointerEvents: 'none', position: 'absolute' },
+			transform: "translate(-0.5 -0.5)",
+			style: { overflow: "visible", pointerEvents: "none", position: "absolute" },
 		}, [
-			n.svgElem('path', {
-				class: 'rightOfModifiedBackgroundCoverUp',
+			n.svgElem("path", {
+				class: "rightOfModifiedBackgroundCoverUp",
 				d: derived(this, reader => {
 					const layoutInfo = this._previewEditorLayoutInfo.read(reader);
 					if (!layoutInfo) {
@@ -378,11 +443,11 @@ export class InlineEditsSideBySideView extends Disposable implements IInlineEdit
 				}),
 				style: {
 					fill: this._editorBackgroundColor,
-				}
+				},
 			}),
 		]).keepUpdated(this._store);
 		this._originalOverlay = n.div({
-			style: { pointerEvents: 'none', display: this._previewEditorLayoutInfo.map(layoutInfo => layoutInfo?.isInsertion ? 'none' : 'block') },
+			style: { pointerEvents: "none", display: this._previewEditorLayoutInfo.map(layoutInfo => layoutInfo?.isInsertion ? "none" : "block") },
 		}, derived(this, reader => {
 			const layoutInfoObs = mapOutFalsy(this._previewEditorLayoutInfo).read(reader);
 			if (!layoutInfoObs) { return undefined; }
@@ -403,7 +468,7 @@ export class InlineEditsSideBySideView extends Disposable implements IInlineEdit
 				layoutInfo.contentLeft - BORDER_RADIUS - BORDER_WIDTH,
 				layoutInfo.codeRect.top,
 				layoutInfo.contentLeft,
-				layoutInfo.codeRect.bottom + transitionRectSize
+				layoutInfo.codeRect.bottom + transitionRectSize,
 			)).read(reader);
 
 			const intersectionLine = new OffsetRange(overlayHider.left, Number.MAX_SAFE_INTEGER);
@@ -414,68 +479,68 @@ export class InlineEditsSideBySideView extends Disposable implements IInlineEdit
 
 			return [
 				n.div({
-					class: 'originalSeparatorSideBySide',
+					class: "originalSeparatorSideBySide",
 					style: {
 						...separatorRect.read(reader).toStyles(),
-						boxSizing: 'border-box',
+						boxSizing: "border-box",
 						borderRadius: `${BORDER_RADIUS}px 0 0 ${BORDER_RADIUS}px`,
 						borderTop: borderStylingSeparator,
 						borderBottom: borderStylingSeparator,
-						borderLeft: hasBorderLeft ? 'none' : borderStylingSeparator,
-					}
+						borderLeft: hasBorderLeft ? "none" : borderStylingSeparator,
+					},
 				}),
 
 				n.div({
-					class: 'originalOverlaySideBySide',
+					class: "originalOverlaySideBySide",
 					style: {
 						...overlayRect.read(reader).toStyles(),
-						boxSizing: 'border-box',
+						boxSizing: "border-box",
 						borderRadius: `${BORDER_RADIUS}px 0 0 ${BORDER_RADIUS}px`,
 						borderTop: borderStyling,
 						borderBottom: borderStyling,
-						borderLeft: hasBorderLeft ? 'none' : borderStyling,
+						borderLeft: hasBorderLeft ? "none" : borderStyling,
 						backgroundColor: asCssVariable(originalBackgroundColor),
-					}
+					},
 				}),
 
 				n.div({
-					class: 'originalCornerCutoutSideBySide',
+					class: "originalCornerCutoutSideBySide",
 					style: {
-						pointerEvents: 'none',
-						display: isModifiedLower.map(isLower => isLower ? 'block' : 'none'),
+						pointerEvents: "none",
+						display: isModifiedLower.map(isLower => isLower ? "block" : "none"),
 						...transitionRect.read(reader).toStyles(),
-					}
+					},
 				}, [
 					n.div({
-						class: 'originalCornerCutoutBackground',
+						class: "originalCornerCutoutBackground",
 						style: {
-							position: 'absolute', top: '0px', left: '0px', width: '100%', height: '100%',
+							position: "absolute", top: "0px", left: "0px", width: "100%", height: "100%",
 							backgroundColor: getEditorBlendedColor(originalBackgroundColor, this._themeService).map(c => c.toString()),
-						}
+						},
 					}),
 					n.div({
-						class: 'originalCornerCutoutBorder',
+						class: "originalCornerCutoutBorder",
 						style: {
-							position: 'absolute', top: '0px', left: '0px', width: '100%', height: '100%',
-							boxSizing: 'border-box',
+							position: "absolute", top: "0px", left: "0px", width: "100%", height: "100%",
+							boxSizing: "border-box",
 							borderTop: borderStyling,
 							borderRight: borderStyling,
 							borderRadius: `0 100% 0 0`,
-							backgroundColor: editorBackground
-						}
-					})
+							backgroundColor: editorBackground,
+						},
+					}),
 				]),
 				n.div({
-					class: 'originalOverlaySideBySideHider',
+					class: "originalOverlaySideBySideHider",
 					style: {
 						...overlayHider.toStyles(),
 						backgroundColor: editorBackground,
-					}
+					},
 				}),
 			];
 		})).keepUpdated(this._store);
 		this._modifiedOverlay = n.div({
-			style: { pointerEvents: 'none', }
+			style: { pointerEvents: "none", },
 		}, derived(this, reader => {
 			const layoutInfoObs = mapOutFalsy(this._previewEditorLayoutInfo).read(reader);
 			if (!layoutInfoObs) { return undefined; }
@@ -502,42 +567,42 @@ export class InlineEditsSideBySideView extends Disposable implements IInlineEdit
 
 			return [
 				n.div({
-					class: 'modifiedInsertionSideBySide',
+					class: "modifiedInsertionSideBySide",
 					style: {
 						...insertionRect.read(reader).toStyles(),
 						backgroundColor: getModifiedBorderColor(this._tabAction).map(c => asCssVariable(c)),
-					}
+					},
 				}),
 				n.div({
-					class: 'modifiedSeparatorSideBySide',
+					class: "modifiedSeparatorSideBySide",
 					style: {
 						...separatorRect.read(reader).toStyles(),
 						borderRadius,
 						borderTop: borderStylingSeparator,
 						borderBottom: borderStylingSeparator,
 						borderRight: borderStylingSeparator,
-						boxSizing: 'border-box',
-					}
+						boxSizing: "border-box",
+					},
 				}),
 				n.div({
-					class: 'modifiedOverlaySideBySide',
+					class: "modifiedOverlaySideBySide",
 					style: {
 						...overlayRect.read(reader).toStyles(),
 						borderRadius,
 						border: borderStyling,
-						boxSizing: 'border-box',
+						boxSizing: "border-box",
 						backgroundColor: asCssVariable(modifiedBackgroundColor),
-					}
-				})
+					},
+				}),
 			];
 		})).keepUpdated(this._store);
 		this._nonOverflowView = n.div({
-			class: 'inline-edits-view',
+			class: "inline-edits-view",
 			style: {
-				position: 'absolute',
-				overflow: 'visible',
-				top: '0px',
-				left: '0px',
+				position: "absolute",
+				overflow: "visible",
+				top: "0px",
+				left: "0px",
 				display: this._display,
 			},
 		}, [

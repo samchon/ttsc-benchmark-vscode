@@ -3,22 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../../../../nls.js';
-import { Disposable, DisposableStore, IDisposable } from '../../../../../base/common/lifecycle.js';
-import { timeout } from '../../../../../base/common/async.js';
-import { autorun } from '../../../../../base/common/observable.js';
-import { toAction } from '../../../../../base/common/actions.js';
-import Severity from '../../../../../base/common/severity.js';
-import { IRemoteAgentHostService, RemoteAgentHostConnectionStatus } from '../../../../../platform/agentHost/common/remoteAgentHostService.js';
-import { IClipboardService } from '../../../../../platform/clipboard/common/clipboardService.js';
-import { IInstantiationService, ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IQuickInputService, IQuickPickItem } from '../../../../../platform/quickinput/common/quickInput.js';
-import { IOutputService } from '../../../../../workbench/services/output/common/output.js';
-import { IPreferencesService } from '../../../../../workbench/services/preferences/common/preferences.js';
-import { IAgentHostSessionsProvider } from '../../../../common/agentHostSessionsProvider.js';
-import { IProductService } from '../../../../../platform/product/common/productService.js';
-import { INotificationService, Severity as NotificationSeverity } from '../../../../../platform/notification/common/notification.js';
-import { IProgressService, ProgressLocation } from '../../../../../platform/progress/common/progress.js';
+import { localize } from "../../../../../nls.js";
+import { Disposable, DisposableStore, IDisposable } from "../../../../../base/common/lifecycle.js";
+import { timeout } from "../../../../../base/common/async.js";
+import { autorun } from "../../../../../base/common/observable.js";
+import { toAction } from "../../../../../base/common/actions.js";
+import Severity from "../../../../../base/common/severity.js";
+import { IRemoteAgentHostService, RemoteAgentHostConnectionStatus } from "../../../../../platform/agentHost/common/remoteAgentHostService.js";
+import { IClipboardService } from "../../../../../platform/clipboard/common/clipboardService.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IQuickInputService, IQuickPickItem } from "../../../../../platform/quickinput/common/quickInput.js";
+import { IOutputService } from "../../../../../workbench/services/output/common/output.js";
+import { IPreferencesService } from "../../../../../workbench/services/preferences/common/preferences.js";
+import { IAgentHostSessionsProvider } from "../../../../common/agentHostSessionsProvider.js";
+import { IProductService } from "../../../../../platform/product/common/productService.js";
+import { INotificationService, Severity as NotificationSeverity } from "../../../../../platform/notification/common/notification.js";
+import { IProgressService, ProgressLocation } from "../../../../../platform/progress/common/progress.js";
 
 export async function reconnectRemoteHost(provider: IAgentHostSessionsProvider, remoteAgentHostService: IRemoteAgentHostService): Promise<void> {
 	if (provider.connect) {
@@ -64,7 +64,7 @@ export async function runServerUpgrade(
 	await progressService.withProgress(
 		{
 			location: ProgressLocation.Notification,
-			title: localize('workspacePicker.upgradingServer', "Updating {0}...", provider.label),
+			title: localize("workspacePicker.upgradingServer", "Updating {0}...", provider.label),
 		},
 		async (progress) => {
 			try {
@@ -102,7 +102,7 @@ export async function runServerUpgrade(
 							}
 							progress.report({
 								message: localize(
-									'workspacePicker.upgradeCountdown',
+									"workspacePicker.upgradeCountdown",
 									"Restarting in {0}s...",
 									secondsLeft,
 								),
@@ -114,27 +114,27 @@ export async function runServerUpgrade(
 					}
 					if (!reconnectAlreadyInFlight) {
 						progress.report({
-							message: localize('workspacePicker.upgradeReconnecting', "Reconnecting..."),
+							message: localize("workspacePicker.upgradeReconnecting", "Reconnecting..."),
 						});
 						await reconnectRemoteHost(provider, remoteAgentHostService);
 					}
 				} else if (upgradeResult.upgradeNeeded === false) {
 					notificationService.notify({
 						severity: NotificationSeverity.Info,
-						message: localize('workspacePicker.upgradeNotNeeded', "{0} is already on the latest version.", provider.label),
+						message: localize("workspacePicker.upgradeNotNeeded", "{0} is already on the latest version.", provider.label),
 					});
 				} else {
 					notificationService.notify({
 						severity: NotificationSeverity.Warning,
 						message: upgradeResult.error
-							? localize('workspacePicker.upgradeFailedWithReason', "Failed to update {0}: {1}", provider.label, upgradeResult.error)
-							: localize('workspacePicker.upgradeNotStarted', "{0} did not start an update.", provider.label),
+							? localize("workspacePicker.upgradeFailedWithReason", "Failed to update {0}: {1}", provider.label, upgradeResult.error)
+							: localize("workspacePicker.upgradeNotStarted", "{0} did not start an update.", provider.label),
 					});
 				}
 			} catch (err) {
 				notificationService.notify({
 					severity: NotificationSeverity.Error,
-					message: localize('workspacePicker.upgradeFailed', "Failed to update {0}: {1}", provider.label, err instanceof Error ? err.message : String(err)),
+					message: localize("workspacePicker.upgradeFailed", "Failed to update {0}: {1}", provider.label, err instanceof Error ? err.message : String(err)),
 				});
 			}
 		},
@@ -159,7 +159,9 @@ export function watchForIncompatibleNotifications(
 	if (!provider.connectionStatus) {
 		return Disposable.None;
 	}
-	let lastWasIncompatible = RemoteAgentHostConnectionStatus.isIncompatible(provider.connectionStatus.get());
+	let lastWasIncompatible = RemoteAgentHostConnectionStatus.isIncompatible(
+    provider.connectionStatus.get(),
+  );
 	return autorun(reader => {
 		const status = provider.connectionStatus!.read(reader);
 		const isIncompatible = RemoteAgentHostConnectionStatus.isIncompatible(status);
@@ -168,20 +170,20 @@ export function watchForIncompatibleNotifications(
 			const primaryActions = [];
 			if (upgradeMethod) {
 				primaryActions.push(toAction({
-					id: 'agentHost.upgradeFromIncompatible',
-					label: localize('agentHostIncompatibleUpdate', "Update Server"),
+					id: "agentHost.upgradeFromIncompatible",
+					label: localize("agentHostIncompatibleUpdate", "Update Server"),
 					run: () => instantiationService.invokeFunction(accessor => runServerUpgrade(accessor, provider, upgradeMethod)),
 				}));
 			}
 			primaryActions.push(toAction({
-				id: 'agentHost.showRemoteHostOptions',
-				label: localize('agentHostIncompatibleShowOptions', "Show Options"),
+				id: "agentHost.showRemoteHostOptions",
+				label: localize("agentHostIncompatibleShowOptions", "Show Options"),
 				run: () => instantiationService.invokeFunction(accessor => showRemoteHostOptions(accessor, provider)),
 			}));
 			notificationService.notify({
 				severity: NotificationSeverity.Warning,
 				message: localize(
-					'agentHostIncompatibleNotification',
+					"agentHostIncompatibleNotification",
 					"Cannot connect to {0}: {1}",
 					provider.label,
 					status.message,
@@ -195,36 +197,68 @@ export function watchForIncompatibleNotifications(
 
 export function getStatusLabel(status: RemoteAgentHostConnectionStatus): string {
 	switch (status.kind) {
-		case 'connected':
-			return localize('workspacePicker.statusOnline', "Online");
-		case 'connecting':
-			return localize('workspacePicker.statusConnecting', "Connecting");
-		case 'disconnected':
-			return localize('workspacePicker.statusOffline', "Offline");
-		case 'incompatible':
-			return localize('workspacePicker.statusIncompatible', "Incompatible");
+		case "connected":
+			return localize("workspacePicker.statusOnline", "Online");
+		case "connecting":
+			return localize("workspacePicker.statusConnecting", "Connecting");
+		case "disconnected":
+			return localize("workspacePicker.statusOffline", "Offline");
+		case "incompatible":
+			return localize("workspacePicker.statusIncompatible", "Incompatible");
 	}
 }
 
 export function getStatusHover(status: RemoteAgentHostConnectionStatus, address?: string): string {
 	switch (status.kind) {
-		case 'connected':
+		case "connected":
 			return address
-				? localize('workspacePicker.hoverConnectedAddr', "Remote agent host is connected and ready.\n\nAddress: {0}", address)
-				: localize('workspacePicker.hoverConnected', "Remote agent host is connected and ready.");
-		case 'connecting':
+				? localize(
+            "workspacePicker.hoverConnectedAddr",
+            "Remote agent host is connected and ready.\n\nAddress: {0}",
+            address,
+          )
+				: localize(
+            "workspacePicker.hoverConnected",
+            "Remote agent host is connected and ready.",
+          );
+		case "connecting":
 			return address
-				? localize('workspacePicker.hoverConnectingAddr', "Attempting to connect to remote agent host...\n\nAddress: {0}", address)
-				: localize('workspacePicker.hoverConnecting', "Attempting to connect to remote agent host...");
-		case 'disconnected':
+				? localize(
+            "workspacePicker.hoverConnectingAddr",
+            "Attempting to connect to remote agent host...\n\nAddress: {0}",
+            address,
+          )
+				: localize(
+            "workspacePicker.hoverConnecting",
+            "Attempting to connect to remote agent host...",
+          );
+		case "disconnected":
 			return address
-				? localize('workspacePicker.hoverDisconnectedAddr', "Remote agent host is disconnected.\n\nAddress: {0}", address)
-				: localize('workspacePicker.hoverDisconnected', "Remote agent host is disconnected.");
-		case 'incompatible': {
-			const offered = status.supportedByClient.join(', ');
+				? localize(
+            "workspacePicker.hoverDisconnectedAddr",
+            "Remote agent host is disconnected.\n\nAddress: {0}",
+            address,
+          )
+				: localize(
+            "workspacePicker.hoverDisconnected",
+            "Remote agent host is disconnected.",
+          );
+		case "incompatible": {
+			const offered = status.supportedByClient.join(", ");
 			return address
-				? localize('workspacePicker.hoverIncompatibleAddr', "Cannot connect to remote agent host: {0}\n\nThis client speaks protocol version {1}.\n\nAddress: {2}", status.message, offered, address)
-				: localize('workspacePicker.hoverIncompatible', "Cannot connect to remote agent host: {0}\n\nThis client speaks protocol version {1}.", status.message, offered);
+				? localize(
+            "workspacePicker.hoverIncompatibleAddr",
+            "Cannot connect to remote agent host: {0}\n\nThis client speaks protocol version {1}.\n\nAddress: {2}",
+            status.message,
+            offered,
+            address,
+          )
+				: localize(
+            "workspacePicker.hoverIncompatible",
+            "Cannot connect to remote agent host: {0}\n\nThis client speaks protocol version {1}.",
+            status.message,
+            offered,
+          );
 		}
 	}
 }
@@ -246,7 +280,7 @@ export interface IShowRemoteHostOptionsOptions {
  * Returns `'back'` if the user clicked the back button (only possible when
  * `options.showBackButton` is true), otherwise `undefined`.
  */
-export async function showRemoteHostOptions(accessor: ServicesAccessor, provider: IAgentHostSessionsProvider, options: IShowRemoteHostOptionsOptions = {}): Promise<'back' | undefined> {
+export async function showRemoteHostOptions(accessor: ServicesAccessor, provider: IAgentHostSessionsProvider, options: IShowRemoteHostOptionsOptions = {}): Promise<"back" | undefined> {
 	const address = provider.remoteAddress;
 	if (!address) {
 		return undefined;
@@ -262,40 +296,56 @@ export async function showRemoteHostOptions(accessor: ServicesAccessor, provider
 
 	const status = provider.connectionStatus?.get();
 	const isConnected = RemoteAgentHostConnectionStatus.isConnected(status);
-	const upgradeMethod = RemoteAgentHostConnectionStatus.isIncompatible(status) ? status.vscodeUpgradeMethod : undefined;
+	const upgradeMethod = RemoteAgentHostConnectionStatus.isIncompatible(
+    status,
+  ) ? status.vscodeUpgradeMethod : undefined;
 
 	type RemoteOptionPickItem = IQuickPickItem & { id: string };
 	const items: RemoteOptionPickItem[] = [];
 	if (upgradeMethod) {
-		items.push({ label: '$(cloud-download) ' + localize('workspacePicker.updateServer', "Update Server"), id: 'upgrade' });
+		items.push({
+      label: "$(cloud-download) " + localize("workspacePicker.updateServer", "Update Server"),
+      id: "upgrade",
+    });
 	}
 	if (!isConnected) {
-		items.push({ label: '$(debug-restart) ' + localize('workspacePicker.reconnect', "Reconnect"), id: 'reconnect' });
+		items.push({
+      label: "$(debug-restart) " + localize("workspacePicker.reconnect", "Reconnect"),
+      id: "reconnect",
+    });
 	}
-	items.push(
-		{ label: '$(trash) ' + localize('workspacePicker.removeRemote', "Remove Remote"), id: 'remove' },
-		{ label: '$(copy) ' + localize('workspacePicker.copyAddress', "Copy Address"), id: 'copy' },
-		{ label: '$(settings-gear) ' + localize('workspacePicker.openSettings', "Open Settings"), id: 'settings' },
-	);
+	items.push({
+    label: "$(trash) " + localize("workspacePicker.removeRemote", "Remove Remote"),
+    id: "remove",
+  }, {
+    label: "$(copy) " + localize("workspacePicker.copyAddress", "Copy Address"),
+    id: "copy",
+  }, {
+    label: "$(settings-gear) " + localize("workspacePicker.openSettings", "Open Settings"),
+    id: "settings",
+  });
 	if (provider.outputChannelId) {
-		items.push({ label: '$(output) ' + localize('workspacePicker.showOutput', "Show Output"), id: 'output' });
+		items.push({
+      label: "$(output) " + localize("workspacePicker.showOutput", "Show Output"),
+      id: "output",
+    });
 	}
 
-	const result = await new Promise<'back' | RemoteOptionPickItem | undefined>((resolve) => {
+	const result = await new Promise<"back" | RemoteOptionPickItem | undefined>((resolve) => {
 		const store = new DisposableStore();
 		const picker = store.add(quickInputService.createQuickPick<RemoteOptionPickItem>());
-		picker.placeholder = localize('workspacePicker.remoteOptionsTitle', "Options for {0}", provider.label);
+		picker.placeholder = localize("workspacePicker.remoteOptionsTitle", "Options for {0}", provider.label);
 		picker.items = items;
 
 		if (RemoteAgentHostConnectionStatus.isIncompatible(status)) {
-			const offered = status.supportedByClient.join(', ');
+			const offered = status.supportedByClient.join(", ");
 			const served = status.offeredByServer?.length
-				? status.offeredByServer.join(', ')
+				? status.offeredByServer.join(", ")
 				: undefined;
 			picker.severity = Severity.Warning;
 			picker.validationMessage = served
-				? localize('workspacePicker.incompatibleValidationServer', "Incompatible protocol version. We speak {0}, but {1} speaks {2}. Ensure {3} and {1} are both up to date.", offered, provider.label, served, productService.nameShort)
-				: localize('workspacePicker.incompatibleValidationClient', "Incompatible protocol version. We speak {0}. Error from {1}: {2}\n\n Ensure {3} and {1} are both up to date.", offered, provider.label, status.message, productService.nameShort);
+				? localize("workspacePicker.incompatibleValidationServer", "Incompatible protocol version. We speak {0}, but {1} speaks {2}. Ensure {3} and {1} are both up to date.", offered, provider.label, served, productService.nameShort)
+				: localize("workspacePicker.incompatibleValidationClient", "Incompatible protocol version. We speak {0}. Error from {1}: {2}\n\n Ensure {3} and {1} are both up to date.", offered, provider.label, status.message, productService.nameShort);
 		}
 
 		if (options.showBackButton) {
@@ -303,7 +353,7 @@ export async function showRemoteHostOptions(accessor: ServicesAccessor, provider
 		}
 		store.add(picker.onDidTriggerButton(button => {
 			if (button === quickInputService.backButton) {
-				resolve('back');
+				resolve("back");
 				picker.hide();
 			}
 		}));
@@ -318,32 +368,36 @@ export async function showRemoteHostOptions(accessor: ServicesAccessor, provider
 		picker.show();
 	});
 
-	if (result === 'back') {
-		return 'back';
+	if (result === "back") {
+		return "back";
 	}
 	if (!result) {
 		return undefined;
 	}
 
 	switch (result.id) {
-		case 'upgrade':
+		case "upgrade":
 			if (upgradeMethod) {
-				await instantiationService.invokeFunction(runServerUpgrade, provider, upgradeMethod);
+				await instantiationService.invokeFunction(
+          runServerUpgrade,
+          provider,
+          upgradeMethod,
+        );
 			}
 			break;
-		case 'reconnect':
+		case "reconnect":
 			await reconnectRemoteHost(provider, remoteAgentHostService);
 			break;
-		case 'remove':
+		case "remove":
 			await removeRemoteHost(provider, remoteAgentHostService);
 			break;
-		case 'copy':
+		case "copy":
 			await clipboardService.writeText(address);
 			break;
-		case 'settings':
-			await preferencesService.openSettings({ query: 'chat.remoteAgentHosts' });
+		case "settings":
+			await preferencesService.openSettings({ query: "chat.remoteAgentHosts" });
 			break;
-		case 'output':
+		case "output":
 			if (provider.outputChannelId) {
 				outputService.showChannel(provider.outputChannelId, true);
 			}

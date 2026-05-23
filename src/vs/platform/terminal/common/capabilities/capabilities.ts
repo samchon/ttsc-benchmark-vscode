@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import type { IPromptInputModel, ISerializedPromptInputModel } from './commandDetection/promptInputModel.js';
-import { ICurrentPartialCommand } from './commandDetection/terminalCommand.js';
-import { ITerminalOutputMatch, ITerminalOutputMatcher } from '../terminal.js';
-import { ReplayEntry } from '../terminalProcess.js';
-import type { IMarker } from '@xterm/headless';
+import { Event } from "../../../../base/common/event.js";
+import type { IPromptInputModel, ISerializedPromptInputModel } from "./commandDetection/promptInputModel.js";
+import { ICurrentPartialCommand } from "./commandDetection/terminalCommand.js";
+import { ITerminalOutputMatch, ITerminalOutputMatcher } from "../terminal.js";
+import { ReplayEntry } from "../terminalProcess.js";
+import type { IMarker } from "@xterm/headless";
 
 /**
  * Primarily driven by the shell integration feature, a terminal capability is the mechanism for
@@ -194,8 +194,8 @@ export interface TerminalShellIntegration {
 }
 
 export const enum CommandInvalidationReason {
-	Windows = 'windows',
-	NoProblemsReported = 'noProblemsReported'
+	Windows = "windows",
+	NoProblemsReported = "noProblemsReported"
 }
 
 export interface ICommandInvalidationRequest {
@@ -217,7 +217,7 @@ export interface ICommandDetectionCapability {
 	/** The command currently being executed, otherwise undefined. */
 	readonly executingCommand: string | undefined;
 	readonly executingCommandObject: ITerminalCommand | undefined;
-	readonly executingCommandConfidence: 'low' | 'medium' | 'high' | undefined;
+	readonly executingCommandConfidence: "low" | "medium" | "high" | undefined;
 	/** The current cwd at the cursor's position. */
 	readonly cwd: string | undefined;
 	readonly hasRichCommandDetection: boolean;
@@ -299,7 +299,7 @@ export interface IPartialCommandDetectionCapability {
 interface IBaseTerminalCommand {
 	// Mandatory
 	command: string;
-	commandLineConfidence: 'low' | 'medium' | 'high';
+	commandLineConfidence: "low" | "medium" | "high";
 	isTrusted: boolean;
 	timestamp: number;
 	duration: number;

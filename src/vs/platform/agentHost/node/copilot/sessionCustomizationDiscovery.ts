@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Delayer } from '../../../../base/common/async.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable, DisposableStore } from '../../../../base/common/lifecycle.js';
-import { ResourceMap } from '../../../../base/common/map.js';
-import { joinPath } from '../../../../base/common/resources.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IFileService } from '../../../files/common/files.js';
-import { ILogService } from '../../../log/common/log.js';
+import { Delayer } from "../../../../base/common/async.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { joinPath } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IFileService } from "../../../files/common/files.js";
+import { ILogService } from "../../../log/common/log.js";
 
 /**
  * The kinds of customizations the agent host discovers from disk.
@@ -19,9 +19,9 @@ import { ILogService } from '../../../log/common/log.js';
  * workbench-side `PromptsType` enum.
  */
 export const enum DiscoveredType {
-	Agent = 'agent',
-	Skill = 'skill',
-	Instruction = 'instruction',
+	Agent = "agent",
+	Skill = "skill",
+	Instruction = "instruction",
 }
 
 export interface IDiscoveredFile {
@@ -29,14 +29,14 @@ export interface IDiscoveredFile {
 	readonly type: DiscoveredType;
 }
 
-const AGENT_FILE_SUFFIX = '.agent.md';
-const AGENT_FILE_FALLBACK_SUFFIX = '.md';
-const INSTRUCTION_FILE_SUFFIX = '.instructions.md';
-const PROMPT_FILE_SUFFIX = '.prompt.md';
-const SKILL_FILENAME = 'SKILL.md';
-const SKILL_FILENAME_LOWER = 'skill.md';
-const README_FILENAME = 'README.md';
-const COPILOT_CUSTOM_INSTRUCTIONS_FILENAME_LOWER = 'copilot-instructions.md';
+const AGENT_FILE_SUFFIX = ".agent.md";
+const AGENT_FILE_FALLBACK_SUFFIX = ".md";
+const INSTRUCTION_FILE_SUFFIX = ".instructions.md";
+const PROMPT_FILE_SUFFIX = ".prompt.md";
+const SKILL_FILENAME = "SKILL.md";
+const SKILL_FILENAME_LOWER = "skill.md";
+const README_FILENAME = "README.md";
+const COPILOT_CUSTOM_INSTRUCTIONS_FILENAME_LOWER = "copilot-instructions.md";
 
 interface ISearchRoot {
 	readonly path: readonly string[];
@@ -51,17 +51,17 @@ interface ISearchRoot {
 function getSearchRoots(workingDirectory: URI, userHome: URI): { workspace: ISearchRoot[]; user: ISearchRoot[] } {
 	return {
 		workspace: [
-			{ path: ['.github', 'agents'], type: DiscoveredType.Agent },
-			{ path: ['.agents', 'agents'], type: DiscoveredType.Agent },
-			{ path: ['.claude', 'agents'], type: DiscoveredType.Agent },
-			{ path: ['.github', 'skills'], type: DiscoveredType.Skill },
-			{ path: ['.agents', 'skills'], type: DiscoveredType.Skill },
-			{ path: ['.claude', 'skills'], type: DiscoveredType.Skill },
-			{ path: ['.github', 'instructions'], type: DiscoveredType.Instruction },
+			{ path: [".github", "agents"], type: DiscoveredType.Agent },
+			{ path: [".agents", "agents"], type: DiscoveredType.Agent },
+			{ path: [".claude", "agents"], type: DiscoveredType.Agent },
+			{ path: [".github", "skills"], type: DiscoveredType.Skill },
+			{ path: [".agents", "skills"], type: DiscoveredType.Skill },
+			{ path: [".claude", "skills"], type: DiscoveredType.Skill },
+			{ path: [".github", "instructions"], type: DiscoveredType.Instruction },
 		],
 		user: [
-			{ path: ['.copilot', 'agents'], type: DiscoveredType.Agent },
-			{ path: ['.agents', 'skills'], type: DiscoveredType.Skill },
+			{ path: [".copilot", "agents"], type: DiscoveredType.Agent },
+			{ path: [".agents", "skills"], type: DiscoveredType.Skill },
 		],
 	};
 }
@@ -88,7 +88,9 @@ export class SessionCustomizationDiscovery extends Disposable {
 	readonly onDidChange: Event<void> = this._onDidChange.event;
 
 	private readonly _watchers = this._register(new DisposableStore());
-	private readonly _refreshDelayer = this._register(new Delayer<void>(REFRESH_DEBOUNCE_MS));
+	private readonly _refreshDelayer = this._register(
+    new Delayer<void>(REFRESH_DEBOUNCE_MS),
+  );
 	private readonly _rootUris: readonly URI[];
 
 	private _cached: Promise<readonly IDiscoveredFile[]> | undefined;
@@ -100,11 +102,14 @@ export class SessionCustomizationDiscovery extends Disposable {
 		@ILogService private readonly _logService: ILogService,
 	) {
 		super();
-		const { workspace, user } = getSearchRoots(this._workingDirectory, this._userHome);
+		const { workspace, user } = getSearchRoots(
+      this._workingDirectory,
+      this._userHome,
+    );
 		this._rootUris = [
-			...workspace.map(root => joinPath(this._workingDirectory, ...root.path)),
-			...user.map(root => joinPath(this._userHome, ...root.path)),
-		];
+      ...workspace.map(root => joinPath(this._workingDirectory, ...root.path)),
+      ...user.map(root => joinPath(this._userHome, ...root.path)),
+    ];
 		this._register(this._fileService.onDidFilesChange(e => {
 			if (this._rootUris.some(rootUri => e.affects(rootUri))) {
 				this._scheduleRefresh();
@@ -139,13 +144,16 @@ export class SessionCustomizationDiscovery extends Disposable {
 	private async _scan(): Promise<readonly IDiscoveredFile[]> {
 		this._watchers.clear();
 		const seen = new ResourceMap<IDiscoveredFile>();
-		const { workspace, user } = getSearchRoots(this._workingDirectory, this._userHome);
+		const { workspace, user } = getSearchRoots(
+      this._workingDirectory,
+      this._userHome,
+    );
 
 		// Workspace first so it wins on URI conflicts.
 		await Promise.all([
-			...workspace.map(root => this._scanRoot(this._workingDirectory, root, seen)),
-			...user.map(root => this._scanRoot(this._userHome, root, seen)),
-		]);
+      ...workspace.map(root => this._scanRoot(this._workingDirectory, root, seen)),
+      ...user.map(root => this._scanRoot(this._userHome, root, seen)),
+    ]);
 
 		return [...seen.values()];
 	}
@@ -154,7 +162,9 @@ export class SessionCustomizationDiscovery extends Disposable {
 		const rootUri = joinPath(base, ...root.path);
 		let stat;
 		try {
-			stat = await this._fileService.resolve(rootUri, { resolveMetadata: false });
+			stat = await this._fileService.resolve(rootUri, {
+        resolveMetadata: false,
+      });
 		} catch {
 			// Root does not exist (or is unreadable) — nothing to discover or watch.
 			return;
@@ -166,9 +176,13 @@ export class SessionCustomizationDiscovery extends Disposable {
 		// Only watch roots that exist; recursive: true so we pick up edits to
 		// files inside skill subdirectories.
 		try {
-			this._watchers.add(this._fileService.watch(rootUri, { recursive: true, excludes: [] }));
+			this._watchers.add(
+        this._fileService.watch(rootUri, { recursive: true, excludes: [] }),
+      );
 		} catch (err) {
-			this._logService.warn(`[SessionCustomizationDiscovery] Failed to watch '${rootUri.toString()}': ${err instanceof Error ? err.message : String(err)}`);
+			this._logService.warn(
+        `[SessionCustomizationDiscovery] Failed to watch '${rootUri.toString()}': ${err instanceof Error ? err.message : String(err)}`,
+      );
 		}
 
 		for (const child of stat.children) {
@@ -176,9 +190,14 @@ export class SessionCustomizationDiscovery extends Disposable {
 				if (child.isDirectory) {
 					const skillFile = joinPath(child.resource, SKILL_FILENAME);
 					try {
-						const skillStat = await this._fileService.resolve(skillFile, { resolveMetadata: false });
+						const skillStat = await this._fileService.resolve(skillFile, {
+              resolveMetadata: false,
+            });
 						if (skillStat.isFile && !seen.has(skillFile)) {
-							seen.set(skillFile, { uri: skillFile, type: DiscoveredType.Skill });
+							seen.set(skillFile, {
+                uri: skillFile,
+                type: DiscoveredType.Skill,
+              });
 						}
 					} catch {
 						// SKILL.md missing — skip this skill directory.
@@ -214,7 +233,10 @@ export class SessionCustomizationDiscovery extends Disposable {
 					// `.agent.md` and `.chatmode.md` are explicitly agents;
 					// any other `.md` file in an agents folder is also
 					// treated as an agent (workbench fallback rule).
-					seen.set(child.resource, { uri: child.resource, type: DiscoveredType.Agent });
+					seen.set(child.resource, {
+            uri: child.resource,
+            type: DiscoveredType.Agent,
+          });
 				} else {
 					const suffix = INSTRUCTION_FILE_SUFFIX;
 					if (name.endsWith(suffix) && !seen.has(child.resource)) {
@@ -228,8 +250,8 @@ export class SessionCustomizationDiscovery extends Disposable {
 
 // Test-only helpers — exported as `_internal` to discourage production use.
 export const _internal = {
-	AGENT_FILE_SUFFIX,
-	INSTRUCTION_FILE_SUFFIX,
-	SKILL_FILENAME,
-	getSearchRoots,
+  AGENT_FILE_SUFFIX,
+  INSTRUCTION_FILE_SUFFIX,
+  SKILL_FILENAME,
+  getSearchRoots,
 };

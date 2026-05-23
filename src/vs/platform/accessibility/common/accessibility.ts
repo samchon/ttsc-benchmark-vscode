@@ -3,11 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../base/common/event.js';
-import { RawContextKey } from '../../contextkey/common/contextkey.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
+import { Event } from "../../../base/common/event.js";
+import { RawContextKey } from "../../contextkey/common/contextkey.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
 
-export const IAccessibilityService = createDecorator<IAccessibilityService>('accessibilityService');
+export const IAccessibilityService = createDecorator<IAccessibilityService>(
+  "accessibilityService",
+);
 
 export interface IAccessibilityService {
 	readonly _serviceBrand: undefined;
@@ -37,7 +39,10 @@ export const enum AccessibilitySupport {
 	Enabled = 2
 }
 
-export const CONTEXT_ACCESSIBILITY_MODE_ENABLED = new RawContextKey<boolean>('accessibilityModeEnabled', false);
+export const CONTEXT_ACCESSIBILITY_MODE_ENABLED = new RawContextKey<boolean>(
+  "accessibilityModeEnabled",
+  false,
+);
 
 export interface IAccessibilityInformation {
 	label: string;
@@ -45,13 +50,13 @@ export interface IAccessibilityInformation {
 }
 
 export function isAccessibilityInformation(obj: unknown): obj is IAccessibilityInformation {
-	if (!obj || typeof obj !== 'object') {
+	if (!obj || typeof obj !== "object") {
 		return false;
 	}
 
 	const candidate = obj as Partial<IAccessibilityInformation>;
-	return typeof candidate.label === 'string'
-		&& (typeof candidate.role === 'undefined' || typeof candidate.role === 'string');
+	return typeof candidate.label === "string"
+		&& (typeof candidate.role === "undefined" || typeof candidate.role === "string");
 }
 
-export const ACCESSIBLE_VIEW_SHOWN_STORAGE_PREFIX = 'ACCESSIBLE_VIEW_SHOWN_';
+export const ACCESSIBLE_VIEW_SHOWN_STORAGE_PREFIX = "ACCESSIBLE_VIEW_SHOWN_";

@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as strings from '../../../../base/common/strings.js';
-import { ICodeEditor, IActiveCodeEditor } from '../../../browser/editorBrowser.js';
-import { Position } from '../../../common/core/position.js';
-import { Range, IRange } from '../../../common/core/range.js';
-import { CancellationTokenSource, CancellationToken } from '../../../../base/common/cancellation.js';
-import { IDisposable, DisposableStore } from '../../../../base/common/lifecycle.js';
-import { ITextModel } from '../../../common/model.js';
-import { EditorKeybindingCancellationTokenSource } from './keybindingCancellation.js';
+import * as strings from "../../../../base/common/strings.js";
+import { ICodeEditor, IActiveCodeEditor } from "../../../browser/editorBrowser.js";
+import { Position } from "../../../common/core/position.js";
+import { Range, IRange } from "../../../common/core/range.js";
+import { CancellationTokenSource, CancellationToken } from "../../../../base/common/cancellation.js";
+import { IDisposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { ITextModel } from "../../../common/model.js";
+import { EditorKeybindingCancellationTokenSource } from "./keybindingCancellation.js";
 
 export const enum CodeEditorStateFlag {
 	Value = 1,
@@ -34,7 +34,11 @@ export class EditorState {
 
 		if ((this.flags & CodeEditorStateFlag.Value) !== 0) {
 			const model = editor.getModel();
-			this.modelVersionId = model ? strings.format('{0}#{1}', model.uri.toString(), model.getVersionId()) : null;
+			this.modelVersionId = model ? strings.format(
+        "{0}#{1}",
+        model.uri.toString(),
+        model.getVersionId(),
+      ) : null;
 		} else {
 			this.modelVersionId = null;
 		}
@@ -70,10 +74,14 @@ export class EditorState {
 		if (this.scrollLeft !== state.scrollLeft || this.scrollTop !== state.scrollTop) {
 			return false;
 		}
-		if (!this.position && state.position || this.position && !state.position || this.position && state.position && !this.position.equals(state.position)) {
+		if (!this.position && state.position || this.position && !state.position || this.position && state.position && !this.position.equals(
+      state.position,
+    )) {
 			return false;
 		}
-		if (!this.selection && state.selection || this.selection && !state.selection || this.selection && state.selection && !this.selection.equalsRange(state.selection)) {
+		if (!this.selection && state.selection || this.selection && !state.selection || this.selection && state.selection && !this.selection.equalsRange(
+      state.selection,
+    )) {
 			return false;
 		}
 		return true;

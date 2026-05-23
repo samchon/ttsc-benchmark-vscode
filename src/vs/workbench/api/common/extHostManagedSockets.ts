@@ -3,19 +3,25 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ExtHostManagedSocketsShape, MainContext, MainThreadManagedSocketsShape } from './extHost.protocol.js';
-import { createDecorator } from '../../../platform/instantiation/common/instantiation.js';
-import * as vscode from 'vscode';
-import { Disposable, DisposableStore, toDisposable } from '../../../base/common/lifecycle.js';
-import { IExtHostRpcService } from './extHostRpcService.js';
-import { VSBuffer } from '../../../base/common/buffer.js';
+import {
+  ExtHostManagedSocketsShape,
+  MainContext,
+  MainThreadManagedSocketsShape,
+} from "./extHost.protocol.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import * as vscode from "vscode";
+import { Disposable, DisposableStore, toDisposable } from "../../../base/common/lifecycle.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
+import { VSBuffer } from "../../../base/common/buffer.js";
 
 export interface IExtHostManagedSockets extends ExtHostManagedSocketsShape {
 	setFactory(socketFactoryId: number, makeConnection: () => Thenable<vscode.ManagedMessagePassing>): void;
 	readonly _serviceBrand: undefined;
 }
 
-export const IExtHostManagedSockets = createDecorator<IExtHostManagedSockets>('IExtHostManagedSockets');
+export const IExtHostManagedSockets = createDecorator<IExtHostManagedSockets>(
+  "IExtHostManagedSockets",
+);
 
 export class ExtHostManagedSockets implements IExtHostManagedSockets {
 	declare readonly _serviceBrand: undefined;
@@ -54,18 +60,29 @@ export class ExtHostManagedSockets implements IExtHostManagedSockets {
 		const id = (++this._remoteSocketIdCounter);
 		const socket = await this._factory.makeConnection();
 		const disposable = new DisposableStore();
-		this._managedRemoteSockets.set(id, new ManagedSocket(id, socket, disposable));
+		this._managedRemoteSockets.set(
+      id,
+      new ManagedSocket(id, socket, disposable),
+    );
 
 		disposable.add(toDisposable(() => this._managedRemoteSockets.delete(id)));
-		disposable.add(socket.onDidEnd(() => {
-			this._proxy.$onDidManagedSocketEnd(id);
-			disposable.dispose();
-		}));
-		disposable.add(socket.onDidClose(e => {
-			this._proxy.$onDidManagedSocketClose(id, e?.stack ?? e?.message);
-			disposable.dispose();
-		}));
-		disposable.add(socket.onDidReceiveMessage(e => this._proxy.$onDidManagedSocketHaveData(id, VSBuffer.wrap(e))));
+		disposable.add(
+      socket.onDidEnd(() => {
+        this._proxy.$onDidManagedSocketEnd(id);
+        disposable.dispose();
+      }),
+    );
+		disposable.add(
+      socket.onDidClose(e => {
+        this._proxy.$onDidManagedSocketClose(id, e?.stack ?? e?.message);
+        disposable.dispose();
+      }),
+    );
+		disposable.add(
+      socket.onDidReceiveMessage(
+        e => this._proxy.$onDidManagedSocketHaveData(id, VSBuffer.wrap(e)),
+      ),
+    );
 
 		return id;
 	}

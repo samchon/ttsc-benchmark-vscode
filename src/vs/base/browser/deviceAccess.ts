@@ -55,21 +55,21 @@ export async function requestUsbDevice(options?: { filters?: unknown[] }): Promi
 	}
 
 	return {
-		deviceClass: device.deviceClass,
-		deviceProtocol: device.deviceProtocol,
-		deviceSubclass: device.deviceSubclass,
-		deviceVersionMajor: device.deviceVersionMajor,
-		deviceVersionMinor: device.deviceVersionMinor,
-		deviceVersionSubminor: device.deviceVersionSubminor,
-		manufacturerName: device.manufacturerName,
-		productId: device.productId,
-		productName: device.productName,
-		serialNumber: device.serialNumber,
-		usbVersionMajor: device.usbVersionMajor,
-		usbVersionMinor: device.usbVersionMinor,
-		usbVersionSubminor: device.usbVersionSubminor,
-		vendorId: device.vendorId,
-	};
+    deviceClass: device.deviceClass,
+    deviceProtocol: device.deviceProtocol,
+    deviceSubclass: device.deviceSubclass,
+    deviceVersionMajor: device.deviceVersionMajor,
+    deviceVersionMinor: device.deviceVersionMinor,
+    deviceVersionSubminor: device.deviceVersionSubminor,
+    manufacturerName: device.manufacturerName,
+    productId: device.productId,
+    productName: device.productName,
+    serialNumber: device.serialNumber,
+    usbVersionMajor: device.usbVersionMajor,
+    usbVersionMinor: device.usbVersionMinor,
+    usbVersionSubminor: device.usbVersionSubminor,
+    vendorId: device.vendorId,
+  };
 }
 
 // https://wicg.github.io/serial/
@@ -105,9 +105,9 @@ export async function requestSerialPort(options?: { filters?: unknown[] }): Prom
 
 	const info = port.getInfo();
 	return {
-		usbVendorId: info.usbVendorId,
-		usbProductId: info.usbProductId
-	};
+    usbVendorId: info.usbVendorId,
+    usbProductId: info.usbProductId,
+  };
 }
 
 // https://wicg.github.io/webhid/
@@ -145,10 +145,10 @@ export async function requestHidDevice(options?: { filters?: unknown[] }): Promi
 
 	const device = devices[0];
 	return {
-		opened: device.opened,
-		vendorId: device.vendorId,
-		productId: device.productId,
-		productName: device.productName,
-		collections: device.collections
-	};
+    opened: device.opened,
+    vendorId: device.vendorId,
+    productId: device.productId,
+    productName: device.productName,
+    collections: device.collections,
+  };
 }

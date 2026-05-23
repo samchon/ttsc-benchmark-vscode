@@ -3,27 +3,30 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { reset } from '../../../../../../base/browser/dom.js';
-import { ActionBar } from '../../../../../../base/browser/ui/actionbar/actionbar.js';
-import { renderLabelWithIcons } from '../../../../../../base/browser/ui/iconLabel/iconLabels.js';
-import { CompareResult } from '../../../../../../base/common/arrays.js';
-import { BugIndicatingError } from '../../../../../../base/common/errors.js';
-import { toDisposable } from '../../../../../../base/common/lifecycle.js';
-import { autorun, autorunWithStore, derived, IObservable } from '../../../../../../base/common/observable.js';
-import { IModelDeltaDecoration, MinimapPosition, OverviewRulerLane } from '../../../../../../editor/common/model.js';
-import { localize } from '../../../../../../nls.js';
-import { MenuId } from '../../../../../../platform/actions/common/actions.js';
-import { IConfigurationService } from '../../../../../../platform/configuration/common/configuration.js';
-import { IContextKeyService } from '../../../../../../platform/contextkey/common/contextkey.js';
-import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILabelService } from '../../../../../../platform/label/common/label.js';
-import { MergeEditorLineRange } from '../../model/lineRange.js';
-import { applyObservableDecorations, join } from '../../utils.js';
-import { handledConflictMinimapOverViewRulerColor, unhandledConflictMinimapOverViewRulerColor } from '../colors.js';
-import { EditorGutter } from '../editorGutter.js';
-import { MergeEditorViewModel } from '../viewModel.js';
-import { ctxIsMergeResultEditor } from '../../../common/mergeEditor.js';
-import { CodeEditorView, createSelectionsAutorun, TitleMenu } from './codeEditorView.js';
+import { reset } from "../../../../../../base/browser/dom.js";
+import { ActionBar } from "../../../../../../base/browser/ui/actionbar/actionbar.js";
+import { renderLabelWithIcons } from "../../../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { CompareResult } from "../../../../../../base/common/arrays.js";
+import { BugIndicatingError } from "../../../../../../base/common/errors.js";
+import { toDisposable } from "../../../../../../base/common/lifecycle.js";
+import { autorun, autorunWithStore, derived, IObservable } from "../../../../../../base/common/observable.js";
+import { IModelDeltaDecoration, MinimapPosition, OverviewRulerLane } from "../../../../../../editor/common/model.js";
+import { localize } from "../../../../../../nls.js";
+import { MenuId } from "../../../../../../platform/actions/common/actions.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { ILabelService } from "../../../../../../platform/label/common/label.js";
+import { MergeEditorLineRange } from "../../model/lineRange.js";
+import { applyObservableDecorations, join } from "../../utils.js";
+import {
+  handledConflictMinimapOverViewRulerColor,
+  unhandledConflictMinimapOverViewRulerColor,
+} from "../colors.js";
+import { EditorGutter } from "../editorGutter.js";
+import { MergeEditorViewModel } from "../viewModel.js";
+import { ctxIsMergeResultEditor } from "../../../common/mergeEditor.js";
+import { CodeEditorView, createSelectionsAutorun, TitleMenu } from "./codeEditorView.js";
 
 export class ResultCodeEditorView extends CodeEditorView {
 	constructor(
@@ -35,13 +38,13 @@ export class ResultCodeEditorView extends CodeEditorView {
 		super(instantiationService, viewModel, configurationService);
 
 		this.editor.invokeWithinContext(accessor => {
-			const contextKeyService = accessor.get(IContextKeyService);
-			const isMergeResultEditor = ctxIsMergeResultEditor.bindTo(contextKeyService);
-			isMergeResultEditor.set(true);
-			this._register(toDisposable(() => isMergeResultEditor.reset()));
-		});
+      const contextKeyService = accessor.get(IContextKeyService);
+      const isMergeResultEditor = ctxIsMergeResultEditor.bindTo(contextKeyService);
+      isMergeResultEditor.set(true);
+      this._register(toDisposable(() => isMergeResultEditor.reset()));
+    });
 
-		this.htmlElements.gutterDiv.style.width = '5px';
+		this.htmlElements.gutterDiv.style.width = "5px";
 		this.htmlElements.root.classList.add(`result`);
 
 		this._register(
@@ -53,7 +56,7 @@ export class ResultCodeEditorView extends CodeEditorView {
 						createView: (item, target) => { throw new BugIndicatingError(); },
 					}));
 				}
-			})
+			}),
 		);
 
 		this._register(autorun(reader => {
@@ -63,12 +66,14 @@ export class ResultCodeEditorView extends CodeEditorView {
 				return;
 			}
 			this.editor.setModel(vm.model.resultTextModel);
-			reset(this.htmlElements.title, ...renderLabelWithIcons(localize('result', 'Result')));
+			reset(this.htmlElements.title, ...renderLabelWithIcons(localize("result", "Result")));
 			reset(this.htmlElements.description, ...renderLabelWithIcons(this._labelService.getUriLabel(vm.model.resultTextModel.uri, { relative: true })));
 		}));
 
 
-		const remainingConflictsActionBar = this._register(new ActionBar(this.htmlElements.detail));
+		const remainingConflictsActionBar = this._register(
+      new ActionBar(this.htmlElements.detail),
+    );
 
 		this._register(autorun(reader => {
 			/** @description update remainingConflicts label */
@@ -85,29 +90,29 @@ export class ResultCodeEditorView extends CodeEditorView {
 
 			const text = count === 1
 				? localize(
-					'mergeEditor.remainingConflicts',
-					'{0} Conflict Remaining',
-					count
+					"mergeEditor.remainingConflicts",
+					"{0} Conflict Remaining",
+					count,
 				)
 				: localize(
-					'mergeEditor.remainingConflict',
-					'{0} Conflicts Remaining ',
-					count
+					"mergeEditor.remainingConflict",
+					"{0} Conflicts Remaining ",
+					count,
 				);
 
 			remainingConflictsActionBar.clear();
 			remainingConflictsActionBar.push({
 				class: undefined,
 				enabled: count > 0,
-				id: 'nextConflict',
+				id: "nextConflict",
 				label: text,
 				run() {
 					vm.model.telemetry.reportConflictCounterClicked();
 					vm.goToNextModifiedBaseRange(m => !model.isHandled(m).read(undefined));
 				},
 				tooltip: count > 0
-					? localize('goToNextConflict', 'Go to next conflict')
-					: localize('allConflictHandled', 'All conflicts handled, the merge can be completed now.'),
+					? localize("goToNextConflict", "Go to next conflict")
+					: localize("allConflictHandled", "All conflicts handled, the merge can be completed now."),
 			});
 		}));
 
@@ -116,17 +121,17 @@ export class ResultCodeEditorView extends CodeEditorView {
 
 		this._register(
 			createSelectionsAutorun(this, (baseRange, viewModel) =>
-				viewModel.model.translateBaseRangeToResult(baseRange)
-			)
+				viewModel.model.translateBaseRangeToResult(baseRange),
+			),
 		);
 
 		this._register(
-			instantiationService.createInstance(
-				TitleMenu,
-				MenuId.MergeInputResultToolbar,
-				this.htmlElements.toolbar
-			)
-		);
+      instantiationService.createInstance(
+        TitleMenu,
+        MenuId.MergeInputResultToolbar,
+        this.htmlElements.toolbar,
+      ),
+    );
 	}
 
 	private readonly decorations = derived(this, reader => {
@@ -145,8 +150,8 @@ export class ResultCodeEditorView extends CodeEditorView {
 				? CompareResult.neitherLessOrGreaterThan
 				: MergeEditorLineRange.compareByStart(
 					baseRange.baseRange,
-					diff.inputRange
-				)
+					diff.inputRange,
+				),
 		);
 
 		const activeModifiedBaseRange = viewModel.activeModifiedBaseRange.read(reader);
@@ -157,20 +162,20 @@ export class ResultCodeEditorView extends CodeEditorView {
 			const modifiedBaseRange = m.left;
 
 			if (modifiedBaseRange) {
-				const blockClassNames = ['merge-editor-block'];
+				const blockClassNames = ["merge-editor-block"];
 				let blockPadding: [top: number, right: number, bottom: number, left: number] = [0, 0, 0, 0];
 				const isHandled = model.isHandled(modifiedBaseRange).read(reader);
 				if (isHandled) {
-					blockClassNames.push('handled');
+					blockClassNames.push("handled");
 				}
 				if (modifiedBaseRange === activeModifiedBaseRange) {
-					blockClassNames.push('focused');
+					blockClassNames.push("focused");
 					blockPadding = [0, 2, 0, 2];
 				}
 				if (modifiedBaseRange.isConflicting) {
-					blockClassNames.push('conflicting');
+					blockClassNames.push("conflicting");
 				}
-				blockClassNames.push('result');
+				blockClassNames.push("result");
 
 				if (!modifiedBaseRange.isConflicting && !showNonConflictingChanges && isHandled) {
 					continue;
@@ -181,10 +186,10 @@ export class ResultCodeEditorView extends CodeEditorView {
 					range: range.toInclusiveRangeOrEmpty(),
 					options: {
 						showIfCollapsed: true,
-						blockClassName: blockClassNames.join(' '),
+						blockClassName: blockClassNames.join(" "),
 						blockPadding,
 						blockIsAfterEnd: range.startLineNumber > textModel.getLineCount(),
-						description: 'Result Diff',
+						description: "Result Diff",
 						minimap: {
 							position: MinimapPosition.Gutter,
 							color: { id: isHandled ? handledConflictMinimapOverViewRulerColor : unhandledConflictMinimapOverViewRulerColor },
@@ -192,8 +197,8 @@ export class ResultCodeEditorView extends CodeEditorView {
 						overviewRuler: modifiedBaseRange.isConflicting ? {
 							position: OverviewRulerLane.Center,
 							color: { id: isHandled ? handledConflictMinimapOverViewRulerColor : unhandledConflictMinimapOverViewRulerColor },
-						} : undefined
-					}
+						} : undefined,
+					},
 				});
 			}
 
@@ -205,9 +210,9 @@ export class ResultCodeEditorView extends CodeEditorView {
 							range,
 							options: {
 								className: `merge-editor-diff result`,
-								description: 'Merge Editor',
+								description: "Merge Editor",
 								isWholeLine: true,
-							}
+							},
 						});
 					}
 
@@ -217,8 +222,8 @@ export class ResultCodeEditorView extends CodeEditorView {
 								range: d.outputRange,
 								options: {
 									className: `merge-editor-diff-word result`,
-									description: 'Merge Editor'
-								}
+									description: "Merge Editor",
+								},
 							});
 						}
 					}

@@ -3,13 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter } from '../../../base/common/event.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { AhpJsonlLogger, getAhpLogByteLength } from '../common/ahpJsonlLogger.js';
-import type { AhpServerNotification, JsonRpcNotification, JsonRpcRequest, JsonRpcResponse, ProtocolMessage } from '../common/state/sessionProtocol.js';
-import type { IProtocolTransport } from '../common/state/sessionTransport.js';
-import type { ITunnelAgentHostMainService, ITunnelRelayMessage } from '../common/tunnelAgentHost.js';
-import { MALFORMED_FRAMES_FORCE_CLOSE_THRESHOLD, MALFORMED_FRAMES_LOG_CAP } from '../common/transportConstants.js';
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { AhpJsonlLogger, getAhpLogByteLength } from "../common/ahpJsonlLogger.js";
+import type {
+  AhpServerNotification,
+  JsonRpcNotification,
+  JsonRpcRequest,
+  JsonRpcResponse,
+  ProtocolMessage,
+} from "../common/state/sessionProtocol.js";
+import type { IProtocolTransport } from "../common/state/sessionTransport.js";
+import type { ITunnelAgentHostMainService, ITunnelRelayMessage } from "../common/tunnelAgentHost.js";
+import { MALFORMED_FRAMES_FORCE_CLOSE_THRESHOLD, MALFORMED_FRAMES_LOG_CAP } from "../common/transportConstants.js";
 
 /**
  * A protocol transport that relays messages through the shared process
@@ -49,19 +55,19 @@ export class TunnelRelayTransport extends Disposable implements IProtocolTranspo
 			} catch (err) {
 				this._malformedFrames++;
 				if (this._malformedFrames <= MALFORMED_FRAMES_LOG_CAP) {
-					const preview = msg.data.length > 80 ? msg.data.slice(0, 80) + '…' : msg.data;
+					const preview = msg.data.length > 80 ? msg.data.slice(0, 80) + "…" : msg.data;
 					console.warn(
 						`[TunnelRelayTransport] Malformed frame #${this._malformedFrames} (len=${msg.data.length}): ${preview}`,
-						err instanceof Error ? err.message : String(err)
+						err instanceof Error ? err.message : String(err),
 					);
 				}
 				if (this._malformedFrames > MALFORMED_FRAMES_FORCE_CLOSE_THRESHOLD) {
-					console.warn('[TunnelRelayTransport] Malformed frame threshold exceeded; closing relay.');
+					console.warn("[TunnelRelayTransport] Malformed frame threshold exceeded; closing relay.");
 					this._tunnelService.disconnect(this._connectionId).catch(() => { /* best effort */ });
 				}
 				return;
 			}
-			this._ahpLogger?.log(parsed, 's2c', getAhpLogByteLength(msg.data));
+			this._ahpLogger?.log(parsed, "s2c", getAhpLogByteLength(msg.data));
 			this._onMessage.fire(parsed);
 		}));
 
@@ -75,13 +81,15 @@ export class TunnelRelayTransport extends Disposable implements IProtocolTranspo
 
 	override dispose(): void {
 		// Tear down the shared-process relay connection
-		this._tunnelService.disconnect(this._connectionId).catch(() => { /* best effort */ });
+		this._tunnelService.disconnect(this._connectionId).catch(
+      () => { /* best effort */ },
+    );
 		super.dispose();
 	}
 
 	send(message: ProtocolMessage | AhpServerNotification | JsonRpcNotification | JsonRpcResponse | JsonRpcRequest): void {
 		const text = JSON.stringify(message);
-		this._ahpLogger?.log(message, 'c2s', getAhpLogByteLength(text));
+		this._ahpLogger?.log(message, "c2s", getAhpLogByteLength(text));
 		this._tunnelService.relaySend(this._connectionId, text).catch(() => {
 			// Send failed — connection probably closed
 		});

@@ -3,26 +3,37 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable } from '../../../base/common/lifecycle.js';
-import { WrappingIndent } from '../config/editorOptions.js';
-import { FontInfo } from '../config/fontInfo.js';
-import { IPosition, Position } from '../core/position.js';
-import { Range } from '../core/range.js';
-import { IModelDecoration, IModelDeltaDecoration, ITextModel, PositionAffinity } from '../model.js';
-import { IActiveIndentGuideInfo, BracketGuideOptions, IndentGuide, IndentGuideHorizontalLine } from '../textModelGuides.js';
-import { ModelDecorationOptions } from '../model/textModel.js';
-import * as viewEvents from '../viewEvents.js';
-import { createModelLineProjection, IModelLineProjection } from './modelLineProjection.js';
-import { ILineBreaksComputer, ModelLineProjectionData, InjectedText, ILineBreaksComputerFactory, ILineBreaksComputerContext } from '../modelLineProjectionData.js';
-import { ConstantTimePrefixSumComputer } from '../model/prefixSumComputer.js';
-import { ViewLineData } from '../viewModel.js';
-import { ICoordinatesConverter, IdentityCoordinatesConverter } from '../coordinatesConverter.js';
-import { LineInjectedText } from '../textModelEvents.js';
+import { IDisposable } from "../../../base/common/lifecycle.js";
+import { WrappingIndent } from "../config/editorOptions.js";
+import { FontInfo } from "../config/fontInfo.js";
+import { IPosition, Position } from "../core/position.js";
+import { Range } from "../core/range.js";
+import { IModelDecoration, IModelDeltaDecoration, ITextModel, PositionAffinity } from "../model.js";
+import {
+  IActiveIndentGuideInfo,
+  BracketGuideOptions,
+  IndentGuide,
+  IndentGuideHorizontalLine,
+} from "../textModelGuides.js";
+import { ModelDecorationOptions } from "../model/textModel.js";
+import * as viewEvents from "../viewEvents.js";
+import { createModelLineProjection, IModelLineProjection } from "./modelLineProjection.js";
+import {
+  ILineBreaksComputer,
+  ModelLineProjectionData,
+  InjectedText,
+  ILineBreaksComputerFactory,
+  ILineBreaksComputerContext,
+} from "../modelLineProjectionData.js";
+import { ConstantTimePrefixSumComputer } from "../model/prefixSumComputer.js";
+import { ViewLineData } from "../viewModel.js";
+import { ICoordinatesConverter, IdentityCoordinatesConverter } from "../coordinatesConverter.js";
+import { LineInjectedText } from "../textModelEvents.js";
 
 export interface IViewModelLines extends IDisposable {
 	createCoordinatesConverter(): ICoordinatesConverter;
 
-	setWrappingSettings(fontInfo: FontInfo, wrappingStrategy: 'simple' | 'advanced', wrappingColumn: number, wrappingIndent: WrappingIndent, wordBreak: 'normal' | 'keepAll'): boolean;
+	setWrappingSettings(fontInfo: FontInfo, wrappingStrategy: "simple" | "advanced", wrappingColumn: number, wrappingIndent: WrappingIndent, wordBreak: "normal" | "keepAll"): boolean;
 	setTabSize(newTabSize: number): boolean;
 	getHiddenAreas(): Range[];
 	setHiddenAreas(_ranges: readonly Range[]): boolean;
@@ -69,8 +80,8 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 	private tabSize: number;
 	private wrappingColumn: number;
 	private wrappingIndent: WrappingIndent;
-	private wordBreak: 'normal' | 'keepAll';
-	private wrappingStrategy: 'simple' | 'advanced';
+	private wordBreak: "normal" | "keepAll";
+	private wrappingStrategy: "simple" | "advanced";
 	private wrapOnEscapedLineFeeds: boolean;
 
 	private modelLineProjections!: IModelLineProjection[];
@@ -89,11 +100,11 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 		monospaceLineBreaksComputerFactory: ILineBreaksComputerFactory,
 		fontInfo: FontInfo,
 		tabSize: number,
-		wrappingStrategy: 'simple' | 'advanced',
+		wrappingStrategy: "simple" | "advanced",
 		wrappingColumn: number,
 		wrappingIndent: WrappingIndent,
-		wordBreak: 'normal' | 'keepAll',
-		wrapOnEscapedLineFeeds: boolean
+		wordBreak: "normal" | "keepAll",
+		wrapOnEscapedLineFeeds: boolean,
 	) {
 		this._editorId = editorId;
 		this.model = model;
@@ -112,7 +123,10 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 	}
 
 	public dispose(): void {
-		this.hiddenAreasDecorationIds = this.model.deltaDecorations(this.hiddenAreasDecorationIds, []);
+		this.hiddenAreasDecorationIds = this.model.deltaDecorations(
+      this.hiddenAreasDecorationIds,
+      [],
+    );
 	}
 
 	public createCoordinatesConverter(): ICoordinatesConverter {
@@ -123,7 +137,10 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 		this.modelLineProjections = [];
 
 		if (resetHiddenAreas) {
-			this.hiddenAreasDecorationIds = this.model.deltaDecorations(this.hiddenAreasDecorationIds, []);
+			this.hiddenAreasDecorationIds = this.model.deltaDecorations(
+        this.hiddenAreasDecorationIds,
+        [],
+      );
 		}
 
 		const linesContent = this.model.getLinesContent();
@@ -131,13 +148,18 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 		const lineBreaksComputer = this.createLineBreaksComputer();
 
 		for (let i = 0; i < lineCount; i++) {
-			lineBreaksComputer.addRequest(i + 1, previousLineBreaks ? previousLineBreaks[i] : null);
+			lineBreaksComputer.addRequest(
+        i + 1,
+        previousLineBreaks ? previousLineBreaks[i] : null,
+      );
 		}
 		const linesBreaks = lineBreaksComputer.finalize();
 
 		const values: number[] = [];
 
-		const hiddenAreas = this.hiddenAreasDecorationIds.map((areaId) => this.model.getDecorationRange(areaId)!).sort(Range.compareRangesUsingStarts);
+		const hiddenAreas = this.hiddenAreasDecorationIds.map((areaId) => this.model.getDecorationRange(areaId)!).sort(
+      Range.compareRangesUsingStarts,
+    );
 		let hiddenAreaStart = 1, hiddenAreaEnd = 0;
 		let hiddenAreaIdx = -1;
 		let nextLineNumberToUpdateHiddenArea = (hiddenAreaIdx + 1 < hiddenAreas.length) ? hiddenAreaEnd + 1 : lineCount + 2;
@@ -160,15 +182,17 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 
 		this._validModelVersionId = this.model.getVersionId();
 
-		this.projectedModelLineLineCounts = new ConstantTimePrefixSumComputer(values);
+		this.projectedModelLineLineCounts = new ConstantTimePrefixSumComputer(
+      values,
+    );
 
 		this._ensureAtLeastOneVisibleLine();
 	}
 
 	public getHiddenAreas(): Range[] {
 		return this.hiddenAreasDecorationIds.map(
-			(decId) => this.model.getDecorationRange(decId)!
-		);
+      (decId) => this.model.getDecorationRange(decId)!,
+    );
 	}
 
 	public setHiddenAreas(_ranges: Range[]): boolean {
@@ -178,7 +202,9 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 		// TODO@Martin: Please stop calling this method on each model change!
 
 		// This checks if there really was a change
-		const oldRanges = this.hiddenAreasDecorationIds.map((areaId) => this.model.getDecorationRange(areaId)!).sort(Range.compareRangesUsingStarts);
+		const oldRanges = this.hiddenAreasDecorationIds.map((areaId) => this.model.getDecorationRange(areaId)!).sort(
+      Range.compareRangesUsingStarts,
+    );
 		if (newRanges.length === oldRanges.length) {
 			let hasDifference = false;
 			for (let i = 0; i < newRanges.length; i++) {
@@ -197,10 +223,13 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 			({
 				range: r,
 				options: ModelDecorationOptions.EMPTY,
-			})
+			}),
 		);
 
-		this.hiddenAreasDecorationIds = this.model.deltaDecorations(this.hiddenAreasDecorationIds, newDecorations);
+		this.hiddenAreasDecorationIds = this.model.deltaDecorations(
+      this.hiddenAreasDecorationIds,
+      newDecorations,
+    );
 
 		const hiddenAreas = newRanges;
 		let hiddenAreaStart = 1, hiddenAreaEnd = 0;
@@ -222,14 +251,18 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 			if (lineNumber >= hiddenAreaStart && lineNumber <= hiddenAreaEnd) {
 				// Line should be hidden
 				if (this.modelLineProjections[i].isVisible()) {
-					this.modelLineProjections[i] = this.modelLineProjections[i].setVisible(false);
+					this.modelLineProjections[i] = this.modelLineProjections[i].setVisible(
+            false,
+          );
 					lineChanged = true;
 				}
 			} else {
 				hasVisibleLine = true;
 				// Line should be visible
 				if (!this.modelLineProjections[i].isVisible()) {
-					this.modelLineProjections[i] = this.modelLineProjections[i].setVisible(true);
+					this.modelLineProjections[i] = this.modelLineProjections[i].setVisible(
+            true,
+          );
 					lineChanged = true;
 				}
 			}
@@ -274,7 +307,7 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 		return true;
 	}
 
-	public setWrappingSettings(fontInfo: FontInfo, wrappingStrategy: 'simple' | 'advanced', wrappingColumn: number, wrappingIndent: WrappingIndent, wordBreak: 'normal' | 'keepAll'): boolean {
+	public setWrappingSettings(fontInfo: FontInfo, wrappingStrategy: "simple" | "advanced", wrappingColumn: number, wrappingIndent: WrappingIndent, wordBreak: "normal" | "keepAll"): boolean {
 		const equalFontInfo = this.fontInfo.equals(fontInfo);
 		const equalWrappingStrategy = (this.wrappingStrategy === wrappingStrategy);
 		const equalWrappingColumn = (this.wrappingColumn === wrappingColumn);
@@ -307,7 +340,7 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 
 	public createLineBreaksComputer(_context?: ILineBreaksComputerContext): ILineBreaksComputer {
 		const lineBreaksComputerFactory = (
-			this.wrappingStrategy === 'advanced'
+			this.wrappingStrategy === "advanced"
 				? this._domLineBreaksComputerFactory
 				: this._monospaceLineBreaksComputerFactory
 		);
@@ -317,9 +350,17 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 			},
 			getLineInjectedText: (lineNumber: number): LineInjectedText[] => {
 				return this.model.getLineInjectedText(lineNumber, this._editorId);
-			}
+			},
 		};
-		return lineBreaksComputerFactory.createLineBreaksComputer(context, this.fontInfo, this.tabSize, this.wrappingColumn, this.wrappingIndent, this.wordBreak, this.wrapOnEscapedLineFeeds);
+		return lineBreaksComputerFactory.createLineBreaksComputer(
+      context,
+      this.fontInfo,
+      this.tabSize,
+      this.wrappingColumn,
+      this.wrappingIndent,
+      this.wordBreak,
+      this.wrapOnEscapedLineFeeds,
+    );
 	}
 
 	public onModelFlushed(): void {
@@ -333,13 +374,26 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 			return null;
 		}
 
-		const outputFromLineNumber = (fromLineNumber === 1 ? 1 : this.projectedModelLineLineCounts.getPrefixSum(fromLineNumber - 1) + 1);
-		const outputToLineNumber = this.projectedModelLineLineCounts.getPrefixSum(toLineNumber);
+		const outputFromLineNumber = (fromLineNumber === 1 ? 1 : this.projectedModelLineLineCounts.getPrefixSum(
+      fromLineNumber - 1,
+    ) + 1);
+		const outputToLineNumber = this.projectedModelLineLineCounts.getPrefixSum(
+      toLineNumber,
+    );
 
-		this.modelLineProjections.splice(fromLineNumber - 1, toLineNumber - fromLineNumber + 1);
-		this.projectedModelLineLineCounts.removeValues(fromLineNumber - 1, toLineNumber - fromLineNumber + 1);
+		this.modelLineProjections.splice(
+      fromLineNumber - 1,
+      toLineNumber - fromLineNumber + 1,
+    );
+		this.projectedModelLineLineCounts.removeValues(
+      fromLineNumber - 1,
+      toLineNumber - fromLineNumber + 1,
+    );
 
-		return new viewEvents.ViewLinesDeletedEvent(outputFromLineNumber, outputToLineNumber);
+		return new viewEvents.ViewLinesDeletedEvent(
+      outputFromLineNumber,
+      outputToLineNumber,
+    );
 	}
 
 	public onModelLinesInserted(versionId: number | null, fromLineNumber: number, _toLineNumber: number, lineBreaks: (ModelLineProjectionData | null)[]): viewEvents.ViewLinesInsertedEvent | null {
@@ -352,7 +406,9 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 		// cannot use this.getHiddenAreas() because those decorations have already seen the effect of this model change
 		const isInHiddenArea = (fromLineNumber > 2 && !this.modelLineProjections[fromLineNumber - 2].isVisible());
 
-		const outputFromLineNumber = (fromLineNumber === 1 ? 1 : this.projectedModelLineLineCounts.getPrefixSum(fromLineNumber - 1) + 1);
+		const outputFromLineNumber = (fromLineNumber === 1 ? 1 : this.projectedModelLineLineCounts.getPrefixSum(
+      fromLineNumber - 1,
+    ) + 1);
 
 		let totalOutputLineCount = 0;
 		const insertLines: IModelLineProjection[] = [];
@@ -373,9 +429,15 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 				.concat(insertLines)
 				.concat(this.modelLineProjections.slice(fromLineNumber - 1));
 
-		this.projectedModelLineLineCounts.insertValues(fromLineNumber - 1, insertPrefixSumValues);
+		this.projectedModelLineLineCounts.insertValues(
+      fromLineNumber - 1,
+      insertPrefixSumValues,
+    );
 
-		return new viewEvents.ViewLinesInsertedEvent(outputFromLineNumber, outputFromLineNumber + totalOutputLineCount - 1);
+		return new viewEvents.ViewLinesInsertedEvent(
+      outputFromLineNumber,
+      outputFromLineNumber + totalOutputLineCount - 1,
+    );
 	}
 
 	public onModelLineChanged(versionId: number | null, lineNumber: number, lineBreakData: ModelLineProjectionData | null): [boolean, viewEvents.ViewLinesChangedEvent | null, viewEvents.ViewLinesInsertedEvent | null, viewEvents.ViewLinesDeletedEvent | null] {
@@ -402,29 +464,49 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 		let deleteTo = -1;
 
 		if (oldOutputLineCount > newOutputLineCount) {
-			changeFrom = this.projectedModelLineLineCounts.getPrefixSum(lineNumber - 1) + 1;
+			changeFrom = this.projectedModelLineLineCounts.getPrefixSum(
+        lineNumber - 1,
+      ) + 1;
 			changeTo = changeFrom + newOutputLineCount - 1;
 			deleteFrom = changeTo + 1;
 			deleteTo = deleteFrom + (oldOutputLineCount - newOutputLineCount) - 1;
 			lineMappingChanged = true;
 		} else if (oldOutputLineCount < newOutputLineCount) {
-			changeFrom = this.projectedModelLineLineCounts.getPrefixSum(lineNumber - 1) + 1;
+			changeFrom = this.projectedModelLineLineCounts.getPrefixSum(
+        lineNumber - 1,
+      ) + 1;
 			changeTo = changeFrom + oldOutputLineCount - 1;
 			insertFrom = changeTo + 1;
 			insertTo = insertFrom + (newOutputLineCount - oldOutputLineCount) - 1;
 			lineMappingChanged = true;
 		} else {
-			changeFrom = this.projectedModelLineLineCounts.getPrefixSum(lineNumber - 1) + 1;
+			changeFrom = this.projectedModelLineLineCounts.getPrefixSum(
+        lineNumber - 1,
+      ) + 1;
 			changeTo = changeFrom + newOutputLineCount - 1;
 		}
 
 		this.projectedModelLineLineCounts.setValue(lineIndex, newOutputLineCount);
 
-		const viewLinesChangedEvent = (changeFrom <= changeTo ? new viewEvents.ViewLinesChangedEvent(changeFrom, changeTo - changeFrom + 1) : null);
-		const viewLinesInsertedEvent = (insertFrom <= insertTo ? new viewEvents.ViewLinesInsertedEvent(insertFrom, insertTo) : null);
-		const viewLinesDeletedEvent = (deleteFrom <= deleteTo ? new viewEvents.ViewLinesDeletedEvent(deleteFrom, deleteTo) : null);
+		const viewLinesChangedEvent = (changeFrom <= changeTo ? new viewEvents.ViewLinesChangedEvent(
+      changeFrom,
+      changeTo - changeFrom + 1,
+    ) : null);
+		const viewLinesInsertedEvent = (insertFrom <= insertTo ? new viewEvents.ViewLinesInsertedEvent(
+      insertFrom,
+      insertTo,
+    ) : null);
+		const viewLinesDeletedEvent = (deleteFrom <= deleteTo ? new viewEvents.ViewLinesDeletedEvent(
+      deleteFrom,
+      deleteTo,
+    ) : null);
 
-		return [lineMappingChanged, viewLinesChangedEvent, viewLinesInsertedEvent, viewLinesDeletedEvent];
+		return [
+      lineMappingChanged,
+      viewLinesChangedEvent,
+      viewLinesInsertedEvent,
+      viewLinesDeletedEvent,
+    ];
 	}
 
 	public acceptVersionId(versionId: number): void {
@@ -434,8 +516,13 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 
 	private _ensureAtLeastOneVisibleLine(): void {
 		if (this.getViewLineCount() === 0 && this.modelLineProjections.length > 0) {
-			this.modelLineProjections[0] = this.modelLineProjections[0].setVisible(true);
-			this.projectedModelLineLineCounts.setValue(0, this.modelLineProjections[0].getViewLineCount());
+			this.modelLineProjections[0] = this.modelLineProjections[0].setVisible(
+        true,
+      );
+			this.projectedModelLineLineCounts.setValue(
+        0,
+        this.modelLineProjections[0].getViewLineCount(),
+      );
 		}
 	}
 
@@ -459,18 +546,37 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 		minLineNumber = this._toValidViewLineNumber(minLineNumber);
 		maxLineNumber = this._toValidViewLineNumber(maxLineNumber);
 
-		const modelPosition = this.convertViewPositionToModelPosition(viewLineNumber, this.getViewLineMinColumn(viewLineNumber));
-		const modelMinPosition = this.convertViewPositionToModelPosition(minLineNumber, this.getViewLineMinColumn(minLineNumber));
-		const modelMaxPosition = this.convertViewPositionToModelPosition(maxLineNumber, this.getViewLineMinColumn(maxLineNumber));
-		const result = this.model.guides.getActiveIndentGuide(modelPosition.lineNumber, modelMinPosition.lineNumber, modelMaxPosition.lineNumber);
+		const modelPosition = this.convertViewPositionToModelPosition(
+      viewLineNumber,
+      this.getViewLineMinColumn(viewLineNumber),
+    );
+		const modelMinPosition = this.convertViewPositionToModelPosition(
+      minLineNumber,
+      this.getViewLineMinColumn(minLineNumber),
+    );
+		const modelMaxPosition = this.convertViewPositionToModelPosition(
+      maxLineNumber,
+      this.getViewLineMinColumn(maxLineNumber),
+    );
+		const result = this.model.guides.getActiveIndentGuide(
+      modelPosition.lineNumber,
+      modelMinPosition.lineNumber,
+      modelMaxPosition.lineNumber,
+    );
 
-		const viewStartPosition = this.convertModelPositionToViewPosition(result.startLineNumber, 1);
-		const viewEndPosition = this.convertModelPositionToViewPosition(result.endLineNumber, this.model.getLineMaxColumn(result.endLineNumber));
+		const viewStartPosition = this.convertModelPositionToViewPosition(
+      result.startLineNumber,
+      1,
+    );
+		const viewEndPosition = this.convertModelPositionToViewPosition(
+      result.endLineNumber,
+      this.model.getLineMaxColumn(result.endLineNumber),
+    );
 		return {
-			startLineNumber: viewStartPosition.lineNumber,
-			endLineNumber: viewEndPosition.lineNumber,
-			indent: result.indent
-		};
+      startLineNumber: viewStartPosition.lineNumber,
+      endLineNumber: viewEndPosition.lineNumber,
+      indent: result.indent,
+    };
 	}
 
 	// #region ViewLineInfo
@@ -485,45 +591,45 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 
 	private getMinColumnOfViewLine(viewLineInfo: ViewLineInfo): number {
 		return this.modelLineProjections[viewLineInfo.modelLineNumber - 1].getViewLineMinColumn(
-			this.model,
-			viewLineInfo.modelLineNumber,
-			viewLineInfo.modelLineWrappedLineIdx
-		);
+      this.model,
+      viewLineInfo.modelLineNumber,
+      viewLineInfo.modelLineWrappedLineIdx,
+    );
 	}
 
 	private getMaxColumnOfViewLine(viewLineInfo: ViewLineInfo): number {
 		return this.modelLineProjections[viewLineInfo.modelLineNumber - 1].getViewLineMaxColumn(
-			this.model,
-			viewLineInfo.modelLineNumber,
-			viewLineInfo.modelLineWrappedLineIdx
-		);
+      this.model,
+      viewLineInfo.modelLineNumber,
+      viewLineInfo.modelLineWrappedLineIdx,
+    );
 	}
 
 	private getModelStartPositionOfViewLine(viewLineInfo: ViewLineInfo): Position {
 		const line = this.modelLineProjections[viewLineInfo.modelLineNumber - 1];
 		const minViewColumn = line.getViewLineMinColumn(
-			this.model,
-			viewLineInfo.modelLineNumber,
-			viewLineInfo.modelLineWrappedLineIdx
-		);
+      this.model,
+      viewLineInfo.modelLineNumber,
+      viewLineInfo.modelLineWrappedLineIdx,
+    );
 		const column = line.getModelColumnOfViewPosition(
-			viewLineInfo.modelLineWrappedLineIdx,
-			minViewColumn
-		);
+      viewLineInfo.modelLineWrappedLineIdx,
+      minViewColumn,
+    );
 		return new Position(viewLineInfo.modelLineNumber, column);
 	}
 
 	private getModelEndPositionOfViewLine(viewLineInfo: ViewLineInfo): Position {
 		const line = this.modelLineProjections[viewLineInfo.modelLineNumber - 1];
 		const maxViewColumn = line.getViewLineMaxColumn(
-			this.model,
-			viewLineInfo.modelLineNumber,
-			viewLineInfo.modelLineWrappedLineIdx
-		);
+      this.model,
+      viewLineInfo.modelLineNumber,
+      viewLineInfo.modelLineWrappedLineIdx,
+    );
 		const column = line.getModelColumnOfViewPosition(
-			viewLineInfo.modelLineWrappedLineIdx,
-			maxViewColumn
-		);
+      viewLineInfo.modelLineWrappedLineIdx,
+      maxViewColumn,
+    );
 		return new Position(viewLineInfo.modelLineNumber, column);
 	}
 
@@ -532,7 +638,9 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 		const endViewLine = this.getViewLineInfo(viewEndLineNumber);
 
 		const result = new Array<ViewLineInfoGroupedByModelRange>();
-		let lastVisibleModelPos: Position | null = this.getModelStartPositionOfViewLine(startViewLine);
+		let lastVisibleModelPos: Position | null = this.getModelStartPositionOfViewLine(
+      startViewLine,
+    );
 		let viewLines = new Array<ViewLineInfo>();
 
 		for (let curModelLine = startViewLine.modelLineNumber; curModelLine <= endViewLine.modelLineNumber; curModelLine++) {
@@ -555,9 +663,15 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 			}
 
 			if (!line.isVisible() && lastVisibleModelPos) {
-				const lastVisibleModelPos2 = new Position(curModelLine - 1, this.model.getLineMaxColumn(curModelLine - 1) + 1);
+				const lastVisibleModelPos2 = new Position(
+          curModelLine - 1,
+          this.model.getLineMaxColumn(curModelLine - 1) + 1,
+        );
 
-				const modelRange = Range.fromPositions(lastVisibleModelPos, lastVisibleModelPos2);
+				const modelRange = Range.fromPositions(
+          lastVisibleModelPos,
+          lastVisibleModelPos2,
+        );
 				result.push(new ViewLineInfoGroupedByModelRange(modelRange, viewLines));
 				viewLines = [];
 
@@ -568,7 +682,10 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 		}
 
 		if (lastVisibleModelPos) {
-			const modelRange = Range.fromPositions(lastVisibleModelPos, this.getModelEndPositionOfViewLine(endViewLine));
+			const modelRange = Range.fromPositions(
+        lastVisibleModelPos,
+        this.getModelEndPositionOfViewLine(endViewLine),
+      );
 			result.push(new ViewLineInfoGroupedByModelRange(modelRange, viewLines));
 		}
 
@@ -578,18 +695,24 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 	// #endregion
 
 	public getViewLinesBracketGuides(viewStartLineNumber: number, viewEndLineNumber: number, activeViewPosition: IPosition | null, options: BracketGuideOptions): IndentGuide[][] {
-		const modelActivePosition = activeViewPosition ? this.convertViewPositionToModelPosition(activeViewPosition.lineNumber, activeViewPosition.column) : null;
+		const modelActivePosition = activeViewPosition ? this.convertViewPositionToModelPosition(
+      activeViewPosition.lineNumber,
+      activeViewPosition.column,
+    ) : null;
 		const resultPerViewLine: IndentGuide[][] = [];
 
-		for (const group of this.getViewLineInfosGroupedByModelRanges(viewStartLineNumber, viewEndLineNumber)) {
+		for (const group of this.getViewLineInfosGroupedByModelRanges(
+      viewStartLineNumber,
+      viewEndLineNumber,
+    )) {
 			const modelRangeStartLineNumber = group.modelRange.startLineNumber;
 
 			const bracketGuidesPerModelLine = this.model.guides.getLinesBracketGuides(
-				modelRangeStartLineNumber,
-				group.modelRange.endLineNumber,
-				modelActivePosition,
-				options
-			);
+        modelRangeStartLineNumber,
+        group.modelRange.endLineNumber,
+        modelActivePosition,
+        options,
+      );
 
 			for (const viewLineInfo of group.viewLines) {
 
@@ -646,7 +769,7 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 						}
 						return new IndentGuide(g.visibleColumn, column, g.className,
 							new IndentGuideHorizontalLine(g.horizontalLine.top,
-								this.getMaxColumnOfViewLine(viewLineInfo)
+								this.getMaxColumnOfViewLine(viewLineInfo),
 							),
 							-1,
 							-1,
@@ -668,8 +791,14 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 		viewStartLineNumber = this._toValidViewLineNumber(viewStartLineNumber);
 		viewEndLineNumber = this._toValidViewLineNumber(viewEndLineNumber);
 
-		const modelStart = this.convertViewPositionToModelPosition(viewStartLineNumber, this.getViewLineMinColumn(viewStartLineNumber));
-		const modelEnd = this.convertViewPositionToModelPosition(viewEndLineNumber, this.getViewLineMaxColumn(viewEndLineNumber));
+		const modelStart = this.convertViewPositionToModelPosition(
+      viewStartLineNumber,
+      this.getViewLineMinColumn(viewStartLineNumber),
+    );
+		const modelEnd = this.convertViewPositionToModelPosition(
+      viewEndLineNumber,
+      this.getViewLineMaxColumn(viewEndLineNumber),
+    );
 
 		let result: number[] = [];
 		const resultRepeatCount: number[] = [];
@@ -681,11 +810,21 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 		for (let modelLineIndex = modelStartLineIndex; modelLineIndex <= modelEndLineIndex; modelLineIndex++) {
 			const line = this.modelLineProjections[modelLineIndex];
 			if (line.isVisible()) {
-				const viewLineStartIndex = line.getViewLineNumberOfModelPosition(0, modelLineIndex === modelStartLineIndex ? modelStart.column : 1);
-				const viewLineEndIndex = line.getViewLineNumberOfModelPosition(0, this.model.getLineMaxColumn(modelLineIndex + 1));
+				const viewLineStartIndex = line.getViewLineNumberOfModelPosition(
+          0,
+          modelLineIndex === modelStartLineIndex ? modelStart.column : 1,
+        );
+				const viewLineEndIndex = line.getViewLineNumberOfModelPosition(
+          0,
+          this.model.getLineMaxColumn(modelLineIndex + 1),
+        );
 				const count = viewLineEndIndex - viewLineStartIndex + 1;
 				let option = IndentGuideRepeatOption.BlockNone;
-				if (count > 1 && line.getViewLineMinColumn(this.model, modelLineIndex + 1, viewLineEndIndex) === 1) {
+				if (count > 1 && line.getViewLineMinColumn(
+          this.model,
+          modelLineIndex + 1,
+          viewLineEndIndex,
+        ) === 1) {
 					// wrapped lines should block indent guides
 					option = (viewLineStartIndex === 0 ? IndentGuideRepeatOption.BlockSubsequent : IndentGuideRepeatOption.BlockAll);
 				}
@@ -698,14 +837,24 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 			} else {
 				// hit invisible line => flush request
 				if (reqStart !== null) {
-					result = result.concat(this.model.guides.getLinesIndentGuides(reqStart.lineNumber, modelLineIndex));
+					result = result.concat(
+            this.model.guides.getLinesIndentGuides(
+              reqStart.lineNumber,
+              modelLineIndex,
+            ),
+          );
 					reqStart = null;
 				}
 			}
 		}
 
 		if (reqStart !== null) {
-			result = result.concat(this.model.guides.getLinesIndentGuides(reqStart.lineNumber, modelEnd.lineNumber));
+			result = result.concat(
+        this.model.guides.getLinesIndentGuides(
+          reqStart.lineNumber,
+          modelEnd.lineNumber,
+        ),
+      );
 			reqStart = null;
 		}
 
@@ -736,28 +885,51 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 
 	public getViewLineContent(viewLineNumber: number): string {
 		const info = this.getViewLineInfo(viewLineNumber);
-		return this.modelLineProjections[info.modelLineNumber - 1].getViewLineContent(this.model, info.modelLineNumber, info.modelLineWrappedLineIdx);
+		return this.modelLineProjections[info.modelLineNumber - 1].getViewLineContent(
+      this.model,
+      info.modelLineNumber,
+      info.modelLineWrappedLineIdx,
+    );
 	}
 
 	public getViewLineLength(viewLineNumber: number): number {
 		const info = this.getViewLineInfo(viewLineNumber);
-		return this.modelLineProjections[info.modelLineNumber - 1].getViewLineLength(this.model, info.modelLineNumber, info.modelLineWrappedLineIdx);
+		return this.modelLineProjections[info.modelLineNumber - 1].getViewLineLength(
+      this.model,
+      info.modelLineNumber,
+      info.modelLineWrappedLineIdx,
+    );
 	}
 
 	public getViewLineMinColumn(viewLineNumber: number): number {
 		const info = this.getViewLineInfo(viewLineNumber);
-		return this.modelLineProjections[info.modelLineNumber - 1].getViewLineMinColumn(this.model, info.modelLineNumber, info.modelLineWrappedLineIdx);
+		return this.modelLineProjections[info.modelLineNumber - 1].getViewLineMinColumn(
+      this.model,
+      info.modelLineNumber,
+      info.modelLineWrappedLineIdx,
+    );
 	}
 
 	public getViewLineMaxColumn(viewLineNumber: number): number {
 		const info = this.getViewLineInfo(viewLineNumber);
-		return this.modelLineProjections[info.modelLineNumber - 1].getViewLineMaxColumn(this.model, info.modelLineNumber, info.modelLineWrappedLineIdx);
+		return this.modelLineProjections[info.modelLineNumber - 1].getViewLineMaxColumn(
+      this.model,
+      info.modelLineNumber,
+      info.modelLineWrappedLineIdx,
+    );
 	}
 
 	public getViewLineData(viewLineNumber: number): ViewLineData {
 		const info = this.getViewLineInfo(viewLineNumber);
-		const baseViewLineNumber = this.projectedModelLineLineCounts.getPrefixSum(info.modelLineNumber - 1) + 1;
-		return this.modelLineProjections[info.modelLineNumber - 1].getViewLineData(this.model, info.modelLineNumber, info.modelLineWrappedLineIdx, baseViewLineNumber);
+		const baseViewLineNumber = this.projectedModelLineLineCounts.getPrefixSum(
+      info.modelLineNumber - 1,
+    ) + 1;
+		return this.modelLineProjections[info.modelLineNumber - 1].getViewLineData(
+      this.model,
+      info.modelLineNumber,
+      info.modelLineWrappedLineIdx,
+      baseViewLineNumber,
+    );
 	}
 
 	public getViewLinesData(viewStartLineNumber: number, viewEndLineNumber: number, needed: boolean[]): ViewLineData[] {
@@ -765,7 +937,9 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 		viewStartLineNumber = this._toValidViewLineNumber(viewStartLineNumber);
 		viewEndLineNumber = this._toValidViewLineNumber(viewEndLineNumber);
 
-		const start = this.projectedModelLineLineCounts.getIndexOf(viewStartLineNumber - 1);
+		const start = this.projectedModelLineLineCounts.getIndexOf(
+      viewStartLineNumber - 1,
+    );
 		let viewLineNumber = viewStartLineNumber;
 		const startModelLineIndex = start.index;
 		const startRemainder = start.remainder;
@@ -784,8 +958,19 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 				lastLine = true;
 				remainingViewLineCount = viewEndLineNumber - viewLineNumber + 1;
 			}
-			const baseViewLineNumber = this.projectedModelLineLineCounts.getPrefixSum(modelLineIndex) + 1;
-			line.getViewLinesData(this.model, modelLineIndex + 1, fromViewLineIndex, remainingViewLineCount, baseViewLineNumber, viewLineNumber - viewStartLineNumber, needed, result);
+			const baseViewLineNumber = this.projectedModelLineLineCounts.getPrefixSum(
+        modelLineIndex,
+      ) + 1;
+			line.getViewLinesData(
+        this.model,
+        modelLineIndex + 1,
+        fromViewLineIndex,
+        remainingViewLineCount,
+        baseViewLineNumber,
+        viewLineNumber - viewStartLineNumber,
+        needed,
+        result,
+      );
 
 			viewLineNumber += remainingViewLineCount;
 
@@ -806,8 +991,16 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 
 		const line = this.modelLineProjections[lineIndex];
 
-		const minColumn = line.getViewLineMinColumn(this.model, lineIndex + 1, remainder);
-		const maxColumn = line.getViewLineMaxColumn(this.model, lineIndex + 1, remainder);
+		const minColumn = line.getViewLineMinColumn(
+      this.model,
+      lineIndex + 1,
+      remainder,
+    );
+		const maxColumn = line.getViewLineMaxColumn(
+      this.model,
+      lineIndex + 1,
+      remainder,
+    );
 		if (viewColumn < minColumn) {
 			viewColumn = minColumn;
 		}
@@ -815,39 +1008,78 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 			viewColumn = maxColumn;
 		}
 
-		const computedModelColumn = line.getModelColumnOfViewPosition(remainder, viewColumn);
-		const computedModelPosition = this.model.validatePosition(new Position(lineIndex + 1, computedModelColumn));
+		const computedModelColumn = line.getModelColumnOfViewPosition(
+      remainder,
+      viewColumn,
+    );
+		const computedModelPosition = this.model.validatePosition(
+      new Position(lineIndex + 1, computedModelColumn),
+    );
 
 		if (computedModelPosition.equals(expectedModelPosition)) {
 			return new Position(viewLineNumber, viewColumn);
 		}
 
-		return this.convertModelPositionToViewPosition(expectedModelPosition.lineNumber, expectedModelPosition.column);
+		return this.convertModelPositionToViewPosition(
+      expectedModelPosition.lineNumber,
+      expectedModelPosition.column,
+    );
 	}
 
 	public validateViewRange(viewRange: Range, expectedModelRange: Range): Range {
-		const validViewStart = this.validateViewPosition(viewRange.startLineNumber, viewRange.startColumn, expectedModelRange.getStartPosition());
-		const validViewEnd = this.validateViewPosition(viewRange.endLineNumber, viewRange.endColumn, expectedModelRange.getEndPosition());
-		return new Range(validViewStart.lineNumber, validViewStart.column, validViewEnd.lineNumber, validViewEnd.column);
+		const validViewStart = this.validateViewPosition(
+      viewRange.startLineNumber,
+      viewRange.startColumn,
+      expectedModelRange.getStartPosition(),
+    );
+		const validViewEnd = this.validateViewPosition(
+      viewRange.endLineNumber,
+      viewRange.endColumn,
+      expectedModelRange.getEndPosition(),
+    );
+		return new Range(
+      validViewStart.lineNumber,
+      validViewStart.column,
+      validViewEnd.lineNumber,
+      validViewEnd.column,
+    );
 	}
 
 	public convertViewPositionToModelPosition(viewLineNumber: number, viewColumn: number): Position {
 		const info = this.getViewLineInfo(viewLineNumber);
 
-		const inputColumn = this.modelLineProjections[info.modelLineNumber - 1].getModelColumnOfViewPosition(info.modelLineWrappedLineIdx, viewColumn);
+		const inputColumn = this.modelLineProjections[info.modelLineNumber - 1].getModelColumnOfViewPosition(
+      info.modelLineWrappedLineIdx,
+      viewColumn,
+    );
 		// console.log('out -> in ' + viewLineNumber + ',' + viewColumn + ' ===> ' + (lineIndex+1) + ',' + inputColumn);
-		return this.model.validatePosition(new Position(info.modelLineNumber, inputColumn));
+		return this.model.validatePosition(
+      new Position(info.modelLineNumber, inputColumn),
+    );
 	}
 
 	public convertViewRangeToModelRange(viewRange: Range): Range {
-		const start = this.convertViewPositionToModelPosition(viewRange.startLineNumber, viewRange.startColumn);
-		const end = this.convertViewPositionToModelPosition(viewRange.endLineNumber, viewRange.endColumn);
-		return new Range(start.lineNumber, start.column, end.lineNumber, end.column);
+		const start = this.convertViewPositionToModelPosition(
+      viewRange.startLineNumber,
+      viewRange.startColumn,
+    );
+		const end = this.convertViewPositionToModelPosition(
+      viewRange.endLineNumber,
+      viewRange.endColumn,
+    );
+		return new Range(
+      start.lineNumber,
+      start.column,
+      end.lineNumber,
+      end.column,
+    );
 	}
 
 	public convertModelPositionToViewPosition(_modelLineNumber: number, _modelColumn: number, affinity: PositionAffinity = PositionAffinity.None, allowZeroLineNumber: boolean = false, belowHiddenRanges: boolean = false): Position {
 
-		const validPosition = this.model.validatePosition(new Position(_modelLineNumber, _modelColumn));
+		const validPosition = this.model.validatePosition(
+      new Position(_modelLineNumber, _modelColumn),
+    );
 		const inputLineNumber = validPosition.lineNumber;
 		const inputColumn = validPosition.column;
 
@@ -869,17 +1101,31 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 			// TODO@alexdima@hediet this isn't soo pretty
 			return new Position(allowZeroLineNumber ? 0 : 1, 1);
 		}
-		const deltaLineNumber = 1 + this.projectedModelLineLineCounts.getPrefixSum(lineIndex);
+		const deltaLineNumber = 1 + this.projectedModelLineLineCounts.getPrefixSum(
+      lineIndex,
+    );
 
 		let r: Position;
 		if (lineIndexChanged) {
 			if (belowHiddenRanges) {
-				r = this.modelLineProjections[lineIndex].getViewPositionOfModelPosition(deltaLineNumber, 1, affinity);
+				r = this.modelLineProjections[lineIndex].getViewPositionOfModelPosition(
+          deltaLineNumber,
+          1,
+          affinity,
+        );
 			} else {
-				r = this.modelLineProjections[lineIndex].getViewPositionOfModelPosition(deltaLineNumber, this.model.getLineMaxColumn(lineIndex + 1), affinity);
+				r = this.modelLineProjections[lineIndex].getViewPositionOfModelPosition(
+          deltaLineNumber,
+          this.model.getLineMaxColumn(lineIndex + 1),
+          affinity,
+        );
 			}
 		} else {
-			r = this.modelLineProjections[inputLineNumber - 1].getViewPositionOfModelPosition(deltaLineNumber, inputColumn, affinity);
+			r = this.modelLineProjections[inputLineNumber - 1].getViewPositionOfModelPosition(
+        deltaLineNumber,
+        inputColumn,
+        affinity,
+      );
 		}
 
 		// console.log('in -> out ' + inputLineNumber + ',' + inputColumn + ' ===> ' + r.lineNumber + ',' + r);
@@ -891,12 +1137,29 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 	*/
 	public convertModelRangeToViewRange(modelRange: Range, affinity: PositionAffinity = PositionAffinity.Left): Range {
 		if (modelRange.isEmpty()) {
-			const start = this.convertModelPositionToViewPosition(modelRange.startLineNumber, modelRange.startColumn, affinity);
+			const start = this.convertModelPositionToViewPosition(
+        modelRange.startLineNumber,
+        modelRange.startColumn,
+        affinity,
+      );
 			return Range.fromPositions(start);
 		} else {
-			const start = this.convertModelPositionToViewPosition(modelRange.startLineNumber, modelRange.startColumn, PositionAffinity.Right);
-			const end = this.convertModelPositionToViewPosition(modelRange.endLineNumber, modelRange.endColumn, PositionAffinity.Left);
-			return new Range(start.lineNumber, start.column, end.lineNumber, end.column);
+			const start = this.convertModelPositionToViewPosition(
+        modelRange.startLineNumber,
+        modelRange.startColumn,
+        PositionAffinity.Right,
+      );
+			const end = this.convertModelPositionToViewPosition(
+        modelRange.endLineNumber,
+        modelRange.endColumn,
+        PositionAffinity.Left,
+      );
+			return new Range(
+        start.lineNumber,
+        start.column,
+        end.lineNumber,
+        end.column,
+      );
 		}
 	}
 
@@ -904,8 +1167,13 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 		let lineIndex = modelLineNumber - 1;
 		if (this.modelLineProjections[lineIndex].isVisible()) {
 			// this model line is visible
-			const deltaLineNumber = 1 + this.projectedModelLineLineCounts.getPrefixSum(lineIndex);
-			return this.modelLineProjections[lineIndex].getViewLineNumberOfModelPosition(deltaLineNumber, modelColumn);
+			const deltaLineNumber = 1 + this.projectedModelLineLineCounts.getPrefixSum(
+        lineIndex,
+      );
+			return this.modelLineProjections[lineIndex].getViewLineNumberOfModelPosition(
+        deltaLineNumber,
+        modelColumn,
+      );
 		}
 
 		// this model line is not visible
@@ -916,18 +1184,41 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 			// Could not reach a real line
 			return 1;
 		}
-		const deltaLineNumber = 1 + this.projectedModelLineLineCounts.getPrefixSum(lineIndex);
-		return this.modelLineProjections[lineIndex].getViewLineNumberOfModelPosition(deltaLineNumber, this.model.getLineMaxColumn(lineIndex + 1));
+		const deltaLineNumber = 1 + this.projectedModelLineLineCounts.getPrefixSum(
+      lineIndex,
+    );
+		return this.modelLineProjections[lineIndex].getViewLineNumberOfModelPosition(
+      deltaLineNumber,
+      this.model.getLineMaxColumn(lineIndex + 1),
+    );
 	}
 
 	public getDecorationsInRange(range: Range, ownerId: number, filterOutValidation: boolean, filterFontDecorations: boolean, onlyMinimapDecorations: boolean, onlyMarginDecorations: boolean): IModelDecoration[] {
-		const modelStart = this.convertViewPositionToModelPosition(range.startLineNumber, range.startColumn);
-		const modelEnd = this.convertViewPositionToModelPosition(range.endLineNumber, range.endColumn);
+		const modelStart = this.convertViewPositionToModelPosition(
+      range.startLineNumber,
+      range.startColumn,
+    );
+		const modelEnd = this.convertViewPositionToModelPosition(
+      range.endLineNumber,
+      range.endColumn,
+    );
 
 		if (modelEnd.lineNumber - modelStart.lineNumber <= range.endLineNumber - range.startLineNumber) {
 			// most likely there are no hidden lines => fast path
 			// fetch decorations from column 1 to cover the case of wrapped lines that have whole line decorations at column 1
-			return this.model.getDecorationsInRange(new Range(modelStart.lineNumber, 1, modelEnd.lineNumber, modelEnd.column), ownerId, filterOutValidation, filterFontDecorations, onlyMinimapDecorations, onlyMarginDecorations);
+			return this.model.getDecorationsInRange(
+        new Range(
+          modelStart.lineNumber,
+          1,
+          modelEnd.lineNumber,
+          modelEnd.column,
+        ),
+        ownerId,
+        filterOutValidation,
+        filterFontDecorations,
+        onlyMinimapDecorations,
+        onlyMarginDecorations,
+      );
 		}
 
 		let result: IModelDecoration[] = [];
@@ -940,20 +1231,49 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 			if (line.isVisible()) {
 				// merge into previous request
 				if (reqStart === null) {
-					reqStart = new Position(modelLineIndex + 1, modelLineIndex === modelStartLineIndex ? modelStart.column : 1);
+					reqStart = new Position(
+            modelLineIndex + 1,
+            modelLineIndex === modelStartLineIndex ? modelStart.column : 1,
+          );
 				}
 			} else {
 				// hit invisible line => flush request
 				if (reqStart !== null) {
 					const maxLineColumn = this.model.getLineMaxColumn(modelLineIndex);
-					result = result.concat(this.model.getDecorationsInRange(new Range(reqStart.lineNumber, reqStart.column, modelLineIndex, maxLineColumn), ownerId, filterOutValidation, filterFontDecorations, onlyMinimapDecorations));
+					result = result.concat(
+            this.model.getDecorationsInRange(
+              new Range(
+                reqStart.lineNumber,
+                reqStart.column,
+                modelLineIndex,
+                maxLineColumn,
+              ),
+              ownerId,
+              filterOutValidation,
+              filterFontDecorations,
+              onlyMinimapDecorations,
+            ),
+          );
 					reqStart = null;
 				}
 			}
 		}
 
 		if (reqStart !== null) {
-			result = result.concat(this.model.getDecorationsInRange(new Range(reqStart.lineNumber, reqStart.column, modelEnd.lineNumber, modelEnd.column), ownerId, filterOutValidation, filterFontDecorations, onlyMinimapDecorations));
+			result = result.concat(
+        this.model.getDecorationsInRange(
+          new Range(
+            reqStart.lineNumber,
+            reqStart.column,
+            modelEnd.lineNumber,
+            modelEnd.column,
+          ),
+          ownerId,
+          filterOutValidation,
+          filterFontDecorations,
+          onlyMinimapDecorations,
+        ),
+      );
 			reqStart = null;
 		}
 
@@ -990,12 +1310,19 @@ export class ViewModelLinesFromProjectedModel implements IViewModelLines {
 
 	public getInjectedTextAt(position: Position): InjectedText | null {
 		const info = this.getViewLineInfo(position.lineNumber);
-		return this.modelLineProjections[info.modelLineNumber - 1].getInjectedTextAt(info.modelLineWrappedLineIdx, position.column);
+		return this.modelLineProjections[info.modelLineNumber - 1].getInjectedTextAt(
+      info.modelLineWrappedLineIdx,
+      position.column,
+    );
 	}
 
 	normalizePosition(position: Position, affinity: PositionAffinity): Position {
 		const info = this.getViewLineInfo(position.lineNumber);
-		return this.modelLineProjections[info.modelLineNumber - 1].normalizePosition(info.modelLineWrappedLineIdx, position, affinity);
+		return this.modelLineProjections[info.modelLineNumber - 1].normalizePosition(
+      info.modelLineWrappedLineIdx,
+      position,
+      affinity,
+    );
 	}
 
 	public getLineIndentColumn(lineNumber: number): number {
@@ -1080,7 +1407,10 @@ class CoordinatesConverter implements ICoordinatesConverter {
 	// View -> Model conversion and related methods
 
 	public convertViewPositionToModelPosition(viewPosition: Position): Position {
-		return this._lines.convertViewPositionToModelPosition(viewPosition.lineNumber, viewPosition.column);
+		return this._lines.convertViewPositionToModelPosition(
+      viewPosition.lineNumber,
+      viewPosition.column,
+    );
 	}
 
 	public convertViewRangeToModelRange(viewRange: Range): Range {
@@ -1088,7 +1418,11 @@ class CoordinatesConverter implements ICoordinatesConverter {
 	}
 
 	public validateViewPosition(viewPosition: Position, expectedModelPosition: Position): Position {
-		return this._lines.validateViewPosition(viewPosition.lineNumber, viewPosition.column, expectedModelPosition);
+		return this._lines.validateViewPosition(
+      viewPosition.lineNumber,
+      viewPosition.column,
+      expectedModelPosition,
+    );
 	}
 
 	public validateViewRange(viewRange: Range, expectedModelRange: Range): Range {
@@ -1098,7 +1432,13 @@ class CoordinatesConverter implements ICoordinatesConverter {
 	// Model -> View conversion and related methods
 
 	public convertModelPositionToViewPosition(modelPosition: Position, affinity?: PositionAffinity, allowZero?: boolean, belowHiddenRanges?: boolean): Position {
-		return this._lines.convertModelPositionToViewPosition(modelPosition.lineNumber, modelPosition.column, affinity, allowZero, belowHiddenRanges);
+		return this._lines.convertModelPositionToViewPosition(
+      modelPosition.lineNumber,
+      modelPosition.column,
+      affinity,
+      allowZero,
+      belowHiddenRanges,
+    );
 	}
 
 	public convertModelRangeToViewRange(modelRange: Range, affinity?: PositionAffinity): Range {
@@ -1106,7 +1446,10 @@ class CoordinatesConverter implements ICoordinatesConverter {
 	}
 
 	public modelPositionIsVisible(modelPosition: Position): boolean {
-		return this._lines.modelPositionIsVisible(modelPosition.lineNumber, modelPosition.column);
+		return this._lines.modelPositionIsVisible(
+      modelPosition.lineNumber,
+      modelPosition.column,
+    );
 	}
 
 	public getModelLineViewLineCount(modelLineNumber: number): number {
@@ -1114,7 +1457,10 @@ class CoordinatesConverter implements ICoordinatesConverter {
 	}
 
 	public getViewLineNumberOfModelPosition(modelLineNumber: number, modelColumn: number): number {
-		return this._lines.getViewLineNumberOfModelPosition(modelLineNumber, modelColumn);
+		return this._lines.getViewLineNumberOfModelPosition(
+      modelLineNumber,
+      modelColumn,
+    );
 	}
 }
 
@@ -1150,7 +1496,7 @@ export class ViewModelLinesFromModelAsIs implements IViewModelLines {
 		return false;
 	}
 
-	public setWrappingSettings(_fontInfo: FontInfo, _wrappingStrategy: 'simple' | 'advanced', _wrappingColumn: number, _wrappingIndent: WrappingIndent): boolean {
+	public setWrappingSettings(_fontInfo: FontInfo, _wrappingStrategy: "simple" | "advanced", _wrappingColumn: number, _wrappingIndent: WrappingIndent): boolean {
 		return false;
 	}
 
@@ -1162,7 +1508,7 @@ export class ViewModelLinesFromModelAsIs implements IViewModelLines {
 			},
 			finalize: () => {
 				return result;
-			}
+			},
 		};
 	}
 
@@ -1178,7 +1524,12 @@ export class ViewModelLinesFromModelAsIs implements IViewModelLines {
 	}
 
 	public onModelLineChanged(_versionId: number | null, lineNumber: number, lineBreakData: ModelLineProjectionData | null): [boolean, viewEvents.ViewLinesChangedEvent | null, viewEvents.ViewLinesInsertedEvent | null, viewEvents.ViewLinesDeletedEvent | null] {
-		return [false, new viewEvents.ViewLinesChangedEvent(lineNumber, 1), null, null];
+		return [
+      false,
+      new viewEvents.ViewLinesChangedEvent(lineNumber, 1),
+      null,
+      null,
+    ];
 	}
 
 	public acceptVersionId(_versionId: number): void {
@@ -1190,10 +1541,10 @@ export class ViewModelLinesFromModelAsIs implements IViewModelLines {
 
 	public getActiveIndentGuide(viewLineNumber: number, _minLineNumber: number, _maxLineNumber: number): IActiveIndentGuideInfo {
 		return {
-			startLineNumber: viewLineNumber,
-			endLineNumber: viewLineNumber,
-			indent: 0
-		};
+      startLineNumber: viewLineNumber,
+      endLineNumber: viewLineNumber,
+      indent: 0,
+    };
 	}
 
 	public getViewLinesBracketGuides(startLineNumber: number, endLineNumber: number, activePosition: IPosition | null): IndentGuide[][] {
@@ -1229,14 +1580,14 @@ export class ViewModelLinesFromModelAsIs implements IViewModelLines {
 		const lineTokens = this.model.tokenization.getLineTokens(viewLineNumber);
 		const lineContent = lineTokens.getLineContent();
 		return new ViewLineData(
-			lineContent,
-			false,
-			1,
-			lineContent.length + 1,
-			0,
-			lineTokens.inflate(),
-			null
-		);
+      lineContent,
+      false,
+      1,
+      lineContent.length + 1,
+      0,
+      lineTokens.inflate(),
+      null,
+    );
 	}
 
 	public getViewLinesData(viewStartLineNumber: number, viewEndLineNumber: number, needed: boolean[]): Array<ViewLineData | null> {
@@ -1254,7 +1605,14 @@ export class ViewModelLinesFromModelAsIs implements IViewModelLines {
 	}
 
 	public getDecorationsInRange(range: Range, ownerId: number, filterOutValidation: boolean, filterFontDecorations: boolean, onlyMinimapDecorations: boolean, onlyMarginDecorations: boolean): IModelDecoration[] {
-		return this.model.getDecorationsInRange(range, ownerId, filterOutValidation, filterFontDecorations, onlyMinimapDecorations, onlyMarginDecorations);
+		return this.model.getDecorationsInRange(
+      range,
+      ownerId,
+      filterOutValidation,
+      filterFontDecorations,
+      onlyMinimapDecorations,
+      onlyMarginDecorations,
+    );
 	}
 
 	normalizePosition(position: Position, affinity: PositionAffinity): Position {

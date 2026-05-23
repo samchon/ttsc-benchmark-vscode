@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { mapValues } from '../../../../base/common/objects.js';
-import { TestResultState } from './testTypes.js';
+import { mapValues } from "../../../../base/common/objects.js";
+import { TestResultState } from "./testTypes.js";
 
 export type TreeStateNode = { statusNode: true; state: TestResultState; priority: number };
 
@@ -14,22 +14,25 @@ export type TreeStateNode = { statusNode: true; state: TestResultState; priority
  * reflected in the parent node.
  */
 export const statePriority: { [K in TestResultState]: number } = {
-	[TestResultState.Running]: 6,
-	[TestResultState.Errored]: 5,
-	[TestResultState.Failed]: 4,
-	[TestResultState.Queued]: 3,
-	[TestResultState.Passed]: 2,
-	[TestResultState.Unset]: 0,
-	[TestResultState.Skipped]: 1,
+  [TestResultState.Running]: 6,
+  [TestResultState.Errored]: 5,
+  [TestResultState.Failed]: 4,
+  [TestResultState.Queued]: 3,
+  [TestResultState.Passed]: 2,
+  [TestResultState.Unset]: 0,
+  [TestResultState.Skipped]: 1,
 };
 
 export const isFailedState = (s: TestResultState) => s === TestResultState.Errored || s === TestResultState.Failed;
 export const isStateWithResult = (s: TestResultState) => s === TestResultState.Errored || s === TestResultState.Failed || s === TestResultState.Passed;
 
-export const stateNodes: { [K in TestResultState]: TreeStateNode } = mapValues(statePriority, (priority, stateStr): TreeStateNode => {
-	const state = Number(stateStr) as TestResultState;
-	return { statusNode: true, state, priority };
-});
+export const stateNodes: { [K in TestResultState]: TreeStateNode } = mapValues(
+  statePriority,
+  (priority, stateStr): TreeStateNode => {
+    const state = Number(stateStr) as TestResultState;
+    return { statusNode: true, state, priority };
+  },
+);
 
 export const cmpPriority = (a: TestResultState, b: TestResultState) => statePriority[b] - statePriority[a];
 
@@ -54,7 +57,9 @@ export const maxPriority = (...states: TestResultState[]) => {
 	}
 };
 
-export const statesInOrder = Object.keys(statePriority).map(s => Number(s) as TestResultState).sort(cmpPriority);
+export const statesInOrder = Object.keys(statePriority).map(s => Number(s) as TestResultState).sort(
+  cmpPriority,
+);
 
 /**
  * Some states are considered terminal; once these are set for a given test run, they
@@ -62,10 +67,10 @@ export const statesInOrder = Object.keys(statePriority).map(s => Number(s) as Te
  * priority.
  */
 export const terminalStatePriorities: { [key in TestResultState]?: number } = {
-	[TestResultState.Passed]: 0,
-	[TestResultState.Skipped]: 1,
-	[TestResultState.Failed]: 2,
-	[TestResultState.Errored]: 3,
+  [TestResultState.Passed]: 0,
+  [TestResultState.Skipped]: 1,
+  [TestResultState.Failed]: 2,
+  [TestResultState.Errored]: 3,
 };
 
 /**

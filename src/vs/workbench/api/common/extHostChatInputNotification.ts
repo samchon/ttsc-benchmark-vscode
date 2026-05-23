@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type * as vscode from 'vscode';
-import * as extHostProtocol from './extHost.protocol.js';
-import { ExtensionIdentifier, IExtensionDescription } from '../../../platform/extensions/common/extensions.js';
+import type * as vscode from "vscode";
+import * as extHostProtocol from "./extHost.protocol.js";
+import { ExtensionIdentifier, IExtensionDescription } from "../../../platform/extensions/common/extensions.js";
 
 export class ExtHostChatInputNotification {
 
@@ -14,9 +14,11 @@ export class ExtHostChatInputNotification {
 	private readonly _items = new Map<string, vscode.ChatInputNotification>();
 
 	constructor(
-		mainContext: extHostProtocol.IMainContext
+		mainContext: extHostProtocol.IMainContext,
 	) {
-		this._proxy = mainContext.getProxy(extHostProtocol.MainContext.MainThreadChatInputNotification);
+		this._proxy = mainContext.getProxy(
+      extHostProtocol.MainContext.MainThreadChatInputNotification,
+    );
 	}
 
 	createInputNotification(extension: IExtensionDescription, id: string): vscode.ChatInputNotification {
@@ -26,20 +28,20 @@ export class ExtHostChatInputNotification {
 		}
 
 		const state: extHostProtocol.ChatInputNotificationDto = {
-			id: internalId,
-			severity: extHostProtocol.ChatInputNotificationSeverityDto.Info,
-			message: '',
-			description: undefined,
-			actions: [],
-			dismissible: true,
-			autoDismissOnMessage: false,
-		};
+      id: internalId,
+      severity: extHostProtocol.ChatInputNotificationSeverityDto.Info,
+      message: "",
+      description: undefined,
+      actions: [],
+      dismissible: true,
+      autoDismissOnMessage: false,
+    };
 
 		let disposed = false;
 		let visible = false;
 		const syncState = () => {
 			if (disposed) {
-				throw new Error('Chat input notification is disposed');
+				throw new Error("Chat input notification is disposed");
 			}
 
 			if (!visible) {

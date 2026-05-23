@@ -3,11 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { shuffle } from './arrays.js';
-import { assert } from './assert.js';
-import { CharCode } from './charCode.js';
-import { compare, compareIgnoreCase, compareSubstring, compareSubstringIgnoreCase } from './strings.js';
-import { URI } from './uri.js';
+import { shuffle } from "./arrays.js";
+import { assert } from "./assert.js";
+import { CharCode } from "./charCode.js";
+import {
+  compare,
+  compareIgnoreCase,
+  compareSubstring,
+  compareSubstringIgnoreCase,
+} from "./strings.js";
+import { URI } from "./uri.js";
 
 export interface IKeyIterator<K> {
 	reset(key: K): this;
@@ -20,7 +25,7 @@ export interface IKeyIterator<K> {
 
 export class StringIterator implements IKeyIterator<string> {
 
-	private _value: string = '';
+	private _value: string = "";
 	private _pos: number = 0;
 
 	reset(key: string): this {
@@ -56,7 +61,7 @@ export class ConfigKeysIterator implements IKeyIterator<string> {
 	private _to!: number;
 
 	constructor(
-		private readonly _caseSensitive: boolean = true
+		private readonly _caseSensitive: boolean = true,
 	) { }
 
 	reset(key: string): this {
@@ -92,7 +97,14 @@ export class ConfigKeysIterator implements IKeyIterator<string> {
 	cmp(a: string): number {
 		return this._caseSensitive
 			? compareSubstring(a, this._value, 0, a.length, this._from, this._to)
-			: compareSubstringIgnoreCase(a, this._value, 0, a.length, this._from, this._to);
+			: compareSubstringIgnoreCase(
+          a,
+          this._value,
+          0,
+          a.length,
+          this._from,
+          this._to,
+        );
 	}
 
 	value(): string {
@@ -109,7 +121,7 @@ export class PathIterator implements IKeyIterator<string> {
 
 	constructor(
 		private readonly _splitOnBackslash: boolean = true,
-		private readonly _caseSensitive: boolean = true
+		private readonly _caseSensitive: boolean = true,
 	) { }
 
 	reset(key: string): this {
@@ -153,7 +165,14 @@ export class PathIterator implements IKeyIterator<string> {
 	cmp(a: string): number {
 		return this._caseSensitive
 			? compareSubstring(a, this._value, 0, a.length, this._from, this._to)
-			: compareSubstringIgnoreCase(a, this._value, 0, a.length, this._from, this._to);
+			: compareSubstringIgnoreCase(
+          a,
+          this._value,
+          0,
+          a.length,
+          this._from,
+          this._to,
+        );
 	}
 
 	value(): string {
@@ -186,7 +205,10 @@ export class UriIterator implements IKeyIterator<URI> {
 			this._states.push(UriIteratorState.Authority);
 		}
 		if (this._value.path) {
-			this._pathIterator = new PathIterator(false, !this._ignorePathCasing(key));
+			this._pathIterator = new PathIterator(
+        false,
+        !this._ignorePathCasing(key),
+      );
 			this._pathIterator.reset(key.path);
 			if (this._pathIterator.value()) {
 				this._states.push(UriIteratorState.Path);
@@ -251,7 +273,7 @@ export class UriIterator implements IKeyIterator<URI> {
 
 abstract class Undef {
 
-	static readonly Val: unique symbol = Symbol('undefined_placeholder');
+	static readonly Val: unique symbol = Symbol("undefined_placeholder");
 
 	static wrap<V>(value: V | undefined): V | typeof Undef.Val {
 		return value === undefined ? Undef.Val : value;
@@ -319,11 +341,15 @@ const enum Dir {
 export class TernarySearchTree<K, V> {
 
 	static forUris<E>(ignorePathCasing: (key: URI) => boolean = () => false, ignoreQueryAndFragment: (key: URI) => boolean = () => false): TernarySearchTree<URI, E> {
-		return new TernarySearchTree<URI, E>(new UriIterator(ignorePathCasing, ignoreQueryAndFragment));
+		return new TernarySearchTree<URI, E>(
+      new UriIterator(ignorePathCasing, ignoreQueryAndFragment),
+    );
 	}
 
 	static forPaths<E>(ignorePathCasing = false): TernarySearchTree<string, E> {
-		return new TernarySearchTree<string, E>(new PathIterator(undefined, !ignorePathCasing));
+		return new TernarySearchTree<string, E>(
+      new PathIterator(undefined, !ignorePathCasing),
+    );
 	}
 
 	static forStrings<E>(): TernarySearchTree<string, E> {

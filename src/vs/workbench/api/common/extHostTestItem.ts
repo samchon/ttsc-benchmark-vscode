@@ -3,15 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type * as vscode from 'vscode';
-import { URI } from '../../../base/common/uri.js';
-import * as editorRange from '../../../editor/common/core/range.js';
-import { TestId, TestIdPathParts } from '../../contrib/testing/common/testId.js';
-import { createTestItemChildren, ExtHostTestItemEvent, ITestChildrenLike, ITestItemApi, ITestItemChildren, TestItemCollection, TestItemEventOp } from '../../contrib/testing/common/testItemCollection.js';
-import { denamespaceTestTag, ITestItem, ITestItemContext } from '../../contrib/testing/common/testTypes.js';
-import { ExtHostDocumentsAndEditors } from './extHostDocumentsAndEditors.js';
-import { createPrivateApiFor, getPrivateApiFor, IExtHostTestItemApi } from './extHostTestingPrivateApi.js';
-import * as Convert from './extHostTypeConverters.js';
+import type * as vscode from "vscode";
+import { URI } from "../../../base/common/uri.js";
+import * as editorRange from "../../../editor/common/core/range.js";
+import { TestId, TestIdPathParts } from "../../contrib/testing/common/testId.js";
+import {
+  createTestItemChildren,
+  ExtHostTestItemEvent,
+  ITestChildrenLike,
+  ITestItemApi,
+  ITestItemChildren,
+  TestItemCollection,
+  TestItemEventOp,
+} from "../../contrib/testing/common/testItemCollection.js";
+import { denamespaceTestTag, ITestItem, ITestItemContext } from "../../contrib/testing/common/testTypes.js";
+import { ExtHostDocumentsAndEditors } from "./extHostDocumentsAndEditors.js";
+import { createPrivateApiFor, getPrivateApiFor, IExtHostTestItemApi } from "./extHostTestingPrivateApi.js";
+import * as Convert from "./extHostTypeConverters.js";
 
 const testItemPropAccessor = <K extends keyof vscode.TestItem>(
 	api: IExtHostTestItemApi,
@@ -36,7 +44,7 @@ const testItemPropAccessor = <K extends keyof vscode.TestItem>(
 	};
 };
 
-type WritableProps = Pick<vscode.TestItem, 'range' | 'label' | 'description' | 'sortText' | 'canResolveChildren' | 'busy' | 'error' | 'tags'>;
+type WritableProps = Pick<vscode.TestItem, "range" | "label" | "description" | "sortText" | "canResolveChildren" | "busy" | "error" | "tags">;
 
 const strictEqualComparator = <T>(a: T, b: T) => a === b;
 
@@ -87,16 +95,16 @@ const makePropDescriptors = (api: IExtHostTestItemApi, label: string): { [K in k
 			},
 		};
 	})(),
-	label: testItemPropAccessor<'label'>(api, label, propComparators.label, evSetProps(label => ({ label }))),
-	description: testItemPropAccessor<'description'>(api, undefined, propComparators.description, evSetProps(description => ({ description }))),
-	sortText: testItemPropAccessor<'sortText'>(api, undefined, propComparators.sortText, evSetProps(sortText => ({ sortText }))),
-	canResolveChildren: testItemPropAccessor<'canResolveChildren'>(api, false, propComparators.canResolveChildren, state => ({
+	label: testItemPropAccessor<"label">(api, label, propComparators.label, evSetProps(label => ({ label }))),
+	description: testItemPropAccessor<"description">(api, undefined, propComparators.description, evSetProps(description => ({ description }))),
+	sortText: testItemPropAccessor<"sortText">(api, undefined, propComparators.sortText, evSetProps(sortText => ({ sortText }))),
+	canResolveChildren: testItemPropAccessor<"canResolveChildren">(api, false, propComparators.canResolveChildren, state => ({
 		op: TestItemEventOp.UpdateCanResolveChildren,
 		state,
 	})),
-	busy: testItemPropAccessor<'busy'>(api, false, propComparators.busy, evSetProps(busy => ({ busy }))),
-	error: testItemPropAccessor<'error'>(api, undefined, propComparators.error, evSetProps(error => ({ error: Convert.MarkdownString.fromStrict(error) || null }))),
-	tags: testItemPropAccessor<'tags'>(api, [], propComparators.tags, (current, previous) => ({
+	busy: testItemPropAccessor<"busy">(api, false, propComparators.busy, evSetProps(busy => ({ busy }))),
+	error: testItemPropAccessor<"error">(api, undefined, propComparators.error, evSetProps(error => ({ error: Convert.MarkdownString.fromStrict(error) || null }))),
+	tags: testItemPropAccessor<"tags">(api, [], propComparators.tags, (current, previous) => ({
 		op: TestItemEventOp.SetTags,
 		new: current.map(Convert.TestTag.from),
 		old: previous.map(Convert.TestTag.from),
@@ -105,11 +113,18 @@ const makePropDescriptors = (api: IExtHostTestItemApi, label: string): { [K in k
 
 const toItemFromPlain = (item: ITestItem.Serialized): TestItemImpl => {
 	const testId = TestId.fromString(item.extId);
-	const testItem = new TestItemImpl(testId.controllerId, testId.localId, item.label, URI.revive(item.uri) || undefined);
+	const testItem = new TestItemImpl(
+    testId.controllerId,
+    testId.localId,
+    item.label,
+    URI.revive(item.uri) || undefined,
+  );
 	testItem.range = Convert.Range.to(item.range || undefined);
 	testItem.description = item.description || undefined;
 	testItem.sortText = item.sortText || undefined;
-	testItem.tags = item.tags.map(t => Convert.TestTag.to({ id: denamespaceTestTag(t).tagId }));
+	testItem.tags = item.tags.map(
+    t => Convert.TestTag.to({ id: denamespaceTestTag(t).tagId }),
+  );
 	return testItem;
 };
 
@@ -144,7 +159,9 @@ export class TestItemImpl implements vscode.TestItem {
 	 */
 	constructor(controllerId: string, id: string, label: string, uri: vscode.Uri | undefined) {
 		if (id.includes(TestIdPathParts.Delimiter)) {
-			throw new Error(`Test IDs may not include the ${JSON.stringify(id)} symbol`);
+			throw new Error(
+        `Test IDs may not include the ${JSON.stringify(id)} symbol`,
+      );
 		}
 
 		const api = createPrivateApiFor(this, controllerId);
@@ -186,12 +203,12 @@ export class TestItemRootImpl extends TestItemImpl {
 export class ExtHostTestItemCollection extends TestItemCollection<TestItemImpl> {
 	constructor(controllerId: string, controllerLabel: string, editors: ExtHostDocumentsAndEditors) {
 		super({
-			controllerId,
-			getDocumentVersion: uri => uri && editors.getDocument(uri)?.version,
-			getApiFor: getPrivateApiFor as (impl: TestItemImpl) => ITestItemApi<TestItemImpl>,
-			getChildren: (item) => item.children as ITestChildrenLike<TestItemImpl>,
-			root: new TestItemRootImpl(controllerId, controllerLabel),
-			toITestItem: Convert.TestItem.from,
-		});
+      controllerId,
+      getDocumentVersion: uri => uri && editors.getDocument(uri)?.version,
+      getApiFor: getPrivateApiFor as (impl: TestItemImpl) => ITestItemApi<TestItemImpl>,
+      getChildren: (item) => item.children as ITestChildrenLike<TestItemImpl>,
+      root: new TestItemRootImpl(controllerId, controllerLabel),
+      toITestItem: Convert.TestItem.from,
+    });
 	}
 }

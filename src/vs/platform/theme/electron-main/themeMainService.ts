@@ -3,13 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../base/common/event.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import { IPartsSplash } from '../common/themeService.js';
-import { IColorScheme } from '../../window/common/window.js';
-import { ISingleFolderWorkspaceIdentifier, IWorkspaceIdentifier } from '../../workspace/common/workspace.js';
+import { Event } from "../../../base/common/event.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { IPartsSplash } from "../common/themeService.js";
+import { IColorScheme } from "../../window/common/window.js";
+import { ISingleFolderWorkspaceIdentifier, IWorkspaceIdentifier } from "../../workspace/common/workspace.js";
 
-export const IThemeMainService = createDecorator<IThemeMainService>('themeMainService');
+export const IThemeMainService = createDecorator<IThemeMainService>(
+  "themeMainService",
+);
 
 export interface IThemeMainService {
 

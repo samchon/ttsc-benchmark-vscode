@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { URI } from '../../../../base/common/uri.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
-import type { IAgentHostGitService } from '../../node/agentHostGitService.js';
-import { projectFromCopilotContext, projectFromRepository, resolveGitProject } from '../../node/copilot/copilotGitProject.js';
+import assert from "assert";
+import { URI } from "../../../../base/common/uri.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
+import type { IAgentHostGitService } from "../../node/agentHostGitService.js";
+import { projectFromCopilotContext, projectFromRepository, resolveGitProject } from "../../node/copilot/copilotGitProject.js";
 
 class TestAgentHostGitService implements IAgentHostGitService {
 	declare readonly _serviceBrand: undefined;
@@ -38,72 +38,84 @@ class TestAgentHostGitService implements IAgentHostGitService {
 	async computeFileDiffsBetweenRefs(): Promise<undefined> { return undefined; }
 }
 
-suite('Copilot Git Project', () => {
-	ensureNoDisposablesAreLeakedInTestSuite();
+suite("Copilot Git Project", () => {
+  ensureNoDisposablesAreLeakedInTestSuite();
 
-	let gitService: TestAgentHostGitService;
+  let gitService: TestAgentHostGitService;
 
-	setup(() => {
-		gitService = new TestAgentHostGitService();
-	});
+  setup(() => {
+    gitService = new TestAgentHostGitService();
+  });
 
-	test('resolves a repository project from a worktree working directory', async () => {
-		gitService.worktreeRoots = [URI.file('/workspace/source-repo')];
+  test(
+    "resolves a repository project from a worktree working directory",
+    async () => {
+      gitService.worktreeRoots = [URI.file("/workspace/source-repo")];
 
-		const project = await resolveGitProject(URI.file('/workspace/worktree-checkout'), gitService);
+      const project = await resolveGitProject(URI.file("/workspace/worktree-checkout"), gitService);
 
-		assert.deepStrictEqual({
-			uri: project?.uri.toString(),
-			displayName: project?.displayName,
-		}, {
-			uri: URI.file('/workspace/source-repo').toString(),
-			displayName: 'source-repo',
-		});
-	});
+      assert.deepStrictEqual({
+        uri: project?.uri.toString(),
+        displayName: project?.displayName,
+      }, {
+        uri: URI.file("/workspace/source-repo").toString(),
+        displayName: "source-repo",
+      });
+    },
+  );
 
-	test('resolves the repository itself for a normal git working directory', async () => {
-		gitService.repositoryRoot = URI.file('/workspace/normal-repo');
+  test(
+    "resolves the repository itself for a normal git working directory",
+    async () => {
+      gitService.repositoryRoot = URI.file("/workspace/normal-repo");
 
-		const project = await resolveGitProject(URI.file('/workspace/normal-repo'), gitService);
+      const project = await resolveGitProject(URI.file("/workspace/normal-repo"), gitService);
 
-		assert.deepStrictEqual({
-			uri: project?.uri.toString(),
-			displayName: project?.displayName,
-		}, {
-			uri: URI.file('/workspace/normal-repo').toString(),
-			displayName: 'normal-repo',
-		});
-	});
+      assert.deepStrictEqual({
+        uri: project?.uri.toString(),
+        displayName: project?.displayName,
+      }, {
+        uri: URI.file("/workspace/normal-repo").toString(),
+        displayName: "normal-repo",
+      });
+    },
+  );
 
-	test('returns undefined outside a git working tree', async () => {
-		gitService.insideWorkTree = false;
+  test("returns undefined outside a git working tree", async () => {
+    gitService.insideWorkTree = false;
 
-		assert.strictEqual(await resolveGitProject(URI.file('/workspace/plain-folder'), gitService), undefined);
-	});
+    assert.strictEqual(
+      await resolveGitProject(URI.file("/workspace/plain-folder"), gitService),
+      undefined,
+    );
+  });
 
-	test('falls back to repository context when no git project is available', async () => {
-		gitService.insideWorkTree = false;
+  test(
+    "falls back to repository context when no git project is available",
+    async () => {
+      gitService.insideWorkTree = false;
 
-		const project = await projectFromCopilotContext({ repository: 'microsoft/vscode' }, gitService);
+      const project = await projectFromCopilotContext({ repository: "microsoft/vscode" }, gitService);
 
-		assert.deepStrictEqual({
-			uri: project?.uri.toString(),
-			displayName: project?.displayName,
-		}, {
-			uri: 'https://github.com/microsoft/vscode',
-			displayName: 'vscode',
-		});
-	});
+      assert.deepStrictEqual({
+        uri: project?.uri.toString(),
+        displayName: project?.displayName,
+      }, {
+        uri: "https://github.com/microsoft/vscode",
+        displayName: "vscode",
+      });
+    },
+  );
 
-	test('parses repository URLs', () => {
-		const project = projectFromRepository('https://github.com/microsoft/vscode.git');
+  test("parses repository URLs", () => {
+    const project = projectFromRepository("https://github.com/microsoft/vscode.git");
 
-		assert.deepStrictEqual({
-			uri: project?.uri.toString(),
-			displayName: project?.displayName,
-		}, {
-			uri: 'https://github.com/microsoft/vscode.git',
-			displayName: 'vscode',
-		});
-	});
+    assert.deepStrictEqual({
+      uri: project?.uri.toString(),
+      displayName: project?.displayName,
+    }, {
+      uri: "https://github.com/microsoft/vscode.git",
+      displayName: "vscode",
+    });
+  });
 });

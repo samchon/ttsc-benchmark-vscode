@@ -3,21 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../../base/common/cancellation.js';
-import { LRUCache } from '../../../../../base/common/map.js';
-import { stableStringify } from '../../../../../base/common/objects.js';
-import { localize } from '../../../../../nls.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
-import { ChatConfiguration } from '../../common/constants.js';
-import { ChatMessageRole, ILanguageModelsService } from '../../common/languageModels.js';
-import { TerminalToolId } from '../../common/tools/terminalToolIds.js';
-import { IToolData } from '../../common/tools/languageModelToolsService.js';
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { LRUCache } from "../../../../../base/common/map.js";
+import { stableStringify } from "../../../../../base/common/objects.js";
+import { localize } from "../../../../../nls.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ChatConfiguration } from "../../common/constants.js";
+import { ChatMessageRole, ILanguageModelsService } from "../../common/languageModels.js";
+import { TerminalToolId } from "../../common/tools/terminalToolIds.js";
+import { IToolData } from "../../common/tools/languageModelToolsService.js";
 
 export const enum ToolRiskLevel {
-	Green = 'green',
-	Orange = 'orange',
-	Red = 'red',
+	Green = "green",
+	Orange = "orange",
+	Red = "red",
 }
 
 export interface IToolRiskAssessment {
@@ -26,7 +26,9 @@ export interface IToolRiskAssessment {
 	readonly explanation: string;
 }
 
-export const IChatToolRiskAssessmentService = createDecorator<IChatToolRiskAssessmentService>('chatToolRiskAssessmentService');
+export const IChatToolRiskAssessmentService = createDecorator<IChatToolRiskAssessmentService>(
+  "chatToolRiskAssessmentService",
+);
 
 export interface IChatToolRiskAssessmentService {
 	readonly _serviceBrand: undefined;
@@ -61,7 +63,9 @@ export class ChatToolRiskAssessmentService implements IChatToolRiskAssessmentSer
 	) { }
 
 	isEnabled(): boolean {
-		return this._configurationService.getValue<boolean>(ChatConfiguration.ToolRiskAssessmentEnabled) !== false;
+		return this._configurationService.getValue<boolean>(
+      ChatConfiguration.ToolRiskAssessmentEnabled,
+    ) !== false;
 	}
 
 	getCached(tool: IToolData, parameters: unknown): IToolRiskAssessment | undefined {
@@ -105,38 +109,50 @@ export class ChatToolRiskAssessmentService implements IChatToolRiskAssessmentSer
 	}
 
 	private _cacheKey(tool: IToolData, parameters: unknown): string {
-		return tool.id + '::' + stableStringify(normalizeRiskCacheParameters(tool, parameters));
+		return tool.id + "::" + stableStringify(
+      normalizeRiskCacheParameters(tool, parameters),
+    );
 	}
 
 	private async _invokeModel(tool: IToolData, parameters: unknown, token: CancellationToken): Promise<IToolRiskAssessment | undefined> {
-		const modelId = this._configurationService.getValue<string>(ChatConfiguration.ToolRiskAssessmentModel) || 'copilot-utility-small';
+		const modelId = this._configurationService.getValue<string>(
+      ChatConfiguration.ToolRiskAssessmentModel,
+    ) || "copilot-utility-small";
 
-		const models = await this._languageModelsService.selectLanguageModels({ vendor: 'copilot', id: modelId });
+		const models = await this._languageModelsService.selectLanguageModels({
+      vendor: "copilot",
+      id: modelId,
+    });
 		if (!models.length || token.isCancellationRequested) {
 			return undefined;
 		}
 
 		const prompt = buildPrompt(tool, parameters);
 		const response = await this._languageModelsService.sendChatRequest(
-			models[0],
-			undefined,
-			[{ role: ChatMessageRole.User, content: [{ type: 'text', value: prompt }] }],
-			{},
-			token
-		);
+      models[0],
+      undefined,
+      [
+        {
+          role: ChatMessageRole.User,
+          content: [{ type: "text", value: prompt }],
+        },
+      ],
+      {},
+      token,
+    );
 
-		let text = '';
+		let text = "";
 		for await (const part of response.stream) {
 			if (token.isCancellationRequested) {
 				return undefined;
 			}
 			if (Array.isArray(part)) {
 				for (const p of part) {
-					if (p.type === 'text') {
+					if (p.type === "text") {
 						text += p.value;
 					}
 				}
-			} else if (part.type === 'text') {
+			} else if (part.type === "text") {
 				text += part.value;
 			}
 		}
@@ -155,7 +171,7 @@ export class ChatToolRiskAssessmentService implements IChatToolRiskAssessmentSer
  * hit the cache even when model-generated descriptive fields differ.
  */
 function normalizeRiskCacheParameters(tool: IToolData, parameters: unknown): unknown {
-	if (tool.id === TerminalToolId.RunInTerminal && parameters && typeof parameters === 'object') {
+	if (tool.id === TerminalToolId.RunInTerminal && parameters && typeof parameters === "object") {
 		const p = parameters as Record<string, unknown>;
 		return { command: p.command };
 	}
@@ -167,10 +183,10 @@ function buildPrompt(tool: IToolData, parameters: unknown): string {
 	try {
 		argsJson = JSON.stringify(parameters ?? {});
 	} catch {
-		argsJson = '{}';
+		argsJson = "{}";
 	}
 	if (argsJson.length > MAX_PARAM_BYTES) {
-		argsJson = argsJson.slice(0, MAX_PARAM_BYTES) + '...[truncated]';
+		argsJson = argsJson.slice(0, MAX_PARAM_BYTES) + "...[truncated]";
 	}
 	return [
 		`You assess what one terminal command does for a code-editing AI agent, and how risky it is.`,
@@ -227,19 +243,19 @@ function buildPrompt(tool: IToolData, parameters: unknown): string {
 		`  - Plain prose. No quotes around the sentence. No markdown fences.`,
 		``,
 		`Tool: ${tool.displayName} (id: ${tool.id})`,
-		`Description: ${tool.modelDescription || tool.userDescription || ''}`,
+		`Description: ${tool.modelDescription || tool.userDescription || ""}`,
 		`Arguments (JSON): ${argsJson}`,
-	].join('\n');
+	].join("\n");
 }
 
 function parseAssessment(rawText: string, tool: IToolData): IToolRiskAssessment | undefined {
 	let text = rawText.trim();
-	if (text.startsWith('```')) {
-		text = text.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+	if (text.startsWith("```")) {
+		text = text.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
 	}
 	// Try to extract JSON object if model added a preamble.
-	const firstBrace = text.indexOf('{');
-	const lastBrace = text.lastIndexOf('}');
+	const firstBrace = text.indexOf("{");
+	const lastBrace = text.lastIndexOf("}");
 	if (firstBrace > 0 && lastBrace > firstBrace) {
 		text = text.slice(firstBrace, lastBrace + 1);
 	}
@@ -251,7 +267,7 @@ function parseAssessment(rawText: string, tool: IToolData): IToolRiskAssessment 
 		return undefined;
 	}
 
-	if (!parsed || typeof parsed !== 'object') {
+	if (!parsed || typeof parsed !== "object") {
 		return undefined;
 	}
 	const obj = parsed as Record<string, unknown>;
@@ -260,7 +276,7 @@ function parseAssessment(rawText: string, tool: IToolData): IToolRiskAssessment 
 		return undefined;
 	}
 
-	const explanation = typeof obj.explanation === 'string'
+	const explanation = typeof obj.explanation === "string"
 		? truncate(obj.explanation, 140)
 		: defaultExplanationFor(risk, tool);
 
@@ -268,28 +284,40 @@ function parseAssessment(rawText: string, tool: IToolData): IToolRiskAssessment 
 }
 
 function normalizeRisk(value: unknown): ToolRiskLevel | undefined {
-	if (typeof value !== 'string') {
+	if (typeof value !== "string") {
 		return undefined;
 	}
 	const v = value.toLowerCase();
-	if (v === 'green') { return ToolRiskLevel.Green; }
-	if (v === 'orange' || v === 'yellow') { return ToolRiskLevel.Orange; }
-	if (v === 'red') { return ToolRiskLevel.Red; }
+	if (v === "green") { return ToolRiskLevel.Green; }
+	if (v === "orange" || v === "yellow") { return ToolRiskLevel.Orange; }
+	if (v === "red") { return ToolRiskLevel.Red; }
 	return undefined;
 }
 
 function truncate(s: string, max: number): string {
 	if (s.length <= max) { return s; }
-	return s.slice(0, max - 1) + '…';
+	return s.slice(0, max - 1) + "…";
 }
 
 function defaultExplanationFor(risk: ToolRiskLevel, tool: IToolData): string {
 	switch (risk) {
 		case ToolRiskLevel.Green:
-			return localize('riskDefaultGreen', "{0} appears to have no observable side effects.", tool.displayName);
+			return localize(
+        "riskDefaultGreen",
+        "{0} appears to have no observable side effects.",
+        tool.displayName,
+      );
 		case ToolRiskLevel.Orange:
-			return localize('riskDefaultOrange', "{0} may modify your workspace or send data over the network.", tool.displayName);
+			return localize(
+        "riskDefaultOrange",
+        "{0} may modify your workspace or send data over the network.",
+        tool.displayName,
+      );
 		case ToolRiskLevel.Red:
-			return localize('riskDefaultRed', "{0} performs an action that is hard to undo.", tool.displayName);
+			return localize(
+        "riskDefaultRed",
+        "{0} performs an action that is hard to undo.",
+        tool.displayName,
+      );
 	}
 }

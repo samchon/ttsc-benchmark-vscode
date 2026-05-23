@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Position } from '../../../common/core/position.js';
-import { Range } from '../../../common/core/range.js';
-import { Selection } from '../../../common/core/selection.js';
-import { ICommand, ICursorStateComputerData, IEditOperationBuilder } from '../../../common/editorCommon.js';
-import { ITextModel } from '../../../common/model.js';
+import { Position } from "../../../common/core/position.js";
+import { Range } from "../../../common/core/range.js";
+import { Selection } from "../../../common/core/selection.js";
+import { ICommand, ICursorStateComputerData, IEditOperationBuilder } from "../../../common/editorCommon.js";
+import { ITextModel } from "../../../common/model.js";
 
 
 export class DragAndDropCommand implements ICommand {
@@ -29,11 +29,21 @@ export class DragAndDropCommand implements ICommand {
 		if (!this.copy) {
 			builder.addEditOperation(this.selection, null);
 		}
-		builder.addEditOperation(new Range(this.targetPosition.lineNumber, this.targetPosition.column, this.targetPosition.lineNumber, this.targetPosition.column), text);
+		builder.addEditOperation(
+      new Range(
+        this.targetPosition.lineNumber,
+        this.targetPosition.column,
+        this.targetPosition.lineNumber,
+        this.targetPosition.column,
+      ),
+      text,
+    );
 
 		if (this.selection.containsPosition(this.targetPosition) && !(
 			this.copy && (
-				this.selection.getEndPosition().equals(this.targetPosition) || this.selection.getStartPosition().equals(this.targetPosition)
+				this.selection.getEndPosition().equals(
+          this.targetPosition,
+        ) || this.selection.getStartPosition().equals(this.targetPosition)
 			) // we allow users to paste content beside the selection
 		)) {
 			this.targetSelection = this.selection;
@@ -47,7 +57,7 @@ export class DragAndDropCommand implements ICommand {
 				this.selection.endLineNumber - this.selection.startLineNumber + this.targetPosition.lineNumber,
 				this.selection.startLineNumber === this.selection.endLineNumber ?
 					this.targetPosition.column + this.selection.endColumn - this.selection.startColumn :
-					this.selection.endColumn
+					this.selection.endColumn,
 			);
 			return;
 		}
@@ -60,7 +70,7 @@ export class DragAndDropCommand implements ICommand {
 				this.targetPosition.lineNumber,
 				this.selection.startLineNumber === this.selection.endLineNumber ?
 					this.targetPosition.column + this.selection.endColumn - this.selection.startColumn :
-					this.selection.endColumn
+					this.selection.endColumn,
 			);
 			return;
 		}
@@ -73,7 +83,7 @@ export class DragAndDropCommand implements ICommand {
 				this.targetPosition.lineNumber + this.selection.endLineNumber - this.selection.startLineNumber,
 				this.selection.startLineNumber === this.selection.endLineNumber ?
 					this.targetPosition.column + this.selection.endColumn - this.selection.startColumn :
-					this.selection.endColumn
+					this.selection.endColumn,
 			);
 			return;
 		}
@@ -89,16 +99,16 @@ export class DragAndDropCommand implements ICommand {
 				this.targetPosition.lineNumber,
 				this.selection.startLineNumber === this.selection.endLineNumber ?
 					this.targetPosition.column :
-					this.selection.endColumn
+					this.selection.endColumn,
 			);
 		} else {
 			// The target position is before the selection's end position. Since the selection doesn't contain the target position, the selection is one-line and target position is before this selection.
 			this.targetSelection = new Selection(
-				this.targetPosition.lineNumber - this.selection.endLineNumber + this.selection.startLineNumber,
-				this.targetPosition.column,
-				this.targetPosition.lineNumber,
-				this.targetPosition.column + this.selection.endColumn - this.selection.startColumn
-			);
+        this.targetPosition.lineNumber - this.selection.endLineNumber + this.selection.startLineNumber,
+        this.targetPosition.column,
+        this.targetPosition.lineNumber,
+        this.targetPosition.column + this.selection.endColumn - this.selection.startColumn,
+      );
 		}
 	}
 

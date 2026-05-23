@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type * as vscode from 'vscode';
-import { es5ClassCompat } from './es5ClassCompat.js';
-import { Position } from './position.js';
-import { getDebugDescriptionOfRange, Range } from './range.js';
+import type * as vscode from "vscode";
+import { es5ClassCompat } from "./es5ClassCompat.js";
+import { Position } from "./position.js";
+import { getDebugDescriptionOfRange, Range } from "./range.js";
 
 @es5ClassCompat
 export class Selection extends Range {
@@ -15,13 +15,13 @@ export class Selection extends Range {
 		if (thing instanceof Selection) {
 			return true;
 		}
-		if (!thing || typeof thing !== 'object') {
+		if (!thing || typeof thing !== "object") {
 			return false;
 		}
 		return Range.isRange(thing)
 			&& Position.isPosition((<Selection>thing).anchor)
 			&& Position.isPosition((<Selection>thing).active)
-			&& typeof (<Selection>thing).isReversed === 'boolean';
+			&& typeof (<Selection>thing).isReversed === "boolean";
 	}
 
 	private _anchor: Position;
@@ -42,7 +42,7 @@ export class Selection extends Range {
 		let anchor: Position | undefined;
 		let active: Position | undefined;
 
-		if (typeof anchorLineOrAnchor === 'number' && typeof anchorColumnOrActive === 'number' && typeof activeLine === 'number' && typeof activeColumn === 'number') {
+		if (typeof anchorLineOrAnchor === "number" && typeof anchorColumnOrActive === "number" && typeof activeLine === "number" && typeof activeColumn === "number") {
 			anchor = new Position(anchorLineOrAnchor, anchorColumnOrActive);
 			active = new Position(activeLine, activeColumn);
 		} else if (Position.isPosition(anchorLineOrAnchor) && Position.isPosition(anchorColumnOrActive)) {
@@ -51,7 +51,7 @@ export class Selection extends Range {
 		}
 
 		if (!anchor || !active) {
-			throw new Error('Invalid arguments');
+			throw new Error("Invalid arguments");
 		}
 
 		super(anchor, active);
@@ -66,15 +66,15 @@ export class Selection extends Range {
 
 	override toJSON() {
 		return {
-			start: this.start,
-			end: this.end,
-			active: this.active,
-			anchor: this.anchor
-		};
+      start: this.start,
+      end: this.end,
+      active: this.active,
+      anchor: this.anchor,
+    };
 	}
 
 
-	[Symbol.for('debug.description')]() {
+	[Symbol.for("debug.description")]() {
 		return getDebugDescriptionOfSelection(this);
 	}
 }

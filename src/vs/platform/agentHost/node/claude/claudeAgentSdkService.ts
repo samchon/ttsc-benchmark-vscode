@@ -3,16 +3,31 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { AnyZodRawShape, GetSessionMessagesOptions, GetSubagentMessagesOptions, InferShape, ListSessionsOptions, ListSubagentsOptions, McpSdkServerConfigWithInstance, Options, SDKSessionInfo, SdkMcpToolDefinition, SessionMessage, WarmQuery } from '@anthropic-ai/claude-agent-sdk';
-import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import * as fs from 'fs';
-import { pathToFileURL } from 'url';
-import { join, resolve } from '../../../../base/common/path.js';
-import { createDecorator } from '../../../instantiation/common/instantiation.js';
-import { ILogService } from '../../../log/common/log.js';
-import { AgentHostClaudeSdkPathEnvVar } from '../../common/agentService.js';
+import type {
+  AnyZodRawShape,
+  GetSessionMessagesOptions,
+  GetSubagentMessagesOptions,
+  InferShape,
+  ListSessionsOptions,
+  ListSubagentsOptions,
+  McpSdkServerConfigWithInstance,
+  Options,
+  SDKSessionInfo,
+  SdkMcpToolDefinition,
+  SessionMessage,
+  WarmQuery,
+} from "@anthropic-ai/claude-agent-sdk";
+import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import * as fs from "fs";
+import { pathToFileURL } from "url";
+import { join, resolve } from "../../../../base/common/path.js";
+import { createDecorator } from "../../../instantiation/common/instantiation.js";
+import { ILogService } from "../../../log/common/log.js";
+import { AgentHostClaudeSdkPathEnvVar } from "../../common/agentService.js";
 
-export const IClaudeAgentSdkService = createDecorator<IClaudeAgentSdkService>('claudeAgentSdkService');
+export const IClaudeAgentSdkService = createDecorator<IClaudeAgentSdkService>(
+  "claudeAgentSdkService",
+);
 
 /**
  * Pure per-method passthrough shim over `@anthropic-ai/claude-agent-sdk`.
@@ -48,7 +63,7 @@ export interface IClaudeAgentSdkService {
 		name: string,
 		description: string,
 		inputSchema: Schema,
-		handler: (args: InferShape<Schema>, extra: unknown) => Promise<CallToolResult>
+		handler: (args: InferShape<Schema>, extra: unknown) => Promise<CallToolResult>,
 	): Promise<SdkMcpToolDefinition<Schema>>;
 }
 
@@ -77,7 +92,7 @@ export interface IClaudeSdkBindings {
 		name: string,
 		description: string,
 		inputSchema: Schema,
-		handler: (args: InferShape<Schema>, extra: unknown) => Promise<CallToolResult>
+		handler: (args: InferShape<Schema>, extra: unknown) => Promise<CallToolResult>,
 	): SdkMcpToolDefinition<Schema>;
 }
 
@@ -145,7 +160,7 @@ export class ClaudeAgentSdkService implements IClaudeAgentSdkService {
 		name: string,
 		description: string,
 		inputSchema: Schema,
-		handler: (args: InferShape<Schema>, extra: unknown) => Promise<CallToolResult>
+		handler: (args: InferShape<Schema>, extra: unknown) => Promise<CallToolResult>,
 	): Promise<SdkMcpToolDefinition<Schema>> {
 		const sdk = await this._getSdk();
 		return sdk.tool(name, description, inputSchema, handler);
@@ -161,7 +176,10 @@ export class ClaudeAgentSdkService implements IClaudeAgentSdkService {
 		} catch (err) {
 			if (!this._firstLoadFailureLogged) {
 				this._firstLoadFailureLogged = true;
-				this._logService.error('[Claude] Failed to load @anthropic-ai/claude-agent-sdk', err);
+				this._logService.error(
+          "[Claude] Failed to load @anthropic-ai/claude-agent-sdk",
+          err,
+        );
 			}
 			throw err;
 		}
@@ -176,17 +194,21 @@ export class ClaudeAgentSdkService implements IClaudeAgentSdkService {
 		// works on Windows.
 		const sdkPath = process.env[AgentHostClaudeSdkPathEnvVar];
 		if (!sdkPath) {
-			throw new Error(`Cannot load @anthropic-ai/claude-agent-sdk: ${AgentHostClaudeSdkPathEnvVar} is not set. Set the 'chat.agentHost.claudeAgent.path' setting to a locally-installed SDK package.`);
+			throw new Error(
+        `Cannot load @anthropic-ai/claude-agent-sdk: ${AgentHostClaudeSdkPathEnvVar} is not set. Set the 'chat.agentHost.claudeAgent.path' setting to a locally-installed SDK package.`,
+      );
 		}
 		// Node ESM rejects directory imports, so if the user pointed at the
 		// package directory, resolve its `exports['.']` / `main` entry first.
 		let entry = sdkPath;
 		if (fs.statSync(sdkPath).isDirectory()) {
-			const pkgJson = JSON.parse(fs.readFileSync(join(sdkPath, 'package.json'), 'utf8'));
-			const mainEntry = pkgJson.exports?.['.']?.default
-				?? pkgJson.exports?.['.']?.import
+			const pkgJson = JSON.parse(
+        fs.readFileSync(join(sdkPath, "package.json"), "utf8"),
+      );
+			const mainEntry = pkgJson.exports?.["."]?.default
+				?? pkgJson.exports?.["."]?.import
 				?? pkgJson.main
-				?? 'index.js';
+				?? "index.js";
 			entry = resolve(sdkPath, mainEntry);
 		}
 		return import(pathToFileURL(entry).href);
@@ -201,14 +223,14 @@ export class ClaudeAgentSdkService implements IClaudeAgentSdkService {
 // exports, the `_assertBindingsMatchSdk` assignment below stops type-
 // checking and the build fails — flagging that the shim needs updating.
 
-type SdkModule = typeof import('@anthropic-ai/claude-agent-sdk');
+type SdkModule = typeof import("@anthropic-ai/claude-agent-sdk");
 
 type AssertBindingsMatchSdk = {
 	[K in keyof IClaudeSdkBindings]: K extends keyof SdkModule
 	? SdkModule[K] extends IClaudeSdkBindings[K]
 	? true
-	: ['SDK export signature drifted from IClaudeSdkBindings', K, SdkModule[K], IClaudeSdkBindings[K]]
-	: ['Not an export of @anthropic-ai/claude-agent-sdk', K];
+	: ["SDK export signature drifted from IClaudeSdkBindings", K, SdkModule[K], IClaudeSdkBindings[K]]
+	: ["Not an export of @anthropic-ai/claude-agent-sdk", K];
 };
 
 // Forces the mapped type above to be eagerly checked: if any entry is not

@@ -3,23 +3,37 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { EventType, addDisposableListener, addStandardDisposableListener, h } from '../../../../../base/browser/dom.js';
-import { createFastDomNode } from '../../../../../base/browser/fastDomNode.js';
-import { IMouseWheelEvent } from '../../../../../base/browser/mouseEvent.js';
-import { ScrollbarState } from '../../../../../base/browser/ui/scrollbar/scrollbarState.js';
-import { Color } from '../../../../../base/common/color.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { IObservable, autorun, autorunWithStore, derived, observableFromEvent, observableSignalFromEvent } from '../../../../../base/common/observable.js';
-import { CodeEditorWidget } from '../../codeEditor/codeEditorWidget.js';
-import { DiffEditorEditors } from '../components/diffEditorEditors.js';
-import { DiffEditorViewModel } from '../diffEditorViewModel.js';
-import { appendRemoveOnDispose } from '../utils.js';
-import { EditorLayoutInfo, EditorOption } from '../../../../common/config/editorOptions.js';
-import { LineRange } from '../../../../common/core/ranges/lineRange.js';
-import { Position } from '../../../../common/core/position.js';
-import { OverviewRulerZone } from '../../../../common/viewModel/overviewZoneManager.js';
-import { defaultInsertColor, defaultRemoveColor, diffInserted, diffOverviewRulerInserted, diffOverviewRulerRemoved, diffRemoved } from '../../../../../platform/theme/common/colorRegistry.js';
-import { IThemeService } from '../../../../../platform/theme/common/themeService.js';
+import { EventType, addDisposableListener, addStandardDisposableListener, h } from "../../../../../base/browser/dom.js";
+import { createFastDomNode } from "../../../../../base/browser/fastDomNode.js";
+import { IMouseWheelEvent } from "../../../../../base/browser/mouseEvent.js";
+import { ScrollbarState } from "../../../../../base/browser/ui/scrollbar/scrollbarState.js";
+import { Color } from "../../../../../base/common/color.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import {
+  IObservable,
+  autorun,
+  autorunWithStore,
+  derived,
+  observableFromEvent,
+  observableSignalFromEvent,
+} from "../../../../../base/common/observable.js";
+import { CodeEditorWidget } from "../../codeEditor/codeEditorWidget.js";
+import { DiffEditorEditors } from "../components/diffEditorEditors.js";
+import { DiffEditorViewModel } from "../diffEditorViewModel.js";
+import { appendRemoveOnDispose } from "../utils.js";
+import { EditorLayoutInfo, EditorOption } from "../../../../common/config/editorOptions.js";
+import { LineRange } from "../../../../common/core/ranges/lineRange.js";
+import { Position } from "../../../../common/core/position.js";
+import { OverviewRulerZone } from "../../../../common/viewModel/overviewZoneManager.js";
+import {
+  defaultInsertColor,
+  defaultRemoveColor,
+  diffInserted,
+  diffOverviewRulerInserted,
+  diffOverviewRulerRemoved,
+  diffRemoved,
+} from "../../../../../platform/theme/common/colorRegistry.js";
+import { IThemeService } from "../../../../../platform/theme/common/themeService.js";
 
 export class OverviewRulerFeature extends Disposable {
 	private static readonly ONE_OVERVIEW_WIDTH = 15;
@@ -37,7 +51,10 @@ export class OverviewRulerFeature extends Disposable {
 	) {
 		super();
 
-		const currentColorTheme = observableFromEvent(this._themeService.onDidColorThemeChange, () => this._themeService.getColorTheme());
+		const currentColorTheme = observableFromEvent(
+      this._themeService.onDidColorThemeChange,
+      () => this._themeService.getColorTheme(),
+    );
 
 		const currentColors = derived(reader => {
 			/** @description colors */
@@ -47,33 +64,48 @@ export class OverviewRulerFeature extends Disposable {
 			return { insertColor, removeColor };
 		});
 
-		const viewportDomElement = createFastDomNode(document.createElement('div'));
-		viewportDomElement.setClassName('diffViewport');
-		viewportDomElement.setPosition('absolute');
+		const viewportDomElement = createFastDomNode(document.createElement("div"));
+		viewportDomElement.setClassName("diffViewport");
+		viewportDomElement.setPosition("absolute");
 
-		const diffOverviewRoot = h('div.diffOverview', {
-			style: { position: 'absolute', top: '0px', width: OverviewRulerFeature.ENTIRE_DIFF_OVERVIEW_WIDTH + 'px' }
-		}).root;
-		this._register(appendRemoveOnDispose(diffOverviewRoot, viewportDomElement.domNode));
-		this._register(addStandardDisposableListener(diffOverviewRoot, EventType.POINTER_DOWN, (e) => {
-			this._editors.modified.delegateVerticalScrollbarPointerDown(e);
-		}));
-		this._register(addDisposableListener(diffOverviewRoot, EventType.MOUSE_WHEEL, (e: IMouseWheelEvent) => {
-			this._editors.modified.delegateScrollFromMouseWheelEvent(e);
-		}, { passive: false }));
+		const diffOverviewRoot = h("div.diffOverview", {
+      style: { position: "absolute", top: "0px", width: OverviewRulerFeature.ENTIRE_DIFF_OVERVIEW_WIDTH + "px" },
+    }).root;
+		this._register(
+      appendRemoveOnDispose(diffOverviewRoot, viewportDomElement.domNode),
+    );
+		this._register(
+      addStandardDisposableListener(
+        diffOverviewRoot,
+        EventType.POINTER_DOWN,
+        (e) => {
+          this._editors.modified.delegateVerticalScrollbarPointerDown(e);
+        },
+      ),
+    );
+		this._register(
+      addDisposableListener(
+        diffOverviewRoot,
+        EventType.MOUSE_WHEEL,
+        (e: IMouseWheelEvent) => {
+          this._editors.modified.delegateScrollFromMouseWheelEvent(e);
+        },
+        { passive: false },
+      ),
+    );
 		this._register(appendRemoveOnDispose(this._rootElement, diffOverviewRoot));
 
 		this._register(autorunWithStore((reader, store) => {
 			/** @description recreate overview rules when model changes */
 			const m = this._diffModel.read(reader);
 
-			const originalOverviewRuler = this._editors.original.createOverviewRuler('original diffOverviewRuler');
+			const originalOverviewRuler = this._editors.original.createOverviewRuler("original diffOverviewRuler");
 			if (originalOverviewRuler) {
 				store.add(originalOverviewRuler);
 				store.add(appendRemoveOnDispose(diffOverviewRoot, originalOverviewRuler.getDomNode()));
 			}
 
-			const modifiedOverviewRuler = this._editors.modified.createOverviewRuler('modified diffOverviewRuler');
+			const modifiedOverviewRuler = this._editors.modified.createOverviewRuler("modified diffOverviewRuler");
 			if (modifiedOverviewRuler) {
 				store.add(modifiedOverviewRuler);
 				store.add(appendRemoveOnDispose(diffOverviewRoot, modifiedOverviewRuler.getDomNode()));
@@ -84,10 +116,10 @@ export class OverviewRulerFeature extends Disposable {
 				return;
 			}
 
-			const origViewZonesChanged = observableSignalFromEvent('viewZoneChanged', this._editors.original.onDidChangeViewZones);
-			const modViewZonesChanged = observableSignalFromEvent('viewZoneChanged', this._editors.modified.onDidChangeViewZones);
-			const origHiddenRangesChanged = observableSignalFromEvent('hiddenRangesChanged', this._editors.original.onDidChangeHiddenAreas);
-			const modHiddenRangesChanged = observableSignalFromEvent('hiddenRangesChanged', this._editors.modified.onDidChangeHiddenAreas);
+			const origViewZonesChanged = observableSignalFromEvent("viewZoneChanged", this._editors.original.onDidChangeViewZones);
+			const modViewZonesChanged = observableSignalFromEvent("viewZoneChanged", this._editors.modified.onDidChangeViewZones);
+			const origHiddenRangesChanged = observableSignalFromEvent("hiddenRangesChanged", this._editors.original.onDidChangeHiddenAreas);
+			const modHiddenRangesChanged = observableSignalFromEvent("hiddenRangesChanged", this._editors.modified.onDidChangeHiddenAreas);
 
 			store.add(autorun(reader => {
 				/** @description set overview ruler zones */
@@ -152,7 +184,7 @@ export class OverviewRulerFeature extends Disposable {
 						0,
 						layoutInfo.height,
 						scrollHeight,
-						scrollTop
+						scrollTop,
 					);
 
 					viewportDomElement.setTop(state.getSliderPosition());
@@ -162,8 +194,8 @@ export class OverviewRulerFeature extends Disposable {
 					viewportDomElement.setHeight(0);
 				}
 
-				diffOverviewRoot.style.height = height + 'px';
-				diffOverviewRoot.style.left = (width - OverviewRulerFeature.ENTIRE_DIFF_OVERVIEW_WIDTH) + 'px';
+				diffOverviewRoot.style.height = height + "px";
+				diffOverviewRoot.style.left = (width - OverviewRulerFeature.ENTIRE_DIFF_OVERVIEW_WIDTH) + "px";
 				viewportDomElement.setWidth(OverviewRulerFeature.ENTIRE_DIFF_OVERVIEW_WIDTH);
 			}));
 		}));

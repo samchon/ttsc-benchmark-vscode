@@ -3,20 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { reverseOrder, compareBy, numberComparator } from '../../../../base/common/arrays.js';
-import { observableValue, observableSignalFromEvent, autorunWithStore, IReader } from '../../../../base/common/observable.js';
-import { HideUnchangedRegionsFeature, IDiffEditorBreadcrumbsSource } from '../../../browser/widget/diffEditor/features/hideUnchangedRegionsFeature.js';
-import { DisposableCancellationTokenSource } from '../../../browser/widget/diffEditor/utils.js';
-import { LineRange } from '../../../common/core/ranges/lineRange.js';
-import { ITextModel } from '../../../common/model.js';
-import { ILanguageFeaturesService } from '../../../common/services/languageFeatures.js';
-import { IOutlineModelService, OutlineModel } from '../../documentSymbols/browser/outlineModel.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { Event } from '../../../../base/common/event.js';
-import { SymbolKind } from '../../../common/languages.js';
+import { reverseOrder, compareBy, numberComparator } from "../../../../base/common/arrays.js";
+import { observableValue, observableSignalFromEvent, autorunWithStore, IReader } from "../../../../base/common/observable.js";
+import { HideUnchangedRegionsFeature, IDiffEditorBreadcrumbsSource } from "../../../browser/widget/diffEditor/features/hideUnchangedRegionsFeature.js";
+import { DisposableCancellationTokenSource } from "../../../browser/widget/diffEditor/utils.js";
+import { LineRange } from "../../../common/core/ranges/lineRange.js";
+import { ITextModel } from "../../../common/model.js";
+import { ILanguageFeaturesService } from "../../../common/services/languageFeatures.js";
+import { IOutlineModelService, OutlineModel } from "../../documentSymbols/browser/outlineModel.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { Event } from "../../../../base/common/event.js";
+import { SymbolKind } from "../../../common/languages.js";
 
 class DiffEditorBreadcrumbsSource extends Disposable implements IDiffEditorBreadcrumbsSource {
-	private readonly _currentModel = observableValue<OutlineModel | undefined>(this, undefined);
+	private readonly _currentModel = observableValue<OutlineModel | undefined>(
+    this,
+    undefined,
+  );
 
 	constructor(
 		private readonly _textModel: ITextModel,
@@ -26,14 +29,18 @@ class DiffEditorBreadcrumbsSource extends Disposable implements IDiffEditorBread
 		super();
 
 		const documentSymbolProviderChanged = observableSignalFromEvent(
-			'documentSymbolProvider.onDidChange',
-			this._languageFeaturesService.documentSymbolProvider.onDidChange
-		);
+      "documentSymbolProvider.onDidChange",
+      this._languageFeaturesService.documentSymbolProvider.onDidChange,
+    );
 
 		const textModelChanged = observableSignalFromEvent(
-			'_textModel.onDidChangeContent',
-			Event.debounce<any>(e => this._textModel.onDidChangeContent(e), () => undefined, 100)
-		);
+      "_textModel.onDidChangeContent",
+      Event.debounce<any>(
+        e => this._textModel.onDidChangeContent(e),
+        () => undefined,
+        100,
+      ),
+    );
 
 		this._register(autorunWithStore(async (reader, store) => {
 			documentSymbolProviderChanged.read(reader);
@@ -52,8 +59,19 @@ class DiffEditorBreadcrumbsSource extends Disposable implements IDiffEditorBread
 		if (!m) { return []; }
 		const symbols = m.asListOfDocumentSymbols()
 			.filter(s => startRange.contains(s.range.startLineNumber) && !startRange.contains(s.range.endLineNumber));
-		symbols.sort(reverseOrder(compareBy(s => s.range.endLineNumber - s.range.startLineNumber, numberComparator)));
-		return symbols.map(s => ({ name: s.name, kind: s.kind, startLineNumber: s.range.startLineNumber }));
+		symbols.sort(
+      reverseOrder(
+        compareBy(
+          s => s.range.endLineNumber - s.range.startLineNumber,
+          numberComparator,
+        ),
+      ),
+    );
+		return symbols.map(s => ({
+      name: s.name,
+      kind: s.kind,
+      startLineNumber: s.range.startLineNumber,
+    }));
 	}
 
 	public getAt(lineNumber: number, reader: IReader): { name: string; kind: SymbolKind; startLineNumber: number }[] {
@@ -62,12 +80,28 @@ class DiffEditorBreadcrumbsSource extends Disposable implements IDiffEditorBread
 		const symbols = m.asListOfDocumentSymbols()
 			.filter(s => new LineRange(s.range.startLineNumber, s.range.endLineNumber).contains(lineNumber));
 		if (symbols.length === 0) { return []; }
-		symbols.sort(reverseOrder(compareBy(s => s.range.endLineNumber - s.range.startLineNumber, numberComparator)));
+		symbols.sort(
+      reverseOrder(
+        compareBy(
+          s => s.range.endLineNumber - s.range.startLineNumber,
+          numberComparator,
+        ),
+      ),
+    );
 
-		return symbols.map(s => ({ name: s.name, kind: s.kind, startLineNumber: s.range.startLineNumber }));
+		return symbols.map(s => ({
+      name: s.name,
+      kind: s.kind,
+      startLineNumber: s.range.startLineNumber,
+    }));
 	}
 }
 
-HideUnchangedRegionsFeature.setBreadcrumbsSourceFactory((textModel, instantiationService) => {
-	return instantiationService.createInstance(DiffEditorBreadcrumbsSource, textModel);
-});
+HideUnchangedRegionsFeature.setBreadcrumbsSourceFactory(
+  (textModel, instantiationService) => {
+    return instantiationService.createInstance(
+      DiffEditorBreadcrumbsSource,
+      textModel,
+    );
+  },
+);

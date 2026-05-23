@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createSingleCallFunction } from '../../../../base/common/functional.js';
-import { IReference } from '../../../../base/common/lifecycle.js';
-import { URI } from '../../../../base/common/uri.js';
-import { ICustomEditorModel, ICustomEditorModelManager } from './customEditor.js';
+import { createSingleCallFunction } from "../../../../base/common/functional.js";
+import { IReference } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ICustomEditorModel, ICustomEditorModelManager } from "./customEditor.js";
 
 export class CustomEditorModelManager implements ICustomEditorModelManager {
 
@@ -59,7 +59,7 @@ export class CustomEditorModelManager implements ICustomEditorModelManager {
 		const key = this.key(resource, viewType);
 		const existing = this._references.get(key);
 		if (existing) {
-			throw new Error('Model already exists');
+			throw new Error("Model already exists");
 		}
 
 		this._references.set(key, { viewType, model, counter: 0 });

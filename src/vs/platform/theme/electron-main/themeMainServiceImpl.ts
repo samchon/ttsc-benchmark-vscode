@@ -3,33 +3,33 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import electron from 'electron';
-import { Emitter, Event } from '../../../base/common/event.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { isLinux, isMacintosh, isWindows } from '../../../base/common/platform.js';
-import { IConfigurationService } from '../../configuration/common/configuration.js';
-import { IStateService } from '../../state/node/state.js';
-import { IPartsSplash } from '../common/themeService.js';
-import { IColorScheme } from '../../window/common/window.js';
-import { ThemeTypeSelector } from '../common/theme.js';
-import { ISingleFolderWorkspaceIdentifier, IWorkspaceIdentifier } from '../../workspace/common/workspace.js';
-import { coalesce } from '../../../base/common/arrays.js';
-import { getAllWindowsExcludingOffscreen } from '../../windows/electron-main/windows.js';
-import { ILogService, LogLevel } from '../../log/common/log.js';
-import { IThemeMainService } from './themeMainService.js';
+import electron from "electron";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { isLinux, isMacintosh, isWindows } from "../../../base/common/platform.js";
+import { IConfigurationService } from "../../configuration/common/configuration.js";
+import { IStateService } from "../../state/node/state.js";
+import { IPartsSplash } from "../common/themeService.js";
+import { IColorScheme } from "../../window/common/window.js";
+import { ThemeTypeSelector } from "../common/theme.js";
+import { ISingleFolderWorkspaceIdentifier, IWorkspaceIdentifier } from "../../workspace/common/workspace.js";
+import { coalesce } from "../../../base/common/arrays.js";
+import { getAllWindowsExcludingOffscreen } from "../../windows/electron-main/windows.js";
+import { ILogService, LogLevel } from "../../log/common/log.js";
+import { IThemeMainService } from "./themeMainService.js";
 
 // These default colors match our default themes
 // editor background color ("Dark Modern", etc...)
-const DEFAULT_BG_LIGHT = '#FFFFFF';
-const DEFAULT_BG_DARK = '#1F1F1F';
-const DEFAULT_BG_HC_BLACK = '#000000';
-const DEFAULT_BG_HC_LIGHT = '#FFFFFF';
+const DEFAULT_BG_LIGHT = "#FFFFFF";
+const DEFAULT_BG_DARK = "#1F1F1F";
+const DEFAULT_BG_HC_BLACK = "#000000";
+const DEFAULT_BG_HC_LIGHT = "#FFFFFF";
 
-const THEME_STORAGE_KEY = 'theme';
-const THEME_BG_STORAGE_KEY = 'themeBackground';
+const THEME_STORAGE_KEY = "theme";
+const THEME_BG_STORAGE_KEY = "themeBackground";
 
-const THEME_WINDOW_SPLASH_KEY = 'windowSplash';
-const THEME_WINDOW_SPLASH_OVERRIDE_KEY = 'windowSplashWorkspaceOverride';
+const THEME_WINDOW_SPLASH_KEY = "windowSplash";
+const THEME_WINDOW_SPLASH_OVERRIDE_KEY = "windowSplashWorkspaceOverride";
 
 class Setting<T> {
 	constructor(public readonly key: string, public readonly defaultValue: T) {
@@ -41,11 +41,26 @@ class Setting<T> {
 
 // in the main process, defaults are not known to the configuration service, so we need to define them here
 namespace Setting {
-	export const DETECT_COLOR_SCHEME = new Setting<boolean>('window.autoDetectColorScheme', false);
-	export const DETECT_HC = new Setting<boolean>('window.autoDetectHighContrast', true);
-	export const SYSTEM_COLOR_THEME = new Setting<'default' | 'auto' | 'light' | 'dark'>('window.systemColorTheme', 'default');
-	export const AUXILIARYBAR_DEFAULT_VISIBILITY = new Setting<'hidden' | 'visibleInWorkspace' | 'visible' | 'maximizedInWorkspace' | 'maximized'>('workbench.secondarySideBar.defaultVisibility', 'visibleInWorkspace');
-	export const STARTUP_EDITOR = new Setting<'none' | 'welcomePage' | 'readme' | 'newUntitledFile' | 'welcomePageInEmptyWorkbench' | 'terminal' | 'agentSessionsWelcomePage'>('workbench.startupEditor', 'welcomePage');
+	export const DETECT_COLOR_SCHEME = new Setting<boolean>(
+    "window.autoDetectColorScheme",
+    false,
+  );
+	export const DETECT_HC = new Setting<boolean>(
+    "window.autoDetectHighContrast",
+    true,
+  );
+	export const SYSTEM_COLOR_THEME = new Setting<"default" | "auto" | "light" | "dark">(
+    "window.systemColorTheme",
+    "default",
+  );
+	export const AUXILIARYBAR_DEFAULT_VISIBILITY = new Setting<"hidden" | "visibleInWorkspace" | "visible" | "maximizedInWorkspace" | "maximized">(
+    "workbench.secondarySideBar.defaultVisibility",
+    "visibleInWorkspace",
+  );
+	export const STARTUP_EDITOR = new Setting<"none" | "welcomePage" | "readme" | "newUntitledFile" | "welcomePageInEmptyWorkbench" | "terminal" | "agentSessionsWelcomePage">(
+    "workbench.startupEditor",
+    "welcomePage",
+  );
 }
 
 interface IPartSplashOverrideWorkspaces {
@@ -72,13 +87,15 @@ export class ThemeMainService extends Disposable implements IThemeMainService {
 
 	private static readonly WORKSPACE_OVERRIDE_LIMIT = 50;
 
-	private readonly _onDidChangeColorScheme = this._register(new Emitter<IColorScheme>());
+	private readonly _onDidChangeColorScheme = this._register(
+    new Emitter<IColorScheme>(),
+  );
 	readonly onDidChangeColorScheme = this._onDidChangeColorScheme.event;
 
 	constructor(
 		@IStateService private stateService: IStateService,
 		@IConfigurationService private configurationService: IConfigurationService,
-		@ILogService private logService: ILogService
+		@ILogService private logService: ILogService,
 	) {
 		super();
 
@@ -95,43 +112,51 @@ export class ThemeMainService extends Disposable implements IThemeMainService {
 		this.logThemeSettings();
 
 		// Color Scheme changes
-		this._register(Event.fromNodeEventEmitter(electron.nativeTheme, 'updated')(() => {
-			this.logThemeSettings();
-			this._onDidChangeColorScheme.fire(this.getColorScheme());
-		}));
+		this._register(
+      Event.fromNodeEventEmitter(electron.nativeTheme, "updated")(() => {
+        this.logThemeSettings();
+        this._onDidChangeColorScheme.fire(this.getColorScheme());
+      }),
+    );
 	}
 
 	private logThemeSettings(): void {
 		if (this.logService.getLevel() >= LogLevel.Debug) {
 			const logSetting = (setting: Setting<string | boolean>) => `${setting.key}=${setting.getValue(this.configurationService)}`;
-			this.logService.debug(`[theme main service] ${logSetting(Setting.DETECT_COLOR_SCHEME)}, ${logSetting(Setting.DETECT_HC)}, ${logSetting(Setting.SYSTEM_COLOR_THEME)}`);
+			this.logService.debug(
+        `[theme main service] ${logSetting(Setting.DETECT_COLOR_SCHEME)}, ${logSetting(Setting.DETECT_HC)}, ${logSetting(Setting.SYSTEM_COLOR_THEME)}`,
+      );
 
 			const logProperty = (property: keyof Electron.NativeTheme) => `${String(property)}=${electron.nativeTheme[property]}`;
-			this.logService.debug(`[theme main service] electron.nativeTheme: ${logProperty('themeSource')}, ${logProperty('shouldUseDarkColors')}, ${logProperty('shouldUseHighContrastColors')}, ${logProperty('shouldUseInvertedColorScheme')}, ${logProperty('shouldUseDarkColorsForSystemIntegratedUI')}	`);
-			this.logService.debug(`[theme main service] New color scheme: ${JSON.stringify(this.getColorScheme())}`);
+			this.logService.debug(
+        `[theme main service] electron.nativeTheme: ${logProperty("themeSource")}, ${logProperty("shouldUseDarkColors")}, ${logProperty("shouldUseHighContrastColors")}, ${logProperty("shouldUseInvertedColorScheme")}, ${logProperty("shouldUseDarkColorsForSystemIntegratedUI")}	`,
+      );
+			this.logService.debug(
+        `[theme main service] New color scheme: ${JSON.stringify(this.getColorScheme())}`,
+      );
 		}
 	}
 
 	private updateSystemColorTheme(): void {
 		if (isLinux || this.isAutoDetectColorScheme()) {
-			electron.nativeTheme.themeSource = 'system'; // only with `system` we can detect the system color scheme
+			electron.nativeTheme.themeSource = "system"; // only with `system` we can detect the system color scheme
 		} else {
 			switch (Setting.SYSTEM_COLOR_THEME.getValue(this.configurationService)) {
-				case 'dark':
-					electron.nativeTheme.themeSource = 'dark';
+				case "dark":
+					electron.nativeTheme.themeSource = "dark";
 					break;
-				case 'light':
-					electron.nativeTheme.themeSource = 'light';
+				case "light":
+					electron.nativeTheme.themeSource = "light";
 					break;
-				case 'auto':
+				case "auto":
 					switch (this.getPreferredBaseTheme() ?? this.getStoredBaseTheme()) {
-						case ThemeTypeSelector.VS: electron.nativeTheme.themeSource = 'light'; break;
-						case ThemeTypeSelector.VS_DARK: electron.nativeTheme.themeSource = 'dark'; break;
-						default: electron.nativeTheme.themeSource = 'system';
+						case ThemeTypeSelector.VS: electron.nativeTheme.themeSource = "light"; break;
+						case ThemeTypeSelector.VS_DARK: electron.nativeTheme.themeSource = "dark"; break;
+						default: electron.nativeTheme.themeSource = "system";
 					}
 					break;
 				default:
-					electron.nativeTheme.themeSource = 'system';
+					electron.nativeTheme.themeSource = "system";
 					break;
 			}
 		}
@@ -143,7 +168,10 @@ export class ThemeMainService extends Disposable implements IThemeMainService {
 		if (isWindows) {
 			if (electron.nativeTheme.shouldUseHighContrastColors) {
 				// shouldUseInvertedColorScheme is dark, !shouldUseInvertedColorScheme is light
-				return { dark: electron.nativeTheme.shouldUseInvertedColorScheme, highContrast: true };
+				return {
+          dark: electron.nativeTheme.shouldUseInvertedColorScheme,
+          highContrast: true,
+        };
 			}
 		}
 
@@ -151,7 +179,10 @@ export class ThemeMainService extends Disposable implements IThemeMainService {
 		// reflecting the 'Invert colours' and `Increase contrast` settings in MacOS
 		else if (isMacintosh) {
 			if (electron.nativeTheme.shouldUseInvertedColorScheme || electron.nativeTheme.shouldUseHighContrastColors) {
-				return { dark: electron.nativeTheme.shouldUseDarkColors, highContrast: true };
+				return {
+          dark: electron.nativeTheme.shouldUseDarkColors,
+          highContrast: true,
+        };
 			}
 		}
 
@@ -163,14 +194,16 @@ export class ThemeMainService extends Disposable implements IThemeMainService {
 		}
 
 		return {
-			dark: electron.nativeTheme.shouldUseDarkColors,
-			highContrast: false
-		};
+      dark: electron.nativeTheme.shouldUseDarkColors,
+      highContrast: false,
+    };
 	}
 
 	getPreferredBaseTheme(): ThemeTypeSelector | undefined {
 		const colorScheme = this.getColorScheme();
-		if (Setting.DETECT_HC.getValue(this.configurationService) && colorScheme.highContrast) {
+		if (Setting.DETECT_HC.getValue(
+      this.configurationService,
+    ) && colorScheme.highContrast) {
 			return colorScheme.dark ? ThemeTypeSelector.HC_BLACK : ThemeTypeSelector.HC_LIGHT;
 		}
 
@@ -194,7 +227,10 @@ export class ThemeMainService extends Disposable implements IThemeMainService {
 
 		// If the stored theme has the same base as the preferred, we can return the stored background
 		if (preferred === undefined || preferred === stored) {
-			const storedBackground = this.stateService.getItem<string | null>(THEME_BG_STORAGE_KEY, null);
+			const storedBackground = this.stateService.getItem<string | null>(
+        THEME_BG_STORAGE_KEY,
+        null,
+      );
 			if (storedBackground) {
 				return storedBackground;
 			}
@@ -210,7 +246,9 @@ export class ThemeMainService extends Disposable implements IThemeMainService {
 	}
 
 	private getStoredBaseTheme(): ThemeTypeSelector {
-		const baseTheme = this.stateService.getItem<ThemeTypeSelector>(THEME_STORAGE_KEY, ThemeTypeSelector.VS_DARK).split(' ')[0];
+		const baseTheme = this.stateService.getItem<ThemeTypeSelector>(THEME_STORAGE_KEY, ThemeTypeSelector.VS_DARK).split(
+      " ",
+    )[0];
 		switch (baseTheme) {
 			case ThemeTypeSelector.VS: return ThemeTypeSelector.VS;
 			case ThemeTypeSelector.HC_BLACK: return ThemeTypeSelector.HC_BLACK;
@@ -229,11 +267,11 @@ export class ThemeMainService extends Disposable implements IThemeMainService {
 			{ key: THEME_STORAGE_KEY, data: splash.baseTheme },
 			{ key: THEME_BG_STORAGE_KEY, data: splash.colorInfo.background },
 			{ key: THEME_WINDOW_SPLASH_KEY, data: splash },
-			splashOverride ? { key: THEME_WINDOW_SPLASH_OVERRIDE_KEY, data: splashOverride } : undefined
+			splashOverride ? { key: THEME_WINDOW_SPLASH_OVERRIDE_KEY, data: splashOverride } : undefined,
 		]));
 
 		// Update in opened windows
-		if (typeof windowId === 'number') {
+		if (typeof windowId === "number") {
 			this.updateBackgroundColor(windowId, splash);
 		}
 
@@ -245,22 +283,34 @@ export class ThemeMainService extends Disposable implements IThemeMainService {
 		let splashOverride: IPartsSplashOverride | undefined = undefined;
 		let changed = false;
 		if (workspace) {
-			splashOverride = { ...this.getWindowSplashOverride() }; // make a copy for modifications
+			splashOverride = {
+        ...this.getWindowSplashOverride(),
+      }; // make a copy for modifications
 
-			changed = this.doUpdateWindowSplashOverride(workspace, splash, splashOverride, 'sideBar');
-			changed = this.doUpdateWindowSplashOverride(workspace, splash, splashOverride, 'auxiliaryBar') || changed;
+			changed = this.doUpdateWindowSplashOverride(
+        workspace,
+        splash,
+        splashOverride,
+        "sideBar",
+      );
+			changed = this.doUpdateWindowSplashOverride(
+        workspace,
+        splash,
+        splashOverride,
+        "auxiliaryBar",
+      ) || changed;
 		}
 
 		return changed ? splashOverride : undefined;
 	}
 
-	private doUpdateWindowSplashOverride(workspace: IWorkspaceIdentifier | ISingleFolderWorkspaceIdentifier, splash: IPartsSplash, splashOverride: IPartsSplashOverride, part: 'sideBar' | 'auxiliaryBar'): boolean {
-		const currentWidth = part === 'sideBar' ? splash.layoutInfo?.sideBarWidth : splash.layoutInfo?.auxiliaryBarWidth;
-		const overrideWidth = part === 'sideBar' ? splashOverride.layoutInfo.sideBarWidth : splashOverride.layoutInfo.auxiliaryBarWidth;
+	private doUpdateWindowSplashOverride(workspace: IWorkspaceIdentifier | ISingleFolderWorkspaceIdentifier, splash: IPartsSplash, splashOverride: IPartsSplashOverride, part: "sideBar" | "auxiliaryBar"): boolean {
+		const currentWidth = part === "sideBar" ? splash.layoutInfo?.sideBarWidth : splash.layoutInfo?.auxiliaryBarWidth;
+		const overrideWidth = part === "sideBar" ? splashOverride.layoutInfo.sideBarWidth : splashOverride.layoutInfo.auxiliaryBarWidth;
 
 		// No layout info: remove override
 		let changed = false;
-		if (typeof currentWidth !== 'number') {
+		if (typeof currentWidth !== "number") {
 			if (splashOverride.layoutInfo.workspaces[workspace.id]) {
 				delete splashOverride.layoutInfo.workspaces[workspace.id];
 				changed = true;
@@ -271,7 +321,9 @@ export class ThemeMainService extends Disposable implements IThemeMainService {
 
 		let workspaceOverride = splashOverride.layoutInfo.workspaces[workspace.id];
 		if (!workspaceOverride) {
-			const workspaceEntries = Object.keys(splashOverride.layoutInfo.workspaces);
+			const workspaceEntries = Object.keys(
+        splashOverride.layoutInfo.workspaces,
+      );
 			if (workspaceEntries.length >= ThemeMainService.WORKSPACE_OVERRIDE_LIMIT) {
 				delete splashOverride.layoutInfo.workspaces[workspaceEntries[0]];
 				changed = true;
@@ -285,18 +337,18 @@ export class ThemeMainService extends Disposable implements IThemeMainService {
 		// Part has width: update width & visibility override
 		if (currentWidth > 0) {
 			if (overrideWidth !== currentWidth) {
-				splashOverride.layoutInfo[part === 'sideBar' ? 'sideBarWidth' : 'auxiliaryBarWidth'] = currentWidth;
+				splashOverride.layoutInfo[part === "sideBar" ? "sideBarWidth" : "auxiliaryBarWidth"] = currentWidth;
 				changed = true;
 			}
 
 			switch (part) {
-				case 'sideBar':
+				case "sideBar":
 					if (!workspaceOverride.sideBarVisible) {
 						workspaceOverride.sideBarVisible = true;
 						changed = true;
 					}
 					break;
-				case 'auxiliaryBar':
+				case "auxiliaryBar":
 					if (!workspaceOverride.auxiliaryBarVisible) {
 						workspaceOverride.auxiliaryBarVisible = true;
 						changed = true;
@@ -308,13 +360,13 @@ export class ThemeMainService extends Disposable implements IThemeMainService {
 		// Part is hidden: update visibility override
 		else {
 			switch (part) {
-				case 'sideBar':
+				case "sideBar":
 					if (workspaceOverride.sideBarVisible) {
 						workspaceOverride.sideBarVisible = false;
 						changed = true;
 					}
 					break;
-				case 'auxiliaryBar':
+				case "auxiliaryBar":
 					if (workspaceOverride.auxiliaryBarVisible) {
 						workspaceOverride.auxiliaryBarVisible = false;
 						changed = true;
@@ -339,14 +391,19 @@ export class ThemeMainService extends Disposable implements IThemeMainService {
 		try {
 			return this.doGetWindowSplash(workspace);
 		} catch (error) {
-			this.logService.error('[theme main service] Failed to get window splash', error);
+			this.logService.error(
+        "[theme main service] Failed to get window splash",
+        error,
+      );
 
 			return undefined;
 		}
 	}
 
 	private doGetWindowSplash(workspace: IWorkspaceIdentifier | ISingleFolderWorkspaceIdentifier | undefined): IPartsSplash | undefined {
-		const partSplash = this.stateService.getItem<IPartsSplash>(THEME_WINDOW_SPLASH_KEY);
+		const partSplash = this.stateService.getItem<IPartsSplash>(
+      THEME_WINDOW_SPLASH_KEY,
+    );
 		if (!partSplash?.layoutInfo) {
 			return partSplash; // return early: overrides currently only apply to layout info
 		}
@@ -366,8 +423,12 @@ export class ThemeMainService extends Disposable implements IThemeMainService {
 		}
 
 		// Figure out auxiliary bar width based on workspace, configuration and overrides
-		const auxiliaryBarDefaultVisibility = Setting.AUXILIARYBAR_DEFAULT_VISIBILITY.getValue(this.configurationService);
-		const startupEditor = Setting.STARTUP_EDITOR.getValue(this.configurationService);
+		const auxiliaryBarDefaultVisibility = Setting.AUXILIARYBAR_DEFAULT_VISIBILITY.getValue(
+      this.configurationService,
+    );
+		const startupEditor = Setting.STARTUP_EDITOR.getValue(
+      this.configurationService,
+    );
 		let auxiliaryBarWidth: number;
 		if (workspace) {
 			const auxiliaryBarVisible = override.layoutInfo.workspaces[workspace.id]?.auxiliaryBarVisible;
@@ -376,9 +437,9 @@ export class ThemeMainService extends Disposable implements IThemeMainService {
 			} else if (auxiliaryBarVisible === false) {
 				auxiliaryBarWidth = 0;
 			} else {
-				if (startupEditor !== 'agentSessionsWelcomePage' && (auxiliaryBarDefaultVisibility === 'visible' || auxiliaryBarDefaultVisibility === 'visibleInWorkspace')) {
+				if (startupEditor !== "agentSessionsWelcomePage" && (auxiliaryBarDefaultVisibility === "visible" || auxiliaryBarDefaultVisibility === "visibleInWorkspace")) {
 					auxiliaryBarWidth = override.layoutInfo.auxiliaryBarWidth || partSplash.layoutInfo.auxiliaryBarWidth || ThemeMainService.DEFAULT_BAR_WIDTH;
-				} else if (startupEditor !== 'agentSessionsWelcomePage' && (auxiliaryBarDefaultVisibility === 'maximized' || auxiliaryBarDefaultVisibility === 'maximizedInWorkspace')) {
+				} else if (startupEditor !== "agentSessionsWelcomePage" && (auxiliaryBarDefaultVisibility === "maximized" || auxiliaryBarDefaultVisibility === "maximizedInWorkspace")) {
 					auxiliaryBarWidth = Number.MAX_SAFE_INTEGER; // marker for a maximised auxiliary bar
 				} else {
 					auxiliaryBarWidth = 0;
@@ -393,21 +454,23 @@ export class ThemeMainService extends Disposable implements IThemeMainService {
 			layoutInfo: {
 				...partSplash.layoutInfo,
 				sideBarWidth,
-				auxiliaryBarWidth
-			}
+				auxiliaryBarWidth,
+			},
 		};
 	}
 
 	private getWindowSplashOverride(): IPartsSplashOverride {
-		let override = this.stateService.getItem<IPartsSplashOverride>(THEME_WINDOW_SPLASH_OVERRIDE_KEY);
+		let override = this.stateService.getItem<IPartsSplashOverride>(
+      THEME_WINDOW_SPLASH_OVERRIDE_KEY,
+    );
 
 		if (!override?.layoutInfo) {
 			override = {
 				layoutInfo: {
 					sideBarWidth: ThemeMainService.DEFAULT_BAR_WIDTH,
 					auxiliaryBarWidth: ThemeMainService.DEFAULT_BAR_WIDTH,
-					workspaces: {}
-				}
+					workspaces: {},
+				},
 			};
 		}
 

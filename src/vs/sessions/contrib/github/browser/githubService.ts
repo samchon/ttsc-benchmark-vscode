@@ -3,19 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IReference } from '../../../../base/common/lifecycle.js';
-import { createDecorator, IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { IGitHubChangedFile } from '../common/types.js';
-import { GitHubApiClient } from './githubApiClient.js';
-import { GitHubRepositoryModel, GitHubRepositoryModelReferenceCollection } from './models/githubRepositoryModel.js';
-import { GitHubPullRequestModel, GitHubPullRequestModelReferenceCollection } from './models/githubPullRequestModel.js';
-import { GitHubPullRequestReviewThreadsModel, GitHubPullRequestReviewThreadsModelReferenceCollection } from './models/githubPullRequestReviewThreadsModel.js';
-import { GitHubPullRequestCIModel, GitHubPullRequestCIModelReferenceCollection } from './models/githubPullRequestCIModel.js';
-import { GitHubChangesFetcher } from './fetchers/githubChangesFetcher.js';
-import { getPullRequestKey } from '../common/utils.js';
-import { derived, derivedOpts, IObservable } from '../../../../base/common/observable.js';
-import { structuralEquals } from '../../../../base/common/equals.js';
-import { ISessionsManagementService } from '../../../services/sessions/common/sessionsManagement.js';
+import { Disposable, IReference } from "../../../../base/common/lifecycle.js";
+import { createDecorator, IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IGitHubChangedFile } from "../common/types.js";
+import { GitHubApiClient } from "./githubApiClient.js";
+import { GitHubRepositoryModel, GitHubRepositoryModelReferenceCollection } from "./models/githubRepositoryModel.js";
+import { GitHubPullRequestModel, GitHubPullRequestModelReferenceCollection } from "./models/githubPullRequestModel.js";
+import {
+  GitHubPullRequestReviewThreadsModel,
+  GitHubPullRequestReviewThreadsModelReferenceCollection,
+} from "./models/githubPullRequestReviewThreadsModel.js";
+import { GitHubPullRequestCIModel, GitHubPullRequestCIModelReferenceCollection } from "./models/githubPullRequestCIModel.js";
+import { GitHubChangesFetcher } from "./fetchers/githubChangesFetcher.js";
+import { getPullRequestKey } from "../common/utils.js";
+import { derived, derivedOpts, IObservable } from "../../../../base/common/observable.js";
+import { structuralEquals } from "../../../../base/common/equals.js";
+import { ISessionsManagementService } from "../../../services/sessions/common/sessionsManagement.js";
 
 export interface IGitHubService {
 	readonly _serviceBrand: undefined;
@@ -61,7 +64,9 @@ export interface IGitHubService {
 	findPullRequestNumberByHeadBranch(owner: string, repo: string, branch: string): Promise<number | undefined>;
 }
 
-export const IGitHubService = createDecorator<IGitHubService>('sessionsGitHubService');
+export const IGitHubService = createDecorator<IGitHubService>(
+  "sessionsGitHubService",
+);
 
 export class GitHubService extends Disposable implements IGitHubService {
 
@@ -93,15 +98,29 @@ export class GitHubService extends Disposable implements IGitHubService {
 	) {
 		super();
 
-		const apiClient = this._register(instantiationService.createInstance(GitHubApiClient));
+		const apiClient = this._register(
+      instantiationService.createInstance(GitHubApiClient),
+    );
 		this._apiClient = apiClient;
 
 		this._changesFetcher = new GitHubChangesFetcher(apiClient);
 
-		this._repositoryReferences = instantiationService.createInstance(GitHubRepositoryModelReferenceCollection, apiClient);
-		this._pullRequestReferences = instantiationService.createInstance(GitHubPullRequestModelReferenceCollection, apiClient);
-		this._pullRequestReviewThreadsReferences = instantiationService.createInstance(GitHubPullRequestReviewThreadsModelReferenceCollection, apiClient);
-		this._pullRequestCIReferences = instantiationService.createInstance(GitHubPullRequestCIModelReferenceCollection, apiClient);
+		this._repositoryReferences = instantiationService.createInstance(
+      GitHubRepositoryModelReferenceCollection,
+      apiClient,
+    );
+		this._pullRequestReferences = instantiationService.createInstance(
+      GitHubPullRequestModelReferenceCollection,
+      apiClient,
+    );
+		this._pullRequestReviewThreadsReferences = instantiationService.createInstance(
+      GitHubPullRequestReviewThreadsModelReferenceCollection,
+      apiClient,
+    );
+		this._pullRequestCIReferences = instantiationService.createInstance(
+      GitHubPullRequestCIModelReferenceCollection,
+      apiClient,
+    );
 
 		const gitHubInfoObs = derivedOpts<{ owner: string; repo: string; pullRequestNumber: number } | undefined>({ equalsFn: structuralEquals },
 			reader => {
@@ -114,7 +133,7 @@ export class GitHubService extends Disposable implements IGitHubService {
 				return {
 					owner: gitHubInfo.owner,
 					repo: gitHubInfo.repo,
-					pullRequestNumber: gitHubInfo.pullRequest.number
+					pullRequestNumber: gitHubInfo.pullRequest.number,
 				};
 			});
 
@@ -143,7 +162,7 @@ export class GitHubService extends Disposable implements IGitHubService {
 					owner: pullRequest.owner,
 					repo: pullRequest.repo,
 					prNumber: pullRequest.prNumber,
-					headSha: pullRequestDetails.headSha
+					headSha: pullRequestDetails.headSha,
 				};
 			});
 
@@ -177,15 +196,31 @@ export class GitHubService extends Disposable implements IGitHubService {
 	}
 
 	createPullRequestModelReference(owner: string, repo: string, prNumber: number): IReference<GitHubPullRequestModel> {
-		return this._pullRequestReferences.acquire(getPullRequestKey(owner, repo, prNumber), owner, repo, prNumber);
+		return this._pullRequestReferences.acquire(
+      getPullRequestKey(owner, repo, prNumber),
+      owner,
+      repo,
+      prNumber,
+    );
 	}
 
 	createPullRequestReviewThreadsModelReference(owner: string, repo: string, prNumber: number): IReference<GitHubPullRequestReviewThreadsModel> {
-		return this._pullRequestReviewThreadsReferences.acquire(getPullRequestKey(owner, repo, prNumber), owner, repo, prNumber);
+		return this._pullRequestReviewThreadsReferences.acquire(
+      getPullRequestKey(owner, repo, prNumber),
+      owner,
+      repo,
+      prNumber,
+    );
 	}
 
 	createPullRequestCIModelReference(owner: string, repo: string, prNumber: number, headSha: string): IReference<GitHubPullRequestCIModel> {
-		return this._pullRequestCIReferences.acquire(`${getPullRequestKey(owner, repo, prNumber)}/${headSha}`, owner, repo, prNumber, headSha);
+		return this._pullRequestCIReferences.acquire(
+      `${getPullRequestKey(owner, repo, prNumber)}/${headSha}`,
+      owner,
+      repo,
+      prNumber,
+      headSha,
+    );
 	}
 
 	getChangedFiles(owner: string, repo: string, base: string, head: string): Promise<readonly IGitHubChangedFile[]> {
@@ -204,7 +239,7 @@ export class GitHubService extends Disposable implements IGitHubService {
 			// "no PR yet" results, drop the cache entry so the next call retries.
 			promise.then(
 				value => {
-					if (typeof value !== 'number') {
+					if (typeof value !== "number") {
 						this._findPRByBranchCache.delete(key);
 					}
 				},
@@ -223,10 +258,10 @@ export class GitHubService extends Disposable implements IGitHubService {
 		// `per_page=1` + `sort=updated` gives us the most recent match.
 		const path = `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls?head=${encodeURIComponent(`${owner}:${branch}`)}&state=all&sort=updated&direction=desc&per_page=1`;
 		const response = await this._apiClient.request<readonly { readonly number: number }[]>(
-			'GET',
-			path,
-			'githubApi.findPullRequestByHeadBranch',
-		);
+      "GET",
+      path,
+      "githubApi.findPullRequestByHeadBranch",
+    );
 		const first = response.data?.[0];
 		return first ? first.number : undefined;
 	}

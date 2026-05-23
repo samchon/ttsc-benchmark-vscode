@@ -3,19 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { FastDomNode, createFastDomNode } from '../../../../base/browser/fastDomNode.js';
-import { ArrayQueue } from '../../../../base/common/arrays.js';
-import './glyphMargin.css';
-import { IGlyphMarginWidget, IGlyphMarginWidgetPosition } from '../../editorBrowser.js';
-import { DynamicViewOverlay } from '../../view/dynamicViewOverlay.js';
-import { RenderingContext, RestrictedRenderingContext } from '../../view/renderingContext.js';
-import { ViewPart } from '../../view/viewPart.js';
-import { EditorOption } from '../../../common/config/editorOptions.js';
-import { Position } from '../../../common/core/position.js';
-import { Range } from '../../../common/core/range.js';
-import { GlyphMarginLane } from '../../../common/model.js';
-import * as viewEvents from '../../../common/viewEvents.js';
-import { ViewContext } from '../../../common/viewModel/viewContext.js';
+import { FastDomNode, createFastDomNode } from "../../../../base/browser/fastDomNode.js";
+import { ArrayQueue } from "../../../../base/common/arrays.js";
+import "./glyphMargin.css";
+import { IGlyphMarginWidget, IGlyphMarginWidgetPosition } from "../../editorBrowser.js";
+import { DynamicViewOverlay } from "../../view/dynamicViewOverlay.js";
+import { RenderingContext, RestrictedRenderingContext } from "../../view/renderingContext.js";
+import { ViewPart } from "../../view/viewPart.js";
+import { EditorOption } from "../../../common/config/editorOptions.js";
+import { Position } from "../../../common/core/position.js";
+import { Range } from "../../../common/core/range.js";
+import { GlyphMarginLane } from "../../../common/model.js";
+import * as viewEvents from "../../../common/viewEvents.js";
+import { ViewContext } from "../../../common/viewModel/viewContext.js";
 
 /**
  * Represents a decoration that should be shown along the lines from `startLineNumber` to `endLineNumber`.
@@ -97,8 +97,14 @@ export abstract class DedupOverlay extends DynamicViewOverlay {
 		for (const d of decorations) {
 			const className = d.className;
 			const zIndex = d.zIndex;
-			let startLineIndex = Math.max(d.startLineNumber, visibleStartLineNumber) - visibleStartLineNumber;
-			const endLineIndex = Math.min(d.endLineNumber, visibleEndLineNumber) - visibleStartLineNumber;
+			let startLineIndex = Math.max(
+        d.startLineNumber,
+        visibleStartLineNumber,
+      ) - visibleStartLineNumber;
+			const endLineIndex = Math.min(
+        d.endLineNumber,
+        visibleEndLineNumber,
+      ) - visibleStartLineNumber;
 
 			if (prevClassName === className) {
 				// Here we avoid rendering the same className multiple times on the same line
@@ -110,7 +116,9 @@ export abstract class DedupOverlay extends DynamicViewOverlay {
 			}
 
 			for (let lineIndex = startLineIndex; lineIndex <= prevEndLineIndex; lineIndex++) {
-				output[lineIndex].add(new LineDecorationToRender(className, zIndex, d.tooltip));
+				output[lineIndex].add(
+          new LineDecorationToRender(className, zIndex, d.tooltip),
+        );
 			}
 		}
 
@@ -140,9 +148,9 @@ export class GlyphMarginWidgets extends ViewPart {
 		const options = this._context.configuration.options;
 		const layoutInfo = options.get(EditorOption.layoutInfo);
 
-		this.domNode = createFastDomNode(document.createElement('div'));
-		this.domNode.setClassName('glyph-margin-widgets');
-		this.domNode.setPosition('absolute');
+		this.domNode = createFastDomNode(document.createElement("div"));
+		this.domNode.setClassName("glyph-margin-widgets");
+		this.domNode.setPosition("absolute");
 		this.domNode.setTop(0);
 
 		this._lineHeight = options.get(EditorOption.lineHeight);
@@ -207,15 +215,15 @@ export class GlyphMarginWidgets extends ViewPart {
 		const domNode = createFastDomNode(widget.getDomNode());
 
 		this._widgets[widget.getId()] = {
-			widget: widget,
-			preference: widget.getPosition(),
-			domNode: domNode,
-			renderInfo: null
-		};
+      widget: widget,
+      preference: widget.getPosition(),
+      domNode: domNode,
+      renderInfo: null,
+    };
 
-		domNode.setPosition('absolute');
-		domNode.setDisplay('none');
-		domNode.setAttribute('widgetId', widget.getId());
+		domNode.setPosition("absolute");
+		domNode.setDisplay("none");
+		domNode.setAttribute("widgetId", widget.getId());
 		this.domNode.appendChild(domNode);
 
 		this.setShouldRender();
@@ -260,15 +268,32 @@ export class GlyphMarginWidgets extends ViewPart {
 				continue;
 			}
 
-			const startLineNumber = Math.max(d.range.startLineNumber, visibleStartLineNumber);
-			const endLineNumber = Math.min(d.range.endLineNumber, visibleEndLineNumber);
+			const startLineNumber = Math.max(
+        d.range.startLineNumber,
+        visibleStartLineNumber,
+      );
+			const endLineNumber = Math.min(
+        d.range.endLineNumber,
+        visibleEndLineNumber,
+      );
 			const lane = d.options.glyphMargin?.position ?? GlyphMarginLane.Center;
 			const zIndex = d.options.zIndex ?? 0;
 
 			for (let lineNumber = startLineNumber; lineNumber <= endLineNumber; lineNumber++) {
-				const modelPosition = this._context.viewModel.coordinatesConverter.convertViewPositionToModelPosition(new Position(lineNumber, 0));
-				const laneIndex = this._context.viewModel.glyphLanes.getLanesAtLine(modelPosition.lineNumber).indexOf(lane);
-				requests.push(new DecorationBasedGlyphRenderRequest(lineNumber, laneIndex, zIndex, glyphMarginClassName));
+				const modelPosition = this._context.viewModel.coordinatesConverter.convertViewPositionToModelPosition(
+          new Position(lineNumber, 0),
+        );
+				const laneIndex = this._context.viewModel.glyphLanes.getLanesAtLine(modelPosition.lineNumber).indexOf(
+          lane,
+        );
+				requests.push(
+          new DecorationBasedGlyphRenderRequest(
+            lineNumber,
+            laneIndex,
+            zIndex,
+            glyphMarginClassName,
+          ),
+        );
 			}
 		}
 	}
@@ -279,17 +304,33 @@ export class GlyphMarginWidgets extends ViewPart {
 
 		for (const widget of Object.values(this._widgets)) {
 			const range = widget.preference.range;
-			const { startLineNumber, endLineNumber } = this._context.viewModel.coordinatesConverter.convertModelRangeToViewRange(Range.lift(range));
+			const { startLineNumber, endLineNumber } = this._context.viewModel.coordinatesConverter.convertModelRangeToViewRange(
+        Range.lift(range),
+      );
 			if (!startLineNumber || !endLineNumber || endLineNumber < visibleStartLineNumber || startLineNumber > visibleEndLineNumber) {
 				// The widget is not in the viewport
 				continue;
 			}
 
 			// The widget is in the viewport, find a good line for it
-			const widgetLineNumber = Math.max(startLineNumber, visibleStartLineNumber);
-			const modelPosition = this._context.viewModel.coordinatesConverter.convertViewPositionToModelPosition(new Position(widgetLineNumber, 0));
-			const laneIndex = this._context.viewModel.glyphLanes.getLanesAtLine(modelPosition.lineNumber).indexOf(widget.preference.lane);
-			requests.push(new WidgetBasedGlyphRenderRequest(widgetLineNumber, laneIndex, widget.preference.zIndex, widget));
+			const widgetLineNumber = Math.max(
+        startLineNumber,
+        visibleStartLineNumber,
+      );
+			const modelPosition = this._context.viewModel.coordinatesConverter.convertViewPositionToModelPosition(
+        new Position(widgetLineNumber, 0),
+      );
+			const laneIndex = this._context.viewModel.glyphLanes.getLanesAtLine(modelPosition.lineNumber).indexOf(
+        widget.preference.lane,
+      );
+			requests.push(
+        new WidgetBasedGlyphRenderRequest(
+          widgetLineNumber,
+          laneIndex,
+          widget.preference.zIndex,
+          widget,
+        ),
+      );
 		}
 	}
 
@@ -337,7 +378,9 @@ export class GlyphMarginWidgets extends ViewPart {
 			widget.renderInfo = null;
 		}
 
-		const requests = new ArrayQueue<GlyphRenderRequest>(this._collectSortedGlyphRenderRequests(ctx));
+		const requests = new ArrayQueue<GlyphRenderRequest>(
+      this._collectSortedGlyphRenderRequests(ctx),
+    );
 		const decorationGlyphsToRender: DecorationBasedGlyph[] = [];
 		while (requests.length > 0) {
 			const first = requests.peek();
@@ -347,7 +390,9 @@ export class GlyphMarginWidgets extends ViewPart {
 			}
 
 			// Requests are sorted by lineNumber and lane, so we read all requests for this particular location
-			const requestsAtLocation = requests.takeWhile((el) => el.lineNumber === first.lineNumber && el.laneIndex === first.laneIndex);
+			const requestsAtLocation = requests.takeWhile(
+        (el) => el.lineNumber === first.lineNumber && el.laneIndex === first.laneIndex,
+      );
 			if (!requestsAtLocation || requestsAtLocation.length === 0) {
 				// not possible
 				break;
@@ -368,13 +413,19 @@ export class GlyphMarginWidgets extends ViewPart {
 					}
 				}
 
-				decorationGlyphsToRender.push(winner.accept(classNames.join(' '))); // TODO@joyceerhl Implement overflow for remaining decorations
+				decorationGlyphsToRender.push(
+          winner.accept(
+            classNames.join(
+              " ",
+            ),
+          ),
+        ); // TODO@joyceerhl Implement overflow for remaining decorations
 			} else {
 				// widgets cannot be combined
 				winner.widget.renderInfo = {
-					lineNumber: winner.lineNumber,
-					laneIndex: winner.laneIndex,
-				};
+          lineNumber: winner.lineNumber,
+          laneIndex: winner.laneIndex,
+        };
 			}
 		}
 		this._decorationGlyphsToRender = decorationGlyphsToRender;
@@ -383,7 +434,7 @@ export class GlyphMarginWidgets extends ViewPart {
 	public render(ctx: RestrictedRenderingContext): void {
 		if (!this._glyphMargin) {
 			for (const widget of Object.values(this._widgets)) {
-				widget.domNode.setDisplay('none');
+				widget.domNode.setDisplay("none");
 			}
 			while (this._managedDomNodes.length > 0) {
 				const domNode = this._managedDomNodes.pop();
@@ -392,18 +443,20 @@ export class GlyphMarginWidgets extends ViewPart {
 			return;
 		}
 
-		const width = (Math.round(this._glyphMarginWidth / this._glyphMarginDecorationLaneCount));
+		const width = (Math.round(
+      this._glyphMarginWidth / this._glyphMarginDecorationLaneCount,
+    ));
 
 		// Render widgets
 		for (const widget of Object.values(this._widgets)) {
 			if (!widget.renderInfo) {
 				// this widget is not visible
-				widget.domNode.setDisplay('none');
+				widget.domNode.setDisplay("none");
 			} else {
 				const top = ctx.viewportData.relativeVerticalOffset[widget.renderInfo.lineNumber - ctx.viewportData.startLineNumber];
 				const left = this._glyphMarginLeft + widget.renderInfo.laneIndex * this._lineHeight;
 
-				widget.domNode.setDisplay('block');
+				widget.domNode.setDisplay("block");
 				widget.domNode.setTop(top);
 				widget.domNode.setLeft(left);
 				widget.domNode.setWidth(width);
@@ -422,11 +475,13 @@ export class GlyphMarginWidgets extends ViewPart {
 			if (i < this._managedDomNodes.length) {
 				domNode = this._managedDomNodes[i];
 			} else {
-				domNode = createFastDomNode(document.createElement('div'));
+				domNode = createFastDomNode(document.createElement("div"));
 				this._managedDomNodes.push(domNode);
 				this.domNode.appendChild(domNode);
 			}
-			const lineHeight = this._context.viewLayout.getLineHeightForLineNumber(decLineNumber);
+			const lineHeight = this._context.viewLayout.getLineHeightForLineNumber(
+        decLineNumber,
+      );
 
 			domNode.setClassName(`cgmr codicon ` + dec.combinedClassName);
 			domNode.setPosition(`absolute`);
@@ -479,7 +534,11 @@ class DecorationBasedGlyphRenderRequest {
 	) { }
 
 	accept(combinedClassName: string): DecorationBasedGlyph {
-		return new DecorationBasedGlyph(this.lineNumber, this.laneIndex, combinedClassName);
+		return new DecorationBasedGlyph(
+      this.lineNumber,
+      this.laneIndex,
+      combinedClassName,
+    );
 	}
 }
 
@@ -503,6 +562,6 @@ class DecorationBasedGlyph {
 	constructor(
 		public readonly lineNumber: number,
 		public readonly laneIndex: number,
-		public readonly combinedClassName: string
+		public readonly combinedClassName: string,
 	) { }
 }

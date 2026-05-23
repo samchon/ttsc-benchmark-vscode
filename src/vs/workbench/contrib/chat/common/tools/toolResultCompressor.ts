@@ -3,10 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IToolResult } from './languageModelToolsService.js';
+import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IToolResult } from "./languageModelToolsService.js";
 
-export const IToolResultCompressor = createDecorator<IToolResultCompressor>('IToolResultCompressor');
+export const IToolResultCompressor = createDecorator<IToolResultCompressor>(
+  "IToolResultCompressor",
+);
 
 /**
  * Result of running a {@link IToolResultFilter}.
@@ -105,7 +107,7 @@ export function isProtectedFromCompression(text: string): boolean {
 	// Top-level JSON object or array — refuse to touch.
 	const first = trimmed[0];
 	const last = trimmed[trimmed.length - 1];
-	if ((first === '{' && last === '}') || (first === '[' && last === ']')) {
+	if ((first === "{" && last === "}") || (first === "[" && last === "]")) {
 		try {
 			JSON.parse(trimmed);
 			return true;
@@ -136,6 +138,6 @@ export const MIN_COMPRESSIBLE_LENGTH = 1024;
  * model knows compression happened, which filters fired, and how to opt out.
  */
 export function formatCompressionBanner(filterIds: readonly string[], beforeChars: number, afterChars: number): string {
-	const ids = filterIds.length > 0 ? filterIds.join(', ') : 'unknown';
+	const ids = filterIds.length > 0 ? filterIds.join(", ") : "unknown";
 	return `[Output compressed by ${ids} (${beforeChars} → ${afterChars} chars). To disable, set chat.tools.compressOutput.enabled to false.]`;
 }

@@ -3,32 +3,45 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken, CancellationTokenSource } from '../../../../base/common/cancellation.js';
-import { Codicon } from '../../../../base/common/codicons.js';
-import { Disposable, DisposableStore, toDisposable } from '../../../../base/common/lifecycle.js';
-import { autorun, debouncedObservable, derived, IObservable, ISettableObservable, ObservablePromise, observableValue } from '../../../../base/common/observable.js';
-import { basename } from '../../../../base/common/resources.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
-import { Range } from '../../../../editor/common/core/range.js';
-import { localize } from '../../../../nls.js';
-import { Action2, MenuId, registerAction2 } from '../../../../platform/actions/common/actions.js';
-import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { IWorkbenchContribution } from '../../../common/contributions.js';
-import { IChatWidget, IChatWidgetService } from '../../chat/browser/chat.js';
-import { ChatContextPick, IChatContextPicker, IChatContextPickerItem, IChatContextPickService } from '../../chat/browser/attachments/chatContextPickService.js';
-import { ChatContextKeys } from '../../chat/common/actions/chatContextKeys.js';
-import { IChatRequestFileEntry, IChatRequestVariableEntry, IDebugVariableEntry } from '../../chat/common/attachments/chatVariableEntries.js';
-import { IDebugService, IExpression, IScope, IStackFrame, State } from '../common/debug.js';
-import { Variable } from '../common/debugModel.js';
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Disposable, DisposableStore, toDisposable } from "../../../../base/common/lifecycle.js";
+import {
+  autorun,
+  debouncedObservable,
+  derived,
+  IObservable,
+  ISettableObservable,
+  ObservablePromise,
+  observableValue,
+} from "../../../../base/common/observable.js";
+import { basename } from "../../../../base/common/resources.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { localize } from "../../../../nls.js";
+import { Action2, MenuId, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { IChatWidget, IChatWidgetService } from "../../chat/browser/chat.js";
+import {
+  ChatContextPick,
+  IChatContextPicker,
+  IChatContextPickerItem,
+  IChatContextPickService,
+} from "../../chat/browser/attachments/chatContextPickService.js";
+import { ChatContextKeys } from "../../chat/common/actions/chatContextKeys.js";
+import { IChatRequestFileEntry, IChatRequestVariableEntry, IDebugVariableEntry } from "../../chat/common/attachments/chatVariableEntries.js";
+import { IDebugService, IExpression, IScope, IStackFrame, State } from "../common/debug.js";
+import { Variable } from "../common/debugModel.js";
 
 const enum PickerMode {
-	Main = 'main',
-	Expression = 'expression',
+	Main = "main",
+	Expression = "expression",
 }
 
 class DebugSessionContextPick implements IChatContextPickerItem {
-	readonly type = 'pickerPick';
-	readonly label = localize('chatContext.debugSession', 'Debug Session...');
+	readonly type = "pickerPick";
+	readonly label = localize("chatContext.debugSession", "Debug Session...");
 	readonly icon = Codicon.debug;
 	readonly ordinal = -200;
 
@@ -45,13 +58,19 @@ class DebugSessionContextPick implements IChatContextPickerItem {
 
 	asPicker(_widget: IChatWidget): IChatContextPicker {
 		const store = new DisposableStore();
-		const mode: ISettableObservable<PickerMode> = observableValue('debugPicker.mode', PickerMode.Main);
-		const query: ISettableObservable<string> = observableValue('debugPicker.query', '');
+		const mode: ISettableObservable<PickerMode> = observableValue(
+      "debugPicker.mode",
+      PickerMode.Main,
+    );
+		const query: ISettableObservable<string> = observableValue(
+      "debugPicker.query",
+      "",
+    );
 
 		const picksObservable = this.createPicksObservable(mode, query, store);
 
 		return {
-			placeholder: localize('selectDebugData', 'Select debug data to attach'),
+			placeholder: localize("selectDebugData", "Select debug data to attach"),
 			picks: (_queryObs: IObservable<string>, token: CancellationToken) => {
 				// Connect the external query observable to our internal one
 				store.add(autorun(reader => {
@@ -77,7 +96,7 @@ class DebugSessionContextPick implements IChatContextPickerItem {
 	private createPicksObservable(
 		mode: ISettableObservable<PickerMode>,
 		query: IObservable<string>,
-		store: DisposableStore
+		store: DisposableStore,
 	): IObservable<{ busy: boolean; picks: ChatContextPick[] }> {
 		const debouncedQuery = debouncedObservable(query, 300);
 
@@ -95,13 +114,13 @@ class DebugSessionContextPick implements IChatContextPickerItem {
 	private getMainPicks(mode: ISettableObservable<PickerMode>): IObservable<{ busy: boolean; picks: ChatContextPick[] }> {
 		// Return an observable that resolves to the main picks
 		const promise = derived(_reader => {
-			return new ObservablePromise(this.buildMainPicks(mode));
-		});
+      return new ObservablePromise(this.buildMainPicks(mode));
+    });
 
 		return promise.map((value, reader) => {
-			const result = value.promiseResult.read(reader);
-			return { picks: result?.data || [], busy: result === undefined };
-		});
+      const result = value.promiseResult.read(reader);
+      return { picks: result?.data || [], busy: result === undefined };
+    });
 	}
 
 	private async buildMainPicks(mode: ISettableObservable<PickerMode>): Promise<ChatContextPick[]> {
@@ -116,26 +135,29 @@ class DebugSessionContextPick implements IChatContextPickerItem {
 
 		// Add "Expression Value..." option at the top
 		picks.push({
-			label: localize('expressionValue', 'Expression Value...'),
+			label: localize("expressionValue", "Expression Value..."),
 			iconClass: ThemeIcon.asClassName(Codicon.symbolVariable),
 			asAttachment: () => {
 				// Switch to expression mode
 				mode.set(PickerMode.Expression, undefined);
-				return 'noop';
+				return "noop";
 			},
 		});
 
 		// Add watch expressions section
 		const watches = this.debugService.getModel().getWatchExpressions();
 		if (watches.length > 0) {
-			picks.push({ type: 'separator', label: localize('watchExpressions', 'Watch Expressions') });
+			picks.push({
+        type: "separator",
+        label: localize("watchExpressions", "Watch Expressions"),
+      });
 			for (const watch of watches) {
 				picks.push({
-					label: watch.name,
-					description: watch.value,
-					iconClass: ThemeIcon.asClassName(Codicon.eye),
-					asAttachment: (): IChatRequestVariableEntry[] => createDebugAttachments(stackFrame, createDebugVariableEntry(watch)),
-				});
+          label: watch.name,
+          description: watch.value,
+          iconClass: ThemeIcon.asClassName(Codicon.eye),
+          asAttachment: (): IChatRequestVariableEntry[] => createDebugAttachments(stackFrame, createDebugVariableEntry(watch)),
+        });
 			}
 		}
 
@@ -153,23 +175,23 @@ class DebugSessionContextPick implements IChatContextPickerItem {
 				continue;
 			}
 
-			picks.push({ type: 'separator', label: scope.name });
+			picks.push({ type: "separator", label: scope.name });
 			try {
 				const variables = await scope.getChildren();
 				if (variables.length > 1) {
 					picks.push({
-						label: localize('allVariablesInScope', 'All variables in {0}', scope.name),
-						iconClass: ThemeIcon.asClassName(Codicon.symbolNamespace),
-						asAttachment: (): IChatRequestVariableEntry[] => createDebugAttachments(stackFrame, createScopeEntry(scope, variables)),
-					});
+            label: localize("allVariablesInScope", "All variables in {0}", scope.name),
+            iconClass: ThemeIcon.asClassName(Codicon.symbolNamespace),
+            asAttachment: (): IChatRequestVariableEntry[] => createDebugAttachments(stackFrame, createScopeEntry(scope, variables)),
+          });
 				}
 				for (const variable of variables) {
 					picks.push({
-						label: variable.name,
-						description: formatVariableDescription(variable),
-						iconClass: ThemeIcon.asClassName(Codicon.symbolVariable),
-						asAttachment: (): IChatRequestVariableEntry[] => createDebugAttachments(stackFrame, createDebugVariableEntry(variable)),
-					});
+            label: variable.name,
+            description: formatVariableDescription(variable),
+            iconClass: ThemeIcon.asClassName(Codicon.symbolVariable),
+            asAttachment: (): IChatRequestVariableEntry[] => createDebugAttachments(stackFrame, createDebugVariableEntry(variable)),
+          });
 				}
 			} catch {
 				// Ignore errors when fetching variables
@@ -181,27 +203,29 @@ class DebugSessionContextPick implements IChatContextPickerItem {
 
 	private getExpressionPicks(
 		query: IObservable<string>,
-		_store: DisposableStore
+		_store: DisposableStore,
 	): IObservable<{ busy: boolean; picks: ChatContextPick[] }> {
 		const promise = derived((reader) => {
-			const queryValue = query.read(reader);
-			const cts = new CancellationTokenSource();
-			reader.store.add(toDisposable(() => cts.dispose(true)));
-			return new ObservablePromise(this.evaluateExpression(queryValue, cts.token));
-		});
+      const queryValue = query.read(reader);
+      const cts = new CancellationTokenSource();
+      reader.store.add(toDisposable(() => cts.dispose(true)));
+      return new ObservablePromise(
+        this.evaluateExpression(queryValue, cts.token),
+      );
+    });
 
 		return promise.map((value, r) => {
-			const result = value.promiseResult.read(r);
-			return { picks: result?.data || [], busy: result === undefined };
-		});
+      const result = value.promiseResult.read(r);
+      return { picks: result?.data || [], busy: result === undefined };
+    });
 	}
 
 	private async evaluateExpression(expression: string, token: CancellationToken): Promise<ChatContextPick[]> {
 		if (!expression.trim()) {
 			return [{
-				label: localize('typeExpression', 'Type an expression to evaluate...'),
+				label: localize("typeExpression", "Type an expression to evaluate..."),
 				disabled: true,
-				asAttachment: () => 'noop',
+				asAttachment: () => "noop",
 			}];
 		}
 
@@ -210,15 +234,21 @@ class DebugSessionContextPick implements IChatContextPickerItem {
 		const stackFrame = viewModel.focusedStackFrame;
 
 		if (!session || !stackFrame) {
-			return [{
-				label: localize('noDebugSession', 'No active debug session'),
-				disabled: true,
-				asAttachment: () => 'noop',
-			}];
+			return [
+        {
+          label: localize("noDebugSession", "No active debug session"),
+          disabled: true,
+          asAttachment: () => "noop",
+        },
+      ];
 		}
 
 		try {
-			const response = await session.evaluate(expression, stackFrame.frameId, 'watch');
+			const response = await session.evaluate(
+        expression,
+        stackFrame.frameId,
+        "watch",
+      );
 
 			if (token.isCancellationRequested) {
 				return [];
@@ -232,7 +262,7 @@ class DebugSessionContextPick implements IChatContextPickerItem {
 					description: formatExpressionResult(resultValue, resultType),
 					iconClass: ThemeIcon.asClassName(Codicon.symbolVariable),
 					asAttachment: (): IChatRequestVariableEntry[] => createDebugAttachments(stackFrame, {
-						kind: 'debugVariable',
+						kind: "debugVariable",
 						id: `debug-expression:${expression}`,
 						name: expression,
 						fullName: expression,
@@ -244,19 +274,21 @@ class DebugSessionContextPick implements IChatContextPickerItem {
 					}),
 				}];
 			} else {
-				return [{
-					label: expression,
-					description: localize('noResult', 'No result'),
-					disabled: true,
-					asAttachment: () => 'noop',
-				}];
+				return [
+          {
+            label: expression,
+            description: localize("noResult", "No result"),
+            disabled: true,
+            asAttachment: () => "noop",
+          },
+        ];
 			}
 		} catch (err) {
 			return [{
 				label: expression,
-				description: err instanceof Error ? err.message : localize('evaluationError', 'Evaluation error'),
+				description: err instanceof Error ? err.message : localize("evaluationError", "Evaluation error"),
 				disabled: true,
-				asAttachment: () => 'noop',
+				asAttachment: () => "noop",
 			}];
 		}
 	}
@@ -264,16 +296,16 @@ class DebugSessionContextPick implements IChatContextPickerItem {
 
 function createDebugVariableEntry(expression: IExpression): IDebugVariableEntry {
 	return {
-		kind: 'debugVariable',
-		id: `debug-variable:${expression.getId()}`,
-		name: expression.name,
-		fullName: expression.name,
-		icon: Codicon.debug,
-		value: expression.value,
-		expression: expression.name,
-		type: expression.type,
-		modelDescription: formatModelDescription(expression.name, expression.value, expression.type),
-	};
+    kind: "debugVariable",
+    id: `debug-variable:${expression.getId()}`,
+    name: expression.name,
+    fullName: expression.name,
+    icon: Codicon.debug,
+    value: expression.value,
+    expression: expression.name,
+    type: expression.type,
+    modelDescription: formatModelDescription(expression.name, expression.value, expression.type),
+  };
 }
 
 function createPausedLocationEntry(stackFrame: IStackFrame): IChatRequestFileEntry {
@@ -284,34 +316,33 @@ function createPausedLocationEntry(stackFrame: IStackFrame): IChatRequestFileEnt
 	}
 
 	return {
-		kind: 'file',
-		value: { uri, range },
-		id: `debug-paused-location:${uri.toString()}:${range.startLineNumber}`,
-		name: basename(uri),
-		modelDescription: 'The debugger is currently paused at this location',
-	};
+    kind: "file",
+    value: { uri, range },
+    id: `debug-paused-location:${uri.toString()}:${range.startLineNumber}`,
+    name: basename(uri),
+    modelDescription: "The debugger is currently paused at this location",
+  };
 }
 
 function createDebugAttachments(stackFrame: IStackFrame, variableEntry: IDebugVariableEntry): IChatRequestVariableEntry[] {
-	return [
-		createPausedLocationEntry(stackFrame),
-		variableEntry,
-	];
+	return [createPausedLocationEntry(stackFrame), variableEntry];
 }
 
 function createScopeEntry(scope: IScope, variables: IExpression[]): IDebugVariableEntry {
-	const variablesSummary = variables.map(v => `${v.name}: ${v.value}`).join('\n');
+	const variablesSummary = variables.map(v => `${v.name}: ${v.value}`).join(
+    "\n",
+  );
 	return {
-		kind: 'debugVariable',
-		id: `debug-scope:${scope.name}`,
-		name: `Scope: ${scope.name}`,
-		fullName: `Scope: ${scope.name}`,
-		icon: Codicon.debug,
-		value: variablesSummary,
-		expression: scope.name,
-		type: 'scope',
-		modelDescription: `Debug scope "${scope.name}" with ${variables.length} variables:\n${variablesSummary}`,
-	};
+    kind: "debugVariable",
+    id: `debug-scope:${scope.name}`,
+    name: `Scope: ${scope.name}`,
+    fullName: `Scope: ${scope.name}`,
+    icon: Codicon.debug,
+    value: variablesSummary,
+    expression: scope.name,
+    type: "scope",
+    modelDescription: `Debug scope "${scope.name}" with ${variables.length} variables:\n${variablesSummary}`,
+  };
 }
 
 function formatVariableDescription(expression: IExpression): string {
@@ -320,14 +351,14 @@ function formatVariableDescription(expression: IExpression): string {
 	if (type && value) {
 		return `${type}: ${value}`;
 	}
-	return value || type || '';
+	return value || type || "";
 }
 
 function formatExpressionResult(value: string, type?: string): string {
 	if (type && value) {
 		return `${type}: ${value}`;
 	}
-	return value || type || '';
+	return value || type || "";
 }
 
 function formatModelDescription(name: string, value: string, type?: string): string {
@@ -340,14 +371,18 @@ function formatModelDescription(name: string, value: string, type?: string): str
 }
 
 export class DebugChatContextContribution extends Disposable implements IWorkbenchContribution {
-	static readonly ID = 'workbench.contrib.chat.debugChatContextContribution';
+	static readonly ID = "workbench.contrib.chat.debugChatContextContribution";
 
 	constructor(
 		@IChatContextPickService contextPickService: IChatContextPickService,
 		@IInstantiationService instantiationService: IInstantiationService,
 	) {
 		super();
-		this._register(contextPickService.registerChatContextItem(instantiationService.createInstance(DebugSessionContextPick)));
+		this._register(
+      contextPickService.registerChatContextItem(
+        instantiationService.createInstance(DebugSessionContextPick),
+      ),
+    );
 	}
 }
 
@@ -355,15 +390,15 @@ export class DebugChatContextContribution extends Disposable implements IWorkben
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'workbench.debug.action.addVariableToChat',
-			title: localize('addToChat', 'Add to Chat'),
+			id: "workbench.debug.action.addVariableToChat",
+			title: localize("addToChat", "Add to Chat"),
 			f1: false,
 			menu: {
 				id: MenuId.DebugVariablesContext,
-				group: 'z_commands',
+				group: "z_commands",
 				order: 110,
-				when: ChatContextKeys.enabled
-			}
+				when: ChatContextKeys.enabled,
+			},
 		});
 	}
 
@@ -391,15 +426,15 @@ registerAction2(class extends Action2 {
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'workbench.debug.action.addWatchExpressionToChat',
-			title: localize('addToChat', 'Add to Chat'),
+			id: "workbench.debug.action.addWatchExpressionToChat",
+			title: localize("addToChat", "Add to Chat"),
 			f1: false,
 			menu: {
 				id: MenuId.DebugWatchContext,
-				group: 'z_commands',
+				group: "z_commands",
 				order: 110,
-				when: ChatContextKeys.enabled
-			}
+				when: ChatContextKeys.enabled,
+			},
 		});
 	}
 
@@ -424,15 +459,15 @@ registerAction2(class extends Action2 {
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'workbench.debug.action.addScopeToChat',
-			title: localize('addToChat', 'Add to Chat'),
+			id: "workbench.debug.action.addScopeToChat",
+			title: localize("addToChat", "Add to Chat"),
 			f1: false,
 			menu: {
 				id: MenuId.DebugScopesContext,
-				group: 'z_commands',
+				group: "z_commands",
 				order: 1,
-				when: ChatContextKeys.enabled
-			}
+				when: ChatContextKeys.enabled,
+			},
 		});
 	}
 
@@ -475,7 +510,7 @@ interface IVariablesContext {
 }
 
 function isVariablesContext(context: unknown): context is IVariablesContext {
-	return typeof context === 'object' && context !== null && 'variable' in context && 'sessionId' in context;
+	return typeof context === "object" && context !== null && "variable" in context && "sessionId" in context;
 }
 
 function createDebugVariableEntryFromContext(context: unknown): IDebugVariableEntry | undefined {
@@ -488,16 +523,16 @@ function createDebugVariableEntryFromContext(context: unknown): IDebugVariableEn
 	if (isVariablesContext(context)) {
 		const variable = context.variable;
 		return {
-			kind: 'debugVariable',
-			id: `debug-variable:${variable.name}`,
-			name: variable.name,
-			fullName: variable.evaluateName ?? variable.name,
-			icon: Codicon.debug,
-			value: variable.value,
-			expression: variable.evaluateName ?? variable.name,
-			type: variable.type,
-			modelDescription: formatModelDescription(variable.evaluateName || variable.name, variable.value, variable.type),
-		};
+      kind: "debugVariable",
+      id: `debug-variable:${variable.name}`,
+      name: variable.name,
+      fullName: variable.evaluateName ?? variable.name,
+      icon: Codicon.debug,
+      value: variable.value,
+      expression: variable.evaluateName ?? variable.name,
+      type: variable.type,
+      modelDescription: formatModelDescription(variable.evaluateName || variable.name, variable.value, variable.type),
+    };
 	}
 
 	return undefined;

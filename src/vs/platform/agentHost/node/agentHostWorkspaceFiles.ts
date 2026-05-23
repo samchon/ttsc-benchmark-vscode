@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as cp from 'child_process';
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { CancellationError } from '../../../base/common/errors.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { Schemas } from '../../../base/common/network.js';
-import { URI } from '../../../base/common/uri.js';
-import { ILogService } from '../../log/common/log.js';
-import { rgDiskPath } from '../../../base/node/ripgrep.js';
+import * as cp from "child_process";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { CancellationError } from "../../../base/common/errors.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { Schemas } from "../../../base/common/network.js";
+import { URI } from "../../../base/common/uri.js";
+import { ILogService } from "../../log/common/log.js";
+import { rgDiskPath } from "../../../base/node/ripgrep.js";
 
 /** Maximum number of files cached per working directory. */
 const MAX_FILES = 50_000;
@@ -80,7 +80,10 @@ export class AgentHostWorkspaceFiles extends Disposable {
 			shared = existing.promise;
 		} else {
 			shared = this._enumerate(workingDirectory);
-			const entry: ICacheEntry = { promise: shared, expiresAt: now + CACHE_TTL_MS };
+			const entry: ICacheEntry = {
+        promise: shared,
+        expiresAt: now + CACHE_TTL_MS,
+      };
 			this._cache.set(key, entry);
 			// If enumeration fails, drop the cache entry so the next caller retries.
 			shared.catch(() => {
@@ -122,7 +125,7 @@ export class AgentHostWorkspaceFiles extends Disposable {
 			// Mirror the workbench's `ripgrepFileSearch.ts` invocation: pass
 			// `--no-config` so a user's global `~/.ripgreprc` cannot change
 			// enumeration results (or enable preprocessors etc.).
-			const args = ['--files', '--hidden', '--no-require-git', '--follow', '--no-config', '--glob', '!.git'];
+			const args = ["--files", "--hidden", "--no-require-git", "--follow", "--no-config", "--glob", "!.git"];
 
 			let child: cp.ChildProcessWithoutNullStreams;
 			try {
@@ -135,7 +138,7 @@ export class AgentHostWorkspaceFiles extends Disposable {
 			this._activeChildren.add(child);
 
 			const results: URI[] = [];
-			let buffer = '';
+			let buffer = "";
 			let limitHit = false;
 			let settled = false;
 
@@ -148,15 +151,15 @@ export class AgentHostWorkspaceFiles extends Disposable {
 				resolve(value);
 			};
 
-			child.stdout.setEncoding('utf8');
-			child.stdout.on('data', (chunk: string) => {
+			child.stdout.setEncoding("utf8");
+			child.stdout.on("data", (chunk: string) => {
 				if (limitHit) {
 					return;
 				}
 				buffer += chunk;
 				let newlineIndex: number;
-				while ((newlineIndex = buffer.indexOf('\n')) >= 0) {
-					const line = buffer.slice(0, newlineIndex).replace(/\r$/, '');
+				while ((newlineIndex = buffer.indexOf("\n")) >= 0) {
+					const line = buffer.slice(0, newlineIndex).replace(/\r$/, "");
 					buffer = buffer.slice(newlineIndex + 1);
 					if (!line) {
 						continue;
@@ -174,25 +177,25 @@ export class AgentHostWorkspaceFiles extends Disposable {
 				}
 			});
 
-			child.stderr.setEncoding('utf8');
-			let stderr = '';
-			child.stderr.on('data', (chunk: string) => {
+			child.stderr.setEncoding("utf8");
+			let stderr = "";
+			child.stderr.on("data", (chunk: string) => {
 				stderr += chunk;
 			});
 
-			child.on('error', err => {
+			child.on("error", err => {
 				this._logService.warn(`[AgentHostWorkspaceFiles] ripgrep error: ${err}`);
 				finish([]);
 			});
 
-			child.on('close', () => {
+			child.on("close", () => {
 				// Flush any trailing line still in the buffer.
 				if (!limitHit && buffer.length > 0) {
-					const line = buffer.replace(/\r$/, '');
+					const line = buffer.replace(/\r$/, "");
 					if (line) {
 						results.push(URI.joinPath(workingDirectory, line));
 					}
-					buffer = '';
+					buffer = "";
 				}
 				if (stderr) {
 					this._logService.trace(`[AgentHostWorkspaceFiles] ripgrep stderr: ${stderr}`);

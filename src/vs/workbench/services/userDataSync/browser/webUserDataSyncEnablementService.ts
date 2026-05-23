@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { IUserDataSyncEnablementService, SyncResource } from '../../../../platform/userDataSync/common/userDataSync.js';
-import { UserDataSyncEnablementService } from './userDataSyncEnablementService.js';
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IUserDataSyncEnablementService, SyncResource } from "../../../../platform/userDataSync/common/userDataSync.js";
+import { UserDataSyncEnablementService } from "./userDataSyncEnablementService.js";
 
 export class WebUserDataSyncEnablementService extends UserDataSyncEnablementService implements IUserDataSyncEnablementService {
 
@@ -48,4 +48,8 @@ export class WebUserDataSyncEnablementService extends UserDataSyncEnablementServ
 
 }
 
-registerSingleton(IUserDataSyncEnablementService, WebUserDataSyncEnablementService, InstantiationType.Delayed);
+registerSingleton(
+  IUserDataSyncEnablementService,
+  WebUserDataSyncEnablementService,
+  InstantiationType.Delayed,
+);

@@ -3,19 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event, Emitter } from '../../../../base/common/event.js';
-import { VSBufferReadableStream } from '../../../../base/common/buffer.js';
-import { IWorkingCopyBackup, IWorkingCopySaveEvent, WorkingCopyCapabilities } from './workingCopy.js';
-import { IFileWorkingCopy, IFileWorkingCopyModel, IFileWorkingCopyModelFactory, SnapshotContext } from './fileWorkingCopy.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IWorkingCopyService } from './workingCopyService.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { ISaveOptions } from '../../../common/editor.js';
-import { raceCancellation } from '../../../../base/common/async.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { IWorkingCopyBackupService } from './workingCopyBackup.js';
-import { emptyStream } from '../../../../base/common/stream.js';
+import { Event, Emitter } from "../../../../base/common/event.js";
+import { VSBufferReadableStream } from "../../../../base/common/buffer.js";
+import { IWorkingCopyBackup, IWorkingCopySaveEvent, WorkingCopyCapabilities } from "./workingCopy.js";
+import {
+  IFileWorkingCopy,
+  IFileWorkingCopyModel,
+  IFileWorkingCopyModelFactory,
+  SnapshotContext,
+} from "./fileWorkingCopy.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IWorkingCopyService } from "./workingCopyService.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { ISaveOptions } from "../../../common/editor.js";
+import { raceCancellation } from "../../../../base/common/async.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IWorkingCopyBackupService } from "./workingCopyBackup.js";
+import { emptyStream } from "../../../../base/common/stream.js";
 
 /**
  * Untitled file specific working copy model factory.
@@ -105,7 +110,9 @@ export class UntitledFileWorkingCopy<M extends IUntitledFileWorkingCopyModel> ex
 	private readonly _onDidChangeDirty = this._register(new Emitter<void>());
 	readonly onDidChangeDirty = this._onDidChangeDirty.event;
 
-	private readonly _onDidSave = this._register(new Emitter<IWorkingCopySaveEvent>());
+	private readonly _onDidSave = this._register(
+    new Emitter<IWorkingCopySaveEvent>(),
+  );
 	readonly onDidSave = this._onDidSave.event;
 
 	private readonly _onDidRevert = this._register(new Emitter<void>());
@@ -127,12 +134,14 @@ export class UntitledFileWorkingCopy<M extends IUntitledFileWorkingCopyModel> ex
 		private readonly saveDelegate: IUntitledFileWorkingCopySaveDelegate<M>,
 		@IWorkingCopyService workingCopyService: IWorkingCopyService,
 		@IWorkingCopyBackupService private readonly workingCopyBackupService: IWorkingCopyBackupService,
-		@ILogService private readonly logService: ILogService
+		@ILogService private readonly logService: ILogService,
 	) {
 		super();
 
 		this.capabilities = this.isScratchpad ? WorkingCopyCapabilities.Untitled | WorkingCopyCapabilities.Scratchpad : WorkingCopyCapabilities.Untitled;
-		this.modified = this.hasAssociatedFilePath || Boolean(this.initialContents && this.initialContents.markModified !== false);
+		this.modified = this.hasAssociatedFilePath || Boolean(
+      this.initialContents && this.initialContents.markModified !== false,
+    );
 
 		// Make known to working copy service
 		this._register(workingCopyService.registerWorkingCopy(this));
@@ -167,10 +176,10 @@ export class UntitledFileWorkingCopy<M extends IUntitledFileWorkingCopyModel> ex
 	//#region Resolve
 
 	async resolve(): Promise<void> {
-		this.trace('resolve()');
+		this.trace("resolve()");
 
 		if (this.isResolved()) {
-			this.trace('resolve() - exit (already resolved)');
+			this.trace("resolve() - exit (already resolved)");
 
 			// return early if the untitled file working copy is already
 			// resolved assuming that the contents have meanwhile changed
@@ -183,15 +192,15 @@ export class UntitledFileWorkingCopy<M extends IUntitledFileWorkingCopyModel> ex
 		// Check for backups or use initial value or empty
 		const backup = await this.workingCopyBackupService.resolve(this);
 		if (backup) {
-			this.trace('resolve() - with backup');
+			this.trace("resolve() - with backup");
 
 			untitledContents = backup.value;
 		} else if (this.initialContents?.value) {
-			this.trace('resolve() - with initial contents');
+			this.trace("resolve() - with initial contents");
 
 			untitledContents = this.initialContents.value;
 		} else {
-			this.trace('resolve() - empty');
+			this.trace("resolve() - empty");
 
 			untitledContents = emptyStream();
 		}
@@ -200,7 +209,9 @@ export class UntitledFileWorkingCopy<M extends IUntitledFileWorkingCopyModel> ex
 		await this.doCreateModel(untitledContents);
 
 		// Untitled associated to file path are modified right away as well as untitled with content
-		this.setModified(this.hasAssociatedFilePath || !!backup || Boolean(this.initialContents && this.initialContents.markModified !== false));
+		this.setModified(
+      this.hasAssociatedFilePath || !!backup || Boolean(this.initialContents && this.initialContents.markModified !== false),
+    );
 
 		// If we have initial contents, make sure to emit this
 		// as the appropriate events to the outside.
@@ -210,10 +221,12 @@ export class UntitledFileWorkingCopy<M extends IUntitledFileWorkingCopyModel> ex
 	}
 
 	private async doCreateModel(contents: VSBufferReadableStream): Promise<void> {
-		this.trace('doCreateModel()');
+		this.trace("doCreateModel()");
 
 		// Create model and dispose it when we get disposed
-		this._model = this._register(await this.modelFactory.createModel(this.resource, contents, CancellationToken.None));
+		this._model = this._register(
+      await this.modelFactory.createModel(this.resource, contents, CancellationToken.None),
+    );
 
 		// Model listeners
 		this.installModelListeners(this._model);
@@ -222,7 +235,9 @@ export class UntitledFileWorkingCopy<M extends IUntitledFileWorkingCopyModel> ex
 	private installModelListeners(model: M): void {
 
 		// Content Change
-		this._register(model.onDidChangeContent(e => this.onModelContentChanged(e)));
+		this._register(
+      model.onDidChangeContent(e => this.onModelContentChanged(e)),
+    );
 
 		// Lifecycle
 		this._register(model.onWillDispose(() => this.dispose()));
@@ -267,7 +282,10 @@ export class UntitledFileWorkingCopy<M extends IUntitledFileWorkingCopyModel> ex
 		// if any - to prevent backing up an unresolved working
 		// copy and loosing the initial value.
 		if (this.isResolved()) {
-			content = await raceCancellation(this.model.snapshot(SnapshotContext.Backup, token), token);
+			content = await raceCancellation(
+        this.model.snapshot(SnapshotContext.Backup, token),
+        token,
+      );
 		} else if (this.initialContents) {
 			content = this.initialContents.value;
 		}
@@ -281,13 +299,16 @@ export class UntitledFileWorkingCopy<M extends IUntitledFileWorkingCopyModel> ex
 	//#region Save
 
 	async save(options?: ISaveOptions): Promise<boolean> {
-		this.trace('save()');
+		this.trace("save()");
 
 		const result = await this.saveDelegate(this, options);
 
 		// Emit Save Event
 		if (result) {
-			this._onDidSave.fire({ reason: options?.reason, source: options?.source });
+			this._onDidSave.fire({
+        reason: options?.reason,
+        source: options?.source,
+      });
 		}
 
 		return result;
@@ -299,7 +320,7 @@ export class UntitledFileWorkingCopy<M extends IUntitledFileWorkingCopyModel> ex
 	//#region Revert
 
 	async revert(): Promise<void> {
-		this.trace('revert()');
+		this.trace("revert()");
 
 		// No longer modified
 		this.setModified(false);
@@ -316,7 +337,7 @@ export class UntitledFileWorkingCopy<M extends IUntitledFileWorkingCopyModel> ex
 	//#endregion
 
 	override dispose(): void {
-		this.trace('dispose()');
+		this.trace("dispose()");
 
 		this._onWillDispose.fire();
 
@@ -324,6 +345,10 @@ export class UntitledFileWorkingCopy<M extends IUntitledFileWorkingCopyModel> ex
 	}
 
 	private trace(msg: string): void {
-		this.logService.trace(`[untitled file working copy] ${msg}`, this.resource.toString(), this.typeId);
+		this.logService.trace(
+      `[untitled file working copy] ${msg}`,
+      this.resource.toString(),
+      this.typeId,
+    );
 	}
 }

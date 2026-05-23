@@ -3,22 +3,29 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { assertNever } from '../../../base/common/assert.js';
-import { Queue } from '../../../base/common/async.js';
-import { VSBuffer } from '../../../base/common/buffer.js';
-import { IStringDictionary } from '../../../base/common/collections.js';
-import { parse, ParseError } from '../../../base/common/json.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { ResourceMap } from '../../../base/common/map.js';
-import { Mutable } from '../../../base/common/types.js';
-import { URI } from '../../../base/common/uri.js';
-import { ConfigurationTarget, ConfigurationTargetToString } from '../../configuration/common/configuration.js';
-import { FileOperationResult, IFileService, toFileOperationResult } from '../../files/common/files.js';
-import { InstantiationType, registerSingleton } from '../../instantiation/common/extensions.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import { IUriIdentityService } from '../../uriIdentity/common/uriIdentity.js';
-import { IInstallableMcpServer } from './mcpManagement.js';
-import { ICommonMcpServerConfiguration, IMcpSandboxConfiguration, IMcpServerConfiguration, IMcpServerVariable, IMcpStdioServerConfiguration, McpServerType } from './mcpPlatformTypes.js';
+import { assertNever } from "../../../base/common/assert.js";
+import { Queue } from "../../../base/common/async.js";
+import { VSBuffer } from "../../../base/common/buffer.js";
+import { IStringDictionary } from "../../../base/common/collections.js";
+import { parse, ParseError } from "../../../base/common/json.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { ResourceMap } from "../../../base/common/map.js";
+import { Mutable } from "../../../base/common/types.js";
+import { URI } from "../../../base/common/uri.js";
+import { ConfigurationTarget, ConfigurationTargetToString } from "../../configuration/common/configuration.js";
+import { FileOperationResult, IFileService, toFileOperationResult } from "../../files/common/files.js";
+import { InstantiationType, registerSingleton } from "../../instantiation/common/extensions.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { IUriIdentityService } from "../../uriIdentity/common/uriIdentity.js";
+import { IInstallableMcpServer } from "./mcpManagement.js";
+import {
+  ICommonMcpServerConfiguration,
+  IMcpSandboxConfiguration,
+  IMcpServerConfiguration,
+  IMcpServerVariable,
+  IMcpStdioServerConfiguration,
+  McpServerType,
+} from "./mcpPlatformTypes.js";
 
 interface IScannedMcpServers {
 	servers?: IStringDictionary<Mutable<IMcpServerConfiguration>>;
@@ -42,7 +49,9 @@ interface IScannedWorkspaceMcpServers {
 
 export type McpResourceTarget = ConfigurationTarget.USER | ConfigurationTarget.WORKSPACE | ConfigurationTarget.WORKSPACE_FOLDER;
 
-export const IMcpResourceScannerService = createDecorator<IMcpResourceScannerService>('IMcpResourceScannerService');
+export const IMcpResourceScannerService = createDecorator<IMcpResourceScannerService>(
+  "IMcpResourceScannerService",
+);
 export interface IMcpResourceScannerService {
 	readonly _serviceBrand: undefined;
 	scanMcpServers(mcpResource: URI, target?: McpResourceTarget): Promise<IScannedMcpServers>;
@@ -108,7 +117,7 @@ export class McpResourceScannerService extends Disposable implements IMcpResourc
 					const errors: ParseError[] = [];
 					const result = parse(content.value.toString(), errors, { allowTrailingComma: true, allowEmptyContent: true }) || {};
 					if (errors.length > 0) {
-						throw new Error('Failed to parse scanned MCP servers: ' + errors.join(', '));
+						throw new Error("Failed to parse scanned MCP servers: " + errors.join(", "));
 					}
 
 					if (target === ConfigurationTarget.USER) {
@@ -144,17 +153,25 @@ export class McpResourceScannerService extends Disposable implements IMcpResourc
 	}
 
 	private async writeScannedMcpServers(mcpResource: URI, scannedMcpServers: IScannedMcpServers): Promise<void> {
-		if ((scannedMcpServers.servers && Object.keys(scannedMcpServers.servers).length > 0)
+		if ((scannedMcpServers.servers && Object.keys(
+      scannedMcpServers.servers,
+    ).length > 0)
 			|| (scannedMcpServers.inputs && scannedMcpServers.inputs.length > 0)
 			|| scannedMcpServers.sandbox !== undefined) {
-			await this.fileService.writeFile(mcpResource, VSBuffer.fromString(JSON.stringify(scannedMcpServers, null, '\t')));
+			await this.fileService.writeFile(
+        mcpResource,
+        VSBuffer.fromString(JSON.stringify(scannedMcpServers, null, "\t")),
+      );
 		} else {
 			await this.fileService.del(mcpResource);
 		}
 	}
 
 	private async writeScannedMcpServersToWorkspaceFolder(mcpResource: URI, scannedMcpServers: IScannedMcpServers): Promise<void> {
-		await this.fileService.writeFile(mcpResource, VSBuffer.fromString(JSON.stringify(scannedMcpServers, null, '\t')));
+		await this.fileService.writeFile(
+      mcpResource,
+      VSBuffer.fromString(JSON.stringify(scannedMcpServers, null, "\t")),
+    );
 	}
 
 	private async writeScannedMcpServersToWorkspace(mcpResource: URI, scannedMcpServers: IScannedMcpServers): Promise<void> {
@@ -162,9 +179,14 @@ export class McpResourceScannerService extends Disposable implements IMcpResourc
 		try {
 			const content = await this.fileService.readFile(mcpResource);
 			const errors: ParseError[] = [];
-			scannedWorkspaceMcpServers = parse(content.value.toString(), errors, { allowTrailingComma: true, allowEmptyContent: true }) as IScannedWorkspaceMcpServers;
+			scannedWorkspaceMcpServers = parse(content.value.toString(), errors, {
+        allowTrailingComma: true,
+        allowEmptyContent: true,
+      }) as IScannedWorkspaceMcpServers;
 			if (errors.length > 0) {
-				throw new Error('Failed to parse scanned MCP servers: ' + errors.join(', '));
+				throw new Error(
+          "Failed to parse scanned MCP servers: " + errors.join(", "),
+        );
 			}
 		} catch (error) {
 			if (toFileOperationResult(error) !== FileOperationResult.FILE_NOT_FOUND) {
@@ -176,14 +198,19 @@ export class McpResourceScannerService extends Disposable implements IMcpResourc
 			scannedWorkspaceMcpServers.settings = {};
 		}
 		scannedWorkspaceMcpServers.settings.mcp = scannedMcpServers;
-		await this.fileService.writeFile(mcpResource, VSBuffer.fromString(JSON.stringify(scannedWorkspaceMcpServers, null, '\t')));
+		await this.fileService.writeFile(
+      mcpResource,
+      VSBuffer.fromString(
+        JSON.stringify(scannedWorkspaceMcpServers, null, "\t"),
+      ),
+    );
 	}
 
 	private fromUserMcpServers(scannedMcpServers: IScannedMcpServers): IScannedMcpServers {
 		const userMcpServers: IScannedMcpServers = {
-			inputs: scannedMcpServers.inputs,
-			sandbox: scannedMcpServers.sandbox
-		};
+      inputs: scannedMcpServers.inputs,
+      sandbox: scannedMcpServers.sandbox,
+    };
 		const servers = Object.entries(scannedMcpServers.servers ?? {});
 		if (servers.length > 0) {
 			userMcpServers.servers = {};
@@ -196,10 +223,12 @@ export class McpResourceScannerService extends Disposable implements IMcpResourc
 
 	private fromWorkspaceFolderMcpServers(scannedWorkspaceFolderMcpServers: IScannedMcpServers): IScannedMcpServers {
 		const scannedMcpServers: IScannedMcpServers = {
-			inputs: scannedWorkspaceFolderMcpServers.inputs,
-			sandbox: scannedWorkspaceFolderMcpServers.sandbox
-		};
-		const servers = Object.entries(scannedWorkspaceFolderMcpServers.servers ?? {});
+      inputs: scannedWorkspaceFolderMcpServers.inputs,
+      sandbox: scannedWorkspaceFolderMcpServers.sandbox,
+    };
+		const servers = Object.entries(
+      scannedWorkspaceFolderMcpServers.servers ?? {},
+    );
 		if (servers.length > 0) {
 			scannedMcpServers.servers = {};
 			for (const [serverName, config] of servers) {
@@ -215,10 +244,10 @@ export class McpResourceScannerService extends Disposable implements IMcpResourc
 		if ((<IOldScannedMcpServer>serverOrConfig).config) {
 			const oldScannedMcpServer = <IOldScannedMcpServer>serverOrConfig;
 			server = {
-				...oldScannedMcpServer.config,
-				version: oldScannedMcpServer.version,
-				gallery: oldScannedMcpServer.gallery
-			};
+        ...oldScannedMcpServer.config,
+        version: oldScannedMcpServer.version,
+        gallery: oldScannedMcpServer.gallery,
+      };
 		} else {
 			server = serverOrConfig as IMcpServerConfiguration;
 		}
@@ -239,4 +268,8 @@ export class McpResourceScannerService extends Disposable implements IMcpResourc
 	}
 }
 
-registerSingleton(IMcpResourceScannerService, McpResourceScannerService, InstantiationType.Delayed);
+registerSingleton(
+  IMcpResourceScannerService,
+  McpResourceScannerService,
+  InstantiationType.Delayed,
+);

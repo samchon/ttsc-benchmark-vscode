@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ILogService } from '../../../../../platform/log/common/log.js';
+import { ILogService } from "../../../../../platform/log/common/log.js";
 
 export interface IChatStreamStats {
 	impliedWordLoadRate: number;
@@ -51,19 +51,19 @@ export class ChatStreamStatsTracker {
 	private _publicData: IChatStreamStats;
 
 	constructor(
-		@ILogService private readonly logService: ILogService
+		@ILogService private readonly logService: ILogService,
 	) {
 		const start = Date.now();
 		this._data = {
-			totalTime: 0,
-			lastUpdateTime: start,
-			impliedWordLoadRate: 0,
-			lastWordCount: 0,
-			firstMarkdownTime: undefined,
-			bootstrapActive: true,
-			wordCountAtBootstrapExit: undefined,
-			updatesWithNewWords: 0
-		};
+      totalTime: 0,
+      lastUpdateTime: start,
+      impliedWordLoadRate: 0,
+      lastWordCount: 0,
+      firstMarkdownTime: undefined,
+      bootstrapActive: true,
+      wordCountAtBootstrapExit: undefined,
+      updatesWithNewWords: 0,
+    };
 		this._publicData = { impliedWordLoadRate: 0, lastWordCount: 0 };
 	}
 
@@ -78,7 +78,7 @@ export class ChatStreamStatsTracker {
 	update(totals: IChatStreamUpdate): IChatStreamStats | undefined {
 		const { totalWordCount: wordCount } = totals;
 		if (wordCount === this._data.lastWordCount) {
-			this.trace('Update- no new words');
+			this.trace("Update- no new words");
 			return undefined;
 		}
 
@@ -87,7 +87,7 @@ export class ChatStreamStatsTracker {
 		const hadNoWordsBeforeUpdate = this._data.lastWordCount === 0;
 		let firstMarkdownTime = this._data.firstMarkdownTime;
 		let wordCountAtBootstrapExit = this._data.wordCountAtBootstrapExit;
-		if (typeof firstMarkdownTime !== 'number' && wordCount > 0) {
+		if (typeof firstMarkdownTime !== "number" && wordCount > 0) {
 			firstMarkdownTime = now;
 		}
 		const updatesWithNewWords = this._data.updatesWithNewWords + 1;
@@ -104,40 +104,45 @@ export class ChatStreamStatsTracker {
 		let bootstrapActive = this._data.bootstrapActive;
 		if (bootstrapActive) {
 			const stableStartTime = firstMarkdownTime;
-			const hasStableData = typeof stableStartTime === 'number'
+			const hasStableData = typeof stableStartTime === "number"
 				&& updatesWithNewWords >= MIN_UPDATES_FOR_STABLE_RATE
 				&& wordCount >= WORDS_FOR_LARGE_CHUNK;
 			if (hasStableData) {
 				bootstrapActive = false;
 				totalTime = Math.max(now - stableStartTime, timeDiff);
 				wordCountAtBootstrapExit = this._data.lastWordCount;
-				this.trace('Has stable data');
+				this.trace("Has stable data");
 			} else {
 				totalTime = Math.max(totalTime, minBootstrapTotalTime);
 			}
 		}
 
-		const wordsSinceBootstrap = typeof wordCountAtBootstrapExit === 'number' ? Math.max(wordCount - wordCountAtBootstrapExit, 0) : wordCount;
+		const wordsSinceBootstrap = typeof wordCountAtBootstrapExit === "number" ? Math.max(
+      wordCount - wordCountAtBootstrapExit,
+      0,
+    ) : wordCount;
 		const effectiveTime = totalTime;
 		const effectiveWordCount = bootstrapActive ? wordCount : wordsSinceBootstrap;
 		const impliedWordLoadRate = effectiveTime > 0 ? effectiveWordCount / (effectiveTime / 1000) : 0;
 		this._data = {
-			totalTime,
-			lastUpdateTime: now,
-			impliedWordLoadRate,
-			lastWordCount: wordCount,
-			firstMarkdownTime,
-			bootstrapActive,
-			wordCountAtBootstrapExit,
-			updatesWithNewWords
-		};
+      totalTime,
+      lastUpdateTime: now,
+      impliedWordLoadRate,
+      lastWordCount: wordCount,
+      firstMarkdownTime,
+      bootstrapActive,
+      wordCountAtBootstrapExit,
+      updatesWithNewWords,
+    };
 		this._publicData = {
-			impliedWordLoadRate,
-			lastWordCount: wordCount
-		};
+      impliedWordLoadRate,
+      lastWordCount: wordCount,
+    };
 
 		const traceWords = bootstrapActive ? wordCount : wordsSinceBootstrap;
-		this.trace(`Update- got ${traceWords} words over last ${totalTime}ms = ${impliedWordLoadRate} words/s`);
+		this.trace(
+      `Update- got ${traceWords} words over last ${totalTime}ms = ${impliedWordLoadRate} words/s`,
+    );
 		return this._data;
 	}
 

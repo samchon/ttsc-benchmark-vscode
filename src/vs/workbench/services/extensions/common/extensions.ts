@@ -3,39 +3,50 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import Severity from '../../../../base/common/severity.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IMessagePassingProtocol } from '../../../../base/parts/ipc/common/ipc.js';
-import { getExtensionId, getGalleryExtensionId } from '../../../../platform/extensionManagement/common/extensionManagementUtil.js';
-import { ImplicitActivationEvents } from '../../../../platform/extensionManagement/common/implicitActivationEvents.js';
-import { ExtensionIdentifier, ExtensionIdentifierMap, ExtensionIdentifierSet, ExtensionType, IExtension, IExtensionContributions, IExtensionDescription, TargetPlatform } from '../../../../platform/extensions/common/extensions.js';
-import { ApiProposalName } from '../../../../platform/extensions/common/extensionsApiProposals.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { IV8Profile } from '../../../../platform/profiling/common/profiling.js';
-import { ExtensionHostKind } from './extensionHostKind.js';
-import { IExtensionDescriptionDelta, IExtensionDescriptionSnapshot } from './extensionHostProtocol.js';
-import { ExtensionRunningLocation } from './extensionRunningLocation.js';
-import { IExtensionPoint } from './extensionsRegistry.js';
+import { Event } from "../../../../base/common/event.js";
+import Severity from "../../../../base/common/severity.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IMessagePassingProtocol } from "../../../../base/parts/ipc/common/ipc.js";
+import { getExtensionId, getGalleryExtensionId } from "../../../../platform/extensionManagement/common/extensionManagementUtil.js";
+import { ImplicitActivationEvents } from "../../../../platform/extensionManagement/common/implicitActivationEvents.js";
+import {
+  ExtensionIdentifier,
+  ExtensionIdentifierMap,
+  ExtensionIdentifierSet,
+  ExtensionType,
+  IExtension,
+  IExtensionContributions,
+  IExtensionDescription,
+  TargetPlatform,
+} from "../../../../platform/extensions/common/extensions.js";
+import { ApiProposalName } from "../../../../platform/extensions/common/extensionsApiProposals.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IV8Profile } from "../../../../platform/profiling/common/profiling.js";
+import { ExtensionHostKind } from "./extensionHostKind.js";
+import { IExtensionDescriptionDelta, IExtensionDescriptionSnapshot } from "./extensionHostProtocol.js";
+import { ExtensionRunningLocation } from "./extensionRunningLocation.js";
+import { IExtensionPoint } from "./extensionsRegistry.js";
 
 export const nullExtensionDescription = Object.freeze<IExtensionDescription>({
-	identifier: new ExtensionIdentifier('nullExtensionDescription'),
-	name: 'Null Extension Description',
-	version: '0.0.0',
-	publisher: 'vscode',
-	engines: { vscode: '' },
-	extensionLocation: URI.parse('void:location'),
-	isBuiltin: false,
-	targetPlatform: TargetPlatform.UNDEFINED,
-	isUserBuiltin: false,
-	isUnderDevelopment: false,
-	preRelease: false,
+  identifier: new ExtensionIdentifier("nullExtensionDescription"),
+  name: "Null Extension Description",
+  version: "0.0.0",
+  publisher: "vscode",
+  engines: { vscode: "" },
+  extensionLocation: URI.parse("void:location"),
+  isBuiltin: false,
+  targetPlatform: TargetPlatform.UNDEFINED,
+  isUserBuiltin: false,
+  isUnderDevelopment: false,
+  preRelease: false,
 });
 
-export type WebWorkerExtHostConfigValue = boolean | 'auto';
-export const webWorkerExtHostConfig = 'extensions.webWorker';
+export type WebWorkerExtHostConfigValue = boolean | "auto";
+export const webWorkerExtHostConfig = "extensions.webWorker";
 
-export const IExtensionService = createDecorator<IExtensionService>('extensionService');
+export const IExtensionService = createDecorator<IExtensionService>(
+  "extensionService",
+);
 
 export interface IMessage {
 	type: Severity;
@@ -166,23 +177,27 @@ export class ExtensionHostExtensions {
 
 	toSnapshot(): IExtensionDescriptionSnapshot {
 		return {
-			versionId: this._versionId,
-			allExtensions: this._allExtensions,
-			myExtensions: this._myExtensions,
-			activationEvents: ImplicitActivationEvents.createActivationEventsMap(this._allExtensions)
-		};
+      versionId: this._versionId,
+      allExtensions: this._allExtensions,
+      myExtensions: this._myExtensions,
+      activationEvents: ImplicitActivationEvents.createActivationEventsMap(this._allExtensions),
+    };
 	}
 
 	public set(versionId: number, allExtensions: IExtensionDescription[], myExtensions: ExtensionIdentifier[]): IExtensionDescriptionDelta {
 		if (this._versionId > versionId) {
-			throw new Error(`ExtensionHostExtensions: invalid versionId ${versionId} (current: ${this._versionId})`);
+			throw new Error(
+        `ExtensionHostExtensions: invalid versionId ${versionId} (current: ${this._versionId})`,
+      );
 		}
 		const toRemove: ExtensionIdentifier[] = [];
 		const toAdd: IExtensionDescription[] = [];
 		const myToRemove: ExtensionIdentifier[] = [];
 		const myToAdd: ExtensionIdentifier[] = [];
 
-		const oldExtensionsMap = extensionDescriptionArrayToMap(this._allExtensions);
+		const oldExtensionsMap = extensionDescriptionArrayToMap(
+      this._allExtensions,
+    );
 		const newExtensionsMap = extensionDescriptionArrayToMap(allExtensions);
 		const extensionsAreTheSame = (a: IExtensionDescription, b: IExtensionDescription) => {
 			return (
@@ -236,8 +251,17 @@ export class ExtensionHostExtensions {
 			}
 		}
 
-		const addActivationEvents = ImplicitActivationEvents.createActivationEventsMap(toAdd);
-		const delta = { versionId, toRemove, toAdd, addActivationEvents, myToRemove, myToAdd };
+		const addActivationEvents = ImplicitActivationEvents.createActivationEventsMap(
+      toAdd,
+    );
+		const delta = {
+      versionId,
+      toRemove,
+      toAdd,
+      addActivationEvents,
+      myToRemove,
+      myToAdd,
+    };
 		this.delta(delta);
 		return delta;
 	}
@@ -302,7 +326,9 @@ export class ExtensionHostExtensions {
 				continue;
 			}
 
-			const activationEvents = ImplicitActivationEvents.readActivationEvents(extensionDescription);
+			const activationEvents = ImplicitActivationEvents.readActivationEvents(
+        extensionDescription,
+      );
 			for (const activationEvent of activationEvents) {
 				result.add(activationEvent);
 			}
@@ -329,7 +355,9 @@ export function isProposedApiEnabled(extension: IExtensionDescription, proposal:
 
 export function checkProposedApiEnabled(extension: IExtensionDescription, proposal: ApiProposalName): void {
 	if (!isProposedApiEnabled(extension, proposal)) {
-		throw new Error(`Extension '${extension.identifier.value}' CANNOT use API proposal: ${proposal}.\nIts package.json#enabledApiProposals-property declares: ${extension.enabledApiProposals?.join(', ') ?? '[]'} but NOT ${proposal}.\n The missing proposal MUST be added and you must start in extension development mode or use the following command line switch: --enable-proposed-api ${extension.identifier.value}`);
+		throw new Error(
+      `Extension '${extension.identifier.value}' CANNOT use API proposal: ${proposal}.\nIts package.json#enabledApiProposals-property declares: ${extension.enabledApiProposals?.join(", ") ?? "[]"} but NOT ${proposal}.\n The missing proposal MUST be added and you must start in extension development mode or use the following command line switch: --enable-proposed-api ${extension.identifier.value}`,
+    );
 	}
 }
 
@@ -337,7 +365,7 @@ export function checkProposedApiEnabled(extension: IExtensionDescription, propos
 /**
  * Extension id or one of the four known program states.
  */
-export type ProfileSegmentId = string | 'idle' | 'program' | 'gc' | 'self';
+export type ProfileSegmentId = string | "idle" | "program" | "gc" | "self";
 
 export interface ExtensionActivationReason {
 	readonly startup: boolean;
@@ -350,7 +378,7 @@ export class ActivationTimes {
 		public readonly codeLoadingTime: number,
 		public readonly activateCallTime: number,
 		public readonly activateResolvedTime: number,
-		public readonly activationReason: ExtensionActivationReason
+		public readonly activationReason: ExtensionActivationReason,
 	) {
 	}
 }
@@ -561,34 +589,37 @@ export interface ProfileSession {
 
 export function toExtension(extensionDescription: IExtensionDescription): IExtension {
 	return {
-		type: extensionDescription.isBuiltin ? ExtensionType.System : ExtensionType.User,
-		isBuiltin: extensionDescription.isBuiltin || extensionDescription.isUserBuiltin,
-		identifier: { id: getGalleryExtensionId(extensionDescription.publisher, extensionDescription.name), uuid: extensionDescription.uuid },
-		manifest: extensionDescription,
-		location: extensionDescription.extensionLocation,
-		targetPlatform: extensionDescription.targetPlatform,
-		validations: [],
-		isValid: true,
-		preRelease: extensionDescription.preRelease,
-		publisherDisplayName: extensionDescription.publisherDisplayName,
-	};
+    type: extensionDescription.isBuiltin ? ExtensionType.System : ExtensionType.User,
+    isBuiltin: extensionDescription.isBuiltin || extensionDescription.isUserBuiltin,
+    identifier: { id: getGalleryExtensionId(extensionDescription.publisher, extensionDescription.name), uuid: extensionDescription.uuid },
+    manifest: extensionDescription,
+    location: extensionDescription.extensionLocation,
+    targetPlatform: extensionDescription.targetPlatform,
+    validations: [],
+    isValid: true,
+    preRelease: extensionDescription.preRelease,
+    publisherDisplayName: extensionDescription.publisherDisplayName,
+  };
 }
 
 export function toExtensionDescription(extension: IExtension, isUnderDevelopment?: boolean): IExtensionDescription {
-	const id = getExtensionId(extension.manifest.publisher, extension.manifest.name);
+	const id = getExtensionId(
+    extension.manifest.publisher,
+    extension.manifest.name,
+  );
 	return {
-		id,
-		identifier: new ExtensionIdentifier(id),
-		isBuiltin: extension.type === ExtensionType.System,
-		isUserBuiltin: extension.type === ExtensionType.User && extension.isBuiltin,
-		isUnderDevelopment: !!isUnderDevelopment,
-		extensionLocation: extension.location,
-		uuid: extension.identifier.uuid,
-		targetPlatform: extension.targetPlatform,
-		publisherDisplayName: extension.publisherDisplayName,
-		preRelease: extension.preRelease,
-		...extension.manifest
-	};
+    id,
+    identifier: new ExtensionIdentifier(id),
+    isBuiltin: extension.type === ExtensionType.System,
+    isUserBuiltin: extension.type === ExtensionType.User && extension.isBuiltin,
+    isUnderDevelopment: !!isUnderDevelopment,
+    extensionLocation: extension.location,
+    uuid: extension.identifier.uuid,
+    targetPlatform: extension.targetPlatform,
+    publisherDisplayName: extension.publisherDisplayName,
+    preRelease: extension.preRelease,
+    ...extension.manifest,
+  };
 }
 
 
@@ -601,14 +632,26 @@ export class NullExtensionService implements IExtensionService {
 	readonly onDidChangeResponsiveChange: Event<IResponsiveStateChangeEvent> = Event.None;
 	readonly onWillStop: Event<WillStopExtensionHostsEvent> = Event.None;
 	readonly extensions = [];
-	activateByEvent(_activationEvent: string): Promise<void> { return Promise.resolve(undefined); }
-	activateById(extensionId: ExtensionIdentifier, reason: ExtensionActivationReason): Promise<void> { return Promise.resolve(undefined); }
+	activateByEvent(_activationEvent: string): Promise<void> { return Promise.resolve(
+    undefined,
+  ); }
+	activateById(extensionId: ExtensionIdentifier, reason: ExtensionActivationReason): Promise<void> { return Promise.resolve(
+    undefined,
+  ); }
 	activationEventIsDone(_activationEvent: string): boolean { return false; }
-	whenInstalledExtensionsRegistered(): Promise<boolean> { return Promise.resolve(true); }
+	whenInstalledExtensionsRegistered(): Promise<boolean> { return Promise.resolve(
+    true,
+  ); }
 	getExtension() { return Promise.resolve(undefined); }
-	readExtensionPointContributions<T>(_extPoint: IExtensionPoint<T>): Promise<ExtensionPointContribution<T>[]> { return Promise.resolve(Object.create(null)); }
-	getExtensionsStatus(): { [id: string]: IExtensionsStatus } { return Object.create(null); }
-	getInspectPorts(_extensionHostKind: ExtensionHostKind, _tryEnableInspector: boolean): Promise<IExtensionInspectInfo[]> { return Promise.resolve([]); }
+	readExtensionPointContributions<T>(_extPoint: IExtensionPoint<T>): Promise<ExtensionPointContribution<T>[]> { return Promise.resolve(
+    Object.create(null),
+  ); }
+	getExtensionsStatus(): { [id: string]: IExtensionsStatus } { return Object.create(
+    null,
+  ); }
+	getInspectPorts(_extensionHostKind: ExtensionHostKind, _tryEnableInspector: boolean): Promise<IExtensionInspectInfo[]> { return Promise.resolve(
+    [],
+  ); }
 	async stopExtensionHosts(): Promise<boolean> { return true; }
 	async startExtensionHosts(): Promise<void> { }
 	async setRemoteEnvironment(_env: { [key: string]: string | null }): Promise<void> { }

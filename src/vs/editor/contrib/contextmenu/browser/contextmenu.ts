@@ -3,37 +3,45 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../base/browser/dom.js';
-import { IKeyboardEvent } from '../../../../base/browser/keyboardEvent.js';
-import { IMouseEvent, IMouseWheelEvent } from '../../../../base/browser/mouseEvent.js';
-import { ActionViewItem } from '../../../../base/browser/ui/actionbar/actionViewItems.js';
-import { IAnchor } from '../../../../base/browser/ui/contextview/contextview.js';
-import { IAction, Separator, SubmenuAction } from '../../../../base/common/actions.js';
-import { KeyCode, KeyMod } from '../../../../base/common/keyCodes.js';
-import { ResolvedKeybinding } from '../../../../base/common/keybindings.js';
-import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { isIOS } from '../../../../base/common/platform.js';
-import { ICodeEditor, IEditorMouseEvent, MouseTargetType } from '../../../browser/editorBrowser.js';
-import { EditorAction, EditorContributionInstantiation, registerEditorAction, registerEditorContribution, ServicesAccessor } from '../../../browser/editorExtensions.js';
-import { EditorOption } from '../../../common/config/editorOptions.js';
-import { IEditorContribution, ScrollType } from '../../../common/editorCommon.js';
-import { EditorContextKeys } from '../../../common/editorContextKeys.js';
-import { ITextModel } from '../../../common/model.js';
-import * as nls from '../../../../nls.js';
-import { IMenuService, MenuId, SubmenuItemAction } from '../../../../platform/actions/common/actions.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { IContextMenuService, IContextViewService } from '../../../../platform/contextview/browser/contextView.js';
-import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
-import { KeybindingWeight } from '../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IWorkspaceContextService, isStandaloneEditorWorkspace } from '../../../../platform/workspace/common/workspace.js';
+import * as dom from "../../../../base/browser/dom.js";
+import { IKeyboardEvent } from "../../../../base/browser/keyboardEvent.js";
+import { IMouseEvent, IMouseWheelEvent } from "../../../../base/browser/mouseEvent.js";
+import { ActionViewItem } from "../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { IAnchor } from "../../../../base/browser/ui/contextview/contextview.js";
+import { IAction, Separator, SubmenuAction } from "../../../../base/common/actions.js";
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { ResolvedKeybinding } from "../../../../base/common/keybindings.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { isIOS } from "../../../../base/common/platform.js";
+import { ICodeEditor, IEditorMouseEvent, MouseTargetType } from "../../../browser/editorBrowser.js";
+import {
+  EditorAction,
+  EditorContributionInstantiation,
+  registerEditorAction,
+  registerEditorContribution,
+  ServicesAccessor,
+} from "../../../browser/editorExtensions.js";
+import { EditorOption } from "../../../common/config/editorOptions.js";
+import { IEditorContribution, ScrollType } from "../../../common/editorCommon.js";
+import { EditorContextKeys } from "../../../common/editorContextKeys.js";
+import { ITextModel } from "../../../common/model.js";
+import * as nls from "../../../../nls.js";
+import { IMenuService, MenuId, SubmenuItemAction } from "../../../../platform/actions/common/actions.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService, IContextViewService } from "../../../../platform/contextview/browser/contextView.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IWorkspaceContextService, isStandaloneEditorWorkspace } from "../../../../platform/workspace/common/workspace.js";
 
 export class ContextMenuController implements IEditorContribution {
 
-	public static readonly ID = 'editor.contrib.contextmenu';
+	public static readonly ID = "editor.contrib.contextmenu";
 
 	public static get(editor: ICodeEditor): ContextMenuController | null {
-		return editor.getContribution<ContextMenuController>(ContextMenuController.ID);
+		return editor.getContribution<ContextMenuController>(
+      ContextMenuController.ID,
+    );
 	}
 
 	private readonly _toDispose = new DisposableStore();
@@ -52,7 +60,11 @@ export class ContextMenuController implements IEditorContribution {
 	) {
 		this._editor = editor;
 
-		this._toDispose.add(this._editor.onContextMenu((e: IEditorMouseEvent) => this._onContextMenu(e)));
+		this._toDispose.add(
+      this._editor.onContextMenu(
+        (e: IEditorMouseEvent) => this._onContextMenu(e),
+      ),
+    );
 		this._toDispose.add(this._editor.onMouseWheel((e: IMouseWheelEvent) => {
 			if (this._contextMenuIsBeingShownCount > 0) {
 				const view = this._contextViewService.getContextViewElement();
@@ -86,7 +98,9 @@ export class ContextMenuController implements IEditorContribution {
 		if (!this._editor.getOption(EditorOption.contextmenu)) {
 			this._editor.focus();
 			// Ensure the cursor is at the position of the mouse click
-			if (e.target.position && !this._editor.getSelection().containsPosition(e.target.position)) {
+			if (e.target.position && !this._editor.getSelection().containsPosition(
+        e.target.position,
+      )) {
 				this._editor.setPosition(e.target.position);
 			}
 			return; // Context menu is turned off through configuration
@@ -147,8 +161,10 @@ export class ContextMenuController implements IEditorContribution {
 		}
 
 		// Find actions available for menu
-		const menuActions = this._getMenuActions(this._editor.getModel(),
-			this._editor.contextMenuId);
+		const menuActions = this._getMenuActions(
+      this._editor.getModel(),
+      this._editor.contextMenuId,
+    );
 
 		// Show menu if we have actions to show
 		if (menuActions.length > 0) {
@@ -160,7 +176,11 @@ export class ContextMenuController implements IEditorContribution {
 		const result: IAction[] = [];
 
 		// get menu groups
-		const groups = this._menuService.getMenuActions(menuId, this._contextKeyService, { arg: model.uri });
+		const groups = this._menuService.getMenuActions(
+      menuId,
+      this._contextKeyService,
+      { arg: model.uri },
+    );
 
 		// translate them into other actions
 		for (const group of groups) {
@@ -199,20 +219,29 @@ export class ContextMenuController implements IEditorContribution {
 		let anchor: IMouseEvent | IAnchor | null = event;
 		if (!anchor) {
 			// Ensure selection is visible
-			this._editor.revealPosition(this._editor.getPosition(), ScrollType.Immediate);
+			this._editor.revealPosition(
+        this._editor.getPosition(),
+        ScrollType.Immediate,
+      );
 
 			this._editor.render();
-			const cursorCoords = this._editor.getScrolledVisiblePosition(this._editor.getPosition());
+			const cursorCoords = this._editor.getScrolledVisiblePosition(
+        this._editor.getPosition(),
+      );
 
 			// Translate to absolute editor position
-			const editorCoords = dom.getDomNodePagePosition(this._editor.getDomNode());
+			const editorCoords = dom.getDomNodePagePosition(
+        this._editor.getDomNode(),
+      );
 			const posx = editorCoords.left + cursorCoords.left;
 			const posy = editorCoords.top + cursorCoords.top + cursorCoords.height;
 
 			anchor = { x: posx, y: posy };
 		}
 
-		const useShadowDOM = this._editor.getOption(EditorOption.useShadowDOM) && !isIOS; // Do not use shadow dom on IOS #122035
+		const useShadowDOM = this._editor.getOption(
+      EditorOption.useShadowDOM,
+    ) && !isIOS; // Do not use shadow dom on IOS #122035
 
 		// Show menu
 		this._contextMenuIsBeingShownCount++;
@@ -230,7 +259,7 @@ export class ContextMenuController implements IEditorContribution {
 				}
 
 				const customAction = action as IAction & { getActionViewItem?: () => ActionViewItem };
-				if (typeof customAction.getActionViewItem === 'function') {
+				if (typeof customAction.getActionViewItem === "function") {
 					return customAction.getActionViewItem();
 				}
 
@@ -243,7 +272,7 @@ export class ContextMenuController implements IEditorContribution {
 
 			onHide: (wasCancelled: boolean) => {
 				this._contextMenuIsBeingShownCount--;
-			}
+			},
 		});
 	}
 
@@ -252,7 +281,9 @@ export class ContextMenuController implements IEditorContribution {
 			return;
 		}
 
-		if (isStandaloneEditorWorkspace(this._workspaceContextService.getWorkspace())) {
+		if (isStandaloneEditorWorkspace(
+      this._workspaceContextService.getWorkspace(),
+    )) {
 			// can't update the configuration properly in the standalone editor
 			return;
 		}
@@ -262,22 +293,22 @@ export class ContextMenuController implements IEditorContribution {
 		let lastId = 0;
 		const createAction = (opts: { label: string; enabled?: boolean; checked?: boolean; run: () => void }): IAction => {
 			return {
-				id: `menu-action-${++lastId}`,
-				label: opts.label,
-				tooltip: '',
-				class: undefined,
-				enabled: (typeof opts.enabled === 'undefined' ? true : opts.enabled),
-				checked: opts.checked,
-				run: opts.run
-			};
+        id: `menu-action-${++lastId}`,
+        label: opts.label,
+        tooltip: "",
+        class: undefined,
+        enabled: (typeof opts.enabled === "undefined" ? true : opts.enabled),
+        checked: opts.checked,
+        run: opts.run,
+      };
 		};
 		const createSubmenuAction = (label: string, actions: IAction[]): SubmenuAction => {
 			return new SubmenuAction(
-				`menu-action-${++lastId}`,
-				label,
-				actions,
-				undefined
-			);
+        `menu-action-${++lastId}`,
+        label,
+        actions,
+        undefined,
+      );
 		};
 		const createEnumAction = <T>(label: string, enabled: boolean, configName: string, configuredValue: T, options: { label: string; value: T }[]): IAction => {
 			if (!enabled) {
@@ -290,79 +321,85 @@ export class ContextMenuController implements IEditorContribution {
 			};
 			const actions: IAction[] = [];
 			for (const option of options) {
-				actions.push(createAction({
-					label: option.label,
-					checked: configuredValue === option.value,
-					run: createRunner(option.value)
-				}));
+				actions.push(
+          createAction({
+            label: option.label,
+            checked: configuredValue === option.value,
+            run: createRunner(option.value),
+          }),
+        );
 			}
-			return createSubmenuAction(
-				label,
-				actions
-			);
+			return createSubmenuAction(label, actions);
 		};
 
 		const actions: IAction[] = [];
 		actions.push(createAction({
-			label: nls.localize('context.minimap.minimap', "Minimap"),
+			label: nls.localize("context.minimap.minimap", "Minimap"),
 			checked: minimapOptions.enabled,
 			run: () => {
 				this._configurationService.updateValue(`editor.minimap.enabled`, !minimapOptions.enabled);
-			}
+			},
 		}));
 		actions.push(new Separator());
 		actions.push(createAction({
-			label: nls.localize('context.minimap.renderCharacters', "Render Characters"),
+			label: nls.localize("context.minimap.renderCharacters", "Render Characters"),
 			enabled: minimapOptions.enabled,
 			checked: minimapOptions.renderCharacters,
 			run: () => {
 				this._configurationService.updateValue(`editor.minimap.renderCharacters`, !minimapOptions.renderCharacters);
-			}
+			},
 		}));
-		actions.push(createEnumAction<'proportional' | 'fill' | 'fit'>(
-			nls.localize('context.minimap.size', "Vertical size"),
+		actions.push(createEnumAction<"proportional" | "fill" | "fit">(
+			nls.localize("context.minimap.size", "Vertical size"),
 			minimapOptions.enabled,
-			'editor.minimap.size',
+			"editor.minimap.size",
 			minimapOptions.size,
 			[{
-				label: nls.localize('context.minimap.size.proportional', "Proportional"),
-				value: 'proportional'
+				label: nls.localize("context.minimap.size.proportional", "Proportional"),
+				value: "proportional",
 			}, {
-				label: nls.localize('context.minimap.size.fill', "Fill"),
-				value: 'fill'
+				label: nls.localize("context.minimap.size.fill", "Fill"),
+				value: "fill",
 			}, {
-				label: nls.localize('context.minimap.size.fit', "Fit"),
-				value: 'fit'
-			}]
+				label: nls.localize("context.minimap.size.fit", "Fit"),
+				value: "fit",
+			}],
 		));
-		actions.push(createEnumAction<'always' | 'mouseover'>(
-			nls.localize('context.minimap.slider', "Slider"),
+		actions.push(createEnumAction<"always" | "mouseover">(
+			nls.localize("context.minimap.slider", "Slider"),
 			minimapOptions.enabled,
-			'editor.minimap.showSlider',
+			"editor.minimap.showSlider",
 			minimapOptions.showSlider,
 			[{
-				label: nls.localize('context.minimap.slider.mouseover', "Mouse Over"),
-				value: 'mouseover'
+				label: nls.localize("context.minimap.slider.mouseover", "Mouse Over"),
+				value: "mouseover",
 			}, {
-				label: nls.localize('context.minimap.slider.always', "Always"),
-				value: 'always'
-			}]
+				label: nls.localize("context.minimap.slider.always", "Always"),
+				value: "always",
+			}],
 		));
-		actions.push(createEnumAction<'right' | 'left'>(
-			nls.localize('context.minimap.side', "Side"),
-			minimapOptions.enabled,
-			'editor.minimap.side',
-			minimapOptions.side,
-			[{
-				label: nls.localize('context.minimap.side.right', "Right"),
-				value: 'right'
-			}, {
-				label: nls.localize('context.minimap.side.left', "Left"),
-				value: 'left'
-			}]
-		));
+		actions.push(
+      createEnumAction<"right" | "left">(
+        nls.localize("context.minimap.side", "Side"),
+        minimapOptions.enabled,
+        "editor.minimap.side",
+        minimapOptions.side,
+        [
+          {
+            label: nls.localize("context.minimap.side.right", "Right"),
+            value: "right",
+          },
+          {
+            label: nls.localize("context.minimap.side.left", "Left"),
+            value: "left",
+          },
+        ],
+      ),
+    );
 
-		const useShadowDOM = this._editor.getOption(EditorOption.useShadowDOM) && !isIOS; // Do not use shadow dom on IOS #122035
+		const useShadowDOM = this._editor.getOption(
+      EditorOption.useShadowDOM,
+    ) && !isIOS; // Do not use shadow dom on IOS #122035
 		this._contextMenuIsBeingShownCount++;
 		this._contextMenuService.showContextMenu({
 			domForShadowRoot: useShadowDOM ? this._editor.getDomNode() : undefined,
@@ -371,7 +408,7 @@ export class ContextMenuController implements IEditorContribution {
 			onHide: (wasCancelled: boolean) => {
 				this._contextMenuIsBeingShownCount--;
 				this._editor.focus();
-			}
+			},
 		});
 	}
 
@@ -392,14 +429,14 @@ class ShowContextMenu extends EditorAction {
 
 	constructor() {
 		super({
-			id: 'editor.action.showContextMenu',
-			label: nls.localize2('action.showContextMenu.label', "Show Editor Context Menu"),
+			id: "editor.action.showContextMenu",
+			label: nls.localize2("action.showContextMenu.label", "Show Editor Context Menu"),
 			precondition: undefined,
 			kbOpts: {
 				kbExpr: EditorContextKeys.textInputFocus,
 				primary: KeyMod.Shift | KeyCode.F10,
-				weight: KeybindingWeight.EditorContrib
-			}
+				weight: KeybindingWeight.EditorContrib,
+			},
 		});
 	}
 
@@ -408,5 +445,9 @@ class ShowContextMenu extends EditorAction {
 	}
 }
 
-registerEditorContribution(ContextMenuController.ID, ContextMenuController, EditorContributionInstantiation.BeforeFirstInteraction);
+registerEditorContribution(
+  ContextMenuController.ID,
+  ContextMenuController,
+  EditorContributionInstantiation.BeforeFirstInteraction,
+);
 registerEditorAction(ShowContextMenu);

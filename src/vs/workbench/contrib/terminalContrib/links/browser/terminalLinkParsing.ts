@@ -9,8 +9,8 @@
  * exist.
  */
 
-import { Lazy } from '../../../../../base/common/lazy.js';
-import { OperatingSystem } from '../../../../../base/common/platform.js';
+import { Lazy } from "../../../../../base/common/lazy.js";
+import { OperatingSystem } from "../../../../../base/common/platform.js";
 
 export interface IParsedLink {
 	path: ILinkPartialRange;
@@ -35,7 +35,9 @@ export interface ILinkPartialRange {
  * A regex that extracts the link suffix which contains line and column information. The link suffix
  * must terminate at the end of line.
  */
-const linkSuffixRegexEol = new Lazy<RegExp>(() => generateLinkSuffixRegex(true));
+const linkSuffixRegexEol = new Lazy<RegExp>(
+  () => generateLinkSuffixRegex(true),
+);
 /**
  * A regex that extracts the link suffix which contains line and column information.
  */
@@ -59,7 +61,7 @@ function generateLinkSuffixRegex(eolOnly: boolean) {
 		return `(?<colEnd${cei++}>\\d+)`;
 	}
 
-	const eolSuffix = eolOnly ? '$' : '';
+	const eolSuffix = eolOnly ? "$" : "";
 
 	// The comments in the regex below use real strings/numbers for better readability, here's
 	// the legend:
@@ -127,11 +129,11 @@ function generateLinkSuffixRegex(eolOnly: boolean) {
 
 	const suffixClause = lineAndColumnRegexClauses
 		// Join all clauses together
-		.join('|')
+		.join("|")
 		// Convert spaces to allow the non-breaking space char (ascii 160)
-		.replace(/ /g, `[${'\u00A0'} ]`);
+		.replace(/ /g, `[${"\u00A0"} ]`);
 
-	return new RegExp(`(${suffixClause})`, eolOnly ? undefined : 'g');
+	return new RegExp(`(${suffixClause})`, eolOnly ? undefined : "g");
 }
 
 /**
@@ -152,8 +154,8 @@ export function removeLinkSuffix(link: string): string {
  */
 export function removeLinkQueryString(link: string): string {
 	// Skip ? in UNC paths
-	const start = link.startsWith('\\\\?\\') ? 4 : 0;
-	const index = link.indexOf('?', start);
+	const start = link.startsWith("\\\\?\\") ? 4 : 0;
+	const index = link.indexOf("?", start);
 	if (index === -1) {
 		return link;
 	}
@@ -190,12 +192,12 @@ export function toLinkSuffix(match: RegExpExecArray | null): ILinkSuffix | null 
 		return null;
 	}
 	return {
-		row: parseIntOptional(groups.row0 || groups.row1 || groups.row2),
-		col: parseIntOptional(groups.col0 || groups.col1 || groups.col2),
-		rowEnd: parseIntOptional(groups.rowEnd0 || groups.rowEnd1 || groups.rowEnd2),
-		colEnd: parseIntOptional(groups.colEnd0 || groups.colEnd1 || groups.colEnd2),
-		suffix: { index: match.index, text: match[0] }
-	};
+    row: parseIntOptional(groups.row0 || groups.row1 || groups.row2),
+    col: parseIntOptional(groups.col0 || groups.col1 || groups.col2),
+    rowEnd: parseIntOptional(groups.rowEnd0 || groups.rowEnd1 || groups.rowEnd2),
+    colEnd: parseIntOptional(groups.colEnd0 || groups.colEnd1 || groups.colEnd2),
+    suffix: { index: match.index, text: match[0] },
+  };
 }
 
 function parseIntOptional(value: string | undefined): number | undefined {
@@ -278,9 +280,9 @@ function detectLinksViaSuffix(line: string): IParsedLink[] {
 			const prefixMatch = path.match(/^(?<prefix>['"]+)/);
 			if (prefixMatch?.groups?.prefix) {
 				prefix = {
-					index: linkStartIndex,
-					text: prefixMatch.groups.prefix
-				};
+          index: linkStartIndex,
+          text: prefixMatch.groups.prefix,
+        };
 				path = path.substring(prefix.text.length);
 
 				// Don't allow suffix links to be returned when the link itself is the empty string
@@ -309,25 +311,27 @@ function detectLinksViaSuffix(line: string): IParsedLink[] {
 			results.push({
 				path: {
 					index: linkStartIndex + (prefix?.text.length || 0),
-					text: path
+					text: path,
 				},
 				prefix,
-				suffix
+				suffix,
 			});
 
 			// If the path contains an opening bracket, provide the path starting immediately after
 			// the opening bracket as an additional result
-			const openingBracketMatch = path.matchAll(/(?<bracket>[\[\(])(?![\]\)])/g);
+			const openingBracketMatch = path.matchAll(
+        /(?<bracket>[\[\(])(?![\]\)])/g,
+      );
 			for (const match of openingBracketMatch) {
 				const bracket = match.groups?.bracket;
 				if (bracket) {
 					results.push({
 						path: {
 							index: linkStartIndex + (prefix?.text.length || 0) + match.index + 1,
-							text: path.substring(match.index + bracket.length)
+							text: path.substring(match.index + bracket.length),
 						},
 						prefix,
-						suffix
+						suffix,
 					});
 				}
 			}
@@ -338,41 +342,44 @@ function detectLinksViaSuffix(line: string): IParsedLink[] {
 }
 
 enum RegexPathConstants {
-	PathPrefix = '(?:\\.\\.?|\\~|file:\/\/)',
-	PathSeparatorClause = '\\/',
+	PathPrefix = "(?:\\.\\.?|\\~|file:\/\/)",
+	PathSeparatorClause = "\\/",
 	// '":; are allowed in paths but they are often separators so ignore them
 	// Also disallow \\ to prevent a catastropic backtracking case #24795
-	ExcludedPathCharactersClause = '[^\\0<>\\?\\s!`&*()\'":;\\\\]',
-	ExcludedStartPathCharactersClause = '[^\\0<>\\?\\s!`&*()\\[\\]\'":;\\\\]',
+	ExcludedPathCharactersClause = "[^\\0<>\\?\\s!`&*()'\":;\\\\]",
+	ExcludedStartPathCharactersClause = "[^\\0<>\\?\\s!`&*()\\[\\]'\":;\\\\]",
 
-	WinOtherPathPrefix = '\\.\\.?|\\~',
-	WinPathSeparatorClause = '(?:\\\\|\\/)',
-	WinExcludedPathCharactersClause = '[^\\0<>\\?\\|\\/\\s!`&*()\'":;]',
-	WinExcludedStartPathCharactersClause = '[^\\0<>\\?\\|\\/\\s!`&*()\\[\\]\'":;]',
+	WinOtherPathPrefix = "\\.\\.?|\\~",
+	WinPathSeparatorClause = "(?:\\\\|\\/)",
+	WinExcludedPathCharactersClause = "[^\\0<>\\?\\|\\/\\s!`&*()'\":;]",
+	WinExcludedStartPathCharactersClause = "[^\\0<>\\?\\|\\/\\s!`&*()\\[\\]'\":;]",
 }
 
 /**
  * A regex that matches non-Windows paths, such as `/foo`, `~/foo`, `./foo`, `../foo` and
  * `foo/bar`.
  */
-const unixLocalLinkClause = '(?:(?:' + RegexPathConstants.PathPrefix + '|(?:' + RegexPathConstants.ExcludedStartPathCharactersClause + RegexPathConstants.ExcludedPathCharactersClause + '*))?(?:' + RegexPathConstants.PathSeparatorClause + '(?:' + RegexPathConstants.ExcludedPathCharactersClause + ')+)+)';
+const unixLocalLinkClause = "(?:(?:" + RegexPathConstants.PathPrefix + "|(?:" + RegexPathConstants.ExcludedStartPathCharactersClause + RegexPathConstants.ExcludedPathCharactersClause + "*))?(?:" + RegexPathConstants.PathSeparatorClause + "(?:" + RegexPathConstants.ExcludedPathCharactersClause + ")+)+)";
 
 /**
  * A regex clause that matches the start of an absolute path on Windows, such as: `C:`, `c:`,
  * `file:///c:` (uri) and `\\?\C:` (UNC path).
  */
-export const winDrivePrefix = '(?:\\\\\\\\\\?\\\\|file:\\/\\/\\/)?[a-zA-Z]:';
+export const winDrivePrefix = "(?:\\\\\\\\\\?\\\\|file:\\/\\/\\/)?[a-zA-Z]:";
 
 /**
  * A regex that matches Windows paths, such as `\\?\c:\foo`, `c:\foo`, `~\foo`, `.\foo`, `..\foo`
  * and `foo\bar`.
  */
-const winLocalLinkClause = '(?:(?:' + `(?:${winDrivePrefix}|${RegexPathConstants.WinOtherPathPrefix})` + '|(?:' + RegexPathConstants.WinExcludedStartPathCharactersClause + RegexPathConstants.WinExcludedPathCharactersClause + '*))?(?:' + RegexPathConstants.WinPathSeparatorClause + '(?:' + RegexPathConstants.WinExcludedPathCharactersClause + ')+)+)';
+const winLocalLinkClause = "(?:(?:" + `(?:${winDrivePrefix}|${RegexPathConstants.WinOtherPathPrefix})` + "|(?:" + RegexPathConstants.WinExcludedStartPathCharactersClause + RegexPathConstants.WinExcludedPathCharactersClause + "*))?(?:" + RegexPathConstants.WinPathSeparatorClause + "(?:" + RegexPathConstants.WinExcludedPathCharactersClause + ")+)+)";
 
 function detectPathsNoSuffix(line: string, os: OperatingSystem): IParsedLink[] {
 	const results: IParsedLink[] = [];
 
-	const regex = new RegExp(os === OperatingSystem.Windows ? winLocalLinkClause : unixLocalLinkClause, 'g');
+	const regex = new RegExp(
+    os === OperatingSystem.Windows ? winLocalLinkClause : unixLocalLinkClause,
+    "g",
+  );
 	let match;
 	while ((match = regex.exec(line)) !== null) {
 		let text = match[0];
@@ -398,10 +405,10 @@ function detectPathsNoSuffix(line: string, os: OperatingSystem): IParsedLink[] {
 		results.push({
 			path: {
 				index,
-				text
+				text,
 			},
 			prefix: undefined,
-			suffix: undefined
+			suffix: undefined,
 		});
 	}
 

@@ -3,13 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AstNode, AstNodeKind, BracketAstNode, InvalidBracketAstNode, ListAstNode, PairAstNode, TextAstNode } from './ast.js';
-import { BeforeEditPositionMapper, TextEditInfo } from './beforeEditPositionMapper.js';
-import { SmallImmutableSet } from './smallImmutableSet.js';
-import { lengthIsZero, lengthLessThan } from './length.js';
-import { concat23Trees, concat23TreesOfSameHeight } from './concat23Trees.js';
-import { NodeReader } from './nodeReader.js';
-import { OpeningBracketId, Tokenizer, TokenKind } from './tokenizer.js';
+import {
+  AstNode,
+  AstNodeKind,
+  BracketAstNode,
+  InvalidBracketAstNode,
+  ListAstNode,
+  PairAstNode,
+  TextAstNode,
+} from "./ast.js";
+import { BeforeEditPositionMapper, TextEditInfo } from "./beforeEditPositionMapper.js";
+import { SmallImmutableSet } from "./smallImmutableSet.js";
+import { lengthIsZero, lengthLessThan } from "./length.js";
+import { concat23Trees, concat23TreesOfSameHeight } from "./concat23Trees.js";
+import { NodeReader } from "./nodeReader.js";
+import { OpeningBracketId, Tokenizer, TokenKind } from "./tokenizer.js";
 
 /**
  * Non incrementally built ASTs are immutable.
@@ -49,7 +57,7 @@ class Parser {
 		private readonly createImmutableLists: boolean,
 	) {
 		if (oldNode && createImmutableLists) {
-			throw new Error('Not supported');
+			throw new Error("Not supported");
 		}
 
 		this.oldNodeReader = oldNode ? new NodeReader(oldNode) : undefined;
@@ -98,13 +106,17 @@ class Parser {
 		}
 
 		// When there is no oldNodeReader, all items are created from scratch and must have the same height.
-		const result = this.oldNodeReader ? concat23Trees(items) : concat23TreesOfSameHeight(items, this.createImmutableLists);
+		const result = this.oldNodeReader ? concat23Trees(
+      items,
+    ) : concat23TreesOfSameHeight(items, this.createImmutableLists);
 		return result;
 	}
 
 	private tryReadChildFromCache(openedBracketIds: SmallImmutableSet<number>): AstNode | undefined {
 		if (this.oldNodeReader) {
-			const maxCacheableLength = this.positionMapper.getDistanceToNextChange(this.tokenizer.offset);
+			const maxCacheableLength = this.positionMapper.getDistanceToNextChange(
+        this.tokenizer.offset,
+      );
 			if (maxCacheableLength === null || !lengthIsZero(maxCacheableLength)) {
 				const cachedNode = this.oldNodeReader.readLongestNodeAt(this.positionMapper.getOffsetBeforeChange(this.tokenizer.offset), curNode => {
 					// The edit could extend the ending token, thus we cannot re-use nodes that touch the edit.
@@ -156,24 +168,26 @@ class Parser {
 				if (
 					nextToken &&
 					nextToken.kind === TokenKind.ClosingBracket &&
-					(nextToken.bracketId === token.bracketId || nextToken.bracketIds.intersects(token.bracketIds))
+					(nextToken.bracketId === token.bracketId || nextToken.bracketIds.intersects(
+            token.bracketIds,
+          ))
 				) {
 					this.tokenizer.read();
 					return PairAstNode.create(
-						token.astNode as BracketAstNode,
-						child,
-						nextToken.astNode as BracketAstNode
-					);
+            token.astNode as BracketAstNode,
+            child,
+            nextToken.astNode as BracketAstNode,
+          );
 				} else {
 					return PairAstNode.create(
-						token.astNode as BracketAstNode,
-						child,
-						null
-					);
+            token.astNode as BracketAstNode,
+            child,
+            null,
+          );
 				}
 			}
 			default:
-				throw new Error('unexpected');
+				throw new Error("unexpected");
 		}
 	}
 }

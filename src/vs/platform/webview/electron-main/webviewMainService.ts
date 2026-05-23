@@ -3,19 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WebContents, webContents, WebFrameMain } from 'electron';
-import { Emitter } from '../../../base/common/event.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { FindInFrameOptions, FoundInFrameResult, IWebviewManagerService, WebviewWebContentsId, WebviewWindowId } from '../common/webviewManagerService.js';
-import { WebviewProtocolProvider } from './webviewProtocolProvider.js';
-import { IWindowsMainService } from '../../windows/electron-main/windows.js';
-import { IFileService } from '../../files/common/files.js';
+import { WebContents, webContents, WebFrameMain } from "electron";
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import {
+  FindInFrameOptions,
+  FoundInFrameResult,
+  IWebviewManagerService,
+  WebviewWebContentsId,
+  WebviewWindowId,
+} from "../common/webviewManagerService.js";
+import { WebviewProtocolProvider } from "./webviewProtocolProvider.js";
+import { IWindowsMainService } from "../../windows/electron-main/windows.js";
+import { IFileService } from "../../files/common/files.js";
 
 export class WebviewMainService extends Disposable implements IWebviewManagerService {
 
 	declare readonly _serviceBrand: undefined;
 
-	private readonly _onFoundInFrame = this._register(new Emitter<FoundInFrameResult>());
+	private readonly _onFoundInFrame = this._register(
+    new Emitter<FoundInFrameResult>(),
+  );
 	public readonly onFoundInFrame = this._onFoundInFrame.event;
 
 	constructor(
@@ -29,7 +37,7 @@ export class WebviewMainService extends Disposable implements IWebviewManagerSer
 	public async setIgnoreMenuShortcuts(id: WebviewWebContentsId | WebviewWindowId, enabled: boolean): Promise<void> {
 		let contents: WebContents | undefined;
 
-		if (typeof (id as WebviewWindowId).windowId === 'number') {
+		if (typeof (id as WebviewWindowId).windowId === "number") {
 			const { windowId } = (id as WebviewWindowId);
 			const window = this.windowsMainService.getWindowById(windowId);
 			if (!window?.win) {
@@ -54,22 +62,22 @@ export class WebviewMainService extends Disposable implements IWebviewManagerSer
 
 		type WebFrameMainWithFindSupport = WebFrameMain & {
 			findInFrame?(text: string, findOptions: FindInFrameOptions): void;
-			on(event: 'found-in-frame', listener: Function): WebFrameMain;
-			removeListener(event: 'found-in-frame', listener: Function): WebFrameMain;
+			on(event: "found-in-frame", listener: Function): WebFrameMain;
+			removeListener(event: "found-in-frame", listener: Function): WebFrameMain;
 		};
 		const frame = initialFrame as unknown as WebFrameMainWithFindSupport;
-		if (typeof frame.findInFrame === 'function') {
+		if (typeof frame.findInFrame === "function") {
 			frame.findInFrame(text, {
-				findNext: options.findNext,
-				forward: options.forward,
-			});
+        findNext: options.findNext,
+        forward: options.forward,
+      });
 			const foundInFrameHandler = (_: unknown, result: FoundInFrameResult) => {
 				if (result.finalUpdate) {
 					this._onFoundInFrame.fire(result);
-					frame.removeListener('found-in-frame', foundInFrameHandler);
+					frame.removeListener("found-in-frame", foundInFrameHandler);
 				}
 			};
-			frame.on('found-in-frame', foundInFrameHandler);
+			frame.on("found-in-frame", foundInFrameHandler);
 		}
 	}
 
@@ -77,12 +85,14 @@ export class WebviewMainService extends Disposable implements IWebviewManagerSer
 		const initialFrame = this.getFrameByName(windowId, frameName);
 
 		type WebFrameMainWithFindSupport = WebFrameMain & {
-			stopFindInFrame?(stopOption: 'keepSelection' | 'clearSelection'): void;
+			stopFindInFrame?(stopOption: "keepSelection" | "clearSelection"): void;
 		};
 
 		const frame = initialFrame as unknown as WebFrameMainWithFindSupport;
-		if (typeof frame.stopFindInFrame === 'function') {
-			frame.stopFindInFrame(options.keepSelection ? 'keepSelection' : 'clearSelection');
+		if (typeof frame.stopFindInFrame === "function") {
+			frame.stopFindInFrame(
+        options.keepSelection ? "keepSelection" : "clearSelection",
+      );
 		}
 	}
 
@@ -91,9 +101,11 @@ export class WebviewMainService extends Disposable implements IWebviewManagerSer
 		if (!window?.win) {
 			throw new Error(`Invalid windowId: ${windowId}`);
 		}
-		const frame = window.win.webContents.mainFrame.framesInSubtree.find(frame => {
-			return frame.name === frameName;
-		});
+		const frame = window.win.webContents.mainFrame.framesInSubtree.find(
+      frame => {
+        return frame.name === frameName;
+      },
+    );
 		if (!frame) {
 			throw new Error(`Unknown frame: ${frameName}`);
 		}

@@ -3,11 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createFastDomNode, FastDomNode } from '../../../../../base/browser/fastDomNode.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { INotebookCellOverlay, INotebookCellOverlayChangeAccessor, INotebookViewCellsUpdateEvent } from '../notebookBrowser.js';
-import { NotebookCellListView } from '../view/notebookCellListView.js';
-import { CellViewModel } from '../viewModel/notebookViewModelImpl.js';
+import { createFastDomNode, FastDomNode } from "../../../../../base/browser/fastDomNode.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import {
+  INotebookCellOverlay,
+  INotebookCellOverlayChangeAccessor,
+  INotebookViewCellsUpdateEvent,
+} from "../notebookBrowser.js";
+import { NotebookCellListView } from "../view/notebookCellListView.js";
+import { CellViewModel } from "../viewModel/notebookViewModelImpl.js";
 
 interface INotebookCellOverlayWidget {
 	overlayId: string;
@@ -18,18 +22,20 @@ interface INotebookCellOverlayWidget {
 export class NotebookCellOverlays extends Disposable {
 	private _lastOverlayId = 0;
 	public domNode: FastDomNode<HTMLElement>;
-	private _overlays: { [key: string]: INotebookCellOverlayWidget } = Object.create(null);
+	private _overlays: { [key: string]: INotebookCellOverlayWidget } = Object.create(
+    null,
+  );
 
 	constructor(
-		private readonly listView: NotebookCellListView<CellViewModel>
+		private readonly listView: NotebookCellListView<CellViewModel>,
 	) {
 		super();
-		this.domNode = createFastDomNode(document.createElement('div'));
-		this.domNode.setClassName('cell-overlays');
-		this.domNode.setPosition('absolute');
-		this.domNode.setAttribute('role', 'presentation');
-		this.domNode.setAttribute('aria-hidden', 'true');
-		this.domNode.setWidth('100%');
+		this.domNode = createFastDomNode(document.createElement("div"));
+		this.domNode.setClassName("cell-overlays");
+		this.domNode.setPosition("absolute");
+		this.domNode.setAttribute("role", "presentation");
+		this.domNode.setAttribute("aria-hidden", "true");
+		this.domNode.setWidth("100%");
 
 		this.listView.containerDomNode.appendChild(this.domNode.domNode);
 	}
@@ -48,7 +54,7 @@ export class NotebookCellOverlays extends Disposable {
 			layoutOverlay: (id: string): void => {
 				overlaysHaveChanged = true;
 				this._layoutOverlay(id);
-			}
+			},
 		};
 
 		callback(changeAccessor);
@@ -74,14 +80,14 @@ export class NotebookCellOverlays extends Disposable {
 		const overlayId = `${++this._lastOverlayId}`;
 
 		const overlayWidget = {
-			overlayId,
-			overlay,
-			domNode: createFastDomNode(overlay.domNode)
-		};
+      overlayId,
+      overlay,
+      domNode: createFastDomNode(overlay.domNode),
+    };
 
 		this._overlays[overlayId] = overlayWidget;
-		overlayWidget.domNode.setClassName('cell-overlay');
-		overlayWidget.domNode.setPosition('absolute');
+		overlayWidget.domNode.setClassName("cell-overlay");
+		overlayWidget.domNode.setPosition("absolute");
 		this.domNode.appendChild(overlayWidget.domNode);
 
 		return overlayId;
@@ -109,11 +115,11 @@ export class NotebookCellOverlays extends Disposable {
 
 		const isInHiddenRanges = this._isInHiddenRanges(overlay);
 		if (isInHiddenRanges) {
-			overlay.domNode.setDisplay('none');
+			overlay.domNode.setDisplay("none");
 			return;
 		}
 
-		overlay.domNode.setDisplay('block');
+		overlay.domNode.setDisplay("block");
 		const index = this.listView.indexOf(overlay.overlay.cell as CellViewModel);
 		if (index === -1) {
 			// should not happen

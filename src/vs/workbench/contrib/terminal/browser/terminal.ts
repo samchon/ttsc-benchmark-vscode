@@ -3,46 +3,99 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDimension } from '../../../../base/browser/dom.js';
-import { Orientation } from '../../../../base/browser/ui/splitview/splitview.js';
-import { Color } from '../../../../base/common/color.js';
-import { Event, IDynamicListEventMultiplexer, type DynamicListEventMultiplexer } from '../../../../base/common/event.js';
-import { DisposableStore, IDisposable, type IReference } from '../../../../base/common/lifecycle.js';
-import { OperatingSystem } from '../../../../base/common/platform.js';
-import { URI, UriComponents } from '../../../../base/common/uri.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { IKeyMods } from '../../../../platform/quickinput/common/quickInput.js';
-import { IMarkProperties, ITerminalCapabilityImplMap, ITerminalCapabilityStore, ITerminalCommand, TerminalCapability } from '../../../../platform/terminal/common/capabilities/capabilities.js';
-import { IMergedEnvironmentVariableCollection } from '../../../../platform/terminal/common/environmentVariable.js';
-import { IExtensionTerminalProfile, IReconnectionProperties, IShellIntegration, IShellLaunchConfig, ITerminalBackend, ITerminalDimensions, ITerminalLaunchError, ITerminalProfile, ITerminalTabLayoutInfoById, TerminalExitReason, TerminalIcon, TerminalLocation, TerminalShellType, TerminalType, TitleEventSource, WaitOnExitValue, type IDecorationAddon, type ShellIntegrationInjectionFailureReason } from '../../../../platform/terminal/common/terminal.js';
-import { IColorTheme } from '../../../../platform/theme/common/themeService.js';
-import { IWorkspaceFolder } from '../../../../platform/workspace/common/workspace.js';
-import { EditorInput } from '../../../common/editor/editorInput.js';
-import { IEditableData } from '../../../common/views.js';
-import { ITerminalStatusList } from './terminalStatusList.js';
-import { XtermTerminal } from './xterm/xtermTerminal.js';
-import { IRegisterContributedProfileArgs, IRemoteTerminalAttachTarget, IStartExtensionTerminalRequest, ITerminalConfiguration, ITerminalFont, ITerminalProcessExtHostProxy, ITerminalProcessInfo } from '../common/terminal.js';
-import type { IMarker, ITheme, Terminal as RawXtermTerminal, IBufferRange, IMarker as IXtermMarker } from '@xterm/xterm';
-import { ScrollPosition } from './xterm/markNavigationAddon.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { GroupIdentifier } from '../../../common/editor.js';
-import { ACTIVE_GROUP_TYPE, AUX_WINDOW_GROUP_TYPE, SIDE_GROUP_TYPE } from '../../../services/editor/common/editorService.js';
-import type { ICurrentPartialCommand } from '../../../../platform/terminal/common/capabilities/commandDetection/terminalCommand.js';
-import type { IXtermCore, IBufferSet } from './xterm-private.js';
-import type { IMenu } from '../../../../platform/actions/common/actions.js';
-import type { IProgressState } from '@xterm/addon-progress';
-import type { IEditorOptions } from '../../../../platform/editor/common/editor.js';
-import type { TerminalEditorInput } from './terminalEditorInput.js';
-import type { MaybePromise } from '../../../../base/common/async.js';
-import { isNumber, type SingleOrMany } from '../../../../base/common/types.js';
+import { IDimension } from "../../../../base/browser/dom.js";
+import { Orientation } from "../../../../base/browser/ui/splitview/splitview.js";
+import { Color } from "../../../../base/common/color.js";
+import { Event, IDynamicListEventMultiplexer, type DynamicListEventMultiplexer } from "../../../../base/common/event.js";
+import { DisposableStore, IDisposable, type IReference } from "../../../../base/common/lifecycle.js";
+import { OperatingSystem } from "../../../../base/common/platform.js";
+import { URI, UriComponents } from "../../../../base/common/uri.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IKeyMods } from "../../../../platform/quickinput/common/quickInput.js";
+import {
+  IMarkProperties,
+  ITerminalCapabilityImplMap,
+  ITerminalCapabilityStore,
+  ITerminalCommand,
+  TerminalCapability,
+} from "../../../../platform/terminal/common/capabilities/capabilities.js";
+import { IMergedEnvironmentVariableCollection } from "../../../../platform/terminal/common/environmentVariable.js";
+import {
+  IExtensionTerminalProfile,
+  IReconnectionProperties,
+  IShellIntegration,
+  IShellLaunchConfig,
+  ITerminalBackend,
+  ITerminalDimensions,
+  ITerminalLaunchError,
+  ITerminalProfile,
+  ITerminalTabLayoutInfoById,
+  TerminalExitReason,
+  TerminalIcon,
+  TerminalLocation,
+  TerminalShellType,
+  TerminalType,
+  TitleEventSource,
+  WaitOnExitValue,
+  type IDecorationAddon,
+  type ShellIntegrationInjectionFailureReason,
+} from "../../../../platform/terminal/common/terminal.js";
+import { IColorTheme } from "../../../../platform/theme/common/themeService.js";
+import { IWorkspaceFolder } from "../../../../platform/workspace/common/workspace.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { IEditableData } from "../../../common/views.js";
+import { ITerminalStatusList } from "./terminalStatusList.js";
+import { XtermTerminal } from "./xterm/xtermTerminal.js";
+import {
+  IRegisterContributedProfileArgs,
+  IRemoteTerminalAttachTarget,
+  IStartExtensionTerminalRequest,
+  ITerminalConfiguration,
+  ITerminalFont,
+  ITerminalProcessExtHostProxy,
+  ITerminalProcessInfo,
+} from "../common/terminal.js";
+import type {
+  IMarker,
+  ITheme,
+  Terminal as RawXtermTerminal,
+  IBufferRange,
+  IMarker as IXtermMarker,
+} from "@xterm/xterm";
+import { ScrollPosition } from "./xterm/markNavigationAddon.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { GroupIdentifier } from "../../../common/editor.js";
+import { ACTIVE_GROUP_TYPE, AUX_WINDOW_GROUP_TYPE, SIDE_GROUP_TYPE } from "../../../services/editor/common/editorService.js";
+import type { ICurrentPartialCommand } from "../../../../platform/terminal/common/capabilities/commandDetection/terminalCommand.js";
+import type { IXtermCore, IBufferSet } from "./xterm-private.js";
+import type { IMenu } from "../../../../platform/actions/common/actions.js";
+import type { IProgressState } from "@xterm/addon-progress";
+import type { IEditorOptions } from "../../../../platform/editor/common/editor.js";
+import type { TerminalEditorInput } from "./terminalEditorInput.js";
+import type { MaybePromise } from "../../../../base/common/async.js";
+import { isNumber, type SingleOrMany } from "../../../../base/common/types.js";
 
-export const ITerminalService = createDecorator<ITerminalService>('terminalService');
-export const ITerminalConfigurationService = createDecorator<ITerminalConfigurationService>('terminalConfigurationService');
-export const ITerminalEditorService = createDecorator<ITerminalEditorService>('terminalEditorService');
-export const ITerminalEditingService = createDecorator<ITerminalEditingService>('terminalEditingService');
-export const ITerminalGroupService = createDecorator<ITerminalGroupService>('terminalGroupService');
-export const ITerminalInstanceService = createDecorator<ITerminalInstanceService>('terminalInstanceService');
-export const ITerminalChatService = createDecorator<ITerminalChatService>('terminalChatService');
+export const ITerminalService = createDecorator<ITerminalService>(
+  "terminalService",
+);
+export const ITerminalConfigurationService = createDecorator<ITerminalConfigurationService>(
+  "terminalConfigurationService",
+);
+export const ITerminalEditorService = createDecorator<ITerminalEditorService>(
+  "terminalEditorService",
+);
+export const ITerminalEditingService = createDecorator<ITerminalEditingService>(
+  "terminalEditingService",
+);
+export const ITerminalGroupService = createDecorator<ITerminalGroupService>(
+  "terminalGroupService",
+);
+export const ITerminalInstanceService = createDecorator<ITerminalInstanceService>(
+  "terminalInstanceService",
+);
+export const ITerminalChatService = createDecorator<ITerminalChatService>(
+  "terminalChatService",
+);
 
 /**
  * A terminal contribution that gets created whenever a terminal is created. A contribution has
@@ -370,7 +423,7 @@ export interface ITerminalGroup {
 	attachToElement(element: HTMLElement): void;
 	addInstance(instance: ITerminalInstance): void;
 	removeInstance(instance: ITerminalInstance): void;
-	moveInstance(instances: SingleOrMany<ITerminalInstance>, index: number, position: 'before' | 'after'): void;
+	moveInstance(instances: SingleOrMany<ITerminalInstance>, index: number, position: "before" | "after"): void;
 	setVisible(visible: boolean): void;
 	layout(width: number, height: number): void;
 	addDisposable(disposable: IDisposable): void;
@@ -470,7 +523,9 @@ export interface IDetachedTerminalInstance extends IDisposable, IBaseTerminalIns
 	attachToElement(container: HTMLElement, options?: Partial<IXtermAttachToElementOptions>): void;
 }
 
-export const isDetachedTerminalInstance = (t: ITerminalInstance | IDetachedTerminalInstance): t is IDetachedTerminalInstance => !isNumber((t as ITerminalInstance).instanceId);
+export const isDetachedTerminalInstance = (t: ITerminalInstance | IDetachedTerminalInstance): t is IDetachedTerminalInstance => !isNumber(
+  (t as ITerminalInstance).instanceId,
+);
 
 export interface ITerminalService extends ITerminalInstanceHost {
 	readonly _serviceBrand: undefined;
@@ -572,7 +627,7 @@ export interface ITerminalService extends ITerminalInstanceHost {
 
 	registerProcessSupport(isSupported: boolean): void;
 
-	showProfileQuickPick(type: 'setDefault' | 'createInstance', cwd?: string | URI): Promise<ITerminalInstance | undefined>;
+	showProfileQuickPick(type: "setDefault" | "createInstance", cwd?: string | URI): Promise<ITerminalInstance | undefined>;
 
 	setContainers(panelContainer: HTMLElement, terminalContainer: HTMLElement): void;
 
@@ -667,7 +722,7 @@ export interface ITerminalEditorService extends ITerminalInstanceHost {
 	getInputFromResource(resource: URI): TerminalEditorInput;
 }
 
-export const terminalEditorId = 'terminalEditor';
+export const terminalEditorId = "terminalEditor";
 
 interface ITerminalEditorInputObject {
 	readonly id: number;
@@ -724,7 +779,7 @@ export interface ICreateTerminalOptions {
 export interface TerminalEditorLocation {
 	viewColumn: GroupIdentifier | SIDE_GROUP_TYPE | ACTIVE_GROUP_TYPE | AUX_WINDOW_GROUP_TYPE;
 	preserveFocus?: boolean;
-	auxiliary?: IEditorOptions['auxiliary'];
+	auxiliary?: IEditorOptions["auxiliary"];
 }
 
 /**
@@ -742,7 +797,7 @@ export interface ITerminalGroupService extends ITerminalInstanceHost {
 	/**
 	 * Gets or sets the last accessed menu, this is used to select the instance(s) for menu actions.
 	 */
-	lastAccessedMenu: 'inline-tab' | 'tab-list';
+	lastAccessedMenu: "inline-tab" | "tab-list";
 
 	readonly onDidChangeActiveGroup: Event<ITerminalGroup | undefined>;
 	readonly onDidDisposeGroup: Event<ITerminalGroup>;
@@ -764,7 +819,7 @@ export interface ITerminalGroupService extends ITerminalInstanceHost {
 	moveGroup(source: SingleOrMany<ITerminalInstance>, target: ITerminalInstance): void;
 	moveGroupToEnd(source: SingleOrMany<ITerminalInstance>): void;
 
-	moveInstance(source: ITerminalInstance, target: ITerminalInstance, side: 'before' | 'after'): void;
+	moveInstance(source: ITerminalInstance, target: ITerminalInstance, side: "before" | "after"): void;
 	unsplitInstance(instance: ITerminalInstance): void;
 	joinInstances(instances: ITerminalInstance[]): void;
 	instanceIsSplit(instance: ITerminalInstance): boolean;
@@ -1587,7 +1642,7 @@ export interface IXtermColorProvider {
 
 export interface IRequestAddInstanceToGroupEvent {
 	uri: URI;
-	side: 'before' | 'after';
+	side: "before" | "after";
 }
 
 export const enum LinuxDistro {
@@ -1597,5 +1652,5 @@ export const enum LinuxDistro {
 }
 
 export const enum TerminalDataTransfers {
-	Terminals = 'Terminals'
+	Terminals = "Terminals"
 }

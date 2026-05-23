@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../base/common/event.js';
-import { IObservable } from '../../base/common/observable.js';
-import { equals } from '../../base/common/objects.js';
-import { RemoteAgentHostConnectionStatus } from '../../platform/agentHost/common/remoteAgentHostService.js';
-import { ResolveSessionConfigResult, SessionConfigValueItem } from '../../platform/agentHost/common/state/protocol/commands.js';
-import { CustomizationAgentRef, RootConfigState } from '../../platform/agentHost/common/state/protocol/state.js';
-import { ISessionsProvider } from '../services/sessions/common/sessionsProvider.js';
-import { ISessionAgentRef } from '../services/sessions/common/session.js';
+import { Event } from "../../base/common/event.js";
+import { IObservable } from "../../base/common/observable.js";
+import { equals } from "../../base/common/objects.js";
+import { RemoteAgentHostConnectionStatus } from "../../platform/agentHost/common/remoteAgentHostService.js";
+import { ResolveSessionConfigResult, SessionConfigValueItem } from "../../platform/agentHost/common/state/protocol/commands.js";
+import { CustomizationAgentRef, RootConfigState } from "../../platform/agentHost/common/state/protocol/state.js";
+import { ISessionsProvider } from "../services/sessions/common/sessionsProvider.js";
+import { ISessionAgentRef } from "../services/sessions/common/session.js";
 
 /**
  * Extended sessions provider for agent host providers (local and remote).
@@ -124,8 +124,8 @@ export interface IAgentHostSessionsProvider extends ISessionsProvider {
 
 }
 
-export const LOCAL_AGENT_HOST_PROVIDER_ID = 'local-agent-host';
-export const REMOTE_AGENT_HOST_PROVIDER_PREFIX = 'agenthost-';
+export const LOCAL_AGENT_HOST_PROVIDER_ID = "local-agent-host";
+export const REMOTE_AGENT_HOST_PROVIDER_PREFIX = "agenthost-";
 export const REMOTE_AGENT_HOST_PROVIDER_RE = /^agenthost-/;
 export const ANY_AGENT_HOST_PROVIDER_RE = /^(local-agent-host|agenthost-)/;
 
@@ -134,7 +134,9 @@ export const ANY_AGENT_HOST_PROVIDER_RE = /^(local-agent-host|agenthost-)/;
  * reserved provider ID (`local-agent-host` or `agenthost-*` prefix).
  */
 export function isAgentHostProvider(provider: ISessionsProvider): provider is IAgentHostSessionsProvider {
-	return provider.id === LOCAL_AGENT_HOST_PROVIDER_ID || provider.id.startsWith(REMOTE_AGENT_HOST_PROVIDER_PREFIX);
+	return provider.id === LOCAL_AGENT_HOST_PROVIDER_ID || provider.id.startsWith(
+    REMOTE_AGENT_HOST_PROVIDER_PREFIX,
+  );
 }
 
 /**
@@ -171,35 +173,35 @@ export function resolvedConfigsEqual(a: ResolveSessionConfigResult, b: ResolveSe
 }
 
 /** Known auto-approve config values. */
-const AUTO_APPROVE_ENUM = ['default', 'autoApprove', 'autopilot'];
+const AUTO_APPROVE_ENUM = ["default", "autoApprove", "autopilot"];
 
 type MutableConfigSchemaItem =
-	| { type: 'string'; title: string; sessionMutable: true; enum: string[] }
-	| { type: 'number'; title: string; sessionMutable: true }
-	| { type: 'boolean'; title: string; sessionMutable: true }
-	| { type: 'array'; title: string; sessionMutable: true }
-	| { type: 'object'; title: string; sessionMutable: true };
+	| { type: "string"; title: string; sessionMutable: true; enum: string[] }
+	| { type: "number"; title: string; sessionMutable: true }
+	| { type: "boolean"; title: string; sessionMutable: true }
+	| { type: "array"; title: string; sessionMutable: true }
+	| { type: "object"; title: string; sessionMutable: true };
 
 function buildMutableConfigSchemaItem(key: string, value: unknown): MutableConfigSchemaItem | undefined {
-	if (typeof value === 'string') {
+	if (typeof value === "string") {
 		return {
-			type: 'string',
-			title: key,
-			sessionMutable: true,
-			enum: key === 'autoApprove' ? AUTO_APPROVE_ENUM : [value],
-		};
+      type: "string",
+      title: key,
+      sessionMutable: true,
+      enum: key === "autoApprove" ? AUTO_APPROVE_ENUM : [value],
+    };
 	}
-	if (typeof value === 'number') {
-		return { type: 'number', title: key, sessionMutable: true };
+	if (typeof value === "number") {
+		return { type: "number", title: key, sessionMutable: true };
 	}
-	if (typeof value === 'boolean') {
-		return { type: 'boolean', title: key, sessionMutable: true };
+	if (typeof value === "boolean") {
+		return { type: "boolean", title: key, sessionMutable: true };
 	}
 	if (Array.isArray(value)) {
-		return { type: 'array', title: key, sessionMutable: true };
+		return { type: "array", title: key, sessionMutable: true };
 	}
-	if (value && typeof value === 'object') {
-		return { type: 'object', title: key, sessionMutable: true };
+	if (value && typeof value === "object") {
+		return { type: "object", title: key, sessionMutable: true };
 	}
 	return undefined;
 }

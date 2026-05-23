@@ -3,29 +3,29 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { SerializedError, errorHandler, onUnexpectedError } from '../../../../base/common/errors.js';
-import { isFirefox, isSafari } from '../../../../base/common/platform.js';
-import { TernarySearchTree } from '../../../../base/common/ternarySearchTree.js';
-import { URI } from '../../../../base/common/uri.js';
-import { mock } from '../../../../base/test/common/mock.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
-import { ExtensionIdentifier, IExtensionDescription } from '../../../../platform/extensions/common/extensions.js';
-import { InstantiationService } from '../../../../platform/instantiation/common/instantiationService.js';
-import { ServiceCollection } from '../../../../platform/instantiation/common/serviceCollection.js';
-import { ILogService, NullLogService } from '../../../../platform/log/common/log.js';
-import { MainThreadErrorsShape, MainThreadExtensionServiceShape } from '../../common/extHost.protocol.js';
-import { ExtensionPaths, IExtHostExtensionService } from '../../common/extHostExtensionService.js';
-import { IExtHostRpcService } from '../../common/extHostRpcService.js';
-import { IExtHostTelemetry } from '../../common/extHostTelemetry.js';
-import { ErrorHandler } from '../../common/extensionHostMain.js';
-import { nullExtensionDescription } from '../../../services/extensions/common/extensions.js';
-import { ProxyIdentifier, Proxied } from '../../../services/extensions/common/proxyIdentifier.js';
-import { IExtHostApiDeprecationService, NullApiDeprecationService } from '../../common/extHostApiDeprecationService.js';
-import { ExtensionDescriptionRegistry, IActivationEventsReader } from '../../../services/extensions/common/extensionDescriptionRegistry.js';
+import assert from "assert";
+import { SerializedError, errorHandler, onUnexpectedError } from "../../../../base/common/errors.js";
+import { isFirefox, isSafari } from "../../../../base/common/platform.js";
+import { TernarySearchTree } from "../../../../base/common/ternarySearchTree.js";
+import { URI } from "../../../../base/common/uri.js";
+import { mock } from "../../../../base/test/common/mock.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
+import { ExtensionIdentifier, IExtensionDescription } from "../../../../platform/extensions/common/extensions.js";
+import { InstantiationService } from "../../../../platform/instantiation/common/instantiationService.js";
+import { ServiceCollection } from "../../../../platform/instantiation/common/serviceCollection.js";
+import { ILogService, NullLogService } from "../../../../platform/log/common/log.js";
+import { MainThreadErrorsShape, MainThreadExtensionServiceShape } from "../../common/extHost.protocol.js";
+import { ExtensionPaths, IExtHostExtensionService } from "../../common/extHostExtensionService.js";
+import { IExtHostRpcService } from "../../common/extHostRpcService.js";
+import { IExtHostTelemetry } from "../../common/extHostTelemetry.js";
+import { ErrorHandler } from "../../common/extensionHostMain.js";
+import { nullExtensionDescription } from "../../../services/extensions/common/extensions.js";
+import { ProxyIdentifier, Proxied } from "../../../services/extensions/common/proxyIdentifier.js";
+import { IExtHostApiDeprecationService, NullApiDeprecationService } from "../../common/extHostApiDeprecationService.js";
+import { ExtensionDescriptionRegistry, IActivationEventsReader } from "../../../services/extensions/common/extensionDescriptionRegistry.js";
 
 
-suite('ExtensionHostMain#ErrorHandler - Wrapping prepareStackTrace can cause slowdown and eventual stack overflow #184926 ', function () {
+suite("ExtensionHostMain#ErrorHandler - Wrapping prepareStackTrace can cause slowdown and eventual stack overflow #184926 ", function () {
 
 	if (isFirefox || isSafari) {
 		return;
@@ -44,7 +44,7 @@ suite('ExtensionHostMain#ErrorHandler - Wrapping prepareStackTrace can cause slo
 	const basicActivationEventsReader: IActivationEventsReader = {
 		readActivationEvents: (extensionDescription: IExtensionDescription): string[] => {
 			return [];
-		}
+		},
 	};
 
 	const collection = new ServiceCollection(
@@ -109,9 +109,9 @@ suite('ExtensionHostMain#ErrorHandler - Wrapping prepareStackTrace can cause slo
 		Error.prepareStackTrace = originalPrepareStackTrace;
 	});
 
-	test('basics', function () {
+	test("basics", function () {
 
-		const err = new Error('test1');
+		const err = new Error("test1");
 
 		onUnexpectedError(err);
 
@@ -119,10 +119,10 @@ suite('ExtensionHostMain#ErrorHandler - Wrapping prepareStackTrace can cause slo
 
 	});
 
-	test('set/reset prepareStackTrace-callback', function () {
+	test("set/reset prepareStackTrace-callback", function () {
 
 		const original = Error.prepareStackTrace;
-		Error.prepareStackTrace = (_error, _stack) => 'stack';
+		Error.prepareStackTrace = (_error, _stack) => "stack";
 		const probeErr = new Error();
 		const stack = probeErr.stack;
 		assert.ok(stack);
@@ -134,13 +134,13 @@ suite('ExtensionHostMain#ErrorHandler - Wrapping prepareStackTrace can cause slo
 		assert.strictEqual(findSubstrCount, 1);
 
 		// one more error
-		const err = new Error('test2');
+		const err = new Error("test2");
 		onUnexpectedError(err);
 
 		assert.strictEqual(findSubstrCount, 2);
 	});
 
-	test('wrap prepareStackTrace-callback', function () {
+	test("wrap prepareStackTrace-callback", function () {
 
 		function do_something_else(params: string) {
 			return params;
@@ -159,7 +159,7 @@ suite('ExtensionHostMain#ErrorHandler - Wrapping prepareStackTrace can cause slo
 		assert.strictEqual(findSubstrCount, 1);
 	});
 
-	test('prevent rewrapping', function () {
+	test("prevent rewrapping", function () {
 
 		let do_something_count = 0;
 		function do_something(params: any) {
@@ -168,7 +168,7 @@ suite('ExtensionHostMain#ErrorHandler - Wrapping prepareStackTrace can cause slo
 
 		Error.prepareStackTrace = (result, stack) => {
 			do_something(stack);
-			return 'fakestack';
+			return "fakestack";
 		};
 
 		for (let i = 0; i < 2_500; ++i) {
@@ -177,7 +177,7 @@ suite('ExtensionHostMain#ErrorHandler - Wrapping prepareStackTrace can cause slo
 
 		const probeErr = new Error();
 		const stack = probeErr.stack;
-		assert.strictEqual(stack, 'fakestack');
+		assert.strictEqual(stack, "fakestack");
 
 		onUnexpectedError(probeErr);
 		assert.strictEqual(findSubstrCount, 1);
@@ -189,9 +189,9 @@ suite('ExtensionHostMain#ErrorHandler - Wrapping prepareStackTrace can cause slo
 	});
 
 
-	suite('https://gist.github.com/thecrypticace/f0f2e182082072efdaf0f8e1537d2cce', function () {
+	suite("https://gist.github.com/thecrypticace/f0f2e182082072efdaf0f8e1537d2cce", function () {
 
-		test('Restored, separate operations', () => {
+		test("Restored, separate operations", () => {
 			// Actual Test
 			let original;
 
@@ -229,7 +229,7 @@ suite('ExtensionHostMain#ErrorHandler - Wrapping prepareStackTrace can cause slo
 			assert.strictEqual(findSubstrCount, 4);
 		});
 
-		test('Never restored, separate operations', () => {
+		test("Never restored, separate operations", () => {
 			// Operation 1
 			for (let i = 0; i < 12_500; ++i) { Error.prepareStackTrace = Error.prepareStackTrace; }
 			assert.ok(new Error().stack);
@@ -247,7 +247,7 @@ suite('ExtensionHostMain#ErrorHandler - Wrapping prepareStackTrace can cause slo
 			assert.ok(new Error().stack);
 		});
 
-		test('Restored, too many uses before restoration', async () => {
+		test("Restored, too many uses before restoration", async () => {
 			const original = Error.prepareStackTrace;
 			Error.prepareStackTrace = (_, stack) => stack;
 

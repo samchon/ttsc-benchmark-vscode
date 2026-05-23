@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Size2D } from '../../../../../../common/core/2d/size.js';
-import { OffsetRange } from '../../../../../../common/core/ranges/offsetRange.js';
+import { Size2D } from "../../../../../../common/core/2d/size.js";
+import { OffsetRange } from "../../../../../../common/core/ranges/offsetRange.js";
 
 /**
  * The tower areas are arranged from left to right, touch and are aligned at the bottom.

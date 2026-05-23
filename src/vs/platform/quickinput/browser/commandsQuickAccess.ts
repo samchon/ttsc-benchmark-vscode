@@ -3,31 +3,38 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WorkbenchActionExecutedClassification, WorkbenchActionExecutedEvent } from '../../../base/common/actions.js';
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { Codicon } from '../../../base/common/codicons.js';
-import { toErrorMessage } from '../../../base/common/errorMessage.js';
-import { isCancellationError } from '../../../base/common/errors.js';
-import { IMatch, matchesBaseContiguousSubString, matchesWords, or } from '../../../base/common/filters.js';
-import { createSingleCallFunction } from '../../../base/common/functional.js';
-import { Disposable, DisposableStore, IDisposable } from '../../../base/common/lifecycle.js';
-import { LRUCache } from '../../../base/common/map.js';
-import { ThemeIcon } from '../../../base/common/themables.js';
-import { TfIdfCalculator, normalizeTfIdfScores } from '../../../base/common/tfIdf.js';
-import { localize } from '../../../nls.js';
-import { ILocalizedString } from '../../action/common/action.js';
-import { ICommandService } from '../../commands/common/commands.js';
-import { IConfigurationChangeEvent, IConfigurationService } from '../../configuration/common/configuration.js';
-import { IDialogService } from '../../dialogs/common/dialogs.js';
-import { IInstantiationService } from '../../instantiation/common/instantiation.js';
-import { IKeybindingService } from '../../keybinding/common/keybinding.js';
-import { ILogService } from '../../log/common/log.js';
-import { FastAndSlowPicks, IPickerQuickAccessItem, IPickerQuickAccessProviderOptions, PickerQuickAccessProvider, Picks, TriggerAction } from './pickerQuickAccess.js';
-import { IQuickAccessProviderRunOptions } from '../common/quickAccess.js';
-import { IKeyMods, IQuickPickSeparator } from '../common/quickInput.js';
-import { IStorageService, StorageScope, StorageTarget, WillSaveStateReason } from '../../storage/common/storage.js';
-import { ITelemetryService } from '../../telemetry/common/telemetry.js';
-import { Categories } from '../../action/common/actionCommonCategories.js';
+import { WorkbenchActionExecutedClassification, WorkbenchActionExecutedEvent } from "../../../base/common/actions.js";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { Codicon } from "../../../base/common/codicons.js";
+import { toErrorMessage } from "../../../base/common/errorMessage.js";
+import { isCancellationError } from "../../../base/common/errors.js";
+import { IMatch, matchesBaseContiguousSubString, matchesWords, or } from "../../../base/common/filters.js";
+import { createSingleCallFunction } from "../../../base/common/functional.js";
+import { Disposable, DisposableStore, IDisposable } from "../../../base/common/lifecycle.js";
+import { LRUCache } from "../../../base/common/map.js";
+import { ThemeIcon } from "../../../base/common/themables.js";
+import { TfIdfCalculator, normalizeTfIdfScores } from "../../../base/common/tfIdf.js";
+import { localize } from "../../../nls.js";
+import { ILocalizedString } from "../../action/common/action.js";
+import { ICommandService } from "../../commands/common/commands.js";
+import { IConfigurationChangeEvent, IConfigurationService } from "../../configuration/common/configuration.js";
+import { IDialogService } from "../../dialogs/common/dialogs.js";
+import { IInstantiationService } from "../../instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../keybinding/common/keybinding.js";
+import { ILogService } from "../../log/common/log.js";
+import {
+  FastAndSlowPicks,
+  IPickerQuickAccessItem,
+  IPickerQuickAccessProviderOptions,
+  PickerQuickAccessProvider,
+  Picks,
+  TriggerAction,
+} from "./pickerQuickAccess.js";
+import { IQuickAccessProviderRunOptions } from "../common/quickAccess.js";
+import { IKeyMods, IQuickPickSeparator } from "../common/quickInput.js";
+import { IStorageService, StorageScope, StorageTarget, WillSaveStateReason } from "../../storage/common/storage.js";
+import { ITelemetryService } from "../../telemetry/common/telemetry.js";
+import { Categories } from "../../action/common/actionCommonCategories.js";
 
 export interface ICommandQuickPick extends IPickerQuickAccessItem {
 	readonly commandId: string;
@@ -48,7 +55,7 @@ export interface ICommandsQuickAccessOptions extends IPickerQuickAccessProviderO
 
 export abstract class AbstractCommandsQuickAccessProvider extends PickerQuickAccessProvider<ICommandQuickPick> implements IDisposable {
 
-	static PREFIX = '>';
+	static PREFIX = ">";
 
 	private static readonly TFIDF_THRESHOLD = 0.5;
 	private static readonly TFIDF_MAX_RESULTS = 5;
@@ -65,11 +72,13 @@ export abstract class AbstractCommandsQuickAccessProvider extends PickerQuickAcc
 		@IKeybindingService protected readonly keybindingService: IKeybindingService,
 		@ICommandService private readonly commandService: ICommandService,
 		@ITelemetryService private readonly telemetryService: ITelemetryService,
-		@IDialogService private readonly dialogService: IDialogService
+		@IDialogService private readonly dialogService: IDialogService,
 	) {
 		super(AbstractCommandsQuickAccessProvider.PREFIX, options);
 
-		this.commandsHistory = this._register(instantiationService.createInstance(CommandsHistory));
+		this.commandsHistory = this._register(
+      instantiationService.createInstance(CommandsHistory),
+    );
 
 		this.options = options;
 	}
@@ -87,7 +96,7 @@ export abstract class AbstractCommandsQuickAccessProvider extends PickerQuickAcc
 			const tfidf = new TfIdfCalculator();
 			tfidf.updateDocuments(allCommandPicks.map(commandPick => ({
 				key: commandPick.commandId,
-				textChunks: [this.getTfIdfChunk(commandPick)]
+				textChunks: [this.getTfIdfChunk(commandPick)],
 			})));
 			const result = tfidf.calculateScores(filter, token);
 
@@ -99,19 +108,25 @@ export abstract class AbstractCommandsQuickAccessProvider extends PickerQuickAcc
 		// Filter
 		const filteredCommandPicks: ICommandQuickPick[] = [];
 		for (const commandPick of allCommandPicks) {
-			const labelHighlights = AbstractCommandsQuickAccessProvider.WORD_FILTER(filter, commandPick.label) ?? undefined;
+			const labelHighlights = AbstractCommandsQuickAccessProvider.WORD_FILTER(
+        filter,
+        commandPick.label,
+      ) ?? undefined;
 
 			let aliasHighlights: IMatch[] | undefined;
 			if (commandPick.commandAlias) {
-				aliasHighlights = AbstractCommandsQuickAccessProvider.WORD_FILTER(filter, commandPick.commandAlias) ?? undefined;
+				aliasHighlights = AbstractCommandsQuickAccessProvider.WORD_FILTER(
+          filter,
+          commandPick.commandAlias,
+        ) ?? undefined;
 			}
 
 			// Add if matching in label or alias
 			if (labelHighlights || aliasHighlights) {
 				commandPick.highlights = {
-					label: labelHighlights,
-					detail: this.options.showAlias ? aliasHighlights : undefined
-				};
+          label: labelHighlights,
+          detail: this.options.showAlias ? aliasHighlights : undefined,
+        };
 
 				filteredCommandPicks.push(commandPick);
 			}
@@ -129,7 +144,9 @@ export abstract class AbstractCommandsQuickAccessProvider extends PickerQuickAcc
 				}
 
 				// Add if we have a tf-idf score
-				const tfidfScore = tfidf.find(score => score.key === commandPick.commandId);
+				const tfidfScore = tfidf.find(
+          score => score.key === commandPick.commandId,
+        );
 				if (tfidfScore) {
 					commandPick.tfIdfScore = tfidfScore.score;
 					filteredCommandPicks.push(commandPick);
@@ -221,30 +238,48 @@ export abstract class AbstractCommandsQuickAccessProvider extends PickerQuickAcc
 
 			// Separator: recently used
 			if (i === 0 && isInHistory) {
-				commandPicks.push({ type: 'separator', label: localize('recentlyUsed', "recently used") });
+				commandPicks.push({
+          type: "separator",
+          label: localize("recentlyUsed", "recently used"),
+        });
 				addOtherSeparator = true;
 			}
 
 			if (addSuggestedSeparator && commandPick.tfIdfScore !== undefined) {
-				commandPicks.push({ type: 'separator', label: localize('suggested', "similar commands") });
+				commandPicks.push({
+          type: "separator",
+          label: localize("suggested", "similar commands"),
+        });
 				addSuggestedSeparator = false;
 			}
 
 			// Separator: commonly used
-			if (addCommonlyUsedSeparator && commandPick.tfIdfScore === undefined && !isInHistory && this.options.suggestedCommandIds?.has(commandPick.commandId)) {
-				commandPicks.push({ type: 'separator', label: localize('commonlyUsed', "commonly used") });
+			if (addCommonlyUsedSeparator && commandPick.tfIdfScore === undefined && !isInHistory && this.options.suggestedCommandIds?.has(
+        commandPick.commandId,
+      )) {
+				commandPicks.push({
+          type: "separator",
+          label: localize("commonlyUsed", "commonly used"),
+        });
 				addOtherSeparator = true;
 				addCommonlyUsedSeparator = false;
 			}
 
 			// Separator: other commands
-			if (addOtherSeparator && commandPick.tfIdfScore === undefined && !isInHistory && !this.options.suggestedCommandIds?.has(commandPick.commandId)) {
-				commandPicks.push({ type: 'separator', label: localize('morecCommands', "other commands") });
+			if (addOtherSeparator && commandPick.tfIdfScore === undefined && !isInHistory && !this.options.suggestedCommandIds?.has(
+        commandPick.commandId,
+      )) {
+				commandPicks.push({
+          type: "separator",
+          label: localize("morecCommands", "other commands"),
+        });
 				addOtherSeparator = false;
 			}
 
 			// Command
-			commandPicks.push(this.toCommandPick(commandPick, runOptions, isInHistory));
+			commandPicks.push(
+        this.toCommandPick(commandPick, runOptions, isInHistory),
+      );
 		}
 
 		if (!this.hasAdditionalCommandPicks(filter, token)) {
@@ -262,35 +297,42 @@ export abstract class AbstractCommandsQuickAccessProvider extends PickerQuickAcc
 				const commandPicks: Array<ICommandQuickPick | IQuickPickSeparator> = additionalCommandPicks.map(commandPick => this.toCommandPick(commandPick, runOptions));
 				// Basically, if we haven't already added a separator, we add one before the additional picks so long
 				// as one hasn't been added to the start of the array.
-				if (addSuggestedSeparator && commandPicks[0]?.type !== 'separator') {
-					commandPicks.unshift({ type: 'separator', label: localize('suggested', "similar commands") });
+				if (addSuggestedSeparator && commandPicks[0]?.type !== "separator") {
+					commandPicks.unshift({ type: "separator", label: localize("suggested", "similar commands") });
 				}
 				return commandPicks;
-			})()
+			})(),
 		};
 	}
 
 	private toCommandPick(commandPick: ICommandQuickPick | IQuickPickSeparator, runOptions?: IQuickAccessProviderRunOptions, isRecentlyUsed: boolean = false): ICommandQuickPick | IQuickPickSeparator {
-		if (commandPick.type === 'separator') {
+		if (commandPick.type === "separator") {
 			return commandPick;
 		}
 		const tooltip = commandPick.tooltip
 			?? commandPick.commandDescription?.value;
 
-		const keybinding = this.keybindingService.lookupKeybinding(commandPick.commandId);
+		const keybinding = this.keybindingService.lookupKeybinding(
+      commandPick.commandId,
+    );
 		const ariaLabel = keybinding ?
-			localize('commandPickAriaLabelWithKeybinding', "{0}, {1}", commandPick.label, keybinding.getAriaLabel()) :
+			localize(
+        "commandPickAriaLabelWithKeybinding",
+        "{0}, {1}",
+        commandPick.label,
+        keybinding.getAriaLabel(),
+      ) :
 			commandPick.label;
 
 		// Add remove button for recently used items (as the last button, to the right)
 		const existingButtons = commandPick.buttons || [];
 		const buttons = isRecentlyUsed ? [
-			...existingButtons,
-			{
-				iconClass: ThemeIcon.asClassName(Codicon.close),
-				tooltip: localize('removeFromRecentlyUsed', "Remove from Recently Used")
-			}
-		] : commandPick.buttons;
+      ...existingButtons,
+      {
+        iconClass: ThemeIcon.asClassName(Codicon.close),
+        tooltip: localize("removeFromRecentlyUsed", "Remove from Recently Used"),
+      },
+    ] : commandPick.buttons;
 
 		return {
 			...commandPick,
@@ -305,9 +347,9 @@ export abstract class AbstractCommandsQuickAccessProvider extends PickerQuickAcc
 				this.commandsHistory.push(commandPick.commandId);
 
 				// Telementry
-				this.telemetryService.publicLog2<WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification>('workbenchActionExecuted', {
+				this.telemetryService.publicLog2<WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification>("workbenchActionExecuted", {
 					id: commandPick.commandId,
-					from: runOptions?.from ?? 'quick open'
+					from: runOptions?.from ?? "quick open",
 				});
 
 				// Run
@@ -317,7 +359,7 @@ export abstract class AbstractCommandsQuickAccessProvider extends PickerQuickAcc
 						: await this.commandService.executeCommand(commandPick.commandId);
 				} catch (error) {
 					if (!isCancellationError(error)) {
-						this.dialogService.error(localize('canNotRun', "Command '{0}' resulted in an error", commandPick.label), toErrorMessage(error));
+						this.dialogService.error(localize("canNotRun", "Command '{0}' resulted in an error", commandPick.label), toErrorMessage(error));
 					}
 				}
 			},
@@ -333,7 +375,7 @@ export abstract class AbstractCommandsQuickAccessProvider extends PickerQuickAcc
 					return commandPick.trigger(buttonIndex, keyMods);
 				}
 				return TriggerAction.NO_ACTION;
-			} : commandPick.trigger
+			} : commandPick.trigger,
 		};
 	}
 
@@ -374,8 +416,8 @@ export class CommandsHistory extends Disposable {
 
 	static readonly DEFAULT_COMMANDS_HISTORY_LENGTH = 50;
 
-	private static readonly PREF_KEY_CACHE = 'commandPalette.mru.cache';
-	private static readonly PREF_KEY_COUNTER = 'commandPalette.mru.counter';
+	private static readonly PREF_KEY_CACHE = "commandPalette.mru.cache";
+	private static readonly PREF_KEY_COUNTER = "commandPalette.mru.counter";
 
 	private static cache: LRUCache<string, number> | undefined;
 	private static counter = 1;
@@ -386,7 +428,7 @@ export class CommandsHistory extends Disposable {
 	constructor(
 		@IStorageService private readonly storageService: IStorageService,
 		@IConfigurationService private readonly configurationService: IConfigurationService,
-		@ILogService private readonly logService: ILogService
+		@ILogService private readonly logService: ILogService,
 	) {
 		super();
 
@@ -397,7 +439,11 @@ export class CommandsHistory extends Disposable {
 	}
 
 	private registerListeners(): void {
-		this._register(this.configurationService.onDidChangeConfiguration(e => this.updateConfiguration(e)));
+		this._register(
+      this.configurationService.onDidChangeConfiguration(
+        e => this.updateConfiguration(e),
+      ),
+    );
 		this._register(this.storageService.onWillSaveState(e => {
 			if (e.reason === WillSaveStateReason.SHUTDOWN) {
 				// Commands history is very dynamic and so we limit impact
@@ -409,11 +455,13 @@ export class CommandsHistory extends Disposable {
 	}
 
 	private updateConfiguration(e?: IConfigurationChangeEvent): void {
-		if (e && !e.affectsConfiguration('workbench.commandPalette.history')) {
+		if (e && !e.affectsConfiguration("workbench.commandPalette.history")) {
 			return;
 		}
 
-		this.configuredCommandsHistoryLength = CommandsHistory.getConfiguredCommandHistoryLength(this.configurationService);
+		this.configuredCommandsHistoryLength = CommandsHistory.getConfiguredCommandHistoryLength(
+      this.configurationService,
+    );
 
 		if (CommandsHistory.cache && CommandsHistory.cache.limit !== this.configuredCommandsHistoryLength) {
 			CommandsHistory.cache.limit = this.configuredCommandsHistoryLength;
@@ -422,7 +470,10 @@ export class CommandsHistory extends Disposable {
 	}
 
 	private load(): void {
-		const raw = this.storageService.get(CommandsHistory.PREF_KEY_CACHE, StorageScope.PROFILE);
+		const raw = this.storageService.get(
+      CommandsHistory.PREF_KEY_CACHE,
+      StorageScope.PROFILE,
+    );
 		let serializedCache: ISerializedCommandHistory | undefined;
 		if (raw) {
 			try {
@@ -432,7 +483,10 @@ export class CommandsHistory extends Disposable {
 			}
 		}
 
-		const cache = CommandsHistory.cache = new LRUCache<string, number>(this.configuredCommandsHistoryLength, 1);
+		const cache = CommandsHistory.cache = new LRUCache<string, number>(
+      this.configuredCommandsHistoryLength,
+      1,
+    );
 		if (serializedCache) {
 			let entries: { key: string; value: number }[];
 			if (serializedCache.usesLRU) {
@@ -443,7 +497,11 @@ export class CommandsHistory extends Disposable {
 			entries.forEach(entry => cache.set(entry.key, entry.value));
 		}
 
-		CommandsHistory.counter = this.storageService.getNumber(CommandsHistory.PREF_KEY_COUNTER, StorageScope.PROFILE, CommandsHistory.counter);
+		CommandsHistory.counter = this.storageService.getNumber(
+      CommandsHistory.PREF_KEY_COUNTER,
+      StorageScope.PROFILE,
+      CommandsHistory.counter,
+    );
 	}
 
 	push(commandId: string): void {
@@ -451,7 +509,10 @@ export class CommandsHistory extends Disposable {
 			return;
 		}
 
-		CommandsHistory.cache.set(commandId, CommandsHistory.counter++); // set counter to command
+		CommandsHistory.cache.set(
+      commandId,
+      CommandsHistory.counter++,
+    ); // set counter to command
 		CommandsHistory.hasChanges = true;
 	}
 
@@ -477,11 +538,26 @@ export class CommandsHistory extends Disposable {
 			return;
 		}
 
-		const serializedCache: ISerializedCommandHistory = { usesLRU: true, entries: [] };
-		CommandsHistory.cache.forEach((value, key) => serializedCache.entries.push({ key, value }));
+		const serializedCache: ISerializedCommandHistory = {
+      usesLRU: true,
+      entries: [],
+    };
+		CommandsHistory.cache.forEach(
+      (value, key) => serializedCache.entries.push({ key, value }),
+    );
 
-		this.storageService.store(CommandsHistory.PREF_KEY_CACHE, JSON.stringify(serializedCache), StorageScope.PROFILE, StorageTarget.USER);
-		this.storageService.store(CommandsHistory.PREF_KEY_COUNTER, CommandsHistory.counter, StorageScope.PROFILE, StorageTarget.USER);
+		this.storageService.store(
+      CommandsHistory.PREF_KEY_CACHE,
+      JSON.stringify(serializedCache),
+      StorageScope.PROFILE,
+      StorageTarget.USER,
+    );
+		this.storageService.store(
+      CommandsHistory.PREF_KEY_COUNTER,
+      CommandsHistory.counter,
+      StorageScope.PROFILE,
+      StorageTarget.USER,
+    );
 		CommandsHistory.hasChanges = false;
 	}
 
@@ -489,7 +565,7 @@ export class CommandsHistory extends Disposable {
 		const config = configurationService.getValue<ICommandsQuickAccessConfiguration>();
 
 		const configuredCommandHistoryLength = config.workbench?.commandPalette?.history;
-		if (typeof configuredCommandHistoryLength === 'number') {
+		if (typeof configuredCommandHistoryLength === "number") {
 			return configuredCommandHistoryLength;
 		}
 
@@ -497,7 +573,9 @@ export class CommandsHistory extends Disposable {
 	}
 
 	static clearHistory(configurationService: IConfigurationService, storageService: IStorageService): void {
-		const commandHistoryLength = CommandsHistory.getConfiguredCommandHistoryLength(configurationService);
+		const commandHistoryLength = CommandsHistory.getConfiguredCommandHistoryLength(
+      configurationService,
+    );
 		CommandsHistory.cache = new LRUCache<string, number>(commandHistoryLength);
 		CommandsHistory.counter = 1;
 

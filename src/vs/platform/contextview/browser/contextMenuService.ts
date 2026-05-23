@@ -3,19 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IContextMenuDelegate } from '../../../base/browser/contextmenu.js';
-import { ModifierKeyEmitter } from '../../../base/browser/dom.js';
-import { IAction, Separator } from '../../../base/common/actions.js';
-import { Emitter } from '../../../base/common/event.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { getFlatContextMenuActions } from '../../actions/browser/menuEntryActionViewItem.js';
-import { IMenuService, MenuId } from '../../actions/common/actions.js';
-import { IContextKeyService } from '../../contextkey/common/contextkey.js';
-import { IKeybindingService } from '../../keybinding/common/keybinding.js';
-import { INotificationService } from '../../notification/common/notification.js';
-import { ITelemetryService } from '../../telemetry/common/telemetry.js';
-import { ContextMenuHandler, IContextMenuHandlerOptions } from './contextMenuHandler.js';
-import { IContextMenuMenuDelegate, IContextMenuService, IContextViewService } from './contextView.js';
+import { IContextMenuDelegate } from "../../../base/browser/contextmenu.js";
+import { ModifierKeyEmitter } from "../../../base/browser/dom.js";
+import { IAction, Separator } from "../../../base/common/actions.js";
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { getFlatContextMenuActions } from "../../actions/browser/menuEntryActionViewItem.js";
+import { IMenuService, MenuId } from "../../actions/common/actions.js";
+import { IContextKeyService } from "../../contextkey/common/contextkey.js";
+import { IKeybindingService } from "../../keybinding/common/keybinding.js";
+import { INotificationService } from "../../notification/common/notification.js";
+import { ITelemetryService } from "../../telemetry/common/telemetry.js";
+import { ContextMenuHandler, IContextMenuHandlerOptions } from "./contextMenuHandler.js";
+import { IContextMenuMenuDelegate, IContextMenuService, IContextViewService } from "./contextView.js";
 
 export class ContextMenuService extends Disposable implements IContextMenuService {
 
@@ -24,7 +24,12 @@ export class ContextMenuService extends Disposable implements IContextMenuServic
 	private _contextMenuHandler: ContextMenuHandler | undefined = undefined;
 	private get contextMenuHandler(): ContextMenuHandler {
 		if (!this._contextMenuHandler) {
-			this._contextMenuHandler = new ContextMenuHandler(this.contextViewService, this.telemetryService, this.notificationService, this.keybindingService);
+			this._contextMenuHandler = new ContextMenuHandler(
+        this.contextViewService,
+        this.telemetryService,
+        this.notificationService,
+        this.keybindingService,
+      );
 		}
 
 		return this._contextMenuHandler;
@@ -55,7 +60,11 @@ export class ContextMenuService extends Disposable implements IContextMenuServic
 
 	showContextMenu(delegate: IContextMenuDelegate | IContextMenuMenuDelegate): void {
 
-		delegate = ContextMenuMenuDelegate.transform(delegate, this.menuService, this.contextKeyService);
+		delegate = ContextMenuMenuDelegate.transform(
+      delegate,
+      this.menuService,
+      this.contextKeyService,
+    );
 
 		this.contextMenuHandler.showContextMenu({
 			...delegate,
@@ -63,7 +72,7 @@ export class ContextMenuService extends Disposable implements IContextMenuServic
 				delegate.onHide?.(didCancel);
 
 				this._onDidHideContextMenu.fire();
-			}
+			},
 		});
 		ModifierKeyEmitter.getInstance().resetKeyStatus();
 		this._onDidShowContextMenu.fire();
@@ -94,7 +103,7 @@ export namespace ContextMenuMenuDelegate {
 				} else {
 					return Separator.join(delegate.getActions(), target);
 				}
-			}
+			},
 		};
 	}
 }

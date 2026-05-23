@@ -5,19 +5,19 @@
 
 function createDecorator(mapFn: (fn: Function, key: string) => Function): MethodDecorator {
 	return (_target: Object, key: string | symbol, descriptor: TypedPropertyDescriptor<any>) => {
-		let fnKey: 'value' | 'get' | null = null;
+		let fnKey: "value" | "get" | null = null;
 		let fn: Function | null = null;
 
-		if (typeof descriptor.value === 'function') {
-			fnKey = 'value';
+		if (typeof descriptor.value === "function") {
+			fnKey = "value";
 			fn = descriptor.value;
-		} else if (typeof descriptor.get === 'function') {
-			fnKey = 'get';
+		} else if (typeof descriptor.get === "function") {
+			fnKey = "get";
 			fn = descriptor.get;
 		}
 
-		if (!fn || typeof key === 'symbol') {
-			throw new Error('not supported');
+		if (!fn || typeof key === "symbol") {
+			throw new Error("not supported");
 		}
 
 		descriptor[fnKey!] = mapFn(fn, key);
@@ -25,34 +25,36 @@ function createDecorator(mapFn: (fn: Function, key: string) => Function): Method
 }
 
 export function memoize(_target: Object, key: string, descriptor: PropertyDescriptor) {
-	let fnKey: 'value' | 'get' | null = null;
+	let fnKey: "value" | "get" | null = null;
 	let fn: Function | null = null;
 
-	if (typeof descriptor.value === 'function') {
-		fnKey = 'value';
+	if (typeof descriptor.value === "function") {
+		fnKey = "value";
 		fn = descriptor.value;
 
 		if (fn!.length !== 0) {
-			console.warn('Memoize should only be used in functions with zero parameters');
+			console.warn(
+        "Memoize should only be used in functions with zero parameters",
+      );
 		}
-	} else if (typeof descriptor.get === 'function') {
-		fnKey = 'get';
+	} else if (typeof descriptor.get === "function") {
+		fnKey = "get";
 		fn = descriptor.get;
 	}
 
 	if (!fn) {
-		throw new Error('not supported');
+		throw new Error("not supported");
 	}
 
 	const memoizeKey = `$memoize$${key}`;
 	descriptor[fnKey!] = function (this: any, ...args: unknown[]) {
 		if (!this.hasOwnProperty(memoizeKey)) {
 			Object.defineProperty(this, memoizeKey, {
-				configurable: false,
-				enumerable: false,
-				writable: false,
-				value: fn.apply(this, args)
-			});
+        configurable: false,
+        enumerable: false,
+        writable: false,
+        value: fn.apply(this, args),
+      });
 		}
 		return this[memoizeKey];
 	};
@@ -128,4 +130,4 @@ export function throttle<T>(delay: number, reducer?: IDebounceReducer<T>, initia
 	});
 }
 
-export { cancelPreviousCalls } from './decorators/cancelPreviousCalls.js';
+export { cancelPreviousCalls } from "./decorators/cancelPreviousCalls.js";

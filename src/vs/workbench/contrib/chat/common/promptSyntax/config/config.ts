@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { IConfigurationService } from '../../../../../../platform/configuration/common/configuration.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { PromptFileSource, PromptsType } from '../promptTypes.js';
-import { getPromptFileDefaultLocations, IPromptSourceFolder } from './promptFileLocations.js';
-import { PromptsStorage } from '../service/promptsService.js';
+import type { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { PromptFileSource, PromptsType } from "../promptTypes.js";
+import { getPromptFileDefaultLocations, IPromptSourceFolder } from "./promptFileLocations.js";
+import { PromptsStorage } from "../service/promptsService.js";
 
 /**
  * Configuration helper for the `reusable prompts` feature.
@@ -48,92 +48,92 @@ export namespace PromptsConfig {
 	/**
 	 * Configuration key for the locations of reusable prompt files.
 	 */
-	export const PROMPT_LOCATIONS_KEY = 'chat.promptFilesLocations';
+	export const PROMPT_LOCATIONS_KEY = "chat.promptFilesLocations";
 
 	/**
 	 * Configuration key for the locations of instructions files.
 	 */
-	export const INSTRUCTIONS_LOCATION_KEY = 'chat.instructionsFilesLocations';
+	export const INSTRUCTIONS_LOCATION_KEY = "chat.instructionsFilesLocations";
 	/**
 	 * Configuration key for the locations of mode files.
 	 * @deprecated Use {@link AGENTS_LOCATION_KEY} instead
 	 */
-	export const MODE_LOCATION_KEY = 'chat.modeFilesLocations';
+	export const MODE_LOCATION_KEY = "chat.modeFilesLocations";
 
 	/**
 	 * Configuration key for the locations of agent files (with simplified path support).
 	 */
-	export const AGENTS_LOCATION_KEY = 'chat.agentFilesLocations';
+	export const AGENTS_LOCATION_KEY = "chat.agentFilesLocations";
 
 	/**
 	 * Configuration key for the locations of skill folders.
 	 */
-	export const SKILLS_LOCATION_KEY = 'chat.agentSkillsLocations';
+	export const SKILLS_LOCATION_KEY = "chat.agentSkillsLocations";
 
 	/**
 	 * Configuration key for the locations of hook files.
 	 */
-	export const HOOKS_LOCATION_KEY = 'chat.hookFilesLocations';
+	export const HOOKS_LOCATION_KEY = "chat.hookFilesLocations";
 
 	/**
 	 * Configuration key for prompt file suggestions.
 	 */
-	export const PROMPT_FILES_SUGGEST_KEY = 'chat.promptFilesRecommendations';
+	export const PROMPT_FILES_SUGGEST_KEY = "chat.promptFilesRecommendations";
 
 	/**
 	 * Configuration key for use of the copilot instructions file.
 	 */
-	export const USE_COPILOT_INSTRUCTION_FILES = 'github.copilot.chat.codeGeneration.useInstructionFiles';
+	export const USE_COPILOT_INSTRUCTION_FILES = "github.copilot.chat.codeGeneration.useInstructionFiles";
 
 	/**
 	 * Configuration key for the AGENTS.md.
 	 */
-	export const USE_AGENT_MD = 'chat.useAgentsMdFile';
+	export const USE_AGENT_MD = "chat.useAgentsMdFile";
 
 	/**
 	 * Configuration key for nested AGENTS.md files.
 	 */
-	export const USE_NESTED_AGENT_MD = 'chat.useNestedAgentsMdFiles';
+	export const USE_NESTED_AGENT_MD = "chat.useNestedAgentsMdFiles";
 
 	/**
 	 * Configuration key for the CLAUDE.md.
 	 */
-	export const USE_CLAUDE_MD = 'chat.useClaudeMdFile';
+	export const USE_CLAUDE_MD = "chat.useClaudeMdFile";
 
 	/**
 	 * Configuration key for agent skills usage.
 	 */
-	export const USE_AGENT_SKILLS = 'chat.useAgentSkills';
+	export const USE_AGENT_SKILLS = "chat.useAgentSkills";
 
 	/**
 	 * Configuration key for chat hooks usage.
 	 */
-	export const USE_CHAT_HOOKS = 'chat.useHooks';
+	export const USE_CHAT_HOOKS = "chat.useHooks";
 
 	/**
 	 * Configuration key for enabling Claude hooks.
 	 */
-	export const USE_CLAUDE_HOOKS = 'chat.useClaudeHooks';
+	export const USE_CLAUDE_HOOKS = "chat.useClaudeHooks";
 
 	/**
 	 * Configuration key for enabling stronger skill adherence prompt (experimental).
 	 */
-	export const USE_SKILL_ADHERENCE_PROMPT = 'chat.experimental.useSkillAdherencePrompt';
+	export const USE_SKILL_ADHERENCE_PROMPT = "chat.experimental.useSkillAdherencePrompt";
 
 	/**
 	 * Configuration key for including applying instructions.
 	 */
-	export const INCLUDE_APPLYING_INSTRUCTIONS = 'chat.includeApplyingInstructions';
+	export const INCLUDE_APPLYING_INSTRUCTIONS = "chat.includeApplyingInstructions";
 
 	/**
 	 * Configuration key for including referenced instructions.
 	 */
-	export const INCLUDE_REFERENCED_INSTRUCTIONS = 'chat.includeReferencedInstructions';
+	export const INCLUDE_REFERENCED_INSTRUCTIONS = "chat.includeReferencedInstructions";
 
 	/**
 	 * Search for configuration files in parent repositories of the workspace folder
 	 */
-	export const USE_CUSTOMIZATIONS_IN_PARENT_REPOS = 'chat.useCustomizationsInParentRepositories';
+	export const USE_CUSTOMIZATIONS_IN_PARENT_REPOS = "chat.useCustomizationsInParentRepositories";
 
 	/**
 	 * Get value of the `reusable prompt locations` configuration setting.
@@ -143,13 +143,15 @@ export namespace PromptsConfig {
 		const key = getPromptFileLocationsConfigKey(type);
 		const configValue = configService.getValue(key);
 
-		if (configValue === undefined || configValue === null || Array.isArray(configValue)) {
+		if (configValue === undefined || configValue === null || Array.isArray(
+      configValue,
+    )) {
 			return undefined;
 		}
 
 		// note! this would be also true for `null` and `array`,
 		// 		 but those cases are already handled above
-		if (typeof configValue === 'object') {
+		if (typeof configValue === "object") {
 			const paths: Record<string, boolean> = {};
 
 			for (const [path, value] of Object.entries(configValue)) {
@@ -178,9 +180,11 @@ export namespace PromptsConfig {
 		const defaultSourceFolders = getPromptFileDefaultLocations(type);
 
 		// note! the `value &&` part handles the `undefined`, `null`, and `false` cases
-		if (value && (typeof value === 'object')) {
+		if (value && (typeof value === "object")) {
 			const paths: IPromptSourceFolder[] = [];
-			const defaultFolderPathsSet = new Set(defaultSourceFolders.map(f => f.path));
+			const defaultFolderPathsSet = new Set(
+        defaultSourceFolders.map(f => f.path),
+      );
 
 			// add default source folders that are not explicitly disabled
 			for (const defaultFolder of defaultSourceFolders) {
@@ -197,8 +201,14 @@ export namespace PromptsConfig {
 				}
 
 				// determine location type in the general case
-				const storage = isTildePath(path) ? PromptsStorage.user : PromptsStorage.local;
-				paths.push({ path, source: storage === PromptsStorage.local ? PromptFileSource.ConfigWorkspace : PromptFileSource.ConfigPersonal, storage });
+				const storage = isTildePath(
+          path,
+        ) ? PromptsStorage.user : PromptsStorage.local;
+				paths.push({
+          path,
+          source: storage === PromptsStorage.local ? PromptFileSource.ConfigWorkspace : PromptFileSource.ConfigPersonal,
+          storage,
+        });
 			}
 
 			return paths;
@@ -216,9 +226,14 @@ export namespace PromptsConfig {
 	 */
 	export function getPromptFilesRecommendationsValue(configService: IConfigurationService, resource?: URI): Record<string, boolean | string> | undefined {
 		// Get the merged configuration value (VS Code automatically merges all levels: default → user → workspace → folder)
-		const configValue = configService.getValue(PromptsConfig.PROMPT_FILES_SUGGEST_KEY, { resource });
+		const configValue = configService.getValue(
+      PromptsConfig.PROMPT_FILES_SUGGEST_KEY,
+      { resource },
+    );
 
-		if (!configValue || typeof configValue !== 'object' || Array.isArray(configValue)) {
+		if (!configValue || typeof configValue !== "object" || Array.isArray(
+      configValue,
+    )) {
 			return undefined;
 		}
 
@@ -233,13 +248,13 @@ export namespace PromptsConfig {
 			}
 
 			// Accept boolean values directly
-			if (typeof value === 'boolean') {
+			if (typeof value === "boolean") {
 				suggestions[cleanPromptName] = value;
 				continue;
 			}
 
 			// Accept string values as when clauses
-			if (typeof value === 'string') {
+			if (typeof value === "string") {
 				const cleanValue = value.trim();
 				if (cleanValue) {
 					suggestions[cleanPromptName] = cleanValue;
@@ -273,7 +288,7 @@ export function getPromptFileLocationsConfigKey(type: PromptsType): string {
 		case PromptsType.hook:
 			return PromptsConfig.HOOKS_LOCATION_KEY;
 		default:
-			throw new Error('Unknown prompt type');
+			throw new Error("Unknown prompt type");
 	}
 }
 
@@ -286,17 +301,17 @@ export function getPromptFileLocationsConfigKey(type: PromptsType): string {
  * 			`undefined` for rest of the values
  */
 export function asBoolean(value: unknown): boolean | undefined {
-	if (typeof value === 'boolean') {
+	if (typeof value === "boolean") {
 		return value;
 	}
 
-	if (typeof value === 'string') {
+	if (typeof value === "string") {
 		const cleanValue = value.trim().toLowerCase();
-		if (cleanValue === 'true') {
+		if (cleanValue === "true") {
 			return true;
 		}
 
-		if (cleanValue === 'false') {
+		if (cleanValue === "false") {
 			return false;
 		}
 
@@ -315,5 +330,5 @@ export function asBoolean(value: unknown): boolean | undefined {
  * @returns `true` if the path starts with `~/`
  */
 export function isTildePath(path: string): boolean {
-	return path.startsWith('~/');
+	return path.startsWith("~/");
 }

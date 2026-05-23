@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IWorkbench, IWorkbenchConstructionOptions } from '../../workbench/browser/web.api.js';
-import { TestSessionsBrowserMain } from './web.test.js';
-import { IDisposable, toDisposable } from '../../base/common/lifecycle.js';
-import { mark } from '../../base/common/performance.js';
-import { DeferredPromise } from '../../base/common/async.js';
+import { IWorkbench, IWorkbenchConstructionOptions } from "../../workbench/browser/web.api.js";
+import { TestSessionsBrowserMain } from "./web.test.js";
+import { IDisposable, toDisposable } from "../../base/common/lifecycle.js";
+import { mark } from "../../base/common/performance.js";
+import { DeferredPromise } from "../../base/common/async.js";
 
 const workbenchPromise = new DeferredPromise<IWorkbench>();
 
@@ -16,13 +16,13 @@ const workbenchPromise = new DeferredPromise<IWorkbench>();
  */
 export function create(domElement: HTMLElement, options: IWorkbenchConstructionOptions): IDisposable {
 
-	mark('code/didLoadWorkbenchMain');
+	mark("code/didLoadWorkbenchMain");
 
 	let instantiatedWorkbench: IWorkbench | undefined = undefined;
 	new TestSessionsBrowserMain(domElement, options).open().then(workbench => {
-		instantiatedWorkbench = workbench;
-		workbenchPromise.complete(workbench);
-	});
+    instantiatedWorkbench = workbench;
+    workbenchPromise.complete(workbench);
+  });
 
 	return toDisposable(() => {
 		if (instantiatedWorkbench) {

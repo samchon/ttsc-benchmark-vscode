@@ -3,9 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { OffsetRange } from '../../../core/ranges/offsetRange.js';
-import { IDiffAlgorithm, SequenceDiff, ISequence, ITimeout, InfiniteTimeout, DiffAlgorithmResult } from './diffAlgorithm.js';
-import { Array2D } from '../utils.js';
+import { OffsetRange } from "../../../core/ranges/offsetRange.js";
+import {
+  IDiffAlgorithm,
+  SequenceDiff,
+  ISequence,
+  ITimeout,
+  InfiniteTimeout,
+  DiffAlgorithmResult,
+} from "./diffAlgorithm.js";
+import { Array2D } from "../utils.js";
 
 /**
  * A O(MN) diffing algorithm that supports a score function.
@@ -76,10 +83,12 @@ export class DynamicProgrammingDiffing implements IDiffAlgorithm {
 
 		function reportDecreasingAligningPositions(s1: number, s2: number): void {
 			if (s1 + 1 !== lastAligningPosS1 || s2 + 1 !== lastAligningPosS2) {
-				result.push(new SequenceDiff(
-					new OffsetRange(s1 + 1, lastAligningPosS1),
-					new OffsetRange(s2 + 1, lastAligningPosS2),
-				));
+				result.push(
+          new SequenceDiff(
+            new OffsetRange(s1 + 1, lastAligningPosS1),
+            new OffsetRange(s2 + 1, lastAligningPosS2),
+          ),
+        );
 			}
 			lastAligningPosS1 = s1;
 			lastAligningPosS2 = s2;

@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from '../../../../../base/common/buffer.js';
-import { Emitter } from '../../../../../base/common/event.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { ICellOutput, IOutputDto, IOutputItemDto, compressOutputItemStreams } from '../notebookCommon.js';
-import { isTextStreamMime } from '../../../../../base/common/mime.js';
+import { VSBuffer } from "../../../../../base/common/buffer.js";
+import { Emitter } from "../../../../../base/common/event.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { ICellOutput, IOutputDto, IOutputItemDto, compressOutputItemStreams } from "../notebookCommon.js";
+import { isTextStreamMime } from "../../../../../base/common/mime.js";
 
 export class NotebookCellOutputTextModel extends Disposable implements ICellOutput {
 
@@ -42,7 +42,7 @@ export class NotebookCellOutputTextModel extends Disposable implements ICellOutp
 	}
 
 	constructor(
-		private _rawOutput: IOutputDto
+		private _rawOutput: IOutputDto,
 	) {
 		super();
 
@@ -90,7 +90,9 @@ export class NotebookCellOutputTextModel extends Disposable implements ICellOutp
 	}
 
 	private optimizeOutputItems() {
-		if (this.outputs.length > 1 && this.outputs.every(item => isTextStreamMime(item.mime))) {
+		if (this.outputs.length > 1 && this.outputs.every(
+      item => isTextStreamMime(item.mime),
+    )) {
 			// Look for the mimes in the items, and keep track of their order.
 			// Merge the streams into one output item, per mime type.
 			const mimeOutputs = new Map<string, Uint8Array[]>();
@@ -111,7 +113,7 @@ export class NotebookCellOutputTextModel extends Disposable implements ICellOutp
 				const compressionResult = compressOutputItemStreams(mimeOutputs.get(mime)!);
 				this.outputs.push({
 					mime,
-					data: compressionResult.data
+					data: compressionResult.data,
 				});
 				if (compressionResult.didCompression) {
 					// we can't rely on knowing buffer lengths if we've erased previous lines
@@ -126,7 +128,7 @@ export class NotebookCellOutputTextModel extends Disposable implements ICellOutp
 			// data: this._data,
 			metadata: this._rawOutput.metadata,
 			outputs: this._rawOutput.outputs,
-			outputId: this._rawOutput.outputId
+			outputId: this._rawOutput.outputId,
 		};
 	}
 

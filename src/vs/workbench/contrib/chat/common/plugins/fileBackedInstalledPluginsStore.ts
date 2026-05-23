@@ -3,24 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { RunOnceScheduler, ThrottledDelayer } from '../../../../../base/common/async.js';
-import { VSBuffer } from '../../../../../base/common/buffer.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { revive } from '../../../../../base/common/marshalling.js';
-import { IObservable, ITransaction, observableValue } from '../../../../../base/common/observable.js';
-import { isEqual, joinPath } from '../../../../../base/common/resources.js';
-import { URI, UriComponents } from '../../../../../base/common/uri.js';
-import { IFileService } from '../../../../../platform/files/common/files.js';
-import { ILogService } from '../../../../../platform/log/common/log.js';
-import { IStorageService, StorageScope } from '../../../../../platform/storage/common/storage.js';
+import { RunOnceScheduler, ThrottledDelayer } from "../../../../../base/common/async.js";
+import { VSBuffer } from "../../../../../base/common/buffer.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { revive } from "../../../../../base/common/marshalling.js";
+import { IObservable, ITransaction, observableValue } from "../../../../../base/common/observable.js";
+import { isEqual, joinPath } from "../../../../../base/common/resources.js";
+import { URI, UriComponents } from "../../../../../base/common/uri.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { IStorageService, StorageScope } from "../../../../../platform/storage/common/storage.js";
 
-const INSTALLED_JSON_FILENAME = 'installed.json';
+const INSTALLED_JSON_FILENAME = "installed.json";
 const INSTALLED_JSON_VERSION = 1;
 
 /** Legacy storage key used before migration to file-backed store. */
-const LEGACY_INSTALLED_PLUGINS_STORAGE_KEY = 'chat.plugins.installed.v1';
+const LEGACY_INSTALLED_PLUGINS_STORAGE_KEY = "chat.plugins.installed.v1";
 /** Legacy storage key for the marketplace index that cached old URI paths. */
-const LEGACY_MARKETPLACE_INDEX_STORAGE_KEY = 'chat.plugins.marketplaces.index.v1';
+const LEGACY_MARKETPLACE_INDEX_STORAGE_KEY = "chat.plugins.marketplaces.index.v1";
 
 /**
  * Minimal entry stored in `installed.json`. URIs are serialised as strings
@@ -76,7 +76,10 @@ export interface IStoredInstalledPlugin {
  * (e.g. batch enables) are coalesced into a single I/O operation.
  */
 export class FileBackedInstalledPluginsStore extends Disposable {
-	private readonly _installed = observableValue<readonly IStoredInstalledPlugin[]>('file/installed.json', []);
+	private readonly _installed = observableValue<readonly IStoredInstalledPlugin[]>(
+    "file/installed.json",
+    [],
+  );
 	private readonly _fileUri: URI;
 	private readonly _writeDelayer: ThrottledDelayer<void>;
 	private _suppressFileWatch = false;
@@ -115,7 +118,10 @@ export class FileBackedInstalledPluginsStore extends Disposable {
 				await this._migrateFromStorage();
 			}
 		} catch (error) {
-			this._logService.error('[FileBackedInstalledPluginsStore] Initialization failed', error);
+			this._logService.error(
+        "[FileBackedInstalledPluginsStore] Initialization failed",
+        error,
+      );
 		}
 
 		this._initialized = true;
@@ -134,17 +140,19 @@ export class FileBackedInstalledPluginsStore extends Disposable {
 			const content = await this._fileService.readFile(this._fileUri);
 			const json: IInstalledJson = JSON.parse(content.value.toString());
 			if (!json || !Array.isArray(json.installed)) {
-				this._logService.warn('[FileBackedInstalledPluginsStore] installed.json has unexpected format, ignoring');
+				this._logService.warn(
+          "[FileBackedInstalledPluginsStore] installed.json has unexpected format, ignoring",
+        );
 				return undefined;
 			}
 
 			// Each entry is { pluginUri, marketplace, name? }.
 			return json.installed
-				.filter((entry): entry is IInstalledJsonEntry => typeof entry.pluginUri === 'string' && typeof entry.marketplace === 'string')
+				.filter((entry): entry is IInstalledJsonEntry => typeof entry.pluginUri === "string" && typeof entry.marketplace === "string")
 				.map(entry => ({
 					pluginUri: URI.parse(entry.pluginUri),
 					marketplace: entry.marketplace,
-					name: typeof entry.name === 'string' ? entry.name : undefined,
+					name: typeof entry.name === "string" ? entry.name : undefined,
 				}));
 		} catch {
 			return undefined;
@@ -153,30 +161,36 @@ export class FileBackedInstalledPluginsStore extends Disposable {
 
 	private _scheduleWrite(): void {
 		void this._writeDelayer.trigger(async () => {
-			await this._writeToFile();
-		});
+      await this._writeToFile();
+    });
 	}
 
 	private async _writeToFile(): Promise<boolean> {
 		const entries: IInstalledJsonEntry[] = this.get().map(e => ({
-			pluginUri: e.pluginUri.toString(),
-			marketplace: e.marketplace,
-			...(e.name ? { name: e.name } : {}),
-		}));
+      pluginUri: e.pluginUri.toString(),
+      marketplace: e.marketplace,
+      ...(e.name ? { name: e.name } : {}),
+    }));
 
 		const data: IInstalledJson = {
-			version: INSTALLED_JSON_VERSION,
-			installed: entries,
-		};
+      version: INSTALLED_JSON_VERSION,
+      installed: entries,
+    };
 
 		try {
 			this._suppressFileWatch = true;
-			const content = JSON.stringify(data, undefined, '\t');
+			const content = JSON.stringify(data, undefined, "\t");
 			await this._fileService.createFolder(this._agentPluginsHome);
-			await this._fileService.writeFile(this._fileUri, VSBuffer.fromString(content));
+			await this._fileService.writeFile(
+        this._fileUri,
+        VSBuffer.fromString(content),
+      );
 			return true;
 		} catch (error) {
-			this._logService.error('[FileBackedInstalledPluginsStore] Failed to write installed.json', error);
+			this._logService.error(
+        "[FileBackedInstalledPluginsStore] Failed to write installed.json",
+        error,
+      );
 			return false;
 		} finally {
 			this._suppressFileWatch = false;
@@ -186,14 +200,19 @@ export class FileBackedInstalledPluginsStore extends Disposable {
 	// --- File watching ------------------------------------------------------------
 
 	private _setupFileWatcher(): void {
-		if (typeof this._fileService.createWatcher !== 'function') {
+		if (typeof this._fileService.createWatcher !== "function") {
 			return;
 		}
 		const dir = this._agentPluginsHome;
-		const watcher = this._fileService.createWatcher(dir, { recursive: false, excludes: [] });
+		const watcher = this._fileService.createWatcher(dir, {
+      recursive: false,
+      excludes: [],
+    });
 		this._register(watcher);
 
-		const scheduler = this._register(new RunOnceScheduler(() => this._onFileChanged(), 100));
+		const scheduler = this._register(
+      new RunOnceScheduler(() => this._onFileChanged(), 100),
+    );
 		this._register(watcher.onDidChange(e => {
 			if (!this._suppressFileWatch && e.affects(this._fileUri)) {
 				scheduler.schedule();
@@ -228,7 +247,10 @@ export class FileBackedInstalledPluginsStore extends Disposable {
 	// --- Migration from legacy storage -------------------------------------------
 
 	private async _migrateFromStorage(): Promise<void> {
-		const raw = this._storageService.get(LEGACY_INSTALLED_PLUGINS_STORAGE_KEY, StorageScope.APPLICATION);
+		const raw = this._storageService.get(
+      LEGACY_INSTALLED_PLUGINS_STORAGE_KEY,
+      StorageScope.APPLICATION,
+    );
 		if (!raw) {
 			return;
 		}
@@ -244,12 +266,14 @@ export class FileBackedInstalledPluginsStore extends Disposable {
 				const rebased = this._rebasePluginUri(uri);
 				return {
 					pluginUri: rebased ?? uri,
-					marketplace: entry.plugin?.marketplaceReference?.rawValue ?? '',
+					marketplace: entry.plugin?.marketplaceReference?.rawValue ?? "",
 					name: entry.plugin?.name,
 				};
 			}).filter(e => !!e.marketplace);
 
-			this._logService.info(`[FileBackedInstalledPluginsStore] Migrating ${migrated.length} plugin(s) from storage to installed.json`);
+			this._logService.info(
+        `[FileBackedInstalledPluginsStore] Migrating ${migrated.length} plugin(s) from storage to installed.json`,
+      );
 
 			// Set in memory and persist to file before removing legacy keys.
 			this._setValue(migrated, undefined, false);
@@ -259,10 +283,19 @@ export class FileBackedInstalledPluginsStore extends Disposable {
 			}
 
 			// Clean up legacy keys.
-			this._storageService.remove(LEGACY_INSTALLED_PLUGINS_STORAGE_KEY, StorageScope.APPLICATION);
-			this._storageService.remove(LEGACY_MARKETPLACE_INDEX_STORAGE_KEY, StorageScope.APPLICATION);
+			this._storageService.remove(
+        LEGACY_INSTALLED_PLUGINS_STORAGE_KEY,
+        StorageScope.APPLICATION,
+      );
+			this._storageService.remove(
+        LEGACY_MARKETPLACE_INDEX_STORAGE_KEY,
+        StorageScope.APPLICATION,
+      );
 		} catch (error) {
-			this._logService.error('[FileBackedInstalledPluginsStore] Migration from storage failed', error);
+			this._logService.error(
+        "[FileBackedInstalledPluginsStore] Migration from storage failed",
+        error,
+      );
 		}
 	}
 
@@ -277,7 +310,12 @@ export class FileBackedInstalledPluginsStore extends Disposable {
 		}
 
 		const oldRoot = this._oldCacheRoot;
-		if (!isEqual(uri, oldRoot) && uri.scheme === oldRoot.scheme && uri.path.startsWith(oldRoot.path + '/')) {
+		if (!isEqual(
+      uri,
+      oldRoot,
+    ) && uri.scheme === oldRoot.scheme && uri.path.startsWith(
+      oldRoot.path + "/",
+    )) {
 			const relativePart = uri.path.substring(oldRoot.path.length);
 			return uri.with({ path: this._agentPluginsHome.path + relativePart });
 		}

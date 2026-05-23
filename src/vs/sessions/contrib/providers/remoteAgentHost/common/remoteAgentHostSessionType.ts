@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { type AgentProvider } from '../../../../../platform/agentHost/common/agentService.js';
+import { type AgentProvider } from "../../../../../platform/agentHost/common/agentService.js";
 
 /**
  * Builds the unique per-connection identifier for a remote agent host.

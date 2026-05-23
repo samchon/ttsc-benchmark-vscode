@@ -3,10 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../dom.js';
-import { ThemeIcon } from '../../../common/themables.js';
+import * as dom from "../../dom.js";
+import { ThemeIcon } from "../../../common/themables.js";
 
-const labelWithIconsRegex = new RegExp(`(\\\\)?\\$\\((${ThemeIcon.iconNameExpression}(?:${ThemeIcon.iconModifierExpression})?)\\)`, 'g');
+const labelWithIconsRegex = new RegExp(
+  `(\\\\)?\\$\\((${ThemeIcon.iconNameExpression}(?:${ThemeIcon.iconModifierExpression})?)\\)`,
+  "g",
+);
 export function renderLabelWithIcons(text: string): Array<HTMLSpanElement | string> {
 	const elements = new Array<HTMLSpanElement | string>();
 	let match: RegExpExecArray | null;

@@ -3,25 +3,35 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { distinct } from '../../../../base/common/arrays.js';
-import { Event } from '../../../../base/common/event.js';
-import { IMarkdownString } from '../../../../base/common/htmlContent.js';
-import { IDisposable, IReference } from '../../../../base/common/lifecycle.js';
-import { URI } from '../../../../base/common/uri.js';
-import * as nls from '../../../../nls.js';
-import { RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { IRevertOptions, ISaveOptions } from '../../../common/editor.js';
-import { globMatchesResource, priorityToRank, RegisteredEditorPriority, RegisteredEditorPriorityInfo } from '../../../services/editor/common/editorResolverService.js';
+import { distinct } from "../../../../base/common/arrays.js";
+import { Event } from "../../../../base/common/event.js";
+import { IMarkdownString } from "../../../../base/common/htmlContent.js";
+import { IDisposable, IReference } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import * as nls from "../../../../nls.js";
+import { RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IRevertOptions, ISaveOptions } from "../../../common/editor.js";
+import {
+  globMatchesResource,
+  priorityToRank,
+  RegisteredEditorPriority,
+  RegisteredEditorPriorityInfo,
+} from "../../../services/editor/common/editorResolverService.js";
 
-export const ICustomEditorService = createDecorator<ICustomEditorService>('customEditorService');
+export const ICustomEditorService = createDecorator<ICustomEditorService>(
+  "customEditorService",
+);
 
-export const CONTEXT_ACTIVE_CUSTOM_EDITOR_ID = new RawContextKey<string>('activeCustomEditorId', '', {
-	type: 'string',
-	description: nls.localize('context.customEditor', "The viewType of the currently active custom editor."),
+export const CONTEXT_ACTIVE_CUSTOM_EDITOR_ID = new RawContextKey<string>("activeCustomEditorId", "", {
+	type: "string",
+	description: nls.localize("context.customEditor", "The viewType of the currently active custom editor."),
 });
 
-export const CONTEXT_FOCUSED_CUSTOM_EDITOR_IS_EDITABLE = new RawContextKey<boolean>('focusedCustomEditorIsEditable', false);
+export const CONTEXT_FOCUSED_CUSTOM_EDITOR_IS_EDITABLE = new RawContextKey<boolean>(
+  "focusedCustomEditorIsEditable",
+  false,
+);
 
 export interface CustomEditorCapabilities {
 	readonly supportsMultipleEditorsPerDocument?: boolean;
@@ -78,14 +88,14 @@ export interface ICustomEditorModel extends IDisposable {
 }
 
 export const enum CustomEditorPriority {
-	default = 'default',
-	builtin = 'builtin',
-	option = 'option',
+	default = "default",
+	builtin = "builtin",
+	option = "option",
 }
 
 export const enum CustomEditorDiffEditorLayout {
-	Inline = 'inline',
-	SideBySide = 'sideBySide',
+	Inline = "inline",
+	SideBySide = "sideBySide",
 }
 
 export interface CustomEditorSelector {
@@ -119,7 +129,9 @@ export class CustomEditorInfo implements CustomEditorDescriptor {
 	}
 
 	matches(resource: URI): boolean {
-		return this.selector.some(selector => selector.filenamePattern && globMatchesResource(selector.filenamePattern, resource));
+		return this.selector.some(
+      selector => selector.filenamePattern && globMatchesResource(selector.filenamePattern, resource),
+    );
 	}
 }
 
@@ -162,8 +174,8 @@ export class CustomEditorInfoCollection {
 	 */
 	public get bestAvailableEditor(): CustomEditorInfo | undefined {
 		const editors = Array.from(this.allEditors).sort((a, b) => {
-			return priorityToRank(a.priority.editor) - priorityToRank(b.priority.editor);
-		});
+      return priorityToRank(a.priority.editor) - priorityToRank(b.priority.editor);
+    });
 		return editors[0];
 	}
 }

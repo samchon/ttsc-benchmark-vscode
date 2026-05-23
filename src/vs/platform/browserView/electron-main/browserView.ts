@@ -3,28 +3,48 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WebContentsView, webContents } from 'electron';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { Emitter, Event } from '../../../base/common/event.js';
-import { VSBuffer } from '../../../base/common/buffer.js';
-import { IBrowserViewBounds, IBrowserViewDevToolsStateEvent, IBrowserViewFocusEvent, IBrowserViewKeyDownEvent, IBrowserViewState, IBrowserViewNavigationEvent, IBrowserViewLoadingEvent, IBrowserViewLoadError, IBrowserViewTitleChangeEvent, IBrowserViewFaviconChangeEvent, IBrowserViewCaptureScreenshotOptions, IBrowserViewFindInPageOptions, IBrowserViewFindInPageResult, IBrowserViewVisibilityEvent, browserViewIsolatedWorldId, browserZoomFactors, browserZoomDefaultIndex, IBrowserViewOwner, IBrowserViewOpenOptions } from '../common/browserView.js';
-import { BrowserViewEmulator } from './browserViewEmulator.js';
-import { BrowserViewInspector } from './browserViewInspector.js';
-import { IWindowsMainService } from '../../windows/electron-main/windows.js';
-import { ICodeWindow, LoadReason } from '../../window/electron-main/window.js';
-import { IAuxiliaryWindowsMainService } from '../../auxiliaryWindow/electron-main/auxiliaryWindows.js';
-import { BrowserViewDebugger } from './browserViewDebugger.js';
-import { ILogService } from '../../log/common/log.js';
-import { BrowserSession } from './browserSession.js';
-import { IAuxiliaryWindow } from '../../auxiliaryWindow/electron-main/auxiliaryWindow.js';
-import { SCAN_CODE_STR_TO_EVENT_KEY_CODE } from '../../../base/common/keyCodes.js';
-import { ITelemetryService } from '../../telemetry/common/telemetry.js';
-import { logBrowserOpen } from '../common/browserViewTelemetry.js';
+import { WebContentsView, webContents } from "electron";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { VSBuffer } from "../../../base/common/buffer.js";
+import {
+  IBrowserViewBounds,
+  IBrowserViewDevToolsStateEvent,
+  IBrowserViewFocusEvent,
+  IBrowserViewKeyDownEvent,
+  IBrowserViewState,
+  IBrowserViewNavigationEvent,
+  IBrowserViewLoadingEvent,
+  IBrowserViewLoadError,
+  IBrowserViewTitleChangeEvent,
+  IBrowserViewFaviconChangeEvent,
+  IBrowserViewCaptureScreenshotOptions,
+  IBrowserViewFindInPageOptions,
+  IBrowserViewFindInPageResult,
+  IBrowserViewVisibilityEvent,
+  browserViewIsolatedWorldId,
+  browserZoomFactors,
+  browserZoomDefaultIndex,
+  IBrowserViewOwner,
+  IBrowserViewOpenOptions,
+} from "../common/browserView.js";
+import { BrowserViewEmulator } from "./browserViewEmulator.js";
+import { BrowserViewInspector } from "./browserViewInspector.js";
+import { IWindowsMainService } from "../../windows/electron-main/windows.js";
+import { ICodeWindow, LoadReason } from "../../window/electron-main/window.js";
+import { IAuxiliaryWindowsMainService } from "../../auxiliaryWindow/electron-main/auxiliaryWindows.js";
+import { BrowserViewDebugger } from "./browserViewDebugger.js";
+import { ILogService } from "../../log/common/log.js";
+import { BrowserSession } from "./browserSession.js";
+import { IAuxiliaryWindow } from "../../auxiliaryWindow/electron-main/auxiliaryWindow.js";
+import { SCAN_CODE_STR_TO_EVENT_KEY_CODE } from "../../../base/common/keyCodes.js";
+import { ITelemetryService } from "../../telemetry/common/telemetry.js";
+import { logBrowserOpen } from "../common/browserViewTelemetry.js";
 
 enum NewPageLocation {
-	Foreground = 'foreground',
-	Background = 'background',
-	NewWindow = 'newWindow'
+	Foreground = "foreground",
+	Background = "background",
+	NewWindow = "newWindow"
 }
 
 /**
@@ -52,31 +72,49 @@ export class BrowserView extends Disposable {
 	private static readonly MAX_CONSOLE_LOG_ENTRIES = 1000;
 	private readonly _consoleLogs: string[] = [];
 
-	private readonly _onDidNavigate = this._register(new Emitter<IBrowserViewNavigationEvent>());
+	private readonly _onDidNavigate = this._register(
+    new Emitter<IBrowserViewNavigationEvent>(),
+  );
 	readonly onDidNavigate: Event<IBrowserViewNavigationEvent> = this._onDidNavigate.event;
 
-	private readonly _onDidChangeLoadingState = this._register(new Emitter<IBrowserViewLoadingEvent>());
+	private readonly _onDidChangeLoadingState = this._register(
+    new Emitter<IBrowserViewLoadingEvent>(),
+  );
 	readonly onDidChangeLoadingState: Event<IBrowserViewLoadingEvent> = this._onDidChangeLoadingState.event;
 
-	private readonly _onDidChangeFocus = this._register(new Emitter<IBrowserViewFocusEvent>());
+	private readonly _onDidChangeFocus = this._register(
+    new Emitter<IBrowserViewFocusEvent>(),
+  );
 	readonly onDidChangeFocus: Event<IBrowserViewFocusEvent> = this._onDidChangeFocus.event;
 
-	private readonly _onDidChangeVisibility = this._register(new Emitter<IBrowserViewVisibilityEvent>());
+	private readonly _onDidChangeVisibility = this._register(
+    new Emitter<IBrowserViewVisibilityEvent>(),
+  );
 	readonly onDidChangeVisibility: Event<IBrowserViewVisibilityEvent> = this._onDidChangeVisibility.event;
 
-	private readonly _onDidChangeDevToolsState = this._register(new Emitter<IBrowserViewDevToolsStateEvent>());
+	private readonly _onDidChangeDevToolsState = this._register(
+    new Emitter<IBrowserViewDevToolsStateEvent>(),
+  );
 	readonly onDidChangeDevToolsState: Event<IBrowserViewDevToolsStateEvent> = this._onDidChangeDevToolsState.event;
 
-	private readonly _onDidKeyCommand = this._register(new Emitter<IBrowserViewKeyDownEvent>());
+	private readonly _onDidKeyCommand = this._register(
+    new Emitter<IBrowserViewKeyDownEvent>(),
+  );
 	readonly onDidKeyCommand: Event<IBrowserViewKeyDownEvent> = this._onDidKeyCommand.event;
 
-	private readonly _onDidChangeTitle = this._register(new Emitter<IBrowserViewTitleChangeEvent>());
+	private readonly _onDidChangeTitle = this._register(
+    new Emitter<IBrowserViewTitleChangeEvent>(),
+  );
 	readonly onDidChangeTitle: Event<IBrowserViewTitleChangeEvent> = this._onDidChangeTitle.event;
 
-	private readonly _onDidChangeFavicon = this._register(new Emitter<IBrowserViewFaviconChangeEvent>());
+	private readonly _onDidChangeFavicon = this._register(
+    new Emitter<IBrowserViewFaviconChangeEvent>(),
+  );
 	readonly onDidChangeFavicon: Event<IBrowserViewFaviconChangeEvent> = this._onDidChangeFavicon.event;
 
-	private readonly _onDidFindInPage = this._register(new Emitter<IBrowserViewFindInPageResult>());
+	private readonly _onDidFindInPage = this._register(
+    new Emitter<IBrowserViewFindInPageResult>(),
+  );
 	readonly onDidFindInPage: Event<IBrowserViewFindInPageResult> = this._onDidFindInPage.event;
 
 	private readonly _onDidClose = this._register(new Emitter<void>());
@@ -96,7 +134,7 @@ export class BrowserView extends Disposable {
 	) {
 		super();
 
-		const webPreferences: Electron.WebPreferences & { type: ReturnType<Electron.WebContents['getType']> } = {
+		const webPreferences: Electron.WebPreferences & { type: ReturnType<Electron.WebContents["getType"]> } = {
 			...options?.webPreferences,
 
 			nodeIntegration: false,
@@ -111,20 +149,21 @@ export class BrowserView extends Disposable {
 			session: this.session.electronSession,
 
 			// TODO@kycutler: Remove this once https://github.com/electron/electron/issues/42578 is fixed
-			type: 'browserView'
+			type: "browserView",
 		};
 
 		this._view = new WebContentsView({
-			webPreferences,
-			// Passing an `undefined` webContents triggers an error in Electron.
-			...(options?.webContents ? { webContents: options.webContents } : {})
-		});
+      webPreferences,
+      ...(options?.webContents ? { webContents: options.webContents } : {}),
+    });
 
 		// Use a default size of 1024x768.
 		this._view.setBounds({ x: -10000, y: -10000, width: 1024, height: 768 });
-		this._view.setBackgroundColor('#FFFFFF');
+		this._view.setBackgroundColor("#FFFFFF");
 
-		this._ownerWindow = this.windowsMainService.getWindowById(owner.mainWindowId)!;
+		this._ownerWindow = this.windowsMainService.getWindowById(
+      owner.mainWindowId,
+    )!;
 		if (!this._ownerWindow) {
 			throw new Error(`Window with ID ${owner.mainWindowId} not found`);
 		}
@@ -143,26 +182,26 @@ export class BrowserView extends Disposable {
 		this._view.webContents.setWindowOpenHandler((details) => {
 			const location = (() => {
 				switch (details.disposition) {
-					case 'background-tab': return NewPageLocation.Background;
-					case 'foreground-tab': return NewPageLocation.Foreground;
-					case 'new-window': return NewPageLocation.NewWindow;
+					case "background-tab": return NewPageLocation.Background;
+					case "foreground-tab": return NewPageLocation.Foreground;
+					case "new-window": return NewPageLocation.NewWindow;
 					default: return undefined;
 				}
 			})();
 
 			if (!location || !this.consumePopupPermission(location)) {
 				// Eventually we may want to surface this. For now, just silently block it.
-				return { action: 'deny' };
+				return { action: "deny" };
 			}
 
 			return {
-				action: 'allow',
+				action: "allow",
 				createWindow: (options) => {
 					logBrowserOpen(this.telemetryService, (() => {
 						switch (location) {
-							case NewPageLocation.NewWindow: return 'browserLinkNewWindow';
-							case NewPageLocation.Background: return 'browserLinkBackground';
-							case NewPageLocation.Foreground: return 'browserLinkForeground';
+							case NewPageLocation.NewWindow: return "browserLinkNewWindow";
+							case NewPageLocation.Background: return "browserLinkBackground";
+							case NewPageLocation.Foreground: return "browserLinkForeground";
 						}
 					})());
 
@@ -180,20 +219,22 @@ export class BrowserView extends Disposable {
 				},
 
 				// We want the standard browser behavior as opposed to Electron's default of closing the new window when the parent is closed
-				outlivesOpener: true
+				outlivesOpener: true,
 			};
 		});
 
-		this._view.webContents.on('context-menu', (_event, params) => {
-			openContextMenu(this, params);
-		});
+		this._view.webContents.on("context-menu", (_event, params) => {
+      openContextMenu(this, params);
+    });
 
-		this._view.webContents.on('destroyed', () => {
-			this.dispose();
-		});
+		this._view.webContents.on("destroyed", () => {
+      this.dispose();
+    });
 
 		this.debugger = new BrowserViewDebugger(this, this.logService);
-		this.emulator = this._register(new BrowserViewEmulator(this, this.logService));
+		this.emulator = this._register(
+      new BrowserViewEmulator(this, this.logService),
+    );
 		this.inspector = this._register(new BrowserViewInspector(this));
 
 		this.setupEventListeners();
@@ -203,36 +244,36 @@ export class BrowserView extends Disposable {
 		const webContents = this._view.webContents;
 
 		// DevTools state events
-		webContents.on('devtools-opened', () => {
-			this._onDidChangeDevToolsState.fire({ isDevToolsOpen: true });
-		});
+		webContents.on("devtools-opened", () => {
+      this._onDidChangeDevToolsState.fire({ isDevToolsOpen: true });
+    });
 
-		webContents.on('devtools-closed', () => {
-			this._onDidChangeDevToolsState.fire({ isDevToolsOpen: false });
-		});
+		webContents.on("devtools-closed", () => {
+      this._onDidChangeDevToolsState.fire({ isDevToolsOpen: false });
+    });
 
 		// Favicon events
-		webContents.on('page-favicon-updated', async (_event, favicons) => {
+		webContents.on("page-favicon-updated", async (_event, favicons) => {
 			// try each url in order until one works
 			for (const url of favicons) {
 				if (!this._faviconRequestCache.has(url)) {
 					this._faviconRequestCache.set(url, (async () => {
-						if (url.startsWith('data:image/')) {
+						if (url.startsWith("data:image/")) {
 							return url;
 						}
 						const response = await webContents.session.fetch(url, {
-							cache: 'force-cache'
+							cache: "force-cache",
 						});
 						if (!response.ok) {
 							throw new Error(`Failed to fetch favicon: ${response.status} ${response.statusText}`);
 						}
-						const type = await response.headers.get('content-type');
-						if (!type?.startsWith('image/')) {
+						const type = await response.headers.get("content-type");
+						if (!type?.startsWith("image/")) {
 							throw new Error(`Favicon is not an image: ${type}`);
 						}
 						const buffer = await response.arrayBuffer();
 
-						return `data:${type};base64,${Buffer.from(buffer).toString('base64')}`;
+						return `data:${type};base64,${Buffer.from(buffer).toString("base64")}`;
 					})());
 				}
 
@@ -254,19 +295,19 @@ export class BrowserView extends Disposable {
 		});
 
 		// Title events
-		webContents.on('page-title-updated', (_event, title) => {
-			this._onDidChangeTitle.fire({ title });
-		});
+		webContents.on("page-title-updated", (_event, title) => {
+      this._onDidChangeTitle.fire({ title });
+    });
 
 		const fireNavigationEvent = () => {
 			const url = webContents.getURL();
 			this._onDidNavigate.fire({
-				url,
-				title: webContents.getTitle(),
-				canGoBack: webContents.navigationHistory.canGoBack(),
-				canGoForward: webContents.navigationHistory.canGoForward(),
-				certificateError: this.session.trust.getCertificateError(url)
-			});
+        url,
+        title: webContents.getTitle(),
+        canGoBack: webContents.navigationHistory.canGoBack(),
+        canGoForward: webContents.navigationHistory.canGoForward(),
+        certificateError: this.session.trust.getCertificateError(url),
+      });
 		};
 
 		const fireLoadingEvent = (loading: boolean) => {
@@ -274,7 +315,7 @@ export class BrowserView extends Disposable {
 		};
 
 		// Loading state events
-		webContents.on('did-start-loading', () => {
+		webContents.on("did-start-loading", () => {
 			this._lastError = undefined;
 
 			// Don't fire loading events for e.g. same-document navigations
@@ -282,8 +323,8 @@ export class BrowserView extends Disposable {
 				fireLoadingEvent(true);
 			}
 		});
-		webContents.on('did-stop-loading', () => fireLoadingEvent(false));
-		webContents.on('did-fail-load', (e, errorCode, errorDescription, validatedURL, isMainFrame) => {
+		webContents.on("did-stop-loading", () => fireLoadingEvent(false));
+		webContents.on("did-fail-load", (e, errorCode, errorDescription, validatedURL, isMainFrame) => {
 			if (isMainFrame) {
 				// Ignore ERR_ABORTED (-3) which is the expected error when user stops a page load.
 				if (errorCode === -3) {
@@ -296,38 +337,38 @@ export class BrowserView extends Disposable {
 					errorCode,
 					errorDescription,
 					// -200 - -220 are the range of certificate errors in Chromium.
-					certificateError: errorCode <= -200 && errorCode >= -220 ? this.session.trust.getCertificateError(validatedURL) : undefined
+					certificateError: errorCode <= -200 && errorCode >= -220 ? this.session.trust.getCertificateError(validatedURL) : undefined,
 				};
 
 				fireLoadingEvent(false);
 				this._onDidNavigate.fire({
 					url: validatedURL,
-					title: '',
+					title: "",
 					canGoBack: webContents.navigationHistory.canGoBack(),
 					canGoForward: webContents.navigationHistory.canGoForward(),
-					certificateError: this.session.trust.getCertificateError(validatedURL)
+					certificateError: this.session.trust.getCertificateError(validatedURL),
 				});
 			}
 		});
-		webContents.on('did-finish-load', () => fireLoadingEvent(false));
+		webContents.on("did-finish-load", () => fireLoadingEvent(false));
 
 		this.session.trust.installCertErrorHandler(webContents);
 
-		webContents.on('render-process-gone', (_event, details) => {
+		webContents.on("render-process-gone", (_event, details) => {
 			this._lastError = {
 				url: webContents.getURL(),
 				errorCode: details.exitCode,
-				errorDescription: `Render process gone: ${details.reason}`
+				errorDescription: `Render process gone: ${details.reason}`,
 			};
 
 			fireLoadingEvent(false);
 		});
 
 		// Navigation events (when URL actually changes)
-		webContents.on('did-navigate', fireNavigationEvent);
-		webContents.on('did-navigate-in-page', fireNavigationEvent);
+		webContents.on("did-navigate", fireNavigationEvent);
+		webContents.on("did-navigate-in-page", fireNavigationEvent);
 
-		webContents.on('did-navigate', () => {
+		webContents.on("did-navigate", () => {
 			// Chromium resets the zoom factor to its per-origin default (100%) when
 			// navigating to a new document. Re-apply our stored zoom to override it.
 			this._consoleLogs.length = 0; // Clear console logs on navigation since they are per-page
@@ -335,34 +376,34 @@ export class BrowserView extends Disposable {
 
 			// Enable pinch-to-zoom
 			void this._view.webContents.setVisualZoomLevelLimits(1, 3).catch(error => {
-				this.logService.error('Failed to set visual zoom level limits for browser view webContents.', error);
+				this.logService.error("Failed to set visual zoom level limits for browser view webContents.", error);
 			});
 		});
 
 		// Focus events
-		webContents.on('focus', () => {
-			this._onDidChangeFocus.fire({ focused: true });
-		});
+		webContents.on("focus", () => {
+      this._onDidChangeFocus.fire({ focused: true });
+    });
 
-		webContents.on('blur', () => {
-			this._onDidChangeFocus.fire({ focused: false });
-		});
+		webContents.on("blur", () => {
+      this._onDidChangeFocus.fire({ focused: false });
+    });
 
 		const onCommandKeydown = (_event: unknown, keyEvent: IBrowserViewKeyDownEvent) => {
 			this._onDidKeyCommand.fire(keyEvent);
 		};
 
 		// Forward key down events that weren't handled by the page to the workbench for shortcut handling.
-		webContents.ipc.on('vscode:browserView:keydown', onCommandKeydown);
-		webContents.on('devtools-opened', () => {
+		webContents.ipc.on("vscode:browserView:keydown", onCommandKeydown);
+		webContents.on("devtools-opened", () => {
 			// Avoid double-registration if the webContents is reused.
-			webContents.devToolsWebContents?.ipc.off('vscode:browserView:keydown', onCommandKeydown);
-			webContents.devToolsWebContents?.ipc.on('vscode:browserView:keydown', onCommandKeydown);
+			webContents.devToolsWebContents?.ipc.off("vscode:browserView:keydown", onCommandKeydown);
+			webContents.devToolsWebContents?.ipc.on("vscode:browserView:keydown", onCommandKeydown);
 		});
 
 		// If the page won't be able to handle events, forward key down events directly.
-		webContents.on('before-input-event', (event, input) => {
-			if (input.type !== 'keyDown') {
+		webContents.on("before-input-event", (event, input) => {
+			if (input.type !== "keyDown") {
 				return;
 			}
 
@@ -389,20 +430,20 @@ export class BrowserView extends Disposable {
 				shiftKey: input.shift,
 				altKey: input.alt,
 				metaKey: input.meta,
-				repeat: input.isAutoRepeat
+				repeat: input.isAutoRepeat,
 			});
 		});
 
 		// Track user gestures for popup blocking logic.
 		// Roughly based on https://html.spec.whatwg.org/multipage/interaction.html#tracking-user-activation.
-		webContents.on('input-event', (_event, input) => {
+		webContents.on("input-event", (_event, input) => {
 			switch (input.type) {
-				case 'rawKeyDown':
-				case 'keyDown':
-				case 'mouseDown':
-				case 'pointerDown':
-				case 'pointerUp':
-				case 'touchEnd':
+				case "rawKeyDown":
+				case "keyDown":
+				case "mouseDown":
+				case "pointerDown":
+				case "pointerUp":
+				case "touchEnd":
 					this._lastUserGestureTimestamp = Date.now();
 			}
 		});
@@ -410,22 +451,22 @@ export class BrowserView extends Disposable {
 		// For now, always prevent sites from blocking unload.
 		// In the future we may want to show a dialog to ask the user,
 		// with heavy restrictions regarding interaction and repeated prompts.
-		webContents.on('will-prevent-unload', (e) => {
-			e.preventDefault();
-		});
+		webContents.on("will-prevent-unload", (e) => {
+      e.preventDefault();
+    });
 
 		// Find in page events
-		webContents.on('found-in-page', (_event, result) => {
-			this._onDidFindInPage.fire({
-				activeMatchOrdinal: result.activeMatchOrdinal,
-				matches: result.matches,
-				selectionArea: result.selectionArea,
-				finalUpdate: result.finalUpdate
-			});
-		});
+		webContents.on("found-in-page", (_event, result) => {
+      this._onDidFindInPage.fire({
+        activeMatchOrdinal: result.activeMatchOrdinal,
+        matches: result.matches,
+        selectionArea: result.selectionArea,
+        finalUpdate: result.finalUpdate,
+      });
+    });
 
 		// Capture console messages for sharing with chat
-		this._view.webContents.on('console-message', (event) => {
+		this._view.webContents.on("console-message", (event) => {
 			this._consoleLogs.push(`[${event.level}] ${event.message}`);
 			if (this._consoleLogs.length > BrowserView.MAX_CONSOLE_LOG_ENTRIES) {
 				this._consoleLogs.splice(0, this._consoleLogs.length - BrowserView.MAX_CONSOLE_LOG_ENTRIES);
@@ -461,23 +502,23 @@ export class BrowserView extends Disposable {
 		const url = webContents.getURL();
 
 		return {
-			url,
-			title: webContents.getTitle(),
-			canGoBack: webContents.navigationHistory.canGoBack(),
-			canGoForward: webContents.navigationHistory.canGoForward(),
-			loading: webContents.isLoading(),
-			focused: webContents.isFocused(),
-			visible: this._view.getVisible(),
-			isDevToolsOpen: webContents.isDevToolsOpened(),
-			lastScreenshot: this._lastScreenshot,
-			lastFavicon: this._lastFavicon,
-			lastError: this._lastError,
-			certificateError: this.session.trust.getCertificateError(url),
-			storageScope: this.session.storageScope,
-			browserZoomIndex: this._browserZoomIndex,
-			isElementSelectionActive: this.inspector.isElementSelectionActive,
-			device: this.emulator.device
-		};
+      url,
+      title: webContents.getTitle(),
+      canGoBack: webContents.navigationHistory.canGoBack(),
+      canGoForward: webContents.navigationHistory.canGoForward(),
+      loading: webContents.isLoading(),
+      focused: webContents.isFocused(),
+      visible: this._view.getVisible(),
+      isDevToolsOpen: webContents.isDevToolsOpened(),
+      lastScreenshot: this._lastScreenshot,
+      lastFavicon: this._lastFavicon,
+      lastError: this._lastError,
+      certificateError: this.session.trust.getCertificateError(url),
+      storageScope: this.session.storageScope,
+      browserZoomIndex: this._browserZoomIndex,
+      isElementSelectionActive: this.inspector.isElementSelectionActive,
+      device: this.emulator.device,
+    };
 	}
 
 	/**
@@ -500,22 +541,32 @@ export class BrowserView extends Disposable {
 			}
 		}
 
-		this._view.setBorderRadius(Math.round(bounds.cornerRadius * bounds.zoomFactor));
+		this._view.setBorderRadius(
+      Math.round(bounds.cornerRadius * bounds.zoomFactor),
+    );
 
 		if (bounds.emulation) {
-			this.emulator.applyScreenEmulation(bounds.emulation.viewportWidth, bounds.emulation.viewportHeight, bounds.emulation.scale, bounds.zoomFactor);
+			this.emulator.applyScreenEmulation(
+        bounds.emulation.viewportWidth,
+        bounds.emulation.viewportHeight,
+        bounds.emulation.scale,
+        bounds.zoomFactor,
+      );
 		}
 
 		this._view.setBounds({
-			x: Math.round(bounds.x * bounds.zoomFactor),
-			y: Math.round(bounds.y * bounds.zoomFactor),
-			width: Math.round(bounds.width * bounds.zoomFactor),
-			height: Math.round(bounds.height * bounds.zoomFactor)
-		});
+      x: Math.round(bounds.x * bounds.zoomFactor),
+      y: Math.round(bounds.y * bounds.zoomFactor),
+      width: Math.round(bounds.width * bounds.zoomFactor),
+      height: Math.round(bounds.height * bounds.zoomFactor),
+    });
 	}
 
 	setBrowserZoomIndex(zoomIndex: number): void {
-		this._browserZoomIndex = Math.max(0, Math.min(zoomIndex, browserZoomFactors.length - 1));
+		this._browserZoomIndex = Math.max(
+      0,
+      Math.min(zoomIndex, browserZoomFactors.length - 1),
+    );
 		const browserZoomFactor = browserZoomFactors[this._browserZoomIndex];
 		this._view.webContents.setZoomFactor(browserZoomFactor);
 	}
@@ -541,7 +592,7 @@ export class BrowserView extends Disposable {
 	 * Get captured console logs.
 	 */
 	getConsoleLogs(): string {
-		return this._consoleLogs.join('\n');
+		return this._consoleLogs.join("\n");
 	}
 
 	/**
@@ -617,15 +668,18 @@ export class BrowserView extends Disposable {
 			// The visual viewport scale accounts for pinch-to-zoom magnification, which is separate from the regular zoom factor.
 			const visualViewportScale = await this.inspector.getVisualViewportScale();
 			options.screenRect = {
-				x: options.pageRect.x * visualViewportScale * zoomFactor,
-				y: options.pageRect.y * visualViewportScale * zoomFactor,
-				width: options.pageRect.width * visualViewportScale * zoomFactor,
-				height: options.pageRect.height * visualViewportScale * zoomFactor
-			};
+        x: options.pageRect.x * visualViewportScale * zoomFactor,
+        y: options.pageRect.y * visualViewportScale * zoomFactor,
+        width: options.pageRect.width * visualViewportScale * zoomFactor,
+        height: options.pageRect.height * visualViewportScale * zoomFactor,
+      };
 		}
-		const image = await this._view.webContents.capturePage(options?.screenRect, {
-			stayHidden: true
-		});
+		const image = await this._view.webContents.capturePage(
+      options?.screenRect,
+      {
+        stayHidden: true,
+      },
+    );
 		const buffer = image.toJPEG(quality);
 		const screenshot = VSBuffer.wrap(buffer);
 		// Only update _lastScreenshot if capturing the full view
@@ -651,21 +705,19 @@ export class BrowserView extends Disposable {
 	 */
 	async findInPage(text: string, options?: IBrowserViewFindInPageOptions): Promise<void> {
 		this._view.webContents.findInPage(text, {
-			matchCase: options?.matchCase ?? false,
-			forward: options?.forward ?? true,
-
-			// `findNext` is not very clearly named. From Electron docs: `Whether to begin a new text finding session with this request`.
-			// It needs to be set to `true` if we want a new search to be performed, such as when the text changes.
-			// We name it `recompute` in our internal options to better reflect its purpose / behavior.
-			findNext: options?.recompute ?? false
-		});
+      matchCase: options?.matchCase ?? false,
+      forward: options?.forward ?? true,
+      findNext: options?.recompute ?? false,
+    });
 	}
 
 	/**
 	 * Stop finding in page
 	 */
 	async stopFindInPage(keepSelection?: boolean): Promise<void> {
-		this._view.webContents.stopFindInPage(keepSelection ? 'keepSelection' : 'clearSelection');
+		this._view.webContents.stopFindInPage(
+      keepSelection ? "keepSelection" : "clearSelection",
+    );
 	}
 
 	/**
@@ -675,13 +727,16 @@ export class BrowserView extends Disposable {
 	async getSelectedText(): Promise<string> {
 		// we don't want to wait for the page to finish loading, which executeJavaScript normally does.
 		if (this._view.webContents.isLoading()) {
-			return '';
+			return "";
 		}
 		try {
 			// Uses our preloaded contextBridge-exposed API.
-			return await this._view.webContents.executeJavaScriptInIsolatedWorld(browserViewIsolatedWorldId, [{ code: 'window.browserViewAPI?.getSelectedText?.() ?? ""' }]);
+			return await this._view.webContents.executeJavaScriptInIsolatedWorld(
+        browserViewIsolatedWorldId,
+        [{ code: 'window.browserViewAPI?.getSelectedText?.() ?? ""' }],
+      );
 		} catch {
-			return '';
+			return "";
 		}
 	}
 
@@ -754,7 +809,7 @@ export class BrowserView extends Disposable {
 	}
 
 	private _codeWindowById(windowId: number | undefined): ICodeWindow | undefined {
-		if (typeof windowId !== 'number') {
+		if (typeof windowId !== "number") {
 			return undefined;
 		}
 
@@ -762,7 +817,7 @@ export class BrowserView extends Disposable {
 	}
 
 	private _auxiliaryWindowById(windowId: number | undefined): IAuxiliaryWindow | undefined {
-		if (typeof windowId !== 'number') {
+		if (typeof windowId !== "number") {
 			return undefined;
 		}
 

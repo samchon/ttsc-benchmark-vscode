@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { localize } from '../../../../nls.js';
-import { INotificationService, NeverShowAgainScope, Severity } from '../../../../platform/notification/common/notification.js';
-import { IWorkbenchContribution } from '../../../common/contributions.js';
-import { IExtensionsWorkbenchService } from '../../extensions/common/extensions.js';
-import { IChatService } from '../common/chatService/chatService.js';
-import { IMarketplacePlugin, IPluginMarketplaceService } from '../common/plugins/pluginMarketplaceService.js';
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { localize } from "../../../../nls.js";
+import { INotificationService, NeverShowAgainScope, Severity } from "../../../../platform/notification/common/notification.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { IExtensionsWorkbenchService } from "../../extensions/common/extensions.js";
+import { IChatService } from "../common/chatService/chatService.js";
+import { IMarketplacePlugin, IPluginMarketplaceService } from "../common/plugins/pluginMarketplaceService.js";
 
 export class AgentPluginRecommendations extends Disposable implements IWorkbenchContribution {
-	static readonly ID = 'workbench.contrib.agentPluginRecommendations';
+	static readonly ID = "workbench.contrib.agentPluginRecommendations";
 
 	private _hasNotified = false;
 
@@ -55,7 +55,9 @@ export class AgentPluginRecommendations extends Disposable implements IWorkbench
 		let fetched: readonly IMarketplacePlugin[] = this._pluginMarketplaceService.lastFetchedPlugins.get();
 		if (fetched.length === 0) {
 			try {
-				fetched = await this._pluginMarketplaceService.fetchMarketplacePlugins(CancellationToken.None);
+				fetched = await this._pluginMarketplaceService.fetchMarketplacePlugins(
+          CancellationToken.None,
+        );
 			} catch {
 				return;
 			}
@@ -79,21 +81,21 @@ export class AgentPluginRecommendations extends Disposable implements IWorkbench
 		this._notificationService.prompt(
 			Severity.Info,
 			uninstalledCount === 1
-				? localize('agentPluginRecommendation.one', "This workspace recommends 1 agent plugin.")
-				: localize('agentPluginRecommendation.many', "This workspace recommends {0} agent plugins.", uninstalledCount),
+				? localize("agentPluginRecommendation.one", "This workspace recommends 1 agent plugin.")
+				: localize("agentPluginRecommendation.many", "This workspace recommends {0} agent plugins.", uninstalledCount),
 			[{
-				label: localize('showPlugins', "Show Plugins"),
+				label: localize("showPlugins", "Show Plugins"),
 				run: () => {
-					this._extensionsWorkbenchService.openSearch('@agentPlugins @recommended');
-				}
+					this._extensionsWorkbenchService.openSearch("@agentPlugins @recommended");
+				},
 			}],
 			{
 				neverShowAgain: {
-					id: 'agentPluginRecommendations.dismissed',
+					id: "agentPluginRecommendations.dismissed",
 					scope: NeverShowAgainScope.WORKSPACE,
 					isSecondary: true,
-				}
-			}
+				},
+			},
 		);
 	}
 }

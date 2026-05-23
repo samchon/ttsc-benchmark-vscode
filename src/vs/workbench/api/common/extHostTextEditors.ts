@@ -3,27 +3,50 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as arrays from '../../../base/common/arrays.js';
-import { Emitter, Event } from '../../../base/common/event.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { URI } from '../../../base/common/uri.js';
-import { IExtensionDescription } from '../../../platform/extensions/common/extensions.js';
-import { ExtHostEditorsShape, IEditorPropertiesChangeData, IMainContext, ITextDocumentShowOptions, ITextEditorDiffInformation, ITextEditorPositionData, MainContext, MainThreadTextEditorsShape } from './extHost.protocol.js';
-import { ExtHostDocumentsAndEditors } from './extHostDocumentsAndEditors.js';
-import { ExtHostTextEditor, TextEditorDecorationType } from './extHostTextEditor.js';
-import * as TypeConverters from './extHostTypeConverters.js';
-import { TextEditorSelectionChangeKind, TextEditorChangeKind } from './extHostTypes.js';
-import * as vscode from 'vscode';
+import * as arrays from "../../../base/common/arrays.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { URI } from "../../../base/common/uri.js";
+import { IExtensionDescription } from "../../../platform/extensions/common/extensions.js";
+import {
+  ExtHostEditorsShape,
+  IEditorPropertiesChangeData,
+  IMainContext,
+  ITextDocumentShowOptions,
+  ITextEditorDiffInformation,
+  ITextEditorPositionData,
+  MainContext,
+  MainThreadTextEditorsShape,
+} from "./extHost.protocol.js";
+import { ExtHostDocumentsAndEditors } from "./extHostDocumentsAndEditors.js";
+import { ExtHostTextEditor, TextEditorDecorationType } from "./extHostTextEditor.js";
+import * as TypeConverters from "./extHostTypeConverters.js";
+import { TextEditorSelectionChangeKind, TextEditorChangeKind } from "./extHostTypes.js";
+import * as vscode from "vscode";
 
 export class ExtHostEditors extends Disposable implements ExtHostEditorsShape {
 
-	private readonly _onDidChangeTextEditorSelection = this._register(new Emitter<vscode.TextEditorSelectionChangeEvent>());
-	private readonly _onDidChangeTextEditorOptions = this._register(new Emitter<vscode.TextEditorOptionsChangeEvent>());
-	private readonly _onDidChangeTextEditorVisibleRanges = this._register(new Emitter<vscode.TextEditorVisibleRangesChangeEvent>());
-	private readonly _onDidChangeTextEditorViewColumn = this._register(new Emitter<vscode.TextEditorViewColumnChangeEvent>());
-	private readonly _onDidChangeTextEditorDiffInformation = this._register(new Emitter<vscode.TextEditorDiffInformationChangeEvent>());
-	private readonly _onDidChangeActiveTextEditor = this._register(new Emitter<vscode.TextEditor | undefined>());
-	private readonly _onDidChangeVisibleTextEditors = this._register(new Emitter<readonly vscode.TextEditor[]>());
+	private readonly _onDidChangeTextEditorSelection = this._register(
+    new Emitter<vscode.TextEditorSelectionChangeEvent>(),
+  );
+	private readonly _onDidChangeTextEditorOptions = this._register(
+    new Emitter<vscode.TextEditorOptionsChangeEvent>(),
+  );
+	private readonly _onDidChangeTextEditorVisibleRanges = this._register(
+    new Emitter<vscode.TextEditorVisibleRangesChangeEvent>(),
+  );
+	private readonly _onDidChangeTextEditorViewColumn = this._register(
+    new Emitter<vscode.TextEditorViewColumnChangeEvent>(),
+  );
+	private readonly _onDidChangeTextEditorDiffInformation = this._register(
+    new Emitter<vscode.TextEditorDiffInformationChangeEvent>(),
+  );
+	private readonly _onDidChangeActiveTextEditor = this._register(
+    new Emitter<vscode.TextEditor | undefined>(),
+  );
+	private readonly _onDidChangeVisibleTextEditors = this._register(
+    new Emitter<readonly vscode.TextEditor[]>(),
+  );
 
 	readonly onDidChangeTextEditorSelection: Event<vscode.TextEditorSelectionChangeEvent> = this._onDidChangeTextEditorSelection.event;
 	readonly onDidChangeTextEditorOptions: Event<vscode.TextEditorOptionsChangeEvent> = this._onDidChangeTextEditorOptions.event;
@@ -42,8 +65,16 @@ export class ExtHostEditors extends Disposable implements ExtHostEditorsShape {
 		super();
 		this._proxy = mainContext.getProxy(MainContext.MainThreadTextEditors);
 
-		this._register(this._extHostDocumentsAndEditors.onDidChangeVisibleTextEditors(e => this._onDidChangeVisibleTextEditors.fire(e)));
-		this._register(this._extHostDocumentsAndEditors.onDidChangeActiveTextEditor(e => this._onDidChangeActiveTextEditor.fire(e)));
+		this._register(
+      this._extHostDocumentsAndEditors.onDidChangeVisibleTextEditors(
+        e => this._onDidChangeVisibleTextEditors.fire(e),
+      ),
+    );
+		this._register(
+      this._extHostDocumentsAndEditors.onDidChangeActiveTextEditor(
+        e => this._onDidChangeActiveTextEditor.fire(e),
+      ),
+    );
 	}
 
 	getActiveTextEditor(): vscode.TextEditor | undefined {
@@ -64,35 +95,44 @@ export class ExtHostEditors extends Disposable implements ExtHostEditorsShape {
 	showTextDocument(document: vscode.TextDocument, columnOrOptions: vscode.ViewColumn | vscode.TextDocumentShowOptions | undefined, preserveFocus?: boolean): Promise<vscode.TextEditor>;
 	async showTextDocument(document: vscode.TextDocument, columnOrOptions: vscode.ViewColumn | vscode.TextDocumentShowOptions | undefined, preserveFocus?: boolean): Promise<vscode.TextEditor> {
 		let options: ITextDocumentShowOptions;
-		if (typeof columnOrOptions === 'number') {
+		if (typeof columnOrOptions === "number") {
 			options = {
-				position: TypeConverters.ViewColumn.from(columnOrOptions),
-				preserveFocus
-			};
-		} else if (typeof columnOrOptions === 'object') {
+        position: TypeConverters.ViewColumn.from(columnOrOptions),
+        preserveFocus,
+      };
+		} else if (typeof columnOrOptions === "object") {
 			options = {
-				position: TypeConverters.ViewColumn.from(columnOrOptions.viewColumn),
-				preserveFocus: columnOrOptions.preserveFocus,
-				selection: typeof columnOrOptions.selection === 'object' ? TypeConverters.Range.from(columnOrOptions.selection) : undefined,
-				pinned: typeof columnOrOptions.preview === 'boolean' ? !columnOrOptions.preview : undefined
-			};
+        position: TypeConverters.ViewColumn.from(columnOrOptions.viewColumn),
+        preserveFocus: columnOrOptions.preserveFocus,
+        selection: typeof columnOrOptions.selection === "object" ? TypeConverters.Range.from(columnOrOptions.selection) : undefined,
+        pinned: typeof columnOrOptions.preview === "boolean" ? !columnOrOptions.preview : undefined,
+      };
 		} else {
 			options = {
-				preserveFocus: false
-			};
+        preserveFocus: false,
+      };
 		}
 
-		const editorId = await this._proxy.$tryShowTextDocument(document.uri, options);
-		const editor = editorId && this._extHostDocumentsAndEditors.getEditor(editorId);
+		const editorId = await this._proxy.$tryShowTextDocument(
+      document.uri,
+      options,
+    );
+		const editor = editorId && this._extHostDocumentsAndEditors.getEditor(
+      editorId,
+    );
 		if (editor) {
 			return editor.value;
 		}
 		// we have no editor... having an id means that we had an editor
 		// on the main side and that it isn't the current editor anymore...
 		if (editorId) {
-			throw new Error(`Could NOT open editor for "${document.uri.toString()}" because another editor opened in the meantime.`);
+			throw new Error(
+        `Could NOT open editor for "${document.uri.toString()}" because another editor opened in the meantime.`,
+      );
 		} else {
-			throw new Error(`Could NOT open editor for "${document.uri.toString()}".`);
+			throw new Error(
+        `Could NOT open editor for "${document.uri.toString()}".`,
+      );
 		}
 	}
 
@@ -105,7 +145,7 @@ export class ExtHostEditors extends Disposable implements ExtHostEditorsShape {
 	$acceptEditorPropertiesChanged(id: string, data: IEditorPropertiesChangeData): void {
 		const textEditor = this._extHostDocumentsAndEditors.getEditor(id);
 		if (!textEditor) {
-			throw new Error('unknown text editor');
+			throw new Error("unknown text editor");
 		}
 
 		// (1) set all properties
@@ -113,36 +153,46 @@ export class ExtHostEditors extends Disposable implements ExtHostEditorsShape {
 			textEditor._acceptOptions(data.options);
 		}
 		if (data.selections) {
-			const selections = data.selections.selections.map(TypeConverters.Selection.to);
+			const selections = data.selections.selections.map(
+        TypeConverters.Selection.to,
+      );
 			textEditor._acceptSelections(selections);
 		}
 		if (data.visibleRanges) {
-			const visibleRanges = arrays.coalesce(data.visibleRanges.map(TypeConverters.Range.to));
+			const visibleRanges = arrays.coalesce(
+        data.visibleRanges.map(TypeConverters.Range.to),
+      );
 			textEditor._acceptVisibleRanges(visibleRanges);
 		}
 
 		// (2) fire change events
 		if (data.options) {
 			this._onDidChangeTextEditorOptions.fire({
-				textEditor: textEditor.value,
-				options: { ...data.options, lineNumbers: TypeConverters.TextEditorLineNumbersStyle.to(data.options.lineNumbers) }
-			});
+        textEditor: textEditor.value,
+        options: { ...data.options, lineNumbers: TypeConverters.TextEditorLineNumbersStyle.to(data.options.lineNumbers) },
+      });
 		}
 		if (data.selections) {
-			const kind = TextEditorSelectionChangeKind.fromValue(data.selections.source);
-			const selections = data.selections.selections.map(TypeConverters.Selection.to);
+			const kind = TextEditorSelectionChangeKind.fromValue(
+        data.selections.source,
+      );
+			const selections = data.selections.selections.map(
+        TypeConverters.Selection.to,
+      );
 			this._onDidChangeTextEditorSelection.fire({
-				textEditor: textEditor.value,
-				selections,
-				kind
-			});
+        textEditor: textEditor.value,
+        selections,
+        kind,
+      });
 		}
 		if (data.visibleRanges) {
-			const visibleRanges = arrays.coalesce(data.visibleRanges.map(TypeConverters.Range.to));
+			const visibleRanges = arrays.coalesce(
+        data.visibleRanges.map(TypeConverters.Range.to),
+      );
 			this._onDidChangeTextEditorVisibleRanges.fire({
-				textEditor: textEditor.value,
-				visibleRanges
-			});
+        textEditor: textEditor.value,
+        visibleRanges,
+      });
 		}
 	}
 
@@ -150,12 +200,15 @@ export class ExtHostEditors extends Disposable implements ExtHostEditorsShape {
 		for (const id in data) {
 			const textEditor = this._extHostDocumentsAndEditors.getEditor(id);
 			if (!textEditor) {
-				throw new Error('Unknown text editor');
+				throw new Error("Unknown text editor");
 			}
 			const viewColumn = TypeConverters.ViewColumn.to(data[id]);
 			if (textEditor.value.viewColumn !== viewColumn) {
 				textEditor._acceptViewColumn(viewColumn);
-				this._onDidChangeTextEditorViewColumn.fire({ textEditor: textEditor.value, viewColumn });
+				this._onDidChangeTextEditorViewColumn.fire({
+          textEditor: textEditor.value,
+          viewColumn,
+        });
 			}
 		}
 	}
@@ -163,15 +216,15 @@ export class ExtHostEditors extends Disposable implements ExtHostEditorsShape {
 	$acceptEditorDiffInformation(id: string, diffInformation: ITextEditorDiffInformation[] | undefined): void {
 		const textEditor = this._extHostDocumentsAndEditors.getEditor(id);
 		if (!textEditor) {
-			throw new Error('unknown text editor');
+			throw new Error("unknown text editor");
 		}
 
 		if (!diffInformation) {
 			textEditor._acceptDiffInformation(undefined);
 			this._onDidChangeTextEditorDiffInformation.fire({
-				textEditor: textEditor.value,
-				diffInformation: undefined
-			});
+        textEditor: textEditor.value,
+        diffInformation: undefined,
+      });
 			return;
 		}
 
@@ -195,13 +248,13 @@ export class ExtHostEditors extends Disposable implements ExtHostEditorsShape {
 				return {
 					original: {
 						startLineNumber: originalStartLineNumber,
-						endLineNumberExclusive: originalEndLineNumberExclusive
+						endLineNumberExclusive: originalEndLineNumberExclusive,
 					},
 					modified: {
 						startLineNumber: modifiedStartLineNumber,
-						endLineNumberExclusive: modifiedEndLineNumberExclusive
+						endLineNumberExclusive: modifiedEndLineNumberExclusive,
 					},
-					kind
+					kind,
 				} satisfies vscode.TextEditorChange;
 			});
 
@@ -213,15 +266,15 @@ export class ExtHostEditors extends Disposable implements ExtHostEditorsShape {
 				get isStale(): boolean {
 					const document = that._extHostDocumentsAndEditors.getDocument(modified);
 					return document?.version !== diff.documentVersion;
-				}
+				},
 			});
 		});
 
 		textEditor._acceptDiffInformation(result);
 		this._onDidChangeTextEditorDiffInformation.fire({
-			textEditor: textEditor.value,
-			diffInformation: result
-		});
+      textEditor: textEditor.value,
+      diffInformation: result,
+    });
 	}
 
 	getDiffInformation(id: string): Promise<vscode.LineChange[]> {

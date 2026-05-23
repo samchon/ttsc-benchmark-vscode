@@ -3,24 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IMarkdownString, isMarkdownString, MarkdownString } from '../../../../../../base/common/htmlContent.js';
-import { CancellationTokenSource } from '../../../../../../base/common/cancellation.js';
-import { Disposable, IDisposable, toDisposable } from '../../../../../../base/common/lifecycle.js';
-import { autorun } from '../../../../../../base/common/observable.js';
-import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { IContextKeyService } from '../../../../../../platform/contextkey/common/contextkey.js';
-import { IKeybindingService } from '../../../../../../platform/keybinding/common/keybinding.js';
-import { IChatProgressRenderableResponseContent } from '../../../common/model/chatModel.js';
-import { ChatContextKeys } from '../../../common/actions/chatContextKeys.js';
-import { ElicitationState, IChatElicitationRequest, IChatElicitationRequestSerialized } from '../../../common/chatService/chatService.js';
-import { ILanguageModelToolsService } from '../../../common/tools/languageModelToolsService.js';
-import { IChatAccessibilityService } from '../../chat.js';
-import { AcceptElicitationRequestActionId } from '../../actions/chatElicitationActions.js';
-import { IChatToolRiskAssessmentService } from '../../tools/chatToolRiskAssessmentService.js';
-import { ChatConfirmationWidget, IChatConfirmationButton } from './chatConfirmationWidget.js';
-import { IChatContentPart, IChatContentPartRenderContext } from './chatContentParts.js';
-import { ToolRiskBadgeWidget } from './toolInvocationParts/toolRiskBadgeWidget.js';
-import { IAction } from '../../../../../../base/common/actions.js';
+import { IMarkdownString, isMarkdownString, MarkdownString } from "../../../../../../base/common/htmlContent.js";
+import { CancellationTokenSource } from "../../../../../../base/common/cancellation.js";
+import { Disposable, IDisposable, toDisposable } from "../../../../../../base/common/lifecycle.js";
+import { autorun } from "../../../../../../base/common/observable.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { IKeybindingService } from "../../../../../../platform/keybinding/common/keybinding.js";
+import { IChatProgressRenderableResponseContent } from "../../../common/model/chatModel.js";
+import { ChatContextKeys } from "../../../common/actions/chatContextKeys.js";
+import {
+  ElicitationState,
+  IChatElicitationRequest,
+  IChatElicitationRequestSerialized,
+} from "../../../common/chatService/chatService.js";
+import { ILanguageModelToolsService } from "../../../common/tools/languageModelToolsService.js";
+import { IChatAccessibilityService } from "../../chat.js";
+import { AcceptElicitationRequestActionId } from "../../actions/chatElicitationActions.js";
+import { IChatToolRiskAssessmentService } from "../../tools/chatToolRiskAssessmentService.js";
+import { ChatConfirmationWidget, IChatConfirmationButton } from "./chatConfirmationWidget.js";
+import { IChatContentPart, IChatContentPartRenderContext } from "./chatContentParts.js";
+import { ToolRiskBadgeWidget } from "./toolInvocationParts/toolRiskBadgeWidget.js";
+import { IAction } from "../../../../../../base/common/actions.js";
 
 export class ChatElicitationContentPart extends Disposable implements IChatContentPart {
 	public readonly domNode: HTMLElement;
@@ -48,8 +52,11 @@ export class ChatElicitationContentPart extends Disposable implements IChatConte
 		super();
 
 		const buttons: IChatConfirmationButton<unknown>[] = [];
-		if (elicitation.kind === 'elicitation2') {
-			const acceptTooltip = this.keybindingService.appendKeybinding(elicitation.acceptButtonLabel, AcceptElicitationRequestActionId);
+		if (elicitation.kind === "elicitation2") {
+			const acceptTooltip = this.keybindingService.appendKeybinding(
+        elicitation.acceptButtonLabel,
+        AcceptElicitationRequestActionId,
+      );
 
 			buttons.push({
 				label: elicitation.acceptButtonLabel,
@@ -58,11 +65,15 @@ export class ChatElicitationContentPart extends Disposable implements IChatConte
 				moreActions: elicitation.moreActions?.map((action: IAction) => ({
 					label: action.label,
 					data: action,
-					run: action.run
-				}))
+					run: action.run,
+				})),
 			});
 			if (elicitation.rejectButtonLabel && elicitation.reject) {
-				buttons.push({ label: elicitation.rejectButtonLabel, data: false, isSecondary: true });
+				buttons.push({
+          label: elicitation.rejectButtonLabel,
+          data: false,
+          isSecondary: true,
+        });
 			}
 
 			this._register(autorun(reader => {
@@ -71,35 +82,49 @@ export class ChatElicitationContentPart extends Disposable implements IChatConte
 				}
 			}));
 
-			const hasElicitationKey = ChatContextKeys.Editing.hasElicitationRequest.bindTo(this.contextKeyService);
-			this._register(autorun(reader => {
-				hasElicitationKey.set(elicitation.state.read(reader) === ElicitationState.Pending);
-			}));
+			const hasElicitationKey = ChatContextKeys.Editing.hasElicitationRequest.bindTo(
+        this.contextKeyService,
+      );
+			this._register(
+        autorun(reader => {
+          hasElicitationKey.set(
+            elicitation.state.read(reader) === ElicitationState.Pending,
+          );
+        }),
+      );
 			this._register(toDisposable(() => hasElicitationKey.reset()));
 
 			this.chatAccessibilityService.acceptElicitation(elicitation);
 		}
 
-		const confirmationWidget = this._register(this.instantiationService.createInstance(ChatConfirmationWidget, context, {
-			title: elicitation.title,
-			subtitle: elicitation.subtitle,
-			buttons,
-			message: this.getMessageToRender(elicitation),
-			footerBanner: this._createRiskBadge(elicitation),
-			toolbarData: { partType: 'elicitation', partSource: elicitation.source?.type, arg: elicitation },
-		}));
+		const confirmationWidget = this._register(
+      this.instantiationService.createInstance(
+        ChatConfirmationWidget,
+        context,
+        {
+          title: elicitation.title,
+          subtitle: elicitation.subtitle,
+          buttons,
+          message: this.getMessageToRender(elicitation),
+          footerBanner: this._createRiskBadge(elicitation),
+          toolbarData: { partType: "elicitation", partSource: elicitation.source?.type, arg: elicitation },
+        },
+      ),
+    );
 		this._confirmWidget = confirmationWidget;
-		confirmationWidget.setShowButtons(elicitation.kind === 'elicitation2' && elicitation.state.get() === ElicitationState.Pending);
+		confirmationWidget.setShowButtons(
+      elicitation.kind === "elicitation2" && elicitation.state.get() === ElicitationState.Pending,
+    );
 
 		this._register(confirmationWidget.onDidClick(async ({ button: e }) => {
-			if (elicitation.kind !== 'elicitation2') {
+			if (elicitation.kind !== "elicitation2") {
 				return;
 			}
 
 			let result: boolean | IAction | undefined;
-			if (typeof e.data === 'boolean' && e.data === true) {
+			if (typeof e.data === "boolean" && e.data === true) {
 				result = e.data;
-			} else if (e.data && typeof e.data === 'object' && 'run' in e.data && 'label' in e.data) {
+			} else if (e.data && typeof e.data === "object" && "run" in e.data && "label" in e.data) {
 				result = e.data as IAction;
 			} else {
 				result = undefined;
@@ -117,7 +142,7 @@ export class ChatElicitationContentPart extends Disposable implements IChatConte
 		this.domNode = confirmationWidget.domNode;
 		this.domNode.tabIndex = 0;
 		const messageToRender = this.getMessageToRender(elicitation);
-		this.domNode.ariaLabel = elicitation.title + ' ' + (typeof messageToRender === 'string' ? messageToRender : messageToRender.value || '');
+		this.domNode.ariaLabel = elicitation.title + " " + (typeof messageToRender === "string" ? messageToRender : messageToRender.value || "");
 	}
 
 	private getMessageToRender(elicitation: IChatElicitationRequest | IChatElicitationRequestSerialized): IMarkdownString | string {
@@ -125,13 +150,20 @@ export class ChatElicitationContentPart extends Disposable implements IChatConte
 			return elicitation.message;
 		}
 
-		const messageMd = isMarkdownString(elicitation.message) ? MarkdownString.lift(elicitation.message) : new MarkdownString(elicitation.message);
-		messageMd.appendCodeblock('json', JSON.stringify(elicitation.acceptedResult, null, 2));
+		const messageMd = isMarkdownString(
+      elicitation.message,
+    ) ? MarkdownString.lift(
+      elicitation.message,
+    ) : new MarkdownString(elicitation.message);
+		messageMd.appendCodeblock(
+      "json",
+      JSON.stringify(elicitation.acceptedResult, null, 2),
+    );
 		return messageMd;
 	}
 
 	private _createRiskBadge(elicitation: IChatElicitationRequest | IChatElicitationRequestSerialized): HTMLElement | undefined {
-		if (elicitation.kind !== 'elicitation2' || !elicitation.riskAssessment) {
+		if (elicitation.kind !== "elicitation2" || !elicitation.riskAssessment) {
 			return undefined;
 		}
 		if (!this.riskAssessmentService.isEnabled()) {
@@ -142,7 +174,9 @@ export class ChatElicitationContentPart extends Disposable implements IChatConte
 		if (!tool) {
 			return undefined;
 		}
-		const widget = this._register(this.instantiationService.createInstance(ToolRiskBadgeWidget));
+		const widget = this._register(
+      this.instantiationService.createInstance(ToolRiskBadgeWidget),
+    );
 		const cached = this.riskAssessmentService.getCached(tool, parameters);
 		if (cached) {
 			widget.setAssessment(cached);

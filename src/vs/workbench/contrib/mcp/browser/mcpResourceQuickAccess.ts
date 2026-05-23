@@ -3,44 +3,63 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DeferredPromise, disposableTimeout, RunOnceScheduler } from '../../../../base/common/async.js';
-import { CancellationToken, CancellationTokenSource } from '../../../../base/common/cancellation.js';
-import { Codicon } from '../../../../base/common/codicons.js';
-import { Event } from '../../../../base/common/event.js';
-import { DisposableStore, IDisposable, toDisposable, Disposable } from '../../../../base/common/lifecycle.js';
-import { autorun, derived, observableValue, IObservable } from '../../../../base/common/observable.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
-import { URI } from '../../../../base/common/uri.js';
-import { generateUuid } from '../../../../base/common/uuid.js';
-import { localize } from '../../../../nls.js';
-import { ByteSize, IFileService, IFileStat } from '../../../../platform/files/common/files.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { INotificationService } from '../../../../platform/notification/common/notification.js';
-import { DefaultQuickAccessFilterValue, IQuickAccessProvider, IQuickAccessProviderRunOptions } from '../../../../platform/quickinput/common/quickAccess.js';
-import { IQuickInputService, IQuickPick, IQuickPickItem, IQuickPickSeparator } from '../../../../platform/quickinput/common/quickInput.js';
-import { IEditorService } from '../../../services/editor/common/editorService.js';
-import { IViewsService } from '../../../services/views/common/viewsService.js';
-import { IChatWidgetService } from '../../chat/browser/chat.js';
-import { IChatAttachmentResolveService } from '../../chat/browser/attachments/chatAttachmentResolveService.js';
-import { IChatRequestVariableEntry } from '../../chat/common/attachments/chatVariableEntries.js';
-import { IMcpResource, IMcpResourceTemplate, IMcpServer, IMcpService, isMcpResourceTemplate, McpCapability, McpConnectionState, McpResourceURI } from '../common/mcpTypes.js';
-import { McpIcons } from '../common/mcpIcons.js';
-import { IUriTemplateVariable } from '../../../../base/common/uriTemplate.js';
-import { openPanelChatAndGetWidget } from './openPanelChatAndGetWidget.js';
-import { LinkedList } from '../../../../base/common/linkedList.js';
-import { ChatContextPickAttachment } from '../../chat/browser/attachments/chatContextPickService.js';
-import { asArray } from '../../../../base/common/arrays.js';
+import { DeferredPromise, disposableTimeout, RunOnceScheduler } from "../../../../base/common/async.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Event } from "../../../../base/common/event.js";
+import { DisposableStore, IDisposable, toDisposable, Disposable } from "../../../../base/common/lifecycle.js";
+import { autorun, derived, observableValue, IObservable } from "../../../../base/common/observable.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { URI } from "../../../../base/common/uri.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { localize } from "../../../../nls.js";
+import { ByteSize, IFileService, IFileStat } from "../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import {
+  DefaultQuickAccessFilterValue,
+  IQuickAccessProvider,
+  IQuickAccessProviderRunOptions,
+} from "../../../../platform/quickinput/common/quickAccess.js";
+import { IQuickInputService, IQuickPick, IQuickPickItem, IQuickPickSeparator } from "../../../../platform/quickinput/common/quickInput.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import { IChatWidgetService } from "../../chat/browser/chat.js";
+import { IChatAttachmentResolveService } from "../../chat/browser/attachments/chatAttachmentResolveService.js";
+import { IChatRequestVariableEntry } from "../../chat/common/attachments/chatVariableEntries.js";
+import {
+  IMcpResource,
+  IMcpResourceTemplate,
+  IMcpServer,
+  IMcpService,
+  isMcpResourceTemplate,
+  McpCapability,
+  McpConnectionState,
+  McpResourceURI,
+} from "../common/mcpTypes.js";
+import { McpIcons } from "../common/mcpIcons.js";
+import { IUriTemplateVariable } from "../../../../base/common/uriTemplate.js";
+import { openPanelChatAndGetWidget } from "./openPanelChatAndGetWidget.js";
+import { LinkedList } from "../../../../base/common/linkedList.js";
+import { ChatContextPickAttachment } from "../../chat/browser/attachments/chatContextPickService.js";
+import { asArray } from "../../../../base/common/arrays.js";
 
 export class McpResourcePickHelper extends Disposable {
-	private _resources = observableValue<{ picks: Map<IMcpServer, (IMcpResourceTemplate | IMcpResource)[]>; isBusy: boolean }>(this, { picks: new Map(), isBusy: true });
+	private _resources = observableValue<{ picks: Map<IMcpServer, (IMcpResourceTemplate | IMcpResource)[]>; isBusy: boolean }>(
+    this,
+    { picks: new Map(), isBusy: true },
+  );
 	private _pickItemsStack: LinkedList<{ server: IMcpServer; resources: (IMcpResource | IMcpResourceTemplate)[] }> = new LinkedList();
-	private _inDirectory = observableValue<undefined | { server: IMcpServer; resources: (IMcpResource | IMcpResourceTemplate)[] }>(this, undefined);
+	private _inDirectory = observableValue<undefined | { server: IMcpServer; resources: (IMcpResource | IMcpResourceTemplate)[] }>(
+    this,
+    undefined,
+  );
 	public static sep(server: IMcpServer): IQuickPickSeparator {
 		return {
-			id: server.definition.id,
-			type: 'separator',
-			label: server.definition.label,
-		};
+      id: server.definition.id,
+      type: "separator",
+      label: server.definition.label,
+    };
 	}
 
 	public addCurrentMCPQuickPickItemLevel(server: IMcpServer, resources: (IMcpResource | IMcpResourceTemplate)[]): void {
@@ -63,7 +82,10 @@ export class McpResourcePickHelper extends Disposable {
 	public navigateBack(): boolean {
 		const items = this._pickItemsStack.pop();
 		if (items) {
-			this._inDirectory.set({ server: items.server, resources: items.resources }, undefined);
+			this._inDirectory.set(
+        { server: items.server, resources: items.resources },
+        undefined,
+      );
 			return true;
 		} else {
 			return false;
@@ -74,21 +96,21 @@ export class McpResourcePickHelper extends Disposable {
 		const iconPath = resource.icons.getUrl(22);
 		if (isMcpResourceTemplate(resource)) {
 			return {
-				id: resource.template.template,
-				label: resource.title || resource.name,
-				description: resource.description,
-				detail: localize('mcp.resource.template', 'Resource template: {0}', resource.template.template),
-				iconPath,
-			};
+        id: resource.template.template,
+        label: resource.title || resource.name,
+        description: resource.description,
+        detail: localize("mcp.resource.template", "Resource template: {0}", resource.template.template),
+        iconPath,
+      };
 		}
 
 		return {
-			id: resource.uri.toString(),
-			label: resource.title || resource.name,
-			description: resource.description,
-			detail: resource.mcpUri + (resource.sizeInBytes !== undefined ? ' (' + ByteSize.formatSize(resource.sizeInBytes) + ')' : ''),
-			iconPath,
-		};
+      id: resource.uri.toString(),
+      label: resource.title || resource.name,
+      description: resource.description,
+      detail: resource.mcpUri + (resource.sizeInBytes !== undefined ? " (" + ByteSize.formatSize(resource.sizeInBytes) + ")" : ""),
+      iconPath,
+    };
 	}
 
 	public hasServersWithResources = derived(reader => {
@@ -113,7 +135,7 @@ export class McpResourcePickHelper extends Disposable {
 		@IFileService private readonly _fileService: IFileService,
 		@IQuickInputService private readonly _quickInputService: IQuickInputService,
 		@INotificationService private readonly _notificationService: INotificationService,
-		@IChatAttachmentResolveService private readonly _chatAttachmentResolveService: IChatAttachmentResolveService
+		@IChatAttachmentResolveService private readonly _chatAttachmentResolveService: IChatAttachmentResolveService,
 	) {
 		super();
 	}
@@ -137,7 +159,9 @@ export class McpResourcePickHelper extends Disposable {
 			return false;
 		}
 
-		if (stat && this._isDirectoryResource(resource) && (stat.children?.length ?? 0) > 0) {
+		if (stat && this._isDirectoryResource(
+      resource,
+    ) && (stat.children?.length ?? 0) > 0) {
 			// Save current state to stack before navigating
 			const currentResources = this._resources.get().picks.get(server);
 			if (currentResources) {
@@ -146,33 +170,35 @@ export class McpResourcePickHelper extends Disposable {
 
 			// Convert all the children to IMcpResource objects
 			const childResources: IMcpResource[] = stat.children!.map(child => {
-				const mcpUri = McpResourceURI.fromServer(server.definition, child.resource.toString());
-				return {
-					uri: mcpUri,
-					mcpUri: child.resource.path,
-					name: child.name,
-					title: child.name,
-					description: resource.description,
-					mimeType: undefined,
-					sizeInBytes: child.size,
-					icons: McpIcons.fromParsed(undefined)
-				};
-			});
+        const mcpUri = McpResourceURI.fromServer(server.definition, child.resource.toString());
+        return {
+          uri: mcpUri,
+          mcpUri: child.resource.path,
+          name: child.name,
+          title: child.name,
+          description: resource.description,
+          mimeType: undefined,
+          sizeInBytes: child.size,
+          icons: McpIcons.fromParsed(undefined),
+        };
+      });
 			this._inDirectory.set({ server, resources: childResources }, undefined);
 			return true;
 		}
 		return false;
 	}
 
-	public toAttachment(resource: IMcpResource | IMcpResourceTemplate, server: IMcpServer): Promise<ChatContextPickAttachment> | 'noop' {
-		const noop = 'noop';
+	public toAttachment(resource: IMcpResource | IMcpResourceTemplate, server: IMcpServer): Promise<ChatContextPickAttachment> | "noop" {
+		const noop = "noop";
 		if (this._isDirectoryResource(resource)) {
 			//Check if directory
 			this.checkIfDirectoryAndPopulate(resource, server);
 			return noop;
 		}
 		if (isMcpResourceTemplate(resource)) {
-			return this._resourceTemplateToAttachment(resource).then(val => val || noop);
+			return this._resourceTemplateToAttachment(resource).then(
+        val => val || noop,
+      );
 		} else {
 			return this._resourceToAttachment(resource).then(val => val || noop);
 		}
@@ -198,27 +224,31 @@ export class McpResourcePickHelper extends Disposable {
 	public checkIfNestedResources = () => !this._pickItemsStack.isEmpty();
 
 	private async _resourceToAttachment(resource: { uri: URI; name: string; mimeType?: string }): Promise<IChatRequestVariableEntry | undefined> {
-		const asImage = await this._chatAttachmentResolveService.resolveImageEditorAttachContext(resource.uri, undefined, resource.mimeType);
+		const asImage = await this._chatAttachmentResolveService.resolveImageEditorAttachContext(
+      resource.uri,
+      undefined,
+      resource.mimeType,
+    );
 		if (asImage) {
 			return asImage;
 		}
 
 		return {
-			id: resource.uri.toString(),
-			kind: 'file',
-			name: resource.name,
-			value: resource.uri,
-		};
+      id: resource.uri.toString(),
+      kind: "file",
+      name: resource.name,
+      value: resource.uri,
+    };
 	}
 
 	private async _resourceTemplateToAttachment(rt: IMcpResourceTemplate) {
 		const maybeUri = await this._resourceTemplateToURI(rt);
 		const uri = maybeUri && await this._verifyUriIfNeeded(maybeUri);
 		return uri && this._resourceToAttachment({
-			uri,
-			name: rt.name,
-			mimeType: rt.mimeType,
-		});
+      uri,
+      name: rt.name,
+      mimeType: rt.mimeType,
+    });
 
 	}
 
@@ -232,12 +262,20 @@ export class McpResourcePickHelper extends Disposable {
 			return uri;
 		}
 
-		this._notificationService.warn(localize('mcp.resource.template.notFound', "The resource {0} was not found.", McpResourceURI.toServer(uri).resourceURL.toString()));
+		this._notificationService.warn(
+      localize(
+        "mcp.resource.template.notFound",
+        "The resource {0} was not found.",
+        McpResourceURI.toServer(uri).resourceURL.toString(),
+      ),
+    );
 		return undefined;
 	}
 
 	private async _resourceTemplateToURI(rt: IMcpResourceTemplate) {
-		const todo = rt.template.components.flatMap(c => typeof c === 'object' ? c.variables : []);
+		const todo = rt.template.components.flatMap(
+      c => typeof c === "object" ? c.variables : [],
+    );
 
 		const quickInput = this._quickInputService.createQuickPick();
 		const cts = new CancellationTokenSource();
@@ -250,13 +288,20 @@ export class McpResourcePickHelper extends Disposable {
 		try {
 			for (let i = 0; i < todo.length; i++) {
 				const variable = todo[i];
-				const resolved = await this._promptForTemplateValue(quickInput, variable, vars, rt);
+				const resolved = await this._promptForTemplateValue(
+          quickInput,
+          variable,
+          vars,
+          rt,
+        );
 				if (resolved === undefined) {
 					return undefined;
 				}
 				// mark the URI as needing verification if any part was not a completion pick
 				needsVerification ||= !resolved.completed;
-				vars[todo[i].name] = variable.repeatable ? resolved.value.split('/') : resolved.value;
+				vars[todo[i].name] = variable.repeatable ? resolved.value.split(
+          "/",
+        ) : resolved.value;
 			}
 			return { uri: rt.resolveURI(vars), needsVerification };
 		} finally {
@@ -270,29 +315,45 @@ export class McpResourcePickHelper extends Disposable {
 		const completions = new Map<string, Promise<string[]>>([]);
 
 		const variablesWithPlaceholders = { ...variablesSoFar };
-		for (const variable of rt.template.components.flatMap(c => typeof c === 'object' ? c.variables : [])) {
+		for (const variable of rt.template.components.flatMap(
+      c => typeof c === "object" ? c.variables : [],
+    )) {
 			if (!variablesWithPlaceholders.hasOwnProperty(variable.name)) {
 				variablesWithPlaceholders[variable.name] = `$${variable.name.toUpperCase()}`;
 			}
 		}
 
-		let placeholder = localize('mcp.resource.template.placeholder', "Value for ${0} in {1}", variable.name.toUpperCase(), rt.template.resolve(variablesWithPlaceholders).replaceAll('%24', '$'));
+		let placeholder = localize(
+      "mcp.resource.template.placeholder",
+      "Value for ${0} in {1}",
+      variable.name.toUpperCase(),
+      rt.template.resolve(variablesWithPlaceholders).replaceAll("%24", "$"),
+    );
 		if (variable.optional) {
-			placeholder += ' (' + localize('mcp.resource.template.optional', "Optional") + ')';
+			placeholder += " (" + localize(
+        "mcp.resource.template.optional",
+        "Optional",
+      ) + ")";
 		}
 
 		input.placeholder = placeholder;
-		input.value = '';
+		input.value = "";
 		input.items = [];
 		input.show();
 
 		const currentID = generateUuid();
 		const setItems = (value: string, completed: string[] = []) => {
-			const items = completed.filter(c => c !== value).map(c => ({ id: c, label: c }));
+			const items = completed.filter(c => c !== value).map(c => ({
+        id: c,
+        label: c,
+      }));
 			if (value) {
 				items.unshift({ id: currentID, label: value });
 			} else if (variable.optional) {
-				items.unshift({ id: currentID, label: localize('mcp.resource.template.empty', "<Empty>") });
+				items.unshift({
+          id: currentID,
+          label: localize("mcp.resource.template.empty", "<Empty>"),
+        });
 			}
 
 			input.items = items;
@@ -305,7 +366,12 @@ export class McpResourcePickHelper extends Disposable {
 			const inputValue = input.value;
 			let promise = completions.get(inputValue);
 			if (!promise) {
-				promise = rt.complete(variable.name, inputValue, variablesSoFar, changeCancellation.token);
+				promise = rt.complete(
+          variable.name,
+          inputValue,
+          variablesSoFar,
+          changeCancellation.token,
+        );
 				completions.set(inputValue, promise);
 			}
 
@@ -322,7 +388,9 @@ export class McpResourcePickHelper extends Disposable {
 			});
 		};
 
-		const getCompletionItemsScheduler = store.add(new RunOnceScheduler(getCompletionItems, 300));
+		const getCompletionItemsScheduler = store.add(
+      new RunOnceScheduler(getCompletionItems, 300),
+    );
 
 		return new Promise<{ value: string; completed: boolean } | undefined>(resolve => {
 			store.add(input.onDidHide(() => resolve(undefined)));
@@ -330,7 +398,7 @@ export class McpResourcePickHelper extends Disposable {
 				const item = input.selectedItems[0];
 				if (item.id === currentID) {
 					resolve({ value: input.value, completed: false });
-				} else if (variable.explodable && item.label.endsWith('/') && item.label !== input.value) {
+				} else if (variable.explodable && item.label.endsWith("/") && item.label !== input.value) {
 					// if navigating in a path structure, picking a `/` should let the user pick in a subdirectory
 					input.value = item.label;
 				} else {
@@ -357,12 +425,12 @@ export class McpResourcePickHelper extends Disposable {
 
 	private _isDirectoryResource(resource: IMcpResource | IMcpResourceTemplate): boolean {
 
-		if (resource.mimeType && resource.mimeType === 'inode/directory') {
+		if (resource.mimeType && resource.mimeType === "inode/directory") {
 			return true;
 		} else if (isMcpResourceTemplate(resource)) {
-			return resource.template.template.endsWith('/');
+			return resource.template.template.endsWith("/");
 		} else {
-			return resource.uri.path.endsWith('/');
+			return resource.uri.path.endsWith("/");
 		}
 	}
 
@@ -373,10 +441,15 @@ export class McpResourcePickHelper extends Disposable {
 		// We try to show everything in-sequence to avoid flickering (#250411) as long as
 		// it loads within 5 seconds. Otherwise we just show things as the load in parallel.
 		let showInSequence = true;
-		this._register(disposableTimeout(() => {
-			showInSequence = false;
-			publish();
-		}, 5_000));
+		this._register(
+      disposableTimeout(
+        () => {
+          showInSequence = false;
+          publish();
+        },
+        5_000,
+      ),
+    );
 
 		const publish = () => {
 			const output = new Map<IMcpServer, (IMcpResourceTemplate | IMcpResource)[]>();
@@ -394,7 +467,10 @@ export class McpResourcePickHelper extends Disposable {
 					break;
 				}
 			}
-			this._resources.set({ picks: output, isBusy: isBusyLoadingPicks }, undefined);
+			this._resources.set(
+        { picks: output, isBusy: isBusyLoadingPicks },
+        undefined,
+      );
 		};
 
 		type Rec = { templates: DeferredPromise<IMcpResourceTemplate[]>; resourcesSoFar: IMcpResource[]; resources: DeferredPromise<unknown> };
@@ -435,7 +511,7 @@ export class McpResourcePickHelper extends Disposable {
 							rec.resourcesSoFar = rec.resourcesSoFar.concat(page);
 							publish();
 						}
-					})())
+					})()),
 				]);
 			} else {
 				rec.templates.complete([]);
@@ -471,13 +547,15 @@ export abstract class AbstractMcpResourceAccessPick {
 		picker.busy = true;
 		picker.keepScrollPosition = true;
 		const store = new DisposableStore();
-		const goBackId = '_goback_';
+		const goBackId = "_goback_";
 
 		type ResourceQuickPickItem = IQuickPickItem & { resource: IMcpResource | IMcpResourceTemplate; server: IMcpServer };
 
-		const attachButton = localize('mcp.quickaccess.attach', "Attach to chat");
+		const attachButton = localize("mcp.quickaccess.attach", "Attach to chat");
 
-		const helper = store.add(this._instantiationService.createInstance(McpResourcePickHelper));
+		const helper = store.add(
+      this._instantiationService.createInstance(McpResourcePickHelper),
+    );
 		if (this._scopeTo) {
 			helper.explicitServers = [this._scopeTo];
 		}
@@ -498,8 +576,8 @@ export abstract class AbstractMcpResourceAccessPick {
 				// Add go back item
 				const goBackItem: IQuickPickItem = {
 					id: goBackId,
-					label: localize('goBack', 'Go back ↩'),
-					alwaysShow: true
+					label: localize("goBack", "Go back ↩"),
+					alwaysShow: true,
 				};
 				items.push(goBackItem);
 			}
@@ -514,7 +592,7 @@ export abstract class AbstractMcpResourceAccessPick {
 				const attachment = helper.toAttachment(resourceItem.resource, resourceItem.server);
 				if (attachment instanceof Promise) {
 					attachment.then(async a => {
-						if (a !== 'noop') {
+						if (a !== "noop") {
 							const widget = await openPanelChatAndGetWidget(this._viewsService, this._chatWidgetService);
 							widget?.attachmentModel.addContext(...asArray(a));
 						}
@@ -524,9 +602,11 @@ export abstract class AbstractMcpResourceAccessPick {
 			}
 		}));
 
-		store.add(picker.onDidHide(() => {
-			helper.dispose();
-		}));
+		store.add(
+      picker.onDidHide(() => {
+        helper.dispose();
+      }),
+    );
 
 		store.add(picker.onDidAccept(async event => {
 			try {
@@ -568,13 +648,24 @@ export class McpResourceQuickPick extends AbstractMcpResourceAccessPick {
 		@IViewsService viewsService: IViewsService,
 		@IQuickInputService private readonly _quickInputService: IQuickInputService,
 	) {
-		super(scopeTo, instantiationService, editorService, chatWidgetService, viewsService);
+		super(
+      scopeTo,
+      instantiationService,
+      editorService,
+      chatWidgetService,
+      viewsService,
+    );
 	}
 
 	public async pick(token = CancellationToken.None) {
 		const store = new DisposableStore();
-		const qp = store.add(this._quickInputService.createQuickPick({ useSeparators: true }));
-		qp.placeholder = localize('mcp.quickaccess.placeholder', "Search for resources");
+		const qp = store.add(
+      this._quickInputService.createQuickPick({ useSeparators: true }),
+    );
+		qp.placeholder = localize(
+      "mcp.quickaccess.placeholder",
+      "Search for resources",
+    );
 		store.add(this.applyToPick(qp, token));
 		store.add(qp.onDidHide(() => store.dispose()));
 		qp.show();
@@ -583,7 +674,7 @@ export class McpResourceQuickPick extends AbstractMcpResourceAccessPick {
 }
 
 export class McpResourceQuickAccess extends AbstractMcpResourceAccessPick implements IQuickAccessProvider {
-	public static readonly PREFIX = 'mcpr ';
+	public static readonly PREFIX = "mcpr ";
 
 	defaultFilterValue = DefaultQuickAccessFilterValue.LAST;
 
@@ -591,9 +682,15 @@ export class McpResourceQuickAccess extends AbstractMcpResourceAccessPick implem
 		@IInstantiationService instantiationService: IInstantiationService,
 		@IEditorService editorService: IEditorService,
 		@IChatWidgetService chatWidgetService: IChatWidgetService,
-		@IViewsService viewsService: IViewsService
+		@IViewsService viewsService: IViewsService,
 	) {
-		super(undefined, instantiationService, editorService, chatWidgetService, viewsService);
+		super(
+      undefined,
+      instantiationService,
+      editorService,
+      chatWidgetService,
+      viewsService,
+    );
 	}
 
 	provide(picker: IQuickPick<IQuickPickItem, { useSeparators: true }>, token: CancellationToken, runOptions?: IQuickAccessProviderRunOptions): IDisposable {

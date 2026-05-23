@@ -4,22 +4,28 @@
  *--------------------------------------------------------------------------------------------*/
 
 
-import { Disposable, DisposableStore, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { Registry } from '../../../../../../platform/registry/common/platform.js';
-import { IWorkbenchContribution, IWorkbenchContributionsRegistry, Extensions as WorkbenchExtensions } from '../../../../../common/contributions.js';
-import { INotebookKernelService } from '../../../common/notebookKernelService.js';
-import { INotebookLoggingService } from '../../../common/notebookLoggingService.js';
-import { IExtensionService } from '../../../../../services/extensions/common/extensions.js';
-import { LifecyclePhase } from '../../../../../services/lifecycle/common/lifecycle.js';
+import { Disposable, DisposableStore, IDisposable } from "../../../../../../base/common/lifecycle.js";
+import { Registry } from "../../../../../../platform/registry/common/platform.js";
+import {
+  IWorkbenchContribution,
+  IWorkbenchContributionsRegistry,
+  Extensions as WorkbenchExtensions,
+} from "../../../../../common/contributions.js";
+import { INotebookKernelService } from "../../../common/notebookKernelService.js";
+import { INotebookLoggingService } from "../../../common/notebookLoggingService.js";
+import { IExtensionService } from "../../../../../services/extensions/common/extensions.js";
+import { LifecyclePhase } from "../../../../../services/lifecycle/common/lifecycle.js";
 
 class NotebookKernelDetection extends Disposable implements IWorkbenchContribution {
 	private _detectionMap = new Map<string, IDisposable>();
-	private readonly _localDisposableStore = this._register(new DisposableStore());
+	private readonly _localDisposableStore = this._register(
+    new DisposableStore(),
+  );
 
 	constructor(
 		@INotebookKernelService private readonly _notebookKernelService: INotebookKernelService,
 		@IExtensionService private readonly _extensionService: IExtensionService,
-		@INotebookLoggingService private readonly _notebookLoggingService: INotebookLoggingService
+		@INotebookLoggingService private readonly _notebookLoggingService: INotebookLoggingService,
 	) {
 		super();
 
@@ -30,15 +36,15 @@ class NotebookKernelDetection extends Disposable implements IWorkbenchContributi
 		this._localDisposableStore.clear();
 
 		this._localDisposableStore.add(this._extensionService.onWillActivateByEvent(e => {
-			if (e.event.startsWith('onNotebook:')) {
+			if (e.event.startsWith("onNotebook:")) {
 				if (this._extensionService.activationEventIsDone(e.event)) {
 					return;
 				}
 
 				// parse the event to get the notebook type
-				const notebookType = e.event.substring('onNotebook:'.length);
+				const notebookType = e.event.substring("onNotebook:".length);
 
-				if (notebookType === '*') {
+				if (notebookType === "*") {
 					// ignore
 					return;
 				}
@@ -57,9 +63,9 @@ class NotebookKernelDetection extends Disposable implements IWorkbenchContributi
 				});
 
 				if (shouldStartDetection && !this._detectionMap.has(notebookType)) {
-					this._notebookLoggingService.debug('KernelDetection', `start extension activation for ${notebookType}`);
+					this._notebookLoggingService.debug("KernelDetection", `start extension activation for ${notebookType}`);
 					const task = this._notebookKernelService.registerNotebookKernelDetectionTask({
-						notebookType: notebookType
+						notebookType: notebookType,
 					});
 
 					this._detectionMap.set(notebookType, task);
@@ -79,7 +85,7 @@ class NotebookKernelDetection extends Disposable implements IWorkbenchContributi
 				const taskToDelete: string[] = [];
 				for (const [notebookType, task] of this._detectionMap) {
 					if (this._extensionService.activationEventIsDone(`onNotebook:${notebookType}`)) {
-						this._notebookLoggingService.debug('KernelDetection', `finish extension activation for ${notebookType}`);
+						this._notebookLoggingService.debug("KernelDetection", `finish extension activation for ${notebookType}`);
 						taskToDelete.push(notebookType);
 						task.dispose();
 					}
@@ -96,9 +102,12 @@ class NotebookKernelDetection extends Disposable implements IWorkbenchContributi
 				if (timer) {
 					clearTimeout(timer);
 				}
-			}
+			},
 		});
 	}
 }
 
-Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench).registerWorkbenchContribution(NotebookKernelDetection, LifecyclePhase.Restored);
+Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench).registerWorkbenchContribution(
+  NotebookKernelDetection,
+  LifecyclePhase.Restored,
+);

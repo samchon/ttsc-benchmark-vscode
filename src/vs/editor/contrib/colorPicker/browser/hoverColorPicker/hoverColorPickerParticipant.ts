@@ -3,24 +3,39 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AsyncIterableProducer } from '../../../../../base/common/async.js';
-import { CancellationToken } from '../../../../../base/common/cancellation.js';
-import { ICodeEditor } from '../../../../browser/editorBrowser.js';
-import { Range } from '../../../../common/core/range.js';
-import { IModelDecoration } from '../../../../common/model.js';
-import { DocumentColorProvider } from '../../../../common/languages.js';
-import { ColorDetector } from '../colorDetector.js';
-import { ColorPickerModel } from '../colorPickerModel.js';
-import { ColorPickerWidget } from '../colorPickerWidget.js';
-import { HoverAnchor, HoverAnchorType, IEditorHoverParticipant, IEditorHoverRenderContext, IHoverPart, IRenderedHoverPart, IRenderedHoverParts, RenderedHoverParts } from '../../../hover/browser/hoverTypes.js';
-import { IThemeService } from '../../../../../platform/theme/common/themeService.js';
-import * as nls from '../../../../../nls.js';
-import { BaseColor, ColorPickerWidgetType, createColorHover, updateColorPresentations, updateEditorModel } from '../colorPickerParticipantUtils.js';
-import { EditorOption } from '../../../../common/config/editorOptions.js';
-import { Dimension } from '../../../../../base/browser/dom.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { Color } from '../../../../../base/common/color.js';
-import { HoverStartSource } from '../../../hover/browser/hoverOperation.js';
+import { AsyncIterableProducer } from "../../../../../base/common/async.js";
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { ICodeEditor } from "../../../../browser/editorBrowser.js";
+import { Range } from "../../../../common/core/range.js";
+import { IModelDecoration } from "../../../../common/model.js";
+import { DocumentColorProvider } from "../../../../common/languages.js";
+import { ColorDetector } from "../colorDetector.js";
+import { ColorPickerModel } from "../colorPickerModel.js";
+import { ColorPickerWidget } from "../colorPickerWidget.js";
+import {
+  HoverAnchor,
+  HoverAnchorType,
+  IEditorHoverParticipant,
+  IEditorHoverRenderContext,
+  IHoverPart,
+  IRenderedHoverPart,
+  IRenderedHoverParts,
+  RenderedHoverParts,
+} from "../../../hover/browser/hoverTypes.js";
+import { IThemeService } from "../../../../../platform/theme/common/themeService.js";
+import * as nls from "../../../../../nls.js";
+import {
+  BaseColor,
+  ColorPickerWidgetType,
+  createColorHover,
+  updateColorPresentations,
+  updateEditorModel,
+} from "../colorPickerParticipantUtils.js";
+import { EditorOption } from "../../../../common/config/editorOptions.js";
+import { Dimension } from "../../../../../base/browser/dom.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { Color } from "../../../../../base/common/color.js";
+import { HoverStartSource } from "../../../hover/browser/hoverOperation.js";
 
 export class ColorHover implements IHoverPart, BaseColor {
 
@@ -34,7 +49,7 @@ export class ColorHover implements IHoverPart, BaseColor {
 		public readonly owner: IEditorHoverParticipant<ColorHover>,
 		public readonly range: Range,
 		public readonly model: ColorPickerModel,
-		public readonly provider: DocumentColorProvider
+		public readonly provider: DocumentColorProvider,
 	) { }
 
 	public isValidForHoverAnchor(anchor: HoverAnchor): boolean {
@@ -66,7 +81,9 @@ export class HoverColorPickerParticipant implements IEditorHoverParticipant<Colo
 	}
 
 	public computeAsync(anchor: HoverAnchor, lineDecorations: IModelDecoration[], source: HoverStartSource, token: CancellationToken): AsyncIterableProducer<ColorHover> {
-		return AsyncIterableProducer.fromPromise(this._computeAsync(anchor, lineDecorations, source));
+		return AsyncIterableProducer.fromPromise(
+      this._computeAsync(anchor, lineDecorations, source),
+    );
 	}
 
 	private async _computeAsync(_anchor: HoverAnchor, lineDecorations: IModelDecoration[], source: HoverStartSource): Promise<ColorHover[]> {
@@ -87,7 +104,10 @@ export class HoverColorPickerParticipant implements IEditorHoverParticipant<Colo
 
 			const colorData = colorDetector.getColorData(d.range.getStartPosition());
 			if (colorData) {
-				const colorHover = ColorHover.fromBaseColor(this, await createColorHover(this._editor.getModel(), colorData.colorInfo, colorData.provider));
+				const colorHover = ColorHover.fromBaseColor(
+          this,
+          await createColorHover(this._editor.getModel(), colorData.colorInfo, colorData.provider),
+        );
 				return [colorHover];
 			}
 
@@ -96,12 +116,14 @@ export class HoverColorPickerParticipant implements IEditorHoverParticipant<Colo
 	}
 
 	private _isValidRequest(source: HoverStartSource): boolean {
-		const decoratorActivatedOn = this._editor.getOption(EditorOption.colorDecoratorsActivatedOn);
+		const decoratorActivatedOn = this._editor.getOption(
+      EditorOption.colorDecoratorsActivatedOn,
+    );
 		switch (source) {
 			case HoverStartSource.Mouse:
-				return decoratorActivatedOn === 'hover' || decoratorActivatedOn === 'clickAndHover';
+				return decoratorActivatedOn === "hover" || decoratorActivatedOn === "clickAndHover";
 			case HoverStartSource.Click:
-				return decoratorActivatedOn === 'click' || decoratorActivatedOn === 'clickAndHover';
+				return decoratorActivatedOn === "click" || decoratorActivatedOn === "clickAndHover";
 			case HoverStartSource.Keyboard:
 				return true;
 		}
@@ -119,19 +141,34 @@ export class HoverColorPickerParticipant implements IEditorHoverParticipant<Colo
 		const colorHover = hoverParts[0];
 		const editorModel = editor.getModel();
 		const model = colorHover.model;
-		this._colorPicker = disposables.add(new ColorPickerWidget(context.fragment, model, editor.getOption(EditorOption.pixelRatio), this._themeService, ColorPickerWidgetType.Hover));
+		this._colorPicker = disposables.add(
+      new ColorPickerWidget(
+        context.fragment,
+        model,
+        editor.getOption(EditorOption.pixelRatio),
+        this._themeService,
+        ColorPickerWidgetType.Hover,
+      ),
+    );
 
 		let editorUpdatedByColorPicker = false;
-		let range = new Range(colorHover.range.startLineNumber, colorHover.range.startColumn, colorHover.range.endLineNumber, colorHover.range.endColumn);
+		let range = new Range(
+      colorHover.range.startLineNumber,
+      colorHover.range.startColumn,
+      colorHover.range.endLineNumber,
+      colorHover.range.endColumn,
+    );
 
 		disposables.add(model.onColorFlushed(async (color: Color) => {
 			await updateColorPresentations(editorModel, model, color, range, colorHover);
 			editorUpdatedByColorPicker = true;
 			range = updateEditorModel(editor, range, model);
 		}));
-		disposables.add(model.onDidChangeColor((color: Color) => {
-			updateColorPresentations(editorModel, model, color, range, colorHover);
-		}));
+		disposables.add(
+      model.onDidChangeColor((color: Color) => {
+        updateColorPresentations(editorModel, model, color, range, colorHover);
+      }),
+    );
 		disposables.add(editor.onDidChangeModelContent((e) => {
 			if (editorUpdatedByColorPicker) {
 				editorUpdatedByColorPicker = false;
@@ -141,15 +178,18 @@ export class HoverColorPickerParticipant implements IEditorHoverParticipant<Colo
 			}
 		}));
 		const renderedHoverPart: IRenderedHoverPart<ColorHover> = {
-			hoverPart: ColorHover.fromBaseColor(this, colorHover),
-			hoverElement: this._colorPicker.domNode,
-			dispose() { disposables.dispose(); }
-		};
+      hoverPart: ColorHover.fromBaseColor(this, colorHover),
+      hoverElement: this._colorPicker.domNode,
+      dispose() { disposables.dispose(); },
+    };
 		return new RenderedHoverParts([renderedHoverPart]);
 	}
 
 	public getAccessibleContent(hoverPart: ColorHover): string {
-		return nls.localize('hoverAccessibilityColorParticipant', 'There is a color picker here.');
+		return nls.localize(
+      "hoverAccessibilityColorParticipant",
+      "There is a color picker here.",
+    );
 	}
 
 	public handleResize(): void {

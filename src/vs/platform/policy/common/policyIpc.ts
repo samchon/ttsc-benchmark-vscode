@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IStringDictionary } from '../../../base/common/collections.js';
-import { Event } from '../../../base/common/event.js';
-import { DisposableStore } from '../../../base/common/lifecycle.js';
-import { PolicyName } from '../../../base/common/policy.js';
-import { IChannel, IServerChannel } from '../../../base/parts/ipc/common/ipc.js';
-import { AbstractPolicyService, IPolicyService, PolicyDefinition, PolicyValue } from './policy.js';
+import { IStringDictionary } from "../../../base/common/collections.js";
+import { Event } from "../../../base/common/event.js";
+import { DisposableStore } from "../../../base/common/lifecycle.js";
+import { PolicyName } from "../../../base/common/policy.js";
+import { IChannel, IServerChannel } from "../../../base/parts/ipc/common/ipc.js";
+import { AbstractPolicyService, IPolicyService, PolicyDefinition, PolicyValue } from "./policy.js";
 
 
 export class PolicyChannel implements IServerChannel {
@@ -18,15 +18,21 @@ export class PolicyChannel implements IServerChannel {
 
 	constructor(private service: IPolicyService) {
 		this.onDidChangeEvent = Event.map(
-			this.service.onDidChange,
-			names => names.reduce<IStringDictionary<PolicyValue | null>>((r, name) => ({ ...r, [name]: this.service.getPolicyValue(name) ?? null }), {}),
-			this.disposables
-		);
+      this.service.onDidChange,
+      names => names.reduce<IStringDictionary<PolicyValue | null>>(
+        (r, name) => ({
+          ...r,
+          [name]: this.service.getPolicyValue(name) ?? null,
+        }),
+        {},
+      ),
+      this.disposables,
+    );
 	}
 
 	listen(_: unknown, event: string): Event<any> {
 		switch (event) {
-			case 'onDidChange': return this.onDidChangeEvent;
+			case "onDidChange": return this.onDidChangeEvent;
 		}
 
 		throw new Error(`Event not found: ${event}`);
@@ -34,7 +40,9 @@ export class PolicyChannel implements IServerChannel {
 
 	call(_: unknown, command: string, arg?: any): Promise<any> {
 		switch (command) {
-			case 'updatePolicyDefinitions': return this.service.updatePolicyDefinitions(arg as IStringDictionary<PolicyDefinition>);
+			case "updatePolicyDefinitions": return this.service.updatePolicyDefinitions(
+        arg as IStringDictionary<PolicyDefinition>,
+      );
 		}
 
 		throw new Error(`Call not found: ${command}`);
@@ -56,7 +64,7 @@ export class PolicyChannelClient extends AbstractPolicyService implements IPolic
 				this.policies.set(name, value);
 			}
 		}
-		this.channel.listen<object>('onDidChange')(policies => {
+		this.channel.listen<object>("onDidChange")(policies => {
 			for (const name in policies) {
 				const value = policies[name as keyof typeof policies];
 
@@ -72,7 +80,10 @@ export class PolicyChannelClient extends AbstractPolicyService implements IPolic
 	}
 
 	protected async _updatePolicyDefinitions(policyDefinitions: IStringDictionary<PolicyDefinition>): Promise<void> {
-		const result = await this.channel.call<{ [name: PolicyName]: PolicyValue }>('updatePolicyDefinitions', policyDefinitions);
+		const result = await this.channel.call<{ [name: PolicyName]: PolicyValue }>(
+      "updatePolicyDefinitions",
+      policyDefinitions,
+    );
 		for (const name in result) {
 			this.policies.set(name, result[name]);
 		}

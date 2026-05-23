@@ -3,21 +3,26 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../../../base/browser/dom.js';
-import { Action } from '../../../../../../base/common/actions.js';
-import { Emitter, Event } from '../../../../../../base/common/event.js';
-import { Disposable, DisposableStore } from '../../../../../../base/common/lifecycle.js';
-import { ThemeIcon } from '../../../../../../base/common/themables.js';
-import { localize } from '../../../../../../nls.js';
-import { IConfigurationService } from '../../../../../../platform/configuration/common/configuration.js';
-import { IContextKeyService } from '../../../../../../platform/contextkey/common/contextkey.js';
-import { IContextMenuService } from '../../../../../../platform/contextview/browser/contextView.js';
-import { ChatContextKeys } from '../../../common/actions/chatContextKeys.js';
-import { ChatConfiguration } from '../../../common/constants.js';
-import { IChatMode } from '../../../common/chatModes.js';
-import { IChatSessionsService } from '../../../common/chatSessionsService.js';
-import { IHandOff } from '../../../common/promptSyntax/promptFileParser.js';
-import { getAgentCanContinueIn, getAgentSessionProvider, getAgentSessionProviderIcon, getAgentSessionProviderName } from '../../agentSessions/agentSessions.js';
+import * as dom from "../../../../../../base/browser/dom.js";
+import { Action } from "../../../../../../base/common/actions.js";
+import { Emitter, Event } from "../../../../../../base/common/event.js";
+import { Disposable, DisposableStore } from "../../../../../../base/common/lifecycle.js";
+import { ThemeIcon } from "../../../../../../base/common/themables.js";
+import { localize } from "../../../../../../nls.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../../../../platform/contextview/browser/contextView.js";
+import { ChatContextKeys } from "../../../common/actions/chatContextKeys.js";
+import { ChatConfiguration } from "../../../common/constants.js";
+import { IChatMode } from "../../../common/chatModes.js";
+import { IChatSessionsService } from "../../../common/chatSessionsService.js";
+import { IHandOff } from "../../../common/promptSyntax/promptFileParser.js";
+import {
+  getAgentCanContinueIn,
+  getAgentSessionProvider,
+  getAgentSessionProviderIcon,
+  getAgentSessionProviderName,
+} from "../../agentSessions/agentSessions.js";
 
 export interface INextPromptSelection {
 	readonly handoff: IHandOff;
@@ -31,7 +36,9 @@ export class ChatSuggestNextWidget extends Disposable {
 	private readonly _onDidChangeHeight = this._register(new Emitter<void>());
 	public readonly onDidChangeHeight: Event<void> = this._onDidChangeHeight.event;
 
-	private readonly _onDidSelectPrompt = this._register(new Emitter<INextPromptSelection>());
+	private readonly _onDidSelectPrompt = this._register(
+    new Emitter<INextPromptSelection>(),
+  );
 	public readonly onDidSelectPrompt: Event<INextPromptSelection> = this._onDidSelectPrompt.event;
 
 	private promptsContainer!: HTMLElement;
@@ -43,14 +50,14 @@ export class ChatSuggestNextWidget extends Disposable {
 		@IConfigurationService private readonly configurationService: IConfigurationService,
 		@IContextMenuService private readonly contextMenuService: IContextMenuService,
 		@IChatSessionsService private readonly chatSessionsService: IChatSessionsService,
-		@IContextKeyService private readonly contextKeyService: IContextKeyService
+		@IContextKeyService private readonly contextKeyService: IContextKeyService,
 	) {
 		super();
 		this.domNode = this.createSuggestNextWidget();
 	}
 
 	public get height(): number {
-		return this.domNode.style.display === 'none' ? 0 : this.domNode.offsetHeight;
+		return this.domNode.style.display === "none" ? 0 : this.domNode.offsetHeight;
 	}
 
 	public getCurrentMode(): IChatMode | undefined {
@@ -59,11 +66,16 @@ export class ChatSuggestNextWidget extends Disposable {
 
 	private createSuggestNextWidget(): HTMLElement {
 		// Reuse welcome view classes for consistent styling
-		const container = dom.$('.chat-suggest-next-widget.chat-welcome-view-suggested-prompts');
-		container.style.display = 'none';
+		const container = dom.$(
+      ".chat-suggest-next-widget.chat-welcome-view-suggested-prompts",
+    );
+		container.style.display = "none";
 
 		// Title element using welcome view class
-		this.titleElement = dom.append(container, dom.$('.chat-welcome-view-suggested-prompts-title'));
+		this.titleElement = dom.append(
+      container,
+      dom.$(".chat-welcome-view-suggested-prompts-title"),
+    );
 
 		// Container for prompt buttons
 		this.promptsContainer = container;
@@ -82,8 +94,15 @@ export class ChatSuggestNextWidget extends Disposable {
 		this._currentMode = mode;
 
 		// Update title with mode name: "Proceed from {Mode}"
-		const modeName = mode.name.get() || mode.label.get() || localize('chat.currentMode', 'current mode');
-		this.titleElement.textContent = localize('chat.proceedFrom', 'Proceed from {0}', modeName);
+		const modeName = mode.name.get() || mode.label.get() || localize(
+      "chat.currentMode",
+      "current mode",
+    );
+		this.titleElement.textContent = localize(
+      "chat.proceedFrom",
+      "Proceed from {0}",
+      modeName,
+    );
 
 		// Clear existing prompt buttons (keep title which is first child)
 		const childrenToRemove: HTMLElement[] = [];
@@ -99,9 +118,15 @@ export class ChatSuggestNextWidget extends Disposable {
 			this.promptsContainer.removeChild(child);
 		}
 
-		const isAutopilotEnabled = this.configurationService.getValue<boolean>(ChatConfiguration.AutopilotEnabled) !== false;
-		const isAutopilotPolicyRestricted = this.configurationService.inspect<boolean>(ChatConfiguration.GlobalAutoApprove).policyValue === false;
-		const firstAutoSendHandoff = isAutopilotEnabled && !isAutopilotPolicyRestricted ? handoffs.find(h => h.send) : undefined;
+		const isAutopilotEnabled = this.configurationService.getValue<boolean>(
+      ChatConfiguration.AutopilotEnabled,
+    ) !== false;
+		const isAutopilotPolicyRestricted = this.configurationService.inspect<boolean>(
+      ChatConfiguration.GlobalAutoApprove,
+    ).policyValue === false;
+		const firstAutoSendHandoff = isAutopilotEnabled && !isAutopilotPolicyRestricted ? handoffs.find(
+      h => h.send,
+    ) : undefined;
 
 		for (const handoff of handoffs) {
 			const promptButton = this.createPromptButton(handoff);
@@ -113,7 +138,7 @@ export class ChatSuggestNextWidget extends Disposable {
 			}
 		}
 
-		this.domNode.style.display = 'flex';
+		this.domNode.style.display = "flex";
 		this._onDidChangeHeight.fire();
 	}
 
@@ -128,12 +153,18 @@ export class ChatSuggestNextWidget extends Disposable {
 			return currentHandoffs?.find(h => h.label === handoffLabel) ?? handoff;
 		};
 
-		const button = dom.$('.chat-welcome-view-suggested-prompt');
-		button.setAttribute('tabindex', '0');
-		button.setAttribute('role', 'button');
-		button.setAttribute('aria-label', localize('chat.suggestNext.item', '{0}', handoff.label));
+		const button = dom.$(".chat-welcome-view-suggested-prompt");
+		button.setAttribute("tabindex", "0");
+		button.setAttribute("role", "button");
+		button.setAttribute(
+      "aria-label",
+      localize("chat.suggestNext.item", "{0}", handoff.label),
+    );
 
-		const titleElement = dom.append(button, dom.$('.chat-welcome-view-suggested-prompt-title'));
+		const titleElement = dom.append(
+      button,
+      dom.$(".chat-welcome-view-suggested-prompt-title"),
+    );
 		titleElement.textContent = handoff.label;
 
 		// Optional showContinueOn behaves like send: only present if specified
@@ -142,7 +173,9 @@ export class ChatSuggestNextWidget extends Disposable {
 		// Get chat session contributions to show in chevron dropdown
 		// Filter to only first-party providers that support "continue in".
 		// TODO: Expand later to any agent with `canDelegate` === true.
-		const currentSessionType = this.contextKeyService.getContextKeyValue<string>(ChatContextKeys.chatSessionType.key);
+		const currentSessionType = this.contextKeyService.getContextKeyValue<string>(
+      ChatContextKeys.chatSessionType.key,
+    );
 		const contributions = this.chatSessionsService.getAllChatSessionContributions();
 		const availableContributions = contributions.filter(c => {
 			if (!c.canDelegate) {
@@ -156,18 +189,34 @@ export class ChatSuggestNextWidget extends Disposable {
 		});
 
 		if (showContinueOn && availableContributions.length > 0) {
-			button.classList.add('chat-suggest-next-has-dropdown');
+			button.classList.add("chat-suggest-next-has-dropdown");
 			// Create a dropdown container that wraps separator and chevron for a larger hit area
-			const dropdownContainer = dom.append(button, dom.$('.chat-suggest-next-dropdown'));
-			dropdownContainer.setAttribute('tabindex', '0');
-			dropdownContainer.setAttribute('role', 'button');
-			dropdownContainer.setAttribute('aria-label', localize('chat.suggestNext.moreOptions', 'More options for {0}', handoff.label));
-			dropdownContainer.setAttribute('aria-haspopup', 'true');
+			const dropdownContainer = dom.append(
+        button,
+        dom.$(".chat-suggest-next-dropdown"),
+      );
+			dropdownContainer.setAttribute("tabindex", "0");
+			dropdownContainer.setAttribute("role", "button");
+			dropdownContainer.setAttribute(
+        "aria-label",
+        localize(
+          "chat.suggestNext.moreOptions",
+          "More options for {0}",
+          handoff.label,
+        ),
+      );
+			dropdownContainer.setAttribute("aria-haspopup", "true");
 
-			const separator = dom.append(dropdownContainer, dom.$('.chat-suggest-next-separator'));
-			separator.setAttribute('aria-hidden', 'true');
-			const chevron = dom.append(dropdownContainer, dom.$('.codicon.codicon-chevron-down.dropdown-chevron'));
-			chevron.setAttribute('aria-hidden', 'true');
+			const separator = dom.append(
+        dropdownContainer,
+        dom.$(".chat-suggest-next-separator"),
+      );
+			separator.setAttribute("aria-hidden", "true");
+			const chevron = dom.append(
+        dropdownContainer,
+        dom.$(".codicon.codicon-chevron-down.dropdown-chevron"),
+      );
+			chevron.setAttribute("aria-hidden", "true");
 
 			const showContextMenu = (e: MouseEvent | KeyboardEvent, anchor?: HTMLElement) => {
 				e.preventDefault();
@@ -179,7 +228,7 @@ export class ChatSuggestNextWidget extends Disposable {
 					const name = getAgentSessionProviderName(provider);
 					return new Action(
 						contrib.type,
-						localize('continueIn', "Continue in {0}", name),
+						localize("continueIn", "Continue in {0}", name),
 						ThemeIcon.isThemeIcon(icon) ? ThemeIcon.asClassName(icon) : undefined,
 						true,
 						() => {
@@ -187,28 +236,34 @@ export class ChatSuggestNextWidget extends Disposable {
 							if (currentHandoff) {
 								this._onDidSelectPrompt.fire({ handoff: currentHandoff, agentId: contrib.name });
 							}
-						}
+						},
 					);
 				});
 
 				this.contextMenuService.showContextMenu({
-					getAnchor: () => anchor || dropdownContainer,
-					getActions: () => actions,
-					autoSelectFirstItem: true,
-				});
+          getAnchor: () => anchor || dropdownContainer,
+          getActions: () => actions,
+          autoSelectFirstItem: true,
+        });
 			};
 
-			disposables.add(dom.addDisposableListener(dropdownContainer, 'click', (e: MouseEvent) => {
-				showContextMenu(e, dropdownContainer);
-			}));
+			disposables.add(
+        dom.addDisposableListener(
+          dropdownContainer,
+          "click",
+          (e: MouseEvent) => {
+            showContextMenu(e, dropdownContainer);
+          },
+        ),
+      );
 
-			disposables.add(dom.addDisposableListener(dropdownContainer, 'keydown', (e) => {
-				if (e.key === 'Enter' || e.key === ' ') {
+			disposables.add(dom.addDisposableListener(dropdownContainer, "keydown", (e) => {
+				if (e.key === "Enter" || e.key === " ") {
 					showContextMenu(e, dropdownContainer);
 				}
 			}));
-			disposables.add(dom.addDisposableListener(button, 'click', (e: MouseEvent) => {
-				if (dom.isHTMLElement(e.target) && e.target.closest('.chat-suggest-next-dropdown')) {
+			disposables.add(dom.addDisposableListener(button, "click", (e: MouseEvent) => {
+				if (dom.isHTMLElement(e.target) && e.target.closest(".chat-suggest-next-dropdown")) {
 					return;
 				}
 				const currentHandoff = getCurrentHandoff();
@@ -217,7 +272,7 @@ export class ChatSuggestNextWidget extends Disposable {
 				}
 			}));
 		} else {
-			disposables.add(dom.addDisposableListener(button, 'click', () => {
+			disposables.add(dom.addDisposableListener(button, "click", () => {
 				const currentHandoff = getCurrentHandoff();
 				if (currentHandoff) {
 					this._onDidSelectPrompt.fire({ handoff: currentHandoff });
@@ -225,8 +280,8 @@ export class ChatSuggestNextWidget extends Disposable {
 			}));
 		}
 
-		disposables.add(dom.addDisposableListener(button, 'keydown', (e) => {
-			if (e.key === 'Enter' || e.key === ' ') {
+		disposables.add(dom.addDisposableListener(button, "keydown", (e) => {
+			if (e.key === "Enter" || e.key === " ") {
 				e.preventDefault();
 				const currentHandoff = getCurrentHandoff();
 				if (currentHandoff) {
@@ -250,24 +305,30 @@ export class ChatSuggestNextWidget extends Disposable {
 			return currentHandoffs?.find(h => h.label === handoffLabel) ?? handoff;
 		};
 
-		const label = localize('chat.suggestNext.startWithAutopilot', "Start with Autopilot");
-		const button = dom.$('.chat-welcome-view-suggested-prompt');
-		button.setAttribute('tabindex', '0');
-		button.setAttribute('role', 'button');
-		button.setAttribute('aria-label', label);
+		const label = localize(
+      "chat.suggestNext.startWithAutopilot",
+      "Start with Autopilot",
+    );
+		const button = dom.$(".chat-welcome-view-suggested-prompt");
+		button.setAttribute("tabindex", "0");
+		button.setAttribute("role", "button");
+		button.setAttribute("aria-label", label);
 
-		const titleElement = dom.append(button, dom.$('.chat-welcome-view-suggested-prompt-title'));
+		const titleElement = dom.append(
+      button,
+      dom.$(".chat-welcome-view-suggested-prompt-title"),
+    );
 		titleElement.textContent = label;
 
-		disposables.add(dom.addDisposableListener(button, 'click', () => {
+		disposables.add(dom.addDisposableListener(button, "click", () => {
 			const currentHandoff = getCurrentHandoff();
 			if (currentHandoff) {
 				this._onDidSelectPrompt.fire({ handoff: currentHandoff, withAutopilot: true });
 			}
 		}));
 
-		disposables.add(dom.addDisposableListener(button, 'keydown', e => {
-			if (e.key === 'Enter' || e.key === ' ') {
+		disposables.add(dom.addDisposableListener(button, "keydown", e => {
+			if (e.key === "Enter" || e.key === " ") {
 				e.preventDefault();
 				const currentHandoff = getCurrentHandoff();
 				if (currentHandoff) {
@@ -282,9 +343,9 @@ export class ChatSuggestNextWidget extends Disposable {
 	}
 
 	public hide(): void {
-		if (this.domNode.style.display !== 'none') {
+		if (this.domNode.style.display !== "none") {
 			this._currentMode = undefined;
-			this.domNode.style.display = 'none';
+			this.domNode.style.display = "none";
 			this._onDidChangeHeight.fire();
 		}
 	}

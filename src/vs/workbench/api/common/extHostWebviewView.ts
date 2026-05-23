@@ -3,15 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { Emitter } from '../../../base/common/event.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { IExtensionDescription } from '../../../platform/extensions/common/extensions.js';
-import { ExtHostWebview, ExtHostWebviews, toExtensionData, shouldSerializeBuffersForPostMessage } from './extHostWebview.js';
-import { ViewBadge } from './extHostTypeConverters.js';
-import type * as vscode from 'vscode';
-import * as extHostProtocol from './extHost.protocol.js';
-import * as extHostTypes from './extHostTypes.js';
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { IExtensionDescription } from "../../../platform/extensions/common/extensions.js";
+import {
+  ExtHostWebview,
+  ExtHostWebviews,
+  toExtensionData,
+  shouldSerializeBuffersForPostMessage,
+} from "./extHostWebview.js";
+import { ViewBadge } from "./extHostTypeConverters.js";
+import type * as vscode from "vscode";
+import * as extHostProtocol from "./extHost.protocol.js";
+import * as extHostTypes from "./extHostTypes.js";
 
 class ExtHostWebviewView extends Disposable implements vscode.WebviewView {
 
@@ -129,7 +134,7 @@ class ExtHostWebviewView extends Disposable implements vscode.WebviewView {
 
 	private assertNotDisposed() {
 		if (this.#isDisposed) {
-			throw new Error('Webview is disposed');
+			throw new Error("Webview is disposed");
 		}
 	}
 }
@@ -149,7 +154,9 @@ export class ExtHostWebviewViews implements extHostProtocol.ExtHostWebviewViewsS
 		mainContext: extHostProtocol.IMainContext,
 		private readonly _extHostWebview: ExtHostWebviews,
 	) {
-		this._proxy = mainContext.getProxy(extHostProtocol.MainContext.MainThreadWebviewViews);
+		this._proxy = mainContext.getProxy(
+      extHostProtocol.MainContext.MainThreadWebviewViews,
+    );
 	}
 
 	public registerWebviewViewProvider(
@@ -171,9 +178,9 @@ export class ExtHostWebviewViews implements extHostProtocol.ExtHostWebviewViewsS
 		});
 
 		return new extHostTypes.Disposable(() => {
-			this._viewProviders.delete(viewType);
-			this._proxy.$unregisterWebviewViewProvider(viewType);
-		});
+      this._viewProviders.delete(viewType);
+      this._proxy.$unregisterWebviewViewProvider(viewType);
+    });
 	}
 
 	async $resolveWebviewView(
@@ -190,8 +197,19 @@ export class ExtHostWebviewViews implements extHostProtocol.ExtHostWebviewViewsS
 
 		const { provider, extension } = entry;
 
-		const webview = this._extHostWebview.createNewWebview(webviewHandle, { /* todo */ }, extension);
-		const revivedView = new ExtHostWebviewView(webviewHandle, this._proxy, viewType, title, webview, true);
+		const webview = this._extHostWebview.createNewWebview(
+      webviewHandle,
+      {},
+      extension,
+    );
+		const revivedView = new ExtHostWebviewView(
+      webviewHandle,
+      this._proxy,
+      viewType,
+      title,
+      webview,
+      true,
+    );
 
 		this._webviewViews.set(webviewHandle, revivedView);
 
@@ -200,7 +218,7 @@ export class ExtHostWebviewViews implements extHostProtocol.ExtHostWebviewViewsS
 
 	async $onDidChangeWebviewViewVisibility(
 		webviewHandle: string,
-		visible: boolean
+		visible: boolean,
 	) {
 		const webviewView = this.getWebviewView(webviewHandle);
 		webviewView._setVisible(visible);
@@ -217,7 +235,7 @@ export class ExtHostWebviewViews implements extHostProtocol.ExtHostWebviewViewsS
 	private getWebviewView(handle: string): ExtHostWebviewView {
 		const entry = this._webviewViews.get(handle);
 		if (!entry) {
-			throw new Error('No webview found');
+			throw new Error("No webview found");
 		}
 		return entry;
 	}

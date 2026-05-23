@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { Event } from '../../../base/common/event.js';
-import { URI } from '../../../base/common/uri.js';
-import { Client, IChannel, IClientRouter, IConnectionHub, IServerChannel } from '../../../base/parts/ipc/common/ipc.js';
-import { ILogService } from '../../log/common/log.js';
-import { IOpenURLOptions, IURLHandler } from './url.js';
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { Event } from "../../../base/common/event.js";
+import { URI } from "../../../base/common/uri.js";
+import { Client, IChannel, IClientRouter, IConnectionHub, IServerChannel } from "../../../base/parts/ipc/common/ipc.js";
+import { ILogService } from "../../log/common/log.js";
+import { IOpenURLOptions, IURLHandler } from "./url.js";
 
 export class URLHandlerChannel implements IServerChannel {
 
@@ -20,7 +20,10 @@ export class URLHandlerChannel implements IServerChannel {
 
 	call(_: unknown, command: string, arg?: any): Promise<any> {
 		switch (command) {
-			case 'handleURL': return this.handler.handleURL(URI.revive(arg[0]), arg[1]);
+			case "handleURL": return this.handler.handleURL(
+        URI.revive(arg[0]),
+        arg[1],
+      );
 		}
 
 		throw new Error(`Call not found: ${command}`);
@@ -32,7 +35,7 @@ export class URLHandlerChannelClient implements IURLHandler {
 	constructor(private channel: IChannel) { }
 
 	handleURL(uri: URI, options?: IOpenURLOptions): Promise<boolean> {
-		return this.channel.call('handleURL', [uri.toJSON(), options]);
+		return this.channel.call("handleURL", [uri.toJSON(), options]);
 	}
 }
 
@@ -40,18 +43,21 @@ export class URLHandlerRouter implements IClientRouter<string> {
 
 	constructor(
 		private next: IClientRouter<string>,
-		private readonly logService: ILogService
+		private readonly logService: ILogService,
 	) { }
 
 	async routeCall(hub: IConnectionHub<string>, command: string, arg?: any, cancellationToken?: CancellationToken): Promise<Client<string>> {
-		if (command !== 'handleURL') {
+		if (command !== "handleURL") {
 			throw new Error(`Call not found: ${command}`);
 		}
 
 		if (Array.isArray(arg) && arg.length > 0) {
 			const uri = URI.revive(arg[0]);
 
-			this.logService.trace('URLHandlerRouter#routeCall() with URI argument', uri.toString(true));
+			this.logService.trace(
+        "URLHandlerRouter#routeCall() with URI argument",
+        uri.toString(true),
+      );
 
 			if (uri.query) {
 				const match = /\bwindowId=(\d+)/.exec(uri.query);
@@ -59,27 +65,44 @@ export class URLHandlerRouter implements IClientRouter<string> {
 				if (match) {
 					const windowId = match[1];
 
-					this.logService.trace(`URLHandlerRouter#routeCall(): found windowId query parameter with value "${windowId}"`, uri.toString(true));
+					this.logService.trace(
+            `URLHandlerRouter#routeCall(): found windowId query parameter with value "${windowId}"`,
+            uri.toString(true),
+          );
 
 					const regex = new RegExp(`window:${windowId}`);
 					const connection = hub.connections.find(c => {
-						this.logService.trace('URLHandlerRouter#routeCall(): testing connection', c.ctx);
+            this.logService.trace(
+              "URLHandlerRouter#routeCall(): testing connection",
+              c.ctx,
+            );
 
-						return regex.test(c.ctx);
-					});
+            return regex.test(c.ctx);
+          });
 					if (connection) {
-						this.logService.trace('URLHandlerRouter#routeCall(): found a connection to route', uri.toString(true));
+						this.logService.trace(
+              "URLHandlerRouter#routeCall(): found a connection to route",
+              uri.toString(true),
+            );
 
 						return connection;
 					} else {
-						this.logService.trace('URLHandlerRouter#routeCall(): did not find a connection to route', uri.toString(true));
+						this.logService.trace(
+              "URLHandlerRouter#routeCall(): did not find a connection to route",
+              uri.toString(true),
+            );
 					}
 				} else {
-					this.logService.trace('URLHandlerRouter#routeCall(): did not find windowId query parameter', uri.toString(true));
+					this.logService.trace(
+            "URLHandlerRouter#routeCall(): did not find windowId query parameter",
+            uri.toString(true),
+          );
 				}
 			}
 		} else {
-			this.logService.trace('URLHandlerRouter#routeCall() without URI argument');
+			this.logService.trace(
+        "URLHandlerRouter#routeCall() without URI argument",
+      );
 		}
 
 		return this.next.routeCall(hub, command, arg, cancellationToken);

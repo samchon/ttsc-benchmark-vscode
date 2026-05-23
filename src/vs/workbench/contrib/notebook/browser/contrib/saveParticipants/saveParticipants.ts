@@ -3,43 +3,51 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../../../base/common/cancellation.js';
-import { HierarchicalKind } from '../../../../../../base/common/hierarchicalKind.js';
-import { Disposable, DisposableStore } from '../../../../../../base/common/lifecycle.js';
-import { isEqual } from '../../../../../../base/common/resources.js';
-import { ICodeEditor } from '../../../../../../editor/browser/editorBrowser.js';
-import { IBulkEditService, ResourceEdit, ResourceTextEdit } from '../../../../../../editor/browser/services/bulkEditService.js';
-import { trimTrailingWhitespace } from '../../../../../../editor/common/commands/trimTrailingWhitespaceCommand.js';
-import { Position } from '../../../../../../editor/common/core/position.js';
-import { Range } from '../../../../../../editor/common/core/range.js';
-import { Selection } from '../../../../../../editor/common/core/selection.js';
-import { CodeActionProvider, CodeActionTriggerType, IWorkspaceTextEdit } from '../../../../../../editor/common/languages.js';
-import { IReadonlyTextBuffer, ITextModel } from '../../../../../../editor/common/model.js';
-import { IEditorWorkerService } from '../../../../../../editor/common/services/editorWorker.js';
-import { ILanguageFeaturesService } from '../../../../../../editor/common/services/languageFeatures.js';
-import { ITextModelService } from '../../../../../../editor/common/services/resolverService.js';
-import { ApplyCodeActionReason, applyCodeAction, getCodeActions } from '../../../../../../editor/contrib/codeAction/browser/codeAction.js';
-import { CodeActionItem, CodeActionKind, CodeActionTriggerSource } from '../../../../../../editor/contrib/codeAction/common/types.js';
-import { FormattingMode, getDocumentFormattingEditsWithSelectedProvider } from '../../../../../../editor/contrib/format/browser/format.js';
-import { SnippetController2 } from '../../../../../../editor/contrib/snippet/browser/snippetController2.js';
-import { localize } from '../../../../../../nls.js';
-import { IConfigurationService } from '../../../../../../platform/configuration/common/configuration.js';
-import { IInstantiationService, ServicesAccessor } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { IProgress, IProgressStep } from '../../../../../../platform/progress/common/progress.js';
-import { Registry } from '../../../../../../platform/registry/common/platform.js';
-import { IWorkspaceTrustManagementService } from '../../../../../../platform/workspace/common/workspaceTrust.js';
-import { IWorkbenchContribution, IWorkbenchContributionsRegistry, Extensions as WorkbenchContributionsExtensions } from '../../../../../common/contributions.js';
-import { SaveReason } from '../../../../../common/editor.js';
-import { getNotebookEditorFromEditorPane } from '../../notebookBrowser.js';
-import { NotebookTextModel } from '../../../common/model/notebookTextModel.js';
-import { CellKind, NotebookSetting } from '../../../common/notebookCommon.js';
-import { NotebookFileWorkingCopyModel } from '../../../common/notebookEditorModel.js';
-import { IEditorService } from '../../../../../services/editor/common/editorService.js';
-import { LifecyclePhase } from '../../../../../services/lifecycle/common/lifecycle.js';
-import { IStoredFileWorkingCopy, IStoredFileWorkingCopyModel } from '../../../../../services/workingCopy/common/storedFileWorkingCopy.js';
-import { IStoredFileWorkingCopySaveParticipant, IStoredFileWorkingCopySaveParticipantContext, IWorkingCopyFileService } from '../../../../../services/workingCopy/common/workingCopyFileService.js';
-import { NotebookMultiCursorController, NotebookMultiCursorState } from '../multicursor/notebookMulticursor.js';
+import { CancellationToken } from "../../../../../../base/common/cancellation.js";
+import { HierarchicalKind } from "../../../../../../base/common/hierarchicalKind.js";
+import { Disposable, DisposableStore } from "../../../../../../base/common/lifecycle.js";
+import { isEqual } from "../../../../../../base/common/resources.js";
+import { ICodeEditor } from "../../../../../../editor/browser/editorBrowser.js";
+import { IBulkEditService, ResourceEdit, ResourceTextEdit } from "../../../../../../editor/browser/services/bulkEditService.js";
+import { trimTrailingWhitespace } from "../../../../../../editor/common/commands/trimTrailingWhitespaceCommand.js";
+import { Position } from "../../../../../../editor/common/core/position.js";
+import { Range } from "../../../../../../editor/common/core/range.js";
+import { Selection } from "../../../../../../editor/common/core/selection.js";
+import { CodeActionProvider, CodeActionTriggerType, IWorkspaceTextEdit } from "../../../../../../editor/common/languages.js";
+import { IReadonlyTextBuffer, ITextModel } from "../../../../../../editor/common/model.js";
+import { IEditorWorkerService } from "../../../../../../editor/common/services/editorWorker.js";
+import { ILanguageFeaturesService } from "../../../../../../editor/common/services/languageFeatures.js";
+import { ITextModelService } from "../../../../../../editor/common/services/resolverService.js";
+import { ApplyCodeActionReason, applyCodeAction, getCodeActions } from "../../../../../../editor/contrib/codeAction/browser/codeAction.js";
+import { CodeActionItem, CodeActionKind, CodeActionTriggerSource } from "../../../../../../editor/contrib/codeAction/common/types.js";
+import { FormattingMode, getDocumentFormattingEditsWithSelectedProvider } from "../../../../../../editor/contrib/format/browser/format.js";
+import { SnippetController2 } from "../../../../../../editor/contrib/snippet/browser/snippetController2.js";
+import { localize } from "../../../../../../nls.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../../../platform/log/common/log.js";
+import { IProgress, IProgressStep } from "../../../../../../platform/progress/common/progress.js";
+import { Registry } from "../../../../../../platform/registry/common/platform.js";
+import { IWorkspaceTrustManagementService } from "../../../../../../platform/workspace/common/workspaceTrust.js";
+import {
+  IWorkbenchContribution,
+  IWorkbenchContributionsRegistry,
+  Extensions as WorkbenchContributionsExtensions,
+} from "../../../../../common/contributions.js";
+import { SaveReason } from "../../../../../common/editor.js";
+import { getNotebookEditorFromEditorPane } from "../../notebookBrowser.js";
+import { NotebookTextModel } from "../../../common/model/notebookTextModel.js";
+import { CellKind, NotebookSetting } from "../../../common/notebookCommon.js";
+import { NotebookFileWorkingCopyModel } from "../../../common/notebookEditorModel.js";
+import { IEditorService } from "../../../../../services/editor/common/editorService.js";
+import { LifecyclePhase } from "../../../../../services/lifecycle/common/lifecycle.js";
+import { IStoredFileWorkingCopy, IStoredFileWorkingCopyModel } from "../../../../../services/workingCopy/common/storedFileWorkingCopy.js";
+import {
+  IStoredFileWorkingCopySaveParticipant,
+  IStoredFileWorkingCopySaveParticipantContext,
+  IWorkingCopyFileService,
+} from "../../../../../services/workingCopy/common/workingCopyFileService.js";
+import { NotebookMultiCursorController, NotebookMultiCursorState } from "../multicursor/notebookMulticursor.js";
 
 export abstract class NotebookSaveParticipant implements IStoredFileWorkingCopySaveParticipant {
 	constructor(
@@ -48,8 +56,12 @@ export abstract class NotebookSaveParticipant implements IStoredFileWorkingCopyS
 	abstract participate(workingCopy: IStoredFileWorkingCopy<IStoredFileWorkingCopyModel>, context: IStoredFileWorkingCopySaveParticipantContext, progress: IProgress<IProgressStep>, token: CancellationToken): Promise<void>;
 
 	protected canParticipate(): boolean {
-		const editor = getNotebookEditorFromEditorPane(this._editorService.activeEditorPane);
-		const controller = editor?.getContribution<NotebookMultiCursorController>(NotebookMultiCursorController.id);
+		const editor = getNotebookEditorFromEditorPane(
+      this._editorService.activeEditorPane,
+    );
+		const controller = editor?.getContribution<NotebookMultiCursorController>(
+      NotebookMultiCursorController.id,
+    );
 		if (!controller) {
 			return true;
 		}
@@ -77,14 +89,23 @@ class FormatOnSaveParticipant implements IStoredFileWorkingCopySaveParticipant {
 			return undefined;
 		}
 
-		const enabled = this.configurationService.getValue<boolean>(NotebookSetting.formatOnSave);
+		const enabled = this.configurationService.getValue<boolean>(
+      NotebookSetting.formatOnSave,
+    );
 		if (!enabled) {
 			return undefined;
 		}
-		progress.report({ message: localize('notebookFormatSave.formatting', "Formatting") });
+		progress.report({
+      message: localize("notebookFormatSave.formatting", "Formatting"),
+    });
 
 		const notebook = workingCopy.model.notebookModel;
-		const formatApplied: boolean = await this.instantiationService.invokeFunction(CodeActionParticipantUtils.checkAndRunFormatCodeAction, notebook, progress, token);
+		const formatApplied: boolean = await this.instantiationService.invokeFunction(
+      CodeActionParticipantUtils.checkAndRunFormatCodeAction,
+      notebook,
+      progress,
+      token,
+    );
 
 		const disposable = new DisposableStore();
 		try {
@@ -100,7 +121,7 @@ class FormatOnSaveParticipant implements IStoredFileWorkingCopySaveParticipant {
 						this.languageFeaturesService,
 						model,
 						FormattingMode.Silent,
-						token
+						token,
 					);
 
 					const edits: ResourceTextEdit[] = [];
@@ -113,7 +134,7 @@ class FormatOnSaveParticipant implements IStoredFileWorkingCopySaveParticipant {
 					return [];
 				}));
 
-				await this.bulkEditService.apply(/* edit */allCellEdits.flat(), { label: localize('formatNotebook', "Format Notebook"), code: 'undoredo.formatNotebook', });
+				await this.bulkEditService.apply(/* edit */allCellEdits.flat(), { label: localize("formatNotebook", "Format Notebook"), code: "undoredo.formatNotebook", });
 			}
 		} finally {
 			progress.report({ increment: 100 });
@@ -134,10 +155,19 @@ class TrimWhitespaceParticipant extends NotebookSaveParticipant {
 	}
 
 	async participate(workingCopy: IStoredFileWorkingCopy<IStoredFileWorkingCopyModel>, context: IStoredFileWorkingCopySaveParticipantContext, progress: IProgress<IProgressStep>, _token: CancellationToken): Promise<void> {
-		const trimTrailingWhitespaceOption = this.configurationService.getValue<boolean>('files.trimTrailingWhitespace');
-		const trimInRegexAndStrings = this.configurationService.getValue<boolean>('files.trimTrailingWhitespaceInRegexAndStrings');
+		const trimTrailingWhitespaceOption = this.configurationService.getValue<boolean>(
+      "files.trimTrailingWhitespace",
+    );
+		const trimInRegexAndStrings = this.configurationService.getValue<boolean>(
+      "files.trimTrailingWhitespaceInRegexAndStrings",
+    );
 		if (trimTrailingWhitespaceOption && this.canParticipate()) {
-			await this.doTrimTrailingWhitespace(workingCopy, context.reason === SaveReason.AUTO, trimInRegexAndStrings, progress);
+			await this.doTrimTrailingWhitespace(
+        workingCopy,
+        context.reason === SaveReason.AUTO,
+        trimInRegexAndStrings,
+        progress,
+      );
 		}
 	}
 
@@ -181,11 +211,16 @@ class TrimWhitespaceParticipant extends NotebookSaveParticipant {
 					return []; // Nothing to do
 				}
 
-				return ops.map(op => new ResourceTextEdit(model.uri, { ...op, text: op.text || '' }, model.getVersionId()));
+				return ops.map(op => new ResourceTextEdit(model.uri, { ...op, text: op.text || "" }, model.getVersionId()));
 			}));
 
-			const filteredEdits = allCellEdits.flat().filter(edit => edit !== undefined) as ResourceEdit[];
-			await this.bulkEditService.apply(filteredEdits, { label: localize('trimNotebookWhitespace', "Notebook Trim Trailing Whitespace"), code: 'undoredo.notebookTrimTrailingWhitespace' });
+			const filteredEdits = allCellEdits.flat().filter(
+        edit => edit !== undefined,
+      ) as ResourceEdit[];
+			await this.bulkEditService.apply(filteredEdits, {
+        label: localize("trimNotebookWhitespace", "Notebook Trim Trailing Whitespace"),
+        code: "undoredo.notebookTrimTrailingWhitespace",
+      });
 
 		} finally {
 			progress.report({ increment: 100 });
@@ -206,8 +241,14 @@ class TrimFinalNewLinesParticipant extends NotebookSaveParticipant {
 
 
 	async participate(workingCopy: IStoredFileWorkingCopy<IStoredFileWorkingCopyModel>, context: IStoredFileWorkingCopySaveParticipantContext, progress: IProgress<IProgressStep>, _token: CancellationToken): Promise<void> {
-		if (this.configurationService.getValue<boolean>('files.trimFinalNewlines') && this.canParticipate()) {
-			await this.doTrimFinalNewLines(workingCopy, context.reason === SaveReason.AUTO, progress);
+		if (this.configurationService.getValue<boolean>(
+      "files.trimFinalNewlines",
+    ) && this.canParticipate()) {
+			await this.doTrimFinalNewLines(
+        workingCopy,
+        context.reason === SaveReason.AUTO,
+        progress,
+      );
 		}
 	}
 
@@ -264,11 +305,16 @@ class TrimFinalNewLinesParticipant extends NotebookSaveParticipant {
 				}
 
 				// create the edit to delete all lines in deletionRange
-				return new ResourceTextEdit(cell.uri, { range: deletionRange, text: '' }, cell.textModel?.getVersionId());
+				return new ResourceTextEdit(cell.uri, { range: deletionRange, text: "" }, cell.textModel?.getVersionId());
 			}));
 
-			const filteredEdits = allCellEdits.flat().filter(edit => edit !== undefined) as ResourceEdit[];
-			await this.bulkEditService.apply(filteredEdits, { label: localize('trimNotebookNewlines', "Trim Final New Lines"), code: 'undoredo.trimFinalNewLines' });
+			const filteredEdits = allCellEdits.flat().filter(
+        edit => edit !== undefined,
+      ) as ResourceEdit[];
+			await this.bulkEditService.apply(filteredEdits, {
+        label: localize("trimNotebookNewlines", "Trim Final New Lines"),
+        code: "undoredo.trimFinalNewLines",
+      });
 
 		} finally {
 			progress.report({ increment: 100 });
@@ -291,8 +337,14 @@ class InsertFinalNewLineParticipant extends NotebookSaveParticipant {
 		// waiting on notebook-specific override before this feature can sync with 'files.insertFinalNewline'
 		// if (this.configurationService.getValue('files.insertFinalNewline')) {
 
-		if (this.configurationService.getValue<boolean>(NotebookSetting.insertFinalNewline) && this.canParticipate()) {
-			await this.doInsertFinalNewLine(workingCopy, context.reason === SaveReason.AUTO, progress);
+		if (this.configurationService.getValue<boolean>(
+      NotebookSetting.insertFinalNewline,
+    ) && this.canParticipate()) {
+			await this.doInsertFinalNewLine(
+        workingCopy,
+        context.reason === SaveReason.AUTO,
+        progress,
+      );
 		}
 	}
 
@@ -327,8 +379,13 @@ class InsertFinalNewLineParticipant extends NotebookSaveParticipant {
 				return new ResourceTextEdit(cell.uri, { range: new Range(lineCount + 1, cell.textBuffer.getLineLength(lineCount), lineCount + 1, cell.textBuffer.getLineLength(lineCount)), text: cell.textBuffer.getEOL() }, cell.textModel?.getVersionId());
 			}));
 
-			const filteredEdits = allCellEdits.filter(edit => edit !== undefined) as ResourceEdit[];
-			await this.bulkEditService.apply(filteredEdits, { label: localize('insertFinalNewLine', "Insert Final New Line"), code: 'undoredo.insertFinalNewLine' });
+			const filteredEdits = allCellEdits.filter(
+        edit => edit !== undefined,
+      ) as ResourceEdit[];
+			await this.bulkEditService.apply(filteredEdits, {
+        label: localize("insertFinalNewLine", "Insert Final New Line"),
+        code: "undoredo.insertFinalNewLine",
+      });
 
 			// set cursor back to initial position after inserting final new line
 			if (activeCellEditor && selections) {
@@ -361,14 +418,14 @@ class CodeActionOnSaveParticipant implements IStoredFileWorkingCopySaveParticipa
 			return;
 		}
 
-		let saveTrigger = '';
+		let saveTrigger = "";
 		if (context.reason === SaveReason.AUTO) {
 			// currently this won't happen, as vs/editor/contrib/codeAction/browser/codeAction.ts L#104 filters out codeactions on autosave. Just future-proofing
 			// ? notebook CodeActions on autosave seems dangerous (perf-wise)
 			// saveTrigger = 'always'; // TODO@Yoyokrazy, support during debt
 			return undefined;
 		} else if (context.reason === SaveReason.EXPLICIT) {
-			saveTrigger = 'explicit';
+			saveTrigger = "explicit";
 		} else {
 			// 	SaveReason.FOCUS_CHANGE, WINDOW_CHANGE need to be addressed when autosaves are enabled
 			return undefined;
@@ -376,24 +433,32 @@ class CodeActionOnSaveParticipant implements IStoredFileWorkingCopySaveParticipa
 
 		const notebookModel = workingCopy.model.notebookModel;
 
-		const setting = this.configurationService.getValue<{ [kind: string]: string | boolean }>(NotebookSetting.codeActionsOnSave);
+		const setting = this.configurationService.getValue<{ [kind: string]: string | boolean }>(
+      NotebookSetting.codeActionsOnSave,
+    );
 		const settingItems: string[] = Array.isArray(setting)
 			? setting
 			: Object.keys(setting).filter(x => setting[x]);
 
 		const allCodeActions = this.createCodeActionsOnSave(settingItems);
 		const excludedActions = allCodeActions
-			.filter(x => setting[x.value] === 'never' || setting[x.value] === false);
+			.filter(x => setting[x.value] === "never" || setting[x.value] === false);
 		const includedActions = allCodeActions
 			.filter(x => setting[x.value] === saveTrigger || setting[x.value] === true);
 
-		const editorCodeActionsOnSave = includedActions.filter(x => !CodeActionKind.Notebook.contains(x));
-		const notebookCodeActionsOnSave = includedActions.filter(x => CodeActionKind.Notebook.contains(x));
+		const editorCodeActionsOnSave = includedActions.filter(
+      x => !CodeActionKind.Notebook.contains(x),
+    );
+		const notebookCodeActionsOnSave = includedActions.filter(
+      x => CodeActionKind.Notebook.contains(x),
+    );
 
 		// run notebook code actions
 		if (notebookCodeActionsOnSave.length) {
 			const nbDisposable = new DisposableStore();
-			progress.report({ message: localize('notebookSaveParticipants.notebookCodeActions', "Running 'Notebook' code actions") });
+			progress.report({
+        message: localize("notebookSaveParticipants.notebookCodeActions", "Running 'Notebook' code actions"),
+      });
 			try {
 				const cell = notebookModel.cells[0];
 				const ref = await this.textModelService.createModelReference(cell.uri);
@@ -401,9 +466,16 @@ class CodeActionOnSaveParticipant implements IStoredFileWorkingCopySaveParticipa
 
 				const textEditorModel = ref.object.textEditorModel;
 
-				await this.instantiationService.invokeFunction(CodeActionParticipantUtils.applyOnSaveGenericCodeActions, textEditorModel, notebookCodeActionsOnSave, excludedActions, progress, token);
+				await this.instantiationService.invokeFunction(
+          CodeActionParticipantUtils.applyOnSaveGenericCodeActions,
+          textEditorModel,
+          notebookCodeActionsOnSave,
+          excludedActions,
+          progress,
+          token,
+        );
 			} catch {
-				this.logService.error('Failed to apply notebook code action on save');
+				this.logService.error("Failed to apply notebook code action on save");
 			} finally {
 				progress.report({ increment: 100 });
 				nbDisposable.dispose();
@@ -429,7 +501,9 @@ class CodeActionOnSaveParticipant implements IStoredFileWorkingCopySaveParticipa
 			}
 
 			const cellDisposable = new DisposableStore();
-			progress.report({ message: localize('notebookSaveParticipants.cellCodeActions', "Running 'Cell' code actions") });
+			progress.report({
+        message: localize("notebookSaveParticipants.cellCodeActions", "Running 'Cell' code actions"),
+      });
 			try {
 				await Promise.all(notebookModel.cells.map(async cell => {
 					const ref = await this.textModelService.createModelReference(cell.uri);
@@ -440,7 +514,7 @@ class CodeActionOnSaveParticipant implements IStoredFileWorkingCopySaveParticipa
 					await this.instantiationService.invokeFunction(CodeActionParticipantUtils.applyOnSaveGenericCodeActions, textEditorModel, editorCodeActionsOnSave, excludedActions, progress, token);
 				}));
 			} catch {
-				this.logService.error('Failed to apply code action on save');
+				this.logService.error("Failed to apply code action on save");
 			} finally {
 				progress.report({ increment: 100 });
 				cellDisposable.dispose();
@@ -453,8 +527,10 @@ class CodeActionOnSaveParticipant implements IStoredFileWorkingCopySaveParticipa
 
 		// Remove subsets
 		return kinds.filter(kind => {
-			return kinds.every(otherKind => otherKind.equals(kind) || !otherKind.contains(kind));
-		});
+      return kinds.every(
+        otherKind => otherKind.equals(kind) || !otherKind.contains(kind),
+      );
+    });
 	}
 }
 
@@ -466,24 +542,40 @@ export class CodeActionParticipantUtils {
 		progress: IProgress<IProgressStep>,
 		token: CancellationToken): Promise<boolean> {
 
-		const instantiationService: IInstantiationService = accessor.get(IInstantiationService);
+		const instantiationService: IInstantiationService = accessor.get(
+      IInstantiationService,
+    );
 		const textModelService: ITextModelService = accessor.get(ITextModelService);
 		const logService: ILogService = accessor.get(ILogService);
-		const configurationService: IConfigurationService = accessor.get(IConfigurationService);
+		const configurationService: IConfigurationService = accessor.get(
+      IConfigurationService,
+    );
 
 		const formatDisposable = new DisposableStore();
 		let formatResult: boolean = false;
-		progress.report({ message: localize('notebookSaveParticipants.formatCodeActions', "Running 'Format' code actions") });
+		progress.report({
+      message: localize("notebookSaveParticipants.formatCodeActions", "Running 'Format' code actions"),
+    });
 		try {
 			const cell = notebookModel.cells[0];
 			const ref = await textModelService.createModelReference(cell.uri);
 			formatDisposable.add(ref);
 			const textEditorModel = ref.object.textEditorModel;
 
-			const defaultFormatterExtId = configurationService.getValue<string | undefined>(NotebookSetting.defaultFormatter);
-			formatResult = await instantiationService.invokeFunction(CodeActionParticipantUtils.applyOnSaveFormatCodeAction, textEditorModel, new HierarchicalKind('notebook.format'), [], defaultFormatterExtId, progress, token);
+			const defaultFormatterExtId = configurationService.getValue<string | undefined>(
+        NotebookSetting.defaultFormatter,
+      );
+			formatResult = await instantiationService.invokeFunction(
+        CodeActionParticipantUtils.applyOnSaveFormatCodeAction,
+        textEditorModel,
+        new HierarchicalKind("notebook.format"),
+        [],
+        defaultFormatterExtId,
+        progress,
+        token,
+      );
 		} catch {
-			logService.error('Failed to apply notebook format action on save');
+			logService.error("Failed to apply notebook format action on save");
 		} finally {
 			progress.report({ increment: 100 });
 			formatDisposable.dispose();
@@ -499,8 +591,12 @@ export class CodeActionParticipantUtils {
 		progress: IProgress<IProgressStep>,
 		token: CancellationToken): Promise<void> {
 
-		const instantiationService: IInstantiationService = accessor.get(IInstantiationService);
-		const languageFeaturesService: ILanguageFeaturesService = accessor.get(ILanguageFeaturesService);
+		const instantiationService: IInstantiationService = accessor.get(
+      IInstantiationService,
+    );
+		const languageFeaturesService: ILanguageFeaturesService = accessor.get(
+      ILanguageFeaturesService,
+    );
 		const logService: ILogService = accessor.get(ILogService);
 
 		const getActionProgress = new class implements IProgress<CodeActionProvider> {
@@ -508,11 +604,11 @@ export class CodeActionParticipantUtils {
 			private _report(): void {
 				progress.report({
 					message: localize(
-						{ key: 'codeaction.get2', comment: ['[configure]({1}) is a link. Only translate `configure`. Do not change brackets and parentheses or {1}'] },
+						{ key: "codeaction.get2", comment: ["[configure]({1}) is a link. Only translate `configure`. Do not change brackets and parentheses or {1}"] },
 						"Getting code actions from '{0}' ([configure]({1})).",
-						[...this._names].map(name => `'${name}'`).join(', '),
-						'command:workbench.action.openSettings?%5B%22notebook.codeActionsOnSave%22%5D'
-					)
+						[...this._names].map(name => `'${name}'`).join(", "),
+						"command:workbench.action.openSettings?%5B%22notebook.codeActionsOnSave%22%5D",
+					),
 				});
 			}
 			report(provider: CodeActionProvider) {
@@ -524,7 +620,14 @@ export class CodeActionParticipantUtils {
 		};
 
 		for (const codeActionKind of codeActionsOnSave) {
-			const actionsToRun = await CodeActionParticipantUtils.getActionsToRun(model, codeActionKind, excludes, languageFeaturesService, getActionProgress, token);
+			const actionsToRun = await CodeActionParticipantUtils.getActionsToRun(
+        model,
+        codeActionKind,
+        excludes,
+        languageFeaturesService,
+        getActionProgress,
+        token,
+      );
 			if (token.isCancellationRequested) {
 				actionsToRun.dispose();
 				return;
@@ -534,10 +637,13 @@ export class CodeActionParticipantUtils {
 				for (const action of actionsToRun.validActions) {
 					const codeActionEdits = action.action.edit?.edits;
 					let breakFlag = false;
-					if (!action.action.kind?.startsWith('notebook')) {
+					if (!action.action.kind?.startsWith("notebook")) {
 						for (const edit of codeActionEdits ?? []) {
 							const workspaceTextEdit = edit as IWorkspaceTextEdit;
-							if (workspaceTextEdit.resource && isEqual(workspaceTextEdit.resource, model.uri)) {
+							if (workspaceTextEdit.resource && isEqual(
+                workspaceTextEdit.resource,
+                model.uri,
+              )) {
 								continue;
 							} else {
 								// error -> applied to multiple resources
@@ -547,11 +653,21 @@ export class CodeActionParticipantUtils {
 						}
 					}
 					if (breakFlag) {
-						logService.warn('Failed to apply code action on save, applied to multiple resources.');
+						logService.warn(
+              "Failed to apply code action on save, applied to multiple resources.",
+            );
 						continue;
 					}
-					progress.report({ message: localize('codeAction.apply', "Applying code action '{0}'.", action.action.title) });
-					await instantiationService.invokeFunction(applyCodeAction, action, ApplyCodeActionReason.OnSave, {}, token);
+					progress.report({
+            message: localize("codeAction.apply", "Applying code action '{0}'.", action.action.title),
+          });
+					await instantiationService.invokeFunction(
+            applyCodeAction,
+            action,
+            ApplyCodeActionReason.OnSave,
+            {},
+            token,
+          );
 					if (token.isCancellationRequested) {
 						return;
 					}
@@ -573,8 +689,12 @@ export class CodeActionParticipantUtils {
 		progress: IProgress<IProgressStep>,
 		token: CancellationToken): Promise<boolean> {
 
-		const instantiationService: IInstantiationService = accessor.get(IInstantiationService);
-		const languageFeaturesService: ILanguageFeaturesService = accessor.get(ILanguageFeaturesService);
+		const instantiationService: IInstantiationService = accessor.get(
+      IInstantiationService,
+    );
+		const languageFeaturesService: ILanguageFeaturesService = accessor.get(
+      ILanguageFeaturesService,
+    );
 		const logService: ILogService = accessor.get(ILogService);
 
 		const getActionProgress = new class implements IProgress<CodeActionProvider> {
@@ -582,11 +702,11 @@ export class CodeActionParticipantUtils {
 			private _report(): void {
 				progress.report({
 					message: localize(
-						{ key: 'codeaction.get2', comment: ['[configure]({1}) is a link. Only translate `configure`. Do not change brackets and parentheses or {1}'] },
+						{ key: "codeaction.get2", comment: ["[configure]({1}) is a link. Only translate `configure`. Do not change brackets and parentheses or {1}"] },
 						"Getting code actions from '{0}' ([configure]({1})).",
-						[...this._names].map(name => `'${name}'`).join(', '),
-						'command:workbench.action.openSettings?%5B%22notebook.defaultFormatter%22%5D'
-					)
+						[...this._names].map(name => `'${name}'`).join(", "),
+						"command:workbench.action.openSettings?%5B%22notebook.defaultFormatter%22%5D",
+					),
 				});
 			}
 			report(provider: CodeActionProvider) {
@@ -597,10 +717,19 @@ export class CodeActionParticipantUtils {
 			}
 		};
 
-		const providedActions = await CodeActionParticipantUtils.getActionsToRun(model, formatCodeActionOnSave, excludes, languageFeaturesService, getActionProgress, token);
+		const providedActions = await CodeActionParticipantUtils.getActionsToRun(
+      model,
+      formatCodeActionOnSave,
+      excludes,
+      languageFeaturesService,
+      getActionProgress,
+      token,
+    );
 		// warn the user if there are more than one provided format action, and there is no specified defaultFormatter
 		if (providedActions.validActions.length > 1 && !extensionId) {
-			logService.warn('More than one format code action is provided, the 0th one will be used. A default can be specified via `notebook.defaultFormatter` in your settings.');
+			logService.warn(
+        "More than one format code action is provided, the 0th one will be used. A default can be specified via `notebook.defaultFormatter` in your settings.",
+      );
 		}
 
 		if (token.isCancellationRequested) {
@@ -609,18 +738,28 @@ export class CodeActionParticipantUtils {
 		}
 
 		try {
-			const action: CodeActionItem | undefined = extensionId ? providedActions.validActions.find(action => action.provider?.extensionId === extensionId) : providedActions.validActions[0];
+			const action: CodeActionItem | undefined = extensionId ? providedActions.validActions.find(
+        action => action.provider?.extensionId === extensionId,
+      ) : providedActions.validActions[0];
 			if (!action) {
 				return false;
 			}
 
-			progress.report({ message: localize('codeAction.apply', "Applying code action '{0}'.", action.action.title) });
-			await instantiationService.invokeFunction(applyCodeAction, action, ApplyCodeActionReason.OnSave, {}, token);
+			progress.report({
+        message: localize("codeAction.apply", "Applying code action '{0}'.", action.action.title),
+      });
+			await instantiationService.invokeFunction(
+        applyCodeAction,
+        action,
+        ApplyCodeActionReason.OnSave,
+        {},
+        token,
+      );
 			if (token.isCancellationRequested) {
 				return false;
 			}
 		} catch {
-			logService.error('Failed to apply notebook format code action on save');
+			logService.error("Failed to apply notebook format code action on save");
 			return false;
 		} finally {
 			providedActions.dispose();
@@ -630,11 +769,18 @@ export class CodeActionParticipantUtils {
 
 	// @Yoyokrazy this could likely be modified to leverage the extensionID, therefore not getting actions from providers unnecessarily -- future work
 	static getActionsToRun(model: ITextModel, codeActionKind: HierarchicalKind, excludes: readonly HierarchicalKind[], languageFeaturesService: ILanguageFeaturesService, progress: IProgress<CodeActionProvider>, token: CancellationToken) {
-		return getCodeActions(languageFeaturesService.codeActionProvider, model, model.getFullModelRange(), {
-			type: CodeActionTriggerType.Invoke,
-			triggerAction: CodeActionTriggerSource.OnSave,
-			filter: { include: codeActionKind, excludes: excludes, includeSourceActions: true },
-		}, progress, token);
+		return getCodeActions(
+      languageFeaturesService.codeActionProvider,
+      model,
+      model.getFullModelRange(),
+      {
+        type: CodeActionTriggerType.Invoke,
+        triggerAction: CodeActionTriggerSource.OnSave,
+        filter: { include: codeActionKind, excludes: excludes, includeSourceActions: true },
+      },
+      progress,
+      token,
+    );
 	}
 
 }
@@ -656,13 +802,38 @@ export class SaveParticipantsContribution extends Disposable implements IWorkben
 	}
 
 	private registerSaveParticipants(): void {
-		this._register(this.workingCopyFileService.addSaveParticipant(this.instantiationService.createInstance(TrimWhitespaceParticipant)));
-		this._register(this.workingCopyFileService.addSaveParticipant(this.instantiationService.createInstance(CodeActionOnSaveParticipant)));
-		this._register(this.workingCopyFileService.addSaveParticipant(this.instantiationService.createInstance(FormatOnSaveParticipant)));
-		this._register(this.workingCopyFileService.addSaveParticipant(this.instantiationService.createInstance(InsertFinalNewLineParticipant)));
-		this._register(this.workingCopyFileService.addSaveParticipant(this.instantiationService.createInstance(TrimFinalNewLinesParticipant)));
+		this._register(
+      this.workingCopyFileService.addSaveParticipant(
+        this.instantiationService.createInstance(TrimWhitespaceParticipant),
+      ),
+    );
+		this._register(
+      this.workingCopyFileService.addSaveParticipant(
+        this.instantiationService.createInstance(CodeActionOnSaveParticipant),
+      ),
+    );
+		this._register(
+      this.workingCopyFileService.addSaveParticipant(
+        this.instantiationService.createInstance(FormatOnSaveParticipant),
+      ),
+    );
+		this._register(
+      this.workingCopyFileService.addSaveParticipant(
+        this.instantiationService.createInstance(InsertFinalNewLineParticipant),
+      ),
+    );
+		this._register(
+      this.workingCopyFileService.addSaveParticipant(
+        this.instantiationService.createInstance(TrimFinalNewLinesParticipant),
+      ),
+    );
 	}
 }
 
-const workbenchContributionsRegistry = Registry.as<IWorkbenchContributionsRegistry>(WorkbenchContributionsExtensions.Workbench);
-workbenchContributionsRegistry.registerWorkbenchContribution(SaveParticipantsContribution, LifecyclePhase.Restored);
+const workbenchContributionsRegistry = Registry.as<IWorkbenchContributionsRegistry>(
+  WorkbenchContributionsExtensions.Workbench,
+);
+workbenchContributionsRegistry.registerWorkbenchContribution(
+  SaveParticipantsContribution,
+  LifecyclePhase.Restored,
+);

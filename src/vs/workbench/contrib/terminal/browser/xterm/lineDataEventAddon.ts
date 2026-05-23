@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter } from '../../../../../base/common/event.js';
-import { Disposable, toDisposable } from '../../../../../base/common/lifecycle.js';
-import { OperatingSystem } from '../../../../../base/common/platform.js';
-import type { Terminal as XTermTerminal, IBuffer, ITerminalAddon } from '@xterm/xterm';
+import { Emitter } from "../../../../../base/common/event.js";
+import { Disposable, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { OperatingSystem } from "../../../../../base/common/platform.js";
+import type { Terminal as XTermTerminal, IBuffer, ITerminalAddon } from "@xterm/xterm";
 
 /**
  * Provides extensions to the xterm object in a modular, testable way.
@@ -41,9 +41,14 @@ export class LineDataEventAddon extends Disposable implements ITerminalAddon {
 		}));
 
 		// Fire onLineData when disposing object to flush last line
-		this._register(toDisposable(() => {
-			this._sendLineData(buffer.active, buffer.active.baseY + buffer.active.cursorY);
-		}));
+		this._register(
+      toDisposable(() => {
+        this._sendLineData(
+          buffer.active,
+          buffer.active.baseY + buffer.active.cursorY,
+        );
+      }),
+    );
 	}
 
 	setOperatingSystem(os: OperatingSystem) {
@@ -57,11 +62,16 @@ export class LineDataEventAddon extends Disposable implements ITerminalAddon {
 		// cursor, in which case we still want to send the current line's data to tasks.
 		if (os === OperatingSystem.Windows) {
 			const xterm = this._xterm;
-			this._register(xterm.parser.registerCsiHandler({ final: 'H' }, () => {
-				const buffer = xterm.buffer;
-				this._sendLineData(buffer.active, buffer.active.baseY + buffer.active.cursorY);
-				return false;
-			}));
+			this._register(
+        xterm.parser.registerCsiHandler({ final: "H" }, () => {
+          const buffer = xterm.buffer;
+          this._sendLineData(
+            buffer.active,
+            buffer.active.baseY + buffer.active.cursorY,
+          );
+          return false;
+        }),
+      );
 		}
 	}
 

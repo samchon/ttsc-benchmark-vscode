@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Iterable } from './iterator.js';
+import { Iterable } from "./iterator.js";
 
-const unset = Symbol('unset');
+const unset = Symbol("unset");
 
 export interface IPrefixTreeNode<T> {
 	/** Possible children of the node. */
@@ -49,7 +49,10 @@ export class WellDefinedPrefixTree<V> {
 
 	/** Mutates a value in the prefix tree. */
 	mutate(key: Iterable<string>, mutate: (value?: V) => V): void {
-		this.opNode(key, n => n._value = mutate(n._value === unset ? undefined : n._value));
+		this.opNode(
+      key,
+      n => n._value = mutate(n._value === unset ? undefined : n._value),
+    );
 	}
 
 	/** Mutates nodes along the path in the prefix tree. */
@@ -182,7 +185,7 @@ export class WellDefinedPrefixTree<V> {
 	}
 
 	private getPathToKey(key: Iterable<string>) {
-		const path = [{ part: '', node: this.root }];
+		const path = [{ part: "", node: this.root }];
 		let i = 0;
 		for (const part of key) {
 			const node = path[i].node.children?.get(part);

@@ -3,21 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { timeout } from '../../../../../../base/common/async.js';
-import { runWithFakedTimers } from '../../../../../../base/test/common/timeTravelScheduler.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../../base/test/common/utils.js';
-import { NullLogService } from '../../../../../../platform/log/common/log.js';
-import { ChatStreamStatsTracker, type IChatStreamStatsInternal } from '../../../common/model/chatStreamStats.js';
+import assert from "assert";
+import { timeout } from "../../../../../../base/common/async.js";
+import { runWithFakedTimers } from "../../../../../../base/test/common/timeTravelScheduler.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../../base/test/common/utils.js";
+import { NullLogService } from "../../../../../../platform/log/common/log.js";
+import { ChatStreamStatsTracker, type IChatStreamStatsInternal } from "../../../common/model/chatStreamStats.js";
 
-suite('ChatStreamStatsTracker', () => {
+suite("ChatStreamStatsTracker", () => {
 	const store = ensureNoDisposablesAreLeakedInTestSuite();
 
 	function createTracker(): ChatStreamStatsTracker {
 		return new ChatStreamStatsTracker(store.add(new NullLogService()));
 	}
 
-	test('drops bootstrap once sufficient markdown streamed', () => runWithFakedTimers<void>({ startTime: 0, useFakeTimers: true }, async () => {
+	test("drops bootstrap once sufficient markdown streamed", () => runWithFakedTimers<void>({ startTime: 0, useFakeTimers: true }, async () => {
 		const tracker = createTracker();
 
 		let data = tracker.update({ totalWordCount: 10 }) as IChatStreamStatsInternal | undefined;
@@ -33,7 +33,7 @@ suite('ChatStreamStatsTracker', () => {
 		assert.strictEqual(data.lastWordCount, 35);
 	}));
 
-	test('large initial chunk uses higher bootstrap minimum', () => runWithFakedTimers<void>({ startTime: 0, useFakeTimers: true }, async () => {
+	test("large initial chunk uses higher bootstrap minimum", () => runWithFakedTimers<void>({ startTime: 0, useFakeTimers: true }, async () => {
 		const tracker = createTracker();
 
 		const data = tracker.update({ totalWordCount: 40 }) as IChatStreamStatsInternal | undefined;
@@ -42,7 +42,7 @@ suite('ChatStreamStatsTracker', () => {
 		assert.strictEqual(data.totalTime, 500);
 	}));
 
-	test('ignores updates without new words', () => runWithFakedTimers<void>({ startTime: 0, useFakeTimers: true }, async () => {
+	test("ignores updates without new words", () => runWithFakedTimers<void>({ startTime: 0, useFakeTimers: true }, async () => {
 		const tracker = createTracker();
 
 		const first = tracker.update({ totalWordCount: 5 });
@@ -53,7 +53,7 @@ suite('ChatStreamStatsTracker', () => {
 		assert.strictEqual(second, undefined);
 	}));
 
-	test('ignores zero-word totals until words arrive', () => runWithFakedTimers<void>({ startTime: 0, useFakeTimers: true }, async () => {
+	test("ignores zero-word totals until words arrive", () => runWithFakedTimers<void>({ startTime: 0, useFakeTimers: true }, async () => {
 		const tracker = createTracker();
 
 		const zero = tracker.update({ totalWordCount: 0 });
@@ -68,7 +68,7 @@ suite('ChatStreamStatsTracker', () => {
 		assert.strictEqual(data.totalTime, 500);
 	}));
 
-	test('unchanged totals do not advance timers', () => runWithFakedTimers<void>({ startTime: 0, useFakeTimers: true }, async () => {
+	test("unchanged totals do not advance timers", () => runWithFakedTimers<void>({ startTime: 0, useFakeTimers: true }, async () => {
 		const tracker = createTracker();
 
 		const first = tracker.update({ totalWordCount: 6 }) as IChatStreamStatsInternal | undefined;
@@ -84,7 +84,7 @@ suite('ChatStreamStatsTracker', () => {
 		assert.strictEqual(tracker.internalData.lastUpdateTime, initialLastUpdateTime);
 	}));
 
-	test('records first markdown time but keeps bootstrap active', () => runWithFakedTimers<void>({ startTime: 0, useFakeTimers: true }, async () => {
+	test("records first markdown time but keeps bootstrap active", () => runWithFakedTimers<void>({ startTime: 0, useFakeTimers: true }, async () => {
 		const tracker = createTracker();
 
 		const data = tracker.update({ totalWordCount: 12 }) as IChatStreamStatsInternal | undefined;
@@ -94,7 +94,7 @@ suite('ChatStreamStatsTracker', () => {
 		assert.strictEqual(data.totalTime, 500);
 	}));
 
-	test('implied rate uses elapsed time after bootstrap drops', () => runWithFakedTimers<void>({ startTime: 0, useFakeTimers: true }, async () => {
+	test("implied rate uses elapsed time after bootstrap drops", () => runWithFakedTimers<void>({ startTime: 0, useFakeTimers: true }, async () => {
 		const tracker = createTracker();
 		assert.ok(tracker.update({ totalWordCount: 10 }));
 
@@ -107,7 +107,7 @@ suite('ChatStreamStatsTracker', () => {
 		assert.ok(Math.abs(data.impliedWordLoadRate - expectedRate) < 0.0001);
 	}));
 
-	test('keeps bootstrap active until both thresholds satisfied', () => runWithFakedTimers<void>({ startTime: 0, useFakeTimers: true }, async () => {
+	test("keeps bootstrap active until both thresholds satisfied", () => runWithFakedTimers<void>({ startTime: 0, useFakeTimers: true }, async () => {
 		const tracker = createTracker();
 		let data = tracker.update({ totalWordCount: 8 }) as IChatStreamStatsInternal | undefined;
 		assert.ok(data);
@@ -123,7 +123,7 @@ suite('ChatStreamStatsTracker', () => {
 		assert.strictEqual(data.totalTime, 200);
 	}));
 
-	test('caps interval contribution to max interval time', () => runWithFakedTimers<void>({ startTime: 0, useFakeTimers: true }, async () => {
+	test("caps interval contribution to max interval time", () => runWithFakedTimers<void>({ startTime: 0, useFakeTimers: true }, async () => {
 		const tracker = createTracker();
 		assert.ok(tracker.update({ totalWordCount: 5 }));
 
@@ -134,7 +134,7 @@ suite('ChatStreamStatsTracker', () => {
 		assert.strictEqual(data.totalTime, 250 + 250);
 	}));
 
-	test('uses larger interval cap for large updates', () => runWithFakedTimers<void>({ startTime: 0, useFakeTimers: true }, async () => {
+	test("uses larger interval cap for large updates", () => runWithFakedTimers<void>({ startTime: 0, useFakeTimers: true }, async () => {
 		const tracker = createTracker();
 		assert.ok(tracker.update({ totalWordCount: 10 }));
 
@@ -151,7 +151,7 @@ suite('ChatStreamStatsTracker', () => {
 		assert.strictEqual(postData.totalTime, baselineTotal + 1000);
 	}));
 
-	test('tracks words since bootstrap exit for rate calculation', () => runWithFakedTimers<void>({ startTime: 0, useFakeTimers: true }, async () => {
+	test("tracks words since bootstrap exit for rate calculation", () => runWithFakedTimers<void>({ startTime: 0, useFakeTimers: true }, async () => {
 		const tracker = createTracker();
 		assert.ok(tracker.update({ totalWordCount: 12 }));
 

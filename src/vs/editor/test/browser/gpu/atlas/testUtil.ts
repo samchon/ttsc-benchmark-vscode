@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { fail, ok } from 'assert';
-import type { ITextureAtlasPageGlyph } from '../../../../browser/gpu/atlas/atlas.js';
-import { TextureAtlas } from '../../../../browser/gpu/atlas/textureAtlas.js';
-import { isNumber } from '../../../../../base/common/types.js';
-import { ensureNonNullable } from '../../../../browser/gpu/gpuUtils.js';
+import { fail, ok } from "assert";
+import type { ITextureAtlasPageGlyph } from "../../../../browser/gpu/atlas/atlas.js";
+import { TextureAtlas } from "../../../../browser/gpu/atlas/textureAtlas.js";
+import { isNumber } from "../../../../../base/common/types.js";
+import { ensureNonNullable } from "../../../../browser/gpu/gpuUtils.js";
 
 export function assertIsValidGlyph(glyph: Readonly<ITextureAtlasPageGlyph> | undefined, atlasOrSource: TextureAtlas | OffscreenCanvas) {
 	if (glyph === undefined) {
-		fail('glyph is undefined');
+		fail("glyph is undefined");
 	}
 	const pageW = atlasOrSource instanceof TextureAtlas ? atlasOrSource.pageSize : atlasOrSource.width;
 	const pageH = atlasOrSource instanceof TextureAtlas ? atlasOrSource.pageSize : atlasOrSource.width;
@@ -42,13 +42,13 @@ export function assertIsValidGlyph(glyph: Readonly<ITextureAtlasPageGlyph> | und
 	ok(glyph.y + glyph.h <= pageH);
 
 	// Each of the glyph's outer pixel edges contain at least 1 non-transparent pixel
-	const ctx = ensureNonNullable(source.getContext('2d'));
+	const ctx = ensureNonNullable(source.getContext("2d"));
 	const edges = [
-		ctx.getImageData(glyph.x, glyph.y, glyph.w, 1).data,
-		ctx.getImageData(glyph.x, glyph.y + glyph.h - 1, glyph.w, 1).data,
-		ctx.getImageData(glyph.x, glyph.y, 1, glyph.h).data,
-		ctx.getImageData(glyph.x + glyph.w - 1, glyph.y, 1, glyph.h).data,
-	];
+    ctx.getImageData(glyph.x, glyph.y, glyph.w, 1).data,
+    ctx.getImageData(glyph.x, glyph.y + glyph.h - 1, glyph.w, 1).data,
+    ctx.getImageData(glyph.x, glyph.y, 1, glyph.h).data,
+    ctx.getImageData(glyph.x + glyph.w - 1, glyph.y, 1, glyph.h).data,
+  ];
 	for (const edge of edges) {
 		ok(edge.some(color => (color & 0xFF) !== 0));
 	}

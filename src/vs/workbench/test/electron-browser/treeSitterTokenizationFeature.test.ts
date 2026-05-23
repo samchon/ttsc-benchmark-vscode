@@ -3,61 +3,61 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { TestInstantiationService } from '../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../base/test/common/utils.js';
-import { IModelService } from '../../../editor/common/services/model.js';
-import { Event } from '../../../base/common/event.js';
-import { URI } from '../../../base/common/uri.js';
-import { IFileService } from '../../../platform/files/common/files.js';
-import { ILogService, NullLogService } from '../../../platform/log/common/log.js';
-import { ITelemetryData, ITelemetryService, TelemetryLevel } from '../../../platform/telemetry/common/telemetry.js';
-import { ClassifiedEvent, OmitMetadata, IGDPRProperty, StrictPropertyCheck } from '../../../platform/telemetry/common/gdprTypings.js';
-import { IConfigurationService } from '../../../platform/configuration/common/configuration.js';
-import { TestConfigurationService } from '../../../platform/configuration/test/common/testConfigurationService.js';
-import { IEnvironmentService } from '../../../platform/environment/common/environment.js';
-import { ModelService } from '../../../editor/common/services/modelService.js';
+import assert from "assert";
+import { TestInstantiationService } from "../../../platform/instantiation/test/common/instantiationServiceMock.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../base/test/common/utils.js";
+import { IModelService } from "../../../editor/common/services/model.js";
+import { Event } from "../../../base/common/event.js";
+import { URI } from "../../../base/common/uri.js";
+import { IFileService } from "../../../platform/files/common/files.js";
+import { ILogService, NullLogService } from "../../../platform/log/common/log.js";
+import { ITelemetryData, ITelemetryService, TelemetryLevel } from "../../../platform/telemetry/common/telemetry.js";
+import { ClassifiedEvent, OmitMetadata, IGDPRProperty, StrictPropertyCheck } from "../../../platform/telemetry/common/gdprTypings.js";
+import { IConfigurationService } from "../../../platform/configuration/common/configuration.js";
+import { TestConfigurationService } from "../../../platform/configuration/test/common/testConfigurationService.js";
+import { IEnvironmentService } from "../../../platform/environment/common/environment.js";
+import { ModelService } from "../../../editor/common/services/modelService.js";
 
-import { FileService } from '../../../platform/files/common/fileService.js';
-import { Schemas } from '../../../base/common/network.js';
-import { TestIPCFileSystemProvider } from './workbenchTestServices.js';
-import { ILanguageService } from '../../../editor/common/languages/language.js';
-import { LanguageService } from '../../../editor/common/services/languageService.js';
-import { TestColorTheme, TestThemeService } from '../../../platform/theme/test/common/testThemeService.js';
-import { IThemeService } from '../../../platform/theme/common/themeService.js';
-import { ITextResourcePropertiesService } from '../../../editor/common/services/textResourceConfiguration.js';
-import { TestTextResourcePropertiesService } from '../common/workbenchTestServices.js';
-import { TestLanguageConfigurationService } from '../../../editor/test/common/modes/testLanguageConfigurationService.js';
-import { ILanguageConfigurationService } from '../../../editor/common/languages/languageConfigurationRegistry.js';
-import { IUndoRedoService } from '../../../platform/undoRedo/common/undoRedo.js';
-import { UndoRedoService } from '../../../platform/undoRedo/common/undoRedoService.js';
-import { TestDialogService } from '../../../platform/dialogs/test/common/testDialogService.js';
-import { TestNotificationService } from '../../../platform/notification/test/common/testNotificationService.js';
-import { DisposableStore, IDisposable } from '../../../base/common/lifecycle.js';
-import { ProbeScope, TokenStyle } from '../../../platform/theme/common/tokenClassificationRegistry.js';
-import { TextMateThemingRuleDefinitions } from '../../services/themes/common/colorThemeData.js';
-import { Color } from '../../../base/common/color.js';
-import { Range } from '../../../editor/common/core/range.js';
-import { TokenUpdate } from '../../../editor/common/model/tokens/treeSitter/tokenStore.js';
-import { ITreeSitterLibraryService } from '../../../editor/common/services/treeSitter/treeSitterLibraryService.js';
-import { TreeSitterLibraryService } from '../../services/treeSitter/browser/treeSitterLibraryService.js';
-import { TokenizationTextModelPart } from '../../../editor/common/model/tokens/tokenizationTextModelPart.js';
-import { TreeSitterSyntaxTokenBackend } from '../../../editor/common/model/tokens/treeSitter/treeSitterSyntaxTokenBackend.js';
-import { TreeParseUpdateEvent, TreeSitterTree } from '../../../editor/common/model/tokens/treeSitter/treeSitterTree.js';
-import { ITextModel } from '../../../editor/common/model.js';
-import { TreeSitterTokenizationImpl } from '../../../editor/common/model/tokens/treeSitter/treeSitterTokenizationImpl.js';
-import { autorunHandleChanges, recordChanges, waitForState } from '../../../base/common/observable.js';
-import { ITreeSitterThemeService } from '../../../editor/common/services/treeSitter/treeSitterThemeService.js';
-import { TreeSitterThemeService } from '../../services/treeSitter/browser/treeSitterThemeService.js';
+import { FileService } from "../../../platform/files/common/fileService.js";
+import { Schemas } from "../../../base/common/network.js";
+import { TestIPCFileSystemProvider } from "./workbenchTestServices.js";
+import { ILanguageService } from "../../../editor/common/languages/language.js";
+import { LanguageService } from "../../../editor/common/services/languageService.js";
+import { TestColorTheme, TestThemeService } from "../../../platform/theme/test/common/testThemeService.js";
+import { IThemeService } from "../../../platform/theme/common/themeService.js";
+import { ITextResourcePropertiesService } from "../../../editor/common/services/textResourceConfiguration.js";
+import { TestTextResourcePropertiesService } from "../common/workbenchTestServices.js";
+import { TestLanguageConfigurationService } from "../../../editor/test/common/modes/testLanguageConfigurationService.js";
+import { ILanguageConfigurationService } from "../../../editor/common/languages/languageConfigurationRegistry.js";
+import { IUndoRedoService } from "../../../platform/undoRedo/common/undoRedo.js";
+import { UndoRedoService } from "../../../platform/undoRedo/common/undoRedoService.js";
+import { TestDialogService } from "../../../platform/dialogs/test/common/testDialogService.js";
+import { TestNotificationService } from "../../../platform/notification/test/common/testNotificationService.js";
+import { DisposableStore, IDisposable } from "../../../base/common/lifecycle.js";
+import { ProbeScope, TokenStyle } from "../../../platform/theme/common/tokenClassificationRegistry.js";
+import { TextMateThemingRuleDefinitions } from "../../services/themes/common/colorThemeData.js";
+import { Color } from "../../../base/common/color.js";
+import { Range } from "../../../editor/common/core/range.js";
+import { TokenUpdate } from "../../../editor/common/model/tokens/treeSitter/tokenStore.js";
+import { ITreeSitterLibraryService } from "../../../editor/common/services/treeSitter/treeSitterLibraryService.js";
+import { TreeSitterLibraryService } from "../../services/treeSitter/browser/treeSitterLibraryService.js";
+import { TokenizationTextModelPart } from "../../../editor/common/model/tokens/tokenizationTextModelPart.js";
+import { TreeSitterSyntaxTokenBackend } from "../../../editor/common/model/tokens/treeSitter/treeSitterSyntaxTokenBackend.js";
+import { TreeParseUpdateEvent, TreeSitterTree } from "../../../editor/common/model/tokens/treeSitter/treeSitterTree.js";
+import { ITextModel } from "../../../editor/common/model.js";
+import { TreeSitterTokenizationImpl } from "../../../editor/common/model/tokens/treeSitter/treeSitterTokenizationImpl.js";
+import { autorunHandleChanges, recordChanges, waitForState } from "../../../base/common/observable.js";
+import { ITreeSitterThemeService } from "../../../editor/common/services/treeSitter/treeSitterThemeService.js";
+import { TreeSitterThemeService } from "../../services/treeSitter/browser/treeSitterThemeService.js";
 
 class MockTelemetryService implements ITelemetryService {
 	_serviceBrand: undefined;
 	telemetryLevel: TelemetryLevel = TelemetryLevel.NONE;
-	sessionId: string = '';
-	machineId: string = '';
-	sqmId: string = '';
-	devDeviceId: string = '';
-	firstSessionDate: string = '';
+	sessionId: string = "";
+	machineId: string = "";
+	sqmId: string = "";
+	devDeviceId: string = "";
+	firstSessionDate: string = "";
 	sendErrorTelemetry: boolean = false;
 	publicLog(eventName: string, data?: ITelemetryData): void {
 	}
@@ -76,14 +76,20 @@ class MockTelemetryService implements ITelemetryService {
 
 class TestTreeSitterColorTheme extends TestColorTheme {
 	public resolveScopes(scopes: ProbeScope[], definitions?: TextMateThemingRuleDefinitions): TokenStyle | undefined {
-		return new TokenStyle(Color.red, undefined, undefined, undefined, undefined);
+		return new TokenStyle(
+      Color.red,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    );
 	}
 	public getTokenColorIndex(): { get: () => number } {
 		return { get: () => 10 };
 	}
 }
 
-suite('Tree Sitter TokenizationFeature', function () {
+suite("Tree Sitter TokenizationFeature", function () {
 
 	let instantiationService: TestInstantiationService;
 	let modelService: IModelService;
@@ -105,7 +111,7 @@ suite('Tree Sitter TokenizationFeature', function () {
 
 		telemetryService = new MockTelemetryService();
 		logService = new NullLogService();
-		configurationService = new TestConfigurationService({ 'editor.experimental.preferTreeSitter.typescript': true });
+		configurationService = new TestConfigurationService({ "editor.experimental.preferTreeSitter.typescript": true });
 		themeService = new TestThemeService(new TestTreeSitterColorTheme());
 		environmentService = {} as IEnvironmentService;
 
@@ -140,7 +146,7 @@ suite('Tree Sitter TokenizationFeature', function () {
 			configurationService,
 			textResourcePropertiesService,
 			undoRedoService,
-			instantiationService
+			instantiationService,
 		);
 		instantiationService.set(IModelService, modelService);
 	});
@@ -157,7 +163,7 @@ suite('Tree Sitter TokenizationFeature', function () {
 
 	let nameNumber = 1;
 	async function getModelAndPrepTree(content: string): Promise<{ model: ITextModel; treeSitterTree: TreeSitterTree; tokenizationImpl: TreeSitterTokenizationImpl }> {
-		const model = disposables.add(modelService.createModel(content, { languageId: 'typescript', onDidChange: Event.None }, URI.file(`file${nameNumber++}.ts`)));
+		const model = disposables.add(modelService.createModel(content, { languageId: "typescript", onDidChange: Event.None }, URI.file(`file${nameNumber++}.ts`)));
 		const treeSitterTreeObs = disposables.add((model.tokenization as TokenizationTextModelPart).tokens.get() as TreeSitterSyntaxTokenBackend).tree;
 		const tokenizationImplObs = disposables.add((model.tokenization as TokenizationTextModelPart).tokens.get() as TreeSitterSyntaxTokenBackend).tokenizationImpl;
 		const treeSitterTree = treeSitterTreeObs.get() ?? await waitForState(treeSitterTreeObs);
@@ -179,7 +185,7 @@ suite('Tree Sitter TokenizationFeature', function () {
 		}
 	}
 
-	test('Three changes come back to back ', async () => {
+	test("Three changes come back to back ", async () => {
 		const content = `/**
 **/
 class x {
@@ -206,15 +212,15 @@ class y {
 		});
 
 		const edit1 = new Promise<void>(resolve => {
-			model.applyEdits([{ range: new Range(7, 1, 8, 1), text: '' }]);
+			model.applyEdits([{ range: new Range(7, 1, 8, 1), text: "" }]);
 			resolve();
 		});
 		const edit2 = new Promise<void>(resolve => {
-			model.applyEdits([{ range: new Range(6, 1, 7, 1), text: '' }]);
+			model.applyEdits([{ range: new Range(6, 1, 7, 1), text: "" }]);
 			resolve();
 		});
 		const edit3 = new Promise<void>(resolve => {
-			model.applyEdits([{ range: new Range(5, 1, 6, 1), text: '' }]);
+			model.applyEdits([{ range: new Range(5, 1, 6, 1), text: "" }]);
 			resolve();
 		});
 		const edits = Promise.all([edit1, edit2, edit3]);
@@ -232,7 +238,7 @@ class y {
 		modelService.destroyModel(model.uri);
 	});
 
-	test('File single line file', async () => {
+	test("File single line file", async () => {
 		const content = `console.log('x');`;
 		const { model, tokenizationImpl } = await getModelAndPrepTree(content);
 		const tokens = tokenizationImpl.getTokensInRange(new Range(1, 1, 1, 18), 0, 17);
@@ -242,7 +248,7 @@ class y {
 		modelService.destroyModel(model.uri);
 	});
 
-	test('File with new lines at beginning and end', async () => {
+	test("File with new lines at beginning and end", async () => {
 		const content = `
 console.log('x');
 `;
@@ -254,8 +260,8 @@ console.log('x');
 		modelService.destroyModel(model.uri);
 	});
 
-	test('File with new lines at beginning and end \\r\\n', async () => {
-		const content = '\r\nconsole.log(\'x\');\r\n';
+	test("File with new lines at beginning and end \\r\\n", async () => {
+		const content = "\r\nconsole.log('x');\r\n";
 		const { model, tokenizationImpl } = await getModelAndPrepTree(content);
 		const tokens = tokenizationImpl.getTokensInRange(new Range(1, 1, 3, 1), 0, 21);
 		verifyTokens(tokens);
@@ -264,7 +270,7 @@ console.log('x');
 		modelService.destroyModel(model.uri);
 	});
 
-	test('File with empty lines in the middle', async () => {
+	test("File with empty lines in the middle", async () => {
 		const content = `
 console.log('x');
 
@@ -278,8 +284,8 @@ console.log('7');
 		modelService.destroyModel(model.uri);
 	});
 
-	test('File with empty lines in the middle \\r\\n', async () => {
-		const content = '\r\nconsole.log(\'x\');\r\n\r\nconsole.log(\'7\');\r\n';
+	test("File with empty lines in the middle \\r\\n", async () => {
+		const content = "\r\nconsole.log('x');\r\n\r\nconsole.log('7');\r\n";
 		const { model, tokenizationImpl } = await getModelAndPrepTree(content);
 		const tokens = tokenizationImpl.getTokensInRange(new Range(1, 1, 5, 1), 0, 42);
 		verifyTokens(tokens);
@@ -288,7 +294,7 @@ console.log('7');
 		modelService.destroyModel(model.uri);
 	});
 
-	test('File with non-empty lines that match no scopes', async () => {
+	test("File with non-empty lines that match no scopes", async () => {
 		const content = `console.log('x');
 ;
 {
@@ -302,8 +308,8 @@ console.log('7');
 		modelService.destroyModel(model.uri);
 	});
 
-	test('File with non-empty lines that match no scopes \\r\\n', async () => {
-		const content = 'console.log(\'x\');\r\n;\r\n{\r\n}\r\n';
+	test("File with non-empty lines that match no scopes \\r\\n", async () => {
+		const content = "console.log('x');\r\n;\r\n{\r\n}\r\n";
 		const { model, tokenizationImpl } = await getModelAndPrepTree(content);
 		const tokens = tokenizationImpl.getTokensInRange(new Range(1, 1, 5, 1), 0, 28);
 		verifyTokens(tokens);
@@ -312,7 +318,7 @@ console.log('7');
 		modelService.destroyModel(model.uri);
 	});
 
-	test('File with tree-sitter token that spans multiple lines', async () => {
+	test("File with tree-sitter token that spans multiple lines", async () => {
 		const content = `/**
 **/
 
@@ -327,8 +333,8 @@ console.log('x');
 		modelService.destroyModel(model.uri);
 	});
 
-	test('File with tree-sitter token that spans multiple lines \\r\\n', async () => {
-		const content = '/**\r\n**/\r\n\r\nconsole.log(\'x\');\r\n\r\n';
+	test("File with tree-sitter token that spans multiple lines \\r\\n", async () => {
+		const content = "/**\r\n**/\r\n\r\nconsole.log('x');\r\n\r\n";
 		const { model, tokenizationImpl } = await getModelAndPrepTree(content);
 		const tokens = tokenizationImpl.getTokensInRange(new Range(1, 1, 6, 1), 0, 33);
 		verifyTokens(tokens);
@@ -337,7 +343,7 @@ console.log('x');
 		modelService.destroyModel(model.uri);
 	});
 
-	test('File with tabs', async () => {
+	test("File with tabs", async () => {
 		const content = `function x() {
 	return true;
 }
@@ -353,8 +359,8 @@ class Y {
 		modelService.destroyModel(model.uri);
 	});
 
-	test('File with tabs \\r\\n', async () => {
-		const content = 'function x() {\r\n\treturn true;\r\n}\r\n\r\nclass Y {\r\n\tprivate z = false;\r\n}';
+	test("File with tabs \\r\\n", async () => {
+		const content = "function x() {\r\n\treturn true;\r\n}\r\n\r\nclass Y {\r\n\tprivate z = false;\r\n}";
 		const { model, tokenizationImpl } = await getModelAndPrepTree(content);
 		const tokens = tokenizationImpl.getTokensInRange(new Range(1, 1, 7, 1), 0, 69);
 		verifyTokens(tokens);
@@ -363,8 +369,8 @@ class Y {
 		modelService.destroyModel(model.uri);
 	});
 
-	test('Template string', async () => {
-		const content = '`t ${6}`';
+	test("Template string", async () => {
+		const content = "`t ${6}`";
 		const { model, tokenizationImpl } = await getModelAndPrepTree(content);
 		const tokens = tokenizationImpl.getTokensInRange(new Range(1, 1, 1, 8), 0, 8);
 		verifyTokens(tokens);
@@ -373,7 +379,7 @@ class Y {
 		modelService.destroyModel(model.uri);
 	});
 
-	test('Many nested scopes', async () => {
+	test("Many nested scopes", async () => {
 		const content = `y = new x(ttt({
 	message: '{0} i\\n\\n [commandName]({1}).',
 	args: ['Test', \`command:\${openSettingsCommand}?\${encodeURIComponent('["SettingName"]')}\`],

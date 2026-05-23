@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { getWindow } from '../../../../../base/browser/dom.js';
-import { createFastDomNode, FastDomNode } from '../../../../../base/browser/fastDomNode.js';
-import { PixelRatio } from '../../../../../base/browser/pixelRatio.js';
-import { IThemeService, Themable } from '../../../../../platform/theme/common/themeService.js';
-import { INotebookEditorDelegate, NotebookOverviewRulerLane } from '../notebookBrowser.js';
+import { getWindow } from "../../../../../base/browser/dom.js";
+import { createFastDomNode, FastDomNode } from "../../../../../base/browser/fastDomNode.js";
+import { PixelRatio } from "../../../../../base/browser/pixelRatio.js";
+import { IThemeService, Themable } from "../../../../../platform/theme/common/themeService.js";
+import { INotebookEditorDelegate, NotebookOverviewRulerLane } from "../notebookBrowser.js";
 
 export class NotebookOverviewRuler extends Themable {
 	private readonly _domNode: FastDomNode<HTMLCanvasElement>;
@@ -15,20 +15,26 @@ export class NotebookOverviewRuler extends Themable {
 
 	constructor(readonly notebookEditor: INotebookEditorDelegate, container: HTMLElement, @IThemeService themeService: IThemeService) {
 		super(themeService);
-		this._domNode = createFastDomNode(document.createElement('canvas'));
-		this._domNode.setPosition('relative');
+		this._domNode = createFastDomNode(document.createElement("canvas"));
+		this._domNode.setPosition("relative");
 		this._domNode.setLayerHinting(true);
-		this._domNode.setContain('strict');
+		this._domNode.setContain("strict");
 
 		container.appendChild(this._domNode.domNode);
 
-		this._register(notebookEditor.onDidChangeDecorations(() => {
-			this.layout();
-		}));
+		this._register(
+      notebookEditor.onDidChangeDecorations(() => {
+        this.layout();
+      }),
+    );
 
-		this._register(PixelRatio.getInstance(getWindow(this._domNode.domNode)).onDidChange(() => {
-			this.layout();
-		}));
+		this._register(
+      PixelRatio.getInstance(getWindow(this._domNode.domNode)).onDidChange(
+        () => {
+          this.layout();
+        },
+      ),
+    );
 	}
 
 	layout() {
@@ -36,14 +42,22 @@ export class NotebookOverviewRuler extends Themable {
 		const layoutInfo = this.notebookEditor.getLayoutInfo();
 		const scrollHeight = layoutInfo.scrollHeight;
 		const height = layoutInfo.height;
-		const ratio = PixelRatio.getInstance(getWindow(this._domNode.domNode)).value;
+		const ratio = PixelRatio.getInstance(
+      getWindow(this._domNode.domNode),
+    ).value;
 		this._domNode.setWidth(width);
 		this._domNode.setHeight(height);
 		this._domNode.domNode.width = width * ratio;
 		this._domNode.domNode.height = height * ratio;
-		const ctx = this._domNode.domNode.getContext('2d')!;
+		const ctx = this._domNode.domNode.getContext("2d")!;
 		ctx.clearRect(0, 0, width * ratio, height * ratio);
-		this._render(ctx, width * ratio, height * ratio, scrollHeight * ratio, ratio);
+		this._render(
+      ctx,
+      width * ratio,
+      height * ratio,
+      scrollHeight * ratio,
+      ratio,
+    );
 	}
 
 	private _render(ctx: CanvasRenderingContext2D, width: number, height: number, scrollHeight: number, ratio: number) {
@@ -62,7 +76,7 @@ export class NotebookOverviewRuler extends Themable {
 
 				decorations.filter(decoration => decoration.overviewRuler).forEach(decoration => {
 					const overviewRuler = decoration.overviewRuler!;
-					const fillStyle = this.getColor(overviewRuler.color) ?? '#000000';
+					const fillStyle = this.getColor(overviewRuler.color) ?? "#000000";
 					const lineHeight = Math.min(fontInfo.lineHeight, (viewCell.layoutInfo.editorHeight / scrollHeight / textBuffer.getLineCount()) * ratio * height);
 					const lineNumbers = overviewRuler.modelRanges.map(range => range.startLineNumber).reduce((previous: number[], current: number) => {
 						if (previous.length === 0) {
@@ -119,13 +133,17 @@ export class NotebookOverviewRuler extends Themable {
 				if (!decoration.options.overviewRuler) {
 					continue;
 				}
-				const viewZoneInfo = this.notebookEditor.getViewZoneLayoutInfo(decoration.viewZoneId);
+				const viewZoneInfo = this.notebookEditor.getViewZoneLayoutInfo(
+          decoration.viewZoneId,
+        );
 
 				if (!viewZoneInfo) {
 					continue;
 				}
 
-				const fillStyle = this.getColor(decoration.options.overviewRuler.color) ?? '#000000';
+				const fillStyle = this.getColor(
+          decoration.options.overviewRuler.color,
+        ) ?? "#000000";
 				let x = 0;
 				switch (decoration.options.overviewRuler.position) {
 					case NotebookOverviewRulerLane.Left:

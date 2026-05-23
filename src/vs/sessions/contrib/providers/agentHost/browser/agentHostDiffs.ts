@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { isDefined } from '../../../../../base/common/types.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { SessionStatus as ProtocolSessionStatus, type ChangesetFile } from '../../../../../platform/agentHost/common/state/protocol/state.js';
-import { ISessionFileDiff } from '../../../../../platform/agentHost/common/state/sessionState.js';
-import { IChatSessionFileChange2, isIChatSessionFileChange2 } from '../../../../../workbench/contrib/chat/common/chatSessionsService.js';
-import { ISessionFileChange, SessionStatus } from '../../../../services/sessions/common/session.js';
+import { isDefined } from "../../../../../base/common/types.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { SessionStatus as ProtocolSessionStatus, type ChangesetFile } from "../../../../../platform/agentHost/common/state/protocol/state.js";
+import { ISessionFileDiff } from "../../../../../platform/agentHost/common/state/sessionState.js";
+import { IChatSessionFileChange2, isIChatSessionFileChange2 } from "../../../../../workbench/contrib/chat/common/chatSessionsService.js";
+import { ISessionFileChange, SessionStatus } from "../../../../services/sessions/common/session.js";
 
 /**
  * Maps the protocol-layer session status bitset to the UI-layer

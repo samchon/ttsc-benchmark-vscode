@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, DisposableMap, DisposableStore } from '../../../../base/common/lifecycle.js';
-import { autorun, derived, IObservable } from '../../../../base/common/observable.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { observableConfigValue } from '../../../../platform/observable/common/platformObservableUtils.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { IWorkbenchContribution } from '../../../common/contributions.js';
-import { getProviderKey } from './util.js';
-import { ISCMRepository, ISCMService } from '../common/scm.js';
-import { IEditorGroupsService, IEditorWorkingSet } from '../../../services/editor/common/editorGroupsService.js';
-import { IWorkbenchLayoutService, Parts } from '../../../services/layout/browser/layoutService.js';
+import { Disposable, DisposableMap, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { autorun, derived, IObservable } from "../../../../base/common/observable.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { observableConfigValue } from "../../../../platform/observable/common/platformObservableUtils.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { getProviderKey } from "./util.js";
+import { ISCMRepository, ISCMService } from "../common/scm.js";
+import { IEditorGroupsService, IEditorWorkingSet } from "../../../services/editor/common/editorGroupsService.js";
+import { IWorkbenchLayoutService, Parts } from "../../../services/layout/browser/layoutService.js";
 
 type ISCMSerializedWorkingSet = {
 	readonly providerKey: string;
@@ -26,7 +26,7 @@ interface ISCMRepositoryWorkingSet {
 }
 
 export class SCMWorkingSetController extends Disposable implements IWorkbenchContribution {
-	static readonly ID = 'workbench.contrib.scmWorkingSets';
+	static readonly ID = "workbench.contrib.scmWorkingSets";
 
 	private _enabledConfig: IObservable<boolean>;
 	private _workingSets!: Map<string, ISCMRepositoryWorkingSet>;
@@ -38,15 +38,19 @@ export class SCMWorkingSetController extends Disposable implements IWorkbenchCon
 		@IEditorGroupsService private readonly editorGroupsService: IEditorGroupsService,
 		@ISCMService private readonly scmService: ISCMService,
 		@IStorageService private readonly storageService: IStorageService,
-		@IWorkbenchLayoutService private readonly layoutService: IWorkbenchLayoutService
+		@IWorkbenchLayoutService private readonly layoutService: IWorkbenchLayoutService,
 	) {
 		super();
 
-		this._enabledConfig = observableConfigValue<boolean>('scm.workingSets.enabled', false, this.configurationService);
+		this._enabledConfig = observableConfigValue<boolean>(
+      "scm.workingSets.enabled",
+      false,
+      this.configurationService,
+    );
 
 		this._store.add(autorun(reader => {
 			if (!this._enabledConfig.read(reader)) {
-				this.storageService.remove('scm.workingSets', StorageScope.WORKSPACE);
+				this.storageService.remove("scm.workingSets", StorageScope.WORKSPACE);
 				this._repositoryDisposables.clearAndDisposeAll();
 				return;
 			}
@@ -66,11 +70,11 @@ export class SCMWorkingSetController extends Disposable implements IWorkbenchCon
 		const disposables = new DisposableStore();
 
 		const historyItemRefId = derived(reader => {
-			const historyProvider = repository.provider.historyProvider.read(reader);
-			const historyItemRef = historyProvider?.historyItemRef.read(reader);
+      const historyProvider = repository.provider.historyProvider.read(reader);
+      const historyItemRef = historyProvider?.historyItemRef.read(reader);
 
-			return historyItemRef?.id;
-		});
+      return historyItemRef?.id;
+    });
 
 		disposables.add(autorun(async reader => {
 			const historyItemRefIdValue = historyItemRefId.read(reader);
@@ -108,16 +112,21 @@ export class SCMWorkingSetController extends Disposable implements IWorkbenchCon
 
 	private _loadWorkingSets(): Map<string, ISCMRepositoryWorkingSet> {
 		const workingSets = new Map<string, ISCMRepositoryWorkingSet>();
-		const workingSetsRaw = this.storageService.get('scm.workingSets', StorageScope.WORKSPACE);
+		const workingSetsRaw = this.storageService.get(
+      "scm.workingSets",
+      StorageScope.WORKSPACE,
+    );
 		if (!workingSetsRaw) {
 			return workingSets;
 		}
 
-		for (const serializedWorkingSet of JSON.parse(workingSetsRaw) as ISCMSerializedWorkingSet[]) {
+		for (const serializedWorkingSet of JSON.parse(
+      workingSetsRaw,
+    ) as ISCMSerializedWorkingSet[]) {
 			workingSets.set(serializedWorkingSet.providerKey, {
-				currentHistoryItemGroupId: serializedWorkingSet.currentHistoryItemGroupId,
-				editorWorkingSets: new Map(serializedWorkingSet.editorWorkingSets)
-			});
+        currentHistoryItemGroupId: serializedWorkingSet.currentHistoryItemGroupId,
+        editorWorkingSets: new Map(serializedWorkingSet.editorWorkingSets),
+      });
 		}
 
 		return workingSets;
@@ -127,15 +136,29 @@ export class SCMWorkingSetController extends Disposable implements IWorkbenchCon
 		const previousHistoryItemGroupId = repositoryWorkingSets.currentHistoryItemGroupId;
 		const editorWorkingSets = repositoryWorkingSets.editorWorkingSets;
 
-		const editorWorkingSet = this.editorGroupsService.saveWorkingSet(previousHistoryItemGroupId);
-		this._workingSets.set(providerKey, { currentHistoryItemGroupId, editorWorkingSets: editorWorkingSets.set(previousHistoryItemGroupId, editorWorkingSet) });
+		const editorWorkingSet = this.editorGroupsService.saveWorkingSet(
+      previousHistoryItemGroupId,
+    );
+		this._workingSets.set(providerKey, {
+      currentHistoryItemGroupId,
+      editorWorkingSets: editorWorkingSets.set(previousHistoryItemGroupId, editorWorkingSet),
+    });
 
 		// Save to storage
 		const workingSets: ISCMSerializedWorkingSet[] = [];
 		for (const [providerKey, { currentHistoryItemGroupId, editorWorkingSets }] of this._workingSets) {
-			workingSets.push({ providerKey, currentHistoryItemGroupId, editorWorkingSets: [...editorWorkingSets] });
+			workingSets.push({
+        providerKey,
+        currentHistoryItemGroupId,
+        editorWorkingSets: [...editorWorkingSets],
+      });
 		}
-		this.storageService.store('scm.workingSets', JSON.stringify(workingSets), StorageScope.WORKSPACE, StorageTarget.MACHINE);
+		this.storageService.store(
+      "scm.workingSets",
+      JSON.stringify(workingSets),
+      StorageScope.WORKSPACE,
+      StorageTarget.MACHINE,
+    );
 	}
 
 	private async _restoreWorkingSet(providerKey: string, currentHistoryItemGroupId: string): Promise<void> {
@@ -144,9 +167,13 @@ export class SCMWorkingSetController extends Disposable implements IWorkbenchCon
 			return;
 		}
 
-		let editorWorkingSetId: IEditorWorkingSet | 'empty' | undefined = workingSets.editorWorkingSets.get(currentHistoryItemGroupId);
-		if (!editorWorkingSetId && this.configurationService.getValue<'empty' | 'current'>('scm.workingSets.default') === 'empty') {
-			editorWorkingSetId = 'empty';
+		let editorWorkingSetId: IEditorWorkingSet | "empty" | undefined = workingSets.editorWorkingSets.get(
+      currentHistoryItemGroupId,
+    );
+		if (!editorWorkingSetId && this.configurationService.getValue<"empty" | "current">(
+      "scm.workingSets.default",
+    ) === "empty") {
+			editorWorkingSetId = "empty";
 		}
 
 		if (editorWorkingSetId) {
@@ -156,7 +183,9 @@ export class SCMWorkingSetController extends Disposable implements IWorkbenchCon
 			// in which the terminal is in the editor part.
 			const preserveFocus = this.layoutService.hasFocus(Parts.PANEL_PART);
 
-			await this.editorGroupsService.applyWorkingSet(editorWorkingSetId, { preserveFocus });
+			await this.editorGroupsService.applyWorkingSet(editorWorkingSetId, {
+        preserveFocus,
+      });
 		}
 	}
 

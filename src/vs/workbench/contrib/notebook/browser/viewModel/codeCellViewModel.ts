@@ -3,27 +3,35 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event, PauseableEmitter } from '../../../../../base/common/event.js';
-import { dispose } from '../../../../../base/common/lifecycle.js';
-import { observableValue } from '../../../../../base/common/observable.js';
-import * as UUID from '../../../../../base/common/uuid.js';
-import { ICodeEditorService } from '../../../../../editor/browser/services/codeEditorService.js';
-import * as editorCommon from '../../../../../editor/common/editorCommon.js';
-import { PrefixSumComputer } from '../../../../../editor/common/model/prefixSumComputer.js';
-import { ITextModelService } from '../../../../../editor/common/services/resolverService.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { IUndoRedoService } from '../../../../../platform/undoRedo/common/undoRedo.js';
-import { CellEditState, CellFindMatch, CellLayoutState, CodeCellLayoutChangeEvent, CodeCellLayoutInfo, ICellOutputViewModel, ICellViewModel } from '../notebookBrowser.js';
-import { NotebookOptionsChangeEvent } from '../notebookOptions.js';
-import { NotebookLayoutInfo } from '../notebookViewEvents.js';
-import { CellOutputViewModel } from './cellOutputViewModel.js';
-import { ViewContext } from './viewContext.js';
-import { NotebookCellTextModel } from '../../common/model/notebookCellTextModel.js';
-import { CellKind, INotebookFindOptions, NotebookCellOutputsSplice } from '../../common/notebookCommon.js';
-import { ICellExecutionError, ICellExecutionStateChangedEvent } from '../../common/notebookExecutionStateService.js';
-import { INotebookService } from '../../common/notebookService.js';
-import { BaseCellViewModel } from './baseCellViewModel.js';
-import { IInlineChatSessionService } from '../../../inlineChat/browser/inlineChatSessionService.js';
+import { Emitter, Event, PauseableEmitter } from "../../../../../base/common/event.js";
+import { dispose } from "../../../../../base/common/lifecycle.js";
+import { observableValue } from "../../../../../base/common/observable.js";
+import * as UUID from "../../../../../base/common/uuid.js";
+import { ICodeEditorService } from "../../../../../editor/browser/services/codeEditorService.js";
+import * as editorCommon from "../../../../../editor/common/editorCommon.js";
+import { PrefixSumComputer } from "../../../../../editor/common/model/prefixSumComputer.js";
+import { ITextModelService } from "../../../../../editor/common/services/resolverService.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IUndoRedoService } from "../../../../../platform/undoRedo/common/undoRedo.js";
+import {
+  CellEditState,
+  CellFindMatch,
+  CellLayoutState,
+  CodeCellLayoutChangeEvent,
+  CodeCellLayoutInfo,
+  ICellOutputViewModel,
+  ICellViewModel,
+} from "../notebookBrowser.js";
+import { NotebookOptionsChangeEvent } from "../notebookOptions.js";
+import { NotebookLayoutInfo } from "../notebookViewEvents.js";
+import { CellOutputViewModel } from "./cellOutputViewModel.js";
+import { ViewContext } from "./viewContext.js";
+import { NotebookCellTextModel } from "../../common/model/notebookCellTextModel.js";
+import { CellKind, INotebookFindOptions, NotebookCellOutputsSplice } from "../../common/notebookCommon.js";
+import { ICellExecutionError, ICellExecutionStateChangedEvent } from "../../common/notebookExecutionStateService.js";
+import { INotebookService } from "../../common/notebookService.js";
+import { BaseCellViewModel } from "./baseCellViewModel.js";
+import { IInlineChatSessionService } from "../../../inlineChat/browser/inlineChatSessionService.js";
 
 export const outputDisplayLimit = 500;
 
@@ -33,22 +41,32 @@ export class CodeCellViewModel extends BaseCellViewModel implements ICellViewMod
 	protected readonly _onLayoutInfoRead = this._register(new Emitter<void>());
 	readonly onLayoutInfoRead = this._onLayoutInfoRead.event;
 
-	protected readonly _onDidStartExecution = this._register(new Emitter<ICellExecutionStateChangedEvent>());
+	protected readonly _onDidStartExecution = this._register(
+    new Emitter<ICellExecutionStateChangedEvent>(),
+  );
 	readonly onDidStartExecution = this._onDidStartExecution.event;
-	protected readonly _onDidStopExecution = this._register(new Emitter<ICellExecutionStateChangedEvent>());
+	protected readonly _onDidStopExecution = this._register(
+    new Emitter<ICellExecutionStateChangedEvent>(),
+  );
 	readonly onDidStopExecution = this._onDidStopExecution.event;
 
-	protected readonly _onDidChangeOutputs = this._register(new Emitter<NotebookCellOutputsSplice>());
+	protected readonly _onDidChangeOutputs = this._register(
+    new Emitter<NotebookCellOutputsSplice>(),
+  );
 	readonly onDidChangeOutputs = this._onDidChangeOutputs.event;
 
-	private readonly _onDidRemoveOutputs = this._register(new Emitter<readonly ICellOutputViewModel[]>());
+	private readonly _onDidRemoveOutputs = this._register(
+    new Emitter<readonly ICellOutputViewModel[]>(),
+  );
 	readonly onDidRemoveOutputs = this._onDidRemoveOutputs.event;
 
 	private _outputCollection: number[] = [];
 
 	private _outputsTop: PrefixSumComputer | null = null;
 
-	protected _pauseableEmitter = this._register(new PauseableEmitter<CodeCellLayoutChangeEvent>());
+	protected _pauseableEmitter = this._register(
+    new PauseableEmitter<CodeCellLayoutChangeEvent>(),
+  );
 
 	readonly onDidChangeLayout = this._pauseableEmitter.event;
 
@@ -59,11 +77,11 @@ export class CodeCellViewModel extends BaseCellViewModel implements ICellViewMod
 		}
 
 		this._editorHeight = height;
-		this.layoutChange({ editorHeight: true }, 'CodeCellViewModel#editorHeight');
+		this.layoutChange({ editorHeight: true }, "CodeCellViewModel#editorHeight");
 	}
 
 	get editorHeight() {
-		throw new Error('editorHeight is write-only');
+		throw new Error("editorHeight is write-only");
 	}
 
 	private _chatHeight = 0;
@@ -73,7 +91,7 @@ export class CodeCellViewModel extends BaseCellViewModel implements ICellViewMod
 		}
 
 		this._chatHeight = height;
-		this.layoutChange({ chatHeight: true }, 'CodeCellViewModel#chatHeight');
+		this.layoutChange({ chatHeight: true }, "CodeCellViewModel#chatHeight");
 	}
 
 	get chatHeight() {
@@ -135,7 +153,10 @@ export class CodeCellViewModel extends BaseCellViewModel implements ICellViewMod
 		return this._outputViewModels;
 	}
 
-	readonly executionErrorDiagnostic = observableValue<ICellExecutionError | undefined>('excecutionError', undefined);
+	readonly executionErrorDiagnostic = observableValue<ICellExecutionError | undefined>(
+    "excecutionError",
+    undefined,
+  );
 
 	constructor(
 		viewType: string,
@@ -147,10 +168,22 @@ export class CodeCellViewModel extends BaseCellViewModel implements ICellViewMod
 		@ITextModelService modelService: ITextModelService,
 		@IUndoRedoService undoRedoService: IUndoRedoService,
 		@ICodeEditorService codeEditorService: ICodeEditorService,
-		@IInlineChatSessionService inlineChatSessionService: IInlineChatSessionService
+		@IInlineChatSessionService inlineChatSessionService: IInlineChatSessionService,
 	) {
-		super(viewType, model, UUID.generateUuid(), viewContext, configurationService, modelService, undoRedoService, codeEditorService, inlineChatSessionService);
-		this._outputViewModels = this.model.outputs.map(output => new CellOutputViewModel(this, output, this._notebookService));
+		super(
+      viewType,
+      model,
+      UUID.generateUuid(),
+      viewContext,
+      configurationService,
+      modelService,
+      undoRedoService,
+      codeEditorService,
+      inlineChatSessionService,
+    );
+		this._outputViewModels = this.model.outputs.map(
+      output => new CellOutputViewModel(this, output, this._notebookService),
+    );
 
 		this._register(this.model.onDidChangeOutputs((splice) => {
 			const removedOutputs: ICellOutputViewModel[] = [];
@@ -168,7 +201,7 @@ export class CodeCellViewModel extends BaseCellViewModel implements ICellViewMod
 			this._onDidChangeOutputs.fire(splice);
 			this._onDidRemoveOutputs.fire(removedOutputs);
 			if (outputLayoutChange) {
-				this.layoutChange({ outputHeight: true }, 'CodeCellViewModel#model.onDidChangeOutputs');
+				this.layoutChange({ outputHeight: true }, "CodeCellViewModel#model.onDidChangeOutputs");
 			}
 			if (!this._outputCollection.length) {
 				this.executionErrorDiagnostic.set(undefined, undefined);
@@ -232,9 +265,14 @@ export class CodeCellViewModel extends BaseCellViewModel implements ICellViewMod
 		// recompute
 		this._ensureOutputsTop();
 		const notebookLayoutConfiguration = this.viewContext.notebookOptions.getLayoutConfiguration();
-		const bottomToolbarDimensions = this.viewContext.notebookOptions.computeBottomToolbarDimensions(this.viewType);
+		const bottomToolbarDimensions = this.viewContext.notebookOptions.computeBottomToolbarDimensions(
+      this.viewType,
+    );
 		const outputShowMoreContainerHeight = state.outputShowMoreContainerHeight ? state.outputShowMoreContainerHeight : this._layoutInfo.outputShowMoreContainerHeight;
-		const outputTotalHeight = Math.max(this._outputMinHeight, this.isOutputCollapsed ? notebookLayoutConfiguration.collapsedIndicatorHeight : this._outputsTop!.getTotalSum());
+		const outputTotalHeight = Math.max(
+      this._outputMinHeight,
+      this.isOutputCollapsed ? notebookLayoutConfiguration.collapsedIndicatorHeight : this._outputsTop!.getTotalSum(),
+    );
 		const commentHeight = state.commentHeight ? this._commentHeight : this._layoutInfo.commentHeight;
 
 		const originalLayout = this.layoutInfo;
@@ -246,7 +284,9 @@ export class CodeCellViewModel extends BaseCellViewModel implements ICellViewMod
 			const chatHeight = state.chatHeight ? this._chatHeight : this._layoutInfo.chatHeight;
 			if (!state.editorHeight && this._layoutInfo.layoutState === CellLayoutState.FromCache && !state.outputHeight) {
 				// No new editorHeight info - keep cached totalHeight and estimate editorHeight
-				const estimate = this.estimateEditorHeight(state.font?.lineHeight ?? this._layoutInfo.fontInfo?.lineHeight);
+				const estimate = this.estimateEditorHeight(
+          state.font?.lineHeight ?? this._layoutInfo.fontInfo?.lineHeight,
+        );
 				editorHeight = estimate.editorHeight;
 				hasHorizontalScrolling = estimate.hasHorizontalScrolling;
 				totalHeight = this._layoutInfo.totalHeight;
@@ -254,18 +294,33 @@ export class CodeCellViewModel extends BaseCellViewModel implements ICellViewMod
 			} else if (state.editorHeight || this._layoutInfo.layoutState === CellLayoutState.Measured) {
 				// Editor has been measured
 				editorHeight = this._editorHeight;
-				totalHeight = this.computeTotalHeight(this._editorHeight, outputTotalHeight, outputShowMoreContainerHeight, chatHeight);
+				totalHeight = this.computeTotalHeight(
+          this._editorHeight,
+          outputTotalHeight,
+          outputShowMoreContainerHeight,
+          chatHeight,
+        );
 				newState = CellLayoutState.Measured;
 				hasHorizontalScrolling = this._layoutInfo.estimatedHasHorizontalScrolling;
 			} else {
-				const estimate = this.estimateEditorHeight(state.font?.lineHeight ?? this._layoutInfo.fontInfo?.lineHeight);
+				const estimate = this.estimateEditorHeight(
+          state.font?.lineHeight ?? this._layoutInfo.fontInfo?.lineHeight,
+        );
 				editorHeight = estimate.editorHeight;
 				hasHorizontalScrolling = estimate.hasHorizontalScrolling;
-				totalHeight = this.computeTotalHeight(editorHeight, outputTotalHeight, outputShowMoreContainerHeight, chatHeight);
+				totalHeight = this.computeTotalHeight(
+          editorHeight,
+          outputTotalHeight,
+          outputShowMoreContainerHeight,
+          chatHeight,
+        );
 				newState = CellLayoutState.Estimated;
 			}
 
-			const statusBarHeight = this.viewContext.notebookOptions.computeEditorStatusbarHeight(this.internalMetadata, this.uri);
+			const statusBarHeight = this.viewContext.notebookOptions.computeEditorStatusbarHeight(
+        this.internalMetadata,
+        this.uri,
+      );
 			const codeIndicatorHeight = editorHeight + statusBarHeight;
 			const outputIndicatorHeight = outputTotalHeight + outputShowMoreContainerHeight;
 			const outputContainerOffset = notebookLayoutConfiguration.editorToolbarHeight
@@ -277,33 +332,38 @@ export class CodeCellViewModel extends BaseCellViewModel implements ICellViewMod
 				- bottomToolbarDimensions.bottomToolbarGap
 				- bottomToolbarDimensions.bottomToolbarHeight / 2
 				- outputShowMoreContainerHeight;
-			const bottomToolbarOffset = this.viewContext.notebookOptions.computeBottomToolbarOffset(totalHeight, this.viewType);
+			const bottomToolbarOffset = this.viewContext.notebookOptions.computeBottomToolbarOffset(
+        totalHeight,
+        this.viewType,
+      );
 			const editorWidth = state.outerWidth !== undefined
-				? this.viewContext.notebookOptions.computeCodeCellEditorWidth(state.outerWidth)
+				? this.viewContext.notebookOptions.computeCodeCellEditorWidth(
+            state.outerWidth,
+          )
 				: this._layoutInfo?.editorWidth;
 
 			this._layoutInfo = {
-				fontInfo: state.font ?? this._layoutInfo.fontInfo ?? null,
-				chatHeight,
-				editorHeight,
-				editorWidth,
-				statusBarHeight,
-				outputContainerOffset,
-				outputTotalHeight,
-				outputShowMoreContainerHeight,
-				outputShowMoreContainerOffset,
-				commentOffset: outputContainerOffset + outputTotalHeight,
-				commentHeight,
-				totalHeight,
-				codeIndicatorHeight,
-				outputIndicatorHeight,
-				bottomToolbarOffset,
-				layoutState: newState,
-				estimatedHasHorizontalScrolling: hasHorizontalScrolling,
-				topMargin: notebookLayoutConfiguration.cellTopMargin,
-				bottomMargin: notebookLayoutConfiguration.cellBottomMargin,
-				outlineWidth: 1
-			};
+        fontInfo: state.font ?? this._layoutInfo.fontInfo ?? null,
+        chatHeight,
+        editorHeight,
+        editorWidth,
+        statusBarHeight,
+        outputContainerOffset,
+        outputTotalHeight,
+        outputShowMoreContainerHeight,
+        outputShowMoreContainerOffset,
+        commentOffset: outputContainerOffset + outputTotalHeight,
+        commentHeight,
+        totalHeight,
+        codeIndicatorHeight,
+        outputIndicatorHeight,
+        bottomToolbarOffset,
+        layoutState: newState,
+        estimatedHasHorizontalScrolling: hasHorizontalScrolling,
+        topMargin: notebookLayoutConfiguration.cellTopMargin,
+        bottomMargin: notebookLayoutConfiguration.cellBottomMargin,
+        outlineWidth: 1,
+      };
 		} else {
 			const codeIndicatorHeight = notebookLayoutConfiguration.collapsedIndicatorHeight;
 			const outputIndicatorHeight = outputTotalHeight + outputShowMoreContainerHeight;
@@ -322,40 +382,45 @@ export class CodeCellViewModel extends BaseCellViewModel implements ICellViewMod
 				- bottomToolbarDimensions.bottomToolbarGap
 				- bottomToolbarDimensions.bottomToolbarHeight / 2
 				- outputShowMoreContainerHeight;
-			const bottomToolbarOffset = this.viewContext.notebookOptions.computeBottomToolbarOffset(totalHeight, this.viewType);
+			const bottomToolbarOffset = this.viewContext.notebookOptions.computeBottomToolbarOffset(
+        totalHeight,
+        this.viewType,
+      );
 			const editorWidth = state.outerWidth !== undefined
-				? this.viewContext.notebookOptions.computeCodeCellEditorWidth(state.outerWidth)
+				? this.viewContext.notebookOptions.computeCodeCellEditorWidth(
+            state.outerWidth,
+          )
 				: this._layoutInfo?.editorWidth;
 
 			this._layoutInfo = {
-				fontInfo: state.font ?? this._layoutInfo.fontInfo ?? null,
-				editorHeight: this._layoutInfo.editorHeight,
-				editorWidth,
-				chatHeight: chatHeight,
-				statusBarHeight: 0,
-				outputContainerOffset,
-				outputTotalHeight,
-				outputShowMoreContainerHeight,
-				outputShowMoreContainerOffset,
-				commentOffset: outputContainerOffset + outputTotalHeight,
-				commentHeight,
-				totalHeight,
-				codeIndicatorHeight,
-				outputIndicatorHeight,
-				bottomToolbarOffset,
-				layoutState: this._layoutInfo.layoutState,
-				estimatedHasHorizontalScrolling: false,
-				outlineWidth: 1,
-				topMargin: notebookLayoutConfiguration.cellTopMargin,
-				bottomMargin: notebookLayoutConfiguration.cellBottomMargin,
-			};
+        fontInfo: state.font ?? this._layoutInfo.fontInfo ?? null,
+        editorHeight: this._layoutInfo.editorHeight,
+        editorWidth,
+        chatHeight: chatHeight,
+        statusBarHeight: 0,
+        outputContainerOffset,
+        outputTotalHeight,
+        outputShowMoreContainerHeight,
+        outputShowMoreContainerOffset,
+        commentOffset: outputContainerOffset + outputTotalHeight,
+        commentHeight,
+        totalHeight,
+        codeIndicatorHeight,
+        outputIndicatorHeight,
+        bottomToolbarOffset,
+        layoutState: this._layoutInfo.layoutState,
+        estimatedHasHorizontalScrolling: false,
+        outlineWidth: 1,
+        topMargin: notebookLayoutConfiguration.cellTopMargin,
+        bottomMargin: notebookLayoutConfiguration.cellBottomMargin,
+      };
 		}
 
 		this._fireOnDidChangeLayout({
-			...state,
-			totalHeight: this.layoutInfo.totalHeight !== originalLayout.totalHeight,
-			source,
-		});
+      ...state,
+      totalHeight: this.layoutInfo.totalHeight !== originalLayout.totalHeight,
+      source,
+    });
 	}
 
 	private _fireOnDidChangeLayout(state: CodeCellLayoutChangeEvent) {
@@ -366,10 +431,10 @@ export class CodeCellViewModel extends BaseCellViewModel implements ICellViewMod
 		super.restoreEditorViewState(editorViewStates);
 		if (totalHeight !== undefined && this._layoutInfo.layoutState !== CellLayoutState.Measured) {
 			this._layoutInfo = {
-				...this._layoutInfo,
-				totalHeight: totalHeight,
-				layoutState: CellLayoutState.FromCache,
-			};
+        ...this._layoutInfo,
+        totalHeight: totalHeight,
+        layoutState: CellLayoutState.FromCache,
+      };
 		}
 	}
 
@@ -389,8 +454,10 @@ export class CodeCellViewModel extends BaseCellViewModel implements ICellViewMod
 
 	private estimateEditorHeight(lineHeight: number | undefined = 20): { editorHeight: number; hasHorizontalScrolling: boolean } {
 		let hasHorizontalScrolling = false;
-		const cellEditorOptions = this.viewContext.getBaseCellEditorOptions(this.language);
-		if (this.layoutInfo.fontInfo && cellEditorOptions.value.wordWrap === 'off') {
+		const cellEditorOptions = this.viewContext.getBaseCellEditorOptions(
+      this.language,
+    );
+		if (this.layoutInfo.fontInfo && cellEditorOptions.value.wordWrap === "off") {
 			for (let i = 0; i < this.lineCount; i++) {
 				const max = this.textBuffer.getLineLastNonWhitespaceColumn(i + 1);
 				const estimatedWidth = max * (this.layoutInfo.fontInfo.typicalHalfwidthCharacterWidth + this.layoutInfo.fontInfo.letterSpacing);
@@ -402,25 +469,33 @@ export class CodeCellViewModel extends BaseCellViewModel implements ICellViewMod
 		}
 
 		const verticalScrollbarHeight = hasHorizontalScrolling ? 12 : 0; // take zoom level into account
-		const editorPadding = this.viewContext.notebookOptions.computeEditorPadding(this.internalMetadata, this.uri);
+		const editorPadding = this.viewContext.notebookOptions.computeEditorPadding(
+      this.internalMetadata,
+      this.uri,
+    );
 		const editorHeight = this.lineCount * lineHeight
 			+ editorPadding.top
 			+ editorPadding.bottom // EDITOR_BOTTOM_PADDING
 			+ verticalScrollbarHeight;
 		return {
-			editorHeight,
-			hasHorizontalScrolling
-		};
+      editorHeight,
+      hasHorizontalScrolling,
+    };
 	}
 
 	private computeTotalHeight(editorHeight: number, outputsTotalHeight: number, outputShowMoreContainerHeight: number, chatHeight: number): number {
 		const layoutConfiguration = this.viewContext.notebookOptions.getLayoutConfiguration();
-		const { bottomToolbarGap } = this.viewContext.notebookOptions.computeBottomToolbarDimensions(this.viewType);
+		const { bottomToolbarGap } = this.viewContext.notebookOptions.computeBottomToolbarDimensions(
+      this.viewType,
+    );
 		return layoutConfiguration.editorToolbarHeight
 			+ layoutConfiguration.cellTopMargin
 			+ chatHeight
 			+ editorHeight
-			+ this.viewContext.notebookOptions.computeEditorStatusbarHeight(this.internalMetadata, this.uri)
+			+ this.viewContext.notebookOptions.computeEditorStatusbarHeight(
+        this.internalMetadata,
+        this.uri,
+      )
 			+ this._commentHeight
 			+ outputsTotalHeight
 			+ outputShowMoreContainerHeight
@@ -430,17 +505,23 @@ export class CodeCellViewModel extends BaseCellViewModel implements ICellViewMod
 
 	protected onDidChangeTextModelContent(): void {
 		if (this.getEditState() !== CellEditState.Editing) {
-			this.updateEditState(CellEditState.Editing, 'onDidChangeTextModelContent');
+			this.updateEditState(
+        CellEditState.Editing,
+        "onDidChangeTextModelContent",
+      );
 			this._onDidChangeState.fire({ contentChanged: true });
 		}
 	}
 
 	onDeselect() {
-		this.updateEditState(CellEditState.Preview, 'onDeselect');
+		this.updateEditState(CellEditState.Preview, "onDeselect");
 	}
 
 	updateOutputShowMoreContainerHeight(height: number) {
-		this.layoutChange({ outputShowMoreContainerHeight: height }, 'CodeCellViewModel#updateOutputShowMoreContainerHeight');
+		this.layoutChange(
+      { outputShowMoreContainerHeight: height },
+      "CodeCellViewModel#updateOutputShowMoreContainerHeight",
+    );
 	}
 
 	updateOutputMinHeight(height: number) {
@@ -454,7 +535,7 @@ export class CodeCellViewModel extends BaseCellViewModel implements ICellViewMod
 
 	updateOutputHeight(index: number, height: number, source?: string) {
 		if (index >= this._outputCollection.length) {
-			throw new Error('Output index out of range!');
+			throw new Error("Output index out of range!");
 		}
 
 		this._ensureOutputsTop();
@@ -485,14 +566,16 @@ export class CodeCellViewModel extends BaseCellViewModel implements ICellViewMod
 		this._ensureOutputsTop();
 
 		if (index >= this._outputCollection.length) {
-			throw new Error('Output index out of range!');
+			throw new Error("Output index out of range!");
 		}
 
 		return this._outputsTop!.getPrefixSum(index - 1);
 	}
 
 	getOutputOffset(index: number): number {
-		return this.layoutInfo.outputContainerOffset + this.getOutputOffsetInContainer(index);
+		return this.layoutInfo.outputContainerOffset + this.getOutputOffsetInContainer(
+      index,
+    );
 	}
 
 	spliceOutputHeights(start: number, deleteCnt: number, heights: number[]) {
@@ -508,7 +591,10 @@ export class CodeCellViewModel extends BaseCellViewModel implements ICellViewMod
 			this._outputsTop!.insertValues(start, values);
 		}
 
-		this.layoutChange({ outputHeight: true }, 'CodeCellViewModel#spliceOutputs');
+		this.layoutChange(
+      { outputHeight: true },
+      "CodeCellViewModel#spliceOutputs",
+    );
 	}
 
 	private _ensureOutputsTop(): void {
@@ -533,9 +619,9 @@ export class CodeCellViewModel extends BaseCellViewModel implements ICellViewMod
 		}
 
 		return {
-			cell: this,
-			contentMatches: matches
-		};
+      cell: this,
+      contentMatches: matches,
+    };
 	}
 
 	override dispose() {

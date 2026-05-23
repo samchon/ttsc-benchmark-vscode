@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from '../../../common/buffer.js';
-import { Event } from '../../../common/event.js';
-import { IDisposable } from '../../../common/lifecycle.js';
-import { IMessagePassingProtocol, IPCClient } from './ipc.js';
+import { VSBuffer } from "../../../common/buffer.js";
+import { Event } from "../../../common/event.js";
+import { IDisposable } from "../../../common/lifecycle.js";
+import { IMessagePassingProtocol, IPCClient } from "./ipc.js";
 
 /**
  * Declare minimal `MessageEvent` and `MessagePort` interfaces here
@@ -25,8 +25,8 @@ export interface MessageEvent {
 
 export interface MessagePort {
 
-	addEventListener(type: 'message', listener: (this: MessagePort, e: MessageEvent) => unknown): void;
-	removeEventListener(type: 'message', listener: (this: MessagePort, e: MessageEvent) => unknown): void;
+	addEventListener(type: "message", listener: (this: MessagePort, e: MessageEvent) => unknown): void;
+	removeEventListener(type: "message", listener: (this: MessagePort, e: MessageEvent) => unknown): void;
 
 	postMessage(message: Uint8Array): void;
 
@@ -44,7 +44,7 @@ export class Protocol implements IMessagePassingProtocol {
 	readonly onMessage;
 
 	constructor(private port: MessagePort) {
-		this.onMessage = Event.fromDOMEventEmitter<VSBuffer>(this.port, 'message', (e: MessageEvent) => {
+		this.onMessage = Event.fromDOMEventEmitter<VSBuffer>(this.port, "message", (e: MessageEvent) => {
 			if (e.data) {
 				return VSBuffer.wrap(e.data);
 			}

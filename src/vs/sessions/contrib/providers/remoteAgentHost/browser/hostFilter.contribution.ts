@@ -3,23 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { localize2 } from '../../../../../nls.js';
-import { IActionViewItemService } from '../../../../../platform/actions/browser/actionViewItemService.js';
-import { Action2, registerAction2 } from '../../../../../platform/actions/common/actions.js';
-import { ContextKeyExpr } from '../../../../../platform/contextkey/common/contextkey.js';
-import { IsWebContext } from '../../../../../platform/contextkey/common/contextkeys.js';
-import { ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IsAuxiliaryWindowContext } from '../../../../../workbench/common/contextkeys.js';
-import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../../../workbench/common/contributions.js';
-import { IsNewChatSessionContext, IsPhoneLayoutContext } from '../../../../common/contextkeys.js';
-import { Menus } from '../../../../browser/menus.js';
-import { IAgentHostFilterService } from '../../../../services/agentHostFilter/common/agentHostFilter.js';
-import { HostFilterActionViewItem } from './hostFilterActionViewItem.js';
-import { MobileHostFilterActionViewItem } from './mobileHostFilterActionViewItem.js';
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { localize2 } from "../../../../../nls.js";
+import { IActionViewItemService } from "../../../../../platform/actions/browser/actionViewItemService.js";
+import { Action2, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IsWebContext } from "../../../../../platform/contextkey/common/contextkeys.js";
+import { ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IsAuxiliaryWindowContext } from "../../../../../workbench/common/contextkeys.js";
+import {
+  IWorkbenchContribution,
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../../../../workbench/common/contributions.js";
+import { IsNewChatSessionContext, IsPhoneLayoutContext } from "../../../../common/contextkeys.js";
+import { Menus } from "../../../../browser/menus.js";
+import { IAgentHostFilterService } from "../../../../services/agentHostFilter/common/agentHostFilter.js";
+import { HostFilterActionViewItem } from "./hostFilterActionViewItem.js";
+import { MobileHostFilterActionViewItem } from "./mobileHostFilterActionViewItem.js";
 
-const PICK_HOST_FILTER_ID = 'sessions.agentHostFilter.pick';
+const PICK_HOST_FILTER_ID = "sessions.agentHostFilter.pick";
 
 /**
  * Action that backs the host filter dropdown. Selection is actually handled
@@ -36,11 +40,11 @@ registerAction2(class PickAgentHostFilterAction extends Action2 {
 	constructor() {
 		super({
 			id: PICK_HOST_FILTER_ID,
-			title: localize2('agentHostFilter.pick', "Select Agent Host"),
+			title: localize2("agentHostFilter.pick", "Select Agent Host"),
 			f1: false,
 			menu: [{
 				id: Menus.SidebarAgentHost,
-				group: 'navigation',
+				group: "navigation",
 				order: 1,
 				// Always shown on web desktop (regardless of host count):
 				// when no hosts are known the pill renders a re-discover
@@ -63,7 +67,7 @@ registerAction2(class PickAgentHostFilterAction extends Action2 {
 				// with a "Re-discover hosts" action so the user always has
 				// a way to retry discovery from the home screen.
 				id: Menus.MobileTitleBarCenter,
-				group: 'navigation',
+				group: "navigation",
 				order: 0,
 				when: ContextKeyExpr.and(
 					IsWebContext,
@@ -81,7 +85,7 @@ registerAction2(class PickAgentHostFilterAction extends Action2 {
 
 class AgentHostFilterContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'sessions.contrib.agentHostFilter';
+	static readonly ID = "sessions.contrib.agentHostFilter";
 
 	constructor(
 		@IAgentHostFilterService filterService: IAgentHostFilterService,
@@ -98,21 +102,36 @@ class AgentHostFilterContribution extends Disposable implements IWorkbenchContri
 		// discovery starts/finishes; `registered` covers the cold-start
 		// race.
 		const registered = this._register(new Emitter<void>());
-		const refreshSignal = Event.any(filterService.onDidChange, filterService.onDidChangeDiscovering, registered.event);
+		const refreshSignal = Event.any(
+      filterService.onDidChange,
+      filterService.onDidChangeDiscovering,
+      registered.event,
+    );
 
-		this._register(actionViewItemService.register(
-			Menus.SidebarAgentHost,
-			PICK_HOST_FILTER_ID,
-			(action, _options, instaService) => instaService.createInstance(HostFilterActionViewItem, action, 'sidebar'),
-			refreshSignal,
-		));
+		this._register(
+      actionViewItemService.register(
+        Menus.SidebarAgentHost,
+        PICK_HOST_FILTER_ID,
+        (action, _options, instaService) => instaService.createInstance(
+          HostFilterActionViewItem,
+          action,
+          "sidebar",
+        ),
+        refreshSignal,
+      ),
+    );
 
-		this._register(actionViewItemService.register(
-			Menus.MobileTitleBarCenter,
-			PICK_HOST_FILTER_ID,
-			(action, _options, instaService) => instaService.createInstance(MobileHostFilterActionViewItem, action),
-			refreshSignal,
-		));
+		this._register(
+      actionViewItemService.register(
+        Menus.MobileTitleBarCenter,
+        PICK_HOST_FILTER_ID,
+        (action, _options, instaService) => instaService.createInstance(
+          MobileHostFilterActionViewItem,
+          action,
+        ),
+        refreshSignal,
+      ),
+    );
 
 		// Fire the one-shot signal asynchronously so any toolbars that
 		// rendered the action with the default view item before our
@@ -123,7 +142,7 @@ class AgentHostFilterContribution extends Disposable implements IWorkbenchContri
 }
 
 registerWorkbenchContribution2(
-	AgentHostFilterContribution.ID,
-	AgentHostFilterContribution,
-	WorkbenchPhase.AfterRestored,
+  AgentHostFilterContribution.ID,
+  AgentHostFilterContribution,
+  WorkbenchPhase.AfterRestored,
 );

@@ -3,19 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { session } from 'electron';
-import { Disposable, IDisposable, toDisposable } from '../../../base/common/lifecycle.js';
-import { COI, FileAccess, Schemas, CacheControlheaders, DocumentPolicyheaders } from '../../../base/common/network.js';
-import { basename, extname, normalize } from '../../../base/common/path.js';
-import { isLinux } from '../../../base/common/platform.js';
-import { TernarySearchTree } from '../../../base/common/ternarySearchTree.js';
-import { URI } from '../../../base/common/uri.js';
-import { generateUuid } from '../../../base/common/uuid.js';
-import { validatedIpcMain } from '../../../base/parts/ipc/electron-main/ipcMain.js';
-import { INativeEnvironmentService } from '../../environment/common/environment.js';
-import { ILogService } from '../../log/common/log.js';
-import { IIPCObjectUrl, IProtocolMainService } from './protocol.js';
-import { IUserDataProfilesService } from '../../userDataProfile/common/userDataProfile.js';
+import { session } from "electron";
+import { Disposable, IDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { COI, FileAccess, Schemas, CacheControlheaders, DocumentPolicyheaders } from "../../../base/common/network.js";
+import { basename, extname, normalize } from "../../../base/common/path.js";
+import { isLinux } from "../../../base/common/platform.js";
+import { TernarySearchTree } from "../../../base/common/ternarySearchTree.js";
+import { URI } from "../../../base/common/uri.js";
+import { generateUuid } from "../../../base/common/uuid.js";
+import { validatedIpcMain } from "../../../base/parts/ipc/electron-main/ipcMain.js";
+import { INativeEnvironmentService } from "../../environment/common/environment.js";
+import { ILogService } from "../../log/common/log.js";
+import { IIPCObjectUrl, IProtocolMainService } from "./protocol.js";
+import { IUserDataProfilesService } from "../../userDataProfile/common/userDataProfile.js";
 
 type ProtocolCallback = { (result: string | Electron.FilePathWithHeaders | { error: number }): void };
 
@@ -24,12 +24,23 @@ export class ProtocolMainService extends Disposable implements IProtocolMainServ
 	declare readonly _serviceBrand: undefined;
 
 	private readonly validRoots = TernarySearchTree.forPaths<boolean>(!isLinux);
-	private readonly validExtensions = new Set(['.svg', '.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.mp4', '.otf', '.ttf']); // https://github.com/microsoft/vscode/issues/119384
+	private readonly validExtensions = new Set([
+    ".svg",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".bmp",
+    ".webp",
+    ".mp4",
+    ".otf",
+    ".ttf",
+  ]); // https://github.com/microsoft/vscode/issues/119384
 
 	constructor(
 		@INativeEnvironmentService private readonly environmentService: INativeEnvironmentService,
 		@IUserDataProfilesService userDataProfilesService: IUserDataProfilesService,
-		@ILogService private readonly logService: ILogService
+		@ILogService private readonly logService: ILogService,
 	) {
 		super();
 
@@ -39,8 +50,12 @@ export class ProtocolMainService extends Disposable implements IProtocolMainServ
 		// - storage    : all files in global and workspace storage (https://github.com/microsoft/vscode/issues/116735)
 		this.addValidFileRoot(environmentService.appRoot);
 		this.addValidFileRoot(environmentService.extensionsPath);
-		this.addValidFileRoot(userDataProfilesService.defaultProfile.globalStorageHome.with({ scheme: Schemas.file }).fsPath);
-		this.addValidFileRoot(environmentService.workspaceStorageHome.with({ scheme: Schemas.file }).fsPath);
+		this.addValidFileRoot(
+      userDataProfilesService.defaultProfile.globalStorageHome.with({ scheme: Schemas.file }).fsPath,
+    );
+		this.addValidFileRoot(
+      environmentService.workspaceStorageHome.with({ scheme: Schemas.file }).fsPath,
+    );
 
 		// Handle protocols
 		this.handleProtocols();
@@ -50,16 +65,24 @@ export class ProtocolMainService extends Disposable implements IProtocolMainServ
 		const { defaultSession } = session;
 
 		// Register vscode-file:// handler
-		defaultSession.protocol.registerFileProtocol(Schemas.vscodeFileResource, (request, callback) => this.handleResourceRequest(request, callback));
+		defaultSession.protocol.registerFileProtocol(
+      Schemas.vscodeFileResource,
+      (request, callback) => this.handleResourceRequest(request, callback),
+    );
 
 		// Block any file:// access
-		defaultSession.protocol.interceptFileProtocol(Schemas.file, (request, callback) => this.handleFileRequest(request, callback));
+		defaultSession.protocol.interceptFileProtocol(
+      Schemas.file,
+      (request, callback) => this.handleFileRequest(request, callback),
+    );
 
 		// Cleanup
-		this._register(toDisposable(() => {
-			defaultSession.protocol.unregisterProtocol(Schemas.vscodeFileResource);
-			defaultSession.protocol.uninterceptProtocol(Schemas.file);
-		}));
+		this._register(
+      toDisposable(() => {
+        defaultSession.protocol.unregisterProtocol(Schemas.vscodeFileResource);
+        defaultSession.protocol.uninterceptProtocol(Schemas.file);
+      }),
+    );
 	}
 
 	addValidFileRoot(root: string): IDisposable {
@@ -82,7 +105,9 @@ export class ProtocolMainService extends Disposable implements IProtocolMainServ
 	private handleFileRequest(request: Electron.ProtocolRequest, callback: ProtocolCallback) {
 		const uri = URI.parse(request.url);
 
-		this.logService.error(`Refused to load resource ${uri.fsPath} from ${Schemas.file}: protocol (original URL: ${request.url})`);
+		this.logService.error(
+      `Refused to load resource ${uri.fsPath} from ${Schemas.file}: protocol (original URL: ${request.url})`,
+    );
 
 		return callback({ error: -3 /* ABORTED */ });
 	}
@@ -97,7 +122,7 @@ export class ProtocolMainService extends Disposable implements IProtocolMainServ
 
 		let headers: Record<string, string> | undefined;
 		if (this.environmentService.crossOriginIsolated) {
-			if (pathBasename === 'workbench.html' || pathBasename === 'workbench-dev.html') {
+			if (pathBasename === "workbench.html" || pathBasename === "workbench-dev.html") {
 				headers = COI.CoopAndCoep;
 			} else {
 				headers = COI.getHeadersFromQuery(request.url);
@@ -108,19 +133,19 @@ export class ProtocolMainService extends Disposable implements IProtocolMainServ
 		// Refs https://github.com/microsoft/vscode/issues/148541#issuecomment-2670891511
 		if (!this.environmentService.isBuilt) {
 			headers = {
-				...headers,
-				...CacheControlheaders
-			};
+        ...headers,
+        ...CacheControlheaders,
+      };
 		}
 
 		// Document-policy header is needed for collecting
 		// JavaScript callstacks via https://www.electronjs.org/docs/latest/api/web-frame-main#framecollectjavascriptcallstack-experimental
 		// until https://github.com/electron/electron/issues/45356 is resolved.
-		if (pathBasename === 'workbench.html' || pathBasename === 'workbench-dev.html') {
+		if (pathBasename === "workbench.html" || pathBasename === "workbench-dev.html") {
 			headers = {
-				...headers,
-				...DocumentPolicyheaders
-			};
+        ...headers,
+        ...DocumentPolicyheaders,
+      };
 		}
 
 		// first check by validRoots
@@ -134,7 +159,9 @@ export class ProtocolMainService extends Disposable implements IProtocolMainServ
 		}
 
 		// finally block to load the resource
-		this.logService.error(`${Schemas.vscodeFileResource}: Refused to load resource ${path} from ${Schemas.vscodeFileResource}: protocol (original URL: ${request.url})`);
+		this.logService.error(
+      `${Schemas.vscodeFileResource}: Refused to load resource ${path} from ${Schemas.vscodeFileResource}: protocol (original URL: ${request.url})`,
+    );
 
 		return callback({ error: -3 /* ABORTED */ });
 	}
@@ -163,9 +190,9 @@ export class ProtocolMainService extends Disposable implements IProtocolMainServ
 
 		// Create unique URI
 		const resource = URI.from({
-			scheme: 'vscode', // used for all our IPC communication (vscode:<channel>)
-			path: generateUuid()
-		});
+      scheme: "vscode",
+      path: generateUuid(),
+    });
 
 		// Install IPC handler
 		const channel = resource.toString();
@@ -181,7 +208,7 @@ export class ProtocolMainService extends Disposable implements IProtocolMainServ
 				this.logService.trace(`IPC Object URL: Removed channel ${channel}.`);
 
 				validatedIpcMain.removeHandler(channel);
-			}
+			},
 		};
 	}
 

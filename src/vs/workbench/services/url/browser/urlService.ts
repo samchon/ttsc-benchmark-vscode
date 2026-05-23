@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IURLService } from '../../../../platform/url/common/url.js';
-import { URI, UriComponents } from '../../../../base/common/uri.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { AbstractURLService } from '../../../../platform/url/common/urlService.js';
-import { Event } from '../../../../base/common/event.js';
-import { IBrowserWorkbenchEnvironmentService } from '../../environment/browser/environmentService.js';
-import { IOpenerService, IOpener, OpenExternalOptions, OpenInternalOptions } from '../../../../platform/opener/common/opener.js';
-import { matchesScheme } from '../../../../base/common/network.js';
-import { IProductService } from '../../../../platform/product/common/productService.js';
+import { IURLService } from "../../../../platform/url/common/url.js";
+import { URI, UriComponents } from "../../../../base/common/uri.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { AbstractURLService } from "../../../../platform/url/common/urlService.js";
+import { Event } from "../../../../base/common/event.js";
+import { IBrowserWorkbenchEnvironmentService } from "../../environment/browser/environmentService.js";
+import { IOpenerService, IOpener, OpenExternalOptions, OpenInternalOptions } from "../../../../platform/opener/common/opener.js";
+import { matchesScheme } from "../../../../base/common/network.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
 
 export interface IURLCallbackProvider {
 
@@ -43,7 +43,7 @@ class BrowserURLOpener implements IOpener {
 
 	constructor(
 		private urlService: IURLService,
-		private productService: IProductService
+		private productService: IProductService,
 	) { }
 
 	async open(resource: string | URI, options?: OpenInternalOptions | OpenExternalOptions): Promise<boolean> {
@@ -55,7 +55,7 @@ class BrowserURLOpener implements IOpener {
 			return false;
 		}
 
-		if (typeof resource === 'string') {
+		if (typeof resource === "string") {
 			resource = URI.parse(resource);
 		}
 
@@ -70,17 +70,21 @@ export class BrowserURLService extends AbstractURLService {
 	constructor(
 		@IBrowserWorkbenchEnvironmentService environmentService: IBrowserWorkbenchEnvironmentService,
 		@IOpenerService openerService: IOpenerService,
-		@IProductService productService: IProductService
+		@IProductService productService: IProductService,
 	) {
 		super();
 
 		this.provider = environmentService.options?.urlCallbackProvider;
 
 		if (this.provider) {
-			this._register(this.provider.onCallback(uri => this.open(uri, { trusted: true })));
+			this._register(
+        this.provider.onCallback(uri => this.open(uri, { trusted: true })),
+      );
 		}
 
-		this._register(openerService.registerOpener(new BrowserURLOpener(this, productService)));
+		this._register(
+      openerService.registerOpener(new BrowserURLOpener(this, productService)),
+    );
 	}
 
 	create(options?: Partial<UriComponents>): URI {
@@ -88,7 +92,7 @@ export class BrowserURLService extends AbstractURLService {
 			return this.provider.create(options);
 		}
 
-		return URI.parse('unsupported://');
+		return URI.parse("unsupported://");
 	}
 }
 

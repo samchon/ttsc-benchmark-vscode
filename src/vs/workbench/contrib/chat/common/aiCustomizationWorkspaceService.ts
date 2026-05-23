@@ -3,29 +3,37 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { IObservable } from '../../../../base/common/observable.js';
-import { URI } from '../../../../base/common/uri.js';
-import { isEqualOrParent } from '../../../../base/common/resources.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { PromptsType } from './promptSyntax/promptTypes.js';
-import { IChatPromptSlashCommand, PromptsStorage } from './promptSyntax/service/promptsService.js';
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { IObservable } from "../../../../base/common/observable.js";
+import { URI } from "../../../../base/common/uri.js";
+import { isEqualOrParent } from "../../../../base/common/resources.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { PromptsType } from "./promptSyntax/promptTypes.js";
+import { IChatPromptSlashCommand, PromptsStorage } from "./promptSyntax/service/promptsService.js";
 
-export const IAICustomizationWorkspaceService = createDecorator<IAICustomizationWorkspaceService>('aiCustomizationWorkspaceService');
+export const IAICustomizationWorkspaceService = createDecorator<IAICustomizationWorkspaceService>(
+  "aiCustomizationWorkspaceService",
+);
 
 /**
  * Extended storage type for AI Customization that includes built-in prompts
  * shipped with the application, alongside the core `PromptsStorage` values.
  */
-export type AICustomizationSource = 'local' | 'user' | 'extension' | 'plugin' | 'builtin';
+export type AICustomizationSource = "local" | "user" | "extension" | "plugin" | "builtin";
 
 export namespace AICustomizationSources {
-	export const local: AICustomizationSource = 'local';
-	export const user: AICustomizationSource = 'user';
-	export const extension: AICustomizationSource = 'extension';
-	export const plugin: AICustomizationSource = 'plugin';
-	export const builtin: AICustomizationSource = 'builtin';
-	export const all: AICustomizationSource[] = [local, user, extension, plugin, builtin];
+	export const local: AICustomizationSource = "local";
+	export const user: AICustomizationSource = "user";
+	export const extension: AICustomizationSource = "extension";
+	export const plugin: AICustomizationSource = "plugin";
+	export const builtin: AICustomizationSource = "builtin";
+	export const all: AICustomizationSource[] = [
+    local,
+    user,
+    extension,
+    plugin,
+    builtin,
+  ];
 }
 
 /**
@@ -37,14 +45,14 @@ export const BUILTIN_STORAGE = AICustomizationSources.builtin;
  * Possible section IDs for the AI Customization Management Editor sidebar.
  */
 export const AICustomizationManagementSection = {
-	Agents: 'agents',
-	Skills: 'skills',
-	Instructions: 'instructions',
-	Prompts: 'prompts',
-	Hooks: 'hooks',
-	McpServers: 'mcpServers',
-	Plugins: 'plugins',
-	Models: 'models',
+  Agents: "agents",
+  Skills: "skills",
+  Instructions: "instructions",
+  Prompts: "prompts",
+  Hooks: "hooks",
+  McpServers: "mcpServers",
+  Plugins: "plugins",
+  Models: "models",
 } as const;
 
 export type AICustomizationManagementSection = typeof AICustomizationManagementSection[keyof typeof AICustomizationManagementSection];

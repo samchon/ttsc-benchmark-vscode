@@ -3,29 +3,36 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IAction, Separator } from '../../../../base/common/actions.js';
-import { IMenuService, SubmenuItemAction, MenuItemAction } from '../../../../platform/actions/common/actions.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { IWorkspacesService } from '../../../../platform/workspaces/common/workspaces.js';
-import { isMacintosh } from '../../../../base/common/platform.js';
-import { INotificationService } from '../../../../platform/notification/common/notification.js';
-import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
-import { INativeWorkbenchEnvironmentService } from '../../../services/environment/electron-browser/environmentService.js';
-import { IAccessibilityService } from '../../../../platform/accessibility/common/accessibility.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { ILabelService } from '../../../../platform/label/common/label.js';
-import { IUpdateService } from '../../../../platform/update/common/update.js';
-import { IOpenRecentAction, MenubarControl } from '../../../browser/parts/titlebar/menubarControl.js';
-import { IStorageService } from '../../../../platform/storage/common/storage.js';
-import { IMenubarData, IMenubarMenu, IMenubarKeybinding, IMenubarMenuItemSubmenu, IMenubarMenuItemAction, MenubarMenuItem } from '../../../../platform/menubar/common/menubar.js';
-import { IMenubarService } from '../../../../platform/menubar/electron-browser/menubar.js';
-import { INativeHostService } from '../../../../platform/native/common/native.js';
-import { IHostService } from '../../../services/host/browser/host.js';
-import { IPreferencesService } from '../../../services/preferences/common/preferences.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { OpenRecentAction } from '../../../browser/actions/windowActions.js';
-import { isICommandActionToggleInfo } from '../../../../platform/action/common/action.js';
-import { getFlatContextMenuActions } from '../../../../platform/actions/browser/menuEntryActionViewItem.js';
+import { IAction, Separator } from "../../../../base/common/actions.js";
+import { IMenuService, SubmenuItemAction, MenuItemAction } from "../../../../platform/actions/common/actions.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IWorkspacesService } from "../../../../platform/workspaces/common/workspaces.js";
+import { isMacintosh } from "../../../../base/common/platform.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { INativeWorkbenchEnvironmentService } from "../../../services/environment/electron-browser/environmentService.js";
+import { IAccessibilityService } from "../../../../platform/accessibility/common/accessibility.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { IUpdateService } from "../../../../platform/update/common/update.js";
+import { IOpenRecentAction, MenubarControl } from "../../../browser/parts/titlebar/menubarControl.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import {
+  IMenubarData,
+  IMenubarMenu,
+  IMenubarKeybinding,
+  IMenubarMenuItemSubmenu,
+  IMenubarMenuItemAction,
+  MenubarMenuItem,
+} from "../../../../platform/menubar/common/menubar.js";
+import { IMenubarService } from "../../../../platform/menubar/electron-browser/menubar.js";
+import { INativeHostService } from "../../../../platform/native/common/native.js";
+import { IHostService } from "../../../services/host/browser/host.js";
+import { IPreferencesService } from "../../../services/preferences/common/preferences.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { OpenRecentAction } from "../../../browser/actions/windowActions.js";
+import { isICommandActionToggleInfo } from "../../../../platform/action/common/action.js";
+import { getFlatContextMenuActions } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
 
 export class NativeMenubarControl extends MenubarControl {
 
@@ -47,7 +54,22 @@ export class NativeMenubarControl extends MenubarControl {
 		@INativeHostService private readonly nativeHostService: INativeHostService,
 		@ICommandService commandService: ICommandService,
 	) {
-		super(menuService, workspacesService, contextKeyService, keybindingService, configurationService, labelService, updateService, storageService, notificationService, preferencesService, environmentService, accessibilityService, hostService, commandService);
+		super(
+      menuService,
+      workspacesService,
+      contextKeyService,
+      keybindingService,
+      configurationService,
+      labelService,
+      updateService,
+      storageService,
+      notificationService,
+      preferencesService,
+      environmentService,
+      accessibilityService,
+      hostService,
+      commandService,
+    );
 
 		(async () => {
 			this.recentlyOpened = await this.workspacesService.getRecentlyOpened();
@@ -64,7 +86,9 @@ export class NativeMenubarControl extends MenubarControl {
 		for (const topLevelMenuName of Object.keys(this.topLevelTitles)) {
 			const menu = this.menus[topLevelMenuName];
 			if (menu) {
-				this.mainMenuDisposables.add(menu.onDidChange(() => this.updateMenubar()));
+				this.mainMenuDisposables.add(
+          menu.onDidChange(() => this.updateMenubar()),
+        );
 			}
 		}
 	}
@@ -79,7 +103,10 @@ export class NativeMenubarControl extends MenubarControl {
 		// Send menus to main process to be rendered by Electron
 		const menubarData = { menus: {}, keybindings: {} };
 		if (this.getMenubarMenus(menubarData)) {
-			this.menubarService.updateMenubar(this.nativeHostService.windowId, menubarData);
+			this.menubarService.updateMenubar(
+        this.nativeHostService.windowId,
+        menubarData,
+      );
 		}
 	}
 
@@ -93,8 +120,14 @@ export class NativeMenubarControl extends MenubarControl {
 			const menu = this.menus[topLevelMenuName];
 			if (menu) {
 				const menubarMenu: IMenubarMenu = { items: [] };
-				const menuActions = getFlatContextMenuActions(menu.getActions({ shouldForwardArgs: true }));
-				this.populateMenuItems(menuActions, menubarMenu, menubarData.keybindings);
+				const menuActions = getFlatContextMenuActions(
+          menu.getActions({ shouldForwardArgs: true }),
+        );
+				this.populateMenuItems(
+          menuActions,
+          menubarMenu,
+          menubarData.keybindings,
+        );
 				if (menubarMenu.items.length === 0) {
 					return false; // Menus are incomplete
 				}
@@ -108,11 +141,11 @@ export class NativeMenubarControl extends MenubarControl {
 	private populateMenuItems(menuActions: readonly IAction[], menuToPopulate: IMenubarMenu, keybindings: { [id: string]: IMenubarKeybinding | undefined }) {
 		for (const menuItem of menuActions) {
 			if (menuItem instanceof Separator) {
-				menuToPopulate.items.push({ id: 'vscode.menubar.separator' });
+				menuToPopulate.items.push({ id: "vscode.menubar.separator" });
 			} else if (menuItem instanceof MenuItemAction || menuItem instanceof SubmenuItemAction) {
 
 				// use mnemonicTitle whenever possible
-				const title = typeof menuItem.item.title === 'string'
+				const title = typeof menuItem.item.title === "string"
 					? menuItem.item.title
 					: menuItem.item.title.mnemonicTitle ?? menuItem.item.title.value;
 
@@ -123,23 +156,25 @@ export class NativeMenubarControl extends MenubarControl {
 
 					if (submenu.items.length > 0) {
 						const menubarSubmenuItem: IMenubarMenuItemSubmenu = {
-							id: menuItem.id,
-							label: title,
-							submenu
-						};
+              id: menuItem.id,
+              label: title,
+              submenu,
+            };
 
 						menuToPopulate.items.push(menubarSubmenuItem);
 					}
 				} else {
 					if (menuItem.id === OpenRecentAction.ID) {
-						const actions = this.getOpenRecentActions().map(this.transformOpenRecentAction);
+						const actions = this.getOpenRecentActions().map(
+              this.transformOpenRecentAction,
+            );
 						menuToPopulate.items.push(...actions);
 					}
 
 					const menubarMenuItem: IMenubarMenuItemAction = {
-						id: menuItem.id,
-						label: title
-					};
+            id: menuItem.id,
+            label: title,
+          };
 
 					if (isICommandActionToggleInfo(menuItem.item.toggled)) {
 						menubarMenuItem.label = menuItem.item.toggled.mnemonicTitle ?? menuItem.item.toggled.title ?? title;
@@ -162,24 +197,24 @@ export class NativeMenubarControl extends MenubarControl {
 
 	private transformOpenRecentAction(action: Separator | IOpenRecentAction): MenubarMenuItem {
 		if (action instanceof Separator) {
-			return { id: 'vscode.menubar.separator' };
+			return { id: "vscode.menubar.separator" };
 		}
 
 		return {
-			id: action.id,
-			uri: action.uri,
-			remoteAuthority: action.remoteAuthority,
-			enabled: action.enabled,
-			label: action.label
-		};
+      id: action.id,
+      uri: action.uri,
+      remoteAuthority: action.remoteAuthority,
+      enabled: action.enabled,
+      label: action.label,
+    };
 	}
 
 	private getAdditionalKeybindings(): { [id: string]: IMenubarKeybinding } {
 		const keybindings: { [id: string]: IMenubarKeybinding } = {};
 		if (isMacintosh) {
-			const keybinding = this.getMenubarKeybinding('workbench.action.quit');
+			const keybinding = this.getMenubarKeybinding("workbench.action.quit");
 			if (keybinding) {
-				keybindings['workbench.action.quit'] = keybinding;
+				keybindings["workbench.action.quit"] = keybinding;
 			}
 		}
 
@@ -195,13 +230,20 @@ export class NativeMenubarControl extends MenubarControl {
 		// first try to resolve a native accelerator
 		const electronAccelerator = binding.getElectronAccelerator();
 		if (electronAccelerator) {
-			return { label: electronAccelerator, userSettingsLabel: binding.getUserSettingsLabel() ?? undefined };
+			return {
+        label: electronAccelerator,
+        userSettingsLabel: binding.getUserSettingsLabel() ?? undefined,
+      };
 		}
 
 		// we need this fallback to support keybindings that cannot show in electron menus (e.g. chords)
 		const acceleratorLabel = binding.getLabel();
 		if (acceleratorLabel) {
-			return { label: acceleratorLabel, isNative: false, userSettingsLabel: binding.getUserSettingsLabel() ?? undefined };
+			return {
+        label: acceleratorLabel,
+        isNative: false,
+        userSettingsLabel: binding.getUserSettingsLabel() ?? undefined,
+      };
 		}
 
 		return undefined;

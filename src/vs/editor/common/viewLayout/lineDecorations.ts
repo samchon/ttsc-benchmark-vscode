@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as strings from '../../../base/common/strings.js';
-import { Constants } from '../../../base/common/uint.js';
-import { InlineDecoration, InlineDecorationType } from '../viewModel/inlineDecorations.js';
-import { LinePartMetadata } from './linePart.js';
+import * as strings from "../../../base/common/strings.js";
+import { Constants } from "../../../base/common/uint.js";
+import { InlineDecoration, InlineDecorationType } from "../viewModel/inlineDecorations.js";
+import { LinePartMetadata } from "./linePart.js";
 
 export class LineDecoration {
 	_lineDecorationBrand: void = undefined;
@@ -15,7 +15,7 @@ export class LineDecoration {
 		public readonly startColumn: number,
 		public readonly endColumn: number,
 		public readonly className: string,
-		public readonly type: InlineDecorationType
+		public readonly type: InlineDecorationType,
 	) {
 	}
 
@@ -55,7 +55,12 @@ export class LineDecoration {
 			if (dec.endColumn <= startColumn || dec.startColumn >= endColumn) {
 				continue;
 			}
-			r[rLength++] = new LineDecoration(Math.max(1, dec.startColumn - startColumn + 1), Math.min(lineLength + 1, dec.endColumn - startColumn + 1), dec.className, dec.type);
+			r[rLength++] = new LineDecoration(
+        Math.max(1, dec.startColumn - startColumn + 1),
+        Math.min(lineLength + 1, dec.endColumn - startColumn + 1),
+        dec.className,
+        dec.type,
+      );
 		}
 		return r;
 	}
@@ -85,7 +90,12 @@ export class LineDecoration {
 			const startColumn = (range.startLineNumber === lineNumber ? range.startColumn : minLineColumn);
 			const endColumn = (range.endLineNumber === lineNumber ? range.endColumn : maxLineColumn);
 
-			result[resultLen++] = new LineDecoration(startColumn, endColumn, d.inlineClassName, d.type);
+			result[resultLen++] = new LineDecoration(
+        startColumn,
+        endColumn,
+        d.inlineClassName,
+        d.type,
+      );
 		}
 
 		return result;
@@ -164,7 +174,14 @@ class Stack {
 			}
 
 			// Basically we are consuming the first i + 1 elements of the stack
-			result.push(new DecorationSegment(nextStartOffset, this.stopOffsets[i], this.classNames.join(' '), Stack._metadata(this.metadata)));
+			result.push(
+        new DecorationSegment(
+          nextStartOffset,
+          this.stopOffsets[i],
+          this.classNames.join(" "),
+          Stack._metadata(this.metadata),
+        ),
+      );
 			nextStartOffset = this.stopOffsets[i] + 1;
 
 			// Consume them
@@ -175,7 +192,14 @@ class Stack {
 		}
 
 		if (this.count > 0 && nextStartOffset < maxStopOffset) {
-			result.push(new DecorationSegment(nextStartOffset, maxStopOffset - 1, this.classNames.join(' '), Stack._metadata(this.metadata)));
+			result.push(
+        new DecorationSegment(
+          nextStartOffset,
+          maxStopOffset - 1,
+          this.classNames.join(" "),
+          Stack._metadata(this.metadata),
+        ),
+      );
 			nextStartOffset = maxStopOffset;
 		}
 
@@ -249,7 +273,11 @@ export class LineDecorationsNormalizer {
 			const currentStartOffset = startColumn - 1;
 			const currentEndOffset = endColumn - 2;
 
-			nextStartOffset = stack.consumeLowerThan(currentStartOffset, nextStartOffset, result);
+			nextStartOffset = stack.consumeLowerThan(
+        currentStartOffset,
+        nextStartOffset,
+        result,
+      );
 
 			if (stack.count === 0) {
 				nextStartOffset = currentStartOffset;
@@ -257,7 +285,11 @@ export class LineDecorationsNormalizer {
 			stack.insert(currentEndOffset, className, metadata);
 		}
 
-		stack.consumeLowerThan(Constants.MAX_SAFE_SMALL_INTEGER, nextStartOffset, result);
+		stack.consumeLowerThan(
+      Constants.MAX_SAFE_SMALL_INTEGER,
+      nextStartOffset,
+      result,
+    );
 
 		return result;
 	}

@@ -3,34 +3,44 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IAsyncDataSource, ITreeRenderer, ITreeNode, ITreeSorter } from '../../../../../base/browser/ui/tree/tree.js';
-import { ITextModelService } from '../../../../../editor/common/services/resolverService.js';
-import { FuzzyScore, createMatches } from '../../../../../base/common/filters.js';
-import { IResourceLabel, ResourceLabels } from '../../../../browser/labels.js';
-import { HighlightedLabel, IHighlight } from '../../../../../base/browser/ui/highlightedlabel/highlightedLabel.js';
-import { IIdentityProvider, IListVirtualDelegate, IKeyboardNavigationLabelProvider } from '../../../../../base/browser/ui/list/list.js';
-import { Range } from '../../../../../editor/common/core/range.js';
-import * as dom from '../../../../../base/browser/dom.js';
-import { ITextModel } from '../../../../../editor/common/model.js';
-import { IDisposable, DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { TextModel } from '../../../../../editor/common/model/textModel.js';
-import { BulkFileOperations, BulkFileOperation, BulkFileOperationType, BulkTextEdit, BulkCategory } from './bulkEditPreview.js';
-import { FileKind } from '../../../../../platform/files/common/files.js';
-import { localize } from '../../../../../nls.js';
-import { ILabelService } from '../../../../../platform/label/common/label.js';
-import type { IListAccessibilityProvider } from '../../../../../base/browser/ui/list/listWidget.js';
-import { IconLabel } from '../../../../../base/browser/ui/iconLabel/iconLabel.js';
-import { basename } from '../../../../../base/common/resources.js';
-import { IThemeService } from '../../../../../platform/theme/common/themeService.js';
-import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { compare } from '../../../../../base/common/strings.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { ResourceFileEdit } from '../../../../../editor/browser/services/bulkEditService.js';
-import { PLAINTEXT_LANGUAGE_ID } from '../../../../../editor/common/languages/modesRegistry.js';
-import { SnippetParser } from '../../../../../editor/contrib/snippet/browser/snippetParser.js';
-import { AriaRole } from '../../../../../base/browser/ui/aria/aria.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import * as css from '../../../../../base/browser/cssValue.js';
+import { IAsyncDataSource, ITreeRenderer, ITreeNode, ITreeSorter } from "../../../../../base/browser/ui/tree/tree.js";
+import { ITextModelService } from "../../../../../editor/common/services/resolverService.js";
+import { FuzzyScore, createMatches } from "../../../../../base/common/filters.js";
+import { IResourceLabel, ResourceLabels } from "../../../../browser/labels.js";
+import { HighlightedLabel, IHighlight } from "../../../../../base/browser/ui/highlightedlabel/highlightedLabel.js";
+import {
+  IIdentityProvider,
+  IListVirtualDelegate,
+  IKeyboardNavigationLabelProvider,
+} from "../../../../../base/browser/ui/list/list.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import * as dom from "../../../../../base/browser/dom.js";
+import { ITextModel } from "../../../../../editor/common/model.js";
+import { IDisposable, DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { TextModel } from "../../../../../editor/common/model/textModel.js";
+import {
+  BulkFileOperations,
+  BulkFileOperation,
+  BulkFileOperationType,
+  BulkTextEdit,
+  BulkCategory,
+} from "./bulkEditPreview.js";
+import { FileKind } from "../../../../../platform/files/common/files.js";
+import { localize } from "../../../../../nls.js";
+import { ILabelService } from "../../../../../platform/label/common/label.js";
+import type { IListAccessibilityProvider } from "../../../../../base/browser/ui/list/listWidget.js";
+import { IconLabel } from "../../../../../base/browser/ui/iconLabel/iconLabel.js";
+import { basename } from "../../../../../base/common/resources.js";
+import { IThemeService } from "../../../../../platform/theme/common/themeService.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { compare } from "../../../../../base/common/strings.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ResourceFileEdit } from "../../../../../editor/browser/services/bulkEditService.js";
+import { PLAINTEXT_LANGUAGE_ID } from "../../../../../editor/common/languages/modesRegistry.js";
+import { SnippetParser } from "../../../../../editor/contrib/snippet/browser/snippetParser.js";
+import { AriaRole } from "../../../../../base/browser/ui/aria/aria.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import * as css from "../../../../../base/browser/cssValue.js";
 
 // --- VIEW MODEL
 
@@ -43,7 +53,7 @@ export class CategoryElement implements ICheckable {
 
 	constructor(
 		readonly parent: BulkFileOperations,
-		readonly category: BulkCategory
+		readonly category: BulkCategory,
 	) { }
 
 	isChecked(): boolean {
@@ -71,7 +81,7 @@ export class FileElement implements ICheckable {
 
 	constructor(
 		readonly parent: CategoryElement | BulkFileOperations,
-		readonly edit: BulkFileOperation
+		readonly edit: BulkFileOperation,
 	) { }
 
 	isChecked(): boolean {
@@ -81,7 +91,9 @@ export class FileElement implements ICheckable {
 
 		// only text edit children -> reflect children state
 		if (this.edit.type === BulkFileOperationType.TextEdit) {
-			checked = !this.edit.textEdits.every(edit => !model.checked.isChecked(edit.textEdit));
+			checked = !this.edit.textEdits.every(
+        edit => !model.checked.isChecked(edit.textEdit),
+      );
 		}
 
 		// multiple file edits -> reflect single state
@@ -156,7 +168,7 @@ export class TextEditElement implements ICheckable {
 		readonly parent: FileElement,
 		readonly idx: number,
 		readonly edit: BulkTextEdit,
-		readonly prefix: string, readonly selecting: string, readonly inserting: string, readonly suffix: string
+		readonly prefix: string, readonly selecting: string, readonly inserting: string, readonly suffix: string,
 	) { }
 
 	isChecked(): boolean {
@@ -225,7 +237,10 @@ export class BulkEditDataSource implements IAsyncDataSource<BulkFileOperations, 
 
 		// category
 		if (element instanceof CategoryElement) {
-			return Array.from(element.category.fileOperations, op => new FileElement(element, op));
+			return Array.from(
+        element.category.fileOperations,
+        op => new FileElement(element, op),
+      );
 		}
 
 		// file: text edit
@@ -234,11 +249,19 @@ export class BulkEditDataSource implements IAsyncDataSource<BulkFileOperations, 
 			let textModel: ITextModel;
 			let textModelDisposable: IDisposable;
 			try {
-				const ref = await this._textModelService.createModelReference(element.edit.uri);
+				const ref = await this._textModelService.createModelReference(
+          element.edit.uri,
+        );
 				textModel = ref.object.textEditorModel;
 				textModelDisposable = ref;
 			} catch {
-				textModel = this._instantiationService.createInstance(TextModel, '', PLAINTEXT_LANGUAGE_ID, TextModel.DEFAULT_CREATION_OPTIONS, null);
+				textModel = this._instantiationService.createInstance(
+          TextModel,
+          "",
+          PLAINTEXT_LANGUAGE_ID,
+          TextModel.DEFAULT_CREATION_OPTIONS,
+          null,
+        );
 				textModelDisposable = textModel;
 			}
 
@@ -266,7 +289,7 @@ export class BulkEditDataSource implements IAsyncDataSource<BulkFileOperations, 
 					textModel.getValueInRange(new Range(range.startLineNumber, range.startColumn - prefixLen, range.startLineNumber, range.startColumn)),
 					textModel.getValueInRange(range),
 					!edit.textEdit.textEdit.insertAsSnippet ? edit.textEdit.textEdit.text : SnippetParser.asInsertText(edit.textEdit.textEdit.text),
-					textModel.getValueInRange(new Range(range.endLineNumber, range.endColumn, range.endLineNumber, range.endColumn + suffixLen))
+					textModel.getValueInRange(new Range(range.endLineNumber, range.endColumn, range.endLineNumber, range.endColumn + suffixLen)),
 				);
 			});
 
@@ -287,7 +310,10 @@ export class BulkEditSorter implements ITreeSorter<BulkEditElement> {
 		}
 
 		if (a instanceof TextEditElement && b instanceof TextEditElement) {
-			return Range.compareRangesUsingStarts(a.edit.textEdit.textEdit.range, b.edit.textEdit.textEdit.range);
+			return Range.compareRangesUsingStarts(
+        a.edit.textEdit.textEdit.range,
+        b.edit.textEdit.textEdit.range,
+      );
 		}
 
 		return 0;
@@ -305,11 +331,11 @@ export class BulkEditAccessibilityProvider implements IListAccessibilityProvider
 	constructor(@ILabelService private readonly _labelService: ILabelService) { }
 
 	getWidgetAriaLabel(): string {
-		return localize('bulkEdit', "Bulk Edit");
+		return localize("bulkEdit", "Bulk Edit");
 	}
 
 	getRole(_element: BulkEditElement): AriaRole {
-		return 'checkbox';
+		return "checkbox";
 	}
 
 	getAriaLabel(element: BulkEditElement): string | null {
@@ -317,46 +343,59 @@ export class BulkEditAccessibilityProvider implements IListAccessibilityProvider
 			if (element.edit.textEdits.length > 0) {
 				if (element.edit.type & BulkFileOperationType.Rename && element.edit.newUri) {
 					return localize(
-						'aria.renameAndEdit', "Renaming {0} to {1}, also making text edits",
-						this._labelService.getUriLabel(element.edit.uri, { relative: true }), this._labelService.getUriLabel(element.edit.newUri, { relative: true })
-					);
+            "aria.renameAndEdit",
+            "Renaming {0} to {1}, also making text edits",
+            this._labelService.getUriLabel(element.edit.uri, { relative: true }),
+            this._labelService.getUriLabel(element.edit.newUri, {
+              relative: true,
+            }),
+          );
 
 				} else if (element.edit.type & BulkFileOperationType.Create) {
 					return localize(
-						'aria.createAndEdit', "Creating {0}, also making text edits",
-						this._labelService.getUriLabel(element.edit.uri, { relative: true })
-					);
+            "aria.createAndEdit",
+            "Creating {0}, also making text edits",
+            this._labelService.getUriLabel(element.edit.uri, { relative: true }),
+          );
 
 				} else if (element.edit.type & BulkFileOperationType.Delete) {
 					return localize(
-						'aria.deleteAndEdit', "Deleting {0}, also making text edits",
-						this._labelService.getUriLabel(element.edit.uri, { relative: true }),
-					);
+            "aria.deleteAndEdit",
+            "Deleting {0}, also making text edits",
+            this._labelService.getUriLabel(element.edit.uri, { relative: true }),
+          );
 				} else {
 					return localize(
-						'aria.editOnly', "{0}, making text edits",
-						this._labelService.getUriLabel(element.edit.uri, { relative: true }),
-					);
+            "aria.editOnly",
+            "{0}, making text edits",
+            this._labelService.getUriLabel(element.edit.uri, { relative: true }),
+          );
 				}
 
 			} else {
 				if (element.edit.type & BulkFileOperationType.Rename && element.edit.newUri) {
 					return localize(
-						'aria.rename', "Renaming {0} to {1}",
-						this._labelService.getUriLabel(element.edit.uri, { relative: true }), this._labelService.getUriLabel(element.edit.newUri, { relative: true })
-					);
+            "aria.rename",
+            "Renaming {0} to {1}",
+            this._labelService.getUriLabel(element.edit.uri, { relative: true }),
+            this._labelService.getUriLabel(element.edit.newUri, {
+              relative: true,
+            }),
+          );
 
 				} else if (element.edit.type & BulkFileOperationType.Create) {
 					return localize(
-						'aria.create', "Creating {0}",
-						this._labelService.getUriLabel(element.edit.uri, { relative: true })
-					);
+            "aria.create",
+            "Creating {0}",
+            this._labelService.getUriLabel(element.edit.uri, { relative: true }),
+          );
 
 				} else if (element.edit.type & BulkFileOperationType.Delete) {
 					return localize(
-						'aria.delete', "Deleting {0}",
-						this._labelService.getUriLabel(element.edit.uri, { relative: true }),
-					);
+            "aria.delete",
+            "Deleting {0}",
+            this._labelService.getUriLabel(element.edit.uri, { relative: true }),
+          );
 				}
 			}
 		}
@@ -364,13 +403,29 @@ export class BulkEditAccessibilityProvider implements IListAccessibilityProvider
 		if (element instanceof TextEditElement) {
 			if (element.selecting.length > 0 && element.inserting.length > 0) {
 				// edit: replace
-				return localize('aria.replace', "line {0}, replacing {1} with {2}", element.edit.textEdit.textEdit.range.startLineNumber, element.selecting, element.inserting);
+				return localize(
+          "aria.replace",
+          "line {0}, replacing {1} with {2}",
+          element.edit.textEdit.textEdit.range.startLineNumber,
+          element.selecting,
+          element.inserting,
+        );
 			} else if (element.selecting.length > 0 && element.inserting.length === 0) {
 				// edit: delete
-				return localize('aria.del', "line {0}, removing {1}", element.edit.textEdit.textEdit.range.startLineNumber, element.selecting);
+				return localize(
+          "aria.del",
+          "line {0}, removing {1}",
+          element.edit.textEdit.textEdit.range.startLineNumber,
+          element.selecting,
+        );
 			} else if (element.selecting.length === 0 && element.inserting.length > 0) {
 				// edit: insert
-				return localize('aria.insert', "line {0}, inserting {1}", element.edit.textEdit.textEdit.range.startLineNumber, element.selecting);
+				return localize(
+          "aria.insert",
+          "line {0}, inserting {1}",
+          element.edit.textEdit.textEdit.range.startLineNumber,
+          element.selecting,
+        );
 			}
 		}
 
@@ -384,7 +439,9 @@ export class BulkEditIdentityProvider implements IIdentityProvider<BulkEditEleme
 
 	getId(element: BulkEditElement): { toString(): string } {
 		if (element instanceof FileElement) {
-			return element.edit.uri + (element.parent instanceof CategoryElement ? JSON.stringify(element.parent.category.metadata) : '');
+			return element.edit.uri + (element.parent instanceof CategoryElement ? JSON.stringify(
+        element.parent.category.metadata,
+      ) : "");
 		} else if (element instanceof TextEditElement) {
 			return element.parent.edit.uri.toString() + element.idx;
 		} else {
@@ -401,8 +458,8 @@ class CategoryElementTemplate {
 	readonly label: IconLabel;
 
 	constructor(container: HTMLElement) {
-		container.classList.add('category');
-		this.icon = document.createElement('div');
+		container.classList.add("category");
+		this.icon = document.createElement("div");
 		container.appendChild(this.icon);
 		this.label = new IconLabel(container);
 	}
@@ -410,7 +467,7 @@ class CategoryElementTemplate {
 
 export class CategoryElementRenderer implements ITreeRenderer<CategoryElement, FuzzyScore, CategoryElementTemplate> {
 
-	static readonly id: string = 'CategoryElementRenderer';
+	static readonly id: string = "CategoryElementRenderer";
 
 	readonly templateId: string = CategoryElementRenderer.id;
 
@@ -422,34 +479,46 @@ export class CategoryElementRenderer implements ITreeRenderer<CategoryElement, F
 
 	renderElement(node: ITreeNode<CategoryElement, FuzzyScore>, _index: number, template: CategoryElementTemplate): void {
 
-		template.icon.style.setProperty('--background-dark', null);
-		template.icon.style.setProperty('--background-light', null);
-		template.icon.style.color = '';
+		template.icon.style.setProperty("--background-dark", null);
+		template.icon.style.setProperty("--background-light", null);
+		template.icon.style.color = "";
 
 		const { metadata } = node.element.category;
 		if (ThemeIcon.isThemeIcon(metadata.iconPath)) {
 			// css
 			const className = ThemeIcon.asClassName(metadata.iconPath);
-			template.icon.className = className ? `theme-icon ${className}` : '';
-			template.icon.style.color = metadata.iconPath.color ? this._themeService.getColorTheme().getColor(metadata.iconPath.color.id)?.toString() ?? '' : '';
+			template.icon.className = className ? `theme-icon ${className}` : "";
+			template.icon.style.color = metadata.iconPath.color ? this._themeService.getColorTheme().getColor(metadata.iconPath.color.id)?.toString() ?? "" : "";
 
 
 		} else if (URI.isUri(metadata.iconPath)) {
 			// background-image
-			template.icon.className = 'uri-icon';
-			template.icon.style.setProperty('--background-dark', css.asCSSUrl(metadata.iconPath));
-			template.icon.style.setProperty('--background-light', css.asCSSUrl(metadata.iconPath));
+			template.icon.className = "uri-icon";
+			template.icon.style.setProperty(
+        "--background-dark",
+        css.asCSSUrl(metadata.iconPath),
+      );
+			template.icon.style.setProperty(
+        "--background-light",
+        css.asCSSUrl(metadata.iconPath),
+      );
 
 		} else if (metadata.iconPath) {
 			// background-image
-			template.icon.className = 'uri-icon';
-			template.icon.style.setProperty('--background-dark', css.asCSSUrl(metadata.iconPath.dark));
-			template.icon.style.setProperty('--background-light', css.asCSSUrl(metadata.iconPath.light));
+			template.icon.className = "uri-icon";
+			template.icon.style.setProperty(
+        "--background-dark",
+        css.asCSSUrl(metadata.iconPath.dark),
+      );
+			template.icon.style.setProperty(
+        "--background-light",
+        css.asCSSUrl(metadata.iconPath.light),
+      );
 		}
 
 		template.label.setLabel(metadata.label, metadata.description, {
-			descriptionMatches: createMatches(node.filterData),
-		});
+      descriptionMatches: createMatches(node.filterData),
+    });
 	}
 
 	disposeTemplate(template: CategoryElementTemplate): void {
@@ -472,16 +541,16 @@ class FileElementTemplate {
 		@ILabelService private readonly _labelService: ILabelService,
 	) {
 
-		this._checkbox = document.createElement('input');
-		this._checkbox.className = 'edit-checkbox';
-		this._checkbox.type = 'checkbox';
-		this._checkbox.setAttribute('role', 'checkbox');
+		this._checkbox = document.createElement("input");
+		this._checkbox.className = "edit-checkbox";
+		this._checkbox.type = "checkbox";
+		this._checkbox.setAttribute("role", "checkbox");
 		container.appendChild(this._checkbox);
 
 		this._label = resourceLabels.create(container, { supportHighlights: true });
 
-		this._details = document.createElement('span');
-		this._details.className = 'details';
+		this._details = document.createElement("span");
+		this._details.className = "details";
 		container.appendChild(this._details);
 	}
 
@@ -496,36 +565,38 @@ class FileElementTemplate {
 
 		this._checkbox.checked = element.isChecked();
 		this._checkbox.disabled = element.isDisabled();
-		this._localDisposables.add(dom.addDisposableListener(this._checkbox, 'change', () => {
-			element.setChecked(this._checkbox.checked);
-		}));
+		this._localDisposables.add(
+      dom.addDisposableListener(this._checkbox, "change", () => {
+        element.setChecked(this._checkbox.checked);
+      }),
+    );
 
 		if (element.edit.type & BulkFileOperationType.Rename && element.edit.newUri) {
 			// rename: oldName → newName
 			this._label.setResource({
-				resource: element.edit.uri,
-				name: localize('rename.label', "{0} → {1}", this._labelService.getUriLabel(element.edit.uri, { relative: true }), this._labelService.getUriLabel(element.edit.newUri, { relative: true })),
-			}, {
-				fileDecorations: { colors: true, badges: false }
-			});
+        resource: element.edit.uri,
+        name: localize("rename.label", "{0} → {1}", this._labelService.getUriLabel(element.edit.uri, { relative: true }), this._labelService.getUriLabel(element.edit.newUri, { relative: true })),
+      }, {
+        fileDecorations: { colors: true, badges: false },
+      });
 
-			this._details.innerText = localize('detail.rename', "(renaming)");
+			this._details.innerText = localize("detail.rename", "(renaming)");
 
 		} else {
 			// create, delete, edit: NAME
 			const options = {
-				matches: createMatches(score),
-				fileKind: FileKind.FILE,
-				fileDecorations: { colors: true, badges: false },
-				extraClasses: <string[]>[]
-			};
+        matches: createMatches(score),
+        fileKind: FileKind.FILE,
+        fileDecorations: { colors: true, badges: false },
+        extraClasses: <string[]>[],
+      };
 			if (element.edit.type & BulkFileOperationType.Create) {
-				this._details.innerText = localize('detail.create', "(creating)");
+				this._details.innerText = localize("detail.create", "(creating)");
 			} else if (element.edit.type & BulkFileOperationType.Delete) {
-				this._details.innerText = localize('detail.del', "(deleting)");
-				options.extraClasses.push('delete');
+				this._details.innerText = localize("detail.del", "(deleting)");
+				options.extraClasses.push("delete");
 			} else {
-				this._details.innerText = '';
+				this._details.innerText = "";
 			}
 			this._label.setFile(element.edit.uri, options);
 		}
@@ -534,7 +605,7 @@ class FileElementTemplate {
 
 export class FileElementRenderer implements ITreeRenderer<FileElement, FuzzyScore, FileElementTemplate> {
 
-	static readonly id: string = 'FileElementRenderer';
+	static readonly id: string = "FileElementRenderer";
 
 	readonly templateId: string = FileElementRenderer.id;
 
@@ -544,7 +615,11 @@ export class FileElementRenderer implements ITreeRenderer<FileElement, FuzzyScor
 	) { }
 
 	renderTemplate(container: HTMLElement): FileElementTemplate {
-		return new FileElementTemplate(container, this._resourceLabels, this._labelService);
+		return new FileElementTemplate(
+      container,
+      this._resourceLabels,
+      this._labelService,
+    );
 	}
 
 	renderElement(node: ITreeNode<FileElement, FuzzyScore>, _index: number, template: FileElementTemplate): void {
@@ -566,15 +641,15 @@ class TextEditElementTemplate {
 	private readonly _label: HighlightedLabel;
 
 	constructor(container: HTMLElement, @IThemeService private readonly _themeService: IThemeService) {
-		container.classList.add('textedit');
+		container.classList.add("textedit");
 
-		this._checkbox = document.createElement('input');
-		this._checkbox.className = 'edit-checkbox';
-		this._checkbox.type = 'checkbox';
-		this._checkbox.setAttribute('role', 'checkbox');
+		this._checkbox = document.createElement("input");
+		this._checkbox.className = "edit-checkbox";
+		this._checkbox.type = "checkbox";
+		this._checkbox.setAttribute("role", "checkbox");
 		container.appendChild(this._checkbox);
 
-		this._icon = document.createElement('div');
+		this._icon = document.createElement("div");
 		container.appendChild(this._icon);
 
 		this._label = this._disposables.add(new HighlightedLabel(container));
@@ -588,10 +663,12 @@ class TextEditElementTemplate {
 	set(element: TextEditElement) {
 		this._localDisposables.clear();
 
-		this._localDisposables.add(dom.addDisposableListener(this._checkbox, 'change', e => {
-			element.setChecked(this._checkbox.checked);
-			e.preventDefault();
-		}));
+		this._localDisposables.add(
+      dom.addDisposableListener(this._checkbox, "change", e => {
+        element.setChecked(this._checkbox.checked);
+        e.preventDefault();
+      }),
+    );
 		if (element.parent.isChecked()) {
 			this._checkbox.checked = element.isChecked();
 			this._checkbox.disabled = element.isDisabled();
@@ -600,61 +677,86 @@ class TextEditElementTemplate {
 			this._checkbox.disabled = element.isDisabled();
 		}
 
-		let value = '';
+		let value = "";
 		value += element.prefix;
 		value += element.selecting;
 		value += element.inserting;
 		value += element.suffix;
 
-		const selectHighlight: IHighlight = { start: element.prefix.length, end: element.prefix.length + element.selecting.length, extraClasses: ['remove'] };
-		const insertHighlight: IHighlight = { start: selectHighlight.end, end: selectHighlight.end + element.inserting.length, extraClasses: ['insert'] };
+		const selectHighlight: IHighlight = {
+      start: element.prefix.length,
+      end: element.prefix.length + element.selecting.length,
+      extraClasses: ["remove"],
+    };
+		const insertHighlight: IHighlight = {
+      start: selectHighlight.end,
+      end: selectHighlight.end + element.inserting.length,
+      extraClasses: ["insert"],
+    };
 
 		let title: string | undefined;
 		const { metadata } = element.edit.textEdit;
 		if (metadata && metadata.description) {
-			title = localize('title', "{0} - {1}", metadata.label, metadata.description);
+			title = localize(
+        "title",
+        "{0} - {1}",
+        metadata.label,
+        metadata.description,
+      );
 		} else if (metadata) {
 			title = metadata.label;
 		}
 
 		const iconPath = metadata?.iconPath;
 		if (!iconPath) {
-			this._icon.style.display = 'none';
+			this._icon.style.display = "none";
 		} else {
-			this._icon.style.display = 'block';
+			this._icon.style.display = "block";
 
-			this._icon.style.setProperty('--background-dark', null);
-			this._icon.style.setProperty('--background-light', null);
+			this._icon.style.setProperty("--background-dark", null);
+			this._icon.style.setProperty("--background-light", null);
 
 			if (ThemeIcon.isThemeIcon(iconPath)) {
 				// css
 				const className = ThemeIcon.asClassName(iconPath);
-				this._icon.className = className ? `theme-icon ${className}` : '';
-				this._icon.style.color = iconPath.color ? this._themeService.getColorTheme().getColor(iconPath.color.id)?.toString() ?? '' : '';
+				this._icon.className = className ? `theme-icon ${className}` : "";
+				this._icon.style.color = iconPath.color ? this._themeService.getColorTheme().getColor(iconPath.color.id)?.toString() ?? "" : "";
 
 
 			} else if (URI.isUri(iconPath)) {
 				// background-image
-				this._icon.className = 'uri-icon';
-				this._icon.style.setProperty('--background-dark', css.asCSSUrl(iconPath));
-				this._icon.style.setProperty('--background-light', css.asCSSUrl(iconPath));
+				this._icon.className = "uri-icon";
+				this._icon.style.setProperty(
+          "--background-dark",
+          css.asCSSUrl(iconPath),
+        );
+				this._icon.style.setProperty(
+          "--background-light",
+          css.asCSSUrl(iconPath),
+        );
 
 			} else {
 				// background-image
-				this._icon.className = 'uri-icon';
-				this._icon.style.setProperty('--background-dark', css.asCSSUrl(iconPath.dark));
-				this._icon.style.setProperty('--background-light', css.asCSSUrl(iconPath.light));
+				this._icon.className = "uri-icon";
+				this._icon.style.setProperty(
+          "--background-dark",
+          css.asCSSUrl(iconPath.dark),
+        );
+				this._icon.style.setProperty(
+          "--background-light",
+          css.asCSSUrl(iconPath.light),
+        );
 			}
 		}
 
 		this._label.set(value, [selectHighlight, insertHighlight], title, true);
-		this._icon.title = title || '';
+		this._icon.title = title || "";
 	}
 }
 
 export class TextEditElementRenderer implements ITreeRenderer<TextEditElement, FuzzyScore, TextEditElementTemplate> {
 
-	static readonly id = 'TextEditElementRenderer';
+	static readonly id = "TextEditElementRenderer";
 
 	readonly templateId: string = TextEditElementRenderer.id;
 

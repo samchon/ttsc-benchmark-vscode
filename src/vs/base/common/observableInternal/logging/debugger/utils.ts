@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable } from '../../../lifecycle.js';
+import { IDisposable } from "../../../lifecycle.js";
 
 export class Debouncer implements IDisposable {
 	private _timeout: Timeout | undefined = undefined;
@@ -12,10 +12,13 @@ export class Debouncer implements IDisposable {
 		if (this._timeout !== undefined) {
 			clearTimeout(this._timeout);
 		}
-		this._timeout = setTimeout(() => {
-			this._timeout = undefined;
-			fn();
-		}, timeoutMs);
+		this._timeout = setTimeout(
+      () => {
+        this._timeout = undefined;
+        fn();
+      },
+      timeoutMs,
+    );
 	}
 
 	dispose(): void {
@@ -30,10 +33,13 @@ export class Throttler implements IDisposable {
 
 	public throttle(fn: () => void, timeoutMs: number): void {
 		if (this._timeout === undefined) {
-			this._timeout = setTimeout(() => {
-				this._timeout = undefined;
-				fn();
-			}, timeoutMs);
+			this._timeout = setTimeout(
+        () => {
+          this._timeout = undefined;
+          fn();
+        },
+        timeoutMs,
+      );
 		}
 	}
 
@@ -46,7 +52,7 @@ export class Throttler implements IDisposable {
 
 export function deepAssign<T>(target: T, source: T): void {
 	for (const key in source) {
-		if (!!target[key] && typeof target[key] === 'object' && !!source[key] && typeof source[key] === 'object') {
+		if (!!target[key] && typeof target[key] === "object" && !!source[key] && typeof source[key] === "object") {
 			deepAssign(target[key], source[key]);
 		} else {
 			target[key] = source[key];
@@ -58,7 +64,7 @@ export function deepAssignDeleteNulls<T>(target: T, source: T): void {
 	for (const key in source) {
 		if (source[key] === null) {
 			delete target[key];
-		} else if (!!target[key] && typeof target[key] === 'object' && !!source[key] && typeof source[key] === 'object') {
+		} else if (!!target[key] && typeof target[key] === "object" && !!source[key] && typeof source[key] === "object") {
 			deepAssignDeleteNulls(target[key], source[key]);
 		} else {
 			target[key] = source[key];

@@ -3,37 +3,41 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Command } from '../../editor/common/languages.js';
-import { UriComponents, URI } from '../../base/common/uri.js';
-import { Event, Emitter } from '../../base/common/event.js';
-import { ContextKeyExpression } from '../../platform/contextkey/common/contextkey.js';
-import { localize } from '../../nls.js';
-import { createDecorator } from '../../platform/instantiation/common/instantiation.js';
-import { IDisposable, Disposable, toDisposable } from '../../base/common/lifecycle.js';
-import { ThemeIcon } from '../../base/common/themables.js';
-import { getOrSet, SetMap } from '../../base/common/map.js';
-import { Registry } from '../../platform/registry/common/platform.js';
-import { IKeybindings } from '../../platform/keybinding/common/keybindingsRegistry.js';
-import { ExtensionIdentifier } from '../../platform/extensions/common/extensions.js';
-import { SyncDescriptor } from '../../platform/instantiation/common/descriptors.js';
-import { IProgressIndicator } from '../../platform/progress/common/progress.js';
-import Severity from '../../base/common/severity.js';
-import { IAccessibilityInformation } from '../../platform/accessibility/common/accessibility.js';
-import { IMarkdownString, MarkdownString } from '../../base/common/htmlContent.js';
-import { mixin } from '../../base/common/objects.js';
-import { Codicon } from '../../base/common/codicons.js';
-import { registerIcon } from '../../platform/theme/common/iconRegistry.js';
-import { CancellationToken } from '../../base/common/cancellation.js';
-import { VSDataTransfer } from '../../base/common/dataTransfer.js';
-import { ILocalizedString } from '../../platform/action/common/action.js';
+import { Command } from "../../editor/common/languages.js";
+import { UriComponents, URI } from "../../base/common/uri.js";
+import { Event, Emitter } from "../../base/common/event.js";
+import { ContextKeyExpression } from "../../platform/contextkey/common/contextkey.js";
+import { localize } from "../../nls.js";
+import { createDecorator } from "../../platform/instantiation/common/instantiation.js";
+import { IDisposable, Disposable, toDisposable } from "../../base/common/lifecycle.js";
+import { ThemeIcon } from "../../base/common/themables.js";
+import { getOrSet, SetMap } from "../../base/common/map.js";
+import { Registry } from "../../platform/registry/common/platform.js";
+import { IKeybindings } from "../../platform/keybinding/common/keybindingsRegistry.js";
+import { ExtensionIdentifier } from "../../platform/extensions/common/extensions.js";
+import { SyncDescriptor } from "../../platform/instantiation/common/descriptors.js";
+import { IProgressIndicator } from "../../platform/progress/common/progress.js";
+import Severity from "../../base/common/severity.js";
+import { IAccessibilityInformation } from "../../platform/accessibility/common/accessibility.js";
+import { IMarkdownString, MarkdownString } from "../../base/common/htmlContent.js";
+import { mixin } from "../../base/common/objects.js";
+import { Codicon } from "../../base/common/codicons.js";
+import { registerIcon } from "../../platform/theme/common/iconRegistry.js";
+import { CancellationToken } from "../../base/common/cancellation.js";
+import { VSDataTransfer } from "../../base/common/dataTransfer.js";
+import { ILocalizedString } from "../../platform/action/common/action.js";
 
-export const VIEWS_LOG_ID = 'views';
-export const VIEWS_LOG_NAME = localize('views log', "Views");
-export const defaultViewIcon = registerIcon('default-view-icon', Codicon.window, localize('defaultViewIcon', 'Default view icon.'));
+export const VIEWS_LOG_ID = "views";
+export const VIEWS_LOG_NAME = localize("views log", "Views");
+export const defaultViewIcon = registerIcon(
+  "default-view-icon",
+  Codicon.window,
+  localize("defaultViewIcon", "Default view icon."),
+);
 
 export namespace Extensions {
-	export const ViewContainersRegistry = 'workbench.registry.view.containers';
-	export const ViewsRegistry = 'workbench.registry.view';
+	export const ViewContainersRegistry = "workbench.registry.view.containers";
+	export const ViewsRegistry = "workbench.registry.view";
 }
 
 export const enum ViewContainerLocation {
@@ -45,10 +49,10 @@ export const enum ViewContainerLocation {
 
 export function ViewContainerLocationToString(viewContainerLocation: ViewContainerLocation) {
 	switch (viewContainerLocation) {
-		case ViewContainerLocation.Sidebar: return 'sidebar';
-		case ViewContainerLocation.Panel: return 'panel';
-		case ViewContainerLocation.AuxiliaryBar: return 'auxiliarybar';
-		case ViewContainerLocation.ChatBar: return 'chatbar';
+		case ViewContainerLocation.Sidebar: return "sidebar";
+		case ViewContainerLocation.Panel: return "panel";
+		case ViewContainerLocation.AuxiliaryBar: return "auxiliarybar";
+		case ViewContainerLocation.ChatBar: return "chatbar";
 	}
 }
 
@@ -217,10 +221,14 @@ interface RelaxedViewContainer extends ViewContainer {
 
 class ViewContainersRegistryImpl extends Disposable implements IViewContainersRegistry {
 
-	private readonly _onDidRegister = this._register(new Emitter<{ viewContainer: ViewContainer; viewContainerLocation: ViewContainerLocation }>());
+	private readonly _onDidRegister = this._register(
+    new Emitter<{ viewContainer: ViewContainer; viewContainerLocation: ViewContainerLocation }>(),
+  );
 	readonly onDidRegister: Event<{ viewContainer: ViewContainer; viewContainerLocation: ViewContainerLocation }> = this._onDidRegister.event;
 
-	private readonly _onDidDeregister = this._register(new Emitter<{ viewContainer: ViewContainer; viewContainerLocation: ViewContainerLocation }>());
+	private readonly _onDidDeregister = this._register(
+    new Emitter<{ viewContainer: ViewContainer; viewContainerLocation: ViewContainerLocation }>(),
+  );
 	readonly onDidDeregister: Event<{ viewContainer: ViewContainer; viewContainerLocation: ViewContainerLocation }> = this._onDidDeregister.event;
 
 	private readonly viewContainers: Map<ViewContainerLocation, ViewContainer[]> = new Map<ViewContainerLocation, ViewContainer[]>();
@@ -237,8 +245,14 @@ class ViewContainersRegistryImpl extends Disposable implements IViewContainersRe
 		}
 
 		const viewContainer: RelaxedViewContainer = viewContainerDescriptor;
-		viewContainer.openCommandActionDescriptor = options?.doNotRegisterOpenCommand ? undefined : (viewContainer.openCommandActionDescriptor ?? { id: viewContainer.id });
-		const viewContainers = getOrSet(this.viewContainers, viewContainerLocation, []);
+		viewContainer.openCommandActionDescriptor = options?.doNotRegisterOpenCommand ? undefined : (viewContainer.openCommandActionDescriptor ?? {
+      id: viewContainer.id,
+    });
+		const viewContainers = getOrSet(
+      this.viewContainers,
+      viewContainerLocation,
+      [],
+    );
 		viewContainers.push(viewContainer);
 		if (options?.isDefault) {
 			this.defaultViewContainers.push(viewContainer);
@@ -271,15 +285,22 @@ class ViewContainersRegistryImpl extends Disposable implements IViewContainersRe
 	}
 
 	getViewContainerLocation(container: ViewContainer): ViewContainerLocation {
-		return [...this.viewContainers.keys()].filter(location => this.getViewContainers(location).filter(viewContainer => viewContainer?.id === container.id).length > 0)[0];
+		return [...this.viewContainers.keys()].filter(
+      location => this.getViewContainers(location).filter(viewContainer => viewContainer?.id === container.id).length > 0,
+    )[0];
 	}
 
 	getDefaultViewContainers(location: ViewContainerLocation): ViewContainer[] {
-		return this.defaultViewContainers.filter(viewContainer => this.getViewContainerLocation(viewContainer) === location);
+		return this.defaultViewContainers.filter(
+      viewContainer => this.getViewContainerLocation(viewContainer) === location,
+    );
 	}
 }
 
-Registry.add(Extensions.ViewContainersRegistry, new ViewContainersRegistryImpl());
+Registry.add(
+  Extensions.ViewContainersRegistry,
+  new ViewContainersRegistryImpl(),
+);
 
 export interface IViewDescriptor {
 
@@ -388,10 +409,10 @@ export interface IViewContainerModel {
 }
 
 export enum ViewContentGroups {
-	Open = '2_open',
-	Debug = '4_debug',
-	SCM = '5_scm',
-	More = '9_more'
+	Open = "2_open",
+	Debug = "4_debug",
+	SCM = "5_scm",
+	More = "9_more"
 }
 
 export interface IViewContentDescriptor {
@@ -401,7 +422,7 @@ export interface IViewContentDescriptor {
 	 * if there are buttons in the `content` property.
 	 */
 	readonly renderSecondaryButtons?: boolean;
-	readonly when?: ContextKeyExpression | 'default';
+	readonly when?: ContextKeyExpression | "default";
 	readonly group?: string;
 	readonly order?: number;
 	readonly precondition?: ContextKeyExpression | undefined;
@@ -446,16 +467,24 @@ function compareViewContentDescriptors(a: IViewContentDescriptor, b: IViewConten
 
 class ViewsRegistry extends Disposable implements IViewsRegistry {
 
-	private readonly _onViewsRegistered = this._register(new Emitter<{ views: IViewDescriptor[]; viewContainer: ViewContainer }[]>());
+	private readonly _onViewsRegistered = this._register(
+    new Emitter<{ views: IViewDescriptor[]; viewContainer: ViewContainer }[]>(),
+  );
 	readonly onViewsRegistered = this._onViewsRegistered.event;
 
-	private readonly _onViewsDeregistered: Emitter<{ views: IViewDescriptor[]; viewContainer: ViewContainer }> = this._register(new Emitter<{ views: IViewDescriptor[]; viewContainer: ViewContainer }>());
+	private readonly _onViewsDeregistered: Emitter<{ views: IViewDescriptor[]; viewContainer: ViewContainer }> = this._register(
+    new Emitter<{ views: IViewDescriptor[]; viewContainer: ViewContainer }>(),
+  );
 	readonly onViewsDeregistered: Event<{ views: IViewDescriptor[]; viewContainer: ViewContainer }> = this._onViewsDeregistered.event;
 
-	private readonly _onDidChangeContainer: Emitter<{ views: IViewDescriptor[]; from: ViewContainer; to: ViewContainer }> = this._register(new Emitter<{ views: IViewDescriptor[]; from: ViewContainer; to: ViewContainer }>());
+	private readonly _onDidChangeContainer: Emitter<{ views: IViewDescriptor[]; from: ViewContainer; to: ViewContainer }> = this._register(
+    new Emitter<{ views: IViewDescriptor[]; from: ViewContainer; to: ViewContainer }>(),
+  );
 	readonly onDidChangeContainer: Event<{ views: IViewDescriptor[]; from: ViewContainer; to: ViewContainer }> = this._onDidChangeContainer.event;
 
-	private readonly _onDidChangeViewWelcomeContent: Emitter<string> = this._register(new Emitter<string>());
+	private readonly _onDidChangeViewWelcomeContent: Emitter<string> = this._register(
+    new Emitter<string>(),
+  );
 	readonly onDidChangeViewWelcomeContent: Event<string> = this._onDidChangeViewWelcomeContent.event;
 
 	private _viewContainers: ViewContainer[] = [];
@@ -467,7 +496,9 @@ class ViewsRegistry extends Disposable implements IViewsRegistry {
 	}
 
 	registerViews2(views: { views: IViewDescriptor[]; viewContainer: ViewContainer }[]): void {
-		views.forEach(({ views, viewContainer }) => this.addViews(views, viewContainer));
+		views.forEach(
+      ({ views, viewContainer }) => this.addViews(views, viewContainer),
+    );
 		this._onViewsRegistered.fire(views);
 	}
 
@@ -484,7 +515,11 @@ class ViewsRegistry extends Disposable implements IViewsRegistry {
 				const views = this.removeViews(viewsToMove, container);
 				if (views.length) {
 					this.addViews(views, viewContainer);
-					this._onDidChangeContainer.fire({ views, from: container, to: viewContainer });
+					this._onDidChangeContainer.fire({
+            views,
+            from: container,
+            to: viewContainer,
+          });
 				}
 			}
 		}
@@ -496,7 +531,9 @@ class ViewsRegistry extends Disposable implements IViewsRegistry {
 
 	getView(id: string): IViewDescriptor | null {
 		for (const viewContainer of this._viewContainers) {
-			const viewDescriptor = (this._views.get(viewContainer) || []).filter(v => v.id === id)[0];
+			const viewDescriptor = (this._views.get(viewContainer) || []).filter(
+        v => v.id === id,
+      )[0];
 			if (viewDescriptor) {
 				return viewDescriptor;
 			}
@@ -506,7 +543,9 @@ class ViewsRegistry extends Disposable implements IViewsRegistry {
 
 	getViewContainer(viewId: string): ViewContainer | null {
 		for (const viewContainer of this._viewContainers) {
-			const viewDescriptor = (this._views.get(viewContainer) || []).filter(v => v.id === viewId)[0];
+			const viewDescriptor = (this._views.get(viewContainer) || []).filter(
+        v => v.id === viewId,
+      )[0];
 			if (viewDescriptor) {
 				return viewContainer;
 			}
@@ -519,9 +558,9 @@ class ViewsRegistry extends Disposable implements IViewsRegistry {
 		this._onDidChangeViewWelcomeContent.fire(id);
 
 		return toDisposable(() => {
-			this._viewWelcomeContents.delete(id, viewContent);
-			this._onDidChangeViewWelcomeContent.fire(id);
-		});
+      this._viewWelcomeContents.delete(id, viewContent);
+      this._onDidChangeViewWelcomeContent.fire(id);
+    });
 	}
 
 	registerViewWelcomeContent2<TKey>(id: string, viewContentMap: Map<TKey, IViewContentDescriptor>): Map<TKey, IDisposable> {
@@ -530,10 +569,13 @@ class ViewsRegistry extends Disposable implements IViewsRegistry {
 		for (const [key, content] of viewContentMap) {
 			this._viewWelcomeContents.add(id, content);
 
-			disposables.set(key, toDisposable(() => {
-				this._viewWelcomeContents.delete(id, content);
-				this._onDidChangeViewWelcomeContent.fire(id);
-			}));
+			disposables.set(
+        key,
+        toDisposable(() => {
+          this._viewWelcomeContents.delete(id, content);
+          this._onDidChangeViewWelcomeContent.fire(id);
+        }),
+      );
 		}
 		this._onDidChangeViewWelcomeContent.fire(id);
 
@@ -542,7 +584,10 @@ class ViewsRegistry extends Disposable implements IViewsRegistry {
 
 	getViewWelcomeContent(id: string): IViewContentDescriptor[] {
 		const result: IViewContentDescriptor[] = [];
-		this._viewWelcomeContents.forEach(id, descriptor => result.push(descriptor));
+		this._viewWelcomeContents.forEach(
+      id,
+      descriptor => result.push(descriptor),
+    );
 		return result.sort(compareViewContentDescriptors);
 	}
 
@@ -555,7 +600,13 @@ class ViewsRegistry extends Disposable implements IViewsRegistry {
 		}
 		for (const viewDescriptor of viewDescriptors) {
 			if (this.getView(viewDescriptor.id) !== null) {
-				throw new Error(localize('duplicateId', "A view with id '{0}' is already registered", viewDescriptor.id));
+				throw new Error(
+          localize(
+            "duplicateId",
+            "A view with id '{0}' is already registered",
+            viewDescriptor.id,
+          ),
+        );
 			}
 			views.push(viewDescriptor);
 		}
@@ -580,7 +631,10 @@ class ViewsRegistry extends Disposable implements IViewsRegistry {
 				this._views.set(viewContainer, remaningViews);
 			} else {
 				this._views.delete(viewContainer);
-				this._viewContainers.splice(this._viewContainers.indexOf(viewContainer), 1);
+				this._viewContainers.splice(
+          this._viewContainers.indexOf(viewContainer),
+          1,
+        );
 			}
 		}
 		return viewsToDeregister;
@@ -604,7 +658,9 @@ export interface IView {
 	getProgressIndicator(): IProgressIndicator | undefined;
 }
 
-export const IViewDescriptorService = createDecorator<IViewDescriptorService>('viewDescriptorService');
+export const IViewDescriptorService = createDecorator<IViewDescriptorService>(
+  "viewDescriptorService",
+);
 
 export enum ViewVisibilityState {
 	Default = 0,
@@ -845,31 +901,37 @@ export class ResolvableTreeItem implements ITreeItem {
 	}
 	public asTreeItem(): ITreeItem {
 		return {
-			handle: this.handle,
-			parentHandle: this.parentHandle,
-			collapsibleState: this.collapsibleState,
-			label: this.label,
-			description: this.description,
-			icon: this.icon,
-			iconDark: this.iconDark,
-			themeIcon: this.themeIcon,
-			resourceUri: this.resourceUri,
-			tooltip: this.tooltip,
-			contextValue: this.contextValue,
-			command: this.command,
-			children: this.children,
-			accessibilityInformation: this.accessibilityInformation
-		};
+      handle: this.handle,
+      parentHandle: this.parentHandle,
+      collapsibleState: this.collapsibleState,
+      label: this.label,
+      description: this.description,
+      icon: this.icon,
+      iconDark: this.iconDark,
+      themeIcon: this.themeIcon,
+      resourceUri: this.resourceUri,
+      tooltip: this.tooltip,
+      contextValue: this.contextValue,
+      command: this.command,
+      children: this.children,
+      accessibilityInformation: this.accessibilityInformation,
+    };
 	}
 }
 
 export class NoTreeViewError extends Error {
-	override readonly name = 'NoTreeViewError';
+	override readonly name = "NoTreeViewError";
 	constructor(treeViewId: string) {
-		super(localize('treeView.notRegistered', 'No tree view with id \'{0}\' registered.', treeViewId));
+		super(
+      localize(
+        "treeView.notRegistered",
+        "No tree view with id '{0}' registered.",
+        treeViewId,
+      ),
+    );
 	}
 	static is(err: unknown): err is NoTreeViewError {
-		return !!err && (err as Error).name === 'NoTreeViewError';
+		return !!err && (err as Error).name === "NoTreeViewError";
 	}
 }
 

@@ -3,12 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createMarkdownCommandLink, IMarkdownString, MarkdownString } from '../../../../../../../base/common/htmlContent.js';
-import { localize } from '../../../../../../../nls.js';
-import { ConfirmedReason, IChatToolInvocation, IChatToolInvocationSerialized, ToolConfirmKind } from '../../../../common/chatService/chatService.js';
+import { createMarkdownCommandLink, IMarkdownString, MarkdownString } from "../../../../../../../base/common/htmlContent.js";
+import { localize } from "../../../../../../../nls.js";
+import {
+  ConfirmedReason,
+  IChatToolInvocation,
+  IChatToolInvocationSerialized,
+  ToolConfirmKind,
+} from "../../../../common/chatService/chatService.js";
 
 export function isMcpToolInvocation(toolInvocation: IChatToolInvocation | IChatToolInvocationSerialized): boolean {
-	return toolInvocation.source?.type === 'mcp' || toolInvocation.toolId.toLowerCase().includes('mcp');
+	return toolInvocation.source?.type === "mcp" || toolInvocation.toolId.toLowerCase().includes(
+    "mcp",
+  );
 }
 
 /**
@@ -19,7 +26,7 @@ export function shouldShimmerForTool(toolInvocation: IChatToolInvocation | IChat
 	if (isMcpToolInvocation(toolInvocation)) {
 		return !IChatToolInvocation.isComplete(toolInvocation);
 	}
-	if (toolInvocation.toolId === 'copilot_askQuestions' || toolInvocation.toolId === 'vscode_askQuestions') {
+	if (toolInvocation.toolId === "copilot_askQuestions" || toolInvocation.toolId === "vscode_askQuestions") {
 		return false;
 	}
 	return false;
@@ -32,7 +39,7 @@ export function shouldShimmerForTool(toolInvocation: IChatToolInvocation | IChat
  */
 export function getToolApprovalMessage(toolInvocation: IChatToolInvocation | IChatToolInvocationSerialized): IMarkdownString | undefined {
 	const reason = IChatToolInvocation.executionConfirmedOrDenied(toolInvocation);
-	if (!reason || typeof reason === 'boolean') {
+	if (!reason || typeof reason === "boolean") {
 		return undefined;
 	}
 
@@ -48,19 +55,45 @@ export function getApprovalMessageFromReason(reason: ConfirmedReason): IMarkdown
 	let md: string;
 	switch (reason.type) {
 		case ToolConfirmKind.Setting:
-			md = localize('chat.autoapprove.setting', 'Auto approved by {0}', createMarkdownCommandLink({ text: '`' + reason.id + '`', id: 'workbench.action.openSettings', arguments: [reason.id], tooltip: localize('openSettings.tooltip', 'Open settings') }, false));
+			md = localize(
+        "chat.autoapprove.setting",
+        "Auto approved by {0}",
+        createMarkdownCommandLink(
+          {
+            text: "`" + reason.id + "`",
+            id: "workbench.action.openSettings",
+            arguments: [reason.id],
+            tooltip: localize("openSettings.tooltip", "Open settings"),
+          },
+          false,
+        ),
+      );
 			break;
 		case ToolConfirmKind.LmServicePerTool:
-			md = reason.scope === 'session'
-				? localize('chat.autoapprove.lmServicePerTool.session', 'Auto approved for this session')
-				: reason.scope === 'workspace'
-					? localize('chat.autoapprove.lmServicePerTool.workspace', 'Auto approved for this workspace')
-					: localize('chat.autoapprove.lmServicePerTool.profile', 'Auto approved for this profile');
-			md += ' (' + createMarkdownCommandLink({ text: localize('edit', 'Edit'), id: 'workbench.action.chat.editToolApproval', arguments: [reason.scope], tooltip: localize('editToolApproval.tooltip', 'Edit tool approval settings') }) + ')';
+			md = reason.scope === "session"
+				? localize(
+            "chat.autoapprove.lmServicePerTool.session",
+            "Auto approved for this session",
+          )
+				: reason.scope === "workspace"
+					? localize(
+              "chat.autoapprove.lmServicePerTool.workspace",
+              "Auto approved for this workspace",
+            )
+					: localize(
+              "chat.autoapprove.lmServicePerTool.profile",
+              "Auto approved for this profile",
+            );
+			md += " (" + createMarkdownCommandLink({
+        text: localize("edit", "Edit"),
+        id: "workbench.action.chat.editToolApproval",
+        arguments: [reason.scope],
+        tooltip: localize("editToolApproval.tooltip", "Edit tool approval settings"),
+      }) + ")";
 			break;
 		case ToolConfirmKind.ConfirmationNotNeeded:
 			if (reason.reason) {
-				return typeof reason.reason === 'string'
+				return typeof reason.reason === "string"
 					? new MarkdownString(reason.reason, { isTrusted: true })
 					: reason.reason;
 			}

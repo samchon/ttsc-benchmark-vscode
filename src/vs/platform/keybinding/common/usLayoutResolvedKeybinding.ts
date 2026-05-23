@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { KeyCode, KeyCodeUtils, IMMUTABLE_CODE_TO_KEY_CODE, ScanCode } from '../../../base/common/keyCodes.js';
-import { SingleModifierChord, Chord, KeyCodeChord, Keybinding } from '../../../base/common/keybindings.js';
-import { OperatingSystem } from '../../../base/common/platform.js';
-import { BaseResolvedKeybinding } from './baseResolvedKeybinding.js';
-import { toEmptyArrayIfContainsNull } from './resolvedKeybindingItem.js';
+import { KeyCode, KeyCodeUtils, IMMUTABLE_CODE_TO_KEY_CODE, ScanCode } from "../../../base/common/keyCodes.js";
+import { SingleModifierChord, Chord, KeyCodeChord, Keybinding } from "../../../base/common/keybindings.js";
+import { OperatingSystem } from "../../../base/common/platform.js";
+import { BaseResolvedKeybinding } from "./baseResolvedKeybinding.js";
+import { toEmptyArrayIfContainsNull } from "./resolvedKeybindingItem.js";
 
 /**
  * Do not instantiate. Use KeybindingService to get a ResolvedKeybinding seeded with information about the current kb layout.
@@ -22,13 +22,13 @@ export class USLayoutResolvedKeybinding extends BaseResolvedKeybinding<KeyCodeCh
 		if (this._os === OperatingSystem.Macintosh) {
 			switch (keyCode) {
 				case KeyCode.LeftArrow:
-					return '←';
+					return "←";
 				case KeyCode.UpArrow:
-					return '↑';
+					return "↑";
 				case KeyCode.RightArrow:
-					return '→';
+					return "→";
 				case KeyCode.DownArrow:
-					return '↓';
+					return "↓";
 			}
 		}
 		return KeyCodeUtils.toString(keyCode);
@@ -36,14 +36,14 @@ export class USLayoutResolvedKeybinding extends BaseResolvedKeybinding<KeyCodeCh
 
 	protected _getLabel(chord: KeyCodeChord): string | null {
 		if (chord.isDuplicateModifierCase()) {
-			return '';
+			return "";
 		}
 		return this._keyCodeToUILabel(chord.keyCode);
 	}
 
 	protected _getAriaLabel(chord: KeyCodeChord): string | null {
 		if (chord.isDuplicateModifierCase()) {
-			return '';
+			return "";
 		}
 		return KeyCodeUtils.toString(chord.keyCode);
 	}
@@ -54,7 +54,7 @@ export class USLayoutResolvedKeybinding extends BaseResolvedKeybinding<KeyCodeCh
 
 	protected _getUserSettingsLabel(chord: KeyCodeChord): string | null {
 		if (chord.isDuplicateModifierCase()) {
-			return '';
+			return "";
 		}
 		const result = KeyCodeUtils.toUserSettingsUS(chord.keyCode);
 		return (result ? result.toLowerCase() : result);
@@ -72,19 +72,19 @@ export class USLayoutResolvedKeybinding extends BaseResolvedKeybinding<KeyCodeCh
 		if (chord.isModifierKey()) {
 			return null;
 		}
-		let result = '';
+		let result = "";
 
 		if (chord.ctrlKey) {
-			result += 'ctrl+';
+			result += "ctrl+";
 		}
 		if (chord.shiftKey) {
-			result += 'shift+';
+			result += "shift+";
 		}
 		if (chord.altKey) {
-			result += 'alt+';
+			result += "alt+";
 		}
 		if (chord.metaKey) {
-			result += 'meta+';
+			result += "meta+";
 		}
 		result += KeyCodeUtils.toString(chord.keyCode);
 
@@ -93,16 +93,16 @@ export class USLayoutResolvedKeybinding extends BaseResolvedKeybinding<KeyCodeCh
 
 	protected _getSingleModifierChordDispatch(keybinding: KeyCodeChord): SingleModifierChord | null {
 		if (keybinding.keyCode === KeyCode.Ctrl && !keybinding.shiftKey && !keybinding.altKey && !keybinding.metaKey) {
-			return 'ctrl';
+			return "ctrl";
 		}
 		if (keybinding.keyCode === KeyCode.Shift && !keybinding.ctrlKey && !keybinding.altKey && !keybinding.metaKey) {
-			return 'shift';
+			return "shift";
 		}
 		if (keybinding.keyCode === KeyCode.Alt && !keybinding.ctrlKey && !keybinding.shiftKey && !keybinding.metaKey) {
-			return 'alt';
+			return "alt";
 		}
 		if (keybinding.keyCode === KeyCode.Meta && !keybinding.ctrlKey && !keybinding.shiftKey && !keybinding.altKey) {
-			return 'meta';
+			return "meta";
 		}
 		return null;
 	}
@@ -181,11 +181,19 @@ export class USLayoutResolvedKeybinding extends BaseResolvedKeybinding<KeyCodeCh
 		if (keyCode === KeyCode.Unknown) {
 			return null;
 		}
-		return new KeyCodeChord(chord.ctrlKey, chord.shiftKey, chord.altKey, chord.metaKey, keyCode);
+		return new KeyCodeChord(
+      chord.ctrlKey,
+      chord.shiftKey,
+      chord.altKey,
+      chord.metaKey,
+      keyCode,
+    );
 	}
 
 	public static resolveKeybinding(keybinding: Keybinding, os: OperatingSystem): USLayoutResolvedKeybinding[] {
-		const chords: KeyCodeChord[] = toEmptyArrayIfContainsNull(keybinding.chords.map(chord => this._toKeyCodeChord(chord)));
+		const chords: KeyCodeChord[] = toEmptyArrayIfContainsNull(
+      keybinding.chords.map(chord => this._toKeyCodeChord(chord)),
+    );
 		if (chords.length > 0) {
 			return [new USLayoutResolvedKeybinding(chords, os)];
 		}

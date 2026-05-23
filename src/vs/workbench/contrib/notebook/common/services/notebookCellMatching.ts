@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { computeLevenshteinDistance } from '../../../../../base/common/diff/diff.js';
-import { CellKind } from '../notebookCommon.js';
+import { computeLevenshteinDistance } from "../../../../../base/common/diff/diff.js";
+import { CellKind } from "../notebookCommon.js";
 
 
 type EditCount = number;
@@ -52,9 +52,9 @@ type ICell = {
  */
 export function matchCellBasedOnSimilarties(modifiedCells: ICell[], originalCells: ICell[]): { modified: number; original: number; percentage: number }[] {
 	const cache: CellEditCountCache = {
-		modifiedToOriginal: new Map<ModifiedIndex, Map<OriginalIndex, { editCount: EditCount }>>(),
-		originalToModified: new Map<OriginalIndex, Map<ModifiedIndex, { editCount: EditCount }>>(),
-	};
+    modifiedToOriginal: new Map<ModifiedIndex, Map<OriginalIndex, { editCount: EditCount }>>(),
+    originalToModified: new Map<OriginalIndex, Map<ModifiedIndex, { editCount: EditCount }>>(),
+  };
 	const results: { modified: number; original: number; dist: number; percentage: number; possibleOriginal: number }[] = [];
 	const mappedOriginalCellToModifiedCell = new Map<number, number>();
 	const mappedModifiedIndexes = new Set<number>();
@@ -63,7 +63,9 @@ export function matchCellBasedOnSimilarties(modifiedCells: ICell[], originalCell
 		if (mappedOriginalCellToModifiedCell.has(originalIndex)) {
 			return false;
 		}
-		const existingEdits = originalIndexWithMostEdits.get(originalIndex)?.dist ?? Number.MAX_SAFE_INTEGER;
+		const existingEdits = originalIndexWithMostEdits.get(
+      originalIndex,
+    )?.dist ?? Number.MAX_SAFE_INTEGER;
 		return value.editCount < existingEdits;
 	};
 	const trackMappedIndexes = (modifiedIndex: number, originalIndex: number) => {
@@ -73,13 +75,31 @@ export function matchCellBasedOnSimilarties(modifiedCells: ICell[], originalCell
 
 	for (let i = 0; i < modifiedCells.length; i++) {
 		const modifiedCell = modifiedCells[i];
-		const { index, editCount: dist, percentage } = computeClosestCell({ cell: modifiedCell, index: i }, originalCells, true, cache, canOriginalIndexBeMappedToModifiedIndex);
+		const { index, editCount: dist, percentage } = computeClosestCell(
+      { cell: modifiedCell, index: i },
+      originalCells,
+      true,
+      cache,
+      canOriginalIndexBeMappedToModifiedIndex,
+    );
 		if (index >= 0 && dist === 0) {
 			trackMappedIndexes(i, index);
-			results.push({ modified: i, original: index, dist, percentage, possibleOriginal: index });
+			results.push({
+        modified: i,
+        original: index,
+        dist,
+        percentage,
+        possibleOriginal: index,
+      });
 		} else {
 			originalIndexWithMostEdits.set(index, { dist: dist, modifiedIndex: i });
-			results.push({ modified: i, original: -1, dist: dist, percentage, possibleOriginal: index });
+			results.push({
+        modified: i,
+        original: -1,
+        dist: dist,
+        percentage,
+        possibleOriginal: index,
+      });
 		}
 	}
 
@@ -266,7 +286,7 @@ export function matchCellBasedOnSimilarties(modifiedCells: ICell[], originalCell
 		// And if the next modified and next original cells are a match.
 		const nextOriginalCell = (i > 0 && originalCells.length > results[i - 1].original) ? results[i - 1].original + 1 : -1;
 		const nextOriginalCellValue = i > 0 && nextOriginalCell >= 0 && nextOriginalCell < originalCells.length ? originalCells[nextOriginalCell].getValue() : undefined;
-		if (index >= 0 && i > 0 && typeof nextOriginalCellValue === 'string' && !mappedOriginalCellToModifiedCell.has(nextOriginalCell)) {
+		if (index >= 0 && i > 0 && typeof nextOriginalCellValue === "string" && !mappedOriginalCellToModifiedCell.has(nextOriginalCell)) {
 			if (modifiedCell.getValue().includes(nextOriginalCellValue) || nextOriginalCellValue.includes(modifiedCell.getValue())) {
 				trackMappedIndexes(i, nextOriginalCell);
 				results[i].original = nextOriginalCell;
@@ -291,9 +311,15 @@ function computeClosestCell({ cell, index: cellIndex }: { cell: ICell; index: nu
 	// Always give preference to internal Cell Id if found.
 	const internalId = cell.internalMetadata?.internalId;
 	if (internalId) {
-		const internalIdIndex = arr.findIndex(cell => cell.internalMetadata?.internalId === internalId);
+		const internalIdIndex = arr.findIndex(
+      cell => cell.internalMetadata?.internalId === internalId,
+    );
 		if (internalIdIndex >= 0) {
-			return { index: internalIdIndex, editCount: 0, percentage: Number.MAX_SAFE_INTEGER };
+			return {
+        index: internalIdIndex,
+        editCount: 0,
+        percentage: Number.MAX_SAFE_INTEGER,
+      };
 		}
 	}
 
@@ -303,12 +329,18 @@ function computeClosestCell({ cell, index: cellIndex }: { cell: ICell; index: nu
 			continue;
 		}
 		const str = arr[i].getValue();
-		const cacheEntry = cache.modifiedToOriginal.get(cellIndex) ?? new Map<OriginalIndex, { editCount: EditCount }>();
-		const value = cacheEntry.get(i) ?? { editCount: computeNumberOfEdits(cell, arr[i]), };
+		const cacheEntry = cache.modifiedToOriginal.get(
+      cellIndex,
+    ) ?? new Map<OriginalIndex, { editCount: EditCount }>();
+		const value = cacheEntry.get(i) ?? {
+      editCount: computeNumberOfEdits(cell, arr[i]),
+    };
 		cacheEntry.set(i, value);
 		cache.modifiedToOriginal.set(cellIndex, cacheEntry);
 
-		const originalCacheEntry = cache.originalToModified.get(i) ?? new Map<ModifiedIndex, { editCount: EditCount }>();
+		const originalCacheEntry = cache.originalToModified.get(
+      i,
+    ) ?? new Map<ModifiedIndex, { editCount: EditCount }>();
 		originalCacheEntry.set(cellIndex, value);
 		cache.originalToModified.set(i, originalCacheEntry);
 
@@ -329,7 +361,11 @@ function computeClosestCell({ cell, index: cellIndex }: { cell: ICell; index: nu
 	}
 
 	if (min_index === -1) {
-		return { index: -1, editCount: Number.MAX_SAFE_INTEGER, percentage: Number.MAX_SAFE_INTEGER };
+		return {
+      index: -1,
+      editCount: Number.MAX_SAFE_INTEGER,
+      percentage: Number.MAX_SAFE_INTEGER,
+    };
 	}
 	const percentage = !cell.getValue().length && !arr[min_index].getValue().length ? 0 : (cell.getValue().length ? (min_edits * 100 / cell.getValue().length) : Number.MAX_SAFE_INTEGER);
 	return { index: min_index, editCount: min_edits, percentage };

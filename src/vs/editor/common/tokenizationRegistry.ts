@@ -3,11 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Color } from '../../base/common/color.js';
-import { Emitter, Event } from '../../base/common/event.js';
-import { Disposable, IDisposable, toDisposable } from '../../base/common/lifecycle.js';
-import { ITokenizationRegistry, ITokenizationSupportChangedEvent, ILazyTokenizationSupport } from './languages.js';
-import { ColorId } from './encodedTokenAttributes.js';
+import { Color } from "../../base/common/color.js";
+import { Emitter, Event } from "../../base/common/event.js";
+import { Disposable, IDisposable, toDisposable } from "../../base/common/lifecycle.js";
+import {
+  ITokenizationRegistry,
+  ITokenizationSupportChangedEvent,
+  ILazyTokenizationSupport,
+} from "./languages.js";
+import { ColorId } from "./encodedTokenAttributes.js";
 
 export class TokenizationRegistry<TSupport> implements ITokenizationRegistry<TSupport> {
 
@@ -25,9 +29,9 @@ export class TokenizationRegistry<TSupport> implements ITokenizationRegistry<TSu
 
 	public handleChange(languageIds: string[]): void {
 		this._onDidChange.fire({
-			changedLanguages: languageIds,
-			changedColorMap: false
-		});
+      changedLanguages: languageIds,
+      changedColorMap: false,
+    });
 	}
 
 	public register(languageId: string, support: TSupport): IDisposable {
@@ -48,7 +52,11 @@ export class TokenizationRegistry<TSupport> implements ITokenizationRegistry<TSu
 
 	public registerFactory(languageId: string, factory: ILazyTokenizationSupport<TSupport>): IDisposable {
 		this._factories.get(languageId)?.dispose();
-		const myData = new TokenizationSupportFactoryData(this, languageId, factory);
+		const myData = new TokenizationSupportFactoryData(
+      this,
+      languageId,
+      factory,
+    );
 		this._factories.set(languageId, myData);
 		return toDisposable(() => {
 			const v = this._factories.get(languageId);
@@ -95,9 +103,9 @@ export class TokenizationRegistry<TSupport> implements ITokenizationRegistry<TSu
 	public setColorMap(colorMap: Color[]): void {
 		this._colorMap = colorMap;
 		this._onDidChange.fire({
-			changedLanguages: Array.from(this._tokenizationSupports.keys()),
-			changedColorMap: true
-		});
+      changedLanguages: Array.from(this._tokenizationSupports.keys()),
+      changedColorMap: true,
+    });
 	}
 
 	public getColorMap(): Color[] | null {

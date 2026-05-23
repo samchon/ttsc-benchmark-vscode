@@ -3,24 +3,33 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { EventType } from '../../../../../base/browser/dom.js';
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { localize } from '../../../../../nls.js';
-import { QuickPickItem, IQuickInputService, IQuickPickItem, QuickInputHideReason } from '../../../../../platform/quickinput/common/quickInput.js';
-import { IDetectedLinks } from './terminalLinkManager.js';
-import { TerminalLinkQuickPickEvent, type IDetachedTerminalInstance, type ITerminalInstance } from '../../../terminal/browser/terminal.js';
-import type { ILink } from '@xterm/xterm';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import type { TerminalLink } from './terminalLink.js';
-import { Sequencer, timeout } from '../../../../../base/common/async.js';
-import { PickerEditorState } from '../../../../browser/quickaccess.js';
-import { getLinkSuffix } from './terminalLinkParsing.js';
-import { TerminalBuiltinLinkType } from './links.js';
-import { ILabelService } from '../../../../../platform/label/common/label.js';
-import { basenameOrAuthority, dirname } from '../../../../../base/common/resources.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { AccessibleViewProviderId, IAccessibleViewService } from '../../../../../platform/accessibility/browser/accessibleView.js';
-import { hasKey } from '../../../../../base/common/types.js';
+import { EventType } from "../../../../../base/browser/dom.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { localize } from "../../../../../nls.js";
+import {
+  QuickPickItem,
+  IQuickInputService,
+  IQuickPickItem,
+  QuickInputHideReason,
+} from "../../../../../platform/quickinput/common/quickInput.js";
+import { IDetectedLinks } from "./terminalLinkManager.js";
+import {
+  TerminalLinkQuickPickEvent,
+  type IDetachedTerminalInstance,
+  type ITerminalInstance,
+} from "../../../terminal/browser/terminal.js";
+import type { ILink } from "@xterm/xterm";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import type { TerminalLink } from "./terminalLink.js";
+import { Sequencer, timeout } from "../../../../../base/common/async.js";
+import { PickerEditorState } from "../../../../browser/quickaccess.js";
+import { getLinkSuffix } from "./terminalLinkParsing.js";
+import { TerminalBuiltinLinkType } from "./links.js";
+import { ILabelService } from "../../../../../platform/label/common/label.js";
+import { basenameOrAuthority, dirname } from "../../../../../base/common/resources.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { AccessibleViewProviderId, IAccessibleViewService } from "../../../../../platform/accessibility/browser/accessibleView.js";
+import { hasKey } from "../../../../../base/common/types.js";
 
 export class TerminalLinkQuickpick extends DisposableStore {
 
@@ -39,7 +48,9 @@ export class TerminalLinkQuickpick extends DisposableStore {
 		@IQuickInputService private readonly _quickInputService: IQuickInputService,
 	) {
 		super();
-		this._editorViewState = this.add(instantiationService.createInstance(PickerEditorState));
+		this._editorViewState = this.add(
+      instantiationService.createInstance(PickerEditorState),
+    );
 	}
 
 	async show(instance: ITerminalInstance | IDetachedTerminalInstance, links: { viewport: IDetectedLinks; all: Promise<IDetectedLinks> }): Promise<void> {
@@ -48,39 +59,64 @@ export class TerminalLinkQuickpick extends DisposableStore {
 		// Allow all links a small amount of time to elapse to finish, if this is not done in this
 		// time they will be loaded upon the first filter.
 		const result = await Promise.race([links.all, timeout(500)]);
-		const usingAllLinks = typeof result === 'object';
+		const usingAllLinks = typeof result === "object";
 		const resolvedLinks = usingAllLinks ? result : links.viewport;
 
 		// Get raw link picks
-		const wordPicks = resolvedLinks.wordLinks ? await this._generatePicks(resolvedLinks.wordLinks) : undefined;
-		const filePicks = resolvedLinks.fileLinks ? await this._generatePicks(resolvedLinks.fileLinks) : undefined;
-		const folderPicks = resolvedLinks.folderLinks ? await this._generatePicks(resolvedLinks.folderLinks) : undefined;
-		const webPicks = resolvedLinks.webLinks ? await this._generatePicks(resolvedLinks.webLinks) : undefined;
+		const wordPicks = resolvedLinks.wordLinks ? await this._generatePicks(
+      resolvedLinks.wordLinks,
+    ) : undefined;
+		const filePicks = resolvedLinks.fileLinks ? await this._generatePicks(
+      resolvedLinks.fileLinks,
+    ) : undefined;
+		const folderPicks = resolvedLinks.folderLinks ? await this._generatePicks(
+      resolvedLinks.folderLinks,
+    ) : undefined;
+		const webPicks = resolvedLinks.webLinks ? await this._generatePicks(
+      resolvedLinks.webLinks,
+    ) : undefined;
 
 		const picks: LinkQuickPickItem[] = [];
 		if (webPicks) {
-			picks.push({ type: 'separator', label: localize('terminal.integrated.urlLinks', "Url") });
+			picks.push({
+        type: "separator",
+        label: localize("terminal.integrated.urlLinks", "Url"),
+      });
 			picks.push(...webPicks);
 		}
 		if (filePicks) {
-			picks.push({ type: 'separator', label: localize('terminal.integrated.localFileLinks', "File") });
+			picks.push({
+        type: "separator",
+        label: localize("terminal.integrated.localFileLinks", "File"),
+      });
 			picks.push(...filePicks);
 		}
 		if (folderPicks) {
-			picks.push({ type: 'separator', label: localize('terminal.integrated.localFolderLinks', "Folder") });
+			picks.push({
+        type: "separator",
+        label: localize("terminal.integrated.localFolderLinks", "Folder"),
+      });
 			picks.push(...folderPicks);
 		}
 		if (wordPicks) {
-			picks.push({ type: 'separator', label: localize('terminal.integrated.searchLinks', "Workspace Search") });
+			picks.push({
+        type: "separator",
+        label: localize("terminal.integrated.searchLinks", "Workspace Search"),
+      });
 			picks.push(...wordPicks);
 		}
 
 		// Create and show quick pick
-		const pick = this._quickInputService.createQuickPick<IQuickPickItem | ITerminalLinkQuickPickItem>({ useSeparators: true });
+		const pick = this._quickInputService.createQuickPick<IQuickPickItem | ITerminalLinkQuickPickItem>(
+      { useSeparators: true },
+    );
 		const disposables = new DisposableStore();
 		disposables.add(pick);
 		pick.items = picks;
-		pick.placeholder = localize('terminal.integrated.openDetectedLink', "Select the link to open, type to filter all links");
+		pick.placeholder = localize(
+      "terminal.integrated.openDetectedLink",
+      "Select the link to open, type to filter all links",
+    );
 		pick.sortByLabel = false;
 		pick.show();
 		if (pick.activeItems.length > 0) {
@@ -104,29 +140,31 @@ export class TerminalLinkQuickpick extends DisposableStore {
 				const webPicks = allLinks.webLinks ? await this._generatePicks(allLinks.webLinks) : undefined;
 				const picks: LinkQuickPickItem[] = [];
 				if (webPicks) {
-					picks.push({ type: 'separator', label: localize('terminal.integrated.urlLinks', "Url") });
+					picks.push({ type: "separator", label: localize("terminal.integrated.urlLinks", "Url") });
 					picks.push(...webPicks);
 				}
 				if (filePicks) {
-					picks.push({ type: 'separator', label: localize('terminal.integrated.localFileLinks', "File") });
+					picks.push({ type: "separator", label: localize("terminal.integrated.localFileLinks", "File") });
 					picks.push(...filePicks);
 				}
 				if (folderPicks) {
-					picks.push({ type: 'separator', label: localize('terminal.integrated.localFolderLinks', "Folder") });
+					picks.push({ type: "separator", label: localize("terminal.integrated.localFolderLinks", "Folder") });
 					picks.push(...folderPicks);
 				}
 				if (wordPicks) {
-					picks.push({ type: 'separator', label: localize('terminal.integrated.searchLinks', "Workspace Search") });
+					picks.push({ type: "separator", label: localize("terminal.integrated.searchLinks", "Workspace Search") });
 					picks.push(...wordPicks);
 				}
 				pick.items = picks;
 			}));
 		}
 
-		disposables.add(pick.onDidChangeActive(async () => {
-			const [item] = pick.activeItems;
-			this._previewItem(item);
-		}));
+		disposables.add(
+      pick.onDidChangeActive(async () => {
+        const [item] = pick.activeItems;
+        this._previewItem(item);
+      }),
+    );
 
 		return new Promise(r => {
 			disposables.add(pick.onDidHide(({ reason }) => {
@@ -202,7 +240,9 @@ export class TerminalLinkQuickpick extends DisposableStore {
 						link.type === TerminalBuiltinLinkType.LocalFolderOutsideWorkspace
 					) {
 						label = basenameOrAuthority(link.uri);
-						description = this._labelService.getUriLabel(dirname(link.uri), { relative: true });
+						description = this._labelService.getUriLabel(dirname(link.uri), {
+              relative: true,
+            });
 					}
 
 					// Add line and column numbers to the label if applicable
@@ -222,10 +262,10 @@ export class TerminalLinkQuickpick extends DisposableStore {
 					}
 
 					// Skip the link if it's a duplicate URI + line/col
-					if (linkUriKeys.has(label + '|' + (description ?? ''))) {
+					if (linkUriKeys.has(label + "|" + (description ?? ""))) {
 						continue;
 					}
-					linkUriKeys.add(label + '|' + (description ?? ''));
+					linkUriKeys.add(label + "|" + (description ?? ""));
 				}
 
 				picks.push({ label, link, description });
@@ -255,19 +295,21 @@ export class TerminalLinkQuickpick extends DisposableStore {
 	}
 
 	private _previewItemInEditor(link: TerminalLink) {
-		const linkSuffix = link.parsedLink ? link.parsedLink.suffix : getLinkSuffix(link.text);
+		const linkSuffix = link.parsedLink ? link.parsedLink.suffix : getLinkSuffix(
+      link.text,
+    );
 		const selection = linkSuffix?.row === undefined ? undefined : {
-			startLineNumber: linkSuffix.row ?? 1,
-			startColumn: linkSuffix.col ?? 1,
-			endLineNumber: linkSuffix.rowEnd,
-			endColumn: linkSuffix.colEnd
-		};
+      startLineNumber: linkSuffix.row ?? 1,
+      startColumn: linkSuffix.col ?? 1,
+      endLineNumber: linkSuffix.rowEnd,
+      endColumn: linkSuffix.colEnd,
+    };
 
 		this._editorViewState.set();
 		this._editorSequencer.queue(async () => {
 			await this._editorViewState.openTransientEditor({
 				resource: link.uri,
-				options: { preserveFocus: true, revealIfOpened: true, ignoreError: true, selection }
+				options: { preserveFocus: true, revealIfOpened: true, ignoreError: true, selection },
 			});
 		});
 	}

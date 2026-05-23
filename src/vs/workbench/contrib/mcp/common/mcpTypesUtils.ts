@@ -3,15 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { disposableTimeout, timeout } from '../../../../base/common/async.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { CancellationError } from '../../../../base/common/errors.js';
-import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { autorun, autorunSelfDisposable, IReader } from '../../../../base/common/observable.js';
-import { ILogger } from '../../../../platform/log/common/log.js';
-import { ToolDataSource } from '../../chat/common/tools/languageModelToolsService.js';
-import { IMcpServer, IMcpServerStartOpts, IMcpService, McpConnectionState, McpServerCacheState, McpServerTransportType } from './mcpTypes.js';
-import { MCP } from './modelContextProtocol.js';
+import { disposableTimeout, timeout } from "../../../../base/common/async.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { CancellationError } from "../../../../base/common/errors.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { autorun, autorunSelfDisposable, IReader } from "../../../../base/common/observable.js";
+import { ILogger } from "../../../../platform/log/common/log.js";
+import { ToolDataSource } from "../../chat/common/tools/languageModelToolsService.js";
+import {
+  IMcpServer,
+  IMcpServerStartOpts,
+  IMcpService,
+  McpConnectionState,
+  McpServerCacheState,
+  McpServerTransportType,
+} from "./mcpTypes.js";
+import { MCP } from "./modelContextProtocol.js";
 
 
 /**
@@ -26,7 +33,7 @@ export function startServerByFilter(mcpService: IMcpService, filter: (s: IMcpSer
 			const server = servers.find(filter);
 
 			if (server) {
-				server.start({ promptType: 'all-untrusted' }).then(state => {
+				server.start({ promptType: "all-untrusted" }).then(state => {
 					if (state.state === McpConnectionState.Kind.Error) {
 						server.showOutput();
 					}
@@ -78,7 +85,9 @@ export async function startServerAndWaitForLiveTools(server: IMcpServer, opts?: 
 	store.dispose();
 
 	if (ok) {
-		await timeout(0); // let the tools register in the language model contribution
+		await timeout(
+      0,
+    ); // let the tools register in the language model contribution
 	}
 
 	return ok;
@@ -87,13 +96,13 @@ export async function startServerAndWaitForLiveTools(server: IMcpServer, opts?: 
 export function mcpServerToSourceData(server: IMcpServer, reader?: IReader): ToolDataSource {
 	const metadata = server.serverMetadata.read(reader);
 	return {
-		type: 'mcp',
-		serverLabel: metadata?.serverName,
-		instructions: metadata?.serverInstructions,
-		label: server.definition.label,
-		collectionId: server.collection.id,
-		definitionId: server.definition.id
-	};
+    type: "mcp",
+    serverLabel: metadata?.serverName,
+    instructions: metadata?.serverInstructions,
+    label: server.definition.label,
+    collectionId: server.collection.id,
+    definitionId: server.definition.id,
+  };
 }
 
 
@@ -106,12 +115,12 @@ export function mcpServerToSourceData(server: IMcpServer, reader?: IReader): Too
  */
 export function canLoadMcpNetworkResourceDirectly(resource: URL, server: IMcpServer | undefined) {
 	let isResourceRequestValid = false;
-	if (resource.protocol === 'http:') {
+	if (resource.protocol === "http:") {
 		const launch = server?.connection.get()?.launchDefinition;
 		if (launch && launch.type === McpServerTransportType.HTTP && launch.uri.authority.toLowerCase() === resource.host.toLowerCase()) {
 			isResourceRequestValid = true;
 		}
-	} else if (resource.protocol === 'https:') {
+	} else if (resource.protocol === "https:") {
 		isResourceRequestValid = true;
 	}
 	return isResourceRequestValid;
@@ -147,8 +156,10 @@ export function findMcpServer(mcpService: IMcpService, filter: (s: IMcpServer) =
 	});
 }
 
-export function translateMcpLogMessage(logger: ILogger, params: MCP.LoggingMessageNotificationParams, prefix = '') {
-	let contents = typeof params.data === 'string' ? params.data : JSON.stringify(params.data);
+export function translateMcpLogMessage(logger: ILogger, params: MCP.LoggingMessageNotificationParams, prefix = "") {
+	let contents = typeof params.data === "string" ? params.data : JSON.stringify(
+    params.data,
+  );
 	if (params.logger) {
 		contents = `${params.logger}: ${contents}`;
 	}
@@ -157,20 +168,20 @@ export function translateMcpLogMessage(logger: ILogger, params: MCP.LoggingMessa
 	}
 
 	switch (params?.level) {
-		case 'debug':
+		case "debug":
 			logger.debug(contents);
 			break;
-		case 'info':
-		case 'notice':
+		case "info":
+		case "notice":
 			logger.info(contents);
 			break;
-		case 'warning':
+		case "warning":
 			logger.warn(contents);
 			break;
-		case 'error':
-		case 'critical':
-		case 'alert':
-		case 'emergency':
+		case "error":
+		case "critical":
+		case "alert":
+		case "emergency":
 			logger.error(contents);
 			break;
 		default:

@@ -3,20 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as viewEvents from '../../../common/viewEvents.js';
-import { ViewContext } from '../../../common/viewModel/viewContext.js';
-import { ViewGpuContext } from '../../gpu/viewGpuContext.js';
-import { DynamicViewOverlay } from '../../view/dynamicViewOverlay.js';
-import { RenderingContext } from '../../view/renderingContext.js';
-import { ViewLineOptions } from '../viewLines/viewLineOptions.js';
-import './gpuMark.css';
+import * as viewEvents from "../../../common/viewEvents.js";
+import { ViewContext } from "../../../common/viewModel/viewContext.js";
+import { ViewGpuContext } from "../../gpu/viewGpuContext.js";
+import { DynamicViewOverlay } from "../../view/dynamicViewOverlay.js";
+import { RenderingContext } from "../../view/renderingContext.js";
+import { ViewLineOptions } from "../viewLines/viewLineOptions.js";
+import "./gpuMark.css";
 
 /**
  * A mark on lines to make identification of GPU-rendered lines vs DOM easier.
  */
 export class GpuMarkOverlay extends DynamicViewOverlay {
 
-	public static readonly CLASS_NAME = 'gpu-mark';
+	public static readonly CLASS_NAME = "gpu-mark";
 
 	private readonly _context: ViewContext;
 
@@ -72,13 +72,20 @@ export class GpuMarkOverlay extends DynamicViewOverlay {
 		const visibleEndLineNumber = ctx.visibleRange.endLineNumber;
 
 		const viewportData = ctx.viewportData;
-		const options = new ViewLineOptions(this._context.configuration, this._context.theme.type);
+		const options = new ViewLineOptions(
+      this._context.configuration,
+      this._context.theme.type,
+    );
 
 		const output: string[] = [];
 		for (let lineNumber = visibleStartLineNumber; lineNumber <= visibleEndLineNumber; lineNumber++) {
 			const lineIndex = lineNumber - visibleStartLineNumber;
-			const cannotRenderReasons = this._viewGpuContext.canRenderDetailed(options, viewportData, lineNumber);
-			output[lineIndex] = cannotRenderReasons.length ? `<div class="${GpuMarkOverlay.CLASS_NAME}" title="Cannot render on GPU: ${cannotRenderReasons.join(', ')}"></div>` : '';
+			const cannotRenderReasons = this._viewGpuContext.canRenderDetailed(
+        options,
+        viewportData,
+        lineNumber,
+      );
+			output[lineIndex] = cannotRenderReasons.length ? `<div class="${GpuMarkOverlay.CLASS_NAME}" title="Cannot render on GPU: ${cannotRenderReasons.join(", ")}"></div>` : "";
 		}
 
 		this._renderResult = output;
@@ -86,11 +93,11 @@ export class GpuMarkOverlay extends DynamicViewOverlay {
 
 	public render(startLineNumber: number, lineNumber: number): string {
 		if (!this._renderResult) {
-			return '';
+			return "";
 		}
 		const lineIndex = lineNumber - startLineNumber;
 		if (lineIndex < 0 || lineIndex >= this._renderResult.length) {
-			return '';
+			return "";
 		}
 		return this._renderResult[lineIndex];
 	}

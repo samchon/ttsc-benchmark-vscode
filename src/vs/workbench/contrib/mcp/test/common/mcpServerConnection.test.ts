@@ -3,26 +3,33 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as assert from 'assert';
-import { timeout } from '../../../../../base/common/async.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { autorun, observableValue } from '../../../../../base/common/observable.js';
-import { upcast } from '../../../../../base/common/types.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { ServiceCollection } from '../../../../../platform/instantiation/common/serviceCollection.js';
-import { TestInstantiationService } from '../../../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { ILogger, ILoggerService, LogLevel, NullLogger } from '../../../../../platform/log/common/log.js';
-import { IProductService } from '../../../../../platform/product/common/productService.js';
-import { IStorageService, StorageScope } from '../../../../../platform/storage/common/storage.js';
-import { IOutputService } from '../../../../services/output/common/output.js';
-import { TestLoggerService, TestProductService, TestStorageService } from '../../../../test/common/workbenchTestServices.js';
-import { IMcpHostDelegate, IMcpMessageTransport } from '../../common/mcpRegistryTypes.js';
-import { McpServerConnection } from '../../common/mcpServerConnection.js';
-import { McpCollectionDefinition, McpConnectionState, McpServerDefinition, McpServerLaunch, McpServerTransportType, McpServerTrust } from '../../common/mcpTypes.js';
-import { TestMcpMessageTransport } from './mcpRegistryTypes.js';
-import { ConfigurationTarget } from '../../../../../platform/configuration/common/configuration.js';
-import { Event } from '../../../../../base/common/event.js';
-import { McpTaskManager } from '../../common/mcpTaskManager.js';
+import * as assert from "assert";
+import { timeout } from "../../../../../base/common/async.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { autorun, observableValue } from "../../../../../base/common/observable.js";
+import { upcast } from "../../../../../base/common/types.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { ServiceCollection } from "../../../../../platform/instantiation/common/serviceCollection.js";
+import { TestInstantiationService } from "../../../../../platform/instantiation/test/common/instantiationServiceMock.js";
+import { ILogger, ILoggerService, LogLevel, NullLogger } from "../../../../../platform/log/common/log.js";
+import { IProductService } from "../../../../../platform/product/common/productService.js";
+import { IStorageService, StorageScope } from "../../../../../platform/storage/common/storage.js";
+import { IOutputService } from "../../../../services/output/common/output.js";
+import { TestLoggerService, TestProductService, TestStorageService } from "../../../../test/common/workbenchTestServices.js";
+import { IMcpHostDelegate, IMcpMessageTransport } from "../../common/mcpRegistryTypes.js";
+import { McpServerConnection } from "../../common/mcpServerConnection.js";
+import {
+  McpCollectionDefinition,
+  McpConnectionState,
+  McpServerDefinition,
+  McpServerLaunch,
+  McpServerTransportType,
+  McpServerTrust,
+} from "../../common/mcpTypes.js";
+import { TestMcpMessageTransport } from "./mcpRegistryTypes.js";
+import { ConfigurationTarget } from "../../../../../platform/configuration/common/configuration.js";
+import { Event } from "../../../../../base/common/event.js";
+import { McpTaskManager } from "../../common/mcpTaskManager.js";
 
 class TestMcpHostDelegate extends Disposable implements IMcpHostDelegate {
 	private readonly _transport: TestMcpMessageTransport;
@@ -45,7 +52,7 @@ class TestMcpHostDelegate extends Disposable implements IMcpHostDelegate {
 
 	start(): IMcpMessageTransport {
 		if (!this._canStartValue) {
-			throw new Error('Cannot start server');
+			throw new Error("Cannot start server");
 		}
 		return this._transport;
 	}
@@ -63,7 +70,7 @@ class TestMcpHostDelegate extends Disposable implements IMcpHostDelegate {
 	}
 }
 
-suite('Workbench - MCP - ServerConnection', () => {
+suite("Workbench - MCP - ServerConnection", () => {
 	const store = ensureNoDisposablesAreLeakedInTestSuite();
 
 	let instantiationService: TestInstantiationService;
@@ -88,10 +95,10 @@ suite('Workbench - MCP - ServerConnection', () => {
 
 		// Create test collection
 		collection = {
-			id: 'test-collection',
-			label: 'Test Collection',
+			id: "test-collection",
+			label: "Test Collection",
 			remoteAuthority: null,
-			serverDefinitions: observableValue('serverDefs', []),
+			serverDefinitions: observableValue("serverDefs", []),
 			trustBehavior: McpServerTrust.Kind.Trusted,
 			scope: StorageScope.APPLICATION,
 			configTarget: ConfigurationTarget.USER,
@@ -100,18 +107,18 @@ suite('Workbench - MCP - ServerConnection', () => {
 
 		// Create server definition
 		serverDefinition = {
-			id: 'test-server',
-			label: 'Test Server',
-			cacheNonce: 'a',
+			id: "test-server",
+			label: "Test Server",
+			cacheNonce: "a",
 			launch: {
 				type: McpServerTransportType.Stdio,
-				command: 'test-command',
+				command: "test-command",
 				args: [],
 				env: {},
 				envFile: undefined,
-				cwd: '/test',
-				sandbox: undefined
-			}
+				cwd: "/test",
+				sandbox: undefined,
+			},
 		};
 	});
 
@@ -132,7 +139,7 @@ suite('Workbench - MCP - ServerConnection', () => {
 		});
 	}
 
-	test('should start and set state to Running when transport succeeds', async () => {
+	test("should start and set state to Running when transport succeeds", async () => {
 		// Create server connection
 		const connection = instantiationService.createInstance(
 			McpServerConnection,
@@ -159,7 +166,7 @@ suite('Workbench - MCP - ServerConnection', () => {
 		assert.ok(await waitForHandler(connection));
 	});
 
-	test('should handle errors during start', async () => {
+	test("should handle errors during start", async () => {
 		// Setup delegate to fail on start
 		delegate.setCanStart(false);
 
@@ -183,7 +190,7 @@ suite('Workbench - MCP - ServerConnection', () => {
 		assert.ok(state.message);
 	});
 
-	test('should handle transport errors', async () => {
+	test("should handle transport errors", async () => {
 		// Create server connection
 		const connection = instantiationService.createInstance(
 			McpServerConnection,
@@ -203,15 +210,15 @@ suite('Workbench - MCP - ServerConnection', () => {
 		// Simulate error in transport
 		transport.setConnectionState({
 			state: McpConnectionState.Kind.Error,
-			message: 'Test error message'
+			message: "Test error message",
 		});
 
 		const state = await startPromise;
 		assert.strictEqual(state.state, McpConnectionState.Kind.Error);
-		assert.strictEqual(state.message, 'Test error message');
+		assert.strictEqual(state.message, "Test error message");
 	});
 
-	test('should stop and set state to Stopped', async () => {
+	test("should stop and set state to Stopped", async () => {
 		// Create server connection
 		const connection = instantiationService.createInstance(
 			McpServerConnection,
@@ -237,7 +244,7 @@ suite('Workbench - MCP - ServerConnection', () => {
 		assert.strictEqual(connection.state.get().state, McpConnectionState.Kind.Stopped);
 	});
 
-	test('should not restart if already starting', async () => {
+	test("should not restart if already starting", async () => {
 		// Create server connection
 		const connection = instantiationService.createInstance(
 			McpServerConnection,
@@ -273,7 +280,7 @@ suite('Workbench - MCP - ServerConnection', () => {
 		connection.dispose();
 	});
 
-	test('should clean up when disposed', async () => {
+	test("should clean up when disposed", async () => {
 		// Create server connection
 		const connection = instantiationService.createInstance(
 			McpServerConnection,
@@ -297,7 +304,7 @@ suite('Workbench - MCP - ServerConnection', () => {
 		assert.strictEqual(connection.state.get().state, McpConnectionState.Kind.Stopped);
 	});
 
-	test('should log transport messages', async () => {
+	test("should log transport messages", async () => {
 		// Track logged messages
 		const loggedMessages: string[] = [];
 
@@ -315,7 +322,7 @@ suite('Workbench - MCP - ServerConnection', () => {
 					loggedMessages.push(message);
 				},
 				error: () => { },
-				dispose: () => { }
+				dispose: () => { },
 			} as Partial<ILogger> as ILogger,
 			false,
 			store.add(new McpTaskManager()),
@@ -326,20 +333,20 @@ suite('Workbench - MCP - ServerConnection', () => {
 		const startPromise = connection.start({});
 
 		// Simulate log message from transport
-		transport.simulateLog('Test log message');
+		transport.simulateLog("Test log message");
 
 		// Set connection to running
 		transport.setConnectionState({ state: McpConnectionState.Kind.Running });
 		await startPromise;
 
 		// Check that the message was logged
-		assert.ok(loggedMessages.some(msg => msg === 'Test log message'));
+		assert.ok(loggedMessages.some(msg => msg === "Test log message"));
 
 		connection.dispose();
 		await timeout(10);
 	});
 
-	test('should emit a sandbox filesystem block for read-only errors with backtick paths', async () => {
+	test("should emit a sandbox filesystem block for read-only errors with backtick paths", async () => {
 		const sandboxedDefinition: McpServerDefinition = {
 			...serverDefinition,
 			sandboxEnabled: true,
@@ -357,7 +364,7 @@ suite('Workbench - MCP - ServerConnection', () => {
 		);
 		store.add(connection);
 
-		const message = 'error: failed to open file `/test-for-sandbox/.git`: Read-only file system (os error 30)';
+		const message = "error: failed to open file `/test-for-sandbox/.git`: Read-only file system (os error 30)";
 		const sandboxBlock = Event.toPromise(connection.onPotentialSandboxBlock);
 		const startPromise = connection.start({});
 
@@ -365,9 +372,9 @@ suite('Workbench - MCP - ServerConnection', () => {
 		transport.setConnectionState({ state: McpConnectionState.Kind.Running });
 
 		assert.deepStrictEqual(await sandboxBlock, {
-			kind: 'filesystem',
+			kind: "filesystem",
 			message,
-			path: '/test-for-sandbox/.git',
+			path: "/test-for-sandbox/.git",
 		});
 
 		await startPromise;
@@ -376,7 +383,7 @@ suite('Workbench - MCP - ServerConnection', () => {
 		await timeout(10);
 	});
 
-	test('should emit a sandbox filesystem block for read-only errors with double-quoted paths', async () => {
+	test("should emit a sandbox filesystem block for read-only errors with double-quoted paths", async () => {
 		const sandboxedDefinition: McpServerDefinition = {
 			...serverDefinition,
 			sandboxEnabled: true,
@@ -394,7 +401,7 @@ suite('Workbench - MCP - ServerConnection', () => {
 		);
 		store.add(connection);
 
-		const message = 'error: failed to open file `/test-for-sandbox/.testfile`: Read-only file system (os error 30)';
+		const message = "error: failed to open file `/test-for-sandbox/.testfile`: Read-only file system (os error 30)";
 		const sandboxBlock = Event.toPromise(connection.onPotentialSandboxBlock);
 		const startPromise = connection.start({});
 
@@ -402,9 +409,9 @@ suite('Workbench - MCP - ServerConnection', () => {
 		transport.setConnectionState({ state: McpConnectionState.Kind.Running });
 
 		assert.deepStrictEqual(await sandboxBlock, {
-			kind: 'filesystem',
+			kind: "filesystem",
 			message,
-			path: '/test-for-sandbox/.testfile',
+			path: "/test-for-sandbox/.testfile",
 		});
 
 		await startPromise;
@@ -413,7 +420,7 @@ suite('Workbench - MCP - ServerConnection', () => {
 		await timeout(10);
 	});
 
-	test('should emit a sandbox filesystem block for read-only at-path errors with double-quoted paths', async () => {
+	test("should emit a sandbox filesystem block for read-only at-path errors with double-quoted paths", async () => {
 		const sandboxedDefinition: McpServerDefinition = {
 			...serverDefinition,
 			sandboxEnabled: true,
@@ -439,9 +446,9 @@ suite('Workbench - MCP - ServerConnection', () => {
 		transport.setConnectionState({ state: McpConnectionState.Kind.Running });
 
 		assert.deepStrictEqual(await sandboxBlock, {
-			kind: 'filesystem',
+			kind: "filesystem",
 			message,
-			path: '/test-for-sandbox/.testfile',
+			path: "/test-for-sandbox/.testfile",
 		});
 
 		await startPromise;
@@ -450,7 +457,7 @@ suite('Workbench - MCP - ServerConnection', () => {
 		await timeout(10);
 	});
 
-	test('should emit a sandbox network block with the denied host', async () => {
+	test("should emit a sandbox network block with the denied host", async () => {
 		const sandboxedDefinition: McpServerDefinition = {
 			...serverDefinition,
 			sandboxEnabled: true,
@@ -471,13 +478,13 @@ suite('Workbench - MCP - ServerConnection', () => {
 		const sandboxBlock = Event.toPromise(connection.onPotentialSandboxBlock);
 		const startPromise = connection.start({});
 
-		transport.simulateLog('No matching config rule, denying: api.example.com:443.');
+		transport.simulateLog("No matching config rule, denying: api.example.com:443.");
 		transport.setConnectionState({ state: McpConnectionState.Kind.Running });
 
 		assert.deepStrictEqual(await sandboxBlock, {
-			kind: 'network',
-			message: 'No matching config rule, denying: api.example.com:443.',
-			host: 'api.example.com',
+			kind: "network",
+			message: "No matching config rule, denying: api.example.com:443.",
+			host: "api.example.com",
 		});
 
 		await startPromise;
@@ -486,7 +493,7 @@ suite('Workbench - MCP - ServerConnection', () => {
 		await timeout(10);
 	});
 
-	test('should correctly handle transitions to and from error state', async () => {
+	test("should correctly handle transitions to and from error state", async () => {
 		// Create server connection
 		const connection = instantiationService.createInstance(
 			McpServerConnection,
@@ -506,7 +513,7 @@ suite('Workbench - MCP - ServerConnection', () => {
 		// Transition to error state
 		const errorState: McpConnectionState = {
 			state: McpConnectionState.Kind.Error,
-			message: 'Temporary error'
+			message: "Temporary error",
 		};
 		transport.setConnectionState(errorState);
 
@@ -526,7 +533,7 @@ suite('Workbench - MCP - ServerConnection', () => {
 		await timeout(10);
 	});
 
-	test('should handle multiple start/stop cycles', async () => {
+	test("should handle multiple start/stop cycles", async () => {
 		// Create server connection
 		const connection = instantiationService.createInstance(
 			McpServerConnection,

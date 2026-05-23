@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { isSigPipeError, onUnexpectedError, setUnexpectedErrorHandler } from '../../../base/common/errors.js';
-import BaseErrorTelemetry from '../common/errorTelemetry.js';
-import { ITelemetryService } from '../common/telemetry.js';
-import { ILogService } from '../../../platform/log/common/log.js';
+import { isSigPipeError, onUnexpectedError, setUnexpectedErrorHandler } from "../../../base/common/errors.js";
+import BaseErrorTelemetry from "../common/errorTelemetry.js";
+import { ITelemetryService } from "../common/telemetry.js";
+import { ILogService } from "../../../platform/log/common/log.js";
 
 export default class ErrorTelemetry extends BaseErrorTelemetry {
 	constructor(
 		private readonly logService: ILogService,
-		@ITelemetryService telemetryService: ITelemetryService
+		@ITelemetryService telemetryService: ITelemetryService,
 	) {
 		super(telemetryService);
 	}
@@ -20,13 +20,16 @@ export default class ErrorTelemetry extends BaseErrorTelemetry {
 		// We handle uncaught exceptions here to prevent electron from opening a dialog to the user
 		setUnexpectedErrorHandler(error => this.onUnexpectedError(error));
 
-		process.on('uncaughtException', error => {
+		process.on("uncaughtException", error => {
 			if (!isSigPipeError(error)) {
 				onUnexpectedError(error);
 			}
 		});
 
-		process.on('unhandledRejection', (reason: unknown) => onUnexpectedError(reason));
+		process.on(
+      "unhandledRejection",
+      (reason: unknown) => onUnexpectedError(reason),
+    );
 	}
 
 	private onUnexpectedError(error: Error): void {

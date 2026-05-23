@@ -3,32 +3,42 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BaseActionViewItem } from '../../../../../base/browser/ui/actionbar/actionViewItems.js';
-import { Disposable, DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { autorun, observableValue } from '../../../../../base/common/observable.js';
-import * as nls from '../../../../../nls.js';
-import { IActionViewItemService } from '../../../../../platform/actions/browser/actionViewItemService.js';
-import { Action2, registerAction2 } from '../../../../../platform/actions/common/actions.js';
-import { ContextKeyExpr } from '../../../../../platform/contextkey/common/contextkey.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../../platform/storage/common/storage.js';
-import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
-import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../../../workbench/common/contributions.js';
-import { type ILanguageModelChatMetadataAndIdentifier, ILanguageModelsService } from '../../../../../workbench/contrib/chat/common/languageModels.js';
-import { type IChatInputPickerOptions } from '../../../../../workbench/contrib/chat/browser/widget/input/chatInputPickerActionItem.js';
-import { ModelPickerActionItem, type IModelPickerDelegate } from '../../../../../workbench/contrib/chat/browser/widget/input/modelPickerActionItem.js';
-import { ActiveSessionProviderIdContext, IsPhoneLayoutContext } from '../../../../common/contextkeys.js';
-import { SessionStatus, type ISession } from '../../../../services/sessions/common/session.js';
-import { ISessionsManagementService } from '../../../../services/sessions/common/sessionsManagement.js';
-import { ISessionsProvidersService } from '../../../../services/sessions/browser/sessionsProvidersService.js';
-import { Menus } from '../../../../browser/menus.js';
-import { LOCAL_AGENT_HOST_PROVIDER_ID, REMOTE_AGENT_HOST_PROVIDER_RE } from '../../../../common/agentHostSessionsProvider.js';
-import { INewChatModelPickerService } from '../../../chat/browser/newChatModelPicker.js';
-import { reportNewChatPickerClosed } from '../../../chat/browser/newChatPickerTelemetry.js';
+import { BaseActionViewItem } from "../../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { Disposable, DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { autorun, observableValue } from "../../../../../base/common/observable.js";
+import * as nls from "../../../../../nls.js";
+import { IActionViewItemService } from "../../../../../platform/actions/browser/actionViewItemService.js";
+import { Action2, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
+import {
+  IWorkbenchContribution,
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../../../../workbench/common/contributions.js";
+import { type ILanguageModelChatMetadataAndIdentifier, ILanguageModelsService } from "../../../../../workbench/contrib/chat/common/languageModels.js";
+import { type IChatInputPickerOptions } from "../../../../../workbench/contrib/chat/browser/widget/input/chatInputPickerActionItem.js";
+import { ModelPickerActionItem, type IModelPickerDelegate } from "../../../../../workbench/contrib/chat/browser/widget/input/modelPickerActionItem.js";
+import { ActiveSessionProviderIdContext, IsPhoneLayoutContext } from "../../../../common/contextkeys.js";
+import { SessionStatus, type ISession } from "../../../../services/sessions/common/session.js";
+import { ISessionsManagementService } from "../../../../services/sessions/common/sessionsManagement.js";
+import { ISessionsProvidersService } from "../../../../services/sessions/browser/sessionsProvidersService.js";
+import { Menus } from "../../../../browser/menus.js";
+import { LOCAL_AGENT_HOST_PROVIDER_ID, REMOTE_AGENT_HOST_PROVIDER_RE } from "../../../../common/agentHostSessionsProvider.js";
+import { INewChatModelPickerService } from "../../../chat/browser/newChatModelPicker.js";
+import { reportNewChatPickerClosed } from "../../../chat/browser/newChatPickerTelemetry.js";
 
 const IsActiveSessionAgentHost = ContextKeyExpr.or(
-	ContextKeyExpr.equals(ActiveSessionProviderIdContext.key, LOCAL_AGENT_HOST_PROVIDER_ID),
-	ContextKeyExpr.regex(ActiveSessionProviderIdContext.key, REMOTE_AGENT_HOST_PROVIDER_RE),
+  ContextKeyExpr.equals(
+    ActiveSessionProviderIdContext.key,
+    LOCAL_AGENT_HOST_PROVIDER_ID,
+  ),
+  ContextKeyExpr.regex(
+    ActiveSessionProviderIdContext.key,
+    REMOTE_AGENT_HOST_PROVIDER_RE,
+  ),
 );
 
 // -- Agent Host Model Picker Action --
@@ -36,12 +46,12 @@ const IsActiveSessionAgentHost = ContextKeyExpr.or(
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'sessions.agentHost.modelPicker',
-			title: nls.localize2('agentHostModelPicker', "Model"),
+			id: "sessions.agentHost.modelPicker",
+			title: nls.localize2("agentHostModelPicker", "Model"),
 			f1: false,
 			menu: [{
 				id: Menus.NewSessionConfig,
-				group: 'navigation',
+				group: "navigation",
 				order: 1,
 				// On phone the {@link MobileChatInputConfigPicker} replaces
 				// this picker with a unified mode + model bottom sheet, so
@@ -90,17 +100,21 @@ export function resolveAgentHostModel(
 	sessionModelId: string | undefined,
 	storedModelId: string | undefined,
 ): ILanguageModelChatMetadataAndIdentifier | undefined {
-	const sessionModel = sessionModelId ? models.find(model => model.identifier === sessionModelId) : undefined;
+	const sessionModel = sessionModelId ? models.find(
+    model => model.identifier === sessionModelId,
+  ) : undefined;
 	if (sessionModel) {
 		return sessionModel;
 	}
 
-	return storedModelId ? models.find(model => model.identifier === storedModelId) : undefined;
+	return storedModelId ? models.find(
+    model => model.identifier === storedModelId,
+  ) : undefined;
 }
 
 class AgentHostModelPickerContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'sessions.contrib.agentHostModelPicker';
+	static readonly ID = "sessions.contrib.agentHostModelPicker";
 
 	constructor(
 		@IActionViewItemService actionViewItemService: IActionViewItemService,
@@ -114,9 +128,9 @@ class AgentHostModelPickerContribution extends Disposable implements IWorkbenchC
 		super();
 
 		this._register(actionViewItemService.register(
-			Menus.NewSessionConfig, 'sessions.agentHost.modelPicker',
+			Menus.NewSessionConfig, "sessions.agentHost.modelPicker",
 			(_action, _options, scopedInstantiationService) => {
-				const currentModel = observableValue<ILanguageModelChatMetadataAndIdentifier | undefined>('currentModel', undefined);
+				const currentModel = observableValue<ILanguageModelChatMetadataAndIdentifier | undefined>("currentModel", undefined);
 				let settingModelInternally = false;
 				const delegate: IModelPickerDelegate = {
 					currentModel,
@@ -131,7 +145,7 @@ class AgentHostModelPickerContribution extends Disposable implements IWorkbenchC
 						}
 						if (!settingModelInternally) {
 							reportNewChatPickerClosed(telemetryService, {
-								id: 'NewChatAgentHostModelPicker',
+								id: "NewChatAgentHostModelPicker",
 								optionIdBefore: previousModel?.identifier,
 								optionIdAfter: model.identifier,
 								optionLabelBefore: previousModel?.metadata.name,
@@ -147,9 +161,9 @@ class AgentHostModelPickerContribution extends Disposable implements IWorkbenchC
 					showFeatured: () => true,
 				};
 				const pickerOptions: IChatInputPickerOptions = {
-					compact: observableValue('compact', false),
+					compact: observableValue("compact", false),
 				};
-				const action = { id: 'sessions.agentHost.modelPicker', label: '', enabled: true, class: undefined, tooltip: '', run: () => { } };
+				const action = { id: "sessions.agentHost.modelPicker", label: "", enabled: true, class: undefined, tooltip: "", run: () => { } };
 				const modelPicker = scopedInstantiationService.createInstance(ModelPickerActionItem, action, delegate, pickerOptions);
 
 				const initModel = (session: ISession | undefined, sessionModelId: string | undefined, isUntitled: boolean) => {
@@ -203,8 +217,19 @@ class AgentHostPickerActionViewItem extends BaseActionViewItem {
 		disposable: DisposableStore,
 		@INewChatModelPickerService newChatModelPickerService: INewChatModelPickerService,
 	) {
-		super(undefined, { id: '', label: '', enabled: true, class: undefined, tooltip: '', run: () => { } });
-		this._register(newChatModelPickerService.registerModelPicker(() => this.picker.openModelPicker()));
+		super(undefined, {
+      id: "",
+      label: "",
+      enabled: true,
+      class: undefined,
+      tooltip: "",
+      run: () => { },
+    });
+		this._register(
+      newChatModelPickerService.registerModelPicker(
+        () => this.picker.openModelPicker(),
+      ),
+    );
 		this._register(disposable);
 	}
 
@@ -218,4 +243,8 @@ class AgentHostPickerActionViewItem extends BaseActionViewItem {
 	}
 }
 
-registerWorkbenchContribution2(AgentHostModelPickerContribution.ID, AgentHostModelPickerContribution, WorkbenchPhase.AfterRestored);
+registerWorkbenchContribution2(
+  AgentHostModelPickerContribution.ID,
+  AgentHostModelPickerContribution,
+  WorkbenchPhase.AfterRestored,
+);

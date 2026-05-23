@@ -3,32 +3,42 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../base/common/event.js';
-import { IMarkdownString } from '../../base/common/htmlContent.js';
-import { IDisposable } from '../../base/common/lifecycle.js';
-import { equals } from '../../base/common/objects.js';
-import { ThemeColor } from '../../base/common/themables.js';
-import { URI } from '../../base/common/uri.js';
-import { ISingleEditOperation } from './core/editOperation.js';
-import { IPosition, Position } from './core/position.js';
-import { IRange, Range } from './core/range.js';
-import { Selection } from './core/selection.js';
-import { TextChange } from './core/textChange.js';
-import { WordCharacterClassifier } from './core/wordCharacterClassifier.js';
-import { IWordAtPosition } from './core/wordHelper.js';
-import { FormattingOptions } from './languages.js';
-import { ILanguageSelection } from './languages/language.js';
-import { IBracketPairsTextModelPart } from './textModelBracketPairs.js';
-import { IModelContentChangedEvent, IModelDecorationsChangedEvent, IModelLanguageChangedEvent, IModelLanguageConfigurationChangedEvent, IModelOptionsChangedEvent, IModelTokensChangedEvent, LineInjectedText, ModelFontChangedEvent, ModelLineHeightChangedEvent } from './textModelEvents.js';
-import { IModelContentChange } from './model/mirrorTextModel.js';
-import { IGuidesTextModelPart } from './textModelGuides.js';
-import { ITokenizationTextModelPart } from './tokenizationTextModelPart.js';
-import { UndoRedoGroup } from '../../platform/undoRedo/common/undoRedo.js';
-import { TokenArray } from './tokens/lineTokens.js';
-import { IEditorModel } from './editorCommon.js';
-import { TextModelEditSource } from './textModelEditSource.js';
-import { TextEdit } from './core/edits/textEdit.js';
-import { IViewModel } from './viewModel.js';
+import { Event } from "../../base/common/event.js";
+import { IMarkdownString } from "../../base/common/htmlContent.js";
+import { IDisposable } from "../../base/common/lifecycle.js";
+import { equals } from "../../base/common/objects.js";
+import { ThemeColor } from "../../base/common/themables.js";
+import { URI } from "../../base/common/uri.js";
+import { ISingleEditOperation } from "./core/editOperation.js";
+import { IPosition, Position } from "./core/position.js";
+import { IRange, Range } from "./core/range.js";
+import { Selection } from "./core/selection.js";
+import { TextChange } from "./core/textChange.js";
+import { WordCharacterClassifier } from "./core/wordCharacterClassifier.js";
+import { IWordAtPosition } from "./core/wordHelper.js";
+import { FormattingOptions } from "./languages.js";
+import { ILanguageSelection } from "./languages/language.js";
+import { IBracketPairsTextModelPart } from "./textModelBracketPairs.js";
+import {
+  IModelContentChangedEvent,
+  IModelDecorationsChangedEvent,
+  IModelLanguageChangedEvent,
+  IModelLanguageConfigurationChangedEvent,
+  IModelOptionsChangedEvent,
+  IModelTokensChangedEvent,
+  LineInjectedText,
+  ModelFontChangedEvent,
+  ModelLineHeightChangedEvent,
+} from "./textModelEvents.js";
+import { IModelContentChange } from "./model/mirrorTextModel.js";
+import { IGuidesTextModelPart } from "./textModelGuides.js";
+import { ITokenizationTextModelPart } from "./tokenizationTextModelPart.js";
+import { UndoRedoGroup } from "../../platform/undoRedo/common/undoRedo.js";
+import { TokenArray } from "./tokens/lineTokens.js";
+import { IEditorModel } from "./editorCommon.js";
+import { TextModelEditSource } from "./textModelEditSource.js";
+import { TextEdit } from "./core/edits/textEdit.js";
+import { IViewModel } from "./viewModel.js";
 
 /**
  * Vertical Lane in the overview ruler of the editor.
@@ -568,8 +578,8 @@ export class TextModelResolvedOptions {
 	readonly trimAutoWhitespace: boolean;
 	readonly bracketPairColorizationOptions: BracketPairColorizationOptions;
 
-	public get originalIndentSize(): number | 'tabSize' {
-		return this._indentSizeIsTabSize ? 'tabSize' : this.indentSize;
+	public get originalIndentSize(): number | "tabSize" {
+		return this._indentSizeIsTabSize ? "tabSize" : this.indentSize;
 	}
 
 	/**
@@ -577,14 +587,14 @@ export class TextModelResolvedOptions {
 	 */
 	constructor(src: {
 		tabSize: number;
-		indentSize: number | 'tabSize';
+		indentSize: number | "tabSize";
 		insertSpaces: boolean;
 		defaultEOL: DefaultEndOfLine;
 		trimAutoWhitespace: boolean;
 		bracketPairColorizationOptions: BracketPairColorizationOptions;
 	}) {
 		this.tabSize = Math.max(1, src.tabSize | 0);
-		if (src.indentSize === 'tabSize') {
+		if (src.indentSize === "tabSize") {
 			this.indentSize = this.tabSize;
 			this._indentSizeIsTabSize = true;
 		} else {
@@ -608,7 +618,10 @@ export class TextModelResolvedOptions {
 			&& this.insertSpaces === other.insertSpaces
 			&& this.defaultEOL === other.defaultEOL
 			&& this.trimAutoWhitespace === other.trimAutoWhitespace
-			&& equals(this.bracketPairColorizationOptions, other.bracketPairColorizationOptions)
+			&& equals(
+        this.bracketPairColorizationOptions,
+        other.bracketPairColorizationOptions,
+      )
 		);
 	}
 
@@ -617,11 +630,11 @@ export class TextModelResolvedOptions {
 	 */
 	public createChangeEvent(newOpts: TextModelResolvedOptions): IModelOptionsChangedEvent {
 		return {
-			tabSize: this.tabSize !== newOpts.tabSize,
-			indentSize: this.indentSize !== newOpts.indentSize,
-			insertSpaces: this.insertSpaces !== newOpts.insertSpaces,
-			trimAutoWhitespace: this.trimAutoWhitespace !== newOpts.trimAutoWhitespace,
-		};
+      tabSize: this.tabSize !== newOpts.tabSize,
+      indentSize: this.indentSize !== newOpts.indentSize,
+      insertSpaces: this.insertSpaces !== newOpts.insertSpaces,
+      trimAutoWhitespace: this.trimAutoWhitespace !== newOpts.trimAutoWhitespace,
+    };
 	}
 }
 
@@ -630,7 +643,7 @@ export class TextModelResolvedOptions {
  */
 export interface ITextModelCreationOptions {
 	tabSize: number;
-	indentSize: number | 'tabSize';
+	indentSize: number | "tabSize";
 	insertSpaces: boolean;
 	detectIndentation: boolean;
 	trimAutoWhitespace: boolean;
@@ -647,7 +660,7 @@ export interface BracketPairColorizationOptions {
 
 export interface ITextModelUpdateOptions {
 	tabSize?: number;
-	indentSize?: number | 'tabSize';
+	indentSize?: number | "tabSize";
 	insertSpaces?: boolean;
 	trimAutoWhitespace?: boolean;
 	bracketColorizationOptions?: BracketPairColorizationOptions;
@@ -692,7 +705,7 @@ export interface ITextSnapshot {
  * @internal
  */
 export function isITextSnapshot(obj: unknown): obj is ITextSnapshot {
-	return (!!obj && typeof (obj as ITextSnapshot).read === 'function');
+	return (!!obj && typeof (obj as ITextSnapshot).read === "function");
 }
 
 /**
@@ -1587,7 +1600,7 @@ export class SearchData {
  * @internal
  */
 export interface ITextBuffer extends IReadonlyTextBuffer, IDisposable {
-	setEOL(newEOL: '\r\n' | '\n'): void;
+	setEOL(newEOL: "\r\n" | "\n"): void;
 	applyEdits(rawOperations: ValidAnnotatedEditOperation[], recordTrimAutoWhitespace: boolean, computeUndoEdits: boolean): ApplyEditsResult;
 }
 
@@ -1599,7 +1612,7 @@ export class ApplyEditsResult {
 	constructor(
 		public readonly reverseEdits: IValidEditOperation[] | null,
 		public readonly changes: IInternalModelContentChange[],
-		public readonly trimAutoWhitespaceLineNumbers: number[] | null
+		public readonly trimAutoWhitespaceLineNumbers: number[] | null,
 	) { }
 
 }

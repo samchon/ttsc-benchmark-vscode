@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { getErrorMessage } from '../../../../base/common/errors.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IEnvironmentService } from '../../../../platform/environment/common/environment.js';
-import { IExtensionStorageService } from '../../../../platform/extensionManagement/common/extensionStorage.js';
-import { FileSystemProviderError, FileSystemProviderErrorCode, IFileService } from '../../../../platform/files/common/files.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
-import { IUserDataProfilesService } from '../../../../platform/userDataProfile/common/userDataProfile.js';
-import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
+import { getErrorMessage } from "../../../../base/common/errors.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { IExtensionStorageService } from "../../../../platform/extensionManagement/common/extensionStorage.js";
+import { FileSystemProviderError, FileSystemProviderErrorCode, IFileService } from "../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IUserDataProfilesService } from "../../../../platform/userDataProfile/common/userDataProfile.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
 
 /**
  * An extension storage has following
@@ -46,7 +46,7 @@ export async function migrateExtensionStorage(fromExtensionId: string, toExtensi
 
 		const storageScope = global ? StorageScope.PROFILE : StorageScope.WORKSPACE;
 		if (!storageService.getBoolean(storageMigratedKey, storageScope, false) && !(migrateLowerCaseStorageKey && storageService.getBoolean(migrateLowerCaseStorageKey, storageScope, false))) {
-			logService.info(`Migrating ${global ? 'global' : 'workspace'} extension storage from ${fromExtensionId} to ${toExtensionId}...`);
+			logService.info(`Migrating ${global ? "global" : "workspace"} extension storage from ${fromExtensionId} to ${toExtensionId}...`);
 			// Migrate state
 			const value = extensionStorageService.getExtensionState(fromExtensionId, global);
 			if (value) {
@@ -62,11 +62,11 @@ export async function migrateExtensionStorage(fromExtensionId: string, toExtensi
 					await fileService.move(fromPath, toPath, true);
 				} catch (error) {
 					if ((<FileSystemProviderError>error).code !== FileSystemProviderErrorCode.FileNotFound) {
-						logService.info(`Error while migrating ${global ? 'global' : 'workspace'} file storage from '${fromExtensionId}' to '${toExtensionId}'`, getErrorMessage(error));
+						logService.info(`Error while migrating ${global ? "global" : "workspace"} file storage from '${fromExtensionId}' to '${toExtensionId}'`, getErrorMessage(error));
 					}
 				}
 			}
-			logService.info(`Migrated ${global ? 'global' : 'workspace'} extension storage from ${fromExtensionId} to ${toExtensionId}`);
+			logService.info(`Migrated ${global ? "global" : "workspace"} extension storage from ${fromExtensionId} to ${toExtensionId}`);
 			storageService.store(storageMigratedKey, true, storageScope, StorageTarget.MACHINE);
 		}
 	});

@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IViewLineTokens } from '../../../common/tokens/lineTokens.js';
-import { ColorId, TokenMetadata, ITokenPresentation, StandardTokenType } from '../../../common/encodedTokenAttributes.js';
-import { ILanguageIdCodec } from '../../../common/languages.js';
+import { IViewLineTokens } from "../../../common/tokens/lineTokens.js";
+import { ColorId, TokenMetadata, ITokenPresentation, StandardTokenType } from "../../../common/encodedTokenAttributes.js";
+import { ILanguageIdCodec } from "../../../common/languages.js";
 
 /**
  * A token on a line.
@@ -109,31 +109,31 @@ export class TestLineTokens implements IViewLineTokens {
 	}
 
 	public findTokenIndexAtOffset(offset: number): number {
-		throw new Error('Not implemented');
+		throw new Error("Not implemented");
 	}
 
 	public getLineContent(): string {
-		throw new Error('Not implemented');
+		throw new Error("Not implemented");
 	}
 
 	public getMetadata(tokenIndex: number): number {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 
 	public getLanguageId(tokenIndex: number): string {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 
 	public getTokenText(tokenIndex: number): string {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 
 	public forEach(callback: (tokenIndex: number) => void): void {
-		throw new Error('Not implemented');
+		throw new Error("Not implemented");
 	}
 
 	public get languageIdCodec(): ILanguageIdCodec {
-		throw new Error('Not implemented');
+		throw new Error("Not implemented");
 	}
 }
 

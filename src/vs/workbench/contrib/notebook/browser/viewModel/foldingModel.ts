@@ -3,24 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { renderAsPlaintext } from '../../../../../base/browser/markdownRenderer.js';
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { DisposableStore, IDisposable } from '../../../../../base/common/lifecycle.js';
-import { marked } from '../../../../../base/common/marked/marked.js';
-import { TrackedRangeStickiness } from '../../../../../editor/common/model.js';
-import { FoldingLimitReporter } from '../../../../../editor/contrib/folding/browser/folding.js';
-import { FoldingRegion, FoldingRegions } from '../../../../../editor/contrib/folding/browser/foldingRanges.js';
-import { IFoldingRangeData, sanitizeRanges } from '../../../../../editor/contrib/folding/browser/syntaxRangeProvider.js';
-import { INotebookViewModel } from '../notebookBrowser.js';
-import { CellKind } from '../../common/notebookCommon.js';
-import { cellRangesToIndexes, ICellRange } from '../../common/notebookRange.js';
+import { renderAsPlaintext } from "../../../../../base/browser/markdownRenderer.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { DisposableStore, IDisposable } from "../../../../../base/common/lifecycle.js";
+import { marked } from "../../../../../base/common/marked/marked.js";
+import { TrackedRangeStickiness } from "../../../../../editor/common/model.js";
+import { FoldingLimitReporter } from "../../../../../editor/contrib/folding/browser/folding.js";
+import { FoldingRegion, FoldingRegions } from "../../../../../editor/contrib/folding/browser/foldingRanges.js";
+import { IFoldingRangeData, sanitizeRanges } from "../../../../../editor/contrib/folding/browser/syntaxRangeProvider.js";
+import { INotebookViewModel } from "../notebookBrowser.js";
+import { CellKind } from "../../common/notebookCommon.js";
+import { cellRangesToIndexes, ICellRange } from "../../common/notebookRange.js";
 
 type RegionFilter = (r: FoldingRegion) => boolean;
 type RegionFilterWithLevel = (r: FoldingRegion, level: number) => boolean;
 
 const foldingRangeLimit: FoldingLimitReporter = {
-	limit: 5000,
-	update: () => { }
+  limit: 5000,
+  update: () => { },
 };
 
 export class FoldingModel implements IDisposable {
@@ -53,9 +53,11 @@ export class FoldingModel implements IDisposable {
 	attachViewModel(model: INotebookViewModel) {
 		this._viewModel = model;
 
-		this._viewModelStore.add(this._viewModel.onDidChangeViewCells(() => {
-			this.recompute();
-		}));
+		this._viewModelStore.add(
+      this._viewModel.onDidChangeViewCells(() => {
+        this.recompute();
+      }),
+    );
 
 		this._viewModelStore.add(this._viewModel.onDidChangeSelection(() => {
 			if (!this._viewModel) {
@@ -107,7 +109,9 @@ export class FoldingModel implements IDisposable {
 			for (let i = index, len = this._regions.length; i < len; i++) {
 				const current = this._regions.toRegion(i);
 				if (this._regions.getStartLineNumber(i) < endLineNumber) {
-					while (levelStack.length > 0 && !current.containedBy(levelStack[levelStack.length - 1])) {
+					while (levelStack.length > 0 && !current.containedBy(
+            levelStack[levelStack.length - 1],
+          )) {
 						levelStack.pop();
 					}
 					levelStack.push(current);
@@ -166,11 +170,14 @@ export class FoldingModel implements IDisposable {
 		for (let i = 0; i < cells.length; i++) {
 			const cell = cells[i];
 
-			if (cell.cellKind !== CellKind.Markup || cell.language !== 'markdown') {
+			if (cell.cellKind !== CellKind.Markup || cell.language !== "markdown") {
 				continue;
 			}
 
-			const minDepth = Math.min(7, ...Array.from(getMarkdownHeadersInCell(cell.getText()), header => header.depth));
+			const minDepth = Math.min(
+        7,
+        ...Array.from(getMarkdownHeadersInCell(cell.getText()), header => header.depth),
+      );
 			if (minDepth < 7) {
 				// header 1 to 6
 				stack.push({ index: i, level: minDepth, endIndex: 0 });
@@ -193,7 +200,7 @@ export class FoldingModel implements IDisposable {
 			return {
 				start: entry.index + 1,
 				end: endIndex + 1,
-				rank: 1
+				rank: 1,
 			};
 		}).filter(range => range.start !== range.end);
 
@@ -217,7 +224,9 @@ export class FoldingModel implements IDisposable {
 
 		while (collapsedIndex !== -1 && k < newRegions.length) {
 			// get the latest range
-			const decRange = viewModel.getTrackedRange(this._foldingRangeDecorationIds[collapsedIndex]);
+			const decRange = viewModel.getTrackedRange(
+        this._foldingRangeDecorationIds[collapsedIndex],
+      );
 			if (decRange) {
 				const collasedStartIndex = decRange.start;
 
@@ -242,13 +251,24 @@ export class FoldingModel implements IDisposable {
 		const cellRanges: ICellRange[] = [];
 		for (let i = 0; i < newRegions.length; i++) {
 			const region = newRegions.toRegion(i);
-			cellRanges.push({ start: region.startLineNumber - 1, end: region.endLineNumber - 1 });
+			cellRanges.push({
+        start: region.startLineNumber - 1,
+        end: region.endLineNumber - 1,
+      });
 		}
 
 		// remove old tracked ranges and add new ones
 		// TODO@rebornix, implement delta
-		this._foldingRangeDecorationIds.forEach(id => viewModel.setTrackedRange(id, null, TrackedRangeStickiness.GrowsOnlyWhenTypingAfter));
-		this._foldingRangeDecorationIds = cellRanges.map(region => viewModel.setTrackedRange(null, region, TrackedRangeStickiness.GrowsOnlyWhenTypingAfter)).filter(str => str !== null) as string[];
+		this._foldingRangeDecorationIds.forEach(
+      id => viewModel.setTrackedRange(
+        id,
+        null,
+        TrackedRangeStickiness.GrowsOnlyWhenTypingAfter,
+      ),
+    );
+		this._foldingRangeDecorationIds = cellRanges.map(region => viewModel.setTrackedRange(null, region, TrackedRangeStickiness.GrowsOnlyWhenTypingAfter)).filter(
+      str => str !== null,
+    ) as string[];
 
 		this._regions = newRegions;
 		this._onDidFoldingRegionChanges.fire();
@@ -262,7 +282,10 @@ export class FoldingModel implements IDisposable {
 
 			if (isCollapsed) {
 				const region = this._regions.toRegion(i);
-				collapsedRanges.push({ start: region.startLineNumber - 1, end: region.endLineNumber - 1 });
+				collapsedRanges.push({
+          start: region.startLineNumber - 1,
+          end: region.endLineNumber - 1,
+        });
 			}
 
 			i++;
@@ -281,7 +304,9 @@ export class FoldingModel implements IDisposable {
 
 		while (k < state.length && i < this._regions.length) {
 			// get the latest range
-			const decRange = this._viewModel.getTrackedRange(this._foldingRangeDecorationIds[i]);
+			const decRange = this._viewModel.getTrackedRange(
+        this._foldingRangeDecorationIds[i],
+      );
 			if (decRange) {
 				const collasedStartIndex = state[k].start;
 
@@ -314,11 +339,11 @@ export function updateFoldingStateAtIndex(foldingModel: FoldingModel, index: num
 
 export function* getMarkdownHeadersInCell(cellContent: string): Iterable<{ readonly depth: number; readonly text: string }> {
 	for (const token of marked.lexer(cellContent, { gfm: true })) {
-		if (token.type === 'heading') {
+		if (token.type === "heading") {
 			yield {
-				depth: token.depth,
-				text: renderAsPlaintext({ value: token.raw }).trim()
-			};
+        depth: token.depth,
+        text: renderAsPlaintext({ value: token.raw }).trim(),
+      };
 		}
 	}
 }

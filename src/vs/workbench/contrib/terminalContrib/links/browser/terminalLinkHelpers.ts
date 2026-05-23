@@ -3,12 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { IViewportRange, IBufferRange, IBufferLine, IBuffer, IBufferCellPosition } from '@xterm/xterm';
-import { IRange } from '../../../../../editor/common/core/range.js';
-import { OperatingSystem } from '../../../../../base/common/platform.js';
-import { IPath, posix, win32 } from '../../../../../base/common/path.js';
-import { ITerminalCapabilityStore, TerminalCapability } from '../../../../../platform/terminal/common/capabilities/capabilities.js';
-import { ITerminalLogService } from '../../../../../platform/terminal/common/terminal.js';
+import type {
+  IViewportRange,
+  IBufferRange,
+  IBufferLine,
+  IBuffer,
+  IBufferCellPosition,
+} from "@xterm/xterm";
+import { IRange } from "../../../../../editor/common/core/range.js";
+import { OperatingSystem } from "../../../../../base/common/platform.js";
+import { IPath, posix, win32 } from "../../../../../base/common/path.js";
+import { ITerminalCapabilityStore, TerminalCapability } from "../../../../../platform/terminal/common/capabilities/capabilities.js";
+import { ITerminalLogService } from "../../../../../platform/terminal/common/terminal.js";
 
 /**
  * Converts a possibly wrapped link's range (comprised of string indices) into a buffer range that plays nicely with xterm.js
@@ -22,24 +28,27 @@ export function convertLinkRangeToBuffer(
 	lines: IBufferLine[],
 	bufferWidth: number,
 	range: IRange,
-	startLine: number
+	startLine: number,
 ): IBufferRange {
 	const bufferRange: IBufferRange = {
 		start: {
 			x: range.startColumn,
-			y: range.startLineNumber + startLine
+			y: range.startLineNumber + startLine,
 		},
 		end: {
 			x: range.endColumn - 1,
-			y: range.endLineNumber + startLine
-		}
+			y: range.endLineNumber + startLine,
+		},
 	};
 
 	// Shift start range right for each wide character before the link
 	let startOffset = 0;
 	const startWrappedLineCount = Math.ceil(range.startColumn / bufferWidth);
 	for (let y = 0; y < Math.min(startWrappedLineCount); y++) {
-		const lineLength = Math.min(bufferWidth, (range.startColumn - 1) - y * bufferWidth);
+		const lineLength = Math.min(
+      bufferWidth,
+      (range.startColumn - 1) - y * bufferWidth,
+    );
 		let lineOffset = 0;
 		const line = lines[y];
 		// Sanity check for line, apparently this can happen but it's not clear under what
@@ -70,9 +79,15 @@ export function convertLinkRangeToBuffer(
 	// Shift end range right for each wide character inside the link
 	let endOffset = 0;
 	const endWrappedLineCount = Math.ceil(range.endColumn / bufferWidth);
-	for (let y = Math.max(0, startWrappedLineCount - 1); y < endWrappedLineCount; y++) {
+	for (let y = Math.max(
+    0,
+    startWrappedLineCount - 1,
+  ); y < endWrappedLineCount; y++) {
 		const start = (y === startWrappedLineCount - 1 ? (range.startColumn - 1 + startOffset) % bufferWidth : 0);
-		const lineLength = Math.min(bufferWidth, range.endColumn + startOffset - y * bufferWidth);
+		const lineLength = Math.min(
+      bufferWidth,
+      range.endColumn + startOffset - y * bufferWidth,
+    );
 		let lineOffset = 0;
 		const line = lines[y];
 		// Sanity check for line, apparently this can happen but it's not clear under what
@@ -81,7 +96,10 @@ export function convertLinkRangeToBuffer(
 		if (!line) {
 			break;
 		}
-		for (let x = start; x < Math.min(bufferWidth, lineLength + lineOffset); x++) {
+		for (let x = start; x < Math.min(
+      bufferWidth,
+      lineLength + lineOffset,
+    ); x++) {
 			const cell = line.getCell(x);
 			// This is unexpected but it means the character doesn't exist, so we shouldn't add to
 			// the offset
@@ -95,7 +113,7 @@ export function convertLinkRangeToBuffer(
 				lineOffset++;
 			}
 			// Offset for early wrapping when the last cell in row is a wide character
-			if (x === bufferWidth - 1 && chars === '') {
+			if (x === bufferWidth - 1 && chars === "") {
 				lineOffset++;
 			}
 			// Offset multi-code characters like emoji
@@ -127,12 +145,12 @@ export function convertBufferRangeToViewport(bufferRange: IBufferRange, viewport
 	return {
 		start: {
 			x: bufferRange.start.x - 1,
-			y: bufferRange.start.y - viewportY - 1
+			y: bufferRange.start.y - viewportY - 1,
 		},
 		end: {
 			x: bufferRange.end.x - 1,
-			y: bufferRange.end.y - viewportY - 1
-		}
+			y: bufferRange.end.y - viewportY - 1,
+		},
 	};
 }
 
@@ -141,7 +159,7 @@ export function getXtermLineContent(buffer: IBuffer, lineStart: number, lineEnd:
 	// more of a sanity check as the wrapped line should already be trimmed down at this point.
 	const maxLineLength = Math.max(2048, cols * 2);
 	lineEnd = Math.min(lineEnd, lineStart + maxLineLength);
-	let content = '';
+	let content = "";
 	for (let i = lineStart; i <= lineEnd; i++) {
 		// Make sure only 0 to cols are considered as resizing when windows mode is enabled will
 		// retain buffer data outside of the terminal width as reflow is disabled.
@@ -187,9 +205,9 @@ export function getXtermRangesByAttr(buffer: IBuffer, lineStart: number, lineEnd
 					// TODO: x overflow
 					const bufferRangeEnd = { x, y };
 					ranges.push({
-						start: bufferRangeStart!,
-						end: bufferRangeEnd
-					});
+            start: bufferRangeStart!,
+            end: bufferRangeEnd,
+          });
 					bufferRangeStart = { x, y };
 				}
 			}
@@ -219,8 +237,10 @@ export function getXtermRangesByAttr(buffer: IBuffer, lineStart: number, lineEnd
  * the particular link can be used to narrow down the result for an exact file match.
  */
 export function updateLinkWithRelativeCwd(capabilities: ITerminalCapabilityStore, y: number, text: string, osPath: IPath, logService: ITerminalLogService): string[] | undefined {
-	const cwd = capabilities.get(TerminalCapability.CommandDetection)?.getCwdForLine(y);
-	logService.trace('terminalLinkHelpers#updateLinkWithRelativeCwd cwd', cwd);
+	const cwd = capabilities.get(TerminalCapability.CommandDetection)?.getCwdForLine(
+    y,
+  );
+	logService.trace("terminalLinkHelpers#updateLinkWithRelativeCwd cwd", cwd);
 	if (!cwd) {
 		return undefined;
 	}
@@ -238,7 +258,9 @@ export function updateLinkWithRelativeCwd(capabilities: ITerminalCapabilityStore
 		// should be: `['/home/common/common/file', '/home/common/file']`. The first is the most
 		// likely as cwd detection is active.
 		while (i < cwdPath.length) {
-			result.push(osPath.resolve(cwd + sep + linkPath.slice(commonDirs).join(sep)));
+			result.push(
+        osPath.resolve(cwd + sep + linkPath.slice(commonDirs).join(sep)),
+      );
 			if (cwdPath[i] === linkPath[i]) {
 				commonDirs++;
 			} else {

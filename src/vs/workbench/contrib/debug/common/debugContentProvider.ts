@@ -3,23 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI as uri } from '../../../../base/common/uri.js';
-import { localize } from '../../../../nls.js';
-import { getMimeTypes } from '../../../../editor/common/services/languagesAssociations.js';
-import { ITextModel } from '../../../../editor/common/model.js';
-import { IModelService } from '../../../../editor/common/services/model.js';
-import { ILanguageService } from '../../../../editor/common/languages/language.js';
-import { ITextModelService, ITextModelContentProvider } from '../../../../editor/common/services/resolverService.js';
-import { IWorkbenchContribution } from '../../../common/contributions.js';
-import { DEBUG_SCHEME, IDebugService, IDebugSession } from './debug.js';
-import { Source } from './debugSource.js';
-import { IEditorWorkerService } from '../../../../editor/common/services/editorWorker.js';
-import { EditOperation } from '../../../../editor/common/core/editOperation.js';
-import { Range } from '../../../../editor/common/core/range.js';
-import { CancellationTokenSource } from '../../../../base/common/cancellation.js';
-import { PLAINTEXT_LANGUAGE_ID } from '../../../../editor/common/languages/modesRegistry.js';
-import { ErrorNoTelemetry } from '../../../../base/common/errors.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
+import { URI as uri } from "../../../../base/common/uri.js";
+import { localize } from "../../../../nls.js";
+import { getMimeTypes } from "../../../../editor/common/services/languagesAssociations.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { ITextModelService, ITextModelContentProvider } from "../../../../editor/common/services/resolverService.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { DEBUG_SCHEME, IDebugService, IDebugSession } from "./debug.js";
+import { Source } from "./debugSource.js";
+import { IEditorWorkerService } from "../../../../editor/common/services/editorWorker.js";
+import { EditOperation } from "../../../../editor/common/core/editOperation.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { PLAINTEXT_LANGUAGE_ID } from "../../../../editor/common/languages/modesRegistry.js";
+import { ErrorNoTelemetry } from "../../../../base/common/errors.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
 
 /**
  * Debug URI format
@@ -45,15 +45,22 @@ export class DebugContentProvider extends Disposable implements IWorkbenchContri
 		@IDebugService private readonly debugService: IDebugService,
 		@IModelService private readonly modelService: IModelService,
 		@ILanguageService private readonly languageService: ILanguageService,
-		@IEditorWorkerService private readonly editorWorkerService: IEditorWorkerService
+		@IEditorWorkerService private readonly editorWorkerService: IEditorWorkerService,
 	) {
 		super();
-		this._store.add(textModelResolverService.registerTextModelContentProvider(DEBUG_SCHEME, this));
+		this._store.add(
+      textModelResolverService.registerTextModelContentProvider(
+        DEBUG_SCHEME,
+        this,
+      ),
+    );
 		DebugContentProvider.INSTANCE = this;
 	}
 
 	override dispose(): void {
-		this.pendingUpdates.forEach(cancellationSource => cancellationSource.dispose());
+		this.pendingUpdates.forEach(
+      cancellationSource => cancellationSource.dispose(),
+    );
 		super.dispose();
 	}
 
@@ -93,15 +100,37 @@ export class DebugContentProvider extends Disposable implements IWorkbenchContri
 		}
 
 		if (!session) {
-			return Promise.reject(new ErrorNoTelemetry(localize('unable', "Unable to resolve the resource without a debug session")));
+			return Promise.reject(
+        new ErrorNoTelemetry(
+          localize(
+            "unable",
+            "Unable to resolve the resource without a debug session",
+          ),
+        ),
+      );
 		}
 		const createErrModel = (errMsg?: string) => {
 			this.debugService.sourceIsNotAvailable(resource);
-			const languageSelection = this.languageService.createById(PLAINTEXT_LANGUAGE_ID);
+			const languageSelection = this.languageService.createById(
+        PLAINTEXT_LANGUAGE_ID,
+      );
 			const message = errMsg
-				? localize('canNotResolveSourceWithError', "Could not load source '{0}': {1}.", resource.path, errMsg)
-				: localize('canNotResolveSource', "Could not load source '{0}'.", resource.path);
-			return this.modelService.createModel(message, languageSelection, resource);
+				? localize(
+            "canNotResolveSourceWithError",
+            "Could not load source '{0}': {1}.",
+            resource.path,
+            errMsg,
+          )
+				: localize(
+            "canNotResolveSource",
+            "Could not load source '{0}'.",
+            resource.path,
+          );
+			return this.modelService.createModel(
+        message,
+        languageSelection,
+        resource,
+      );
 		};
 
 		return session.loadSource(resource).then(response => {

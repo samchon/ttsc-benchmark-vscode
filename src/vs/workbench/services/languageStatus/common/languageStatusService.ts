@@ -3,18 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { Event } from '../../../../base/common/event.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import Severity from '../../../../base/common/severity.js';
-import { compare } from '../../../../base/common/strings.js';
-import { ITextModel } from '../../../../editor/common/model.js';
-import { Command } from '../../../../editor/common/languages.js';
-import { LanguageFeatureRegistry } from '../../../../editor/common/languageFeatureRegistry.js';
-import { LanguageSelector } from '../../../../editor/common/languageSelector.js';
-import { IAccessibilityInformation } from '../../../../platform/accessibility/common/accessibility.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Event } from "../../../../base/common/event.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import Severity from "../../../../base/common/severity.js";
+import { compare } from "../../../../base/common/strings.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+import { Command } from "../../../../editor/common/languages.js";
+import { LanguageFeatureRegistry } from "../../../../editor/common/languageFeatureRegistry.js";
+import { LanguageSelector } from "../../../../editor/common/languageSelector.js";
+import { IAccessibilityInformation } from "../../../../platform/accessibility/common/accessibility.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
 
 export interface ILanguageStatus {
 	readonly id: string;
@@ -33,7 +33,9 @@ export interface ILanguageStatusProvider {
 	provideLanguageStatus(langId: string, token: CancellationToken): Promise<ILanguageStatus | undefined>;
 }
 
-export const ILanguageStatusService = createDecorator<ILanguageStatusService>('ILanguageStatusService');
+export const ILanguageStatusService = createDecorator<ILanguageStatusService>(
+  "ILanguageStatusService",
+);
 
 export interface ILanguageStatusService {
 
@@ -73,4 +75,8 @@ class LanguageStatusServiceImpl implements ILanguageStatusService {
 	}
 }
 
-registerSingleton(ILanguageStatusService, LanguageStatusServiceImpl, InstantiationType.Delayed);
+registerSingleton(
+  ILanguageStatusService,
+  LanguageStatusServiceImpl,
+  InstantiationType.Delayed,
+);

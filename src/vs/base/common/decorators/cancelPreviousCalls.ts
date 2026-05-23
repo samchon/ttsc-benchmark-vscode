@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { assertDefined } from '../types.js';
-import { Disposable, DisposableMap } from '../lifecycle.js';
-import { CancellationTokenSource, CancellationToken } from '../cancellation.js';
+import { assertDefined } from "../types.js";
+import { Disposable, DisposableMap } from "../lifecycle.js";
+import { CancellationTokenSource, CancellationToken } from "../cancellation.js";
 
 /**
  * Helper type that represents a function that has an optional {@linkcode CancellationToken}
@@ -95,10 +95,7 @@ export function cancelPreviousCalls<
 ) {
 	const originalMethod = descriptor.value;
 
-	assertDefined(
-		originalMethod,
-		`Method '${methodName}' is not defined.`,
-	);
+	assertDefined(originalMethod, `Method '${methodName}' is not defined.`);
 
 	// we create the global map that contains `TObjectRecord` for each object instance that
 	// uses this decorator, which itself contains a `{method name} -> TMethodRecord` mapping

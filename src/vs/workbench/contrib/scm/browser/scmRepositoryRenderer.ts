@@ -3,34 +3,39 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './media/scm.css';
-import { IDisposable, DisposableStore, combinedDisposable } from '../../../../base/common/lifecycle.js';
-import { autorun, IObservable, observableSignalFromEvent } from '../../../../base/common/observable.js';
-import { append, $ } from '../../../../base/browser/dom.js';
-import { ISCMProvider, ISCMRepository, ISCMViewService } from '../common/scm.js';
-import { CountBadge } from '../../../../base/browser/ui/countBadge/countBadge.js';
-import { IContextMenuService } from '../../../../platform/contextview/browser/contextView.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { ActionRunner, IAction } from '../../../../base/common/actions.js';
-import { connectPrimaryMenu, getRepositoryResourceCount, isSCMRepository, StatusBarAction } from './util.js';
-import { ITreeNode, ITreeRenderer } from '../../../../base/browser/ui/tree/tree.js';
-import { ICompressibleTreeRenderer } from '../../../../base/browser/ui/tree/objectTree.js';
-import { FuzzyScore } from '../../../../base/common/filters.js';
-import { IListRenderer } from '../../../../base/browser/ui/list/list.js';
-import { IActionViewItemProvider } from '../../../../base/browser/ui/actionbar/actionbar.js';
-import { defaultCountBadgeStyles } from '../../../../platform/theme/browser/defaultStyles.js';
-import { WorkbenchToolBar } from '../../../../platform/actions/browser/toolbar.js';
-import { IMenuService, MenuId, MenuItemAction } from '../../../../platform/actions/common/actions.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
-import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
-import { IconLabel } from '../../../../base/browser/ui/iconLabel/iconLabel.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
-import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
-import { shorten } from '../../../../base/common/labels.js';
-import { dirname } from '../../../../base/common/resources.js';
-import { ILabelService } from '../../../../platform/label/common/label.js';
-import { Codicon } from '../../../../base/common/codicons.js';
+import "./media/scm.css";
+import { IDisposable, DisposableStore, combinedDisposable } from "../../../../base/common/lifecycle.js";
+import { autorun, IObservable, observableSignalFromEvent } from "../../../../base/common/observable.js";
+import { append, $ } from "../../../../base/browser/dom.js";
+import { ISCMProvider, ISCMRepository, ISCMViewService } from "../common/scm.js";
+import { CountBadge } from "../../../../base/browser/ui/countBadge/countBadge.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { ActionRunner, IAction } from "../../../../base/common/actions.js";
+import {
+  connectPrimaryMenu,
+  getRepositoryResourceCount,
+  isSCMRepository,
+  StatusBarAction,
+} from "./util.js";
+import { ITreeNode, ITreeRenderer } from "../../../../base/browser/ui/tree/tree.js";
+import { ICompressibleTreeRenderer } from "../../../../base/browser/ui/tree/objectTree.js";
+import { FuzzyScore } from "../../../../base/common/filters.js";
+import { IListRenderer } from "../../../../base/browser/ui/list/list.js";
+import { IActionViewItemProvider } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { defaultCountBadgeStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { WorkbenchToolBar } from "../../../../platform/actions/browser/toolbar.js";
+import { IMenuService, MenuId, MenuItemAction } from "../../../../platform/actions/common/actions.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IconLabel } from "../../../../base/browser/ui/iconLabel/iconLabel.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { shorten } from "../../../../base/common/labels.js";
+import { dirname } from "../../../../base/common/resources.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { Codicon } from "../../../../base/common/codicons.js";
 
 export class RepositoryActionRunner extends ActionRunner {
 	constructor(private readonly getSelectedRepositories: () => ISCMRepository[]) {
@@ -67,7 +72,7 @@ interface RepositoryTemplate {
 
 export class RepositoryRenderer implements ICompressibleTreeRenderer<ISCMRepository, FuzzyScore, RepositoryTemplate>, IListRenderer<ISCMRepository, RepositoryTemplate>, ITreeRenderer<ISCMRepository, FuzzyScore, RepositoryTemplate> {
 
-	static readonly TEMPLATE_ID = 'repository';
+	static readonly TEMPLATE_ID = "repository";
 	get templateId(): string { return RepositoryRenderer.TEMPLATE_ID; }
 
 	private readonly onDidChangeVisibleRepositoriesSignal: IObservable<void>;
@@ -83,25 +88,55 @@ export class RepositoryRenderer implements ICompressibleTreeRenderer<ISCMReposit
 		@IMenuService private menuService: IMenuService,
 		@ISCMViewService private scmViewService: ISCMViewService,
 		@ITelemetryService private telemetryService: ITelemetryService,
-		@IUriIdentityService private uriIdentityService: IUriIdentityService
+		@IUriIdentityService private uriIdentityService: IUriIdentityService,
 	) {
-		this.onDidChangeVisibleRepositoriesSignal = observableSignalFromEvent(this, this.scmViewService.onDidChangeVisibleRepositories);
+		this.onDidChangeVisibleRepositoriesSignal = observableSignalFromEvent(
+      this,
+      this.scmViewService.onDidChangeVisibleRepositories,
+    );
 	}
 
 	renderTemplate(container: HTMLElement): RepositoryTemplate {
-		const provider = append(container, $('.scm-provider'));
-		const icon = append(provider, $('.icon'));
+		const provider = append(container, $(".scm-provider"));
+		const icon = append(provider, $(".icon"));
 		const label = new IconLabel(provider, { supportIcons: false });
 
-		const actions = append(provider, $('.actions'));
-		const toolBar = new WorkbenchToolBar(actions, { actionViewItemProvider: this.actionViewItemProvider, resetMenu: this.toolbarMenuId, responsiveBehavior: { enabled: true, kind: 'all', minItems: 2 } }, this.menuService, this.contextKeyService, this.contextMenuService, this.keybindingService, this.commandService, this.telemetryService);
-		const countContainer = append(provider, $('.count'));
+		const actions = append(provider, $(".actions"));
+		const toolBar = new WorkbenchToolBar(
+      actions,
+      {
+        actionViewItemProvider: this.actionViewItemProvider,
+        resetMenu: this.toolbarMenuId,
+        responsiveBehavior: { enabled: true, kind: "all", minItems: 2 },
+      },
+      this.menuService,
+      this.contextKeyService,
+      this.contextMenuService,
+      this.keybindingService,
+      this.commandService,
+      this.telemetryService,
+    );
+		const countContainer = append(provider, $(".count"));
 		const count = new CountBadge(countContainer, {}, defaultCountBadgeStyles);
-		const visibilityDisposable = toolBar.onDidChangeDropdownVisibility(e => provider.classList.toggle('active', e));
+		const visibilityDisposable = toolBar.onDidChangeDropdownVisibility(
+      e => provider.classList.toggle("active", e),
+    );
 
-		const templateDisposable = combinedDisposable(label, visibilityDisposable, toolBar);
+		const templateDisposable = combinedDisposable(
+      label,
+      visibilityDisposable,
+      toolBar,
+    );
 
-		return { icon, label, countContainer, count, toolBar, elementDisposables: new DisposableStore(), templateDisposable };
+		return {
+      icon,
+      label,
+      countContainer,
+      count,
+      toolBar,
+      elementDisposables: new DisposableStore(),
+      templateDisposable,
+    };
 	}
 
 	renderElement(arg: ISCMRepository | ITreeNode<ISCMRepository, FuzzyScore>, index: number, templateData: RepositoryTemplate): void {
@@ -139,7 +174,9 @@ export class RepositoryRenderer implements ICompressibleTreeRenderer<ISCMReposit
 			if (repositoriesWithRootUri.length > 1) {
 				description = repository.provider.label;
 			} else if (repositoriesWithSameName.length > 1) {
-				const repositoryIndex = repositoriesWithSameName.findIndex(r => r === repository);
+				const repositoryIndex = repositoriesWithSameName.findIndex(
+          r => r === repository,
+        );
 				const shortDescription = shorten(repositoriesWithSameName
 					.map(r => this.labelService.getUriLabel(dirname(r.provider.rootUri!), { relative: true })));
 
@@ -169,7 +206,10 @@ export class RepositoryRenderer implements ICompressibleTreeRenderer<ISCMReposit
 		let menuPrimaryActions: IAction[] = [];
 		let menuSecondaryActions: IAction[] = [];
 		const updateToolbar = () => {
-			templateData.toolBar.setActions([...statusPrimaryActions, ...menuPrimaryActions], menuSecondaryActions);
+			templateData.toolBar.setActions(
+        [...statusPrimaryActions, ...menuPrimaryActions],
+        menuSecondaryActions,
+      );
 		};
 
 		templateData.elementDisposables.add(autorun(reader => {
@@ -180,7 +220,7 @@ export class RepositoryRenderer implements ICompressibleTreeRenderer<ISCMReposit
 
 		templateData.elementDisposables.add(autorun(reader => {
 			const count = repository.provider.count.read(reader) ?? getRepositoryResourceCount(repository.provider);
-			templateData.countContainer.setAttribute('data-count', String(count));
+			templateData.countContainer.setAttribute("data-count", String(count));
 			templateData.count.setCount(count);
 		}));
 
@@ -196,14 +236,14 @@ export class RepositoryRenderer implements ICompressibleTreeRenderer<ISCMReposit
 				menuPrimaryActions = primary;
 				menuSecondaryActions = secondary;
 				updateToolbar();
-			}, this.toolbarMenuId === MenuId.SCMTitle ? 'navigation' : 'inline'));
+			}, this.toolbarMenuId === MenuId.SCMTitle ? "navigation" : "inline"));
 		}));
 
 		templateData.toolBar.context = repository.provider;
 	}
 
 	renderCompressedElements(): void {
-		throw new Error('Should never happen since node is incompressible');
+		throw new Error("Should never happen since node is incompressible");
 	}
 
 	disposeElement(group: ISCMRepository | ITreeNode<ISCMRepository, FuzzyScore>, index: number, template: RepositoryTemplate): void {

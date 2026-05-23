@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DisposableStore, IDisposable } from '../../../../base/common/lifecycle.js';
-import { ICodeEditor } from '../../../browser/editorBrowser.js';
-import { SuggestModel } from './suggestModel.js';
+import { DisposableStore, IDisposable } from "../../../../base/common/lifecycle.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { SuggestModel } from "./suggestModel.js";
 
 export class OvertypingCapturer implements IDisposable {
 
@@ -52,13 +52,17 @@ export class OvertypingCapturer implements IDisposable {
 			}
 		}));
 
-		this._disposables.add(suggestModel.onDidTrigger(e => {
-			this._locked = true;
-		}));
+		this._disposables.add(
+      suggestModel.onDidTrigger(e => {
+        this._locked = true;
+      }),
+    );
 
-		this._disposables.add(suggestModel.onDidCancel(e => {
-			this._locked = false;
-		}));
+		this._disposables.add(
+      suggestModel.onDidCancel(e => {
+        this._locked = false;
+      }),
+    );
 	}
 
 	getLastOvertypedInfo(idx: number): { value: string; multiline: boolean } | undefined {

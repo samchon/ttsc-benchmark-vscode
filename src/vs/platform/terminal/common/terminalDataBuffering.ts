@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../base/common/event.js';
-import { IDisposable } from '../../../base/common/lifecycle.js';
-import { isString } from '../../../base/common/types.js';
-import { IProcessDataEvent } from './terminal.js';
+import { Event } from "../../../base/common/event.js";
+import { IDisposable } from "../../../base/common/lifecycle.js";
+import { isString } from "../../../base/common/types.js";
+import { IProcessDataEvent } from "./terminal.js";
 
 interface TerminalDataBuffer extends IDisposable {
 	data: string[];
@@ -43,7 +43,7 @@ export class TerminalDataBufferer implements IDisposable {
 					clearTimeout(timeoutId);
 					this.flushBuffer(id);
 					disposable.dispose();
-				}
+				},
 			};
 			this._terminalBufferMap.set(id, buffer);
 		});
@@ -59,7 +59,7 @@ export class TerminalDataBufferer implements IDisposable {
 		const buffer = this._terminalBufferMap.get(id);
 		if (buffer) {
 			this._terminalBufferMap.delete(id);
-			this._callback(id, buffer.data.join(''));
+			this._callback(id, buffer.data.join(""));
 		}
 	}
 }

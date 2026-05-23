@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ThrottledDelayer } from '../../../common/async.js';
-import { Event, PauseableEmitter } from '../../../common/event.js';
-import { Disposable, IDisposable } from '../../../common/lifecycle.js';
-import { parse, stringify } from '../../../common/marshalling.js';
-import { isObject, isUndefined, isUndefinedOrNull } from '../../../common/types.js';
+import { ThrottledDelayer } from "../../../common/async.js";
+import { Event, PauseableEmitter } from "../../../common/event.js";
+import { Disposable, IDisposable } from "../../../common/lifecycle.js";
+import { parse, stringify } from "../../../common/marshalling.js";
+import { isObject, isUndefined, isUndefinedOrNull } from "../../../common/types.js";
 
 export enum StorageHint {
 
@@ -116,14 +116,18 @@ export class Storage extends Disposable implements IStorage {
 
 	private static readonly DEFAULT_FLUSH_DELAY = 100;
 
-	private readonly _onDidChangeStorage = this._register(new PauseableEmitter<IStorageChangeEvent>());
+	private readonly _onDidChangeStorage = this._register(
+    new PauseableEmitter<IStorageChangeEvent>(),
+  );
 	readonly onDidChangeStorage = this._onDidChangeStorage.event;
 
 	private state = StorageState.None;
 
 	private cache = new Map<string, string>();
 
-	private readonly flushDelayer = this._register(new ThrottledDelayer<void>(Storage.DEFAULT_FLUSH_DELAY));
+	private readonly flushDelayer = this._register(
+    new ThrottledDelayer<void>(Storage.DEFAULT_FLUSH_DELAY),
+  );
 
 	private pendingDeletes = new Set<string>();
 	private pendingInserts = new Map<string, string>();
@@ -134,7 +138,7 @@ export class Storage extends Disposable implements IStorage {
 
 	constructor(
 		protected readonly database: IStorageDatabase,
-		private readonly options: IStorageOptions = Object.create(null)
+		private readonly options: IStorageOptions = Object.create(null),
 	) {
 		super();
 
@@ -142,7 +146,11 @@ export class Storage extends Disposable implements IStorage {
 	}
 
 	private registerListeners(): void {
-		this._register(this.database.onDidChangeItemsExternal(e => this.onDidChangeItemsExternal(e)));
+		this._register(
+      this.database.onDidChangeItemsExternal(
+        e => this.onDidChangeItemsExternal(e),
+      ),
+    );
 	}
 
 	private onDidChangeItemsExternal(e: IStorageItemsChangeEvent): void {
@@ -234,7 +242,7 @@ export class Storage extends Disposable implements IStorage {
 			return fallbackValue;
 		}
 
-		return value === 'true';
+		return value === "true";
 	}
 
 	getNumber(key: string, fallbackValue: number): number;
@@ -366,7 +374,10 @@ export class Storage extends Disposable implements IStorage {
 		}
 
 		// Get pending data
-		const updateRequest: IUpdateRequest = { insert: this.pendingInserts, delete: this.pendingDeletes };
+		const updateRequest: IUpdateRequest = {
+      insert: this.pendingInserts,
+      delete: this.pendingDeletes,
+    };
 
 		// Reset pending data for next run
 		this.pendingDeletes = new Set<string>();
@@ -436,7 +447,7 @@ export class InMemoryStorageDatabase implements IStorageDatabase {
 }
 
 
-export const MIGRATED_KEY = '__$__migratedStorageMarker';
+export const MIGRATED_KEY = "__$__migratedStorageMarker";
 
 export class MigratingStorage extends Storage {
 
@@ -456,12 +467,14 @@ export class MigratingStorage extends Storage {
 		this.isFallbackStorageReadonly = isReadonly;
 	}
 
-	private static readonly INTERNAL_KEY_PREFIX = '__$__';
+	private static readonly INTERNAL_KEY_PREFIX = "__$__";
 
 	override get(key: string, fallbackValue: string): string;
 	override get(key: string, fallbackValue?: string): string | undefined;
 	override get(key: string, fallbackValue?: string): string | undefined {
-		if (!key.startsWith(MigratingStorage.INTERNAL_KEY_PREFIX) && !this.migratedKeys.has(key) && isUndefined(super.get(key))) {
+		if (!key.startsWith(
+      MigratingStorage.INTERNAL_KEY_PREFIX,
+    ) && !this.migratedKeys.has(key) && isUndefined(super.get(key))) {
 			// Check fallback storage and auto-migrate on hit.
 			// Mark the key as migrated immediately to prevent
 			// re-checking the fallback, and to ensure a key

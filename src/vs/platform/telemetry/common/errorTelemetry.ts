@@ -3,25 +3,25 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { binarySearch } from '../../../base/common/arrays.js';
-import { errorHandler, ErrorNoTelemetry, PendingMigrationError } from '../../../base/common/errors.js';
-import { ListenerLeakError } from '../../../base/common/event.js';
-import { DisposableStore, toDisposable } from '../../../base/common/lifecycle.js';
-import { safeStringify } from '../../../base/common/objects.js';
-import { FileOperationError } from '../../files/common/files.js';
-import { ITelemetryService } from './telemetry.js';
+import { binarySearch } from "../../../base/common/arrays.js";
+import { errorHandler, ErrorNoTelemetry, PendingMigrationError } from "../../../base/common/errors.js";
+import { ListenerLeakError } from "../../../base/common/event.js";
+import { DisposableStore, toDisposable } from "../../../base/common/lifecycle.js";
+import { safeStringify } from "../../../base/common/objects.js";
+import { FileOperationError } from "../../files/common/files.js";
+import { ITelemetryService } from "./telemetry.js";
 
 export type ErrorEventFragment = {
-	owner: 'lramos15, sbatten';
-	comment: 'Whenever an error in VS Code is thrown.';
-	callstack: { classification: 'CallstackOrException'; purpose: 'PerformanceAndHealth'; comment: 'The callstack of the error.' };
-	msg?: { classification: 'CallstackOrException'; purpose: 'PerformanceAndHealth'; comment: 'The message of the error. Normally the first line int the callstack.' };
-	file?: { classification: 'CallstackOrException'; purpose: 'PerformanceAndHealth'; comment: 'The file the error originated from.' };
-	line?: { classification: 'CallstackOrException'; purpose: 'PerformanceAndHealth'; comment: 'The line the error originate on.' };
-	column?: { classification: 'CallstackOrException'; purpose: 'PerformanceAndHealth'; comment: 'The column of the line which the error orginated on.' };
-	uncaught_error_name?: { classification: 'CallstackOrException'; purpose: 'PerformanceAndHealth'; comment: 'If the error is uncaught what is the error type' };
-	uncaught_error_msg?: { classification: 'CallstackOrException'; purpose: 'PerformanceAndHealth'; comment: 'If the error is uncaught this is just msg but for uncaught errors.' };
-	count?: { classification: 'CallstackOrException'; purpose: 'PerformanceAndHealth'; comment: 'How many times this error has been thrown' };
+	owner: "lramos15, sbatten";
+	comment: "Whenever an error in VS Code is thrown.";
+	callstack: { classification: "CallstackOrException"; purpose: "PerformanceAndHealth"; comment: "The callstack of the error." };
+	msg?: { classification: "CallstackOrException"; purpose: "PerformanceAndHealth"; comment: "The message of the error. Normally the first line int the callstack." };
+	file?: { classification: "CallstackOrException"; purpose: "PerformanceAndHealth"; comment: "The file the error originated from." };
+	line?: { classification: "CallstackOrException"; purpose: "PerformanceAndHealth"; comment: "The line the error originate on." };
+	column?: { classification: "CallstackOrException"; purpose: "PerformanceAndHealth"; comment: "The column of the line which the error orginated on." };
+	uncaught_error_name?: { classification: "CallstackOrException"; purpose: "PerformanceAndHealth"; comment: "If the error is uncaught what is the error type" };
+	uncaught_error_msg?: { classification: "CallstackOrException"; purpose: "PerformanceAndHealth"; comment: "If the error is uncaught this is just msg but for uncaught errors." };
+	count?: { classification: "CallstackOrException"; purpose: "PerformanceAndHealth"; comment: "How many times this error has been thrown" };
 };
 
 type ListenerLeakDiagEvent = {
@@ -30,8 +30,8 @@ type ListenerLeakDiagEvent = {
 };
 
 type ListenerLeakDiagFragment = {
-	kind?: { classification: 'SystemMetaData'; purpose: 'PerformanceAndHealth'; comment: 'Whether the leak is dominated by a single subscriber or popular among many.' };
-	listenerCount?: { classification: 'SystemMetaData'; purpose: 'PerformanceAndHealth'; comment: 'Number of listeners on the emitter when the leak was detected.' };
+	kind?: { classification: "SystemMetaData"; purpose: "PerformanceAndHealth"; comment: "Whether the leak is dominated by a single subscriber or popular among many." };
+	listenerCount?: { classification: "SystemMetaData"; purpose: "PerformanceAndHealth"; comment: "Number of listeners on the emitter when the leak was detected." };
 };
 
 type UnhandledErrorEvent = ErrorEvent & ListenerLeakDiagEvent;
@@ -65,10 +65,12 @@ export namespace ErrorEvent {
  * and falls back to {@link safeStringify} when no message is available.
  */
 export function packErrorForTelemetry(err: any): { callstack: string | undefined; msg: string } {
-	if (!err || typeof err !== 'object') {
+	if (!err || typeof err !== "object") {
 		return { callstack: undefined, msg: safeStringify(err) };
 	}
-	const callstack: string | undefined = Array.isArray(err.stack) ? err.stack.join('\n') : err.stack;
+	const callstack: string | undefined = Array.isArray(
+    err.stack,
+  ) ? err.stack.join("\n") : err.stack;
 	const msg = err.message ? err.message : safeStringify(err);
 	return { callstack, msg };
 }
@@ -122,7 +124,13 @@ export default abstract class BaseErrorTelemetry {
 		// Explicitly filter out PendingMigrationError for https://github.com/microsoft/vscode/issues/250648#issuecomment-3394040431
 		// We don't inherit from ErrorNoTelemetry to preserve the name used in reporting for exthostdeprecatedapiusage event.
 		// TODO(deepak1556): remove when PendingMigrationError is no longer needed.
-		if (ErrorNoTelemetry.isErrorNoTelemetry(err) || err instanceof FileOperationError || PendingMigrationError.is(err) || (typeof err?.message === 'string' && err.message.includes('Unable to read file'))) {
+		if (ErrorNoTelemetry.isErrorNoTelemetry(
+      err,
+    ) || err instanceof FileOperationError || PendingMigrationError.is(
+      err,
+    ) || (typeof err?.message === "string" && err.message.includes(
+      "Unable to read file",
+    ))) {
 			return;
 		}
 
@@ -159,16 +167,22 @@ export default abstract class BaseErrorTelemetry {
 		}
 
 		if (this._flushHandle === undefined) {
-			this._flushHandle = setTimeout(() => {
-				this._flushBuffer();
-				this._flushHandle = undefined;
-			}, this._flushDelay);
+			this._flushHandle = setTimeout(
+        () => {
+          this._flushBuffer();
+          this._flushHandle = undefined;
+        },
+        this._flushDelay,
+      );
 		}
 	}
 
 	private _flushBuffer(): void {
 		for (const error of this._buffer) {
-			this._telemetryService.publicLogError2<UnhandledErrorEvent, UnhandledErrorClassification>('UnhandledError', error as UnhandledErrorEvent);
+			this._telemetryService.publicLogError2<UnhandledErrorEvent, UnhandledErrorClassification>(
+        "UnhandledError",
+        error as UnhandledErrorEvent,
+      );
 		}
 		this._buffer.length = 0;
 	}

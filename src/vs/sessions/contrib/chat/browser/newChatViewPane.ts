@@ -3,34 +3,34 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './media/chatWidget.css';
-import * as dom from '../../../../base/browser/dom.js';
-import { Disposable, DisposableStore, IDisposable, MutableDisposable } from '../../../../base/common/lifecycle.js';
-import { derived } from '../../../../base/common/observable.js';
-import { isWeb } from '../../../../base/common/platform.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { IContextMenuService } from '../../../../platform/contextview/browser/contextView.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
-import { IThemeService } from '../../../../platform/theme/common/themeService.js';
-import { IHoverService } from '../../../../platform/hover/browser/hover.js';
-import { localize } from '../../../../nls.js';
-import { ISessionsManagementService } from '../../../services/sessions/common/sessionsManagement.js';
-import { IAquariumService, IMountedToggleHandle } from '../../aquarium/browser/aquariumOverlay.js';
-import { IViewDescriptorService } from '../../../../workbench/common/views.js';
-import { IWorkspaceTrustRequestService } from '../../../../platform/workspace/common/workspaceTrust.js';
-import { IViewPaneOptions, ViewPane } from '../../../../workbench/browser/parts/views/viewPane.js';
-import { WorkspacePicker } from './sessionWorkspacePicker.js';
-import { WebWorkspacePicker } from './webWorkspacePicker.js';
-import { IPreferredSessionType } from './sessionTypePicker.js';
-import { NewChatInputWidget } from './newChatInput.js';
-import { NoAgentHostEmptyState } from './noAgentHostEmptyState.js';
-import { IChatRequestVariableEntry } from '../../../../workbench/contrib/chat/common/attachments/chatVariableEntries.js';
-import { IAgentHostFilterService } from '../../../services/agentHostFilter/common/agentHostFilter.js';
+import "./media/chatWidget.css";
+import * as dom from "../../../../base/browser/dom.js";
+import { Disposable, DisposableStore, IDisposable, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { derived } from "../../../../base/common/observable.js";
+import { isWeb } from "../../../../base/common/platform.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { localize } from "../../../../nls.js";
+import { ISessionsManagementService } from "../../../services/sessions/common/sessionsManagement.js";
+import { IAquariumService, IMountedToggleHandle } from "../../aquarium/browser/aquariumOverlay.js";
+import { IViewDescriptorService } from "../../../../workbench/common/views.js";
+import { IWorkspaceTrustRequestService } from "../../../../platform/workspace/common/workspaceTrust.js";
+import { IViewPaneOptions, ViewPane } from "../../../../workbench/browser/parts/views/viewPane.js";
+import { WorkspacePicker } from "./sessionWorkspacePicker.js";
+import { WebWorkspacePicker } from "./webWorkspacePicker.js";
+import { IPreferredSessionType } from "./sessionTypePicker.js";
+import { NewChatInputWidget } from "./newChatInput.js";
+import { NoAgentHostEmptyState } from "./noAgentHostEmptyState.js";
+import { IChatRequestVariableEntry } from "../../../../workbench/contrib/chat/common/attachments/chatVariableEntries.js";
+import { IAgentHostFilterService } from "../../../services/agentHostFilter/common/agentHostFilter.js";
 
 // #region --- New Chat Widget ---
 
@@ -65,7 +65,9 @@ class NewChatWidget extends Disposable {
 		// sheet on phone-layout viewports. On Electron desktop, the regular
 		// {@link WorkspacePicker} is fine — phones never run there.
 		const PickerCtor = isWeb ? WebWorkspacePicker : WorkspacePicker;
-		this._workspacePicker = this._register(this.instantiationService.createInstance(PickerCtor));
+		this._workspacePicker = this._register(
+      this.instantiationService.createInstance(PickerCtor),
+    );
 		this._register(this._pendingSessionTypeWait);
 
 		const canSendRequest = derived(reader => {
@@ -77,9 +79,9 @@ class NewChatWidget extends Disposable {
 		});
 
 		const loading = derived(reader => {
-			const session = this.sessionsManagementService.activeSession.read(reader);
-			return session?.loading.read(reader) ?? false;
-		});
+      const session = this.sessionsManagementService.activeSession.read(reader);
+      return session?.loading.read(reader) ?? false;
+    });
 
 		this._newChatInput = this._register(this.instantiationService.createInstance(NewChatInputWidget, {
 			getContextFolderUri: () => this._getContextFolderUri(),
@@ -106,22 +108,37 @@ class NewChatWidget extends Disposable {
 			}
 			this._newChatInput.focus();
 		}));
-		this._register(this._newChatInput.sessionTypePicker.onDidSelectSessionType(async pick => {
-			await this._onWorkspaceSelected(this._workspacePicker.selectedFolderUri, pick);
-			this._newChatInput.focus();
-		}));
+		this._register(
+      this._newChatInput.sessionTypePicker.onDidSelectSessionType(
+        async pick => {
+          await this._onWorkspaceSelected(this._workspacePicker.selectedFolderUri, pick);
+          this._newChatInput.focus();
+        },
+      ),
+    );
 	}
 
 	// --- Rendering ---
 
 	render(parent: HTMLElement): void {
-		const element = dom.append(parent, dom.$('.sessions-chat-widget'));
-		const chatWidgetContainer = dom.append(element, dom.$('.new-chat-widget-container'));
-		const chatWidgetContent = dom.append(chatWidgetContainer, dom.$('.new-chat-widget-content'));
+		const element = dom.append(parent, dom.$(".sessions-chat-widget"));
+		const chatWidgetContainer = dom.append(
+      element,
+      dom.$(".new-chat-widget-container"),
+    );
+		const chatWidgetContent = dom.append(
+      chatWidgetContainer,
+      dom.$(".new-chat-widget-content"),
+    );
 
-		this._aquariumToggle = this._register(this.aquariumService.mountToggle(element));
+		this._aquariumToggle = this._register(
+      this.aquariumService.mountToggle(element),
+    );
 
-		const workspacePickerContainer = dom.append(chatWidgetContent, dom.$('.new-session-workspace-picker-container'));
+		const workspacePickerContainer = dom.append(
+      chatWidgetContent,
+      dom.$(".new-session-workspace-picker-container"),
+    );
 		// On web (vscode.dev / insiders.vscode.dev) the workspace picker is
 		// scoped to the currently selected agent host. When no hosts are
 		// known there is nothing for the user to pick, so swap the picker
@@ -141,10 +158,13 @@ class NewChatWidget extends Disposable {
 		// from a pending new session when navigating back from another session).
 		const restoredFolderUri = this._workspacePicker.selectedFolderUri;
 		if (!this._syncWorkspacePickerFromActiveSession() && restoredFolderUri) {
-			this._createNewSession(restoredFolderUri, this._newChatInput.sessionTypePicker.selectedPick);
+			this._createNewSession(
+        restoredFolderUri,
+        this._newChatInput.sessionTypePicker.selectedPick,
+      );
 		}
 
-		chatWidgetContainer.classList.add('revealed');
+		chatWidgetContainer.classList.add("revealed");
 	}
 
 	/**
@@ -166,7 +186,9 @@ class NewChatWidget extends Disposable {
 		const sessionWorkspace = activeSession.workspace.get();
 		const folderUri = sessionWorkspace?.folders[0]?.root;
 		if (folderUri) {
-			this._workspacePicker.setSelectedWorkspace(folderUri, { fireEvent: false });
+			this._workspacePicker.setSelectedWorkspace(folderUri, {
+        fireEvent: false,
+      });
 		}
 
 		return true;
@@ -180,7 +202,9 @@ class NewChatWidget extends Disposable {
 		// any provider that offers the same sessionTypeId.
 		let effectivePick = pick;
 		if (effectivePick) {
-			const available = this.sessionsManagementService.getSessionTypesForFolder(folderUri);
+			const available = this.sessionsManagementService.getSessionTypesForFolder(
+        folderUri,
+      );
 			const matches = available.some(t =>
 				(effectivePick!.providerId === undefined || t.providerId === effectivePick!.providerId)
 				&& t.sessionType.id === effectivePick!.sessionTypeId);
@@ -195,7 +219,9 @@ class NewChatWidget extends Disposable {
 		// agent-host-specific UI (model picker etc.) until the user re-picks the workspace.
 		// If the connection fails, the picker fires onDidSelectWorkspace(undefined) which
 		// clears the pending wait via _onWorkspaceSelected.
-		const availableNow = this.sessionsManagementService.getSessionTypesForFolder(folderUri);
+		const availableNow = this.sessionsManagementService.getSessionTypesForFolder(
+      folderUri,
+    );
 		if (availableNow.length === 0) {
 			const pendingStore = new DisposableStore();
 			this._pendingSessionTypeWait.value = pendingStore;
@@ -221,7 +247,7 @@ class NewChatWidget extends Disposable {
 					? { providerId: fallbackProviderId }
 					: undefined);
 		} catch (e) {
-			this.logService.error('Failed to create new session:', e);
+			this.logService.error("Failed to create new session:", e);
 		}
 	}
 
@@ -233,26 +259,41 @@ class NewChatWidget extends Disposable {
 	}
 
 	private _renderWorkspacePicker(container: HTMLElement): IDisposable {
-		const pickersRow = dom.append(container, dom.$('.session-workspace-picker'));
-		const pickersLabel = dom.append(pickersRow, dom.$('.session-workspace-picker-label'));
+		const pickersRow = dom.append(
+      container,
+      dom.$(".session-workspace-picker"),
+    );
+		const pickersLabel = dom.append(
+      pickersRow,
+      dom.$(".session-workspace-picker-label"),
+    );
 		pickersLabel.textContent = this._workspacePicker.selectedFolderUri
-			? localize('newSessionIn', "New session in")
-			: localize('newSessionChooseWorkspace', "Start by picking a");
+			? localize("newSessionIn", "New session in")
+			: localize("newSessionChooseWorkspace", "Start by picking a");
 
 		this._workspacePicker.render(pickersRow);
-		const withLabel = dom.append(pickersRow, dom.$('.session-workspace-picker-label.session-workspace-picker-with-label'));
-		withLabel.textContent = localize('newSessionWith', "with");
-		this._newChatInput.sessionTypePicker.render(pickersRow, { className: 'sessions-chat-session-type-picker' });
+		const withLabel = dom.append(
+      pickersRow,
+      dom.$(
+        ".session-workspace-picker-label.session-workspace-picker-with-label",
+      ),
+    );
+		withLabel.textContent = localize("newSessionWith", "with");
+		this._newChatInput.sessionTypePicker.render(pickersRow, {
+      className: "sessions-chat-session-type-picker",
+    });
 		return this._workspacePicker.onDidSelectWorkspace(() => {
 			const folderUri = this._workspacePicker.selectedFolderUri;
 			pickersLabel.textContent = folderUri
-				? localize('newSessionIn', "New session in")
-				: localize('newSessionChooseWorkspace', "Start by picking a");
+				? localize("newSessionIn", "New session in")
+				: localize("newSessionChooseWorkspace", "Start by picking a");
 		});
 	}
 
 	private _renderEmptyState(container: HTMLElement): IDisposable {
-		const emptyState = this.instantiationService.createInstance(NoAgentHostEmptyState);
+		const emptyState = this.instantiationService.createInstance(
+      NoAgentHostEmptyState,
+    );
 		emptyState.render(container);
 		this._activeEmptyState = emptyState;
 		return {
@@ -276,17 +317,20 @@ class NewChatWidget extends Disposable {
 	 */
 	private _renderEmptyStateGate(container: HTMLElement, chatWidgetContent: HTMLElement): IDisposable {
 		const store = new DisposableStore();
-		const pickerSlot = dom.append(container, dom.$('.session-workspace-picker-slot'));
+		const pickerSlot = dom.append(
+      container,
+      dom.$(".session-workspace-picker-slot"),
+    );
 		const stateDisposables = store.add(new MutableDisposable());
 
 		const showPicker = () => {
-			chatWidgetContent.classList.remove('no-agent-host');
+			chatWidgetContent.classList.remove("no-agent-host");
 			dom.clearNode(pickerSlot);
 			stateDisposables.value = this._renderWorkspacePicker(pickerSlot);
 		};
 
 		const showEmptyState = () => {
-			chatWidgetContent.classList.add('no-agent-host');
+			chatWidgetContent.classList.add("no-agent-host");
 			dom.clearNode(pickerSlot);
 			stateDisposables.value = this._renderEmptyState(pickerSlot);
 		};
@@ -345,16 +389,19 @@ class NewChatWidget extends Disposable {
 			return;
 		}
 		try {
-			await this.sessionsManagementService.sendNewChatRequest(session, { query, attachedContext });
+			await this.sessionsManagementService.sendNewChatRequest(session, {
+        query,
+        attachedContext,
+      });
 		} catch (e) {
-			this.logService.error('Failed to send request:', e);
+			this.logService.error("Failed to send request:", e);
 		}
 	}
 
 	private async _requestFolderTrust(folderUri: URI): Promise<boolean> {
 		const trusted = await this.workspaceTrustRequestService.requestResourcesTrust({
 			uri: folderUri,
-			message: localize('trustFolderMessage', "An agent session will be able to read files, run commands, and make changes in this folder."),
+			message: localize("trustFolderMessage", "An agent session will be able to read files, run commands, and make changes in this folder."),
 		});
 		if (!trusted) {
 			this._workspacePicker.removeFromRecents(folderUri);
@@ -426,7 +473,7 @@ class NewChatWidget extends Disposable {
 
 // #region --- New Chat View Pane ---
 
-export const SessionsViewId = 'workbench.view.sessions.chat';
+export const SessionsViewId = "workbench.view.sessions.chat";
 
 export class NewChatViewPane extends ViewPane {
 
@@ -444,15 +491,26 @@ export class NewChatViewPane extends ViewPane {
 		@IThemeService themeService: IThemeService,
 		@IHoverService hoverService: IHoverService,
 	) {
-		super(options, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, instantiationService, openerService, themeService, hoverService);
+		super(
+      options,
+      keybindingService,
+      contextMenuService,
+      configurationService,
+      contextKeyService,
+      viewDescriptorService,
+      instantiationService,
+      openerService,
+      themeService,
+      hoverService,
+    );
 	}
 
 	protected override renderBody(container: HTMLElement): void {
 		super.renderBody(container);
 
-		this._widget = this._register(this.instantiationService.createInstance(
-			NewChatWidget,
-		));
+		this._widget = this._register(
+      this.instantiationService.createInstance(NewChatWidget),
+    );
 
 		this._widget.render(container);
 		this._widget.focusInput();

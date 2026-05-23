@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { extHostCustomer, IExtHostContext } from '../../services/extensions/common/extHostCustomers.js';
-import { ExtHostContext, ExtHostExtensionServiceShape } from '../common/extHost.protocol.js';
-import { IRemoteAuthorityResolverService } from '../../../platform/remote/common/remoteAuthorityResolver.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { IWorkbenchEnvironmentService } from '../../services/environment/common/environmentService.js';
+import { extHostCustomer, IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+import { ExtHostContext, ExtHostExtensionServiceShape } from "../common/extHost.protocol.js";
+import { IRemoteAuthorityResolverService } from "../../../platform/remote/common/remoteAuthorityResolver.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { IWorkbenchEnvironmentService } from "../../services/environment/common/environmentService.js";
 
 @extHostCustomer
 export class MainThreadRemoteConnectionData extends Disposable {
@@ -17,10 +17,12 @@ export class MainThreadRemoteConnectionData extends Disposable {
 	constructor(
 		extHostContext: IExtHostContext,
 		@IWorkbenchEnvironmentService protected readonly _environmentService: IWorkbenchEnvironmentService,
-		@IRemoteAuthorityResolverService remoteAuthorityResolverService: IRemoteAuthorityResolverService
+		@IRemoteAuthorityResolverService remoteAuthorityResolverService: IRemoteAuthorityResolverService,
 	) {
 		super();
-		this._proxy = extHostContext.getProxy(ExtHostContext.ExtHostExtensionService);
+		this._proxy = extHostContext.getProxy(
+      ExtHostContext.ExtHostExtensionService,
+    );
 
 		const remoteAuthority = this._environmentService.remoteAuthority;
 		if (remoteAuthority) {

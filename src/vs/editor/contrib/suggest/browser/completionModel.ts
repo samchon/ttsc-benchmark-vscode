@@ -3,14 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { quickSelect } from '../../../../base/common/arrays.js';
-import { CharCode } from '../../../../base/common/charCode.js';
-import { anyScore, fuzzyScore, FuzzyScore, fuzzyScoreGracefulAggressive, FuzzyScoreOptions, FuzzyScorer } from '../../../../base/common/filters.js';
-import { compareIgnoreCase } from '../../../../base/common/strings.js';
-import { InternalSuggestOptions } from '../../../common/config/editorOptions.js';
-import { CompletionItemKind, CompletionItemProvider } from '../../../common/languages.js';
-import { WordDistance } from './wordDistance.js';
-import { CompletionItem } from './suggest.js';
+import { quickSelect } from "../../../../base/common/arrays.js";
+import { CharCode } from "../../../../base/common/charCode.js";
+import {
+  anyScore,
+  fuzzyScore,
+  FuzzyScore,
+  fuzzyScoreGracefulAggressive,
+  FuzzyScoreOptions,
+  FuzzyScorer,
+} from "../../../../base/common/filters.js";
+import { compareIgnoreCase } from "../../../../base/common/strings.js";
+import { InternalSuggestOptions } from "../../../common/config/editorOptions.js";
+import { CompletionItemKind, CompletionItemProvider } from "../../../common/languages.js";
+import { WordDistance } from "./wordDistance.js";
+import { CompletionItem } from "./suggest.js";
 
 type StrictCompletionItem = Required<CompletionItem>;
 
@@ -56,9 +63,9 @@ export class CompletionModel {
 		lineContext: LineContext,
 		wordDistance: WordDistance,
 		options: InternalSuggestOptions,
-		snippetSuggestions: 'top' | 'bottom' | 'inline' | 'none',
+		snippetSuggestions: "top" | "bottom" | "inline" | "none",
 		fuzzyScoreOptions: FuzzyScoreOptions | undefined = FuzzyScoreOptions.default,
-		readonly clipboardText: string | undefined = undefined
+		readonly clipboardText: string | undefined = undefined,
 	) {
 		this._items = items;
 		this._column = column;
@@ -68,9 +75,9 @@ export class CompletionModel {
 		this._lineContext = lineContext;
 		this._fuzzyScoreOptions = fuzzyScoreOptions;
 
-		if (snippetSuggestions === 'top') {
+		if (snippetSuggestions === "top") {
 			this._snippetCompareFn = CompletionModel._compareCompletionItemsSnippetsUp;
-		} else if (snippetSuggestions === 'bottom') {
+		} else if (snippetSuggestions === "bottom") {
 			this._snippetCompareFn = CompletionModel._compareCompletionItemsSnippetsDown;
 		}
 	}
@@ -127,8 +134,8 @@ export class CompletionModel {
 		const labelLengths: number[] = [];
 
 		const { leadingLineContent, characterCountDelta } = this._lineContext;
-		let word = '';
-		let wordLow = '';
+		let word = "";
+		let wordLow = "";
 
 		// incrementally filter less
 		const source = this._refilterKind === Refilter.All ? this._items : this._filteredItems!;
@@ -161,7 +168,7 @@ export class CompletionModel {
 			const overwriteBefore = item.position.column - item.editStart.column;
 			const wordLen = overwriteBefore + characterCountDelta - (item.position.column - this._column);
 			if (word.length !== wordLen) {
-				word = wordLen === 0 ? '' : leadingLineContent.slice(-wordLen);
+				word = wordLen === 0 ? "" : leadingLineContent.slice(-wordLen);
 				wordLow = word.toLowerCase();
 			}
 
@@ -195,28 +202,54 @@ export class CompletionModel {
 					// and therefore the same rules as not having a word apply
 					item.score = FuzzyScore.Default;
 
-				} else if (typeof item.completion.filterText === 'string') {
+				} else if (typeof item.completion.filterText === "string") {
 					// when there is a `filterText` it must match the `word`.
 					// if it matches we check with the label to compute highlights
 					// and if that doesn't yield a result we have no highlights,
 					// despite having the match
-					const match = scoreFn(word, wordLow, wordPos, item.completion.filterText, item.filterTextLow!, 0, this._fuzzyScoreOptions);
+					const match = scoreFn(
+            word,
+            wordLow,
+            wordPos,
+            item.completion.filterText,
+            item.filterTextLow!,
+            0,
+            this._fuzzyScoreOptions,
+          );
 					if (!match) {
 						continue; // NO match
 					}
-					if (compareIgnoreCase(item.completion.filterText, item.textLabel) === 0) {
+					if (compareIgnoreCase(
+            item.completion.filterText,
+            item.textLabel,
+          ) === 0) {
 						// filterText and label are actually the same -> use good highlights
 						item.score = match;
 					} else {
 						// re-run the scorer on the label in the hope of a result BUT use the rank
 						// of the filterText-match
-						item.score = anyScore(word, wordLow, wordPos, item.textLabel, item.labelLow, 0);
+						item.score = anyScore(
+              word,
+              wordLow,
+              wordPos,
+              item.textLabel,
+              item.labelLow,
+              0,
+            );
 						item.score[0] = match[0]; // use score from filterText
 					}
 
 				} else {
 					// by default match `word` against the `label`
-					const match = scoreFn(word, wordLow, wordPos, item.textLabel, item.labelLow, 0, this._fuzzyScoreOptions);
+					const match = scoreFn(
+            word,
+            wordLow,
+            wordPos,
+            item.textLabel,
+            item.labelLow,
+            0,
+            this._fuzzyScoreOptions,
+          );
 					if (!match) {
 						continue; // NO match
 					}
@@ -225,7 +258,10 @@ export class CompletionModel {
 			}
 
 			item.idx = i;
-			item.distance = this._wordDistance.distance(item.position, item.completion);
+			item.distance = this._wordDistance.distance(
+        item.position,
+        item.completion,
+      );
 			target.push(item as StrictCompletionItem);
 
 			// update stats
@@ -237,7 +273,7 @@ export class CompletionModel {
 		this._stats = {
 			pLabelLen: labelLengths.length ?
 				quickSelect(labelLengths.length - .85, labelLengths, (a, b) => a - b)
-				: 0
+				: 0,
 		};
 	}
 

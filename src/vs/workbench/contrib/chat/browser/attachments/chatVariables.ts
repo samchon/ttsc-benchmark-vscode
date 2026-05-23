@@ -3,19 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IChatVariablesService, IDynamicVariable } from '../../common/attachments/chatVariables.js';
-import { IToolAndToolSetEnablementMap } from '../../common/tools/languageModelToolsService.js';
-import { IChatWidget, IChatWidgetService } from '../chat.js';
-import { ChatDynamicVariableModel } from './chatDynamicVariables.js';
-import { Range } from '../../../../../editor/common/core/range.js';
-import { URI } from '../../../../../base/common/uri.js';
+import { IChatVariablesService, IDynamicVariable } from "../../common/attachments/chatVariables.js";
+import { IToolAndToolSetEnablementMap } from "../../common/tools/languageModelToolsService.js";
+import { IChatWidget, IChatWidgetService } from "../chat.js";
+import { ChatDynamicVariableModel } from "./chatDynamicVariables.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import { URI } from "../../../../../base/common/uri.js";
 
 export function getDynamicVariablesForWidget(widget: IChatWidget): ReadonlyArray<IDynamicVariable> {
 	if (!widget.viewModel || !widget.supportsFileReferences) {
 		return [];
 	}
 
-	const model = widget.getContrib<ChatDynamicVariableModel>(ChatDynamicVariableModel.ID);
+	const model = widget.getContrib<ChatDynamicVariableModel>(
+    ChatDynamicVariableModel.ID,
+  );
 	if (!model) {
 		return [];
 	}
@@ -48,15 +50,15 @@ export function getDynamicVariablesForWidget(widget: IChatWidget): ReadonlyArray
 				const endPos = editorModel.getPositionAt(attachment.range.endExclusive);
 
 				const referenceObj: IDynamicVariable = {
-					id: attachment.id,
-					fullName: attachment.name,
-					modelDescription: attachment.modelDescription,
-					range: new Range(startPos.lineNumber, startPos.column, endPos.lineNumber, endPos.column),
-					icon: attachment.icon,
-					isFile: attachment.kind === 'file',
-					isDirectory: attachment.kind === 'directory',
-					data: attachment.value
-				};
+          id: attachment.id,
+          fullName: attachment.name,
+          modelDescription: attachment.modelDescription,
+          range: new Range(startPos.lineNumber, startPos.column, endPos.lineNumber, endPos.column),
+          icon: attachment.icon,
+          isFile: attachment.kind === "file",
+          isDirectory: attachment.kind === "directory",
+          data: attachment.value,
+        };
 				references.push(referenceObj);
 			}
 		}
@@ -79,7 +81,9 @@ export class ChatVariablesService implements IChatVariablesService {
 	) { }
 
 	getDynamicVariables(sessionResource: URI): ReadonlyArray<IDynamicVariable> {
-		const widget = this.chatWidgetService.getWidgetBySessionResource(sessionResource);
+		const widget = this.chatWidgetService.getWidgetBySessionResource(
+      sessionResource,
+    );
 		if (!widget) {
 			return [];
 		}
@@ -87,7 +91,9 @@ export class ChatVariablesService implements IChatVariablesService {
 	}
 
 	getSelectedToolAndToolSets(sessionResource: URI): IToolAndToolSetEnablementMap {
-		const widget = this.chatWidgetService.getWidgetBySessionResource(sessionResource);
+		const widget = this.chatWidgetService.getWidgetBySessionResource(
+      sessionResource,
+    );
 		if (!widget) {
 			return new Map();
 		}

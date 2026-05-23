@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IPosition, Position } from './position.js';
-import { Range } from './range.js';
+import { IPosition, Position } from "./position.js";
+import { Range } from "./range.js";
 
 /**
  * A selection in the editor.
@@ -66,7 +66,12 @@ export class Selection extends Range {
 	public readonly positionColumn: number;
 
 	constructor(selectionStartLineNumber: number, selectionStartColumn: number, positionLineNumber: number, positionColumn: number) {
-		super(selectionStartLineNumber, selectionStartColumn, positionLineNumber, positionColumn);
+		super(
+      selectionStartLineNumber,
+      selectionStartColumn,
+      positionLineNumber,
+      positionColumn,
+    );
 		this.selectionStartLineNumber = selectionStartLineNumber;
 		this.selectionStartColumn = selectionStartColumn;
 		this.positionLineNumber = positionLineNumber;
@@ -77,7 +82,7 @@ export class Selection extends Range {
 	 * Transform to a human-readable representation.
 	 */
 	public override toString(): string {
-		return '[' + this.selectionStartLineNumber + ',' + this.selectionStartColumn + ' -> ' + this.positionLineNumber + ',' + this.positionColumn + ']';
+		return "[" + this.selectionStartLineNumber + "," + this.selectionStartColumn + " -> " + this.positionLineNumber + "," + this.positionColumn + "]";
 	}
 
 	/**
@@ -116,9 +121,19 @@ export class Selection extends Range {
 	 */
 	public override setEndPosition(endLineNumber: number, endColumn: number): Selection {
 		if (this.getDirection() === SelectionDirection.LTR) {
-			return new Selection(this.startLineNumber, this.startColumn, endLineNumber, endColumn);
+			return new Selection(
+        this.startLineNumber,
+        this.startColumn,
+        endLineNumber,
+        endColumn,
+      );
 		}
-		return new Selection(endLineNumber, endColumn, this.startLineNumber, this.startColumn);
+		return new Selection(
+      endLineNumber,
+      endColumn,
+      this.startLineNumber,
+      this.startColumn,
+    );
 	}
 
 	/**
@@ -132,7 +147,10 @@ export class Selection extends Range {
 	 * Get the position at the start of the selection.
 	*/
 	public getSelectionStart(): Position {
-		return new Position(this.selectionStartLineNumber, this.selectionStartColumn);
+		return new Position(
+      this.selectionStartLineNumber,
+      this.selectionStartColumn,
+    );
 	}
 
 	/**
@@ -140,9 +158,19 @@ export class Selection extends Range {
 	 */
 	public override setStartPosition(startLineNumber: number, startColumn: number): Selection {
 		if (this.getDirection() === SelectionDirection.LTR) {
-			return new Selection(startLineNumber, startColumn, this.endLineNumber, this.endColumn);
+			return new Selection(
+        startLineNumber,
+        startColumn,
+        this.endLineNumber,
+        this.endColumn,
+      );
 		}
-		return new Selection(this.endLineNumber, this.endColumn, startLineNumber, startColumn);
+		return new Selection(
+      this.endLineNumber,
+      this.endColumn,
+      startLineNumber,
+      startColumn,
+    );
 	}
 
 	// ----
@@ -151,7 +179,12 @@ export class Selection extends Range {
 	 * Create a `Selection` from one or two positions
 	 */
 	public static override fromPositions(start: IPosition, end: IPosition = start): Selection {
-		return new Selection(start.lineNumber, start.column, end.lineNumber, end.column);
+		return new Selection(
+      start.lineNumber,
+      start.column,
+      end.lineNumber,
+      end.column,
+    );
 	}
 
 	/**
@@ -159,9 +192,19 @@ export class Selection extends Range {
 	 */
 	public static fromRange(range: Range, direction: SelectionDirection): Selection {
 		if (direction === SelectionDirection.LTR) {
-			return new Selection(range.startLineNumber, range.startColumn, range.endLineNumber, range.endColumn);
+			return new Selection(
+        range.startLineNumber,
+        range.startColumn,
+        range.endLineNumber,
+        range.endColumn,
+      );
 		} else {
-			return new Selection(range.endLineNumber, range.endColumn, range.startLineNumber, range.startColumn);
+			return new Selection(
+        range.endLineNumber,
+        range.endColumn,
+        range.startLineNumber,
+        range.startColumn,
+      );
 		}
 	}
 
@@ -169,7 +212,12 @@ export class Selection extends Range {
 	 * Create a `Selection` from an `ISelection`.
 	 */
 	public static liftSelection(sel: ISelection): Selection {
-		return new Selection(sel.selectionStartLineNumber, sel.selectionStartColumn, sel.positionLineNumber, sel.positionColumn);
+		return new Selection(
+      sel.selectionStartLineNumber,
+      sel.selectionStartColumn,
+      sel.positionLineNumber,
+      sel.positionColumn,
+    );
 	}
 
 	/**
@@ -199,10 +247,10 @@ export class Selection extends Range {
 	public static isISelection(obj: unknown): obj is ISelection {
 		return (
 			!!obj
-			&& (typeof (obj as ISelection).selectionStartLineNumber === 'number')
-			&& (typeof (obj as ISelection).selectionStartColumn === 'number')
-			&& (typeof (obj as ISelection).positionLineNumber === 'number')
-			&& (typeof (obj as ISelection).positionColumn === 'number')
+			&& (typeof (obj as ISelection).selectionStartLineNumber === "number")
+			&& (typeof (obj as ISelection).selectionStartColumn === "number")
+			&& (typeof (obj as ISelection).positionLineNumber === "number")
+			&& (typeof (obj as ISelection).positionColumn === "number")
 		);
 	}
 
@@ -212,9 +260,19 @@ export class Selection extends Range {
 	public static createWithDirection(startLineNumber: number, startColumn: number, endLineNumber: number, endColumn: number, direction: SelectionDirection): Selection {
 
 		if (direction === SelectionDirection.LTR) {
-			return new Selection(startLineNumber, startColumn, endLineNumber, endColumn);
+			return new Selection(
+        startLineNumber,
+        startColumn,
+        endLineNumber,
+        endColumn,
+      );
 		}
 
-		return new Selection(endLineNumber, endColumn, startLineNumber, startColumn);
+		return new Selection(
+      endLineNumber,
+      endColumn,
+      startLineNumber,
+      startColumn,
+    );
 	}
 }

@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ITreeNavigator } from '../../../../../base/browser/ui/tree/tree.js';
-import { Emitter } from '../../../../../base/common/event.js';
-import { IDisposable } from '../../../../../base/common/lifecycle.js';
-import { RenderableMatch } from '../../browser/searchTreeModel/searchTreeCommon.js';
+import { ITreeNavigator } from "../../../../../base/browser/ui/tree/tree.js";
+import { Emitter } from "../../../../../base/common/event.js";
+import { IDisposable } from "../../../../../base/common/lifecycle.js";
+import { RenderableMatch } from "../../browser/searchTreeModel/searchTreeCommon.js";
 
 const someEvent = new Emitter().event;
 

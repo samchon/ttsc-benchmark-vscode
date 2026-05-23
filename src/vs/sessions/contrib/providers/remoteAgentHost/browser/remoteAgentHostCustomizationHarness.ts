@@ -4,27 +4,36 @@
  *--------------------------------------------------------------------------------------------*/
 
 
-import { Codicon } from '../../../../../base/common/codicons.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { basename } from '../../../../../base/common/resources.js';
-import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { localize } from '../../../../../nls.js';
-import { AgentHostConfigKey, getAgentHostConfiguredCustomizations } from '../../../../../platform/agentHost/common/agentHostCustomizationConfig.js';
-import { agentHostUri } from '../../../../../platform/agentHost/common/agentHostFileSystemProvider.js';
-import { IFileService } from '../../../../../platform/files/common/files.js';
-import { ILogService } from '../../../../../platform/log/common/log.js';
-import { AGENT_HOST_SCHEME, fromAgentHostUri } from '../../../../../platform/agentHost/common/agentHostUri.js';
-import type { IAgentConnection } from '../../../../../platform/agentHost/common/agentService.js';
-import { ActionType } from '../../../../../platform/agentHost/common/state/sessionActions.js';
-import { ROOT_STATE_URI, type AgentInfo, type CustomizationRef } from '../../../../../platform/agentHost/common/state/sessionState.js';
-import { IFileDialogService } from '../../../../../platform/dialogs/common/dialogs.js';
-import { INotificationService } from '../../../../../platform/notification/common/notification.js';
-import { AICustomizationManagementSection, AICustomizationSources, IAICustomizationWorkspaceService, type IStorageSourceFilter } from '../../../../../workbench/contrib/chat/common/aiCustomizationWorkspaceService.js';
-import { type IHarnessDescriptor, type ICustomizationItem, type ICustomizationItemAction } from '../../../../../workbench/contrib/chat/common/customizationHarnessService.js';
-import { PromptsType } from '../../../../../workbench/contrib/chat/common/promptSyntax/promptTypes.js';
-import { AgentCustomizationSyncProvider } from '../../../../../workbench/contrib/chat/browser/agentSessions/agentHost/agentCustomizationSyncProvider.js';
-import { AgentCustomizationItemProvider } from '../../../../../workbench/contrib/chat/browser/agentSessions/agentHost/agentCustomizationItemProvider.js';
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { basename } from "../../../../../base/common/resources.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { localize } from "../../../../../nls.js";
+import { AgentHostConfigKey, getAgentHostConfiguredCustomizations } from "../../../../../platform/agentHost/common/agentHostCustomizationConfig.js";
+import { agentHostUri } from "../../../../../platform/agentHost/common/agentHostFileSystemProvider.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { AGENT_HOST_SCHEME, fromAgentHostUri } from "../../../../../platform/agentHost/common/agentHostUri.js";
+import type { IAgentConnection } from "../../../../../platform/agentHost/common/agentService.js";
+import { ActionType } from "../../../../../platform/agentHost/common/state/sessionActions.js";
+import { ROOT_STATE_URI, type AgentInfo, type CustomizationRef } from "../../../../../platform/agentHost/common/state/sessionState.js";
+import { IFileDialogService } from "../../../../../platform/dialogs/common/dialogs.js";
+import { INotificationService } from "../../../../../platform/notification/common/notification.js";
+import {
+  AICustomizationManagementSection,
+  AICustomizationSources,
+  IAICustomizationWorkspaceService,
+  type IStorageSourceFilter,
+} from "../../../../../workbench/contrib/chat/common/aiCustomizationWorkspaceService.js";
+import {
+  type IHarnessDescriptor,
+  type ICustomizationItem,
+  type ICustomizationItemAction,
+} from "../../../../../workbench/contrib/chat/common/customizationHarnessService.js";
+import { PromptsType } from "../../../../../workbench/contrib/chat/common/promptSyntax/promptTypes.js";
+import { AgentCustomizationSyncProvider } from "../../../../../workbench/contrib/chat/browser/agentSessions/agentHost/agentCustomizationSyncProvider.js";
+import { AgentCustomizationItemProvider } from "../../../../../workbench/contrib/chat/browser/agentSessions/agentHost/agentCustomizationItemProvider.js";
 
 function customizationKey(customization: CustomizationRef): string {
 	return customization.uri;
@@ -48,18 +57,20 @@ export class RemoteAgentPluginController extends Disposable {
 		super();
 
 		this.pluginActions = [
-			{
-				id: 'remoteAgentHost.addPlugin',
-				label: localize('remoteAgentHost.addPlugin', "Add Remote Plugin"),
-				tooltip: localize('remoteAgentHost.addPluginTooltip', "Add a plugin folder that already exists on this remote agent host."),
-				icon: Codicon.remote,
-				run: () => this.addConfiguredPlugin(),
-			},
-		];
+      {
+        id: "remoteAgentHost.addPlugin",
+        label: localize("remoteAgentHost.addPlugin", "Add Remote Plugin"),
+        tooltip: localize("remoteAgentHost.addPluginTooltip", "Add a plugin folder that already exists on this remote agent host."),
+        icon: Codicon.remote,
+        run: () => this.addConfiguredPlugin(),
+      },
+    ];
 	}
 
 	async removeConfiguredPlugin(customizationToRemove: CustomizationRef): Promise<void> {
-		const updated = this.getConfiguredCustomizations().filter(customization => customizationKey(customization) !== customizationKey(customizationToRemove));
+		const updated = this.getConfiguredCustomizations().filter(
+      customization => customizationKey(customization) !== customizationKey(customizationToRemove),
+    );
 		this.dispatchCustomizations(updated);
 	}
 
@@ -84,13 +95,13 @@ export class RemoteAgentPluginController extends Disposable {
 	private async pickRemotePluginFolder(title: string): Promise<URI | undefined> {
 		try {
 			const selected = await this._fileDialogService.showOpenDialog({
-				canSelectFiles: false,
-				canSelectFolders: true,
-				canSelectMany: false,
-				title,
-				availableFileSystems: [AGENT_HOST_SCHEME],
-				defaultUri: agentHostUri(this._connectionAuthority, '/'),
-			});
+        canSelectFiles: false,
+        canSelectFolders: true,
+        canSelectMany: false,
+        title,
+        availableFileSystems: [AGENT_HOST_SCHEME],
+        defaultUri: agentHostUri(this._connectionAuthority, "/"),
+      });
 			return selected?.[0];
 		} catch {
 			return undefined;
@@ -98,26 +109,36 @@ export class RemoteAgentPluginController extends Disposable {
 	}
 
 	private async addConfiguredPlugin(): Promise<void> {
-		const selected = await this.pickRemotePluginFolder(localize('remoteAgentHost.selectPluginFolder', "Select Plugin Folder on {0}", this._hostLabel));
+		const selected = await this.pickRemotePluginFolder(
+      localize(
+        "remoteAgentHost.selectPluginFolder",
+        "Select Plugin Folder on {0}",
+        this._hostLabel,
+      ),
+    );
 		if (!selected) {
 			return;
 		}
 
 		const original = fromAgentHostUri(selected);
 		const newCustomization: CustomizationRef = {
-			uri: original.toString(),
-			displayName: basename(original) || original.path,
-		};
+      uri: original.toString(),
+      displayName: basename(original) || original.path,
+    };
 
 		const current = this.getConfiguredCustomizations();
 		const nextKey = customizationKey(newCustomization);
-		if (current.some(customization => customizationKey(customization) === nextKey)) {
-			this._notificationService.info(localize(
-				'remoteAgentHost.pluginAlreadyConfigured',
-				"'{0}' is already configured on {1}.",
-				newCustomization.displayName,
-				this._hostLabel,
-			));
+		if (current.some(
+      customization => customizationKey(customization) === nextKey,
+    )) {
+			this._notificationService.info(
+        localize(
+          "remoteAgentHost.pluginAlreadyConfigured",
+          "'{0}' is already configured on {1}.",
+          newCustomization.displayName,
+          this._hostLabel,
+        ),
+      );
 			return;
 		}
 
@@ -156,8 +177,8 @@ export function createRemoteAgentCustomizationItemProvider(
 				return undefined;
 			}
 			return [{
-				id: 'remoteAgentHost.removeConfiguredPlugin',
-				label: localize('remoteAgentHost.removeConfiguredPlugin', "Remove from Remote Host"),
+				id: "remoteAgentHost.removeConfiguredPlugin",
+				label: localize("remoteAgentHost.removeConfiguredPlugin", "Remove from Remote Host"),
 				icon: Codicon.trash,
 				run: () => controller.removeConfiguredPlugin(customization),
 			}];
@@ -176,7 +197,13 @@ export function createRemoteAgentHarnessDescriptor(
 	itemProvider: AgentCustomizationItemProvider,
 	syncProvider: AgentCustomizationSyncProvider,
 ): IHarnessDescriptor {
-	const allSources = [AICustomizationSources.local, AICustomizationSources.user, AICustomizationSources.plugin, AICustomizationSources.extension, AICustomizationSources.builtin];
+	const allSources = [
+    AICustomizationSources.local,
+    AICustomizationSources.user,
+    AICustomizationSources.plugin,
+    AICustomizationSources.extension,
+    AICustomizationSources.builtin,
+  ];
 	const filter: IStorageSourceFilter = { sources: allSources };
 
 	return {

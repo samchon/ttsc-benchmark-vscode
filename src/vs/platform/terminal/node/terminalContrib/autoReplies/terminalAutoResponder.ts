@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { timeout } from '../../../../../base/common/async.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { isString } from '../../../../../base/common/types.js';
-import { isWindows } from '../../../../../base/common/platform.js';
-import { ILogService } from '../../../../log/common/log.js';
-import { ITerminalChildProcess } from '../../../common/terminal.js';
+import { timeout } from "../../../../../base/common/async.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { isString } from "../../../../../base/common/types.js";
+import { isWindows } from "../../../../../base/common/platform.js";
+import { ILogService } from "../../../../log/common/log.js";
+import { ITerminalChildProcess } from "../../../common/terminal.js";
 
 /**
  * Tracks a terminal process's data stream and responds immediately when a matching string is
@@ -29,7 +29,7 @@ export class TerminalAutoResponder extends Disposable {
 		proc: ITerminalChildProcess,
 		matchWord: string,
 		response: string,
-		logService: ILogService
+		logService: ILogService,
 	) {
 		super();
 

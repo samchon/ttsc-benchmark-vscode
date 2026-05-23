@@ -3,13 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../base/common/event.js';
-import { ScanCode, ScanCodeUtils } from '../../../base/common/keyCodes.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import { IKeyboardEvent } from '../../keybinding/common/keybinding.js';
-import { IKeyboardMapper } from './keyboardMapper.js';
+import { Event } from "../../../base/common/event.js";
+import { ScanCode, ScanCodeUtils } from "../../../base/common/keyCodes.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { IKeyboardEvent } from "../../keybinding/common/keybinding.js";
+import { IKeyboardMapper } from "./keyboardMapper.js";
 
-export const IKeyboardLayoutService = createDecorator<IKeyboardLayoutService>('keyboardLayoutService');
+export const IKeyboardLayoutService = createDecorator<IKeyboardLayoutService>(
+  "keyboardLayoutService",
+);
 
 export interface IWindowsKeyMapping {
 	vkey: string;
@@ -109,52 +111,52 @@ export function areKeyboardLayoutsEqual(a: IKeyboardLayoutInfo | null, b: IKeybo
 
 export function parseKeyboardLayoutDescription(layout: IKeyboardLayoutInfo | null): { label: string; description: string } {
 	if (!layout) {
-		return { label: '', description: '' };
+		return { label: "", description: "" };
 	}
 
 	if ((<IWindowsKeyboardLayoutInfo>layout).name) {
 		// windows
 		const windowsLayout = <IWindowsKeyboardLayoutInfo>layout;
 		return {
-			label: windowsLayout.text,
-			description: ''
-		};
+      label: windowsLayout.text,
+      description: "",
+    };
 	}
 
 	if ((<IMacKeyboardLayoutInfo>layout).id) {
 		const macLayout = <IMacKeyboardLayoutInfo>layout;
 		if (macLayout.localizedName) {
 			return {
-				label: macLayout.localizedName,
-				description: ''
-			};
+        label: macLayout.localizedName,
+        description: "",
+      };
 		}
 
 		if (/^com\.apple\.keylayout\./.test(macLayout.id)) {
 			return {
-				label: macLayout.id.replace(/^com\.apple\.keylayout\./, '').replace(/-/g, ' '),
-				description: ''
-			};
+        label: macLayout.id.replace(/^com\.apple\.keylayout\./, "").replace(/-/g, " "),
+        description: "",
+      };
 		}
 		if (/^.*inputmethod\./.test(macLayout.id)) {
 			return {
-				label: macLayout.id.replace(/^.*inputmethod\./, '').replace(/[-\.]/g, ' '),
-				description: `Input Method (${macLayout.lang})`
-			};
+        label: macLayout.id.replace(/^.*inputmethod\./, "").replace(/[-\.]/g, " "),
+        description: `Input Method (${macLayout.lang})`,
+      };
 		}
 
 		return {
-			label: macLayout.lang,
-			description: ''
-		};
+      label: macLayout.lang,
+      description: "",
+    };
 	}
 
 	const linuxLayout = <ILinuxKeyboardLayoutInfo>layout;
 
 	return {
-		label: linuxLayout.layout,
-		description: ''
-	};
+    label: linuxLayout.layout,
+    description: "",
+  };
 }
 
 export function getKeyboardLayoutId(layout: IKeyboardLayoutInfo): string {

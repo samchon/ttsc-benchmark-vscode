@@ -3,112 +3,120 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './media/agenttitlebarstatuswidget.css';
-import { $, addDisposableListener, EventType, getWindow, isHTMLElement, reset } from '../../../../../../base/browser/dom.js';
-import { renderIcon } from '../../../../../../base/browser/ui/iconLabel/iconLabels.js';
-import { Disposable, DisposableStore } from '../../../../../../base/common/lifecycle.js';
-import { Codicon } from '../../../../../../base/common/codicons.js';
-import { Event as EventUtils } from '../../../../../../base/common/event.js';
-import { localize } from '../../../../../../nls.js';
-import { IHoverService } from '../../../../../../platform/hover/browser/hover.js';
-import { getDefaultHoverDelegate } from '../../../../../../base/browser/ui/hover/hoverDelegateFactory.js';
-import { AgentStatusMode, IAgentTitleBarStatusService } from './agentTitleBarStatusService.js';
-import { ICommandService } from '../../../../../../platform/commands/common/commands.js';
-import { IKeybindingService } from '../../../../../../platform/keybinding/common/keybinding.js';
-import { EnterAgentSessionProjectionAction, ExitAgentSessionProjectionAction } from './agentSessionProjectionActions.js';
-import { UNIFIED_QUICK_ACCESS_ACTION_ID } from './unifiedQuickAccessActions.js';
-import { IAgentSessionsService } from '../agentSessionsService.js';
-import { AgentSessionStatus, IAgentSession, isSessionInProgressStatus } from '../agentSessionsModel.js';
-import { BaseActionViewItem, IBaseActionViewItemOptions } from '../../../../../../base/browser/ui/actionbar/actionViewItems.js';
-import { IAction, Separator, SubmenuAction, toAction } from '../../../../../../base/common/actions.js';
-import { IWorkspaceContextService, WorkbenchState } from '../../../../../../platform/workspace/common/workspace.js';
-import { IEditorGroupsService } from '../../../../../services/editor/common/editorGroupsService.js';
-import { IEditorService } from '../../../../../services/editor/common/editorService.js';
-import { renderAsPlaintext } from '../../../../../../base/browser/markdownRenderer.js';
-import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { IMenuService, MenuId, MenuItemAction, SubmenuItemAction } from '../../../../../../platform/actions/common/actions.js';
-import { IContextKeyService } from '../../../../../../platform/contextkey/common/contextkey.js';
-import { HiddenItemStrategy, WorkbenchToolBar } from '../../../../../../platform/actions/browser/toolbar.js';
-import { DropdownWithPrimaryActionViewItem } from '../../../../../../platform/actions/browser/dropdownWithPrimaryActionViewItem.js';
-import { createActionViewItem } from '../../../../../../platform/actions/browser/menuEntryActionViewItem.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../../../platform/storage/common/storage.js';
-import { FocusAgentSessionsAction } from '../agentSessionsActions.js';
-import { IWorkbenchContribution } from '../../../../../common/contributions.js';
-import { IActionViewItemService } from '../../../../../../platform/actions/browser/actionViewItemService.js';
-import { IConfigurationService } from '../../../../../../platform/configuration/common/configuration.js';
-import { mainWindow } from '../../../../../../base/browser/window.js';
-import { LayoutSettings } from '../../../../../services/layout/browser/layoutService.js';
-import { WindowTitle } from '../../../../../browser/parts/titlebar/windowTitle.js';
-import { ChatConfiguration } from '../../../common/constants.js';
-import { IChatEntitlementService } from '../../../../../services/chat/common/chatEntitlementService.js';
-import { IChatWidgetService } from '../../chat.js';
-import { ITelemetryService } from '../../../../../../platform/telemetry/common/telemetry.js';
-import { ITitleService } from '../../../../../services/title/browser/titleService.js';
+import "./media/agenttitlebarstatuswidget.css";
+import { $, addDisposableListener, EventType, getWindow, isHTMLElement, reset } from "../../../../../../base/browser/dom.js";
+import { renderIcon } from "../../../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { Disposable, DisposableStore } from "../../../../../../base/common/lifecycle.js";
+import { Codicon } from "../../../../../../base/common/codicons.js";
+import { Event as EventUtils } from "../../../../../../base/common/event.js";
+import { localize } from "../../../../../../nls.js";
+import { IHoverService } from "../../../../../../platform/hover/browser/hover.js";
+import { getDefaultHoverDelegate } from "../../../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { AgentStatusMode, IAgentTitleBarStatusService } from "./agentTitleBarStatusService.js";
+import { ICommandService } from "../../../../../../platform/commands/common/commands.js";
+import { IKeybindingService } from "../../../../../../platform/keybinding/common/keybinding.js";
+import { EnterAgentSessionProjectionAction, ExitAgentSessionProjectionAction } from "./agentSessionProjectionActions.js";
+import { UNIFIED_QUICK_ACCESS_ACTION_ID } from "./unifiedQuickAccessActions.js";
+import { IAgentSessionsService } from "../agentSessionsService.js";
+import { AgentSessionStatus, IAgentSession, isSessionInProgressStatus } from "../agentSessionsModel.js";
+import { BaseActionViewItem, IBaseActionViewItemOptions } from "../../../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { IAction, Separator, SubmenuAction, toAction } from "../../../../../../base/common/actions.js";
+import { IWorkspaceContextService, WorkbenchState } from "../../../../../../platform/workspace/common/workspace.js";
+import { IEditorGroupsService } from "../../../../../services/editor/common/editorGroupsService.js";
+import { IEditorService } from "../../../../../services/editor/common/editorService.js";
+import { renderAsPlaintext } from "../../../../../../base/browser/markdownRenderer.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { IMenuService, MenuId, MenuItemAction, SubmenuItemAction } from "../../../../../../platform/actions/common/actions.js";
+import { IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { HiddenItemStrategy, WorkbenchToolBar } from "../../../../../../platform/actions/browser/toolbar.js";
+import { DropdownWithPrimaryActionViewItem } from "../../../../../../platform/actions/browser/dropdownWithPrimaryActionViewItem.js";
+import { createActionViewItem } from "../../../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../../../platform/storage/common/storage.js";
+import { FocusAgentSessionsAction } from "../agentSessionsActions.js";
+import { IWorkbenchContribution } from "../../../../../common/contributions.js";
+import { IActionViewItemService } from "../../../../../../platform/actions/browser/actionViewItemService.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { mainWindow } from "../../../../../../base/browser/window.js";
+import { LayoutSettings } from "../../../../../services/layout/browser/layoutService.js";
+import { WindowTitle } from "../../../../../browser/parts/titlebar/windowTitle.js";
+import { ChatConfiguration } from "../../../common/constants.js";
+import { IChatEntitlementService } from "../../../../../services/chat/common/chatEntitlementService.js";
+import { IChatWidgetService } from "../../chat.js";
+import { ITelemetryService } from "../../../../../../platform/telemetry/common/telemetry.js";
+import { ITitleService } from "../../../../../services/title/browser/titleService.js";
 
 // Telemetry types
 type AgentStatusClickAction =
-	| 'openSession'
-	| 'quickAccess'
-	| 'focusSessionsView'
-	| 'toggleChat'
-	| 'setupChat'
-	| 'applyFilter'
-	| 'clearFilter'
-	| 'enterProjection'
-	| 'exitProjection';
+	| "openSession"
+	| "quickAccess"
+	| "focusSessionsView"
+	| "toggleChat"
+	| "setupChat"
+	| "applyFilter"
+	| "clearFilter"
+	| "enterProjection"
+	| "exitProjection";
 
 type AgentStatusClickEvent = {
-	source: 'pill' | 'sparkle' | 'unread' | 'inProgress' | 'needsInput';
+	source: "pill" | "sparkle" | "unread" | "inProgress" | "needsInput";
 	action: AgentStatusClickAction;
 };
 
 type AgentStatusClickClassification = {
-	source: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Which part of the agent status widget was clicked.' };
-	action: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The action taken in response to the click.' };
-	owner: 'joshspicer';
-	comment: 'Tracks interactions with the agent status command center control.';
+	source: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Which part of the agent status widget was clicked." };
+	action: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The action taken in response to the click." };
+	owner: "joshspicer";
+	comment: "Tracks interactions with the agent status command center control.";
 };
 
 // Action IDs
-const TOGGLE_CHAT_ACTION_ID = 'workbench.action.chat.toggle';
-const QUICK_OPEN_ACTION_ID = 'workbench.action.quickOpenWithModes';
+const TOGGLE_CHAT_ACTION_ID = "workbench.action.chat.toggle";
+const QUICK_OPEN_ACTION_ID = "workbench.action.quickOpenWithModes";
 
 // Storage key for filter state
-const FILTER_STORAGE_KEY = 'agentSessions.filterExcludes.agentsessionsviewerfiltersubmenu';
+const FILTER_STORAGE_KEY = "agentSessions.filterExcludes.agentsessionsviewerfiltersubmenu";
 // Storage key for saving user's filter state before we override it
-const PREVIOUS_FILTER_STORAGE_KEY = 'agentSessions.filterExcludes.previousUserFilter';
+const PREVIOUS_FILTER_STORAGE_KEY = "agentSessions.filterExcludes.previousUserFilter";
 
-type AgentStatusSettingMode = 'hidden' | 'badge' | 'compact';
+type AgentStatusSettingMode = "hidden" | "badge" | "compact";
 
 function shouldForceHiddenAgentStatus(configurationService: IConfigurationService): boolean {
-	const aiFeaturesDisabled = configurationService.getValue<boolean>(ChatConfiguration.AIDisabled) === true;
-	const aiCustomizationsDisabled = configurationService.getValue<boolean>('disableAICustomizations') === true
-		|| configurationService.getValue<boolean>('workbench.disableAICustomizations') === true;
+	const aiFeaturesDisabled = configurationService.getValue<boolean>(
+    ChatConfiguration.AIDisabled,
+  ) === true;
+	const aiCustomizationsDisabled = configurationService.getValue<boolean>(
+    "disableAICustomizations",
+  ) === true
+		|| configurationService.getValue<boolean>(
+      "workbench.disableAICustomizations",
+    ) === true;
 
 	return aiFeaturesDisabled && aiCustomizationsDisabled;
 }
 
 function getAgentStatusSettingMode(configurationService: IConfigurationService): AgentStatusSettingMode {
 	if (shouldForceHiddenAgentStatus(configurationService)) {
-		return 'hidden';
+		return "hidden";
 	}
 
-	const value = configurationService.getValue(ChatConfiguration.AgentStatusEnabled);
+	const value = configurationService.getValue(
+    ChatConfiguration.AgentStatusEnabled,
+  );
 
-	if (value === false || value === 'hidden') {
-		return 'hidden';
+	if (value === false || value === "hidden") {
+		return "hidden";
 	}
 
-	if (value === 'badge') {
-		return 'badge';
+	if (value === "badge") {
+		return "badge";
 	}
 
 	// Backward compatibility: previous experiments stored this as a boolean.
-	if (value === true || value === undefined || value === 'compact') {
-		return 'compact';
+	if (value === true || value === undefined || value === "compact") {
+		return "compact";
 	}
 
-	return 'compact';
+	return "compact";
 }
 
 /**
@@ -139,7 +147,7 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 
 	/** Tracks if this window applied a badge filter (unread/inProgress), so we only auto-clear our own filters */
 	// TODO: This is imperfect. Targetted fix for vscode#290863. We should revisit storing filter state per-window to avoid this
-	private _badgeFilterAppliedByThisWindow: 'unread' | 'inProgress' | 'needsInput' | null = null;
+	private _badgeFilterAppliedByThisWindow: "unread" | "inProgress" | "needsInput" | null = null;
 
 	/** Reusable menu for CommandCenterCenter items (e.g., debug toolbar) */
 	private readonly _commandCenterMenu;
@@ -171,34 +179,54 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 		super(undefined, action, options);
 
 		// Create menu for CommandCenterCenter to get items like debug toolbar
-		this._commandCenterMenu = this._register(this.menuService.createMenu(MenuId.CommandCenterCenter, this.contextKeyService));
+		this._commandCenterMenu = this._register(
+      this.menuService.createMenu(
+        MenuId.CommandCenterCenter,
+        this.contextKeyService,
+      ),
+    );
 
 		// Create menu for ChatTitleBarMenu to show in sparkle section dropdown
-		this._chatTitleBarMenu = this._register(this.menuService.createMenu(MenuId.ChatTitleBarMenu, this.contextKeyService));
+		this._chatTitleBarMenu = this._register(
+      this.menuService.createMenu(
+        MenuId.ChatTitleBarMenu,
+        this.contextKeyService,
+      ),
+    );
 
 		// Re-render when control mode or session info changes
-		this._register(this.agentTitleBarStatusService.onDidChangeMode(() => {
-			this._render();
-		}));
+		this._register(
+      this.agentTitleBarStatusService.onDidChangeMode(() => {
+        this._render();
+      }),
+    );
 
-		this._register(this.agentTitleBarStatusService.onDidChangeSessionInfo(() => {
-			this._render();
-		}));
+		this._register(
+      this.agentTitleBarStatusService.onDidChangeSessionInfo(() => {
+        this._render();
+      }),
+    );
 
 		// Re-render when sessions change to update statistics
-		this._register(this.agentSessionsService.model.onDidChangeSessions(() => {
-			this._render();
-		}));
+		this._register(
+      this.agentSessionsService.model.onDidChangeSessions(() => {
+        this._render();
+      }),
+    );
 
 		// Re-render when window title changes (honors user's window.title setting)
-		this._register(this._windowTitle.onDidChange(() => {
-			this._render();
-		}));
+		this._register(
+      this._windowTitle.onDidChange(() => {
+        this._render();
+      }),
+    );
 
 		// Re-render when active editor changes (for file name display when tabs are hidden)
-		this._register(this.editorService.onDidActiveEditorChange(() => {
-			this._render();
-		}));
+		this._register(
+      this.editorService.onDidActiveEditorChange(() => {
+        this._render();
+      }),
+    );
 
 		// Re-render when tabs visibility changes
 		this._register(this.editorGroupsService.onDidChangeEditorPartOptions(({ newPartOptions, oldPartOptions }) => {
@@ -214,9 +242,13 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 		}));
 
 		// Re-render when storage changes (e.g., filter state changes from sessions view)
-		this._register(this.storageService.onDidChangeValue(StorageScope.PROFILE, 'agentSessions.filterExcludes.agentsessionsviewerfiltersubmenu', this._store)(() => {
-			this._render();
-		}));
+		this._register(
+      this.storageService.onDidChangeValue(StorageScope.PROFILE, "agentSessions.filterExcludes.agentsessionsviewerfiltersubmenu", this._store)(
+        () => {
+          this._render();
+        },
+      ),
+    );
 
 		// Re-render when settings change
 		this._register(this.configurationService.onDidChangeConfiguration(e => {
@@ -225,8 +257,8 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 				|| e.affectsConfiguration(ChatConfiguration.UnifiedAgentsBar)
 				|| e.affectsConfiguration(ChatConfiguration.ChatViewSessionsEnabled)
 				|| e.affectsConfiguration(ChatConfiguration.AIDisabled)
-				|| e.affectsConfiguration('disableAICustomizations')
-				|| e.affectsConfiguration('workbench.disableAICustomizations')
+				|| e.affectsConfiguration("disableAICustomizations")
+				|| e.affectsConfiguration("workbench.disableAICustomizations")
 			) {
 				this._lastRenderState = undefined; // Force re-render
 				this._render();
@@ -238,28 +270,35 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 			this.chatEntitlementService.onDidChangeSentiment,
 			this.chatEntitlementService.onDidChangeQuotaExceeded,
 			this.chatEntitlementService.onDidChangeEntitlement,
-			this.chatEntitlementService.onDidChangeAnonymous
+			this.chatEntitlementService.onDidChangeAnonymous,
 		)(() => {
 			this._lastRenderState = undefined; // Force re-render
 			this._render();
 		}));
 
 		// Re-render when chat widgets are added or backgrounded to update active/unread session counts
-		this._register(this.chatWidgetService.onDidAddWidget(() => {
-			this._render();
-		}));
+		this._register(
+      this.chatWidgetService.onDidAddWidget(() => {
+        this._render();
+      }),
+    );
 
-		this._register(this.chatWidgetService.onDidBackgroundSession(() => {
-			this._render();
-		}));
+		this._register(
+      this.chatWidgetService.onDidBackgroundSession(() => {
+        this._render();
+      }),
+    );
 	}
 
 	override render(container: HTMLElement): void {
 		super.render(container);
 		this._container = container;
-		container.classList.add('agent-status-container');
-		container.setAttribute('role', 'toolbar');
-		container.setAttribute('aria-label', localize('agentStatusToolbarLabel', "Agent Status"));
+		container.classList.add("agent-status-container");
+		container.setAttribute("role", "toolbar");
+		container.setAttribute(
+      "aria-label",
+      localize("agentStatusToolbarLabel", "Agent Status"),
+    );
 		// Container should not be focusable - inner elements handle focus
 		container.tabIndex = -1;
 
@@ -306,14 +345,14 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 			// Get attention session info for state computation
 			const attentionSession = attentionNeededSessions.length > 0
 				? [...attentionNeededSessions].sort((a, b) => {
-					const timeA = a.timing.lastRequestStarted ?? a.timing.created;
-					const timeB = b.timing.lastRequestStarted ?? b.timing.created;
-					return timeB - timeA;
-				})[0]
+            const timeA = a.timing.lastRequestStarted ?? a.timing.created;
+            const timeB = b.timing.lastRequestStarted ?? b.timing.created;
+            return timeB - timeA;
+          })[0]
 				: undefined;
 
 			const attentionText = attentionSession?.description
-				? (typeof attentionSession.description === 'string'
+				? (typeof attentionSession.description === "string"
 					? attentionSession.description
 					: renderAsPlaintext(attentionSession.description))
 				: attentionSession?.label;
@@ -324,25 +363,29 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 			const { isFilteredToUnread, isFilteredToInProgress, isFilteredToNeedsInput } = this._getCurrentFilterState();
 
 			const statusMode = getAgentStatusSettingMode(this.configurationService);
-			const unifiedAgentsBarEnabled = this.configurationService.getValue<boolean>(ChatConfiguration.UnifiedAgentsBar) === true;
-			const viewSessionsEnabled = this.configurationService.getValue<boolean>(ChatConfiguration.ChatViewSessionsEnabled) !== false;
+			const unifiedAgentsBarEnabled = this.configurationService.getValue<boolean>(
+        ChatConfiguration.UnifiedAgentsBar,
+      ) === true;
+			const viewSessionsEnabled = this.configurationService.getValue<boolean>(
+        ChatConfiguration.ChatViewSessionsEnabled,
+      ) !== false;
 
 			// Build state key for comparison
 			const stateKey = JSON.stringify({
-				mode,
-				sessionTitle: sessionInfo?.title,
-				activeCount: activeSessions.length,
-				unreadCount: unreadSessions.length,
-				attentionCount: attentionNeededSessions.length,
-				attentionText,
-				label,
-				isFilteredToUnread,
-				isFilteredToInProgress,
-				isFilteredToNeedsInput,
-				statusMode,
-				unifiedAgentsBarEnabled,
-				viewSessionsEnabled,
-			});
+        mode,
+        sessionTitle: sessionInfo?.title,
+        activeCount: activeSessions.length,
+        unreadCount: unreadSessions.length,
+        attentionCount: attentionNeededSessions.length,
+        attentionText,
+        label,
+        isFilteredToUnread,
+        isFilteredToInProgress,
+        isFilteredToNeedsInput,
+        statusMode,
+        unifiedAgentsBarEnabled,
+        viewSessionsEnabled,
+      });
 
 			// Skip re-render if state hasn't changed
 			if (this._lastRenderState === stateKey) {
@@ -363,12 +406,17 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 			} else if (this.agentTitleBarStatusService.mode === AgentStatusMode.SessionReady) {
 				// Session ready mode - show session title + enter projection button
 				this._renderSessionReadyMode(this._dynamicDisposables);
-			} else if (statusMode === 'compact') {
+			} else if (statusMode === "compact") {
 				// Compact mode - replace command center search with integrated control
 				this._renderChatInputMode(this._dynamicDisposables);
-			} else if (statusMode === 'badge') {
+			} else if (statusMode === "badge") {
 				// Badge mode - render status badge next to command center search
-				this._renderStatusBadge(this._dynamicDisposables, activeSessions, unreadSessions, attentionNeededSessions);
+				this._renderStatusBadge(
+          this._dynamicDisposables,
+          activeSessions,
+          unreadSessions,
+          attentionNeededSessions,
+        );
 			}
 			// Hidden mode intentionally renders nothing.
 
@@ -426,10 +474,10 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 	private _getNextRovingIndex(currentIndex: number, key: string): number | undefined {
 		const len = this._rovingElements.length;
 		switch (key) {
-			case 'ArrowRight': return (currentIndex + 1) % len;
-			case 'ArrowLeft': return (currentIndex - 1 + len) % len;
-			case 'Home': return 0;
-			case 'End': return len - 1;
+			case "ArrowRight": return (currentIndex + 1) % len;
+			case "ArrowLeft": return (currentIndex - 1 + len) % len;
+			case "Home": return 0;
+			case "End": return len - 1;
 			default: return undefined;
 		}
 	}
@@ -460,19 +508,23 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 			: sessions;
 
 		// Active sessions include both InProgress and NeedsInput
-		const activeSessions = filteredSessions.filter(s => isSessionInProgressStatus(s.status) && !s.isArchived());
+		const activeSessions = filteredSessions.filter(
+      s => isSessionInProgressStatus(s.status) && !s.isArchived(),
+    );
 		const unreadSessions = filteredSessions.filter(s => !s.isRead());
 		// Sessions that need user input/attention (subset of active)
-		const attentionNeededSessions = filteredSessions.filter(s => s.status === AgentSessionStatus.NeedsInput && !this.chatWidgetService.getWidgetBySessionResource(s.resource));
+		const attentionNeededSessions = filteredSessions.filter(
+      s => s.status === AgentSessionStatus.NeedsInput && !this.chatWidgetService.getWidgetBySessionResource(s.resource),
+    );
 
 		return {
-			activeSessions,
-			unreadSessions,
-			attentionNeededSessions,
-			hasActiveSessions: activeSessions.length > 0,
-			hasUnreadSessions: unreadSessions.length > 0,
-			hasAttentionNeeded: attentionNeededSessions.length > 0,
-		};
+      activeSessions,
+      unreadSessions,
+      attentionNeededSessions,
+      hasActiveSessions: activeSessions.length > 0,
+      hasUnreadSessions: unreadSessions.length > 0,
+      hasAttentionNeeded: attentionNeededSessions.length > 0,
+    };
 	}
 
 	// #endregion
@@ -487,9 +539,9 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 		const { activeSessions, unreadSessions, attentionNeededSessions, hasAttentionNeeded } = this._getSessionStats();
 
 		// Create pill
-		const pill = $('div.agent-status-pill.chat-input-mode');
+		const pill = $("div.agent-status-pill.chat-input-mode");
 		if (hasAttentionNeeded) {
-			pill.classList.add('needs-attention');
+			pill.classList.add("needs-attention");
 		}
 		this._container.appendChild(pill);
 
@@ -498,17 +550,17 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 
 		// Compact mode is always true when rendering chat input mode (caller already checked for compact)
 		const isCompactMode = true;
-		pill.classList.toggle('compact-mode', isCompactMode);
+		pill.classList.toggle("compact-mode", isCompactMode);
 
 		// Left icon container (sparkle by default, report+count when attention needed, search on hover)
-		const leftIcon = $('span.agent-status-left-icon');
+		const leftIcon = $("span.agent-status-left-icon");
 		if (hasAttentionNeeded) {
 			// Show report icon + count when sessions need attention
 			const reportIcon = renderIcon(Codicon.report);
-			const countSpan = $('span.agent-status-attention-count');
+			const countSpan = $("span.agent-status-attention-count");
 			countSpan.textContent = String(attentionNeededSessions.length);
 			reset(leftIcon, reportIcon, countSpan);
-			leftIcon.classList.add('has-attention');
+			leftIcon.classList.add("has-attention");
 		} else {
 			reset(leftIcon, renderIcon(Codicon.searchSparkle));
 		}
@@ -517,79 +569,95 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 		}
 
 		// Input area wrapper - hover only activates here, not on badge sections
-		const inputArea = $('div.agent-status-input-area');
-		inputArea.setAttribute('role', 'button');
-		inputArea.setAttribute('aria-label', localize('openQuickAccess', "Open Quick Access"));
+		const inputArea = $("div.agent-status-input-area");
+		inputArea.setAttribute("role", "button");
+		inputArea.setAttribute(
+      "aria-label",
+      localize("openQuickAccess", "Open Quick Access"),
+    );
 		inputArea.tabIndex = 0;
 		this._rovingElements.push(inputArea);
 		pill.appendChild(inputArea);
 
 		// Label - always shows workspace name in compact mode
-		const label = $('span.agent-status-label');
-		const { progress: progressText } = this._getSessionNeedingAttention(attentionNeededSessions);
+		const label = $("span.agent-status-label");
+		const { progress: progressText } = this._getSessionNeedingAttention(
+      attentionNeededSessions,
+    );
 		const defaultLabel = isCompactMode ? this._getLabel() : (progressText ?? this._getLabel());
 
 		if (!isCompactMode && progressText) {
-			label.classList.add('has-progress');
+			label.classList.add("has-progress");
 		}
 
-		const hoverLabel = localize('askAnythingPlaceholder', "Ask anything or describe what to build");
+		const hoverLabel = localize(
+      "askAnythingPlaceholder",
+      "Ask anything or describe what to build",
+    );
 
 		label.textContent = defaultLabel;
 		inputArea.appendChild(label);
 
 		if (isCompactMode) {
 			// Compact mode: hover resets icon state but keeps workspace name
-			disposables.add(addDisposableListener(inputArea, EventType.MOUSE_ENTER, () => {
-				reset(leftIcon, renderIcon(Codicon.searchSparkle));
-				leftIcon.classList.remove('has-attention');
-				label.classList.remove('has-progress');
-			}));
+			disposables.add(
+        addDisposableListener(inputArea, EventType.MOUSE_ENTER, () => {
+          reset(leftIcon, renderIcon(Codicon.searchSparkle));
+          leftIcon.classList.remove("has-attention");
+          label.classList.remove("has-progress");
+        }),
+      );
 
-			disposables.add(addDisposableListener(inputArea, EventType.MOUSE_LEAVE, () => {
-				reset(leftIcon, renderIcon(Codicon.searchSparkle));
-			}));
+			disposables.add(
+        addDisposableListener(inputArea, EventType.MOUSE_LEAVE, () => {
+          reset(leftIcon, renderIcon(Codicon.searchSparkle));
+        }),
+      );
 		} else {
 			// Send icon (hidden by default, shown on hover - only when not showing attention message)
-			const sendIcon = $('span.agent-status-send');
+			const sendIcon = $("span.agent-status-send");
 			reset(sendIcon, renderIcon(Codicon.send));
-			sendIcon.classList.add('hidden');
+			sendIcon.classList.add("hidden");
 			inputArea.appendChild(sendIcon);
 
 			// Hover behavior - swap icon and label (only when showing default state).
 			if (!progressText) {
-				disposables.add(addDisposableListener(inputArea, EventType.MOUSE_ENTER, () => {
-					reset(leftIcon, renderIcon(Codicon.searchSparkle));
-					leftIcon.classList.remove('has-attention');
-					label.textContent = hoverLabel;
-					label.classList.remove('has-progress');
-					sendIcon.classList.remove('hidden');
-				}));
+				disposables.add(
+          addDisposableListener(inputArea, EventType.MOUSE_ENTER, () => {
+            reset(leftIcon, renderIcon(Codicon.searchSparkle));
+            leftIcon.classList.remove("has-attention");
+            label.textContent = hoverLabel;
+            label.classList.remove("has-progress");
+            sendIcon.classList.remove("hidden");
+          }),
+        );
 
-				disposables.add(addDisposableListener(inputArea, EventType.MOUSE_LEAVE, () => {
-					reset(leftIcon, renderIcon(Codicon.searchSparkle));
-					label.textContent = defaultLabel;
-					sendIcon.classList.add('hidden');
-				}));
+				disposables.add(
+          addDisposableListener(inputArea, EventType.MOUSE_LEAVE, () => {
+            reset(leftIcon, renderIcon(Codicon.searchSparkle));
+            label.textContent = defaultLabel;
+            sendIcon.classList.add("hidden");
+          }),
+        );
 			}
 		}
 
 		// Setup hover tooltip on input area
-		const hoverDelegate = getDefaultHoverDelegate('mouse');
+		const hoverDelegate = getDefaultHoverDelegate("mouse");
 		disposables.add(this.hoverService.setupManagedHover(hoverDelegate, inputArea, () => {
 			const kbForTooltip = this.keybindingService.lookupKeybinding(UNIFIED_QUICK_ACCESS_ACTION_ID)?.getLabel();
 			return kbForTooltip
-				? localize('askTooltip', "Open Quick Access ({0})", kbForTooltip)
-				: localize('askTooltip2', "Open Quick Access");
+				? localize("askTooltip", "Open Quick Access ({0})", kbForTooltip)
+				: localize("askTooltip2", "Open Quick Access");
 		}));
 
 		// Click handler - always open quick access in compact mode (attention sessions are handled by the badge)
 		disposables.add(addDisposableListener(inputArea, EventType.CLICK, (e) => {
 			e.preventDefault();
 			e.stopPropagation();
-			this.telemetryService.publicLog2<AgentStatusClickEvent, AgentStatusClickClassification>('agentStatusWidget.click', {
-				source: 'pill',
-				action: 'quickAccess',
+			this.telemetryService.publicLog2<AgentStatusClickEvent, AgentStatusClickClassification>("agentStatusWidget.click", {
+				source: "pill",
+				action: "quickAccess",
 			});
 			const useUnifiedQuickAccess = this.configurationService.getValue<boolean>(ChatConfiguration.UnifiedAgentsBar) === true;
 			this.commandService.executeCommand(useUnifiedQuickAccess ? UNIFIED_QUICK_ACCESS_ACTION_ID : QUICK_OPEN_ACTION_ID);
@@ -597,12 +665,12 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 
 		// Keyboard handler
 		disposables.add(addDisposableListener(inputArea, EventType.KEY_DOWN, (e) => {
-			if (e.key === 'Enter' || e.key === ' ') {
+			if (e.key === "Enter" || e.key === " ") {
 				e.preventDefault();
 				e.stopPropagation();
-				this.telemetryService.publicLog2<AgentStatusClickEvent, AgentStatusClickClassification>('agentStatusWidget.click', {
-					source: 'pill',
-					action: 'quickAccess',
+				this.telemetryService.publicLog2<AgentStatusClickEvent, AgentStatusClickClassification>("agentStatusWidget.click", {
+					source: "pill",
+					action: "quickAccess",
 				});
 				const useUnifiedQuickAccess = this.configurationService.getValue<boolean>(ChatConfiguration.UnifiedAgentsBar) === true;
 				this.commandService.executeCommand(useUnifiedQuickAccess ? UNIFIED_QUICK_ACCESS_ACTION_ID : QUICK_OPEN_ACTION_ID);
@@ -610,7 +678,13 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 		}));
 
 		// In compact mode, render status badge inline within the pill
-		this._renderStatusBadge(disposables, activeSessions, unreadSessions, attentionNeededSessions, pill);
+		this._renderStatusBadge(
+      disposables,
+      activeSessions,
+      unreadSessions,
+      attentionNeededSessions,
+      pill,
+    );
 	}
 
 	private _renderSessionMode(disposables: DisposableStore): void {
@@ -623,26 +697,29 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 		// Render command center items (like debug toolbar) FIRST - to the left
 		this._renderCommandCenterToolbar(disposables);
 
-		const pill = $('div.agent-status-pill.session-mode');
+		const pill = $("div.agent-status-pill.session-mode");
 		this._container.appendChild(pill);
 
 		// Search button (left side, inside pill)
 		this._renderSearchButton(disposables, pill);
 
 		// Session title (center)
-		const titleLabel = $('span.agent-status-title');
+		const titleLabel = $("span.agent-status-title");
 		const sessionInfo = this.agentTitleBarStatusService.sessionInfo;
-		titleLabel.textContent = sessionInfo?.title ?? localize('agentSessionProjection', "Agent Session Projection");
+		titleLabel.textContent = sessionInfo?.title ?? localize(
+      "agentSessionProjection",
+      "Agent Session Projection",
+    );
 		pill.appendChild(titleLabel);
 
 		// Escape button (right side)
 		this._renderEscapeButton(disposables, pill);
 
 		// Setup pill hover
-		const hoverDelegate = getDefaultHoverDelegate('mouse');
+		const hoverDelegate = getDefaultHoverDelegate("mouse");
 		disposables.add(this.hoverService.setupManagedHover(hoverDelegate, pill, () => {
 			const sessionInfo = this.agentTitleBarStatusService.sessionInfo;
-			return sessionInfo ? localize('agentSessionProjectionTooltip', "Agent Session Projection: {0}", sessionInfo.title) : localize('agentSessionProjection', "Agent Session Projection");
+			return sessionInfo ? localize("agentSessionProjectionTooltip", "Agent Session Projection: {0}", sessionInfo.title) : localize("agentSessionProjection", "Agent Session Projection");
 		}));
 
 		// Click handler - clicking anywhere on container exits projection
@@ -652,10 +729,17 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 			this.commandService.executeCommand(ExitAgentSessionProjectionAction.ID);
 		};
 		disposables.add(addDisposableListener(pill, EventType.CLICK, exitHandler));
-		disposables.add(addDisposableListener(pill, EventType.MOUSE_DOWN, exitHandler));
+		disposables.add(
+      addDisposableListener(pill, EventType.MOUSE_DOWN, exitHandler),
+    );
 
 		// Status badge (separate rectangle on right)
-		this._renderStatusBadge(disposables, activeSessions, unreadSessions, attentionNeededSessions);
+		this._renderStatusBadge(
+      disposables,
+      activeSessions,
+      unreadSessions,
+      attentionNeededSessions,
+    );
 	}
 
 	/**
@@ -669,23 +753,26 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 
 		const { activeSessions, unreadSessions, attentionNeededSessions } = this._getSessionStats();
 
-		const pill = $('div.agent-status-pill.session-ready-mode');
+		const pill = $("div.agent-status-pill.session-ready-mode");
 		this._container.appendChild(pill);
 
 		// Session title (left side)
-		const titleLabel = $('span.agent-status-title');
+		const titleLabel = $("span.agent-status-title");
 		const sessionInfo = this.agentTitleBarStatusService.sessionInfo;
-		titleLabel.textContent = sessionInfo?.title ?? localize('agentSessionReady', "Review Changes");
+		titleLabel.textContent = sessionInfo?.title ?? localize(
+      "agentSessionReady",
+      "Review Changes",
+    );
 		pill.appendChild(titleLabel);
 
 		// Enter button (right side)
 		this._renderEnterButton(disposables, pill);
 
 		// Setup pill hover
-		const hoverDelegate = getDefaultHoverDelegate('mouse');
+		const hoverDelegate = getDefaultHoverDelegate("mouse");
 		disposables.add(this.hoverService.setupManagedHover(hoverDelegate, pill, () => {
 			const sessionInfo = this.agentTitleBarStatusService.sessionInfo;
-			return sessionInfo ? localize('agentSessionReadyTooltip', "Review changes from: {0}", sessionInfo.title) : localize('agentSessionReadyGeneric', "Review agent session changes");
+			return sessionInfo ? localize("agentSessionReadyTooltip", "Review changes from: {0}", sessionInfo.title) : localize("agentSessionReadyGeneric", "Review agent session changes");
 		}));
 
 		// Click handler - clicking anywhere on pill enters projection
@@ -694,17 +781,29 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 			e.stopPropagation();
 			const sessionInfo = this.agentTitleBarStatusService.sessionInfo;
 			if (sessionInfo) {
-				const session = this.agentSessionsService.getSession(sessionInfo.sessionResource);
+				const session = this.agentSessionsService.getSession(
+          sessionInfo.sessionResource,
+        );
 				if (session) {
-					this.commandService.executeCommand(EnterAgentSessionProjectionAction.ID, session);
+					this.commandService.executeCommand(
+            EnterAgentSessionProjectionAction.ID,
+            session,
+          );
 				}
 			}
 		};
 		disposables.add(addDisposableListener(pill, EventType.CLICK, enterHandler));
-		disposables.add(addDisposableListener(pill, EventType.MOUSE_DOWN, enterHandler));
+		disposables.add(
+      addDisposableListener(pill, EventType.MOUSE_DOWN, enterHandler),
+    );
 
 		// Status badge (separate rectangle on right)
-		this._renderStatusBadge(disposables, activeSessions, unreadSessions, attentionNeededSessions);
+		this._renderStatusBadge(
+      disposables,
+      activeSessions,
+      unreadSessions,
+      attentionNeededSessions,
+    );
 	}
 
 	// #endregion
@@ -724,7 +823,9 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 
 		// Get menu actions from CommandCenterCenter (e.g., debug toolbar)
 		const allActions: IAction[] = [];
-		for (const [, actions] of this._commandCenterMenu.getActions({ shouldForwardArgs: true })) {
+		for (const [, actions] of this._commandCenterMenu.getActions({
+      shouldForwardArgs: true,
+    })) {
 			for (const action of actions) {
 				// Filter out the quick open action - we provide our own search UI
 				if (action.id === QUICK_OPEN_ACTION_ID) {
@@ -744,16 +845,16 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 			return;
 		}
 
-		const hoverDelegate = getDefaultHoverDelegate('mouse');
-		const toolbarContainer = $('div.agent-status-command-center-toolbar');
+		const hoverDelegate = getDefaultHoverDelegate("mouse");
+		const toolbarContainer = $("div.agent-status-command-center-toolbar");
 		container.appendChild(toolbarContainer);
 
 		const toolbar = this.instantiationService.createInstance(WorkbenchToolBar, toolbarContainer, {
 			hiddenItemStrategy: HiddenItemStrategy.NoHide,
-			telemetrySource: 'agentStatusCommandCenter',
+			telemetrySource: "agentStatusCommandCenter",
 			actionViewItemProvider: (action, options) => {
 				return createActionViewItem(this.instantiationService, action, { ...options, hoverDelegate });
-			}
+			},
 		});
 		disposables.add(toolbar);
 
@@ -762,12 +863,12 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 		// Add separator after the toolbar
 		if (parent) {
 			// Inside pill (compact mode): use a vertical line separator
-			const separator = $('span.agent-status-line-separator');
+			const separator = $("span.agent-status-line-separator");
 			container.appendChild(separator);
 		} else {
 			// Outside pill: use dot separator (matching command center style)
 			const separator = renderIcon(Codicon.circleSmallFilled);
-			separator.classList.add('agent-status-separator');
+			separator.classList.add("agent-status-separator");
 			container.appendChild(separator);
 		}
 	}
@@ -781,32 +882,43 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 			return;
 		}
 
-		const searchButton = $('span.agent-status-search');
+		const searchButton = $("span.agent-status-search");
 		reset(searchButton, renderIcon(Codicon.searchSparkle));
-		searchButton.setAttribute('role', 'button');
-		searchButton.setAttribute('aria-label', localize('openQuickOpen', "Open Quick Open"));
+		searchButton.setAttribute("role", "button");
+		searchButton.setAttribute(
+      "aria-label",
+      localize("openQuickOpen", "Open Quick Open"),
+    );
 		searchButton.tabIndex = 0;
 		this._rovingElements.push(searchButton);
 		container.appendChild(searchButton);
 
 		// Setup hover
-		const hoverDelegate = getDefaultHoverDelegate('mouse');
+		const hoverDelegate = getDefaultHoverDelegate("mouse");
 		const searchKb = this.keybindingService.lookupKeybinding(QUICK_OPEN_ACTION_ID)?.getLabel();
 		const searchTooltip = searchKb
-			? localize('openQuickOpenTooltip', "Go to File ({0})", searchKb)
-			: localize('openQuickOpenTooltip2', "Go to File");
-		disposables.add(this.hoverService.setupManagedHover(hoverDelegate, searchButton, searchTooltip));
+			? localize("openQuickOpenTooltip", "Go to File ({0})", searchKb)
+			: localize("openQuickOpenTooltip2", "Go to File");
+		disposables.add(
+      this.hoverService.setupManagedHover(
+        hoverDelegate,
+        searchButton,
+        searchTooltip,
+      ),
+    );
 
 		// Click handler
-		disposables.add(addDisposableListener(searchButton, EventType.CLICK, (e) => {
-			e.preventDefault();
-			e.stopPropagation();
-			this.commandService.executeCommand(QUICK_OPEN_ACTION_ID);
-		}));
+		disposables.add(
+      addDisposableListener(searchButton, EventType.CLICK, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.commandService.executeCommand(QUICK_OPEN_ACTION_ID);
+      }),
+    );
 
 		// Keyboard handler
 		disposables.add(addDisposableListener(searchButton, EventType.KEY_DOWN, (e) => {
-			if (e.key === 'Enter' || e.key === ' ') {
+			if (e.key === "Enter" || e.key === " ") {
 				e.preventDefault();
 				e.stopPropagation();
 				this.commandService.executeCommand(QUICK_OPEN_ACTION_ID);
@@ -829,7 +941,11 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 		const hasAttentionNeeded = attentionNeededSessions.length > 0;
 
 		// Auto-clear filter if the filtered category becomes empty if this window applied it
-		this._clearFilterIfCategoryEmpty(hasUnreadSessions, hasActiveSessions, hasAttentionNeeded);
+		this._clearFilterIfCategoryEmpty(
+      hasUnreadSessions,
+      hasActiveSessions,
+      hasAttentionNeeded,
+    );
 
 		// When inlineContainer is provided, render sections directly into it (compact mode)
 		// Otherwise, create a separate badge container
@@ -837,51 +953,60 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 		if (inlineContainer) {
 			badge = inlineContainer;
 		} else {
-			badge = $('div.agent-status-badge');
+			badge = $("div.agent-status-badge");
 			this._container.appendChild(badge);
 		}
 
 		// Sparkle dropdown button section (always visible on left) - proper button with dropdown menu
-		const sparkleContainer = $('span.agent-status-badge-section.sparkle');
+		const sparkleContainer = $("span.agent-status-badge-section.sparkle");
 		sparkleContainer.tabIndex = 0;
 
 		// Get menu actions for dropdown with proper group separators
-		const menuActions: IAction[] = Separator.join(...this._chatTitleBarMenu.getActions({ shouldForwardArgs: true }).map(([, actions]) => actions));
+		const menuActions: IAction[] = Separator.join(
+      ...this._chatTitleBarMenu.getActions({ shouldForwardArgs: true }).map(([, actions]) => actions),
+    );
 
 		const primaryActionId = TOGGLE_CHAT_ACTION_ID;
-		const primaryActionTitle = localize('toggleChat', "Toggle Chat");
+		const primaryActionTitle = localize("toggleChat", "Toggle Chat");
 		const primaryActionIcon = Codicon.chatSparkle;
 
 		// Create primary action
-		const primaryAction = this.instantiationService.createInstance(MenuItemAction, {
-			id: primaryActionId,
-			title: primaryActionTitle,
-			icon: primaryActionIcon,
-		}, undefined, undefined, undefined, undefined);
+		const primaryAction = this.instantiationService.createInstance(
+      MenuItemAction,
+      {
+        id: primaryActionId,
+        title: primaryActionTitle,
+        icon: primaryActionIcon,
+      },
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    );
 
 		// Create dropdown action (empty label prevents default tooltip - we have our own hover)
 		const dropdownAction = toAction({
-			id: 'agentStatus.sparkle.dropdown',
-			label: localize('agentStatus.sparkle.dropdown', "More Actions"),
-			run() { }
-		});
+      id: "agentStatus.sparkle.dropdown",
+      label: localize("agentStatus.sparkle.dropdown", "More Actions"),
+      run() { },
+    });
 
 		// Create the dropdown with primary action button
 		const sparkleDropdown = this.instantiationService.createInstance(
-			DropdownWithPrimaryActionViewItem,
-			primaryAction,
-			dropdownAction,
-			menuActions,
-			'agent-status-sparkle-dropdown',
-			{ skipTelemetry: true }
-		);
+      DropdownWithPrimaryActionViewItem,
+      primaryAction,
+      dropdownAction,
+      menuActions,
+      "agent-status-sparkle-dropdown",
+      { skipTelemetry: true },
+    );
 		sparkleDropdown.render(sparkleContainer);
 		disposables.add(sparkleDropdown);
 
 		// Capture-phase listener for ArrowLeft/ArrowRight/Home/End to prevent DropdownWithPrimaryActionViewItem
 		// from consuming these keys internally. This ensures the outer roving tabindex handles navigation.
 		disposables.add(addDisposableListener(sparkleContainer, EventType.KEY_DOWN, (e) => {
-			if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Home' || e.key === 'End') {
+			if (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "Home" || e.key === "End") {
 				const idx = this._rovingElements.indexOf(sparkleContainer);
 				if (idx === -1) {
 					return;
@@ -897,11 +1022,11 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 
 		// Add keyboard handler for Enter/Space on the sparkle container
 		disposables.add(addDisposableListener(sparkleContainer, EventType.KEY_DOWN, (e) => {
-			if (e.key === 'Enter' || e.key === ' ') {
+			if (e.key === "Enter" || e.key === " ") {
 				e.preventDefault();
 				e.stopPropagation();
 				this.commandService.executeCommand(primaryActionId);
-			} else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+			} else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
 				// Open dropdown menu with arrow keys
 				e.preventDefault();
 				e.stopPropagation();
@@ -910,10 +1035,12 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 		}));
 
 		// Hover delegate for status sections
-		const hoverDelegate = getDefaultHoverDelegate('mouse');
+		const hoverDelegate = getDefaultHoverDelegate("mouse");
 
 		// Only show status indicators if chat.viewSessions.enabled is true
-		const viewSessionsEnabled = this.configurationService.getValue<boolean>(ChatConfiguration.ChatViewSessionsEnabled) !== false;
+		const viewSessionsEnabled = this.configurationService.getValue<boolean>(
+      ChatConfiguration.ChatViewSessionsEnabled,
+    ) !== false;
 
 		// When compact mode is active, show status indicators before the sparkle button:
 		// [needs-input, active, unread, sparkle] (populating inward)
@@ -933,125 +1060,189 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 		// Unread section (blue dot + count)
 		if (viewSessionsEnabled && hasUnreadSessions && this.workspaceContextService.getWorkbenchState() !== WorkbenchState.EMPTY) {
 			const { isFilteredToUnread } = this._getCurrentFilterState();
-			unreadSection = $('span.agent-status-badge-section.unread');
+			unreadSection = $("span.agent-status-badge-section.unread");
 			if (isFilteredToUnread) {
-				unreadSection.classList.add('filtered');
+				unreadSection.classList.add("filtered");
 			}
-			unreadSection.setAttribute('role', 'button');
+			unreadSection.setAttribute("role", "button");
 			unreadSection.tabIndex = 0;
-			const unreadIcon = $('span.agent-status-icon');
+			const unreadIcon = $("span.agent-status-icon");
 			reset(unreadIcon, renderIcon(Codicon.circleFilled));
 			unreadSection.appendChild(unreadIcon);
-			const unreadCount = $('span.agent-status-text');
+			const unreadCount = $("span.agent-status-text");
 			unreadCount.textContent = String(unreadSessions.length);
 			unreadSection.appendChild(unreadCount);
 
 			// Click handler - filter to unread sessions
-			disposables.add(addDisposableListener(unreadSection, EventType.CLICK, (e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				this._openSessionsWithFilter('unread');
-			}));
+			disposables.add(
+        addDisposableListener(unreadSection, EventType.CLICK, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this._openSessionsWithFilter("unread");
+        }),
+      );
 			disposables.add(addDisposableListener(unreadSection, EventType.KEY_DOWN, (e) => {
-				if (e.key === 'Enter' || e.key === ' ') {
+				if (e.key === "Enter" || e.key === " ") {
 					e.preventDefault();
 					e.stopPropagation();
-					this._openSessionsWithFilter('unread');
+					this._openSessionsWithFilter("unread");
 				}
 			}));
 
 			// Hover tooltip for unread section
 			const unreadTooltip = unreadSessions.length === 1
-				? localize('unreadSessionsTooltip1', "{0} unread session", unreadSessions.length)
-				: localize('unreadSessionsTooltip', "{0} unread sessions", unreadSessions.length);
-			disposables.add(this.hoverService.setupManagedHover(hoverDelegate, unreadSection, unreadTooltip));
+				? localize(
+            "unreadSessionsTooltip1",
+            "{0} unread session",
+            unreadSessions.length,
+          )
+				: localize(
+            "unreadSessionsTooltip",
+            "{0} unread sessions",
+            unreadSessions.length,
+          );
+			disposables.add(
+        this.hoverService.setupManagedHover(
+          hoverDelegate,
+          unreadSection,
+          unreadTooltip,
+        ),
+      );
 		}
 
 		// Needs-input section - shows sessions requiring user attention (approval/confirmation/input)
 		if (viewSessionsEnabled && hasAttentionNeeded) {
 			const { isFilteredToNeedsInput } = this._getCurrentFilterState();
-			needsInputSection = $('span.agent-status-badge-section.active.needs-input');
+			needsInputSection = $(
+        "span.agent-status-badge-section.active.needs-input",
+      );
 			if (isFilteredToNeedsInput) {
-				needsInputSection.classList.add('filtered');
+				needsInputSection.classList.add("filtered");
 			}
-			needsInputSection.setAttribute('role', 'button');
+			needsInputSection.setAttribute("role", "button");
 			needsInputSection.tabIndex = 0;
-			const needsInputIcon = $('span.agent-status-icon');
+			const needsInputIcon = $("span.agent-status-icon");
 			reset(needsInputIcon, renderIcon(Codicon.report));
 			needsInputSection.appendChild(needsInputIcon);
-			const needsInputCount = $('span.agent-status-text');
+			const needsInputCount = $("span.agent-status-text");
 			needsInputCount.textContent = String(attentionNeededSessions.length);
 			needsInputSection.appendChild(needsInputCount);
 
-			disposables.add(addDisposableListener(needsInputSection, EventType.CLICK, (e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				this._openSessionsWithFilter('needsInput');
-			}));
+			disposables.add(
+        addDisposableListener(needsInputSection, EventType.CLICK, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this._openSessionsWithFilter("needsInput");
+        }),
+      );
 			disposables.add(addDisposableListener(needsInputSection, EventType.KEY_DOWN, (e) => {
-				if (e.key === 'Enter' || e.key === ' ') {
+				if (e.key === "Enter" || e.key === " ") {
 					e.preventDefault();
 					e.stopPropagation();
-					this._openSessionsWithFilter('needsInput');
+					this._openSessionsWithFilter("needsInput");
 				}
 			}));
 
 			const needsInputTooltip = attentionNeededSessions.length === 1
-				? localize('needsInputSessionsTooltip1', "{0} session needs input", attentionNeededSessions.length)
-				: localize('needsInputSessionsTooltip', "{0} sessions need input", attentionNeededSessions.length);
-			disposables.add(this.hoverService.setupManagedHover(hoverDelegate, needsInputSection, needsInputTooltip));
+				? localize(
+            "needsInputSessionsTooltip1",
+            "{0} session needs input",
+            attentionNeededSessions.length,
+          )
+				: localize(
+            "needsInputSessionsTooltip",
+            "{0} sessions need input",
+            attentionNeededSessions.length,
+          );
+			disposables.add(
+        this.hoverService.setupManagedHover(
+          hoverDelegate,
+          needsInputSection,
+          needsInputTooltip,
+        ),
+      );
 		}
 
 		// In-progress section - shows sessions that are actively running (excludes needs-input)
-		const inProgressOnly = activeSessions.filter(s => s.status !== AgentSessionStatus.NeedsInput);
+		const inProgressOnly = activeSessions.filter(
+      s => s.status !== AgentSessionStatus.NeedsInput,
+    );
 		if (viewSessionsEnabled && inProgressOnly.length > 0) {
 			const { isFilteredToInProgress } = this._getCurrentFilterState();
-			activeSection = $('span.agent-status-badge-section.active');
+			activeSection = $("span.agent-status-badge-section.active");
 			if (isFilteredToInProgress) {
-				activeSection.classList.add('filtered');
+				activeSection.classList.add("filtered");
 			}
-			activeSection.setAttribute('role', 'button');
+			activeSection.setAttribute("role", "button");
 			activeSection.tabIndex = 0;
-			const statusIcon = $('span.agent-status-icon');
+			const statusIcon = $("span.agent-status-icon");
 			reset(statusIcon, renderIcon(Codicon.sessionInProgress));
 			activeSection.appendChild(statusIcon);
-			const statusCount = $('span.agent-status-text');
+			const statusCount = $("span.agent-status-text");
 			statusCount.textContent = String(inProgressOnly.length);
 			activeSection.appendChild(statusCount);
 
-			disposables.add(addDisposableListener(activeSection, EventType.CLICK, (e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				this._openSessionsWithFilter('inProgress');
-			}));
+			disposables.add(
+        addDisposableListener(activeSection, EventType.CLICK, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this._openSessionsWithFilter("inProgress");
+        }),
+      );
 			disposables.add(addDisposableListener(activeSection, EventType.KEY_DOWN, (e) => {
-				if (e.key === 'Enter' || e.key === ' ') {
+				if (e.key === "Enter" || e.key === " ") {
 					e.preventDefault();
 					e.stopPropagation();
-					this._openSessionsWithFilter('inProgress');
+					this._openSessionsWithFilter("inProgress");
 				}
 			}));
 
 			const activeTooltip = inProgressOnly.length === 1
-				? localize('activeSessionsTooltip1', "{0} session in progress", inProgressOnly.length)
-				: localize('activeSessionsTooltip', "{0} sessions in progress", inProgressOnly.length);
-			disposables.add(this.hoverService.setupManagedHover(hoverDelegate, activeSection, activeTooltip));
+				? localize(
+            "activeSessionsTooltip1",
+            "{0} session in progress",
+            inProgressOnly.length,
+          )
+				: localize(
+            "activeSessionsTooltip",
+            "{0} sessions in progress",
+            inProgressOnly.length,
+          );
+			disposables.add(
+        this.hoverService.setupManagedHover(
+          hoverDelegate,
+          activeSection,
+          activeTooltip,
+        ),
+      );
 		}
 
 		// Append status sections in the correct order and register for roving tabindex
 		if (reverseOrder) {
 			// [needs-input, active, unread, sparkle] — populates inward
-			if (needsInputSection) { badge.appendChild(needsInputSection); this._rovingElements.push(needsInputSection); }
-			if (activeSection) { badge.appendChild(activeSection); this._rovingElements.push(activeSection); }
-			if (unreadSection) { badge.appendChild(unreadSection); this._rovingElements.push(unreadSection); }
+			if (needsInputSection) { badge.appendChild(
+        needsInputSection,
+      ); this._rovingElements.push(needsInputSection); }
+			if (activeSection) { badge.appendChild(
+        activeSection,
+      ); this._rovingElements.push(activeSection); }
+			if (unreadSection) { badge.appendChild(
+        unreadSection,
+      ); this._rovingElements.push(unreadSection); }
 			badge.appendChild(sparkleContainer);
 			this._rovingElements.push(sparkleContainer);
 		} else {
 			// Original: [sparkle (already appended), unread, active, needs-input]
 			this._rovingElements.push(sparkleContainer);
-			if (unreadSection) { badge.appendChild(unreadSection); this._rovingElements.push(unreadSection); }
-			if (activeSection) { badge.appendChild(activeSection); this._rovingElements.push(activeSection); }
-			if (needsInputSection) { badge.appendChild(needsInputSection); this._rovingElements.push(needsInputSection); }
+			if (unreadSection) { badge.appendChild(
+        unreadSection,
+      ); this._rovingElements.push(unreadSection); }
+			if (activeSection) { badge.appendChild(
+        activeSection,
+      ); this._rovingElements.push(activeSection); }
+			if (needsInputSection) { badge.appendChild(
+        needsInputSection,
+      ); this._rovingElements.push(needsInputSection); }
 		}
 
 	}
@@ -1064,11 +1255,11 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 	private _clearFilterIfCategoryEmpty(hasUnreadSessions: boolean, hasActiveSessions: boolean, hasAttentionNeeded: boolean): void {
 		// Only auto-clear if this window applied the badge filter
 		// This prevents Window B from clearing filters that Window A set
-		if (this._badgeFilterAppliedByThisWindow === 'unread' && !hasUnreadSessions) {
+		if (this._badgeFilterAppliedByThisWindow === "unread" && !hasUnreadSessions) {
 			this._restoreUserFilter();
-		} else if (this._badgeFilterAppliedByThisWindow === 'inProgress' && !hasActiveSessions) {
+		} else if (this._badgeFilterAppliedByThisWindow === "inProgress" && !hasActiveSessions) {
 			this._restoreUserFilter();
-		} else if (this._badgeFilterAppliedByThisWindow === 'needsInput' && !hasAttentionNeeded) {
+		} else if (this._badgeFilterAppliedByThisWindow === "needsInput" && !hasAttentionNeeded) {
 			this._restoreUserFilter();
 		}
 	}
@@ -1079,24 +1270,39 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 	private _getCurrentFilterState(): { isFilteredToUnread: boolean; isFilteredToInProgress: boolean; isFilteredToNeedsInput: boolean } {
 		const filter = this._getStoredFilter();
 		if (!filter) {
-			return { isFilteredToUnread: false, isFilteredToInProgress: false, isFilteredToNeedsInput: false };
+			return {
+        isFilteredToUnread: false,
+        isFilteredToInProgress: false,
+        isFilteredToNeedsInput: false,
+      };
 		}
 
 		// Detect if filtered to unread (read=true excludes read sessions, leaving only unread)
 		const isFilteredToUnread = filter.read === true && filter.states.length === 0;
 		// Detect if filtered to in-progress only (3 excluded states including NeedsInput)
-		const isFilteredToInProgress = filter.states?.length === 3 && filter.states.includes(AgentSessionStatus.NeedsInput) && filter.read === false;
+		const isFilteredToInProgress = filter.states?.length === 3 && filter.states.includes(
+      AgentSessionStatus.NeedsInput,
+    ) && filter.read === false;
 		// Detect if filtered to needs-input only (3 excluded states including InProgress)
-		const isFilteredToNeedsInput = filter.states?.length === 3 && filter.states.includes(AgentSessionStatus.InProgress) && filter.read === false;
+		const isFilteredToNeedsInput = filter.states?.length === 3 && filter.states.includes(
+      AgentSessionStatus.InProgress,
+    ) && filter.read === false;
 
-		return { isFilteredToUnread, isFilteredToInProgress, isFilteredToNeedsInput };
+		return {
+      isFilteredToUnread,
+      isFilteredToInProgress,
+      isFilteredToNeedsInput,
+    };
 	}
 
 	/**
 	 * Get the stored filter object from storage.
 	 */
 	private _getStoredFilter(): { providers: string[]; states: AgentSessionStatus[]; archived: boolean; read: boolean } | undefined {
-		const filterStr = this.storageService.get(FILTER_STORAGE_KEY, StorageScope.PROFILE);
+		const filterStr = this.storageService.get(
+      FILTER_STORAGE_KEY,
+      StorageScope.PROFILE,
+    );
 		if (!filterStr) {
 			return undefined;
 		}
@@ -1111,7 +1317,12 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 	 * Store a filter object to storage.
 	 */
 	private _storeFilter(filter: { providers: string[]; states: AgentSessionStatus[]; archived: boolean; read: boolean }): void {
-		this.storageService.store(FILTER_STORAGE_KEY, JSON.stringify(filter), StorageScope.PROFILE, StorageTarget.USER);
+		this.storageService.store(
+      FILTER_STORAGE_KEY,
+      JSON.stringify(filter),
+      StorageScope.PROFILE,
+      StorageTarget.USER,
+    );
 	}
 
 	/**
@@ -1119,11 +1330,11 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 	 */
 	private _clearFilter(): void {
 		this._storeFilter({
-			providers: [],
-			states: [],
-			archived: true,
-			read: false
-		});
+      providers: [],
+      states: [],
+      archived: true,
+      read: false,
+    });
 	}
 
 	/**
@@ -1142,7 +1353,12 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 
 		const currentFilter = this._getStoredFilter();
 		if (currentFilter) {
-			this.storageService.store(PREVIOUS_FILTER_STORAGE_KEY, JSON.stringify(currentFilter), StorageScope.PROFILE, StorageTarget.USER);
+			this.storageService.store(
+        PREVIOUS_FILTER_STORAGE_KEY,
+        JSON.stringify(currentFilter),
+        StorageScope.PROFILE,
+        StorageTarget.USER,
+      );
 		}
 	}
 
@@ -1150,7 +1366,10 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 	 * Restore the user's previous filter (saved before we applied a badge filter).
 	 */
 	private _restoreUserFilter(): void {
-		const previousFilterStr = this.storageService.get(PREVIOUS_FILTER_STORAGE_KEY, StorageScope.PROFILE);
+		const previousFilterStr = this.storageService.get(
+      PREVIOUS_FILTER_STORAGE_KEY,
+      StorageScope.PROFILE,
+    );
 		if (previousFilterStr) {
 			try {
 				const previousFilter = JSON.parse(previousFilterStr);
@@ -1164,7 +1383,10 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 			this._clearFilter();
 		}
 		// Clear the saved filter after restoring
-		this.storageService.remove(PREVIOUS_FILTER_STORAGE_KEY, StorageScope.PROFILE);
+		this.storageService.remove(
+      PREVIOUS_FILTER_STORAGE_KEY,
+      StorageScope.PROFILE,
+    );
 		// Clear the per-window badge filter tracking
 		this._badgeFilterAppliedByThisWindow = null;
 	}
@@ -1173,20 +1395,23 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 	 * Opens the agent sessions view with a specific filter applied, or restores previous filter if already applied.
 	 * Preserves session type (provider) filters while toggling only status filters.
 	 */
-	private _openSessionsWithFilter(filterType: 'unread' | 'inProgress' | 'needsInput'): void {
+	private _openSessionsWithFilter(filterType: "unread" | "inProgress" | "needsInput"): void {
 		const { isFilteredToUnread, isFilteredToInProgress, isFilteredToNeedsInput } = this._getCurrentFilterState();
 		const currentFilter = this._getStoredFilter();
 		// Preserve existing provider filters (session type filters like Local, Background, etc.)
 		const preservedProviders = currentFilter?.providers ?? [];
 
 		// Log telemetry for filter button clicks
-		const isToggleOff = (filterType === 'unread' && isFilteredToUnread)
-			|| (filterType === 'inProgress' && isFilteredToInProgress)
-			|| (filterType === 'needsInput' && isFilteredToNeedsInput);
-		this.telemetryService.publicLog2<AgentStatusClickEvent, AgentStatusClickClassification>('agentStatusWidget.click', {
-			source: filterType,
-			action: isToggleOff ? 'clearFilter' : 'applyFilter',
-		});
+		const isToggleOff = (filterType === "unread" && isFilteredToUnread)
+			|| (filterType === "inProgress" && isFilteredToInProgress)
+			|| (filterType === "needsInput" && isFilteredToNeedsInput);
+		this.telemetryService.publicLog2<AgentStatusClickEvent, AgentStatusClickClassification>(
+      "agentStatusWidget.click",
+      {
+        source: filterType,
+        action: isToggleOff ? "clearFilter" : "applyFilter",
+      },
+    );
 
 		// Check if already filtered to this type — toggle off
 		if (isToggleOff) {
@@ -1195,29 +1420,29 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 			// Save current filter before applying our own
 			this._saveUserFilter();
 
-			if (filterType === 'unread') {
+			if (filterType === "unread") {
 				this._storeFilter({
-					providers: preservedProviders,
-					states: [],
-					archived: true,
-					read: true
-				});
-			} else if (filterType === 'inProgress') {
+          providers: preservedProviders,
+          states: [],
+          archived: true,
+          read: true,
+        });
+			} else if (filterType === "inProgress") {
 				// Exclude Completed, Failed, and NeedsInput — show only InProgress
 				this._storeFilter({
-					providers: preservedProviders,
-					states: [AgentSessionStatus.Completed, AgentSessionStatus.Failed, AgentSessionStatus.NeedsInput],
-					archived: true,
-					read: false
-				});
+          providers: preservedProviders,
+          states: [AgentSessionStatus.Completed, AgentSessionStatus.Failed, AgentSessionStatus.NeedsInput],
+          archived: true,
+          read: false,
+        });
 			} else {
 				// Exclude Completed, Failed, and InProgress — show only NeedsInput
 				this._storeFilter({
-					providers: preservedProviders,
-					states: [AgentSessionStatus.Completed, AgentSessionStatus.Failed, AgentSessionStatus.InProgress],
-					archived: true,
-					read: false
-				});
+          providers: preservedProviders,
+          states: [AgentSessionStatus.Completed, AgentSessionStatus.Failed, AgentSessionStatus.InProgress],
+          archived: true,
+          read: false,
+        });
 			}
 			this._badgeFilterAppliedByThisWindow = filterType;
 		}
@@ -1230,34 +1455,50 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 	 * Render the escape button for exiting session projection mode.
 	 */
 	private _renderEscapeButton(disposables: DisposableStore, parent: HTMLElement): void {
-		const escButton = $('span.agent-status-esc-button');
-		escButton.textContent = 'Esc';
-		escButton.setAttribute('role', 'button');
-		escButton.setAttribute('aria-label', localize('exitAgentSessionProjection', "Exit Agent Session Projection"));
+		const escButton = $("span.agent-status-esc-button");
+		escButton.textContent = "Esc";
+		escButton.setAttribute("role", "button");
+		escButton.setAttribute(
+      "aria-label",
+      localize("exitAgentSessionProjection", "Exit Agent Session Projection"),
+    );
 		escButton.tabIndex = 0;
 		this._rovingElements.push(escButton);
 		parent.appendChild(escButton);
 
 		// Setup hover
-		const hoverDelegate = getDefaultHoverDelegate('mouse');
-		disposables.add(this.hoverService.setupManagedHover(hoverDelegate, escButton, localize('exitAgentSessionProjectionTooltip', "Exit Agent Session Projection (Escape)")));
+		const hoverDelegate = getDefaultHoverDelegate("mouse");
+		disposables.add(
+      this.hoverService.setupManagedHover(
+        hoverDelegate,
+        escButton,
+        localize(
+          "exitAgentSessionProjectionTooltip",
+          "Exit Agent Session Projection (Escape)",
+        ),
+      ),
+    );
 
 		// Click handler
-		disposables.add(addDisposableListener(escButton, EventType.MOUSE_DOWN, (e) => {
-			e.preventDefault();
-			e.stopPropagation();
-			this.commandService.executeCommand(ExitAgentSessionProjectionAction.ID);
-		}));
+		disposables.add(
+      addDisposableListener(escButton, EventType.MOUSE_DOWN, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.commandService.executeCommand(ExitAgentSessionProjectionAction.ID);
+      }),
+    );
 
-		disposables.add(addDisposableListener(escButton, EventType.CLICK, (e) => {
-			e.preventDefault();
-			e.stopPropagation();
-			this.commandService.executeCommand(ExitAgentSessionProjectionAction.ID);
-		}));
+		disposables.add(
+      addDisposableListener(escButton, EventType.CLICK, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.commandService.executeCommand(ExitAgentSessionProjectionAction.ID);
+      }),
+    );
 
 		// Keyboard handler
 		disposables.add(addDisposableListener(escButton, EventType.KEY_DOWN, (e) => {
-			if (e.key === 'Enter' || e.key === ' ') {
+			if (e.key === "Enter" || e.key === " ") {
 				e.preventDefault();
 				e.stopPropagation();
 				this.commandService.executeCommand(ExitAgentSessionProjectionAction.ID);
@@ -1269,22 +1510,36 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 	 * Render the enter button for entering session projection mode.
 	 */
 	private _renderEnterButton(disposables: DisposableStore, parent: HTMLElement): void {
-		const enterButton = $('span.agent-status-enter-button');
+		const enterButton = $("span.agent-status-enter-button");
 		// Get the keybinding for the enter action
-		const keybinding = this.keybindingService.lookupKeybinding(EnterAgentSessionProjectionAction.ID);
-		enterButton.textContent = keybinding?.getLabel() ?? localize('review', "Review");
-		enterButton.setAttribute('role', 'button');
-		enterButton.setAttribute('aria-label', localize('enterAgentSessionProjection', "Enter Agent Session Projection"));
+		const keybinding = this.keybindingService.lookupKeybinding(
+      EnterAgentSessionProjectionAction.ID,
+    );
+		enterButton.textContent = keybinding?.getLabel() ?? localize(
+      "review",
+      "Review",
+    );
+		enterButton.setAttribute("role", "button");
+		enterButton.setAttribute(
+      "aria-label",
+      localize("enterAgentSessionProjection", "Enter Agent Session Projection"),
+    );
 		enterButton.tabIndex = 0;
 		this._rovingElements.push(enterButton);
 		parent.appendChild(enterButton);
 
 		// Setup hover
-		const hoverDelegate = getDefaultHoverDelegate('mouse');
+		const hoverDelegate = getDefaultHoverDelegate("mouse");
 		const hoverText = keybinding
-			? localize('enterAgentSessionProjectionTooltip', "Review Changes ({0})", keybinding.getLabel())
-			: localize('enterAgentSessionProjectionTooltipNoKey', "Review Changes");
-		disposables.add(this.hoverService.setupManagedHover(hoverDelegate, enterButton, hoverText));
+			? localize(
+          "enterAgentSessionProjectionTooltip",
+          "Review Changes ({0})",
+          keybinding.getLabel(),
+        )
+			: localize("enterAgentSessionProjectionTooltipNoKey", "Review Changes");
+		disposables.add(
+      this.hoverService.setupManagedHover(hoverDelegate, enterButton, hoverText),
+    );
 
 		// Enter projection handler - same as clicking the pill
 		const enterProjection = (e: Event) => {
@@ -1292,20 +1547,29 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 			e.stopPropagation();
 			const sessionInfo = this.agentTitleBarStatusService.sessionInfo;
 			if (sessionInfo) {
-				const session = this.agentSessionsService.getSession(sessionInfo.sessionResource);
+				const session = this.agentSessionsService.getSession(
+          sessionInfo.sessionResource,
+        );
 				if (session) {
-					this.commandService.executeCommand(EnterAgentSessionProjectionAction.ID, session);
+					this.commandService.executeCommand(
+            EnterAgentSessionProjectionAction.ID,
+            session,
+          );
 				}
 			}
 		};
 
 		// Click handler
-		disposables.add(addDisposableListener(enterButton, EventType.MOUSE_DOWN, enterProjection));
-		disposables.add(addDisposableListener(enterButton, EventType.CLICK, enterProjection));
+		disposables.add(
+      addDisposableListener(enterButton, EventType.MOUSE_DOWN, enterProjection),
+    );
+		disposables.add(
+      addDisposableListener(enterButton, EventType.CLICK, enterProjection),
+    );
 
 		// Keyboard handler
 		disposables.add(addDisposableListener(enterButton, EventType.KEY_DOWN, (e) => {
-			if (e.key === 'Enter' || e.key === ' ') {
+			if (e.key === "Enter" || e.key === " ") {
 				enterProjection(e);
 			}
 		}));
@@ -1326,10 +1590,10 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 
 		// Sort by most recently started request
 		const sorted = [...attentionNeededSessions].sort((a, b) => {
-			const timeA = a.timing.lastRequestStarted ?? a.timing.created;
-			const timeB = b.timing.lastRequestStarted ?? b.timing.created;
-			return timeB - timeA;
-		});
+      const timeA = a.timing.lastRequestStarted ?? a.timing.created;
+      const timeB = b.timing.lastRequestStarted ?? b.timing.created;
+      return timeB - timeA;
+    });
 
 		const mostRecent = sorted[0];
 		if (!mostRecent.description) {
@@ -1337,7 +1601,7 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 		}
 
 		// Convert markdown to plain text if needed
-		const progress = typeof mostRecent.description === 'string'
+		const progress = typeof mostRecent.description === "string"
 			? mostRecent.description
 			: renderAsPlaintext(mostRecent.description);
 
@@ -1360,23 +1624,23 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
 		let label = this._windowTitle.workspaceName;
 		if (this._windowTitle.isCustomTitleFormat()) {
 			label = this._windowTitle.getWindowTitle();
-		} else if (!label && this.editorGroupsService.partOptions.showTabs === 'none') {
-			label = this._windowTitle.fileName ?? '';
+		} else if (!label && this.editorGroupsService.partOptions.showTabs === "none") {
+			label = this._windowTitle.fileName ?? "";
 		}
 
 		if (!label) {
-			label = localize('agentStatusWidget.search', "Search");
+			label = localize("agentStatusWidget.search", "Search");
 		}
 
 		// Apply prefix and suffix decorations
 		if (prefix) {
-			label = localize('label1', "{0} {1}", prefix, label);
+			label = localize("label1", "{0} {1}", prefix, label);
 		}
 		if (suffix) {
-			label = localize('label2', "{0} {1}", label, suffix);
+			label = localize("label2", "{0} {1}", label, suffix);
 		}
 
-		return label.replaceAll(/\r\n|\r|\n/g, '\u23CE');
+		return label.replaceAll(/\r\n|\r|\n/g, "\u23CE");
 	}
 
 	// #endregion
@@ -1390,7 +1654,7 @@ export class AgentTitleBarStatusWidget extends BaseActionViewItem {
  */
 export class AgentTitleBarStatusRendering extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'workbench.contrib.agentStatus.rendering';
+	static readonly ID = "workbench.contrib.agentStatus.rendering";
 
 	constructor(
 		@IActionViewItemService actionViewItemService: IActionViewItemService,
@@ -1412,17 +1676,24 @@ export class AgentTitleBarStatusRendering extends Disposable implements IWorkben
 		// Only hide the default command center search box (via unified-agents-bar)
 		// when chat is enabled, so the search box remains visible during remote
 		// connection startup before the agent status widget is ready to render.
-		const chatEnabledKey = contextKeyService.getContextKeyValue<boolean>('chatIsEnabled');
+		const chatEnabledKey = contextKeyService.getContextKeyValue<boolean>(
+      "chatIsEnabled",
+    );
 		let chatEnabled = !!chatEnabledKey;
 
 		const updateClass = () => {
-			const commandCenterEnabled = configurationService.getValue<boolean>(LayoutSettings.COMMAND_CENTER) === true;
+			const commandCenterEnabled = configurationService.getValue<boolean>(
+        LayoutSettings.COMMAND_CENTER,
+      ) === true;
 			const statusMode = getAgentStatusSettingMode(configurationService);
-			const enabled = commandCenterEnabled && chatEnabled && statusMode !== 'hidden';
-			const enhanced = enabled && statusMode === 'compact';
+			const enabled = commandCenterEnabled && chatEnabled && statusMode !== "hidden";
+			const enhanced = enabled && statusMode === "compact";
 
-			mainWindow.document.body.classList.toggle('agent-status-enabled', enabled);
-			mainWindow.document.body.classList.toggle('unified-agents-bar', enhanced);
+			mainWindow.document.body.classList.toggle(
+        "agent-status-enabled",
+        enabled,
+      );
+			mainWindow.document.body.classList.toggle("unified-agents-bar", enhanced);
 		};
 		updateClass();
 		this._register(configurationService.onDidChangeConfiguration(e => {
@@ -1430,15 +1701,15 @@ export class AgentTitleBarStatusRendering extends Disposable implements IWorkben
 				e.affectsConfiguration(ChatConfiguration.AgentStatusEnabled)
 				|| e.affectsConfiguration(LayoutSettings.COMMAND_CENTER)
 				|| e.affectsConfiguration(ChatConfiguration.AIDisabled)
-				|| e.affectsConfiguration('disableAICustomizations')
-				|| e.affectsConfiguration('workbench.disableAICustomizations')
+				|| e.affectsConfiguration("disableAICustomizations")
+				|| e.affectsConfiguration("workbench.disableAICustomizations")
 			) {
 				updateClass();
 			}
 		}));
 		this._register(contextKeyService.onDidChangeContext(e => {
-			if (e.affectsSome(new Set(['chatIsEnabled']))) {
-				chatEnabled = !!contextKeyService.getContextKeyValue<boolean>('chatIsEnabled');
+			if (e.affectsSome(new Set(["chatIsEnabled"]))) {
+				chatEnabled = !!contextKeyService.getContextKeyValue<boolean>("chatIsEnabled");
 				updateClass();
 			}
 		}));

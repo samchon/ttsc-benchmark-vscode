@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CharCode } from './charCode.js';
-import { isAbsolute, join, normalize, posix, sep } from './path.js';
-import { isWindows } from './platform.js';
-import { equalsIgnoreCase, rtrim, startsWithIgnoreCase } from './strings.js';
-import { isNumber } from './types.js';
+import { CharCode } from "./charCode.js";
+import { isAbsolute, join, normalize, posix, sep } from "./path.js";
+import { isWindows } from "./platform.js";
+import { equalsIgnoreCase, rtrim, startsWithIgnoreCase } from "./strings.js";
+import { isNumber } from "./types.js";
 
 export function isPathSeparator(code: number) {
 	return code === CharCode.Slash || code === CharCode.Backslash;
@@ -30,11 +30,11 @@ export function toSlashes(osPath: string) {
  * Using it on a Linux or MaxOS path might change it.
  */
 export function toPosixPath(osPath: string) {
-	if (osPath.indexOf('/') === -1) {
+	if (osPath.indexOf("/") === -1) {
 		osPath = toSlashes(osPath);
 	}
 	if (/^[a-zA-Z]:(\/|$)/.test(osPath)) { // starts with a drive letter
-		osPath = '/' + osPath;
+		osPath = "/" + osPath;
 	}
 	return osPath;
 }
@@ -46,7 +46,7 @@ export function toPosixPath(osPath: string) {
  */
 export function getRoot(path: string, sep: string = posix.sep): string {
 	if (!path) {
-		return '';
+		return "";
 	}
 
 	const len = path.length;
@@ -98,7 +98,7 @@ export function getRoot(path: string, sep: string = posix.sep): string {
 	// check for URI
 	// scheme://authority/path
 	// ^^^^^^^^^^^^^^^^^^^
-	let pos = path.indexOf('://');
+	let pos = path.indexOf("://");
 	if (pos !== -1) {
 		pos += 3; // 3 -> "://".length
 		for (; pos < len; pos++) {
@@ -108,7 +108,7 @@ export function getRoot(path: string, sep: string = posix.sep): string {
 		}
 	}
 
-	return '';
+	return "";
 }
 
 /**
@@ -182,11 +182,11 @@ export function isValidBasename(name: string | null | undefined, isWindowsOS: bo
 		return false; // check for certain invalid file names
 	}
 
-	if (name === '.' || name === '..') {
+	if (name === "." || name === "..") {
 		return false; // check for reserved values
 	}
 
-	if (isWindowsOS && name[name.length - 1] === '.') {
+	if (isWindowsOS && name[name.length - 1] === ".") {
 		return false; // Windows: file cannot end with a "."
 	}
 
@@ -269,7 +269,7 @@ export function isWindowsDriveLetter(char0: number): boolean {
 export function sanitizeFilePath(candidate: string, cwd: string): string {
 
 	// Special case: allow to open a drive letter without trailing backslash
-	if (isWindows && candidate.endsWith(':')) {
+	if (isWindows && candidate.endsWith(":")) {
 		candidate += sep;
 	}
 
@@ -290,7 +290,7 @@ export function removeTrailingPathSeparator(candidate: string): string {
 		candidate = rtrim(candidate, sep);
 
 		// Special case: allow to open drive root ('C:\')
-		if (candidate.endsWith(':')) {
+		if (candidate.endsWith(":")) {
 			candidate += sep;
 		}
 
@@ -315,7 +315,9 @@ export function isRootOrDriveLetter(path: string): boolean {
 		}
 
 		return hasDriveLetter(pathNormalized) &&
-			(path.length === 2 || pathNormalized.charCodeAt(2) === CharCode.Backslash);
+			(path.length === 2 || pathNormalized.charCodeAt(
+        2,
+      ) === CharCode.Backslash);
 	}
 
 	return pathNormalized === posix.sep;
@@ -357,7 +359,7 @@ export interface IPathWithLineAndColumn {
 }
 
 export function parseLineAndColumnAware(rawPath: string): IPathWithLineAndColumn {
-	const segments = rawPath.split(':'); // C:\file.txt:<line>:<column>
+	const segments = rawPath.split(":"); // C:\file.txt:<line>:<column>
 
 	let path: string | undefined;
 	let line: number | undefined;
@@ -366,7 +368,9 @@ export function parseLineAndColumnAware(rawPath: string): IPathWithLineAndColumn
 	for (const segment of segments) {
 		const segmentAsNumber = Number(segment);
 		if (!isNumber(segmentAsNumber)) {
-			path = path ? [path, segment].join(':') : segment; // a colon can well be part of a path (e.g. C:\...)
+			path = path ? [path, segment].join(
+        ":",
+      ) : segment; // a colon can well be part of a path (e.g. C:\...)
 		} else if (line === undefined) {
 			line = segmentAsNumber;
 		} else if (column === undefined) {
@@ -375,21 +379,21 @@ export function parseLineAndColumnAware(rawPath: string): IPathWithLineAndColumn
 	}
 
 	if (!path) {
-		throw new Error('Format for `--goto` should be: `FILE:LINE(:COLUMN)`');
+		throw new Error("Format for `--goto` should be: `FILE:LINE(:COLUMN)`");
 	}
 
 	return {
 		path,
 		line: line !== undefined ? line : undefined,
-		column: column !== undefined ? column : line !== undefined ? 1 : undefined // if we have a line, make sure column is also set
+		column: column !== undefined ? column : line !== undefined ? 1 : undefined, // if we have a line, make sure column is also set
 	};
 }
 
-const pathChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-const windowsSafePathFirstChars = 'BDEFGHIJKMOQRSTUVWXYZbdefghijkmoqrstuvwxyz0123456789';
+const pathChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+const windowsSafePathFirstChars = "BDEFGHIJKMOQRSTUVWXYZbdefghijkmoqrstuvwxyz0123456789";
 
 export function randomPath(parent?: string, prefix?: string, randomLength = 8): string {
-	let suffix = '';
+	let suffix = "";
 	for (let i = 0; i < randomLength; i++) {
 		let pathCharsTouse: string;
 		if (i === 0 && isWindows && !prefix && (randomLength === 3 || randomLength === 4)) {
@@ -405,7 +409,9 @@ export function randomPath(parent?: string, prefix?: string, randomLength = 8): 
 			pathCharsTouse = pathChars;
 		}
 
-		suffix += pathCharsTouse.charAt(Math.floor(Math.random() * pathCharsTouse.length));
+		suffix += pathCharsTouse.charAt(
+      Math.floor(Math.random() * pathCharsTouse.length),
+    );
 	}
 
 	let randomFileName: string;

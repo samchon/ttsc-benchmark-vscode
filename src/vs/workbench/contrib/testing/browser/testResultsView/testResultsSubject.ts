@@ -4,18 +4,28 @@
  *--------------------------------------------------------------------------------------------*/
 
 
-import { MarshalledId } from '../../../../../base/common/marshallingIds.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { Range } from '../../../../../editor/common/core/range.js';
-import { TestId } from '../../common/testId.js';
-import { ITestResult } from '../../common/testResult.js';
-import { IRichLocation, ITestItem, ITestMessage, ITestMessageMenuArgs, ITestRunTask, ITestTaskState, InternalTestItem, TestMessageType, TestResultItem } from '../../common/testTypes.js';
-import { TestUriType, buildTestUri } from '../../common/testingUri.js';
+import { MarshalledId } from "../../../../../base/common/marshallingIds.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import { TestId } from "../../common/testId.js";
+import { ITestResult } from "../../common/testResult.js";
+import {
+  IRichLocation,
+  ITestItem,
+  ITestMessage,
+  ITestMessageMenuArgs,
+  ITestRunTask,
+  ITestTaskState,
+  InternalTestItem,
+  TestMessageType,
+  TestResultItem,
+} from "../../common/testTypes.js";
+import { TestUriType, buildTestUri } from "../../common/testingUri.js";
 
 export const getMessageArgs = (test: TestResultItem, message: ITestMessage): ITestMessageMenuArgs => ({
-	$mid: MarshalledId.TestMessageMenuArgs,
-	test: InternalTestItem.serialize(test),
-	message: ITestMessage.serialize(message),
+  $mid: MarshalledId.TestMessageMenuArgs,
+  test: InternalTestItem.serialize(test),
+  message: ITestMessage.serialize(message),
 });
 
 interface ISubjectCommon {
@@ -39,7 +49,9 @@ export class MessageSubject implements ISubjectCommon {
 	}
 
 	public get isDiffable() {
-		return this.message.type === TestMessageType.Error && ITestMessage.isDiffable(this.message);
+		return this.message.type === TestMessageType.Error && ITestMessage.isDiffable(
+      this.message,
+    );
 	}
 
 	public get contextValue() {
@@ -55,14 +67,31 @@ export class MessageSubject implements ISubjectCommon {
 		const messages = test.tasks[taskIndex].messages;
 		this.messageIndex = messageIndex;
 
-		const parts = { messageIndex, resultId: result.id, taskIndex, testExtId: test.item.extId };
-		this.expectedUri = buildTestUri({ ...parts, type: TestUriType.ResultExpectedOutput });
-		this.actualUri = buildTestUri({ ...parts, type: TestUriType.ResultActualOutput });
-		this.messageUri = buildTestUri({ ...parts, type: TestUriType.ResultMessage });
+		const parts = {
+      messageIndex,
+      resultId: result.id,
+      taskIndex,
+      testExtId: test.item.extId,
+    };
+		this.expectedUri = buildTestUri({
+      ...parts,
+      type: TestUriType.ResultExpectedOutput,
+    });
+		this.actualUri = buildTestUri({
+      ...parts,
+      type: TestUriType.ResultActualOutput,
+    });
+		this.messageUri = buildTestUri({
+      ...parts,
+      type: TestUriType.ResultMessage,
+    });
 
 		const message = this.message = messages[this.messageIndex];
 		this.context = getMessageArgs(test, message);
-		this.revealLocation = message.location ?? (test.item.uri && test.item.range ? { uri: test.item.uri, range: Range.lift(test.item.range) } : undefined);
+		this.revealLocation = message.location ?? (test.item.uri && test.item.range ? {
+      uri: test.item.uri,
+      range: Range.lift(test.item.range),
+    } : undefined);
 	}
 }
 
@@ -75,7 +104,11 @@ export class TaskSubject implements ISubjectCommon {
 	}
 
 	constructor(public readonly result: ITestResult, public readonly taskIndex: number) {
-		this.outputUri = buildTestUri({ resultId: result.id, taskIndex, type: TestUriType.TaskOutput });
+		this.outputUri = buildTestUri({
+      resultId: result.id,
+      taskIndex,
+      type: TestUriType.TaskOutput,
+    });
 	}
 }
 
@@ -89,7 +122,12 @@ export class TestOutputSubject implements ISubjectCommon {
 	}
 
 	constructor(public readonly result: ITestResult, public readonly taskIndex: number, public readonly test: TestResultItem) {
-		this.outputUri = buildTestUri({ resultId: this.result.id, taskIndex: this.taskIndex, testExtId: this.test.item.extId, type: TestUriType.TestOutput });
+		this.outputUri = buildTestUri({
+      resultId: this.result.id,
+      taskIndex: this.taskIndex,
+      testExtId: this.test.item.extId,
+      type: TestUriType.TestOutput,
+    });
 		this.task = result.tasks[this.taskIndex];
 	}
 }

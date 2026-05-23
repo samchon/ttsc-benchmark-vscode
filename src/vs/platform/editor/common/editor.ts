@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { equals } from '../../../base/common/arrays.js';
-import { Event } from '../../../base/common/event.js';
-import { IDisposable } from '../../../base/common/lifecycle.js';
-import { URI } from '../../../base/common/uri.js';
-import { IUriIdentityService } from '../../uriIdentity/common/uriIdentity.js';
-import { IRectangle } from '../../window/common/window.js';
+import { equals } from "../../../base/common/arrays.js";
+import { Event } from "../../../base/common/event.js";
+import { IDisposable } from "../../../base/common/lifecycle.js";
+import { URI } from "../../../base/common/uri.js";
+import { IUriIdentityService } from "../../uriIdentity/common/uriIdentity.js";
+import { IRectangle } from "../../window/common/window.js";
 
 export interface IResolvableEditorModel extends IDisposable {
 
@@ -26,8 +26,8 @@ export interface IResolvableEditorModel extends IDisposable {
 export function isResolvedEditorModel(model: IDisposable | undefined | null): model is IResolvableEditorModel {
 	const candidate = model as IResolvableEditorModel | undefined | null;
 
-	return typeof candidate?.resolve === 'function'
-		&& typeof candidate?.isResolved === 'function';
+	return typeof candidate?.resolve === "function"
+		&& typeof candidate?.isResolved === "function";
 }
 
 export interface IBaseUntypedEditorInput {
@@ -460,14 +460,14 @@ export const enum TextEditorSelectionSource {
 	 * was not triggered by the user via keyboard or mouse
 	 * but through text editor APIs.
 	 */
-	PROGRAMMATIC = 'api',
+	PROGRAMMATIC = "api",
 
 	/**
 	 * Navigation source indicates a selection change that
 	 * was caused via some command or UI component such as
 	 * an outline tree.
 	 */
-	NAVIGATION = 'code.navigation',
+	NAVIGATION = "code.navigation",
 
 	/**
 	 * Jump source indicates a selection change that
@@ -475,7 +475,7 @@ export const enum TextEditorSelectionSource {
 	 * location in the same or different text editor such
 	 * as "Go to definition".
 	 */
-	JUMP = 'code.jump'
+	JUMP = "code.jump"
 }
 
 export interface ITextEditorOptions extends IEditorOptions {
@@ -501,7 +501,7 @@ export type ITextEditorChange = [
 	originalStartLineNumber: number,
 	originalEndLineNumberExclusive: number,
 	modifiedStartLineNumber: number,
-	modifiedEndLineNumberExclusive: number
+	modifiedEndLineNumberExclusive: number,
 ];
 
 export interface ITextEditorDiffInformation {
@@ -519,6 +519,6 @@ export function isTextEditorDiffInformationEqual(
 		uriIdentityService.extUri.isEqual(diff1?.original, diff2?.original) &&
 		uriIdentityService.extUri.isEqual(diff1?.modified, diff2?.modified) &&
 		equals<ITextEditorChange>(diff1?.changes, diff2?.changes, (a, b) => {
-			return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3];
-		});
+      return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3];
+    });
 }

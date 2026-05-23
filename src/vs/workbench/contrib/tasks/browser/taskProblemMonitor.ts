@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, DisposableMap, DisposableStore } from '../../../../base/common/lifecycle.js';
-import { AbstractProblemCollector } from '../common/problemCollectors.js';
-import { ITerminalInstance } from '../../terminal/browser/terminal.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IMarkerData, MarkerSeverity, IMarker as ITaskMarker } from '../../../../platform/markers/common/markers.js';
+import { Disposable, DisposableMap, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { AbstractProblemCollector } from "../common/problemCollectors.js";
+import { ITerminalInstance } from "../../terminal/browser/terminal.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IMarkerData, MarkerSeverity, IMarker as ITaskMarker } from "../../../../platform/markers/common/markers.js";
 
 interface ITerminalMarkerData {
 	readonly resources: Map<string, URI>;
@@ -25,17 +25,19 @@ export class TaskProblemMonitor extends Disposable {
 
 	addTerminal(terminal: ITerminalInstance, problemMatcher: AbstractProblemCollector) {
 		this.terminalMarkerMap.set(terminal.instanceId, {
-			resources: new Map<string, URI>(),
-			markers: new Map<string, Map<string, IMarkerData>>()
-		});
+      resources: new Map<string, URI>(),
+      markers: new Map<string, Map<string, IMarkerData>>(),
+    });
 
 		const store = new DisposableStore();
 		this.terminalDisposables.set(terminal.instanceId, store);
 
-		store.add(terminal.onDisposed(() => {
-			this.terminalMarkerMap.delete(terminal.instanceId);
-			this.terminalDisposables.deleteAndDispose(terminal.instanceId);
-		}));
+		store.add(
+      terminal.onDisposed(() => {
+        this.terminalMarkerMap.delete(terminal.instanceId);
+        this.terminalDisposables.deleteAndDispose(terminal.instanceId);
+      }),
+    );
 
 		store.add(problemMatcher.onDidFindErrors((markers: ITaskMarker[]) => {
 			const markerData = this.terminalMarkerMap.get(terminal.instanceId);
@@ -60,15 +62,17 @@ export class TaskProblemMonitor extends Disposable {
 				}
 			}
 		}));
-		store.add(problemMatcher.onDidRequestInvalidateLastMarker(() => {
-			const markerData = this.terminalMarkerMap.get(terminal.instanceId);
-			markerData?.markers.clear();
-			markerData?.resources.clear();
-			this.terminalMarkerMap.set(terminal.instanceId, {
-				resources: new Map<string, URI>(),
-				markers: new Map<string, Map<string, IMarkerData>>()
-			});
-		}));
+		store.add(
+      problemMatcher.onDidRequestInvalidateLastMarker(() => {
+        const markerData = this.terminalMarkerMap.get(terminal.instanceId);
+        markerData?.markers.clear();
+        markerData?.resources.clear();
+        this.terminalMarkerMap.set(terminal.instanceId, {
+          resources: new Map<string, URI>(),
+          markers: new Map<string, Map<string, IMarkerData>>(),
+        });
+      }),
+    );
 	}
 
 	/**

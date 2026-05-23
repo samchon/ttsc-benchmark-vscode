@@ -14,67 +14,67 @@
 
 // JSON-RPC base types
 export type {
-	JsonRpcErrorResponse,
-	JsonRpcNotification,
-	JsonRpcRequest,
-	JsonRpcResponse,
-	JsonRpcSuccessResponse,
-} from './protocol/messages.js';
+  JsonRpcErrorResponse,
+  JsonRpcNotification,
+  JsonRpcRequest,
+  JsonRpcResponse,
+  JsonRpcSuccessResponse,
+} from "./protocol/messages.js";
 
 // Typed message unions
 export type {
-	AhpClientNotification,
-	AhpNotification,
-	AhpRequest,
-	AhpResponse,
-	AhpServerNotification,
-	AhpSuccessResponse,
-	CommandMap,
-	ClientNotificationMap,
-	ProtocolMessage,
-	ServerNotificationMap,
-} from './protocol/messages.js';
+  AhpClientNotification,
+  AhpNotification,
+  AhpRequest,
+  AhpResponse,
+  AhpServerNotification,
+  AhpSuccessResponse,
+  CommandMap,
+  ClientNotificationMap,
+  ProtocolMessage,
+  ServerNotificationMap,
+} from "./protocol/messages.js";
 
 // Command params and results
 export type {
-	CreateSessionParams,
-	DirectoryEntry,
-	DispatchActionParams,
-	DisposeSessionParams,
-	FetchTurnsParams,
-	FetchTurnsResult,
-	InitializeParams,
-	InitializeResult,
-	ListSessionsParams,
-	ListSessionsResult,
-	ReconnectParams,
-	ReconnectReplayResult,
-	ReconnectResult,
-	ReconnectSnapshotResult,
-	ResourceCopyParams,
-	ResourceCopyResult,
-	ResourceDeleteParams,
-	ResourceDeleteResult,
-	ResourceListParams,
-	ResourceListResult,
-	ResourceMoveParams,
-	ResourceMoveResult,
-	ResourceReadParams,
-	ResourceReadResult,
-	ResourceWriteParams,
-	ResourceWriteResult,
-	SubscribeParams,
-	UnsubscribeParams,
-} from './protocol/commands.js';
+  CreateSessionParams,
+  DirectoryEntry,
+  DispatchActionParams,
+  DisposeSessionParams,
+  FetchTurnsParams,
+  FetchTurnsResult,
+  InitializeParams,
+  InitializeResult,
+  ListSessionsParams,
+  ListSessionsResult,
+  ReconnectParams,
+  ReconnectReplayResult,
+  ReconnectResult,
+  ReconnectSnapshotResult,
+  ResourceCopyParams,
+  ResourceCopyResult,
+  ResourceDeleteParams,
+  ResourceDeleteResult,
+  ResourceListParams,
+  ResourceListResult,
+  ResourceMoveParams,
+  ResourceMoveResult,
+  ResourceReadParams,
+  ResourceReadResult,
+  ResourceWriteParams,
+  ResourceWriteResult,
+  SubscribeParams,
+  UnsubscribeParams,
+} from "./protocol/commands.js";
 
-export { ContentEncoding, ReconnectResultType } from './protocol/commands.js';
+export { ContentEncoding, ReconnectResultType } from "./protocol/commands.js";
 
 // Error codes
-export { AhpErrorCodes, JsonRpcErrorCodes } from './protocol/errors.js';
-export type { AhpErrorCode, JsonRpcErrorCode } from './protocol/errors.js';
+export { AhpErrorCodes, JsonRpcErrorCodes } from "./protocol/errors.js";
+export type { AhpErrorCode, JsonRpcErrorCode } from "./protocol/errors.js";
 
 // Snapshot type (re-exported from state)
-export type { Snapshot as IStateSnapshot } from './protocol/state.js';
+export type { Snapshot as IStateSnapshot } from "./protocol/state.js";
 
 // ---- Backward-compatible error code aliases ---------------------------------
 
@@ -90,18 +90,24 @@ export const AHP_AUTH_REQUIRED = -32007 as const;
 
 // ---- Type guards -----------------------------------------------------------
 
-import type { AhpRequest, AhpNotification, AhpSuccessResponse, ProtocolMessage, JsonRpcErrorResponse } from './protocol/messages.js';
+import type {
+  AhpRequest,
+  AhpNotification,
+  AhpSuccessResponse,
+  ProtocolMessage,
+  JsonRpcErrorResponse,
+} from "./protocol/messages.js";
 
 export function isJsonRpcRequest(msg: ProtocolMessage): msg is AhpRequest {
-	return 'method' in msg && 'id' in msg;
+	return "method" in msg && "id" in msg;
 }
 
 export function isJsonRpcNotification(msg: ProtocolMessage): msg is AhpNotification {
-	return 'method' in msg && !('id' in msg);
+	return "method" in msg && !("id" in msg);
 }
 
 export function isJsonRpcResponse(msg: ProtocolMessage): msg is AhpSuccessResponse | JsonRpcErrorResponse {
-	return 'id' in msg && !('method' in msg);
+	return "id" in msg && !("method" in msg);
 }
 
 // ---- VS Code-specific types ------------------------------------------------
@@ -126,7 +132,7 @@ export interface ISetAuthTokenParams {
 
 // ---- Server → Client notification param aliases (backward compat) -----------
 
-import type { INotification } from './sessionActions.js';
+import type { INotification } from "./sessionActions.js";
 
 export interface INotificationBroadcastParams {
 	readonly notification: INotification;

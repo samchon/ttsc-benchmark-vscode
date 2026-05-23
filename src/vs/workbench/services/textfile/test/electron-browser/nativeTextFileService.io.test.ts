@@ -3,33 +3,42 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { NullLogService } from '../../../../../platform/log/common/log.js';
-import { FileService } from '../../../../../platform/files/common/fileService.js';
-import { Schemas } from '../../../../../base/common/network.js';
-import { ITextFileService } from '../../common/textfiles.js';
-import { TextFileEditorModelManager } from '../../common/textFileEditorModelManager.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { ServiceCollection } from '../../../../../platform/instantiation/common/serviceCollection.js';
-import { IFileService, IStat } from '../../../../../platform/files/common/files.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { join } from '../../../../../base/common/path.js';
-import { UTF16le, detectEncodingByBOMFromBuffer, UTF8_with_bom, UTF16be, toCanonicalName } from '../../common/encoding.js';
-import { VSBuffer } from '../../../../../base/common/buffer.js';
-import files from '../common/fixtures/files.js';
-import createSuite from '../common/textFileService.io.test.js';
-import { IWorkingCopyFileService, WorkingCopyFileService } from '../../../workingCopy/common/workingCopyFileService.js';
-import { WorkingCopyService } from '../../../workingCopy/common/workingCopyService.js';
-import { UriIdentityService } from '../../../../../platform/uriIdentity/common/uriIdentityService.js';
-import { TestInMemoryFileSystemProvider } from '../../../../test/browser/workbenchTestServices.js';
-import { TestNativeTextFileServiceWithEncodingOverrides, workbenchInstantiationService } from '../../../../test/electron-browser/workbenchTestServices.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
+import { NullLogService } from "../../../../../platform/log/common/log.js";
+import { FileService } from "../../../../../platform/files/common/fileService.js";
+import { Schemas } from "../../../../../base/common/network.js";
+import { ITextFileService } from "../../common/textfiles.js";
+import { TextFileEditorModelManager } from "../../common/textFileEditorModelManager.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { ServiceCollection } from "../../../../../platform/instantiation/common/serviceCollection.js";
+import { IFileService, IStat } from "../../../../../platform/files/common/files.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { join } from "../../../../../base/common/path.js";
+import {
+  UTF16le,
+  detectEncodingByBOMFromBuffer,
+  UTF8_with_bom,
+  UTF16be,
+  toCanonicalName,
+} from "../../common/encoding.js";
+import { VSBuffer } from "../../../../../base/common/buffer.js";
+import files from "../common/fixtures/files.js";
+import createSuite from "../common/textFileService.io.test.js";
+import { IWorkingCopyFileService, WorkingCopyFileService } from "../../../workingCopy/common/workingCopyFileService.js";
+import { WorkingCopyService } from "../../../workingCopy/common/workingCopyService.js";
+import { UriIdentityService } from "../../../../../platform/uriIdentity/common/uriIdentityService.js";
+import { TestInMemoryFileSystemProvider } from "../../../../test/browser/workbenchTestServices.js";
+import {
+  TestNativeTextFileServiceWithEncodingOverrides,
+  workbenchInstantiationService,
+} from "../../../../test/electron-browser/workbenchTestServices.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
 
-suite('Files - NativeTextFileService i/o', function () {
+suite("Files - NativeTextFileService i/o", function () {
 	const disposables = new DisposableStore();
 
 	let service: ITextFileService;
 	let fileProvider: TestInMemoryFileSystemProvider;
-	const testDir = 'test';
+	const testDir = "test";
 
 	createSuite({
 		setup: async () => {
@@ -53,7 +62,7 @@ suite('Files - NativeTextFileService i/o', function () {
 				await fileProvider.writeFile(
 					URI.file(join(testDir, fileName)),
 					files[fileName],
-					{ create: true, overwrite: false, unlock: false, atomic: false }
+					{ create: true, overwrite: false, unlock: false, atomic: false },
 				);
 			}
 
@@ -67,7 +76,7 @@ suite('Files - NativeTextFileService i/o', function () {
 		exists,
 		stat,
 		readFile,
-		detectEncodingByBOM
+		detectEncodingByBOM,
 	});
 
 	async function exists(fsPath: string): Promise<boolean> {

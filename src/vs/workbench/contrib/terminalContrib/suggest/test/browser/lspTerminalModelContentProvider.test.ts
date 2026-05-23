@@ -3,24 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { TestInstantiationService } from '../../../../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { ITextModelService } from '../../../../../../editor/common/services/resolverService.js';
-import { IModelService } from '../../../../../../editor/common/services/model.js';
-import { ITextModel } from '../../../../../../editor/common/model.js';
-import { createTerminalLanguageVirtualUri, LspTerminalModelContentProvider } from '../../browser/lspTerminalModelContentProvider.js';
-import * as sinon from 'sinon';
-import assert from 'assert';
-import { URI } from '../../../../../../base/common/uri.js';
-import { TerminalCapabilityStore } from '../../../../../../platform/terminal/common/capabilities/terminalCapabilityStore.js';
-import { IMarkerService } from '../../../../../../platform/markers/common/markers.js';
-import { ILanguageService } from '../../../../../../editor/common/languages/language.js';
-import { GeneralShellType } from '../../../../../../platform/terminal/common/terminal.js';
-import { ITerminalCapabilityStore } from '../../../../../../platform/terminal/common/capabilities/capabilities.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../../base/test/common/utils.js';
-import { Schemas } from '../../../../../../base/common/network.js';
-import { VSCODE_LSP_TERMINAL_PROMPT_TRACKER } from '../../browser/lspTerminalUtil.js';
+import { TestInstantiationService } from "../../../../../../platform/instantiation/test/common/instantiationServiceMock.js";
+import { ITextModelService } from "../../../../../../editor/common/services/resolverService.js";
+import { IModelService } from "../../../../../../editor/common/services/model.js";
+import { ITextModel } from "../../../../../../editor/common/model.js";
+import { createTerminalLanguageVirtualUri, LspTerminalModelContentProvider } from "../../browser/lspTerminalModelContentProvider.js";
+import * as sinon from "sinon";
+import assert from "assert";
+import { URI } from "../../../../../../base/common/uri.js";
+import { TerminalCapabilityStore } from "../../../../../../platform/terminal/common/capabilities/terminalCapabilityStore.js";
+import { IMarkerService } from "../../../../../../platform/markers/common/markers.js";
+import { ILanguageService } from "../../../../../../editor/common/languages/language.js";
+import { GeneralShellType } from "../../../../../../platform/terminal/common/terminal.js";
+import { ITerminalCapabilityStore } from "../../../../../../platform/terminal/common/capabilities/capabilities.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../../base/test/common/utils.js";
+import { Schemas } from "../../../../../../base/common/network.js";
+import { VSCODE_LSP_TERMINAL_PROMPT_TRACKER } from "../../browser/lspTerminalUtil.js";
 
-suite('LspTerminalModelContentProvider', () => {
+suite("LspTerminalModelContentProvider", () => {
 	const store = ensureNoDisposablesAreLeakedInTestSuite();
 
 	let instantiationService: TestInstantiationService;
@@ -36,7 +36,7 @@ suite('LspTerminalModelContentProvider', () => {
 	setup(async () => {
 		instantiationService = store.add(new TestInstantiationService());
 		capabilityStore = store.add(new TerminalCapabilityStore());
-		virtualTerminalDocumentUri = URI.from({ scheme: 'vscodeTerminal', path: '/terminal1.py' });
+		virtualTerminalDocumentUri = URI.from({ scheme: "vscodeTerminal", path: "/terminal1.py" });
 
 		// Create stubs for the mock text model methods
 		setValueSpy = sinon.stub();
@@ -46,7 +46,7 @@ suite('LspTerminalModelContentProvider', () => {
 			setValue: setValueSpy,
 			getValue: getValueSpy,
 			dispose: sinon.stub(),
-			isDisposed: sinon.stub().returns(false)
+			isDisposed: sinon.stub().returns(false),
 		} as unknown as ITextModel;
 
 		// Create a stub for modelService.getModel
@@ -76,7 +76,7 @@ suite('LspTerminalModelContentProvider', () => {
 			capabilityStore,
 			1,
 			virtualTerminalDocumentUri,
-			GeneralShellType.Python
+			GeneralShellType.Python,
 		));
 	});
 
@@ -85,10 +85,10 @@ suite('LspTerminalModelContentProvider', () => {
 		lspTerminalModelContentProvider?.dispose();
 	});
 
-	suite('setContent', () => {
+	suite("setContent", () => {
 
-		test('should add delimiter when setting content on empty document', () => {
-			getValueSpy.returns('');
+		test("should add delimiter when setting content on empty document", () => {
+			getValueSpy.returns("");
 
 			lspTerminalModelContentProvider.setContent('print("hello")');
 
@@ -96,8 +96,8 @@ suite('LspTerminalModelContentProvider', () => {
 			assert.strictEqual(setValueSpy.args[0][0], VSCODE_LSP_TERMINAL_PROMPT_TRACKER);
 		});
 
-		test('should update content with delimiter when document already has content', () => {
-			const existingContent = 'previous content\n' + VSCODE_LSP_TERMINAL_PROMPT_TRACKER;
+		test("should update content with delimiter when document already has content", () => {
+			const existingContent = "previous content\n" + VSCODE_LSP_TERMINAL_PROMPT_TRACKER;
 			getValueSpy.returns(existingContent);
 
 			lspTerminalModelContentProvider.setContent('print("hello")');
@@ -107,9 +107,9 @@ suite('LspTerminalModelContentProvider', () => {
 			assert.strictEqual(setValueSpy.args[0][0], expectedContent);
 		});
 
-		test('should sanitize content when delimiter is in the middle of existing content', () => {
+		test("should sanitize content when delimiter is in the middle of existing content", () => {
 			// Simulating a corrupted state where the delimiter is in the middle
-			const existingContent = 'previous content\n' + VSCODE_LSP_TERMINAL_PROMPT_TRACKER + 'some extra text';
+			const existingContent = "previous content\n" + VSCODE_LSP_TERMINAL_PROMPT_TRACKER + "some extra text";
 			getValueSpy.returns(existingContent);
 
 			lspTerminalModelContentProvider.setContent('print("hello")');
@@ -119,9 +119,9 @@ suite('LspTerminalModelContentProvider', () => {
 			assert.strictEqual(setValueSpy.args[0][0], expectedContent);
 		});
 
-		test('Mac, Linux - createTerminalLanguageVirtualUri should return the correct URI', () => {
-			const expectedUri = URI.from({ scheme: Schemas.vscodeTerminal, path: '/terminal1.py' });
-			const actualUri = createTerminalLanguageVirtualUri(1, 'py');
+		test("Mac, Linux - createTerminalLanguageVirtualUri should return the correct URI", () => {
+			const expectedUri = URI.from({ scheme: Schemas.vscodeTerminal, path: "/terminal1.py" });
+			const actualUri = createTerminalLanguageVirtualUri(1, "py");
 			assert.strictEqual(actualUri.toString(), expectedUri.toString());
 		});
 	});

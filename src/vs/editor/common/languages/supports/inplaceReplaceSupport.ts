@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IRange } from '../../core/range.js';
-import { IInplaceReplaceSupportResult } from '../../languages.js';
+import { IRange } from "../../core/range.js";
+import { IInplaceReplaceSupportResult } from "../../languages.js";
 
 export class BasicInplaceReplace {
 
@@ -16,9 +16,9 @@ export class BasicInplaceReplace {
 			const result = this.doNavigateValueSet(text1, up);
 			if (result) {
 				return {
-					range: range1,
-					value: result
-				};
+          range: range1,
+          value: result,
+        };
 			}
 		}
 
@@ -26,9 +26,9 @@ export class BasicInplaceReplace {
 			const result = this.doNavigateValueSet(text2, up);
 			if (result) {
 				return {
-					range: range2,
-					value: result
-				};
+          range: range2,
+          value: result,
+        };
 			}
 		}
 
@@ -44,7 +44,7 @@ export class BasicInplaceReplace {
 	}
 
 	private numberReplace(value: string, up: boolean): string | null {
-		const precision = Math.pow(10, value.length - (value.lastIndexOf('.') + 1));
+		const precision = Math.pow(10, value.length - (value.lastIndexOf(".") + 1));
 		let n1 = Number(value);
 		const n2 = parseFloat(value);
 
@@ -65,11 +65,19 @@ export class BasicInplaceReplace {
 	}
 
 	private readonly _defaultValueSet: string[][] = [
-		['true', 'false'],
-		['True', 'False'],
-		['Private', 'Public', 'Friend', 'ReadOnly', 'Partial', 'Protected', 'WriteOnly'],
-		['public', 'protected', 'private'],
-	];
+    ["true", "false"],
+    ["True", "False"],
+    [
+      "Private",
+      "Public",
+      "Friend",
+      "ReadOnly",
+      "Partial",
+      "Protected",
+      "WriteOnly",
+    ],
+    ["public", "protected", "private"],
+  ];
 
 	private textReplace(value: string, up: boolean): string | null {
 		return this.valueSetsReplace(this._defaultValueSet, value, up);

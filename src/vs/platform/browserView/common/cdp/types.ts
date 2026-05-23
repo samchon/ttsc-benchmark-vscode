@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { Event } from '../../../../base/common/event.js';
-import type { IDisposable } from '../../../../base/common/lifecycle.js';
+import type { Event } from "../../../../base/common/event.js";
+import type { IDisposable } from "../../../../base/common/lifecycle.js";
 
 /**
  * CDP error codes following JSON-RPC 2.0 conventions
@@ -26,10 +26,10 @@ export const CDPErrorCode = {
 export class CDPError extends Error {
 	constructor(
 		message: string,
-		readonly code: number
+		readonly code: number,
 	) {
 		super(message);
-		this.name = 'CDPError';
+		this.name = "CDPError";
 	}
 }
 
@@ -39,7 +39,7 @@ export class CDPError extends Error {
 export class CDPMethodNotFoundError extends CDPError {
 	constructor(method: string) {
 		super(`Method not found: ${method}`, CDPErrorCode.MethodNotFound);
-		this.name = 'CDPMethodNotFoundError';
+		this.name = "CDPMethodNotFoundError";
 	}
 }
 
@@ -49,7 +49,7 @@ export class CDPMethodNotFoundError extends CDPError {
 export class CDPInvalidParamsError extends CDPError {
 	constructor(message: string) {
 		super(message, CDPErrorCode.InvalidParams);
-		this.name = 'CDPInvalidParamsError';
+		this.name = "CDPInvalidParamsError";
 	}
 }
 
@@ -59,7 +59,7 @@ export class CDPInvalidParamsError extends CDPError {
 export class CDPInternalError extends CDPError {
 	constructor(message: string) {
 		super(message, CDPErrorCode.InternalError);
-		this.name = 'CDPInternalError';
+		this.name = "CDPInternalError";
 	}
 }
 
@@ -69,7 +69,7 @@ export class CDPInternalError extends CDPError {
 export class CDPServerError extends CDPError {
 	constructor(message: string) {
 		super(message, CDPErrorCode.ServerError);
-		this.name = 'CDPServerError';
+		this.name = "CDPServerError";
 	}
 }
 

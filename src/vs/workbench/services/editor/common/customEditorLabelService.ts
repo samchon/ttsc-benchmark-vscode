@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { ParsedPattern, parse as parseGlob } from '../../../../base/common/glob.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { isAbsolute, parse as parsePath, ParsedPath, dirname } from '../../../../base/common/path.js';
-import { dirname as resourceDirname, relativePath as getRelativePath } from '../../../../base/common/resources.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
-import { MRUCache } from '../../../../base/common/map.js';
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { ParsedPattern, parse as parseGlob } from "../../../../base/common/glob.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { isAbsolute, parse as parsePath, ParsedPath, dirname } from "../../../../base/common/path.js";
+import { dirname as resourceDirname, relativePath as getRelativePath } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { MRUCache } from "../../../../base/common/map.js";
 
 interface ICustomEditorLabelObject {
 	readonly [key: string]: string;
@@ -31,8 +31,8 @@ export class CustomEditorLabelService extends Disposable implements ICustomEdito
 
 	readonly _serviceBrand: undefined;
 
-	static readonly SETTING_ID_PATTERNS = 'workbench.editor.customLabels.patterns';
-	static readonly SETTING_ID_ENABLED = 'workbench.editor.customLabels.enabled';
+	static readonly SETTING_ID_PATTERNS = "workbench.editor.customLabels.patterns";
+	static readonly SETTING_ID_ENABLED = "workbench.editor.customLabels.enabled";
 
 	private readonly _onDidChange = this._register(new Emitter<void>());
 	readonly onDidChange = this._onDidChange.event;
@@ -75,13 +75,17 @@ export class CustomEditorLabelService extends Disposable implements ICustomEdito
 	}
 
 	private storeEnablementState(): void {
-		this.enabled = this.configurationService.getValue<boolean>(CustomEditorLabelService.SETTING_ID_ENABLED);
+		this.enabled = this.configurationService.getValue<boolean>(
+      CustomEditorLabelService.SETTING_ID_ENABLED,
+    );
 	}
 
 	private _templateRegexValidation = /[a-zA-Z0-9]/;
 	private storeCustomPatterns(): void {
 		this.patterns = [];
-		const customLabelPatterns = this.configurationService.getValue<ICustomEditorLabelObject>(CustomEditorLabelService.SETTING_ID_PATTERNS);
+		const customLabelPatterns = this.configurationService.getValue<ICustomEditorLabelObject>(
+      CustomEditorLabelService.SETTING_ID_PATTERNS,
+    );
 		for (const pattern in customLabelPatterns) {
 			const template = customLabelPatterns[pattern];
 
@@ -95,19 +99,21 @@ export class CustomEditorLabelService extends Disposable implements ICustomEdito
 			this.patterns.push({ pattern, template, isAbsolutePath, parsedPattern });
 		}
 
-		this.patterns.sort((a, b) => this.patternWeight(b.pattern) - this.patternWeight(a.pattern));
+		this.patterns.sort(
+      (a, b) => this.patternWeight(b.pattern) - this.patternWeight(a.pattern),
+    );
 	}
 
 	private patternWeight(pattern: string): number {
 		let weight = 0;
-		for (const fragment of pattern.split('/')) {
-			if (fragment === '**') {
+		for (const fragment of pattern.split("/")) {
+			if (fragment === "**") {
 				weight += 1;
-			} else if (fragment === '*') {
+			} else if (fragment === "*") {
 				weight += 10;
-			} else if (fragment.includes('*') || fragment.includes('?')) {
+			} else if (fragment.includes("*") || fragment.includes("?")) {
 				weight += 50;
-			} else if (fragment !== '') {
+			} else if (fragment !== "") {
 				weight += 100;
 			}
 		}
@@ -140,7 +146,10 @@ export class CustomEditorLabelService extends Disposable implements ICustomEdito
 			let relevantPath: string;
 			if (root && !pattern.isAbsolutePath) {
 				if (!relativePath) {
-					relativePath = getRelativePath(resourceDirname(root.uri), resource) ?? resource.path;
+					relativePath = getRelativePath(
+            resourceDirname(root.uri),
+            resource,
+          ) ?? resource.path;
 				}
 				relevantPath = relativePath;
 			} else {
@@ -162,25 +171,25 @@ export class CustomEditorLabelService extends Disposable implements ICustomEdito
 		return template.replace(this._parsedTemplateExpression, (match: string, variable: string, ...args: unknown[]) => {
 			parsedPath = parsedPath ?? parsePath(resource.path);
 			// named group matches
-			const { dirnameN = '0', extnameN = '0' } = args.pop() as { dirnameN?: string; extnameN?: string };
+			const { dirnameN = "0", extnameN = "0" } = args.pop() as { dirnameN?: string; extnameN?: string };
 
-			if (variable === 'filename') {
+			if (variable === "filename") {
 				const { filename } = this._filenameCaptureExpression.exec(parsedPath.base)?.groups ?? {};
 				if (filename) {
 					return filename;
 				}
-			} else if (variable === 'extname') {
+			} else if (variable === "extname") {
 				const extension = this.getExtnames(parsedPath.base);
 				if (extension) {
 					return extension;
 				}
-			} else if (variable.startsWith('extname')) {
+			} else if (variable.startsWith("extname")) {
 				const n = parseInt(extnameN);
 				const nthExtname = this.getNthExtname(parsedPath.base, n);
 				if (nthExtname) {
 					return nthExtname;
 				}
-			} else if (variable.startsWith('dirname')) {
+			} else if (variable.startsWith("dirname")) {
 				const n = parseInt(dirnameN);
 				const nthDir = this.getNthDirname(dirname(relevantPath), n);
 				if (nthDir) {
@@ -194,7 +203,7 @@ export class CustomEditorLabelService extends Disposable implements ICustomEdito
 
 	private removeLeadingDot(path: string): string {
 		let withoutLeadingDot = path;
-		while (withoutLeadingDot.startsWith('.')) {
+		while (withoutLeadingDot.startsWith(".")) {
 			withoutLeadingDot = withoutLeadingDot.slice(1);
 		}
 		return withoutLeadingDot;
@@ -202,19 +211,21 @@ export class CustomEditorLabelService extends Disposable implements ICustomEdito
 
 	private getNthDirname(path: string, n: number): string | undefined {
 		// grand-parent/parent/filename.ext1.ext2 -> [grand-parent, parent]
-		path = path.startsWith('/') ? path.slice(1) : path;
-		const pathFragments = path.split('/');
+		path = path.startsWith("/") ? path.slice(1) : path;
+		const pathFragments = path.split("/");
 
 		return this.getNthFragment(pathFragments, n);
 	}
 
 	private getExtnames(fullFileName: string): string {
-		return this.removeLeadingDot(fullFileName).split('.').slice(1).join('.');
+		return this.removeLeadingDot(fullFileName).split(".").slice(1).join(".");
 	}
 
 	private getNthExtname(fullFileName: string, n: number): string | undefined {
 		// file.ext1.ext2.ext3 -> [file, ext1, ext2, ext3]
-		const extensionNameFragments = this.removeLeadingDot(fullFileName).split('.');
+		const extensionNameFragments = this.removeLeadingDot(fullFileName).split(
+      ".",
+    );
 		extensionNameFragments.shift(); // remove the first element which is the file name
 
 		return this.getNthFragment(extensionNameFragments, n);
@@ -231,14 +242,16 @@ export class CustomEditorLabelService extends Disposable implements ICustomEdito
 		}
 
 		const nthFragment = fragments[nth];
-		if (nthFragment === undefined || nthFragment === '') {
+		if (nthFragment === undefined || nthFragment === "") {
 			return undefined;
 		}
 		return nthFragment;
 	}
 }
 
-export const ICustomEditorLabelService = createDecorator<ICustomEditorLabelService>('ICustomEditorLabelService');
+export const ICustomEditorLabelService = createDecorator<ICustomEditorLabelService>(
+  "ICustomEditorLabelService",
+);
 
 export interface ICustomEditorLabelService {
 	readonly _serviceBrand: undefined;
@@ -246,4 +259,8 @@ export interface ICustomEditorLabelService {
 	getName(resource: URI): string | undefined;
 }
 
-registerSingleton(ICustomEditorLabelService, CustomEditorLabelService, InstantiationType.Delayed);
+registerSingleton(
+  ICustomEditorLabelService,
+  CustomEditorLabelService,
+  InstantiationType.Delayed,
+);

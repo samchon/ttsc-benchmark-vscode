@@ -99,12 +99,12 @@ export function buildHistoryFromTasks(
 		}
 
 		const event: ExecutionEvent = {
-			time: task.time - startTime,
-			label: `${task.source}`,
-			root,
-			parent: parentEvent,
-			detail: extractCallerFrame(task.source.stackTrace),
-		};
+      time: task.time - startTime,
+      label: `${task.source}`,
+      root,
+      parent: parentEvent,
+      detail: extractCallerFrame(task.source.stackTrace),
+    };
 		eventByTrace.set(trace, event);
 		taskEvents.push(event);
 	}
@@ -122,11 +122,11 @@ export function buildHistoryFromTasks(
 		if (!parentEvent) { continue; }
 
 		const logEvent: ExecutionEvent = {
-			time: parentEvent.time,
-			label: `log: ${entry.message}`,
-			root: parentEvent.root,
-			parent: parentEvent,
-		};
+      time: parentEvent.time,
+      label: `log: ${entry.message}`,
+      root: parentEvent.root,
+      parent: parentEvent,
+    };
 		const bucket = logsByParent.get(parentEvent);
 		if (bucket) { bucket.push(logEvent); }
 		else { logsByParent.set(parentEvent, [logEvent]); }
@@ -149,15 +149,15 @@ export function buildHistoryFromTasks(
  * newline (callers may render them stacked) or `undefined` when none.
  */
 const _skipFramePatterns = [
-	/[\\/]virtualScheduling[\\/]/,
-	/[\\/]vs[\\/]base[\\/]common[\\/]async\./,
-	/timeTravelScheduler|traceableTimeApi/,
-	/RunOnceScheduler\.schedule/,
-	/scheduleAtNextAnimationFrame/,
-	/TimeoutTimer\.cancelAndSet/,
-	/TimeoutTimer\.setIfNotSet/,
-	/timeoutDeferred/,
-	/createTimeout/,
+  /[\\/]virtualScheduling[\\/]/,
+  /[\\/]vs[\\/]base[\\/]common[\\/]async\./,
+  /timeTravelScheduler|traceableTimeApi/,
+  /RunOnceScheduler\.schedule/,
+  /scheduleAtNextAnimationFrame/,
+  /TimeoutTimer\.cancelAndSet/,
+  /TimeoutTimer\.setIfNotSet/,
+  /timeoutDeferred/,
+  /createTimeout/,
 ];
 
 const MAX_DETAIL_FRAMES = 5;
@@ -165,14 +165,14 @@ const MAX_DETAIL_FRAMES = 5;
 function extractCallerFrame(stackTrace: string | undefined): string | undefined {
 	if (!stackTrace) { return undefined; }
 	const frames: string[] = [];
-	for (const line of stackTrace.split('\n')) {
+	for (const line of stackTrace.split("\n")) {
 		const trimmed = line.trim();
-		if (!trimmed.startsWith('at ')) { continue; }
+		if (!trimmed.startsWith("at ")) { continue; }
 		if (_skipFramePatterns.some(p => p.test(trimmed))) { continue; }
 		frames.push(trimmed.slice(3));
 		if (frames.length >= MAX_DETAIL_FRAMES) { break; }
 	}
-	return frames.length === 0 ? undefined : frames.join('\n');
+	return frames.length === 0 ? undefined : frames.join("\n");
 }
 
 // -----------------------------------------------------------------------------
@@ -195,9 +195,9 @@ function extractCallerFrame(stackTrace: string | undefined): string | undefined 
  */
 export function renderSwimlanes(history: ExecutionHistory): string {
 	const { roots, events } = history;
-	if (events.length === 0) { return '(empty history)'; }
+	if (events.length === 0) { return "(empty history)"; }
 	if (roots.length === 0) {
-		return events.map(e => `[+${e.time}ms] ${e.label}`).join('\n');
+		return events.map(e => `[+${e.time}ms] ${e.label}`).join("\n");
 	}
 
 	const n = events.length;
@@ -250,7 +250,7 @@ export function renderSwimlanes(history: ExecutionHistory): string {
 	const detailLinesOf = new Array<readonly string[]>(n);
 	for (let i = 0; i < n; i++) {
 		const e = events[i];
-		const frames = e.detail ? e.detail.split('\n') : [];
+		const frames = e.detail ? e.detail.split("\n") : [];
 		displayLabelOf[i] = frames.length > 0 ? `${e.label} · ${frames[0]}` : e.label;
 		detailLinesOf[i] = frames.slice(1);
 	}
@@ -262,7 +262,10 @@ export function renderSwimlanes(history: ExecutionHistory): string {
 	for (const r of roots) { widthOf.set(r, r.label.length); }
 	for (let i = 0; i < n; i++) {
 		const baseIndent = slotOf[i] * 3 + 3;
-		const maxLen = Math.max(displayLabelOf[i].length, ...detailLinesOf[i].map(l => l.length + 2));
+		const maxLen = Math.max(
+      displayLabelOf[i].length,
+      ...detailLinesOf[i].map(l => l.length + 2),
+    );
 		const w = baseIndent + maxLen;
 		const cur = widthOf.get(events[i].root) ?? 0;
 		if (w > cur) { widthOf.set(events[i].root, w); }
@@ -278,9 +281,11 @@ export function renderSwimlanes(history: ExecutionHistory): string {
 	const header: string[] = [];
 	for (const r of roots) {
 		const w = widthOf.get(r)!;
-		header.push(r.label.padStart(Math.ceil((w + r.label.length) / 2)).padEnd(w));
+		header.push(
+      r.label.padStart(Math.ceil((w + r.label.length) / 2)).padEnd(w),
+    );
 	}
-	lines.push(`${' '.repeat(timeColWidth)} ${header.join('  ')}`.trimEnd());
+	lines.push(`${" ".repeat(timeColWidth)} ${header.join("  ")}`.trimEnd());
 
 	// Compute lastChild index for each event (for drawing continuation lines).
 	const lastChildOf = new Array<number>(n).fill(-1);
@@ -314,10 +319,10 @@ export function renderSwimlanes(history: ExecutionHistory): string {
 					for (const a of stack) {
 						if (slotOf[a] === s && lastChildOf[a] > i) { hasActive = true; break; }
 					}
-					indent.push(hasActive ? '│  ' : '   ');
+					indent.push(hasActive ? "│  " : "   ");
 				}
-				const prefix = isLastChild[i] ? '└─ ' : '├─ ';
-				parts.push(`${indent.join('')}${prefix}${displayLabelOf[i]}`.padEnd(w));
+				const prefix = isLastChild[i] ? "└─ " : "├─ ";
+				parts.push(`${indent.join("")}${prefix}${displayLabelOf[i]}`.padEnd(w));
 			} else {
 				// Cross-lane continuation. Draw `│` at each slot occupied by
 				// an active ancestor (lastChild > i). Also show a `|` placeholder
@@ -327,8 +332,8 @@ export function renderSwimlanes(history: ExecutionHistory): string {
 					if (lastChildOf[a] > i) { activeSlots.push(slotOf[a]); }
 				}
 				const maxSlot = Math.max(...activeSlots, -1);
-				const chars: string[] = new Array(Math.max(maxSlot + 1, 0)).fill('   ');
-				for (const s of activeSlots) { chars[s] = '│  '; }
+				const chars: string[] = new Array(Math.max(maxSlot + 1, 0)).fill("   ");
+				for (const s of activeSlots) { chars[s] = "│  "; }
 
 				// Find the next event in root r strictly after i.
 				let nextJ = -1;
@@ -339,18 +344,18 @@ export function renderSwimlanes(history: ExecutionHistory): string {
 					const s = slotOf[nextJ];
 					// Reserve slot if next event will open a new branch (├─).
 					if (!isLastChild[nextJ]) {
-						while (chars.length <= s) { chars.push('   '); }
-						if (chars[s] === '   ') { chars[s] = '|  '; }
+						while (chars.length <= s) { chars.push("   "); }
+						if (chars[s] === "   ") { chars[s] = "|  "; }
 					}
 				}
 
 				// Trim trailing empty cells.
-				while (chars.length > 0 && chars[chars.length - 1] === '   ') { chars.pop(); }
-				parts.push(chars.join('').padEnd(w));
+				while (chars.length > 0 && chars[chars.length - 1] === "   ") { chars.pop(); }
+				parts.push(chars.join("").padEnd(w));
 			}
 		}
 
-		lines.push(`${timeStr} ${parts.join('  ')}`.trimEnd());
+		lines.push(`${timeStr} ${parts.join("  ")}`.trimEnd());
 
 		// Continuation lines for any extra stack frames. Indented under the
 		// label, with no time column, no `├─`/`└─` glyph, and `│  `
@@ -369,15 +374,15 @@ export function renderSwimlanes(history: ExecutionHistory): string {
 				for (const a of stackForExtras) {
 					if (slotOf[a] === s && lastChildOf[a] > i) { hasActive = true; break; }
 				}
-				extraIndent.push(hasActive ? '│  ' : '   ');
+				extraIndent.push(hasActive ? "│  " : "   ");
 			}
-			extraIndent.push(hasOpenChildren ? '│  ' : '   ');
+			extraIndent.push(hasOpenChildren ? "│  " : "   ");
 			for (const extra of extras) {
 				const extrasParts: string[] = [];
 				for (const r of roots) {
 					const w = widthOf.get(r)!;
 					if (r === event.root) {
-						extrasParts.push(`${extraIndent.join('')}${extra}`.padEnd(w));
+						extrasParts.push(`${extraIndent.join("")}${extra}`.padEnd(w));
 					} else {
 						// Reuse the same continuation logic: any active lane on
 						// other roots needs `│` glyphs.
@@ -387,14 +392,16 @@ export function renderSwimlanes(history: ExecutionHistory): string {
 							if (lastChildOf[a] > i) { activeSlots.push(slotOf[a]); }
 						}
 						const maxSlot = Math.max(...activeSlots, -1);
-						const chars: string[] = new Array(Math.max(maxSlot + 1, 0)).fill('   ');
-						for (const s of activeSlots) { chars[s] = '│  '; }
-						while (chars.length > 0 && chars[chars.length - 1] === '   ') { chars.pop(); }
-						extrasParts.push(chars.join('').padEnd(w));
+						const chars: string[] = new Array(Math.max(maxSlot + 1, 0)).fill(
+              "   ",
+            );
+						for (const s of activeSlots) { chars[s] = "│  "; }
+						while (chars.length > 0 && chars[chars.length - 1] === "   ") { chars.pop(); }
+						extrasParts.push(chars.join("").padEnd(w));
 					}
 				}
-				const timePad = ' '.repeat(timeColWidth);
-				lines.push(`${timePad} ${extrasParts.join('  ')}`.trimEnd());
+				const timePad = " ".repeat(timeColWidth);
+				lines.push(`${timePad} ${extrasParts.join("  ")}`.trimEnd());
 			}
 		}
 
@@ -411,7 +418,7 @@ export function renderSwimlanes(history: ExecutionHistory): string {
 		}
 	}
 
-	return lines.join('\n');
+	return lines.join("\n");
 }
 
 // -----------------------------------------------------------------------------
@@ -434,7 +441,7 @@ export function renderSwimlanes(history: ExecutionHistory): string {
  */
 export function renderLaneGraph(history: ExecutionHistory): string {
 	const { events } = history;
-	if (events.length === 0) { return ''; }
+	if (events.length === 0) { return ""; }
 
 	interface Node {
 		readonly label: string;
@@ -453,13 +460,21 @@ export function renderLaneGraph(history: ExecutionHistory): string {
 
 	for (const e of events) {
 		if (rootsWithChildren.has(e.root) && !syntheticForRoot.has(e.root)) {
-			const syn: Node = { label: `+${e.root.label}`, parent: undefined, isSynthetic: true };
+			const syn: Node = {
+        label: `+${e.root.label}`,
+        parent: undefined,
+        isSynthetic: true,
+      };
 			syntheticForRoot.set(e.root, syn);
 			nodes.push(syn);
 		}
 		const timeStr = `+${e.time}ms`.padStart(7);
 		const parent = e.parent ? nodeByEvent.get(e.parent)! : syntheticForRoot.get(e.root);
-		const node: Node = { label: `[${timeStr}] ${e.label}`, parent, isSynthetic: false };
+		const node: Node = {
+      label: `[${timeStr}] ${e.label}`,
+      parent,
+      isSynthetic: false,
+    };
 		nodeByEvent.set(e, node);
 		nodes.push(node);
 	}
@@ -485,7 +500,9 @@ export function renderLaneGraph(history: ExecutionHistory): string {
 	}
 
 	if (totalCols === 0) {
-		return events.map(e => `[+${`${e.time}ms`.padStart(5)}] ${e.label}`).join('\n');
+		return events.map(e => `[+${`${e.time}ms`.padStart(5)}] ${e.label}`).join(
+      "\n",
+    );
 	}
 
 	const active = new Array<number>(totalCols).fill(-1);
@@ -508,23 +525,23 @@ export function renderLaneGraph(history: ExecutionHistory): string {
 
 			let g: string, s: string;
 			if (isConnect) {
-				g = last ? '└' : '├';
-				s = '─';
+				g = last ? "└" : "├";
+				s = "─";
 			} else if (isOpen && node.isSynthetic) {
-				g = '+';
-				s = node.label.slice(1, 2) || '?';
+				g = "+";
+				s = node.label.slice(1, 2) || "?";
 			} else if (isOpen && connectCol >= 0) {
-				g = '╷'; s = '─';
+				g = "╷"; s = "─";
 			} else if (isOpen) {
-				g = '╷'; s = ' ';
+				g = "╷"; s = " ";
 			} else if (inHoriz && isActive) {
-				g = '┼'; s = '─';
+				g = "┼"; s = "─";
 			} else if (inHoriz) {
-				g = '─'; s = '─';
+				g = "─"; s = "─";
 			} else if (isActive) {
-				g = '│'; s = ' ';
+				g = "│"; s = " ";
 			} else {
-				g = ' '; s = ' ';
+				g = " "; s = " ";
 			}
 			chars.push(g, s);
 		}
@@ -533,11 +550,11 @@ export function renderLaneGraph(history: ExecutionHistory): string {
 		if (opensCol >= 0) { active[opensCol] = i; }
 
 		if (node.isSynthetic) {
-			lines.push(chars.join('').trimEnd());
+			lines.push(chars.join("").trimEnd());
 		} else {
-			lines.push(`${chars.join('')}${node.label}`);
+			lines.push(`${chars.join("")}${node.label}`);
 		}
 	}
 
-	return lines.join('\n');
+	return lines.join("\n");
 }

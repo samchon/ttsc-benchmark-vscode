@@ -3,19 +3,25 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationTokenSource, CancellationToken } from '../../../../base/common/cancellation.js';
-import { OutputChannel } from './ripgrepSearchUtils.js';
-import { RipgrepTextSearchEngine } from './ripgrepTextSearchEngine.js';
-import { TextSearchProvider2, TextSearchComplete2, TextSearchResult2, TextSearchQuery2, TextSearchProviderOptions, } from '../common/searchExtTypes.js';
-import { Progress } from '../../../../platform/progress/common/progress.js';
-import { Schemas } from '../../../../base/common/network.js';
-import type { RipgrepTextSearchOptions } from '../common/searchExtTypesInternal.js';
+import { CancellationTokenSource, CancellationToken } from "../../../../base/common/cancellation.js";
+import { OutputChannel } from "./ripgrepSearchUtils.js";
+import { RipgrepTextSearchEngine } from "./ripgrepTextSearchEngine.js";
+import {
+  TextSearchProvider2,
+  TextSearchComplete2,
+  TextSearchResult2,
+  TextSearchQuery2,
+  TextSearchProviderOptions,
+} from "../common/searchExtTypes.js";
+import { Progress } from "../../../../platform/progress/common/progress.js";
+import { Schemas } from "../../../../base/common/network.js";
+import type { RipgrepTextSearchOptions } from "../common/searchExtTypesInternal.js";
 
 export class RipgrepSearchProvider implements TextSearchProvider2 {
 	private inProgress: Set<CancellationTokenSource> = new Set();
 
 	constructor(private outputChannel: OutputChannel, private getNumThreads: () => Promise<number | undefined>) {
-		process.once('exit', () => this.dispose());
+		process.once("exit", () => this.dispose());
 	}
 
 	async provideTextSearchResults(query: TextSearchQuery2, options: TextSearchProviderOptions, progress: Progress<TextSearchResult2>, token: CancellationToken): Promise<TextSearchComplete2> {
@@ -30,7 +36,7 @@ export class RipgrepSearchProvider implements TextSearchProvider2 {
 				maxResults: options.maxResults,
 				previewOptions: options.previewOptions,
 				maxFileSize: options.maxFileSize,
-				surroundingContext: options.surroundingContext
+				surroundingContext: options.surroundingContext,
 			};
 			if (folderOption.folder.scheme === Schemas.vscodeUserData) {
 				// Ripgrep search engine can only provide file-scheme results, but we want to use it to search some schemes that are backed by the filesystem, but with some other provider as the frontend,
@@ -44,7 +50,7 @@ export class RipgrepSearchProvider implements TextSearchProvider2 {
 		})).then((e => {
 			const complete: TextSearchComplete2 = {
 				// todo: get this to actually check
-				limitHit: e.some(complete => !!complete && complete.limitHit)
+				limitHit: e.some(complete => !!complete && complete.limitHit),
 			};
 			return complete;
 		}));

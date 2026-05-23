@@ -3,12 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { Event } from '../../../../base/common/event.js';
-import { EnvironmentVariableScope, IEnvironmentVariableCollection, IMergedEnvironmentVariableCollection } from '../../../../platform/terminal/common/environmentVariable.js';
-import { ITerminalStatus } from './terminal.js';
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { Event } from "../../../../base/common/event.js";
+import {
+  EnvironmentVariableScope,
+  IEnvironmentVariableCollection,
+  IMergedEnvironmentVariableCollection,
+} from "../../../../platform/terminal/common/environmentVariable.js";
+import { ITerminalStatus } from "./terminal.js";
 
-export const IEnvironmentVariableService = createDecorator<IEnvironmentVariableService>('environmentVariableService');
+export const IEnvironmentVariableService = createDecorator<IEnvironmentVariableService>(
+  "environmentVariableService",
+);
 
 /**
  * Tracks and persists environment variable collections as defined by extensions.

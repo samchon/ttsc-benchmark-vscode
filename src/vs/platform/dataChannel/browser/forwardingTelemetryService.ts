@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ClassifiedEvent, OmitMetadata, IGDPRProperty, StrictPropertyCheck } from '../../telemetry/common/gdprTypings.js';
-import { ITelemetryData, ITelemetryService, TelemetryLevel } from '../../telemetry/common/telemetry.js';
-import { IDataChannelService } from '../common/dataChannel.js';
+import { ClassifiedEvent, OmitMetadata, IGDPRProperty, StrictPropertyCheck } from "../../telemetry/common/gdprTypings.js";
+import { ITelemetryData, ITelemetryService, TelemetryLevel } from "../../telemetry/common/telemetry.js";
+import { IDataChannelService } from "../common/dataChannel.js";
 
 export class InterceptingTelemetryService implements ITelemetryService {
 	_serviceBrand: undefined;
@@ -94,17 +94,17 @@ export class DataChannelForwardingTelemetryService extends InterceptingTelemetry
 			}
 
 			if (forward) {
-				dataChannelService.getDataChannel<IEditTelemetryData>('editTelemetry').sendData({ eventName, data: data ?? {} });
+				dataChannelService.getDataChannel<IEditTelemetryData>("editTelemetry").sendData({ eventName, data: data ?? {} });
 			}
 		});
 	}
 }
 
-const shouldForwardToChannel = Symbol('shouldForwardToChannel');
+const shouldForwardToChannel = Symbol("shouldForwardToChannel");
 export function forwardToChannelIf(value: boolean): Record<string, unknown> {
 	return {
 		// This will not be sent via telemetry, it is just a marker
-		[shouldForwardToChannel]: value
+		[shouldForwardToChannel]: value,
 	};
 }
 
@@ -113,5 +113,5 @@ export function isCopilotLikeExtension(extensionId: string | undefined): boolean
 		return false;
 	}
 	const extIdLowerCase = extensionId.toLowerCase();
-	return extIdLowerCase === 'github.copilot' || extIdLowerCase === 'github.copilot-chat';
+	return extIdLowerCase === "github.copilot" || extIdLowerCase === "github.copilot-chat";
 }

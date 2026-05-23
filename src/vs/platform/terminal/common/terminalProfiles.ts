@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Codicon } from '../../../base/common/codicons.js';
-import { isUriComponents, URI } from '../../../base/common/uri.js';
-import { localize } from '../../../nls.js';
-import { IExtensionTerminalProfile, ITerminalProfile, TerminalIcon } from './terminal.js';
-import { ThemeIcon } from '../../../base/common/themables.js';
-import { isObject, isString, type SingleOrMany } from '../../../base/common/types.js';
+import { Codicon } from "../../../base/common/codicons.js";
+import { isUriComponents, URI } from "../../../base/common/uri.js";
+import { localize } from "../../../nls.js";
+import { IExtensionTerminalProfile, ITerminalProfile, TerminalIcon } from "./terminal.js";
+import { ThemeIcon } from "../../../base/common/themables.js";
+import { isObject, isString, type SingleOrMany } from "../../../base/common/types.js";
 
 export function createProfileSchemaEnums(detectedProfiles: ITerminalProfile[], extensionProfiles?: readonly IExtensionTerminalProfile[]): {
 	values: (string | null)[] | undefined;
@@ -16,26 +16,26 @@ export function createProfileSchemaEnums(detectedProfiles: ITerminalProfile[], e
 } {
 	const result: { name: string | null; description: string }[] = [{
 		name: null,
-		description: localize('terminalAutomaticProfile', 'Automatically detect the default')
+		description: localize("terminalAutomaticProfile", "Automatically detect the default"),
 	}];
 	result.push(...detectedProfiles.map(e => {
 		return {
 			name: e.profileName,
-			description: createProfileDescription(e)
+			description: createProfileDescription(e),
 		};
 	}));
 	if (extensionProfiles) {
 		result.push(...extensionProfiles.map(extensionProfile => {
 			return {
 				name: extensionProfile.title,
-				description: createExtensionProfileDescription(extensionProfile)
+				description: createExtensionProfileDescription(extensionProfile),
 			};
 		}));
 	}
 	return {
-		values: result.map(e => e.name),
-		markdownDescriptions: result.map(e => e.description)
-	};
+    values: result.map(e => e.name),
+    markdownDescriptions: result.map(e => e.description),
+  };
 }
 
 function createProfileDescription(profile: ITerminalProfile): string {
@@ -44,7 +44,7 @@ function createProfileDescription(profile: ITerminalProfile): string {
 		if (isString(profile.args)) {
 			description += `\n- args: "${profile.args}"`;
 		} else {
-			description += `\n- args: [${profile.args.length === 0 ? '' : `'${profile.args.join(`','`)}'`}]`;
+			description += `\n- args: [${profile.args.length === 0 ? "" : `'${profile.args.join(`','`)}'`}]`;
 		}
 	}
 	if (profile.overrideName !== undefined) {
@@ -100,8 +100,12 @@ export function terminalIconsEqual(a?: TerminalIcon, b?: TerminalIcon): boolean 
 	) {
 		const castedA = (a as { light: unknown; dark: unknown });
 		const castedB = (b as { light: unknown; dark: unknown });
-		if ((URI.isUri(castedA.light) || isUriComponents(castedA.light)) && (URI.isUri(castedA.dark) || isUriComponents(castedA.dark))
-			&& (URI.isUri(castedB.light) || isUriComponents(castedB.light)) && (URI.isUri(castedB.dark) || isUriComponents(castedB.dark))) {
+		if ((URI.isUri(castedA.light) || isUriComponents(
+      castedA.light,
+    )) && (URI.isUri(castedA.dark) || isUriComponents(castedA.dark))
+			&& (URI.isUri(castedB.light) || isUriComponents(
+        castedB.light,
+      )) && (URI.isUri(castedB.dark) || isUriComponents(castedB.dark))) {
 			return castedA.light.path === castedB.light.path && castedA.dark.path === castedB.dark.path;
 		}
 	}

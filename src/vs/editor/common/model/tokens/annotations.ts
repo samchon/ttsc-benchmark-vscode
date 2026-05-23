@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { binarySearch2 } from '../../../../base/common/arrays.js';
-import { StringEdit } from '../../core/edits/stringEdit.js';
-import { OffsetRange } from '../../core/ranges/offsetRange.js';
+import { binarySearch2 } from "../../../../base/common/arrays.js";
+import { StringEdit } from "../../core/edits/stringEdit.js";
+import { OffsetRange } from "../../core/ranges/offsetRange.js";
 
 export interface IAnnotation<T> {
 	range: OffsetRange;
@@ -55,10 +55,17 @@ export class AnnotatedString<T> implements IAnnotatedString<T> {
 	 */
 	public setAnnotations(annotations: AnnotationsUpdate<T>): void {
 		for (const annotation of annotations.annotations) {
-			const startIndex = this._getStartIndexOfIntersectingAnnotation(annotation.range.start);
-			const endIndexExclusive = this._getEndIndexOfIntersectingAnnotation(annotation.range.endExclusive);
+			const startIndex = this._getStartIndexOfIntersectingAnnotation(
+        annotation.range.start,
+      );
+			const endIndexExclusive = this._getEndIndexOfIntersectingAnnotation(
+        annotation.range.endExclusive,
+      );
 			if (annotation.annotation !== undefined) {
-				this._annotations.splice(startIndex, endIndexExclusive - startIndex, { range: annotation.range, annotation: annotation.annotation });
+				this._annotations.splice(startIndex, endIndexExclusive - startIndex, {
+          range: annotation.range,
+          annotation: annotation.annotation,
+        });
 			} else {
 				this._annotations.splice(startIndex, endIndexExclusive - startIndex);
 			}
@@ -70,15 +77,20 @@ export class AnnotatedString<T> implements IAnnotatedString<T> {
 	 */
 	public getAnnotationsIntersecting(range: OffsetRange): IAnnotation<T>[] {
 		const startIndex = this._getStartIndexOfIntersectingAnnotation(range.start);
-		const endIndexExclusive = this._getEndIndexOfIntersectingAnnotation(range.endExclusive);
+		const endIndexExclusive = this._getEndIndexOfIntersectingAnnotation(
+      range.endExclusive,
+    );
 		return this._annotations.slice(startIndex, endIndexExclusive);
 	}
 
 	private _getStartIndexOfIntersectingAnnotation(offset: number): number {
 		// Find index to the left of the offset
-		const startIndexWhereToReplace = binarySearch2(this._annotations.length, (index) => {
-			return this._annotations[index].range.start - offset;
-		});
+		const startIndexWhereToReplace = binarySearch2(
+      this._annotations.length,
+      (index) => {
+        return this._annotations[index].range.start - offset;
+      },
+    );
 		let startIndex: number;
 		if (startIndexWhereToReplace >= 0) {
 			startIndex = startIndexWhereToReplace;
@@ -100,9 +112,12 @@ export class AnnotatedString<T> implements IAnnotatedString<T> {
 
 	private _getEndIndexOfIntersectingAnnotation(offset: number): number {
 		// Find index to the right of the offset
-		const endIndexWhereToReplace = binarySearch2(this._annotations.length, (index) => {
-			return this._annotations[index].range.endExclusive - offset;
-		});
+		const endIndexWhereToReplace = binarySearch2(
+      this._annotations.length,
+      (index) => {
+        return this._annotations[index].range.endExclusive - offset;
+      },
+    );
 		let endIndexExclusive: number;
 		if (endIndexWhereToReplace >= 0) {
 			endIndexExclusive = endIndexWhereToReplace + 1;
@@ -155,7 +170,10 @@ export class AnnotatedString<T> implements IAnnotatedString<T> {
 					break;
 				}
 				annotations.shift();
-				const newAnnotation = { range: range.delta(offset), annotation: annotation.annotation };
+				const newAnnotation = {
+          range: range.delta(offset),
+          annotation: annotation.annotation,
+        };
 				if (!newAnnotation.range.isEmpty) {
 					finalAnnotations.push(newAnnotation);
 				} else {
@@ -215,7 +233,10 @@ export class AnnotatedString<T> implements IAnnotatedString<T> {
 				break;
 			}
 			annotations.shift();
-			const newAnnotation = { annotation: annotation.annotation, range: annotation.range.delta(offset) };
+			const newAnnotation = {
+        annotation: annotation.annotation,
+        range: annotation.range.delta(offset),
+      };
 			if (!newAnnotation.range.isEmpty) {
 				finalAnnotations.push(newAnnotation);
 			} else {
@@ -263,7 +284,9 @@ export class AnnotationsUpdate<T> {
 	}
 
 	public rebase(edit: StringEdit): void {
-		const annotatedString = new AnnotatedString<T | undefined>(this._annotations);
+		const annotatedString = new AnnotatedString<T | undefined>(
+      this._annotations,
+    );
 		annotatedString.applyEdit(edit);
 		this._annotations = annotatedString.getAllAnnotations();
 	}

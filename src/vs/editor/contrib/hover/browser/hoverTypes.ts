@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Dimension } from '../../../../base/browser/dom.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { ScrollEvent } from '../../../../base/common/scrollable.js';
-import { BrandedService, IConstructorSignature } from '../../../../platform/instantiation/common/instantiation.js';
-import { ICodeEditor, IEditorMouseEvent } from '../../../browser/editorBrowser.js';
-import { Position } from '../../../common/core/position.js';
-import { Range } from '../../../common/core/range.js';
-import { IModelDecoration } from '../../../common/model.js';
-import { HoverStartSource } from './hoverOperation.js';
+import { Dimension } from "../../../../base/browser/dom.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { ScrollEvent } from "../../../../base/common/scrollable.js";
+import { BrandedService, IConstructorSignature } from "../../../../platform/instantiation/common/instantiation.js";
+import { ICodeEditor, IEditorMouseEvent } from "../../../browser/editorBrowser.js";
+import { Position } from "../../../common/core/position.js";
+import { Range } from "../../../common/core/range.js";
+import { IModelDecoration } from "../../../common/model.js";
+import { HoverStartSource } from "./hoverOperation.js";
 
 export interface IHoverPart {
 	/**
@@ -54,7 +54,9 @@ export class HoverRangeAnchor {
 	) {
 	}
 	public equals(other: HoverAnchor) {
-		return (other.type === HoverAnchorType.Range && this.range.equalsRange(other.range));
+		return (other.type === HoverAnchorType.Range && this.range.equalsRange(
+      other.range,
+    ));
 	}
 	public canAdoptVisibleHover(lastAnchor: HoverAnchor, showAtPosition: Position): boolean {
 		return (lastAnchor.type === HoverAnchorType.Range && showAtPosition.lineNumber === this.range.startLineNumber);
@@ -69,7 +71,7 @@ export class HoverForeignElementAnchor {
 		public readonly range: Range,
 		public readonly initialMousePosX: number | undefined,
 		public readonly initialMousePosY: number | undefined,
-		public readonly supportsMarkerHover: boolean | undefined
+		public readonly supportsMarkerHover: boolean | undefined,
 	) {
 	}
 	public equals(other: HoverAnchor) {

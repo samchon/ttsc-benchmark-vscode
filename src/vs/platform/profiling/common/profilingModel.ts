@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { IV8Profile, IV8ProfileNode } from './profiling.js';
+import type { IV8Profile, IV8ProfileNode } from "./profiling.js";
 
 // #region
 // https://github.com/microsoft/vscode-js-profile-visualizer/blob/6e7401128ee860be113a916f80fcfe20ac99418e/packages/vscode-js-profile-core/src/cpu/model.ts#L4
@@ -108,7 +108,7 @@ const ensureSourceLocations = (profile: ICpuProfileRaw): ReadonlyArray<IAnnotati
 			callFrame.scriptId,
 			callFrame.lineNumber,
 			callFrame.columnNumber,
-		].join(':');
+		].join(":");
 
 		const existing = locationsByRef.get(ref);
 		if (existing) {
@@ -208,12 +208,12 @@ export const buildModel = (profile: ICpuProfileRaw): IProfileModel => {
 		// make them 0-based:
 		const id = mapId(node.id);
 		nodes[id] = {
-			id,
-			selfTime: 0,
-			aggregateTime: 0,
-			locationId: node.locationId as number,
-			children: node.children?.map(mapId) || [],
-		};
+      id,
+      selfTime: 0,
+      aggregateTime: 0,
+      locationId: node.locationId as number,
+      children: node.children?.map(mapId) || [],
+    };
 
 		for (const child of node.positionTicks || []) {
 			if (child.startLocationId) {
@@ -273,11 +273,11 @@ export class BottomUpNode {
 			aggregateTime: 0,
 			ticks: 0,
 			callFrame: {
-				functionName: '(root)',
+				functionName: "(root)",
 				lineNumber: -1,
 				columnNumber: -1,
-				scriptId: '0',
-				url: '',
+				scriptId: "0",
+				url: "",
 			},
 		});
 	}

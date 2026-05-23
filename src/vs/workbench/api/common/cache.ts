@@ -11,7 +11,7 @@ export class Cache<T> {
 	private _idPool = 1;
 
 	constructor(
-		private readonly id: string
+		private readonly id: string,
 	) { }
 
 	add(item: readonly T[]): number {

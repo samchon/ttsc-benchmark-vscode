@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { ScrollbarState } from '../../../../browser/ui/scrollbar/scrollbarState.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../common/utils.js';
+import assert from "assert";
+import { ScrollbarState } from "../../../../browser/ui/scrollbar/scrollbarState.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../common/utils.js";
 
-suite('ScrollbarState', () => {
+suite("ScrollbarState", () => {
 
 	ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('inflates slider size', () => {
+	test("inflates slider size", () => {
 		const actual = new ScrollbarState(0, 14, 0, 339, 42423, 32787);
 
 		assert.strictEqual(actual.getArrowSize(), 0);
@@ -37,7 +37,7 @@ suite('ScrollbarState', () => {
 		assert.strictEqual(actual.getSliderPosition(), 249);
 	});
 
-	test('inflates slider size with arrows', () => {
+	test("inflates slider size with arrows", () => {
 		const actual = new ScrollbarState(12, 14, 0, 339, 42423, 32787);
 
 		assert.strictEqual(actual.getArrowSize(), 12);

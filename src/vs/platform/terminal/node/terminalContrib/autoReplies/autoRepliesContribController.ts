@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ILogService } from '../../../../log/common/log.js';
-import type { IPtyServiceContribution, ITerminalChildProcess } from '../../../common/terminal.js';
-import { TerminalAutoResponder } from './terminalAutoResponder.js';
+import { ILogService } from "../../../../log/common/log.js";
+import type { IPtyServiceContribution, ITerminalChildProcess } from "../../../common/terminal.js";
+import { TerminalAutoResponder } from "./terminalAutoResponder.js";
 
 export class AutoRepliesPtyServiceContribution implements IPtyServiceContribution {
 	private readonly _autoReplies: Map<string, string> = new Map();
@@ -13,7 +13,7 @@ export class AutoRepliesPtyServiceContribution implements IPtyServiceContributio
 	private readonly _autoResponders: Map<number, Map<string, TerminalAutoResponder>> = new Map();
 
 	constructor(
-		@ILogService private readonly _logService: ILogService
+		@ILogService private readonly _logService: ILogService,
 	) {
 	}
 
@@ -23,7 +23,9 @@ export class AutoRepliesPtyServiceContribution implements IPtyServiceContributio
 		for (const persistentProcessId of this._autoResponders.keys()) {
 			const process = this._terminalProcesses.get(persistentProcessId);
 			if (!process) {
-				this._logService.error('Could not find terminal process to install auto reply');
+				this._logService.error(
+          "Could not find terminal process to install auto reply",
+        );
 				continue;
 			}
 			this._processInstallAutoReply(persistentProcessId, process, match, reply);
@@ -81,7 +83,15 @@ export class AutoRepliesPtyServiceContribution implements IPtyServiceContributio
 		const processAutoResponders = this._autoResponders.get(persistentProcessId);
 		if (processAutoResponders) {
 			processAutoResponders.get(match)?.dispose();
-			processAutoResponders.set(match, new TerminalAutoResponder(terminalProcess, match, reply, this._logService));
+			processAutoResponders.set(
+        match,
+        new TerminalAutoResponder(
+          terminalProcess,
+          match,
+          reply,
+          this._logService,
+        ),
+      );
 		}
 	}
 }

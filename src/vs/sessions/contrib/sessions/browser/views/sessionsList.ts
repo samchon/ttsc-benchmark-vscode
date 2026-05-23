@@ -3,72 +3,98 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import '../media/sessionsList.css';
-import * as DOM from '../../../../../base/browser/dom.js';
-import { Gesture } from '../../../../../base/browser/touch.js';
-import { IListVirtualDelegate } from '../../../../../base/browser/ui/list/list.js';
-import { IListStyles } from '../../../../../base/browser/ui/list/listWidget.js';
-import { IObjectTreeElement, ITreeNode, ITreeRenderer, ITreeContextMenuEvent, ObjectTreeElementCollapseState } from '../../../../../base/browser/ui/tree/tree.js';
-import { RenderIndentGuides, TreeFindMode } from '../../../../../base/browser/ui/tree/abstractTree.js';
-import { Codicon } from '../../../../../base/common/codicons.js';
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { HighlightedLabel } from '../../../../../base/browser/ui/highlightedlabel/highlightedLabel.js';
-import { createPixelSpinner } from '../../../../../base/browser/ui/pixelSpinner/pixelSpinner.js';
-import { createMatches, FuzzyScore, IMatch } from '../../../../../base/common/filters.js';
-import { Disposable, DisposableStore, MutableDisposable, toDisposable } from '../../../../../base/common/lifecycle.js';
-import { MarkdownString } from '../../../../../base/common/htmlContent.js';
-import { IReader, autorun, observableSignalFromEvent } from '../../../../../base/common/observable.js';
-import { ThemeIcon, themeColorFromId } from '../../../../../base/common/themables.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { fromNow } from '../../../../../base/common/date.js';
-import { localize } from '../../../../../nls.js';
-import { MenuId, IMenuService } from '../../../../../platform/actions/common/actions.js';
-import { MenuWorkbenchToolBar } from '../../../../../platform/actions/browser/toolbar.js';
-import { IContextKeyService, RawContextKey } from '../../../../../platform/contextkey/common/contextkey.js';
-import { ChatSessionProviderIdContext, IsPhoneLayoutContext } from '../../../../common/contextkeys.js';
-import { IContextMenuService } from '../../../../../platform/contextview/browser/contextView.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IKeybindingService } from '../../../../../platform/keybinding/common/keybinding.js';
-import { ServiceCollection } from '../../../../../platform/instantiation/common/serviceCollection.js';
-import { WorkbenchObjectTree } from '../../../../../platform/list/browser/listService.js';
-import { IStyleOverride, defaultButtonStyles, defaultFindWidgetStyles, defaultToggleStyles } from '../../../../../platform/theme/browser/defaultStyles.js';
-import { asCssVariable } from '../../../../../platform/theme/common/colorUtils.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../../platform/storage/common/storage.js';
-import { GITHUB_REMOTE_FILE_SCHEME, ISession, ISessionWorkspace, SessionStatus } from '../../../../services/sessions/common/session.js';
-import { AgentSessionApprovalModel, IAgentSessionApprovalInfo } from '../../../../../workbench/contrib/chat/browser/agentSessions/agentSessionApprovalModel.js';
-import { Button } from '../../../../../base/browser/ui/button/button.js';
-import { IMarkdownRendererService } from '../../../../../platform/markdown/browser/markdownRenderer.js';
-import { Separator } from '../../../../../base/common/actions.js';
-import { IHoverService } from '../../../../../platform/hover/browser/hover.js';
-import { HoverStyle } from '../../../../../base/browser/ui/hover/hover.js';
-import { HoverPosition } from '../../../../../base/browser/ui/hover/hoverWidget.js';
-import { ISessionsManagementService } from '../../../../services/sessions/common/sessionsManagement.js';
-import { IAgentSessionsService } from '../../../../../workbench/contrib/chat/browser/agentSessions/agentSessionsService.js';
-import { IAccessibilityService } from '../../../../../platform/accessibility/common/accessibility.js';
-import { ISessionsListModelService } from './sessionsListModelService.js';
-import { IAgentHostFilterService } from '../../../../services/agentHostFilter/common/agentHostFilter.js';
+import "../media/sessionsList.css";
+import * as DOM from "../../../../../base/browser/dom.js";
+import { Gesture } from "../../../../../base/browser/touch.js";
+import { IListVirtualDelegate } from "../../../../../base/browser/ui/list/list.js";
+import { IListStyles } from "../../../../../base/browser/ui/list/listWidget.js";
+import {
+  IObjectTreeElement,
+  ITreeNode,
+  ITreeRenderer,
+  ITreeContextMenuEvent,
+  ObjectTreeElementCollapseState,
+} from "../../../../../base/browser/ui/tree/tree.js";
+import { RenderIndentGuides, TreeFindMode } from "../../../../../base/browser/ui/tree/abstractTree.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { HighlightedLabel } from "../../../../../base/browser/ui/highlightedlabel/highlightedLabel.js";
+import { createPixelSpinner } from "../../../../../base/browser/ui/pixelSpinner/pixelSpinner.js";
+import { createMatches, FuzzyScore, IMatch } from "../../../../../base/common/filters.js";
+import { Disposable, DisposableStore, MutableDisposable, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { MarkdownString } from "../../../../../base/common/htmlContent.js";
+import { IReader, autorun, observableSignalFromEvent } from "../../../../../base/common/observable.js";
+import { ThemeIcon, themeColorFromId } from "../../../../../base/common/themables.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { fromNow } from "../../../../../base/common/date.js";
+import { localize } from "../../../../../nls.js";
+import { MenuId, IMenuService } from "../../../../../platform/actions/common/actions.js";
+import { MenuWorkbenchToolBar } from "../../../../../platform/actions/browser/toolbar.js";
+import { IContextKeyService, RawContextKey } from "../../../../../platform/contextkey/common/contextkey.js";
+import { ChatSessionProviderIdContext, IsPhoneLayoutContext } from "../../../../common/contextkeys.js";
+import { IContextMenuService } from "../../../../../platform/contextview/browser/contextView.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../../platform/keybinding/common/keybinding.js";
+import { ServiceCollection } from "../../../../../platform/instantiation/common/serviceCollection.js";
+import { WorkbenchObjectTree } from "../../../../../platform/list/browser/listService.js";
+import {
+  IStyleOverride,
+  defaultButtonStyles,
+  defaultFindWidgetStyles,
+  defaultToggleStyles,
+} from "../../../../../platform/theme/browser/defaultStyles.js";
+import { asCssVariable } from "../../../../../platform/theme/common/colorUtils.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../../platform/storage/common/storage.js";
+import { GITHUB_REMOTE_FILE_SCHEME, ISession, ISessionWorkspace, SessionStatus } from "../../../../services/sessions/common/session.js";
+import { AgentSessionApprovalModel, IAgentSessionApprovalInfo } from "../../../../../workbench/contrib/chat/browser/agentSessions/agentSessionApprovalModel.js";
+import { Button } from "../../../../../base/browser/ui/button/button.js";
+import { IMarkdownRendererService } from "../../../../../platform/markdown/browser/markdownRenderer.js";
+import { Separator } from "../../../../../base/common/actions.js";
+import { IHoverService } from "../../../../../platform/hover/browser/hover.js";
+import { HoverStyle } from "../../../../../base/browser/ui/hover/hover.js";
+import { HoverPosition } from "../../../../../base/browser/ui/hover/hoverWidget.js";
+import { ISessionsManagementService } from "../../../../services/sessions/common/sessionsManagement.js";
+import { IAgentSessionsService } from "../../../../../workbench/contrib/chat/browser/agentSessions/agentSessionsService.js";
+import { IAccessibilityService } from "../../../../../platform/accessibility/common/accessibility.js";
+import { ISessionsListModelService } from "./sessionsListModelService.js";
+import { IAgentHostFilterService } from "../../../../services/agentHostFilter/common/agentHostFilter.js";
 
 const $ = DOM.$;
 
-export const SessionItemToolbarMenuId = new MenuId('SessionItemToolbar');
-export const SessionItemContextMenuId = new MenuId('SessionItemContextMenu');
-export const SessionSectionToolbarMenuId = new MenuId('SessionSectionToolbar');
-export const IsSessionPinnedContext = new RawContextKey<boolean>('sessionItem.isPinned', false);
-export const IsSessionArchivedContext = new RawContextKey<boolean>('sessionItem.isArchived', false);
-export const IsSessionReadContext = new RawContextKey<boolean>('sessionItem.isRead', true);
-export const SessionItemHasBranchNameContext = new RawContextKey<boolean>('sessionItem.hasBranchName', false);
-export const SessionSectionTypeContext = new RawContextKey<string>('sessionSection.type', '');
+export const SessionItemToolbarMenuId = new MenuId("SessionItemToolbar");
+export const SessionItemContextMenuId = new MenuId("SessionItemContextMenu");
+export const SessionSectionToolbarMenuId = new MenuId("SessionSectionToolbar");
+export const IsSessionPinnedContext = new RawContextKey<boolean>(
+  "sessionItem.isPinned",
+  false,
+);
+export const IsSessionArchivedContext = new RawContextKey<boolean>(
+  "sessionItem.isArchived",
+  false,
+);
+export const IsSessionReadContext = new RawContextKey<boolean>(
+  "sessionItem.isRead",
+  true,
+);
+export const SessionItemHasBranchNameContext = new RawContextKey<boolean>(
+  "sessionItem.hasBranchName",
+  false,
+);
+export const SessionSectionTypeContext = new RawContextKey<string>(
+  "sessionSection.type",
+  "",
+);
 
 //#region Types
 
 export enum SessionsGrouping {
-	Workspace = 'workspace',
-	Date = 'date',
+	Workspace = "workspace",
+	Date = "date",
 }
 
 export enum SessionsSorting {
-	Created = 'created',
-	Updated = 'updated',
+	Created = "created",
+	Updated = "updated",
 }
 
 export interface ISessionSection {
@@ -79,8 +105,8 @@ export interface ISessionSection {
 
 export interface ISessionShowMore {
 	readonly showMore: true;
-	readonly kind: 'sessions' | 'folders';
-	readonly mode: 'more' | 'less';
+	readonly kind: "sessions" | "folders";
+	readonly mode: "more" | "less";
 	readonly sectionLabel: string;
 	readonly remainingCount: number;
 }
@@ -88,14 +114,16 @@ export interface ISessionShowMore {
 export type SessionListItem = ISession | ISessionSection | ISessionShowMore;
 
 function isSessionSection(item: SessionListItem): item is ISessionSection {
-	return 'sessions' in item && Array.isArray((item as ISessionSection).sessions);
+	return "sessions" in item && Array.isArray(
+    (item as ISessionSection).sessions,
+  );
 }
 
 function isSessionShowMore(item: SessionListItem): item is ISessionShowMore {
-	return 'showMore' in item && (item as ISessionShowMore).showMore === true;
+	return "showMore" in item && (item as ISessionShowMore).showMore === true;
 }
 
-const SHOW_MORE_FOLDERS_LABEL = '__more_folders__';
+const SHOW_MORE_FOLDERS_LABEL = "__more_folders__";
 const FOUR_DAYS_MS = 4 * 24 * 60 * 60 * 1000;
 
 //#endregion
@@ -130,7 +158,11 @@ class SessionsTreeDelegate implements IListVirtualDelegate<SessionListItem> {
 
 		let height = this._isPhone() ? SessionsTreeDelegate.ITEM_HEIGHT_PHONE : SessionsTreeDelegate.ITEM_HEIGHT;
 		if (this._approvalModel) {
-			const approval = getFirstApprovalAcrossChats(this._approvalModel, element as ISession, undefined);
+			const approval = getFirstApprovalAcrossChats(
+        this._approvalModel,
+        element as ISession,
+        undefined,
+      );
 			if (approval) {
 				height += SessionItemRenderer.getApprovalRowHeight(approval.label);
 			}
@@ -139,7 +171,9 @@ class SessionsTreeDelegate implements IListVirtualDelegate<SessionListItem> {
 	}
 
 	hasDynamicHeight(element: SessionListItem): boolean {
-		return !!this._approvalModel && !isSessionSection(element) && !isSessionShowMore(element);
+		return !!this._approvalModel && !isSessionSection(
+      element,
+    ) && !isSessionShowMore(element);
 	}
 
 	getTemplateId(element: SessionListItem): string {
@@ -174,7 +208,7 @@ interface ISessionItemTemplate {
 }
 
 class SessionItemRenderer implements ITreeRenderer<SessionListItem, FuzzyScore, ISessionItemTemplate> {
-	static readonly TEMPLATE_ID = 'session-item';
+	static readonly TEMPLATE_ID = "session-item";
 	readonly templateId = SessionItemRenderer.TEMPLATE_ID;
 
 	private static readonly APPROVAL_ROW_MAX_LINES = 3;
@@ -182,7 +216,10 @@ class SessionItemRenderer implements ITreeRenderer<SessionListItem, FuzzyScore, 
 	private static readonly _APPROVAL_ROW_OVERHEAD = 14;
 
 	static getApprovalRowHeight(label: string): number {
-		const lineCount = Math.min(label.split(/\r?\n/).length, SessionItemRenderer.APPROVAL_ROW_MAX_LINES);
+		const lineCount = Math.min(
+      label.split(/\r?\n/).length,
+      SessionItemRenderer.APPROVAL_ROW_MAX_LINES,
+    );
 		return lineCount * SessionItemRenderer._APPROVAL_ROW_LINE_HEIGHT + SessionItemRenderer._APPROVAL_ROW_OVERHEAD;
 	}
 
@@ -201,44 +238,95 @@ class SessionItemRenderer implements ITreeRenderer<SessionListItem, FuzzyScore, 
 		private readonly agentSessionsService: IAgentSessionsService,
 		private readonly accessibilityService: IAccessibilityService,
 	) {
-		this._motionReducedSignal = observableSignalFromEvent('reduceMotion', this.accessibilityService.onDidChangeReducedMotion);
+		this._motionReducedSignal = observableSignalFromEvent(
+      "reduceMotion",
+      this.accessibilityService.onDidChangeReducedMotion,
+    );
 	}
 
 	renderTemplate(container: HTMLElement): ISessionItemTemplate {
 		const disposables = new DisposableStore();
 		const elementDisposables = disposables.add(new DisposableStore());
 
-		container.classList.add('session-item');
+		container.classList.add("session-item");
 
-		const iconContainer = DOM.append(container, $('.session-icon'));
-		const mainCol = DOM.append(container, $('.session-main'));
-		const titleRow = DOM.append(mainCol, $('.session-title-row'));
-		const title = disposables.add(new HighlightedLabel(DOM.append(titleRow, $('.session-title'))));
-		const titleToolbarContainer = DOM.append(titleRow, $('.session-title-toolbar'));
+		const iconContainer = DOM.append(container, $(".session-icon"));
+		const mainCol = DOM.append(container, $(".session-main"));
+		const titleRow = DOM.append(mainCol, $(".session-title-row"));
+		const title = disposables.add(
+      new HighlightedLabel(DOM.append(titleRow, $(".session-title"))),
+    );
+		const titleToolbarContainer = DOM.append(
+      titleRow,
+      $(".session-title-toolbar"),
+    );
 		// The list opens a session on click and on Gesture `tap` (touch).
 		// DOM event propagation stops only cover mouse/pointer events; the
 		// list's tap handler reads from `Gesture` directly, bypassing
 		// bubbling. Combine both: stop pointer/click for mouse, and
 		// register the toolbar with `Gesture.ignoreTarget` so synthesized
 		// tap events on touch never reach the list either.
-		for (const eventType of ['pointerdown', 'pointerup', 'click', 'dblclick'] as const) {
-			disposables.add(DOM.addDisposableListener(titleToolbarContainer, eventType, e => e.stopPropagation()));
+		for (const eventType of [
+      "pointerdown",
+      "pointerup",
+      "click",
+      "dblclick",
+    ] as const) {
+			disposables.add(
+        DOM.addDisposableListener(
+          titleToolbarContainer,
+          eventType,
+          e => e.stopPropagation(),
+        ),
+      );
 		}
 		disposables.add(Gesture.ignoreTarget(titleToolbarContainer));
-		const detailsRow = DOM.append(mainCol, $('.session-details-row'));
+		const detailsRow = DOM.append(mainCol, $(".session-details-row"));
 
 		// Approval row
-		const approvalRow = DOM.append(mainCol, $('.session-approval-row'));
-		const approvalLabel = DOM.append(approvalRow, $('span.session-approval-label'));
-		const approvalButtonContainer = DOM.append(approvalRow, $('.session-approval-button'));
+		const approvalRow = DOM.append(mainCol, $(".session-approval-row"));
+		const approvalLabel = DOM.append(
+      approvalRow,
+      $("span.session-approval-label"),
+    );
+		const approvalButtonContainer = DOM.append(
+      approvalRow,
+      $(".session-approval-button"),
+    );
 
-		const contextKeyService = disposables.add(this.contextKeyService.createScoped(container));
-		const scopedInstantiationService = disposables.add(this.instantiationService.createChild(new ServiceCollection([IContextKeyService, contextKeyService])));
-		const titleToolbar = disposables.add(scopedInstantiationService.createInstance(MenuWorkbenchToolBar, titleToolbarContainer, SessionItemToolbarMenuId, {
-			menuOptions: { shouldForwardArgs: true },
-		}));
+		const contextKeyService = disposables.add(
+      this.contextKeyService.createScoped(container),
+    );
+		const scopedInstantiationService = disposables.add(
+      this.instantiationService.createChild(
+        new ServiceCollection([IContextKeyService, contextKeyService]),
+      ),
+    );
+		const titleToolbar = disposables.add(
+      scopedInstantiationService.createInstance(
+        MenuWorkbenchToolBar,
+        titleToolbarContainer,
+        SessionItemToolbarMenuId,
+        {
+          menuOptions: { shouldForwardArgs: true },
+        },
+      ),
+    );
 
-		return { container, iconContainer, title, titleToolbar, detailsRow, approvalRow, approvalLabel, approvalButtonContainer, contextKeyService, disposables, elementDisposables, currentIconSelector: undefined };
+		return {
+      container,
+      iconContainer,
+      title,
+      titleToolbar,
+      detailsRow,
+      approvalRow,
+      approvalLabel,
+      approvalButtonContainer,
+      contextKeyService,
+      disposables,
+      elementDisposables,
+      currentIconSelector: undefined,
+    };
 	}
 
 	renderElement(node: ITreeNode<SessionListItem, FuzzyScore>, _index: number, template: ISessionItemTemplate): void {
@@ -264,16 +352,22 @@ class SessionItemRenderer implements ITreeRenderer<SessionListItem, FuzzyScore, 
 		// Context keys
 		const isPinned = this.options.isPinned(element);
 		IsSessionPinnedContext.bindTo(template.contextKeyService).set(isPinned);
-		IsSessionArchivedContext.bindTo(template.contextKeyService).set(element.isArchived.get());
-		IsSessionReadContext.bindTo(template.contextKeyService).set(this.options.isRead(element));
-		SessionItemHasBranchNameContext.bindTo(template.contextKeyService).set(!!element.workspace.get()?.folders[0]?.gitRepository?.branchName?.trim());
+		IsSessionArchivedContext.bindTo(template.contextKeyService).set(
+      element.isArchived.get(),
+    );
+		IsSessionReadContext.bindTo(template.contextKeyService).set(
+      this.options.isRead(element),
+    );
+		SessionItemHasBranchNameContext.bindTo(template.contextKeyService).set(
+      !!element.workspace.get()?.folders[0]?.gitRepository?.branchName?.trim(),
+    );
 
 		// Pinned & archived styling — reactive
 		template.elementDisposables.add(autorun(reader => {
 			const isArchived = element.isArchived.read(reader);
-			template.container.classList.toggle('archived', isArchived);
+			template.container.classList.toggle("archived", isArchived);
 			// Only apply pinned styling when not archived to avoid persistent toolbars on archived sessions
-			template.container.classList.toggle('pinned', isPinned && !isArchived);
+			template.container.classList.toggle("pinned", isPinned && !isArchived);
 		}));
 
 		// Icon — reactive based on status, read state, PR, and motion preference.
@@ -295,8 +389,8 @@ class SessionItemRenderer implements ITreeRenderer<SessionListItem, FuzzyScore, 
 			// renders with the same state skip rebuilding the DOM and don't restart the animation.
 			const isPixelSpinner = sessionStatus === SessionStatus.InProgress && !this.accessibilityService.isMotionReduced();
 			if (isPixelSpinner) {
-				const pixelSpinnerKey = '__pixel_spinner__';
-				const iconColor = asCssVariable('textLink.foreground');
+				const pixelSpinnerKey = "__pixel_spinner__";
+				const iconColor = asCssVariable("textLink.foreground");
 				if (template.currentIconSelector !== pixelSpinnerKey) {
 					template.currentIconSelector = pixelSpinnerKey;
 					DOM.clearNode(template.iconContainer);
@@ -311,7 +405,7 @@ class SessionItemRenderer implements ITreeRenderer<SessionListItem, FuzzyScore, 
 			} else {
 				const icon = this.getStatusIcon(sessionStatus, isRead, isArchived, gitHubInfo?.pullRequest?.icon);
 				const iconSelector = ThemeIcon.asCSSSelector(icon);
-				const iconColor = icon.color ? asCssVariable(icon.color.id) : '';
+				const iconColor = icon.color ? asCssVariable(icon.color.id) : "";
 
 				if (iconSelector !== template.currentIconSelector) {
 					template.currentIconSelector = iconSelector;
@@ -325,19 +419,25 @@ class SessionItemRenderer implements ITreeRenderer<SessionListItem, FuzzyScore, 
 					}
 				}
 			}
-			template.iconContainer.classList.toggle('session-icon-pulse', sessionStatus === SessionStatus.NeedsInput);
-			template.container.classList.toggle('in-progress', sessionStatus === SessionStatus.InProgress);
+			template.iconContainer.classList.toggle("session-icon-pulse", sessionStatus === SessionStatus.NeedsInput);
+			template.container.classList.toggle("in-progress", sessionStatus === SessionStatus.InProgress);
 		}));
 
 		// Title — reactive
-		template.elementDisposables.add(autorun(reader => {
-			const titleText = element.title.read(reader);
-			template.title.set(titleText, matches);
-		}));
+		template.elementDisposables.add(
+      autorun(reader => {
+        const titleText = element.title.read(reader);
+        template.title.set(titleText, matches);
+      }),
+    );
 
 		// Details row — reactive: badge · diff stats · time
-		const timeDisposable = template.elementDisposables.add(new MutableDisposable());
-		const descriptionDisposable = template.elementDisposables.add(new MutableDisposable());
+		const timeDisposable = template.elementDisposables.add(
+      new MutableDisposable(),
+    );
+		const descriptionDisposable = template.elementDisposables.add(
+      new MutableDisposable(),
+    );
 		template.elementDisposables.add(autorun(reader => {
 			const sessionStatus = element.status.read(reader);
 			const changes = element.changes.read(reader);
@@ -360,7 +460,7 @@ class SessionItemRenderer implements ITreeRenderer<SessionListItem, FuzzyScore, 
 					workspace.folders.length > 0 &&
 					workspace?.folders[0]?.gitRepository?.workTreeUri === undefined;
 				const icon = workspace?.isVirtualWorkspace ? Codicon.cloud : isWorkspaceSession ? Codicon.folder : Codicon.worktree;
-				const typeIconEl = DOM.append(template.detailsRow, $('span.session-details-icon'));
+				const typeIconEl = DOM.append(template.detailsRow, $("span.session-details-icon"));
 				DOM.append(typeIconEl, $(`span${ThemeIcon.asCSSSelector(icon)}`));
 				parts.push(typeIconEl);
 			}
@@ -375,7 +475,7 @@ class SessionItemRenderer implements ITreeRenderer<SessionListItem, FuzzyScore, 
 			)) {
 				const badgeLabel = this.getWorkspaceBadgeLabel(workspace);
 				if (badgeLabel) {
-					const badgeEl = DOM.append(template.detailsRow, $('span.session-badge'));
+					const badgeEl = DOM.append(template.detailsRow, $("span.session-badge"));
 					badgeEl.textContent = badgeLabel;
 					parts.push(badgeEl);
 				}
@@ -391,11 +491,11 @@ class SessionItemRenderer implements ITreeRenderer<SessionListItem, FuzzyScore, 
 				}
 				if (insertions > 0 || deletions > 0) {
 					if (parts.length > 0) {
-						DOM.append(template.detailsRow, $('span.session-separator.has-separator'));
+						DOM.append(template.detailsRow, $("span.session-separator.has-separator"));
 					}
-					const diffEl = DOM.append(template.detailsRow, $('span.session-diff'));
-					DOM.append(diffEl, $('span.session-diff-added')).textContent = `+${insertions}`;
-					DOM.append(diffEl, $('span.session-diff-removed')).textContent = `-${deletions}`;
+					const diffEl = DOM.append(template.detailsRow, $("span.session-diff"));
+					DOM.append(diffEl, $("span.session-diff-added")).textContent = `+${insertions}`;
+					DOM.append(diffEl, $("span.session-diff-removed")).textContent = `-${deletions}`;
 					parts.push(diffEl);
 				}
 			}
@@ -403,38 +503,38 @@ class SessionItemRenderer implements ITreeRenderer<SessionListItem, FuzzyScore, 
 			// Status description
 			if (sessionStatus === SessionStatus.InProgress) {
 				if (parts.length > 0) {
-					DOM.append(template.detailsRow, $('span.session-separator.has-separator'));
+					DOM.append(template.detailsRow, $("span.session-separator.has-separator"));
 				}
-				const statusEl = DOM.append(template.detailsRow, $('span.session-description'));
+				const statusEl = DOM.append(template.detailsRow, $("span.session-description"));
 				if (description) {
 					descriptionDisposable.value = this.markdownRendererService.render(description, { sanitizerConfig: { replaceWithPlaintext: true } }, statusEl);
 				} else {
 					descriptionDisposable.clear();
-					statusEl.textContent = localize('working', "Working...");
+					statusEl.textContent = localize("working", "Working...");
 				}
 				parts.push(statusEl);
 			} else if (sessionStatus === SessionStatus.NeedsInput) {
 				if (parts.length > 0) {
-					DOM.append(template.detailsRow, $('span.session-separator.has-separator'));
+					DOM.append(template.detailsRow, $("span.session-separator.has-separator"));
 				}
-				const statusEl = DOM.append(template.detailsRow, $('span.session-description'));
+				const statusEl = DOM.append(template.detailsRow, $("span.session-description"));
 				if (description) {
 					descriptionDisposable.value = this.markdownRendererService.render(description, { sanitizerConfig: { replaceWithPlaintext: true } }, statusEl);
 				} else {
 					descriptionDisposable.clear();
-					statusEl.textContent = localize('needsInput', "Input needed");
+					statusEl.textContent = localize("needsInput", "Input needed");
 				}
 				parts.push(statusEl);
 			} else if (sessionStatus === SessionStatus.Error) {
 				if (parts.length > 0) {
-					DOM.append(template.detailsRow, $('span.session-separator.has-separator'));
+					DOM.append(template.detailsRow, $("span.session-separator.has-separator"));
 				}
-				const statusEl = DOM.append(template.detailsRow, $('span.session-description'));
+				const statusEl = DOM.append(template.detailsRow, $("span.session-description"));
 				if (description) {
 					descriptionDisposable.value = this.markdownRendererService.render(description, { sanitizerConfig: { replaceWithPlaintext: true } }, statusEl);
 				} else {
 					descriptionDisposable.clear();
-					statusEl.textContent = localize('failed', "Failed");
+					statusEl.textContent = localize("failed", "Failed");
 				}
 				parts.push(statusEl);
 			} else {
@@ -444,13 +544,13 @@ class SessionItemRenderer implements ITreeRenderer<SessionListItem, FuzzyScore, 
 			// Timestamp — visible when not hiding details
 			if (!hideDetails && timeDate) {
 				if (parts.length > 0) {
-					DOM.append(template.detailsRow, $('span.session-separator.has-separator'));
+					DOM.append(template.detailsRow, $("span.session-separator.has-separator"));
 				}
-				const timeEl = DOM.append(template.detailsRow, $('span.session-time'));
+				const timeEl = DOM.append(template.detailsRow, $("span.session-time"));
 				const definiteTimeDate = timeDate;
 				const formatTime = () => {
 					const seconds = Math.round((Date.now() - definiteTimeDate.getTime()) / 1000);
-					return seconds < 60 ? localize('secondsDuration', "now") : fromNow(definiteTimeDate, true);
+					return seconds < 60 ? localize("secondsDuration", "now") : fromNow(definiteTimeDate, true);
 				};
 				timeEl.textContent = formatTime();
 				const targetWindow = DOM.getWindow(timeEl);
@@ -475,9 +575,13 @@ class SessionItemRenderer implements ITreeRenderer<SessionListItem, FuzzyScore, 
 		}
 
 		const approvalModel = this.approvalModel;
-		const initialInfo = getFirstApprovalAcrossChats(approvalModel, element, undefined);
+		const initialInfo = getFirstApprovalAcrossChats(
+      approvalModel,
+      element,
+      undefined,
+    );
 		let wasVisible = !!initialInfo;
-		template.approvalRow.classList.toggle('visible', wasVisible);
+		template.approvalRow.classList.toggle("visible", wasVisible);
 
 		const buttonStore = template.elementDisposables.add(new DisposableStore());
 
@@ -487,40 +591,40 @@ class SessionItemRenderer implements ITreeRenderer<SessionListItem, FuzzyScore, 
 			const info = getFirstApprovalAcrossChats(approvalModel, element, reader);
 			const visible = !!info;
 
-			template.approvalRow.classList.toggle('visible', visible);
+			template.approvalRow.classList.toggle("visible", visible);
 
 			if (info) {
 				// Render up to 3 lines as separate code blocks
-				const lines = info.label.split('\n');
+				const lines = info.label.split("\n");
 				const maxLines = SessionItemRenderer.APPROVAL_ROW_MAX_LINES;
 				const visibleLines = lines.slice(0, maxLines);
 				if (lines.length > maxLines) {
 					visibleLines[maxLines - 1] = `${visibleLines[maxLines - 1]} \u2026`;
 				}
-				const langId = info.languageId ?? 'json';
+				const langId = info.languageId ?? "json";
 				const labelContent = new MarkdownString();
 				for (const line of visibleLines) {
 					labelContent.appendCodeblock(langId, line);
 				}
 
-				template.approvalLabel.textContent = '';
+				template.approvalLabel.textContent = "";
 				buttonStore.add(this.markdownRendererService.render(labelContent, {}, template.approvalLabel));
 
 				// Hover with full content as a code block
-				const fullContent = new MarkdownString().appendCodeblock(info.languageId ?? 'json', info.label);
+				const fullContent = new MarkdownString().appendCodeblock(info.languageId ?? "json", info.label);
 				buttonStore.add(this.hoverService.setupDelayedHover(template.approvalLabel, {
 					content: fullContent,
 					style: HoverStyle.Pointer,
 					position: { hoverPosition: HoverPosition.BELOW },
 				}));
 
-				template.approvalButtonContainer.textContent = '';
+				template.approvalButtonContainer.textContent = "";
 				const button = buttonStore.add(new Button(template.approvalButtonContainer, {
-					title: localize('allowActionOnce', "Allow once"),
+					title: localize("allowActionOnce", "Allow once"),
 					secondary: true,
-					...defaultButtonStyles
+					...defaultButtonStyles,
 				}));
-				button.label = localize('allowAction', "Allow");
+				button.label = localize("allowAction", "Allow");
 				buttonStore.add(button.onDidClick(() => info.confirm()));
 			}
 
@@ -536,18 +640,33 @@ class SessionItemRenderer implements ITreeRenderer<SessionListItem, FuzzyScore, 
 			case SessionStatus.InProgress:
 				// When motion is allowed, the pixel spinner is rendered directly in renderSession
 				// and this method is not consulted; here we only provide the reduced-motion fallback.
-				return { ...Codicon.sessionInProgress, color: themeColorFromId('textLink.foreground') };
-			case SessionStatus.NeedsInput: return { ...Codicon.circleFilled, color: themeColorFromId('list.warningForeground') };
-			case SessionStatus.Error: return { ...Codicon.error, color: themeColorFromId('errorForeground') };
+				return {
+          ...Codicon.sessionInProgress,
+          color: themeColorFromId("textLink.foreground"),
+        };
+			case SessionStatus.NeedsInput: return {
+        ...Codicon.circleFilled,
+        color: themeColorFromId("list.warningForeground"),
+      };
+			case SessionStatus.Error: return {
+        ...Codicon.error,
+        color: themeColorFromId("errorForeground"),
+      };
 			default:
 				if (pullRequestIcon) {
 					return pullRequestIcon;
 				}
 
 				if (!isRead && !isArchived) {
-					return { ...Codicon.circleFilled, color: themeColorFromId('textLink.foreground') };
+					return {
+            ...Codicon.circleFilled,
+            color: themeColorFromId("textLink.foreground"),
+          };
 				}
-				return { ...Codicon.circleSmallFilled, color: themeColorFromId('agentSessionReadIndicator.foreground') };
+				return {
+          ...Codicon.circleSmallFilled,
+          color: themeColorFromId("agentSessionReadIndicator.foreground"),
+        };
 		}
 	}
 
@@ -555,7 +674,7 @@ class SessionItemRenderer implements ITreeRenderer<SessionListItem, FuzzyScore, 
 		// For GitHub remote sessions, extract owner/name from the repository URI path
 		const folder = workspace.folders[0];
 		if (folder?.root.scheme === GITHUB_REMOTE_FILE_SCHEME) {
-			const parts = folder.root.path.split('/').filter(Boolean);
+			const parts = folder.root.path.split("/").filter(Boolean);
 			if (parts.length >= 2) {
 				return `${parts[0]}/${parts[1]}`;
 			}
@@ -589,7 +708,7 @@ interface ISessionSectionTemplate {
 }
 
 class SessionSectionRenderer implements ITreeRenderer<SessionListItem, FuzzyScore, ISessionSectionTemplate> {
-	static readonly TEMPLATE_ID = 'session-section';
+	static readonly TEMPLATE_ID = "session-section";
 	readonly templateId = SessionSectionRenderer.TEMPLATE_ID;
 
 	constructor(
@@ -601,16 +720,32 @@ class SessionSectionRenderer implements ITreeRenderer<SessionListItem, FuzzyScor
 	renderTemplate(container: HTMLElement): ISessionSectionTemplate {
 		const disposables = new DisposableStore();
 
-		container.classList.add('session-section');
-		const label = DOM.append(container, $('span.session-section-label'));
-		const count = DOM.append(container, $('span.session-section-count'));
-		const toolbarContainer = DOM.append(container, $('.session-section-toolbar'));
+		container.classList.add("session-section");
+		const label = DOM.append(container, $("span.session-section-label"));
+		const count = DOM.append(container, $("span.session-section-count"));
+		const toolbarContainer = DOM.append(
+      container,
+      $(".session-section-toolbar"),
+    );
 
-		const contextKeyService = disposables.add(this.contextKeyService.createScoped(container));
-		const scopedInstantiationService = disposables.add(this.instantiationService.createChild(new ServiceCollection([IContextKeyService, contextKeyService])));
-		const toolbar = disposables.add(scopedInstantiationService.createInstance(MenuWorkbenchToolBar, toolbarContainer, SessionSectionToolbarMenuId, {
-			menuOptions: { shouldForwardArgs: true },
-		}));
+		const contextKeyService = disposables.add(
+      this.contextKeyService.createScoped(container),
+    );
+		const scopedInstantiationService = disposables.add(
+      this.instantiationService.createChild(
+        new ServiceCollection([IContextKeyService, contextKeyService]),
+      ),
+    );
+		const toolbar = disposables.add(
+      scopedInstantiationService.createInstance(
+        MenuWorkbenchToolBar,
+        toolbarContainer,
+        SessionSectionToolbarMenuId,
+        {
+          menuOptions: { shouldForwardArgs: true },
+        },
+      ),
+    );
 
 		return { container, label, count, toolbar, contextKeyService, disposables };
 	}
@@ -622,16 +757,20 @@ class SessionSectionRenderer implements ITreeRenderer<SessionListItem, FuzzyScor
 		}
 		template.label.textContent = element.label;
 		if (this.hideSectionCount) {
-			template.count.textContent = '';
-			template.count.style.display = 'none';
+			template.count.textContent = "";
+			template.count.style.display = "none";
 		} else {
 			template.count.textContent = String(element.sessions.length);
-			template.count.style.display = '';
+			template.count.style.display = "";
 		}
 
 		// Set context key for section type so toolbar actions can use when clauses
-		const sectionType = element.id.startsWith('workspace:') ? 'workspace' : element.id;
-		SessionSectionTypeContext.bindTo(template.contextKeyService).set(sectionType);
+		const sectionType = element.id.startsWith(
+      "workspace:",
+    ) ? "workspace" : element.id;
+		SessionSectionTypeContext.bindTo(template.contextKeyService).set(
+      sectionType,
+    );
 		template.toolbar.context = element;
 	}
 
@@ -645,12 +784,12 @@ class SessionSectionRenderer implements ITreeRenderer<SessionListItem, FuzzyScor
 //#region Show More Renderer
 
 class SessionShowMoreRenderer implements ITreeRenderer<SessionListItem, FuzzyScore, HTMLElement> {
-	static readonly TEMPLATE_ID = 'session-show-more';
+	static readonly TEMPLATE_ID = "session-show-more";
 	readonly templateId = SessionShowMoreRenderer.TEMPLATE_ID;
 
 	renderTemplate(container: HTMLElement): HTMLElement {
-		container.classList.add('session-show-more');
-		return DOM.append(container, $('span.session-show-more-label'));
+		container.classList.add("session-show-more");
+		return DOM.append(container, $("span.session-show-more-label"));
 	}
 
 	renderElement(node: ITreeNode<SessionListItem, FuzzyScore>, _index: number, template: HTMLElement): void {
@@ -659,17 +798,28 @@ class SessionShowMoreRenderer implements ITreeRenderer<SessionListItem, FuzzySco
 			return;
 		}
 		const container = template.parentElement;
-		container?.classList.toggle('session-show-more-folders', element.kind === 'folders');
-		if (element.mode === 'less') {
-			template.textContent = element.kind === 'folders'
-				? localize('showLessWorkspacesCompact', "Show fewer workspaces")
-				: localize('showLessCompact', "Show less");
+		container?.classList.toggle(
+      "session-show-more-folders",
+      element.kind === "folders",
+    );
+		if (element.mode === "less") {
+			template.textContent = element.kind === "folders"
+				? localize("showLessWorkspacesCompact", "Show fewer workspaces")
+				: localize("showLessCompact", "Show less");
 		} else {
-			template.textContent = element.kind === 'folders'
+			template.textContent = element.kind === "folders"
 				? element.remainingCount === 1
-					? localize('showMoreWorkspaceCompact', "+{0} workspace", element.remainingCount)
-					: localize('showMoreWorkspacesCompact', "+{0} workspaces", element.remainingCount)
-				: localize('showMoreCompact', "+{0} more", element.remainingCount);
+					? localize(
+              "showMoreWorkspaceCompact",
+              "+{0} workspace",
+              element.remainingCount,
+            )
+					: localize(
+              "showMoreWorkspacesCompact",
+              "+{0} workspaces",
+              element.remainingCount,
+            )
+				: localize("showMoreCompact", "+{0} more", element.remainingCount);
 		}
 	}
 
@@ -680,7 +830,7 @@ class SessionShowMoreRenderer implements ITreeRenderer<SessionListItem, FuzzySco
 
 class SessionsAccessibilityProvider {
 	getWidgetAriaLabel(): string {
-		return localize('sessionsList', "Sessions");
+		return localize("sessionsList", "Sessions");
 	}
 
 	getAriaLabel(element: SessionListItem): string | null {
@@ -688,20 +838,32 @@ class SessionsAccessibilityProvider {
 			return `${element.label}, ${element.sessions.length}`;
 		}
 		if (isSessionShowMore(element)) {
-			if (element.mode === 'less') {
-				return element.kind === 'folders'
-					? localize('showLessWorkspacesAria', "Show fewer workspaces")
-					: localize('showLessAria', "Show fewer sessions");
+			if (element.mode === "less") {
+				return element.kind === "folders"
+					? localize("showLessWorkspacesAria", "Show fewer workspaces")
+					: localize("showLessAria", "Show fewer sessions");
 			}
-			return element.kind === 'folders'
+			return element.kind === "folders"
 				? element.remainingCount === 1
-					? localize('showMoreWorkspaceAria', "Show {0} more workspace", element.remainingCount)
-					: localize('showMoreWorkspacesAria', "Show {0} more workspaces", element.remainingCount)
-				: localize('showMoreAria', "Show {0} more sessions", element.remainingCount);
+					? localize(
+              "showMoreWorkspaceAria",
+              "Show {0} more workspace",
+              element.remainingCount,
+            )
+					: localize(
+              "showMoreWorkspacesAria",
+              "Show {0} more workspaces",
+              element.remainingCount,
+            )
+				: localize(
+            "showMoreAria",
+            "Show {0} more sessions",
+            element.remainingCount,
+          );
 		}
 		const title = element.title.get();
 		const created = fromNow(element.createdAt, true);
-		return localize('sessionItemAria', "{0}, created {1}", title, created);
+		return localize("sessionItemAria", "{0}, created {1}", title, created);
 	}
 }
 
@@ -762,12 +924,12 @@ export interface ISessionsList {
 
 export class SessionsList extends Disposable implements ISessionsList {
 
-	private static readonly SECTION_COLLAPSE_STATE_KEY = 'sessionsListControl.sectionCollapseState';
-	private static readonly EXCLUDED_TYPES_KEY = 'sessionsListControl.excludedSessionTypes';
-	private static readonly EXCLUDED_STATUSES_KEY = 'sessionsListControl.excludedStatuses';
-	private static readonly EXCLUDE_ARCHIVED_KEY = 'sessionsListControl.excludeArchived';
-	private static readonly EXCLUDE_READ_KEY = 'sessionsListControl.excludeRead';
-	private static readonly WORKSPACE_GROUP_CAPPED_KEY = 'sessionsListControl.workspaceGroupCapped';
+	private static readonly SECTION_COLLAPSE_STATE_KEY = "sessionsListControl.sectionCollapseState";
+	private static readonly EXCLUDED_TYPES_KEY = "sessionsListControl.excludedSessionTypes";
+	private static readonly EXCLUDED_STATUSES_KEY = "sessionsListControl.excludedStatuses";
+	private static readonly EXCLUDE_ARCHIVED_KEY = "sessionsListControl.excludeArchived";
+	private static readonly EXCLUDE_READ_KEY = "sessionsListControl.excludeRead";
+	private static readonly WORKSPACE_GROUP_CAPPED_KEY = "sessionsListControl.workspaceGroupCapped";
 	private static readonly WORKSPACE_GROUP_LIMIT = 5;
 
 	private readonly listContainer: HTMLElement;
@@ -788,7 +950,9 @@ export class SessionsList extends Disposable implements ISessionsList {
 	private readonly _onDidUpdate = this._register(new Emitter<void>());
 	readonly onDidUpdate: Event<void> = this._onDidUpdate.event;
 
-	private readonly _onDidChangeFindOpenState = this._register(new Emitter<boolean>());
+	private readonly _onDidChangeFindOpenState = this._register(
+    new Emitter<boolean>(),
+  );
 	readonly onDidChangeFindOpenState: Event<boolean> = this._onDidChangeFindOpenState.event;
 
 	get element(): HTMLElement { return this.listContainer; }
@@ -815,27 +979,54 @@ export class SessionsList extends Disposable implements ISessionsList {
 		this.excludedStatuses = this.loadExcludedStatuses();
 
 		// Load archived/read filter state
-		this._excludeArchived = this.storageService.getBoolean(SessionsList.EXCLUDE_ARCHIVED_KEY, StorageScope.PROFILE, true);
-		this._excludeRead = this.storageService.getBoolean(SessionsList.EXCLUDE_READ_KEY, StorageScope.PROFILE, false);
-		this.workspaceGroupCapped = this.storageService.getBoolean(SessionsList.WORKSPACE_GROUP_CAPPED_KEY, StorageScope.PROFILE, true);
+		this._excludeArchived = this.storageService.getBoolean(
+      SessionsList.EXCLUDE_ARCHIVED_KEY,
+      StorageScope.PROFILE,
+      true,
+    );
+		this._excludeRead = this.storageService.getBoolean(
+      SessionsList.EXCLUDE_READ_KEY,
+      StorageScope.PROFILE,
+      false,
+    );
+		this.workspaceGroupCapped = this.storageService.getBoolean(
+      SessionsList.WORKSPACE_GROUP_CAPPED_KEY,
+      StorageScope.PROFILE,
+      true,
+    );
 
-		this.listContainer = DOM.append(container, $('.sessions-list-control'));
+		this.listContainer = DOM.append(container, $(".sessions-list-control"));
 
-		const approvalModel = this._register(instantiationService.createInstance(AgentSessionApprovalModel));
-		const markdownRendererService = instantiationService.invokeFunction(accessor => accessor.get(IMarkdownRendererService));
-		const hoverService = instantiationService.invokeFunction(accessor => accessor.get(IHoverService));
-		const agentSessionsService = instantiationService.invokeFunction(accessor => accessor.get(IAgentSessionsService));
-		const accessibilityService = instantiationService.invokeFunction(accessor => accessor.get(IAccessibilityService));
+		const approvalModel = this._register(
+      instantiationService.createInstance(AgentSessionApprovalModel),
+    );
+		const markdownRendererService = instantiationService.invokeFunction(
+      accessor => accessor.get(IMarkdownRendererService),
+    );
+		const hoverService = instantiationService.invokeFunction(
+      accessor => accessor.get(IHoverService),
+    );
+		const agentSessionsService = instantiationService.invokeFunction(
+      accessor => accessor.get(IAgentSessionsService),
+    );
+		const accessibilityService = instantiationService.invokeFunction(
+      accessor => accessor.get(IAccessibilityService),
+    );
 		const sessionRenderer = new SessionItemRenderer(
-			{ grouping: this.options.grouping, sorting: this.options.sorting, isPinned: s => this.isSessionPinned(s), isRead: s => this.isSessionRead(s) },
-			approvalModel,
-			instantiationService,
-			contextKeyService,
-			markdownRendererService,
-			hoverService,
-			agentSessionsService,
-			accessibilityService,
-		);
+      {
+        grouping: this.options.grouping,
+        sorting: this.options.sorting,
+        isPinned: s => this.isSessionPinned(s),
+        isRead: s => this.isSessionRead(s),
+      },
+      approvalModel,
+      instantiationService,
+      contextKeyService,
+      markdownRendererService,
+      hoverService,
+      agentSessionsService,
+      accessibilityService,
+    );
 
 		const showMoreRenderer = new SessionShowMoreRenderer();
 
@@ -843,11 +1034,14 @@ export class SessionsList extends Disposable implements ISessionsList {
 		// observe the workbench's value rather than shadowing it with a fresh
 		// scoped default of `false`. The reactive height refresh below listens
 		// on the same scoped service for changes.
-		const delegate = new SessionsTreeDelegate(approvalModel, () => !!IsPhoneLayoutContext.getValue(contextKeyService));
+		const delegate = new SessionsTreeDelegate(
+      approvalModel,
+      () => !!IsPhoneLayoutContext.getValue(contextKeyService),
+    );
 
 		this.tree = this._register(instantiationService.createInstance(
 			WorkbenchObjectTree<SessionListItem, FuzzyScore>,
-			'SessionsListTree',
+			"SessionsListTree",
 			this.listContainer,
 			delegate,
 			[
@@ -866,7 +1060,7 @@ export class SessionsList extends Disposable implements ISessionsList {
 							return `show-more:${element.kind}:${element.mode}:${element.sectionLabel}`;
 						}
 						return element.resource.toString();
-					}
+					},
 				},
 				horizontalScrolling: false,
 				multipleSelectionSupport: true,
@@ -878,7 +1072,7 @@ export class SessionsList extends Disposable implements ISessionsList {
 					...defaultFindWidgetStyles,
 					toggleStyles: {
 						...defaultToggleStyles,
-						inputActiveOptionBorder: 'transparent',
+						inputActiveOptionBorder: "transparent",
 					},
 				},
 				keyboardNavigationLabelProvider: {
@@ -890,12 +1084,12 @@ export class SessionsList extends Disposable implements ISessionsList {
 							return element.sectionLabel;
 						}
 						return element.title.get();
-					}
+					},
 				},
 				overrideStyles: this.options.overrideStyles,
 				renderIndentGuides: RenderIndentGuides.None,
-				twistieAdditionalCssClass: () => 'force-no-twistie',
-			}
+				twistieAdditionalCssClass: () => "force-no-twistie",
+			},
 		));
 
 		this._register(this.tree.onDidOpen(e => {
@@ -904,10 +1098,10 @@ export class SessionsList extends Disposable implements ISessionsList {
 				return;
 			}
 			if (isSessionShowMore(element)) {
-				if (element.kind === 'folders') {
-					this.expandedMoreFolders = element.mode === 'more';
+				if (element.kind === "folders") {
+					this.expandedMoreFolders = element.mode === "more";
 				} else {
-					if (element.mode === 'more') {
+					if (element.mode === "more") {
 						this.expandedWorkspaceGroups.add(element.sectionLabel);
 					} else {
 						this.expandedWorkspaceGroups.delete(element.sectionLabel);
@@ -960,7 +1154,7 @@ export class SessionsList extends Disposable implements ISessionsList {
 		}));
 
 		let isFindOpen = false;
-		let findPattern = '';
+		let findPattern = "";
 		const updateFindPatternState = () => {
 			const hasFindPattern = isFindOpen && findPattern.length > 0;
 			if (hasFindPattern !== this.hasFindPattern) {
@@ -969,20 +1163,24 @@ export class SessionsList extends Disposable implements ISessionsList {
 			}
 		};
 
-		this._register(this.tree.onDidChangeFindOpenState(open => {
-			isFindOpen = open;
-			this._onDidChangeFindOpenState.fire(open);
-			updateFindPatternState();
-		}));
+		this._register(
+      this.tree.onDidChangeFindOpenState(open => {
+        isFindOpen = open;
+        this._onDidChangeFindOpenState.fire(open);
+        updateFindPatternState();
+      }),
+    );
 
 		// Only treat the find as "active" for layout purposes (bypassing workspace
 		// capping and per-group limits) once the user has actually typed a pattern
 		// and the find widget is open. Opening the empty find widget should not
 		// reorder the list, and closing find should restore the capped layout.
-		this._register(this.tree.onDidChangeFindPattern(pattern => {
-			findPattern = pattern;
-			updateFindPatternState();
-		}));
+		this._register(
+      this.tree.onDidChangeFindPattern(pattern => {
+        findPattern = pattern;
+        updateFindPatternState();
+      }),
+    );
 
 		this._register(this._sessionsManagementService.onDidChangeSessions(() => {
 			if (this.visible) {
@@ -1033,10 +1231,14 @@ export class SessionsList extends Disposable implements ISessionsList {
 			filtered = filtered.filter(s => s.providerId === hostFilter);
 		}
 		if (this.excludedSessionTypes.size > 0) {
-			filtered = filtered.filter(s => !this.excludedSessionTypes.has(s.sessionType));
+			filtered = filtered.filter(
+        s => !this.excludedSessionTypes.has(s.sessionType),
+      );
 		}
 		if (this.excludedStatuses.size > 0) {
-			filtered = filtered.filter(s => !this.excludedStatuses.has(s.status.get()));
+			filtered = filtered.filter(
+        s => !this.excludedStatuses.has(s.status.get()),
+      );
 		}
 		if (this._excludeArchived) {
 			filtered = filtered.filter(s => !s.isArchived.get());
@@ -1047,17 +1249,28 @@ export class SessionsList extends Disposable implements ISessionsList {
 
 		// Always include the active session even if it was filtered out,
 		// so it remains visible while selected
-		if (activeSession && !filtered.some(s => s.sessionId === activeSession.sessionId)) {
-			const match = this.sessions.find(s => s.sessionId === activeSession.sessionId);
+		if (activeSession && !filtered.some(
+      s => s.sessionId === activeSession.sessionId,
+    )) {
+			const match = this.sessions.find(
+        s => s.sessionId === activeSession.sessionId,
+      );
 			if (match) {
 				filtered = [...filtered, match];
 			}
 		}
 
 		const grouping = this.options.grouping();
-		const sections = groupSessionsForList(filtered, grouping, this.options.sorting(), session => this.isSessionPinned(session));
+		const sections = groupSessionsForList(
+      filtered,
+      grouping,
+      this.options.sorting(),
+      session => this.isSessionPinned(session),
+    );
 
-		const hasTodaySessions = sections.some(s => s.id === 'today' && s.sessions.length > 0);
+		const hasTodaySessions = sections.some(
+      s => s.id === "today" && s.sessions.length > 0,
+    );
 
 		// Partition workspace sections into "primary" (meets criteria) and "more"
 		// when grouping by workspace. An active find pattern bypasses partitioning
@@ -1067,14 +1280,22 @@ export class SessionsList extends Disposable implements ISessionsList {
 		const partitionFolders = grouping === SessionsGrouping.Workspace && !this.hasFindPattern && this.workspaceGroupCapped;
 		const moreFolderSectionIds = new Set<string>();
 		if (partitionFolders) {
-			const workspaceSections = sections.filter(s => s.id.startsWith('workspace:'));
+			const workspaceSections = sections.filter(
+        s => s.id.startsWith("workspace:"),
+      );
 			if (workspaceSections.length > 0) {
 				const now = Date.now();
 				const isRecent = (section: ISessionSection) =>
-					section.sessions.some(s => s.updatedAt.get().getTime() >= now - FOUR_DAYS_MS);
+					section.sessions.some(
+            s => s.updatedAt.get().getTime() >= now - FOUR_DAYS_MS,
+          );
 				const isOpenWindow = (section: ISessionSection) =>
-					!!this.openWindowSourceFolder && section.sessions.some(s => sessionMatchesFolder(s, this.openWindowSourceFolder!));
-				const meetsCriteria = (section: ISessionSection) => isRecent(section) || isOpenWindow(section);
+					!!this.openWindowSourceFolder && section.sessions.some(
+            s => sessionMatchesFolder(s, this.openWindowSourceFolder!),
+          );
+				const meetsCriteria = (section: ISessionSection) => isRecent(
+          section,
+        ) || isOpenWindow(section);
 
 				let anyMeets = false;
 				for (const section of workspaceSections) {
@@ -1111,48 +1332,61 @@ export class SessionsList extends Disposable implements ISessionsList {
 
 		const renderSection = (section: ISessionSection): IObjectTreeElement<SessionListItem> => {
 			const isWorkspaceGroup = grouping === SessionsGrouping.Workspace
-				&& section.id.startsWith('workspace:');
+				&& section.id.startsWith("workspace:");
 			const exceedsLimit = isWorkspaceGroup
 				&& !this.hasFindPattern
 				&& section.sessions.length > SessionsList.WORKSPACE_GROUP_LIMIT;
-			const isExpanded = exceedsLimit && (this.expandedWorkspaceGroups.has(section.label) || !this.workspaceGroupCapped);
+			const isExpanded = exceedsLimit && (this.expandedWorkspaceGroups.has(
+        section.label,
+      ) || !this.workspaceGroupCapped);
 			const isCapped = exceedsLimit && !isExpanded;
 
 			let sectionChildren: IObjectTreeElement<SessionListItem>[];
 			if (isCapped) {
-				const visible = section.sessions.slice(0, SessionsList.WORKSPACE_GROUP_LIMIT);
+				const visible = section.sessions.slice(
+          0,
+          SessionsList.WORKSPACE_GROUP_LIMIT,
+        );
 				const remainingCount = section.sessions.length - SessionsList.WORKSPACE_GROUP_LIMIT;
 				sectionChildren = [
-					...visible.map(session => ({ element: session as SessionListItem })),
-					{ element: { showMore: true as const, kind: 'sessions' as const, mode: 'more' as const, sectionLabel: section.label, remainingCount } },
-				];
-			} else if (isExpanded && this.expandedWorkspaceGroups.has(section.label)) {
+          ...visible.map(session => ({ element: session as SessionListItem })),
+          {
+            element: { showMore: true as const, kind: "sessions" as const, mode: "more" as const, sectionLabel: section.label, remainingCount },
+          },
+        ];
+			} else if (isExpanded && this.expandedWorkspaceGroups.has(
+        section.label,
+      )) {
 				sectionChildren = [
-					...section.sessions.map(session => ({ element: session as SessionListItem })),
-					{ element: { showMore: true as const, kind: 'sessions' as const, mode: 'less' as const, sectionLabel: section.label, remainingCount: 0 } },
-				];
+          ...section.sessions.map(session => ({ element: session as SessionListItem })),
+          {
+            element: { showMore: true as const, kind: "sessions" as const, mode: "less" as const, sectionLabel: section.label, remainingCount: 0 },
+          },
+        ];
 			} else {
-				sectionChildren = section.sessions.map(session => ({ element: session as SessionListItem }));
+				sectionChildren = section.sessions.map(session => ({
+          element: session as SessionListItem,
+        }));
 			}
 
 			// Default collapse state for older time sections
 			let defaultCollapsed: boolean | ObjectTreeElementCollapseState = ObjectTreeElementCollapseState.PreserveOrExpanded;
 			if (grouping === SessionsGrouping.Date && hasTodaySessions) {
-				const olderSections = ['yesterday', 'thisWeek', 'older', 'archived'];
+				const olderSections = ["yesterday", "thisWeek", "older", "archived"];
 				if (olderSections.includes(section.id)) {
 					defaultCollapsed = ObjectTreeElementCollapseState.PreserveOrCollapsed;
 				}
 			}
-			if (section.id === 'archived') {
+			if (section.id === "archived") {
 				defaultCollapsed = ObjectTreeElementCollapseState.PreserveOrCollapsed;
 			}
 
 			return {
-				element: section as SessionListItem,
-				collapsible: true,
-				collapsed: this.getSavedCollapseState(section.id) ?? defaultCollapsed,
-				children: sectionChildren,
-			};
+        element: section as SessionListItem,
+        collapsible: true,
+        collapsed: this.getSavedCollapseState(section.id) ?? defaultCollapsed,
+        children: sectionChildren,
+      };
 		};
 
 		const moreFolderSections: ISessionSection[] = [];
@@ -1163,7 +1397,7 @@ export class SessionsList extends Disposable implements ISessionsList {
 		for (const section of sections) {
 			if (moreFolderSectionIds.has(section.id)) {
 				moreFolderSections.push(section);
-			} else if (partitionFolders && section.id === 'archived') {
+			} else if (partitionFolders && section.id === "archived") {
 				archivedSection = section;
 			} else {
 				children.push(renderSection(section));
@@ -1176,12 +1410,12 @@ export class SessionsList extends Disposable implements ISessionsList {
 					children.push(renderSection(section));
 				}
 				children.push({
-					element: { showMore: true as const, kind: 'folders' as const, mode: 'less' as const, sectionLabel: SHOW_MORE_FOLDERS_LABEL, remainingCount: 0 },
-				});
+          element: { showMore: true as const, kind: "folders" as const, mode: "less" as const, sectionLabel: SHOW_MORE_FOLDERS_LABEL, remainingCount: 0 },
+        });
 			} else {
 				children.push({
-					element: { showMore: true as const, kind: 'folders' as const, mode: 'more' as const, sectionLabel: SHOW_MORE_FOLDERS_LABEL, remainingCount: moreFolderSections.length },
-				});
+          element: { showMore: true as const, kind: "folders" as const, mode: "more" as const, sectionLabel: SHOW_MORE_FOLDERS_LABEL, remainingCount: moreFolderSections.length },
+        });
 			}
 		}
 		if (archivedSection) {
@@ -1286,31 +1520,42 @@ export class SessionsList extends Disposable implements ISessionsList {
 			return;
 		}
 
-		const selection = this.tree.getSelection().filter((s): s is ISession => !!s && !isSessionSection(s) && !isSessionShowMore(s));
+		const selection = this.tree.getSelection().filter(
+      (s): s is ISession => !!s && !isSessionSection(s) && !isSessionShowMore(s),
+    );
 		const selectedSessions = selection.includes(element) ? [element, ...selection.filter(s => s !== element)] : [element];
 
 		const contextOverlay: [string, boolean | string][] = [
-			[IsSessionPinnedContext.key, this.isSessionPinned(element)],
-			[IsSessionArchivedContext.key, element.isArchived.get()],
-			[IsSessionReadContext.key, this.isSessionRead(element)],
-			[SessionItemHasBranchNameContext.key, !!element.workspace.get()?.folders[0]?.gitRepository?.branchName?.trim()],
-			['chatSessionType', element.sessionType],
-			[ChatSessionProviderIdContext.key, element.providerId],
-		];
+      [IsSessionPinnedContext.key, this.isSessionPinned(element)],
+      [IsSessionArchivedContext.key, element.isArchived.get()],
+      [IsSessionReadContext.key, this.isSessionRead(element)],
+      [
+        SessionItemHasBranchNameContext.key,
+        !!element.workspace.get()?.folders[0]?.gitRepository?.branchName?.trim(),
+      ],
+      ["chatSessionType", element.sessionType],
+      [ChatSessionProviderIdContext.key, element.providerId],
+    ];
 
-		const menu = this.menuService.createMenu(SessionItemContextMenuId, this.contextKeyService.createOverlay(contextOverlay));
+		const menu = this.menuService.createMenu(
+      SessionItemContextMenuId,
+      this.contextKeyService.createOverlay(contextOverlay),
+    );
 
 		this.contextMenuService.showContextMenu({
-			getActions: () => Separator.join(...menu.getActions({ arg: selectedSessions, shouldForwardArgs: true }).map(([, actions]) => actions)),
-			getAnchor: () => e.anchor,
-			getKeyBinding: (action) => this.keybindingService.lookupKeybinding(action.id) ?? undefined,
-		});
+      getActions: () => Separator.join(...menu.getActions({ arg: selectedSessions, shouldForwardArgs: true }).map(([, actions]) => actions)),
+      getAnchor: () => e.anchor,
+      getKeyBinding: (action) => this.keybindingService.lookupKeybinding(action.id) ?? undefined,
+    });
 
 		menu.dispose();
 	}
 
 	resetSectionCollapseState(): void {
-		this.storageService.remove(SessionsList.SECTION_COLLAPSE_STATE_KEY, StorageScope.PROFILE);
+		this.storageService.remove(
+      SessionsList.SECTION_COLLAPSE_STATE_KEY,
+      StorageScope.PROFILE,
+    );
 	}
 
 	// -- Pinning --
@@ -1358,7 +1603,10 @@ export class SessionsList extends Disposable implements ISessionsList {
 	}
 
 	private loadExcludedSessionTypes(): Set<string> {
-		const raw = this.storageService.get(SessionsList.EXCLUDED_TYPES_KEY, StorageScope.PROFILE);
+		const raw = this.storageService.get(
+      SessionsList.EXCLUDED_TYPES_KEY,
+      StorageScope.PROFILE,
+    );
 		if (raw) {
 			try {
 				const arr = JSON.parse(raw);
@@ -1374,9 +1622,17 @@ export class SessionsList extends Disposable implements ISessionsList {
 
 	private saveExcludedSessionTypes(): void {
 		if (this.excludedSessionTypes.size === 0) {
-			this.storageService.remove(SessionsList.EXCLUDED_TYPES_KEY, StorageScope.PROFILE);
+			this.storageService.remove(
+        SessionsList.EXCLUDED_TYPES_KEY,
+        StorageScope.PROFILE,
+      );
 		} else {
-			this.storageService.store(SessionsList.EXCLUDED_TYPES_KEY, JSON.stringify([...this.excludedSessionTypes]), StorageScope.PROFILE, StorageTarget.USER);
+			this.storageService.store(
+        SessionsList.EXCLUDED_TYPES_KEY,
+        JSON.stringify([...this.excludedSessionTypes]),
+        StorageScope.PROFILE,
+        StorageTarget.USER,
+      );
 		}
 	}
 
@@ -1397,7 +1653,10 @@ export class SessionsList extends Disposable implements ISessionsList {
 	}
 
 	private loadExcludedStatuses(): Set<SessionStatus> {
-		const raw = this.storageService.get(SessionsList.EXCLUDED_STATUSES_KEY, StorageScope.PROFILE);
+		const raw = this.storageService.get(
+      SessionsList.EXCLUDED_STATUSES_KEY,
+      StorageScope.PROFILE,
+    );
 		if (raw) {
 			try {
 				const arr = JSON.parse(raw);
@@ -1413,9 +1672,17 @@ export class SessionsList extends Disposable implements ISessionsList {
 
 	private saveExcludedStatuses(): void {
 		if (this.excludedStatuses.size === 0) {
-			this.storageService.remove(SessionsList.EXCLUDED_STATUSES_KEY, StorageScope.PROFILE);
+			this.storageService.remove(
+        SessionsList.EXCLUDED_STATUSES_KEY,
+        StorageScope.PROFILE,
+      );
 		} else {
-			this.storageService.store(SessionsList.EXCLUDED_STATUSES_KEY, JSON.stringify([...this.excludedStatuses]), StorageScope.PROFILE, StorageTarget.USER);
+			this.storageService.store(
+        SessionsList.EXCLUDED_STATUSES_KEY,
+        JSON.stringify([...this.excludedStatuses]),
+        StorageScope.PROFILE,
+        StorageTarget.USER,
+      );
 		}
 	}
 
@@ -1423,7 +1690,12 @@ export class SessionsList extends Disposable implements ISessionsList {
 
 	setExcludeArchived(exclude: boolean): void {
 		this._excludeArchived = exclude;
-		this.storageService.store(SessionsList.EXCLUDE_ARCHIVED_KEY, exclude, StorageScope.PROFILE, StorageTarget.USER);
+		this.storageService.store(
+      SessionsList.EXCLUDE_ARCHIVED_KEY,
+      exclude,
+      StorageScope.PROFILE,
+      StorageTarget.USER,
+    );
 		this.update();
 	}
 
@@ -1433,7 +1705,12 @@ export class SessionsList extends Disposable implements ISessionsList {
 
 	setExcludeRead(exclude: boolean): void {
 		this._excludeRead = exclude;
-		this.storageService.store(SessionsList.EXCLUDE_READ_KEY, exclude, StorageScope.PROFILE, StorageTarget.USER);
+		this.storageService.store(
+      SessionsList.EXCLUDE_READ_KEY,
+      exclude,
+      StorageScope.PROFILE,
+      StorageTarget.USER,
+    );
 		this.update();
 	}
 
@@ -1447,11 +1724,26 @@ export class SessionsList extends Disposable implements ISessionsList {
 		this.excludedStatuses.clear();
 		this.saveExcludedStatuses();
 		this._excludeArchived = true;
-		this.storageService.store(SessionsList.EXCLUDE_ARCHIVED_KEY, true, StorageScope.PROFILE, StorageTarget.USER);
+		this.storageService.store(
+      SessionsList.EXCLUDE_ARCHIVED_KEY,
+      true,
+      StorageScope.PROFILE,
+      StorageTarget.USER,
+    );
 		this._excludeRead = false;
-		this.storageService.store(SessionsList.EXCLUDE_READ_KEY, false, StorageScope.PROFILE, StorageTarget.USER);
+		this.storageService.store(
+      SessionsList.EXCLUDE_READ_KEY,
+      false,
+      StorageScope.PROFILE,
+      StorageTarget.USER,
+    );
 		this.workspaceGroupCapped = true;
-		this.storageService.store(SessionsList.WORKSPACE_GROUP_CAPPED_KEY, true, StorageScope.PROFILE, StorageTarget.USER);
+		this.storageService.store(
+      SessionsList.WORKSPACE_GROUP_CAPPED_KEY,
+      true,
+      StorageScope.PROFILE,
+      StorageTarget.USER,
+    );
 		this.expandedWorkspaceGroups.clear();
 		this.expandedMoreFolders = false;
 		this.update();
@@ -1461,7 +1753,12 @@ export class SessionsList extends Disposable implements ISessionsList {
 
 	setWorkspaceGroupCapped(capped: boolean): void {
 		this.workspaceGroupCapped = capped;
-		this.storageService.store(SessionsList.WORKSPACE_GROUP_CAPPED_KEY, capped, StorageScope.PROFILE, StorageTarget.USER);
+		this.storageService.store(
+      SessionsList.WORKSPACE_GROUP_CAPPED_KEY,
+      capped,
+      StorageScope.PROFILE,
+      StorageTarget.USER,
+    );
 		if (capped) {
 			this.expandedWorkspaceGroups.clear();
 		}
@@ -1495,11 +1792,14 @@ export class SessionsList extends Disposable implements ISessionsList {
 	// -- Section collapse persistence --
 
 	private getSavedCollapseState(sectionId: string): boolean | undefined {
-		const raw = this.storageService.get(SessionsList.SECTION_COLLAPSE_STATE_KEY, StorageScope.PROFILE);
+		const raw = this.storageService.get(
+      SessionsList.SECTION_COLLAPSE_STATE_KEY,
+      StorageScope.PROFILE,
+    );
 		if (raw) {
 			try {
 				const state: Record<string, boolean> = JSON.parse(raw);
-				if (typeof state[sectionId] === 'boolean') {
+				if (typeof state[sectionId] === "boolean") {
 					return state[sectionId];
 				}
 			} catch {
@@ -1511,11 +1811,16 @@ export class SessionsList extends Disposable implements ISessionsList {
 
 	private saveSectionCollapseState(sectionId: string, collapsed: boolean): void {
 		let state: Record<string, boolean> = {};
-		const raw = this.storageService.get(SessionsList.SECTION_COLLAPSE_STATE_KEY, StorageScope.PROFILE);
+		const raw = this.storageService.get(
+      SessionsList.SECTION_COLLAPSE_STATE_KEY,
+      StorageScope.PROFILE,
+    );
 		if (raw) {
 			try {
 				const parsed = JSON.parse(raw);
-				if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+				if (typeof parsed === "object" && parsed !== null && !Array.isArray(
+          parsed,
+        )) {
 					state = parsed;
 				}
 			} catch {
@@ -1523,7 +1828,12 @@ export class SessionsList extends Disposable implements ISessionsList {
 			}
 		}
 		state[sectionId] = collapsed;
-		this.storageService.store(SessionsList.SECTION_COLLAPSE_STATE_KEY, JSON.stringify(state), StorageScope.PROFILE, StorageTarget.USER);
+		this.storageService.store(
+      SessionsList.SECTION_COLLAPSE_STATE_KEY,
+      JSON.stringify(state),
+      StorageScope.PROFILE,
+      StorageTarget.USER,
+    );
 	}
 
 	private saveBulkCollapseState(collapsed: boolean): void {
@@ -1533,7 +1843,12 @@ export class SessionsList extends Disposable implements ISessionsList {
 				state[child.element.id] = collapsed;
 			}
 		}
-		this.storageService.store(SessionsList.SECTION_COLLAPSE_STATE_KEY, JSON.stringify(state), StorageScope.PROFILE, StorageTarget.USER);
+		this.storageService.store(
+      SessionsList.SECTION_COLLAPSE_STATE_KEY,
+      JSON.stringify(state),
+      StorageScope.PROFILE,
+      StorageTarget.USER,
+    );
 	}
 
 }
@@ -1608,7 +1923,11 @@ export function groupSessionsForList(
 
 	const sections: ISessionSection[] = [];
 	if (pinned.length > 0) {
-		sections.push({ id: 'pinned', label: localize('pinned', "Pinned"), sessions: pinned });
+		sections.push({
+      id: "pinned",
+      label: localize("pinned", "Pinned"),
+      sessions: pinned,
+    });
 	}
 
 	sections.push(...(grouping === SessionsGrouping.Workspace
@@ -1616,7 +1935,11 @@ export function groupSessionsForList(
 		: groupByDate(regular, sorting)));
 
 	if (archived.length > 0) {
-		sections.push({ id: 'archived', label: localize('archived', "Done"), sessions: archived });
+		sections.push({
+      id: "archived",
+      label: localize("archived", "Done"),
+      sessions: archived,
+    });
 	}
 
 	return sections;
@@ -1626,7 +1949,7 @@ export function groupByWorkspace(sessions: ISession[]): ISessionSection[] {
 	const groups = new Map<string, ISession[]>();
 	for (const session of sessions) {
 		const workspace = session.workspace.get();
-		const label = workspace?.label || localize('unknown', "Unknown");
+		const label = workspace?.label || localize("unknown", "Unknown");
 		let group = groups.get(label);
 		if (!group) {
 			group = [];
@@ -1635,21 +1958,25 @@ export function groupByWorkspace(sessions: ISession[]): ISessionSection[] {
 		group.push(session);
 	}
 
-	const unknownWorkspaceLabel = localize('unknown', "Unknown");
+	const unknownWorkspaceLabel = localize("unknown", "Unknown");
 	const order = [...groups.keys()]
 		.filter(k => k !== unknownWorkspaceLabel)
 		.sort((a, b) => a.localeCompare(b));
 
 	const result: ISessionSection[] = order.map(label => ({
-		id: `workspace:${label}`,
-		label,
-		sessions: groups.get(label)!,
-	}));
+    id: `workspace:${label}`,
+    label,
+    sessions: groups.get(label)!,
+  }));
 
 	// "Unknown Workspace" always at the bottom
 	const unknownWorkspace = groups.get(unknownWorkspaceLabel);
 	if (unknownWorkspace) {
-		result.push({ id: `workspace:${unknownWorkspaceLabel}`, label: unknownWorkspaceLabel, sessions: unknownWorkspace });
+		result.push({
+      id: `workspace:${unknownWorkspaceLabel}`,
+      label: unknownWorkspaceLabel,
+      sessions: unknownWorkspace,
+    });
 	}
 
 	return result;
@@ -1689,10 +2016,10 @@ export function groupByDate(sessions: ISession[], sorting: SessionsSorting): ISe
 		}
 	};
 
-	addGroup('today', localize('today', "Today"), today);
-	addGroup('yesterday', localize('yesterday', "Yesterday"), yesterday);
-	addGroup('thisWeek', localize('lastSevenDays', "Last 7 Days"), week);
-	addGroup('older', localize('older', "Older"), older);
+	addGroup("today", localize("today", "Today"), today);
+	addGroup("yesterday", localize("yesterday", "Yesterday"), yesterday);
+	addGroup("thisWeek", localize("lastSevenDays", "Last 7 Days"), week);
+	addGroup("older", localize("older", "Older"), older);
 
 	return sections;
 }

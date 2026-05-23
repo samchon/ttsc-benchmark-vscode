@@ -3,16 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable, IReference } from '../../../base/common/lifecycle.js';
-import { URI } from '../../../base/common/uri.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import { Event } from '../../../base/common/event.js';
-import type { FileEditKind } from './state/sessionState.js';
+import { IDisposable, IReference } from "../../../base/common/lifecycle.js";
+import { URI } from "../../../base/common/uri.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { Event } from "../../../base/common/event.js";
+import type { FileEditKind } from "./state/sessionState.js";
 
-export const ISessionDataService = createDecorator<ISessionDataService>('sessionDataService');
+export const ISessionDataService = createDecorator<ISessionDataService>(
+  "sessionDataService",
+);
 
 /** Filename of the per-session SQLite database. */
-export const SESSION_DB_FILENAME = 'session.db';
+export const SESSION_DB_FILENAME = "session.db";
 
 /**
  * Subdirectory under a session's data directory that holds snapshotted
@@ -21,7 +23,7 @@ export const SESSION_DB_FILENAME = 'session.db';
  * in-memory state tree, and reads of files under this directory are
  * auto-approved by the agent's permission flow.
  */
-export const SESSION_ATTACHMENTS_DIRNAME = 'attachments';
+export const SESSION_ATTACHMENTS_DIRNAME = "attachments";
 
 // ---- File-edit types ----------------------------------------------------
 

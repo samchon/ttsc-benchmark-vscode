@@ -3,15 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IStringDictionary } from '../../../../base/common/collections.js';
-import { ErrorNoTelemetry } from '../../../../base/common/errors.js';
-import { IProcessEnvironment } from '../../../../base/common/platform.js';
-import { ConfigurationTarget } from '../../../../platform/configuration/common/configuration.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { IWorkspaceFolderData } from '../../../../platform/workspace/common/workspace.js';
-import { ConfigurationResolverExpression } from './configurationResolverExpression.js';
+import { IStringDictionary } from "../../../../base/common/collections.js";
+import { ErrorNoTelemetry } from "../../../../base/common/errors.js";
+import { IProcessEnvironment } from "../../../../base/common/platform.js";
+import { ConfigurationTarget } from "../../../../platform/configuration/common/configuration.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IWorkspaceFolderData } from "../../../../platform/workspace/common/workspace.js";
+import { ConfigurationResolverExpression } from "./configurationResolverExpression.js";
 
-export const IConfigurationResolverService = createDecorator<IConfigurationResolverService>('configurationResolverService');
+export const IConfigurationResolverService = createDecorator<IConfigurationResolverService>(
+  "configurationResolverService",
+);
 
 export interface IConfigurationResolverService {
 	readonly _serviceBrand: undefined;
@@ -51,7 +53,7 @@ export interface IConfigurationResolverService {
 
 interface PromptStringInputInfo {
 	id: string;
-	type: 'promptString';
+	type: "promptString";
 	description: string;
 	default?: string;
 	password?: boolean;
@@ -59,7 +61,7 @@ interface PromptStringInputInfo {
 
 interface PickStringInputInfo {
 	id: string;
-	type: 'pickString';
+	type: "pickString";
 	description: string;
 	options: (string | { value: string; label?: string })[];
 	default?: string;
@@ -67,7 +69,7 @@ interface PickStringInputInfo {
 
 interface CommandInputInfo {
 	id: string;
-	type: 'command';
+	type: "command";
 	command: string;
 	args?: any;
 }
@@ -75,39 +77,41 @@ interface CommandInputInfo {
 export type ConfiguredInput = PromptStringInputInfo | PickStringInputInfo | CommandInputInfo;
 
 export enum VariableKind {
-	Unknown = 'unknown',
+	Unknown = "unknown",
 
-	Env = 'env',
-	Config = 'config',
-	Command = 'command',
-	Input = 'input',
-	ExtensionInstallFolder = 'extensionInstallFolder',
-	TaskVar = 'taskVar',
+	Env = "env",
+	Config = "config",
+	Command = "command",
+	Input = "input",
+	ExtensionInstallFolder = "extensionInstallFolder",
+	TaskVar = "taskVar",
 
-	WorkspaceFolder = 'workspaceFolder',
-	Cwd = 'cwd',
-	WorkspaceFolderBasename = 'workspaceFolderBasename',
-	UserHome = 'userHome',
-	LineNumber = 'lineNumber',
-	ColumnNumber = 'columnNumber',
-	SelectedText = 'selectedText',
-	File = 'file',
-	FileWorkspaceFolder = 'fileWorkspaceFolder',
-	FileWorkspaceFolderBasename = 'fileWorkspaceFolderBasename',
-	RelativeFile = 'relativeFile',
-	RelativeFileDirname = 'relativeFileDirname',
-	FileDirname = 'fileDirname',
-	FileExtname = 'fileExtname',
-	FileBasename = 'fileBasename',
-	FileBasenameNoExtension = 'fileBasenameNoExtension',
-	FileDirnameBasename = 'fileDirnameBasename',
-	ExecPath = 'execPath',
-	ExecInstallFolder = 'execInstallFolder',
-	PathSeparator = 'pathSeparator',
-	PathSeparatorAlias = '/'
+	WorkspaceFolder = "workspaceFolder",
+	Cwd = "cwd",
+	WorkspaceFolderBasename = "workspaceFolderBasename",
+	UserHome = "userHome",
+	LineNumber = "lineNumber",
+	ColumnNumber = "columnNumber",
+	SelectedText = "selectedText",
+	File = "file",
+	FileWorkspaceFolder = "fileWorkspaceFolder",
+	FileWorkspaceFolderBasename = "fileWorkspaceFolderBasename",
+	RelativeFile = "relativeFile",
+	RelativeFileDirname = "relativeFileDirname",
+	FileDirname = "fileDirname",
+	FileExtname = "fileExtname",
+	FileBasename = "fileBasename",
+	FileBasenameNoExtension = "fileBasenameNoExtension",
+	FileDirnameBasename = "fileDirnameBasename",
+	ExecPath = "execPath",
+	ExecInstallFolder = "execInstallFolder",
+	PathSeparator = "pathSeparator",
+	PathSeparatorAlias = "/"
 }
 
-export const allVariableKinds = Object.values(VariableKind).filter((value): value is VariableKind => typeof value === 'string');
+export const allVariableKinds = Object.values(VariableKind).filter(
+  (value): value is VariableKind => typeof value === "string",
+);
 
 export class VariableError extends ErrorNoTelemetry {
 	constructor(public readonly variable: VariableKind, message?: string) {

@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../dom.js';
-import * as domStylesheetsJs from '../../domStylesheets.js';
-import { IMouseEvent } from '../../mouseEvent.js';
-import { DomScrollableElement } from '../scrollbar/scrollableElement.js';
-import { commonPrefixLength } from '../../../common/arrays.js';
-import { ThemeIcon } from '../../../common/themables.js';
-import { Emitter, Event } from '../../../common/event.js';
-import { DisposableStore, dispose, IDisposable } from '../../../common/lifecycle.js';
-import { ScrollbarVisibility } from '../../../common/scrollable.js';
-import './breadcrumbsWidget.css';
+import * as dom from "../../dom.js";
+import * as domStylesheetsJs from "../../domStylesheets.js";
+import { IMouseEvent } from "../../mouseEvent.js";
+import { DomScrollableElement } from "../scrollbar/scrollableElement.js";
+import { commonPrefixLength } from "../../../common/arrays.js";
+import { ThemeIcon } from "../../../common/themables.js";
+import { Emitter, Event } from "../../../common/event.js";
+import { DisposableStore, dispose, IDisposable } from "../../../common/lifecycle.js";
+import { ScrollbarVisibility } from "../../../common/scrollable.js";
+import "./breadcrumbsWidget.css";
 
 export abstract class BreadcrumbsItem {
 	abstract dispose(): void;
@@ -29,7 +29,7 @@ export interface IBreadcrumbsWidgetStyles {
 }
 
 export interface IBreadcrumbsItemEvent {
-	type: 'select' | 'focus';
+	type: "select" | "focus";
 	item: BreadcrumbsItem;
 	node: HTMLElement;
 	payload: unknown;
@@ -67,22 +67,28 @@ export class BreadcrumbsWidget {
 		horizontalScrollbarSize: number,
 		horizontalScrollbarVisibility: ScrollbarVisibility = ScrollbarVisibility.Auto,
 		separatorIcon: ThemeIcon,
-		styles: IBreadcrumbsWidgetStyles
+		styles: IBreadcrumbsWidgetStyles,
 	) {
-		this._domNode = document.createElement('div');
-		this._domNode.className = 'monaco-breadcrumbs';
+		this._domNode = document.createElement("div");
+		this._domNode.className = "monaco-breadcrumbs";
 		this._domNode.tabIndex = 0;
-		this._domNode.setAttribute('role', 'list');
+		this._domNode.setAttribute("role", "list");
 		this._scrollable = new DomScrollableElement(this._domNode, {
-			vertical: ScrollbarVisibility.Hidden,
-			horizontal: horizontalScrollbarVisibility,
-			horizontalScrollbarSize,
-			useShadows: false,
-			scrollYToX: true
-		});
+      vertical: ScrollbarVisibility.Hidden,
+      horizontal: horizontalScrollbarVisibility,
+      horizontalScrollbarSize,
+      useShadows: false,
+      scrollYToX: true,
+    });
 		this._separatorIcon = separatorIcon;
 		this._disposables.add(this._scrollable);
-		this._disposables.add(dom.addStandardDisposableListener(this._domNode, 'click', e => this._onClick(e)));
+		this._disposables.add(
+      dom.addStandardDisposableListener(
+        this._domNode,
+        "click",
+        e => this._onClick(e),
+      ),
+    );
 		container.appendChild(this._scrollable.getDomNode());
 
 		const styleElement = domStylesheetsJs.createStyleSheet(this._domNode);
@@ -90,20 +96,24 @@ export class BreadcrumbsWidget {
 
 		const focusTracker = dom.trackFocus(this._domNode);
 		this._disposables.add(focusTracker);
-		this._disposables.add(focusTracker.onDidBlur(_ => this._onDidChangeFocus.fire(false)));
-		this._disposables.add(focusTracker.onDidFocus(_ => this._onDidChangeFocus.fire(true)));
+		this._disposables.add(
+      focusTracker.onDidBlur(_ => this._onDidChangeFocus.fire(false)),
+    );
+		this._disposables.add(
+      focusTracker.onDidFocus(_ => this._onDidChangeFocus.fire(true)),
+    );
 	}
 
 	setHorizontalScrollbarSize(size: number) {
 		this._scrollable.updateOptions({
-			horizontalScrollbarSize: size
-		});
+      horizontalScrollbarSize: size,
+    });
 	}
 
 	setHorizontalScrollbarVisibility(visibility: ScrollbarVisibility) {
 		this._scrollable.updateOptions({
-			horizontal: visibility
-		});
+      horizontal: visibility,
+    });
 	}
 
 	dispose(): void {
@@ -134,12 +144,14 @@ export class BreadcrumbsWidget {
 
 	private _updateDimensions(dim: dom.Dimension): IDisposable {
 		const disposables = new DisposableStore();
-		disposables.add(dom.modify(dom.getWindow(this._domNode), () => {
-			this._dimension = dim;
-			this._domNode.style.width = `${dim.width}px`;
-			this._domNode.style.height = `${dim.height}px`;
-			disposables.add(this._updateScrollbar());
-		}));
+		disposables.add(
+      dom.modify(dom.getWindow(this._domNode), () => {
+        this._dimension = dim;
+        this._domNode.style.width = `${dim.width}px`;
+        this._domNode.style.height = `${dim.height}px`;
+        disposables.add(this._updateScrollbar());
+      }),
+    );
 		return disposables;
 	}
 
@@ -154,7 +166,7 @@ export class BreadcrumbsWidget {
 	}
 
 	private _style(styleElement: HTMLStyleElement, style: IBreadcrumbsWidgetStyles): void {
-		let content = '';
+		let content = "";
 		if (style.breadcrumbsBackground) {
 			content += `.monaco-breadcrumbs { background-color: ${style.breadcrumbsBackground}}`;
 		}
@@ -175,7 +187,7 @@ export class BreadcrumbsWidget {
 
 	setEnabled(value: boolean) {
 		this._enabled = value;
-		this._domNode.classList.toggle('disabled', !this._enabled);
+		this._domNode.classList.toggle("disabled", !this._enabled);
 	}
 
 	domFocus(): void {
@@ -216,15 +228,20 @@ export class BreadcrumbsWidget {
 		for (let i = 0; i < this._nodes.length; i++) {
 			const node = this._nodes[i];
 			if (i !== nth) {
-				node.classList.remove('focused');
+				node.classList.remove("focused");
 			} else {
 				this._focusedItemIdx = i;
-				node.classList.add('focused');
+				node.classList.add("focused");
 				node.focus();
 			}
 		}
 		this._reveal(this._focusedItemIdx, true);
-		this._onDidFocusItem.fire({ type: 'focus', item: this._items[this._focusedItemIdx], node: this._nodes[this._focusedItemIdx], payload });
+		this._onDidFocusItem.fire({
+      type: "focus",
+      item: this._items[this._focusedItemIdx],
+      node: this._nodes[this._focusedItemIdx],
+      payload,
+    });
 	}
 
 	reveal(item: BreadcrumbsItem): void {
@@ -268,13 +285,18 @@ export class BreadcrumbsWidget {
 		for (let i = 0; i < this._nodes.length; i++) {
 			const node = this._nodes[i];
 			if (i !== nth) {
-				node.classList.remove('selected');
+				node.classList.remove("selected");
 			} else {
 				this._selectedItemIdx = i;
-				node.classList.add('selected');
+				node.classList.add("selected");
 			}
 		}
-		this._onDidSelectItem.fire({ type: 'select', item: this._items[this._selectedItemIdx], node: this._nodes[this._selectedItemIdx], payload });
+		this._onDidSelectItem.fire({
+      type: "select",
+      item: this._items[this._selectedItemIdx],
+      node: this._nodes[this._selectedItemIdx],
+      payload,
+    });
 	}
 
 	getItems(): readonly BreadcrumbsItem[] {
@@ -286,13 +308,19 @@ export class BreadcrumbsWidget {
 		let removed: BreadcrumbsItem[] = [];
 		try {
 			prefix = commonPrefixLength(this._items, items, (a, b) => a.equals(b));
-			removed = this._items.splice(prefix, this._items.length - prefix, ...items.slice(prefix));
+			removed = this._items.splice(
+        prefix,
+        this._items.length - prefix,
+        ...items.slice(prefix),
+      );
 			this._render(prefix);
 			dispose(removed);
 			dispose(items.slice(0, prefix));
 			this._focus(-1, undefined);
 		} catch (e) {
-			const newError = new Error(`BreadcrumbsItem#setItems: newItems: ${items.length}, prefix: ${prefix}, removed: ${removed.length}`);
+			const newError = new Error(
+        `BreadcrumbsItem#setItems: newItems: ${items.length}, prefix: ${prefix}, removed: ${removed.length}`,
+      );
 			newError.name = e.name;
 			newError.stack = e.stack;
 			throw newError;
@@ -320,7 +348,9 @@ export class BreadcrumbsWidget {
 		// case b: more items -> render them
 		for (; start < this._items.length; start++) {
 			const item = this._items[start];
-			const node = this._freeNodes.length > 0 ? this._freeNodes.pop() : document.createElement('div');
+			const node = this._freeNodes.length > 0 ? this._freeNodes.pop() : document.createElement(
+        "div",
+      );
 			if (node) {
 				this._renderItem(item, node);
 				this._domNode.appendChild(node);
@@ -335,16 +365,16 @@ export class BreadcrumbsWidget {
 
 	private _renderItem(item: BreadcrumbsItem, container: HTMLDivElement): void {
 		dom.clearNode(container);
-		container.className = '';
+		container.className = "";
 		try {
 			item.render(container);
 		} catch (err) {
-			container.textContent = '<<RENDER ERROR>>';
+			container.textContent = "<<RENDER ERROR>>";
 			console.error(err);
 		}
 		container.tabIndex = -1;
-		container.setAttribute('role', 'listitem');
-		container.classList.add('monaco-breadcrumb-item');
+		container.setAttribute("role", "listitem");
+		container.classList.add("monaco-breadcrumb-item");
 		const iconContainer = dom.$(ThemeIcon.asCSSSelector(this._separatorIcon));
 		container.appendChild(iconContainer);
 	}

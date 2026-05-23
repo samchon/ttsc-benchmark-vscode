@@ -3,26 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createDecorator, IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { Event, AsyncEmitter, IWaitUntil } from '../../../../base/common/event.js';
-import { Promises } from '../../../../base/common/async.js';
-import { insert } from '../../../../base/common/arrays.js';
-import { URI } from '../../../../base/common/uri.js';
-import { Disposable, IDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { IFileService, FileOperation, IFileStatWithMetadata } from '../../../../platform/files/common/files.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { IWorkingCopyService } from './workingCopyService.js';
-import { IWorkingCopy } from './workingCopy.js';
-import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
-import { WorkingCopyFileOperationParticipant } from './workingCopyFileOperationParticipant.js';
-import { VSBuffer, VSBufferReadable, VSBufferReadableStream } from '../../../../base/common/buffer.js';
-import { SaveReason } from '../../../common/editor.js';
-import { IProgress, IProgressStep } from '../../../../platform/progress/common/progress.js';
-import { StoredFileWorkingCopySaveParticipant } from './storedFileWorkingCopySaveParticipant.js';
-import { IStoredFileWorkingCopy, IStoredFileWorkingCopyModel } from './storedFileWorkingCopy.js';
+import { createDecorator, IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { Event, AsyncEmitter, IWaitUntil } from "../../../../base/common/event.js";
+import { Promises } from "../../../../base/common/async.js";
+import { insert } from "../../../../base/common/arrays.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Disposable, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { IFileService, FileOperation, IFileStatWithMetadata } from "../../../../platform/files/common/files.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { IWorkingCopyService } from "./workingCopyService.js";
+import { IWorkingCopy } from "./workingCopy.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { WorkingCopyFileOperationParticipant } from "./workingCopyFileOperationParticipant.js";
+import { VSBuffer, VSBufferReadable, VSBufferReadableStream } from "../../../../base/common/buffer.js";
+import { SaveReason } from "../../../common/editor.js";
+import { IProgress, IProgressStep } from "../../../../platform/progress/common/progress.js";
+import { StoredFileWorkingCopySaveParticipant } from "./storedFileWorkingCopySaveParticipant.js";
+import { IStoredFileWorkingCopy, IStoredFileWorkingCopyModel } from "./storedFileWorkingCopy.js";
 
-export const IWorkingCopyFileService = createDecorator<IWorkingCopyFileService>('workingCopyFileService');
+export const IWorkingCopyFileService = createDecorator<IWorkingCopyFileService>(
+  "workingCopyFileService",
+);
 
 export interface SourceTargetPair {
 
@@ -80,7 +82,7 @@ export interface IWorkingCopyFileOperationParticipant {
 		operation: FileOperation,
 		undoInfo: IFileOperationUndoRedoInfo | undefined,
 		timeout: number,
-		token: CancellationToken
+		token: CancellationToken,
 	): Promise<void>;
 }
 
@@ -115,7 +117,7 @@ export interface IStoredFileWorkingCopySaveParticipant {
 		workingCopy: IStoredFileWorkingCopy<IStoredFileWorkingCopyModel>,
 		context: IStoredFileWorkingCopySaveParticipantContext,
 		progress: IProgress<IProgressStep>,
-		token: CancellationToken
+		token: CancellationToken,
 	): Promise<void>;
 }
 
@@ -293,13 +295,19 @@ export class WorkingCopyFileService extends Disposable implements IWorkingCopyFi
 
 	//#region Events
 
-	private readonly _onWillRunWorkingCopyFileOperation = this._register(new AsyncEmitter<WorkingCopyFileEvent>());
+	private readonly _onWillRunWorkingCopyFileOperation = this._register(
+    new AsyncEmitter<WorkingCopyFileEvent>(),
+  );
 	readonly onWillRunWorkingCopyFileOperation = this._onWillRunWorkingCopyFileOperation.event;
 
-	private readonly _onDidFailWorkingCopyFileOperation = this._register(new AsyncEmitter<WorkingCopyFileEvent>());
+	private readonly _onDidFailWorkingCopyFileOperation = this._register(
+    new AsyncEmitter<WorkingCopyFileEvent>(),
+  );
 	readonly onDidFailWorkingCopyFileOperation = this._onDidFailWorkingCopyFileOperation.event;
 
-	private readonly _onDidRunWorkingCopyFileOperation = this._register(new AsyncEmitter<WorkingCopyFileEvent>());
+	private readonly _onDidRunWorkingCopyFileOperation = this._register(
+    new AsyncEmitter<WorkingCopyFileEvent>(),
+  );
 	readonly onDidRunWorkingCopyFileOperation = this._onDidRunWorkingCopyFileOperation.event;
 
 	//#endregion
@@ -310,12 +318,16 @@ export class WorkingCopyFileService extends Disposable implements IWorkingCopyFi
 		@IFileService private readonly fileService: IFileService,
 		@IWorkingCopyService private readonly workingCopyService: IWorkingCopyService,
 		@IInstantiationService instantiationService: IInstantiationService,
-		@IUriIdentityService private readonly uriIdentityService: IUriIdentityService
+		@IUriIdentityService private readonly uriIdentityService: IUriIdentityService,
 	) {
 		super();
 
-		this.fileOperationParticipants = this._register(instantiationService.createInstance(WorkingCopyFileOperationParticipant));
-		this.saveParticipants = this._register(instantiationService.createInstance(StoredFileWorkingCopySaveParticipant));
+		this.fileOperationParticipants = this._register(
+      instantiationService.createInstance(WorkingCopyFileOperationParticipant),
+    );
+		this.saveParticipants = this._register(
+      instantiationService.createInstance(StoredFileWorkingCopySaveParticipant),
+    );
 
 		// register a default working copy provider that uses the working copy service
 		this._register(this.registerWorkingCopyProvider(resource => {
@@ -350,8 +362,16 @@ export class WorkingCopyFileService extends Disposable implements IWorkingCopyFi
 
 		// validate create operation before starting
 		if (isFile) {
-			const validateCreates = await Promises.settled(operations.map(operation => this.fileService.canCreateFile(operation.resource, { overwrite: operation.overwrite })));
-			const error = validateCreates.find(validateCreate => validateCreate instanceof Error);
+			const validateCreates = await Promises.settled(
+        operations.map(
+          operation => this.fileService.canCreateFile(operation.resource, {
+            overwrite: operation.overwrite,
+          }),
+        ),
+      );
+			const error = validateCreates.find(
+        validateCreate => validateCreate instanceof Error,
+      );
 			if (error instanceof Error) {
 				throw error;
 			}
@@ -359,19 +379,40 @@ export class WorkingCopyFileService extends Disposable implements IWorkingCopyFi
 
 		// file operation participant
 		const files = operations.map(operation => ({ target: operation.resource }));
-		await this.runFileOperationParticipants(files, FileOperation.CREATE, undoInfo, token);
+		await this.runFileOperationParticipants(
+      files,
+      FileOperation.CREATE,
+      undoInfo,
+      token,
+    );
 
 		// before events
-		const event = { correlationId: this.correlationIds++, operation: FileOperation.CREATE, files };
+		const event = {
+      correlationId: this.correlationIds++,
+      operation: FileOperation.CREATE,
+      files,
+    };
 		await this._onWillRunWorkingCopyFileOperation.fireAsync(event, CancellationToken.None /* intentional: we currently only forward cancellation to participants */);
 
 		// now actually create on disk
 		let stats: IFileStatWithMetadata[];
 		try {
 			if (isFile) {
-				stats = await Promises.settled(operations.map(operation => this.fileService.createFile(operation.resource, (operation as ICreateFileOperation).contents, { overwrite: operation.overwrite })));
+				stats = await Promises.settled(
+          operations.map(
+            operation => this.fileService.createFile(
+              operation.resource,
+              (operation as ICreateFileOperation).contents,
+              { overwrite: operation.overwrite },
+            ),
+          ),
+        );
 			} else {
-				stats = await Promises.settled(operations.map(operation => this.fileService.createFolder(operation.resource)));
+				stats = await Promises.settled(
+          operations.map(
+            operation => this.fileService.createFolder(operation.resource),
+          ),
+        );
 			}
 		} catch (error) {
 
@@ -400,7 +441,11 @@ export class WorkingCopyFileService extends Disposable implements IWorkingCopyFi
 
 		// validate move/copy operation before starting
 		for (const { file: { source, target }, overwrite } of operations) {
-			const validateMoveOrCopy = await (move ? this.fileService.canMove(source, target, overwrite) : this.fileService.canCopy(source, target, overwrite));
+			const validateMoveOrCopy = await (move ? this.fileService.canMove(
+        source,
+        target,
+        overwrite,
+      ) : this.fileService.canCopy(source, target, overwrite));
 			if (validateMoveOrCopy instanceof Error) {
 				throw validateMoveOrCopy;
 			}
@@ -408,10 +453,19 @@ export class WorkingCopyFileService extends Disposable implements IWorkingCopyFi
 
 		// file operation participant
 		const files = operations.map(o => o.file);
-		await this.runFileOperationParticipants(files, move ? FileOperation.MOVE : FileOperation.COPY, undoInfo, token);
+		await this.runFileOperationParticipants(
+      files,
+      move ? FileOperation.MOVE : FileOperation.COPY,
+      undoInfo,
+      token,
+    );
 
 		// before event
-		const event = { correlationId: this.correlationIds++, operation: move ? FileOperation.MOVE : FileOperation.COPY, files };
+		const event = {
+      correlationId: this.correlationIds++,
+      operation: move ? FileOperation.MOVE : FileOperation.COPY,
+      files,
+    };
 		await this._onWillRunWorkingCopyFileOperation.fireAsync(event, CancellationToken.None /* intentional: we currently only forward cancellation to participants */);
 
 		try {
@@ -421,8 +475,15 @@ export class WorkingCopyFileService extends Disposable implements IWorkingCopyFi
 				// - move: revert both source and target (if any)
 				// - copy: revert target (if any)
 				if (!this.uriIdentityService.extUri.isEqual(source, target)) {
-					const dirtyWorkingCopies = (move ? [...this.getDirty(source), ...this.getDirty(target)] : this.getDirty(target));
-					await Promises.settled(dirtyWorkingCopies.map(dirtyWorkingCopy => dirtyWorkingCopy.revert({ soft: true })));
+					const dirtyWorkingCopies = (move ? [
+            ...this.getDirty(source),
+            ...this.getDirty(target),
+          ] : this.getDirty(target));
+					await Promises.settled(
+            dirtyWorkingCopies.map(
+              dirtyWorkingCopy => dirtyWorkingCopy.revert({ soft: true }),
+            ),
+          );
 				}
 
 				// now we can rename the source to target via file operation
@@ -450,7 +511,10 @@ export class WorkingCopyFileService extends Disposable implements IWorkingCopyFi
 
 		// validate delete operation before starting
 		for (const operation of operations) {
-			const validateDelete = await this.fileService.canDelete(operation.resource, { recursive: operation.recursive, useTrash: operation.useTrash });
+			const validateDelete = await this.fileService.canDelete(
+        operation.resource,
+        { recursive: operation.recursive, useTrash: operation.useTrash },
+      );
 			if (validateDelete instanceof Error) {
 				throw validateDelete;
 			}
@@ -458,10 +522,19 @@ export class WorkingCopyFileService extends Disposable implements IWorkingCopyFi
 
 		// file operation participant
 		const files = operations.map(operation => ({ target: operation.resource }));
-		await this.runFileOperationParticipants(files, FileOperation.DELETE, undoInfo, token);
+		await this.runFileOperationParticipants(
+      files,
+      FileOperation.DELETE,
+      undoInfo,
+      token,
+    );
 
 		// before events
-		const event = { correlationId: this.correlationIds++, operation: FileOperation.DELETE, files };
+		const event = {
+      correlationId: this.correlationIds++,
+      operation: FileOperation.DELETE,
+      files,
+    };
 		await this._onWillRunWorkingCopyFileOperation.fireAsync(event, CancellationToken.None /* intentional: we currently only forward cancellation to participants */);
 
 		// check for any existing dirty working copies for the resource
@@ -469,13 +542,20 @@ export class WorkingCopyFileService extends Disposable implements IWorkingCopyFi
 		// any opened editor with these working copies
 		for (const operation of operations) {
 			const dirtyWorkingCopies = this.getDirty(operation.resource);
-			await Promises.settled(dirtyWorkingCopies.map(dirtyWorkingCopy => dirtyWorkingCopy.revert({ soft: true })));
+			await Promises.settled(
+        dirtyWorkingCopies.map(
+          dirtyWorkingCopy => dirtyWorkingCopy.revert({ soft: true }),
+        ),
+      );
 		}
 
 		// now actually delete from disk
 		try {
 			for (const operation of operations) {
-				await this.fileService.del(operation.resource, { recursive: operation.recursive, useTrash: operation.useTrash });
+				await this.fileService.del(operation.resource, {
+          recursive: operation.recursive,
+          useTrash: operation.useTrash,
+        });
 			}
 		} catch (error) {
 
@@ -497,11 +577,18 @@ export class WorkingCopyFileService extends Disposable implements IWorkingCopyFi
 	private readonly fileOperationParticipants: WorkingCopyFileOperationParticipant;
 
 	addFileOperationParticipant(participant: IWorkingCopyFileOperationParticipant): IDisposable {
-		return this.fileOperationParticipants.addFileOperationParticipant(participant);
+		return this.fileOperationParticipants.addFileOperationParticipant(
+      participant,
+    );
 	}
 
 	private runFileOperationParticipants(files: SourceTargetPair[], operation: FileOperation, undoInfo: IFileOperationUndoRedoInfo | undefined, token: CancellationToken): Promise<void> {
-		return this.fileOperationParticipants.participate(files, operation, undoInfo, token);
+		return this.fileOperationParticipants.participate(
+      files,
+      operation,
+      undoInfo,
+      token,
+    );
 	}
 
 	//#endregion
@@ -517,7 +604,12 @@ export class WorkingCopyFileService extends Disposable implements IWorkingCopyFi
 	}
 
 	runSaveParticipants(workingCopy: IStoredFileWorkingCopy<IStoredFileWorkingCopyModel>, context: IStoredFileWorkingCopySaveParticipantContext, progress: IProgress<IProgressStep>, token: CancellationToken): Promise<void> {
-		return this.saveParticipants.participate(workingCopy, context, progress, token);
+		return this.saveParticipants.participate(
+      workingCopy,
+      context,
+      progress,
+      token,
+    );
 	}
 
 	//#endregion
@@ -549,4 +641,8 @@ export class WorkingCopyFileService extends Disposable implements IWorkingCopyFi
 	//#endregion
 }
 
-registerSingleton(IWorkingCopyFileService, WorkingCopyFileService, InstantiationType.Delayed);
+registerSingleton(
+  IWorkingCopyFileService,
+  WorkingCopyFileService,
+  InstantiationType.Delayed,
+);

@@ -3,31 +3,31 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { TestInstantiationService } from '../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { URI } from '../../../base/common/uri.js';
-import { workbenchInstantiationService, TestEditorService } from './workbenchTestServices.js';
-import { IModelService } from '../../../editor/common/services/model.js';
-import { ILanguageService } from '../../../editor/common/languages/language.js';
-import { LanguageService } from '../../../editor/common/services/languageService.js';
-import { RangeHighlightDecorations } from '../../browser/codeeditor.js';
-import { TextModel } from '../../../editor/common/model/textModel.js';
-import { createTestCodeEditor } from '../../../editor/test/browser/testCodeEditor.js';
-import { Range, IRange } from '../../../editor/common/core/range.js';
-import { Position } from '../../../editor/common/core/position.js';
-import { IConfigurationService } from '../../../platform/configuration/common/configuration.js';
-import { TestConfigurationService } from '../../../platform/configuration/test/common/testConfigurationService.js';
-import { ModelService } from '../../../editor/common/services/modelService.js';
-import { CoreNavigationCommands } from '../../../editor/browser/coreCommands.js';
-import { ICodeEditor } from '../../../editor/browser/editorBrowser.js';
-import { IEditorService } from '../../services/editor/common/editorService.js';
-import { createTextModel } from '../../../editor/test/common/testTextModel.js';
-import { IThemeService } from '../../../platform/theme/common/themeService.js';
-import { TestThemeService } from '../../../platform/theme/test/common/testThemeService.js';
-import { DisposableStore } from '../../../base/common/lifecycle.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../base/test/common/utils.js';
+import assert from "assert";
+import { TestInstantiationService } from "../../../platform/instantiation/test/common/instantiationServiceMock.js";
+import { URI } from "../../../base/common/uri.js";
+import { workbenchInstantiationService, TestEditorService } from "./workbenchTestServices.js";
+import { IModelService } from "../../../editor/common/services/model.js";
+import { ILanguageService } from "../../../editor/common/languages/language.js";
+import { LanguageService } from "../../../editor/common/services/languageService.js";
+import { RangeHighlightDecorations } from "../../browser/codeeditor.js";
+import { TextModel } from "../../../editor/common/model/textModel.js";
+import { createTestCodeEditor } from "../../../editor/test/browser/testCodeEditor.js";
+import { Range, IRange } from "../../../editor/common/core/range.js";
+import { Position } from "../../../editor/common/core/position.js";
+import { IConfigurationService } from "../../../platform/configuration/common/configuration.js";
+import { TestConfigurationService } from "../../../platform/configuration/test/common/testConfigurationService.js";
+import { ModelService } from "../../../editor/common/services/modelService.js";
+import { CoreNavigationCommands } from "../../../editor/browser/coreCommands.js";
+import { ICodeEditor } from "../../../editor/browser/editorBrowser.js";
+import { IEditorService } from "../../services/editor/common/editorService.js";
+import { createTextModel } from "../../../editor/test/common/testTextModel.js";
+import { IThemeService } from "../../../platform/theme/common/themeService.js";
+import { TestThemeService } from "../../../platform/theme/test/common/testThemeService.js";
+import { DisposableStore } from "../../../base/common/lifecycle.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../base/test/common/utils.js";
 
-suite('Editor - Range decorations', () => {
+suite("Editor - Range decorations", () => {
 
 	let disposables: DisposableStore;
 	let instantiationService: TestInstantiationService;
@@ -43,12 +43,12 @@ suite('Editor - Range decorations', () => {
 		instantiationService.stub(IEditorService, new TestEditorService());
 		instantiationService.stub(ILanguageService, LanguageService);
 		instantiationService.stub(IModelService, stubModelService(instantiationService));
-		text = 'LINE1' + '\n' + 'LINE2' + '\n' + 'LINE3' + '\n' + 'LINE4' + '\r\n' + 'LINE5';
-		model = disposables.add(aModel(URI.file('some_file')));
+		text = "LINE1" + "\n" + "LINE2" + "\n" + "LINE3" + "\n" + "LINE4" + "\r\n" + "LINE5";
+		model = disposables.add(aModel(URI.file("some_file")));
 		codeEditor = disposables.add(createTestCodeEditor(model));
 
-		instantiationService.stub(IEditorService, 'activeEditor', { get resource() { return codeEditor.getModel()!.uri; } });
-		instantiationService.stub(IEditorService, 'activeTextEditorControl', codeEditor);
+		instantiationService.stub(IEditorService, "activeEditor", { get resource() { return codeEditor.getModel()!.uri; } });
+		instantiationService.stub(IEditorService, "activeTextEditorControl", codeEditor);
 
 		testObject = disposables.add(instantiationService.createInstance(RangeHighlightDecorations));
 	});
@@ -61,7 +61,7 @@ suite('Editor - Range decorations', () => {
 
 	ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('highlight range for the resource if it is an active editor', function () {
+	test("highlight range for the resource if it is an active editor", function () {
 		const range: IRange = new Range(1, 1, 1, 1);
 		testObject.highlightRange({ resource: model.uri, range });
 
@@ -70,7 +70,7 @@ suite('Editor - Range decorations', () => {
 		assert.deepStrictEqual(actuals, [range]);
 	});
 
-	test('remove highlight range', function () {
+	test("remove highlight range", function () {
 		testObject.highlightRange({ resource: model.uri, range: { startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 1 } });
 		testObject.removeHighlightRange();
 
@@ -79,7 +79,7 @@ suite('Editor - Range decorations', () => {
 		assert.deepStrictEqual(actuals, []);
 	});
 
-	test('highlight range for the resource removes previous highlight', function () {
+	test("highlight range for the resource removes previous highlight", function () {
 		testObject.highlightRange({ resource: model.uri, range: { startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 1 } });
 		const range: IRange = new Range(2, 2, 4, 3);
 		testObject.highlightRange({ resource: model.uri, range });
@@ -89,10 +89,10 @@ suite('Editor - Range decorations', () => {
 		assert.deepStrictEqual(actuals, [range]);
 	});
 
-	test('highlight range for a new resource removes highlight of previous resource', function () {
+	test("highlight range for a new resource removes highlight of previous resource", function () {
 		testObject.highlightRange({ resource: model.uri, range: { startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 1 } });
 
-		const anotherModel = prepareActiveEditor('anotherModel');
+		const anotherModel = prepareActiveEditor("anotherModel");
 		const range: IRange = new Range(2, 2, 4, 3);
 		testObject.highlightRange({ resource: anotherModel.uri, range });
 
@@ -102,37 +102,37 @@ suite('Editor - Range decorations', () => {
 		assert.deepStrictEqual(actuals, [range]);
 	});
 
-	test('highlight is removed on model change', function () {
+	test("highlight is removed on model change", function () {
 		testObject.highlightRange({ resource: model.uri, range: { startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 1 } });
-		prepareActiveEditor('anotherModel');
+		prepareActiveEditor("anotherModel");
 
 		const actuals = rangeHighlightDecorations(model);
 		assert.deepStrictEqual(actuals, []);
 	});
 
-	test('highlight is removed on cursor position change', function () {
+	test("highlight is removed on cursor position change", function () {
 		testObject.highlightRange({ resource: model.uri, range: { startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 1 } });
-		codeEditor.trigger('mouse', CoreNavigationCommands.MoveTo.id, {
-			position: new Position(2, 1)
+		codeEditor.trigger("mouse", CoreNavigationCommands.MoveTo.id, {
+			position: new Position(2, 1),
 		});
 
 		const actuals = rangeHighlightDecorations(model);
 		assert.deepStrictEqual(actuals, []);
 	});
 
-	test('range is not highlight if not active editor', function () {
-		const model = aModel(URI.file('some model'));
+	test("range is not highlight if not active editor", function () {
+		const model = aModel(URI.file("some model"));
 		testObject.highlightRange({ resource: model.uri, range: { startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 1 } });
 
 		const actuals = rangeHighlightDecorations(model);
 		assert.deepStrictEqual(actuals, []);
 	});
 
-	test('previous highlight is not removed if not active editor', function () {
+	test("previous highlight is not removed if not active editor", function () {
 		const range = new Range(1, 1, 1, 1);
 		testObject.highlightRange({ resource: model.uri, range });
 
-		const model1 = aModel(URI.file('some model'));
+		const model1 = aModel(URI.file("some model"));
 		testObject.highlightRange({ resource: model1.uri, range: { startLineNumber: 2, startColumn: 1, endLineNumber: 2, endColumn: 1 } });
 
 		const actuals = rangeHighlightDecorations(model);
@@ -155,7 +155,7 @@ suite('Editor - Range decorations', () => {
 		const rangeHighlights: IRange[] = [];
 
 		for (const dec of m.getAllDecorations()) {
-			if (dec.options.className === 'rangeHighlight') {
+			if (dec.options.className === "rangeHighlight") {
 				rangeHighlights.push(dec.range);
 			}
 		}

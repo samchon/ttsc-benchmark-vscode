@@ -3,20 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { derived, IObservable } from '../../../../../base/common/observable.js';
-import { CodeEditorWidget } from '../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js';
-import { ScrollType } from '../../../../../editor/common/editorCommon.js';
-import { DocumentLineRangeMap } from '../model/mapping.js';
-import { ReentrancyBarrier } from '../../../../../base/common/controlFlow.js';
-import { BaseCodeEditorView } from './editors/baseCodeEditorView.js';
-import { IMergeEditorLayout } from './mergeEditor.js';
-import { MergeEditorViewModel } from './viewModel.js';
-import { InputCodeEditorView } from './editors/inputCodeEditorView.js';
-import { ResultCodeEditorView } from './editors/resultCodeEditorView.js';
-import { CodeEditorView } from './editors/codeEditorView.js';
-import { BugIndicatingError } from '../../../../../base/common/errors.js';
-import { isDefined } from '../../../../../base/common/types.js';
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { derived, IObservable } from "../../../../../base/common/observable.js";
+import { CodeEditorWidget } from "../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import { ScrollType } from "../../../../../editor/common/editorCommon.js";
+import { DocumentLineRangeMap } from "../model/mapping.js";
+import { ReentrancyBarrier } from "../../../../../base/common/controlFlow.js";
+import { BaseCodeEditorView } from "./editors/baseCodeEditorView.js";
+import { IMergeEditorLayout } from "./mergeEditor.js";
+import { MergeEditorViewModel } from "./viewModel.js";
+import { InputCodeEditorView } from "./editors/inputCodeEditorView.js";
+import { ResultCodeEditorView } from "./editors/resultCodeEditorView.js";
+import { CodeEditorView } from "./editors/codeEditorView.js";
+import { BugIndicatingError } from "../../../../../base/common/errors.js";
+import { isDefined } from "../../../../../base/common/types.js";
 
 export class ScrollSynchronizer extends Disposable {
 	private get model() { return this.viewModel.get()?.model; }
@@ -25,8 +25,8 @@ export class ScrollSynchronizer extends Disposable {
 
 	public readonly updateScrolling: () => void;
 
-	private get lockResultWithInputs() { return this.layout.get().kind === 'columns'; }
-	private get lockBaseWithInputs() { return this.layout.get().kind === 'mixed' && !this.layout.get().showBaseAtTop; }
+	private get lockResultWithInputs() { return this.layout.get().kind === "columns"; }
+	private get lockBaseWithInputs() { return this.layout.get().kind === "mixed" && !this.layout.get().showBaseAtTop; }
 
 	private _isSyncing = true;
 
@@ -84,7 +84,7 @@ export class ScrollSynchronizer extends Disposable {
 			return {
 				update: () => {
 					alignScrolling(this.inputResultView, true, true);
-				}
+				},
 			};
 		}).recomputeInitiallyAndOnChange(this._store);
 
@@ -103,10 +103,14 @@ export class ScrollSynchronizer extends Disposable {
 
 	private _shouldLock(editor1: CodeEditorView, editor2: CodeEditorView): boolean {
 		const isInput = (editor: CodeEditorView) => editor === this.input1View || editor === this.input2View;
-		if (isInput(editor1) && editor2 === this.inputResultView || isInput(editor2) && editor1 === this.inputResultView) {
+		if (isInput(editor1) && editor2 === this.inputResultView || isInput(
+      editor2,
+    ) && editor1 === this.inputResultView) {
 			return this.lockResultWithInputs;
 		}
-		if (isInput(editor1) && editor2 === this.baseView.get() || isInput(editor2) && editor1 === this.baseView.get()) {
+		if (isInput(editor1) && editor2 === this.baseView.get() || isInput(
+      editor2,
+    ) && editor1 === this.baseView.get()) {
 			return this.lockBaseWithInputs;
 		}
 		if (isInput(editor1) && isInput(editor2)) {
@@ -180,13 +184,24 @@ export class ScrollSynchronizer extends Disposable {
 		const sourceRange = result.inputRange;
 		const targetRange = result.outputRange;
 
-		const resultStartTopPx = targetEditor.getTopForLineNumber(targetRange.startLineNumber);
-		const resultEndPx = targetEditor.getTopForLineNumber(targetRange.endLineNumberExclusive);
+		const resultStartTopPx = targetEditor.getTopForLineNumber(
+      targetRange.startLineNumber,
+    );
+		const resultEndPx = targetEditor.getTopForLineNumber(
+      targetRange.endLineNumberExclusive,
+    );
 
-		const sourceStartTopPx = scrollingEditor.getTopForLineNumber(sourceRange.startLineNumber);
-		const sourceEndPx = scrollingEditor.getTopForLineNumber(sourceRange.endLineNumberExclusive);
+		const sourceStartTopPx = scrollingEditor.getTopForLineNumber(
+      sourceRange.startLineNumber,
+    );
+		const sourceEndPx = scrollingEditor.getTopForLineNumber(
+      sourceRange.endLineNumberExclusive,
+    );
 
-		const factor = Math.min((scrollingEditor.getScrollTop() - sourceStartTopPx) / (sourceEndPx - sourceStartTopPx), 1);
+		const factor = Math.min(
+      (scrollingEditor.getScrollTop() - sourceStartTopPx) / (sourceEndPx - sourceStartTopPx),
+      1,
+    );
 		const resultScrollPosition = resultStartTopPx + (resultEndPx - resultStartTopPx) * factor;
 
 		targetEditor.setScrollTop(resultScrollPosition, ScrollType.Immediate);

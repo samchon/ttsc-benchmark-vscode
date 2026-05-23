@@ -3,12 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import { Disposable, IDisposable } from '../../../../base/common/lifecycle.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IFileDeleteOptions, IFileOverwriteOptions, FileSystemProviderCapabilities, FileType, IFileWriteOptions, hasReadWriteCapability, IFileService, IFileSystemProvider, IFileSystemProviderWithFileReadWriteCapability, IStat, IWatchOptions } from '../../../../platform/files/common/files.js';
-import { isEqual } from '../../../../base/common/resources.js';
-import { VSBuffer } from '../../../../base/common/buffer.js';
+import { Event } from "../../../../base/common/event.js";
+import { Disposable, IDisposable } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import {
+  IFileDeleteOptions,
+  IFileOverwriteOptions,
+  FileSystemProviderCapabilities,
+  FileType,
+  IFileWriteOptions,
+  hasReadWriteCapability,
+  IFileService,
+  IFileSystemProvider,
+  IFileSystemProviderWithFileReadWriteCapability,
+  IStat,
+  IWatchOptions,
+} from "../../../../platform/files/common/files.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
 
 interface ILocalHistoryResource {
 
@@ -34,39 +46,44 @@ interface ISerializedLocalHistoryResource {
  */
 export class LocalHistoryFileSystemProvider implements IFileSystemProvider, IFileSystemProviderWithFileReadWriteCapability {
 
-	static readonly SCHEMA = 'vscode-local-history';
+	static readonly SCHEMA = "vscode-local-history";
 
 	static toLocalHistoryFileSystem(resource: ILocalHistoryResource): URI {
 		const serializedLocalHistoryResource: ISerializedLocalHistoryResource = {
-			location: resource.location.toString(true),
-			associatedResource: resource.associatedResource.toString(true)
-		};
+      location: resource.location.toString(true),
+      associatedResource: resource.associatedResource.toString(true),
+    };
 
 		// Try to preserve the associated resource as much as possible
 		// and only keep the `query` part dynamic. This enables other
 		// components (e.g. other timeline providers) to continue
 		// providing timeline entries even when our resource is active.
 		return resource.associatedResource.with({
-			scheme: LocalHistoryFileSystemProvider.SCHEMA,
-			query: JSON.stringify(serializedLocalHistoryResource)
-		});
+      scheme: LocalHistoryFileSystemProvider.SCHEMA,
+      query: JSON.stringify(serializedLocalHistoryResource),
+    });
 	}
 
 	static fromLocalHistoryFileSystem(resource: URI): ILocalHistoryResource {
-		const serializedLocalHistoryResource: ISerializedLocalHistoryResource = JSON.parse(resource.query);
+		const serializedLocalHistoryResource: ISerializedLocalHistoryResource = JSON.parse(
+      resource.query,
+    );
 
 		return {
-			location: URI.parse(serializedLocalHistoryResource.location),
-			associatedResource: URI.parse(serializedLocalHistoryResource.associatedResource)
-		};
+      location: URI.parse(serializedLocalHistoryResource.location),
+      associatedResource: URI.parse(serializedLocalHistoryResource.associatedResource),
+    };
 	}
 
-	private static readonly EMPTY_RESOURCE = URI.from({ scheme: LocalHistoryFileSystemProvider.SCHEMA, path: '/empty' });
+	private static readonly EMPTY_RESOURCE = URI.from({
+    scheme: LocalHistoryFileSystemProvider.SCHEMA,
+    path: "/empty",
+  });
 
 	static readonly EMPTY: ILocalHistoryResource = {
-		location: LocalHistoryFileSystemProvider.EMPTY_RESOURCE,
-		associatedResource: LocalHistoryFileSystemProvider.EMPTY_RESOURCE
-	};
+    location: LocalHistoryFileSystemProvider.EMPTY_RESOURCE,
+    associatedResource: LocalHistoryFileSystemProvider.EMPTY_RESOURCE,
+  };
 
 	get capabilities() {
 		return FileSystemProviderCapabilities.FileReadWrite | FileSystemProviderCapabilities.Readonly;
@@ -110,7 +127,9 @@ export class LocalHistoryFileSystemProvider implements IFileSystemProvider, IFil
 	//#region Supported File Operations
 
 	async stat(resource: URI): Promise<IStat> {
-		const location = LocalHistoryFileSystemProvider.fromLocalHistoryFileSystem(resource).location;
+		const location = LocalHistoryFileSystemProvider.fromLocalHistoryFileSystem(
+      resource,
+    ).location;
 
 		// Special case: empty resource
 		if (isEqual(LocalHistoryFileSystemProvider.EMPTY_RESOURCE, location)) {
@@ -122,11 +141,13 @@ export class LocalHistoryFileSystemProvider implements IFileSystemProvider, IFil
 	}
 
 	async readFile(resource: URI): Promise<Uint8Array> {
-		const location = LocalHistoryFileSystemProvider.fromLocalHistoryFileSystem(resource).location;
+		const location = LocalHistoryFileSystemProvider.fromLocalHistoryFileSystem(
+      resource,
+    ).location;
 
 		// Special case: empty resource
 		if (isEqual(LocalHistoryFileSystemProvider.EMPTY_RESOURCE, location)) {
-			return VSBuffer.fromString('').buffer;
+			return VSBuffer.fromString("").buffer;
 		}
 
 		// Otherwise delegate to provider
@@ -135,7 +156,7 @@ export class LocalHistoryFileSystemProvider implements IFileSystemProvider, IFil
 			return provider.readFile(location);
 		}
 
-		throw new Error('Unsupported');
+		throw new Error("Unsupported");
 	}
 
 	//#endregion

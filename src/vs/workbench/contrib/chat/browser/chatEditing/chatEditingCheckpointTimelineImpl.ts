@@ -3,38 +3,72 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { equals as arraysEqual } from '../../../../../base/common/arrays.js';
-import { findFirst, findLast, findLastIdx } from '../../../../../base/common/arraysFind.js';
-import { assertNever } from '../../../../../base/common/assert.js';
-import { ThrottledDelayer } from '../../../../../base/common/async.js';
-import { Event } from '../../../../../base/common/event.js';
-import { Disposable, DisposableStore, IDisposable } from '../../../../../base/common/lifecycle.js';
-import { mapsStrictEqualIgnoreOrder, ResourceMap, ResourceSet } from '../../../../../base/common/map.js';
-import { equals as objectsEqual } from '../../../../../base/common/objects.js';
-import { constObservable, derived, derivedOpts, IObservable, IReader, ITransaction, ObservablePromise, observableSignalFromEvent, observableValue, observableValueOpts, transaction } from '../../../../../base/common/observable.js';
-import { isEqual } from '../../../../../base/common/resources.js';
-import { isDefined, Mutable } from '../../../../../base/common/types.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { generateUuid } from '../../../../../base/common/uuid.js';
-import { Range } from '../../../../../editor/common/core/range.js';
-import { TextEdit } from '../../../../../editor/common/languages.js';
-import { DefaultEndOfLine, EndOfLinePreference, ITextModel, ValidAnnotatedEditOperation } from '../../../../../editor/common/model.js';
-import { createTextBuffer } from '../../../../../editor/common/model/textModel.js';
-import { IEditorWorkerService } from '../../../../../editor/common/services/editorWorker.js';
-import { ITextModelService } from '../../../../../editor/common/services/resolverService.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { CellEditType, CellUri, INotebookTextModel } from '../../../notebook/common/notebookCommon.js';
-import { INotebookEditorModelResolverService } from '../../../notebook/common/notebookEditorModelResolverService.js';
-import { INotebookService } from '../../../notebook/common/notebookService.js';
-import { emptySessionEntryDiff, IEditSessionDiffStats, IEditSessionEntryDiff, IModifiedEntryTelemetryInfo } from '../../common/editing/chatEditingService.js';
-import { IChatRequestDisablement } from '../../common/model/chatModel.js';
-import { IChatEditingCheckpointTimeline } from './chatEditingCheckpointTimeline.js';
-import { FileOperation, FileOperationType, IChatEditingTimelineState, ICheckpoint, IFileBaseline, IReconstructedFileExistsState, IReconstructedFileNotExistsState, IReconstructedFileState } from './chatEditingOperations.js';
-import { ChatEditingSnapshotTextModelContentProvider } from './chatEditingTextModelContentProviders.js';
-import { createSnapshot as createNotebookSnapshot, restoreSnapshot as restoreNotebookSnapshot } from './notebook/chatEditingModifiedNotebookSnapshot.js';
+import { equals as arraysEqual } from "../../../../../base/common/arrays.js";
+import { findFirst, findLast, findLastIdx } from "../../../../../base/common/arraysFind.js";
+import { assertNever } from "../../../../../base/common/assert.js";
+import { ThrottledDelayer } from "../../../../../base/common/async.js";
+import { Event } from "../../../../../base/common/event.js";
+import { Disposable, DisposableStore, IDisposable } from "../../../../../base/common/lifecycle.js";
+import { mapsStrictEqualIgnoreOrder, ResourceMap, ResourceSet } from "../../../../../base/common/map.js";
+import { equals as objectsEqual } from "../../../../../base/common/objects.js";
+import {
+  constObservable,
+  derived,
+  derivedOpts,
+  IObservable,
+  IReader,
+  ITransaction,
+  ObservablePromise,
+  observableSignalFromEvent,
+  observableValue,
+  observableValueOpts,
+  transaction,
+} from "../../../../../base/common/observable.js";
+import { isEqual } from "../../../../../base/common/resources.js";
+import { isDefined, Mutable } from "../../../../../base/common/types.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { generateUuid } from "../../../../../base/common/uuid.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import { TextEdit } from "../../../../../editor/common/languages.js";
+import {
+  DefaultEndOfLine,
+  EndOfLinePreference,
+  ITextModel,
+  ValidAnnotatedEditOperation,
+} from "../../../../../editor/common/model.js";
+import { createTextBuffer } from "../../../../../editor/common/model/textModel.js";
+import { IEditorWorkerService } from "../../../../../editor/common/services/editorWorker.js";
+import { ITextModelService } from "../../../../../editor/common/services/resolverService.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { CellEditType, CellUri, INotebookTextModel } from "../../../notebook/common/notebookCommon.js";
+import { INotebookEditorModelResolverService } from "../../../notebook/common/notebookEditorModelResolverService.js";
+import { INotebookService } from "../../../notebook/common/notebookService.js";
+import {
+  emptySessionEntryDiff,
+  IEditSessionDiffStats,
+  IEditSessionEntryDiff,
+  IModifiedEntryTelemetryInfo,
+} from "../../common/editing/chatEditingService.js";
+import { IChatRequestDisablement } from "../../common/model/chatModel.js";
+import { IChatEditingCheckpointTimeline } from "./chatEditingCheckpointTimeline.js";
+import {
+  FileOperation,
+  FileOperationType,
+  IChatEditingTimelineState,
+  ICheckpoint,
+  IFileBaseline,
+  IReconstructedFileExistsState,
+  IReconstructedFileNotExistsState,
+  IReconstructedFileState,
+} from "./chatEditingOperations.js";
+import { ChatEditingSnapshotTextModelContentProvider } from "./chatEditingTextModelContentProviders.js";
+import {
+  createSnapshot as createNotebookSnapshot,
+  restoreSnapshot as restoreNotebookSnapshot,
+} from "./notebook/chatEditingModifiedNotebookSnapshot.js";
 
-const START_REQUEST_EPOCH = '$$start';
-const STOP_ID_EPOCH_PREFIX = '__epoch_';
+const START_REQUEST_EPOCH = "$$start";
+const STOP_ID_EPOCH_PREFIX = "__epoch_";
 
 type IReconstructedFileStateWithNotebook = IReconstructedFileNotExistsState | (Mutable<IReconstructedFileExistsState> & { notebook?: INotebookTextModel });
 
@@ -65,9 +99,15 @@ export interface IChatEditingTimelineFsDelegate {
 export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpointTimeline {
 
 	private _epochCounter = 0;
-	private readonly _checkpoints = observableValue<readonly ICheckpoint[]>(this, []);
+	private readonly _checkpoints = observableValue<readonly ICheckpoint[]>(
+    this,
+    [],
+  );
 	private readonly _currentEpoch = observableValue<number>(this, 0);
-	private readonly _operations = observableValueOpts<FileOperation[]>({ equalsFn: () => false }, []); // mutable
+	private readonly _operations = observableValueOpts<FileOperation[]>(
+    { equalsFn: () => false },
+    [],
+  ); // mutable
 	private readonly _fileBaselines = new Map<string, IFileBaseline>(); // key: `${uri}::${requestId}`
 	private readonly _refCountedDiffs = new Map<string, IObservable<IEditSessionEntryDiff | undefined>>();
 	private readonly _finalizedDiffCache = new Map<string, IEditSessionEntryDiff>();
@@ -105,7 +145,9 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 		return previousCheckpoint.epoch > startOfRequest.epoch ? previousCheckpoint : startOfRequest;
 	});
 
-	public readonly canUndo: IObservable<boolean> = this._willUndoToCheckpoint.map(cp => !!cp);
+	public readonly canUndo: IObservable<boolean> = this._willUndoToCheckpoint.map(
+    cp => !!cp,
+  );
 
 
 	/**
@@ -161,7 +203,9 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 		);
 	});
 
-	public readonly canRedo: IObservable<boolean> = this._willRedoToEpoch.map(e => !!e);
+	public readonly canRedo: IObservable<boolean> = this._willRedoToEpoch.map(
+    e => !!e,
+  );
 
 	public readonly requestDisablement: IObservable<IChatRequestDisablement[]> = derivedOpts(
 		{ equalsFn: (a, b) => arraysEqual(a, b, objectsEqual) },
@@ -206,14 +250,21 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 		@INotebookService private readonly _notebookService: INotebookService,
 		@ITextModelService private readonly _textModelService: ITextModelService,
 		@IEditorWorkerService private readonly _editorWorkerService: IEditorWorkerService,
-		@IConfigurationService private readonly _configurationService: IConfigurationService
+		@IConfigurationService private readonly _configurationService: IConfigurationService,
 	) {
-		this.createCheckpoint(undefined, undefined, 'Initial State', 'Starting point before any edits');
+		this.createCheckpoint(
+      undefined,
+      undefined,
+      "Initial State",
+      "Starting point before any edits",
+    );
 	}
 
 	public createCheckpoint(requestId: string | undefined, undoStopId: string | undefined, label: string, description?: string): string {
 		const existingCheckpoints = this._checkpoints.get();
-		const existing = existingCheckpoints.find(c => c.undoStopId === undoStopId && c.requestId === requestId);
+		const existing = existingCheckpoints.find(
+      c => c.undoStopId === undoStopId && c.requestId === requestId,
+    );
 		if (existing) {
 			return existing.checkpointId;
 		}
@@ -223,19 +274,19 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 		const epoch = this.incrementEpoch();
 
 		checkpoints.push({
-			checkpointId,
-			requestId,
-			undoStopId,
-			epoch,
-			label,
-			description
-		});
+      checkpointId,
+      requestId,
+      undoStopId,
+      epoch,
+      label,
+      description,
+    });
 
 		transaction(tx => {
-			this._checkpoints.set(checkpoints, tx);
-			this._operations.set(operations, tx);
-			this._currentEpoch.set(epoch + 1, tx);
-		});
+      this._checkpoints.set(checkpoints, tx);
+      this._operations.set(operations, tx);
+      this._currentEpoch.set(epoch + 1, tx);
+    });
 
 		return checkpointId;
 	}
@@ -266,7 +317,10 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 			// because there may have been user changes in the meantime. But we still want
 			// to set the epoch marking that checkpoint as having been undone (the second
 			// arg below) so that disablement works and so it's discarded if appropriate later.
-			return this._navigateToEpoch(targetCheckpoint.epoch + 1, targetCheckpoint.epoch);
+			return this._navigateToEpoch(
+        targetCheckpoint.epoch + 1,
+        targetCheckpoint.epoch,
+      );
 		} else {
 			return this._navigateToEpoch(targetCheckpoint.epoch + 1);
 		}
@@ -274,13 +328,21 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 	}
 
 	public getContentURIAtStop(requestId: string, fileURI: URI, stopId: string | undefined): URI {
-		return ChatEditingSnapshotTextModelContentProvider.getSnapshotFileURI(this.chatSessionResource, requestId, stopId, fileURI.path);
+		return ChatEditingSnapshotTextModelContentProvider.getSnapshotFileURI(
+      this.chatSessionResource,
+      requestId,
+      stopId,
+      fileURI.path,
+    );
 	}
 
 	private async _navigateToEpoch(restoreToEpoch: number, navigateToEpoch = restoreToEpoch): Promise<void> {
 		const currentEpoch = this._currentEpoch.get();
 		if (currentEpoch !== restoreToEpoch) {
-			const urisToRestore = await this._applyFileSystemOperations(currentEpoch, restoreToEpoch);
+			const urisToRestore = await this._applyFileSystemOperations(
+        currentEpoch,
+        restoreToEpoch,
+      );
 
 			// Reconstruct content for files affected by operations in the range
 			await this._reconstructAllFileContents(restoreToEpoch, urisToRestore);
@@ -301,15 +363,17 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 	public recordFileOperation(operation: FileOperation): void {
 		const { currentEpoch, checkpoints, operations } = this._getVisibleOperationsAndCheckpoints();
 		if (operation.epoch < currentEpoch) {
-			throw new Error(`Cannot record operation at epoch ${operation.epoch} when current epoch is ${currentEpoch}`);
+			throw new Error(
+        `Cannot record operation at epoch ${operation.epoch} when current epoch is ${currentEpoch}`,
+      );
 		}
 
 		operations.push(operation);
 		transaction(tx => {
-			this._checkpoints.set(checkpoints, tx);
-			this._operations.set(operations, tx);
-			this._currentEpoch.set(operation.epoch + 1, tx);
-		});
+      this._checkpoints.set(checkpoints, tx);
+      this._operations.set(operations, tx);
+      this._currentEpoch.set(operation.epoch + 1, tx);
+    });
 	}
 
 	private _getVisibleOperationsAndCheckpoints() {
@@ -318,10 +382,10 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 		const operations = this._operations.get();
 
 		return {
-			currentEpoch,
-			checkpoints: checkpoints.filter(c => c.epoch < currentEpoch),
-			operations: operations.filter(op => op.epoch < currentEpoch)
-		};
+      currentEpoch,
+      checkpoints: checkpoints.filter(c => c.epoch < currentEpoch),
+      operations: operations.filter(op => op.epoch < currentEpoch),
+    };
 	}
 
 	public recordFileBaseline(baseline: IFileBaseline): void {
@@ -345,7 +409,9 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 		if (stopId?.startsWith(STOP_ID_EPOCH_PREFIX)) {
 			toEpoch = Number(stopId.slice(STOP_ID_EPOCH_PREFIX.length));
 		} else {
-			toEpoch = this._checkpoints.get().find(c => c.requestId === requestId && c.undoStopId === stopId)?.epoch;
+			toEpoch = this._checkpoints.get().find(
+        c => c.requestId === requestId && c.undoStopId === stopId,
+      )?.epoch;
 		}
 
 		// The content URI doesn't preserve the original scheme or authority. Look through
@@ -353,15 +419,23 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 		const fileURI = this._getTimelineCanonicalUriForPath(contentURI);
 
 		if (!toEpoch || !fileURI) {
-			return '';
+			return "";
 		}
 
-		const baseline = await this._findBestBaselineForFile(fileURI, toEpoch, requestId);
+		const baseline = await this._findBestBaselineForFile(
+      fileURI,
+      toEpoch,
+      requestId,
+    );
 		if (!baseline) {
-			return '';
+			return "";
 		}
 
-		const operations = this._getFileOperationsInRange(fileURI, baseline.epoch, toEpoch);
+		const operations = this._getFileOperationsInRange(
+      fileURI,
+      baseline.epoch,
+      toEpoch,
+    );
 		const replayed = await this._replayOperations(baseline, operations);
 		return replayed.exists ? replayed.content : undefined;
 	}
@@ -425,17 +499,25 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 		}
 
 		// Find the most appropriate baseline for this file
-		const baseline = await this._findBestBaselineForFile(uri, targetEpoch, targetCheckpoint.requestId || '');
+		const baseline = await this._findBestBaselineForFile(
+      uri,
+      targetEpoch,
+      targetCheckpoint.requestId || "",
+    );
 		if (!baseline) {
 			// File doesn't exist at this checkpoint
 			return {
-				exists: false,
-				uri,
-			};
+        exists: false,
+        uri,
+      };
 		}
 
 		// Get operations that affect this file from baseline to target checkpoint
-		const operations = this._getFileOperationsInRange(uri, baseline.epoch, targetEpoch);
+		const operations = this._getFileOperationsInRange(
+      uri,
+      baseline.epoch,
+      targetEpoch,
+    );
 
 		// Replay operations to reconstruct state
 		return this._replayOperations(baseline, operations);
@@ -443,12 +525,12 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 
 	public getStateForPersistence(): IChatEditingTimelineState {
 		return {
-			checkpoints: this._checkpoints.get(),
-			currentEpoch: this._currentEpoch.get(),
-			fileBaselines: [...this._fileBaselines],
-			operations: this._operations.get(),
-			epochCounter: this._epochCounter,
-		};
+      checkpoints: this._checkpoints.get(),
+      currentEpoch: this._currentEpoch.get(),
+      fileBaselines: [...this._fileBaselines],
+      operations: this._operations.get(),
+      epochCounter: this._epochCounter,
+    };
 	}
 
 	public restoreFromState(state: IChatEditingTimelineState, tx: ITransaction): void {
@@ -465,7 +547,9 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 
 	public getCheckpointIdForRequest(requestId: string, undoStopId?: string): string | undefined {
 		const checkpoints = this._checkpoints.get();
-		return checkpoints.find(c => c.requestId === requestId && c.undoStopId === undoStopId)?.checkpointId;
+		return checkpoints.find(
+      c => c.requestId === requestId && c.undoStopId === undoStopId,
+    )?.checkpointId;
 	}
 
 	private async _reconstructAllFileContents(targetEpoch: number, filesToReconstruct: ResourceSet): Promise<void> {
@@ -494,34 +578,48 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 			}
 
 			// If the file was just created, use that as its updated baseline
-			if (operation.type === FileOperationType.Create && isEqual(operation.uri, uri)) {
+			if (operation.type === FileOperationType.Create && isEqual(
+        operation.uri,
+        uri,
+      )) {
 				return {
-					uri: operation.uri,
-					requestId: operation.requestId,
-					content: operation.initialContent,
-					epoch: operation.epoch,
-					telemetryInfo: operation.telemetryInfo,
-				};
+          uri: operation.uri,
+          requestId: operation.requestId,
+          content: operation.initialContent,
+          epoch: operation.epoch,
+          telemetryInfo: operation.telemetryInfo,
+        };
 			}
 
 			// If the file was renamed to this URI, use its old contents as the baseline
-			if (operation.type === FileOperationType.Rename && isEqual(operation.newUri, uri)) {
-				const prev = await this._findBestBaselineForFile(operation.oldUri, operation.epoch, operation.requestId);
+			if (operation.type === FileOperationType.Rename && isEqual(
+        operation.newUri,
+        uri,
+      )) {
+				const prev = await this._findBestBaselineForFile(
+          operation.oldUri,
+          operation.epoch,
+          operation.requestId,
+        );
 				if (!prev) {
 					return undefined;
 				}
 
 
-				const operations = this._getFileOperationsInRange(operation.oldUri, prev.epoch, operation.epoch);
+				const operations = this._getFileOperationsInRange(
+          operation.oldUri,
+          prev.epoch,
+          operation.epoch,
+        );
 				const replayed = await this._replayOperations(prev, operations);
 				return {
-					uri: uri,
-					epoch: operation.epoch,
-					content: replayed.exists ? replayed.content : '',
-					requestId: operation.requestId,
-					telemetryInfo: prev.telemetryInfo,
-					notebookViewType: replayed.exists ? replayed.notebookViewType : undefined,
-				};
+          uri: uri,
+          epoch: operation.epoch,
+          content: replayed.exists ? replayed.content : "",
+          requestId: operation.requestId,
+          telemetryInfo: prev.telemetryInfo,
+          notebookViewType: replayed.exists ? replayed.notebookViewType : undefined,
+        };
 			}
 
 			// When the request ID changes, check if we have a baseline for the current request
@@ -550,26 +648,38 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 
 	private async _replayOperations(baseline: IFileBaseline, operations: readonly FileOperation[]): Promise<IReconstructedFileState> {
 		let currentState: IReconstructedFileStateWithNotebook = {
-			exists: true,
-			content: baseline.content,
-			uri: baseline.uri,
-			telemetryInfo: baseline.telemetryInfo,
-		};
+      exists: true,
+      content: baseline.content,
+      uri: baseline.uri,
+      telemetryInfo: baseline.telemetryInfo,
+    };
 
 		if (baseline.notebookViewType) {
-			currentState.notebook = await this._notebookEditorModelResolverService.createUntitledNotebookTextModel(baseline.notebookViewType);
+			currentState.notebook = await this._notebookEditorModelResolverService.createUntitledNotebookTextModel(
+        baseline.notebookViewType,
+      );
 			if (baseline.content) {
 				restoreNotebookSnapshot(currentState.notebook, baseline.content);
 			}
 		}
 
 		for (const operation of operations) {
-			currentState = await this._applyOperationToState(currentState, operation, baseline.telemetryInfo);
+			currentState = await this._applyOperationToState(
+        currentState,
+        operation,
+        baseline.telemetryInfo,
+      );
 		}
 
 		if (currentState.exists && currentState.notebook) {
-			const info = await this._notebookService.withNotebookDataProvider(currentState.notebook.viewType);
-			currentState.content = createNotebookSnapshot(currentState.notebook, info.serializer.options, this._configurationService);
+			const info = await this._notebookService.withNotebookDataProvider(
+        currentState.notebook.viewType,
+      );
+			currentState.content = createNotebookSnapshot(
+        currentState.notebook,
+        info.serializer.options,
+        this._configurationService,
+      );
 			currentState.notebook.dispose();
 		}
 
@@ -585,20 +695,22 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 
 				let notebook: INotebookTextModel | undefined;
 				if (operation.notebookViewType) {
-					notebook = await this._notebookEditorModelResolverService.createUntitledNotebookTextModel(operation.notebookViewType);
+					notebook = await this._notebookEditorModelResolverService.createUntitledNotebookTextModel(
+            operation.notebookViewType,
+          );
 					if (operation.initialContent) {
 						restoreNotebookSnapshot(notebook, operation.initialContent);
 					}
 				}
 
 				return {
-					exists: true,
-					content: operation.initialContent,
-					uri: operation.uri,
-					telemetryInfo,
-					notebookViewType: operation.notebookViewType,
-					notebook,
-				};
+          exists: true,
+          content: operation.initialContent,
+          uri: operation.uri,
+          telemetryInfo,
+          notebookViewType: operation.notebookViewType,
+          notebook,
+        };
 			}
 
 			case FileOperationType.Delete:
@@ -607,48 +719,59 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 				}
 
 				return {
-					exists: false,
-					uri: operation.uri
-				};
+          exists: false,
+          uri: operation.uri,
+        };
 
 			case FileOperationType.Rename:
 				return {
-					...state,
-					uri: operation.newUri
-				};
+          ...state,
+          uri: operation.newUri,
+        };
 
 			case FileOperationType.TextEdit: {
 				if (!state.exists) {
-					throw new Error('Cannot apply text edits to non-existent file');
+					throw new Error("Cannot apply text edits to non-existent file");
 				}
 
-				const nbCell = operation.cellIndex !== undefined && state.notebook?.cells.at(operation.cellIndex);
+				const nbCell = operation.cellIndex !== undefined && state.notebook?.cells.at(
+          operation.cellIndex,
+        );
 				if (nbCell) {
-					const newContent = this._applyTextEditsToContent(nbCell.getValue(), operation.edits);
+					const newContent = this._applyTextEditsToContent(
+            nbCell.getValue(),
+            operation.edits,
+          );
 					state.notebook!.applyEdits([{
 						editType: CellEditType.Replace,
 						index: operation.cellIndex,
 						count: 1,
-						cells: [{ cellKind: nbCell.cellKind, language: nbCell.language, mime: nbCell.language, source: newContent, outputs: nbCell.outputs }]
+						cells: [{ cellKind: nbCell.cellKind, language: nbCell.language, mime: nbCell.language, source: newContent, outputs: nbCell.outputs }],
 					}], true, undefined, () => undefined, undefined);
 					return state;
 				}
 
 				// Apply text edits using a temporary text model
 				return {
-					...state,
-					content: this._applyTextEditsToContent(state.content, operation.edits)
-				};
+          ...state,
+          content: this._applyTextEditsToContent(state.content, operation.edits),
+        };
 			}
 			case FileOperationType.NotebookEdit:
 				if (!state.exists) {
-					throw new Error('Cannot apply notebook edits to non-existent file');
+					throw new Error("Cannot apply notebook edits to non-existent file");
 				}
 				if (!state.notebook) {
-					throw new Error('Cannot apply notebook edits to non-notebook file');
+					throw new Error("Cannot apply notebook edits to non-notebook file");
 				}
 
-				state.notebook.applyEdits(operation.cellEdits.slice(), true, undefined, () => undefined, undefined);
+				state.notebook.applyEdits(
+          operation.cellEdits.slice(),
+          true,
+          undefined,
+          () => undefined,
+          undefined,
+        );
 				return state;
 
 			default:
@@ -669,7 +792,11 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 		// Apply file system operations in the correct direction
 		const urisToRestore = new ResourceSet();
 		for (const operation of operations) {
-			await this._applyFileSystemOperation(operation, isMovingForward, urisToRestore);
+			await this._applyFileSystemOperation(
+        operation,
+        isMovingForward,
+        urisToRestore,
+      );
 		}
 
 		return urisToRestore;
@@ -679,7 +806,10 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 		switch (operation.type) {
 			case FileOperationType.Create:
 				if (isMovingForward) {
-					await this._delegate.createFile(operation.uri, operation.initialContent);
+					await this._delegate.createFile(
+            operation.uri,
+            operation.initialContent,
+          );
 					urisToRestore.add(operation.uri);
 				} else {
 					await this._delegate.deleteFile(operation.uri);
@@ -692,7 +822,10 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 					await this._delegate.deleteFile(operation.uri);
 					urisToRestore.delete(operation.uri);
 				} else {
-					await this._delegate.createFile(operation.uri, operation.finalContent);
+					await this._delegate.createFile(
+            operation.uri,
+            operation.finalContent,
+          );
 					urisToRestore.add(operation.uri);
 				}
 				break;
@@ -712,7 +845,9 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 			// Text and notebook edits don't affect file system structure
 			case FileOperationType.TextEdit:
 			case FileOperationType.NotebookEdit:
-				urisToRestore.add(CellUri.parse(operation.uri)?.notebook ?? operation.uri);
+				urisToRestore.add(
+          CellUri.parse(operation.uri)?.notebook ?? operation.uri,
+        );
 				break;
 
 			default:
@@ -721,26 +856,42 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 	}
 
 	private _applyTextEditsToContent(content: string, edits: readonly TextEdit[]): string {
-		const { textBuffer, disposable } = createTextBuffer(content, DefaultEndOfLine.LF);
+		const { textBuffer, disposable } = createTextBuffer(
+      content,
+      DefaultEndOfLine.LF,
+    );
 		try {
 			textBuffer.applyEdits(edits.map(edit =>
-				new ValidAnnotatedEditOperation(null, Range.lift(edit.range), edit.text, false, false, false)
+				new ValidAnnotatedEditOperation(null, Range.lift(edit.range), edit.text, false, false, false),
 			), false, false);
 			const fullRange = textBuffer.getRangeAt(0, textBuffer.getLength());
-			return textBuffer.getValueInRange(fullRange, EndOfLinePreference.TextDefined);
+			return textBuffer.getValueInRange(
+        fullRange,
+        EndOfLinePreference.TextDefined,
+      );
 		} finally {
 			disposable.dispose();
 		}
 	}
 
 	public getEntryDiffBetweenStops(uri: URI, requestId: string | undefined, stopId: string | undefined): IObservable<IEditSessionEntryDiff | undefined> {
-		const epochs = derivedOpts<{ start: ICheckpoint; end: ICheckpoint | undefined }>({ equalsFn: (a, b) => a.start === b.start && a.end === b.end }, reader => {
-			const checkpoints = this._checkpoints.read(reader);
-			const startIndex = checkpoints.findIndex(c => c.requestId === requestId && c.undoStopId === stopId);
-			return { start: checkpoints[startIndex], end: checkpoints[startIndex + 1] };
-		});
+		const epochs = derivedOpts<{ start: ICheckpoint; end: ICheckpoint | undefined }>(
+      { equalsFn: (a, b) => a.start === b.start && a.end === b.end },
+      reader => {
+        const checkpoints = this._checkpoints.read(reader);
+        const startIndex = checkpoints.findIndex(c => c.requestId === requestId && c.undoStopId === stopId);
+        return {
+          start: checkpoints[startIndex],
+          end: checkpoints[startIndex + 1],
+        };
+      },
+    );
 
-		return this._getEntryDiffBetweenEpochs(uri, `s\0${requestId}\0${stopId}`, epochs);
+		return this._getEntryDiffBetweenEpochs(
+      uri,
+      `s\0${requestId}\0${stopId}`,
+      epochs,
+    );
 	}
 
 	/** Gets the epoch bounds of the request. If stopRequestId is undefined, gets ONLY the single request's bounds */
@@ -764,7 +915,11 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 	}
 
 	public getEntryDiffBetweenRequests(uri: URI, startRequestId: string, stopRequestId: string): IObservable<IEditSessionEntryDiff | undefined> {
-		return this._getEntryDiffBetweenEpochs(uri, `r\0${startRequestId}\0${stopRequestId}`, this._getRequestEpochBounds(startRequestId, stopRequestId));
+		return this._getEntryDiffBetweenEpochs(
+      uri,
+      `r\0${startRequestId}\0${stopRequestId}`,
+      this._getRequestEpochBounds(startRequestId, stopRequestId),
+    );
 	}
 
 	private _getEntryDiffBetweenEpochs(uri: URI, cacheKey: string, epochs: IObservable<{ start: ICheckpoint | undefined; end: ICheckpoint | undefined }>): IObservable<IEditSessionEntryDiff | undefined> {
@@ -779,11 +934,11 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 
 		if (!obs) {
 			obs = this._getEntryDiffBetweenEpochsInner(
-				uri,
-				key,
-				epochs,
-				() => this._refCountedDiffs.delete(key),
-			);
+        uri,
+        key,
+        epochs,
+        () => this._refCountedDiffs.delete(key),
+      );
 			this._refCountedDiffs.set(key, obs);
 		}
 
@@ -883,7 +1038,7 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 			originalUri,
 			modifiedUri,
 			{ ignoreTrimWhitespace: false, computeMoves: false, maxComputationTimeMs: 3000 },
-			'advanced'
+			"advanced",
 		).then((diff): IEditSessionEntryDiff => {
 			const entryDiff: IEditSessionEntryDiff = {
 				originalURI: originalUri,
@@ -949,7 +1104,10 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 		});
 
 
-		return this._getDiffsForFilesAtEpochs(startEpochs, boundsObservable.map(b => b.end));
+		return this._getDiffsForFilesAtEpochs(
+      startEpochs,
+      boundsObservable.map(b => b.end),
+    );
 	}
 
 	private _getDiffsForFilesAtEpochs(startEpochs: IObservable<ResourceMap<number>>, endCheckpointObs: IObservable<ICheckpoint | undefined>) {
@@ -985,8 +1143,8 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 		});
 
 		return perFileDiffs.map((diffs, reader) => {
-			return diffs.flatMap(d => d.read(reader)).filter(isDefined);
-		});
+      return diffs.flatMap(d => d.read(reader)).filter(isDefined);
+    });
 	}
 
 	public getDiffsForFilesInSession(): IObservable<readonly IEditSessionEntryDiff[]> {
@@ -1004,7 +1162,10 @@ export class ChatEditingCheckpointTimelineImpl implements IChatEditingCheckpoint
 			return uris;
 		});
 
-		return this._getDiffsForFilesAtEpochs(startEpochs, constObservable(undefined));
+		return this._getDiffsForFilesAtEpochs(
+      startEpochs,
+      constObservable(undefined),
+    );
 	}
 
 	public getDiffForSession(): IObservable<IEditSessionDiffStats> {

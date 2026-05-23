@@ -3,25 +3,32 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IAction } from '../../base/common/actions.js';
-import { Emitter } from '../../base/common/event.js';
-import { Disposable, DisposableStore } from '../../base/common/lifecycle.js';
-import { isEqual } from '../../base/common/resources.js';
-import { URI } from '../../base/common/uri.js';
-import { ICodeEditor, IOverlayWidget, IOverlayWidgetPosition, OverlayWidgetPositionPreference, isCodeEditor, isCompositeEditor } from '../../editor/browser/editorBrowser.js';
-import { EmbeddedCodeEditorWidget } from '../../editor/browser/widget/codeEditor/embeddedCodeEditorWidget.js';
-import { EditorOption } from '../../editor/common/config/editorOptions.js';
-import { IRange } from '../../editor/common/core/range.js';
-import { CursorChangeReason, ICursorPositionChangedEvent } from '../../editor/common/cursorEvents.js';
-import { IEditorContribution } from '../../editor/common/editorCommon.js';
-import { IModelDecorationsChangeAccessor, TrackedRangeStickiness } from '../../editor/common/model.js';
-import { ModelDecorationOptions } from '../../editor/common/model/textModel.js';
-import { AbstractFloatingClickMenu, FloatingClickWidget } from '../../platform/actions/browser/floatingMenu.js';
-import { IMenuService, MenuId } from '../../platform/actions/common/actions.js';
-import { IContextKeyService } from '../../platform/contextkey/common/contextkey.js';
-import { IInstantiationService } from '../../platform/instantiation/common/instantiation.js';
-import { IKeybindingService } from '../../platform/keybinding/common/keybinding.js';
-import { IEditorService } from '../services/editor/common/editorService.js';
+import { IAction } from "../../base/common/actions.js";
+import { Emitter } from "../../base/common/event.js";
+import { Disposable, DisposableStore } from "../../base/common/lifecycle.js";
+import { isEqual } from "../../base/common/resources.js";
+import { URI } from "../../base/common/uri.js";
+import {
+  ICodeEditor,
+  IOverlayWidget,
+  IOverlayWidgetPosition,
+  OverlayWidgetPositionPreference,
+  isCodeEditor,
+  isCompositeEditor,
+} from "../../editor/browser/editorBrowser.js";
+import { EmbeddedCodeEditorWidget } from "../../editor/browser/widget/codeEditor/embeddedCodeEditorWidget.js";
+import { EditorOption } from "../../editor/common/config/editorOptions.js";
+import { IRange } from "../../editor/common/core/range.js";
+import { CursorChangeReason, ICursorPositionChangedEvent } from "../../editor/common/cursorEvents.js";
+import { IEditorContribution } from "../../editor/common/editorCommon.js";
+import { IModelDecorationsChangeAccessor, TrackedRangeStickiness } from "../../editor/common/model.js";
+import { ModelDecorationOptions } from "../../editor/common/model/textModel.js";
+import { AbstractFloatingClickMenu, FloatingClickWidget } from "../../platform/actions/browser/floatingMenu.js";
+import { IMenuService, MenuId } from "../../platform/actions/common/actions.js";
+import { IContextKeyService } from "../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../platform/keybinding/common/keybinding.js";
+import { IEditorService } from "../services/editor/common/editorService.js";
 
 export interface IRangeHighlightDecoration {
 	resource: URI;
@@ -46,8 +53,8 @@ export class RangeHighlightDecorations extends Disposable {
 		if (this.editor && this.rangeHighlightDecorationId) {
 			const decorationId = this.rangeHighlightDecorationId;
 			this.editor.changeDecorations((accessor) => {
-				accessor.removeDecoration(decorationId);
-			});
+        accessor.removeDecoration(decorationId);
+      });
 			this._onHighlightRemoved.fire();
 		}
 
@@ -96,26 +103,34 @@ export class RangeHighlightDecorations extends Disposable {
 					this.removeHighlightRange();
 				}
 			}));
-			this.editorDisposables.add(this.editor.onDidChangeModel(() => { this.removeHighlightRange(); }));
-			this.editorDisposables.add(this.editor.onDidDispose(() => {
-				this.removeHighlightRange();
-				this.editor = null;
-			}));
+			this.editorDisposables.add(
+        this.editor.onDidChangeModel(() => {
+          this.removeHighlightRange();
+        }),
+      );
+			this.editorDisposables.add(
+        this.editor.onDidDispose(() => {
+          this.removeHighlightRange();
+          this.editor = null;
+        }),
+      );
 		}
 	}
 
-	private static readonly _WHOLE_LINE_RANGE_HIGHLIGHT = ModelDecorationOptions.register({
-		description: 'codeeditor-range-highlight-whole',
-		stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
-		className: 'rangeHighlight',
-		isWholeLine: true
-	});
+	private static readonly _WHOLE_LINE_RANGE_HIGHLIGHT = ModelDecorationOptions.register(
+    {
+      description: "codeeditor-range-highlight-whole",
+      stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+      className: "rangeHighlight",
+      isWholeLine: true,
+    },
+  );
 
 	private static readonly _RANGE_HIGHLIGHT = ModelDecorationOptions.register({
-		description: 'codeeditor-range-highlight',
-		stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
-		className: 'rangeHighlight'
-	});
+    description: "codeeditor-range-highlight",
+    stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+    className: "rangeHighlight",
+  });
 
 	private createRangeHighlightDecoration(isWholeLine: boolean = true): ModelDecorationOptions {
 		return (isWholeLine ? RangeHighlightDecorations._WHOLE_LINE_RANGE_HIGHLIGHT : RangeHighlightDecorations._RANGE_HIGHLIGHT);
@@ -137,19 +152,19 @@ export class FloatingEditorClickWidget extends FloatingClickWidget implements IO
 		private editor: ICodeEditor,
 		label: string,
 		keyBindingAction: string | null,
-		@IKeybindingService keybindingService: IKeybindingService
+		@IKeybindingService keybindingService: IKeybindingService,
 	) {
 		super(keybindingService.appendKeybinding(label, keyBindingAction));
 	}
 
 	getId(): string {
-		return 'editor.overlayWidget.floatingClickWidget';
+		return "editor.overlayWidget.floatingClickWidget";
 	}
 
 	getPosition(): IOverlayWidgetPosition {
 		return {
-			preference: OverlayWidgetPositionPreference.BOTTOM_RIGHT_CORNER
-		};
+      preference: OverlayWidgetPositionPreference.BOTTOM_RIGHT_CORNER,
+    };
 	}
 
 	override render() {
@@ -165,24 +180,31 @@ export class FloatingEditorClickWidget extends FloatingClickWidget implements IO
 }
 
 export class FloatingEditorClickMenu extends AbstractFloatingClickMenu implements IEditorContribution {
-	static readonly ID = 'editor.contrib.floatingClickMenu';
+	static readonly ID = "editor.contrib.floatingClickMenu";
 
 	constructor(
 		private readonly editor: ICodeEditor,
 		@IInstantiationService private readonly instantiationService: IInstantiationService,
 		@IMenuService menuService: IMenuService,
-		@IContextKeyService contextKeyService: IContextKeyService
+		@IContextKeyService contextKeyService: IContextKeyService,
 	) {
 		super(MenuId.EditorContent, menuService, contextKeyService);
 		this.render();
 	}
 
 	protected override createWidget(action: IAction): FloatingClickWidget {
-		return this.instantiationService.createInstance(FloatingEditorClickWidget, this.editor, action.label, action.id);
+		return this.instantiationService.createInstance(
+      FloatingEditorClickWidget,
+      this.editor,
+      action.label,
+      action.id,
+    );
 	}
 
 	protected override isVisible() {
-		return !(this.editor instanceof EmbeddedCodeEditorWidget) && this.editor?.hasModel() && !this.editor.getOption(EditorOption.inDiffEditor);
+		return !(this.editor instanceof EmbeddedCodeEditorWidget) && this.editor?.hasModel() && !this.editor.getOption(
+      EditorOption.inDiffEditor,
+    );
 	}
 
 	protected override getActionArg(): unknown {

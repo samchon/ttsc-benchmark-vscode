@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../common/lifecycle.js';
-import type { IHoverDelegate2 } from './hover.js';
+import { Disposable } from "../../../common/lifecycle.js";
+import type { IHoverDelegate2 } from "./hover.js";
 
 let baseHoverDelegate: IHoverDelegate2 = {
 	showInstantHover: () => undefined,
@@ -19,7 +19,7 @@ let baseHoverDelegate: IHoverDelegate2 = {
 		hide: () => undefined,
 		update: () => undefined,
 	}),
-	showManagedHover: () => undefined
+	showManagedHover: () => undefined,
 };
 
 /**

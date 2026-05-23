@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ViewEventHandler } from '../../../common/viewEventHandler.js';
-import type { ViewportData } from '../../../common/viewLayout/viewLinesViewportData.js';
-import type { ViewContext } from '../../../common/viewModel/viewContext.js';
-import type { ViewLineOptions } from '../../viewParts/viewLines/viewLineOptions.js';
-import type { IGpuRenderStrategy } from '../gpu.js';
-import { GlyphRasterizer } from '../raster/glyphRasterizer.js';
-import type { ViewGpuContext } from '../viewGpuContext.js';
+import { ViewEventHandler } from "../../../common/viewEventHandler.js";
+import type { ViewportData } from "../../../common/viewLayout/viewLinesViewportData.js";
+import type { ViewContext } from "../../../common/viewModel/viewContext.js";
+import type { ViewLineOptions } from "../../viewParts/viewLines/viewLineOptions.js";
+import type { IGpuRenderStrategy } from "../gpu.js";
+import { GlyphRasterizer } from "../raster/glyphRasterizer.js";
+import type { ViewGpuContext } from "../viewGpuContext.js";
 
 export abstract class BaseRenderStrategy extends ViewEventHandler implements IGpuRenderStrategy {
 

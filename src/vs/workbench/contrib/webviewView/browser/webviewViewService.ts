@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { promiseWithResolvers } from '../../../../base/common/async.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable, IDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { IViewBadge } from '../../../common/views.js';
-import { IOverlayWebview } from '../../webview/browser/webview.js';
+import { promiseWithResolvers } from "../../../../base/common/async.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IViewBadge } from "../../../common/views.js";
+import { IOverlayWebview } from "../../webview/browser/webview.js";
 
 /**
  * A webview shown in a view pane.
@@ -69,7 +69,9 @@ interface IWebviewViewResolver {
 	resolve(webviewView: WebviewView, cancellation: CancellationToken): Promise<void>;
 }
 
-export const IWebviewViewService = createDecorator<IWebviewViewService>('webviewViewService');
+export const IWebviewViewService = createDecorator<IWebviewViewService>(
+  "webviewViewService",
+);
 
 export interface IWebviewViewService {
 
@@ -100,7 +102,9 @@ export class WebviewViewService extends Disposable implements IWebviewViewServic
 
 	private readonly _awaitingRevival = new Map<string, { readonly webview: WebviewView; readonly resolve: () => void }>();
 
-	private readonly _onNewResolverRegistered = this._register(new Emitter<{ readonly viewType: string }>());
+	private readonly _onNewResolverRegistered = this._register(
+    new Emitter<{ readonly viewType: string }>(),
+  );
 	public readonly onNewResolverRegistered = this._onNewResolverRegistered.event;
 
 	register(viewType: string, resolver: IWebviewViewResolver): IDisposable {
@@ -114,21 +118,21 @@ export class WebviewViewService extends Disposable implements IWebviewViewServic
 		const pending = this._awaitingRevival.get(viewType);
 		if (pending) {
 			resolver.resolve(pending.webview, CancellationToken.None).then(() => {
-				this._awaitingRevival.delete(viewType);
-				pending.resolve();
-			});
+        this._awaitingRevival.delete(viewType);
+        pending.resolve();
+      });
 		}
 
 		return toDisposable(() => {
-			this._resolvers.delete(viewType);
-		});
+      this._resolvers.delete(viewType);
+    });
 	}
 
 	resolve(viewType: string, webview: WebviewView, cancellation: CancellationToken): Promise<void> {
 		const resolver = this._resolvers.get(viewType);
 		if (!resolver) {
 			if (this._awaitingRevival.has(viewType)) {
-				throw new Error('View already awaiting revival');
+				throw new Error("View already awaiting revival");
 			}
 
 			const { promise, resolve } = promiseWithResolvers<void>();

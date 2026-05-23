@@ -3,25 +3,25 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { binarySearch, coalesceInPlace, equals } from '../../../../base/common/arrays.js';
-import { CancellationToken, CancellationTokenSource } from '../../../../base/common/cancellation.js';
-import { onUnexpectedExternalError } from '../../../../base/common/errors.js';
-import { Iterable } from '../../../../base/common/iterator.js';
-import { LRUCache } from '../../../../base/common/map.js';
-import { commonPrefixLength } from '../../../../base/common/strings.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IPosition, Position } from '../../../common/core/position.js';
-import { IRange, Range } from '../../../common/core/range.js';
-import { ITextModel } from '../../../common/model.js';
-import { DocumentSymbol, DocumentSymbolProvider } from '../../../common/languages.js';
-import { MarkerSeverity } from '../../../../platform/markers/common/markers.js';
-import { IFeatureDebounceInformation, ILanguageFeatureDebounceService } from '../../../common/services/languageFeatureDebounce.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { IModelService } from '../../../common/services/model.js';
-import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { LanguageFeatureRegistry } from '../../../common/languageFeatureRegistry.js';
-import { ILanguageFeaturesService } from '../../../common/services/languageFeatures.js';
+import { binarySearch, coalesceInPlace, equals } from "../../../../base/common/arrays.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { onUnexpectedExternalError } from "../../../../base/common/errors.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { LRUCache } from "../../../../base/common/map.js";
+import { commonPrefixLength } from "../../../../base/common/strings.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IPosition, Position } from "../../../common/core/position.js";
+import { IRange, Range } from "../../../common/core/range.js";
+import { ITextModel } from "../../../common/model.js";
+import { DocumentSymbol, DocumentSymbolProvider } from "../../../common/languages.js";
+import { MarkerSeverity } from "../../../../platform/markers/common/markers.js";
+import { IFeatureDebounceInformation, ILanguageFeatureDebounceService } from "../../../common/services/languageFeatureDebounce.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IModelService } from "../../../common/services/model.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { LanguageFeatureRegistry } from "../../../common/languageFeatureRegistry.js";
+import { ILanguageFeaturesService } from "../../../common/services/languageFeatures.js";
 
 export abstract class TreeElement {
 
@@ -37,7 +37,7 @@ export abstract class TreeElement {
 		// complex id-computation which contains the origin/extension,
 		// the parent path, and some dedupe logic when names collide
 		let candidateId: string;
-		if (typeof candidate === 'string') {
+		if (typeof candidate === "string") {
 			candidateId = `${container.id}/${candidate}`;
 		} else {
 			candidateId = `${container.id}/${candidate.name}`;
@@ -104,7 +104,7 @@ export class OutlineElement extends TreeElement {
 	constructor(
 		readonly id: string,
 		public parent: TreeElement | undefined,
-		readonly symbol: DocumentSymbol
+		readonly symbol: DocumentSymbol,
 	) {
 		super();
 	}
@@ -124,12 +124,18 @@ export class OutlineGroup extends TreeElement {
 	}
 
 	getItemEnclosingPosition(position: IPosition): OutlineElement | undefined {
-		return position ? this._getItemEnclosingPosition(position, this.children) : undefined;
+		return position ? this._getItemEnclosingPosition(
+      position,
+      this.children,
+    ) : undefined;
 	}
 
 	private _getItemEnclosingPosition(position: IPosition, children: Map<string, OutlineElement>): OutlineElement | undefined {
 		for (const [, item] of children) {
-			if (!item.symbol.range || !Range.containsPosition(item.symbol.range, position)) {
+			if (!item.symbol.range || !Range.containsPosition(
+        item.symbol.range,
+        position,
+      )) {
 				continue;
 			}
 			return this._getItemEnclosingPosition(position, item.children) || item;
@@ -147,11 +153,18 @@ export class OutlineGroup extends TreeElement {
 		item.marker = undefined;
 
 		// find the proper start index to check for item/marker overlap.
-		const idx = binarySearch<IRange>(markers, item.symbol.range, Range.compareRangesUsingStarts);
+		const idx = binarySearch<IRange>(
+      markers,
+      item.symbol.range,
+      Range.compareRangesUsingStarts,
+    );
 		let start: number;
 		if (idx < 0) {
 			start = ~idx;
-			if (start > 0 && Range.areIntersecting(markers[start - 1], item.symbol.range)) {
+			if (start > 0 && Range.areIntersecting(
+        markers[start - 1],
+        item.symbol.range,
+      )) {
 				start -= 1;
 			}
 		} else {
@@ -161,7 +174,10 @@ export class OutlineGroup extends TreeElement {
 		const myMarkers: IOutlineMarker[] = [];
 		let myTopSev: MarkerSeverity | undefined;
 
-		for (; start < markers.length && Range.areIntersecting(item.symbol.range, markers[start]); start++) {
+		for (; start < markers.length && Range.areIntersecting(
+      item.symbol.range,
+      markers[start],
+    ); start++) {
 			// remove markers intersecting with this outline element
 			// and store them in a 'private' array.
 			const marker = markers[start];
@@ -182,9 +198,9 @@ export class OutlineGroup extends TreeElement {
 
 		if (myTopSev) {
 			item.marker = {
-				count: myMarkers.length,
-				topSev: myTopSev
-			};
+        count: myMarkers.length,
+        topSev: myTopSev,
+      };
 		}
 
 		coalesceInPlace(markers);
@@ -201,7 +217,7 @@ export class OutlineModel extends TreeElement {
 		const promises = provider.map((provider, index) => {
 
 			const id = TreeElement.findId(`provider_${index}`, result);
-			const group = new OutlineGroup(id, result, provider.displayName ?? 'Unknown Outline Provider', index);
+			const group = new OutlineGroup(id, result, provider.displayName ?? "Unknown Outline Provider", index);
 
 
 			return Promise.resolve(provider.provideDocumentSymbols(textModel, cts.token)).then(result => {
@@ -262,7 +278,7 @@ export class OutlineModel extends TreeElement {
 		return undefined;
 	}
 
-	readonly id = 'root';
+	readonly id = "root";
 	readonly parent = undefined;
 
 	protected _groups = new Map<string, OutlineGroup>();
@@ -271,7 +287,7 @@ export class OutlineModel extends TreeElement {
 	protected constructor(readonly uri: URI) {
 		super();
 
-		this.id = 'root';
+		this.id = "root";
 		this.parent = undefined;
 	}
 
@@ -354,44 +370,54 @@ export class OutlineModel extends TreeElement {
 			if (child instanceof OutlineElement) {
 				roots.push(child.symbol);
 			} else {
-				roots.push(...Iterable.map(child.children.values(), child => child.symbol));
+				roots.push(
+          ...Iterable.map(child.children.values(), child => child.symbol),
+        );
 			}
 		}
-		return roots.sort((a, b) => Range.compareRangesUsingStarts(a.range, b.range));
+		return roots.sort(
+      (a, b) => Range.compareRangesUsingStarts(a.range, b.range),
+    );
 	}
 
 	asListOfDocumentSymbols(): DocumentSymbol[] {
 		const roots = this.getTopLevelSymbols();
 		const bucket: DocumentSymbol[] = [];
-		OutlineModel._flattenDocumentSymbols(bucket, roots, '');
+		OutlineModel._flattenDocumentSymbols(bucket, roots, "");
 		return bucket.sort((a, b) =>
-			Position.compare(Range.getStartPosition(a.range), Range.getStartPosition(b.range)) || Position.compare(Range.getEndPosition(b.range), Range.getEndPosition(a.range))
+			Position.compare(Range.getStartPosition(a.range), Range.getStartPosition(b.range)) || Position.compare(Range.getEndPosition(b.range), Range.getEndPosition(a.range)),
 		);
 	}
 
 	private static _flattenDocumentSymbols(bucket: DocumentSymbol[], entries: DocumentSymbol[], overrideContainerLabel: string): void {
 		for (const entry of entries) {
 			bucket.push({
-				kind: entry.kind,
-				tags: entry.tags,
-				name: entry.name,
-				detail: entry.detail,
-				containerName: entry.containerName || overrideContainerLabel,
-				range: entry.range,
-				selectionRange: entry.selectionRange,
-				children: undefined, // we flatten it...
-			});
+        kind: entry.kind,
+        tags: entry.tags,
+        name: entry.name,
+        detail: entry.detail,
+        containerName: entry.containerName || overrideContainerLabel,
+        range: entry.range,
+        selectionRange: entry.selectionRange,
+        children: undefined,
+      });
 
 			// Recurse over children
 			if (entry.children) {
-				OutlineModel._flattenDocumentSymbols(bucket, entry.children, entry.name);
+				OutlineModel._flattenDocumentSymbols(
+          bucket,
+          entry.children,
+          entry.name,
+        );
 			}
 		}
 	}
 }
 
 
-export const IOutlineModelService = createDecorator<IOutlineModelService>('IOutlineModelService');
+export const IOutlineModelService = createDecorator<IOutlineModelService>(
+  "IOutlineModelService",
+);
 
 export interface IOutlineModelService {
 	_serviceBrand: undefined;
@@ -421,14 +447,20 @@ export class OutlineModelService implements IOutlineModelService {
 	constructor(
 		@ILanguageFeaturesService private readonly _languageFeaturesService: ILanguageFeaturesService,
 		@ILanguageFeatureDebounceService debounces: ILanguageFeatureDebounceService,
-		@IModelService modelService: IModelService
+		@IModelService modelService: IModelService,
 	) {
-		this._debounceInformation = debounces.for(_languageFeaturesService.documentSymbolProvider, 'DocumentSymbols', { min: 350 });
+		this._debounceInformation = debounces.for(
+      _languageFeaturesService.documentSymbolProvider,
+      "DocumentSymbols",
+      { min: 350 },
+    );
 
 		// don't cache outline models longer than their text model
-		this._disposables.add(modelService.onModelRemoved(textModel => {
-			this._cache.delete(textModel.id);
-		}));
+		this._disposables.add(
+      modelService.onModelRemoved(textModel => {
+        this._cache.delete(textModel.id);
+      }),
+    );
 	}
 
 	dispose(): void {
@@ -441,16 +473,19 @@ export class OutlineModelService implements IOutlineModelService {
 		const provider = registry.ordered(textModel);
 
 		let data = this._cache.get(textModel.id);
-		if (!data || data.versionId !== textModel.getVersionId() || !equals(data.provider, provider)) {
+		if (!data || data.versionId !== textModel.getVersionId() || !equals(
+      data.provider,
+      provider,
+    )) {
 			const source = new CancellationTokenSource();
 			data = {
-				versionId: textModel.getVersionId(),
-				provider,
-				promiseCnt: 0,
-				source,
-				promise: OutlineModel.create(registry, textModel, source.token),
-				model: undefined,
-			};
+        versionId: textModel.getVersionId(),
+        provider,
+        promiseCnt: 0,
+        source,
+        promise: OutlineModel.create(registry, textModel, source.token),
+        model: undefined,
+      };
 			this._cache.set(textModel.id, data);
 
 			const now = Date.now();
@@ -490,8 +525,15 @@ export class OutlineModelService implements IOutlineModelService {
 	}
 
 	getCachedModels(): Iterable<OutlineModel> {
-		return Iterable.filter<OutlineModel | undefined, OutlineModel>(Iterable.map(this._cache.values(), entry => entry.model), model => model !== undefined);
+		return Iterable.filter<OutlineModel | undefined, OutlineModel>(
+      Iterable.map(this._cache.values(), entry => entry.model),
+      model => model !== undefined,
+    );
 	}
 }
 
-registerSingleton(IOutlineModelService, OutlineModelService, InstantiationType.Delayed);
+registerSingleton(
+  IOutlineModelService,
+  OutlineModelService,
+  InstantiationType.Delayed,
+);

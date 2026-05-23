@@ -20,7 +20,11 @@ class NotebookLogger {
 
 	debug(...args: unknown[]) {
 		const date = new Date();
-		console.log(`${date.getSeconds()}:${date.getMilliseconds().toString().padStart(3, '0')}`, `frame #${this._frameId}: `, ...args);
+		console.log(
+      `${date.getSeconds()}:${date.getMilliseconds().toString().padStart(3, "0")}`,
+      `frame #${this._frameId}: `,
+      ...args,
+    );
 	}
 }
 

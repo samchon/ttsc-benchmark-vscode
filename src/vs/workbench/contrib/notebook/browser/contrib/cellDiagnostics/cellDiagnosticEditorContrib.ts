@@ -3,23 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable, toDisposable } from '../../../../../../base/common/lifecycle.js';
-import { IMarkerData, IMarkerService } from '../../../../../../platform/markers/common/markers.js';
-import { IRange } from '../../../../../../editor/common/core/range.js';
-import { ICellExecutionStateChangedEvent, IExecutionStateChangedEvent, INotebookExecutionStateService, NotebookExecutionType } from '../../../common/notebookExecutionStateService.js';
-import { IConfigurationService } from '../../../../../../platform/configuration/common/configuration.js';
-import { CellKind, NotebookSetting } from '../../../common/notebookCommon.js';
-import { INotebookEditor, INotebookEditorContribution } from '../../notebookBrowser.js';
-import { registerNotebookContribution } from '../../notebookEditorExtensions.js';
-import { CodeCellViewModel } from '../../viewModel/codeCellViewModel.js';
-import { Event } from '../../../../../../base/common/event.js';
-import { IChatAgentService } from '../../../../chat/common/participants/chatAgents.js';
-import { ChatAgentLocation } from '../../../../chat/common/constants.js';
-import { autorun } from '../../../../../../base/common/observable.js';
+import { Disposable, IDisposable, toDisposable } from "../../../../../../base/common/lifecycle.js";
+import { IMarkerData, IMarkerService } from "../../../../../../platform/markers/common/markers.js";
+import { IRange } from "../../../../../../editor/common/core/range.js";
+import {
+  ICellExecutionStateChangedEvent,
+  IExecutionStateChangedEvent,
+  INotebookExecutionStateService,
+  NotebookExecutionType,
+} from "../../../common/notebookExecutionStateService.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { CellKind, NotebookSetting } from "../../../common/notebookCommon.js";
+import { INotebookEditor, INotebookEditorContribution } from "../../notebookBrowser.js";
+import { registerNotebookContribution } from "../../notebookEditorExtensions.js";
+import { CodeCellViewModel } from "../../viewModel/codeCellViewModel.js";
+import { Event } from "../../../../../../base/common/event.js";
+import { IChatAgentService } from "../../../../chat/common/participants/chatAgents.js";
+import { ChatAgentLocation } from "../../../../chat/common/constants.js";
+import { autorun } from "../../../../../../base/common/observable.js";
 
 export class CellDiagnostics extends Disposable implements INotebookEditorContribution {
 
-	static ID: string = 'workbench.notebook.cellDiagnostics';
+	static ID: string = "workbench.notebook.cellDiagnostics";
 
 	private enabled = false;
 	private listening = false;
@@ -30,13 +35,15 @@ export class CellDiagnostics extends Disposable implements INotebookEditorContri
 		@INotebookExecutionStateService private readonly notebookExecutionStateService: INotebookExecutionStateService,
 		@IMarkerService private readonly markerService: IMarkerService,
 		@IChatAgentService private readonly chatAgentService: IChatAgentService,
-		@IConfigurationService private readonly configurationService: IConfigurationService
+		@IConfigurationService private readonly configurationService: IConfigurationService,
 	) {
 		super();
 
 		this.updateEnabled();
 
-		this._register(chatAgentService.onDidChangeAgents(() => this.updateEnabled()));
+		this._register(
+      chatAgentService.onDidChangeAgents(() => this.updateEnabled()),
+    );
 		this._register(configurationService.onDidChangeConfiguration((e) => {
 			if (e.affectsConfiguration(NotebookSetting.cellFailureDiagnostics)) {
 				this.updateEnabled();
@@ -46,11 +53,15 @@ export class CellDiagnostics extends Disposable implements INotebookEditorContri
 
 	private hasNotebookAgent(): boolean {
 		const agents = this.chatAgentService.getAgents();
-		return !!agents.find(agent => agent.locations.includes(ChatAgentLocation.Notebook));
+		return !!agents.find(
+      agent => agent.locations.includes(ChatAgentLocation.Notebook),
+    );
 	}
 
 	private updateEnabled() {
-		const settingEnabled = this.configurationService.getValue(NotebookSetting.cellFailureDiagnostics);
+		const settingEnabled = this.configurationService.getValue(
+      NotebookSetting.cellFailureDiagnostics,
+    );
 		if (this.enabled && (!settingEnabled || !this.hasNotebookAgent())) {
 			this.enabled = false;
 			this.clearAll();
@@ -59,7 +70,7 @@ export class CellDiagnostics extends Disposable implements INotebookEditorContri
 			if (!this.listening) {
 				this.listening = true;
 				this._register(Event.accumulate<ICellExecutionStateChangedEvent | IExecutionStateChangedEvent>(
-					this.notebookExecutionStateService.onDidChangeExecution, 200
+					this.notebookExecutionStateService.onDidChangeExecution, 200,
 				)((e) => this.handleChangeExecutionState(e)));
 			}
 		}
@@ -74,7 +85,9 @@ export class CellDiagnostics extends Disposable implements INotebookEditorContri
 		for (const e of changes.reverse()) {
 
 			const notebookUri = this.notebookEditor.textModel?.uri;
-			if (e.type === NotebookExecutionType.cell && notebookUri && e.affectsNotebook(notebookUri) && !handled.has(e.cellHandle)) {
+			if (e.type === NotebookExecutionType.cell && notebookUri && e.affectsNotebook(
+        notebookUri,
+      ) && !handled.has(e.cellHandle)) {
 				handled.add(e.cellHandle);
 				if (!!e.changed) {
 					// cell is running
@@ -119,9 +132,17 @@ export class CellDiagnostics extends Disposable implements INotebookEditorContri
 			const errorLabel = metadata.error.name ? `${metadata.error.name}: ${metadata.error.message}` : metadata.error.message;
 			const marker = this.createMarkerData(errorLabel, metadata.error.location);
 			this.markerService.changeOne(CellDiagnostics.ID, cell.uri, [marker]);
-			disposables.push(toDisposable(() => this.markerService.changeOne(CellDiagnostics.ID, cell.uri, [])));
+			disposables.push(
+        toDisposable(
+          () => this.markerService.changeOne(CellDiagnostics.ID, cell.uri, []),
+        ),
+      );
 			cell.executionErrorDiagnostic.set(metadata.error, undefined);
-			disposables.push(toDisposable(() => cell.executionErrorDiagnostic.set(undefined, undefined)));
+			disposables.push(
+        toDisposable(
+          () => cell.executionErrorDiagnostic.set(undefined, undefined),
+        ),
+      );
 			disposables.push(autorun((r) => {
 				if (!cell.executionErrorDiagnostic.read(r)) {
 					this.clear(cellHandle);
@@ -132,23 +153,25 @@ export class CellDiagnostics extends Disposable implements INotebookEditorContri
 					this.clear(cellHandle);
 				}
 			}));
-			disposables.push(cell.model.onDidChangeContent(() => {
-				this.clear(cellHandle);
-			}));
+			disposables.push(
+        cell.model.onDidChangeContent(() => {
+          this.clear(cellHandle);
+        }),
+      );
 			this.diagnosticsByHandle.set(cellHandle, disposables);
 		}
 	}
 
 	private createMarkerData(message: string, location: IRange): IMarkerData {
 		return {
-			severity: 8,
-			message: message,
-			startLineNumber: location.startLineNumber + 1,
-			startColumn: location.startColumn + 1,
-			endLineNumber: location.endLineNumber + 1,
-			endColumn: location.endColumn + 1,
-			source: 'Cell Execution Error'
-		};
+      severity: 8,
+      message: message,
+      startLineNumber: location.startLineNumber + 1,
+      startColumn: location.startColumn + 1,
+      endLineNumber: location.endLineNumber + 1,
+      endColumn: location.endColumn + 1,
+      source: "Cell Execution Error",
+    };
 	}
 
 	override dispose() {

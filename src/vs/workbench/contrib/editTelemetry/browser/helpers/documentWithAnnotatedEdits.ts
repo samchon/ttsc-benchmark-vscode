@@ -3,17 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AsyncReader, AsyncReaderEndOfStream } from '../../../../../base/common/async.js';
-import { CachedFunction } from '../../../../../base/common/cache.js';
-import { Disposable, DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { IObservableWithChange, ISettableObservable, observableValue, runOnChange } from '../../../../../base/common/observable.js';
-import { AnnotatedStringEdit, IEditData, StringEdit } from '../../../../../editor/common/core/edits/stringEdit.js';
-import { StringText } from '../../../../../editor/common/core/text/abstractText.js';
-import { IEditorWorkerService } from '../../../../../editor/common/services/editorWorker.js';
-import { TextModelEditSource } from '../../../../../editor/common/textModelEditSource.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IObservableDocument } from './observableWorkspace.js';
-import { iterateObservableChanges, mapObservableDelta } from './utils.js';
+import { AsyncReader, AsyncReaderEndOfStream } from "../../../../../base/common/async.js";
+import { CachedFunction } from "../../../../../base/common/cache.js";
+import { Disposable, DisposableStore } from "../../../../../base/common/lifecycle.js";
+import {
+  IObservableWithChange,
+  ISettableObservable,
+  observableValue,
+  runOnChange,
+} from "../../../../../base/common/observable.js";
+import { AnnotatedStringEdit, IEditData, StringEdit } from "../../../../../editor/common/core/edits/stringEdit.js";
+import { StringText } from "../../../../../editor/common/core/text/abstractText.js";
+import { IEditorWorkerService } from "../../../../../editor/common/services/editorWorker.js";
+import { TextModelEditSource } from "../../../../../editor/common/textModelEditSource.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IObservableDocument } from "./observableWorkspace.js";
+import { iterateObservableChanges, mapObservableDelta } from "./utils.js";
 
 export interface IDocumentWithAnnotatedEdits<TEditData extends IEditData<TEditData> = EditKeySourceData> {
 	readonly value: IObservableWithChange<StringText, { edit: AnnotatedStringEdit<TEditData> }>;
@@ -55,7 +60,7 @@ export class EditSourceData implements IEditData<EditSourceData> {
 	public readonly key;
 
 	constructor(
-		public readonly editSource: TextModelEditSource
+		public readonly editSource: TextModelEditSource,
 	) {
 		this.key = this.editSource.toKey(1);
 		this.source = EditSourceBase.create(this.editSource);
@@ -93,38 +98,55 @@ export class EditKeySourceData implements IEditData<EditKeySourceData> {
 }
 
 export abstract class EditSourceBase {
-	private static _cache = new CachedFunction({ getCacheKey: v => v.toString() }, (arg: EditSource) => arg);
+	private static _cache = new CachedFunction(
+    { getCacheKey: v => v.toString() },
+    (arg: EditSource) => arg,
+  );
 
 	public static create(reason: TextModelEditSource): EditSource {
 		const data = reason.metadata;
 		switch (data.source) {
-			case 'reloadFromDisk':
+			case "reloadFromDisk":
 				return this._cache.get(new ExternalEditSource());
-			case 'inlineCompletionPartialAccept':
-			case 'inlineCompletionAccept': {
-				const type = 'type' in data ? data.type : undefined;
-				if ('$nes' in data && data.$nes) {
-					return this._cache.get(new InlineSuggestEditSource('nes', data.$extensionId ?? '', data.$providerId ?? '', type));
+			case "inlineCompletionPartialAccept":
+			case "inlineCompletionAccept": {
+				const type = "type" in data ? data.type : undefined;
+				if ("$nes" in data && data.$nes) {
+					return this._cache.get(
+            new InlineSuggestEditSource(
+              "nes",
+              data.$extensionId ?? "",
+              data.$providerId ?? "",
+              type,
+            ),
+          );
 				}
-				return this._cache.get(new InlineSuggestEditSource('completion', data.$extensionId ?? '', data.$providerId ?? '', type));
+				return this._cache.get(
+          new InlineSuggestEditSource(
+            "completion",
+            data.$extensionId ?? "",
+            data.$providerId ?? "",
+            type,
+          ),
+        );
 			}
-			case 'snippet':
-				return this._cache.get(new IdeEditSource('suggest'));
-			case 'unknown':
+			case "snippet":
+				return this._cache.get(new IdeEditSource("suggest"));
+			case "unknown":
 				if (!data.name) {
 					return this._cache.get(new UnknownEditSource());
 				}
 				switch (data.name) {
-					case 'formatEditsCommand':
-						return this._cache.get(new IdeEditSource('format'));
+					case "formatEditsCommand":
+						return this._cache.get(new IdeEditSource("format"));
 				}
 				return this._cache.get(new UnknownEditSource());
 
-			case 'Chat.applyEdits':
-				return this._cache.get(new ChatEditSource('sidebar'));
-			case 'inlineChat.applyEdits':
-				return this._cache.get(new ChatEditSource('inline'));
-			case 'cursor':
+			case "Chat.applyEdits":
+				return this._cache.get(new ChatEditSource("sidebar"));
+			case "inlineChat.applyEdits":
+				return this._cache.get(new ChatEditSource("inline"));
+			case "cursor":
 				return this._cache.get(new UserEditSource());
 			default:
 				return this._cache.get(new UnknownEditSource());
@@ -137,69 +159,69 @@ export abstract class EditSourceBase {
 export type EditSource = InlineSuggestEditSource | ChatEditSource | IdeEditSource | UserEditSource | UnknownEditSource | ExternalEditSource;
 
 export class InlineSuggestEditSource extends EditSourceBase {
-	public readonly category = 'ai';
-	public readonly feature = 'inlineSuggest';
+	public readonly category = "ai";
+	public readonly feature = "inlineSuggest";
 	constructor(
-		public readonly kind: 'completion' | 'nes',
+		public readonly kind: "completion" | "nes",
 		public readonly extensionId: string,
 		public readonly providerId: string,
-		public readonly type: 'word' | 'line' | undefined,
+		public readonly type: "word" | "line" | undefined,
 	) { super(); }
 
 	override toString() { return `${this.category}/${this.feature}/${this.kind}/${this.extensionId}/${this.type}`; }
 
-	public getColor(): string { return '#00ff0033'; }
+	public getColor(): string { return "#00ff0033"; }
 }
 
 class ChatEditSource extends EditSourceBase {
-	public readonly category = 'ai';
-	public readonly feature = 'chat';
+	public readonly category = "ai";
+	public readonly feature = "chat";
 	constructor(
-		public readonly kind: 'sidebar' | 'inline',
+		public readonly kind: "sidebar" | "inline",
 	) { super(); }
 
 	override toString() { return `${this.category}/${this.feature}/${this.kind}`; }
 
-	public getColor(): string { return '#00ff0066'; }
+	public getColor(): string { return "#00ff0066"; }
 }
 
 class IdeEditSource extends EditSourceBase {
-	public readonly category = 'ide';
+	public readonly category = "ide";
 	constructor(
-		public readonly feature: 'suggest' | 'format' | string,
+		public readonly feature: "suggest" | "format" | string,
 	) { super(); }
 
 	override toString() { return `${this.category}/${this.feature}`; }
 
-	public getColor(): string { return this.feature === 'format' ? '#0000ff33' : '#80808033'; }
+	public getColor(): string { return this.feature === "format" ? "#0000ff33" : "#80808033"; }
 }
 
 class UserEditSource extends EditSourceBase {
-	public readonly category = 'user';
+	public readonly category = "user";
 	constructor() { super(); }
 
 	override toString() { return this.category; }
 
-	public getColor(): string { return '#d3d3d333'; }
+	public getColor(): string { return "#d3d3d333"; }
 }
 
 /** Caused by external tools that trigger a reload from disk */
 class ExternalEditSource extends EditSourceBase {
-	public readonly category = 'external';
+	public readonly category = "external";
 	constructor() { super(); }
 
 	override toString() { return this.category; }
 
-	public getColor(): string { return '#009ab254'; }
+	public getColor(): string { return "#009ab254"; }
 }
 
 class UnknownEditSource extends EditSourceBase {
-	public readonly category = 'unknown';
+	public readonly category = "unknown";
 	constructor() { super(); }
 
 	override toString() { return this.category; }
 
-	public getColor(): string { return '#ff000033'; }
+	public getColor(): string { return "#ff000033"; }
 }
 
 export class CombineStreamedChanges<TEditData extends (EditKeySourceData | EditSourceData) & IEditData<TEditData>> extends Disposable implements IDocumentWithAnnotatedEdits<TEditData> {
@@ -245,7 +267,9 @@ export class CombineStreamedChanges<TEditData extends (EditKeySourceData | EditS
 				do {
 					reader.readBufferedOrThrow();
 					last = peeked;
-					chatEdit = chatEdit.compose(AnnotatedStringEdit.compose(peeked.change.map(c => c.edit)));
+					chatEdit = chatEdit.compose(
+            AnnotatedStringEdit.compose(peeked.change.map(c => c.edit)),
+          );
 					const peekedOrUndefined = await reader.peekTimeout(1000);
 					if (!peekedOrUndefined) {
 						break;
@@ -255,7 +279,10 @@ export class CombineStreamedChanges<TEditData extends (EditKeySourceData | EditS
 
 				if (!chatEdit.isEmpty()) {
 					const data = chatEdit.replacements[0].data;
-					const diffEdit = await this._diffService.computeDiff(first.prevValue.value, last.value.value);
+					const diffEdit = await this._diffService.computeDiff(
+            first.prevValue.value,
+            last.value.value,
+          );
 					const edit = diffEdit.mapData(_e => data);
 					this._value.set(last.value, undefined, { edit });
 				}
@@ -280,14 +307,19 @@ export class DiffService {
 	}
 
 	public async computeDiff(original: string, modified: string): Promise<StringEdit> {
-		const diffEdit = await this._editorWorkerService.computeStringEditFromDiff(original, modified, { maxComputationTimeMs: 500 }, 'advanced');
+		const diffEdit = await this._editorWorkerService.computeStringEditFromDiff(
+      original,
+      modified,
+      { maxComputationTimeMs: 500 },
+      "advanced",
+    );
 		return diffEdit;
 	}
 }
 
 function isChatEdit(next: { value: StringText; change: { edit: AnnotatedStringEdit<EditKeySourceData | EditSourceData> }[] }) {
 	return next.change.every(c => c.edit.replacements.every(e => {
-		if (e.data.source.category === 'ai' && e.data.source.feature === 'chat') {
+		if (e.data.source.category === "ai" && e.data.source.feature === "chat") {
 			return true;
 		}
 		return false;
@@ -305,14 +337,16 @@ export class MinimizeEditsProcessor<TEditData extends IEditData<TEditData>> exte
 		const v = this.value = observableValue(this, _originalDoc.value.get());
 
 		let prevValue: string = this._originalDoc.value.get().value;
-		this._register(runOnChange(this._originalDoc.value, (val, _prevVal, edits) => {
-			const eComposed = AnnotatedStringEdit.compose(edits.map(e => e.edit));
+		this._register(
+      runOnChange(this._originalDoc.value, (val, _prevVal, edits) => {
+        const eComposed = AnnotatedStringEdit.compose(edits.map(e => e.edit));
 
-			const e = eComposed.removeCommonSuffixAndPrefix(prevValue);
-			prevValue = val.value;
+        const e = eComposed.removeCommonSuffixAndPrefix(prevValue);
+        prevValue = val.value;
 
-			v.set(val, undefined, { edit: e });
-		}));
+        v.set(val, undefined, { edit: e });
+      }),
+    );
 	}
 
 	async waitForQueue(): Promise<void> {
@@ -325,9 +359,9 @@ export class MinimizeEditsProcessor<TEditData extends IEditData<TEditData>> exte
  */
 export function createDocWithJustReason(docWithAnnotatedEdits: IDocumentWithAnnotatedEdits<EditSourceData>, store: DisposableStore): IDocumentWithAnnotatedEdits<EditKeySourceData> {
 	const docWithJustReason: IDocumentWithAnnotatedEdits<EditKeySourceData> = {
-		value: mapObservableDelta(docWithAnnotatedEdits.value, edit => ({ edit: edit.edit.mapData(d => d.data.toEditSourceData()) }), store),
-		waitForQueue: () => docWithAnnotatedEdits.waitForQueue(),
-	};
+    value: mapObservableDelta(docWithAnnotatedEdits.value, edit => ({ edit: edit.edit.mapData(d => d.data.toEditSourceData()) }), store),
+    waitForQueue: () => docWithAnnotatedEdits.waitForQueue(),
+  };
 	return docWithJustReason;
 }
 

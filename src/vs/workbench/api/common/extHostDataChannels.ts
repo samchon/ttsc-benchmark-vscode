@@ -3,20 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type * as vscode from 'vscode';
-import { Emitter, Event } from '../../../base/common/event.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { ExtHostDataChannelsShape } from './extHost.protocol.js';
-import { checkProposedApiEnabled } from '../../services/extensions/common/extensions.js';
-import { IExtensionDescription } from '../../../platform/extensions/common/extensions.js';
-import { createDecorator } from '../../../platform/instantiation/common/instantiation.js';
+import type * as vscode from "vscode";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { ExtHostDataChannelsShape } from "./extHost.protocol.js";
+import { checkProposedApiEnabled } from "../../services/extensions/common/extensions.js";
+import { IExtensionDescription } from "../../../platform/extensions/common/extensions.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
 
 export interface IExtHostDataChannels extends ExtHostDataChannelsShape {
 	readonly _serviceBrand: undefined;
 	createDataChannel<T>(extension: IExtensionDescription, channelId: string): vscode.DataChannel<T>;
 }
 
-export const IExtHostDataChannels = createDecorator<IExtHostDataChannels>('IExtHostDataChannels');
+export const IExtHostDataChannels = createDecorator<IExtHostDataChannels>(
+  "IExtHostDataChannels",
+);
 
 export class ExtHostDataChannels implements IExtHostDataChannels {
 	declare readonly _serviceBrand: undefined;
@@ -27,7 +29,7 @@ export class ExtHostDataChannels implements IExtHostDataChannels {
 	}
 
 	createDataChannel<T>(extension: IExtensionDescription, channelId: string): vscode.DataChannel<T> {
-		checkProposedApiEnabled(extension, 'dataChannels');
+		checkProposedApiEnabled(extension, "dataChannels");
 
 		let channel = this._channels.get(channelId);
 		if (!channel) {

@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { range } from './arrays.js';
-import { CancellationToken, CancellationTokenSource } from './cancellation.js';
-import { CancellationError } from './errors.js';
-import { Event, Emitter } from './event.js';
+import { range } from "./arrays.js";
+import { CancellationToken, CancellationTokenSource } from "./cancellation.js";
+import { CancellationError } from "./errors.js";
+import { Event, Emitter } from "./event.js";
 
 /**
  * A Pager is a stateless abstraction over a paged collection.
@@ -45,12 +45,12 @@ interface IPage<T> {
 
 function createPage<T>(elements?: T[]): IPage<T> {
 	return {
-		isResolved: !!elements,
-		promise: null,
-		cts: null,
-		promiseIndexes: new Set<number>(),
-		elements: elements || []
-	};
+    isResolved: !!elements,
+    promise: null,
+    cts: null,
+    promiseIndexes: new Set<number>(),
+    elements: elements || [],
+  };
 }
 
 /**
@@ -71,7 +71,7 @@ export function singlePagePager<T>(elements: T[]): IPager<T> {
 		pageSize: elements.length,
 		getPage: (pageIndex: number, cancellationToken: CancellationToken): Promise<T[]> => {
 			return Promise.resolve(elements);
-		}
+		},
 	};
 }
 
@@ -89,9 +89,9 @@ export class PagedModel<T> implements IPagedModel<T> {
 		const totalPages = Math.ceil(this.pager.total / this.pager.pageSize);
 
 		this.pages = [
-			createPage(this.pager.firstPage.slice()),
-			...range(totalPages - 1).map(() => createPage<T>())
-		];
+      createPage(this.pager.firstPage.slice()),
+      ...range(totalPages - 1).map(() => createPage<T>()),
+    ];
 	}
 
 	isResolved(index: number): boolean {
@@ -232,7 +232,9 @@ export class PageIteratorPager<T> implements IPager<T> {
 
 		// If we're complete and don't have this page, it doesn't exist
 		if (this.isComplete) {
-			throw new Error(`Page ${pageIndex} is out of bounds. Total pages: ${this.cachedPages.length}`);
+			throw new Error(
+        `Page ${pageIndex} is out of bounds. Total pages: ${this.cachedPages.length}`,
+      );
 		}
 
 
@@ -254,7 +256,9 @@ export class PageIteratorPager<T> implements IPager<T> {
 		try {
 			await promise;
 			if (pageIndex >= this.cachedPages.length) {
-				throw new Error(`Page ${pageIndex} is out of bounds. Total pages: ${this.cachedPages.length}`);
+				throw new Error(
+          `Page ${pageIndex} is out of bounds. Total pages: ${this.cachedPages.length}`,
+        );
 			}
 			return this.cachedPages[pageIndex];
 		} finally {
@@ -268,7 +272,9 @@ export class PageIteratorPager<T> implements IPager<T> {
 				throw new CancellationError();
 			}
 
-			this.currentIterator = await this.currentIterator.getNextPage(cancellationToken);
+			this.currentIterator = await this.currentIterator.getNextPage(
+        cancellationToken,
+      );
 			this.cachedPages.push([...this.currentIterator.elements]);
 		}
 		if (!this.currentIterator.hasNextPage) {
@@ -317,7 +323,7 @@ export class IterativePagedModel<T> implements IPagedModel<T> {
 		if (index < this.items.length) {
 			return this.items[index];
 		}
-		throw new Error('Item not resolved yet');
+		throw new Error("Item not resolved yet");
 	}
 
 	/**
@@ -338,7 +344,7 @@ export class IterativePagedModel<T> implements IPagedModel<T> {
 			return this.items[index];
 		}
 
-		throw new Error('Index out of bounds');
+		throw new Error("Index out of bounds");
 	}
 
 	private async loadNextPage(cancellationToken: CancellationToken): Promise<void> {
@@ -384,9 +390,9 @@ export class IterativePagedModel<T> implements IPagedModel<T> {
  */
 export function mapPager<T, R>(pager: IPager<T>, fn: (t: T) => R): IPager<R> {
 	return {
-		firstPage: pager.firstPage.map(fn),
-		total: pager.total,
-		pageSize: pager.pageSize,
-		getPage: (pageIndex, token) => pager.getPage(pageIndex, token).then(r => r.map(fn))
-	};
+    firstPage: pager.firstPage.map(fn),
+    total: pager.total,
+    pageSize: pager.pageSize,
+    getPage: (pageIndex, token) => pager.getPage(pageIndex, token).then(r => r.map(fn)),
+  };
 }

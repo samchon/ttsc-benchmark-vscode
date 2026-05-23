@@ -3,18 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IAction } from '../../../../../../base/common/actions.js';
-import { IMarkdownString } from '../../../../../../base/common/htmlContent.js';
-import { IObservable, observableValue } from '../../../../../../base/common/observable.js';
-import { ElicitationState, IChatElicitationRequest, IChatElicitationRequestSerialized } from '../../chatService/chatService.js';
-import { ToolDataSource } from '../../tools/languageModelToolsService.js';
+import { IAction } from "../../../../../../base/common/actions.js";
+import { IMarkdownString } from "../../../../../../base/common/htmlContent.js";
+import { IObservable, observableValue } from "../../../../../../base/common/observable.js";
+import {
+  ElicitationState,
+  IChatElicitationRequest,
+  IChatElicitationRequestSerialized,
+} from "../../chatService/chatService.js";
+import { ToolDataSource } from "../../tools/languageModelToolsService.js";
 
 export class ChatElicitationRequestPart implements IChatElicitationRequest {
-	public readonly kind = 'elicitation2';
-	public state = observableValue('state', ElicitationState.Pending);
+	public readonly kind = "elicitation2";
+	public state = observableValue("state", ElicitationState.Pending);
 	public acceptedResult?: Record<string, unknown>;
 
-	private readonly _isHiddenValue = observableValue<boolean>('isHidden', false);
+	private readonly _isHiddenValue = observableValue<boolean>("isHidden", false);
 	public readonly isHidden: IObservable<boolean> = this._isHiddenValue;
 	public reject?: (() => Promise<void>) | undefined;
 
@@ -42,8 +46,8 @@ export class ChatElicitationRequestPart implements IChatElicitationRequest {
 
 	accept(value: IAction | true): Promise<void> {
 		return this._accept(value).then(state => {
-			this.state.set(state, undefined);
-		});
+      this.state.set(state, undefined);
+    });
 	}
 
 	hide(): void {
@@ -61,14 +65,14 @@ export class ChatElicitationRequestPart implements IChatElicitationRequest {
 		const state = this.state.get();
 
 		return {
-			kind: 'elicitationSerialized',
-			title: this.title,
-			message: this.message,
-			state: state === ElicitationState.Pending ? ElicitationState.Rejected : state,
-			acceptedResult: this.acceptedResult,
-			subtitle: this.subtitle,
-			source: this.source,
-			isHidden: this._isHiddenValue.get(),
-		} satisfies IChatElicitationRequestSerialized;
+      kind: "elicitationSerialized",
+      title: this.title,
+      message: this.message,
+      state: state === ElicitationState.Pending ? ElicitationState.Rejected : state,
+      acceptedResult: this.acceptedResult,
+      subtitle: this.subtitle,
+      source: this.source,
+      isHidden: this._isHiddenValue.get(),
+    } satisfies IChatElicitationRequestSerialized;
 	}
 }

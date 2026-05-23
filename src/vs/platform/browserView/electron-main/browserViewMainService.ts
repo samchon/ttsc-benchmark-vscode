@@ -3,26 +3,43 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../base/common/event.js';
-import { Disposable, DisposableMap } from '../../../base/common/lifecycle.js';
-import { VSBuffer } from '../../../base/common/buffer.js';
-import { IBrowserViewBounds, IBrowserViewState, IBrowserViewService, IBrowserViewCaptureScreenshotOptions, IBrowserViewFindInPageOptions, BrowserViewCommandId, IBrowserViewOwner, IBrowserViewInfo, IBrowserViewCreatedEvent, IBrowserViewOpenOptions, IBrowserViewCreateOptions, IBrowserViewTheme, IBrowserViewConfiguration, IBrowserDeviceProfile } from '../common/browserView.js';
-import { clipboard, Menu, MenuItem } from 'electron';
-import { IEnvironmentMainService } from '../../environment/electron-main/environmentMainService.js';
-import { createDecorator, IInstantiationService } from '../../instantiation/common/instantiation.js';
-import { BrowserView } from './browserView.js';
-import { generateUuid } from '../../../base/common/uuid.js';
-import { IWindowsMainService } from '../../windows/electron-main/windows.js';
-import { BrowserSession } from './browserSession.js';
-import { IApplicationStorageMainService } from '../../storage/electron-main/storageMainService.js';
-import { IntegratedBrowserOpenSource, logBrowserOpen } from '../common/browserViewTelemetry.js';
-import { ITelemetryService } from '../../telemetry/common/telemetry.js';
-import { localize } from '../../../nls.js';
-import { INativeHostMainService } from '../../native/electron-main/nativeHostMainService.js';
-import { htmlAttributeEncodeValue } from '../../../base/common/strings.js';
-import { BrowserViewInspectElementId } from './browserViewInspector.js';
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable, DisposableMap } from "../../../base/common/lifecycle.js";
+import { VSBuffer } from "../../../base/common/buffer.js";
+import {
+  IBrowserViewBounds,
+  IBrowserViewState,
+  IBrowserViewService,
+  IBrowserViewCaptureScreenshotOptions,
+  IBrowserViewFindInPageOptions,
+  BrowserViewCommandId,
+  IBrowserViewOwner,
+  IBrowserViewInfo,
+  IBrowserViewCreatedEvent,
+  IBrowserViewOpenOptions,
+  IBrowserViewCreateOptions,
+  IBrowserViewTheme,
+  IBrowserViewConfiguration,
+  IBrowserDeviceProfile,
+} from "../common/browserView.js";
+import { clipboard, Menu, MenuItem } from "electron";
+import { IEnvironmentMainService } from "../../environment/electron-main/environmentMainService.js";
+import { createDecorator, IInstantiationService } from "../../instantiation/common/instantiation.js";
+import { BrowserView } from "./browserView.js";
+import { generateUuid } from "../../../base/common/uuid.js";
+import { IWindowsMainService } from "../../windows/electron-main/windows.js";
+import { BrowserSession } from "./browserSession.js";
+import { IApplicationStorageMainService } from "../../storage/electron-main/storageMainService.js";
+import { IntegratedBrowserOpenSource, logBrowserOpen } from "../common/browserViewTelemetry.js";
+import { ITelemetryService } from "../../telemetry/common/telemetry.js";
+import { localize } from "../../../nls.js";
+import { INativeHostMainService } from "../../native/electron-main/nativeHostMainService.js";
+import { htmlAttributeEncodeValue } from "../../../base/common/strings.js";
+import { BrowserViewInspectElementId } from "./browserViewInspector.js";
 
-export const IBrowserViewMainService = createDecorator<IBrowserViewMainService>('browserViewMainService');
+export const IBrowserViewMainService = createDecorator<IBrowserViewMainService>(
+  "browserViewMainService",
+);
 
 export interface IBrowserViewMainService extends IBrowserViewService {
 	readonly _serviceBrand: undefined;
@@ -44,12 +61,16 @@ export class BrowserViewMainService extends Disposable implements IBrowserViewMa
 		return BrowserSession.isBrowserViewWebContents(contents);
 	}
 
-	private readonly browserViews = this._register(new DisposableMap<string, BrowserView>());
+	private readonly browserViews = this._register(
+    new DisposableMap<string, BrowserView>(),
+  );
 	private _keybindings: { [commandId: string]: string } = Object.create(null);
 	private _theme: IBrowserViewTheme | undefined;
 	private _configuration: IBrowserViewConfiguration = {};
 
-	private readonly _onDidCreateBrowserView = this._register(new Emitter<IBrowserViewCreatedEvent>());
+	private readonly _onDidCreateBrowserView = this._register(
+    new Emitter<IBrowserViewCreatedEvent>(),
+  );
 	readonly onDidCreateBrowserView: Event<IBrowserViewCreatedEvent> = this._onDidCreateBrowserView.event;
 
 	constructor(
@@ -58,7 +79,7 @@ export class BrowserViewMainService extends Disposable implements IBrowserViewMa
 		@IWindowsMainService private readonly windowsMainService: IWindowsMainService,
 		@ITelemetryService private readonly telemetryService: ITelemetryService,
 		@INativeHostMainService private readonly nativeHostMainService: INativeHostMainService,
-		@IApplicationStorageMainService private readonly applicationStorageMainService: IApplicationStorageMainService
+		@IApplicationStorageMainService private readonly applicationStorageMainService: IApplicationStorageMainService,
 	) {
 		super();
 	}
@@ -70,17 +91,21 @@ export class BrowserViewMainService extends Disposable implements IBrowserViewMa
 			return view.getState();
 		}
 
-		const ownerWindow = this.windowsMainService.getWindowById(options.owner.mainWindowId);
+		const ownerWindow = this.windowsMainService.getWindowById(
+      options.owner.mainWindowId,
+    );
 		if (!ownerWindow) {
-			throw new Error(`Owner window with ID ${options.owner.mainWindowId} not found`);
+			throw new Error(
+        `Owner window with ID ${options.owner.mainWindowId} not found`,
+      );
 		}
 
 		const browserSession = BrowserSession.getOrCreate(
-			id,
-			options.scope,
-			this.environmentMainService.workspaceStorageHome,
-			ownerWindow.openedWorkspace?.id
-		);
+      id,
+      options.scope,
+      this.environmentMainService.workspaceStorageHome,
+      ownerWindow.openedWorkspace?.id,
+    );
 
 		const view = this.createBrowserView(id, options.owner, browserSession);
 
@@ -89,9 +114,9 @@ export class BrowserViewMainService extends Disposable implements IBrowserViewMa
 		}
 
 		return {
-			...view.getState(),
-			...options.initialState
-		};
+      ...view.getState(),
+      ...options.initialState,
+    };
 	}
 
 	tryGetBrowserView(id: string): BrowserView | undefined {
@@ -99,14 +124,16 @@ export class BrowserViewMainService extends Disposable implements IBrowserViewMa
 	}
 
 	async createTarget(url: string, owner: IBrowserViewOwner, browserContextId?: string): Promise<BrowserView> {
-		const browserSession = browserContextId ? BrowserSession.get(browserContextId) : undefined;
+		const browserSession = browserContextId ? BrowserSession.get(
+      browserContextId,
+    ) : undefined;
 
 		return this.openNew(url, {
-			owner,
-			session: browserSession,
-			openOptions: { preserveFocus: true },
-			source: 'cdpCreated'
-		});
+      owner,
+      session: browserSession,
+      openOptions: { preserveFocus: true },
+      source: "cdpCreated",
+    });
 	}
 
 	/**
@@ -122,10 +149,10 @@ export class BrowserViewMainService extends Disposable implements IBrowserViewMa
 
 	private _getViewInfo(view: BrowserView): IBrowserViewInfo {
 		return {
-			id: view.id,
-			owner: view.owner,
-			state: view.getState()
-		};
+      id: view.id,
+      owner: view.owner,
+      state: view.getState(),
+    };
 	}
 
 	async getBrowserViews(windowId?: number): Promise<IBrowserViewInfo[]> {
@@ -287,9 +314,9 @@ export class BrowserViewMainService extends Disposable implements IBrowserViewMa
 
 	async clearWorkspaceStorage(workspaceId: string): Promise<void> {
 		const browserSession = BrowserSession.getOrCreateWorkspace(
-			workspaceId,
-			this.environmentMainService.workspaceStorageHome
-		);
+      workspaceId,
+      this.environmentMainService.workspaceStorageHome,
+    );
 		browserSession.connectStorage(this.applicationStorageMainService);
 		await browserSession.clearData();
 	}
@@ -343,13 +370,13 @@ export class BrowserViewMainService extends Disposable implements IBrowserViewMa
 				const info = this._getViewInfo(child);
 				this._onDidCreateBrowserView.fire({
 					info: url ? { ...info, state: { ...info.state, url } } : info,
-					openOptions
+					openOptions,
 				});
 
 				return child;
 			},
 			(v, params) => this.showContextMenu(v, params),
-			options
+			options,
 		);
 		this.browserViews.set(id, view);
 		if (this._theme) {
@@ -357,8 +384,8 @@ export class BrowserViewMainService extends Disposable implements IBrowserViewMa
 		}
 
 		Event.once(view.onDidClose)(() => {
-			this.browserViews.deleteAndDispose(id);
-		});
+      this.browserViews.deleteAndDispose(id);
+    });
 
 		return view;
 	}
@@ -375,10 +402,14 @@ export class BrowserViewMainService extends Disposable implements IBrowserViewMa
 			session: BrowserSession | undefined;
 			openOptions: IBrowserViewOpenOptions | undefined;
 			source: IntegratedBrowserOpenSource;
-		}
+		},
 	): Promise<BrowserView> {
 		const targetId = generateUuid();
-		const view = this.createBrowserView(targetId, owner, session || BrowserSession.getOrCreateEphemeral(targetId));
+		const view = this.createBrowserView(
+      targetId,
+      owner,
+      session || BrowserSession.getOrCreateEphemeral(targetId),
+    );
 
 		if (url) {
 			void view.loadURL(url).catch(() => { });
@@ -389,9 +420,9 @@ export class BrowserViewMainService extends Disposable implements IBrowserViewMa
 		// Fire creation event so the workbench can open an editor tab
 		const info = this._getViewInfo(view);
 		this._onDidCreateBrowserView.fire({
-			info: url ? { ...info, state: { ...info.state, url } } : info,
-			openOptions
-		});
+      info: url ? { ...info, state: { ...info.state, url } } : info,
+      openOptions,
+    });
 
 		return view;
 	}
@@ -408,115 +439,146 @@ export class BrowserViewMainService extends Disposable implements IBrowserViewMa
 
 		const inspectTarget = this._configuration.aiFeaturesDisabled
 			? undefined
-			: params.frame && await view.inspector.getElementHandle(BrowserViewInspectElementId.ContextMenuTarget, params.frame);
+			: params.frame && await view.inspector.getElementHandle(
+          BrowserViewInspectElementId.ContextMenuTarget,
+          params.frame,
+        );
 		const menu = new Menu();
 
 		if (params.linkURL) {
 			menu.append(new MenuItem({
-				label: localize('browser.contextMenu.openLinkInNewTab', 'Open Link in New Tab'),
+				label: localize("browser.contextMenu.openLinkInNewTab", "Open Link in New Tab"),
 				click: () => {
 					void this.openNew(params.linkURL, {
 						owner: view.owner,
 						session: view.session,
 						openOptions: { preserveFocus: true, background: true },
-						source: 'browserLinkBackground'
+						source: "browserLinkBackground",
 					});
-				}
+				},
 			}));
 			menu.append(new MenuItem({
-				label: localize('browser.contextMenu.openLinkInExternalBrowser', 'Open Link in External Browser'),
-				click: () => { void this.nativeHostMainService.openExternal(undefined, params.linkURL); }
+				label: localize("browser.contextMenu.openLinkInExternalBrowser", "Open Link in External Browser"),
+				click: () => { void this.nativeHostMainService.openExternal(undefined, params.linkURL); },
 			}));
-			menu.append(new MenuItem({ type: 'separator' }));
+			menu.append(new MenuItem({ type: "separator" }));
 			menu.append(new MenuItem({
-				label: localize('browser.contextMenu.copyLink', 'Copy Link'),
+				label: localize("browser.contextMenu.copyLink", "Copy Link"),
 				click: () => {
 					clipboard.write({
 						text: params.linkURL,
-						html: `<a href="${encodeURI(params.linkURL)}">${htmlAttributeEncodeValue(params.linkText || params.linkURL)}</a>`
+						html: `<a href="${encodeURI(params.linkURL)}">${htmlAttributeEncodeValue(params.linkText || params.linkURL)}</a>`,
 					});
-				}
+				},
 			}));
 		}
 
 		if (params.hasImageContents && params.srcURL) {
 			if (menu.items.length > 0) {
-				menu.append(new MenuItem({ type: 'separator' }));
+				menu.append(new MenuItem({ type: "separator" }));
 			}
 			menu.append(new MenuItem({
-				label: localize('browser.contextMenu.openImageInNewTab', 'Open Image in New Tab'),
+				label: localize("browser.contextMenu.openImageInNewTab", "Open Image in New Tab"),
 				click: () => {
 					void this.openNew(params.srcURL!, {
 						owner: view.owner,
 						session: view.session,
 						openOptions: { preserveFocus: true, background: true },
-						source: 'browserLinkBackground'
+						source: "browserLinkBackground",
 					});
-				}
+				},
 			}));
-			menu.append(new MenuItem({
-				label: localize('browser.contextMenu.copyImage', 'Copy Image'),
-				click: () => { view.webContents.copyImageAt(params.x, params.y); }
-			}));
-			menu.append(new MenuItem({
-				label: localize('browser.contextMenu.copyImageUrl', 'Copy Image URL'),
-				click: () => { clipboard.writeText(params.srcURL!); }
-			}));
+			menu.append(
+        new MenuItem({
+          label: localize("browser.contextMenu.copyImage", "Copy Image"),
+          click: () => { view.webContents.copyImageAt(params.x, params.y); },
+        }),
+      );
+			menu.append(
+        new MenuItem({
+          label: localize("browser.contextMenu.copyImageUrl", "Copy Image URL"),
+          click: () => { clipboard.writeText(params.srcURL!); },
+        }),
+      );
 		}
 
 		if (params.isEditable) {
-			menu.append(new MenuItem({ role: 'cut', enabled: params.editFlags.canCut }));
-			menu.append(new MenuItem({ role: 'copy', enabled: params.editFlags.canCopy }));
-			menu.append(new MenuItem({ role: 'paste', enabled: params.editFlags.canPaste }));
-			menu.append(new MenuItem({ role: 'pasteAndMatchStyle', enabled: params.editFlags.canPaste }));
-			menu.append(new MenuItem({ role: 'selectAll', enabled: params.editFlags.canSelectAll }));
+			menu.append(
+        new MenuItem({ role: "cut", enabled: params.editFlags.canCut }),
+      );
+			menu.append(
+        new MenuItem({ role: "copy", enabled: params.editFlags.canCopy }),
+      );
+			menu.append(
+        new MenuItem({ role: "paste", enabled: params.editFlags.canPaste }),
+      );
+			menu.append(
+        new MenuItem({
+          role: "pasteAndMatchStyle",
+          enabled: params.editFlags.canPaste,
+        }),
+      );
+			menu.append(
+        new MenuItem({
+          role: "selectAll",
+          enabled: params.editFlags.canSelectAll,
+        }),
+      );
 		} else if (params.selectionText) {
-			menu.append(new MenuItem({ role: 'copy' }));
+			menu.append(new MenuItem({ role: "copy" }));
 		}
 
 		// Add navigation items as defaults
 		if (menu.items.length === 0) {
 			if (webContents.navigationHistory.canGoBack()) {
-				menu.append(new MenuItem({
-					label: localize('browser.contextMenu.back', 'Back'),
-					accelerator: this._keybindings[BrowserViewCommandId.GoBack],
-					click: () => webContents.navigationHistory.goBack()
-				}));
+				menu.append(
+          new MenuItem({
+            label: localize("browser.contextMenu.back", "Back"),
+            accelerator: this._keybindings[BrowserViewCommandId.GoBack],
+            click: () => webContents.navigationHistory.goBack(),
+          }),
+        );
 			}
 			if (webContents.navigationHistory.canGoForward()) {
-				menu.append(new MenuItem({
-					label: localize('browser.contextMenu.forward', 'Forward'),
-					accelerator: this._keybindings[BrowserViewCommandId.GoForward],
-					click: () => webContents.navigationHistory.goForward()
-				}));
+				menu.append(
+          new MenuItem({
+            label: localize("browser.contextMenu.forward", "Forward"),
+            accelerator: this._keybindings[BrowserViewCommandId.GoForward],
+            click: () => webContents.navigationHistory.goForward(),
+          }),
+        );
 			}
-			menu.append(new MenuItem({
-				label: localize('browser.contextMenu.reload', 'Reload'),
-				accelerator: this._keybindings[BrowserViewCommandId.Reload],
-				click: () => webContents.reload()
-			}));
+			menu.append(
+        new MenuItem({
+          label: localize("browser.contextMenu.reload", "Reload"),
+          accelerator: this._keybindings[BrowserViewCommandId.Reload],
+          click: () => webContents.reload(),
+        }),
+      );
 		}
 
-		menu.append(new MenuItem({ type: 'separator' }));
+		menu.append(new MenuItem({ type: "separator" }));
 		if (inspectTarget) {
 			menu.append(new MenuItem({
-				label: localize('browser.contextMenu.addElementToChat', 'Add Element to Chat'),
-				click: () => inspectTarget.addToChat()
+				label: localize("browser.contextMenu.addElementToChat", "Add Element to Chat"),
+				click: () => inspectTarget.addToChat(),
 			}));
 			void inspectTarget.highlight().catch(() => { });
-			menu.on('menu-will-close', () => inspectTarget.dispose());
+			menu.on("menu-will-close", () => inspectTarget.dispose());
 		}
-		menu.append(new MenuItem({
-			label: localize('browser.contextMenu.inspect', 'Inspect'),
-			click: () => webContents.inspectElement(params.x, params.y)
-		}));
+		menu.append(
+      new MenuItem({
+        label: localize("browser.contextMenu.inspect", "Inspect"),
+        click: () => webContents.inspectElement(params.x, params.y),
+      }),
+    );
 
 		const viewBounds = view.getWebContentsView().getBounds();
 		menu.popup({
-			window: win,
-			x: viewBounds.x + params.x,
-			y: viewBounds.y + params.y,
-			sourceType: params.menuSourceType
-		});
+      window: win,
+      x: viewBounds.x + params.x,
+      y: viewBounds.y + params.y,
+      sourceType: params.menuSourceType,
+    });
 	}
 }

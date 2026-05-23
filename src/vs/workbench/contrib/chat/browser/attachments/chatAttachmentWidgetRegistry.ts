@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as event from '../../../../../base/common/event.js';
-import { IDisposable } from '../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IChatRequestVariableEntry } from '../../common/attachments/chatVariableEntries.js';
+import * as event from "../../../../../base/common/event.js";
+import { IDisposable } from "../../../../../base/common/lifecycle.js";
+import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IChatRequestVariableEntry } from "../../common/attachments/chatVariableEntries.js";
 
 /**
  * Interface for a contributed attachment widget instance.
@@ -28,7 +28,9 @@ export type ChatAttachmentWidgetFactory = (
 	container: HTMLElement,
 ) => IChatAttachmentWidgetInstance;
 
-export const IChatAttachmentWidgetRegistry = createDecorator<IChatAttachmentWidgetRegistry>('chatAttachmentWidgetRegistry');
+export const IChatAttachmentWidgetRegistry = createDecorator<IChatAttachmentWidgetRegistry>(
+  "chatAttachmentWidgetRegistry",
+);
 
 export interface IChatAttachmentWidgetRegistry {
 	readonly _serviceBrand: undefined;
@@ -62,7 +64,7 @@ export class ChatAttachmentWidgetRegistry implements IChatAttachmentWidgetRegist
 				if (this._factories.get(kind) === factory) {
 					this._factories.delete(kind);
 				}
-			}
+			},
 		};
 	}
 

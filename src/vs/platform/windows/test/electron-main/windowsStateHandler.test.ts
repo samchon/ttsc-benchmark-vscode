@@ -3,16 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { tmpdir } from 'os';
-import { join } from '../../../../base/common/path.js';
-import { URI } from '../../../../base/common/uri.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
-import { IWindowState as IWindowUIState, WindowMode } from '../../../window/electron-main/window.js';
-import { getWindowsStateStoreData, IWindowsState, IWindowState, restoreWindowsState } from '../../electron-main/windowsStateHandler.js';
-import { IWorkspaceIdentifier } from '../../../workspace/common/workspace.js';
+import assert from "assert";
+import { tmpdir } from "os";
+import { join } from "../../../../base/common/path.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
+import { IWindowState as IWindowUIState, WindowMode } from "../../../window/electron-main/window.js";
+import {
+  getWindowsStateStoreData,
+  IWindowsState,
+  IWindowState,
+  restoreWindowsState,
+} from "../../electron-main/windowsStateHandler.js";
+import { IWorkspaceIdentifier } from "../../../workspace/common/workspace.js";
 
-suite('Windows State Storing', () => {
+suite("Windows State Storing", () => {
 
 	function getUIState(): IWindowUIState {
 		return {
@@ -20,14 +25,14 @@ suite('Windows State Storing', () => {
 			y: 10,
 			width: 100,
 			height: 200,
-			mode: 0
+			mode: 0,
 		};
 	}
 
 	function toWorkspace(uri: URI): IWorkspaceIdentifier {
 		return {
-			id: '1234',
-			configPath: uri
+			id: "1234",
+			configPath: uri,
 		};
 	}
 	function assertEqualURI(u1: URI | undefined, u2: URI | undefined, message?: string): void {
@@ -70,54 +75,54 @@ suite('Windows State Storing', () => {
 		assertEqualWindowsState(state, restored, message);
 	}
 
-	const testBackupPath1 = join(tmpdir(), 'windowStateTest', 'backupFolder1');
-	const testBackupPath2 = join(tmpdir(), 'windowStateTest', 'backupFolder2');
+	const testBackupPath1 = join(tmpdir(), "windowStateTest", "backupFolder1");
+	const testBackupPath2 = join(tmpdir(), "windowStateTest", "backupFolder2");
 
-	const testWSPath = URI.file(join(tmpdir(), 'windowStateTest', 'test.code-workspace'));
-	const testFolderURI = URI.file(join(tmpdir(), 'windowStateTest', 'testFolder'));
+	const testWSPath = URI.file(join(tmpdir(), "windowStateTest", "test.code-workspace"));
+	const testFolderURI = URI.file(join(tmpdir(), "windowStateTest", "testFolder"));
 
-	const testRemoteFolderURI = URI.parse('foo://bar/c/d');
+	const testRemoteFolderURI = URI.parse("foo://bar/c/d");
 
-	test('storing and restoring', () => {
+	test("storing and restoring", () => {
 		let windowState: IWindowsState;
 		windowState = {
-			openedWindows: []
+			openedWindows: [],
 		};
-		assertRestoring(windowState, 'no windows');
+		assertRestoring(windowState, "no windows");
 		windowState = {
-			openedWindows: [{ backupPath: testBackupPath1, uiState: getUIState() }]
+			openedWindows: [{ backupPath: testBackupPath1, uiState: getUIState() }],
 		};
-		assertRestoring(windowState, 'empty workspace');
+		assertRestoring(windowState, "empty workspace");
 
 		windowState = {
-			openedWindows: [{ backupPath: testBackupPath1, uiState: getUIState(), workspace: toWorkspace(testWSPath) }]
+			openedWindows: [{ backupPath: testBackupPath1, uiState: getUIState(), workspace: toWorkspace(testWSPath) }],
 		};
-		assertRestoring(windowState, 'workspace');
+		assertRestoring(windowState, "workspace");
 
 		windowState = {
-			openedWindows: [{ backupPath: testBackupPath2, uiState: getUIState(), folderUri: testFolderURI }]
+			openedWindows: [{ backupPath: testBackupPath2, uiState: getUIState(), folderUri: testFolderURI }],
 		};
-		assertRestoring(windowState, 'folder');
+		assertRestoring(windowState, "folder");
 
 		windowState = {
-			openedWindows: [{ backupPath: testBackupPath1, uiState: getUIState(), folderUri: testFolderURI }, { backupPath: testBackupPath1, uiState: getUIState(), folderUri: testRemoteFolderURI, remoteAuthority: 'bar' }]
+			openedWindows: [{ backupPath: testBackupPath1, uiState: getUIState(), folderUri: testFolderURI }, { backupPath: testBackupPath1, uiState: getUIState(), folderUri: testRemoteFolderURI, remoteAuthority: "bar" }],
 		};
-		assertRestoring(windowState, 'multiple windows');
+		assertRestoring(windowState, "multiple windows");
 
 		windowState = {
 			lastActiveWindow: { backupPath: testBackupPath2, uiState: getUIState(), folderUri: testFolderURI },
-			openedWindows: []
+			openedWindows: [],
 		};
-		assertRestoring(windowState, 'lastActiveWindow');
+		assertRestoring(windowState, "lastActiveWindow");
 
 		windowState = {
 			lastPluginDevelopmentHostWindow: { backupPath: testBackupPath2, uiState: getUIState(), folderUri: testFolderURI },
-			openedWindows: []
+			openedWindows: [],
 		};
-		assertRestoring(windowState, 'lastPluginDevelopmentHostWindow');
+		assertRestoring(windowState, "lastPluginDevelopmentHostWindow");
 	});
 
-	test('open 1_32', () => {
+	test("open 1_32", () => {
 		const v1_32_workspace = `{
 			"openedWindows": [],
 			"lastActiveWindow": {
@@ -140,13 +145,13 @@ suite('Windows State Storing', () => {
 		let expected: IWindowsState = {
 			openedWindows: [],
 			lastActiveWindow: {
-				backupPath: '/home/user/.config/code-oss-dev/Backups/53b714b46ef1a2d4346568b4f591028c',
+				backupPath: "/home/user/.config/code-oss-dev/Backups/53b714b46ef1a2d4346568b4f591028c",
 				uiState: { mode: WindowMode.Maximized, x: 0, y: 27, width: 2560, height: 1364 },
-				workspace: { id: '53b714b46ef1a2d4346568b4f591028c', configPath: URI.parse('file:///home/user/workspaces/testing/custom.code-workspace') }
-			}
+				workspace: { id: "53b714b46ef1a2d4346568b4f591028c", configPath: URI.parse("file:///home/user/workspaces/testing/custom.code-workspace") },
+			},
 		};
 
-		assertEqualWindowsState(expected, windowsState, 'v1_32_workspace');
+		assertEqualWindowsState(expected, windowsState, "v1_32_workspace");
 
 		const v1_32_folder = `{
 			"openedWindows": [],
@@ -167,12 +172,12 @@ suite('Windows State Storing', () => {
 		expected = {
 			openedWindows: [],
 			lastActiveWindow: {
-				backupPath: '/home/user/.config/code-oss-dev/Backups/1daac1621c6c06f9e916ac8062e5a1b5',
+				backupPath: "/home/user/.config/code-oss-dev/Backups/1daac1621c6c06f9e916ac8062e5a1b5",
 				uiState: { mode: WindowMode.Normal, x: 625, y: 263, width: 1718, height: 953 },
-				folderUri: URI.parse('file:///home/user/workspaces/testing/folding')
-			}
+				folderUri: URI.parse("file:///home/user/workspaces/testing/folding"),
+			},
 		};
-		assertEqualWindowsState(expected, windowsState, 'v1_32_folder');
+		assertEqualWindowsState(expected, windowsState, "v1_32_folder");
 
 		const v1_32_empty_window = ` {
 			"openedWindows": [
@@ -193,11 +198,11 @@ suite('Windows State Storing', () => {
 		expected = {
 			openedWindows: [],
 			lastActiveWindow: {
-				backupPath: '/home/user/.config/code-oss-dev/Backups/1549539668998',
-				uiState: { mode: WindowMode.Normal, x: 768, y: 336, width: 1200, height: 800 }
-			}
+				backupPath: "/home/user/.config/code-oss-dev/Backups/1549539668998",
+				uiState: { mode: WindowMode.Normal, x: 768, y: 336, width: 1200, height: 800 },
+			},
 		};
-		assertEqualWindowsState(expected, windowsState, 'v1_32_empty_window');
+		assertEqualWindowsState(expected, windowsState, "v1_32_empty_window");
 	});
 
 	ensureNoDisposablesAreLeakedInTestSuite();

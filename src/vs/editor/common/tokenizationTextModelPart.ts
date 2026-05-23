@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Range } from './core/range.js';
-import { StandardTokenType } from './encodedTokenAttributes.js';
-import { LineTokens } from './tokens/lineTokens.js';
-import { SparseMultilineTokens } from './tokens/sparseMultilineTokens.js';
+import { Range } from "./core/range.js";
+import { StandardTokenType } from "./encodedTokenAttributes.js";
+import { LineTokens } from "./tokens/lineTokens.js";
+import { SparseMultilineTokens } from "./tokens/sparseMultilineTokens.js";
 
 /**
  * Provides tokenization related functionality of the text model.

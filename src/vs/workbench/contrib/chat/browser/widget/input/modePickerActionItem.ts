@@ -3,38 +3,42 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../../../base/browser/dom.js';
-import { renderLabelWithIcons } from '../../../../../../base/browser/ui/iconLabel/iconLabels.js';
-import { IAction } from '../../../../../../base/common/actions.js';
-import { coalesce } from '../../../../../../base/common/arrays.js';
-import { Codicon } from '../../../../../../base/common/codicons.js';
-import { groupBy } from '../../../../../../base/common/collections.js';
-import { IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { autorun, IObservable, observableValue } from '../../../../../../base/common/observable.js';
-import { ThemeIcon } from '../../../../../../base/common/themables.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { localize } from '../../../../../../nls.js';
-import { getFlatActionBarActions } from '../../../../../../platform/actions/browser/menuEntryActionViewItem.js';
-import { IMenuService, MenuId, MenuItemAction } from '../../../../../../platform/actions/common/actions.js';
-import { IActionWidgetService } from '../../../../../../platform/actionWidget/browser/actionWidget.js';
-import { IActionWidgetDropdownAction, IActionWidgetDropdownActionProvider, IActionWidgetDropdownOptions } from '../../../../../../platform/actionWidget/browser/actionWidgetDropdown.js';
-import { ICommandService } from '../../../../../../platform/commands/common/commands.js';
-import { IConfigurationService } from '../../../../../../platform/configuration/common/configuration.js';
-import { IContextKeyService } from '../../../../../../platform/contextkey/common/contextkey.js';
-import { IKeybindingService } from '../../../../../../platform/keybinding/common/keybinding.js';
-import { IProductService } from '../../../../../../platform/product/common/productService.js';
-import { ITelemetryService } from '../../../../../../platform/telemetry/common/telemetry.js';
-import { IChatAgentService } from '../../../common/participants/chatAgents.js';
-import { ChatMode, IChatMode, IChatModes } from '../../../common/chatModes.js';
-import { isOrganizationPromptFile } from '../../../common/promptSyntax/utils/promptsServiceUtils.js';
-import { ChatAgentLocation, ChatConfiguration, ChatModeKind } from '../../../common/constants.js';
-import { PromptsStorage } from '../../../common/promptSyntax/service/promptsService.js';
-import { Target } from '../../../common/promptSyntax/promptTypes.js';
-import { getOpenChatActionIdForMode } from '../../actions/chatActions.js';
-import { IToggleChatModeArgs, ToggleAgentModeActionId } from '../../actions/chatExecuteActions.js';
-import { ChatInputPickerActionViewItem, IChatInputPickerOptions } from './chatInputPickerActionItem.js';
-import { IOpenerService } from '../../../../../../platform/opener/common/opener.js';
-import { IWorkbenchAssignmentService } from '../../../../../services/assignment/common/assignmentService.js';
+import * as dom from "../../../../../../base/browser/dom.js";
+import { renderLabelWithIcons } from "../../../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { IAction } from "../../../../../../base/common/actions.js";
+import { coalesce } from "../../../../../../base/common/arrays.js";
+import { Codicon } from "../../../../../../base/common/codicons.js";
+import { groupBy } from "../../../../../../base/common/collections.js";
+import { IDisposable } from "../../../../../../base/common/lifecycle.js";
+import { autorun, IObservable, observableValue } from "../../../../../../base/common/observable.js";
+import { ThemeIcon } from "../../../../../../base/common/themables.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { localize } from "../../../../../../nls.js";
+import { getFlatActionBarActions } from "../../../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { IMenuService, MenuId, MenuItemAction } from "../../../../../../platform/actions/common/actions.js";
+import { IActionWidgetService } from "../../../../../../platform/actionWidget/browser/actionWidget.js";
+import {
+  IActionWidgetDropdownAction,
+  IActionWidgetDropdownActionProvider,
+  IActionWidgetDropdownOptions,
+} from "../../../../../../platform/actionWidget/browser/actionWidgetDropdown.js";
+import { ICommandService } from "../../../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { IKeybindingService } from "../../../../../../platform/keybinding/common/keybinding.js";
+import { IProductService } from "../../../../../../platform/product/common/productService.js";
+import { ITelemetryService } from "../../../../../../platform/telemetry/common/telemetry.js";
+import { IChatAgentService } from "../../../common/participants/chatAgents.js";
+import { ChatMode, IChatMode, IChatModes } from "../../../common/chatModes.js";
+import { isOrganizationPromptFile } from "../../../common/promptSyntax/utils/promptsServiceUtils.js";
+import { ChatAgentLocation, ChatConfiguration, ChatModeKind } from "../../../common/constants.js";
+import { PromptsStorage } from "../../../common/promptSyntax/service/promptsService.js";
+import { Target } from "../../../common/promptSyntax/promptTypes.js";
+import { getOpenChatActionIdForMode } from "../../actions/chatActions.js";
+import { IToggleChatModeArgs, ToggleAgentModeActionId } from "../../actions/chatExecuteActions.js";
+import { ChatInputPickerActionViewItem, IChatInputPickerOptions } from "./chatInputPickerActionItem.js";
+import { IOpenerService } from "../../../../../../platform/opener/common/opener.js";
+import { IWorkbenchAssignmentService } from "../../../../../services/assignment/common/assignmentService.js";
 
 export interface IModePickerDelegate {
 	readonly currentMode: IObservable<IChatMode>;
@@ -50,9 +54,9 @@ export interface IModePickerDelegate {
 // TODO: there should be an icon contributed for built-in modes
 const builtinDefaultIcon = (mode: IChatMode) => {
 	switch (mode.name.get().toLowerCase()) {
-		case 'ask': return Codicon.ask;
-		case 'edit': return Codicon.edit;
-		case 'plan': return Codicon.tasklist;
+		case "ask": return Codicon.ask;
+		case "edit": return Codicon.edit;
+		case "plan": return Codicon.tasklist;
 		default: return undefined;
 	}
 };
@@ -74,24 +78,39 @@ export class ModePickerActionItem extends ChatInputPickerActionViewItem {
 		@IOpenerService openerService: IOpenerService,
 		@IWorkbenchAssignmentService assignmentService: IWorkbenchAssignmentService,
 	) {
-		const assignments = observableValue<{ showOldAskMode: boolean }>('modePickerAssignments', { showOldAskMode: false });
+		const assignments = observableValue<{ showOldAskMode: boolean }>(
+      "modePickerAssignments",
+      { showOldAskMode: false },
+    );
 
 		// Get custom agent target dynamically (may change when switching session types)
 		const getCustomAgentTarget = () => delegate.customAgentTarget?.() ?? Target.Undefined;
 
 		// Category definitions
-		const builtInCategory = { label: localize('built-in', "Built-In"), order: 0 };
-		const customCategory = { label: localize('custom', "Custom"), order: 1 };
-		const policyDisabledCategory = { label: localize('managedByOrganization', "Managed by your organization"), order: 999, showHeader: true };
+		const builtInCategory = {
+      label: localize("built-in", "Built-In"),
+      order: 0,
+    };
+		const customCategory = { label: localize("custom", "Custom"), order: 1 };
+		const policyDisabledCategory = {
+      label: localize("managedByOrganization", "Managed by your organization"),
+      order: 999,
+      showHeader: true,
+    };
 
-		const agentModeDisabledViaPolicy = configurationService.inspect<boolean>(ChatConfiguration.AgentEnabled).policyValue === false;
+		const agentModeDisabledViaPolicy = configurationService.inspect<boolean>(
+      ChatConfiguration.AgentEnabled,
+    ).policyValue === false;
 
 		const makeAction = (mode: IChatMode, currentMode: IChatMode): IActionWidgetDropdownAction => {
 			const isDisabledViaPolicy =
 				mode.kind === ChatModeKind.Agent &&
 				agentModeDisabledViaPolicy;
 
-			const tooltip = chatAgentService.getDefaultAgent(ChatAgentLocation.Chat, mode.kind)?.description ?? action.tooltip;
+			const tooltip = chatAgentService.getDefaultAgent(
+        ChatAgentLocation.Chat,
+        mode.kind,
+      )?.description ?? action.tooltip;
 
 			// Add toolbar actions for Agent modes
 			const toolbarActions: IAction[] = [];
@@ -101,11 +120,19 @@ export class ModePickerActionItem extends ChatInputPickerActionViewItem {
 					if (mode.source?.storage === PromptsStorage.extension) {
 						icon = Codicon.file;
 						id = `viewAgent:${mode.id}`;
-						label = localize('viewModeConfiguration', "View {0} agent", mode.label.get());
+						label = localize(
+              "viewModeConfiguration",
+              "View {0} agent",
+              mode.label.get(),
+            );
 					} else {
 						icon = Codicon.edit;
 						id = `editAgent:${mode.id}`;
-						label = localize('editModeConfiguration', "Edit {0} agent", mode.label.get());
+						label = localize(
+              "editModeConfiguration",
+              "Edit {0} agent",
+              mode.label.get(),
+            );
 					}
 
 					const modeResource = mode.uri;
@@ -117,7 +144,7 @@ export class ModePickerActionItem extends ChatInputPickerActionViewItem {
 						enabled: true,
 						run: async () => {
 							openerService.open(modeResource.get());
-						}
+						},
 					});
 				}
 			}
@@ -127,10 +154,10 @@ export class ModePickerActionItem extends ChatInputPickerActionViewItem {
 				id: getOpenChatActionIdForMode(mode),
 				label: mode.label.get(),
 				icon: isDisabledViaPolicy ? ThemeIcon.fromId(Codicon.lock.id) : mode.icon.get(),
-				class: isDisabledViaPolicy ? 'disabled-by-policy' : undefined,
+				class: isDisabledViaPolicy ? "disabled-by-policy" : undefined,
 				enabled: !isDisabledViaPolicy,
 				checked: !isDisabledViaPolicy && currentMode.id === mode.id,
-				tooltip: '',
+				tooltip: "",
 				hover: { content: tooltip },
 				toolbarActions,
 				run: async () => {
@@ -139,25 +166,25 @@ export class ModePickerActionItem extends ChatInputPickerActionViewItem {
 					}
 					const result = await commandService.executeCommand(
 						ToggleAgentModeActionId,
-						{ modeId: mode.id, sessionResource: this.delegate.sessionResource() } satisfies IToggleChatModeArgs
+						{ modeId: mode.id, sessionResource: this.delegate.sessionResource() } satisfies IToggleChatModeArgs,
 					);
 					if (this.element) {
 						this.renderLabel(this.element);
 					}
 					return result;
 				},
-				category: isDisabledViaPolicy ? policyDisabledCategory : builtInCategory
+				category: isDisabledViaPolicy ? policyDisabledCategory : builtInCategory,
 			};
 		};
 
 		const makeActionFromCustomMode = (mode: IChatMode, currentMode: IChatMode): IActionWidgetDropdownAction => {
 			return {
-				...makeAction(mode, currentMode),
-				tooltip: '',
-				hover: { content: mode.description.get() ?? chatAgentService.getDefaultAgent(ChatAgentLocation.Chat, mode.kind)?.description ?? action.tooltip },
-				icon: mode.icon.get() ?? (isModeConsideredBuiltIn(mode, this._productService) ? builtinDefaultIcon(mode) : undefined),
-				category: agentModeDisabledViaPolicy ? policyDisabledCategory : customCategory
-			};
+        ...makeAction(mode, currentMode),
+        tooltip: "",
+        hover: { content: mode.description.get() ?? chatAgentService.getDefaultAgent(ChatAgentLocation.Chat, mode.kind)?.description ?? action.tooltip },
+        icon: mode.icon.get() ?? (isModeConsideredBuiltIn(mode, this._productService) ? builtinDefaultIcon(mode) : undefined),
+        category: agentModeDisabledViaPolicy ? policyDisabledCategory : customCategory,
+      };
 		};
 
 		const getActionsForCustomAgentTarget = (currentTarget: Target): IActionWidgetDropdownAction[] => {
@@ -171,19 +198,25 @@ export class ModePickerActionItem extends ChatInputPickerActionViewItem {
 				return true;
 			});
 			const customModes = groupBy(
-				filteredCustomModes,
-				mode => isModeConsideredBuiltIn(mode, this._productService) ? 'builtin' : 'custom');
+        filteredCustomModes,
+        mode => isModeConsideredBuiltIn(mode, this._productService) ? "builtin" : "custom",
+      );
 			// Always include the default "Agent" option first
 			const checked = currentMode.id === ChatMode.Agent.id;
-			const defaultAction = { ...makeAction(ChatMode.Agent, ChatMode.Agent), checked };
+			const defaultAction = {
+        ...makeAction(ChatMode.Agent, ChatMode.Agent),
+        checked,
+      };
 			defaultAction.category = builtInCategory;
 			const builtInActions = customModes.builtin?.map(mode => {
-				const action = makeActionFromCustomMode(mode, currentMode);
-				action.category = builtInCategory;
-				return action;
-			}) ?? [];
+        const action = makeActionFromCustomMode(mode, currentMode);
+        action.category = builtInCategory;
+        return action;
+      }) ?? [];
 			// Add filtered custom modes
-			const customActions = customModes.custom?.map(mode => makeActionFromCustomMode(mode, currentMode)) ?? [];
+			const customActions = customModes.custom?.map(
+        mode => makeActionFromCustomMode(mode, currentMode),
+      ) ?? [];
 			return [defaultAction, ...builtInActions, ...customActions];
 		};
 
@@ -205,7 +238,7 @@ export class ModePickerActionItem extends ChatInputPickerActionViewItem {
 				// Filter out 'implement' mode from the dropdown - it's available for handoffs but not user-selectable
 				const customModes = groupBy(
 					filteredCustomModes,
-					mode => isModeConsideredBuiltIn(mode, this._productService) ? 'builtin' : 'custom');
+					mode => isModeConsideredBuiltIn(mode, this._productService) ? "builtin" : "custom");
 
 				const customBuiltinModeActions = customModes.builtin?.map(mode => {
 					const action = makeActionFromCustomMode(mode, currentMode);
@@ -221,10 +254,10 @@ export class ModePickerActionItem extends ChatInputPickerActionViewItem {
 					agentMode && makeAction(agentMode, currentMode),
 					...otherBuiltinModes.map(mode => mode && makeAction(mode, currentMode)),
 					...customBuiltinModeActions,
-					...customModeActions
+					...customModeActions,
 				]);
 				return orderedModes;
-			}
+			},
 		};
 
 		const dynamicActionProvider: IActionWidgetDropdownActionProvider = {
@@ -234,19 +267,27 @@ export class ModePickerActionItem extends ChatInputPickerActionViewItem {
 					return getActionsForCustomAgentTarget(currentTarget);
 				}
 				return actionProvider.getActions();
-			}
+			},
 		};
 
-		const modePickerActionWidgetOptions: Omit<IActionWidgetDropdownOptions, 'label' | 'labelRenderer'> = {
+		const modePickerActionWidgetOptions: Omit<IActionWidgetDropdownOptions, "label" | "labelRenderer"> = {
 			actionProvider: dynamicActionProvider,
 			actionBarActionProvider: {
-				getActions: () => this.getModePickerActionBarActions()
+				getActions: () => this.getModePickerActionBarActions(),
 			},
 			showItemKeybindings: true,
-			reporter: { id: 'ChatModePicker', name: 'ChatModePicker', includeOptions: true },
+			reporter: { id: "ChatModePicker", name: "ChatModePicker", includeOptions: true },
 		};
 
-		super(action, modePickerActionWidgetOptions, pickerOptions, actionWidgetService, keybindingService, contextKeyService, telemetryService);
+		super(
+      action,
+      modePickerActionWidgetOptions,
+      pickerOptions,
+      actionWidgetService,
+      keybindingService,
+      contextKeyService,
+      telemetryService,
+    );
 
 		// Listen to changes in the current mode and its properties
 		this._register(autorun(reader => {
@@ -256,17 +297,34 @@ export class ModePickerActionItem extends ChatInputPickerActionViewItem {
 			}
 		}));
 
-		assignmentService.getTreatment('chat.showOldAskMode').then(showOldAskMode => {
-			assignments.set({ showOldAskMode: showOldAskMode === 'enabled' }, undefined);
-		});
-		this._register(assignmentService.onDidRefetchAssignments(async () => {
-			assignments.set({ showOldAskMode: await assignmentService.getTreatment('chat.showOldAskMode') === 'enabled' }, undefined);
-		}));
+		assignmentService.getTreatment("chat.showOldAskMode").then(
+      showOldAskMode => {
+        assignments.set(
+          { showOldAskMode: showOldAskMode === "enabled" },
+          undefined,
+        );
+      },
+    );
+		this._register(
+      assignmentService.onDidRefetchAssignments(async () => {
+        assignments.set(
+          {
+            showOldAskMode: await assignmentService.getTreatment("chat.showOldAskMode") === "enabled",
+          },
+          undefined,
+        );
+      }),
+    );
 	}
 
 	private getModePickerActionBarActions(): IAction[] {
-		const menuActions = this.menuService.createMenu(MenuId.ChatModePicker, this.contextKeyService);
-		const menuContributions = getFlatActionBarActions(menuActions.getActions({ renderShortTitle: true }));
+		const menuActions = this.menuService.createMenu(
+      MenuId.ChatModePicker,
+      this.contextKeyService,
+    );
+		const menuContributions = getFlatActionBarActions(
+      menuActions.getActions({ renderShortTitle: true }),
+    );
 		menuActions.dispose();
 
 		return menuContributions;
@@ -274,7 +332,7 @@ export class ModePickerActionItem extends ChatInputPickerActionViewItem {
 
 	override render(container: HTMLElement): void {
 		super.render(container);
-		container.classList.add('chat-mode-picker-item');
+		container.classList.add("chat-mode-picker-item");
 	}
 
 	protected override renderLabel(element: HTMLElement): IDisposable | null {
@@ -295,7 +353,9 @@ export class ModePickerActionItem extends ChatInputPickerActionViewItem {
 			labelElements.push(...renderLabelWithIcons(`$(${icon.id})`));
 		}
 		if (!collapsed || !icon) {
-			labelElements.push(dom.$('span.chat-input-picker-label', undefined, state));
+			labelElements.push(
+        dom.$("span.chat-input-picker-label", undefined, state),
+      );
 		}
 
 		dom.reset(element, ...labelElements);
@@ -321,12 +381,16 @@ function isModeConsideredBuiltIn(mode: IChatMode, productService: IProductServic
 		// If somehow there is no URI, but it's from the built-in chat extension, consider it built-in
 		return true;
 	}
-	return !isOrganizationPromptFile(modeUri, mode.source.extensionId, productService);
+	return !isOrganizationPromptFile(
+    modeUri,
+    mode.source.extensionId,
+    productService,
+  );
 }
 
 function shouldShowBuiltInMode(mode: IChatMode, assignments: { showOldAskMode: boolean }, agentModeDisabledViaPolicy: boolean): boolean {
 	// The built-in "Edit" mode is deprecated, but still supported for older conversations and agent disablement.
-	if (mode.id === ChatMode.Edit.id || mode.name.get().toLowerCase() === 'edit') {
+	if (mode.id === ChatMode.Edit.id || mode.name.get().toLowerCase() === "edit") {
 		if (mode.id === ChatMode.Edit.id) {
 			return agentModeDisabledViaPolicy;
 		} else {
@@ -336,7 +400,7 @@ function shouldShowBuiltInMode(mode: IChatMode, assignments: { showOldAskMode: b
 
 	// The "Ask" mode is a special case - we want to show either the old or new version based on the assignment or agent disablement, but not both
 	// We still support the old "Ask" mode for conversations that already use it.
-	if (mode.id === ChatMode.Ask.id || mode.name.get().toLowerCase() === 'ask') {
+	if (mode.id === ChatMode.Ask.id || mode.name.get().toLowerCase() === "ask") {
 		if (mode.id === ChatMode.Ask.id) {
 			return assignments.showOldAskMode || agentModeDisabledViaPolicy;
 		} else {

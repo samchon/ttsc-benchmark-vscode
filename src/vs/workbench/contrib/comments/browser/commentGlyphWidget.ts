@@ -3,29 +3,95 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as nls from '../../../../nls.js';
-import { Color } from '../../../../base/common/color.js';
-import { ContentWidgetPositionPreference, ICodeEditor, IContentWidgetPosition } from '../../../../editor/browser/editorBrowser.js';
-import { IModelDecorationOptions, OverviewRulerLane } from '../../../../editor/common/model.js';
-import { ModelDecorationOptions } from '../../../../editor/common/model/textModel.js';
-import { darken, editorBackground, editorForeground, listInactiveSelectionBackground, opaque, registerColor } from '../../../../platform/theme/common/colorRegistry.js';
-import { themeColorFromId } from '../../../../platform/theme/common/themeService.js';
-import { IEditorDecorationsCollection } from '../../../../editor/common/editorCommon.js';
-import { CommentThreadState } from '../../../../editor/common/languages.js';
-import { Disposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { Emitter } from '../../../../base/common/event.js';
+import * as nls from "../../../../nls.js";
+import { Color } from "../../../../base/common/color.js";
+import { ContentWidgetPositionPreference, ICodeEditor, IContentWidgetPosition } from "../../../../editor/browser/editorBrowser.js";
+import { IModelDecorationOptions, OverviewRulerLane } from "../../../../editor/common/model.js";
+import { ModelDecorationOptions } from "../../../../editor/common/model/textModel.js";
+import {
+  darken,
+  editorBackground,
+  editorForeground,
+  listInactiveSelectionBackground,
+  opaque,
+  registerColor,
+} from "../../../../platform/theme/common/colorRegistry.js";
+import { themeColorFromId } from "../../../../platform/theme/common/themeService.js";
+import { IEditorDecorationsCollection } from "../../../../editor/common/editorCommon.js";
+import { CommentThreadState } from "../../../../editor/common/languages.js";
+import { Disposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { Emitter } from "../../../../base/common/event.js";
 
-export const overviewRulerCommentingRangeForeground = registerColor('editorGutter.commentRangeForeground', { dark: opaque(listInactiveSelectionBackground, editorBackground), light: darken(opaque(listInactiveSelectionBackground, editorBackground), .05), hcDark: Color.white, hcLight: Color.black }, nls.localize('editorGutterCommentRangeForeground', 'Editor gutter decoration color for commenting ranges. This color should be opaque.'));
-const overviewRulerCommentForeground = registerColor('editorOverviewRuler.commentForeground', overviewRulerCommentingRangeForeground, nls.localize('editorOverviewRuler.commentForeground', 'Editor overview ruler decoration color for resolved comments. This color should be opaque.'));
-const overviewRulerCommentUnresolvedForeground = registerColor('editorOverviewRuler.commentUnresolvedForeground', overviewRulerCommentForeground, nls.localize('editorOverviewRuler.commentUnresolvedForeground', 'Editor overview ruler decoration color for unresolved comments. This color should be opaque.'));
-const overviewRulerCommentDraftForeground = registerColor('editorOverviewRuler.commentDraftForeground', overviewRulerCommentUnresolvedForeground, nls.localize('editorOverviewRuler.commentDraftForeground', 'Editor overview ruler decoration color for comment threads with draft comments. This color should be opaque.'));
+export const overviewRulerCommentingRangeForeground = registerColor(
+  "editorGutter.commentRangeForeground",
+  {
+    dark: opaque(listInactiveSelectionBackground, editorBackground),
+    light: darken(opaque(listInactiveSelectionBackground, editorBackground), .05),
+    hcDark: Color.white,
+    hcLight: Color.black,
+  },
+  nls.localize(
+    "editorGutterCommentRangeForeground",
+    "Editor gutter decoration color for commenting ranges. This color should be opaque.",
+  ),
+);
+const overviewRulerCommentForeground = registerColor(
+  "editorOverviewRuler.commentForeground",
+  overviewRulerCommentingRangeForeground,
+  nls.localize(
+    "editorOverviewRuler.commentForeground",
+    "Editor overview ruler decoration color for resolved comments. This color should be opaque.",
+  ),
+);
+const overviewRulerCommentUnresolvedForeground = registerColor(
+  "editorOverviewRuler.commentUnresolvedForeground",
+  overviewRulerCommentForeground,
+  nls.localize(
+    "editorOverviewRuler.commentUnresolvedForeground",
+    "Editor overview ruler decoration color for unresolved comments. This color should be opaque.",
+  ),
+);
+const overviewRulerCommentDraftForeground = registerColor(
+  "editorOverviewRuler.commentDraftForeground",
+  overviewRulerCommentUnresolvedForeground,
+  nls.localize(
+    "editorOverviewRuler.commentDraftForeground",
+    "Editor overview ruler decoration color for comment threads with draft comments. This color should be opaque.",
+  ),
+);
 
-const editorGutterCommentGlyphForeground = registerColor('editorGutter.commentGlyphForeground', { dark: editorForeground, light: editorForeground, hcDark: Color.black, hcLight: Color.white }, nls.localize('editorGutterCommentGlyphForeground', 'Editor gutter decoration color for commenting glyphs.'));
-registerColor('editorGutter.commentUnresolvedGlyphForeground', editorGutterCommentGlyphForeground, nls.localize('editorGutterCommentUnresolvedGlyphForeground', 'Editor gutter decoration color for commenting glyphs for unresolved comment threads.'));
-registerColor('editorGutter.commentDraftGlyphForeground', editorGutterCommentGlyphForeground, nls.localize('editorGutterCommentDraftGlyphForeground', 'Editor gutter decoration color for commenting glyphs for comment threads with draft comments.'));
+const editorGutterCommentGlyphForeground = registerColor(
+  "editorGutter.commentGlyphForeground",
+  {
+    dark: editorForeground,
+    light: editorForeground,
+    hcDark: Color.black,
+    hcLight: Color.white,
+  },
+  nls.localize(
+    "editorGutterCommentGlyphForeground",
+    "Editor gutter decoration color for commenting glyphs.",
+  ),
+);
+registerColor(
+  "editorGutter.commentUnresolvedGlyphForeground",
+  editorGutterCommentGlyphForeground,
+  nls.localize(
+    "editorGutterCommentUnresolvedGlyphForeground",
+    "Editor gutter decoration color for commenting glyphs for unresolved comment threads.",
+  ),
+);
+registerColor(
+  "editorGutter.commentDraftGlyphForeground",
+  editorGutterCommentGlyphForeground,
+  nls.localize(
+    "editorGutterCommentDraftGlyphForeground",
+    "Editor gutter decoration color for commenting glyphs for comment threads with draft comments.",
+  ),
+);
 
 export class CommentGlyphWidget extends Disposable {
-	public static description = 'comment-glyph-widget';
+	public static description = "comment-glyph-widget";
 	private _lineNumber!: number;
 	private _editor: ICodeEditor;
 	private _threadState: CommentThreadState | undefined;
@@ -33,7 +99,9 @@ export class CommentGlyphWidget extends Disposable {
 	private readonly _commentsDecorations: IEditorDecorationsCollection;
 	private _commentsOptions: ModelDecorationOptions;
 
-	private readonly _onDidChangeLineNumber = this._register(new Emitter<number>());
+	private readonly _onDidChangeLineNumber = this._register(
+    new Emitter<number>(),
+  );
 	public readonly onDidChangeLineNumber = this._onDidChangeLineNumber.event;
 
 	constructor(editor: ICodeEditor, lineNumber: number) {
@@ -56,10 +124,10 @@ export class CommentGlyphWidget extends Disposable {
 		// Priority: draft > unresolved > resolved
 		let className: string;
 		if (this._threadHasDraft) {
-			className = 'comment-range-glyph comment-thread-draft';
+			className = "comment-range-glyph comment-thread-draft";
 		} else {
 			const unresolved = this._threadState === CommentThreadState.Unresolved;
-			className = `comment-range-glyph comment-thread${unresolved ? '-unresolved' : ''}`;
+			className = `comment-range-glyph comment-thread${unresolved ? "-unresolved" : ""}`;
 		}
 
 		const decorationOptions: IModelDecorationOptions = {
@@ -68,10 +136,10 @@ export class CommentGlyphWidget extends Disposable {
 			overviewRuler: {
 				color: themeColorFromId(this._threadHasDraft ? overviewRulerCommentDraftForeground :
 					(this._threadState === CommentThreadState.Unresolved ? overviewRulerCommentUnresolvedForeground : overviewRulerCommentForeground)),
-				position: OverviewRulerLane.Center
+				position: OverviewRulerLane.Center,
 			},
 			collapseOnReplaceEdit: true,
-			linesDecorationsClassName: className
+			linesDecorationsClassName: className,
 		};
 
 		return ModelDecorationOptions.createDynamic(decorationOptions);
@@ -90,9 +158,9 @@ export class CommentGlyphWidget extends Disposable {
 		const commentsDecorations = [{
 			range: {
 				startLineNumber: this._lineNumber, startColumn: 1,
-				endLineNumber: this._lineNumber, endColumn: 1
+				endLineNumber: this._lineNumber, endColumn: 1,
 			},
-			options: this._commentsOptions
+			options: this._commentsOptions,
 		}];
 
 		this._commentsDecorations.set(commentsDecorations);
@@ -104,14 +172,16 @@ export class CommentGlyphWidget extends Disposable {
 	}
 
 	getPosition(): IContentWidgetPosition {
-		const range = (this._commentsDecorations.length > 0 ? this._commentsDecorations.getRange(0) : null);
+		const range = (this._commentsDecorations.length > 0 ? this._commentsDecorations.getRange(
+      0,
+    ) : null);
 
 		return {
 			position: {
 				lineNumber: range ? range.endLineNumber : this._lineNumber,
-				column: 1
+				column: 1,
 			},
-			preference: [ContentWidgetPositionPreference.EXACT]
+			preference: [ContentWidgetPositionPreference.EXACT],
 		};
 	}
 }

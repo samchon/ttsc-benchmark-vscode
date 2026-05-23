@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { binarySearch, isFalsyOrEmpty } from '../../../../base/common/arrays.js';
-import { ICodeEditor } from '../../../browser/editorBrowser.js';
-import { EditorOption } from '../../../common/config/editorOptions.js';
-import { IPosition } from '../../../common/core/position.js';
-import { Range } from '../../../common/core/range.js';
-import { CompletionItem, CompletionItemKind } from '../../../common/languages.js';
-import { IEditorWorkerService } from '../../../common/services/editorWorker.js';
-import { BracketSelectionRangeProvider } from '../../smartSelect/browser/bracketSelections.js';
+import { binarySearch, isFalsyOrEmpty } from "../../../../base/common/arrays.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { EditorOption } from "../../../common/config/editorOptions.js";
+import { IPosition } from "../../../common/core/position.js";
+import { Range } from "../../../common/core/range.js";
+import { CompletionItem, CompletionItemKind } from "../../../common/languages.js";
+import { IEditorWorkerService } from "../../../common/services/editorWorker.js";
+import { BracketSelectionRangeProvider } from "../../smartSelect/browser/bracketSelections.js";
 
 export abstract class WordDistance {
 
@@ -35,12 +35,18 @@ export abstract class WordDistance {
 			return WordDistance.None;
 		}
 
-		const [ranges] = await new BracketSelectionRangeProvider().provideSelectionRanges(model, [position]);
+		const [ranges] = await new BracketSelectionRangeProvider().provideSelectionRanges(
+      model,
+      [position],
+    );
 		if (ranges.length === 0) {
 			return WordDistance.None;
 		}
 
-		const wordRanges = await service.computeWordRanges(model.uri, ranges[0].range);
+		const wordRanges = await service.computeWordRanges(
+      model.uri,
+      ranges[0].range,
+    );
 		if (!wordRanges) {
 			return WordDistance.None;
 		}
@@ -57,7 +63,7 @@ export abstract class WordDistance {
 				if (item.kind === CompletionItemKind.Keyword) {
 					return 2 << 20;
 				}
-				const word = typeof item.label === 'string' ? item.label : item.label.label;
+				const word = typeof item.label === "string" ? item.label : item.label.label;
 				const wordLines = wordRanges[word];
 				if (isFalsyOrEmpty(wordLines)) {
 					return 2 << 20;

@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IRenderedMarkdown, MarkdownRenderOptions, renderMarkdown } from '../../../base/browser/markdownRenderer.js';
-import { onUnexpectedError } from '../../../base/common/errors.js';
-import { IMarkdownString, MarkdownStringTrustedOptions } from '../../../base/common/htmlContent.js';
-import { InstantiationType, registerSingleton } from '../../instantiation/common/extensions.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import { IOpenerService } from '../../opener/common/opener.js';
+import { IRenderedMarkdown, MarkdownRenderOptions, renderMarkdown } from "../../../base/browser/markdownRenderer.js";
+import { onUnexpectedError } from "../../../base/common/errors.js";
+import { IMarkdownString, MarkdownStringTrustedOptions } from "../../../base/common/htmlContent.js";
+import { InstantiationType, registerSingleton } from "../../instantiation/common/extensions.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { IOpenerService } from "../../opener/common/opener.js";
 
 /**
  * Renders markdown to HTML.
@@ -33,7 +33,9 @@ export interface IMarkdownCodeBlockRenderer {
 }
 
 
-export const IMarkdownRendererService = createDecorator<IMarkdownRendererService>('markdownRendererService');
+export const IMarkdownRendererService = createDecorator<IMarkdownRendererService>(
+  "markdownRendererService",
+);
 
 /**
  * Service that renders markdown content in a standard manner.
@@ -72,12 +74,16 @@ export class MarkdownRendererService implements IMarkdownRendererService {
 
 		if (!resolvedOptions.codeBlockRenderer) {
 			resolvedOptions.codeBlockRenderer = (alias, value) => {
-				return this._defaultCodeBlockRenderer?.renderCodeBlock(alias, value, resolvedOptions ?? {}) ?? Promise.resolve(document.createElement('span'));
+				return this._defaultCodeBlockRenderer?.renderCodeBlock(
+          alias,
+          value,
+          resolvedOptions ?? {},
+        ) ?? Promise.resolve(document.createElement("span"));
 			};
 		}
 
 		const rendered = renderMarkdown(markdown, resolvedOptions, outElement);
-		rendered.element.classList.add('rendered-markdown');
+		rendered.element.classList.add("rendered-markdown");
 		return rendered;
 	}
 
@@ -89,11 +95,11 @@ export class MarkdownRendererService implements IMarkdownRendererService {
 export async function openLinkFromMarkdown(openerService: IOpenerService, link: string, isTrusted: boolean | MarkdownStringTrustedOptions | undefined, skipValidation?: boolean): Promise<boolean> {
 	try {
 		return await openerService.open(link, {
-			fromUserGesture: true,
-			allowContributedOpeners: true,
-			allowCommands: toAllowCommandsOption(isTrusted),
-			skipValidation
-		});
+      fromUserGesture: true,
+      allowContributedOpeners: true,
+      allowCommands: toAllowCommandsOption(isTrusted),
+      skipValidation,
+    });
 	} catch (e) {
 		onUnexpectedError(e);
 		return false;
@@ -112,4 +118,8 @@ function toAllowCommandsOption(isTrusted: boolean | MarkdownStringTrustedOptions
 	return false; // Block commands
 }
 
-registerSingleton(IMarkdownRendererService, MarkdownRendererService, InstantiationType.Delayed);
+registerSingleton(
+  IMarkdownRendererService,
+  MarkdownRendererService,
+  InstantiationType.Delayed,
+);

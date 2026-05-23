@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as buffer from '../../../base/common/buffer.js';
-import { decodeUTF16LE } from './stringBuilder.js';
+import * as buffer from "../../../base/common/buffer.js";
+import { decodeUTF16LE } from "./stringBuilder.js";
 
 function escapeNewLine(str: string): string {
 	return (
 		str
-			.replace(/\n/g, '\\n')
-			.replace(/\r/g, '\\r')
+			.replace(/\n/g, "\\n")
+			.replace(/\r/g, "\\r")
 	);
 }
 
@@ -36,7 +36,7 @@ export class TextChange {
 		public readonly oldPosition: number,
 		public readonly oldText: string,
 		public readonly newPosition: number,
-		public readonly newText: string
+		public readonly newText: string,
 	) { }
 
 	public toString(): string {
@@ -89,8 +89,14 @@ export class TextChange {
 	public static read(b: Uint8Array, offset: number, dest: TextChange[]): number {
 		const oldPosition = buffer.readUInt32BE(b, offset); offset += 4;
 		const newPosition = buffer.readUInt32BE(b, offset); offset += 4;
-		const oldText = TextChange._readString(b, offset); offset += TextChange._writeStringSize(oldText);
-		const newText = TextChange._readString(b, offset); offset += TextChange._writeStringSize(newText);
+		const oldText = TextChange._readString(
+      b,
+      offset,
+    ); offset += TextChange._writeStringSize(oldText);
+		const newText = TextChange._readString(
+      b,
+      offset,
+    ); offset += TextChange._writeStringSize(newText);
 		dest.push(new TextChange(oldPosition, oldText, newPosition, newText));
 		return offset;
 	}
@@ -166,14 +172,20 @@ class TextChangeCompressor {
 			}
 
 			if (currEdit.oldPosition < prevEdit.newPosition) {
-				const [e1, e2] = TextChangeCompressor._splitCurr(currEdit, prevEdit.newPosition - currEdit.oldPosition);
+				const [e1, e2] = TextChangeCompressor._splitCurr(
+          currEdit,
+          prevEdit.newPosition - currEdit.oldPosition,
+        );
 				this._acceptCurr(e1);
 				currEdit = e2;
 				continue;
 			}
 
 			if (prevEdit.newPosition < currEdit.oldPosition) {
-				const [e1, e2] = TextChangeCompressor._splitPrev(prevEdit, currEdit.oldPosition - prevEdit.newPosition);
+				const [e1, e2] = TextChangeCompressor._splitPrev(
+          prevEdit,
+          currEdit.oldPosition - prevEdit.newPosition,
+        );
 				this._acceptPrev(e1);
 				prevEdit = e2;
 				continue;
@@ -190,13 +202,19 @@ class TextChangeCompressor {
 				prevEdit = this._getPrev(++prevIndex);
 				currEdit = this._getCurr(++currIndex);
 			} else if (currEdit.oldEnd < prevEdit.newEnd) {
-				const [e1, e2] = TextChangeCompressor._splitPrev(prevEdit, currEdit.oldLength);
+				const [e1, e2] = TextChangeCompressor._splitPrev(
+          prevEdit,
+          currEdit.oldLength,
+        );
 				mergePrev = e1;
 				mergeCurr = currEdit;
 				prevEdit = e2;
 				currEdit = this._getCurr(++currIndex);
 			} else {
-				const [e1, e2] = TextChangeCompressor._splitCurr(currEdit, prevEdit.newLength);
+				const [e1, e2] = TextChangeCompressor._splitCurr(
+          currEdit,
+          prevEdit.newLength,
+        );
 				mergePrev = prevEdit;
 				mergeCurr = e1;
 				prevEdit = this._getPrev(++prevIndex);
@@ -204,11 +222,11 @@ class TextChangeCompressor {
 			}
 
 			this._result[this._resultLen++] = new TextChange(
-				mergePrev.oldPosition,
-				mergePrev.oldText,
-				mergeCurr.newPosition,
-				mergeCurr.newText
-			);
+        mergePrev.oldPosition,
+        mergePrev.oldText,
+        mergeCurr.newPosition,
+        mergeCurr.newText,
+      );
 			this._prevDeltaOffset += mergePrev.newLength - mergePrev.oldLength;
 			this._currDeltaOffset += mergeCurr.newLength - mergeCurr.oldLength;
 		}
@@ -219,7 +237,10 @@ class TextChangeCompressor {
 	}
 
 	private _acceptCurr(currEdit: TextChange): void {
-		this._result[this._resultLen++] = TextChangeCompressor._rebaseCurr(this._prevDeltaOffset, currEdit);
+		this._result[this._resultLen++] = TextChangeCompressor._rebaseCurr(
+      this._prevDeltaOffset,
+      currEdit,
+    );
 		this._currDeltaOffset += currEdit.newLength - currEdit.oldLength;
 	}
 
@@ -228,7 +249,10 @@ class TextChangeCompressor {
 	}
 
 	private _acceptPrev(prevEdit: TextChange): void {
-		this._result[this._resultLen++] = TextChangeCompressor._rebasePrev(this._currDeltaOffset, prevEdit);
+		this._result[this._resultLen++] = TextChangeCompressor._rebasePrev(
+      this._currDeltaOffset,
+      prevEdit,
+    );
 		this._prevDeltaOffset += prevEdit.newLength - prevEdit.oldLength;
 	}
 
@@ -238,20 +262,20 @@ class TextChangeCompressor {
 
 	private static _rebaseCurr(prevDeltaOffset: number, currEdit: TextChange): TextChange {
 		return new TextChange(
-			currEdit.oldPosition - prevDeltaOffset,
-			currEdit.oldText,
-			currEdit.newPosition,
-			currEdit.newText
-		);
+      currEdit.oldPosition - prevDeltaOffset,
+      currEdit.oldText,
+      currEdit.newPosition,
+      currEdit.newText,
+    );
 	}
 
 	private static _rebasePrev(currDeltaOffset: number, prevEdit: TextChange): TextChange {
 		return new TextChange(
-			prevEdit.oldPosition,
-			prevEdit.oldText,
-			prevEdit.newPosition + currDeltaOffset,
-			prevEdit.newText
-		);
+      prevEdit.oldPosition,
+      prevEdit.oldText,
+      prevEdit.newPosition + currDeltaOffset,
+      prevEdit.newText,
+    );
 	}
 
 	private static _splitPrev(edit: TextChange, offset: number): [TextChange, TextChange] {
@@ -259,19 +283,9 @@ class TextChangeCompressor {
 		const postText = edit.newText.substr(offset);
 
 		return [
-			new TextChange(
-				edit.oldPosition,
-				edit.oldText,
-				edit.newPosition,
-				preText
-			),
-			new TextChange(
-				edit.oldEnd,
-				'',
-				edit.newPosition + offset,
-				postText
-			)
-		];
+      new TextChange(edit.oldPosition, edit.oldText, edit.newPosition, preText),
+      new TextChange(edit.oldEnd, "", edit.newPosition + offset, postText),
+    ];
 	}
 
 	private static _splitCurr(edit: TextChange, offset: number): [TextChange, TextChange] {
@@ -279,19 +293,9 @@ class TextChangeCompressor {
 		const postText = edit.oldText.substr(offset);
 
 		return [
-			new TextChange(
-				edit.oldPosition,
-				preText,
-				edit.newPosition,
-				edit.newText
-			),
-			new TextChange(
-				edit.oldPosition + offset,
-				postText,
-				edit.newEnd,
-				''
-			)
-		];
+      new TextChange(edit.oldPosition, preText, edit.newPosition, edit.newText),
+      new TextChange(edit.oldPosition + offset, postText, edit.newEnd, ""),
+    ];
 	}
 
 	private static _merge(edits: TextChange[]): TextChange[] {
@@ -309,11 +313,11 @@ class TextChangeCompressor {
 			if (prev.oldEnd === curr.oldPosition) {
 				// Merge into `prev`
 				prev = new TextChange(
-					prev.oldPosition,
-					prev.oldText + curr.oldText,
-					prev.newPosition,
-					prev.newText + curr.newText
-				);
+          prev.oldPosition,
+          prev.oldText + curr.oldText,
+          prev.newPosition,
+          prev.newText + curr.newText,
+        );
 			} else {
 				result[resultLen++] = prev;
 				prev = curr;

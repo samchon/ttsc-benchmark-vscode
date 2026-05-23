@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { distinct } from '../../../../base/common/arrays.js';
-import { ScopedLineTokens, ignoreBracketsInToken } from '../supports.js';
-import { BracketsUtils, RichEditBrackets } from './richEditBrackets.js';
+import { distinct } from "../../../../base/common/arrays.js";
+import { ScopedLineTokens, ignoreBracketsInToken } from "../supports.js";
+import { BracketsUtils, RichEditBrackets } from "./richEditBrackets.js";
 
 /**
  * Interface used to support electric characters
@@ -53,7 +53,13 @@ export class BracketElectricCharacterSupport {
 		const reversedBracketRegex = this._richEditBrackets.reversedRegex;
 		const text = context.getLineContent().substring(0, column - 1) + character;
 
-		const r = BracketsUtils.findPrevBracketInRange(reversedBracketRegex, 1, text, 0, text.length);
+		const r = BracketsUtils.findPrevBracketInRange(
+      reversedBracketRegex,
+      1,
+      text,
+      0,
+      text.length,
+    );
 		if (!r) {
 			return null;
 		}
@@ -65,14 +71,16 @@ export class BracketElectricCharacterSupport {
 			return null;
 		}
 
-		const textBeforeBracket = context.getActualLineContentBefore(r.startColumn - 1);
+		const textBeforeBracket = context.getActualLineContentBefore(
+      r.startColumn - 1,
+    );
 		if (!/^\s*$/.test(textBeforeBracket)) {
 			// There is other text on the line before the bracket
 			return null;
 		}
 
 		return {
-			matchOpenBracket: bracketText
-		};
+      matchOpenBracket: bracketText,
+    };
 	}
 }

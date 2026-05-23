@@ -3,15 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../../base/common/cancellation.js';
-import { IStringDictionary } from '../../../../../base/common/collections.js';
-import { Event } from '../../../../../base/common/event.js';
-import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
-import { observableValue } from '../../../../../base/common/observable.js';
-import { IAction } from '../../../../../base/common/actions.js';
-import { ExtensionIdentifier } from '../../../../../platform/extensions/common/extensions.js';
-import { IChatMessage, IModelsControlManifest, ILanguageModelChatMetadata, ILanguageModelChatMetadataAndIdentifier, ILanguageModelChatProvider, ILanguageModelChatRequestOptions, ILanguageModelChatResponse, ILanguageModelChatSelector, ILanguageModelProviderDescriptor, ILanguageModelsGroup, ILanguageModelsService, IUserFriendlyLanguageModel } from '../../common/languageModels.js';
-import { ILanguageModelsProviderGroup } from '../../common/languageModelsConfiguration.js';
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { IStringDictionary } from "../../../../../base/common/collections.js";
+import { Event } from "../../../../../base/common/event.js";
+import { Disposable, IDisposable } from "../../../../../base/common/lifecycle.js";
+import { observableValue } from "../../../../../base/common/observable.js";
+import { IAction } from "../../../../../base/common/actions.js";
+import { ExtensionIdentifier } from "../../../../../platform/extensions/common/extensions.js";
+import {
+  IChatMessage,
+  IModelsControlManifest,
+  ILanguageModelChatMetadata,
+  ILanguageModelChatMetadataAndIdentifier,
+  ILanguageModelChatProvider,
+  ILanguageModelChatRequestOptions,
+  ILanguageModelChatResponse,
+  ILanguageModelChatSelector,
+  ILanguageModelProviderDescriptor,
+  ILanguageModelsGroup,
+  ILanguageModelsService,
+  IUserFriendlyLanguageModel,
+} from "../../common/languageModels.js";
+import { ILanguageModelsProviderGroup } from "../../common/languageModelsConfiguration.js";
 
 export class NullLanguageModelsService implements ILanguageModelsService {
 	_serviceBrand: undefined;
@@ -70,11 +83,11 @@ export class NullLanguageModelsService implements ILanguageModelsService {
 	}
 
 	sendChatRequest(identifier: string, from: ExtensionIdentifier | undefined, messages: IChatMessage[], options: ILanguageModelChatRequestOptions, token: CancellationToken): Promise<ILanguageModelChatResponse> {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 
 	computeTokenLength(identifier: string, message: string | IChatMessage, token: CancellationToken): Promise<number> {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 
 	getModelConfiguration(_modelId: string): IStringDictionary<unknown> | undefined {
@@ -138,5 +151,8 @@ export class NullLanguageModelsService implements ILanguageModelsService {
 		return { free: {}, paid: {} };
 	}
 
-	restrictedChatParticipants = observableValue('restrictedChatParticipants', Object.create(null));
+	restrictedChatParticipants = observableValue(
+    "restrictedChatParticipants",
+    Object.create(null),
+  );
 }

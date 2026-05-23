@@ -3,21 +3,25 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { parentPort } from 'worker_threads';
-import { DefaultLinesDiffComputer } from '../../../editor/common/diff/defaultLinesDiffComputer/defaultLinesDiffComputer.js';
-import type { ILinesDiffComputerOptions } from '../../../editor/common/diff/linesDiffComputer.js';
-import type { IDiffCountResult } from '../common/diffComputeService.js';
+import { parentPort } from "worker_threads";
+import { DefaultLinesDiffComputer } from "../../../editor/common/diff/defaultLinesDiffComputer/defaultLinesDiffComputer.js";
+import type { ILinesDiffComputerOptions } from "../../../editor/common/diff/linesDiffComputer.js";
+import type { IDiffCountResult } from "../common/diffComputeService.js";
 
 export function computeDiffCounts(originalText: string, modifiedText: string, timeoutMs: number): IDiffCountResult {
 	const originalLines = originalText.split(/\r\n|\r|\n/);
 	const modifiedLines = modifiedText.split(/\r\n|\r|\n/);
 	const diffComputer = new DefaultLinesDiffComputer();
 	const options: ILinesDiffComputerOptions = {
-		ignoreTrimWhitespace: true,
-		maxComputationTimeMs: timeoutMs,
-		computeMoves: false,
-	};
-	const result = diffComputer.computeDiff(originalLines, modifiedLines, options);
+    ignoreTrimWhitespace: true,
+    maxComputationTimeMs: timeoutMs,
+    computeMoves: false,
+  };
+	const result = diffComputer.computeDiff(
+    originalLines,
+    modifiedLines,
+    options,
+  );
 
 	let added = 0;
 	let removed = 0;
@@ -32,12 +36,12 @@ export function computeDiffCounts(originalText: string, modifiedText: string, ti
 function main() {
 	const port = parentPort;
 	if (!port) {
-		throw new Error('This module should only be used in a worker thread.');
+		throw new Error("This module should only be used in a worker thread.");
 	}
 
-	port.on('message', ({ id, fn, args }: { id: number; fn: string; args: unknown[] }) => {
+	port.on("message", ({ id, fn, args }: { id: number; fn: string; args: unknown[] }) => {
 		try {
-			if (fn === 'computeDiffCounts') {
+			if (fn === "computeDiffCounts") {
 				const res = computeDiffCounts(args[0] as string, args[1] as string, args[2] as number);
 				port.postMessage({ id, res });
 			} else {

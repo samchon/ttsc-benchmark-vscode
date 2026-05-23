@@ -3,12 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { Disposable, DisposableMap } from '../../../base/common/lifecycle.js';
-import { ExtHostAiRelatedInformationShape, ExtHostContext, MainContext, MainThreadAiRelatedInformationShape } from '../common/extHost.protocol.js';
-import { RelatedInformationType } from '../common/extHostTypes.js';
-import { IAiRelatedInformationProvider, IAiRelatedInformationService, RelatedInformationResult } from '../../services/aiRelatedInformation/common/aiRelatedInformation.js';
-import { IExtHostContext, extHostNamedCustomer } from '../../services/extensions/common/extHostCustomers.js';
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { Disposable, DisposableMap } from "../../../base/common/lifecycle.js";
+import {
+  ExtHostAiRelatedInformationShape,
+  ExtHostContext,
+  MainContext,
+  MainThreadAiRelatedInformationShape,
+} from "../common/extHost.protocol.js";
+import { RelatedInformationType } from "../common/extHostTypes.js";
+import {
+  IAiRelatedInformationProvider,
+  IAiRelatedInformationService,
+  RelatedInformationResult,
+} from "../../services/aiRelatedInformation/common/aiRelatedInformation.js";
+import { IExtHostContext, extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
 
 @extHostNamedCustomer(MainContext.MainThreadAiRelatedInformation)
 export class MainThreadAiRelatedInformation extends Disposable implements MainThreadAiRelatedInformationShape {
@@ -25,7 +34,11 @@ export class MainThreadAiRelatedInformation extends Disposable implements MainTh
 
 	$getAiRelatedInformation(query: string, types: RelatedInformationType[]): Promise<RelatedInformationResult[]> {
 		// TODO: use a real cancellation token
-		return this._aiRelatedInformationService.getRelatedInformation(query, types, CancellationToken.None);
+		return this._aiRelatedInformationService.getRelatedInformation(
+      query,
+      types,
+      CancellationToken.None,
+    );
 	}
 
 	$registerAiRelatedInformationProvider(handle: number, type: RelatedInformationType): void {
@@ -34,7 +47,13 @@ export class MainThreadAiRelatedInformation extends Disposable implements MainTh
 				return this._proxy.$provideAiRelatedInformation(handle, query, token);
 			},
 		};
-		this._registrations.set(handle, this._aiRelatedInformationService.registerAiRelatedInformationProvider(type, provider));
+		this._registrations.set(
+      handle,
+      this._aiRelatedInformationService.registerAiRelatedInformationProvider(
+        type,
+        provider,
+      ),
+    );
 	}
 
 	$unregisterAiRelatedInformationProvider(handle: number): void {

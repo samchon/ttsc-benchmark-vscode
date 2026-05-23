@@ -3,16 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { onUnexpectedError } from '../../../../../base/common/errors.js';
-import { Disposable, DisposableStore, IDisposable } from '../../../../../base/common/lifecycle.js';
-import { derived, IObservable, IObservableWithChange, mapObservableArrayCached, observableSignalFromEvent, observableValue, transaction } from '../../../../../base/common/observable.js';
-import { isDefined } from '../../../../../base/common/types.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { StringText } from '../../../../../editor/common/core/text/abstractText.js';
-import { ITextModel } from '../../../../../editor/common/model.js';
-import { offsetEditFromContentChanges } from '../../../../../editor/common/model/textModelStringEdit.js';
-import { IModelService } from '../../../../../editor/common/services/model.js';
-import { IObservableDocument, ObservableWorkspace, StringEditWithReason } from './observableWorkspace.js';
+import { onUnexpectedError } from "../../../../../base/common/errors.js";
+import { Disposable, DisposableStore, IDisposable } from "../../../../../base/common/lifecycle.js";
+import {
+  derived,
+  IObservable,
+  IObservableWithChange,
+  mapObservableArrayCached,
+  observableSignalFromEvent,
+  observableValue,
+  transaction,
+} from "../../../../../base/common/observable.js";
+import { isDefined } from "../../../../../base/common/types.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { StringText } from "../../../../../editor/common/core/text/abstractText.js";
+import { ITextModel } from "../../../../../editor/common/model.js";
+import { offsetEditFromContentChanges } from "../../../../../editor/common/model/textModelStringEdit.js";
+import { IModelService } from "../../../../../editor/common/services/model.js";
+import { IObservableDocument, ObservableWorkspace, StringEditWithReason } from "./observableWorkspace.js";
 
 export class VSCodeWorkspace extends ObservableWorkspace implements IDisposable {
 	private readonly _documents;
@@ -25,15 +33,21 @@ export class VSCodeWorkspace extends ObservableWorkspace implements IDisposable 
 	) {
 		super();
 
-		const onModelAdded = observableSignalFromEvent(this, this._textModelService.onModelAdded);
-		const onModelRemoved = observableSignalFromEvent(this, this._textModelService.onModelRemoved);
+		const onModelAdded = observableSignalFromEvent(
+      this,
+      this._textModelService.onModelAdded,
+    );
+		const onModelRemoved = observableSignalFromEvent(
+      this,
+      this._textModelService.onModelRemoved,
+    );
 
 		const models = derived(this, reader => {
-			onModelAdded.read(reader);
-			onModelRemoved.read(reader);
-			const models = this._textModelService.getModels();
-			return models;
-		});
+      onModelAdded.read(reader);
+      onModelRemoved.read(reader);
+      const models = this._textModelService.getModels();
+      return models;
+    });
 
 		const documents = mapObservableArrayCached(this, models, (m, store) => {
 			if (m.isTooLargeForSyncing()) {
@@ -64,7 +78,10 @@ export class VSCodeDocument extends Disposable implements IObservableDocument {
 	) {
 		super();
 
-		this._value = observableValue<StringText, StringEditWithReason>(this, new StringText(this.textModel.getValue()));
+		this._value = observableValue<StringText, StringEditWithReason>(
+      this,
+      new StringText(this.textModel.getValue()),
+    );
 		this._version = observableValue(this, this.textModel.getVersionId());
 		this._languageId = observableValue(this, this.textModel.getLanguageId());
 
@@ -82,10 +99,12 @@ export class VSCodeDocument extends Disposable implements IObservableDocument {
 			});
 		}));
 
-		this._register(this.textModel.onDidChangeLanguage(e => {
-			transaction(tx => {
-				this._languageId.set(this.textModel.getLanguageId(), tx);
-			});
-		}));
+		this._register(
+      this.textModel.onDidChangeLanguage(e => {
+        transaction(tx => {
+          this._languageId.set(this.textModel.getLanguageId(), tx);
+        });
+      }),
+    );
 	}
 }

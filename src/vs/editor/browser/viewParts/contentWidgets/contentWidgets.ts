@@ -3,19 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../base/browser/dom.js';
-import { FastDomNode, createFastDomNode } from '../../../../base/browser/fastDomNode.js';
-import { ContentWidgetPositionPreference, IContentWidget, IContentWidgetRenderedCoordinate } from '../../editorBrowser.js';
-import { PartFingerprint, PartFingerprints, ViewPart } from '../../view/viewPart.js';
-import { RenderingContext, RestrictedRenderingContext } from '../../view/renderingContext.js';
-import { ViewContext } from '../../../common/viewModel/viewContext.js';
-import * as viewEvents from '../../../common/viewEvents.js';
-import { ViewportData } from '../../../common/viewLayout/viewLinesViewportData.js';
-import { EditorOption } from '../../../common/config/editorOptions.js';
-import { IDimension } from '../../../common/core/2d/dimension.js';
-import { PositionAffinity } from '../../../common/model.js';
-import { IPosition, Position } from '../../../common/core/position.js';
-import { IViewModel } from '../../../common/viewModel.js';
+import * as dom from "../../../../base/browser/dom.js";
+import { FastDomNode, createFastDomNode } from "../../../../base/browser/fastDomNode.js";
+import {
+  ContentWidgetPositionPreference,
+  IContentWidget,
+  IContentWidgetRenderedCoordinate,
+} from "../../editorBrowser.js";
+import { PartFingerprint, PartFingerprints, ViewPart } from "../../view/viewPart.js";
+import { RenderingContext, RestrictedRenderingContext } from "../../view/renderingContext.js";
+import { ViewContext } from "../../../common/viewModel/viewContext.js";
+import * as viewEvents from "../../../common/viewEvents.js";
+import { ViewportData } from "../../../common/viewLayout/viewLinesViewportData.js";
+import { EditorOption } from "../../../common/config/editorOptions.js";
+import { IDimension } from "../../../common/core/2d/dimension.js";
+import { PositionAffinity } from "../../../common/model.js";
+import { IPosition, Position } from "../../../common/core/position.js";
+import { IViewModel } from "../../../common/viewModel.js";
 
 /**
  * This view part is responsible for rendering the content widgets, which are
@@ -35,15 +39,22 @@ export class ViewContentWidgets extends ViewPart {
 		this._viewDomNode = viewDomNode;
 		this._widgets = {};
 
-		this.domNode = createFastDomNode(document.createElement('div'));
+		this.domNode = createFastDomNode(document.createElement("div"));
 		PartFingerprints.write(this.domNode, PartFingerprint.ContentWidgets);
-		this.domNode.setClassName('contentWidgets');
-		this.domNode.setPosition('absolute');
+		this.domNode.setClassName("contentWidgets");
+		this.domNode.setPosition("absolute");
 		this.domNode.setTop(0);
 
-		this.overflowingContentWidgetsDomNode = createFastDomNode(document.createElement('div'));
-		PartFingerprints.write(this.overflowingContentWidgetsDomNode, PartFingerprint.OverflowingContentWidgets);
-		this.overflowingContentWidgetsDomNode.setClassName('overflowingContentWidgets');
+		this.overflowingContentWidgetsDomNode = createFastDomNode(
+      document.createElement("div"),
+    );
+		PartFingerprints.write(
+      this.overflowingContentWidgetsDomNode,
+      PartFingerprint.OverflowingContentWidgets,
+    );
+		this.overflowingContentWidgetsDomNode.setClassName(
+      "overflowingContentWidgets",
+    );
 	}
 
 	public override dispose(): void {
@@ -129,7 +140,7 @@ export class ViewContentWidgets extends ViewPart {
 
 			const domNode = myWidget.domNode.domNode;
 			domNode.remove();
-			domNode.removeAttribute('monaco-visible-content-widget');
+			domNode.removeAttribute("monaco-visible-content-widget");
 
 			this.setShouldRender();
 		}
@@ -175,12 +186,12 @@ interface IBoxLayoutResult {
 }
 
 interface IOffViewportRenderData {
-	kind: 'offViewport';
+	kind: "offViewport";
 	preserveFocus: boolean;
 }
 
 interface IInViewportRenderData {
-	kind: 'inViewport';
+	kind: "inViewport";
 	coordinate: Coordinate;
 	position: ContentWidgetPositionPreference;
 }
@@ -240,10 +251,12 @@ class Widget {
 		this._isVisible = false;
 		this._renderData = null;
 
-		this.domNode.setPosition((this._fixedOverflowWidgets && this.allowEditorOverflow) ? 'fixed' : 'absolute');
-		this.domNode.setDisplay('none');
-		this.domNode.setVisibility('hidden');
-		this.domNode.setAttribute('widgetId', this.id);
+		this.domNode.setPosition(
+      (this._fixedOverflowWidgets && this.allowEditorOverflow) ? "fixed" : "absolute",
+    );
+		this.domNode.setDisplay("none");
+		this.domNode.setVisibility("hidden");
+		this.domNode.setAttribute("widgetId", this.id);
 		this.domNode.setMaxWidth(this._maxWidth);
 	}
 
@@ -258,13 +271,25 @@ class Widget {
 	}
 
 	public updateAnchorViewPosition(): void {
-		this._setPosition(this._affinity, this._primaryAnchor.modelPosition, this._secondaryAnchor.modelPosition);
+		this._setPosition(
+      this._affinity,
+      this._primaryAnchor.modelPosition,
+      this._secondaryAnchor.modelPosition,
+    );
 	}
 
 	private _setPosition(affinity: PositionAffinity | null, primaryAnchor: IPosition | null, secondaryAnchor: IPosition | null): void {
 		this._affinity = affinity;
-		this._primaryAnchor = getValidPositionPair(primaryAnchor, this._context.viewModel, this._affinity);
-		this._secondaryAnchor = getValidPositionPair(secondaryAnchor, this._context.viewModel, this._affinity);
+		this._primaryAnchor = getValidPositionPair(
+      primaryAnchor,
+      this._context.viewModel,
+      this._affinity,
+    );
+		this._secondaryAnchor = getValidPositionPair(
+      secondaryAnchor,
+      this._context.viewModel,
+      this._affinity,
+    );
 
 		function getValidPositionPair(position: IPosition | null, viewModel: IViewModel, affinity: PositionAffinity | null): PositionPair {
 			if (!position) {
@@ -272,8 +297,13 @@ class Widget {
 			}
 			// Do not trust that widgets give a valid position
 			const validModelPosition = viewModel.model.validatePosition(position);
-			if (viewModel.coordinatesConverter.modelPositionIsVisible(validModelPosition)) {
-				const viewPosition = viewModel.coordinatesConverter.convertModelPositionToViewPosition(validModelPosition, affinity ?? undefined);
+			if (viewModel.coordinatesConverter.modelPositionIsVisible(
+        validModelPosition,
+      )) {
+				const viewPosition = viewModel.coordinatesConverter.convertModelPositionToViewPosition(
+          validModelPosition,
+          affinity ?? undefined,
+        );
 				return new PositionPair(position, viewPosition);
 			}
 			return new PositionPair(position, null);
@@ -298,9 +328,9 @@ class Widget {
 			// we change it from `display:none` to `display:block` even if it
 			// might be outside the viewport such that we can measure its size
 			// in `prepareRender`
-			this.domNode.setDisplay('block');
+			this.domNode.setDisplay("block");
 		} else {
-			this.domNode.setDisplay('none');
+			this.domNode.setDisplay("none");
 		}
 		this._cachedDomNodeOffsetWidth = -1;
 		this._cachedDomNodeOffsetHeight = -1;
@@ -341,7 +371,10 @@ class Widget {
 
 		// Initially, the limits are defined as the dom node limits
 		const MIN_LIMIT = Math.max(LEFT_PADDING, domNodePosition.left - width);
-		const MAX_LIMIT = Math.min(domNodePosition.left + domNodePosition.width + width, windowSize.width - RIGHT_PADDING);
+		const MAX_LIMIT = Math.min(
+      domNodePosition.left + domNodePosition.width + width,
+      windowSize.width - RIGHT_PADDING,
+    );
 
 		const elDocument = this._viewDomNode.domNode.ownerDocument;
 		const elWindow = elDocument.defaultView;
@@ -366,14 +399,21 @@ class Widget {
 		const aboveTop = anchor.top - height;
 		const belowTop = anchor.top + anchor.height;
 
-		const domNodePosition = dom.getDomNodePagePosition(this._viewDomNode.domNode);
+		const domNodePosition = dom.getDomNodePagePosition(
+      this._viewDomNode.domNode,
+    );
 		const elDocument = this._viewDomNode.domNode.ownerDocument;
 		const elWindow = elDocument.defaultView;
 		const absoluteAboveTop = domNodePosition.top + aboveTop - (elWindow?.scrollY ?? 0);
 		const absoluteBelowTop = domNodePosition.top + belowTop - (elWindow?.scrollY ?? 0);
 
 		const windowSize = dom.getClientArea(elDocument.body);
-		const [left, absoluteAboveLeft] = this._layoutHorizontalSegmentInPage(windowSize, domNodePosition, anchor.left - ctx.scrollLeft + this._contentLeft, width);
+		const [left, absoluteAboveLeft] = this._layoutHorizontalSegmentInPage(
+      windowSize,
+      domNodePosition,
+      anchor.left - ctx.scrollLeft + this._contentLeft,
+      width,
+    );
 
 		// Leave some clearance to the top/bottom
 		const TOP_PADDING = 22;
@@ -384,12 +424,12 @@ class Widget {
 
 		if (this._fixedOverflowWidgets) {
 			return {
-				fitsAbove,
-				aboveTop: Math.max(absoluteAboveTop, TOP_PADDING),
-				fitsBelow,
-				belowTop: absoluteBelowTop,
-				left: absoluteAboveLeft
-			};
+        fitsAbove,
+        aboveTop: Math.max(absoluteAboveTop, TOP_PADDING),
+        fitsBelow,
+        belowTop: absoluteBelowTop,
+        left: absoluteAboveLeft,
+      };
 		}
 
 		return { fitsAbove, aboveTop, fitsBelow, belowTop, left };
@@ -405,7 +445,10 @@ class Widget {
 	 * The content widget should touch if possible the secondary anchor.
 	 */
 	private _getAnchorsCoordinates(ctx: RenderingContext): { primary: AnchorCoordinate | null; secondary: AnchorCoordinate | null } {
-		const primary = getCoordinates(this._primaryAnchor.viewPosition, this._affinity);
+		const primary = getCoordinates(
+      this._primaryAnchor.viewPosition,
+      this._affinity,
+    );
 		const secondaryViewPosition = (this._secondaryAnchor.viewPosition?.lineNumber === this._primaryAnchor.viewPosition?.lineNumber ? this._secondaryAnchor.viewPosition : null);
 		const secondary = getCoordinates(secondaryViewPosition, this._affinity);
 		return { primary, secondary };
@@ -422,7 +465,9 @@ class Widget {
 
 			// Left-align widgets that should appear :before content
 			const left = (position.column === 1 && affinity === PositionAffinity.LeftOfInjectedText ? 0 : horizontalPosition.left);
-			const top = ctx.getVerticalOffsetForLineNumber(position.lineNumber) - ctx.scrollTop;
+			const top = ctx.getVerticalOffsetForLineNumber(
+        position.lineNumber,
+      ) - ctx.scrollTop;
 			const lineHeight = ctx.getLineHeightForLineNumber(position.lineNumber);
 			return new AnchorCoordinate(top, left, lineHeight);
 		}
@@ -433,13 +478,21 @@ class Widget {
 			return primary;
 		}
 
-		const fontInfo = this._context.configuration.options.get(EditorOption.fontInfo);
+		const fontInfo = this._context.configuration.options.get(
+      EditorOption.fontInfo,
+    );
 
 		let left = secondary.left;
 		if (left < primary.left) {
-			left = Math.max(left, primary.left - width + fontInfo.typicalFullwidthCharacterWidth);
+			left = Math.max(
+        left,
+        primary.left - width + fontInfo.typicalFullwidthCharacterWidth,
+      );
 		} else {
-			left = Math.min(left, primary.left + width - fontInfo.typicalFullwidthCharacterWidth);
+			left = Math.min(
+        left,
+        primary.left + width - fontInfo.typicalFullwidthCharacterWidth,
+      );
 		}
 		return new AnchorCoordinate(primary.top, left, primary.height);
 	}
@@ -452,17 +505,20 @@ class Widget {
 		const { primary, secondary } = this._getAnchorsCoordinates(ctx);
 		if (!primary) {
 			return {
-				kind: 'offViewport',
-				preserveFocus: this.domNode.domNode.contains(this.domNode.domNode.ownerDocument.activeElement)
-			};
+        kind: "offViewport",
+        preserveFocus: this.domNode.domNode.contains(this.domNode.domNode.ownerDocument.activeElement),
+      };
 			// return null;
 		}
 
 		if (this._cachedDomNodeOffsetWidth === -1 || this._cachedDomNodeOffsetHeight === -1) {
 
 			let preferredDimensions: IDimension | null = null;
-			if (typeof this._actual.beforeRender === 'function') {
-				preferredDimensions = safeInvoke(this._actual.beforeRender, this._actual);
+			if (typeof this._actual.beforeRender === "function") {
+				preferredDimensions = safeInvoke(
+          this._actual.beforeRender,
+          this._actual,
+        );
 			}
 			if (preferredDimensions) {
 				this._cachedDomNodeOffsetWidth = preferredDimensions.width;
@@ -475,13 +531,27 @@ class Widget {
 			}
 		}
 
-		const anchor = this._reduceAnchorCoordinates(primary, secondary, this._cachedDomNodeOffsetWidth);
+		const anchor = this._reduceAnchorCoordinates(
+      primary,
+      secondary,
+      this._cachedDomNodeOffsetWidth,
+    );
 
 		let placement: IBoxLayoutResult | null;
 		if (this.allowEditorOverflow) {
-			placement = this._layoutBoxInPage(anchor, this._cachedDomNodeOffsetWidth, this._cachedDomNodeOffsetHeight, ctx);
+			placement = this._layoutBoxInPage(
+        anchor,
+        this._cachedDomNodeOffsetWidth,
+        this._cachedDomNodeOffsetHeight,
+        ctx,
+      );
 		} else {
-			placement = this._layoutBoxInViewport(anchor, this._cachedDomNodeOffsetWidth, this._cachedDomNodeOffsetHeight, ctx);
+			placement = this._layoutBoxInViewport(
+        anchor,
+        this._cachedDomNodeOffsetWidth,
+        this._cachedDomNodeOffsetHeight,
+        ctx,
+      );
 		}
 
 		// Do two passes, first for perfect fit, second picks first option
@@ -495,10 +565,10 @@ class Widget {
 					}
 					if (pass === 2 || placement.fitsAbove) {
 						return {
-							kind: 'inViewport',
-							coordinate: new Coordinate(placement.aboveTop, placement.left),
-							position: ContentWidgetPositionPreference.ABOVE
-						};
+              kind: "inViewport",
+              coordinate: new Coordinate(placement.aboveTop, placement.left),
+              position: ContentWidgetPositionPreference.ABOVE,
+            };
 					}
 				} else if (pref === ContentWidgetPositionPreference.BELOW) {
 					if (!placement) {
@@ -507,24 +577,24 @@ class Widget {
 					}
 					if (pass === 2 || placement.fitsBelow) {
 						return {
-							kind: 'inViewport',
-							coordinate: new Coordinate(placement.belowTop, placement.left),
-							position: ContentWidgetPositionPreference.BELOW
-						};
+              kind: "inViewport",
+              coordinate: new Coordinate(placement.belowTop, placement.left),
+              position: ContentWidgetPositionPreference.BELOW,
+            };
 					}
 				} else {
 					if (this.allowEditorOverflow) {
 						return {
-							kind: 'inViewport',
-							coordinate: this._prepareRenderWidgetAtExactPositionOverflowing(new Coordinate(anchor.top, anchor.left)),
-							position: ContentWidgetPositionPreference.EXACT
-						};
+              kind: "inViewport",
+              coordinate: this._prepareRenderWidgetAtExactPositionOverflowing(new Coordinate(anchor.top, anchor.left)),
+              position: ContentWidgetPositionPreference.EXACT,
+            };
 					} else {
 						return {
-							kind: 'inViewport',
-							coordinate: new Coordinate(anchor.top, anchor.left),
-							position: ContentWidgetPositionPreference.EXACT
-						};
+              kind: "inViewport",
+              coordinate: new Coordinate(anchor.top, anchor.left),
+              position: ContentWidgetPositionPreference.EXACT,
+            };
 					}
 				}
 			}
@@ -554,22 +624,22 @@ class Widget {
 	}
 
 	public render(ctx: RestrictedRenderingContext): void {
-		if (!this._renderData || this._renderData.kind === 'offViewport') {
+		if (!this._renderData || this._renderData.kind === "offViewport") {
 			// This widget should be invisible
 			if (this._isVisible) {
-				this.domNode.removeAttribute('monaco-visible-content-widget');
+				this.domNode.removeAttribute("monaco-visible-content-widget");
 				this._isVisible = false;
 
-				if (this._renderData?.kind === 'offViewport' && this._renderData.preserveFocus) {
+				if (this._renderData?.kind === "offViewport" && this._renderData.preserveFocus) {
 					// widget wants to be shown, but it is outside of the viewport and it
 					// has focus which we need to preserve
 					this.domNode.setTop(-1000);
 				} else {
-					this.domNode.setVisibility('hidden');
+					this.domNode.setVisibility("hidden");
 				}
 			}
 
-			if (typeof this._actual.afterRender === 'function') {
+			if (typeof this._actual.afterRender === "function") {
 				safeInvoke(this._actual.afterRender, this._actual, null, null);
 			}
 			return;
@@ -580,18 +650,25 @@ class Widget {
 			this.domNode.setTop(this._renderData.coordinate.top);
 			this.domNode.setLeft(this._renderData.coordinate.left);
 		} else {
-			this.domNode.setTop(this._renderData.coordinate.top + ctx.scrollTop - ctx.bigNumbersDelta);
+			this.domNode.setTop(
+        this._renderData.coordinate.top + ctx.scrollTop - ctx.bigNumbersDelta,
+      );
 			this.domNode.setLeft(this._renderData.coordinate.left);
 		}
 
 		if (!this._isVisible) {
-			this.domNode.setVisibility('inherit');
-			this.domNode.setAttribute('monaco-visible-content-widget', 'true');
+			this.domNode.setVisibility("inherit");
+			this.domNode.setAttribute("monaco-visible-content-widget", "true");
 			this._isVisible = true;
 		}
 
-		if (typeof this._actual.afterRender === 'function') {
-			safeInvoke(this._actual.afterRender, this._actual, this._renderData.position, this._renderData.coordinate);
+		if (typeof this._actual.afterRender === "function") {
+			safeInvoke(
+        this._actual.afterRender,
+        this._actual,
+        this._renderData.position,
+        this._renderData.coordinate,
+      );
 		}
 	}
 }
@@ -599,7 +676,7 @@ class Widget {
 class PositionPair {
 	constructor(
 		public readonly modelPosition: IPosition | null,
-		public readonly viewPosition: Position | null
+		public readonly viewPosition: Position | null,
 	) { }
 }
 
@@ -608,7 +685,7 @@ class Coordinate implements IContentWidgetRenderedCoordinate {
 
 	constructor(
 		public readonly top: number,
-		public readonly left: number
+		public readonly left: number,
 	) { }
 }
 
@@ -618,7 +695,7 @@ class AnchorCoordinate {
 	constructor(
 		public readonly top: number,
 		public readonly left: number,
-		public readonly height: number
+		public readonly height: number,
 	) { }
 }
 

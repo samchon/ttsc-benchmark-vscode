@@ -3,26 +3,30 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from '../../../../../../base/common/buffer.js';
-import { Disposable } from '../../../../../../base/common/lifecycle.js';
-import { basename, dirname } from '../../../../../../base/common/resources.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { hash } from '../../../../../../base/common/hash.js';
-import { IFileService } from '../../../../../../platform/files/common/files.js';
-import { PromptsType } from '../../../common/promptSyntax/promptTypes.js';
-import { type CustomizationRef } from '../../../../../../platform/agentHost/common/state/sessionState.js';
-import { type URI as ProtocolURI } from '../../../../../../platform/agentHost/common/state/protocol/state.js';
-import { IAgentHostFileSystemService, SYNCED_CUSTOMIZATION_SCHEME } from '../../../../../../workbench/services/agentHost/common/agentHostFileSystemService.js';
+import { VSBuffer } from "../../../../../../base/common/buffer.js";
+import { Disposable } from "../../../../../../base/common/lifecycle.js";
+import { basename, dirname } from "../../../../../../base/common/resources.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { hash } from "../../../../../../base/common/hash.js";
+import { IFileService } from "../../../../../../platform/files/common/files.js";
+import { PromptsType } from "../../../common/promptSyntax/promptTypes.js";
+import { type CustomizationRef } from "../../../../../../platform/agentHost/common/state/sessionState.js";
+import { type URI as ProtocolURI } from "../../../../../../platform/agentHost/common/state/protocol/state.js";
+import { IAgentHostFileSystemService, SYNCED_CUSTOMIZATION_SCHEME } from "../../../../../../workbench/services/agentHost/common/agentHostFileSystemService.js";
 
 // Re-export so existing consumers don't need to change their import source.
 export { SYNCED_CUSTOMIZATION_SCHEME };
 
-const DISPLAY_NAME = 'VS Code Synced Data';
+const DISPLAY_NAME = "VS Code Synced Data";
 
-const MANIFEST_CONTENT = JSON.stringify({
-	name: DISPLAY_NAME,
-	description: 'Customization data synced from VS Code',
-}, null, '\t');
+const MANIFEST_CONTENT = JSON.stringify(
+  {
+    name: DISPLAY_NAME,
+    description: "Customization data synced from VS Code",
+  },
+  null,
+  "\t",
+);
 
 /**
  * Maps a {@link PromptsType} to the default plugin directory where that
@@ -34,10 +38,10 @@ const MANIFEST_CONTENT = JSON.stringify({
  */
 function pluginDirForType(type: PromptsType): string | undefined {
 	switch (type) {
-		case PromptsType.instructions: return 'rules';
-		case PromptsType.prompt: return 'commands';
-		case PromptsType.agent: return 'agents';
-		case PromptsType.skill: return 'skills';
+		case PromptsType.instructions: return "rules";
+		case PromptsType.prompt: return "commands";
+		case PromptsType.agent: return "agents";
+		case PromptsType.skill: return "skills";
 		case PromptsType.hook: return undefined; // TODO: hooks require JSON merging
 	}
 }
@@ -92,7 +96,10 @@ export class SyncedCustomizationBundler extends Disposable {
 	 * {@link InMemoryFileSystemProvider} only routes by path.
 	 */
 	private get _rootUri(): URI {
-		return URI.from({ scheme: SYNCED_CUSTOMIZATION_SCHEME, path: `/${this._authority}` });
+		return URI.from({
+      scheme: SYNCED_CUSTOMIZATION_SCHEME,
+      path: `/${this._authority}`,
+    });
 	}
 
 	/**
@@ -117,8 +124,11 @@ export class SyncedCustomizationBundler extends Disposable {
 		}
 
 		// Write the manifest
-		const manifestUri = URI.joinPath(this._rootUri, '.plugin', 'plugin.json');
-		await this._fileService.writeFile(manifestUri, VSBuffer.fromString(MANIFEST_CONTENT));
+		const manifestUri = URI.joinPath(this._rootUri, ".plugin", "plugin.json");
+		await this._fileService.writeFile(
+      manifestUri,
+      VSBuffer.fromString(MANIFEST_CONTENT),
+    );
 
 		// Read each source file and write it into the correct plugin directory,
 		// collecting data for the nonce computation.
@@ -134,7 +144,7 @@ export class SyncedCustomizationBundler extends Disposable {
 			// Preserve the directory structure: skills/{skillName}/SKILL.md.
 			let destUri: URI;
 			let hashKey: string;
-			if (file.type === PromptsType.skill && fileName.toLowerCase() === 'skill.md') {
+			if (file.type === PromptsType.skill && fileName.toLowerCase() === "skill.md") {
 				const skillDirName = basename(dirname(file.uri));
 				destUri = URI.joinPath(this._rootUri, dir, skillDirName, fileName);
 				hashKey = `${dir}/${skillDirName}/${fileName}`;
@@ -151,7 +161,7 @@ export class SyncedCustomizationBundler extends Disposable {
 
 		// Stable nonce: sort so file ordering doesn't matter
 		hashParts.sort();
-		const nonce = String(hash(hashParts.join('\n')));
+		const nonce = String(hash(hashParts.join("\n")));
 
 		this._lastNonce = nonce;
 

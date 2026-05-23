@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { SDKMessage } from '@anthropic-ai/claude-agent-sdk';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable, IReference } from '../../../../base/common/lifecycle.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IInstantiationService } from '../../../instantiation/common/instantiation.js';
-import { ILogService } from '../../../log/common/log.js';
-import { AgentSignal } from '../../common/agentService.js';
-import { ISessionDatabase } from '../../common/sessionDataService.js';
-import { ClaudeFileEditObserver } from './claudeFileEditObserver.js';
-import { ClaudeMapperState, mapSDKMessageToAgentSignals } from './claudeMapSessionEvents.js';
-import type { SubagentRegistry } from './claudeSubagentRegistry.js';
+import type { SDKMessage } from "@anthropic-ai/claude-agent-sdk";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable, IReference } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IInstantiationService } from "../../../instantiation/common/instantiation.js";
+import { ILogService } from "../../../log/common/log.js";
+import { AgentSignal } from "../../common/agentService.js";
+import { ISessionDatabase } from "../../common/sessionDataService.js";
+import { ClaudeFileEditObserver } from "./claudeFileEditObserver.js";
+import { ClaudeMapperState, mapSDKMessageToAgentSignals } from "./claudeMapSessionEvents.js";
+import type { SubagentRegistry } from "./claudeSubagentRegistry.js";
 
 /**
  * Per-message router. Awaits file-edit observation for `type: 'user'`
@@ -30,7 +30,9 @@ import type { SubagentRegistry } from './claudeSubagentRegistry.js';
  */
 export class ClaudeSdkMessageRouter extends Disposable {
 
-	private readonly _onDidProduceSignal = this._register(new Emitter<AgentSignal>());
+	private readonly _onDidProduceSignal = this._register(
+    new Emitter<AgentSignal>(),
+  );
 	readonly onDidProduceSignal: Event<AgentSignal> = this._onDidProduceSignal.event;
 
 	private readonly _editObserver: ClaudeFileEditObserver;
@@ -49,8 +51,12 @@ export class ClaudeSdkMessageRouter extends Disposable {
 		super();
 		this._clientId = clientId;
 		this._editObserver = this._register(
-			instantiationService.createInstance(ClaudeFileEditObserver, _sessionUri.toString(), dbRef),
-		);
+      instantiationService.createInstance(
+        ClaudeFileEditObserver,
+        _sessionUri.toString(),
+        dbRef,
+      ),
+    );
 	}
 
 	setClientId(clientId: string | undefined): void {
@@ -58,9 +64,9 @@ export class ClaudeSdkMessageRouter extends Disposable {
 	}
 
 	async handle(message: SDKMessage, turnId: string | undefined): Promise<void> {
-		if (message.type === 'assistant') {
+		if (message.type === "assistant") {
 			this._editObserver.observeAssistant(message);
-		} else if (message.type === 'user' && turnId !== undefined) {
+		} else if (message.type === "user" && turnId !== undefined) {
 			await this._editObserver.observeUser(message, turnId, this._mapperState);
 		}
 		if (turnId === undefined) {
@@ -68,19 +74,21 @@ export class ClaudeSdkMessageRouter extends Disposable {
 		}
 		try {
 			const signals = mapSDKMessageToAgentSignals(
-				message,
-				this._sessionUri,
-				turnId,
-				this._mapperState,
-				this._logService,
-				this._subagents,
-				this._clientId,
-			);
+        message,
+        this._sessionUri,
+        turnId,
+        this._mapperState,
+        this._logService,
+        this._subagents,
+        this._clientId,
+      );
 			for (const signal of signals) {
 				this._onDidProduceSignal.fire(signal);
 			}
 		} catch (mapperErr) {
-			this._logService.warn(`[ClaudeSdkMessageRouter] mapper threw, skipping message: ${mapperErr}`);
+			this._logService.warn(
+        `[ClaudeSdkMessageRouter] mapper threw, skipping message: ${mapperErr}`,
+      );
 		}
 	}
 }

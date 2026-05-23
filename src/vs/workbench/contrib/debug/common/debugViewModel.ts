@@ -3,11 +3,35 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { IContextKey, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { CONTEXT_DISASSEMBLE_REQUEST_SUPPORTED, CONTEXT_EXPRESSION_SELECTED, CONTEXT_FOCUSED_SESSION_IS_ATTACH, CONTEXT_FOCUSED_SESSION_IS_NO_DEBUG, CONTEXT_FOCUSED_STACK_FRAME_HAS_INSTRUCTION_POINTER_REFERENCE, CONTEXT_JUMP_TO_CURSOR_SUPPORTED, CONTEXT_LOADED_SCRIPTS_SUPPORTED, CONTEXT_MULTI_SESSION_DEBUG, CONTEXT_RESTART_FRAME_SUPPORTED, CONTEXT_SET_DATA_BREAKPOINT_BYTES_SUPPORTED, CONTEXT_SET_EXPRESSION_SUPPORTED, CONTEXT_SET_VARIABLE_SUPPORTED, CONTEXT_STEP_BACK_SUPPORTED, CONTEXT_STEP_INTO_TARGETS_SUPPORTED, CONTEXT_SUSPEND_DEBUGGEE_SUPPORTED, CONTEXT_TERMINATE_DEBUGGEE_SUPPORTED, CONTEXT_TERMINATE_THREADS_SUPPORTED, IDebugSession, IExpression, IExpressionContainer, IStackFrame, IThread, IViewModel } from './debug.js';
-import { isSessionAttach } from './debugUtils.js';
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IContextKey, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import {
+  CONTEXT_DISASSEMBLE_REQUEST_SUPPORTED,
+  CONTEXT_EXPRESSION_SELECTED,
+  CONTEXT_FOCUSED_SESSION_IS_ATTACH,
+  CONTEXT_FOCUSED_SESSION_IS_NO_DEBUG,
+  CONTEXT_FOCUSED_STACK_FRAME_HAS_INSTRUCTION_POINTER_REFERENCE,
+  CONTEXT_JUMP_TO_CURSOR_SUPPORTED,
+  CONTEXT_LOADED_SCRIPTS_SUPPORTED,
+  CONTEXT_MULTI_SESSION_DEBUG,
+  CONTEXT_RESTART_FRAME_SUPPORTED,
+  CONTEXT_SET_DATA_BREAKPOINT_BYTES_SUPPORTED,
+  CONTEXT_SET_EXPRESSION_SUPPORTED,
+  CONTEXT_SET_VARIABLE_SUPPORTED,
+  CONTEXT_STEP_BACK_SUPPORTED,
+  CONTEXT_STEP_INTO_TARGETS_SUPPORTED,
+  CONTEXT_SUSPEND_DEBUGGEE_SUPPORTED,
+  CONTEXT_TERMINATE_DEBUGGEE_SUPPORTED,
+  CONTEXT_TERMINATE_THREADS_SUPPORTED,
+  IDebugSession,
+  IExpression,
+  IExpressionContainer,
+  IStackFrame,
+  IThread,
+  IViewModel,
+} from "./debug.js";
+import { isSessionAttach } from "./debugUtils.js";
 
 export class ViewModel extends Disposable implements IViewModel {
 
@@ -17,13 +41,25 @@ export class ViewModel extends Disposable implements IViewModel {
 	private _focusedSession: IDebugSession | undefined;
 	private _focusedThread: IThread | undefined;
 	private selectedExpression: { expression: IExpression; settingWatch: boolean } | undefined;
-	private readonly _onDidFocusSession = this._register(new Emitter<IDebugSession | undefined>());
-	private readonly _onDidFocusThread = this._register(new Emitter<{ thread: IThread | undefined; explicit: boolean; session: IDebugSession | undefined }>());
-	private readonly _onDidFocusStackFrame = this._register(new Emitter<{ stackFrame: IStackFrame | undefined; explicit: boolean; session: IDebugSession | undefined }>());
-	private readonly _onDidSelectExpression = this._register(new Emitter<{ expression: IExpression; settingWatch: boolean } | undefined>());
-	private readonly _onDidEvaluateLazyExpression = this._register(new Emitter<IExpressionContainer>());
+	private readonly _onDidFocusSession = this._register(
+    new Emitter<IDebugSession | undefined>(),
+  );
+	private readonly _onDidFocusThread = this._register(
+    new Emitter<{ thread: IThread | undefined; explicit: boolean; session: IDebugSession | undefined }>(),
+  );
+	private readonly _onDidFocusStackFrame = this._register(
+    new Emitter<{ stackFrame: IStackFrame | undefined; explicit: boolean; session: IDebugSession | undefined }>(),
+  );
+	private readonly _onDidSelectExpression = this._register(
+    new Emitter<{ expression: IExpression; settingWatch: boolean } | undefined>(),
+  );
+	private readonly _onDidEvaluateLazyExpression = this._register(
+    new Emitter<IExpressionContainer>(),
+  );
 	private readonly _onWillUpdateViews = this._register(new Emitter<void>());
-	private readonly _onDidChangeVisualization = this._register(new Emitter<{ original: IExpression; replacement: IExpression }>());
+	private readonly _onDidChangeVisualization = this._register(
+    new Emitter<{ original: IExpression; replacement: IExpression }>(),
+  );
 	private readonly visualized = new WeakMap<IExpression, IExpression>();
 	private readonly preferredVisualizers = new Map</** cache key */ string, /* tree ID */ string>();
 	private expressionSelectedContextKey!: IContextKey<boolean>;
@@ -47,28 +83,28 @@ export class ViewModel extends Disposable implements IViewModel {
 	constructor(private contextKeyService: IContextKeyService) {
 		super();
 		contextKeyService.bufferChangeEvents(() => {
-			this.expressionSelectedContextKey = CONTEXT_EXPRESSION_SELECTED.bindTo(contextKeyService);
-			this.loadedScriptsSupportedContextKey = CONTEXT_LOADED_SCRIPTS_SUPPORTED.bindTo(contextKeyService);
-			this.stepBackSupportedContextKey = CONTEXT_STEP_BACK_SUPPORTED.bindTo(contextKeyService);
-			this.focusedSessionIsAttach = CONTEXT_FOCUSED_SESSION_IS_ATTACH.bindTo(contextKeyService);
-			this.focusedSessionIsNoDebug = CONTEXT_FOCUSED_SESSION_IS_NO_DEBUG.bindTo(contextKeyService);
-			this.restartFrameSupportedContextKey = CONTEXT_RESTART_FRAME_SUPPORTED.bindTo(contextKeyService);
-			this.stepIntoTargetsSupported = CONTEXT_STEP_INTO_TARGETS_SUPPORTED.bindTo(contextKeyService);
-			this.jumpToCursorSupported = CONTEXT_JUMP_TO_CURSOR_SUPPORTED.bindTo(contextKeyService);
-			this.setVariableSupported = CONTEXT_SET_VARIABLE_SUPPORTED.bindTo(contextKeyService);
-			this.setDataBreakpointAtByteSupported = CONTEXT_SET_DATA_BREAKPOINT_BYTES_SUPPORTED.bindTo(contextKeyService);
-			this.setExpressionSupported = CONTEXT_SET_EXPRESSION_SUPPORTED.bindTo(contextKeyService);
-			this.multiSessionDebug = CONTEXT_MULTI_SESSION_DEBUG.bindTo(contextKeyService);
-			this.terminateDebuggeeSupported = CONTEXT_TERMINATE_DEBUGGEE_SUPPORTED.bindTo(contextKeyService);
-			this.suspendDebuggeeSupported = CONTEXT_SUSPEND_DEBUGGEE_SUPPORTED.bindTo(contextKeyService);
-			this.terminateThreadsSupported = CONTEXT_TERMINATE_THREADS_SUPPORTED.bindTo(contextKeyService);
-			this.disassembleRequestSupported = CONTEXT_DISASSEMBLE_REQUEST_SUPPORTED.bindTo(contextKeyService);
-			this.focusedStackFrameHasInstructionPointerReference = CONTEXT_FOCUSED_STACK_FRAME_HAS_INSTRUCTION_POINTER_REFERENCE.bindTo(contextKeyService);
-		});
+      this.expressionSelectedContextKey = CONTEXT_EXPRESSION_SELECTED.bindTo(contextKeyService);
+      this.loadedScriptsSupportedContextKey = CONTEXT_LOADED_SCRIPTS_SUPPORTED.bindTo(contextKeyService);
+      this.stepBackSupportedContextKey = CONTEXT_STEP_BACK_SUPPORTED.bindTo(contextKeyService);
+      this.focusedSessionIsAttach = CONTEXT_FOCUSED_SESSION_IS_ATTACH.bindTo(contextKeyService);
+      this.focusedSessionIsNoDebug = CONTEXT_FOCUSED_SESSION_IS_NO_DEBUG.bindTo(contextKeyService);
+      this.restartFrameSupportedContextKey = CONTEXT_RESTART_FRAME_SUPPORTED.bindTo(contextKeyService);
+      this.stepIntoTargetsSupported = CONTEXT_STEP_INTO_TARGETS_SUPPORTED.bindTo(contextKeyService);
+      this.jumpToCursorSupported = CONTEXT_JUMP_TO_CURSOR_SUPPORTED.bindTo(contextKeyService);
+      this.setVariableSupported = CONTEXT_SET_VARIABLE_SUPPORTED.bindTo(contextKeyService);
+      this.setDataBreakpointAtByteSupported = CONTEXT_SET_DATA_BREAKPOINT_BYTES_SUPPORTED.bindTo(contextKeyService);
+      this.setExpressionSupported = CONTEXT_SET_EXPRESSION_SUPPORTED.bindTo(contextKeyService);
+      this.multiSessionDebug = CONTEXT_MULTI_SESSION_DEBUG.bindTo(contextKeyService);
+      this.terminateDebuggeeSupported = CONTEXT_TERMINATE_DEBUGGEE_SUPPORTED.bindTo(contextKeyService);
+      this.suspendDebuggeeSupported = CONTEXT_SUSPEND_DEBUGGEE_SUPPORTED.bindTo(contextKeyService);
+      this.terminateThreadsSupported = CONTEXT_TERMINATE_THREADS_SUPPORTED.bindTo(contextKeyService);
+      this.disassembleRequestSupported = CONTEXT_DISASSEMBLE_REQUEST_SUPPORTED.bindTo(contextKeyService);
+      this.focusedStackFrameHasInstructionPointerReference = CONTEXT_FOCUSED_STACK_FRAME_HAS_INSTRUCTION_POINTER_REFERENCE.bindTo(contextKeyService);
+    });
 	}
 
 	getId(): string {
-		return 'root';
+		return "root";
 	}
 
 	get focusedSession(): IDebugSession | undefined {
@@ -94,23 +130,49 @@ export class ViewModel extends Disposable implements IViewModel {
 		this._focusedSession = session;
 
 		this.contextKeyService.bufferChangeEvents(() => {
-			this.loadedScriptsSupportedContextKey.set(!!session?.capabilities.supportsLoadedSourcesRequest);
-			this.stepBackSupportedContextKey.set(!!session?.capabilities.supportsStepBack);
-			this.restartFrameSupportedContextKey.set(!!session?.capabilities.supportsRestartFrame);
-			this.stepIntoTargetsSupported.set(!!session?.capabilities.supportsStepInTargetsRequest);
-			this.jumpToCursorSupported.set(!!session?.capabilities.supportsGotoTargetsRequest);
-			this.setVariableSupported.set(!!session?.capabilities.supportsSetVariable);
-			this.setDataBreakpointAtByteSupported.set(!!session?.capabilities.supportsDataBreakpointBytes);
-			this.setExpressionSupported.set(!!session?.capabilities.supportsSetExpression);
-			this.terminateDebuggeeSupported.set(!!session?.capabilities.supportTerminateDebuggee);
-			this.suspendDebuggeeSupported.set(!!session?.capabilities.supportSuspendDebuggee);
-			this.terminateThreadsSupported.set(!!session?.capabilities.supportsTerminateThreadsRequest);
-			this.disassembleRequestSupported.set(!!session?.capabilities.supportsDisassembleRequest);
-			this.focusedStackFrameHasInstructionPointerReference.set(!!stackFrame?.instructionPointerReference);
-			const attach = !!session && isSessionAttach(session);
-			this.focusedSessionIsAttach.set(attach);
-			this.focusedSessionIsNoDebug.set(!!session && !!session.configuration.noDebug);
-		});
+      this.loadedScriptsSupportedContextKey.set(
+        !!session?.capabilities.supportsLoadedSourcesRequest,
+      );
+      this.stepBackSupportedContextKey.set(
+        !!session?.capabilities.supportsStepBack,
+      );
+      this.restartFrameSupportedContextKey.set(
+        !!session?.capabilities.supportsRestartFrame,
+      );
+      this.stepIntoTargetsSupported.set(
+        !!session?.capabilities.supportsStepInTargetsRequest,
+      );
+      this.jumpToCursorSupported.set(
+        !!session?.capabilities.supportsGotoTargetsRequest,
+      );
+      this.setVariableSupported.set(!!session?.capabilities.supportsSetVariable);
+      this.setDataBreakpointAtByteSupported.set(
+        !!session?.capabilities.supportsDataBreakpointBytes,
+      );
+      this.setExpressionSupported.set(
+        !!session?.capabilities.supportsSetExpression,
+      );
+      this.terminateDebuggeeSupported.set(
+        !!session?.capabilities.supportTerminateDebuggee,
+      );
+      this.suspendDebuggeeSupported.set(
+        !!session?.capabilities.supportSuspendDebuggee,
+      );
+      this.terminateThreadsSupported.set(
+        !!session?.capabilities.supportsTerminateThreadsRequest,
+      );
+      this.disassembleRequestSupported.set(
+        !!session?.capabilities.supportsDisassembleRequest,
+      );
+      this.focusedStackFrameHasInstructionPointerReference.set(
+        !!stackFrame?.instructionPointerReference,
+      );
+      const attach = !!session && isSessionAttach(session);
+      this.focusedSessionIsAttach.set(attach);
+      this.focusedSessionIsNoDebug.set(
+        !!session && !!session.configuration.noDebug,
+      );
+    });
 
 		if (shouldEmitForSession) {
 			this._onDidFocusSession.fire(session);
@@ -145,7 +207,10 @@ export class ViewModel extends Disposable implements IViewModel {
 	}
 
 	setSelectedExpression(expression: IExpression | undefined, settingWatch: boolean) {
-		this.selectedExpression = expression ? { expression, settingWatch: settingWatch } : undefined;
+		this.selectedExpression = expression ? {
+      expression,
+      settingWatch: settingWatch,
+    } : undefined;
 		this.expressionSelectedContextKey.set(!!expression);
 		this._onDidSelectExpression.fire(this.selectedExpression);
 	}
@@ -184,11 +249,16 @@ export class ViewModel extends Disposable implements IViewModel {
 			this.visualized.delete(original);
 			this.preferredVisualizers.delete(key);
 		}
-		this._onDidChangeVisualization.fire({ original: current, replacement: visualized || original });
+		this._onDidChangeVisualization.fire({
+      original: current,
+      replacement: visualized || original,
+    });
 	}
 
 	getVisualizedExpression(expression: IExpression): IExpression | string | undefined {
-		return this.visualized.get(expression) || this.preferredVisualizers.get(this.getPreferredVisualizedKey(expression));
+		return this.visualized.get(expression) || this.preferredVisualizers.get(
+      this.getPreferredVisualizedKey(expression),
+    );
 	}
 
 	async evaluateLazyExpression(expression: IExpressionContainer): Promise<void> {
@@ -201,6 +271,6 @@ export class ViewModel extends Disposable implements IViewModel {
 			expr.name,
 			expr.type,
 			!!expr.memoryReference,
-		].join('\0'));
+		].join("\0"));
 	}
 }

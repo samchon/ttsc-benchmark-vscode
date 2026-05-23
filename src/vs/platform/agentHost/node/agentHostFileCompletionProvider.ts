@@ -3,17 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { isCancellationError } from '../../../base/common/errors.js';
-import { compareItemsByFuzzyScore, FuzzyScorerCache, IItemAccessor, prepareQuery, scoreItemFuzzy } from '../../../base/common/fuzzyScorer.js';
-import { Schemas } from '../../../base/common/network.js';
-import { basename, relativePath } from '../../../base/common/resources.js';
-import { URI } from '../../../base/common/uri.js';
-import { CompletionItem, CompletionItemKind, CompletionsParams } from '../common/state/protocol/commands.js';
-import { MessageAttachmentKind } from '../common/state/protocol/state.js';
-import { CompletionTriggerCharacter, IAgentHostCompletionItemProvider } from './agentHostCompletions.js';
-import { AgentHostStateManager } from './agentHostStateManager.js';
-import { AgentHostWorkspaceFiles } from './agentHostWorkspaceFiles.js';
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { isCancellationError } from "../../../base/common/errors.js";
+import {
+  compareItemsByFuzzyScore,
+  FuzzyScorerCache,
+  IItemAccessor,
+  prepareQuery,
+  scoreItemFuzzy,
+} from "../../../base/common/fuzzyScorer.js";
+import { Schemas } from "../../../base/common/network.js";
+import { basename, relativePath } from "../../../base/common/resources.js";
+import { URI } from "../../../base/common/uri.js";
+import { CompletionItem, CompletionItemKind, CompletionsParams } from "../common/state/protocol/commands.js";
+import { MessageAttachmentKind } from "../common/state/protocol/state.js";
+import { CompletionTriggerCharacter, IAgentHostCompletionItemProvider } from "./agentHostCompletions.js";
+import { AgentHostStateManager } from "./agentHostStateManager.js";
+import { AgentHostWorkspaceFiles } from "./agentHostWorkspaceFiles.js";
 
 /** Maximum number of completion items returned per call. */
 const MAX_RESULTS = 50;
@@ -54,7 +60,11 @@ export function extractAtToken(text: string, offset: number): IAtToken | undefin
 					return undefined;
 				}
 			}
-			return { token: text.slice(i + 1, offset), rangeStart: i, rangeEnd: offset };
+			return {
+        token: text.slice(i + 1, offset),
+        rangeStart: i,
+        rangeEnd: offset,
+      };
 		}
 	}
 	return undefined;
@@ -76,7 +86,7 @@ class UriAccessor implements IItemAccessor<URI> {
 		if (!rel) {
 			return undefined;
 		}
-		const idx = rel.lastIndexOf('/');
+		const idx = rel.lastIndexOf("/");
 		return idx > 0 ? rel.slice(0, idx) : undefined;
 	}
 
@@ -100,9 +110,13 @@ class UriAccessor implements IItemAccessor<URI> {
  */
 export class AgentHostFileCompletionProvider implements IAgentHostCompletionItemProvider {
 
-	readonly kinds: ReadonlySet<CompletionItemKind> = new Set([CompletionItemKind.UserMessage]);
+	readonly kinds: ReadonlySet<CompletionItemKind> = new Set([
+    CompletionItemKind.UserMessage,
+  ]);
 
-	readonly triggerCharacters: readonly string[] = [CompletionTriggerCharacter.File];
+	readonly triggerCharacters: readonly string[] = [
+    CompletionTriggerCharacter.File,
+  ];
 
 	constructor(
 		private readonly _stateManager: AgentHostStateManager,
@@ -110,7 +124,9 @@ export class AgentHostFileCompletionProvider implements IAgentHostCompletionItem
 	) { }
 
 	async provideCompletionItems(params: CompletionsParams, token: CancellationToken): Promise<readonly CompletionItem[]> {
-		const workingDirectoryStr = this._stateManager.getSessionState(params.channel)?.summary.workingDirectory;
+		const workingDirectoryStr = this._stateManager.getSessionState(
+      params.channel,
+    )?.summary.workingDirectory;
 		if (!workingDirectoryStr) {
 			return [];
 		}
@@ -151,8 +167,12 @@ export class AgentHostFileCompletionProvider implements IAgentHostCompletionItem
 			candidates = files.slice(0, MAX_RESULTS);
 		} else {
 			// Filter out non-matches first to avoid sorting tens of thousands of zeros.
-			const matching = files.filter(f => scoreItemFuzzy(f, query, true, accessor, cache).score > 0);
-			matching.sort((a, b) => compareItemsByFuzzyScore(a, b, query, true, accessor, cache));
+			const matching = files.filter(
+        f => scoreItemFuzzy(f, query, true, accessor, cache).score > 0,
+      );
+			matching.sort(
+        (a, b) => compareItemsByFuzzyScore(a, b, query, true, accessor, cache),
+      );
 			candidates = matching.slice(0, MAX_RESULTS);
 		}
 
@@ -166,7 +186,7 @@ export class AgentHostFileCompletionProvider implements IAgentHostCompletionItem
 					type: MessageAttachmentKind.Resource,
 					uri: uri.toString(),
 					label: name,
-					displayKind: 'document',
+					displayKind: "document",
 				},
 			};
 		});

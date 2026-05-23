@@ -3,56 +3,75 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as nls from '../../../../nls.js';
-import * as dom from '../../../../base/browser/dom.js';
-import * as domStylesheetsJs from '../../../../base/browser/domStylesheets.js';
-import * as cssJs from '../../../../base/browser/cssValue.js';
-import { Action, IAction } from '../../../../base/common/actions.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IContextMenuService, IContextViewService } from '../../../../platform/contextview/browser/contextView.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { IThemeService, Themable } from '../../../../platform/theme/common/themeService.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
-import { switchTerminalShowTabsTitle } from './terminalActions.js';
-import { INotificationService, IPromptChoice, Severity } from '../../../../platform/notification/common/notification.js';
-import { ICreateTerminalOptions, ITerminalConfigurationService, ITerminalGroupService, ITerminalInstance, ITerminalService, TerminalConnectionState, TerminalDataTransfers } from './terminal.js';
-import { ViewPane, IViewPaneOptions } from '../../../browser/parts/views/viewPane.js';
-import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
-import { IContextKey, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { IViewDescriptorService } from '../../../common/views.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
-import { IMenu, IMenuService, MenuId, MenuItemAction } from '../../../../platform/actions/common/actions.js';
-import { ITerminalProfileResolverService, ITerminalProfileService, TerminalCommandId } from '../common/terminal.js';
-import { TerminalSettingId, ITerminalProfile, TerminalLocation } from '../../../../platform/terminal/common/terminal.js';
-import { ActionViewItem, IBaseActionViewItemOptions, SelectActionViewItem } from '../../../../base/browser/ui/actionbar/actionViewItems.js';
-import { asCssVariable, selectBorder } from '../../../../platform/theme/common/colorRegistry.js';
-import { ISelectOptionItem, SeparatorSelectOption } from '../../../../base/browser/ui/selectBox/selectBox.js';
-import { IActionViewItem } from '../../../../base/browser/ui/actionbar/actionbar.js';
-import { TerminalTabbedView } from './terminalTabbedView.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { renderLabelWithIcons } from '../../../../base/browser/ui/iconLabel/iconLabels.js';
-import { getColorForSeverity } from './terminalStatusList.js';
-import { getFlatContextMenuActions, MenuEntryActionViewItem } from '../../../../platform/actions/browser/menuEntryActionViewItem.js';
-import { DropdownWithPrimaryActionViewItem } from '../../../../platform/actions/browser/dropdownWithPrimaryActionViewItem.js';
-import { DisposableMap, DisposableStore, dispose, IDisposable, MutableDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { URI } from '../../../../base/common/uri.js';
-import { isDark } from '../../../../platform/theme/common/theme.js';
-import { getColorClass, getUriClasses } from './terminalIcon.js';
-import { getTerminalActionBarArgs } from './terminalMenus.js';
-import { TerminalContextKeys } from '../common/terminalContextKey.js';
-import { getInstanceHoverInfo } from './terminalTooltip.js';
-import { ServicesAccessor } from '../../../../editor/browser/editorExtensions.js';
-import { TerminalCapability } from '../../../../platform/terminal/common/capabilities/capabilities.js';
-import { defaultSelectBoxStyles } from '../../../../platform/theme/browser/defaultStyles.js';
-import { Event } from '../../../../base/common/event.js';
-import { IHoverDelegate, IHoverDelegateOptions } from '../../../../base/browser/ui/hover/hoverDelegate.js';
-import { IHoverService } from '../../../../platform/hover/browser/hover.js';
-import { IAccessibilityService } from '../../../../platform/accessibility/common/accessibility.js';
-import { InstanceContext, TerminalContextActionRunner } from './terminalContextMenu.js';
-import { MicrotaskDelay } from '../../../../base/common/symbols.js';
-import { IStorageService } from '../../../../platform/storage/common/storage.js';
-import { hasNativeContextMenu } from '../../../../platform/window/common/window.js';
-import { hasKey } from '../../../../base/common/types.js';
+import * as nls from "../../../../nls.js";
+import * as dom from "../../../../base/browser/dom.js";
+import * as domStylesheetsJs from "../../../../base/browser/domStylesheets.js";
+import * as cssJs from "../../../../base/browser/cssValue.js";
+import { Action, IAction } from "../../../../base/common/actions.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextMenuService, IContextViewService } from "../../../../platform/contextview/browser/contextView.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IThemeService, Themable } from "../../../../platform/theme/common/themeService.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { switchTerminalShowTabsTitle } from "./terminalActions.js";
+import { INotificationService, IPromptChoice, Severity } from "../../../../platform/notification/common/notification.js";
+import {
+  ICreateTerminalOptions,
+  ITerminalConfigurationService,
+  ITerminalGroupService,
+  ITerminalInstance,
+  ITerminalService,
+  TerminalConnectionState,
+  TerminalDataTransfers,
+} from "./terminal.js";
+import { ViewPane, IViewPaneOptions } from "../../../browser/parts/views/viewPane.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { IContextKey, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IViewDescriptorService } from "../../../common/views.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { IMenu, IMenuService, MenuId, MenuItemAction } from "../../../../platform/actions/common/actions.js";
+import {
+  ITerminalProfileResolverService,
+  ITerminalProfileService,
+  TerminalCommandId,
+} from "../common/terminal.js";
+import { TerminalSettingId, ITerminalProfile, TerminalLocation } from "../../../../platform/terminal/common/terminal.js";
+import { ActionViewItem, IBaseActionViewItemOptions, SelectActionViewItem } from "../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { asCssVariable, selectBorder } from "../../../../platform/theme/common/colorRegistry.js";
+import { ISelectOptionItem, SeparatorSelectOption } from "../../../../base/browser/ui/selectBox/selectBox.js";
+import { IActionViewItem } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { TerminalTabbedView } from "./terminalTabbedView.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { renderLabelWithIcons } from "../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { getColorForSeverity } from "./terminalStatusList.js";
+import { getFlatContextMenuActions, MenuEntryActionViewItem } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { DropdownWithPrimaryActionViewItem } from "../../../../platform/actions/browser/dropdownWithPrimaryActionViewItem.js";
+import {
+  DisposableMap,
+  DisposableStore,
+  dispose,
+  IDisposable,
+  MutableDisposable,
+  toDisposable,
+} from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import { isDark } from "../../../../platform/theme/common/theme.js";
+import { getColorClass, getUriClasses } from "./terminalIcon.js";
+import { getTerminalActionBarArgs } from "./terminalMenus.js";
+import { TerminalContextKeys } from "../common/terminalContextKey.js";
+import { getInstanceHoverInfo } from "./terminalTooltip.js";
+import { ServicesAccessor } from "../../../../editor/browser/editorExtensions.js";
+import { TerminalCapability } from "../../../../platform/terminal/common/capabilities/capabilities.js";
+import { defaultSelectBoxStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { Event } from "../../../../base/common/event.js";
+import { IHoverDelegate, IHoverDelegateOptions } from "../../../../base/browser/ui/hover/hoverDelegate.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { IAccessibilityService } from "../../../../platform/accessibility/common/accessibility.js";
+import { InstanceContext, TerminalContextActionRunner } from "./terminalContextMenu.js";
+import { MicrotaskDelay } from "../../../../base/common/symbols.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { hasNativeContextMenu } from "../../../../platform/window/common/window.js";
+import { hasKey } from "../../../../base/common/types.js";
 
 export class TerminalViewPane extends ViewPane {
 	private _parentDomElement: HTMLElement | undefined;
@@ -64,12 +83,16 @@ export class TerminalViewPane extends ViewPane {
 	 * double creation for example when toggling a terminal's visibility and focusing it.
 	 */
 	private _isTerminalBeingCreated: boolean = false;
-	private readonly _newDropdown: MutableDisposable<DropdownWithPrimaryActionViewItem> = this._register(new MutableDisposable());
+	private readonly _newDropdown: MutableDisposable<DropdownWithPrimaryActionViewItem> = this._register(
+    new MutableDisposable(),
+  );
 	private readonly _dropdownMenu: IMenu;
 	private readonly _singleTabMenu: IMenu;
 	private _viewShowing: IContextKey<boolean>;
 	private readonly _disposableStore = this._register(new DisposableStore());
-	private readonly _actionDisposables: DisposableMap<TerminalCommandId> = this._register(new DisposableMap());
+	private readonly _actionDisposables: DisposableMap<TerminalCommandId> = this._register(
+    new DisposableMap(),
+  );
 
 	constructor(
 		options: IViewPaneOptions,
@@ -91,10 +114,23 @@ export class TerminalViewPane extends ViewPane {
 		@ITerminalProfileService private readonly _terminalProfileService: ITerminalProfileService,
 		@ITerminalProfileResolverService private readonly _terminalProfileResolverService: ITerminalProfileResolverService,
 	) {
-		super(options, keybindingService, contextMenuService, _configurationService, _contextKeyService, viewDescriptorService, _instantiationService, openerService, themeService, hoverService);
-		this._register(this._terminalService.onDidRegisterProcessSupport(() => {
-			this._onDidChangeViewWelcomeState.fire();
-		}));
+		super(
+      options,
+      keybindingService,
+      contextMenuService,
+      _configurationService,
+      _contextKeyService,
+      viewDescriptorService,
+      _instantiationService,
+      openerService,
+      themeService,
+      hoverService,
+    );
+		this._register(
+      this._terminalService.onDidRegisterProcessSupport(() => {
+        this._onDidChangeViewWelcomeState.fire();
+      }),
+    );
 
 		this._register(this._terminalService.onDidChangeInstances(() => {
 			// If the first terminal is opened, hide the welcome view
@@ -109,10 +145,26 @@ export class TerminalViewPane extends ViewPane {
 			}
 			this.layoutBody(this._parentDomElement.offsetHeight, this._parentDomElement.offsetWidth);
 		}));
-		this._dropdownMenu = this._register(this._menuService.createMenu(MenuId.TerminalNewDropdownContext, this._contextKeyService));
-		this._singleTabMenu = this._register(this._menuService.createMenu(MenuId.TerminalTabContext, this._contextKeyService));
-		this._register(this._terminalProfileService.onDidChangeAvailableProfiles(profiles => this._updateTabActionBar(profiles)));
-		this._viewShowing = TerminalContextKeys.viewShowing.bindTo(this._contextKeyService);
+		this._dropdownMenu = this._register(
+      this._menuService.createMenu(
+        MenuId.TerminalNewDropdownContext,
+        this._contextKeyService,
+      ),
+    );
+		this._singleTabMenu = this._register(
+      this._menuService.createMenu(
+        MenuId.TerminalTabContext,
+        this._contextKeyService,
+      ),
+    );
+		this._register(
+      this._terminalProfileService.onDidChangeAvailableProfiles(
+        profiles => this._updateTabActionBar(profiles),
+      ),
+    );
+		this._viewShowing = TerminalContextKeys.viewShowing.bindTo(
+      this._contextKeyService,
+    );
 		this._register(this.onDidChangeBodyVisibility(e => {
 			if (e) {
 				this._terminalTabbedView?.rerenderTabs();
@@ -126,19 +178,26 @@ export class TerminalViewPane extends ViewPane {
 		const shellIntegrationDisposable = this._register(new MutableDisposable());
 		shellIntegrationDisposable.value = this._terminalService.onAnyInstanceAddedCapabilityType(c => {
 			if (c === TerminalCapability.CommandDetection && this._gutterDecorationsEnabled()) {
-				this._parentDomElement?.classList.add('shell-integration');
+				this._parentDomElement?.classList.add("shell-integration");
 				shellIntegrationDisposable.clear();
 			}
 		});
 	}
 
 	private _updateForShellIntegration(container: HTMLElement) {
-		container.classList.toggle('shell-integration', this._gutterDecorationsEnabled());
+		container.classList.toggle(
+      "shell-integration",
+      this._gutterDecorationsEnabled(),
+    );
 	}
 
 	private _gutterDecorationsEnabled(): boolean {
-		const decorationsEnabled = this._configurationService.getValue(TerminalSettingId.ShellIntegrationDecorationsEnabled);
-		return (decorationsEnabled === 'both' || decorationsEnabled === 'gutter') && this._configurationService.getValue(TerminalSettingId.ShellIntegrationEnabled);
+		const decorationsEnabled = this._configurationService.getValue(
+      TerminalSettingId.ShellIntegrationDecorationsEnabled,
+    );
+		return (decorationsEnabled === "both" || decorationsEnabled === "gutter") && this._configurationService.getValue(
+      TerminalSettingId.ShellIntegrationEnabled,
+    );
 	}
 
 	private _initializeTerminal(checkRestoredTerminals: boolean) {
@@ -146,10 +205,12 @@ export class TerminalViewPane extends ViewPane {
 			const wasInitialized = this._isInitialized;
 			this._isInitialized = true;
 
-			let hideOnStartup: 'never' | 'whenEmpty' | 'always' = 'never';
+			let hideOnStartup: "never" | "whenEmpty" | "always" = "never";
 			if (!wasInitialized) {
-				hideOnStartup = this._configurationService.getValue(TerminalSettingId.HideOnStartup);
-				if (hideOnStartup === 'always') {
+				hideOnStartup = this._configurationService.getValue(
+          TerminalSettingId.HideOnStartup,
+        );
+				if (hideOnStartup === "always") {
 					this._terminalGroupService.hidePanel();
 				}
 			}
@@ -165,11 +226,13 @@ export class TerminalViewPane extends ViewPane {
 			}
 			if (!wasInitialized) {
 				switch (hideOnStartup) {
-					case 'never':
+					case "never":
 						this._isTerminalBeingCreated = true;
-						this._terminalService.createTerminal({ location: TerminalLocation.Panel }).finally(() => this._isTerminalBeingCreated = false);
+						this._terminalService.createTerminal({ location: TerminalLocation.Panel }).finally(
+              () => this._isTerminalBeingCreated = false,
+            );
 						break;
-					case 'whenEmpty':
+					case "whenEmpty":
 						if (this._terminalService.restoredGroupCount === 0) {
 							this._terminalGroupService.hidePanel();
 						}
@@ -180,7 +243,9 @@ export class TerminalViewPane extends ViewPane {
 
 			if (!this._isTerminalBeingCreated) {
 				this._isTerminalBeingCreated = true;
-				this._terminalService.createTerminal({ location: TerminalLocation.Panel }).finally(() => this._isTerminalBeingCreated = false);
+				this._terminalService.createTerminal({ location: TerminalLocation.Panel }).finally(
+          () => this._isTerminalBeingCreated = false,
+        );
 			}
 		}
 	}
@@ -193,22 +258,25 @@ export class TerminalViewPane extends ViewPane {
 			this._updateForShellIntegration(container);
 		}
 		this._parentDomElement = container;
-		this._parentDomElement.classList.add('integrated-terminal');
+		this._parentDomElement.classList.add("integrated-terminal");
 		domStylesheetsJs.createStyleSheet(this._parentDomElement);
-		this._instantiationService.createInstance(TerminalThemeIconStyle, this._parentDomElement);
+		this._instantiationService.createInstance(
+      TerminalThemeIconStyle,
+      this._parentDomElement,
+    );
 
 		if (!this.shouldShowWelcome()) {
 			this._createTabsView();
 		}
 
 		this._register(this.configurationService.onDidChangeConfiguration(e => {
-			if (e.affectsConfiguration(TerminalSettingId.FontFamily) || e.affectsConfiguration('editor.fontFamily')) {
+			if (e.affectsConfiguration(TerminalSettingId.FontFamily) || e.affectsConfiguration("editor.fontFamily")) {
 				if (!this._terminalConfigurationService.configFontIsMonospace()) {
 					const choices: IPromptChoice[] = [{
-						label: nls.localize('terminal.useMonospace', "Use 'monospace'"),
-						run: () => this.configurationService.updateValue(TerminalSettingId.FontFamily, 'monospace'),
+						label: nls.localize("terminal.useMonospace", "Use 'monospace'"),
+						run: () => this.configurationService.updateValue(TerminalSettingId.FontFamily, "monospace"),
 					}];
-					this._notificationService.prompt(Severity.Warning, nls.localize('terminal.monospaceOnly', "The terminal only supports monospace fonts. Be sure to restart VS Code if this is a newly installed font."), choices);
+					this._notificationService.prompt(Severity.Warning, nls.localize("terminal.monospaceOnly", "The terminal only supports monospace fonts. Be sure to restart VS Code if this is a newly installed font."), choices);
 				}
 			}
 		}));
@@ -230,15 +298,27 @@ export class TerminalViewPane extends ViewPane {
 			}
 			this._terminalGroupService.updateVisibility();
 		}));
-		this._register(this._terminalService.onDidChangeConnectionState(() => this._initializeTerminal(true)));
-		this.layoutBody(this._parentDomElement.offsetHeight, this._parentDomElement.offsetWidth);
+		this._register(
+      this._terminalService.onDidChangeConnectionState(
+        () => this._initializeTerminal(true),
+      ),
+    );
+		this.layoutBody(
+      this._parentDomElement.offsetHeight,
+      this._parentDomElement.offsetWidth,
+    );
 	}
 
 	private _createTabsView(): void {
 		if (!this._parentDomElement) {
 			return;
 		}
-		this._terminalTabbedView = this._register(this.instantiationService.createInstance(TerminalTabbedView, this._parentDomElement));
+		this._terminalTabbedView = this._register(
+      this.instantiationService.createInstance(
+        TerminalTabbedView,
+        this._parentDomElement,
+      ),
+    );
 	}
 
 	// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -268,19 +348,35 @@ export class TerminalViewPane extends ViewPane {
 						return;
 					}
 				});
-				const item = store.add(new ActionViewItem(action, panelOnlySplitAction, { ...options, icon: true, label: false, keybinding: this._getKeybindingLabel(action) }));
+				const item = store.add(
+          new ActionViewItem(action, panelOnlySplitAction, {
+            ...options,
+            icon: true,
+            label: false,
+            keybinding: this._getKeybindingLabel(action),
+          }),
+        );
 				this._actionDisposables.set(action.id, store);
 				return item;
 			}
 			case TerminalCommandId.SwitchTerminal: {
-				const item = this._instantiationService.createInstance(SwitchTerminalActionViewItem, action);
+				const item = this._instantiationService.createInstance(
+          SwitchTerminalActionViewItem,
+          action,
+        );
 				this._actionDisposables.set(action.id, item);
 				return item;
 			}
 			case TerminalCommandId.Focus: {
 				if (action instanceof MenuItemAction) {
-					const actions = getFlatContextMenuActions(this._singleTabMenu.getActions({ shouldForwardArgs: true }));
-					const item = this._instantiationService.createInstance(SingleTerminalTabActionViewItem, action, actions);
+					const actions = getFlatContextMenuActions(
+            this._singleTabMenu.getActions({ shouldForwardArgs: true }),
+          );
+					const item = this._instantiationService.createInstance(
+            SingleTerminalTabActionViewItem,
+            action,
+            actions,
+          );
 					this._actionDisposables.set(action.id, item);
 					return item;
 				}
@@ -289,12 +385,30 @@ export class TerminalViewPane extends ViewPane {
 			case TerminalCommandId.New: {
 				if (action instanceof MenuItemAction) {
 					this._disposableStore.clear();
-					const actions = getTerminalActionBarArgs(TerminalLocation.Panel, this._terminalProfileService.availableProfiles, this._getDefaultProfileName(), this._terminalProfileService.contributedProfiles, this._terminalService, this._dropdownMenu, this._disposableStore);
-					this._newDropdown.value = this._instantiationService.createInstance(DropdownWithPrimaryActionViewItem, action, actions.dropdownAction, actions.dropdownMenuActions, actions.className, {
-						hoverDelegate: options.hoverDelegate,
-						getKeyBinding: (action: IAction) => this._keybindingService.lookupKeybinding(action.id, this._contextKeyService)
-					});
-					this._newDropdown.value?.update(actions.dropdownAction, actions.dropdownMenuActions);
+					const actions = getTerminalActionBarArgs(
+            TerminalLocation.Panel,
+            this._terminalProfileService.availableProfiles,
+            this._getDefaultProfileName(),
+            this._terminalProfileService.contributedProfiles,
+            this._terminalService,
+            this._dropdownMenu,
+            this._disposableStore,
+          );
+					this._newDropdown.value = this._instantiationService.createInstance(
+            DropdownWithPrimaryActionViewItem,
+            action,
+            actions.dropdownAction,
+            actions.dropdownMenuActions,
+            actions.className,
+            {
+              hoverDelegate: options.hoverDelegate,
+              getKeyBinding: (action: IAction) => this._keybindingService.lookupKeybinding(action.id, this._contextKeyService),
+            },
+          );
+					this._newDropdown.value?.update(
+            actions.dropdownAction,
+            actions.dropdownMenuActions,
+          );
 					return this._newDropdown.value;
 				}
 			}
@@ -318,8 +432,19 @@ export class TerminalViewPane extends ViewPane {
 
 	private _updateTabActionBar(profiles: ITerminalProfile[]): void {
 		this._disposableStore.clear();
-		const actions = getTerminalActionBarArgs(TerminalLocation.Panel, profiles, this._getDefaultProfileName(), this._terminalProfileService.contributedProfiles, this._terminalService, this._dropdownMenu, this._disposableStore);
-		this._newDropdown.value?.update(actions.dropdownAction, actions.dropdownMenuActions);
+		const actions = getTerminalActionBarArgs(
+      TerminalLocation.Panel,
+      profiles,
+      this._getDefaultProfileName(),
+      this._terminalProfileService.contributedProfiles,
+      this._terminalService,
+      this._dropdownMenu,
+      this._disposableStore,
+    );
+		this._newDropdown.value?.update(
+      actions.dropdownAction,
+      actions.dropdownMenuActions,
+    );
 	}
 
 	override focus() {
@@ -327,7 +452,9 @@ export class TerminalViewPane extends ViewPane {
 		if (this._terminalService.connectionState === TerminalConnectionState.Connected) {
 			if (this._terminalGroupService.instances.length === 0 && !this._isTerminalBeingCreated) {
 				this._isTerminalBeingCreated = true;
-				this._terminalService.createTerminal({ location: TerminalLocation.Panel }).finally(() => this._isTerminalBeingCreated = false);
+				this._terminalService.createTerminal({ location: TerminalLocation.Panel }).finally(
+          () => this._isTerminalBeingCreated = false,
+        );
 			}
 			this._terminalGroupService.showPanel(true);
 			return;
@@ -365,25 +492,68 @@ class SwitchTerminalActionViewItem extends SelectActionViewItem {
 		@ITerminalProfileService terminalProfileService: ITerminalProfileService,
 		@IConfigurationService configurationService: IConfigurationService,
 	) {
-		super(null, action, getTerminalSelectOpenItems(_terminalService, _terminalGroupService), _terminalGroupService.activeGroupIndex, contextViewService, defaultSelectBoxStyles, { ariaLabel: nls.localize('terminals', 'Open Terminals.'), optionsAsChildren: true, useCustomDrawn: !hasNativeContextMenu(configurationService) });
-		this._register(_terminalService.onDidChangeInstances(() => this._updateItems(), this));
-		this._register(_terminalService.onDidChangeActiveGroup(() => this._updateItems(), this));
-		this._register(_terminalService.onDidChangeActiveInstance(() => this._updateItems(), this));
-		this._register(_terminalService.onAnyInstanceTitleChange(() => this._updateItems(), this));
-		this._register(_terminalGroupService.onDidChangeGroups(() => this._updateItems(), this));
-		this._register(_terminalService.onDidChangeConnectionState(() => this._updateItems(), this));
-		this._register(terminalProfileService.onDidChangeAvailableProfiles(() => this._updateItems(), this));
-		this._register(_terminalService.onAnyInstancePrimaryStatusChange(() => this._updateItems(), this));
+		super(
+      null,
+      action,
+      getTerminalSelectOpenItems(_terminalService, _terminalGroupService),
+      _terminalGroupService.activeGroupIndex,
+      contextViewService,
+      defaultSelectBoxStyles,
+      {
+        ariaLabel: nls.localize("terminals", "Open Terminals."),
+        optionsAsChildren: true,
+        useCustomDrawn: !hasNativeContextMenu(configurationService),
+      },
+    );
+		this._register(
+      _terminalService.onDidChangeInstances(() => this._updateItems(), this),
+    );
+		this._register(
+      _terminalService.onDidChangeActiveGroup(() => this._updateItems(), this),
+    );
+		this._register(
+      _terminalService.onDidChangeActiveInstance(
+        () => this._updateItems(),
+        this,
+      ),
+    );
+		this._register(
+      _terminalService.onAnyInstanceTitleChange(() => this._updateItems(), this),
+    );
+		this._register(
+      _terminalGroupService.onDidChangeGroups(() => this._updateItems(), this),
+    );
+		this._register(
+      _terminalService.onDidChangeConnectionState(
+        () => this._updateItems(),
+        this,
+      ),
+    );
+		this._register(
+      terminalProfileService.onDidChangeAvailableProfiles(
+        () => this._updateItems(),
+        this,
+      ),
+    );
+		this._register(
+      _terminalService.onAnyInstancePrimaryStatusChange(
+        () => this._updateItems(),
+        this,
+      ),
+    );
 	}
 
 	override render(container: HTMLElement): void {
 		super.render(container);
-		container.classList.add('switch-terminal');
+		container.classList.add("switch-terminal");
 		container.style.borderColor = asCssVariable(selectBorder);
 	}
 
 	private _updateItems(): void {
-		const options = getTerminalSelectOpenItems(this._terminalService, this._terminalGroupService);
+		const options = getTerminalSelectOpenItems(
+      this._terminalService,
+      this._terminalGroupService,
+    );
 		this.setOptions(options, this._terminalGroupService.activeGroupIndex);
 	}
 }
@@ -392,10 +562,10 @@ function getTerminalSelectOpenItems(terminalService: ITerminalService, terminalG
 	let items: ISelectOptionItem[];
 	if (terminalService.connectionState === TerminalConnectionState.Connected) {
 		items = terminalGroupService.getGroupLabels().map(label => {
-			return { text: label };
-		});
+      return { text: label };
+    });
 	} else {
-		items = [{ text: nls.localize('terminalConnectingLabel', "Starting...") }];
+		items = [{ text: nls.localize("terminalConnectingLabel", "Starting...") }];
 	}
 	items.push(SeparatorSelectOption);
 	items.push({ text: switchTerminalShowTabsTitle });
@@ -421,12 +591,21 @@ class SingleTerminalTabActionViewItem extends MenuEntryActionViewItem {
 		@IContextMenuService contextMenuService: IContextMenuService,
 		@ICommandService private readonly _commandService: ICommandService,
 		@IInstantiationService private readonly _instantiationService: IInstantiationService,
-		@IAccessibilityService _accessibilityService: IAccessibilityService
+		@IAccessibilityService _accessibilityService: IAccessibilityService,
 	) {
-		super(action, {
-			draggable: true,
-			hoverDelegate: _instantiationService.createInstance(SingleTabHoverDelegate)
-		}, keybindingService, notificationService, contextKeyService, themeService, contextMenuService, _accessibilityService);
+		super(
+      action,
+      {
+        draggable: true,
+        hoverDelegate: _instantiationService.createInstance(SingleTabHoverDelegate),
+      },
+      keybindingService,
+      notificationService,
+      contextKeyService,
+      themeService,
+      contextMenuService,
+      _accessibilityService,
+    );
 
 		// Register listeners to update the tab
 		this._register(Event.debounce<ITerminalInstance | undefined, Set<ITerminalInstance>>(Event.any(
@@ -454,9 +633,12 @@ class SingleTerminalTabActionViewItem extends MenuEntryActionViewItem {
 	}
 
 	override async onClick(event: MouseEvent): Promise<void> {
-		this._terminalGroupService.lastAccessedMenu = 'inline-tab';
+		this._terminalGroupService.lastAccessedMenu = "inline-tab";
 		if (event.altKey && this._menuItemAction.alt) {
-			this._commandService.executeCommand(this._menuItemAction.alt.id, { location: TerminalLocation.Panel } satisfies ICreateTerminalOptions);
+			this._commandService.executeCommand(
+        this._menuItemAction.alt.id,
+        { location: TerminalLocation.Panel } satisfies ICreateTerminalOptions,
+      );
 		} else {
 			this._openContextMenu();
 		}
@@ -500,22 +682,27 @@ class SingleTerminalTabActionViewItem extends MenuEntryActionViewItem {
 			const label = this.label;
 			const instance = this._terminalGroupService.activeInstance;
 			if (!instance) {
-				dom.reset(label, '');
+				dom.reset(label, "");
 				return;
 			}
-			label.classList.add('single-terminal-tab');
-			let colorStyle = '';
+			label.classList.add("single-terminal-tab");
+			let colorStyle = "";
 			const primaryStatus = instance.statusList.primary;
 			if (primaryStatus) {
 				const colorKey = getColorForSeverity(primaryStatus.severity);
 				this._themeService.getColorTheme();
-				const foundColor = this._themeService.getColorTheme().getColor(colorKey);
+				const foundColor = this._themeService.getColorTheme().getColor(
+          colorKey,
+        );
 				if (foundColor) {
 					colorStyle = foundColor.toString();
 				}
 			}
 			label.style.color = colorStyle;
-			dom.reset(label, ...renderLabelWithIcons(this._instantiationService.invokeFunction(getSingleTabLabel, instance, this._terminaConfigurationService.config.tabs.separator, ThemeIcon.isThemeIcon(this._commandAction.item.icon) ? this._commandAction.item.icon : undefined)));
+			dom.reset(
+        label,
+        ...renderLabelWithIcons(this._instantiationService.invokeFunction(getSingleTabLabel, instance, this._terminaConfigurationService.config.tabs.separator, ThemeIcon.isThemeIcon(this._commandAction.item.icon) ? this._commandAction.item.icon : undefined)),
+      );
 
 			if (this._altCommand) {
 				label.classList.remove(this._altCommand);
@@ -527,7 +714,7 @@ class SingleTerminalTabActionViewItem extends MenuEntryActionViewItem {
 			}
 			if (this._class) {
 				label.classList.remove(this._class);
-				label.classList.remove('terminal-uri-icon');
+				label.classList.remove("terminal-uri-icon");
 				this._class = undefined;
 			}
 			const colorClass = getColorClass(instance);
@@ -535,7 +722,10 @@ class SingleTerminalTabActionViewItem extends MenuEntryActionViewItem {
 				this._color = colorClass;
 				label.classList.add(colorClass);
 			}
-			const uriClasses = getUriClasses(instance, this._themeService.getColorTheme().type);
+			const uriClasses = getUriClasses(
+        instance,
+        this._themeService.getColorTheme().type,
+      );
 			if (uriClasses) {
 				this._class = uriClasses?.[0];
 				label.classList.add(...uriClasses);
@@ -559,7 +749,7 @@ class SingleTerminalTabActionViewItem extends MenuEntryActionViewItem {
 				const instance = this._terminalGroupService.activeInstance;
 				return instance ? [new InstanceContext(instance)] : [];
 			},
-			onHide: () => actionRunner.dispose()
+			onHide: () => actionRunner.dispose(),
 		});
 	}
 }
@@ -568,7 +758,7 @@ function getSingleTabLabel(accessor: ServicesAccessor, instance: ITerminalInstan
 	// Don't even show the icon if there is no title as the icon would shift around when the title
 	// is added
 	if (!instance || !instance.title) {
-		return '';
+		return "";
 	}
 	const iconId = ThemeIcon.isThemeIcon(instance.icon) ? instance.icon.id : accessor.get(ITerminalProfileResolverService).getDefaultIcon().id;
 	const label = `$(${icon?.id || iconId}) ${getSingleTabTitle(instance, separator)}`;
@@ -582,7 +772,7 @@ function getSingleTabLabel(accessor: ServicesAccessor, instance: ITerminalInstan
 
 function getSingleTabTitle(instance: ITerminalInstance | undefined, separator: string): string {
 	if (!instance) {
-		return '';
+		return "";
 	}
 	return !instance.description ? instance.title : `${instance.title} ${separator} ${instance.description}`;
 }
@@ -593,7 +783,7 @@ class TerminalThemeIconStyle extends Themable {
 		container: HTMLElement,
 		@IThemeService private readonly _themeService: IThemeService,
 		@ITerminalService private readonly _terminalService: ITerminalService,
-		@ITerminalGroupService private readonly _terminalGroupService: ITerminalGroupService
+		@ITerminalGroupService private readonly _terminalGroupService: ITerminalGroupService,
 	) {
 		super(_themeService);
 		this._registerListeners();
@@ -603,9 +793,15 @@ class TerminalThemeIconStyle extends Themable {
 	}
 
 	private _registerListeners(): void {
-		this._register(this._terminalService.onAnyInstanceIconChange(() => this.updateStyles()));
-		this._register(this._terminalService.onDidChangeInstances(() => this.updateStyles()));
-		this._register(this._terminalGroupService.onDidChangeGroups(() => this.updateStyles()));
+		this._register(
+      this._terminalService.onAnyInstanceIconChange(() => this.updateStyles()),
+    );
+		this._register(
+      this._terminalService.onDidChangeInstances(() => this.updateStyles()),
+    );
+		this._register(
+      this._terminalGroupService.onDidChangeGroups(() => this.updateStyles()),
+    );
 	}
 
 	override updateStyles(): void {
@@ -613,7 +809,7 @@ class TerminalThemeIconStyle extends Themable {
 		const colorTheme = this._themeService.getColorTheme();
 
 		// TODO: add a rule collector to avoid duplication
-		let css = '';
+		let css = "";
 
 		// Add icons
 		for (const instance of this._terminalService.instances) {
@@ -624,7 +820,10 @@ class TerminalThemeIconStyle extends Themable {
 			let uri = undefined;
 			if (icon instanceof URI) {
 				uri = icon;
-			} else if (icon instanceof Object && hasKey(icon, { light: true, dark: true })) {
+			} else if (icon instanceof Object && hasKey(icon, {
+        light: true,
+        dark: true,
+      })) {
 				uri = isDark(colorTheme.type) ? icon.dark : icon.light;
 			}
 			const iconClasses = getUriClasses(instance, colorTheme.type);
@@ -659,7 +858,7 @@ class TerminalThemeIconStyle extends Themable {
 class SingleTabHoverDelegate implements IHoverDelegate {
 	private _lastHoverHideTime: number = 0;
 
-	readonly placement = 'element';
+	readonly placement = "element";
 
 	constructor(
 		@IConfigurationService private readonly _configurationService: IConfigurationService,
@@ -672,7 +871,7 @@ class SingleTabHoverDelegate implements IHoverDelegate {
 	get delay(): number {
 		return Date.now() - this._lastHoverHideTime < 200
 			? 0  // show instantly when a hover was recently shown
-			: this._configurationService.getValue<number>('workbench.hover.delay');
+			: this._configurationService.getValue<number>("workbench.hover.delay");
 	}
 
 	showHover(options: IHoverDelegateOptions, focus?: boolean) {
@@ -681,11 +880,14 @@ class SingleTabHoverDelegate implements IHoverDelegate {
 			return;
 		}
 		const hoverInfo = getInstanceHoverInfo(instance, this._storageService);
-		return this._hoverService.showInstantHover({
-			...options,
-			content: hoverInfo.content,
-			actions: hoverInfo.actions
-		}, focus);
+		return this._hoverService.showInstantHover(
+      {
+        ...options,
+        content: hoverInfo.content,
+        actions: hoverInfo.actions,
+      },
+      focus,
+    );
 	}
 
 	onDidHideHover() {

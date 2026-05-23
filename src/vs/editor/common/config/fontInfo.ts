@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as platform from '../../../base/common/platform.js';
-import { EditorOption, FindComputedEditorOptionValueById } from './editorOptions.js';
-import { EditorZoom } from './editorZoom.js';
+import * as platform from "../../../base/common/platform.js";
+import { EditorOption, FindComputedEditorOptionValueById } from "./editorOptions.js";
+import { EditorZoom } from "./editorZoom.js";
 
 /**
  * Determined from empirical observations.
@@ -50,25 +50,25 @@ export class BareFontInfo {
 		lineHeight *= editorZoomLevelMultiplier;
 
 		if (fontVariationSettings === FONT_VARIATION_TRANSLATE) {
-			if (fontWeight === 'normal' || fontWeight === 'bold') {
+			if (fontWeight === "normal" || fontWeight === "bold") {
 				fontVariationSettings = FONT_VARIATION_OFF;
 			} else {
 				const fontWeightAsNumber = parseInt(fontWeight, 10);
 				fontVariationSettings = `'wght' ${fontWeightAsNumber}`;
-				fontWeight = 'normal';
+				fontWeight = "normal";
 			}
 		}
 
 		return new BareFontInfo({
-			pixelRatio: pixelRatio,
-			fontFamily: fontFamily,
-			fontWeight: fontWeight,
-			fontSize: fontSize,
-			fontFeatureSettings: fontFeatureSettings,
-			fontVariationSettings,
-			lineHeight: lineHeight,
-			letterSpacing: letterSpacing
-		});
+      pixelRatio: pixelRatio,
+      fontFamily: fontFamily,
+      fontWeight: fontWeight,
+      fontSize: fontSize,
+      fontFeatureSettings: fontFeatureSettings,
+      fontVariationSettings,
+      lineHeight: lineHeight,
+      letterSpacing: letterSpacing,
+    });
 	}
 
 	readonly pixelRatio: number;
@@ -210,24 +210,24 @@ export class FontInfo extends BareFontInfo {
 /**
  * @internal
  */
-export const FONT_VARIATION_OFF = 'normal';
+export const FONT_VARIATION_OFF = "normal";
 /**
  * @internal
  */
-export const FONT_VARIATION_TRANSLATE = 'translate';
+export const FONT_VARIATION_TRANSLATE = "translate";
 
 /**
  * @internal
  */
-export const DEFAULT_WINDOWS_FONT_FAMILY = 'Consolas, \'Courier New\', monospace';
+export const DEFAULT_WINDOWS_FONT_FAMILY = "Consolas, 'Courier New', monospace";
 /**
  * @internal
  */
-export const DEFAULT_MAC_FONT_FAMILY = 'Menlo, Monaco, \'Courier New\', monospace';
+export const DEFAULT_MAC_FONT_FAMILY = "Menlo, Monaco, 'Courier New', monospace";
 /**
  * @internal
  */
-export const DEFAULT_LINUX_FONT_FAMILY = '\'Droid Sans Mono\', monospace';
+export const DEFAULT_LINUX_FONT_FAMILY = "'Droid Sans Mono', monospace";
 /**
  * @internal
  */
@@ -235,7 +235,7 @@ export const EDITOR_FONT_DEFAULTS = {
 	fontFamily: (
 		platform.isMacintosh ? DEFAULT_MAC_FONT_FAMILY : (platform.isWindows ? DEFAULT_WINDOWS_FONT_FAMILY : DEFAULT_LINUX_FONT_FAMILY)
 	),
-	fontWeight: 'normal',
+	fontWeight: "normal",
 	fontSize: (
 		platform.isMacintosh ? 12 : 14
 	),

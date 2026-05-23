@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { StoredValue } from './storedValue.js';
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { StoredValue } from "./storedValue.js";
 
 export interface IObservableValue<T> {
 	readonly onDidChange: Event<T>;
@@ -13,8 +13,8 @@ export interface IObservableValue<T> {
 }
 
 export const staticObservableValue = <T>(value: T): IObservableValue<T> => ({
-	onDidChange: Event.None,
-	value,
+  onDidChange: Event.None,
+  value,
 });
 
 export class MutableObservableValue<T> extends Disposable implements IObservableValue<T> {

@@ -3,31 +3,48 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { findLast } from '../../../../../base/common/arraysFind.js';
-import { CancellationToken } from '../../../../../base/common/cancellation.js';
-import { IStringDictionary } from '../../../../../base/common/collections.js';
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { IMarkdownString } from '../../../../../base/common/htmlContent.js';
-import { Iterable } from '../../../../../base/common/iterator.js';
-import { Disposable, IDisposable, toDisposable } from '../../../../../base/common/lifecycle.js';
-import { revive, Revived } from '../../../../../base/common/marshalling.js';
-import { IObservable } from '../../../../../base/common/observable.js';
-import { equalsIgnoreCase } from '../../../../../base/common/strings.js';
-import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { Command } from '../../../../../editor/common/languages.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { ContextKeyExpr, IContextKey, IContextKeyService } from '../../../../../platform/contextkey/common/contextkey.js';
-import { ExtensionIdentifier } from '../../../../../platform/extensions/common/extensions.js';
-import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
-import { ChatContextKeys } from '../actions/chatContextKeys.js';
-import { IChatAgentEditedFileEvent, IChatProgressHistoryResponseContent, IChatRequestModeInstructions, IChatRequestVariableData, ISerializableChatAgentData } from '../model/chatModel.js';
-import { ChatRequestHooks } from '../promptSyntax/hookSchema.js';
-import { IRawChatCommandContribution } from './chatParticipantContribTypes.js';
-import { IChatFollowup, IChatLocationData, IChatProgress, IChatResponseErrorDetails, IChatTaskDto } from '../chatService/chatService.js';
-import { ChatAgentLocation, ChatConfiguration, ChatModeKind, ChatPermissionLevel } from '../constants.js';
-import { ILanguageModelsService } from '../languageModels.js';
-import { ChatPerfMark, markChat } from '../chatPerf.js';
+import { findLast } from "../../../../../base/common/arraysFind.js";
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { IStringDictionary } from "../../../../../base/common/collections.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { IMarkdownString } from "../../../../../base/common/htmlContent.js";
+import { Iterable } from "../../../../../base/common/iterator.js";
+import { Disposable, IDisposable, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { revive, Revived } from "../../../../../base/common/marshalling.js";
+import { IObservable } from "../../../../../base/common/observable.js";
+import { equalsIgnoreCase } from "../../../../../base/common/strings.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { Command } from "../../../../../editor/common/languages.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { ContextKeyExpr, IContextKey, IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { ExtensionIdentifier } from "../../../../../platform/extensions/common/extensions.js";
+import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ChatContextKeys } from "../actions/chatContextKeys.js";
+import {
+  IChatAgentEditedFileEvent,
+  IChatProgressHistoryResponseContent,
+  IChatRequestModeInstructions,
+  IChatRequestVariableData,
+  ISerializableChatAgentData,
+} from "../model/chatModel.js";
+import { ChatRequestHooks } from "../promptSyntax/hookSchema.js";
+import { IRawChatCommandContribution } from "./chatParticipantContribTypes.js";
+import {
+  IChatFollowup,
+  IChatLocationData,
+  IChatProgress,
+  IChatResponseErrorDetails,
+  IChatTaskDto,
+} from "../chatService/chatService.js";
+import {
+  ChatAgentLocation,
+  ChatConfiguration,
+  ChatModeKind,
+  ChatPermissionLevel,
+} from "../constants.js";
+import { ILanguageModelsService } from "../languageModels.js";
+import { ChatPerfMark, markChat } from "../chatPerf.js";
 
 //#region agent service, commands etc
 
@@ -214,7 +231,9 @@ export interface IChatAgentResult {
 	nextQuestion?: IChatQuestion;
 }
 
-export const IChatAgentService = createDecorator<IChatAgentService>('chatAgentService');
+export const IChatAgentService = createDecorator<IChatAgentService>(
+  "chatAgentService",
+);
 
 interface IChatAgentEntry {
 	data: IChatAgentData;
@@ -278,15 +297,19 @@ export interface IChatAgentService {
 
 export class ChatAgentService extends Disposable implements IChatAgentService {
 
-	public static readonly AGENT_LEADER = '@';
+	public static readonly AGENT_LEADER = "@";
 
 	declare _serviceBrand: undefined;
 
 	private _agents = new Map<string, IChatAgentEntry>();
 
-	private readonly _onDidChangeAgents = this._register(new Emitter<IChatAgent | undefined>());
+	private readonly _onDidChangeAgents = this._register(
+    new Emitter<IChatAgent | undefined>(),
+  );
 	readonly onDidChangeAgents: Event<IChatAgent | undefined> = this._onDidChangeAgents.event;
-	private readonly _onWillInvokeAgent = this._register(new Emitter<IChatAgentInvocationEvent>());
+	private readonly _onWillInvokeAgent = this._register(
+    new Emitter<IChatAgentInvocationEvent>(),
+  );
 	readonly onWillInvokeAgent: Event<IChatAgentInvocationEvent> = this._onWillInvokeAgent.event;
 
 	private readonly _agentsContextKeys = new Set<string>();
@@ -302,9 +325,15 @@ export class ChatAgentService extends Disposable implements IChatAgentService {
 		@IConfigurationService private readonly configurationService: IConfigurationService,
 	) {
 		super();
-		this._hasDefaultAgent = ChatContextKeys.enabled.bindTo(this.contextKeyService);
-		this._extensionAgentRegistered = ChatContextKeys.extensionParticipantRegistered.bindTo(this.contextKeyService);
-		this._defaultAgentRegistered = ChatContextKeys.panelParticipantRegistered.bindTo(this.contextKeyService);
+		this._hasDefaultAgent = ChatContextKeys.enabled.bindTo(
+      this.contextKeyService,
+    );
+		this._extensionAgentRegistered = ChatContextKeys.extensionParticipantRegistered.bindTo(
+      this.contextKeyService,
+    );
+		this._defaultAgentRegistered = ChatContextKeys.panelParticipantRegistered.bindTo(
+      this.contextKeyService,
+    );
 		this._register(contextKeyService.onDidChangeContext((e) => {
 			if (e.affectsSome(this._agentsContextKeys)) {
 				this._updateContextKeys();
@@ -324,7 +353,7 @@ export class ChatAgentService extends Disposable implements IChatAgentService {
 			...data,
 			get slashCommands() {
 				return commands.filter(c => !c.when || that.contextKeyService.contextMatchesRules(ContextKeyExpr.deserialize(c.when)));
-			}
+			},
 		};
 		const entry = { data };
 		this._agents.set(id, entry);
@@ -333,11 +362,11 @@ export class ChatAgentService extends Disposable implements IChatAgentService {
 		this._onDidChangeAgents.fire(undefined);
 
 		return toDisposable(() => {
-			this._agents.delete(id);
-			this._updateAgentsContextKeys();
-			this._updateContextKeys();
-			this._onDidChangeAgents.fire(undefined);
-		});
+      this._agents.delete(id);
+      this._updateAgentsContextKeys();
+      this._updateContextKeys();
+      this._onDidChangeAgents.fire(undefined);
+    });
 	}
 
 	private _updateAgentsContextKeys(): void {
@@ -362,7 +391,7 @@ export class ChatAgentService extends Disposable implements IChatAgentService {
 				if (!agent.isCore) {
 					extensionAgentRegistered = true;
 				}
-				if (agent.id === 'chat.setup' || agent.id === 'github.copilot.editsAgent') {
+				if (agent.id === "chat.setup" || agent.id === "github.copilot.editsAgent") {
 					// TODO@roblourens firing the event below probably isn't necessary but leave it alone for now
 					toolsAgentRegistered = true;
 				} else {
@@ -374,7 +403,9 @@ export class ChatAgentService extends Disposable implements IChatAgentService {
 		this._extensionAgentRegistered.set(extensionAgentRegistered);
 		if (toolsAgentRegistered !== this._hasToolsAgent) {
 			this._hasToolsAgent = toolsAgentRegistered;
-			this._onDidChangeAgents.fire(this.getDefaultAgent(ChatAgentLocation.Chat, ChatModeKind.Agent));
+			this._onDidChangeAgents.fire(
+        this.getDefaultAgent(ChatAgentLocation.Chat, ChatModeKind.Agent),
+      );
 		}
 	}
 
@@ -385,7 +416,9 @@ export class ChatAgentService extends Disposable implements IChatAgentService {
 		}
 
 		if (entry.impl) {
-			throw new Error(`Agent already has implementation: ${JSON.stringify(id)}`);
+			throw new Error(
+        `Agent already has implementation: ${JSON.stringify(id)}`,
+      );
 		}
 
 		if (entry.data.isDefault) {
@@ -412,9 +445,9 @@ export class ChatAgentService extends Disposable implements IChatAgentService {
 		this._onDidChangeAgents.fire(new MergedChatAgent(data, agentImpl));
 
 		return toDisposable(() => {
-			this._agents.delete(data.id);
-			this._onDidChangeAgents.fire(undefined);
-		});
+      this._agents.delete(data.id);
+      this._onDidChangeAgents.fire(undefined);
+    });
 	}
 
 	private _agentCompletionProviders = new Map<string, (query: string, token: CancellationToken) => Promise<IChatAgentCompletionItem[]>>();
@@ -422,8 +455,8 @@ export class ChatAgentService extends Disposable implements IChatAgentService {
 	registerAgentCompletionProvider(id: string, provider: (query: string, token: CancellationToken) => Promise<IChatAgentCompletionItem[]>) {
 		this._agentCompletionProviders.set(id, provider);
 		return {
-			dispose: () => { this._agentCompletionProviders.delete(id); }
-		};
+      dispose: () => { this._agentCompletionProviders.delete(id); },
+    };
 	}
 
 	async getAgentCompletionItems(id: string, query: string, token: CancellationToken) {
@@ -433,7 +466,9 @@ export class ChatAgentService extends Disposable implements IChatAgentService {
 	updateAgent(id: string, updateMetadata: IChatAgentMetadata): void {
 		const agent = this._agents.get(id);
 		if (!agent?.impl) {
-			throw new Error(`No activated agent with id ${JSON.stringify(id)} registered`);
+			throw new Error(
+        `No activated agent with id ${JSON.stringify(id)} registered`,
+      );
 		}
 		agent.data.metadata = { ...agent.data.metadata, ...updateMetadata };
 		this._onDidChangeAgents.fire(new MergedChatAgent(agent.data, agent.impl));
@@ -455,7 +490,11 @@ export class ChatAgentService extends Disposable implements IChatAgentService {
 	}
 
 	getContributedDefaultAgent(location: ChatAgentLocation): IChatAgentData | undefined {
-		return this._preferExtensionAgent(this.getAgents().filter(a => !!a.isDefault && a.locations.includes(location)));
+		return this._preferExtensionAgent(
+      this.getAgents().filter(
+        a => !!a.isDefault && a.locations.includes(location),
+      ),
+    );
 	}
 
 	private _preferExtensionAgent<T extends IChatAgentData>(agents: T[]): T | undefined {
@@ -475,12 +514,19 @@ export class ChatAgentService extends Disposable implements IChatAgentService {
 	}
 
 	private _agentIsEnabled(idOrAgent: string | IChatAgentEntry): boolean {
-		const entry = typeof idOrAgent === 'string' ? this._agents.get(idOrAgent) : idOrAgent;
-		return !entry?.data.when || this.contextKeyService.contextMatchesRules(ContextKeyExpr.deserialize(entry.data.when));
+		const entry = typeof idOrAgent === "string" ? this._agents.get(
+      idOrAgent,
+    ) : idOrAgent;
+		return !entry?.data.when || this.contextKeyService.contextMatchesRules(
+      ContextKeyExpr.deserialize(entry.data.when),
+    );
 	}
 
 	getAgentByFullyQualifiedId(id: string): IChatAgentData | undefined {
-		const agent = Iterable.find(this._agents.values(), a => getFullyQualifiedId(a.data) === id)?.data;
+		const agent = Iterable.find(
+      this._agents.values(),
+      a => getFullyQualifiedId(a.data) === id,
+    )?.data;
 		if (agent && !this._agentIsEnabled(agent.id)) {
 			return;
 		}
@@ -505,7 +551,9 @@ export class ChatAgentService extends Disposable implements IChatAgentService {
 	}
 
 	getAgentsByName(name: string): IChatAgentData[] {
-		return this._preferExtensionAgents(this.getAgents().filter(a => a.name === name));
+		return this._preferExtensionAgents(
+      this.getAgents().filter(a => a.name === name),
+    );
 	}
 
 	private _preferExtensionAgents<T extends IChatAgentData>(agents: T[]): T[] {
@@ -588,8 +636,8 @@ export class ChatAgentService extends Disposable implements IChatAgentService {
 	registerChatParticipantDetectionProvider(handle: number, provider: IChatParticipantDetectionProvider) {
 		this._chatParticipantDetectionProviders.set(handle, provider);
 		return toDisposable(() => {
-			this._chatParticipantDetectionProviders.delete(handle);
-		});
+      this._chatParticipantDetectionProviders.delete(handle);
+    });
 	}
 
 	hasChatParticipantDetectionProviders() {
@@ -598,7 +646,9 @@ export class ChatAgentService extends Disposable implements IChatAgentService {
 
 	async detectAgentOrCommand(request: IChatAgentRequest, history: IChatAgentHistoryEntry[], options: { location: ChatAgentLocation }, token: CancellationToken): Promise<{ agent: IChatAgentData; command?: IChatAgentCommand } | undefined> {
 		// TODO@joyceerhl should we have a selector to be able to narrow down which provider to use
-		const provider = Iterable.first(this._chatParticipantDetectionProviders.values());
+		const provider = Iterable.first(
+      this._chatParticipantDetectionProviders.values(),
+    );
 		if (!provider) {
 			return;
 		}
@@ -613,7 +663,12 @@ export class ChatAgentService extends Disposable implements IChatAgentService {
 			return acc;
 		}, []);
 
-		const result = await provider.provideParticipantDetection(request, history, { ...options, participants }, token);
+		const result = await provider.provideParticipantDetection(
+      request,
+      history,
+      { ...options, participants },
+      token,
+    );
 		if (!result) {
 			return;
 		}
@@ -641,16 +696,16 @@ export class ChatAgentService extends Disposable implements IChatAgentService {
 export class MergedChatAgent implements IChatAgent {
 	constructor(
 		private readonly data: IChatAgentData,
-		private readonly impl: IChatAgentImplementation
+		private readonly impl: IChatAgentImplementation,
 	) { }
 	when?: string | undefined;
 	publisherDisplayName?: string | undefined;
 	isDynamic?: boolean | undefined;
 
 	get id(): string { return this.data.id; }
-	get name(): string { return this.data.name ?? ''; }
-	get fullName(): string { return this.data.fullName ?? ''; }
-	get description(): string { return this.data.description ?? ''; }
+	get name(): string { return this.data.name ?? ""; }
+	get fullName(): string { return this.data.fullName ?? ""; }
+	get description(): string { return this.data.description ?? ""; }
 	get extensionId(): ExtensionIdentifier { return this.data.extensionId; }
 	get extensionVersion(): string | undefined { return this.data.extensionVersion; }
 	get extensionPublisherId(): string { return this.data.extensionPublisherId; }
@@ -689,7 +744,9 @@ export class MergedChatAgent implements IChatAgent {
 	}
 }
 
-export const IChatAgentNameService = createDecorator<IChatAgentNameService>('chatAgentNameService');
+export const IChatAgentNameService = createDecorator<IChatAgentNameService>(
+  "chatAgentNameService",
+);
 
 export interface IChatAgentNameService {
 	_serviceBrand: undefined;
@@ -715,20 +772,22 @@ export class ChatAgentNameService implements IChatAgentNameService {
 
 		// TODO would like to use observables here but nothing uses it downstream and I'm not sure how to combine these two
 		const nameAllowed = this.checkAgentNameRestriction(chatAgentData.name, chatAgentData).get();
-		const fullNameAllowed = !chatAgentData.fullName || this.checkAgentNameRestriction(chatAgentData.fullName.replace(/\s/g, ''), chatAgentData).get();
+		const fullNameAllowed = !chatAgentData.fullName || this.checkAgentNameRestriction(chatAgentData.fullName.replace(/\s/g, ""), chatAgentData).get();
 		return nameAllowed && fullNameAllowed;
 	}
 
 	private checkAgentNameRestriction(name: string, chatAgentData: IChatAgentData): IObservable<boolean> {
 		// Registry is a map of name to an array of extension publisher IDs or extension IDs that are allowed to use it.
 		// Look up the list of extensions that are allowed to use this name
-		const allowList = this.languageModelsService.restrictedChatParticipants.map<string[] | undefined>(registry => registry[name.toLowerCase()]);
+		const allowList = this.languageModelsService.restrictedChatParticipants.map<string[] | undefined>(
+      registry => registry[name.toLowerCase()],
+    );
 		return allowList.map(allowList => {
 			if (!allowList) {
 				return true;
 			}
 
-			return allowList.some(id => equalsIgnoreCase(id, id.includes('.') ? chatAgentData.extensionId.value : chatAgentData.extensionPublisherId));
+			return allowList.some(id => equalsIgnoreCase(id, id.includes(".") ? chatAgentData.extensionId.value : chatAgentData.extensionPublisherId));
 		});
 	}
 }
@@ -741,7 +800,7 @@ export function getFullyQualifiedId(chatAgentData: IChatAgentData): string {
  * There was a period where serialized chat agent data used 'id' instead of 'name'.
  * Don't copy this pattern, serialized data going forward should be versioned with strict interfaces.
  */
-interface IOldSerializedChatAgentData extends Omit<ISerializableChatAgentData, 'name'> {
+interface IOldSerializedChatAgentData extends Omit<ISerializableChatAgentData, "name"> {
 	id: string;
 	extensionPublisher?: string;
 }
@@ -751,24 +810,26 @@ function isSerializableChatAgentData(obj: ISerializableChatAgentData | IOldSeria
 }
 
 export function reviveSerializedAgent(raw: ISerializableChatAgentData | IOldSerializedChatAgentData): IChatAgentData {
-	const normalized: ISerializableChatAgentData = isSerializableChatAgentData(raw) ?
+	const normalized: ISerializableChatAgentData = isSerializableChatAgentData(
+    raw,
+  ) ?
 		raw :
 		{
-			...raw,
-			name: raw.id,
-		};
+      ...raw,
+      name: raw.id,
+    };
 
 	// Fill in required fields that may be missing from old data
 	if (!normalized.extensionPublisherId) {
-		normalized.extensionPublisherId = (raw as IOldSerializedChatAgentData).extensionPublisher ?? '';
+		normalized.extensionPublisherId = (raw as IOldSerializedChatAgentData).extensionPublisher ?? "";
 	}
 
 	if (!normalized.extensionDisplayName) {
-		normalized.extensionDisplayName = '';
+		normalized.extensionDisplayName = "";
 	}
 
 	if (!normalized.extensionId) {
-		normalized.extensionId = new ExtensionIdentifier('');
+		normalized.extensionId = new ExtensionIdentifier("");
 	}
 
 	return revive(normalized);

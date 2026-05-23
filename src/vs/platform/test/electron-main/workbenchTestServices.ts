@@ -3,13 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Promises } from '../../../base/common/async.js';
-import { Event, Emitter } from '../../../base/common/event.js';
-import { IAuxiliaryWindow } from '../../auxiliaryWindow/electron-main/auxiliaryWindow.js';
-import { NativeParsedArgs } from '../../environment/common/argv.js';
-import { ILifecycleMainService, IRelaunchHandler, LifecycleMainPhase, ShutdownEvent, ShutdownReason } from '../../lifecycle/electron-main/lifecycleMainService.js';
-import { IStateService } from '../../state/node/state.js';
-import { ICodeWindow, UnloadReason } from '../../window/electron-main/window.js';
+import { Promises } from "../../../base/common/async.js";
+import { Event, Emitter } from "../../../base/common/event.js";
+import { IAuxiliaryWindow } from "../../auxiliaryWindow/electron-main/auxiliaryWindow.js";
+import { NativeParsedArgs } from "../../environment/common/argv.js";
+import {
+  ILifecycleMainService,
+  IRelaunchHandler,
+  LifecycleMainPhase,
+  ShutdownEvent,
+  ShutdownReason,
+} from "../../lifecycle/electron-main/lifecycleMainService.js";
+import { IStateService } from "../../state/node/state.js";
+import { ICodeWindow, UnloadReason } from "../../window/electron-main/window.js";
 
 export class TestLifecycleMainService implements ILifecycleMainService {
 
@@ -27,7 +33,7 @@ export class TestLifecycleMainService implements ILifecycleMainService {
 			reason: ShutdownReason.QUIT,
 			join(id, promise) {
 				joiners.push(promise);
-			}
+			},
 		});
 
 		await Promises.settled(joiners);

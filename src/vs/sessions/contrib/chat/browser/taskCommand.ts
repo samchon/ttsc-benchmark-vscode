@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CommandString } from '../../../../workbench/contrib/tasks/common/taskConfiguration.js';
-import { ITaskEntry } from './sessionsTasksService.js';
+import { CommandString } from "../../../../workbench/contrib/tasks/common/taskConfiguration.js";
+import { ITaskEntry } from "./sessionsTasksService.js";
 
 /**
  * Operating system identifier used to pick the right OS-specific overrides on
  * an `ITaskEntry`. Mirrors the keys used in `tasks.json` (`windows`, `osx`,
  * `linux`).
  */
-export type TaskTargetOS = 'windows' | 'osx' | 'linux';
+export type TaskTargetOS = "windows" | "osx" | "linux";
 
 /**
  * Context passed to {@link resolveTaskCommand}.
@@ -41,25 +41,25 @@ function posixStrong(value: string): string {
 }
 
 function posixWeak(value: string): string {
-	return `"${value.replace(/(["\\$`])/g, '\\$1')}"`;
+	return `"${value.replace(/(["\\$`])/g, "\\$1")}"`;
 }
 
 function posixEscape(value: string): string {
-	return value.replace(/([\\\s"'`$&|;<>(){}[\]*?#~!])/g, '\\$1');
+	return value.replace(/([\\\s"'`$&|;<>(){}[\]*?#~!])/g, "\\$1");
 }
 
 function renderArg(arg: CommandString): string {
-	if (typeof arg === 'string') {
+	if (typeof arg === "string") {
 		return POSIX_NEEDS_QUOTING.test(arg) ? posixStrong(arg) : arg;
 	}
 	if (Array.isArray(arg)) {
-		return arg.map(renderArg).join(' ');
+		return arg.map(renderArg).join(" ");
 	}
 	const value = CommandString.value(arg);
 	switch (arg.quoting) {
-		case 'strong': return posixStrong(value);
-		case 'weak': return posixWeak(value);
-		case 'escape': return posixEscape(value);
+		case "strong": return posixStrong(value);
+		case "weak": return posixWeak(value);
+		case "escape": return posixEscape(value);
 		default: return POSIX_NEEDS_QUOTING.test(value) ? posixStrong(value) : value;
 	}
 }
@@ -79,10 +79,10 @@ function resolveOwnCommand(task: ITaskEntry, targetOS?: TaskTargetOS): string | 
 				parts.push(renderArg(arg));
 			}
 		}
-		return parts.join(' ');
+		return parts.join(" ");
 	}
 
-	if (task.script && (!task.type || task.type === 'npm')) {
+	if (task.script && (!task.type || task.type === "npm")) {
 		return `npm run ${task.script}`;
 	}
 
@@ -101,7 +101,9 @@ function resolveDependencies(task: ITaskEntry, ctx: ITaskResolutionContext, stac
 	if (!task.dependsOn || !ctx.lookup) {
 		return undefined;
 	}
-	const depLabels = typeof task.dependsOn === 'string' ? [task.dependsOn] : task.dependsOn;
+	const depLabels = typeof task.dependsOn === "string" ? [
+    task.dependsOn,
+  ] : task.dependsOn;
 	const resolved: string[] = [];
 	for (const label of depLabels) {
 		const dep = ctx.lookup(label);
@@ -124,9 +126,9 @@ function resolveDependencies(task: ITaskEntry, ctx: ITaskResolutionContext, stac
 	// dependency does. Output interleaving is unavoidable but matches the
 	// semantics of the Tasks extension. `sequence` (and the unspecified
 	// default) chain with `&&` so a failing dependency short-circuits.
-	return task.dependsOrder === 'parallel'
-		? `${resolved.map(c => `( ${c} )`).join(' & ')} & wait`
-		: resolved.join(' && ');
+	return task.dependsOrder === "parallel"
+		? `${resolved.map(c => `( ${c} )`).join(" & ")} & wait`
+		: resolved.join(" && ");
 }
 
 function resolveInternal(task: ITaskEntry, ctx: ITaskResolutionContext, stack: Set<string>): string | undefined {

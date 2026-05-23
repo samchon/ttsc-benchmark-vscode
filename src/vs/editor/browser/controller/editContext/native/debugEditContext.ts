@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { EditContext } from './editContextFactory.js';
+import { EditContext } from "./editContextFactory.js";
 
-const COLOR_FOR_CONTROL_BOUNDS = 'blue';
-const COLOR_FOR_SELECTION_BOUNDS = 'red';
-const COLOR_FOR_CHARACTER_BOUNDS = 'green';
+const COLOR_FOR_CONTROL_BOUNDS = "blue";
+const COLOR_FOR_SELECTION_BOUNDS = "red";
+const COLOR_FOR_CHARACTER_BOUNDS = "green";
 
 export class DebugEditContext {
 	private _isDebugging = true;
@@ -68,11 +68,26 @@ export class DebugEditContext {
 		return this._editContext.characterBounds();
 	}
 
-	private readonly _ontextupdateWrapper = new EventListenerWrapper('textupdate', this);
-	private readonly _ontextformatupdateWrapper = new EventListenerWrapper('textformatupdate', this);
-	private readonly _oncharacterboundsupdateWrapper = new EventListenerWrapper('characterboundsupdate', this);
-	private readonly _oncompositionstartWrapper = new EventListenerWrapper('compositionstart', this);
-	private readonly _oncompositionendWrapper = new EventListenerWrapper('compositionend', this);
+	private readonly _ontextupdateWrapper = new EventListenerWrapper(
+    "textupdate",
+    this,
+  );
+	private readonly _ontextformatupdateWrapper = new EventListenerWrapper(
+    "textformatupdate",
+    this,
+  );
+	private readonly _oncharacterboundsupdateWrapper = new EventListenerWrapper(
+    "characterboundsupdate",
+    this,
+  );
+	private readonly _oncompositionstartWrapper = new EventListenerWrapper(
+    "compositionstart",
+    this,
+  );
+	private readonly _oncompositionendWrapper = new EventListenerWrapper(
+    "compositionend",
+    this,
+  );
 
 	get ontextupdate(): EventHandler | null { return this._ontextupdateWrapper.eventHandler; }
 	set ontextupdate(value: EventHandler | null) { this._ontextupdateWrapper.eventHandler = value; }
@@ -97,9 +112,9 @@ export class DebugEditContext {
 				this.renderDebug();
 				console.log(`DebugEditContex.on_${type}`, event);
 			}
-			if (typeof listener === 'function') {
+			if (typeof listener === "function") {
 				listener.call(this, event);
-			} else if (typeof listener === 'object' && 'handleEvent' in listener) {
+			} else if (typeof listener === "object" && "handleEvent" in listener) {
 				listener.handleEvent(event);
 			}
 		};
@@ -141,47 +156,57 @@ export class DebugEditContext {
 			return;
 		}
 		if (this._controlBounds) {
-			this._disposables.push(createRect(this._controlBounds, COLOR_FOR_CONTROL_BOUNDS));
+			this._disposables.push(
+        createRect(this._controlBounds, COLOR_FOR_CONTROL_BOUNDS),
+      );
 		}
 		if (this._selectionBounds) {
-			this._disposables.push(createRect(this._selectionBounds, COLOR_FOR_SELECTION_BOUNDS));
+			this._disposables.push(
+        createRect(this._selectionBounds, COLOR_FOR_SELECTION_BOUNDS),
+      );
 		}
 		if (this._characterBounds) {
 			for (const rect of this._characterBounds.characterBounds) {
 				this._disposables.push(createRect(rect, COLOR_FOR_CHARACTER_BOUNDS));
 			}
 		}
-		this._disposables.push(createDiv(this._editContext.text, this._editContext.selectionStart, this._editContext.selectionEnd));
+		this._disposables.push(
+      createDiv(
+        this._editContext.text,
+        this._editContext.selectionStart,
+        this._editContext.selectionEnd,
+      ),
+    );
 	}
 }
 
 function createDiv(text: string, selectionStart: number, selectionEnd: number) {
-	const ret = document.createElement('div');
-	ret.className = 'debug-rect-marker';
-	ret.style.position = 'absolute';
-	ret.style.zIndex = '999999999';
-	ret.style.bottom = '50px';
-	ret.style.left = '60px';
-	ret.style.backgroundColor = 'white';
-	ret.style.border = '1px solid black';
-	ret.style.padding = '5px';
-	ret.style.whiteSpace = 'pre';
-	ret.style.font = '12px monospace';
-	ret.style.pointerEvents = 'none';
+	const ret = document.createElement("div");
+	ret.className = "debug-rect-marker";
+	ret.style.position = "absolute";
+	ret.style.zIndex = "999999999";
+	ret.style.bottom = "50px";
+	ret.style.left = "60px";
+	ret.style.backgroundColor = "white";
+	ret.style.border = "1px solid black";
+	ret.style.padding = "5px";
+	ret.style.whiteSpace = "pre";
+	ret.style.font = "12px monospace";
+	ret.style.pointerEvents = "none";
 
 	const before = text.substring(0, selectionStart);
-	const selected = text.substring(selectionStart, selectionEnd) || '|';
-	const after = text.substring(selectionEnd) + ' ';
+	const selected = text.substring(selectionStart, selectionEnd) || "|";
+	const after = text.substring(selectionEnd) + " ";
 
 	const beforeNode = document.createTextNode(before);
 	ret.appendChild(beforeNode);
 
-	const selectedNode = document.createElement('span');
-	selectedNode.style.backgroundColor = 'yellow';
+	const selectedNode = document.createElement("span");
+	selectedNode.style.backgroundColor = "yellow";
 	selectedNode.appendChild(document.createTextNode(selected));
 
-	selectedNode.style.minWidth = '2px';
-	selectedNode.style.minHeight = '16px';
+	selectedNode.style.minWidth = "2px";
+	selectedNode.style.minHeight = "16px";
 	ret.appendChild(selectedNode);
 
 	const afterNode = document.createTextNode(after);
@@ -193,22 +218,22 @@ function createDiv(text: string, selectionStart: number, selectionEnd: number) {
 	return {
 		dispose: () => {
 			ret.remove();
-		}
+		},
 	};
 }
 
-function createRect(rect: DOMRect, color: 'green' | 'blue' | 'red') {
-	const ret = document.createElement('div');
-	ret.className = 'debug-rect-marker';
-	ret.style.position = 'absolute';
-	ret.style.zIndex = '999999999';
+function createRect(rect: DOMRect, color: "green" | "blue" | "red") {
+	const ret = document.createElement("div");
+	ret.className = "debug-rect-marker";
+	ret.style.position = "absolute";
+	ret.style.zIndex = "999999999";
 	ret.style.outline = `2px solid ${color}`;
-	ret.style.pointerEvents = 'none';
+	ret.style.pointerEvents = "none";
 
-	ret.style.top = rect.top + 'px';
-	ret.style.left = rect.left + 'px';
-	ret.style.width = rect.width + 'px';
-	ret.style.height = rect.height + 'px';
+	ret.style.top = rect.top + "px";
+	ret.style.left = rect.left + "px";
+	ret.style.width = rect.width + "px";
+	ret.style.height = rect.height + "px";
 
 	// eslint-disable-next-line no-restricted-syntax
 	document.body.appendChild(ret);
@@ -216,7 +241,7 @@ function createRect(rect: DOMRect, color: 'green' | 'blue' | 'red') {
 	return {
 		dispose: () => {
 			ret.remove();
-		}
+		},
 	};
 }
 

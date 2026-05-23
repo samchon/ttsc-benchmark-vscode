@@ -3,33 +3,80 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DeferredPromise } from '../../../base/common/async.js';
-import { Emitter } from '../../../base/common/event.js';
-import { Disposable, DisposableStore, IReference } from '../../../base/common/lifecycle.js';
-import { IObservable, ISettableObservable, observableValue } from '../../../base/common/observable.js';
-import { generateUuid } from '../../../base/common/uuid.js';
-import { getDelayedChannel, ProxyChannel } from '../../../base/parts/ipc/common/ipc.js';
-import { Client as MessagePortClient } from '../../../base/parts/ipc/common/ipc.mp.js';
-import { acquirePort } from '../../../base/parts/ipc/electron-browser/ipc.mp.js';
-import { IInstantiationService } from '../../instantiation/common/instantiation.js';
-import { IConfigurationService } from '../../configuration/common/configuration.js';
-import { IEnvironmentService } from '../../environment/common/environment.js';
-import { ILogService } from '../../log/common/log.js';
-import { AgentHostAhpJsonlLoggingSettingId, AgentHostEnabledSettingId, AgentHostIpcChannels, IAgentCreateSessionConfig, IAgentHostInspectInfo, IAgentHostService, IAgentResolveSessionConfigParams, IAgentService, IAgentSessionConfigCompletionsParams, IAgentSessionMetadata, AuthenticateParams, AuthenticateResult, IAgentHostSocketInfo, IConnectionTrackerService } from '../common/agentService.js';
-import { AhpJsonlLogger } from '../common/ahpJsonlLogger.js';
-import { wrapAgentServiceWithAhpLogging } from './localAhpJsonlLogging.js';
-import { AgentSubscriptionManager, type IAgentSubscription } from '../common/state/agentSubscription.js';
-import type { CompletionsParams, CompletionsResult, CreateTerminalParams, ResolveSessionConfigResult, SessionConfigCompletionsResult } from '../common/state/protocol/commands.js';
-import { ActionType, type ActionEnvelope, type INotification, type IRootConfigChangedAction, type SessionAction, type TerminalAction } from '../common/state/sessionActions.js';
-import type { ResourceCopyParams, ResourceCopyResult, ResourceDeleteParams, ResourceDeleteResult, ResourceListResult, ResourceMoveParams, ResourceMoveResult, ResourceReadResult, ResourceWriteParams, ResourceWriteResult, IStateSnapshot } from '../common/state/sessionProtocol.js';
-import { StateComponents, ROOT_STATE_URI, type RootState } from '../common/state/sessionState.js';
-import { revive } from '../../../base/common/marshalling.js';
-import { URI } from '../../../base/common/uri.js';
-import { IFileService } from '../../files/common/files.js';
-import { AGENT_HOST_CLIENT_RESOURCE_CHANNEL, AgentHostClientResourceChannel } from '../common/agentHostClientResourceChannel.js';
-import { TELEMETRY_CRASH_REPORTER_SETTING_ID, TELEMETRY_OLD_SETTING_ID, TELEMETRY_SETTING_ID } from '../../telemetry/common/telemetry.js';
-import { getTelemetryLevel } from '../../telemetry/common/telemetryUtils.js';
-import { AgentHostTelemetryLevelConfigKey, telemetryLevelToAgentHostConfigValue } from '../common/agentHostSchema.js';
+import { DeferredPromise } from "../../../base/common/async.js";
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable, DisposableStore, IReference } from "../../../base/common/lifecycle.js";
+import { IObservable, ISettableObservable, observableValue } from "../../../base/common/observable.js";
+import { generateUuid } from "../../../base/common/uuid.js";
+import { getDelayedChannel, ProxyChannel } from "../../../base/parts/ipc/common/ipc.js";
+import { Client as MessagePortClient } from "../../../base/parts/ipc/common/ipc.mp.js";
+import { acquirePort } from "../../../base/parts/ipc/electron-browser/ipc.mp.js";
+import { IInstantiationService } from "../../instantiation/common/instantiation.js";
+import { IConfigurationService } from "../../configuration/common/configuration.js";
+import { IEnvironmentService } from "../../environment/common/environment.js";
+import { ILogService } from "../../log/common/log.js";
+import {
+  AgentHostAhpJsonlLoggingSettingId,
+  AgentHostEnabledSettingId,
+  AgentHostIpcChannels,
+  IAgentCreateSessionConfig,
+  IAgentHostInspectInfo,
+  IAgentHostService,
+  IAgentResolveSessionConfigParams,
+  IAgentService,
+  IAgentSessionConfigCompletionsParams,
+  IAgentSessionMetadata,
+  AuthenticateParams,
+  AuthenticateResult,
+  IAgentHostSocketInfo,
+  IConnectionTrackerService,
+} from "../common/agentService.js";
+import { AhpJsonlLogger } from "../common/ahpJsonlLogger.js";
+import { wrapAgentServiceWithAhpLogging } from "./localAhpJsonlLogging.js";
+import { AgentSubscriptionManager, type IAgentSubscription } from "../common/state/agentSubscription.js";
+import type {
+  CompletionsParams,
+  CompletionsResult,
+  CreateTerminalParams,
+  ResolveSessionConfigResult,
+  SessionConfigCompletionsResult,
+} from "../common/state/protocol/commands.js";
+import {
+  ActionType,
+  type ActionEnvelope,
+  type INotification,
+  type IRootConfigChangedAction,
+  type SessionAction,
+  type TerminalAction,
+} from "../common/state/sessionActions.js";
+import type {
+  ResourceCopyParams,
+  ResourceCopyResult,
+  ResourceDeleteParams,
+  ResourceDeleteResult,
+  ResourceListResult,
+  ResourceMoveParams,
+  ResourceMoveResult,
+  ResourceReadResult,
+  ResourceWriteParams,
+  ResourceWriteResult,
+  IStateSnapshot,
+} from "../common/state/sessionProtocol.js";
+import { StateComponents, ROOT_STATE_URI, type RootState } from "../common/state/sessionState.js";
+import { revive } from "../../../base/common/marshalling.js";
+import { URI } from "../../../base/common/uri.js";
+import { IFileService } from "../../files/common/files.js";
+import { AGENT_HOST_CLIENT_RESOURCE_CHANNEL, AgentHostClientResourceChannel } from "../common/agentHostClientResourceChannel.js";
+import {
+  TELEMETRY_CRASH_REPORTER_SETTING_ID,
+  TELEMETRY_OLD_SETTING_ID,
+  TELEMETRY_SETTING_ID,
+} from "../../telemetry/common/telemetry.js";
+import { getTelemetryLevel } from "../../telemetry/common/telemetryUtils.js";
+import {
+  AgentHostTelemetryLevelConfigKey,
+  telemetryLevelToAgentHostConfigValue,
+} from "../common/agentHostSchema.js";
 
 /**
  * Renderer-side implementation of {@link IAgentHostService} that connects
@@ -57,10 +104,15 @@ export class LocalAgentHostServiceClient extends Disposable implements IAgentHos
 	private readonly _onDidAction = this._register(new Emitter<ActionEnvelope>());
 	readonly onDidAction = this._onDidAction.event;
 
-	private readonly _onDidNotification = this._register(new Emitter<INotification>());
+	private readonly _onDidNotification = this._register(
+    new Emitter<INotification>(),
+  );
 	readonly onDidNotification = this._onDidNotification.event;
 
-	private readonly _authenticationPending: ISettableObservable<boolean> = observableValue('authenticationPending', true);
+	private readonly _authenticationPending: ISettableObservable<boolean> = observableValue(
+    "authenticationPending",
+    true,
+  );
 	readonly authenticationPending: IObservable<boolean> = this._authenticationPending;
 	private _authenticationSettled = false;
 
@@ -89,32 +141,49 @@ export class LocalAgentHostServiceClient extends Disposable implements IAgentHos
 		// Create a proxy backed by a delayed channel - usable immediately,
 		// calls queue until the MessagePort connection is established.
 		const rawProxy = ProxyChannel.toService<IAgentService>(
-			getDelayedChannel(this._clientEventually.p.then(client => client.getChannel(AgentHostIpcChannels.AgentHost)))
-		);
+      getDelayedChannel(
+        this._clientEventually.p.then(
+          client => client.getChannel(AgentHostIpcChannels.AgentHost),
+        ),
+      ),
+    );
 
 		// Optionally wrap the proxy with a logging layer that synthesizes JSON-RPC
 		// frames for every request/response/notification on the in-process MessagePort
 		// channel, mirroring the AHP transport JSONL logs produced by remote agent hosts.
-		this._ahpLogger = this._configurationService.getValue<boolean>(AgentHostAhpJsonlLoggingSettingId)
-			? this._register(instantiationService.createInstance(AhpJsonlLogger, {
-				logsHome: environmentService.logsHome,
-				connectionId: this.clientId,
-				transport: 'local',
-			}))
+		this._ahpLogger = this._configurationService.getValue<boolean>(
+      AgentHostAhpJsonlLoggingSettingId,
+    )
+			? this._register(
+          instantiationService.createInstance(AhpJsonlLogger, {
+            logsHome: environmentService.logsHome,
+            connectionId: this.clientId,
+            transport: "local",
+          }),
+        )
 			: undefined;
-		this._proxy = this._ahpLogger ? wrapAgentServiceWithAhpLogging(rawProxy, this._ahpLogger) : rawProxy;
+		this._proxy = this._ahpLogger ? wrapAgentServiceWithAhpLogging(
+      rawProxy,
+      this._ahpLogger,
+    ) : rawProxy;
 
 		this._connectionTracker = ProxyChannel.toService<IConnectionTrackerService>(
-			getDelayedChannel(this._clientEventually.p.then(client => client.getChannel(AgentHostIpcChannels.ConnectionTracker)))
-		);
+      getDelayedChannel(
+        this._clientEventually.p.then(
+          client => client.getChannel(AgentHostIpcChannels.ConnectionTracker),
+        ),
+      ),
+    );
 
-		this._subscriptionManager = this._register(new AgentSubscriptionManager(
-			this.clientId,
-			() => this.nextClientSeq(),
-			msg => this._logService.warn(`[AgentHost:renderer] ${msg}`),
-			resource => this.subscribe(resource),
-			resource => this.unsubscribe(resource),
-		));
+		this._subscriptionManager = this._register(
+      new AgentSubscriptionManager(
+        this.clientId,
+        () => this.nextClientSeq(),
+        msg => this._logService.warn(`[AgentHost:renderer] ${msg}`),
+        resource => this.subscribe(resource),
+        resource => this.unsubscribe(resource),
+      ),
+    );
 
 		this._register(this._configurationService.onDidChangeConfiguration(e => {
 			if (e.affectsConfiguration(TELEMETRY_SETTING_ID) || e.affectsConfiguration(TELEMETRY_OLD_SETTING_ID) || e.affectsConfiguration(TELEMETRY_CRASH_REPORTER_SETTING_ID)) {
@@ -122,15 +191,24 @@ export class LocalAgentHostServiceClient extends Disposable implements IAgentHos
 			}
 		}));
 
-		if (this._configurationService.getValue<boolean>(AgentHostEnabledSettingId)) {
+		if (this._configurationService.getValue<boolean>(
+      AgentHostEnabledSettingId,
+    )) {
 			this._connect();
 		}
 	}
 
 	private async _connect(): Promise<void> {
-		this._logService.info('[AgentHost:renderer] Acquiring MessagePort to agent host...');
-		const port = await acquirePort('vscode:createAgentHostMessageChannel', 'vscode:createAgentHostMessageChannelResult');
-		this._logService.info('[AgentHost:renderer] MessagePort acquired, creating client...');
+		this._logService.info(
+      "[AgentHost:renderer] Acquiring MessagePort to agent host...",
+    );
+		const port = await acquirePort(
+      "vscode:createAgentHostMessageChannel",
+      "vscode:createAgentHostMessageChannelResult",
+    );
+		this._logService.info(
+      "[AgentHost:renderer] MessagePort acquired, creating client...",
+    );
 
 		const store = this._register(new DisposableStore());
 		// Use clientId as the IPC ctx so the agent host can route reverse-RPC
@@ -140,34 +218,39 @@ export class LocalAgentHostServiceClient extends Disposable implements IAgentHos
 		// Serve filesystem reverse-RPCs from the local file service. The
 		// agent host registers an authority on its
 		// AgentHostClientFileSystemProvider that calls back through this channel.
-		client.registerChannel(AGENT_HOST_CLIENT_RESOURCE_CHANNEL, new AgentHostClientResourceChannel(this._fileService, this._ahpLogger));
+		client.registerChannel(
+      AGENT_HOST_CLIENT_RESOURCE_CHANNEL,
+      new AgentHostClientResourceChannel(this._fileService, this._ahpLogger),
+    );
 		this._clientEventually.complete(client);
 		this._updateTelemetryLevel();
 
 		store.add(this._proxy.onDidAction(e => {
 			const revived = revive(e) as ActionEnvelope;
 			if (this._ahpLogger) {
-				const frame = { jsonrpc: '2.0' as const, method: 'action', params: e };
-				this._ahpLogger.log(frame, 's2c');
+				const frame = { jsonrpc: "2.0" as const, method: "action", params: e };
+				this._ahpLogger.log(frame, "s2c");
 			}
 			this._subscriptionManager.receiveEnvelope(revived);
 			this._onDidAction.fire(revived);
 		}));
 		store.add(this._proxy.onDidNotification(e => {
 			if (this._ahpLogger) {
-				const frame = { jsonrpc: '2.0' as const, method: 'notification', params: { notification: e } };
-				this._ahpLogger.log(frame, 's2c');
+				const frame = { jsonrpc: "2.0" as const, method: "notification", params: { notification: e } };
+				this._ahpLogger.log(frame, "s2c");
 			}
 			this._onDidNotification.fire(revive(e));
 		}));
-		this._logService.info('[AgentHost:renderer] Direct MessagePort connection established');
+		this._logService.info(
+      "[AgentHost:renderer] Direct MessagePort connection established",
+    );
 		this._onAgentHostStart.fire();
 
 		// Subscribe to root state
 		this.subscribe(URI.parse(ROOT_STATE_URI)).then(snapshot => {
 			this._subscriptionManager.handleRootSnapshot(snapshot.state as RootState, snapshot.fromSeq);
 		}).catch(err => {
-			this._logService.error('[AgentHost:renderer] Failed to subscribe to root state', err);
+			this._logService.error("[AgentHost:renderer] Failed to subscribe to root state", err);
 		});
 	}
 

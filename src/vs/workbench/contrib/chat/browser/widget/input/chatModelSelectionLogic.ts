@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ChatAgentLocation, ChatModeKind } from '../../../common/constants.js';
-import { ILanguageModelChatMetadata, ILanguageModelChatMetadataAndIdentifier } from '../../../common/languageModels.js';
+import { ChatAgentLocation, ChatModeKind } from "../../../common/constants.js";
+import { ILanguageModelChatMetadata, ILanguageModelChatMetadataAndIdentifier } from "../../../common/languageModels.js";
 
 /**
  * Describes the context needed for model selection decisions.
@@ -29,10 +29,13 @@ export function filterModelsForSession(
 	currentModeKind: ChatModeKind,
 	location: ChatAgentLocation,
 ): ILanguageModelChatMetadataAndIdentifier[] {
-	if (sessionType && sessionType !== 'local' && hasModelsTargetingSession(models, sessionType)) {
+	if (sessionType && sessionType !== "local" && hasModelsTargetingSession(
+    models,
+    sessionType,
+  )) {
 		return models.filter(entry =>
 			entry.metadata?.targetChatSessionType === sessionType &&
-			entry.metadata?.isUserSelectable !== false
+			entry.metadata?.isUserSelectable !== false,
 		);
 	}
 
@@ -40,7 +43,7 @@ export function filterModelsForSession(
 		!entry.metadata?.targetChatSessionType &&
 		entry.metadata?.isUserSelectable !== false &&
 		isModelSupportedForMode(entry, currentModeKind) &&
-		isModelSupportedForInlineChat(entry, location)
+		isModelSupportedForInlineChat(entry, location),
 	);
 }
 
@@ -107,7 +110,9 @@ export function findDefaultModel(
 	models: ILanguageModelChatMetadataAndIdentifier[],
 	location: ChatAgentLocation,
 ): ILanguageModelChatMetadataAndIdentifier | undefined {
-	return models.find(m => m.metadata.isDefaultForLocation[location]) || models[0];
+	return models.find(
+    m => m.metadata.isDefaultForLocation[location],
+  ) || models[0];
 }
 
 /**
@@ -200,28 +205,28 @@ export function resolveModelFromSyncState(
 	allModels: ILanguageModelChatMetadataAndIdentifier[],
 	sessionType: string | undefined,
 	context?: IModelSelectionContext,
-): { action: 'keep' | 'apply' | 'default' } {
+): { action: "keep" | "apply" | "default" } {
 	// Already the same model — nothing to do
 	if (currentModel && currentModel.identifier === stateModel.identifier) {
-		return { action: 'keep' };
+		return { action: "keep" };
 	}
 
 	// Validate the state model belongs to this session's model pool
 	if (!isModelValidForSession(stateModel, allModels, sessionType)) {
-		return { action: 'default' };
+		return { action: "default" };
 	}
 
 	// When a UI context is available, also validate mode and inline-chat compatibility
 	if (context) {
 		if (!isModelSupportedForMode(stateModel, context.currentModeKind)) {
-			return { action: 'default' };
+			return { action: "default" };
 		}
 		if (!isModelSupportedForInlineChat(stateModel, context.location)) {
-			return { action: 'default' };
+			return { action: "default" };
 		}
 	}
 
-	return { action: 'apply' };
+	return { action: "apply" };
 }
 
 /**
@@ -248,7 +253,7 @@ export function mergeModelsWithCache(
 	const usableCached = cachedModels.filter(m =>
 		contributedVendors.has(m.metadata.vendor) &&
 		!liveVendors.has(m.metadata.vendor) &&
-		!resolvedVendors?.has(m.metadata.vendor)
+		!resolvedVendors?.has(m.metadata.vendor),
 	);
 	return [...liveModels, ...usableCached];
 }
@@ -289,10 +294,10 @@ export function shouldRestoreLateArrivingModel(
 		return false;
 	}
 	const result = shouldRestorePersistedModel(
-		persistedModelId,
-		persistedAsDefault,
-		[model],
-		location,
-	);
+    persistedModelId,
+    persistedAsDefault,
+    [model],
+    location,
+  );
 	return result.shouldRestore;
 }

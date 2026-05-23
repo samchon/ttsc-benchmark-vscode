@@ -3,46 +3,58 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../base/browser/dom.js';
-import { Button } from '../../../../base/browser/ui/button/button.js';
-import { IListRenderer, IListVirtualDelegate } from '../../../../base/browser/ui/list/list.js';
-import { IListAccessibilityProvider } from '../../../../base/browser/ui/list/listWidget.js';
-import { assertNever } from '../../../../base/common/assert.js';
-import { CancellationToken, CancellationTokenSource } from '../../../../base/common/cancellation.js';
-import { Codicon } from '../../../../base/common/codicons.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable, DisposableStore, IDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { autorun, autorunWithStore, derived, IObservable, ISettableObservable, observableValue, transaction } from '../../../../base/common/observable.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
-import { Constants } from '../../../../base/common/uint.js';
-import { URI } from '../../../../base/common/uri.js';
-import { generateUuid } from '../../../../base/common/uuid.js';
-import { ICodeEditor } from '../../../../editor/browser/editorBrowser.js';
-import { EditorContributionCtor, EditorContributionInstantiation, IEditorContributionDescription } from '../../../../editor/browser/editorExtensions.js';
-import { CodeEditorWidget } from '../../../../editor/browser/widget/codeEditor/codeEditorWidget.js';
-import { EmbeddedCodeEditorWidget } from '../../../../editor/browser/widget/codeEditor/embeddedCodeEditorWidget.js';
-import { IEditorOptions } from '../../../../editor/common/config/editorOptions.js';
-import { Position } from '../../../../editor/common/core/position.js';
-import { Range } from '../../../../editor/common/core/range.js';
-import { IWordAtPosition } from '../../../../editor/common/core/wordHelper.js';
-import { IEditorContribution, IEditorDecorationsCollection } from '../../../../editor/common/editorCommon.js';
-import { Location } from '../../../../editor/common/languages.js';
-import { ITextModelService } from '../../../../editor/common/services/resolverService.js';
-import { ClickLinkGesture, ClickLinkMouseEvent } from '../../../../editor/contrib/gotoSymbol/browser/link/clickLinkGesture.js';
-import { localize, localize2 } from '../../../../nls.js';
-import { createActionViewItem } from '../../../../platform/actions/browser/menuEntryActionViewItem.js';
-import { MenuWorkbenchToolBar } from '../../../../platform/actions/browser/toolbar.js';
-import { Action2, MenuId, registerAction2 } from '../../../../platform/actions/common/actions.js';
-import { TextEditorSelectionRevealType } from '../../../../platform/editor/common/editor.js';
-import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { ILabelService } from '../../../../platform/label/common/label.js';
-import { WorkbenchList } from '../../../../platform/list/browser/listService.js';
-import { INotificationService } from '../../../../platform/notification/common/notification.js';
-import { defaultButtonStyles } from '../../../../platform/theme/browser/defaultStyles.js';
-import { ResourceLabel } from '../../../browser/labels.js';
-import { IEditorService, SIDE_GROUP } from '../../../services/editor/common/editorService.js';
-import { makeStackFrameColumnDecoration, TOP_STACK_FRAME_DECORATION } from './callStackEditorContribution.js';
-import './media/callStackWidget.css';
+import * as dom from "../../../../base/browser/dom.js";
+import { Button } from "../../../../base/browser/ui/button/button.js";
+import { IListRenderer, IListVirtualDelegate } from "../../../../base/browser/ui/list/list.js";
+import { IListAccessibilityProvider } from "../../../../base/browser/ui/list/listWidget.js";
+import { assertNever } from "../../../../base/common/assert.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable, DisposableStore, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import {
+  autorun,
+  autorunWithStore,
+  derived,
+  IObservable,
+  ISettableObservable,
+  observableValue,
+  transaction,
+} from "../../../../base/common/observable.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { Constants } from "../../../../base/common/uint.js";
+import { URI } from "../../../../base/common/uri.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { ICodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import {
+  EditorContributionCtor,
+  EditorContributionInstantiation,
+  IEditorContributionDescription,
+} from "../../../../editor/browser/editorExtensions.js";
+import { CodeEditorWidget } from "../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import { EmbeddedCodeEditorWidget } from "../../../../editor/browser/widget/codeEditor/embeddedCodeEditorWidget.js";
+import { IEditorOptions } from "../../../../editor/common/config/editorOptions.js";
+import { Position } from "../../../../editor/common/core/position.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { IWordAtPosition } from "../../../../editor/common/core/wordHelper.js";
+import { IEditorContribution, IEditorDecorationsCollection } from "../../../../editor/common/editorCommon.js";
+import { Location } from "../../../../editor/common/languages.js";
+import { ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import { ClickLinkGesture, ClickLinkMouseEvent } from "../../../../editor/contrib/gotoSymbol/browser/link/clickLinkGesture.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { createActionViewItem } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { MenuWorkbenchToolBar } from "../../../../platform/actions/browser/toolbar.js";
+import { Action2, MenuId, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { TextEditorSelectionRevealType } from "../../../../platform/editor/common/editor.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { WorkbenchList } from "../../../../platform/list/browser/listService.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { defaultButtonStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { ResourceLabel } from "../../../browser/labels.js";
+import { IEditorService, SIDE_GROUP } from "../../../services/editor/common/editorService.js";
+import { makeStackFrameColumnDecoration, TOP_STACK_FRAME_DECORATION } from "./callStackEditorContribution.js";
+import "./media/callStackWidget.css";
 
 
 export class CallStackFrame {
@@ -62,7 +74,10 @@ export class SkippedCallFrames {
 }
 
 export abstract class CustomStackFrame {
-	public readonly showHeader = observableValue('CustomStackFrame.showHeader', true);
+	public readonly showHeader = observableValue(
+    "CustomStackFrame.showHeader",
+    true,
+  );
 	public abstract readonly height: IObservable<number>;
 	public abstract readonly label: string;
 	public icon?: ThemeIcon;
@@ -78,12 +93,18 @@ interface IFrameLikeItem {
 }
 
 class WrappedCallStackFrame extends CallStackFrame implements IFrameLikeItem {
-	public readonly editorHeight = observableValue('WrappedCallStackFrame.height', this.source ? 100 : 0);
-	public readonly collapsed = observableValue('WrappedCallStackFrame.collapsed', false);
+	public readonly editorHeight = observableValue(
+    "WrappedCallStackFrame.height",
+    this.source ? 100 : 0,
+  );
+	public readonly collapsed = observableValue(
+    "WrappedCallStackFrame.collapsed",
+    false,
+  );
 
 	public readonly height = derived(reader => {
-		return this.collapsed.read(reader) ? CALL_STACK_WIDGET_HEADER_HEIGHT : CALL_STACK_WIDGET_HEADER_HEIGHT + this.editorHeight.read(reader);
-	});
+    return this.collapsed.read(reader) ? CALL_STACK_WIDGET_HEADER_HEIGHT : CALL_STACK_WIDGET_HEADER_HEIGHT + this.editorHeight.read(reader);
+  });
 
 	constructor(original: CallStackFrame) {
 		super(original.name, original.source, original.line, original.column);
@@ -91,12 +112,15 @@ class WrappedCallStackFrame extends CallStackFrame implements IFrameLikeItem {
 }
 
 class WrappedCustomStackFrame implements IFrameLikeItem {
-	public readonly collapsed = observableValue('WrappedCallStackFrame.collapsed', false);
+	public readonly collapsed = observableValue(
+    "WrappedCallStackFrame.collapsed",
+    false,
+  );
 
 	public readonly height = derived(reader => {
-		const headerHeight = this.original.showHeader.read(reader) ? CALL_STACK_WIDGET_HEADER_HEIGHT : 0;
-		return this.collapsed.read(reader) ? headerHeight : headerHeight + this.original.height.read(reader);
-	});
+    const headerHeight = this.original.showHeader.read(reader) ? CALL_STACK_WIDGET_HEADER_HEIGHT : 0;
+    return this.collapsed.read(reader) ? headerHeight : headerHeight + this.original.height.read(reader);
+  });
 
 	constructor(public readonly original: CustomStackFrame) { }
 }
@@ -106,7 +130,7 @@ const isFrameLike = (item: unknown): item is IFrameLikeItem =>
 
 type ListItem = WrappedCallStackFrame | SkippedCallFrames | WrappedCustomStackFrame;
 
-const WIDGET_CLASS_NAME = 'multiCallStackWidget';
+const WIDGET_CLASS_NAME = "multiCallStackWidget";
 
 /**
  * A reusable widget that displays a call stack as a series of editors. Note
@@ -139,11 +163,13 @@ export class CallStackWidget extends Disposable {
 		super();
 
 		container.classList.add(WIDGET_CLASS_NAME);
-		this._register(toDisposable(() => container.classList.remove(WIDGET_CLASS_NAME)));
+		this._register(
+      toDisposable(() => container.classList.remove(WIDGET_CLASS_NAME)),
+    );
 
 		this.list = this._register(instantiationService.createInstance(
 			WorkbenchList,
-			'TestResultStackWidget',
+			"TestResultStackWidget",
 			container,
 			new StackDelegate(),
 			[
@@ -159,7 +185,7 @@ export class CallStackWidget extends Disposable {
 				setRowLineHeight: false,
 				alwaysConsumeMouseWheel: false,
 				accessibilityProvider: instantiationService.createInstance(StackAccessibilityProvider),
-			}
+			},
 		) as WorkbenchList<ListItem>);
 	}
 
@@ -243,10 +269,16 @@ class StackAccessibilityProvider implements IListAccessibilityProvider<ListItem>
 
 		if (e instanceof CallStackFrame) {
 			if (e.source && e.line) {
-				return localize({
-					comment: ['{0} is an extension-defined label, then line number and filename'],
-					key: 'stackTraceLabel',
-				}, '{0}, line {1} in {2}', e.name, e.line, this.labelService.getUriLabel(e.source, { relative: true }));
+				return localize(
+          {
+            comment: ["{0} is an extension-defined label, then line number and filename"],
+            key: "stackTraceLabel",
+          },
+          "{0}, line {1} in {2}",
+          e.name,
+          e.line,
+          this.labelService.getUriLabel(e.source, { relative: true }),
+        );
 			}
 
 			return e.name;
@@ -255,7 +287,7 @@ class StackAccessibilityProvider implements IListAccessibilityProvider<ListItem>
 		assertNever(e);
 	}
 	getWidgetAriaLabel(): string {
-		return localize('stackTrace', 'Stack Trace');
+		return localize("stackTrace", "Stack Trace");
 	}
 }
 
@@ -294,8 +326,8 @@ interface IStackTemplateData extends IAbstractFrameRendererTemplateData {
 const editorOptions: IEditorOptions = {
 	scrollBeyondLastLine: false,
 	scrollbar: {
-		vertical: 'hidden',
-		horizontal: 'hidden',
+		vertical: "hidden",
+		horizontal: "hidden",
 		handleMouseWheel: false,
 		useShadows: false,
 	},
@@ -308,16 +340,13 @@ const editorOptions: IEditorOptions = {
 	automaticLayout: false,
 };
 
-const makeFrameElements = () => dom.h('div.multiCallStackFrame', [
-	dom.h('div.header@header', [
-		dom.h('div.collapse-button@collapseButton'),
-		dom.h('div.title.show-file-icons@title'),
-		dom.h('div.actions@actions'),
-	]),
-
-	dom.h('div.editorParent', [
-		dom.h('div.editorContainer@editor'),
-	])
+const makeFrameElements = () => dom.h("div.multiCallStackFrame", [
+  dom.h("div.header@header", [
+    dom.h("div.collapse-button@collapseButton"),
+    dom.h("div.title.show-file-icons@title"),
+    dom.h("div.actions@actions"),
+  ]),
+  dom.h("div.editorParent", [dom.h("div.editorContainer@editor")]),
 ]);
 
 export const CALL_STACK_WIDGET_HEADER_HEIGHT = 24;
@@ -345,30 +374,38 @@ abstract class AbstractFrameRenderer<T extends IAbstractFrameRendererTemplateDat
 
 
 		const templateStore = new DisposableStore();
-		container.classList.add('multiCallStackFrameContainer');
-		templateStore.add(toDisposable(() => {
-			container.classList.remove('multiCallStackFrameContainer');
-			elements.root.remove();
-		}));
+		container.classList.add("multiCallStackFrameContainer");
+		templateStore.add(
+      toDisposable(() => {
+        container.classList.remove("multiCallStackFrameContainer");
+        elements.root.remove();
+      }),
+    );
 
-		const label = templateStore.add(this.instantiationService.createInstance(ResourceLabel, elements.title, {}));
+		const label = templateStore.add(
+      this.instantiationService.createInstance(
+        ResourceLabel,
+        elements.title,
+        {},
+      ),
+    );
 
 		const collapse = templateStore.add(new Button(elements.collapseButton, {}));
 
 		const contentId = generateUuid();
 		elements.editor.id = contentId;
-		elements.editor.role = 'region';
-		elements.collapseButton.setAttribute('aria-controls', contentId);
+		elements.editor.role = "region";
+		elements.collapseButton.setAttribute("aria-controls", contentId);
 
 		return this.finishRenderTemplate({
-			container,
-			decorations: [],
-			elements,
-			label,
-			collapse,
-			elementStore: templateStore.add(new DisposableStore()),
-			templateStore,
-		});
+      container,
+      decorations: [],
+      elements,
+      label,
+      collapse,
+      elementStore: templateStore.add(new DisposableStore()),
+      templateStore,
+    });
 	}
 
 	protected abstract finishRenderTemplate(data: IAbstractFrameRendererTemplateData): T;
@@ -382,16 +419,23 @@ abstract class AbstractFrameRenderer<T extends IAbstractFrameRendererTemplateDat
 	}
 
 	private setupCollapseButton(item: IFrameLikeItem, { elementStore, elements, collapse }: T) {
-		elementStore.add(autorun(reader => {
-			collapse.element.className = '';
-			const collapsed = item.collapsed.read(reader);
-			collapse.icon = collapsed ? Codicon.chevronRight : Codicon.chevronDown;
-			collapse.element.ariaExpanded = String(!collapsed);
-			elements.root.classList.toggle('collapsed', collapsed);
-		}));
-		const toggleCollapse = () => item.collapsed.set(!item.collapsed.get(), undefined);
+		elementStore.add(
+      autorun(reader => {
+        collapse.element.className = "";
+        const collapsed = item.collapsed.read(reader);
+        collapse.icon = collapsed ? Codicon.chevronRight : Codicon.chevronDown;
+        collapse.element.ariaExpanded = String(!collapsed);
+        elements.root.classList.toggle("collapsed", collapsed);
+      }),
+    );
+		const toggleCollapse = () => item.collapsed.set(
+      !item.collapsed.get(),
+      undefined,
+    );
 		elementStore.add(collapse.onDidClick(toggleCollapse));
-		elementStore.add(dom.addDisposableListener(elements.title, 'click', toggleCollapse));
+		elementStore.add(
+      dom.addDisposableListener(elements.title, "click", toggleCollapse),
+    );
 	}
 
 	disposeElement(element: ListItem, index: number, templateData: T): void {
@@ -407,7 +451,7 @@ const CONTEXT_LINES = 2;
 
 /** Renderer for a normal stack frame where code is available. */
 class FrameCodeRenderer extends AbstractFrameRenderer<IStackTemplateData> {
-	public static readonly templateId = 'f';
+	public static readonly templateId = "f";
 
 	public readonly templateId = FrameCodeRenderer.templateId;
 
@@ -423,33 +467,42 @@ class FrameCodeRenderer extends AbstractFrameRenderer<IStackTemplateData> {
 	protected override finishRenderTemplate(data: IAbstractFrameRendererTemplateData): IStackTemplateData {
 		// override default e.g. language contributions, only allow users to click
 		// on code in the call stack to go to its source location
-		const contributions: IEditorContributionDescription[] = [{
-			id: ClickToLocationContribution.ID,
-			instantiation: EditorContributionInstantiation.BeforeFirstInteraction,
-			ctor: ClickToLocationContribution as EditorContributionCtor,
-		}];
+		const contributions: IEditorContributionDescription[] = [
+      {
+        id: ClickToLocationContribution.ID,
+        instantiation: EditorContributionInstantiation.BeforeFirstInteraction,
+        ctor: ClickToLocationContribution as EditorContributionCtor,
+      },
+    ];
 
 		const editor = this.containingEditor
 			? this.instantiationService.createInstance(
-				EmbeddedCodeEditorWidget,
-				data.elements.editor,
-				editorOptions,
-				{ isSimpleWidget: true, contributions },
-				this.containingEditor,
-			)
+          EmbeddedCodeEditorWidget,
+          data.elements.editor,
+          editorOptions,
+          { isSimpleWidget: true, contributions },
+          this.containingEditor,
+        )
 			: this.instantiationService.createInstance(
-				CodeEditorWidget,
-				data.elements.editor,
-				editorOptions,
-				{ isSimpleWidget: true, contributions },
-			);
+          CodeEditorWidget,
+          data.elements.editor,
+          editorOptions,
+          { isSimpleWidget: true, contributions },
+        );
 
 		data.templateStore.add(editor);
 
-		const toolbar = data.templateStore.add(this.instantiationService.createInstance(MenuWorkbenchToolBar, data.elements.actions, MenuId.DebugCallStackToolbar, {
-			menuOptions: { shouldForwardArgs: true },
-			actionViewItemProvider: (action, options) => createActionViewItem(this.instantiationService, action, options),
-		}));
+		const toolbar = data.templateStore.add(
+      this.instantiationService.createInstance(
+        MenuWorkbenchToolBar,
+        data.elements.actions,
+        MenuId.DebugCallStackToolbar,
+        {
+          menuOptions: { shouldForwardArgs: true },
+          actionViewItemProvider: (action, options) => createActionViewItem(this.instantiationService, action, options),
+        },
+      ),
+    );
 
 		return { ...data, editor, toolbar };
 	}
@@ -498,22 +551,22 @@ class FrameCodeRenderer extends AbstractFrameRenderer<IStackTemplateData> {
 
 	private setupEditorAfterModel(item: WrappedCallStackFrame, template: IStackTemplateData): void {
 		const range = Range.fromPositions({
-			column: item.column ?? 1,
-			lineNumber: item.line ?? 1,
-		});
+      column: item.column ?? 1,
+      lineNumber: item.line ?? 1,
+    });
 
 		template.toolbar.context = { uri: item.source, range };
 
 		template.editor.setHiddenAreas([
-			Range.fromPositions(
-				{ column: 1, lineNumber: 1 },
-				{ column: 1, lineNumber: Math.max(1, item.line - CONTEXT_LINES - 1) },
-			),
-			Range.fromPositions(
-				{ column: 1, lineNumber: item.line + CONTEXT_LINES + 1 },
-				{ column: 1, lineNumber: Constants.MAX_SAFE_SMALL_INTEGER },
-			),
-		]);
+      Range.fromPositions({ column: 1, lineNumber: 1 }, {
+        column: 1,
+        lineNumber: Math.max(1, item.line - CONTEXT_LINES - 1),
+      }),
+      Range.fromPositions(
+        { column: 1, lineNumber: item.line + CONTEXT_LINES + 1 },
+        { column: 1, lineNumber: Constants.MAX_SAFE_SMALL_INTEGER },
+      ),
+    ]);
 
 		template.editor.changeDecorations(accessor => {
 			for (const d of template.decorations) {
@@ -546,28 +599,32 @@ interface IMissingTemplateData {
 
 /** Renderer for a call frame that's missing a URI */
 class MissingCodeRenderer implements IListRenderer<ListItem, IMissingTemplateData> {
-	public static readonly templateId = 'm';
+	public static readonly templateId = "m";
 	public readonly templateId = MissingCodeRenderer.templateId;
 
 	constructor(@IInstantiationService private readonly instantiationService: IInstantiationService) { }
 
 	renderTemplate(container: HTMLElement): IMissingTemplateData {
 		const elements = makeFrameElements();
-		elements.root.classList.add('missing');
+		elements.root.classList.add("missing");
 		container.appendChild(elements.root);
-		const label = this.instantiationService.createInstance(ResourceLabel, elements.title, {});
+		const label = this.instantiationService.createInstance(
+      ResourceLabel,
+      elements.title,
+      {},
+    );
 		return { elements, label };
 	}
 
 	renderElement(element: ListItem, _index: number, templateData: IMissingTemplateData): void {
 		const cast = element as CallStackFrame;
 		templateData.label.element.setResource({
-			name: cast.name,
-			description: localize('stackFrameLocation', 'Line {0} column {1}', cast.line, cast.column),
-			range: { startLineNumber: cast.line, startColumn: cast.column, endColumn: cast.column, endLineNumber: cast.line },
-		}, {
-			icon: Codicon.fileBinary,
-		});
+      name: cast.name,
+      description: localize("stackFrameLocation", "Line {0} column {1}", cast.line, cast.column),
+      range: { startLineNumber: cast.line, startColumn: cast.column, endColumn: cast.column, endLineNumber: cast.line },
+    }, {
+      icon: Codicon.fileBinary,
+    });
 	}
 
 	disposeTemplate(templateData: IMissingTemplateData): void {
@@ -578,7 +635,7 @@ class MissingCodeRenderer implements IListRenderer<ListItem, IMissingTemplateDat
 
 /** Renderer for a call frame that's missing a URI */
 class CustomRenderer extends AbstractFrameRenderer<IAbstractFrameRendererTemplateData> {
-	public static readonly templateId = 'c';
+	public static readonly templateId = "c";
 	public readonly templateId = CustomRenderer.templateId;
 
 	protected override finishRenderTemplate(data: IAbstractFrameRendererTemplateData): IAbstractFrameRendererTemplateData {
@@ -591,10 +648,12 @@ class CustomRenderer extends AbstractFrameRenderer<IAbstractFrameRendererTemplat
 		const item = element as WrappedCustomStackFrame;
 		const { elementStore, container, label } = template;
 
-		label.element.setResource({ name: item.original.label }, { icon: item.original.icon });
+		label.element.setResource({ name: item.original.label }, {
+      icon: item.original.icon,
+    });
 
 		elementStore.add(autorun(reader => {
-			template.elements.header.style.display = item.original.showHeader.read(reader) ? '' : 'none';
+			template.elements.header.style.display = item.original.showHeader.read(reader) ? "" : "none";
 		}));
 
 		elementStore.add(autorunWithStore((reader, store) => {
@@ -618,7 +677,7 @@ interface ISkippedTemplateData {
 
 /** Renderer for a button to load more call frames */
 class SkippedRenderer implements IListRenderer<ListItem, ISkippedTemplateData> {
-	public static readonly templateId = 's';
+	public static readonly templateId = "s";
 	public readonly templateId = SkippedRenderer.templateId;
 
 	constructor(
@@ -628,7 +687,7 @@ class SkippedRenderer implements IListRenderer<ListItem, ISkippedTemplateData> {
 
 	renderTemplate(container: HTMLElement): ISkippedTemplateData {
 		const store = new DisposableStore();
-		const button = new Button(container, { title: '', ...defaultButtonStyles });
+		const button = new Button(container, { title: "", ...defaultButtonStyles });
 		const data: ISkippedTemplateData = { button, store };
 
 		store.add(button);
@@ -639,7 +698,7 @@ class SkippedRenderer implements IListRenderer<ListItem, ISkippedTemplateData> {
 
 			button.enabled = false;
 			this.loadFrames(data.current).catch(e => {
-				this.notificationService.error(localize('failedToLoadFrames', 'Failed to load stack frames: {0}', e.message));
+				this.notificationService.error(localize("failedToLoadFrames", "Failed to load stack frames: {0}", e.message));
 			});
 		}));
 
@@ -660,7 +719,7 @@ class SkippedRenderer implements IListRenderer<ListItem, ISkippedTemplateData> {
 
 /** A simple contribution that makes all data in the editor clickable to go to the location */
 class ClickToLocationContribution extends Disposable implements IEditorContribution {
-	public static readonly ID = 'clickToLocation';
+	public static readonly ID = "clickToLocation";
 	private readonly linkDecorations: IEditorDecorationsCollection;
 	private current: { line: number; word: IWordAtPosition } | undefined;
 
@@ -674,9 +733,13 @@ class ClickToLocationContribution extends Disposable implements IEditorContribut
 
 		const clickLinkGesture = this._register(new ClickLinkGesture(editor));
 
-		this._register(clickLinkGesture.onMouseMoveOrRelevantKeyDown(([mouseEvent, keyboardEvent]) => {
-			this.onMove(mouseEvent);
-		}));
+		this._register(
+      clickLinkGesture.onMouseMoveOrRelevantKeyDown(
+        ([mouseEvent, keyboardEvent]) => {
+          this.onMove(mouseEvent);
+        },
+      ),
+    );
 		this._register(clickLinkGesture.onExecute((e) => {
 			const model = this.editor.getModel();
 			if (!this.current || !model) {
@@ -699,7 +762,9 @@ class ClickToLocationContribution extends Disposable implements IEditorContribut
 		}
 
 		const position = mouseEvent.target.position;
-		const word = position && this.editor.getModel()?.getWordAtPosition(position);
+		const word = position && this.editor.getModel()?.getWordAtPosition(
+      position,
+    );
 		if (!word) {
 			return this.clear();
 		}
@@ -713,8 +778,8 @@ class ClickToLocationContribution extends Disposable implements IEditorContribut
 		this.linkDecorations.set([{
 			range: new Range(position.lineNumber, word.startColumn, position.lineNumber, word.endColumn),
 			options: {
-				description: 'call-stack-go-to-file-link',
-				inlineClassName: 'call-stack-go-to-file-link',
+				description: "call-stack-go-to-file-link",
+				inlineClassName: "call-stack-go-to-file-link",
 			},
 		}]);
 	}
@@ -728,13 +793,13 @@ class ClickToLocationContribution extends Disposable implements IEditorContribut
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'callStackWidget.goToFile',
-			title: localize2('goToFile', 'Open File'),
+			id: "callStackWidget.goToFile",
+			title: localize2("goToFile", "Open File"),
 			icon: Codicon.goToFile,
 			menu: {
 				id: MenuId.DebugCallStackToolbar,
 				order: 22,
-				group: 'navigation',
+				group: "navigation",
 			},
 		});
 	}

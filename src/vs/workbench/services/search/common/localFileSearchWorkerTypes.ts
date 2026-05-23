@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { UriComponents } from '../../../../base/common/uri.js';
-import { IWebWorkerClient, IWebWorkerServer } from '../../../../base/common/worker/webWorker.js';
-import { IFileMatch, IFileQueryProps, IFolderQuery, ITextQueryProps } from './search.js';
+import { UriComponents } from "../../../../base/common/uri.js";
+import { IWebWorkerClient, IWebWorkerServer } from "../../../../base/common/worker/webWorker.js";
+import { IFileMatch, IFileQueryProps, IFolderQuery, ITextQueryProps } from "./search.js";
 
 export interface IWorkerTextSearchComplete {
 	results: IFileMatch<UriComponents>[];
@@ -18,7 +18,7 @@ export interface IWorkerFileSearchComplete {
 }
 
 // Copied from lib.dom.ts, which is not available in this layer.
-type IWorkerFileSystemHandleKind = 'directory' | 'file';
+type IWorkerFileSystemHandleKind = "directory" | "file";
 
 export interface IWorkerFileSystemHandle {
 	readonly kind: IWorkerFileSystemHandleKind;
@@ -27,7 +27,7 @@ export interface IWorkerFileSystemHandle {
 }
 
 export interface IWorkerFileSystemDirectoryHandle extends IWorkerFileSystemHandle {
-	readonly kind: 'directory';
+	readonly kind: "directory";
 	getDirectoryHandle(name: string): Promise<IWorkerFileSystemDirectoryHandle>;
 	getFileHandle(name: string): Promise<IWorkerFileSystemFileHandle>;
 	resolve(possibleDescendant: IWorkerFileSystemHandle): Promise<string[] | null>;
@@ -35,7 +35,7 @@ export interface IWorkerFileSystemDirectoryHandle extends IWorkerFileSystemHandl
 }
 
 export interface IWorkerFileSystemFileHandle extends IWorkerFileSystemHandle {
-	readonly kind: 'file';
+	readonly kind: "file";
 	getFile(): Promise<{ arrayBuffer(): Promise<ArrayBuffer> }>;
 }
 
@@ -49,12 +49,17 @@ export interface ILocalFileSearchWorker {
 }
 
 export abstract class LocalFileSearchWorkerHost {
-	public static CHANNEL_NAME = 'localFileSearchWorkerHost';
+	public static CHANNEL_NAME = "localFileSearchWorkerHost";
 	public static getChannel(workerServer: IWebWorkerServer): LocalFileSearchWorkerHost {
-		return workerServer.getChannel<LocalFileSearchWorkerHost>(LocalFileSearchWorkerHost.CHANNEL_NAME);
+		return workerServer.getChannel<LocalFileSearchWorkerHost>(
+      LocalFileSearchWorkerHost.CHANNEL_NAME,
+    );
 	}
 	public static setChannel(workerClient: IWebWorkerClient<unknown>, obj: LocalFileSearchWorkerHost): void {
-		workerClient.setChannel<LocalFileSearchWorkerHost>(LocalFileSearchWorkerHost.CHANNEL_NAME, obj);
+		workerClient.setChannel<LocalFileSearchWorkerHost>(
+      LocalFileSearchWorkerHost.CHANNEL_NAME,
+      obj,
+    );
 	}
 
 	abstract $sendTextSearchMatch(match: IFileMatch<UriComponents>, queryId: number): void;

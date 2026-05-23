@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { encodeHex, VSBuffer } from '../../../../base/common/buffer.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IFileService } from '../../../files/common/files.js';
-import { InMemoryFileSystemProvider } from '../../../files/common/inMemoryFilesystemProvider.js';
+import { encodeHex, VSBuffer } from "../../../../base/common/buffer.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IFileService } from "../../../files/common/files.js";
+import { InMemoryFileSystemProvider } from "../../../files/common/inMemoryFilesystemProvider.js";
 
 /**
  * URI scheme for transient file content backing tool-call write-permission
@@ -15,7 +15,7 @@ import { InMemoryFileSystemProvider } from '../../../files/common/inMemoryFilesy
  * on the agent host's file service; content can be read/written through the
  * file service just like any other resource.
  */
-export const PENDING_EDIT_CONTENT_SCHEME = 'pending-edit-content';
+export const PENDING_EDIT_CONTENT_SCHEME = "pending-edit-content";
 
 /**
  * Builds a `pending-edit-content:` URI identifying the proposed "after"
@@ -24,10 +24,10 @@ export const PENDING_EDIT_CONTENT_SCHEME = 'pending-edit-content';
  */
 export function buildPendingEditContentUri(sessionUri: string, toolCallId: string, filePath: string): URI {
 	return URI.from({
-		scheme: PENDING_EDIT_CONTENT_SCHEME,
-		authority: encodeHex(VSBuffer.fromString(sessionUri)).toString(),
-		path: `/${encodeURIComponent(toolCallId)}/${encodeHex(VSBuffer.fromString(filePath))}`,
-	});
+    scheme: PENDING_EDIT_CONTENT_SCHEME,
+    authority: encodeHex(VSBuffer.fromString(sessionUri)).toString(),
+    path: `/${encodeURIComponent(toolCallId)}/${encodeHex(VSBuffer.fromString(filePath))}`,
+  });
 }
 
 /**
@@ -37,7 +37,10 @@ export function buildPendingEditContentUri(sessionUri: string, toolCallId: strin
  */
 export function registerPendingEditContentProvider(fileService: IFileService): IDisposable {
 	const provider = new InMemoryFileSystemProvider();
-	const registration = fileService.registerProvider(PENDING_EDIT_CONTENT_SCHEME, provider);
+	const registration = fileService.registerProvider(
+    PENDING_EDIT_CONTENT_SCHEME,
+    provider,
+  );
 	return {
 		dispose() {
 			registration.dispose();

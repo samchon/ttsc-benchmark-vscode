@@ -3,27 +3,39 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as arrays from '../../../../base/common/arrays.js';
-import * as objects from '../../../../base/common/objects.js';
-import { AutoOpenBarrier } from '../../../../base/common/async.js';
-import { throttle } from '../../../../base/common/decorators.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable, IDisposable, MutableDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { isMacintosh, isWeb, isWindows, OperatingSystem, OS } from '../../../../base/common/platform.js';
-import { ConfigurationTarget, IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IContextKey, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { ITerminalProfile, IExtensionTerminalProfile, TerminalSettingPrefix, TerminalSettingId, ITerminalProfileObject, IShellLaunchConfig, ITerminalExecutable } from '../../../../platform/terminal/common/terminal.js';
-import { registerTerminalDefaultProfileConfiguration } from '../../../../platform/terminal/common/terminalPlatformConfiguration.js';
-import { terminalIconsEqual, terminalProfileArgsMatch } from '../../../../platform/terminal/common/terminalProfiles.js';
-import { ITerminalInstanceService } from './terminal.js';
-import { refreshTerminalActions } from './terminalActions.js';
-import { IRegisterContributedProfileArgs, ITerminalProfileProvider, ITerminalProfileService } from '../common/terminal.js';
-import { TerminalContextKeys } from '../common/terminalContextKey.js';
-import { ITerminalContributionService } from '../common/terminalExtensionPoints.js';
-import { IWorkbenchEnvironmentService } from '../../../services/environment/common/environmentService.js';
-import { IExtensionService } from '../../../services/extensions/common/extensions.js';
-import { IRemoteAgentService } from '../../../services/remote/common/remoteAgentService.js';
-import { hasKey, isString } from '../../../../base/common/types.js';
+import * as arrays from "../../../../base/common/arrays.js";
+import * as objects from "../../../../base/common/objects.js";
+import { AutoOpenBarrier } from "../../../../base/common/async.js";
+import { throttle } from "../../../../base/common/decorators.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable, IDisposable, MutableDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { isMacintosh, isWeb, isWindows, OperatingSystem, OS } from "../../../../base/common/platform.js";
+import { ConfigurationTarget, IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKey, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import {
+  ITerminalProfile,
+  IExtensionTerminalProfile,
+  TerminalSettingPrefix,
+  TerminalSettingId,
+  ITerminalProfileObject,
+  IShellLaunchConfig,
+  ITerminalExecutable,
+} from "../../../../platform/terminal/common/terminal.js";
+import { registerTerminalDefaultProfileConfiguration } from "../../../../platform/terminal/common/terminalPlatformConfiguration.js";
+import { terminalIconsEqual, terminalProfileArgsMatch } from "../../../../platform/terminal/common/terminalProfiles.js";
+import { ITerminalInstanceService } from "./terminal.js";
+import { refreshTerminalActions } from "./terminalActions.js";
+import {
+  IRegisterContributedProfileArgs,
+  ITerminalProfileProvider,
+  ITerminalProfileService,
+} from "../common/terminal.js";
+import { TerminalContextKeys } from "../common/terminalContextKey.js";
+import { ITerminalContributionService } from "../common/terminalExtensionPoints.js";
+import { IWorkbenchEnvironmentService } from "../../../services/environment/common/environmentService.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { IRemoteAgentService } from "../../../services/remote/common/remoteAgentService.js";
+import { hasKey, isString } from "../../../../base/common/types.js";
 
 /*
  * Links TerminalService with TerminalProfileResolverService
@@ -41,11 +53,15 @@ export class TerminalProfileService extends Disposable implements ITerminalProfi
 	private readonly _internalContributedProfiles: IExtensionTerminalProfile[] = [];
 	private _defaultProfileName?: string;
 	private _platformConfigJustRefreshed = false;
-	private readonly _refreshTerminalActionsDisposable = this._register(new MutableDisposable());
+	private readonly _refreshTerminalActionsDisposable = this._register(
+    new MutableDisposable(),
+  );
 	private readonly _profileProviders: Map</*ext id*/string, Map</*provider id*/string, ITerminalProfileProvider>> = new Map();
 	private _defaultProfileOverride: { extensionIdentifier: string; id: string } | undefined;
 
-	private readonly _onDidChangeAvailableProfiles = this._register(new Emitter<ITerminalProfile[]>());
+	private readonly _onDidChangeAvailableProfiles = this._register(
+    new Emitter<ITerminalProfile[]>(),
+  );
 	get onDidChangeAvailableProfiles(): Event<ITerminalProfile[]> { return this._onDidChangeAvailableProfiles.event; }
 
 	get profilesReady(): Promise<void> { return this._profilesReadyPromise; }
@@ -56,9 +72,13 @@ export class TerminalProfileService extends Disposable implements ITerminalProfi
 		return this._availableProfiles || [];
 	}
 	get contributedProfiles(): IExtensionTerminalProfile[] {
-		const userConfiguredProfileNames = this._availableProfiles?.map(p => p.profileName) || [];
+		const userConfiguredProfileNames = this._availableProfiles?.map(
+      p => p.profileName,
+    ) || [];
 		// Allow a user defined profile to override an extension contributed profile with the same name
-		return this._contributedProfiles?.filter(p => !userConfiguredProfileNames.includes(p.title)) || [];
+		return this._contributedProfiles?.filter(
+      p => !userConfiguredProfileNames.includes(p.title),
+    ) || [];
 	}
 
 	constructor(
@@ -68,15 +88,21 @@ export class TerminalProfileService extends Disposable implements ITerminalProfi
 		@IExtensionService private readonly _extensionService: IExtensionService,
 		@IRemoteAgentService private _remoteAgentService: IRemoteAgentService,
 		@IWorkbenchEnvironmentService private readonly _environmentService: IWorkbenchEnvironmentService,
-		@ITerminalInstanceService private readonly _terminalInstanceService: ITerminalInstanceService
+		@ITerminalInstanceService private readonly _terminalInstanceService: ITerminalInstanceService,
 	) {
 		super();
 
 		// in web, we don't want to show the dropdown unless there's a web extension
 		// that contributes a profile
-		this._register(this._extensionService.onDidChangeExtensions(() => this.refreshAvailableProfiles()));
+		this._register(
+      this._extensionService.onDidChangeExtensions(
+        () => this.refreshAvailableProfiles(),
+      ),
+    );
 
-		this._webExtensionContributedProfileContextKey = TerminalContextKeys.webExtensionContributedProfile.bindTo(this._contextKeyService);
+		this._webExtensionContributedProfileContextKey = TerminalContextKeys.webExtensionContributedProfile.bindTo(
+      this._contextKeyService,
+    );
 		this._updateWebContextKey();
 		this._profilesReadyPromise = this._remoteAgentService.getEnvironment()
 			.then(() => {
@@ -117,7 +143,9 @@ export class TerminalProfileService extends Disposable implements ITerminalProfi
 	getDefaultProfile(os?: OperatingSystem): ITerminalProfile | undefined {
 		let defaultProfileName: string | undefined;
 		if (os) {
-			defaultProfileName = this._configurationService.getValue(`${TerminalSettingPrefix.DefaultProfile}${this._getOsKey(os)}`);
+			defaultProfileName = this._configurationService.getValue(
+        `${TerminalSettingPrefix.DefaultProfile}${this._getOsKey(os)}`,
+      );
 			if (!defaultProfileName || !isString(defaultProfileName)) {
 				return undefined;
 			}
@@ -130,14 +158,16 @@ export class TerminalProfileService extends Disposable implements ITerminalProfi
 
 		// IMPORTANT: Only allow the default profile name to find non-auto detected profiles as
 		// to avoid unsafe path profiles being picked up.
-		return this.availableProfiles.find(e => e.profileName === defaultProfileName && !e.isAutoDetected);
+		return this.availableProfiles.find(
+      e => e.profileName === defaultProfileName && !e.isAutoDetected,
+    );
 	}
 
 	private _getOsKey(os: OperatingSystem): string {
 		switch (os) {
-			case OperatingSystem.Linux: return 'linux';
-			case OperatingSystem.Macintosh: return 'osx';
-			case OperatingSystem.Windows: return 'windows';
+			case OperatingSystem.Linux: return "linux";
+			case OperatingSystem.Macintosh: return "osx";
+			case OperatingSystem.Windows: return "windows";
 		}
 	}
 
@@ -150,13 +180,22 @@ export class TerminalProfileService extends Disposable implements ITerminalProfi
 	protected async _refreshAvailableProfilesNow(): Promise<void> {
 		// Profiles
 		const profiles = await this._detectProfiles(true);
-		const profilesChanged = !arrays.equals(profiles, this._availableProfiles, profilesEqual);
+		const profilesChanged = !arrays.equals(
+      profiles,
+      this._availableProfiles,
+      profilesEqual,
+    );
 		// Contributed profiles
 		const contributedProfilesChanged = await this._updateContributedProfiles();
 		// Automation profiles
 		const platform = await this.getPlatformKey();
-		const automationProfile = this._configurationService.getValue<ITerminalExecutable | null | undefined>(`${TerminalSettingPrefix.AutomationProfile}${platform}`);
-		const automationProfileChanged = !objects.equals(automationProfile, this._automationProfile);
+		const automationProfile = this._configurationService.getValue<ITerminalExecutable | null | undefined>(
+      `${TerminalSettingPrefix.AutomationProfile}${platform}`,
+    );
+		const automationProfileChanged = !objects.equals(
+      automationProfile,
+      this._automationProfile,
+    );
 		// Update
 		if (profilesChanged || contributedProfilesChanged || automationProfileChanged) {
 			this._availableProfiles = profiles;
@@ -171,17 +210,23 @@ export class TerminalProfileService extends Disposable implements ITerminalProfi
 	private async _updateContributedProfiles(): Promise<boolean> {
 		const platformKey = await this.getPlatformKey();
 		const excludedContributedProfiles: string[] = [];
-		const configProfiles: { [key: string]: ITerminalExecutable | null | undefined } = this._configurationService.getValue(TerminalSettingPrefix.Profiles + platformKey);
+		const configProfiles: { [key: string]: ITerminalExecutable | null | undefined } = this._configurationService.getValue(
+      TerminalSettingPrefix.Profiles + platformKey,
+    );
 		for (const [profileName, value] of Object.entries(configProfiles)) {
 			if (value === null) {
 				excludedContributedProfiles.push(profileName);
 			}
 		}
 		const filteredContributedProfiles = [
-			...Array.from(this._terminalContributionService.terminalProfiles.filter(p => !excludedContributedProfiles.includes(p.title))),
-			...this._internalContributedProfiles.filter(p => !excludedContributedProfiles.includes(p.title)),
-		];
-		const contributedProfilesChanged = !arrays.equals(filteredContributedProfiles, this._contributedProfiles, contributedProfilesEqual);
+      ...Array.from(this._terminalContributionService.terminalProfiles.filter(p => !excludedContributedProfiles.includes(p.title))),
+      ...this._internalContributedProfiles.filter(p => !excludedContributedProfiles.includes(p.title)),
+    ];
+		const contributedProfilesChanged = !arrays.equals(
+      filteredContributedProfiles,
+      this._contributedProfiles,
+      contributedProfilesEqual,
+    );
 		this._contributedProfiles = filteredContributedProfiles;
 		return contributedProfilesChanged;
 	}
@@ -195,36 +240,55 @@ export class TerminalProfileService extends Disposable implements ITerminalProfi
 		// On web without a pty host, getBackend() waits forever for a backend
 		// that will never register. Check synchronously first to avoid hanging.
 		if (isWeb && !this._environmentService.remoteAuthority) {
-			const hasAnyBackend = [...this._terminalInstanceService.getRegisteredBackends()].length > 0;
+			const hasAnyBackend = [
+        ...this._terminalInstanceService.getRegisteredBackends(),
+      ].length > 0;
 			if (!hasAnyBackend) {
 				return this._availableProfiles || [];
 			}
 		}
-		const primaryBackend = await this._terminalInstanceService.getBackend(this._environmentService.remoteAuthority);
+		const primaryBackend = await this._terminalInstanceService.getBackend(
+      this._environmentService.remoteAuthority,
+    );
 		if (!primaryBackend) {
 			return this._availableProfiles || [];
 		}
 		const platform = await this.getPlatformKey();
-		this._defaultProfileName = this._configurationService.getValue(`${TerminalSettingPrefix.DefaultProfile}${platform}`) ?? undefined;
-		return primaryBackend.getProfiles(this._configurationService.getValue(`${TerminalSettingPrefix.Profiles}${platform}`), this._defaultProfileName, includeDetectedProfiles);
+		this._defaultProfileName = this._configurationService.getValue(
+      `${TerminalSettingPrefix.DefaultProfile}${platform}`,
+    ) ?? undefined;
+		return primaryBackend.getProfiles(
+      this._configurationService.getValue(
+        `${TerminalSettingPrefix.Profiles}${platform}`,
+      ),
+      this._defaultProfileName,
+      includeDetectedProfiles,
+    );
 	}
 
 	private _updateWebContextKey(): void {
-		this._webExtensionContributedProfileContextKey.set(isWeb && this._contributedProfiles.length > 0);
+		this._webExtensionContributedProfileContextKey.set(
+      isWeb && this._contributedProfiles.length > 0,
+    );
 	}
 
 	private async _refreshPlatformConfig(profiles: ITerminalProfile[]) {
 		const env = await this._remoteAgentService.getEnvironment();
-		registerTerminalDefaultProfileConfiguration({ os: env?.os || OS, profiles }, this._contributedProfiles);
-		this._refreshTerminalActionsDisposable.value = refreshTerminalActions(profiles);
+		registerTerminalDefaultProfileConfiguration(
+      { os: env?.os || OS, profiles },
+      this._contributedProfiles,
+    );
+		this._refreshTerminalActionsDisposable.value = refreshTerminalActions(
+      profiles,
+    );
 	}
 
 	async getPlatformKey(): Promise<string> {
 		const env = await this._remoteAgentService.getEnvironment();
 		if (env) {
-			return env.os === OperatingSystem.Windows ? 'windows' : (env.os === OperatingSystem.Macintosh ? 'osx' : 'linux');
+			return env.os === OperatingSystem.Windows ? "windows" : (env.os === OperatingSystem.Macintosh ? "osx" : "linux");
 		}
-		return isWindows ? 'windows' : (isMacintosh ? 'osx' : 'linux');
+		return isWindows ? "windows" : (isMacintosh ? "osx" : "linux");
 	}
 
 	registerTerminalProfileProvider(extensionIdentifier: string, id: string, profileProvider: ITerminalProfileProvider): IDisposable {
@@ -239,20 +303,26 @@ export class TerminalProfileService extends Disposable implements ITerminalProfi
 
 	async registerContributedProfile(args: IRegisterContributedProfileArgs): Promise<void> {
 		const platformKey = await this.getPlatformKey();
-		const profilesConfig = await this._configurationService.getValue(`${TerminalSettingPrefix.Profiles}${platformKey}`);
-		if (typeof profilesConfig === 'object') {
+		const profilesConfig = await this._configurationService.getValue(
+      `${TerminalSettingPrefix.Profiles}${platformKey}`,
+    );
+		if (typeof profilesConfig === "object") {
 			const newProfile: IExtensionTerminalProfile = {
-				extensionIdentifier: args.extensionIdentifier,
-				icon: args.options.icon,
-				id: args.id,
-				title: args.title,
-				color: args.options.color,
-				titleTemplate: args.titleTemplate
-			};
+        extensionIdentifier: args.extensionIdentifier,
+        icon: args.options.icon,
+        id: args.id,
+        title: args.title,
+        color: args.options.color,
+        titleTemplate: args.titleTemplate,
+      };
 
 			(profilesConfig as { [key: string]: ITerminalProfileObject })[args.title] = newProfile;
 		}
-		await this._configurationService.updateValue(`${TerminalSettingPrefix.Profiles}${platformKey}`, profilesConfig, ConfigurationTarget.USER);
+		await this._configurationService.updateValue(
+      `${TerminalSettingPrefix.Profiles}${platformKey}`,
+      profilesConfig,
+      ConfigurationTarget.USER,
+    );
 		return;
 	}
 
@@ -280,19 +350,26 @@ export class TerminalProfileService extends Disposable implements ITerminalProfi
 	async getContributedDefaultProfile(shellLaunchConfig: IShellLaunchConfig): Promise<IExtensionTerminalProfile | undefined> {
 		// prevents recursion with the MainThreadTerminalService call to create terminal
 		// and defers to the provided launch config when an executable is provided
-		if (shellLaunchConfig && !shellLaunchConfig.extHostTerminalId && !hasKey(shellLaunchConfig, { executable: true })) {
+		if (shellLaunchConfig && !shellLaunchConfig.extHostTerminalId && !hasKey(
+      shellLaunchConfig,
+      { executable: true },
+    )) {
 			// Programmatic override takes priority over configuration
 			if (this._defaultProfileOverride) {
 				const overridden = this.contributedProfiles.find(
-					p => p.extensionIdentifier === this._defaultProfileOverride!.extensionIdentifier && p.id === this._defaultProfileOverride!.id
-				);
+          p => p.extensionIdentifier === this._defaultProfileOverride!.extensionIdentifier && p.id === this._defaultProfileOverride!.id,
+        );
 				if (overridden) {
 					return overridden;
 				}
 			}
 			const key = await this.getPlatformKey();
-			const defaultProfileName = this._configurationService.getValue(`${TerminalSettingPrefix.DefaultProfile}${key}`);
-			const contributedDefaultProfile = this.contributedProfiles.find(p => p.title === defaultProfileName);
+			const defaultProfileName = this._configurationService.getValue(
+        `${TerminalSettingPrefix.DefaultProfile}${key}`,
+      );
+			const contributedDefaultProfile = this.contributedProfiles.find(
+        p => p.title === defaultProfileName,
+      );
 			return contributedDefaultProfile;
 		}
 		return undefined;

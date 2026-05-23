@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { asArray } from '../../../../base/common/arrays.js';
-import { IMarkdownString, isEmptyMarkdownString } from '../../../../base/common/htmlContent.js';
-import { ICodeEditor } from '../../../browser/editorBrowser.js';
-import { IHoverComputer } from './hoverOperation.js';
-import { GlyphMarginLane } from '../../../common/model.js';
+import { asArray } from "../../../../base/common/arrays.js";
+import { IMarkdownString, isEmptyMarkdownString } from "../../../../base/common/htmlContent.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { IHoverComputer } from "./hoverOperation.js";
+import { GlyphMarginLane } from "../../../common/model.js";
 
-export type LaneOrLineNumber = GlyphMarginLane | 'lineNo';
+export type LaneOrLineNumber = GlyphMarginLane | "lineNo";
 
 export interface IHoverMessage {
 	value: IMarkdownString;
@@ -23,7 +23,7 @@ export interface GlyphHoverComputerOptions {
 export class GlyphHoverComputer implements IHoverComputer<GlyphHoverComputerOptions, IHoverMessage> {
 
 	constructor(
-		private readonly _editor: ICodeEditor
+		private readonly _editor: ICodeEditor,
 	) {
 	}
 
@@ -31,14 +31,14 @@ export class GlyphHoverComputer implements IHoverComputer<GlyphHoverComputerOpti
 
 		const toHoverMessage = (contents: IMarkdownString): IHoverMessage => {
 			return {
-				value: contents
-			};
+        value: contents,
+      };
 		};
 
 		const lineDecorations = this._editor.getLineDecorations(opts.lineNumber);
 
 		const result: IHoverMessage[] = [];
-		const isLineHover = opts.laneOrLine === 'lineNo';
+		const isLineHover = opts.laneOrLine === "lineNo";
 		if (!lineDecorations) {
 			return result;
 		}

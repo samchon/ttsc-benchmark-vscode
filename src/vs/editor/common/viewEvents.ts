@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ScrollEvent } from '../../base/common/scrollable.js';
-import { ConfigurationChangedEvent, EditorOption } from './config/editorOptions.js';
-import { Range } from './core/range.js';
-import { Selection } from './core/selection.js';
-import { CursorChangeReason } from './cursorEvents.js';
-import { ScrollType } from './editorCommon.js';
-import { IModelDecorationsChangedEvent } from './textModelEvents.js';
-import { IColorTheme } from '../../platform/theme/common/themeService.js';
+import { ScrollEvent } from "../../base/common/scrollable.js";
+import { ConfigurationChangedEvent, EditorOption } from "./config/editorOptions.js";
+import { Range } from "./core/range.js";
+import { Selection } from "./core/selection.js";
+import { CursorChangeReason } from "./cursorEvents.js";
+import { ScrollType } from "./editorCommon.js";
+import { IModelDecorationsChangedEvent } from "./textModelEvents.js";
+import { IColorTheme } from "../../platform/theme/common/themeService.js";
 
 export const enum ViewEventType {
 	ViewCompositionStart,
@@ -65,7 +65,7 @@ export class ViewCursorStateChangedEvent {
 	constructor(
 		public readonly selections: Selection[],
 		public readonly modelSelections: Selection[],
-		public readonly reason: CursorChangeReason
+		public readonly reason: CursorChangeReason,
 	) { }
 }
 
@@ -225,7 +225,7 @@ export class ViewRevealRangeRequestEvent {
 		/**
 		 * The scroll type.
 		 */
-		public readonly scrollType: ScrollType
+		public readonly scrollType: ScrollType,
 	) { }
 }
 
@@ -261,7 +261,7 @@ export class ViewThemeChangedEvent {
 	public readonly type = ViewEventType.ViewThemeChanged;
 
 	constructor(
-		public readonly theme: IColorTheme
+		public readonly theme: IColorTheme,
 	) { }
 }
 

@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IStringDictionary } from '../../../base/common/collections.js';
-import { IPolicyData } from '../../../base/common/defaultAccount.js';
-import { Emitter, Event } from '../../../base/common/event.js';
-import { Iterable } from '../../../base/common/iterator.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { PolicyName } from '../../../base/common/policy.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
+import { IStringDictionary } from "../../../base/common/collections.js";
+import { IPolicyData } from "../../../base/common/defaultAccount.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Iterable } from "../../../base/common/iterator.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { PolicyName } from "../../../base/common/policy.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
 
 export type PolicyValue = string | number | boolean;
 export type PolicyDefinition = {
-	type: 'string' | 'number' | 'boolean';
+	type: "string" | "number" | "boolean";
 	value?: (policyData: IPolicyData) => string | number | boolean | undefined;
 	restrictedValue?: PolicyValue;
 };
@@ -28,13 +28,13 @@ export function getRestrictedPolicyValue(definition: PolicyDefinition): PolicyVa
 		return definition.restrictedValue;
 	}
 	switch (definition.type) {
-		case 'boolean': return false;
-		case 'number': return 0;
-		case 'string': return '';
+		case "boolean": return false;
+		case "number": return 0;
+		case "string": return "";
 	}
 }
 
-export const IPolicyService = createDecorator<IPolicyService>('policy');
+export const IPolicyService = createDecorator<IPolicyService>("policy");
 
 export interface IPolicyService {
 	readonly _serviceBrand: undefined;
@@ -52,18 +52,27 @@ export abstract class AbstractPolicyService extends Disposable implements IPolic
 	public policyDefinitions: IStringDictionary<PolicyDefinition> = {};
 	protected policies = new Map<PolicyName, PolicyValue>();
 
-	protected readonly _onDidChange = this._register(new Emitter<readonly PolicyName[]>());
+	protected readonly _onDidChange = this._register(
+    new Emitter<readonly PolicyName[]>(),
+  );
 	readonly onDidChange = this._onDidChange.event;
 
 	async updatePolicyDefinitions(policyDefinitions: IStringDictionary<PolicyDefinition>): Promise<IStringDictionary<PolicyValue>> {
 		const size = Object.keys(this.policyDefinitions).length;
-		this.policyDefinitions = { ...policyDefinitions, ...this.policyDefinitions };
+		this.policyDefinitions = {
+      ...policyDefinitions,
+      ...this.policyDefinitions,
+    };
 
 		if (size !== Object.keys(this.policyDefinitions).length) {
 			await this._updatePolicyDefinitions(this.policyDefinitions);
 		}
 
-		return Iterable.reduce(this.policies.entries(), (r, [name, value]) => ({ ...r, [name]: value }), {});
+		return Iterable.reduce(
+      this.policies.entries(),
+      (r, [name, value]) => ({ ...r, [name]: value }),
+      {},
+    );
 	}
 
 	getPolicyValue(name: PolicyName): PolicyValue | undefined {
@@ -71,7 +80,14 @@ export abstract class AbstractPolicyService extends Disposable implements IPolic
 	}
 
 	serialize(): IStringDictionary<{ definition: PolicyDefinition; value: PolicyValue }> {
-		return Iterable.reduce<[PolicyName, PolicyDefinition], IStringDictionary<{ definition: PolicyDefinition; value: PolicyValue }>>(Object.entries(this.policyDefinitions), (r, [name, definition]) => ({ ...r, [name]: { definition, value: this.policies.get(name)! } }), {});
+		return Iterable.reduce<[PolicyName, PolicyDefinition], IStringDictionary<{ definition: PolicyDefinition; value: PolicyValue }>>(
+      Object.entries(this.policyDefinitions),
+      (r, [name, definition]) => ({
+        ...r,
+        [name]: { definition, value: this.policies.get(name)! },
+      }),
+      {},
+    );
 	}
 
 	protected abstract _updatePolicyDefinitions(policyDefinitions: IStringDictionary<PolicyDefinition>): Promise<void>;

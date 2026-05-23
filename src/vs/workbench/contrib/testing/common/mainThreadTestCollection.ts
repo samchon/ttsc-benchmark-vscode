@@ -3,13 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter } from '../../../../base/common/event.js';
-import { Iterable } from '../../../../base/common/iterator.js';
-import { LinkedList } from '../../../../base/common/linkedList.js';
-import { ResourceMap } from '../../../../base/common/map.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IMainThreadTestCollection } from './testService.js';
-import { AbstractIncrementalTestCollection, ITestUriCanonicalizer, IncrementalChangeCollector, IncrementalTestCollectionItem, InternalTestItem, TestDiffOpType, TestsDiff } from './testTypes.js';
+import { Emitter } from "../../../../base/common/event.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { LinkedList } from "../../../../base/common/linkedList.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IMainThreadTestCollection } from "./testService.js";
+import {
+  AbstractIncrementalTestCollection,
+  ITestUriCanonicalizer,
+  IncrementalChangeCollector,
+  IncrementalTestCollectionItem,
+  InternalTestItem,
+  TestDiffOpType,
+  TestsDiff,
+} from "./testTypes.js";
 
 export class MainThreadTestCollection extends AbstractIncrementalTestCollection<IncrementalTestCollectionItem> implements IMainThreadTestCollection {
 	private testsByUrl = new ResourceMap<Set<IncrementalTestCollectionItem>>();
@@ -68,12 +76,16 @@ export class MainThreadTestCollection extends AbstractIncrementalTestCollection<
 		}
 
 		const prom = this.expandActual(test.item.extId, levels);
-		const record = { doneLvl: existing ? existing.doneLvl : -1, pendingLvl: levels, prom };
+		const record = {
+      doneLvl: existing ? existing.doneLvl : -1,
+      pendingLvl: levels,
+      prom,
+    };
 		this.expandPromises.set(test, record);
 
 		return prom.then(() => {
-			record.doneLvl = levels;
-		});
+      record.doneLvl = levels;
+    });
 	}
 
 	/**
@@ -94,7 +106,12 @@ export class MainThreadTestCollection extends AbstractIncrementalTestCollection<
 	 * @inheritdoc
 	 */
 	public getReviverDiff() {
-		const ops: TestsDiff = [{ op: TestDiffOpType.IncrementPendingExtHosts, amount: this.pendingRootCount }];
+		const ops: TestsDiff = [
+      {
+        op: TestDiffOpType.IncrementPendingExtHosts,
+        amount: this.pendingRootCount,
+      },
+    ];
 
 		const queue = [this.rootIds];
 		while (queue.length) {
@@ -106,7 +123,7 @@ export class MainThreadTestCollection extends AbstractIncrementalTestCollection<
 						controllerId: item.controllerId,
 						expand: item.expand,
 						item: item.item,
-					}
+					},
 				});
 				queue.push(item.children);
 			}

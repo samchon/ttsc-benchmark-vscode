@@ -2,10 +2,10 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { URI } from '../../../../base/common/uri.js';
-import { IFolderQuery } from './search.js';
-import { TernarySearchTree, UriIterator } from '../../../../base/common/ternarySearchTree.js';
-import { ResourceMap } from '../../../../base/common/map.js';
+import { URI } from "../../../../base/common/uri.js";
+import { IFolderQuery } from "./search.js";
+import { TernarySearchTree, UriIterator } from "../../../../base/common/ternarySearchTree.js";
+import { ResourceMap } from "../../../../base/common/map.js";
 
 /**
  * A ternary search tree that supports URI keys and query/fragment-aware substring matching, specifically for file search.
@@ -14,14 +14,14 @@ import { ResourceMap } from '../../../../base/common/map.js';
 export class FolderQuerySearchTree<FolderQueryInfo extends { folder: URI }> extends TernarySearchTree<URI, Map<string, FolderQueryInfo>> {
 	constructor(folderQueries: IFolderQuery<URI>[],
 		getFolderQueryInfo: (fq: IFolderQuery, i: number) => FolderQueryInfo,
-		ignorePathCasing: (key: URI) => boolean = () => false
+		ignorePathCasing: (key: URI) => boolean = () => false,
 	) {
 		const uriIterator = new UriIterator(ignorePathCasing, () => false);
 		super(uriIterator);
 
 		const fqBySameBase = new ResourceMap<{ fq: IFolderQuery<URI>; i: number }[]>();
 		folderQueries.forEach((fq, i) => {
-			const uriWithoutQueryOrFragment = fq.folder.with({ query: '', fragment: '' });
+			const uriWithoutQueryOrFragment = fq.folder.with({ query: "", fragment: "" });
 			if (fqBySameBase.has(uriWithoutQueryOrFragment)) {
 				fqBySameBase.get(uriWithoutQueryOrFragment)!.push({ fq, i });
 			} else {
@@ -40,7 +40,9 @@ export class FolderQuerySearchTree<FolderQueryInfo extends { folder: URI }> exte
 
 	findQueryFragmentAwareSubstr(key: URI): FolderQueryInfo | undefined {
 
-		const baseURIResult = super.findSubstr(key.with({ query: '', fragment: '' }));
+		const baseURIResult = super.findSubstr(
+      key.with({ query: "", fragment: "" }),
+    );
 		if (!baseURIResult) {
 			return undefined;
 		}
@@ -54,12 +56,12 @@ export class FolderQuerySearchTree<FolderQueryInfo extends { folder: URI }> exte
 	}
 
 	private encodeKey(key: URI): string {
-		let str = '';
+		let str = "";
 		if (key.query) {
 			str += key.query;
 		}
 		if (key.fragment) {
-			str += '#' + key.fragment;
+			str += "#" + key.fragment;
 		}
 		return str;
 	}

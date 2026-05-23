@@ -3,32 +3,36 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../base/common/event.js';
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { IChannel, IServerChannel } from '../../../base/parts/ipc/common/ipc.js';
-import { ISandboxDependencyStatus, ISandboxHelperService, IWindowsMxcFilesystemPolicy } from './sandboxHelperService.js';
+import { Event } from "../../../base/common/event.js";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { IChannel, IServerChannel } from "../../../base/parts/ipc/common/ipc.js";
+import {
+  ISandboxDependencyStatus,
+  ISandboxHelperService,
+  IWindowsMxcFilesystemPolicy,
+} from "./sandboxHelperService.js";
 
-export const SANDBOX_HELPER_CHANNEL_NAME = 'sandboxHelper';
+export const SANDBOX_HELPER_CHANNEL_NAME = "sandboxHelper";
 
 export class SandboxHelperChannel implements IServerChannel {
 
 	constructor(private readonly service: ISandboxHelperService) { }
 
 	listen<T>(_context: unknown, _event: string): Event<T> {
-		throw new Error('Invalid listen');
+		throw new Error("Invalid listen");
 	}
 
 	call<T>(_context: unknown, command: string, _arg?: unknown, _cancellationToken?: CancellationToken): Promise<T> {
 		switch (command) {
-			case 'checkSandboxDependencies':
+			case "checkSandboxDependencies":
 				return this.service.checkSandboxDependencies() as Promise<T>;
-			case 'getWindowsMxcFilesystemPolicy':
+			case "getWindowsMxcFilesystemPolicy":
 				return this.service.getWindowsMxcFilesystemPolicy() as Promise<T>;
-			case 'getWindowsMxcEnvironment':
+			case "getWindowsMxcEnvironment":
 				return this.service.getWindowsMxcEnvironment() as Promise<T>;
 		}
 
-		throw new Error('Invalid call');
+		throw new Error("Invalid call");
 	}
 }
 
@@ -38,14 +42,18 @@ export class SandboxHelperChannelClient implements ISandboxHelperService {
 	constructor(private readonly channel: IChannel) { }
 
 	checkSandboxDependencies(): Promise<ISandboxDependencyStatus | undefined> {
-		return this.channel.call<ISandboxDependencyStatus | undefined>('checkSandboxDependencies');
+		return this.channel.call<ISandboxDependencyStatus | undefined>(
+      "checkSandboxDependencies",
+    );
 	}
 
 	getWindowsMxcFilesystemPolicy(): Promise<IWindowsMxcFilesystemPolicy | undefined> {
-		return this.channel.call<IWindowsMxcFilesystemPolicy | undefined>('getWindowsMxcFilesystemPolicy');
+		return this.channel.call<IWindowsMxcFilesystemPolicy | undefined>(
+      "getWindowsMxcFilesystemPolicy",
+    );
 	}
 
 	getWindowsMxcEnvironment(): Promise<string[] | undefined> {
-		return this.channel.call<string[] | undefined>('getWindowsMxcEnvironment');
+		return this.channel.call<string[] | undefined>("getWindowsMxcEnvironment");
 	}
 }

@@ -3,12 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../base/common/event.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
+import { Event } from "../../../base/common/event.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
 
-export const IExtensionHostStarter = createDecorator<IExtensionHostStarter>('extensionHostStarter');
+export const IExtensionHostStarter = createDecorator<IExtensionHostStarter>(
+  "extensionHostStarter",
+);
 
-export const ipcExtensionHostStarterChannelName = 'extensionHostStarter';
+export const ipcExtensionHostStarterChannelName = "extensionHostStarter";
 export const extensionHostGraceTimeMs = 6000;
 
 export interface IExtensionHostProcessOptions {

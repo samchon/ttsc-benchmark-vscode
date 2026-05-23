@@ -3,38 +3,38 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { Event } from '../../../../../base/common/event.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { CancellationToken } from '../../../../../base/common/cancellation.js';
-import { TestServiceAccessor, workbenchInstantiationService } from '../../../../test/browser/workbenchTestServices.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { FileChangesEvent, FileChangeType } from '../../../../../platform/files/common/files.js';
-import { IRevertOptions, ISaveOptions } from '../../../../common/editor.js';
-import { ResourceWorkingCopy } from '../../common/resourceWorkingCopy.js';
-import { WorkingCopyCapabilities, IWorkingCopyBackup } from '../../common/workingCopy.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { runWithFakedTimers } from '../../../../../base/test/common/timeTravelScheduler.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
+import assert from "assert";
+import { Event } from "../../../../../base/common/event.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { TestServiceAccessor, workbenchInstantiationService } from "../../../../test/browser/workbenchTestServices.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { FileChangesEvent, FileChangeType } from "../../../../../platform/files/common/files.js";
+import { IRevertOptions, ISaveOptions } from "../../../../common/editor.js";
+import { ResourceWorkingCopy } from "../../common/resourceWorkingCopy.js";
+import { WorkingCopyCapabilities, IWorkingCopyBackup } from "../../common/workingCopy.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { runWithFakedTimers } from "../../../../../base/test/common/timeTravelScheduler.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
 
-suite('ResourceWorkingCopy', function () {
+suite("ResourceWorkingCopy", function () {
 
 	class TestResourceWorkingCopy extends ResourceWorkingCopy {
-		name = 'testName';
-		typeId = 'testTypeId';
+		name = "testName";
+		typeId = "testTypeId";
 		capabilities = WorkingCopyCapabilities.None;
 		onDidChangeDirty = Event.None;
 		onDidChangeContent = Event.None;
 		onDidSave = Event.None;
 		isDirty(): boolean { return false; }
-		async backup(token: CancellationToken): Promise<IWorkingCopyBackup> { throw new Error('Method not implemented.'); }
+		async backup(token: CancellationToken): Promise<IWorkingCopyBackup> { throw new Error("Method not implemented."); }
 		async save(options?: ISaveOptions): Promise<boolean> { return false; }
 		async revert(options?: IRevertOptions): Promise<void> { }
 
 	}
 
 	const disposables = new DisposableStore();
-	const resource = URI.file('test/resource');
+	const resource = URI.file("test/resource");
 	let instantiationService: IInstantiationService;
 	let accessor: TestServiceAccessor;
 	let workingCopy: TestResourceWorkingCopy;
@@ -54,7 +54,7 @@ suite('ResourceWorkingCopy', function () {
 		disposables.clear();
 	});
 
-	test('orphaned tracking', async () => {
+	test("orphaned tracking", async () => {
 		return runWithFakedTimers({}, async () => {
 			assert.strictEqual(workingCopy.isOrphaned(), false);
 
@@ -74,7 +74,7 @@ suite('ResourceWorkingCopy', function () {
 		});
 	});
 
-	test('dispose, isDisposed', async () => {
+	test("dispose, isDisposed", async () => {
 		assert.strictEqual(workingCopy.isDisposed(), false);
 
 		let disposedEvent = false;

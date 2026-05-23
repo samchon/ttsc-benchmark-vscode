@@ -3,21 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { onUnexpectedError } from '../../../../base/common/errors.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { IMatch } from '../../../../base/common/filters.js';
-import { defaultGenerator } from '../../../../base/common/idGenerator.js';
-import { dispose, IDisposable, IReference } from '../../../../base/common/lifecycle.js';
-import { ResourceMap } from '../../../../base/common/map.js';
-import { basename, extUri } from '../../../../base/common/resources.js';
-import * as strings from '../../../../base/common/strings.js';
-import { Constants } from '../../../../base/common/uint.js';
-import { URI } from '../../../../base/common/uri.js';
-import { Position } from '../../../common/core/position.js';
-import { IRange, Range } from '../../../common/core/range.js';
-import { Location, LocationLink } from '../../../common/languages.js';
-import { ITextEditorModel, ITextModelService } from '../../../common/services/resolverService.js';
-import { localize } from '../../../../nls.js';
+import { onUnexpectedError } from "../../../../base/common/errors.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { IMatch } from "../../../../base/common/filters.js";
+import { defaultGenerator } from "../../../../base/common/idGenerator.js";
+import { dispose, IDisposable, IReference } from "../../../../base/common/lifecycle.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { basename, extUri } from "../../../../base/common/resources.js";
+import * as strings from "../../../../base/common/strings.js";
+import { Constants } from "../../../../base/common/uint.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Position } from "../../../common/core/position.js";
+import { IRange, Range } from "../../../common/core/range.js";
+import { Location, LocationLink } from "../../../common/languages.js";
+import { ITextEditorModel, ITextModelService } from "../../../common/services/resolverService.js";
+import { localize } from "../../../../nls.js";
 
 export class OneReference {
 
@@ -29,7 +29,7 @@ export class OneReference {
 		readonly isProviderFirst: boolean,
 		readonly parent: FileReferences,
 		readonly link: LocationLink,
-		private _rangeCallback: (ref: OneReference) => void
+		private _rangeCallback: (ref: OneReference) => void,
 	) { }
 
 	get uri() {
@@ -51,14 +51,24 @@ export class OneReference {
 
 		if (!preview) {
 			return localize(
-				'aria.oneReference', "in {0} on line {1} at column {2}",
-				basename(this.uri), this.range.startLineNumber, this.range.startColumn
-			);
+        "aria.oneReference",
+        "in {0} on line {1} at column {2}",
+        basename(this.uri),
+        this.range.startLineNumber,
+        this.range.startColumn,
+      );
 		} else {
 			return localize(
-				{ key: 'aria.oneReference.preview', comment: ['Placeholders are: 0: filename, 1:line number, 2: column number, 3: preview snippet of source code'] }, "{0} in {1} on line {2} at column {3}",
-				preview.value, basename(this.uri), this.range.startLineNumber, this.range.startColumn
-			);
+        {
+          key: "aria.oneReference.preview",
+          comment: ["Placeholders are: 0: filename, 1:line number, 2: column number, 3: preview snippet of source code"],
+        },
+        "{0} in {1} on line {2} at column {3}",
+        preview.value,
+        basename(this.uri),
+        this.range.startLineNumber,
+        this.range.startColumn,
+      );
 		}
 	}
 }
@@ -66,7 +76,7 @@ export class OneReference {
 export class FilePreview implements IDisposable {
 
 	constructor(
-		private readonly _modelReference: IReference<ITextEditorModel>
+		private readonly _modelReference: IReference<ITextEditorModel>,
 	) { }
 
 	dispose(): void {
@@ -81,18 +91,31 @@ export class FilePreview implements IDisposable {
 		}
 
 		const { startLineNumber, startColumn, endLineNumber, endColumn } = range;
-		const word = model.getWordUntilPosition({ lineNumber: startLineNumber, column: startColumn - n });
-		const beforeRange = new Range(startLineNumber, word.startColumn, startLineNumber, startColumn);
-		const afterRange = new Range(endLineNumber, endColumn, endLineNumber, Constants.MAX_SAFE_SMALL_INTEGER);
+		const word = model.getWordUntilPosition({
+      lineNumber: startLineNumber,
+      column: startColumn - n,
+    });
+		const beforeRange = new Range(
+      startLineNumber,
+      word.startColumn,
+      startLineNumber,
+      startColumn,
+    );
+		const afterRange = new Range(
+      endLineNumber,
+      endColumn,
+      endLineNumber,
+      Constants.MAX_SAFE_SMALL_INTEGER,
+    );
 
-		const before = model.getValueInRange(beforeRange).replace(/^\s+/, '');
+		const before = model.getValueInRange(beforeRange).replace(/^\s+/, "");
 		const inside = model.getValueInRange(range);
-		const after = model.getValueInRange(afterRange).replace(/\s+$/, '');
+		const after = model.getValueInRange(afterRange).replace(/\s+$/, "");
 
 		return {
-			value: before + inside + after,
-			highlight: { start: before.length, end: before.length + inside.length }
-		};
+      value: before + inside + after,
+      highlight: { start: before.length, end: before.length + inside.length },
+    };
 	}
 }
 
@@ -104,7 +127,7 @@ export class FileReferences implements IDisposable {
 
 	constructor(
 		readonly parent: ReferencesModel,
-		readonly uri: URI
+		readonly uri: URI,
 	) { }
 
 	dispose(): void {
@@ -119,9 +142,20 @@ export class FileReferences implements IDisposable {
 	get ariaMessage(): string {
 		const len = this.children.length;
 		if (len === 1) {
-			return localize('aria.fileReferences.1', "1 symbol in {0}, full path {1}", basename(this.uri), this.uri.fsPath);
+			return localize(
+        "aria.fileReferences.1",
+        "1 symbol in {0}, full path {1}",
+        basename(this.uri),
+        this.uri.fsPath,
+      );
 		} else {
-			return localize('aria.fileReferences.N', "{0} symbols in {1}, full path {2}", len, basename(this.uri), this.uri.fsPath);
+			return localize(
+        "aria.fileReferences.N",
+        "{0} symbols in {1}, full path {2}",
+        len,
+        basename(this.uri),
+        this.uri.fsPath,
+      );
 		}
 	}
 
@@ -134,7 +168,9 @@ export class FileReferences implements IDisposable {
 				continue;
 			}
 			try {
-				const ref = await textModelResolverService.createModelReference(child.uri);
+				const ref = await textModelResolverService.createModelReference(
+          child.uri,
+        );
 				this._previews.set(child.uri, new FilePreview(ref));
 			} catch (err) {
 				onUnexpectedError(err);
@@ -172,14 +208,17 @@ export class ReferencesModel implements IDisposable {
 			}
 
 			// append, check for equality first!
-			if (current.children.length === 0 || ReferencesModel._compareReferences(link, current.children[current.children.length - 1]) !== 0) {
+			if (current.children.length === 0 || ReferencesModel._compareReferences(
+        link,
+        current.children[current.children.length - 1],
+      ) !== 0) {
 
 				const oneRef = new OneReference(
-					providersFirst === link,
-					current,
-					link,
-					ref => this._onDidChangeReferenceRange.fire(ref)
-				);
+          providersFirst === link,
+          current,
+          link,
+          ref => this._onDidChangeReferenceRange.fire(ref),
+        );
 				this.references.push(oneRef);
 				current.children.push(oneRef);
 			}
@@ -206,13 +245,27 @@ export class ReferencesModel implements IDisposable {
 
 	get ariaMessage(): string {
 		if (this.isEmpty) {
-			return localize('aria.result.0', "No results found");
+			return localize("aria.result.0", "No results found");
 		} else if (this.references.length === 1) {
-			return localize('aria.result.1', "Found 1 symbol in {0}", this.references[0].uri.fsPath);
+			return localize(
+        "aria.result.1",
+        "Found 1 symbol in {0}",
+        this.references[0].uri.fsPath,
+      );
 		} else if (this.groups.length === 1) {
-			return localize('aria.result.n1', "Found {0} symbols in {1}", this.references.length, this.groups[0].uri.fsPath);
+			return localize(
+        "aria.result.n1",
+        "Found {0} symbols in {1}",
+        this.references.length,
+        this.groups[0].uri.fsPath,
+      );
 		} else {
-			return localize('aria.result.nm', "Found {0} symbols in {1} files", this.references.length, this.groups.length);
+			return localize(
+        "aria.result.nm",
+        "Found {0} symbols in {1} files",
+        this.references.length,
+        this.groups.length,
+      );
 		}
 	}
 
@@ -250,7 +303,7 @@ export class ReferencesModel implements IDisposable {
 			return {
 				idx,
 				prefixLen: strings.commonPrefixLength(ref.uri.toString(), resource.toString()),
-				offsetDist: Math.abs(ref.range.startLineNumber - position.lineNumber) * 100 + Math.abs(ref.range.startColumn - position.column)
+				offsetDist: Math.abs(ref.range.startLineNumber - position.lineNumber) * 100 + Math.abs(ref.range.startColumn - position.column),
 			};
 		}).sort((a, b) => {
 			if (a.prefixLen > b.prefixLen) {

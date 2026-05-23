@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { INativeHostService } from '../../../../platform/native/common/native.js';
-import { IPowerService, PowerSaveBlockerType, SystemIdleState, ThermalState } from '../common/powerService.js';
-import { Event } from '../../../../base/common/event.js';
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { INativeHostService } from "../../../../platform/native/common/native.js";
+import { IPowerService, PowerSaveBlockerType, SystemIdleState, ThermalState } from "../common/powerService.js";
+import { Event } from "../../../../base/common/event.js";
 
 /**
  * Desktop implementation of IPowerService using Electron's powerMonitor.
@@ -32,7 +32,10 @@ export class NativePowerService extends Disposable implements IPowerService {
 
 		// Forward events from native host service
 		this.onDidSuspend = nativeHostService.onDidSuspendOS;
-		this.onDidResume = Event.map(nativeHostService.onDidResumeOS, () => undefined);
+		this.onDidResume = Event.map(
+      nativeHostService.onDidResumeOS,
+      () => undefined,
+    );
 		this.onDidChangeOnBatteryPower = nativeHostService.onDidChangeOnBatteryPower;
 		this.onDidChangeThermalState = nativeHostService.onDidChangeThermalState;
 		this.onDidChangeSpeedLimit = nativeHostService.onDidChangeSpeedLimit;

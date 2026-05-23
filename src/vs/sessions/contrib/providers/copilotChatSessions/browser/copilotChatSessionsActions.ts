@@ -3,69 +3,112 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BaseActionViewItem } from '../../../../../base/browser/ui/actionbar/actionViewItems.js';
-import { coalesce } from '../../../../../base/common/arrays.js';
-import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
-import { MarshalledId } from '../../../../../base/common/marshallingIds.js';
-import { IReader, autorun, observableValue } from '../../../../../base/common/observable.js';
-import { isWeb } from '../../../../../base/common/platform.js';
-import { localize2 } from '../../../../../nls.js';
-import { IActionViewItemService } from '../../../../../platform/actions/browser/actionViewItemService.js';
-import { Action2, MenuId, MenuRegistry, isIMenuItem, registerAction2 } from '../../../../../platform/actions/common/actions.js';
-import { CommandsRegistry, ICommandService } from '../../../../../platform/commands/common/commands.js';
-import { ContextKeyExpr, IContextKeyService } from '../../../../../platform/contextkey/common/contextkey.js';
-import { IInstantiationService, ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../../platform/storage/common/storage.js';
-import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
-import { IWorkbenchContribution, WorkbenchPhase, registerWorkbenchContribution2 } from '../../../../../workbench/common/contributions.js';
-import { IAgentSessionsService } from '../../../../../workbench/contrib/chat/browser/agentSessions/agentSessionsService.js';
-import { IChatInputPickerOptions } from '../../../../../workbench/contrib/chat/browser/widget/input/chatInputPickerActionItem.js';
-import { IModelPickerDelegate, ModelPickerActionItem } from '../../../../../workbench/contrib/chat/browser/widget/input/modelPickerActionItem.js';
-import { ILanguageModelChatMetadataAndIdentifier, ILanguageModelsService } from '../../../../../workbench/contrib/chat/common/languageModels.js';
-import { Menus } from '../../../../browser/menus.js';
-import { ActiveSessionHasGitRepositoryContext, ActiveSessionProviderIdContext, ActiveSessionTypeContext, ChatSessionProviderIdContext, IsNewChatSessionContext } from '../../../../common/contextkeys.js';
-import { ISessionsProvidersService } from '../../../../services/sessions/browser/sessionsProvidersService.js';
-import { ISession, SessionStatus } from '../../../../services/sessions/common/session.js';
-import { ISessionsManagementService } from '../../../../services/sessions/common/sessionsManagement.js';
-import { SessionItemContextMenuId } from '../../../sessions/browser/views/sessionsList.js';
-import { BranchPicker } from './branchPicker.js';
-import { ClaudePermissionModePicker } from './claudePermissionModePicker.js';
-import { ClaudeCodeSessionType, COPILOT_PROVIDER_ID, CopilotChatSessionsProvider, CopilotCloudSessionType, LocalSessionType } from './copilotChatSessionsProvider.js';
-import { IsolationPicker } from './isolationPicker.js';
-import { ModePicker } from './modePicker.js';
-import { CloudModelPicker } from './modelPicker.js';
-import { CopilotPermissionPickerDelegate, PermissionPicker } from './permissionPicker.js';
-import { SessionType } from '../../../../../workbench/contrib/chat/common/chatSessionsService.js';
-import { INewChatModelPickerService } from '../../../chat/browser/newChatModelPicker.js';
-import { reportNewChatPickerClosed } from '../../../chat/browser/newChatPickerTelemetry.js';
-import { CopilotCLISessionType } from '../../agentHost/browser/baseAgentHostSessionsProvider.js';
+import { BaseActionViewItem } from "../../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { coalesce } from "../../../../../base/common/arrays.js";
+import { Disposable, IDisposable } from "../../../../../base/common/lifecycle.js";
+import { MarshalledId } from "../../../../../base/common/marshallingIds.js";
+import { IReader, autorun, observableValue } from "../../../../../base/common/observable.js";
+import { isWeb } from "../../../../../base/common/platform.js";
+import { localize2 } from "../../../../../nls.js";
+import { IActionViewItemService } from "../../../../../platform/actions/browser/actionViewItemService.js";
+import { Action2, MenuId, MenuRegistry, isIMenuItem, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { CommandsRegistry, ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { ContextKeyExpr, IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
+import {
+  IWorkbenchContribution,
+  WorkbenchPhase,
+  registerWorkbenchContribution2,
+} from "../../../../../workbench/common/contributions.js";
+import { IAgentSessionsService } from "../../../../../workbench/contrib/chat/browser/agentSessions/agentSessionsService.js";
+import { IChatInputPickerOptions } from "../../../../../workbench/contrib/chat/browser/widget/input/chatInputPickerActionItem.js";
+import { IModelPickerDelegate, ModelPickerActionItem } from "../../../../../workbench/contrib/chat/browser/widget/input/modelPickerActionItem.js";
+import { ILanguageModelChatMetadataAndIdentifier, ILanguageModelsService } from "../../../../../workbench/contrib/chat/common/languageModels.js";
+import { Menus } from "../../../../browser/menus.js";
+import {
+  ActiveSessionHasGitRepositoryContext,
+  ActiveSessionProviderIdContext,
+  ActiveSessionTypeContext,
+  ChatSessionProviderIdContext,
+  IsNewChatSessionContext,
+} from "../../../../common/contextkeys.js";
+import { ISessionsProvidersService } from "../../../../services/sessions/browser/sessionsProvidersService.js";
+import { ISession, SessionStatus } from "../../../../services/sessions/common/session.js";
+import { ISessionsManagementService } from "../../../../services/sessions/common/sessionsManagement.js";
+import { SessionItemContextMenuId } from "../../../sessions/browser/views/sessionsList.js";
+import { BranchPicker } from "./branchPicker.js";
+import { ClaudePermissionModePicker } from "./claudePermissionModePicker.js";
+import {
+  ClaudeCodeSessionType,
+  COPILOT_PROVIDER_ID,
+  CopilotChatSessionsProvider,
+  CopilotCloudSessionType,
+  LocalSessionType,
+} from "./copilotChatSessionsProvider.js";
+import { IsolationPicker } from "./isolationPicker.js";
+import { ModePicker } from "./modePicker.js";
+import { CloudModelPicker } from "./modelPicker.js";
+import { CopilotPermissionPickerDelegate, PermissionPicker } from "./permissionPicker.js";
+import { SessionType } from "../../../../../workbench/contrib/chat/common/chatSessionsService.js";
+import { INewChatModelPickerService } from "../../../chat/browser/newChatModelPicker.js";
+import { reportNewChatPickerClosed } from "../../../chat/browser/newChatPickerTelemetry.js";
+import { CopilotCLISessionType } from "../../agentHost/browser/baseAgentHostSessionsProvider.js";
 
-const IsActiveSessionCopilotCLI = ContextKeyExpr.equals(ActiveSessionTypeContext.key, CopilotCLISessionType.id);
-const IsActiveSessionCopilotCloud = ContextKeyExpr.equals(ActiveSessionTypeContext.key, CopilotCloudSessionType.id);
-const IsActiveSessionLocal = ContextKeyExpr.equals(ActiveSessionTypeContext.key, LocalSessionType.id);
-const IsActiveCopilotChatSessionProvider = ContextKeyExpr.equals(ActiveSessionProviderIdContext.key, COPILOT_PROVIDER_ID);
-const IsActiveSessionCopilotChatCLI = ContextKeyExpr.and(IsActiveSessionCopilotCLI, IsActiveCopilotChatSessionProvider);
-const IsActiveSessionCopilotChatCloud = ContextKeyExpr.and(IsActiveSessionCopilotCloud, IsActiveCopilotChatSessionProvider);
-const IsActiveSessionClaudeCode = ContextKeyExpr.equals(ActiveSessionTypeContext.key, ClaudeCodeSessionType.id);
-const IsActiveSessionCopilotChatClaudeCode = ContextKeyExpr.and(IsActiveSessionClaudeCode, IsActiveCopilotChatSessionProvider);
-const IsActiveSessionCopilotChatLocal = ContextKeyExpr.and(IsActiveSessionLocal, IsActiveCopilotChatSessionProvider);
+const IsActiveSessionCopilotCLI = ContextKeyExpr.equals(
+  ActiveSessionTypeContext.key,
+  CopilotCLISessionType.id,
+);
+const IsActiveSessionCopilotCloud = ContextKeyExpr.equals(
+  ActiveSessionTypeContext.key,
+  CopilotCloudSessionType.id,
+);
+const IsActiveSessionLocal = ContextKeyExpr.equals(
+  ActiveSessionTypeContext.key,
+  LocalSessionType.id,
+);
+const IsActiveCopilotChatSessionProvider = ContextKeyExpr.equals(
+  ActiveSessionProviderIdContext.key,
+  COPILOT_PROVIDER_ID,
+);
+const IsActiveSessionCopilotChatCLI = ContextKeyExpr.and(
+  IsActiveSessionCopilotCLI,
+  IsActiveCopilotChatSessionProvider,
+);
+const IsActiveSessionCopilotChatCloud = ContextKeyExpr.and(
+  IsActiveSessionCopilotCloud,
+  IsActiveCopilotChatSessionProvider,
+);
+const IsActiveSessionClaudeCode = ContextKeyExpr.equals(
+  ActiveSessionTypeContext.key,
+  ClaudeCodeSessionType.id,
+);
+const IsActiveSessionCopilotChatClaudeCode = ContextKeyExpr.and(
+  IsActiveSessionClaudeCode,
+  IsActiveCopilotChatSessionProvider,
+);
+const IsActiveSessionCopilotChatLocal = ContextKeyExpr.and(
+  IsActiveSessionLocal,
+  IsActiveCopilotChatSessionProvider,
+);
 
 // -- Actions --
 
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'sessions.defaultCopilot.isolationPicker',
-			title: localize2('isolationPicker', "Isolation Mode"),
+			id: "sessions.defaultCopilot.isolationPicker",
+			title: localize2("isolationPicker", "Isolation Mode"),
 			f1: false,
 			menu: [{
 				id: Menus.NewSessionRepositoryConfig,
-				group: 'navigation',
+				group: "navigation",
 				order: 1,
 				when: ContextKeyExpr.and(
 					IsNewChatSessionContext,
 					IsActiveSessionCopilotChatCLI,
-					ContextKeyExpr.equals('config.github.copilot.chat.cli.isolationOption.enabled', true),
+					ContextKeyExpr.equals("config.github.copilot.chat.cli.isolationOption.enabled", true),
 				),
 			}],
 		});
@@ -76,13 +119,13 @@ registerAction2(class extends Action2 {
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'sessions.defaultCopilot.branchPicker',
-			title: localize2('branchPicker', "Branch"),
+			id: "sessions.defaultCopilot.branchPicker",
+			title: localize2("branchPicker", "Branch"),
 			f1: false,
 			precondition: ActiveSessionHasGitRepositoryContext,
 			menu: [{
 				id: Menus.NewSessionRepositoryConfig,
-				group: 'navigation',
+				group: "navigation",
 				order: 2,
 				when: ContextKeyExpr.and(IsNewChatSessionContext, IsActiveSessionCopilotChatCLI),
 			}],
@@ -94,12 +137,12 @@ registerAction2(class extends Action2 {
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'sessions.defaultCopilot.modePicker',
-			title: localize2('modePicker', "Mode"),
+			id: "sessions.defaultCopilot.modePicker",
+			title: localize2("modePicker", "Mode"),
 			f1: false,
 			menu: [{
 				id: Menus.NewSessionConfig,
-				group: 'navigation',
+				group: "navigation",
 				order: 0,
 				when: ContextKeyExpr.or(IsActiveSessionCopilotChatCLI, IsActiveSessionCopilotChatLocal),
 			}],
@@ -111,12 +154,12 @@ registerAction2(class extends Action2 {
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'sessions.defaultCopilot.localModelPicker',
-			title: localize2('localModelPicker', "Model"),
+			id: "sessions.defaultCopilot.localModelPicker",
+			title: localize2("localModelPicker", "Model"),
 			f1: false,
 			menu: [{
 				id: Menus.NewSessionConfig,
-				group: 'navigation',
+				group: "navigation",
 				order: 1,
 				when: ContextKeyExpr.or(IsActiveSessionCopilotChatCLI, IsActiveSessionCopilotChatClaudeCode, IsActiveSessionCopilotChatLocal),
 			}],
@@ -128,12 +171,12 @@ registerAction2(class extends Action2 {
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'sessions.defaultCopilot.cloudModelPicker',
-			title: localize2('cloudModelPicker', "Model"),
+			id: "sessions.defaultCopilot.cloudModelPicker",
+			title: localize2("cloudModelPicker", "Model"),
 			f1: false,
 			menu: [{
 				id: Menus.NewSessionConfig,
-				group: 'navigation',
+				group: "navigation",
 				order: 1,
 				when: IsActiveSessionCopilotChatCloud,
 			}],
@@ -145,12 +188,12 @@ registerAction2(class extends Action2 {
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'sessions.defaultCopilot.permissionPicker',
-			title: localize2('permissionPicker', "Permissions"),
+			id: "sessions.defaultCopilot.permissionPicker",
+			title: localize2("permissionPicker", "Permissions"),
 			f1: false,
 			menu: [{
 				id: Menus.NewSessionControl,
-				group: 'navigation',
+				group: "navigation",
 				order: 1,
 				when: ContextKeyExpr.or(IsActiveSessionCopilotChatCLI, IsActiveSessionCopilotChatLocal),
 			}],
@@ -162,12 +205,12 @@ registerAction2(class extends Action2 {
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'sessions.defaultCopilot.claudePermissionModePicker',
-			title: localize2('claudePermissionModePicker', "Permission Mode"),
+			id: "sessions.defaultCopilot.claudePermissionModePicker",
+			title: localize2("claudePermissionModePicker", "Permission Mode"),
 			f1: false,
 			menu: [{
 				id: Menus.NewSessionControl,
-				group: 'navigation',
+				group: "navigation",
 				order: 1,
 				when: IsActiveSessionCopilotChatClaudeCode,
 			}],
@@ -188,7 +231,14 @@ registerAction2(class extends Action2 {
  */
 export class PickerActionViewItem extends BaseActionViewItem {
 	constructor(private readonly picker: { render(container: HTMLElement): void; dispose(): void }, disposable?: IDisposable) {
-		super(undefined, { id: '', label: '', enabled: true, class: undefined, tooltip: '', run: () => { } });
+		super(undefined, {
+      id: "",
+      label: "",
+      enabled: true,
+      class: undefined,
+      tooltip: "",
+      run: () => { },
+    });
 		if (disposable) {
 			this._register(disposable);
 		}
@@ -208,7 +258,7 @@ export class PickerActionViewItem extends BaseActionViewItem {
 
 class CopilotPickerActionViewItemContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'workbench.contrib.copilotPickerActionViewItems';
+	static readonly ID = "workbench.contrib.copilotPickerActionViewItems";
 
 	constructor(
 		@IActionViewItemService actionViewItemService: IActionViewItemService,
@@ -216,36 +266,45 @@ class CopilotPickerActionViewItemContribution extends Disposable implements IWor
 	) {
 		super();
 
+		this._register(
+      actionViewItemService.register(
+        Menus.NewSessionRepositoryConfig,
+        "sessions.defaultCopilot.isolationPicker",
+        () => {
+          const picker = instantiationService.createInstance(IsolationPicker);
+          return new PickerActionViewItem(picker);
+        },
+      ),
+    );
+		this._register(
+      actionViewItemService.register(
+        Menus.NewSessionRepositoryConfig,
+        "sessions.defaultCopilot.branchPicker",
+        () => {
+          const picker = instantiationService.createInstance(BranchPicker);
+          return new PickerActionViewItem(picker);
+        },
+      ),
+    );
+		this._register(
+      actionViewItemService.register(
+        Menus.NewSessionConfig,
+        "sessions.defaultCopilot.modePicker",
+        () => {
+          const picker = instantiationService.createInstance(ModePicker);
+          return new PickerActionViewItem(picker);
+        },
+      ),
+    );
 		this._register(actionViewItemService.register(
-			Menus.NewSessionRepositoryConfig, 'sessions.defaultCopilot.isolationPicker',
-			() => {
-				const picker = instantiationService.createInstance(IsolationPicker);
-				return new PickerActionViewItem(picker);
-			},
-		));
-		this._register(actionViewItemService.register(
-			Menus.NewSessionRepositoryConfig, 'sessions.defaultCopilot.branchPicker',
-			() => {
-				const picker = instantiationService.createInstance(BranchPicker);
-				return new PickerActionViewItem(picker);
-			},
-		));
-		this._register(actionViewItemService.register(
-			Menus.NewSessionConfig, 'sessions.defaultCopilot.modePicker',
-			() => {
-				const picker = instantiationService.createInstance(ModePicker);
-				return new PickerActionViewItem(picker);
-			},
-		));
-		this._register(actionViewItemService.register(
-			Menus.NewSessionConfig, 'sessions.defaultCopilot.localModelPicker',
+			Menus.NewSessionConfig, "sessions.defaultCopilot.localModelPicker",
 			(_action, _options, scopedInstantiationService) => {
 				const picker = scopedInstantiationService.createInstance(SessionModelPicker);
 				return new PickerActionViewItem(picker);
 			},
 		));
 		this._register(actionViewItemService.register(
-			Menus.NewSessionConfig, 'sessions.defaultCopilot.cloudModelPicker',
+			Menus.NewSessionConfig, "sessions.defaultCopilot.cloudModelPicker",
 			(_action, _options, scopedInstantiationService) => {
 				const picker = scopedInstantiationService.createInstance(CloudModelPicker);
 				return new PickerActionViewItem(picker);
@@ -261,7 +320,7 @@ class CopilotPickerActionViewItemContribution extends Disposable implements IWor
 		// `mobilePickerSheet.ts` into the desktop bundle.
 		if (!isWeb) {
 			this._register(actionViewItemService.register(
-				Menus.NewSessionControl, 'sessions.defaultCopilot.permissionPicker',
+				Menus.NewSessionControl, "sessions.defaultCopilot.permissionPicker",
 				() => {
 					const delegate = instantiationService.createInstance(CopilotPermissionPickerDelegate);
 					const picker = instantiationService.createInstance(PermissionPicker, delegate);
@@ -270,7 +329,7 @@ class CopilotPickerActionViewItemContribution extends Disposable implements IWor
 			));
 		}
 		this._register(actionViewItemService.register(
-			Menus.NewSessionControl, 'sessions.defaultCopilot.claudePermissionModePicker',
+			Menus.NewSessionControl, "sessions.defaultCopilot.claudePermissionModePicker",
 			() => {
 				const picker = instantiationService.createInstance(ClaudePermissionModePicker);
 				return new PickerActionViewItem(picker);
@@ -294,8 +353,11 @@ export function shouldShowSessionManageModelsAction(sessionsManagementService: I
 }
 
 function getVendorFromModelIdentifier(modelIdentifier: string): string | undefined {
-	const firstSlash = modelIdentifier.indexOf('/');
-	return firstSlash === -1 ? undefined : modelIdentifier.substring(0, firstSlash);
+	const firstSlash = modelIdentifier.indexOf("/");
+	return firstSlash === -1 ? undefined : modelIdentifier.substring(
+    0,
+    firstSlash,
+  );
 }
 
 /**
@@ -305,7 +367,10 @@ function getVendorFromModelIdentifier(modelIdentifier: string): string | undefin
  */
 export class SessionModelPicker extends Disposable {
 
-	private readonly _currentModel = observableValue<ILanguageModelChatMetadataAndIdentifier | undefined>('currentModel', undefined);
+	private readonly _currentModel = observableValue<ILanguageModelChatMetadataAndIdentifier | undefined>(
+    "currentModel",
+    undefined,
+  );
 	private readonly _delegate: IModelPickerDelegate;
 	private readonly _modelPicker: ModelPickerActionItem;
 	private _lastSessionType: string | undefined;
@@ -336,7 +401,7 @@ export class SessionModelPicker extends Disposable {
 				}
 				if (!this._settingModelInternally) {
 					reportNewChatPickerClosed(this._telemetryService, {
-						id: 'NewChatLocalModelPicker',
+						id: "NewChatLocalModelPicker",
 						optionIdBefore: previousModel?.identifier,
 						optionIdAfter: model.identifier,
 						optionLabelBefore: previousModel?.metadata.name,
@@ -353,14 +418,34 @@ export class SessionModelPicker extends Disposable {
 		};
 
 		const pickerOptions: IChatInputPickerOptions = {
-			compact: observableValue('compact', false),
-		};
-		const action = { id: 'sessions.modelPicker', label: '', enabled: true, class: undefined, tooltip: '', run: () => { } };
-		this._modelPicker = instantiationService.createInstance(ModelPickerActionItem, action, this._delegate, pickerOptions);
-		this._register(this._newChatModelPickerService.registerModelPicker(() => this._modelPicker.openModelPicker()));
+      compact: observableValue("compact", false),
+    };
+		const action = {
+      id: "sessions.modelPicker",
+      label: "",
+      enabled: true,
+      class: undefined,
+      tooltip: "",
+      run: () => { },
+    };
+		this._modelPicker = instantiationService.createInstance(
+      ModelPickerActionItem,
+      action,
+      this._delegate,
+      pickerOptions,
+    );
+		this._register(
+      this._newChatModelPickerService.registerModelPicker(
+        () => this._modelPicker.openModelPicker(),
+      ),
+    );
 
 		this._initModel();
-		this._register(this._languageModelsService.onDidChangeLanguageModels(() => this._initModel()));
+		this._register(
+      this._languageModelsService.onDidChangeLanguageModels(
+        () => this._initModel(),
+      ),
+    );
 
 		// When the active session changes, re-init (may switch session type).
 		// _initModel() calls _delegate.setModel() which already forwards to
@@ -388,7 +473,10 @@ export class SessionModelPicker extends Disposable {
 			this._lastSessionType = sessionType;
 		}
 
-		const models = getAvailableModels(this._languageModelsService, this._sessionsManagementService);
+		const models = getAvailableModels(
+      this._languageModelsService,
+      this._sessionsManagementService,
+    );
 		this._modelPicker.setEnabled(models.length > 0);
 		if (models.length === 0) {
 			return;
@@ -396,7 +484,9 @@ export class SessionModelPicker extends Disposable {
 
 		const current = this._currentModel.get();
 		const sessionModelId = session?.modelId.get();
-		const sessionModel = sessionModelId ? models.find(m => m.identifier === sessionModelId) : undefined;
+		const sessionModel = sessionModelId ? models.find(
+      m => m.identifier === sessionModelId,
+    ) : undefined;
 		const isNewSession = session?.status.get() === SessionStatus.Untitled;
 		this._settingModelInternally = true;
 		try {
@@ -405,7 +495,9 @@ export class SessionModelPicker extends Disposable {
 				// be restore races, or models that were removed. Only repair with a
 				// fallback after the saved model's vendor has resolved and confirmed the
 				// model is gone.
-				if (!sessionModelId || sessionModel || !this._hasResolvedSessionModelVendor(sessionModelId)) {
+				if (!sessionModelId || sessionModel || !this._hasResolvedSessionModelVendor(
+          sessionModelId,
+        )) {
 					this._currentModel.set(sessionModel, undefined);
 					this._lastPushedSessionId = session.sessionId;
 					return;
@@ -417,9 +509,13 @@ export class SessionModelPicker extends Disposable {
 			}
 
 			if (!current) {
-				this._delegate.setModel(sessionModel ?? this._getFallbackModel(sessionType, models));
+				this._delegate.setModel(
+          sessionModel ?? this._getFallbackModel(sessionType, models),
+        );
 				this._lastPushedSessionId = session?.sessionId;
-			} else if (session && isNewSession && session.sessionId !== this._lastPushedSessionId && models.some(m => m.identifier === current.identifier)) {
+			} else if (session && isNewSession && session.sessionId !== this._lastPushedSessionId && models.some(
+        m => m.identifier === current.identifier,
+      )) {
 				// Active session changed (e.g. user switched repository) but the
 				// previously selected model is still available. Re-push it so the
 				// new session's provider receives setModel — otherwise the request
@@ -443,8 +539,13 @@ export class SessionModelPicker extends Disposable {
 	}
 
 	private _getFallbackModel(sessionType: string | undefined, models: ILanguageModelChatMetadataAndIdentifier[]): ILanguageModelChatMetadataAndIdentifier {
-		const rememberedModelId = sessionType ? this._storageService.get(modelPickerStorageKey(sessionType), StorageScope.PROFILE) : undefined;
-		const remembered = rememberedModelId ? models.find(m => m.identifier === rememberedModelId) : undefined;
+		const rememberedModelId = sessionType ? this._storageService.get(
+      modelPickerStorageKey(sessionType),
+      StorageScope.PROFILE,
+    ) : undefined;
+		const remembered = rememberedModelId ? models.find(
+      m => m.identifier === rememberedModelId,
+    ) : undefined;
 		return remembered ?? models[0];
 	}
 
@@ -477,17 +578,21 @@ export function getAvailableModels(
 	// models (those without a targetChatSessionType) since no extension
 	// registers models specifically targeting the 'local' session type.
 	if (session.sessionType === SessionType.Local) {
-		return allModels.filter(m => !m.metadata.targetChatSessionType && m.metadata.isUserSelectable);
+		return allModels.filter(
+      m => !m.metadata.targetChatSessionType && m.metadata.isUserSelectable,
+    );
 	}
 
-	return allModels.filter(m => m.metadata.targetChatSessionType === session.sessionType);
+	return allModels.filter(
+    m => m.metadata.targetChatSessionType === session.sessionType,
+  );
 }
 
 // -- Context Key Contribution --
 
 class CopilotActiveSessionContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'workbench.contrib.copilotActiveSession';
+	static readonly ID = "workbench.contrib.copilotActiveSession";
 
 	constructor(
 		@ISessionsManagementService sessionsManagementService: ISessionsManagementService,
@@ -496,7 +601,9 @@ class CopilotActiveSessionContribution extends Disposable implements IWorkbenchC
 	) {
 		super();
 
-		const hasRepositoryKey = ActiveSessionHasGitRepositoryContext.bindTo(contextKeyService);
+		const hasRepositoryKey = ActiveSessionHasGitRepositoryContext.bindTo(
+      contextKeyService,
+    );
 
 		this._register(autorun((reader: IReader) => {
 			const session = sessionsManagementService.activeSession.read(reader);
@@ -512,8 +619,16 @@ class CopilotActiveSessionContribution extends Disposable implements IWorkbenchC
 	}
 }
 
-registerWorkbenchContribution2(CopilotPickerActionViewItemContribution.ID, CopilotPickerActionViewItemContribution, WorkbenchPhase.AfterRestored);
-registerWorkbenchContribution2(CopilotActiveSessionContribution.ID, CopilotActiveSessionContribution, WorkbenchPhase.AfterRestored);
+registerWorkbenchContribution2(
+  CopilotPickerActionViewItemContribution.ID,
+  CopilotPickerActionViewItemContribution,
+  WorkbenchPhase.AfterRestored,
+);
+registerWorkbenchContribution2(
+  CopilotActiveSessionContribution.ID,
+  CopilotActiveSessionContribution,
+  WorkbenchPhase.AfterRestored,
+);
 
 /**
  * Bridges extension-contributed context menu actions from {@link MenuId.AgentSessionsContext}
@@ -522,7 +637,7 @@ registerWorkbenchContribution2(CopilotActiveSessionContribution.ID, CopilotActiv
  * and forward to the original command with marshalled context.
  */
 class CopilotSessionContextMenuBridge extends Disposable implements IWorkbenchContribution {
-	static readonly ID = 'copilotChatSessions.contextMenuBridge';
+	static readonly ID = "copilotChatSessions.contextMenuBridge";
 
 	private readonly _bridgedIds = new Set<string>();
 
@@ -540,13 +655,15 @@ class CopilotSessionContextMenuBridge extends Disposable implements IWorkbenchCo
 	}
 
 	private _bridgeItems(): void {
-		const items = MenuRegistry.getMenuItems(MenuId.AgentSessionsContext).filter(isIMenuItem);
+		const items = MenuRegistry.getMenuItems(MenuId.AgentSessionsContext).filter(
+      isIMenuItem,
+    );
 		for (const item of items) {
 			const commandId = item.command.id;
-			if (!commandId.startsWith('github.copilot.')) {
+			if (!commandId.startsWith("github.copilot.")) {
 				continue;
 			}
-			if (commandId === 'github.copilot.cli.sessions.delete') {
+			if (commandId === "github.copilot.cli.sessions.delete") {
 				continue; // Delete is handled natively via sessionsManagementService
 			}
 			if (this._bridgedIds.has(commandId)) {
@@ -571,7 +688,10 @@ class CopilotSessionContextMenuBridge extends Disposable implements IWorkbenchCo
 				});
 			}));
 
-			const providerWhen = ContextKeyExpr.equals(ChatSessionProviderIdContext.key, COPILOT_PROVIDER_ID);
+			const providerWhen = ContextKeyExpr.equals(
+        ChatSessionProviderIdContext.key,
+        COPILOT_PROVIDER_ID,
+      );
 			this._register(MenuRegistry.appendMenuItem(SessionItemContextMenuId, {
 				command: { ...item.command, id: wrapperId },
 				group: item.group,
@@ -582,23 +702,27 @@ class CopilotSessionContextMenuBridge extends Disposable implements IWorkbenchCo
 	}
 }
 
-registerWorkbenchContribution2(CopilotSessionContextMenuBridge.ID, CopilotSessionContextMenuBridge, WorkbenchPhase.AfterRestored);
+registerWorkbenchContribution2(
+  CopilotSessionContextMenuBridge.ID,
+  CopilotSessionContextMenuBridge,
+  WorkbenchPhase.AfterRestored,
+);
 
 registerAction2(class DeleteSessionAction extends Action2 {
 	constructor() {
 		super({
-			id: 'sessionsViewPane.copilot.deleteSession',
-			title: localize2('deleteSession', "Delete..."),
+			id: "sessionsViewPane.copilot.deleteSession",
+			title: localize2("deleteSession", "Delete..."),
 			menu: [{
 				id: SessionItemContextMenuId,
-				group: '1_edit',
+				group: "1_edit",
 				order: 4,
 				when: ContextKeyExpr.and(
 					ContextKeyExpr.equals(ChatSessionProviderIdContext.key, COPILOT_PROVIDER_ID),
-					ContextKeyExpr.notEquals('chatSessionType', ClaudeCodeSessionType.id),
-					ContextKeyExpr.notEquals('chatSessionType', LocalSessionType.id),
+					ContextKeyExpr.notEquals("chatSessionType", ClaudeCodeSessionType.id),
+					ContextKeyExpr.notEquals("chatSessionType", LocalSessionType.id),
 				),
-			}]
+			}],
 		});
 	}
 	async run(accessor: ServicesAccessor, context?: ISession | ISession[]): Promise<void> {

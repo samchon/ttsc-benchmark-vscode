@@ -3,18 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../../../nls.js';
-import { ExtensionInstallLocation, IExtensionManagementServer, IExtensionManagementServerService } from './extensionManagement.js';
-import { IRemoteAgentService } from '../../remote/common/remoteAgentService.js';
-import { Schemas } from '../../../../base/common/network.js';
-import { IChannel } from '../../../../base/parts/ipc/common/ipc.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { ILabelService } from '../../../../platform/label/common/label.js';
-import { isWeb } from '../../../../base/common/platform.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { WebExtensionManagementService } from './webExtensionManagementService.js';
-import { IExtension } from '../../../../platform/extensions/common/extensions.js';
-import { RemoteExtensionManagementService } from './remoteExtensionManagementService.js';
+import { localize } from "../../../../nls.js";
+import {
+  ExtensionInstallLocation,
+  IExtensionManagementServer,
+  IExtensionManagementServerService,
+} from "./extensionManagement.js";
+import { IRemoteAgentService } from "../../remote/common/remoteAgentService.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { IChannel } from "../../../../base/parts/ipc/common/ipc.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { isWeb } from "../../../../base/common/platform.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { WebExtensionManagementService } from "./webExtensionManagementService.js";
+import { IExtension } from "../../../../platform/extensions/common/extensions.js";
+import { RemoteExtensionManagementService } from "./remoteExtensionManagementService.js";
 
 export class ExtensionManagementServerService implements IExtensionManagementServerService {
 
@@ -31,20 +35,25 @@ export class ExtensionManagementServerService implements IExtensionManagementSer
 	) {
 		const remoteAgentConnection = remoteAgentService.getConnection();
 		if (remoteAgentConnection) {
-			const extensionManagementService = instantiationService.createInstance(RemoteExtensionManagementService, remoteAgentConnection.getChannel<IChannel>('extensions'));
+			const extensionManagementService = instantiationService.createInstance(
+        RemoteExtensionManagementService,
+        remoteAgentConnection.getChannel<IChannel>("extensions"),
+      );
 			this.remoteExtensionManagementServer = {
-				id: 'remote',
-				extensionManagementService,
-				get label() { return labelService.getHostLabel(Schemas.vscodeRemote, remoteAgentConnection.remoteAuthority) || localize('remote', "Remote"); },
-			};
+        id: "remote",
+        extensionManagementService,
+        get label() { return labelService.getHostLabel(Schemas.vscodeRemote, remoteAgentConnection.remoteAuthority) || localize("remote", "Remote"); },
+      };
 		}
 		if (isWeb) {
-			const extensionManagementService = instantiationService.createInstance(WebExtensionManagementService);
+			const extensionManagementService = instantiationService.createInstance(
+        WebExtensionManagementService,
+      );
 			this.webExtensionManagementServer = {
-				id: 'web',
-				extensionManagementService,
-				label: localize('browser', "Browser"),
-			};
+        id: "web",
+        extensionManagementService,
+        label: localize("browser", "Browser"),
+      };
 		}
 	}
 
@@ -64,4 +73,8 @@ export class ExtensionManagementServerService implements IExtensionManagementSer
 	}
 }
 
-registerSingleton(IExtensionManagementServerService, ExtensionManagementServerService, InstantiationType.Delayed);
+registerSingleton(
+  IExtensionManagementServerService,
+  ExtensionManagementServerService,
+  InstantiationType.Delayed,
+);

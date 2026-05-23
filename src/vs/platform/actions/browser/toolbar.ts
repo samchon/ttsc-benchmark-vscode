@@ -3,27 +3,41 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { addDisposableListener, getWindow } from '../../../base/browser/dom.js';
-import { StandardMouseEvent } from '../../../base/browser/mouseEvent.js';
-import { IToolBarOptions, ToggleMenuAction, ToolBar } from '../../../base/browser/ui/toolbar/toolbar.js';
-import { IAction, Separator, SubmenuAction, toAction, WorkbenchActionExecutedClassification, WorkbenchActionExecutedEvent } from '../../../base/common/actions.js';
-import { coalesceInPlace } from '../../../base/common/arrays.js';
-import { intersection } from '../../../base/common/collections.js';
-import { BugIndicatingError } from '../../../base/common/errors.js';
-import { Emitter } from '../../../base/common/event.js';
-import { Iterable } from '../../../base/common/iterator.js';
-import { DisposableStore } from '../../../base/common/lifecycle.js';
-import { localize } from '../../../nls.js';
-import { createActionViewItem, getActionBarActions } from './menuEntryActionViewItem.js';
-import { IMenu, IMenuActionOptions, IMenuService, MenuId, MenuItemAction, SubmenuItemAction } from '../common/actions.js';
-import { createConfigureKeybindingAction } from '../common/menuService.js';
-import { ICommandService } from '../../commands/common/commands.js';
-import { IContextKeyService } from '../../contextkey/common/contextkey.js';
-import { IContextMenuService } from '../../contextview/browser/contextView.js';
-import { IKeybindingService } from '../../keybinding/common/keybinding.js';
-import { ITelemetryService } from '../../telemetry/common/telemetry.js';
-import { IActionViewItemService } from './actionViewItemService.js';
-import { IInstantiationService } from '../../instantiation/common/instantiation.js';
+import { addDisposableListener, getWindow } from "../../../base/browser/dom.js";
+import { StandardMouseEvent } from "../../../base/browser/mouseEvent.js";
+import { IToolBarOptions, ToggleMenuAction, ToolBar } from "../../../base/browser/ui/toolbar/toolbar.js";
+import {
+  IAction,
+  Separator,
+  SubmenuAction,
+  toAction,
+  WorkbenchActionExecutedClassification,
+  WorkbenchActionExecutedEvent,
+} from "../../../base/common/actions.js";
+import { coalesceInPlace } from "../../../base/common/arrays.js";
+import { intersection } from "../../../base/common/collections.js";
+import { BugIndicatingError } from "../../../base/common/errors.js";
+import { Emitter } from "../../../base/common/event.js";
+import { Iterable } from "../../../base/common/iterator.js";
+import { DisposableStore } from "../../../base/common/lifecycle.js";
+import { localize } from "../../../nls.js";
+import { createActionViewItem, getActionBarActions } from "./menuEntryActionViewItem.js";
+import {
+  IMenu,
+  IMenuActionOptions,
+  IMenuService,
+  MenuId,
+  MenuItemAction,
+  SubmenuItemAction,
+} from "../common/actions.js";
+import { createConfigureKeybindingAction } from "../common/menuService.js";
+import { ICommandService } from "../../commands/common/commands.js";
+import { IContextKeyService } from "../../contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../contextview/browser/contextView.js";
+import { IKeybindingService } from "../../keybinding/common/keybinding.js";
+import { ITelemetryService } from "../../telemetry/common/telemetry.js";
+import { IActionViewItemService } from "./actionViewItemService.js";
+import { IInstantiationService } from "../../instantiation/common/instantiation.js";
 
 export const enum HiddenItemStrategy {
 	/** This toolbar doesn't support hiding*/
@@ -99,22 +113,23 @@ export class WorkbenchToolBar extends ToolBar {
 		@ITelemetryService telemetryService: ITelemetryService,
 	) {
 		super(container, _contextMenuService, {
-			// defaults
-			getKeyBinding: (action) => _keybindingService.lookupKeybinding(action.id) ?? undefined,
-			// options (override defaults)
-			..._options,
-			// mandatory (overide options)
-			allowContextMenu: true,
-			skipTelemetry: typeof _options?.telemetrySource === 'string',
-		});
+      getKeyBinding: (action) => _keybindingService.lookupKeybinding(action.id) ?? undefined,
+      ..._options,
+      allowContextMenu: true,
+      skipTelemetry: typeof _options?.telemetrySource === "string",
+    });
 
 		// telemetry logic
 		const telemetrySource = _options?.telemetrySource;
 		if (telemetrySource) {
-			this._store.add(this.actionBar.onDidRun(e => telemetryService.publicLog2<WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification>(
-				'workbenchActionExecuted',
-				{ id: e.action.id, from: telemetrySource })
-			));
+			this._store.add(
+        this.actionBar.onDidRun(
+          e => telemetryService.publicLog2<WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification>(
+            "workbenchActionExecuted",
+            { id: e.action.id, from: telemetrySource },
+          ),
+        ),
+      );
 		}
 	}
 
@@ -161,7 +176,10 @@ export class WorkbenchToolBar extends ToolBar {
 		// count for max
 		if (this._options?.overflowBehavior !== undefined) {
 
-			const exemptedIds = intersection(new Set(this._options.overflowBehavior.exempted), Iterable.map(primary, a => a?.id));
+			const exemptedIds = intersection(
+        new Set(this._options.overflowBehavior.exempted),
+        Iterable.map(primary, a => a?.id),
+      );
 			const maxItems = this._options.overflowBehavior.maxItems - exemptedIds.size;
 
 			let count = 0;
@@ -185,11 +203,14 @@ export class WorkbenchToolBar extends ToolBar {
 		coalesceInPlace(primary);
 		coalesceInPlace(extraSecondary);
 
-		super.setActions(Separator.clean(primary), Separator.join(extraSecondary, secondary));
+		super.setActions(
+      Separator.clean(primary),
+      Separator.join(extraSecondary, secondary),
+    );
 
 		// add context menu for toggle and configure keybinding actions
 		if (toggleActions.length > 0 || primary.length > 0) {
-			this._sessionDisposables.add(addDisposableListener(this.getElement(), 'contextmenu', e => {
+			this._sessionDisposables.add(addDisposableListener(this.getElement(), "contextmenu", e => {
 				const event = new StandardMouseEvent(getWindow(this.getElement()), e);
 
 				const action = this.getItemAction(event.target);
@@ -224,7 +245,7 @@ export class WorkbenchToolBar extends ToolBar {
 									label: action.label,
 									checked: true,
 									enabled: false,
-									run() { }
+									run() { },
 								});
 								break; // there is only one
 							}
@@ -242,10 +263,10 @@ export class WorkbenchToolBar extends ToolBar {
 
 					} else {
 						primaryActions.push(toAction({
-							id: 'label',
-							label: localize('hide', "Hide"),
+							id: "label",
+							label: localize("hide", "Hide"),
 							enabled: false,
-							run() { }
+							run() { },
 						}));
 					}
 				}
@@ -259,9 +280,9 @@ export class WorkbenchToolBar extends ToolBar {
 				if (someAreHidden && menuIds) {
 					actions.push(new Separator());
 					actions.push(toAction({
-						id: 'resetThisMenu',
-						label: localize('resetThisMenu', "Reset Menu"),
-						run: () => this._menuService.resetHiddenStates(menuIds)
+						id: "resetThisMenu",
+						label: localize("resetThisMenu", "Reset Menu"),
+						run: () => this._menuService.resetHiddenStates(menuIds),
 					}));
 				}
 
@@ -275,7 +296,7 @@ export class WorkbenchToolBar extends ToolBar {
 					// add context menu actions (iff appicable)
 					menuId: this._options?.contextMenu,
 					menuActionOptions: { renderShortTitle: true, ...this._options?.menuOptions },
-					skipTelemetry: typeof this._options?.telemetrySource === 'string',
+					skipTelemetry: typeof this._options?.telemetrySource === "string",
 					contextKeyService: this._contextKeyService,
 				});
 			}));
@@ -364,7 +385,7 @@ export class MenuWorkbenchToolBar extends WorkbenchToolBar {
 					return viewItem;
 				}
 				return createActionViewItem(instantiationService, action, opts);
-			}
+			},
 		}, menuService, contextKeyService, contextMenuService, keybindingService, commandService, telemetryService);
 
 		this._container = container;
@@ -372,12 +393,19 @@ export class MenuWorkbenchToolBar extends WorkbenchToolBar {
 		this._toolbarOptions = options?.toolbarOptions;
 
 		// update logic
-		this._menu = this._store.add(menuService.createMenu(menuId, contextKeyService, { emitEventsForSubmenuChanges: true, eventDebounceDelay: options?.eventDebounceDelay }));
+		this._menu = this._store.add(
+      menuService.createMenu(menuId, contextKeyService, {
+        emitEventsForSubmenuChanges: true,
+        eventDebounceDelay: options?.eventDebounceDelay,
+      }),
+    );
 
-		this._store.add(this._menu.onDidChange(() => {
-			this._updateToolbar();
-			this._onDidChangeMenuItems.fire(this);
-		}));
+		this._store.add(
+      this._menu.onDidChange(() => {
+        this._updateToolbar();
+        this._onDidChangeMenuItems.fire(this);
+      }),
+    );
 
 		this._store.add(actionViewService.onDidChange(e => {
 			if (e === menuId) {
@@ -389,12 +417,15 @@ export class MenuWorkbenchToolBar extends WorkbenchToolBar {
 
 	private _updateToolbar(): void {
 		const { primary, secondary } = getActionBarActions(
-			this._menu.getActions(this._menuOptions),
-			this._toolbarOptions?.primaryGroup,
-			this._toolbarOptions?.shouldInlineSubmenu,
-			this._toolbarOptions?.useSeparatorsInPrimaryActions
-		);
-		this._container.classList.toggle('has-no-actions', primary.length === 0 && secondary.length === 0);
+      this._menu.getActions(this._menuOptions),
+      this._toolbarOptions?.primaryGroup,
+      this._toolbarOptions?.shouldInlineSubmenu,
+      this._toolbarOptions?.useSeparatorsInPrimaryActions,
+    );
+		this._container.classList.toggle(
+      "has-no-actions",
+      primary.length === 0 && secondary.length === 0,
+    );
 		super.setActions(primary, secondary);
 	}
 
@@ -411,6 +442,6 @@ export class MenuWorkbenchToolBar extends WorkbenchToolBar {
 	 * @deprecated The WorkbenchToolBar does not support this method because it works with menus.
 	 */
 	override setActions(): void {
-		throw new BugIndicatingError('This toolbar is populated from a menu.');
+		throw new BugIndicatingError("This toolbar is populated from a menu.");
 	}
 }

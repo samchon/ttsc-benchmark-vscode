@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AutorunObserver } from '../reactions/autorunImpl.js';
-import { IObservable } from '../base.js';
-import { TransactionImpl } from '../transaction.js';
-import type { Derived } from '../observables/derivedImpl.js';
-import { DebugLocation } from '../debugLocation.js';
+import { AutorunObserver } from "../reactions/autorunImpl.js";
+import { IObservable } from "../base.js";
+import { TransactionImpl } from "../transaction.js";
+import type { Derived } from "../observables/derivedImpl.js";
+import { DebugLocation } from "../debugLocation.js";
 
 let globalObservableLogger: IObservableLogger | undefined;
 
@@ -17,7 +17,10 @@ export function addLogger(logger: IObservableLogger): void {
 	} else if (globalObservableLogger instanceof ComposedLogger) {
 		globalObservableLogger.loggers.push(logger);
 	} else {
-		globalObservableLogger = new ComposedLogger([globalObservableLogger, logger]);
+		globalObservableLogger = new ComposedLogger([
+      globalObservableLogger,
+      logger,
+    ]);
 	}
 }
 

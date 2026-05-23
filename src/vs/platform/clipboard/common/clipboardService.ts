@@ -3,10 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../base/common/uri.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
+import { URI } from "../../../base/common/uri.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
 
-export const IClipboardService = createDecorator<IClipboardService>('clipboardService');
+export const IClipboardService = createDecorator<IClipboardService>(
+  "clipboardService",
+);
 
 export interface IClipboardService {
 

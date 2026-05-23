@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { h } from '../../dom.js';
-import './pixelSpinner.css';
+import { h } from "../../dom.js";
+import "./pixelSpinner.css";
 
 export interface IPixelSpinnerOptions {
 	/**
@@ -30,15 +30,15 @@ export interface IPixelSpinnerOptions {
  * @returns The spinner root element.
  */
 export function createPixelSpinner(parent?: HTMLElement, options?: IPixelSpinnerOptions): HTMLElement {
-	const root = h('span.monaco-pixel-spinner').root;
+	const root = h("span.monaco-pixel-spinner").root;
 	if (options?.ariaLabel) {
-		root.setAttribute('role', 'status');
-		root.setAttribute('aria-label', options.ariaLabel);
+		root.setAttribute("role", "status");
+		root.setAttribute("aria-label", options.ariaLabel);
 	} else {
-		root.setAttribute('aria-hidden', 'true');
+		root.setAttribute("aria-hidden", "true");
 	}
 	for (let i = 0; i < 6; i++) {
-		root.appendChild(h('span.monaco-pixel-spinner-dot').root);
+		root.appendChild(h("span.monaco-pixel-spinner-dot").root);
 	}
 	parent?.appendChild(root);
 	return root;

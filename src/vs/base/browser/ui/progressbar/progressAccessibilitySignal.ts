@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable } from '../../../common/lifecycle.js';
+import { IDisposable } from "../../../common/lifecycle.js";
 
 export interface IScopedAccessibilityProgressSignalDelegate extends IDisposable { }
 
 const nullScopedAccessibilityProgressSignalFactory = () => ({
-	msLoopTime: -1,
-	msDelayTime: -1,
-	dispose: () => { },
+  msLoopTime: -1,
+  msDelayTime: -1,
+  dispose: () => { },
 });
 let progressAccessibilitySignalSchedulerFactory: (msDelayTime: number, msLoopTime?: number) => IScopedAccessibilityProgressSignalDelegate = nullScopedAccessibilityProgressSignalFactory;
 

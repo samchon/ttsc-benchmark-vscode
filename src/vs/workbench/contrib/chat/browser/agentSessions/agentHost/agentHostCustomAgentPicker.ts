@@ -3,39 +3,47 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../../../base/browser/dom.js';
-import { renderLabelWithIcons } from '../../../../../../base/browser/ui/iconLabel/iconLabels.js';
-import { IAction } from '../../../../../../base/common/actions.js';
-import { Codicon } from '../../../../../../base/common/codicons.js';
-import { IDisposable, MutableDisposable } from '../../../../../../base/common/lifecycle.js';
-import { autorun, observableValue } from '../../../../../../base/common/observable.js';
-import { ThemeIcon } from '../../../../../../base/common/themables.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import * as nls from '../../../../../../nls.js';
-import { getFlatActionBarActions } from '../../../../../../platform/actions/browser/menuEntryActionViewItem.js';
-import { Action2, IMenuService, MenuId, registerAction2 } from '../../../../../../platform/actions/common/actions.js';
-import { IActionWidgetService } from '../../../../../../platform/actionWidget/browser/actionWidget.js';
-import { IActionWidgetDropdownAction, IActionWidgetDropdownActionProvider, IActionWidgetDropdownOptions } from '../../../../../../platform/actionWidget/browser/actionWidgetDropdown.js';
-import { IAgentHostService } from '../../../../../../platform/agentHost/common/agentService.js';
-import { agentHostAgentPickerStorageKey, getEffectiveAgents, resolveAgentHostAgent } from '../../../../../../platform/agentHost/common/customAgents.js';
-import { type IAgentSubscription } from '../../../../../../platform/agentHost/common/state/agentSubscription.js';
-import { ActionType } from '../../../../../../platform/agentHost/common/state/protocol/actions.js';
-import type { CustomizationAgentRef, SessionState } from '../../../../../../platform/agentHost/common/state/protocol/state.js';
-import { StateComponents } from '../../../../../../platform/agentHost/common/state/sessionState.js';
-import { ICommandService } from '../../../../../../platform/commands/common/commands.js';
-import { IContextKeyService } from '../../../../../../platform/contextkey/common/contextkey.js';
-import { ServicesAccessor } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { IKeybindingService } from '../../../../../../platform/keybinding/common/keybinding.js';
-import { IOpenerService } from '../../../../../../platform/opener/common/opener.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../../../platform/storage/common/storage.js';
-import { ITelemetryService } from '../../../../../../platform/telemetry/common/telemetry.js';
-import { IsSessionsWindowContext } from '../../../../../common/contextkeys.js';
-import { isUntitledChatSession } from '../../../common/model/chatUri.js';
-import { AICustomizationManagementCommands } from '../../aiCustomization/aiCustomizationManagement.js';
-import { AICustomizationManagementSection } from '../../../common/aiCustomizationWorkspaceService.js';
-import type { IChatWidget } from '../../chat.js';
-import { ChatInputPickerActionViewItem, IChatInputPickerOptions } from '../../widget/input/chatInputPickerActionItem.js';
-import { IAgentHostUntitledProvisionalSessionService } from './agentHostUntitledProvisionalSessionService.js';
+import * as dom from "../../../../../../base/browser/dom.js";
+import { renderLabelWithIcons } from "../../../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { IAction } from "../../../../../../base/common/actions.js";
+import { Codicon } from "../../../../../../base/common/codicons.js";
+import { IDisposable, MutableDisposable } from "../../../../../../base/common/lifecycle.js";
+import { autorun, observableValue } from "../../../../../../base/common/observable.js";
+import { ThemeIcon } from "../../../../../../base/common/themables.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import * as nls from "../../../../../../nls.js";
+import { getFlatActionBarActions } from "../../../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { Action2, IMenuService, MenuId, registerAction2 } from "../../../../../../platform/actions/common/actions.js";
+import { IActionWidgetService } from "../../../../../../platform/actionWidget/browser/actionWidget.js";
+import {
+  IActionWidgetDropdownAction,
+  IActionWidgetDropdownActionProvider,
+  IActionWidgetDropdownOptions,
+} from "../../../../../../platform/actionWidget/browser/actionWidgetDropdown.js";
+import { IAgentHostService } from "../../../../../../platform/agentHost/common/agentService.js";
+import {
+  agentHostAgentPickerStorageKey,
+  getEffectiveAgents,
+  resolveAgentHostAgent,
+} from "../../../../../../platform/agentHost/common/customAgents.js";
+import { type IAgentSubscription } from "../../../../../../platform/agentHost/common/state/agentSubscription.js";
+import { ActionType } from "../../../../../../platform/agentHost/common/state/protocol/actions.js";
+import type { CustomizationAgentRef, SessionState } from "../../../../../../platform/agentHost/common/state/protocol/state.js";
+import { StateComponents } from "../../../../../../platform/agentHost/common/state/sessionState.js";
+import { ICommandService } from "../../../../../../platform/commands/common/commands.js";
+import { IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { ServicesAccessor } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../../../platform/keybinding/common/keybinding.js";
+import { IOpenerService } from "../../../../../../platform/opener/common/opener.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../../../platform/telemetry/common/telemetry.js";
+import { IsSessionsWindowContext } from "../../../../../common/contextkeys.js";
+import { isUntitledChatSession } from "../../../common/model/chatUri.js";
+import { AICustomizationManagementCommands } from "../../aiCustomization/aiCustomizationManagement.js";
+import { AICustomizationManagementSection } from "../../../common/aiCustomizationWorkspaceService.js";
+import type { IChatWidget } from "../../chat.js";
+import { ChatInputPickerActionViewItem, IChatInputPickerOptions } from "../../widget/input/chatInputPickerActionItem.js";
+import { IAgentHostUntitledProvisionalSessionService } from "./agentHostUntitledProvisionalSessionService.js";
 
 /**
  * Shared footer-menu identifier for both Agent Host custom-agent pickers —
@@ -43,11 +51,11 @@ import { IAgentHostUntitledProvisionalSessionService } from './agentHostUntitled
  * chat-editor picker. What is shared here is the {@link MenuId}; each
  * surface contributes its own footer actions against this menu as needed.
  */
-export const MenuIdAgentHostAgentPicker = new MenuId('AgentHostAgentPicker');
+export const MenuIdAgentHostAgentPicker = new MenuId("AgentHostAgentPicker");
 
 function toBackendSessionUri(sessionResource: URI): URI | undefined {
 	const scheme = sessionResource.scheme;
-	const prefix = 'agent-host-';
+	const prefix = "agent-host-";
 	if (!scheme.startsWith(prefix)) {
 		return undefined;
 	}
@@ -55,7 +63,7 @@ function toBackendSessionUri(sessionResource: URI): URI | undefined {
 	if (!provider) {
 		return undefined;
 	}
-	const rawId = sessionResource.path.replace(/^\//, '');
+	const rawId = sessionResource.path.replace(/^\//, "");
 	return URI.from({ scheme: provider, path: `/${rawId}` });
 }
 
@@ -80,8 +88,13 @@ function toBackendSessionUri(sessionResource: URI): URI | undefined {
  */
 export class WorkbenchAgentHostAgentPickerActionItem extends ChatInputPickerActionViewItem {
 
-	private readonly _currentAgent = observableValue<CustomizationAgentRef | undefined>('agentHostCurrentAgent', undefined);
-	private readonly _subRef = this._register(new MutableDisposable<IDisposable & { readonly sub: IAgentSubscription<SessionState>; readonly backendSession: URI }>());
+	private readonly _currentAgent = observableValue<CustomizationAgentRef | undefined>(
+    "agentHostCurrentAgent",
+    undefined,
+  );
+	private readonly _subRef = this._register(
+    new MutableDisposable<IDisposable & { readonly sub: IAgentSubscription<SessionState>; readonly backendSession: URI }>(),
+  );
 	/** Captured at construction so the footer menu doesn't depend on a private parent field. */
 	private readonly _ctxKeyService: IContextKeyService;
 
@@ -99,7 +112,7 @@ export class WorkbenchAgentHostAgentPickerActionItem extends ChatInputPickerActi
 		@IAgentHostService private readonly _agentHostService: IAgentHostService,
 		@IAgentHostUntitledProvisionalSessionService private readonly _provisional: IAgentHostUntitledProvisionalSessionService,
 	) {
-		const widgetOptions: Omit<IActionWidgetDropdownOptions, 'label' | 'labelRenderer'> = {
+		const widgetOptions: Omit<IActionWidgetDropdownOptions, "label" | "labelRenderer"> = {
 			actionProvider: {
 				getActions: () => this._buildRows(),
 			} satisfies IActionWidgetDropdownActionProvider,
@@ -107,10 +120,18 @@ export class WorkbenchAgentHostAgentPickerActionItem extends ChatInputPickerActi
 				getActions: () => this._getFooterActions(),
 			},
 			showItemKeybindings: false,
-			reporter: { id: 'ChatAgentHostAgentPicker', name: 'ChatAgentHostAgentPicker', includeOptions: true },
+			reporter: { id: "ChatAgentHostAgentPicker", name: "ChatAgentHostAgentPicker", includeOptions: true },
 		};
 
-		super(action, widgetOptions, pickerOptions, actionWidgetService, keybindingService, contextKeyService, telemetryService);
+		super(
+      action,
+      widgetOptions,
+      pickerOptions,
+      actionWidgetService,
+      keybindingService,
+      contextKeyService,
+      telemetryService,
+    );
 		this._ctxKeyService = contextKeyService;
 
 		this._reattach();
@@ -125,10 +146,12 @@ export class WorkbenchAgentHostAgentPickerActionItem extends ChatInputPickerActi
 		}));
 
 		// Active chat session changed (editor switched, view-model swapped).
-		this._register(this._widget.onDidChangeViewModel(() => {
-			this._reattach();
-			this._refresh();
-		}));
+		this._register(
+      this._widget.onDidChangeViewModel(() => {
+        this._reattach();
+        this._refresh();
+      }),
+    );
 
 		// Provisional backend create/rebind/dispose — swap the subscription
 		// when the change is for the session this picker is bound to.
@@ -143,13 +166,16 @@ export class WorkbenchAgentHostAgentPickerActionItem extends ChatInputPickerActi
 
 	override render(container: HTMLElement): void {
 		super.render(container);
-		container.classList.add('chat-agent-picker-item');
+		container.classList.add("chat-agent-picker-item");
 	}
 
 	protected override renderLabel(element: HTMLElement): IDisposable | null {
 		this.setAriaLabelAttributes(element);
 		const current = this._currentAgent.get();
-		const label = current ? current.name : nls.localize('agentPickerDefault', "Agent");
+		const label = current ? current.name : nls.localize(
+      "agentPickerDefault",
+      "Agent",
+    );
 		const elements: (HTMLElement | string)[] = [];
 		const compact = this.pickerOptions.compact.get();
 		// Only the default placeholder shows an icon; a chosen custom agent
@@ -158,7 +184,7 @@ export class WorkbenchAgentHostAgentPickerActionItem extends ChatInputPickerActi
 			elements.push(...renderLabelWithIcons(`$(${Codicon.agent.id})`));
 		}
 		if (!compact || current) {
-			elements.push(dom.$('span.chat-input-picker-label', undefined, label));
+			elements.push(dom.$("span.chat-input-picker-label", undefined, label));
 		}
 		dom.reset(element, ...elements);
 		return null;
@@ -166,17 +192,23 @@ export class WorkbenchAgentHostAgentPickerActionItem extends ChatInputPickerActi
 
 	private _buildRows(): IActionWidgetDropdownAction[] {
 		const current = this._currentAgent.get();
-		const defaultCategory = { label: nls.localize('agentPickerDefaultCategory', "Default"), order: 0 };
-		const customCategory = { label: nls.localize('agentPickerCustomCategory', "Custom Agents"), order: 1 };
+		const defaultCategory = {
+      label: nls.localize("agentPickerDefaultCategory", "Default"),
+      order: 0,
+    };
+		const customCategory = {
+      label: nls.localize("agentPickerCustomCategory", "Custom Agents"),
+      order: 1,
+    };
 		const rows: IActionWidgetDropdownAction[] = [{
-			id: 'workbench.chat.agentHostAgentPicker.default',
-			label: nls.localize('agentPickerDefault', "Agent"),
-			tooltip: '',
+			id: "workbench.chat.agentHostAgentPicker.default",
+			label: nls.localize("agentPickerDefault", "Agent"),
+			tooltip: "",
 			class: undefined,
 			enabled: true,
 			icon: ThemeIcon.fromId(Codicon.agent.id),
 			checked: current === undefined,
-			hover: { content: nls.localize('agentPickerDefaultHover', "Use the default agent.") },
+			hover: { content: nls.localize("agentPickerDefaultHover", "Use the default agent.") },
 			category: defaultCategory,
 			run: async () => {
 				this._userSetAgent(undefined);
@@ -187,7 +219,11 @@ export class WorkbenchAgentHostAgentPickerActionItem extends ChatInputPickerActi
 		}];
 		for (const agent of this._currentAgents()) {
 			const agentUri = agent.uri;
-			const viewAgentLabel = nls.localize('viewAgent', "View {0} agent", agent.name);
+			const viewAgentLabel = nls.localize(
+        "viewAgent",
+        "View {0} agent",
+        agent.name,
+      );
 			const toolbarActions: IAction[] = [{
 				id: `workbench.chat.agentHostAgentPicker.view.${agent.uri.toString()}`,
 				label: viewAgentLabel,
@@ -199,7 +235,7 @@ export class WorkbenchAgentHostAgentPickerActionItem extends ChatInputPickerActi
 			rows.push({
 				id: `workbench.chat.agentHostAgentPicker.agent.${agent.uri.toString()}`,
 				label: agent.name,
-				tooltip: '',
+				tooltip: "",
 				class: undefined,
 				enabled: true,
 				checked: current?.uri.toString() === agent.uri.toString(),
@@ -227,8 +263,12 @@ export class WorkbenchAgentHostAgentPickerActionItem extends ChatInputPickerActi
 
 	private _reattach(): void {
 		const resource = this._sessionResource();
-		const provisionalBackend = resource ? this._provisional.get(resource) : undefined;
-		const fallbackBackend = resource ? toBackendSessionUri(resource) : undefined;
+		const provisionalBackend = resource ? this._provisional.get(
+      resource,
+    ) : undefined;
+		const fallbackBackend = resource ? toBackendSessionUri(
+      resource,
+    ) : undefined;
 		const backend = provisionalBackend ?? fallbackBackend;
 
 		// For untitled chat sessions the AHP server only knows about the
@@ -236,7 +276,9 @@ export class WorkbenchAgentHostAgentPickerActionItem extends ChatInputPickerActi
 		// Subscribing to the deterministic URI before that hands us a
 		// permanently-empty subscription, so wait for `_provisional.onDidChange`
 		// to swap us onto the real backend.
-		const readyToSubscribe = !!backend && (!resource || !isUntitledChatSession(resource) || !!provisionalBackend);
+		const readyToSubscribe = !!backend && (!resource || !isUntitledChatSession(
+      resource,
+    ) || !!provisionalBackend);
 		const targetBackend = readyToSubscribe ? backend : undefined;
 
 		if (this._subRef.value?.backendSession.toString() === targetBackend?.toString()) {
@@ -246,14 +288,17 @@ export class WorkbenchAgentHostAgentPickerActionItem extends ChatInputPickerActi
 		if (!targetBackend) {
 			return;
 		}
-		const ref = this._agentHostService.getSubscription(StateComponents.Session, targetBackend);
+		const ref = this._agentHostService.getSubscription(
+      StateComponents.Session,
+      targetBackend,
+    );
 		const sub = ref.object;
 		const listener = sub.onDidChange(() => this._refresh());
 		this._subRef.value = {
-			sub,
-			backendSession: targetBackend,
-			dispose: () => { listener.dispose(); ref.dispose(); },
-		};
+      sub,
+      backendSession: targetBackend,
+      dispose: () => { listener.dispose(); ref.dispose(); },
+    };
 	}
 
 	private _readState(): SessionState | undefined {
@@ -274,7 +319,10 @@ export class WorkbenchAgentHostAgentPickerActionItem extends ChatInputPickerActi
 		const state = this._readState();
 		const agents = getEffectiveAgents(state?.customizations);
 		const sessionAgentUri = state?.summary.agent?.uri;
-		const storedUri = this._storageService.get(agentHostAgentPickerStorageKey(resource.scheme), StorageScope.PROFILE);
+		const storedUri = this._storageService.get(
+      agentHostAgentPickerStorageKey(resource.scheme),
+      StorageScope.PROFILE,
+    );
 		const resolved = resolveAgentHostAgent(agents, sessionAgentUri, storedUri);
 		this._currentAgent.set(resolved, undefined);
 	}
@@ -288,19 +336,29 @@ export class WorkbenchAgentHostAgentPickerActionItem extends ChatInputPickerActi
 		this._currentAgent.set(agent, undefined);
 		const key = agentHostAgentPickerStorageKey(resource.scheme);
 		if (agent) {
-			this._storageService.store(key, agent.uri.toString(), StorageScope.PROFILE, StorageTarget.MACHINE);
+			this._storageService.store(
+        key,
+        agent.uri.toString(),
+        StorageScope.PROFILE,
+        StorageTarget.MACHINE,
+      );
 		} else {
 			this._storageService.remove(key, StorageScope.PROFILE);
 		}
 		this._agentHostService.dispatch(backend.toString(), {
-			type: ActionType.SessionAgentChanged,
-			...(agent ? { agent: { uri: agent.uri } } : {}),
-		});
+      type: ActionType.SessionAgentChanged,
+      ...(agent ? { agent: { uri: agent.uri } } : {}),
+    });
 	}
 
 	private _getFooterActions(): IAction[] {
-		const menu = this._menuService.createMenu(MenuIdAgentHostAgentPicker, this._ctxKeyService);
-		const actions = getFlatActionBarActions(menu.getActions({ renderShortTitle: true }));
+		const menu = this._menuService.createMenu(
+      MenuIdAgentHostAgentPicker,
+      this._ctxKeyService,
+    );
+		const actions = getFlatActionBarActions(
+      menu.getActions({ renderShortTitle: true }),
+    );
 		menu.dispose();
 		return actions;
 	}
@@ -320,12 +378,12 @@ export class WorkbenchAgentHostAgentPickerActionItem extends ChatInputPickerActi
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'workbench.chat.agentHostAgentPicker.configure',
-			title: nls.localize2('configureCustomAgents', "Configure Custom Agents..."),
+			id: "workbench.chat.agentHostAgentPicker.configure",
+			title: nls.localize2("configureCustomAgents", "Configure Custom Agents..."),
 			f1: false,
 			menu: [{
 				id: MenuIdAgentHostAgentPicker,
-				group: 'configure',
+				group: "configure",
 				order: 1,
 				when: IsSessionsWindowContext.negate(),
 			}],
@@ -336,7 +394,7 @@ registerAction2(class extends Action2 {
 		try {
 			await commandService.executeCommand(AICustomizationManagementCommands.OpenEditor, AICustomizationManagementSection.Agents);
 		} catch {
-			await commandService.executeCommand('workbench.action.chat.configure.customagents');
+			await commandService.executeCommand("workbench.action.chat.configure.customagents");
 		}
 	}
 });

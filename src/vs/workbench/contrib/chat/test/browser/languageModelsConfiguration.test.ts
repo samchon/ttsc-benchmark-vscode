@@ -3,36 +3,36 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { createTextModel } from '../../../../../editor/test/common/testTextModel.js';
-import { parseLanguageModelsProviderGroups } from '../../browser/languageModelsConfigurationService.js';
+import assert from "assert";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { createTextModel } from "../../../../../editor/test/common/testTextModel.js";
+import { parseLanguageModelsProviderGroups } from "../../browser/languageModelsConfigurationService.js";
 
-suite('LanguageModelsConfiguration', () => {
+suite("LanguageModelsConfiguration", () => {
 	const testDisposables = ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('parseLanguageModelsConfiguration - empty', () => {
-		const model = testDisposables.add(createTextModel('[]'));
+	test("parseLanguageModelsConfiguration - empty", () => {
+		const model = testDisposables.add(createTextModel("[]"));
 		const result = parseLanguageModelsProviderGroups(model);
 		assert.deepStrictEqual(result, []);
 	});
 
-	test('parseLanguageModelsConfiguration - simple', () => {
+	test("parseLanguageModelsConfiguration - simple", () => {
 		const content = JSON.stringify([{
-			vendor: 'vendor',
-			name: 'group',
-			configurations: []
-		}], null, '\t');
+			vendor: "vendor",
+			name: "group",
+			configurations: [],
+		}], null, "\t");
 		const model = testDisposables.add(createTextModel(content));
 		const result = parseLanguageModelsProviderGroups(model);
 
 		assert.strictEqual(result.length, 1);
-		assert.strictEqual(result[0].name, 'group');
-		assert.strictEqual(result[0].vendor, 'vendor');
+		assert.strictEqual(result[0].name, "group");
+		assert.strictEqual(result[0].vendor, "vendor");
 		assert.ok(result[0].range);
 	});
 
-	test('parseLanguageModelsConfiguration - with configuration range', () => {
+	test("parseLanguageModelsConfiguration - with configuration range", () => {
 		const content = `[
 	{
 		"vendor": "vendor",
@@ -51,10 +51,10 @@ suite('LanguageModelsConfiguration', () => {
 
 		const configurations = result[0].configurations as { configuration: Record<string, unknown> }[];
 		const config = configurations[0].configuration;
-		assert.deepStrictEqual(config, { foo: 'bar' });
+		assert.deepStrictEqual(config, { foo: "bar" });
 	});
 
-	test('parseLanguageModelsConfiguration - multiple vendors and groups', () => {
+	test("parseLanguageModelsConfiguration - multiple vendors and groups", () => {
 		const content = `[
 	{ "vendor": "vendor1", "name": "g1", "configurations": [] },
 	{ "vendor": "vendor1", "name": "g2", "configurations": [] },
@@ -64,15 +64,15 @@ suite('LanguageModelsConfiguration', () => {
 		const result = parseLanguageModelsProviderGroups(model);
 
 		assert.strictEqual(result.length, 3);
-		assert.strictEqual(result[0].name, 'g1');
-		assert.strictEqual(result[0].vendor, 'vendor1');
-		assert.strictEqual(result[1].name, 'g2');
-		assert.strictEqual(result[1].vendor, 'vendor1');
-		assert.strictEqual(result[2].name, 'g3');
-		assert.strictEqual(result[2].vendor, 'vendor2');
+		assert.strictEqual(result[0].name, "g1");
+		assert.strictEqual(result[0].vendor, "vendor1");
+		assert.strictEqual(result[1].name, "g2");
+		assert.strictEqual(result[1].vendor, "vendor1");
+		assert.strictEqual(result[2].name, "g3");
+		assert.strictEqual(result[2].vendor, "vendor2");
 	});
 
-	test('parseLanguageModelsConfiguration - complex configuration values', () => {
+	test("parseLanguageModelsConfiguration - complex configuration values", () => {
 		const content = `[
 	{
 		"vendor": "vendor",
@@ -96,15 +96,15 @@ suite('LanguageModelsConfiguration', () => {
 
 		const configurations = result[0]?.configurations as { configuration: Record<string, unknown> }[];
 		const config = configurations[0].configuration;
-		assert.strictEqual(config.str, 'value');
+		assert.strictEqual(config.str, "value");
 		assert.strictEqual(config.num, 123);
 		assert.strictEqual(config.bool, true);
 		assert.strictEqual(config.null, null);
 		assert.deepStrictEqual(config.arr, [1, 2]);
-		assert.deepStrictEqual(config.obj, { nested: 'val' });
+		assert.deepStrictEqual(config.obj, { nested: "val" });
 	});
 
-	test('parseLanguageModelsConfiguration - with comments', () => {
+	test("parseLanguageModelsConfiguration - with comments", () => {
 		const content = `[
 	// This is a comment
 	/* Block comment */
@@ -118,11 +118,11 @@ suite('LanguageModelsConfiguration', () => {
 		const result = parseLanguageModelsProviderGroups(model);
 
 		assert.strictEqual(result.length, 1);
-		assert.strictEqual(result[0].name, 'group');
-		assert.strictEqual(result[0].vendor, 'vendor');
+		assert.strictEqual(result[0].name, "group");
+		assert.strictEqual(result[0].vendor, "vendor");
 	});
 
-	test('parseLanguageModelsConfiguration - ranges', () => {
+	test("parseLanguageModelsConfiguration - ranges", () => {
 		const content = `[
 	{
 		"vendor": "vendor",
@@ -149,7 +149,7 @@ suite('LanguageModelsConfiguration', () => {
 		assert.strictEqual(g2.range.endLineNumber, 11);
 	});
 
-	test('parseLanguageModelsConfiguration - models range', () => {
+	test("parseLanguageModelsConfiguration - models range", () => {
 		const content = `[
 	{
 		"vendor": "vendor",
@@ -165,19 +165,19 @@ suite('LanguageModelsConfiguration', () => {
 
 		assert.deepStrictEqual({
 			startLineNumber: result[0].modelsRange?.startLineNumber,
-			endLineNumber: result[0].modelsRange?.endLineNumber
+			endLineNumber: result[0].modelsRange?.endLineNumber,
 		}, {
 			startLineNumber: 5,
-			endLineNumber: 8
+			endLineNumber: 8,
 		});
 	});
 
-	test('parseLanguageModelsConfiguration - empty models range', () => {
+	test("parseLanguageModelsConfiguration - empty models range", () => {
 		const content = JSON.stringify([{
-			vendor: 'vendor',
-			name: 'group',
-			models: []
-		}], null, '\t');
+			vendor: "vendor",
+			name: "group",
+			models: [],
+		}], null, "\t");
 		const model = testDisposables.add(createTextModel(content));
 		const result = parseLanguageModelsProviderGroups(model);
 
@@ -185,7 +185,7 @@ suite('LanguageModelsConfiguration', () => {
 			startLineNumber: 5,
 			startColumn: 13,
 			endLineNumber: 5,
-			endColumn: 15
+			endColumn: 15,
 		});
 	});
 });

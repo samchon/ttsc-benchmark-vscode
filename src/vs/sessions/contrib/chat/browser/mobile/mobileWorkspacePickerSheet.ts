@@ -3,20 +3,26 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ActionListItemKind, IActionListItem } from '../../../../../platform/actionWidget/browser/actionList.js';
-import { IWorkbenchLayoutService } from '../../../../../workbench/services/layout/browser/layoutService.js';
-import { isPhoneLayout } from '../../../../browser/parts/mobile/mobileLayout.js';
-import { IMobilePickerSheetHeaderAction, IMobilePickerSheetItem, IMobilePickerSheetSearchSource, MOBILE_PICKER_SHEET_HEADER_ACTION_PREFIX, showMobilePickerSheet } from '../../../../browser/parts/mobile/mobilePickerSheet.js';
-import { localize } from '../../../../../nls.js';
-import { IWorkspacePickerItem } from '../sessionWorkspacePicker.js';
-import { SubmenuAction, IAction } from '../../../../../base/common/actions.js';
-import { isString } from '../../../../../base/common/types.js';
-import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { Codicon } from '../../../../../base/common/codicons.js';
-import { ISessionWorkspaceBrowseAction } from '../../../../services/sessions/common/session.js';
+import { ActionListItemKind, IActionListItem } from "../../../../../platform/actionWidget/browser/actionList.js";
+import { IWorkbenchLayoutService } from "../../../../../workbench/services/layout/browser/layoutService.js";
+import { isPhoneLayout } from "../../../../browser/parts/mobile/mobileLayout.js";
+import {
+  IMobilePickerSheetHeaderAction,
+  IMobilePickerSheetItem,
+  IMobilePickerSheetSearchSource,
+  MOBILE_PICKER_SHEET_HEADER_ACTION_PREFIX,
+  showMobilePickerSheet,
+} from "../../../../browser/parts/mobile/mobilePickerSheet.js";
+import { localize } from "../../../../../nls.js";
+import { IWorkspacePickerItem } from "../sessionWorkspacePicker.js";
+import { SubmenuAction, IAction } from "../../../../../base/common/actions.js";
+import { isString } from "../../../../../base/common/types.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { ISessionWorkspaceBrowseAction } from "../../../../services/sessions/common/session.js";
 
 /** Prefix used for ids of dynamically-loaded folder rows in the sheet. */
-const SEARCH_RESULT_ID_PREFIX = 'searchResult:';
+const SEARCH_RESULT_ID_PREFIX = "searchResult:";
 
 /**
  * Plan for translating an action-widget picker entry into mobile sheet
@@ -47,7 +53,7 @@ export function buildMobileWorkspacePickerRows(
 			continue;
 		}
 
-		const sectionTitle = pendingSeparator ? '' : undefined;
+		const sectionTitle = pendingSeparator ? "" : undefined;
 		pendingSeparator = false;
 
 		// Submenu items: flatten the inner actions into individual rows
@@ -68,7 +74,7 @@ export function buildMobileWorkspacePickerRows(
 						label: child.label,
 						icon: childIcon,
 						disabled: !child.enabled,
-						sectionTitle: isFirst ? (sectionTitle ?? item.label ?? '') : undefined,
+						sectionTitle: isFirst ? (sectionTitle ?? item.label ?? "") : undefined,
 					},
 					run: () => child.run(),
 				});
@@ -90,7 +96,7 @@ export function buildMobileWorkspacePickerRows(
 		rows.push({
 			sheetItem: {
 				id,
-				label: item.label ?? '',
+				label: item.label ?? "",
 				description: descriptionToString(item.description),
 				icon,
 				checked: !!data?.checked,
@@ -122,7 +128,7 @@ function collectSubmenuActions(actions: readonly IAction[]): IAction[] {
 	return out;
 }
 
-function descriptionToString(value: IActionListItem<IWorkspacePickerItem>['description']): string | undefined {
+function descriptionToString(value: IActionListItem<IWorkspacePickerItem>["description"]): string | undefined {
 	if (value === undefined) {
 		return undefined;
 	}
@@ -156,16 +162,23 @@ export async function showMobileWorkspacePickerSheet(
 	dispatch: (item: IWorkspacePickerItem) => void,
 	browseActions: readonly ISessionWorkspaceBrowseAction[],
 ): Promise<void> {
-	const { rowItems, headerBrowseActions } = partitionItems(items, dispatch, browseActions);
+	const { rowItems, headerBrowseActions } = partitionItems(
+    items,
+    dispatch,
+    browseActions,
+  );
 
 	// Restrict inline folder search to browse actions the picker
 	// actually chose to surface in its item list — the scoped picker
 	// only emits one item (for the currently-selected host), so this
 	// keeps the search results to that host's folders rather than
 	// every registered provider's folders.
-	const surfacedProviderIds = collectSurfacedBrowseProviderIds(items, browseActions);
-	const inlineFolderActions = browseActions.filter((b): b is ISessionWorkspaceBrowseAction & Required<Pick<ISessionWorkspaceBrowseAction, 'listFolders'>> =>
-		typeof b.listFolders === 'function' && surfacedProviderIds.has(b.providerId)
+	const surfacedProviderIds = collectSurfacedBrowseProviderIds(
+    items,
+    browseActions,
+  );
+	const inlineFolderActions = browseActions.filter((b): b is ISessionWorkspaceBrowseAction & Required<Pick<ISessionWorkspaceBrowseAction, "listFolders">> =>
+		typeof b.listFolders === "function" && surfacedProviderIds.has(b.providerId),
 	);
 
 	// No workspaces / commands, no inline search, and we have a single
@@ -182,23 +195,25 @@ export async function showMobileWorkspacePickerSheet(
 	}
 
 	const rows = buildMobileWorkspacePickerRows(rowItems, dispatch);
-	const headerActions: IMobilePickerSheetHeaderAction[] = headerBrowseActions.map((b, i) => ({
-		id: String(i),
-		label: b.label,
-		icon: b.icon,
-	}));
+	const headerActions: IMobilePickerSheetHeaderAction[] = headerBrowseActions.map(
+    (b, i) => ({
+      id: String(i),
+      label: b.label,
+      icon: b.icon,
+    }),
+  );
 
 	// Build the inline search source and a parallel id→dispatch map so
 	// the sheet can resolve folder taps back to a provider selection.
 	const folderRunById = new Map<string, () => void>();
 	const folderLabelById = new Map<string, string>();
 	// Track the current search query so drill-down can append to it.
-	let currentSearchQuery = '';
+	let currentSearchQuery = "";
 	const search: IMobilePickerSheetSearchSource | undefined = inlineFolderActions.length > 0
 		? {
-			placeholder: localize('mobileWorkspacePicker.searchFolders', "Search folders…"),
-			resultsSectionTitle: localize('mobileWorkspacePicker.foldersSection', "Folders"),
-			emptyMessage: localize('mobileWorkspacePicker.noFolders', "No folders match"),
+			placeholder: localize("mobileWorkspacePicker.searchFolders", "Search folders…"),
+			resultsSectionTitle: localize("mobileWorkspacePicker.foldersSection", "Folders"),
+			emptyMessage: localize("mobileWorkspacePicker.noFolders", "No folders match"),
 			loadItems: async (query, token) => {
 				currentSearchQuery = query;
 				folderRunById.clear();
@@ -238,7 +253,7 @@ export async function showMobileWorkspacePickerSheet(
 		}
 		: undefined;
 
-	triggerElement.setAttribute('aria-expanded', 'true');
+	triggerElement.setAttribute("aria-expanded", "true");
 
 	// Track the last-tapped folder from search results so Done can
 	// dispatch it. In `stayOpenOnSelect` mode, row taps don't close
@@ -250,12 +265,12 @@ export async function showMobileWorkspacePickerSheet(
 	try {
 		await showMobilePickerSheet(
 			layoutService.mainContainer,
-			localize('mobileWorkspacePicker.title', "Choose Workspace"),
+			localize("mobileWorkspacePicker.title", "Choose Workspace"),
 			rows.map(r => r.sheetItem),
 			{
 				headerActions,
 				search,
-				caption: localize('mobileWorkspacePicker.caption', "Search to browse folders on the host"),
+				caption: localize("mobileWorkspacePicker.caption", "Search to browse folders on the host"),
 				stayOpenOnSelect: true,
 				onDidSelect: (id) => {
 					if (id.startsWith(MOBILE_PICKER_SHEET_HEADER_ACTION_PREFIX)) {
@@ -273,8 +288,8 @@ export async function showMobileWorkspacePickerSheet(
 							// Compute the prefix up to (and including)
 							// the last `/` in the current query, then
 							// append the tapped folder name + `/`.
-							const lastSlash = currentSearchQuery.lastIndexOf('/');
-							const prefix = lastSlash >= 0 ? currentSearchQuery.slice(0, lastSlash + 1) : '';
+							const lastSlash = currentSearchQuery.lastIndexOf("/");
+							const prefix = lastSlash >= 0 ? currentSearchQuery.slice(0, lastSlash + 1) : "";
 							return `${prefix}${folderName}/`;
 						}
 						return;
@@ -295,7 +310,7 @@ export async function showMobileWorkspacePickerSheet(
 		// dispatch it now. Recent rows were already dispatched on tap.
 		lastSearchFolderRun?.();
 	} finally {
-		triggerElement.setAttribute('aria-expanded', 'false');
+		triggerElement.setAttribute("aria-expanded", "false");
 		triggerElement.focus();
 	}
 }
@@ -335,7 +350,7 @@ function partitionItems(
 	const rowItems: IActionListItem<IWorkspacePickerItem>[] = [];
 	const headerBrowseActions: IBrowseHeaderAction[] = [];
 
-	const hasInlineSearch = (index: number | undefined) => index !== undefined && typeof browseActions[index]?.listFolders === 'function';
+	const hasInlineSearch = (index: number | undefined) => index !== undefined && typeof browseActions[index]?.listFolders === "function";
 
 	for (const item of items) {
 		if (item.kind === ActionListItemKind.Separator) {
@@ -351,10 +366,10 @@ function partitionItems(
 					continue;
 				}
 				headerBrowseActions.push({
-					label: child.label || item.label || '',
-					icon: (child as IAction & { icon?: ThemeIcon }).icon ?? item.group?.icon ?? Codicon.folderOpened,
-					invoke: () => child.run(),
-				});
+          label: child.label || item.label || "",
+          icon: (child as IAction & { icon?: ThemeIcon }).icon ?? item.group?.icon ?? Codicon.folderOpened,
+          invoke: () => child.run(),
+        });
 				promoted = true;
 			}
 			if (!promoted) {
@@ -371,10 +386,10 @@ function partitionItems(
 			}
 			const data = item.item;
 			headerBrowseActions.push({
-				label: item.label ?? '',
-				icon: item.group?.icon ?? Codicon.folderOpened,
-				invoke: () => dispatch(data),
-			});
+        label: item.label ?? "",
+        icon: item.group?.icon ?? Codicon.folderOpened,
+        invoke: () => dispatch(data),
+      });
 			continue;
 		}
 

@@ -3,42 +3,58 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../../base/common/event.js';
-import { ResourceSet } from '../../../../../base/common/map.js';
-import { derived, observableValue } from '../../../../../base/common/observable.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { mock } from '../../../../../base/test/common/mock.js';
-import { IContextMenuService, IContextViewService } from '../../../../../platform/contextview/browser/contextView.js';
-import { IFileService } from '../../../../../platform/files/common/files.js';
-import { IListService, ListService } from '../../../../../platform/list/browser/listService.js';
-import { IWorkspace, IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
-import { IAICustomizationWorkspaceService, IStorageSourceFilter } from '../../../../contrib/chat/common/aiCustomizationWorkspaceService.js';
-import { ICustomizationHarnessService, IHarnessDescriptor, createVSCodeHarnessDescriptor } from '../../../../contrib/chat/common/customizationHarnessService.js';
-import { IAgentPluginService } from '../../../../contrib/chat/common/plugins/agentPluginService.js';
-import { IChatSessionsService } from '../../../../contrib/chat/common/chatSessionsService.js';
-import { getChatSessionType, LocalChatSessionUri } from '../../../../contrib/chat/common/model/chatUri.js';
-import { PromptsType } from '../../../../contrib/chat/common/promptSyntax/promptTypes.js';
-import { IPromptsService, AgentInstructionFileType, PromptsStorage, IPromptPath, IAgentInstructionFile } from '../../../../contrib/chat/common/promptSyntax/service/promptsService.js';
-import { AICustomizationManagementSection } from '../../../../contrib/chat/browser/aiCustomization/aiCustomizationManagement.js';
-import { AICustomizationItemsModel, IAICustomizationItemsModel } from '../../../../contrib/chat/browser/aiCustomization/aiCustomizationItemsModel.js';
-import { AICustomizationListWidget } from '../../../../contrib/chat/browser/aiCustomization/aiCustomizationListWidget.js';
-import { IProductService } from '../../../../../platform/product/common/productService.js';
-import { IPathService } from '../../../../services/path/common/pathService.js';
-import { ComponentFixtureContext, createEditorServices, defineComponentFixture, defineThemedFixtureGroup, registerWorkbenchServices } from '../fixtureUtils.js';
-import { ParsedPromptFile, PromptHeader } from '../../../../contrib/chat/common/promptSyntax/promptFileParser.js';
-import { Range } from '../../../../../editor/common/core/range.js';
-import { isEqual } from '../../../../../base/common/resources.js';
+import { Event } from "../../../../../base/common/event.js";
+import { ResourceSet } from "../../../../../base/common/map.js";
+import { derived, observableValue } from "../../../../../base/common/observable.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { mock } from "../../../../../base/test/common/mock.js";
+import { IContextMenuService, IContextViewService } from "../../../../../platform/contextview/browser/contextView.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { IListService, ListService } from "../../../../../platform/list/browser/listService.js";
+import { IWorkspace, IWorkspaceContextService } from "../../../../../platform/workspace/common/workspace.js";
+import { IAICustomizationWorkspaceService, IStorageSourceFilter } from "../../../../contrib/chat/common/aiCustomizationWorkspaceService.js";
+import {
+  ICustomizationHarnessService,
+  IHarnessDescriptor,
+  createVSCodeHarnessDescriptor,
+} from "../../../../contrib/chat/common/customizationHarnessService.js";
+import { IAgentPluginService } from "../../../../contrib/chat/common/plugins/agentPluginService.js";
+import { IChatSessionsService } from "../../../../contrib/chat/common/chatSessionsService.js";
+import { getChatSessionType, LocalChatSessionUri } from "../../../../contrib/chat/common/model/chatUri.js";
+import { PromptsType } from "../../../../contrib/chat/common/promptSyntax/promptTypes.js";
+import {
+  IPromptsService,
+  AgentInstructionFileType,
+  PromptsStorage,
+  IPromptPath,
+  IAgentInstructionFile,
+} from "../../../../contrib/chat/common/promptSyntax/service/promptsService.js";
+import { AICustomizationManagementSection } from "../../../../contrib/chat/browser/aiCustomization/aiCustomizationManagement.js";
+import { AICustomizationItemsModel, IAICustomizationItemsModel } from "../../../../contrib/chat/browser/aiCustomization/aiCustomizationItemsModel.js";
+import { AICustomizationListWidget } from "../../../../contrib/chat/browser/aiCustomization/aiCustomizationListWidget.js";
+import { IProductService } from "../../../../../platform/product/common/productService.js";
+import { IPathService } from "../../../../services/path/common/pathService.js";
+import {
+  ComponentFixtureContext,
+  createEditorServices,
+  defineComponentFixture,
+  defineThemedFixtureGroup,
+  registerWorkbenchServices,
+} from "../fixtureUtils.js";
+import { ParsedPromptFile, PromptHeader } from "../../../../contrib/chat/common/promptSyntax/promptFileParser.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import { isEqual } from "../../../../../base/common/resources.js";
 
 // Ensure color registrations are loaded
-import '../../../../../platform/theme/common/colors/inputColors.js';
-import '../../../../../platform/theme/common/colors/listColors.js';
+import "../../../../../platform/theme/common/colors/inputColors.js";
+import "../../../../../platform/theme/common/colors/listColors.js";
 
 // ============================================================================
 // Mock helpers
 // ============================================================================
 
 const defaultFilter: IStorageSourceFilter = {
-	sources: [PromptsStorage.local, PromptsStorage.user, PromptsStorage.extension, PromptsStorage.plugin],
+  sources: [PromptsStorage.local, PromptsStorage.user, PromptsStorage.extension, PromptsStorage.plugin],
 };
 
 interface IFixtureInstructionFile {
@@ -70,7 +86,7 @@ function createMockPromptsService(instructionFiles: IFixtureInstructionFile[], a
 		override async getInstructionFiles() {
 			return instructionFiles.map(f => ({
 				uri: f.promptPath.uri,
-				name: f.name ?? '',
+				name: f.name ?? "",
 				description: f.description,
 				storage: f.promptPath.storage,
 				pattern: f.applyTo,
@@ -79,7 +95,7 @@ function createMockPromptsService(instructionFiles: IFixtureInstructionFile[], a
 		override async parseNew(uri: URI): Promise<ParsedPromptFile> {
 			const file = instructionFiles.find(f => isEqual(f.promptPath.uri, uri));
 			const headerLines = [];
-			headerLines.push('---\n');
+			headerLines.push("---\n");
 			if (file) {
 				if (file.name) {
 					headerLines.push(`name: ${file.name}\n`);
@@ -91,11 +107,11 @@ function createMockPromptsService(instructionFiles: IFixtureInstructionFile[], a
 					headerLines.push(`applyTo: "${file.applyTo}"\n`);
 				}
 			}
-			headerLines.push('---\n');
+			headerLines.push("---\n");
 			const header = new PromptHeader(
 				new Range(2, 1, headerLines.length, 1),
 				uri,
-				headerLines
+				headerLines,
 			);
 			return new ParsedPromptFile(uri, header);
 		}
@@ -103,15 +119,18 @@ function createMockPromptsService(instructionFiles: IFixtureInstructionFile[], a
 }
 
 function createMockWorkspaceService(): IAICustomizationWorkspaceService {
-	const activeProjectRoot = observableValue<URI | undefined>('mockActiveProjectRoot', URI.file('/workspace'));
+	const activeProjectRoot = observableValue<URI | undefined>(
+    "mockActiveProjectRoot",
+    URI.file("/workspace"),
+  );
 	return new class extends mock<IAICustomizationWorkspaceService>() {
 		override readonly isSessionsWindow = false;
 		override readonly welcomePageFeatures = {
 			showGettingStartedBanner: true,
 		};
 		override readonly activeProjectRoot = activeProjectRoot;
-		override readonly hasOverrideProjectRoot = observableValue('hasOverride', false);
-		override getActiveProjectRoot() { return URI.file('/workspace'); }
+		override readonly hasOverrideProjectRoot = observableValue("hasOverride", false);
+		override getActiveProjectRoot() { return URI.file("/workspace"); }
 		override getStorageSourceFilter() { return defaultFilter; }
 		override getSkillUIIntegrations() { return new Map(); }
 	}();
@@ -119,12 +138,17 @@ function createMockWorkspaceService(): IAICustomizationWorkspaceService {
 
 function createMockHarnessService(): ICustomizationHarnessService {
 	const descriptor = createVSCodeHarnessDescriptor([PromptsStorage.extension]);
-	const activeSessionResource = observableValue<URI>('activeSessionResource', LocalChatSessionUri.getNewSessionUri());
-	const activeHarness = derived(reader => getChatSessionType(activeSessionResource.read(reader)));
+	const activeSessionResource = observableValue<URI>(
+    "activeSessionResource",
+    LocalChatSessionUri.getNewSessionUri(),
+  );
+	const activeHarness = derived(
+    reader => getChatSessionType(activeSessionResource.read(reader)),
+  );
 	return new class extends mock<ICustomizationHarnessService>() {
 		override readonly activeSessionResource = activeSessionResource;
 		override readonly activeHarness = activeHarness;
-		override readonly availableHarnesses = observableValue<readonly IHarnessDescriptor[]>('harnesses', [descriptor]);
+		override readonly availableHarnesses = observableValue<readonly IHarnessDescriptor[]>("harnesses", [descriptor]);
 		override findHarnessById(id: string) { return id === descriptor.id ? descriptor : undefined; }
 		override getStorageSourceFilter() { return defaultFilter; }
 		override getActiveDescriptor() { return descriptor; }
@@ -138,7 +162,7 @@ function createMockWorkspaceContextService(): IWorkspaceContextService {
 	return new class extends mock<IWorkspaceContextService>() {
 		override readonly onDidChangeWorkspaceFolders = Event.None;
 		override getWorkspace(): IWorkspace {
-			return { id: 'test', folders: [] };
+			return { id: "test", folders: [] };
 		}
 	}();
 }
@@ -184,17 +208,17 @@ async function renderInstructionsTab(ctx: ComponentFixtureContext, instructionFi
 				override getRegisteredChatSessionItemProviders() { return []; }
 			}());
 			reg.defineInstance(IAgentPluginService, new class extends mock<IAgentPluginService>() {
-				override readonly plugins = observableValue('plugins', []);
+				override readonly plugins = observableValue("plugins", []);
 			}());
 			reg.defineInstance(IFileService, new class extends mock<IFileService>() {
 				override readonly onDidFilesChange = Event.None;
 			}());
 			reg.defineInstance(IProductService, new class extends mock<IProductService>() { }());
 			reg.defineInstance(IPathService, new class extends mock<IPathService>() {
-				override readonly defaultUriScheme = 'file';
+				override readonly defaultUriScheme = "file";
 				override userHome(): URI;
 				override userHome(): Promise<URI>;
-				override userHome(): URI | Promise<URI> { return URI.file('/home/dev'); }
+				override userHome(): URI | Promise<URI> { return URI.file("/home/dev"); }
 			}());
 			// AICustomizationItemsModel is the single source of truth for items
 			// in the editor. Register the real implementation — it will resolve
@@ -204,8 +228,8 @@ async function renderInstructionsTab(ctx: ComponentFixtureContext, instructionFi
 	});
 
 	const widget = ctx.disposableStore.add(
-		instantiationService.createInstance(AICustomizationListWidget)
-	);
+    instantiationService.createInstance(AICustomizationListWidget),
+  );
 	ctx.container.appendChild(widget.element);
 	await widget.setSection(AICustomizationManagementSection.Instructions);
 	widget.layout(height, width);
@@ -215,29 +239,29 @@ async function renderInstructionsTab(ctx: ComponentFixtureContext, instructionFi
 // Fixtures
 // ============================================================================
 
-export default defineThemedFixtureGroup({ path: 'chat/aiCustomizations/' }, {
+export default defineThemedFixtureGroup({ path: "chat/aiCustomizations/" }, {
 
 	InstructionsTabWithItems: defineComponentFixture({
-		labels: { kind: 'screenshot' },
+		labels: { kind: "screenshot" },
 		render: ctx => renderInstructionsTab(ctx, [
 			// Always-active instructions (no applyTo)
-			{ promptPath: { uri: URI.file('/workspace/.github/instructions/coding-standards.instructions.md'), storage: PromptsStorage.local, type: PromptsType.instructions }, name: 'Coding Standards', description: 'Repository-wide coding standards' },
-			{ promptPath: { uri: URI.file('/home/dev/.copilot/instructions/my-style.instructions.md'), storage: PromptsStorage.user, type: PromptsType.instructions }, name: 'My Style', description: 'Personal coding style preferences' },
+			{ promptPath: { uri: URI.file("/workspace/.github/instructions/coding-standards.instructions.md"), storage: PromptsStorage.local, type: PromptsType.instructions }, name: "Coding Standards", description: "Repository-wide coding standards" },
+			{ promptPath: { uri: URI.file("/home/dev/.copilot/instructions/my-style.instructions.md"), storage: PromptsStorage.user, type: PromptsType.instructions }, name: "My Style", description: "Personal coding style preferences" },
 			// Always-included instruction (applyTo: **)
-			{ promptPath: { uri: URI.file('/workspace/.github/instructions/general-guidelines.instructions.md'), storage: PromptsStorage.local, type: PromptsType.instructions }, name: 'General Guidelines', description: 'General development guidelines', applyTo: '**' },
+			{ promptPath: { uri: URI.file("/workspace/.github/instructions/general-guidelines.instructions.md"), storage: PromptsStorage.local, type: PromptsType.instructions }, name: "General Guidelines", description: "General development guidelines", applyTo: "**" },
 			// On-demand instructions (with applyTo pattern)
-			{ promptPath: { uri: URI.file('/workspace/.github/instructions/testing-guidelines.instructions.md'), storage: PromptsStorage.local, type: PromptsType.instructions }, name: 'Testing Guidelines', description: 'Testing best practices', applyTo: '**/*.test.ts' },
-			{ promptPath: { uri: URI.file('/workspace/.github/instructions/security-review.instructions.md'), storage: PromptsStorage.local, type: PromptsType.instructions }, name: 'Security Review', description: 'Security review checklist', applyTo: 'src/auth/**' },
-			{ promptPath: { uri: URI.file('/home/dev/.copilot/instructions/typescript-rules.instructions.md'), storage: PromptsStorage.extension, type: PromptsType.instructions, extension: undefined!, source: undefined! }, name: 'TypeScript Rules', description: 'TypeScript conventions', applyTo: '**/*.ts' },
+			{ promptPath: { uri: URI.file("/workspace/.github/instructions/testing-guidelines.instructions.md"), storage: PromptsStorage.local, type: PromptsType.instructions }, name: "Testing Guidelines", description: "Testing best practices", applyTo: "**/*.test.ts" },
+			{ promptPath: { uri: URI.file("/workspace/.github/instructions/security-review.instructions.md"), storage: PromptsStorage.local, type: PromptsType.instructions }, name: "Security Review", description: "Security review checklist", applyTo: "src/auth/**" },
+			{ promptPath: { uri: URI.file("/home/dev/.copilot/instructions/typescript-rules.instructions.md"), storage: PromptsStorage.extension, type: PromptsType.instructions, extension: undefined!, source: undefined! }, name: "TypeScript Rules", description: "TypeScript conventions", applyTo: "**/*.ts" },
 		], [
 			// Agent instruction files (AGENTS.md, copilot-instructions.md)
-			{ uri: URI.file('/workspace/AGENTS.md'), realPath: undefined, type: AgentInstructionFileType.agentsMd },
-			{ uri: URI.file('/workspace/.github/copilot-instructions.md'), realPath: undefined, type: AgentInstructionFileType.copilotInstructionsMd },
+			{ uri: URI.file("/workspace/AGENTS.md"), realPath: undefined, type: AgentInstructionFileType.agentsMd },
+			{ uri: URI.file("/workspace/.github/copilot-instructions.md"), realPath: undefined, type: AgentInstructionFileType.copilotInstructionsMd },
 		]),
 	}),
 
 	InstructionsTabEmpty: defineComponentFixture({
-		labels: { kind: 'screenshot' },
+		labels: { kind: "screenshot" },
 		render: ctx => renderInstructionsTab(ctx, []),
 	}),
 });

@@ -3,22 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IWorkbenchContribution } from '../../../../common/contributions.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { IProductService } from '../../../../../platform/product/common/productService.js';
-import { IExtensionService } from '../../../../services/extensions/common/extensions.js';
-import { ExtensionIdentifier } from '../../../../../platform/extensions/common/extensions.js';
-import { IExtensionManagementService, InstallOperation } from '../../../../../platform/extensionManagement/common/extensionManagement.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../../platform/storage/common/storage.js';
-import { IDefaultChatAgent } from '../../../../../base/common/product.js';
-import { IChatWidgetService } from '../chat.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
+import { IWorkbenchContribution } from "../../../../common/contributions.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { IProductService } from "../../../../../platform/product/common/productService.js";
+import { IExtensionService } from "../../../../services/extensions/common/extensions.js";
+import { ExtensionIdentifier } from "../../../../../platform/extensions/common/extensions.js";
+import { IExtensionManagementService, InstallOperation } from "../../../../../platform/extensionManagement/common/extensionManagement.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../../platform/storage/common/storage.js";
+import { IDefaultChatAgent } from "../../../../../base/common/product.js";
+import { IChatWidgetService } from "../chat.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
 
 export class ChatGettingStartedContribution extends Disposable implements IWorkbenchContribution {
-	static readonly ID = 'workbench.contrib.chatGettingStarted';
+	static readonly ID = "workbench.contrib.chatGettingStarted";
 	private recentlyInstalled: boolean = false;
 
-	private static readonly hideWelcomeView = 'workbench.chat.hideWelcomeView';
+	private static readonly hideWelcomeView = "workbench.chat.hideWelcomeView";
 
 	constructor(
 		@IProductService private readonly productService: IProductService,
@@ -31,7 +31,11 @@ export class ChatGettingStartedContribution extends Disposable implements IWorkb
 		super();
 
 		const defaultChatAgent = this.productService.defaultChatAgent;
-		const hideWelcomeView = this.storageService.getBoolean(ChatGettingStartedContribution.hideWelcomeView, StorageScope.APPLICATION, false);
+		const hideWelcomeView = this.storageService.getBoolean(
+      ChatGettingStartedContribution.hideWelcomeView,
+      StorageScope.APPLICATION,
+      false,
+    );
 		if (!defaultChatAgent || hideWelcomeView) {
 			return;
 		}
@@ -66,14 +70,21 @@ export class ChatGettingStartedContribution extends Disposable implements IWorkb
 	private async onDidInstallChat() {
 
 		// Don't reveal if user prefers the agent sessions welcome page
-		const startupEditor = this.configurationService.getValue<string>('workbench.startupEditor');
-		if (startupEditor !== 'agentSessionsWelcomePage') {
+		const startupEditor = this.configurationService.getValue<string>(
+      "workbench.startupEditor",
+    );
+		if (startupEditor !== "agentSessionsWelcomePage") {
 			// Open Chat view
 			this.chatWidgetService.revealWidget();
 		}
 
 		// Only do this once
-		this.storageService.store(ChatGettingStartedContribution.hideWelcomeView, true, StorageScope.APPLICATION, StorageTarget.MACHINE);
+		this.storageService.store(
+      ChatGettingStartedContribution.hideWelcomeView,
+      true,
+      StorageScope.APPLICATION,
+      StorageTarget.MACHINE,
+    );
 		this.recentlyInstalled = false;
 	}
 }

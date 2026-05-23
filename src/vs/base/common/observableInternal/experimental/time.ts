@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../lifecycle.js';
-import { IObservable } from '../base.js';
-import { DisposableStore, IDisposable, toDisposable } from '../commonFacade/deps.js';
-import { observableValue } from '../observables/observableValue.js';
-import { autorun } from '../reactions/autorun.js';
+import { Disposable } from "../../lifecycle.js";
+import { IObservable } from "../base.js";
+import { DisposableStore, IDisposable, toDisposable } from "../commonFacade/deps.js";
+import { observableValue } from "../observables/observableValue.js";
+import { autorun } from "../reactions/autorun.js";
 
 /** Measures the total time an observable had the value "true". */
 export class TotalTrueTimeObservable extends Disposable {
@@ -89,7 +89,7 @@ export class TotalTrueTimeObservable extends Disposable {
  * Returns an observable that is true when the input observable was true within the last `timeMs` milliseconds.
  */
 export function wasTrueRecently(obs: IObservable<boolean>, timeMs: number, store: DisposableStore): IObservable<boolean> {
-	const result = observableValue('wasTrueRecently', false);
+	const result = observableValue("wasTrueRecently", false);
 	let timeout: ReturnType<typeof setTimeout> | undefined;
 
 	store.add(autorun(reader => {

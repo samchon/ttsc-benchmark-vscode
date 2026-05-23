@@ -3,28 +3,37 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ITreeNavigator } from '../../../../base/browser/ui/tree/tree.js';
-import * as nls from '../../../../nls.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { getSelectionKeyboardEvent, WorkbenchCompressibleAsyncDataTree } from '../../../../platform/list/browser/listService.js';
-import { IViewsService } from '../../../services/views/common/viewsService.js';
-import { searchRemoveIcon, searchReplaceIcon } from './searchIcons.js';
-import { SearchView } from './searchView.js';
-import * as Constants from '../common/constants.js';
-import { IReplaceService } from './replace.js';
-import { IEditorService } from '../../../services/editor/common/editorService.js';
-import { ISearchConfiguration, ISearchConfigurationProperties } from '../../../services/search/common/search.js';
-import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
-import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
-import { Action2, MenuId, registerAction2 } from '../../../../platform/actions/common/actions.js';
-import { KeybindingWeight } from '../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { KeyCode, KeyMod } from '../../../../base/common/keyCodes.js';
-import { category, getElementsToOperateOn, getSearchView, shouldRefocus } from './searchActionsBase.js';
-import { equals } from '../../../../base/common/arrays.js';
-import { arrayContainsElementOrParent, RenderableMatch, ISearchResult, isSearchTreeFileMatch, isSearchTreeFolderMatch, isSearchTreeMatch, isSearchResult, isTextSearchHeading } from './searchTreeModel/searchTreeCommon.js';
-import { MatchInNotebook } from './notebookSearch/notebookSearchModel.js';
-import { AITextSearchHeadingImpl } from './AISearch/aiSearchModel.js';
+import { ITreeNavigator } from "../../../../base/browser/ui/tree/tree.js";
+import * as nls from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { getSelectionKeyboardEvent, WorkbenchCompressibleAsyncDataTree } from "../../../../platform/list/browser/listService.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import { searchRemoveIcon, searchReplaceIcon } from "./searchIcons.js";
+import { SearchView } from "./searchView.js";
+import * as Constants from "../common/constants.js";
+import { IReplaceService } from "./replace.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { ISearchConfiguration, ISearchConfigurationProperties } from "../../../services/search/common/search.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { Action2, MenuId, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { category, getElementsToOperateOn, getSearchView, shouldRefocus } from "./searchActionsBase.js";
+import { equals } from "../../../../base/common/arrays.js";
+import {
+  arrayContainsElementOrParent,
+  RenderableMatch,
+  ISearchResult,
+  isSearchTreeFileMatch,
+  isSearchTreeFolderMatch,
+  isSearchTreeMatch,
+  isSearchResult,
+  isTextSearchHeading,
+} from "./searchTreeModel/searchTreeCommon.js";
+import { MatchInNotebook } from "./notebookSearch/notebookSearchModel.js";
+import { AITextSearchHeadingImpl } from "./AISearch/aiSearchModel.js";
 
 
 //#region Interfaces
@@ -57,7 +66,7 @@ registerAction2(class RemoveAction extends Action2 {
 	) {
 		super({
 			id: Constants.SearchCommandIds.RemoveActionId,
-			title: nls.localize2('RemoveAction.label', "Dismiss"),
+			title: nls.localize2("RemoveAction.label", "Dismiss"),
 			category,
 			icon: searchRemoveIcon,
 			keybinding: {
@@ -71,16 +80,16 @@ registerAction2(class RemoveAction extends Action2 {
 			menu: [
 				{
 					id: MenuId.SearchContext,
-					group: 'search',
+					group: "search",
 					order: 2,
 				},
 				{
 					id: MenuId.SearchActionMenu,
-					group: 'inline',
+					group: "inline",
 					when: ContextKeyExpr.or(Constants.SearchContext.FileFocusKey, Constants.SearchContext.MatchFocusKey, Constants.SearchContext.FolderFocusKey),
 					order: 2,
 				},
-			]
+			],
 		});
 	}
 
@@ -102,7 +111,7 @@ registerAction2(class RemoveAction extends Action2 {
 			element = viewer.getFocus()[0] ?? undefined;
 		}
 
-		const elementsToRemove = getElementsToOperateOn(viewer, element, configurationService.getValue<ISearchConfigurationProperties>('search'));
+		const elementsToRemove = getElementsToOperateOn(viewer, element, configurationService.getValue<ISearchConfigurationProperties>("search"));
 		let focusElement = viewer.getFocus()[0] ?? undefined;
 
 		if (elementsToRemove.length === 0) {
@@ -152,7 +161,7 @@ registerAction2(class ReplaceAction extends Action2 {
 	) {
 		super({
 			id: Constants.SearchCommandIds.ReplaceActionId,
-			title: nls.localize2('match.replace.label', "Replace"),
+			title: nls.localize2("match.replace.label", "Replace"),
 			category,
 			keybinding: {
 				weight: KeybindingWeight.WorkbenchContrib,
@@ -164,16 +173,16 @@ registerAction2(class ReplaceAction extends Action2 {
 				{
 					id: MenuId.SearchContext,
 					when: ContextKeyExpr.and(Constants.SearchContext.ReplaceActiveKey, Constants.SearchContext.MatchFocusKey, Constants.SearchContext.IsEditableItemKey),
-					group: 'search',
-					order: 1
+					group: "search",
+					order: 1,
 				},
 				{
 					id: MenuId.SearchActionMenu,
 					when: ContextKeyExpr.and(Constants.SearchContext.ReplaceActiveKey, Constants.SearchContext.MatchFocusKey, Constants.SearchContext.IsEditableItemKey),
-					group: 'inline',
-					order: 1
-				}
-			]
+					group: "inline",
+					order: 1,
+				},
+			],
 		});
 	}
 
@@ -188,7 +197,7 @@ registerAction2(class ReplaceAllAction extends Action2 {
 	) {
 		super({
 			id: Constants.SearchCommandIds.ReplaceAllInFileActionId,
-			title: nls.localize2('file.replaceAll.label', "Replace All"),
+			title: nls.localize2("file.replaceAll.label", "Replace All"),
 			category,
 			keybinding: {
 				weight: KeybindingWeight.WorkbenchContrib,
@@ -201,16 +210,16 @@ registerAction2(class ReplaceAllAction extends Action2 {
 				{
 					id: MenuId.SearchContext,
 					when: ContextKeyExpr.and(Constants.SearchContext.ReplaceActiveKey, Constants.SearchContext.FileFocusKey, Constants.SearchContext.IsEditableItemKey),
-					group: 'search',
-					order: 1
+					group: "search",
+					order: 1,
 				},
 				{
 					id: MenuId.SearchActionMenu,
 					when: ContextKeyExpr.and(Constants.SearchContext.ReplaceActiveKey, Constants.SearchContext.FileFocusKey, Constants.SearchContext.IsEditableItemKey),
-					group: 'inline',
-					order: 1
-				}
-			]
+					group: "inline",
+					order: 1,
+				},
+			],
 		});
 	}
 
@@ -224,7 +233,7 @@ registerAction2(class ReplaceAllInFolderAction extends Action2 {
 	) {
 		super({
 			id: Constants.SearchCommandIds.ReplaceAllInFolderActionId,
-			title: nls.localize2('file.replaceAll.label', "Replace All"),
+			title: nls.localize2("file.replaceAll.label", "Replace All"),
 			category,
 			keybinding: {
 				weight: KeybindingWeight.WorkbenchContrib,
@@ -237,16 +246,16 @@ registerAction2(class ReplaceAllInFolderAction extends Action2 {
 				{
 					id: MenuId.SearchContext,
 					when: ContextKeyExpr.and(Constants.SearchContext.ReplaceActiveKey, Constants.SearchContext.FolderFocusKey, Constants.SearchContext.IsEditableItemKey),
-					group: 'search',
-					order: 1
+					group: "search",
+					order: 1,
 				},
 				{
 					id: MenuId.SearchActionMenu,
 					when: ContextKeyExpr.and(Constants.SearchContext.ReplaceActiveKey, Constants.SearchContext.FolderFocusKey, Constants.SearchContext.IsEditableItemKey),
-					group: 'inline',
-					order: 1
-				}
-			]
+					group: "inline",
+					order: 1,
+				},
+			],
 		});
 	}
 
@@ -274,10 +283,17 @@ async function performReplace(accessor: ServicesAccessor,
 	const element: RenderableMatch | null = context?.element ?? viewer.getFocus()[0];
 
 	// since multiple elements can be selected, we need to check the type of the FolderMatch/FileMatch/Match before we perform the replace.
-	const elementsToReplace = getElementsToOperateOn(viewer, element ?? undefined, configurationService.getValue<ISearchConfigurationProperties>('search'));
+	const elementsToReplace = getElementsToOperateOn(
+    viewer,
+    element ?? undefined,
+    configurationService.getValue<ISearchConfigurationProperties>("search"),
+  );
 	let focusElement = viewer.getFocus()[0];
 
-	if (!focusElement || (focusElement && !arrayContainsElementOrParent(focusElement, elementsToReplace)) || (isSearchResult(focusElement))) {
+	if (!focusElement || (focusElement && !arrayContainsElementOrParent(
+    focusElement,
+    elementsToReplace,
+  )) || (isSearchResult(focusElement))) {
 		focusElement = element;
 	}
 
@@ -286,7 +302,11 @@ async function performReplace(accessor: ServicesAccessor,
 	}
 	let nextFocusElement: RenderableMatch | undefined;
 	if (focusElement) {
-		nextFocusElement = await getElementToFocusAfterRemoved(viewer, focusElement, elementsToReplace);
+		nextFocusElement = await getElementToFocusAfterRemoved(
+      viewer,
+      focusElement,
+      elementsToReplace,
+    );
 	}
 
 	const searchResult = viewlet?.searchResult;
@@ -309,10 +329,15 @@ async function performReplace(accessor: ServicesAccessor,
 
 			if (isSearchTreeMatch(nextFocusElement)) {
 				const useReplacePreview = configurationService.getValue<ISearchConfiguration>().search?.useReplacePreview;
-				if (!useReplacePreview || instantiationService.invokeFunction(accessor => hasToOpenFile(accessor, nextFocusElement!)) || nextFocusElement instanceof MatchInNotebook) {
+				if (!useReplacePreview || instantiationService.invokeFunction(
+          accessor => hasToOpenFile(accessor, nextFocusElement!),
+        ) || nextFocusElement instanceof MatchInNotebook) {
 					viewlet?.open(nextFocusElement, true);
 				} else {
-					instantiationService.invokeFunction(accessor => accessor.get(IReplaceService)).openReplacePreview(nextFocusElement, true);
+					instantiationService.invokeFunction(accessor => accessor.get(IReplaceService)).openReplacePreview(
+            nextFocusElement,
+            true,
+          );
 				}
 			} else if (isSearchTreeFileMatch(nextFocusElement)) {
 				viewlet?.open(nextFocusElement, true);
@@ -331,7 +356,10 @@ function hasToOpenFile(accessor: ServicesAccessor, currBottomElem: RenderableMat
 	const activeEditor = accessor.get(IEditorService).activeEditor;
 	const file = activeEditor?.resource;
 	if (file) {
-		return accessor.get(IUriIdentityService).extUri.isEqual(file, currBottomElem.parent().resource);
+		return accessor.get(IUriIdentityService).extUri.isEqual(
+      file,
+      currBottomElem.parent().resource,
+    );
 	}
 	return false;
 }
@@ -375,9 +403,16 @@ function compareLevels(elem1: RenderableMatch, elem2: RenderableMatch) {
 export async function getElementToFocusAfterRemoved(viewer: WorkbenchCompressibleAsyncDataTree<ISearchResult, RenderableMatch>, element: RenderableMatch, elementsToRemove: RenderableMatch[]): Promise<RenderableMatch | undefined> {
 	const navigator: ITreeNavigator<any> = viewer.navigate(element);
 	if (isSearchTreeFolderMatch(element)) {
-		while (!!navigator.next() && (!isSearchTreeFolderMatch(navigator.current()) || arrayContainsElementOrParent(navigator.current(), elementsToRemove))) { }
+		while (!!navigator.next() && (!isSearchTreeFolderMatch(
+      navigator.current(),
+    ) || arrayContainsElementOrParent(
+      navigator.current(),
+      elementsToRemove,
+    ))) { }
 	} else if (isSearchTreeFileMatch(element)) {
-		while (!!navigator.next() && (!isSearchTreeFileMatch(navigator.current()) || arrayContainsElementOrParent(navigator.current(), elementsToRemove))) {
+		while (!!navigator.next() && (!isSearchTreeFileMatch(
+      navigator.current(),
+    ) || arrayContainsElementOrParent(navigator.current(), elementsToRemove))) {
 			// Never expand AI search results by default
 			if (navigator.current() instanceof AITextSearchHeadingImpl) {
 				return navigator.current();
@@ -385,7 +420,9 @@ export async function getElementToFocusAfterRemoved(viewer: WorkbenchCompressibl
 			await viewer.expand(navigator.current());
 		}
 	} else {
-		while (navigator.next() && (!isSearchTreeMatch(navigator.current()) || arrayContainsElementOrParent(navigator.current(), elementsToRemove))) {
+		while (navigator.next() && (!isSearchTreeMatch(
+      navigator.current(),
+    ) || arrayContainsElementOrParent(navigator.current(), elementsToRemove))) {
 			// Never expand AI search results by default
 			if (navigator.current() instanceof AITextSearchHeadingImpl) {
 				return navigator.current();

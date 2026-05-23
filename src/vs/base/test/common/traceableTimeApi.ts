@@ -10,10 +10,10 @@
  */
 
 export {
-	createTraceRoot,
-	ROOT_TRACE,
-	Trace,
-	TraceContext,
-} from './virtualScheduling/index.js';
+  createTraceRoot,
+  ROOT_TRACE,
+  Trace,
+  TraceContext,
+} from "./virtualScheduling/index.js";
 
-export type { RunAsHandlerOptions } from './virtualScheduling/index.js';
+export type { RunAsHandlerOptions } from "./virtualScheduling/index.js";

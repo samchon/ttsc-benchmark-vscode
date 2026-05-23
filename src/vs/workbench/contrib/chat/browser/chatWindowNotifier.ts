@@ -3,22 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../base/browser/dom.js';
-import { mainWindow } from '../../../../base/browser/window.js';
-import { CancellationTokenSource } from '../../../../base/common/cancellation.js';
-import { Disposable, DisposableResourceMap, toDisposable } from '../../../../base/common/lifecycle.js';
-import { autorunDelta, autorunIterableDelta } from '../../../../base/common/observable.js';
-import { URI } from '../../../../base/common/uri.js';
-import { localize } from '../../../../nls.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { FocusMode } from '../../../../platform/native/common/native.js';
-import { IWorkbenchContribution } from '../../../common/contributions.js';
-import { IHostService } from '../../../services/host/browser/host.js';
-import { IChatModel, IChatRequestNeedsInputInfo } from '../common/model/chatModel.js';
-import { IChatService, IChatToolInvocation, ToolConfirmKind } from '../common/chatService/chatService.js';
-import { migrateLegacyTerminalToolSpecificData } from '../common/chat.js';
-import { ChatConfiguration, ChatNotificationMode } from '../common/constants.js';
-import { IChatWidgetService } from './chat.js';
+import * as dom from "../../../../base/browser/dom.js";
+import { mainWindow } from "../../../../base/browser/window.js";
+import { CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { Disposable, DisposableResourceMap, toDisposable } from "../../../../base/common/lifecycle.js";
+import { autorunDelta, autorunIterableDelta } from "../../../../base/common/observable.js";
+import { URI } from "../../../../base/common/uri.js";
+import { localize } from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { FocusMode } from "../../../../platform/native/common/native.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { IHostService } from "../../../services/host/browser/host.js";
+import { IChatModel, IChatRequestNeedsInputInfo } from "../common/model/chatModel.js";
+import { IChatService, IChatToolInvocation, ToolConfirmKind } from "../common/chatService/chatService.js";
+import { migrateLegacyTerminalToolSpecificData } from "../common/chat.js";
+import { ChatConfiguration, ChatNotificationMode } from "../common/constants.js";
+import { IChatWidgetService } from "./chat.js";
 
 /**
  * Observes all live chat models and triggers OS notifications when any model
@@ -26,9 +26,11 @@ import { IChatWidgetService } from './chat.js';
  */
 export class ChatWindowNotifier extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'workbench.contrib.chatWindowNotifier';
+	static readonly ID = "workbench.contrib.chatWindowNotifier";
 
-	private readonly _activeNotifications = this._register(new DisposableResourceMap());
+	private readonly _activeNotifications = this._register(
+    new DisposableResourceMap(),
+  );
 
 	constructor(
 		@IChatService private readonly _chatService: IChatService,
@@ -49,7 +51,7 @@ export class ChatWindowNotifier extends Disposable implements IWorkbenchContribu
 				for (const model of removedValues) {
 					modelTrackers.deleteAndDispose(model.sessionResource);
 				}
-			}
+			},
 		));
 	}
 
@@ -70,13 +72,17 @@ export class ChatWindowNotifier extends Disposable implements IWorkbenchContribu
 
 	private async _notifyIfNeeded(sessionResource: URI, info: IChatRequestNeedsInputInfo): Promise<void> {
 		// Check configuration
-		const mode = this._configurationService.getValue<ChatNotificationMode>(ChatConfiguration.NotifyWindowOnConfirmation);
+		const mode = this._configurationService.getValue<ChatNotificationMode>(
+      ChatConfiguration.NotifyWindowOnConfirmation,
+    );
 		if (mode === ChatNotificationMode.Off) {
 			return;
 		}
 
 		// Find the widget to determine the target window
-		const widget = this._chatWidgetService.getWidgetBySessionResource(sessionResource);
+		const widget = this._chatWidgetService.getWidgetBySessionResource(
+      sessionResource,
+    );
 		const targetWindow = widget ? dom.getWindow(widget.domNode) : mainWindow;
 
 		const isFocused = targetWindow.document.hasFocus();
@@ -93,18 +99,25 @@ export class ChatWindowNotifier extends Disposable implements IWorkbenchContribu
 		}
 
 		// Create OS notification
-		const notificationTitle = info.title ? localize('chatTitle', "Session: {0}", info.title) : localize('chat.untitledChat', "Untitled Session");
+		const notificationTitle = info.title ? localize(
+      "chatTitle",
+      "Session: {0}",
+      info.title,
+    ) : localize("chat.untitledChat", "Untitled Session");
 
 		const cts = new CancellationTokenSource();
-		this._activeNotifications.set(sessionResource, toDisposable(() => cts.dispose(true)));
+		this._activeNotifications.set(
+      sessionResource,
+      toDisposable(() => cts.dispose(true)),
+    );
 
 		// Determine if the pending input is for a question carousel
 		const isQuestionCarousel = this._isQuestionCarouselPending(sessionResource);
 
 		try {
 			const actionLabel = isQuestionCarousel
-				? localize('openChatAction', "Open Session")
-				: localize('allowAction', "Allow");
+				? localize("openChatAction", "Open Session")
+				: localize("allowAction", "Allow");
 
 			const result = await this._hostService.showToast({
 				title: this._sanitizeOSToastText(notificationTitle),
@@ -112,14 +125,18 @@ export class ChatWindowNotifier extends Disposable implements IWorkbenchContribu
 				actions: [actionLabel],
 			}, cts.token);
 
-			if (result.actionIndex === 0 && !isQuestionCarousel && this._confirmAllow(sessionResource)) {
+			if (result.actionIndex === 0 && !isQuestionCarousel && this._confirmAllow(
+        sessionResource,
+      )) {
 				return; // skip focusing/opening chat if we successfully confirmed the tool invocation from the toast action
 			}
 
-			if (result.clicked || typeof result.actionIndex === 'number') {
+			if (result.clicked || typeof result.actionIndex === "number") {
 				await this._hostService.focus(targetWindow, { mode: FocusMode.Force });
 
-				const widget = await this._chatWidgetService.openSession(sessionResource);
+				const widget = await this._chatWidgetService.openSession(
+          sessionResource,
+        );
 				widget?.focusInput();
 			}
 		} finally {
@@ -134,7 +151,7 @@ export class ChatWindowNotifier extends Disposable implements IWorkbenchContribu
 			return false;
 		}
 		for (const part of lastResponse.response.value) {
-			const state = part.kind === 'toolInvocation' ? part.state.get() : undefined;
+			const state = part.kind === "toolInvocation" ? part.state.get() : undefined;
 			if (state?.type === IChatToolInvocation.StateKind.WaitingForConfirmation || state?.type === IChatToolInvocation.StateKind.WaitingForPostApproval) {
 				state.confirm({ type: ToolConfirmKind.UserAction });
 				return true;
@@ -145,7 +162,7 @@ export class ChatWindowNotifier extends Disposable implements IWorkbenchContribu
 
 	private _getNotificationBody(sessionResource: URI, info: IChatRequestNeedsInputInfo, isQuestionCarousel: boolean): string {
 		if (isQuestionCarousel) {
-			return localize('questionCarouselDetail', "Questions need your input.");
+			return localize("questionCarouselDetail", "Questions need your input.");
 		}
 		const terminalCommand = this._getPendingTerminalCommand(sessionResource);
 		if (terminalCommand) {
@@ -154,7 +171,7 @@ export class ChatWindowNotifier extends Disposable implements IWorkbenchContribu
 		if (info.detail) {
 			return this._sanitizeOSToastText(info.detail);
 		}
-		return localize('notificationDetail', "Approval needed to continue.");
+		return localize("notificationDetail", "Approval needed to continue.");
 	}
 
 	private _getPendingTerminalCommand(sessionResource: URI): string | undefined {
@@ -164,12 +181,14 @@ export class ChatWindowNotifier extends Disposable implements IWorkbenchContribu
 			return undefined;
 		}
 		for (const part of lastResponse.response.value) {
-			if (part.kind === 'toolInvocation' && part.toolSpecificData?.kind === 'terminal') {
+			if (part.kind === "toolInvocation" && part.toolSpecificData?.kind === "terminal") {
 				const state = part.state.get();
 				if (state?.type !== IChatToolInvocation.StateKind.WaitingForConfirmation && state?.type !== IChatToolInvocation.StateKind.WaitingForPostApproval) {
 					continue;
 				}
-				const terminalData = migrateLegacyTerminalToolSpecificData(part.toolSpecificData);
+				const terminalData = migrateLegacyTerminalToolSpecificData(
+          part.toolSpecificData,
+        );
 				return terminalData.commandLine.forDisplay ?? terminalData.commandLine.userEdited ?? terminalData.commandLine.toolEdited ?? terminalData.commandLine.original;
 			}
 		}
@@ -183,12 +202,12 @@ export class ChatWindowNotifier extends Disposable implements IWorkbenchContribu
 			return false;
 		}
 		return lastResponse.response.value.some(
-			part => part.kind === 'questionCarousel' && !part.isUsed
-		);
+      part => part.kind === "questionCarousel" && !part.isUsed,
+    );
 	}
 
 	private _sanitizeOSToastText(text: string): string {
-		return text.replace(/`/g, '\''); // convert backticks to single quotes
+		return text.replace(/`/g, "'"); // convert backticks to single quotes
 	}
 
 	private _clearNotification(sessionResource: URI): void {

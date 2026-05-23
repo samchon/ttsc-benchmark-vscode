@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IWorkbenchContribution } from '../../../common/contributions.js';
-import { IExtensionService } from '../../../services/extensions/common/extensions.js';
-import { IProgressService, ProgressLocation } from '../../../../platform/progress/common/progress.js';
-import { localize } from '../../../../nls.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { DeferredPromise, timeout } from '../../../../base/common/async.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { IProgressService, ProgressLocation } from "../../../../platform/progress/common/progress.js";
+import { localize } from "../../../../nls.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { DeferredPromise, timeout } from "../../../../base/common/async.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
 
 export class ExtensionActivationProgress implements IWorkbenchContribution {
 
@@ -23,15 +23,15 @@ export class ExtensionActivationProgress implements IWorkbenchContribution {
 	) {
 
 		const options = {
-			location: ProgressLocation.Window,
-			title: localize('activation', "Activating Extensions...")
-		};
+      location: ProgressLocation.Window,
+      title: localize("activation", "Activating Extensions..."),
+    };
 
 		let deferred: DeferredPromise<any> | undefined;
 		let count = 0;
 
 		this._listener = extensionService.onWillActivateByEvent(e => {
-			logService.trace('onWillActivateByEvent: ', e.event);
+			logService.trace("onWillActivateByEvent: ", e.event);
 
 			if (!deferred) {
 				deferred = new DeferredPromise();

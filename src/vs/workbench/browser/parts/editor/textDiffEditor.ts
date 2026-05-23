@@ -3,39 +3,62 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../../../nls.js';
-import { deepClone } from '../../../../base/common/objects.js';
-import { isObject, assertReturnsDefined } from '../../../../base/common/types.js';
-import { ICodeEditor, IDiffEditor } from '../../../../editor/browser/editorBrowser.js';
-import { IDiffEditorOptions, IEditorOptions as ICodeEditorOptions } from '../../../../editor/common/config/editorOptions.js';
-import { AbstractTextEditor, IEditorConfiguration } from './textEditor.js';
-import { TEXT_DIFF_EDITOR_ID, IEditorFactoryRegistry, EditorExtensions, ITextDiffEditorPane, IEditorOpenContext, isEditorInput, isTextEditorViewState, createTooLargeFileError } from '../../../common/editor.js';
-import { EditorInput } from '../../../common/editor/editorInput.js';
-import { applyTextEditorOptions } from '../../../common/editor/editorOptions.js';
-import { DiffEditorInput } from '../../../common/editor/diffEditorInput.js';
-import { TextDiffEditorModel } from '../../../common/editor/textDiffEditorModel.js';
-import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
-import { IStorageService } from '../../../../platform/storage/common/storage.js';
-import { ITextResourceConfigurationChangeEvent, ITextResourceConfigurationService } from '../../../../editor/common/services/textResourceConfiguration.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { IThemeService } from '../../../../platform/theme/common/themeService.js';
-import { TextFileOperationError, TextFileOperationResult } from '../../../services/textfile/common/textfiles.js';
-import { ScrollType, IDiffEditorViewState, IDiffEditorModel, IDiffEditorViewModel } from '../../../../editor/common/editorCommon.js';
-import { Registry } from '../../../../platform/registry/common/platform.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IEditorGroup, IEditorGroupsService } from '../../../services/editor/common/editorGroupsService.js';
-import { IEditorService } from '../../../services/editor/common/editorService.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { EditorActivation, ITextEditorOptions } from '../../../../platform/editor/common/editor.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { isEqual } from '../../../../base/common/resources.js';
-import { Dimension } from '../../../../base/browser/dom.js';
-import { multibyteAwareBtoa } from '../../../../base/common/strings.js';
-import { ByteSize, FileOperationError, FileOperationResult, IFileService, TooLargeFileOperationError } from '../../../../platform/files/common/files.js';
-import { IBoundarySashes } from '../../../../base/browser/ui/sash/sash.js';
-import { IPreferencesService } from '../../../services/preferences/common/preferences.js';
-import { StopWatch } from '../../../../base/common/stopwatch.js';
-import { DiffEditorWidget } from '../../../../editor/browser/widget/diffEditor/diffEditorWidget.js';
+import { localize } from "../../../../nls.js";
+import { deepClone } from "../../../../base/common/objects.js";
+import { isObject, assertReturnsDefined } from "../../../../base/common/types.js";
+import { ICodeEditor, IDiffEditor } from "../../../../editor/browser/editorBrowser.js";
+import { IDiffEditorOptions, IEditorOptions as ICodeEditorOptions } from "../../../../editor/common/config/editorOptions.js";
+import { AbstractTextEditor, IEditorConfiguration } from "./textEditor.js";
+import {
+  TEXT_DIFF_EDITOR_ID,
+  IEditorFactoryRegistry,
+  EditorExtensions,
+  ITextDiffEditorPane,
+  IEditorOpenContext,
+  isEditorInput,
+  isTextEditorViewState,
+  createTooLargeFileError,
+} from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { applyTextEditorOptions } from "../../../common/editor/editorOptions.js";
+import { DiffEditorInput } from "../../../common/editor/diffEditorInput.js";
+import { TextDiffEditorModel } from "../../../common/editor/textDiffEditorModel.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import {
+  ITextResourceConfigurationChangeEvent,
+  ITextResourceConfigurationService,
+} from "../../../../editor/common/services/textResourceConfiguration.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { TextFileOperationError, TextFileOperationResult } from "../../../services/textfile/common/textfiles.js";
+import {
+  ScrollType,
+  IDiffEditorViewState,
+  IDiffEditorModel,
+  IDiffEditorViewModel,
+} from "../../../../editor/common/editorCommon.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IEditorGroup, IEditorGroupsService } from "../../../services/editor/common/editorGroupsService.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { EditorActivation, ITextEditorOptions } from "../../../../platform/editor/common/editor.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { Dimension } from "../../../../base/browser/dom.js";
+import { multibyteAwareBtoa } from "../../../../base/common/strings.js";
+import {
+  ByteSize,
+  FileOperationError,
+  FileOperationResult,
+  IFileService,
+  TooLargeFileOperationError,
+} from "../../../../platform/files/common/files.js";
+import { IBoundarySashes } from "../../../../base/browser/ui/sash/sash.js";
+import { IPreferencesService } from "../../../services/preferences/common/preferences.js";
+import { StopWatch } from "../../../../base/common/stopwatch.js";
+import { DiffEditorWidget } from "../../../../editor/browser/widget/diffEditor/diffEditorWidget.js";
 
 /**
  * The text editor that leverages the diff text editor for the editing experience.
@@ -55,7 +78,9 @@ export class TextDiffEditor extends AbstractTextEditor<IDiffEditorViewState> imp
 		const originalEditor = this.diffEditorControl.getOriginalEditor();
 		const modifiedEditor = this.diffEditorControl.getModifiedEditor();
 
-		return (originalEditor.hasTextFocus() ? originalEditor : modifiedEditor).invokeWithinContext(accessor => accessor.get(IContextKeyService));
+		return (originalEditor.hasTextFocus() ? originalEditor : modifiedEditor).invokeWithinContext(
+      accessor => accessor.get(IContextKeyService),
+    );
 	}
 
 	constructor(
@@ -68,9 +93,20 @@ export class TextDiffEditor extends AbstractTextEditor<IDiffEditorViewState> imp
 		@IThemeService themeService: IThemeService,
 		@IEditorGroupsService editorGroupService: IEditorGroupsService,
 		@IFileService fileService: IFileService,
-		@IPreferencesService private readonly preferencesService: IPreferencesService
+		@IPreferencesService private readonly preferencesService: IPreferencesService,
 	) {
-		super(TextDiffEditor.ID, group, telemetryService, instantiationService, storageService, configurationService, themeService, editorService, editorGroupService, fileService);
+		super(
+      TextDiffEditor.ID,
+      group,
+      telemetryService,
+      instantiationService,
+      storageService,
+      configurationService,
+      themeService,
+      editorService,
+      editorGroupService,
+      fileService,
+    );
 	}
 
 	override getTitle(): string {
@@ -78,11 +114,18 @@ export class TextDiffEditor extends AbstractTextEditor<IDiffEditorViewState> imp
 			return this.input.getName();
 		}
 
-		return localize('textDiffEditor', "Text Diff Editor");
+		return localize("textDiffEditor", "Text Diff Editor");
 	}
 
 	protected override createEditorControl(parent: HTMLElement, configuration: ICodeEditorOptions): void {
-		this.diffEditorControl = this._register(this.instantiationService.createInstance(DiffEditorWidget, parent, configuration, {}));
+		this.diffEditorControl = this._register(
+      this.instantiationService.createInstance(
+        DiffEditorWidget,
+        parent,
+        configuration,
+        {},
+      ),
+    );
 	}
 
 	protected updateEditorControlOptions(options: ICodeEditorOptions): void {
@@ -125,7 +168,9 @@ export class TextDiffEditor extends AbstractTextEditor<IDiffEditorViewState> imp
 			const control = assertReturnsDefined(this.diffEditorControl);
 			const resolvedDiffEditorModel = resolvedModel;
 
-			const vm = resolvedDiffEditorModel.textDiffEditorModel ? control.createViewModel(resolvedDiffEditorModel.textDiffEditorModel) : null;
+			const vm = resolvedDiffEditorModel.textDiffEditorModel ? control.createViewModel(
+        resolvedDiffEditorModel.textDiffEditorModel,
+      ) : null;
 			this._previousViewModel = vm;
 			await vm?.waitForDiff();
 			control.setModel(vm);
@@ -133,13 +178,22 @@ export class TextDiffEditor extends AbstractTextEditor<IDiffEditorViewState> imp
 			// Restore view state (unless provided by options)
 			let hasPreviousViewState = false;
 			if (!isTextEditorViewState(options?.viewState)) {
-				hasPreviousViewState = this.restoreTextDiffEditorViewState(input, options, context, control);
+				hasPreviousViewState = this.restoreTextDiffEditorViewState(
+          input,
+          options,
+          context,
+          control,
+        );
 			}
 
 			// Apply options to editor if any
 			let optionsGotApplied = false;
 			if (options) {
-				optionsGotApplied = applyTextEditorOptions(options, control, ScrollType.Immediate);
+				optionsGotApplied = applyTextEditorOptions(
+          options,
+          control,
+          ScrollType.Immediate,
+        );
 			}
 
 			if (!optionsGotApplied && !hasPreviousViewState) {
@@ -152,9 +206,9 @@ export class TextDiffEditor extends AbstractTextEditor<IDiffEditorViewState> imp
 			// a resolved model might have more specific information about being
 			// readonly or not that the input did not have.
 			control.updateOptions({
-				...this.getReadonlyConfiguration(resolvedDiffEditorModel.modifiedModel?.isReadonly()),
-				originalEditable: !resolvedDiffEditorModel.originalModel?.isReadonly()
-			});
+        ...this.getReadonlyConfiguration(resolvedDiffEditorModel.modifiedModel?.isReadonly()),
+        originalEditable: !resolvedDiffEditorModel.originalModel?.isReadonly(),
+      });
 
 			control.handleInitialized();
 
@@ -176,12 +230,25 @@ export class TextDiffEditor extends AbstractTextEditor<IDiffEditorViewState> imp
 		if ((<FileOperationError>error).fileOperationResult === FileOperationResult.FILE_TOO_LARGE) {
 			let message: string;
 			if (error instanceof TooLargeFileOperationError) {
-				message = localize('fileTooLargeForHeapErrorWithSize', "At least one file is not displayed in the text compare editor because it is very large ({0}).", ByteSize.formatSize(error.size));
+				message = localize(
+          "fileTooLargeForHeapErrorWithSize",
+          "At least one file is not displayed in the text compare editor because it is very large ({0}).",
+          ByteSize.formatSize(error.size),
+        );
 			} else {
-				message = localize('fileTooLargeForHeapErrorWithoutSize', "At least one file is not displayed in the text compare editor because it is very large.");
+				message = localize(
+          "fileTooLargeForHeapErrorWithoutSize",
+          "At least one file is not displayed in the text compare editor because it is very large.",
+        );
 			}
 
-			throw createTooLargeFileError(this.group, input, options, message, this.preferencesService);
+			throw createTooLargeFileError(
+        this.group,
+        input,
+        options,
+        message,
+        this.preferencesService,
+      );
 		}
 
 		// Otherwise make sure the error bubbles up
@@ -211,7 +278,14 @@ export class TextDiffEditor extends AbstractTextEditor<IDiffEditorViewState> imp
 		const original = input.original;
 		const modified = input.modified;
 
-		const binaryDiffInput = this.instantiationService.createInstance(DiffEditorInput, input.getName(), input.getDescription(), original, modified, true);
+		const binaryDiffInput = this.instantiationService.createInstance(
+      DiffEditorInput,
+      input.getName(),
+      input.getDescription(),
+      original,
+      modified,
+      true,
+    );
 
 		// Forward binary flag to input if supported
 		const fileEditorFactory = Registry.as<IEditorFactoryRegistry>(EditorExtensions.EditorFactory).getFileEditorFactory();
@@ -235,8 +309,8 @@ export class TextDiffEditor extends AbstractTextEditor<IDiffEditorViewState> imp
 				// in us now opening as binary.
 				activation: EditorActivation.PRESERVE,
 				pinned: this.group.isPinned(input),
-				sticky: this.group.isSticky(input)
-			}
+				sticky: this.group.isSticky(input),
+			},
 		}]);
 	}
 
@@ -244,7 +318,11 @@ export class TextDiffEditor extends AbstractTextEditor<IDiffEditorViewState> imp
 		super.setOptions(options);
 
 		if (options) {
-			applyTextEditorOptions(options, assertReturnsDefined(this.diffEditorControl), ScrollType.Smooth);
+			applyTextEditorOptions(
+        options,
+        assertReturnsDefined(this.diffEditorControl),
+        ScrollType.Smooth,
+      );
 		}
 	}
 
@@ -253,7 +331,10 @@ export class TextDiffEditor extends AbstractTextEditor<IDiffEditorViewState> imp
 			return true;
 		}
 
-		return e.affectsConfiguration(resource, 'diffEditor') || e.affectsConfiguration(resource, 'accessibility.verbosity.diffEditor');
+		return e.affectsConfiguration(
+      resource,
+      "diffEditor",
+    ) || e.affectsConfiguration(resource, "accessibility.verbosity.diffEditor");
 	}
 
 	protected override computeConfiguration(configuration: IEditorConfiguration): ICodeEditorOptions {
@@ -261,14 +342,16 @@ export class TextDiffEditor extends AbstractTextEditor<IDiffEditorViewState> imp
 
 		// Handle diff editor specially by merging in diffEditor configuration
 		if (isObject(configuration.diffEditor)) {
-			const diffEditorConfiguration: IDiffEditorOptions = deepClone(configuration.diffEditor);
+			const diffEditorConfiguration: IDiffEditorOptions = deepClone(
+        configuration.diffEditor,
+      );
 
 			// User settings defines `diffEditor.codeLens`, but here we rename that to `diffEditor.diffCodeLens` to avoid collisions with `editor.codeLens`.
 			diffEditorConfiguration.diffCodeLens = diffEditorConfiguration.codeLens;
 			delete diffEditorConfiguration.codeLens;
 
 			// User settings defines `diffEditor.wordWrap`, but here we rename that to `diffEditor.diffWordWrap` to avoid collisions with `editor.wordWrap`.
-			diffEditorConfiguration.diffWordWrap = <'off' | 'on' | 'inherit' | undefined>diffEditorConfiguration.wordWrap;
+			diffEditorConfiguration.diffWordWrap = <"off" | "on" | "inherit" | undefined>diffEditorConfiguration.wordWrap;
 			delete diffEditorConfiguration.wordWrap;
 
 			Object.assign(editorConfiguration, diffEditorConfiguration);
@@ -282,19 +365,19 @@ export class TextDiffEditor extends AbstractTextEditor<IDiffEditorViewState> imp
 
 	protected override getConfigurationOverrides(configuration: IEditorConfiguration): IDiffEditorOptions {
 		return {
-			...super.getConfigurationOverrides(configuration),
-			...this.getReadonlyConfiguration(this.input?.isReadonly()),
-			originalEditable: this.input instanceof DiffEditorInput && !this.input.original.isReadonly(),
-			lineDecorationsWidth: '2ch'
-		};
+      ...super.getConfigurationOverrides(configuration),
+      ...this.getReadonlyConfiguration(this.input?.isReadonly()),
+      originalEditable: this.input instanceof DiffEditorInput && !this.input.original.isReadonly(),
+      lineDecorationsWidth: "2ch",
+    };
 	}
 
 	protected override updateReadonly(input: EditorInput): void {
 		if (input instanceof DiffEditorInput) {
 			this.diffEditorControl?.updateOptions({
-				...this.getReadonlyConfiguration(input.isReadonly()),
-				originalEditable: !input.original.isReadonly(),
-			});
+        ...this.getReadonlyConfiguration(input.isReadonly()),
+        originalEditable: !input.original.isReadonly(),
+      });
 		} else {
 			super.updateReadonly(input);
 		}
@@ -323,8 +406,11 @@ export class TextDiffEditor extends AbstractTextEditor<IDiffEditorViewState> imp
 		// Log input lifecycle telemetry
 		const inputLifecycleElapsed = this.inputLifecycleStopWatch?.elapsed();
 		this.inputLifecycleStopWatch = undefined;
-		if (typeof inputLifecycleElapsed === 'number') {
-			this.logInputLifecycleTelemetry(inputLifecycleElapsed, this.getControl()?.getModel()?.modified?.getLanguageId());
+		if (typeof inputLifecycleElapsed === "number") {
+			this.logInputLifecycleTelemetry(
+        inputLifecycleElapsed,
+        this.getControl()?.getModel()?.modified?.getLanguageId(),
+      );
 		}
 
 		// Clear Model
@@ -341,16 +427,16 @@ export class TextDiffEditor extends AbstractTextEditor<IDiffEditorViewState> imp
 			languageId: string;
 			collapseUnchangedRegions: boolean;
 		}, {
-			owner: 'hediet';
-			editorVisibleTimeMs: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Indicates the time the diff editor was visible to the user' };
-			languageId: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Indicates for which language the diff editor was shown' };
-			collapseUnchangedRegions: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Indicates whether unchanged regions were collapsed' };
-			comment: 'This event gives insight about how long the diff editor was visible to the user.';
-		}>('diffEditor.editorVisibleTime', {
-			editorVisibleTimeMs: duration,
-			languageId: languageId ?? '',
-			collapseUnchangedRegions,
-		});
+			owner: "hediet";
+			editorVisibleTimeMs: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Indicates the time the diff editor was visible to the user" };
+			languageId: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Indicates for which language the diff editor was shown" };
+			collapseUnchangedRegions: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Indicates whether unchanged regions were collapsed" };
+			comment: "This event gives insight about how long the diff editor was visible to the user.";
+		}>("diffEditor.editorVisibleTime", {
+      editorVisibleTimeMs: duration,
+      languageId: languageId ?? "",
+      collapseUnchangedRegions,
+    });
 	}
 
 	override getControl(): IDiffEditor | undefined {
@@ -428,6 +514,9 @@ export class TextDiffEditor extends AbstractTextEditor<IDiffEditorViewState> imp
 		}
 
 		// create a URI that is the Base64 concatenation of original + modified resource
-		return URI.from({ scheme: 'diff', path: `${multibyteAwareBtoa(original.toString())}${multibyteAwareBtoa(modified.toString())}` });
+		return URI.from({
+      scheme: "diff",
+      path: `${multibyteAwareBtoa(original.toString())}${multibyteAwareBtoa(modified.toString())}`,
+    });
 	}
 }

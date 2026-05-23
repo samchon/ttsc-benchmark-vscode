@@ -3,23 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../../../base/common/lifecycle.js';
-import { WorkbenchPhase, registerWorkbenchContribution2 } from '../../../../../common/contributions.js';
-import { CellKind } from '../../../common/notebookCommon.js';
-import { IEditorService } from '../../../../../services/editor/common/editorService.js';
-import { CellEditState, getNotebookEditorFromEditorPane } from '../../notebookBrowser.js';
-import { RedoCommand, UndoCommand } from '../../../../../../editor/browser/editorExtensions.js';
-import { NotebookViewModel } from '../../viewModel/notebookViewModelImpl.js';
+import { Disposable } from "../../../../../../base/common/lifecycle.js";
+import { WorkbenchPhase, registerWorkbenchContribution2 } from "../../../../../common/contributions.js";
+import { CellKind } from "../../../common/notebookCommon.js";
+import { IEditorService } from "../../../../../services/editor/common/editorService.js";
+import { CellEditState, getNotebookEditorFromEditorPane } from "../../notebookBrowser.js";
+import { RedoCommand, UndoCommand } from "../../../../../../editor/browser/editorExtensions.js";
+import { NotebookViewModel } from "../../viewModel/notebookViewModelImpl.js";
 
 class NotebookUndoRedoContribution extends Disposable {
 
-	static readonly ID = 'workbench.contrib.notebookUndoRedo';
+	static readonly ID = "workbench.contrib.notebookUndoRedo";
 
 	constructor(@IEditorService private readonly _editorService: IEditorService) {
 		super();
 
 		const PRIORITY = 105;
-		this._register(UndoCommand.addImplementation(PRIORITY, 'notebook-undo-redo', () => {
+		this._register(UndoCommand.addImplementation(PRIORITY, "notebook-undo-redo", () => {
 			const editor = getNotebookEditorFromEditorPane(this._editorService.activeEditorPane);
 			const viewModel = editor?.getViewModel() as NotebookViewModel | undefined;
 			if (editor && editor.hasEditorFocus() && editor.hasModel() && viewModel) {
@@ -28,7 +28,7 @@ class NotebookUndoRedoContribution extends Disposable {
 						for (let i = 0; i < editor.getLength(); i++) {
 							const cell = editor.cellAt(i);
 							if (cell.cellKind === CellKind.Markup && cellResources.find(resource => resource.fragment === cell.model.uri.fragment)) {
-								cell.updateEditState(CellEditState.Editing, 'undo');
+								cell.updateEditState(CellEditState.Editing, "undo");
 							}
 						}
 
@@ -40,7 +40,7 @@ class NotebookUndoRedoContribution extends Disposable {
 			return false;
 		}));
 
-		this._register(RedoCommand.addImplementation(PRIORITY, 'notebook-undo-redo', () => {
+		this._register(RedoCommand.addImplementation(PRIORITY, "notebook-undo-redo", () => {
 			const editor = getNotebookEditorFromEditorPane(this._editorService.activeEditorPane);
 			const viewModel = editor?.getViewModel() as NotebookViewModel | undefined;
 
@@ -50,7 +50,7 @@ class NotebookUndoRedoContribution extends Disposable {
 						for (let i = 0; i < editor.getLength(); i++) {
 							const cell = editor.cellAt(i);
 							if (cell.cellKind === CellKind.Markup && cellResources.find(resource => resource.fragment === cell.model.uri.fragment)) {
-								cell.updateEditState(CellEditState.Editing, 'redo');
+								cell.updateEditState(CellEditState.Editing, "redo");
 							}
 						}
 
@@ -64,4 +64,8 @@ class NotebookUndoRedoContribution extends Disposable {
 	}
 }
 
-registerWorkbenchContribution2(NotebookUndoRedoContribution.ID, NotebookUndoRedoContribution, WorkbenchPhase.BlockRestore);
+registerWorkbenchContribution2(
+  NotebookUndoRedoContribution.ID,
+  NotebookUndoRedoContribution,
+  WorkbenchPhase.BlockRestore,
+);

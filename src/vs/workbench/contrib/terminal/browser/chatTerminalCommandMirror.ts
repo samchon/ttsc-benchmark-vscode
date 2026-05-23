@@ -3,23 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, DisposableStore, toDisposable } from '../../../../base/common/lifecycle.js';
-import { CancellationError } from '../../../../base/common/errors.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import type { IMarker as IXtermMarker, Terminal as RawXtermTerminal } from '@xterm/xterm';
-import type { ITerminalCommand } from '../../../../platform/terminal/common/capabilities/capabilities.js';
-import { ITerminalService, type IDetachedTerminalInstance } from './terminal.js';
-import { DetachedProcessInfo } from './detachedTerminal.js';
-import { XtermTerminal } from './xterm/xtermTerminal.js';
-import { TERMINAL_BACKGROUND_COLOR } from '../common/terminalColorRegistry.js';
-import { PANEL_BACKGROUND } from '../../../common/theme.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { ChatContextKeys } from '../../chat/common/actions/chatContextKeys.js';
-import { editorBackground } from '../../../../platform/theme/common/colorRegistry.js';
-import { Color } from '../../../../base/common/color.js';
-import type { IChatTerminalToolInvocationData } from '../../chat/common/chatService/chatService.js';
-import type { IColorTheme } from '../../../../platform/theme/common/themeService.js';
-import { ICurrentPartialCommand } from '../../../../platform/terminal/common/capabilities/commandDetection/terminalCommand.js';
+import { Disposable, DisposableStore, toDisposable } from "../../../../base/common/lifecycle.js";
+import { CancellationError } from "../../../../base/common/errors.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import type { IMarker as IXtermMarker, Terminal as RawXtermTerminal } from "@xterm/xterm";
+import type { ITerminalCommand } from "../../../../platform/terminal/common/capabilities/capabilities.js";
+import { ITerminalService, type IDetachedTerminalInstance } from "./terminal.js";
+import { DetachedProcessInfo } from "./detachedTerminal.js";
+import { XtermTerminal } from "./xterm/xtermTerminal.js";
+import { TERMINAL_BACKGROUND_COLOR } from "../common/terminalColorRegistry.js";
+import { PANEL_BACKGROUND } from "../../../common/theme.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { ChatContextKeys } from "../../chat/common/actions/chatContextKeys.js";
+import { editorBackground } from "../../../../platform/theme/common/colorRegistry.js";
+import { Color } from "../../../../base/common/color.js";
+import type { IChatTerminalToolInvocationData } from "../../chat/common/chatService/chatService.js";
+import type { IColorTheme } from "../../../../platform/theme/common/themeService.js";
+import { ICurrentPartialCommand } from "../../../../platform/terminal/common/capabilities/commandDetection/terminalCommand.js";
 
 function getChatTerminalBackgroundColor(theme: IColorTheme, contextKeyService: IContextKeyService, storedBackground?: string): Color | undefined {
 	if (storedBackground) {
@@ -124,7 +124,7 @@ function computeOutputLineCount(startLine: number, endLine: number): number {
 export async function getCommandOutputSnapshot(
 	xtermTerminal: XtermTerminal,
 	command: ITerminalCommand,
-	log?: (reason: 'fallback' | 'primary', error: unknown) => void
+	log?: (reason: "fallback" | "primary", error: unknown) => void,
 ): Promise<{ text: string; lineCount: number } | undefined> {
 	const executedMarker = command.executedMarker;
 	const endMarker = command.endMarker;
@@ -136,11 +136,7 @@ export async function getCommandOutputSnapshot(
 	if (!executedMarker || executedMarker.isDisposed) {
 		const raw = xtermTerminal.raw;
 		const buffer = raw.buffer.active;
-		const offsets = [
-			-(buffer.baseY + buffer.cursorY),
-			-buffer.baseY,
-			0
-		];
+		const offsets = [-(buffer.baseY + buffer.cursorY), -buffer.baseY, 0];
 		let startMarker: IXtermMarker | undefined;
 		for (const offset of offsets) {
 			startMarker = raw.registerMarker(offset);
@@ -149,20 +145,20 @@ export async function getCommandOutputSnapshot(
 			}
 		}
 		if (!startMarker || startMarker.isDisposed) {
-			return { text: '', lineCount: 0 };
+			return { text: "", lineCount: 0 };
 		}
 		const startLine = startMarker.line;
 		let text: string | undefined;
 		try {
 			text = await xtermTerminal.getRangeAsVT(startMarker, endMarker, true);
 		} catch (error) {
-			log?.('fallback', error);
+			log?.("fallback", error);
 			return undefined;
 		} finally {
 			startMarker.dispose();
 		}
 		if (!text) {
-			return { text: '', lineCount: 0 };
+			return { text: "", lineCount: 0 };
 		}
 		const endLine = endMarker.line;
 		const lineCount = computeOutputLineCount(startLine, endLine);
@@ -177,11 +173,11 @@ export async function getCommandOutputSnapshot(
 	try {
 		text = await xtermTerminal.getRangeAsVT(executedMarker, endMarker, true);
 	} catch (error) {
-		log?.('primary', error);
+		log?.("primary", error);
 		return undefined;
 	}
 	if (!text) {
-		return { text: '', lineCount: 0 };
+		return { text: "", lineCount: 0 };
 	}
 
 	return { text, lineCount };
@@ -221,13 +217,17 @@ export class DetachedTerminalCommandMirror extends Disposable implements IDetach
 	private _detachedTerminal: IDetachedTerminalInstance | undefined;
 	private _detachedTerminalPromise: Promise<IDetachedTerminalInstance> | undefined;
 	private _attachedContainer: HTMLElement | undefined;
-	private readonly _streamingDisposables = this._register(new DisposableStore());
-	private readonly _onDidUpdateEmitter = this._register(new Emitter<IDetachedTerminalCommandMirrorRenderResult>());
+	private readonly _streamingDisposables = this._register(
+    new DisposableStore(),
+  );
+	private readonly _onDidUpdateEmitter = this._register(
+    new Emitter<IDetachedTerminalCommandMirrorRenderResult>(),
+  );
 	public readonly onDidUpdate: Event<IDetachedTerminalCommandMirrorRenderResult> = this._onDidUpdateEmitter.event;
 	private readonly _onDidInputEmitter = this._register(new Emitter<string>());
 	public readonly onDidInput: Event<string> = this._onDidInputEmitter.event;
 
-	private _lastVT = '';
+	private _lastVT = "";
 	private _lineCount = 0;
 	private _maxColumnWidth = 0;
 	private _lastUpToDateCursorY: number | undefined;
@@ -241,12 +241,14 @@ export class DetachedTerminalCommandMirror extends Disposable implements IDetach
 		private readonly _xtermTerminal: XtermTerminal,
 		private readonly _command: ITerminalCommand,
 		@ITerminalService private readonly _terminalService: ITerminalService,
-		@IContextKeyService private readonly _contextKeyService: IContextKeyService
+		@IContextKeyService private readonly _contextKeyService: IContextKeyService,
 	) {
 		super();
-		this._register(toDisposable(() => {
-			this._stopStreaming();
-		}));
+		this._register(
+      toDisposable(() => {
+        this._stopStreaming();
+      }),
+    );
 	}
 
 	async attach(container: HTMLElement): Promise<void> {
@@ -266,7 +268,7 @@ export class DetachedTerminalCommandMirror extends Disposable implements IDetach
 			return;
 		}
 		if (this._attachedContainer !== container) {
-			container.classList.add('chat-terminal-output-terminal');
+			container.classList.add("chat-terminal-output-terminal");
 			terminal.attachToElement(container, { enableGpu: false });
 			this._attachedContainer = container;
 		}
@@ -356,12 +358,16 @@ export class DetachedTerminalCommandMirror extends Disposable implements IDetach
 		}
 
 		const endMarker = this._command.endMarker;
-		const text = await source.getRangeAsVT(executedMarker, endMarker, endMarker?.line !== executedMarker.line);
+		const text = await source.getRangeAsVT(
+      executedMarker,
+      endMarker,
+      endMarker?.line !== executedMarker.line,
+    );
 		if (this._store.isDisposed) {
 			return undefined;
 		}
 		if (!text) {
-			return { text: '' };
+			return { text: "" };
 		}
 
 		return { text };
@@ -392,7 +398,10 @@ export class DetachedTerminalCommandMirror extends Disposable implements IDetach
 		if (!detached) {
 			return 0;
 		}
-		return computeMaxBufferColumnWidth(detached.xterm.buffer.active, detached.xterm.cols);
+		return computeMaxBufferColumnWidth(
+      detached.xterm.buffer.active,
+      detached.xterm.cols,
+    );
 	}
 
 	private async _getOrCreateTerminal(): Promise<IDetachedTerminalInstance> {
@@ -407,16 +416,16 @@ export class DetachedTerminalCommandMirror extends Disposable implements IDetach
 		}
 		const createPromise = (async () => {
 			const colorProvider = {
-				getBackgroundColor: (theme: IColorTheme) => getChatTerminalBackgroundColor(theme, this._contextKeyService)
+				getBackgroundColor: (theme: IColorTheme) => getChatTerminalBackgroundColor(theme, this._contextKeyService),
 			};
-			const processInfo = new DetachedProcessInfo({ initialCwd: '' });
+			const processInfo = new DetachedProcessInfo({ initialCwd: "" });
 			const detached = await this._terminalService.createDetachedTerminal({
 				cols: this._xtermTerminal.raw.cols ?? ChatTerminalMirrorMetrics.MirrorColCountFallback,
 				rows: ChatTerminalMirrorMetrics.MirrorRowCount,
 				readonly: false,
 				processInfo,
 				disableOverviewRuler: true,
-				colorProvider
+				colorProvider,
 			});
 			if (this._store.isDisposed) {
 				processInfo.dispose();
@@ -440,7 +449,11 @@ export class DetachedTerminalCommandMirror extends Disposable implements IDetach
 			return;
 		}
 		this._isStreaming = true;
-		this._streamingDisposables.add(Event.any(raw.onCursorMove, raw.onLineFeed, raw.onWriteParsed)(() => this._handleCursorEvent()));
+		this._streamingDisposables.add(
+      Event.any(raw.onCursorMove, raw.onLineFeed, raw.onWriteParsed)(
+        () => this._handleCursorEvent(),
+      ),
+    );
 		this._streamingDisposables.add(raw.onData(() => this._handleCursorEvent()));
 	}
 
@@ -459,7 +472,10 @@ export class DetachedTerminalCommandMirror extends Disposable implements IDetach
 			return;
 		}
 		const cursorY = this._getAbsoluteCursorY(this._sourceRaw);
-		this._lowestDirtyCursorY = this._lowestDirtyCursorY === undefined ? cursorY : Math.min(this._lowestDirtyCursorY, cursorY);
+		this._lowestDirtyCursorY = this._lowestDirtyCursorY === undefined ? cursorY : Math.min(
+      this._lowestDirtyCursorY,
+      cursorY,
+    );
 		this._scheduleFlush();
 	}
 
@@ -482,8 +498,8 @@ export class DetachedTerminalCommandMirror extends Disposable implements IDetach
 			return;
 		}
 		this._flushPromise = this._doFlushDirtyRange().finally(() => {
-			this._flushPromise = undefined;
-		});
+      this._flushPromise = undefined;
+    });
 	}
 
 	private async _doFlushDirtyRange(): Promise<void> {
@@ -537,7 +553,10 @@ export class DetachedTerminalCommandMirror extends Disposable implements IDetach
 		// Only append if: (1) cursor hasn't moved backwards, and (2) boundary around slice point matches.
 		// This is an efficient O(1) check instead of comparing the entire prefix.
 		// On Windows, VT sequences can differ even for equivalent content, so we must verify.
-		const canAppend = !!this._lastVT && startLine >= previousCursor && vt.text.length >= this._lastVT.length && this._vtBoundaryMatches(vt.text, this._lastVT.length);
+		const canAppend = !!this._lastVT && startLine >= previousCursor && vt.text.length >= this._lastVT.length && this._vtBoundaryMatches(
+      vt.text,
+      this._lastVT.length,
+    );
 		await new Promise<void>(resolve => {
 			if (!canAppend) {
 				// Use \x1bc (RIS) + new content in one write to avoid a blank frame
@@ -570,7 +589,10 @@ export class DetachedTerminalCommandMirror extends Disposable implements IDetach
 			this._stopStreaming();
 		}
 
-		this._onDidUpdateEmitter.fire({ lineCount: this._lineCount, maxColumnWidth: this._maxColumnWidth });
+		this._onDidUpdateEmitter.fire({
+      lineCount: this._lineCount,
+      maxColumnWidth: this._maxColumnWidth,
+    });
 	}
 
 	private _getAbsoluteCursorY(raw: RawXtermTerminal): number {
@@ -593,21 +615,23 @@ export class DetachedTerminalSnapshotMirror extends Disposable {
 	private _detachedTerminal: Promise<IDetachedTerminalInstance> | undefined;
 	private _attachedContainer: HTMLElement | undefined;
 
-	private _output: IChatTerminalToolInvocationData['terminalCommandOutput'] | undefined;
+	private _output: IChatTerminalToolInvocationData["terminalCommandOutput"] | undefined;
 	private _container: HTMLElement | undefined;
 	private _dirty = true;
 	private _lastRenderedLineCount: number | undefined;
 	private _lastRenderedMaxColumnWidth: number | undefined;
 
 	constructor(
-		output: IChatTerminalToolInvocationData['terminalCommandOutput'] | undefined,
-		private readonly _getTheme: () => IChatTerminalToolInvocationData['terminalTheme'] | undefined,
+		output: IChatTerminalToolInvocationData["terminalCommandOutput"] | undefined,
+		private readonly _getTheme: () => IChatTerminalToolInvocationData["terminalTheme"] | undefined,
 		@ITerminalService private readonly _terminalService: ITerminalService,
 		@IContextKeyService private readonly _contextKeyService: IContextKeyService,
 	) {
 		super();
 		this._output = output;
-		const processInfo = this._register(new DetachedProcessInfo({ initialCwd: '' }));
+		const processInfo = this._register(
+      new DetachedProcessInfo({ initialCwd: "" }),
+    );
 		this._detachedTerminal = this._terminalService.createDetachedTerminal({
 			cols: ChatTerminalMirrorMetrics.MirrorColCountFallback,
 			rows: ChatTerminalMirrorMetrics.MirrorRowCount,
@@ -618,8 +642,8 @@ export class DetachedTerminalSnapshotMirror extends Disposable {
 				getBackgroundColor: theme => {
 					const storedBackground = this._getTheme()?.background;
 					return getChatTerminalBackgroundColor(theme, this._contextKeyService, storedBackground);
-				}
-			}
+				},
+			},
 		}).then(terminal => {
 			// If the store is already disposed, dispose the terminal immediately
 			if (this._store.isDisposed) {
@@ -632,12 +656,12 @@ export class DetachedTerminalSnapshotMirror extends Disposable {
 
 	private async _getTerminal(): Promise<IDetachedTerminalInstance> {
 		if (!this._detachedTerminal) {
-			throw new Error('Detached terminal not initialized');
+			throw new Error("Detached terminal not initialized");
 		}
 		return this._detachedTerminal;
 	}
 
-	public setOutput(output: IChatTerminalToolInvocationData['terminalCommandOutput'] | undefined): void {
+	public setOutput(output: IChatTerminalToolInvocationData["terminalCommandOutput"] | undefined): void {
 		this._output = output;
 		this._dirty = true;
 	}
@@ -647,7 +671,7 @@ export class DetachedTerminalSnapshotMirror extends Disposable {
 		if (this._store.isDisposed) {
 			return;
 		}
-		container.classList.add('chat-terminal-output-terminal');
+		container.classList.add("chat-terminal-output-terminal");
 		const needsAttach = this._attachedContainer !== container || container.firstChild === null;
 		if (needsAttach) {
 			terminal.attachToElement(container, { enableGpu: false });
@@ -664,7 +688,10 @@ export class DetachedTerminalSnapshotMirror extends Disposable {
 			return undefined;
 		}
 		if (!this._dirty) {
-			return { lineCount: this._lastRenderedLineCount ?? output.lineCount, maxColumnWidth: this._lastRenderedMaxColumnWidth };
+			return {
+        lineCount: this._lastRenderedLineCount ?? output.lineCount,
+        maxColumnWidth: this._lastRenderedMaxColumnWidth,
+      };
 		}
 		const terminal = await this._getTerminal();
 		if (this._store.isDisposed) {
@@ -673,7 +700,7 @@ export class DetachedTerminalSnapshotMirror extends Disposable {
 		if (this._container) {
 			this._applyTheme(this._container);
 		}
-		const text = output.text ?? '';
+		const text = output.text ?? "";
 		const lineCount = output.lineCount ?? this._estimateLineCount(text);
 		if (!text) {
 			this._dirty = false;
@@ -695,16 +722,21 @@ export class DetachedTerminalSnapshotMirror extends Disposable {
 	}
 
 	private _computeMaxColumnWidth(terminal: IDetachedTerminalInstance): number {
-		return computeMaxBufferColumnWidth(terminal.xterm.buffer.active, terminal.xterm.cols);
+		return computeMaxBufferColumnWidth(
+      terminal.xterm.buffer.active,
+      terminal.xterm.cols,
+    );
 	}
 
 	private _estimateLineCount(text: string): number {
 		if (!text) {
 			return 0;
 		}
-		const sanitized = text.replace(/\r/g, '');
-		const segments = sanitized.split('\n');
-		const count = sanitized.endsWith('\n') ? segments.length - 1 : segments.length;
+		const sanitized = text.replace(/\r/g, "");
+		const segments = sanitized.split("\n");
+		const count = sanitized.endsWith(
+      "\n",
+    ) ? segments.length - 1 : segments.length;
 		return Math.max(count, 1);
 	}
 
@@ -715,8 +747,8 @@ export class DetachedTerminalSnapshotMirror extends Disposable {
 	private _applyTheme(container: HTMLElement): void {
 		const theme = this._getTheme();
 		if (!theme) {
-			container.style.removeProperty('background-color');
-			container.style.removeProperty('color');
+			container.style.removeProperty("background-color");
+			container.style.removeProperty("color");
 			return;
 		}
 		if (theme.background) {

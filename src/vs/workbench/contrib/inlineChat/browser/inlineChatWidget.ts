@@ -3,49 +3,63 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { $, Dimension, getActiveElement, getTotalHeight, getWindow, h, reset, trackFocus } from '../../../../base/browser/dom.js';
-import { IActionViewItemOptions } from '../../../../base/browser/ui/actionbar/actionViewItems.js';
-import { getDefaultHoverDelegate } from '../../../../base/browser/ui/hover/hoverDelegateFactory.js';
-import { renderLabelWithIcons } from '../../../../base/browser/ui/iconLabel/iconLabels.js';
-import { IAction } from '../../../../base/common/actions.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { MarkdownString } from '../../../../base/common/htmlContent.js';
-import { DisposableStore, toDisposable } from '../../../../base/common/lifecycle.js';
-import { autorun, IObservable, observableValue } from '../../../../base/common/observable.js';
-import { isEqual } from '../../../../base/common/resources.js';
-import { ICodeEditor } from '../../../../editor/browser/editorBrowser.js';
-import { ICodeEditorViewState } from '../../../../editor/common/editorCommon.js';
-import { ITextModelService } from '../../../../editor/common/services/resolverService.js';
-import { localize } from '../../../../nls.js';
-import { IAccessibleViewService } from '../../../../platform/accessibility/browser/accessibleView.js';
-import { IAccessibilityService } from '../../../../platform/accessibility/common/accessibility.js';
-import { IWorkbenchButtonBarOptions, MenuWorkbenchButtonBar } from '../../../../platform/actions/browser/buttonbar.js';
-import { createActionViewItem } from '../../../../platform/actions/browser/menuEntryActionViewItem.js';
-import { MenuWorkbenchToolBar } from '../../../../platform/actions/browser/toolbar.js';
-import { MenuId } from '../../../../platform/actions/common/actions.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IContextKey, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { IHoverService } from '../../../../platform/hover/browser/hover.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { ServiceCollection } from '../../../../platform/instantiation/common/serviceCollection.js';
-import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
-import { ILayoutService } from '../../../../platform/layout/browser/layoutService.js';
-import { IMarkdownRendererService } from '../../../../platform/markdown/browser/markdownRenderer.js';
-import product from '../../../../platform/product/common/product.js';
-import { asCssVariable, asCssVariableName, editorBackground, inputBackground } from '../../../../platform/theme/common/colorRegistry.js';
-import { EDITOR_DRAG_AND_DROP_BACKGROUND } from '../../../common/theme.js';
-import { IChatEntitlementService } from '../../../services/chat/common/chatEntitlementService.js';
-import { AccessibilityVerbositySettingId } from '../../accessibility/browser/accessibilityConfiguration.js';
-import { AccessibilityCommandId } from '../../accessibility/common/accessibilityCommands.js';
-import { IChatWidgetViewOptions } from '../../chat/browser/chat.js';
-import { ChatWidget, IChatWidgetLocationOptions } from '../../chat/browser/widget/chatWidget.js';
-import { chatRequestBackground } from '../../chat/common/widget/chatColors.js';
-import { ChatContextKeys } from '../../chat/common/actions/chatContextKeys.js';
-import { ChatMode } from '../../chat/common/chatModes.js';
-import { ChatAgentVoteDirection, IChatService } from '../../chat/common/chatService/chatService.js';
-import { isResponseVM } from '../../chat/common/model/chatViewModel.js';
-import { CTX_INLINE_CHAT_FOCUSED, CTX_INLINE_CHAT_RESPONSE_FOCUSED, inlineChatBackground, inlineChatForeground } from '../common/inlineChat.js';
-import './media/inlineChat.css';
+import {
+  $,
+  Dimension,
+  getActiveElement,
+  getTotalHeight,
+  getWindow,
+  h,
+  reset,
+  trackFocus,
+} from "../../../../base/browser/dom.js";
+import { IActionViewItemOptions } from "../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { getDefaultHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { renderLabelWithIcons } from "../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { IAction } from "../../../../base/common/actions.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { MarkdownString } from "../../../../base/common/htmlContent.js";
+import { DisposableStore, toDisposable } from "../../../../base/common/lifecycle.js";
+import { autorun, IObservable, observableValue } from "../../../../base/common/observable.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { ICodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { ICodeEditorViewState } from "../../../../editor/common/editorCommon.js";
+import { ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import { localize } from "../../../../nls.js";
+import { IAccessibleViewService } from "../../../../platform/accessibility/browser/accessibleView.js";
+import { IAccessibilityService } from "../../../../platform/accessibility/common/accessibility.js";
+import { IWorkbenchButtonBarOptions, MenuWorkbenchButtonBar } from "../../../../platform/actions/browser/buttonbar.js";
+import { createActionViewItem } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { MenuWorkbenchToolBar } from "../../../../platform/actions/browser/toolbar.js";
+import { MenuId } from "../../../../platform/actions/common/actions.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKey, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ServiceCollection } from "../../../../platform/instantiation/common/serviceCollection.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { ILayoutService } from "../../../../platform/layout/browser/layoutService.js";
+import { IMarkdownRendererService } from "../../../../platform/markdown/browser/markdownRenderer.js";
+import product from "../../../../platform/product/common/product.js";
+import { asCssVariable, asCssVariableName, editorBackground, inputBackground } from "../../../../platform/theme/common/colorRegistry.js";
+import { EDITOR_DRAG_AND_DROP_BACKGROUND } from "../../../common/theme.js";
+import { IChatEntitlementService } from "../../../services/chat/common/chatEntitlementService.js";
+import { AccessibilityVerbositySettingId } from "../../accessibility/browser/accessibilityConfiguration.js";
+import { AccessibilityCommandId } from "../../accessibility/common/accessibilityCommands.js";
+import { IChatWidgetViewOptions } from "../../chat/browser/chat.js";
+import { ChatWidget, IChatWidgetLocationOptions } from "../../chat/browser/widget/chatWidget.js";
+import { chatRequestBackground } from "../../chat/common/widget/chatColors.js";
+import { ChatContextKeys } from "../../chat/common/actions/chatContextKeys.js";
+import { ChatMode } from "../../chat/common/chatModes.js";
+import { ChatAgentVoteDirection, IChatService } from "../../chat/common/chatService/chatService.js";
+import { isResponseVM } from "../../chat/common/model/chatViewModel.js";
+import {
+  CTX_INLINE_CHAT_FOCUSED,
+  CTX_INLINE_CHAT_RESPONSE_FOCUSED,
+  inlineChatBackground,
+  inlineChatForeground,
+} from "../common/inlineChat.js";
+import "./media/inlineChat.css";
 
 export interface InlineChatWidgetViewState {
 	editorViewState: ICodeEditorViewState;
@@ -72,20 +86,17 @@ export interface IInlineChatWidgetConstructionOptions {
 
 export abstract class InlineChatWidget {
 
-	protected readonly _elements = h(
-		'div.inline-chat@root',
-		[
-			h('div.chat-widget@chatWidget'),
-			h('div.accessibleViewer@accessibleViewer'),
-			h('div.status@status', [
-				h('div.label.info.hidden@infoLabel'),
-				h('div.actions.hidden@toolbar1'),
-				h('div.label.status.hidden@statusLabel'),
-				h('div.actions.secondary.hidden@toolbar2'),
-				h('div.label.disclaimer.hidden@disclaimerLabel'),
-			]),
-		]
-	);
+	protected readonly _elements = h("div.inline-chat@root", [
+    h("div.chat-widget@chatWidget"),
+    h("div.accessibleViewer@accessibleViewer"),
+    h("div.status@status", [
+      h("div.label.info.hidden@infoLabel"),
+      h("div.actions.hidden@toolbar1"),
+      h("div.label.status.hidden@statusLabel"),
+      h("div.actions.secondary.hidden@toolbar2"),
+      h("div.label.disclaimer.hidden@disclaimerLabel"),
+    ]),
+  ]);
 
 	protected readonly _store = new DisposableStore();
 
@@ -95,7 +106,10 @@ export abstract class InlineChatWidget {
 	readonly chatWidget: ChatWidget;
 
 	protected readonly _onDidChangeHeight = this._store.add(new Emitter<void>());
-	readonly onDidChangeHeight: Event<void> = Event.filter(this._onDidChangeHeight.event, _ => !this.#isLayouting);
+	readonly onDidChangeHeight: Event<void> = Event.filter(
+    this._onDidChangeHeight.event,
+    _ => !this.#isLayouting,
+  );
 
 	readonly #requestInProgress = observableValue(this, false);
 	readonly requestInProgress: IObservable<boolean> = this.#requestInProgress;
@@ -137,14 +151,13 @@ export abstract class InlineChatWidget {
 		this.#chatEntitlementService = chatEntitlementService;
 		this.#markdownRendererService = markdownRendererService;
 
-		this.scopedContextKeyService = this._store.add(contextKeyService.createScoped(this._elements.chatWidget));
+		this.scopedContextKeyService = this._store.add(
+      contextKeyService.createScoped(this._elements.chatWidget),
+    );
 		const scopedInstaService = _instantiationService.createChild(
-			new ServiceCollection([
-				IContextKeyService,
-				this.scopedContextKeyService
-			]),
-			this._store
-		);
+      new ServiceCollection([IContextKeyService, this.scopedContextKeyService]),
+      this._store,
+    );
 
 		this.chatWidget = scopedInstaService.createInstance(
 			ChatWidget,
@@ -153,7 +166,7 @@ export abstract class InlineChatWidget {
 			{
 				autoScroll: true,
 				defaultElementHeight: 32,
-				renderStyle: 'minimal',
+				renderStyle: "minimal",
 				renderInputOnTop: false,
 				renderFollowups: true,
 				supportsFileReferences: true,
@@ -166,34 +179,50 @@ export abstract class InlineChatWidget {
 					if (emptyResponse) {
 						return false;
 					}
-					if (item.response.value.every(item => item.kind === 'textEditGroup' && options.chatWidgetViewOptions?.rendererOptions?.renderTextEditsAsSummary?.(item.uri))) {
+					if (item.response.value.every(item => item.kind === "textEditGroup" && options.chatWidgetViewOptions?.rendererOptions?.renderTextEditsAsSummary?.(item.uri))) {
 						return false;
 					}
 					return true;
 				},
 				dndContainer: this._elements.root,
 				defaultMode: ChatMode.Ask,
-				...options.chatWidgetViewOptions
+				...options.chatWidgetViewOptions,
 			},
 			{
 				listForeground: inlineChatForeground,
 				listBackground: inlineChatBackground,
 				overlayBackground: EDITOR_DRAG_AND_DROP_BACKGROUND,
 				inputEditorBackground: inputBackground,
-				resultEditorBackground: editorBackground
-			}
+				resultEditorBackground: editorBackground,
+			},
 		);
-		this._elements.root.classList.toggle('in-zone-widget', !!options.inZoneWidget);
+		this._elements.root.classList.toggle(
+      "in-zone-widget",
+      !!options.inZoneWidget,
+    );
 		this.chatWidget.render(this._elements.chatWidget);
-		this._elements.chatWidget.style.setProperty(asCssVariableName(chatRequestBackground), asCssVariable(inlineChatBackground));
+		this._elements.chatWidget.style.setProperty(
+      asCssVariableName(chatRequestBackground),
+      asCssVariable(inlineChatBackground),
+    );
 		this.chatWidget.setVisible(true);
 		this._store.add(this.chatWidget);
 
-		const ctxResponse = ChatContextKeys.isResponse.bindTo(this.scopedContextKeyService);
-		const ctxResponseVote = ChatContextKeys.responseVote.bindTo(this.scopedContextKeyService);
-		const ctxResponseSupportIssues = ChatContextKeys.responseSupportsIssueReporting.bindTo(this.scopedContextKeyService);
-		const ctxResponseError = ChatContextKeys.responseHasError.bindTo(this.scopedContextKeyService);
-		const ctxResponseErrorFiltered = ChatContextKeys.responseIsFiltered.bindTo(this.scopedContextKeyService);
+		const ctxResponse = ChatContextKeys.isResponse.bindTo(
+      this.scopedContextKeyService,
+    );
+		const ctxResponseVote = ChatContextKeys.responseVote.bindTo(
+      this.scopedContextKeyService,
+    );
+		const ctxResponseSupportIssues = ChatContextKeys.responseSupportsIssueReporting.bindTo(
+      this.scopedContextKeyService,
+    );
+		const ctxResponseError = ChatContextKeys.responseHasError.bindTo(
+      this.scopedContextKeyService,
+    );
+		const ctxResponseErrorFiltered = ChatContextKeys.responseIsFiltered.bindTo(
+      this.scopedContextKeyService,
+    );
 
 		const viewModelStore = this._store.add(new DisposableStore());
 		this._store.add(this.chatWidget.onDidChangeViewModel(() => {
@@ -221,7 +250,7 @@ export abstract class InlineChatWidget {
 				toolbar2.context = last;
 
 				ctxResponse.set(isResponseVM(last));
-				ctxResponseVote.set(isResponseVM(last) ? last.vote === ChatAgentVoteDirection.Down ? 'down' : last.vote === ChatAgentVoteDirection.Up ? 'up' : '' : '');
+				ctxResponseVote.set(isResponseVM(last) ? last.vote === ChatAgentVoteDirection.Down ? "down" : last.vote === ChatAgentVoteDirection.Up ? "up" : "" : "");
 				ctxResponseError.set(isResponseVM(last) && last.errorDetails !== undefined);
 				ctxResponseErrorFiltered.set((!!(isResponseVM(last) && last.errorDetails?.responseIsFiltered)));
 				ctxResponseSupportIssues.set(isResponseVM(last) && (last.agent?.metadata.supportIssueReporting ?? false));
@@ -231,43 +260,70 @@ export abstract class InlineChatWidget {
 			this._onDidChangeHeight.fire();
 		}));
 
-		this._store.add(this.chatWidget.onDidChangeContentHeight(() => {
-			this._onDidChangeHeight.fire();
-		}));
+		this._store.add(
+      this.chatWidget.onDidChangeContentHeight(() => {
+        this._onDidChangeHeight.fire();
+      }),
+    );
 
 		// context keys
-		this.#ctxResponseFocused = CTX_INLINE_CHAT_RESPONSE_FOCUSED.bindTo(contextKeyService);
+		this.#ctxResponseFocused = CTX_INLINE_CHAT_RESPONSE_FOCUSED.bindTo(
+      contextKeyService,
+    );
 		const tracker = this._store.add(trackFocus(this.domNode));
-		this._store.add(tracker.onDidBlur(() => this.#ctxResponseFocused.set(false)));
-		this._store.add(tracker.onDidFocus(() => this.#ctxResponseFocused.set(true)));
+		this._store.add(
+      tracker.onDidBlur(() => this.#ctxResponseFocused.set(false)),
+    );
+		this._store.add(
+      tracker.onDidFocus(() => this.#ctxResponseFocused.set(true)),
+    );
 
-		this.#ctxInputEditorFocused = CTX_INLINE_CHAT_FOCUSED.bindTo(contextKeyService);
-		this._store.add(this.chatWidget.inputEditor.onDidFocusEditorWidget(() => this.#ctxInputEditorFocused.set(true)));
-		this._store.add(this.chatWidget.inputEditor.onDidBlurEditorWidget(() => this.#ctxInputEditorFocused.set(false)));
+		this.#ctxInputEditorFocused = CTX_INLINE_CHAT_FOCUSED.bindTo(
+      contextKeyService,
+    );
+		this._store.add(
+      this.chatWidget.inputEditor.onDidFocusEditorWidget(
+        () => this.#ctxInputEditorFocused.set(true),
+      ),
+    );
+		this._store.add(
+      this.chatWidget.inputEditor.onDidBlurEditorWidget(
+        () => this.#ctxInputEditorFocused.set(false),
+      ),
+    );
 
 
 		// BUTTON bar
 		if (options.statusMenuId) {
 			const statusMenuOptions = options.statusMenuId.options;
-			const statusButtonBar = scopedInstaService.createInstance(MenuWorkbenchButtonBar, this._elements.toolbar1, options.statusMenuId.menu, {
-				toolbarOptions: { primaryGroup: '0_main' },
-				telemetrySource: options.chatWidgetViewOptions?.menus?.telemetrySource,
-				menuOptions: { renderShortTitle: true },
-				...statusMenuOptions,
-			});
-			this._store.add(statusButtonBar.onDidChange(() => this._onDidChangeHeight.fire()));
+			const statusButtonBar = scopedInstaService.createInstance(
+        MenuWorkbenchButtonBar,
+        this._elements.toolbar1,
+        options.statusMenuId.menu,
+        {
+          toolbarOptions: { primaryGroup: "0_main" },
+          telemetrySource: options.chatWidgetViewOptions?.menus?.telemetrySource,
+          menuOptions: { renderShortTitle: true },
+          ...statusMenuOptions,
+        },
+      );
+			this._store.add(
+        statusButtonBar.onDidChange(() => this._onDidChangeHeight.fire()),
+      );
 			this._store.add(statusButtonBar);
 		}
 
 		// secondary toolbar
-		const toolbar2 = scopedInstaService.createInstance(MenuWorkbenchToolBar, this._elements.toolbar2, options.secondaryMenuId ?? MenuId.for(''), {
+		const toolbar2 = scopedInstaService.createInstance(MenuWorkbenchToolBar, this._elements.toolbar2, options.secondaryMenuId ?? MenuId.for(""), {
 			telemetrySource: options.chatWidgetViewOptions?.menus?.telemetrySource,
 			menuOptions: { renderShortTitle: true, shouldForwardArgs: true },
 			actionViewItemProvider: (action: IAction, options: IActionViewItemOptions) => {
 				return createActionViewItem(scopedInstaService, action, options);
-			}
+			},
 		});
-		this._store.add(toolbar2.onDidChangeMenuItems(() => this._onDidChangeHeight.fire()));
+		this._store.add(
+      toolbar2.onDidChangeMenuItems(() => this._onDidChangeHeight.fire()),
+    );
 		this._store.add(toolbar2);
 
 
@@ -282,28 +338,45 @@ export abstract class InlineChatWidget {
 		this.#updateAriaLabel();
 		this.#setupDisclaimer();
 
-		this._store.add(hoverService.setupManagedHover(getDefaultHoverDelegate('element'), this._elements.statusLabel, () => {
-			return this._elements.statusLabel.dataset['title'];
-		}));
+		this._store.add(
+      hoverService.setupManagedHover(
+        getDefaultHoverDelegate("element"),
+        this._elements.statusLabel,
+        () => {
+          return this._elements.statusLabel.dataset["title"];
+        },
+      ),
+    );
 
 		this._store.add(this.#chatService.onDidPerformUserAction(e => {
-			if (isEqual(e.sessionResource, this.chatWidget.viewModel?.model.sessionResource) && e.action.kind === 'vote') {
-				this.updateStatus(localize('feedbackThanks', "Thank you for your feedback!"), { resetAfter: 1250 });
+			if (isEqual(e.sessionResource, this.chatWidget.viewModel?.model.sessionResource) && e.action.kind === "vote") {
+				this.updateStatus(localize("feedbackThanks", "Thank you for your feedback!"), { resetAfter: 1250 });
 			}
 		}));
 	}
 
 	#updateAriaLabel(): void {
 
-		this._elements.root.ariaLabel = this.#accessibleViewService.getOpenAriaHint(AccessibilityVerbositySettingId.InlineChat);
+		this._elements.root.ariaLabel = this.#accessibleViewService.getOpenAriaHint(
+      AccessibilityVerbositySettingId.InlineChat,
+    );
 
 		if (this.#accessibilityService.isScreenReaderOptimized()) {
 			let label = defaultAriaLabel;
-			if (this.#configurationService.getValue<boolean>(AccessibilityVerbositySettingId.InlineChat)) {
+			if (this.#configurationService.getValue<boolean>(
+        AccessibilityVerbositySettingId.InlineChat,
+      )) {
 				const kbLabel = this.#keybindingService.lookupKeybinding(AccessibilityCommandId.OpenAccessibilityHelp)?.getLabel();
 				label = kbLabel
-					? localize('inlineChat.accessibilityHelp', "Inline Chat Input, Use {0} for Inline Chat Accessibility Help.", kbLabel)
-					: localize('inlineChat.accessibilityHelpNoKb', "Inline Chat Input, Run the Inline Chat Accessibility Help command for more information.");
+					? localize(
+              "inlineChat.accessibilityHelp",
+              "Inline Chat Input, Use {0} for Inline Chat Accessibility Help.",
+              kbLabel,
+            )
+					: localize(
+              "inlineChat.accessibilityHelpNoKb",
+              "Inline Chat Input, Run the Inline Chat Accessibility Help command for more information.",
+            );
 			}
 			this.chatWidget.inputEditor.updateOptions({ ariaLabel: label });
 		}
@@ -321,10 +394,10 @@ export abstract class InlineChatWidget {
 			const requestInProgress = this.#chatService.requestInProgressObs.read(reader);
 
 			const showDisclaimer = !sentiment.completed && anonymous && !requestInProgress;
-			this._elements.disclaimerLabel.classList.toggle('hidden', !showDisclaimer);
+			this._elements.disclaimerLabel.classList.toggle("hidden", !showDisclaimer);
 
 			if (showDisclaimer) {
-				const renderedMarkdown = disposables.add(this.#markdownRendererService.render(new MarkdownString(localize({ key: 'termsDisclaimer', comment: ['{Locked="]({2})"}', '{Locked="]({3})"}'] }, "By continuing with {0} Copilot, you agree to {1}'s [Terms]({2}) and [Privacy Statement]({3})", product.defaultChatAgent?.provider?.default?.name ?? '', product.defaultChatAgent?.provider?.default?.name ?? '', product.defaultChatAgent?.termsStatementUrl ?? '', product.defaultChatAgent?.privacyStatementUrl ?? ''), { isTrusted: true })));
+				const renderedMarkdown = disposables.add(this.#markdownRendererService.render(new MarkdownString(localize({ key: "termsDisclaimer", comment: ['{Locked="]({2})"}', '{Locked="]({3})"}'] }, "By continuing with {0} Copilot, you agree to {1}'s [Terms]({2}) and [Privacy Statement]({3})", product.defaultChatAgent?.provider?.default?.name ?? "", product.defaultChatAgent?.provider?.default?.name ?? "", product.defaultChatAgent?.termsStatementUrl ?? "", product.defaultChatAgent?.privacyStatementUrl ?? ""), { isTrusted: true })));
 				this._elements.disclaimerLabel.appendChild(renderedMarkdown.element);
 			}
 
@@ -364,9 +437,9 @@ export abstract class InlineChatWidget {
 		this._elements.root.style.width = `${dimension.width}px`;
 
 		this.chatWidget.layout(
-			dimension.height - statusHeight - extraHeight,
-			dimension.width
-		);
+      dimension.height - statusHeight - extraHeight,
+      dimension.width,
+    );
 	}
 
 	/**
@@ -374,10 +447,10 @@ export abstract class InlineChatWidget {
 	 */
 	get contentHeight(): number {
 		const data = {
-			chatWidgetContentHeight: this.chatWidget.contentHeight,
-			statusHeight: getTotalHeight(this._elements.status),
-			extraHeight: this._getExtraHeight()
-		};
+      chatWidgetContentHeight: this.chatWidget.contentHeight,
+      statusHeight: getTotalHeight(this._elements.status),
+      extraHeight: this._getExtraHeight(),
+    };
 		const result = data.chatWidgetContentHeight + data.statusHeight + data.extraHeight;
 		return result;
 	}
@@ -388,7 +461,9 @@ export abstract class InlineChatWidget {
 
 		let maxWidgetOutputHeight = 100;
 		for (const item of this.chatWidget.viewModel?.getItems() ?? []) {
-			if (isResponseVM(item) && item.response.value.some(r => r.kind === 'textEditGroup' && !r.state?.applied)) {
+			if (isResponseVM(item) && item.response.value.some(
+        r => r.kind === "textEditGroup" && !r.state?.applied,
+      )) {
 				maxWidgetOutputHeight = 270;
 				break;
 			}
@@ -396,7 +471,10 @@ export abstract class InlineChatWidget {
 
 		let value = this.contentHeight;
 		value -= this.chatWidget.contentHeight;
-		value += Math.min(this.chatWidget.input.height.get() + maxWidgetOutputHeight, this.chatWidget.contentHeight);
+		value += Math.min(
+      this.chatWidget.input.height.get() + maxWidgetOutputHeight,
+      this.chatWidget.contentHeight,
+    );
 		return value;
 	}
 
@@ -405,36 +483,39 @@ export abstract class InlineChatWidget {
 	}
 
 	updateInfo(message: string): void {
-		this._elements.infoLabel.classList.toggle('hidden', !message);
+		this._elements.infoLabel.classList.toggle("hidden", !message);
 		const renderedMessage = renderLabelWithIcons(message);
 		reset(this._elements.infoLabel, ...renderedMessage);
 		this._onDidChangeHeight.fire();
 	}
 
 	updateStatus(message: string, ops: { classes?: string[]; resetAfter?: number; keepMessage?: boolean; title?: string } = {}) {
-		const isTempMessage = typeof ops.resetAfter === 'number';
-		if (isTempMessage && !this._elements.statusLabel.dataset['state']) {
+		const isTempMessage = typeof ops.resetAfter === "number";
+		if (isTempMessage && !this._elements.statusLabel.dataset["state"]) {
 			const statusLabel = this._elements.statusLabel.innerText;
-			const title = this._elements.statusLabel.dataset['title'];
+			const title = this._elements.statusLabel.dataset["title"];
 			const classes = Array.from(this._elements.statusLabel.classList.values());
-			setTimeout(() => {
-				this.updateStatus(statusLabel, { classes, keepMessage: true, title });
-			}, ops.resetAfter);
+			setTimeout(
+        () => {
+          this.updateStatus(statusLabel, { classes, keepMessage: true, title });
+        },
+        ops.resetAfter,
+      );
 		}
 		const renderedMessage = renderLabelWithIcons(message);
 		reset(this._elements.statusLabel, ...renderedMessage);
-		this._elements.statusLabel.className = `label status ${(ops.classes ?? []).join(' ')}`;
-		this._elements.statusLabel.classList.toggle('hidden', !message);
+		this._elements.statusLabel.className = `label status ${(ops.classes ?? []).join(" ")}`;
+		this._elements.statusLabel.classList.toggle("hidden", !message);
 		if (isTempMessage) {
-			this._elements.statusLabel.dataset['state'] = 'temp';
+			this._elements.statusLabel.dataset["state"] = "temp";
 		} else {
-			delete this._elements.statusLabel.dataset['state'];
+			delete this._elements.statusLabel.dataset["state"];
 		}
 
 		if (ops.title) {
-			this._elements.statusLabel.dataset['title'] = ops.title;
+			this._elements.statusLabel.dataset["title"] = ops.title;
 		} else {
-			delete this._elements.statusLabel.dataset['title'];
+			delete this._elements.statusLabel.dataset["title"];
 		}
 		this._onDidChangeHeight.fire();
 	}
@@ -444,12 +525,12 @@ export abstract class InlineChatWidget {
 		this.chatWidget.saveState();
 
 		reset(this._elements.statusLabel);
-		this._elements.statusLabel.classList.toggle('hidden', true);
-		this._elements.toolbar1.classList.add('hidden');
-		this._elements.toolbar2.classList.add('hidden');
-		this.updateInfo('');
+		this._elements.statusLabel.classList.toggle("hidden", true);
+		this._elements.toolbar1.classList.add("hidden");
+		this._elements.toolbar2.classList.add("hidden");
+		this.updateInfo("");
 
-		this._elements.accessibleViewer.classList.toggle('hidden', true);
+		this._elements.accessibleViewer.classList.toggle("hidden", true);
 		this._onDidChangeHeight.fire();
 	}
 
@@ -463,7 +544,7 @@ export abstract class InlineChatWidget {
 
 }
 
-const defaultAriaLabel = localize('aria-label', "Inline Chat Input");
+const defaultAriaLabel = localize("aria-label", "Inline Chat Input");
 
 export class EditorBasedInlineChatWidget extends InlineChatWidget {
 
@@ -484,18 +565,22 @@ export class EditorBasedInlineChatWidget extends InlineChatWidget {
 		@IChatEntitlementService chatEntitlementService: IChatEntitlementService,
 		@IMarkdownRendererService markdownRendererService: IMarkdownRendererService,
 	) {
-		const overflowWidgetsNode = layoutService.getContainer(getWindow(parentEditor.getContainerDomNode())).appendChild($('.inline-chat-overflow.monaco-editor'));
+		const overflowWidgetsNode = layoutService.getContainer(getWindow(parentEditor.getContainerDomNode())).appendChild(
+      $(".inline-chat-overflow.monaco-editor"),
+    );
 		super(location, {
 			...options,
 			chatWidgetViewOptions: {
 				...options.chatWidgetViewOptions,
-				editorOverflowWidgetsDomNode: overflowWidgetsNode
-			}
+				editorOverflowWidgetsDomNode: overflowWidgetsNode,
+			},
 		}, instantiationService, contextKeyService, keybindingService, accessibilityService, configurationService, accessibleViewService, textModelResolverService, chatService, hoverService, chatEntitlementService, markdownRendererService);
 
-		this._store.add(toDisposable(() => {
-			overflowWidgetsNode.remove();
-		}));
+		this._store.add(
+      toDisposable(() => {
+        overflowWidgetsNode.remove();
+      }),
+    );
 	}
 
 	// --- layout

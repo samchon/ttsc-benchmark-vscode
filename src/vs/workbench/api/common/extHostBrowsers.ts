@@ -3,16 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../base/common/event.js';
-import { Disposable, DisposableMap } from '../../../base/common/lifecycle.js';
-import { URI } from '../../../base/common/uri.js';
-import { Codicon } from '../../../base/common/codicons.js';
-import type * as vscode from 'vscode';
-import { BrowserTabDto, ExtHostBrowsersShape, IMainContext, MainContext, MainThreadBrowsersShape } from './extHost.protocol.js';
-import { generateUuid } from '../../../base/common/uuid.js';
-import * as extHostTypes from './extHostTypes.js';
-import * as typeConverters from './extHostTypeConverters.js';
-import { CDPEvent, CDPRequest, CDPResponse } from '../../../platform/browserView/common/cdp/types.js';
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable, DisposableMap } from "../../../base/common/lifecycle.js";
+import { URI } from "../../../base/common/uri.js";
+import { Codicon } from "../../../base/common/codicons.js";
+import type * as vscode from "vscode";
+import {
+  BrowserTabDto,
+  ExtHostBrowsersShape,
+  IMainContext,
+  MainContext,
+  MainThreadBrowsersShape,
+} from "./extHost.protocol.js";
+import { generateUuid } from "../../../base/common/uuid.js";
+import * as extHostTypes from "./extHostTypes.js";
+import * as typeConverters from "./extHostTypeConverters.js";
+import { CDPEvent, CDPRequest, CDPResponse } from "../../../platform/browserView/common/cdp/types.js";
 
 // #region Internal browser tab object
 
@@ -47,7 +53,7 @@ class ExtHostBrowserTab {
 			},
 			close(): Promise<void> {
 				return that._close();
-			}
+			},
 		};
 	}
 
@@ -106,7 +112,7 @@ class ExtHostBrowserCDPSession {
 			},
 			close(): Promise<void> {
 				return that._close();
-			}
+			},
 		};
 	}
 
@@ -117,24 +123,29 @@ class ExtHostBrowserCDPSession {
 
 	private async _sendMessage(message: CDPRequest): Promise<void> {
 		if (this._closed) {
-			throw new Error('Session is closed');
+			throw new Error("Session is closed");
 		}
-		if (!message || typeof message !== 'object') {
-			throw new Error('Message must be an object');
+		if (!message || typeof message !== "object") {
+			throw new Error("Message must be an object");
 		}
-		if (typeof message.id !== 'number') {
-			throw new Error('Message must have a numeric id');
+		if (typeof message.id !== "number") {
+			throw new Error("Message must have a numeric id");
 		}
-		if (typeof message.method !== 'string') {
-			throw new Error('Message must have a method string');
+		if (typeof message.method !== "string") {
+			throw new Error("Message must have a method string");
 		}
-		if (message.params !== undefined && typeof message.params !== 'object') {
-			throw new Error('Message params must be an object');
+		if (message.params !== undefined && typeof message.params !== "object") {
+			throw new Error("Message params must be an object");
 		}
-		if (message.sessionId !== undefined && typeof message.sessionId !== 'string') {
-			throw new Error('Message sessionId must be a string');
+		if (message.sessionId !== undefined && typeof message.sessionId !== "string") {
+			throw new Error("Message sessionId must be a string");
 		}
-		await this._proxy.$sendCDPMessage(this.id, { id: message.id, method: message.method, params: message.params, sessionId: message.sessionId });
+		await this._proxy.$sendCDPMessage(this.id, {
+      id: message.id,
+      method: message.method,
+      params: message.params,
+      sessionId: message.sessionId,
+    });
 	}
 
 	private async _close(): Promise<void> {
@@ -158,20 +169,30 @@ class ExtHostBrowserCDPSession {
 export class ExtHostBrowsers extends Disposable implements ExtHostBrowsersShape {
 	private readonly _proxy: MainThreadBrowsersShape;
 	private readonly _browserTabs = new Map<string, ExtHostBrowserTab>();
-	private readonly _sessions = this._register(new DisposableMap<string, ExtHostBrowserCDPSession>());
+	private readonly _sessions = this._register(
+    new DisposableMap<string, ExtHostBrowserCDPSession>(),
+  );
 
 	private _activeBrowserTabId: string | undefined;
 
-	private readonly _onDidOpenBrowserTab = this._register(new Emitter<vscode.BrowserTab>());
+	private readonly _onDidOpenBrowserTab = this._register(
+    new Emitter<vscode.BrowserTab>(),
+  );
 	readonly onDidOpenBrowserTab: Event<vscode.BrowserTab> = this._onDidOpenBrowserTab.event;
 
-	private readonly _onDidCloseBrowserTab = this._register(new Emitter<vscode.BrowserTab>());
+	private readonly _onDidCloseBrowserTab = this._register(
+    new Emitter<vscode.BrowserTab>(),
+  );
 	readonly onDidCloseBrowserTab: Event<vscode.BrowserTab> = this._onDidCloseBrowserTab.event;
 
-	private readonly _onDidChangeActiveBrowserTab = this._register(new Emitter<vscode.BrowserTab | undefined>());
+	private readonly _onDidChangeActiveBrowserTab = this._register(
+    new Emitter<vscode.BrowserTab | undefined>(),
+  );
 	readonly onDidChangeActiveBrowserTab: Event<vscode.BrowserTab | undefined> = this._onDidChangeActiveBrowserTab.event;
 
-	private readonly _onDidChangeBrowserTabState = this._register(new Emitter<vscode.BrowserTab>());
+	private readonly _onDidChangeBrowserTabState = this._register(
+    new Emitter<vscode.BrowserTab>(),
+  );
 	readonly onDidChangeBrowserTabState: Event<vscode.BrowserTab> = this._onDidChangeBrowserTabState.event;
 
 	constructor(mainContext: IMainContext) {
@@ -195,9 +216,9 @@ export class ExtHostBrowsers extends Disposable implements ExtHostBrowsersShape 
 	async openBrowserTab(url: string, options?: vscode.BrowserTabShowOptions): Promise<vscode.BrowserTab> {
 		const viewColumn = typeConverters.ViewColumn.from(options?.viewColumn);
 		const dto = await this._proxy.$openBrowserTab(url, viewColumn, {
-			preserveFocus: options?.preserveFocus,
-			inactive: options?.background,
-		});
+      preserveFocus: options?.preserveFocus,
+      inactive: options?.background,
+    });
 
 		return this._getOrCreateTab(dto).value;
 	}

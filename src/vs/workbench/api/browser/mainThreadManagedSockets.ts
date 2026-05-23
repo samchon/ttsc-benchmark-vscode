@@ -3,15 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from '../../../base/common/buffer.js';
-import { Emitter, Event } from '../../../base/common/event.js';
-import { Disposable, DisposableMap, DisposableStore } from '../../../base/common/lifecycle.js';
-import { ISocket, SocketCloseEventType } from '../../../base/parts/ipc/common/ipc.net.js';
-import { ManagedSocket, RemoteSocketHalf, connectManagedSocket } from '../../../platform/remote/common/managedSocket.js';
-import { ManagedRemoteConnection, RemoteConnectionType } from '../../../platform/remote/common/remoteAuthorityResolver.js';
-import { IRemoteSocketFactoryService, ISocketFactory } from '../../../platform/remote/common/remoteSocketFactoryService.js';
-import { IExtHostContext, extHostNamedCustomer } from '../../services/extensions/common/extHostCustomers.js';
-import { ExtHostContext, ExtHostManagedSocketsShape, MainContext, MainThreadManagedSocketsShape } from '../common/extHost.protocol.js';
+import { VSBuffer } from "../../../base/common/buffer.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable, DisposableMap, DisposableStore } from "../../../base/common/lifecycle.js";
+import { ISocket, SocketCloseEventType } from "../../../base/parts/ipc/common/ipc.net.js";
+import { ManagedSocket, RemoteSocketHalf, connectManagedSocket } from "../../../platform/remote/common/managedSocket.js";
+import { ManagedRemoteConnection, RemoteConnectionType } from "../../../platform/remote/common/remoteAuthorityResolver.js";
+import { IRemoteSocketFactoryService, ISocketFactory } from "../../../platform/remote/common/remoteSocketFactoryService.js";
+import { IExtHostContext, extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
+import {
+  ExtHostContext,
+  ExtHostManagedSocketsShape,
+  MainContext,
+  MainThreadManagedSocketsShape,
+} from "../common/extHost.protocol.js";
 
 @extHostNamedCustomer(MainContext.MainThreadManagedSockets)
 export class MainThreadManagedSockets extends Disposable implements MainThreadManagedSocketsShape {
@@ -40,7 +45,7 @@ export class MainThreadManagedSockets extends Disposable implements MainThreadMa
 			connect(connectTo: ManagedRemoteConnection, path: string, query: string, debugLabel: string): Promise<ISocket> {
 				return new Promise<ISocket>((resolve, reject) => {
 					if (connectTo.id !== socketFactoryId) {
-						return reject(new Error('Invalid connectTo'));
+						return reject(new Error("Invalid connectTo"));
 					}
 
 					const factoryId = connectTo.id;
@@ -66,7 +71,12 @@ export class MainThreadManagedSockets extends Disposable implements MainThreadMa
 				});
 			}
 		};
-		store.add(this._remoteSocketFactoryService.register(RemoteConnectionType.Managed, socketFactory));
+		store.add(
+      this._remoteSocketFactoryService.register(
+        RemoteConnectionType.Managed,
+        socketFactory,
+      ),
+    );
 		this._registrations.set(socketFactoryId, store);
 
 	}
@@ -81,10 +91,10 @@ export class MainThreadManagedSockets extends Disposable implements MainThreadMa
 
 	$onDidManagedSocketClose(socketId: number, error: string | undefined): void {
 		this._remoteSockets.get(socketId)?.onClose.fire({
-			type: SocketCloseEventType.NodeSocketCloseEvent,
-			error: error ? new Error(error) : undefined,
-			hadError: !!error
-		});
+      type: SocketCloseEventType.NodeSocketCloseEvent,
+      error: error ? new Error(error) : undefined,
+      hadError: !!error,
+    });
 		this._remoteSockets.delete(socketId);
 	}
 
@@ -98,9 +108,14 @@ export class MainThreadManagedSocket extends ManagedSocket {
 		socketId: number,
 		proxy: ExtHostManagedSocketsShape,
 		path: string, query: string, debugLabel: string,
-		half: RemoteSocketHalf
+		half: RemoteSocketHalf,
 	): Promise<MainThreadManagedSocket> {
-		const socket = new MainThreadManagedSocket(socketId, proxy, debugLabel, half);
+		const socket = new MainThreadManagedSocket(
+      socketId,
+      proxy,
+      debugLabel,
+      half,
+    );
 		return connectManagedSocket(socket, path, query, debugLabel, half);
 	}
 

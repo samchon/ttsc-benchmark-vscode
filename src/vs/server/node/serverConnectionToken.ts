@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as cookie from 'cookie';
-import * as fs from 'fs';
-import type * as http from 'http';
-import * as url from 'url';
-import * as path from '../../base/common/path.js';
-import { generateUuid } from '../../base/common/uuid.js';
-import { connectionTokenCookieName, connectionTokenQueryName } from '../../base/common/network.js';
-import { ServerParsedArgs } from './serverEnvironmentService.js';
-import { Promises } from '../../base/node/pfs.js';
+import * as cookie from "cookie";
+import * as fs from "fs";
+import type * as http from "http";
+import * as url from "url";
+import * as path from "../../base/common/path.js";
+import { generateUuid } from "../../base/common/uuid.js";
+import { connectionTokenCookieName, connectionTokenQueryName } from "../../base/common/network.js";
+import { ServerParsedArgs } from "./serverEnvironmentService.js";
+import { Promises } from "../../base/node/pfs.js";
 
 const connectionTokenRegex = /^[0-9A-Za-z_-]+$/;
 
@@ -44,44 +44,57 @@ export type ServerConnectionToken = NoneServerConnectionToken | MandatoryServerC
 
 export class ServerConnectionTokenParseError {
 	constructor(
-		public readonly message: string
+		public readonly message: string,
 	) { }
 }
 
 export async function parseServerConnectionToken(args: ServerParsedArgs, defaultValue: () => Promise<string>): Promise<ServerConnectionToken | ServerConnectionTokenParseError> {
-	const withoutConnectionToken = args['without-connection-token'];
-	const connectionToken = args['connection-token'];
-	const connectionTokenFile = args['connection-token-file'];
+	const withoutConnectionToken = args["without-connection-token"];
+	const connectionToken = args["connection-token"];
+	const connectionTokenFile = args["connection-token-file"];
 
 	if (withoutConnectionToken) {
-		if (typeof connectionToken !== 'undefined' || typeof connectionTokenFile !== 'undefined') {
-			return new ServerConnectionTokenParseError(`Please do not use the argument '--connection-token' or '--connection-token-file' at the same time as '--without-connection-token'.`);
+		if (typeof connectionToken !== "undefined" || typeof connectionTokenFile !== "undefined") {
+			return new ServerConnectionTokenParseError(
+        `Please do not use the argument '--connection-token' or '--connection-token-file' at the same time as '--without-connection-token'.`,
+      );
 		}
 		return new NoneServerConnectionToken();
 	}
 
-	if (typeof connectionTokenFile !== 'undefined') {
-		if (typeof connectionToken !== 'undefined') {
-			return new ServerConnectionTokenParseError(`Please do not use the argument '--connection-token' at the same time as '--connection-token-file'.`);
+	if (typeof connectionTokenFile !== "undefined") {
+		if (typeof connectionToken !== "undefined") {
+			return new ServerConnectionTokenParseError(
+        `Please do not use the argument '--connection-token' at the same time as '--connection-token-file'.`,
+      );
 		}
 
 		let rawConnectionToken: string;
 		try {
-			rawConnectionToken = fs.readFileSync(connectionTokenFile).toString().replace(/\r?\n$/, '');
+			rawConnectionToken = fs.readFileSync(connectionTokenFile).toString().replace(
+        /\r?\n$/,
+        "",
+      );
 		} catch (e) {
-			return new ServerConnectionTokenParseError(`Unable to read the connection token file at '${connectionTokenFile}'.`);
+			return new ServerConnectionTokenParseError(
+        `Unable to read the connection token file at '${connectionTokenFile}'.`,
+      );
 		}
 
 		if (!connectionTokenRegex.test(rawConnectionToken)) {
-			return new ServerConnectionTokenParseError(`The connection token defined in '${connectionTokenFile} does not adhere to the characters 0-9, a-z, A-Z, _, or -.`);
+			return new ServerConnectionTokenParseError(
+        `The connection token defined in '${connectionTokenFile} does not adhere to the characters 0-9, a-z, A-Z, _, or -.`,
+      );
 		}
 
 		return new MandatoryServerConnectionToken(rawConnectionToken);
 	}
 
-	if (typeof connectionToken !== 'undefined') {
+	if (typeof connectionToken !== "undefined") {
 		if (!connectionTokenRegex.test(connectionToken)) {
-			return new ServerConnectionTokenParseError(`The connection token '${connectionToken} does not adhere to the characters 0-9, a-z, A-Z or -.`);
+			return new ServerConnectionTokenParseError(
+        `The connection token '${connectionToken} does not adhere to the characters 0-9, a-z, A-Z or -.`,
+      );
 		}
 
 		return new MandatoryServerConnectionToken(connectionToken);
@@ -92,16 +105,16 @@ export async function parseServerConnectionToken(args: ServerParsedArgs, default
 
 export async function determineServerConnectionToken(args: ServerParsedArgs): Promise<ServerConnectionToken | ServerConnectionTokenParseError> {
 	const readOrGenerateConnectionToken = async () => {
-		if (!args['user-data-dir']) {
+		if (!args["user-data-dir"]) {
 			// No place to store it!
 			return generateUuid();
 		}
-		const storageLocation = path.join(args['user-data-dir'], 'token');
+		const storageLocation = path.join(args["user-data-dir"], "token");
 
 		// First try to find a connection token
 		try {
 			const fileContents = await fs.promises.readFile(storageLocation);
-			const connectionToken = fileContents.toString().replace(/\r?\n$/, '');
+			const connectionToken = fileContents.toString().replace(/\r?\n$/, "");
 			if (connectionTokenRegex.test(connectionToken)) {
 				return connectionToken;
 			}
@@ -112,7 +125,9 @@ export async function determineServerConnectionToken(args: ServerParsedArgs): Pr
 
 		try {
 			// Try to store it
-			await Promises.writeFile(storageLocation, connectionToken, { mode: 0o600 });
+			await Promises.writeFile(storageLocation, connectionToken, {
+        mode: 0o600,
+      });
 		} catch (err) { }
 
 		return connectionToken;
@@ -127,6 +142,6 @@ export function requestHasValidConnectionToken(connectionToken: ServerConnection
 	}
 
 	// Otherwise, check if there is a valid cookie
-	const cookies = cookie.parse(req.headers.cookie || '');
+	const cookies = cookie.parse(req.headers.cookie || "");
 	return connectionToken.validate(cookies[connectionTokenCookieName]);
 }

@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as strings from '../../../base/common/strings.js';
-import { EditOperation, ISingleEditOperation } from '../core/editOperation.js';
-import { Position } from '../core/position.js';
-import { Range } from '../core/range.js';
-import { Selection } from '../core/selection.js';
-import { ICommand, ICursorStateComputerData, IEditOperationBuilder } from '../editorCommon.js';
-import { StandardTokenType } from '../encodedTokenAttributes.js';
-import { ITextModel } from '../model.js';
+import * as strings from "../../../base/common/strings.js";
+import { EditOperation, ISingleEditOperation } from "../core/editOperation.js";
+import { Position } from "../core/position.js";
+import { Range } from "../core/range.js";
+import { Selection } from "../core/selection.js";
+import { ICommand, ICursorStateComputerData, IEditOperationBuilder } from "../editorCommon.js";
+import { StandardTokenType } from "../encodedTokenAttributes.js";
+import { ITextModel } from "../model.js";
 
 export class TrimTrailingWhitespaceCommand implements ICommand {
 
@@ -27,7 +27,11 @@ export class TrimTrailingWhitespaceCommand implements ICommand {
 	}
 
 	public getEditOperations(model: ITextModel, builder: IEditOperationBuilder): void {
-		const ops = trimTrailingWhitespace(model, this._cursors, this._trimInRegexesAndStrings);
+		const ops = trimTrailingWhitespace(
+      model,
+      this._cursors,
+      this._trimInRegexesAndStrings,
+    );
 		for (let i = 0, len = ops.length; i < len; i++) {
 			const op = ops[i];
 
@@ -108,7 +112,9 @@ export function trimTrailingWhitespace(model: ITextModel, cursors: Position[], t
 			}
 
 			const lineTokens = model.tokenization.getLineTokens(lineNumber);
-			const fromColumnType = lineTokens.getStandardTokenType(lineTokens.findTokenIndexAtOffset(fromColumn));
+			const fromColumnType = lineTokens.getStandardTokenType(
+        lineTokens.findTokenIndexAtOffset(fromColumn),
+      );
 
 			if (fromColumnType === StandardTokenType.String || fromColumnType === StandardTokenType.RegEx) {
 				continue;
@@ -116,10 +122,9 @@ export function trimTrailingWhitespace(model: ITextModel, cursors: Position[], t
 		}
 
 		fromColumn = Math.max(minEditColumn, fromColumn);
-		r[rLen++] = EditOperation.delete(new Range(
-			lineNumber, fromColumn,
-			lineNumber, maxLineColumn
-		));
+		r[rLen++] = EditOperation.delete(
+      new Range(lineNumber, fromColumn, lineNumber, maxLineColumn),
+    );
 	}
 
 	return r;

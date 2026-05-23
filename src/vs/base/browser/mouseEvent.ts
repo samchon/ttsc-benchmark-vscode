@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as browser from './browser.js';
-import { IframeUtils } from './iframe.js';
-import * as platform from '../common/platform.js';
+import * as browser from "./browser.js";
+import { IframeUtils } from "./iframe.js";
+import * as platform from "../common/platform.js";
 
 export interface IMouseEvent {
 	readonly browserEvent: MouseEvent;
@@ -59,7 +59,7 @@ export class StandardMouseEvent implements IMouseEvent {
 		this.target = <HTMLElement>e.target;
 
 		this.detail = e.detail || 1;
-		if (e.type === 'dblclick') {
+		if (e.type === "dblclick") {
 			this.detail = 2;
 		}
 		this.ctrlKey = e.ctrlKey;
@@ -71,7 +71,10 @@ export class StandardMouseEvent implements IMouseEvent {
 		this.posy = e.pageY;
 
 		// Find the position of the iframe this code is executing in relative to the iframe where the event was captured.
-		const iframeOffsets = IframeUtils.getPositionOfChildWindowRelativeToAncestorWindow(targetWindow, e.view);
+		const iframeOffsets = IframeUtils.getPositionOfChildWindowRelativeToAncestorWindow(
+      targetWindow,
+      e.view,
+    );
 		this.posx -= iframeOffsets.left;
 		this.posy -= iframeOffsets.top;
 	}
@@ -140,7 +143,9 @@ export class StandardWheelEvent {
 			// Chrome version >= 123 contains the fix to factor devicePixelRatio into the wheel event.
 			// See https://chromium.googlesource.com/chromium/src.git/+/be51b448441ff0c9d1f17e0f25c4bf1ab3f11f61
 			const chromeVersionMatch = navigator.userAgent.match(/Chrome\/(\d+)/);
-			const chromeMajorVersion = chromeVersionMatch ? parseInt(chromeVersionMatch[1]) : 123;
+			const chromeMajorVersion = chromeVersionMatch ? parseInt(
+        chromeVersionMatch[1],
+      ) : 123;
 			shouldFactorDPR = chromeMajorVersion <= 122;
 		}
 
@@ -153,16 +158,16 @@ export class StandardWheelEvent {
 			const devicePixelRatio = e.view?.devicePixelRatio || 1;
 
 			// vertical delta scroll
-			if (typeof e1.wheelDeltaY !== 'undefined') {
+			if (typeof e1.wheelDeltaY !== "undefined") {
 				if (shouldFactorDPR) {
 					// Refs https://github.com/microsoft/vscode/issues/146403#issuecomment-1854538928
 					this.deltaY = e1.wheelDeltaY / (120 * devicePixelRatio);
 				} else {
 					this.deltaY = e1.wheelDeltaY / 120;
 				}
-			} else if (typeof e2.VERTICAL_AXIS !== 'undefined' && e2.axis === e2.VERTICAL_AXIS) {
+			} else if (typeof e2.VERTICAL_AXIS !== "undefined" && e2.axis === e2.VERTICAL_AXIS) {
 				this.deltaY = -e2.detail / 3;
-			} else if (e.type === 'wheel') {
+			} else if (e.type === "wheel") {
 				// Modern wheel event
 				// https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent
 				const ev = <WheelEvent><unknown>e;
@@ -180,7 +185,7 @@ export class StandardWheelEvent {
 			}
 
 			// horizontal delta scroll
-			if (typeof e1.wheelDeltaX !== 'undefined') {
+			if (typeof e1.wheelDeltaX !== "undefined") {
 				if (browser.isSafari && platform.isWindows) {
 					this.deltaX = - (e1.wheelDeltaX / 120);
 				} else if (shouldFactorDPR) {
@@ -189,9 +194,9 @@ export class StandardWheelEvent {
 				} else {
 					this.deltaX = e1.wheelDeltaX / 120;
 				}
-			} else if (typeof e2.HORIZONTAL_AXIS !== 'undefined' && e2.axis === e2.HORIZONTAL_AXIS) {
+			} else if (typeof e2.HORIZONTAL_AXIS !== "undefined" && e2.axis === e2.HORIZONTAL_AXIS) {
 				this.deltaX = -e.detail / 3;
-			} else if (e.type === 'wheel') {
+			} else if (e.type === "wheel") {
 				// Modern wheel event
 				// https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent
 				const ev = <WheelEvent><unknown>e;

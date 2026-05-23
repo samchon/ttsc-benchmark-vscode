@@ -3,18 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from '../../../base/common/buffer.js';
-import * as platform from '../../../base/common/platform.js';
+import { VSBuffer } from "../../../base/common/buffer.js";
+import * as platform from "../../../base/common/platform.js";
 
 export interface IFullSemanticTokensDto {
 	id: number;
-	type: 'full';
+	type: "full";
 	data: Uint32Array;
 }
 
 export interface IDeltaSemanticTokensDto {
 	id: number;
-	type: 'delta';
+	type: "delta";
 	deltas: { start: number; deleteCount: number; data?: Uint32Array }[];
 }
 
@@ -55,7 +55,11 @@ function fromLittleEndianBuffer(buff: VSBuffer): Uint32Array {
 		reverseEndianness(uint8Arr);
 	}
 	if (uint8Arr.byteOffset % 4 === 0) {
-		return new Uint32Array(uint8Arr.buffer, uint8Arr.byteOffset, uint8Arr.length / 4);
+		return new Uint32Array(
+      uint8Arr.buffer,
+      uint8Arr.byteOffset,
+      uint8Arr.length / 4,
+    );
 	} else {
 		// unaligned memory access doesn't work on all platforms
 		const data = new Uint8Array(uint8Arr.byteLength);
@@ -68,7 +72,7 @@ export function encodeSemanticTokensDto(semanticTokens: ISemanticTokensDto): VSB
 	const dest = new Uint32Array(encodeSemanticTokensDtoSize(semanticTokens));
 	let offset = 0;
 	dest[offset++] = semanticTokens.id;
-	if (semanticTokens.type === 'full') {
+	if (semanticTokens.type === "full") {
 		dest[offset++] = EncodedSemanticTokensType.Full;
 		dest[offset++] = semanticTokens.data.length;
 		dest.set(semanticTokens.data, offset); offset += semanticTokens.data.length;
@@ -95,7 +99,7 @@ function encodeSemanticTokensDtoSize(semanticTokens: ISemanticTokensDto): number
 		+ 1 // id
 		+ 1 // type
 	);
-	if (semanticTokens.type === 'full') {
+	if (semanticTokens.type === "full") {
 		result += (
 			+ 1 // data length
 			+ semanticTokens.data.length
@@ -127,10 +131,10 @@ export function decodeSemanticTokensDto(_buff: VSBuffer): ISemanticTokensDto {
 		const length = src[offset++];
 		const data = src.subarray(offset, offset + length); offset += length;
 		return {
-			id: id,
-			type: 'full',
-			data: data
-		};
+      id: id,
+      type: "full",
+      data: data,
+    };
 	}
 	const deltaCount = src[offset++];
 	const deltas: { start: number; deleteCount: number; data?: Uint32Array }[] = [];
@@ -145,8 +149,8 @@ export function decodeSemanticTokensDto(_buff: VSBuffer): ISemanticTokensDto {
 		deltas[i] = { start, deleteCount, data };
 	}
 	return {
-		id: id,
-		type: 'delta',
-		deltas: deltas
-	};
+    id: id,
+    type: "delta",
+    deltas: deltas,
+  };
 }

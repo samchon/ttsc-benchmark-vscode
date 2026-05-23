@@ -3,35 +3,58 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize, localize2 } from '../../../../../nls.js';
-import { $ } from '../../../../../base/browser/dom.js';
-import { RawContextKey, IContextKey, IContextKeyService, ContextKeyExpr } from '../../../../../platform/contextkey/common/contextkey.js';
-import { Action2, registerAction2, MenuId } from '../../../../../platform/actions/common/actions.js';
-import { ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
-import { KeybindingWeight } from '../../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { IConfigurationRegistry, Extensions as ConfigurationExtensions, ConfigurationScope } from '../../../../../platform/configuration/common/configurationRegistry.js';
-import { KeyMod, KeyCode } from '../../../../../base/common/keyCodes.js';
-import { IEditorService } from '../../../../services/editor/common/editorService.js';
-import { Codicon } from '../../../../../base/common/codicons.js';
-import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { Disposable, DisposableStore, MutableDisposable } from '../../../../../base/common/lifecycle.js';
-import { disposableTimeout } from '../../../../../base/common/async.js';
-import { browserZoomFactors, browserZoomLabel, browserZoomAccessibilityLabel } from '../../../../../platform/browserView/common/browserView.js';
-import { IBrowserViewModel } from '../../../browserView/common/browserView.js';
-import { BrowserZoomService, IBrowserZoomService, MATCH_WINDOW_ZOOM_LABEL } from '../../../browserView/common/browserZoomService.js';
-import { IAccessibilityService } from '../../../../../platform/accessibility/common/accessibility.js';
-import { BrowserEditor, BrowserEditorContribution, CONTEXT_BROWSER_HAS_ERROR, CONTEXT_BROWSER_HAS_URL, CONTEXT_BROWSER_FOCUSED, IBrowserEditorWidgetContribution } from '../browserEditor.js';
-import { BROWSER_EDITOR_ACTIVE, BrowserActionCategory, BrowserActionGroup } from '../browserViewActions.js';
-import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../../common/contributions.js';
-import { getZoomLevel, onDidChangeZoomLevel } from '../../../../../base/browser/browser.js';
-import { zoomLevelToZoomFactor } from '../../../../../platform/window/common/window.js';
-import { mainWindow } from '../../../../../base/browser/window.js';
-import { InstantiationType, registerSingleton } from '../../../../../platform/instantiation/common/extensions.js';
-import { workbenchConfigurationNodeBase } from '../../../../common/configuration.js';
-import { Registry } from '../../../../../platform/registry/common/platform.js';
+import { localize, localize2 } from "../../../../../nls.js";
+import { $ } from "../../../../../base/browser/dom.js";
+import { RawContextKey, IContextKey, IContextKeyService, ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { Action2, registerAction2, MenuId } from "../../../../../platform/actions/common/actions.js";
+import { ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingWeight } from "../../../../../platform/keybinding/common/keybindingsRegistry.js";
+import {
+  IConfigurationRegistry,
+  Extensions as ConfigurationExtensions,
+  ConfigurationScope,
+} from "../../../../../platform/configuration/common/configurationRegistry.js";
+import { KeyMod, KeyCode } from "../../../../../base/common/keyCodes.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../../../base/common/lifecycle.js";
+import { disposableTimeout } from "../../../../../base/common/async.js";
+import { browserZoomFactors, browserZoomLabel, browserZoomAccessibilityLabel } from "../../../../../platform/browserView/common/browserView.js";
+import { IBrowserViewModel } from "../../../browserView/common/browserView.js";
+import { BrowserZoomService, IBrowserZoomService, MATCH_WINDOW_ZOOM_LABEL } from "../../../browserView/common/browserZoomService.js";
+import { IAccessibilityService } from "../../../../../platform/accessibility/common/accessibility.js";
+import {
+  BrowserEditor,
+  BrowserEditorContribution,
+  CONTEXT_BROWSER_HAS_ERROR,
+  CONTEXT_BROWSER_HAS_URL,
+  CONTEXT_BROWSER_FOCUSED,
+  IBrowserEditorWidgetContribution,
+} from "../browserEditor.js";
+import { BROWSER_EDITOR_ACTIVE, BrowserActionCategory, BrowserActionGroup } from "../browserViewActions.js";
+import {
+  IWorkbenchContribution,
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../../../common/contributions.js";
+import { getZoomLevel, onDidChangeZoomLevel } from "../../../../../base/browser/browser.js";
+import { zoomLevelToZoomFactor } from "../../../../../platform/window/common/window.js";
+import { mainWindow } from "../../../../../base/browser/window.js";
+import { InstantiationType, registerSingleton } from "../../../../../platform/instantiation/common/extensions.js";
+import { workbenchConfigurationNodeBase } from "../../../../common/configuration.js";
+import { Registry } from "../../../../../platform/registry/common/platform.js";
 
-const CONTEXT_BROWSER_CAN_ZOOM_IN = new RawContextKey<boolean>('browserCanZoomIn', true, localize('browser.canZoomIn', "Whether the browser can zoom in further"));
-const CONTEXT_BROWSER_CAN_ZOOM_OUT = new RawContextKey<boolean>('browserCanZoomOut', true, localize('browser.canZoomOut', "Whether the browser can zoom out further"));
+const CONTEXT_BROWSER_CAN_ZOOM_IN = new RawContextKey<boolean>(
+  "browserCanZoomIn",
+  true,
+  localize("browser.canZoomIn", "Whether the browser can zoom in further"),
+);
+const CONTEXT_BROWSER_CAN_ZOOM_OUT = new RawContextKey<boolean>(
+  "browserCanZoomOut",
+  true,
+  localize("browser.canZoomOut", "Whether the browser can zoom out further"),
+);
 
 /**
  * Transient zoom-level indicator that briefly appears inside the URL bar on zoom changes.
@@ -44,11 +67,11 @@ class BrowserZoomPill extends Disposable {
 
 	constructor() {
 		super();
-		this.element = $('.browser-zoom-pill');
+		this.element = $(".browser-zoom-pill");
 		// Don't announce this transient element; the zoom level is announced via IAccessibilityService.status()
-		this.element.setAttribute('aria-hidden', 'true');
-		this._icon = $('span');
-		this._label = $('span');
+		this.element.setAttribute("aria-hidden", "true");
+		this._icon = $("span");
+		this._label = $("span");
 		this.element.appendChild(this._icon);
 		this.element.appendChild(this._label);
 	}
@@ -57,13 +80,18 @@ class BrowserZoomPill extends Disposable {
 	 * Briefly show the zoom level, then auto-hide after 750 ms.
 	 */
 	show(zoomLabel: string, isAtOrAboveDefault: boolean): void {
-		this._icon.className = ThemeIcon.asClassName(isAtOrAboveDefault ? Codicon.zoomIn : Codicon.zoomOut);
+		this._icon.className = ThemeIcon.asClassName(
+      isAtOrAboveDefault ? Codicon.zoomIn : Codicon.zoomOut,
+    );
 		this._label.textContent = zoomLabel;
-		this.element.classList.add('visible');
+		this.element.classList.add("visible");
 		// Reset auto-hide timer so rapid zoom actions extend the display
-		this._timeout.value = disposableTimeout(() => {
-			this.element.classList.remove('visible');
-		}, 750); // Chrome shows the zoom level for 1.5 seconds, but we show it for less because ours is non-interactive
+		this._timeout.value = disposableTimeout(
+      () => {
+        this.element.classList.remove("visible");
+      },
+      750,
+    ); // Chrome shows the zoom level for 1.5 seconds, but we show it for less because ours is non-interactive
 	}
 }
 
@@ -82,8 +110,12 @@ export class BrowserEditorZoomSupport extends BrowserEditorContribution {
 		@IAccessibilityService private readonly accessibilityService: IAccessibilityService,
 	) {
 		super(editor);
-		this._canZoomInContext = CONTEXT_BROWSER_CAN_ZOOM_IN.bindTo(contextKeyService);
-		this._canZoomOutContext = CONTEXT_BROWSER_CAN_ZOOM_OUT.bindTo(contextKeyService);
+		this._canZoomInContext = CONTEXT_BROWSER_CAN_ZOOM_IN.bindTo(
+      contextKeyService,
+    );
+		this._canZoomOutContext = CONTEXT_BROWSER_CAN_ZOOM_OUT.bindTo(
+      contextKeyService,
+    );
 		this._zoomPill = this._register(new BrowserZoomPill());
 	}
 
@@ -93,9 +125,11 @@ export class BrowserEditorZoomSupport extends BrowserEditorContribution {
 
 	protected override subscribeToModel(model: IBrowserViewModel, store: DisposableStore): void {
 		this._updateZoomContext(model);
-		store.add(model.onDidChangeZoom(() => {
-			this._updateZoomContext(model);
-		}));
+		store.add(
+      model.onDidChangeZoom(() => {
+        this._updateZoomContext(model);
+      }),
+    );
 	}
 
 	override clear(): void {
@@ -128,13 +162,18 @@ export class BrowserEditorZoomSupport extends BrowserEditorContribution {
 		if (!model) {
 			return;
 		}
-		const defaultIndex = this.browserZoomService.getEffectiveZoomIndex(undefined, false);
+		const defaultIndex = this.browserZoomService.getEffectiveZoomIndex(
+      undefined,
+      false,
+    );
 		const defaultFactor = browserZoomFactors[defaultIndex];
 		const currentFactor = model.zoomFactor;
 		const label = browserZoomLabel(currentFactor);
 		this._zoomPill.show(label, currentFactor >= defaultFactor);
 		// Announce the new zoom level to screen readers (polite, non-interruptive).
-		this.accessibilityService.status(browserZoomAccessibilityLabel(currentFactor));
+		this.accessibilityService.status(
+      browserZoomAccessibilityLabel(currentFactor),
+    );
 	}
 }
 
@@ -144,12 +183,12 @@ BrowserEditor.registerContribution(BrowserEditorZoomSupport);
 // -- Actions ------------------------------------------------------------
 
 class ZoomInAction extends Action2 {
-	static readonly ID = 'workbench.action.browser.zoomIn';
+	static readonly ID = "workbench.action.browser.zoomIn";
 
 	constructor() {
 		super({
 			id: ZoomInAction.ID,
-			title: localize2('browser.zoomInAction', 'Zoom In'),
+			title: localize2("browser.zoomInAction", "Zoom In"),
 			category: BrowserActionCategory,
 			icon: Codicon.zoomIn,
 			f1: true,
@@ -170,7 +209,9 @@ class ZoomInAction extends Action2 {
 		});
 	}
 
-	async run(accessor: ServicesAccessor, browserEditor = accessor.get(IEditorService).activeEditorPane): Promise<void> {
+	async run(accessor: ServicesAccessor, browserEditor = accessor.get(
+    IEditorService,
+  ).activeEditorPane): Promise<void> {
 		if (browserEditor instanceof BrowserEditor) {
 			await browserEditor.getContribution(BrowserEditorZoomSupport)?.zoomIn();
 		}
@@ -178,12 +219,12 @@ class ZoomInAction extends Action2 {
 }
 
 class ZoomOutAction extends Action2 {
-	static readonly ID = 'workbench.action.browser.zoomOut';
+	static readonly ID = "workbench.action.browser.zoomOut";
 
 	constructor() {
 		super({
 			id: ZoomOutAction.ID,
-			title: localize2('browser.zoomOutAction', 'Zoom Out'),
+			title: localize2("browser.zoomOutAction", "Zoom Out"),
 			category: BrowserActionCategory,
 			icon: Codicon.zoomOut,
 			f1: true,
@@ -202,13 +243,15 @@ class ZoomOutAction extends Action2 {
 				secondary: [KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.Minus, KeyMod.CtrlCmd | KeyCode.NumpadSubtract],
 				linux: {
 					primary: KeyMod.CtrlCmd | KeyCode.Minus,
-					secondary: [KeyMod.CtrlCmd | KeyCode.NumpadSubtract]
-				}
+					secondary: [KeyMod.CtrlCmd | KeyCode.NumpadSubtract],
+				},
 			},
 		});
 	}
 
-	async run(accessor: ServicesAccessor, browserEditor = accessor.get(IEditorService).activeEditorPane): Promise<void> {
+	async run(accessor: ServicesAccessor, browserEditor = accessor.get(
+    IEditorService,
+  ).activeEditorPane): Promise<void> {
 		if (browserEditor instanceof BrowserEditor) {
 			await browserEditor.getContribution(BrowserEditorZoomSupport)?.zoomOut();
 		}
@@ -216,12 +259,12 @@ class ZoomOutAction extends Action2 {
 }
 
 class ResetZoomAction extends Action2 {
-	static readonly ID = 'workbench.action.browser.resetZoom';
+	static readonly ID = "workbench.action.browser.resetZoom";
 
 	constructor() {
 		super({
 			id: ResetZoomAction.ID,
-			title: localize2('browser.resetZoomAction', 'Reset Zoom'),
+			title: localize2("browser.resetZoomAction", "Reset Zoom"),
 			category: BrowserActionCategory,
 			icon: Codicon.screenNormal,
 			f1: true,
@@ -241,7 +284,9 @@ class ResetZoomAction extends Action2 {
 		});
 	}
 
-	async run(accessor: ServicesAccessor, browserEditor = accessor.get(IEditorService).activeEditorPane): Promise<void> {
+	async run(accessor: ServicesAccessor, browserEditor = accessor.get(
+    IEditorService,
+  ).activeEditorPane): Promise<void> {
 		if (browserEditor instanceof BrowserEditor) {
 			await browserEditor.getContribution(BrowserEditorZoomSupport)?.resetZoom();
 		}
@@ -257,41 +302,55 @@ registerAction2(ResetZoomAction);
  * views using the 'Match Window' default zoom level stay in sync.
  */
 class WindowZoomSynchronizer extends Disposable implements IWorkbenchContribution {
-	static readonly ID = 'workbench.contrib.browserView.windowZoomSynchronizer';
+	static readonly ID = "workbench.contrib.browserView.windowZoomSynchronizer";
 
 	constructor(@IBrowserZoomService browserZoomService: IBrowserZoomService) {
 		super();
-		browserZoomService.notifyWindowZoomChanged(zoomLevelToZoomFactor(getZoomLevel(mainWindow)));
-		this._register(onDidChangeZoomLevel(() => {
-			browserZoomService.notifyWindowZoomChanged(zoomLevelToZoomFactor(getZoomLevel(mainWindow)));
-		}));
+		browserZoomService.notifyWindowZoomChanged(
+      zoomLevelToZoomFactor(getZoomLevel(mainWindow)),
+    );
+		this._register(
+      onDidChangeZoomLevel(() => {
+        browserZoomService.notifyWindowZoomChanged(
+          zoomLevelToZoomFactor(getZoomLevel(mainWindow)),
+        );
+      }),
+    );
 	}
 }
 
-registerWorkbenchContribution2(WindowZoomSynchronizer.ID, WindowZoomSynchronizer, WorkbenchPhase.BlockRestore);
+registerWorkbenchContribution2(
+  WindowZoomSynchronizer.ID,
+  WindowZoomSynchronizer,
+  WorkbenchPhase.BlockRestore,
+);
 
-registerSingleton(IBrowserZoomService, BrowserZoomService, InstantiationType.Delayed);
+registerSingleton(
+  IBrowserZoomService,
+  BrowserZoomService,
+  InstantiationType.Delayed,
+);
 
 Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).registerConfiguration({
 	...workbenchConfigurationNodeBase,
 	properties: {
-		'workbench.browser.pageZoom': {
-			type: 'string',
+		"workbench.browser.pageZoom": {
+			type: "string",
 			enum: [MATCH_WINDOW_ZOOM_LABEL, ...browserZoomFactors.map(f => `${Math.round(f * 100)}%`)],
 			markdownEnumDescriptions: [
 				localize(
-					{ comment: ['This is the description for a setting enum value.'], key: 'browser.defaultZoomLevel.matchWindow' },
-					'Matches the application\'s current UI zoom level.'
+					{ comment: ["This is the description for a setting enum value."], key: "browser.defaultZoomLevel.matchWindow" },
+					"Matches the application's current UI zoom level.",
 				),
-				...browserZoomFactors.map(() => ''),
+				...browserZoomFactors.map(() => ""),
 			],
 			default: MATCH_WINDOW_ZOOM_LABEL,
 			markdownDescription: localize(
-				{ comment: ['This is the description for a setting.'], key: 'browser.pageZoom' },
-				'Default zoom level for all sites in the Integrated Browser.'
+				{ comment: ["This is the description for a setting."], key: "browser.pageZoom" },
+				"Default zoom level for all sites in the Integrated Browser.",
 			),
 			// Zoom can change from machine to machine, so we don't need the workspace-level nor syncing that WINDOW has.
-			scope: ConfigurationScope.MACHINE
-		}
-	}
+			scope: ConfigurationScope.MACHINE,
+		},
+	},
 });

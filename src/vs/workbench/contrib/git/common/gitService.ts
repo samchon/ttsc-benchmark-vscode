@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { IObservable } from '../../../../base/common/observable.js';
-import { URI } from '../../../../base/common/uri.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { IObservable } from "../../../../base/common/observable.js";
+import { URI } from "../../../../base/common/uri.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
 
 export enum GitRefType {
 	Head,
@@ -26,7 +26,7 @@ export interface GitRefQuery {
 	readonly contains?: string;
 	readonly count?: number;
 	readonly pattern?: string | string[];
-	readonly sort?: 'alphabetically' | 'committerdate' | 'creatordate';
+	readonly sort?: "alphabetically" | "committerdate" | "creatordate";
 }
 
 export interface GitChange {
@@ -93,7 +93,7 @@ export interface IGitExtensionDelegate {
 	diffBetweenWithStats2(root: URI, ref: string, path?: string): Promise<GitDiffChange[]>;
 }
 
-export const IGitService = createDecorator<IGitService>('gitService');
+export const IGitService = createDecorator<IGitService>("gitService");
 
 export interface IGitService {
 	readonly _serviceBrand: undefined;

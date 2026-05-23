@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { ISession } from '../../../services/sessions/common/session.js';
-import { ITaskEntry } from './sessionsTasksService.js';
+import { IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { ISession } from "../../../services/sessions/common/session.js";
+import { ITaskEntry } from "./sessionsTasksService.js";
 
 /**
  * Pluggable runner that knows how to execute a session task in the runtime
@@ -57,7 +57,9 @@ export interface ISessionTaskRunnerRegistry {
 	getRunner(session: ISession): ISessionTaskRunner | undefined;
 }
 
-export const ISessionTaskRunnerRegistry = createDecorator<ISessionTaskRunnerRegistry>('sessionTaskRunnerRegistry');
+export const ISessionTaskRunnerRegistry = createDecorator<ISessionTaskRunnerRegistry>(
+  "sessionTaskRunnerRegistry",
+);
 
 export class SessionTaskRunnerRegistry implements ISessionTaskRunnerRegistry {
 

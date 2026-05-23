@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BugIndicatingError } from '../../../../base/common/errors.js';
+import { BugIndicatingError } from "../../../../base/common/errors.js";
 
 export interface IOffsetRange {
 	readonly start: number;
@@ -35,7 +35,10 @@ export class OffsetRange implements IOffsetRange {
 			sortedRanges.splice(i, 0, range);
 		} else {
 			const start = Math.min(range.start, sortedRanges[i].start);
-			const end = Math.max(range.endExclusive, sortedRanges[j - 1].endExclusive);
+			const end = Math.max(
+        range.endExclusive,
+        sortedRanges[j - 1].endExclusive,
+      );
 			sortedRanges.splice(i, j - i, new OffsetRange(start, end));
 		}
 	}
@@ -106,7 +109,10 @@ export class OffsetRange implements IOffsetRange {
 	 * The joined range is the smallest range that contains both ranges.
 	 */
 	public join(other: OffsetRange): OffsetRange {
-		return new OffsetRange(Math.min(this.start, other.start), Math.max(this.endExclusive, other.endExclusive));
+		return new OffsetRange(
+      Math.min(this.start, other.start),
+      Math.max(this.endExclusive, other.endExclusive),
+    );
 	}
 
 	/**
@@ -168,7 +174,9 @@ export class OffsetRange implements IOffsetRange {
 	 */
 	public clip(value: number): number {
 		if (this.isEmpty) {
-			throw new BugIndicatingError(`Invalid clipping range: ${this.toString()}`);
+			throw new BugIndicatingError(
+        `Invalid clipping range: ${this.toString()}`,
+      );
 		}
 		return Math.max(this.start, Math.min(this.endExclusive - 1, value));
 	}
@@ -181,7 +189,9 @@ export class OffsetRange implements IOffsetRange {
 	 */
 	public clipCyclic(value: number): number {
 		if (this.isEmpty) {
-			throw new BugIndicatingError(`Invalid clipping range: ${this.toString()}`);
+			throw new BugIndicatingError(
+        `Invalid clipping range: ${this.toString()}`,
+      );
 		}
 		if (value < this.start) {
 			return this.endExclusive - ((this.start - value) % this.length);
@@ -212,7 +222,9 @@ export class OffsetRange implements IOffsetRange {
 	*/
 	public joinRightTouching(range: OffsetRange): OffsetRange {
 		if (this.endExclusive !== range.start) {
-			throw new BugIndicatingError(`Invalid join: ${this.toString()} and ${range.toString()}`);
+			throw new BugIndicatingError(
+        `Invalid join: ${this.toString()} and ${range.toString()}`,
+      );
 		}
 		return new OffsetRange(this.start, range.endExclusive);
 	}
@@ -223,7 +235,10 @@ export class OffsetRange implements IOffsetRange {
 		if (marginEnd === undefined) {
 			marginEnd = marginStart;
 		}
-		return new OffsetRange(this.start - marginStart, this.endExclusive + marginEnd);
+		return new OffsetRange(
+      this.start - marginStart,
+      this.endExclusive + marginEnd,
+    );
 	}
 }
 
@@ -247,13 +262,16 @@ export class OffsetRangeSet {
 			this._sortedRanges.splice(i, 0, range);
 		} else {
 			const start = Math.min(range.start, this._sortedRanges[i].start);
-			const end = Math.max(range.endExclusive, this._sortedRanges[j - 1].endExclusive);
+			const end = Math.max(
+        range.endExclusive,
+        this._sortedRanges[j - 1].endExclusive,
+      );
 			this._sortedRanges.splice(i, j - i, new OffsetRange(start, end));
 		}
 	}
 
 	public toString(): string {
-		return this._sortedRanges.map(r => r.toString()).join(', ');
+		return this._sortedRanges.map(r => r.toString()).join(", ");
 	}
 
 	/**

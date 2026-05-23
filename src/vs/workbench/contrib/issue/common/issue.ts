@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { UriComponents } from '../../../../base/common/uri.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
+import { UriComponents } from "../../../../base/common/uri.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
 
 // Since data sent through the service is serialized to JSON, functions will be lost, so Color objects
 // should not be sent as their 'toString' method will be stripped. Instead convert to strings before sending.
@@ -24,10 +24,10 @@ export const enum IssueType {
 }
 
 export enum IssueSource {
-	VSCode = 'vscode',
-	Extension = 'extension',
-	Marketplace = 'marketplace',
-	Unknown = 'unknown'
+	VSCode = "vscode",
+	Extension = "extension",
+	Marketplace = "marketplace",
+	Unknown = "unknown"
 }
 
 export interface IssueReporterStyles extends WindowStyles {
@@ -101,7 +101,9 @@ export interface ISettingSearchResult {
 	score: number;
 }
 
-export const IIssueFormService = createDecorator<IIssueFormService>('issueFormService');
+export const IIssueFormService = createDecorator<IIssueFormService>(
+  "issueFormService",
+);
 
 /**
  * Narrow surface of the issue reporter wizard that `IIssueFormService.submitIssue`
@@ -113,7 +115,7 @@ export interface IIssueSubmissionHost {
 	getScreenshots(): readonly { readonly dataUrl: string; readonly annotatedDataUrl?: string }[];
 	getRecordings(): readonly { readonly filePath: string }[];
 	setUploading(uploading: boolean): void;
-	setAttachmentUploadState(index: number, state: 'pending' | 'uploading' | 'done'): void;
+	setAttachmentUploadState(index: number, state: "pending" | "uploading" | "done"): void;
 }
 
 export interface IIssueFormService {
@@ -129,7 +131,9 @@ export interface IIssueFormService {
 	submitIssue(host: IIssueSubmissionHost, data: IssueReporterData, title: string, body: string): Promise<boolean>;
 }
 
-export const IWorkbenchIssueService = createDecorator<IWorkbenchIssueService>('workbenchIssueService');
+export const IWorkbenchIssueService = createDecorator<IWorkbenchIssueService>(
+  "workbenchIssueService",
+);
 
 export interface IWorkbenchIssueService {
 	readonly _serviceBrand: undefined;

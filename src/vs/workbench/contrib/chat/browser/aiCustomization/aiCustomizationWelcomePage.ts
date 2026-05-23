@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as DOM from '../../../../../base/browser/dom.js';
-import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
-import { ICommandService } from '../../../../../platform/commands/common/commands.js';
-import { AICustomizationManagementSection } from './aiCustomizationManagement.js';
-import { IAICustomizationWorkspaceService, IWelcomePageFeatures } from '../../common/aiCustomizationWorkspaceService.js';
-import { PromptLaunchersAICustomizationWelcomePage } from './aiCustomizationWelcomePagePromptLaunchers.js';
-import { IHoverService } from '../../../../../platform/hover/browser/hover.js';
+import * as DOM from "../../../../../base/browser/dom.js";
+import { Disposable, IDisposable } from "../../../../../base/common/lifecycle.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { AICustomizationManagementSection } from "./aiCustomizationManagement.js";
+import { IAICustomizationWorkspaceService, IWelcomePageFeatures } from "../../common/aiCustomizationWorkspaceService.js";
+import { PromptLaunchersAICustomizationWelcomePage } from "./aiCustomizationWelcomePagePromptLaunchers.js";
+import { IHoverService } from "../../../../../platform/hover/browser/hover.js";
 
 const $ = DOM.$;
 
@@ -54,10 +54,19 @@ export class AICustomizationWelcomePage extends Disposable {
 	) {
 		super();
 
-		this.container = DOM.append(parent, $('.welcome-page-host'));
-		this.container.style.height = '100%';
-		this.container.style.overflow = 'hidden';
-		this.implementation = this._register(new PromptLaunchersAICustomizationWelcomePage(this.container, welcomePageFeatures, callbacks, commandService, workspaceService, hoverService));
+		this.container = DOM.append(parent, $(".welcome-page-host"));
+		this.container.style.height = "100%";
+		this.container.style.overflow = "hidden";
+		this.implementation = this._register(
+      new PromptLaunchersAICustomizationWelcomePage(
+        this.container,
+        welcomePageFeatures,
+        callbacks,
+        commandService,
+        workspaceService,
+        hoverService,
+      ),
+    );
 	}
 
 	rebuildCards(visibleSectionIds: ReadonlySet<AICustomizationManagementSection>): void {

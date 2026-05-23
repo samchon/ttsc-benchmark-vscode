@@ -3,21 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { $ } from '../../../../browser/dom.js';
-import { GridView, IView, Orientation, Sizing } from '../../../../browser/ui/grid/gridview.js';
-import { nodesToArrays, TestView } from './util.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../common/utils.js';
+import assert from "assert";
+import { $ } from "../../../../browser/dom.js";
+import { GridView, IView, Orientation, Sizing } from "../../../../browser/ui/grid/gridview.js";
+import { nodesToArrays, TestView } from "./util.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../common/utils.js";
 
-suite('Gridview', function () {
+suite("Gridview", function () {
 
 	const store = ensureNoDisposablesAreLeakedInTestSuite();
 
 	function createGridView(): GridView {
 		const gridview = store.add(new GridView());
-		const container = $('.container');
+		const container = $(".container");
 
-		container.style.position = 'absolute';
+		container.style.position = "absolute";
 		container.style.width = `${200}px`;
 		container.style.height = `${200}px`;
 		container.appendChild(gridview.element);
@@ -25,23 +25,23 @@ suite('Gridview', function () {
 		return gridview;
 	}
 
-	test('empty gridview is empty', function () {
+	test("empty gridview is empty", function () {
 		const gridview = createGridView();
 		assert.deepStrictEqual(nodesToArrays(gridview.getView()), []);
 	});
 
-	test('gridview addView', function () {
+	test("gridview addView", function () {
 		const gridview = createGridView();
 
 		const view = store.add(new TestView(20, 20, 20, 20));
-		assert.throws(() => gridview.addView(view, 200, []), 'empty location');
-		assert.throws(() => gridview.addView(view, 200, [1]), 'index overflow');
-		assert.throws(() => gridview.addView(view, 200, [0, 0]), 'hierarchy overflow');
+		assert.throws(() => gridview.addView(view, 200, []), "empty location");
+		assert.throws(() => gridview.addView(view, 200, [1]), "index overflow");
+		assert.throws(() => gridview.addView(view, 200, [0, 0]), "hierarchy overflow");
 
 		const views = [
 			store.add(new TestView(20, 20, 20, 20)),
 			store.add(new TestView(20, 20, 20, 20)),
-			store.add(new TestView(20, 20, 20, 20))
+			store.add(new TestView(20, 20, 20, 20)),
 		];
 
 		gridview.addView(views[0], 200, [0]);
@@ -51,15 +51,15 @@ suite('Gridview', function () {
 		assert.deepStrictEqual(nodesToArrays(gridview.getView()), views);
 	});
 
-	test('gridview addView nested', function () {
+	test("gridview addView nested", function () {
 		const gridview = createGridView();
 
 		const views = [
 			store.add(new TestView(20, 20, 20, 20)),
 			[
 				store.add(new TestView(20, 20, 20, 20)),
-				store.add(new TestView(20, 20, 20, 20))
-			]
+				store.add(new TestView(20, 20, 20, 20)),
+			],
 		];
 
 		gridview.addView(views[0] as IView, 200, [0]);
@@ -69,7 +69,7 @@ suite('Gridview', function () {
 		assert.deepStrictEqual(nodesToArrays(gridview.getView()), views);
 	});
 
-	test('gridview addView deep nested', function () {
+	test("gridview addView deep nested", function () {
 		const gridview = createGridView();
 
 		const view1 = store.add(new TestView(20, 20, 20, 20));
@@ -105,7 +105,7 @@ suite('Gridview', function () {
 		assert.deepStrictEqual(nodesToArrays(gridview.getView()), [view1, [view5, [view8, view7], [view4, view3], view2], view6]);
 	});
 
-	test('simple layout', function () {
+	test("simple layout", function () {
 		const gridview = createGridView();
 		gridview.layout(800, 600);
 
@@ -155,7 +155,7 @@ suite('Gridview', function () {
 		assert.deepStrictEqual(gridview.getViewSize([1, 0, 1]), { width: 600, height: 100 });
 	});
 
-	test('simple layout with automatic size distribution', function () {
+	test("simple layout with automatic size distribution", function () {
 		const gridview = createGridView();
 		gridview.layout(800, 600);
 
@@ -191,7 +191,7 @@ suite('Gridview', function () {
 		assert.deepStrictEqual(view5.size, [400, 150]);
 	});
 
-	test('addviews before layout call 1', function () {
+	test("addviews before layout call 1", function () {
 		const gridview = createGridView();
 
 		const view1 = store.add(new TestView(50, Number.POSITIVE_INFINITY, 50, Number.POSITIVE_INFINITY));
@@ -210,7 +210,7 @@ suite('Gridview', function () {
 		assert.deepStrictEqual(view3.size, [400, 300]);
 	});
 
-	test('addviews before layout call 2', function () {
+	test("addviews before layout call 2", function () {
 		const gridview = createGridView();
 		const view1 = store.add(new TestView(50, Number.POSITIVE_INFINITY, 50, Number.POSITIVE_INFINITY));
 		gridview.addView(view1, 200, [0]);
@@ -228,7 +228,7 @@ suite('Gridview', function () {
 		assert.deepStrictEqual(view3.size, [400, 300]);
 	});
 
-	test('flipping orientation should preserve absolute offsets', function () {
+	test("flipping orientation should preserve absolute offsets", function () {
 		const gridview = createGridView();
 		const view1 = store.add(new TestView(50, Number.POSITIVE_INFINITY, 50, Number.POSITIVE_INFINITY));
 		gridview.addView(view1, 200, [0]);

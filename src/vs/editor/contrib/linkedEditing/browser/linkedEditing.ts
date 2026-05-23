@@ -3,55 +3,69 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as arrays from '../../../../base/common/arrays.js';
-import { Delayer, first } from '../../../../base/common/async.js';
-import { CancellationToken, CancellationTokenSource } from '../../../../base/common/cancellation.js';
-import { Color } from '../../../../base/common/color.js';
-import { isCancellationError, onUnexpectedError, onUnexpectedExternalError } from '../../../../base/common/errors.js';
-import { Event } from '../../../../base/common/event.js';
-import { KeyCode, KeyMod } from '../../../../base/common/keyCodes.js';
-import { Disposable, DisposableStore } from '../../../../base/common/lifecycle.js';
-import * as strings from '../../../../base/common/strings.js';
-import { URI } from '../../../../base/common/uri.js';
-import { ICodeEditor } from '../../../browser/editorBrowser.js';
-import { EditorAction, EditorCommand, EditorContributionInstantiation, registerEditorAction, registerEditorCommand, registerEditorContribution, registerModelAndPositionCommand, ServicesAccessor } from '../../../browser/editorExtensions.js';
-import { ICodeEditorService } from '../../../browser/services/codeEditorService.js';
-import { EditorOption } from '../../../common/config/editorOptions.js';
-import { IPosition, Position } from '../../../common/core/position.js';
-import { IRange, Range } from '../../../common/core/range.js';
-import { IEditorContribution, IEditorDecorationsCollection } from '../../../common/editorCommon.js';
-import { EditorContextKeys } from '../../../common/editorContextKeys.js';
-import { IModelDeltaDecoration, ITextModel, TrackedRangeStickiness } from '../../../common/model.js';
-import { ModelDecorationOptions } from '../../../common/model/textModel.js';
-import { LinkedEditingRangeProvider, LinkedEditingRanges } from '../../../common/languages.js';
-import { ILanguageConfigurationService } from '../../../common/languages/languageConfigurationRegistry.js';
-import * as nls from '../../../../nls.js';
-import { ContextKeyExpr, IContextKey, IContextKeyService, RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
-import { KeybindingWeight } from '../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { ILanguageFeaturesService } from '../../../common/services/languageFeatures.js';
-import { registerColor } from '../../../../platform/theme/common/colorRegistry.js';
-import { LanguageFeatureRegistry } from '../../../common/languageFeatureRegistry.js';
-import { ISingleEditOperation } from '../../../common/core/editOperation.js';
-import { IFeatureDebounceInformation, ILanguageFeatureDebounceService } from '../../../common/services/languageFeatureDebounce.js';
-import { StopWatch } from '../../../../base/common/stopwatch.js';
-import './linkedEditing.css';
+import * as arrays from "../../../../base/common/arrays.js";
+import { Delayer, first } from "../../../../base/common/async.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { Color } from "../../../../base/common/color.js";
+import { isCancellationError, onUnexpectedError, onUnexpectedExternalError } from "../../../../base/common/errors.js";
+import { Event } from "../../../../base/common/event.js";
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import * as strings from "../../../../base/common/strings.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import {
+  EditorAction,
+  EditorCommand,
+  EditorContributionInstantiation,
+  registerEditorAction,
+  registerEditorCommand,
+  registerEditorContribution,
+  registerModelAndPositionCommand,
+  ServicesAccessor,
+} from "../../../browser/editorExtensions.js";
+import { ICodeEditorService } from "../../../browser/services/codeEditorService.js";
+import { EditorOption } from "../../../common/config/editorOptions.js";
+import { IPosition, Position } from "../../../common/core/position.js";
+import { IRange, Range } from "../../../common/core/range.js";
+import { IEditorContribution, IEditorDecorationsCollection } from "../../../common/editorCommon.js";
+import { EditorContextKeys } from "../../../common/editorContextKeys.js";
+import { IModelDeltaDecoration, ITextModel, TrackedRangeStickiness } from "../../../common/model.js";
+import { ModelDecorationOptions } from "../../../common/model/textModel.js";
+import { LinkedEditingRangeProvider, LinkedEditingRanges } from "../../../common/languages.js";
+import { ILanguageConfigurationService } from "../../../common/languages/languageConfigurationRegistry.js";
+import * as nls from "../../../../nls.js";
+import { ContextKeyExpr, IContextKey, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { ILanguageFeaturesService } from "../../../common/services/languageFeatures.js";
+import { registerColor } from "../../../../platform/theme/common/colorRegistry.js";
+import { LanguageFeatureRegistry } from "../../../common/languageFeatureRegistry.js";
+import { ISingleEditOperation } from "../../../common/core/editOperation.js";
+import { IFeatureDebounceInformation, ILanguageFeatureDebounceService } from "../../../common/services/languageFeatureDebounce.js";
+import { StopWatch } from "../../../../base/common/stopwatch.js";
+import "./linkedEditing.css";
 
-export const CONTEXT_ONTYPE_RENAME_INPUT_VISIBLE = new RawContextKey<boolean>('LinkedEditingInputVisible', false);
+export const CONTEXT_ONTYPE_RENAME_INPUT_VISIBLE = new RawContextKey<boolean>(
+  "LinkedEditingInputVisible",
+  false,
+);
 
-const DECORATION_CLASS_NAME = 'linked-editing-decoration';
+const DECORATION_CLASS_NAME = "linked-editing-decoration";
 
 export class LinkedEditingContribution extends Disposable implements IEditorContribution {
 
-	public static readonly ID = 'editor.contrib.linkedEditing';
+	public static readonly ID = "editor.contrib.linkedEditing";
 
 	private static readonly DECORATION = ModelDecorationOptions.register({
-		description: 'linked-editing',
-		stickiness: TrackedRangeStickiness.AlwaysGrowsWhenTypingAtEdges,
-		className: DECORATION_CLASS_NAME
-	});
+    description: "linked-editing",
+    stickiness: TrackedRangeStickiness.AlwaysGrowsWhenTypingAtEdges,
+    className: DECORATION_CLASS_NAME,
+  });
 
 	static get(editor: ICodeEditor): LinkedEditingContribution | null {
-		return editor.getContribution<LinkedEditingContribution>(LinkedEditingContribution.ID);
+		return editor.getContribution<LinkedEditingContribution>(
+      LinkedEditingContribution.ID,
+    );
 	}
 
 	private _debounceDuration: number | undefined;
@@ -84,14 +98,20 @@ export class LinkedEditingContribution extends Disposable implements IEditorCont
 		@IContextKeyService contextKeyService: IContextKeyService,
 		@ILanguageFeaturesService languageFeaturesService: ILanguageFeaturesService,
 		@ILanguageConfigurationService private readonly languageConfigurationService: ILanguageConfigurationService,
-		@ILanguageFeatureDebounceService languageFeatureDebounceService: ILanguageFeatureDebounceService
+		@ILanguageFeatureDebounceService languageFeatureDebounceService: ILanguageFeatureDebounceService,
 	) {
 		super();
 		this._editor = editor;
 		this._providers = languageFeaturesService.linkedEditingRangeProvider;
 		this._enabled = false;
-		this._visibleContextKey = CONTEXT_ONTYPE_RENAME_INPUT_VISIBLE.bindTo(contextKeyService);
-		this._debounceInformation = languageFeatureDebounceService.for(this._providers, 'Linked Editing', { max: 200 });
+		this._visibleContextKey = CONTEXT_ONTYPE_RENAME_INPUT_VISIBLE.bindTo(
+      contextKeyService,
+    );
+		this._debounceInformation = languageFeatureDebounceService.for(
+      this._providers,
+      "Linked Editing",
+      { max: 200 },
+    );
 
 		this._currentDecorations = this._editor.createDecorationsCollection();
 		this._languageWordPattern = null;
@@ -106,7 +126,9 @@ export class LinkedEditingContribution extends Disposable implements IEditorCont
 		this._currentRequestPosition = null;
 		this._currentRequestModelVersion = null;
 
-		this._register(this._editor.onDidChangeModel(() => this.reinitialize(true)));
+		this._register(
+      this._editor.onDidChangeModel(() => this.reinitialize(true)),
+    );
 
 		this._register(this._editor.onDidChangeConfiguration(e => {
 			if (e.hasChanged(EditorOption.linkedEditing) || e.hasChanged(EditorOption.renameOnType)) {
@@ -114,14 +136,20 @@ export class LinkedEditingContribution extends Disposable implements IEditorCont
 			}
 		}));
 		this._register(this._providers.onDidChange(() => this.reinitialize(false)));
-		this._register(this._editor.onDidChangeModelLanguage(() => this.reinitialize(true)));
+		this._register(
+      this._editor.onDidChangeModelLanguage(() => this.reinitialize(true)),
+    );
 
 		this.reinitialize(true);
 	}
 
 	private reinitialize(forceRefresh: boolean) {
 		const model = this._editor.getModel();
-		const isEnabled = model !== null && (this._editor.getOption(EditorOption.linkedEditing) || this._editor.getOption(EditorOption.renameOnType)) && this._providers.has(model);
+		const isEnabled = model !== null && (this._editor.getOption(
+      EditorOption.linkedEditing,
+    ) || this._editor.getOption(
+      EditorOption.renameOnType,
+    )) && this._providers.has(model);
 		if (isEnabled === this._enabled && !forceRefresh) {
 			return;
 		}
@@ -136,25 +164,31 @@ export class LinkedEditingContribution extends Disposable implements IEditorCont
 		}
 
 		this._localToDispose.add(
-			Event.runAndSubscribe(
-				model.onDidChangeLanguageConfiguration,
-				() => {
-					this._languageWordPattern = this.languageConfigurationService.getLanguageConfiguration(model.getLanguageId()).getWordDefinition();
-				}
-			)
-		);
+      Event.runAndSubscribe(model.onDidChangeLanguageConfiguration, () => {
+        this._languageWordPattern = this.languageConfigurationService.getLanguageConfiguration(model.getLanguageId()).getWordDefinition();
+      }),
+    );
 
-		const rangeUpdateScheduler = new Delayer(this._debounceInformation.get(model));
+		const rangeUpdateScheduler = new Delayer(
+      this._debounceInformation.get(model),
+    );
 		const triggerRangeUpdate = () => {
-			this._rangeUpdateTriggerPromise = rangeUpdateScheduler.trigger(() => this.updateRanges(), this._debounceDuration ?? this._debounceInformation.get(model));
+			this._rangeUpdateTriggerPromise = rangeUpdateScheduler.trigger(
+        () => this.updateRanges(),
+        this._debounceDuration ?? this._debounceInformation.get(model),
+      );
 		};
 		const rangeSyncScheduler = new Delayer(0);
 		const triggerRangeSync = (token: number) => {
-			this._rangeSyncTriggerPromise = rangeSyncScheduler.trigger(() => this._syncRanges(token));
+			this._rangeSyncTriggerPromise = rangeSyncScheduler.trigger(
+        () => this._syncRanges(token),
+      );
 		};
-		this._localToDispose.add(this._editor.onDidChangeCursorPosition(() => {
-			triggerRangeUpdate();
-		}));
+		this._localToDispose.add(
+      this._editor.onDidChangeCursorPosition(() => {
+        triggerRangeUpdate();
+      }),
+    );
 		this._localToDispose.add(this._editor.onDidChangeModelContent((e) => {
 			if (!this._ignoreChangeEvent) {
 				if (this._currentDecorations.length > 0) {
@@ -171,7 +205,7 @@ export class LinkedEditingContribution extends Disposable implements IEditorCont
 			dispose: () => {
 				rangeUpdateScheduler.dispose();
 				rangeSyncScheduler.dispose();
-			}
+			},
 		});
 		this.updateRanges();
 	}
@@ -207,30 +241,36 @@ export class LinkedEditingContribution extends Disposable implements IEditorCont
 			}
 			if (mirrorRange.startLineNumber !== mirrorRange.endLineNumber) {
 				edits.push({
-					range: mirrorRange,
-					text: referenceValue
-				});
+          range: mirrorRange,
+          text: referenceValue,
+        });
 			} else {
 				let oldValue = model.getValueInRange(mirrorRange);
 				let newValue = referenceValue;
 				let rangeStartColumn = mirrorRange.startColumn;
 				let rangeEndColumn = mirrorRange.endColumn;
 
-				const commonPrefixLength = strings.commonPrefixLength(oldValue, newValue);
+				const commonPrefixLength = strings.commonPrefixLength(
+          oldValue,
+          newValue,
+        );
 				rangeStartColumn += commonPrefixLength;
 				oldValue = oldValue.substr(commonPrefixLength);
 				newValue = newValue.substr(commonPrefixLength);
 
-				const commonSuffixLength = strings.commonSuffixLength(oldValue, newValue);
+				const commonSuffixLength = strings.commonSuffixLength(
+          oldValue,
+          newValue,
+        );
 				rangeEndColumn -= commonSuffixLength;
 				oldValue = oldValue.substr(0, oldValue.length - commonSuffixLength);
 				newValue = newValue.substr(0, newValue.length - commonSuffixLength);
 
 				if (rangeStartColumn !== rangeEndColumn || newValue.length !== 0) {
 					edits.push({
-						range: new Range(mirrorRange.startLineNumber, rangeStartColumn, mirrorRange.endLineNumber, rangeEndColumn),
-						text: newValue
-					});
+            range: new Range(mirrorRange.startLineNumber, rangeStartColumn, mirrorRange.endLineNumber, rangeEndColumn),
+            text: newValue,
+          });
 				}
 			}
 		}
@@ -243,8 +283,10 @@ export class LinkedEditingContribution extends Disposable implements IEditorCont
 			this._editor.popUndoStop();
 			this._ignoreChangeEvent = true;
 			const prevEditOperationType = this._editor._getViewModel().getPrevEditOperationType();
-			this._editor.executeEdits('linkedEditing', edits);
-			this._editor._getViewModel().setPrevEditOperationType(prevEditOperationType);
+			this._editor.executeEdits("linkedEditing", edits);
+			this._editor._getViewModel().setPrevEditOperationType(
+        prevEditOperationType,
+      );
 		} finally {
 			this._ignoreChangeEvent = false;
 		}
@@ -316,7 +358,12 @@ export class LinkedEditingContribution extends Disposable implements IEditorCont
 		const currentRequestCts = this._currentRequestCts = new CancellationTokenSource();
 		try {
 			const sw = new StopWatch(false);
-			const response = await getLinkedEditingRanges(this._providers, model, position, currentRequestCts.token);
+			const response = await getLinkedEditingRanges(
+        this._providers,
+        model,
+        position,
+        currentRequestCts.token,
+      );
 			this._debounceInformation.update(model, sw.elapsed());
 			if (currentRequestCts !== this._currentRequestCts) {
 				return;
@@ -352,7 +399,10 @@ export class LinkedEditingContribution extends Disposable implements IEditorCont
 				return;
 			}
 
-			const decorations: IModelDeltaDecoration[] = ranges.map(range => ({ range: range, options: LinkedEditingContribution.DECORATION }));
+			const decorations: IModelDeltaDecoration[] = ranges.map(range => ({
+        range: range,
+        options: LinkedEditingContribution.DECORATION,
+      }));
 			this._visibleContextKey.set(true);
 			this._currentDecorations.set(decorations);
 			this._syncRangesToken++; // cancel any pending syncRanges call
@@ -398,14 +448,14 @@ export class LinkedEditingContribution extends Disposable implements IEditorCont
 export class LinkedEditingAction extends EditorAction {
 	constructor() {
 		super({
-			id: 'editor.action.linkedEditing',
-			label: nls.localize2('linkedEditing.label', "Start Linked Editing"),
+			id: "editor.action.linkedEditing",
+			label: nls.localize2("linkedEditing.label", "Start Linked Editing"),
 			precondition: ContextKeyExpr.and(EditorContextKeys.writable, EditorContextKeys.hasRenameProvider),
 			kbOpts: {
 				kbExpr: EditorContextKeys.editorTextFocus,
 				primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.F2,
-				weight: KeybindingWeight.EditorContrib
-			}
+				weight: KeybindingWeight.EditorContrib,
+			},
 		});
 	}
 
@@ -438,17 +488,19 @@ export class LinkedEditingAction extends EditorAction {
 	}
 }
 
-const LinkedEditingCommand = EditorCommand.bindToContribution<LinkedEditingContribution>(LinkedEditingContribution.get);
+const LinkedEditingCommand = EditorCommand.bindToContribution<LinkedEditingContribution>(
+  LinkedEditingContribution.get,
+);
 registerEditorCommand(new LinkedEditingCommand({
-	id: 'cancelLinkedEditingInput',
+	id: "cancelLinkedEditingInput",
 	precondition: CONTEXT_ONTYPE_RENAME_INPUT_VISIBLE,
 	handler: x => x.clearRanges(),
 	kbOpts: {
 		kbExpr: EditorContextKeys.editorTextFocus,
 		weight: KeybindingWeight.EditorContrib + 99,
 		primary: KeyCode.Escape,
-		secondary: [KeyMod.Shift | KeyCode.Escape]
-	}
+		secondary: [KeyMod.Shift | KeyCode.Escape],
+	},
 }));
 
 
@@ -468,12 +520,36 @@ function getLinkedEditingRanges(providers: LanguageFeatureRegistry<LinkedEditing
 	}), result => !!result && arrays.isNonEmptyArray(result?.ranges));
 }
 
-export const editorLinkedEditingBackground = registerColor('editor.linkedEditingBackground', { dark: Color.fromHex('#f00').transparent(0.3), light: Color.fromHex('#f00').transparent(0.3), hcDark: Color.fromHex('#f00').transparent(0.3), hcLight: Color.white }, nls.localize('editorLinkedEditingBackground', 'Background color when the editor auto renames on type.'));
+export const editorLinkedEditingBackground = registerColor(
+  "editor.linkedEditingBackground",
+  {
+    dark: Color.fromHex("#f00").transparent(0.3),
+    light: Color.fromHex("#f00").transparent(0.3),
+    hcDark: Color.fromHex("#f00").transparent(0.3),
+    hcLight: Color.white,
+  },
+  nls.localize(
+    "editorLinkedEditingBackground",
+    "Background color when the editor auto renames on type.",
+  ),
+);
 
-registerModelAndPositionCommand('_executeLinkedEditingProvider', (_accessor, model, position) => {
-	const { linkedEditingRangeProvider } = _accessor.get(ILanguageFeaturesService);
-	return getLinkedEditingRanges(linkedEditingRangeProvider, model, position, CancellationToken.None);
-});
+registerModelAndPositionCommand(
+  "_executeLinkedEditingProvider",
+  (_accessor, model, position) => {
+    const { linkedEditingRangeProvider } = _accessor.get(ILanguageFeaturesService);
+    return getLinkedEditingRanges(
+      linkedEditingRangeProvider,
+      model,
+      position,
+      CancellationToken.None,
+    );
+  },
+);
 
-registerEditorContribution(LinkedEditingContribution.ID, LinkedEditingContribution, EditorContributionInstantiation.AfterFirstRender);
+registerEditorContribution(
+  LinkedEditingContribution.ID,
+  LinkedEditingContribution,
+  EditorContributionInstantiation.AfterFirstRender,
+);
 registerEditorAction(LinkedEditingAction);

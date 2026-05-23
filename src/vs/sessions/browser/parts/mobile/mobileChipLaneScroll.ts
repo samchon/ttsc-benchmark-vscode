@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../base/browser/dom.js';
-import { DisposableStore, IDisposable } from '../../../../base/common/lifecycle.js';
-import { IWorkbenchLayoutService } from '../../../../workbench/services/layout/browser/layoutService.js';
-import { isPhoneLayout } from './mobileLayout.js';
+import * as dom from "../../../../base/browser/dom.js";
+import { DisposableStore, IDisposable } from "../../../../base/common/lifecycle.js";
+import { IWorkbenchLayoutService } from "../../../../workbench/services/layout/browser/layoutService.js";
+import { isPhoneLayout } from "./mobileLayout.js";
 
 /** Pixels of pointer movement before a drag is treated as a scroll
  * gesture rather than a tap. Small enough that taps stay responsive,
@@ -56,7 +56,7 @@ export function installMobileChipLaneScroll(lane: HTMLElement, layoutService: IW
 		// Only react to primary input. Ignore right-clicks and
 		// non-touch/-mouse pointer types (e.g. pen) to avoid
 		// fighting other gesture handlers.
-		if (!e.isPrimary || (e.pointerType !== 'touch' && e.pointerType !== 'mouse')) {
+		if (!e.isPrimary || (e.pointerType !== "touch" && e.pointerType !== "mouse")) {
 			return;
 		}
 		pointerId = e.pointerId;
@@ -105,12 +105,15 @@ export function installMobileChipLaneScroll(lane: HTMLElement, layoutService: IW
 		const swallow = (clickEvent: MouseEvent) => {
 			clickEvent.preventDefault();
 			clickEvent.stopPropagation();
-			lane.removeEventListener('click', swallow, true);
+			lane.removeEventListener("click", swallow, true);
 		};
-		lane.addEventListener('click', swallow, true);
+		lane.addEventListener("click", swallow, true);
 		// Drop the suppressor on the next frame in case no click
 		// ever fires (e.g. lifted off-screen).
-		dom.getWindow(lane).setTimeout(() => lane.removeEventListener('click', swallow, true), 0);
+		dom.getWindow(lane).setTimeout(
+      () => lane.removeEventListener("click", swallow, true),
+      0,
+    );
 	};
 	store.add(dom.addDisposableListener(lane, dom.EventType.POINTER_UP, endDrag));
 	// `pointercancel` isn't in the workbench's `EventType` enum (only
@@ -118,7 +121,7 @@ export function installMobileChipLaneScroll(lane: HTMLElement, layoutService: IW
 	// raw literal. Browsers fire it when the pointer leaves the page or
 	// the gesture is interrupted (e.g. iOS scroll/zoom takeover) and
 	// we need to release pointer capture in those cases too.
-	store.add(dom.addDisposableListener(lane, 'pointercancel', endDrag));
+	store.add(dom.addDisposableListener(lane, "pointercancel", endDrag));
 
 	return store;
 }

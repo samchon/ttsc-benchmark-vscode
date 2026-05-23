@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { Size2D } from '../../../../common/core/2d/size.js';
-import { LineRange } from '../../../../common/core/ranges/lineRange.js';
-import { WidgetLayoutConstants, WidgetPlacementContext, ContinuousLineSizes } from '../../browser/view/inlineEdits/inlineEditsViews/longDistanceHint/longDistnaceWidgetPlacement.js';
+import assert from "assert";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { Size2D } from "../../../../common/core/2d/size.js";
+import { LineRange } from "../../../../common/core/ranges/lineRange.js";
+import { WidgetLayoutConstants, WidgetPlacementContext, ContinuousLineSizes } from "../../browser/view/inlineEdits/inlineEditsViews/longDistanceHint/longDistnaceWidgetPlacement.js";
 
-suite('WidgetPlacementContext', () => {
+suite("WidgetPlacementContext", () => {
 	ensureNoDisposablesAreLeakedInTestSuite();
 
 	function createLineRangeInfo(startLine: number, sizes: Size2D[], top: number = 0): ContinuousLineSizes {
@@ -28,8 +28,8 @@ suite('WidgetPlacementContext', () => {
 		minWidgetWidth: 50,
 	};
 
-	suite('constructor - availableSpaceSizes computation', () => {
-		test('computes available space sizes correctly with no padding', () => {
+	suite("constructor - availableSpaceSizes computation", () => {
+		test("computes available space sizes correctly with no padding", () => {
 			const sizes = [new Size2D(100, 20), new Size2D(150, 20), new Size2D(80, 20)];
 			const lineRangeInfo = createLineRangeInfo(1, sizes);
 			const editorTrueContentWidth = 500;
@@ -43,7 +43,7 @@ suite('WidgetPlacementContext', () => {
 			assert.strictEqual(context.availableSpaceSizes[2].width, 420); // 500 - 80
 		});
 
-		test('computes available space sizes with end of line padding', () => {
+		test("computes available space sizes with end of line padding", () => {
 			const sizes = [new Size2D(100, 20), new Size2D(150, 20)];
 			const lineRangeInfo = createLineRangeInfo(1, sizes);
 			const editorTrueContentWidth = 500;
@@ -55,7 +55,7 @@ suite('WidgetPlacementContext', () => {
 			assert.strictEqual(context.availableSpaceSizes[1].width, 330); // 500 - 150 - 20
 		});
 
-		test('available space width is never negative', () => {
+		test("available space width is never negative", () => {
 			const sizes = [new Size2D(600, 20)];
 			const lineRangeInfo = createLineRangeInfo(1, sizes);
 			const editorTrueContentWidth = 500;
@@ -66,7 +66,7 @@ suite('WidgetPlacementContext', () => {
 			assert.strictEqual(context.availableSpaceSizes[0].width, 0);
 		});
 
-		test('preserves heights in available space sizes', () => {
+		test("preserves heights in available space sizes", () => {
 			const sizes = [new Size2D(100, 25), new Size2D(100, 30), new Size2D(100, 20)];
 			const lineRangeInfo = createLineRangeInfo(1, sizes);
 			const editorTrueContentWidth = 500;
@@ -80,8 +80,8 @@ suite('WidgetPlacementContext', () => {
 		});
 	});
 
-	suite('constructor - prefix sums computation', () => {
-		test('computes height prefix sums correctly', () => {
+	suite("constructor - prefix sums computation", () => {
+		test("computes height prefix sums correctly", () => {
 			const sizes = [new Size2D(100, 20), new Size2D(100, 30), new Size2D(100, 25)];
 			const lineRangeInfo = createLineRangeInfo(1, sizes);
 
@@ -90,7 +90,7 @@ suite('WidgetPlacementContext', () => {
 			assert.deepStrictEqual(context.availableSpaceHeightPrefixSums, [0, 20, 50, 75]);
 		});
 
-		test('prefix sums start with 0 and have length = sizes.length + 1', () => {
+		test("prefix sums start with 0 and have length = sizes.length + 1", () => {
 			const sizes = [new Size2D(100, 10), new Size2D(100, 20)];
 			const lineRangeInfo = createLineRangeInfo(1, sizes);
 
@@ -101,8 +101,8 @@ suite('WidgetPlacementContext', () => {
 		});
 	});
 
-	suite('constructor - transposed sizes', () => {
-		test('transposes width and height correctly', () => {
+	suite("constructor - transposed sizes", () => {
+		test("transposes width and height correctly", () => {
 			const sizes = [new Size2D(100, 20), new Size2D(150, 30)];
 			const lineRangeInfo = createLineRangeInfo(1, sizes);
 
@@ -117,8 +117,8 @@ suite('WidgetPlacementContext', () => {
 		});
 	});
 
-	suite('getWidgetVerticalOutline', () => {
-		test('computes vertical outline for first line', () => {
+	suite("getWidgetVerticalOutline", () => {
+		test("computes vertical outline for first line", () => {
 			const sizes = [new Size2D(100, 20), new Size2D(100, 20)];
 			const lineRangeInfo = createLineRangeInfo(1, sizes, 100);
 
@@ -132,7 +132,7 @@ suite('WidgetPlacementContext', () => {
 			assert.strictEqual(outline.endExclusive, 168);
 		});
 
-		test('computes vertical outline for second line', () => {
+		test("computes vertical outline for second line", () => {
 			const sizes = [new Size2D(100, 20), new Size2D(100, 25)];
 			const lineRangeInfo = createLineRangeInfo(1, sizes, 100);
 
@@ -148,7 +148,7 @@ suite('WidgetPlacementContext', () => {
 			assert.strictEqual(outline.endExclusive, 188);
 		});
 
-		test('works with zero margins', () => {
+		test("works with zero margins", () => {
 			const sizes = [new Size2D(100, 20)];
 			const lineRangeInfo = createLineRangeInfo(1, sizes, 0);
 			const zeroConstants: WidgetLayoutConstants = {
@@ -167,8 +167,8 @@ suite('WidgetPlacementContext', () => {
 		});
 	});
 
-	suite('tryFindWidgetOutline', () => {
-		test('returns undefined when no line has enough width', () => {
+	suite("tryFindWidgetOutline", () => {
+		test("returns undefined when no line has enough width", () => {
 			// All lines have content that leaves less than minWidgetWidth
 			const sizes = [new Size2D(460, 20), new Size2D(470, 20), new Size2D(480, 20)];
 			const lineRangeInfo = createLineRangeInfo(1, sizes);
@@ -179,7 +179,7 @@ suite('WidgetPlacementContext', () => {
 			assert.strictEqual(result, undefined);
 		});
 
-		test('finds widget outline on target line when it has enough space', () => {
+		test("finds widget outline on target line when it has enough space", () => {
 			const sizes = [new Size2D(100, 20), new Size2D(100, 20), new Size2D(100, 20)];
 			const lineRangeInfo = createLineRangeInfo(1, sizes, 0);
 
@@ -190,7 +190,7 @@ suite('WidgetPlacementContext', () => {
 			assert.ok(result.horizontalWidgetRange.length >= defaultLayoutConstants.minWidgetWidth);
 		});
 
-		test('searches outward from target line', () => {
+		test("searches outward from target line", () => {
 			// First and last lines are excluded from placement
 			// Lines 2, 3 have no space, line 4 has space
 			const sizes = [
@@ -211,7 +211,7 @@ suite('WidgetPlacementContext', () => {
 			assert.ok(result !== undefined);
 		});
 
-		test('prefers closer lines to target', () => {
+		test("prefers closer lines to target", () => {
 			const sizes = [
 				new Size2D(100, 20),  // line 0 - excluded (first)
 				new Size2D(100, 20),  // line 1 - has space
@@ -240,7 +240,7 @@ suite('WidgetPlacementContext', () => {
 			}
 		});
 
-		test('horizontal widget range ends at editor content right', () => {
+		test("horizontal widget range ends at editor content right", () => {
 			const sizes = [new Size2D(100, 20), new Size2D(100, 20), new Size2D(100, 20)];
 			const lineRangeInfo = createLineRangeInfo(1, sizes, 0);
 			const editorTrueContentRight = 500;
@@ -253,8 +253,8 @@ suite('WidgetPlacementContext', () => {
 		});
 	});
 
-	suite('edge cases', () => {
-		test('handles single line range', () => {
+	suite("edge cases", () => {
+		test("handles single line range", () => {
 			const sizes = [new Size2D(100, 20)];
 			const lineRangeInfo = createLineRangeInfo(5, sizes, 50);
 
@@ -264,7 +264,7 @@ suite('WidgetPlacementContext', () => {
 			assert.deepStrictEqual(context.availableSpaceHeightPrefixSums, [0, 20]);
 		});
 
-		test('handles empty content lines (width 0)', () => {
+		test("handles empty content lines (width 0)", () => {
 			const sizes = [new Size2D(0, 20), new Size2D(0, 20)];
 			const lineRangeInfo = createLineRangeInfo(1, sizes);
 
@@ -274,7 +274,7 @@ suite('WidgetPlacementContext', () => {
 			assert.strictEqual(context.availableSpaceSizes[1].width, 500);
 		});
 
-		test('handles varying line heights', () => {
+		test("handles varying line heights", () => {
 			const sizes = [new Size2D(100, 10), new Size2D(100, 30), new Size2D(100, 20)];
 			const lineRangeInfo = createLineRangeInfo(1, sizes, 100);
 
@@ -284,7 +284,7 @@ suite('WidgetPlacementContext', () => {
 			assert.deepStrictEqual(context.availableSpaceHeightPrefixSums, [0, 10, 40, 60]);
 		});
 
-		test('handles very large line numbers', () => {
+		test("handles very large line numbers", () => {
 			const sizes = [new Size2D(100, 20)];
 			const lineRangeInfo = createLineRangeInfo(10000, sizes, 0);
 

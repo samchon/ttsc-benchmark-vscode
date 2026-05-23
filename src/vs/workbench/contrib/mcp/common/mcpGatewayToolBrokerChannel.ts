@@ -3,18 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { autorun } from '../../../../base/common/observable.js';
-import { IServerChannel } from '../../../../base/parts/ipc/common/ipc.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { IMcpGatewayServerDescriptor } from '../../../../platform/mcp/common/mcpGateway.js';
-import { MCP } from '../../../../platform/mcp/common/modelContextProtocol.js';
-import { URI } from '../../../../base/common/uri.js';
-import { McpServer } from './mcpServer.js';
-import { IMcpServer, IMcpService, McpCapability, McpServerCacheState, McpToolVisibility } from './mcpTypes.js';
-import { startServerAndWaitForLiveTools } from './mcpTypesUtils.js';
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { autorun } from "../../../../base/common/observable.js";
+import { IServerChannel } from "../../../../base/parts/ipc/common/ipc.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IMcpGatewayServerDescriptor } from "../../../../platform/mcp/common/mcpGateway.js";
+import { MCP } from "../../../../platform/mcp/common/modelContextProtocol.js";
+import { URI } from "../../../../base/common/uri.js";
+import { McpServer } from "./mcpServer.js";
+import {
+  IMcpServer,
+  IMcpService,
+  McpCapability,
+  McpServerCacheState,
+  McpToolVisibility,
+} from "./mcpTypes.js";
+import { startServerAndWaitForLiveTools } from "./mcpTypesUtils.js";
 
 interface ICallToolForServerArgs {
 	serverId: string;
@@ -35,7 +41,9 @@ interface IServerIdArg {
 export class McpGatewayToolBrokerChannel extends Disposable implements IServerChannel<unknown> {
 	private readonly _onDidChangeTools = this._register(new Emitter<void>());
 	private readonly _onDidChangeResources = this._register(new Emitter<void>());
-	private readonly _onDidChangeServers = this._register(new Emitter<readonly IMcpGatewayServerDescriptor[]>());
+	private readonly _onDidChangeServers = this._register(
+    new Emitter<readonly IMcpGatewayServerDescriptor[]>(),
+  );
 
 	/**
 	 * Per-server promise that races server startup against the grace period timeout.
@@ -55,7 +63,7 @@ export class McpGatewayToolBrokerChannel extends Disposable implements IServerCh
 		private readonly _startupGracePeriodMs = 5000,
 	) {
 		super();
-		this._logService.debug('[McpGateway][ToolBroker] Initialized');
+		this._logService.debug("[McpGateway][ToolBroker] Initialized");
 
 		let toolsInitialized = false;
 		this._register(autorun(reader => {
@@ -64,7 +72,7 @@ export class McpGatewayToolBrokerChannel extends Disposable implements IServerCh
 			}
 
 			if (toolsInitialized) {
-				this._logService.debug('[McpGateway][ToolBroker] Tools changed, firing onDidChangeTools');
+				this._logService.debug("[McpGateway][ToolBroker] Tools changed, firing onDidChangeTools");
 				this._onDidChangeTools.fire();
 			} else {
 				toolsInitialized = true;
@@ -78,7 +86,7 @@ export class McpGatewayToolBrokerChannel extends Disposable implements IServerCh
 			}
 
 			if (resourcesInitialized) {
-				this._logService.debug('[McpGateway][ToolBroker] Resources changed, firing onDidChangeResources');
+				this._logService.debug("[McpGateway][ToolBroker] Resources changed, firing onDidChangeResources");
 				this._onDidChangeResources.fire();
 			} else {
 				resourcesInitialized = true;
@@ -90,7 +98,7 @@ export class McpGatewayToolBrokerChannel extends Disposable implements IServerCh
 			const servers = this._mcpService.servers.read(reader);
 
 			if (serversInitialized) {
-				this._logService.debug('[McpGateway][ToolBroker] Servers changed, firing onDidChangeServers');
+				this._logService.debug("[McpGateway][ToolBroker] Servers changed, firing onDidChangeServers");
 				this._onDidChangeServers.fire(servers.map(s => ({ id: s.definition.id, label: s.definition.label })));
 			} else {
 				serversInitialized = true;
@@ -149,11 +157,11 @@ export class McpGatewayToolBrokerChannel extends Disposable implements IServerCh
 
 	listen<T>(_ctx: unknown, event: string): Event<T> {
 		switch (event) {
-			case 'onDidChangeTools':
+			case "onDidChangeTools":
 				return this._onDidChangeTools.event as Event<T>;
-			case 'onDidChangeResources':
+			case "onDidChangeResources":
 				return this._onDidChangeResources.event as Event<T>;
-			case 'onDidChangeServers':
+			case "onDidChangeServers":
 				return this._onDidChangeServers.event as Event<T>;
 		}
 
@@ -164,31 +172,41 @@ export class McpGatewayToolBrokerChannel extends Disposable implements IServerCh
 		this._logService.debug(`[McpGateway][ToolBroker] IPC call: ${command}`);
 
 		switch (command) {
-			case 'listServers': {
+			case "listServers": {
 				const servers = this._listServers();
 				return servers as T;
 			}
-			case 'listToolsForServer': {
+			case "listToolsForServer": {
 				const { serverId } = arg as IServerIdArg;
 				const tools = await this._listToolsForServer(serverId);
 				return tools as T;
 			}
-			case 'callToolForServer': {
+			case "callToolForServer": {
 				const { serverId, name, args, chatSessionResource } = arg as ICallToolForServerArgs;
-				const result = await this._callToolForServer(serverId, name, args || {}, chatSessionResource, cancellationToken);
+				const result = await this._callToolForServer(
+          serverId,
+          name,
+          args || {},
+          chatSessionResource,
+          cancellationToken,
+        );
 				return result as T;
 			}
-			case 'listResourcesForServer': {
+			case "listResourcesForServer": {
 				const { serverId } = arg as IServerIdArg;
 				const resources = await this._listResourcesForServer(serverId);
 				return resources as T;
 			}
-			case 'readResourceForServer': {
+			case "readResourceForServer": {
 				const { serverId, uri } = arg as IReadResourceForServerArgs;
-				const result = await this._readResourceForServer(serverId, uri, cancellationToken);
+				const result = await this._readResourceForServer(
+          serverId,
+          uri,
+          cancellationToken,
+        );
 				return result as T;
 			}
-			case 'listResourceTemplatesForServer': {
+			case "listResourceTemplatesForServer": {
 				const { serverId } = arg as IServerIdArg;
 				const templates = await this._listResourceTemplatesForServer(serverId);
 				return templates as T;
@@ -204,29 +222,39 @@ export class McpGatewayToolBrokerChannel extends Disposable implements IServerCh
 		for (const server of servers) {
 			result.push({ id: server.definition.id, label: server.definition.label });
 		}
-		this._logService.debug(`[McpGateway][ToolBroker] listServers result: ${result.length} server(s): [${result.map(s => s.label).join(', ')}]`);
+		this._logService.debug(
+      `[McpGateway][ToolBroker] listServers result: ${result.length} server(s): [${result.map(s => s.label).join(", ")}]`,
+    );
 		return result;
 	}
 
 	private async _listToolsForServer(serverId: string): Promise<readonly MCP.Tool[]> {
 		const server = this._getServerById(serverId);
 		if (!server) {
-			this._logService.warn(`[McpGateway][ToolBroker] listToolsForServer: unknown server '${serverId}'`);
+			this._logService.warn(
+        `[McpGateway][ToolBroker] listToolsForServer: unknown server '${serverId}'`,
+      );
 			return [];
 		}
 		if (!await this._shouldUseCachedData(server)) {
-			this._logService.debug(`[McpGateway][ToolBroker] Server '${serverId}' not ready, skipping tool listing`);
+			this._logService.debug(
+        `[McpGateway][ToolBroker] Server '${serverId}' not ready, skipping tool listing`,
+      );
 			return [];
 		}
 		const tools = server.tools.get()
 			.filter(t => t.visibility & McpToolVisibility.Model)
 			.map(t => t.definition);
-		this._logService.debug(`[McpGateway][ToolBroker] listToolsForServer '${serverId}': ${tools.length} tool(s)`);
+		this._logService.debug(
+      `[McpGateway][ToolBroker] listToolsForServer '${serverId}': ${tools.length} tool(s)`,
+    );
 		return tools;
 	}
 
 	private async _callToolForServer(serverId: string, name: string, args: Record<string, unknown>, chatSessionResource?: string, token: CancellationToken = CancellationToken.None): Promise<MCP.CallToolResult> {
-		this._logService.debug(`[McpGateway][ToolBroker] callToolForServer '${serverId}' tool '${name}' with args: ${JSON.stringify(args)}`);
+		this._logService.debug(
+      `[McpGateway][ToolBroker] callToolForServer '${serverId}' tool '${name}' with args: ${JSON.stringify(args)}`,
+    );
 
 		const server = this._getServerById(serverId);
 		if (!server) {
@@ -234,22 +262,28 @@ export class McpGatewayToolBrokerChannel extends Disposable implements IServerCh
 		}
 
 		const tool = server.tools.get().find(t =>
-			t.definition.name === name && (t.visibility & McpToolVisibility.Model)
+			t.definition.name === name && (t.visibility & McpToolVisibility.Model),
 		);
 		if (!tool) {
 			throw new Error(`Unknown tool '${name}' on server '${serverId}'`);
 		}
 
-		const context = chatSessionResource ? { chatSessionResource: URI.parse(chatSessionResource) } : undefined;
+		const context = chatSessionResource ? {
+      chatSessionResource: URI.parse(chatSessionResource),
+    } : undefined;
 		const result = await tool.call(args, context, token);
-		this._logService.debug(`[McpGateway][ToolBroker] Tool '${name}' on '${serverId}' completed (isError=${result.isError ?? false}, content blocks=${result.content.length})`);
+		this._logService.debug(
+      `[McpGateway][ToolBroker] Tool '${name}' on '${serverId}' completed (isError=${result.isError ?? false}, content blocks=${result.content.length})`,
+    );
 		return result;
 	}
 
 	private async _listResourcesForServer(serverId: string): Promise<readonly MCP.Resource[]> {
 		const server = this._getServerById(serverId);
 		if (!server) {
-			this._logService.warn(`[McpGateway][ToolBroker] listResourcesForServer: unknown server '${serverId}'`);
+			this._logService.warn(
+        `[McpGateway][ToolBroker] listResourcesForServer: unknown server '${serverId}'`,
+      );
 			return [];
 		}
 		if (!await this._shouldUseCachedData(server)) {
@@ -258,16 +292,23 @@ export class McpGatewayToolBrokerChannel extends Disposable implements IServerCh
 
 		const capabilities = server.capabilities.get();
 		if (!capabilities || !(capabilities & McpCapability.Resources)) {
-			this._logService.debug(`[McpGateway][ToolBroker] Server '${serverId}' has no resource capability`);
+			this._logService.debug(
+        `[McpGateway][ToolBroker] Server '${serverId}' has no resource capability`,
+      );
 			return [];
 		}
 
 		try {
 			const resources = await McpServer.callOn(server, h => h.listResources());
-			this._logService.debug(`[McpGateway][ToolBroker] Server '${serverId}' listed ${resources.length} resource(s)`);
+			this._logService.debug(
+        `[McpGateway][ToolBroker] Server '${serverId}' listed ${resources.length} resource(s)`,
+      );
 			return resources;
 		} catch (error) {
-			this._logService.warn(`[McpGateway][ToolBroker] Server '${serverId}' failed to list resources`, error);
+			this._logService.warn(
+        `[McpGateway][ToolBroker] Server '${serverId}' failed to list resources`,
+        error,
+      );
 			return [];
 		}
 	}
@@ -278,16 +319,26 @@ export class McpGatewayToolBrokerChannel extends Disposable implements IServerCh
 			throw new Error(`Unknown server: ${serverId}`);
 		}
 
-		this._logService.debug(`[McpGateway][ToolBroker] readResourceForServer '${uri}' from server '${serverId}'`);
-		const result = await McpServer.callOn(server, h => h.readResource({ uri }, token), token);
-		this._logService.debug(`[McpGateway][ToolBroker] readResourceForServer returned ${result.contents.length} content(s)`);
+		this._logService.debug(
+      `[McpGateway][ToolBroker] readResourceForServer '${uri}' from server '${serverId}'`,
+    );
+		const result = await McpServer.callOn(
+      server,
+      h => h.readResource({ uri }, token),
+      token,
+    );
+		this._logService.debug(
+      `[McpGateway][ToolBroker] readResourceForServer returned ${result.contents.length} content(s)`,
+    );
 		return result;
 	}
 
 	private async _listResourceTemplatesForServer(serverId: string): Promise<readonly MCP.ResourceTemplate[]> {
 		const server = this._getServerById(serverId);
 		if (!server) {
-			this._logService.warn(`[McpGateway][ToolBroker] listResourceTemplatesForServer: unknown server '${serverId}'`);
+			this._logService.warn(
+        `[McpGateway][ToolBroker] listResourceTemplatesForServer: unknown server '${serverId}'`,
+      );
 			return [];
 		}
 		if (!await this._shouldUseCachedData(server)) {
@@ -300,11 +351,19 @@ export class McpGatewayToolBrokerChannel extends Disposable implements IServerCh
 		}
 
 		try {
-			const resourceTemplates = await McpServer.callOn(server, h => h.listResourceTemplates());
-			this._logService.debug(`[McpGateway][ToolBroker] Server '${serverId}' listed ${resourceTemplates.length} resource template(s)`);
+			const resourceTemplates = await McpServer.callOn(
+        server,
+        h => h.listResourceTemplates(),
+      );
+			this._logService.debug(
+        `[McpGateway][ToolBroker] Server '${serverId}' listed ${resourceTemplates.length} resource template(s)`,
+      );
 			return resourceTemplates;
 		} catch (error) {
-			this._logService.warn(`[McpGateway][ToolBroker] Server '${serverId}' failed to list resource templates`, error);
+			this._logService.warn(
+        `[McpGateway][ToolBroker] Server '${serverId}' failed to list resource templates`,
+        error,
+      );
 			return [];
 		}
 	}
@@ -315,16 +374,23 @@ export class McpGatewayToolBrokerChannel extends Disposable implements IServerCh
 			return true;
 		}
 
-		this._logService.debug(`[McpGateway][ToolBroker] Server '${server.definition.id}' not ready (cacheState=${cacheState}), starting...`);
+		this._logService.debug(
+      `[McpGateway][ToolBroker] Server '${server.definition.id}' not ready (cacheState=${cacheState}), starting...`,
+    );
 		try {
 			const ready = await startServerAndWaitForLiveTools(server, {
-				promptType: 'all-untrusted',
-				errorOnUserInteraction: true,
-			});
-			this._logService.debug(`[McpGateway][ToolBroker] Server '${server.definition.id}' ready=${ready}`);
+        promptType: "all-untrusted",
+        errorOnUserInteraction: true,
+      });
+			this._logService.debug(
+        `[McpGateway][ToolBroker] Server '${server.definition.id}' ready=${ready}`,
+      );
 			return ready;
 		} catch (error) {
-			this._logService.warn(`[McpGateway][ToolBroker] Server '${server.definition.id}' failed to start`, error);
+			this._logService.warn(
+        `[McpGateway][ToolBroker] Server '${server.definition.id}' failed to start`,
+        error,
+      );
 			return false;
 		}
 	}

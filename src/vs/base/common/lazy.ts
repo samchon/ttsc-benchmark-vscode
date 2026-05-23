@@ -41,7 +41,9 @@ export class Lazy<T> {
 				this._state = LazyValueState.Completed;
 			}
 		} else if (this._state === LazyValueState.Running) {
-			throw new Error('Cannot read the value of a lazy that is being initialized');
+			throw new Error(
+        "Cannot read the value of a lazy that is being initialized",
+      );
 		}
 
 		if (this._error) {

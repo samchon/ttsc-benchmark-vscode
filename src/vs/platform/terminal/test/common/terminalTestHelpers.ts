@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ILogger } from '@xterm/headless';
+import type { ILogger } from "@xterm/headless";
 
 /**
  * A logger for xterm.js that suppresses noisy warnings during tests.
@@ -13,12 +13,12 @@ export const TestXtermLogger: ILogger = {
 	debug: () => { },
 	info: () => { },
 	warn: (message: string) => {
-		if (message.includes('task queue')) {
+		if (message.includes("task queue")) {
 			return;
 		}
 		console.warn(message);
 	},
 	error: (message: string | Error) => {
 		console.error(message);
-	}
+	},
 };

@@ -3,44 +3,56 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './media/notebookFind.css';
-import { KeyCode, KeyMod } from '../../../../../../base/common/keyCodes.js';
-import { Schemas } from '../../../../../../base/common/network.js';
-import { isEqual } from '../../../../../../base/common/resources.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { ICodeEditor } from '../../../../../../editor/browser/editorBrowser.js';
-import { ICodeEditorService } from '../../../../../../editor/browser/services/codeEditorService.js';
-import { EditorOption } from '../../../../../../editor/common/config/editorOptions.js';
-import { EditorContextKeys } from '../../../../../../editor/common/editorContextKeys.js';
-import { ITextModel } from '../../../../../../editor/common/model.js';
-import { FindStartFocusAction, getSelectionSearchString, IFindStartOptions, NextMatchFindAction, PreviousMatchFindAction, StartFindAction, StartFindReplaceAction } from '../../../../../../editor/contrib/find/browser/findController.js';
-import { localize2 } from '../../../../../../nls.js';
-import { Action2, registerAction2 } from '../../../../../../platform/actions/common/actions.js';
+import "./media/notebookFind.css";
+import { KeyCode, KeyMod } from "../../../../../../base/common/keyCodes.js";
+import { Schemas } from "../../../../../../base/common/network.js";
+import { isEqual } from "../../../../../../base/common/resources.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { ICodeEditor } from "../../../../../../editor/browser/editorBrowser.js";
+import { ICodeEditorService } from "../../../../../../editor/browser/services/codeEditorService.js";
+import { EditorOption } from "../../../../../../editor/common/config/editorOptions.js";
+import { EditorContextKeys } from "../../../../../../editor/common/editorContextKeys.js";
+import { ITextModel } from "../../../../../../editor/common/model.js";
+import {
+  FindStartFocusAction,
+  getSelectionSearchString,
+  IFindStartOptions,
+  NextMatchFindAction,
+  PreviousMatchFindAction,
+  StartFindAction,
+  StartFindReplaceAction,
+} from "../../../../../../editor/contrib/find/browser/findController.js";
+import { localize2 } from "../../../../../../nls.js";
+import { Action2, registerAction2 } from "../../../../../../platform/actions/common/actions.js";
 
-import { ContextKeyExpr } from '../../../../../../platform/contextkey/common/contextkey.js';
-import { ServicesAccessor } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { KeybindingWeight } from '../../../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { IShowNotebookFindWidgetOptions, NotebookFindContrib } from './notebookFindWidget.js';
-import { INotebookCommandContext, NotebookMultiCellAction } from '../../controller/coreActions.js';
-import { getNotebookEditorFromEditorPane, INotebookEditor } from '../../notebookBrowser.js';
-import { registerNotebookContribution } from '../../notebookEditorExtensions.js';
-import { CellUri, NotebookFindScopeType } from '../../../common/notebookCommon.js';
-import { INTERACTIVE_WINDOW_IS_ACTIVE_EDITOR, NOTEBOOK_EDITOR_FOCUSED, NOTEBOOK_IS_ACTIVE_EDITOR } from '../../../common/notebookContextKeys.js';
-import { IEditorService } from '../../../../../services/editor/common/editorService.js';
-import { CONTEXT_FIND_WIDGET_VISIBLE } from '../../../../../../editor/contrib/find/browser/findModel.js';
+import { ContextKeyExpr } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { ServicesAccessor } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingWeight } from "../../../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { IShowNotebookFindWidgetOptions, NotebookFindContrib } from "./notebookFindWidget.js";
+import { INotebookCommandContext, NotebookMultiCellAction } from "../../controller/coreActions.js";
+import { getNotebookEditorFromEditorPane, INotebookEditor } from "../../notebookBrowser.js";
+import { registerNotebookContribution } from "../../notebookEditorExtensions.js";
+import { CellUri, NotebookFindScopeType } from "../../../common/notebookCommon.js";
+import {
+  INTERACTIVE_WINDOW_IS_ACTIVE_EDITOR,
+  NOTEBOOK_EDITOR_FOCUSED,
+  NOTEBOOK_IS_ACTIVE_EDITOR,
+} from "../../../common/notebookContextKeys.js";
+import { IEditorService } from "../../../../../services/editor/common/editorService.js";
+import { CONTEXT_FIND_WIDGET_VISIBLE } from "../../../../../../editor/contrib/find/browser/findModel.js";
 
 registerNotebookContribution(NotebookFindContrib.id, NotebookFindContrib);
 
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'notebook.hideFind',
-			title: localize2('notebookActions.hideFind', 'Hide Find in Notebook'),
+			id: "notebook.hideFind",
+			title: localize2("notebookActions.hideFind", "Hide Find in Notebook"),
 			keybinding: {
 				when: ContextKeyExpr.and(NOTEBOOK_EDITOR_FOCUSED, CONTEXT_FIND_WIDGET_VISIBLE),
 				primary: KeyCode.Escape,
-				weight: KeybindingWeight.EditorContrib + 5
-			}
+				weight: KeybindingWeight.EditorContrib + 5,
+			},
 		});
 	}
 
@@ -61,13 +73,13 @@ registerAction2(class extends Action2 {
 registerAction2(class extends NotebookMultiCellAction {
 	constructor() {
 		super({
-			id: 'notebook.find',
-			title: localize2('notebookActions.findInNotebook', 'Find in Notebook'),
+			id: "notebook.find",
+			title: localize2("notebookActions.findInNotebook", "Find in Notebook"),
 			keybinding: {
 				when: ContextKeyExpr.and(NOTEBOOK_EDITOR_FOCUSED, ContextKeyExpr.or(NOTEBOOK_IS_ACTIVE_EDITOR, INTERACTIVE_WINDOW_IS_ACTIVE_EDITOR), EditorContextKeys.focus.toNegated()),
 				primary: KeyCode.KeyF | KeyMod.CtrlCmd,
-				weight: KeybindingWeight.WorkbenchContrib
-			}
+				weight: KeybindingWeight.WorkbenchContrib,
+			},
 		});
 	}
 
@@ -97,21 +109,28 @@ function notebookContainsTextModel(uri: URI, textModel: ITextModel) {
 
 function getSearchStringOptions(editor: ICodeEditor, opts: IFindStartOptions) {
 	// Get the search string result, following the same logic in _start function in 'vs/editor/contrib/find/browser/findController'
-	if (opts.seedSearchStringFromSelection === 'single') {
-		const selectionSearchString = getSelectionSearchString(editor, opts.seedSearchStringFromSelection, opts.seedSearchStringFromNonEmptySelection);
+	if (opts.seedSearchStringFromSelection === "single") {
+		const selectionSearchString = getSelectionSearchString(
+      editor,
+      opts.seedSearchStringFromSelection,
+      opts.seedSearchStringFromNonEmptySelection,
+    );
 		if (selectionSearchString) {
 			return {
-				searchString: selectionSearchString,
-				selection: editor.getSelection()
-			};
+        searchString: selectionSearchString,
+        selection: editor.getSelection(),
+      };
 		}
-	} else if (opts.seedSearchStringFromSelection === 'multiple' && !opts.updateSearchScope) {
-		const selectionSearchString = getSelectionSearchString(editor, opts.seedSearchStringFromSelection);
+	} else if (opts.seedSearchStringFromSelection === "multiple" && !opts.updateSearchScope) {
+		const selectionSearchString = getSelectionSearchString(
+      editor,
+      opts.seedSearchStringFromSelection,
+    );
 		if (selectionSearchString) {
 			return {
-				searchString: selectionSearchString,
-				selection: editor.getSelection()
-			};
+        searchString: selectionSearchString,
+        selection: editor.getSelection(),
+      };
 		}
 	}
 
@@ -131,7 +150,10 @@ function isNotebookEditorValidForSearch(accessor: ServicesAccessor, editor: INot
 		const codeEditorService = accessor.get(ICodeEditorService);
 		// check if the active pane contains the active text editor
 		const textEditor = codeEditorService.getFocusedCodeEditor() || codeEditorService.getActiveCodeEditor();
-		if (editor.hasModel() && textEditor && textEditor.hasModel() && notebookContainsTextModel(editor.textModel.uri, textEditor.getModel())) {
+		if (editor.hasModel() && textEditor && textEditor.hasModel() && notebookContainsTextModel(
+      editor.textModel.uri,
+      textEditor.getModel(),
+    )) {
 			// the active text editor is in notebook editor
 			return true;
 		} else {
@@ -151,15 +173,15 @@ function openFindWidget(controller: NotebookFindContrib | undefined, editor: INo
 	}
 
 	const searchStringOptions = getSearchStringOptions(codeEditor, {
-		forceRevealReplace: false,
-		seedSearchStringFromSelection: codeEditor.getOption(EditorOption.find).seedSearchStringFromSelection !== 'never' ? 'single' : 'none',
-		seedSearchStringFromNonEmptySelection: codeEditor.getOption(EditorOption.find).seedSearchStringFromSelection === 'selection',
-		seedSearchStringFromGlobalClipboard: codeEditor.getOption(EditorOption.find).globalFindClipboard,
-		shouldFocus: FindStartFocusAction.FocusFindInput,
-		shouldAnimate: true,
-		updateSearchScope: false,
-		loop: codeEditor.getOption(EditorOption.find).loop
-	});
+    forceRevealReplace: false,
+    seedSearchStringFromSelection: codeEditor.getOption(EditorOption.find).seedSearchStringFromSelection !== "never" ? "single" : "none",
+    seedSearchStringFromNonEmptySelection: codeEditor.getOption(EditorOption.find).seedSearchStringFromSelection === "selection",
+    seedSearchStringFromGlobalClipboard: codeEditor.getOption(EditorOption.find).globalFindClipboard,
+    shouldFocus: FindStartFocusAction.FocusFindInput,
+    shouldAnimate: true,
+    updateSearchScope: false,
+    loop: codeEditor.getOption(EditorOption.find).loop,
+  });
 
 	let options: IShowNotebookFindWidgetOptions | undefined = undefined;
 	const uri = codeEditor.getModel().uri;
@@ -168,9 +190,9 @@ function openFindWidget(controller: NotebookFindContrib | undefined, editor: INo
 		const cell = editor.getCellByHandle(data.handle);
 		if (cell) {
 			options = {
-				searchStringSeededFrom: { cell, range: searchStringOptions.selection },
-				focus: focusWidget
-			};
+        searchStringSeededFrom: { cell, range: searchStringOptions.selection },
+        focus: focusWidget,
+      };
 		}
 	} else {
 		options = { focus: focusWidget };
@@ -182,13 +204,17 @@ function openFindWidget(controller: NotebookFindContrib | undefined, editor: INo
 
 function findWidgetAction(accessor: ServicesAccessor, codeEditor: ICodeEditor, next: boolean): boolean {
 	const editorService = accessor.get(IEditorService);
-	const editor = getNotebookEditorFromEditorPane(editorService.activeEditorPane);
+	const editor = getNotebookEditorFromEditorPane(
+    editorService.activeEditorPane,
+  );
 
 	if (!isNotebookEditorValidForSearch(accessor, editor, codeEditor)) {
 		return false;
 	}
 
-	const controller = editor?.getContribution<NotebookFindContrib>(NotebookFindContrib.id);
+	const controller = editor?.getContribution<NotebookFindContrib>(
+    NotebookFindContrib.id,
+  );
 	if (!controller) {
 		return false;
 	}
@@ -206,13 +232,17 @@ function findWidgetAction(accessor: ServicesAccessor, codeEditor: ICodeEditor, n
 
 async function runFind(accessor: ServicesAccessor, next: boolean): Promise<void> {
 	const editorService = accessor.get(IEditorService);
-	const editor = getNotebookEditorFromEditorPane(editorService.activeEditorPane);
+	const editor = getNotebookEditorFromEditorPane(
+    editorService.activeEditorPane,
+  );
 
 	if (!editor) {
 		return;
 	}
 
-	const controller = editor.getContribution<NotebookFindContrib>(NotebookFindContrib.id);
+	const controller = editor.getContribution<NotebookFindContrib>(
+    NotebookFindContrib.id,
+  );
 	if (controller && controller.isVisible()) {
 		next ? controller.findNext() : controller.findPrevious();
 	}
@@ -246,13 +276,13 @@ StartFindReplaceAction.addImplementation(100, (accessor: ServicesAccessor, codeE
 
 	const searchStringOptions = getSearchStringOptions(codeEditor, {
 		forceRevealReplace: false,
-		seedSearchStringFromSelection: codeEditor.getOption(EditorOption.find).seedSearchStringFromSelection !== 'never' ? 'single' : 'none',
-		seedSearchStringFromNonEmptySelection: codeEditor.getOption(EditorOption.find).seedSearchStringFromSelection === 'selection',
+		seedSearchStringFromSelection: codeEditor.getOption(EditorOption.find).seedSearchStringFromSelection !== "never" ? "single" : "none",
+		seedSearchStringFromNonEmptySelection: codeEditor.getOption(EditorOption.find).seedSearchStringFromSelection === "selection",
 		seedSearchStringFromGlobalClipboard: codeEditor.getOption(EditorOption.find).globalFindClipboard,
 		shouldFocus: FindStartFocusAction.FocusFindInput,
 		shouldAnimate: true,
 		updateSearchScope: false,
-		loop: codeEditor.getOption(EditorOption.find).loop
+		loop: codeEditor.getOption(EditorOption.find).loop,
 	});
 
 	if (controller) {
@@ -263,30 +293,36 @@ StartFindReplaceAction.addImplementation(100, (accessor: ServicesAccessor, codeE
 	return false;
 });
 
-NextMatchFindAction.addImplementation(100, (accessor: ServicesAccessor, codeEditor: ICodeEditor, args: any) => {
-	return findWidgetAction(accessor, codeEditor, true);
-});
+NextMatchFindAction.addImplementation(
+  100,
+  (accessor: ServicesAccessor, codeEditor: ICodeEditor, args: any) => {
+    return findWidgetAction(accessor, codeEditor, true);
+  },
+);
 
-PreviousMatchFindAction.addImplementation(100, (accessor: ServicesAccessor, codeEditor: ICodeEditor, args: any) => {
-	return findWidgetAction(accessor, codeEditor, false);
-});
+PreviousMatchFindAction.addImplementation(
+  100,
+  (accessor: ServicesAccessor, codeEditor: ICodeEditor, args: any) => {
+    return findWidgetAction(accessor, codeEditor, false);
+  },
+);
 
 // Widget-focused keybindings - these handle F3/Shift+F3 when the notebook find widget has focus
 // This follows the same pattern as the text editor which has separate keybindings for widget focus
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'notebook.findNext.fromWidget',
-			title: localize2('notebook.findNext.fromWidget', 'Find Next'),
+			id: "notebook.findNext.fromWidget",
+			title: localize2("notebook.findNext.fromWidget", "Find Next"),
 			keybinding: {
 				when: ContextKeyExpr.and(
 					NOTEBOOK_EDITOR_FOCUSED,
-					CONTEXT_FIND_WIDGET_VISIBLE
+					CONTEXT_FIND_WIDGET_VISIBLE,
 				),
 				primary: KeyCode.F3,
 				mac: { primary: KeyMod.CtrlCmd | KeyCode.KeyG, secondary: [KeyCode.F3] },
-				weight: KeybindingWeight.WorkbenchContrib + 1
-			}
+				weight: KeybindingWeight.WorkbenchContrib + 1,
+			},
 		});
 	}
 
@@ -298,17 +334,17 @@ registerAction2(class extends Action2 {
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'notebook.findPrevious.fromWidget',
-			title: localize2('notebook.findPrevious.fromWidget', 'Find Previous'),
+			id: "notebook.findPrevious.fromWidget",
+			title: localize2("notebook.findPrevious.fromWidget", "Find Previous"),
 			keybinding: {
 				when: ContextKeyExpr.and(
 					NOTEBOOK_EDITOR_FOCUSED,
-					CONTEXT_FIND_WIDGET_VISIBLE
+					CONTEXT_FIND_WIDGET_VISIBLE,
 				),
 				primary: KeyMod.Shift | KeyCode.F3,
 				mac: { primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyG, secondary: [KeyMod.Shift | KeyCode.F3] },
-				weight: KeybindingWeight.WorkbenchContrib + 1
-			}
+				weight: KeybindingWeight.WorkbenchContrib + 1,
+			},
 		});
 	}
 

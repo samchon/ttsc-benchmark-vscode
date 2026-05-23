@@ -3,20 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, DisposableMap, DisposableStore } from '../../../../base/common/lifecycle.js';
-import { autorun, derivedOpts } from '../../../../base/common/observable.js';
-import { isEqual } from '../../../../base/common/resources.js';
-import { URI } from '../../../../base/common/uri.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../../workbench/common/contributions.js';
-import { ISession } from '../../../services/sessions/common/session.js';
-import { ISessionsChangeEvent, ISessionsManagementService } from '../../../services/sessions/common/sessionsManagement.js';
-import { getPullRequestKey } from '../common/utils.js';
-import { GitHubService, IGitHubService } from './githubService.js';
+import { Disposable, DisposableMap, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { autorun, derivedOpts } from "../../../../base/common/observable.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import {
+  IWorkbenchContribution,
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../../../workbench/common/contributions.js";
+import { ISession } from "../../../services/sessions/common/session.js";
+import { ISessionsChangeEvent, ISessionsManagementService } from "../../../services/sessions/common/sessionsManagement.js";
+import { getPullRequestKey } from "../common/utils.js";
+import { GitHubService, IGitHubService } from "./githubService.js";
 
 export class GitHubPullRequestPollingContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'sessions.contrib.githubPullRequestPolling';
+	static readonly ID = "sessions.contrib.githubPullRequestPolling";
 
 	private readonly _pullRequests = new DisposableMap<string>();
 
@@ -78,8 +82,16 @@ export class GitHubPullRequestPollingContribution extends Disposable implements 
 			reader.store.add(model.startPolling());
 		}));
 
-		this._sessionsManagementService.onDidChangeSessions(this._onDidChangeSessions, this, this._store);
-		this._onDidChangeSessions({ added: this._sessionsManagementService.getSessions(), removed: [], changed: [] });
+		this._sessionsManagementService.onDidChangeSessions(
+      this._onDidChangeSessions,
+      this,
+      this._store,
+    );
+		this._onDidChangeSessions({
+      added: this._sessionsManagementService.getSessions(),
+      removed: [],
+      changed: [],
+    });
 	}
 
 	private _onDidChangeSessions(e: ISessionsChangeEvent): void {
@@ -116,13 +128,21 @@ export class GitHubPullRequestPollingContribution extends Disposable implements 
 			return;
 		}
 
-		const key = getPullRequestKey(gitHubInfo.owner, gitHubInfo.repo, gitHubInfo.pullRequest.number);
+		const key = getPullRequestKey(
+      gitHubInfo.owner,
+      gitHubInfo.repo,
+      gitHubInfo.pullRequest.number,
+    );
 		if (this._pullRequests.has(key)) {
 			return;
 		}
 
 		const disposables = new DisposableStore();
-		const modelRef = this._gitHubService.createPullRequestModelReference(gitHubInfo.owner, gitHubInfo.repo, gitHubInfo.pullRequest.number);
+		const modelRef = this._gitHubService.createPullRequestModelReference(
+      gitHubInfo.owner,
+      gitHubInfo.repo,
+      gitHubInfo.pullRequest.number,
+    );
 
 		disposables.add(modelRef);
 		disposables.add(modelRef.object.startPolling());
@@ -136,7 +156,11 @@ export class GitHubPullRequestPollingContribution extends Disposable implements 
 			return;
 		}
 
-		const key = getPullRequestKey(gitHubInfo.owner, gitHubInfo.repo, gitHubInfo.pullRequest.number);
+		const key = getPullRequestKey(
+      gitHubInfo.owner,
+      gitHubInfo.repo,
+      gitHubInfo.pullRequest.number,
+    );
 		this._pullRequests.deleteAndDispose(key);
 	}
 
@@ -147,6 +171,10 @@ export class GitHubPullRequestPollingContribution extends Disposable implements 
 	}
 }
 
-registerWorkbenchContribution2(GitHubPullRequestPollingContribution.ID, GitHubPullRequestPollingContribution, WorkbenchPhase.AfterRestored);
+registerWorkbenchContribution2(
+  GitHubPullRequestPollingContribution.ID,
+  GitHubPullRequestPollingContribution,
+  WorkbenchPhase.AfterRestored,
+);
 
 registerSingleton(IGitHubService, GitHubService, InstantiationType.Delayed);

@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { getWindow, runWhenWindowIdle } from '../../../../base/browser/dom.js';
-import { debounce } from '../../../../base/common/decorators.js';
-import { Disposable, MutableDisposable } from '../../../../base/common/lifecycle.js';
-import type { XtermTerminal } from './xterm/xtermTerminal.js';
+import { getWindow, runWhenWindowIdle } from "../../../../base/browser/dom.js";
+import { debounce } from "../../../../base/common/decorators.js";
+import { Disposable, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import type { XtermTerminal } from "./xterm/xtermTerminal.js";
 
 const enum Constants {
 	/**

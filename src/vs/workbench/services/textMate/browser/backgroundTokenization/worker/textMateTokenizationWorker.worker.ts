@@ -3,18 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI, UriComponents } from '../../../../../../base/common/uri.js';
-import { LanguageId } from '../../../../../../editor/common/encodedTokenAttributes.js';
-import { IModelChangedEvent } from '../../../../../../editor/common/model/mirrorTextModel.js';
-import { ICreateGrammarResult, TMGrammarFactory } from '../../../common/TMGrammarFactory.js';
-import { IValidEmbeddedLanguagesMap, IValidGrammarDefinition, IValidTokenTypeMap } from '../../../common/TMScopeRegistry.js';
-import type { IOnigLib, IRawTheme, StackDiff } from 'vscode-textmate';
-import { TextMateWorkerTokenizer } from './textMateWorkerTokenizer.js';
-import { importAMDNodeModule } from '../../../../../../amdX.js';
-import { IWebWorkerServerRequestHandler, IWebWorkerServer } from '../../../../../../base/common/worker/webWorker.js';
-import { TextMateWorkerHost } from './textMateWorkerHost.js';
-import { ISerializedAnnotation } from '../../../../../../editor/common/model/tokens/annotations.js';
-import { IFontTokenOption } from '../../../../../../editor/common/textModelEvents.js';
+import { URI, UriComponents } from "../../../../../../base/common/uri.js";
+import { LanguageId } from "../../../../../../editor/common/encodedTokenAttributes.js";
+import { IModelChangedEvent } from "../../../../../../editor/common/model/mirrorTextModel.js";
+import { ICreateGrammarResult, TMGrammarFactory } from "../../../common/TMGrammarFactory.js";
+import {
+  IValidEmbeddedLanguagesMap,
+  IValidGrammarDefinition,
+  IValidTokenTypeMap,
+} from "../../../common/TMScopeRegistry.js";
+import type { IOnigLib, IRawTheme, StackDiff } from "vscode-textmate";
+import { TextMateWorkerTokenizer } from "./textMateWorkerTokenizer.js";
+import { importAMDNodeModule } from "../../../../../../amdX.js";
+import { IWebWorkerServerRequestHandler, IWebWorkerServer } from "../../../../../../base/common/worker/webWorker.js";
+import { TextMateWorkerHost } from "./textMateWorkerHost.js";
+import { ISerializedAnnotation } from "../../../../../../editor/common/model/tokens/annotations.js";
+import { IFontTokenOption } from "../../../../../../editor/common/textModelEvents.js";
 
 export function create(workerServer: IWebWorkerServer): TextMateTokenizationWorker {
 	return new TextMateTokenizationWorker(workerServer);
@@ -49,32 +53,45 @@ export class TextMateTokenizationWorker implements IWebWorkerServerRequestHandle
 	private readonly _host: TextMateWorkerHost;
 	private readonly _models = new Map</* controllerId */ number, TextMateWorkerTokenizer>();
 	private readonly _grammarCache: Promise<ICreateGrammarResult>[] = [];
-	private _grammarFactory: Promise<TMGrammarFactory | null> = Promise.resolve(null);
+	private _grammarFactory: Promise<TMGrammarFactory | null> = Promise.resolve(
+    null,
+  );
 
 	constructor(workerServer: IWebWorkerServer) {
 		this._host = TextMateWorkerHost.getChannel(workerServer);
 	}
 
 	public async $init(_createData: ICreateData): Promise<void> {
-		const grammarDefinitions = _createData.grammarDefinitions.map<IValidGrammarDefinition>((def) => {
-			return {
-				location: URI.revive(def.location),
-				language: def.language,
-				scopeName: def.scopeName,
-				embeddedLanguages: def.embeddedLanguages,
-				tokenTypes: def.tokenTypes,
-				injectTo: def.injectTo,
-				balancedBracketSelectors: def.balancedBracketSelectors,
-				unbalancedBracketSelectors: def.unbalancedBracketSelectors,
-				sourceExtensionId: def.sourceExtensionId,
-			};
-		});
-		this._grammarFactory = this._loadTMGrammarFactory(grammarDefinitions, _createData.onigurumaWASMUri);
+		const grammarDefinitions = _createData.grammarDefinitions.map<IValidGrammarDefinition>(
+      (def) => {
+        return {
+          location: URI.revive(def.location),
+          language: def.language,
+          scopeName: def.scopeName,
+          embeddedLanguages: def.embeddedLanguages,
+          tokenTypes: def.tokenTypes,
+          injectTo: def.injectTo,
+          balancedBracketSelectors: def.balancedBracketSelectors,
+          unbalancedBracketSelectors: def.unbalancedBracketSelectors,
+          sourceExtensionId: def.sourceExtensionId,
+        };
+      },
+    );
+		this._grammarFactory = this._loadTMGrammarFactory(
+      grammarDefinitions,
+      _createData.onigurumaWASMUri,
+    );
 	}
 
 	private async _loadTMGrammarFactory(grammarDefinitions: IValidGrammarDefinition[], onigurumaWASMUri: string): Promise<TMGrammarFactory> {
-		const vscodeTextmate = await importAMDNodeModule<typeof import('vscode-textmate')>('vscode-textmate', 'release/main.js');
-		const vscodeOniguruma = await importAMDNodeModule<typeof import('vscode-oniguruma')>('vscode-oniguruma', 'release/main.js');
+		const vscodeTextmate = await importAMDNodeModule<typeof import("vscode-textmate")>(
+      "vscode-textmate",
+      "release/main.js",
+    );
+		const vscodeOniguruma = await importAMDNodeModule<typeof import("vscode-oniguruma")>(
+      "vscode-oniguruma",
+      "release/main.js",
+    );
 		const response = await fetch(onigurumaWASMUri);
 
 		// Using the response directly only works if the server sets the MIME type 'application/wasm'.
@@ -84,15 +101,20 @@ export class TextMateTokenizationWorker implements IWebWorkerServerRequestHandle
 		await vscodeOniguruma.loadWASM(bytes);
 
 		const onigLib: Promise<IOnigLib> = Promise.resolve({
-			createOnigScanner: (sources) => vscodeOniguruma.createOnigScanner(sources),
-			createOnigString: (str) => vscodeOniguruma.createOnigString(str)
-		});
+      createOnigScanner: (sources) => vscodeOniguruma.createOnigScanner(sources),
+      createOnigString: (str) => vscodeOniguruma.createOnigString(str),
+    });
 
-		return new TMGrammarFactory({
-			logTrace: (msg: string) => {/* console.log(msg) */ },
-			logError: (msg: string, err: unknown) => console.error(msg, err),
-			readFile: (resource: URI) => this._host.$readFile(resource)
-		}, grammarDefinitions, vscodeTextmate, onigLib);
+		return new TMGrammarFactory(
+      {
+        logTrace: (msg: string) => {/* console.log(msg) */ },
+        logError: (msg: string, err: unknown) => console.error(msg, err),
+        readFile: (resource: URI) => this._host.$readFile(resource),
+      },
+      grammarDefinitions,
+      vscodeTextmate,
+      onigLib,
+    );
 	}
 
 	// These methods are called by the renderer
@@ -125,11 +147,17 @@ export class TextMateTokenizationWorker implements IWebWorkerServerRequestHandle
 	}
 
 	public $retokenize(controllerId: number, startLineNumber: number, endLineNumberExclusive: number): void {
-		this._models.get(controllerId)!.retokenize(startLineNumber, endLineNumberExclusive);
+		this._models.get(controllerId)!.retokenize(
+      startLineNumber,
+      endLineNumberExclusive,
+    );
 	}
 
 	public $acceptModelLanguageChanged(controllerId: number, newLanguageId: string, newEncodedLanguageId: LanguageId): void {
-		this._models.get(controllerId)!.onLanguageId(newLanguageId, newEncodedLanguageId);
+		this._models.get(controllerId)!.onLanguageId(
+      newLanguageId,
+      newEncodedLanguageId,
+    );
 	}
 
 	public $acceptRemovedModel(controllerId: number): void {

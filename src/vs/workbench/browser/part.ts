@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './media/part.css';
-import { Component } from '../common/component.js';
-import { IThemeService, IColorTheme } from '../../platform/theme/common/themeService.js';
-import { Dimension, size, IDimension, getActiveDocument, prepend, IDomPosition } from '../../base/browser/dom.js';
-import { IStorageService } from '../../platform/storage/common/storage.js';
-import { ISerializableView, IViewSize } from '../../base/browser/ui/grid/grid.js';
-import { Event, Emitter } from '../../base/common/event.js';
-import { IWorkbenchLayoutService } from '../services/layout/browser/layoutService.js';
-import { assertReturnsDefined } from '../../base/common/types.js';
-import { IDisposable, toDisposable } from '../../base/common/lifecycle.js';
+import "./media/part.css";
+import { Component } from "../common/component.js";
+import { IThemeService, IColorTheme } from "../../platform/theme/common/themeService.js";
+import { Dimension, size, IDimension, getActiveDocument, prepend, IDomPosition } from "../../base/browser/dom.js";
+import { IStorageService } from "../../platform/storage/common/storage.js";
+import { ISerializableView, IViewSize } from "../../base/browser/ui/grid/grid.js";
+import { Event, Emitter } from "../../base/common/event.js";
+import { IWorkbenchLayoutService } from "../services/layout/browser/layoutService.js";
+import { assertReturnsDefined } from "../../base/common/types.js";
+import { IDisposable, toDisposable } from "../../base/common/lifecycle.js";
 
 export interface IPartOptions {
 	readonly hasTitle?: boolean;
@@ -53,7 +53,7 @@ export abstract class Part<MementoType extends object = object> extends Componen
 		protected options: IPartOptions,
 		themeService: IThemeService,
 		storageService: IStorageService,
-		protected readonly layoutService: IWorkbenchLayoutService
+		protected readonly layoutService: IWorkbenchLayoutService,
 	) {
 		super(id, themeService, storageService);
 
@@ -107,7 +107,7 @@ export abstract class Part<MementoType extends object = object> extends Componen
 
 	protected setHeaderArea(headerContainer: HTMLElement): void {
 		if (this.headerArea) {
-			throw new Error('Header already exists');
+			throw new Error("Header already exists");
 		}
 
 		if (!this.parent || !this.titleArea) {
@@ -115,8 +115,8 @@ export abstract class Part<MementoType extends object = object> extends Componen
 		}
 
 		prepend(this.parent, headerContainer);
-		headerContainer.classList.add('header-or-footer');
-		headerContainer.classList.add('header');
+		headerContainer.classList.add("header-or-footer");
+		headerContainer.classList.add("header");
 
 		this.headerArea = headerContainer;
 		this.partLayout?.setHeaderVisibility(true);
@@ -125,7 +125,7 @@ export abstract class Part<MementoType extends object = object> extends Componen
 
 	protected setFooterArea(footerContainer: HTMLElement): void {
 		if (this.footerArea) {
-			throw new Error('Footer already exists');
+			throw new Error("Footer already exists");
 		}
 
 		if (!this.parent || !this.titleArea) {
@@ -133,8 +133,8 @@ export abstract class Part<MementoType extends object = object> extends Componen
 		}
 
 		this.parent.appendChild(footerContainer);
-		footerContainer.classList.add('header-or-footer');
-		footerContainer.classList.add('footer');
+		footerContainer.classList.add("header-or-footer");
+		footerContainer.classList.add("footer");
 
 		this.footerArea = footerContainer;
 		this.partLayout?.setFooterVisibility(true);
@@ -161,7 +161,12 @@ export abstract class Part<MementoType extends object = object> extends Componen
 
 	private relayout() {
 		if (this.dimension && this.contentPosition) {
-			this.layout(this.dimension.width, this.dimension.height, this.contentPosition.top, this.contentPosition.left);
+			this.layout(
+        this.dimension.width,
+        this.dimension.height,
+        this.contentPosition.top,
+        this.contentPosition.left,
+      );
 		}
 	}
 	/**
@@ -215,7 +220,10 @@ class PartLayout {
 		// Title Size: Width (Fill), Height (Variable)
 		let titleSize: Dimension;
 		if (this.options.hasTitle) {
-			titleSize = new Dimension(width, Math.min(height, PartLayout.TITLE_HEIGHT));
+			titleSize = new Dimension(
+        width,
+        Math.min(height, PartLayout.TITLE_HEIGHT),
+      );
 		} else {
 			titleSize = Dimension.None;
 		}
@@ -223,7 +231,10 @@ class PartLayout {
 		// Header Size: Width (Fill), Height (Variable)
 		let headerSize: Dimension;
 		if (this.headerVisible) {
-			headerSize = new Dimension(width, Math.min(height, PartLayout.HEADER_HEIGHT));
+			headerSize = new Dimension(
+        width,
+        Math.min(height, PartLayout.HEADER_HEIGHT),
+      );
 		} else {
 			headerSize = Dimension.None;
 		}
@@ -231,18 +242,24 @@ class PartLayout {
 		// Footer Size: Width (Fill), Height (Variable)
 		let footerSize: Dimension;
 		if (this.footerVisible) {
-			footerSize = new Dimension(width, Math.min(height, PartLayout.Footer_HEIGHT));
+			footerSize = new Dimension(
+        width,
+        Math.min(height, PartLayout.Footer_HEIGHT),
+      );
 		} else {
 			footerSize = Dimension.None;
 		}
 
 		let contentWidth = width;
-		if (this.options && typeof this.options.borderWidth === 'function') {
+		if (this.options && typeof this.options.borderWidth === "function") {
 			contentWidth -= this.options.borderWidth(); // adjust for border size
 		}
 
 		// Content Size: Width (Fill), Height (Variable)
-		const contentSize = new Dimension(contentWidth, height - titleSize.height - headerSize.height - footerSize.height);
+		const contentSize = new Dimension(
+      contentWidth,
+      height - titleSize.height - headerSize.height - footerSize.height,
+    );
 
 		// Content
 		if (this.contentArea) {

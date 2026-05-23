@@ -3,22 +3,39 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './media/singleeditortabscontrol.css';
-import { EditorResourceAccessor, Verbosity, IEditorPartOptions, SideBySideEditor, preventEditorClose, EditorCloseMethod, IToolbarActions } from '../../../common/editor.js';
-import { EditorInput } from '../../../common/editor/editorInput.js';
-import { EditorTabsControl } from './editorTabsControl.js';
-import { ResourceLabel, IResourceLabel } from '../../labels.js';
-import { TAB_ACTIVE_FOREGROUND, TAB_UNFOCUSED_ACTIVE_FOREGROUND } from '../../../common/theme.js';
-import { EventType as TouchEventType, GestureEvent, Gesture } from '../../../../base/browser/touch.js';
-import { addDisposableListener, EventType, EventHelper, Dimension, isAncestor, DragAndDropObserver, isHTMLElement, $ } from '../../../../base/browser/dom.js';
-import { CLOSE_EDITOR_COMMAND_ID, UNLOCK_GROUP_COMMAND_ID } from './editorCommands.js';
-import { Color } from '../../../../base/common/color.js';
-import { assertReturnsDefined, assertReturnsAllDefined } from '../../../../base/common/types.js';
-import { equals } from '../../../../base/common/objects.js';
-import { toDisposable } from '../../../../base/common/lifecycle.js';
-import { defaultBreadcrumbsWidgetStyles } from '../../../../platform/theme/browser/defaultStyles.js';
-import { IEditorTitleControlDimensions } from './editorTitleControl.js';
-import { BreadcrumbsControlFactory } from './breadcrumbsControl.js';
+import "./media/singleeditortabscontrol.css";
+import {
+  EditorResourceAccessor,
+  Verbosity,
+  IEditorPartOptions,
+  SideBySideEditor,
+  preventEditorClose,
+  EditorCloseMethod,
+  IToolbarActions,
+} from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { EditorTabsControl } from "./editorTabsControl.js";
+import { ResourceLabel, IResourceLabel } from "../../labels.js";
+import { TAB_ACTIVE_FOREGROUND, TAB_UNFOCUSED_ACTIVE_FOREGROUND } from "../../../common/theme.js";
+import { EventType as TouchEventType, GestureEvent, Gesture } from "../../../../base/browser/touch.js";
+import {
+  addDisposableListener,
+  EventType,
+  EventHelper,
+  Dimension,
+  isAncestor,
+  DragAndDropObserver,
+  isHTMLElement,
+  $,
+} from "../../../../base/browser/dom.js";
+import { CLOSE_EDITOR_COMMAND_ID, UNLOCK_GROUP_COMMAND_ID } from "./editorCommands.js";
+import { Color } from "../../../../base/common/color.js";
+import { assertReturnsDefined, assertReturnsAllDefined } from "../../../../base/common/types.js";
+import { equals } from "../../../../base/common/objects.js";
+import { toDisposable } from "../../../../base/common/lifecycle.js";
+import { defaultBreadcrumbsWidgetStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { IEditorTitleControlDimensions } from "./editorTitleControl.js";
+import { BreadcrumbsControlFactory } from "./breadcrumbsControl.js";
 
 interface IRenderedEditorLabel {
 	readonly editor?: EditorInput;
@@ -46,28 +63,56 @@ export class SingleEditorTabsControl extends EditorTabsControl {
 		// Gesture Support
 		this._register(Gesture.addTarget(titleContainer));
 
-		const labelContainer = $('.label-container');
+		const labelContainer = $(".label-container");
 		titleContainer.appendChild(labelContainer);
 
 		// Editor Label
-		this.editorLabel = this._register(this.instantiationService.createInstance(ResourceLabel, labelContainer, {})).element;
-		this._register(addDisposableListener(this.editorLabel.element, EventType.CLICK, e => this.onTitleLabelClick(e)));
+		this.editorLabel = this._register(
+      this.instantiationService.createInstance(
+        ResourceLabel,
+        labelContainer,
+        {},
+      ),
+    ).element;
+		this._register(
+      addDisposableListener(
+        this.editorLabel.element,
+        EventType.CLICK,
+        e => this.onTitleLabelClick(e),
+      ),
+    );
 
 		// Breadcrumbs
-		this.breadcrumbsControlFactory = this._register(this.instantiationService.createInstance(BreadcrumbsControlFactory, labelContainer, this.groupView, {
-			showFileIcons: false,
-			showSymbolIcons: true,
-			showDecorationColors: false,
-			widgetStyles: { ...defaultBreadcrumbsWidgetStyles, breadcrumbsBackground: Color.transparent.toString() },
-			showPlaceholder: false,
-			dragEditor: true,
-		}));
-		this._register(this.breadcrumbsControlFactory.onDidEnablementChange(() => this.handleBreadcrumbsEnablementChange()));
-		titleContainer.classList.toggle('breadcrumbs', Boolean(this.breadcrumbsControl));
-		this._register(toDisposable(() => titleContainer.classList.remove('breadcrumbs'))); // important to remove because the container is a shared dom node
+		this.breadcrumbsControlFactory = this._register(
+      this.instantiationService.createInstance(
+        BreadcrumbsControlFactory,
+        labelContainer,
+        this.groupView,
+        {
+          showFileIcons: false,
+          showSymbolIcons: true,
+          showDecorationColors: false,
+          widgetStyles: { ...defaultBreadcrumbsWidgetStyles, breadcrumbsBackground: Color.transparent.toString() },
+          showPlaceholder: false,
+          dragEditor: true,
+        },
+      ),
+    );
+		this._register(
+      this.breadcrumbsControlFactory.onDidEnablementChange(
+        () => this.handleBreadcrumbsEnablementChange(),
+      ),
+    );
+		titleContainer.classList.toggle(
+      "breadcrumbs",
+      Boolean(this.breadcrumbsControl),
+    );
+		this._register(
+      toDisposable(() => titleContainer.classList.remove("breadcrumbs")),
+    ); // important to remove because the container is a shared dom node
 
 		// Create editor actions toolbar
-		this.createEditorActionsToolBar(titleContainer, ['title-actions']);
+		this.createEditorActionsToolBar(titleContainer, ["title-actions"]);
 
 		return titleContainer;
 	}
@@ -84,13 +129,31 @@ export class SingleEditorTabsControl extends EditorTabsControl {
 		}));
 
 		// Pin on double click
-		this._register(addDisposableListener(titleContainer, EventType.DBLCLICK, e => this.onTitleDoubleClick(e)));
+		this._register(
+      addDisposableListener(
+        titleContainer,
+        EventType.DBLCLICK,
+        e => this.onTitleDoubleClick(e),
+      ),
+    );
 
 		// Detect mouse click
-		this._register(addDisposableListener(titleContainer, EventType.AUXCLICK, e => this.onTitleAuxClick(e)));
+		this._register(
+      addDisposableListener(
+        titleContainer,
+        EventType.AUXCLICK,
+        e => this.onTitleAuxClick(e),
+      ),
+    );
 
 		// Detect touch
-		this._register(addDisposableListener(titleContainer, TouchEventType.Tap, (e: GestureEvent) => this.onTitleTap(e)));
+		this._register(
+      addDisposableListener(
+        titleContainer,
+        TouchEventType.Tap,
+        (e: GestureEvent) => this.onTitleTap(e),
+      ),
+    );
 
 		// Context Menu
 		for (const event of [EventType.CONTEXT_MENU, TouchEventType.Contextmenu]) {
@@ -119,7 +182,12 @@ export class SingleEditorTabsControl extends EditorTabsControl {
 		if (e.button === 1 /* Middle Button */ && this.tabsModel.activeEditor) {
 			EventHelper.stop(e, true /* for https://github.com/microsoft/vscode/issues/56715 */);
 
-			if (!preventEditorClose(this.tabsModel, this.tabsModel.activeEditor, EditorCloseMethod.MOUSE, this.groupsView.partOptions)) {
+			if (!preventEditorClose(
+        this.tabsModel,
+        this.tabsModel.activeEditor,
+        EditorCloseMethod.MOUSE,
+        this.groupsView.partOptions,
+      )) {
 				this.groupView.closeEditor(this.tabsModel.activeEditor);
 			}
 		}
@@ -201,12 +269,12 @@ export class SingleEditorTabsControl extends EditorTabsControl {
 
 			// Signal dirty (unless saving)
 			if (editor.isDirty() && !editor.isSaving()) {
-				titleContainer.classList.add('dirty');
+				titleContainer.classList.add("dirty");
 			}
 
 			// Otherwise, clear dirty
 			else {
-				titleContainer.classList.remove('dirty');
+				titleContainer.classList.remove("dirty");
 			}
 		});
 	}
@@ -214,7 +282,10 @@ export class SingleEditorTabsControl extends EditorTabsControl {
 	override updateOptions(oldOptions: IEditorPartOptions, newOptions: IEditorPartOptions): void {
 		super.updateOptions(oldOptions, newOptions);
 
-		if (oldOptions.labelFormat !== newOptions.labelFormat || !equals(oldOptions.decorations, newOptions.decorations)) {
+		if (oldOptions.labelFormat !== newOptions.labelFormat || !equals(
+      oldOptions.decorations,
+      newOptions.decorations,
+    )) {
 			this.redraw();
 		}
 	}
@@ -225,7 +296,10 @@ export class SingleEditorTabsControl extends EditorTabsControl {
 
 	protected handleBreadcrumbsEnablementChange(): void {
 		const titleContainer = assertReturnsDefined(this.titleContainer);
-		titleContainer.classList.toggle('breadcrumbs', Boolean(this.breadcrumbsControl));
+		titleContainer.classList.toggle(
+      "breadcrumbs",
+      Boolean(this.breadcrumbsControl),
+    );
 
 		this.redraw();
 	}
@@ -234,7 +308,9 @@ export class SingleEditorTabsControl extends EditorTabsControl {
 		if (
 			!this.activeLabel.editor && this.tabsModel.activeEditor || 						// active editor changed from null => editor
 			this.activeLabel.editor && !this.tabsModel.activeEditor || 						// active editor changed from editor => null
-			(!this.activeLabel.editor || !this.tabsModel.isActive(this.activeLabel.editor))	// active editor changed from editorA => editorB
+			(!this.activeLabel.editor || !this.tabsModel.isActive(
+        this.activeLabel.editor,
+      ))	// active editor changed from editorA => editorB
 		) {
 			fn();
 
@@ -249,7 +325,9 @@ export class SingleEditorTabsControl extends EditorTabsControl {
 			return; // need an active editor to check for properties changed
 		}
 
-		if (this.activeLabel.pinned !== this.tabsModel.isPinned(this.tabsModel.activeEditor)) {
+		if (this.activeLabel.pinned !== this.tabsModel.isPinned(
+      this.tabsModel.activeEditor,
+    )) {
 			fn(); // only run if pinned state has changed
 		}
 	}
@@ -273,16 +351,22 @@ export class SingleEditorTabsControl extends EditorTabsControl {
 		if (this.breadcrumbsControl) {
 			if (isGroupActive) {
 				this.breadcrumbsControl.update();
-				this.breadcrumbsControl.domNode.classList.toggle('preview', !isEditorPinned);
+				this.breadcrumbsControl.domNode.classList.toggle(
+          "preview",
+          !isEditorPinned,
+        );
 			} else {
 				this.breadcrumbsControl.hide();
 			}
 		}
 
 		// Clear if there is no editor
-		const [titleContainer, editorLabel] = assertReturnsAllDefined(this.titleContainer, this.editorLabel);
+		const [titleContainer, editorLabel] = assertReturnsAllDefined(
+      this.titleContainer,
+      this.editorLabel,
+    );
 		if (!editor) {
-			titleContainer.classList.remove('dirty');
+			titleContainer.classList.remove("dirty");
 			editorLabel.clear();
 			this.clearEditorActionsToolbar();
 		}
@@ -297,36 +381,40 @@ export class SingleEditorTabsControl extends EditorTabsControl {
 			const { labelFormat } = this.groupsView.partOptions;
 			let description: string;
 			if (this.breadcrumbsControl && !this.breadcrumbsControl.isHidden()) {
-				description = ''; // hide description when showing breadcrumbs
-			} else if (labelFormat === 'default' && !isGroupActive) {
-				description = ''; // hide description when group is not active and style is 'default'
+				description = ""; // hide description when showing breadcrumbs
+			} else if (labelFormat === "default" && !isGroupActive) {
+				description = ""; // hide description when group is not active and style is 'default'
 			} else {
-				description = editor.getDescription(this.getVerbosity(labelFormat)) || '';
+				description = editor.getDescription(
+          this.getVerbosity(labelFormat),
+        ) || "";
 			}
 
 			editorLabel.setResource(
 				{
 					resource: EditorResourceAccessor.getOriginalUri(editor, { supportSideBySide: SideBySideEditor.BOTH }),
 					name: editor.getName(),
-					description
+					description,
 				},
 				{
 					title: this.getHoverTitle(editor),
 					italic: !isEditorPinned,
-					extraClasses: ['single-tab', 'title-label'].concat(editor.getLabelExtraClasses()),
+					extraClasses: ["single-tab", "title-label"].concat(editor.getLabelExtraClasses()),
 					fileDecorations: {
 						colors: Boolean(options.decorations?.colors),
-						badges: Boolean(options.decorations?.badges)
+						badges: Boolean(options.decorations?.badges),
 					},
 					icon: editor.getIcon(),
 					hideIcon: options.showIcons === false,
-				}
+				},
 			);
 
 			if (isGroupActive) {
-				titleContainer.style.color = this.getColor(TAB_ACTIVE_FOREGROUND) || '';
+				titleContainer.style.color = this.getColor(TAB_ACTIVE_FOREGROUND) || "";
 			} else {
-				titleContainer.style.color = this.getColor(TAB_UNFOCUSED_ACTIVE_FOREGROUND) || '';
+				titleContainer.style.color = this.getColor(
+          TAB_UNFOCUSED_ACTIVE_FOREGROUND,
+        ) || "";
 			}
 
 			// Update Editor Actions Toolbar
@@ -336,8 +424,8 @@ export class SingleEditorTabsControl extends EditorTabsControl {
 
 	private getVerbosity(style: string | undefined): Verbosity {
 		switch (style) {
-			case 'short': return Verbosity.SHORT;
-			case 'long': return Verbosity.LONG;
+			case "short": return Verbosity.SHORT;
+			case "long": return Verbosity.LONG;
 			default: return Verbosity.MEDIUM;
 		}
 	}
@@ -353,17 +441,17 @@ export class SingleEditorTabsControl extends EditorTabsControl {
 		// Inactive: only show "Close, "Unlock" and secondary actions
 		else {
 			return {
-				primary: this.groupsView.partOptions.alwaysShowEditorActions ? editorActions.primary : editorActions.primary.filter(action => action.id === CLOSE_EDITOR_COMMAND_ID || action.id === UNLOCK_GROUP_COMMAND_ID),
-				secondary: editorActions.secondary
-			};
+        primary: this.groupsView.partOptions.alwaysShowEditorActions ? editorActions.primary : editorActions.primary.filter(action => action.id === CLOSE_EDITOR_COMMAND_ID || action.id === UNLOCK_GROUP_COMMAND_ID),
+        secondary: editorActions.secondary,
+      };
 		}
 	}
 
 	protected override prepareEditorLayoutActions(): IToolbarActions {
 		return {
-			primary: [],
-			secondary: []
-		};
+      primary: [],
+      secondary: [],
+    };
 	}
 
 	getHeight(): number {

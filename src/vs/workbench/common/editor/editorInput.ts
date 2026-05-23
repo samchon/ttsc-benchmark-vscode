@@ -3,14 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter } from '../../../base/common/event.js';
-import { URI } from '../../../base/common/uri.js';
-import { EditorInputCapabilities, Verbosity, GroupIdentifier, ISaveOptions, IRevertOptions, IMoveResult, IEditorDescriptor, IEditorPane, IUntypedEditorInput, EditorResourceAccessor, AbstractEditorInput, isEditorInput, IEditorIdentifier } from '../editor.js';
-import { isEqual } from '../../../base/common/resources.js';
-import { ConfirmResult } from '../../../platform/dialogs/common/dialogs.js';
-import { IMarkdownString } from '../../../base/common/htmlContent.js';
-import { IDisposable } from '../../../base/common/lifecycle.js';
-import { ThemeIcon } from '../../../base/common/themables.js';
+import { Emitter } from "../../../base/common/event.js";
+import { URI } from "../../../base/common/uri.js";
+import {
+  EditorInputCapabilities,
+  Verbosity,
+  GroupIdentifier,
+  ISaveOptions,
+  IRevertOptions,
+  IMoveResult,
+  IEditorDescriptor,
+  IEditorPane,
+  IUntypedEditorInput,
+  EditorResourceAccessor,
+  AbstractEditorInput,
+  isEditorInput,
+  IEditorIdentifier,
+} from "../editor.js";
+import { isEqual } from "../../../base/common/resources.js";
+import { ConfirmResult } from "../../../platform/dialogs/common/dialogs.js";
+import { IMarkdownString } from "../../../base/common/htmlContent.js";
+import { IDisposable } from "../../../base/common/lifecycle.js";
+import { ThemeIcon } from "../../../base/common/themables.js";
 
 export interface IEditorCloseHandler {
 
@@ -62,7 +76,9 @@ export abstract class EditorInput extends AbstractEditorInput {
 
 	protected readonly _onDidChangeDirty = this._register(new Emitter<void>());
 	protected readonly _onDidChangeLabel = this._register(new Emitter<void>());
-	protected readonly _onDidChangeCapabilities = this._register(new Emitter<void>());
+	protected readonly _onDidChangeCapabilities = this._register(
+    new Emitter<void>(),
+  );
 
 	private readonly _onWillDispose = this._register(new Emitter<void>());
 
@@ -328,7 +344,10 @@ export abstract class EditorInput extends AbstractEditorInput {
 			return false;
 		}
 
-		return isEqual(this.resource, EditorResourceAccessor.getCanonicalUri(otherInput));
+		return isEqual(
+      this.resource,
+      EditorResourceAccessor.getCanonicalUri(otherInput),
+    );
 	}
 
 	/**

@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../base/common/event.js';
-import { IDisposable } from '../../../base/common/lifecycle.js';
-import { connectionTokenQueryName } from '../../../base/common/network.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import type { IAgentConnection } from './agentService.js';
-import type { UnsupportedProtocolVersionErrorData } from './state/protocol/errors.js';
-import { AHP_UNSUPPORTED_PROTOCOL_VERSION, ProtocolError } from './state/sessionProtocol.js';
-import type { UnsupportedProtocolVersionErrorMeta, IVscodeUpgradeResult } from './state/protocolUpgrade.js';
-import { TUNNEL_ADDRESS_PREFIX } from './tunnelAgentHost.js';
+import { Event } from "../../../base/common/event.js";
+import { IDisposable } from "../../../base/common/lifecycle.js";
+import { connectionTokenQueryName } from "../../../base/common/network.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import type { IAgentConnection } from "./agentService.js";
+import type { UnsupportedProtocolVersionErrorData } from "./state/protocol/errors.js";
+import { AHP_UNSUPPORTED_PROTOCOL_VERSION, ProtocolError } from "./state/sessionProtocol.js";
+import type { UnsupportedProtocolVersionErrorMeta, IVscodeUpgradeResult } from "./state/protocolUpgrade.js";
+import { TUNNEL_ADDRESS_PREFIX } from "./tunnelAgentHost.js";
 
 /**
  * Connection status for a remote agent host.
@@ -21,11 +21,11 @@ import { TUNNEL_ADDRESS_PREFIX } from './tunnelAgentHost.js';
  * compatible with anything the client offered) so the UI can surface it.
  */
 export type RemoteAgentHostConnectionStatus =
-	| { readonly kind: 'connected' }
-	| { readonly kind: 'connecting' }
-	| { readonly kind: 'disconnected' }
+	| { readonly kind: "connected" }
+	| { readonly kind: "connecting" }
+	| { readonly kind: "disconnected" }
 	| {
-		readonly kind: 'incompatible';
+		readonly kind: "incompatible";
 		/** Human-readable reason from the host (or a synthesised one when the host did not send one). */
 		readonly message: string;
 		/** Protocol versions the client offered. */
@@ -43,34 +43,46 @@ export type RemoteAgentHostConnectionStatus =
 
 export namespace RemoteAgentHostConnectionStatus {
 	/** Singleton "connected" status. */
-	export const connected: RemoteAgentHostConnectionStatus = Object.freeze({ kind: 'connected' });
+	export const connected: RemoteAgentHostConnectionStatus = Object.freeze({
+    kind: "connected",
+  });
 	/** Singleton "connecting" status. */
-	export const connecting: RemoteAgentHostConnectionStatus = Object.freeze({ kind: 'connecting' });
+	export const connecting: RemoteAgentHostConnectionStatus = Object.freeze({
+    kind: "connecting",
+  });
 	/** Singleton "disconnected" status. */
-	export const disconnected: RemoteAgentHostConnectionStatus = Object.freeze({ kind: 'disconnected' });
+	export const disconnected: RemoteAgentHostConnectionStatus = Object.freeze({
+    kind: "disconnected",
+  });
 	/** Build an "incompatible" status from a host-supplied message and the versions involved. */
 	export function incompatible(message: string, supportedByClient: readonly string[], offeredByServer?: readonly string[], vscodeUpgradeMethod?: string): RemoteAgentHostConnectionStatus {
-		return Object.freeze({ kind: 'incompatible', message, supportedByClient, offeredByServer, vscodeUpgradeMethod });
+		return Object.freeze({
+      kind: "incompatible",
+      message,
+      supportedByClient,
+      offeredByServer,
+      vscodeUpgradeMethod,
+    });
 	}
 	/** Whether the connection is fully established and ready for traffic. */
 	export function isConnected(status: RemoteAgentHostConnectionStatus | undefined): boolean {
-		return status?.kind === 'connected';
+		return status?.kind === "connected";
 	}
 	/** Whether the connection is mid-handshake. */
 	export function isConnecting(status: RemoteAgentHostConnectionStatus | undefined): boolean {
-		return status?.kind === 'connecting';
+		return status?.kind === "connecting";
 	}
 	/** Whether the connection is in the plain disconnected state. */
 	export function isDisconnected(status: RemoteAgentHostConnectionStatus | undefined): boolean {
-		return status?.kind === 'disconnected';
+		return status?.kind === "disconnected";
 	}
 	/** Whether the connection rejected our protocol version. */
-	export function isIncompatible(status: RemoteAgentHostConnectionStatus | undefined): status is RemoteAgentHostConnectionStatus & { kind: 'incompatible' } {
-		return status?.kind === 'incompatible';
+	export function isIncompatible(status: RemoteAgentHostConnectionStatus | undefined): status is RemoteAgentHostConnectionStatus & { kind: "incompatible" } {
+		return status?.kind === "incompatible";
 	}
 	/** Whether the connection is anything except `connected`. */
 	export function isUnavailable(status: RemoteAgentHostConnectionStatus | undefined): boolean {
-		return status?.kind !== 'connected';
+		return status?.kind !== "connected";
 	}
 	/**
 	 * If `err` is a protocol-version mismatch reported by an agent host
@@ -81,30 +93,37 @@ export namespace RemoteAgentHostConnectionStatus {
 	export function fromConnectError(err: unknown, supportedByClient: readonly string[]): RemoteAgentHostConnectionStatus | undefined {
 		if (err instanceof ProtocolError && err.code === AHP_UNSUPPORTED_PROTOCOL_VERSION) {
 			const data = err.data as (Partial<UnsupportedProtocolVersionErrorData> & { _meta?: UnsupportedProtocolVersionErrorMeta }) | undefined;
-			const offeredByServer = Array.isArray(data?.supportedVersions) ? data.supportedVersions : undefined;
-			const vscodeUpgradeMethod = typeof data?._meta?.vscodeUpgradeMethod === 'string' ? data._meta.vscodeUpgradeMethod : undefined;
-			return incompatible(err.message, supportedByClient, offeredByServer, vscodeUpgradeMethod);
+			const offeredByServer = Array.isArray(
+        data?.supportedVersions,
+      ) ? data.supportedVersions : undefined;
+			const vscodeUpgradeMethod = typeof data?._meta?.vscodeUpgradeMethod === "string" ? data._meta.vscodeUpgradeMethod : undefined;
+			return incompatible(
+        err.message,
+        supportedByClient,
+        offeredByServer,
+        vscodeUpgradeMethod,
+      );
 		}
 		return undefined;
 	}
 }
 
 /** Configuration key for the list of WebSocket remote agent host addresses. */
-export const RemoteAgentHostsSettingId = 'chat.remoteAgentHosts';
+export const RemoteAgentHostsSettingId = "chat.remoteAgentHosts";
 
 /** Configuration key to enable remote agent host connections. */
-export const RemoteAgentHostsEnabledSettingId = 'chat.remoteAgentHostsEnabled';
+export const RemoteAgentHostsEnabledSettingId = "chat.remoteAgentHostsEnabled";
 
 /**
  * Configuration key that controls whether online dev tunnels and
  * configured SSH remote agent hosts are auto-connected at startup.
  */
-export const RemoteAgentHostAutoConnectSettingId = 'chat.remoteAgentHostsAutoConnect';
+export const RemoteAgentHostAutoConnectSettingId = "chat.remoteAgentHostsAutoConnect";
 
 export const enum RemoteAgentHostEntryType {
-	WebSocket = 'websocket',
-	SSH = 'ssh',
-	Tunnel = 'tunnel',
+	WebSocket = "websocket",
+	SSH = "ssh",
+	Tunnel = "tunnel",
 }
 
 export interface IRemoteAgentHostWebSocketConnection {
@@ -154,7 +173,7 @@ export interface IRemoteAgentHostTunnelConnection {
 	 */
 	readonly label?: string;
 	/** Auth provider used to connect to this tunnel. */
-	readonly authProvider?: 'github' | 'microsoft';
+	readonly authProvider?: "github" | "microsoft";
 }
 
 export type RemoteAgentHostConnection = IRemoteAgentHostWebSocketConnection | IRemoteAgentHostSSHConnection | IRemoteAgentHostTunnelConnection;
@@ -177,8 +196,8 @@ export function getEntryAddress(entry: IRemoteAgentHostEntry): string {
 }
 
 export const enum RemoteAgentHostInputValidationError {
-	Empty = 'empty',
-	Invalid = 'invalid',
+	Empty = "empty",
+	Invalid = "invalid",
 }
 
 export interface IParsedRemoteAgentHostInput {
@@ -191,7 +210,9 @@ export type RemoteAgentHostInputParseResult =
 	| { readonly parsed: IParsedRemoteAgentHostInput; readonly error?: undefined }
 	| { readonly parsed?: undefined; readonly error: RemoteAgentHostInputValidationError };
 
-export const IRemoteAgentHostService = createDecorator<IRemoteAgentHostService>('remoteAgentHostService');
+export const IRemoteAgentHostService = createDecorator<IRemoteAgentHostService>(
+  "remoteAgentHostService",
+);
 
 /**
  * Manages connections to one or more remote agent host processes over
@@ -295,16 +316,22 @@ export class NullRemoteAgentHostService implements IRemoteAgentHostService {
 	readonly configuredEntries: readonly IRemoteAgentHostEntry[] = [];
 	getConnection(): IAgentConnection | undefined { return undefined; }
 	async addRemoteAgentHost(): Promise<IRemoteAgentHostConnectionInfo> {
-		throw new Error('Remote agent host connections are not supported in this environment.');
+		throw new Error(
+      "Remote agent host connections are not supported in this environment.",
+    );
 	}
 	async removeRemoteAgentHost(_address: string): Promise<void> { }
 	reconnect(_address: string): void { }
 	async addManagedConnection(): Promise<IRemoteAgentHostConnectionInfo> {
-		throw new Error('Remote agent host connections are not supported in this environment.');
+		throw new Error(
+      "Remote agent host connections are not supported in this environment.",
+    );
 	}
 	getEntryByAddress(): IRemoteAgentHostEntry | undefined { return undefined; }
 	async triggerServerUpgrade(): Promise<IVscodeUpgradeResult> {
-		throw new Error('Remote agent host connections are not supported in this environment.');
+		throw new Error(
+      "Remote agent host connections are not supported in this environment.",
+    );
 	}
 }
 
@@ -327,11 +354,16 @@ export function parseRemoteAgentHostInput(input: string): RemoteAgentHostInputPa
 			return { error: RemoteAgentHostInputValidationError.Invalid };
 		}
 
-		const connectionToken = url.searchParams.get(connectionTokenQueryName) ?? undefined;
+		const connectionToken = url.searchParams.get(
+      connectionTokenQueryName,
+    ) ?? undefined;
 		url.searchParams.delete(connectionTokenQueryName);
 
 		// Only preserve wss: in the address - the transport defaults to ws:
-		const address = formatRemoteAgentHostAddress(url, normalizedProtocol === 'wss:' ? normalizedProtocol : undefined);
+		const address = formatRemoteAgentHostAddress(
+      url,
+      normalizedProtocol === "wss:" ? normalizedProtocol : undefined,
+    );
 		if (!address) {
 			return { error: RemoteAgentHostInputValidationError.Invalid };
 		}
@@ -351,29 +383,29 @@ export function parseRemoteAgentHostInput(input: string): RemoteAgentHostInputPa
 function extractRemoteAgentHostCandidate(input: string): string | undefined {
 	const urlMatch = input.match(/(?<url>(?:https?|wss?):\/\/\S+)/i);
 	const candidate = urlMatch?.groups?.url ?? input;
-	const trimmedCandidate = candidate.trim().replace(/[),.;\]]+$/, '');
+	const trimmedCandidate = candidate.trim().replace(/[),.;\]]+$/, "");
 	return trimmedCandidate || undefined;
 }
 
-function normalizeRemoteAgentHostProtocol(protocol: string): 'ws:' | 'wss:' | undefined {
+function normalizeRemoteAgentHostProtocol(protocol: string): "ws:" | "wss:" | undefined {
 	switch (protocol.toLowerCase()) {
-		case 'ws:':
-		case 'http:':
-			return 'ws:';
-		case 'wss:':
-		case 'https:':
-			return 'wss:';
+		case "ws:":
+		case "http:":
+			return "ws:";
+		case "wss:":
+		case "https:":
+			return "wss:";
 		default:
 			return undefined;
 	}
 }
 
-function formatRemoteAgentHostAddress(url: URL, protocol: 'ws:' | 'wss:' | undefined): string | undefined {
+function formatRemoteAgentHostAddress(url: URL, protocol: "ws:" | "wss:" | undefined): string | undefined {
 	if (!url.host) {
 		return undefined;
 	}
 
-	const path = url.pathname !== '/' ? url.pathname : '';
+	const path = url.pathname !== "/" ? url.pathname : "";
 	const query = url.search;
 	const base = protocol ? `${protocol}//${url.host}` : url.host;
 	return `${base}${path}${query}`;
@@ -419,20 +451,20 @@ export function entryToRawEntry(entry: IRemoteAgentHostEntry): IRawRemoteAgentHo
 	switch (entry.connection.type) {
 		case RemoteAgentHostEntryType.SSH:
 			return {
-				address: entry.connection.address,
-				name: entry.name,
-				connectionToken: entry.connectionToken,
-				sshConfigHost: entry.connection.sshConfigHost,
-				sshHostName: entry.connection.hostName,
-				sshUser: entry.connection.user,
-				sshPort: entry.connection.port,
-			};
+        address: entry.connection.address,
+        name: entry.name,
+        connectionToken: entry.connectionToken,
+        sshConfigHost: entry.connection.sshConfigHost,
+        sshHostName: entry.connection.hostName,
+        sshUser: entry.connection.user,
+        sshPort: entry.connection.port,
+      };
 		case RemoteAgentHostEntryType.WebSocket:
 			return {
-				address: entry.connection.address,
-				name: entry.name,
-				connectionToken: entry.connectionToken,
-			};
+        address: entry.connection.address,
+        name: entry.name,
+        connectionToken: entry.connectionToken,
+      };
 		case RemoteAgentHostEntryType.Tunnel:
 			return undefined;
 	}

@@ -3,21 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { FastDomNode, createFastDomNode } from '../../../../../base/browser/fastDomNode.js';
-import { onUnexpectedError } from '../../../../../base/common/errors.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { ServicesAccessor } from '../../../../../editor/browser/editorExtensions.js';
-import { localize2 } from '../../../../../nls.js';
-import { Categories } from '../../../../../platform/action/common/actionCommonCategories.js';
-import { Action2, registerAction2 } from '../../../../../platform/actions/common/actions.js';
-import { IsDevelopmentContext } from '../../../../../platform/contextkey/common/contextkeys.js';
-import { IEditorService } from '../../../../services/editor/common/editorService.js';
-import { getNotebookEditorFromEditorPane, INotebookViewCellsUpdateEvent, INotebookViewZone, INotebookViewZoneChangeAccessor } from '../notebookBrowser.js';
-import { NotebookCellListView } from '../view/notebookCellListView.js';
-import { ICoordinatesConverter } from '../view/notebookRenderingCommon.js';
-import { CellViewModel } from '../viewModel/notebookViewModelImpl.js';
+import { FastDomNode, createFastDomNode } from "../../../../../base/browser/fastDomNode.js";
+import { onUnexpectedError } from "../../../../../base/common/errors.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { ServicesAccessor } from "../../../../../editor/browser/editorExtensions.js";
+import { localize2 } from "../../../../../nls.js";
+import { Categories } from "../../../../../platform/action/common/actionCommonCategories.js";
+import { Action2, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { IsDevelopmentContext } from "../../../../../platform/contextkey/common/contextkeys.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+import {
+  getNotebookEditorFromEditorPane,
+  INotebookViewCellsUpdateEvent,
+  INotebookViewZone,
+  INotebookViewZoneChangeAccessor,
+} from "../notebookBrowser.js";
+import { NotebookCellListView } from "../view/notebookCellListView.js";
+import { ICoordinatesConverter } from "../view/notebookRenderingCommon.js";
+import { CellViewModel } from "../viewModel/notebookViewModelImpl.js";
 
-const invalidFunc = () => { throw new Error(`Invalid notebook view zone change accessor`); };
+const invalidFunc = () => { throw new Error(
+  `Invalid notebook view zone change accessor`,
+); };
 
 interface IZoneWidget {
 	whitespaceId: string;
@@ -32,12 +39,12 @@ export class NotebookViewZones extends Disposable {
 
 	constructor(private readonly listView: NotebookCellListView<CellViewModel>, private readonly coordinator: ICoordinatesConverter) {
 		super();
-		this.domNode = createFastDomNode(document.createElement('div'));
-		this.domNode.setClassName('view-zones');
-		this.domNode.setPosition('absolute');
-		this.domNode.setAttribute('role', 'presentation');
-		this.domNode.setAttribute('aria-hidden', 'true');
-		this.domNode.setWidth('100%');
+		this.domNode = createFastDomNode(document.createElement("div"));
+		this.domNode.setClassName("view-zones");
+		this.domNode.setPosition("absolute");
+		this.domNode.setAttribute("role", "presentation");
+		this.domNode.setAttribute("aria-hidden", "true");
+		this.domNode.setWidth("100%");
 		this._zones = {};
 
 		this.listView.containerDomNode.appendChild(this.domNode.domNode);
@@ -59,7 +66,7 @@ export class NotebookViewZones extends Disposable {
 				zonesHaveChanged = true;
 				// TODO: validate if zones have changed layout
 				this._layoutZone(id);
-			}
+			},
 		};
 
 		safeInvoke1Arg(callback, changeAccessor);
@@ -123,10 +130,16 @@ export class NotebookViewZones extends Disposable {
 
 	private _updateWhitespace(zone: IZoneWidget) {
 		const whitespaceId = zone.whitespaceId;
-		const viewPosition = this.coordinator.convertModelIndexToViewIndex(zone.zone.afterModelPosition);
+		const viewPosition = this.coordinator.convertModelIndexToViewIndex(
+      zone.zone.afterModelPosition,
+    );
 		const isInHiddenArea = this._isInHiddenRanges(zone.zone);
 		zone.isInHiddenArea = isInHiddenArea;
-		this.listView.changeOneWhitespace(whitespaceId, viewPosition, isInHiddenArea ? 0 : zone.zone.heightInPx);
+		this.listView.changeOneWhitespace(
+      whitespaceId,
+      viewPosition,
+      isInHiddenArea ? 0 : zone.zone.heightInPx,
+    );
 	}
 
 	layout() {
@@ -136,21 +149,26 @@ export class NotebookViewZones extends Disposable {
 	}
 
 	private _addZone(zone: INotebookViewZone): string {
-		const viewPosition = this.coordinator.convertModelIndexToViewIndex(zone.afterModelPosition);
-		const whitespaceId = this.listView.insertWhitespace(viewPosition, zone.heightInPx);
+		const viewPosition = this.coordinator.convertModelIndexToViewIndex(
+      zone.afterModelPosition,
+    );
+		const whitespaceId = this.listView.insertWhitespace(
+      viewPosition,
+      zone.heightInPx,
+    );
 		const isInHiddenArea = this._isInHiddenRanges(zone);
 		const myZone: IZoneWidget = {
-			whitespaceId: whitespaceId,
-			zone: zone,
-			domNode: createFastDomNode(zone.domNode),
-			isInHiddenArea: isInHiddenArea
-		};
+      whitespaceId: whitespaceId,
+      zone: zone,
+      domNode: createFastDomNode(zone.domNode),
+      isInHiddenArea: isInHiddenArea,
+    };
 
 		this._zones[whitespaceId] = myZone;
-		myZone.domNode.setPosition('absolute');
-		myZone.domNode.domNode.style.width = '100%';
-		myZone.domNode.setDisplay('none');
-		myZone.domNode.setAttribute('notebook-view-zone', whitespaceId);
+		myZone.domNode.setPosition("absolute");
+		myZone.domNode.domNode.style.width = "100%";
+		myZone.domNode.setDisplay("none");
+		myZone.domNode.setAttribute("notebook-view-zone", whitespaceId);
 		this.domNode.appendChild(myZone.domNode);
 		return whitespaceId;
 	}
@@ -181,11 +199,11 @@ export class NotebookViewZones extends Disposable {
 		const isInHiddenArea = this._isInHiddenRanges(zoneWidget.zone);
 
 		if (isInHiddenArea) {
-			zoneWidget.domNode.setDisplay('none');
+			zoneWidget.domNode.setDisplay("none");
 		} else {
 			const top = this.listView.getWhitespacePosition(zoneWidget.whitespaceId);
 			zoneWidget.domNode.setTop(top);
-			zoneWidget.domNode.setDisplay('block');
+			zoneWidget.domNode.setDisplay("block");
 			zoneWidget.domNode.setHeight(zoneWidget.zone.heightInPx);
 		}
 	}
@@ -217,17 +235,19 @@ class ToggleNotebookViewZoneDeveloperAction extends Action2 {
 	static viewZoneIds: string[] = [];
 	constructor() {
 		super({
-			id: 'notebook.developer.addViewZones',
-			title: localize2('workbench.notebook.developer.addViewZones', "Toggle Notebook View Zones"),
-			category: Categories.Developer,
-			precondition: IsDevelopmentContext,
-			f1: true
-		});
+      id: "notebook.developer.addViewZones",
+      title: localize2("workbench.notebook.developer.addViewZones", "Toggle Notebook View Zones"),
+      category: Categories.Developer,
+      precondition: IsDevelopmentContext,
+      f1: true,
+    });
 	}
 
 	async run(accessor: ServicesAccessor): Promise<void> {
 		const editorService = accessor.get(IEditorService);
-		const editor = getNotebookEditorFromEditorPane(editorService.activeEditorPane);
+		const editor = getNotebookEditorFromEditorPane(
+      editorService.activeEditorPane,
+    );
 
 		if (!editor) {
 			return;
@@ -251,9 +271,9 @@ class ToggleNotebookViewZoneDeveloperAction extends Action2 {
 
 				const viewZoneIds: string[] = [];
 				for (let i = 0; i < cells.length; i++) {
-					const domNode = document.createElement('div');
+					const domNode = document.createElement("div");
 					domNode.innerText = `View Zone ${i}`;
-					domNode.style.backgroundColor = 'rgba(0, 255, 0, 0.5)';
+					domNode.style.backgroundColor = "rgba(0, 255, 0, 0.5)";
 					const viewZoneId = accessor.addZone({
 						afterModelPosition: i,
 						heightInPx: 200,

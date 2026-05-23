@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IReader, IObservable } from '../base.js';
-import { DebugOwner, DebugNameData } from '../debugName.js';
-import { CancellationError, CancellationToken, CancellationTokenSource } from '../commonFacade/cancellation.js';
-import { strictEquals } from '../commonFacade/deps.js';
-import { autorun } from '../reactions/autorun.js';
-import { Derived } from '../observables/derivedImpl.js';
-import { DebugLocation } from '../debugLocation.js';
+import { IReader, IObservable } from "../base.js";
+import { DebugOwner, DebugNameData } from "../debugName.js";
+import { CancellationError, CancellationToken, CancellationTokenSource } from "../commonFacade/cancellation.js";
+import { strictEquals } from "../commonFacade/deps.js";
+import { autorun } from "../reactions/autorun.js";
+import { Derived } from "../observables/derivedImpl.js";
+import { DebugLocation } from "../debugLocation.js";
 
 /**
  * Resolves the promise when the observables state matches the predicate.
@@ -29,7 +29,7 @@ export function waitForState<T>(observable: IObservable<T>, predicate?: (state: 
 			return {
 				isFinished: predicate(state),
 				error: isError ? isError(state) : false,
-				state
+				state,
 			};
 		});
 		const d = autorun(reader => {
@@ -96,6 +96,6 @@ export function derivedWithCancellationToken<T>(computeFnOrOwner: ((reader: IRea
 		}, undefined,
 		() => cancellationTokenSource?.dispose(),
 		strictEquals,
-		DebugLocation.ofCaller()
+		DebugLocation.ofCaller(),
 	);
 }

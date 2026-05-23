@@ -3,16 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { IRegisteredCodeWindow } from '../../../base/browser/dom.js';
-import { CodeWindow, mainWindow } from '../../../base/browser/window.js';
-import { DisposableStore } from '../../../base/common/lifecycle.js';
-import { runWithFakedTimers } from '../../../base/test/common/timeTravelScheduler.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../base/test/common/utils.js';
-import { BaseWindow } from '../../browser/window.js';
-import { TestContextMenuService, TestEnvironmentService, TestHostService, TestLayoutService } from './workbenchTestServices.js';
+import assert from "assert";
+import { IRegisteredCodeWindow } from "../../../base/browser/dom.js";
+import { CodeWindow, mainWindow } from "../../../base/browser/window.js";
+import { DisposableStore } from "../../../base/common/lifecycle.js";
+import { runWithFakedTimers } from "../../../base/test/common/timeTravelScheduler.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../base/test/common/utils.js";
+import { BaseWindow } from "../../browser/window.js";
+import {
+  TestContextMenuService,
+  TestEnvironmentService,
+  TestHostService,
+  TestLayoutService,
+} from "./workbenchTestServices.js";
 
-suite('Window', () => {
+suite("Window", () => {
 
 	ensureNoDisposablesAreLeakedInTestSuite();
 
@@ -25,14 +30,14 @@ suite('Window', () => {
 		protected override enableWindowFocusOnElementFocus(): void { }
 	}
 
-	test('multi window aware setTimeout()', async function () {
+	test("multi window aware setTimeout()", async function () {
 		return runWithFakedTimers({ useFakeTimers: true }, async () => {
 			const disposables = new DisposableStore();
 
 			let windows: IRegisteredCodeWindow[] = [];
 			const dom = {
 				getWindowsCount: () => windows.length,
-				getWindows: () => windows
+				getWindows: () => windows,
 			};
 
 			const setTimeoutCalls: number[] = [];
@@ -50,7 +55,7 @@ suite('Window', () => {
 						clearTimeoutCalls.push(id);
 
 						return mainWindow.clearTimeout(timeoutId);
-					}
+					},
 				} as any;
 
 				disposables.add(new TestWindow(res, dom));
@@ -70,7 +75,7 @@ suite('Window', () => {
 						called = true;
 						resolve();
 					} else {
-						reject(new Error('timeout called twice'));
+						reject(new Error("timeout called twice"));
 					}
 				}, 1);
 			});
@@ -88,7 +93,7 @@ suite('Window', () => {
 						called = true;
 						resolve();
 					} else {
-						reject(new Error('timeout called twice'));
+						reject(new Error("timeout called twice"));
 					}
 				}, 0);
 			});
@@ -107,7 +112,7 @@ suite('Window', () => {
 			windows = [
 				{ window: window2, disposables },
 				{ window: window1, disposables },
-				{ window: window3, disposables }
+				{ window: window3, disposables },
 			];
 
 			await new Promise<void>((resolve, reject) => {
@@ -116,7 +121,7 @@ suite('Window', () => {
 						called = true;
 						resolve();
 					} else {
-						reject(new Error('timeout called twice'));
+						reject(new Error("timeout called twice"));
 					}
 				}, 1);
 			});
@@ -142,9 +147,9 @@ suite('Window', () => {
 						called = true;
 						resolve();
 					} else if (called) {
-						reject(new Error('timeout called twice'));
+						reject(new Error("timeout called twice"));
 					} else {
-						reject(new Error('timeout called for wrong window'));
+						reject(new Error("timeout called for wrong window"));
 					}
 				}, 1);
 			});

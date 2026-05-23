@@ -3,32 +3,32 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { MutableDisposable } from '../../../../base/common/lifecycle.js';
-import { autorun } from '../../../../base/common/observable.js';
-import { themeColorFromId } from '../../../../base/common/themables.js';
-import { URI } from '../../../../base/common/uri.js';
-import { CodeEditorWidget } from '../../../../editor/browser/widget/codeEditor/codeEditorWidget.js';
-import { ICodeEditorService } from '../../../../editor/browser/services/codeEditorService.js';
-import { Position } from '../../../../editor/common/core/position.js';
-import { IDecorationOptions } from '../../../../editor/common/editorCommon.js';
-import { CompletionItem, CompletionItemKind } from '../../../../editor/common/languages.js';
-import { ITextModel } from '../../../../editor/common/model.js';
-import { ILanguageFeaturesService } from '../../../../editor/common/services/languageFeatures.js';
-import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
-import { IChatRequestVariableEntry } from '../../../../workbench/contrib/chat/common/attachments/chatVariableEntries.js';
-import { IChatInputCompletionItem, IChatSessionsService, isAgentHostTarget } from '../../../../workbench/contrib/chat/common/chatSessionsService.js';
-import { getChatSessionType } from '../../../../workbench/contrib/chat/common/model/chatUri.js';
-import { chatSlashCommandBackground, chatSlashCommandForeground } from '../../../../workbench/contrib/chat/common/widget/chatColors.js';
-import { AgentHostInputCompletionsBase } from '../../../../workbench/contrib/chat/browser/widget/input/editor/agentHostInputCompletionsBase.js';
-import { ISessionsManagementService } from '../../../services/sessions/common/sessionsManagement.js';
-import { NewChatContextAttachments } from './newChatContextAttachments.js';
+import { MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { autorun } from "../../../../base/common/observable.js";
+import { themeColorFromId } from "../../../../base/common/themables.js";
+import { URI } from "../../../../base/common/uri.js";
+import { CodeEditorWidget } from "../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { Position } from "../../../../editor/common/core/position.js";
+import { IDecorationOptions } from "../../../../editor/common/editorCommon.js";
+import { CompletionItem, CompletionItemKind } from "../../../../editor/common/languages.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+import { ILanguageFeaturesService } from "../../../../editor/common/services/languageFeatures.js";
+import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+import { IChatRequestVariableEntry } from "../../../../workbench/contrib/chat/common/attachments/chatVariableEntries.js";
+import { IChatInputCompletionItem, IChatSessionsService, isAgentHostTarget } from "../../../../workbench/contrib/chat/common/chatSessionsService.js";
+import { getChatSessionType } from "../../../../workbench/contrib/chat/common/model/chatUri.js";
+import { chatSlashCommandBackground, chatSlashCommandForeground } from "../../../../workbench/contrib/chat/common/widget/chatColors.js";
+import { AgentHostInputCompletionsBase } from "../../../../workbench/contrib/chat/browser/widget/input/editor/agentHostInputCompletionsBase.js";
+import { ISessionsManagementService } from "../../../services/sessions/common/sessionsManagement.js";
+import { NewChatContextAttachments } from "./newChatContextAttachments.js";
 
 /**
  * Command ID used by completion items to attach an agent-host-supplied
  * resource reference (returned by `IChatSessionContentProvider.provideChatInputCompletions`)
  * to the sessions context attachments.
  */
-const ADD_REFERENCE_COMMAND = 'sessions.chat.addAgentHostReference';
+const ADD_REFERENCE_COMMAND = "sessions.chat.addAgentHostReference";
 
 interface IReferenceArg {
 	readonly handler: AgentHostInputCompletionHandler;
@@ -36,9 +36,12 @@ interface IReferenceArg {
 	readonly insertText: string;
 }
 
-CommandsRegistry.registerCommand(ADD_REFERENCE_COMMAND, (_accessor, arg: IReferenceArg) => {
-	arg.handler.acceptCompletion(arg.entry, arg.insertText);
-});
+CommandsRegistry.registerCommand(
+  ADD_REFERENCE_COMMAND,
+  (_accessor, arg: IReferenceArg) => {
+    arg.handler.acceptCompletion(arg.entry, arg.insertText);
+  },
+);
 
 /**
  * Bridges the new-chat input editor to the agent host's `completions`
@@ -55,7 +58,7 @@ CommandsRegistry.registerCommand(ADD_REFERENCE_COMMAND, (_accessor, arg: IRefere
  */
 export class AgentHostInputCompletionHandler extends AgentHostInputCompletionsBase<void, string> {
 
-	private static readonly _decoType = 'sessions-agent-host-reference';
+	private static readonly _decoType = "sessions-agent-host-reference";
 	private static _decosRegistered = false;
 
 	private readonly _registration = this._register(new MutableDisposable());
@@ -106,7 +109,9 @@ export class AgentHostInputCompletionHandler extends AgentHostInputCompletionsBa
 	}
 
 	private async _registerForScheme(scheme: string): Promise<void> {
-		const triggerCharacters = await this._chatSessionsService.getChatInputCompletionTriggerCharacters(scheme);
+		const triggerCharacters = await this._chatSessionsService.getChatInputCompletionTriggerCharacters(
+      scheme,
+    );
 		if (!triggerCharacters || triggerCharacters.length === 0) {
 			return;
 		}
@@ -114,7 +119,9 @@ export class AgentHostInputCompletionHandler extends AgentHostInputCompletionsBa
 		// The active session may have changed mid-await — bail if its
 		// resource scheme is no longer the one we registered for.
 		const activeSession = this._sessionsManagementService.activeSession.get();
-		if (!activeSession || getChatSessionType(activeSession.resource) !== scheme) {
+		if (!activeSession || getChatSessionType(
+      activeSession.resource,
+    ) !== scheme) {
 			return;
 		}
 
@@ -124,11 +131,11 @@ export class AgentHostInputCompletionHandler extends AgentHostInputCompletionsBa
 		}
 
 		this._registration.value = this._registerProvider(
-			{ scheme: editorUri.scheme, hasAccessToAllModels: true },
-			`sessionsAgentHostInputCompletions[${scheme}]`,
-			triggerCharacters,
-			scheme,
-		);
+      { scheme: editorUri.scheme, hasAccessToAllModels: true },
+      `sessionsAgentHostInputCompletions[${scheme}]`,
+      triggerCharacters,
+      scheme,
+    );
 	}
 
 	protected override _resolveContext(_model: ITextModel, scheme: string): { sessionResource: URI; context: void } | undefined {
@@ -148,39 +155,42 @@ export class AgentHostInputCompletionHandler extends AgentHostInputCompletionsBa
 	}
 
 	protected override _buildItem(position: Position, item: IChatInputCompletionItem): CompletionItem {
-		const replaceRange = AgentHostInputCompletionHandler.computeRange(position, item);
+		const replaceRange = AgentHostInputCompletionHandler.computeRange(
+      position,
+      item,
+    );
 		const attachment = item.attachment;
 		switch (attachment.kind) {
-			case 'command': {
+			case "command": {
 				return {
-					label: item.insertText,
-					insertText: item.insertText,
-					filterText: item.insertText,
-					range: replaceRange,
-					kind: CompletionItemKind.Text,
-					detail: attachment.description,
-				};
+          label: item.insertText,
+          insertText: item.insertText,
+          filterText: item.insertText,
+          range: replaceRange,
+          kind: CompletionItemKind.Text,
+          detail: attachment.description,
+        };
 			}
-			case 'skill': {
+			case "skill": {
 				return {
-					label: item.insertText,
-					insertText: item.insertText,
-					filterText: item.insertText,
-					range: replaceRange,
-					kind: CompletionItemKind.Text,
-				};
+          label: item.insertText,
+          insertText: item.insertText,
+          filterText: item.insertText,
+          range: replaceRange,
+          kind: CompletionItemKind.Text,
+        };
 			}
 			default: {
 				const label = attachment.displayName ?? item.insertText;
 				const description = attachment.uri.path;
 				const kind = attachment.isDirectory ? CompletionItemKind.Folder : CompletionItemKind.File;
 				const entry: IChatRequestVariableEntry = {
-					id: attachment.uri.toString(),
-					name: attachment.displayName ?? this._basename(attachment.uri),
-					value: attachment.uri,
-					kind: attachment.isDirectory ? 'directory' : 'file',
-					_meta: attachment._meta,
-				};
+          id: attachment.uri.toString(),
+          name: attachment.displayName ?? this._basename(attachment.uri),
+          value: attachment.uri,
+          kind: attachment.isDirectory ? "directory" : "file",
+          _meta: attachment._meta,
+        };
 				return {
 					label: { label, description },
 					insertText: item.insertText,
@@ -189,7 +199,7 @@ export class AgentHostInputCompletionHandler extends AgentHostInputCompletionsBa
 					kind,
 					command: {
 						id: ADD_REFERENCE_COMMAND,
-						title: '',
+						title: "",
 						arguments: [{ handler: this, entry, insertText: item.insertText } satisfies IReferenceArg],
 					},
 				};
@@ -198,7 +208,7 @@ export class AgentHostInputCompletionHandler extends AgentHostInputCompletionsBa
 	}
 
 	private _basename(uri: URI): string {
-		const idx = uri.path.lastIndexOf('/');
+		const idx = uri.path.lastIndexOf("/");
 		return idx >= 0 ? uri.path.slice(idx + 1) : uri.path;
 	}
 
@@ -219,18 +229,28 @@ export class AgentHostInputCompletionHandler extends AgentHostInputCompletionsBa
 	private _registerDecorations(): void {
 		if (!AgentHostInputCompletionHandler._decosRegistered) {
 			AgentHostInputCompletionHandler._decosRegistered = true;
-			this._codeEditorService.registerDecorationType('sessions-chat', AgentHostInputCompletionHandler._decoType, {
-				color: themeColorFromId(chatSlashCommandForeground),
-				backgroundColor: themeColorFromId(chatSlashCommandBackground),
-				borderRadius: '3px',
-			});
+			this._codeEditorService.registerDecorationType(
+        "sessions-chat",
+        AgentHostInputCompletionHandler._decoType,
+        {
+          color: themeColorFromId(chatSlashCommandForeground),
+          backgroundColor: themeColorFromId(chatSlashCommandBackground),
+          borderRadius: "3px",
+        },
+      );
 		}
 
 		// Re-decorate when the editor content changes (the user typed,
 		// pasted, or the inserted text moved) and when attachments change
 		// (a chip was removed, draft state restored, etc.).
-		this._register(this._editor.onDidChangeModelContent(() => this._updateDecorations()));
-		this._register(this._contextAttachments.onDidChangeContext(() => this._updateDecorations()));
+		this._register(
+      this._editor.onDidChangeModelContent(() => this._updateDecorations()),
+    );
+		this._register(
+      this._contextAttachments.onDidChangeContext(
+        () => this._updateDecorations(),
+      ),
+    );
 		this._updateDecorations();
 	}
 
@@ -239,7 +259,9 @@ export class AgentHostInputCompletionHandler extends AgentHostInputCompletionsBa
 		// being removed is the canonical signal that the reference is
 		// gone, even if its inserted text still happens to appear in the
 		// editor.
-		const attachedIds = new Set(this._contextAttachments.attachments.map(a => a.id));
+		const attachedIds = new Set(
+      this._contextAttachments.attachments.map(a => a.id),
+    );
 		for (const id of [...this._insertedTexts.keys()]) {
 			if (!attachedIds.has(id)) {
 				this._insertedTexts.delete(id);
@@ -276,6 +298,10 @@ export class AgentHostInputCompletionHandler extends AgentHostInputCompletionsBa
 			}
 		}
 
-		this._editor.setDecorationsByType('sessions-chat', AgentHostInputCompletionHandler._decoType, decos);
+		this._editor.setDecorationsByType(
+      "sessions-chat",
+      AgentHostInputCompletionHandler._decoType,
+      decos,
+    );
 	}
 }

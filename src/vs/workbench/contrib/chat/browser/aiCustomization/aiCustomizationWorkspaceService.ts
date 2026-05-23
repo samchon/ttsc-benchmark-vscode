@@ -3,23 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { constObservable, derived, IObservable, observableFromEventOpts } from '../../../../../base/common/observable.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { CancellationToken } from '../../../../../base/common/cancellation.js';
-import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
-import { IAICustomizationWorkspaceService, AICustomizationManagementSection, IStorageSourceFilter } from '../../common/aiCustomizationWorkspaceService.js';
-import { InstantiationType, registerSingleton } from '../../../../../platform/instantiation/common/extensions.js';
-import { IChatPromptSlashCommand, IPromptsService } from '../../common/promptSyntax/service/promptsService.js';
-import { ICommandService } from '../../../../../platform/commands/common/commands.js';
-import { PromptsType } from '../../common/promptSyntax/promptTypes.js';
-import { ICustomizationHarnessService } from '../../common/customizationHarnessService.js';
+import { constObservable, derived, IObservable, observableFromEventOpts } from "../../../../../base/common/observable.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { IWorkspaceContextService } from "../../../../../platform/workspace/common/workspace.js";
 import {
-	GENERATE_AGENT_COMMAND_ID,
-	GENERATE_HOOK_COMMAND_ID,
-	GENERATE_ON_DEMAND_INSTRUCTIONS_COMMAND_ID,
-	GENERATE_PROMPT_COMMAND_ID,
-	GENERATE_SKILL_COMMAND_ID,
-} from '../actions/chatActions.js';
+  IAICustomizationWorkspaceService,
+  AICustomizationManagementSection,
+  IStorageSourceFilter,
+} from "../../common/aiCustomizationWorkspaceService.js";
+import { InstantiationType, registerSingleton } from "../../../../../platform/instantiation/common/extensions.js";
+import { IChatPromptSlashCommand, IPromptsService } from "../../common/promptSyntax/service/promptsService.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { PromptsType } from "../../common/promptSyntax/promptTypes.js";
+import { ICustomizationHarnessService } from "../../common/customizationHarnessService.js";
+import {
+  GENERATE_AGENT_COMMAND_ID,
+  GENERATE_HOOK_COMMAND_ID,
+  GENERATE_ON_DEMAND_INSTRUCTIONS_COMMAND_ID,
+  GENERATE_PROMPT_COMMAND_ID,
+  GENERATE_SKILL_COMMAND_ID,
+} from "../actions/chatActions.js";
 
 class AICustomizationWorkspaceService implements IAICustomizationWorkspaceService {
 	declare readonly _serviceBrand: undefined;
@@ -33,14 +37,14 @@ class AICustomizationWorkspaceService implements IAICustomizationWorkspaceServic
 		@ICustomizationHarnessService private readonly harnessService: ICustomizationHarnessService,
 	) {
 		const workspaceFolders = observableFromEventOpts(
-			{ owner: this },
-			this.workspaceContextService.onDidChangeWorkspaceFolders,
-			() => this.workspaceContextService.getWorkspace().folders
-		);
+      { owner: this },
+      this.workspaceContextService.onDidChangeWorkspaceFolders,
+      () => this.workspaceContextService.getWorkspace().folders,
+    );
 		this.activeProjectRoot = derived(reader => {
-			const folders = workspaceFolders.read(reader);
-			return folders[0]?.uri;
-		});
+      const folders = workspaceFolders.read(reader);
+      return folders[0]?.uri;
+    });
 	}
 
 	getActiveProjectRoot(): URI | undefined {
@@ -49,14 +53,14 @@ class AICustomizationWorkspaceService implements IAICustomizationWorkspaceServic
 	}
 
 	readonly managementSections: readonly AICustomizationManagementSection[] = [
-		AICustomizationManagementSection.Agents,
-		AICustomizationManagementSection.Skills,
-		AICustomizationManagementSection.Instructions,
-		AICustomizationManagementSection.Prompts,
-		AICustomizationManagementSection.Hooks,
-		AICustomizationManagementSection.McpServers,
-		AICustomizationManagementSection.Plugins,
-	];
+    AICustomizationManagementSection.Agents,
+    AICustomizationManagementSection.Skills,
+    AICustomizationManagementSection.Instructions,
+    AICustomizationManagementSection.Prompts,
+    AICustomizationManagementSection.Hooks,
+    AICustomizationManagementSection.McpServers,
+    AICustomizationManagementSection.Plugins,
+  ];
 
 	getStorageSourceFilter(type: PromptsType): IStorageSourceFilter {
 		return this.harnessService.getStorageSourceFilter(type);
@@ -65,8 +69,8 @@ class AICustomizationWorkspaceService implements IAICustomizationWorkspaceServic
 	readonly isSessionsWindow = false;
 
 	readonly welcomePageFeatures = {
-		showGettingStartedBanner: true,
-	};
+    showGettingStartedBanner: true,
+  };
 
 	readonly hasOverrideProjectRoot = constObservable(false);
 	setOverrideProjectRoot(_root: URI): void { }
@@ -82,12 +86,12 @@ class AICustomizationWorkspaceService implements IAICustomizationWorkspaceServic
 
 	async generateCustomization(type: PromptsType): Promise<void> {
 		const commandIds: Partial<Record<PromptsType, string>> = {
-			[PromptsType.agent]: GENERATE_AGENT_COMMAND_ID,
-			[PromptsType.skill]: GENERATE_SKILL_COMMAND_ID,
-			[PromptsType.instructions]: GENERATE_ON_DEMAND_INSTRUCTIONS_COMMAND_ID,
-			[PromptsType.prompt]: GENERATE_PROMPT_COMMAND_ID,
-			[PromptsType.hook]: GENERATE_HOOK_COMMAND_ID,
-		};
+      [PromptsType.agent]: GENERATE_AGENT_COMMAND_ID,
+      [PromptsType.skill]: GENERATE_SKILL_COMMAND_ID,
+      [PromptsType.instructions]: GENERATE_ON_DEMAND_INSTRUCTIONS_COMMAND_ID,
+      [PromptsType.prompt]: GENERATE_PROMPT_COMMAND_ID,
+      [PromptsType.hook]: GENERATE_HOOK_COMMAND_ID,
+    };
 		const commandId = commandIds[type];
 		if (commandId) {
 			await this.commandService.executeCommand(commandId);
@@ -105,4 +109,8 @@ class AICustomizationWorkspaceService implements IAICustomizationWorkspaceServic
 	}
 }
 
-registerSingleton(IAICustomizationWorkspaceService, AICustomizationWorkspaceService, InstantiationType.Delayed);
+registerSingleton(
+  IAICustomizationWorkspaceService,
+  AICustomizationWorkspaceService,
+  InstantiationType.Delayed,
+);

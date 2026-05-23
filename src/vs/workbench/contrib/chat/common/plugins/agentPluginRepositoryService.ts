@@ -3,12 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../../../base/common/uri.js';
-import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IMarketplacePlugin, IMarketplaceReference, IPluginSourceDescriptor, MarketplaceType, PluginSourceKind } from './pluginMarketplaceService.js';
-import { IPluginSource } from './pluginSource.js';
+import { URI } from "../../../../../base/common/uri.js";
+import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
+import {
+  IMarketplacePlugin,
+  IMarketplaceReference,
+  IPluginSourceDescriptor,
+  MarketplaceType,
+  PluginSourceKind,
+} from "./pluginMarketplaceService.js";
+import { IPluginSource } from "./pluginSource.js";
 
-export const IAgentPluginRepositoryService = createDecorator<IAgentPluginRepositoryService>('agentPluginRepositoryService');
+export const IAgentPluginRepositoryService = createDecorator<IAgentPluginRepositoryService>(
+  "agentPluginRepositoryService",
+);
 
 /**
  * Options for ensuring a marketplace repository is available locally.

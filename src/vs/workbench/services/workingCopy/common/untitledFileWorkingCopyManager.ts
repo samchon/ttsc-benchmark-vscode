@@ -3,18 +3,25 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DisposableStore, dispose, IDisposable } from '../../../../base/common/lifecycle.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IUntitledFileWorkingCopy, IUntitledFileWorkingCopyInitialContents, IUntitledFileWorkingCopyModel, IUntitledFileWorkingCopyModelFactory, IUntitledFileWorkingCopySaveDelegate, UntitledFileWorkingCopy } from './untitledFileWorkingCopy.js';
-import { Event, Emitter } from '../../../../base/common/event.js';
-import { Schemas } from '../../../../base/common/network.js';
-import { IWorkingCopyService } from './workingCopyService.js';
-import { ILabelService } from '../../../../platform/label/common/label.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { IWorkingCopyBackupService } from './workingCopyBackup.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { BaseFileWorkingCopyManager, IBaseFileWorkingCopyManager } from './abstractFileWorkingCopyManager.js';
-import { ResourceMap } from '../../../../base/common/map.js';
+import { DisposableStore, dispose, IDisposable } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import {
+  IUntitledFileWorkingCopy,
+  IUntitledFileWorkingCopyInitialContents,
+  IUntitledFileWorkingCopyModel,
+  IUntitledFileWorkingCopyModelFactory,
+  IUntitledFileWorkingCopySaveDelegate,
+  UntitledFileWorkingCopy,
+} from "./untitledFileWorkingCopy.js";
+import { Event, Emitter } from "../../../../base/common/event.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { IWorkingCopyService } from "./workingCopyService.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IWorkingCopyBackupService } from "./workingCopyBackup.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { BaseFileWorkingCopyManager, IBaseFileWorkingCopyManager } from "./abstractFileWorkingCopyManager.js";
+import { ResourceMap } from "../../../../base/common/map.js";
 
 export interface IUntitledFileWorkingCopySaveEvent {
 
@@ -130,13 +137,19 @@ export class UntitledFileWorkingCopyManager<M extends IUntitledFileWorkingCopyMo
 
 	//#region Events
 
-	private readonly _onDidSave = this._register(new Emitter<IUntitledFileWorkingCopySaveEvent>());
+	private readonly _onDidSave = this._register(
+    new Emitter<IUntitledFileWorkingCopySaveEvent>(),
+  );
 	readonly onDidSave = this._onDidSave.event;
 
-	private readonly _onDidChangeDirty = this._register(new Emitter<IUntitledFileWorkingCopy<M>>());
+	private readonly _onDidChangeDirty = this._register(
+    new Emitter<IUntitledFileWorkingCopy<M>>(),
+  );
 	readonly onDidChangeDirty = this._onDidChangeDirty.event;
 
-	private readonly _onWillDispose = this._register(new Emitter<IUntitledFileWorkingCopy<M>>());
+	private readonly _onWillDispose = this._register(
+    new Emitter<IUntitledFileWorkingCopy<M>>(),
+  );
 	readonly onWillDispose = this._onWillDispose.event;
 
 	//#endregion
@@ -151,7 +164,7 @@ export class UntitledFileWorkingCopyManager<M extends IUntitledFileWorkingCopyMo
 		@ILabelService private readonly labelService: ILabelService,
 		@ILogService logService: ILogService,
 		@IWorkingCopyBackupService workingCopyBackupService: IWorkingCopyBackupService,
-		@IWorkingCopyService private readonly workingCopyService: IWorkingCopyService
+		@IWorkingCopyService private readonly workingCopyService: IWorkingCopyService,
 	) {
 		super(fileService, logService, workingCopyBackupService);
 	}
@@ -168,7 +181,9 @@ export class UntitledFileWorkingCopyManager<M extends IUntitledFileWorkingCopyMo
 		return workingCopy;
 	}
 
-	private doCreateOrGet(options: IInternalUntitledFileWorkingCopyOptions = Object.create(null)): IUntitledFileWorkingCopy<M> {
+	private doCreateOrGet(options: IInternalUntitledFileWorkingCopyOptions = Object.create(
+    null,
+  )): IUntitledFileWorkingCopy<M> {
 		const massagedOptions = this.massageOptions(options);
 
 		// Return existing instance if asked for it
@@ -184,17 +199,19 @@ export class UntitledFileWorkingCopyManager<M extends IUntitledFileWorkingCopyMo
 	}
 
 	private massageOptions(options: IInternalUntitledFileWorkingCopyOptions): IInternalUntitledFileWorkingCopyOptions {
-		const massagedOptions: IInternalUntitledFileWorkingCopyOptions = Object.create(null);
+		const massagedOptions: IInternalUntitledFileWorkingCopyOptions = Object.create(
+      null,
+    );
 
 		// Handle associated resource
 		if (options.associatedResource) {
 			massagedOptions.untitledResource = URI.from({
-				scheme: Schemas.untitled,
-				authority: options.associatedResource.authority,
-				fragment: options.associatedResource.fragment,
-				path: options.associatedResource.path,
-				query: options.associatedResource.query
-			});
+        scheme: Schemas.untitled,
+        authority: options.associatedResource.authority,
+        fragment: options.associatedResource.fragment,
+        path: options.associatedResource.path,
+        query: options.associatedResource.query,
+      });
 			massagedOptions.associatedResource = options.associatedResource;
 		}
 
@@ -224,7 +241,7 @@ export class UntitledFileWorkingCopyManager<M extends IUntitledFileWorkingCopyMo
 					path: options.isScratchpad ? `Scratchpad-${counter}` : `Untitled-${counter}`,
 					query: this.workingCopyTypeId ?
 						`typeId=${this.workingCopyTypeId}` : // distinguish untitled resources among others by encoding the `typeId` as query param
-						undefined							 // keep untitled resources for text files as they are (when `typeId === ''`)
+						undefined,							 // keep untitled resources for text files as they are (when `typeId === ''`)
 				});
 				counter++;
 			} while (this.has(untitledResource));
@@ -232,18 +249,18 @@ export class UntitledFileWorkingCopyManager<M extends IUntitledFileWorkingCopyMo
 
 		// Create new working copy with provided options
 		const workingCopy = new UntitledFileWorkingCopy(
-			this.workingCopyTypeId,
-			untitledResource,
-			this.labelService.getUriBasenameLabel(untitledResource),
-			!!options.associatedResource,
-			!!options.isScratchpad,
-			options.contents,
-			this.modelFactory,
-			this.saveDelegate,
-			this.workingCopyService,
-			this.workingCopyBackupService,
-			this.logService
-		);
+      this.workingCopyTypeId,
+      untitledResource,
+      this.labelService.getUriBasenameLabel(untitledResource),
+      !!options.associatedResource,
+      !!options.isScratchpad,
+      options.contents,
+      this.modelFactory,
+      this.saveDelegate,
+      this.workingCopyService,
+      this.workingCopyBackupService,
+      this.logService,
+    );
 
 		// Register
 		this.registerWorkingCopy(workingCopy);
@@ -255,11 +272,20 @@ export class UntitledFileWorkingCopyManager<M extends IUntitledFileWorkingCopyMo
 
 		// Install working copy listeners
 		const workingCopyListeners = new DisposableStore();
-		workingCopyListeners.add(workingCopy.onDidChangeDirty(() => this._onDidChangeDirty.fire(workingCopy)));
-		workingCopyListeners.add(workingCopy.onWillDispose(() => this._onWillDispose.fire(workingCopy)));
+		workingCopyListeners.add(
+      workingCopy.onDidChangeDirty(
+        () => this._onDidChangeDirty.fire(workingCopy),
+      ),
+    );
+		workingCopyListeners.add(
+      workingCopy.onWillDispose(() => this._onWillDispose.fire(workingCopy)),
+    );
 
 		// Keep for disposal
-		this.mapResourceToWorkingCopyListeners.set(workingCopy.resource, workingCopyListeners);
+		this.mapResourceToWorkingCopyListeners.set(
+      workingCopy.resource,
+      workingCopyListeners,
+    );
 
 		// Add to cache
 		this.add(workingCopy.resource, workingCopy);
@@ -275,7 +301,9 @@ export class UntitledFileWorkingCopyManager<M extends IUntitledFileWorkingCopyMo
 		const removed = super.remove(resource);
 
 		// Dispose any existing working copy listeners
-		const workingCopyListener = this.mapResourceToWorkingCopyListeners.get(resource);
+		const workingCopyListener = this.mapResourceToWorkingCopyListeners.get(
+      resource,
+    );
 		if (workingCopyListener) {
 			dispose(workingCopyListener);
 			this.mapResourceToWorkingCopyListeners.delete(resource);

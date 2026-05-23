@@ -3,18 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable } from '../../../../../base/common/lifecycle.js';
-import { IObservable } from '../../../../../base/common/observable.js';
-import { basename } from '../../../../../base/common/resources.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { SyncDescriptor0 } from '../../../../../platform/instantiation/common/descriptors.js';
-import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
-import { type INamedPluginResource, type IMcpServerDefinition, type IParsedHookCommand } from '../../../../../platform/agentPlugins/common/pluginParsers.js';
-import { ContributionEnablementState, IEnablementModel } from '../enablement.js';
-import { HookType } from '../promptSyntax/hookTypes.js';
-import { IMarketplacePlugin } from './pluginMarketplaceService.js';
+import { IDisposable } from "../../../../../base/common/lifecycle.js";
+import { IObservable } from "../../../../../base/common/observable.js";
+import { basename } from "../../../../../base/common/resources.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { SyncDescriptor0 } from "../../../../../platform/instantiation/common/descriptors.js";
+import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
+import {
+  type INamedPluginResource,
+  type IMcpServerDefinition,
+  type IParsedHookCommand,
+} from "../../../../../platform/agentPlugins/common/pluginParsers.js";
+import { ContributionEnablementState, IEnablementModel } from "../enablement.js";
+import { HookType } from "../promptSyntax/hookTypes.js";
+import { IMarketplacePlugin } from "./pluginMarketplaceService.js";
 
-export const IAgentPluginService = createDecorator<IAgentPluginService>('agentPluginService');
+export const IAgentPluginService = createDecorator<IAgentPluginService>(
+  "agentPluginService",
+);
 
 export interface IAgentPluginHook {
 	readonly type: HookType;
@@ -80,10 +86,10 @@ function normalizePluginToken(value: string): string {
 	return value
 		.trim()
 		.toLowerCase()
-		.replace(/\s+/g, '-')
-		.replace(/[^a-z0-9_.:-]/g, '-')
-		.replace(/-+/g, '-')
-		.replace(/^[-:.]+|[-:.]+$/g, '');
+		.replace(/\s+/g, "-")
+		.replace(/[^a-z0-9_.:-]/g, "-")
+		.replace(/-+/g, "-")
+		.replace(/^[-:.]+|[-:.]+$/g, "");
 }
 
 class AgentPluginDiscoveryRegistry {

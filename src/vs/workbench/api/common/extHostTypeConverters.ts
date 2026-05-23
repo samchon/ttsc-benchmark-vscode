@@ -3,75 +3,150 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type * as vscode from 'vscode';
-import { asArray, coalesce, isNonEmptyArray } from '../../../base/common/arrays.js';
-import { VSBuffer, decodeBase64, encodeBase64 } from '../../../base/common/buffer.js';
-import { IStringDictionary } from '../../../base/common/collections.js';
-import { IDataTransferFile, IDataTransferItem, UriList } from '../../../base/common/dataTransfer.js';
-import { createSingleCallFunction } from '../../../base/common/functional.js';
-import * as htmlContent from '../../../base/common/htmlContent.js';
-import { DisposableStore } from '../../../base/common/lifecycle.js';
-import { ResourceMap, ResourceSet } from '../../../base/common/map.js';
-import * as marked from '../../../base/common/marked/marked.js';
-import { parse, revive } from '../../../base/common/marshalling.js';
-import { MarshalledId } from '../../../base/common/marshallingIds.js';
-import { Mimes } from '../../../base/common/mime.js';
-import { cloneAndChange } from '../../../base/common/objects.js';
-import { OS } from '../../../base/common/platform.js';
-import { IPrefixTreeNode, WellDefinedPrefixTree } from '../../../base/common/prefixTree.js';
-import { basename } from '../../../base/common/resources.js';
-import { ThemeIcon } from '../../../base/common/themables.js';
-import { isDefined, isEmptyObject, isNumber, isString, isUndefinedOrNull } from '../../../base/common/types.js';
-import { URI, UriComponents, isUriComponents } from '../../../base/common/uri.js';
-import { IURITransformer } from '../../../base/common/uriIpc.js';
-import { generateUuid } from '../../../base/common/uuid.js';
-import { RenderLineNumbersType } from '../../../editor/common/config/editorOptions.js';
-import { IPosition } from '../../../editor/common/core/position.js';
-import * as editorRange from '../../../editor/common/core/range.js';
-import { ISelection } from '../../../editor/common/core/selection.js';
-import { IContentDecorationRenderOptions, IDecorationOptions, IDecorationRenderOptions, IThemeDecorationRenderOptions } from '../../../editor/common/editorCommon.js';
-import * as encodedTokenAttributes from '../../../editor/common/encodedTokenAttributes.js';
-import * as languageSelector from '../../../editor/common/languageSelector.js';
-import * as languages from '../../../editor/common/languages.js';
-import { EndOfLineSequence, TrackedRangeStickiness } from '../../../editor/common/model.js';
-import { ITextEditorOptions } from '../../../platform/editor/common/editor.js';
-import { IExtensionDescription, IRelaxedExtensionDescription } from '../../../platform/extensions/common/extensions.js';
-import { ILogService } from '../../../platform/log/common/log.js';
-import { IMarkerData, IRelatedInformation, MarkerSeverity, MarkerTag } from '../../../platform/markers/common/markers.js';
-import { ProgressLocation as MainProgressLocation } from '../../../platform/progress/common/progress.js';
-import { DEFAULT_EDITOR_ASSOCIATION, SaveReason } from '../../common/editor.js';
-import { IViewBadge } from '../../common/views.js';
-import { IChatAgentRequest, IChatAgentResult } from '../../contrib/chat/common/participants/chatAgents.js';
-import { IChatRequestModeInstructions } from '../../contrib/chat/common/model/chatModel.js';
-import { IChatAgentMarkdownContentWithVulnerability, IChatCodeCitation, IChatCommandButton, IChatConfirmation, IChatContentInlineReference, IChatContentReference, IChatExtensionsContent, IChatExternalToolInvocationUpdate, IChatFollowup, IChatHookPart, IChatMarkdownContent, IChatMoveMessage, IChatMultiDiffDataSerialized, IChatProgressMessage, IChatPullRequestContent, IChatQuestionCarousel, IChatResponseCodeblockUriPart, IChatTaskDto, IChatTaskResult, IChatTerminalToolInvocationData, IChatTextEdit, IChatThinkingPart, IChatToolInvocationSerialized, IChatTreeData, IChatUserActionEvent, IChatWarningMessage, IChatInfoMessage, IChatWorkspaceEdit } from '../../contrib/chat/common/chatService/chatService.js';
-import { LocalChatSessionUri } from '../../contrib/chat/common/model/chatUri.js';
-import { ChatRequestToolReferenceEntry, IChatRequestVariableEntry, isImageVariableEntry, isPromptFileVariableEntry, isPromptTextVariableEntry } from '../../contrib/chat/common/attachments/chatVariableEntries.js';
-import { ChatSessionStatus, IChatSessionItem } from '../../contrib/chat/common/chatSessionsService.js';
-import { ChatAgentLocation } from '../../contrib/chat/common/constants.js';
-import { ChatRequestHooks, resolveEffectiveCommand } from '../../contrib/chat/common/promptSyntax/hookSchema.js';
-import { type IParsedHookCommand } from '../../../platform/agentPlugins/common/pluginParsers.js';
-import { IToolInvocationContext, IToolResult, IToolResultInputOutputDetails, IToolResultOutputDetails, ToolDataSource, ToolInvocationPresentation } from '../../contrib/chat/common/tools/languageModelToolsService.js';
-import * as chatProvider from '../../contrib/chat/common/languageModels.js';
-import { IChatMessageDataPart, IChatResponseDataPart, IChatResponsePromptTsxPart, IChatResponseTextPart } from '../../contrib/chat/common/languageModels.js';
-import { DebugTreeItemCollapsibleState, IDebugVisualizationTreeItem } from '../../contrib/debug/common/debug.js';
-import { McpServerDefinition as McpServerDefinitionType, McpServerLaunch, McpServerTransportType } from '../../contrib/mcp/common/mcpTypes.js';
-import * as notebooks from '../../contrib/notebook/common/notebookCommon.js';
-import { CellEditType } from '../../contrib/notebook/common/notebookCommon.js';
-import { ICellRange } from '../../contrib/notebook/common/notebookRange.js';
-import { InputValidationType } from '../../contrib/scm/common/scm.js';
-import * as search from '../../contrib/search/common/search.js';
-import { TestId } from '../../contrib/testing/common/testId.js';
-import { CoverageDetails, DetailType, ICoverageCount, IFileCoverage, ISerializedTestResults, ITestErrorMessage, ITestItem, ITestRunProfileReference, ITestTag, TestMessageType, TestResultItem, TestRunProfileBitset, denamespaceTestTag, namespaceTestTag } from '../../contrib/testing/common/testTypes.js';
-import { AiSettingsSearchResult, AiSettingsSearchResultKind } from '../../services/aiSettingsSearch/common/aiSettingsSearch.js';
-import { EditorGroupColumn } from '../../services/editor/common/editorGroupColumn.js';
-import { ACTIVE_GROUP, SIDE_GROUP } from '../../services/editor/common/editorService.js';
-import { checkProposedApiEnabled, isProposedApiEnabled } from '../../services/extensions/common/extensions.js';
-import { Dto, SerializableObjectWithBuffers } from '../../services/extensions/common/proxyIdentifier.js';
-import * as extHostProtocol from './extHost.protocol.js';
-import { CommandsConverter } from './extHostCommands.js';
-import { getPrivateApiFor } from './extHostTestingPrivateApi.js';
-import * as types from './extHostTypes.js';
-import { LanguageModelDataPart, LanguageModelPromptTsxPart, LanguageModelTextPart } from './extHostTypes.js';
+import type * as vscode from "vscode";
+import { asArray, coalesce, isNonEmptyArray } from "../../../base/common/arrays.js";
+import { VSBuffer, decodeBase64, encodeBase64 } from "../../../base/common/buffer.js";
+import { IStringDictionary } from "../../../base/common/collections.js";
+import { IDataTransferFile, IDataTransferItem, UriList } from "../../../base/common/dataTransfer.js";
+import { createSingleCallFunction } from "../../../base/common/functional.js";
+import * as htmlContent from "../../../base/common/htmlContent.js";
+import { DisposableStore } from "../../../base/common/lifecycle.js";
+import { ResourceMap, ResourceSet } from "../../../base/common/map.js";
+import * as marked from "../../../base/common/marked/marked.js";
+import { parse, revive } from "../../../base/common/marshalling.js";
+import { MarshalledId } from "../../../base/common/marshallingIds.js";
+import { Mimes } from "../../../base/common/mime.js";
+import { cloneAndChange } from "../../../base/common/objects.js";
+import { OS } from "../../../base/common/platform.js";
+import { IPrefixTreeNode, WellDefinedPrefixTree } from "../../../base/common/prefixTree.js";
+import { basename } from "../../../base/common/resources.js";
+import { ThemeIcon } from "../../../base/common/themables.js";
+import { isDefined, isEmptyObject, isNumber, isString, isUndefinedOrNull } from "../../../base/common/types.js";
+import { URI, UriComponents, isUriComponents } from "../../../base/common/uri.js";
+import { IURITransformer } from "../../../base/common/uriIpc.js";
+import { generateUuid } from "../../../base/common/uuid.js";
+import { RenderLineNumbersType } from "../../../editor/common/config/editorOptions.js";
+import { IPosition } from "../../../editor/common/core/position.js";
+import * as editorRange from "../../../editor/common/core/range.js";
+import { ISelection } from "../../../editor/common/core/selection.js";
+import {
+  IContentDecorationRenderOptions,
+  IDecorationOptions,
+  IDecorationRenderOptions,
+  IThemeDecorationRenderOptions,
+} from "../../../editor/common/editorCommon.js";
+import * as encodedTokenAttributes from "../../../editor/common/encodedTokenAttributes.js";
+import * as languageSelector from "../../../editor/common/languageSelector.js";
+import * as languages from "../../../editor/common/languages.js";
+import { EndOfLineSequence, TrackedRangeStickiness } from "../../../editor/common/model.js";
+import { ITextEditorOptions } from "../../../platform/editor/common/editor.js";
+import { IExtensionDescription, IRelaxedExtensionDescription } from "../../../platform/extensions/common/extensions.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { IMarkerData, IRelatedInformation, MarkerSeverity, MarkerTag } from "../../../platform/markers/common/markers.js";
+import { ProgressLocation as MainProgressLocation } from "../../../platform/progress/common/progress.js";
+import { DEFAULT_EDITOR_ASSOCIATION, SaveReason } from "../../common/editor.js";
+import { IViewBadge } from "../../common/views.js";
+import { IChatAgentRequest, IChatAgentResult } from "../../contrib/chat/common/participants/chatAgents.js";
+import { IChatRequestModeInstructions } from "../../contrib/chat/common/model/chatModel.js";
+import {
+  IChatAgentMarkdownContentWithVulnerability,
+  IChatCodeCitation,
+  IChatCommandButton,
+  IChatConfirmation,
+  IChatContentInlineReference,
+  IChatContentReference,
+  IChatExtensionsContent,
+  IChatExternalToolInvocationUpdate,
+  IChatFollowup,
+  IChatHookPart,
+  IChatMarkdownContent,
+  IChatMoveMessage,
+  IChatMultiDiffDataSerialized,
+  IChatProgressMessage,
+  IChatPullRequestContent,
+  IChatQuestionCarousel,
+  IChatResponseCodeblockUriPart,
+  IChatTaskDto,
+  IChatTaskResult,
+  IChatTerminalToolInvocationData,
+  IChatTextEdit,
+  IChatThinkingPart,
+  IChatToolInvocationSerialized,
+  IChatTreeData,
+  IChatUserActionEvent,
+  IChatWarningMessage,
+  IChatInfoMessage,
+  IChatWorkspaceEdit,
+} from "../../contrib/chat/common/chatService/chatService.js";
+import { LocalChatSessionUri } from "../../contrib/chat/common/model/chatUri.js";
+import {
+  ChatRequestToolReferenceEntry,
+  IChatRequestVariableEntry,
+  isImageVariableEntry,
+  isPromptFileVariableEntry,
+  isPromptTextVariableEntry,
+} from "../../contrib/chat/common/attachments/chatVariableEntries.js";
+import { ChatSessionStatus, IChatSessionItem } from "../../contrib/chat/common/chatSessionsService.js";
+import { ChatAgentLocation } from "../../contrib/chat/common/constants.js";
+import { ChatRequestHooks, resolveEffectiveCommand } from "../../contrib/chat/common/promptSyntax/hookSchema.js";
+import { type IParsedHookCommand } from "../../../platform/agentPlugins/common/pluginParsers.js";
+import {
+  IToolInvocationContext,
+  IToolResult,
+  IToolResultInputOutputDetails,
+  IToolResultOutputDetails,
+  ToolDataSource,
+  ToolInvocationPresentation,
+} from "../../contrib/chat/common/tools/languageModelToolsService.js";
+import * as chatProvider from "../../contrib/chat/common/languageModels.js";
+import {
+  IChatMessageDataPart,
+  IChatResponseDataPart,
+  IChatResponsePromptTsxPart,
+  IChatResponseTextPart,
+} from "../../contrib/chat/common/languageModels.js";
+import { DebugTreeItemCollapsibleState, IDebugVisualizationTreeItem } from "../../contrib/debug/common/debug.js";
+import {
+  McpServerDefinition as McpServerDefinitionType,
+  McpServerLaunch,
+  McpServerTransportType,
+} from "../../contrib/mcp/common/mcpTypes.js";
+import * as notebooks from "../../contrib/notebook/common/notebookCommon.js";
+import { CellEditType } from "../../contrib/notebook/common/notebookCommon.js";
+import { ICellRange } from "../../contrib/notebook/common/notebookRange.js";
+import { InputValidationType } from "../../contrib/scm/common/scm.js";
+import * as search from "../../contrib/search/common/search.js";
+import { TestId } from "../../contrib/testing/common/testId.js";
+import {
+  CoverageDetails,
+  DetailType,
+  ICoverageCount,
+  IFileCoverage,
+  ISerializedTestResults,
+  ITestErrorMessage,
+  ITestItem,
+  ITestRunProfileReference,
+  ITestTag,
+  TestMessageType,
+  TestResultItem,
+  TestRunProfileBitset,
+  denamespaceTestTag,
+  namespaceTestTag,
+} from "../../contrib/testing/common/testTypes.js";
+import { AiSettingsSearchResult, AiSettingsSearchResultKind } from "../../services/aiSettingsSearch/common/aiSettingsSearch.js";
+import { EditorGroupColumn } from "../../services/editor/common/editorGroupColumn.js";
+import { ACTIVE_GROUP, SIDE_GROUP } from "../../services/editor/common/editorService.js";
+import { checkProposedApiEnabled, isProposedApiEnabled } from "../../services/extensions/common/extensions.js";
+import { Dto, SerializableObjectWithBuffers } from "../../services/extensions/common/proxyIdentifier.js";
+import * as extHostProtocol from "./extHost.protocol.js";
+import { CommandsConverter } from "./extHostCommands.js";
+import { getPrivateApiFor } from "./extHostTestingPrivateApi.js";
+import * as types from "./extHostTypes.js";
+import {
+  LanguageModelDataPart,
+  LanguageModelPromptTsxPart,
+  LanguageModelTextPart,
+} from "./extHostTypes.js";
 
 export namespace Command {
 
@@ -99,7 +174,10 @@ export namespace Selection {
 
 	export function to(selection: ISelection): types.Selection {
 		const { selectionStartLineNumber, selectionStartColumn, positionLineNumber, positionColumn } = selection;
-		const start = new types.Position(selectionStartLineNumber - 1, selectionStartColumn - 1);
+		const start = new types.Position(
+      selectionStartLineNumber - 1,
+      selectionStartColumn - 1,
+    );
 		const end = new types.Position(positionLineNumber - 1, positionColumn - 1);
 		return new types.Selection(start, end);
 	}
@@ -107,11 +185,11 @@ export namespace Selection {
 	export function from(selection: SelectionLike): ISelection {
 		const { anchor, active } = selection;
 		return {
-			selectionStartLineNumber: anchor.line + 1,
-			selectionStartColumn: anchor.character + 1,
-			positionLineNumber: active.line + 1,
-			positionColumn: active.character + 1
-		};
+      selectionStartLineNumber: anchor.line + 1,
+      selectionStartColumn: anchor.character + 1,
+      positionLineNumber: active.line + 1,
+      positionColumn: active.character + 1,
+    };
 	}
 }
 export namespace Range {
@@ -125,11 +203,11 @@ export namespace Range {
 		}
 		const { start, end } = range;
 		return {
-			startLineNumber: start.line + 1,
-			startColumn: start.character + 1,
-			endLineNumber: end.line + 1,
-			endColumn: end.character + 1
-		};
+      startLineNumber: start.line + 1,
+      startColumn: start.character + 1,
+      endLineNumber: end.line + 1,
+      endColumn: end.character + 1,
+    };
 	}
 
 	export function to(range: undefined): types.Range;
@@ -140,7 +218,12 @@ export namespace Range {
 			return undefined;
 		}
 		const { startLineNumber, startColumn, endLineNumber, endColumn } = range;
-		return new types.Range(startLineNumber - 1, startColumn - 1, endLineNumber - 1, endColumn - 1);
+		return new types.Range(
+      startLineNumber - 1,
+      startColumn - 1,
+      endLineNumber - 1,
+      endColumn - 1,
+    );
 	}
 }
 
@@ -148,13 +231,16 @@ export namespace Location {
 
 	export function from(location: vscode.Location): Dto<languages.Location> {
 		return {
-			uri: location.uri,
-			range: Range.from(location.range)
-		};
+      uri: location.uri,
+      range: Range.from(location.range),
+    };
 	}
 
 	export function to(location: Dto<languages.Location>): vscode.Location {
-		return new types.Location(URI.revive(location.uri), Range.to(location.range));
+		return new types.Location(
+      URI.revive(location.uri),
+      Range.to(location.range),
+    );
 	}
 }
 
@@ -181,35 +267,39 @@ export namespace Position {
 export namespace DocumentSelector {
 
 	export function from(value: vscode.DocumentSelector, uriTransformer?: IURITransformer, extension?: IExtensionDescription): extHostProtocol.IDocumentFilterDto[] {
-		return coalesce(asArray(value).map(sel => _doTransformDocumentSelector(sel, uriTransformer, extension)));
+		return coalesce(
+      asArray(value).map(
+        sel => _doTransformDocumentSelector(sel, uriTransformer, extension),
+      ),
+    );
 	}
 
 	function _doTransformDocumentSelector(selector: string | vscode.DocumentFilter, uriTransformer: IURITransformer | undefined, extension: IExtensionDescription | undefined): extHostProtocol.IDocumentFilterDto | undefined {
-		if (typeof selector === 'string') {
+		if (typeof selector === "string") {
 			return {
-				$serialized: true,
-				language: selector,
-				isBuiltin: extension?.isBuiltin,
-			};
+        $serialized: true,
+        language: selector,
+        isBuiltin: extension?.isBuiltin,
+      };
 		}
 
 		if (selector) {
 			return {
-				$serialized: true,
-				language: selector.language,
-				scheme: _transformScheme(selector.scheme, uriTransformer),
-				pattern: GlobPattern.from(selector.pattern) ?? undefined,
-				exclusive: selector.exclusive,
-				notebookType: selector.notebookType,
-				isBuiltin: extension?.isBuiltin
-			};
+        $serialized: true,
+        language: selector.language,
+        scheme: _transformScheme(selector.scheme, uriTransformer),
+        pattern: GlobPattern.from(selector.pattern) ?? undefined,
+        exclusive: selector.exclusive,
+        notebookType: selector.notebookType,
+        isBuiltin: extension?.isBuiltin,
+      };
 		}
 
 		return undefined;
 	}
 
 	function _transformScheme(scheme: string | undefined, uriTransformer: IURITransformer | undefined): string | undefined {
-		if (uriTransformer && typeof scheme === 'string') {
+		if (uriTransformer && typeof scheme === "string") {
 			return uriTransformer.transformOutgoingScheme(scheme);
 		}
 		return scheme;
@@ -247,28 +337,34 @@ export namespace Diagnostic {
 				code = String(value.code);
 			} else {
 				code = {
-					value: String(value.code.value),
-					target: value.code.target,
-				};
+          value: String(value.code.value),
+          target: value.code.target,
+        };
 			}
 		}
 
 		return {
-			...Range.from(value.range),
-			message: value.message,
-			source: value.source,
-			code,
-			severity: DiagnosticSeverity.from(value.severity),
-			relatedInformation: value.relatedInformation && value.relatedInformation.map(DiagnosticRelatedInformation.from),
-			tags: Array.isArray(value.tags) ? coalesce(value.tags.map(DiagnosticTag.from)) : undefined,
-		};
+      ...Range.from(value.range),
+      message: value.message,
+      source: value.source,
+      code,
+      severity: DiagnosticSeverity.from(value.severity),
+      relatedInformation: value.relatedInformation && value.relatedInformation.map(DiagnosticRelatedInformation.from),
+      tags: Array.isArray(value.tags) ? coalesce(value.tags.map(DiagnosticTag.from)) : undefined,
+    };
 	}
 
 	export function to(value: IMarkerData): vscode.Diagnostic {
-		const res = new types.Diagnostic(Range.to(value), value.message, DiagnosticSeverity.to(value.severity));
+		const res = new types.Diagnostic(
+      Range.to(value),
+      value.message,
+      DiagnosticSeverity.to(value.severity),
+    );
 		res.source = value.source;
 		res.code = isString(value.code) ? value.code : value.code?.value;
-		res.relatedInformation = value.relatedInformation && value.relatedInformation.map(DiagnosticRelatedInformation.to);
+		res.relatedInformation = value.relatedInformation && value.relatedInformation.map(
+      DiagnosticRelatedInformation.to,
+    );
 		res.tags = value.tags && coalesce(value.tags.map(DiagnosticTag.to));
 		return res;
 	}
@@ -277,13 +373,16 @@ export namespace Diagnostic {
 export namespace DiagnosticRelatedInformation {
 	export function from(value: vscode.DiagnosticRelatedInformation): IRelatedInformation {
 		return {
-			...Range.from(value.location.range),
-			message: value.message,
-			resource: value.location.uri
-		};
+      ...Range.from(value.location.range),
+      message: value.message,
+      resource: value.location.uri,
+    };
 	}
 	export function to(value: IRelatedInformation): types.DiagnosticRelatedInformation {
-		return new types.DiagnosticRelatedInformation(new types.Location(value.resource, Range.to(value)), value.message);
+		return new types.DiagnosticRelatedInformation(
+      new types.Location(value.resource, Range.to(value)),
+      value.message,
+    );
 	}
 }
 export namespace DiagnosticSeverity {
@@ -320,7 +419,7 @@ export namespace DiagnosticSeverity {
 
 export namespace ViewColumn {
 	export function from(column?: vscode.ViewColumn): EditorGroupColumn {
-		if (typeof column === 'number' && column >= types.ViewColumn.One) {
+		if (typeof column === "number" && column >= types.ViewColumn.One) {
 			return column - 1; // adjust zero index (ViewColumn.ONE => 0)
 		}
 
@@ -332,7 +431,7 @@ export namespace ViewColumn {
 	}
 
 	export function to(position: EditorGroupColumn): vscode.ViewColumn {
-		if (typeof position === 'number' && position >= 0) {
+		if (typeof position === "number" && position >= 0) {
 			return position + 1; // adjust to index (ViewColumn.ONE => 1)
 		}
 
@@ -341,7 +440,7 @@ export namespace ViewColumn {
 }
 
 function isDecorationOptions(something: any): something is vscode.DecorationOptions {
-	return (typeof something.range !== 'undefined');
+	return (typeof something.range !== "undefined");
 }
 
 export function isDecorationOptionsArr(something: vscode.Range[] | vscode.DecorationOptions[]): something is vscode.DecorationOptions[] {
@@ -363,22 +462,29 @@ export namespace MarkdownString {
 	}
 
 	function isCodeblock(thing: any): thing is Codeblock {
-		return thing && typeof thing === 'object'
-			&& typeof (<Codeblock>thing).language === 'string'
-			&& typeof (<Codeblock>thing).value === 'string';
+		return thing && typeof thing === "object"
+			&& typeof (<Codeblock>thing).language === "string"
+			&& typeof (<Codeblock>thing).value === "string";
 	}
 
 	export function from(markup: vscode.MarkdownString | vscode.MarkedString): htmlContent.IMarkdownString {
 		let res: htmlContent.IMarkdownString;
 		if (isCodeblock(markup)) {
 			const { language, value } = markup;
-			res = { value: '```' + language + '\n' + value + '\n```\n' };
+			res = { value: "```" + language + "\n" + value + "\n```\n" };
 		} else if (types.MarkdownString.isMarkdownString(markup)) {
-			res = { value: markup.value, isTrusted: markup.isTrusted, supportThemeIcons: markup.supportThemeIcons, supportHtml: markup.supportHtml, supportAlertSyntax: markup.supportAlertSyntax, baseUri: markup.baseUri };
-		} else if (typeof markup === 'string') {
+			res = {
+        value: markup.value,
+        isTrusted: markup.isTrusted,
+        supportThemeIcons: markup.supportThemeIcons,
+        supportHtml: markup.supportHtml,
+        supportAlertSyntax: markup.supportAlertSyntax,
+        baseUri: markup.baseUri,
+      };
+		} else if (typeof markup === "string") {
 			res = { value: markup };
 		} else {
-			res = { value: '' };
+			res = { value: "" };
 		}
 
 		// extract uris into a separate object
@@ -393,14 +499,14 @@ export namespace MarkdownString {
 			} catch (e) {
 				// ignore
 			}
-			return '';
+			return "";
 		};
 
 		marked.marked.walkTokens(marked.marked.lexer(res.value), token => {
-			if (token.type === 'link') {
+			if (token.type === "link") {
 				collectUri({ href: token.href });
-			} else if (token.type === 'image') {
-				if (typeof token.href === 'string') {
+			} else if (token.type === "image") {
+				if (typeof token.href === "string") {
 					collectUri(htmlContent.parseHrefAndDimensions(token.href));
 				}
 			}
@@ -442,7 +548,10 @@ export namespace MarkdownString {
 	}
 
 	export function to(value: htmlContent.IMarkdownString): vscode.MarkdownString {
-		const result = new types.MarkdownString(value.value, value.supportThemeIcons);
+		const result = new types.MarkdownString(
+      value.value,
+      value.supportThemeIcons,
+    );
 		result.isTrusted = value.isTrusted;
 		result.supportHtml = value.supportHtml;
 		result.supportAlertSyntax = value.supportAlertSyntax;
@@ -454,7 +563,7 @@ export namespace MarkdownString {
 		if (!value) {
 			return undefined;
 		}
-		return typeof value === 'string' ? value : MarkdownString.from(value);
+		return typeof value === "string" ? value : MarkdownString.from(value);
 	}
 }
 
@@ -467,23 +576,23 @@ export function fromRangeOrRangeWithMessage(ranges: vscode.Range[] | vscode.Deco
 					? MarkdownString.fromMany(r.hoverMessage)
 					: (r.hoverMessage ? MarkdownString.from(r.hoverMessage) : undefined),
 				// eslint-disable-next-line local/code-no-any-casts
-				renderOptions: <any> /* URI vs Uri */r.renderOptions
+				renderOptions: <any> /* URI vs Uri */r.renderOptions,
 			};
 		});
 	} else {
 		return ranges.map((r): IDecorationOptions => {
-			return {
-				range: Range.from(r)
-			};
-		});
+      return {
+        range: Range.from(r),
+      };
+    });
 	}
 }
 
 export function pathOrURIToURI(value: string | URI): URI {
-	if (typeof value === 'undefined') {
+	if (typeof value === "undefined") {
 		return value;
 	}
-	if (typeof value === 'string') {
+	if (typeof value === "string") {
 		return URI.file(value);
 	} else {
 		return value;
@@ -492,62 +601,62 @@ export function pathOrURIToURI(value: string | URI): URI {
 
 export namespace ThemableDecorationAttachmentRenderOptions {
 	export function from(options: vscode.ThemableDecorationAttachmentRenderOptions): IContentDecorationRenderOptions {
-		if (typeof options === 'undefined') {
+		if (typeof options === "undefined") {
 			return options;
 		}
 		return {
-			contentText: options.contentText,
-			contentIconPath: options.contentIconPath ? pathOrURIToURI(options.contentIconPath) : undefined,
-			border: options.border,
-			borderColor: <string | types.ThemeColor>options.borderColor,
-			fontStyle: options.fontStyle,
-			fontWeight: options.fontWeight,
-			textDecoration: options.textDecoration,
-			color: <string | types.ThemeColor>options.color,
-			backgroundColor: <string | types.ThemeColor>options.backgroundColor,
-			margin: options.margin,
-			width: options.width,
-			height: options.height,
-		};
+      contentText: options.contentText,
+      contentIconPath: options.contentIconPath ? pathOrURIToURI(options.contentIconPath) : undefined,
+      border: options.border,
+      borderColor: <string | types.ThemeColor>options.borderColor,
+      fontStyle: options.fontStyle,
+      fontWeight: options.fontWeight,
+      textDecoration: options.textDecoration,
+      color: <string | types.ThemeColor>options.color,
+      backgroundColor: <string | types.ThemeColor>options.backgroundColor,
+      margin: options.margin,
+      width: options.width,
+      height: options.height,
+    };
 	}
 }
 
 export namespace ThemableDecorationRenderOptions {
 	export function from(options: vscode.ThemableDecorationRenderOptions): IThemeDecorationRenderOptions {
-		if (typeof options === 'undefined') {
+		if (typeof options === "undefined") {
 			return options;
 		}
 		return {
-			backgroundColor: <string | types.ThemeColor>options.backgroundColor,
-			outline: options.outline,
-			outlineColor: <string | types.ThemeColor>options.outlineColor,
-			outlineStyle: options.outlineStyle,
-			outlineWidth: options.outlineWidth,
-			border: options.border,
-			borderColor: <string | types.ThemeColor>options.borderColor,
-			borderRadius: options.borderRadius,
-			borderSpacing: options.borderSpacing,
-			borderStyle: options.borderStyle,
-			borderWidth: options.borderWidth,
-			fontStyle: options.fontStyle,
-			fontWeight: options.fontWeight,
-			textDecoration: options.textDecoration,
-			cursor: options.cursor,
-			color: <string | types.ThemeColor>options.color,
-			opacity: options.opacity,
-			letterSpacing: options.letterSpacing,
-			gutterIconPath: options.gutterIconPath ? pathOrURIToURI(options.gutterIconPath) : undefined,
-			gutterIconSize: options.gutterIconSize,
-			overviewRulerColor: <string | types.ThemeColor>options.overviewRulerColor,
-			before: options.before ? ThemableDecorationAttachmentRenderOptions.from(options.before) : undefined,
-			after: options.after ? ThemableDecorationAttachmentRenderOptions.from(options.after) : undefined,
-		};
+      backgroundColor: <string | types.ThemeColor>options.backgroundColor,
+      outline: options.outline,
+      outlineColor: <string | types.ThemeColor>options.outlineColor,
+      outlineStyle: options.outlineStyle,
+      outlineWidth: options.outlineWidth,
+      border: options.border,
+      borderColor: <string | types.ThemeColor>options.borderColor,
+      borderRadius: options.borderRadius,
+      borderSpacing: options.borderSpacing,
+      borderStyle: options.borderStyle,
+      borderWidth: options.borderWidth,
+      fontStyle: options.fontStyle,
+      fontWeight: options.fontWeight,
+      textDecoration: options.textDecoration,
+      cursor: options.cursor,
+      color: <string | types.ThemeColor>options.color,
+      opacity: options.opacity,
+      letterSpacing: options.letterSpacing,
+      gutterIconPath: options.gutterIconPath ? pathOrURIToURI(options.gutterIconPath) : undefined,
+      gutterIconSize: options.gutterIconSize,
+      overviewRulerColor: <string | types.ThemeColor>options.overviewRulerColor,
+      before: options.before ? ThemableDecorationAttachmentRenderOptions.from(options.before) : undefined,
+      after: options.after ? ThemableDecorationAttachmentRenderOptions.from(options.after) : undefined,
+    };
 	}
 }
 
 export namespace DecorationRangeBehavior {
 	export function from(value: types.DecorationRangeBehavior): TrackedRangeStickiness {
-		if (typeof value === 'undefined') {
+		if (typeof value === "undefined") {
 			return value;
 		}
 		switch (value) {
@@ -566,36 +675,35 @@ export namespace DecorationRangeBehavior {
 export namespace DecorationRenderOptions {
 	export function from(options: vscode.DecorationRenderOptions): IDecorationRenderOptions {
 		return {
-			isWholeLine: options.isWholeLine,
-			rangeBehavior: options.rangeBehavior ? DecorationRangeBehavior.from(options.rangeBehavior) : undefined,
-			overviewRulerLane: options.overviewRulerLane,
-			light: options.light ? ThemableDecorationRenderOptions.from(options.light) : undefined,
-			dark: options.dark ? ThemableDecorationRenderOptions.from(options.dark) : undefined,
-
-			backgroundColor: <string | types.ThemeColor>options.backgroundColor,
-			outline: options.outline,
-			outlineColor: <string | types.ThemeColor>options.outlineColor,
-			outlineStyle: options.outlineStyle,
-			outlineWidth: options.outlineWidth,
-			border: options.border,
-			borderColor: <string | types.ThemeColor>options.borderColor,
-			borderRadius: options.borderRadius,
-			borderSpacing: options.borderSpacing,
-			borderStyle: options.borderStyle,
-			borderWidth: options.borderWidth,
-			fontStyle: options.fontStyle,
-			fontWeight: options.fontWeight,
-			textDecoration: options.textDecoration,
-			cursor: options.cursor,
-			color: <string | types.ThemeColor>options.color,
-			opacity: options.opacity,
-			letterSpacing: options.letterSpacing,
-			gutterIconPath: options.gutterIconPath ? pathOrURIToURI(options.gutterIconPath) : undefined,
-			gutterIconSize: options.gutterIconSize,
-			overviewRulerColor: <string | types.ThemeColor>options.overviewRulerColor,
-			before: options.before ? ThemableDecorationAttachmentRenderOptions.from(options.before) : undefined,
-			after: options.after ? ThemableDecorationAttachmentRenderOptions.from(options.after) : undefined,
-		};
+      isWholeLine: options.isWholeLine,
+      rangeBehavior: options.rangeBehavior ? DecorationRangeBehavior.from(options.rangeBehavior) : undefined,
+      overviewRulerLane: options.overviewRulerLane,
+      light: options.light ? ThemableDecorationRenderOptions.from(options.light) : undefined,
+      dark: options.dark ? ThemableDecorationRenderOptions.from(options.dark) : undefined,
+      backgroundColor: <string | types.ThemeColor>options.backgroundColor,
+      outline: options.outline,
+      outlineColor: <string | types.ThemeColor>options.outlineColor,
+      outlineStyle: options.outlineStyle,
+      outlineWidth: options.outlineWidth,
+      border: options.border,
+      borderColor: <string | types.ThemeColor>options.borderColor,
+      borderRadius: options.borderRadius,
+      borderSpacing: options.borderSpacing,
+      borderStyle: options.borderStyle,
+      borderWidth: options.borderWidth,
+      fontStyle: options.fontStyle,
+      fontWeight: options.fontWeight,
+      textDecoration: options.textDecoration,
+      cursor: options.cursor,
+      color: <string | types.ThemeColor>options.color,
+      opacity: options.opacity,
+      letterSpacing: options.letterSpacing,
+      gutterIconPath: options.gutterIconPath ? pathOrURIToURI(options.gutterIconPath) : undefined,
+      gutterIconSize: options.gutterIconSize,
+      overviewRulerColor: <string | types.ThemeColor>options.overviewRulerColor,
+      before: options.before ? ThemableDecorationAttachmentRenderOptions.from(options.before) : undefined,
+      after: options.after ? ThemableDecorationAttachmentRenderOptions.from(options.after) : undefined,
+    };
 	}
 }
 
@@ -603,15 +711,17 @@ export namespace TextEdit {
 
 	export function from(edit: vscode.TextEdit): languages.TextEdit {
 		return {
-			text: edit.newText,
-			eol: edit.newEol && EndOfLine.from(edit.newEol),
-			range: Range.from(edit.range)
-		};
+      text: edit.newText,
+      eol: edit.newEol && EndOfLine.from(edit.newEol),
+      range: Range.from(edit.range),
+    };
 	}
 
 	export function to(edit: languages.TextEdit): types.TextEdit {
 		const result = new types.TextEdit(Range.to(edit.range), edit.text);
-		result.newEol = (typeof edit.eol === 'undefined' ? undefined : EndOfLine.to(edit.eol))!;
+		result.newEol = (typeof edit.eol === "undefined" ? undefined : EndOfLine.to(
+      edit.eol,
+    ))!;
 		return result;
 	}
 }
@@ -625,8 +735,8 @@ export namespace WorkspaceEdit {
 
 	export function from(value: vscode.WorkspaceEdit, versionInfo?: IVersionInformationProvider): extHostProtocol.IWorkspaceEditDto {
 		const result: extHostProtocol.IWorkspaceEditDto = {
-			edits: []
-		};
+      edits: [],
+    };
 
 		if (value instanceof types.WorkspaceEdit) {
 
@@ -634,7 +744,9 @@ export namespace WorkspaceEdit {
 			// information (in case they exist as text model already) can be ignored
 			const toCreate = new ResourceSet();
 			for (const entry of value._allEntries()) {
-				if (entry._type === types.FileEditType.File && URI.isUri(entry.to) && entry.from === undefined) {
+				if (entry._type === types.FileEditType.File && URI.isUri(
+          entry.to,
+        ) && entry.from === undefined) {
 					toCreate.add(entry.to);
 				}
 			}
@@ -642,31 +754,37 @@ export namespace WorkspaceEdit {
 			for (const entry of value._allEntries()) {
 
 				if (entry._type === types.FileEditType.File) {
-					let contents: { type: 'base64'; value: string } | { type: 'dataTransferItem'; id: string } | undefined;
+					let contents: { type: "base64"; value: string } | { type: "dataTransferItem"; id: string } | undefined;
 					if (entry.options?.contents) {
 						if (ArrayBuffer.isView(entry.options.contents)) {
-							contents = { type: 'base64', value: encodeBase64(VSBuffer.wrap(entry.options.contents)) };
+							contents = {
+                type: "base64",
+                value: encodeBase64(VSBuffer.wrap(entry.options.contents)),
+              };
 						} else {
-							contents = { type: 'dataTransferItem', id: (entry.options.contents as types.DataTransferFile)._itemId };
+							contents = {
+                type: "dataTransferItem",
+                id: (entry.options.contents as types.DataTransferFile)._itemId,
+              };
 						}
 					}
 
 					// file operation
 					result.edits.push({
-						oldResource: entry.from,
-						newResource: entry.to,
-						options: { ...entry.options, contents },
-						metadata: entry.metadata
-					});
+            oldResource: entry.from,
+            newResource: entry.to,
+            options: { ...entry.options, contents },
+            metadata: entry.metadata,
+          });
 
 				} else if (entry._type === types.FileEditType.Text) {
 					// text edits
 					result.edits.push({
-						resource: entry.uri,
-						textEdit: TextEdit.from(entry.edit),
-						versionId: !toCreate.has(entry.uri) ? versionInfo?.getTextDocumentVersion(entry.uri) : undefined,
-						metadata: entry.metadata
-					});
+            resource: entry.uri,
+            textEdit: TextEdit.from(entry.edit),
+            versionId: !toCreate.has(entry.uri) ? versionInfo?.getTextDocumentVersion(entry.uri) : undefined,
+            metadata: entry.metadata,
+          });
 				} else if (entry._type === types.FileEditType.Snippet) {
 					result.edits.push({
 						resource: entry.uri,
@@ -674,20 +792,20 @@ export namespace WorkspaceEdit {
 							range: Range.from(entry.range),
 							text: entry.edit.value,
 							insertAsSnippet: true,
-							keepWhitespace: entry.keepWhitespace
+							keepWhitespace: entry.keepWhitespace,
 						},
 						versionId: !toCreate.has(entry.uri) ? versionInfo?.getTextDocumentVersion(entry.uri) : undefined,
-						metadata: entry.metadata
+						metadata: entry.metadata,
 					});
 
 				} else if (entry._type === types.FileEditType.Cell) {
 					// cell edit
 					result.edits.push({
-						metadata: entry.metadata,
-						resource: entry.uri,
-						cellEdit: entry.edit,
-						notebookVersionId: versionInfo?.getNotebookDocumentVersion(entry.uri)
-					});
+            metadata: entry.metadata,
+            resource: entry.uri,
+            cellEdit: entry.edit,
+            notebookVersionId: versionInfo?.getNotebookDocumentVersion(entry.uri),
+          });
 
 				} else if (entry._type === types.FileEditType.CellReplace) {
 					// cell replace
@@ -699,8 +817,8 @@ export namespace WorkspaceEdit {
 							editType: notebooks.CellEditType.Replace,
 							index: entry.index,
 							count: entry.count,
-							cells: entry.cells.map(NotebookCellData.from)
-						}
+							cells: entry.cells.map(NotebookCellData.from),
+						},
 					});
 				}
 			}
@@ -722,7 +840,10 @@ export namespace WorkspaceEdit {
 
 				let editOrSnippetTest: types.TextEdit | types.SnippetTextEdit;
 				if (isSnippet) {
-					editOrSnippetTest = types.SnippetTextEdit.replace(range, new types.SnippetString(text));
+					editOrSnippetTest = types.SnippetTextEdit.replace(
+            range,
+            new types.SnippetString(text),
+          );
 				} else {
 					editOrSnippetTest = types.TextEdit.replace(range, text);
 				}
@@ -736,10 +857,10 @@ export namespace WorkspaceEdit {
 
 			} else {
 				result.renameFile(
-					URI.revive((<extHostProtocol.IWorkspaceFileEditDto>edit).oldResource!),
-					URI.revive((<extHostProtocol.IWorkspaceFileEditDto>edit).newResource!),
-					(<extHostProtocol.IWorkspaceFileEditDto>edit).options
-				);
+          URI.revive((<extHostProtocol.IWorkspaceFileEditDto>edit).oldResource!),
+          URI.revive((<extHostProtocol.IWorkspaceFileEditDto>edit).newResource!),
+          (<extHostProtocol.IWorkspaceFileEditDto>edit).options,
+        );
 			}
 		}
 
@@ -753,7 +874,9 @@ export namespace WorkspaceEdit {
 
 export namespace SymbolKind {
 
-	const _fromMapping: { [kind: number]: languages.SymbolKind } = Object.create(null);
+	const _fromMapping: { [kind: number]: languages.SymbolKind } = Object.create(
+    null,
+  );
 	_fromMapping[types.SymbolKind.File] = languages.SymbolKind.File;
 	_fromMapping[types.SymbolKind.Module] = languages.SymbolKind.Module;
 	_fromMapping[types.SymbolKind.Namespace] = languages.SymbolKind.Namespace;
@@ -782,7 +905,7 @@ export namespace SymbolKind {
 	_fromMapping[types.SymbolKind.TypeParameter] = languages.SymbolKind.TypeParameter;
 
 	export function from(kind: vscode.SymbolKind): languages.SymbolKind {
-		return typeof _fromMapping[kind] === 'number' ? _fromMapping[kind] : languages.SymbolKind.Property;
+		return typeof _fromMapping[kind] === "number" ? _fromMapping[kind] : languages.SymbolKind.Property;
 	}
 
 	export function to(kind: languages.SymbolKind): vscode.SymbolKind {
@@ -813,20 +936,20 @@ export namespace SymbolTag {
 export namespace WorkspaceSymbol {
 	export function from(info: vscode.SymbolInformation): search.IWorkspaceSymbol {
 		return {
-			name: info.name,
-			kind: SymbolKind.from(info.kind),
-			tags: info.tags && info.tags.map(SymbolTag.from),
-			containerName: info.containerName,
-			location: location.from(info.location)
-		};
+      name: info.name,
+      kind: SymbolKind.from(info.kind),
+      tags: info.tags && info.tags.map(SymbolTag.from),
+      containerName: info.containerName,
+      location: location.from(info.location),
+    };
 	}
 	export function to(info: search.IWorkspaceSymbol): types.SymbolInformation {
 		const result = new types.SymbolInformation(
-			info.name,
-			SymbolKind.to(info.kind),
-			info.containerName,
-			location.to(info.location)
-		);
+      info.name,
+      SymbolKind.to(info.kind),
+      info.containerName,
+      location.to(info.location),
+    );
 		result.tags = info.tags && info.tags.map(SymbolTag.to);
 		return result;
 	}
@@ -835,13 +958,13 @@ export namespace WorkspaceSymbol {
 export namespace DocumentSymbol {
 	export function from(info: vscode.DocumentSymbol): languages.DocumentSymbol {
 		const result: languages.DocumentSymbol = {
-			name: info.name || '!!MISSING: name!!',
-			detail: info.detail,
-			range: Range.from(info.range),
-			selectionRange: Range.from(info.selectionRange),
-			kind: SymbolKind.from(info.kind),
-			tags: info.tags?.map(SymbolTag.from) ?? []
-		};
+      name: info.name || "!!MISSING: name!!",
+      detail: info.detail,
+      range: Range.from(info.range),
+      selectionRange: Range.from(info.selectionRange),
+      kind: SymbolKind.from(info.kind),
+      tags: info.tags?.map(SymbolTag.from) ?? [],
+    };
 		if (info.children) {
 			result.children = info.children.map(from);
 		}
@@ -849,12 +972,12 @@ export namespace DocumentSymbol {
 	}
 	export function to(info: languages.DocumentSymbol): vscode.DocumentSymbol {
 		const result = new types.DocumentSymbol(
-			info.name,
-			info.detail,
-			SymbolKind.to(info.kind),
-			Range.to(info.range),
-			Range.to(info.selectionRange),
-		);
+      info.name,
+      info.detail,
+      SymbolKind.to(info.kind),
+      Range.to(info.range),
+      Range.to(info.selectionRange),
+    );
 		if (isNonEmptyArray(info.tags)) {
 			result.tags = info.tags.map(SymbolTag.to);
 		}
@@ -870,13 +993,13 @@ export namespace CallHierarchyItem {
 
 	export function to(item: extHostProtocol.ICallHierarchyItemDto): types.CallHierarchyItem {
 		const result = new types.CallHierarchyItem(
-			SymbolKind.to(item.kind),
-			item.name,
-			item.detail || '',
-			URI.revive(item.uri),
-			Range.to(item.range),
-			Range.to(item.selectionRange)
-		);
+      SymbolKind.to(item.kind),
+      item.name,
+      item.detail || "",
+      URI.revive(item.uri),
+      Range.to(item.range),
+      Range.to(item.selectionRange),
+    );
 
 		result._sessionId = item._sessionId;
 		result._itemId = item._itemId;
@@ -890,20 +1013,20 @@ export namespace CallHierarchyItem {
 		itemId = itemId ?? (<types.CallHierarchyItem>item)._itemId;
 
 		if (sessionId === undefined || itemId === undefined) {
-			throw new Error('invalid item');
+			throw new Error("invalid item");
 		}
 
 		return {
-			_sessionId: sessionId,
-			_itemId: itemId,
-			name: item.name,
-			detail: item.detail,
-			kind: SymbolKind.from(item.kind),
-			uri: item.uri,
-			range: Range.from(item.range),
-			selectionRange: Range.from(item.selectionRange),
-			tags: item.tags?.map(SymbolTag.from)
-		};
+      _sessionId: sessionId,
+      _itemId: itemId,
+      name: item.name,
+      detail: item.detail,
+      kind: SymbolKind.from(item.kind),
+      uri: item.uri,
+      range: Range.from(item.range),
+      selectionRange: Range.from(item.selectionRange),
+      tags: item.tags?.map(SymbolTag.from),
+    };
 	}
 }
 
@@ -911,9 +1034,9 @@ export namespace CallHierarchyIncomingCall {
 
 	export function to(item: extHostProtocol.IIncomingCallDto): types.CallHierarchyIncomingCall {
 		return new types.CallHierarchyIncomingCall(
-			CallHierarchyItem.to(item.from),
-			item.fromRanges.map(r => Range.to(r))
-		);
+      CallHierarchyItem.to(item.from),
+      item.fromRanges.map(r => Range.to(r)),
+    );
 	}
 }
 
@@ -921,9 +1044,9 @@ export namespace CallHierarchyOutgoingCall {
 
 	export function to(item: extHostProtocol.IOutgoingCallDto): types.CallHierarchyOutgoingCall {
 		return new types.CallHierarchyOutgoingCall(
-			CallHierarchyItem.to(item.to),
-			item.fromRanges.map(r => Range.to(r))
-		);
+      CallHierarchyItem.to(item.to),
+      item.fromRanges.map(r => Range.to(r)),
+    );
 	}
 }
 
@@ -931,9 +1054,9 @@ export namespace CallHierarchyOutgoingCall {
 export namespace location {
 	export function from(value: vscode.Location): languages.Location {
 		return {
-			range: value.range && Range.from(value.range),
-			uri: value.uri
-		};
+      range: value.range && Range.from(value.range),
+      uri: value.uri,
+    };
 	}
 
 	export function to(value: extHostProtocol.ILocationDto): types.Location {
@@ -965,7 +1088,7 @@ export namespace DefinitionLink {
 				: undefined,
 			originSelectionRange: value.originSelectionRange
 				? Range.to(value.originSelectionRange)
-				: undefined
+				: undefined,
 		};
 	}
 }
@@ -973,11 +1096,11 @@ export namespace DefinitionLink {
 export namespace Hover {
 	export function from(hover: vscode.VerboseHover): languages.Hover {
 		const convertedHover: languages.Hover = {
-			range: Range.from(hover.range),
-			contents: MarkdownString.fromMany(hover.contents),
-			canIncreaseVerbosity: hover.canIncreaseVerbosity,
-			canDecreaseVerbosity: hover.canDecreaseVerbosity,
-		};
+      range: Range.from(hover.range),
+      contents: MarkdownString.fromMany(hover.contents),
+      canIncreaseVerbosity: hover.canIncreaseVerbosity,
+      canDecreaseVerbosity: hover.canDecreaseVerbosity,
+    };
 		return convertedHover;
 	}
 
@@ -986,20 +1109,28 @@ export namespace Hover {
 		const range = Range.to(info.range);
 		const canIncreaseVerbosity = info.canIncreaseVerbosity;
 		const canDecreaseVerbosity = info.canDecreaseVerbosity;
-		return new types.VerboseHover(contents, range, canIncreaseVerbosity, canDecreaseVerbosity);
+		return new types.VerboseHover(
+      contents,
+      range,
+      canIncreaseVerbosity,
+      canDecreaseVerbosity,
+    );
 	}
 }
 
 export namespace EvaluatableExpression {
 	export function from(expression: vscode.EvaluatableExpression): languages.EvaluatableExpression {
 		return {
-			range: Range.from(expression.range),
-			expression: expression.expression
-		};
+      range: Range.from(expression.range),
+      expression: expression.expression,
+    };
 	}
 
 	export function to(info: languages.EvaluatableExpression): types.EvaluatableExpression {
-		return new types.EvaluatableExpression(Range.to(info.range), info.expression);
+		return new types.EvaluatableExpression(
+      Range.to(info.range),
+      info.expression,
+    );
 	}
 }
 
@@ -1007,23 +1138,23 @@ export namespace InlineValue {
 	export function from(inlineValue: vscode.InlineValue): languages.InlineValue {
 		if (inlineValue instanceof types.InlineValueText) {
 			return {
-				type: 'text',
-				range: Range.from(inlineValue.range),
-				text: inlineValue.text
-			} satisfies languages.InlineValueText;
+        type: "text",
+        range: Range.from(inlineValue.range),
+        text: inlineValue.text,
+      } satisfies languages.InlineValueText;
 		} else if (inlineValue instanceof types.InlineValueVariableLookup) {
 			return {
-				type: 'variable',
-				range: Range.from(inlineValue.range),
-				variableName: inlineValue.variableName,
-				caseSensitiveLookup: inlineValue.caseSensitiveLookup
-			} satisfies languages.InlineValueVariableLookup;
+        type: "variable",
+        range: Range.from(inlineValue.range),
+        variableName: inlineValue.variableName,
+        caseSensitiveLookup: inlineValue.caseSensitiveLookup,
+      } satisfies languages.InlineValueVariableLookup;
 		} else if (inlineValue instanceof types.InlineValueEvaluatableExpression) {
 			return {
-				type: 'expression',
-				range: Range.from(inlineValue.range),
-				expression: inlineValue.expression
-			} satisfies languages.InlineValueExpression;
+        type: "expression",
+        range: Range.from(inlineValue.range),
+        expression: inlineValue.expression,
+      } satisfies languages.InlineValueExpression;
 		} else {
 			throw new Error(`Unknown 'InlineValue' type`);
 		}
@@ -1031,22 +1162,22 @@ export namespace InlineValue {
 
 	export function to(inlineValue: languages.InlineValue): vscode.InlineValue {
 		switch (inlineValue.type) {
-			case 'text':
+			case "text":
 				return {
-					range: Range.to(inlineValue.range),
-					text: inlineValue.text
-				} satisfies vscode.InlineValueText;
-			case 'variable':
+          range: Range.to(inlineValue.range),
+          text: inlineValue.text,
+        } satisfies vscode.InlineValueText;
+			case "variable":
 				return {
-					range: Range.to(inlineValue.range),
-					variableName: inlineValue.variableName,
-					caseSensitiveLookup: inlineValue.caseSensitiveLookup
-				} satisfies vscode.InlineValueVariableLookup;
-			case 'expression':
+          range: Range.to(inlineValue.range),
+          variableName: inlineValue.variableName,
+          caseSensitiveLookup: inlineValue.caseSensitiveLookup,
+        } satisfies vscode.InlineValueVariableLookup;
+			case "expression":
 				return {
-					range: Range.to(inlineValue.range),
-					expression: inlineValue.expression
-				} satisfies vscode.InlineValueEvaluatableExpression;
+          range: Range.to(inlineValue.range),
+          expression: inlineValue.expression,
+        } satisfies vscode.InlineValueEvaluatableExpression;
 		}
 	}
 }
@@ -1054,38 +1185,47 @@ export namespace InlineValue {
 export namespace InlineValueContext {
 	export function from(inlineValueContext: vscode.InlineValueContext): extHostProtocol.IInlineValueContextDto {
 		return {
-			frameId: inlineValueContext.frameId,
-			stoppedLocation: Range.from(inlineValueContext.stoppedLocation)
-		};
+      frameId: inlineValueContext.frameId,
+      stoppedLocation: Range.from(inlineValueContext.stoppedLocation),
+    };
 	}
 
 	export function to(inlineValueContext: extHostProtocol.IInlineValueContextDto): types.InlineValueContext {
-		return new types.InlineValueContext(inlineValueContext.frameId, Range.to(inlineValueContext.stoppedLocation));
+		return new types.InlineValueContext(
+      inlineValueContext.frameId,
+      Range.to(inlineValueContext.stoppedLocation),
+    );
 	}
 }
 
 export namespace DocumentHighlight {
 	export function from(documentHighlight: vscode.DocumentHighlight): languages.DocumentHighlight {
 		return {
-			range: Range.from(documentHighlight.range),
-			kind: documentHighlight.kind
-		};
+      range: Range.from(documentHighlight.range),
+      kind: documentHighlight.kind,
+    };
 	}
 	export function to(occurrence: languages.DocumentHighlight): types.DocumentHighlight {
-		return new types.DocumentHighlight(Range.to(occurrence.range), occurrence.kind);
+		return new types.DocumentHighlight(
+      Range.to(occurrence.range),
+      occurrence.kind,
+    );
 	}
 }
 
 export namespace MultiDocumentHighlight {
 	export function from(multiDocumentHighlight: vscode.MultiDocumentHighlight): languages.MultiDocumentHighlight {
 		return {
-			uri: multiDocumentHighlight.uri,
-			highlights: multiDocumentHighlight.highlights.map(DocumentHighlight.from)
-		};
+      uri: multiDocumentHighlight.uri,
+      highlights: multiDocumentHighlight.highlights.map(DocumentHighlight.from),
+    };
 	}
 
 	export function to(multiDocumentHighlight: languages.MultiDocumentHighlight): types.MultiDocumentHighlight {
-		return new types.MultiDocumentHighlight(URI.revive(multiDocumentHighlight.uri), multiDocumentHighlight.highlights.map(DocumentHighlight.to));
+		return new types.MultiDocumentHighlight(
+      URI.revive(multiDocumentHighlight.uri),
+      multiDocumentHighlight.highlights.map(DocumentHighlight.to),
+    );
 	}
 }
 
@@ -1106,9 +1246,9 @@ export namespace CompletionTriggerKind {
 export namespace CompletionContext {
 	export function to(context: languages.CompletionContext): types.CompletionContext {
 		return {
-			triggerKind: CompletionTriggerKind.to(context.triggerKind),
-			triggerCharacter: context.triggerCharacter
-		};
+      triggerKind: CompletionTriggerKind.to(context.triggerKind),
+      triggerCharacter: context.triggerCharacter,
+    };
 	}
 }
 
@@ -1129,11 +1269,11 @@ export namespace CompletionItemTag {
 
 export namespace CompletionCommand {
 	export function from(c: vscode.Command | { command: vscode.Command; icon: vscode.ThemeIcon }, converter: CommandsConverter, disposables: DisposableStore): { command: extHostProtocol.ICommandDto; icon?: languages.IconPath } {
-		if ('icon' in c && 'command' in c) {
+		if ("icon" in c && "command" in c) {
 			return {
-				command: converter.toInternal(c.command, disposables),
-				icon: IconPath.fromThemeIcon(c.icon)
-			};
+        command: converter.toInternal(c.command, disposables),
+        icon: IconPath.fromThemeIcon(c.icon),
+      };
 		}
 		return { command: converter.toInternal(c, disposables) };
 	}
@@ -1141,69 +1281,95 @@ export namespace CompletionCommand {
 
 export namespace CompletionItemKind {
 
-	const _from = new Map<types.CompletionItemKind, languages.CompletionItemKind>([
-		[types.CompletionItemKind.Method, languages.CompletionItemKind.Method],
-		[types.CompletionItemKind.Function, languages.CompletionItemKind.Function],
-		[types.CompletionItemKind.Constructor, languages.CompletionItemKind.Constructor],
-		[types.CompletionItemKind.Field, languages.CompletionItemKind.Field],
-		[types.CompletionItemKind.Variable, languages.CompletionItemKind.Variable],
-		[types.CompletionItemKind.Class, languages.CompletionItemKind.Class],
-		[types.CompletionItemKind.Interface, languages.CompletionItemKind.Interface],
-		[types.CompletionItemKind.Struct, languages.CompletionItemKind.Struct],
-		[types.CompletionItemKind.Module, languages.CompletionItemKind.Module],
-		[types.CompletionItemKind.Property, languages.CompletionItemKind.Property],
-		[types.CompletionItemKind.Unit, languages.CompletionItemKind.Unit],
-		[types.CompletionItemKind.Value, languages.CompletionItemKind.Value],
-		[types.CompletionItemKind.Constant, languages.CompletionItemKind.Constant],
-		[types.CompletionItemKind.Enum, languages.CompletionItemKind.Enum],
-		[types.CompletionItemKind.EnumMember, languages.CompletionItemKind.EnumMember],
-		[types.CompletionItemKind.Keyword, languages.CompletionItemKind.Keyword],
-		[types.CompletionItemKind.Snippet, languages.CompletionItemKind.Snippet],
-		[types.CompletionItemKind.Text, languages.CompletionItemKind.Text],
-		[types.CompletionItemKind.Color, languages.CompletionItemKind.Color],
-		[types.CompletionItemKind.File, languages.CompletionItemKind.File],
-		[types.CompletionItemKind.Reference, languages.CompletionItemKind.Reference],
-		[types.CompletionItemKind.Folder, languages.CompletionItemKind.Folder],
-		[types.CompletionItemKind.Event, languages.CompletionItemKind.Event],
-		[types.CompletionItemKind.Operator, languages.CompletionItemKind.Operator],
-		[types.CompletionItemKind.TypeParameter, languages.CompletionItemKind.TypeParameter],
-		[types.CompletionItemKind.Issue, languages.CompletionItemKind.Issue],
-		[types.CompletionItemKind.User, languages.CompletionItemKind.User],
-	]);
+	const _from = new Map<types.CompletionItemKind, languages.CompletionItemKind>(
+    [
+      [types.CompletionItemKind.Method, languages.CompletionItemKind.Method],
+      [types.CompletionItemKind.Function, languages.CompletionItemKind.Function],
+      [
+        types.CompletionItemKind.Constructor,
+        languages.CompletionItemKind.Constructor,
+      ],
+      [types.CompletionItemKind.Field, languages.CompletionItemKind.Field],
+      [types.CompletionItemKind.Variable, languages.CompletionItemKind.Variable],
+      [types.CompletionItemKind.Class, languages.CompletionItemKind.Class],
+      [
+        types.CompletionItemKind.Interface,
+        languages.CompletionItemKind.Interface,
+      ],
+      [types.CompletionItemKind.Struct, languages.CompletionItemKind.Struct],
+      [types.CompletionItemKind.Module, languages.CompletionItemKind.Module],
+      [types.CompletionItemKind.Property, languages.CompletionItemKind.Property],
+      [types.CompletionItemKind.Unit, languages.CompletionItemKind.Unit],
+      [types.CompletionItemKind.Value, languages.CompletionItemKind.Value],
+      [types.CompletionItemKind.Constant, languages.CompletionItemKind.Constant],
+      [types.CompletionItemKind.Enum, languages.CompletionItemKind.Enum],
+      [
+        types.CompletionItemKind.EnumMember,
+        languages.CompletionItemKind.EnumMember,
+      ],
+      [types.CompletionItemKind.Keyword, languages.CompletionItemKind.Keyword],
+      [types.CompletionItemKind.Snippet, languages.CompletionItemKind.Snippet],
+      [types.CompletionItemKind.Text, languages.CompletionItemKind.Text],
+      [types.CompletionItemKind.Color, languages.CompletionItemKind.Color],
+      [types.CompletionItemKind.File, languages.CompletionItemKind.File],
+      [
+        types.CompletionItemKind.Reference,
+        languages.CompletionItemKind.Reference,
+      ],
+      [types.CompletionItemKind.Folder, languages.CompletionItemKind.Folder],
+      [types.CompletionItemKind.Event, languages.CompletionItemKind.Event],
+      [types.CompletionItemKind.Operator, languages.CompletionItemKind.Operator],
+      [
+        types.CompletionItemKind.TypeParameter,
+        languages.CompletionItemKind.TypeParameter,
+      ],
+      [types.CompletionItemKind.Issue, languages.CompletionItemKind.Issue],
+      [types.CompletionItemKind.User, languages.CompletionItemKind.User],
+    ],
+  );
 
 	export function from(kind: types.CompletionItemKind): languages.CompletionItemKind {
 		return _from.get(kind) ?? languages.CompletionItemKind.Property;
 	}
 
 	const _to = new Map<languages.CompletionItemKind, types.CompletionItemKind>([
-		[languages.CompletionItemKind.Method, types.CompletionItemKind.Method],
-		[languages.CompletionItemKind.Function, types.CompletionItemKind.Function],
-		[languages.CompletionItemKind.Constructor, types.CompletionItemKind.Constructor],
-		[languages.CompletionItemKind.Field, types.CompletionItemKind.Field],
-		[languages.CompletionItemKind.Variable, types.CompletionItemKind.Variable],
-		[languages.CompletionItemKind.Class, types.CompletionItemKind.Class],
-		[languages.CompletionItemKind.Interface, types.CompletionItemKind.Interface],
-		[languages.CompletionItemKind.Struct, types.CompletionItemKind.Struct],
-		[languages.CompletionItemKind.Module, types.CompletionItemKind.Module],
-		[languages.CompletionItemKind.Property, types.CompletionItemKind.Property],
-		[languages.CompletionItemKind.Unit, types.CompletionItemKind.Unit],
-		[languages.CompletionItemKind.Value, types.CompletionItemKind.Value],
-		[languages.CompletionItemKind.Constant, types.CompletionItemKind.Constant],
-		[languages.CompletionItemKind.Enum, types.CompletionItemKind.Enum],
-		[languages.CompletionItemKind.EnumMember, types.CompletionItemKind.EnumMember],
-		[languages.CompletionItemKind.Keyword, types.CompletionItemKind.Keyword],
-		[languages.CompletionItemKind.Snippet, types.CompletionItemKind.Snippet],
-		[languages.CompletionItemKind.Text, types.CompletionItemKind.Text],
-		[languages.CompletionItemKind.Color, types.CompletionItemKind.Color],
-		[languages.CompletionItemKind.File, types.CompletionItemKind.File],
-		[languages.CompletionItemKind.Reference, types.CompletionItemKind.Reference],
-		[languages.CompletionItemKind.Folder, types.CompletionItemKind.Folder],
-		[languages.CompletionItemKind.Event, types.CompletionItemKind.Event],
-		[languages.CompletionItemKind.Operator, types.CompletionItemKind.Operator],
-		[languages.CompletionItemKind.TypeParameter, types.CompletionItemKind.TypeParameter],
-		[languages.CompletionItemKind.User, types.CompletionItemKind.User],
-		[languages.CompletionItemKind.Issue, types.CompletionItemKind.Issue],
-	]);
+    [languages.CompletionItemKind.Method, types.CompletionItemKind.Method],
+    [languages.CompletionItemKind.Function, types.CompletionItemKind.Function],
+    [
+      languages.CompletionItemKind.Constructor,
+      types.CompletionItemKind.Constructor,
+    ],
+    [languages.CompletionItemKind.Field, types.CompletionItemKind.Field],
+    [languages.CompletionItemKind.Variable, types.CompletionItemKind.Variable],
+    [languages.CompletionItemKind.Class, types.CompletionItemKind.Class],
+    [languages.CompletionItemKind.Interface, types.CompletionItemKind.Interface],
+    [languages.CompletionItemKind.Struct, types.CompletionItemKind.Struct],
+    [languages.CompletionItemKind.Module, types.CompletionItemKind.Module],
+    [languages.CompletionItemKind.Property, types.CompletionItemKind.Property],
+    [languages.CompletionItemKind.Unit, types.CompletionItemKind.Unit],
+    [languages.CompletionItemKind.Value, types.CompletionItemKind.Value],
+    [languages.CompletionItemKind.Constant, types.CompletionItemKind.Constant],
+    [languages.CompletionItemKind.Enum, types.CompletionItemKind.Enum],
+    [
+      languages.CompletionItemKind.EnumMember,
+      types.CompletionItemKind.EnumMember,
+    ],
+    [languages.CompletionItemKind.Keyword, types.CompletionItemKind.Keyword],
+    [languages.CompletionItemKind.Snippet, types.CompletionItemKind.Snippet],
+    [languages.CompletionItemKind.Text, types.CompletionItemKind.Text],
+    [languages.CompletionItemKind.Color, types.CompletionItemKind.Color],
+    [languages.CompletionItemKind.File, types.CompletionItemKind.File],
+    [languages.CompletionItemKind.Reference, types.CompletionItemKind.Reference],
+    [languages.CompletionItemKind.Folder, types.CompletionItemKind.Folder],
+    [languages.CompletionItemKind.Event, types.CompletionItemKind.Event],
+    [languages.CompletionItemKind.Operator, types.CompletionItemKind.Operator],
+    [
+      languages.CompletionItemKind.TypeParameter,
+      types.CompletionItemKind.TypeParameter,
+    ],
+    [languages.CompletionItemKind.User, types.CompletionItemKind.User],
+    [languages.CompletionItemKind.Issue, types.CompletionItemKind.Issue],
+  ]);
 
 	export function to(kind: languages.CompletionItemKind): types.CompletionItemKind {
 		return _to.get(kind) ?? types.CompletionItemKind.Property;
@@ -1219,7 +1385,9 @@ export namespace CompletionItem {
 		result.kind = CompletionItemKind.to(suggestion.kind);
 		result.tags = suggestion.tags?.map(CompletionItemTag.to);
 		result.detail = suggestion.detail;
-		result.documentation = htmlContent.isMarkdownString(suggestion.documentation) ? MarkdownString.to(suggestion.documentation) : suggestion.documentation;
+		result.documentation = htmlContent.isMarkdownString(
+      suggestion.documentation,
+    ) ? MarkdownString.to(suggestion.documentation) : suggestion.documentation;
 		result.sortText = suggestion.sortText;
 		result.filterText = suggestion.filterText;
 		result.preselect = suggestion.preselect;
@@ -1228,22 +1396,34 @@ export namespace CompletionItem {
 		// range
 		if (editorRange.Range.isIRange(suggestion.range)) {
 			result.range = Range.to(suggestion.range);
-		} else if (typeof suggestion.range === 'object') {
-			result.range = { inserting: Range.to(suggestion.range.insert), replacing: Range.to(suggestion.range.replace) };
+		} else if (typeof suggestion.range === "object") {
+			result.range = {
+        inserting: Range.to(suggestion.range.insert),
+        replacing: Range.to(suggestion.range.replace),
+      };
 		}
 
-		result.keepWhitespace = typeof suggestion.insertTextRules === 'undefined' ? false : Boolean(suggestion.insertTextRules & languages.CompletionItemInsertTextRule.KeepWhitespace);
+		result.keepWhitespace = typeof suggestion.insertTextRules === "undefined" ? false : Boolean(
+      suggestion.insertTextRules & languages.CompletionItemInsertTextRule.KeepWhitespace,
+    );
 		// 'insertText'-logic
-		if (typeof suggestion.insertTextRules !== 'undefined' && suggestion.insertTextRules & languages.CompletionItemInsertTextRule.InsertAsSnippet) {
+		if (typeof suggestion.insertTextRules !== "undefined" && suggestion.insertTextRules & languages.CompletionItemInsertTextRule.InsertAsSnippet) {
 			result.insertText = new types.SnippetString(suggestion.insertText);
 		} else {
 			result.insertText = suggestion.insertText;
-			result.textEdit = result.range instanceof types.Range ? new types.TextEdit(result.range, result.insertText) : undefined;
+			result.textEdit = result.range instanceof types.Range ? new types.TextEdit(
+        result.range,
+        result.insertText,
+      ) : undefined;
 		}
 		if (suggestion.additionalTextEdits && suggestion.additionalTextEdits.length > 0) {
-			result.additionalTextEdits = suggestion.additionalTextEdits.map(e => TextEdit.to(e as languages.TextEdit));
+			result.additionalTextEdits = suggestion.additionalTextEdits.map(
+        e => TextEdit.to(e as languages.TextEdit),
+      );
 		}
-		result.command = converter && suggestion.command ? converter.fromInternal(suggestion.command) : undefined;
+		result.command = converter && suggestion.command ? converter.fromInternal(
+      suggestion.command,
+    ) : undefined;
 
 		return result;
 	}
@@ -1251,20 +1431,20 @@ export namespace CompletionItem {
 
 export namespace ParameterInformation {
 	export function from(info: types.ParameterInformation): languages.ParameterInformation {
-		if (typeof info.label !== 'string' && !Array.isArray(info.label)) {
-			throw new TypeError('Invalid label');
+		if (typeof info.label !== "string" && !Array.isArray(info.label)) {
+			throw new TypeError("Invalid label");
 		}
 
 		return {
-			label: info.label,
-			documentation: MarkdownString.fromStrict(info.documentation)
-		};
+      label: info.label,
+      documentation: MarkdownString.fromStrict(info.documentation),
+    };
 	}
 	export function to(info: languages.ParameterInformation): types.ParameterInformation {
 		return {
-			label: info.label,
-			documentation: htmlContent.isMarkdownString(info.documentation) ? MarkdownString.to(info.documentation) : info.documentation
-		};
+      label: info.label,
+      documentation: htmlContent.isMarkdownString(info.documentation) ? MarkdownString.to(info.documentation) : info.documentation,
+    };
 	}
 }
 
@@ -1272,20 +1452,20 @@ export namespace SignatureInformation {
 
 	export function from(info: types.SignatureInformation): languages.SignatureInformation {
 		return {
-			label: info.label,
-			documentation: MarkdownString.fromStrict(info.documentation),
-			parameters: Array.isArray(info.parameters) ? info.parameters.map(ParameterInformation.from) : [],
-			activeParameter: info.activeParameter,
-		};
+      label: info.label,
+      documentation: MarkdownString.fromStrict(info.documentation),
+      parameters: Array.isArray(info.parameters) ? info.parameters.map(ParameterInformation.from) : [],
+      activeParameter: info.activeParameter,
+    };
 	}
 
 	export function to(info: languages.SignatureInformation): types.SignatureInformation {
 		return {
-			label: info.label,
-			documentation: htmlContent.isMarkdownString(info.documentation) ? MarkdownString.to(info.documentation) : info.documentation,
-			parameters: Array.isArray(info.parameters) ? info.parameters.map(ParameterInformation.to) : [],
-			activeParameter: info.activeParameter,
-		};
+      label: info.label,
+      documentation: htmlContent.isMarkdownString(info.documentation) ? MarkdownString.to(info.documentation) : info.documentation,
+      parameters: Array.isArray(info.parameters) ? info.parameters.map(ParameterInformation.to) : [],
+      activeParameter: info.activeParameter,
+    };
 	}
 }
 
@@ -1293,18 +1473,18 @@ export namespace SignatureHelp {
 
 	export function from(help: types.SignatureHelp): languages.SignatureHelp {
 		return {
-			activeSignature: help.activeSignature,
-			activeParameter: help.activeParameter,
-			signatures: Array.isArray(help.signatures) ? help.signatures.map(SignatureInformation.from) : [],
-		};
+      activeSignature: help.activeSignature,
+      activeParameter: help.activeParameter,
+      signatures: Array.isArray(help.signatures) ? help.signatures.map(SignatureInformation.from) : [],
+    };
 	}
 
 	export function to(help: languages.SignatureHelp): types.SignatureHelp {
 		return {
-			activeSignature: help.activeSignature,
-			activeParameter: help.activeParameter,
-			signatures: Array.isArray(help.signatures) ? help.signatures.map(SignatureInformation.to) : [],
-		};
+      activeSignature: help.activeSignature,
+      activeParameter: help.activeParameter,
+      signatures: Array.isArray(help.signatures) ? help.signatures.map(SignatureInformation.to) : [],
+    };
 	}
 }
 
@@ -1312,12 +1492,14 @@ export namespace InlayHint {
 
 	export function to(converter: Command.ICommandsConverter, hint: languages.InlayHint): vscode.InlayHint {
 		const res = new types.InlayHint(
-			Position.to(hint.position),
-			typeof hint.label === 'string' ? hint.label : hint.label.map(InlayHintLabelPart.to.bind(undefined, converter)),
-			hint.kind && InlayHintKind.to(hint.kind)
-		);
+      Position.to(hint.position),
+      typeof hint.label === "string" ? hint.label : hint.label.map(InlayHintLabelPart.to.bind(undefined, converter)),
+      hint.kind && InlayHintKind.to(hint.kind),
+    );
 		res.textEdits = hint.textEdits && hint.textEdits.map(TextEdit.to);
-		res.tooltip = htmlContent.isMarkdownString(hint.tooltip) ? MarkdownString.to(hint.tooltip) : hint.tooltip;
+		res.tooltip = htmlContent.isMarkdownString(
+      hint.tooltip,
+    ) ? MarkdownString.to(hint.tooltip) : hint.tooltip;
 		res.paddingLeft = hint.paddingLeft;
 		res.paddingRight = hint.paddingRight;
 		return res;
@@ -1354,17 +1536,20 @@ export namespace DocumentLink {
 
 	export function from(link: vscode.DocumentLink): languages.ILink {
 		return {
-			range: Range.from(link.range),
-			url: link.target,
-			tooltip: link.tooltip
-		};
+      range: Range.from(link.range),
+      url: link.target,
+      tooltip: link.tooltip,
+    };
 	}
 
 	export function to(link: languages.ILink): vscode.DocumentLink {
 		let target: URI | undefined = undefined;
 		if (link.url) {
 			try {
-				target = typeof link.url === 'string' ? URI.parse(link.url, true) : URI.revive(link.url);
+				target = typeof link.url === "string" ? URI.parse(
+          link.url,
+          true,
+        ) : URI.revive(link.url);
 			} catch (err) {
 				// ignore
 			}
@@ -1382,17 +1567,19 @@ export namespace ColorPresentation {
 			cp.textEdit = TextEdit.to(colorPresentation.textEdit);
 		}
 		if (colorPresentation.additionalTextEdits) {
-			cp.additionalTextEdits = colorPresentation.additionalTextEdits.map(value => TextEdit.to(value));
+			cp.additionalTextEdits = colorPresentation.additionalTextEdits.map(
+        value => TextEdit.to(value),
+      );
 		}
 		return cp;
 	}
 
 	export function from(colorPresentation: vscode.ColorPresentation): languages.IColorPresentation {
 		return {
-			label: colorPresentation.label,
-			textEdit: colorPresentation.textEdit ? TextEdit.from(colorPresentation.textEdit) : undefined,
-			additionalTextEdits: colorPresentation.additionalTextEdits ? colorPresentation.additionalTextEdits.map(value => TextEdit.from(value)) : undefined
-		};
+      label: colorPresentation.label,
+      textEdit: colorPresentation.textEdit ? TextEdit.from(colorPresentation.textEdit) : undefined,
+      additionalTextEdits: colorPresentation.additionalTextEdits ? colorPresentation.additionalTextEdits.map(value => TextEdit.from(value)) : undefined,
+    };
 	}
 }
 
@@ -1483,7 +1670,7 @@ export namespace EndOfLine {
 
 export namespace ProgressLocation {
 	export function from(loc: vscode.ProgressLocation | { viewId: string }): MainProgressLocation | string {
-		if (typeof loc === 'object') {
+		if (typeof loc === "object") {
 			return loc.viewId;
 		}
 
@@ -1498,7 +1685,10 @@ export namespace ProgressLocation {
 
 export namespace FoldingRange {
 	export function from(r: vscode.FoldingRange): languages.FoldingRange {
-		const range: languages.FoldingRange = { start: r.start + 1, end: r.end + 1 };
+		const range: languages.FoldingRange = {
+      start: r.start + 1,
+      end: r.end + 1,
+    };
 		if (r.kind) {
 			range.kind = FoldingRangeKind.from(r.kind);
 		}
@@ -1552,12 +1742,12 @@ export namespace TextEditorOpenOptions {
 	export function from(options?: TextEditorOpenOptions): ITextEditorOptions | undefined {
 		if (options) {
 			return {
-				pinned: typeof options.preview === 'boolean' ? !options.preview : undefined,
-				inactive: options.background,
-				preserveFocus: options.preserveFocus,
-				selection: typeof options.selection === 'object' ? Range.from(options.selection) : undefined,
-				override: typeof options.override === 'boolean' ? DEFAULT_EDITOR_ASSOCIATION.id : undefined
-			};
+        pinned: typeof options.preview === "boolean" ? !options.preview : undefined,
+        inactive: options.background,
+        preserveFocus: options.preserveFocus,
+        selection: typeof options.selection === "object" ? Range.from(options.selection) : undefined,
+        override: typeof options.override === "boolean" ? DEFAULT_EDITOR_ASSOCIATION.id : undefined,
+      };
 		}
 
 		return undefined;
@@ -1576,7 +1766,7 @@ export namespace GlobPattern {
 			return pattern.toJSON();
 		}
 
-		if (typeof pattern === 'string') {
+		if (typeof pattern === "string") {
 			return pattern;
 		}
 
@@ -1598,7 +1788,7 @@ export namespace GlobPattern {
 			return false;
 		}
 
-		return URI.isUri(rp.baseUri) && typeof rp.pattern === 'string';
+		return URI.isUri(rp.baseUri) && typeof rp.pattern === "string";
 	}
 
 	function isLegacyRelativePatternShape(obj: unknown): obj is { base: string; pattern: string } {
@@ -1612,15 +1802,18 @@ export namespace GlobPattern {
 			return false;
 		}
 
-		return typeof rp.base === 'string' && typeof rp.pattern === 'string';
+		return typeof rp.base === "string" && typeof rp.pattern === "string";
 	}
 
 	export function to(pattern: string | extHostProtocol.IRelativePatternDto): vscode.GlobPattern {
-		if (typeof pattern === 'string') {
+		if (typeof pattern === "string") {
 			return pattern;
 		}
 
-		return new types.RelativePattern(URI.revive(pattern.baseUri), pattern.pattern);
+		return new types.RelativePattern(
+      URI.revive(pattern.baseUri),
+      pattern.pattern,
+    );
 	}
 }
 
@@ -1634,17 +1827,17 @@ export namespace LanguageSelector {
 			return undefined;
 		} else if (Array.isArray(selector)) {
 			return <languageSelector.LanguageSelector>selector.map(from);
-		} else if (typeof selector === 'string') {
+		} else if (typeof selector === "string") {
 			return selector;
 		} else {
 			const filter = selector as vscode.DocumentFilter; // TODO: microsoft/TypeScript#42768
 			return {
-				language: filter.language,
-				scheme: filter.scheme,
-				pattern: GlobPattern.from(filter.pattern) ?? undefined,
-				exclusive: filter.exclusive,
-				notebookType: filter.notebookType
-			};
+        language: filter.language,
+        scheme: filter.scheme,
+        pattern: GlobPattern.from(filter.pattern) ?? undefined,
+        exclusive: filter.exclusive,
+        notebookType: filter.notebookType,
+      };
 		}
 	}
 }
@@ -1663,19 +1856,19 @@ export namespace NotebookRange {
 export namespace NotebookCellExecutionSummary {
 	export function to(data: notebooks.NotebookCellInternalMetadata): vscode.NotebookCellExecutionSummary {
 		return {
-			timing: typeof data.runStartTime === 'number' && typeof data.runEndTime === 'number' ? { startTime: data.runStartTime, endTime: data.runEndTime } : undefined,
-			executionOrder: data.executionOrder,
-			success: data.lastRunSuccess
-		};
+      timing: typeof data.runStartTime === "number" && typeof data.runEndTime === "number" ? { startTime: data.runStartTime, endTime: data.runEndTime } : undefined,
+      executionOrder: data.executionOrder,
+      success: data.lastRunSuccess,
+    };
 	}
 
 	export function from(data: vscode.NotebookCellExecutionSummary): Partial<notebooks.NotebookCellInternalMetadata> {
 		return {
-			lastRunSuccess: data.success,
-			runStartTime: data.timing?.startTime,
-			runEndTime: data.timing?.endTime,
-			executionOrder: data.executionOrder
-		};
+      lastRunSuccess: data.success,
+      runStartTime: data.timing?.startTime,
+      runEndTime: data.timing?.endTime,
+      executionOrder: data.executionOrder,
+    };
 	}
 }
 
@@ -1705,9 +1898,9 @@ export namespace NotebookData {
 
 	export function from(data: vscode.NotebookData): extHostProtocol.NotebookDataDto {
 		const res: extHostProtocol.NotebookDataDto = {
-			metadata: data.metadata ?? Object.create(null),
-			cells: [],
-		};
+      metadata: data.metadata ?? Object.create(null),
+      cells: [],
+    };
 		for (const cell of data.cells) {
 			types.NotebookCellData.validate(cell);
 			res.cells.push(NotebookCellData.from(cell));
@@ -1716,9 +1909,7 @@ export namespace NotebookData {
 	}
 
 	export function to(data: extHostProtocol.NotebookDataDto): vscode.NotebookData {
-		const res = new types.NotebookData(
-			data.cells.map(NotebookCellData.to),
-		);
+		const res = new types.NotebookData(data.cells.map(NotebookCellData.to));
 		if (!isEmptyObject(data.metadata)) {
 			res.metadata = data.metadata;
 		}
@@ -1730,35 +1921,35 @@ export namespace NotebookCellData {
 
 	export function from(data: vscode.NotebookCellData): extHostProtocol.NotebookCellDataDto {
 		return {
-			cellKind: NotebookCellKind.from(data.kind),
-			language: data.languageId,
-			mime: data.mime,
-			source: data.value,
-			metadata: data.metadata,
-			internalMetadata: NotebookCellExecutionSummary.from(data.executionSummary ?? {}),
-			outputs: data.outputs ? data.outputs.map(NotebookCellOutput.from) : []
-		};
+      cellKind: NotebookCellKind.from(data.kind),
+      language: data.languageId,
+      mime: data.mime,
+      source: data.value,
+      metadata: data.metadata,
+      internalMetadata: NotebookCellExecutionSummary.from(data.executionSummary ?? {}),
+      outputs: data.outputs ? data.outputs.map(NotebookCellOutput.from) : [],
+    };
 	}
 
 	export function to(data: extHostProtocol.NotebookCellDataDto): vscode.NotebookCellData {
 		return new types.NotebookCellData(
-			NotebookCellKind.to(data.cellKind),
-			data.source,
-			data.language,
-			data.mime,
-			data.outputs ? data.outputs.map(NotebookCellOutput.to) : undefined,
-			data.metadata,
-			data.internalMetadata ? NotebookCellExecutionSummary.to(data.internalMetadata) : undefined
-		);
+      NotebookCellKind.to(data.cellKind),
+      data.source,
+      data.language,
+      data.mime,
+      data.outputs ? data.outputs.map(NotebookCellOutput.to) : undefined,
+      data.metadata,
+      data.internalMetadata ? NotebookCellExecutionSummary.to(data.internalMetadata) : undefined,
+    );
 	}
 }
 
 export namespace NotebookCellOutputItem {
 	export function from(item: types.NotebookCellOutputItem): extHostProtocol.NotebookOutputItemDto {
 		return {
-			mime: item.mime,
-			valueBytes: VSBuffer.wrap(item.data),
-		};
+      mime: item.mime,
+      valueBytes: VSBuffer.wrap(item.data),
+    };
 	}
 
 	export function to(item: extHostProtocol.NotebookOutputItemDto): types.NotebookCellOutputItem {
@@ -1769,15 +1960,19 @@ export namespace NotebookCellOutputItem {
 export namespace NotebookCellOutput {
 	export function from(output: vscode.NotebookCellOutput): extHostProtocol.NotebookOutputDto {
 		return {
-			outputId: output.id,
-			items: output.items.map(NotebookCellOutputItem.from),
-			metadata: output.metadata
-		};
+      outputId: output.id,
+      items: output.items.map(NotebookCellOutputItem.from),
+      metadata: output.metadata,
+    };
 	}
 
 	export function to(output: extHostProtocol.NotebookOutputDto): vscode.NotebookCellOutput {
 		const items = output.items.map(NotebookCellOutputItem.to);
-		return new types.NotebookCellOutput(items, output.outputId, output.metadata);
+		return new types.NotebookCellOutput(
+      items,
+      output.outputId,
+      output.metadata,
+    );
 	}
 }
 
@@ -1790,9 +1985,9 @@ export namespace NotebookExclusiveDocumentPattern {
 	export function from(pattern: { include: vscode.GlobPattern | undefined | null; exclude: vscode.GlobPattern | undefined } | vscode.GlobPattern | undefined): string | extHostProtocol.IRelativePatternDto | { include: string | extHostProtocol.IRelativePatternDto | undefined; exclude: string | extHostProtocol.IRelativePatternDto | undefined } | undefined {
 		if (isExclusivePattern(pattern)) {
 			return {
-				include: GlobPattern.from(pattern.include) ?? undefined,
-				exclude: GlobPattern.from(pattern.exclude) ?? undefined,
-			};
+        include: GlobPattern.from(pattern.include) ?? undefined,
+        exclude: GlobPattern.from(pattern.exclude) ?? undefined,
+      };
 		}
 
 		return GlobPattern.from(pattern) ?? undefined;
@@ -1801,9 +1996,9 @@ export namespace NotebookExclusiveDocumentPattern {
 	export function to(pattern: string | extHostProtocol.IRelativePatternDto | { include: string | extHostProtocol.IRelativePatternDto; exclude: string | extHostProtocol.IRelativePatternDto }): { include: vscode.GlobPattern; exclude: vscode.GlobPattern } | vscode.GlobPattern {
 		if (isExclusivePattern(pattern)) {
 			return {
-				include: GlobPattern.to(pattern.include),
-				exclude: GlobPattern.to(pattern.exclude)
-			};
+        include: GlobPattern.to(pattern.include),
+        exclude: GlobPattern.to(pattern.exclude),
+      };
 		}
 
 		return GlobPattern.to(pattern);
@@ -1820,60 +2015,69 @@ export namespace NotebookExclusiveDocumentPattern {
 
 export namespace NotebookStatusBarItem {
 	export function from(item: vscode.NotebookCellStatusBarItem, commandsConverter: Command.ICommandsConverter, disposables: DisposableStore): notebooks.INotebookCellStatusBarItem {
-		const command = typeof item.command === 'string' ? { title: '', command: item.command } : item.command;
+		const command = typeof item.command === "string" ? {
+      title: "",
+      command: item.command,
+    } : item.command;
 		return {
 			alignment: item.alignment === types.NotebookCellStatusBarAlignment.Left ? notebooks.CellStatusbarAlignment.Left : notebooks.CellStatusbarAlignment.Right,
 			command: commandsConverter.toInternal(command, disposables), // TODO@roblou
 			text: item.text,
 			tooltip: item.tooltip,
 			accessibilityInformation: item.accessibilityInformation,
-			priority: item.priority
+			priority: item.priority,
 		};
 	}
 }
 
 export namespace NotebookKernelSourceAction {
 	export function from(item: vscode.NotebookKernelSourceAction, commandsConverter: Command.ICommandsConverter, disposables: DisposableStore): notebooks.INotebookKernelSourceAction {
-		const command = typeof item.command === 'string' ? { title: '', command: item.command } : item.command;
+		const command = typeof item.command === "string" ? {
+      title: "",
+      command: item.command,
+    } : item.command;
 
 		return {
-			command: commandsConverter.toInternal(command, disposables),
-			label: item.label,
-			description: item.description,
-			detail: item.detail,
-			documentation: item.documentation
-		};
+      command: commandsConverter.toInternal(command, disposables),
+      label: item.label,
+      description: item.description,
+      detail: item.detail,
+      documentation: item.documentation,
+    };
 	}
 }
 
 export namespace NotebookDocumentContentOptions {
 	export function from(options: vscode.NotebookDocumentContentOptions | undefined): notebooks.TransientOptions {
 		return {
-			transientOutputs: options?.transientOutputs ?? false,
-			transientCellMetadata: options?.transientCellMetadata ?? {},
-			transientDocumentMetadata: options?.transientDocumentMetadata ?? {},
-			cellContentMetadata: options?.cellContentMetadata ?? {}
-		};
+      transientOutputs: options?.transientOutputs ?? false,
+      transientCellMetadata: options?.transientCellMetadata ?? {},
+      transientDocumentMetadata: options?.transientDocumentMetadata ?? {},
+      cellContentMetadata: options?.cellContentMetadata ?? {},
+    };
 	}
 }
 
 export namespace NotebookRendererScript {
 	export function from(preload: vscode.NotebookRendererScript): { uri: UriComponents; provides: readonly string[] } {
 		return {
-			uri: preload.uri,
-			provides: preload.provides
-		};
+      uri: preload.uri,
+      provides: preload.provides,
+    };
 	}
 
 	export function to(preload: { uri: UriComponents; provides: readonly string[] }): vscode.NotebookRendererScript {
-		return new types.NotebookRendererScript(URI.revive(preload.uri), preload.provides);
+		return new types.NotebookRendererScript(
+      URI.revive(preload.uri),
+      preload.provides,
+    );
 	}
 }
 
 export namespace TestMessage {
 	export function from(message: vscode.TestMessage): ITestErrorMessage.Serialized {
 		return {
-			message: MarkdownString.fromStrict(message.message) || '',
+			message: MarkdownString.fromStrict(message.message) || "",
 			type: TestMessageType.Error,
 			expected: message.expectedOutput,
 			actual: message.actualOutput,
@@ -1888,7 +2092,9 @@ export namespace TestMessage {
 	}
 
 	export function to(item: ITestErrorMessage.Serialized): vscode.TestMessage {
-		const message = new types.TestMessage(typeof item.message === 'string' ? item.message : MarkdownString.to(item.message));
+		const message = new types.TestMessage(
+      typeof item.message === "string" ? item.message : MarkdownString.to(item.message),
+    );
 		message.actualOutput = item.actual;
 		message.expectedOutput = item.expected;
 		message.contextValue = item.contextValue;
@@ -1906,22 +2112,24 @@ export namespace TestTag {
 export namespace TestRunProfile {
 	export function from(item: types.TestRunProfileBase): ITestRunProfileReference {
 		return {
-			controllerId: item.controllerId,
-			profileId: item.profileId,
-			group: TestRunProfileKind.from(item.kind),
-		};
+      controllerId: item.controllerId,
+      profileId: item.profileId,
+      group: TestRunProfileKind.from(item.kind),
+    };
 	}
 }
 
 export namespace TestRunProfileKind {
 	const profileGroupToBitset: { [K in vscode.TestRunProfileKind]: TestRunProfileBitset } = {
-		[types.TestRunProfileKind.Coverage]: TestRunProfileBitset.Coverage,
-		[types.TestRunProfileKind.Debug]: TestRunProfileBitset.Debug,
-		[types.TestRunProfileKind.Run]: TestRunProfileBitset.Run,
-	};
+    [types.TestRunProfileKind.Coverage]: TestRunProfileBitset.Coverage,
+    [types.TestRunProfileKind.Debug]: TestRunProfileBitset.Debug,
+    [types.TestRunProfileKind.Run]: TestRunProfileBitset.Run,
+  };
 
 	export function from(kind: types.TestRunProfileKind): TestRunProfileBitset {
-		return profileGroupToBitset.hasOwnProperty(kind) ? profileGroupToBitset[kind] : TestRunProfileBitset.Run;
+		return profileGroupToBitset.hasOwnProperty(
+      kind,
+    ) ? profileGroupToBitset[kind] : TestRunProfileBitset.Run;
 	}
 }
 
@@ -1931,16 +2139,16 @@ export namespace TestItem {
 	export function from(item: vscode.TestItem): ITestItem {
 		const ctrlId = getPrivateApiFor(item).controllerId;
 		return {
-			extId: TestId.fromExtHostTestItem(item, ctrlId).toString(),
-			label: item.label,
-			uri: URI.revive(item.uri),
-			busy: item.busy,
-			tags: item.tags.map(t => TestTag.namespace(ctrlId, t.id)),
-			range: editorRange.Range.lift(Range.from(item.range)),
-			description: item.description || null,
-			sortText: item.sortText || null,
-			error: item.error ? (MarkdownString.fromStrict(item.error) || null) : null,
-		};
+      extId: TestId.fromExtHostTestItem(item, ctrlId).toString(),
+      label: item.label,
+      uri: URI.revive(item.uri),
+      busy: item.busy,
+      tags: item.tags.map(t => TestTag.namespace(ctrlId, t.id)),
+      range: editorRange.Range.lift(Range.from(item.range)),
+      description: item.description || null,
+      sortText: item.sortText || null,
+      error: item.error ? (MarkdownString.fromStrict(item.error) || null) : null,
+    };
 	}
 
 	export function toPlain(item: ITestItem.Serialized): vscode.TestItem {
@@ -2034,9 +2242,9 @@ export namespace TestResults {
 		}
 
 		return {
-			completedAt: serialized.completedAt,
-			results: roots.map(r => convertTestResultItem(r)).filter(isDefined),
-		};
+      completedAt: serialized.completedAt,
+      results: roots.map(r => convertTestResultItem(r)).filter(isDefined),
+    };
 	}
 }
 
@@ -2046,14 +2254,14 @@ export namespace TestCoverage {
 	}
 
 	function fromLocation(location: vscode.Range | vscode.Position) {
-		return 'line' in location ? Position.from(location) : Range.from(location);
+		return "line" in location ? Position.from(location) : Range.from(location);
 	}
 
 	function toLocation(location: IPosition | editorRange.IRange): types.Position | types.Range;
 	function toLocation(location: IPosition | editorRange.IRange | undefined): types.Position | types.Range | undefined;
 	function toLocation(location: IPosition | editorRange.IRange | undefined): types.Position | types.Range | undefined {
 		if (!location) { return undefined; }
-		return 'endLineNumber' in location ? Range.to(location) : Position.to(location);
+		return "endLineNumber" in location ? Range.to(location) : Position.to(location);
 	}
 
 	export function to(serialized: CoverageDetails.Serialized): vscode.FileCoverageDetail {
@@ -2062,36 +2270,38 @@ export namespace TestCoverage {
 			if (serialized.branches) {
 				for (const branch of serialized.branches) {
 					branches.push({
-						executed: branch.count,
-						location: toLocation(branch.location),
-						label: branch.label
-					});
+            executed: branch.count,
+            location: toLocation(branch.location),
+            label: branch.label,
+          });
 				}
 			}
 			return new types.StatementCoverage(
-				serialized.count,
-				toLocation(serialized.location),
-				serialized.branches?.map(b => new types.BranchCoverage(
-					b.count,
-					toLocation(b.location)!,
-					b.label,
-				))
-			);
+        serialized.count,
+        toLocation(serialized.location),
+        serialized.branches?.map(
+          b => new types.BranchCoverage(
+            b.count,
+            toLocation(b.location)!,
+            b.label,
+          ),
+        ),
+      );
 		} else {
 			return new types.DeclarationCoverage(
-				serialized.name,
-				serialized.count,
-				toLocation(serialized.location),
-			);
+        serialized.name,
+        serialized.count,
+        toLocation(serialized.location),
+      );
 		}
 	}
 
 	export function fromDetails(coverage: vscode.FileCoverageDetail): CoverageDetails.Serialized {
-		if (typeof coverage.executed === 'number' && coverage.executed < 0) {
+		if (typeof coverage.executed === "number" && coverage.executed < 0) {
 			throw new Error(`Invalid coverage count ${coverage.executed}`);
 		}
 
-		if ('branches' in coverage) {
+		if ("branches" in coverage) {
 			return {
 				count: coverage.executed,
 				location: fromLocation(coverage.location),
@@ -2102,11 +2312,11 @@ export namespace TestCoverage {
 			};
 		} else {
 			return {
-				type: DetailType.Declaration,
-				name: coverage.name,
-				count: coverage.executed,
-				location: fromLocation(coverage.location),
-			};
+        type: DetailType.Declaration,
+        name: coverage.name,
+        count: coverage.executed,
+        location: fromLocation(coverage.location),
+      };
 		}
 	}
 
@@ -2144,13 +2354,13 @@ export namespace TypeHierarchyItem {
 
 	export function to(item: extHostProtocol.ITypeHierarchyItemDto): types.TypeHierarchyItem {
 		const result = new types.TypeHierarchyItem(
-			SymbolKind.to(item.kind),
-			item.name,
-			item.detail || '',
-			URI.revive(item.uri),
-			Range.to(item.range),
-			Range.to(item.selectionRange)
-		);
+      SymbolKind.to(item.kind),
+      item.name,
+      item.detail || "",
+      URI.revive(item.uri),
+      Range.to(item.range),
+      Range.to(item.selectionRange),
+    );
 
 		result._sessionId = item._sessionId;
 		result._itemId = item._itemId;
@@ -2164,20 +2374,20 @@ export namespace TypeHierarchyItem {
 		itemId = itemId ?? (<types.TypeHierarchyItem>item)._itemId;
 
 		if (sessionId === undefined || itemId === undefined) {
-			throw new Error('invalid item');
+			throw new Error("invalid item");
 		}
 
 		return {
-			_sessionId: sessionId,
-			_itemId: itemId,
-			kind: SymbolKind.from(item.kind),
-			name: item.name,
-			detail: item.detail ?? '',
-			uri: item.uri,
-			range: Range.from(item.range),
-			selectionRange: Range.from(item.selectionRange),
-			tags: item.tags?.map(SymbolTag.from)
-		};
+      _sessionId: sessionId,
+      _itemId: itemId,
+      kind: SymbolKind.from(item.kind),
+      name: item.name,
+      detail: item.detail ?? "",
+      uri: item.uri,
+      range: Range.from(item.range),
+      selectionRange: Range.from(item.selectionRange),
+      tags: item.tags?.map(SymbolTag.from),
+    };
 	}
 }
 
@@ -2188,9 +2398,9 @@ export namespace ViewBadge {
 		}
 
 		return {
-			value: badge.value,
-			tooltip: badge.tooltip
-		};
+      value: badge.value,
+      tooltip: badge.tooltip,
+    };
 	}
 }
 
@@ -2199,11 +2409,19 @@ export namespace DataTransferItem {
 		const file = item.fileData;
 		if (file) {
 			return new types.InternalFileDataTransferItem(
-				new types.DataTransferFile(file.name, URI.revive(file.uri), file.id, createSingleCallFunction(() => resolveFileData(file.id))));
+        new types.DataTransferFile(
+          file.name,
+          URI.revive(file.uri),
+          file.id,
+          createSingleCallFunction(() => resolveFileData(file.id)),
+        ),
+      );
 		}
 
 		if (mime === Mimes.uriList && item.uriListData) {
-			return new types.InternalDataTransferItem(reviveUriList(item.uriListData));
+			return new types.InternalDataTransferItem(
+        reviveUriList(item.uriListData),
+      );
 		}
 
 		return new types.InternalDataTransferItem(item.asString);
@@ -2214,11 +2432,11 @@ export namespace DataTransferItem {
 
 		if (mime === Mimes.uriList) {
 			return {
-				id,
-				asString: stringValue,
-				fileData: undefined,
-				uriListData: serializeUriList(stringValue),
-			};
+        id,
+        asString: stringValue,
+        fileData: undefined,
+        uriListData: serializeUriList(stringValue),
+      };
 		}
 
 		const fileValue = item.asFile();
@@ -2235,7 +2453,7 @@ export namespace DataTransferItem {
 
 	function serializeUriList(stringValue: string): ReadonlyArray<string | URI> {
 		return UriList.split(stringValue).map(part => {
-			if (part.startsWith('#')) {
+			if (part.startsWith("#")) {
 				return part;
 			}
 
@@ -2250,32 +2468,38 @@ export namespace DataTransferItem {
 	}
 
 	function reviveUriList(parts: ReadonlyArray<string | UriComponents>): string {
-		return UriList.create(parts.map(part => {
-			return typeof part === 'string' ? part : URI.revive(part);
-		}));
+		return UriList.create(
+      parts.map(part => {
+        return typeof part === "string" ? part : URI.revive(part);
+      }),
+    );
 	}
 }
 
 export namespace DataTransfer {
 	export function toDataTransfer(value: extHostProtocol.DataTransferDTO, resolveFileData: (itemId: string) => Promise<Uint8Array>): types.DataTransfer {
 		const init = value.items.map(([type, item]) => {
-			return [type, DataTransferItem.to(type, item, resolveFileData)] as const;
-		});
+      return [type, DataTransferItem.to(type, item, resolveFileData)] as const;
+    });
 		return new types.DataTransfer(init);
 	}
 
 	export async function from(dataTransfer: vscode.DataTransfer): Promise<extHostProtocol.DataTransferDTO> {
-		const items = await Promise.all(Array.from(dataTransfer, async ([mime, value]) => {
-			return [mime, await DataTransferItem.from(mime, value)] as const;
-		}));
+		const items = await Promise.all(
+      Array.from(dataTransfer, async ([mime, value]) => {
+        return [mime, await DataTransferItem.from(mime, value)] as const;
+      }),
+    );
 
 		return { items };
 	}
 
 	export async function fromList(dataTransfer: Iterable<readonly [string, IDataTransferItem]>): Promise<extHostProtocol.DataTransferDTO> {
-		const items = await Promise.all(Array.from(dataTransfer, async ([mime, value]) => {
-			return [mime, await DataTransferItem.from(mime, value, value.id)] as const;
-		}));
+		const items = await Promise.all(
+      Array.from(dataTransfer, async ([mime, value]) => {
+        return [mime, await DataTransferItem.from(mime, value, value.id)] as const;
+      }),
+    );
 
 		return { items };
 	}
@@ -2284,21 +2508,21 @@ export namespace DataTransfer {
 export namespace ChatFollowup {
 	export function from(followup: vscode.ChatFollowup, request: IChatAgentRequest | undefined): IChatFollowup {
 		return {
-			kind: 'reply',
-			agentId: followup.participant ?? request?.agentId ?? '',
-			subCommand: followup.command ?? request?.command,
-			message: followup.prompt,
-			title: followup.label
-		};
+      kind: "reply",
+      agentId: followup.participant ?? request?.agentId ?? "",
+      subCommand: followup.command ?? request?.command,
+      message: followup.prompt,
+      title: followup.label,
+    };
 	}
 
 	export function to(followup: IChatFollowup): vscode.ChatFollowup {
 		return {
-			prompt: followup.message,
-			label: followup.title,
-			participant: followup.agentId,
-			command: followup.subCommand,
-		};
+      prompt: followup.message,
+      label: followup.title,
+      participant: followup.agentId,
+      command: followup.subCommand,
+    };
 	}
 }
 
@@ -2325,26 +2549,26 @@ export namespace LanguageModelChatMessage {
 
 	export function to(message: chatProvider.IChatMessage): vscode.LanguageModelChatMessage {
 		const content = message.content.map(c => {
-			if (c.type === 'text') {
+			if (c.type === "text") {
 				return new LanguageModelTextPart(c.value, c.audience);
-			} else if (c.type === 'tool_result') {
+			} else if (c.type === "tool_result") {
 				const content: (LanguageModelTextPart | LanguageModelPromptTsxPart | LanguageModelDataPart)[] = coalesce(c.value.map(part => {
-					if (part.type === 'text') {
+					if (part.type === "text") {
 						return new types.LanguageModelTextPart(part.value, part.audience);
-					} else if (part.type === 'data') {
+					} else if (part.type === "data") {
 						return new types.LanguageModelDataPart(part.data.buffer, part.mimeType);
-					} else if (part.type === 'prompt_tsx') {
+					} else if (part.type === "prompt_tsx") {
 						return new types.LanguageModelPromptTsxPart(part.value);
 					} else {
 						return undefined; // Strip unknown parts
 					}
 				}));
 				return new types.LanguageModelToolResultPart(c.toolCallId, content, c.isError);
-			} else if (c.type === 'image_url') {
+			} else if (c.type === "image_url") {
 				return new types.LanguageModelDataPart(c.value.data.buffer, c.value.mimeType);
-			} else if (c.type === 'data') {
+			} else if (c.type === "data") {
 				return new types.LanguageModelDataPart(c.data.buffer, c.mimeType);
-			} else if (c.type === 'tool_use') {
+			} else if (c.type === "tool_use") {
 				return new types.LanguageModelToolCallPart(c.toolCallId, c.name, c.parameters);
 			}
 
@@ -2352,7 +2576,11 @@ export namespace LanguageModelChatMessage {
 		}).filter(c => c !== undefined);
 
 		const role = LanguageModelChatMessageRole.to(message.role);
-		const result = new types.LanguageModelChatMessage(role, content, message.name);
+		const result = new types.LanguageModelChatMessage(
+      role,
+      content,
+      message.name,
+    );
 		return result;
 	}
 
@@ -2362,40 +2590,40 @@ export namespace LanguageModelChatMessage {
 		const name = message.name;
 
 		let messageContent = message.content;
-		if (typeof messageContent === 'string') {
+		if (typeof messageContent === "string") {
 			messageContent = [new types.LanguageModelTextPart(messageContent)];
 		}
 
 		const content = messageContent.map((c): chatProvider.IChatMessagePart => {
 			if (c instanceof types.LanguageModelToolResultPart) {
 				return {
-					type: 'tool_result',
+					type: "tool_result",
 					toolCallId: c.callId,
 					value: coalesce(c.content.map(part => {
 						if (part instanceof types.LanguageModelTextPart) {
 							return {
-								type: 'text',
+								type: "text",
 								value: part.value,
 								audience: part.audience,
 							} satisfies IChatResponseTextPart;
 						} else if (part instanceof types.LanguageModelPromptTsxPart) {
 							return {
-								type: 'prompt_tsx',
+								type: "prompt_tsx",
 								value: part.value,
 							} satisfies IChatResponsePromptTsxPart;
 						} else if (part instanceof types.LanguageModelDataPart) {
 							return {
-								type: 'data',
+								type: "data",
 								mimeType: part.mimeType,
 								data: VSBuffer.wrap(part.data),
-								audience: part.audience
+								audience: part.audience,
 							} satisfies IChatResponseDataPart;
 						} else {
 							// Strip unknown parts
 							return undefined;
 						}
 					})),
-					isError: c.isError
+					isError: c.isError,
 				};
 			} else if (c instanceof types.LanguageModelDataPart) {
 				if (isImageDataPart(c)) {
@@ -2405,46 +2633,46 @@ export namespace LanguageModelChatMessage {
 					};
 
 					return {
-						type: 'image_url',
-						value: value
+						type: "image_url",
+						value: value,
 					};
 				} else {
 					return {
-						type: 'data',
+						type: "data",
 						mimeType: c.mimeType,
 						data: VSBuffer.wrap(c.data),
-						audience: c.audience
+						audience: c.audience,
 					} satisfies IChatMessageDataPart;
 				}
 			} else if (c instanceof types.LanguageModelToolCallPart) {
 				return {
-					type: 'tool_use',
+					type: "tool_use",
 					toolCallId: c.callId,
 					name: c.name,
-					parameters: c.input
+					parameters: c.input,
 				};
 			} else if (c instanceof types.LanguageModelTextPart) {
 				return {
-					type: 'text',
-					value: c.value
+					type: "text",
+					value: c.value,
 				};
 			} else {
-				if (typeof c !== 'string') {
-					throw new Error('Unexpected chat message content type');
+				if (typeof c !== "string") {
+					throw new Error("Unexpected chat message content type");
 				}
 
 				return {
-					type: 'text',
-					value: c
+					type: "text",
+					value: c,
 				};
 			}
 		});
 
 		return {
-			role,
-			name,
-			content
-		};
+      role,
+      name,
+      content,
+    };
 	}
 }
 
@@ -2452,31 +2680,35 @@ export namespace LanguageModelChatMessage2 {
 
 	export function to(message: chatProvider.IChatMessage): vscode.LanguageModelChatMessage2 {
 		const content = message.content.map(c => {
-			if (c.type === 'text') {
+			if (c.type === "text") {
 				return new LanguageModelTextPart(c.value, c.audience);
-			} else if (c.type === 'tool_result') {
+			} else if (c.type === "tool_result") {
 				const content: (LanguageModelTextPart | LanguageModelPromptTsxPart | LanguageModelDataPart)[] = c.value.map(part => {
-					if (part.type === 'text') {
+					if (part.type === "text") {
 						return new types.LanguageModelTextPart(part.value, part.audience);
-					} else if (part.type === 'data') {
+					} else if (part.type === "data") {
 						return new types.LanguageModelDataPart(part.data.buffer, part.mimeType);
 					} else {
 						return new types.LanguageModelPromptTsxPart(part.value);
 					}
 				});
 				return new types.LanguageModelToolResultPart(c.toolCallId, content, c.isError);
-			} else if (c.type === 'image_url') {
+			} else if (c.type === "image_url") {
 				return new types.LanguageModelDataPart(c.value.data.buffer, c.value.mimeType);
-			} else if (c.type === 'data') {
+			} else if (c.type === "data") {
 				return new types.LanguageModelDataPart(c.data.buffer, c.mimeType);
-			} else if (c.type === 'thinking') {
+			} else if (c.type === "thinking") {
 				return new types.LanguageModelThinkingPart(c.value, c.id, c.metadata);
 			} else {
 				return new types.LanguageModelToolCallPart(c.toolCallId, c.name, c.parameters);
 			}
 		});
 		const role = LanguageModelChatMessageRole.to(message.role);
-		const result = new types.LanguageModelChatMessage2(role, content, message.name);
+		const result = new types.LanguageModelChatMessage2(
+      role,
+      content,
+      message.name,
+    );
 		return result;
 	}
 
@@ -2486,40 +2718,40 @@ export namespace LanguageModelChatMessage2 {
 		const name = message.name;
 
 		let messageContent = message.content;
-		if (typeof messageContent === 'string') {
+		if (typeof messageContent === "string") {
 			messageContent = [new types.LanguageModelTextPart(messageContent)];
 		}
 
 		const content = messageContent.map((c): chatProvider.IChatMessagePart => {
 			if (c instanceof types.LanguageModelToolResultPart) {
 				return {
-					type: 'tool_result',
+					type: "tool_result",
 					toolCallId: c.callId,
 					value: coalesce(c.content.map(part => {
 						if (part instanceof types.LanguageModelTextPart) {
 							return {
-								type: 'text',
+								type: "text",
 								value: part.value,
 								audience: part.audience,
 							} satisfies IChatResponseTextPart;
 						} else if (part instanceof types.LanguageModelPromptTsxPart) {
 							return {
-								type: 'prompt_tsx',
+								type: "prompt_tsx",
 								value: part.value,
 							} satisfies IChatResponsePromptTsxPart;
 						} else if (part instanceof types.LanguageModelDataPart) {
 							return {
-								type: 'data',
+								type: "data",
 								mimeType: part.mimeType,
 								data: VSBuffer.wrap(part.data),
-								audience: part.audience
+								audience: part.audience,
 							} satisfies IChatResponseDataPart;
 						} else {
 							// Strip unknown parts
 							return undefined;
 						}
 					})),
-					isError: c.isError
+					isError: c.isError,
 				};
 			} else if (c instanceof types.LanguageModelDataPart) {
 				if (isImageDataPart(c)) {
@@ -2529,66 +2761,66 @@ export namespace LanguageModelChatMessage2 {
 					};
 
 					return {
-						type: 'image_url',
-						value: value
+						type: "image_url",
+						value: value,
 					};
 				} else {
 					return {
-						type: 'data',
+						type: "data",
 						mimeType: c.mimeType,
 						data: VSBuffer.wrap(c.data),
-						audience: c.audience
+						audience: c.audience,
 					} satisfies IChatMessageDataPart;
 				}
 			} else if (c instanceof types.LanguageModelToolCallPart) {
 				return {
-					type: 'tool_use',
+					type: "tool_use",
 					toolCallId: c.callId,
 					name: c.name,
-					parameters: c.input
+					parameters: c.input,
 				};
 			} else if (c instanceof types.LanguageModelTextPart) {
 				return {
-					type: 'text',
-					value: c.value
+					type: "text",
+					value: c.value,
 				};
 			} else if (c instanceof types.LanguageModelThinkingPart) {
 				return {
-					type: 'thinking',
+					type: "thinking",
 					value: c.value,
 					id: c.id,
-					metadata: c.metadata
+					metadata: c.metadata,
 				};
 
 			} else {
-				if (typeof c !== 'string') {
-					throw new Error('Unexpected chat message content type llm 2');
+				if (typeof c !== "string") {
+					throw new Error("Unexpected chat message content type llm 2");
 				}
 
 				return {
-					type: 'text',
-					value: c
+					type: "text",
+					value: c,
 				};
 			}
 		});
 
 		return {
-			role,
-			name,
-			content
-		};
+      role,
+      name,
+      content,
+    };
 	}
 }
 
 function isImageDataPart(part: types.LanguageModelDataPart): boolean {
-	const mime = typeof part.mimeType === 'string' ? part.mimeType.toLowerCase() : '';
+	const mime = typeof part.mimeType === "string" ? part.mimeType.toLowerCase() : "";
 	switch (mime) {
-		case 'image/png':
-		case 'image/jpeg':
-		case 'image/jpg':
-		case 'image/gif':
-		case 'image/webp':
-		case 'image/bmp':
+		case "image/png":
+		case "image/jpeg":
+		case "image/jpg":
+		case "image/gif":
+		case "image/webp":
+		case "image/bmp":
 			return true;
 		default:
 			return false;
@@ -2598,9 +2830,9 @@ function isImageDataPart(part: types.LanguageModelDataPart): boolean {
 export namespace ChatResponseMarkdownPart {
 	export function from(part: vscode.ChatResponseMarkdownPart): Dto<IChatMarkdownContent> {
 		return {
-			kind: 'markdownContent',
-			content: MarkdownString.from(part.value)
-		};
+      kind: "markdownContent",
+      content: MarkdownString.from(part.value),
+    };
 	}
 	export function to(part: Dto<IChatMarkdownContent>): vscode.ChatResponseMarkdownPart {
 		return new types.ChatResponseMarkdownPart(MarkdownString.to(part.content));
@@ -2610,64 +2842,71 @@ export namespace ChatResponseMarkdownPart {
 export namespace ChatResponseCodeblockUriPart {
 	export function from(part: vscode.ChatResponseCodeblockUriPart): Dto<IChatResponseCodeblockUriPart> {
 		return {
-			kind: 'codeblockUri',
-			uri: part.value,
-			isEdit: part.isEdit,
-			undoStopId: part.undoStopId
-		};
+      kind: "codeblockUri",
+      uri: part.value,
+      isEdit: part.isEdit,
+      undoStopId: part.undoStopId,
+    };
 	}
 	export function to(part: Dto<IChatResponseCodeblockUriPart>): vscode.ChatResponseCodeblockUriPart {
-		return new types.ChatResponseCodeblockUriPart(URI.revive(part.uri), part.isEdit, part.undoStopId);
+		return new types.ChatResponseCodeblockUriPart(
+      URI.revive(part.uri),
+      part.isEdit,
+      part.undoStopId,
+    );
 	}
 }
 
 export namespace ChatResponseMarkdownWithVulnerabilitiesPart {
 	export function from(part: vscode.ChatResponseMarkdownWithVulnerabilitiesPart): Dto<IChatAgentMarkdownContentWithVulnerability> {
 		return {
-			kind: 'markdownVuln',
-			content: MarkdownString.from(part.value),
-			vulnerabilities: part.vulnerabilities,
-		};
+      kind: "markdownVuln",
+      content: MarkdownString.from(part.value),
+      vulnerabilities: part.vulnerabilities,
+    };
 	}
 	export function to(part: Dto<IChatAgentMarkdownContentWithVulnerability>): vscode.ChatResponseMarkdownWithVulnerabilitiesPart {
-		return new types.ChatResponseMarkdownWithVulnerabilitiesPart(MarkdownString.to(part.content), part.vulnerabilities);
+		return new types.ChatResponseMarkdownWithVulnerabilitiesPart(
+      MarkdownString.to(part.content),
+      part.vulnerabilities,
+    );
 	}
 }
 
 export namespace ChatResponseConfirmationPart {
 	export function from(part: vscode.ChatResponseConfirmationPart): Dto<IChatConfirmation> {
 		return {
-			kind: 'confirmation',
-			title: part.title,
-			message: MarkdownString.from(part.message),
-			data: part.data,
-			buttons: part.buttons
-		};
+      kind: "confirmation",
+      title: part.title,
+      message: MarkdownString.from(part.message),
+      data: part.data,
+      buttons: part.buttons,
+    };
 	}
 }
 
 export namespace ChatResponseQuestionCarouselPart {
-	function questionTypeToString(type: vscode.ChatQuestionType): 'text' | 'singleSelect' | 'multiSelect' {
+	function questionTypeToString(type: vscode.ChatQuestionType): "text" | "singleSelect" | "multiSelect" {
 		switch (type) {
-			case types.ChatQuestionType.Text: return 'text';
-			case types.ChatQuestionType.SingleSelect: return 'singleSelect';
-			case types.ChatQuestionType.MultiSelect: return 'multiSelect';
-			default: return 'text';
+			case types.ChatQuestionType.Text: return "text";
+			case types.ChatQuestionType.SingleSelect: return "singleSelect";
+			case types.ChatQuestionType.MultiSelect: return "multiSelect";
+			default: return "text";
 		}
 	}
 
-	function stringToQuestionType(type: 'text' | 'singleSelect' | 'multiSelect'): vscode.ChatQuestionType {
+	function stringToQuestionType(type: "text" | "singleSelect" | "multiSelect"): vscode.ChatQuestionType {
 		switch (type) {
-			case 'text': return types.ChatQuestionType.Text;
-			case 'singleSelect': return types.ChatQuestionType.SingleSelect;
-			case 'multiSelect': return types.ChatQuestionType.MultiSelect;
+			case "text": return types.ChatQuestionType.Text;
+			case "singleSelect": return types.ChatQuestionType.SingleSelect;
+			case "multiSelect": return types.ChatQuestionType.MultiSelect;
 			default: return types.ChatQuestionType.Text;
 		}
 	}
 
 	export function from(part: vscode.ChatResponseQuestionCarouselPart): Dto<IChatQuestionCarousel> {
 		return {
-			kind: 'questionCarousel',
+			kind: "questionCarousel",
 			questions: part.questions.map(q => ({
 				id: q.id,
 				type: questionTypeToString(q.type),
@@ -2675,9 +2914,9 @@ export namespace ChatResponseQuestionCarouselPart {
 				message: q.message ? MarkdownString.from(q.message) : undefined,
 				options: q.options?.map(opt => ({ id: opt.id, label: opt.label, value: String(opt.value) })),
 				defaultValue: q.defaultValue,
-				allowFreeformInput: q.allowFreeformInput
+				allowFreeformInput: q.allowFreeformInput,
 			})),
-			allowSkip: part.allowSkip
+			allowSkip: part.allowSkip,
 		};
 	}
 
@@ -2687,17 +2926,20 @@ export namespace ChatResponseQuestionCarouselPart {
 			stringToQuestionType(q.type),
 			q.title,
 			{
-				message: q.message ? (typeof q.message === 'string' ? new types.MarkdownString(q.message) : MarkdownString.to(q.message)) : undefined,
+				message: q.message ? (typeof q.message === "string" ? new types.MarkdownString(q.message) : MarkdownString.to(q.message)) : undefined,
 				options: q.options?.map(opt => ({
 					id: opt.id,
 					label: opt.label,
-					value: opt.value
+					value: opt.value,
 				})),
 				defaultValue: q.defaultValue,
-				allowFreeformInput: q.allowFreeformInput
-			}
+				allowFreeformInput: q.allowFreeformInput,
+			},
 		));
-		return new types.ChatResponseQuestionCarouselPart(questions, part.allowSkip);
+		return new types.ChatResponseQuestionCarouselPart(
+      questions,
+      part.allowSkip,
+    );
 	}
 }
 
@@ -2706,32 +2948,34 @@ export namespace ChatResponseFilesPart {
 		const { value, baseUri } = part;
 		function convert(items: vscode.ChatResponseFileTree[], baseUri: URI): extHostProtocol.IChatResponseProgressFileTreeData[] {
 			return items.map(item => {
-				const myUri = URI.joinPath(baseUri, item.name);
-				return {
-					label: item.name,
-					uri: myUri,
-					children: item.children && convert(item.children, myUri)
-				};
-			});
+        const myUri = URI.joinPath(baseUri, item.name);
+        return {
+          label: item.name,
+          uri: myUri,
+          children: item.children && convert(item.children, myUri),
+        };
+      });
 		}
 		return {
-			kind: 'treeData',
+			kind: "treeData",
 			treeData: {
 				label: basename(baseUri),
 				uri: baseUri,
-				children: convert(value, baseUri)
-			}
+				children: convert(value, baseUri),
+			},
 		};
 	}
 	export function to(part: Dto<IChatTreeData>): vscode.ChatResponseFileTreePart {
-		const treeData = revive<extHostProtocol.IChatResponseProgressFileTreeData>(part.treeData);
+		const treeData = revive<extHostProtocol.IChatResponseProgressFileTreeData>(
+      part.treeData,
+    );
 		function convert(items: extHostProtocol.IChatResponseProgressFileTreeData[]): vscode.ChatResponseFileTree[] {
 			return items.map(item => {
-				return {
-					name: item.label,
-					children: item.children && convert(item.children)
-				};
-			});
+        return {
+          name: item.label,
+          children: item.children && convert(item.children),
+        };
+      });
 		}
 
 		const baseUri = treeData.uri;
@@ -2743,7 +2987,7 @@ export namespace ChatResponseFilesPart {
 export namespace ChatResponseMultiDiffPart {
 	export function from(part: vscode.ChatResponseMultiDiffPart): IChatMultiDiffDataSerialized {
 		return {
-			kind: 'multiDiffData',
+			kind: "multiDiffData",
 			multiDiffData: {
 				title: part.title,
 				resources: part.value.map(entry => ({
@@ -2752,20 +2996,24 @@ export namespace ChatResponseMultiDiffPart {
 					goToFileUri: entry.goToFileUri,
 					added: entry.added,
 					removed: entry.removed,
-				}))
+				})),
 			},
-			readOnly: part.readOnly
+			readOnly: part.readOnly,
 		};
 	}
 	export function to(part: IChatMultiDiffDataSerialized): vscode.ChatResponseMultiDiffPart {
 		const resources = part.multiDiffData.resources.map(resource => ({
-			originalUri: resource.originalUri ? URI.revive(resource.originalUri) : undefined,
-			modifiedUri: resource.modifiedUri ? URI.revive(resource.modifiedUri) : undefined,
-			goToFileUri: resource.goToFileUri ? URI.revive(resource.goToFileUri) : undefined,
-			added: resource.added,
-			removed: resource.removed,
-		}));
-		return new types.ChatResponseMultiDiffPart(resources, part.multiDiffData.title, part.readOnly);
+      originalUri: resource.originalUri ? URI.revive(resource.originalUri) : undefined,
+      modifiedUri: resource.modifiedUri ? URI.revive(resource.modifiedUri) : undefined,
+      goToFileUri: resource.goToFileUri ? URI.revive(resource.goToFileUri) : undefined,
+      added: resource.added,
+      removed: resource.removed,
+    }));
+		return new types.ChatResponseMultiDiffPart(
+      resources,
+      part.multiDiffData.title,
+      part.readOnly,
+    );
 	}
 }
 
@@ -2773,16 +3021,16 @@ export namespace ChatResponseAnchorPart {
 	export function from(part: vscode.ChatResponseAnchorPart): Dto<IChatContentInlineReference> {
 		// Work around type-narrowing confusion between vscode.Uri and URI
 		const isUri = (thing: unknown): thing is vscode.Uri => URI.isUri(thing);
-		const isSymbolInformation = (thing: object): thing is vscode.SymbolInformation => 'name' in thing;
+		const isSymbolInformation = (thing: object): thing is vscode.SymbolInformation => "name" in thing;
 
 		return {
-			kind: 'inlineReference',
+			kind: "inlineReference",
 			name: part.title,
 			inlineReference: isUri(part.value)
 				? part.value
 				: isSymbolInformation(part.value)
 					? WorkspaceSymbol.from(part.value)
-					: Location.from(part.value)
+					: Location.from(part.value),
 		};
 	}
 
@@ -2791,10 +3039,10 @@ export namespace ChatResponseAnchorPart {
 		return new types.ChatResponseAnchorPart(
 			URI.isUri(value.inlineReference)
 				? value.inlineReference
-				: 'location' in value.inlineReference
+				: "location" in value.inlineReference
 					? WorkspaceSymbol.to(value.inlineReference) as vscode.SymbolInformation
 					: Location.to(value.inlineReference),
-			part.name
+			part.name,
 		);
 	}
 }
@@ -2802,9 +3050,9 @@ export namespace ChatResponseAnchorPart {
 export namespace ChatResponseProgressPart {
 	export function from(part: vscode.ChatResponseProgressPart): Dto<IChatProgressMessage> {
 		return {
-			kind: 'progressMessage',
-			content: MarkdownString.from(part.value)
-		};
+      kind: "progressMessage",
+      content: MarkdownString.from(part.value),
+    };
 	}
 	export function to(part: Dto<IChatProgressMessage>): vscode.ChatResponseProgressPart {
 		return new types.ChatResponseProgressPart(part.content.value);
@@ -2814,38 +3062,47 @@ export namespace ChatResponseProgressPart {
 export namespace ChatResponseThinkingProgressPart {
 	export function from(part: vscode.ChatResponseThinkingProgressPart): Dto<IChatThinkingPart> {
 		return {
-			kind: 'thinking',
-			value: part.value,
-			id: part.id,
-			metadata: part.metadata
-		};
+      kind: "thinking",
+      value: part.value,
+      id: part.id,
+      metadata: part.metadata,
+    };
 	}
 	export function to(part: Dto<IChatThinkingPart>): vscode.ChatResponseThinkingProgressPart {
-		return new types.ChatResponseThinkingProgressPart(part.value ?? '', part.id, part.metadata);
+		return new types.ChatResponseThinkingProgressPart(
+      part.value ?? "",
+      part.id,
+      part.metadata,
+    );
 	}
 }
 
 export namespace ChatResponseHookPart {
 	export function from(part: vscode.ChatResponseHookPart): Dto<IChatHookPart> {
 		return {
-			kind: 'hook',
-			hookType: part.hookType,
-			stopReason: part.stopReason,
-			systemMessage: part.systemMessage,
-			metadata: part.metadata
-		};
+      kind: "hook",
+      hookType: part.hookType,
+      stopReason: part.stopReason,
+      systemMessage: part.systemMessage,
+      metadata: part.metadata,
+    };
 	}
 	export function to(part: Dto<IChatHookPart>): vscode.ChatResponseHookPart {
-		return new types.ChatResponseHookPart(part.hookType, part.stopReason, part.systemMessage, part.metadata);
+		return new types.ChatResponseHookPart(
+      part.hookType,
+      part.stopReason,
+      part.systemMessage,
+      part.metadata,
+    );
 	}
 }
 
 export namespace ChatResponseWarningPart {
 	export function from(part: vscode.ChatResponseWarningPart): Dto<IChatWarningMessage> {
 		return {
-			kind: 'warning',
-			content: MarkdownString.from(part.value)
-		};
+      kind: "warning",
+      content: MarkdownString.from(part.value),
+    };
 	}
 	export function to(part: Dto<IChatWarningMessage>): vscode.ChatResponseWarningPart {
 		return new types.ChatResponseWarningPart(part.content.value);
@@ -2855,9 +3112,9 @@ export namespace ChatResponseWarningPart {
 export namespace ChatResponseInfoPart {
 	export function from(part: vscode.ChatResponseInfoPart): Dto<IChatInfoMessage> {
 		return {
-			kind: 'info',
-			content: MarkdownString.from(part.value)
-		};
+      kind: "info",
+      content: MarkdownString.from(part.value),
+    };
 	}
 	export function to(part: Dto<IChatInfoMessage>): vscode.ChatResponseInfoPart {
 		return new types.ChatResponseInfoPart(part.content.value);
@@ -2867,50 +3124,55 @@ export namespace ChatResponseInfoPart {
 export namespace ChatResponseExtensionsPart {
 	export function from(part: vscode.ChatResponseExtensionsPart): Dto<IChatExtensionsContent> {
 		return {
-			kind: 'extensions',
-			extensions: part.extensions
-		};
+      kind: "extensions",
+      extensions: part.extensions,
+    };
 	}
 }
 
 export namespace ChatResponsePullRequestPart {
-	export function from(part: Omit<vscode.ChatResponsePullRequestPart, 'command'> & { command?: vscode.Command }, commandsConverter: CommandsConverter, commandDisposables: DisposableStore): Dto<IChatPullRequestContent> {
+	export function from(part: Omit<vscode.ChatResponsePullRequestPart, "command"> & { command?: vscode.Command }, commandsConverter: CommandsConverter, commandDisposables: DisposableStore): Dto<IChatPullRequestContent> {
 		// If the command isn't in the converter, then this session may have been restored, and the command args don't exist anymore
 		let command: extHostProtocol.ICommandDto;
 		if (!part.command) {
 			if (!part.uri) {
-				throw new Error('Pull request part must have a command if URI is provided');
+				throw new Error(
+          "Pull request part must have a command if URI is provided",
+        );
 			}
 			command = {
-				title: 'Open Pull Request',
-				id: 'vscode.open',
-				arguments: [part.uri]
-			};
+        title: "Open Pull Request",
+        id: "vscode.open",
+        arguments: [part.uri],
+      };
 		} else {
 			command = commandsConverter.toInternal(part.command, commandDisposables);
 		}
 		return {
-			kind: 'pullRequest',
-			author: part.author,
-			title: part.title,
-			description: part.description,
-			uri: part.uri,
-			linkTag: part.linkTag,
-			command
-		};
+      kind: "pullRequest",
+      author: part.author,
+      title: part.title,
+      description: part.description,
+      uri: part.uri,
+      linkTag: part.linkTag,
+      command,
+    };
 	}
 }
 
 export namespace ChatResponseMovePart {
 	export function from(part: vscode.ChatResponseMovePart): Dto<IChatMoveMessage> {
 		return {
-			kind: 'move',
-			uri: part.uri,
-			range: Range.from(part.range),
-		};
+      kind: "move",
+      uri: part.uri,
+      range: Range.from(part.range),
+    };
 	}
 	export function to(part: Dto<IChatMoveMessage>): vscode.ChatResponseMovePart {
-		return new types.ChatResponseMovePart(URI.revive(part.uri), Range.to(part.range));
+		return new types.ChatResponseMovePart(
+      URI.revive(part.uri),
+      Range.to(part.range),
+    );
 	}
 }
 
@@ -2921,17 +3183,24 @@ export namespace ChatToolInvocationPart {
 		let resultDetails: IToolResultInputOutputDetails | undefined;
 		let toolSpecificData: any;
 
-		if (part.toolSpecificData && isChatMcpToolInvocationData(part.toolSpecificData)) {
+		if (part.toolSpecificData && isChatMcpToolInvocationData(
+      part.toolSpecificData,
+    )) {
 			// Convert ChatMcpToolInvocationData to IToolResultInputOutputDetails
-			resultDetails = convertMcpToResultDetails(part.toolSpecificData, part.isError);
+			resultDetails = convertMcpToResultDetails(
+        part.toolSpecificData,
+        part.isError,
+      );
 			toolSpecificData = undefined; // MCP data goes to resultDetails, not toolSpecificData
 		} else {
-			toolSpecificData = part.toolSpecificData ? convertToolSpecificData(part.toolSpecificData) : undefined;
+			toolSpecificData = part.toolSpecificData ? convertToolSpecificData(
+        part.toolSpecificData,
+      ) : undefined;
 		}
 
-		const presentation = part.presentation === 'hidden'
+		const presentation = part.presentation === "hidden"
 			? ToolInvocationPresentation.Hidden
-			: part.presentation === 'hiddenAfterComplete'
+			: part.presentation === "hiddenAfterComplete"
 				? ToolInvocationPresentation.HiddenAfterComplete
 				: undefined;
 
@@ -2940,21 +3209,21 @@ export namespace ChatToolInvocationPart {
 		// an in-progress invocation, then push again with isComplete: true to complete it.
 		if (part.enablePartialUpdate) {
 			return {
-				kind: 'externalToolInvocationUpdate',
-				toolCallId: part.toolCallId,
-				toolName: part.toolName,
-				isComplete: !!part.isComplete,
-				invocationMessage: part.invocationMessage ? MarkdownString.from(part.invocationMessage) : undefined,
-				pastTenseMessage: part.pastTenseMessage ? MarkdownString.from(part.pastTenseMessage) : undefined,
-				toolSpecificData,
-				subagentInvocationId: part.subAgentInvocationId,
-				resultDetails
-			};
+        kind: "externalToolInvocationUpdate",
+        toolCallId: part.toolCallId,
+        toolName: part.toolName,
+        isComplete: !!part.isComplete,
+        invocationMessage: part.invocationMessage ? MarkdownString.from(part.invocationMessage) : undefined,
+        pastTenseMessage: part.pastTenseMessage ? MarkdownString.from(part.pastTenseMessage) : undefined,
+        toolSpecificData,
+        subagentInvocationId: part.subAgentInvocationId,
+        resultDetails,
+      };
 		}
 
 		// Convert extension API ChatToolInvocationPart to internal serialized format (legacy path)
 		return {
-			kind: 'toolInvocationSerialized',
+			kind: "toolInvocationSerialized",
 			toolCallId: part.toolCallId,
 			toolId: part.toolName,
 			invocationMessage: part.invocationMessage ? MarkdownString.from(part.invocationMessage) : part.toolName,
@@ -2967,23 +3236,23 @@ export namespace ChatToolInvocationPart {
 			toolSpecificData,
 			resultDetails,
 			presentation,
-			subAgentInvocationId: part.subAgentInvocationId
+			subAgentInvocationId: part.subAgentInvocationId,
 		};
 	}
 
 	function isChatMcpToolInvocationData(data: any): data is vscode.ChatMcpToolInvocationData {
-		return data !== null && typeof data === 'object' &&
-			'input' in data && typeof data.input === 'string' &&
-			'output' in data && Array.isArray(data.output);
+		return data !== null && typeof data === "object" &&
+			"input" in data && typeof data.input === "string" &&
+			"output" in data && Array.isArray(data.output);
 	}
 
 	function convertMcpToResultDetails(data: vscode.ChatMcpToolInvocationData, isError?: boolean): IToolResultInputOutputDetails {
 		return {
 			input: data.input,
 			output: data.output.map((o) => {
-				const isText = o.mimeType.startsWith('text/');
+				const isText = o.mimeType.startsWith("text/");
 				return {
-					type: 'embed' as const,
+					type: "embed" as const,
 					mimeType: o.mimeType,
 					value: isText ? VSBuffer.wrap(o.data).toString() : encodeBase64(VSBuffer.wrap(o.data)),
 					isText: isText,
@@ -2995,23 +3264,23 @@ export namespace ChatToolInvocationPart {
 
 	function convertToolSpecificData(data: any): any {
 		// Convert extension API terminal tool data to internal format
-		if ('command' in data && 'language' in data) {
+		if ("command" in data && "language" in data) {
 			return {
-				kind: 'terminal',
-				command: data.command,
-				language: data.language
-			};
-		} else if ('commandLine' in data && 'language' in data) {
-			const presentationOverrides = data.presentationOverrides && typeof data.presentationOverrides.commandLine === 'string' ? {
-				commandLine: data.presentationOverrides.commandLine,
-				language: data.presentationOverrides.language
-			} : undefined;
+        kind: "terminal",
+        command: data.command,
+        language: data.language,
+      };
+		} else if ("commandLine" in data && "language" in data) {
+			const presentationOverrides = data.presentationOverrides && typeof data.presentationOverrides.commandLine === "string" ? {
+        commandLine: data.presentationOverrides.commandLine,
+        language: data.presentationOverrides.language,
+      } : undefined;
 			const result: IChatTerminalToolInvocationData = {
-				kind: 'terminal',
+				kind: "terminal",
 				presentationOverrides,
 				commandLine: data.commandLine,
 				language: data.language,
-				terminalCommandOutput: typeof data.output?.text === 'string' ? {
+				terminalCommandOutput: typeof data.output?.text === "string" ? {
 					text: data.output.text,
 				} : undefined,
 				terminalCommandState: data.state ? {
@@ -3021,44 +3290,46 @@ export namespace ChatToolInvocationPart {
 			};
 
 			return result;
-		} else if ('todoList' in data && Array.isArray(data.todoList)) {
+		} else if ("todoList" in data && Array.isArray(data.todoList)) {
 			// Convert extension API todo tool data to internal format
 			return {
-				kind: 'todoList',
+				kind: "todoList",
 				todoList: data.todoList.map((todo: any) => ({
 					id: String(todo.id),
 					title: todo.title,
-					status: todoStatusEnumToString(todo.status)
-				}))
+					status: todoStatusEnumToString(todo.status),
+				})),
 			};
-		} else if ('input' in data && 'output' in data && !Array.isArray(data.output)) {
+		} else if ("input" in data && "output" in data && !Array.isArray(
+      data.output,
+    )) {
 			// Convert extension API simple tool invocation data to internal format
 			return {
-				kind: 'simpleToolInvocation',
-				input: typeof data.input === 'string' ? data.input : '',
-				output: typeof data.output === 'string' ? data.output : ''
-			};
-		} else if (data && 'values' in data && Array.isArray(data.values)) {
+        kind: "simpleToolInvocation",
+        input: typeof data.input === "string" ? data.input : "",
+        output: typeof data.output === "string" ? data.output : "",
+      };
+		} else if (data && "values" in data && Array.isArray(data.values)) {
 			// Convert extension API resources tool data to internal format
 			return {
-				kind: 'resources',
+				kind: "resources",
 				values: data.values.map((v: any) => {
 					if (v instanceof types.Location) {
 						return Location.from(v);
 					} else {
 						return URI.revive(v);
 					}
-				})
+				}),
 			};
 		} else if (data instanceof types.ChatSubagentToolInvocationData) {
 			// Convert extension API subagent tool data to internal format
 			return {
-				kind: 'subagent',
-				description: data.description,
-				agentName: data.agentName,
-				prompt: data.prompt,
-				result: data.result,
-			};
+        kind: "subagent",
+        description: data.description,
+        agentName: data.agentName,
+        prompt: data.prompt,
+        result: data.result,
+      };
 		}
 		return data;
 	}
@@ -3067,23 +3338,23 @@ export namespace ChatToolInvocationPart {
 		// Handle enum values
 		switch (status) {
 			case types.ChatTodoStatus.NotStarted:
-				return 'not-started';
+				return "not-started";
 			case types.ChatTodoStatus.InProgress:
-				return 'in-progress';
+				return "in-progress";
 			case types.ChatTodoStatus.Completed:
-				return 'completed';
+				return "completed";
 			default:
-				return 'not-started';
+				return "not-started";
 		}
 	}
 
 	function todoStatusStringToEnum(status: string): types.ChatTodoStatus {
 		switch (status) {
-			case 'not-started':
+			case "not-started":
 				return types.ChatTodoStatus.NotStarted;
-			case 'in-progress':
+			case "in-progress":
 				return types.ChatTodoStatus.InProgress;
-			case 'completed':
+			case "completed":
 				return types.ChatTodoStatus.Completed;
 			default:
 				return types.ChatTodoStatus.NotStarted;
@@ -3092,10 +3363,10 @@ export namespace ChatToolInvocationPart {
 
 	export function to(part: any): vscode.ChatToolInvocationPart {
 		const toolInvocation = new types.ChatToolInvocationPart(
-			part.toolId || part.toolName,
-			part.toolCallId,
-			part.errorMessage
-		);
+      part.toolId || part.toolName,
+      part.toolCallId,
+      part.errorMessage,
+    );
 
 		if (part.invocationMessage) {
 			toolInvocation.invocationMessage = part.invocationMessage;
@@ -3113,7 +3384,9 @@ export namespace ChatToolInvocationPart {
 			toolInvocation.isComplete = part.isComplete;
 		}
 		if (part.toolSpecificData) {
-			toolInvocation.toolSpecificData = convertFromInternalToolSpecificData(part.toolSpecificData);
+			toolInvocation.toolSpecificData = convertFromInternalToolSpecificData(
+        part.toolSpecificData,
+      );
 		}
 		toolInvocation.subAgentInvocationId = part.subAgentInvocationId;
 		toolInvocation.subAgentName = part.subAgentName;
@@ -3123,45 +3396,45 @@ export namespace ChatToolInvocationPart {
 
 	function convertFromInternalToolSpecificData(data: any): any {
 		// Convert internal terminal tool data to extension API format
-		if (data.kind === 'terminal') {
+		if (data.kind === "terminal") {
 			if (data.commandLine) {
 				// New format with commandLine
 				const result: any = {
-					commandLine: data.commandLine,
-					language: data.language
-				};
+          commandLine: data.commandLine,
+          language: data.language,
+        };
 
 				// Map internal 'terminalCommandOutput' -> extension 'output'
 				if (data.terminalCommandOutput) {
 					result.output = {
-						text: data.terminalCommandOutput.text,
-						truncated: data.terminalCommandOutput.truncated,
-						lineCount: data.terminalCommandOutput.lineCount
-					};
+            text: data.terminalCommandOutput.text,
+            truncated: data.terminalCommandOutput.truncated,
+            lineCount: data.terminalCommandOutput.lineCount,
+          };
 				}
 
 				// Map internal 'terminalCommandState' -> extension 'state'
 				if (data.terminalCommandState) {
 					result.state = {
-						exitCode: data.terminalCommandState.exitCode,
-						duration: data.terminalCommandState.duration
-					};
+            exitCode: data.terminalCommandState.exitCode,
+            duration: data.terminalCommandState.duration,
+          };
 				}
 
 				return result;
 			} else {
 				// Legacy format with command
 				return {
-					command: data.command,
-					language: data.language
-				};
+          command: data.command,
+          language: data.language,
+        };
 			}
-		} else if (data.kind === 'terminal2') {
+		} else if (data.kind === "terminal2") {
 			return {
-				commandLine: data.commandLine,
-				language: data.language
-			};
-		} else if (data.kind === 'todoList') {
+        commandLine: data.commandLine,
+        language: data.language,
+      };
+		} else if (data.kind === "todoList") {
 			// Convert internal todo tool data to extension API format
 			return {
 				todoList: data.todoList.map((todo: any, index: number) => {
@@ -3170,9 +3443,9 @@ export namespace ChatToolInvocationPart {
 					return {
 						id,
 						title: todo.title,
-						status: todoStatusStringToEnum(todo.status)
+						status: todoStatusStringToEnum(todo.status),
 					};
-				})
+				}),
 			};
 		}
 		return data;
@@ -3182,47 +3455,58 @@ export namespace ChatToolInvocationPart {
 export namespace ChatTask {
 	export function from(part: vscode.ChatResponseProgressPart2): IChatTaskDto {
 		return {
-			kind: 'progressTask',
-			content: MarkdownString.from(part.value),
-		};
+      kind: "progressTask",
+      content: MarkdownString.from(part.value),
+    };
 	}
 }
 
 export namespace ChatTaskResult {
 	export function from(part: string | void): Dto<IChatTaskResult> {
 		return {
-			kind: 'progressTaskResult',
-			content: typeof part === 'string' ? MarkdownString.from(part) : undefined
-		};
+      kind: "progressTaskResult",
+      content: typeof part === "string" ? MarkdownString.from(part) : undefined,
+    };
 	}
 }
 
 export namespace ChatResponseCommandButtonPart {
 	export function from(part: vscode.ChatResponseCommandButtonPart, commandsConverter: CommandsConverter, commandDisposables: DisposableStore): Dto<IChatCommandButton> {
 		// If the command isn't in the converter, then this session may have been restored, and the command args don't exist anymore
-		const command = commandsConverter.toInternal(part.value, commandDisposables) ?? { command: part.value.command, title: part.value.title };
+		const command = commandsConverter.toInternal(
+      part.value,
+      commandDisposables,
+    ) ?? {
+      command: part.value.command,
+      title: part.value.title,
+    };
 		return {
-			kind: 'command',
-			command
-		};
+      kind: "command",
+      command,
+    };
 	}
 	export function to(part: Dto<IChatCommandButton>, commandsConverter: CommandsConverter): vscode.ChatResponseCommandButtonPart {
 		// If the command isn't in the converter, then this session may have been restored, and the command args don't exist anymore
-		return new types.ChatResponseCommandButtonPart(commandsConverter.fromInternal(part.command) ?? { command: part.command.id, title: part.command.title });
+		return new types.ChatResponseCommandButtonPart(
+      commandsConverter.fromInternal(part.command) ?? { command: part.command.id, title: part.command.title },
+    );
 	}
 }
 
 export namespace ChatResponseTextEditPart {
 	export function from(part: vscode.ChatResponseTextEditPart): Dto<IChatTextEdit> {
 		return {
-			kind: 'textEdit',
-			uri: part.uri,
-			edits: part.edits.map(e => TextEdit.from(e)),
-			done: part.isDone
-		};
+      kind: "textEdit",
+      uri: part.uri,
+      edits: part.edits.map(e => TextEdit.from(e)),
+      done: part.isDone,
+    };
 	}
 	export function to(part: Dto<IChatTextEdit>): vscode.ChatResponseTextEditPart {
-		const result = new types.ChatResponseTextEditPart(URI.revive(part.uri), part.edits.map(e => TextEdit.to(e)));
+		const result = new types.ChatResponseTextEditPart(
+      URI.revive(part.uri),
+      part.edits.map(e => TextEdit.to(e)),
+    );
 		result.isDone = part.done;
 		return result;
 	}
@@ -3233,22 +3517,22 @@ export namespace NotebookEdit {
 	export function from(edit: vscode.NotebookEdit): extHostProtocol.ICellEditOperationDto {
 		if (edit.newCellMetadata) {
 			return {
-				editType: CellEditType.Metadata,
-				index: edit.range.start,
-				metadata: edit.newCellMetadata
-			};
+        editType: CellEditType.Metadata,
+        index: edit.range.start,
+        metadata: edit.newCellMetadata,
+      };
 		} else if (edit.newNotebookMetadata) {
 			return {
-				editType: CellEditType.DocumentMetadata,
-				metadata: edit.newNotebookMetadata
-			};
+        editType: CellEditType.DocumentMetadata,
+        metadata: edit.newNotebookMetadata,
+      };
 		} else {
 			return {
-				editType: CellEditType.Replace,
-				index: edit.range.start,
-				count: edit.range.end - edit.range.start,
-				cells: edit.newCells.map(NotebookCellData.from)
-			};
+        editType: CellEditType.Replace,
+        index: edit.range.start,
+        count: edit.range.end - edit.range.start,
+        cells: edit.newCells.map(NotebookCellData.from),
+      };
 		}
 	}
 }
@@ -3257,18 +3541,18 @@ export namespace NotebookEdit {
 export namespace ChatResponseNotebookEditPart {
 	export function from(part: vscode.ChatResponseNotebookEditPart): extHostProtocol.IChatNotebookEditDto {
 		return {
-			kind: 'notebookEdit',
-			uri: part.uri,
-			edits: part.edits.map(NotebookEdit.from),
-			done: part.isDone
-		};
+      kind: "notebookEdit",
+      uri: part.uri,
+      edits: part.edits.map(NotebookEdit.from),
+      done: part.isDone,
+    };
 	}
 }
 
 export namespace ChatResponseWorkspaceEditPart {
 	export function from(part: vscode.ChatResponseWorkspaceEditPart): IChatWorkspaceEdit {
 		return {
-			kind: 'workspaceEdit',
+			kind: "workspaceEdit",
 			edits: part.edits.map(e => ({
 				oldResource: e.oldResource,
 				newResource: e.newResource,
@@ -3281,45 +3565,52 @@ export namespace ChatResponseReferencePart {
 	export function from(part: types.ChatResponseReferencePart): Dto<IChatContentReference> {
 		const iconPath = ThemeIcon.isThemeIcon(part.iconPath) ? part.iconPath
 			: URI.isUri(part.iconPath) ? { light: URI.revive(part.iconPath) }
-				: (part.iconPath && 'light' in part.iconPath && 'dark' in part.iconPath && URI.isUri(part.iconPath.light) && URI.isUri(part.iconPath.dark) ? { light: URI.revive(part.iconPath.light), dark: URI.revive(part.iconPath.dark) }
+				: (part.iconPath && "light" in part.iconPath && "dark" in part.iconPath && URI.isUri(
+            part.iconPath.light,
+          ) && URI.isUri(part.iconPath.dark) ? {
+            light: URI.revive(part.iconPath.light),
+            dark: URI.revive(part.iconPath.dark),
+          }
 					: undefined);
 
-		if (typeof part.value === 'object' && 'variableName' in part.value) {
+		if (typeof part.value === "object" && "variableName" in part.value) {
 			return {
-				kind: 'reference',
+				kind: "reference",
 				reference: {
 					variableName: part.value.variableName,
 					value: URI.isUri(part.value.value) || !part.value.value ?
 						part.value.value :
-						Location.from(part.value.value as vscode.Location)
+						Location.from(part.value.value as vscode.Location),
 				},
 				iconPath,
-				options: part.options
+				options: part.options,
 			};
 		}
 
 		return {
-			kind: 'reference',
-			reference: URI.isUri(part.value) || typeof part.value === 'string' ?
+			kind: "reference",
+			reference: URI.isUri(part.value) || typeof part.value === "string" ?
 				part.value :
 				Location.from(<vscode.Location>part.value),
 			iconPath,
-			options: part.options
+			options: part.options,
 		};
 	}
 	export function to(part: Dto<IChatContentReference>): vscode.ChatResponseReferencePart {
 		const value = revive<IChatContentReference>(part);
 
-		const mapValue = (value: URI | languages.Location): vscode.Uri | vscode.Location => URI.isUri(value) ?
+		const mapValue = (value: URI | languages.Location): vscode.Uri | vscode.Location => URI.isUri(
+      value,
+    ) ?
 			value :
 			Location.to(value);
 
 		return new types.ChatResponseReferencePart(
-			typeof value.reference === 'string' ? value.reference : 'variableName' in value.reference ? {
+			typeof value.reference === "string" ? value.reference : "variableName" in value.reference ? {
 				variableName: value.reference.variableName,
-				value: value.reference.value && mapValue(value.reference.value)
+				value: value.reference.value && mapValue(value.reference.value),
 			} :
-				mapValue(value.reference)
+				mapValue(value.reference),
 		) as vscode.ChatResponseReferencePart; // 'value' is extended with variableName
 	}
 }
@@ -3327,11 +3618,11 @@ export namespace ChatResponseReferencePart {
 export namespace ChatResponseCodeCitationPart {
 	export function from(part: vscode.ChatResponseCodeCitationPart): Dto<IChatCodeCitation> {
 		return {
-			kind: 'codeCitation',
-			value: part.value,
-			license: part.license,
-			snippet: part.snippet
-		};
+      kind: "codeCitation",
+      value: part.value,
+      license: part.license,
+      snippet: part.snippet,
+    };
 	}
 }
 
@@ -3355,7 +3646,11 @@ export namespace ChatResponsePart {
 		} else if (part instanceof types.ChatResponseMultiDiffPart) {
 			return ChatResponseMultiDiffPart.from(part);
 		} else if (part instanceof types.ChatResponseCommandButtonPart) {
-			return ChatResponseCommandButtonPart.from(part, commandsConverter, commandDisposables);
+			return ChatResponseCommandButtonPart.from(
+        part,
+        commandsConverter,
+        commandDisposables,
+      );
 		} else if (part instanceof types.ChatResponseTextEditPart) {
 			return ChatResponseTextEditPart.from(part);
 		} else if (part instanceof types.ChatResponseNotebookEditPart) {
@@ -3379,7 +3674,11 @@ export namespace ChatResponsePart {
 		} else if (part instanceof types.ChatResponseExtensionsPart) {
 			return ChatResponseExtensionsPart.from(part);
 		} else if (part instanceof types.ChatResponsePullRequestPart) {
-			return ChatResponsePullRequestPart.from(part, commandsConverter, commandDisposables);
+			return ChatResponsePullRequestPart.from(
+        part,
+        commandsConverter,
+        commandDisposables,
+      );
 		} else if (part instanceof types.ChatToolInvocationPart) {
 			return ChatToolInvocationPart.from(part);
 		} else if (part instanceof types.ChatResponseWorkspaceEditPart) {
@@ -3387,19 +3686,19 @@ export namespace ChatResponsePart {
 		}
 
 		return {
-			kind: 'markdownContent',
-			content: MarkdownString.from('')
-		};
+      kind: "markdownContent",
+      content: MarkdownString.from(""),
+    };
 	}
 
 	export function to(part: extHostProtocol.IChatProgressDto, commandsConverter: CommandsConverter): vscode.ChatResponsePart | undefined {
 		switch (part.kind) {
-			case 'reference': return ChatResponseReferencePart.to(part);
-			case 'markdownContent':
-			case 'inlineReference':
-			case 'progressMessage':
-			case 'treeData':
-			case 'command':
+			case "reference": return ChatResponseReferencePart.to(part);
+			case "markdownContent":
+			case "inlineReference":
+			case "progressMessage":
+			case "treeData":
+			case "command":
 				return toContent(part, commandsConverter);
 		}
 		return undefined;
@@ -3407,11 +3706,14 @@ export namespace ChatResponsePart {
 
 	export function toContent(part: extHostProtocol.IChatContentProgressDto, commandsConverter: CommandsConverter): vscode.ChatResponseMarkdownPart | vscode.ChatResponseFileTreePart | vscode.ChatResponseAnchorPart | vscode.ChatResponseCommandButtonPart | undefined {
 		switch (part.kind) {
-			case 'markdownContent': return ChatResponseMarkdownPart.to(part);
-			case 'inlineReference': return ChatResponseAnchorPart.to(part);
-			case 'progressMessage': return undefined;
-			case 'treeData': return ChatResponseFilesPart.to(part);
-			case 'command': return ChatResponseCommandButtonPart.to(part, commandsConverter);
+			case "markdownContent": return ChatResponseMarkdownPart.to(part);
+			case "inlineReference": return ChatResponseAnchorPart.to(part);
+			case "progressMessage": return undefined;
+			case "treeData": return ChatResponseFilesPart.to(part);
+			case "command": return ChatResponseCommandButtonPart.to(
+        part,
+        commandsConverter,
+      );
 		}
 
 		return undefined;
@@ -3424,16 +3726,18 @@ export namespace ChatAgentRequest {
 		const toolReferences: IChatRequestVariableEntry[] = [];
 		const variableReferences: IChatRequestVariableEntry[] = [];
 		for (const v of request.variables.variables) {
-			if (v.kind === 'tool') {
+			if (v.kind === "tool") {
 				toolReferences.push(v);
-			} else if (v.kind === 'toolset') {
+			} else if (v.kind === "toolset") {
 				toolReferences.push(...v.value);
 			} else {
 				variableReferences.push(v);
 			}
 		}
 
-		const sessionId = LocalChatSessionUri.parseLocalSessionId(request.sessionResource) ?? request.sessionResource.toString();
+		const sessionId = LocalChatSessionUri.parseLocalSessionId(
+      request.sessionResource,
+    ) ?? request.sessionResource.toString();
 		const requestWithAllProps: vscode.ChatRequest = {
 			id: request.requestId,
 			prompt: request.message,
@@ -3467,7 +3771,7 @@ export namespace ChatAgentRequest {
 			isSystemInitiated: request.isSystemInitiated,
 		};
 
-		if (!isProposedApiEnabled(extension, 'chatParticipantPrivate')) {
+		if (!isProposedApiEnabled(extension, "chatParticipantPrivate")) {
 			// eslint-disable-next-line local/code-no-any-casts
 			delete (requestWithAllProps as any).id;
 			// eslint-disable-next-line local/code-no-any-casts
@@ -3496,7 +3800,7 @@ export namespace ChatAgentRequest {
 			delete (requestWithAllProps as any).hooks;
 		}
 
-		if (!isProposedApiEnabled(extension, 'chatParticipantAdditions')) {
+		if (!isProposedApiEnabled(extension, "chatParticipantAdditions")) {
 			delete requestWithAllProps.acceptedConfirmationData;
 			delete requestWithAllProps.rejectedConfirmationData;
 			// eslint-disable-next-line local/code-no-any-casts
@@ -3536,7 +3840,7 @@ export namespace ChatSessionCustomizationType {
 
 export namespace ChatPromptReference {
 	export function to(variable: IChatRequestVariableEntry, diagnostics: readonly [vscode.Uri, readonly vscode.Diagnostic[]][], logService: ILogService): vscode.ChatPromptReference | undefined {
-		let value: vscode.ChatPromptReference['value'] = variable.value;
+		let value: vscode.ChatPromptReference["value"] = variable.value;
 		if (!value) {
 			let varStr: string;
 			try {
@@ -3545,23 +3849,31 @@ export namespace ChatPromptReference {
 				varStr = `kind=${variable.kind}, id=${variable.id}, name=${variable.name}`;
 			}
 
-			logService.error(`[ChatPromptReference] Ignoring invalid reference in variable: ${varStr}`);
+			logService.error(
+        `[ChatPromptReference] Ignoring invalid reference in variable: ${varStr}`,
+      );
 			return undefined;
 		}
 
 		if (isUriComponents(value)) {
 			value = URI.revive(value);
-		} else if (value && typeof value === 'object' && 'uri' in value && 'range' in value && isUriComponents(value.uri)) {
+		} else if (value && typeof value === "object" && "uri" in value && "range" in value && isUriComponents(
+      value.uri,
+    )) {
 			value = Location.to(revive(value));
 		} else if (isImageVariableEntry(variable)) {
 			const ref = variable.references?.[0]?.reference;
 			value = new types.ChatReferenceBinaryData(
-				variable.mimeType ?? 'image/png',
-				() => Promise.resolve(new Uint8Array(Object.values(variable.value as number[]))),
-				ref && URI.isUri(ref) ? ref : undefined
-			);
-		} else if (variable.kind === 'diagnostic') {
-			const filterSeverity = variable.filterSeverity && DiagnosticSeverity.to(variable.filterSeverity);
+        variable.mimeType ?? "image/png",
+        () => Promise.resolve(
+          new Uint8Array(Object.values(variable.value as number[])),
+        ),
+        ref && URI.isUri(ref) ? ref : undefined,
+      );
+		} else if (variable.kind === "diagnostic") {
+			const filterSeverity = variable.filterSeverity && DiagnosticSeverity.to(
+        variable.filterSeverity,
+      );
 			const filterUri = variable.filterUri && URI.revive(variable.filterUri).toString();
 			value = new types.ChatReferenceDiagnostic(diagnostics.map(([uri, d]): [vscode.Uri, vscode.Diagnostic[]] => {
 				if (variable.filterUri && uri.toString() !== filterUri) {
@@ -3583,18 +3895,20 @@ export namespace ChatPromptReference {
 		let toolReferences;
 		if (isPromptFileVariableEntry(variable) || isPromptTextVariableEntry(variable)) {
 			if (variable.toolReferences) {
-				toolReferences = ChatLanguageModelToolReferences.to(variable.toolReferences);
+				toolReferences = ChatLanguageModelToolReferences.to(
+          variable.toolReferences,
+        );
 			}
 		}
 
 		return {
-			id: variable.id,
-			name: variable.name,
-			range: variable.range && [variable.range.start, variable.range.endExclusive],
-			toolReferences,
-			value,
-			modelDescription: variable.modelDescription,
-		};
+      id: variable.id,
+      name: variable.name,
+      range: variable.range && [variable.range.start, variable.range.endExclusive],
+      toolReferences,
+      value,
+      modelDescription: variable.modelDescription,
+    };
 	}
 }
 
@@ -3602,13 +3916,13 @@ export namespace ChatLanguageModelToolReference {
 	export function to(variable: IChatRequestVariableEntry): vscode.ChatLanguageModelToolReference {
 		const value = variable.value;
 		if (value) {
-			throw new Error('Invalid tool reference');
+			throw new Error("Invalid tool reference");
 		}
 
 		return {
-			name: variable.id,
-			range: variable.range && [variable.range.start, variable.range.endExclusive],
-		};
+      name: variable.id,
+      range: variable.range && [variable.range.start, variable.range.endExclusive],
+    };
 	}
 }
 
@@ -3616,12 +3930,12 @@ namespace ChatLanguageModelToolReferences {
 	export function to(variables: readonly ChatRequestToolReferenceEntry[]): vscode.ChatLanguageModelToolReference[] {
 		const toolReferences = [];
 		for (const v of variables) {
-			if (v.kind === 'tool') {
+			if (v.kind === "tool") {
 				toolReferences.push(ChatLanguageModelToolReference.to(v));
-			} else if (v.kind === 'toolset') {
+			} else if (v.kind === "toolset") {
 				toolReferences.push(...v.value.map(ChatLanguageModelToolReference.to));
 			} else {
-				throw new Error('Invalid tool reference in prompt variables');
+				throw new Error("Invalid tool reference in prompt variables");
 			}
 		}
 		return toolReferences;
@@ -3632,13 +3946,13 @@ export namespace ChatRequestModeInstructions {
 	export function to(mode: IChatRequestModeInstructions | Dto<IChatRequestModeInstructions> | undefined): vscode.ChatRequestModeInstructions | undefined {
 		if (mode) {
 			return {
-				uri: URI.revive(mode.uri),
-				name: mode.name,
-				content: mode.content,
-				toolReferences: ChatLanguageModelToolReferences.to(revive(mode.toolReferences)),
-				metadata: mode.metadata,
-				isBuiltin: mode.isBuiltin,
-			};
+        uri: URI.revive(mode.uri),
+        name: mode.name,
+        content: mode.content,
+        toolReferences: ChatLanguageModelToolReferences.to(revive(mode.toolReferences)),
+        metadata: mode.metadata,
+        isBuiltin: mode.isBuiltin,
+      };
 		}
 		return undefined;
 	}
@@ -3650,7 +3964,7 @@ export namespace ChatRequestModeInstructions {
 				name: mode.name,
 				content: mode.content,
 				toolReferences: mode.toolReferences?.map(ref => ({
-					kind: 'tool' as const,
+					kind: "tool" as const,
 					id: ref.name,
 					name: ref.name,
 					value: undefined,
@@ -3667,38 +3981,38 @@ export namespace ChatRequestModeInstructions {
 export namespace ChatAgentCompletionItem {
 	export function from(item: vscode.ChatCompletionItem, commandsConverter: CommandsConverter, disposables: DisposableStore): extHostProtocol.IChatAgentCompletionItem {
 		return {
-			id: item.id,
-			label: item.label,
-			fullName: item.fullName,
-			icon: item.icon?.id,
-			value: item.values[0].value,
-			insertText: item.insertText,
-			detail: item.detail,
-			documentation: item.documentation,
-			command: commandsConverter.toInternal(item.command, disposables),
-		};
+      id: item.id,
+      label: item.label,
+      fullName: item.fullName,
+      icon: item.icon?.id,
+      value: item.values[0].value,
+      insertText: item.insertText,
+      detail: item.detail,
+      documentation: item.documentation,
+      command: commandsConverter.toInternal(item.command, disposables),
+    };
 	}
 }
 
 export namespace ChatAgentResult {
 	export function to(result: IChatAgentResult): vscode.ChatResult {
 		return {
-			errorDetails: result.errorDetails,
-			metadata: reviveMetadata(result.metadata),
-			nextQuestion: result.nextQuestion,
-			details: result.details,
-		};
+      errorDetails: result.errorDetails,
+      metadata: reviveMetadata(result.metadata),
+      nextQuestion: result.nextQuestion,
+      details: result.details,
+    };
 	}
 	export function from(result: vscode.ChatResult): Dto<IChatAgentResult> {
 		return {
-			errorDetails: result.errorDetails,
-			metadata: result.metadata,
-			nextQuestion: result.nextQuestion,
-			details: result.details,
-		};
+      errorDetails: result.errorDetails,
+      metadata: result.metadata,
+      nextQuestion: result.nextQuestion,
+      details: result.details,
+    };
 	}
 
-	function reviveMetadata(metadata: IChatAgentResult['metadata']) {
+	function reviveMetadata(metadata: IChatAgentResult["metadata"]) {
 		return cloneAndChange(metadata, value => {
 			if (value.$mid === MarshalledId.LanguageModelToolResult) {
 				return new types.LanguageModelToolResult(cloneAndChange(value.content, reviveMetadata));
@@ -3711,9 +4025,9 @@ export namespace ChatAgentResult {
 			} else if (value.$mid === MarshalledId.LanguageModelDataPart) {
 				let buffer: Uint8Array;
 				// correction for old data serialized pre-303151
-				if (value.data && typeof value.data === 'object' && value.data.type === 'Buffer' && Array.isArray(value.data.data)) {
+				if (value.data && typeof value.data === "object" && value.data.type === "Buffer" && Array.isArray(value.data.data)) {
 					buffer = new Uint8Array(value.data.data);
-				} else if (typeof value.data === 'string') {
+				} else if (typeof value.data === "string") {
 					try {
 						buffer = decodeBase64(value.data).buffer;
 					} catch {
@@ -3733,56 +4047,65 @@ export namespace ChatAgentResult {
 
 export namespace ChatAgentUserActionEvent {
 	export function to(result: IChatAgentResult, event: IChatUserActionEvent, commandsConverter: CommandsConverter): vscode.ChatUserActionEvent | undefined {
-		if (event.action.kind === 'vote') {
+		if (event.action.kind === "vote") {
 			// Is the "feedback" type
 			return;
 		}
 
 		const ehResult = ChatAgentResult.to(result);
-		if (event.action.kind === 'command') {
+		if (event.action.kind === "command") {
 			const command = event.action.commandButton.command;
 			const commandButton = {
-				command: commandsConverter.fromInternal(command) ?? { command: command.id, title: command.title },
-			};
-			const commandAction: vscode.ChatCommandAction = { kind: 'command', commandButton };
+        command: commandsConverter.fromInternal(command) ?? { command: command.id, title: command.title },
+      };
+			const commandAction: vscode.ChatCommandAction = {
+        kind: "command",
+        commandButton,
+      };
 			return { action: commandAction, result: ehResult };
-		} else if (event.action.kind === 'followUp') {
-			const followupAction: vscode.ChatFollowupAction = { kind: 'followUp', followup: ChatFollowup.to(event.action.followup) };
+		} else if (event.action.kind === "followUp") {
+			const followupAction: vscode.ChatFollowupAction = {
+        kind: "followUp",
+        followup: ChatFollowup.to(event.action.followup),
+      };
 			return { action: followupAction, result: ehResult };
-		} else if (event.action.kind === 'inlineChat') {
-			return { action: { kind: 'editor', accepted: event.action.action === 'accepted' }, result: ehResult };
-		} else if (event.action.kind === 'chatEditingSessionAction') {
+		} else if (event.action.kind === "inlineChat") {
+			return {
+        action: { kind: "editor", accepted: event.action.action === "accepted" },
+        result: ehResult,
+      };
+		} else if (event.action.kind === "chatEditingSessionAction") {
 
 			const outcomes = new Map([
-				['accepted', types.ChatEditingSessionActionOutcome.Accepted],
-				['rejected', types.ChatEditingSessionActionOutcome.Rejected],
-				['saved', types.ChatEditingSessionActionOutcome.Saved],
-			]);
+        ["accepted", types.ChatEditingSessionActionOutcome.Accepted],
+        ["rejected", types.ChatEditingSessionActionOutcome.Rejected],
+        ["saved", types.ChatEditingSessionActionOutcome.Saved],
+      ]);
 
 			return {
 				action: {
-					kind: 'chatEditingSessionAction',
+					kind: "chatEditingSessionAction",
 					outcome: outcomes.get(event.action.outcome) ?? types.ChatEditingSessionActionOutcome.Rejected,
 					uri: URI.revive(event.action.uri),
-					hasRemainingEdits: event.action.hasRemainingEdits
-				}, result: ehResult
+					hasRemainingEdits: event.action.hasRemainingEdits,
+				}, result: ehResult,
 			};
-		} else if (event.action.kind === 'chatEditingHunkAction') {
+		} else if (event.action.kind === "chatEditingHunkAction") {
 			const outcomes = new Map([
-				['accepted', types.ChatEditingSessionActionOutcome.Accepted],
-				['rejected', types.ChatEditingSessionActionOutcome.Rejected],
-			]);
+        ["accepted", types.ChatEditingSessionActionOutcome.Accepted],
+        ["rejected", types.ChatEditingSessionActionOutcome.Rejected],
+      ]);
 
 			return {
 				action: {
-					kind: 'chatEditingHunkAction',
+					kind: "chatEditingHunkAction",
 					outcome: outcomes.get(event.action.outcome) ?? types.ChatEditingSessionActionOutcome.Rejected,
 					uri: URI.revive(event.action.uri),
 					hasRemainingEdits: event.action.hasRemainingEdits,
 					lineCount: event.action.lineCount,
 					linesAdded: event.action.linesAdded,
-					linesRemoved: event.action.linesRemoved
-				}, result: ehResult
+					linesRemoved: event.action.linesRemoved,
+				}, result: ehResult,
 			};
 		} else {
 			return { action: event.action, result: ehResult };
@@ -3792,10 +4115,13 @@ export namespace ChatAgentUserActionEvent {
 
 export namespace TerminalQuickFix {
 	export function from(quickFix: vscode.TerminalQuickFixTerminalCommand | vscode.TerminalQuickFixOpener | vscode.Command, converter: Command.ICommandsConverter, disposables: DisposableStore): extHostProtocol.ITerminalQuickFixTerminalCommandDto | extHostProtocol.ITerminalQuickFixOpenerDto | extHostProtocol.ICommandDto | undefined {
-		if ('terminalCommand' in quickFix) {
-			return { terminalCommand: quickFix.terminalCommand, shouldExecute: quickFix.shouldExecute };
+		if ("terminalCommand" in quickFix) {
+			return {
+        terminalCommand: quickFix.terminalCommand,
+        shouldExecute: quickFix.shouldExecute,
+      };
 		}
-		if ('uri' in quickFix) {
+		if ("uri" in quickFix) {
 			return { uri: quickFix.uri };
 		}
 		return converter.toInternal(quickFix, disposables);
@@ -3804,9 +4130,9 @@ export namespace TerminalQuickFix {
 export namespace TerminalCompletionItemDto {
 	export function from(item: vscode.TerminalCompletionItem): extHostProtocol.ITerminalCompletionItemDto {
 		return {
-			...item,
-			documentation: MarkdownString.fromStrict(item.documentation),
-		};
+      ...item,
+      documentation: MarkdownString.fromStrict(item.documentation),
+    };
 	}
 }
 
@@ -3814,33 +4140,33 @@ export namespace TerminalCompletionList {
 	export function from(completions: vscode.TerminalCompletionList | vscode.TerminalCompletionItem[], pathSeparator: string): extHostProtocol.TerminalCompletionListDto {
 		if (Array.isArray(completions)) {
 			return {
-				items: completions.map(i => TerminalCompletionItemDto.from(i)),
-			};
+        items: completions.map(i => TerminalCompletionItemDto.from(i)),
+      };
 		}
 		return {
-			items: completions.items.map(i => TerminalCompletionItemDto.from(i)),
-			resourceOptions: completions.resourceOptions ? TerminalCompletionResourceOptions.from(completions.resourceOptions, pathSeparator) : undefined,
-		};
+      items: completions.items.map(i => TerminalCompletionItemDto.from(i)),
+      resourceOptions: completions.resourceOptions ? TerminalCompletionResourceOptions.from(completions.resourceOptions, pathSeparator) : undefined,
+    };
 	}
 }
 
 export namespace TerminalCompletionResourceOptions {
 	export function from(resourceOptions: vscode.TerminalCompletionResourceOptions, pathSeparator: string): extHostProtocol.TerminalCompletionResourceOptionsDto {
 		return {
-			...resourceOptions,
-			pathSeparator,
-			cwd: resourceOptions.cwd,
-			globPattern: GlobPattern.from(resourceOptions.globPattern) ?? undefined
-		};
+      ...resourceOptions,
+      pathSeparator,
+      cwd: resourceOptions.cwd,
+      globPattern: GlobPattern.from(resourceOptions.globPattern) ?? undefined,
+    };
 	}
 }
 
 export namespace PartialAcceptInfo {
 	export function to(info: languages.PartialAcceptInfo): types.PartialAcceptInfo {
 		return {
-			kind: PartialAcceptTriggerKind.to(info.kind),
-			acceptedLength: info.acceptedLength,
-		};
+      kind: PartialAcceptTriggerKind.to(info.kind),
+      acceptedLength: info.acceptedLength,
+    };
 	}
 }
 
@@ -3862,20 +4188,22 @@ export namespace PartialAcceptTriggerKind {
 export namespace InlineCompletionEndOfLifeReason {
 	export function to<T>(reason: languages.InlineCompletionEndOfLifeReason<T>, convertFn: (item: T) => vscode.InlineCompletionItem | undefined): vscode.InlineCompletionEndOfLifeReason {
 		if (reason.kind === languages.InlineCompletionEndOfLifeReasonKind.Ignored) {
-			const supersededBy = reason.supersededBy ? convertFn(reason.supersededBy) : undefined;
+			const supersededBy = reason.supersededBy ? convertFn(
+        reason.supersededBy,
+      ) : undefined;
 			return {
-				kind: types.InlineCompletionEndOfLifeReasonKind.Ignored,
-				supersededBy: supersededBy,
-				userTypingDisagreed: reason.userTypingDisagreed,
-			};
+        kind: types.InlineCompletionEndOfLifeReasonKind.Ignored,
+        supersededBy: supersededBy,
+        userTypingDisagreed: reason.userTypingDisagreed,
+      };
 		} else if (reason.kind === languages.InlineCompletionEndOfLifeReasonKind.Accepted) {
 			return {
-				kind: types.InlineCompletionEndOfLifeReasonKind.Accepted,
-			};
+        kind: types.InlineCompletionEndOfLifeReasonKind.Accepted,
+      };
 		}
 		return {
-			kind: types.InlineCompletionEndOfLifeReasonKind.Rejected,
-		};
+      kind: types.InlineCompletionEndOfLifeReasonKind.Rejected,
+    };
 	}
 }
 
@@ -3901,22 +4229,29 @@ export namespace InlineCompletionHintStyle {
 export namespace DebugTreeItem {
 	export function from(item: vscode.DebugTreeItem, id: number): IDebugVisualizationTreeItem {
 		return {
-			id,
-			label: item.label,
-			description: item.description,
-			canEdit: item.canEdit,
-			collapsibleState: (item.collapsibleState || DebugTreeItemCollapsibleState.None) as DebugTreeItemCollapsibleState,
-			contextValue: item.contextValue,
-		};
+      id,
+      label: item.label,
+      description: item.description,
+      canEdit: item.canEdit,
+      collapsibleState: (item.collapsibleState || DebugTreeItemCollapsibleState.None) as DebugTreeItemCollapsibleState,
+      contextValue: item.contextValue,
+    };
 	}
 }
 
 export namespace LanguageModelToolSource {
-	export function to(source: Dto<ToolDataSource>): vscode.LanguageModelToolInformation['source'] {
-		if (source.type === 'mcp') {
-			return new types.LanguageModelToolMCPSource(source.label, source.serverLabel || source.label, source.instructions);
-		} else if (source.type === 'extension') {
-			return new types.LanguageModelToolExtensionSource(source.extensionId.value, source.label);
+	export function to(source: Dto<ToolDataSource>): vscode.LanguageModelToolInformation["source"] {
+		if (source.type === "mcp") {
+			return new types.LanguageModelToolMCPSource(
+        source.label,
+        source.serverLabel || source.label,
+        source.instructions,
+      );
+		} else if (source.type === "extension") {
+			return new types.LanguageModelToolExtensionSource(
+        source.extensionId.value,
+        source.label,
+      );
 		} else {
 			return undefined;
 		}
@@ -3926,9 +4261,9 @@ export namespace LanguageModelToolSource {
 export namespace LanguageModelToolResult {
 	export function to(result: IToolResult): vscode.ExtendedLanguageModelToolResult {
 		const toolResult = new types.LanguageModelToolResult(result.content.map(item => {
-			if (item.kind === 'text') {
+			if (item.kind === "text") {
 				return new types.LanguageModelTextPart(item.value, item.audience);
-			} else if (item.kind === 'data') {
+			} else if (item.kind === "data") {
 				return new types.LanguageModelDataPart(item.value.data.buffer, item.value.mimeType, item.audience);
 			} else {
 				return new types.LanguageModelPromptTsxPart(item.value);
@@ -3945,12 +4280,12 @@ export namespace LanguageModelToolResult {
 
 	export function from(result: vscode.ExtendedLanguageModelToolResult2, extension: IExtensionDescription): Dto<IToolResult> | SerializableObjectWithBuffers<Dto<IToolResult>> {
 		if (result.toolResultMessage) {
-			checkProposedApiEnabled(extension, 'chatParticipantPrivate');
+			checkProposedApiEnabled(extension, "chatParticipantPrivate");
 		}
 
 		const checkAudienceApi = (item: LanguageModelTextPart | LanguageModelDataPart) => {
 			if (item.audience) {
-				checkProposedApiEnabled(extension, 'languageModelToolResultAudience');
+				checkProposedApiEnabled(extension, "languageModelToolResultAudience");
 			}
 		};
 
@@ -3958,16 +4293,16 @@ export namespace LanguageModelToolResult {
 		let detailsDto: Dto<Array<URI | types.Location> | IToolResultInputOutputDetails | IToolResultOutputDetails | undefined> = undefined;
 		if (Array.isArray(result.toolResultDetails)) {
 			detailsDto = result.toolResultDetails?.map(detail => {
-				return URI.isUri(detail) ? detail : Location.from(detail as vscode.Location);
-			});
+        return URI.isUri(detail) ? detail : Location.from(detail as vscode.Location);
+      });
 		} else {
 			if (result.toolResultDetails2) {
 				detailsDto = {
 					output: {
-						type: 'data',
+						type: "data",
 						mimeType: (result.toolResultDetails2 as vscode.ToolResultDataOutput).mime,
 						value: VSBuffer.wrap((result.toolResultDetails2 as vscode.ToolResultDataOutput).value),
-					}
+					},
 				} satisfies IToolResultOutputDetails;
 				hasBuffers = true;
 			}
@@ -3978,28 +4313,28 @@ export namespace LanguageModelToolResult {
 				if (item instanceof types.LanguageModelTextPart) {
 					checkAudienceApi(item);
 					return {
-						kind: 'text',
+						kind: "text",
 						value: item.value,
-						audience: item.audience
+						audience: item.audience,
 					};
 				} else if (item instanceof types.LanguageModelPromptTsxPart) {
 					return {
-						kind: 'promptTsx',
+						kind: "promptTsx",
 						value: item.value,
 					};
 				} else if (item instanceof types.LanguageModelDataPart) {
 					checkAudienceApi(item);
 					hasBuffers = true;
 					return {
-						kind: 'data',
+						kind: "data",
 						value: {
 							mimeType: item.mimeType,
-							data: VSBuffer.wrap(item.data)
+							data: VSBuffer.wrap(item.data),
 						},
-						audience: item.audience
+						audience: item.audience,
 					};
 				} else {
-					throw new Error('Unknown LanguageModelToolResult part type');
+					throw new Error("Unknown LanguageModelToolResult part type");
 				}
 			}),
 			toolResultMessage: MarkdownString.fromStrict(result.toolResultMessage),
@@ -4033,11 +4368,15 @@ export namespace IconPath {
 			return value;
 		} else if (URI.isUri(value)) {
 			return value;
-		} else if (typeof value === 'string') {
+		} else if (typeof value === "string") {
 			return URI.file(value);
-		} else if (typeof value === 'object' && value !== null && 'dark' in value) {
-			const dark = typeof value.dark === 'string' ? URI.file(value.dark) : value.dark;
-			const light = typeof value.light === 'string' ? URI.file(value.light) : value.light;
+		} else if (typeof value === "object" && value !== null && "dark" in value) {
+			const dark = typeof value.dark === "string" ? URI.file(
+        value.dark,
+      ) : value.dark;
+			const light = typeof value.light === "string" ? URI.file(
+        value.light,
+      ) : value.light;
 			return !dark ? undefined : { dark, light: light ?? dark };
 		} else {
 			return undefined;
@@ -4061,9 +4400,9 @@ export namespace IconPath {
 		} else {
 			const icon = value as { light: UriComponents; dark: UriComponents };
 			return {
-				light: URI.revive(icon.light),
-				dark: URI.revive(icon.dark)
-			};
+        light: URI.revive(icon.light),
+        dark: URI.revive(icon.dark),
+      };
 		}
 	}
 }
@@ -4071,10 +4410,10 @@ export namespace IconPath {
 export namespace AiSettingsSearch {
 	export function fromSettingsSearchResult(result: vscode.SettingsSearchResult): AiSettingsSearchResult {
 		return {
-			query: result.query,
-			kind: fromSettingsSearchResultKind(result.kind),
-			settings: result.settings
-		};
+      query: result.query,
+      kind: fromSettingsSearchResultKind(result.kind),
+      settings: result.settings,
+    };
 	}
 
 	function fromSettingsSearchResultKind(kind: number): AiSettingsSearchResultKind {
@@ -4086,7 +4425,7 @@ export namespace AiSettingsSearch {
 			case AiSettingsSearchResultKind.CANCELED:
 				return AiSettingsSearchResultKind.CANCELED;
 			default:
-				throw new Error('Unknown AiSettingsSearchResultKind');
+				throw new Error("Unknown AiSettingsSearchResultKind");
 		}
 	}
 }
@@ -4105,7 +4444,7 @@ export namespace McpServerDefinition {
 					headers: Object.entries(item.headers),
 					authentication: (item as vscode.McpHttpServerDefinition2).authentication ? {
 						providerId: (item as vscode.McpHttpServerDefinition2).authentication!.providerId,
-						scopes: (item as vscode.McpHttpServerDefinition2).authentication!.scopes
+						scopes: (item as vscode.McpHttpServerDefinition2).authentication!.scopes,
 					} : undefined,
 				}
 				: {
@@ -4115,8 +4454,8 @@ export namespace McpServerDefinition {
 					command: item.command,
 					env: item.env,
 					envFile: undefined,
-					sandbox: undefined
-				}
+					sandbox: undefined,
+				},
 		);
 	}
 
@@ -4125,19 +4464,24 @@ export namespace McpServerDefinition {
 		const launch = McpServerLaunch.fromSerialized(dto.launch);
 		if (launch.type === McpServerTransportType.HTTP) {
 			return new types.McpHttpServerDefinition(
-				dto.label,
-				launch.uri,
-				Object.fromEntries(launch.headers),
-				dto.cacheNonce === '$$NONE' ? undefined : dto.cacheNonce,
-			);
+        dto.label,
+        launch.uri,
+        Object.fromEntries(launch.headers),
+        dto.cacheNonce === "$$NONE" ? undefined : dto.cacheNonce,
+      );
 		} else {
 			const result = new types.McpStdioServerDefinition(
-				dto.label,
-				launch.command,
-				[...launch.args],
-				Object.fromEntries(Object.entries(launch.env).map(([key, value]) => [key, value === null ? null : String(value)])),
-				dto.cacheNonce === '$$NONE' ? undefined : dto.cacheNonce,
-			);
+        dto.label,
+        launch.command,
+        [...launch.args],
+        Object.fromEntries(
+          Object.entries(launch.env).map(([key, value]) => [
+            key,
+            value === null ? null : String(value),
+          ]),
+        ),
+        dto.cacheNonce === "$$NONE" ? undefined : dto.cacheNonce,
+      );
 			if (launch.cwd) {
 				result.cwd = URI.file(launch.cwd);
 			}
@@ -4156,7 +4500,7 @@ export namespace SourceControlInputBoxValidationType {
 			case types.SourceControlInputBoxValidationType.Information:
 				return InputValidationType.Information;
 			default:
-				throw new Error('Unknown SourceControlInputBoxValidationType');
+				throw new Error("Unknown SourceControlInputBoxValidationType");
 		}
 	}
 }
@@ -4190,11 +4534,11 @@ export namespace ChatHookCommand {
 			return undefined;
 		}
 		return {
-			command,
-			cwd: hook.cwd,
-			env: hook.env,
-			timeout: hook.timeout,
-		};
+      command,
+      cwd: hook.cwd,
+      env: hook.env,
+      timeout: hook.timeout,
+    };
 	}
 }
 

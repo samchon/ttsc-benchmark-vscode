@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDragAndDropData } from '../../dnd.js';
-import { IKeyboardEvent } from '../../keyboardEvent.js';
-import { IMouseEvent } from '../../mouseEvent.js';
-import { GestureEvent } from '../../touch.js';
-import { ListViewTargetSector } from './listView.js';
-import { IDisposable } from '../../../common/lifecycle.js';
+import { IDragAndDropData } from "../../dnd.js";
+import { IKeyboardEvent } from "../../keyboardEvent.js";
+import { IMouseEvent } from "../../mouseEvent.js";
+import { GestureEvent } from "../../touch.js";
+import { ListViewTargetSector } from "./listView.js";
+import { IDisposable } from "../../../common/lifecycle.js";
 
 export interface IListVirtualDelegate<T> {
 	getHeight(element: T): number;
@@ -73,7 +73,7 @@ export interface IListContextMenuEvent<T> {
 	readonly anchor: HTMLElement | IMouseEvent;
 }
 
-export const NotSelectableGroupId = 'notSelectable';
+export const NotSelectableGroupId = "notSelectable";
 export type NotSelectableGroupIdType = typeof NotSelectableGroupId;
 
 export interface IIdentityProvider<T> {
@@ -101,9 +101,9 @@ export const enum ListDragOverEffectType {
 }
 
 export const enum ListDragOverEffectPosition {
-	Over = 'drop-target',
-	Before = 'drop-target-before',
-	After = 'drop-target-after'
+	Over = "drop-target",
+	Before = "drop-target-before",
+	After = "drop-target-after"
 }
 
 export interface ListDragOverEffect {
@@ -118,8 +118,8 @@ export interface IListDragOverReaction {
 }
 
 export const ListDragOverReactions = {
-	reject(): IListDragOverReaction { return { accept: false }; },
-	accept(): IListDragOverReaction { return { accept: true }; },
+  reject(): IListDragOverReaction { return { accept: false }; },
+  accept(): IListDragOverReaction { return { accept: true }; },
 };
 
 /**

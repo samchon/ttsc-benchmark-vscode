@@ -3,27 +3,31 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Separator } from '../../../../../base/common/actions.js';
-import { coalesce } from '../../../../../base/common/arrays.js';
-import { posix as pathPosix, win32 as pathWin32 } from '../../../../../base/common/path.js';
-import { OperatingSystem } from '../../../../../base/common/platform.js';
-import { escapeRegExpCharacters } from '../../../../../base/common/strings.js';
-import { localize } from '../../../../../nls.js';
-import type { TerminalNewAutoApproveButtonData } from '../../../chat/browser/widget/chatContentParts/toolInvocationParts/chatTerminalToolConfirmationSubPart.js';
-import type { ToolConfirmationAction } from '../../../chat/common/tools/languageModelToolsService.js';
-import type { ICommandApprovalResultWithReason } from './tools/commandLineAnalyzer/autoApprove/commandLineAutoApprover.js';
-import { isAutoApproveRule } from './tools/commandLineAnalyzer/commandLineAnalyzer.js';
+import { Separator } from "../../../../../base/common/actions.js";
+import { coalesce } from "../../../../../base/common/arrays.js";
+import { posix as pathPosix, win32 as pathWin32 } from "../../../../../base/common/path.js";
+import { OperatingSystem } from "../../../../../base/common/platform.js";
+import { escapeRegExpCharacters } from "../../../../../base/common/strings.js";
+import { localize } from "../../../../../nls.js";
+import type { TerminalNewAutoApproveButtonData } from "../../../chat/browser/widget/chatContentParts/toolInvocationParts/chatTerminalToolConfirmationSubPart.js";
+import type { ToolConfirmationAction } from "../../../chat/common/tools/languageModelToolsService.js";
+import type { ICommandApprovalResultWithReason } from "./tools/commandLineAnalyzer/autoApprove/commandLineAutoApprover.js";
+import { isAutoApproveRule } from "./tools/commandLineAnalyzer/commandLineAnalyzer.js";
 
 export function isPowerShell(envShell: string, os: OperatingSystem): boolean {
 	if (os === OperatingSystem.Windows) {
-		return /^(?:powershell|pwsh)(?:-preview)?$/i.test(pathWin32.basename(envShell).replace(/\.exe$/i, ''));
+		return /^(?:powershell|pwsh)(?:-preview)?$/i.test(
+      pathWin32.basename(envShell).replace(/\.exe$/i, ""),
+    );
 
 	}
-	return /^(?:powershell|pwsh)(?:-preview)?$/.test(pathPosix.basename(envShell));
+	return /^(?:powershell|pwsh)(?:-preview)?$/.test(
+    pathPosix.basename(envShell),
+  );
 }
 
 export function isWindowsPowerShell(envShell: string): boolean {
-	return envShell.endsWith('System32\\WindowsPowerShell\\v1.0\\powershell.exe');
+	return envShell.endsWith("System32\\WindowsPowerShell\\v1.0\\powershell.exe");
 }
 
 export function isZsh(envShell: string, os: OperatingSystem): boolean {
@@ -47,7 +51,7 @@ export function isFish(envShell: string, os: OperatingSystem): boolean {
 	return /^fish$/.test(pathPosix.basename(envShell));
 }
 
-export const TRUNCATION_MESSAGE = '\n\n[... PREVIOUS OUTPUT TRUNCATED ...]\n\n';
+export const TRUNCATION_MESSAGE = "\n\n[... PREVIOUS OUTPUT TRUNCATED ...]\n\n";
 
 export function truncateOutputKeepingTail(output: string, maxLength: number): string {
 	if (output.length <= maxLength) {
@@ -67,7 +71,7 @@ export function truncateOutputKeepingTail(output: string, maxLength: number): st
  * escaping artifacts (for example: \" \' \/) commonly produced in streamed tool-call JSON.
  */
 export function normalizeTerminalCommandForDisplay(commandLine: string): string {
-	return commandLine.replace(/\\(["'\/])/g, '$1');
+	return commandLine.replace(/\\(["'\/])/g, "$1");
 }
 
 /**
@@ -75,8 +79,14 @@ export function normalizeTerminalCommandForDisplay(commandLine: string): string 
  * Normalizes escape artifacts, collapses newlines to spaces, and truncates to 80 characters.
  */
 export function buildCommandDisplayText(command: string): string {
-	const normalized = normalizeTerminalCommandForDisplay(command).replace(/\r\n|\r|\n/g, ' ');
-	return normalized.length > 80 ? normalized.substring(0, 77) + '...' : normalized;
+	const normalized = normalizeTerminalCommandForDisplay(command).replace(
+    /\r\n|\r|\n/g,
+    " ",
+  );
+	return normalized.length > 80 ? normalized.substring(
+    0,
+    77,
+  ) + "..." : normalized;
 }
 
 /**
@@ -84,7 +94,7 @@ export function buildCommandDisplayText(command: string): string {
  * This prevents multi-line input from being sent as multiple commands via sendText.
  */
 export function normalizeCommandForExecution(command: string): string {
-	return command.replace(/\r\n|\r|\n/g, ' ').trim();
+	return command.replace(/\r\n|\r|\n/g, " ").trim();
 }
 
 /**
@@ -100,7 +110,7 @@ export function normalizeCommandForExecution(command: string): string {
 export function isMultilineCommand(command: string): boolean {
 	// Normalize all line-ending variants to \n, then check for a newline
 	// that is not preceded by a backslash (i.e. not a line continuation).
-	const normalized = command.replace(/\r\n|\r/g, '\n');
+	const normalized = command.replace(/\r\n|\r/g, "\n");
 	return /(?<!\\)\n/.test(normalized);
 }
 
@@ -110,40 +120,74 @@ export function generateAutoApproveActions(commandLine: string, subCommands: str
 	// We shouldn't offer configuring rules for commands that are explicitly denied since it
 	// wouldn't get auto approved with a new rule
 	const canCreateAutoApproval = (
-		autoApproveResult.subCommandResults.every(e => e.result !== 'denied') &&
-		autoApproveResult.commandLineResult.result !== 'denied'
+		autoApproveResult.subCommandResults.every(e => e.result !== "denied") &&
+		autoApproveResult.commandLineResult.result !== "denied"
 	);
 	if (canCreateAutoApproval) {
 		const unapprovedSubCommands = subCommands.filter((_, index) => {
-			return autoApproveResult.subCommandResults[index].result !== 'approved';
-		});
+      return autoApproveResult.subCommandResults[index].result !== "approved";
+    });
 
 		// Some commands should not be recommended as they are too permissive generally. This only
 		// applies to sub-commands, we still want to offer approving of the exact the command line
 		// however as it's very specific.
 		const neverAutoApproveCommands = new Set([
-			// Shell interpreters
-			'bash', 'sh', 'zsh', 'fish', 'ksh', 'csh', 'tcsh', 'dash',
-			'pwsh', 'powershell', 'powershell.exe', 'cmd', 'cmd.exe',
-			// Script interpreters
-			'python', 'python3', 'node', 'ruby', 'perl', 'php', 'lua',
-			// Direct execution commands
-			'eval', 'exec', 'source', 'sudo', 'su', 'doas',
-			// Network tools that can download and execute code
-			'curl', 'wget', 'invoke-restmethod', 'invoke-webrequest', 'irm', 'iwr',
-		]);
+      "bash",
+      "sh",
+      "zsh",
+      "fish",
+      "ksh",
+      "csh",
+      "tcsh",
+      "dash",
+      "pwsh",
+      "powershell",
+      "powershell.exe",
+      "cmd",
+      "cmd.exe",
+      "python",
+      "python3",
+      "node",
+      "ruby",
+      "perl",
+      "php",
+      "lua",
+      "eval",
+      "exec",
+      "source",
+      "sudo",
+      "su",
+      "doas",
+      "curl",
+      "wget",
+      "invoke-restmethod",
+      "invoke-webrequest",
+      "irm",
+      "iwr",
+    ]);
 
 		// Commands where we want to suggest the sub-command (eg. `foo bar` instead of `foo`)
-		const commandsWithSubcommands = new Set(['git', 'npm', 'npx', 'yarn', 'docker', 'kubectl', 'cargo', 'dotnet', 'mvn', 'gradle']);
+		const commandsWithSubcommands = new Set([
+      "git",
+      "npm",
+      "npx",
+      "yarn",
+      "docker",
+      "kubectl",
+      "cargo",
+      "dotnet",
+      "mvn",
+      "gradle",
+    ]);
 
 		// Commands where we want to suggest the sub-command of a sub-command (eg. `foo bar baz`
 		// instead of `foo`)
-		const commandsWithSubSubCommands = new Set(['npm run', 'yarn run']);
+		const commandsWithSubSubCommands = new Set(["npm run", "yarn run"]);
 
 		// Helper function to find the first non-flag argument after a given index
 		const findNextNonFlagArg = (parts: string[], startIndex: number): number | undefined => {
 			for (let i = startIndex; i < parts.length; i++) {
-				if (!parts[i].startsWith('-')) {
+				if (!parts[i].startsWith("-")) {
 					return i;
 				}
 			}
@@ -177,12 +221,12 @@ export function generateAutoApproveActions(commandLine: string, subCommands: str
 						const subSubCommandIndex = findNextNonFlagArg(parts, subCommandIndex + 1);
 						if (subSubCommandIndex !== undefined) {
 							// Include everything from command to sub-sub-command (including flags)
-							return parts.slice(0, subSubCommandIndex + 1).join(' ');
+							return parts.slice(0, subSubCommandIndex + 1).join(" ");
 						}
 						return undefined;
 					} else {
 						// Include everything from command to subcommand (including flags)
-						return parts.slice(0, subCommandIndex + 1).join(' ');
+						return parts.slice(0, subCommandIndex + 1).join(" ");
 					}
 				}
 				return undefined;
@@ -196,41 +240,41 @@ export function generateAutoApproveActions(commandLine: string, subCommands: str
 			if (subCommandsToSuggest.length === 1) {
 				subCommandLabel = `\`${subCommandsToSuggest[0]} \u2026\``;
 			} else {
-				subCommandLabel = `Commands ${subCommandsToSuggest.map(e => `\`${e} \u2026\``).join(', ')}`;
+				subCommandLabel = `Commands ${subCommandsToSuggest.map(e => `\`${e} \u2026\``).join(", ")}`;
 			}
 
 			actions.push({
 				label: `Allow ${subCommandLabel} in this Session`,
 				data: {
-					type: 'newRule',
+					type: "newRule",
 					rule: subCommandsToSuggest.map(key => ({
 						key,
 						value: true,
-						scope: 'session'
-					}))
-				} satisfies TerminalNewAutoApproveButtonData
+						scope: "session",
+					})),
+				} satisfies TerminalNewAutoApproveButtonData,
 			});
 			actions.push({
 				label: `Allow ${subCommandLabel} in this Workspace`,
 				data: {
-					type: 'newRule',
+					type: "newRule",
 					rule: subCommandsToSuggest.map(key => ({
 						key,
 						value: true,
-						scope: 'workspace'
-					}))
-				} satisfies TerminalNewAutoApproveButtonData
+						scope: "workspace",
+					})),
+				} satisfies TerminalNewAutoApproveButtonData,
 			});
 			actions.push({
 				label: `Always Allow ${subCommandLabel}`,
 				data: {
-					type: 'newRule',
+					type: "newRule",
 					rule: subCommandsToSuggest.map(key => ({
 						key,
 						value: true,
-						scope: 'user'
-					}))
-				} satisfies TerminalNewAutoApproveButtonData
+						scope: "user",
+					})),
+				} satisfies TerminalNewAutoApproveButtonData,
 			});
 		}
 
@@ -240,53 +284,55 @@ export function generateAutoApproveActions(commandLine: string, subCommands: str
 
 		// Allow exact command line, don't do this if it's just the first sub-command's first
 		// word or if it's an exact match for special sub-commands
-		const firstSubcommandFirstWord = unapprovedSubCommands.length > 0 ? unapprovedSubCommands[0].split(' ')[0] : '';
+		const firstSubcommandFirstWord = unapprovedSubCommands.length > 0 ? unapprovedSubCommands[0].split(
+      " ",
+    )[0] : "";
 		if (
 			firstSubcommandFirstWord !== commandLine &&
 			!commandsWithSubcommands.has(commandLine) &&
 			!commandsWithSubSubCommands.has(commandLine)
 		) {
 			actions.push({
-				label: localize('autoApprove.exactCommand1', 'Allow Exact Command Line in this Session'),
+				label: localize("autoApprove.exactCommand1", "Allow Exact Command Line in this Session"),
 				data: {
-					type: 'newRule',
+					type: "newRule",
 					rule: {
 						key: `/^${escapeRegExpCharacters(commandLine)}$/`,
 						value: {
 							approve: true,
-							matchCommandLine: true
+							matchCommandLine: true,
 						},
-						scope: 'session'
-					}
-				} satisfies TerminalNewAutoApproveButtonData
+						scope: "session",
+					},
+				} satisfies TerminalNewAutoApproveButtonData,
 			});
 			actions.push({
-				label: localize('autoApprove.exactCommand2', 'Allow Exact Command Line in this Workspace'),
+				label: localize("autoApprove.exactCommand2", "Allow Exact Command Line in this Workspace"),
 				data: {
-					type: 'newRule',
+					type: "newRule",
 					rule: {
 						key: `/^${escapeRegExpCharacters(commandLine)}$/`,
 						value: {
 							approve: true,
-							matchCommandLine: true
+							matchCommandLine: true,
 						},
-						scope: 'workspace'
-					}
-				} satisfies TerminalNewAutoApproveButtonData
+						scope: "workspace",
+					},
+				} satisfies TerminalNewAutoApproveButtonData,
 			});
 			actions.push({
-				label: localize('autoApprove.exactCommand', 'Always Allow Exact Command Line'),
+				label: localize("autoApprove.exactCommand", "Always Allow Exact Command Line"),
 				data: {
-					type: 'newRule',
+					type: "newRule",
 					rule: {
 						key: `/^${escapeRegExpCharacters(commandLine)}$/`,
 						value: {
 							approve: true,
-							matchCommandLine: true
+							matchCommandLine: true,
 						},
-						scope: 'user'
-					}
-				} satisfies TerminalNewAutoApproveButtonData
+						scope: "user",
+					},
+				} satisfies TerminalNewAutoApproveButtonData,
 			});
 		}
 	}
@@ -298,21 +344,21 @@ export function generateAutoApproveActions(commandLine: string, subCommands: str
 
 	// Allow all commands for this session
 	actions.push({
-		label: localize('allowSession', 'Allow All Commands in this Session'),
-		tooltip: localize('allowSessionTooltip', 'Allow this tool to run in this session without confirmation.'),
+		label: localize("allowSession", "Allow All Commands in this Session"),
+		tooltip: localize("allowSessionTooltip", "Allow this tool to run in this session without confirmation."),
 		data: {
-			type: 'sessionApproval'
-		} satisfies TerminalNewAutoApproveButtonData
+			type: "sessionApproval",
+		} satisfies TerminalNewAutoApproveButtonData,
 	});
 
 	actions.push(new Separator());
 
 	// Always show configure option
 	actions.push({
-		label: localize('autoApprove.configure', 'Configure Auto Approve...'),
+		label: localize("autoApprove.configure", "Configure Auto Approve..."),
 		data: {
-			type: 'configure'
-		} satisfies TerminalNewAutoApproveButtonData
+			type: "configure",
+		} satisfies TerminalNewAutoApproveButtonData,
 	});
 
 	return actions;
@@ -345,7 +391,7 @@ export function extractCdPrefix(commandLine: string, shell: string, os: Operatin
 	const cdPrefixMatch = commandLine.match(
 		isPwsh
 			? /^(?:cd(?: \/d)?|Set-Location(?: -Path)?) (?<dir>[^\s]+) ?(?:&&|;)\s+(?<suffix>.+)$/i
-			: /^cd (?<dir>[^\s]+) &&\s+(?<suffix>.+)$/
+			: /^cd (?<dir>[^\s]+) &&\s+(?<suffix>.+)$/,
 	);
 	const cdDir = cdPrefixMatch?.groups?.dir;
 	const cdSuffix = cdPrefixMatch?.groups?.suffix;

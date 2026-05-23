@@ -3,18 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { mock } from '../../../test/common/workbenchTestServices.js';
-import { TestInstantiationService } from '../../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { IExtHostContext } from '../../../services/extensions/common/extHostCustomers.js';
-import { INotebookKernel, INotebookKernelService } from '../../../contrib/notebook/common/notebookKernelService.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { ILanguageService } from '../../../../editor/common/languages/language.js';
-import { INotebookCellExecution, INotebookExecution, INotebookExecutionStateService } from '../../../contrib/notebook/common/notebookExecutionStateService.js';
-import { INotebookService } from '../../../contrib/notebook/common/notebookService.js';
-import { INotebookEditorService } from '../../../contrib/notebook/browser/services/notebookEditorService.js';
-import { Event } from '../../../../base/common/event.js';
-import { MainThreadNotebookKernels } from '../../browser/mainThreadNotebookKernels.js';
-import { ExtensionIdentifier } from '../../../../platform/extensions/common/extensions.js';
+import { mock } from "../../../test/common/workbenchTestServices.js";
+import { TestInstantiationService } from "../../../../platform/instantiation/test/common/instantiationServiceMock.js";
+import { IExtHostContext } from "../../../services/extensions/common/extHostCustomers.js";
+import { INotebookKernel, INotebookKernelService } from "../../../contrib/notebook/common/notebookKernelService.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import {
+  INotebookCellExecution,
+  INotebookExecution,
+  INotebookExecutionStateService,
+} from "../../../contrib/notebook/common/notebookExecutionStateService.js";
+import { INotebookService } from "../../../contrib/notebook/common/notebookService.js";
+import { INotebookEditorService } from "../../../contrib/notebook/browser/services/notebookEditorService.js";
+import { Event } from "../../../../base/common/event.js";
+import { MainThreadNotebookKernels } from "../../browser/mainThreadNotebookKernels.js";
+import { ExtensionIdentifier } from "../../../../platform/extensions/common/extensions.js";
 
 export class TestMainThreadNotebookKernels extends Disposable {
 	private readonly instantiationService: TestInstantiationService;
@@ -26,13 +30,18 @@ export class TestMainThreadNotebookKernels extends Disposable {
 		super();
 		this.instantiationService = this._register(new TestInstantiationService());
 		this.setupDefaultStubs();
-		this.mainThreadNotebookKernels = this._register(this.instantiationService.createInstance(MainThreadNotebookKernels, extHostContext));
+		this.mainThreadNotebookKernels = this._register(
+      this.instantiationService.createInstance(
+        MainThreadNotebookKernels,
+        extHostContext,
+      ),
+    );
 	}
 
 	private setupDefaultStubs(): void {
 		this.instantiationService.stub(ILanguageService, new class extends mock<ILanguageService>() {
 			override getRegisteredLanguageIds() {
-				return ['typescript', 'javascript', 'python'];
+				return ["typescript", "javascript", "python"];
 			}
 		});
 
@@ -51,7 +60,7 @@ export class TestMainThreadNotebookKernels extends Disposable {
 					selected: undefined,
 					suggestions: [],
 					all: [],
-					hidden: []
+					hidden: [],
 				};
 			}
 		}(this));
@@ -87,14 +96,14 @@ export class TestMainThreadNotebookKernels extends Disposable {
 	async addKernel(id: string): Promise<void> {
 		const handle = this.kernelHandle++;
 		await this.instance.$addKernel(handle, {
-			id,
-			notebookType: 'test-notebook',
-			extensionId: new ExtensionIdentifier('test.extension'),
-			extensionLocation: { scheme: 'test', path: '/test' },
-			label: 'Test Kernel',
-			description: 'A test kernel',
-			hasVariableProvider: true
-		});
+      id,
+      notebookType: "test-notebook",
+      extensionId: new ExtensionIdentifier("test.extension"),
+      extensionLocation: { scheme: "test", path: "/test" },
+      label: "Test Kernel",
+      description: "A test kernel",
+      hasVariableProvider: true,
+    });
 	}
 
 	getKernel(id: string): INotebookKernel | undefined {

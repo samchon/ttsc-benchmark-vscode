@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { addDisposableListener, EventHelper, EventType, getWindow } from '../../../base/browser/dom.js';
-import { StandardKeyboardEvent } from '../../../base/browser/keyboardEvent.js';
-import { StandardMouseEvent } from '../../../base/browser/mouseEvent.js';
-import { KeyCode, KeyMod } from '../../../base/common/keyCodes.js';
-import { DisposableStore, IDisposable } from '../../../base/common/lifecycle.js';
-import { isMacintosh } from '../../../base/common/platform.js';
-import { IEditorOptions } from '../common/editor.js';
+import { addDisposableListener, EventHelper, EventType, getWindow } from "../../../base/browser/dom.js";
+import { StandardKeyboardEvent } from "../../../base/browser/keyboardEvent.js";
+import { StandardMouseEvent } from "../../../base/browser/mouseEvent.js";
+import { KeyCode, KeyMod } from "../../../base/common/keyCodes.js";
+import { DisposableStore, IDisposable } from "../../../base/common/lifecycle.js";
+import { isMacintosh } from "../../../base/common/platform.js";
+import { IEditorOptions } from "../common/editor.js";
 
 //#region Editor Open Event Listeners
 
@@ -30,11 +30,15 @@ export function registerOpenEditorListeners(element: HTMLElement, onOpenEditor: 
 		onOpenEditor(toOpenEditorOptions(new StandardMouseEvent(getWindow(element), e)));
 	}));
 
-	disposables.add(addDisposableListener(element, EventType.DBLCLICK, e => {
-		EventHelper.stop(e, true);
+	disposables.add(
+    addDisposableListener(element, EventType.DBLCLICK, e => {
+      EventHelper.stop(e, true);
 
-		onOpenEditor(toOpenEditorOptions(new StandardMouseEvent(getWindow(element), e), true));
-	}));
+      onOpenEditor(
+        toOpenEditorOptions(new StandardMouseEvent(getWindow(element), e), true),
+      );
+    }),
+  );
 
 	disposables.add(addDisposableListener(element, EventType.KEY_DOWN, e => {
 		const options = toOpenEditorOptions(new StandardKeyboardEvent(e));
@@ -61,13 +65,19 @@ export function toOpenEditorOptions(event: StandardMouseEvent | StandardKeyboard
 			preserveFocus = true;
 		}
 
-		if (typeof preserveFocus === 'undefined') {
+		if (typeof preserveFocus === "undefined") {
 			return;
 		}
 
-		return { editorOptions: { preserveFocus, pinned: !preserveFocus }, openToSide: false };
+		return {
+      editorOptions: { preserveFocus, pinned: !preserveFocus },
+      openToSide: false,
+    };
 	} else {
-		return { editorOptions: { preserveFocus: !isDoubleClick, pinned: isDoubleClick || event.middleButton }, openToSide: event.ctrlKey || event.metaKey || event.altKey };
+		return {
+      editorOptions: { preserveFocus: !isDoubleClick, pinned: isDoubleClick || event.middleButton },
+      openToSide: event.ctrlKey || event.metaKey || event.altKey,
+    };
 	}
 }
 

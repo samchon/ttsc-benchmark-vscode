@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationTokenSource } from '../../../base/common/cancellation.js';
-import { DisposableStore, IDisposable, toDisposable } from '../../../base/common/lifecycle.js';
-import { ExtHostSpeechShape, IMainContext, MainContext, MainThreadSpeechShape } from './extHost.protocol.js';
-import type * as vscode from 'vscode';
-import { ExtensionIdentifier } from '../../../platform/extensions/common/extensions.js';
+import { CancellationTokenSource } from "../../../base/common/cancellation.js";
+import { DisposableStore, IDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { ExtHostSpeechShape, IMainContext, MainContext, MainThreadSpeechShape } from "./extHost.protocol.js";
+import type * as vscode from "vscode";
+import { ExtensionIdentifier } from "../../../platform/extensions/common/extensions.js";
 
 export class ExtHostSpeech implements ExtHostSpeechShape {
 
@@ -20,7 +20,7 @@ export class ExtHostSpeech implements ExtHostSpeechShape {
 	private readonly synthesizers = new Map<number, vscode.TextToSpeechSession>();
 
 	constructor(
-		mainContext: IMainContext
+		mainContext: IMainContext,
 	) {
 		this.proxy = mainContext.getProxy(MainContext.MainThreadSpeech);
 	}
@@ -36,7 +36,10 @@ export class ExtHostSpeech implements ExtHostSpeechShape {
 		const cts = new CancellationTokenSource();
 		this.sessions.set(session, cts);
 
-		const speechToTextSession = await provider.provideSpeechToTextSession(cts.token, language ? { language } : undefined);
+		const speechToTextSession = await provider.provideSpeechToTextSession(
+      cts.token,
+      language ? { language } : undefined,
+    );
 		if (!speechToTextSession) {
 			return;
 		}
@@ -49,7 +52,9 @@ export class ExtHostSpeech implements ExtHostSpeechShape {
 			this.proxy.$emitSpeechToTextEvent(session, e);
 		}));
 
-		disposables.add(cts.token.onCancellationRequested(() => disposables.dispose()));
+		disposables.add(
+      cts.token.onCancellationRequested(() => disposables.dispose()),
+    );
 	}
 
 	async $cancelSpeechToTextSession(session: number): Promise<void> {
@@ -68,7 +73,10 @@ export class ExtHostSpeech implements ExtHostSpeechShape {
 		const cts = new CancellationTokenSource();
 		this.sessions.set(session, cts);
 
-		const textToSpeech = await provider.provideTextToSpeechSession(cts.token, language ? { language } : undefined);
+		const textToSpeech = await provider.provideTextToSpeechSession(
+      cts.token,
+      language ? { language } : undefined,
+    );
 		if (!textToSpeech) {
 			return;
 		}
@@ -83,7 +91,9 @@ export class ExtHostSpeech implements ExtHostSpeechShape {
 			this.proxy.$emitTextToSpeechEvent(session, e);
 		}));
 
-		disposables.add(cts.token.onCancellationRequested(() => disposables.dispose()));
+		disposables.add(
+      cts.token.onCancellationRequested(() => disposables.dispose()),
+    );
 	}
 
 	async $synthesizeSpeech(session: number, text: string): Promise<void> {
@@ -107,7 +117,9 @@ export class ExtHostSpeech implements ExtHostSpeechShape {
 		const cts = new CancellationTokenSource();
 		this.sessions.set(session, cts);
 
-		const keywordRecognitionSession = await provider.provideKeywordRecognitionSession(cts.token);
+		const keywordRecognitionSession = await provider.provideKeywordRecognitionSession(
+      cts.token,
+    );
 		if (!keywordRecognitionSession) {
 			return;
 		}
@@ -120,7 +132,9 @@ export class ExtHostSpeech implements ExtHostSpeechShape {
 			this.proxy.$emitKeywordRecognitionEvent(session, e);
 		}));
 
-		disposables.add(cts.token.onCancellationRequested(() => disposables.dispose()));
+		disposables.add(
+      cts.token.onCancellationRequested(() => disposables.dispose()),
+    );
 	}
 
 	async $cancelKeywordRecognitionSession(session: number): Promise<void> {
@@ -132,11 +146,14 @@ export class ExtHostSpeech implements ExtHostSpeechShape {
 		const handle = ExtHostSpeech.ID_POOL++;
 
 		this.providers.set(handle, provider);
-		this.proxy.$registerProvider(handle, identifier, { extension, displayName: extension.value });
+		this.proxy.$registerProvider(handle, identifier, {
+      extension,
+      displayName: extension.value,
+    });
 
 		return toDisposable(() => {
-			this.proxy.$unregisterProvider(handle);
-			this.providers.delete(handle);
-		});
+      this.proxy.$unregisterProvider(handle);
+      this.providers.delete(handle);
+    });
 	}
 }

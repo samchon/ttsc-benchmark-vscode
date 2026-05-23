@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
-import { InstantiationType, registerSingleton } from '../../../../../platform/instantiation/common/extensions.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../../platform/storage/common/storage.js';
-import { ISession, SessionStatus } from '../../../../services/sessions/common/session.js';
-import { ISessionsManagementService } from '../../../../services/sessions/common/sessionsManagement.js';
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
+import { InstantiationType, registerSingleton } from "../../../../../platform/instantiation/common/extensions.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../../platform/storage/common/storage.js";
+import { ISession, SessionStatus } from "../../../../services/sessions/common/session.js";
+import { ISessionsManagementService } from "../../../../services/sessions/common/sessionsManagement.js";
 
 export const enum SessionListModelChangeKind {
-	Pinned = 'pinned',
-	Read = 'read',
+	Pinned = "pinned",
+	Read = "read",
 }
 
 export interface ISessionListModelChangeEvent {
@@ -47,14 +47,16 @@ export interface ISessionsListModelService {
 	markAllRead(sessions: ISession[]): void;
 }
 
-export const ISessionsListModelService = createDecorator<ISessionsListModelService>('sessionsListModelService');
+export const ISessionsListModelService = createDecorator<ISessionsListModelService>(
+  "sessionsListModelService",
+);
 
 export class SessionsListModelService extends Disposable implements ISessionsListModelService {
 
 	declare readonly _serviceBrand: undefined;
 
-	private static readonly PINNED_SESSIONS_KEY = 'sessionsListControl.pinnedSessions';
-	private static readonly READ_SESSIONS_KEY = 'sessionsListControl.readSessions';
+	private static readonly PINNED_SESSIONS_KEY = "sessionsListControl.pinnedSessions";
+	private static readonly READ_SESSIONS_KEY = "sessionsListControl.readSessions";
 
 	/**
 	 * Sessions created on or after this date start as unread by default.
@@ -62,9 +64,13 @@ export class SessionsListModelService extends Disposable implements ISessionsLis
 	 * the read set, preserving the behaviour that existed before the unread
 	 * indicator was introduced.
 	 */
-	private static readonly UNREAD_DEFAULT_CUTOFF = new Date('2026-05-12T00:00:00.000Z');
+	private static readonly UNREAD_DEFAULT_CUTOFF = new Date(
+    "2026-05-12T00:00:00.000Z",
+  );
 
-	private readonly _onDidChange = this._register(new Emitter<ISessionListModelChangeEvent>());
+	private readonly _onDidChange = this._register(
+    new Emitter<ISessionListModelChangeEvent>(),
+  );
 	readonly onDidChange: Event<ISessionListModelChangeEvent> = this._onDidChange.event;
 
 	private readonly _pinnedSessionIds: Set<string>;
@@ -77,8 +83,12 @@ export class SessionsListModelService extends Disposable implements ISessionsLis
 	) {
 		super();
 
-		this._pinnedSessionIds = this.loadSet(SessionsListModelService.PINNED_SESSIONS_KEY);
-		this._readSessionIds = this.loadSet(SessionsListModelService.READ_SESSIONS_KEY);
+		this._pinnedSessionIds = this.loadSet(
+      SessionsListModelService.PINNED_SESSIONS_KEY,
+    );
+		this._readSessionIds = this.loadSet(
+      SessionsListModelService.READ_SESSIONS_KEY,
+    );
 
 		this._register(this.sessionsManagementService.onDidChangeSessions(e => {
 			for (const session of e.removed) {
@@ -117,8 +127,13 @@ export class SessionsListModelService extends Disposable implements ISessionsLis
 			return;
 		}
 		this._pinnedSessionIds.add(session.sessionId);
-		this.saveSet(SessionsListModelService.PINNED_SESSIONS_KEY, this._pinnedSessionIds);
-		this._onDidChange.fire({ changes: [{ sessionId: session.sessionId, kind: SessionListModelChangeKind.Pinned }] });
+		this.saveSet(
+      SessionsListModelService.PINNED_SESSIONS_KEY,
+      this._pinnedSessionIds,
+    );
+		this._onDidChange.fire({
+      changes: [{ sessionId: session.sessionId, kind: SessionListModelChangeKind.Pinned }],
+    });
 	}
 
 	unpinSession(session: ISession): void {
@@ -126,8 +141,13 @@ export class SessionsListModelService extends Disposable implements ISessionsLis
 			return;
 		}
 		this._pinnedSessionIds.delete(session.sessionId);
-		this.saveSet(SessionsListModelService.PINNED_SESSIONS_KEY, this._pinnedSessionIds);
-		this._onDidChange.fire({ changes: [{ sessionId: session.sessionId, kind: SessionListModelChangeKind.Pinned }] });
+		this.saveSet(
+      SessionsListModelService.PINNED_SESSIONS_KEY,
+      this._pinnedSessionIds,
+    );
+		this._onDidChange.fire({
+      changes: [{ sessionId: session.sessionId, kind: SessionListModelChangeKind.Pinned }],
+    });
 	}
 
 	isSessionPinned(session: ISession): boolean {
@@ -141,8 +161,13 @@ export class SessionsListModelService extends Disposable implements ISessionsLis
 			return;
 		}
 		this._readSessionIds.add(session.sessionId);
-		this.saveSet(SessionsListModelService.READ_SESSIONS_KEY, this._readSessionIds);
-		this._onDidChange.fire({ changes: [{ sessionId: session.sessionId, kind: SessionListModelChangeKind.Read }] });
+		this.saveSet(
+      SessionsListModelService.READ_SESSIONS_KEY,
+      this._readSessionIds,
+    );
+		this._onDidChange.fire({
+      changes: [{ sessionId: session.sessionId, kind: SessionListModelChangeKind.Read }],
+    });
 	}
 
 	markUnread(session: ISession): void {
@@ -150,8 +175,13 @@ export class SessionsListModelService extends Disposable implements ISessionsLis
 			return;
 		}
 		this._readSessionIds.delete(session.sessionId);
-		this.saveSet(SessionsListModelService.READ_SESSIONS_KEY, this._readSessionIds);
-		this._onDidChange.fire({ changes: [{ sessionId: session.sessionId, kind: SessionListModelChangeKind.Read }] });
+		this.saveSet(
+      SessionsListModelService.READ_SESSIONS_KEY,
+      this._readSessionIds,
+    );
+		this._onDidChange.fire({
+      changes: [{ sessionId: session.sessionId, kind: SessionListModelChangeKind.Read }],
+    });
 	}
 
 	isSessionRead(session: ISession): boolean {
@@ -171,11 +201,17 @@ export class SessionsListModelService extends Disposable implements ISessionsLis
 		for (const session of sessions) {
 			if (!this._readSessionIds.has(session.sessionId)) {
 				this._readSessionIds.add(session.sessionId);
-				changed.push({ sessionId: session.sessionId, kind: SessionListModelChangeKind.Read });
+				changed.push({
+          sessionId: session.sessionId,
+          kind: SessionListModelChangeKind.Read,
+        });
 			}
 		}
 		if (changed.length > 0) {
-			this.saveSet(SessionsListModelService.READ_SESSIONS_KEY, this._readSessionIds);
+			this.saveSet(
+        SessionsListModelService.READ_SESSIONS_KEY,
+        this._readSessionIds,
+      );
 			this._onDidChange.fire({ changes: changed });
 		}
 	}
@@ -186,12 +222,24 @@ export class SessionsListModelService extends Disposable implements ISessionsLis
 		this._lastKnownStatus.delete(session.sessionId);
 		const changes: { sessionId: string; kind: SessionListModelChangeKind }[] = [];
 		if (this._pinnedSessionIds.delete(session.sessionId)) {
-			this.saveSet(SessionsListModelService.PINNED_SESSIONS_KEY, this._pinnedSessionIds);
-			changes.push({ sessionId: session.sessionId, kind: SessionListModelChangeKind.Pinned });
+			this.saveSet(
+        SessionsListModelService.PINNED_SESSIONS_KEY,
+        this._pinnedSessionIds,
+      );
+			changes.push({
+        sessionId: session.sessionId,
+        kind: SessionListModelChangeKind.Pinned,
+      });
 		}
 		if (this._readSessionIds.delete(session.sessionId)) {
-			this.saveSet(SessionsListModelService.READ_SESSIONS_KEY, this._readSessionIds);
-			changes.push({ sessionId: session.sessionId, kind: SessionListModelChangeKind.Read });
+			this.saveSet(
+        SessionsListModelService.READ_SESSIONS_KEY,
+        this._readSessionIds,
+      );
+			changes.push({
+        sessionId: session.sessionId,
+        kind: SessionListModelChangeKind.Read,
+      });
 		}
 		if (changes.length > 0) {
 			this._onDidChange.fire({ changes });
@@ -219,9 +267,18 @@ export class SessionsListModelService extends Disposable implements ISessionsLis
 		if (set.size === 0) {
 			this.storageService.remove(key, StorageScope.PROFILE);
 		} else {
-			this.storageService.store(key, JSON.stringify([...set]), StorageScope.PROFILE, StorageTarget.USER);
+			this.storageService.store(
+        key,
+        JSON.stringify([...set]),
+        StorageScope.PROFILE,
+        StorageTarget.USER,
+      );
 		}
 	}
 }
 
-registerSingleton(ISessionsListModelService, SessionsListModelService, InstantiationType.Delayed);
+registerSingleton(
+  ISessionsListModelService,
+  SessionsListModelService,
+  InstantiationType.Delayed,
+);

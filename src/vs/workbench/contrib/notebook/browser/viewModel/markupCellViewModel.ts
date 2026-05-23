@@ -3,21 +3,32 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import * as UUID from '../../../../../base/common/uuid.js';
-import * as editorCommon from '../../../../../editor/common/editorCommon.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { CellEditState, CellFindMatch, CellFoldingState, CellLayoutContext, CellLayoutState, EditorFoldingStateDelegate, ICellOutputViewModel, ICellViewModel, MarkupCellLayoutChangeEvent, MarkupCellLayoutInfo } from '../notebookBrowser.js';
-import { BaseCellViewModel } from './baseCellViewModel.js';
-import { NotebookCellTextModel } from '../../common/model/notebookCellTextModel.js';
-import { CellKind, INotebookFindOptions } from '../../common/notebookCommon.js';
-import { ITextModelService } from '../../../../../editor/common/services/resolverService.js';
-import { ViewContext } from './viewContext.js';
-import { IUndoRedoService } from '../../../../../platform/undoRedo/common/undoRedo.js';
-import { NotebookOptionsChangeEvent } from '../notebookOptions.js';
-import { ICodeEditorService } from '../../../../../editor/browser/services/codeEditorService.js';
-import { NotebookCellStateChangedEvent, NotebookLayoutInfo } from '../notebookViewEvents.js';
-import { IInlineChatSessionService } from '../../../inlineChat/browser/inlineChatSessionService.js';
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import * as UUID from "../../../../../base/common/uuid.js";
+import * as editorCommon from "../../../../../editor/common/editorCommon.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import {
+  CellEditState,
+  CellFindMatch,
+  CellFoldingState,
+  CellLayoutContext,
+  CellLayoutState,
+  EditorFoldingStateDelegate,
+  ICellOutputViewModel,
+  ICellViewModel,
+  MarkupCellLayoutChangeEvent,
+  MarkupCellLayoutInfo,
+} from "../notebookBrowser.js";
+import { BaseCellViewModel } from "./baseCellViewModel.js";
+import { NotebookCellTextModel } from "../../common/model/notebookCellTextModel.js";
+import { CellKind, INotebookFindOptions } from "../../common/notebookCommon.js";
+import { ITextModelService } from "../../../../../editor/common/services/resolverService.js";
+import { ViewContext } from "./viewContext.js";
+import { IUndoRedoService } from "../../../../../platform/undoRedo/common/undoRedo.js";
+import { NotebookOptionsChangeEvent } from "../notebookOptions.js";
+import { ICodeEditorService } from "../../../../../editor/browser/services/codeEditorService.js";
+import { NotebookCellStateChangedEvent, NotebookLayoutInfo } from "../notebookViewEvents.js";
+import { IInlineChatSessionService } from "../../../inlineChat/browser/inlineChatSessionService.js";
 
 export class MarkupCellViewModel extends BaseCellViewModel implements ICellViewModel {
 
@@ -66,14 +77,18 @@ export class MarkupCellViewModel extends BaseCellViewModel implements ICellViewM
 	}
 
 	get editorHeight() {
-		throw new Error('MarkdownCellViewModel.editorHeight is write only');
+		throw new Error("MarkdownCellViewModel.editorHeight is write only");
 	}
 
-	protected readonly _onDidChangeLayout = this._register(new Emitter<MarkupCellLayoutChangeEvent>());
+	protected readonly _onDidChangeLayout = this._register(
+    new Emitter<MarkupCellLayoutChangeEvent>(),
+  );
 	readonly onDidChangeLayout = this._onDidChangeLayout.event;
 
 	get foldingState() {
-		return this.foldingDelegate.getFoldingState(this.foldingDelegate.getCellIndex(this));
+		return this.foldingDelegate.getFoldingState(
+      this.foldingDelegate.getCellIndex(this),
+    );
 	}
 
 	private _hoveringOutput: boolean = false;
@@ -122,11 +137,23 @@ export class MarkupCellViewModel extends BaseCellViewModel implements ICellViewM
 		@ITextModelService textModelService: ITextModelService,
 		@IUndoRedoService undoRedoService: IUndoRedoService,
 		@ICodeEditorService codeEditorService: ICodeEditorService,
-		@IInlineChatSessionService inlineChatSessionService: IInlineChatSessionService
+		@IInlineChatSessionService inlineChatSessionService: IInlineChatSessionService,
 	) {
-		super(viewType, model, UUID.generateUuid(), viewContext, configurationService, textModelService, undoRedoService, codeEditorService, inlineChatSessionService);
+		super(
+      viewType,
+      model,
+      UUID.generateUuid(),
+      viewContext,
+      configurationService,
+      textModelService,
+      undoRedoService,
+      codeEditorService,
+      inlineChatSessionService,
+    );
 
-		const { bottomToolbarGap } = this.viewContext.notebookOptions.computeBottomToolbarDimensions(this.viewType);
+		const { bottomToolbarGap } = this.viewContext.notebookOptions.computeBottomToolbarDimensions(
+      this.viewType,
+    );
 		const layoutConfiguration = this.viewContext.notebookOptions.getLayoutConfiguration();
 		this._layoutInfo = {
 			chatHeight: 0,
@@ -159,7 +186,9 @@ export class MarkupCellViewModel extends BaseCellViewModel implements ICellViewM
 
 	private _computeTotalHeight(): number {
 		const layoutConfiguration = this.viewContext.notebookOptions.getLayoutConfiguration();
-		const { bottomToolbarGap } = this.viewContext.notebookOptions.computeBottomToolbarDimensions(this.viewType);
+		const { bottomToolbarGap } = this.viewContext.notebookOptions.computeBottomToolbarDimensions(
+      this.viewType,
+    );
 		const foldHintHeight = this._computeFoldHintHeight();
 
 		if (this.getEditState() === CellEditState.Editing) {
@@ -174,7 +203,10 @@ export class MarkupCellViewModel extends BaseCellViewModel implements ICellViewM
 			// On file open, the previewHeight + bottomToolbarGap for a cell out of viewport can be 0
 			// When it's 0, the list view will never try to render it anymore even if we scroll the cell into view.
 			// Thus we make sure it's greater than 0
-			return Math.max(1, this._previewHeight + bottomToolbarGap + foldHintHeight + this._commentHeight);
+			return Math.max(
+        1,
+        this._previewHeight + bottomToolbarGap + foldHintHeight + this._commentHeight,
+      );
 		}
 	}
 
@@ -277,13 +309,13 @@ export class MarkupCellViewModel extends BaseCellViewModel implements ICellViewM
 		// we might already warmup the viewport so the cell has a total height computed
 		if (totalHeight !== undefined && this.layoutInfo.layoutState === CellLayoutState.Uninitialized) {
 			this._layoutInfo = {
-				...this.layoutInfo,
-				totalHeight: totalHeight,
-				chatHeight: this._chatHeight,
-				editorHeight: this._editorHeight,
-				statusBarHeight: this._statusBarHeight,
-				layoutState: CellLayoutState.FromCache,
-			};
+        ...this.layoutInfo,
+        totalHeight: totalHeight,
+        chatHeight: this._chatHeight,
+        editorHeight: this._editorHeight,
+        statusBarHeight: this._statusBarHeight,
+        layoutState: CellLayoutState.FromCache,
+      };
 			this.layoutChange({});
 		}
 	}
@@ -319,9 +351,9 @@ export class MarkupCellViewModel extends BaseCellViewModel implements ICellViewM
 		}
 
 		return {
-			cell: this,
-			contentMatches: matches
-		};
+      cell: this,
+      contentMatches: matches,
+    };
 	}
 
 	override dispose() {

@@ -3,8 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ITerminalLaunchResult, IProcessPropertyMap, IPtyService, ITerminalChildProcess, ITerminalLaunchError, ProcessPropertyType } from '../../../../platform/terminal/common/terminal.js';
-import { BasePty } from '../common/basePty.js';
+import {
+  ITerminalLaunchResult,
+  IProcessPropertyMap,
+  IPtyService,
+  ITerminalChildProcess,
+  ITerminalLaunchError,
+  ProcessPropertyType,
+} from "../../../../platform/terminal/common/terminal.js";
+import { BasePty } from "../common/basePty.js";
 
 /**
  * Responsible for establishing and maintaining a connection with an existing terminal process
@@ -14,7 +21,7 @@ export class LocalPty extends BasePty implements ITerminalChildProcess {
 	constructor(
 		id: number,
 		shouldPersist: boolean,
-		private readonly _proxy: IPtyService
+		private readonly _proxy: IPtyService,
 	) {
 		super(id, shouldPersist);
 	}
@@ -67,7 +74,9 @@ export class LocalPty extends BasePty implements ITerminalChildProcess {
 
 	freePortKillProcess(port: string): Promise<{ port: string; processId: string }> {
 		if (!this._proxy.freePortKillProcess) {
-			throw new Error('freePortKillProcess does not exist on the local pty service');
+			throw new Error(
+        "freePortKillProcess does not exist on the local pty service",
+      );
 		}
 		return this._proxy.freePortKillProcess(port);
 	}
@@ -87,7 +96,7 @@ export class LocalPty extends BasePty implements ITerminalChildProcess {
 		this._proxy.acknowledgeDataEvent(this.id, charCount);
 	}
 
-	setUnicodeVersion(version: '6' | '11'): Promise<void> {
+	setUnicodeVersion(version: "6" | "11"): Promise<void> {
 		return this._proxy.setUnicodeVersion(this.id, version);
 	}
 

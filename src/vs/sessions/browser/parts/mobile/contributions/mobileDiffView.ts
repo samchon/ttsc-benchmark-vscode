@@ -3,23 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './media/mobileOverlayViews.css';
-import './mobileDiffColors.js';
-import * as DOM from '../../../../../base/browser/dom.js';
-import { Disposable, DisposableStore, toDisposable } from '../../../../../base/common/lifecycle.js';
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { Gesture, EventType as TouchEventType } from '../../../../../base/browser/touch.js';
-import { Codicon } from '../../../../../base/common/codicons.js';
-import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { localize } from '../../../../../nls.js';
-import { ITextFileService } from '../../../../../workbench/services/textfile/common/textfiles.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { basename } from '../../../../../base/common/resources.js';
-import { linesDiffComputers } from '../../../../../editor/common/diff/linesDiffComputers.js';
-import { ILanguageService } from '../../../../../editor/common/languages/language.js';
-import { tokenizeToString } from '../../../../../editor/common/languages/textToHtmlTokenizer.js';
-import { TokenizationRegistry } from '../../../../../editor/common/languages.js';
-import { generateTokensCSSForColorMap } from '../../../../../editor/common/languages/supports/tokenization.js';
+import "./media/mobileOverlayViews.css";
+import "./mobileDiffColors.js";
+import * as DOM from "../../../../../base/browser/dom.js";
+import { Disposable, DisposableStore, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { Gesture, EventType as TouchEventType } from "../../../../../base/browser/touch.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { localize } from "../../../../../nls.js";
+import { ITextFileService } from "../../../../../workbench/services/textfile/common/textfiles.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { basename } from "../../../../../base/common/resources.js";
+import { linesDiffComputers } from "../../../../../editor/common/diff/linesDiffComputers.js";
+import { ILanguageService } from "../../../../../editor/common/languages/language.js";
+import { tokenizeToString } from "../../../../../editor/common/languages/textToHtmlTokenizer.js";
+import { TokenizationRegistry } from "../../../../../editor/common/languages.js";
+import { generateTokensCSSForColorMap } from "../../../../../editor/common/languages/supports/tokenization.js";
 
 const $ = DOM.$;
 
@@ -32,32 +32,49 @@ const $ = DOM.$;
  * pure fallback for the leftover `'unknown'` cases. The IDs match
  * VS Code's built-in extension `package.json` contributions. */
 const EXTENSION_LANGUAGE_MAP: Record<string, string> = {
-	'.js': 'javascript', '.mjs': 'javascript', '.cjs': 'javascript',
-	'.jsx': 'javascriptreact',
-	'.ts': 'typescript', '.mts': 'typescript', '.cts': 'typescript',
-	'.tsx': 'typescriptreact',
-	'.py': 'python', '.pyw': 'python',
-	'.java': 'java',
-	'.c': 'c', '.h': 'c',
-	'.cpp': 'cpp', '.cc': 'cpp', '.cxx': 'cpp', '.hpp': 'cpp',
-	'.cs': 'csharp',
-	'.go': 'go',
-	'.rs': 'rust',
-	'.rb': 'ruby',
-	'.php': 'php',
-	'.html': 'html', '.htm': 'html',
-	'.css': 'css', '.scss': 'scss', '.less': 'less',
-	'.json': 'json', '.jsonc': 'jsonc',
-	'.md': 'markdown',
-	'.sh': 'shellscript', '.bash': 'shellscript', '.zsh': 'shellscript',
-	'.yaml': 'yaml', '.yml': 'yaml',
-	'.xml': 'xml',
-	'.sql': 'sql',
-	'.swift': 'swift',
-	'.kt': 'kotlin', '.kts': 'kotlin',
-	'.r': 'r',
-	'.lua': 'lua',
-	'.dart': 'dart',
+  ".js": "javascript",
+  ".mjs": "javascript",
+  ".cjs": "javascript",
+  ".jsx": "javascriptreact",
+  ".ts": "typescript",
+  ".mts": "typescript",
+  ".cts": "typescript",
+  ".tsx": "typescriptreact",
+  ".py": "python",
+  ".pyw": "python",
+  ".java": "java",
+  ".c": "c",
+  ".h": "c",
+  ".cpp": "cpp",
+  ".cc": "cpp",
+  ".cxx": "cpp",
+  ".hpp": "cpp",
+  ".cs": "csharp",
+  ".go": "go",
+  ".rs": "rust",
+  ".rb": "ruby",
+  ".php": "php",
+  ".html": "html",
+  ".htm": "html",
+  ".css": "css",
+  ".scss": "scss",
+  ".less": "less",
+  ".json": "json",
+  ".jsonc": "jsonc",
+  ".md": "markdown",
+  ".sh": "shellscript",
+  ".bash": "shellscript",
+  ".zsh": "shellscript",
+  ".yaml": "yaml",
+  ".yml": "yaml",
+  ".xml": "xml",
+  ".sql": "sql",
+  ".swift": "swift",
+  ".kt": "kotlin",
+  ".kts": "kotlin",
+  ".r": "r",
+  ".lua": "lua",
+  ".dart": "dart",
 };
 
 /**
@@ -69,7 +86,7 @@ const EXTENSION_LANGUAGE_MAP: Record<string, string> = {
  * {@link IFileDiffViewData} (without siblings) — in that case the view
  * is rendered without prev/next navigation.
  */
-export const MOBILE_OPEN_DIFF_VIEW_COMMAND_ID = 'sessions.mobile.openDiffView';
+export const MOBILE_OPEN_DIFF_VIEW_COMMAND_ID = "sessions.mobile.openDiffView";
 
 /**
  * Minimal subset of diff entry fields consumed by the mobile diff view.
@@ -157,7 +174,9 @@ export class MobileDiffView extends Disposable {
 		// Normalise siblings into a non-empty array so all subsequent code
 		// can index it directly. If the caller didn't pass siblings we
 		// treat the single diff as its own one-element list.
-		this.siblings = data.siblings && data.siblings.length > 0 ? data.siblings : [data.diff];
+		this.siblings = data.siblings && data.siblings.length > 0 ? data.siblings : [
+      data.diff,
+    ];
 		const startIndex = data.index ?? this.siblings.indexOf(data.diff);
 		this.currentIndex = startIndex >= 0 ? startIndex : 0;
 
@@ -167,52 +186,105 @@ export class MobileDiffView extends Disposable {
 
 	private render(workbenchContainer: HTMLElement): void {
 		// -- Root overlay -----------------------------------------
-		const overlay = DOM.append(workbenchContainer, $('div.mobile-overlay-view'));
-		this.viewStore.add(DOM.addDisposableListener(overlay, DOM.EventType.CONTEXT_MENU, e => e.preventDefault()));
+		const overlay = DOM.append(
+      workbenchContainer,
+      $("div.mobile-overlay-view"),
+    );
+		this.viewStore.add(
+      DOM.addDisposableListener(
+        overlay,
+        DOM.EventType.CONTEXT_MENU,
+        e => e.preventDefault(),
+      ),
+    );
 		this.viewStore.add(toDisposable(() => overlay.remove()));
 
 		// -- Header -----------------------------------------------
-		const header = DOM.append(overlay, $('div.mobile-overlay-header'));
+		const header = DOM.append(overlay, $("div.mobile-overlay-header"));
 
-		const backBtn = DOM.append(header, $('button.mobile-overlay-back-btn', { type: 'button' })) as HTMLButtonElement;
-		backBtn.setAttribute('aria-label', localize('diffView.back', "Back"));
-		DOM.append(backBtn, $('span')).classList.add(...ThemeIcon.asClassNameArray(Codicon.chevronLeft));
+		const backBtn = DOM.append(
+      header,
+      $("button.mobile-overlay-back-btn", { type: "button" }),
+    ) as HTMLButtonElement;
+		backBtn.setAttribute("aria-label", localize("diffView.back", "Back"));
+		DOM.append(backBtn, $("span")).classList.add(
+      ...ThemeIcon.asClassNameArray(Codicon.chevronLeft),
+    );
 		DOM.append(backBtn, $('span.back-btn-label')).textContent = localize('diffView.backLabel', "Back");
 		this.viewStore.add(Gesture.addTarget(backBtn));
-		this.viewStore.add(DOM.addDisposableListener(backBtn, DOM.EventType.CLICK, () => this.dispose()));
-		this.viewStore.add(DOM.addDisposableListener(backBtn, TouchEventType.Tap, () => this.dispose()));
+		this.viewStore.add(
+      DOM.addDisposableListener(
+        backBtn,
+        DOM.EventType.CLICK,
+        () => this.dispose(),
+      ),
+    );
+		this.viewStore.add(
+      DOM.addDisposableListener(
+        backBtn,
+        TouchEventType.Tap,
+        () => this.dispose(),
+      ),
+    );
 
-		const info = DOM.append(header, $('div.mobile-overlay-header-info'));
-		this.titleEl = DOM.append(info, $('div.mobile-overlay-header-title'));
-		this.subtitleEl = DOM.append(info, $('div.mobile-overlay-header-subtitle'));
+		const info = DOM.append(header, $("div.mobile-overlay-header-info"));
+		this.titleEl = DOM.append(info, $("div.mobile-overlay-header-title"));
+		this.subtitleEl = DOM.append(info, $("div.mobile-overlay-header-subtitle"));
 
 		// Prev/Next nav appears on the right side when we have siblings.
 		// We always create the elements (so layout space is reserved) but
 		// keep them hidden when there is only a single file.
-		const nav = DOM.append(header, $('div.mobile-diff-nav'));
-		this.prevBtn = DOM.append(nav, $('button.mobile-diff-nav-btn.prev', { type: 'button' })) as HTMLButtonElement;
-		this.prevBtn.setAttribute('aria-label', localize('diffView.prevFile', "Previous file"));
-		DOM.append(this.prevBtn, $('span')).classList.add(...ThemeIcon.asClassNameArray(Codicon.chevronUp));
-		this.positionEl = DOM.append(nav, $('span.mobile-diff-nav-position'));
-		this.nextBtn = DOM.append(nav, $('button.mobile-diff-nav-btn.next', { type: 'button' })) as HTMLButtonElement;
-		this.nextBtn.setAttribute('aria-label', localize('diffView.nextFile', "Next file"));
-		DOM.append(this.nextBtn, $('span')).classList.add(...ThemeIcon.asClassNameArray(Codicon.chevronDown));
+		const nav = DOM.append(header, $("div.mobile-diff-nav"));
+		this.prevBtn = DOM.append(
+      nav,
+      $("button.mobile-diff-nav-btn.prev", { type: "button" }),
+    ) as HTMLButtonElement;
+		this.prevBtn.setAttribute(
+      "aria-label",
+      localize("diffView.prevFile", "Previous file"),
+    );
+		DOM.append(this.prevBtn, $("span")).classList.add(
+      ...ThemeIcon.asClassNameArray(Codicon.chevronUp),
+    );
+		this.positionEl = DOM.append(nav, $("span.mobile-diff-nav-position"));
+		this.nextBtn = DOM.append(
+      nav,
+      $("button.mobile-diff-nav-btn.next", { type: "button" }),
+    ) as HTMLButtonElement;
+		this.nextBtn.setAttribute(
+      "aria-label",
+      localize("diffView.nextFile", "Next file"),
+    );
+		DOM.append(this.nextBtn, $("span")).classList.add(
+      ...ThemeIcon.asClassNameArray(Codicon.chevronDown),
+    );
 
 		this.viewStore.add(Gesture.addTarget(this.prevBtn));
 		this.viewStore.add(Gesture.addTarget(this.nextBtn));
 		const onPrev = () => this.navigate(-1);
 		const onNext = () => this.navigate(+1);
-		this.viewStore.add(DOM.addDisposableListener(this.prevBtn, DOM.EventType.CLICK, onPrev));
-		this.viewStore.add(DOM.addDisposableListener(this.prevBtn, TouchEventType.Tap, onPrev));
-		this.viewStore.add(DOM.addDisposableListener(this.nextBtn, DOM.EventType.CLICK, onNext));
-		this.viewStore.add(DOM.addDisposableListener(this.nextBtn, TouchEventType.Tap, onNext));
+		this.viewStore.add(
+      DOM.addDisposableListener(this.prevBtn, DOM.EventType.CLICK, onPrev),
+    );
+		this.viewStore.add(
+      DOM.addDisposableListener(this.prevBtn, TouchEventType.Tap, onPrev),
+    );
+		this.viewStore.add(
+      DOM.addDisposableListener(this.nextBtn, DOM.EventType.CLICK, onNext),
+    );
+		this.viewStore.add(
+      DOM.addDisposableListener(this.nextBtn, TouchEventType.Tap, onNext),
+    );
 
-		nav.style.display = this.siblings.length > 1 ? '' : 'none';
+		nav.style.display = this.siblings.length > 1 ? "" : "none";
 
 		// -- Body -------------------------------------------------
-		const body = DOM.append(overlay, $('div.mobile-overlay-body'));
-		this.scrollWrapper = DOM.append(body, $('div.mobile-overlay-scroll'));
-		this.contentArea = DOM.append(this.scrollWrapper, $('div.mobile-diff-output'));
+		const body = DOM.append(overlay, $("div.mobile-overlay-body"));
+		this.scrollWrapper = DOM.append(body, $("div.mobile-overlay-scroll"));
+		this.contentArea = DOM.append(
+      this.scrollWrapper,
+      $("div.mobile-diff-output"),
+    );
 
 		// Horizontal swipe between sibling files. We mount on the scroll
 		// wrapper so vertical scrolling continues to work normally; the
@@ -232,7 +304,7 @@ export class MobileDiffView extends Disposable {
 		let tracking = false;
 
 		const onPointerDown = (e: PointerEvent) => {
-			if (e.pointerType !== 'touch') {
+			if (e.pointerType !== "touch") {
 				return;
 			}
 			tracking = true;
@@ -268,9 +340,13 @@ export class MobileDiffView extends Disposable {
 			this.navigate(dx < 0 ? +1 : -1);
 		};
 
-		store.add(DOM.addDisposableListener(target, 'pointerdown', onPointerDown));
-		store.add(DOM.addDisposableListener(target, 'pointerup', onPointerUp));
-		store.add(DOM.addDisposableListener(target, 'pointercancel', () => { tracking = false; }));
+		store.add(DOM.addDisposableListener(target, "pointerdown", onPointerDown));
+		store.add(DOM.addDisposableListener(target, "pointerup", onPointerUp));
+		store.add(
+      DOM.addDisposableListener(target, "pointercancel", () => {
+        tracking = false;
+      }),
+    );
 		return store;
 	}
 
@@ -291,7 +367,7 @@ export class MobileDiffView extends Disposable {
 
 		const diff = this.siblings[this.currentIndex];
 		const fileNameUri = diff.modifiedURI ?? diff.originalURI;
-		const fileName = fileNameUri ? basename(fileNameUri) : '';
+		const fileName = fileNameUri ? basename(fileNameUri) : "";
 
 		// Header content
 		this.titleEl.textContent = fileName;
@@ -302,27 +378,33 @@ export class MobileDiffView extends Disposable {
 		DOM.clearNode(this.subtitleEl);
 		if (!diff.identical) {
 			if (diff.added) {
-				DOM.append(this.subtitleEl, $('span.mobile-changes-row-added')).textContent = `+${diff.added}`;
+				DOM.append(
+          this.subtitleEl,
+          $("span.mobile-changes-row-added"),
+        ).textContent = `+${diff.added}`;
 			}
 			if (diff.added && diff.removed) {
-				DOM.append(this.subtitleEl, document.createTextNode(' '));
+				DOM.append(this.subtitleEl, document.createTextNode(" "));
 			}
 			if (diff.removed) {
-				DOM.append(this.subtitleEl, $('span.mobile-changes-row-removed')).textContent = `-${diff.removed}`;
+				DOM.append(
+          this.subtitleEl,
+          $("span.mobile-changes-row-removed"),
+        ).textContent = `-${diff.removed}`;
 			}
 		}
 
 		if (this.siblings.length > 1) {
 			this.positionEl.textContent = localize(
-				'diffView.position',
-				"{0} / {1}",
-				this.currentIndex + 1,
-				this.siblings.length,
-			);
+        "diffView.position",
+        "{0} / {1}",
+        this.currentIndex + 1,
+        this.siblings.length,
+      );
 			this.prevBtn.disabled = this.currentIndex === 0;
 			this.nextBtn.disabled = this.currentIndex === this.siblings.length - 1;
-			this.prevBtn.setAttribute('aria-disabled', String(this.prevBtn.disabled));
-			this.nextBtn.setAttribute('aria-disabled', String(this.nextBtn.disabled));
+			this.prevBtn.setAttribute("aria-disabled", String(this.prevBtn.disabled));
+			this.nextBtn.setAttribute("aria-disabled", String(this.nextBtn.disabled));
 		}
 
 		// Reset scroll position so the user starts at the top of each file.
@@ -335,13 +417,16 @@ export class MobileDiffView extends Disposable {
 
 	private loadDiffContent(container: HTMLElement, diff: IFileDiffViewData): void {
 		if (diff.identical) {
-			const empty = DOM.append(container, $('div.mobile-diff-empty-state'));
-			empty.textContent = localize('diffView.noChanges', "No changes in this file.");
+			const empty = DOM.append(container, $("div.mobile-diff-empty-state"));
+			empty.textContent = localize(
+        "diffView.noChanges",
+        "No changes in this file.",
+      );
 			return;
 		}
 
-		const loadingEl = DOM.append(container, $('div.mobile-diff-empty-state'));
-		loadingEl.textContent = localize('diffView.loading', "Loading…");
+		const loadingEl = DOM.append(container, $("div.mobile-diff-empty-state"));
+		loadingEl.textContent = localize("diffView.loading", "Loading…");
 
 		const generation = this.renderGeneration;
 		const languageId = this.resolveLanguageId(diff);
@@ -357,11 +442,11 @@ export class MobileDiffView extends Disposable {
 	): Promise<void> {
 		const [originalText, modifiedText] = await Promise.all([
 			diff.originalURI
-				? this.textFileService.read(diff.originalURI, { acceptTextOnly: true }).then(m => m.value).catch(() => '')
-				: Promise.resolve(''),
+				? this.textFileService.read(diff.originalURI, { acceptTextOnly: true }).then(m => m.value).catch(() => "")
+				: Promise.resolve(""),
 			diff.modifiedURI
-				? this.textFileService.read(diff.modifiedURI, { acceptTextOnly: true }).then(m => m.value).catch(() => '')
-				: Promise.resolve(''),
+				? this.textFileService.read(diff.modifiedURI, { acceptTextOnly: true }).then(m => m.value).catch(() => "")
+				: Promise.resolve(""),
 		]);
 
 		if (this.disposed || generation !== this.renderGeneration) {
@@ -371,8 +456,11 @@ export class MobileDiffView extends Disposable {
 		const hunks = computeUnifiedDiff(originalText, modifiedText);
 		if (hunks.length === 0) {
 			DOM.clearNode(container);
-			const empty = DOM.append(container, $('div.mobile-diff-empty-state'));
-			empty.textContent = localize('diffView.noChanges', "No changes in this file.");
+			const empty = DOM.append(container, $("div.mobile-diff-empty-state"));
+			empty.textContent = localize(
+        "diffView.noChanges",
+        "No changes in this file.",
+      );
 			return;
 		}
 
@@ -383,15 +471,23 @@ export class MobileDiffView extends Disposable {
 		// (plain foreground). Detect that case and fall back to a lightweight
 		// regex tokenizer that covers the most common syntax patterns.
 		const [origLineHtml, modLineHtml] = await Promise.all([
-			tokenizeFileLines(this.languageService, originalText, languageId),
-			tokenizeFileLines(this.languageService, modifiedText, languageId),
-		]);
+      tokenizeFileLines(this.languageService, originalText, languageId),
+      tokenizeFileLines(this.languageService, modifiedText, languageId),
+    ]);
 
 		// Real tokenization produces multiple distinct mtk* classes; if ALL
 		// non-empty lines contain only `mtk1`, the grammar did not fire.
-		const hasRealTokens = hasMultipleTokenClasses(origLineHtml) || hasMultipleTokenClasses(modLineHtml);
-		const origLines = hasRealTokens ? origLineHtml : regexTokenizeLines(originalText, languageId);
-		const modLines = hasRealTokens ? modLineHtml : regexTokenizeLines(modifiedText, languageId);
+		const hasRealTokens = hasMultipleTokenClasses(
+      origLineHtml,
+    ) || hasMultipleTokenClasses(modLineHtml);
+		const origLines = hasRealTokens ? origLineHtml : regexTokenizeLines(
+      originalText,
+      languageId,
+    );
+		const modLines = hasRealTokens ? modLineHtml : regexTokenizeLines(
+      modifiedText,
+      languageId,
+    );
 
 		if (this.disposed || generation !== this.renderGeneration) {
 			return;
@@ -405,7 +501,7 @@ export class MobileDiffView extends Disposable {
 		// kept so both paths share the same container node.
 		const colorMap = TokenizationRegistry.getColorMap();
 		if (colorMap && hasRealTokens) {
-			const styleEl = document.createElement('style');
+			const styleEl = document.createElement("style");
 			styleEl.textContent = generateTokensCSSForColorMap(colorMap);
 			container.appendChild(styleEl);
 		}
@@ -418,14 +514,16 @@ export class MobileDiffView extends Disposable {
 		// the user is reading. Falls back to the original (deletion case).
 		const uri = diff.modifiedURI ?? diff.originalURI;
 		if (!uri) {
-			return 'plaintext';
+			return "plaintext";
 		}
 		// `guessLanguageIdByFilepathOrFirstLine` already handles unknown
 		// URI schemes (like `vscode-agent-host://`) — its association
 		// resolver falls through to `resource.path` and basenames that
 		// for extension matching. We don't need to massage the URI.
-		const guessed = this.languageService.guessLanguageIdByFilepathOrFirstLine(uri);
-		if (guessed && guessed !== 'unknown') {
+		const guessed = this.languageService.guessLanguageIdByFilepathOrFirstLine(
+      uri,
+    );
+		if (guessed && guessed !== "unknown") {
 			return guessed;
 		}
 		// Most language extensions (javascript, typescript, python, etc.)
@@ -434,8 +532,10 @@ export class MobileDiffView extends Disposable {
 		// `tokenizeToString` will pick up if/when their TextMate grammars
 		// load on demand.
 		const name = basename(uri);
-		const ext = name.includes('.') ? name.slice(name.lastIndexOf('.')).toLowerCase() : '';
-		return EXTENSION_LANGUAGE_MAP[ext] ?? 'plaintext';
+		const ext = name.includes(
+      ".",
+    ) ? name.slice(name.lastIndexOf(".")).toLowerCase() : "";
+		return EXTENSION_LANGUAGE_MAP[ext] ?? "plaintext";
 	}
 
 	private renderHunks(
@@ -448,21 +548,23 @@ export class MobileDiffView extends Disposable {
 			// Hunk header — sticky inside the scroll container so the
 			// `@@ -..,.. +..,.. @@` indicator stays anchored as the user
 			// scrolls through the hunk's lines.
-			const headerEl = DOM.append(container, $('div.mobile-diff-hunk-header'));
+			const headerEl = DOM.append(container, $("div.mobile-diff-hunk-header"));
 			headerEl.textContent = hunk.header;
 
 			// Lines
 			for (const line of hunk.lines) {
-				const row = DOM.append(container, $('div.mobile-diff-line'));
+				const row = DOM.append(container, $("div.mobile-diff-line"));
 				row.classList.add(line.type);
 
-				const numEl = DOM.append(row, $('span.mobile-diff-line-num'));
-				numEl.textContent = line.lineNum !== undefined ? String(line.lineNum) : '';
+				const numEl = DOM.append(row, $("span.mobile-diff-line-num"));
+				numEl.textContent = line.lineNum !== undefined ? String(
+          line.lineNum,
+        ) : "";
 
-				const gutter = DOM.append(row, $('span.mobile-diff-gutter'));
-				gutter.textContent = line.type === 'added' ? '+' : line.type === 'removed' ? '-' : ' ';
+				const gutter = DOM.append(row, $("span.mobile-diff-gutter"));
+				gutter.textContent = line.type === "added" ? "+" : line.type === "removed" ? "-" : " ";
 
-				const content = DOM.append(row, $('span.mobile-diff-content'));
+				const content = DOM.append(row, $("span.mobile-diff-content"));
 				// `lineNum` is 1-based and indexes into the source the
 				// line was taken from: original for context/removed,
 				// modified for added (see `computeUnifiedDiff`). The
@@ -470,7 +572,7 @@ export class MobileDiffView extends Disposable {
 				// line in the same order, so a direct lookup gives us
 				// the highlighted markup.
 				if (line.lineNum !== undefined) {
-					const source = line.type === 'added' ? modLineHtml : origLineHtml;
+					const source = line.type === "added" ? modLineHtml : origLineHtml;
 					const html = source[line.lineNum - 1];
 					if (html !== undefined) {
 						content.innerHTML = html;
@@ -509,7 +611,7 @@ export class MobileDiffView extends Disposable {
  */
 async function tokenizeFileLines(languageService: ILanguageService, text: string, languageId: string): Promise<string[]> {
 	if (!text) {
-		return [''];
+		return [""];
 	}
 	const html = await tokenizeToString(languageService, text, languageId);
 	const inner = stripTokenizedWrapper(html);
@@ -517,7 +619,7 @@ async function tokenizeFileLines(languageService: ILanguageService, text: string
 	// always lower-case in the upstream implementation). Splitting on
 	// the literal preserves the inner `<span class="mtkN">…</span>`
 	// markup that gives us the syntax-highlight colours.
-	return inner.split('<br/>');
+	return inner.split("<br/>");
 }
 
 /**
@@ -528,7 +630,7 @@ async function tokenizeFileLines(languageService: ILanguageService, text: string
  */
 function stripTokenizedWrapper(html: string): string {
 	const openTag = '<div class="monaco-tokenized-source">';
-	const closeTag = '</div>';
+	const closeTag = "</div>";
 	if (html.startsWith(openTag) && html.endsWith(closeTag)) {
 		return html.slice(openTag.length, html.length - closeTag.length);
 	}
@@ -561,7 +663,7 @@ function hasMultipleTokenClasses(lines: readonly string[]): boolean {
 // are styled in `media/mobileOverlayViews.css` using per-theme CSS variables
 // defined against the `.vs`, `.hc-black`, and `.hc-light` body class selectors,
 // keeping all theme-specific values in the stylesheet rather than in JS.
-type RegexTokenKind = 'comment' | 'string' | 'keyword' | 'number' | 'default';
+type RegexTokenKind = "comment" | "string" | "keyword" | "number" | "default";
 
 interface IRegexToken {
 	start: number;
@@ -569,44 +671,139 @@ interface IRegexToken {
 	kind: RegexTokenKind;
 }
 
-type LangFamily = 'js' | 'python' | 'css' | 'html' | 'json' | 'shell' | 'generic';
+type LangFamily = "js" | "python" | "css" | "html" | "json" | "shell" | "generic";
 
 const LANG_FAMILY: Record<string, LangFamily> = {
-	javascript: 'js', javascriptreact: 'js',
-	typescript: 'js', typescriptreact: 'js',
-	java: 'js', csharp: 'js', go: 'js', rust: 'js',
-	cpp: 'js', c: 'js', swift: 'js', kotlin: 'js', dart: 'js', php: 'js', ruby: 'js',
-	python: 'python',
-	css: 'css', scss: 'css', less: 'css',
-	html: 'html', xml: 'html',
-	json: 'json', jsonc: 'json',
-	shellscript: 'shell', powershell: 'shell',
+  javascript: "js",
+  javascriptreact: "js",
+  typescript: "js",
+  typescriptreact: "js",
+  java: "js",
+  csharp: "js",
+  go: "js",
+  rust: "js",
+  cpp: "js",
+  c: "js",
+  swift: "js",
+  kotlin: "js",
+  dart: "js",
+  php: "js",
+  ruby: "js",
+  python: "python",
+  css: "css",
+  scss: "css",
+  less: "css",
+  html: "html",
+  xml: "html",
+  json: "json",
+  jsonc: "json",
+  shellscript: "shell",
+  powershell: "shell",
 };
 
 const JS_KEYWORDS = new Set([
-	'break', 'case', 'catch', 'class', 'const', 'continue', 'debugger', 'default',
-	'delete', 'do', 'else', 'export', 'extends', 'false', 'finally', 'for',
-	'function', 'if', 'import', 'in', 'instanceof', 'let', 'new', 'null',
-	'of', 'return', 'static', 'super', 'switch', 'this', 'throw', 'true',
-	'try', 'typeof', 'undefined', 'var', 'void', 'while', 'with', 'yield',
-	'async', 'await', 'from', 'as', 'interface', 'type', 'enum', 'declare',
-	'abstract', 'override', 'readonly', 'namespace', 'module', 'public', 'private', 'protected',
+  "break",
+  "case",
+  "catch",
+  "class",
+  "const",
+  "continue",
+  "debugger",
+  "default",
+  "delete",
+  "do",
+  "else",
+  "export",
+  "extends",
+  "false",
+  "finally",
+  "for",
+  "function",
+  "if",
+  "import",
+  "in",
+  "instanceof",
+  "let",
+  "new",
+  "null",
+  "of",
+  "return",
+  "static",
+  "super",
+  "switch",
+  "this",
+  "throw",
+  "true",
+  "try",
+  "typeof",
+  "undefined",
+  "var",
+  "void",
+  "while",
+  "with",
+  "yield",
+  "async",
+  "await",
+  "from",
+  "as",
+  "interface",
+  "type",
+  "enum",
+  "declare",
+  "abstract",
+  "override",
+  "readonly",
+  "namespace",
+  "module",
+  "public",
+  "private",
+  "protected",
 ]);
 
 const PY_KEYWORDS = new Set([
-	'False', 'None', 'True', 'and', 'as', 'assert', 'async', 'await',
-	'break', 'class', 'continue', 'def', 'del', 'elif', 'else', 'except',
-	'finally', 'for', 'from', 'global', 'if', 'import', 'in', 'is',
-	'lambda', 'nonlocal', 'not', 'or', 'pass', 'raise', 'return',
-	'try', 'while', 'with', 'yield',
+  "False",
+  "None",
+  "True",
+  "and",
+  "as",
+  "assert",
+  "async",
+  "await",
+  "break",
+  "class",
+  "continue",
+  "def",
+  "del",
+  "elif",
+  "else",
+  "except",
+  "finally",
+  "for",
+  "from",
+  "global",
+  "if",
+  "import",
+  "in",
+  "is",
+  "lambda",
+  "nonlocal",
+  "not",
+  "or",
+  "pass",
+  "raise",
+  "return",
+  "try",
+  "while",
+  "with",
+  "yield",
 ]);
 
 function escapeHtml(s: string): string {
-	return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+	return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 function buildSpan(kind: RegexTokenKind, text: string): string {
-	if (kind === 'default' || !text) {
+	if (kind === "default" || !text) {
 		return escapeHtml(text);
 	}
 	return `<span class="mobile-diff-tok-${kind}">${escapeHtml(text)}</span>`;
@@ -622,54 +819,62 @@ function regexTokenizeLine(line: string, lang: LangFamily): string {
 		let matched = false;
 
 		// Line comments
-		const commentPfx = lang === 'python' ? '#' : lang === 'shell' ? '#' : '//';
-		if (line.startsWith(commentPfx, pos) || (lang === 'generic' && line.startsWith('#', pos))) {
-			tokens.push({ start: pos, end: len, kind: 'comment' });
+		const commentPfx = lang === "python" ? "#" : lang === "shell" ? "#" : "//";
+		if (line.startsWith(
+      commentPfx,
+      pos,
+    ) || (lang === "generic" && line.startsWith("#", pos))) {
+			tokens.push({ start: pos, end: len, kind: "comment" });
 			pos = len;
 			matched = true;
 		}
 
 		// Block comments /* ... */
-		if (!matched && lang !== 'python' && lang !== 'shell' && line.startsWith('/*', pos)) {
-			const end = line.indexOf('*/', pos + 2);
+		if (!matched && lang !== "python" && lang !== "shell" && line.startsWith(
+      "/*",
+      pos,
+    )) {
+			const end = line.indexOf("*/", pos + 2);
 			const tokenEnd = end === -1 ? len : end + 2;
-			tokens.push({ start: pos, end: tokenEnd, kind: 'comment' });
+			tokens.push({ start: pos, end: tokenEnd, kind: "comment" });
 			pos = tokenEnd;
 			matched = true;
 		}
 
 		// Template literals
-		if (!matched && (lang === 'js') && line[pos] === '`') {
+		if (!matched && (lang === "js") && line[pos] === "`") {
 			let i = pos + 1;
 			while (i < len) {
-				if (line[i] === '\\') { i += 2; continue; }
-				if (line[i] === '`') { i++; break; }
+				if (line[i] === "\\") { i += 2; continue; }
+				if (line[i] === "`") { i++; break; }
 				i++;
 			}
-			tokens.push({ start: pos, end: i, kind: 'string' });
+			tokens.push({ start: pos, end: i, kind: "string" });
 			pos = i;
 			matched = true;
 		}
 
 		// Strings
-		if (!matched && (line[pos] === '"' || line[pos] === '\'')) {
+		if (!matched && (line[pos] === '"' || line[pos] === "'")) {
 			const q = line[pos];
 			let i = pos + 1;
 			while (i < len) {
-				if (line[i] === '\\') { i += 2; continue; }
+				if (line[i] === "\\") { i += 2; continue; }
 				if (line[i] === q) { i++; break; }
 				i++;
 			}
-			tokens.push({ start: pos, end: i, kind: 'string' });
+			tokens.push({ start: pos, end: i, kind: "string" });
 			pos = i;
 			matched = true;
 		}
 
 		// Numbers
 		if (!matched && /[0-9]/.test(line[pos])) {
-			const m = line.slice(pos).match(/^0x[0-9a-fA-F]+|^[0-9]+\.?[0-9]*(?:[eE][+-]?[0-9]+)?/);
+			const m = line.slice(pos).match(
+        /^0x[0-9a-fA-F]+|^[0-9]+\.?[0-9]*(?:[eE][+-]?[0-9]+)?/,
+      );
 			if (m) {
-				tokens.push({ start: pos, end: pos + m[0].length, kind: 'number' });
+				tokens.push({ start: pos, end: pos + m[0].length, kind: "number" });
 				pos += m[0].length;
 				matched = true;
 			}
@@ -680,8 +885,8 @@ function regexTokenizeLine(line: string, lang: LangFamily): string {
 			const m = line.slice(pos).match(/^[a-zA-Z_$][a-zA-Z0-9_$]*/);
 			if (m) {
 				const word = m[0];
-				const keywords = lang === 'python' ? PY_KEYWORDS : JS_KEYWORDS;
-				const kind: RegexTokenKind = keywords.has(word) ? 'keyword' : 'default';
+				const keywords = lang === "python" ? PY_KEYWORDS : JS_KEYWORDS;
+				const kind: RegexTokenKind = keywords.has(word) ? "keyword" : "default";
 				tokens.push({ start: pos, end: pos + word.length, kind });
 				pos += word.length;
 				matched = true;
@@ -692,16 +897,18 @@ function regexTokenizeLine(line: string, lang: LangFamily): string {
 			// Advance one character (operator/punctuation/whitespace)
 			const prevTok = tokens[tokens.length - 1];
 			// Coalesce consecutive default-colored chars to avoid span bloat
-			if (prevTok && prevTok.kind === 'default') {
+			if (prevTok && prevTok.kind === "default") {
 				prevTok.end = pos + 1;
 			} else {
-				tokens.push({ start: pos, end: pos + 1, kind: 'default' });
+				tokens.push({ start: pos, end: pos + 1, kind: "default" });
 			}
 			pos++;
 		}
 	}
 
-	return tokens.map(t => buildSpan(t.kind, line.slice(t.start, t.end))).join('');
+	return tokens.map(t => buildSpan(t.kind, line.slice(t.start, t.end))).join(
+    "",
+  );
 }
 
 /**
@@ -710,9 +917,9 @@ function regexTokenizeLine(line: string, lang: LangFamily): string {
  */
 function regexTokenizeLines(text: string, languageId: string): string[] {
 	if (!text) {
-		return [''];
+		return [""];
 	}
-	const lang: LangFamily = LANG_FAMILY[languageId] ?? 'generic';
+	const lang: LangFamily = LANG_FAMILY[languageId] ?? "generic";
 	return text.split(/\r?\n/).map(line => regexTokenizeLine(line, lang));
 }
 
@@ -721,7 +928,7 @@ function regexTokenizeLines(text: string, languageId: string): string[] {
 // the diff editor — no in-tree diff algorithm to maintain.
 
 interface IDiffLine {
-	type: 'context' | 'added' | 'removed';
+	type: "context" | "added" | "removed";
 	lineNum?: number;
 	text: string;
 }
@@ -737,11 +944,15 @@ function computeUnifiedDiff(original: string, modified: string): IDiffHunk[] {
 	const origLines = original.split(/\r?\n/);
 	const modLines = modified.split(/\r?\n/);
 
-	const result = linesDiffComputers.getDefault().computeDiff(origLines, modLines, {
-		ignoreTrimWhitespace: false,
-		maxComputationTimeMs: 1000,
-		computeMoves: false,
-	});
+	const result = linesDiffComputers.getDefault().computeDiff(
+    origLines,
+    modLines,
+    {
+      ignoreTrimWhitespace: false,
+      maxComputationTimeMs: 1000,
+      computeMoves: false,
+    },
+  );
 
 	if (result.changes.length === 0) {
 		return [];
@@ -757,11 +968,11 @@ function computeUnifiedDiff(original: string, modified: string): IDiffHunk[] {
 	const groups: Group[] = [];
 	for (const change of result.changes) {
 		const sub: Sub = {
-			origStart: change.original.startLineNumber,
-			origEnd: change.original.endLineNumberExclusive,
-			modStart: change.modified.startLineNumber,
-			modEnd: change.modified.endLineNumberExclusive,
-		};
+      origStart: change.original.startLineNumber,
+      origEnd: change.original.endLineNumberExclusive,
+      modStart: change.modified.startLineNumber,
+      modEnd: change.modified.endLineNumberExclusive,
+    };
 		const last = groups[groups.length - 1];
 		const lastSub = last?.subs[last.subs.length - 1];
 		if (lastSub && sub.origStart - lastSub.origEnd <= CONTEXT_LINES * 2) {
@@ -777,14 +988,20 @@ function computeUnifiedDiff(original: string, modified: string): IDiffHunk[] {
 		const last = group.subs[group.subs.length - 1];
 		const origLeading = Math.max(1, first.origStart - CONTEXT_LINES);
 		const modLeading = Math.max(1, first.modStart - CONTEXT_LINES);
-		const origTrailing = Math.min(origLines.length + 1, last.origEnd + CONTEXT_LINES);
-		const modTrailing = Math.min(modLines.length + 1, last.modEnd + CONTEXT_LINES);
+		const origTrailing = Math.min(
+      origLines.length + 1,
+      last.origEnd + CONTEXT_LINES,
+    );
+		const modTrailing = Math.min(
+      modLines.length + 1,
+      last.modEnd + CONTEXT_LINES,
+    );
 
 		const lines: IDiffLine[] = [];
 
 		// Leading context (from original — identical to modified in unchanged regions).
 		for (let i = origLeading; i < first.origStart; i++) {
-			lines.push({ type: 'context', lineNum: i, text: origLines[i - 1] ?? '' });
+			lines.push({ type: "context", lineNum: i, text: origLines[i - 1] ?? "" });
 		}
 
 		// Walk each sub-change in the group. Emit removed/added for the
@@ -793,10 +1010,14 @@ function computeUnifiedDiff(original: string, modified: string): IDiffHunk[] {
 		for (let s = 0; s < group.subs.length; s++) {
 			const sub = group.subs[s];
 			for (let i = sub.origStart; i < sub.origEnd; i++) {
-				lines.push({ type: 'removed', lineNum: i, text: origLines[i - 1] ?? '' });
+				lines.push({
+          type: "removed",
+          lineNum: i,
+          text: origLines[i - 1] ?? "",
+        });
 			}
 			for (let i = sub.modStart; i < sub.modEnd; i++) {
-				lines.push({ type: 'added', lineNum: i, text: modLines[i - 1] ?? '' });
+				lines.push({ type: "added", lineNum: i, text: modLines[i - 1] ?? "" });
 			}
 			const next = group.subs[s + 1];
 			if (next) {
@@ -805,22 +1026,26 @@ function computeUnifiedDiff(original: string, modified: string): IDiffHunk[] {
 				// original-side line numbers because the gutter mirrors
 				// the original side for context rows elsewhere in the file.
 				for (let i = sub.origEnd; i < next.origStart; i++) {
-					lines.push({ type: 'context', lineNum: i, text: origLines[i - 1] ?? '' });
+					lines.push({
+            type: "context",
+            lineNum: i,
+            text: origLines[i - 1] ?? "",
+          });
 				}
 			}
 		}
 
 		// Trailing context.
 		for (let i = last.origEnd; i < origTrailing; i++) {
-			lines.push({ type: 'context', lineNum: i, text: origLines[i - 1] ?? '' });
+			lines.push({ type: "context", lineNum: i, text: origLines[i - 1] ?? "" });
 		}
 
 		const origCount = origTrailing - origLeading;
 		const modCount = modTrailing - modLeading;
 		hunks.push({
-			header: `@@ -${origLeading},${origCount} +${modLeading},${modCount} @@`,
-			lines,
-		});
+      header: `@@ -${origLeading},${origCount} +${modLeading},${modCount} @@`,
+      lines,
+    });
 	}
 
 	return hunks;
@@ -836,5 +1061,10 @@ export function openMobileDiffView(
 	textFileService: ITextFileService,
 	languageService: ILanguageService,
 ): MobileDiffView {
-	return new MobileDiffView(workbenchContainer, data, textFileService, languageService);
+	return new MobileDiffView(
+    workbenchContainer,
+    data,
+    textFileService,
+    languageService,
+  );
 }

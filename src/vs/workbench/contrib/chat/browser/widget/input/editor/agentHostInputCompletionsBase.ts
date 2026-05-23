@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../../../../base/common/cancellation.js';
-import { Disposable, IDisposable } from '../../../../../../../base/common/lifecycle.js';
-import { URI } from '../../../../../../../base/common/uri.js';
-import { Position } from '../../../../../../../editor/common/core/position.js';
-import { Range } from '../../../../../../../editor/common/core/range.js';
-import { CompletionItem, CompletionList } from '../../../../../../../editor/common/languages.js';
-import { ITextModel } from '../../../../../../../editor/common/model.js';
-import { LanguageFilter } from '../../../../../../../editor/common/languageSelector.js';
-import { ILanguageFeaturesService } from '../../../../../../../editor/common/services/languageFeatures.js';
-import { IChatInputCompletionItem, IChatSessionsService } from '../../../../common/chatSessionsService.js';
-import { isAtTriggerCharacterToken } from './chatInputCompletionUtils.js';
+import { CancellationToken } from "../../../../../../../base/common/cancellation.js";
+import { Disposable, IDisposable } from "../../../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../../../base/common/uri.js";
+import { Position } from "../../../../../../../editor/common/core/position.js";
+import { Range } from "../../../../../../../editor/common/core/range.js";
+import { CompletionItem, CompletionList } from "../../../../../../../editor/common/languages.js";
+import { ITextModel } from "../../../../../../../editor/common/model.js";
+import { LanguageFilter } from "../../../../../../../editor/common/languageSelector.js";
+import { ILanguageFeaturesService } from "../../../../../../../editor/common/services/languageFeatures.js";
+import { IChatInputCompletionItem, IChatSessionsService } from "../../../../common/chatSessionsService.js";
+import { isAtTriggerCharacterToken } from "./chatInputCompletionUtils.js";
 
 /**
  * Shared plumbing for Monaco completion providers that delegate to an
@@ -70,10 +70,10 @@ export abstract class AgentHostInputCompletionsBase<TContext, TRegData = void> e
 	 */
 	protected _registerProvider(filter: LanguageFilter, debugName: string, triggerCharacters: readonly string[], regData: TRegData): IDisposable {
 		return this._languageFeaturesService.completionProvider.register(filter, {
-			_debugDisplayName: debugName,
-			triggerCharacters: [...triggerCharacters],
-			provideCompletionItems: (model, position, _context, token) => this._provide(model, position, token, triggerCharacters, regData),
-		});
+      _debugDisplayName: debugName,
+      triggerCharacters: [...triggerCharacters],
+      provideCompletionItems: (model, position, _context, token) => this._provide(model, position, token, triggerCharacters, regData),
+    });
 	}
 
 	private async _provide(model: ITextModel, position: Position, token: CancellationToken, triggerCharacters: readonly string[], regData: TRegData): Promise<CompletionList | null> {
@@ -93,7 +93,11 @@ export abstract class AgentHostInputCompletionsBase<TContext, TRegData = void> e
 
 		const text = model.getValue();
 		const offset = model.getOffsetAt(position);
-		const result = await this._chatSessionsService.provideChatInputCompletions(ctx.sessionResource, { text, offset }, token);
+		const result = await this._chatSessionsService.provideChatInputCompletions(
+      ctx.sessionResource,
+      { text, offset },
+      token,
+    );
 		if (token.isCancellationRequested || !result) {
 			return null;
 		}
@@ -114,8 +118,18 @@ export abstract class AgentHostInputCompletionsBase<TContext, TRegData = void> e
 	protected static computeRange(position: Position, item: IChatInputCompletionItem): { insert: Range; replace: Range } {
 		const start = item.start ?? position;
 		const end = item.end ?? position;
-		const replace = new Range(start.lineNumber, start.column, end.lineNumber, end.column);
-		const insert = new Range(start.lineNumber, start.column, position.lineNumber, position.column);
+		const replace = new Range(
+      start.lineNumber,
+      start.column,
+      end.lineNumber,
+      end.column,
+    );
+		const insert = new Range(
+      start.lineNumber,
+      start.column,
+      position.lineNumber,
+      position.column,
+    );
 		return { insert, replace };
 	}
 }

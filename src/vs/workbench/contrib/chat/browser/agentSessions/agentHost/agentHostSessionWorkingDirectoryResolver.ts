@@ -3,12 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable, toDisposable } from '../../../../../../base/common/lifecycle.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { InstantiationType, registerSingleton } from '../../../../../../platform/instantiation/common/extensions.js';
+import { IDisposable, toDisposable } from "../../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { createDecorator } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { InstantiationType, registerSingleton } from "../../../../../../platform/instantiation/common/extensions.js";
 
-export const IAgentHostSessionWorkingDirectoryResolver = createDecorator<IAgentHostSessionWorkingDirectoryResolver>('agentHostSessionWorkingDirectoryResolver');
+export const IAgentHostSessionWorkingDirectoryResolver = createDecorator<IAgentHostSessionWorkingDirectoryResolver>(
+  "agentHostSessionWorkingDirectoryResolver",
+);
 
 export interface IAgentHostSessionWorkingDirectoryResolver {
 	readonly _serviceBrand: undefined;
@@ -33,12 +35,20 @@ class AgentHostSessionWorkingDirectoryResolver implements IAgentHostSessionWorki
 	}
 
 	resolve(sessionResource: URI): URI | undefined {
-		return this._resolvers.get(sessionResource.scheme)?.resolve(sessionResource);
+		return this._resolvers.get(sessionResource.scheme)?.resolve(
+      sessionResource,
+    );
 	}
 
 	isNewSession(sessionResource: URI): boolean {
-		return this._resolvers.get(sessionResource.scheme)?.isNewSession?.(sessionResource) ?? false;
+		return this._resolvers.get(sessionResource.scheme)?.isNewSession?.(
+      sessionResource,
+    ) ?? false;
 	}
 }
 
-registerSingleton(IAgentHostSessionWorkingDirectoryResolver, AgentHostSessionWorkingDirectoryResolver, InstantiationType.Delayed);
+registerSingleton(
+  IAgentHostSessionWorkingDirectoryResolver,
+  AgentHostSessionWorkingDirectoryResolver,
+  InstantiationType.Delayed,
+);

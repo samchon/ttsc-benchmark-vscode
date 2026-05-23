@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as strings from '../../../base/common/strings.js';
-import * as platform from '../../../base/common/platform.js';
-import * as buffer from '../../../base/common/buffer.js';
+import * as strings from "../../../base/common/strings.js";
+import * as platform from "../../../base/common/platform.js";
+import * as buffer from "../../../base/common/buffer.js";
 
 let _utf16LE_TextDecoder: TextDecoder | null;
 function getUTF16LE_TextDecoder(): TextDecoder {
 	if (!_utf16LE_TextDecoder) {
-		_utf16LE_TextDecoder = new TextDecoder('UTF-16LE');
+		_utf16LE_TextDecoder = new TextDecoder("UTF-16LE");
 	}
 	return _utf16LE_TextDecoder;
 }
@@ -18,7 +18,7 @@ function getUTF16LE_TextDecoder(): TextDecoder {
 let _utf16BE_TextDecoder: TextDecoder | null;
 function getUTF16BE_TextDecoder(): TextDecoder {
 	if (!_utf16BE_TextDecoder) {
-		_utf16BE_TextDecoder = new TextDecoder('UTF-16BE');
+		_utf16BE_TextDecoder = new TextDecoder("UTF-16BE");
 	}
 	return _utf16BE_TextDecoder;
 }
@@ -50,7 +50,7 @@ function compatDecodeUTF16LE(source: Uint8Array, offset: number, len: number): s
 		const charCode = buffer.readUInt16LE(source, offset); offset += 2;
 		result[resultLen++] = String.fromCharCode(charCode);
 	}
-	return result.join('');
+	return result.join("");
 }
 
 export class StringBuilder {
@@ -77,14 +77,14 @@ export class StringBuilder {
 	public build(): string {
 		if (this._completedStrings !== null) {
 			this._flushBuffer();
-			return this._completedStrings.join('');
+			return this._completedStrings.join("");
 		}
 		return this._buildBuffer();
 	}
 
 	private _buildBuffer(): string {
 		if (this._bufferLength === 0) {
-			return '';
+			return "";
 		}
 
 		const view = new Uint16Array(this._buffer.buffer, 0, this._bufferLength);

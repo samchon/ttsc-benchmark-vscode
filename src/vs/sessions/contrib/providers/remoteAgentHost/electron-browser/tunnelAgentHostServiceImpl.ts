@@ -3,37 +3,41 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { ProxyChannel } from '../../../../../base/parts/ipc/common/ipc.js';
-import { IAuthenticationService } from '../../../../../workbench/services/authentication/common/authentication.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { IEnvironmentService } from '../../../../../platform/environment/common/environment.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { ISharedProcessService } from '../../../../../platform/ipc/electron-browser/services.js';
-import { ILogService } from '../../../../../platform/log/common/log.js';
-import { IProductService } from '../../../../../platform/product/common/productService.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../../platform/storage/common/storage.js';
-import { IRemoteAgentHostService, RemoteAgentHostEntryType, RemoteAgentHostsEnabledSettingId } from '../../../../../platform/agentHost/common/remoteAgentHostService.js';
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { ProxyChannel } from "../../../../../base/parts/ipc/common/ipc.js";
+import { IAuthenticationService } from "../../../../../workbench/services/authentication/common/authentication.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IEnvironmentService } from "../../../../../platform/environment/common/environment.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ISharedProcessService } from "../../../../../platform/ipc/electron-browser/services.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { IProductService } from "../../../../../platform/product/common/productService.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../../platform/storage/common/storage.js";
 import {
-	ITunnelAgentHostService,
-	TUNNEL_AGENT_HOST_CHANNEL,
-	TunnelAgentHostsSettingId,
-	type ICachedTunnel,
-	type ITunnelAgentHostMainService,
-	type ITunnelInfo,
-} from '../../../../../platform/agentHost/common/tunnelAgentHost.js';
-import { AhpJsonlLogger } from '../../../../../platform/agentHost/common/ahpJsonlLogger.js';
-import { AgentHostAhpJsonlLoggingSettingId } from '../../../../../platform/agentHost/common/agentService.js';
-import { RemoteAgentHostProtocolClient } from '../../../../../platform/agentHost/browser/remoteAgentHostProtocolClient.js';
-import { TunnelRelayTransport } from '../../../../../platform/agentHost/electron-browser/tunnelRelayTransport.js';
+  IRemoteAgentHostService,
+  RemoteAgentHostEntryType,
+  RemoteAgentHostsEnabledSettingId,
+} from "../../../../../platform/agentHost/common/remoteAgentHostService.js";
+import {
+  ITunnelAgentHostService,
+  TUNNEL_AGENT_HOST_CHANNEL,
+  TunnelAgentHostsSettingId,
+  type ICachedTunnel,
+  type ITunnelAgentHostMainService,
+  type ITunnelInfo,
+} from "../../../../../platform/agentHost/common/tunnelAgentHost.js";
+import { AhpJsonlLogger } from "../../../../../platform/agentHost/common/ahpJsonlLogger.js";
+import { AgentHostAhpJsonlLoggingSettingId } from "../../../../../platform/agentHost/common/agentService.js";
+import { RemoteAgentHostProtocolClient } from "../../../../../platform/agentHost/browser/remoteAgentHostProtocolClient.js";
+import { TunnelRelayTransport } from "../../../../../platform/agentHost/electron-browser/tunnelRelayTransport.js";
 
-const LOG_PREFIX = '[TunnelAgentHost]';
+const LOG_PREFIX = "[TunnelAgentHost]";
 
 /** Storage key for recently used tunnel cache. */
-const CACHED_TUNNELS_KEY = 'tunnelAgentHost.recentTunnels';
+const CACHED_TUNNELS_KEY = "tunnelAgentHost.recentTunnels";
 /** Storage key for tunnels the user explicitly disconnected. */
-const AUTO_CONNECT_SUPPRESSED_TUNNELS_KEY = 'tunnelAgentHost.autoConnectSuppressedTunnels';
+const AUTO_CONNECT_SUPPRESSED_TUNNELS_KEY = "tunnelAgentHost.autoConnectSuppressedTunnels";
 
 /**
  * Renderer-side implementation of {@link ITunnelAgentHostService} that
@@ -49,7 +53,7 @@ export class TunnelAgentHostService extends Disposable implements ITunnelAgentHo
 	readonly onDidChangeTunnels: Event<void> = this._onDidChangeTunnels.event;
 
 	/** Tracks which auth provider was last used successfully. */
-	private _lastAuthProvider: 'github' | 'microsoft' | undefined;
+	private _lastAuthProvider: "github" | "microsoft" | undefined;
 
 	constructor(
 		@ISharedProcessService sharedProcessService: ISharedProcessService,
@@ -65,12 +69,14 @@ export class TunnelAgentHostService extends Disposable implements ITunnelAgentHo
 		super();
 
 		this._mainService = ProxyChannel.toService<ITunnelAgentHostMainService>(
-			sharedProcessService.getChannel(TUNNEL_AGENT_HOST_CHANNEL),
-		);
+      sharedProcessService.getChannel(TUNNEL_AGENT_HOST_CHANNEL),
+    );
 	}
 
 	async listTunnels(options?: { silent?: boolean }): Promise<ITunnelInfo[]> {
-		if (!this._configurationService.getValue<boolean>(RemoteAgentHostsEnabledSettingId)) {
+		if (!this._configurationService.getValue<boolean>(
+      RemoteAgentHostsEnabledSettingId,
+    )) {
 			return [];
 		}
 
@@ -78,47 +84,83 @@ export class TunnelAgentHostService extends Disposable implements ITunnelAgentHo
 		const auth = await this._getToken(silent);
 		if (!auth) {
 			if (silent) {
-				this._logService.debug(`${LOG_PREFIX} No cached token available for silent tunnel enumeration`);
+				this._logService.debug(
+          `${LOG_PREFIX} No cached token available for silent tunnel enumeration`,
+        );
 			} else {
-				this._logService.warn(`${LOG_PREFIX} No auth token available for tunnel enumeration`);
+				this._logService.warn(
+          `${LOG_PREFIX} No auth token available for tunnel enumeration`,
+        );
 			}
 			return [];
 		}
 
-		const additionalNames = this._configurationService.getValue<string[]>(TunnelAgentHostsSettingId) ?? [];
-		return this._mainService.listTunnels(auth.token, auth.provider, additionalNames.length > 0 ? additionalNames : undefined);
+		const additionalNames = this._configurationService.getValue<string[]>(
+      TunnelAgentHostsSettingId,
+    ) ?? [];
+		return this._mainService.listTunnels(
+      auth.token,
+      auth.provider,
+      additionalNames.length > 0 ? additionalNames : undefined,
+    );
 	}
 
-	async connect(tunnel: ITunnelInfo, authProvider?: 'github' | 'microsoft'): Promise<void> {
-		if (!this._configurationService.getValue<boolean>(RemoteAgentHostsEnabledSettingId)) {
-			throw new Error('Remote agent host connections are not enabled.');
+	async connect(tunnel: ITunnelInfo, authProvider?: "github" | "microsoft"): Promise<void> {
+		if (!this._configurationService.getValue<boolean>(
+      RemoteAgentHostsEnabledSettingId,
+    )) {
+			throw new Error("Remote agent host connections are not enabled.");
 		}
 
 		const auth = authProvider
 			? await this._getTokenForProvider(authProvider, false)
 			: await this._getToken(false);
 		if (!auth) {
-			throw new Error('No authentication available');
+			throw new Error("No authentication available");
 		}
 
-		this._logService.info(`${LOG_PREFIX} Connecting to tunnel '${tunnel.name}' (${tunnel.tunnelId})`);
-		const result = await this._mainService.connect(auth.token, auth.provider, tunnel.tunnelId, tunnel.clusterId);
-		this._logService.info(`${LOG_PREFIX} Tunnel relay connected, connectionId=${result.connectionId}`);
+		this._logService.info(
+      `${LOG_PREFIX} Connecting to tunnel '${tunnel.name}' (${tunnel.tunnelId})`,
+    );
+		const result = await this._mainService.connect(
+      auth.token,
+      auth.provider,
+      tunnel.tunnelId,
+      tunnel.clusterId,
+    );
+		this._logService.info(
+      `${LOG_PREFIX} Tunnel relay connected, connectionId=${result.connectionId}`,
+    );
 
 		// Create relay transport + protocol client, then register with RemoteAgentHostService
 		try {
-			const ahpLoggingEnabled = !!this._configurationService.getValue<boolean>(AgentHostAhpJsonlLoggingSettingId);
+			const ahpLoggingEnabled = !!this._configurationService.getValue<boolean>(
+        AgentHostAhpJsonlLoggingSettingId,
+      );
 			const logger = ahpLoggingEnabled ? this._instantiationService.createInstance(
-				AhpJsonlLogger,
-				{ logsHome: this._environmentService.logsHome, connectionId: result.connectionId, transport: 'tunnel' },
-			) : undefined;
-			const transport = new TunnelRelayTransport(result.connectionId, this._mainService, logger);
+        AhpJsonlLogger,
+        {
+          logsHome: this._environmentService.logsHome,
+          connectionId: result.connectionId,
+          transport: "tunnel",
+        },
+      ) : undefined;
+			const transport = new TunnelRelayTransport(
+        result.connectionId,
+        this._mainService,
+        logger,
+      );
 			const protocolClient = this._instantiationService.createInstance(
-				RemoteAgentHostProtocolClient, result.address, transport, undefined,
-			);
+        RemoteAgentHostProtocolClient,
+        result.address,
+        transport,
+        undefined,
+      );
 
 			await protocolClient.connect();
-			this._logService.info(`${LOG_PREFIX} Protocol handshake completed with ${result.address}`);
+			this._logService.info(
+        `${LOG_PREFIX} Protocol handshake completed with ${result.address}`,
+      );
 
 			this.cacheTunnel(tunnel, auth.provider);
 
@@ -135,7 +177,9 @@ export class TunnelAgentHostService extends Disposable implements ITunnelAgentHo
 			}, protocolClient);
 		} catch (err) {
 			this._logService.error(`${LOG_PREFIX} Connection setup failed`, err);
-			this._mainService.disconnect(result.connectionId).catch(() => { /* best effort */ });
+			this._mainService.disconnect(result.connectionId).catch(
+        () => { /* best effort */ },
+      );
 			throw err;
 		}
 	}
@@ -149,17 +193,20 @@ export class TunnelAgentHostService extends Disposable implements ITunnelAgentHo
 	 * Get an auth token, trying cached sessions first (silent),
 	 * then prompting interactively if `silent` is false.
 	 */
-	private async _getToken(silent: boolean): Promise<{ token: string; provider: 'github' | 'microsoft' } | undefined> {
+	private async _getToken(silent: boolean): Promise<{ token: string; provider: "github" | "microsoft" } | undefined> {
 		// Try the last known provider first
 		if (this._lastAuthProvider) {
-			const result = await this._getTokenForProvider(this._lastAuthProvider, silent);
+			const result = await this._getTokenForProvider(
+        this._lastAuthProvider,
+        silent,
+      );
 			if (result) {
 				return result;
 			}
 		}
 
 		// Try both providers silently
-		for (const provider of ['github', 'microsoft'] as const) {
+		for (const provider of ["github", "microsoft"] as const) {
 			if (provider === this._lastAuthProvider) {
 				continue; // Already tried above
 			}
@@ -179,15 +226,15 @@ export class TunnelAgentHostService extends Disposable implements ITunnelAgentHo
 	 * @param provider The auth provider to use.
 	 * @param silent If true, only try cached sessions. If false, prompt the user.
 	 */
-	private _getScopesForProvider(provider: 'github' | 'microsoft'): string[] {
+	private _getScopesForProvider(provider: "github" | "microsoft"): string[] {
 		const config = this._productService.tunnelApplicationConfig?.authenticationProviders;
 		return config?.[provider]?.scopes ?? [];
 	}
 
 	private async _getTokenForProvider(
-		provider: 'github' | 'microsoft',
+		provider: "github" | "microsoft",
 		silent: boolean,
-	): Promise<{ token: string; provider: 'github' | 'microsoft' } | undefined> {
+	): Promise<{ token: string; provider: "github" | "microsoft" } | undefined> {
 		const providerId = provider;
 		const scopes = this._getScopesForProvider(provider);
 		if (scopes.length === 0) {
@@ -196,11 +243,21 @@ export class TunnelAgentHostService extends Disposable implements ITunnelAgentHo
 
 		try {
 			// Try exact scope match first
-			let sessions = await this._authenticationService.getSessions(providerId, scopes, {}, true);
+			let sessions = await this._authenticationService.getSessions(
+        providerId,
+        scopes,
+        {},
+        true,
+      );
 
 			// Fall back: find any session whose scopes are a superset
 			if (sessions.length === 0) {
-				const allSessions = await this._authenticationService.getSessions(providerId, undefined, {}, true);
+				const allSessions = await this._authenticationService.getSessions(
+          providerId,
+          undefined,
+          {},
+          true,
+        );
 				const requestedSet = new Set(scopes);
 				let bestSession: typeof allSessions[number] | undefined;
 				let bestExtra = Infinity;
@@ -228,7 +285,11 @@ export class TunnelAgentHostService extends Disposable implements ITunnelAgentHo
 
 			// Interactive fallback: create a new session
 			if (sessions.length === 0 && !silent) {
-				const session = await this._authenticationService.createSession(providerId, scopes, { activateImmediate: true });
+				const session = await this._authenticationService.createSession(
+          providerId,
+          scopes,
+          { activateImmediate: true },
+        );
 				sessions = [session];
 			}
 
@@ -240,18 +301,23 @@ export class TunnelAgentHostService extends Disposable implements ITunnelAgentHo
 				}
 			}
 		} catch (err) {
-			this._logService.debug(`${LOG_PREFIX} Failed to get ${provider} token: ${err}`);
+			this._logService.debug(
+        `${LOG_PREFIX} Failed to get ${provider} token: ${err}`,
+      );
 		}
 		return undefined;
 	}
 
-	async getAuthProvider(options?: { silent?: boolean }): Promise<'github' | 'microsoft' | undefined> {
+	async getAuthProvider(options?: { silent?: boolean }): Promise<"github" | "microsoft" | undefined> {
 		const result = await this._getToken(options?.silent ?? true);
 		return result?.provider;
 	}
 
 	getCachedTunnels(): ICachedTunnel[] {
-		const raw = this._storageService.get(CACHED_TUNNELS_KEY, StorageScope.APPLICATION);
+		const raw = this._storageService.get(
+      CACHED_TUNNELS_KEY,
+      StorageScope.APPLICATION,
+    );
 		if (!raw) {
 			return [];
 		}
@@ -262,15 +328,15 @@ export class TunnelAgentHostService extends Disposable implements ITunnelAgentHo
 		}
 	}
 
-	cacheTunnel(tunnel: ITunnelInfo, authProvider?: 'github' | 'microsoft'): void {
+	cacheTunnel(tunnel: ITunnelInfo, authProvider?: "github" | "microsoft"): void {
 		const cached = this.getCachedTunnels();
 		const filtered = cached.filter(t => t.tunnelId !== tunnel.tunnelId);
 		filtered.unshift({
-			tunnelId: tunnel.tunnelId,
-			clusterId: tunnel.clusterId,
-			name: tunnel.name,
-			authProvider,
-		});
+      tunnelId: tunnel.tunnelId,
+      clusterId: tunnel.clusterId,
+      name: tunnel.name,
+      authProvider,
+    });
 		this.clearAutoConnectSuppression(tunnel.tunnelId);
 		this._storeCachedTunnels(filtered.slice(0, 20));
 		this._onDidChangeTunnels.fire();
@@ -305,12 +371,20 @@ export class TunnelAgentHostService extends Disposable implements ITunnelAgentHo
 		if (tunnels.length === 0) {
 			this._storageService.remove(CACHED_TUNNELS_KEY, StorageScope.APPLICATION);
 		} else {
-			this._storageService.store(CACHED_TUNNELS_KEY, JSON.stringify(tunnels), StorageScope.APPLICATION, StorageTarget.USER);
+			this._storageService.store(
+        CACHED_TUNNELS_KEY,
+        JSON.stringify(tunnels),
+        StorageScope.APPLICATION,
+        StorageTarget.USER,
+      );
 		}
 	}
 
 	private _getAutoConnectSuppressedTunnels(): Set<string> {
-		const raw = this._storageService.get(AUTO_CONNECT_SUPPRESSED_TUNNELS_KEY, StorageScope.APPLICATION);
+		const raw = this._storageService.get(
+      AUTO_CONNECT_SUPPRESSED_TUNNELS_KEY,
+      StorageScope.APPLICATION,
+    );
 		if (!raw) {
 			return new Set();
 		}
@@ -319,7 +393,7 @@ export class TunnelAgentHostService extends Disposable implements ITunnelAgentHo
 			if (!Array.isArray(parsed)) {
 				return new Set();
 			}
-			return new Set(parsed.filter(item => typeof item === 'string'));
+			return new Set(parsed.filter(item => typeof item === "string"));
 		} catch {
 			return new Set();
 		}
@@ -327,9 +401,17 @@ export class TunnelAgentHostService extends Disposable implements ITunnelAgentHo
 
 	private _storeAutoConnectSuppressedTunnels(tunnelIds: Set<string>): void {
 		if (tunnelIds.size === 0) {
-			this._storageService.remove(AUTO_CONNECT_SUPPRESSED_TUNNELS_KEY, StorageScope.APPLICATION);
+			this._storageService.remove(
+        AUTO_CONNECT_SUPPRESSED_TUNNELS_KEY,
+        StorageScope.APPLICATION,
+      );
 		} else {
-			this._storageService.store(AUTO_CONNECT_SUPPRESSED_TUNNELS_KEY, JSON.stringify([...tunnelIds]), StorageScope.APPLICATION, StorageTarget.USER);
+			this._storageService.store(
+        AUTO_CONNECT_SUPPRESSED_TUNNELS_KEY,
+        JSON.stringify([...tunnelIds]),
+        StorageScope.APPLICATION,
+        StorageTarget.USER,
+      );
 		}
 	}
 }

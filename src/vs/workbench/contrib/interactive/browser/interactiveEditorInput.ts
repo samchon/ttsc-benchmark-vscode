@@ -3,27 +3,39 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import { IReference } from '../../../../base/common/lifecycle.js';
-import * as paths from '../../../../base/common/path.js';
-import { isEqual, joinPath } from '../../../../base/common/resources.js';
-import { URI } from '../../../../base/common/uri.js';
-import { PLAINTEXT_LANGUAGE_ID } from '../../../../editor/common/languages/modesRegistry.js';
-import { IResolvedTextEditorModel, ITextModelService } from '../../../../editor/common/services/resolverService.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { EditorInputCapabilities, GroupIdentifier, IRevertOptions, ISaveOptions, IUntypedEditorInput } from '../../../common/editor.js';
-import { EditorInput } from '../../../common/editor/editorInput.js';
-import { IInteractiveDocumentService } from './interactiveDocumentService.js';
-import { IInteractiveHistoryService } from './interactiveHistoryService.js';
-import { IResolvedNotebookEditorModel, NotebookSetting } from '../../notebook/common/notebookCommon.js';
-import { ICompositeNotebookEditorInput, NotebookEditorInput } from '../../notebook/common/notebookEditorInput.js';
-import { INotebookService } from '../../notebook/common/notebookService.js';
+import { Event } from "../../../../base/common/event.js";
+import { IReference } from "../../../../base/common/lifecycle.js";
+import * as paths from "../../../../base/common/path.js";
+import { isEqual, joinPath } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { PLAINTEXT_LANGUAGE_ID } from "../../../../editor/common/languages/modesRegistry.js";
+import { IResolvedTextEditorModel, ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IFileDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import {
+  EditorInputCapabilities,
+  GroupIdentifier,
+  IRevertOptions,
+  ISaveOptions,
+  IUntypedEditorInput,
+} from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { IInteractiveDocumentService } from "./interactiveDocumentService.js";
+import { IInteractiveHistoryService } from "./interactiveHistoryService.js";
+import { IResolvedNotebookEditorModel, NotebookSetting } from "../../notebook/common/notebookCommon.js";
+import { ICompositeNotebookEditorInput, NotebookEditorInput } from "../../notebook/common/notebookEditorInput.js";
+import { INotebookService } from "../../notebook/common/notebookService.js";
 
 export class InteractiveEditorInput extends EditorInput implements ICompositeNotebookEditorInput {
 	static create(instantiationService: IInstantiationService, resource: URI, inputResource: URI, title?: string, language?: string) {
-		return instantiationService.createInstance(InteractiveEditorInput, resource, inputResource, title, language);
+		return instantiationService.createInstance(
+      InteractiveEditorInput,
+      resource,
+      inputResource,
+      title,
+      language,
+    );
 	}
 
 	private static windowNames: Record<string, string> = {};
@@ -34,10 +46,10 @@ export class InteractiveEditorInput extends EditorInput implements ICompositeNot
 		}
 	}
 
-	static readonly ID: string = 'workbench.input.interactive';
+	static readonly ID: string = "workbench.input.interactive";
 
 	public override get editorId(): string {
-		return 'interactive';
+		return "interactive";
 	}
 
 	override get typeId(): string {
@@ -96,14 +108,25 @@ export class InteractiveEditorInput extends EditorInput implements ICompositeNot
 		@IInteractiveHistoryService historyService: IInteractiveHistoryService,
 		@INotebookService private readonly _notebookService: INotebookService,
 		@IFileDialogService private readonly _fileDialogService: IFileDialogService,
-		@IConfigurationService configurationService: IConfigurationService
+		@IConfigurationService configurationService: IConfigurationService,
 	) {
-		const input = NotebookEditorInput.getOrCreate(instantiationService, resource, undefined, 'interactive', {});
+		const input = NotebookEditorInput.getOrCreate(
+      instantiationService,
+      resource,
+      undefined,
+      "interactive",
+      {},
+    );
 		super();
-		this.isScratchpad = configurationService.getValue<boolean>(NotebookSetting.InteractiveWindowPromptToSave) !== true;
+		this.isScratchpad = configurationService.getValue<boolean>(
+      NotebookSetting.InteractiveWindowPromptToSave,
+    ) !== true;
 		this._notebookEditorInput = input;
 		this._register(this._notebookEditorInput);
-		this.name = title ?? InteractiveEditorInput.windowNames[resource.path] ?? paths.basename(resource.path, paths.extname(resource.path));
+		this.name = title ?? InteractiveEditorInput.windowNames[resource.path] ?? paths.basename(
+      resource.path,
+      paths.extname(resource.path),
+    );
 		this._initLanguage = languageId;
 		this._resource = resource;
 		this._inputResource = inputResource;
@@ -126,11 +149,19 @@ export class InteractiveEditorInput extends EditorInput implements ICompositeNot
 		}));
 
 		// Re-emit some events from the primary side to the outside
-		this._register(this.primary.onDidChangeDirty(() => this._onDidChangeDirty.fire()));
-		this._register(this.primary.onDidChangeLabel(() => this._onDidChangeLabel.fire()));
+		this._register(
+      this.primary.onDidChangeDirty(() => this._onDidChangeDirty.fire()),
+    );
+		this._register(
+      this.primary.onDidChangeLabel(() => this._onDidChangeLabel.fire()),
+    );
 
 		// Re-emit some events from both sides to the outside
-		this._register(this.primary.onDidChangeCapabilities(() => this._onDidChangeCapabilities.fire()));
+		this._register(
+      this.primary.onDidChangeCapabilities(
+        () => this._onDidChangeCapabilities.fire(),
+      ),
+    );
 	}
 
 	override get capabilities(): EditorInputCapabilities {
@@ -169,8 +200,14 @@ export class InteractiveEditorInput extends EditorInput implements ICompositeNot
 		}
 
 		const resolvedLanguage = language ?? this._initLanguage ?? PLAINTEXT_LANGUAGE_ID;
-		this._interactiveDocumentService.willCreateInteractiveDocument(this.resource, this.inputResource, resolvedLanguage);
-		this._inputModelRef = await this._textModelService.createModelReference(this.inputResource);
+		this._interactiveDocumentService.willCreateInteractiveDocument(
+      this.resource,
+      this.inputResource,
+      resolvedLanguage,
+    );
+		this._inputModelRef = await this._textModelService.createModelReference(
+      this.inputResource,
+    );
 
 		return this._inputModelRef.object.textEditorModel;
 	}
@@ -195,22 +232,30 @@ export class InteractiveEditorInput extends EditorInput implements ICompositeNot
 			return undefined;
 		}
 
-		const provider = this._notebookService.getContributedNotebookType('interactive');
+		const provider = this._notebookService.getContributedNotebookType(
+      "interactive",
+    );
 
 		if (!provider) {
 			return undefined;
 		}
 
-		const filename = this.getName() + '.ipynb';
-		const pathCandidate = joinPath(await this._fileDialogService.defaultFilePath(), filename);
+		const filename = this.getName() + ".ipynb";
+		const pathCandidate = joinPath(
+      await this._fileDialogService.defaultFilePath(),
+      filename,
+    );
 
-		const target = await this._fileDialogService.pickFileToSave(pathCandidate, options?.availableFileSystems);
+		const target = await this._fileDialogService.pickFileToSave(
+      pathCandidate,
+      options?.availableFileSystems,
+    );
 		if (!target) {
 			return undefined; // save cancelled
 		}
 
 		const saved = await this._editorModelReference.saveAs(target);
-		if (saved && 'resource' in saved && saved.resource) {
+		if (saved && "resource" in saved && saved.resource) {
 			this._notebookService.getNotebookTextModel(saved.resource)?.dispose();
 		}
 		return saved;
@@ -255,7 +300,10 @@ export class InteractiveEditorInput extends EditorInput implements ICompositeNot
 		this._notebookEditorInput?.dispose();
 		this._editorModelReference?.dispose();
 		this._editorModelReference = null;
-		this._interactiveDocumentService.willRemoveInteractiveDocument(this.resource, this.inputResource);
+		this._interactiveDocumentService.willRemoveInteractiveDocument(
+      this.resource,
+      this.inputResource,
+    );
 		this._inputModelRef?.dispose();
 		this._inputModelRef = null;
 		super.dispose();

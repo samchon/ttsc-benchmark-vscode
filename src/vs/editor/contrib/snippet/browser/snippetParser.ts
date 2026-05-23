@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CharCode } from '../../../../base/common/charCode.js';
+import { CharCode } from "../../../../base/common/charCode.js";
 
 export const enum TokenType {
 	Dollar,
@@ -33,18 +33,18 @@ export interface Token {
 export class Scanner {
 
 	private static _table: { [ch: number]: TokenType } = {
-		[CharCode.DollarSign]: TokenType.Dollar,
-		[CharCode.Colon]: TokenType.Colon,
-		[CharCode.Comma]: TokenType.Comma,
-		[CharCode.OpenCurlyBrace]: TokenType.CurlyOpen,
-		[CharCode.CloseCurlyBrace]: TokenType.CurlyClose,
-		[CharCode.Backslash]: TokenType.Backslash,
-		[CharCode.Slash]: TokenType.Forwardslash,
-		[CharCode.Pipe]: TokenType.Pipe,
-		[CharCode.Plus]: TokenType.Plus,
-		[CharCode.Dash]: TokenType.Dash,
-		[CharCode.QuestionMark]: TokenType.QuestionMark,
-	};
+    [CharCode.DollarSign]: TokenType.Dollar,
+    [CharCode.Colon]: TokenType.Colon,
+    [CharCode.Comma]: TokenType.Comma,
+    [CharCode.OpenCurlyBrace]: TokenType.CurlyOpen,
+    [CharCode.CloseCurlyBrace]: TokenType.CurlyClose,
+    [CharCode.Backslash]: TokenType.Backslash,
+    [CharCode.Slash]: TokenType.Forwardslash,
+    [CharCode.Pipe]: TokenType.Pipe,
+    [CharCode.Plus]: TokenType.Plus,
+    [CharCode.Dash]: TokenType.Dash,
+    [CharCode.QuestionMark]: TokenType.QuestionMark,
+  };
 
 	static isDigitCharacter(ch: number): boolean {
 		return ch >= CharCode.Digit0 && ch <= CharCode.Digit9;
@@ -56,7 +56,7 @@ export class Scanner {
 			|| (ch >= CharCode.A && ch <= CharCode.Z);
 	}
 
-	value: string = '';
+	value: string = "";
 	pos: number = 0;
 
 	text(value: string) {
@@ -81,7 +81,7 @@ export class Scanner {
 
 		// static types
 		type = Scanner._table[ch];
-		if (typeof type === 'number') {
+		if (typeof type === "number") {
 			this.pos += 1;
 			return { type, pos, len: 1 };
 		}
@@ -117,7 +117,7 @@ export class Scanner {
 			ch = this.value.charCodeAt(pos + len);
 		} while (
 			!isNaN(ch)
-			&& typeof Scanner._table[ch] === 'undefined' // not static token
+			&& typeof Scanner._table[ch] === "undefined" // not static token
 			&& !Scanner.isDigitCharacter(ch) // not number
 			&& !Scanner.isVariableCharacter(ch) // not variable
 		);
@@ -186,7 +186,7 @@ export abstract class Marker {
 	}
 
 	toString(): string {
-		return this.children.reduce((prev, cur) => prev + cur.toString(), '');
+		return this.children.reduce((prev, cur) => prev + cur.toString(), "");
 	}
 
 	abstract toTextmateString(): string;
@@ -201,7 +201,7 @@ export abstract class Marker {
 export class Text extends Marker {
 
 	static escape(value: string): string {
-		return value.replace(/\$|}|\\/g, '\\$&');
+		return value.replace(/\$|}|\\/g, "\\$&");
 	}
 
 	constructor(public value: string) {
@@ -257,7 +257,7 @@ export class Placeholder extends TransformableMarker {
 	}
 
 	toTextmateString(): string {
-		let transformString = '';
+		let transformString = "";
 		if (this.transform) {
 			transformString = this.transform.toTextmateString();
 		}
@@ -268,7 +268,7 @@ export class Placeholder extends TransformableMarker {
 		} else if (this.choice) {
 			return `\${${this.index}|${this.choice.toTextmateString()}|${transformString}}`;
 		} else {
-			return `\${${this.index}:${this.children.map(child => child.toTextmateString()).join('')}${transformString}}`;
+			return `\${${this.index}:${this.children.map(child => child.toTextmateString()).join("")}${transformString}}`;
 		}
 	}
 
@@ -300,8 +300,8 @@ export class Choice extends Marker {
 
 	toTextmateString(): string {
 		return this.options
-			.map(option => option.value.replace(/\||,|\\/g, '\\$&'))
-			.join(',');
+			.map(option => option.value.replace(/\||,|\\/g, "\\$&"))
+			.join(",");
 	}
 
 	override len(): number {
@@ -317,28 +317,30 @@ export class Choice extends Marker {
 
 export class Transform extends Marker {
 
-	regexp: RegExp = new RegExp('');
+	regexp: RegExp = new RegExp("");
 
 	resolve(value: string): string {
 		const _this = this;
 		let didMatch = false;
 		let ret = value.replace(this.regexp, function () {
-			didMatch = true;
-			return _this._replace(Array.prototype.slice.call(arguments, 0, -2));
-		});
+      didMatch = true;
+      return _this._replace(Array.prototype.slice.call(arguments, 0, -2));
+    });
 		// when the regex didn't match and when the transform has
 		// else branches, then run those
-		if (!didMatch && this._children.some(child => child instanceof FormatString && Boolean(child.elseValue))) {
+		if (!didMatch && this._children.some(
+      child => child instanceof FormatString && Boolean(child.elseValue),
+    )) {
 			ret = this._replace([]);
 		}
 		return ret;
 	}
 
 	private _replace(groups: string[]): string {
-		let ret = '';
+		let ret = "";
 		for (const marker of this._children) {
 			if (marker instanceof FormatString) {
-				let value = groups[marker.index] || '';
+				let value = groups[marker.index] || "";
 				value = marker.resolve(value);
 				ret += value;
 			} else {
@@ -349,16 +351,19 @@ export class Transform extends Marker {
 	}
 
 	override toString(): string {
-		return '';
+		return "";
 	}
 
 	toTextmateString(): string {
-		return `/${this.regexp.source}/${this.children.map(c => c.toTextmateString()).join('')}/${(this.regexp.ignoreCase ? 'i' : '') + (this.regexp.global ? 'g' : '')}`;
+		return `/${this.regexp.source}/${this.children.map(c => c.toTextmateString()).join("")}/${(this.regexp.ignoreCase ? "i" : "") + (this.regexp.global ? "g" : "")}`;
 	}
 
 	clone(): Transform {
 		const ret = new Transform();
-		ret.regexp = new RegExp(this.regexp.source, '' + (this.regexp.ignoreCase ? 'i' : '') + (this.regexp.global ? 'g' : ''));
+		ret.regexp = new RegExp(
+      this.regexp.source,
+      "" + (this.regexp.ignoreCase ? "i" : "") + (this.regexp.global ? "g" : ""),
+    );
 		ret._children = this.children.map(child => child.clone());
 		return ret;
 	}
@@ -377,26 +382,26 @@ export class FormatString extends Marker {
 	}
 
 	resolve(value?: string): string {
-		if (this.shorthandName === 'upcase') {
-			return !value ? '' : value.toLocaleUpperCase();
-		} else if (this.shorthandName === 'downcase') {
-			return !value ? '' : value.toLocaleLowerCase();
-		} else if (this.shorthandName === 'capitalize') {
-			return !value ? '' : (value[0].toLocaleUpperCase() + value.substr(1));
-		} else if (this.shorthandName === 'pascalcase') {
-			return !value ? '' : this._toPascalCase(value);
-		} else if (this.shorthandName === 'camelcase') {
-			return !value ? '' : this._toCamelCase(value);
-		} else if (this.shorthandName === 'kebabcase') {
-			return !value ? '' : this._toKebabCase(value);
-		} else if (this.shorthandName === 'snakecase') {
-			return !value ? '' : this._toSnakeCase(value);
-		} else if (Boolean(value) && typeof this.ifValue === 'string') {
+		if (this.shorthandName === "upcase") {
+			return !value ? "" : value.toLocaleUpperCase();
+		} else if (this.shorthandName === "downcase") {
+			return !value ? "" : value.toLocaleLowerCase();
+		} else if (this.shorthandName === "capitalize") {
+			return !value ? "" : (value[0].toLocaleUpperCase() + value.substr(1));
+		} else if (this.shorthandName === "pascalcase") {
+			return !value ? "" : this._toPascalCase(value);
+		} else if (this.shorthandName === "camelcase") {
+			return !value ? "" : this._toCamelCase(value);
+		} else if (this.shorthandName === "kebabcase") {
+			return !value ? "" : this._toKebabCase(value);
+		} else if (this.shorthandName === "snakecase") {
+			return !value ? "" : this._toSnakeCase(value);
+		} else if (Boolean(value) && typeof this.ifValue === "string") {
 			return this.ifValue;
-		} else if (!Boolean(value) && typeof this.elseValue === 'string') {
+		} else if (!Boolean(value) && typeof this.elseValue === "string") {
 			return this.elseValue;
 		} else {
-			return value || '';
+			return value || "";
 		}
 	}
 
@@ -412,25 +417,27 @@ export class FormatString extends Marker {
 			return value
 				.trim()
 				.toLowerCase()
-				.replace(/^_+|_+$/g, '')
-				.replace(/[\s_]+/g, '-');
+				.replace(/^_+|_+$/g, "")
+				.replace(/[\s_]+/g, "-");
 		}
 
-		const cleaned = value.trim().replace(/^_+|_+$/g, '');
+		const cleaned = value.trim().replace(/^_+|_+$/g, "");
 
-		const match2 = cleaned.match(/\p{Lu}{2,}(?=\p{Lu}\p{Ll}+[0-9]*|[\s_-]|$)|\p{Lu}?\p{Ll}+[0-9]*|\p{Lu}(?=\p{Lu}\p{Ll})|\p{Lu}(?=[\s_-]|$)|[0-9]+/gu);
+		const match2 = cleaned.match(
+      /\p{Lu}{2,}(?=\p{Lu}\p{Ll}+[0-9]*|[\s_-]|$)|\p{Lu}?\p{Ll}+[0-9]*|\p{Lu}(?=\p{Lu}\p{Ll})|\p{Lu}(?=[\s_-]|$)|[0-9]+/gu,
+    );
 
 		if (!match2) {
 			return cleaned
 				.split(/[\s_-]+/)
 				.filter(word => word.length > 0)
 				.map(word => word.toLowerCase())
-				.join('-');
+				.join("-");
 		}
 
 		return match2
 			.map(x => x.toLowerCase())
-			.join('-');
+			.join("-");
 	}
 
 	private _toPascalCase(value: string): string {
@@ -441,7 +448,7 @@ export class FormatString extends Marker {
 		return match.map(word => {
 			return word.charAt(0).toUpperCase() + word.substr(1);
 		})
-			.join('');
+			.join("");
 	}
 
 	private _toCamelCase(value: string): string {
@@ -455,17 +462,17 @@ export class FormatString extends Marker {
 			}
 			return word.charAt(0).toUpperCase() + word.substr(1);
 		})
-			.join('');
+			.join("");
 	}
 
 	private _toSnakeCase(value: string): string {
-		return value.replace(/(\p{Ll})(\p{Lu})/gu, '$1_$2')
-			.replace(/[\s\-]+/g, '_')
+		return value.replace(/(\p{Ll})(\p{Lu})/gu, "$1_$2")
+			.replace(/[\s\-]+/g, "_")
 			.toLowerCase();
 	}
 
 	toTextmateString(): string {
-		let value = '${';
+		let value = "${";
 		value += this.index;
 		if (this.shorthandName) {
 			value += `:/${this.shorthandName}`;
@@ -477,12 +484,17 @@ export class FormatString extends Marker {
 		} else if (this.elseValue) {
 			value += `:-${this.elseValue}`;
 		}
-		value += '}';
+		value += "}";
 		return value;
 	}
 
 	clone(): FormatString {
-		const ret = new FormatString(this.index, this.shorthandName, this.ifValue, this.elseValue);
+		const ret = new FormatString(
+      this.index,
+      this.shorthandName,
+      this.ifValue,
+      this.elseValue,
+    );
 		return ret;
 	}
 }
@@ -496,7 +508,7 @@ export class Variable extends TransformableMarker {
 	resolve(resolver: VariableResolver): boolean {
 		let value = resolver.resolve(this);
 		if (this.transform) {
-			value = this.transform.resolve(value || '');
+			value = this.transform.resolve(value || "");
 		}
 		if (value !== undefined) {
 			this._children = [new Text(value)];
@@ -506,14 +518,14 @@ export class Variable extends TransformableMarker {
 	}
 
 	toTextmateString(): string {
-		let transformString = '';
+		let transformString = "";
 		if (this.transform) {
 			transformString = this.transform.toTextmateString();
 		}
 		if (this.children.length === 0) {
 			return `\${${this.name}${transformString}}`;
 		} else {
-			return `\${${this.name}:${this.children.map(child => child.toTextmateString()).join('')}${transformString}}`;
+			return `\${${this.name}:${this.children.map(child => child.toTextmateString()).join("")}${transformString}}`;
 		}
 	}
 
@@ -590,9 +602,9 @@ export class TextmateSnippet extends Marker {
 	fullLen(marker: Marker): number {
 		let ret = 0;
 		walk([marker], marker => {
-			ret += marker.len();
-			return true;
-		});
+      ret += marker.len();
+      return true;
+    });
 		return ret;
 	}
 
@@ -631,7 +643,10 @@ export class TextmateSnippet extends Marker {
 	}
 
 	toTextmateString(): string {
-		return this.children.reduce((prev, cur) => prev + cur.toTextmateString(), '');
+		return this.children.reduce(
+      (prev, cur) => prev + cur.toTextmateString(),
+      "",
+    );
 	}
 
 	clone(): TextmateSnippet {
@@ -648,7 +663,7 @@ export class TextmateSnippet extends Marker {
 export class SnippetParser {
 
 	static escape(value: string): string {
-		return value.replace(/\$|}|\\/g, '\\$&');
+		return value.replace(/\$|}|\\/g, "\\$&");
 	}
 
 	/**
@@ -669,7 +684,11 @@ export class SnippetParser {
 	parse(value: string, insertFinalTabstop?: boolean, enforceFinalTabstop?: boolean): TextmateSnippet {
 		const snippet = new TextmateSnippet();
 		this.parseFragment(value, snippet);
-		this.ensureFinalTabstop(snippet, enforceFinalTabstop ?? false, insertFinalTabstop ?? false);
+		this.ensureFinalTabstop(
+      snippet,
+      enforceFinalTabstop ?? false,
+      insertFinalTabstop ?? false,
+    );
 		return snippet;
 	}
 
@@ -711,7 +730,9 @@ export class SnippetParser {
 				clone.appendChild(newChild);
 
 				// "recurse" on children that are again placeholders
-				if (newChild instanceof Placeholder && placeholderDefaultValues.has(newChild.index) && !stack.has(newChild.index)) {
+				if (newChild instanceof Placeholder && placeholderDefaultValues.has(
+          newChild.index,
+        ) && !stack.has(newChild.index)) {
 					stack.add(newChild.index);
 					fillInIncompletePlaceholder(newChild, stack);
 					stack.delete(newChild.index);
@@ -773,7 +794,10 @@ export class SnippetParser {
 			}
 			this._token = this._scanner.next();
 		}
-		const value = this._scanner.value.substring(start.pos, this._token.pos).replace(/\\(\$|}|\\)/g, '$1');
+		const value = this._scanner.value.substring(start.pos, this._token.pos).replace(
+      /\\(\$|}|\\)/g,
+      "$1",
+    );
 		this._token = this._scanner.next();
 		return value;
 	}
@@ -815,7 +839,7 @@ export class SnippetParser {
 
 		parent.appendChild(/^\d+$/.test(value!)
 			? new Placeholder(Number(value!))
-			: new Variable(value!)
+			: new Variable(value!),
 		);
 		return true;
 	}
@@ -849,7 +873,7 @@ export class SnippetParser {
 				}
 
 				// fallback
-				parent.appendChild(new Text('${' + index! + ':'));
+				parent.appendChild(new Text("${" + index! + ":"));
 				placeholder.children.forEach(parent.appendChild, parent);
 				return true;
 			}
@@ -931,7 +955,7 @@ export class SnippetParser {
 			return false;
 		}
 
-		parent.appendChild(new Text(values.join('')));
+		parent.appendChild(new Text(values.join("")));
 		return true;
 	}
 
@@ -964,7 +988,7 @@ export class SnippetParser {
 				}
 
 				// fallback
-				parent.appendChild(new Text('${' + name! + ':'));
+				parent.appendChild(new Text("${" + name! + ":"));
 				variable.children.forEach(parent.appendChild, parent);
 				return true;
 			}
@@ -994,8 +1018,8 @@ export class SnippetParser {
 		// ...<regex>/<format>/<options>}
 
 		const transform = new Transform();
-		let regexValue = '';
-		let regexOptions = '';
+		let regexValue = "";
+		let regexOptions = "";
 
 		// (1) /regex
 		while (true) {
@@ -1107,7 +1131,9 @@ export class SnippetParser {
 			// ${1:+<if>}
 			const ifValue = this._until(TokenType.CurlyClose);
 			if (ifValue) {
-				parent.appendChild(new FormatString(Number(index), undefined, ifValue, undefined));
+				parent.appendChild(
+          new FormatString(Number(index), undefined, ifValue, undefined),
+        );
 				return true;
 			}
 
@@ -1115,7 +1141,9 @@ export class SnippetParser {
 			// ${2:-<else>}
 			const elseValue = this._until(TokenType.CurlyClose);
 			if (elseValue) {
-				parent.appendChild(new FormatString(Number(index), undefined, undefined, elseValue));
+				parent.appendChild(
+          new FormatString(Number(index), undefined, undefined, elseValue),
+        );
 				return true;
 			}
 
@@ -1125,7 +1153,9 @@ export class SnippetParser {
 			if (ifValue) {
 				const elseValue = this._until(TokenType.CurlyClose);
 				if (elseValue) {
-					parent.appendChild(new FormatString(Number(index), undefined, ifValue, elseValue));
+					parent.appendChild(
+            new FormatString(Number(index), undefined, ifValue, elseValue),
+          );
 					return true;
 				}
 			}
@@ -1134,7 +1164,9 @@ export class SnippetParser {
 			// ${1:<else>}
 			const elseValue = this._until(TokenType.CurlyClose);
 			if (elseValue) {
-				parent.appendChild(new FormatString(Number(index), undefined, undefined, elseValue));
+				parent.appendChild(
+          new FormatString(Number(index), undefined, undefined, elseValue),
+        );
 				return true;
 			}
 		}

@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../base/common/event.js';
-import { IChannel, IServerChannel } from '../../../base/parts/ipc/common/ipc.js';
-import { ITelemetryData } from './telemetry.js';
-import { ITelemetryAppender } from './telemetryUtils.js';
+import { Event } from "../../../base/common/event.js";
+import { IChannel, IServerChannel } from "../../../base/parts/ipc/common/ipc.js";
+import { ITelemetryData } from "./telemetry.js";
+import { ITelemetryAppender } from "./telemetryUtils.js";
 
 export interface ITelemetryLog {
 	eventName: string;
@@ -32,7 +32,7 @@ export class TelemetryAppenderClient implements ITelemetryAppender {
 	constructor(private channel: IChannel) { }
 
 	log(eventName: string, data?: unknown): unknown {
-		this.channel.call('log', { eventName, data })
+		this.channel.call("log", { eventName, data })
 			.then(undefined, err => `Failed to log telemetry: ${console.warn(err)}`);
 
 		return Promise.resolve(null);

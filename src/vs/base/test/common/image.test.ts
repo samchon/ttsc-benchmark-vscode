@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { VSBuffer } from '../../common/buffer.js';
-import { readImageDimensions } from '../../common/image.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from './utils.js';
+import assert from "assert";
+import { VSBuffer } from "../../common/buffer.js";
+import { readImageDimensions } from "../../common/image.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "./utils.js";
 
 function buf(...bytes: number[]): VSBuffer {
 	return VSBuffer.wrap(new Uint8Array(bytes));
@@ -32,7 +32,7 @@ function makeJpeg(width: number, height: number): VSBuffer {
 		(height >> 8) & 0xFF, height & 0xFF,
 		(width >> 8) & 0xFF, width & 0xFF,
 		0x03, 0x01, 0x22, 0x00, 0x02, 0x11, 0x01, 0x03, 0x11, 0x01,
-		0xFF, 0xD9 // EOI
+		0xFF, 0xD9, // EOI
 	);
 }
 
@@ -43,7 +43,7 @@ function makePng(width: number, height: number): VSBuffer {
 		0x49, 0x48, 0x44, 0x52, // "IHDR"
 		(width >>> 24) & 0xFF, (width >>> 16) & 0xFF, (width >>> 8) & 0xFF, width & 0xFF,
 		(height >>> 24) & 0xFF, (height >>> 16) & 0xFF, (height >>> 8) & 0xFF, height & 0xFF,
-		0x08, 0x06, 0x00, 0x00, 0x00 // bit depth, color type, etc.
+		0x08, 0x06, 0x00, 0x00, 0x00, // bit depth, color type, etc.
 	);
 }
 
@@ -52,7 +52,7 @@ function makeGif(width: number, height: number): VSBuffer {
 		0x47, 0x49, 0x46, 0x38, 0x39, 0x61, // "GIF89a"
 		width & 0xFF, (width >> 8) & 0xFF,
 		height & 0xFF, (height >> 8) & 0xFF,
-		0x00, 0x00, 0x00 // packed field, bg color index, pixel aspect ratio
+		0x00, 0x00, 0x00, // packed field, bg color index, pixel aspect ratio
 	);
 }
 
@@ -64,7 +64,7 @@ function makeWebPVp8(width: number, height: number): VSBuffer {
 		0x00, 0x00, 0x00, // frame tag
 		0x9D, 0x01, 0x2A, // start code
 		width & 0xFF, (width >> 8) & 0x3F,
-		height & 0xFF, (height >> 8) & 0x3F
+		height & 0xFF, (height >> 8) & 0x3F,
 	);
 }
 
@@ -82,7 +82,7 @@ function makeWebPVp8l(width: number, height: number): VSBuffer {
 		0x56, 0x50, 0x38, 0x4C, 10, 0, 0, 0, // "VP8L" <chunkSize=10>
 		0x2F, // VP8L signature byte
 		b21, b22, b23, b24,
-		0, 0, 0, 0, 0 // padding to satisfy the 30-byte minimum
+		0, 0, 0, 0, 0, // padding to satisfy the 30-byte minimum
 	);
 }
 
@@ -95,14 +95,14 @@ function makeWebPVp8x(width: number, height: number): VSBuffer {
 		0x56, 0x50, 0x38, 0x58, 10, 0, 0, 0, // "VP8X" <chunkSize=10>
 		0x00, 0x00, 0x00, 0x00, // flags + reserved
 		w & 0xFF, (w >> 8) & 0xFF, (w >> 16) & 0xFF,
-		h & 0xFF, (h >> 8) & 0xFF, (h >> 16) & 0xFF
+		h & 0xFF, (h >> 8) & 0xFF, (h >> 16) & 0xFF,
 	);
 }
 
-suite('readImageDimensions', () => {
+suite("readImageDimensions", () => {
 	ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('parses dimensions across supported formats and rejects unrecognized buffers', () => {
+	test("parses dimensions across supported formats and rejects unrecognized buffers", () => {
 		const fixtures = {
 			jpeg: { input: makeJpeg(640, 480), expected: { width: 640, height: 480 } },
 			png: { input: makePng(1920, 1080), expected: { width: 1920, height: 1080 } },
@@ -121,16 +121,16 @@ suite('readImageDimensions', () => {
 				input: buf(
 					0xFF, 0xD8, // SOI
 					0xFF, 0xE0, 0x00, 0x00, // APP0 with invalid length 0
-					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 // padding to pass the outer < 12 check
-				), expected: undefined
+					0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // padding to pass the outer < 12 check
+				), expected: undefined,
 			},
 		};
 
 		const actual = Object.fromEntries(
-			Object.entries(fixtures).map(([k, v]) => [k, readImageDimensions(v.input)])
+			Object.entries(fixtures).map(([k, v]) => [k, readImageDimensions(v.input)]),
 		);
 		const expected = Object.fromEntries(
-			Object.entries(fixtures).map(([k, v]) => [k, v.expected])
+			Object.entries(fixtures).map(([k, v]) => [k, v.expected]),
 		);
 
 		assert.deepStrictEqual(actual, expected);

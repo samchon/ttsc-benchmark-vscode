@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ExtHostContext, MainContext, MainThreadUrlsShape, ExtHostUrlsShape } from '../common/extHost.protocol.js';
-import { extHostNamedCustomer, IExtHostContext } from '../../services/extensions/common/extHostCustomers.js';
-import { IURLService, IOpenURLOptions } from '../../../platform/url/common/url.js';
-import { URI, UriComponents } from '../../../base/common/uri.js';
-import { Disposable, IDisposable } from '../../../base/common/lifecycle.js';
-import { IExtensionContributedURLHandler, IExtensionUrlHandler } from '../../services/extensions/browser/extensionUrlHandler.js';
-import { ExtensionIdentifier } from '../../../platform/extensions/common/extensions.js';
-import { ITrustedDomainService } from '../../contrib/url/browser/trustedDomainService.js';
+import { ExtHostContext, MainContext, MainThreadUrlsShape, ExtHostUrlsShape } from "../common/extHost.protocol.js";
+import { extHostNamedCustomer, IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+import { IURLService, IOpenURLOptions } from "../../../platform/url/common/url.js";
+import { URI, UriComponents } from "../../../base/common/uri.js";
+import { Disposable, IDisposable } from "../../../base/common/lifecycle.js";
+import { IExtensionContributedURLHandler, IExtensionUrlHandler } from "../../services/extensions/browser/extensionUrlHandler.js";
+import { ExtensionIdentifier } from "../../../platform/extensions/common/extensions.js";
+import { ITrustedDomainService } from "../../contrib/url/browser/trustedDomainService.js";
 
 class ExtensionUrlHandler implements IExtensionContributedURLHandler {
 
@@ -18,7 +18,7 @@ class ExtensionUrlHandler implements IExtensionContributedURLHandler {
 		private readonly proxy: ExtHostUrlsShape,
 		private readonly handle: number,
 		readonly extensionId: ExtensionIdentifier,
-		readonly extensionDisplayName: string
+		readonly extensionDisplayName: string,
 	) { }
 
 	async handleURL(uri: URI, options?: IOpenURLOptions): Promise<boolean> {
@@ -41,7 +41,7 @@ export class MainThreadUrls extends Disposable implements MainThreadUrlsShape {
 		context: IExtHostContext,
 		@ITrustedDomainService trustedDomainService: ITrustedDomainService,
 		@IURLService private readonly urlService: IURLService,
-		@IExtensionUrlHandler private readonly extensionUrlHandler: IExtensionUrlHandler
+		@IExtensionUrlHandler private readonly extensionUrlHandler: IExtensionUrlHandler,
 	) {
 		super();
 
@@ -49,7 +49,12 @@ export class MainThreadUrls extends Disposable implements MainThreadUrlsShape {
 	}
 
 	async $registerUriHandler(handle: number, extensionId: ExtensionIdentifier, extensionDisplayName: string): Promise<void> {
-		const handler = new ExtensionUrlHandler(this.proxy, handle, extensionId, extensionDisplayName);
+		const handler = new ExtensionUrlHandler(
+      this.proxy,
+      handle,
+      extensionId,
+      extensionDisplayName,
+    );
 		const disposable = this.urlService.registerHandler(handler);
 
 		this.handlers.set(handle, { extensionId, disposable });

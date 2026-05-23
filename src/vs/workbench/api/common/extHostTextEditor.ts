@@ -3,34 +3,50 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ok } from '../../../base/common/assert.js';
-import { ReadonlyError, illegalArgument } from '../../../base/common/errors.js';
-import { IdGenerator } from '../../../base/common/idGenerator.js';
-import { TextEditorCursorStyle } from '../../../editor/common/config/editorOptions.js';
-import { IRange } from '../../../editor/common/core/range.js';
-import { ISingleEditOperation } from '../../../editor/common/core/editOperation.js';
-import { IResolvedTextEditorConfiguration, ITextEditorConfigurationUpdate, MainThreadTextEditorsShape } from './extHost.protocol.js';
-import * as TypeConverters from './extHostTypeConverters.js';
-import { EndOfLine, Position, Range, Selection, SnippetString, TextEditorLineNumbersStyle, TextEditorRevealType } from './extHostTypes.js';
-import type * as vscode from 'vscode';
-import { ILogService } from '../../../platform/log/common/log.js';
-import { Lazy } from '../../../base/common/lazy.js';
-import { IExtensionDescription } from '../../../platform/extensions/common/extensions.js';
+import { ok } from "../../../base/common/assert.js";
+import { ReadonlyError, illegalArgument } from "../../../base/common/errors.js";
+import { IdGenerator } from "../../../base/common/idGenerator.js";
+import { TextEditorCursorStyle } from "../../../editor/common/config/editorOptions.js";
+import { IRange } from "../../../editor/common/core/range.js";
+import { ISingleEditOperation } from "../../../editor/common/core/editOperation.js";
+import {
+  IResolvedTextEditorConfiguration,
+  ITextEditorConfigurationUpdate,
+  MainThreadTextEditorsShape,
+} from "./extHost.protocol.js";
+import * as TypeConverters from "./extHostTypeConverters.js";
+import {
+  EndOfLine,
+  Position,
+  Range,
+  Selection,
+  SnippetString,
+  TextEditorLineNumbersStyle,
+  TextEditorRevealType,
+} from "./extHostTypes.js";
+import type * as vscode from "vscode";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { Lazy } from "../../../base/common/lazy.js";
+import { IExtensionDescription } from "../../../platform/extensions/common/extensions.js";
 
 export class TextEditorDecorationType {
 
-	private static readonly _Keys = new IdGenerator('TextEditorDecorationType');
+	private static readonly _Keys = new IdGenerator("TextEditorDecorationType");
 
 	readonly value: vscode.TextEditorDecorationType;
 
 	constructor(proxy: MainThreadTextEditorsShape, extension: IExtensionDescription, options: vscode.DecorationRenderOptions) {
 		const key = TextEditorDecorationType._Keys.nextId();
-		proxy.$registerTextEditorDecorationType(extension.identifier, key, TypeConverters.DecorationRenderOptions.from(options));
+		proxy.$registerTextEditorDecorationType(
+      extension.identifier,
+      key,
+      TypeConverters.DecorationRenderOptions.from(options),
+    );
 		this.value = Object.freeze({
 			key,
 			dispose() {
 				proxy.$removeTextEditorDecorationType(key);
-			}
+			},
 		});
 	}
 
@@ -70,17 +86,17 @@ class TextEditorEdit {
 	finalize(): IEditData {
 		this._finalized = true;
 		return {
-			documentVersionId: this._documentVersionId,
-			edits: this._collectedEdits,
-			setEndOfLine: this._setEndOfLine,
-			undoStopBefore: this._undoStopBefore,
-			undoStopAfter: this._undoStopAfter
-		};
+      documentVersionId: this._documentVersionId,
+      edits: this._collectedEdits,
+      setEndOfLine: this._setEndOfLine,
+      undoStopBefore: this._undoStopBefore,
+      undoStopAfter: this._undoStopAfter,
+    };
 	}
 
 	private _throwIfFinalized() {
 		if (this._finalized) {
-			throw new Error('Edit is only valid while callback runs');
+			throw new Error("Edit is only valid while callback runs");
 		}
 	}
 
@@ -93,7 +109,7 @@ class TextEditorEdit {
 		} else if (location instanceof Range) {
 			range = location;
 		} else {
-			throw new Error('Unrecognized location');
+			throw new Error("Unrecognized location");
 		}
 
 		this._pushEdit(range, value, false);
@@ -111,7 +127,7 @@ class TextEditorEdit {
 		if (location instanceof Range) {
 			range = location;
 		} else {
-			throw new Error('Unrecognized location');
+			throw new Error("Unrecognized location");
 		}
 
 		this._pushEdit(range, null, true);
@@ -120,16 +136,16 @@ class TextEditorEdit {
 	private _pushEdit(range: Range, text: string | null, forceMoveMarkers: boolean): void {
 		const validRange = this._document.validateRange(range);
 		this._collectedEdits.push({
-			range: validRange,
-			text: text,
-			forceMoveMarkers: forceMoveMarkers
-		});
+      range: validRange,
+      text: text,
+      forceMoveMarkers: forceMoveMarkers,
+    });
 	}
 
 	setEndOfLine(endOfLine: EndOfLine): void {
 		this._throwIfFinalized();
 		if (endOfLine !== EndOfLine.LF && endOfLine !== EndOfLine.CRLF) {
-			throw illegalArgument('endOfLine');
+			throw illegalArgument("endOfLine");
 		}
 
 		this._setEndOfLine = endOfLine;
@@ -144,7 +160,7 @@ export class ExtHostTextEditorOptions {
 
 	private _tabSize!: number;
 	private _indentSize!: number;
-	private _originalIndentSize!: number | 'tabSize';
+	private _originalIndentSize!: number | "tabSize";
 	private _insertSpaces!: boolean;
 	private _cursorStyle!: TextEditorCursorStyle;
 	private _lineNumbers!: TextEditorLineNumbersStyle;
@@ -189,7 +205,7 @@ export class ExtHostTextEditorOptions {
 			},
 			set lineNumbers(value: TextEditorLineNumbersStyle) {
 				that._setLineNumbers(value);
-			}
+			},
 		};
 	}
 
@@ -199,20 +215,22 @@ export class ExtHostTextEditorOptions {
 		this._originalIndentSize = source.originalIndentSize;
 		this._insertSpaces = source.insertSpaces;
 		this._cursorStyle = source.cursorStyle;
-		this._lineNumbers = TypeConverters.TextEditorLineNumbersStyle.to(source.lineNumbers);
+		this._lineNumbers = TypeConverters.TextEditorLineNumbersStyle.to(
+      source.lineNumbers,
+    );
 	}
 
 	// --- internal: tabSize
 
-	private _validateTabSize(value: number | string): number | 'auto' | null {
-		if (value === 'auto') {
-			return 'auto';
+	private _validateTabSize(value: number | string): number | "auto" | null {
+		if (value === "auto") {
+			return "auto";
 		}
-		if (typeof value === 'number') {
+		if (typeof value === "number") {
 			const r = Math.floor(value);
 			return (r > 0 ? r : null);
 		}
-		if (typeof value === 'string') {
+		if (typeof value === "string") {
 			const r = parseInt(value, 10);
 			if (isNaN(r)) {
 				return null;
@@ -228,7 +246,7 @@ export class ExtHostTextEditorOptions {
 			// ignore invalid call
 			return;
 		}
-		if (typeof tabSize === 'number') {
+		if (typeof tabSize === "number") {
 			if (this._tabSize === tabSize) {
 				// nothing to do
 				return;
@@ -236,22 +254,25 @@ export class ExtHostTextEditorOptions {
 			// reflect the new tabSize value immediately
 			this._tabSize = tabSize;
 		}
-		this._warnOnError('setTabSize', this._proxy.$trySetOptions(this._id, {
-			tabSize: tabSize
-		}));
+		this._warnOnError(
+      "setTabSize",
+      this._proxy.$trySetOptions(this._id, {
+        tabSize: tabSize,
+      }),
+    );
 	}
 
 	// --- internal: indentSize
 
-	private _validateIndentSize(value: number | string): number | 'tabSize' | null {
-		if (value === 'tabSize') {
-			return 'tabSize';
+	private _validateIndentSize(value: number | string): number | "tabSize" | null {
+		if (value === "tabSize") {
+			return "tabSize";
 		}
-		if (typeof value === 'number') {
+		if (typeof value === "number") {
 			const r = Math.floor(value);
 			return (r > 0 ? r : null);
 		}
-		if (typeof value === 'string') {
+		if (typeof value === "string") {
 			const r = parseInt(value, 10);
 			if (isNaN(r)) {
 				return null;
@@ -267,7 +288,7 @@ export class ExtHostTextEditorOptions {
 			// ignore invalid call
 			return;
 		}
-		if (typeof indentSize === 'number') {
+		if (typeof indentSize === "number") {
 			if (this._originalIndentSize === indentSize) {
 				// nothing to do
 				return;
@@ -276,23 +297,26 @@ export class ExtHostTextEditorOptions {
 			this._indentSize = indentSize;
 			this._originalIndentSize = indentSize;
 		}
-		this._warnOnError('setIndentSize', this._proxy.$trySetOptions(this._id, {
-			indentSize: indentSize
-		}));
+		this._warnOnError(
+      "setIndentSize",
+      this._proxy.$trySetOptions(this._id, {
+        indentSize: indentSize,
+      }),
+    );
 	}
 
 	// --- internal: insert spaces
 
-	private _validateInsertSpaces(value: boolean | string): boolean | 'auto' {
-		if (value === 'auto') {
-			return 'auto';
+	private _validateInsertSpaces(value: boolean | string): boolean | "auto" {
+		if (value === "auto") {
+			return "auto";
 		}
-		return (value === 'false' ? false : Boolean(value));
+		return (value === "false" ? false : Boolean(value));
 	}
 
 	private _setInsertSpaces(value: boolean | string) {
 		const insertSpaces = this._validateInsertSpaces(value);
-		if (typeof insertSpaces === 'boolean') {
+		if (typeof insertSpaces === "boolean") {
 			if (this._insertSpaces === insertSpaces) {
 				// nothing to do
 				return;
@@ -300,9 +324,12 @@ export class ExtHostTextEditorOptions {
 			// reflect the new insertSpaces value immediately
 			this._insertSpaces = insertSpaces;
 		}
-		this._warnOnError('setInsertSpaces', this._proxy.$trySetOptions(this._id, {
-			insertSpaces: insertSpaces
-		}));
+		this._warnOnError(
+      "setInsertSpaces",
+      this._proxy.$trySetOptions(this._id, {
+        insertSpaces: insertSpaces,
+      }),
+    );
 	}
 
 	// --- internal: cursor style
@@ -313,9 +340,12 @@ export class ExtHostTextEditorOptions {
 			return;
 		}
 		this._cursorStyle = value;
-		this._warnOnError('setCursorStyle', this._proxy.$trySetOptions(this._id, {
-			cursorStyle: value
-		}));
+		this._warnOnError(
+      "setCursorStyle",
+      this._proxy.$trySetOptions(this._id, {
+        cursorStyle: value,
+      }),
+    );
 	}
 
 	// --- internal: line number
@@ -326,21 +356,24 @@ export class ExtHostTextEditorOptions {
 			return;
 		}
 		this._lineNumbers = value;
-		this._warnOnError('setLineNumbers', this._proxy.$trySetOptions(this._id, {
-			lineNumbers: TypeConverters.TextEditorLineNumbersStyle.from(value)
-		}));
+		this._warnOnError(
+      "setLineNumbers",
+      this._proxy.$trySetOptions(this._id, {
+        lineNumbers: TypeConverters.TextEditorLineNumbersStyle.from(value),
+      }),
+    );
 	}
 
 	public assign(newOptions: vscode.TextEditorOptions) {
 		const bulkConfigurationUpdate: ITextEditorConfigurationUpdate = {};
 		let hasUpdate = false;
 
-		if (typeof newOptions.tabSize !== 'undefined') {
+		if (typeof newOptions.tabSize !== "undefined") {
 			const tabSize = this._validateTabSize(newOptions.tabSize);
-			if (tabSize === 'auto') {
+			if (tabSize === "auto") {
 				hasUpdate = true;
 				bulkConfigurationUpdate.tabSize = tabSize;
-			} else if (typeof tabSize === 'number' && this._tabSize !== tabSize) {
+			} else if (typeof tabSize === "number" && this._tabSize !== tabSize) {
 				// reflect the new tabSize value immediately
 				this._tabSize = tabSize;
 				hasUpdate = true;
@@ -348,12 +381,12 @@ export class ExtHostTextEditorOptions {
 			}
 		}
 
-		if (typeof newOptions.indentSize !== 'undefined') {
+		if (typeof newOptions.indentSize !== "undefined") {
 			const indentSize = this._validateIndentSize(newOptions.indentSize);
-			if (indentSize === 'tabSize') {
+			if (indentSize === "tabSize") {
 				hasUpdate = true;
 				bulkConfigurationUpdate.indentSize = indentSize;
-			} else if (typeof indentSize === 'number' && this._originalIndentSize !== indentSize) {
+			} else if (typeof indentSize === "number" && this._originalIndentSize !== indentSize) {
 				// reflect the new indentSize value immediately
 				this._indentSize = indentSize;
 				this._originalIndentSize = indentSize;
@@ -362,9 +395,9 @@ export class ExtHostTextEditorOptions {
 			}
 		}
 
-		if (typeof newOptions.insertSpaces !== 'undefined') {
+		if (typeof newOptions.insertSpaces !== "undefined") {
 			const insertSpaces = this._validateInsertSpaces(newOptions.insertSpaces);
-			if (insertSpaces === 'auto') {
+			if (insertSpaces === "auto") {
 				hasUpdate = true;
 				bulkConfigurationUpdate.insertSpaces = insertSpaces;
 			} else if (this._insertSpaces !== insertSpaces) {
@@ -375,7 +408,7 @@ export class ExtHostTextEditorOptions {
 			}
 		}
 
-		if (typeof newOptions.cursorStyle !== 'undefined') {
+		if (typeof newOptions.cursorStyle !== "undefined") {
 			if (this._cursorStyle !== newOptions.cursorStyle) {
 				this._cursorStyle = newOptions.cursorStyle;
 				hasUpdate = true;
@@ -383,24 +416,29 @@ export class ExtHostTextEditorOptions {
 			}
 		}
 
-		if (typeof newOptions.lineNumbers !== 'undefined') {
+		if (typeof newOptions.lineNumbers !== "undefined") {
 			if (this._lineNumbers !== newOptions.lineNumbers) {
 				this._lineNumbers = newOptions.lineNumbers;
 				hasUpdate = true;
-				bulkConfigurationUpdate.lineNumbers = TypeConverters.TextEditorLineNumbersStyle.from(newOptions.lineNumbers);
+				bulkConfigurationUpdate.lineNumbers = TypeConverters.TextEditorLineNumbersStyle.from(
+          newOptions.lineNumbers,
+        );
 			}
 		}
 
 		if (hasUpdate) {
-			this._warnOnError('setOptions', this._proxy.$trySetOptions(this._id, bulkConfigurationUpdate));
+			this._warnOnError(
+        "setOptions",
+        this._proxy.$trySetOptions(this._id, bulkConfigurationUpdate),
+      );
 		}
 	}
 
 	private _warnOnError(action: string, promise: Promise<any>): void {
 		promise.catch(err => {
-			this._logService.warn(`ExtHostTextEditorOptions '${action}' failed:'`);
-			this._logService.warn(err);
-		});
+      this._logService.warn(`ExtHostTextEditorOptions '${action}' failed:'`);
+      this._logService.warn(err);
+    });
 	}
 }
 
@@ -422,10 +460,15 @@ export class ExtHostTextEditor {
 		private readonly _logService: ILogService,
 		document: Lazy<vscode.TextDocument>,
 		selections: Selection[], options: IResolvedTextEditorConfiguration,
-		visibleRanges: Range[], viewColumn: vscode.ViewColumn | undefined
+		visibleRanges: Range[], viewColumn: vscode.ViewColumn | undefined,
 	) {
 		this._selections = selections;
-		this._options = new ExtHostTextEditorOptions(this._proxy, this.id, options, _logService);
+		this._options = new ExtHostTextEditorOptions(
+      this._proxy,
+      this.id,
+      options,
+      _logService,
+    );
 		this._visibleRanges = visibleRanges;
 		this._viewColumn = viewColumn;
 
@@ -436,7 +479,7 @@ export class ExtHostTextEditor {
 				return document.value;
 			},
 			set document(_value) {
-				throw new ReadonlyError('document');
+				throw new ReadonlyError("document");
 			},
 			// --- selection
 			get selection(): Selection {
@@ -444,7 +487,7 @@ export class ExtHostTextEditor {
 			},
 			set selection(value: Selection) {
 				if (!(value instanceof Selection)) {
-					throw illegalArgument('selection');
+					throw illegalArgument("selection");
 				}
 				that._selections = [value];
 				that._trySetSelection();
@@ -454,7 +497,7 @@ export class ExtHostTextEditor {
 			},
 			set selections(value: Selection[]) {
 				if (!Array.isArray(value) || value.some(a => !(a instanceof Selection))) {
-					throw illegalArgument('selections');
+					throw illegalArgument("selections");
 				}
 				if (value.length === 0) {
 					value = [new Selection(0, 0, 0, 0)];
@@ -467,7 +510,7 @@ export class ExtHostTextEditor {
 				return that._visibleRanges;
 			},
 			set visibleRanges(_value: Range[]) {
-				throw new ReadonlyError('visibleRanges');
+				throw new ReadonlyError("visibleRanges");
 			},
 			get diffInformation() {
 				return that._diffInformation;
@@ -486,12 +529,12 @@ export class ExtHostTextEditor {
 				return that._viewColumn;
 			},
 			set viewColumn(_value) {
-				throw new ReadonlyError('viewColumn');
+				throw new ReadonlyError("viewColumn");
 			},
 			// --- edit
 			edit(callback: (edit: TextEditorEdit) => void, options: { undoStopBefore: boolean; undoStopAfter: boolean } = { undoStopBefore: true, undoStopAfter: true }): Promise<boolean> {
 				if (that._disposed) {
-					return Promise.reject(new Error('TextEditor#edit not possible on closed editors'));
+					return Promise.reject(new Error("TextEditor#edit not possible on closed editors"));
 				}
 				const edit = new TextEditorEdit(document.value, options);
 				callback(edit);
@@ -500,7 +543,7 @@ export class ExtHostTextEditor {
 			// --- snippet edit
 			insertSnippet(snippet: SnippetString, where?: Position | readonly Position[] | Range | readonly Range[], options: { undoStopBefore: boolean; undoStopAfter: boolean; keepWhitespace?: boolean } = { undoStopBefore: true, undoStopAfter: true }): Promise<boolean> {
 				if (that._disposed) {
-					return Promise.reject(new Error('TextEditor#insertSnippet not possible on closed editors'));
+					return Promise.reject(new Error("TextEditor#insertSnippet not possible on closed editors"));
 				}
 				let ranges: IRange[];
 
@@ -545,7 +588,7 @@ export class ExtHostTextEditor {
 						return _proxy.$trySetDecorations(
 							id,
 							decorationType.key,
-							TypeConverters.fromRangeOrRangeWithMessage(ranges)
+							TypeConverters.fromRangeOrRangeWithMessage(ranges),
 						);
 					} else {
 						const _ranges: number[] = new Array<number>(4 * ranges.length);
@@ -559,7 +602,7 @@ export class ExtHostTextEditor {
 						return _proxy.$trySetDecorationsFast(
 							id,
 							decorationType.key,
-							_ranges
+							_ranges,
 						);
 					}
 				});
@@ -568,7 +611,7 @@ export class ExtHostTextEditor {
 				that._runOnProxy(() => _proxy.$tryRevealRange(
 					id,
 					TypeConverters.Range.from(range),
-					(revealType || TextEditorRevealType.Default)
+					(revealType || TextEditorRevealType.Default),
 				));
 			},
 			show(column: vscode.ViewColumn) {
@@ -577,9 +620,9 @@ export class ExtHostTextEditor {
 			hide() {
 				_proxy.$tryHideEditor(id);
 			},
-			[Symbol.for('debug.description')]() {
+			[Symbol.for("debug.description")]() {
 				return `TextEditor(${this.document.uri.toString()})`;
-			}
+			},
 		});
 	}
 
@@ -617,7 +660,9 @@ export class ExtHostTextEditor {
 
 	private async _trySetSelection(): Promise<vscode.TextEditor | null | undefined> {
 		const selection = this._selections.map(TypeConverters.Selection.from);
-		await this._runOnProxy(() => this._proxy.$trySetSelections(this.id, selection));
+		await this._runOnProxy(
+      () => this._proxy.$trySetSelections(this.id, selection),
+    );
 		return this.value;
 	}
 
@@ -653,35 +698,33 @@ export class ExtHostTextEditor {
 
 			if (nextRangeStart.isBefore(rangeEnd)) {
 				// overlapping ranges
-				return Promise.reject(
-					new Error('Overlapping ranges are not allowed!')
-				);
+				return Promise.reject(new Error("Overlapping ranges are not allowed!"));
 			}
 		}
 
 		// prepare data for serialization
 		const edits = editData.edits.map((edit): ISingleEditOperation => {
-			return {
-				range: TypeConverters.Range.from(edit.range),
-				text: edit.text,
-				forceMoveMarkers: edit.forceMoveMarkers
-			};
-		});
+      return {
+        range: TypeConverters.Range.from(edit.range),
+        text: edit.text,
+        forceMoveMarkers: edit.forceMoveMarkers,
+      };
+    });
 
 		return this._proxy.$tryApplyEdits(this.id, editData.documentVersionId, edits, {
-			setEndOfLine: typeof editData.setEndOfLine === 'number' ? TypeConverters.EndOfLine.from(editData.setEndOfLine) : undefined,
+			setEndOfLine: typeof editData.setEndOfLine === "number" ? TypeConverters.EndOfLine.from(editData.setEndOfLine) : undefined,
 			undoStopBefore: editData.undoStopBefore,
-			undoStopAfter: editData.undoStopAfter
+			undoStopAfter: editData.undoStopAfter,
 		});
 	}
 	private _runOnProxy(callback: () => Promise<any>): Promise<ExtHostTextEditor | undefined | null> {
 		if (this._disposed) {
-			this._logService.warn('TextEditor is closed/disposed');
+			this._logService.warn("TextEditor is closed/disposed");
 			return Promise.resolve(undefined);
 		}
 
 		return callback().then(() => this, err => {
-			if (!(err instanceof Error && err.name === 'DISPOSED')) {
+			if (!(err instanceof Error && err.name === "DISPOSED")) {
 				this._logService.warn(err);
 			}
 			return null;

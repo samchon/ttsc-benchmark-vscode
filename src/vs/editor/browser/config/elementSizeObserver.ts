@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { IDimension } from '../../common/core/2d/dimension.js';
-import { Emitter, Event } from '../../../base/common/event.js';
-import { getWindow, scheduleAtNextAnimationFrame } from '../../../base/browser/dom.js';
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { IDimension } from "../../common/core/2d/dimension.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { getWindow, scheduleAtNextAnimationFrame } from "../../../base/browser/dom.js";
 
 export class ElementSizeObserver extends Disposable {
 
@@ -50,7 +50,10 @@ export class ElementSizeObserver extends Disposable {
 			let observedDimension: IDimension | null = null;
 			const observeNow = () => {
 				if (observedDimension) {
-					this.observe({ width: observedDimension.width, height: observedDimension.height });
+					this.observe({
+            width: observedDimension.width,
+            height: observedDimension.height,
+          });
 				} else {
 					this.observe();
 				}
@@ -66,10 +69,13 @@ export class ElementSizeObserver extends Disposable {
 						alreadyObservedThisAnimationFrame = true;
 						observeNow();
 					} finally {
-						scheduleAtNextAnimationFrame(getWindow(this._referenceDomElement), () => {
-							alreadyObservedThisAnimationFrame = false;
-							update();
-						});
+						scheduleAtNextAnimationFrame(
+              getWindow(this._referenceDomElement),
+              () => {
+                alreadyObservedThisAnimationFrame = false;
+                update();
+              },
+            );
 					}
 				}
 			};

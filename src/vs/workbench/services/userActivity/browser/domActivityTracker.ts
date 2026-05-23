@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../base/browser/dom.js';
-import { mainWindow } from '../../../../base/browser/window.js';
-import { Event } from '../../../../base/common/event.js';
-import { Disposable, MutableDisposable } from '../../../../base/common/lifecycle.js';
-import { IUserActivityService } from '../common/userActivityService.js';
+import * as dom from "../../../../base/browser/dom.js";
+import { mainWindow } from "../../../../base/browser/window.js";
+import { Event } from "../../../../base/common/event.js";
+import { Disposable, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { IUserActivityService } from "../common/userActivityService.js";
 
 /**
  * This uses a time interval and checks whether there's any activity in that
@@ -55,11 +55,38 @@ export class DomActivityTracker extends Disposable {
 			intervalsWithoutActivity = 0;
 		};
 
-		this._register(Event.runAndSubscribe(dom.onDidRegisterWindow, ({ window, disposables }) => {
-			disposables.add(dom.addDisposableListener(window.document, 'touchstart', () => onActivity(window), eventListenerOptions));
-			disposables.add(dom.addDisposableListener(window.document, 'mousedown', () => onActivity(window), eventListenerOptions));
-			disposables.add(dom.addDisposableListener(window.document, 'keydown', () => onActivity(window), eventListenerOptions));
-		}, { window: mainWindow, disposables: this._store }));
+		this._register(
+      Event.runAndSubscribe(
+        dom.onDidRegisterWindow,
+        ({ window, disposables }) => {
+          disposables.add(
+            dom.addDisposableListener(
+              window.document,
+              "touchstart",
+              () => onActivity(window),
+              eventListenerOptions,
+            ),
+          );
+          disposables.add(
+            dom.addDisposableListener(
+              window.document,
+              "mousedown",
+              () => onActivity(window),
+              eventListenerOptions,
+            ),
+          );
+          disposables.add(
+            dom.addDisposableListener(
+              window.document,
+              "keydown",
+              () => onActivity(window),
+              eventListenerOptions,
+            ),
+          );
+        },
+        { window: mainWindow, disposables: this._store },
+      ),
+    );
 
 		onActivity(mainWindow);
 	}

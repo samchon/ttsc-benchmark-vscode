@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { combinedDisposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { clamp } from '../../../../../../base/common/numbers.js';
-import { ICellViewModel, INotebookEditor } from '../../notebookBrowser.js';
+import { combinedDisposable, IDisposable } from "../../../../../../base/common/lifecycle.js";
+import { clamp } from "../../../../../../base/common/numbers.js";
+import { ICellViewModel, INotebookEditor } from "../../notebookBrowser.js";
 
 export function registerCellToolbarStickyScroll(notebookEditor: INotebookEditor, cell: ICellViewModel, element: HTMLElement, opts?: { extraOffset?: number; min?: number }): IDisposable {
 	const extraOffset = opts?.extraOffset ?? 0;
@@ -13,7 +13,7 @@ export function registerCellToolbarStickyScroll(notebookEditor: INotebookEditor,
 
 	const updateForScroll = () => {
 		if (cell.isInputCollapsed) {
-			element.style.top = '';
+			element.style.top = "";
 		} else {
 			const scrollTop = notebookEditor.scrollTop;
 			const elementTop = notebookEditor.getAbsoluteTopOfElement(cell);
@@ -29,9 +29,9 @@ export function registerCellToolbarStickyScroll(notebookEditor: INotebookEditor,
 	updateForScroll();
 	const disposables: IDisposable[] = [];
 	disposables.push(
-		notebookEditor.onDidScroll(() => updateForScroll()),
-		notebookEditor.onDidChangeLayout(() => updateForScroll())
-	);
+    notebookEditor.onDidScroll(() => updateForScroll()),
+    notebookEditor.onDidChangeLayout(() => updateForScroll()),
+  );
 
 	return combinedDisposable(...disposables);
 }

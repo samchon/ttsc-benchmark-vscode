@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type * as vscode from 'vscode';
-import { illegalArgument } from '../../../../base/common/errors.js';
-import { es5ClassCompat } from './es5ClassCompat.js';
-import { Position } from './position.js';
+import type * as vscode from "vscode";
+import { illegalArgument } from "../../../../base/common/errors.js";
+import { es5ClassCompat } from "./es5ClassCompat.js";
+import { Position } from "./position.js";
 
 @es5ClassCompat
 export class Range {
@@ -15,7 +15,7 @@ export class Range {
 		if (thing instanceof Range) {
 			return true;
 		}
-		if (!thing || typeof thing !== 'object') {
+		if (!thing || typeof thing !== "object") {
 			return false;
 		}
 		return Position.isPosition((<Range>thing).start)
@@ -29,7 +29,7 @@ export class Range {
 		if (this.isRange(obj)) {
 			return new Range(obj.start, obj.end);
 		}
-		throw new Error('Invalid argument, is NOT a range-like object');
+		throw new Error("Invalid argument, is NOT a range-like object");
 	}
 
 	protected _start: Position;
@@ -50,7 +50,7 @@ export class Range {
 		let start: Position | undefined;
 		let end: Position | undefined;
 
-		if (typeof startLineOrStart === 'number' && typeof startColumnOrEnd === 'number' && typeof endLine === 'number' && typeof endColumn === 'number') {
+		if (typeof startLineOrStart === "number" && typeof startColumnOrEnd === "number" && typeof endLine === "number" && typeof endColumn === "number") {
 			start = new Position(startLineOrStart, startColumnOrEnd);
 			end = new Position(endLine, endColumn);
 		} else if (Position.isPosition(startLineOrStart) && Position.isPosition(startColumnOrEnd)) {
@@ -59,7 +59,7 @@ export class Range {
 		}
 
 		if (!start || !end) {
-			throw new Error('Invalid arguments');
+			throw new Error("Invalid arguments");
 		}
 
 		if (start.isBefore(end)) {
@@ -153,7 +153,7 @@ export class Range {
 		return [this.start, this.end];
 	}
 
-	[Symbol.for('debug.description')]() {
+	[Symbol.for("debug.description")]() {
 		return getDebugDescriptionOfRange(this);
 	}
 }

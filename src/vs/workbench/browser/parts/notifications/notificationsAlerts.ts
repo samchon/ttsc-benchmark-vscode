@@ -3,13 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { alert } from '../../../../base/browser/ui/aria/aria.js';
-import { localize } from '../../../../nls.js';
-import { INotificationViewItem, INotificationsModel, NotificationChangeType, INotificationChangeEvent, NotificationViewItemContentChangeKind } from '../../../common/notifications.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { toErrorMessage } from '../../../../base/common/errorMessage.js';
-import { NotificationPriority, Severity } from '../../../../platform/notification/common/notification.js';
-import { Event } from '../../../../base/common/event.js';
+import { alert } from "../../../../base/browser/ui/aria/aria.js";
+import { localize } from "../../../../nls.js";
+import {
+  INotificationViewItem,
+  INotificationsModel,
+  NotificationChangeType,
+  INotificationChangeEvent,
+  NotificationViewItemContentChangeKind,
+} from "../../../common/notifications.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { toErrorMessage } from "../../../../base/common/errorMessage.js";
+import { NotificationPriority, Severity } from "../../../../platform/notification/common/notification.js";
+import { Event } from "../../../../base/common/event.js";
 
 export class NotificationsAlerts extends Disposable {
 
@@ -25,7 +31,9 @@ export class NotificationsAlerts extends Disposable {
 	}
 
 	private registerListeners(): void {
-		this._register(this.model.onDidChangeNotification(e => this.onDidChangeNotification(e)));
+		this._register(
+      this.model.onDidChangeNotification(e => this.onDidChangeNotification(e)),
+    );
 	}
 
 	private onDidChangeNotification(e: INotificationChangeEvent): void {
@@ -39,7 +47,9 @@ export class NotificationsAlerts extends Disposable {
 				if (e.item.message.original instanceof Error) {
 					console.error(e.item.message.original);
 				} else {
-					console.error(toErrorMessage(e.item.message.linkedText.toString(), true));
+					console.error(
+            toErrorMessage(e.item.message.linkedText.toString(), true),
+          );
 				}
 			}
 		}
@@ -65,11 +75,23 @@ export class NotificationsAlerts extends Disposable {
 	private doTriggerAriaAlert(notification: INotificationViewItem): void {
 		let alertText: string;
 		if (notification.severity === Severity.Error) {
-			alertText = localize('alertErrorMessage', "Error: {0}", notification.message.linkedText.toString());
+			alertText = localize(
+        "alertErrorMessage",
+        "Error: {0}",
+        notification.message.linkedText.toString(),
+      );
 		} else if (notification.severity === Severity.Warning) {
-			alertText = localize('alertWarningMessage', "Warning: {0}", notification.message.linkedText.toString());
+			alertText = localize(
+        "alertWarningMessage",
+        "Warning: {0}",
+        notification.message.linkedText.toString(),
+      );
 		} else {
-			alertText = localize('alertInfoMessage', "Info: {0}", notification.message.linkedText.toString());
+			alertText = localize(
+        "alertInfoMessage",
+        "Info: {0}",
+        notification.message.linkedText.toString(),
+      );
 		}
 
 		alert(alertText);

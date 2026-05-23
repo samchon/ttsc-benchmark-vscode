@@ -3,17 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { getWindow } from '../../../base/browser/dom.js';
-import { DisposableStore } from '../../../base/common/lifecycle.js';
-import { isEqual } from '../../../base/common/resources.js';
-import { URI, UriComponents } from '../../../base/common/uri.js';
-import { IActiveCodeEditor, IViewZone } from '../../../editor/browser/editorBrowser.js';
-import { ICodeEditorService } from '../../../editor/browser/services/codeEditorService.js';
-import { ExtensionIdentifier } from '../../../platform/extensions/common/extensions.js';
-import { reviveWebviewContentOptions } from './mainThreadWebviews.js';
-import { ExtHostContext, ExtHostEditorInsetsShape, IWebviewContentOptions, MainContext, MainThreadEditorInsetsShape } from '../common/extHost.protocol.js';
-import { IWebviewService, IWebviewElement } from '../../contrib/webview/browser/webview.js';
-import { extHostNamedCustomer, IExtHostContext } from '../../services/extensions/common/extHostCustomers.js';
+import { getWindow } from "../../../base/browser/dom.js";
+import { DisposableStore } from "../../../base/common/lifecycle.js";
+import { isEqual } from "../../../base/common/resources.js";
+import { URI, UriComponents } from "../../../base/common/uri.js";
+import { IActiveCodeEditor, IViewZone } from "../../../editor/browser/editorBrowser.js";
+import { ICodeEditorService } from "../../../editor/browser/services/codeEditorService.js";
+import { ExtensionIdentifier } from "../../../platform/extensions/common/extensions.js";
+import { reviveWebviewContentOptions } from "./mainThreadWebviews.js";
+import {
+  ExtHostContext,
+  ExtHostEditorInsetsShape,
+  IWebviewContentOptions,
+  MainContext,
+  MainThreadEditorInsetsShape,
+} from "../common/extHost.protocol.js";
+import { IWebviewService, IWebviewElement } from "../../contrib/webview/browser/webview.js";
+import { extHostNamedCustomer, IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
 
 // todo@jrieken move these things back into something like contrib/insets
 class EditorWebviewZone implements IViewZone {
@@ -37,8 +43,8 @@ class EditorWebviewZone implements IViewZone {
 		readonly height: number,
 		readonly webview: IWebviewElement,
 	) {
-		this.domNode = document.createElement('div');
-		this.domNode.style.zIndex = '10'; // without this, the webview is not interactive
+		this.domNode = document.createElement("div");
+		this.domNode.style.zIndex = "10"; // without this, the webview is not interactive
 		this.afterLineNumber = line;
 		this.afterColumn = 1;
 		this.heightInLines = height;
@@ -48,7 +54,9 @@ class EditorWebviewZone implements IViewZone {
 	}
 
 	dispose(): void {
-		this.editor.changeViewZones(accessor => this._id && accessor.removeZone(this._id));
+		this.editor.changeViewZones(
+      accessor => this._id && accessor.removeZone(this._id),
+    );
 	}
 }
 
@@ -74,10 +82,13 @@ export class MainThreadEditorInsets implements MainThreadEditorInsetsShape {
 	async $createEditorInset(handle: number, id: string, uri: UriComponents, line: number, height: number, options: IWebviewContentOptions, extensionId: ExtensionIdentifier, extensionLocation: UriComponents): Promise<void> {
 
 		let editor: IActiveCodeEditor | undefined;
-		id = id.substr(0, id.indexOf(',')); //todo@jrieken HACK
+		id = id.substr(0, id.indexOf(",")); //todo@jrieken HACK
 
 		for (const candidate of this._editorService.listCodeEditors()) {
-			if (candidate.getId() === id && candidate.hasModel() && isEqual(candidate.getModel().uri, URI.revive(uri))) {
+			if (candidate.getId() === id && candidate.hasModel() && isEqual(
+        candidate.getModel().uri,
+        URI.revive(uri),
+      )) {
 				editor = candidate;
 				break;
 			}
@@ -96,7 +107,7 @@ export class MainThreadEditorInsets implements MainThreadEditorInsetsShape {
 				enableFindWidget: false,
 			},
 			contentOptions: reviveWebviewContentOptions(options),
-			extension: { id: extensionId, location: URI.revive(extensionLocation) }
+			extension: { id: extensionId, location: URI.revive(extensionLocation) },
 		});
 
 		const webviewZone = new EditorWebviewZone(editor, line, height, webview);
@@ -111,7 +122,11 @@ export class MainThreadEditorInsets implements MainThreadEditorInsetsShape {
 		disposables.add(editor.onDidDispose(remove));
 		disposables.add(webviewZone);
 		disposables.add(webview);
-		disposables.add(webview.onMessage(msg => this._proxy.$onDidReceiveMessage(handle, msg.message)));
+		disposables.add(
+      webview.onMessage(
+        msg => this._proxy.$onDidReceiveMessage(handle, msg.message),
+      ),
+    );
 
 		this._insets.set(handle, webviewZone);
 	}
@@ -141,7 +156,7 @@ export class MainThreadEditorInsets implements MainThreadEditorInsetsShape {
 	private getInset(handle: number): EditorWebviewZone {
 		const inset = this._insets.get(handle);
 		if (!inset) {
-			throw new Error('Unknown inset');
+			throw new Error("Unknown inset");
 		}
 		return inset;
 	}

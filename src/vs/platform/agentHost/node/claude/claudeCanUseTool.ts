@@ -3,13 +3,31 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { PermissionResult, PermissionUpdate } from '@anthropic-ai/claude-agent-sdk';
-import { ClaudePermissionMode, ClaudeSessionConfigKey } from '../../common/claudeSessionConfigKeys.js';
-import { SessionInputResponseKind, ToolCallPendingConfirmationState, ToolCallStatus } from '../../common/state/protocol/state.js';
-import { IAgentConfigurationService } from '../agentConfigurationService.js';
-import { ClaudeAgentSession } from './claudeAgentSession.js';
-import { buildAskUserSessionInputQuestions, buildExitPlanModeConfirmationState, flattenAskUserAnswers, parseAskUserQuestionInput } from './claudeInteractiveTools.js';
-import { getClaudeConfirmationTitle, getClaudeInvocationMessage, getClaudePermissionKind, getClaudeToolDisplayName, getClaudeToolInputString, getClaudeToolPath, INTERACTIVE_CLAUDE_TOOLS, buildClaudeToolMeta } from './claudeToolDisplay.js';
+import type { PermissionResult, PermissionUpdate } from "@anthropic-ai/claude-agent-sdk";
+import { ClaudePermissionMode, ClaudeSessionConfigKey } from "../../common/claudeSessionConfigKeys.js";
+import {
+  SessionInputResponseKind,
+  ToolCallPendingConfirmationState,
+  ToolCallStatus,
+} from "../../common/state/protocol/state.js";
+import { IAgentConfigurationService } from "../agentConfigurationService.js";
+import { ClaudeAgentSession } from "./claudeAgentSession.js";
+import {
+  buildAskUserSessionInputQuestions,
+  buildExitPlanModeConfirmationState,
+  flattenAskUserAnswers,
+  parseAskUserQuestionInput,
+} from "./claudeInteractiveTools.js";
+import {
+  getClaudeConfirmationTitle,
+  getClaudeInvocationMessage,
+  getClaudePermissionKind,
+  getClaudeToolDisplayName,
+  getClaudeToolInputString,
+  getClaudeToolPath,
+  INTERACTIVE_CLAUDE_TOOLS,
+  buildClaudeToolMeta,
+} from "./claudeToolDisplay.js";
 
 /**
  * Dependencies for {@link handleCanUseTool}. Kept narrow: a session
@@ -75,7 +93,7 @@ export async function handleCanUseTool(
 ): Promise<PermissionResult> {
 	const session = deps.getSession(sessionId);
 	if (!session) {
-		return { behavior: 'deny', message: 'Session is no longer active' };
+		return { behavior: "deny", message: "Session is no longer active" };
 	}
 
 	// Observe the SDK's per-request abort signal so a host parked on
@@ -85,17 +103,20 @@ export async function handleCanUseTool(
 	// id is not pending, so it is safe to fire both regardless of
 	// which channel this tool happens to use.
 	if (options.signal.aborted) {
-		return { behavior: 'deny', message: 'SDK aborted the tool request' };
+		return { behavior: "deny", message: "SDK aborted the tool request" };
 	}
 	const abortHandler = () => {
 		session.respondToPermissionRequest(options.toolUseID, false);
-		session.respondToUserInputRequest(options.toolUseID, SessionInputResponseKind.Cancel);
+		session.respondToUserInputRequest(
+      options.toolUseID,
+      SessionInputResponseKind.Cancel,
+    );
 	};
-	options.signal.addEventListener('abort', abortHandler);
+	options.signal.addEventListener("abort", abortHandler);
 	try {
 		return await dispatchCanUseTool(deps, session, toolName, input, options);
 	} finally {
-		options.signal.removeEventListener('abort', abortHandler);
+		options.signal.removeEventListener("abort", abortHandler);
 	}
 }
 
@@ -122,32 +143,35 @@ async function dispatchCanUseTool(
 
 	const permissionKind = getClaudePermissionKind(toolName);
 	const displayName = getClaudeToolDisplayName(toolName);
-	const permissionPath = options.blockedPath ?? getClaudeToolPath(toolName, input);
+	const permissionPath = options.blockedPath ?? getClaudeToolPath(
+    toolName,
+    input,
+  );
 	const toolInputString = getClaudeToolInputString(toolName, input);
 	const meta = buildClaudeToolMeta(toolName);
 	const state: ToolCallPendingConfirmationState = {
-		status: ToolCallStatus.PendingConfirmation,
-		toolCallId: options.toolUseID,
-		toolName,
-		displayName,
-		invocationMessage: getClaudeInvocationMessage(toolName, displayName, input),
-		toolInput: toolInputString,
-		confirmationTitle: getClaudeConfirmationTitle(toolName),
-		...(meta ? { _meta: meta } : {}),
-	};
+    status: ToolCallStatus.PendingConfirmation,
+    toolCallId: options.toolUseID,
+    toolName,
+    displayName,
+    invocationMessage: getClaudeInvocationMessage(toolName, displayName, input),
+    toolInput: toolInputString,
+    confirmationTitle: getClaudeConfirmationTitle(toolName),
+    ...(meta ? { _meta: meta } : {}),
+  };
 
 	const parentToolCallId = resolveSubagentParent(session, options);
 
 	const approved = await session.requestPermission({
-		toolUseID: options.toolUseID,
-		state,
-		permissionKind,
-		...(permissionPath !== undefined ? { permissionPath } : {}),
-		...(parentToolCallId !== undefined ? { parentToolCallId } : {}),
-	});
+    toolUseID: options.toolUseID,
+    state,
+    permissionKind,
+    ...(permissionPath !== undefined ? { permissionPath } : {}),
+    ...(parentToolCallId !== undefined ? { parentToolCallId } : {}),
+  });
 	return approved
-		? { behavior: 'allow', updatedInput: input }
-		: { behavior: 'deny', message: 'User declined' };
+		? { behavior: "allow", updatedInput: input }
+		: { behavior: "deny", message: "User declined" };
 }
 
 /**
@@ -192,12 +216,15 @@ function handleInteractiveTool(
 	options: IClaudeCanUseToolOptions,
 ): Promise<PermissionResult> {
 	switch (toolName) {
-		case 'ExitPlanMode':
+		case "ExitPlanMode":
 			return handleExitPlanMode(deps, session, input, options);
-		case 'AskUserQuestion':
+		case "AskUserQuestion":
 			return handleAskUserQuestion(deps, session, input, options);
 		default:
-			return Promise.resolve({ behavior: 'deny', message: `Unsupported interactive tool: ${toolName}` });
+			return Promise.resolve({
+        behavior: "deny",
+        message: `Unsupported interactive tool: ${toolName}`,
+      });
 	}
 }
 
@@ -227,18 +254,21 @@ async function handleExitPlanMode(
 	const toolUseID = options.toolUseID;
 	const parentToolCallId = resolveSubagentParent(session, options);
 	const approved = await session.requestPermission({
-		toolUseID,
-		state: buildExitPlanModeConfirmationState(input, toolUseID),
-		permissionKind: getClaudePermissionKind('ExitPlanMode'),
-		...(parentToolCallId !== undefined ? { parentToolCallId } : {}),
-	});
+    toolUseID,
+    state: buildExitPlanModeConfirmationState(input, toolUseID),
+    permissionKind: getClaudePermissionKind("ExitPlanMode"),
+    ...(parentToolCallId !== undefined ? { parentToolCallId } : {}),
+  });
 	if (approved) {
 		deps.configurationService.updateSessionConfig(session.sessionUri.toString(), {
-			[ClaudeSessionConfigKey.PermissionMode]: 'acceptEdits' satisfies ClaudePermissionMode,
+			[ClaudeSessionConfigKey.PermissionMode]: "acceptEdits" satisfies ClaudePermissionMode,
 		});
-		return { behavior: 'allow', updatedInput: input };
+		return { behavior: "allow", updatedInput: input };
 	}
-	return { behavior: 'deny', message: 'The user declined the plan, maybe ask why?' };
+	return {
+    behavior: "deny",
+    message: "The user declined the plan, maybe ask why?",
+  };
 }
 
 /**
@@ -256,21 +286,27 @@ async function handleAskUserQuestion(
 	const toolUseID = options.toolUseID;
 	const askInput = parseAskUserQuestionInput(input);
 	if (!askInput) {
-		return { behavior: 'deny', message: 'AskUserQuestion called without questions' };
+		return {
+      behavior: "deny",
+      message: "AskUserQuestion called without questions",
+    };
 	}
 
 	const parentToolCallId = resolveSubagentParent(session, options);
-	const answer = await session.requestUserInput({
-		id: toolUseID,
-		questions: buildAskUserSessionInputQuestions(askInput),
-	}, parentToolCallId);
+	const answer = await session.requestUserInput(
+    {
+      id: toolUseID,
+      questions: buildAskUserSessionInputQuestions(askInput),
+    },
+    parentToolCallId,
+  );
 	if (answer.response !== SessionInputResponseKind.Accept || !answer.answers) {
-		return { behavior: 'deny', message: 'The user cancelled the question' };
+		return { behavior: "deny", message: "The user cancelled the question" };
 	}
 
 	const answers = flattenAskUserAnswers(askInput, answer.answers);
 	if (Object.keys(answers).length === 0) {
-		return { behavior: 'deny', message: 'The user cancelled the question' };
+		return { behavior: "deny", message: "The user cancelled the question" };
 	}
-	return { behavior: 'allow', updatedInput: { ...input, answers } };
+	return { behavior: "allow", updatedInput: { ...input, answers } };
 }

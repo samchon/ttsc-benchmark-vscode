@@ -3,25 +3,38 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DisposableStore, toDisposable } from '../../../../../../base/common/lifecycle.js';
-import { autorunWithStore, derived, observableFromEvent } from '../../../../../../base/common/observable.js';
-import { INotebookEditor } from '../../notebookBrowser.js';
-import { ThrottledDelayer } from '../../../../../../base/common/async.js';
-import { ICodeEditor, IViewZone } from '../../../../../../editor/browser/editorBrowser.js';
-import { IEditorWorkerService } from '../../../../../../editor/common/services/editorWorker.js';
-import { EditorOption } from '../../../../../../editor/common/config/editorOptions.js';
-import { themeColorFromId } from '../../../../../../base/common/themables.js';
-import { RenderOptions, LineSource, renderLines } from '../../../../../../editor/browser/widget/diffEditor/components/diffEditorViewZones/renderLines.js';
-import { diffAddDecoration, diffWholeLineAddDecoration, diffDeleteDecoration } from '../../../../../../editor/browser/widget/diffEditor/registrations.contribution.js';
-import { IDocumentDiff } from '../../../../../../editor/common/diff/documentDiffProvider.js';
-import { ITextModel, TrackedRangeStickiness, MinimapPosition, IModelDeltaDecoration, OverviewRulerLane } from '../../../../../../editor/common/model.js';
-import { ModelDecorationOptions } from '../../../../../../editor/common/model/textModel.js';
-import { Range } from '../../../../../../editor/common/core/range.js';
-import { NotebookCellTextModel } from '../../../common/model/notebookCellTextModel.js';
-import { DetailedLineRangeMapping } from '../../../../../../editor/common/diff/rangeMapping.js';
-import { minimapGutterAddedBackground, minimapGutterDeletedBackground, minimapGutterModifiedBackground, overviewRulerAddedForeground, overviewRulerDeletedForeground, overviewRulerModifiedForeground } from '../../../../scm/common/quickDiff.js';
-import { INotebookOriginalCellModelFactory } from './notebookOriginalCellModelFactory.js';
-import { InlineDecoration, InlineDecorationType } from '../../../../../../editor/common/viewModel/inlineDecorations.js';
+import { DisposableStore, toDisposable } from "../../../../../../base/common/lifecycle.js";
+import { autorunWithStore, derived, observableFromEvent } from "../../../../../../base/common/observable.js";
+import { INotebookEditor } from "../../notebookBrowser.js";
+import { ThrottledDelayer } from "../../../../../../base/common/async.js";
+import { ICodeEditor, IViewZone } from "../../../../../../editor/browser/editorBrowser.js";
+import { IEditorWorkerService } from "../../../../../../editor/common/services/editorWorker.js";
+import { EditorOption } from "../../../../../../editor/common/config/editorOptions.js";
+import { themeColorFromId } from "../../../../../../base/common/themables.js";
+import { RenderOptions, LineSource, renderLines } from "../../../../../../editor/browser/widget/diffEditor/components/diffEditorViewZones/renderLines.js";
+import { diffAddDecoration, diffWholeLineAddDecoration, diffDeleteDecoration } from "../../../../../../editor/browser/widget/diffEditor/registrations.contribution.js";
+import { IDocumentDiff } from "../../../../../../editor/common/diff/documentDiffProvider.js";
+import {
+  ITextModel,
+  TrackedRangeStickiness,
+  MinimapPosition,
+  IModelDeltaDecoration,
+  OverviewRulerLane,
+} from "../../../../../../editor/common/model.js";
+import { ModelDecorationOptions } from "../../../../../../editor/common/model/textModel.js";
+import { Range } from "../../../../../../editor/common/core/range.js";
+import { NotebookCellTextModel } from "../../../common/model/notebookCellTextModel.js";
+import { DetailedLineRangeMapping } from "../../../../../../editor/common/diff/rangeMapping.js";
+import {
+  minimapGutterAddedBackground,
+  minimapGutterDeletedBackground,
+  minimapGutterModifiedBackground,
+  overviewRulerAddedForeground,
+  overviewRulerDeletedForeground,
+  overviewRulerModifiedForeground,
+} from "../../../../scm/common/quickDiff.js";
+import { INotebookOriginalCellModelFactory } from "./notebookOriginalCellModelFactory.js";
+import { InlineDecoration, InlineDecorationType } from "../../../../../../editor/common/viewModel/inlineDecorations.js";
 
 //TODO: allow client to set read-only - chateditsession should set read-only while making changes
 export class NotebookCellDiffDecorator extends DisposableStore {
@@ -41,7 +54,10 @@ export class NotebookCellDiffDecorator extends DisposableStore {
 	) {
 		super();
 
-		const onDidChangeVisibleRanges = observableFromEvent(notebookEditor.onDidChangeVisibleRanges, () => notebookEditor.visibleRanges);
+		const onDidChangeVisibleRanges = observableFromEvent(
+      notebookEditor.onDidChangeVisibleRanges,
+      () => notebookEditor.visibleRanges,
+    );
 		const editorObs = derived((r) => {
 			const visibleRanges = onDidChangeVisibleRanges.read(r);
 			const visibleCellHandles = visibleRanges.map(range => notebookEditor.getCellsInRange(range)).flat().map(c => c.handle);
@@ -101,11 +117,15 @@ export class NotebookCellDiffDecorator extends DisposableStore {
 		}
 		const version = model.getVersionId();
 		const diff = await this._editorWorkerService.computeDiff(
-			originalModel.uri,
-			model.uri,
-			{ computeMoves: true, ignoreTrimWhitespace: false, maxComputationTimeMs: Number.MAX_SAFE_INTEGER },
-			'advanced'
-		);
+      originalModel.uri,
+      model.uri,
+      {
+        computeMoves: true,
+        ignoreTrimWhitespace: false,
+        maxComputationTimeMs: Number.MAX_SAFE_INTEGER,
+      },
+      "advanced",
+    );
 
 
 		if (this.isDisposed) {
@@ -114,7 +134,12 @@ export class NotebookCellDiffDecorator extends DisposableStore {
 
 
 		if (diff && !diff.identical && this.modifiedCell.textModel && originalModel && model === editor.getModel() && editor.getModel()?.getVersionId() === version) {
-			this._updateWithDiff(editor, originalModel, diff, this.modifiedCell.textModel);
+			this._updateWithDiff(
+        editor,
+        originalModel,
+        diff,
+        this.modifiedCell.textModel,
+      );
 		} else {
 			this.perEditorDisposables.clear();
 		}
@@ -127,7 +152,14 @@ export class NotebookCellDiffDecorator extends DisposableStore {
 			if (!model) {
 				return;
 			}
-			this._originalModel = this.add(this.originalCellModelFactory.getOrCreate(model.uri, this.originalCell.getValue(), model.getLanguageId(), this.modifiedCell.cellKind)).object;
+			this._originalModel = this.add(
+        this.originalCellModelFactory.getOrCreate(
+          model.uri,
+          this.originalCell.getValue(),
+          model.getLanguageId(),
+          this.modifiedCell.cellKind,
+        ),
+      ).object;
 		}
 		return this._originalModel;
 	}
@@ -152,23 +184,34 @@ export class NotebookCellDiffDecorator extends DisposableStore {
 		this.diffForPreviouslyAppliedDecorators = diff;
 
 		const chatDiffAddDecoration = ModelDecorationOptions.createDynamic({
-			...diffAddDecoration,
-			stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges
-		});
-		const chatDiffWholeLineAddDecoration = ModelDecorationOptions.createDynamic({
-			...diffWholeLineAddDecoration,
-			stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
-		});
+      ...diffAddDecoration,
+      stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+    });
+		const chatDiffWholeLineAddDecoration = ModelDecorationOptions.createDynamic(
+      {
+        ...diffWholeLineAddDecoration,
+        stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+      },
+    );
 		const createOverviewDecoration = (overviewRulerColor: string, minimapColor: string) => {
 			return ModelDecorationOptions.createDynamic({
-				description: 'chat-editing-decoration',
-				overviewRuler: { color: themeColorFromId(overviewRulerColor), position: OverviewRulerLane.Left },
-				minimap: { color: themeColorFromId(minimapColor), position: MinimapPosition.Gutter },
-			});
+        description: "chat-editing-decoration",
+        overviewRuler: { color: themeColorFromId(overviewRulerColor), position: OverviewRulerLane.Left },
+        minimap: { color: themeColorFromId(minimapColor), position: MinimapPosition.Gutter },
+      });
 		};
-		const modifiedDecoration = createOverviewDecoration(overviewRulerModifiedForeground, minimapGutterModifiedBackground);
-		const addedDecoration = createOverviewDecoration(overviewRulerAddedForeground, minimapGutterAddedBackground);
-		const deletedDecoration = createOverviewDecoration(overviewRulerDeletedForeground, minimapGutterDeletedBackground);
+		const modifiedDecoration = createOverviewDecoration(
+      overviewRulerModifiedForeground,
+      minimapGutterModifiedBackground,
+    );
+		const addedDecoration = createOverviewDecoration(
+      overviewRulerAddedForeground,
+      minimapGutterAddedBackground,
+    );
+		const deletedDecoration = createOverviewDecoration(
+      overviewRulerDeletedForeground,
+      minimapGutterDeletedBackground,
+    );
 
 		editor.changeViewZones((viewZoneChangeAccessor) => {
 			for (const id of this._viewZones) {
@@ -196,13 +239,13 @@ export class NotebookCellDiffDecorator extends DisposableStore {
 					decorations.push(new InlineDecoration(
 						i.originalRange.delta(-(diffEntry.original.startLineNumber - 1)),
 						diffDeleteDecoration.className!,
-						InlineDecorationType.Regular
+						InlineDecorationType.Regular,
 					));
 
 					// If the original range is empty, the start line number is 1 and the new range spans the entire file, don't draw an Added decoration
 					if (!(i.originalRange.isEmpty() && i.originalRange.startLineNumber === 1 && i.modifiedRange.endLineNumber === editorLineCount) && !i.modifiedRange.isEmpty()) {
 						modifiedVisualDecorations.push({
-							range: i.modifiedRange, options: chatDiffAddDecoration
+							range: i.modifiedRange, options: chatDiffAddDecoration,
 						});
 					}
 				}
@@ -214,7 +257,7 @@ export class NotebookCellDiffDecorator extends DisposableStore {
 				if (!diffEntry.modified.isEmpty && !(isCreatedContent && (diffEntry.modified.endLineNumberExclusive - 1) === editorLineCount)) {
 					modifiedVisualDecorations.push({
 						range: diffEntry.modified.toInclusiveRange()!,
-						options: chatDiffWholeLineAddDecoration
+						options: chatDiffWholeLineAddDecoration,
 					});
 				}
 
@@ -222,24 +265,24 @@ export class NotebookCellDiffDecorator extends DisposableStore {
 					// insertion
 					modifiedVisualDecorations.push({
 						range: diffEntry.modified.toInclusiveRange()!,
-						options: addedDecoration
+						options: addedDecoration,
 					});
 				} else if (diffEntry.modified.isEmpty) {
 					// deletion
 					modifiedVisualDecorations.push({
 						range: new Range(diffEntry.modified.startLineNumber - 1, 1, diffEntry.modified.startLineNumber, 1),
-						options: deletedDecoration
+						options: deletedDecoration,
 					});
 				} else {
 					// modification
 					modifiedVisualDecorations.push({
 						range: diffEntry.modified.toInclusiveRange()!,
-						options: modifiedDecoration
+						options: modifiedDecoration,
 					});
 				}
 
-				const domNode = document.createElement('div');
-				domNode.className = 'chat-editing-original-zone view-lines line-delete monaco-mouse-cursor-text';
+				const domNode = document.createElement("div");
+				domNode.className = "chat-editing-original-zone view-lines line-delete monaco-mouse-cursor-text";
 				const result = renderLines(source, renderOptions, decorations, domNode);
 
 				if (!isCreatedContent) {
@@ -248,7 +291,7 @@ export class NotebookCellDiffDecorator extends DisposableStore {
 						afterLineNumber: diffEntry.modified.startLineNumber - 1,
 						heightInLines: result.heightInLines,
 						domNode,
-						ordinal: 50000 + 2 // more than https://github.com/microsoft/vscode/blob/bf52a5cfb2c75a7327c9adeaefbddc06d529dcad/src/vs/workbench/contrib/inlineChat/browser/inlineChatZoneWidget.ts#L42
+						ordinal: 50000 + 2, // more than https://github.com/microsoft/vscode/blob/bf52a5cfb2c75a7327c9adeaefbddc06d529dcad/src/vs/workbench/contrib/inlineChat/browser/inlineChatZoneWidget.ts#L42
 					};
 
 					this._viewZones.push(viewZoneChangeAccessor.addZone(viewZoneData));

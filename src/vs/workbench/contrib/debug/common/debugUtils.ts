@@ -3,27 +3,33 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { equalsIgnoreCase } from '../../../../base/common/strings.js';
-import { IDebuggerContribution, IDebugSession, IConfig, IConfigPresentation, State } from './debug.js';
-import { URI as uri } from '../../../../base/common/uri.js';
-import { isAbsolute } from '../../../../base/common/path.js';
-import { deepClone } from '../../../../base/common/objects.js';
-import { Schemas } from '../../../../base/common/network.js';
-import { IEditorService } from '../../../services/editor/common/editorService.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { ITextModel } from '../../../../editor/common/model.js';
-import { Position } from '../../../../editor/common/core/position.js';
-import { IRange, Range } from '../../../../editor/common/core/range.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { coalesce } from '../../../../base/common/arrays.js';
-import { ILanguageFeaturesService } from '../../../../editor/common/services/languageFeatures.js';
-import { OperatingSystem, OS } from '../../../../base/common/platform.js';
+import { equalsIgnoreCase } from "../../../../base/common/strings.js";
+import {
+  IDebuggerContribution,
+  IDebugSession,
+  IConfig,
+  IConfigPresentation,
+  State,
+} from "./debug.js";
+import { URI as uri } from "../../../../base/common/uri.js";
+import { isAbsolute } from "../../../../base/common/path.js";
+import { deepClone } from "../../../../base/common/objects.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+import { Position } from "../../../../editor/common/core/position.js";
+import { IRange, Range } from "../../../../editor/common/core/range.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { coalesce } from "../../../../base/common/arrays.js";
+import { ILanguageFeaturesService } from "../../../../editor/common/services/languageFeatures.js";
+import { OperatingSystem, OS } from "../../../../base/common/platform.js";
 
 const _formatPIIRegexp = /{([^}]+)}/g;
 
 export function formatPII(value: string, excludePII: boolean, args: { [key: string]: string } | undefined): string {
 	return value.replace(_formatPIIRegexp, function (match, group) {
-		if (excludePII && group.length > 0 && group[0] !== '_') {
+		if (excludePII && group.length > 0 && group[0] !== "_") {
 			return match;
 		}
 
@@ -40,7 +46,7 @@ export function formatPII(value: string, excludePII: boolean, args: { [key: stri
 export function filterExceptionsFromTelemetry<T extends { [key: string]: unknown }>(data: T): Partial<T> {
 	const output: Partial<T> = {};
 	for (const key of Object.keys(data) as (keyof T & string)[]) {
-		if (!key.startsWith('!')) {
+		if (!key.startsWith("!")) {
 			output[key] = data[key];
 		}
 	}
@@ -50,7 +56,9 @@ export function filterExceptionsFromTelemetry<T extends { [key: string]: unknown
 
 
 export function isSessionAttach(session: IDebugSession): boolean {
-	return session.configuration.request === 'attach' && !getExtensionHostDebugSession(session) && (!session.parentSession || isSessionAttach(session.parentSession));
+	return session.configuration.request === "attach" && !getExtensionHostDebugSession(
+    session,
+  ) && (!session.parentSession || isSessionAttach(session.parentSession));
 }
 
 /**
@@ -63,7 +71,7 @@ export function getExtensionHostDebugSession(session: IDebugSession): IDebugSess
 		return;
 	}
 
-	if (type === 'vslsShare') {
+	if (type === "vslsShare") {
 		type = (session.configuration as { adapterProxy?: { configuration?: { type?: string } } }).adapterProxy?.configuration?.type || type;
 	}
 
@@ -71,7 +79,9 @@ export function getExtensionHostDebugSession(session: IDebugSession): IDebugSess
 		return session;
 	}
 
-	return session.parentSession ? getExtensionHostDebugSession(session.parentSession) : undefined;
+	return session.parentSession ? getExtensionHostDebugSession(
+    session.parentSession,
+  ) : undefined;
 }
 
 // only a debugger contributions with a label, program, or runtime attribute is considered a "defining" or "main" debugger contribution
@@ -125,7 +135,10 @@ export function getExactExpressionStartAndEnd(lineContent: string, looseStart: n
 		}
 
 		if (subExpressionResult) {
-			matchingExpression = matchingExpression.substring(0, subExpression.lastIndex);
+			matchingExpression = matchingExpression.substring(
+        0,
+        subExpression.lastIndex,
+      );
 		}
 	}
 
@@ -136,7 +149,9 @@ export function getExactExpressionStartAndEnd(lineContent: string, looseStart: n
 
 export async function getEvaluatableExpressionAtPosition(languageFeaturesService: ILanguageFeaturesService, model: ITextModel, position: Position, token?: CancellationToken): Promise<{ range: IRange; matchingExpression: string } | null> {
 	if (languageFeaturesService.evaluatableExpressionProvider.has(model)) {
-		const supports = languageFeaturesService.evaluatableExpressionProvider.ordered(model);
+		const supports = languageFeaturesService.evaluatableExpressionProvider.ordered(
+      model,
+    );
 
 		const results = coalesce(await Promise.all(supports.map(async support => {
 			try {
@@ -152,21 +167,28 @@ export async function getEvaluatableExpressionAtPosition(languageFeaturesService
 
 			if (!matchingExpression) {
 				const lineContent = model.getLineContent(position.lineNumber);
-				matchingExpression = lineContent.substring(range.startColumn - 1, range.endColumn - 1);
+				matchingExpression = lineContent.substring(
+          range.startColumn - 1,
+          range.endColumn - 1,
+        );
 			}
 
 			return { range, matchingExpression };
 		}
 	} else { // old one-size-fits-all strategy
 		const lineContent = model.getLineContent(position.lineNumber);
-		const { start, end } = getExactExpressionStartAndEnd(lineContent, position.column, position.column);
+		const { start, end } = getExactExpressionStartAndEnd(
+      lineContent,
+      position.column,
+      position.column,
+    );
 
 		// use regex to extract the sub-expression #9821
 		const matchingExpression = lineContent.substring(start - 1, end);
 		return {
-			matchingExpression,
-			range: new Range(position.lineNumber, start, position.lineNumber, start + matchingExpression.length)
-		};
+      matchingExpression,
+      range: new Range(position.lineNumber, start, position.lineNumber, start + matchingExpression.length),
+    };
 	}
 
 	return null;
@@ -182,8 +204,8 @@ export function isUriString(s: string | undefined): boolean {
 }
 
 function stringToUri(source: PathContainer): string | undefined {
-	if (typeof source.path === 'string') {
-		if (typeof source.sourceReference === 'number' && source.sourceReference > 0) {
+	if (typeof source.path === "string") {
+		if (typeof source.sourceReference === "number" && source.sourceReference > 0) {
 			// if there is a source reference, don't touch path
 		} else {
 			if (isUriString(source.path)) {
@@ -202,7 +224,7 @@ function stringToUri(source: PathContainer): string | undefined {
 }
 
 function uriToString(source: PathContainer): string | undefined {
-	if (typeof source.path === 'object') {
+	if (typeof source.path === "object") {
 		const u = uri.revive(source.path);
 		if (u) {
 			if (u.scheme === Schemas.file) {
@@ -255,73 +277,108 @@ export function convertToVSCPaths(message: DebugProtocol.ProtocolMessage, toUri:
 function convertPaths(msg: DebugProtocol.ProtocolMessage, fixSourcePath: (toDA: boolean, source: PathContainer | undefined) => void): void {
 
 	switch (msg.type) {
-		case 'event': {
+		case "event": {
 			const event = <DebugProtocol.Event>msg;
 			switch (event.event) {
-				case 'output':
+				case "output":
 					fixSourcePath(false, (<DebugProtocol.OutputEvent>event).body.source);
 					break;
-				case 'loadedSource':
-					fixSourcePath(false, (<DebugProtocol.LoadedSourceEvent>event).body.source);
+				case "loadedSource":
+					fixSourcePath(
+            false,
+            (<DebugProtocol.LoadedSourceEvent>event).body.source,
+          );
 					break;
-				case 'breakpoint':
-					fixSourcePath(false, (<DebugProtocol.BreakpointEvent>event).body.breakpoint.source);
+				case "breakpoint":
+					fixSourcePath(
+            false,
+            (<DebugProtocol.BreakpointEvent>event).body.breakpoint.source,
+          );
 					break;
 				default:
 					break;
 			}
 			break;
 		}
-		case 'request': {
+		case "request": {
 			const request = <DebugProtocol.Request>msg;
 			switch (request.command) {
-				case 'setBreakpoints':
-					fixSourcePath(true, (<DebugProtocol.SetBreakpointsArguments>request.arguments).source);
+				case "setBreakpoints":
+					fixSourcePath(
+            true,
+            (<DebugProtocol.SetBreakpointsArguments>request.arguments).source,
+          );
 					break;
-				case 'breakpointLocations':
-					fixSourcePath(true, (<DebugProtocol.BreakpointLocationsArguments>request.arguments).source);
+				case "breakpointLocations":
+					fixSourcePath(
+            true,
+            (<DebugProtocol.BreakpointLocationsArguments>request.arguments).source,
+          );
 					break;
-				case 'source':
-					fixSourcePath(true, (<DebugProtocol.SourceArguments>request.arguments).source);
+				case "source":
+					fixSourcePath(
+            true,
+            (<DebugProtocol.SourceArguments>request.arguments).source,
+          );
 					break;
-				case 'gotoTargets':
-					fixSourcePath(true, (<DebugProtocol.GotoTargetsArguments>request.arguments).source);
+				case "gotoTargets":
+					fixSourcePath(
+            true,
+            (<DebugProtocol.GotoTargetsArguments>request.arguments).source,
+          );
 					break;
-				case 'launchVSCode':
-					request.arguments.args.forEach((arg: PathContainer | undefined) => fixSourcePath(false, arg));
+				case "launchVSCode":
+					request.arguments.args.forEach(
+            (arg: PathContainer | undefined) => fixSourcePath(false, arg),
+          );
 					break;
 				default:
 					break;
 			}
 			break;
 		}
-		case 'response': {
+		case "response": {
 			const response = <DebugProtocol.Response>msg;
 			if (response.success && response.body) {
 				switch (response.command) {
-					case 'stackTrace':
-						(<DebugProtocol.StackTraceResponse>response).body.stackFrames.forEach(frame => fixSourcePath(false, frame.source));
+					case "stackTrace":
+						(<DebugProtocol.StackTraceResponse>response).body.stackFrames.forEach(
+              frame => fixSourcePath(false, frame.source),
+            );
 						break;
-					case 'loadedSources':
-						(<DebugProtocol.LoadedSourcesResponse>response).body.sources.forEach(source => fixSourcePath(false, source));
+					case "loadedSources":
+						(<DebugProtocol.LoadedSourcesResponse>response).body.sources.forEach(
+              source => fixSourcePath(false, source),
+            );
 						break;
-					case 'scopes':
-						(<DebugProtocol.ScopesResponse>response).body.scopes.forEach(scope => fixSourcePath(false, scope.source));
+					case "scopes":
+						(<DebugProtocol.ScopesResponse>response).body.scopes.forEach(
+              scope => fixSourcePath(false, scope.source),
+            );
 						break;
-					case 'setFunctionBreakpoints':
-						(<DebugProtocol.SetFunctionBreakpointsResponse>response).body.breakpoints.forEach(bp => fixSourcePath(false, bp.source));
+					case "setFunctionBreakpoints":
+						(<DebugProtocol.SetFunctionBreakpointsResponse>response).body.breakpoints.forEach(
+              bp => fixSourcePath(false, bp.source),
+            );
 						break;
-					case 'setBreakpoints':
-						(<DebugProtocol.SetBreakpointsResponse>response).body.breakpoints.forEach(bp => fixSourcePath(false, bp.source));
+					case "setBreakpoints":
+						(<DebugProtocol.SetBreakpointsResponse>response).body.breakpoints.forEach(
+              bp => fixSourcePath(false, bp.source),
+            );
 						break;
-					case 'disassemble':
+					case "disassemble":
 						{
 							const di = <DebugProtocol.DisassembleResponse>response;
-							di.body?.instructions.forEach(di => fixSourcePath(false, di.location));
+							di.body?.instructions.forEach(
+                di => fixSourcePath(false, di.location),
+              );
 						}
 						break;
-					case 'locations':
-						fixSourcePath(false, (<DebugProtocol.LocationsResponse>response).body?.source);
+					case "locations":
+						fixSourcePath(
+              false,
+              (<DebugProtocol.LocationsResponse>response).body?.source,
+            );
 						break;
 					default:
 						break;
@@ -360,14 +417,14 @@ export function getVisibleAndSorted<T extends { presentation?: IConfigPresentati
 }
 
 function compareOrders(first: number | undefined, second: number | undefined): number {
-	if (typeof first !== 'number') {
-		if (typeof second !== 'number') {
+	if (typeof first !== "number") {
+		if (typeof second !== "number") {
 			return 0;
 		}
 
 		return 1;
 	}
-	if (typeof second !== 'number') {
+	if (typeof second !== "number") {
 		return -1;
 	}
 
@@ -375,14 +432,20 @@ function compareOrders(first: number | undefined, second: number | undefined): n
 }
 
 export async function saveAllBeforeDebugStart(configurationService: IConfigurationService, editorService: IEditorService): Promise<void> {
-	const saveBeforeStartConfig: string = configurationService.getValue('debug.saveBeforeStart', { overrideIdentifier: editorService.activeTextEditorLanguageId });
-	if (saveBeforeStartConfig !== 'none') {
+	const saveBeforeStartConfig: string = configurationService.getValue(
+    "debug.saveBeforeStart",
+    { overrideIdentifier: editorService.activeTextEditorLanguageId },
+  );
+	if (saveBeforeStartConfig !== "none") {
 		await editorService.saveAll();
-		if (saveBeforeStartConfig === 'allEditorsInActiveGroup') {
+		if (saveBeforeStartConfig === "allEditorsInActiveGroup") {
 			const activeEditor = editorService.activeEditorPane;
 			if (activeEditor && activeEditor.input.resource?.scheme === Schemas.untitled) {
 				// Make sure to save the active editor in case it is in untitled file it wont be saved as part of saveAll #111850
-				await editorService.save({ editor: activeEditor.input, groupId: activeEditor.group.id });
+				await editorService.save({
+          editor: activeEditor.input,
+          groupId: activeEditor.group.id,
+        });
 			}
 		}
 	}
@@ -402,7 +465,9 @@ export function resolveChildSession(session: IDebugSession, allSessions: readonl
 	const childSessions = allSessions.filter(s => s.parentSession === session);
 	if (childSessions.length > 0) {
 		// Prefer stopped child session if available #112595
-		const stoppedChildSession = childSessions.find(s => s.state === State.Stopped);
+		const stoppedChildSession = childSessions.find(
+      s => s.state === State.Stopped,
+    );
 		if (stoppedChildSession) {
 			return stoppedChildSession;
 		} else {
@@ -414,7 +479,7 @@ export function resolveChildSession(session: IDebugSession, allSessions: readonl
 	return session;
 }
 
-type IPlatformSpecificConfig = NonNullable<IConfig['windows']>;
+type IPlatformSpecificConfig = NonNullable<IConfig["windows"]>;
 
 function getPlatformSpecificConfig(config: IConfig, os: OperatingSystem): IPlatformSpecificConfig | undefined {
 	switch (os) {
@@ -434,10 +499,10 @@ export function getEffectiveConfigForPlatform(config: IConfig, os: OperatingSyst
 	}
 
 	return {
-		...config,
-		...platformConfig,
-		presentation: platformConfig.presentation ? { ...config.presentation, ...platformConfig.presentation } : config.presentation,
-	};
+    ...config,
+    ...platformConfig,
+    presentation: platformConfig.presentation ? { ...config.presentation, ...platformConfig.presentation } : config.presentation,
+  };
 }
 
 export function getEffectivePresentationForConfig(config: IConfig, os: OperatingSystem = OS): IConfigPresentation | undefined {

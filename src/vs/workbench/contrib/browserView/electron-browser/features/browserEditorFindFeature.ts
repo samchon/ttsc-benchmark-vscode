@@ -3,30 +3,49 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize, localize2 } from '../../../../../nls.js';
-import { $, DisposableResizeObserver, getWindow } from '../../../../../base/browser/dom.js';
-import { IContextKey, IContextKeyService, ContextKeyExpr, RawContextKey } from '../../../../../platform/contextkey/common/contextkey.js';
-import { Action2, registerAction2, MenuId } from '../../../../../platform/actions/common/actions.js';
-import { IInstantiationService, ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
-import { KeybindingWeight } from '../../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { KeyMod, KeyCode } from '../../../../../base/common/keyCodes.js';
-import { IEditorService } from '../../../../services/editor/common/editorService.js';
-import { DisposableStore, toDisposable } from '../../../../../base/common/lifecycle.js';
-import { Lazy } from '../../../../../base/common/lazy.js';
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { IBrowserViewModel } from '../../common/browserView.js';
-import { BrowserViewCommandId } from '../../../../../platform/browserView/common/browserView.js';
-import { SimpleFindWidget } from '../../../codeEditor/browser/find/simpleFindWidget.js';
-import { IContextViewService } from '../../../../../platform/contextview/browser/contextView.js';
-import { IHoverService } from '../../../../../platform/hover/browser/hover.js';
-import { IKeybindingService } from '../../../../../platform/keybinding/common/keybinding.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { IAccessibilityService } from '../../../../../platform/accessibility/common/accessibility.js';
-import { BrowserEditor, BrowserEditorContribution, CONTEXT_BROWSER_HAS_ERROR, CONTEXT_BROWSER_HAS_URL } from '../browserEditor.js';
-import { BROWSER_EDITOR_ACTIVE, BrowserActionCategory, BrowserActionGroup } from '../browserViewActions.js';
+import { localize, localize2 } from "../../../../../nls.js";
+import { $, DisposableResizeObserver, getWindow } from "../../../../../base/browser/dom.js";
+import { IContextKey, IContextKeyService, ContextKeyExpr, RawContextKey } from "../../../../../platform/contextkey/common/contextkey.js";
+import { Action2, registerAction2, MenuId } from "../../../../../platform/actions/common/actions.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingWeight } from "../../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { KeyMod, KeyCode } from "../../../../../base/common/keyCodes.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+import { DisposableStore, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { Lazy } from "../../../../../base/common/lazy.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { IBrowserViewModel } from "../../common/browserView.js";
+import { BrowserViewCommandId } from "../../../../../platform/browserView/common/browserView.js";
+import { SimpleFindWidget } from "../../../codeEditor/browser/find/simpleFindWidget.js";
+import { IContextViewService } from "../../../../../platform/contextview/browser/contextView.js";
+import { IHoverService } from "../../../../../platform/hover/browser/hover.js";
+import { IKeybindingService } from "../../../../../platform/keybinding/common/keybinding.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IAccessibilityService } from "../../../../../platform/accessibility/common/accessibility.js";
+import {
+  BrowserEditor,
+  BrowserEditorContribution,
+  CONTEXT_BROWSER_HAS_ERROR,
+  CONTEXT_BROWSER_HAS_URL,
+} from "../browserEditor.js";
+import { BROWSER_EDITOR_ACTIVE, BrowserActionCategory, BrowserActionGroup } from "../browserViewActions.js";
 
-const CONTEXT_BROWSER_FIND_WIDGET_VISIBLE = new RawContextKey<boolean>('browserFindWidgetVisible', false, localize('browser.findWidgetVisible', "Whether the browser find widget is visible"));
-const CONTEXT_BROWSER_FIND_WIDGET_FOCUSED = new RawContextKey<boolean>('browserFindWidgetFocused', false, localize('browser.findWidgetFocused', "Whether the browser find widget is focused"));
+const CONTEXT_BROWSER_FIND_WIDGET_VISIBLE = new RawContextKey<boolean>(
+  "browserFindWidgetVisible",
+  false,
+  localize(
+    "browser.findWidgetVisible",
+    "Whether the browser find widget is visible",
+  ),
+);
+const CONTEXT_BROWSER_FIND_WIDGET_FOCUSED = new RawContextKey<boolean>(
+  "browserFindWidgetFocused",
+  false,
+  localize(
+    "browser.findWidgetFocused",
+    "Whether the browser find widget is focused",
+  ),
+);
 
 /**
  * Find widget for the integrated browser view.
@@ -51,27 +70,39 @@ class BrowserFindWidget extends SimpleFindWidget {
 		@IHoverService hoverService: IHoverService,
 		@IKeybindingService keybindingService: IKeybindingService,
 		@IConfigurationService configurationService: IConfigurationService,
-		@IAccessibilityService accessibilityService: IAccessibilityService
+		@IAccessibilityService accessibilityService: IAccessibilityService,
 	) {
-		super({
-			showCommonFindToggles: true,
-			checkImeCompletionState: true,
-			showResultCount: true,
-			enableSash: true,
-			initialWidth: 350,
-			previousMatchActionId: BrowserViewCommandId.FindPrevious,
-			nextMatchActionId: BrowserViewCommandId.FindNext,
-			closeWidgetActionId: BrowserViewCommandId.HideFind
-		}, contextViewService, contextKeyService, hoverService, keybindingService, configurationService, accessibilityService);
+		super(
+      {
+        showCommonFindToggles: true,
+        checkImeCompletionState: true,
+        showResultCount: true,
+        enableSash: true,
+        initialWidth: 350,
+        previousMatchActionId: BrowserViewCommandId.FindPrevious,
+        nextMatchActionId: BrowserViewCommandId.FindNext,
+        closeWidgetActionId: BrowserViewCommandId.HideFind,
+      },
+      contextViewService,
+      contextKeyService,
+      hoverService,
+      keybindingService,
+      configurationService,
+      accessibilityService,
+    );
 
-		this._findWidgetVisible = CONTEXT_BROWSER_FIND_WIDGET_VISIBLE.bindTo(contextKeyService);
-		this._findWidgetFocused = CONTEXT_BROWSER_FIND_WIDGET_FOCUSED.bindTo(contextKeyService);
+		this._findWidgetVisible = CONTEXT_BROWSER_FIND_WIDGET_VISIBLE.bindTo(
+      contextKeyService,
+    );
+		this._findWidgetFocused = CONTEXT_BROWSER_FIND_WIDGET_FOCUSED.bindTo(
+      contextKeyService,
+    );
 
 		const domNode = this.getDomNode();
 		container.appendChild(domNode);
 
 		let lastHeight = domNode.offsetHeight;
-		const resizeObserver = this._register(new DisposableResizeObserver('BrowserEditorFindFeature.heightChange', () => {
+		const resizeObserver = this._register(new DisposableResizeObserver("BrowserEditorFindFeature.heightChange", () => {
 			const newHeight = domNode.offsetHeight;
 			if (newHeight !== lastHeight) {
 				lastHeight = newHeight;
@@ -95,16 +126,18 @@ class BrowserFindWidget extends SimpleFindWidget {
 			this._modelDisposables.add(model.onDidFindInPage(result => {
 				this._lastFindResult = {
 					resultIndex: result.activeMatchOrdinal - 1, // Convert to 0-based index
-					resultCount: result.matches
+					resultCount: result.matches,
 				};
 				this._hasFoundMatch = result.matches > 0;
 				this.updateButtons(this._hasFoundMatch);
 				this.updateResultCount();
 			}));
 
-			this._modelDisposables.add(model.onWillDispose(() => {
-				this.setModel(undefined);
-			}));
+			this._modelDisposables.add(
+        model.onWillDispose(() => {
+          this.setModel(undefined);
+        }),
+      );
 		}
 	}
 
@@ -137,10 +170,10 @@ class BrowserFindWidget extends SimpleFindWidget {
 		const value = this.inputValue;
 		if (value && this._model) {
 			this._model.findInPage(value, {
-				forward: !previous,
-				recompute: false,
-				matchCase: this._getCaseSensitiveValue()
-			});
+        forward: !previous,
+        recompute: false,
+        matchCase: this._getCaseSensitiveValue(),
+      });
 		}
 	}
 
@@ -148,10 +181,10 @@ class BrowserFindWidget extends SimpleFindWidget {
 		const value = this.inputValue;
 		if (value && this._model) {
 			this._model.findInPage(value, {
-				forward: true,
-				recompute: true,
-				matchCase: this._getCaseSensitiveValue()
-			});
+        forward: true,
+        recompute: true,
+        matchCase: this._getCaseSensitiveValue(),
+      });
 		}
 	}
 
@@ -211,12 +244,12 @@ export class BrowserEditorFindContribution extends BrowserEditorContribution {
 	) {
 		super(editor);
 
-		this._findWidgetContainer = $('.browser-find-widget-wrapper');
+		this._findWidgetContainer = $(".browser-find-widget-wrapper");
 
 		this._findWidget = new Lazy(() => {
 			const findWidget = this.instantiationService.createInstance(
 				BrowserFindWidget,
-				this._findWidgetContainer
+				this._findWidgetContainer,
 			);
 			if (editor.model) {
 				findWidget.setModel(editor.model);
@@ -254,7 +287,9 @@ export class BrowserEditorFindContribution extends BrowserEditorContribution {
 	 */
 	async showFind(): Promise<void> {
 		const selectedText = (await this.editor.model?.getSelectedText())?.trim();
-		const textToReveal = selectedText && !/[\r\n]/.test(selectedText) ? selectedText : undefined;
+		const textToReveal = selectedText && !/[\r\n]/.test(
+      selectedText,
+    ) ? selectedText : undefined;
 		this._findWidget.value.reveal(textToReveal);
 		this._findWidget.value.layout(this._findWidgetContainer.clientWidth);
 	}
@@ -291,7 +326,7 @@ class ShowBrowserFindAction extends Action2 {
 	constructor() {
 		super({
 			id: ShowBrowserFindAction.ID,
-			title: localize2('browser.showFindAction', 'Find in Page'),
+			title: localize2("browser.showFindAction", "Find in Page"),
 			category: BrowserActionCategory,
 			f1: true,
 			precondition: ContextKeyExpr.and(BROWSER_EDITOR_ACTIVE, CONTEXT_BROWSER_HAS_URL, CONTEXT_BROWSER_HAS_ERROR.negate()),
@@ -302,12 +337,14 @@ class ShowBrowserFindAction extends Action2 {
 			},
 			keybinding: {
 				weight: KeybindingWeight.EditorContrib,
-				primary: KeyMod.CtrlCmd | KeyCode.KeyF
-			}
+				primary: KeyMod.CtrlCmd | KeyCode.KeyF,
+			},
 		});
 	}
 
-	run(accessor: ServicesAccessor, browserEditor = accessor.get(IEditorService).activeEditorPane): void {
+	run(accessor: ServicesAccessor, browserEditor = accessor.get(
+    IEditorService,
+  ).activeEditorPane): void {
 		if (browserEditor instanceof BrowserEditor) {
 			void browserEditor.getContribution(BrowserEditorFindContribution)?.showFind();
 		}
@@ -320,14 +357,14 @@ class HideBrowserFindAction extends Action2 {
 	constructor() {
 		super({
 			id: HideBrowserFindAction.ID,
-			title: localize2('browser.hideFindAction', 'Close Find Widget'),
+			title: localize2("browser.hideFindAction", "Close Find Widget"),
 			category: BrowserActionCategory,
 			f1: false,
 			precondition: ContextKeyExpr.and(BROWSER_EDITOR_ACTIVE, CONTEXT_BROWSER_FIND_WIDGET_VISIBLE),
 			keybinding: {
 				weight: KeybindingWeight.EditorContrib + 5,
-				primary: KeyCode.Escape
-			}
+				primary: KeyCode.Escape,
+			},
 		});
 	}
 
@@ -345,20 +382,20 @@ class BrowserFindNextAction extends Action2 {
 	constructor() {
 		super({
 			id: BrowserFindNextAction.ID,
-			title: localize2('browser.findNextAction', 'Find Next'),
+			title: localize2("browser.findNextAction", "Find Next"),
 			category: BrowserActionCategory,
 			f1: false,
 			precondition: BROWSER_EDITOR_ACTIVE,
 			keybinding: [{
 				when: CONTEXT_BROWSER_FIND_WIDGET_FOCUSED,
 				weight: KeybindingWeight.EditorContrib,
-				primary: KeyCode.Enter
+				primary: KeyCode.Enter,
 			}, {
 				when: CONTEXT_BROWSER_FIND_WIDGET_VISIBLE,
 				weight: KeybindingWeight.EditorContrib,
 				primary: KeyCode.F3,
-				mac: { primary: KeyMod.CtrlCmd | KeyCode.KeyG }
-			}]
+				mac: { primary: KeyMod.CtrlCmd | KeyCode.KeyG },
+			}],
 		});
 	}
 
@@ -376,20 +413,20 @@ class BrowserFindPreviousAction extends Action2 {
 	constructor() {
 		super({
 			id: BrowserFindPreviousAction.ID,
-			title: localize2('browser.findPreviousAction', 'Find Previous'),
+			title: localize2("browser.findPreviousAction", "Find Previous"),
 			category: BrowserActionCategory,
 			f1: false,
 			precondition: BROWSER_EDITOR_ACTIVE,
 			keybinding: [{
 				when: CONTEXT_BROWSER_FIND_WIDGET_FOCUSED,
 				weight: KeybindingWeight.EditorContrib,
-				primary: KeyMod.Shift | KeyCode.Enter
+				primary: KeyMod.Shift | KeyCode.Enter,
 			}, {
 				when: CONTEXT_BROWSER_FIND_WIDGET_VISIBLE,
 				weight: KeybindingWeight.EditorContrib,
 				primary: KeyMod.Shift | KeyCode.F3,
-				mac: { primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyG }
-			}]
+				mac: { primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyG },
+			}],
 		});
 	}
 

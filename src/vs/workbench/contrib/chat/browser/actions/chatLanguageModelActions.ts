@@ -3,47 +3,51 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Action2, MenuId, registerAction2 } from '../../../../../platform/actions/common/actions.js';
-import { ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IQuickInputService, IQuickPickItem, QuickPickInput } from '../../../../../platform/quickinput/common/quickInput.js';
-import { ILanguageModelsService } from '../../common/languageModels.js';
-import { IAuthenticationAccessService } from '../../../../services/authentication/browser/authenticationAccessService.js';
-import { localize, localize2 } from '../../../../../nls.js';
-import { AllowedExtension, INTERNAL_AUTH_PROVIDER_PREFIX } from '../../../../services/authentication/common/authentication.js';
-import { IDialogService } from '../../../../../platform/dialogs/common/dialogs.js';
-import { CHAT_CATEGORY } from './chatActions.js';
-import { IExtensionService } from '../../../../services/extensions/common/extensions.js';
-import { IExtensionsWorkbenchService } from '../../../extensions/common/extensions.js';
-import { IProductService } from '../../../../../platform/product/common/productService.js';
-import { Codicon } from '../../../../../base/common/codicons.js';
-import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { ChatContextKeys } from '../../common/actions/chatContextKeys.js';
-import { ILanguageModelsProviderGroup } from '../../common/languageModelsConfiguration.js';
+import { Action2, MenuId, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IQuickInputService, IQuickPickItem, QuickPickInput } from "../../../../../platform/quickinput/common/quickInput.js";
+import { ILanguageModelsService } from "../../common/languageModels.js";
+import { IAuthenticationAccessService } from "../../../../services/authentication/browser/authenticationAccessService.js";
+import { localize, localize2 } from "../../../../../nls.js";
+import { AllowedExtension, INTERNAL_AUTH_PROVIDER_PREFIX } from "../../../../services/authentication/common/authentication.js";
+import { IDialogService } from "../../../../../platform/dialogs/common/dialogs.js";
+import { CHAT_CATEGORY } from "./chatActions.js";
+import { IExtensionService } from "../../../../services/extensions/common/extensions.js";
+import { IExtensionsWorkbenchService } from "../../../extensions/common/extensions.js";
+import { IProductService } from "../../../../../platform/product/common/productService.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { ChatContextKeys } from "../../common/actions/chatContextKeys.js";
+import { ILanguageModelsProviderGroup } from "../../common/languageModelsConfiguration.js";
 
 class ManageLanguageModelAuthenticationAction extends Action2 {
-	static readonly ID = 'workbench.action.chat.manageLanguageModelAuthentication';
+	static readonly ID = "workbench.action.chat.manageLanguageModelAuthentication";
 
 	constructor() {
 		super({
 			id: ManageLanguageModelAuthenticationAction.ID,
-			title: localize2('manageLanguageModelAuthentication', 'Manage Language Model Access...'),
+			title: localize2("manageLanguageModelAuthentication", "Manage Language Model Access..."),
 			category: CHAT_CATEGORY,
 			precondition: ChatContextKeys.enabled,
 			menu: [{
 				id: MenuId.AccountsContext,
 				order: 100,
 			}],
-			f1: true
+			f1: true,
 		});
 	}
 
 	async run(accessor: ServicesAccessor): Promise<void> {
 		const quickInputService = accessor.get(IQuickInputService);
 		const languageModelsService = accessor.get(ILanguageModelsService);
-		const authenticationAccessService = accessor.get(IAuthenticationAccessService);
+		const authenticationAccessService = accessor.get(
+      IAuthenticationAccessService,
+    );
 		const dialogService = accessor.get(IDialogService);
 		const extensionService = accessor.get(IExtensionService);
-		const extensionsWorkbenchService = accessor.get(IExtensionsWorkbenchService);
+		const extensionsWorkbenchService = accessor.get(
+      IExtensionsWorkbenchService,
+    );
 		const productService = accessor.get(IProductService);
 
 		// Get all registered language models
@@ -68,14 +72,16 @@ class ManageLanguageModelAuthenticationAction extends Action2 {
 			try {
 				// Use providerLabel as the providerId and accountLabel (or default)
 				const providerId = INTERNAL_AUTH_PROVIDER_PREFIX + ownerId;
-				const accountLabel = model.auth.accountLabel || 'Language Models';
+				const accountLabel = model.auth.accountLabel || "Language Models";
 				ownerToAccountLabel.set(ownerId, accountLabel);
 				const allowedExtensions = authenticationAccessService.readAllowedExtensions(
 					providerId,
-					accountLabel
+					accountLabel,
 				).filter(ext => !ext.trusted); // Filter out trusted extensions because those should not be modified
 
-				if (productService.trustedExtensionAuthAccess && !Array.isArray(productService.trustedExtensionAuthAccess)) {
+				if (productService.trustedExtensionAuthAccess && !Array.isArray(
+          productService.trustedExtensionAuthAccess,
+        )) {
 					const trustedExtensions = productService.trustedExtensionAuthAccess[providerId];
 					// If the provider is trusted, add all trusted extensions to the allowed list
 					for (const ext of trustedExtensions) {
@@ -88,11 +94,11 @@ class ManageLanguageModelAuthenticationAction extends Action2 {
 							continue; // Skip if the extension is not found
 						}
 						allowedExtensions.push({
-							id: ext,
-							name: extension.displayName || extension.name,
-							allowed: true, // Assume trusted extensions are allowed by default
-							trusted: true // Mark as trusted
-						});
+              id: ext,
+              name: extension.displayName || extension.name,
+              allowed: true,
+              trusted: true,
+            });
 					}
 				}
 
@@ -116,10 +122,10 @@ class ManageLanguageModelAuthenticationAction extends Action2 {
 
 		if (extensionAuth.size === 0) {
 			dialogService.prompt({
-				type: 'info',
-				message: localize('noLanguageModels', 'No language models requiring authentication found.'),
-				detail: localize('noLanguageModelsDetail', 'There are currently no language models that require authentication.')
-			});
+        type: "info",
+        message: localize("noLanguageModels", "No language models requiring authentication found."),
+        detail: localize("noLanguageModelsDetail", "There are currently no language models that require authentication."),
+      });
 			return;
 		}
 
@@ -133,13 +139,13 @@ class ManageLanguageModelAuthenticationAction extends Action2 {
 			}
 			// Add separator for the owning extension
 			items.push({
-				type: 'separator',
+				type: "separator",
 				id: ownerId,
-				label: localize('extensionOwner', '{0}', extension.displayName || extension.name),
+				label: localize("extensionOwner", "{0}", extension.displayName || extension.name),
 				buttons: [{
 					iconClass: ThemeIcon.asClassName(Codicon.info),
-					tooltip: localize('openExtension', 'Open Extension'),
-				}]
+					tooltip: localize("openExtension", "Open Extension"),
+				}],
 			});
 
 			// Add allowed extensions as checkboxes (visual representation)
@@ -148,9 +154,9 @@ class ManageLanguageModelAuthenticationAction extends Action2 {
 				for (const allowedExt of allowedExtensions) {
 					if (allowedExt.trusted && !addedTrustedSeparator) {
 						items.push({
-							type: 'separator',
-							label: localize('trustedExtension', 'Trusted by Microsoft'),
-						});
+              type: "separator",
+              label: localize("trustedExtension", "Trusted by Microsoft"),
+            });
 						addedTrustedSeparator = true;
 					}
 					items.push({
@@ -162,16 +168,16 @@ class ManageLanguageModelAuthenticationAction extends Action2 {
 						disabled: allowedExt.trusted, // Don't allow toggling trusted extensions
 						buttons: [{
 							iconClass: ThemeIcon.asClassName(Codicon.info),
-							tooltip: localize('openExtension', 'Open Extension'),
-						}]
+							tooltip: localize("openExtension", "Open Extension"),
+						}],
 					});
 				}
 			} else {
 				items.push({
-					label: localize('noAllowedExtensions', 'No extensions have access'),
-					description: localize('noAccessDescription', 'No extensions are currently allowed to use models from {0}', ownerId),
-					pickable: false
-				});
+          label: localize("noAllowedExtensions", "No extensions have access"),
+          description: localize("noAccessDescription", "No extensions are currently allowed to use models from {0}", ownerId),
+          pickable: false,
+        });
 			}
 		}
 
@@ -197,9 +203,9 @@ class ManageLanguageModelAuthenticationAction extends Action2 {
 						void extensionsWorkbenchService.open(extId);
 					}
 				},
-				title: localize('languageModelAuthTitle', 'Manage Language Model Access'),
-				placeHolder: localize('languageModelAuthPlaceholder', 'Choose which extensions can access language models'),
-			}
+				title: localize("languageModelAuthTitle", "Manage Language Model Access"),
+				placeHolder: localize("languageModelAuthPlaceholder", "Choose which extensions can access language models"),
+			},
 		);
 		if (!result) {
 			return;
@@ -219,10 +225,10 @@ class ManageLanguageModelAuthenticationAction extends Action2 {
 			}
 
 			authenticationAccessService.updateAllowedExtensions(
-				INTERNAL_AUTH_PROVIDER_PREFIX + ownerId,
-				ownerToAccountLabel.get(ownerId) || 'Language Models',
-				allowedExtensions
-			);
+        INTERNAL_AUTH_PROVIDER_PREFIX + ownerId,
+        ownerToAccountLabel.get(ownerId) || "Language Models",
+        allowedExtensions,
+      );
 		}
 
 	}
@@ -231,39 +237,45 @@ class ManageLanguageModelAuthenticationAction extends Action2 {
 class ConfigureLanguageModelsGroupAction extends Action2 {
 	constructor() {
 		super({
-			id: 'lm.addLanguageModelsProviderGroup',
-			title: localize('lm.configureGroup', 'Add Language Models Group'),
-		});
+      id: "lm.addLanguageModelsProviderGroup",
+      title: localize("lm.configureGroup", "Add Language Models Group"),
+    });
 	}
 
 	async run(accessor: ServicesAccessor, languageModelsProviderGroup: ILanguageModelsProviderGroup): Promise<void> {
 		const languageModelsService = accessor.get(ILanguageModelsService);
 
 		if (!languageModelsProviderGroup) {
-			throw new Error('Language model group is required');
+			throw new Error("Language model group is required");
 		}
 
 		const { name, vendor, ...configuration } = languageModelsProviderGroup;
-		await languageModelsService.addLanguageModelsProviderGroup(name, vendor, configuration);
+		await languageModelsService.addLanguageModelsProviderGroup(
+      name,
+      vendor,
+      configuration,
+    );
 	}
 }
 
 class MigrateLanguageModelsGroupAction extends Action2 {
 	constructor() {
 		super({
-			id: 'lm.migrateLanguageModelsProviderGroup',
-			title: localize('lm.migrateGroup', 'Migrate Language Models Group'),
-		});
+      id: "lm.migrateLanguageModelsProviderGroup",
+      title: localize("lm.migrateGroup", "Migrate Language Models Group"),
+    });
 	}
 
 	async run(accessor: ServicesAccessor, languageModelsProviderGroup: ILanguageModelsProviderGroup): Promise<void> {
 		const languageModelsService = accessor.get(ILanguageModelsService);
 
 		if (!languageModelsProviderGroup) {
-			throw new Error('Language model group is required');
+			throw new Error("Language model group is required");
 		}
 
-		await languageModelsService.migrateLanguageModelsProviderGroup(languageModelsProviderGroup);
+		await languageModelsService.migrateLanguageModelsProviderGroup(
+      languageModelsProviderGroup,
+    );
 	}
 }
 

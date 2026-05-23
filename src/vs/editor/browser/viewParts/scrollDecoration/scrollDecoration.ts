@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './scrollDecoration.css';
-import { FastDomNode, createFastDomNode } from '../../../../base/browser/fastDomNode.js';
-import { ViewPart } from '../../view/viewPart.js';
-import { RenderingContext, RestrictedRenderingContext } from '../../view/renderingContext.js';
-import { ViewContext } from '../../../common/viewModel/viewContext.js';
-import * as viewEvents from '../../../common/viewEvents.js';
-import { EditorOption, RenderMinimap } from '../../../common/config/editorOptions.js';
+import "./scrollDecoration.css";
+import { FastDomNode, createFastDomNode } from "../../../../base/browser/fastDomNode.js";
+import { ViewPart } from "../../view/viewPart.js";
+import { RenderingContext, RestrictedRenderingContext } from "../../view/renderingContext.js";
+import { ViewContext } from "../../../common/viewModel/viewContext.js";
+import * as viewEvents from "../../../common/viewEvents.js";
+import { EditorOption, RenderMinimap } from "../../../common/config/editorOptions.js";
 
 
 export class ScrollDecorationViewPart extends ViewPart {
@@ -30,9 +30,9 @@ export class ScrollDecorationViewPart extends ViewPart {
 		const options = this._context.configuration.options;
 		const scrollbar = options.get(EditorOption.scrollbar);
 		this._useShadows = scrollbar.useShadows;
-		this._domNode = createFastDomNode(document.createElement('div'));
-		this._domNode.setAttribute('role', 'presentation');
-		this._domNode.setAttribute('aria-hidden', 'true');
+		this._domNode = createFastDomNode(document.createElement("div"));
+		this._domNode.setAttribute("role", "presentation");
+		this._domNode.setAttribute("aria-hidden", "true");
 	}
 
 
@@ -83,6 +83,6 @@ export class ScrollDecorationViewPart extends ViewPart {
 
 	public render(ctx: RestrictedRenderingContext): void {
 		this._domNode.setWidth(this._width);
-		this._domNode.setClassName(this._shouldShow ? 'scroll-decoration' : '');
+		this._domNode.setClassName(this._shouldShow ? "scroll-decoration" : "");
 	}
 }

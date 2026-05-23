@@ -3,29 +3,36 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as nls from '../../../../nls.js';
-import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
-import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
-import { Categories } from '../../../../platform/action/common/actionCommonCategories.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { showWindowLogActionId } from '../../../services/log/common/logConstants.js';
-import { DisposableStore, IDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { ILayoutService } from '../../../../platform/layout/browser/layoutService.js';
-import { $, addDisposableListener, append, getDomNodePagePosition, getWindows, onDidRegisterWindow } from '../../../../base/browser/dom.js';
-import { createCSSRule, createStyleSheet } from '../../../../base/browser/domStylesheets.js';
-import { Emitter } from '../../../../base/common/event.js';
+import * as nls from "../../../../nls.js";
+import { Action2, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { showWindowLogActionId } from "../../../services/log/common/logConstants.js";
+import { DisposableStore, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { ILayoutService } from "../../../../platform/layout/browser/layoutService.js";
+import {
+  $,
+  addDisposableListener,
+  append,
+  getDomNodePagePosition,
+  getWindows,
+  onDidRegisterWindow,
+} from "../../../../base/browser/dom.js";
+import { createCSSRule, createStyleSheet } from "../../../../base/browser/domStylesheets.js";
+import { Emitter } from "../../../../base/common/event.js";
 
 class ToggleKeybindingsLogAction extends Action2 {
 	static disposable: IDisposable | undefined;
 
 	constructor() {
 		super({
-			id: 'workbench.action.toggleKeybindingsLog',
-			title: nls.localize2('toggleKeybindingsLog', "Toggle Keyboard Shortcuts Troubleshooting"),
-			category: Categories.Developer,
-			f1: true
-		});
+      id: "workbench.action.toggleKeybindingsLog",
+      title: nls.localize2("toggleKeybindingsLog", "Toggle Keyboard Shortcuts Troubleshooting"),
+      category: Categories.Developer,
+      f1: true,
+    });
 	}
 
 	run(accessor: ServicesAccessor): void {
@@ -45,12 +52,12 @@ class ToggleKeybindingsLogAction extends Action2 {
 		const disposables = new DisposableStore();
 
 		const container = layoutService.activeContainer;
-		const focusMarker = append(container, $('.focus-troubleshooting-marker'));
+		const focusMarker = append(container, $(".focus-troubleshooting-marker"));
 		disposables.add(toDisposable(() => focusMarker.remove()));
 
 		// Add CSS rule for focus marker
 		const stylesheet = createStyleSheet(undefined, undefined, disposables);
-		createCSSRule('.focus-troubleshooting-marker', `
+		createCSSRule(".focus-troubleshooting-marker", `
 			position: fixed;
 			pointer-events: none;
 			z-index: 100000;
@@ -63,18 +70,29 @@ class ToggleKeybindingsLogAction extends Action2 {
 		const onKeyDown = disposables.add(new Emitter<KeyboardEvent>());
 
 		function registerWindowListeners(window: Window, disposables: DisposableStore): void {
-			disposables.add(addDisposableListener(window, 'keydown', e => onKeyDown.fire(e), true));
+			disposables.add(
+        addDisposableListener(window, "keydown", e => onKeyDown.fire(e), true),
+      );
 		}
 
 		for (const { window, disposables } of getWindows()) {
 			registerWindowListeners(window, disposables);
 		}
 
-		disposables.add(onDidRegisterWindow(({ window, disposables }) => registerWindowListeners(window, disposables)));
+		disposables.add(
+      onDidRegisterWindow(
+        ({ window, disposables }) => registerWindowListeners(
+          window,
+          disposables,
+        ),
+      ),
+    );
 
-		disposables.add(layoutService.onDidChangeActiveContainer(() => {
-			layoutService.activeContainer.appendChild(focusMarker);
-		}));
+		disposables.add(
+      layoutService.onDidChangeActiveContainer(() => {
+        layoutService.activeContainer.appendChild(focusMarker);
+      }),
+    );
 
 		disposables.add(onKeyDown.event(e => {
 			const target = e.target as HTMLElement;
@@ -84,11 +102,11 @@ class ToggleKeybindingsLogAction extends Action2 {
 				focusMarker.style.left = `${position.left}px`;
 				focusMarker.style.width = `${position.width}px`;
 				focusMarker.style.height = `${position.height}px`;
-				focusMarker.style.display = 'block';
+				focusMarker.style.display = "block";
 
 				// Hide after timeout
 				setTimeout(() => {
-					focusMarker.style.display = 'none';
+					focusMarker.style.display = "none";
 				}, 800);
 			}
 		}));

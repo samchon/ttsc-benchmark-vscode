@@ -3,18 +3,30 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type * as vscode from 'vscode';
-import { Event } from '../../../base/common/event.js';
-import { Disposable, DisposableMap } from '../../../base/common/lifecycle.js';
-import { URI, UriComponents } from '../../../base/common/uri.js';
-import { ExtensionIdentifier } from '../../../platform/extensions/common/extensions.js';
-import { createDecorator } from '../../../platform/instantiation/common/instantiation.js';
-import { IExtHostExtensionService } from './extHostExtensionService.js';
-import { IExtHostRpcService } from './extHostRpcService.js';
-import { ExtHostGitExtensionShape, GitBranchDto, GitChangeDto, GitDiffChangeDto, GitRefDto, GitRefQueryDto, GitRefTypeDto, GitRepositoryStateDto, GitUpstreamRefDto, MainContext, MainThreadGitExtensionShape } from './extHost.protocol.js';
-import { ResourceMap } from '../../../base/common/map.js';
+import type * as vscode from "vscode";
+import { Event } from "../../../base/common/event.js";
+import { Disposable, DisposableMap } from "../../../base/common/lifecycle.js";
+import { URI, UriComponents } from "../../../base/common/uri.js";
+import { ExtensionIdentifier } from "../../../platform/extensions/common/extensions.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { IExtHostExtensionService } from "./extHostExtensionService.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
+import {
+  ExtHostGitExtensionShape,
+  GitBranchDto,
+  GitChangeDto,
+  GitDiffChangeDto,
+  GitRefDto,
+  GitRefQueryDto,
+  GitRefTypeDto,
+  GitRepositoryStateDto,
+  GitUpstreamRefDto,
+  MainContext,
+  MainThreadGitExtensionShape,
+} from "./extHost.protocol.js";
+import { ResourceMap } from "../../../base/common/map.js";
 
-const GIT_EXTENSION_ID = 'vscode.git';
+const GIT_EXTENSION_ID = "vscode.git";
 
 function toGitRefTypeDto(type: GitRefType): GitRefTypeDto {
 	switch (type) {
@@ -27,22 +39,22 @@ function toGitRefTypeDto(type: GitRefType): GitRefTypeDto {
 
 function toGitBranchDto(branch: Branch): GitBranchDto {
 	return {
-		name: branch.name,
-		commit: branch.commit,
-		type: toGitRefTypeDto(branch.type),
-		remote: branch.remote,
-		upstream: branch.upstream ? toGitUpstreamRefDto(branch.upstream) : undefined,
-		ahead: branch.ahead,
-		behind: branch.behind,
-	};
+    name: branch.name,
+    commit: branch.commit,
+    type: toGitRefTypeDto(branch.type),
+    remote: branch.remote,
+    upstream: branch.upstream ? toGitUpstreamRefDto(branch.upstream) : undefined,
+    ahead: branch.ahead,
+    behind: branch.behind,
+  };
 }
 
 function toGitUpstreamRefDto(upstream: UpstreamRef): GitUpstreamRefDto {
 	return {
-		remote: upstream.remote,
-		name: upstream.name,
-		commit: upstream.commit,
-	};
+    remote: upstream.remote,
+    name: upstream.name,
+    commit: upstream.commit,
+  };
 }
 
 // Status values from the git extension's const enum Status
@@ -63,21 +75,37 @@ function toGitChangeDto(change: Change): GitChangeDto {
 		case GitStatus.INDEX_ADDED:
 		case GitStatus.UNTRACKED:
 		case GitStatus.INTENT_TO_ADD:
-			return { uri: change.uri, originalUri: undefined, modifiedUri: change.uri };
+			return {
+        uri: change.uri,
+        originalUri: undefined,
+        modifiedUri: change.uri,
+      };
 
 		// Deleted: no modified
 		case GitStatus.INDEX_DELETED:
 		case GitStatus.DELETED:
-			return { uri: change.uri, originalUri: change.uri, modifiedUri: undefined };
+			return {
+        uri: change.uri,
+        originalUri: change.uri,
+        modifiedUri: undefined,
+      };
 
 		// Renamed: original is old name, modified is new name
 		case GitStatus.INDEX_RENAMED:
 		case GitStatus.INTENT_TO_RENAME:
-			return { uri: change.uri, originalUri: change.originalUri, modifiedUri: change.renameUri };
+			return {
+        uri: change.uri,
+        originalUri: change.originalUri,
+        modifiedUri: change.renameUri,
+      };
 
 		// Modified and everything else: both original and modified
 		default:
-			return { uri: change.uri, originalUri: change.originalUri, modifiedUri: change.uri };
+			return {
+        uri: change.uri,
+        originalUri: change.originalUri,
+        modifiedUri: change.uri,
+      };
 	}
 }
 
@@ -157,7 +185,7 @@ interface GitRefQuery {
 	readonly contains?: string;
 	readonly count?: number;
 	readonly pattern?: string | string[];
-	readonly sort?: 'alphabetically' | 'committerdate' | 'creatordate';
+	readonly sort?: "alphabetically" | "committerdate" | "creatordate";
 }
 
 interface GitExtensionAPI {
@@ -172,7 +200,9 @@ export interface IExtHostGitExtensionService extends ExtHostGitExtensionShape {
 	readonly _serviceBrand: undefined;
 }
 
-export const IExtHostGitExtensionService = createDecorator<IExtHostGitExtensionService>('IExtHostGitExtensionService');
+export const IExtHostGitExtensionService = createDecorator<IExtHostGitExtensionService>(
+  "IExtHostGitExtensionService",
+);
 
 export class ExtHostGitExtensionService extends Disposable implements IExtHostGitExtensionService {
 	declare readonly _serviceBrand: undefined;
@@ -260,7 +290,7 @@ export class ExtHostGitExtensionService extends Disposable implements IExtHostGi
 					id,
 					name: ref.name,
 					type: toGitRefTypeDto(ref.type),
-					revision: ref.commit
+					revision: ref.commit,
 				} satisfies GitRefDto;
 			});
 
@@ -283,19 +313,22 @@ export class ExtHostGitExtensionService extends Disposable implements IExtHostGi
 		const state = repository.state;
 
 		return {
-			HEAD: state.HEAD ? toGitBranchDto(state.HEAD) : undefined,
-			remotes: state.remotes,
-			mergeChanges: state.mergeChanges.map(toGitChangeDto),
-			indexChanges: state.indexChanges.map(toGitChangeDto),
-			workingTreeChanges: state.workingTreeChanges.map(toGitChangeDto),
-			untrackedChanges: state.untrackedChanges.map(toGitChangeDto),
-		};
+      HEAD: state.HEAD ? toGitBranchDto(state.HEAD) : undefined,
+      remotes: state.remotes,
+      mergeChanges: state.mergeChanges.map(toGitChangeDto),
+      indexChanges: state.indexChanges.map(toGitChangeDto),
+      workingTreeChanges: state.workingTreeChanges.map(toGitChangeDto),
+      untrackedChanges: state.untrackedChanges.map(toGitChangeDto),
+    };
 	}
 
 	private _setRepositoryStateChangeListener(handle: number, repository: Repository): void {
-		this._repositoryStateChangeListeners.set(handle, repository.state.onDidChange(() => {
-			this._proxy.$onDidChangeRepository(handle);
-		}));
+		this._repositoryStateChangeListeners.set(
+      handle,
+      repository.state.onDidChange(() => {
+        this._proxy.$onDidChangeRepository(handle);
+      }),
+    );
 	}
 
 	async $diffBetweenWithStats(handle: number, ref1: string, ref2: string, path?: string): Promise<GitDiffChangeDto[]> {
@@ -307,10 +340,10 @@ export class ExtHostGitExtensionService extends Disposable implements IExtHostGi
 		try {
 			const changes = await repository.diffBetweenWithStats(ref1, ref2, path);
 			return changes.map(c => ({
-				...toGitChangeDto(c),
-				insertions: c.insertions,
-				deletions: c.deletions,
-			}));
+        ...toGitChangeDto(c),
+        insertions: c.insertions,
+        deletions: c.deletions,
+      }));
 		} catch {
 			return [];
 		}
@@ -325,10 +358,10 @@ export class ExtHostGitExtensionService extends Disposable implements IExtHostGi
 		try {
 			const changes = await repository.diffBetweenWithStats2(ref, path);
 			return changes.map(c => ({
-				...toGitChangeDto(c),
-				insertions: c.insertions,
-				deletions: c.deletions,
-			}));
+        ...toGitChangeDto(c),
+        insertions: c.insertions,
+        deletions: c.deletions,
+      }));
 		} catch {
 			return [];
 		}
@@ -341,12 +374,18 @@ export class ExtHostGitExtensionService extends Disposable implements IExtHostGi
 
 		try {
 			await this._extHostExtensionService.activateByIdWithErrors(
-				new ExtensionIdentifier(GIT_EXTENSION_ID),
-				{ startup: false, extensionId: new ExtensionIdentifier(GIT_EXTENSION_ID), activationEvent: 'api' }
-			);
+        new ExtensionIdentifier(GIT_EXTENSION_ID),
+        {
+          startup: false,
+          extensionId: new ExtensionIdentifier(GIT_EXTENSION_ID),
+          activationEvent: "api",
+        },
+      );
 
-			const exports = this._extHostExtensionService.getExtensionExports(new ExtensionIdentifier(GIT_EXTENSION_ID));
-			if (!!exports && typeof (exports as GitExtension).getAPI === 'function') {
+			const exports = this._extHostExtensionService.getExtensionExports(
+        new ExtensionIdentifier(GIT_EXTENSION_ID),
+      );
+			if (!!exports && typeof (exports as GitExtension).getAPI === "function") {
 				this._gitApi = (exports as GitExtension).getAPI(1);
 			}
 		} catch {

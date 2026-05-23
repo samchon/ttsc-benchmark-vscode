@@ -3,34 +3,41 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as DOM from '../../../../../../base/browser/dom.js';
-import * as domSanitize from '../../../../../../base/browser/domSanitize.js';
-import { renderIcon } from '../../../../../../base/browser/ui/iconLabel/iconLabels.js';
-import { disposableTimeout, raceCancellation } from '../../../../../../base/common/async.js';
-import { CancellationTokenSource } from '../../../../../../base/common/cancellation.js';
-import { Codicon } from '../../../../../../base/common/codicons.js';
-import { ThemeIcon } from '../../../../../../base/common/themables.js';
-import { Disposable, DisposableStore, MutableDisposable, toDisposable } from '../../../../../../base/common/lifecycle.js';
-import { ICodeEditor } from '../../../../../../editor/browser/editorBrowser.js';
-import { CodeEditorWidget } from '../../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js';
-import { IEditorOptions } from '../../../../../../editor/common/config/editorOptions.js';
-import { EditorContextKeys } from '../../../../../../editor/common/editorContextKeys.js';
-import { ILanguageService } from '../../../../../../editor/common/languages/language.js';
-import { tokenizeToStringSync } from '../../../../../../editor/common/languages/textToHtmlTokenizer.js';
-import { IReadonlyTextBuffer } from '../../../../../../editor/common/model.js';
-import { localize } from '../../../../../../nls.js';
-import { IAccessibilityService } from '../../../../../../platform/accessibility/common/accessibility.js';
-import { IConfigurationService } from '../../../../../../platform/configuration/common/configuration.js';
-import { IContextKeyService } from '../../../../../../platform/contextkey/common/contextkey.js';
-import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ServiceCollection } from '../../../../../../platform/instantiation/common/serviceCollection.js';
-import { IKeybindingService } from '../../../../../../platform/keybinding/common/keybinding.js';
-import { CellEditState, CellFocusMode, CellFoldingState, EXPAND_CELL_INPUT_COMMAND_ID, IActiveNotebookEditorDelegate, ICellViewModel } from '../../notebookBrowser.js';
-import { collapsedIcon, expandedIcon } from '../../notebookIcons.js';
-import { CellEditorOptions } from './cellEditorOptions.js';
-import { collapsedCellTTPolicy, MarkdownCellRenderTemplate } from '../notebookRenderingCommon.js';
-import { MarkupCellViewModel } from '../../viewModel/markupCellViewModel.js';
-import { WordHighlighterContribution } from '../../../../../../editor/contrib/wordHighlighter/browser/wordHighlighter.js';
+import * as DOM from "../../../../../../base/browser/dom.js";
+import * as domSanitize from "../../../../../../base/browser/domSanitize.js";
+import { renderIcon } from "../../../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { disposableTimeout, raceCancellation } from "../../../../../../base/common/async.js";
+import { CancellationTokenSource } from "../../../../../../base/common/cancellation.js";
+import { Codicon } from "../../../../../../base/common/codicons.js";
+import { ThemeIcon } from "../../../../../../base/common/themables.js";
+import { Disposable, DisposableStore, MutableDisposable, toDisposable } from "../../../../../../base/common/lifecycle.js";
+import { ICodeEditor } from "../../../../../../editor/browser/editorBrowser.js";
+import { CodeEditorWidget } from "../../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import { IEditorOptions } from "../../../../../../editor/common/config/editorOptions.js";
+import { EditorContextKeys } from "../../../../../../editor/common/editorContextKeys.js";
+import { ILanguageService } from "../../../../../../editor/common/languages/language.js";
+import { tokenizeToStringSync } from "../../../../../../editor/common/languages/textToHtmlTokenizer.js";
+import { IReadonlyTextBuffer } from "../../../../../../editor/common/model.js";
+import { localize } from "../../../../../../nls.js";
+import { IAccessibilityService } from "../../../../../../platform/accessibility/common/accessibility.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { ServiceCollection } from "../../../../../../platform/instantiation/common/serviceCollection.js";
+import { IKeybindingService } from "../../../../../../platform/keybinding/common/keybinding.js";
+import {
+  CellEditState,
+  CellFocusMode,
+  CellFoldingState,
+  EXPAND_CELL_INPUT_COMMAND_ID,
+  IActiveNotebookEditorDelegate,
+  ICellViewModel,
+} from "../../notebookBrowser.js";
+import { collapsedIcon, expandedIcon } from "../../notebookIcons.js";
+import { CellEditorOptions } from "./cellEditorOptions.js";
+import { collapsedCellTTPolicy, MarkdownCellRenderTemplate } from "../notebookRenderingCommon.js";
+import { MarkupCellViewModel } from "../../viewModel/markupCellViewModel.js";
+import { WordHighlighterContribution } from "../../../../../../editor/contrib/wordHighlighter/browser/wordHighlighter.js";
 
 export class MarkupCell extends Disposable {
 
@@ -40,7 +47,9 @@ export class MarkupCell extends Disposable {
 	private editorPart: HTMLElement;
 
 	private readonly localDisposables = this._register(new DisposableStore());
-	private readonly focusSwitchDisposable = this._register(new MutableDisposable());
+	private readonly focusSwitchDisposable = this._register(
+    new MutableDisposable(),
+  );
 	private readonly editorDisposables = this._register(new DisposableStore());
 	private foldingState: CellFoldingState;
 	private cellEditorOptions: CellEditorOptions;
@@ -63,9 +72,18 @@ export class MarkupCell extends Disposable {
 
 		this.constructDOM();
 		this.editorPart = templateData.editorPart;
-		this.cellEditorOptions = this._register(new CellEditorOptions(this.notebookEditor.getBaseCellEditorOptions(viewCell.language), this.notebookEditor.notebookOptions, this.configurationService));
+		this.cellEditorOptions = this._register(
+      new CellEditorOptions(
+        this.notebookEditor.getBaseCellEditorOptions(viewCell.language),
+        this.notebookEditor.notebookOptions,
+        this.configurationService,
+      ),
+    );
 		this.cellEditorOptions.setLineNumbers(this.viewCell.lineNumbers);
-		this.editorOptions = this.cellEditorOptions.getValue(this.viewCell.internalMetadata, this.viewCell.uri);
+		this.editorOptions = this.cellEditorOptions.getValue(
+      this.viewCell.internalMetadata,
+      this.viewCell.uri,
+    );
 
 		this._register(toDisposable(() => renderedEditors.delete(this.viewCell)));
 		this.registerListeners();
@@ -73,13 +91,17 @@ export class MarkupCell extends Disposable {
 		// update for init state
 		this.templateData.cellParts.scheduleRenderCell(this.viewCell);
 
-		this._register(toDisposable(() => {
-			this.templateData.cellParts.unrenderCell(this.viewCell);
-		}));
+		this._register(
+      toDisposable(() => {
+        this.templateData.cellParts.unrenderCell(this.viewCell);
+      }),
+    );
 
-		this._register(this.accessibilityService.onDidChangeScreenReaderOptimized(() => {
-			this.viewUpdate();
-		}));
+		this._register(
+      this.accessibilityService.onDidChangeScreenReaderOptimized(() => {
+        this.viewUpdate();
+      }),
+    );
 
 		this.updateForHover();
 		this.updateForFocusModeChange();
@@ -95,9 +117,11 @@ export class MarkupCell extends Disposable {
 		this.viewUpdate();
 
 		this.layoutCellParts();
-		this._register(this.viewCell.onDidChangeLayout(() => {
-			this.layoutCellParts();
-		}));
+		this._register(
+      this.viewCell.onDidChangeLayout(() => {
+        this.layoutCellParts();
+      }),
+    );
 	}
 
 	layoutCellParts() {
@@ -110,25 +134,32 @@ export class MarkupCell extends Disposable {
 		this.markdownAccessibilityContainer = this.templateData.cellContainer;
 		this.markdownAccessibilityContainer.id = id;
 		// Hide the element from non-screen readers
-		this.markdownAccessibilityContainer.style.height = '1px';
-		this.markdownAccessibilityContainer.style.overflow = 'hidden';
-		this.markdownAccessibilityContainer.style.position = 'absolute';
-		this.markdownAccessibilityContainer.style.top = '100000px';
-		this.markdownAccessibilityContainer.style.left = '10000px';
-		this.markdownAccessibilityContainer.ariaHidden = 'false';
+		this.markdownAccessibilityContainer.style.height = "1px";
+		this.markdownAccessibilityContainer.style.overflow = "hidden";
+		this.markdownAccessibilityContainer.style.position = "absolute";
+		this.markdownAccessibilityContainer.style.top = "100000px";
+		this.markdownAccessibilityContainer.style.left = "10000px";
+		this.markdownAccessibilityContainer.ariaHidden = "false";
 
-		this.templateData.rootContainer.setAttribute('aria-describedby', id);
-		this.templateData.container.classList.toggle('webview-backed-markdown-cell', true);
+		this.templateData.rootContainer.setAttribute("aria-describedby", id);
+		this.templateData.container.classList.toggle(
+      "webview-backed-markdown-cell",
+      true,
+    );
 	}
 
 	private registerListeners() {
-		this._register(this.viewCell.onDidChangeState(e => {
-			this.templateData.cellParts.updateState(this.viewCell, e);
-		}));
+		this._register(
+      this.viewCell.onDidChangeState(e => {
+        this.templateData.cellParts.updateState(this.viewCell, e);
+      }),
+    );
 
-		this._register(this.viewCell.model.onDidChangeMetadata(() => {
-			this.viewUpdate();
-		}));
+		this._register(
+      this.viewCell.model.onDidChangeMetadata(() => {
+        this.viewUpdate();
+      }),
+    );
 
 		this._register(this.viewCell.onDidChangeState((e) => {
 			if (e.editStateChanged || e.contentChanged) {
@@ -175,14 +206,26 @@ export class MarkupCell extends Disposable {
 			}
 		}));
 
-		this._register(this.cellEditorOptions.onDidChange(() => this.updateMarkupCellOptions()));
+		this._register(
+      this.cellEditorOptions.onDidChange(() => this.updateMarkupCellOptions()),
+    );
 	}
 
 	private updateMarkupCellOptions(): void {
-		this.updateEditorOptions(this.cellEditorOptions.getUpdatedValue(this.viewCell.internalMetadata, this.viewCell.uri));
+		this.updateEditorOptions(
+      this.cellEditorOptions.getUpdatedValue(
+        this.viewCell.internalMetadata,
+        this.viewCell.uri,
+      ),
+    );
 
 		if (this.editor) {
-			this.editor.updateOptions(this.cellEditorOptions.getUpdatedValue(this.viewCell.internalMetadata, this.viewCell.uri));
+			this.editor.updateOptions(
+        this.cellEditorOptions.getUpdatedValue(
+          this.viewCell.internalMetadata,
+          this.viewCell.uri,
+        ),
+      );
 
 			const cts = new CancellationTokenSource();
 			this._register({ dispose() { cts.dispose(true); } });
@@ -211,7 +254,10 @@ export class MarkupCell extends Disposable {
 	}
 
 	private updateForHover(): void {
-		this.templateData.container.classList.toggle('markdown-cell-hover', this.viewCell.cellIsHovered);
+		this.templateData.container.classList.toggle(
+      "markdown-cell-hover",
+      this.viewCell.cellIsHovered,
+    );
 	}
 
 	private updateForFocusModeChange() {
@@ -219,7 +265,10 @@ export class MarkupCell extends Disposable {
 			this.focusEditorIfNeeded();
 		}
 
-		this.templateData.container.classList.toggle('cell-editor-focus', this.viewCell.focusMode === CellFocusMode.Editor);
+		this.templateData.container.classList.toggle(
+      "cell-editor-focus",
+      this.viewCell.focusMode === CellFocusMode.Editor,
+    );
 	}
 
 	override dispose() {
@@ -236,7 +285,7 @@ export class MarkupCell extends Disposable {
 
 	private updateFoldingIconShowClass() {
 		const showFoldingIcon = this.notebookEditor.notebookOptions.getDisplayOptions().showFoldingControls;
-		this.templateData.foldingIndicator.classList.remove('mouseover', 'always');
+		this.templateData.foldingIndicator.classList.remove("mouseover", "always");
 		this.templateData.foldingIndicator.classList.add(showFoldingIcon);
 	}
 
@@ -254,36 +303,58 @@ export class MarkupCell extends Disposable {
 		DOM.show(this.templateData.cellInputCollapsedContainer);
 		DOM.hide(this.editorPart);
 
-		this.templateData.cellInputCollapsedContainer.innerText = '';
+		this.templateData.cellInputCollapsedContainer.innerText = "";
 
-		const markdownIcon = DOM.append(this.templateData.cellInputCollapsedContainer, DOM.$('span'));
+		const markdownIcon = DOM.append(
+      this.templateData.cellInputCollapsedContainer,
+      DOM.$("span"),
+    );
 		markdownIcon.classList.add(...ThemeIcon.asClassNameArray(Codicon.markdown));
 
-		const element = DOM.$('div');
-		element.classList.add('cell-collapse-preview');
-		const richEditorText = this.getRichText(this.viewCell.textBuffer, this.viewCell.language);
+		const element = DOM.$("div");
+		element.classList.add("cell-collapse-preview");
+		const richEditorText = this.getRichText(
+      this.viewCell.textBuffer,
+      this.viewCell.language,
+    );
 		element.innerText = richEditorText;
-		element.innerHTML = (collapsedCellTTPolicy?.createHTML(richEditorText) ?? richEditorText) as string;
+		element.innerHTML = (collapsedCellTTPolicy?.createHTML(
+      richEditorText,
+    ) ?? richEditorText) as string;
 		this.templateData.cellInputCollapsedContainer.appendChild(element);
 
-		const expandIcon = DOM.append(element, DOM.$('span.expandInputIcon'));
+		const expandIcon = DOM.append(element, DOM.$("span.expandInputIcon"));
 		expandIcon.classList.add(...ThemeIcon.asClassNameArray(Codicon.more));
-		const keybinding = this.keybindingService.lookupKeybinding(EXPAND_CELL_INPUT_COMMAND_ID);
+		const keybinding = this.keybindingService.lookupKeybinding(
+      EXPAND_CELL_INPUT_COMMAND_ID,
+    );
 		if (keybinding) {
-			element.title = localize('cellExpandInputButtonLabelWithDoubleClick', "Double-click to expand cell input ({0})", keybinding.getLabel());
-			expandIcon.title = localize('cellExpandInputButtonLabel', "Expand Cell Input ({0})", keybinding.getLabel());
+			element.title = localize(
+        "cellExpandInputButtonLabelWithDoubleClick",
+        "Double-click to expand cell input ({0})",
+        keybinding.getLabel(),
+      );
+			expandIcon.title = localize(
+        "cellExpandInputButtonLabel",
+        "Expand Cell Input ({0})",
+        keybinding.getLabel(),
+      );
 		}
 
-		this.markdownAccessibilityContainer.ariaHidden = 'true';
+		this.markdownAccessibilityContainer.ariaHidden = "true";
 
-		this.templateData.container.classList.toggle('input-collapsed', true);
+		this.templateData.container.classList.toggle("input-collapsed", true);
 		this.viewCell.renderedMarkdownHeight = 0;
 		this.viewCell.layoutChange({});
 	}
 
 
 	private getRichText(buffer: IReadonlyTextBuffer, language: string) {
-		return tokenizeToStringSync(this.languageService, buffer.getLineContent(1), language);
+		return tokenizeToStringSync(
+      this.languageService,
+      buffer.getLineContent(1),
+      language,
+    );
 	}
 
 	private viewUpdateEditing(): void {
@@ -291,13 +362,16 @@ export class MarkupCell extends Disposable {
 		let editorHeight: number;
 
 		DOM.show(this.editorPart);
-		this.markdownAccessibilityContainer.ariaHidden = 'true';
+		this.markdownAccessibilityContainer.ariaHidden = "true";
 		DOM.hide(this.templateData.cellInputCollapsedContainer);
 
 		this.notebookEditor.hideMarkupPreviews([this.viewCell]);
 
-		this.templateData.container.classList.toggle('input-collapsed', false);
-		this.templateData.container.classList.toggle('markdown-cell-edit-mode', true);
+		this.templateData.container.classList.toggle("input-collapsed", false);
+		this.templateData.container.classList.toggle(
+      "markdown-cell-edit-mode",
+      true,
+    );
 
 		if (this.editor && this.editor.hasModel()) {
 			editorHeight = this.editor.getContentHeight();
@@ -309,35 +383,51 @@ export class MarkupCell extends Disposable {
 			this.bindEditorListeners(this.editor);
 
 			this.editor.layout({
-				width: this.viewCell.layoutInfo.editorWidth,
-				height: editorHeight
-			});
+        width: this.viewCell.layoutInfo.editorWidth,
+        height: editorHeight,
+      });
 		} else {
 			this.editorDisposables.clear();
-			const width = this.notebookEditor.notebookOptions.computeMarkdownCellEditorWidth(this.notebookEditor.getLayoutInfo().width);
+			const width = this.notebookEditor.notebookOptions.computeMarkdownCellEditorWidth(
+        this.notebookEditor.getLayoutInfo().width,
+      );
 			const lineNum = this.viewCell.lineCount;
 			const lineHeight = this.viewCell.layoutInfo.fontInfo?.lineHeight || 17;
-			const editorPadding = this.notebookEditor.notebookOptions.computeEditorPadding(this.viewCell.internalMetadata, this.viewCell.uri);
-			editorHeight = Math.max(lineNum, 1) * lineHeight + editorPadding.top + editorPadding.bottom;
+			const editorPadding = this.notebookEditor.notebookOptions.computeEditorPadding(
+        this.viewCell.internalMetadata,
+        this.viewCell.uri,
+      );
+			editorHeight = Math.max(
+        lineNum,
+        1,
+      ) * lineHeight + editorPadding.top + editorPadding.bottom;
 
-			this.templateData.editorContainer.innerText = '';
+			this.templateData.editorContainer.innerText = "";
 
 			// create a special context key service that set the inCompositeEditor-contextkey
-			const editorContextKeyService = this.contextKeyService.createScoped(this.templateData.editorPart);
-			EditorContextKeys.inCompositeEditor.bindTo(editorContextKeyService).set(true);
-			const editorInstaService = this.editorDisposables.add(this.instantiationService.createChild(new ServiceCollection([IContextKeyService, editorContextKeyService])));
+			const editorContextKeyService = this.contextKeyService.createScoped(
+        this.templateData.editorPart,
+      );
+			EditorContextKeys.inCompositeEditor.bindTo(editorContextKeyService).set(
+        true,
+      );
+			const editorInstaService = this.editorDisposables.add(
+        this.instantiationService.createChild(
+          new ServiceCollection([IContextKeyService, editorContextKeyService]),
+        ),
+      );
 			this.editorDisposables.add(editorContextKeyService);
 
 			this.editor = this.editorDisposables.add(editorInstaService.createInstance(CodeEditorWidget, this.templateData.editorContainer, {
 				...this.editorOptions,
 				dimension: {
 					width: width,
-					height: editorHeight
+					height: editorHeight,
 				},
 				allowVariableLineHeights: false,
 				// overflowWidgetsDomNode: this.notebookEditor.getOverflowContainerDomNode()
 			}, {
-				contributions: this.notebookEditor.creationOptions.cellEditorContributions
+				contributions: this.notebookEditor.creationOptions.cellEditorContributions,
 			}));
 			this.templateData.currentEditor = this.editor;
 			this.editorDisposables.add(this.editor.onDidBlurEditorWidget(() => {
@@ -370,8 +460,8 @@ export class MarkupCell extends Disposable {
 					this.editor!.layout(
 						{
 							width: width,
-							height: realContentHeight
-						}
+							height: realContentHeight,
+						},
 					);
 					editorHeight = realContentHeight;
 				}
@@ -397,16 +487,22 @@ export class MarkupCell extends Disposable {
 		this.viewCell.detachTextEditor();
 		DOM.hide(this.editorPart);
 		DOM.hide(this.templateData.cellInputCollapsedContainer);
-		this.markdownAccessibilityContainer.ariaHidden = 'false';
-		this.templateData.container.classList.toggle('input-collapsed', false);
-		this.templateData.container.classList.toggle('markdown-cell-edit-mode', false);
+		this.markdownAccessibilityContainer.ariaHidden = "false";
+		this.templateData.container.classList.toggle("input-collapsed", false);
+		this.templateData.container.classList.toggle(
+      "markdown-cell-edit-mode",
+      false,
+    );
 
 		this.renderedEditors.delete(this.viewCell);
 
-		this.markdownAccessibilityContainer.innerText = '';
+		this.markdownAccessibilityContainer.innerText = "";
 		if (this.viewCell.renderedHtml) {
 			if (this.accessibilityService.isScreenReaderOptimized()) {
-				domSanitize.safeSetInnerHtml(this.markdownAccessibilityContainer, this.viewCell.renderedHtml);
+				domSanitize.safeSetInnerHtml(
+          this.markdownAccessibilityContainer,
+          this.viewCell.renderedHtml,
+        );
 			} else {
 				DOM.clearNode(this.markdownAccessibilityContainer);
 			}
@@ -430,7 +526,10 @@ export class MarkupCell extends Disposable {
 				return;
 			}
 
-			this.notebookEditor.revealRangeInViewAsync(this.viewCell, primarySelection);
+			this.notebookEditor.revealRangeInViewAsync(
+        this.viewCell,
+        primarySelection,
+      );
 		}
 	}
 
@@ -440,12 +539,10 @@ export class MarkupCell extends Disposable {
 
 	private onCellEditorWidthChange(): void {
 		const realContentHeight = this.editor!.getContentHeight();
-		this.layoutEditor(
-			{
-				width: this.viewCell.layoutInfo.editorWidth,
-				height: realContentHeight
-			}
-		);
+		this.layoutEditor({
+      width: this.viewCell.layoutInfo.editorWidth,
+      height: realContentHeight,
+    });
 
 		// LET the content size observer to handle it
 		// this.viewCell.editorHeight = realContentHeight;
@@ -453,7 +550,10 @@ export class MarkupCell extends Disposable {
 	}
 
 	relayoutCell(): void {
-		this.notebookEditor.layoutNotebookCell(this.viewCell, this.viewCell.layoutInfo.totalHeight);
+		this.notebookEditor.layoutNotebookCell(
+      this.viewCell,
+      this.viewCell.layoutInfo.totalHeight,
+    );
 		this.layoutFoldingIndicator();
 	}
 
@@ -465,15 +565,18 @@ export class MarkupCell extends Disposable {
 	private layoutFoldingIndicator() {
 		switch (this.foldingState) {
 			case CellFoldingState.None:
-				this.templateData.foldingIndicator.style.display = 'none';
-				this.templateData.foldingIndicator.innerText = '';
+				this.templateData.foldingIndicator.style.display = "none";
+				this.templateData.foldingIndicator.innerText = "";
 				break;
 			case CellFoldingState.Collapsed:
-				this.templateData.foldingIndicator.style.display = '';
-				DOM.reset(this.templateData.foldingIndicator, renderIcon(collapsedIcon));
+				this.templateData.foldingIndicator.style.display = "";
+				DOM.reset(
+          this.templateData.foldingIndicator,
+          renderIcon(collapsedIcon),
+        );
 				break;
 			case CellFoldingState.Expanded:
-				this.templateData.foldingIndicator.style.display = '';
+				this.templateData.foldingIndicator.style.display = "";
 				DOM.reset(this.templateData.foldingIndicator, renderIcon(expandedIcon));
 				break;
 
@@ -494,7 +597,7 @@ export class MarkupCell extends Disposable {
 		}));
 
 		this.localDisposables.add(editor.onDidChangeCursorSelection((e) => {
-			if (e.source === 'restoreState') {
+			if (e.source === "restoreState") {
 				// do not reveal the cell into view if this selection change was caused by restoring editors...
 				return;
 			}
@@ -514,9 +617,11 @@ export class MarkupCell extends Disposable {
 		}));
 
 		const updateFocusMode = () => this.viewCell.focusMode = editor.hasWidgetFocus() ? CellFocusMode.Editor : CellFocusMode.Container;
-		this.localDisposables.add(editor.onDidFocusEditorWidget(() => {
-			updateFocusMode();
-		}));
+		this.localDisposables.add(
+      editor.onDidFocusEditorWidget(() => {
+        updateFocusMode();
+      }),
+    );
 
 		this.localDisposables.add(editor.onDidBlurEditorWidget(() => {
 			// this is for a special case:
@@ -535,11 +640,9 @@ export class MarkupCell extends Disposable {
 	private onCellEditorHeightChange(editor: CodeEditorWidget, newHeight: number): void {
 		const viewLayout = editor.getLayoutInfo();
 		this.viewCell.editorHeight = newHeight;
-		editor.layout(
-			{
-				width: viewLayout.width,
-				height: newHeight
-			}
-		);
+		editor.layout({
+      width: viewLayout.width,
+      height: newHeight,
+    });
 	}
 }

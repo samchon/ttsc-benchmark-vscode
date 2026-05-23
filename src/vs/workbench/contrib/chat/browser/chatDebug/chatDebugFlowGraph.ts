@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../../../../nls.js';
-import { IChatDebugEvent } from '../../common/chatDebugService.js';
+import { localize } from "../../../../../nls.js";
+import { IChatDebugEvent } from "../../common/chatDebugService.js";
 
 // ---- Data model ----
 
 export interface FlowNode {
 	readonly id: string;
-	readonly kind: IChatDebugEvent['kind'];
+	readonly kind: IChatDebugEvent["kind"];
 	/** For `generic` nodes: the event category (e.g. `'discovery'`). Used to narrow filtering. */
 	readonly category?: string;
 	readonly label: string;
@@ -31,7 +31,7 @@ export interface FlowFilterOptions {
 
 export interface LayoutNode {
 	readonly id: string;
-	readonly kind: IChatDebugEvent['kind'];
+	readonly kind: IChatDebugEvent["kind"];
 	readonly label: string;
 	readonly sublabel?: string;
 	readonly tooltip?: string;
@@ -93,13 +93,13 @@ function truncateLabel(text: string, maxLength: number): string {
 	if (text.length <= maxLength) {
 		return text;
 	}
-	return text.substring(0, maxLength - 1) + '\u2026';
+	return text.substring(0, maxLength - 1) + "\u2026";
 }
 
 export function buildFlowGraph(events: readonly IChatDebugEvent[]): FlowNode[] {
 	// Before filtering, extract description metadata from subagent events
 	// that will be filtered out, so we can enrich the surviving sibling events.
-	const subagentToolNames = ['runSubagent', 'search_subagent'];
+	const subagentToolNames = ["runSubagent", "search_subagent"];
 
 	/**
 	 * Check whether a name matches a known subagent tool name.
@@ -114,7 +114,7 @@ export function buildFlowGraph(events: readonly IChatDebugEvent[]): FlowNode[] {
 			}
 			if (name.startsWith(toolName)) {
 				const nextChar = name[toolName.length];
-				if (nextChar === '-' || nextChar === ' ' || nextChar === '(' || nextChar === ':') {
+				if (nextChar === "-" || nextChar === " " || nextChar === "(" || nextChar === ":") {
 					return true;
 				}
 			}
@@ -125,7 +125,7 @@ export function buildFlowGraph(events: readonly IChatDebugEvent[]): FlowNode[] {
 	/** Strip the leading tool emoji prefix if present. */
 	const emojiPrefixRe = /^\u{1F6E0}\uFE0F?\s*/u;
 	function stripToolEmoji(name: string): string {
-		return name.replace(emojiPrefixRe, '');
+		return name.replace(emojiPrefixRe, "");
 	}
 
 	// The extension may emit two subagentInvocation events per subagent:
@@ -137,7 +137,9 @@ export function buildFlowGraph(events: readonly IChatDebugEvent[]): FlowNode[] {
 	const completionDescsByParent = new Map<string, string[]>();
 	const startedCountByParent = new Map<string, number>();
 	for (const e of events) {
-		if (e.kind === 'subagentInvocation' && isSubagentName(e.agentName) && e.description && e.parentEventId) {
+		if (e.kind === "subagentInvocation" && isSubagentName(
+      e.agentName,
+    ) && e.description && e.parentEventId) {
 			let descs = completionDescsByParent.get(e.parentEventId);
 			if (!descs) {
 				descs = [];
@@ -148,7 +150,7 @@ export function buildFlowGraph(events: readonly IChatDebugEvent[]): FlowNode[] {
 	}
 
 	function getSubagentDescription(event: IChatDebugEvent): string | undefined {
-		if (event.kind !== 'subagentInvocation' || !event.parentEventId) {
+		if (event.kind !== "subagentInvocation" || !event.parentEventId) {
 			return undefined;
 		}
 		const descs = completionDescsByParent.get(event.parentEventId);
@@ -165,7 +167,7 @@ export function buildFlowGraph(events: readonly IChatDebugEvent[]): FlowNode[] {
 	// in the tree for correct parent-child linkage; they are collapsed
 	// into their subagent child in a post-processing step.
 	const filtered = events.filter(e => {
-		if (e.kind === 'subagentInvocation' && isSubagentName(e.agentName)) {
+		if (e.kind === "subagentInvocation" && isSubagentName(e.agentName)) {
 			return false;
 		}
 		return true;
@@ -207,38 +209,42 @@ export function buildFlowGraph(events: readonly IChatDebugEvent[]): FlowNode[] {
 		const sublabel = getEventSublabel(event, effectiveKind);
 		let tooltip = getEventTooltip(event);
 		let description: string | undefined;
-		if (effectiveKind === 'subagentInvocation') {
+		if (effectiveKind === "subagentInvocation") {
 			description = getSubagentDescription(event);
 			// Strip any existing "Subagent:" prefix from the description to
 			// avoid double-prefixing (e.g. "Subagent: Subagent: name").
-			const cleanDesc = description?.replace(/^Subagent:\s*/i, '');
+			const cleanDesc = description?.replace(/^Subagent:\s*/i, "");
 			// Show "Subagent: <description>" as the label so users can identify
 			// these nodes and see what task they perform.
 			label = cleanDesc
-				? localize('subagentWithDesc', "Subagent: {0}", truncateLabel(cleanDesc, 30))
-				: localize('subagentLabel', "Subagent");
+				? localize(
+            "subagentWithDesc",
+            "Subagent: {0}",
+            truncateLabel(cleanDesc, 30),
+          )
+				: localize("subagentLabel", "Subagent");
 			if (description) {
 				// Ensure description appears in tooltip if not already present
 				if (tooltip && !tooltip.includes(description)) {
-					const lines = tooltip.split('\n');
+					const lines = tooltip.split("\n");
 					lines.splice(1, 0, description);
-					tooltip = lines.join('\n');
+					tooltip = lines.join("\n");
 				}
 			}
 		}
 
 		return {
-			id: event.id ?? `event-${events.indexOf(event)}`,
-			kind: effectiveKind,
-			category: event.kind === 'generic' ? event.category : undefined,
-			label,
-			sublabel,
-			description,
-			tooltip,
-			isError: isErrorEvent(event),
-			created: event.created.getTime(),
-			children: children?.map(toFlowNode) ?? [],
-		};
+      id: event.id ?? `event-${events.indexOf(event)}`,
+      kind: effectiveKind,
+      category: event.kind === "generic" ? event.category : undefined,
+      label,
+      sublabel,
+      description,
+      tooltip,
+      isError: isErrorEvent(event),
+      created: event.created.getTime(),
+      children: children?.map(toFlowNode) ?? [],
+    };
 	}
 
 	const rawNodes = roots.map(toFlowNode);
@@ -253,14 +259,20 @@ export function buildFlowGraph(events: readonly IChatDebugEvent[]): FlowNode[] {
 		let changed = false;
 		const result: FlowNode[] = [];
 		for (const node of nodeList) {
-			if (node.kind === 'toolCall' && isSubagentName(stripToolEmoji(node.label))) {
+			if (node.kind === "toolCall" && isSubagentName(
+        stripToolEmoji(node.label),
+      )) {
 				changed = true;
 				// Flatten any child_session_ref intermediaries first so
 				// the subagentInvocation becomes a direct child.
 				const flatChildren = flattenChildSessionRefs(node.children);
-				const subagentChildren = flatChildren.filter(c => c.kind === 'subagentInvocation');
+				const subagentChildren = flatChildren.filter(
+          c => c.kind === "subagentInvocation",
+        );
 				if (subagentChildren.length > 0) {
-					const otherChildren = flatChildren.filter(c => c.kind !== 'subagentInvocation');
+					const otherChildren = flatChildren.filter(
+            c => c.kind !== "subagentInvocation",
+          );
 					// Each subagent child gets its own children; non-subagent
 					// siblings (which are rare) are added to the first subagent.
 					for (let i = 0; i < subagentChildren.length; i++) {
@@ -268,7 +280,7 @@ export function buildFlowGraph(events: readonly IChatDebugEvent[]): FlowNode[] {
 						result.push({
 							...subagentChildren[i],
 							children: collapseSubagentToolCalls(
-								[...subagentChildren[i].children, ...extra]
+								[...subagentChildren[i].children, ...extra],
 							),
 						});
 					}
@@ -290,21 +302,25 @@ export function buildFlowGraph(events: readonly IChatDebugEvent[]): FlowNode[] {
 	}
 
 	function flattenChildSessionRefs(nodeList: FlowNode[]): FlowNode[] {
-		if (!nodeList.some(n => n.kind === 'generic' && n.category === 'subagent')) {
+		if (!nodeList.some(
+      n => n.kind === "generic" && n.category === "subagent",
+    )) {
 			return nodeList; // fast path: nothing to flatten
 		}
 		const result: FlowNode[] = [];
 		for (const node of nodeList) {
-			if (node.kind === 'generic' && node.category === 'subagent') {
+			if (node.kind === "generic" && node.category === "subagent") {
 				// child_session_ref placeholder — find the subagentInvocation
 				// and move all siblings into it as children.
-				const subagentChild = node.children.find(c => c.kind === 'subagentInvocation');
+				const subagentChild = node.children.find(
+          c => c.kind === "subagentInvocation",
+        );
 				if (subagentChild) {
 					const siblings = node.children.filter(c => c !== subagentChild);
 					result.push({
-						...subagentChild,
-						children: [...subagentChild.children, ...siblings],
-					});
+            ...subagentChild,
+            children: [...subagentChild.children, ...siblings],
+          });
 				} else {
 					// No subagent child — promote all children
 					result.push(...node.children);
@@ -346,7 +362,7 @@ function filterByKind(nodes: FlowNode[], isKindVisible: (kind: string, category?
 		if (!isKindVisible(node.kind, node.category)) {
 			changed = true;
 			// For subagents, drop the entire subgraph
-			if (node.kind === 'subagentInvocation') {
+			if (node.kind === "subagentInvocation") {
 				continue;
 			}
 			// For other kinds, re-parent children up
@@ -431,10 +447,14 @@ export function sliceFlowNodes(nodes: readonly FlowNode[], maxCount: number): Fl
 			}
 			remaining--; // count this node
 			if (node.children.length === 0 || remaining <= 0) {
-				result.push(node.children.length === 0 ? node : { ...node, children: [] });
+				result.push(
+          node.children.length === 0 ? node : { ...node, children: [] },
+        );
 			} else {
 				const slicedChildren = sliceTree(node.children);
-				result.push(slicedChildren !== node.children ? { ...node, children: slicedChildren } : node);
+				result.push(
+          slicedChildren !== node.children ? { ...node, children: slicedChildren } : node,
+        );
 			}
 		}
 		return result;
@@ -448,7 +468,7 @@ export function sliceFlowNodes(nodes: readonly FlowNode[], maxCount: number): Fl
 // ---- Discovery node merging ----
 
 function isDiscoveryNode(node: FlowNode): boolean {
-	return node.kind === 'generic' && node.category === 'discovery';
+	return node.kind === "generic" && node.category === "discovery";
 }
 
 /**
@@ -473,7 +493,9 @@ export function mergeDiscoveryNodes(
 		// Non-discovery node: recurse into children and pass through.
 		if (!isDiscoveryNode(node)) {
 			const mergedChildren = mergeDiscoveryNodes(node.children);
-			result.push(mergedChildren !== node.children ? { ...node, children: mergedChildren } : node);
+			result.push(
+        mergedChildren !== node.children ? { ...node, children: mergedChildren } : node,
+      );
 			i++;
 			continue;
 		}
@@ -500,20 +522,25 @@ export function mergeDiscoveryNodes(
 		const labels = run.map(n => n.label);
 		const uniqueLabels = [...new Set(labels)];
 		const summaryLabel = uniqueLabels.length <= 2
-			? uniqueLabels.join(', ')
-			: localize('discoveryMergedLabel', "{0} +{1} more", uniqueLabels[0], run.length - 1);
+			? uniqueLabels.join(", ")
+			: localize(
+          "discoveryMergedLabel",
+          "{0} +{1} more",
+          uniqueLabels[0],
+          run.length - 1,
+        );
 
 		result.push({
-			id: mergedId,
-			kind: 'generic',
-			category: 'discovery',
-			label: summaryLabel,
-			sublabel: localize('discoveryStepsCount', "{0} discovery steps", run.length),
-			tooltip: run.map(n => n.label + (n.sublabel ? `: ${n.sublabel}` : '')).join('\n'),
-			created: run[0].created,
-			children: [],
-			mergedNodes: run,
-		});
+      id: mergedId,
+      kind: "generic",
+      category: "discovery",
+      label: summaryLabel,
+      sublabel: localize("discoveryStepsCount", "{0} discovery steps", run.length),
+      tooltip: run.map(n => n.label + (n.sublabel ? `: ${n.sublabel}` : "")).join("\n"),
+      created: run[0].created,
+      children: [],
+      mergedNodes: run,
+    });
 		i = j;
 	}
 
@@ -523,7 +550,7 @@ export function mergeDiscoveryNodes(
 // ---- Tool call node merging ----
 
 function isToolCallNode(node: FlowNode): boolean {
-	return node.kind === 'toolCall';
+	return node.kind === "toolCall";
 }
 
 /**
@@ -557,7 +584,9 @@ export function mergeToolCallNodes(
 		// Non-tool-call node: recurse into children and pass through.
 		if (!isToolCallNode(node)) {
 			const mergedChildren = mergeToolCallNodes(node.children);
-			result.push(mergedChildren !== node.children ? { ...node, children: mergedChildren } : node);
+			result.push(
+        mergedChildren !== node.children ? { ...node, children: mergedChildren } : node,
+      );
 			i++;
 			continue;
 		}
@@ -574,7 +603,9 @@ export function mergeToolCallNodes(
 		if (run.length < 2) {
 			// Single tool call — recurse into children, nothing to merge.
 			const mergedChildren = mergeToolCallNodes(node.children);
-			result.push(mergedChildren !== node.children ? { ...node, children: mergedChildren } : node);
+			result.push(
+        mergedChildren !== node.children ? { ...node, children: mergedChildren } : node,
+      );
 			i = j;
 			continue;
 		}
@@ -583,15 +614,15 @@ export function mergeToolCallNodes(
 		const mergedId = `merged-toolCall:${run[0].id}`;
 
 		result.push({
-			id: mergedId,
-			kind: 'toolCall',
-			label: toolName,
-			sublabel: localize('toolCallsCount', "{0} calls", run.length),
-			tooltip: run.map(n => n.label + (n.sublabel ? `: ${n.sublabel}` : '')).join('\n'),
-			created: run[0].created,
-			children: [],
-			mergedNodes: run,
-		});
+      id: mergedId,
+      kind: "toolCall",
+      label: toolName,
+      sublabel: localize("toolCallsCount", "{0} calls", run.length),
+      tooltip: run.map(n => n.label + (n.sublabel ? `: ${n.sublabel}` : "")).join("\n"),
+      created: run[0].created,
+      children: [],
+      mergedNodes: run,
+    });
 		i = j;
 	}
 
@@ -605,88 +636,104 @@ export function mergeToolCallNodes(
  * "Agent response") to their proper typed kind so they receive
  * correct colors, labels, and sublabel treatment in the flow chart.
  */
-function getEffectiveKind(event: IChatDebugEvent): IChatDebugEvent['kind'] {
-	if (event.kind === 'generic') {
-		const name = event.name.toLowerCase().replace(/[\s_-]+/g, '');
-		if (name === 'usermessage' || name === 'userprompt' || name === 'user' || name.startsWith('usermessage')) {
-			return 'userMessage';
+function getEffectiveKind(event: IChatDebugEvent): IChatDebugEvent["kind"] {
+	if (event.kind === "generic") {
+		const name = event.name.toLowerCase().replace(/[\s_-]+/g, "");
+		if (name === "usermessage" || name === "userprompt" || name === "user" || name.startsWith(
+      "usermessage",
+    )) {
+			return "userMessage";
 		}
-		if (name === 'response' || name.startsWith('agentresponse') || name.startsWith('assistantresponse') || name.startsWith('modelresponse')) {
-			return 'agentResponse';
+		if (name === "response" || name.startsWith(
+      "agentresponse",
+    ) || name.startsWith('assistantresponse') || name.startsWith('modelresponse')) {
+			return "agentResponse";
 		}
 		const cat = event.category?.toLowerCase();
-		if (cat === 'user' || cat === 'usermessage') {
-			return 'userMessage';
+		if (cat === "user" || cat === "usermessage") {
+			return "userMessage";
 		}
-		if (cat === 'response' || cat === 'agentresponse') {
-			return 'agentResponse';
+		if (cat === "response" || cat === "agentresponse") {
+			return "agentResponse";
 		}
 	}
 	return event.kind;
 }
 
-function getEventLabel(event: IChatDebugEvent, effectiveKind?: IChatDebugEvent['kind']): string {
+function getEventLabel(event: IChatDebugEvent, effectiveKind?: IChatDebugEvent["kind"]): string {
 	const kind = effectiveKind ?? event.kind;
 	switch (kind) {
-		case 'userMessage':
-			return localize('userLabel', "User Message");
-		case 'modelTurn':
-			return event.kind === 'modelTurn' ? (event.model ?? localize('modelTurnLabel', "Model Turn")) : localize('modelTurnLabel', "Model Turn");
-		case 'toolCall':
-			return event.kind === 'toolCall' ? event.toolName : event.kind === 'generic' ? event.name : localize('toolCallLabel', "Tool Call");
-		case 'subagentInvocation':
-			return event.kind === 'subagentInvocation' ? event.agentName : localize('subagentFallback', "Subagent");
-		case 'agentResponse':
-			return localize('agentResponseLabel', "Agent Response");
-		case 'generic':
-			return event.kind === 'generic' ? event.name : localize('genericLabel', "Event");
+		case "userMessage":
+			return localize("userLabel", "User Message");
+		case "modelTurn":
+			return event.kind === "modelTurn" ? (event.model ?? localize(
+        "modelTurnLabel",
+        "Model Turn",
+      )) : localize("modelTurnLabel", "Model Turn");
+		case "toolCall":
+			return event.kind === "toolCall" ? event.toolName : event.kind === "generic" ? event.name : localize(
+        "toolCallLabel",
+        "Tool Call",
+      );
+		case "subagentInvocation":
+			return event.kind === "subagentInvocation" ? event.agentName : localize(
+        "subagentFallback",
+        "Subagent",
+      );
+		case "agentResponse":
+			return localize("agentResponseLabel", "Agent Response");
+		case "generic":
+			return event.kind === "generic" ? event.name : localize(
+        "genericLabel",
+        "Event",
+      );
 	}
 }
 
-function getEventSublabel(event: IChatDebugEvent, effectiveKind?: IChatDebugEvent['kind']): string | undefined {
+function getEventSublabel(event: IChatDebugEvent, effectiveKind?: IChatDebugEvent["kind"]): string | undefined {
 	const kind = effectiveKind ?? event.kind;
 	switch (kind) {
-		case 'modelTurn': {
+		case "modelTurn": {
 			const parts: string[] = [];
-			if (event.kind === 'modelTurn' && event.requestName) {
+			if (event.kind === "modelTurn" && event.requestName) {
 				parts.push(event.requestName);
 			}
-			if (event.kind === 'modelTurn' && event.totalTokens) {
-				parts.push(localize('tokenCount', "{0} tokens", event.totalTokens));
+			if (event.kind === "modelTurn" && event.totalTokens) {
+				parts.push(localize("tokenCount", "{0} tokens", event.totalTokens));
 			}
-			if (event.kind === 'modelTurn' && event.durationInMillis) {
+			if (event.kind === "modelTurn" && event.durationInMillis) {
 				parts.push(formatDuration(event.durationInMillis));
 			}
-			return parts.length > 0 ? parts.join(' \u00b7 ') : undefined;
+			return parts.length > 0 ? parts.join(" \u00b7 ") : undefined;
 		}
-		case 'toolCall': {
+		case "toolCall": {
 			const parts: string[] = [];
-			if (event.kind === 'toolCall' && event.result) {
+			if (event.kind === "toolCall" && event.result) {
 				parts.push(event.result);
 			}
-			if (event.kind === 'toolCall' && event.durationInMillis) {
+			if (event.kind === "toolCall" && event.durationInMillis) {
 				parts.push(formatDuration(event.durationInMillis));
 			}
-			return parts.length > 0 ? parts.join(' \u00b7 ') : undefined;
+			return parts.length > 0 ? parts.join(" \u00b7 ") : undefined;
 		}
-		case 'subagentInvocation': {
+		case "subagentInvocation": {
 			const parts: string[] = [];
-			if (event.kind === 'subagentInvocation' && event.status) {
+			if (event.kind === "subagentInvocation" && event.status) {
 				parts.push(event.status);
 			}
-			if (event.kind === 'subagentInvocation' && event.durationInMillis) {
+			if (event.kind === "subagentInvocation" && event.durationInMillis) {
 				parts.push(formatDuration(event.durationInMillis));
 			}
-			return parts.length > 0 ? parts.join(' \u00b7 ') : undefined;
+			return parts.length > 0 ? parts.join(" \u00b7 ") : undefined;
 		}
-		case 'userMessage':
-		case 'agentResponse': {
+		case "userMessage":
+		case "agentResponse": {
 			// Use the message summary as the sublabel. For remapped generic
 			// events, use the details property.
 			let text: string | undefined;
-			if (event.kind === 'userMessage' || event.kind === 'agentResponse') {
+			if (event.kind === "userMessage" || event.kind === "agentResponse") {
 				text = event.message;
-			} else if (event.kind === 'generic') {
+			} else if (event.kind === "generic") {
 				text = event.details;
 			}
 			if (!text) {
@@ -694,8 +741,8 @@ function getEventSublabel(event: IChatDebugEvent, effectiveKind?: IChatDebugEven
 			}
 			// Find the first meaningful line, skipping trivial lines like
 			// lone brackets/braces that appear when the message is JSON.
-			const lines = text.split('\n');
-			let firstLine = '';
+			const lines = text.split("\n");
+			let firstLine = "";
 			for (const line of lines) {
 				const trimmed = line.trim();
 				if (trimmed && trimmed.length > 2) {
@@ -705,12 +752,15 @@ function getEventSublabel(event: IChatDebugEvent, effectiveKind?: IChatDebugEven
 			}
 			if (!firstLine) {
 				// Fall back to the full text collapsed to a single line
-				firstLine = text.replace(/\s+/g, ' ').trim();
+				firstLine = text.replace(/\s+/g, " ").trim();
 			}
 			if (!firstLine) {
 				return undefined;
 			}
-			return firstLine.length > 60 ? firstLine.substring(0, 57) + '...' : firstLine;
+			return firstLine.length > 60 ? firstLine.substring(
+        0,
+        57,
+      ) + "..." : firstLine;
 		}
 		default:
 			return undefined;
@@ -725,81 +775,124 @@ function formatDuration(ms: number): string {
 }
 
 function isErrorEvent(event: IChatDebugEvent): boolean {
-	return (event.kind === 'toolCall' && event.result === 'error') ||
-		(event.kind === 'generic' && event.level === 3 /* ChatDebugLogLevel.Error */) ||
-		(event.kind === 'subagentInvocation' && event.status === 'failed');
+	return (event.kind === "toolCall" && event.result === "error") ||
+		(event.kind === "generic" && event.level === 3 /* ChatDebugLogLevel.Error */) ||
+		(event.kind === "subagentInvocation" && event.status === "failed");
 }
 
 const TOOLTIP_MAX_LENGTH = 500;
 
 function getEventTooltip(event: IChatDebugEvent): string | undefined {
 	switch (event.kind) {
-		case 'userMessage': {
+		case "userMessage": {
 			const msg = event.message.trim();
 			if (msg.length > TOOLTIP_MAX_LENGTH) {
-				return msg.substring(0, TOOLTIP_MAX_LENGTH) + '\u2026';
+				return msg.substring(0, TOOLTIP_MAX_LENGTH) + "\u2026";
 			}
 			return msg || undefined;
 		}
-		case 'toolCall': {
+		case "toolCall": {
 			const parts: string[] = [event.toolName];
 			if (event.input) {
 				const input = event.input.trim();
-				parts.push(localize('tooltipInput', "Input: {0}", input.length > TOOLTIP_MAX_LENGTH ? input.substring(0, TOOLTIP_MAX_LENGTH) + '\u2026' : input));
+				parts.push(
+          localize(
+            "tooltipInput",
+            "Input: {0}",
+            input.length > TOOLTIP_MAX_LENGTH ? input.substring(0, TOOLTIP_MAX_LENGTH) + "\u2026" : input,
+          ),
+        );
 			}
 			if (event.output) {
 				const output = event.output.trim();
-				parts.push(localize('tooltipOutput', "Output: {0}", output.length > TOOLTIP_MAX_LENGTH ? output.substring(0, TOOLTIP_MAX_LENGTH) + '\u2026' : output));
+				parts.push(
+          localize(
+            "tooltipOutput",
+            "Output: {0}",
+            output.length > TOOLTIP_MAX_LENGTH ? output.substring(0, TOOLTIP_MAX_LENGTH) + "\u2026" : output,
+          ),
+        );
 			}
 			if (event.result) {
-				parts.push(localize('tooltipResult', "Result: {0}", event.result));
+				parts.push(localize("tooltipResult", "Result: {0}", event.result));
 			}
-			return parts.join('\n');
+			return parts.join("\n");
 		}
-		case 'subagentInvocation': {
+		case "subagentInvocation": {
 			const parts: string[] = [event.agentName];
 			if (event.description) {
 				parts.push(event.description);
 			}
 			if (event.status) {
-				parts.push(localize('tooltipStatus', "Status: {0}", event.status));
+				parts.push(localize("tooltipStatus", "Status: {0}", event.status));
 			}
 			if (event.toolCallCount !== undefined) {
-				parts.push(localize('tooltipToolCalls', "Tool calls: {0}", event.toolCallCount));
+				parts.push(
+          localize("tooltipToolCalls", "Tool calls: {0}", event.toolCallCount),
+        );
 			}
 			if (event.modelTurnCount !== undefined) {
-				parts.push(localize('tooltipModelTurns', "Model turns: {0}", event.modelTurnCount));
+				parts.push(
+          localize(
+            "tooltipModelTurns",
+            "Model turns: {0}",
+            event.modelTurnCount,
+          ),
+        );
 			}
-			return parts.join('\n');
+			return parts.join("\n");
 		}
-		case 'generic': {
+		case "generic": {
 			if (event.details) {
 				const details = event.details.trim();
-				return details.length > TOOLTIP_MAX_LENGTH ? details.substring(0, TOOLTIP_MAX_LENGTH) + '\u2026' : details;
+				return details.length > TOOLTIP_MAX_LENGTH ? details.substring(
+          0,
+          TOOLTIP_MAX_LENGTH,
+        ) + "\u2026" : details;
 			}
 			return undefined;
 		}
-		case 'modelTurn': {
+		case "modelTurn": {
 			const parts: string[] = [];
 			if (event.model) {
 				parts.push(event.model);
 			}
 			if (event.totalTokens !== undefined) {
-				parts.push(localize('tooltipTokens', "Tokens: {0}", event.totalTokens));
+				parts.push(localize("tooltipTokens", "Tokens: {0}", event.totalTokens));
 			}
 			if (event.inputTokens !== undefined) {
-				parts.push(localize('tooltipInputTokens', "Input tokens: {0}", event.inputTokens));
+				parts.push(
+          localize("tooltipInputTokens", "Input tokens: {0}", event.inputTokens),
+        );
 			}
 			if (event.outputTokens !== undefined) {
-				parts.push(localize('tooltipOutputTokens', "Output tokens: {0}", event.outputTokens));
+				parts.push(
+          localize(
+            "tooltipOutputTokens",
+            "Output tokens: {0}",
+            event.outputTokens,
+          ),
+        );
 			}
 			if (event.cachedTokens !== undefined) {
-				parts.push(localize('tooltipCachedTokens', "Cached tokens: {0}", event.cachedTokens));
+				parts.push(
+          localize(
+            "tooltipCachedTokens",
+            "Cached tokens: {0}",
+            event.cachedTokens,
+          ),
+        );
 			}
 			if (event.durationInMillis !== undefined) {
-				parts.push(localize('tooltipDuration', "Duration: {0}", formatDuration(event.durationInMillis)));
+				parts.push(
+          localize(
+            "tooltipDuration",
+            "Duration: {0}",
+            formatDuration(event.durationInMillis),
+          ),
+        );
 			}
-			return parts.length > 0 ? parts.join('\n') : undefined;
+			return parts.length > 0 ? parts.join("\n") : undefined;
 		}
 		default:
 			return undefined;

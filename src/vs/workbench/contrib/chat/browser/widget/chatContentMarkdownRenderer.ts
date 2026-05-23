@@ -3,19 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { $, reset } from '../../../../../base/browser/dom.js';
-import { IRenderedMarkdown, MarkdownRenderOptions } from '../../../../../base/browser/markdownRenderer.js';
-import { getDefaultHoverDelegate } from '../../../../../base/browser/ui/hover/hoverDelegateFactory.js';
-import { IMarkdownString } from '../../../../../base/common/htmlContent.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { IMarkdownRenderer, IMarkdownRendererService } from '../../../../../platform/markdown/browser/markdownRenderer.js';
-import { ILanguageService } from '../../../../../editor/common/languages/language.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { IHoverService } from '../../../../../platform/hover/browser/hover.js';
-import { IOpenerService } from '../../../../../platform/opener/common/opener.js';
-import product from '../../../../../platform/product/common/product.js';
-import { Schemas } from '../../../../../base/common/network.js';
-import { AGENT_HOST_SCHEME } from '../../../../../platform/agentHost/common/agentHostUri.js';
+import { $, reset } from "../../../../../base/browser/dom.js";
+import { IRenderedMarkdown, MarkdownRenderOptions } from "../../../../../base/browser/markdownRenderer.js";
+import { getDefaultHoverDelegate } from "../../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { IMarkdownString } from "../../../../../base/common/htmlContent.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { IMarkdownRenderer, IMarkdownRendererService } from "../../../../../platform/markdown/browser/markdownRenderer.js";
+import { ILanguageService } from "../../../../../editor/common/languages/language.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IHoverService } from "../../../../../platform/hover/browser/hover.js";
+import { IOpenerService } from "../../../../../platform/opener/common/opener.js";
+import product from "../../../../../platform/product/common/product.js";
+import { Schemas } from "../../../../../base/common/network.js";
+import { AGENT_HOST_SCHEME } from "../../../../../platform/agentHost/common/agentHostUri.js";
 
 const _remoteImageDisallowed = () => false;
 
@@ -29,55 +29,58 @@ function renderPlainTextMarkdown(markdown: IMarkdownString, outElement?: HTMLEle
 		return undefined;
 	}
 
-	const element = outElement ?? $('div');
-	element.classList.add('rendered-markdown');
-	reset(element, $('p', undefined, value.length > 100_000 ? `${value.substr(0, 100_000)}…` : value));
+	const element = outElement ?? $("div");
+	element.classList.add("rendered-markdown");
+	reset(
+    element,
+    $(
+      "p",
+      undefined,
+      value.length > 100_000 ? `${value.substr(0, 100_000)}…` : value,
+    ),
+  );
 	return {
-		element,
-		dispose: () => { }
-	};
+    element,
+    dispose: () => { },
+  };
 }
 
 export const allowedChatMarkdownHtmlTags = Object.freeze([
-	'b',
-	'blockquote',
-	'br',
-	'code',
-	'del',
-	'em',
-	'h1',
-	'h2',
-	'h3',
-	'h4',
-	'h5',
-	'h6',
-	'hr',
-	'i',
-	'ins',
-	'li',
-	'ol',
-	'p',
-	'pre',
-	's',
-	'strong',
-	'sub',
-	'sup',
-	'table',
-	'tbody',
-	'td',
-	'th',
-	'thead',
-	'tr',
-	'ul',
-	'a',
-	'img',
-
-	// TODO@roblourens when we sanitize attributes in markdown source, we can ban these elements at that step. microsoft/vscode-copilot#5091
-	// Not in the official list, but used for codicons and other vscode markdown extensions
-	'span',
-	'div',
-
-	'input', // Allowed for rendering checkboxes. Other types of inputs are removed and the inputs are always disabled
+  "b",
+  "blockquote",
+  "br",
+  "code",
+  "del",
+  "em",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "hr",
+  "i",
+  "ins",
+  "li",
+  "ol",
+  "p",
+  "pre",
+  "s",
+  "strong",
+  "sub",
+  "sup",
+  "table",
+  "tbody",
+  "td",
+  "th",
+  "thead",
+  "tr",
+  "ul",
+  "a",
+  "img",
+  "span",
+  "div",
+  "input",
 ]);
 
 export function getChatMarkdownRenderOptions(options?: MarkdownRenderOptions): MarkdownRenderOptions {
@@ -89,9 +92,9 @@ export function getChatMarkdownRenderOptions(options?: MarkdownRenderOptions): M
 				override: allowedChatMarkdownHtmlTags,
 			},
 			...options?.sanitizerConfig,
-			allowedLinkSchemes: { augment: [product.urlProtocol, 'copilot-skill', Schemas.vscodeBrowser, AGENT_HOST_SCHEME] },
+			allowedLinkSchemes: { augment: [product.urlProtocol, "copilot-skill", Schemas.vscodeBrowser, AGENT_HOST_SCHEME] },
 			remoteImageIsAllowed: _remoteImageDisallowed,
-		}
+		},
 	};
 }
 
@@ -124,7 +127,11 @@ export class ChatContentMarkdownRenderer implements IMarkdownRenderer {
 				value: `<body>\n\n${markdown.value}\n\n</body>`,
 			}
 			: markdown;
-		const result = this.markdownRendererService.render(mdWithBody, options, outElement);
+		const result = this.markdownRendererService.render(
+      mdWithBody,
+      options,
+      outElement,
+    );
 
 		// In some cases, the renderer can return top level text nodes  but our CSS expects
 		// all text to be in a <p> for margin to be applied properly.
@@ -132,7 +139,7 @@ export class ChatContentMarkdownRenderer implements IMarkdownRenderer {
 		result.element.normalize();
 		for (const child of result.element.childNodes) {
 			if (child.nodeType === Node.TEXT_NODE && child.textContent?.trim()) {
-				child.replaceWith($('p', undefined, child.textContent));
+				child.replaceWith($("p", undefined, child.textContent));
 			}
 		}
 		return this.attachCustomHover(result);
@@ -141,11 +148,11 @@ export class ChatContentMarkdownRenderer implements IMarkdownRenderer {
 	private attachCustomHover(result: IRenderedMarkdown): IRenderedMarkdown {
 		const store = new DisposableStore();
 		// eslint-disable-next-line no-restricted-syntax
-		result.element.querySelectorAll('a').forEach((element) => {
+		result.element.querySelectorAll("a").forEach((element) => {
 			if (element.title) {
 				const title = element.title;
-				element.title = '';
-				store.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate('element'), element, title));
+				element.title = "";
+				store.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate("element"), element, title));
 			}
 		});
 
@@ -154,7 +161,7 @@ export class ChatContentMarkdownRenderer implements IMarkdownRenderer {
 			dispose: () => {
 				result.dispose();
 				store.dispose();
-			}
+			},
 		};
 	}
 }

@@ -3,24 +3,31 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Codicon } from '../../../../base/common/codicons.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { localize, localize2 } from '../../../../nls.js';
-import { Action2, MenuId, registerAction2 } from '../../../../platform/actions/common/actions.js';
-import { ContextKeyExpr, IContextKeyService, RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
-import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { bindContextKey } from '../../../../platform/observable/common/platformObservableUtils.js';
-import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../../workbench/common/contributions.js';
-import { IsSessionsWindowContext } from '../../../../workbench/common/contextkeys.js';
-import { ChatViewPaneTarget, IChatWidgetService } from '../../../../workbench/contrib/chat/browser/chat.js';
-import { ChatContextKeys } from '../../../../workbench/contrib/chat/common/actions/chatContextKeys.js';
-import { CHAT_CATEGORY } from '../../../../workbench/contrib/chat/browser/actions/chatActions.js';
-import { IGitHubService } from '../../github/browser/githubService.js';
-import { GitHubCheckConclusion, GitHubCheckStatus, IGitHubCICheck } from '../../github/common/types.js';
-import { ISessionsManagementService } from '../../../services/sessions/common/sessionsManagement.js';
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { Action2, MenuId, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { ContextKeyExpr, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { bindContextKey } from "../../../../platform/observable/common/platformObservableUtils.js";
+import {
+  IWorkbenchContribution,
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../../../workbench/common/contributions.js";
+import { IsSessionsWindowContext } from "../../../../workbench/common/contextkeys.js";
+import { ChatViewPaneTarget, IChatWidgetService } from "../../../../workbench/contrib/chat/browser/chat.js";
+import { ChatContextKeys } from "../../../../workbench/contrib/chat/common/actions/chatContextKeys.js";
+import { CHAT_CATEGORY } from "../../../../workbench/contrib/chat/browser/actions/chatActions.js";
+import { IGitHubService } from "../../github/browser/githubService.js";
+import { GitHubCheckConclusion, GitHubCheckStatus, IGitHubCICheck } from "../../github/common/types.js";
+import { ISessionsManagementService } from "../../../services/sessions/common/sessionsManagement.js";
 
-export const hasActiveSessionFailedCIChecks = new RawContextKey<boolean>('sessions.hasActiveSessionFailedCIChecks', false);
+export const hasActiveSessionFailedCIChecks = new RawContextKey<boolean>(
+  "sessions.hasActiveSessionFailedCIChecks",
+  false,
+);
 
 // --- Shared CI check utilities ------------------------------------------------
 
@@ -44,20 +51,22 @@ export function getCheckGroup(check: IGitHubCICheck): CICheckGroup {
 		case GitHubCheckStatus.Queued:
 			return CICheckGroup.Pending;
 		case GitHubCheckStatus.Completed:
-			return isFailedConclusion(check.conclusion) ? CICheckGroup.Failed : CICheckGroup.Successful;
+			return isFailedConclusion(
+        check.conclusion,
+      ) ? CICheckGroup.Failed : CICheckGroup.Successful;
 	}
 }
 
 export function getCheckStateLabel(check: IGitHubCICheck): string {
 	switch (getCheckGroup(check)) {
 		case CICheckGroup.Running:
-			return localize('ci.runningState', "running");
+			return localize("ci.runningState", "running");
 		case CICheckGroup.Pending:
-			return localize('ci.pendingState', "pending");
+			return localize("ci.pendingState", "pending");
 		case CICheckGroup.Failed:
-			return localize('ci.failedState', "failed");
+			return localize("ci.failedState", "failed");
 		case CICheckGroup.Successful:
-			return localize('ci.successfulState', "successful");
+			return localize("ci.successfulState", "successful");
 	}
 }
 
@@ -70,26 +79,26 @@ export function buildFixChecksPrompt(failedChecks: ReadonlyArray<{ check: IGitHu
 		const parts = [
 			`Check: ${check.name}`,
 			`Status: ${getCheckStateLabel(check)}`,
-			`Conclusion: ${check.conclusion ?? 'unknown'}`,
+			`Conclusion: ${check.conclusion ?? "unknown"}`,
 		];
 
 		if (check.detailsUrl) {
 			parts.push(`Details: ${check.detailsUrl}`);
 		}
 
-		parts.push('', 'Annotations and output:', annotations || 'No output available for this check run.');
-		return parts.join('\n');
+		parts.push("", "Annotations and output:", annotations || "No output available for this check run.");
+		return parts.join("\n");
 	});
 
 	return [
-		'Please fix the failed CI checks for this session immediately.',
-		'Use the failed check information below, including annotations and check output, to identify the root causes and make the necessary code changes.',
-		'Focus on resolving these CI failures. Avoid unrelated changes unless they are required to fix the checks.',
-		'',
-		'Failed CI checks:',
-		'',
-		sections.join('\n\n---\n\n'),
-	].join('\n');
+		"Please fix the failed CI checks for this session immediately.",
+		"Use the failed check information below, including annotations and check output, to identify the root causes and make the necessary code changes.",
+		"Focus on resolving these CI failures. Avoid unrelated changes unless they are required to fix the checks.",
+		"",
+		"Failed CI checks:",
+		"",
+		sections.join("\n\n---\n\n"),
+	].join("\n");
 }
 
 /**
@@ -98,7 +107,7 @@ export function buildFixChecksPrompt(failedChecks: ReadonlyArray<{ check: IGitHu
  */
 class ActiveSessionFailedCIChecksContextContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'workbench.contrib.activeSessionFailedCIChecksContext';
+	static readonly ID = "workbench.contrib.activeSessionFailedCIChecksContext";
 
 	constructor(
 		@IContextKeyService contextKeyService: IContextKeyService,
@@ -119,18 +128,18 @@ class ActiveSessionFailedCIChecksContextContribution extends Disposable implemen
 
 class FixCIChecksAction extends Action2 {
 
-	static readonly ID = 'sessions.action.fixCIChecks';
+	static readonly ID = "sessions.action.fixCIChecks";
 
 	constructor() {
 		super({
 			id: FixCIChecksAction.ID,
-			title: localize2('fixChecks', 'Fix Checks'),
+			title: localize2("fixChecks", "Fix Checks"),
 			icon: Codicon.lightbulbAutofix,
 			category: CHAT_CATEGORY,
 			precondition: ContextKeyExpr.and(ChatContextKeys.enabled, hasActiveSessionFailedCIChecks),
 			menu: [{
 				id: MenuId.AgentsChangesPrimaryActionSubMenu,
-				group: '5_checks',
+				group: "5_checks",
 				order: 4,
 				when: ContextKeyExpr.and(IsSessionsWindowContext, hasActiveSessionFailedCIChecks),
 			}],
@@ -159,17 +168,27 @@ class FixCIChecksAction extends Action2 {
 			return;
 		}
 
-		const failedCheckDetails = await Promise.all(failedChecks.map(async check => {
-			const annotations = await ciModel.getCheckRunAnnotations(check.id);
-			return { check, annotations };
-		}));
+		const failedCheckDetails = await Promise.all(
+      failedChecks.map(async check => {
+        const annotations = await ciModel.getCheckRunAnnotations(check.id);
+        return { check, annotations };
+      }),
+    );
 
 		const prompt = buildFixChecksPrompt(failedCheckDetails);
 		const sessionResource = activeSession.resource;
-		const chatWidget = chatWidgetService.getWidgetBySessionResource(sessionResource)
-			?? await chatWidgetService.openSession(sessionResource, ChatViewPaneTarget);
+		const chatWidget = chatWidgetService.getWidgetBySessionResource(
+      sessionResource,
+    )
+			?? await chatWidgetService.openSession(
+        sessionResource,
+        ChatViewPaneTarget,
+      );
 		if (!chatWidget) {
-			logService.error('[FixCIChecks] Cannot fix CI checks: no chat widget found for session', sessionResource.toString());
+			logService.error(
+        "[FixCIChecks] Cannot fix CI checks: no chat widget found for session",
+        sessionResource.toString(),
+      );
 			return;
 		}
 
@@ -177,5 +196,9 @@ class FixCIChecksAction extends Action2 {
 	}
 }
 
-registerWorkbenchContribution2(ActiveSessionFailedCIChecksContextContribution.ID, ActiveSessionFailedCIChecksContextContribution, WorkbenchPhase.AfterRestored);
+registerWorkbenchContribution2(
+  ActiveSessionFailedCIChecksContextContribution.ID,
+  ActiveSessionFailedCIChecksContextContribution,
+  WorkbenchPhase.AfterRestored,
+);
 registerAction2(FixCIChecksAction);

@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { safeIntl } from '../../../../base/common/date.js';
-import { Lazy } from '../../../../base/common/lazy.js';
-import { EditOperation, ISingleEditOperation } from '../../../common/core/editOperation.js';
-import { Range } from '../../../common/core/range.js';
-import { Selection } from '../../../common/core/selection.js';
-import { ICommand, ICursorStateComputerData, IEditOperationBuilder } from '../../../common/editorCommon.js';
-import { ITextModel } from '../../../common/model.js';
+import { safeIntl } from "../../../../base/common/date.js";
+import { Lazy } from "../../../../base/common/lazy.js";
+import { EditOperation, ISingleEditOperation } from "../../../common/core/editOperation.js";
+import { Range } from "../../../common/core/range.js";
+import { Selection } from "../../../common/core/selection.js";
+import { ICommand, ICursorStateComputerData, IEditOperationBuilder } from "../../../common/editorCommon.js";
+import { ITextModel } from "../../../common/model.js";
 
 export class SortLinesCommand implements ICommand {
 
@@ -88,11 +88,11 @@ function getSortData(model: ITextModel, selection: Selection, descending: boolea
 	}
 
 	return {
-		startLineNumber: startLineNumber,
-		endLineNumber: endLineNumber,
-		before: linesToSort,
-		after: sorted
-	};
+    startLineNumber: startLineNumber,
+    endLineNumber: endLineNumber,
+    before: linesToSort,
+    after: sorted,
+  };
 }
 
 /**
@@ -106,7 +106,12 @@ function sortLines(model: ITextModel, selection: Selection, descending: boolean)
 	}
 
 	return EditOperation.replace(
-		new Range(data.startLineNumber, 1, data.endLineNumber, model.getLineMaxColumn(data.endLineNumber)),
-		data.after.join('\n')
-	);
+    new Range(
+      data.startLineNumber,
+      1,
+      data.endLineNumber,
+      model.getLineMaxColumn(data.endLineNumber),
+    ),
+    data.after.join("\n"),
+  );
 }

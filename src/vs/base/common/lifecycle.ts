@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { compareBy, numberComparator } from './arrays.js';
-import { groupBy } from './collections.js';
-import { SetMap, ResourceMap } from './map.js';
-import { URI } from './uri.js';
-import { createSingleCallFunction } from './functional.js';
-import { Iterable } from './iterator.js';
-import { BugIndicatingError, onUnexpectedError } from './errors.js';
+import { compareBy, numberComparator } from "./arrays.js";
+import { groupBy } from "./collections.js";
+import { SetMap, ResourceMap } from "./map.js";
+import { URI } from "./uri.js";
+import { createSingleCallFunction } from "./functional.js";
+import { Iterable } from "./iterator.js";
+import { BugIndicatingError, onUnexpectedError } from "./errors.js";
 
 // #region Disposable Tracking
 
@@ -49,11 +49,11 @@ export interface IDisposableTracker {
 export class GCBasedDisposableTracker implements IDisposableTracker {
 
 	private readonly _registry = new FinalizationRegistry<string>(heldValue => {
-		console.warn(`[LEAKED DISPOSABLE] ${heldValue}`);
-	});
+    console.warn(`[LEAKED DISPOSABLE] ${heldValue}`);
+  });
 
 	trackDisposable(disposable: IDisposable): void {
-		const stack = new Error('CREATED via:').stack!;
+		const stack = new Error("CREATED via:").stack!;
 		this._registry.register(disposable, stack, disposable);
 	}
 
@@ -90,7 +90,13 @@ export class DisposableTracker implements IDisposableTracker {
 	private getDisposableData(d: IDisposable): DisposableInfo {
 		let val = this.livingDisposables.get(d);
 		if (!val) {
-			val = { parent: null, source: null, isSingleton: false, value: d, idx: DisposableTracker.idx++ };
+			val = {
+        parent: null,
+        source: null,
+        isSingleton: false,
+        value: d,
+        idx: DisposableTracker.idx++,
+      };
 			this.livingDisposables.set(d, val);
 		}
 		return val;
@@ -123,7 +129,10 @@ export class DisposableTracker implements IDisposableTracker {
 			return cacheValue;
 		}
 
-		const result = data.parent ? this.getRootParent(this.getDisposableData(data.parent), cache) : data;
+		const result = data.parent ? this.getRootParent(
+      this.getDisposableData(data.parent),
+      cache,
+    ) : data;
 		cache.set(data, result);
 		return result;
 	}
@@ -155,11 +164,11 @@ export class DisposableTracker implements IDisposableTracker {
 
 			// Remove all objects that are a child of other leaking objects. Assumes there are no cycles.
 			uncoveredLeakingObjs = leakingObjects.filter(l => {
-				return !(l.parent && leakingObjsSet.has(l.parent));
-			});
+        return !(l.parent && leakingObjsSet.has(l.parent));
+      });
 
 			if (uncoveredLeakingObjs.length === 0) {
-				throw new Error('There are cyclic diposable chains!');
+				throw new Error("There are cyclic diposable chains!");
 			}
 		}
 
@@ -169,13 +178,21 @@ export class DisposableTracker implements IDisposableTracker {
 
 		function getStackTracePath(leaking: DisposableInfo): string[] {
 			function removePrefix(array: string[], linesToRemove: (string | RegExp)[]) {
-				while (array.length > 0 && linesToRemove.some(regexp => typeof regexp === 'string' ? regexp === array[0] : array[0].match(regexp))) {
+				while (array.length > 0 && linesToRemove.some(
+          regexp => typeof regexp === "string" ? regexp === array[0] : array[0].match(regexp),
+        )) {
 					array.shift();
 				}
 			}
 
-			const lines = leaking.source!.split('\n').map(p => p.trim().replace('at ', '')).filter(l => l !== '');
-			removePrefix(lines, ['Error', /^trackDisposable \(.*\)$/, /^DisposableTracker.trackDisposable \(.*\)$/]);
+			const lines = leaking.source!.split("\n").map(p => p.trim().replace("at ", "")).filter(
+        l => l !== "",
+      );
+			removePrefix(lines, [
+        "Error",
+        /^trackDisposable \(.*\)$/,
+        /^DisposableTracker.trackDisposable \(.*\)$/,
+      ]);
 			return lines.reverse();
 		}
 
@@ -183,14 +200,14 @@ export class DisposableTracker implements IDisposableTracker {
 		for (const leaking of uncoveredLeakingObjs) {
 			const stackTracePath = getStackTracePath(leaking);
 			for (let i = 0; i <= stackTracePath.length; i++) {
-				stackTraceStarts.add(stackTracePath.slice(0, i).join('\n'), leaking);
+				stackTraceStarts.add(stackTracePath.slice(0, i).join("\n"), leaking);
 			}
 		}
 
 		// Put earlier leaks first
 		uncoveredLeakingObjs.sort(compareBy(l => l.idx, numberComparator));
 
-		let message = '';
+		let message = "";
 
 		let i = 0;
 		for (const leaking of uncoveredLeakingObjs.slice(0, maxReported)) {
@@ -200,22 +217,31 @@ export class DisposableTracker implements IDisposableTracker {
 
 			for (let i = 0; i < stackTracePath.length; i++) {
 				let line = stackTracePath[i];
-				const starts = stackTraceStarts.get(stackTracePath.slice(0, i + 1).join('\n'));
+				const starts = stackTraceStarts.get(
+          stackTracePath.slice(0, i + 1).join("\n"),
+        );
 				line = `(shared with ${starts.size}/${uncoveredLeakingObjs.length} leaks) at ${line}`;
 
-				const prevStarts = stackTraceStarts.get(stackTracePath.slice(0, i).join('\n'));
-				const continuations = groupBy([...prevStarts].map(d => getStackTracePath(d)[i]), v => v);
+				const prevStarts = stackTraceStarts.get(
+          stackTracePath.slice(0, i).join("\n"),
+        );
+				const continuations = groupBy(
+          [...prevStarts].map(d => getStackTracePath(d)[i]),
+          v => v,
+        );
 				delete continuations[stackTracePath[i]];
 				for (const [cont, set] of Object.entries(continuations)) {
 					if (set) {
-						stackTraceFormattedLines.unshift(`    - stacktraces of ${set.length} other leaks continue with ${cont}`);
+						stackTraceFormattedLines.unshift(
+              `    - stacktraces of ${set.length} other leaks continue with ${cont}`,
+            );
 					}
 				}
 
 				stackTraceFormattedLines.unshift(line);
 			}
 
-			message += `\n\n\n==================== Leaking disposable ${i}/${uncoveredLeakingObjs.length}: ${leaking.value.constructor.name} ====================\n${stackTraceFormattedLines.join('\n')}\n============================================================\n\n`;
+			message += `\n\n\n==================== Leaking disposable ${i}/${uncoveredLeakingObjs.length}: ${leaking.value.constructor.name} ====================\n${stackTraceFormattedLines.join("\n")}\n============================================================\n\n`;
 		}
 
 		if (uncoveredLeakingObjs.length > maxReported) {
@@ -231,10 +257,10 @@ export function setDisposableTracker(tracker: IDisposableTracker | null): void {
 }
 
 if (TRACK_DISPOSABLES) {
-	const __is_disposable_tracked__ = '__is_disposable_tracked__';
+	const __is_disposable_tracked__ = "__is_disposable_tracked__";
 	setDisposableTracker(new class implements IDisposableTracker {
 		trackDisposable(x: IDisposable): void {
-			const stack = new Error('Potentially leaked disposable').stack!;
+			const stack = new Error("Potentially leaked disposable").stack!;
 			setTimeout(() => {
 				// eslint-disable-next-line local/code-no-any-casts
 				if (!(x as any)[__is_disposable_tracked__]) {
@@ -318,7 +344,7 @@ export interface IDisposable {
  */
 export function isDisposable<E>(thing: E): thing is E & IDisposable {
 	// eslint-disable-next-line local/code-no-any-casts
-	return typeof thing === 'object' && thing !== null && typeof (<IDisposable><any>thing).dispose === 'function' && (<IDisposable><any>thing).dispose.length === 0;
+	return typeof thing === "object" && thing !== null && typeof (<IDisposable><any>thing).dispose === "function" && (<IDisposable><any>thing).dispose.length === 0;
 }
 
 /**
@@ -346,7 +372,10 @@ export function dispose<T extends IDisposable>(arg: T | Iterable<T> | undefined)
 		if (errors.length === 1) {
 			throw errors[0];
 		} else if (errors.length > 1) {
-			throw new AggregateError(errors, 'Encountered errors while disposing of store');
+			throw new AggregateError(
+        errors,
+        "Encountered errors while disposing of store",
+      );
 		}
 
 		return Array.isArray(arg) ? [] : arg;
@@ -389,7 +418,9 @@ class FunctionDisposable implements IDisposable {
 			return;
 		}
 		if (!this._fn) {
-			throw new Error(`Unbound disposable context: Need to use an arrow function to preserve the value of this`);
+			throw new Error(
+        `Unbound disposable context: Need to use an arrow function to preserve the value of this`,
+      );
 		}
 		this._isDisposed = true;
 		markAsDisposed(this);
@@ -469,13 +500,15 @@ export class DisposableStore implements IDisposable {
 			return o;
 		}
 		if ((o as unknown as DisposableStore) === this) {
-			throw new Error('Cannot register a disposable on itself!');
+			throw new Error("Cannot register a disposable on itself!");
 		}
 
 		setParentOfDisposable(o, this);
 		if (this._isDisposed) {
 			if (!DisposableStore.DISABLE_DISPOSED_WARNING) {
-				console.warn(new Error('Trying to add a disposable to a DisposableStore that has already been disposed of. The added object will be leaked!').stack);
+				console.warn(
+          new Error("Trying to add a disposable to a DisposableStore that has already been disposed of. The added object will be leaked!").stack,
+        );
 			}
 		} else {
 			this._toDispose.add(o);
@@ -493,7 +526,7 @@ export class DisposableStore implements IDisposable {
 			return;
 		}
 		if ((o as unknown as DisposableStore) === this) {
-			throw new Error('Cannot dispose a disposable on itself!');
+			throw new Error("Cannot dispose a disposable on itself!");
 		}
 		this._toDispose.delete(o);
 		o.dispose();
@@ -513,7 +546,7 @@ export class DisposableStore implements IDisposable {
 
 	public assertNotDisposed(): void {
 		if (this._isDisposed) {
-			onUnexpectedError(new BugIndicatingError('Object disposed'));
+			onUnexpectedError(new BugIndicatingError("Object disposed"));
 		}
 	}
 }
@@ -550,7 +583,7 @@ export abstract class Disposable implements IDisposable {
 	 */
 	protected _register<T extends IDisposable>(o: T): T {
 		if ((o as unknown as Disposable) === this) {
-			throw new Error('Cannot register a disposable on itself!');
+			throw new Error("Cannot register a disposable on itself!");
 		}
 		return this._store.add(o);
 	}
@@ -691,7 +724,10 @@ export abstract class ReferenceCollection<T> {
 		let reference = this.references.get(key);
 
 		if (!reference) {
-			reference = { counter: 0, object: this.createReferencedObject(key, ...args) };
+			reference = {
+        counter: 0,
+        object: this.createReferencedObject(key, ...args),
+      };
 			this.references.set(key, reference);
 		}
 
@@ -727,9 +763,9 @@ export class AsyncReferenceCollection<T> {
 			const object = await ref.object;
 
 			return {
-				object,
-				dispose: () => ref.dispose()
-			};
+        object,
+        dispose: () => ref.dispose(),
+      };
 		} catch (error) {
 			ref.dispose();
 			throw error;
@@ -804,7 +840,9 @@ export class DisposableMap<K, V extends IDisposable = IDisposable> implements ID
 
 	set(key: K, value: V, skipDisposeOnOverwrite = false): void {
 		if (this._isDisposed) {
-			console.warn(new Error('Trying to add a disposable to a DisposableMap that has already been disposed of. The added object will be leaked!').stack);
+			console.warn(
+        new Error("Trying to add a disposable to a DisposableMap that has already been disposed of. The added object will be leaked!").stack,
+      );
 		}
 
 		if (!skipDisposeOnOverwrite) {
@@ -898,7 +936,9 @@ export class DisposableSet<V extends IDisposable = IDisposable> implements IDisp
 
 	add(value: V): void {
 		if (this._isDisposed) {
-			console.warn(new Error('Trying to add a disposable to a DisposableSet that has already been disposed of. The added object will be leaked!').stack);
+			console.warn(
+        new Error("Trying to add a disposable to a DisposableSet that has already been disposed of. The added object will be leaked!").stack,
+      );
 		}
 
 		this._store.add(value);
@@ -947,8 +987,8 @@ export function thenIfNotDisposed<T>(promise: Promise<T>, then: (result: T) => v
 		then(result);
 	});
 	return toDisposable(() => {
-		disposed = true;
-	});
+    disposed = true;
+  });
 }
 
 /**

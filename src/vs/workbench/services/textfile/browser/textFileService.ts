@@ -3,53 +3,103 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../../../nls.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IEncodingSupport, ITextFileService, ITextFileStreamContent, ITextFileContent, IResourceEncodings, IReadTextFileOptions, IWriteTextFileOptions, toBufferOrReadable, TextFileOperationError, TextFileOperationResult, ITextFileSaveOptions, ITextFileEditorModelManager, IResourceEncoding, stringToSnapshot, ITextFileSaveAsOptions, IReadTextFileEncodingOptions, TextFileEditorModelState, IResolvedTextFileEditorModel } from '../common/textfiles.js';
-import { IRevertOptions, SaveSourceRegistry } from '../../../common/editor.js';
-import { ILifecycleService } from '../../lifecycle/common/lifecycle.js';
-import { IFileService, FileOperationError, FileOperationResult, IFileStatWithMetadata, ICreateFileOptions, IFileStreamContent } from '../../../../platform/files/common/files.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { extname as pathExtname } from '../../../../base/common/path.js';
-import { IWorkbenchEnvironmentService } from '../../environment/common/environmentService.js';
-import { IUntitledTextEditorService, IUntitledTextEditorModelManager } from '../../untitled/common/untitledTextEditorService.js';
-import { IResolvedUntitledTextEditorModel, UntitledTextEditorModel } from '../../untitled/common/untitledTextEditorModel.js';
-import { TextFileEditorModelManager } from '../common/textFileEditorModelManager.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { Schemas } from '../../../../base/common/network.js';
-import { createTextBufferFactoryFromSnapshot, createTextBufferFactoryFromStream } from '../../../../editor/common/model/textModel.js';
-import { IModelService } from '../../../../editor/common/services/model.js';
-import { joinPath, dirname, basename, toLocalResource, extname, isEqual } from '../../../../base/common/resources.js';
-import { IDialogService, IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
-import { VSBuffer, VSBufferReadable, bufferToStream, VSBufferReadableStream } from '../../../../base/common/buffer.js';
-import { ITextSnapshot, ITextModel } from '../../../../editor/common/model.js';
-import { ITextResourceConfigurationService } from '../../../../editor/common/services/textResourceConfiguration.js';
-import { PLAINTEXT_LANGUAGE_ID } from '../../../../editor/common/languages/modesRegistry.js';
-import { IFilesConfigurationService } from '../../filesConfiguration/common/filesConfigurationService.js';
-import { IResolvedTextEditorModel } from '../../../../editor/common/services/resolverService.js';
-import { BaseTextEditorModel } from '../../../common/editor/textEditorModel.js';
-import { ICodeEditorService } from '../../../../editor/browser/services/codeEditorService.js';
-import { IPathService } from '../../path/common/pathService.js';
-import { IWorkingCopyFileService, IFileOperationUndoRedoInfo, ICreateFileOperation } from '../../workingCopy/common/workingCopyFileService.js';
-import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
-import { IWorkspaceContextService, WORKSPACE_EXTENSION } from '../../../../platform/workspace/common/workspace.js';
-import { UTF8, UTF8_with_bom, UTF16be, UTF16le, encodingExists, toEncodeReadable, toDecodeStream, IDecodeStreamResult, DecodeStreamError, DecodeStreamErrorKind } from '../common/encoding.js';
-import { consumeStream, ReadableStream } from '../../../../base/common/stream.js';
-import { ILanguageService } from '../../../../editor/common/languages/language.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { CancellationToken, CancellationTokenSource } from '../../../../base/common/cancellation.js';
-import { IElevatedFileService } from '../../files/common/elevatedFileService.js';
-import { IDecorationData, IDecorationsProvider, IDecorationsService } from '../../decorations/common/decorations.js';
-import { Emitter } from '../../../../base/common/event.js';
-import { Codicon } from '../../../../base/common/codicons.js';
-import { listErrorForeground } from '../../../../platform/theme/common/colorRegistry.js';
+import { localize } from "../../../../nls.js";
+import { URI } from "../../../../base/common/uri.js";
+import {
+  IEncodingSupport,
+  ITextFileService,
+  ITextFileStreamContent,
+  ITextFileContent,
+  IResourceEncodings,
+  IReadTextFileOptions,
+  IWriteTextFileOptions,
+  toBufferOrReadable,
+  TextFileOperationError,
+  TextFileOperationResult,
+  ITextFileSaveOptions,
+  ITextFileEditorModelManager,
+  IResourceEncoding,
+  stringToSnapshot,
+  ITextFileSaveAsOptions,
+  IReadTextFileEncodingOptions,
+  TextFileEditorModelState,
+  IResolvedTextFileEditorModel,
+} from "../common/textfiles.js";
+import { IRevertOptions, SaveSourceRegistry } from "../../../common/editor.js";
+import { ILifecycleService } from "../../lifecycle/common/lifecycle.js";
+import {
+  IFileService,
+  FileOperationError,
+  FileOperationResult,
+  IFileStatWithMetadata,
+  ICreateFileOptions,
+  IFileStreamContent,
+} from "../../../../platform/files/common/files.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { extname as pathExtname } from "../../../../base/common/path.js";
+import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
+import { IUntitledTextEditorService, IUntitledTextEditorModelManager } from "../../untitled/common/untitledTextEditorService.js";
+import { IResolvedUntitledTextEditorModel, UntitledTextEditorModel } from "../../untitled/common/untitledTextEditorModel.js";
+import { TextFileEditorModelManager } from "../common/textFileEditorModelManager.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { Schemas } from "../../../../base/common/network.js";
+import {
+  createTextBufferFactoryFromSnapshot,
+  createTextBufferFactoryFromStream,
+} from "../../../../editor/common/model/textModel.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { joinPath, dirname, basename, toLocalResource, extname, isEqual } from "../../../../base/common/resources.js";
+import { IDialogService, IFileDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { VSBuffer, VSBufferReadable, bufferToStream, VSBufferReadableStream } from "../../../../base/common/buffer.js";
+import { ITextSnapshot, ITextModel } from "../../../../editor/common/model.js";
+import { ITextResourceConfigurationService } from "../../../../editor/common/services/textResourceConfiguration.js";
+import { PLAINTEXT_LANGUAGE_ID } from "../../../../editor/common/languages/modesRegistry.js";
+import { IFilesConfigurationService } from "../../filesConfiguration/common/filesConfigurationService.js";
+import { IResolvedTextEditorModel } from "../../../../editor/common/services/resolverService.js";
+import { BaseTextEditorModel } from "../../../common/editor/textEditorModel.js";
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { IPathService } from "../../path/common/pathService.js";
+import {
+  IWorkingCopyFileService,
+  IFileOperationUndoRedoInfo,
+  ICreateFileOperation,
+} from "../../workingCopy/common/workingCopyFileService.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IWorkspaceContextService, WORKSPACE_EXTENSION } from "../../../../platform/workspace/common/workspace.js";
+import {
+  UTF8,
+  UTF8_with_bom,
+  UTF16be,
+  UTF16le,
+  encodingExists,
+  toEncodeReadable,
+  toDecodeStream,
+  IDecodeStreamResult,
+  DecodeStreamError,
+  DecodeStreamErrorKind,
+} from "../common/encoding.js";
+import { consumeStream, ReadableStream } from "../../../../base/common/stream.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { IElevatedFileService } from "../../files/common/elevatedFileService.js";
+import { IDecorationData, IDecorationsProvider, IDecorationsService } from "../../decorations/common/decorations.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { listErrorForeground } from "../../../../platform/theme/common/colorRegistry.js";
 
 export abstract class AbstractTextFileService extends Disposable implements ITextFileService {
 
 	declare readonly _serviceBrand: undefined;
 
-	private static readonly TEXTFILE_SAVE_CREATE_SOURCE = SaveSourceRegistry.registerSource('textFileCreate.source', localize('textFileCreate.source', "File Created"));
-	private static readonly TEXTFILE_SAVE_REPLACE_SOURCE = SaveSourceRegistry.registerSource('textFileOverwrite.source', localize('textFileOverwrite.source', "File Replaced"));
+	private static readonly TEXTFILE_SAVE_CREATE_SOURCE = SaveSourceRegistry.registerSource(
+    "textFileCreate.source",
+    localize("textFileCreate.source", "File Created"),
+  );
+	private static readonly TEXTFILE_SAVE_REPLACE_SOURCE = SaveSourceRegistry.registerSource(
+    "textFileOverwrite.source",
+    localize("textFileOverwrite.source", "File Replaced"),
+  );
 
 	readonly files: ITextFileEditorModelManager;
 
@@ -73,11 +123,13 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 		@ILanguageService private readonly languageService: ILanguageService,
 		@ILogService protected readonly logService: ILogService,
 		@IElevatedFileService private readonly elevatedFileService: IElevatedFileService,
-		@IDecorationsService private readonly decorationsService: IDecorationsService
+		@IDecorationsService private readonly decorationsService: IDecorationsService,
 	) {
 		super();
 
-		this.files = this._register(this.instantiationService.createInstance(TextFileEditorModelManager));
+		this.files = this._register(
+      this.instantiationService.createInstance(TextFileEditorModelManager),
+    );
 		this.untitled = untitledTextEditorService;
 
 		this.provideDecorations();
@@ -90,7 +142,7 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 		// Text file model decorations
 		const provider = this._register(new class extends Disposable implements IDecorationsProvider {
 
-			readonly label = localize('textFileModelDecorations', "Text File Model Decorations");
+			readonly label = localize("textFileModelDecorations", "Text File Model Decorations");
 
 			private readonly _onDidChange = this._register(new Emitter<URI[]>());
 			readonly onDidChange = this._onDidChange.event;
@@ -136,7 +188,7 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 						color: listErrorForeground,
 						letter: Codicon.lockSmall,
 						strikethrough: true,
-						tooltip: localize('readonlyAndDeleted', "Deleted, Read-only"),
+						tooltip: localize("readonlyAndDeleted", "Deleted, Read-only"),
 					};
 				}
 
@@ -144,7 +196,7 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 				else if (isReadonly) {
 					return {
 						letter: Codicon.lockSmall,
-						tooltip: localize('readonly', "Read-only"),
+						tooltip: localize("readonly", "Read-only"),
 					};
 				}
 
@@ -153,7 +205,7 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 					return {
 						color: listErrorForeground,
 						strikethrough: true,
-						tooltip: localize('deleted', "Deleted"),
+						tooltip: localize("deleted", "Deleted"),
 					};
 				}
 
@@ -161,7 +213,9 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 			}
 		}(this.files));
 
-		this._register(this.decorationsService.registerDecorationsProvider(provider));
+		this._register(
+      this.decorationsService.registerDecorationsProvider(provider),
+    );
 	}
 
 	//#endregion
@@ -172,7 +226,9 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 
 	get encoding(): EncodingOracle {
 		if (!this._encoding) {
-			this._encoding = this._register(this.instantiationService.createInstance(EncodingOracle));
+			this._encoding = this._register(
+        this.instantiationService.createInstance(EncodingOracle),
+      );
 		}
 
 		return this._encoding;
@@ -180,30 +236,25 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 
 	async read(resource: URI, options?: IReadTextFileOptions): Promise<ITextFileContent> {
 		const [bufferStream, decoder] = await this.doRead(resource, {
-			...options,
-			// optimization: since we know that the caller does not
-			// care about buffering, we indicate this to the reader.
-			// this reduces all the overhead the buffered reading
-			// has (open, read, close) if the provider supports
-			// unbuffered reading.
-			preferUnbuffered: true
-		});
+      ...options,
+      preferUnbuffered: true,
+    });
 
 		return {
-			...bufferStream,
-			encoding: decoder.detected.encoding || UTF8,
-			value: await consumeStream(decoder.stream, strings => strings.join(''))
-		};
+      ...bufferStream,
+      encoding: decoder.detected.encoding || UTF8,
+      value: await consumeStream(decoder.stream, strings => strings.join("")),
+    };
 	}
 
 	async readStream(resource: URI, options?: IReadTextFileOptions): Promise<ITextFileStreamContent> {
 		const [bufferStream, decoder] = await this.doRead(resource, options);
 
 		return {
-			...bufferStream,
-			encoding: decoder.detected.encoding || UTF8,
-			value: await createTextBufferFactoryFromStream(decoder.stream)
-		};
+      ...bufferStream,
+      encoding: decoder.detected.encoding || UTF8,
+      value: await createTextBufferFactoryFromStream(decoder.stream),
+    };
 	}
 
 	private async doRead(resource: URI, options?: IReadTextFileOptions & { preferUnbuffered?: boolean }): Promise<[IFileStreamContent, IDecodeStreamResult]> {
@@ -212,18 +263,30 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 		// read stream raw (either buffered or unbuffered)
 		let bufferStream: IFileStreamContent;
 		if (options?.preferUnbuffered) {
-			const content = await this.fileService.readFile(resource, options, cts.token);
+			const content = await this.fileService.readFile(
+        resource,
+        options,
+        cts.token,
+      );
 			bufferStream = {
-				...content,
-				value: bufferToStream(content.value)
-			};
+        ...content,
+        value: bufferToStream(content.value),
+      };
 		} else {
-			bufferStream = await this.fileService.readFileStream(resource, options, cts.token);
+			bufferStream = await this.fileService.readFileStream(
+        resource,
+        options,
+        cts.token,
+      );
 		}
 
 		// read through encoding library
 		try {
-			const decoder = await this.doGetDecodedStream(resource, bufferStream.value, options);
+			const decoder = await this.doGetDecodedStream(
+        resource,
+        bufferStream.value,
+        options,
+      );
 
 			return [bufferStream, decoder];
 		} catch (error) {
@@ -240,7 +303,14 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 
 			// special treatment for streams that are binary
 			if ((<DecodeStreamError>error).decodeStreamErrorKind === DecodeStreamErrorKind.STREAM_IS_BINARY) {
-				throw new TextFileOperationError(localize('fileBinaryError', "File seems to be binary and cannot be opened as text"), TextFileOperationResult.FILE_IS_BINARY, options);
+				throw new TextFileOperationError(
+          localize(
+            "fileBinaryError",
+            "File seems to be binary and cannot be opened as text",
+          ),
+          TextFileOperationResult.FILE_IS_BINARY,
+          options,
+        );
 			}
 
 			// re-throw any other error as it is
@@ -251,23 +321,35 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 	}
 
 	async create(operations: { resource: URI; value?: string | ITextSnapshot; options?: ICreateFileOptions }[], undoInfo?: IFileOperationUndoRedoInfo): Promise<readonly IFileStatWithMetadata[]> {
-		const operationsWithContents: ICreateFileOperation[] = await Promise.all(operations.map(async operation => {
-			const contents = await this.getEncodedReadable(operation.resource, operation.value);
-			return {
-				resource: operation.resource,
-				contents,
-				overwrite: operation.options?.overwrite
-			};
-		}));
+		const operationsWithContents: ICreateFileOperation[] = await Promise.all(
+      operations.map(async operation => {
+        const contents = await this.getEncodedReadable(operation.resource, operation.value);
+        return {
+          resource: operation.resource,
+          contents,
+          overwrite: operation.options?.overwrite,
+        };
+      }),
+    );
 
-		return this.workingCopyFileService.create(operationsWithContents, CancellationToken.None, undoInfo);
+		return this.workingCopyFileService.create(
+      operationsWithContents,
+      CancellationToken.None,
+      undoInfo,
+    );
 	}
 
 	async write(resource: URI, value: string | ITextSnapshot, options?: IWriteTextFileOptions): Promise<IFileStatWithMetadata> {
 		const readable = await this.getEncodedReadable(resource, value, options);
 
-		if (options?.writeElevated && this.elevatedFileService.isSupported(resource)) {
-			return this.elevatedFileService.writeFileElevated(resource, readable, options);
+		if (options?.writeElevated && this.elevatedFileService.isSupported(
+      resource,
+    )) {
+			return this.elevatedFileService.writeFileElevated(
+        resource,
+        readable,
+        options,
+      );
 		}
 
 		return this.fileService.writeFile(resource, readable, options);
@@ -282,18 +364,23 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 	async getEncodedReadable(resource: URI | undefined, value?: string | ITextSnapshot, options?: IWriteTextFileOptions): Promise<VSBuffer | VSBufferReadable | undefined> {
 
 		// check for encoding
-		const { encoding, addBOM } = await this.encoding.getWriteEncoding(resource, options);
+		const { encoding, addBOM } = await this.encoding.getWriteEncoding(
+      resource,
+      options,
+    );
 
 		// when encoding is standard skip encoding step
 		if (encoding === UTF8 && !addBOM) {
-			return typeof value === 'undefined'
+			return typeof value === "undefined"
 				? undefined
 				: toBufferOrReadable(value);
 		}
 
 		// otherwise create encoded readable
-		value = value || '';
-		const snapshot = typeof value === 'string' ? stringToSnapshot(value) : value;
+		value = value || "";
+		const snapshot = typeof value === "string" ? stringToSnapshot(
+      value,
+    ) : value;
 		return toEncodeReadable(snapshot, encoding, { addBOM });
 	}
 
@@ -308,17 +395,21 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 			acceptTextOnly: options?.acceptTextOnly ?? false,
 			guessEncoding:
 				options?.autoGuessEncoding ||
-				this.textResourceConfigurationService.getValue(resource, 'files.autoGuessEncoding'),
+				this.textResourceConfigurationService.getValue(resource, "files.autoGuessEncoding"),
 			candidateGuessEncodings:
 				options?.candidateGuessEncodings ||
-				this.textResourceConfigurationService.getValue(resource, 'files.candidateGuessEncodings'),
-			overwriteEncoding: async detectedEncoding => this.validateDetectedEncoding(resource, detectedEncoding ?? undefined, options)
+				this.textResourceConfigurationService.getValue(resource, "files.candidateGuessEncodings"),
+			overwriteEncoding: async detectedEncoding => this.validateDetectedEncoding(resource, detectedEncoding ?? undefined, options),
 		});
 	}
 
 	getEncoding(resource: URI): string {
-		const model = resource.scheme === Schemas.untitled ? this.untitled.get(resource) : this.files.get(resource);
-		return model?.getEncoding() ?? this.encoding.getUnvalidatedEncodingForResource(resource);
+		const model = resource.scheme === Schemas.untitled ? this.untitled.get(
+      resource,
+    ) : this.files.get(resource);
+		return model?.getEncoding() ?? this.encoding.getUnvalidatedEncodingForResource(
+      resource,
+    );
 	}
 
 	async resolveDecoding(resource: URI | undefined, options?: IReadTextFileEncodingOptions): Promise<{ preferredEncoding: string; guessEncoding: boolean; candidateGuessEncodings: string[] }> {
@@ -326,15 +417,19 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 			preferredEncoding: (await this.encoding.getPreferredReadEncoding(resource, options, undefined)).encoding,
 			guessEncoding:
 				options?.autoGuessEncoding ||
-				this.textResourceConfigurationService.getValue(resource, 'files.autoGuessEncoding'),
+				this.textResourceConfigurationService.getValue(resource, "files.autoGuessEncoding"),
 			candidateGuessEncodings:
 				options?.candidateGuessEncodings ||
-				this.textResourceConfigurationService.getValue(resource, 'files.candidateGuessEncodings'),
+				this.textResourceConfigurationService.getValue(resource, "files.candidateGuessEncodings"),
 		};
 	}
 
 	async validateDetectedEncoding(resource: URI | undefined, detectedEncoding: string | undefined, options?: IReadTextFileEncodingOptions): Promise<string> {
-		const { encoding } = await this.encoding.getPreferredReadEncoding(resource, options, detectedEncoding);
+		const { encoding } = await this.encoding.getPreferredReadEncoding(
+      resource,
+      options,
+      detectedEncoding,
+    );
 
 		return encoding;
 	}
@@ -363,7 +458,10 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 
 				// Otherwise ask user
 				else {
-					targetUri = await this.fileDialogService.pickFileToSave(await this.suggestSavePath(resource), options?.availableFileSystems);
+					targetUri = await this.fileDialogService.pickFileToSave(
+            await this.suggestSavePath(resource),
+            options?.availableFileSystems,
+          );
 				}
 
 				// Save as if target provided
@@ -388,7 +486,10 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 
 		// Get to target resource
 		if (!target) {
-			target = await this.fileDialogService.pickFileToSave(await this.suggestSavePath(options?.suggestedTarget ?? source), options?.availableFileSystems);
+			target = await this.fileDialogService.pickFileToSave(
+        await this.suggestSavePath(options?.suggestedTarget ?? source),
+        options?.availableFileSystems,
+      );
 		}
 
 		if (!target) {
@@ -407,7 +508,7 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 
 		// Just save if target is same as models own resource
 		if (isEqual(source, target)) {
-			return this.save(source, { ...options, force: true  /* force to save, even if not dirty (https://github.com/microsoft/vscode/issues/99619) */ });
+			return this.save(source, { ...options, force: true });
 		}
 
 		// If the target is different but of same identity, we
@@ -415,8 +516,16 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 		// underlying file system cannot have both and then save.
 		// However, this will only work if the source exists
 		// and is not orphaned, so we need to check that too.
-		if (this.fileService.hasProvider(source) && this.uriIdentityService.extUri.isEqual(source, target) && (await this.fileService.exists(source))) {
-			await this.workingCopyFileService.move([{ file: { source, target } }], CancellationToken.None);
+		if (this.fileService.hasProvider(
+      source,
+    ) && this.uriIdentityService.extUri.isEqual(
+      source,
+      target,
+    ) && (await this.fileService.exists(source))) {
+			await this.workingCopyFileService.move(
+        [{ file: { source, target } }],
+        CancellationToken.None,
+      );
 
 			// At this point we don't know whether we have a
 			// model for the source or the target URI so we
@@ -452,7 +561,12 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 		// If the source is an existing resolved file or untitled text model, we can
 		// directly use that model to copy the contents to the target destination
 		if (resolvedTextModel) {
-			success = await this.doSaveAsTextFile(resolvedTextModel, source, target, options);
+			success = await this.doSaveAsTextFile(
+        resolvedTextModel,
+        source,
+        target,
+        options,
+      );
 		}
 
 		// Otherwise if the source can be handled by the file service
@@ -468,7 +582,12 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 		else {
 			const textModel = this.modelService.getModel(source);
 			if (textModel) {
-				success = await this.doSaveAsTextFile(textModel, source, target, options);
+				success = await this.doSaveAsTextFile(
+          textModel,
+          source,
+          target,
+          options,
+        );
 			}
 		}
 
@@ -502,7 +621,7 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 		// Find source encoding if any
 		let sourceModelEncoding: string | undefined = undefined;
 		const sourceModelWithEncodingSupport = (sourceModel as unknown as IEncodingSupport);
-		if (typeof sourceModelWithEncodingSupport.getEncoding === 'function') {
+		if (typeof sourceModelWithEncodingSupport.getEncoding === "function") {
 			sourceModelEncoding = sourceModelWithEncodingSupport.getEncoding();
 		}
 
@@ -519,11 +638,13 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 
 			// create target file adhoc if it does not exist yet
 			if (!targetExists) {
-				await this.create([{ resource: target, value: '' }]);
+				await this.create([{ resource: target, value: "" }]);
 			}
 
 			try {
-				targetModel = await this.files.resolve(target, { encoding: sourceModelEncoding });
+				targetModel = await this.files.resolve(target, {
+          encoding: sourceModelEncoding,
+        });
 			} catch (error) {
 				// if the target already exists and was not created by us, it is possible
 				// that we cannot resolve the target as text model if it is binary or too
@@ -549,7 +670,14 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 		// path. This can happen if the file was created after the untitled file was opened.
 		// See https://github.com/microsoft/vscode/issues/67946
 		let write: boolean;
-		if (sourceModel instanceof UntitledTextEditorModel && sourceModel.hasAssociatedFilePath && targetExists && this.uriIdentityService.extUri.isEqual(target, toLocalResource(sourceModel.resource, this.environmentService.remoteAuthority, this.pathService.defaultUriScheme))) {
+		if (sourceModel instanceof UntitledTextEditorModel && sourceModel.hasAssociatedFilePath && targetExists && this.uriIdentityService.extUri.isEqual(
+      target,
+      toLocalResource(
+        sourceModel.resource,
+        this.environmentService.remoteAuthority,
+        this.pathService.defaultUriScheme,
+      ),
+    )) {
 			write = await this.confirmOverwrite(target);
 		} else {
 			write = true;
@@ -580,32 +708,43 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 			targetModel.updatePreferredEncoding(sourceModelEncoding);
 
 			// content
-			this.modelService.updateModel(targetTextModel, createTextBufferFactoryFromSnapshot(sourceTextModel.createSnapshot()));
+			this.modelService.updateModel(
+        targetTextModel,
+        createTextBufferFactoryFromSnapshot(sourceTextModel.createSnapshot()),
+      );
 
 			// language
 			const sourceLanguageId = sourceTextModel.getLanguageId();
 			const targetLanguageId = targetTextModel.getLanguageId();
 			if (sourceLanguageId !== PLAINTEXT_LANGUAGE_ID && targetLanguageId === PLAINTEXT_LANGUAGE_ID) {
-				targetTextModel.setLanguage(sourceLanguageId); // only use if more specific than plain/text
+				targetTextModel.setLanguage(
+          sourceLanguageId,
+        ); // only use if more specific than plain/text
 			}
 
 			// indentation options (preserve tabs vs spaces, tab size, indent size)
 			const sourceOptions = sourceTextModel.getOptions();
 			targetTextModel.updateOptions({
-				tabSize: sourceOptions.tabSize,
-				indentSize: sourceOptions.indentSize,
-				insertSpaces: sourceOptions.insertSpaces
-			});
+        tabSize: sourceOptions.tabSize,
+        indentSize: sourceOptions.indentSize,
+        insertSpaces: sourceOptions.insertSpaces,
+      });
 
 			// end of line sequence (preserve LF vs CRLF)
 			const sourceEOL = sourceTextModel.getEndOfLineSequence();
 			targetTextModel.setEOL(sourceEOL);
 
 			// transient properties
-			const sourceTransientProperties = this.codeEditorService.getTransientModelProperties(sourceTextModel);
+			const sourceTransientProperties = this.codeEditorService.getTransientModelProperties(
+        sourceTextModel,
+      );
 			if (sourceTransientProperties) {
 				for (const [key, value] of sourceTransientProperties) {
-					this.codeEditorService.setTransientModelProperty(targetTextModel, key, value);
+					this.codeEditorService.setTransientModelProperty(
+            targetTextModel,
+            key,
+            value,
+          );
 				}
 			}
 		}
@@ -613,36 +752,36 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 		// set source options depending on target exists or not
 		if (!options?.source) {
 			options = {
-				...options,
-				source: targetExists ? AbstractTextFileService.TEXTFILE_SAVE_REPLACE_SOURCE : AbstractTextFileService.TEXTFILE_SAVE_CREATE_SOURCE
-			};
+        ...options,
+        source: targetExists ? AbstractTextFileService.TEXTFILE_SAVE_REPLACE_SOURCE : AbstractTextFileService.TEXTFILE_SAVE_CREATE_SOURCE,
+      };
 		}
 
 		// save model
 		return targetModel.save({
-			...options,
-			from: source
-		});
+      ...options,
+      from: source,
+    });
 	}
 
 	private async confirmOverwrite(resource: URI): Promise<boolean> {
 		const { confirmed } = await this.dialogService.confirm({
-			type: 'warning',
-			message: localize('confirmOverwrite', "'{0}' already exists. Do you want to replace it?", basename(resource)),
-			detail: localize('overwriteIrreversible', "A file or folder with the name '{0}' already exists in the folder '{1}'. Replacing it will overwrite its current contents.", basename(resource), basename(dirname(resource))),
-			primaryButton: localize({ key: 'replaceButtonLabel', comment: ['&& denotes a mnemonic'] }, "&&Replace"),
-		});
+      type: "warning",
+      message: localize("confirmOverwrite", "'{0}' already exists. Do you want to replace it?", basename(resource)),
+      detail: localize("overwriteIrreversible", "A file or folder with the name '{0}' already exists in the folder '{1}'. Replacing it will overwrite its current contents.", basename(resource), basename(dirname(resource))),
+      primaryButton: localize({ key: "replaceButtonLabel", comment: ["&& denotes a mnemonic"] }, "&&Replace"),
+    });
 
 		return confirmed;
 	}
 
 	private async confirmMakeWriteable(resource: URI): Promise<boolean> {
 		const { confirmed } = await this.dialogService.confirm({
-			type: 'warning',
-			message: localize('confirmMakeWriteable', "'{0}' is marked as read-only. Do you want to save anyway?", basename(resource)),
-			detail: localize('confirmMakeWriteableDetail', "Paths can be configured as read-only via settings."),
-			primaryButton: localize({ key: 'makeWriteableButtonLabel', comment: ['&& denotes a mnemonic'] }, "&&Save Anyway")
-		});
+      type: "warning",
+      message: localize("confirmMakeWriteable", "'{0}' is marked as read-only. Do you want to save anyway?", basename(resource)),
+      detail: localize("confirmMakeWriteableDetail", "Paths can be configured as read-only via settings."),
+      primaryButton: localize({ key: "makeWriteableButtonLabel", comment: ["&& denotes a mnemonic"] }, "&&Save Anyway"),
+    });
 
 		return confirmed;
 	}
@@ -665,7 +804,11 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 
 				// Untitled with associated file path
 				if (model.hasAssociatedFilePath) {
-					return toLocalResource(resource, remoteAuthority, this.pathService.defaultUriScheme);
+					return toLocalResource(
+            resource,
+            remoteAuthority,
+            this.pathService.defaultUriScheme,
+          );
 				}
 
 				// Untitled without associated file path: use name
@@ -673,7 +816,10 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 				// figure out the file extension from the mode if any.
 
 				let nameCandidate: string;
-				if (await this.pathService.hasValidBasename(joinPath(defaultFilePath, model.name), model.name)) {
+				if (await this.pathService.hasValidBasename(
+          joinPath(defaultFilePath, model.name),
+          model.name,
+        )) {
 					nameCandidate = model.name;
 				} else {
 					nameCandidate = basename(resource);
@@ -756,7 +902,9 @@ export abstract class AbstractTextFileService extends Disposable implements ITex
 	//#region dirty
 
 	isDirty(resource: URI): boolean {
-		const model = resource.scheme === Schemas.untitled ? this.untitled.get(resource) : this.files.get(resource);
+		const model = resource.scheme === Schemas.untitled ? this.untitled.get(
+      resource,
+    ) : this.files.get(resource);
 		if (model) {
 			return model.isDirty();
 		}
@@ -783,7 +931,7 @@ export class EncodingOracle extends Disposable implements IResourceEncodings {
 		@ITextResourceConfigurationService private textResourceConfigurationService: ITextResourceConfigurationService,
 		@IWorkbenchEnvironmentService private environmentService: IWorkbenchEnvironmentService,
 		@IWorkspaceContextService private contextService: IWorkspaceContextService,
-		@IUriIdentityService private readonly uriIdentityService: IUriIdentityService
+		@IUriIdentityService private readonly uriIdentityService: IUriIdentityService,
 	) {
 		super();
 
@@ -795,39 +943,61 @@ export class EncodingOracle extends Disposable implements IResourceEncodings {
 	private registerListeners(): void {
 
 		// Workspace Folder Change
-		this._register(this.contextService.onDidChangeWorkspaceFolders(() => this.encodingOverrides = this.getDefaultEncodingOverrides()));
+		this._register(
+      this.contextService.onDidChangeWorkspaceFolders(
+        () => this.encodingOverrides = this.getDefaultEncodingOverrides(),
+      ),
+    );
 	}
 
 	private getDefaultEncodingOverrides(): IEncodingOverride[] {
 		const defaultEncodingOverrides: IEncodingOverride[] = [];
 
 		// Global settings
-		defaultEncodingOverrides.push({ parent: this.environmentService.userRoamingDataHome, encoding: UTF8 });
+		defaultEncodingOverrides.push({
+      parent: this.environmentService.userRoamingDataHome,
+      encoding: UTF8,
+    });
 
 		// Workspace files (via extension and via untitled workspaces location)
-		defaultEncodingOverrides.push({ extension: WORKSPACE_EXTENSION, encoding: UTF8 });
-		defaultEncodingOverrides.push({ parent: this.environmentService.untitledWorkspacesHome, encoding: UTF8 });
+		defaultEncodingOverrides.push({
+      extension: WORKSPACE_EXTENSION,
+      encoding: UTF8,
+    });
+		defaultEncodingOverrides.push({
+      parent: this.environmentService.untitledWorkspacesHome,
+      encoding: UTF8,
+    });
 
 		// Folder Settings
 		this.contextService.getWorkspace().folders.forEach(folder => {
-			defaultEncodingOverrides.push({ parent: joinPath(folder.uri, '.vscode'), encoding: UTF8 });
-		});
+      defaultEncodingOverrides.push({
+        parent: joinPath(folder.uri, ".vscode"),
+        encoding: UTF8,
+      });
+    });
 
 		return defaultEncodingOverrides;
 	}
 
 	async getWriteEncoding(resource: URI | undefined, options?: IWriteTextFileOptions): Promise<{ encoding: string; addBOM: boolean }> {
-		const { encoding, hasBOM } = await this.getPreferredWriteEncoding(resource, options ? options.encoding : undefined);
+		const { encoding, hasBOM } = await this.getPreferredWriteEncoding(
+      resource,
+      options ? options.encoding : undefined,
+    );
 
 		return { encoding, addBOM: hasBOM };
 	}
 
 	async getPreferredWriteEncoding(resource: URI | undefined, preferredEncoding?: string): Promise<IResourceEncoding> {
-		const resourceEncoding = await this.getValidatedEncodingForResource(resource, preferredEncoding);
+		const resourceEncoding = await this.getValidatedEncodingForResource(
+      resource,
+      preferredEncoding,
+    );
 
 		return {
 			encoding: resourceEncoding,
-			hasBOM: resourceEncoding === UTF16be || resourceEncoding === UTF16le || resourceEncoding === UTF8_with_bom // enforce BOM for certain encodings
+			hasBOM: resourceEncoding === UTF16be || resourceEncoding === UTF16le || resourceEncoding === UTF8_with_bom, // enforce BOM for certain encodings
 		};
 	}
 
@@ -844,20 +1014,26 @@ export class EncodingOracle extends Disposable implements IResourceEncodings {
 		}
 
 		// Encoding detected
-		else if (typeof detectedEncoding === 'string') {
+		else if (typeof detectedEncoding === "string") {
 			preferredEncoding = detectedEncoding;
 		}
 
 		// Encoding configured
-		else if (this.textResourceConfigurationService.getValue(resource, 'files.encoding') === UTF8_with_bom) {
+		else if (this.textResourceConfigurationService.getValue(
+      resource,
+      "files.encoding",
+    ) === UTF8_with_bom) {
 			preferredEncoding = UTF8; // if we did not detect UTF 8 BOM before, this can only be UTF 8 then
 		}
 
-		const encoding = await this.getValidatedEncodingForResource(resource, preferredEncoding);
+		const encoding = await this.getValidatedEncodingForResource(
+      resource,
+      preferredEncoding,
+    );
 
 		return {
 			encoding,
-			hasBOM: encoding === UTF16be || encoding === UTF16le || encoding === UTF8_with_bom // enforce BOM for certain encodings
+			hasBOM: encoding === UTF16be || encoding === UTF16le || encoding === UTF8_with_bom, // enforce BOM for certain encodings
 		};
 	}
 
@@ -870,14 +1046,20 @@ export class EncodingOracle extends Disposable implements IResourceEncodings {
 		} else if (preferredEncoding) {
 			fileEncoding = preferredEncoding; // preferred encoding comes second
 		} else {
-			fileEncoding = this.textResourceConfigurationService.getValue(resource, 'files.encoding'); // and last we check for settings
+			fileEncoding = this.textResourceConfigurationService.getValue(
+        resource,
+        "files.encoding",
+      ); // and last we check for settings
 		}
 
 		return fileEncoding || UTF8;
 	}
 
 	private async getValidatedEncodingForResource(resource: URI | undefined, preferredEncoding?: string): Promise<string> {
-		let fileEncoding = this.getUnvalidatedEncodingForResource(resource, preferredEncoding);
+		let fileEncoding = this.getUnvalidatedEncodingForResource(
+      resource,
+      preferredEncoding,
+    );
 		if (fileEncoding !== UTF8 && !(await encodingExists(fileEncoding))) {
 			fileEncoding = UTF8;
 		}
@@ -890,12 +1072,17 @@ export class EncodingOracle extends Disposable implements IResourceEncodings {
 			for (const override of this.encodingOverrides) {
 
 				// check if the resource is child of encoding override path
-				if (override.parent && this.uriIdentityService.extUri.isEqualOrParent(resource, override.parent)) {
+				if (override.parent && this.uriIdentityService.extUri.isEqualOrParent(
+          resource,
+          override.parent,
+        )) {
 					return override.encoding;
 				}
 
 				// check if the resource extension is equal to encoding override
-				if (override.extension && extname(resource) === `.${override.extension}`) {
+				if (override.extension && extname(
+          resource,
+        ) === `.${override.extension}`) {
 					return override.encoding;
 				}
 			}

@@ -3,23 +3,29 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DEFAULT_EDITOR_ASSOCIATION, GroupIdentifier, IRevertOptions, isResourceEditorInput, IUntypedEditorInput } from '../editor.js';
-import { EditorInput } from './editorInput.js';
-import { AbstractResourceEditorInput } from './resourceEditorInput.js';
-import { URI } from '../../../base/common/uri.js';
-import { ITextFileService, ITextFileSaveOptions, ILanguageSupport } from '../../services/textfile/common/textfiles.js';
-import { IEditorService } from '../../services/editor/common/editorService.js';
-import { IFileService } from '../../../platform/files/common/files.js';
-import { ILabelService } from '../../../platform/label/common/label.js';
-import { Schemas } from '../../../base/common/network.js';
-import { isEqual } from '../../../base/common/resources.js';
-import { ITextEditorModel, ITextModelService } from '../../../editor/common/services/resolverService.js';
-import { TextResourceEditorModel } from './textResourceEditorModel.js';
-import { IReference } from '../../../base/common/lifecycle.js';
-import { createTextBufferFactory } from '../../../editor/common/model/textModel.js';
-import { IFilesConfigurationService } from '../../services/filesConfiguration/common/filesConfigurationService.js';
-import { ITextResourceConfigurationService } from '../../../editor/common/services/textResourceConfiguration.js';
-import { ICustomEditorLabelService } from '../../services/editor/common/customEditorLabelService.js';
+import {
+  DEFAULT_EDITOR_ASSOCIATION,
+  GroupIdentifier,
+  IRevertOptions,
+  isResourceEditorInput,
+  IUntypedEditorInput,
+} from "../editor.js";
+import { EditorInput } from "./editorInput.js";
+import { AbstractResourceEditorInput } from "./resourceEditorInput.js";
+import { URI } from "../../../base/common/uri.js";
+import { ITextFileService, ITextFileSaveOptions, ILanguageSupport } from "../../services/textfile/common/textfiles.js";
+import { IEditorService } from "../../services/editor/common/editorService.js";
+import { IFileService } from "../../../platform/files/common/files.js";
+import { ILabelService } from "../../../platform/label/common/label.js";
+import { Schemas } from "../../../base/common/network.js";
+import { isEqual } from "../../../base/common/resources.js";
+import { ITextEditorModel, ITextModelService } from "../../../editor/common/services/resolverService.js";
+import { TextResourceEditorModel } from "./textResourceEditorModel.js";
+import { IReference } from "../../../base/common/lifecycle.js";
+import { createTextBufferFactory } from "../../../editor/common/model/textModel.js";
+import { IFilesConfigurationService } from "../../services/filesConfiguration/common/filesConfigurationService.js";
+import { ITextResourceConfigurationService } from "../../../editor/common/services/textResourceConfiguration.js";
+import { ICustomEditorLabelService } from "../../services/editor/common/customEditorLabelService.js";
 
 /**
  * The base class for all editor inputs that open in text editors.
@@ -35,16 +41,26 @@ export abstract class AbstractTextResourceEditorInput extends AbstractResourceEd
 		@IFileService fileService: IFileService,
 		@IFilesConfigurationService filesConfigurationService: IFilesConfigurationService,
 		@ITextResourceConfigurationService textResourceConfigurationService: ITextResourceConfigurationService,
-		@ICustomEditorLabelService customEditorLabelService: ICustomEditorLabelService
+		@ICustomEditorLabelService customEditorLabelService: ICustomEditorLabelService,
 	) {
-		super(resource, preferredResource, labelService, fileService, filesConfigurationService, textResourceConfigurationService, customEditorLabelService);
+		super(
+      resource,
+      preferredResource,
+      labelService,
+      fileService,
+      filesConfigurationService,
+      textResourceConfigurationService,
+      customEditorLabelService,
+    );
 	}
 
 	override save(group: GroupIdentifier, options?: ITextFileSaveOptions): Promise<IUntypedEditorInput | undefined> {
 
 		// If this is neither an `untitled` resource, nor a resource
 		// we can handle with the file service, we can only "Save As..."
-		if (this.resource.scheme !== Schemas.untitled && !this.fileService.hasProvider(this.resource)) {
+		if (this.resource.scheme !== Schemas.untitled && !this.fileService.hasProvider(
+      this.resource,
+    )) {
 			return this.saveAs(group, options);
 		}
 
@@ -61,7 +77,10 @@ export abstract class AbstractTextResourceEditorInput extends AbstractResourceEd
 		// Save / Save As
 		let target: URI | undefined;
 		if (saveAs) {
-			target = await this.textFileService.saveAs(this.resource, undefined, { ...options, suggestedTarget: this.preferredResource });
+			target = await this.textFileService.saveAs(this.resource, undefined, {
+        ...options,
+        suggestedTarget: this.preferredResource,
+      });
 		} else {
 			target = await this.textFileService.save(this.resource, options);
 		}
@@ -84,7 +103,7 @@ export abstract class AbstractTextResourceEditorInput extends AbstractResourceEd
  */
 export class TextResourceEditorInput extends AbstractTextResourceEditorInput implements ILanguageSupport {
 
-	static readonly ID: string = 'workbench.editors.resourceEditorInput';
+	static readonly ID: string = "workbench.editors.resourceEditorInput";
 
 	override get typeId(): string {
 		return TextResourceEditorInput.ID;
@@ -110,9 +129,19 @@ export class TextResourceEditorInput extends AbstractTextResourceEditorInput imp
 		@ILabelService labelService: ILabelService,
 		@IFilesConfigurationService filesConfigurationService: IFilesConfigurationService,
 		@ITextResourceConfigurationService textResourceConfigurationService: ITextResourceConfigurationService,
-		@ICustomEditorLabelService customEditorLabelService: ICustomEditorLabelService
+		@ICustomEditorLabelService customEditorLabelService: ICustomEditorLabelService,
 	) {
-		super(resource, undefined, editorService, textFileService, labelService, fileService, filesConfigurationService, textResourceConfigurationService, customEditorLabelService);
+		super(
+      resource,
+      undefined,
+      editorService,
+      textFileService,
+      labelService,
+      fileService,
+      filesConfigurationService,
+      textResourceConfigurationService,
+      customEditorLabelService,
+    );
 	}
 
 	override getName(): string {
@@ -166,7 +195,9 @@ export class TextResourceEditorInput extends AbstractTextResourceEditorInput imp
 		this.preferredLanguageId = undefined;
 
 		if (!this.modelReference) {
-			this.modelReference = this.textModelService.createModelReference(this.resource);
+			this.modelReference = this.textModelService.createModelReference(
+        this.resource,
+      );
 		}
 
 		const ref = await this.modelReference;
@@ -177,14 +208,19 @@ export class TextResourceEditorInput extends AbstractTextResourceEditorInput imp
 			ref.dispose();
 			this.modelReference = undefined;
 
-			throw new Error(`Unexpected model for TextResourceEditorInput: ${this.resource}`);
+			throw new Error(
+        `Unexpected model for TextResourceEditorInput: ${this.resource}`,
+      );
 		}
 
 		this.cachedModel = model;
 
 		// Set contents and language if preferred
-		if (typeof preferredContents === 'string' || typeof preferredLanguageId === 'string') {
-			model.updateTextEditorModel(typeof preferredContents === 'string' ? createTextBufferFactory(preferredContents) : undefined, preferredLanguageId);
+		if (typeof preferredContents === "string" || typeof preferredLanguageId === "string") {
+			model.updateTextEditorModel(
+        typeof preferredContents === "string" ? createTextBufferFactory(preferredContents) : undefined,
+        preferredLanguageId,
+      );
 		}
 
 		return model;

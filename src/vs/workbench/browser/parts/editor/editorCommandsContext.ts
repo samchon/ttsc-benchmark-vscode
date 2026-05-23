@@ -3,14 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { getActiveElement } from '../../../../base/browser/dom.js';
-import { List } from '../../../../base/browser/ui/list/listWidget.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IListService } from '../../../../platform/list/browser/listService.js';
-import { IEditorCommandsContext, isEditorCommandsContext, IEditorIdentifier, isEditorIdentifier } from '../../../common/editor.js';
-import { EditorInput } from '../../../common/editor/editorInput.js';
-import { IEditorGroup, IEditorGroupsService, isEditorGroup } from '../../../services/editor/common/editorGroupsService.js';
-import { IEditorService } from '../../../services/editor/common/editorService.js';
+import { getActiveElement } from "../../../../base/browser/dom.js";
+import { List } from "../../../../base/browser/ui/list/listWidget.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IListService } from "../../../../platform/list/browser/listService.js";
+import {
+  IEditorCommandsContext,
+  isEditorCommandsContext,
+  IEditorIdentifier,
+  isEditorIdentifier,
+} from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { IEditorGroup, IEditorGroupsService, isEditorGroup } from "../../../services/editor/common/editorGroupsService.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
 
 export interface IResolvedEditorCommandsContext {
 	readonly groupedEditors: {
@@ -21,12 +26,23 @@ export interface IResolvedEditorCommandsContext {
 }
 
 export function resolveCommandsContext(commandArgs: unknown[], editorService: IEditorService, editorGroupsService: IEditorGroupsService, listService: IListService): IResolvedEditorCommandsContext {
-	const commandContext = getCommandsContext(commandArgs, editorService, editorGroupsService, listService);
+	const commandContext = getCommandsContext(
+    commandArgs,
+    editorService,
+    editorGroupsService,
+    listService,
+  );
 	const preserveFocus = commandContext.length ? commandContext[0].preserveFocus || false : false;
-	const resolvedContext: IResolvedEditorCommandsContext = { groupedEditors: [], preserveFocus };
+	const resolvedContext: IResolvedEditorCommandsContext = {
+    groupedEditors: [],
+    preserveFocus,
+  };
 
 	for (const editorContext of commandContext) {
-		const groupAndEditor = getEditorAndGroupFromContext(editorContext, editorGroupsService);
+		const groupAndEditor = getEditorAndGroupFromContext(
+      editorContext,
+      editorGroupsService,
+    );
 		if (!groupAndEditor) {
 			continue;
 		}
@@ -64,18 +80,33 @@ function getCommandsContext(commandArgs: unknown[], editorService: IEditorServic
 	let isListAction = list instanceof List && list.getHTMLElement() === getActiveElement();
 
 	// Get editor context for which the command was triggered
-	let editorContext = getEditorContextFromCommandArgs(commandArgs, isListAction, editorService, editorGroupsService, listService);
+	let editorContext = getEditorContextFromCommandArgs(
+    commandArgs,
+    isListAction,
+    editorService,
+    editorGroupsService,
+    listService,
+  );
 
 	// If the editor context can not be determined use the active editor
 	if (!editorContext) {
 		const modalEditorPart = editorGroupsService.activeModalEditorPart;
 		const activeGroup = modalEditorPart?.activeGroup ?? editorGroupsService.activeGroup;
 		const activeEditor = activeGroup.activeEditor;
-		editorContext = { groupId: activeGroup.id, editorIndex: activeEditor ? activeGroup.getIndexOfEditor(activeEditor) : undefined };
+		editorContext = {
+      groupId: activeGroup.id,
+      editorIndex: activeEditor ? activeGroup.getIndexOfEditor(activeEditor) : undefined,
+    };
 		isListAction = false;
 	}
 
-	const multiEditorContext = getMultiSelectContext(editorContext, isListAction, editorService, editorGroupsService, listService);
+	const multiEditorContext = getMultiSelectContext(
+    editorContext,
+    isListAction,
+    editorService,
+    editorGroupsService,
+    listService,
+  );
 
 	// Make sure the command context is the first one in the list
 	return moveCurrentEditorContextToFront(editorContext, multiEditorContext);
@@ -88,7 +119,7 @@ function moveCurrentEditorContextToFront(editorContext: IEditorCommandsContext, 
 
 	const editorContextIndex = multiEditorContext.findIndex(context =>
 		context.groupId === editorContext.groupId &&
-		context.editorIndex === editorContext.editorIndex
+		context.editorIndex === editorContext.editorIndex,
 	);
 
 	if (editorContextIndex !== -1) {
@@ -97,7 +128,7 @@ function moveCurrentEditorContextToFront(editorContext: IEditorCommandsContext, 
 	} else if (editorContext.editorIndex === undefined) {
 		multiEditorContext.unshift(editorContext);
 	} else {
-		throw new Error('Editor context not found in multi editor context');
+		throw new Error("Editor context not found in multi editor context");
 	}
 
 	return multiEditorContext;
@@ -106,7 +137,9 @@ function moveCurrentEditorContextToFront(editorContext: IEditorCommandsContext, 
 function getEditorContextFromCommandArgs(commandArgs: unknown[], isListAction: boolean, editorService: IEditorService, editorGroupsService: IEditorGroupsService, listService: IListService): IEditorCommandsContext | undefined {
 
 	// We only know how to extraxt the command context from URI and IEditorCommandsContext arguments
-	const filteredArgs = commandArgs.filter(arg => isEditorCommandsContext(arg) || URI.isUri(arg));
+	const filteredArgs = commandArgs.filter(
+    arg => isEditorCommandsContext(arg) || URI.isUri(arg),
+  );
 
 	// If the command arguments contain an editor context, use it
 	for (const arg of filteredArgs) {
@@ -121,7 +154,10 @@ function getEditorContextFromCommandArgs(commandArgs: unknown[], isListAction: b
 		if (editorIdentifiers.length) {
 			const editorIdentifier = editorIdentifiers[0];
 			const group = editorGroupsService.getGroup(editorIdentifier.groupId);
-			return { groupId: editorIdentifier.groupId, editorIndex: group?.getIndexOfEditor(editorIdentifier.editor) };
+			return {
+        groupId: editorIdentifier.groupId,
+        editorIndex: group?.getIndexOfEditor(editorIdentifier.editor),
+      };
 		}
 	}
 
@@ -131,7 +167,11 @@ function getEditorContextFromCommandArgs(commandArgs: unknown[], isListAction: b
 		const list = listService.lastFocusedList as List<unknown>;
 		for (const focusedElement of list.getFocusedElements()) {
 			if (isGroupOrEditor(focusedElement)) {
-				return groupOrEditorToEditorContext(focusedElement, undefined, editorGroupsService);
+				return groupOrEditorToEditorContext(
+          focusedElement,
+          undefined,
+          editorGroupsService,
+        );
 			}
 		}
 	}
@@ -147,7 +187,13 @@ function getMultiSelectContext(editorContext: IEditorCommandsContext, isListActi
 		const selection = list.getSelectedElements().filter(isGroupOrEditor);
 
 		if (selection.length > 1) {
-			return selection.map(e => groupOrEditorToEditorContext(e, editorContext.preserveFocus, editorGroupsService));
+			return selection.map(
+        e => groupOrEditorToEditorContext(
+          e,
+          editorContext.preserveFocus,
+          editorGroupsService,
+        ),
+      );
 		}
 
 		if (selection.length === 0) {
@@ -156,16 +202,30 @@ function getMultiSelectContext(editorContext: IEditorCommandsContext, isListActi
 			// it will be `true` if the active element is a `List` even if it is part of the editor
 			// area. The workaround here is to fallback to `isListAction: false` if the list is not
 			// having any editor or group selected.
-			return getMultiSelectContext(editorContext, false, editorService, editorGroupsService, listService);
+			return getMultiSelectContext(
+        editorContext,
+        false,
+        editorService,
+        editorGroupsService,
+        listService,
+      );
 		}
 	}
 	// Check editors selected in the group (tabs)
 	else {
 		const group = editorGroupsService.getGroup(editorContext.groupId);
-		const editor = editorContext.editorIndex !== undefined ? group?.getEditorByIndex(editorContext.editorIndex) : group?.activeEditor;
+		const editor = editorContext.editorIndex !== undefined ? group?.getEditorByIndex(
+      editorContext.editorIndex,
+    ) : group?.activeEditor;
 		// If the editor is selected, return all selected editors otherwise only use the editors context
 		if (group && editor && group.isSelected(editor)) {
-			return group.selectedEditors.map(editor => groupOrEditorToEditorContext({ editor, groupId: group.id }, editorContext.preserveFocus, editorGroupsService));
+			return group.selectedEditors.map(
+        editor => groupOrEditorToEditorContext(
+          { editor, groupId: group.id },
+          editorContext.preserveFocus,
+          editorGroupsService,
+        ),
+      );
 		}
 	}
 
@@ -179,7 +239,11 @@ function groupOrEditorToEditorContext(element: IEditorIdentifier | IEditorGroup,
 	}
 
 	const group = editorGroupsService.getGroup(element.groupId);
-	return { groupId: element.groupId, editorIndex: group ? group.getIndexOfEditor(element.editor) : -1, preserveFocus };
+	return {
+    groupId: element.groupId,
+    editorIndex: group ? group.getIndexOfEditor(element.editor) : -1,
+    preserveFocus,
+  };
 }
 
 function isGroupOrEditor(element: unknown): element is IEditorIdentifier | IEditorGroup {

@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../common/event.js';
-import { IDisposable } from '../../../common/lifecycle.js';
-import { isMacintosh } from '../../../common/platform.js';
-import { MarkdownActionHandler } from '../../markdownRenderer.js';
-import { IContextViewProvider } from '../contextview/contextview.js';
-import { IListStyles, unthemedListStyles } from '../list/listWidget.js';
-import { Widget } from '../widget.js';
-import './selectBox.css';
-import { SelectBoxList } from './selectBoxCustom.js';
-import { SelectBoxNative } from './selectBoxNative.js';
+import { Event } from "../../../common/event.js";
+import { IDisposable } from "../../../common/lifecycle.js";
+import { isMacintosh } from "../../../common/platform.js";
+import { MarkdownActionHandler } from "../../markdownRenderer.js";
+import { IContextViewProvider } from "../contextview/contextview.js";
+import { IListStyles, unthemedListStyles } from "../list/listWidget.js";
+import { Widget } from "../widget.js";
+import "./selectBox.css";
+import { SelectBoxList } from "./selectBoxCustom.js";
+import { SelectBoxNative } from "./selectBoxNative.js";
 
 
 
@@ -54,11 +54,13 @@ export interface ISelectOptionItem {
 	isSeparator?: boolean;
 }
 
-export const SeparatorSelectOption: Readonly<ISelectOptionItem> = Object.freeze({
-	text: '\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500',
-	isDisabled: true,
-	isSeparator: true,
-});
+export const SeparatorSelectOption: Readonly<ISelectOptionItem> = Object.freeze(
+  {
+    text: "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+    isDisabled: true,
+    isSeparator: true,
+  },
+);
 
 export interface ISelectBoxStyles extends IListStyles {
 	readonly selectBackground: string | undefined;
@@ -71,14 +73,14 @@ export interface ISelectBoxStyles extends IListStyles {
 }
 
 export const unthemedSelectBoxStyles: ISelectBoxStyles = {
-	...unthemedListStyles,
-	selectBackground: '#3C3C3C',
-	selectForeground: '#F0F0F0',
-	selectBorder: '#3C3C3C',
-	decoratorRightForeground: undefined,
-	selectListBackground: undefined,
-	selectListBorder: undefined,
-	focusBorder: undefined,
+  ...unthemedListStyles,
+  selectBackground: "#3C3C3C",
+  selectForeground: "#F0F0F0",
+  selectBorder: "#3C3C3C",
+  decoratorRightForeground: undefined,
+  selectListBackground: undefined,
+  selectListBorder: undefined,
+  focusBorder: undefined,
 };
 
 export interface ISelectData {
@@ -94,9 +96,20 @@ export class SelectBox extends Widget implements ISelectBoxDelegate {
 
 		// Default to native SelectBox for OSX unless overridden
 		if (isMacintosh && !selectBoxOptions?.useCustomDrawn) {
-			this.selectBoxDelegate = new SelectBoxNative(options, selected, styles, selectBoxOptions);
+			this.selectBoxDelegate = new SelectBoxNative(
+        options,
+        selected,
+        styles,
+        selectBoxOptions,
+      );
 		} else {
-			this.selectBoxDelegate = new SelectBoxList(options, selected, contextViewProvider, styles, selectBoxOptions);
+			this.selectBoxDelegate = new SelectBoxList(
+        options,
+        selected,
+        contextViewProvider,
+        styles,
+        selectBoxOptions,
+      );
 		}
 
 		this._register(this.selectBoxDelegate);

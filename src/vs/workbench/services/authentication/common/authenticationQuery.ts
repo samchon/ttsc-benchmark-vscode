@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { AuthenticationSessionAccount } from './authentication.js';
+import { Event } from "../../../../base/common/event.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { AuthenticationSessionAccount } from "./authentication.js";
 
 /**
  * Statistics about authentication usage
@@ -288,7 +288,7 @@ export interface IAccountEntitiesQuery extends IBaseQuery {
 	 * Execute a callback for each entity that has used this account
 	 * @param callback Function to execute for each entity
 	 */
-	forEach(callback: (entityId: string, entityType: 'extension' | 'mcpServer') => void): void;
+	forEach(callback: (entityId: string, entityType: "extension" | "mcpServer") => void): void;
 }
 
 /**
@@ -460,7 +460,9 @@ export interface IMcpServerQuery {
 /**
  * Main authentication query service interface
  */
-export const IAuthenticationQueryService = createDecorator<IAuthenticationQueryService>('IAuthenticationQueryService');
+export const IAuthenticationQueryService = createDecorator<IAuthenticationQueryService>(
+  "IAuthenticationQueryService",
+);
 export interface IAuthenticationQueryService {
 	readonly _serviceBrand: undefined;
 
@@ -469,7 +471,7 @@ export interface IAuthenticationQueryService {
 	 */
 	readonly onDidChangePreferences: Event<{
 		readonly providerId: string;
-		readonly entityType: 'extension' | 'mcpServer';
+		readonly entityType: "extension" | "mcpServer";
 		readonly entityIds: string[];
 	}>;
 
@@ -513,5 +515,5 @@ export interface IAuthenticationQueryService {
 	 * @param confirmation Must be 'CLEAR_ALL_AUTH_DATA' to confirm
 	 * @param includeInternal Whether to include internal providers (defaults to true for complete clearing)
 	 */
-	clearAllData(confirmation: 'CLEAR_ALL_AUTH_DATA', includeInternal?: boolean): Promise<void>;
+	clearAllData(confirmation: "CLEAR_ALL_AUTH_DATA", includeInternal?: boolean): Promise<void>;
 }

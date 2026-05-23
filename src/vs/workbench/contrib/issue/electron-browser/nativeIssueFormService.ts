@@ -3,27 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IMenuService } from '../../../../platform/actions/common/actions.js';
-import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { IEnvironmentService } from '../../../../platform/environment/common/environment.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { INativeHostService } from '../../../../platform/native/common/native.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
-import product from '../../../../platform/product/common/product.js';
-import { MutableDisposable } from '../../../../base/common/lifecycle.js';
-import { IAuxiliaryWindowService } from '../../../services/auxiliaryWindow/browser/auxiliaryWindowService.js';
-import { IHostService } from '../../../services/host/browser/host.js';
-import { IssueFormService } from '../browser/issueFormService.js';
-import { IGitHubUploadService } from '../browser/githubUploadService.js';
-import { IssueReporterEditorInput } from '../browser/issueReporterEditorInput.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IEditorService } from '../../../services/editor/common/editorService.js';
-import { IIssueFormService, IssueReporterData } from '../common/issue.js';
-import { IssueReporter } from './issueReporterService.js';
+import { IMenuService } from "../../../../platform/actions/common/actions.js";
+import { IClipboardService } from "../../../../platform/clipboard/common/clipboardService.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { IEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { INativeHostService } from "../../../../platform/native/common/native.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import product from "../../../../platform/product/common/product.js";
+import { MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { IAuxiliaryWindowService } from "../../../services/auxiliaryWindow/browser/auxiliaryWindowService.js";
+import { IHostService } from "../../../services/host/browser/host.js";
+import { IssueFormService } from "../browser/issueFormService.js";
+import { IGitHubUploadService } from "../browser/githubUploadService.js";
+import { IssueReporterEditorInput } from "../browser/issueReporterEditorInput.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IIssueFormService, IssueReporterData } from "../common/issue.js";
+import { IssueReporter } from "./issueReporterService.js";
 
 export class NativeIssueFormService extends IssueFormService implements IIssueFormService {
 
@@ -32,7 +32,9 @@ export class NativeIssueFormService extends IssueFormService implements IIssueFo
 	 * (e.g. authentication onDidChangeSessions) are released when the aux window closes or a new
 	 * reporter is opened.
 	 */
-	private readonly legacyReporter = this._register(new MutableDisposable<IssueReporter>());
+	private readonly legacyReporter = this._register(
+    new MutableDisposable<IssueReporter>(),
+  );
 
 	constructor(
 		@IInstantiationService instantiationService: IInstantiationService,
@@ -51,7 +53,20 @@ export class NativeIssueFormService extends IssueFormService implements IIssueFo
 		@IClipboardService clipboardService: IClipboardService,
 		@INativeHostService private readonly nativeHostService: INativeHostService,
 	) {
-		super(instantiationService, auxiliaryWindowService, menuService, contextKeyService, logService, dialogService, hostService, openerService, fileService, githubUploadService, editorService, clipboardService);
+		super(
+      instantiationService,
+      auxiliaryWindowService,
+      menuService,
+      contextKeyService,
+      logService,
+      dialogService,
+      hostService,
+      openerService,
+      fileService,
+      githubUploadService,
+      editorService,
+      clipboardService,
+    );
 	}
 
 	override async openReporter(data: IssueReporterData): Promise<void> {
@@ -59,7 +74,9 @@ export class NativeIssueFormService extends IssueFormService implements IIssueFo
 			return;
 		}
 
-		const useWizard = this.configurationService.getValue<boolean>('issueReporter.wizard.enabled');
+		const useWizard = this.configurationService.getValue<boolean>(
+      "issueReporter.wizard.enabled",
+    );
 		if (!useWizard) {
 			// Legacy reporter needs OS properties synchronously for the issue body.
 			const { arch, release, type } = await this.nativeHostService.getOSProperties();
@@ -71,7 +88,10 @@ export class NativeIssueFormService extends IssueFormService implements IIssueFo
 
 		// Wizard path pulls system info from IProcessService.getSystemInfo() inside
 		// the editor pane, so it does not depend on arch/release/type here.
-		const input = this.instantiationService.createInstance(IssueReporterEditorInput, data);
+		const input = this.instantiationService.createInstance(
+      IssueReporterEditorInput,
+      data,
+    );
 		await this.editorService.openEditor(input, { pinned: true });
 	}
 
@@ -86,15 +106,19 @@ export class NativeIssueFormService extends IssueFormService implements IIssueFo
 
 		if (this.issueReporterWindow) {
 			const issueReporter = this.instantiationService.createInstance(
-				IssueReporter,
-				!!this.environmentService.disableExtensions,
-				data,
-				{ type: this.type, arch: this.arch, release: this.release },
-				product,
-				this.issueReporterWindow,
-			);
+        IssueReporter,
+        !!this.environmentService.disableExtensions,
+        data,
+        { type: this.type, arch: this.arch, release: this.release },
+        product,
+        this.issueReporterWindow,
+      );
 			this.legacyReporter.value = issueReporter;
-			this.issueReporterWindow.addEventListener('beforeunload', () => this.legacyReporter.clear(), { once: true });
+			this.issueReporterWindow.addEventListener(
+        "beforeunload",
+        () => this.legacyReporter.clear(),
+        { once: true },
+      );
 			issueReporter.render();
 		}
 	}

@@ -3,24 +3,26 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DisposableMap, IDisposable } from '../../../../../base/common/lifecycle.js';
-import { observableValue } from '../../../../../base/common/observable.js';
-import { joinPath } from '../../../../../base/common/resources.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { ConfigurationTarget, IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { IFileService } from '../../../../../platform/files/common/files.js';
-import { StorageScope } from '../../../../../platform/storage/common/storage.js';
-import { IWorkspaceContextService, IWorkspaceFolder } from '../../../../../platform/workspace/common/workspace.js';
-import { IRemoteAgentService } from '../../../../services/remote/common/remoteAgentService.js';
-import { DiscoverySource } from '../mcpConfiguration.js';
-import { IMcpRegistry } from '../mcpRegistryTypes.js';
-import { McpCollectionSortOrder, McpServerTrust } from '../mcpTypes.js';
-import { IMcpDiscovery } from './mcpDiscovery.js';
-import { FilesystemMcpDiscovery, WritableMcpCollectionDefinition } from './nativeMcpDiscoveryAbstract.js';
-import { claudeConfigToServerDefinition } from './nativeMcpDiscoveryAdapters.js';
+import { DisposableMap, IDisposable } from "../../../../../base/common/lifecycle.js";
+import { observableValue } from "../../../../../base/common/observable.js";
+import { joinPath } from "../../../../../base/common/resources.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ConfigurationTarget, IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { StorageScope } from "../../../../../platform/storage/common/storage.js";
+import { IWorkspaceContextService, IWorkspaceFolder } from "../../../../../platform/workspace/common/workspace.js";
+import { IRemoteAgentService } from "../../../../services/remote/common/remoteAgentService.js";
+import { DiscoverySource } from "../mcpConfiguration.js";
+import { IMcpRegistry } from "../mcpRegistryTypes.js";
+import { McpCollectionSortOrder, McpServerTrust } from "../mcpTypes.js";
+import { IMcpDiscovery } from "./mcpDiscovery.js";
+import { FilesystemMcpDiscovery, WritableMcpCollectionDefinition } from "./nativeMcpDiscoveryAbstract.js";
+import { claudeConfigToServerDefinition } from "./nativeMcpDiscoveryAdapters.js";
 
 export class CursorWorkspaceMcpDiscoveryAdapter extends FilesystemMcpDiscovery implements IMcpDiscovery {
-	private readonly _collections = this._register(new DisposableMap<string, IDisposable>());
+	private readonly _collections = this._register(
+    new DisposableMap<string, IDisposable>(),
+  );
 
 	constructor(
 		@IFileService fileService: IFileService,
@@ -48,7 +50,7 @@ export class CursorWorkspaceMcpDiscoveryAdapter extends FilesystemMcpDiscovery i
 	}
 
 	private watchFolder(folder: IWorkspaceFolder) {
-		const configFile = joinPath(folder.uri, '.cursor', 'mcp.json');
+		const configFile = joinPath(folder.uri, ".cursor", "mcp.json");
 		const collection: WritableMcpCollectionDefinition = {
 			id: `cursor-workspace.${folder.index}`,
 			label: `${folder.name}/.cursor/mcp.json`,
@@ -64,14 +66,14 @@ export class CursorWorkspaceMcpDiscoveryAdapter extends FilesystemMcpDiscovery i
 		};
 
 		this._collections.set(folder.uri.toString(), this.watchFile(
-			URI.joinPath(folder.uri, '.cursor', 'mcp.json'),
+			URI.joinPath(folder.uri, ".cursor", "mcp.json"),
 			collection,
 			DiscoverySource.CursorWorkspace,
 			async contents => {
 				const defs = await claudeConfigToServerDefinition(collection.id, contents, folder.uri);
 				defs?.forEach(d => d.roots = [folder.uri]);
 				return defs;
-			}
+			},
 		));
 	}
 }

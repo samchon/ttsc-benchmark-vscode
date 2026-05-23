@@ -3,45 +3,50 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { MainThreadDocumentsAndEditors } from '../../browser/mainThreadDocumentsAndEditors.js';
-import { SingleProxyRPCProtocol } from '../common/testRPCProtocol.js';
-import { TestConfigurationService } from '../../../../platform/configuration/test/common/testConfigurationService.js';
-import { ModelService } from '../../../../editor/common/services/modelService.js';
-import { TestCodeEditorService } from '../../../../editor/test/browser/editorTestServices.js';
-import { ITextFileService } from '../../../services/textfile/common/textfiles.js';
-import { IDocumentsAndEditorsDelta } from '../../common/extHost.protocol.js';
-import { createTestCodeEditor, ITestCodeEditor } from '../../../../editor/test/browser/testCodeEditor.js';
-import { mock } from '../../../../base/test/common/mock.js';
-import { TestEditorService, TestEditorGroupsService, TestEnvironmentService, TestPathService } from '../../../test/browser/workbenchTestServices.js';
-import { Event } from '../../../../base/common/event.js';
-import { ITextModel } from '../../../../editor/common/model.js';
-import { ServiceCollection } from '../../../../platform/instantiation/common/serviceCollection.js';
-import { ICodeEditorService } from '../../../../editor/browser/services/codeEditorService.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { TestThemeService } from '../../../../platform/theme/test/common/testThemeService.js';
-import { UndoRedoService } from '../../../../platform/undoRedo/common/undoRedoService.js';
-import { TestDialogService } from '../../../../platform/dialogs/test/common/testDialogService.js';
-import { TestNotificationService } from '../../../../platform/notification/test/common/testNotificationService.js';
-import { TestTextResourcePropertiesService, TestWorkingCopyFileService } from '../../../test/common/workbenchTestServices.js';
-import { UriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentityService.js';
-import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
-import { IPaneCompositePartService } from '../../../services/panecomposite/browser/panecomposite.js';
-import { TextModel } from '../../../../editor/common/model/textModel.js';
-import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
-import { TestInstantiationService } from '../../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { ILanguageService } from '../../../../editor/common/languages/language.js';
-import { LanguageService } from '../../../../editor/common/services/languageService.js';
-import { ILanguageConfigurationService } from '../../../../editor/common/languages/languageConfigurationRegistry.js';
-import { TestLanguageConfigurationService } from '../../../../editor/test/common/modes/testLanguageConfigurationService.js';
-import { IUndoRedoService } from '../../../../platform/undoRedo/common/undoRedo.js';
-import { IQuickDiffModelService } from '../../../contrib/scm/browser/quickDiffModel.js';
-import { ITextEditorDiffInformation } from '../../../../platform/editor/common/editor.js';
-import { ITreeSitterLibraryService } from '../../../../editor/common/services/treeSitter/treeSitterLibraryService.js';
-import { TestTreeSitterLibraryService } from '../../../../editor/test/common/services/testTreeSitterLibraryService.js';
+import assert from "assert";
+import { MainThreadDocumentsAndEditors } from "../../browser/mainThreadDocumentsAndEditors.js";
+import { SingleProxyRPCProtocol } from "../common/testRPCProtocol.js";
+import { TestConfigurationService } from "../../../../platform/configuration/test/common/testConfigurationService.js";
+import { ModelService } from "../../../../editor/common/services/modelService.js";
+import { TestCodeEditorService } from "../../../../editor/test/browser/editorTestServices.js";
+import { ITextFileService } from "../../../services/textfile/common/textfiles.js";
+import { IDocumentsAndEditorsDelta } from "../../common/extHost.protocol.js";
+import { createTestCodeEditor, ITestCodeEditor } from "../../../../editor/test/browser/testCodeEditor.js";
+import { mock } from "../../../../base/test/common/mock.js";
+import {
+  TestEditorService,
+  TestEditorGroupsService,
+  TestEnvironmentService,
+  TestPathService,
+} from "../../../test/browser/workbenchTestServices.js";
+import { Event } from "../../../../base/common/event.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+import { ServiceCollection } from "../../../../platform/instantiation/common/serviceCollection.js";
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { TestThemeService } from "../../../../platform/theme/test/common/testThemeService.js";
+import { UndoRedoService } from "../../../../platform/undoRedo/common/undoRedoService.js";
+import { TestDialogService } from "../../../../platform/dialogs/test/common/testDialogService.js";
+import { TestNotificationService } from "../../../../platform/notification/test/common/testNotificationService.js";
+import { TestTextResourcePropertiesService, TestWorkingCopyFileService } from "../../../test/common/workbenchTestServices.js";
+import { UriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentityService.js";
+import { IClipboardService } from "../../../../platform/clipboard/common/clipboardService.js";
+import { IPaneCompositePartService } from "../../../services/panecomposite/browser/panecomposite.js";
+import { TextModel } from "../../../../editor/common/model/textModel.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
+import { TestInstantiationService } from "../../../../platform/instantiation/test/common/instantiationServiceMock.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { LanguageService } from "../../../../editor/common/services/languageService.js";
+import { ILanguageConfigurationService } from "../../../../editor/common/languages/languageConfigurationRegistry.js";
+import { TestLanguageConfigurationService } from "../../../../editor/test/common/modes/testLanguageConfigurationService.js";
+import { IUndoRedoService } from "../../../../platform/undoRedo/common/undoRedo.js";
+import { IQuickDiffModelService } from "../../../contrib/scm/browser/quickDiffModel.js";
+import { ITextEditorDiffInformation } from "../../../../platform/editor/common/editor.js";
+import { ITreeSitterLibraryService } from "../../../../editor/common/services/treeSitter/treeSitterLibraryService.js";
+import { TestTreeSitterLibraryService } from "../../../../editor/test/common/services/testTreeSitterLibraryService.js";
 
-suite('MainThreadDocumentsAndEditors', () => {
+suite("MainThreadDocumentsAndEditors", () => {
 
 	let disposables: DisposableStore;
 
@@ -54,8 +59,8 @@ suite('MainThreadDocumentsAndEditors', () => {
 		return createTestCodeEditor(model, {
 			hasTextFocus: false,
 			serviceCollection: new ServiceCollection(
-				[ICodeEditorService, codeEditorService]
-			)
+				[ICodeEditorService, codeEditorService],
+			),
 		});
 	}
 
@@ -64,7 +69,7 @@ suite('MainThreadDocumentsAndEditors', () => {
 
 		deltas.length = 0;
 		const configService = new TestConfigurationService();
-		configService.setUserConfiguration('editor', { 'detectIndentation': false });
+		configService.setUserConfiguration("editor", { "detectIndentation": false });
 		const dialogService = new TestDialogService();
 		const notificationService = new TestNotificationService();
 		const undoRedoService = new UndoRedoService(dialogService, notificationService);
@@ -78,7 +83,7 @@ suite('MainThreadDocumentsAndEditors', () => {
 			configService,
 			new TestTextResourcePropertiesService(configService),
 			undoRedoService,
-			instantiationService
+			instantiationService,
 		);
 		codeEditorService = new TestCodeEditorService(themeService);
 		textFileService = new class extends mock<ITextFileService>() {
@@ -88,13 +93,13 @@ suite('MainThreadDocumentsAndEditors', () => {
 				onDidSave: Event.None,
 				onDidRevert: Event.None,
 				onDidChangeDirty: Event.None,
-				onDidChangeEncoding: Event.None
+				onDidChangeEncoding: Event.None,
 			};
 			// eslint-disable-next-line local/code-no-any-casts
 			override untitled = <any>{
-				onDidChangeEncoding: Event.None
+				onDidChangeEncoding: Event.None,
 			};
-			override getEncoding() { return 'utf8'; }
+			override getEncoding() { return "utf8"; }
 		};
 		const workbenchEditorService = disposables.add(new TestEditorService());
 		const editorGroupService = new TestEditorGroupsService();
@@ -108,7 +113,7 @@ suite('MainThreadDocumentsAndEditors', () => {
 		new MainThreadDocumentsAndEditors(
 			SingleProxyRPCProtocol({
 				$acceptDocumentsAndEditorsDelta: (delta: IDocumentsAndEditorsDelta) => { deltas.push(delta); },
-				$acceptEditorDiffInformation: (id: string, diffInformation: ITextEditorDiffInformation | undefined) => { }
+				$acceptEditorDiffInformation: (id: string, diffInformation: ITextEditorDiffInformation | undefined) => { },
 			}),
 			modelService,
 			textFileService,
@@ -129,7 +134,7 @@ suite('MainThreadDocumentsAndEditors', () => {
 			new UriIdentityService(fileService),
 			new class extends mock<IClipboardService>() {
 				override readText() {
-					return Promise.resolve('clipboard_contents');
+					return Promise.resolve("clipboard_contents");
 				}
 			},
 			new TestPathService(),
@@ -138,7 +143,7 @@ suite('MainThreadDocumentsAndEditors', () => {
 				override createQuickDiffModelReference() {
 					return undefined;
 				}
-			}
+			},
 		);
 	});
 
@@ -148,10 +153,10 @@ suite('MainThreadDocumentsAndEditors', () => {
 
 	ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('Model#add', () => {
+	test("Model#add", () => {
 		deltas.length = 0;
 
-		disposables.add(modelService.createModel('farboo', null));
+		disposables.add(modelService.createModel("farboo", null));
 
 		assert.strictEqual(deltas.length, 1);
 		const [delta] = deltas;
@@ -163,11 +168,11 @@ suite('MainThreadDocumentsAndEditors', () => {
 		assert.strictEqual(delta.newActiveEditor, undefined);
 	});
 
-	test('ignore huge model', function () {
+	test("ignore huge model", function () {
 
 		const oldLimit = TextModel._MODEL_SYNC_LIMIT;
 		try {
-			const largeModelString = 'abc'.repeat(1024);
+			const largeModelString = "abc".repeat(1024);
 			TextModel._MODEL_SYNC_LIMIT = largeModelString.length / 2;
 
 			const model = modelService.createModel(largeModelString, null);
@@ -187,11 +192,11 @@ suite('MainThreadDocumentsAndEditors', () => {
 		}
 	});
 
-	test('ignore huge model from editor', function () {
+	test("ignore huge model from editor", function () {
 
 		const oldLimit = TextModel._MODEL_SYNC_LIMIT;
 		try {
-			const largeModelString = 'abc'.repeat(1024);
+			const largeModelString = "abc".repeat(1024);
 			TextModel._MODEL_SYNC_LIMIT = largeModelString.length / 2;
 
 			const model = modelService.createModel(largeModelString, null);
@@ -208,10 +213,10 @@ suite('MainThreadDocumentsAndEditors', () => {
 		}
 	});
 
-	test('ignore simple widget model', function () {
+	test("ignore simple widget model", function () {
 		this.timeout(1000 * 60); // increase timeout for this one test
 
-		const model = modelService.createModel('test', null, undefined, true);
+		const model = modelService.createModel("test", null, undefined, true);
 		disposables.add(model);
 		assert.ok(model.isForSimpleWidget);
 
@@ -224,7 +229,7 @@ suite('MainThreadDocumentsAndEditors', () => {
 		assert.strictEqual(delta.removedEditors, undefined);
 	});
 
-	test('ignore editor w/o model', () => {
+	test("ignore editor w/o model", () => {
 		const editor = myCreateTestCodeEditor(undefined);
 		assert.strictEqual(deltas.length, 1);
 		const [delta] = deltas;
@@ -237,10 +242,10 @@ suite('MainThreadDocumentsAndEditors', () => {
 		editor.dispose();
 	});
 
-	test('editor with model', () => {
+	test("editor with model", () => {
 		deltas.length = 0;
 
-		const model = modelService.createModel('farboo', null);
+		const model = modelService.createModel("farboo", null);
 		const editor = myCreateTestCodeEditor(model);
 
 		assert.strictEqual(deltas.length, 2);
@@ -261,8 +266,8 @@ suite('MainThreadDocumentsAndEditors', () => {
 		model.dispose();
 	});
 
-	test('editor with dispos-ed/-ing model', () => {
-		const model = modelService.createModel('farboo', null);
+	test("editor with dispos-ed/-ing model", () => {
+		const model = modelService.createModel("farboo", null);
 		const editor = myCreateTestCodeEditor(model);
 
 		// ignore things until now

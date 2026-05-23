@@ -3,19 +3,37 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { Disposable, DisposableMap, DisposableStore } from '../../../base/common/lifecycle.js';
-import { revive } from '../../../base/common/marshalling.js';
-import { ThemeIcon } from '../../../base/common/themables.js';
-import { isUriComponents, URI, UriComponents } from '../../../base/common/uri.js';
-import { ExtensionIdentifier } from '../../../platform/extensions/common/extensions.js';
-import { ILogService } from '../../../platform/log/common/log.js';
-import { IProductService } from '../../../platform/product/common/productService.js';
-import { toToolSetKey } from '../../contrib/chat/common/tools/languageModelToolsContribution.js';
-import { CountTokensCallback, ILanguageModelToolsService, IToolData, IToolInvocation, IToolProgressStep, IToolResult, ToolDataSource, ToolProgress, toolResultHasBuffers, ToolSet } from '../../contrib/chat/common/tools/languageModelToolsService.js';
-import { extHostNamedCustomer, IExtHostContext } from '../../services/extensions/common/extHostCustomers.js';
-import { Dto, SerializableObjectWithBuffers } from '../../services/extensions/common/proxyIdentifier.js';
-import { ExtHostContext, ExtHostLanguageModelToolsShape, IToolDataDto, IToolDefinitionDto, MainContext, MainThreadLanguageModelToolsShape } from '../common/extHost.protocol.js';
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { Disposable, DisposableMap, DisposableStore } from "../../../base/common/lifecycle.js";
+import { revive } from "../../../base/common/marshalling.js";
+import { ThemeIcon } from "../../../base/common/themables.js";
+import { isUriComponents, URI, UriComponents } from "../../../base/common/uri.js";
+import { ExtensionIdentifier } from "../../../platform/extensions/common/extensions.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { IProductService } from "../../../platform/product/common/productService.js";
+import { toToolSetKey } from "../../contrib/chat/common/tools/languageModelToolsContribution.js";
+import {
+  CountTokensCallback,
+  ILanguageModelToolsService,
+  IToolData,
+  IToolInvocation,
+  IToolProgressStep,
+  IToolResult,
+  ToolDataSource,
+  ToolProgress,
+  toolResultHasBuffers,
+  ToolSet,
+} from "../../contrib/chat/common/tools/languageModelToolsService.js";
+import { extHostNamedCustomer, IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+import { Dto, SerializableObjectWithBuffers } from "../../services/extensions/common/proxyIdentifier.js";
+import {
+  ExtHostContext,
+  ExtHostLanguageModelToolsShape,
+  IToolDataDto,
+  IToolDefinitionDto,
+  MainContext,
+  MainThreadLanguageModelToolsShape,
+} from "../common/extHost.protocol.js";
 
 @extHostNamedCustomer(MainContext.MainThreadLanguageModelTools)
 export class MainThreadLanguageModelTools extends Disposable implements MainThreadLanguageModelToolsShape {
@@ -34,9 +52,15 @@ export class MainThreadLanguageModelTools extends Disposable implements MainThre
 		@IProductService private readonly _productService: IProductService,
 	) {
 		super();
-		this._proxy = extHostContext.getProxy(ExtHostContext.ExtHostLanguageModelTools);
+		this._proxy = extHostContext.getProxy(
+      ExtHostContext.ExtHostLanguageModelTools,
+    );
 
-		this._register(this._languageModelToolsService.onDidChangeTools(e => this._proxy.$onDidChangeTools(this.getToolDtos())));
+		this._register(
+      this._languageModelToolsService.onDidChangeTools(
+        e => this._proxy.$onDidChangeTools(this.getToolDtos()),
+      ),
+    );
 	}
 
 	private getToolDtos(): IToolDataDto[] {
@@ -46,7 +70,7 @@ export class MainThreadLanguageModelTools extends Disposable implements MainThre
 				displayName: tool.displayName,
 				toolReferenceName: tool.toolReferenceName,
 				legacyToolReferenceFullNames: tool.legacyToolReferenceFullNames,
-				fullReferenceName: tool.source.type === 'mcp' ? this._languageModelToolsService.getFullReferenceName(tool) : undefined,
+				fullReferenceName: tool.source.type === "mcp" ? this._languageModelToolsService.getFullReferenceName(tool) : undefined,
 				tags: tool.tags,
 				userDescription: tool.userDescription,
 				modelDescription: tool.modelDescription,
@@ -61,17 +85,21 @@ export class MainThreadLanguageModelTools extends Disposable implements MainThre
 
 	async $invokeTool(dto: Dto<IToolInvocation>, token?: CancellationToken): Promise<Dto<IToolResult> | SerializableObjectWithBuffers<Dto<IToolResult>>> {
 		const result = await this._languageModelToolsService.invokeTool(
-			revive<IToolInvocation>(dto),
-			(input, token) => this._proxy.$countTokensForInvocation(dto.callId, input, token),
-			token ?? CancellationToken.None,
-		);
+      revive<IToolInvocation>(dto),
+      (input, token) => this._proxy.$countTokensForInvocation(
+        dto.callId,
+        input,
+        token,
+      ),
+      token ?? CancellationToken.None,
+    );
 
 		// Only return content and metadata to EH
 		const out: Dto<IToolResult> = {
-			content: result.content,
-			toolMetadata: result.toolMetadata,
-			toolResultError: result.toolResultError,
-		};
+      content: result.content,
+      toolMetadata: result.toolMetadata,
+      toolResultError: result.toolResultError,
+    };
 		return toolResultHasBuffers(result) ? new SerializableObjectWithBuffers(out) : out;
 	}
 
@@ -109,21 +137,29 @@ export class MainThreadLanguageModelTools extends Disposable implements MainThre
 	}
 
 	$registerToolWithDefinition(extensionId: ExtensionIdentifier, definition: IToolDefinitionDto, hasHandleToolStream: boolean): void {
-		let icon: IToolData['icon'] | undefined;
+		let icon: IToolData["icon"] | undefined;
 		if (definition.icon) {
 			if (ThemeIcon.isThemeIcon(definition.icon)) {
 				icon = definition.icon;
-			} else if (typeof definition.icon === 'object' && definition.icon !== null && isUriComponents(definition.icon)) {
+			} else if (typeof definition.icon === "object" && definition.icon !== null && isUriComponents(
+        definition.icon,
+      )) {
 				icon = { dark: URI.revive(definition.icon as UriComponents) };
 			} else {
 				const iconObj = definition.icon as { light?: UriComponents; dark: UriComponents };
-				icon = { dark: URI.revive(iconObj.dark), light: iconObj.light ? URI.revive(iconObj.light) : undefined };
+				icon = {
+          dark: URI.revive(iconObj.dark),
+          light: iconObj.light ? URI.revive(iconObj.light) : undefined,
+        };
 			}
 		}
 
 		// Convert source from DTO, matching the isBuiltinTool logic from languageModelToolsContribution
 		const isBuiltinTool = this._productService.defaultChatAgent?.chatExtensionId
-			? ExtensionIdentifier.equals(extensionId, this._productService.defaultChatAgent.chatExtensionId)
+			? ExtensionIdentifier.equals(
+          extensionId,
+          this._productService.defaultChatAgent.chatExtensionId,
+        )
 			: false;
 		const source: ToolDataSource = isBuiltinTool
 			? ToolDataSource.Internal
@@ -131,19 +167,19 @@ export class MainThreadLanguageModelTools extends Disposable implements MainThre
 
 		// Create the tool data
 		const toolData: IToolData = {
-			id: definition.id,
-			displayName: definition.displayName,
-			toolReferenceName: definition.toolReferenceName,
-			legacyToolReferenceFullNames: definition.legacyToolReferenceFullNames,
-			tags: definition.tags,
-			userDescription: definition.userDescription,
-			modelDescription: definition.modelDescription,
-			inputSchema: definition.inputSchema,
-			source,
-			icon,
-			models: definition.models,
-			canBeReferencedInPrompt: !!definition.userDescription && !definition.toolSet,
-		};
+      id: definition.id,
+      displayName: definition.displayName,
+      toolReferenceName: definition.toolReferenceName,
+      legacyToolReferenceFullNames: definition.legacyToolReferenceFullNames,
+      tags: definition.tags,
+      userDescription: definition.userDescription,
+      modelDescription: definition.modelDescription,
+      inputSchema: definition.inputSchema,
+      source,
+      icon,
+      models: definition.models,
+      canBeReferencedInPrompt: !!definition.userDescription && !definition.toolSet,
+    };
 
 		// Register both tool data and implementation
 		const id = definition.id;
@@ -163,13 +199,17 @@ export class MainThreadLanguageModelTools extends Disposable implements MainThre
 				},
 				handleToolStream: hasHandleToolStream ? (context, token) => this._proxy.$handleToolStream(id, context, token) : undefined,
 				prepareToolInvocation: (context, token) => this._proxy.$prepareToolInvocation(id, context, token),
-			}
+			},
 		));
 
 		if (definition.toolSet) {
-			const ts = this._languageModelToolsService.getToolSet(toToolSetKey(extensionId, definition.toolSet)) || this._languageModelToolsService.getToolSet(definition.toolSet);
+			const ts = this._languageModelToolsService.getToolSet(
+        toToolSetKey(extensionId, definition.toolSet),
+      ) || this._languageModelToolsService.getToolSet(definition.toolSet);
 			if (!ts || !(ts instanceof ToolSet)) {
-				this._logService.warn(`ToolSet ${definition.toolSet} not found for tool ${definition.id} from extension ${extensionId.value}`);
+				this._logService.warn(
+          `ToolSet ${definition.toolSet} not found for tool ${definition.id} from extension ${extensionId.value}`,
+        );
 			} else {
 				store.add(ts.addTool(toolData));
 			}

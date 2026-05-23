@@ -3,28 +3,32 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as fs from 'fs';
-import * as path from '../../../base/common/path.js';
-import { URI } from '../../../base/common/uri.js';
-import { ExtensionStoragePaths as CommonExtensionStoragePaths } from '../common/extHostStoragePaths.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { Schemas } from '../../../base/common/network.js';
-import { IntervalTimer, timeout } from '../../../base/common/async.js';
-import { ILogService } from '../../../platform/log/common/log.js';
-import { Promises } from '../../../base/node/pfs.js';
+import * as fs from "fs";
+import * as path from "../../../base/common/path.js";
+import { URI } from "../../../base/common/uri.js";
+import { ExtensionStoragePaths as CommonExtensionStoragePaths } from "../common/extHostStoragePaths.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { Schemas } from "../../../base/common/network.js";
+import { IntervalTimer, timeout } from "../../../base/common/async.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { Promises } from "../../../base/node/pfs.js";
 
 export class ExtensionStoragePaths extends CommonExtensionStoragePaths {
 
 	private _workspaceStorageLock: Lock | null = null;
 
 	protected override async _getWorkspaceStorageURI(storageName: string): Promise<URI> {
-		const workspaceStorageURI = await super._getWorkspaceStorageURI(storageName);
+		const workspaceStorageURI = await super._getWorkspaceStorageURI(
+      storageName,
+    );
 		if (workspaceStorageURI.scheme !== Schemas.file) {
 			return workspaceStorageURI;
 		}
 
 		if (this._environment.skipWorkspaceStorageLock) {
-			this._logService.info(`Skipping acquiring lock for ${workspaceStorageURI.fsPath}.`);
+			this._logService.info(
+        `Skipping acquiring lock for ${workspaceStorageURI.fsPath}.`,
+      );
 			return workspaceStorageURI;
 		}
 
@@ -44,13 +48,13 @@ export class ExtensionStoragePaths extends CommonExtensionStoragePaths {
 
 			await mkdir(workspaceStoragePath);
 
-			const lockfile = path.join(workspaceStoragePath, 'vscode.lock');
+			const lockfile = path.join(workspaceStoragePath, "vscode.lock");
 			const lock = await tryAcquireLock(this._logService, lockfile, false);
 			if (lock) {
 				this._workspaceStorageLock = lock;
-				process.on('exit', () => {
-					lock.dispose();
-				});
+				process.on("exit", () => {
+          lock.dispose();
+        });
 				return URI.file(workspaceStoragePath);
 			}
 
@@ -90,7 +94,7 @@ class Lock extends Disposable {
 
 	constructor(
 		private readonly logService: ILogService,
-		private readonly filename: string
+		private readonly filename: string,
 	) {
 		super();
 
@@ -117,13 +121,17 @@ class Lock extends Disposable {
 	}
 
 	public async setWillRelease(timeUntilReleaseMs: number): Promise<void> {
-		this.logService.info(`Lock '${this.filename}': Marking the lockfile as scheduled to be released in ${timeUntilReleaseMs} ms.`);
+		this.logService.info(
+      `Lock '${this.filename}': Marking the lockfile as scheduled to be released in ${timeUntilReleaseMs} ms.`,
+    );
 		try {
 			const contents: ILockfileContents = {
-				pid: process.pid,
-				willReleaseAt: Date.now() + timeUntilReleaseMs
-			};
-			await Promises.writeFile(this.filename, JSON.stringify(contents), { flag: 'w' });
+        pid: process.pid,
+        willReleaseAt: Date.now() + timeUntilReleaseMs,
+      };
+			await Promises.writeFile(this.filename, JSON.stringify(contents), {
+        flag: "w",
+      });
 		} catch (err) {
 			this.logService.error(err);
 		}
@@ -138,10 +146,12 @@ class Lock extends Disposable {
 async function tryAcquireLock(logService: ILogService, filename: string, isSecondAttempt: boolean): Promise<Lock | null> {
 	try {
 		const contents: ILockfileContents = {
-			pid: process.pid,
-			willReleaseAt: 0
-		};
-		await Promises.writeFile(filename, JSON.stringify(contents), { flag: 'wx' });
+      pid: process.pid,
+      willReleaseAt: 0,
+    };
+		await Promises.writeFile(filename, JSON.stringify(contents), {
+      flag: "wx",
+    });
 	} catch (err) {
 		logService.error(err);
 	}
@@ -154,7 +164,9 @@ async function tryAcquireLock(logService: ILogService, filename: string, isSecon
 			logService.info(`Lock '${filename}': Could not acquire lock, giving up.`);
 			return null;
 		}
-		logService.info(`Lock '${filename}': Could not acquire lock, checking if the file is stale.`);
+		logService.info(
+      `Lock '${filename}': Could not acquire lock, checking if the file is stale.`,
+    );
 		return checkStaleAndTryAcquireLock(logService, filename);
 	}
 
@@ -207,7 +219,10 @@ async function readmtime(logService: ILogService, filename: string): Promise<num
 
 function processExists(pid: number): boolean {
 	try {
-		process.kill(pid, 0); // throws an exception if the process doesn't exist anymore.
+		process.kill(
+      pid,
+      0,
+    ); // throws an exception if the process doesn't exist anymore.
 		return true;
 	} catch (e) {
 		return false;
@@ -225,9 +240,13 @@ async function checkStaleAndTryAcquireLock(logService: ILogService, filename: st
 		let timeUntilRelease = contents.willReleaseAt - Date.now();
 		if (timeUntilRelease < 5000) {
 			if (timeUntilRelease > 0) {
-				logService.info(`Lock '${filename}': The lockfile is scheduled to be released in ${timeUntilRelease} ms.`);
+				logService.info(
+          `Lock '${filename}': The lockfile is scheduled to be released in ${timeUntilRelease} ms.`,
+        );
 			} else {
-				logService.info(`Lock '${filename}': The lockfile is scheduled to have been released.`);
+				logService.info(
+          `Lock '${filename}': The lockfile is scheduled to have been released.`,
+        );
 			}
 
 			while (timeUntilRelease > 0) {
@@ -245,7 +264,9 @@ async function checkStaleAndTryAcquireLock(logService: ILogService, filename: st
 	}
 
 	if (!processExists(contents.pid)) {
-		logService.info(`Lock '${filename}': The pid ${contents.pid} appears to be gone.`);
+		logService.info(
+      `Lock '${filename}': The pid ${contents.pid} appears to be gone.`,
+    );
 		return tryDeleteAndAcquireLock(logService, filename);
 	}
 
@@ -253,7 +274,9 @@ async function checkStaleAndTryAcquireLock(logService: ILogService, filename: st
 	const elapsed1 = Date.now() - mtime1;
 	if (elapsed1 <= STALE_LOCK_TIME) {
 		// the lock does not look stale
-		logService.info(`Lock '${filename}': The lock does not look stale, elapsed: ${elapsed1} ms, giving up.`);
+		logService.info(
+      `Lock '${filename}': The lock does not look stale, elapsed: ${elapsed1} ms, giving up.`,
+    );
 		return null;
 	}
 
@@ -267,12 +290,16 @@ async function checkStaleAndTryAcquireLock(logService: ILogService, filename: st
 	const elapsed2 = Date.now() - mtime2;
 	if (elapsed2 <= STALE_LOCK_TIME) {
 		// the lock does not look stale
-		logService.info(`Lock '${filename}': The lock does not look stale, elapsed: ${elapsed2} ms, giving up.`);
+		logService.info(
+      `Lock '${filename}': The lock does not look stale, elapsed: ${elapsed2} ms, giving up.`,
+    );
 		return null;
 	}
 
 	// the lock looks stale
-	logService.info(`Lock '${filename}': The lock looks stale even after waiting for 2s.`);
+	logService.info(
+    `Lock '${filename}': The lock looks stale even after waiting for 2s.`,
+  );
 	return tryDeleteAndAcquireLock(logService, filename);
 }
 

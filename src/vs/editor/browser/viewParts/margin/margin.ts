@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './margin.css';
-import { FastDomNode, createFastDomNode } from '../../../../base/browser/fastDomNode.js';
-import { ViewPart } from '../../view/viewPart.js';
-import { RenderingContext, RestrictedRenderingContext } from '../../view/renderingContext.js';
-import { ViewContext } from '../../../common/viewModel/viewContext.js';
-import * as viewEvents from '../../../common/viewEvents.js';
-import { EditorOption } from '../../../common/config/editorOptions.js';
+import "./margin.css";
+import { FastDomNode, createFastDomNode } from "../../../../base/browser/fastDomNode.js";
+import { ViewPart } from "../../view/viewPart.js";
+import { RenderingContext, RestrictedRenderingContext } from "../../view/renderingContext.js";
+import { ViewContext } from "../../../common/viewModel/viewContext.js";
+import * as viewEvents from "../../../common/viewEvents.js";
+import { EditorOption } from "../../../common/config/editorOptions.js";
 
 /**
  * Margin is a vertical strip located on the left of the editor's content area.
@@ -18,8 +18,8 @@ import { EditorOption } from '../../../common/config/editorOptions.js';
  */
 export class Margin extends ViewPart {
 
-	public static readonly CLASS_NAME = 'glyph-margin';
-	public static readonly OUTER_CLASS_NAME = 'margin';
+	public static readonly CLASS_NAME = "glyph-margin";
+	public static readonly OUTER_CLASS_NAME = "margin";
 
 	private readonly _domNode: FastDomNode<HTMLElement>;
 	private _canUseLayerHinting: boolean;
@@ -38,13 +38,15 @@ export class Margin extends ViewPart {
 		this._glyphMarginLeft = layoutInfo.glyphMarginLeft;
 		this._glyphMarginWidth = layoutInfo.glyphMarginWidth;
 
-		this._domNode = createFastDomNode(document.createElement('div'));
+		this._domNode = createFastDomNode(document.createElement("div"));
 		this._domNode.setClassName(Margin.OUTER_CLASS_NAME);
-		this._domNode.setPosition('absolute');
-		this._domNode.setAttribute('role', 'presentation');
-		this._domNode.setAttribute('aria-hidden', 'true');
+		this._domNode.setPosition("absolute");
+		this._domNode.setAttribute("role", "presentation");
+		this._domNode.setAttribute("aria-hidden", "true");
 
-		this._glyphMarginBackgroundDomNode = createFastDomNode(document.createElement('div'));
+		this._glyphMarginBackgroundDomNode = createFastDomNode(
+      document.createElement("div"),
+    );
 		this._glyphMarginBackgroundDomNode.setClassName(Margin.CLASS_NAME);
 
 		this._domNode.appendChild(this._glyphMarginBackgroundDomNode);
@@ -80,7 +82,7 @@ export class Margin extends ViewPart {
 
 	public render(ctx: RestrictedRenderingContext): void {
 		this._domNode.setLayerHinting(this._canUseLayerHinting);
-		this._domNode.setContain('strict');
+		this._domNode.setContain("strict");
 		const adjustedScrollTop = ctx.scrollTop - ctx.bigNumbersDelta;
 		this._domNode.setTop(-adjustedScrollTop);
 

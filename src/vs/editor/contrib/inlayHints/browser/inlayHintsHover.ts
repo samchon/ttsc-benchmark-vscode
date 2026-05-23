@@ -3,39 +3,46 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AsyncIterableProducer } from '../../../../base/common/async.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { IMarkdownString, isEmptyMarkdownString, MarkdownString } from '../../../../base/common/htmlContent.js';
-import { ICodeEditor, IEditorMouseEvent, MouseTargetType } from '../../../browser/editorBrowser.js';
-import { Position } from '../../../common/core/position.js';
-import { IModelDecoration } from '../../../common/model.js';
-import { ModelDecorationInjectedTextOptions } from '../../../common/model/textModel.js';
-import { HoverAnchor, HoverForeignElementAnchor, IEditorHoverParticipant } from '../../hover/browser/hoverTypes.js';
-import { ITextModelService } from '../../../common/services/resolverService.js';
-import { getHoverProviderResultsAsAsyncIterable } from '../../hover/browser/getHover.js';
-import { MarkdownHover, MarkdownHoverParticipant } from '../../hover/browser/markdownHoverParticipant.js';
-import { RenderedInlayHintLabelPart, InlayHintsController } from './inlayHintsController.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { ILanguageFeaturesService } from '../../../common/services/languageFeatures.js';
-import { EditorOption } from '../../../common/config/editorOptions.js';
-import { localize } from '../../../../nls.js';
-import * as platform from '../../../../base/common/platform.js';
-import { asCommandLink } from './inlayHints.js';
-import { isNonEmptyArray } from '../../../../base/common/arrays.js';
-import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
-import { IHoverService } from '../../../../platform/hover/browser/hover.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { HoverStartSource } from '../../hover/browser/hoverOperation.js';
-import { IMarkdownRendererService } from '../../../../platform/markdown/browser/markdownRenderer.js';
+import { AsyncIterableProducer } from "../../../../base/common/async.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { IMarkdownString, isEmptyMarkdownString, MarkdownString } from "../../../../base/common/htmlContent.js";
+import { ICodeEditor, IEditorMouseEvent, MouseTargetType } from "../../../browser/editorBrowser.js";
+import { Position } from "../../../common/core/position.js";
+import { IModelDecoration } from "../../../common/model.js";
+import { ModelDecorationInjectedTextOptions } from "../../../common/model/textModel.js";
+import { HoverAnchor, HoverForeignElementAnchor, IEditorHoverParticipant } from "../../hover/browser/hoverTypes.js";
+import { ITextModelService } from "../../../common/services/resolverService.js";
+import { getHoverProviderResultsAsAsyncIterable } from "../../hover/browser/getHover.js";
+import { MarkdownHover, MarkdownHoverParticipant } from "../../hover/browser/markdownHoverParticipant.js";
+import { RenderedInlayHintLabelPart, InlayHintsController } from "./inlayHintsController.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ILanguageFeaturesService } from "../../../common/services/languageFeatures.js";
+import { EditorOption } from "../../../common/config/editorOptions.js";
+import { localize } from "../../../../nls.js";
+import * as platform from "../../../../base/common/platform.js";
+import { asCommandLink } from "./inlayHints.js";
+import { isNonEmptyArray } from "../../../../base/common/arrays.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { HoverStartSource } from "../../hover/browser/hoverOperation.js";
+import { IMarkdownRendererService } from "../../../../platform/markdown/browser/markdownRenderer.js";
 
 class InlayHintsHoverAnchor extends HoverForeignElementAnchor {
 	constructor(
 		readonly part: RenderedInlayHintLabelPart,
 		owner: InlayHintsHover,
 		initialMousePosX: number | undefined,
-		initialMousePosY: number | undefined
+		initialMousePosY: number | undefined,
 	) {
-		super(10, owner, part.item.anchor.range, initialMousePosX, initialMousePosY, true);
+		super(
+      10,
+      owner,
+      part.item.anchor.range,
+      initialMousePosX,
+      initialMousePosY,
+      true,
+    );
 	}
 }
 
@@ -53,7 +60,15 @@ export class InlayHintsHover extends MarkdownHoverParticipant implements IEditor
 		@ILanguageFeaturesService languageFeaturesService: ILanguageFeaturesService,
 		@ICommandService commandService: ICommandService,
 	) {
-		super(editor, markdownRendererService, configurationService, languageFeaturesService, keybindingService, hoverService, commandService);
+		super(
+      editor,
+      markdownRendererService,
+      configurationService,
+      languageFeaturesService,
+      keybindingService,
+      hoverService,
+      commandService,
+    );
 	}
 
 	suggestHoverAnchor(mouseEvent: IEditorMouseEvent): HoverAnchor | null {
@@ -68,7 +83,12 @@ export class InlayHintsHover extends MarkdownHoverParticipant implements IEditor
 		if (!(options instanceof ModelDecorationInjectedTextOptions && options.attachedData instanceof RenderedInlayHintLabelPart)) {
 			return null;
 		}
-		return new InlayHintsHoverAnchor(options.attachedData, this, mouseEvent.event.posx, mouseEvent.event.posy);
+		return new InlayHintsHoverAnchor(
+      options.attachedData,
+      this,
+      mouseEvent.event.posx,
+      mouseEvent.event.posy,
+    );
 	}
 
 	override computeSync(): MarkdownHover[] {
@@ -91,7 +111,7 @@ export class InlayHintsHover extends MarkdownHoverParticipant implements IEditor
 
 			// (1) Inlay Tooltip
 			let itemTooltip: IMarkdownString | undefined;
-			if (typeof part.item.hint.tooltip === 'string') {
+			if (typeof part.item.hint.tooltip === "string") {
 				itemTooltip = new MarkdownString().appendText(part.item.hint.tooltip);
 			} else if (part.item.hint.tooltip) {
 				itemTooltip = part.item.hint.tooltip;
@@ -101,12 +121,12 @@ export class InlayHintsHover extends MarkdownHoverParticipant implements IEditor
 			}
 			// (1.2) Inlay dbl-click gesture
 			if (isNonEmptyArray(part.item.hint.textEdits)) {
-				executor.emitOne(new MarkdownHover(this, anchor.range, [new MarkdownString().appendText(localize('hint.dbl', "Double-click to insert"))], false, 10001));
+				executor.emitOne(new MarkdownHover(this, anchor.range, [new MarkdownString().appendText(localize("hint.dbl", "Double-click to insert"))], false, 10001));
 			}
 
 			// (2) Inlay Label Part Tooltip
 			let partTooltip: IMarkdownString | undefined;
-			if (typeof part.part.tooltip === 'string') {
+			if (typeof part.part.tooltip === "string") {
 				partTooltip = new MarkdownString().appendText(part.part.tooltip);
 			} else if (part.part.tooltip) {
 				partTooltip = part.part.tooltip;
@@ -118,21 +138,21 @@ export class InlayHintsHover extends MarkdownHoverParticipant implements IEditor
 			// (2.2) Inlay Label Part Help Hover
 			if (part.part.location || part.part.command) {
 				let linkHint: MarkdownString | undefined;
-				const useMetaKey = this._editor.getOption(EditorOption.multiCursorModifier) === 'altKey';
+				const useMetaKey = this._editor.getOption(EditorOption.multiCursorModifier) === "altKey";
 				const kb = useMetaKey
 					? platform.isMacintosh
-						? localize('links.navigate.kb.meta.mac', "cmd + click")
-						: localize('links.navigate.kb.meta', "ctrl + click")
+						? localize("links.navigate.kb.meta.mac", "cmd + click")
+						: localize("links.navigate.kb.meta", "ctrl + click")
 					: platform.isMacintosh
-						? localize('links.navigate.kb.alt.mac', "option + click")
-						: localize('links.navigate.kb.alt', "alt + click");
+						? localize("links.navigate.kb.alt.mac", "option + click")
+						: localize("links.navigate.kb.alt", "alt + click");
 
 				if (part.part.location && part.part.command) {
-					linkHint = new MarkdownString().appendText(localize('hint.defAndCommand', 'Go to Definition ({0}), right click for more', kb));
+					linkHint = new MarkdownString().appendText(localize("hint.defAndCommand", "Go to Definition ({0}), right click for more", kb));
 				} else if (part.part.location) {
-					linkHint = new MarkdownString().appendText(localize('hint.def', 'Go to Definition ({0})', kb));
+					linkHint = new MarkdownString().appendText(localize("hint.def", "Go to Definition ({0})", kb));
 				} else if (part.part.command) {
-					linkHint = new MarkdownString(`[${localize('hint.cmd', "Execute Command")}](${asCommandLink(part.part.command)} "${part.part.command.title}") (${kb})`, { isTrusted: true });
+					linkHint = new MarkdownString(`[${localize("hint.cmd", "Execute Command")}](${asCommandLink(part.part.command)} "${part.part.command.title}") (${kb})`, { isTrusted: true });
 				}
 				if (linkHint) {
 					executor.emitOne(new MarkdownHover(this, anchor.range, [linkHint], false, 10000));
@@ -161,9 +181,20 @@ export class InlayHintsHover extends MarkdownHoverParticipant implements IEditor
 				return;
 			}
 
-			for await (const item of getHoverProviderResultsAsAsyncIterable(this._languageFeaturesService.hoverProvider, model, new Position(range.startLineNumber, range.startColumn), token)) {
+			for await (const item of getHoverProviderResultsAsAsyncIterable(
+        this._languageFeaturesService.hoverProvider,
+        model,
+        new Position(range.startLineNumber, range.startColumn),
+        token,
+      )) {
 				if (!isEmptyMarkdownString(item.hover.contents)) {
-					yield new MarkdownHover(this, part.item.anchor.range, item.hover.contents, false, 2 + item.ordinal);
+					yield new MarkdownHover(
+            this,
+            part.item.anchor.range,
+            item.hover.contents,
+            false,
+            2 + item.ordinal,
+          );
 				}
 			}
 		} finally {

@@ -3,20 +3,51 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './indentGuides.css';
-import { DynamicViewOverlay } from '../../view/dynamicViewOverlay.js';
-import { editorBracketHighlightingForeground1, editorBracketHighlightingForeground2, editorBracketHighlightingForeground3, editorBracketHighlightingForeground4, editorBracketHighlightingForeground5, editorBracketHighlightingForeground6, editorBracketPairGuideActiveBackground1, editorBracketPairGuideActiveBackground2, editorBracketPairGuideActiveBackground3, editorBracketPairGuideActiveBackground4, editorBracketPairGuideActiveBackground5, editorBracketPairGuideActiveBackground6, editorBracketPairGuideBackground1, editorBracketPairGuideBackground2, editorBracketPairGuideBackground3, editorBracketPairGuideBackground4, editorBracketPairGuideBackground5, editorBracketPairGuideBackground6, editorIndentGuide1, editorIndentGuide2, editorIndentGuide3, editorIndentGuide4, editorIndentGuide5, editorIndentGuide6, editorActiveIndentGuide1, editorActiveIndentGuide2, editorActiveIndentGuide3, editorActiveIndentGuide4, editorActiveIndentGuide5, editorActiveIndentGuide6 } from '../../../common/core/editorColorRegistry.js';
-import { RenderingContext } from '../../view/renderingContext.js';
-import { ViewContext } from '../../../common/viewModel/viewContext.js';
-import * as viewEvents from '../../../common/viewEvents.js';
-import { registerThemingParticipant } from '../../../../platform/theme/common/themeService.js';
-import { EditorOption, InternalGuidesOptions } from '../../../common/config/editorOptions.js';
-import { Position } from '../../../common/core/position.js';
-import { ArrayQueue } from '../../../../base/common/arrays.js';
-import { Color } from '../../../../base/common/color.js';
-import { isDefined } from '../../../../base/common/types.js';
-import { BracketPairGuidesClassNames } from '../../../common/model/guidesTextModelPart.js';
-import { IndentGuide, HorizontalGuidesState } from '../../../common/textModelGuides.js';
+import "./indentGuides.css";
+import { DynamicViewOverlay } from "../../view/dynamicViewOverlay.js";
+import {
+  editorBracketHighlightingForeground1,
+  editorBracketHighlightingForeground2,
+  editorBracketHighlightingForeground3,
+  editorBracketHighlightingForeground4,
+  editorBracketHighlightingForeground5,
+  editorBracketHighlightingForeground6,
+  editorBracketPairGuideActiveBackground1,
+  editorBracketPairGuideActiveBackground2,
+  editorBracketPairGuideActiveBackground3,
+  editorBracketPairGuideActiveBackground4,
+  editorBracketPairGuideActiveBackground5,
+  editorBracketPairGuideActiveBackground6,
+  editorBracketPairGuideBackground1,
+  editorBracketPairGuideBackground2,
+  editorBracketPairGuideBackground3,
+  editorBracketPairGuideBackground4,
+  editorBracketPairGuideBackground5,
+  editorBracketPairGuideBackground6,
+  editorIndentGuide1,
+  editorIndentGuide2,
+  editorIndentGuide3,
+  editorIndentGuide4,
+  editorIndentGuide5,
+  editorIndentGuide6,
+  editorActiveIndentGuide1,
+  editorActiveIndentGuide2,
+  editorActiveIndentGuide3,
+  editorActiveIndentGuide4,
+  editorActiveIndentGuide5,
+  editorActiveIndentGuide6,
+} from "../../../common/core/editorColorRegistry.js";
+import { RenderingContext } from "../../view/renderingContext.js";
+import { ViewContext } from "../../../common/viewModel/viewContext.js";
+import * as viewEvents from "../../../common/viewEvents.js";
+import { registerThemingParticipant } from "../../../../platform/theme/common/themeService.js";
+import { EditorOption, InternalGuidesOptions } from "../../../common/config/editorOptions.js";
+import { Position } from "../../../common/core/position.js";
+import { ArrayQueue } from "../../../../base/common/arrays.js";
+import { Color } from "../../../../base/common/color.js";
+import { isDefined } from "../../../../base/common/types.js";
+import { BracketPairGuidesClassNames } from "../../../common/model/guidesTextModelPart.js";
+import { IndentGuide, HorizontalGuidesState } from "../../../common/textModelGuides.js";
 
 /**
  * Indent guides are vertical lines that help identify the indentation level of
@@ -119,35 +150,37 @@ export class IndentGuidesOverlay extends DynamicViewOverlay {
 		const activeCursorPosition = this._primaryPosition;
 
 		const indents = this.getGuidesByLine(
-			visibleStartLineNumber,
-			Math.min(visibleEndLineNumber + 1, this._context.viewModel.getLineCount()),
-			activeCursorPosition
-		);
+      visibleStartLineNumber,
+      Math.min(visibleEndLineNumber + 1, this._context.viewModel.getLineCount()),
+      activeCursorPosition,
+    );
 
 		const output: string[] = [];
 		for (let lineNumber = visibleStartLineNumber; lineNumber <= visibleEndLineNumber; lineNumber++) {
 			const lineIndex = lineNumber - visibleStartLineNumber;
 			const indent = indents[lineIndex];
-			let result = '';
-			const leftOffset = ctx.visibleRangeForPosition(new Position(lineNumber, 1))?.left ?? 0;
+			let result = "";
+			const leftOffset = ctx.visibleRangeForPosition(
+        new Position(lineNumber, 1),
+      )?.left ?? 0;
 			for (const guide of indent) {
 				const left =
 					guide.column === -1
 						? leftOffset + (guide.visibleColumn - 1) * this._spaceWidth
 						: ctx.visibleRangeForPosition(
-							new Position(lineNumber, guide.column)
-						)!.left;
+                new Position(lineNumber, guide.column),
+              )!.left;
 
 				if (left > scrollWidth || (this._maxIndentLeft > 0 && left > this._maxIndentLeft)) {
 					break;
 				}
 
-				const className = guide.horizontalLine ? (guide.horizontalLine.top ? 'horizontal-top' : 'horizontal-bottom') : 'vertical';
+				const className = guide.horizontalLine ? (guide.horizontalLine.top ? "horizontal-top" : "horizontal-bottom") : "vertical";
 
 				const width = guide.horizontalLine
 					? (ctx.visibleRangeForPosition(
-						new Position(lineNumber, guide.horizontalLine.endColumn)
-					)?.left ?? (left + this._spaceWidth)) - left
+              new Position(lineNumber, guide.horizontalLine.endColumn),
+            )?.left ?? (left + this._spaceWidth)) - left
 					: this._spaceWidth;
 
 				result += `<div class="core-guide ${guide.className} ${className}" style="left:${left}px;width:${width}px"></div>`;
@@ -160,7 +193,7 @@ export class IndentGuidesOverlay extends DynamicViewOverlay {
 	private getGuidesByLine(
 		visibleStartLineNumber: number,
 		visibleEndLineNumber: number,
-		activeCursorPosition: Position | null
+		activeCursorPosition: Position | null,
 	): IndentGuide[][] {
 		const bracketGuides = this._bracketPairGuideOptions.bracketPairs !== false
 			? this._context.viewModel.getBracketGuidesInRangeByLine(
@@ -171,19 +204,19 @@ export class IndentGuidesOverlay extends DynamicViewOverlay {
 					highlightActive: this._bracketPairGuideOptions.highlightActiveBracketPair,
 					horizontalGuides: this._bracketPairGuideOptions.bracketPairsHorizontal === true
 						? HorizontalGuidesState.Enabled
-						: this._bracketPairGuideOptions.bracketPairsHorizontal === 'active'
+						: this._bracketPairGuideOptions.bracketPairsHorizontal === "active"
 							? HorizontalGuidesState.EnabledForActive
 							: HorizontalGuidesState.Disabled,
 					includeInactive: this._bracketPairGuideOptions.bracketPairs === true,
-				}
+				},
 			)
 			: null;
 
 		const indentGuides = this._bracketPairGuideOptions.indentation
 			? this._context.viewModel.getLinesIndentGuides(
-				visibleStartLineNumber,
-				visibleEndLineNumber
-			)
+          visibleStartLineNumber,
+          visibleEndLineNumber,
+        )
 			: null;
 
 		let activeIndentStartLineNumber = 0;
@@ -191,7 +224,11 @@ export class IndentGuidesOverlay extends DynamicViewOverlay {
 		let activeIndentLevel = 0;
 
 		if (this._bracketPairGuideOptions.highlightActiveIndentation !== false && activeCursorPosition) {
-			const activeIndentInfo = this._context.viewModel.getActiveIndentGuide(activeCursorPosition.lineNumber, visibleStartLineNumber, visibleEndLineNumber);
+			const activeIndentInfo = this._context.viewModel.getActiveIndentGuide(
+        activeCursorPosition.lineNumber,
+        visibleStartLineNumber,
+        visibleEndLineNumber,
+      );
 			activeIndentStartLineNumber = activeIndentInfo.startLineNumber;
 			activeIndentEndLineNumber = activeIndentInfo.endLineNumber;
 			activeIndentLevel = activeIndentInfo.indent;
@@ -213,23 +250,25 @@ export class IndentGuidesOverlay extends DynamicViewOverlay {
 				const indentGuide = (indentLvl - 1) * indentSize + 1;
 				const isActive =
 					// Disable active indent guide if there are bracket guides.
-					(this._bracketPairGuideOptions.highlightActiveIndentation === 'always' || bracketGuidesInLine.length === 0) &&
+					(this._bracketPairGuideOptions.highlightActiveIndentation === "always" || bracketGuidesInLine.length === 0) &&
 					activeIndentStartLineNumber <= lineNumber &&
 					lineNumber <= activeIndentEndLineNumber &&
 					indentLvl === activeIndentLevel;
-				lineGuides.push(...bracketGuidesInLineQueue.takeWhile(g => g.visibleColumn < indentGuide) || []);
+				lineGuides.push(
+          ...bracketGuidesInLineQueue.takeWhile(g => g.visibleColumn < indentGuide) || [],
+        );
 				const peeked = bracketGuidesInLineQueue.peek();
 				if (!peeked || peeked.visibleColumn !== indentGuide || peeked.horizontalLine) {
 					lineGuides.push(
-						new IndentGuide(
-							indentGuide,
-							-1,
-							`core-guide-indent lvl-${(indentLvl - 1) % 30}` + (isActive ? ' indent-active' : ''),
-							null,
-							-1,
-							-1,
-						)
-					);
+            new IndentGuide(
+              indentGuide,
+              -1,
+              `core-guide-indent lvl-${(indentLvl - 1) % 30}` + (isActive ? " indent-active" : ""),
+              null,
+              -1,
+              -1,
+            ),
+          );
 				}
 			}
 
@@ -241,11 +280,11 @@ export class IndentGuidesOverlay extends DynamicViewOverlay {
 
 	public render(startLineNumber: number, lineNumber: number): string {
 		if (!this._renderResult) {
-			return '';
+			return "";
 		}
 		const lineIndex = lineNumber - startLineNumber;
 		if (lineIndex < 0 || lineIndex >= this._renderResult.length) {
-			return '';
+			return "";
 		}
 		return this._renderResult[lineIndex];
 	}
@@ -266,7 +305,7 @@ registerThemingParticipant((theme, collector) => {
 		{ bracketColor: editorBracketHighlightingForeground3, guideColor: editorBracketPairGuideBackground3, guideColorActive: editorBracketPairGuideActiveBackground3 },
 		{ bracketColor: editorBracketHighlightingForeground4, guideColor: editorBracketPairGuideBackground4, guideColorActive: editorBracketPairGuideActiveBackground4 },
 		{ bracketColor: editorBracketHighlightingForeground5, guideColor: editorBracketPairGuideBackground5, guideColorActive: editorBracketPairGuideActiveBackground5 },
-		{ bracketColor: editorBracketHighlightingForeground6, guideColor: editorBracketPairGuideBackground6, guideColorActive: editorBracketPairGuideActiveBackground6 }
+		{ bracketColor: editorBracketHighlightingForeground6, guideColor: editorBracketPairGuideBackground6, guideColorActive: editorBracketPairGuideActiveBackground6 },
 	];
 	const colorProvider = new BracketPairGuidesClassNames();
 
@@ -321,7 +360,7 @@ registerThemingParticipant((theme, collector) => {
 	if (colorValues.length > 0) {
 		for (let level = 0; level < 30; level++) {
 			const colors = colorValues[level % colorValues.length];
-			collector.addRule(`.monaco-editor .${colorProvider.getInlineClassNameOfLevel(level).replace(/ /g, '.')} { --guide-color: ${colors.guideColor}; --guide-color-active: ${colors.guideColorActive}; }`);
+			collector.addRule(`.monaco-editor .${colorProvider.getInlineClassNameOfLevel(level).replace(/ /g, ".")} { --guide-color: ${colors.guideColor}; --guide-color-active: ${colors.guideColorActive}; }`);
 		}
 
 		collector.addRule(`.monaco-editor .vertical { box-shadow: 1px 0 0 0 var(--guide-color) inset; }`);

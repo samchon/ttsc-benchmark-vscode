@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../base/common/uri.js';
-import { testUrlMatchesGlob } from './urlGlob.js';
+import { URI } from "../../../base/common/uri.js";
+import { testUrlMatchesGlob } from "./urlGlob.js";
 
 /**
  * Check whether a domain like https://www.microsoft.com matches
@@ -23,7 +23,7 @@ export function isURLDomainTrusted(url: URI, trustedDomains: string[]): boolean 
 	}
 
 	for (let i = 0; i < trustedDomains.length; i++) {
-		if (trustedDomains[i] === '*') {
+		if (trustedDomains[i] === "*") {
 			return true;
 		}
 
@@ -39,9 +39,9 @@ export function isURLDomainTrusted(url: URI, trustedDomains: string[]): boolean 
  * Case-normalize some case-insensitive URLs, such as github.
  */
 export function normalizeURL(url: string | URI): string {
-	const caseInsensitiveAuthorities = ['github.com'];
+	const caseInsensitiveAuthorities = ["github.com"];
 	try {
-		const parsed = typeof url === 'string' ? URI.parse(url, true) : url;
+		const parsed = typeof url === "string" ? URI.parse(url, true) : url;
 		if (caseInsensitiveAuthorities.includes(parsed.authority)) {
 			return parsed.with({ path: parsed.path.toLowerCase() }).toString(true);
 		} else {

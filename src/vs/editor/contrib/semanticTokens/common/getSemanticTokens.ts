@@ -3,19 +3,25 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { onUnexpectedExternalError } from '../../../../base/common/errors.js';
-import { URI } from '../../../../base/common/uri.js';
-import { ITextModel } from '../../../common/model.js';
-import { DocumentSemanticTokensProvider, SemanticTokens, SemanticTokensEdits, SemanticTokensLegend, DocumentRangeSemanticTokensProvider } from '../../../common/languages.js';
-import { IModelService } from '../../../common/services/model.js';
-import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
-import { assertType } from '../../../../base/common/types.js';
-import { VSBuffer } from '../../../../base/common/buffer.js';
-import { encodeSemanticTokensDto } from '../../../common/services/semanticTokensDto.js';
-import { Range } from '../../../common/core/range.js';
-import { LanguageFeatureRegistry } from '../../../common/languageFeatureRegistry.js';
-import { ILanguageFeaturesService } from '../../../common/services/languageFeatures.js';
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { onUnexpectedExternalError } from "../../../../base/common/errors.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ITextModel } from "../../../common/model.js";
+import {
+  DocumentSemanticTokensProvider,
+  SemanticTokens,
+  SemanticTokensEdits,
+  SemanticTokensLegend,
+  DocumentRangeSemanticTokensProvider,
+} from "../../../common/languages.js";
+import { IModelService } from "../../../common/services/model.js";
+import { CommandsRegistry, ICommandService } from "../../../../platform/commands/common/commands.js";
+import { assertType } from "../../../../base/common/types.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { encodeSemanticTokensDto } from "../../../common/services/semanticTokensDto.js";
+import { Range } from "../../../common/core/range.js";
+import { LanguageFeatureRegistry } from "../../../common/languageFeatureRegistry.js";
+import { ILanguageFeaturesService } from "../../../common/services/languageFeatures.js";
 
 export function isSemanticTokens(v: SemanticTokens | SemanticTokensEdits): v is SemanticTokens {
 	return v && !!((<SemanticTokens>v).data);
@@ -29,7 +35,7 @@ export class DocumentSemanticTokensResult {
 	constructor(
 		public readonly provider: DocumentSemanticTokensProvider,
 		public readonly tokens: SemanticTokens | SemanticTokensEdits | null,
-		public readonly error: unknown
+		public readonly error: unknown,
 	) { }
 }
 
@@ -138,7 +144,7 @@ export async function getDocumentRangeSemanticTokens(registry: LanguageFeatureRe
 	return null;
 }
 
-CommandsRegistry.registerCommand('_provideDocumentSemanticTokensLegend', async (accessor, ...args): Promise<SemanticTokensLegend | undefined> => {
+CommandsRegistry.registerCommand("_provideDocumentSemanticTokensLegend", async (accessor, ...args): Promise<SemanticTokensLegend | undefined> => {
 	const [uri] = args;
 	assertType(uri instanceof URI);
 
@@ -151,13 +157,13 @@ CommandsRegistry.registerCommand('_provideDocumentSemanticTokensLegend', async (
 	const providers = _getDocumentSemanticTokensProviderHighestGroup(documentSemanticTokensProvider, model);
 	if (!providers) {
 		// there is no provider => fall back to a document range semantic tokens provider
-		return accessor.get(ICommandService).executeCommand('_provideDocumentRangeSemanticTokensLegend', uri);
+		return accessor.get(ICommandService).executeCommand("_provideDocumentRangeSemanticTokensLegend", uri);
 	}
 
 	return providers[0].getLegend();
 });
 
-CommandsRegistry.registerCommand('_provideDocumentSemanticTokens', async (accessor, ...args): Promise<VSBuffer | undefined> => {
+CommandsRegistry.registerCommand("_provideDocumentSemanticTokens", async (accessor, ...args): Promise<VSBuffer | undefined> => {
 	const [uri] = args;
 	assertType(uri instanceof URI);
 
@@ -168,7 +174,7 @@ CommandsRegistry.registerCommand('_provideDocumentSemanticTokens', async (access
 	const { documentSemanticTokensProvider } = accessor.get(ILanguageFeaturesService);
 	if (!hasDocumentSemanticTokensProvider(documentSemanticTokensProvider, model)) {
 		// there is no provider => fall back to a document range semantic tokens provider
-		return accessor.get(ICommandService).executeCommand('_provideDocumentRangeSemanticTokens', uri, model.getFullModelRange());
+		return accessor.get(ICommandService).executeCommand("_provideDocumentRangeSemanticTokens", uri, model.getFullModelRange());
 	}
 
 	const r = await getDocumentSemanticTokens(documentSemanticTokensProvider, model, null, null, CancellationToken.None);
@@ -184,8 +190,8 @@ CommandsRegistry.registerCommand('_provideDocumentSemanticTokens', async (access
 
 	const buff = encodeSemanticTokensDto({
 		id: 0,
-		type: 'full',
-		data: tokens.data
+		type: "full",
+		data: tokens.data,
 	});
 	if (tokens.resultId) {
 		provider.releaseDocumentSemanticTokens(tokens.resultId);
@@ -193,7 +199,7 @@ CommandsRegistry.registerCommand('_provideDocumentSemanticTokens', async (access
 	return buff;
 });
 
-CommandsRegistry.registerCommand('_provideDocumentRangeSemanticTokensLegend', async (accessor, ...args): Promise<SemanticTokensLegend | undefined> => {
+CommandsRegistry.registerCommand("_provideDocumentRangeSemanticTokensLegend", async (accessor, ...args): Promise<SemanticTokensLegend | undefined> => {
 	const [uri, range] = args;
 	assertType(uri instanceof URI);
 
@@ -229,7 +235,7 @@ CommandsRegistry.registerCommand('_provideDocumentRangeSemanticTokensLegend', as
 	return result.provider.getLegend();
 });
 
-CommandsRegistry.registerCommand('_provideDocumentRangeSemanticTokens', async (accessor, ...args): Promise<VSBuffer | undefined> => {
+CommandsRegistry.registerCommand("_provideDocumentRangeSemanticTokens", async (accessor, ...args): Promise<VSBuffer | undefined> => {
 	const [uri, range] = args;
 	assertType(uri instanceof URI);
 	assertType(Range.isIRange(range));
@@ -248,7 +254,7 @@ CommandsRegistry.registerCommand('_provideDocumentRangeSemanticTokens', async (a
 
 	return encodeSemanticTokensDto({
 		id: 0,
-		type: 'full',
-		data: result.tokens.data
+		type: "full",
+		data: result.tokens.data,
 	});
 });

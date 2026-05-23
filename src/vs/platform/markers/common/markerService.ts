@@ -3,23 +3,31 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { isFalsyOrEmpty, isNonEmptyArray } from '../../../base/common/arrays.js';
-import { MicrotaskEmitter } from '../../../base/common/event.js';
-import { Iterable } from '../../../base/common/iterator.js';
-import { IDisposable, toDisposable } from '../../../base/common/lifecycle.js';
-import { ResourceMap, ResourceSet } from '../../../base/common/map.js';
-import { Schemas } from '../../../base/common/network.js';
-import { URI } from '../../../base/common/uri.js';
-import { localize } from '../../../nls.js';
-import { IMarker, IMarkerData, IMarkerReadOptions, IMarkerService, IResourceMarker, MarkerSeverity, MarkerStatistics } from './markers.js';
+import { isFalsyOrEmpty, isNonEmptyArray } from "../../../base/common/arrays.js";
+import { MicrotaskEmitter } from "../../../base/common/event.js";
+import { Iterable } from "../../../base/common/iterator.js";
+import { IDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { ResourceMap, ResourceSet } from "../../../base/common/map.js";
+import { Schemas } from "../../../base/common/network.js";
+import { URI } from "../../../base/common/uri.js";
+import { localize } from "../../../nls.js";
+import {
+  IMarker,
+  IMarkerData,
+  IMarkerReadOptions,
+  IMarkerService,
+  IResourceMarker,
+  MarkerSeverity,
+  MarkerStatistics,
+} from "./markers.js";
 
 export const unsupportedSchemas = new Set([
-	Schemas.inMemory,
-	Schemas.vscodeSourceControl,
-	Schemas.walkThrough,
-	Schemas.walkThroughSnippet,
-	Schemas.vscodeChatCodeBlock,
-	Schemas.vscodeTerminal
+  Schemas.inMemory,
+  Schemas.vscodeSourceControl,
+  Schemas.walkThrough,
+  Schemas.walkThroughSnippet,
+  Schemas.vscodeChatCodeBlock,
+  Schemas.vscodeTerminal,
 ]);
 
 class DoubleResourceMap<V> {
@@ -60,20 +68,23 @@ class DoubleResourceMap<V> {
 			removedB = resourceMap.delete(resource);
 		}
 		if (removedA !== removedB) {
-			throw new Error('illegal state');
+			throw new Error("illegal state");
 		}
 		return removedA && removedB;
 	}
 
 	values(key?: URI | string): Iterable<V> {
-		if (typeof key === 'string') {
+		if (typeof key === "string") {
 			return this._byOwner.get(key)?.values() ?? Iterable.empty();
 		}
 		if (URI.isUri(key)) {
 			return this._byResource.get(key)?.values() ?? Iterable.empty();
 		}
 
-		return Iterable.map(Iterable.concat(...this._byOwner.values()), map => map[1]);
+		return Iterable.map(
+      Iterable.concat(...this._byOwner.values()),
+      map => map[1],
+    );
 	}
 }
 
@@ -110,7 +121,12 @@ class MarkerStats implements MarkerStatistics {
 	}
 
 	private _resourceStats(resource: URI): MarkerStatistics {
-		const result: MarkerStatistics = { errors: 0, warnings: 0, infos: 0, unknowns: 0 };
+		const result: MarkerStatistics = {
+      errors: 0,
+      warnings: 0,
+      infos: 0,
+      unknowns: 0,
+    };
 
 		// TODO this is a hack
 		if (unsupportedSchemas.has(resource.scheme)) {
@@ -152,8 +168,8 @@ export class MarkerService implements IMarkerService {
 	declare readonly _serviceBrand: undefined;
 
 	private readonly _onMarkerChanged = new MicrotaskEmitter<readonly URI[]>({
-		merge: MarkerService._merge
-	});
+    merge: MarkerService._merge,
+  });
 
 	readonly onMarkerChanged = this._onMarkerChanged.event;
 
@@ -246,21 +262,21 @@ export class MarkerService implements IMarkerService {
 		endColumn = endColumn > 0 ? endColumn : startColumn;
 
 		return {
-			resource,
-			owner,
-			code,
-			severity,
-			message,
-			source,
-			startLineNumber,
-			startColumn,
-			endLineNumber,
-			endColumn,
-			relatedInformation,
-			modelVersionId,
-			tags,
-			origin
-		};
+      resource,
+      owner,
+      code,
+      severity,
+      message,
+      source,
+      startLineNumber,
+      startColumn,
+      endLineNumber,
+      endColumn,
+      relatedInformation,
+      modelVersionId,
+      tags,
+      origin,
+    };
 	}
 
 	changeAll(owner: string, data: IResourceMarker[]): void {
@@ -314,19 +330,24 @@ export class MarkerService implements IMarkerService {
 	 */
 	private _createFilteredMarker(resource: URI, reasons: string[]): IMarker {
 		const message = reasons.length === 1
-			? localize('filtered', "Problems are paused because: \"{0}\"", reasons[0])
-			: localize('filtered.network', "Problems are paused because: \"{0}\" and {1} more", reasons[0], reasons.length - 1);
+			? localize("filtered", "Problems are paused because: \"{0}\"", reasons[0])
+			: localize(
+          "filtered.network",
+          "Problems are paused because: \"{0}\" and {1} more",
+          reasons[0],
+          reasons.length - 1,
+        );
 
 		return {
-			owner: 'markersFilter',
-			resource,
-			severity: MarkerSeverity.Info,
-			message,
-			startLineNumber: 1,
-			startColumn: 1,
-			endLineNumber: 1,
-			endColumn: 1,
-		};
+      owner: "markersFilter",
+      resource,
+      severity: MarkerSeverity.Info,
+      message,
+      startLineNumber: 1,
+      startColumn: 1,
+      endLineNumber: 1,
+      endColumn: 1,
+    };
 	}
 
 	read(filter: IMarkerReadOptions = Object.create(null)): IMarker[] {
@@ -339,7 +360,9 @@ export class MarkerService implements IMarkerService {
 
 		if (owner && resource) {
 			// exactly one owner AND resource
-			const reasons = !filter.ignoreResourceFilters ? this._filteredResources.get(resource) : undefined;
+			const reasons = !filter.ignoreResourceFilters ? this._filteredResources.get(
+        resource,
+      ) : undefined;
 			if (reasons?.length) {
 				const infoMarker = this._createFilteredMarker(resource, reasons);
 				return [infoMarker];
@@ -355,7 +378,9 @@ export class MarkerService implements IMarkerService {
 				if (take > 0 && result.length === take) {
 					break;
 				}
-				const reasons = !filter.ignoreResourceFilters ? this._filteredResources.get(resource) : undefined;
+				const reasons = !filter.ignoreResourceFilters ? this._filteredResources.get(
+          resource,
+        ) : undefined;
 				if (reasons?.length) {
 					result.push(this._createFilteredMarker(resource, reasons));
 
@@ -382,7 +407,9 @@ export class MarkerService implements IMarkerService {
 					if (take > 0 && result.length === take) {
 						break;
 					}
-					const reasons = !filter.ignoreResourceFilters ? this._filteredResources.get(data.resource) : undefined;
+					const reasons = !filter.ignoreResourceFilters ? this._filteredResources.get(
+            data.resource,
+          ) : undefined;
 					if (reasons?.length) {
 						result.push(this._createFilteredMarker(data.resource, reasons));
 						filtered.add(data.resource);

@@ -3,26 +3,26 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IRange } from '../../../../editor/common/core/range.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { generateUuid } from '../../../../base/common/uuid.js';
-import { isEqual } from '../../../../base/common/resources.js';
-import { IChatEditingService } from '../../../../workbench/contrib/chat/common/editing/chatEditingService.js';
-import { isIChatSessionFileChange2 } from '../../../../workbench/contrib/chat/common/chatSessionsService.js';
-import { ISessionsManagementService } from '../../../services/sessions/common/sessionsManagement.js';
-import { editingEntriesContainResource } from '../../../../workbench/contrib/chat/browser/sessionResourceMatching.js';
-import { changeMatchesResource, IAgentFeedbackContext } from './agentFeedbackEditorUtils.js';
-import { IEditorService } from '../../../../workbench/services/editor/common/editorService.js';
-import { IChatWidgetService } from '../../../../workbench/contrib/chat/browser/chat.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { ICodeReviewSuggestion } from '../../codeReview/browser/codeReviewService.js';
-import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
-import { logChangesViewReviewCommentAdded } from '../../../common/sessionsTelemetry.js';
-import { ISessionFileChange } from '../../../services/sessions/common/session.js';
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IRange } from "../../../../editor/common/core/range.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { IChatEditingService } from "../../../../workbench/contrib/chat/common/editing/chatEditingService.js";
+import { isIChatSessionFileChange2 } from "../../../../workbench/contrib/chat/common/chatSessionsService.js";
+import { ISessionsManagementService } from "../../../services/sessions/common/sessionsManagement.js";
+import { editingEntriesContainResource } from "../../../../workbench/contrib/chat/browser/sessionResourceMatching.js";
+import { changeMatchesResource, IAgentFeedbackContext } from "./agentFeedbackEditorUtils.js";
+import { IEditorService } from "../../../../workbench/services/editor/common/editorService.js";
+import { IChatWidgetService } from "../../../../workbench/contrib/chat/browser/chat.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { ICodeReviewSuggestion } from "../../codeReview/browser/codeReviewService.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { logChangesViewReviewCommentAdded } from "../../../common/sessionsTelemetry.js";
+import { ISessionFileChange } from "../../../services/sessions/common/session.js";
 
 // --- Types --------------------------------------------------------------------
 
@@ -55,7 +55,9 @@ export interface IAgentFeedbackNavigationBearing {
 
 // --- Service Interface --------------------------------------------------------
 
-export const IAgentFeedbackService = createDecorator<IAgentFeedbackService>('agentFeedbackService');
+export const IAgentFeedbackService = createDecorator<IAgentFeedbackService>(
+  "agentFeedbackService",
+);
 
 export interface IAgentFeedbackService {
 	readonly _serviceBrand: undefined;
@@ -129,7 +131,9 @@ export class AgentFeedbackService extends Disposable implements IAgentFeedbackSe
 
 	declare readonly _serviceBrand: undefined;
 
-	private readonly _onDidChangeFeedback = this._store.add(new Emitter<IAgentFeedbackChangeEvent>());
+	private readonly _onDidChangeFeedback = this._store.add(
+    new Emitter<IAgentFeedbackChangeEvent>(),
+  );
 	readonly onDidChangeFeedback = this._onDidChangeFeedback.event;
 	private readonly _onDidChangeNavigation = this._store.add(new Emitter<URI>());
 	readonly onDidChangeNavigation = this._onDidChangeNavigation.event;
@@ -161,22 +165,24 @@ export class AgentFeedbackService extends Disposable implements IAgentFeedbackSe
 		}
 
 		const feedback: IAgentFeedback = {
-			id: generateUuid(),
-			text,
-			resourceUri,
-			range,
-			sessionResource,
-			suggestion,
-			codeSelection: context?.codeSelection,
-			diffHunks: context?.diffHunks,
-			sourcePRReviewCommentId,
-		};
+      id: generateUuid(),
+      text,
+      resourceUri,
+      range,
+      sessionResource,
+      suggestion,
+      codeSelection: context?.codeSelection,
+      diffHunks: context?.diffHunks,
+      sourcePRReviewCommentId,
+    };
 
 		// Insert at the correct sorted position.
 		// Files are grouped by recency: first feedback for a new file appears after
 		// all existing files. Within a file, items are sorted by startLineNumber.
 		const resourceStr = resourceUri.toString();
-		const hasExistingForFile = feedbackItems.some(f => f.resourceUri.toString() === resourceStr);
+		const hasExistingForFile = feedbackItems.some(
+      f => f.resourceUri.toString() === resourceStr,
+    );
 
 		if (!hasExistingForFile) {
 			// New file — append at the end
@@ -206,10 +212,10 @@ export class AgentFeedbackService extends Disposable implements IAgentFeedbackSe
 		this._onDidChangeFeedback.fire({ sessionResource, feedbackItems });
 
 		logChangesViewReviewCommentAdded(this._telemetryService, {
-			hasExistingFeedback: hasExistingForFile,
-			hasSuggestion: !!suggestion,
-			isFromPRReview: !!sourcePRReviewCommentId,
-		});
+      hasExistingFeedback: hasExistingForFile,
+      hasSuggestion: !!suggestion,
+      isFromPRReview: !!sourcePRReviewCommentId,
+    });
 
 		return feedback;
 	}
@@ -249,9 +255,9 @@ export class AgentFeedbackService extends Disposable implements IAgentFeedbackSe
 		if (idx >= 0) {
 			const existing = feedbackItems[idx];
 			feedbackItems[idx] = {
-				...existing,
-				text: newText,
-			};
+        ...existing,
+        text: newText,
+      };
 			this._sessionUpdatedOrder.set(key, ++this._sessionUpdatedSequence);
 			this._onDidChangeFeedback.fire({ sessionResource, feedbackItems });
 		}
@@ -271,7 +277,11 @@ export class AgentFeedbackService extends Disposable implements IAgentFeedbackSe
 			}
 
 			const candidate = feedbackItems[0].sessionResource;
-			if (!this._sessionContainsResource(candidate, resourceUri, feedbackItems)) {
+			if (!this._sessionContainsResource(
+        candidate,
+        resourceUri,
+        feedbackItems,
+      )) {
 				continue;
 			}
 
@@ -295,7 +305,10 @@ export class AgentFeedbackService extends Disposable implements IAgentFeedbackSe
 				continue;
 			}
 
-			if (editingEntriesContainResource(editingSession.entries.get(), resourceUri)) {
+			if (editingEntriesContainResource(
+        editingSession.entries.get(),
+        resourceUri,
+      )) {
 				return true;
 			}
 		}
@@ -320,13 +333,26 @@ export class AgentFeedbackService extends Disposable implements IAgentFeedbackSe
 		if (!feedback) {
 			return;
 		}
-		await this.revealSessionComment(sessionResource, feedbackId, feedback.resourceUri, feedback.range);
+		await this.revealSessionComment(
+      sessionResource,
+      feedbackId,
+      feedback.resourceUri,
+      feedback.range,
+    );
 	}
 
 	async revealSessionComment(sessionResource: URI, commentId: string, resourceUri: URI, range: IRange): Promise<void> {
-		const selection = { startLineNumber: range.startLineNumber, startColumn: range.startColumn };
-		const sessionData = this._sessionsManagementService.getSession(sessionResource);
-		const sessionChange = this._getSessionChange(resourceUri, sessionData?.changes.get());
+		const selection = {
+      startLineNumber: range.startLineNumber,
+      startColumn: range.startColumn,
+    };
+		const sessionData = this._sessionsManagementService.getSession(
+      sessionResource,
+    );
+		const sessionChange = this._getSessionChange(
+      resourceUri,
+      sessionData?.changes.get(),
+    );
 
 		if (sessionChange?.isDeletion && sessionChange.originalUri) {
 			await this._editorService.openEditor({
@@ -336,7 +362,7 @@ export class AgentFeedbackService extends Disposable implements IAgentFeedbackSe
 					preserveFocus: false,
 					revealIfVisible: true,
 					selection,
-				}
+				},
 			});
 		} else if (sessionChange?.originalUri) {
 			await this._editorService.openEditor({
@@ -347,7 +373,7 @@ export class AgentFeedbackService extends Disposable implements IAgentFeedbackSe
 					preserveFocus: false,
 					revealIfVisible: true,
 					selection,
-				}
+				},
 			});
 		} else {
 			await this._editorService.openEditor({
@@ -357,7 +383,7 @@ export class AgentFeedbackService extends Disposable implements IAgentFeedbackSe
 					preserveFocus: false,
 					revealIfVisible: true,
 					selection,
-				}
+				},
 			});
 		}
 
@@ -369,28 +395,34 @@ export class AgentFeedbackService extends Disposable implements IAgentFeedbackSe
 			return undefined;
 		}
 
-		const matchingChange = changes.find(change => changeMatchesResource(change, resourceUri));
+		const matchingChange = changes.find(
+      change => changeMatchesResource(change, resourceUri),
+    );
 		if (!matchingChange) {
 			return undefined;
 		}
 
 		if (isIChatSessionFileChange2(matchingChange)) {
 			return {
-				originalUri: matchingChange.originalUri,
-				modifiedUri: matchingChange.modifiedUri ?? matchingChange.uri,
-				isDeletion: matchingChange.modifiedUri === undefined,
-			};
+        originalUri: matchingChange.originalUri,
+        modifiedUri: matchingChange.modifiedUri ?? matchingChange.uri,
+        isDeletion: matchingChange.modifiedUri === undefined,
+      };
 		}
 
 		return {
-			originalUri: matchingChange.originalUri,
-			modifiedUri: matchingChange.modifiedUri,
-			isDeletion: false,
-		};
+      originalUri: matchingChange.originalUri,
+      modifiedUri: matchingChange.modifiedUri,
+      isDeletion: false,
+    };
 	}
 
 	getNextFeedback(sessionResource: URI, next: boolean): IAgentFeedback | undefined {
-		return this.getNextNavigableItem(sessionResource, this.getFeedback(sessionResource), next);
+		return this.getNextNavigableItem(
+      sessionResource,
+      this.getFeedback(sessionResource),
+      next,
+    );
 	}
 
 	getNextNavigableItem<T extends INavigableSessionComment>(sessionResource: URI, items: readonly T[], next: boolean): T | undefined {
@@ -401,7 +433,9 @@ export class AgentFeedbackService extends Disposable implements IAgentFeedbackSe
 		}
 
 		const anchorId = this._navigationAnchorBySession.get(key);
-		let anchorIndex = anchorId ? items.findIndex(item => item.id === anchorId) : -1;
+		let anchorIndex = anchorId ? items.findIndex(
+      item => item.id === anchorId,
+    ) : -1;
 
 		if (anchorIndex < 0 && !next) {
 			anchorIndex = 0;
@@ -426,10 +460,14 @@ export class AgentFeedbackService extends Disposable implements IAgentFeedbackSe
 		this._onDidChangeNavigation.fire(sessionResource);
 	}
 
-	getNavigationBearing(sessionResource: URI, items: readonly INavigableSessionComment[] = this._feedbackBySession.get(sessionResource.toString()) ?? []): IAgentFeedbackNavigationBearing {
+	getNavigationBearing(sessionResource: URI, items: readonly INavigableSessionComment[] = this._feedbackBySession.get(
+    sessionResource.toString(),
+  ) ?? []): IAgentFeedbackNavigationBearing {
 		const key = sessionResource.toString();
 		const anchorId = this._navigationAnchorBySession.get(key);
-		const activeIdx = anchorId ? items.findIndex(item => item.id === anchorId) : -1;
+		const activeIdx = anchorId ? items.findIndex(
+      item => item.id === anchorId,
+    ) : -1;
 		return { activeIdx, totalCount: items.length };
 	}
 
@@ -443,28 +481,51 @@ export class AgentFeedbackService extends Disposable implements IAgentFeedbackSe
 	}
 
 	async addFeedbackAndSubmit(sessionResource: URI, resourceUri: URI, range: IRange, text: string, suggestion?: ICodeReviewSuggestion, context?: IAgentFeedbackContext, sourcePRReviewCommentId?: string): Promise<void> {
-		this.addFeedback(sessionResource, resourceUri, range, text, suggestion, context, sourcePRReviewCommentId);
+		this.addFeedback(
+      sessionResource,
+      resourceUri,
+      range,
+      text,
+      suggestion,
+      context,
+      sourcePRReviewCommentId,
+    );
 
 		// Wait for the attachment contribution to update the chat widget's attachment model
-		const widget = this._chatWidgetService.getWidgetBySessionResource(sessionResource);
+		const widget = this._chatWidgetService.getWidgetBySessionResource(
+      sessionResource,
+    );
 		if (widget) {
-			const attachmentId = 'agentFeedback:' + sessionResource.toString();
-			const hasAttachment = () => widget.attachmentModel.attachments.some(a => a.id === attachmentId);
+			const attachmentId = "agentFeedback:" + sessionResource.toString();
+			const hasAttachment = () => widget.attachmentModel.attachments.some(
+        a => a.id === attachmentId,
+      );
 
 			if (!hasAttachment()) {
 				await Event.toPromise(
-					Event.filter(widget.attachmentModel.onDidChange, () => hasAttachment())
-				);
+          Event.filter(
+            widget.attachmentModel.onDidChange,
+            () => hasAttachment(),
+          ),
+        );
 			}
 		} else {
-			this._logService.error('[AgentFeedback] addFeedbackAndSubmit: no chat widget found for session, feedback may not be submitted correctly', sessionResource.toString());
+			this._logService.error(
+        "[AgentFeedback] addFeedbackAndSubmit: no chat widget found for session, feedback may not be submitted correctly",
+        sessionResource.toString(),
+      );
 			await new Promise(resolve => setTimeout(resolve, 100));
 		}
 
 		try {
-			await this._commandService.executeCommand('agentFeedbackEditor.action.submit');
+			await this._commandService.executeCommand(
+        "agentFeedbackEditor.action.submit",
+      );
 		} catch (err) {
-			this._logService.error('[AgentFeedback] Failed to execute submit feedback command', err);
+			this._logService.error(
+        "[AgentFeedback] Failed to execute submit feedback command",
+        err,
+      );
 		}
 	}
 }

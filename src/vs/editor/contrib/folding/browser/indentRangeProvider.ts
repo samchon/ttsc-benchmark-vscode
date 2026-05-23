@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { ITextModel } from '../../../common/model.js';
-import { computeIndentLevel } from '../../../common/model/utils.js';
-import { FoldingMarkers } from '../../../common/languages/languageConfiguration.js';
-import { ILanguageConfigurationService } from '../../../common/languages/languageConfigurationRegistry.js';
-import { FoldingRegions, MAX_LINE_NUMBER } from './foldingRanges.js';
-import { FoldingLimitReporter, RangeProvider } from './folding.js';
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { ITextModel } from "../../../common/model.js";
+import { computeIndentLevel } from "../../../common/model/utils.js";
+import { FoldingMarkers } from "../../../common/languages/languageConfiguration.js";
+import { ILanguageConfigurationService } from "../../../common/languages/languageConfigurationRegistry.js";
+import { FoldingRegions, MAX_LINE_NUMBER } from "./foldingRanges.js";
+import { FoldingLimitReporter, RangeProvider } from "./folding.js";
 
 const MAX_FOLDING_REGIONS_FOR_INDENT_DEFAULT = 5000;
 
-const ID_INDENT_PROVIDER = 'indent';
+const ID_INDENT_PROVIDER = "indent";
 
 export class IndentRangeProvider implements RangeProvider {
 	readonly id = ID_INDENT_PROVIDER;
@@ -21,16 +21,20 @@ export class IndentRangeProvider implements RangeProvider {
 	constructor(
 		private readonly editorModel: ITextModel,
 		private readonly languageConfigurationService: ILanguageConfigurationService,
-		private readonly foldingRangesLimit: FoldingLimitReporter
+		private readonly foldingRangesLimit: FoldingLimitReporter,
 	) { }
 
 	dispose() { }
 
 	compute(cancelationToken: CancellationToken,): Promise<FoldingRegions> {
-		const foldingRules = this.languageConfigurationService.getLanguageConfiguration(this.editorModel.getLanguageId()).foldingRules;
+		const foldingRules = this.languageConfigurationService.getLanguageConfiguration(
+      this.editorModel.getLanguageId(),
+    ).foldingRules;
 		const offSide = foldingRules && !!foldingRules.offSide;
 		const markers = foldingRules && foldingRules.markers;
-		return Promise.resolve(computeRanges(this.editorModel, offSide, markers, this.foldingRangesLimit));
+		return Promise.resolve(
+      computeRanges(this.editorModel, offSide, markers, this.foldingRangesLimit),
+    );
 	}
 }
 
@@ -119,8 +123,8 @@ interface PreviousRegion {
 }
 
 const foldingRangesLimitDefault: FoldingLimitReporter = {
-	limit: MAX_FOLDING_REGIONS_FOR_INDENT_DEFAULT,
-	update: () => { }
+  limit: MAX_FOLDING_REGIONS_FOR_INDENT_DEFAULT,
+  update: () => { },
 };
 
 export function computeRanges(model: ITextModel, offSide: boolean, markers?: FoldingMarkers, foldingRangesLimit: FoldingLimitReporter = foldingRangesLimitDefault): FoldingRegions {
@@ -134,7 +138,11 @@ export function computeRanges(model: ITextModel, offSide: boolean, markers?: Fol
 
 	const previousRegions: PreviousRegion[] = [];
 	const line = model.getLineCount() + 1;
-	previousRegions.push({ indent: -1, endAbove: line, line }); // sentinel, to make sure there's at least one entry
+	previousRegions.push({
+    indent: -1,
+    endAbove: line,
+    line,
+  }); // sentinel, to make sure there's at least one entry
 
 	for (let line = model.getLineCount(); line > 0; line--) {
 		const lineContent = model.getLineContent(line);

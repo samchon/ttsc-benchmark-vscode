@@ -3,32 +3,42 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { getWindow, addDisposableListener, n } from '../../../../base/browser/dom.js';
-import { Disposable, DisposableStore, IDisposable } from '../../../../base/common/lifecycle.js';
-import { ICodeEditor } from '../../../browser/editorBrowser.js';
-import { IEditorContribution, INewScrollPosition } from '../../../common/editorCommon.js';
-import { EditorOption } from '../../../common/config/editorOptions.js';
-import { autorun, derived, disposableObservableValue, IObservable, observableValue } from '../../../../base/common/observable.js';
-import { observableCodeEditor } from '../../../browser/observableCodeEditor.js';
-import { Point } from '../../../common/core/2d/point.js';
-import { AnimationFrameScheduler } from '../../../../base/browser/animatedValue.js';
-import { appendRemoveOnDispose } from '../../../browser/widget/diffEditor/utils.js';
-import './middleScroll.css';
+import { getWindow, addDisposableListener, n } from "../../../../base/browser/dom.js";
+import { Disposable, DisposableStore, IDisposable } from "../../../../base/common/lifecycle.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { IEditorContribution, INewScrollPosition } from "../../../common/editorCommon.js";
+import { EditorOption } from "../../../common/config/editorOptions.js";
+import {
+  autorun,
+  derived,
+  disposableObservableValue,
+  IObservable,
+  observableValue,
+} from "../../../../base/common/observable.js";
+import { observableCodeEditor } from "../../../browser/observableCodeEditor.js";
+import { Point } from "../../../common/core/2d/point.js";
+import { AnimationFrameScheduler } from "../../../../base/browser/animatedValue.js";
+import { appendRemoveOnDispose } from "../../../browser/widget/diffEditor/utils.js";
+import "./middleScroll.css";
 
 export class MiddleScrollController extends Disposable implements IEditorContribution {
-	public static readonly ID = 'editor.contrib.middleScroll';
+	public static readonly ID = "editor.contrib.middleScroll";
 
 	static get(editor: ICodeEditor): MiddleScrollController | null {
-		return editor.getContribution<MiddleScrollController>(MiddleScrollController.ID);
+		return editor.getContribution<MiddleScrollController>(
+      MiddleScrollController.ID,
+    );
 	}
 
 	constructor(
-		private readonly _editor: ICodeEditor
+		private readonly _editor: ICodeEditor,
 	) {
 		super();
 
 		const obsEditor = observableCodeEditor(this._editor);
-		const scrollOnMiddleClick = obsEditor.getOption(EditorOption.scrollOnMiddleClick);
+		const scrollOnMiddleClick = obsEditor.getOption(
+      EditorOption.scrollOnMiddleClick,
+    );
 
 		this._register(autorun(reader => {
 			if (!scrollOnMiddleClick.read(reader)) {
@@ -41,9 +51,9 @@ export class MiddleScrollController extends Disposable implements IEditorContrib
 
 			const scrollingSession = reader.store.add(
 				disposableObservableValue(
-					'scrollingSession',
-					undefined as undefined | { mouseDeltaAfterThreshold: IObservable<Point>; initialMousePosInEditor: Point; didScroll: boolean } & IDisposable
-				)
+					"scrollingSession",
+					undefined as undefined | { mouseDeltaAfterThreshold: IObservable<Point>; initialMousePosInEditor: Point; didScroll: boolean } & IDisposable,
+				),
 			);
 
 			reader.store.add(this._editor.onMouseDown(e => {
@@ -116,44 +126,46 @@ export class MiddleScrollController extends Disposable implements IEditorContrib
 
 				const directionAttr = derived(reader => {
 					const delta = session.mouseDeltaAfterThreshold.read(reader);
-					let direction: string = '';
-					direction += (delta.y < 0 ? 'n' : (delta.y > 0 ? 's' : ''));
-					direction += (delta.x < 0 ? 'w' : (delta.x > 0 ? 'e' : ''));
+					let direction: string = "";
+					direction += (delta.y < 0 ? "n" : (delta.y > 0 ? "s" : ""));
+					direction += (delta.x < 0 ? "w" : (delta.x > 0 ? "e" : ""));
 					return direction;
 				});
 				reader.store.add(autorun(reader => {
-					editorDomNode.setAttribute('data-scroll-direction', directionAttr.read(reader));
+					editorDomNode.setAttribute("data-scroll-direction", directionAttr.read(reader));
 				}));
 			}));
 
 			const dotDomElem = reader.store.add(n.div({
-				class: ['scroll-editor-on-middle-click-dot', scrollingSession.map(session => session ? '' : 'hidden')],
+				class: ["scroll-editor-on-middle-click-dot", scrollingSession.map(session => session ? "" : "hidden")],
 				style: {
 					left: scrollingSession.map((session) => session ? session.initialMousePosInEditor.x : 0),
 					top: scrollingSession.map((session) => session ? session.initialMousePosInEditor.y : 0),
-				}
+				},
 			}).toDisposableLiveElement());
 			reader.store.add(appendRemoveOnDispose(editorDomNode, dotDomElem.element));
 
 			reader.store.add(autorun(reader => {
 				const session = scrollingSession.read(reader);
-				editorDomNode.classList.toggle('scroll-editor-on-middle-click-editor', !!session);
+				editorDomNode.classList.toggle("scroll-editor-on-middle-click-editor", !!session);
 			}));
 		}));
 	}
 }
 
 function observeWindowMousePos(window: Window, initialPos: Point, store: DisposableStore): IObservable<Point> {
-	const val = observableValue('pos', initialPos);
-	store.add(addDisposableListener(window, 'mousemove', (e: MouseEvent) => {
-		val.set(new Point(e.pageX, e.pageY), undefined);
-	}));
+	const val = observableValue("pos", initialPos);
+	store.add(
+    addDisposableListener(window, "mousemove", (e: MouseEvent) => {
+      val.set(new Point(e.pageX, e.pageY), undefined);
+    }),
+  );
 	return val;
 }
 
 function toScrollPosition(p: Point): INewScrollPosition {
 	return {
-		scrollLeft: p.x,
-		scrollTop: p.y,
-	};
+    scrollLeft: p.x,
+    scrollTop: p.y,
+  };
 }

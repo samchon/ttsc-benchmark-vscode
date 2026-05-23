@@ -3,12 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../../../base/common/cancellation.js';
-import { Emitter } from '../../../../../../base/common/event.js';
-import { Disposable } from '../../../../../../base/common/lifecycle.js';
-import { ConfigSchema, SessionModelInfo } from '../../../../../../platform/agentHost/common/state/sessionState.js';
-import { nullExtensionDescription } from '../../../../../services/extensions/common/extensions.js';
-import { ILanguageModelChatMetadataAndIdentifier, ILanguageModelChatProvider, ILanguageModelConfigurationSchema } from '../../../common/languageModels.js';
+import { CancellationToken } from "../../../../../../base/common/cancellation.js";
+import { Emitter } from "../../../../../../base/common/event.js";
+import { Disposable } from "../../../../../../base/common/lifecycle.js";
+import { ConfigSchema, SessionModelInfo } from "../../../../../../platform/agentHost/common/state/sessionState.js";
+import { nullExtensionDescription } from "../../../../../services/extensions/common/extensions.js";
+import {
+  ILanguageModelChatMetadataAndIdentifier,
+  ILanguageModelChatProvider,
+  ILanguageModelConfigurationSchema,
+} from "../../../common/languageModels.js";
 
 /**
  * Exposes models available from the agent host process as selectable
@@ -38,9 +42,9 @@ export class AgentHostLanguageModelProvider extends Disposable implements ILangu
 
 	async provideLanguageModelChatInfo(_options: unknown, _token: CancellationToken): Promise<ILanguageModelChatMetadataAndIdentifier[]> {
 		return this._models
-			.filter(m => m.policyState !== 'disabled')
+			.filter(m => m.policyState !== "disabled")
 			.map(m => {
-				const multiplierNumeric = typeof m._meta?.multiplierNumeric === 'number' ? m._meta.multiplierNumeric : undefined;
+				const multiplierNumeric = typeof m._meta?.multiplierNumeric === "number" ? m._meta.multiplierNumeric : undefined;
 				return {
 					identifier: `${this._vendor}:${m.id}`,
 					metadata: {
@@ -48,7 +52,7 @@ export class AgentHostLanguageModelProvider extends Disposable implements ILangu
 						name: m.name,
 						id: m.id,
 						vendor: this._vendor,
-						version: '1.0',
+						version: "1.0",
 						family: m.id,
 						maxInputTokens: m.maxContextWindow ?? 0,
 						maxOutputTokens: 0,
@@ -85,13 +89,13 @@ export class AgentHostLanguageModelProvider extends Disposable implements ILangu
 				enumItemLabels: property.enumLabels,
 				enumDescriptions: property.enumDescriptions,
 				readOnly: property.readOnly,
-				group: key === 'thinkingLevel' ? 'navigation' : undefined,
+				group: key === "thinkingLevel" ? "navigation" : undefined,
 			}])),
 		};
 	}
 
 	async sendChatRequest(): Promise<never> {
-		throw new Error('Agent-host models do not support direct chat requests');
+		throw new Error("Agent-host models do not support direct chat requests");
 	}
 
 	async provideTokenCount(): Promise<number> {

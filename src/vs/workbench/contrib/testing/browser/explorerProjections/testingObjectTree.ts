@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ITreeNode } from '../../../../../base/browser/ui/tree/tree.js';
-import { WorkbenchObjectTree } from '../../../../../platform/list/browser/listService.js';
-import { TestExplorerTreeElement, TestItemTreeElement } from './index.js';
-import { ISerializedTestTreeCollapseState } from './testingViewState.js';
-import { TestId } from '../../common/testId.js';
+import { ITreeNode } from "../../../../../base/browser/ui/tree/tree.js";
+import { WorkbenchObjectTree } from "../../../../../platform/list/browser/listService.js";
+import { TestExplorerTreeElement, TestItemTreeElement } from "./index.js";
+import { ISerializedTestTreeCollapseState } from "./testingViewState.js";
+import { TestId } from "../../common/testId.js";
 
 
 export class TestingObjectTree<TFilterData = void> extends WorkbenchObjectTree<TestExplorerTreeElement, TFilterData> {
@@ -62,7 +62,9 @@ export class TestingObjectTree<TFilterData = void> extends WorkbenchObjectTree<T
 				if (node.element.test.controllerId === node.element.test.item.extId) {
 					build(node, root);
 				} else {
-					const ctrlNode = root.children[node.element.test.controllerId] ??= { children: {} };
+					const ctrlNode = root.children[node.element.test.controllerId] ??= {
+            children: {},
+          };
 					build(node, ctrlNode);
 				}
 			}

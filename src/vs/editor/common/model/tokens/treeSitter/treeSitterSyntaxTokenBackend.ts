@@ -3,25 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { toDisposable } from '../../../../../base/common/lifecycle.js';
-import { StandardTokenType } from '../../../encodedTokenAttributes.js';
-import { ILanguageIdCodec } from '../../../languages.js';
-import { IModelContentChangedEvent } from '../../../textModelEvents.js';
-import { BackgroundTokenizationState } from '../../../tokenizationTextModelPart.js';
-import { LineTokens } from '../../../tokens/lineTokens.js';
-import { TextModel } from '../../textModel.js';
-import { AbstractSyntaxTokenBackend } from '../abstractSyntaxTokenBackend.js';
-import { autorun, derived, IObservable, ObservablePromise } from '../../../../../base/common/observable.js';
-import { TreeSitterTree } from './treeSitterTree.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { TreeSitterTokenizationImpl } from './treeSitterTokenizationImpl.js';
-import { ITreeSitterLibraryService } from '../../../services/treeSitter/treeSitterLibraryService.js';
-import { LineRange } from '../../../core/ranges/lineRange.js';
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { toDisposable } from "../../../../../base/common/lifecycle.js";
+import { StandardTokenType } from "../../../encodedTokenAttributes.js";
+import { ILanguageIdCodec } from "../../../languages.js";
+import { IModelContentChangedEvent } from "../../../textModelEvents.js";
+import { BackgroundTokenizationState } from "../../../tokenizationTextModelPart.js";
+import { LineTokens } from "../../../tokens/lineTokens.js";
+import { TextModel } from "../../textModel.js";
+import { AbstractSyntaxTokenBackend } from "../abstractSyntaxTokenBackend.js";
+import { autorun, derived, IObservable, ObservablePromise } from "../../../../../base/common/observable.js";
+import { TreeSitterTree } from "./treeSitterTree.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { TreeSitterTokenizationImpl } from "./treeSitterTokenizationImpl.js";
+import { ITreeSitterLibraryService } from "../../../services/treeSitter/treeSitterLibraryService.js";
+import { LineRange } from "../../../core/ranges/lineRange.js";
 
 export class TreeSitterSyntaxTokenBackend extends AbstractSyntaxTokenBackend {
 	protected _backgroundTokenizationState: BackgroundTokenizationState = BackgroundTokenizationState.InProgress;
-	protected readonly _onDidChangeBackgroundTokenizationState: Emitter<void> = this._register(new Emitter<void>());
+	protected readonly _onDidChangeBackgroundTokenizationState: Emitter<void> = this._register(
+    new Emitter<void>(),
+  );
 	public readonly onDidChangeBackgroundTokenizationState: Event<void> = this._onDidChangeBackgroundTokenizationState.event;
 
 	private readonly _tree: IObservable<TreeSitterTree | undefined>;
@@ -33,18 +35,20 @@ export class TreeSitterSyntaxTokenBackend extends AbstractSyntaxTokenBackend {
 		textModel: TextModel,
 		visibleLineRanges: IObservable<readonly LineRange[]>,
 		@ITreeSitterLibraryService private readonly _treeSitterLibraryService: ITreeSitterLibraryService,
-		@IInstantiationService private readonly _instantiationService: IInstantiationService
+		@IInstantiationService private readonly _instantiationService: IInstantiationService,
 	) {
 		super(languageIdCodec, textModel);
 
 
-		const parserClassPromise = new ObservablePromise(this._treeSitterLibraryService.getParserClass());
+		const parserClassPromise = new ObservablePromise(
+      this._treeSitterLibraryService.getParserClass(),
+    );
 
 
 		const parserClassObs = derived(this, reader => {
-			const parser = parserClassPromise.promiseResult?.read(reader)?.getDataOrThrow();
-			return parser;
-		});
+      const parser = parserClassPromise.promiseResult?.read(reader)?.getDataOrThrow();
+      return parser;
+    });
 
 
 		this._tree = derived(this, reader => {

@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { addDisposableListener, EventType, getWindow } from '../../../../../base/browser/dom.js';
-import { IMouseWheelEvent } from '../../../../../base/browser/mouseEvent.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { isChrome, isMacintosh } from '../../../../../base/common/platform.js';
-import { CodeEditorWidget } from '../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js';
-import { INotebookEditorDelegate } from '../notebookBrowser.js';
+import { addDisposableListener, EventType, getWindow } from "../../../../../base/browser/dom.js";
+import { IMouseWheelEvent } from "../../../../../base/browser/mouseEvent.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { isChrome, isMacintosh } from "../../../../../base/common/platform.js";
+import { CodeEditorWidget } from "../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import { INotebookEditorDelegate } from "../notebookBrowser.js";
 
 export class NotebookHorizontalTracker extends Disposable {
 	constructor(
@@ -69,7 +69,7 @@ export class NotebookHorizontalTracker extends Disposable {
 				type: event.type,
 				defaultPrevented: false,
 				preventDefault: () => { },
-				stopPropagation: () => { }
+				stopPropagation: () => { },
 			};
 
 			(hoveringOnEditor[1] as CodeEditorWidget).delegateScrollFromMouseWheelEvent(evt as unknown as IMouseWheelEvent);

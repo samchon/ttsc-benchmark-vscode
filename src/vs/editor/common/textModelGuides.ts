@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IPosition } from './core/position.js';
+import { IPosition } from "./core/position.js";
 
 export interface IGuidesTextModelPart {
 	/**
@@ -56,7 +56,7 @@ export class IndentGuide {
 		 * If set (!= -1), only show this guide for wrapped lines that don't contain this model column, but are after it.
 		*/
 		public readonly forWrappedLinesAfterColumn: number | -1,
-		public readonly forWrappedLinesBeforeOrAtColumn: number | -1
+		public readonly forWrappedLinesBeforeOrAtColumn: number | -1,
 	) {
 		if ((visibleColumn !== -1) === (column !== -1)) {
 			throw new Error();

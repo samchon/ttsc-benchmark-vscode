@@ -3,12 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { LanguageId } from '../../../../../editor/common/encodedTokenAttributes.js';
-import { EncodedTokenizationResult, IBackgroundTokenizationStore, IBackgroundTokenizer, IState, ITokenizationSupport, TokenizationResult } from '../../../../../editor/common/languages.js';
-import { nullTokenizeEncoded } from '../../../../../editor/common/languages/nullTokenize.js';
-import { ITextModel } from '../../../../../editor/common/model.js';
-import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
-import { IObservable, keepObserved } from '../../../../../base/common/observable.js';
+import { LanguageId } from "../../../../../editor/common/encodedTokenAttributes.js";
+import {
+  EncodedTokenizationResult,
+  IBackgroundTokenizationStore,
+  IBackgroundTokenizer,
+  IState,
+  ITokenizationSupport,
+  TokenizationResult,
+} from "../../../../../editor/common/languages.js";
+import { nullTokenizeEncoded } from "../../../../../editor/common/languages/nullTokenize.js";
+import { ITextModel } from "../../../../../editor/common/model.js";
+import { Disposable, IDisposable } from "../../../../../base/common/lifecycle.js";
+import { IObservable, keepObserved } from "../../../../../base/common/observable.js";
 
 export class TokenizationSupportWithLineLimit extends Disposable implements ITokenizationSupport {
 	get backgroundTokenizerShouldOnlyVerifyTokens(): boolean | undefined {
@@ -32,7 +39,7 @@ export class TokenizationSupportWithLineLimit extends Disposable implements ITok
 	}
 
 	tokenize(line: string, hasEOL: boolean, state: IState): TokenizationResult {
-		throw new Error('Not supported!');
+		throw new Error("Not supported!");
 	}
 
 	tokenizeEncoded(line: string, hasEOL: boolean, state: IState): EncodedTokenizationResult {

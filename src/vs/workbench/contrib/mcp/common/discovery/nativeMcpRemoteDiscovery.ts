@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ProxyChannel } from '../../../../../base/parts/ipc/common/ipc.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { IFileService } from '../../../../../platform/files/common/files.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { ILabelService } from '../../../../../platform/label/common/label.js';
-import { ILogService } from '../../../../../platform/log/common/log.js';
-import { INativeMcpDiscoveryHelperService, NativeMcpDiscoveryHelperChannelName } from '../../../../../platform/mcp/common/nativeMcpDiscoveryHelper.js';
-import { IRemoteAgentService } from '../../../../services/remote/common/remoteAgentService.js';
-import { IMcpRegistry } from '../mcpRegistryTypes.js';
-import { NativeFilesystemMcpDiscovery } from './nativeMcpDiscoveryAbstract.js';
+import { ProxyChannel } from "../../../../../base/parts/ipc/common/ipc.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ILabelService } from "../../../../../platform/label/common/label.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { INativeMcpDiscoveryHelperService, NativeMcpDiscoveryHelperChannelName } from "../../../../../platform/mcp/common/nativeMcpDiscoveryHelper.js";
+import { IRemoteAgentService } from "../../../../services/remote/common/remoteAgentService.js";
+import { IMcpRegistry } from "../mcpRegistryTypes.js";
+import { NativeFilesystemMcpDiscovery } from "./nativeMcpDiscoveryAbstract.js";
 
 /**
  * Discovers MCP servers on the remote filesystem, if any.
@@ -27,7 +27,14 @@ export class RemoteNativeMpcDiscovery extends NativeFilesystemMcpDiscovery {
 		@IMcpRegistry mcpRegistry: IMcpRegistry,
 		@IConfigurationService configurationService: IConfigurationService,
 	) {
-		super(remoteAgent.getConnection()?.remoteAuthority || null, labelService, fileService, instantiationService, mcpRegistry, configurationService);
+		super(
+      remoteAgent.getConnection()?.remoteAuthority || null,
+      labelService,
+      fileService,
+      instantiationService,
+      mcpRegistry,
+      configurationService,
+    );
 	}
 
 	public override async start() {
@@ -42,9 +49,9 @@ export class RemoteNativeMpcDiscovery extends NativeFilesystemMcpDiscovery {
 			service.load().then(
 				data => this.setDetails(data),
 				err => {
-					this.logService.warn('Error getting remote process MCP environment', err);
+					this.logService.warn("Error getting remote process MCP environment", err);
 					this.setDetails(undefined);
-				}
+				},
 			);
 		});
 	}

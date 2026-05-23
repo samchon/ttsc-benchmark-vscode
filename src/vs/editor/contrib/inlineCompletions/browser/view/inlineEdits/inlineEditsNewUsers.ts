@@ -3,39 +3,46 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { timeout } from '../../../../../../base/common/async.js';
-import { BugIndicatingError } from '../../../../../../base/common/errors.js';
-import { Disposable, DisposableStore, IDisposable, MutableDisposable } from '../../../../../../base/common/lifecycle.js';
-import { autorun, derived, IObservable, observableValue, runOnChange, runOnChangeWithCancellationToken } from '../../../../../../base/common/observable.js';
-import { IConfigurationService } from '../../../../../../platform/configuration/common/configuration.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../../../platform/storage/common/storage.js';
-import { InlineEditsGutterIndicator } from './components/gutterIndicatorView.js';
-import { ModelPerInlineEdit } from './inlineEditsModel.js';
-import { InlineEditsCollapsedView } from './inlineEditsViews/inlineEditsCollapsedView.js';
+import { timeout } from "../../../../../../base/common/async.js";
+import { BugIndicatingError } from "../../../../../../base/common/errors.js";
+import { Disposable, DisposableStore, IDisposable, MutableDisposable } from "../../../../../../base/common/lifecycle.js";
+import {
+  autorun,
+  derived,
+  IObservable,
+  observableValue,
+  runOnChange,
+  runOnChangeWithCancellationToken,
+} from "../../../../../../base/common/observable.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../../../platform/storage/common/storage.js";
+import { InlineEditsGutterIndicator } from "./components/gutterIndicatorView.js";
+import { ModelPerInlineEdit } from "./inlineEditsModel.js";
+import { InlineEditsCollapsedView } from "./inlineEditsViews/inlineEditsCollapsedView.js";
 
 enum UserKind {
-	FirstTime = 'firstTime',
-	SecondTime = 'secondTime',
-	Active = 'active'
+	FirstTime = "firstTime",
+	SecondTime = "secondTime",
+	Active = "active"
 }
 
 export class InlineEditsOnboardingExperience extends Disposable {
 
 	private readonly _disposables = this._register(new MutableDisposable());
 
-	private readonly _setupDone = observableValue({ name: 'setupDone' }, false);
+	private readonly _setupDone = observableValue({ name: "setupDone" }, false);
 
 	private readonly _activeCompletionId = derived<string | undefined>(reader => {
-		const model = this._model.read(reader);
-		if (!model) { return undefined; }
+    const model = this._model.read(reader);
+    if (!model) { return undefined; }
 
-		if (!this._setupDone.read(reader)) { return undefined; }
+    if (!this._setupDone.read(reader)) { return undefined; }
 
-		const indicator = this._indicator.read(reader);
-		if (!indicator || !indicator.isVisible.read(reader)) { return undefined; }
+    const indicator = this._indicator.read(reader);
+    if (!indicator || !indicator.isVisible.read(reader)) { return undefined; }
 
-		return model.inlineEdit.inlineCompletion.identity.id;
-	});
+    return model.inlineEdit.inlineCompletion.identity.id;
+  });
 
 	constructor(
 		private readonly _model: IObservable<ModelPerInlineEdit | undefined>,
@@ -125,25 +132,35 @@ export class InlineEditsOnboardingExperience extends Disposable {
 		}));
 
 		// Remember when the user has accepted an inline edit
-		disposableStore.add(autorun((reader) => {
-			const model = this._model.read(reader);
-			if (!model) { return; }
-			reader.store.add(model.onDidAccept(() => {
-				inlineEditHasBeenAccepted = true;
-			}));
-		}));
+		disposableStore.add(
+      autorun((reader) => {
+        const model = this._model.read(reader);
+        if (!model) { return; }
+        reader.store.add(
+          model.onDidAccept(() => {
+            inlineEditHasBeenAccepted = true;
+          }),
+        );
+      }),
+    );
 
 		return disposableStore;
 	}
 
 	private getNewUserType(): UserKind {
-		return this._storageService.get('inlineEditsGutterIndicatorUserKind', StorageScope.APPLICATION, UserKind.FirstTime) as UserKind;
+		return this._storageService.get(
+      "inlineEditsGutterIndicatorUserKind",
+      StorageScope.APPLICATION,
+      UserKind.FirstTime,
+    ) as UserKind;
 	}
 
 	private setNewUserType(value: UserKind): void {
 		switch (value) {
 			case UserKind.FirstTime:
-				throw new BugIndicatingError('UserKind should not be set to first time');
+				throw new BugIndicatingError(
+          "UserKind should not be set to first time",
+        );
 			case UserKind.SecondTime:
 				break;
 			case UserKind.Active:
@@ -151,19 +168,27 @@ export class InlineEditsOnboardingExperience extends Disposable {
 				break;
 		}
 
-		this._storageService.store('inlineEditsGutterIndicatorUserKind', value, StorageScope.APPLICATION, StorageTarget.USER);
+		this._storageService.store(
+      "inlineEditsGutterIndicatorUserKind",
+      value,
+      StorageScope.APPLICATION,
+      StorageTarget.USER,
+    );
 	}
 
 	private _initializeDebugSetting(): IDisposable {
 		// Debug setting to reset the new user experience
-		const hiddenDebugSetting = 'editor.inlineSuggest.edits.resetNewUserExperience';
+		const hiddenDebugSetting = "editor.inlineSuggest.edits.resetNewUserExperience";
 		if (this._configurationService.getValue(hiddenDebugSetting)) {
-			this._storageService.remove('inlineEditsGutterIndicatorUserKind', StorageScope.APPLICATION);
+			this._storageService.remove(
+        "inlineEditsGutterIndicatorUserKind",
+        StorageScope.APPLICATION,
+      );
 		}
 
 		const disposable = this._configurationService.onDidChangeConfiguration(e => {
 			if (e.affectsConfiguration(hiddenDebugSetting) && this._configurationService.getValue(hiddenDebugSetting)) {
-				this._storageService.remove('inlineEditsGutterIndicatorUserKind', StorageScope.APPLICATION);
+				this._storageService.remove("inlineEditsGutterIndicatorUserKind", StorageScope.APPLICATION);
 				this._disposables.value = this.setupNewUserExperience();
 			}
 		});

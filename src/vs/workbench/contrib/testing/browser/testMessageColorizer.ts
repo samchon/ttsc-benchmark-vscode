@@ -3,29 +3,29 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { renderAsPlaintext } from '../../../../base/browser/markdownRenderer.js';
-import { IMarkdownString } from '../../../../base/common/htmlContent.js';
-import { IDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { GraphemeIterator, forAnsiStringParts, removeAnsiEscapeCodes } from '../../../../base/common/strings.js';
-import './media/testMessageColorizer.css';
-import { CodeEditorWidget } from '../../../../editor/browser/widget/codeEditor/codeEditorWidget.js';
-import { Position } from '../../../../editor/common/core/position.js';
-import { Range } from '../../../../editor/common/core/range.js';
+import { renderAsPlaintext } from "../../../../base/browser/markdownRenderer.js";
+import { IMarkdownString } from "../../../../base/common/htmlContent.js";
+import { IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { GraphemeIterator, forAnsiStringParts, removeAnsiEscapeCodes } from "../../../../base/common/strings.js";
+import "./media/testMessageColorizer.css";
+import { CodeEditorWidget } from "../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import { Position } from "../../../../editor/common/core/position.js";
+import { Range } from "../../../../editor/common/core/range.js";
 
 const colorAttrRe = /^\x1b\[([0-9]+)m$/;
 
 const enum Classes {
-	Prefix = 'tstm-ansidec-',
-	ForegroundPrefix = Classes.Prefix + 'fg',
-	BackgroundPrefix = Classes.Prefix + 'bg',
-	Bold = Classes.Prefix + '1',
-	Faint = Classes.Prefix + '2',
-	Italic = Classes.Prefix + '3',
-	Underline = Classes.Prefix + '4',
+	Prefix = "tstm-ansidec-",
+	ForegroundPrefix = Classes.Prefix + "fg",
+	BackgroundPrefix = Classes.Prefix + "bg",
+	Bold = Classes.Prefix + "1",
+	Faint = Classes.Prefix + "2",
+	Italic = Classes.Prefix + "3",
+	Underline = Classes.Prefix + "4",
 }
 
 export const renderTestMessageAsText = (tm: string | IMarkdownString) =>
-	typeof tm === 'string' ? removeAnsiEscapeCodes(tm) : renderAsPlaintext(tm);
+	typeof tm === "string" ? removeAnsiEscapeCodes(tm) : renderAsPlaintext(tm);
 
 
 /**
@@ -76,7 +76,7 @@ export const colorizeTestMessageInEditor = (message: string, editor: CodeEditorW
 
 				const graphemes = new GraphemeIterator(part.str);
 				for (let i = 0; !graphemes.eol(); i += graphemes.nextGraphemeLength()) {
-					if (part.str[i] === '\n') {
+					if (part.str[i] === "\n") {
 						line++;
 						col = 1;
 					} else {
@@ -87,8 +87,8 @@ export const colorizeTestMessageInEditor = (message: string, editor: CodeEditorW
 				const end = new Position(line, col);
 				if (cls.length) {
 					decos.push(changeAccessor.addDecoration(Range.fromPositions(start, end), {
-						inlineClassName: cls.join(' '),
-						description: 'test-message-colorized',
+						inlineClassName: cls.join(" "),
+						description: "test-message-colorized",
 					}));
 				}
 				start = end;

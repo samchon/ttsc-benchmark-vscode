@@ -3,16 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import electron from 'electron';
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { Event } from '../../../base/common/event.js';
-import { IDisposable } from '../../../base/common/lifecycle.js';
-import { ISerializableCommandAction } from '../../action/common/action.js';
-import { NativeParsedArgs } from '../../environment/common/argv.js';
-import { FocusMode } from '../../native/common/native.js';
-import { IUserDataProfile } from '../../userDataProfile/common/userDataProfile.js';
-import { ISingleFolderWorkspaceIdentifier, IWorkspaceIdentifier } from '../../workspace/common/workspace.js';
-import { DEFAULT_AUX_WINDOW_SIZE, DEFAULT_EMPTY_WINDOW_SIZE, DEFAULT_WORKSPACE_WINDOW_SIZE, INativeWindowConfiguration } from '../common/window.js';
+import electron from "electron";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { Event } from "../../../base/common/event.js";
+import { IDisposable } from "../../../base/common/lifecycle.js";
+import { ISerializableCommandAction } from "../../action/common/action.js";
+import { NativeParsedArgs } from "../../environment/common/argv.js";
+import { FocusMode } from "../../native/common/native.js";
+import { IUserDataProfile } from "../../userDataProfile/common/userDataProfile.js";
+import { ISingleFolderWorkspaceIdentifier, IWorkspaceIdentifier } from "../../workspace/common/workspace.js";
+import {
+  DEFAULT_AUX_WINDOW_SIZE,
+  DEFAULT_EMPTY_WINDOW_SIZE,
+  DEFAULT_WORKSPACE_WINDOW_SIZE,
+  INativeWindowConfiguration,
+} from "../common/window.js";
 
 export interface IBaseWindow extends IDisposable {
 
@@ -141,10 +146,10 @@ export interface IWindowState {
 export const defaultWindowState = function (mode = WindowMode.Normal, hasWorkspace = false): IWindowState {
 	const size = hasWorkspace ? DEFAULT_WORKSPACE_WINDOW_SIZE : DEFAULT_EMPTY_WINDOW_SIZE;
 	return {
-		width: size.width,
-		height: size.height,
-		mode
-	};
+    width: size.width,
+    height: size.height,
+    mode,
+  };
 };
 
 export const defaultAuxWindowState = function (): IWindowState {
@@ -163,12 +168,12 @@ export const defaultAuxWindowState = function (): IWindowState {
 	const y = Math.max(workArea.y + (workArea.height / 2) - (height / 2), 0);
 
 	return {
-		x,
-		y,
-		width,
-		height,
-		mode: WindowMode.Normal
-	};
+    x,
+    y,
+    width,
+    height,
+    mode: WindowMode.Normal,
+  };
 };
 
 export const enum WindowMode {

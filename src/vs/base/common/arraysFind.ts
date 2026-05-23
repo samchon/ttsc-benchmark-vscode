@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Comparator } from './arrays.js';
+import { Comparator } from "./arrays.js";
 
 export function findLast<T, R extends T>(array: readonly T[], predicate: (item: T, index: number) => item is R, fromIndex?: number): R | undefined;
 export function findLast<T>(array: readonly T[], predicate: (item: T, index: number) => unknown, fromIndex?: number): T | undefined;
@@ -112,7 +112,12 @@ export function findFirstIdxMonotonousOrArrLen<T>(array: readonly T[], predicate
 }
 
 export function findFirstIdxMonotonous<T>(array: readonly T[], predicate: (item: T) => boolean, startIdx = 0, endIdxEx = array.length): number {
-	const idx = findFirstIdxMonotonousOrArrLen(array, predicate, startIdx, endIdxEx);
+	const idx = findFirstIdxMonotonousOrArrLen(
+    array,
+    predicate,
+    startIdx,
+    endIdxEx,
+  );
 	return idx === array.length ? -1 : idx;
 }
 
@@ -140,14 +145,20 @@ export class MonotonousArray<T> {
 			if (this._prevFindLastPredicate) {
 				for (const item of this._array) {
 					if (this._prevFindLastPredicate(item) && !predicate(item)) {
-						throw new Error('MonotonousArray: current predicate must be weaker than (or equal to) the previous predicate.');
+						throw new Error(
+              "MonotonousArray: current predicate must be weaker than (or equal to) the previous predicate.",
+            );
 					}
 				}
 			}
 			this._prevFindLastPredicate = predicate;
 		}
 
-		const idx = findLastIdxMonotonous(this._array, predicate, this._findLastMonotonousLastIdx);
+		const idx = findLastIdxMonotonous(
+      this._array,
+      predicate,
+      this._findLastMonotonousLastIdx,
+    );
 		this._findLastMonotonousLastIdx = idx + 1;
 		return idx === -1 ? undefined : this._array[idx];
 	}

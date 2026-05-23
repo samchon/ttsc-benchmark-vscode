@@ -3,22 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../base/browser/dom.js';
-import * as nls from '../../../../nls.js';
-import { Disposable, DisposableMap, DisposableStore } from '../../../../base/common/lifecycle.js';
-import * as languages from '../../../../editor/common/languages.js';
-import { Emitter } from '../../../../base/common/event.js';
-import { ICommentService } from './commentService.js';
-import { StandardKeyboardEvent } from '../../../../base/browser/keyboardEvent.js';
-import { KeyCode } from '../../../../base/common/keyCodes.js';
-import { CommentNode } from './commentNode.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { URI } from '../../../../base/common/uri.js';
-import { ICommentThreadWidget } from '../common/commentThreadWidget.js';
-import { IMarkdownRendererExtraOptions } from '../../../../platform/markdown/browser/markdownRenderer.js';
-import { ICellRange } from '../../notebook/common/notebookRange.js';
-import { IRange } from '../../../../editor/common/core/range.js';
-import { LayoutableEditor } from './simpleCommentEditor.js';
+import * as dom from "../../../../base/browser/dom.js";
+import * as nls from "../../../../nls.js";
+import { Disposable, DisposableMap, DisposableStore } from "../../../../base/common/lifecycle.js";
+import * as languages from "../../../../editor/common/languages.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { ICommentService } from "./commentService.js";
+import { StandardKeyboardEvent } from "../../../../base/browser/keyboardEvent.js";
+import { KeyCode } from "../../../../base/common/keyCodes.js";
+import { CommentNode } from "./commentNode.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ICommentThreadWidget } from "../common/commentThreadWidget.js";
+import { IMarkdownRendererExtraOptions } from "../../../../platform/markdown/browser/markdownRenderer.js";
+import { ICellRange } from "../../notebook/common/notebookRange.js";
+import { IRange } from "../../../../editor/common/core/range.js";
+import { LayoutableEditor } from "./simpleCommentEditor.js";
 
 export class CommentThreadBody<T extends IRange | ICellRange = IRange> extends Disposable {
 	private _commentsElement!: HTMLElement;
@@ -60,7 +60,9 @@ export class CommentThreadBody<T extends IRange | ICellRange = IRange> extends D
 
 	focus(commentUniqueId?: number) {
 		if (commentUniqueId !== undefined) {
-			const comment = this._commentElements.find(commentNode => commentNode.comment.uniqueIdInThread === commentUniqueId);
+			const comment = this._commentElements.find(
+        commentNode => commentNode.comment.uniqueIdInThread === commentUniqueId,
+      );
 			if (comment) {
 				comment.focus();
 				return;
@@ -80,8 +82,11 @@ export class CommentThreadBody<T extends IRange | ICellRange = IRange> extends D
 	}
 
 	async display() {
-		this._commentsElement = dom.append(this.container, dom.$('div.comments-container'));
-		this._commentsElement.setAttribute('role', 'presentation');
+		this._commentsElement = dom.append(
+      this.container,
+      dom.$("div.comments-container"),
+    );
+		this._commentsElement.setAttribute("role", "presentation");
 		this._commentsElement.tabIndex = 0;
 		this._updateAriaLabel();
 
@@ -116,17 +121,20 @@ export class CommentThreadBody<T extends IRange | ICellRange = IRange> extends D
 		this._resizeObserver = new MutationObserver(this._refresh.bind(this));
 
 		this._resizeObserver.observe(this.container, {
-			attributes: true,
-			childList: true,
-			characterData: true,
-			subtree: true
-		});
+      attributes: true,
+      childList: true,
+      characterData: true,
+      subtree: true,
+    });
 	}
 
 	private _containerClientArea: dom.Dimension | undefined = undefined;
 	private _refresh() {
 		const dimensions = dom.getClientArea(this.container);
-		if ((dimensions.height === 0 && dimensions.width === 0) || (dom.Dimension.equals(this._containerClientArea, dimensions))) {
+		if ((dimensions.height === 0 && dimensions.width === 0) || (dom.Dimension.equals(
+      this._containerClientArea,
+      dimensions,
+    ))) {
 			return;
 		}
 		this._containerClientArea = dimensions;
@@ -139,8 +147,8 @@ export class CommentThreadBody<T extends IRange | ICellRange = IRange> extends D
 
 	layout(widthInPixel?: number) {
 		this._commentElements.forEach(element => {
-			element.layout(widthInPixel);
-		});
+      element.layout(widthInPixel);
+    });
 	}
 
 	getPendingEdits(): { [key: number]: languages.PendingComment } {
@@ -158,14 +166,18 @@ export class CommentThreadBody<T extends IRange | ICellRange = IRange> extends D
 	}
 
 	getCommentCoords(commentUniqueId: number): { thread: dom.IDomNodePagePosition; comment: dom.IDomNodePagePosition } | undefined {
-		const matchedNode = this._commentElements.filter(commentNode => commentNode.comment.uniqueIdInThread === commentUniqueId);
+		const matchedNode = this._commentElements.filter(
+      commentNode => commentNode.comment.uniqueIdInThread === commentUniqueId,
+    );
 		if (matchedNode && matchedNode.length) {
-			const commentThreadCoords = dom.getDomNodePagePosition(this._commentElements[0].domNode);
+			const commentThreadCoords = dom.getDomNodePagePosition(
+        this._commentElements[0].domNode,
+      );
 			const commentCoords = dom.getDomNodePagePosition(matchedNode[0].domNode);
 			return {
-				thread: commentThreadCoords,
-				comment: commentCoords
-			};
+        thread: commentThreadCoords,
+        comment: commentCoords,
+      };
 		}
 
 		return;
@@ -179,7 +191,9 @@ export class CommentThreadBody<T extends IRange | ICellRange = IRange> extends D
 		const commentElementsToDelIndex: number[] = [];
 		for (let i = 0; i < oldCommentsLen; i++) {
 			const comment = this._commentElements[i].comment;
-			const newComment = commentThread.comments ? commentThread.comments.filter(c => c.uniqueIdInThread === comment.uniqueIdInThread) : [];
+			const newComment = commentThread.comments ? commentThread.comments.filter(
+        c => c.uniqueIdInThread === comment.uniqueIdInThread,
+      ) : [];
 
 			if (newComment.length) {
 				this._commentElements[i].update(newComment[0]);
@@ -206,7 +220,9 @@ export class CommentThreadBody<T extends IRange | ICellRange = IRange> extends D
 
 		for (let i = newCommentsLen - 1; i >= 0; i--) {
 			const currentComment = commentThread.comments![i];
-			const oldCommentNode = this._commentElements.filter(commentNode => commentNode.comment.uniqueIdInThread === currentComment.uniqueIdInThread);
+			const oldCommentNode = this._commentElements.filter(
+        commentNode => commentNode.comment.uniqueIdInThread === currentComment.uniqueIdInThread,
+      );
 			if (oldCommentNode.length) {
 				lastCommentElement = oldCommentNode[0].domNode;
 				newCommentNodeList.unshift(oldCommentNode[0]);
@@ -215,7 +231,10 @@ export class CommentThreadBody<T extends IRange | ICellRange = IRange> extends D
 
 				newCommentNodeList.unshift(newElement);
 				if (lastCommentElement) {
-					this._commentsElement.insertBefore(newElement.domNode, lastCommentElement);
+					this._commentsElement.insertBefore(
+            newElement.domNode,
+            lastCommentElement,
+          );
 					lastCommentElement = newElement.domNode;
 				} else {
 					this._commentsElement.appendChild(newElement.domNode);
@@ -235,7 +254,9 @@ export class CommentThreadBody<T extends IRange | ICellRange = IRange> extends D
 		await Promise.all(startEditing);
 
 		if (newCommentsInEditMode.length) {
-			const lastIndex = this._commentElements.indexOf(newCommentsInEditMode[newCommentsInEditMode.length - 1]);
+			const lastIndex = this._commentElements.indexOf(
+        newCommentsInEditMode[newCommentsInEditMode.length - 1],
+      );
 			this._focusedComment = lastIndex;
 		}
 
@@ -248,16 +269,29 @@ export class CommentThreadBody<T extends IRange | ICellRange = IRange> extends D
 	private _updateAriaLabel() {
 		if (this._commentThread.isDocumentCommentThread()) {
 			if (this._commentThread.range) {
-				this._commentsElement.ariaLabel = nls.localize('commentThreadAria.withRange', "Comment thread with {0} comments on lines {1} through {2}. {3}.",
-					this._commentThread.comments?.length, this._commentThread.range.startLineNumber, this._commentThread.range.endLineNumber,
-					this._commentThread.label);
+				this._commentsElement.ariaLabel = nls.localize(
+          "commentThreadAria.withRange",
+          "Comment thread with {0} comments on lines {1} through {2}. {3}.",
+          this._commentThread.comments?.length,
+          this._commentThread.range.startLineNumber,
+          this._commentThread.range.endLineNumber,
+          this._commentThread.label,
+        );
 			} else {
-				this._commentsElement.ariaLabel = nls.localize('commentThreadAria.document', "Comment thread with {0} comments on the entire document. {1}.",
-					this._commentThread.comments?.length, this._commentThread.label);
+				this._commentsElement.ariaLabel = nls.localize(
+          "commentThreadAria.document",
+          "Comment thread with {0} comments on the entire document. {1}.",
+          this._commentThread.comments?.length,
+          this._commentThread.label,
+        );
 			}
 		} else {
-			this._commentsElement.ariaLabel = nls.localize('commentThreadAria', "Comment thread with {0} comments. {1}.",
-				this._commentThread.comments?.length, this._commentThread.label);
+			this._commentsElement.ariaLabel = nls.localize(
+        "commentThreadAria",
+        "Comment thread with {0} comments. {1}.",
+        this._commentThread.comments?.length,
+        this._commentThread.label,
+      );
 		}
 	}
 
@@ -275,19 +309,21 @@ export class CommentThreadBody<T extends IRange | ICellRange = IRange> extends D
 	}
 
 	private createNewCommentNode(comment: languages.Comment): CommentNode<T> {
-		const newCommentNode = this._scopedInstatiationService.createInstance(CommentNode,
-			this._parentEditor,
-			this._commentThread,
-			comment,
-			this._pendingEdits ? this._pendingEdits[comment.uniqueIdInThread] : undefined,
-			this.owner,
-			this.parentResourceUri,
-			this._parentCommentThreadWidget,
-			this._markdownRendererOptions) as unknown as CommentNode<T>;
+		const newCommentNode = this._scopedInstatiationService.createInstance(
+      CommentNode,
+      this._parentEditor,
+      this._commentThread,
+      comment,
+      this._pendingEdits ? this._pendingEdits[comment.uniqueIdInThread] : undefined,
+      this.owner,
+      this.parentResourceUri,
+      this._parentCommentThreadWidget,
+      this._markdownRendererOptions,
+    ) as unknown as CommentNode<T>;
 
 		const disposables: DisposableStore = new DisposableStore();
 		disposables.add(newCommentNode.onDidClick(clickedNode =>
-			this._setFocusedComment(this._commentElements.findIndex(commentNode => commentNode.comment.uniqueIdInThread === clickedNode.comment.uniqueIdInThread))
+			this._setFocusedComment(this._commentElements.findIndex(commentNode => commentNode.comment.uniqueIdInThread === clickedNode.comment.uniqueIdInThread)),
 		));
 		disposables.add(newCommentNode);
 		this._commentDisposable.set(newCommentNode, disposables);

@@ -3,19 +3,26 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IUntypedEditorInput, IMatchEditorOptions, EditorsOrder, GroupIdentifier } from '../editor.js';
-import { EditorInput } from './editorInput.js';
-import { Emitter } from '../../../base/common/event.js';
-import { IGroupModelChangeEvent, IReadonlyEditorGroupModel } from './editorGroupModel.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
+import {
+  IUntypedEditorInput,
+  IMatchEditorOptions,
+  EditorsOrder,
+  GroupIdentifier,
+} from "../editor.js";
+import { EditorInput } from "./editorInput.js";
+import { Emitter } from "../../../base/common/event.js";
+import { IGroupModelChangeEvent, IReadonlyEditorGroupModel } from "./editorGroupModel.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
 
 abstract class FilteredEditorGroupModel extends Disposable implements IReadonlyEditorGroupModel {
 
-	private readonly _onDidModelChange = this._register(new Emitter<IGroupModelChangeEvent>());
+	private readonly _onDidModelChange = this._register(
+    new Emitter<IGroupModelChangeEvent>(),
+  );
 	readonly onDidModelChange = this._onDidModelChange.event;
 
 	constructor(
-		protected readonly model: IReadonlyEditorGroupModel
+		protected readonly model: IReadonlyEditorGroupModel,
 	) {
 		super();
 
@@ -34,15 +41,31 @@ abstract class FilteredEditorGroupModel extends Disposable implements IReadonlyE
 	get isLocked(): boolean { return this.model.isLocked; }
 	get stickyCount(): number { return this.model.stickyCount; }
 
-	get activeEditor(): EditorInput | null { return this.model.activeEditor && this.filter(this.model.activeEditor) ? this.model.activeEditor : null; }
-	get previewEditor(): EditorInput | null { return this.model.previewEditor && this.filter(this.model.previewEditor) ? this.model.previewEditor : null; }
-	get selectedEditors(): EditorInput[] { return this.model.selectedEditors.filter(e => this.filter(e)); }
+	get activeEditor(): EditorInput | null { return this.model.activeEditor && this.filter(
+    this.model.activeEditor,
+  ) ? this.model.activeEditor : null; }
+	get previewEditor(): EditorInput | null { return this.model.previewEditor && this.filter(
+    this.model.previewEditor,
+  ) ? this.model.previewEditor : null; }
+	get selectedEditors(): EditorInput[] { return this.model.selectedEditors.filter(
+    e => this.filter(e),
+  ); }
 
-	isPinned(editorOrIndex: EditorInput | number): boolean { return this.model.isPinned(editorOrIndex); }
-	isTransient(editorOrIndex: EditorInput | number): boolean { return this.model.isTransient(editorOrIndex); }
-	isSticky(editorOrIndex: EditorInput | number): boolean { return this.model.isSticky(editorOrIndex); }
-	isActive(editor: EditorInput | IUntypedEditorInput): boolean { return this.model.isActive(editor); }
-	isSelected(editorOrIndex: EditorInput | number): boolean { return this.model.isSelected(editorOrIndex); }
+	isPinned(editorOrIndex: EditorInput | number): boolean { return this.model.isPinned(
+    editorOrIndex,
+  ); }
+	isTransient(editorOrIndex: EditorInput | number): boolean { return this.model.isTransient(
+    editorOrIndex,
+  ); }
+	isSticky(editorOrIndex: EditorInput | number): boolean { return this.model.isSticky(
+    editorOrIndex,
+  ); }
+	isActive(editor: EditorInput | IUntypedEditorInput): boolean { return this.model.isActive(
+    editor,
+  ); }
+	isSelected(editorOrIndex: EditorInput | number): boolean { return this.model.isSelected(
+    editorOrIndex,
+  ); }
 
 	isFirst(editor: EditorInput): boolean {
 		return this.model.isFirst(editor, this.getEditors(EditorsOrder.SEQUENTIAL));
@@ -82,7 +105,10 @@ export class StickyEditorGroupModel extends FilteredEditorGroupModel {
 			return [];
 		}
 		if (order === EditorsOrder.SEQUENTIAL) {
-			return this.model.getEditors(EditorsOrder.SEQUENTIAL).slice(0, this.model.stickyCount);
+			return this.model.getEditors(EditorsOrder.SEQUENTIAL).slice(
+        0,
+        this.model.stickyCount,
+      );
 		}
 		return super.getEditors(order, options);
 	}
@@ -123,13 +149,17 @@ export class UnstickyEditorGroupModel extends FilteredEditorGroupModel {
 
 	override getEditors(order: EditorsOrder, options?: { excludeSticky?: boolean }): EditorInput[] {
 		if (order === EditorsOrder.SEQUENTIAL) {
-			return this.model.getEditors(EditorsOrder.SEQUENTIAL).slice(this.model.stickyCount);
+			return this.model.getEditors(EditorsOrder.SEQUENTIAL).slice(
+        this.model.stickyCount,
+      );
 		}
 		return super.getEditors(order, options);
 	}
 
 	getEditorByIndex(index: number): EditorInput | undefined {
-		return index >= 0 ? this.model.getEditorByIndex(index + this.model.stickyCount) : undefined;
+		return index >= 0 ? this.model.getEditorByIndex(
+      index + this.model.stickyCount,
+    ) : undefined;
 	}
 
 	indexOf(editor: EditorInput | IUntypedEditorInput | null, editors?: EditorInput[], options?: IMatchEditorOptions): number {

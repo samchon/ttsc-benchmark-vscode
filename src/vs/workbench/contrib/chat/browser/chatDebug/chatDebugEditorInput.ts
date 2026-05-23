@@ -3,25 +3,29 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Codicon } from '../../../../../base/common/codicons.js';
-import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { localize } from '../../../../../nls.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { registerIcon } from '../../../../../platform/theme/common/iconRegistry.js';
-import { EditorInputCapabilities, IEditorSerializer, IUntypedEditorInput } from '../../../../common/editor.js';
-import { EditorInput } from '../../../../common/editor/editorInput.js';
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { localize } from "../../../../../nls.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { registerIcon } from "../../../../../platform/theme/common/iconRegistry.js";
+import { EditorInputCapabilities, IEditorSerializer, IUntypedEditorInput } from "../../../../common/editor.js";
+import { EditorInput } from "../../../../common/editor/editorInput.js";
 
-const chatDebugEditorIcon = registerIcon('chat-debug-editor-label-icon', Codicon.bug, localize('chatDebugEditorLabelIcon', 'Icon of the chat debug editor label.'));
+const chatDebugEditorIcon = registerIcon(
+  "chat-debug-editor-label-icon",
+  Codicon.bug,
+  localize("chatDebugEditorLabelIcon", "Icon of the chat debug editor label."),
+);
 
 export class ChatDebugEditorInput extends EditorInput {
 
-	static readonly ID = 'workbench.editor.chatDebug';
+	static readonly ID = "workbench.editor.chatDebug";
 
 	static readonly RESOURCE = URI.from({
-		scheme: 'chat-debug',
-		path: 'default'
-	});
+    scheme: "chat-debug",
+    path: "default",
+  });
 
 	private static _instance: ChatDebugEditorInput;
 	static get instance() {
@@ -41,7 +45,7 @@ export class ChatDebugEditorInput extends EditorInput {
 	readonly resource = ChatDebugEditorInput.RESOURCE;
 
 	override getName(): string {
-		return localize('chatDebugInputName', "Agent Debug Logs");
+		return localize("chatDebugInputName", "Agent Debug Logs");
 	}
 
 	override getIcon(): ThemeIcon {
@@ -64,7 +68,7 @@ export class ChatDebugEditorInputSerializer implements IEditorSerializer {
 	}
 
 	serialize(editorInput: EditorInput): string {
-		return '';
+		return "";
 	}
 
 	deserialize(instantiationService: IInstantiationService): EditorInput {

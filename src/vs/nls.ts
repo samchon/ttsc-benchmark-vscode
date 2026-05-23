@@ -12,7 +12,9 @@ export function getNLSLanguage(): string | undefined {
 }
 
 declare const document: { location?: { hash?: string } } | undefined;
-const isPseudo = getNLSLanguage() === 'pseudo' || (typeof document !== 'undefined' && document.location && typeof document.location.hash === 'string' && document.location.hash.indexOf('pseudo=true') >= 0);
+const isPseudo = getNLSLanguage() === "pseudo" || (typeof document !== "undefined" && document.location && typeof document.location.hash === "string" && document.location.hash.indexOf(
+  "pseudo=true",
+) >= 0);
 
 export interface ILocalizeInfo {
 	key: string;
@@ -34,9 +36,9 @@ function _format(message: string, args: (string | number | boolean | undefined |
 			const index = rest[0];
 			const arg = args[index];
 			let result = match;
-			if (typeof arg === 'string') {
+			if (typeof arg === "string") {
 				result = arg;
-			} else if (typeof arg === 'number' || typeof arg === 'boolean' || arg === void 0 || arg === null) {
+			} else if (typeof arg === "number" || typeof arg === "boolean" || arg === void 0 || arg === null) {
 				result = String(arg);
 			}
 			return result;
@@ -45,7 +47,7 @@ function _format(message: string, args: (string | number | boolean | undefined |
 
 	if (isPseudo) {
 		// FF3B and FF3D is the Unicode zenkaku representation for [ and ]
-		result = '\uFF3B' + result.replace(/[aouei]/g, '$&$&') + '\uFF3D';
+		result = "\uFF3B" + result.replace(/[aouei]/g, "$&$&") + "\uFF3D";
 	}
 
 	return result;
@@ -83,7 +85,7 @@ export function localize(key: string, message: string, ...args: (string | number
  * @skipMangle
  */
 export function localize(data: ILocalizeInfo | string /* | number when built */, message: string /* | null when built */, ...args: (string | number | boolean | undefined | null)[]): string {
-	if (typeof data === 'number') {
+	if (typeof data === "number") {
 		return _format(lookupMessage(data, message), args);
 	}
 	return _format(message, args);
@@ -96,8 +98,8 @@ export function localize(data: ILocalizeInfo | string /* | number when built */,
  */
 function lookupMessage(index: number, fallback: string | null): string {
 	const message = getNLSMessages()?.[index];
-	if (typeof message !== 'string') {
-		if (typeof fallback === 'string') {
+	if (typeof message !== "string") {
+		if (typeof fallback === "string") {
 			return fallback;
 		}
 		throw new Error(`!!! NLS MISSING: ${index} !!!`);
@@ -140,7 +142,7 @@ export function localize2(key: string, message: string, ...args: (string | numbe
  */
 export function localize2(data: ILocalizeInfo | string /* | number when built */, originalMessage: string, ...args: (string | number | boolean | undefined | null)[]): ILocalizedString {
 	let message: string;
-	if (typeof data === 'number') {
+	if (typeof data === "number") {
 		message = lookupMessage(data, originalMessage);
 	} else {
 		message = originalMessage;
@@ -149,9 +151,9 @@ export function localize2(data: ILocalizeInfo | string /* | number when built */
 	const value = _format(message, args);
 
 	return {
-		value,
-		original: originalMessage === message ? value : _format(originalMessage, args)
-	};
+    value,
+    original: originalMessage === message ? value : _format(originalMessage, args),
+  };
 }
 
 export interface INLSLanguagePackConfiguration {

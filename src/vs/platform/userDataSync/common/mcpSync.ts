@@ -3,16 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IConfigurationService } from '../../configuration/common/configuration.js';
-import { IEnvironmentService } from '../../environment/common/environment.js';
-import { IFileService } from '../../files/common/files.js';
-import { ILogService } from '../../log/common/log.js';
-import { IStorageService } from '../../storage/common/storage.js';
-import { ITelemetryService } from '../../telemetry/common/telemetry.js';
-import { IUriIdentityService } from '../../uriIdentity/common/uriIdentity.js';
-import { IUserDataProfile } from '../../userDataProfile/common/userDataProfile.js';
-import { AbstractJsonSynchronizer } from './abstractJsonSynchronizer.js';
-import { IUserDataSyncLocalStoreService, IUserDataSynchroniser, IUserDataSyncLogService, IUserDataSyncEnablementService, IUserDataSyncStoreService, SyncResource } from './userDataSync.js';
+import { IConfigurationService } from "../../configuration/common/configuration.js";
+import { IEnvironmentService } from "../../environment/common/environment.js";
+import { IFileService } from "../../files/common/files.js";
+import { ILogService } from "../../log/common/log.js";
+import { IStorageService } from "../../storage/common/storage.js";
+import { ITelemetryService } from "../../telemetry/common/telemetry.js";
+import { IUriIdentityService } from "../../uriIdentity/common/uriIdentity.js";
+import { IUserDataProfile } from "../../userDataProfile/common/userDataProfile.js";
+import { AbstractJsonSynchronizer } from "./abstractJsonSynchronizer.js";
+import {
+  IUserDataSyncLocalStoreService,
+  IUserDataSynchroniser,
+  IUserDataSyncLogService,
+  IUserDataSyncEnablementService,
+  IUserDataSyncStoreService,
+  SyncResource,
+} from "./userDataSync.js";
 
 interface IMcpSyncContent {
 	mcp?: string;
@@ -44,7 +51,22 @@ export class McpSynchroniser extends AbstractJsonSynchronizer implements IUserDa
 		@ITelemetryService telemetryService: ITelemetryService,
 		@IUriIdentityService uriIdentityService: IUriIdentityService,
 	) {
-		super(profile.mcpResource, { syncResource: SyncResource.Mcp, profile }, collection, 'mcp.json', fileService, environmentService, storageService, userDataSyncStoreService, userDataSyncLocalStoreService, userDataSyncEnablementService, telemetryService, logService, configurationService, uriIdentityService);
+		super(
+      profile.mcpResource,
+      { syncResource: SyncResource.Mcp, profile },
+      collection,
+      "mcp.json",
+      fileService,
+      environmentService,
+      storageService,
+      userDataSyncStoreService,
+      userDataSyncLocalStoreService,
+      userDataSyncEnablementService,
+      telemetryService,
+      logService,
+      configurationService,
+      uriIdentityService,
+    );
 	}
 
 	protected getContentFromSyncContent(syncContent: string): string | null {

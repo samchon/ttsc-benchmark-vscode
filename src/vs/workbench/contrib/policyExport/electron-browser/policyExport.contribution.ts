@@ -3,23 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../common/contributions.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { IWorkbenchConfigurationService } from '../../../services/configuration/common/configuration.js';
-import { IExtensionService } from '../../../services/extensions/common/extensions.js';
-import { INativeEnvironmentService } from '../../../../platform/environment/common/environment.js';
-import { process } from '../../../../base/parts/sandbox/electron-browser/globals.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { INativeHostService } from '../../../../platform/native/common/native.js';
-import { Registry } from '../../../../platform/registry/common/platform.js';
-import { Extensions, IConfigurationRegistry } from '../../../../platform/configuration/common/configurationRegistry.js';
-import { IProgressService, ProgressLocation } from '../../../../platform/progress/common/progress.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { URI } from '../../../../base/common/uri.js';
-import { VSBuffer } from '../../../../base/common/buffer.js';
-import { PolicyCategory, PolicyCategoryData } from '../../../../base/common/policy.js';
-import { ExportedPolicyDataDto } from '../common/policyDto.js';
-import { join } from '../../../../base/common/path.js';
+import {
+  IWorkbenchContribution,
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../../common/contributions.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IWorkbenchConfigurationService } from "../../../services/configuration/common/configuration.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { INativeEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { process } from "../../../../base/parts/sandbox/electron-browser/globals.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { INativeHostService } from "../../../../platform/native/common/native.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { Extensions, IConfigurationRegistry } from "../../../../platform/configuration/common/configurationRegistry.js";
+import { IProgressService, ProgressLocation } from "../../../../platform/progress/common/progress.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { URI } from "../../../../base/common/uri.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { PolicyCategory, PolicyCategoryData } from "../../../../base/common/policy.js";
+import { ExportedPolicyDataDto } from "../common/policyDto.js";
+import { join } from "../../../../base/common/path.js";
 
 interface ExtensionConfigurationPolicyEntry {
 	readonly name: string;
@@ -29,8 +33,8 @@ interface ExtensionConfigurationPolicyEntry {
 }
 
 export class PolicyExportContribution extends Disposable implements IWorkbenchContribution {
-	static readonly ID = 'workbench.contrib.policyExport';
-	static readonly DEFAULT_POLICY_EXPORT_PATH = 'build/lib/policies/policyData.jsonc';
+	static readonly ID = "workbench.contrib.policyExport";
+	static readonly DEFAULT_POLICY_EXPORT_PATH = "build/lib/policies/policyData.jsonc";
 
 	constructor(
 		@INativeEnvironmentService private readonly nativeEnvironmentService: INativeEnvironmentService,
@@ -50,8 +54,13 @@ export class PolicyExportContribution extends Disposable implements IWorkbenchCo
 
 		const policyDataPath = this.nativeEnvironmentService.exportPolicyData;
 		if (policyDataPath !== undefined) {
-			const defaultPath = join(this.nativeEnvironmentService.appRoot, PolicyExportContribution.DEFAULT_POLICY_EXPORT_PATH);
-			void this.exportPolicyDataAndQuit(policyDataPath ? policyDataPath : defaultPath);
+			const defaultPath = join(
+        this.nativeEnvironmentService.appRoot,
+        PolicyExportContribution.DEFAULT_POLICY_EXPORT_PATH,
+      );
+			void this.exportPolicyDataAndQuit(
+        policyDataPath ? policyDataPath : defaultPath,
+      );
 		}
 	}
 
@@ -63,13 +72,13 @@ export class PolicyExportContribution extends Disposable implements IWorkbenchCo
 		try {
 			await this.progressService.withProgress({
 				location: ProgressLocation.Notification,
-				title: `Exporting policy data to ${policyDataPath}`
+				title: `Exporting policy data to ${policyDataPath}`,
 			}, async (_progress) => {
-				this.log('Export started. Waiting for configurations to load.');
+				this.log("Export started. Waiting for configurations to load.");
 				await this.extensionService.whenInstalledExtensionsRegistered();
 				await this.configurationService.whenRemoteConfigurationLoaded();
 
-				this.log('Extensions and configuration loaded.');
+				this.log("Extensions and configuration loaded.");
 				const configurationRegistry = Registry.as<IConfigurationRegistry>(Extensions.Configuration);
 				const configurationProperties = {
 					...configurationRegistry.getExcludedConfigurationProperties(),
@@ -79,9 +88,9 @@ export class PolicyExportContribution extends Disposable implements IWorkbenchCo
 				const policyData: ExportedPolicyDataDto = {
 					categories: Object.values(PolicyCategory).map(category => ({
 						key: category,
-						name: PolicyCategoryData[category].name
+						name: PolicyCategoryData[category].name,
 					})),
-					policies: []
+					policies: [],
 				};
 
 				for (const [key, schema] of Object.entries(configurationProperties)) {
@@ -109,7 +118,7 @@ export class PolicyExportContribution extends Disposable implements IWorkbenchCo
 				// Checks DISTRO_PRODUCT_JSON env var (for testing),
 				// then falls back to fetching from GitHub API with GITHUB_TOKEN.
 				const distroProduct = await this.getDistroProductJson();
-				const extensionPolicies = distroProduct['extensionConfigurationPolicy'] as Record<string, ExtensionConfigurationPolicyEntry> | undefined;
+				const extensionPolicies = distroProduct["extensionConfigurationPolicy"] as Record<string, ExtensionConfigurationPolicyEntry> | undefined;
 				if (extensionPolicies) {
 					const existingKeys = new Set(policyData.policies.map(p => p.key));
 					let added = 0;
@@ -128,7 +137,7 @@ export class PolicyExportContribution extends Disposable implements IWorkbenchCo
 							localization: {
 								description: { key, value: entry.description },
 							},
-							type: 'boolean',
+							type: "boolean",
 							default: true,
 							included: true,
 						});
@@ -145,7 +154,7 @@ export class PolicyExportContribution extends Disposable implements IWorkbenchCo
 
 			await this.nativeHostService.exit(0);
 		} catch (error) {
-			this.log('Failed to export policy', error);
+			this.log("Failed to export policy", error);
 			await this.nativeHostService.exit(1);
 		}
 	}
@@ -159,51 +168,57 @@ export class PolicyExportContribution extends Disposable implements IWorkbenchCo
 		const root = this.nativeEnvironmentService.appRoot;
 
 		// 1. DISTRO_PRODUCT_JSON env var (for testing)
-		const envPath = process.env['DISTRO_PRODUCT_JSON'];
+		const envPath = process.env["DISTRO_PRODUCT_JSON"];
 		if (envPath) {
-			this.log(`Reading distro product.json from DISTRO_PRODUCT_JSON=${envPath}`);
+			this.log(
+        `Reading distro product.json from DISTRO_PRODUCT_JSON=${envPath}`,
+      );
 			const content = (await this.fileService.readFile(URI.file(envPath))).value.toString();
 			return JSON.parse(content);
 		}
 
 		// 2. GitHub API with GITHUB_TOKEN
-		const packageJsonPath = join(root, 'package.json');
+		const packageJsonPath = join(root, "package.json");
 		const packageJsonContent = (await this.fileService.readFile(URI.file(packageJsonPath))).value.toString();
 		const packageJson = JSON.parse(packageJsonContent);
 		const distroCommit: string | undefined = packageJson.distro;
 
 		if (!distroCommit) {
 			throw new Error(
-				'No distro commit found in package.json. ' +
-				'Use `npm run export-policy-data` which sets up the required environment.'
+				"No distro commit found in package.json. " +
+				"Use `npm run export-policy-data` which sets up the required environment.",
 			);
 		}
 
-		const token = process.env['GITHUB_TOKEN'];
+		const token = process.env["GITHUB_TOKEN"];
 		if (!token) {
 			throw new Error(
-				'GITHUB_TOKEN is required to fetch distro product.json. ' +
-				'Use `npm run export-policy-data` which sets up the required environment.'
+				"GITHUB_TOKEN is required to fetch distro product.json. " +
+				"Use `npm run export-policy-data` which sets up the required environment.",
 			);
 		}
 
-		this.log(`Fetching distro product.json for commit ${distroCommit} from GitHub...`);
+		this.log(
+      `Fetching distro product.json for commit ${distroCommit} from GitHub...`,
+    );
 		const url = `https://api.github.com/repos/microsoft/vscode-distro/contents/mixin/stable/product.json?ref=${encodeURIComponent(distroCommit)}`;
 		const response = await fetch(url, {
 			headers: {
-				'Accept': 'application/vnd.github+json',
-				'Authorization': `Bearer ${token}`,
-				'X-GitHub-Api-Version': '2022-11-28',
-				'User-Agent': 'VSCode Build'
-			}
+				"Accept": "application/vnd.github+json",
+				"Authorization": `Bearer ${token}`,
+				"X-GitHub-Api-Version": "2022-11-28",
+				"User-Agent": "VSCode Build",
+			},
 		});
 
 		if (!response.ok) {
-			throw new Error(`Failed to fetch distro product.json: ${response.status} ${response.statusText}`);
+			throw new Error(
+        `Failed to fetch distro product.json: ${response.status} ${response.statusText}`,
+      );
 		}
 
 		const data = await response.json() as { content: string; encoding: string };
-		if (data.encoding !== 'base64') {
+		if (data.encoding !== "base64") {
 			throw new Error(`Unexpected encoding from GitHub API: ${data.encoding}`);
 		}
 		const content = VSBuffer.wrap(Uint8Array.from(atob(data.content), c => c.charCodeAt(0))).toString();
@@ -212,7 +227,7 @@ export class PolicyExportContribution extends Disposable implements IWorkbenchCo
 }
 
 registerWorkbenchContribution2(
-	PolicyExportContribution.ID,
-	PolicyExportContribution,
-	WorkbenchPhase.Eventually,
+  PolicyExportContribution.ID,
+  PolicyExportContribution,
+  WorkbenchPhase.Eventually,
 );

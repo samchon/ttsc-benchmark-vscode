@@ -3,24 +3,34 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, DisposableStore, toDisposable } from '../../../base/common/lifecycle.js';
-import { DeferredPromise } from '../../../base/common/async.js';
-import { Emitter } from '../../../base/common/event.js';
-import { IpcMainEvent } from 'electron';
-import { validatedIpcMain } from '../../../base/parts/ipc/electron-main/ipcMain.js';
-import { Client as MessagePortClient } from '../../../base/parts/ipc/electron-main/ipc.mp.js';
-import { IConfigurationService } from '../../configuration/common/configuration.js';
-import { IEnvironmentMainService } from '../../environment/electron-main/environmentMainService.js';
-import { parseAgentHostDebugPort } from '../../environment/node/environmentService.js';
-import { ILifecycleMainService } from '../../lifecycle/electron-main/lifecycleMainService.js';
-import { ILogService } from '../../log/common/log.js';
-import { Schemas } from '../../../base/common/network.js';
-import { getResolvedShellEnv } from '../../shell/node/shellEnv.js';
-import { NullTelemetryService } from '../../telemetry/common/telemetryUtils.js';
-import { UtilityProcess } from '../../utilityProcess/electron-main/utilityProcess.js';
-import { IAgentHostConnection, IAgentHostStarter } from '../common/agent.js';
-import { AgentHostClaudeAgentSdkPathSettingId, AgentHostClaudeSdkPathEnvVar, AgentHostOTelCaptureContentSettingId, AgentHostOTelDbSpanExporterEnabledSettingId, AgentHostOTelEnabledSettingId, AgentHostOTelExporterTypeSettingId, AgentHostOTelOtlpEndpointSettingId, AgentHostOTelOutfileSettingId, buildAgentHostOTelEnv } from '../common/agentService.js';
-import { deepClone } from '../../../base/common/objects.js';
+import { Disposable, DisposableStore, toDisposable } from "../../../base/common/lifecycle.js";
+import { DeferredPromise } from "../../../base/common/async.js";
+import { Emitter } from "../../../base/common/event.js";
+import { IpcMainEvent } from "electron";
+import { validatedIpcMain } from "../../../base/parts/ipc/electron-main/ipcMain.js";
+import { Client as MessagePortClient } from "../../../base/parts/ipc/electron-main/ipc.mp.js";
+import { IConfigurationService } from "../../configuration/common/configuration.js";
+import { IEnvironmentMainService } from "../../environment/electron-main/environmentMainService.js";
+import { parseAgentHostDebugPort } from "../../environment/node/environmentService.js";
+import { ILifecycleMainService } from "../../lifecycle/electron-main/lifecycleMainService.js";
+import { ILogService } from "../../log/common/log.js";
+import { Schemas } from "../../../base/common/network.js";
+import { getResolvedShellEnv } from "../../shell/node/shellEnv.js";
+import { NullTelemetryService } from "../../telemetry/common/telemetryUtils.js";
+import { UtilityProcess } from "../../utilityProcess/electron-main/utilityProcess.js";
+import { IAgentHostConnection, IAgentHostStarter } from "../common/agent.js";
+import {
+  AgentHostClaudeAgentSdkPathSettingId,
+  AgentHostClaudeSdkPathEnvVar,
+  AgentHostOTelCaptureContentSettingId,
+  AgentHostOTelDbSpanExporterEnabledSettingId,
+  AgentHostOTelEnabledSettingId,
+  AgentHostOTelExporterTypeSettingId,
+  AgentHostOTelOtlpEndpointSettingId,
+  AgentHostOTelOutfileSettingId,
+  buildAgentHostOTelEnv,
+} from "../common/agentService.js";
+import { deepClone } from "../../../base/common/objects.js";
 
 export class ElectronAgentHostStarter extends Disposable implements IAgentHostStarter {
 
@@ -40,25 +50,47 @@ export class ElectronAgentHostStarter extends Disposable implements IAgentHostSt
 	) {
 		super();
 
-		this._register(this._lifecycleMainService.onWillShutdown(() => this._onWillShutdown.fire()));
+		this._register(
+      this._lifecycleMainService.onWillShutdown(
+        () => this._onWillShutdown.fire(),
+      ),
+    );
 
 		// Listen for new windows to establish a direct MessagePort connection to the agent host
-		const onWindowConnection = (e: IpcMainEvent, nonce: string) => this._onWindowConnection(e, nonce);
-		validatedIpcMain.on('vscode:createAgentHostMessageChannel', onWindowConnection);
-		this._register(toDisposable(() => {
-			validatedIpcMain.removeListener('vscode:createAgentHostMessageChannel', onWindowConnection);
-		}));
+		const onWindowConnection = (e: IpcMainEvent, nonce: string) => this._onWindowConnection(
+      e,
+      nonce,
+    );
+		validatedIpcMain.on(
+      "vscode:createAgentHostMessageChannel",
+      onWindowConnection,
+    );
+		this._register(
+      toDisposable(() => {
+        validatedIpcMain.removeListener(
+          "vscode:createAgentHostMessageChannel",
+          onWindowConnection,
+        );
+      }),
+    );
 	}
 
 	async start(): Promise<IAgentHostConnection> {
-		this.utilityProcess = new UtilityProcess(this._logService, NullTelemetryService, this._lifecycleMainService);
+		this.utilityProcess = new UtilityProcess(
+      this._logService,
+      NullTelemetryService,
+      this._lifecycleMainService,
+    );
 		this.utilityProcessStarted = new DeferredPromise<void>();
 
-		const inspectParams = parseAgentHostDebugPort(this._environmentMainService.args, this._environmentMainService.isBuilt);
+		const inspectParams = parseAgentHostDebugPort(
+      this._environmentMainService.args,
+      this._environmentMainService.isBuilt,
+    );
 		const execArgv = inspectParams.port ? [
-			'--nolazy',
-			`--inspect${inspectParams.break ? '-brk' : ''}=${inspectParams.port}`
-		] : undefined;
+      "--nolazy",
+      `--inspect${inspectParams.break ? "-brk" : ""}=${inspectParams.port}`,
+    ] : undefined;
 
 		// Resolve user shell environment so spawned tools/terminals inherit
 		// PATH and other vars from the user's login shell (macOS/Linux GUI launches).
@@ -69,9 +101,11 @@ export class ElectronAgentHostStarter extends Disposable implements IAgentHostSt
 		// setting at a locally-installed `@anthropic-ai/claude-agent-sdk` package,
 		// or when the env var is already set on the parent process (developer
 		// override). The SDK itself is intentionally not bundled with VS Code.
-		const claudeSdkPath = this._configurationService.getValue<string>(AgentHostClaudeAgentSdkPathSettingId)
+		const claudeSdkPath = this._configurationService.getValue<string>(
+      AgentHostClaudeAgentSdkPathSettingId,
+    )
 			|| process.env[AgentHostClaudeSdkPathEnvVar]
-			|| '';
+			|| "";
 
 		// Translate `chat.agentHost.otel.*` settings into the env vars consumed by
 		// the agent host process. Any value already present on `process.env` wins
@@ -86,34 +120,36 @@ export class ElectronAgentHostStarter extends Disposable implements IAgentHostSt
 		}, process.env);
 
 		const args = [
-			'--logsPath', this._environmentMainService.logsHome.with({ scheme: Schemas.file }).fsPath,
-			'--user-data-dir', this._environmentMainService.userDataPath,
-		];
+      "--logsPath",
+      this._environmentMainService.logsHome.with({ scheme: Schemas.file }).fsPath,
+      "--user-data-dir",
+      this._environmentMainService.userDataPath,
+    ];
 		if (this._environmentMainService.disableTelemetry) {
-			args.push('--disable-telemetry');
+			args.push("--disable-telemetry");
 		}
 
 		this.utilityProcess.start({
-			type: 'agentHost',
-			name: 'agent-host',
-			entryPoint: 'vs/platform/agentHost/node/agentHostMain',
+			type: "agentHost",
+			name: "agent-host",
+			entryPoint: "vs/platform/agentHost/node/agentHostMain",
 			execArgv,
 			args,
 			env: {
 				...deepClone(process.env),
 				...shellEnv,
-				VSCODE_ESM_ENTRYPOINT: 'vs/platform/agentHost/node/agentHostMain',
-				VSCODE_PIPE_LOGGING: 'true',
-				VSCODE_VERBOSE_LOGGING: 'true',
+				VSCODE_ESM_ENTRYPOINT: "vs/platform/agentHost/node/agentHostMain",
+				VSCODE_PIPE_LOGGING: "true",
+				VSCODE_VERBOSE_LOGGING: "true",
 				...(claudeSdkPath ? { [AgentHostClaudeSdkPathEnvVar]: claudeSdkPath } : {}),
 				...otelEnv,
-			}
+			},
 		});
 
 		this.utilityProcessStarted.complete();
 
 		const port = this.utilityProcess.connect();
-		const client = new MessagePortClient(port, 'agentHost');
+		const client = new MessagePortClient(port, "agentHost");
 
 		const store = new DisposableStore();
 		store.add(client);
@@ -123,25 +159,35 @@ export class ElectronAgentHostStarter extends Disposable implements IAgentHostSt
 			}
 			this._logService.error(`[AgentHost:stderr] ${data}`);
 		}));
-		store.add(toDisposable(() => {
-			this.utilityProcess?.kill();
-			this.utilityProcess?.dispose();
-			this.utilityProcess = undefined;
-			this.utilityProcessStarted = undefined;
-		}));
+		store.add(
+      toDisposable(() => {
+        this.utilityProcess?.kill();
+        this.utilityProcess?.dispose();
+        this.utilityProcess = undefined;
+        this.utilityProcessStarted = undefined;
+      }),
+    );
 
 		return {
-			client,
-			store,
-			onDidProcessExit: this.utilityProcess.onExit,
-		};
+      client,
+      store,
+      onDidProcessExit: this.utilityProcess.onExit,
+    };
 	}
 
 	private async _resolveShellEnv(): Promise<typeof process.env> {
 		try {
-			return await getResolvedShellEnv(this._configurationService, this._logService, this._environmentMainService.args, process.env);
+			return await getResolvedShellEnv(
+        this._configurationService,
+        this._logService,
+        this._environmentMainService.args,
+        process.env,
+      );
 		} catch (error) {
-			this._logService.error('AgentHostStarter was unable to resolve shell environment', error);
+			this._logService.error(
+        "AgentHostStarter was unable to resolve shell environment",
+        error,
+      );
 			return {};
 		}
 	}
@@ -154,7 +200,9 @@ export class ElectronAgentHostStarter extends Disposable implements IAgentHostSt
 		await this.utilityProcessStarted?.p;
 
 		if (!this.utilityProcess) {
-			this._logService.error('AgentHostStarter: cannot create window connection, agent host process is not running');
+			this._logService.error(
+        "AgentHostStarter: cannot create window connection, agent host process is not running",
+      );
 			return;
 		}
 
@@ -165,17 +213,21 @@ export class ElectronAgentHostStarter extends Disposable implements IAgentHostSt
 			return;
 		}
 
-		e.sender.postMessage('vscode:createAgentHostMessageChannelResult', nonce, [port]);
+		e.sender.postMessage("vscode:createAgentHostMessageChannelResult", nonce, [
+      port,
+    ]);
 	}
 
 	private static readonly _expectedStderrPatterns = [
-		'Most NODE_OPTIONs are not supported in packaged apps',
-		'Debugger listening on ws://',
-		'For help, see: https://nodejs.org/en/docs/inspector',
-		'ExperimentalWarning: SQLite is an experimental feature',
-	];
+    "Most NODE_OPTIONs are not supported in packaged apps",
+    "Debugger listening on ws://",
+    "For help, see: https://nodejs.org/en/docs/inspector",
+    "ExperimentalWarning: SQLite is an experimental feature",
+  ];
 
 	private _isExpectedStderr(data: string): boolean {
-		return ElectronAgentHostStarter._expectedStderrPatterns.some(pattern => data.includes(pattern));
+		return ElectronAgentHostStarter._expectedStderrPatterns.some(
+      pattern => data.includes(pattern),
+    );
 	}
 }

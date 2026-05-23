@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { isWindows } from '../../../../../base/common/platform.js';
-import { count } from '../../../../../base/common/strings.js';
-import { isString } from '../../../../../base/common/types.js';
-import { SimpleCompletionModel, type LineContext } from '../../../../services/suggest/browser/simpleCompletionModel.js';
-import { TerminalCompletionItemKind, type TerminalCompletionItem } from './terminalCompletionItem.js';
+import { isWindows } from "../../../../../base/common/platform.js";
+import { count } from "../../../../../base/common/strings.js";
+import { isString } from "../../../../../base/common/types.js";
+import { SimpleCompletionModel, type LineContext } from "../../../../services/suggest/browser/simpleCompletionModel.js";
+import { TerminalCompletionItemKind, type TerminalCompletionItem } from "./terminalCompletionItem.js";
 
 export class TerminalCompletionModel extends SimpleCompletionModel<TerminalCompletionItem> {
 	constructor(
 		items: TerminalCompletionItem[],
-		lineContext: LineContext
+		lineContext: LineContext,
 	) {
 		super(items, lineContext, compareCompletionsFn);
 	}
@@ -48,11 +48,15 @@ const compareCompletionsFn = (leadingLineContent: string, a: TerminalCompletionI
 	}
 
 	// Sort files of the same name by extension
-	const isArg = leadingLineContent.includes(' ');
+	const isArg = leadingLineContent.includes(" ");
 	if (!isArg && a.completion.kind === TerminalCompletionItemKind.File && b.completion.kind === TerminalCompletionItemKind.File) {
 		// If the file name excluding the extension is different, just do a regular sort
 		if (a.labelLowExcludeFileExt !== b.labelLowExcludeFileExt) {
-			return a.labelLowExcludeFileExt.localeCompare(b.labelLowExcludeFileExt, undefined, { ignorePunctuation: true });
+			return a.labelLowExcludeFileExt.localeCompare(
+        b.labelLowExcludeFileExt,
+        undefined,
+        { ignorePunctuation: true },
+      );
 		}
 		// Then by label length ascending (excluding file extension if it's a file)
 		score = a.labelLowExcludeFileExt.length - b.labelLowExcludeFileExt.length;
@@ -74,11 +78,17 @@ const compareCompletionsFn = (leadingLineContent: string, a: TerminalCompletionI
 	// Boost main and master branches for git commands
 	// HACK: Currently this just matches leading line content, it should eventually check the
 	//       completion type is a branch
-	if (a.completion.kind === TerminalCompletionItemKind.Argument && b.completion.kind === TerminalCompletionItemKind.Argument && /^\s*git\b/.test(leadingLineContent)) {
-		const aLabel = isString(a.completion.label) ? a.completion.label : a.completion.label.label;
-		const bLabel = isString(b.completion.label) ? b.completion.label : b.completion.label.label;
-		const aIsMainOrMaster = aLabel === 'main' || aLabel === 'master';
-		const bIsMainOrMaster = bLabel === 'main' || bLabel === 'master';
+	if (a.completion.kind === TerminalCompletionItemKind.Argument && b.completion.kind === TerminalCompletionItemKind.Argument && /^\s*git\b/.test(
+    leadingLineContent,
+  )) {
+		const aLabel = isString(
+      a.completion.label,
+    ) ? a.completion.label : a.completion.label.label;
+		const bLabel = isString(
+      b.completion.label,
+    ) ? b.completion.label : b.completion.label.label;
+		const aIsMainOrMaster = aLabel === "main" || aLabel === "master";
+		const bIsMainOrMaster = bLabel === "main" || bLabel === "master";
 
 		if (aIsMainOrMaster && !bIsMainOrMaster) {
 			return -1;
@@ -90,11 +100,19 @@ const compareCompletionsFn = (leadingLineContent: string, a: TerminalCompletionI
 
 	// Sort by more detailed completions
 	if (a.completion.kind === TerminalCompletionItemKind.Method && b.completion.kind === TerminalCompletionItemKind.Method) {
-		if (!isString(a.completion.label) && a.completion.label.description && !isString(b.completion.label) && b.completion.label.description) {
+		if (!isString(
+      a.completion.label,
+    ) && a.completion.label.description && !isString(
+      b.completion.label,
+    ) && b.completion.label.description) {
 			score = 0;
-		} else if (!isString(a.completion.label) && a.completion.label.description) {
+		} else if (!isString(
+      a.completion.label,
+    ) && a.completion.label.description) {
 			score = -2;
-		} else if (!isString(b.completion.label) && b.completion.label.description) {
+		} else if (!isString(
+      b.completion.label,
+    ) && b.completion.label.description) {
 			score = 2;
 		}
 		score += (b.completion.detail ? 1 : 0) + (b.completion.documentation ? 2 : 0) - (a.completion.detail ? 1 : 0) - (a.completion.documentation ? 2 : 0);
@@ -147,7 +165,9 @@ const compareCompletionsFn = (leadingLineContent: string, a: TerminalCompletionI
 
 	// Sort alphabetically, ignoring punctuation causes dot files to be mixed in rather than
 	// all at the top
-	return a.labelLow.localeCompare(b.labelLow, undefined, { ignorePunctuation: true });
+	return a.labelLow.localeCompare(b.labelLow, undefined, {
+    ignorePunctuation: true,
+  });
 };
 
 const isResourceKind = (kind: TerminalCompletionItemKind | undefined) =>
@@ -162,38 +182,38 @@ const isResourceKind = (kind: TerminalCompletionItemKind | undefined) =>
 const fileExtScores = new Map<string, number>(isWindows ? [
 	// Windows - .ps1 > .exe > .bat > .cmd. This is the command precedence when running the files
 	//           without an extension, tested manually in pwsh v7.4.4
-	['ps1', 0.09],
-	['exe', 0.08],
-	['bat', 0.07],
-	['cmd', 0.07],
-	['msi', 0.06],
-	['com', 0.06],
+	["ps1", 0.09],
+	["exe", 0.08],
+	["bat", 0.07],
+	["cmd", 0.07],
+	["msi", 0.06],
+	["com", 0.06],
 	// Non-Windows
-	['sh', -0.05],
-	['bash', -0.05],
-	['zsh', -0.05],
-	['fish', -0.05],
-	['csh', -0.06], // C shell
-	['ksh', -0.06], // Korn shell
+	["sh", -0.05],
+	["bash", -0.05],
+	["zsh", -0.05],
+	["fish", -0.05],
+	["csh", -0.06], // C shell
+	["ksh", -0.06], // Korn shell
 	// Scripting language files are excluded here as the standard behavior on Windows will just open
 	// the file in a text editor, not run the file
 ] : [
 	// Pwsh
-	['ps1', 0.05],
+	["ps1", 0.05],
 	// Windows
-	['bat', -0.05],
-	['cmd', -0.05],
-	['exe', -0.05],
+	["bat", -0.05],
+	["cmd", -0.05],
+	["exe", -0.05],
 	// Non-Windows
-	['sh', 0.05],
-	['bash', 0.05],
-	['zsh', 0.05],
-	['fish', 0.05],
-	['csh', 0.04], // C shell
-	['ksh', 0.04], // Korn shell
+	["sh", 0.05],
+	["bash", 0.05],
+	["zsh", 0.05],
+	["fish", 0.05],
+	["csh", 0.04], // C shell
+	["ksh", 0.04], // Korn shell
 	// Scripting languages
-	['py', 0.05], // Python
-	['pl', 0.05], // Perl
+	["py", 0.05], // Python
+	["pl", 0.05], // Perl
 ]);
 
 function fileExtScore(ext: string): number {

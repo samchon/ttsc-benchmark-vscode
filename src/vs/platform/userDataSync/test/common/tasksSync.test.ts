@@ -3,18 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { VSBuffer } from '../../../../base/common/buffer.js';
-import { runWithFakedTimers } from '../../../../base/test/common/timeTravelScheduler.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
-import { IFileService } from '../../../files/common/files.js';
-import { ILogService } from '../../../log/common/log.js';
-import { IUserDataProfilesService } from '../../../userDataProfile/common/userDataProfile.js';
-import { getTasksContentFromSyncContent, TasksSynchroniser } from '../../common/tasksSync.js';
-import { Change, IUserDataSyncStoreService, MergeState, SyncResource, SyncStatus } from '../../common/userDataSync.js';
-import { UserDataSyncClient, UserDataSyncTestServer } from './userDataSyncClient.js';
+import assert from "assert";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { runWithFakedTimers } from "../../../../base/test/common/timeTravelScheduler.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
+import { IFileService } from "../../../files/common/files.js";
+import { ILogService } from "../../../log/common/log.js";
+import { IUserDataProfilesService } from "../../../userDataProfile/common/userDataProfile.js";
+import { getTasksContentFromSyncContent, TasksSynchroniser } from "../../common/tasksSync.js";
+import {
+  Change,
+  IUserDataSyncStoreService,
+  MergeState,
+  SyncResource,
+  SyncStatus,
+} from "../../common/userDataSync.js";
+import { UserDataSyncClient, UserDataSyncTestServer } from "./userDataSyncClient.js";
 
-suite('TasksSync', () => {
+suite("TasksSync", () => {
 
 	const server = new UserDataSyncTestServer();
 	let client: UserDataSyncClient;
@@ -33,7 +39,7 @@ suite('TasksSync', () => {
 		testObject = client.getSynchronizer(SyncResource.Tasks) as TasksSynchroniser;
 	});
 
-	test('when tasks file does not exist', async () => {
+	test("when tasks file does not exist", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const fileService = client.instantiationService.get(IFileService);
 			const tasksResource = client.instantiationService.get(IUserDataProfilesService).defaultProfile.tasksResource;
@@ -64,17 +70,17 @@ suite('TasksSync', () => {
 		});
 	});
 
-	test('when tasks file does not exist and remote has changes', async () => {
+	test("when tasks file does not exist and remote has changes", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const client2 = disposableStore.add(new UserDataSyncClient(server));
 			await client2.setUp(true);
 			const content = JSON.stringify({
-				'version': '2.0.0',
-				'tasks': [{
-					'type': 'npm',
-					'script': 'watch',
-					'label': 'Watch'
-				}]
+				"version": "2.0.0",
+				"tasks": [{
+					"type": "npm",
+					"script": "watch",
+					"label": "Watch",
+				}],
 			});
 			const tasksResource2 = client2.instantiationService.get(IUserDataProfilesService).defaultProfile.tasksResource;
 			await client2.instantiationService.get(IFileService).writeFile(tasksResource2, VSBuffer.fromString(content));
@@ -94,17 +100,17 @@ suite('TasksSync', () => {
 		});
 	});
 
-	test('when tasks file exists locally and remote has no tasks', async () => {
+	test("when tasks file exists locally and remote has no tasks", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const fileService = client.instantiationService.get(IFileService);
 			const tasksResource = client.instantiationService.get(IUserDataProfilesService).defaultProfile.tasksResource;
 			const content = JSON.stringify({
-				'version': '2.0.0',
-				'tasks': [{
-					'type': 'npm',
-					'script': 'watch',
-					'label': 'Watch'
-				}]
+				"version": "2.0.0",
+				"tasks": [{
+					"type": "npm",
+					"script": "watch",
+					"label": "Watch",
+				}],
 			});
 			fileService.writeFile(tasksResource, VSBuffer.fromString(content));
 
@@ -118,17 +124,17 @@ suite('TasksSync', () => {
 		});
 	});
 
-	test('first time sync: when tasks file exists locally with same content as remote', async () => {
+	test("first time sync: when tasks file exists locally with same content as remote", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const client2 = disposableStore.add(new UserDataSyncClient(server));
 			await client2.setUp(true);
 			const content = JSON.stringify({
-				'version': '2.0.0',
-				'tasks': [{
-					'type': 'npm',
-					'script': 'watch',
-					'label': 'Watch'
-				}]
+				"version": "2.0.0",
+				"tasks": [{
+					"type": "npm",
+					"script": "watch",
+					"label": "Watch",
+				}],
 			});
 			const tasksResource2 = client2.instantiationService.get(IUserDataProfilesService).defaultProfile.tasksResource;
 			await client2.instantiationService.get(IFileService).writeFile(tasksResource2, VSBuffer.fromString(content));
@@ -149,24 +155,24 @@ suite('TasksSync', () => {
 		});
 	});
 
-	test('when tasks file locally has moved forward', async () => {
+	test("when tasks file locally has moved forward", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const fileService = client.instantiationService.get(IFileService);
 			const tasksResource = client.instantiationService.get(IUserDataProfilesService).defaultProfile.tasksResource;
 			fileService.writeFile(tasksResource, VSBuffer.fromString(JSON.stringify({
-				'version': '2.0.0',
-				'tasks': []
+				"version": "2.0.0",
+				"tasks": [],
 			})));
 
 			await testObject.sync(await client.getLatestRef(SyncResource.Tasks));
 
 			const content = JSON.stringify({
-				'version': '2.0.0',
-				'tasks': [{
-					'type': 'npm',
-					'script': 'watch',
-					'label': 'Watch'
-				}]
+				"version": "2.0.0",
+				"tasks": [{
+					"type": "npm",
+					"script": "watch",
+					"label": "Watch",
+				}],
 			});
 			fileService.writeFile(tasksResource, VSBuffer.fromString(content));
 
@@ -180,15 +186,15 @@ suite('TasksSync', () => {
 		});
 	});
 
-	test('when tasks file remotely has moved forward', async () => {
+	test("when tasks file remotely has moved forward", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const client2 = disposableStore.add(new UserDataSyncClient(server));
 			await client2.setUp(true);
 			const tasksResource2 = client2.instantiationService.get(IUserDataProfilesService).defaultProfile.tasksResource;
 			const fileService2 = client2.instantiationService.get(IFileService);
 			await fileService2.writeFile(tasksResource2, VSBuffer.fromString(JSON.stringify({
-				'version': '2.0.0',
-				'tasks': []
+				"version": "2.0.0",
+				"tasks": [],
 			})));
 
 			const fileService = client.instantiationService.get(IFileService);
@@ -198,12 +204,12 @@ suite('TasksSync', () => {
 			await testObject.sync(await client.getLatestRef(SyncResource.Tasks));
 
 			const content = JSON.stringify({
-				'version': '2.0.0',
-				'tasks': [{
-					'type': 'npm',
-					'script': 'watch',
-					'label': 'Watch'
-				}]
+				"version": "2.0.0",
+				"tasks": [{
+					"type": "npm",
+					"script": "watch",
+					"label": "Watch",
+				}],
 			});
 			fileService2.writeFile(tasksResource2, VSBuffer.fromString(content));
 
@@ -219,15 +225,15 @@ suite('TasksSync', () => {
 		});
 	});
 
-	test('when tasks file has moved forward locally and remotely with same changes', async () => {
+	test("when tasks file has moved forward locally and remotely with same changes", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const client2 = disposableStore.add(new UserDataSyncClient(server));
 			await client2.setUp(true);
 			const tasksResource2 = client2.instantiationService.get(IUserDataProfilesService).defaultProfile.tasksResource;
 			const fileService2 = client2.instantiationService.get(IFileService);
 			await fileService2.writeFile(tasksResource2, VSBuffer.fromString(JSON.stringify({
-				'version': '2.0.0',
-				'tasks': []
+				"version": "2.0.0",
+				"tasks": [],
 			})));
 
 			const fileService = client.instantiationService.get(IFileService);
@@ -237,12 +243,12 @@ suite('TasksSync', () => {
 			await testObject.sync(await client.getLatestRef(SyncResource.Tasks));
 
 			const content = JSON.stringify({
-				'version': '2.0.0',
-				'tasks': [{
-					'type': 'npm',
-					'script': 'watch',
-					'label': 'Watch'
-				}]
+				"version": "2.0.0",
+				"tasks": [{
+					"type": "npm",
+					"script": "watch",
+					"label": "Watch",
+				}],
 			});
 			fileService2.writeFile(tasksResource2, VSBuffer.fromString(content));
 			await client2.sync();
@@ -259,15 +265,15 @@ suite('TasksSync', () => {
 		});
 	});
 
-	test('when tasks file has moved forward locally and remotely - accept preview', async () => {
+	test("when tasks file has moved forward locally and remotely - accept preview", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const client2 = disposableStore.add(new UserDataSyncClient(server));
 			await client2.setUp(true);
 			const tasksResource2 = client2.instantiationService.get(IUserDataProfilesService).defaultProfile.tasksResource;
 			const fileService2 = client2.instantiationService.get(IFileService);
 			await fileService2.writeFile(tasksResource2, VSBuffer.fromString(JSON.stringify({
-				'version': '2.0.0',
-				'tasks': []
+				"version": "2.0.0",
+				"tasks": [],
 			})));
 
 			const fileService = client.instantiationService.get(IFileService);
@@ -277,21 +283,21 @@ suite('TasksSync', () => {
 			await testObject.sync(await client.getLatestRef(SyncResource.Tasks));
 
 			fileService2.writeFile(tasksResource2, VSBuffer.fromString(JSON.stringify({
-				'version': '2.0.0',
-				'tasks': [{
-					'type': 'npm',
-					'script': 'watch',
-				}]
+				"version": "2.0.0",
+				"tasks": [{
+					"type": "npm",
+					"script": "watch",
+				}],
 			})));
 			await client2.sync();
 
 			const content = JSON.stringify({
-				'version': '2.0.0',
-				'tasks': [{
-					'type': 'npm',
-					'script': 'watch',
-					'label': 'Watch'
-				}]
+				"version": "2.0.0",
+				"tasks": [{
+					"type": "npm",
+					"script": "watch",
+					"label": "Watch",
+				}],
 			});
 			fileService.writeFile(tasksResource, VSBuffer.fromString(content));
 			await testObject.sync(await client.getLatestRef(SyncResource.Tasks));
@@ -314,15 +320,15 @@ suite('TasksSync', () => {
 		});
 	});
 
-	test('when tasks file has moved forward locally and remotely - accept modified preview', async () => {
+	test("when tasks file has moved forward locally and remotely - accept modified preview", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const client2 = disposableStore.add(new UserDataSyncClient(server));
 			await client2.setUp(true);
 			const tasksResource2 = client2.instantiationService.get(IUserDataProfilesService).defaultProfile.tasksResource;
 			const fileService2 = client2.instantiationService.get(IFileService);
 			await fileService2.writeFile(tasksResource2, VSBuffer.fromString(JSON.stringify({
-				'version': '2.0.0',
-				'tasks': []
+				"version": "2.0.0",
+				"tasks": [],
 			})));
 
 			const fileService = client.instantiationService.get(IFileService);
@@ -332,31 +338,31 @@ suite('TasksSync', () => {
 			await testObject.sync(await client.getLatestRef(SyncResource.Tasks));
 
 			fileService2.writeFile(tasksResource2, VSBuffer.fromString(JSON.stringify({
-				'version': '2.0.0',
-				'tasks': [{
-					'type': 'npm',
-					'script': 'watch',
-				}]
+				"version": "2.0.0",
+				"tasks": [{
+					"type": "npm",
+					"script": "watch",
+				}],
 			})));
 			await client2.sync();
 
 			fileService.writeFile(tasksResource, VSBuffer.fromString(JSON.stringify({
-				'version': '2.0.0',
-				'tasks': [{
-					'type': 'npm',
-					'script': 'watch',
-					'label': 'Watch'
-				}]
+				"version": "2.0.0",
+				"tasks": [{
+					"type": "npm",
+					"script": "watch",
+					"label": "Watch",
+				}],
 			})));
 			await testObject.sync(await client.getLatestRef(SyncResource.Tasks));
 
 			const content = JSON.stringify({
-				'version': '2.0.0',
-				'tasks': [{
-					'type': 'npm',
-					'script': 'watch',
-					'label': 'Watch 2'
-				}]
+				"version": "2.0.0",
+				"tasks": [{
+					"type": "npm",
+					"script": "watch",
+					"label": "Watch 2",
+				}],
 			});
 			await testObject.accept(testObject.conflicts.conflicts[0].previewResource, content);
 			await testObject.apply(false);
@@ -369,15 +375,15 @@ suite('TasksSync', () => {
 		});
 	});
 
-	test('when tasks file has moved forward locally and remotely - accept remote', async () => {
+	test("when tasks file has moved forward locally and remotely - accept remote", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const client2 = disposableStore.add(new UserDataSyncClient(server));
 			await client2.setUp(true);
 			const tasksResource2 = client2.instantiationService.get(IUserDataProfilesService).defaultProfile.tasksResource;
 			const fileService2 = client2.instantiationService.get(IFileService);
 			await fileService2.writeFile(tasksResource2, VSBuffer.fromString(JSON.stringify({
-				'version': '2.0.0',
-				'tasks': []
+				"version": "2.0.0",
+				"tasks": [],
 			})));
 
 			const fileService = client.instantiationService.get(IFileService);
@@ -387,22 +393,22 @@ suite('TasksSync', () => {
 			await testObject.sync(await client.getLatestRef(SyncResource.Tasks));
 
 			const content = JSON.stringify({
-				'version': '2.0.0',
-				'tasks': [{
-					'type': 'npm',
-					'script': 'watch',
-				}]
+				"version": "2.0.0",
+				"tasks": [{
+					"type": "npm",
+					"script": "watch",
+				}],
 			});
 			fileService2.writeFile(tasksResource2, VSBuffer.fromString(content));
 			await client2.sync();
 
 			fileService.writeFile(tasksResource, VSBuffer.fromString(JSON.stringify({
-				'version': '2.0.0',
-				'tasks': [{
-					'type': 'npm',
-					'script': 'watch',
-					'label': 'Watch'
-				}]
+				"version": "2.0.0",
+				"tasks": [{
+					"type": "npm",
+					"script": "watch",
+					"label": "Watch",
+				}],
 			})));
 			await testObject.sync(await client.getLatestRef(SyncResource.Tasks));
 			assert.deepStrictEqual(testObject.status, SyncStatus.HasConflicts);
@@ -418,15 +424,15 @@ suite('TasksSync', () => {
 		});
 	});
 
-	test('when tasks file has moved forward locally and remotely - accept local', async () => {
+	test("when tasks file has moved forward locally and remotely - accept local", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const client2 = disposableStore.add(new UserDataSyncClient(server));
 			await client2.setUp(true);
 			const tasksResource2 = client2.instantiationService.get(IUserDataProfilesService).defaultProfile.tasksResource;
 			const fileService2 = client2.instantiationService.get(IFileService);
 			await fileService2.writeFile(tasksResource2, VSBuffer.fromString(JSON.stringify({
-				'version': '2.0.0',
-				'tasks': []
+				"version": "2.0.0",
+				"tasks": [],
 			})));
 
 			const fileService = client.instantiationService.get(IFileService);
@@ -436,21 +442,21 @@ suite('TasksSync', () => {
 			await testObject.sync(await client.getLatestRef(SyncResource.Tasks));
 
 			fileService2.writeFile(tasksResource2, VSBuffer.fromString(JSON.stringify({
-				'version': '2.0.0',
-				'tasks': [{
-					'type': 'npm',
-					'script': 'watch',
-				}]
+				"version": "2.0.0",
+				"tasks": [{
+					"type": "npm",
+					"script": "watch",
+				}],
 			})));
 			await client2.sync();
 
 			const content = JSON.stringify({
-				'version': '2.0.0',
-				'tasks': [{
-					'type': 'npm',
-					'script': 'watch',
-					'label': 'Watch'
-				}]
+				"version": "2.0.0",
+				"tasks": [{
+					"type": "npm",
+					"script": "watch",
+					"label": "Watch",
+				}],
 			});
 			fileService.writeFile(tasksResource, VSBuffer.fromString(content));
 			await testObject.sync(await client.getLatestRef(SyncResource.Tasks));
@@ -467,13 +473,13 @@ suite('TasksSync', () => {
 		});
 	});
 
-	test('when tasks file was removed in one client', async () => {
+	test("when tasks file was removed in one client", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const fileService = client.instantiationService.get(IFileService);
 			const tasksResource = client.instantiationService.get(IUserDataProfilesService).defaultProfile.tasksResource;
 			await fileService.writeFile(tasksResource, VSBuffer.fromString(JSON.stringify({
-				'version': '2.0.0',
-				'tasks': []
+				"version": "2.0.0",
+				"tasks": [],
 			})));
 			await testObject.sync(await client.getLatestRef(SyncResource.Tasks));
 
@@ -497,19 +503,19 @@ suite('TasksSync', () => {
 		});
 	});
 
-	test('when tasks file is created after first sync', async () => {
+	test("when tasks file is created after first sync", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const fileService = client.instantiationService.get(IFileService);
 			const tasksResource = client.instantiationService.get(IUserDataProfilesService).defaultProfile.tasksResource;
 			await testObject.sync(await client.getLatestRef(SyncResource.Tasks));
 
 			const content = JSON.stringify({
-				'version': '2.0.0',
-				'tasks': [{
-					'type': 'npm',
-					'script': 'watch',
-					'label': 'Watch'
-				}]
+				"version": "2.0.0",
+				"tasks": [{
+					"type": "npm",
+					"script": "watch",
+					"label": "Watch",
+				}],
 			});
 			await fileService.createFile(tasksResource, VSBuffer.fromString(content));
 
@@ -519,7 +525,7 @@ suite('TasksSync', () => {
 			await testObject.sync(manifest);
 
 			assert.deepStrictEqual(server.requests, [
-				{ type: 'POST', url: `${server.url}/v1/resource/${testObject.resource}`, headers: { 'If-Match': lastSyncUserData?.ref } },
+				{ type: "POST", url: `${server.url}/v1/resource/${testObject.resource}`, headers: { "If-Match": lastSyncUserData?.ref } },
 			]);
 
 			lastSyncUserData = await testObject.getLastSyncUserData();
@@ -530,7 +536,7 @@ suite('TasksSync', () => {
 		});
 	});
 
-	test('apply remote when tasks file does not exist', async () => {
+	test("apply remote when tasks file does not exist", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const fileService = client.instantiationService.get(IFileService);
 			const tasksResource = client.instantiationService.get(IUserDataProfilesService).defaultProfile.tasksResource;
@@ -548,18 +554,18 @@ suite('TasksSync', () => {
 		});
 	});
 
-	test('sync profile tasks', async () => {
+	test("sync profile tasks", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const client2 = disposableStore.add(new UserDataSyncClient(server));
 			await client2.setUp(true);
-			const profile = await client2.instantiationService.get(IUserDataProfilesService).createNamedProfile('profile1');
+			const profile = await client2.instantiationService.get(IUserDataProfilesService).createNamedProfile("profile1");
 			const expected = JSON.stringify({
-				'version': '2.0.0',
-				'tasks': [{
-					'type': 'npm',
-					'script': 'watch',
-					'label': 'Watch'
-				}]
+				"version": "2.0.0",
+				"tasks": [{
+					"type": "npm",
+					"script": "watch",
+					"label": "Watch",
+				}],
 			});
 			await client2.instantiationService.get(IFileService).createFile(profile.tasksResource, VSBuffer.fromString(expected));
 			await client2.sync();

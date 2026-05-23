@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { sumBy } from '../../../../base/common/arrays.js';
-import { BugIndicatingError } from '../../../../base/common/errors.js';
-import { OffsetRange } from '../ranges/offsetRange.js';
+import { sumBy } from "../../../../base/common/arrays.js";
+import { BugIndicatingError } from "../../../../base/common/errors.js";
+import { OffsetRange } from "../ranges/offsetRange.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export abstract class BaseEdit<T extends BaseReplacement<T> = BaseReplacement<any>, TEdit extends BaseEdit<T, TEdit> = BaseEdit<T, any>> {
@@ -15,7 +15,9 @@ export abstract class BaseEdit<T extends BaseReplacement<T> = BaseReplacement<an
 		let lastEndEx = -1;
 		for (const replacement of replacements) {
 			if (!(replacement.replaceRange.start >= lastEndEx)) {
-				throw new BugIndicatingError(`Edits must be disjoint and sorted. Found ${replacement} after ${lastEndEx}`);
+				throw new BugIndicatingError(
+          `Edits must be disjoint and sorted. Found ${replacement} after ${lastEndEx}`,
+        );
 			}
 			lastEndEx = replacement.replaceRange.endExclusive;
 		}
@@ -41,7 +43,7 @@ export abstract class BaseEdit<T extends BaseReplacement<T> = BaseReplacement<an
 	}
 
 	public toString() {
-		const edits = this.replacements.map(e => e.toString()).join(', ');
+		const edits = this.replacements.map(e => e.toString()).join(", ");
 		return `[${edits}]`;
 	}
 
@@ -146,31 +148,48 @@ export abstract class BaseEdit<T extends BaseReplacement<T> = BaseReplacement<an
 			if (!firstIntersecting) {
 				result.push(r2.delta(-edit1ToEdit2));
 			} else {
-				const newReplaceRangeStart = Math.min(firstIntersecting.replaceRange.start, r2.replaceRange.start - firstEdit1ToEdit2);
+				const newReplaceRangeStart = Math.min(
+          firstIntersecting.replaceRange.start,
+          r2.replaceRange.start - firstEdit1ToEdit2,
+        );
 
 				const prefixLength = r2.replaceRange.start - (firstIntersecting.replaceRange.start + firstEdit1ToEdit2);
 				if (prefixLength > 0) {
-					const prefix = firstIntersecting.slice(OffsetRange.emptyAt(newReplaceRangeStart), new OffsetRange(0, prefixLength));
+					const prefix = firstIntersecting.slice(
+            OffsetRange.emptyAt(newReplaceRangeStart),
+            new OffsetRange(0, prefixLength),
+          );
 					result.push(prefix);
 				}
 				if (!lastIntersecting) {
-					throw new BugIndicatingError(`Invariant violation: lastIntersecting is undefined`);
+					throw new BugIndicatingError(
+            `Invariant violation: lastIntersecting is undefined`,
+          );
 				}
 				const suffixLength = (lastIntersecting.replaceRange.endExclusive + edit1ToEdit2) - r2.replaceRange.endExclusive;
 				if (suffixLength > 0) {
 					const e = lastIntersecting.slice(
-						OffsetRange.ofStartAndLength(lastIntersecting.replaceRange.endExclusive, 0),
-						new OffsetRange(lastIntersecting.getNewLength() - suffixLength, lastIntersecting.getNewLength())
-					);
+            OffsetRange.ofStartAndLength(
+              lastIntersecting.replaceRange.endExclusive,
+              0,
+            ),
+            new OffsetRange(
+              lastIntersecting.getNewLength() - suffixLength,
+              lastIntersecting.getNewLength(),
+            ),
+          );
 					edit1Queue.unshift(e);
 					edit1ToEdit2 -= e.getNewLength() - e.replaceRange.length;
 				}
 
 				const newReplaceRange = new OffsetRange(
-					newReplaceRangeStart,
-					r2.replaceRange.endExclusive - edit1ToEdit2
-				);
-				const middle = r2.slice(newReplaceRange, new OffsetRange(0, r2.getNewLength()));
+          newReplaceRangeStart,
+          r2.replaceRange.endExclusive - edit1ToEdit2,
+        );
+				const middle = r2.slice(
+          newReplaceRange,
+          new OffsetRange(0, r2.getNewLength()),
+        );
 				result.push(middle);
 			}
 		}
@@ -194,7 +213,12 @@ export abstract class BaseEdit<T extends BaseReplacement<T> = BaseReplacement<an
 				e1.push(edit);
 				e2delta += edit.getNewLength() - edit.replaceRange.length;
 			} else {
-				e2.push(edit.slice(edit.replaceRange.delta(e2delta), new OffsetRange(0, edit.getNewLength())));
+				e2.push(
+          edit.slice(
+            edit.replaceRange.delta(e2delta),
+            new OffsetRange(0, edit.getNewLength()),
+          ),
+        );
 			}
 		}
 		return { e1: this._createNew(e1), e2: this._createNew(e2) };
@@ -207,7 +231,12 @@ export abstract class BaseEdit<T extends BaseReplacement<T> = BaseReplacement<an
 		const ranges: OffsetRange[] = [];
 		let offset = 0;
 		for (const e of this.replacements) {
-			ranges.push(OffsetRange.ofStartAndLength(e.replaceRange.start + offset, e.getNewLength()));
+			ranges.push(
+        OffsetRange.ofStartAndLength(
+          e.replaceRange.start + offset,
+          e.getNewLength(),
+        ),
+      );
 			offset += e.getLengthDelta();
 		}
 		return ranges;
@@ -217,7 +246,9 @@ export abstract class BaseEdit<T extends BaseReplacement<T> = BaseReplacement<an
 		if (this.replacements.length === 0) {
 			return undefined;
 		}
-		return this.replacements[0].replaceRange.join(this.replacements.at(-1)!.replaceRange);
+		return this.replacements[0].replaceRange.join(
+      this.replacements.at(-1)!.replaceRange,
+    );
 	}
 
 	public isEmpty(): boolean {
@@ -225,7 +256,10 @@ export abstract class BaseEdit<T extends BaseReplacement<T> = BaseReplacement<an
 	}
 
 	public getLengthDelta(): number {
-		return sumBy(this.replacements, (replacement) => replacement.getLengthDelta());
+		return sumBy(
+      this.replacements,
+      (replacement) => replacement.getLengthDelta(),
+    );
 	}
 
 	public getNewDataLength(dataLength: number): number {
@@ -250,9 +284,9 @@ export abstract class BaseEdit<T extends BaseReplacement<T> = BaseReplacement<an
 
 	public applyToOffsetRange(originalRange: OffsetRange): OffsetRange {
 		return new OffsetRange(
-			this.applyToOffset(originalRange.start),
-			this.applyToOffset(originalRange.endExclusive)
-		);
+      this.applyToOffset(originalRange.start),
+      this.applyToOffset(originalRange.endExclusive),
+    );
 	}
 
 	public applyInverseToOffset(postEditsOffset: number): number {
@@ -325,7 +359,10 @@ export abstract class BaseReplacement<TSelf extends BaseReplacement<TSelf>> {
 	public abstract slice(newReplaceRange: OffsetRange, rangeInReplacement?: OffsetRange): TSelf;
 
 	public delta(offset: number): TSelf {
-		return this.slice(this.replaceRange.delta(offset), new OffsetRange(0, this.getNewLength()));
+		return this.slice(
+      this.replaceRange.delta(offset),
+      new OffsetRange(0, this.getNewLength()),
+    );
 	}
 
 	public getLengthDelta(): number {
@@ -343,7 +380,10 @@ export abstract class BaseReplacement<TSelf extends BaseReplacement<TSelf>> {
 	}
 
 	getRangeAfterReplace(): OffsetRange {
-		return new OffsetRange(this.replaceRange.start, this.replaceRange.start + this.getNewLength());
+		return new OffsetRange(
+      this.replaceRange.start,
+      this.replaceRange.start + this.getNewLength(),
+    );
 	}
 }
 
@@ -380,7 +420,9 @@ export class AnnotationReplacement<TAnnotation> extends BaseReplacement<Annotati
 	}
 
 	override equals(other: AnnotationReplacement<TAnnotation>): boolean {
-		return this.replaceRange.equals(other.replaceRange) && this.newLength === other.newLength && this.annotation === other.annotation;
+		return this.replaceRange.equals(
+      other.replaceRange,
+    ) && this.newLength === other.newLength && this.annotation === other.annotation;
 	}
 
 	getNewLength(): number { return this.newLength; }
@@ -389,10 +431,18 @@ export class AnnotationReplacement<TAnnotation> extends BaseReplacement<Annotati
 		if (this.annotation !== other.annotation) {
 			return undefined;
 		}
-		return new AnnotationReplacement<TAnnotation>(this.replaceRange.joinRightTouching(other.replaceRange), this.newLength + other.newLength, this.annotation);
+		return new AnnotationReplacement<TAnnotation>(
+      this.replaceRange.joinRightTouching(other.replaceRange),
+      this.newLength + other.newLength,
+      this.annotation,
+    );
 	}
 
 	slice(range: OffsetRange, rangeInReplacement?: OffsetRange): AnnotationReplacement<TAnnotation> {
-		return new AnnotationReplacement<TAnnotation>(range, rangeInReplacement ? rangeInReplacement.length : this.newLength, this.annotation);
+		return new AnnotationReplacement<TAnnotation>(
+      range,
+      rangeInReplacement ? rangeInReplacement.length : this.newLength,
+      this.annotation,
+    );
 	}
 }

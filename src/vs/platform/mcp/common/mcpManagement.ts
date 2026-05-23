@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { Event } from '../../../base/common/event.js';
-import { IMarkdownString } from '../../../base/common/htmlContent.js';
-import { IIterativePager } from '../../../base/common/paging.js';
-import { URI } from '../../../base/common/uri.js';
-import { SortBy, SortOrder } from '../../extensionManagement/common/extensionManagement.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import { IMcpSandboxConfiguration, IMcpServerConfiguration, IMcpServerVariable } from './mcpPlatformTypes.js';
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { Event } from "../../../base/common/event.js";
+import { IMarkdownString } from "../../../base/common/htmlContent.js";
+import { IIterativePager } from "../../../base/common/paging.js";
+import { URI } from "../../../base/common/uri.js";
+import { SortBy, SortOrder } from "../../extensionManagement/common/extensionManagement.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { IMcpSandboxConfiguration, IMcpServerConfiguration, IMcpServerVariable } from "./mcpPlatformTypes.js";
 
-export type InstallSource = 'gallery' | 'local';
+export type InstallSource = "gallery" | "local";
 
 export interface ILocalMcpServer {
 	readonly name: string;
@@ -41,7 +41,7 @@ export interface ILocalMcpServer {
 export interface IMcpServerInput {
 	readonly description?: string;
 	readonly isRequired?: boolean;
-	readonly format?: 'string' | 'number' | 'boolean' | 'filepath';
+	readonly format?: "string" | "number" | "boolean" | "filepath";
 	readonly value?: string;
 	readonly isSecret?: boolean;
 	readonly default?: string;
@@ -53,13 +53,13 @@ export interface IMcpServerVariableInput extends IMcpServerInput {
 }
 
 export interface IMcpServerPositionalArgument extends IMcpServerVariableInput {
-	readonly type: 'positional';
+	readonly type: "positional";
 	readonly valueHint?: string;
 	readonly isRepeated?: boolean;
 }
 
 export interface IMcpServerNamedArgument extends IMcpServerVariableInput {
-	readonly type: 'named';
+	readonly type: "named";
 	readonly name: string;
 	readonly isRepeated?: boolean;
 }
@@ -72,18 +72,18 @@ export interface IMcpServerKeyValueInput extends IMcpServerVariableInput {
 export type IMcpServerArgument = IMcpServerPositionalArgument | IMcpServerNamedArgument;
 
 export const enum RegistryType {
-	NODE = 'npm',
-	PYTHON = 'pypi',
-	DOCKER = 'oci',
-	NUGET = 'nuget',
-	MCPB = 'mcpb',
-	REMOTE = 'remote'
+	NODE = "npm",
+	PYTHON = "pypi",
+	DOCKER = "oci",
+	NUGET = "nuget",
+	MCPB = "mcpb",
+	REMOTE = "remote"
 }
 
 export const enum TransportType {
-	STDIO = 'stdio',
-	STREAMABLE_HTTP = 'streamable-http',
-	SSE = 'sse'
+	STDIO = "stdio",
+	STREAMABLE_HTTP = "streamable-http",
+	SSE = "sse"
 }
 
 export interface StdioTransport {
@@ -123,8 +123,8 @@ export interface IGalleryMcpServerConfiguration {
 }
 
 export const enum GalleryMcpServerStatus {
-	Active = 'active',
-	Deprecated = 'deprecated'
+	Active = "active",
+	Deprecated = "deprecated"
 }
 
 export interface IGalleryMcpServer {
@@ -164,7 +164,9 @@ export interface IQueryOptions {
 	sortOrder?: SortOrder;
 }
 
-export const IMcpGalleryService = createDecorator<IMcpGalleryService>('IMcpGalleryService');
+export const IMcpGalleryService = createDecorator<IMcpGalleryService>(
+  "IMcpGalleryService",
+);
 export interface IMcpGalleryService {
 	readonly _serviceBrand: undefined;
 	isEnabled(): boolean;
@@ -214,13 +216,15 @@ export interface IInstallableMcpServer {
 	readonly inputs?: IMcpServerVariable[];
 }
 
-export type McpServerConfiguration = Omit<IInstallableMcpServer, 'name'>;
+export type McpServerConfiguration = Omit<IInstallableMcpServer, "name">;
 export interface McpServerConfigurationParseResult {
 	readonly mcpServerConfiguration: McpServerConfiguration;
 	readonly notices: string[];
 }
 
-export const IMcpManagementService = createDecorator<IMcpManagementService>('IMcpManagementService');
+export const IMcpManagementService = createDecorator<IMcpManagementService>(
+  "IMcpManagementService",
+);
 export interface IMcpManagementService {
 	readonly _serviceBrand: undefined;
 	readonly onInstallMcpServer: Event<InstallMcpServerEvent>;
@@ -238,7 +242,9 @@ export interface IMcpManagementService {
 	getMcpServerConfigurationFromManifest(manifest: IGalleryMcpServerConfiguration, packageType: RegistryType): McpServerConfigurationParseResult;
 }
 
-export const IAllowedMcpServersService = createDecorator<IAllowedMcpServersService>('IAllowedMcpServersService');
+export const IAllowedMcpServersService = createDecorator<IAllowedMcpServersService>(
+  "IAllowedMcpServersService",
+);
 export interface IAllowedMcpServersService {
 	readonly _serviceBrand: undefined;
 
@@ -246,11 +252,11 @@ export interface IAllowedMcpServersService {
 	isAllowed(mcpServer: IGalleryMcpServer | ILocalMcpServer | IInstallableMcpServer): true | IMarkdownString;
 }
 
-export const mcpAccessConfig = 'chat.mcp.access';
-export const mcpGalleryServiceUrlConfig = 'chat.mcp.gallery.serviceUrl';
-export const mcpGalleryServiceEnablementConfig = 'chat.mcp.gallery.enabled';
-export const mcpAutoStartConfig = 'chat.mcp.autostart';
-export const mcpAppsEnabledConfig = 'chat.mcp.apps.enabled';
+export const mcpAccessConfig = "chat.mcp.access";
+export const mcpGalleryServiceUrlConfig = "chat.mcp.gallery.serviceUrl";
+export const mcpGalleryServiceEnablementConfig = "chat.mcp.gallery.enabled";
+export const mcpAutoStartConfig = "chat.mcp.autostart";
+export const mcpAppsEnabledConfig = "chat.mcp.apps.enabled";
 
 export interface IMcpGalleryConfig {
 	readonly serviceUrl?: string;
@@ -259,13 +265,13 @@ export interface IMcpGalleryConfig {
 }
 
 export const enum McpAutoStartValue {
-	Never = 'never',
-	OnlyNew = 'onlyNew',
-	NewAndOutdated = 'newAndOutdated',
+	Never = "never",
+	OnlyNew = "onlyNew",
+	NewAndOutdated = "newAndOutdated",
 }
 
 export const enum McpAccessValue {
-	None = 'none',
-	Registry = 'registry',
-	All = 'all',
+	None = "none",
+	Registry = "registry",
+	All = "all",
 }

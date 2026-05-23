@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable, DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { ITextModel, TrackedRangeStickiness } from '../../../../../editor/common/model.js';
-import { ModelDecorationOptions } from '../../../../../editor/common/model/textModel.js';
-import { IModelService } from '../../../../../editor/common/services/model.js';
-import { Range } from '../../../../../editor/common/core/range.js';
+import { IDisposable, DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ITextModel, TrackedRangeStickiness } from "../../../../../editor/common/model.js";
+import { ModelDecorationOptions } from "../../../../../editor/common/model/textModel.js";
+import { IModelService } from "../../../../../editor/common/services/model.js";
+import { Range } from "../../../../../editor/common/core/range.js";
 
 /**
  * Can add a range highlight decoration to a model.
@@ -22,7 +22,7 @@ export class RangeHighlightDecorations implements IDisposable {
 	private readonly _modelDisposables = new DisposableStore();
 
 	constructor(
-		@IModelService private readonly _modelService: IModelService
+		@IModelService private readonly _modelService: IModelService,
 	) {
 	}
 
@@ -30,8 +30,8 @@ export class RangeHighlightDecorations implements IDisposable {
 		if (this._model && this._decorationId) {
 			const decorationId = this._decorationId;
 			this._model.changeDecorations((accessor) => {
-				accessor.removeDecoration(decorationId);
-			});
+        accessor.removeDecoration(decorationId);
+      });
 		}
 		this._decorationId = null;
 	}
@@ -52,8 +52,8 @@ export class RangeHighlightDecorations implements IDisposable {
 	private doHighlightRange(model: ITextModel, range: Range) {
 		this.removeHighlightRange();
 		model.changeDecorations((accessor) => {
-			this._decorationId = accessor.addDecoration(range, RangeHighlightDecorations._RANGE_HIGHLIGHT_DECORATION);
-		});
+      this._decorationId = accessor.addDecoration(range, RangeHighlightDecorations._RANGE_HIGHLIGHT_DECORATION);
+    });
 		this.setModel(model);
 	}
 
@@ -61,16 +61,20 @@ export class RangeHighlightDecorations implements IDisposable {
 		if (this._model !== model) {
 			this.clearModelListeners();
 			this._model = model;
-			this._modelDisposables.add(this._model.onDidChangeDecorations((e) => {
-				this.clearModelListeners();
-				this.removeHighlightRange();
-				this._model = null;
-			}));
-			this._modelDisposables.add(this._model.onWillDispose(() => {
-				this.clearModelListeners();
-				this.removeHighlightRange();
-				this._model = null;
-			}));
+			this._modelDisposables.add(
+        this._model.onDidChangeDecorations((e) => {
+          this.clearModelListeners();
+          this.removeHighlightRange();
+          this._model = null;
+        }),
+      );
+			this._modelDisposables.add(
+        this._model.onWillDispose(() => {
+          this.clearModelListeners();
+          this.removeHighlightRange();
+          this._model = null;
+        }),
+      );
 		}
 	}
 
@@ -86,10 +90,12 @@ export class RangeHighlightDecorations implements IDisposable {
 		this._modelDisposables.dispose();
 	}
 
-	private static readonly _RANGE_HIGHLIGHT_DECORATION = ModelDecorationOptions.register({
-		description: 'search-range-highlight',
-		stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
-		className: 'rangeHighlight',
-		isWholeLine: true
-	});
+	private static readonly _RANGE_HIGHLIGHT_DECORATION = ModelDecorationOptions.register(
+    {
+      description: "search-range-highlight",
+      stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+      className: "rangeHighlight",
+      isWholeLine: true,
+    },
+  );
 }

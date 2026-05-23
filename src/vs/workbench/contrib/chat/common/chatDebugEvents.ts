@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IChatDebugEvent } from './chatDebugService.js';
+import { IChatDebugEvent } from "./chatDebugService.js";
 
 /**
  * Checks whether a debug event matches a single text search term.
@@ -14,24 +14,26 @@ export function debugEventMatchesText(event: IChatDebugEvent, term: string): boo
 		return true;
 	}
 	switch (event.kind) {
-		case 'toolCall':
+		case "toolCall":
 			return event.toolName.toLowerCase().includes(term)
 				|| (event.input?.toLowerCase().includes(term) ?? false)
 				|| (event.output?.toLowerCase().includes(term) ?? false);
-		case 'modelTurn':
+		case "modelTurn":
 			return (event.model?.toLowerCase().includes(term) ?? false)
 				|| (event.requestName?.toLowerCase().includes(term) ?? false);
-		case 'generic':
+		case "generic":
 			return event.name.toLowerCase().includes(term)
 				|| (event.details?.toLowerCase().includes(term) ?? false)
 				|| (event.category?.toLowerCase().includes(term) ?? false);
-		case 'subagentInvocation':
+		case "subagentInvocation":
 			return event.agentName.toLowerCase().includes(term)
 				|| (event.description?.toLowerCase().includes(term) ?? false);
-		case 'userMessage':
-		case 'agentResponse':
+		case "userMessage":
+		case "agentResponse":
 			return event.message.toLowerCase().includes(term)
-				|| event.sections.some(s => s.name.toLowerCase().includes(term) || s.content.toLowerCase().includes(term));
+				|| event.sections.some(
+          s => s.name.toLowerCase().includes(term) || s.content.toLowerCase().includes(term),
+        );
 	}
 }
 
@@ -49,7 +51,9 @@ const timestampTokenPattern = /\b(?:before|after):\d{4}(?:-\d{2}(?:-\d{2}(?:t\d{
  * For `after:`, the timestamp is the **start** of the most specific unit.
  */
 export function parseTimeToken(text: string, prefix: string): number | undefined {
-	const regex = new RegExp(`${prefix}:(\\d{4})(?:-(\\d{2})(?:-(\\d{2})(?:t(\\d{1,2})(?::(\\d{2})(?::(\\d{2}))?)?)?)?)?(?!\\w)`);
+	const regex = new RegExp(
+    `${prefix}:(\\d{4})(?:-(\\d{2})(?:-(\\d{2})(?:t(\\d{1,2})(?::(\\d{2})(?::(\\d{2}))?)?)?)?)?(?!\\w)`,
+  );
 	const m = regex.exec(text);
 	if (!m) {
 		return undefined;
@@ -62,7 +66,7 @@ export function parseTimeToken(text: string, prefix: string): number | undefined
 	const minute = m[5] !== undefined ? parseInt(m[5], 10) : undefined;
 	const second = m[6] !== undefined ? parseInt(m[6], 10) : undefined;
 
-	if (prefix === 'before') {
+	if (prefix === "before") {
 		if (second !== undefined) {
 			return new Date(year, month!, day!, hour!, minute!, second, 999).getTime();
 		} else if (minute !== undefined) {
@@ -94,7 +98,7 @@ export function parseTimeToken(text: string, prefix: string): number | undefined
  * returning only the plain text search portion.
  */
 export function stripTimestampTokens(text: string): string {
-	return text.replace(timestampTokenPattern, '').trim();
+	return text.replace(timestampTokenPattern, "").trim();
 }
 
 /**
@@ -107,14 +111,16 @@ export function stripTimestampTokens(text: string): string {
  * stripped before text matching.
  */
 export function filterDebugEventsByText(events: readonly IChatDebugEvent[], filterText: string): readonly IChatDebugEvent[] {
-	const beforeTimestamp = parseTimeToken(filterText, 'before');
-	const afterTimestamp = parseTimeToken(filterText, 'after');
+	const beforeTimestamp = parseTimeToken(filterText, "before");
+	const afterTimestamp = parseTimeToken(filterText, "after");
 
 	// Strip timestamp tokens before splitting into text search terms
 	const textOnly = stripTimestampTokens(filterText);
 	const terms = textOnly.split(/\s*,\s*/).filter(t => t.length > 0);
-	const includeTerms = terms.filter(t => !t.startsWith('!')).map(t => t.trim());
-	const excludeTerms = terms.filter(t => t.startsWith('!')).map(t => t.slice(1).trim()).filter(t => t.length > 0);
+	const includeTerms = terms.filter(t => !t.startsWith("!")).map(t => t.trim());
+	const excludeTerms = terms.filter(t => t.startsWith("!")).map(t => t.slice(1).trim()).filter(
+    t => t.length > 0,
+  );
 
 	return events.filter(e => {
 		// Timestamp bounds

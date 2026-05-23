@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { RGBA8 } from '../../../common/core/misc/rgba.js';
-import { Constants, getCharIndex } from './minimapCharSheet.js';
-import { toUint8 } from '../../../../base/common/uint.js';
+import { RGBA8 } from "../../../common/core/misc/rgba.js";
+import { Constants, getCharIndex } from "./minimapCharSheet.js";
+import { toUint8 } from "../../../../base/common/uint.js";
 
 export class MinimapCharRenderer {
 	_minimapCharRendererBrand: void = undefined;
@@ -37,13 +37,13 @@ export class MinimapCharRenderer {
 		backgroundAlpha: number,
 		fontScale: number,
 		useLighterFont: boolean,
-		force1pxHeight: boolean
+		force1pxHeight: boolean,
 	): void {
 		const charWidth = Constants.BASE_CHAR_WIDTH * this.scale;
 		const charHeight = Constants.BASE_CHAR_HEIGHT * this.scale;
 		const renderHeight = (force1pxHeight ? 1 : charHeight);
 		if (dx + charWidth > target.width || dy + renderHeight > target.height) {
-			console.warn('bad render request outside image data');
+			console.warn("bad render request outside image data");
 			return;
 		}
 
@@ -88,13 +88,13 @@ export class MinimapCharRenderer {
 		foregroundAlpha: number,
 		backgroundColor: RGBA8,
 		backgroundAlpha: number,
-		force1pxHeight: boolean
+		force1pxHeight: boolean,
 	): void {
 		const charWidth = Constants.BASE_CHAR_WIDTH * this.scale;
 		const charHeight = Constants.BASE_CHAR_HEIGHT * this.scale;
 		const renderHeight = (force1pxHeight ? 1 : charHeight);
 		if (dx + charWidth > target.width || dy + renderHeight > target.height) {
-			console.warn('bad render request outside image data');
+			console.warn("bad render request outside image data");
 			return;
 		}
 

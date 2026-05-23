@@ -3,42 +3,47 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { equals as arraysEqual } from '../../../../base/common/arrays.js';
-import { assertNever } from '../../../../base/common/assert.js';
-import { decodeHex, encodeHex, VSBuffer } from '../../../../base/common/buffer.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { Event } from '../../../../base/common/event.js';
-import { IMarkdownString } from '../../../../base/common/htmlContent.js';
-import { Disposable, IDisposable } from '../../../../base/common/lifecycle.js';
-import { equals as objectsEqual } from '../../../../base/common/objects.js';
-import { IObservable, ObservableMap } from '../../../../base/common/observable.js';
-import { IIterativePager } from '../../../../base/common/paging.js';
-import Severity from '../../../../base/common/severity.js';
-import { URI, UriComponents } from '../../../../base/common/uri.js';
-import { Location } from '../../../../editor/common/languages.js';
-import { localize } from '../../../../nls.js';
-import { ConfigurationTarget } from '../../../../platform/configuration/common/configuration.js';
-import { RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
-import { IEditorOptions } from '../../../../platform/editor/common/editor.js';
-import { ExtensionIdentifier } from '../../../../platform/extensions/common/extensions.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { McpGalleryManifestStatus } from '../../../../platform/mcp/common/mcpGalleryManifest.js';
-import { IGalleryMcpServer, IGalleryMcpServerConfiguration, IInstallableMcpServer, IQueryOptions } from '../../../../platform/mcp/common/mcpManagement.js';
-import { IMcpDevModeConfig, IMcpSandboxConfiguration, IMcpServerConfiguration } from '../../../../platform/mcp/common/mcpPlatformTypes.js';
-import { StorageScope } from '../../../../platform/storage/common/storage.js';
-import { IWorkspaceFolder, IWorkspaceFolderData } from '../../../../platform/workspace/common/workspace.js';
-import { IWorkbenchLocalMcpServer, IWorkbencMcpServerInstallOptions } from '../../../services/mcp/common/mcpWorkbenchManagementService.js';
-import { ContributionEnablementState, IEnablementModel } from '../../chat/common/enablement.js';
-import { ToolProgress } from '../../chat/common/tools/languageModelToolsService.js';
-import { IMcpServerSamplingConfiguration } from './mcpConfiguration.js';
-import { McpServerRequestHandler } from './mcpServerRequestHandler.js';
-import { MCP } from './modelContextProtocol.js';
-import { UriTemplate } from '../../../../base/common/uriTemplate.js';
+import { equals as arraysEqual } from "../../../../base/common/arrays.js";
+import { assertNever } from "../../../../base/common/assert.js";
+import { decodeHex, encodeHex, VSBuffer } from "../../../../base/common/buffer.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Event } from "../../../../base/common/event.js";
+import { IMarkdownString } from "../../../../base/common/htmlContent.js";
+import { Disposable, IDisposable } from "../../../../base/common/lifecycle.js";
+import { equals as objectsEqual } from "../../../../base/common/objects.js";
+import { IObservable, ObservableMap } from "../../../../base/common/observable.js";
+import { IIterativePager } from "../../../../base/common/paging.js";
+import Severity from "../../../../base/common/severity.js";
+import { URI, UriComponents } from "../../../../base/common/uri.js";
+import { Location } from "../../../../editor/common/languages.js";
+import { localize } from "../../../../nls.js";
+import { ConfigurationTarget } from "../../../../platform/configuration/common/configuration.js";
+import { RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { IEditorOptions } from "../../../../platform/editor/common/editor.js";
+import { ExtensionIdentifier } from "../../../../platform/extensions/common/extensions.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { McpGalleryManifestStatus } from "../../../../platform/mcp/common/mcpGalleryManifest.js";
+import {
+  IGalleryMcpServer,
+  IGalleryMcpServerConfiguration,
+  IInstallableMcpServer,
+  IQueryOptions,
+} from "../../../../platform/mcp/common/mcpManagement.js";
+import { IMcpDevModeConfig, IMcpSandboxConfiguration, IMcpServerConfiguration } from "../../../../platform/mcp/common/mcpPlatformTypes.js";
+import { StorageScope } from "../../../../platform/storage/common/storage.js";
+import { IWorkspaceFolder, IWorkspaceFolderData } from "../../../../platform/workspace/common/workspace.js";
+import { IWorkbenchLocalMcpServer, IWorkbencMcpServerInstallOptions } from "../../../services/mcp/common/mcpWorkbenchManagementService.js";
+import { ContributionEnablementState, IEnablementModel } from "../../chat/common/enablement.js";
+import { ToolProgress } from "../../chat/common/tools/languageModelToolsService.js";
+import { IMcpServerSamplingConfiguration } from "./mcpConfiguration.js";
+import { McpServerRequestHandler } from "./mcpServerRequestHandler.js";
+import { MCP } from "./modelContextProtocol.js";
+import { UriTemplate } from "../../../../base/common/uriTemplate.js";
 
-export const extensionMcpCollectionPrefix = 'ext.';
+export const extensionMcpCollectionPrefix = "ext.";
 
 export function extensionPrefixedIdentifier(identifier: ExtensionIdentifier, id: string): string {
-	return ExtensionIdentifier.toKey(identifier) + '/' + id;
+	return ExtensionIdentifier.toKey(identifier) + "/" + id;
 }
 
 /**
@@ -181,14 +186,14 @@ export namespace McpServerDefinition {
 
 	export function fromSerialized(def: McpServerDefinition.Serialized): McpServerDefinition {
 		return {
-			id: def.id,
-			label: def.label,
-			cacheNonce: def.cacheNonce,
-			staticMetadata: def.staticMetadata,
-			launch: McpServerLaunch.fromSerialized(def.launch),
-			sandboxEnabled: def.sandboxEnabled,
-			variableReplacement: def.variableReplacement ? McpServerDefinitionVariableReplacement.fromSerialized(def.variableReplacement) : undefined,
-		};
+      id: def.id,
+      label: def.label,
+      cacheNonce: def.cacheNonce,
+      staticMetadata: def.staticMetadata,
+      launch: McpServerLaunch.fromSerialized(def.launch),
+      sandboxEnabled: def.sandboxEnabled,
+      variableReplacement: def.variableReplacement ? McpServerDefinitionVariableReplacement.fromSerialized(def.variableReplacement) : undefined,
+    };
 	}
 
 	export function equals(a: McpServerDefinition, b: McpServerDefinition): boolean {
@@ -225,10 +230,10 @@ export namespace McpServerDefinitionVariableReplacement {
 
 	export function fromSerialized(def: McpServerDefinitionVariableReplacement.Serialized): McpServerDefinitionVariableReplacement {
 		return {
-			section: def.section,
-			folder: def.folder ? { ...def.folder, uri: URI.revive(def.folder.uri) } : undefined,
-			target: def.target,
-		};
+      section: def.section,
+      folder: def.folder ? { ...def.folder, uri: URI.revive(def.folder.uri) } : undefined,
+      target: def.target,
+    };
 	}
 }
 
@@ -240,7 +245,11 @@ export interface IAutostartResult {
 }
 
 export namespace IAutostartResult {
-	export const Empty: IAutostartResult = { working: false, starting: [], serversRequiringInteraction: [] };
+	export const Empty: IAutostartResult = {
+    working: false,
+    starting: [],
+    serversRequiringInteraction: [],
+  };
 }
 
 export interface IMcpService {
@@ -275,13 +284,13 @@ export const enum LazyCollectionState {
 	AllKnown,
 }
 
-export const IMcpService = createDecorator<IMcpService>('IMcpService');
+export const IMcpService = createDecorator<IMcpService>("IMcpService");
 
 export interface McpCollectionReference {
 	id: string;
 	label: string;
 	order: number;
-	presentation?: McpCollectionDefinition['presentation'];
+	presentation?: McpCollectionDefinition["presentation"];
 }
 
 export interface McpDefinitionReference {
@@ -291,7 +300,7 @@ export interface McpDefinitionReference {
 
 export class McpStartServerInteraction {
 	/** @internal */
-	public readonly participants = new ObservableMap</* server definition ID */ string, { s: 'unknown' | 'resolved' } | { s: 'waiting'; definition: McpServerDefinition; collection: McpCollectionDefinition }>();
+	public readonly participants = new ObservableMap</* server definition ID */ string, { s: "unknown" | "resolved" } | { s: "waiting"; definition: McpServerDefinition; collection: McpCollectionDefinition }>();
 	choice?: Promise<string[] | undefined>;
 }
 
@@ -307,7 +316,7 @@ export interface IMcpServerStartOpts {
 	 * - all-untrusted: prompt for all servers that are not trusted
 	 * - never: don't prompt, fail silently when trying to start an untrusted server
 	 */
-	promptType?: 'only-new' | 'all-untrusted' | 'never';
+	promptType?: "only-new" | "all-untrusted" | "never";
 	/** True if th servre should be launched with debugging. */
 	debug?: boolean;
 	/** Correlate multiple interactions such that any trust prompts are presented in combination. */
@@ -443,7 +452,10 @@ export interface IMcpPrompt {
 	resolve(args: Record<string, string | undefined>, token?: CancellationToken): Promise<IMcpPromptMessage[]>;
 }
 
-export const mcpPromptReplaceSpecialChars = (s: string) => s.replace(/[^a-z0-9_.-]/gi, '_');
+export const mcpPromptReplaceSpecialChars = (s: string) => s.replace(
+  /[^a-z0-9_.-]/gi,
+  "_",
+);
 
 export const mcpPromptPrefix = (definition: McpDefinitionReference) =>
 	`/mcp.` + mcpPromptReplaceSpecialChars(definition.label);
@@ -580,22 +592,31 @@ export namespace McpServerLaunch {
 	export function fromSerialized(launch: McpServerLaunch.Serialized): McpServerLaunch {
 		switch (launch.type) {
 			case McpServerTransportType.HTTP:
-				return { type: launch.type, uri: URI.revive(launch.uri), headers: launch.headers, oauth: launch.oauth, authentication: launch.authentication };
+				return {
+          type: launch.type,
+          uri: URI.revive(launch.uri),
+          headers: launch.headers,
+          oauth: launch.oauth,
+          authentication: launch.authentication,
+        };
 			case McpServerTransportType.Stdio:
 				return {
-					type: launch.type,
-					cwd: launch.cwd,
-					command: launch.command,
-					args: launch.args,
-					env: launch.env,
-					envFile: launch.envFile,
-					sandbox: launch.sandbox
-				};
+          type: launch.type,
+          cwd: launch.cwd,
+          command: launch.command,
+          args: launch.args,
+          env: launch.env,
+          envFile: launch.envFile,
+          sandbox: launch.sandbox,
+        };
 		}
 	}
 
 	export async function hash(launch: McpServerLaunch): Promise<string> {
-		const nonce = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(launch)));
+		const nonce = await crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(JSON.stringify(launch)),
+    );
 		return encodeHex(VSBuffer.wrap(new Uint8Array(nonce)));
 	}
 }
@@ -606,7 +627,7 @@ export namespace McpServerLaunch {
  * eventually build a {@link IMcpServerConnection.handler}.
  */
 export interface IMcpPotentialSandboxBlock {
-	readonly kind: 'network' | 'filesystem';
+	readonly kind: "network" | "filesystem";
 	readonly message: string;
 	readonly host?: string;
 	readonly path?: string;
@@ -639,9 +660,9 @@ export interface IMcpServerConnection extends IDisposable {
 /** Client methods whose implementations are passed through the server connection. */
 export interface IMcpClientMethods {
 	/** Handler for `sampling/createMessage` */
-	createMessageRequestHandler?(req: MCP.CreateMessageRequest['params'], token?: CancellationToken): Promise<MCP.CreateMessageResult>;
+	createMessageRequestHandler?(req: MCP.CreateMessageRequest["params"], token?: CancellationToken): Promise<MCP.CreateMessageResult>;
 	/** Handler for `elicitation/create` */
-	elicitationRequestHandler?(req: MCP.ElicitRequest['params'], token?: CancellationToken): Promise<MCP.ElicitResult>;
+	elicitationRequestHandler?(req: MCP.ElicitRequest["params"], token?: CancellationToken): Promise<MCP.ElicitResult>;
 }
 
 /**
@@ -659,13 +680,13 @@ export namespace McpConnectionState {
 	export const toString = (s: McpConnectionState): string => {
 		switch (s.state) {
 			case Kind.Stopped:
-				return localize('mcpstate.stopped', 'Stopped');
+				return localize("mcpstate.stopped", "Stopped");
 			case Kind.Starting:
-				return localize('mcpstate.starting', 'Starting');
+				return localize("mcpstate.starting", "Starting");
 			case Kind.Running:
-				return localize('mcpstate.running', 'Running');
+				return localize("mcpstate.running", "Running");
 			case Kind.Error:
-				return localize('mcpstate.error', 'Error {0}', s.message);
+				return localize("mcpstate.error", "Error {0}", s.message);
 			default:
 				assertNever(s);
 		}
@@ -674,13 +695,13 @@ export namespace McpConnectionState {
 	export const toKindString = (s: McpConnectionState.Kind): string => {
 		switch (s) {
 			case Kind.Stopped:
-				return 'stopped';
+				return "stopped";
 			case Kind.Starting:
-				return 'starting';
+				return "starting";
 			case Kind.Running:
-				return 'running';
+				return "running";
 			case Kind.Error:
-				return 'error';
+				return "error";
 			default:
 				assertNever(s);
 		}
@@ -694,7 +715,7 @@ export namespace McpConnectionState {
 
 	export interface Stopped {
 		readonly state: Kind.Stopped;
-		readonly reason?: 'needs-user-interaction';
+		readonly reason?: "needs-user-interaction";
 	}
 
 	export interface Starting {
@@ -728,7 +749,7 @@ export class MpcResponseError extends Error {
 export class McpConnectionFailedError extends Error { }
 
 export class UserInteractionRequiredError extends Error {
-	private static readonly prefix = 'User interaction required: ';
+	private static readonly prefix = "User interaction required: ";
 
 	public static is(error: Error): boolean {
 		return error.message.startsWith(this.prefix);
@@ -741,7 +762,7 @@ export class UserInteractionRequiredError extends Error {
 
 export interface IMcpConfigPath {
 	id: string;
-	key: 'userLocalValue' | 'userRemoteValue' | 'workspaceValue' | 'workspaceFolderValue';
+	key: "userLocalValue" | "userRemoteValue" | "workspaceValue" | "workspaceFolderValue";
 	label: string;
 	scope: StorageScope;
 	target: ConfigurationTarget;
@@ -778,9 +799,9 @@ export const enum McpServerInstallState {
 }
 
 export const enum McpServerEditorTab {
-	Readme = 'readme',
-	Manifest = 'manifest',
-	Configuration = 'configuration',
+	Readme = "readme",
+	Manifest = "manifest",
+	Configuration = "configuration",
 }
 
 export type McpServerEnablementStatus = {
@@ -817,7 +838,9 @@ export interface IWorkbenchMcpServer {
 	getManifest(token: CancellationToken): Promise<IGalleryMcpServerConfiguration>;
 }
 
-export const IMcpWorkbenchService = createDecorator<IMcpWorkbenchService>('IMcpWorkbenchService');
+export const IMcpWorkbenchService = createDecorator<IMcpWorkbenchService>(
+  "IMcpWorkbenchService",
+);
 export interface IMcpWorkbenchService {
 	readonly _serviceBrand: undefined;
 	readonly onChange: Event<IWorkbenchMcpServer | undefined>;
@@ -838,7 +861,7 @@ export interface IMcpWorkbenchService {
 export class McpServerContainers extends Disposable {
 	constructor(
 		private readonly containers: IMcpServerContainer[],
-		@IMcpWorkbenchService mcpWorkbenchService: IMcpWorkbenchService
+		@IMcpWorkbenchService mcpWorkbenchService: IMcpWorkbenchService,
 	) {
 		super();
 		this._register(mcpWorkbenchService.onChange(this.update, this));
@@ -861,51 +884,59 @@ export class McpServerContainers extends Disposable {
 	}
 }
 
-export const McpServersGalleryStatusContext = new RawContextKey<string>('mcpServersGalleryStatus', McpGalleryManifestStatus.Unavailable);
-export const HasInstalledMcpServersContext = new RawContextKey<boolean>('hasInstalledMcpServers', true);
-export const InstalledMcpServersViewId = 'workbench.views.mcp.installed';
+export const McpServersGalleryStatusContext = new RawContextKey<string>(
+  "mcpServersGalleryStatus",
+  McpGalleryManifestStatus.Unavailable,
+);
+export const HasInstalledMcpServersContext = new RawContextKey<boolean>(
+  "hasInstalledMcpServers",
+  true,
+);
+export const InstalledMcpServersViewId = "workbench.views.mcp.installed";
 
 export namespace McpResourceURI {
-	export const scheme = 'mcp-resource';
+	export const scheme = "mcp-resource";
 
 	// Random placeholder for empty authorities, otherwise they're represente as
 	// `scheme//path/here` in the URI which would get normalized to `scheme/path/here`.
-	const emptyAuthorityPlaceholder = 'dylo78gyp'; // chosen by a fair dice roll. Guaranteed to be random.
+	const emptyAuthorityPlaceholder = "dylo78gyp"; // chosen by a fair dice roll. Guaranteed to be random.
 
 	export function fromServer(def: McpDefinitionReference, resourceURI: URI | string): URI {
-		if (typeof resourceURI === 'string') {
+		if (typeof resourceURI === "string") {
 			resourceURI = URI.parse(resourceURI);
 		}
 		return resourceURI.with({
-			scheme,
-			authority: encodeHex(VSBuffer.fromString(def.id)),
-			path: ['', resourceURI.scheme, resourceURI.authority || emptyAuthorityPlaceholder].join('/') + resourceURI.path,
-		});
+      scheme,
+      authority: encodeHex(VSBuffer.fromString(def.id)),
+      path: ["", resourceURI.scheme, resourceURI.authority || emptyAuthorityPlaceholder].join("/") + resourceURI.path,
+    });
 	}
 
 	export function toServer(uri: URI | string): { definitionId: string; resourceURL: URL } {
-		if (typeof uri === 'string') {
+		if (typeof uri === "string") {
 			uri = URI.parse(uri);
 		}
 		if (uri.scheme !== scheme) {
 			throw new Error(`Invalid MCP resource URI: ${uri.toString()}`);
 		}
-		const parts = uri.path.split('/');
+		const parts = uri.path.split("/");
 		if (parts.length < 3) {
 			throw new Error(`Invalid MCP resource URI: ${uri.toString()}`);
 		}
 		const [, serverScheme, authority, ...path] = parts;
 
 		// URI cannot correctly stringify empty authorities (#250905) so we use URL instead to construct
-		const url = new URL(`${serverScheme}://${authority.toLowerCase() === emptyAuthorityPlaceholder ? '' : authority}`);
-		url.pathname = path.length ? ('/' + path.join('/')) : '';
+		const url = new URL(
+      `${serverScheme}://${authority.toLowerCase() === emptyAuthorityPlaceholder ? "" : authority}`,
+    );
+		url.pathname = path.length ? ("/" + path.join("/")) : "";
 		url.search = uri.query;
 		url.hash = uri.fragment;
 
 		return {
-			definitionId: decodeHex(uri.authority).toString(),
-			resourceURL: url,
-		};
+      definitionId: decodeHex(uri.authority).toString(),
+      resourceURL: url,
+    };
 	}
 
 }
@@ -926,7 +957,7 @@ export const enum McpCapability {
 export interface ISamplingOptions {
 	server: IMcpServer;
 	isDuringToolCall: boolean;
-	params: MCP.CreateMessageRequest['params'];
+	params: MCP.CreateMessageRequest["params"];
 }
 
 export interface ISamplingResult {
@@ -947,7 +978,9 @@ export interface IMcpSamplingService {
 	updateConfig(server: IMcpServer, mutate: (r: IMcpServerSamplingConfiguration) => unknown): Promise<IMcpServerSamplingConfiguration>;
 }
 
-export const IMcpSamplingService = createDecorator<IMcpSamplingService>('IMcpServerSampling');
+export const IMcpSamplingService = createDecorator<IMcpSamplingService>(
+  "IMcpServerSampling",
+);
 
 export class McpError extends Error {
 	public static methodNotFound(method: string) {
@@ -955,11 +988,17 @@ export class McpError extends Error {
 	}
 
 	public static notAllowed() {
-		return new McpError(-32000, 'The user has denied permission to call this method.');
+		return new McpError(
+      -32000,
+      "The user has denied permission to call this method.",
+    );
 	}
 
 	public static unknown(e: Error) {
-		const mcpError = new McpError(MCP.INTERNAL_ERROR, `Unknown error: ${e.stack}`);
+		const mcpError = new McpError(
+      MCP.INTERNAL_ERROR,
+      `Unknown error: ${e.stack}`,
+    );
 		mcpError.cause = e;
 		return mcpError;
 	}
@@ -967,14 +1006,14 @@ export class McpError extends Error {
 	constructor(
 		public readonly code: number,
 		message: string,
-		public readonly data?: unknown
+		public readonly data?: unknown,
 	) {
 		super(message);
 	}
 }
 
 export const enum McpToolName {
-	Prefix = 'mcp_',
+	Prefix = "mcp_",
 	MaxPrefixLen = 18,
 	MaxLength = 64,
 }
@@ -991,7 +1030,7 @@ export interface IMcpElicitationService {
 	 * @param elicitation Request to elicit a response.
 	 * @returns A promise that resolves to an {@link ElicitationResult}.
 	 */
-	elicit(server: IMcpServer, context: IMcpToolCallContext | undefined, elicitation: MCP.ElicitRequest['params'], token: CancellationToken): Promise<ElicitResult>;
+	elicit(server: IMcpServer, context: IMcpToolCallContext | undefined, elicitation: MCP.ElicitRequest["params"], token: CancellationToken): Promise<ElicitResult>;
 }
 
 export const enum ElicitationKind {
@@ -1017,9 +1056,11 @@ export interface IFormModeElicitResult extends IDisposable {
 
 export type ElicitResult = IUrlModeElicitResult | IFormModeElicitResult;
 
-export const IMcpElicitationService = createDecorator<IMcpElicitationService>('IMcpElicitationService');
+export const IMcpElicitationService = createDecorator<IMcpElicitationService>(
+  "IMcpElicitationService",
+);
 
-export const McpToolResourceLinkMimeType = 'application/vnd.code.resource-link';
+export const McpToolResourceLinkMimeType = "application/vnd.code.resource-link";
 
 export interface IMcpToolResourceLinkContents {
 	uri: UriComponents;

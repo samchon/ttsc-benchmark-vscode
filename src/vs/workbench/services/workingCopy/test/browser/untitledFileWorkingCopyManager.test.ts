@@ -3,20 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { bufferToStream, VSBuffer } from '../../../../../base/common/buffer.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { Schemas } from '../../../../../base/common/network.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { FileWorkingCopyManager, IFileWorkingCopyManager } from '../../common/fileWorkingCopyManager.js';
-import { NO_TYPE_ID, WorkingCopyCapabilities } from '../../common/workingCopy.js';
-import { TestStoredFileWorkingCopyModel, TestStoredFileWorkingCopyModelFactory } from './storedFileWorkingCopy.test.js';
-import { TestUntitledFileWorkingCopyModel, TestUntitledFileWorkingCopyModelFactory } from './untitledFileWorkingCopy.test.js';
-import { TestInMemoryFileSystemProvider, TestServiceAccessor, workbenchInstantiationService } from '../../../../test/browser/workbenchTestServices.js';
+import assert from "assert";
+import { bufferToStream, VSBuffer } from "../../../../../base/common/buffer.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../../base/common/network.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { FileWorkingCopyManager, IFileWorkingCopyManager } from "../../common/fileWorkingCopyManager.js";
+import { NO_TYPE_ID, WorkingCopyCapabilities } from "../../common/workingCopy.js";
+import { TestStoredFileWorkingCopyModel, TestStoredFileWorkingCopyModelFactory } from "./storedFileWorkingCopy.test.js";
+import {
+  TestUntitledFileWorkingCopyModel,
+  TestUntitledFileWorkingCopyModelFactory,
+} from "./untitledFileWorkingCopy.test.js";
+import {
+  TestInMemoryFileSystemProvider,
+  TestServiceAccessor,
+  workbenchInstantiationService,
+} from "../../../../test/browser/workbenchTestServices.js";
 
-suite('UntitledFileWorkingCopyManager', () => {
+suite("UntitledFileWorkingCopyManager", () => {
 
 	const disposables = new DisposableStore();
 	let instantiationService: IInstantiationService;
@@ -32,14 +39,14 @@ suite('UntitledFileWorkingCopyManager', () => {
 		disposables.add(accessor.fileService.registerProvider(Schemas.vscodeRemote, disposables.add(new TestInMemoryFileSystemProvider())));
 
 		manager = disposables.add(new FileWorkingCopyManager(
-			'testUntitledFileWorkingCopyType',
+			"testUntitledFileWorkingCopyType",
 			new TestStoredFileWorkingCopyModelFactory(),
 			new TestUntitledFileWorkingCopyModelFactory(),
 			accessor.fileService, accessor.lifecycleService, accessor.labelService, accessor.logService,
 			accessor.workingCopyFileService, accessor.workingCopyBackupService, accessor.uriIdentityService, accessor.fileDialogService,
 			accessor.filesConfigurationService, accessor.workingCopyService, accessor.notificationService,
 			accessor.workingCopyEditorService, accessor.editorService, accessor.elevatedFileService, accessor.pathService,
-			accessor.environmentService, accessor.dialogService, accessor.decorationsService, accessor.progressService
+			accessor.environmentService, accessor.dialogService, accessor.decorationsService, accessor.progressService,
 		));
 	});
 
@@ -51,7 +58,7 @@ suite('UntitledFileWorkingCopyManager', () => {
 		disposables.clear();
 	});
 
-	test('basics', async () => {
+	test("basics", async () => {
 		let createCounter = 0;
 		disposables.add(manager.untitled.onDidCreate(e => {
 			createCounter++;
@@ -70,13 +77,13 @@ suite('UntitledFileWorkingCopyManager', () => {
 		assert.strictEqual(accessor.workingCopyService.workingCopies.length, 0);
 		assert.strictEqual(manager.untitled.workingCopies.length, 0);
 
-		assert.strictEqual(manager.untitled.get(URI.file('/some/invalidPath')), undefined);
-		assert.strictEqual(manager.untitled.get(URI.file('/some/invalidPath').with({ scheme: Schemas.untitled })), undefined);
+		assert.strictEqual(manager.untitled.get(URI.file("/some/invalidPath")), undefined);
+		assert.strictEqual(manager.untitled.get(URI.file("/some/invalidPath").with({ scheme: Schemas.untitled })), undefined);
 
 		const workingCopy1 = await manager.untitled.resolve();
 		const workingCopy2 = await manager.untitled.resolve();
 
-		assert.strictEqual(workingCopy1.typeId, 'testUntitledFileWorkingCopyType');
+		assert.strictEqual(workingCopy1.typeId, "testUntitledFileWorkingCopyType");
 		assert.strictEqual(workingCopy1.resource.scheme, Schemas.untitled);
 
 		assert.strictEqual(createCounter, 2);
@@ -96,13 +103,13 @@ suite('UntitledFileWorkingCopyManager', () => {
 			assert.ok(workingCopy.model);
 		}
 
-		workingCopy1.model?.updateContents('Hello World');
+		workingCopy1.model?.updateContents("Hello World");
 
 		assert.strictEqual(workingCopy1.isDirty(), true);
 		assert.strictEqual(workingCopy1.isModified(), true);
 		assert.strictEqual(dirtyCounter, 1);
 
-		workingCopy1.model?.updateContents(''); // change to empty clears dirty/modified flags
+		workingCopy1.model?.updateContents(""); // change to empty clears dirty/modified flags
 		assert.strictEqual(workingCopy1.isDirty(), false);
 		assert.strictEqual(workingCopy1.isModified(), false);
 		assert.strictEqual(dirtyCounter, 2);
@@ -125,7 +132,7 @@ suite('UntitledFileWorkingCopyManager', () => {
 		assert.strictEqual(disposeCounter, 2);
 	});
 
-	test('dirty - scratchpads are never dirty', async () => {
+	test("dirty - scratchpads are never dirty", async () => {
 		let dirtyCounter = 0;
 		disposables.add(manager.untitled.onDidChangeDirty(e => {
 			dirtyCounter++;
@@ -133,13 +140,13 @@ suite('UntitledFileWorkingCopyManager', () => {
 
 		const workingCopy1 = await manager.resolve({
 			untitledResource: URI.from({ scheme: Schemas.untitled, path: `/myscratchpad` }),
-			isScratchpad: true
+			isScratchpad: true,
 		});
 
 		assert.strictEqual(workingCopy1.resource.scheme, Schemas.untitled);
 		assert.strictEqual(manager.untitled.workingCopies.length, 1);
 
-		workingCopy1.model?.updateContents('contents');
+		workingCopy1.model?.updateContents("contents");
 		assert.strictEqual(workingCopy1.isDirty(), false);
 		assert.strictEqual(workingCopy1.isModified(), true);
 
@@ -152,48 +159,48 @@ suite('UntitledFileWorkingCopyManager', () => {
 		workingCopy1.dispose();
 	});
 
-	test('resolve - with initial value', async () => {
+	test("resolve - with initial value", async () => {
 		let dirtyCounter = 0;
 		disposables.add(manager.untitled.onDidChangeDirty(e => {
 			dirtyCounter++;
 		}));
 
-		const workingCopy1 = await manager.untitled.resolve({ contents: { value: bufferToStream(VSBuffer.fromString('Hello World')) } });
+		const workingCopy1 = await manager.untitled.resolve({ contents: { value: bufferToStream(VSBuffer.fromString("Hello World")) } });
 
 		assert.strictEqual(workingCopy1.isModified(), true);
 		assert.strictEqual(workingCopy1.isDirty(), true);
 		assert.strictEqual(dirtyCounter, 1);
-		assert.strictEqual(workingCopy1.model?.contents, 'Hello World');
+		assert.strictEqual(workingCopy1.model?.contents, "Hello World");
 
 		workingCopy1.dispose();
 
-		const workingCopy2 = await manager.untitled.resolve({ contents: { value: bufferToStream(VSBuffer.fromString('Hello World')), markModified: true } });
+		const workingCopy2 = await manager.untitled.resolve({ contents: { value: bufferToStream(VSBuffer.fromString("Hello World")), markModified: true } });
 
 		assert.strictEqual(workingCopy2.isModified(), true);
 		assert.strictEqual(workingCopy2.isDirty(), true);
 		assert.strictEqual(dirtyCounter, 2);
-		assert.strictEqual(workingCopy2.model?.contents, 'Hello World');
+		assert.strictEqual(workingCopy2.model?.contents, "Hello World");
 
 		workingCopy2.dispose();
 	});
 
-	test('resolve - with initial value but markDirty: false', async () => {
+	test("resolve - with initial value but markDirty: false", async () => {
 		let dirtyCounter = 0;
 		disposables.add(manager.untitled.onDidChangeDirty(e => {
 			dirtyCounter++;
 		}));
 
-		const workingCopy = await manager.untitled.resolve({ contents: { value: bufferToStream(VSBuffer.fromString('Hello World')), markModified: false } });
+		const workingCopy = await manager.untitled.resolve({ contents: { value: bufferToStream(VSBuffer.fromString("Hello World")), markModified: false } });
 
 		assert.strictEqual(workingCopy.isModified(), false);
 		assert.strictEqual(workingCopy.isDirty(), false);
 		assert.strictEqual(dirtyCounter, 0);
-		assert.strictEqual(workingCopy.model?.contents, 'Hello World');
+		assert.strictEqual(workingCopy.model?.contents, "Hello World");
 
 		workingCopy.dispose();
 	});
 
-	test('resolve begins counter from 1 for disposed untitled', async () => {
+	test("resolve begins counter from 1 for disposed untitled", async () => {
 		const untitled1 = await manager.untitled.resolve();
 		untitled1.dispose();
 
@@ -201,7 +208,7 @@ suite('UntitledFileWorkingCopyManager', () => {
 		assert.strictEqual(untitled1.resource.toString(), untitled1Again.resource.toString());
 	});
 
-	test('resolve - existing', async () => {
+	test("resolve - existing", async () => {
 		let createCounter = 0;
 		disposables.add(manager.untitled.onDidCreate(e => {
 			createCounter++;
@@ -214,7 +221,7 @@ suite('UntitledFileWorkingCopyManager', () => {
 		assert.strictEqual(workingCopy1, workingCopy2);
 		assert.strictEqual(createCounter, 1);
 
-		const workingCopy3 = await manager.untitled.resolve({ untitledResource: URI.file('/invalid/untitled') });
+		const workingCopy3 = await manager.untitled.resolve({ untitledResource: URI.file("/invalid/untitled") });
 		assert.strictEqual(workingCopy3.resource.scheme, Schemas.untitled);
 
 		workingCopy1.dispose();
@@ -222,8 +229,8 @@ suite('UntitledFileWorkingCopyManager', () => {
 		workingCopy3.dispose();
 	});
 
-	test('resolve - untitled resource used for new working copy', async () => {
-		const invalidUntitledResource = URI.file('my/untitled.txt');
+	test("resolve - untitled resource used for new working copy", async () => {
+		const invalidUntitledResource = URI.file("my/untitled.txt");
 		const validUntitledResource = invalidUntitledResource.with({ scheme: Schemas.untitled });
 
 		const workingCopy1 = await manager.untitled.resolve({ untitledResource: invalidUntitledResource });
@@ -236,60 +243,60 @@ suite('UntitledFileWorkingCopyManager', () => {
 		workingCopy2.dispose();
 	});
 
-	test('resolve - with associated resource', async () => {
-		const workingCopy = await manager.untitled.resolve({ associatedResource: { path: '/some/associated.txt' } });
+	test("resolve - with associated resource", async () => {
+		const workingCopy = await manager.untitled.resolve({ associatedResource: { path: "/some/associated.txt" } });
 
 		assert.strictEqual(workingCopy.hasAssociatedFilePath, true);
-		assert.strictEqual(workingCopy.resource.path, '/some/associated.txt');
+		assert.strictEqual(workingCopy.resource.path, "/some/associated.txt");
 
 		workingCopy.dispose();
 	});
 
-	test('save - without associated resource', async () => {
+	test("save - without associated resource", async () => {
 		let savedEvent: { source: URI; target: URI } | undefined = undefined;
 		disposables.add(manager.untitled.onDidSave(e => {
 			savedEvent = e;
 		}));
 
 		const workingCopy = await manager.untitled.resolve();
-		workingCopy.model?.updateContents('Simple Save');
+		workingCopy.model?.updateContents("Simple Save");
 
-		accessor.fileDialogService.setPickFileToSave(URI.file('simple/file.txt'));
+		accessor.fileDialogService.setPickFileToSave(URI.file("simple/file.txt"));
 
 		const result = await workingCopy.save();
 		assert.ok(result);
 
 		assert.strictEqual(manager.untitled.get(workingCopy.resource), undefined);
 		assert.strictEqual(savedEvent!.source.toString(), workingCopy.resource.toString());
-		assert.strictEqual(savedEvent!.target.toString(), URI.file('simple/file.txt').toString());
+		assert.strictEqual(savedEvent!.target.toString(), URI.file("simple/file.txt").toString());
 
 		workingCopy.dispose();
 	});
 
-	test('save - with associated resource', async () => {
+	test("save - with associated resource", async () => {
 		let savedEvent: { source: URI; target: URI } | undefined = undefined;
 		disposables.add(manager.untitled.onDidSave(e => {
 			savedEvent = e;
 		}));
 
-		const workingCopy = await manager.untitled.resolve({ associatedResource: { path: '/some/associated.txt' } });
-		workingCopy.model?.updateContents('Simple Save with associated resource');
+		const workingCopy = await manager.untitled.resolve({ associatedResource: { path: "/some/associated.txt" } });
+		workingCopy.model?.updateContents("Simple Save with associated resource");
 
-		accessor.fileService.notExistsSet.set(URI.from({ scheme: Schemas.file, path: '/some/associated.txt' }), true);
+		accessor.fileService.notExistsSet.set(URI.from({ scheme: Schemas.file, path: "/some/associated.txt" }), true);
 
 		const result = await workingCopy.save();
 		assert.ok(result);
 
 		assert.strictEqual(manager.untitled.get(workingCopy.resource), undefined);
 		assert.strictEqual(savedEvent!.source.toString(), workingCopy.resource.toString());
-		assert.strictEqual(savedEvent!.target.toString(), URI.file('/some/associated.txt').toString());
+		assert.strictEqual(savedEvent!.target.toString(), URI.file("/some/associated.txt").toString());
 
 		workingCopy.dispose();
 	});
 
-	test('save - with associated resource (asks to overwrite)', async () => {
-		const workingCopy = await manager.untitled.resolve({ associatedResource: { path: '/some/associated.txt' } });
-		workingCopy.model?.updateContents('Simple Save with associated resource');
+	test("save - with associated resource (asks to overwrite)", async () => {
+		const workingCopy = await manager.untitled.resolve({ associatedResource: { path: "/some/associated.txt" } });
+		workingCopy.model?.updateContents("Simple Save with associated resource");
 
 		let result = await workingCopy.save();
 		assert.ok(!result); // not confirmed
@@ -306,7 +313,7 @@ suite('UntitledFileWorkingCopyManager', () => {
 		workingCopy.dispose();
 	});
 
-	test('destroy', async () => {
+	test("destroy", async () => {
 		assert.strictEqual(accessor.workingCopyService.workingCopies.length, 0);
 
 		await manager.untitled.resolve();
@@ -322,17 +329,17 @@ suite('UntitledFileWorkingCopyManager', () => {
 		assert.strictEqual(manager.untitled.workingCopies.length, 0);
 	});
 
-	test('manager with different types produce different URIs', async () => {
+	test("manager with different types produce different URIs", async () => {
 		try {
 			manager = disposables.add(new FileWorkingCopyManager(
-				'someOtherUntitledTypeId',
+				"someOtherUntitledTypeId",
 				new TestStoredFileWorkingCopyModelFactory(),
 				new TestUntitledFileWorkingCopyModelFactory(),
 				accessor.fileService, accessor.lifecycleService, accessor.labelService, accessor.logService,
 				accessor.workingCopyFileService, accessor.workingCopyBackupService, accessor.uriIdentityService, accessor.fileDialogService,
 				accessor.filesConfigurationService, accessor.workingCopyService, accessor.notificationService,
 				accessor.workingCopyEditorService, accessor.editorService, accessor.elevatedFileService, accessor.pathService,
-				accessor.environmentService, accessor.dialogService, accessor.decorationsService, accessor.progressService
+				accessor.environmentService, accessor.dialogService, accessor.decorationsService, accessor.progressService,
 			));
 
 			const untitled1OriginalType = disposables.add(await manager.untitled.resolve());
@@ -344,7 +351,7 @@ suite('UntitledFileWorkingCopyManager', () => {
 		}
 	});
 
-	test('manager without typeId produces backwards compatible URIs', async () => {
+	test("manager without typeId produces backwards compatible URIs", async () => {
 		try {
 			manager = disposables.add(new FileWorkingCopyManager(
 				NO_TYPE_ID,
@@ -354,15 +361,15 @@ suite('UntitledFileWorkingCopyManager', () => {
 				accessor.workingCopyFileService, accessor.workingCopyBackupService, accessor.uriIdentityService, accessor.fileDialogService,
 				accessor.filesConfigurationService, accessor.workingCopyService, accessor.notificationService,
 				accessor.workingCopyEditorService, accessor.editorService, accessor.elevatedFileService, accessor.pathService,
-				accessor.environmentService, accessor.dialogService, accessor.decorationsService, accessor.progressService
+				accessor.environmentService, accessor.dialogService, accessor.decorationsService, accessor.progressService,
 			));
 
 			const result = disposables.add(await manager.untitled.resolve());
 			assert.strictEqual(result.resource.scheme, Schemas.untitled);
 			assert.ok(result.resource.path.length > 0);
-			assert.strictEqual(result.resource.query, '');
-			assert.strictEqual(result.resource.authority, '');
-			assert.strictEqual(result.resource.fragment, '');
+			assert.strictEqual(result.resource.query, "");
+			assert.strictEqual(result.resource.authority, "");
+			assert.strictEqual(result.resource.fragment, "");
 		} finally {
 			manager.destroy();
 		}

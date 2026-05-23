@@ -3,31 +3,48 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Action } from '../../../../base/common/actions.js';
-import { SequencerByKey } from '../../../../base/common/async.js';
-import { CancellationTokenSource } from '../../../../base/common/cancellation.js';
-import { Lazy } from '../../../../base/common/lazy.js';
-import { revive } from '../../../../base/common/marshalling.js';
-import { dirname, isEqual, isEqualOrParent, joinPath } from '../../../../base/common/resources.js';
-import { URI } from '../../../../base/common/uri.js';
-import { localize } from '../../../../nls.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { IEnvironmentService } from '../../../../platform/environment/common/environment.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { INotificationService, Severity } from '../../../../platform/notification/common/notification.js';
-import { IProgressService, ProgressLocation } from '../../../../platform/progress/common/progress.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { IUserDataProfileService } from '../../../services/userDataProfile/common/userDataProfile.js';
-import type { Dto } from '../../../services/extensions/common/proxyIdentifier.js';
-import { IAgentPluginRepositoryService, IEnsureRepositoryOptions, IPullRepositoryOptions } from '../common/plugins/agentPluginRepositoryService.js';
-import { IMarketplacePlugin, IMarketplaceReference, IPluginSourceDescriptor, MarketplaceReferenceKind, MarketplaceType, PluginSourceKind } from '../common/plugins/pluginMarketplaceService.js';
-import { IPluginSource } from '../common/plugins/pluginSource.js';
-import { IPluginGitService } from '../common/plugins/pluginGitService.js';
-import { GitHubPluginSource, GitUrlPluginSource, NpmPluginSource, PipPluginSource, RelativePathPluginSource } from './pluginSources.js';
+import { Action } from "../../../../base/common/actions.js";
+import { SequencerByKey } from "../../../../base/common/async.js";
+import { CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { Lazy } from "../../../../base/common/lazy.js";
+import { revive } from "../../../../base/common/marshalling.js";
+import { dirname, isEqual, isEqualOrParent, joinPath } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { localize } from "../../../../nls.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { INotificationService, Severity } from "../../../../platform/notification/common/notification.js";
+import { IProgressService, ProgressLocation } from "../../../../platform/progress/common/progress.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IUserDataProfileService } from "../../../services/userDataProfile/common/userDataProfile.js";
+import type { Dto } from "../../../services/extensions/common/proxyIdentifier.js";
+import {
+  IAgentPluginRepositoryService,
+  IEnsureRepositoryOptions,
+  IPullRepositoryOptions,
+} from "../common/plugins/agentPluginRepositoryService.js";
+import {
+  IMarketplacePlugin,
+  IMarketplaceReference,
+  IPluginSourceDescriptor,
+  MarketplaceReferenceKind,
+  MarketplaceType,
+  PluginSourceKind,
+} from "../common/plugins/pluginMarketplaceService.js";
+import { IPluginSource } from "../common/plugins/pluginSource.js";
+import { IPluginGitService } from "../common/plugins/pluginGitService.js";
+import {
+  GitHubPluginSource,
+  GitUrlPluginSource,
+  NpmPluginSource,
+  PipPluginSource,
+  RelativePathPluginSource,
+} from "./pluginSources.js";
 
-const MARKETPLACE_INDEX_STORAGE_KEY = 'chat.plugins.marketplaces.index.v1';
+const MARKETPLACE_INDEX_STORAGE_KEY = "chat.plugins.marketplaces.index.v1";
 
 interface IMarketplaceIndexEntry {
 	repositoryUri: URI;
@@ -41,7 +58,9 @@ export class AgentPluginRepositoryService implements IAgentPluginRepositoryServi
 
 	readonly agentPluginsHome: URI;
 	private readonly _cacheRoot: URI;
-	private readonly _marketplaceIndex = new Lazy<Map<string, IMarketplaceIndexEntry>>(() => this._loadMarketplaceIndex());
+	private readonly _marketplaceIndex = new Lazy<Map<string, IMarketplaceIndexEntry>>(
+    () => this._loadMarketplaceIndex(),
+  );
 	private readonly _pluginSources: ReadonlyMap<PluginSourceKind, IPluginSource>;
 	private readonly _cloneSequencer = new SequencerByKey<string>();
 	private readonly _migrationDone: Promise<void>;
@@ -62,8 +81,11 @@ export class AgentPluginRepositoryService implements IAgentPluginRepositoryServi
 		// so that external tools can discover it. On web, fall back to the
 		// internal cache location.
 		this.agentPluginsHome = userDataProfileService.currentProfile.agentPluginsHome;
-		const legacyCacheRoot = joinPath(environmentService.cacheHome, 'agentPlugins');
-		const oldCacheRoot = environmentService.cacheHome.scheme === 'file'
+		const legacyCacheRoot = joinPath(
+      environmentService.cacheHome,
+      "agentPlugins",
+    );
+		const oldCacheRoot = environmentService.cacheHome.scheme === "file"
 			? legacyCacheRoot
 			: this.agentPluginsHome;
 		this._cacheRoot = this.agentPluginsHome;
@@ -79,12 +101,24 @@ export class AgentPluginRepositoryService implements IAgentPluginRepositoryServi
 		// Build per-kind source repository map via instantiation service so
 		// each repository can inject its own dependencies.
 		this._pluginSources = new Map<PluginSourceKind, IPluginSource>([
-			[PluginSourceKind.RelativePath, new RelativePathPluginSource()],
-			[PluginSourceKind.GitHub, instantiationService.createInstance(GitHubPluginSource)],
-			[PluginSourceKind.GitUrl, instantiationService.createInstance(GitUrlPluginSource)],
-			[PluginSourceKind.Npm, instantiationService.createInstance(NpmPluginSource)],
-			[PluginSourceKind.Pip, instantiationService.createInstance(PipPluginSource)],
-		]);
+      [PluginSourceKind.RelativePath, new RelativePathPluginSource()],
+      [
+        PluginSourceKind.GitHub,
+        instantiationService.createInstance(GitHubPluginSource),
+      ],
+      [
+        PluginSourceKind.GitUrl,
+        instantiationService.createInstance(GitUrlPluginSource),
+      ],
+      [
+        PluginSourceKind.Npm,
+        instantiationService.createInstance(NpmPluginSource),
+      ],
+      [
+        PluginSourceKind.Pip,
+        instantiationService.createInstance(PipPluginSource),
+      ],
+    ]);
 	}
 
 	getPluginSource(kind: PluginSourceKind): IPluginSource {
@@ -112,9 +146,15 @@ export class AgentPluginRepositoryService implements IAgentPluginRepositoryServi
 		if (plugin.sourceDescriptor.kind !== PluginSourceKind.RelativePath) {
 			return this.getPluginSourceInstallUri(plugin.sourceDescriptor);
 		}
-		const repoDir = this.getRepositoryUri(plugin.marketplaceReference, plugin.marketplaceType);
-		const normalizedSource = plugin.source.trim().replace(/^\.?\/+|\/+$/g, '');
-		const pluginDir = normalizedSource ? joinPath(repoDir, normalizedSource) : repoDir;
+		const repoDir = this.getRepositoryUri(
+      plugin.marketplaceReference,
+      plugin.marketplaceType,
+    );
+		const normalizedSource = plugin.source.trim().replace(/^\.?\/+|\/+$/g, "");
+		const pluginDir = normalizedSource ? joinPath(
+      repoDir,
+      normalizedSource,
+    ) : repoDir;
 		if (!isEqualOrParent(pluginDir, repoDir)) {
 			throw new Error(`Invalid plugin source path '${plugin.source}'`);
 		}
@@ -123,7 +163,10 @@ export class AgentPluginRepositoryService implements IAgentPluginRepositoryServi
 
 	async ensureRepository(marketplace: IMarketplaceReference, options?: IEnsureRepositoryOptions): Promise<URI> {
 		await this._migrationDone;
-		const repoDir = this.getRepositoryUri(marketplace, options?.marketplaceType);
+		const repoDir = this.getRepositoryUri(
+      marketplace,
+      options?.marketplaceType,
+    );
 		return this._cloneSequencer.queue(repoDir.fsPath, async () => {
 			const repoExists = await this._fileService.exists(repoDir);
 			if (repoExists) {
@@ -135,7 +178,7 @@ export class AgentPluginRepositoryService implements IAgentPluginRepositoryServi
 				throw new Error(`Local marketplace repository does not exist: ${repoDir.fsPath}`);
 			}
 
-			const progressTitle = options?.progressTitle ?? localize('preparingMarketplace', "Preparing plugin marketplace '{0}'...", marketplace.displayLabel);
+			const progressTitle = options?.progressTitle ?? localize("preparingMarketplace", "Preparing plugin marketplace '{0}'...", marketplace.displayLabel);
 			const failureLabel = options?.failureLabel ?? marketplace.displayLabel;
 			await this._cloneRepository(repoDir, marketplace.cloneUrl, progressTitle, failureLabel);
 			this._updateMarketplaceIndex(marketplace, repoDir, options?.marketplaceType);
@@ -144,10 +187,15 @@ export class AgentPluginRepositoryService implements IAgentPluginRepositoryServi
 	}
 
 	async pullRepository(marketplace: IMarketplaceReference, options?: IPullRepositoryOptions): Promise<boolean> {
-		const repoDir = this.getRepositoryUri(marketplace, options?.marketplaceType);
+		const repoDir = this.getRepositoryUri(
+      marketplace,
+      options?.marketplaceType,
+    );
 		const repoExists = await this._fileService.exists(repoDir);
 		if (!repoExists) {
-			this._logService.warn(`[AgentPluginRepositoryService] Cannot update plugin '${options?.pluginName ?? marketplace.displayLabel}': repository not cloned`);
+			this._logService.warn(
+        `[AgentPluginRepositoryService] Cannot update plugin '${options?.pluginName ?? marketplace.displayLabel}': repository not cloned`,
+      );
 			return false;
 		}
 
@@ -161,26 +209,29 @@ export class AgentPluginRepositoryService implements IAgentPluginRepositoryServi
 			const cts = new CancellationTokenSource();
 			try {
 				return await this._progressService.withProgress(
-					{
-						location: ProgressLocation.Notification,
-						title: localize('updatingPlugin', "Updating plugin '{0}'...", updateLabel),
-						cancellable: true,
-					},
-					() => this._pluginGit.pull(repoDir, cts.token),
-					() => cts.dispose(true),
-				);
+          {
+            location: ProgressLocation.Notification,
+            title: localize("updatingPlugin", "Updating plugin '{0}'...", updateLabel),
+            cancellable: true,
+          },
+          () => this._pluginGit.pull(repoDir, cts.token),
+          () => cts.dispose(true),
+        );
 			} finally {
 				cts.dispose();
 			}
 		} catch (err) {
-			this._logService.error(`[AgentPluginRepositoryService] Failed to update ${marketplace.displayLabel}:`, err);
+			this._logService.error(
+        `[AgentPluginRepositoryService] Failed to update ${marketplace.displayLabel}:`,
+        err,
+      );
 			if (!options?.silent) {
 				this._notificationService.notify({
 					severity: Severity.Error,
-					message: localize('pullFailed', "Failed to update plugin '{0}': {1}", options?.failureLabel ?? updateLabel, err?.message ?? String(err)),
+					message: localize("pullFailed", "Failed to update plugin '{0}': {1}", options?.failureLabel ?? updateLabel, err?.message ?? String(err)),
 					actions: {
-						primary: [new Action('showGitOutput', localize('showGitOutput', "Show Git Output"), undefined, true, () => {
-							this._commandService.executeCommand('git.showOutput');
+						primary: [new Action("showGitOutput", localize("showGitOutput", "Show Git Output"), undefined, true, () => {
+							this._commandService.executeCommand("git.showOutput");
 						})],
 					},
 				});
@@ -195,7 +246,10 @@ export class AgentPluginRepositoryService implements IAgentPluginRepositoryServi
 
 	private _loadMarketplaceIndex(): Map<string, IMarketplaceIndexEntry> {
 		const result = new Map<string, IMarketplaceIndexEntry>();
-		const stored = this._storageService.getObject<IStoredMarketplaceIndex>(MARKETPLACE_INDEX_STORAGE_KEY, StorageScope.APPLICATION);
+		const stored = this._storageService.getObject<IStoredMarketplaceIndex>(
+      MARKETPLACE_INDEX_STORAGE_KEY,
+      StorageScope.APPLICATION,
+    );
 		if (!stored) {
 			return result;
 		}
@@ -207,9 +261,9 @@ export class AgentPluginRepositoryService implements IAgentPluginRepositoryServi
 			}
 
 			result.set(canonicalId, {
-				repositoryUri: entry.repositoryUri,
-				marketplaceType: entry.marketplaceType,
-			});
+        repositoryUri: entry.repositoryUri,
+        marketplaceType: entry.marketplaceType,
+      });
 		}
 
 		return result;
@@ -225,50 +279,66 @@ export class AgentPluginRepositoryService implements IAgentPluginRepositoryServi
 			return;
 		}
 
-		this._marketplaceIndex.value.set(marketplace.canonicalId, { repositoryUri, marketplaceType });
+		this._marketplaceIndex.value.set(marketplace.canonicalId, {
+      repositoryUri,
+      marketplaceType,
+    });
 		this._saveMarketplaceIndex();
 	}
 
 	private _saveMarketplaceIndex(): void {
 		const serialized: IStoredMarketplaceIndex = {};
 		for (const [canonicalId, entry] of this._marketplaceIndex.value) {
-			serialized[canonicalId] = JSON.parse(JSON.stringify({
-				repositoryUri: entry.repositoryUri,
-				marketplaceType: entry.marketplaceType,
-			}));
+			serialized[canonicalId] = JSON.parse(
+        JSON.stringify({
+          repositoryUri: entry.repositoryUri,
+          marketplaceType: entry.marketplaceType,
+        }),
+      );
 		}
 
 		if (Object.keys(serialized).length === 0) {
-			this._storageService.remove(MARKETPLACE_INDEX_STORAGE_KEY, StorageScope.APPLICATION);
+			this._storageService.remove(
+        MARKETPLACE_INDEX_STORAGE_KEY,
+        StorageScope.APPLICATION,
+      );
 			return;
 		}
 
-		this._storageService.store(MARKETPLACE_INDEX_STORAGE_KEY, JSON.stringify(serialized), StorageScope.APPLICATION, StorageTarget.MACHINE);
+		this._storageService.store(
+      MARKETPLACE_INDEX_STORAGE_KEY,
+      JSON.stringify(serialized),
+      StorageScope.APPLICATION,
+      StorageTarget.MACHINE,
+    );
 	}
 
 	private async _cloneRepository(repoDir: URI, cloneUrl: string, progressTitle: string, failureLabel: string, ref?: string): Promise<void> {
 		const cts = new CancellationTokenSource();
 		try {
 			await this._progressService.withProgress(
-				{
-					location: ProgressLocation.Notification,
-					title: progressTitle,
-					cancellable: true,
-				},
-				async () => {
-					await this._fileService.createFolder(dirname(repoDir));
-					await this._pluginGit.cloneRepository(cloneUrl, repoDir, ref, cts.token);
-				},
-				() => cts.dispose(true),
-			);
+        {
+          location: ProgressLocation.Notification,
+          title: progressTitle,
+          cancellable: true,
+        },
+        async () => {
+          await this._fileService.createFolder(dirname(repoDir));
+          await this._pluginGit.cloneRepository(cloneUrl, repoDir, ref, cts.token);
+        },
+        () => cts.dispose(true),
+      );
 		} catch (err) {
-			this._logService.error(`[AgentPluginRepositoryService] Failed to clone ${cloneUrl}:`, err);
+			this._logService.error(
+        `[AgentPluginRepositoryService] Failed to clone ${cloneUrl}:`,
+        err,
+      );
 			this._notificationService.notify({
 				severity: Severity.Error,
-				message: localize('cloneFailed', "Failed to install plugin '{0}': {1}", failureLabel, err?.message ?? String(err)),
+				message: localize("cloneFailed", "Failed to install plugin '{0}': {1}", failureLabel, err?.message ?? String(err)),
 				actions: {
-					primary: [new Action('showGitOutput', localize('showGitOutput', "Show Git Output"), undefined, true, () => {
-						this._commandService.executeCommand('git.showOutput');
+					primary: [new Action("showGitOutput", localize("showGitOutput", "Show Git Output"), undefined, true, () => {
+						this._commandService.executeCommand("git.showOutput");
 					})],
 				},
 			});
@@ -279,7 +349,10 @@ export class AgentPluginRepositoryService implements IAgentPluginRepositoryServi
 	}
 
 	getPluginSourceInstallUri(sourceDescriptor: IPluginSourceDescriptor): URI {
-		return this.getPluginSource(sourceDescriptor.kind).getInstallUri(this._cacheRoot, sourceDescriptor);
+		return this.getPluginSource(sourceDescriptor.kind).getInstallUri(
+      this._cacheRoot,
+      sourceDescriptor,
+    );
 	}
 
 	async ensurePluginSource(plugin: IMarketplacePlugin, options?: IEnsureRepositoryOptions): Promise<URI> {
@@ -308,17 +381,27 @@ export class AgentPluginRepositoryService implements IAgentPluginRepositoryServi
 
 		try {
 			await this._pluginGit.fetchRepository(repoDir);
-			const behindCount = await this._pluginGit.revListCount(repoDir, 'HEAD', '@{u}');
+			const behindCount = await this._pluginGit.revListCount(
+        repoDir,
+        "HEAD",
+        "@{u}",
+      );
 			return behindCount > 0;
 		} catch (err) {
-			this._logService.debug(`[AgentPluginRepositoryService] Silent fetch failed for ${marketplace.displayLabel}:`, err);
+			this._logService.debug(
+        `[AgentPluginRepositoryService] Silent fetch failed for ${marketplace.displayLabel}:`,
+        err,
+      );
 			return false;
 		}
 	}
 
 	async cleanupPluginSource(plugin: IMarketplacePlugin, otherInstalledDescriptors?: readonly IPluginSourceDescriptor[]): Promise<void> {
 		const repo = this.getPluginSource(plugin.sourceDescriptor.kind);
-		const cleanupDir = repo.getCleanupTarget(this._cacheRoot, plugin.sourceDescriptor);
+		const cleanupDir = repo.getCleanupTarget(
+      this._cacheRoot,
+      plugin.sourceDescriptor,
+    );
 		if (!cleanupDir) {
 			return;
 		}
@@ -327,12 +410,14 @@ export class AgentPluginRepositoryService implements IAgentPluginRepositoryServi
 		// cleanup target (e.g. same cloned repository with different sub-paths).
 		if (otherInstalledDescriptors) {
 			const shared = otherInstalledDescriptors.some(other => {
-				const otherRepo = this.getPluginSource(other.kind);
-				const otherTarget = otherRepo.getCleanupTarget(this._cacheRoot, other);
-				return otherTarget && isEqual(otherTarget, cleanupDir);
-			});
+        const otherRepo = this.getPluginSource(other.kind);
+        const otherTarget = otherRepo.getCleanupTarget(this._cacheRoot, other);
+        return otherTarget && isEqual(otherTarget, cleanupDir);
+      });
 			if (shared) {
-				this._logService.info(`[${plugin.sourceDescriptor.kind}] Skipping cleanup of shared cache: ${cleanupDir.toString()}`);
+				this._logService.info(
+          `[${plugin.sourceDescriptor.kind}] Skipping cleanup of shared cache: ${cleanupDir.toString()}`,
+        );
 				return;
 			}
 		}
@@ -341,10 +426,15 @@ export class AgentPluginRepositoryService implements IAgentPluginRepositoryServi
 			const exists = await this._fileService.exists(cleanupDir);
 			if (exists) {
 				await this._fileService.del(cleanupDir, { recursive: true });
-				this._logService.info(`[${plugin.sourceDescriptor.kind}] Removed plugin cache: ${cleanupDir.toString()}`);
+				this._logService.info(
+          `[${plugin.sourceDescriptor.kind}] Removed plugin cache: ${cleanupDir.toString()}`,
+        );
 			}
 		} catch (err) {
-			this._logService.warn(`[${plugin.sourceDescriptor.kind}] Failed to remove plugin cache '${cleanupDir.toString()}':`, err);
+			this._logService.warn(
+        `[${plugin.sourceDescriptor.kind}] Failed to remove plugin cache '${cleanupDir.toString()}':`,
+        err,
+      );
 		}
 
 		try {
@@ -352,7 +442,10 @@ export class AgentPluginRepositoryService implements IAgentPluginRepositoryServi
 			// so we don't leave dangling owner/authority folders behind.
 			await this._pruneEmptyParents(cleanupDir);
 		} catch (err) {
-			this._logService.warn(`[${plugin.sourceDescriptor.kind}] Failed to cleanup plugin source:`, err);
+			this._logService.warn(
+        `[${plugin.sourceDescriptor.kind}] Failed to cleanup plugin source:`,
+        err,
+      );
 		}
 	}
 
@@ -395,19 +488,29 @@ export class AgentPluginRepositoryService implements IAgentPluginRepositoryServi
 
 			const newExists = await this._fileService.exists(this.agentPluginsHome);
 			if (newExists) {
-				this._logService.info('[AgentPluginRepositoryService] Both old and new agent-plugins directories exist; skipping directory migration');
+				this._logService.info(
+          "[AgentPluginRepositoryService] Both old and new agent-plugins directories exist; skipping directory migration",
+        );
 				return;
 			}
 
-			this._logService.info(`[AgentPluginRepositoryService] Migrating agent plugins from ${oldCacheRoot.toString()} to ${this.agentPluginsHome.toString()}`);
+			this._logService.info(
+        `[AgentPluginRepositoryService] Migrating agent plugins from ${oldCacheRoot.toString()} to ${this.agentPluginsHome.toString()}`,
+      );
 			await this._fileService.move(oldCacheRoot, this.agentPluginsHome, false);
 
 			// Clear the marketplace index — it caches repository URIs that
 			// pointed to the old location and would cause path mismatches.
-			this._storageService.remove(MARKETPLACE_INDEX_STORAGE_KEY, StorageScope.APPLICATION);
+			this._storageService.remove(
+        MARKETPLACE_INDEX_STORAGE_KEY,
+        StorageScope.APPLICATION,
+      );
 			this._marketplaceIndex.value.clear();
 		} catch (error) {
-			this._logService.error('[AgentPluginRepositoryService] Directory migration failed', error);
+			this._logService.error(
+        "[AgentPluginRepositoryService] Directory migration failed",
+        error,
+      );
 		}
 	}
 

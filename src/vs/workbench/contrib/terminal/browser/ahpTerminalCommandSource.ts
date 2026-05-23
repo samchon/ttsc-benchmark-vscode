@@ -3,14 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { removeAnsiEscapeCodes } from '../../../../base/common/strings.js';
-import type { IMarker } from '@xterm/xterm';
-import { TerminalCapability, type ITerminalCommand, type IMarkProperties } from '../../../../platform/terminal/common/capabilities/capabilities.js';
-import type { ITerminalOutputMatch, ITerminalOutputMatcher } from '../../../../platform/terminal/common/terminal.js';
-import type { IAhpTerminalCommandSource, ITerminalInstance } from './terminal.js';
-import { AhpCommandMarkKind, getAhpCommandMarkId, type AgentHostPty, type IAgentHostPtyCommandExecutedEvent, type IAgentHostPtyCommandFinishedEvent } from './agentHostPty.js';
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { removeAnsiEscapeCodes } from "../../../../base/common/strings.js";
+import type { IMarker } from "@xterm/xterm";
+import { TerminalCapability, type ITerminalCommand, type IMarkProperties } from "../../../../platform/terminal/common/capabilities/capabilities.js";
+import type { ITerminalOutputMatch, ITerminalOutputMatcher } from "../../../../platform/terminal/common/terminal.js";
+import type { IAhpTerminalCommandSource, ITerminalInstance } from "./terminal.js";
+import {
+  AhpCommandMarkKind,
+  getAhpCommandMarkId,
+  type AgentHostPty,
+  type IAgentHostPtyCommandExecutedEvent,
+  type IAgentHostPtyCommandFinishedEvent,
+} from "./agentHostPty.js";
 
 /**
  * An implementation of {@link ITerminalCommand} backed by AHP protocol data
@@ -23,7 +29,7 @@ import { AhpCommandMarkKind, getAhpCommandMarkId, type AgentHostPty, type IAgent
 export class AhpTerminalCommand implements ITerminalCommand {
 	// -- IBaseTerminalCommand mandatory fields --
 	command: string;
-	readonly commandLineConfidence: 'low' | 'medium' | 'high' = 'high';
+	readonly commandLineConfidence: "low" | "medium" | "high" = "high";
 	readonly isTrusted: boolean = false;
 	timestamp: number;
 	duration: number = 0;
@@ -170,10 +176,14 @@ export class AhpTerminalCommandSource extends Disposable implements IAhpTerminal
 	private readonly _commands: AhpTerminalCommand[] = [];
 	private _executingCommand: AhpTerminalCommand | undefined;
 
-	private readonly _onCommandExecuted = this._register(new Emitter<ITerminalCommand>());
+	private readonly _onCommandExecuted = this._register(
+    new Emitter<ITerminalCommand>(),
+  );
 	readonly onCommandExecuted: Event<ITerminalCommand> = this._onCommandExecuted.event;
 
-	private readonly _onCommandFinished = this._register(new Emitter<ITerminalCommand>());
+	private readonly _onCommandFinished = this._register(
+    new Emitter<ITerminalCommand>(),
+  );
 	readonly onCommandFinished: Event<ITerminalCommand> = this._onCommandFinished.event;
 
 	private _terminalInstance: ITerminalInstance | undefined;
@@ -218,21 +228,23 @@ export class AhpTerminalCommandSource extends Disposable implements IAhpTerminal
 	 */
 	private _resolveMarkById(commandId: string, kind: AhpCommandMarkKind): IMarker | undefined {
 		const markId = getAhpCommandMarkId(commandId, kind);
-		const bufferMarkCapability = this._terminalInstance?.capabilities.get(TerminalCapability.BufferMarkDetection);
+		const bufferMarkCapability = this._terminalInstance?.capabilities.get(
+      TerminalCapability.BufferMarkDetection,
+    );
 		return bufferMarkCapability?.getMark(markId);
 	}
 
 	private _handleCommandExecuted(event: IAgentHostPtyCommandExecutedEvent): void {
 		const command = new AhpTerminalCommand(
-			event.commandId,
-			event.commandLine,
-			event.timestamp,
-			{
-				resolveMarker: (kind) => this._resolveMarkById(event.commandId, kind),
-				storedOutput: event.storedOutput,
-				wasReplayed: event.storedOutput !== undefined,
-			},
-		);
+      event.commandId,
+      event.commandLine,
+      event.timestamp,
+      {
+        resolveMarker: (kind) => this._resolveMarkById(event.commandId, kind),
+        storedOutput: event.storedOutput,
+        wasReplayed: event.storedOutput !== undefined,
+      },
+    );
 		this._executingCommand = command;
 		this._onCommandExecuted.fire(command);
 	}

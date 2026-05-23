@@ -3,31 +3,31 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { DeferredPromise } from '../../../../base/common/async.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable, DisposableStore, IDisposable } from '../../../../base/common/lifecycle.js';
-import { URI } from '../../../../base/common/uri.js';
-import type { IChannel } from '../../../../base/parts/ipc/common/ipc.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
-import { TestInstantiationService } from '../../../instantiation/test/common/instantiationServiceMock.js';
-import { ILogService, NullLogService } from '../../../log/common/log.js';
-import { IConfigurationService } from '../../../configuration/common/configuration.js';
+import assert from "assert";
+import { DeferredPromise } from "../../../../base/common/async.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable, DisposableStore, IDisposable } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import type { IChannel } from "../../../../base/parts/ipc/common/ipc.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
+import { TestInstantiationService } from "../../../instantiation/test/common/instantiationServiceMock.js";
+import { ILogService, NullLogService } from "../../../log/common/log.js";
+import { IConfigurationService } from "../../../configuration/common/configuration.js";
 
-import { ISharedProcessService } from '../../../ipc/electron-browser/services.js';
-import { IQuickInputService } from '../../../quickinput/common/quickInput.js';
-import { IRemoteAgentHostService, RemoteAgentHostsEnabledSettingId } from '../../common/remoteAgentHostService.js';
-import type { IAgentConnection } from '../../common/agentService.js';
+import { ISharedProcessService } from "../../../ipc/electron-browser/services.js";
+import { IQuickInputService } from "../../../quickinput/common/quickInput.js";
+import { IRemoteAgentHostService, RemoteAgentHostsEnabledSettingId } from "../../common/remoteAgentHostService.js";
+import type { IAgentConnection } from "../../common/agentService.js";
 import type {
-	ISSHAgentHostConfig,
-	ISSHConnectResult,
-	ISSHKeyboardInteractiveRequest,
-	ISSHRelayMessage,
-	ISSHResolvedConfig,
-	ISSHRemoteAgentHostMainService,
-} from '../../common/sshRemoteAgentHost.js';
-import { ISSHRelayClientFactory, SSHRemoteAgentHostService } from '../../electron-browser/sshRemoteAgentHostServiceImpl.js';
-import { RemoteAgentHostProtocolClient } from '../../browser/remoteAgentHostProtocolClient.js';
+  ISSHAgentHostConfig,
+  ISSHConnectResult,
+  ISSHKeyboardInteractiveRequest,
+  ISSHRelayMessage,
+  ISSHResolvedConfig,
+  ISSHRemoteAgentHostMainService,
+} from "../../common/sshRemoteAgentHost.js";
+import { ISSHRelayClientFactory, SSHRemoteAgentHostService } from "../../electron-browser/sshRemoteAgentHostServiceImpl.js";
+import { RemoteAgentHostProtocolClient } from "../../browser/remoteAgentHostProtocolClient.js";
 
 /**
  * In-renderer mock of the shared-process SSH service. Exposes the same
@@ -73,25 +73,25 @@ class MockSSHMainService {
 		this.connectCalls.push(config);
 		const connectionId = this.connectResult?.connectionId ?? `conn-${this._nextConnectionId++}`;
 		return {
-			connectionId,
-			address: this.connectResult?.address ?? `ssh:${config.host}`,
-			name: config.name,
-			connectionToken: 'test-token',
-			config: { host: config.host, username: config.username, authMethod: config.authMethod, name: config.name, sshConfigHost: config.sshConfigHost },
-			sshConfigHost: config.sshConfigHost,
-		};
+      connectionId,
+      address: this.connectResult?.address ?? `ssh:${config.host}`,
+      name: config.name,
+      connectionToken: "test-token",
+      config: { host: config.host, username: config.username, authMethod: config.authMethod, name: config.name, sshConfigHost: config.sshConfigHost },
+      sshConfigHost: config.sshConfigHost,
+    };
 	}
 
 	async reconnect(sshConfigHost: string, name: string): Promise<ISSHConnectResult> {
 		this.reconnectCalls.push({ sshConfigHost, name });
 		return {
-			connectionId: `conn-${this._nextConnectionId++}`,
-			address: `ssh:${sshConfigHost}`,
-			name,
-			connectionToken: 'test-token',
-			config: { host: sshConfigHost, username: 'u', authMethod: 0 as never, name, sshConfigHost },
-			sshConfigHost,
-		};
+      connectionId: `conn-${this._nextConnectionId++}`,
+      address: `ssh:${sshConfigHost}`,
+      name,
+      connectionToken: "test-token",
+      config: { host: sshConfigHost, username: "u", authMethod: 0 as never, name, sshConfigHost },
+      sshConfigHost,
+    };
 	}
 
 	async relaySend(_connectionId: string, _message: string): Promise<void> { /* no-op */ }
@@ -101,10 +101,20 @@ class MockSSHMainService {
 	}
 
 	async listSSHConfigHosts(): Promise<string[]> { return []; }
-	async ensureUserSSHConfig(): Promise<URI> { return URI.file('/tmp/ssh-config'); }
-	async listSSHConfigFiles(): Promise<URI[]> { return [URI.file('/tmp/ssh-config')]; }
+	async ensureUserSSHConfig(): Promise<URI> { return URI.file(
+    "/tmp/ssh-config",
+  ); }
+	async listSSHConfigFiles(): Promise<URI[]> { return [
+    URI.file("/tmp/ssh-config"),
+  ]; }
 	async resolveSSHConfig(_host: string): Promise<ISSHResolvedConfig> {
-		return { hostname: '', user: undefined, port: 22, identityFile: [], forwardAgent: false };
+		return {
+      hostname: "",
+      user: undefined,
+      port: 22,
+      identityFile: [],
+      forwardAgent: false,
+    };
 	}
 
 	dispose(): void {
@@ -123,14 +133,14 @@ function asChannel(target: object): IChannel {
 	return {
 		call: async <T>(method: string, args?: unknown): Promise<T> => {
 			const fn = (target as Record<string, unknown>)[method];
-			if (typeof fn !== 'function') {
+			if (typeof fn !== "function") {
 				throw new Error(`MockChannel: no method ${method}`);
 			}
 			return (fn as (...a: unknown[]) => Promise<T>).apply(target, (args as unknown[]) ?? []);
 		},
 		listen: <T>(event: string): Event<T> => {
 			const ev = (target as Record<string, unknown>)[event];
-			if (typeof ev !== 'function') {
+			if (typeof ev !== "function") {
 				throw new Error(`MockChannel: no event ${event}`);
 			}
 			return ev as Event<T>;
@@ -146,8 +156,17 @@ class MockRemoteAgentHostService extends Disposable {
 	async addManagedConnection(entry: { name: string; connection: { address?: string; sshConfigHost?: string } }, client: IAgentConnection, transportDisposable?: IDisposable): Promise<unknown> {
 		const address = entry.connection.address ?? `ssh:${entry.connection.sshConfigHost}`;
 		this.added.push({ address, transport: transportDisposable });
-		this._entries.set(address, { client: client as { dispose?: () => void }, transport: transportDisposable });
-		return { address, name: entry.name, clientId: 'mock', defaultDirectory: undefined, status: 0 };
+		this._entries.set(address, {
+      client: client as { dispose?: () => void },
+      transport: transportDisposable,
+    });
+		return {
+      address,
+      name: entry.name,
+      clientId: "mock",
+      defaultDirectory: undefined,
+      status: 0,
+    };
 	}
 
 	/** Simulate user clicking "Remove Remote": disposes the per-entry store, which runs the transport disposable. */
@@ -174,7 +193,7 @@ class MockRemoteAgentHostService extends Disposable {
 }
 
 class MockProtocolClient extends Disposable {
-	readonly clientId = 'mock-protocol-client';
+	readonly clientId = "mock-protocol-client";
 	readonly onDidClose = Event.None;
 	readonly onDidAction = Event.None;
 	readonly onDidNotification = Event.None;
@@ -190,7 +209,7 @@ class TestConfigurationService {
 	setRemoteAgentHostsEnabled(enabled: boolean): void { this._remoteAgentHostsEnabled = enabled; }
 }
 
-suite('SSHRemoteAgentHostService (renderer)', () => {
+suite("SSHRemoteAgentHostService (renderer)", () => {
 
 	const disposables = new DisposableStore();
 	let mainService: MockSSHMainService;
@@ -244,11 +263,11 @@ suite('SSHRemoteAgentHostService (renderer)', () => {
 	ensureNoDisposablesAreLeakedInTestSuite();
 
 	const sampleConfig: ISSHAgentHostConfig = {
-		host: 'remote.example',
-		username: 'user',
+		host: "remote.example",
+		username: "user",
 		authMethod: 0 as never,
-		name: 'My Remote',
-		sshConfigHost: 'remote.example',
+		name: "My Remote",
+		sshConfigHost: "remote.example",
 	};
 
 	/** Wait until the renderer has created its protocol client, then resolve its handshake. */
@@ -257,23 +276,23 @@ suite('SSHRemoteAgentHostService (renderer)', () => {
 		client.connectDeferred.complete();
 	}
 
-	test('connect registers a managed connection with a transport disposable', async () => {
+	test("connect registers a managed connection with a transport disposable", async () => {
 		const connectPromise = service.connect(sampleConfig);
 		await awaitClientThenResolve(0);
 		const handle = await connectPromise;
 
 		assert.strictEqual(remoteAgentHostService.added.length, 1);
-		assert.strictEqual(remoteAgentHostService.added[0].address, 'ssh:remote.example');
-		assert.ok(remoteAgentHostService.added[0].transport, 'a transport disposable is passed so removal can tear down the SSH tunnel');
+		assert.strictEqual(remoteAgentHostService.added[0].address, "ssh:remote.example");
+		assert.ok(remoteAgentHostService.added[0].transport, "a transport disposable is passed so removal can tear down the SSH tunnel");
 		assert.strictEqual(service.connections.length, 1);
-		assert.strictEqual(handle.localAddress, 'ssh:remote.example');
+		assert.strictEqual(handle.localAddress, "ssh:remote.example");
 	});
 
-	test('disabled setting prevents SSH tunnel connects and reconnects', async () => {
+	test("disabled setting prevents SSH tunnel connects and reconnects", async () => {
 		configurationService.setRemoteAgentHostsEnabled(false);
 
 		await assert.rejects(() => service.connect(sampleConfig), /not enabled/);
-		await assert.rejects(() => service.reconnect('remote.example', 'My Remote'), /not enabled/);
+		await assert.rejects(() => service.reconnect("remote.example", "My Remote"), /not enabled/);
 
 		assert.deepStrictEqual({ connectCalls: mainService.connectCalls, reconnectCalls: mainService.reconnectCalls, added: remoteAgentHostService.added }, {
 			connectCalls: [],
@@ -282,7 +301,7 @@ suite('SSHRemoteAgentHostService (renderer)', () => {
 		});
 	});
 
-	test('removing the entry tears down the SSH tunnel and the renderer-side handle', async () => {
+	test("removing the entry tears down the SSH tunnel and the renderer-side handle", async () => {
 		const connectPromise = service.connect(sampleConfig);
 		await awaitClientThenResolve(0);
 		await connectPromise;
@@ -292,32 +311,32 @@ suite('SSHRemoteAgentHostService (renderer)', () => {
 
 		// Simulate the user clicking "Remove Remote": IRemoteAgentHostService
 		// disposes the per-entry store, which runs our transport disposable.
-		remoteAgentHostService.removeEntry('ssh:remote.example');
+		remoteAgentHostService.removeEntry("ssh:remote.example");
 
-		assert.deepStrictEqual(mainService.disconnectCalls, ['conn-1'], 'main-process tunnel is told to disconnect');
-		assert.strictEqual(service.connections.length, 0, 'renderer-side handle is dropped');
+		assert.deepStrictEqual(mainService.disconnectCalls, ["conn-1"], "main-process tunnel is told to disconnect");
+		assert.strictEqual(service.connections.length, 0, "renderer-side handle is dropped");
 	});
 
-	test('connect after removal does not reuse the previous handle', async () => {
+	test("connect after removal does not reuse the previous handle", async () => {
 		// First connect → entry registered, then removed.
 		const c1 = service.connect(sampleConfig);
 		await awaitClientThenResolve(0);
 		await c1;
-		remoteAgentHostService.removeEntry('ssh:remote.example');
+		remoteAgentHostService.removeEntry("ssh:remote.example");
 		assert.strictEqual(service.connections.length, 0);
 
 		// Second connect → main returns a new connectionId; renderer creates
 		// a fresh handle and registers a new managed entry.
-		mainService.connectResult = { connectionId: 'conn-2', address: 'ssh:remote.example' };
+		mainService.connectResult = { connectionId: "conn-2", address: "ssh:remote.example" };
 		const c2 = service.connect(sampleConfig);
 		await awaitClientThenResolve(1);
 		await c2;
 
 		assert.strictEqual(service.connections.length, 1);
-		assert.strictEqual(remoteAgentHostService.added.length, 2, 'each connect produces a fresh managed-connection registration');
+		assert.strictEqual(remoteAgentHostService.added.length, 2, "each connect produces a fresh managed-connection registration");
 	});
 
-	test('main-process onDidCloseConnection cleans up renderer handle without double-disconnecting', async () => {
+	test("main-process onDidCloseConnection cleans up renderer handle without double-disconnecting", async () => {
 		const connectPromise = service.connect(sampleConfig);
 		await awaitClientThenResolve(0);
 		await connectPromise;
@@ -327,13 +346,13 @@ suite('SSHRemoteAgentHostService (renderer)', () => {
 		// We can't directly fire on the wrapped emitter through the channel because
 		// ProxyChannel is one-directional; instead we trigger via the mock service
 		// emitter that the renderer subscribed to.
-		(mainService as unknown as { _onDidCloseConnection: Emitter<string> })._onDidCloseConnection.fire('conn-1');
+		(mainService as unknown as { _onDidCloseConnection: Emitter<string> })._onDidCloseConnection.fire("conn-1");
 
-		assert.strictEqual(service.connections.length, 0, 'handle dropped on main close');
+		assert.strictEqual(service.connections.length, 0, "handle dropped on main close");
 		// Removing the (already-gone) entry shouldn't trigger another disconnect call.
-		remoteAgentHostService.removeEntry('ssh:remote.example');
+		remoteAgentHostService.removeEntry("ssh:remote.example");
 		// One disconnect from the transport disposable is fine; we just want to make
 		// sure we're not at risk of issuing a second one against a stale id.
-		assert.ok(mainService.disconnectCalls.length <= 1, 'no duplicate disconnect against a stale connectionId');
+		assert.ok(mainService.disconnectCalls.length <= 1, "no duplicate disconnect against a stale connectionId");
 	});
 });

@@ -3,23 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { getWindowById } from '../../../../base/browser/dom.js';
-import { isAuxiliaryWindow } from '../../../../base/browser/window.js';
-import { timeout } from '../../../../base/common/async.js';
-import { Event } from '../../../../base/common/event.js';
-import { Disposable, DisposableStore } from '../../../../base/common/lifecycle.js';
-import { basename } from '../../../../base/common/path.js';
-import { isString } from '../../../../base/common/types.js';
-import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
-import { TelemetryTrustedValue } from '../../../../platform/telemetry/common/telemetryUtils.js';
-import { TerminalCapability } from '../../../../platform/terminal/common/capabilities/capabilities.js';
-import { TerminalLocation, type IShellLaunchConfig, type ShellIntegrationInjectionFailureReason } from '../../../../platform/terminal/common/terminal.js';
-import type { IWorkbenchContribution } from '../../../common/contributions.js';
-import { ILifecycleService } from '../../../services/lifecycle/common/lifecycle.js';
-import { ITerminalEditorService, ITerminalService, type ITerminalInstance } from './terminal.js';
+import { getWindowById } from "../../../../base/browser/dom.js";
+import { isAuxiliaryWindow } from "../../../../base/browser/window.js";
+import { timeout } from "../../../../base/common/async.js";
+import { Event } from "../../../../base/common/event.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { basename } from "../../../../base/common/path.js";
+import { isString } from "../../../../base/common/types.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { TelemetryTrustedValue } from "../../../../platform/telemetry/common/telemetryUtils.js";
+import { TerminalCapability } from "../../../../platform/terminal/common/capabilities/capabilities.js";
+import {
+  TerminalLocation,
+  type IShellLaunchConfig,
+  type ShellIntegrationInjectionFailureReason,
+} from "../../../../platform/terminal/common/terminal.js";
+import type { IWorkbenchContribution } from "../../../common/contributions.js";
+import { ILifecycleService } from "../../../services/lifecycle/common/lifecycle.js";
+import { ITerminalEditorService, ITerminalService, type ITerminalInstance } from "./terminal.js";
 
 export class TerminalTelemetryContribution extends Disposable implements IWorkbenchContribution {
-	static ID = 'terminalTelemetry';
+	static ID = "terminalTelemetry";
 
 	constructor(
 		@ILifecycleService lifecycleService: ILifecycleService,
@@ -59,14 +63,18 @@ export class TerminalTelemetryContribution extends Disposable implements IWorkbe
 			this._store.delete(store);
 		}));
 
-		this._register(terminalService.onAnyInstanceShellTypeChanged(instance => {
-			this._logShellTypeChanged(instance);
-		}));
+		this._register(
+      terminalService.onAnyInstanceShellTypeChanged(instance => {
+        this._logShellTypeChanged(instance);
+      }),
+    );
 	}
 
 	private _logCreateInstance(instance: ITerminalInstance, isInAuxWindow: boolean): void {
 		const slc = instance.shellLaunchConfig;
-		const commandDetection = instance.capabilities.get(TerminalCapability.CommandDetection);
+		const commandDetection = instance.capabilities.get(
+      TerminalCapability.CommandDetection,
+    );
 
 		type TerminalCreationTelemetryData = {
 			location: string;
@@ -89,41 +97,41 @@ export class TerminalTelemetryContribution extends Disposable implements IWorkbe
 			terminalSessionId: string;
 		};
 		type TerminalCreationTelemetryClassification = {
-			owner: 'anthonykim1';
-			comment: 'Track details about terminal creation, such as the shell type';
+			owner: "anthonykim1";
+			comment: "Track details about terminal creation, such as the shell type";
 
-			location: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The location of the terminal.' };
+			location: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The location of the terminal." };
 
-			shellType: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The detected shell type for the terminal.' };
-			promptType: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The detected prompt type for the terminal.' };
+			shellType: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The detected shell type for the terminal." };
+			promptType: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The detected prompt type for the terminal." };
 
-			isCustomPtyImplementation: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Whether the terminal was using a custom PTY implementation.' };
-			isExtensionOwnedTerminal: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Whether the terminal was created by an extension.' };
-			isLoginShell: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Whether the arguments contain -l or --login.' };
-			isReconnect: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Whether the terminal is reconnecting to an existing instance.' };
-			hasRemoteAuthority: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Whether the terminal has a remote authority, this is likely a connection terminal when undefined in a window with a remote authority.' };
+			isCustomPtyImplementation: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Whether the terminal was using a custom PTY implementation." };
+			isExtensionOwnedTerminal: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Whether the terminal was created by an extension." };
+			isLoginShell: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Whether the arguments contain -l or --login." };
+			isReconnect: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Whether the terminal is reconnecting to an existing instance." };
+			hasRemoteAuthority: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Whether the terminal has a remote authority, this is likely a connection terminal when undefined in a window with a remote authority." };
 
-			shellIntegrationQuality: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The shell integration quality (rich=2, basic=1 or none=0).' };
-			shellIntegrationInjected: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Whether the shell integration script was injected.' };
-			shellIntegrationInjectionFailureReason: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Info about shell integration injection.' };
+			shellIntegrationQuality: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The shell integration quality (rich=2, basic=1 or none=0)." };
+			shellIntegrationInjected: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Whether the shell integration script was injected." };
+			shellIntegrationInjectionFailureReason: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Info about shell integration injection." };
 
-			imageAddonLoaded: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Whether the xterm.js image addon was loaded.' };
+			imageAddonLoaded: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Whether the xterm.js image addon was loaded." };
 
-			terminalSessionId: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The session ID of the terminal instance.' };
+			terminalSessionId: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The session ID of the terminal instance." };
 		};
-		this._telemetryService.publicLog2<TerminalCreationTelemetryData, TerminalCreationTelemetryClassification>('terminal/createInstance', {
+		this._telemetryService.publicLog2<TerminalCreationTelemetryData, TerminalCreationTelemetryClassification>("terminal/createInstance", {
 			location: (instance.target === TerminalLocation.Panel
-				? 'view'
+				? "view"
 				: instance.target === TerminalLocation.Editor
-					? (isInAuxWindow ? 'editor-auxwindow' : 'editor')
-					: 'unknown'),
+					? (isInAuxWindow ? "editor-auxwindow" : "editor")
+					: "unknown"),
 
 			shellType: new TelemetryTrustedValue(getSanitizedShellType(slc)),
 			promptType: new TelemetryTrustedValue(instance.capabilities.get(TerminalCapability.PromptTypeDetection)?.promptType),
 
 			isCustomPtyImplementation: !!slc.customPtyImplementation,
 			isExtensionOwnedTerminal: !!slc.isExtensionOwnedTerminal,
-			isLoginShell: (isString(slc.args) ? slc.args.split(' ') : slc.args)?.some(arg => arg === '-l' || arg === '--login') ?? false,
+			isLoginShell: (isString(slc.args) ? slc.args.split(" ") : slc.args)?.some(arg => arg === "-l" || arg === "--login") ?? false,
 			isReconnect: !!slc.attachPersistentProcess,
 			hasRemoteAuthority: instance.hasRemoteAuthority,
 
@@ -141,161 +149,160 @@ export class TerminalTelemetryContribution extends Disposable implements IWorkbe
 			terminalSessionId: string;
 		};
 		type TerminalShellTypeChangedTelemetryClassification = {
-			owner: 'anthonykim1';
-			comment: 'Track when the detected shell type for a terminal changes, including detection of agent CLIs (e.g. claude, copilot, gemini)';
+			owner: "anthonykim1";
+			comment: "Track when the detected shell type for a terminal changes, including detection of agent CLIs (e.g. claude, copilot, gemini)";
 
-			shellType: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The new detected shell type for the terminal.' };
-			terminalSessionId: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The session ID of the terminal instance.' };
+			shellType: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The new detected shell type for the terminal." };
+			terminalSessionId: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The session ID of the terminal instance." };
 		};
-		this._telemetryService.publicLog2<TerminalShellTypeChangedTelemetryData, TerminalShellTypeChangedTelemetryClassification>('terminal/shellTypeChanged', {
-			shellType: new TelemetryTrustedValue(instance.shellType ?? 'unknown'),
-			terminalSessionId: instance.sessionId,
-		});
+		this._telemetryService.publicLog2<TerminalShellTypeChangedTelemetryData, TerminalShellTypeChangedTelemetryClassification>(
+      "terminal/shellTypeChanged",
+      {
+        shellType: new TelemetryTrustedValue(instance.shellType ?? "unknown"),
+        terminalSessionId: instance.sessionId,
+      },
+    );
 	}
 }
 
 // #region Shell Type
 
 const enum AllowedShellType {
-	Unknown = 'unknown',
+	Unknown = "unknown",
 
 	// Windows only
-	CommandPrompt = 'cmd',
-	Cygwin = 'cygwin-bash',
-	GitBash = 'git-bash',
-	Msys2 = 'msys2-bash',
-	WindowsPowerShell = 'windows-powershell',
-	Wsl = 'wsl',
+	CommandPrompt = "cmd",
+	Cygwin = "cygwin-bash",
+	GitBash = "git-bash",
+	Msys2 = "msys2-bash",
+	WindowsPowerShell = "windows-powershell",
+	Wsl = "wsl",
 
 
 	// Common Unix shells
-	Bash = 'bash',
-	Fish = 'fish',
-	Pwsh = 'pwsh',
-	PwshPreview = 'pwsh-preview',
-	Sh = 'sh',
-	Ssh = 'ssh',
-	Tmux = 'tmux',
-	Zsh = 'zsh',
+	Bash = "bash",
+	Fish = "fish",
+	Pwsh = "pwsh",
+	PwshPreview = "pwsh-preview",
+	Sh = "sh",
+	Ssh = "ssh",
+	Tmux = "tmux",
+	Zsh = "zsh",
 
 	// More shells
-	Amm = 'amm',
-	Ash = 'ash',
-	Csh = 'csh',
-	Dash = 'dash',
-	Elvish = 'elvish',
-	Ion = 'ion',
-	Ksh = 'ksh',
-	Mksh = 'mksh',
-	Msh = 'msh',
-	NuShell = 'nu',
-	Plan9Shell = 'rc',
-	SchemeShell = 'scsh',
-	Tcsh = 'tcsh',
-	Termux = 'termux',
-	Xonsh = 'xonsh',
+	Amm = "amm",
+	Ash = "ash",
+	Csh = "csh",
+	Dash = "dash",
+	Elvish = "elvish",
+	Ion = "ion",
+	Ksh = "ksh",
+	Mksh = "mksh",
+	Msh = "msh",
+	NuShell = "nu",
+	Plan9Shell = "rc",
+	SchemeShell = "scsh",
+	Tcsh = "tcsh",
+	Termux = "termux",
+	Xonsh = "xonsh",
 
 	// AI CLIs
-	Claude = 'claude',
-	Codex = 'codex',
-	Copilot = 'copilot',
-	Gemini = 'gemini',
+	Claude = "claude",
+	Codex = "codex",
+	Copilot = "copilot",
+	Gemini = "gemini",
 
 	// Lanugage REPLs
 	// These are expected to be very low since they are not typically the default shell
-	Clojure = 'clj',
-	CommonLispSbcl = 'sbcl',
-	Crystal = 'crystal',
-	Deno = 'deno',
-	Elixir = 'iex',
-	Erlang = 'erl',
-	FSharp = 'fsi',
-	Go = 'go',
-	HaskellGhci = 'ghci',
-	Java = 'jshell',
-	Julia = 'julia',
-	Lua = 'lua',
-	Node = 'node',
-	Ocaml = 'ocaml',
-	Perl = 'perl',
-	Php = 'php',
-	PrologSwipl = 'swipl',
-	Python = 'python',
-	R = 'R',
-	RubyIrb = 'irb',
-	Scala = 'scala',
-	SchemeRacket = 'racket',
-	SmalltalkGnu = 'gst',
-	SmalltalkPharo = 'pharo',
-	Tcl = 'tclsh',
-	TsNode = 'ts-node',
+	Clojure = "clj",
+	CommonLispSbcl = "sbcl",
+	Crystal = "crystal",
+	Deno = "deno",
+	Elixir = "iex",
+	Erlang = "erl",
+	FSharp = "fsi",
+	Go = "go",
+	HaskellGhci = "ghci",
+	Java = "jshell",
+	Julia = "julia",
+	Lua = "lua",
+	Node = "node",
+	Ocaml = "ocaml",
+	Perl = "perl",
+	Php = "php",
+	PrologSwipl = "swipl",
+	Python = "python",
+	R = "R",
+	RubyIrb = "irb",
+	Scala = "scala",
+	SchemeRacket = "racket",
+	SmalltalkGnu = "gst",
+	SmalltalkPharo = "pharo",
+	Tcl = "tclsh",
+	TsNode = "ts-node",
 }
 
 // Types that match the executable name directly
 const shellTypeExecutableAllowList: Set<string> = new Set([
-	// Windows only
-	AllowedShellType.CommandPrompt,
-	AllowedShellType.Wsl,
-
-	// Common Unix shells
-	AllowedShellType.Bash,
-	AllowedShellType.Fish,
-	AllowedShellType.Pwsh,
-	AllowedShellType.Sh,
-	AllowedShellType.Ssh,
-	AllowedShellType.Tmux,
-	AllowedShellType.Zsh,
-
-	// More shells
-	AllowedShellType.Amm,
-	AllowedShellType.Ash,
-	AllowedShellType.Csh,
-	AllowedShellType.Dash,
-	AllowedShellType.Elvish,
-	AllowedShellType.Ion,
-	AllowedShellType.Ksh,
-	AllowedShellType.Mksh,
-	AllowedShellType.Msh,
-	AllowedShellType.NuShell,
-	AllowedShellType.Plan9Shell,
-	AllowedShellType.SchemeShell,
-	AllowedShellType.Tcsh,
-	AllowedShellType.Termux,
-	AllowedShellType.Xonsh,
-
-	// Lanugage REPLs
-	AllowedShellType.Clojure,
-	AllowedShellType.CommonLispSbcl,
-	AllowedShellType.Crystal,
-	AllowedShellType.Deno,
-	AllowedShellType.Elixir,
-	AllowedShellType.Erlang,
-	AllowedShellType.FSharp,
-	AllowedShellType.Go,
-	AllowedShellType.HaskellGhci,
-	AllowedShellType.Java,
-	AllowedShellType.Julia,
-	AllowedShellType.Lua,
-	AllowedShellType.Node,
-	AllowedShellType.Ocaml,
-	AllowedShellType.Perl,
-	AllowedShellType.Php,
-	AllowedShellType.PrologSwipl,
-	AllowedShellType.Python,
-	AllowedShellType.R,
-	AllowedShellType.RubyIrb,
-	AllowedShellType.Scala,
-	AllowedShellType.SchemeRacket,
-	AllowedShellType.SmalltalkGnu,
-	AllowedShellType.SmalltalkPharo,
-	AllowedShellType.Tcl,
-	AllowedShellType.TsNode,
+  AllowedShellType.CommandPrompt,
+  AllowedShellType.Wsl,
+  AllowedShellType.Bash,
+  AllowedShellType.Fish,
+  AllowedShellType.Pwsh,
+  AllowedShellType.Sh,
+  AllowedShellType.Ssh,
+  AllowedShellType.Tmux,
+  AllowedShellType.Zsh,
+  AllowedShellType.Amm,
+  AllowedShellType.Ash,
+  AllowedShellType.Csh,
+  AllowedShellType.Dash,
+  AllowedShellType.Elvish,
+  AllowedShellType.Ion,
+  AllowedShellType.Ksh,
+  AllowedShellType.Mksh,
+  AllowedShellType.Msh,
+  AllowedShellType.NuShell,
+  AllowedShellType.Plan9Shell,
+  AllowedShellType.SchemeShell,
+  AllowedShellType.Tcsh,
+  AllowedShellType.Termux,
+  AllowedShellType.Xonsh,
+  AllowedShellType.Clojure,
+  AllowedShellType.CommonLispSbcl,
+  AllowedShellType.Crystal,
+  AllowedShellType.Deno,
+  AllowedShellType.Elixir,
+  AllowedShellType.Erlang,
+  AllowedShellType.FSharp,
+  AllowedShellType.Go,
+  AllowedShellType.HaskellGhci,
+  AllowedShellType.Java,
+  AllowedShellType.Julia,
+  AllowedShellType.Lua,
+  AllowedShellType.Node,
+  AllowedShellType.Ocaml,
+  AllowedShellType.Perl,
+  AllowedShellType.Php,
+  AllowedShellType.PrologSwipl,
+  AllowedShellType.Python,
+  AllowedShellType.R,
+  AllowedShellType.RubyIrb,
+  AllowedShellType.Scala,
+  AllowedShellType.SchemeRacket,
+  AllowedShellType.SmalltalkGnu,
+  AllowedShellType.SmalltalkPharo,
+  AllowedShellType.Tcl,
+  AllowedShellType.TsNode,
 ]) satisfies Set<AllowedShellType>;
 
 // Dynamic executables that map to a single type
 const shellTypeExecutableRegexAllowList: { regex: RegExp; type: AllowedShellType }[] = [
-	{ regex: /^(?:pwsh|powershell)-preview$/i, type: AllowedShellType.PwshPreview },
-	{ regex: /^python(?:\d+(?:\.\d+)?)?$/i, type: AllowedShellType.Python },
+  {
+    regex: /^(?:pwsh|powershell)-preview$/i,
+    type: AllowedShellType.PwshPreview,
+  },
+  { regex: /^python(?:\d+(?:\.\d+)?)?$/i, type: AllowedShellType.Python },
 ];
 
 // Path-based look ups
@@ -319,7 +326,7 @@ function getSanitizedShellType(slc: IShellLaunchConfig): AllowedShellType {
 		return AllowedShellType.Unknown;
 	}
 	const executableFile = basename(slc.executable);
-	const executableFileWithoutExt = executableFile.replace(/\.[^\.]+$/, '');
+	const executableFileWithoutExt = executableFile.replace(/\.[^\.]+$/, "");
 	for (const entry of shellTypePathRegexAllowList) {
 		if (entry.regex.test(slc.executable)) {
 			return entry.type;

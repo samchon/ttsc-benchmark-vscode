@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { IChatTip, IChatTipService } from '../../../../workbench/contrib/chat/browser/chatTipService.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
+import { Event } from "../../../../base/common/event.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IChatTip, IChatTipService } from "../../../../workbench/contrib/chat/browser/chatTipService.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
 
 class NullChatTipService implements IChatTipService {
 	declare _serviceBrand: undefined;
@@ -31,4 +31,8 @@ class NullChatTipService implements IChatTipService {
 	clearDismissedTips(): void { }
 }
 
-registerSingleton(IChatTipService, NullChatTipService, InstantiationType.Delayed);
+registerSingleton(
+  IChatTipService,
+  NullChatTipService,
+  InstantiationType.Delayed,
+);

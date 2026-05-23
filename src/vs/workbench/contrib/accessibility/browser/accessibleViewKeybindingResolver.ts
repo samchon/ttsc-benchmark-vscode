@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { MarkdownString } from '../../../../base/common/htmlContent.js';
-import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
-import { IPickerQuickAccessItem } from '../../../../platform/quickinput/browser/pickerQuickAccess.js';
+import { MarkdownString } from "../../../../base/common/htmlContent.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { IPickerQuickAccessItem } from "../../../../platform/quickinput/browser/pickerQuickAccess.js";
 
 export function resolveContentAndKeybindingItems(keybindingService: IKeybindingService, value?: string): { content: MarkdownString; configureKeybindingItems: IPickerQuickAccessItem[] | undefined; configuredKeybindingItems: IPickerQuickAccessItem[] | undefined } | undefined {
 	if (!value) {
@@ -22,21 +22,25 @@ export function resolveContentAndKeybindingItems(keybindingService: IKeybindingS
 			if (!keybinding) {
 				kbLabel = ` (unassigned keybinding)`;
 				configureKeybindingItems.push({
-					label: commandId,
-					id: commandId
-				});
+          label: commandId,
+          id: commandId,
+        });
 			} else {
-				kbLabel = ' (' + keybinding + ')';
+				kbLabel = " (" + keybinding + ")";
 				configuredKeybindingItems.push({
-					label: commandId,
-					id: commandId
-				});
+          label: commandId,
+          id: commandId,
+        });
 			}
 			value = value.replace(match[0], kbLabel);
 		}
 	}
 	const content = new MarkdownString(value);
 	content.isTrusted = true;
-	return { content, configureKeybindingItems: configureKeybindingItems.length ? configureKeybindingItems : undefined, configuredKeybindingItems: configuredKeybindingItems.length ? configuredKeybindingItems : undefined };
+	return {
+    content,
+    configureKeybindingItems: configureKeybindingItems.length ? configureKeybindingItems : undefined,
+    configuredKeybindingItems: configuredKeybindingItems.length ? configuredKeybindingItems : undefined,
+  };
 }
 

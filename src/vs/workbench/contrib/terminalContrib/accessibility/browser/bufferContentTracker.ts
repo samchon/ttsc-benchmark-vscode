@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { ITerminalLogService, TerminalSettingId } from '../../../../../platform/terminal/common/terminal.js';
-import { IXtermTerminal } from '../../../terminal/browser/terminal.js';
-import type { IMarker, Terminal } from '@xterm/xterm';
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { ITerminalLogService, TerminalSettingId } from "../../../../../platform/terminal/common/terminal.js";
+import { IXtermTerminal } from "../../../terminal/browser/terminal.js";
+import type { IMarker, Terminal } from "@xterm/xterm";
 
 export class BufferContentTracker extends Disposable {
 	/**
@@ -25,7 +25,7 @@ export class BufferContentTracker extends Disposable {
 	bufferToEditorLineMapping: Map<number, number> = new Map();
 
 	constructor(
-		private readonly _xterm: Pick<IXtermTerminal, 'getFont'> & { raw: Terminal },
+		private readonly _xterm: Pick<IXtermTerminal, "getFont"> & { raw: Terminal },
 		@IConfigurationService private readonly _configurationService: IConfigurationService,
 		@ITerminalLogService private readonly _logService: ITerminalLogService,
 	) {
@@ -48,7 +48,11 @@ export class BufferContentTracker extends Disposable {
 		this._updateCachedContent();
 		this._updateViewportContent();
 		this._lastCachedMarker = this._register(this._xterm.raw.registerMarker());
-		this._logService.debug('Buffer content tracker: set ', this._lines.length, ' lines');
+		this._logService.debug(
+      "Buffer content tracker: set ",
+      this._lines.length,
+      " lines",
+    );
 	}
 
 	private _updateCachedContent(): void {
@@ -61,7 +65,9 @@ export class BufferContentTracker extends Disposable {
 		}
 
 		// to keep the cache size down, remove any lines that are no longer in the scrollback
-		const scrollback: number = this._configurationService.getValue(TerminalSettingId.Scrollback);
+		const scrollback: number = this._configurationService.getValue(
+      TerminalSettingId.Scrollback,
+    );
 		const maxBufferSize = scrollback + this._xterm.raw.rows - 1;
 		const linesToAdd = end - start;
 		if (linesToAdd + this._lines.length > maxBufferSize) {
@@ -69,28 +75,41 @@ export class BufferContentTracker extends Disposable {
 			for (let i = 0; i < numToRemove; i++) {
 				this._lines.shift();
 			}
-			this._logService.debug('Buffer content tracker: removed ', numToRemove, ' lines from top of cached lines, now ', this._lines.length, ' lines');
+			this._logService.debug(
+        "Buffer content tracker: removed ",
+        numToRemove,
+        " lines from top of cached lines, now ",
+        this._lines.length,
+        " lines",
+      );
 		}
 
 		// iterate through the buffer lines and add them to the editor line cache
 		const cachedLines = [];
-		let currentLine: string = '';
+		let currentLine: string = "";
 		for (let i = start; i < end; i++) {
 			const line = buffer.getLine(i);
 			if (!line) {
 				continue;
 			}
-			this.bufferToEditorLineMapping.set(i, this._lines.length + cachedLines.length);
+			this.bufferToEditorLineMapping.set(
+        i,
+        this._lines.length + cachedLines.length,
+      );
 			const isWrapped = buffer.getLine(i + 1)?.isWrapped;
 			currentLine += line.translateToString(!isWrapped);
 			if (currentLine && !isWrapped || i === (buffer.baseY + this._xterm.raw.rows - 1)) {
 				if (line.length) {
 					cachedLines.push(currentLine);
-					currentLine = '';
+					currentLine = "";
 				}
 			}
 		}
-		this._logService.debug('Buffer content tracker:', cachedLines.length, ' lines cached');
+		this._logService.debug(
+      "Buffer content tracker:",
+      cachedLines.length,
+      " lines cached",
+    );
 		this._lines.push(...cachedLines);
 	}
 
@@ -102,18 +121,24 @@ export class BufferContentTracker extends Disposable {
 		let linesToRemove = this._priorEditorViewportLineCount;
 		let index = 1;
 		while (linesToRemove) {
-			this.bufferToEditorLineMapping.forEach((value, key) => { if (value === this._lines.length - index) { this.bufferToEditorLineMapping.delete(key); } });
+			this.bufferToEditorLineMapping.forEach((value, key) => {
+        if (value === this._lines.length - index) { this.bufferToEditorLineMapping.delete(key); }
+      });
 			this._lines.pop();
 			index++;
 			linesToRemove--;
 		}
-		this._logService.debug('Buffer content tracker: removed lines from viewport, now ', this._lines.length, ' lines cached');
+		this._logService.debug(
+      "Buffer content tracker: removed lines from viewport, now ",
+      this._lines.length,
+      " lines cached",
+    );
 	}
 
 	private _updateViewportContent(): void {
 		const buffer = this._xterm.raw.buffer.active;
 		this._priorEditorViewportLineCount = 0;
-		let currentLine: string = '';
+		let currentLine: string = "";
 		for (let i = buffer.baseY; i < buffer.baseY + this._xterm.raw.rows; i++) {
 			const line = buffer.getLine(i);
 			if (!line) {
@@ -126,10 +151,14 @@ export class BufferContentTracker extends Disposable {
 				if (currentLine.length) {
 					this._priorEditorViewportLineCount++;
 					this._lines.push(currentLine);
-					currentLine = '';
+					currentLine = "";
 				}
 			}
 		}
-		this._logService.debug('Viewport content update complete, ', this._lines.length, ' lines in the viewport');
+		this._logService.debug(
+      "Viewport content update complete, ",
+      this._lines.length,
+      " lines in the viewport",
+    );
 	}
 }

@@ -3,18 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { IModelDecoration, ITextModel } from '../../model.js';
-import { TokenizationTextModelPart } from './tokenizationTextModelPart.js';
-import { Range } from '../../core/range.js';
-import { DecorationProvider, LineFontChangingDecoration, LineHeightChangingDecoration } from '../decorationProvider.js';
-import { Emitter } from '../../../../base/common/event.js';
-import { IFontTokenOption, IModelContentChangedEvent } from '../../textModelEvents.js';
-import { classNameForFontTokenDecorations } from '../../languages/supports/tokenization.js';
-import { Position } from '../../core/position.js';
-import { AnnotatedString, AnnotationsUpdate, IAnnotatedString, IAnnotationUpdate } from './annotations.js';
-import { OffsetRange } from '../../core/ranges/offsetRange.js';
-import { offsetEditFromContentChanges } from '../textModelStringEdit.js';
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IModelDecoration, ITextModel } from "../../model.js";
+import { TokenizationTextModelPart } from "./tokenizationTextModelPart.js";
+import { Range } from "../../core/range.js";
+import {
+  DecorationProvider,
+  LineFontChangingDecoration,
+  LineHeightChangingDecoration,
+} from "../decorationProvider.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { IFontTokenOption, IModelContentChangedEvent } from "../../textModelEvents.js";
+import { classNameForFontTokenDecorations } from "../../languages/supports/tokenization.js";
+import { Position } from "../../core/position.js";
+import {
+  AnnotatedString,
+  AnnotationsUpdate,
+  IAnnotatedString,
+  IAnnotationUpdate,
+} from "./annotations.js";
+import { OffsetRange } from "../../core/ranges/offsetRange.js";
+import { offsetEditFromContentChanges } from "../textModelStringEdit.js";
 
 export interface IFontTokenAnnotation {
 	decorationId: string;
@@ -25,17 +34,21 @@ export class TokenizationFontDecorationProvider extends Disposable implements De
 
 	private static DECORATION_COUNT = 0;
 
-	private readonly _onDidChangeLineHeight = this._register(new Emitter<Set<LineHeightChangingDecoration>>());
+	private readonly _onDidChangeLineHeight = this._register(
+    new Emitter<Set<LineHeightChangingDecoration>>(),
+  );
 	public readonly onDidChangeLineHeight = this._onDidChangeLineHeight.event;
 
-	private readonly _onDidChangeFont = this._register(new Emitter<Set<LineFontChangingDecoration>>());
+	private readonly _onDidChangeFont = this._register(
+    new Emitter<Set<LineFontChangingDecoration>>(),
+  );
 	public readonly onDidChangeFont = this._onDidChangeFont.event;
 
 	private _fontAnnotatedString: IAnnotatedString<IFontTokenAnnotation> = new AnnotatedString<IFontTokenAnnotation>();
 
 	constructor(
 		private readonly textModel: ITextModel,
-		private readonly tokenizationTextModelPart: TokenizationTextModelPart
+		private readonly tokenizationTextModelPart: TokenizationTextModelPart,
 	) {
 		super();
 		this._register(this.tokenizationTextModelPart.onDidChangeFontTokens(fontChanges => {
@@ -55,17 +68,17 @@ export class TokenizationFontDecorationProvider extends Disposable implements De
 				if (annotation.annotation === undefined) {
 					fontTokenAnnotation = {
 						range: annotation.range,
-						annotation: undefined
+						annotation: undefined,
 					};
 				} else {
 					const decorationId = `tokenization-font-decoration-${TokenizationFontDecorationProvider.DECORATION_COUNT}`;
 					const fontTokenDecoration: IFontTokenAnnotation = {
 						fontToken: annotation.annotation,
-						decorationId
+						decorationId,
 					};
 					fontTokenAnnotation = {
 						range: annotation.range,
-						annotation: fontTokenDecoration
+						annotation: fontTokenDecoration,
 					};
 					TokenizationFontDecorationProvider.DECORATION_COUNT++;
 
@@ -108,42 +121,62 @@ export class TokenizationFontDecorationProvider extends Disposable implements De
 		const affectedLineHeights = new Set<LineHeightChangingDecoration>();
 		const affectedLineFonts = new Set<LineFontChangingDecoration>();
 		for (const deletedAnnotation of deletedAnnotations) {
-			const startPosition = this.textModel.getPositionAt(deletedAnnotation.range.start);
+			const startPosition = this.textModel.getPositionAt(
+        deletedAnnotation.range.start,
+      );
 			const lineNumber = startPosition.lineNumber;
 			const decorationId = deletedAnnotation.annotation.decorationId;
-			affectedLineHeights.add(new LineHeightChangingDecoration(0, decorationId, lineNumber, null));
-			affectedLineFonts.add(new LineFontChangingDecoration(0, decorationId, lineNumber));
+			affectedLineHeights.add(
+        new LineHeightChangingDecoration(0, decorationId, lineNumber, null),
+      );
+			affectedLineFonts.add(
+        new LineFontChangingDecoration(0, decorationId, lineNumber),
+      );
 		}
 		this._onDidChangeLineHeight.fire(affectedLineHeights);
 		this._onDidChangeFont.fire(affectedLineFonts);
 	}
 
 	public getDecorationsInRange(range: Range, ownerId?: number, filterOutValidation?: boolean, filterFontDecorations?: boolean, onlyMinimapDecorations?: boolean): IModelDecoration[] {
-		const startOffsetOfRange = this.textModel.getOffsetAt(range.getStartPosition());
+		const startOffsetOfRange = this.textModel.getOffsetAt(
+      range.getStartPosition(),
+    );
 		const endOffsetOfRange = this.textModel.getOffsetAt(range.getEndPosition());
-		const annotations = this._fontAnnotatedString.getAnnotationsIntersecting(new OffsetRange(startOffsetOfRange, endOffsetOfRange));
+		const annotations = this._fontAnnotatedString.getAnnotationsIntersecting(
+      new OffsetRange(startOffsetOfRange, endOffsetOfRange),
+    );
 
 		const decorations: IModelDecoration[] = [];
 		for (const annotation of annotations) {
 			const anno = annotation.annotation;
 			const affectsFont = !!(anno.fontToken.fontFamily || anno.fontToken.fontSizeMultiplier);
 			if (!(affectsFont && filterFontDecorations)) {
-				const annotationStartPosition = this.textModel.getPositionAt(annotation.range.start);
-				const annotationEndPosition = this.textModel.getPositionAt(annotation.range.endExclusive);
-				const range = Range.fromPositions(annotationStartPosition, annotationEndPosition);
+				const annotationStartPosition = this.textModel.getPositionAt(
+          annotation.range.start,
+        );
+				const annotationEndPosition = this.textModel.getPositionAt(
+          annotation.range.endExclusive,
+        );
+				const range = Range.fromPositions(
+          annotationStartPosition,
+          annotationEndPosition,
+        );
 				const anno = annotation.annotation;
-				const className = classNameForFontTokenDecorations(anno.fontToken.fontFamily ?? '', anno.fontToken.fontSizeMultiplier ?? 0);
+				const className = classNameForFontTokenDecorations(
+          anno.fontToken.fontFamily ?? "",
+          anno.fontToken.fontSizeMultiplier ?? 0,
+        );
 				const id = anno.decorationId;
 				decorations.push({
 					id: id,
 					options: {
-						description: 'FontOptionDecoration',
+						description: "FontOptionDecoration",
 						inlineClassName: className,
 						lineHeight: anno.fontToken.lineHeightMultiplier,
-						affectsFont
+						affectsFont,
 					},
 					ownerId: 0,
-					range
+					range,
 				});
 			}
 		}
@@ -152,9 +185,14 @@ export class TokenizationFontDecorationProvider extends Disposable implements De
 
 	public getAllDecorations(ownerId?: number, filterOutValidation?: boolean): IModelDecoration[] {
 		return this.getDecorationsInRange(
-			new Range(1, 1, this.textModel.getLineCount(), this.textModel.getLineMaxColumn(this.textModel.getLineCount())),
-			ownerId,
-			filterOutValidation
-		);
+      new Range(
+        1,
+        1,
+        this.textModel.getLineCount(),
+        this.textModel.getLineMaxColumn(this.textModel.getLineCount()),
+      ),
+      ownerId,
+      filterOutValidation,
+    );
 	}
 }

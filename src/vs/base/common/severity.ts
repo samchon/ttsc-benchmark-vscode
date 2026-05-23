@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as strings from './strings.js';
+import * as strings from "./strings.js";
 
 enum Severity {
 	Ignore = 0,
@@ -14,11 +14,11 @@ enum Severity {
 
 namespace Severity {
 
-	const _error = 'error';
-	const _warning = 'warning';
-	const _warn = 'warn';
-	const _info = 'info';
-	const _ignore = 'ignore';
+	const _error = "error";
+	const _warning = "warning";
+	const _warn = "warn";
+	const _info = "info";
+	const _ignore = "ignore";
 
 	/**
 	 * Parses 'error', 'warning', 'warn', 'info' in call casings

@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ActionBar, IActionBarOptions } from '../../../base/browser/ui/actionbar/actionbar.js';
-import { WorkbenchActionExecutedClassification, WorkbenchActionExecutedEvent } from '../../../base/common/actions.js';
-import { ITelemetryService } from '../../telemetry/common/telemetry.js';
+import { ActionBar, IActionBarOptions } from "../../../base/browser/ui/actionbar/actionbar.js";
+import { WorkbenchActionExecutedClassification, WorkbenchActionExecutedEvent } from "../../../base/common/actions.js";
+import { ITelemetryService } from "../../telemetry/common/telemetry.js";
 
 export interface IWorkbenchActionBarOptions extends IActionBarOptions {
 	/**
@@ -30,10 +30,14 @@ export class WorkbenchActionBar extends ActionBar {
 
 		const telemetrySource = options.telemetrySource;
 		if (telemetrySource) {
-			this._store.add(this.onDidRun(e => telemetryService.publicLog2<WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification>(
-				'workbenchActionExecuted',
-				{ id: e.action.id, from: telemetrySource })
-			));
+			this._store.add(
+        this.onDidRun(
+          e => telemetryService.publicLog2<WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification>(
+            "workbenchActionExecuted",
+            { id: e.action.id, from: telemetrySource },
+          ),
+        ),
+      );
 		}
 	}
 }

@@ -3,10 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { toUint32 } from '../../../../base/common/uint.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
-import { ConstantTimePrefixSumComputer, PrefixSumComputer, PrefixSumIndexOfResult } from '../../../common/model/prefixSumComputer.js';
+import assert from "assert";
+import { toUint32 } from "../../../../base/common/uint.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
+import {
+  ConstantTimePrefixSumComputer,
+  PrefixSumComputer,
+  PrefixSumIndexOfResult,
+} from "../../../common/model/prefixSumComputer.js";
 
 interface IPrefixSumComputer {
 	getTotalSum(): number;
@@ -32,22 +36,22 @@ function toUint32Array(arr: number[]): Uint32Array {
 function createBoth(values: number[]): IPrefixSumComputer[] {
 	const psc = new PrefixSumComputer(toUint32Array(values));
 	const wrapped: IPrefixSumComputer = {
-		getTotalSum: () => psc.getTotalSum(),
-		getPrefixSum: (count: number) => count === 0 ? 0 : psc.getPrefixSum(count - 1),
-		getIndexOf: (sum: number) => psc.getIndexOf(sum),
-		setValue: (index: number, value: number) => { psc.setValue(index, value); },
-		insertValues: (insertIndex: number, insertArr: number[]) => { psc.insertValues(insertIndex, toUint32Array(insertArr)); },
-		removeValues: (start: number, deleteCount: number) => { psc.removeValues(start, deleteCount); },
-	};
+    getTotalSum: () => psc.getTotalSum(),
+    getPrefixSum: (count: number) => count === 0 ? 0 : psc.getPrefixSum(count - 1),
+    getIndexOf: (sum: number) => psc.getIndexOf(sum),
+    setValue: (index: number, value: number) => { psc.setValue(index, value); },
+    insertValues: (insertIndex: number, insertArr: number[]) => { psc.insertValues(insertIndex, toUint32Array(insertArr)); },
+    removeValues: (start: number, deleteCount: number) => { psc.removeValues(start, deleteCount); },
+  };
 	const ct = new ConstantTimePrefixSumComputer([...values]);
 	const wrappedCt: IPrefixSumComputer = {
-		getTotalSum: () => ct.getTotalSum(),
-		getPrefixSum: (count: number) => ct.getPrefixSum(count),
-		getIndexOf: (sum: number) => ct.getIndexOf(sum),
-		setValue: (index: number, value: number) => { ct.setValue(index, value); },
-		insertValues: (insertIndex: number, insertArr: number[]) => { ct.insertValues(insertIndex, insertArr); },
-		removeValues: (start: number, deleteCount: number) => { ct.removeValues(start, deleteCount); },
-	};
+    getTotalSum: () => ct.getTotalSum(),
+    getPrefixSum: (count: number) => ct.getPrefixSum(count),
+    getIndexOf: (sum: number) => ct.getIndexOf(sum),
+    setValue: (index: number, value: number) => { ct.setValue(index, value); },
+    insertValues: (insertIndex: number, insertArr: number[]) => { ct.insertValues(insertIndex, insertArr); },
+    removeValues: (start: number, deleteCount: number) => { ct.removeValues(start, deleteCount); },
+  };
 	return [wrapped, wrappedCt];
 }
 
@@ -57,11 +61,11 @@ function forBoth(values: number[], callback: (psc: IPrefixSumComputer) => void):
 	}
 }
 
-suite('Editor ViewModel - PrefixSumComputer', () => {
+suite("Editor ViewModel - PrefixSumComputer", () => {
 
 	ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('comprehensive setValue and getIndexOf', () => {
+	test("comprehensive setValue and getIndexOf", () => {
 		forBoth([1, 1, 2, 1, 3], psc => {
 			assert.strictEqual(psc.getTotalSum(), 8);
 			assert.strictEqual(psc.getPrefixSum(0), 0);
@@ -151,22 +155,22 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 
 	// --- getTotalSum ---
 
-	test('getTotalSum with typical values', () => {
+	test("getTotalSum with typical values", () => {
 		forBoth([1, 1, 2, 1, 3], psc => assert.strictEqual(psc.getTotalSum(), 8));
 		forBoth([10], psc => assert.strictEqual(psc.getTotalSum(), 10));
 		forBoth([5, 5, 5], psc => assert.strictEqual(psc.getTotalSum(), 15));
 	});
 
-	test('getTotalSum with all zeroes', () => {
+	test("getTotalSum with all zeroes", () => {
 		forBoth([0, 0, 0], psc => assert.strictEqual(psc.getTotalSum(), 0));
 		forBoth([0], psc => assert.strictEqual(psc.getTotalSum(), 0));
 	});
 
-	test('getTotalSum with empty array', () => {
+	test("getTotalSum with empty array", () => {
 		forBoth([], psc => assert.strictEqual(psc.getTotalSum(), 0));
 	});
 
-	test('getTotalSum with single element', () => {
+	test("getTotalSum with single element", () => {
 		forBoth([0], psc => assert.strictEqual(psc.getTotalSum(), 0));
 		forBoth([1], psc => assert.strictEqual(psc.getTotalSum(), 1));
 		forBoth([100], psc => assert.strictEqual(psc.getTotalSum(), 100));
@@ -174,7 +178,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 
 	// --- getPrefixSum ---
 
-	test('getPrefixSum with typical values', () => {
+	test("getPrefixSum with typical values", () => {
 		forBoth([1, 1, 2, 1, 3], psc => {
 			assert.strictEqual(psc.getPrefixSum(0), 0);
 			assert.strictEqual(psc.getPrefixSum(1), 1);
@@ -185,7 +189,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('getPrefixSum with all zeroes', () => {
+	test("getPrefixSum with all zeroes", () => {
 		forBoth([0, 0, 0], psc => {
 			assert.strictEqual(psc.getPrefixSum(0), 0);
 			assert.strictEqual(psc.getPrefixSum(1), 0);
@@ -194,20 +198,20 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('getPrefixSum with single element', () => {
+	test("getPrefixSum with single element", () => {
 		forBoth([7], psc => {
 			assert.strictEqual(psc.getPrefixSum(0), 0);
 			assert.strictEqual(psc.getPrefixSum(1), 7);
 		});
 	});
 
-	test('getPrefixSum with empty array', () => {
+	test("getPrefixSum with empty array", () => {
 		forBoth([], psc => {
 			assert.strictEqual(psc.getPrefixSum(0), 0);
 		});
 	});
 
-	test('getPrefixSum with leading/trailing zeroes', () => {
+	test("getPrefixSum with leading/trailing zeroes", () => {
 		forBoth([0, 0, 3, 0, 0], psc => {
 			assert.strictEqual(psc.getPrefixSum(0), 0);
 			assert.strictEqual(psc.getPrefixSum(1), 0);
@@ -220,7 +224,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 
 	// --- getIndexOf ---
 
-	test('getIndexOf with typical values', () => {
+	test("getIndexOf with typical values", () => {
 		forBoth([1, 1, 2, 1, 3], psc => {
 			assert.deepStrictEqual(psc.getIndexOf(0), new PrefixSumIndexOfResult(0, 0));
 			assert.deepStrictEqual(psc.getIndexOf(1), new PrefixSumIndexOfResult(1, 0));
@@ -234,19 +238,19 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('getIndexOf with all zeroes', () => {
+	test("getIndexOf with all zeroes", () => {
 		forBoth([0, 0, 0], psc => {
 			assert.deepStrictEqual(psc.getIndexOf(0), new PrefixSumIndexOfResult(2, 0));
 		});
 	});
 
-	test('getIndexOf with single zero', () => {
+	test("getIndexOf with single zero", () => {
 		forBoth([0], psc => {
 			assert.deepStrictEqual(psc.getIndexOf(0), new PrefixSumIndexOfResult(0, 0));
 		});
 	});
 
-	test('getIndexOf with single element', () => {
+	test("getIndexOf with single element", () => {
 		forBoth([5], psc => {
 			assert.deepStrictEqual(psc.getIndexOf(0), new PrefixSumIndexOfResult(0, 0));
 			assert.deepStrictEqual(psc.getIndexOf(1), new PrefixSumIndexOfResult(0, 1));
@@ -254,7 +258,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('getIndexOf with leading zeroes', () => {
+	test("getIndexOf with leading zeroes", () => {
 		forBoth([0, 0, 3], psc => {
 			assert.deepStrictEqual(psc.getIndexOf(0), new PrefixSumIndexOfResult(2, 0));
 			assert.deepStrictEqual(psc.getIndexOf(1), new PrefixSumIndexOfResult(2, 1));
@@ -262,7 +266,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('getIndexOf with trailing zeroes', () => {
+	test("getIndexOf with trailing zeroes", () => {
 		forBoth([3, 0, 0], psc => {
 			assert.deepStrictEqual(psc.getIndexOf(0), new PrefixSumIndexOfResult(0, 0));
 			assert.deepStrictEqual(psc.getIndexOf(1), new PrefixSumIndexOfResult(0, 1));
@@ -270,7 +274,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('getIndexOf with interleaved zeroes', () => {
+	test("getIndexOf with interleaved zeroes", () => {
 		forBoth([0, 1, 0, 2, 0], psc => {
 			assert.deepStrictEqual(psc.getIndexOf(0), new PrefixSumIndexOfResult(1, 0));
 			assert.deepStrictEqual(psc.getIndexOf(1), new PrefixSumIndexOfResult(3, 0));
@@ -278,7 +282,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('getIndexOf with all ones', () => {
+	test("getIndexOf with all ones", () => {
 		forBoth([1, 1, 1, 1, 1], psc => {
 			for (let i = 0; i < 5; i++) {
 				assert.deepStrictEqual(psc.getIndexOf(i), new PrefixSumIndexOfResult(i, 0));
@@ -286,7 +290,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('getIndexOf with large value in single element', () => {
+	test("getIndexOf with large value in single element", () => {
 		forBoth([1000], psc => {
 			assert.deepStrictEqual(psc.getIndexOf(0), new PrefixSumIndexOfResult(0, 0));
 			assert.deepStrictEqual(psc.getIndexOf(500), new PrefixSumIndexOfResult(0, 500));
@@ -296,7 +300,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 
 	// --- setValue ---
 
-	test('setValue no-op when value unchanged', () => {
+	test("setValue no-op when value unchanged", () => {
 		forBoth([1, 2, 3], psc => {
 			assert.strictEqual(psc.getTotalSum(), 6);
 			psc.setValue(1, 2);
@@ -304,7 +308,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('setValue increase', () => {
+	test("setValue increase", () => {
 		forBoth([1, 2, 3], psc => {
 			psc.setValue(1, 5);
 			assert.strictEqual(psc.getTotalSum(), 9);
@@ -317,7 +321,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('setValue decrease', () => {
+	test("setValue decrease", () => {
 		forBoth([1, 5, 3], psc => {
 			psc.setValue(1, 2);
 			assert.strictEqual(psc.getTotalSum(), 6);
@@ -327,7 +331,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('setValue to zero', () => {
+	test("setValue to zero", () => {
 		forBoth([1, 2, 3], psc => {
 			psc.setValue(1, 0);
 			assert.strictEqual(psc.getTotalSum(), 4);
@@ -337,7 +341,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('setValue from zero', () => {
+	test("setValue from zero", () => {
 		forBoth([0, 0, 0], psc => {
 			psc.setValue(1, 3);
 			assert.strictEqual(psc.getTotalSum(), 3);
@@ -346,7 +350,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('setValue on first element', () => {
+	test("setValue on first element", () => {
 		forBoth([1, 2, 3], psc => {
 			psc.setValue(0, 10);
 			assert.strictEqual(psc.getTotalSum(), 15);
@@ -357,7 +361,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('setValue on last element', () => {
+	test("setValue on last element", () => {
 		forBoth([1, 2, 3], psc => {
 			psc.setValue(2, 10);
 			assert.strictEqual(psc.getTotalSum(), 13);
@@ -366,7 +370,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('set all values to zero then restore', () => {
+	test("set all values to zero then restore", () => {
 		forBoth([1, 2, 3], psc => {
 			psc.setValue(0, 0);
 			psc.setValue(1, 0);
@@ -381,7 +385,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('setValue multiple times on same index', () => {
+	test("setValue multiple times on same index", () => {
 		forBoth([1, 1, 1], psc => {
 			psc.setValue(1, 5);
 			psc.setValue(1, 2);
@@ -396,7 +400,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 
 	// --- insertValues ---
 
-	test('insertValues at beginning', () => {
+	test("insertValues at beginning", () => {
 		forBoth([3, 4], psc => {
 			psc.insertValues(0, [1, 2]);
 			assert.strictEqual(psc.getTotalSum(), 10);
@@ -410,7 +414,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('insertValues at end', () => {
+	test("insertValues at end", () => {
 		forBoth([1, 2], psc => {
 			psc.insertValues(2, [3, 4]);
 			assert.strictEqual(psc.getTotalSum(), 10);
@@ -419,7 +423,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('insertValues in the middle', () => {
+	test("insertValues in the middle", () => {
 		forBoth([1, 4], psc => {
 			psc.insertValues(1, [2, 3]);
 			assert.strictEqual(psc.getTotalSum(), 10);
@@ -430,7 +434,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('insertValues with zeroes', () => {
+	test("insertValues with zeroes", () => {
 		forBoth([1, 2], psc => {
 			psc.insertValues(1, [0, 0]);
 			assert.strictEqual(psc.getTotalSum(), 3);
@@ -441,7 +445,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('insertValues into all-zeroes', () => {
+	test("insertValues into all-zeroes", () => {
 		forBoth([0, 0, 0], psc => {
 			psc.insertValues(1, [2, 3]);
 			assert.strictEqual(psc.getTotalSum(), 5);
@@ -454,7 +458,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('insertValues into empty computer', () => {
+	test("insertValues into empty computer", () => {
 		forBoth([], psc => {
 			psc.insertValues(0, [5, 3]);
 			assert.strictEqual(psc.getTotalSum(), 8);
@@ -466,7 +470,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 
 	// --- removeValues ---
 
-	test('removeValues from beginning', () => {
+	test("removeValues from beginning", () => {
 		forBoth([1, 2, 3, 4], psc => {
 			psc.removeValues(0, 2);
 			assert.strictEqual(psc.getTotalSum(), 7);
@@ -477,7 +481,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('removeValues from end', () => {
+	test("removeValues from end", () => {
 		forBoth([1, 2, 3, 4], psc => {
 			psc.removeValues(2, 2);
 			assert.strictEqual(psc.getTotalSum(), 3);
@@ -486,7 +490,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('removeValues from the middle', () => {
+	test("removeValues from the middle", () => {
 		forBoth([1, 2, 3, 4], psc => {
 			psc.removeValues(1, 2);
 			assert.strictEqual(psc.getTotalSum(), 5);
@@ -498,14 +502,14 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('removeValues all', () => {
+	test("removeValues all", () => {
 		forBoth([1, 2, 3], psc => {
 			psc.removeValues(0, 3);
 			assert.strictEqual(psc.getTotalSum(), 0);
 		});
 	});
 
-	test('removeValues single element', () => {
+	test("removeValues single element", () => {
 		forBoth([5, 10, 15], psc => {
 			psc.removeValues(1, 1);
 			assert.strictEqual(psc.getTotalSum(), 20);
@@ -515,7 +519,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('removeValues zero-valued elements', () => {
+	test("removeValues zero-valued elements", () => {
 		forBoth([0, 0, 5, 0, 0], psc => {
 			psc.removeValues(0, 2);
 			assert.strictEqual(psc.getTotalSum(), 5);
@@ -526,7 +530,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 
 	// --- combined operations ---
 
-	test('insert then remove', () => {
+	test("insert then remove", () => {
 		forBoth([1, 2, 3], psc => {
 			psc.insertValues(1, [10, 20]);
 			assert.strictEqual(psc.getTotalSum(), 36);
@@ -538,7 +542,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('remove then insert at same position', () => {
+	test("remove then insert at same position", () => {
 		forBoth([1, 2, 3], psc => {
 			psc.removeValues(1, 1);
 			psc.insertValues(1, [5]);
@@ -549,7 +553,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('setValue then insert then remove', () => {
+	test("setValue then insert then remove", () => {
 		forBoth([1, 1, 1], psc => {
 			psc.setValue(0, 5);
 			psc.insertValues(1, [10]);
@@ -564,7 +568,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('multiple queries between mutations are consistent', () => {
+	test("multiple queries between mutations are consistent", () => {
 		forBoth([2, 3, 5], psc => {
 			assert.strictEqual(psc.getTotalSum(), 10);
 			assert.deepStrictEqual(psc.getIndexOf(0), new PrefixSumIndexOfResult(0, 0));
@@ -581,7 +585,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 
 	// --- edge cases ---
 
-	test('large values', () => {
+	test("large values", () => {
 		forBoth([100, 200, 300], psc => {
 			assert.strictEqual(psc.getTotalSum(), 600);
 			assert.strictEqual(psc.getPrefixSum(1), 100);
@@ -596,7 +600,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('many elements', () => {
+	test("many elements", () => {
 		forBoth(new Array(100).fill(1), psc => {
 			assert.strictEqual(psc.getTotalSum(), 100);
 			assert.strictEqual(psc.getPrefixSum(50), 50);
@@ -607,7 +611,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('many elements all zeroes', () => {
+	test("many elements all zeroes", () => {
 		forBoth(new Array(100).fill(0), psc => {
 			assert.strictEqual(psc.getTotalSum(), 0);
 			for (let i = 0; i <= 100; i++) {
@@ -617,7 +621,7 @@ suite('Editor ViewModel - PrefixSumComputer', () => {
 		});
 	});
 
-	test('setValue between queries re-validates correctly', () => {
+	test("setValue between queries re-validates correctly", () => {
 		forBoth([1, 1, 1, 1, 1], psc => {
 			assert.strictEqual(psc.getTotalSum(), 5);
 

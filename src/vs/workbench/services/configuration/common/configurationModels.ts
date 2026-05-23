@@ -3,17 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { equals } from '../../../../base/common/objects.js';
-import { toValuesTree, IConfigurationModel, IConfigurationOverrides, IConfigurationValue, IConfigurationChange } from '../../../../platform/configuration/common/configuration.js';
-import { Configuration as BaseConfiguration, ConfigurationModelParser, ConfigurationModel, ConfigurationParseOptions } from '../../../../platform/configuration/common/configurationModels.js';
-import { IStoredWorkspaceFolder } from '../../../../platform/workspaces/common/workspaces.js';
-import { Workspace } from '../../../../platform/workspace/common/workspace.js';
-import { ResourceMap } from '../../../../base/common/map.js';
-import { URI } from '../../../../base/common/uri.js';
-import { isBoolean } from '../../../../base/common/types.js';
-import { distinct } from '../../../../base/common/arrays.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { IStringDictionary } from '../../../../base/common/collections.js';
+import { equals } from "../../../../base/common/objects.js";
+import {
+  toValuesTree,
+  IConfigurationModel,
+  IConfigurationOverrides,
+  IConfigurationValue,
+  IConfigurationChange,
+} from "../../../../platform/configuration/common/configuration.js";
+import {
+  Configuration as BaseConfiguration,
+  ConfigurationModelParser,
+  ConfigurationModel,
+  ConfigurationParseOptions,
+} from "../../../../platform/configuration/common/configurationModels.js";
+import { IStoredWorkspaceFolder } from "../../../../platform/workspaces/common/workspaces.js";
+import { Workspace } from "../../../../platform/workspace/common/workspace.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { URI } from "../../../../base/common/uri.js";
+import { isBoolean } from "../../../../base/common/types.js";
+import { distinct } from "../../../../base/common/arrays.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IStringDictionary } from "../../../../base/common/collections.js";
 
 export class WorkspaceConfigurationModelParser extends ConfigurationModelParser {
 
@@ -59,22 +70,36 @@ export class WorkspaceConfigurationModelParser extends ConfigurationModelParser 
 	}
 
 	protected override doParseRaw(raw: IStringDictionary<unknown>, configurationParseOptions?: ConfigurationParseOptions): IConfigurationModel {
-		this._folders = (raw['folders'] || []) as IStoredWorkspaceFolder[];
-		this._transient = isBoolean(raw['transient']) && raw['transient'];
-		this._settingsModelParser.parseRaw(raw['settings'] as IStringDictionary<unknown>, configurationParseOptions);
-		this._launchModel = this.createConfigurationModelFrom(raw, 'launch');
-		this._tasksModel = this.createConfigurationModelFrom(raw, 'tasks');
+		this._folders = (raw["folders"] || []) as IStoredWorkspaceFolder[];
+		this._transient = isBoolean(raw["transient"]) && raw["transient"];
+		this._settingsModelParser.parseRaw(
+      raw["settings"] as IStringDictionary<unknown>,
+      configurationParseOptions,
+    );
+		this._launchModel = this.createConfigurationModelFrom(raw, "launch");
+		this._tasksModel = this.createConfigurationModelFrom(raw, "tasks");
 		return super.doParseRaw(raw, configurationParseOptions);
 	}
 
 	private createConfigurationModelFrom(raw: IStringDictionary<unknown>, key: string): ConfigurationModel {
 		const data = raw[key] as IStringDictionary<unknown> | undefined;
 		if (data) {
-			const contents = toValuesTree(data, message => console.error(`Conflict in settings file ${this._name}: ${message}`));
+			const contents = toValuesTree(
+        data,
+        message => console.error(
+          `Conflict in settings file ${this._name}: ${message}`,
+        ),
+      );
 			const scopedContents = Object.create(null);
 			scopedContents[key] = contents;
 			const keys = Object.keys(data).map(k => `${key}.${k}`);
-			return new ConfigurationModel(scopedContents, keys, [], undefined, this.logService);
+			return new ConfigurationModel(
+        scopedContents,
+        keys,
+        [],
+        undefined,
+        this.logService,
+      );
 		}
 		return ConfigurationModel.createEmptyModel(this.logService);
 	}
@@ -87,7 +112,12 @@ export class StandaloneConfigurationModelParser extends ConfigurationModelParser
 	}
 
 	protected override doParseRaw(raw: IStringDictionary<unknown>, configurationParseOptions?: ConfigurationParseOptions): IConfigurationModel {
-		const contents = toValuesTree(raw, message => console.error(`Conflict in settings file ${this._name}: ${message}`));
+		const contents = toValuesTree(
+      raw,
+      message => console.error(
+        `Conflict in settings file ${this._name}: ${message}`,
+      ),
+    );
 		const scopedContents = Object.create(null);
 		scopedContents[this.scope] = contents;
 		const keys = Object.keys(raw).map(key => `${this.scope}.${key}`);
@@ -109,9 +139,20 @@ export class Configuration extends BaseConfiguration {
 		memoryConfiguration: ConfigurationModel,
 		memoryConfigurationByResource: ResourceMap<ConfigurationModel>,
 		private readonly _workspace: Workspace | undefined,
-		logService: ILogService
+		logService: ILogService,
 	) {
-		super(defaults, policy, application, localUser, remoteUser, workspaceConfiguration, folders, memoryConfiguration, memoryConfigurationByResource, logService);
+		super(
+      defaults,
+      policy,
+      application,
+      localUser,
+      remoteUser,
+      workspaceConfiguration,
+      folders,
+      memoryConfiguration,
+      memoryConfigurationByResource,
+      logService,
+    );
 	}
 
 	override getValue(key: string | undefined, overrides: IConfigurationOverrides = {}): unknown {
@@ -161,9 +202,16 @@ export class Configuration extends BaseConfiguration {
 		};
 		const keys = compare(this.allKeys(), other.allKeys());
 		const overrides: [string, string[]][] = [];
-		const allOverrideIdentifiers = distinct([...this.allOverrideIdentifiers(), ...other.allOverrideIdentifiers()]);
+		const allOverrideIdentifiers = distinct([
+      ...this.allOverrideIdentifiers(),
+      ...other.allOverrideIdentifiers(),
+    ]);
 		for (const overrideIdentifier of allOverrideIdentifiers) {
-			const keys = compare(this.getAllKeysForOverrideIdentifier(overrideIdentifier), other.getAllKeysForOverrideIdentifier(overrideIdentifier), overrideIdentifier);
+			const keys = compare(
+        this.getAllKeysForOverrideIdentifier(overrideIdentifier),
+        other.getAllKeysForOverrideIdentifier(overrideIdentifier),
+        overrideIdentifier,
+      );
 			if (keys.length) {
 				overrides.push([overrideIdentifier, keys]);
 			}

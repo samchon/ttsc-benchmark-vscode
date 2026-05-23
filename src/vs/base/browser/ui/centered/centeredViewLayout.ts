@@ -3,13 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { $, IDomNodePagePosition } from '../../dom.js';
-import { IView, IViewSize } from '../grid/grid.js';
-import { IBoundarySashes } from '../sash/sash.js';
-import { DistributeSizing, ISplitViewStyles, IView as ISplitViewView, Orientation, SplitView } from '../splitview/splitview.js';
-import { Color } from '../../../common/color.js';
-import { Event } from '../../../common/event.js';
-import { DisposableStore, IDisposable } from '../../../common/lifecycle.js';
+import { $, IDomNodePagePosition } from "../../dom.js";
+import { IView, IViewSize } from "../grid/grid.js";
+import { IBoundarySashes } from "../sash/sash.js";
+import {
+  DistributeSizing,
+  ISplitViewStyles,
+  IView as ISplitViewView,
+  Orientation,
+  SplitView,
+} from "../splitview/splitview.js";
+import { Color } from "../../../common/color.js";
+import { Event } from "../../../common/event.js";
+import { DisposableStore, IDisposable } from "../../../common/lifecycle.js";
 
 export interface CenteredViewState {
 	// width of the fixed centered layout
@@ -21,37 +27,37 @@ export interface CenteredViewState {
 }
 
 const defaultState: CenteredViewState = {
-	targetWidth: 900,
-	leftMarginRatio: 0.1909,
-	rightMarginRatio: 0.1909,
+  targetWidth: 900,
+  leftMarginRatio: 0.1909,
+  rightMarginRatio: 0.1909,
 };
 
-const distributeSizing: DistributeSizing = { type: 'distribute' };
+const distributeSizing: DistributeSizing = { type: "distribute" };
 
 function createEmptyView(background: Color | undefined): ISplitViewView<{ top: number; left: number }> {
-	const element = $('.centered-layout-margin');
-	element.style.height = '100%';
+	const element = $(".centered-layout-margin");
+	element.style.height = "100%";
 	if (background) {
 		element.style.backgroundColor = background.toString();
 	}
 
 	return {
-		element,
-		layout: () => undefined,
-		minimumSize: 60,
-		maximumSize: Number.POSITIVE_INFINITY,
-		onDidChange: Event.None
-	};
+    element,
+    layout: () => undefined,
+    minimumSize: 60,
+    maximumSize: Number.POSITIVE_INFINITY,
+    onDidChange: Event.None,
+  };
 }
 
 function toSplitViewView(view: IView, getHeight: () => number): ISplitViewView<{ top: number; left: number }> {
 	return {
-		element: view.element,
-		get maximumSize() { return view.maximumWidth; },
-		get minimumSize() { return view.minimumWidth; },
-		onDidChange: Event.map(view.onDidChange, e => e && e.width),
-		layout: (size, offset, ctx) => view.layout(size, getHeight(), ctx?.top ?? 0, (ctx?.left ?? 0) + offset)
-	};
+    element: view.element,
+    get maximumSize() { return view.maximumWidth; },
+    get minimumSize() { return view.minimumWidth; },
+    onDidChange: Event.map(view.onDidChange, e => e && e.width),
+    layout: (size, offset, ctx) => view.layout(size, getHeight(), ctx?.top ?? 0, (ctx?.left ?? 0) + offset),
+  };
 }
 
 export interface ICenteredViewStyles extends ISplitViewStyles {
@@ -61,7 +67,12 @@ export interface ICenteredViewStyles extends ISplitViewStyles {
 export class CenteredViewLayout implements IDisposable {
 
 	private splitView?: SplitView<{ top: number; left: number }>;
-	private lastLayoutPosition: IDomNodePagePosition = { width: 0, height: 0, left: 0, top: 0 };
+	private lastLayoutPosition: IDomNodePagePosition = {
+    width: 0,
+    height: 0,
+    left: 0,
+    top: 0,
+  };
 	private style!: ICenteredViewStyles;
 	private didLayout = false;
 	private emptyViews: ISplitViewView<{ top: number; left: number }>[] | undefined;
@@ -71,11 +82,11 @@ export class CenteredViewLayout implements IDisposable {
 		private container: HTMLElement,
 		private view: IView,
 		public state: CenteredViewState = { ...defaultState },
-		private centeredLayoutFixedWidth: boolean = false
+		private centeredLayoutFixedWidth: boolean = false,
 	) {
 		this.container.appendChild(this.view.element);
 		// Make sure to hide the split view overflow like sashes #52892
-		this.container.style.overflow = 'hidden';
+		this.container.style.overflow = "hidden";
 	}
 
 	get minimumWidth(): number { return this.splitView ? this.splitView.minimumSize : this.view.minimumWidth; }
@@ -116,7 +127,10 @@ export class CenteredViewLayout implements IDisposable {
 			return;
 		}
 		if (this.centeredLayoutFixedWidth) {
-			const centerViewWidth = Math.min(this.lastLayoutPosition.width, this.state.targetWidth);
+			const centerViewWidth = Math.min(
+        this.lastLayoutPosition.width,
+        this.state.targetWidth,
+      );
 			const marginWidthFloat = (this.lastLayoutPosition.width - centerViewWidth) / 2;
 			this.splitView.resizeView(0, Math.floor(marginWidthFloat));
 			this.splitView.resizeView(1, centerViewWidth);
@@ -142,8 +156,12 @@ export class CenteredViewLayout implements IDisposable {
 	private updateState() {
 		if (!!this.splitView) {
 			this.state.targetWidth = this.splitView.getViewSize(1);
-			this.state.leftMarginRatio = this.splitView.getViewSize(0) / this.lastLayoutPosition.width;
-			this.state.rightMarginRatio = this.splitView.getViewSize(2) / this.lastLayoutPosition.width;
+			this.state.leftMarginRatio = this.splitView.getViewSize(
+        0,
+      ) / this.lastLayoutPosition.width;
+			this.state.rightMarginRatio = this.splitView.getViewSize(
+        2,
+      ) / this.lastLayoutPosition.width;
 		}
 	}
 
@@ -168,10 +186,10 @@ export class CenteredViewLayout implements IDisposable {
 		if (active) {
 			this.view.element.remove();
 			this.splitView = new SplitView(this.container, {
-				inverseAltBehavior: true,
-				orientation: Orientation.HORIZONTAL,
-				styles: this.style
-			});
+        inverseAltBehavior: true,
+        orientation: Orientation.HORIZONTAL,
+        styles: this.style,
+      });
 			this.splitView.orthogonalStartSash = this.boundarySashes.top;
 			this.splitView.orthogonalEndSash = this.boundarySashes.bottom;
 
@@ -180,17 +198,29 @@ export class CenteredViewLayout implements IDisposable {
 					this.updateState();
 				}
 			}));
-			this.splitViewDisposables.add(this.splitView.onDidSashReset(() => {
-				this.state = { ...defaultState };
-				this.resizeSplitViews();
-			}));
+			this.splitViewDisposables.add(
+        this.splitView.onDidSashReset(() => {
+          this.state = { ...defaultState };
+          this.resizeSplitViews();
+        }),
+      );
 
-			this.splitView.layout(this.lastLayoutPosition.width, this.lastLayoutPosition);
+			this.splitView.layout(
+        this.lastLayoutPosition.width,
+        this.lastLayoutPosition,
+      );
 			const backgroundColor = this.style ? this.style.background : undefined;
-			this.emptyViews = [createEmptyView(backgroundColor), createEmptyView(backgroundColor)];
+			this.emptyViews = [
+        createEmptyView(backgroundColor),
+        createEmptyView(backgroundColor),
+      ];
 
 			this.splitView.addView(this.emptyViews[0], distributeSizing, 0);
-			this.splitView.addView(toSplitViewView(this.view, () => this.lastLayoutPosition.height), distributeSizing, 1);
+			this.splitView.addView(
+        toSplitViewView(this.view, () => this.lastLayoutPosition.height),
+        distributeSizing,
+        1,
+      );
 			this.splitView.addView(this.emptyViews[1], distributeSizing, 2);
 
 			this.resizeSplitViews();
@@ -201,7 +231,12 @@ export class CenteredViewLayout implements IDisposable {
 			this.splitView = undefined;
 			this.emptyViews = undefined;
 			this.container.appendChild(this.view.element);
-			this.view.layout(this.lastLayoutPosition.width, this.lastLayoutPosition.height, this.lastLayoutPosition.top, this.lastLayoutPosition.left);
+			this.view.layout(
+        this.lastLayoutPosition.width,
+        this.lastLayoutPosition.height,
+        this.lastLayoutPosition.top,
+        this.lastLayoutPosition.left,
+      );
 		}
 	}
 

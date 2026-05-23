@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IObservable, ITransaction } from '../observable.js';
-import { observableValueOpts } from './observables/observableValueOpts.js';
+import { IObservable, ITransaction } from "../observable.js";
+import { observableValueOpts } from "./observables/observableValueOpts.js";
 
 
 export class ObservableMap<K, V> implements Map<K, V> {
@@ -53,8 +53,8 @@ export class ObservableMap<K, V> implements Map<K, V> {
 
 	forEach(callbackfn: (value: V, key: K, map: Map<K, V>) => void, thisArg?: unknown): void {
 		this._data.forEach((value, key, _map) => {
-			callbackfn.call(thisArg, value, key, this);
-		});
+      callbackfn.call(thisArg, value, key, this);
+    });
 	}
 
 	*entries(): IterableIterator<[K, V]> {
@@ -74,6 +74,6 @@ export class ObservableMap<K, V> implements Map<K, V> {
 	}
 
 	get [Symbol.toStringTag](): string {
-		return 'ObservableMap';
+		return "ObservableMap";
 	}
 }

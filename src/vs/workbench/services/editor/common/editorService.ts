@@ -3,18 +3,44 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { IResourceEditorInput, IEditorOptions, IResourceEditorInputIdentifier, ITextResourceEditorInput } from '../../../../platform/editor/common/editor.js';
-import { IEditorPane, GroupIdentifier, IUntitledTextResourceEditorInput, IResourceDiffEditorInput, ITextDiffEditorPane, IEditorIdentifier, ISaveOptions, IRevertOptions, EditorsOrder, IVisibleEditorPane, IEditorCloseEvent, IUntypedEditorInput, IFindEditorOptions, IEditorWillOpenEvent, ITextResourceDiffEditorInput } from '../../../common/editor.js';
-import { EditorInput } from '../../../common/editor/editorInput.js';
-import { Event } from '../../../../base/common/event.js';
-import { IEditor, IDiffEditor } from '../../../../editor/common/editorCommon.js';
-import { ICloseEditorOptions, IEditorGroup, IEditorGroupsContainer, isEditorGroup } from './editorGroupsService.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IGroupModelChangeEvent } from '../../../common/editor/editorGroupModel.js';
-import { DisposableStore } from '../../../../base/common/lifecycle.js';
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import {
+  IResourceEditorInput,
+  IEditorOptions,
+  IResourceEditorInputIdentifier,
+  ITextResourceEditorInput,
+} from "../../../../platform/editor/common/editor.js";
+import {
+  IEditorPane,
+  GroupIdentifier,
+  IUntitledTextResourceEditorInput,
+  IResourceDiffEditorInput,
+  ITextDiffEditorPane,
+  IEditorIdentifier,
+  ISaveOptions,
+  IRevertOptions,
+  EditorsOrder,
+  IVisibleEditorPane,
+  IEditorCloseEvent,
+  IUntypedEditorInput,
+  IFindEditorOptions,
+  IEditorWillOpenEvent,
+  ITextResourceDiffEditorInput,
+} from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { Event } from "../../../../base/common/event.js";
+import { IEditor, IDiffEditor } from "../../../../editor/common/editorCommon.js";
+import {
+  ICloseEditorOptions,
+  IEditorGroup,
+  IEditorGroupsContainer,
+  isEditorGroup,
+} from "./editorGroupsService.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IGroupModelChangeEvent } from "../../../common/editor/editorGroupModel.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
 
-export const IEditorService = createDecorator<IEditorService>('editorService');
+export const IEditorService = createDecorator<IEditorService>("editorService");
 
 /**
  * Open an editor in the currently active group.
@@ -45,7 +71,7 @@ export type PreferredGroup = IEditorGroup | GroupIdentifier | SIDE_GROUP_TYPE | 
 export function isPreferredGroup(obj: unknown): obj is PreferredGroup {
 	const candidate = obj as PreferredGroup | undefined;
 
-	return typeof obj === 'number' || isEditorGroup(candidate);
+	return typeof obj === "number" || isEditorGroup(candidate);
 }
 
 export interface ISaveEditorsOptions extends ISaveOptions {

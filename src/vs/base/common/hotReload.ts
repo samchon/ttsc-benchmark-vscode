@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable } from './lifecycle.js';
+import { IDisposable } from "./lifecycle.js";
 
 let _isHotReloadEnabled = false;
 
@@ -21,8 +21,8 @@ export function registerHotReloadHandler(handler: HotReloadHandler): IDisposable
 		const handlers = registerGlobalHotReloadHandler();
 		handlers.add(handler);
 		return {
-			dispose() { handlers.delete(handler); }
-		};
+      dispose() { handlers.delete(handler); },
+    };
 	}
 }
 
@@ -74,7 +74,7 @@ function registerGlobalHotReloadHandler() {
 let hotReloadHandlers: Set<(args: { oldExports: Record<string, unknown>; newSrc: string; config: HotReloadConfig }) => AcceptNewExportsFn | undefined> | undefined = undefined;
 
 interface HotReloadConfig {
-	mode?: 'patch-prototype' | undefined;
+	mode?: "patch-prototype" | undefined;
 }
 
 interface GlobalThisAddition {
@@ -86,7 +86,7 @@ type AcceptNewExportsFn = (newExports: Record<string, unknown>) => boolean;
 if (isHotReloadEnabled()) {
 	// This code does not run in production.
 	registerHotReloadHandler(({ oldExports, newSrc, config }) => {
-		if (config.mode !== 'patch-prototype') {
+		if (config.mode !== "patch-prototype") {
 			return undefined;
 		}
 
@@ -94,7 +94,7 @@ if (isHotReloadEnabled()) {
 			for (const key in newExports) {
 				const exportedItem = newExports[key];
 				console.log(`[hot-reload] Patching prototype methods of '${key}'`, { exportedItem });
-				if (typeof exportedItem === 'function' && exportedItem.prototype) {
+				if (typeof exportedItem === "function" && exportedItem.prototype) {
 					const oldExportedItem = oldExports[key];
 					if (oldExportedItem) {
 						for (const prop of Object.getOwnPropertyNames(exportedItem.prototype)) {

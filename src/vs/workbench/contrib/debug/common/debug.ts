@@ -3,118 +3,567 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IAction } from '../../../../base/common/actions.js';
-import { VSBuffer } from '../../../../base/common/buffer.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { Color } from '../../../../base/common/color.js';
-import { Event } from '../../../../base/common/event.js';
-import { IJSONSchema, IJSONSchemaSnippet } from '../../../../base/common/jsonSchema.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import severity from '../../../../base/common/severity.js';
-import { URI, UriComponents, URI as uri } from '../../../../base/common/uri.js';
-import { IPosition, Position } from '../../../../editor/common/core/position.js';
-import { IRange } from '../../../../editor/common/core/range.js';
-import * as editorCommon from '../../../../editor/common/editorCommon.js';
-import { ITextModel as EditorIModel } from '../../../../editor/common/model.js';
-import * as nls from '../../../../nls.js';
-import { ConfigurationTarget } from '../../../../platform/configuration/common/configuration.js';
-import { RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { ITelemetryEndpoint } from '../../../../platform/telemetry/common/telemetry.js';
-import { IWorkspaceFolder } from '../../../../platform/workspace/common/workspace.js';
-import { IEditorPane } from '../../../common/editor.js';
-import { DebugCompoundRoot } from './debugCompoundRoot.js';
-import { IDataBreakpointOptions, IFunctionBreakpointOptions, IInstructionBreakpointOptions } from './debugModel.js';
-import { Source } from './debugSource.js';
-import { ITaskIdentifier } from '../../tasks/common/tasks.js';
-import { LiveTestResult } from '../../testing/common/testResult.js';
-import { IEditorService } from '../../../services/editor/common/editorService.js';
-import { IView } from '../../../common/views.js';
+import { IAction } from "../../../../base/common/actions.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Color } from "../../../../base/common/color.js";
+import { Event } from "../../../../base/common/event.js";
+import { IJSONSchema, IJSONSchemaSnippet } from "../../../../base/common/jsonSchema.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import severity from "../../../../base/common/severity.js";
+import { URI, UriComponents, URI as uri } from "../../../../base/common/uri.js";
+import { IPosition, Position } from "../../../../editor/common/core/position.js";
+import { IRange } from "../../../../editor/common/core/range.js";
+import * as editorCommon from "../../../../editor/common/editorCommon.js";
+import { ITextModel as EditorIModel } from "../../../../editor/common/model.js";
+import * as nls from "../../../../nls.js";
+import { ConfigurationTarget } from "../../../../platform/configuration/common/configuration.js";
+import { RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { ITelemetryEndpoint } from "../../../../platform/telemetry/common/telemetry.js";
+import { IWorkspaceFolder } from "../../../../platform/workspace/common/workspace.js";
+import { IEditorPane } from "../../../common/editor.js";
+import { DebugCompoundRoot } from "./debugCompoundRoot.js";
+import {
+  IDataBreakpointOptions,
+  IFunctionBreakpointOptions,
+  IInstructionBreakpointOptions,
+} from "./debugModel.js";
+import { Source } from "./debugSource.js";
+import { ITaskIdentifier } from "../../tasks/common/tasks.js";
+import { LiveTestResult } from "../../testing/common/testResult.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IView } from "../../../common/views.js";
 
-export const VIEWLET_ID = 'workbench.view.debug';
+export const VIEWLET_ID = "workbench.view.debug";
 
-export const VARIABLES_VIEW_ID = 'workbench.debug.variablesView';
-export const WATCH_VIEW_ID = 'workbench.debug.watchExpressionsView';
-export const CALLSTACK_VIEW_ID = 'workbench.debug.callStackView';
-export const LOADED_SCRIPTS_VIEW_ID = 'workbench.debug.loadedScriptsView';
-export const BREAKPOINTS_VIEW_ID = 'workbench.debug.breakPointsView';
-export const DISASSEMBLY_VIEW_ID = 'workbench.debug.disassemblyView';
-export const DEBUG_PANEL_ID = 'workbench.panel.repl';
-export const REPL_VIEW_ID = 'workbench.panel.repl.view';
-export const CONTEXT_DEBUG_TYPE = new RawContextKey<string>('debugType', undefined, { type: 'string', description: nls.localize('debugType', "Debug type of the active debug session. For example 'python'.") });
-export const CONTEXT_DEBUG_CONFIGURATION_TYPE = new RawContextKey<string>('debugConfigurationType', undefined, { type: 'string', description: nls.localize('debugConfigurationType', "Debug type of the selected launch configuration. For example 'python'.") });
-export const CONTEXT_DEBUG_STATE = new RawContextKey<string>('debugState', 'inactive', { type: 'string', description: nls.localize('debugState', "State that the focused debug session is in. One of the following: 'inactive', 'initializing', 'stopped' or 'running'.") });
-export const CONTEXT_DEBUG_UX_KEY = 'debugUx';
-export const CONTEXT_DEBUG_UX = new RawContextKey<string>(CONTEXT_DEBUG_UX_KEY, 'default', { type: 'string', description: nls.localize('debugUX', "Debug UX state. When there are no debug configurations it is 'simple', otherwise 'default'. Used to decide when to show welcome views in the debug viewlet.") });
-export const CONTEXT_HAS_DEBUGGED = new RawContextKey<boolean>('hasDebugged', false, { type: 'boolean', description: nls.localize('hasDebugged', "True when a debug session has been started at least once, false otherwise.") });
-export const CONTEXT_IN_DEBUG_MODE = new RawContextKey<boolean>('inDebugMode', false, { type: 'boolean', description: nls.localize('inDebugMode', "True when debugging, false otherwise.") });
-export const CONTEXT_IN_DEBUG_REPL = new RawContextKey<boolean>('inDebugRepl', false, { type: 'boolean', description: nls.localize('inDebugRepl', "True when focus is in the debug console, false otherwise.") });
-export const CONTEXT_BREAKPOINT_WIDGET_VISIBLE = new RawContextKey<boolean>('breakpointWidgetVisible', false, { type: 'boolean', description: nls.localize('breakpointWidgetVisibile', "True when breakpoint editor zone widget is visible, false otherwise.") });
-export const CONTEXT_IN_BREAKPOINT_WIDGET = new RawContextKey<boolean>('inBreakpointWidget', false, { type: 'boolean', description: nls.localize('inBreakpointWidget', "True when focus is in the breakpoint editor zone widget, false otherwise.") });
-export const CONTEXT_BREAKPOINTS_FOCUSED = new RawContextKey<boolean>('breakpointsFocused', true, { type: 'boolean', description: nls.localize('breakpointsFocused', "True when the BREAKPOINTS view is focused, false otherwise.") });
-export const CONTEXT_WATCH_EXPRESSIONS_FOCUSED = new RawContextKey<boolean>('watchExpressionsFocused', true, { type: 'boolean', description: nls.localize('watchExpressionsFocused', "True when the WATCH view is focused, false otherwise.") });
-export const CONTEXT_WATCH_EXPRESSIONS_EXIST = new RawContextKey<boolean>('watchExpressionsExist', false, { type: 'boolean', description: nls.localize('watchExpressionsExist', "True when at least one watch expression exists, false otherwise.") });
-export const CONTEXT_VARIABLES_FOCUSED = new RawContextKey<boolean>('variablesFocused', true, { type: 'boolean', description: nls.localize('variablesFocused', "True when the VARIABLES views is focused, false otherwise") });
-export const CONTEXT_EXPRESSION_SELECTED = new RawContextKey<boolean>('expressionSelected', false, { type: 'boolean', description: nls.localize('expressionSelected', "True when an expression input box is open in either the WATCH or the VARIABLES view, false otherwise.") });
-export const CONTEXT_BREAKPOINT_INPUT_FOCUSED = new RawContextKey<boolean>('breakpointInputFocused', false, { type: 'boolean', description: nls.localize('breakpointInputFocused', "True when the input box has focus in the BREAKPOINTS view.") });
-export const CONTEXT_CALLSTACK_ITEM_TYPE = new RawContextKey<string>('callStackItemType', undefined, { type: 'string', description: nls.localize('callStackItemType', "Represents the item type of the focused element in the CALL STACK view. For example: 'session', 'thread', 'stackFrame'") });
-export const CONTEXT_CALLSTACK_SESSION_IS_ATTACH = new RawContextKey<boolean>('callStackSessionIsAttach', false, { type: 'boolean', description: nls.localize('callStackSessionIsAttach', "True when the session in the CALL STACK view is attach, false otherwise. Used internally for inline menus in the CALL STACK view.") });
-export const CONTEXT_CALLSTACK_ITEM_STOPPED = new RawContextKey<boolean>('callStackItemStopped', false, { type: 'boolean', description: nls.localize('callStackItemStopped', "True when the focused item in the CALL STACK is stopped. Used internally for inline menus in the CALL STACK view.") });
-export const CONTEXT_CALLSTACK_SESSION_HAS_ONE_THREAD = new RawContextKey<boolean>('callStackSessionHasOneThread', false, { type: 'boolean', description: nls.localize('callStackSessionHasOneThread', "True when the focused session in the CALL STACK view has exactly one thread. Used internally for inline menus in the CALL STACK view.") });
-export const CONTEXT_CALLSTACK_FOCUSED = new RawContextKey<boolean>('callStackFocused', true, { type: 'boolean', description: nls.localize('callStackFocused', "True when the CALLSTACK view is focused, false otherwise.") });
-export const CONTEXT_WATCH_ITEM_TYPE = new RawContextKey<string>('watchItemType', undefined, { type: 'string', description: nls.localize('watchItemType', "Represents the item type of the focused element in the WATCH view. For example: 'expression', 'variable'") });
-export const CONTEXT_CAN_VIEW_MEMORY = new RawContextKey<boolean>('canViewMemory', undefined, { type: 'boolean', description: nls.localize('canViewMemory', "Indicates whether the item in the view has an associated memory reference.") });
-export const CONTEXT_BREAKPOINT_ITEM_TYPE = new RawContextKey<string>('breakpointItemType', undefined, { type: 'string', description: nls.localize('breakpointItemType', "Represents the item type of the focused element in the BREAKPOINTS view. For example: 'breakpoint', 'exceptionBreakpoint', 'functionBreakpoint', 'dataBreakpoint'") });
-export const CONTEXT_BREAKPOINT_ITEM_IS_DATA_BYTES = new RawContextKey<boolean>('breakpointItemBytes', undefined, { type: 'boolean', description: nls.localize('breakpointItemIsDataBytes', "Whether the breakpoint item is a data breakpoint on a byte range.") });
-export const CONTEXT_BREAKPOINT_HAS_MODES = new RawContextKey<boolean>('breakpointHasModes', false, { type: 'boolean', description: nls.localize('breakpointHasModes', "Whether the breakpoint has multiple modes it can switch to.") });
-export const CONTEXT_BREAKPOINT_SUPPORTS_CONDITION = new RawContextKey<boolean>('breakpointSupportsCondition', false, { type: 'boolean', description: nls.localize('breakpointSupportsCondition', "True when the focused breakpoint supports conditions.") });
-export const CONTEXT_LOADED_SCRIPTS_SUPPORTED = new RawContextKey<boolean>('loadedScriptsSupported', false, { type: 'boolean', description: nls.localize('loadedScriptsSupported', "True when the focused sessions supports the LOADED SCRIPTS view") });
-export const CONTEXT_LOADED_SCRIPTS_ITEM_TYPE = new RawContextKey<string>('loadedScriptsItemType', undefined, { type: 'string', description: nls.localize('loadedScriptsItemType', "Represents the item type of the focused element in the LOADED SCRIPTS view.") });
-export const CONTEXT_FOCUSED_SESSION_IS_ATTACH = new RawContextKey<boolean>('focusedSessionIsAttach', false, { type: 'boolean', description: nls.localize('focusedSessionIsAttach', "True when the focused session is 'attach'.") });
-export const CONTEXT_FOCUSED_SESSION_IS_NO_DEBUG = new RawContextKey<boolean>('focusedSessionIsNoDebug', false, { type: 'boolean', description: nls.localize('focusedSessionIsNoDebug', "True when the focused session is run without debugging.") });
-export const CONTEXT_STEP_BACK_SUPPORTED = new RawContextKey<boolean>('stepBackSupported', false, { type: 'boolean', description: nls.localize('stepBackSupported', "True when the focused session supports 'stepBack' requests.") });
-export const CONTEXT_RESTART_FRAME_SUPPORTED = new RawContextKey<boolean>('restartFrameSupported', false, { type: 'boolean', description: nls.localize('restartFrameSupported', "True when the focused session supports 'restartFrame' requests.") });
-export const CONTEXT_STACK_FRAME_SUPPORTS_RESTART = new RawContextKey<boolean>('stackFrameSupportsRestart', false, { type: 'boolean', description: nls.localize('stackFrameSupportsRestart', "True when the focused stack frame supports 'restartFrame'.") });
-export const CONTEXT_JUMP_TO_CURSOR_SUPPORTED = new RawContextKey<boolean>('jumpToCursorSupported', false, { type: 'boolean', description: nls.localize('jumpToCursorSupported', "True when the focused session supports 'jumpToCursor' request.") });
-export const CONTEXT_STEP_INTO_TARGETS_SUPPORTED = new RawContextKey<boolean>('stepIntoTargetsSupported', false, { type: 'boolean', description: nls.localize('stepIntoTargetsSupported', "True when the focused session supports 'stepIntoTargets' request.") });
-export const CONTEXT_BREAKPOINTS_EXIST = new RawContextKey<boolean>('breakpointsExist', false, { type: 'boolean', description: nls.localize('breakpointsExist', "True when at least one breakpoint exists.") });
-export const CONTEXT_DEBUGGERS_AVAILABLE = new RawContextKey<boolean>('debuggersAvailable', false, { type: 'boolean', description: nls.localize('debuggersAvailable', "True when there is at least one debug extensions active.") });
-export const CONTEXT_DEBUG_EXTENSION_AVAILABLE = new RawContextKey<boolean>('debugExtensionAvailable', true, { type: 'boolean', description: nls.localize('debugExtensionsAvailable', "True when there is at least one debug extension installed and enabled.") });
-export const CONTEXT_DEBUG_PROTOCOL_VARIABLE_MENU_CONTEXT = new RawContextKey<string>('debugProtocolVariableMenuContext', undefined, { type: 'string', description: nls.localize('debugProtocolVariableMenuContext', "Represents the context the debug adapter sets on the focused variable in the VARIABLES view.") });
-export const CONTEXT_SET_VARIABLE_SUPPORTED = new RawContextKey<boolean>('debugSetVariableSupported', false, { type: 'boolean', description: nls.localize('debugSetVariableSupported', "True when the focused session supports 'setVariable' request.") });
-export const CONTEXT_SET_DATA_BREAKPOINT_BYTES_SUPPORTED = new RawContextKey<boolean>('debugSetDataBreakpointAddressSupported', false, { type: 'boolean', description: nls.localize('debugSetDataBreakpointAddressSupported', "True when the focused session supports 'getBreakpointInfo' request on an address.") });
-export const CONTEXT_SET_EXPRESSION_SUPPORTED = new RawContextKey<boolean>('debugSetExpressionSupported', false, { type: 'boolean', description: nls.localize('debugSetExpressionSupported', "True when the focused session supports 'setExpression' request.") });
-export const CONTEXT_BREAK_WHEN_VALUE_CHANGES_SUPPORTED = new RawContextKey<boolean>('breakWhenValueChangesSupported', false, { type: 'boolean', description: nls.localize('breakWhenValueChangesSupported', "True when the focused session supports to break when value changes.") });
-export const CONTEXT_BREAK_WHEN_VALUE_IS_ACCESSED_SUPPORTED = new RawContextKey<boolean>('breakWhenValueIsAccessedSupported', false, { type: 'boolean', description: nls.localize('breakWhenValueIsAccessedSupported', "True when the focused breakpoint supports to break when value is accessed.") });
-export const CONTEXT_BREAK_WHEN_VALUE_IS_READ_SUPPORTED = new RawContextKey<boolean>('breakWhenValueIsReadSupported', false, { type: 'boolean', description: nls.localize('breakWhenValueIsReadSupported', "True when the focused breakpoint supports to break when value is read.") });
-export const CONTEXT_TERMINATE_DEBUGGEE_SUPPORTED = new RawContextKey<boolean>('terminateDebuggeeSupported', false, { type: 'boolean', description: nls.localize('terminateDebuggeeSupported', "True when the focused session supports the terminate debuggee capability.") });
-export const CONTEXT_SUSPEND_DEBUGGEE_SUPPORTED = new RawContextKey<boolean>('suspendDebuggeeSupported', false, { type: 'boolean', description: nls.localize('suspendDebuggeeSupported', "True when the focused session supports the suspend debuggee capability.") });
-export const CONTEXT_TERMINATE_THREADS_SUPPORTED = new RawContextKey<boolean>('terminateThreadsSupported', false, { type: 'boolean', description: nls.localize('terminateThreadsSupported', "True when the focused session supports the terminate threads capability.") });
-export const CONTEXT_VARIABLE_EVALUATE_NAME_PRESENT = new RawContextKey<boolean>('variableEvaluateNamePresent', false, { type: 'boolean', description: nls.localize('variableEvaluateNamePresent', "True when the focused variable has an 'evaluateName' field set.") });
-export const CONTEXT_VARIABLE_IS_READONLY = new RawContextKey<boolean>('variableIsReadonly', false, { type: 'boolean', description: nls.localize('variableIsReadonly', "True when the focused variable is read-only.") });
-export const CONTEXT_VARIABLE_VALUE = new RawContextKey<boolean>('variableValue', false, { type: 'string', description: nls.localize('variableValue', "Value of the variable, present for debug visualization clauses.") });
-export const CONTEXT_VARIABLE_TYPE = new RawContextKey<boolean>('variableType', false, { type: 'string', description: nls.localize('variableType', "Type of the variable, present for debug visualization clauses.") });
-export const CONTEXT_VARIABLE_INTERFACES = new RawContextKey<boolean>('variableInterfaces', false, { type: 'array', description: nls.localize('variableInterfaces', "Any interfaces or contracts that the variable satisfies, present for debug visualization clauses.") });
-export const CONTEXT_VARIABLE_NAME = new RawContextKey<boolean>('variableName', false, { type: 'string', description: nls.localize('variableName', "Name of the variable, present for debug visualization clauses.") });
-export const CONTEXT_VARIABLE_LANGUAGE = new RawContextKey<boolean>('variableLanguage', false, { type: 'string', description: nls.localize('variableLanguage', "Language of the variable source, present for debug visualization clauses.") });
-export const CONTEXT_VARIABLE_EXTENSIONID = new RawContextKey<boolean>('variableExtensionId', false, { type: 'string', description: nls.localize('variableExtensionId', "Extension ID of the variable source, present for debug visualization clauses.") });
-export const CONTEXT_EXCEPTION_WIDGET_VISIBLE = new RawContextKey<boolean>('exceptionWidgetVisible', false, { type: 'boolean', description: nls.localize('exceptionWidgetVisible', "True when the exception widget is visible.") });
-export const CONTEXT_MULTI_SESSION_REPL = new RawContextKey<boolean>('multiSessionRepl', false, { type: 'boolean', description: nls.localize('multiSessionRepl', "True when there is more than 1 debug console.") });
-export const CONTEXT_MULTI_SESSION_DEBUG = new RawContextKey<boolean>('multiSessionDebug', false, { type: 'boolean', description: nls.localize('multiSessionDebug', "True when there is more than 1 active debug session.") });
-export const CONTEXT_DISASSEMBLE_REQUEST_SUPPORTED = new RawContextKey<boolean>('disassembleRequestSupported', false, { type: 'boolean', description: nls.localize('disassembleRequestSupported', "True when the focused sessions supports disassemble request.") });
-export const CONTEXT_DISASSEMBLY_VIEW_FOCUS = new RawContextKey<boolean>('disassemblyViewFocus', false, { type: 'boolean', description: nls.localize('disassemblyViewFocus', "True when the Disassembly View is focused.") });
-export const CONTEXT_LANGUAGE_SUPPORTS_DISASSEMBLE_REQUEST = new RawContextKey<boolean>('languageSupportsDisassembleRequest', false, { type: 'boolean', description: nls.localize('languageSupportsDisassembleRequest', "True when the language in the current editor supports disassemble request.") });
-export const CONTEXT_FOCUSED_STACK_FRAME_HAS_INSTRUCTION_POINTER_REFERENCE = new RawContextKey<boolean>('focusedStackFrameHasInstructionReference', false, { type: 'boolean', description: nls.localize('focusedStackFrameHasInstructionReference', "True when the focused stack frame has instruction pointer reference.") });
+export const VARIABLES_VIEW_ID = "workbench.debug.variablesView";
+export const WATCH_VIEW_ID = "workbench.debug.watchExpressionsView";
+export const CALLSTACK_VIEW_ID = "workbench.debug.callStackView";
+export const LOADED_SCRIPTS_VIEW_ID = "workbench.debug.loadedScriptsView";
+export const BREAKPOINTS_VIEW_ID = "workbench.debug.breakPointsView";
+export const DISASSEMBLY_VIEW_ID = "workbench.debug.disassemblyView";
+export const DEBUG_PANEL_ID = "workbench.panel.repl";
+export const REPL_VIEW_ID = "workbench.panel.repl.view";
+export const CONTEXT_DEBUG_TYPE = new RawContextKey<string>(
+  "debugType",
+  undefined,
+  {
+    type: "string",
+    description: nls.localize("debugType", "Debug type of the active debug session. For example 'python'."),
+  },
+);
+export const CONTEXT_DEBUG_CONFIGURATION_TYPE = new RawContextKey<string>(
+  "debugConfigurationType",
+  undefined,
+  {
+    type: "string",
+    description: nls.localize("debugConfigurationType", "Debug type of the selected launch configuration. For example 'python'."),
+  },
+);
+export const CONTEXT_DEBUG_STATE = new RawContextKey<string>(
+  "debugState",
+  "inactive",
+  {
+    type: "string",
+    description: nls.localize("debugState", "State that the focused debug session is in. One of the following: 'inactive', 'initializing', 'stopped' or 'running'."),
+  },
+);
+export const CONTEXT_DEBUG_UX_KEY = "debugUx";
+export const CONTEXT_DEBUG_UX = new RawContextKey<string>(
+  CONTEXT_DEBUG_UX_KEY,
+  "default",
+  {
+    type: "string",
+    description: nls.localize("debugUX", "Debug UX state. When there are no debug configurations it is 'simple', otherwise 'default'. Used to decide when to show welcome views in the debug viewlet."),
+  },
+);
+export const CONTEXT_HAS_DEBUGGED = new RawContextKey<boolean>(
+  "hasDebugged",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("hasDebugged", "True when a debug session has been started at least once, false otherwise."),
+  },
+);
+export const CONTEXT_IN_DEBUG_MODE = new RawContextKey<boolean>(
+  "inDebugMode",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("inDebugMode", "True when debugging, false otherwise."),
+  },
+);
+export const CONTEXT_IN_DEBUG_REPL = new RawContextKey<boolean>(
+  "inDebugRepl",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("inDebugRepl", "True when focus is in the debug console, false otherwise."),
+  },
+);
+export const CONTEXT_BREAKPOINT_WIDGET_VISIBLE = new RawContextKey<boolean>(
+  "breakpointWidgetVisible",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("breakpointWidgetVisibile", "True when breakpoint editor zone widget is visible, false otherwise."),
+  },
+);
+export const CONTEXT_IN_BREAKPOINT_WIDGET = new RawContextKey<boolean>(
+  "inBreakpointWidget",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("inBreakpointWidget", "True when focus is in the breakpoint editor zone widget, false otherwise."),
+  },
+);
+export const CONTEXT_BREAKPOINTS_FOCUSED = new RawContextKey<boolean>(
+  "breakpointsFocused",
+  true,
+  {
+    type: "boolean",
+    description: nls.localize("breakpointsFocused", "True when the BREAKPOINTS view is focused, false otherwise."),
+  },
+);
+export const CONTEXT_WATCH_EXPRESSIONS_FOCUSED = new RawContextKey<boolean>(
+  "watchExpressionsFocused",
+  true,
+  {
+    type: "boolean",
+    description: nls.localize("watchExpressionsFocused", "True when the WATCH view is focused, false otherwise."),
+  },
+);
+export const CONTEXT_WATCH_EXPRESSIONS_EXIST = new RawContextKey<boolean>(
+  "watchExpressionsExist",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("watchExpressionsExist", "True when at least one watch expression exists, false otherwise."),
+  },
+);
+export const CONTEXT_VARIABLES_FOCUSED = new RawContextKey<boolean>(
+  "variablesFocused",
+  true,
+  {
+    type: "boolean",
+    description: nls.localize("variablesFocused", "True when the VARIABLES views is focused, false otherwise"),
+  },
+);
+export const CONTEXT_EXPRESSION_SELECTED = new RawContextKey<boolean>(
+  "expressionSelected",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("expressionSelected", "True when an expression input box is open in either the WATCH or the VARIABLES view, false otherwise."),
+  },
+);
+export const CONTEXT_BREAKPOINT_INPUT_FOCUSED = new RawContextKey<boolean>(
+  "breakpointInputFocused",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("breakpointInputFocused", "True when the input box has focus in the BREAKPOINTS view."),
+  },
+);
+export const CONTEXT_CALLSTACK_ITEM_TYPE = new RawContextKey<string>(
+  "callStackItemType",
+  undefined,
+  {
+    type: "string",
+    description: nls.localize("callStackItemType", "Represents the item type of the focused element in the CALL STACK view. For example: 'session', 'thread', 'stackFrame'"),
+  },
+);
+export const CONTEXT_CALLSTACK_SESSION_IS_ATTACH = new RawContextKey<boolean>(
+  "callStackSessionIsAttach",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("callStackSessionIsAttach", "True when the session in the CALL STACK view is attach, false otherwise. Used internally for inline menus in the CALL STACK view."),
+  },
+);
+export const CONTEXT_CALLSTACK_ITEM_STOPPED = new RawContextKey<boolean>(
+  "callStackItemStopped",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("callStackItemStopped", "True when the focused item in the CALL STACK is stopped. Used internally for inline menus in the CALL STACK view."),
+  },
+);
+export const CONTEXT_CALLSTACK_SESSION_HAS_ONE_THREAD = new RawContextKey<boolean>(
+  "callStackSessionHasOneThread",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("callStackSessionHasOneThread", "True when the focused session in the CALL STACK view has exactly one thread. Used internally for inline menus in the CALL STACK view."),
+  },
+);
+export const CONTEXT_CALLSTACK_FOCUSED = new RawContextKey<boolean>(
+  "callStackFocused",
+  true,
+  {
+    type: "boolean",
+    description: nls.localize("callStackFocused", "True when the CALLSTACK view is focused, false otherwise."),
+  },
+);
+export const CONTEXT_WATCH_ITEM_TYPE = new RawContextKey<string>(
+  "watchItemType",
+  undefined,
+  {
+    type: "string",
+    description: nls.localize("watchItemType", "Represents the item type of the focused element in the WATCH view. For example: 'expression', 'variable'"),
+  },
+);
+export const CONTEXT_CAN_VIEW_MEMORY = new RawContextKey<boolean>(
+  "canViewMemory",
+  undefined,
+  {
+    type: "boolean",
+    description: nls.localize("canViewMemory", "Indicates whether the item in the view has an associated memory reference."),
+  },
+);
+export const CONTEXT_BREAKPOINT_ITEM_TYPE = new RawContextKey<string>(
+  "breakpointItemType",
+  undefined,
+  {
+    type: "string",
+    description: nls.localize("breakpointItemType", "Represents the item type of the focused element in the BREAKPOINTS view. For example: 'breakpoint', 'exceptionBreakpoint', 'functionBreakpoint', 'dataBreakpoint'"),
+  },
+);
+export const CONTEXT_BREAKPOINT_ITEM_IS_DATA_BYTES = new RawContextKey<boolean>(
+  "breakpointItemBytes",
+  undefined,
+  {
+    type: "boolean",
+    description: nls.localize("breakpointItemIsDataBytes", "Whether the breakpoint item is a data breakpoint on a byte range."),
+  },
+);
+export const CONTEXT_BREAKPOINT_HAS_MODES = new RawContextKey<boolean>(
+  "breakpointHasModes",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("breakpointHasModes", "Whether the breakpoint has multiple modes it can switch to."),
+  },
+);
+export const CONTEXT_BREAKPOINT_SUPPORTS_CONDITION = new RawContextKey<boolean>(
+  "breakpointSupportsCondition",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("breakpointSupportsCondition", "True when the focused breakpoint supports conditions."),
+  },
+);
+export const CONTEXT_LOADED_SCRIPTS_SUPPORTED = new RawContextKey<boolean>(
+  "loadedScriptsSupported",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("loadedScriptsSupported", "True when the focused sessions supports the LOADED SCRIPTS view"),
+  },
+);
+export const CONTEXT_LOADED_SCRIPTS_ITEM_TYPE = new RawContextKey<string>(
+  "loadedScriptsItemType",
+  undefined,
+  {
+    type: "string",
+    description: nls.localize("loadedScriptsItemType", "Represents the item type of the focused element in the LOADED SCRIPTS view."),
+  },
+);
+export const CONTEXT_FOCUSED_SESSION_IS_ATTACH = new RawContextKey<boolean>(
+  "focusedSessionIsAttach",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("focusedSessionIsAttach", "True when the focused session is 'attach'."),
+  },
+);
+export const CONTEXT_FOCUSED_SESSION_IS_NO_DEBUG = new RawContextKey<boolean>(
+  "focusedSessionIsNoDebug",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("focusedSessionIsNoDebug", "True when the focused session is run without debugging."),
+  },
+);
+export const CONTEXT_STEP_BACK_SUPPORTED = new RawContextKey<boolean>(
+  "stepBackSupported",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("stepBackSupported", "True when the focused session supports 'stepBack' requests."),
+  },
+);
+export const CONTEXT_RESTART_FRAME_SUPPORTED = new RawContextKey<boolean>(
+  "restartFrameSupported",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("restartFrameSupported", "True when the focused session supports 'restartFrame' requests."),
+  },
+);
+export const CONTEXT_STACK_FRAME_SUPPORTS_RESTART = new RawContextKey<boolean>(
+  "stackFrameSupportsRestart",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("stackFrameSupportsRestart", "True when the focused stack frame supports 'restartFrame'."),
+  },
+);
+export const CONTEXT_JUMP_TO_CURSOR_SUPPORTED = new RawContextKey<boolean>(
+  "jumpToCursorSupported",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("jumpToCursorSupported", "True when the focused session supports 'jumpToCursor' request."),
+  },
+);
+export const CONTEXT_STEP_INTO_TARGETS_SUPPORTED = new RawContextKey<boolean>(
+  "stepIntoTargetsSupported",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("stepIntoTargetsSupported", "True when the focused session supports 'stepIntoTargets' request."),
+  },
+);
+export const CONTEXT_BREAKPOINTS_EXIST = new RawContextKey<boolean>(
+  "breakpointsExist",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("breakpointsExist", "True when at least one breakpoint exists."),
+  },
+);
+export const CONTEXT_DEBUGGERS_AVAILABLE = new RawContextKey<boolean>(
+  "debuggersAvailable",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("debuggersAvailable", "True when there is at least one debug extensions active."),
+  },
+);
+export const CONTEXT_DEBUG_EXTENSION_AVAILABLE = new RawContextKey<boolean>(
+  "debugExtensionAvailable",
+  true,
+  {
+    type: "boolean",
+    description: nls.localize("debugExtensionsAvailable", "True when there is at least one debug extension installed and enabled."),
+  },
+);
+export const CONTEXT_DEBUG_PROTOCOL_VARIABLE_MENU_CONTEXT = new RawContextKey<string>(
+  "debugProtocolVariableMenuContext",
+  undefined,
+  {
+    type: "string",
+    description: nls.localize("debugProtocolVariableMenuContext", "Represents the context the debug adapter sets on the focused variable in the VARIABLES view."),
+  },
+);
+export const CONTEXT_SET_VARIABLE_SUPPORTED = new RawContextKey<boolean>(
+  "debugSetVariableSupported",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("debugSetVariableSupported", "True when the focused session supports 'setVariable' request."),
+  },
+);
+export const CONTEXT_SET_DATA_BREAKPOINT_BYTES_SUPPORTED = new RawContextKey<boolean>(
+  "debugSetDataBreakpointAddressSupported",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("debugSetDataBreakpointAddressSupported", "True when the focused session supports 'getBreakpointInfo' request on an address."),
+  },
+);
+export const CONTEXT_SET_EXPRESSION_SUPPORTED = new RawContextKey<boolean>(
+  "debugSetExpressionSupported",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("debugSetExpressionSupported", "True when the focused session supports 'setExpression' request."),
+  },
+);
+export const CONTEXT_BREAK_WHEN_VALUE_CHANGES_SUPPORTED = new RawContextKey<boolean>(
+  "breakWhenValueChangesSupported",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("breakWhenValueChangesSupported", "True when the focused session supports to break when value changes."),
+  },
+);
+export const CONTEXT_BREAK_WHEN_VALUE_IS_ACCESSED_SUPPORTED = new RawContextKey<boolean>(
+  "breakWhenValueIsAccessedSupported",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("breakWhenValueIsAccessedSupported", "True when the focused breakpoint supports to break when value is accessed."),
+  },
+);
+export const CONTEXT_BREAK_WHEN_VALUE_IS_READ_SUPPORTED = new RawContextKey<boolean>(
+  "breakWhenValueIsReadSupported",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("breakWhenValueIsReadSupported", "True when the focused breakpoint supports to break when value is read."),
+  },
+);
+export const CONTEXT_TERMINATE_DEBUGGEE_SUPPORTED = new RawContextKey<boolean>(
+  "terminateDebuggeeSupported",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("terminateDebuggeeSupported", "True when the focused session supports the terminate debuggee capability."),
+  },
+);
+export const CONTEXT_SUSPEND_DEBUGGEE_SUPPORTED = new RawContextKey<boolean>(
+  "suspendDebuggeeSupported",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("suspendDebuggeeSupported", "True when the focused session supports the suspend debuggee capability."),
+  },
+);
+export const CONTEXT_TERMINATE_THREADS_SUPPORTED = new RawContextKey<boolean>(
+  "terminateThreadsSupported",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("terminateThreadsSupported", "True when the focused session supports the terminate threads capability."),
+  },
+);
+export const CONTEXT_VARIABLE_EVALUATE_NAME_PRESENT = new RawContextKey<boolean>(
+  "variableEvaluateNamePresent",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("variableEvaluateNamePresent", "True when the focused variable has an 'evaluateName' field set."),
+  },
+);
+export const CONTEXT_VARIABLE_IS_READONLY = new RawContextKey<boolean>(
+  "variableIsReadonly",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("variableIsReadonly", "True when the focused variable is read-only."),
+  },
+);
+export const CONTEXT_VARIABLE_VALUE = new RawContextKey<boolean>(
+  "variableValue",
+  false,
+  {
+    type: "string",
+    description: nls.localize("variableValue", "Value of the variable, present for debug visualization clauses."),
+  },
+);
+export const CONTEXT_VARIABLE_TYPE = new RawContextKey<boolean>(
+  "variableType",
+  false,
+  {
+    type: "string",
+    description: nls.localize("variableType", "Type of the variable, present for debug visualization clauses."),
+  },
+);
+export const CONTEXT_VARIABLE_INTERFACES = new RawContextKey<boolean>(
+  "variableInterfaces",
+  false,
+  {
+    type: "array",
+    description: nls.localize("variableInterfaces", "Any interfaces or contracts that the variable satisfies, present for debug visualization clauses."),
+  },
+);
+export const CONTEXT_VARIABLE_NAME = new RawContextKey<boolean>(
+  "variableName",
+  false,
+  {
+    type: "string",
+    description: nls.localize("variableName", "Name of the variable, present for debug visualization clauses."),
+  },
+);
+export const CONTEXT_VARIABLE_LANGUAGE = new RawContextKey<boolean>(
+  "variableLanguage",
+  false,
+  {
+    type: "string",
+    description: nls.localize("variableLanguage", "Language of the variable source, present for debug visualization clauses."),
+  },
+);
+export const CONTEXT_VARIABLE_EXTENSIONID = new RawContextKey<boolean>(
+  "variableExtensionId",
+  false,
+  {
+    type: "string",
+    description: nls.localize("variableExtensionId", "Extension ID of the variable source, present for debug visualization clauses."),
+  },
+);
+export const CONTEXT_EXCEPTION_WIDGET_VISIBLE = new RawContextKey<boolean>(
+  "exceptionWidgetVisible",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("exceptionWidgetVisible", "True when the exception widget is visible."),
+  },
+);
+export const CONTEXT_MULTI_SESSION_REPL = new RawContextKey<boolean>(
+  "multiSessionRepl",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("multiSessionRepl", "True when there is more than 1 debug console."),
+  },
+);
+export const CONTEXT_MULTI_SESSION_DEBUG = new RawContextKey<boolean>(
+  "multiSessionDebug",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("multiSessionDebug", "True when there is more than 1 active debug session."),
+  },
+);
+export const CONTEXT_DISASSEMBLE_REQUEST_SUPPORTED = new RawContextKey<boolean>(
+  "disassembleRequestSupported",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("disassembleRequestSupported", "True when the focused sessions supports disassemble request."),
+  },
+);
+export const CONTEXT_DISASSEMBLY_VIEW_FOCUS = new RawContextKey<boolean>(
+  "disassemblyViewFocus",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("disassemblyViewFocus", "True when the Disassembly View is focused."),
+  },
+);
+export const CONTEXT_LANGUAGE_SUPPORTS_DISASSEMBLE_REQUEST = new RawContextKey<boolean>(
+  "languageSupportsDisassembleRequest",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("languageSupportsDisassembleRequest", "True when the language in the current editor supports disassemble request."),
+  },
+);
+export const CONTEXT_FOCUSED_STACK_FRAME_HAS_INSTRUCTION_POINTER_REFERENCE = new RawContextKey<boolean>(
+  "focusedStackFrameHasInstructionReference",
+  false,
+  {
+    type: "boolean",
+    description: nls.localize("focusedStackFrameHasInstructionReference", "True when the focused stack frame has instruction pointer reference."),
+  },
+);
 
-export const debuggerDisabledMessage = (debugType: string) => nls.localize('debuggerDisabled', "Configured debug type '{0}' is installed but not supported in this environment.", debugType);
+export const debuggerDisabledMessage = (debugType: string) => nls.localize(
+  "debuggerDisabled",
+  "Configured debug type '{0}' is installed but not supported in this environment.",
+  debugType,
+);
 
-export const EDITOR_CONTRIBUTION_ID = 'editor.contrib.debug';
-export const BREAKPOINT_EDITOR_CONTRIBUTION_ID = 'editor.contrib.breakpoint';
-export const DEBUG_SCHEME = 'debug';
+export const EDITOR_CONTRIBUTION_ID = "editor.contrib.debug";
+export const BREAKPOINT_EDITOR_CONTRIBUTION_ID = "editor.contrib.breakpoint";
+export const DEBUG_SCHEME = "debug";
 export const INTERNAL_CONSOLE_OPTIONS_SCHEMA = {
-	enum: ['neverOpen', 'openOnSessionStart', 'openOnFirstSessionStart'],
-	default: 'openOnFirstSessionStart',
-	description: nls.localize('internalConsoleOptions', "Controls when the internal Debug Console should open.")
+  enum: ["neverOpen", "openOnSessionStart", "openOnFirstSessionStart"],
+  default: "openOnFirstSessionStart",
+  description: nls.localize("internalConsoleOptions", "Controls when the internal Debug Console should open."),
 };
 
 export interface IDebugViewWithVariables extends IView {
@@ -209,10 +658,10 @@ export const enum State {
 
 export function getStateLabel(state: State): string {
 	switch (state) {
-		case State.Initializing: return 'initializing';
-		case State.Stopped: return 'stopped';
-		case State.Running: return 'running';
-		default: return 'inactive';
+		case State.Initializing: return "initializing";
+		case State.Stopped: return "stopped";
+		case State.Running: return "running";
+		default: return "inactive";
 	}
 }
 
@@ -223,11 +672,11 @@ export interface AdapterEndEvent {
 }
 
 export interface LoadedSourceEvent {
-	reason: 'new' | 'changed' | 'removed';
+	reason: "new" | "changed" | "removed";
 	source: Source;
 }
 
-export type IDebugSessionReplMode = 'separate' | 'mergeWithParent';
+export type IDebugSessionReplMode = "separate" | "mergeWithParent";
 
 export interface IDebugTestRunReference {
 	runId: string;
@@ -300,7 +749,7 @@ export interface IErrorMemoryRange extends IMemoryRange {
  */
 export type MemoryRange = IValidMemoryRange | IUnreadableMemoryRange | IErrorMemoryRange;
 
-export const DEBUG_MEMORY_SCHEME = 'vscode-debug-memory';
+export const DEBUG_MEMORY_SCHEME = "vscode-debug-memory";
 
 /**
  * An IMemoryRegion corresponds to a contiguous range of memory referred to
@@ -457,7 +906,7 @@ export interface IDebugSession extends ITreeElement, IDisposable {
 	stackTrace(threadId: number, startFrame: number, levels: number, token: CancellationToken): Promise<DebugProtocol.StackTraceResponse | undefined>;
 	exceptionInfo(threadId: number): Promise<IExceptionInfo | undefined>;
 	scopes(frameId: number, threadId: number): Promise<DebugProtocol.ScopesResponse | undefined>;
-	variables(variablesReference: number, threadId: number | undefined, filter: 'indexed' | 'named' | undefined, start: number | undefined, count: number | undefined): Promise<DebugProtocol.VariablesResponse | undefined>;
+	variables(variablesReference: number, threadId: number | undefined, filter: "indexed" | "named" | undefined, start: number | undefined, count: number | undefined): Promise<DebugProtocol.VariablesResponse | undefined>;
 	evaluate(expression: string, frameId?: number, context?: string, location?: IDebugEvaluatePosition): Promise<DebugProtocol.EvaluateResponse | undefined>;
 	customRequest(request: string, args: unknown): Promise<DebugProtocol.Response | undefined>;
 	cancel(progressId: string): Promise<DebugProtocol.CancelResponse | undefined>;
@@ -576,7 +1025,7 @@ export interface IStackFrame extends ITreeElement {
 
 export function isFrameDeemphasized(frame: IStackFrame): boolean {
 	const hint = frame.presentationHint ?? frame.source.presentationHint;
-	return hint === 'deemphasize' || hint === 'subtle';
+	return hint === "deemphasize" || hint === "subtle";
 }
 
 export interface IEnablement extends ITreeElement {
@@ -762,7 +1211,7 @@ export interface IDebugModel extends ITreeElement {
 	getInstructionBreakpoints(): ReadonlyArray<IInstructionBreakpoint>;
 	getWatchExpressions(): ReadonlyArray<IExpression & IEvaluate>;
 	registerBreakpointModes(debugType: string, modes: DebugProtocol.BreakpointMode[]): void;
-	getBreakpointModes(forBreakpointType: 'source' | 'exception' | 'data' | 'instruction'): DebugProtocol.BreakpointMode[];
+	getBreakpointModes(forBreakpointType: "source" | "exception" | "data" | "instruction"): DebugProtocol.BreakpointMode[];
 	readonly onDidChangeBreakpoints: Event<IBreakpointsChangeEvent | undefined>;
 	readonly onDidChangeCallStack: Event<void>;
 	/**
@@ -791,13 +1240,13 @@ export interface IBreakpointsChangeEvent {
 
 export interface IDebugConfiguration {
 	allowBreakpointsEverywhere: boolean;
-	gutterMiddleClickAction: 'logpoint' | 'conditionalBreakpoint' | 'triggeredBreakpoint' | 'none';
-	openDebug: 'neverOpen' | 'openOnSessionStart' | 'openOnFirstSessionStart' | 'openOnDebugBreak';
+	gutterMiddleClickAction: "logpoint" | "conditionalBreakpoint" | "triggeredBreakpoint" | "none";
+	openDebug: "neverOpen" | "openOnSessionStart" | "openOnFirstSessionStart" | "openOnDebugBreak";
 	openExplorerOnEnd: boolean;
-	inlineValues: boolean | 'auto' | 'on' | 'off'; // boolean for back-compat
-	toolBarLocation: 'floating' | 'docked' | 'commandCenter' | 'hidden';
-	showInStatusBar: 'never' | 'always' | 'onFirstSessionStart';
-	internalConsoleOptions: 'neverOpen' | 'openOnSessionStart' | 'openOnFirstSessionStart';
+	inlineValues: boolean | "auto" | "on" | "off"; // boolean for back-compat
+	toolBarLocation: "floating" | "docked" | "commandCenter" | "hidden";
+	showInStatusBar: "never" | "always" | "onFirstSessionStart";
+	internalConsoleOptions: "neverOpen" | "openOnSessionStart" | "openOnFirstSessionStart";
 	extensionHostDebugAdapter: boolean;
 	enableAllHovers: boolean;
 	showSubSessionsInToolBar: boolean;
@@ -810,19 +1259,19 @@ export interface IDebugConfiguration {
 		closeOnEnd: boolean;
 		collapseIdenticalLines: boolean;
 		historySuggestions: boolean;
-		acceptSuggestionOnEnter: 'off' | 'on';
+		acceptSuggestionOnEnter: "off" | "on";
 		maximumLines: number;
 	};
 	focusWindowOnBreak: boolean;
 	focusEditorOnBreak: boolean;
-	onTaskErrors: 'debugAnyway' | 'showErrors' | 'prompt' | 'abort';
+	onTaskErrors: "debugAnyway" | "showErrors" | "prompt" | "abort";
 	showBreakpointsInOverviewRuler: boolean;
 	showInlineBreakpointCandidates: boolean;
-	confirmOnExit: 'always' | 'never';
+	confirmOnExit: "always" | "never";
 	disassemblyView: {
 		showSourceCode: boolean;
 	};
-	autoExpandLazyVariables: 'auto' | 'off' | 'on';
+	autoExpandLazyVariables: "auto" | "off" | "on";
 	enableStatusBarColor: boolean;
 	showVariableTypes: boolean;
 	hideSlowPreLaunchWarning: boolean;
@@ -841,7 +1290,7 @@ export interface IConfigPresentation {
 }
 
 interface IEnvConfig {
-	internalConsoleOptions?: 'neverOpen' | 'openOnSessionStart' | 'openOnFirstSessionStart';
+	internalConsoleOptions?: "neverOpen" | "openOnSessionStart" | "openOnFirstSessionStart";
 	preRestartTask?: string | ITaskIdentifier;
 	postRestartTask?: string | ITaskIdentifier;
 	preLaunchTask?: string | ITaskIdentifier;
@@ -881,7 +1330,7 @@ export interface ICompound {
 }
 
 export function isDebugConfig(thing: IConfig | ICompound): thing is IConfig {
-	return 'type' in thing && 'request' in thing;
+	return "type" in thing && "request" in thing;
 }
 
 export interface IDebugAdapter extends IDisposable {
@@ -907,20 +1356,20 @@ export interface IDebugAdapterExecutableOptions {
 }
 
 export interface IDebugAdapterExecutable {
-	readonly type: 'executable';
+	readonly type: "executable";
 	readonly command: string;
 	readonly args: string[];
 	readonly options?: IDebugAdapterExecutableOptions;
 }
 
 export interface IDebugAdapterServer {
-	readonly type: 'server';
+	readonly type: "server";
 	readonly port: number;
 	readonly host?: string;
 }
 
 export interface IDebugAdapterNamedPipeServer {
-	readonly type: 'pipeServer';
+	readonly type: "pipeServer";
 	readonly path: string;
 }
 
@@ -930,7 +1379,7 @@ export interface IDebugAdapterInlineImpl extends IDisposable {
 }
 
 export interface IDebugAdapterImpl {
-	readonly type: 'implementation';
+	readonly type: "implementation";
 }
 
 export type IAdapterDescriptor = IDebugAdapterExecutable | IDebugAdapterServer | IDebugAdapterNamedPipeServer | IDebugAdapterImpl;
@@ -1046,7 +1495,7 @@ export interface IConfigurationManager {
 }
 
 export enum DebuggerString {
-	UnverifiedBreakpoints = 'unverifiedBreakpoints'
+	UnverifiedBreakpoints = "unverifiedBreakpoints"
 }
 
 export interface IAdapterManager {
@@ -1130,7 +1579,7 @@ export interface ILaunch {
 
 // Debug service interfaces
 
-export const IDebugService = createDecorator<IDebugService>('debugService');
+export const IDebugService = createDecorator<IDebugService>("debugService");
 
 export interface IDebugService {
 	readonly _serviceBrand: undefined;
@@ -1438,12 +1887,12 @@ export namespace IDebugVisualization {
 	}
 
 	export const deserialize = (v: Serialized): IDebugVisualization => ({
-		id: v.id,
-		name: v.name,
-		iconPath: v.iconPath && { light: URI.revive(v.iconPath.light), dark: URI.revive(v.iconPath.dark) },
-		iconClass: v.iconClass,
-		visualization: v.visualization,
-	});
+    id: v.id,
+    name: v.name,
+    iconPath: v.iconPath && { light: URI.revive(v.iconPath.light), dark: URI.revive(v.iconPath.dark) },
+    iconClass: v.iconClass,
+    visualization: v.visualization,
+  });
 
 	export const serialize = (visualizer: IDebugVisualization): Serialized => visualizer;
 }

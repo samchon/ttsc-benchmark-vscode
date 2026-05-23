@@ -3,14 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { renderAsPlaintext } from '../../../../../base/browser/markdownRenderer.js';
-import { Disposable, DisposableResourceMap, IDisposable } from '../../../../../base/common/lifecycle.js';
-import { autorun, autorunIterableDelta, IObservable, ISettableObservable, observableValue } from '../../../../../base/common/observable.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { migrateLegacyTerminalToolSpecificData } from '../../common/chat.js';
-import { IChatModel } from '../../common/model/chatModel.js';
-import { IChatService, IChatToolInvocation, ToolConfirmKind } from '../../common/chatService/chatService.js';
-import { ILanguageService } from '../../../../../editor/common/languages/language.js';
+import { renderAsPlaintext } from "../../../../../base/browser/markdownRenderer.js";
+import { Disposable, DisposableResourceMap, IDisposable } from "../../../../../base/common/lifecycle.js";
+import {
+  autorun,
+  autorunIterableDelta,
+  IObservable,
+  ISettableObservable,
+  observableValue,
+} from "../../../../../base/common/observable.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { migrateLegacyTerminalToolSpecificData } from "../../common/chat.js";
+import { IChatModel } from "../../common/model/chatModel.js";
+import { IChatService, IChatToolInvocation, ToolConfirmKind } from "../../common/chatService/chatService.js";
+import { ILanguageService } from "../../../../../editor/common/languages/language.js";
 
 export interface IAgentSessionApprovalInfo {
 	readonly label: string;
@@ -46,7 +52,7 @@ export class AgentSessionApprovalModel extends Disposable {
 					this._modelTrackers.deleteAndDispose(model.sessionResource);
 					this._approvals.get(model.sessionResource.toString())?.set(undefined, undefined);
 				}
-			}
+			},
 		));
 	}
 
@@ -57,14 +63,19 @@ export class AgentSessionApprovalModel extends Disposable {
 	private _getOrCreateApproval(key: string): ISettableObservable<IAgentSessionApprovalInfo | undefined> {
 		let obs = this._approvals.get(key);
 		if (!obs) {
-			obs = observableValue<IAgentSessionApprovalInfo | undefined>(`sessionApproval.${key}`, undefined);
+			obs = observableValue<IAgentSessionApprovalInfo | undefined>(
+        `sessionApproval.${key}`,
+        undefined,
+      );
 			this._approvals.set(key, obs);
 		}
 		return obs;
 	}
 
 	private _trackModel(model: IChatModel): IDisposable {
-		const settable = this._getOrCreateApproval(model.sessionResource.toString());
+		const settable = this._getOrCreateApproval(
+      model.sessionResource.toString(),
+    );
 
 		const setIfChanged = (value: IAgentSessionApprovalInfo | undefined) => {
 			const current = settable.get();
@@ -91,14 +102,14 @@ export class AgentSessionApprovalModel extends Disposable {
 			}
 
 			for (const part of lastResponse.response.value) {
-				if (part.kind !== 'toolInvocation' || part.toolSpecificData?.kind === 'modifiedFilesConfirmation') {
+				if (part.kind !== "toolInvocation" || part.toolSpecificData?.kind === "modifiedFilesConfirmation") {
 					continue; // unsupported
 				}
 				const state = part.state.read(reader);
 				if (state.type === IChatToolInvocation.StateKind.WaitingForConfirmation || state.type === IChatToolInvocation.StateKind.WaitingForPostApproval) {
 					let label: string;
 					let languageId: string | undefined;
-					if (part.toolSpecificData?.kind === 'terminal') {
+					if (part.toolSpecificData?.kind === "terminal") {
 						const terminalData = migrateLegacyTerminalToolSpecificData(part.toolSpecificData);
 						label = terminalData.presentationOverrides?.commandLine ?? terminalData.commandLine.forDisplay ?? terminalData.commandLine.userEdited ?? terminalData.commandLine.toolEdited ?? terminalData.commandLine.original;
 						languageId = this._languageService.getLanguageIdByLanguageName(terminalData.presentationOverrides?.language ?? terminalData.language) ?? undefined;
@@ -106,7 +117,7 @@ export class AgentSessionApprovalModel extends Disposable {
 						label = needsInput.detail;
 					} else {
 						const msg = part.invocationMessage;
-						label = typeof msg === 'string' ? msg : renderAsPlaintext(msg);
+						label = typeof msg === "string" ? msg : renderAsPlaintext(msg);
 					}
 
 					const confirmState = state;

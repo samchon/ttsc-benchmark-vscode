@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { SDKSessionInfo } from '@anthropic-ai/claude-agent-sdk';
-import { URI } from '../../../../base/common/uri.js';
-import { ClaudePermissionMode, narrowClaudePermissionMode } from '../../common/claudeSessionConfigKeys.js';
-import { AgentProvider, AgentSession, IAgentSessionMetadata } from '../../common/agentService.js';
-import { ISessionDataService } from '../../common/sessionDataService.js';
-import type { ModelSelection } from '../../common/state/protocol/state.js';
+import type { SDKSessionInfo } from "@anthropic-ai/claude-agent-sdk";
+import { URI } from "../../../../base/common/uri.js";
+import { ClaudePermissionMode, narrowClaudePermissionMode } from "../../common/claudeSessionConfigKeys.js";
+import { AgentProvider, AgentSession, IAgentSessionMetadata } from "../../common/agentService.js";
+import { ISessionDataService } from "../../common/sessionDataService.js";
+import type { ModelSelection } from "../../common/state/protocol/state.js";
 
 /**
  * Read view of Claude's per-session DB overlay. SDK-supplied fields
@@ -51,9 +51,9 @@ export interface IClaudeSessionOverlayUpdate {
  */
 export class ClaudeSessionMetadataStore {
 
-	private static readonly KEY_CUSTOMIZATION_DIRECTORY = 'claude.customizationDirectory';
-	private static readonly KEY_MODEL = 'claude.model';
-	private static readonly KEY_PERMISSION_MODE = 'claude.permissionMode';
+	private static readonly KEY_CUSTOMIZATION_DIRECTORY = "claude.customizationDirectory";
+	private static readonly KEY_MODEL = "claude.model";
+	private static readonly KEY_PERMISSION_MODE = "claude.permissionMode";
 
 	constructor(
 		private readonly _provider: AgentProvider,
@@ -72,13 +72,28 @@ export class ClaudeSessionMetadataStore {
 		try {
 			const work: Promise<void>[] = [];
 			if (fields.customizationDirectory) {
-				work.push(db.setMetadata(ClaudeSessionMetadataStore.KEY_CUSTOMIZATION_DIRECTORY, fields.customizationDirectory.toString()));
+				work.push(
+          db.setMetadata(
+            ClaudeSessionMetadataStore.KEY_CUSTOMIZATION_DIRECTORY,
+            fields.customizationDirectory.toString(),
+          ),
+        );
 			}
 			if (fields.model) {
-				work.push(db.setMetadata(ClaudeSessionMetadataStore.KEY_MODEL, serializeModelSelection(fields.model)));
+				work.push(
+          db.setMetadata(
+            ClaudeSessionMetadataStore.KEY_MODEL,
+            serializeModelSelection(fields.model),
+          ),
+        );
 			}
 			if (fields.permissionMode) {
-				work.push(db.setMetadata(ClaudeSessionMetadataStore.KEY_PERMISSION_MODE, fields.permissionMode));
+				work.push(
+          db.setMetadata(
+            ClaudeSessionMetadataStore.KEY_PERMISSION_MODE,
+            fields.permissionMode,
+          ),
+        );
 			}
 			await Promise.all(work);
 		} finally {
@@ -99,16 +114,20 @@ export class ClaudeSessionMetadataStore {
 			return {};
 		}
 		try {
-			const [customizationDirectoryRaw, modelRaw, permissionModeRaw] = await Promise.all([
-				ref.object.getMetadata(ClaudeSessionMetadataStore.KEY_CUSTOMIZATION_DIRECTORY),
-				ref.object.getMetadata(ClaudeSessionMetadataStore.KEY_MODEL),
-				ref.object.getMetadata(ClaudeSessionMetadataStore.KEY_PERMISSION_MODE),
-			]);
+			const [customizationDirectoryRaw, modelRaw, permissionModeRaw] = await Promise.all(
+        [
+          ref.object.getMetadata(
+            ClaudeSessionMetadataStore.KEY_CUSTOMIZATION_DIRECTORY,
+          ),
+          ref.object.getMetadata(ClaudeSessionMetadataStore.KEY_MODEL),
+          ref.object.getMetadata(ClaudeSessionMetadataStore.KEY_PERMISSION_MODE),
+        ],
+      );
 			return {
-				customizationDirectory: customizationDirectoryRaw ? URI.parse(customizationDirectoryRaw) : undefined,
-				model: parseModelSelection(modelRaw),
-				permissionMode: narrowClaudePermissionMode(permissionModeRaw),
-			};
+        customizationDirectory: customizationDirectoryRaw ? URI.parse(customizationDirectoryRaw) : undefined,
+        model: parseModelSelection(modelRaw),
+        permissionMode: narrowClaudePermissionMode(permissionModeRaw),
+      };
 		} finally {
 			ref.dispose();
 		}
@@ -121,14 +140,14 @@ export class ClaudeSessionMetadataStore {
 	 */
 	project(entry: SDKSessionInfo, overlay: IClaudeSessionOverlay): IAgentSessionMetadata {
 		return {
-			session: AgentSession.uri(this._provider, entry.sessionId),
-			startTime: entry.createdAt ?? entry.lastModified,
-			modifiedTime: entry.lastModified,
-			summary: entry.customTitle ?? entry.summary,
-			workingDirectory: entry.cwd ? URI.file(entry.cwd) : undefined,
-			customizationDirectory: overlay.customizationDirectory,
-			model: overlay.model,
-		};
+      session: AgentSession.uri(this._provider, entry.sessionId),
+      startTime: entry.createdAt ?? entry.lastModified,
+      modifiedTime: entry.lastModified,
+      summary: entry.customTitle ?? entry.summary,
+      workingDirectory: entry.cwd ? URI.file(entry.cwd) : undefined,
+      customizationDirectory: overlay.customizationDirectory,
+      model: overlay.model,
+    };
 	}
 }
 
@@ -141,13 +160,15 @@ function parseModelSelection(raw: string | undefined): ModelSelection | undefine
 		return undefined;
 	}
 	try {
-		const value: { id?: unknown; config?: unknown } | string | number | boolean | null = JSON.parse(raw);
-		if (value && typeof value === 'object' && typeof value.id === 'string') {
+		const value: { id?: unknown; config?: unknown } | string | number | boolean | null = JSON.parse(
+      raw,
+    );
+		if (value && typeof value === "object" && typeof value.id === "string") {
 			const result: ModelSelection = { id: value.id };
-			if (value.config && typeof value.config === 'object') {
+			if (value.config && typeof value.config === "object") {
 				const config: Record<string, string> = {};
 				for (const [key, configValue] of Object.entries(value.config)) {
-					if (typeof configValue === 'string') {
+					if (typeof configValue === "string") {
 						config[key] = configValue;
 					}
 				}

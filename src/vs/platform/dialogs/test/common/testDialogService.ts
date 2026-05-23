@@ -3,9 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import Severity from '../../../../base/common/severity.js';
-import { IConfirmation, IConfirmationResult, IDialogService, IInputResult, IPrompt, IPromptBaseButton, IPromptResult, IPromptResultWithCancel, IPromptWithCustomCancel, IPromptWithDefaultCancel } from '../../common/dialogs.js';
+import { Event } from "../../../../base/common/event.js";
+import Severity from "../../../../base/common/severity.js";
+import {
+  IConfirmation,
+  IConfirmationResult,
+  IDialogService,
+  IInputResult,
+  IPrompt,
+  IPromptBaseButton,
+  IPromptResult,
+  IPromptResultWithCancel,
+  IPromptWithCustomCancel,
+  IPromptWithDefaultCancel,
+} from "../../common/dialogs.js";
 
 export class TestDialogService implements IDialogService {
 
@@ -16,7 +27,7 @@ export class TestDialogService implements IDialogService {
 
 	constructor(
 		private defaultConfirmResult: IConfirmationResult | undefined = undefined,
-		private defaultPromptResult: IPromptResult<unknown> | undefined = undefined
+		private defaultPromptResult: IPromptResult<unknown> | undefined = undefined,
 	) { }
 
 	private confirmResult: IConfirmationResult | undefined = undefined;
@@ -43,7 +54,7 @@ export class TestDialogService implements IDialogService {
 			return this.defaultPromptResult as IPromptResult<T>;
 		}
 		const promptButtons: IPromptBaseButton<T>[] = [...(prompt.buttons ?? [])];
-		if (prompt.cancelButton && typeof prompt.cancelButton !== 'string' && typeof prompt.cancelButton !== 'boolean') {
+		if (prompt.cancelButton && typeof prompt.cancelButton !== "string" && typeof prompt.cancelButton !== "boolean") {
 			promptButtons.push(prompt.cancelButton);
 		}
 
@@ -60,6 +71,9 @@ export class TestDialogService implements IDialogService {
 	async error(message: string, detail?: string): Promise<void> {
 		await this.prompt({ type: Severity.Error, message, detail });
 	}
-	async input(): Promise<IInputResult> { { return { confirmed: true, values: [] }; } }
+	async input(): Promise<IInputResult> { { return {
+    confirmed: true,
+    values: [],
+  }; } }
 	async about(): Promise<void> { }
 }

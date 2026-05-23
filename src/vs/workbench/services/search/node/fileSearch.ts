@@ -3,25 +3,35 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as childProcess from 'child_process';
-import * as fs from 'fs';
-import * as path from '../../../../base/common/path.js';
-import { Readable } from 'stream';
-import { StringDecoder } from 'string_decoder';
-import * as arrays from '../../../../base/common/arrays.js';
-import { toErrorMessage } from '../../../../base/common/errorMessage.js';
-import * as glob from '../../../../base/common/glob.js';
-import * as normalization from '../../../../base/common/normalization.js';
-import { isEqualOrParent } from '../../../../base/common/extpath.js';
-import * as platform from '../../../../base/common/platform.js';
-import { StopWatch } from '../../../../base/common/stopwatch.js';
-import * as strings from '../../../../base/common/strings.js';
-import * as types from '../../../../base/common/types.js';
-import { URI } from '../../../../base/common/uri.js';
-import { Promises } from '../../../../base/node/pfs.js';
-import { IFileQuery, IFolderQuery, IProgressMessage, ISearchEngineStats, IRawFileMatch, ISearchEngine, ISearchEngineSuccess, isFilePatternMatch, hasSiblingFn } from '../common/search.js';
-import { spawnRipgrepCmd } from './ripgrepFileSearch.js';
-import { prepareQuery } from '../../../../base/common/fuzzyScorer.js';
+import * as childProcess from "child_process";
+import * as fs from "fs";
+import * as path from "../../../../base/common/path.js";
+import { Readable } from "stream";
+import { StringDecoder } from "string_decoder";
+import * as arrays from "../../../../base/common/arrays.js";
+import { toErrorMessage } from "../../../../base/common/errorMessage.js";
+import * as glob from "../../../../base/common/glob.js";
+import * as normalization from "../../../../base/common/normalization.js";
+import { isEqualOrParent } from "../../../../base/common/extpath.js";
+import * as platform from "../../../../base/common/platform.js";
+import { StopWatch } from "../../../../base/common/stopwatch.js";
+import * as strings from "../../../../base/common/strings.js";
+import * as types from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Promises } from "../../../../base/node/pfs.js";
+import {
+  IFileQuery,
+  IFolderQuery,
+  IProgressMessage,
+  ISearchEngineStats,
+  IRawFileMatch,
+  ISearchEngine,
+  ISearchEngineSuccess,
+  isFilePatternMatch,
+  hasSiblingFn,
+} from "../common/search.js";
+import { spawnRipgrepCmd } from "./ripgrepFileSearch.js";
+import { prepareQuery } from "../../../../base/common/fuzzyScorer.js";
 
 interface IDirectoryEntry extends IRawFileMatch {
 	base: string;
@@ -34,8 +44,8 @@ interface IDirectoryTree {
 }
 
 const killCmds = new Set<() => void>();
-process.on('exit', () => {
-	killCmds.forEach(cmd => cmd());
+process.on("exit", () => {
+  killCmds.forEach(cmd => cmd());
 });
 
 export class FileWalker {
@@ -63,9 +73,14 @@ export class FileWalker {
 
 	constructor(config: IFileQuery) {
 		this.config = config;
-		this.filePattern = config.filePattern || '';
-		const globOptions = config.ignoreGlobCase ? { ignoreCase: true } : undefined;
-		this.includePattern = config.includePattern && glob.parse(config.includePattern, globOptions);
+		this.filePattern = config.filePattern || "";
+		const globOptions = config.ignoreGlobCase ? {
+      ignoreCase: true,
+    } : undefined;
+		this.includePattern = config.includePattern && glob.parse(
+      config.includePattern,
+      globOptions,
+    );
 		this.maxResults = config.maxResults || null;
 		this.exists = !!config.exists;
 		this.walkedPaths = Object.create(null);
@@ -76,10 +91,15 @@ export class FileWalker {
 		this.errors = [];
 
 		if (this.filePattern) {
-			this.normalizedFilePatternLowercase = config.shouldGlobMatchFilePattern ? null : prepareQuery(this.filePattern).normalizedLowercase;
+			this.normalizedFilePatternLowercase = config.shouldGlobMatchFilePattern ? null : prepareQuery(
+        this.filePattern,
+      ).normalizedLowercase;
 		}
 
-		this.globalExcludePattern = config.excludePattern && glob.parse(config.excludePattern, globOptions);
+		this.globalExcludePattern = config.excludePattern && glob.parse(
+      config.excludePattern,
+      globOptions,
+    );
 		this.folderExcludePatterns = new Map<string, AbsoluteAndRelativeParsedExpression>();
 
 		config.folderQueries.forEach(folderQuery => {
@@ -202,12 +222,18 @@ export class FileWalker {
 			done = () => { };
 			cb(err);
 		};
-		let leftover = '';
+		let leftover = "";
 		const tree = this.initDirectoryTree();
 
 		let ripgrep;
 		try {
-			ripgrep = await spawnRipgrepCmd(this.config, folderQuery, this.config.includePattern, this.folderExcludePatterns.get(folderQuery.folder.fsPath)!.expression, numThreads);
+			ripgrep = await spawnRipgrepCmd(
+        this.config,
+        folderQuery,
+        this.config.includePattern,
+        this.folderExcludePatterns.get(folderQuery.folder.fsPath)!.expression,
+        numThreads,
+      );
 		} catch (err) {
 			done(err instanceof Error ? err : new Error(String(err)));
 			return;
@@ -217,7 +243,7 @@ export class FileWalker {
 
 		const escapedArgs = ripgrep.rgArgs.args
 			.map(arg => arg.match(/^-/) ? arg : `'${arg}'`)
-			.join(' ');
+			.join(" ");
 
 		let rgCmd = `${ripgrep.rgDiskPath} ${escapedArgs}\n - cwd: ${ripgrep.cwd}`;
 		if (ripgrep.rgArgs.siblingClauses) {
@@ -226,7 +252,7 @@ export class FileWalker {
 		onMessage({ message: rgCmd });
 
 		this.cmdResultCount = 0;
-		this.collectStdout(cmd, 'utf8', onMessage, (err: Error | null, stdout?: string, last?: boolean) => {
+		this.collectStdout(cmd, "utf8", onMessage, (err: Error | null, stdout?: string, last?: boolean) => {
 			if (err) {
 				done(err);
 				return;
@@ -237,8 +263,8 @@ export class FileWalker {
 			}
 
 			// Mac: uses NFD unicode form on disk, but we want NFC
-			const normalized = leftover + (isMac ? normalization.normalizeNFC(stdout || '') : stdout);
-			const relativeFiles = normalized.split('\n');
+			const normalized = leftover + (isMac ? normalization.normalizeNFC(stdout || "") : stdout);
+			const relativeFiles = normalized.split("\n");
 
 			if (last) {
 				const n = relativeFiles.length;
@@ -247,11 +273,11 @@ export class FileWalker {
 					relativeFiles.pop();
 				}
 			} else {
-				leftover = relativeFiles.pop() || '';
+				leftover = relativeFiles.pop() || "";
 			}
 
-			if (relativeFiles.length && relativeFiles[0].indexOf('\n') !== -1) {
-				done(new Error('Splitting up files failed'));
+			if (relativeFiles.length && relativeFiles[0].indexOf("\n") !== -1) {
+				done(new Error("Splitting up files failed"));
 				return;
 			}
 
@@ -286,32 +312,34 @@ export class FileWalker {
 	 * Public for testing.
 	 */
 	spawnFindCmd(folderQuery: IFolderQuery) {
-		const excludePattern = this.folderExcludePatterns.get(folderQuery.folder.fsPath)!;
+		const excludePattern = this.folderExcludePatterns.get(
+      folderQuery.folder.fsPath,
+    )!;
 		const basenames = excludePattern.getBasenameTerms();
 		const pathTerms = excludePattern.getPathTerms();
-		const args = ['-L', '.'];
+		const args = ["-L", "."];
 		if (basenames.length || pathTerms.length) {
-			args.push('-not', '(', '(');
+			args.push("-not", "(", "(");
 			for (const basename of basenames) {
-				args.push('-name', basename);
-				args.push('-o');
+				args.push("-name", basename);
+				args.push("-o");
 			}
 			for (const path of pathTerms) {
-				args.push('-path', path);
-				args.push('-o');
+				args.push("-path", path);
+				args.push("-o");
 			}
 			args.pop();
-			args.push(')', '-prune', ')');
+			args.push(")", "-prune", ")");
 		}
-		args.push('-type', 'f');
-		return childProcess.spawn('find', args, { cwd: folderQuery.folder.fsPath });
+		args.push("-type", "f");
+		return childProcess.spawn("find", args, { cwd: folderQuery.folder.fsPath });
 	}
 
 	/**
 	 * Public for testing.
 	 */
 	readStdout(cmd: childProcess.ChildProcess, encoding: BufferEncoding, cb: (err: Error | null, stdout?: string) => void): void {
-		let all = '';
+		let all = "";
 		this.collectStdout(cmd, encoding, () => { }, (err: Error | null, stdout?: string, last?: boolean) => {
 			if (err) {
 				cb(err);
@@ -339,9 +367,9 @@ export class FileWalker {
 		if (cmd.stdout) {
 			// Should be non-null, but #38195
 			this.forwardData(cmd.stdout, encoding, onData);
-			cmd.stdout.once('data', () => gotData = true);
+			cmd.stdout.once("data", () => gotData = true);
 		} else {
-			onMessage({ message: 'stdout is null' });
+			onMessage({ message: "stdout is null" });
 		}
 
 		let stderr: Buffer[];
@@ -349,14 +377,14 @@ export class FileWalker {
 			// Should be non-null, but #38195
 			stderr = this.collectData(cmd.stderr);
 		} else {
-			onMessage({ message: 'stderr is null' });
+			onMessage({ message: "stderr is null" });
 		}
 
-		cmd.on('error', (err: Error) => {
-			onData(err);
-		});
+		cmd.on("error", (err: Error) => {
+      onData(err);
+    });
 
-		cmd.on('close', (code: number) => {
+		cmd.on("close", (code: number) => {
 			// ripgrep returns code=1 when no results are found
 			let stderrText: string;
 			if (!gotData && (stderrText = this.decodeData(stderr, encoding)) && rgErrorMsgForDisplay(stderrText)) {
@@ -365,50 +393,52 @@ export class FileWalker {
 				if (this.exists && code === 0) {
 					this.isLimitHit = true;
 				}
-				onData(null, '', true);
+				onData(null, "", true);
 			}
 		});
 	}
 
 	private forwardData(stream: Readable, encoding: BufferEncoding, cb: (err: Error | null, stdout?: string) => void): StringDecoder {
 		const decoder = new StringDecoder(encoding);
-		stream.on('data', (data: Buffer) => {
-			cb(null, decoder.write(data));
-		});
+		stream.on("data", (data: Buffer) => {
+      cb(null, decoder.write(data));
+    });
 		return decoder;
 	}
 
 	private collectData(stream: Readable): Buffer[] {
 		const buffers: Buffer[] = [];
-		stream.on('data', (data: Buffer) => {
-			buffers.push(data);
-		});
+		stream.on("data", (data: Buffer) => {
+      buffers.push(data);
+    });
 		return buffers;
 	}
 
 	private decodeData(buffers: Buffer[], encoding: BufferEncoding): string {
 		const decoder = new StringDecoder(encoding);
-		return buffers.map(buffer => decoder.write(buffer)).join('');
+		return buffers.map(buffer => decoder.write(buffer)).join("");
 	}
 
 	private initDirectoryTree(): IDirectoryTree {
 		const tree: IDirectoryTree = {
-			rootEntries: [],
-			pathToEntries: Object.create(null)
-		};
-		tree.pathToEntries['.'] = tree.rootEntries;
+      rootEntries: [],
+      pathToEntries: Object.create(null),
+    };
+		tree.pathToEntries["."] = tree.rootEntries;
 		return tree;
 	}
 
 	private addDirectoryEntries(folderQuery: IFolderQuery, { pathToEntries }: IDirectoryTree, base: string, relativeFiles: string[], onResult: (result: IRawFileMatch) => void) {
 		// Support relative paths to files from a root resource (ignores excludes)
-		const filePatternMatch = this.filePattern && relativeFiles.find(f => strings.equals(f, this.filePattern, this.config.ignoreGlobCase));
+		const filePatternMatch = this.filePattern && relativeFiles.find(
+      f => strings.equals(f, this.filePattern, this.config.ignoreGlobCase),
+    );
 		if (filePatternMatch) {
 			this.matchFile(onResult, {
-				base,
-				relativePath: filePatternMatch,
-				searchPath: this.getSearchPath(folderQuery, filePatternMatch)
-			});
+        base,
+        relativePath: filePatternMatch,
+        searchPath: this.getSearchPath(folderQuery, filePatternMatch),
+      });
 		}
 
 		const add = (relativePath: string) => {
@@ -420,11 +450,11 @@ export class FileWalker {
 				add(dirname);
 			}
 			entries.push({
-				base,
-				relativePath,
-				basename,
-				searchPath: this.getSearchPath(folderQuery, relativePath),
-			});
+        base,
+        relativePath,
+        basename,
+        searchPath: this.getSearchPath(folderQuery, relativePath),
+      });
 		};
 		relativeFiles.forEach(add);
 	}
@@ -436,7 +466,9 @@ export class FileWalker {
 		const ignoreGlobCase = this.config.ignoreGlobCase;
 		function matchDirectory(entries: IDirectoryEntry[]) {
 			self.directoriesWalked++;
-			const hasSibling = hasSiblingFn(() => entries.map(entry => entry.basename));
+			const hasSibling = hasSiblingFn(
+        () => entries.map(entry => entry.basename),
+      );
 			for (let i = 0, n = entries.length; i < n; i++) {
 				const entry = entries[i];
 				const { relativePath, basename } = entry;
@@ -445,7 +477,11 @@ export class FileWalker {
 				// If the user searches for the exact file name, we adjust the glob matching
 				// to ignore filtering by siblings because the user seems to know what they
 				// are searching for and we want to include the result in that case anyway
-				if (excludePattern.test(relativePath, basename, !strings.equals(filePattern, basename, ignoreGlobCase) ? hasSibling : undefined)) {
+				if (excludePattern.test(
+          relativePath,
+          basename,
+          !strings.equals(filePattern, basename, ignoreGlobCase) ? hasSibling : undefined,
+        )) {
 					continue;
 				}
 
@@ -471,12 +507,12 @@ export class FileWalker {
 
 	getStats(): ISearchEngineStats {
 		return {
-			cmdTime: this.cmdSW!.elapsed(),
-			fileWalkTime: this.fileWalkSW!.elapsed(),
-			directoriesWalked: this.directoriesWalked,
-			filesWalked: this.filesWalked,
-			cmdResultCount: this.cmdResultCount
-		};
+      cmdTime: this.cmdSW!.elapsed(),
+      fileWalkTime: this.fileWalkSW!.elapsed(),
+      directoriesWalked: this.directoriesWalked,
+      filesWalked: this.filesWalked,
+      cmdResultCount: this.cmdResultCount,
+    };
 	}
 
 	private doWalk(folderQuery: IFolderQuery, relativeParentPath: string, files: string[], onResult: (result: IRawFileMatch) => void, done: (error?: Error) => void): void {
@@ -525,7 +561,7 @@ export class FileWalker {
 								return clb(null);
 							}
 
-							realpath = realpath || '';
+							realpath = realpath || "";
 							if (this.walkedPaths[realpath]) {
 								return clb(null); // escape when there are cycles (can happen with symlinks)
 							}
@@ -574,7 +610,12 @@ export class FileWalker {
 	}
 
 	private matchFile(onResult: (result: IRawFileMatch) => void, candidate: IRawFileMatch): void {
-		if (this.isFileMatch(candidate) && (!this.includePattern || this.includePattern(candidate.relativePath, path.basename(candidate.relativePath)))) {
+		if (this.isFileMatch(
+      candidate,
+    ) && (!this.includePattern || this.includePattern(
+      candidate.relativePath,
+      path.basename(candidate.relativePath),
+    ))) {
 			this.resultCount++;
 
 			if (this.exists || (this.maxResults && this.resultCount > this.maxResults)) {
@@ -590,14 +631,22 @@ export class FileWalker {
 	private isFileMatch(candidate: IRawFileMatch): boolean {
 		// Check for search pattern
 		if (this.filePattern) {
-			if (this.filePattern === '*') {
+			if (this.filePattern === "*") {
 				return true; // support the all-matching wildcard
 			}
 
 			if (this.normalizedFilePatternLowercase) {
-				return isFilePatternMatch(candidate, this.normalizedFilePatternLowercase);
+				return isFilePatternMatch(
+          candidate,
+          this.normalizedFilePatternLowercase,
+        );
 			} else if (this.filePattern) {
-				return isFilePatternMatch(candidate, this.filePattern, false, this.config.ignoreGlobCase);
+				return isFilePatternMatch(
+          candidate,
+          this.filePattern,
+          false,
+          this.config.ignoreGlobCase,
+        );
 			}
 		}
 
@@ -656,13 +705,20 @@ export class Engine implements ISearchEngine<IRawFileMatch> {
 	}
 
 	search(onResult: (result: IRawFileMatch) => void, onProgress: (progress: IProgressMessage) => void, done: (error: Error | null, complete: ISearchEngineSuccess) => void): void {
-		this.walker.walk(this.folderQueries, this.extraFiles, this.numThreads, onResult, onProgress, (err: Error | null, isLimitHit: boolean) => {
-			done(err, {
-				limitHit: isLimitHit,
-				stats: this.walker.getStats(),
-				messages: [],
-			});
-		});
+		this.walker.walk(
+      this.folderQueries,
+      this.extraFiles,
+      this.numThreads,
+      onResult,
+      onProgress,
+      (err: Error | null, isLimitHit: boolean) => {
+        done(err, {
+          limitHit: isLimitHit,
+          stats: this.walker.getStats(),
+          messages: [],
+        });
+      },
+    );
 	}
 
 	cancel(): void {
@@ -701,14 +757,31 @@ class AbsoluteAndRelativeParsedExpression {
 				}
 			});
 
-		const globOptions = { trimForExclusions: true, ignoreCase: this.ignoreCase };
-		this.absoluteParsedExpr = absoluteGlobExpr && glob.parse(absoluteGlobExpr, globOptions);
-		this.relativeParsedExpr = relativeGlobExpr && glob.parse(relativeGlobExpr, globOptions);
+		const globOptions = {
+      trimForExclusions: true,
+      ignoreCase: this.ignoreCase,
+    };
+		this.absoluteParsedExpr = absoluteGlobExpr && glob.parse(
+      absoluteGlobExpr,
+      globOptions,
+    );
+		this.relativeParsedExpr = relativeGlobExpr && glob.parse(
+      relativeGlobExpr,
+      globOptions,
+    );
 	}
 
 	test(_path: string, basename?: string, hasSibling?: (name: string) => boolean | Promise<boolean>): string | Promise<string | null> | undefined | null {
-		return (this.relativeParsedExpr && this.relativeParsedExpr(_path, basename, hasSibling)) ||
-			(this.absoluteParsedExpr && this.absoluteParsedExpr(path.join(this.root, _path), basename, hasSibling));
+		return (this.relativeParsedExpr && this.relativeParsedExpr(
+      _path,
+      basename,
+      hasSibling,
+    )) ||
+			(this.absoluteParsedExpr && this.absoluteParsedExpr(
+        path.join(this.root, _path),
+        basename,
+        hasSibling,
+      ));
 	}
 
 	getBasenameTerms(): string[] {
@@ -739,19 +812,19 @@ class AbsoluteAndRelativeParsedExpression {
 }
 
 function rgErrorMsgForDisplay(msg: string): string | undefined {
-	const lines = msg.trim().split('\n');
+	const lines = msg.trim().split("\n");
 	const firstLine = lines[0].trim();
 
-	if (firstLine.startsWith('Error parsing regex')) {
+	if (firstLine.startsWith("Error parsing regex")) {
 		return firstLine;
 	}
 
-	if (firstLine.startsWith('regex parse error')) {
+	if (firstLine.startsWith("regex parse error")) {
 		return strings.uppercaseFirstLetter(lines[lines.length - 1].trim());
 	}
 
-	if (firstLine.startsWith('error parsing glob') ||
-		firstLine.startsWith('unsupported encoding')) {
+	if (firstLine.startsWith("error parsing glob") ||
+		firstLine.startsWith("unsupported encoding")) {
 		// Uppercase first letter
 		return firstLine.charAt(0).toUpperCase() + firstLine.substr(1);
 	}
@@ -761,7 +834,7 @@ function rgErrorMsgForDisplay(msg: string): string | undefined {
 		return `Literal '\\n' currently not supported`;
 	}
 
-	if (firstLine.startsWith('Literal ')) {
+	if (firstLine.startsWith("Literal ")) {
 		// Other unsupported chars
 		return firstLine;
 	}

@@ -3,11 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable } from '../../../base/common/lifecycle.js';
-import { Schemas } from '../../../base/common/network.js';
-import { URI } from '../../../base/common/uri.js';
-import { IAddress } from '../../remote/common/remoteAgentConnection.js';
-import { extractLocalHostUriMetaDataForPortMapping, ITunnelService, RemoteTunnel } from '../../tunnel/common/tunnel.js';
+import { IDisposable } from "../../../base/common/lifecycle.js";
+import { Schemas } from "../../../base/common/network.js";
+import { URI } from "../../../base/common/uri.js";
+import { IAddress } from "../../remote/common/remoteAgentConnection.js";
+import {
+  extractLocalHostUriMetaDataForPortMapping,
+  ITunnelService,
+  RemoteTunnel,
+} from "../../tunnel/common/tunnel.js";
 
 export interface IWebviewPortMapping {
 	readonly webviewPort: number;
@@ -24,7 +28,7 @@ export class WebviewPortMappingManager implements IDisposable {
 	constructor(
 		private readonly _getExtensionLocation: () => URI | undefined,
 		private readonly _getMappings: () => readonly IWebviewPortMapping[],
-		private readonly tunnelService: ITunnelService
+		private readonly tunnelService: ITunnelService,
 	) { }
 
 	public async getRedirect(resolveAuthority: IAddress | null | undefined, url: string): Promise<string | undefined> {
@@ -38,7 +42,10 @@ export class WebviewPortMappingManager implements IDisposable {
 			if (mapping.webviewPort === requestLocalHostInfo.port) {
 				const extensionLocation = this._getExtensionLocation();
 				if (extensionLocation && extensionLocation.scheme === Schemas.vscodeRemote) {
-					const tunnel = resolveAuthority && await this.getOrCreateTunnel(resolveAuthority, mapping.extensionHostPort);
+					const tunnel = resolveAuthority && await this.getOrCreateTunnel(
+            resolveAuthority,
+            mapping.extensionHostPort,
+          );
 					if (tunnel) {
 						if (tunnel.tunnelLocalPort === mapping.webviewPort) {
 							return undefined;
@@ -51,7 +58,7 @@ export class WebviewPortMappingManager implements IDisposable {
 
 				if (mapping.webviewPort !== mapping.extensionHostPort) {
 					return encodeURI(uri.with({
-						authority: `${requestLocalHostInfo.address}:${mapping.extensionHostPort}`
+						authority: `${requestLocalHostInfo.address}:${mapping.extensionHostPort}`,
 					}).toString(true));
 				}
 			}
@@ -72,9 +79,13 @@ export class WebviewPortMappingManager implements IDisposable {
 		if (existing) {
 			return existing;
 		}
-		const tunnelOrError = await this.tunnelService.openTunnel({ getAddress: async () => remoteAuthority }, undefined, remotePort);
+		const tunnelOrError = await this.tunnelService.openTunnel(
+      { getAddress: async () => remoteAuthority },
+      undefined,
+      remotePort,
+    );
 		let tunnel: RemoteTunnel | undefined;
-		if (typeof tunnelOrError === 'string') {
+		if (typeof tunnelOrError === "string") {
 			tunnel = undefined;
 		}
 		if (tunnel) {

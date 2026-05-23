@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { getZoomLevel, setZoomFactor, setZoomLevel } from '../../../base/browser/browser.js';
-import { getActiveWindow, getWindows } from '../../../base/browser/dom.js';
-import { mainWindow } from '../../../base/browser/window.js';
-import { ISandboxConfiguration } from '../../../base/parts/sandbox/common/sandboxTypes.js';
-import { ISandboxGlobals, ipcRenderer, webFrame } from '../../../base/parts/sandbox/electron-browser/globals.js';
-import { zoomLevelToZoomFactor } from '../common/window.js';
+import { getZoomLevel, setZoomFactor, setZoomLevel } from "../../../base/browser/browser.js";
+import { getActiveWindow, getWindows } from "../../../base/browser/dom.js";
+import { mainWindow } from "../../../base/browser/window.js";
+import { ISandboxConfiguration } from "../../../base/parts/sandbox/common/sandboxTypes.js";
+import { ISandboxGlobals, ipcRenderer, webFrame } from "../../../base/parts/sandbox/electron-browser/globals.js";
+import { zoomLevelToZoomFactor } from "../common/window.js";
 
 export enum ApplyZoomTarget {
 	ACTIVE_WINDOW = 1,
@@ -23,7 +23,10 @@ export const MIN_ZOOM_LEVEL = -8;
  * browser helper so that it can be accessed in non-electron layers.
  */
 export function applyZoom(zoomLevel: number, target: ApplyZoomTarget | Window): void {
-	zoomLevel = Math.min(Math.max(zoomLevel, MIN_ZOOM_LEVEL), MAX_ZOOM_LEVEL); // cap zoom levels between -8 and 8
+	zoomLevel = Math.min(
+    Math.max(zoomLevel, MIN_ZOOM_LEVEL),
+    MAX_ZOOM_LEVEL,
+  ); // cap zoom levels between -8 and 8
 
 	const targetWindows: Window[] = [];
 	if (target === ApplyZoomTarget.ACTIVE_WINDOW) {
@@ -57,11 +60,17 @@ function getGlobals(win: Window): ISandboxGlobals | undefined {
 }
 
 export function zoomIn(target: ApplyZoomTarget | Window): void {
-	applyZoom(getZoomLevel(typeof target === 'number' ? getActiveWindow() : target) + 1, target);
+	applyZoom(
+    getZoomLevel(typeof target === "number" ? getActiveWindow() : target) + 1,
+    target,
+  );
 }
 
 export function zoomOut(target: ApplyZoomTarget | Window): void {
-	applyZoom(getZoomLevel(typeof target === 'number' ? getActiveWindow() : target) - 1, target);
+	applyZoom(
+    getZoomLevel(typeof target === "number" ? getActiveWindow() : target) - 1,
+    target,
+  );
 }
 
 //#region Bootstrap Window
@@ -84,7 +93,7 @@ export interface ILoadResult<M, T> {
 export interface IBootstrapWindow {
 	load<M, T extends ISandboxConfiguration = ISandboxConfiguration>(
 		esModule: string,
-		options: ILoadOptions<T>
+		options: ILoadOptions<T>,
 	): Promise<ILoadResult<M, T>>;
 }
 

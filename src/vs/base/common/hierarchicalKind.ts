@@ -4,13 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 export class HierarchicalKind {
-	public static readonly sep = '.';
+	public static readonly sep = ".";
 
-	public static readonly None = new HierarchicalKind('@@none@@'); // Special kind that matches nothing
-	public static readonly Empty = new HierarchicalKind('');
+	public static readonly None = new HierarchicalKind(
+    "@@none@@",
+  ); // Special kind that matches nothing
+	public static readonly Empty = new HierarchicalKind("");
 
 	constructor(
-		public readonly value: string
+		public readonly value: string,
 	) { }
 
 	public equals(other: HierarchicalKind): boolean {
@@ -18,7 +20,9 @@ export class HierarchicalKind {
 	}
 
 	public contains(other: HierarchicalKind): boolean {
-		return this.equals(other) || this.value === '' || other.value.startsWith(this.value + HierarchicalKind.sep);
+		return this.equals(other) || this.value === "" || other.value.startsWith(
+      this.value + HierarchicalKind.sep,
+    );
 	}
 
 	public intersects(other: HierarchicalKind): boolean {
@@ -26,6 +30,8 @@ export class HierarchicalKind {
 	}
 
 	public append(...parts: string[]): HierarchicalKind {
-		return new HierarchicalKind((this.value ? [this.value, ...parts] : parts).join(HierarchicalKind.sep));
+		return new HierarchicalKind(
+      (this.value ? [this.value, ...parts] : parts).join(HierarchicalKind.sep),
+    );
 	}
 }

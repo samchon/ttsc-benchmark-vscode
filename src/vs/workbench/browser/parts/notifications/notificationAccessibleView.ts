@@ -3,38 +3,45 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IAction } from '../../../../base/common/actions.js';
-import { Codicon } from '../../../../base/common/codicons.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
-import { localize } from '../../../../nls.js';
-import { IAccessibleViewService, AccessibleViewProviderId, AccessibleViewType, AccessibleContentProvider } from '../../../../platform/accessibility/browser/accessibleView.js';
-import { IAccessibleViewImplementation } from '../../../../platform/accessibility/browser/accessibleViewRegistry.js';
-import { IAccessibilitySignalService, AccessibilitySignal } from '../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { IListService, WorkbenchList } from '../../../../platform/list/browser/listService.js';
-import { getNotificationFromContext } from './notificationsCommands.js';
-import { NotificationFocusedContext } from '../../../common/contextkeys.js';
-import { INotificationViewItem } from '../../../common/notifications.js';
-import { withSeverityPrefix } from '../../../../platform/notification/common/notification.js';
+import { IAction } from "../../../../base/common/actions.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { localize } from "../../../../nls.js";
+import {
+  IAccessibleViewService,
+  AccessibleViewProviderId,
+  AccessibleViewType,
+  AccessibleContentProvider,
+} from "../../../../platform/accessibility/browser/accessibleView.js";
+import { IAccessibleViewImplementation } from "../../../../platform/accessibility/browser/accessibleViewRegistry.js";
+import { IAccessibilitySignalService, AccessibilitySignal } from "../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { IListService, WorkbenchList } from "../../../../platform/list/browser/listService.js";
+import { getNotificationFromContext } from "./notificationsCommands.js";
+import { NotificationFocusedContext } from "../../../common/contextkeys.js";
+import { INotificationViewItem } from "../../../common/notifications.js";
+import { withSeverityPrefix } from "../../../../platform/notification/common/notification.js";
 
 export class NotificationAccessibleView implements IAccessibleViewImplementation {
 	readonly priority = 90;
-	readonly name = 'notifications';
+	readonly name = "notifications";
 	readonly when = NotificationFocusedContext;
 	readonly type = AccessibleViewType.View;
 	getProvider(accessor: ServicesAccessor) {
 		const accessibleViewService = accessor.get(IAccessibleViewService);
 		const listService = accessor.get(IListService);
 		const commandService = accessor.get(ICommandService);
-		const accessibilitySignalService = accessor.get(IAccessibilitySignalService);
+		const accessibilitySignalService = accessor.get(
+      IAccessibilitySignalService,
+    );
 
 		function getProvider() {
 			const notification = getNotificationFromContext(listService);
 			if (!notification) {
 				return;
 			}
-			commandService.executeCommand('notifications.showList');
+			commandService.executeCommand("notifications.showList");
 			let notificationIndex: number | undefined;
 			const list = listService.lastFocusedList;
 			if (list instanceof WorkbenchList) {
@@ -45,7 +52,7 @@ export class NotificationAccessibleView implements IAccessibleViewImplementation
 			}
 
 			function focusList(): void {
-				commandService.executeCommand('notifications.showList');
+				commandService.executeCommand("notifications.showList");
 				if (list && notificationIndex !== undefined) {
 					list.domFocus();
 					try {
@@ -60,7 +67,10 @@ export class NotificationAccessibleView implements IAccessibleViewImplementation
 				if (!notification || !message) {
 					return;
 				}
-				return withSeverityPrefix(notification.source ? localize('notification.accessibleViewSrc', '{0} Source: {1}', message, notification.source) : message, notification.severity);
+				return withSeverityPrefix(
+          notification.source ? localize("notification.accessibleViewSrc", "{0} Source: {1}", message, notification.source) : message,
+          notification.severity,
+        );
 			}
 			const content = getContentForNotification();
 			if (!content) {
@@ -72,7 +82,7 @@ export class NotificationAccessibleView implements IAccessibleViewImplementation
 				{ type: AccessibleViewType.View },
 				() => content,
 				() => focusList(),
-				'accessibility.verbosity.notification',
+				"accessibility.verbosity.notification",
 				undefined,
 				getActionsFromNotification(notification, accessibilitySignalService),
 				() => {
@@ -119,16 +129,18 @@ function getActionsFromNotification(notification: INotificationViewItem, accessi
 			};
 		}
 	}
-	const manageExtension = actions?.find(a => a.label.includes('Manage Extension'));
+	const manageExtension = actions?.find(
+    a => a.label.includes("Manage Extension"),
+  );
 	if (manageExtension) {
 		manageExtension.class = ThemeIcon.asClassName(Codicon.gear);
 	}
 	if (actions) {
 		actions.push({
-			id: 'clearNotification', label: localize('clearNotification', "Clear Notification"), tooltip: localize('clearNotification', "Clear Notification"), run: () => {
+			id: "clearNotification", label: localize("clearNotification", "Clear Notification"), tooltip: localize("clearNotification", "Clear Notification"), run: () => {
 				notification.close();
 				accessibilitySignalService.playSignal(AccessibilitySignal.clear);
-			}, enabled: true, class: ThemeIcon.asClassName(Codicon.clearAll)
+			}, enabled: true, class: ThemeIcon.asClassName(Codicon.clearAll),
 		});
 	}
 	return actions;

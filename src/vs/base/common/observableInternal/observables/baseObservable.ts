@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IObservableWithChange, IObserver, IReader, IObservable } from '../base.js';
-import { DisposableStore } from '../commonFacade/deps.js';
-import { DebugLocation } from '../debugLocation.js';
-import { DebugOwner, getFunctionName } from '../debugName.js';
-import { debugGetObservableGraph } from '../logging/debugGetDependencyGraph.js';
-import { getLogger, logObservable } from '../logging/logging.js';
-import type { keepObserved, recomputeInitiallyAndOnChange } from '../utils/utils.js';
-import { derivedOpts } from './derived.js';
+import { IObservableWithChange, IObserver, IReader, IObservable } from "../base.js";
+import { DisposableStore } from "../commonFacade/deps.js";
+import { DebugLocation } from "../debugLocation.js";
+import { DebugOwner, getFunctionName } from "../debugName.js";
+import { debugGetObservableGraph } from "../logging/debugGetDependencyGraph.js";
+import { getLogger, logObservable } from "../logging/logging.js";
+import type { keepObserved, recomputeInitiallyAndOnChange } from "../utils/utils.js";
+import { derivedOpts } from "./derived.js";
 
 let _derived: typeof derivedOpts;
 /**
@@ -99,12 +99,12 @@ export abstract class ConvenientObservable<T, TChange> implements IObservableWit
 	*/
 	public flatten<TNew>(this: IObservable<IObservableWithChange<TNew, any>>): IObservable<TNew> {
 		return _derived(
-			{
-				owner: undefined,
-				debugName: () => `${this.debugName} (flattened)`,
-			},
-			(reader) => this.read(reader).read(reader)
-		);
+      {
+        owner: undefined,
+        debugName: () => `${this.debugName} (flattened)`,
+      },
+      (reader) => this.read(reader).read(reader),
+    );
 	}
 
 	public recomputeInitiallyAndOnChange(store: DisposableStore, handleValue?: (value: T) => void): IObservable<T> {
@@ -138,11 +138,11 @@ class DebugHelper {
 	}
 
 	getDependencyGraph(): string {
-		return _debugGetObservableGraph(this.observable, { type: 'dependencies' });
+		return _debugGetObservableGraph(this.observable, { type: "dependencies" });
 	}
 
 	getObserverGraph(): string {
-		return _debugGetObservableGraph(this.observable, { type: 'observers' });
+		return _debugGetObservableGraph(this.observable, { type: "observers" });
 	}
 }
 

@@ -3,19 +3,53 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { RunOnceScheduler } from '../../../base/common/async.js';
-import { Emitter, Event } from '../../../base/common/event.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { equals } from '../../../base/common/objects.js';
-import { ILogService } from '../../log/common/log.js';
-import { TelemetryLevel } from '../../telemetry/common/telemetry.js';
-import { ActionType, ActionEnvelope, ActionOrigin, INotification, IRootConfigChangedAction, SessionAction, RootAction, StateAction, TerminalAction, ChangesetAction, isRootAction, isSessionAction, isChangesetAction } from '../common/state/sessionActions.js';
-import type { IStateSnapshot } from '../common/state/sessionProtocol.js';
-import { rootReducer, sessionReducer, changesetReducer } from '../common/state/sessionReducers.js';
-import { createRootState, createSessionState, isAhpRootChannel, SessionLifecycle, type ChangesetState, type ChangesetSummary, type RootState, type SessionMeta, type SessionState, type SessionSummary, type Turn, type URI, ROOT_STATE_URI, ChangesetStatus } from '../common/state/sessionState.js';
-import { AgentHostTelemetryLevelConfigKey, IPermissionsValue, platformRootSchema, telemetryLevelToAgentHostConfigValue } from '../common/agentHostSchema.js';
-import { SessionConfigKey } from '../common/sessionConfigKeys.js';
-import { parseChangesetUri } from '../common/changesetUri.js';
+import { RunOnceScheduler } from "../../../base/common/async.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { equals } from "../../../base/common/objects.js";
+import { ILogService } from "../../log/common/log.js";
+import { TelemetryLevel } from "../../telemetry/common/telemetry.js";
+import {
+  ActionType,
+  ActionEnvelope,
+  ActionOrigin,
+  INotification,
+  IRootConfigChangedAction,
+  SessionAction,
+  RootAction,
+  StateAction,
+  TerminalAction,
+  ChangesetAction,
+  isRootAction,
+  isSessionAction,
+  isChangesetAction,
+} from "../common/state/sessionActions.js";
+import type { IStateSnapshot } from "../common/state/sessionProtocol.js";
+import { rootReducer, sessionReducer, changesetReducer } from "../common/state/sessionReducers.js";
+import {
+  createRootState,
+  createSessionState,
+  isAhpRootChannel,
+  SessionLifecycle,
+  type ChangesetState,
+  type ChangesetSummary,
+  type RootState,
+  type SessionMeta,
+  type SessionState,
+  type SessionSummary,
+  type Turn,
+  type URI,
+  ROOT_STATE_URI,
+  ChangesetStatus,
+} from "../common/state/sessionState.js";
+import {
+  AgentHostTelemetryLevelConfigKey,
+  IPermissionsValue,
+  platformRootSchema,
+  telemetryLevelToAgentHostConfigValue,
+} from "../common/agentHostSchema.js";
+import { SessionConfigKey } from "../common/sessionConfigKeys.js";
+import { parseChangesetUri } from "../common/changesetUri.js";
 
 /**
  * Field-level equality for two changeset catalogue arrays. Used by
@@ -77,12 +111,18 @@ export class AgentHostStateManager extends Disposable {
 
 	/** Sessions whose summary changed since the last flush. */
 	private readonly _dirtySummaries = new Set<string>();
-	private readonly _summaryNotifyScheduler = this._register(new RunOnceScheduler(() => this._flushSummaryNotifications(), 100));
+	private readonly _summaryNotifyScheduler = this._register(
+    new RunOnceScheduler(() => this._flushSummaryNotifications(), 100),
+  );
 
-	private readonly _onDidEmitEnvelope = this._register(new Emitter<ActionEnvelope>());
+	private readonly _onDidEmitEnvelope = this._register(
+    new Emitter<ActionEnvelope>(),
+  );
 	readonly onDidEmitEnvelope: Event<ActionEnvelope> = this._onDidEmitEnvelope.event;
 
-	private readonly _onDidEmitNotification = this._register(new Emitter<INotification>());
+	private readonly _onDidEmitNotification = this._register(
+    new Emitter<INotification>(),
+  );
 	readonly onDidEmitNotification: Event<INotification> = this._onDidEmitNotification.event;
 
 	constructor(
@@ -105,7 +145,9 @@ export class AgentHostStateManager extends Disposable {
 			},
 		};
 	}
-	private readonly _log = (msg: string) => this._logService.warn(`[AgentHostStateManager] ${msg}`);
+	private readonly _log = (msg: string) => this._logService.warn(
+    `[AgentHostStateManager] ${msg}`,
+  );
 
 	get hasActiveSessions(): boolean {
 		return this._sessionsWithActiveTurn.size > 0;
@@ -153,10 +195,10 @@ export class AgentHostStateManager extends Disposable {
 	getSnapshot(resource: URI): IStateSnapshot | undefined {
 		if (isAhpRootChannel(resource)) {
 			return {
-				resource: ROOT_STATE_URI,
-				state: this._rootState,
-				fromSeq: this._serverSeq,
-			};
+        resource: ROOT_STATE_URI,
+        state: this._rootState,
+        fromSeq: this._serverSeq,
+      };
 		}
 
 		// Changeset URIs are nested under their session URI; check them
@@ -165,10 +207,10 @@ export class AgentHostStateManager extends Disposable {
 		const changesetState = this._changesetStates.get(resource);
 		if (changesetState) {
 			return {
-				resource,
-				state: changesetState,
-				fromSeq: this._serverSeq,
-			};
+        resource,
+        state: changesetState,
+        fromSeq: this._serverSeq,
+      };
 		}
 
 		const sessionState = this._sessionStates.get(resource);
@@ -177,10 +219,10 @@ export class AgentHostStateManager extends Disposable {
 		}
 
 		return {
-			resource,
-			state: sessionState,
-			fromSeq: this._serverSeq,
-		};
+      resource,
+      state: sessionState,
+      fromSeq: this._serverSeq,
+    };
 	}
 
 	/** Read-only accessor for callers that only need to inspect a changeset (not subscribe). */
@@ -206,7 +248,9 @@ export class AgentHostStateManager extends Disposable {
 	createSession(summary: SessionSummary, options?: { readonly emitNotification?: boolean }): SessionState {
 		const key = summary.resource;
 		if (this._sessionStates.has(key)) {
-			this._logService.warn(`[AgentHostStateManager] Session already exists: ${key}`);
+			this._logService.warn(
+        `[AgentHostStateManager] Session already exists: ${key}`,
+      );
 			return this._sessionStates.get(key)!;
 		}
 
@@ -222,10 +266,10 @@ export class AgentHostStateManager extends Disposable {
 			// intentionally skip both until they are persisted.
 			this._lastNotifiedSummaries.set(key, summary);
 			this._onDidEmitNotification.fire({
-				type: 'root/sessionAdded',
-				channel: ROOT_STATE_URI,
-				summary,
-			});
+        type: "root/sessionAdded",
+        channel: ROOT_STATE_URI,
+        summary,
+      });
 		}
 
 		return state;
@@ -244,7 +288,9 @@ export class AgentHostStateManager extends Disposable {
 		const key = session.toString();
 		const state = this._sessionStates.get(key);
 		if (!state) {
-			this._logService.warn(`[AgentHostStateManager] markSessionPersisted: unknown session ${key}`);
+			this._logService.warn(
+        `[AgentHostStateManager] markSessionPersisted: unknown session ${key}`,
+      );
 			return;
 		}
 		// `_lastNotifiedSummaries` is set whenever a session has been announced
@@ -262,10 +308,10 @@ export class AgentHostStateManager extends Disposable {
 		state.summary = summary;
 		this._lastNotifiedSummaries.set(key, summary);
 		this._onDidEmitNotification.fire({
-			type: 'root/sessionAdded',
-			channel: ROOT_STATE_URI,
-			summary,
-		});
+      type: "root/sessionAdded",
+      channel: ROOT_STATE_URI,
+      summary,
+    });
 	}
 
 	/**
@@ -280,19 +326,23 @@ export class AgentHostStateManager extends Disposable {
 	restoreSession(summary: SessionSummary, turns: Turn[]): SessionState {
 		const key = summary.resource;
 		if (this._sessionStates.has(key)) {
-			this._logService.warn(`[AgentHostStateManager] Session already exists (restore): ${key}`);
+			this._logService.warn(
+        `[AgentHostStateManager] Session already exists (restore): ${key}`,
+      );
 			return this._sessionStates.get(key)!;
 		}
 
 		const state: SessionState = {
-			...createSessionState(summary),
-			lifecycle: SessionLifecycle.Ready,
-			turns,
-		};
+      ...createSessionState(summary),
+      lifecycle: SessionLifecycle.Ready,
+      turns,
+    };
 		this._sessionStates.set(key, state);
 		this._lastNotifiedSummaries.set(key, summary);
 
-		this._logService.trace(`[AgentHostStateManager] Restored session: ${key} (${turns.length} turns)`);
+		this._logService.trace(
+      `[AgentHostStateManager] Restored session: ${key} (${turns.length} turns)`,
+    );
 
 		return state;
 	}
@@ -338,13 +388,18 @@ export class AgentHostStateManager extends Disposable {
 		// Without this, evicting a session that still has an active turn
 		// silently strands the active-sessions count above zero forever.
 		if (this._sessionsWithActiveTurn.delete(session)) {
-			this.dispatchServerAction(ROOT_STATE_URI, { type: ActionType.RootActiveSessionsChanged, activeSessions: this._sessionsWithActiveTurn.size });
+			this.dispatchServerAction(ROOT_STATE_URI, {
+        type: ActionType.RootActiveSessionsChanged,
+        activeSessions: this._sessionsWithActiveTurn.size,
+      });
 		}
 
 		this._sessionStates.delete(session);
 		this._lastNotifiedSummaries.delete(session);
 		this._dirtySummaries.delete(session);
-		this._logService.trace(`[AgentHostStateManager] Removed session: ${session}`);
+		this._logService.trace(
+      `[AgentHostStateManager] Removed session: ${session}`,
+    );
 	}
 
 	/**
@@ -373,10 +428,10 @@ export class AgentHostStateManager extends Disposable {
 		this.removeSession(session);
 		if (wasAnnounced) {
 			this._onDidEmitNotification.fire({
-				type: 'root/sessionRemoved',
-				channel: ROOT_STATE_URI,
-				session,
-			});
+        type: "root/sessionRemoved",
+        channel: ROOT_STATE_URI,
+        session,
+      });
 		}
 	}
 
@@ -392,7 +447,10 @@ export class AgentHostStateManager extends Disposable {
 	 * helpers in `sessionState.ts` to combine slots.
 	 */
 	setSessionMeta(session: URI, meta: SessionMeta | undefined): void {
-		this.dispatchServerAction(session, { type: ActionType.SessionMetaChanged, _meta: meta });
+		this.dispatchServerAction(session, {
+      type: ActionType.SessionMetaChanged,
+      _meta: meta,
+    });
 	}
 
 	// ---- Changeset registry -------------------------------------------------
@@ -418,7 +476,10 @@ export class AgentHostStateManager extends Disposable {
 		if (this._changesetStates.has(changesetUri)) {
 			return changesetUri;
 		}
-		this._changesetStates.set(changesetUri, { status: initialStatus, files: [] });
+		this._changesetStates.set(changesetUri, {
+      status: initialStatus,
+      files: [],
+    });
 		return changesetUri;
 	}
 
@@ -437,7 +498,9 @@ export class AgentHostStateManager extends Disposable {
 	setSessionChangesets(session: URI, changesets: readonly ChangesetSummary[] | undefined): void {
 		const state = this._sessionStates.get(session);
 		if (!state) {
-			this._logService.warn(`[AgentHostStateManager] setSessionChangesets: unknown session ${session}`);
+			this._logService.warn(
+        `[AgentHostStateManager] setSessionChangesets: unknown session ${session}`,
+      );
 			return;
 		}
 		// Skip dispatch when the catalogue is field-equal to the existing
@@ -450,11 +513,13 @@ export class AgentHostStateManager extends Disposable {
 		}
 		// Take a defensive copy so callers can't mutate the catalogue array
 		// after dispatch; the reducer otherwise stores the reference as-is.
-		const next: ChangesetSummary[] | undefined = changesets ? [...changesets] : undefined;
+		const next: ChangesetSummary[] | undefined = changesets ? [
+      ...changesets,
+    ] : undefined;
 		this.dispatchServerAction(session, {
-			type: ActionType.SessionChangesetsChanged,
-			changesets: next,
-		});
+      type: ActionType.SessionChangesetsChanged,
+      changesets: next,
+    });
 	}
 
 	/**
@@ -477,8 +542,8 @@ export class AgentHostStateManager extends Disposable {
 			return;
 		}
 		this.dispatchServerAction(changeset, {
-			type: ActionType.ChangesetCleared,
-		});
+      type: ActionType.ChangesetCleared,
+    });
 		this._changesetStates.delete(changeset);
 	}
 
@@ -560,7 +625,11 @@ export class AgentHostStateManager extends Disposable {
 					return this._rootState;
 				}
 			}
-			this._rootState = rootReducer(this._rootState, action as RootAction, this._log);
+			this._rootState = rootReducer(
+        this._rootState,
+        action as RootAction,
+        this._log,
+      );
 			resultingState = this._rootState;
 		}
 
@@ -592,12 +661,17 @@ export class AgentHostStateManager extends Disposable {
 					} else {
 						this._sessionsWithActiveTurn.delete(key);
 					}
-					this.dispatchServerAction(ROOT_STATE_URI, { type: ActionType.RootActiveSessionsChanged, activeSessions: this._sessionsWithActiveTurn.size });
+					this.dispatchServerAction(ROOT_STATE_URI, {
+            type: ActionType.RootActiveSessionsChanged,
+            activeSessions: this._sessionsWithActiveTurn.size,
+          });
 				}
 
 				resultingState = newState;
 			} else {
-				this._logService.warn(`[AgentHostStateManager] Action for unknown session: ${key}, type=${action.type}`);
+				this._logService.warn(
+          `[AgentHostStateManager] Action for unknown session: ${key}, type=${action.type}`,
+        );
 			}
 		}
 
@@ -610,7 +684,9 @@ export class AgentHostStateManager extends Disposable {
 				// Routing the action to subscribers (Issue 1) makes
 				// orphan envelopes client-visible, so we must drop them
 				// here rather than letting them advance `_serverSeq`.
-				this._logService.warn(`[AgentHostStateManager] Action for unknown changeset: ${key}, type=${action.type}`);
+				this._logService.warn(
+          `[AgentHostStateManager] Action for unknown changeset: ${key}, type=${action.type}`,
+        );
 				return undefined;
 			}
 			const newState = changesetReducer(state, changesetAction, this._log);
@@ -622,13 +698,15 @@ export class AgentHostStateManager extends Disposable {
 
 		// Emit envelope
 		const envelope: ActionEnvelope = {
-			channel,
-			action,
-			serverSeq: ++this._serverSeq,
-			origin,
-		};
+      channel,
+      action,
+      serverSeq: ++this._serverSeq,
+      origin,
+    };
 
-		this._logService.trace(`[AgentHostStateManager] Emitting envelope: seq=${envelope.serverSeq}, type=${action.type}${origin ? `, origin=${origin.clientId}:${origin.clientSeq}` : ''}`);
+		this._logService.trace(
+      `[AgentHostStateManager] Emitting envelope: seq=${envelope.serverSeq}, type=${action.type}${origin ? `, origin=${origin.clientId}:${origin.clientSeq}` : ""}`,
+    );
 		this._onDidEmitEnvelope.fire(envelope);
 
 		return resultingState;
@@ -671,11 +749,11 @@ export class AgentHostStateManager extends Disposable {
 
 		if (Object.keys(changes).length > 0) {
 			this._onDidEmitNotification.fire({
-				type: 'root/sessionSummaryChanged',
-				channel: ROOT_STATE_URI,
-				session,
-				changes,
-			});
+        type: "root/sessionSummaryChanged",
+        channel: ROOT_STATE_URI,
+        session,
+        changes,
+      });
 		}
 	}
 }

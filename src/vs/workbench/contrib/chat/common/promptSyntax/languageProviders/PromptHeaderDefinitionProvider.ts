@@ -3,21 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../../../base/common/cancellation.js';
-import { Position } from '../../../../../../editor/common/core/position.js';
-import { Range } from '../../../../../../editor/common/core/range.js';
-import { Definition, DefinitionProvider } from '../../../../../../editor/common/languages.js';
-import { ITextModel } from '../../../../../../editor/common/model.js';
-import { IChatModeService } from '../../chatModes.js';
-import { PromptHeaderAttributes } from '../promptFileParser.js';
-import { getPromptsTypeForLanguageId } from '../promptTypes.js';
-import { IPromptsService } from '../service/promptsService.js';
+import { CancellationToken } from "../../../../../../base/common/cancellation.js";
+import { Position } from "../../../../../../editor/common/core/position.js";
+import { Range } from "../../../../../../editor/common/core/range.js";
+import { Definition, DefinitionProvider } from "../../../../../../editor/common/languages.js";
+import { ITextModel } from "../../../../../../editor/common/model.js";
+import { IChatModeService } from "../../chatModes.js";
+import { PromptHeaderAttributes } from "../promptFileParser.js";
+import { getPromptsTypeForLanguageId } from "../promptTypes.js";
+import { IPromptsService } from "../service/promptsService.js";
 
 export class PromptHeaderDefinitionProvider implements DefinitionProvider {
 	/**
 	 * Debug display name for this provider.
 	 */
-	public readonly _debugDisplayName: string = 'PromptHeaderDefinitionProvider';
+	public readonly _debugDisplayName: string = "PromptHeaderDefinitionProvider";
 
 	constructor(
 		@IPromptsService private readonly promptsService: IPromptsService,
@@ -38,14 +38,20 @@ export class PromptHeaderDefinitionProvider implements DefinitionProvider {
 			return undefined;
 		}
 
-		const agentAttr = header.getAttribute(PromptHeaderAttributes.agent) ?? header.getAttribute(PromptHeaderAttributes.mode);
-		if (agentAttr && agentAttr.value.type === 'scalar' && agentAttr.range.containsPosition(position)) {
-			const agent = (await this.chatModeService.getLocalModes()).findModeByName(agentAttr.value.value);
+		const agentAttr = header.getAttribute(
+      PromptHeaderAttributes.agent,
+    ) ?? header.getAttribute(PromptHeaderAttributes.mode);
+		if (agentAttr && agentAttr.value.type === "scalar" && agentAttr.range.containsPosition(
+      position,
+    )) {
+			const agent = (await this.chatModeService.getLocalModes()).findModeByName(
+        agentAttr.value.value,
+      );
 			if (agent && agent.uri) {
 				return {
-					uri: agent.uri.get(),
-					range: new Range(1, 1, 1, 1)
-				};
+          uri: agent.uri.get(),
+          range: new Range(1, 1, 1, 1),
+        };
 			}
 		}
 		return undefined;

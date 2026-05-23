@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { URI } from '../../../../base/common/uri.js';
-import { ExtHostDocumentsAndEditors } from '../../common/extHostDocumentsAndEditors.js';
-import { TestRPCProtocol } from '../common/testRPCProtocol.js';
-import { NullLogService } from '../../../../platform/log/common/log.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
+import assert from "assert";
+import { URI } from "../../../../base/common/uri.js";
+import { ExtHostDocumentsAndEditors } from "../../common/extHostDocumentsAndEditors.js";
+import { TestRPCProtocol } from "../common/testRPCProtocol.js";
+import { NullLogService } from "../../../../platform/log/common/log.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
 
-suite('ExtHostDocumentsAndEditors', () => {
+suite("ExtHostDocumentsAndEditors", () => {
 
 	let editors: ExtHostDocumentsAndEditors;
 
@@ -20,21 +20,21 @@ suite('ExtHostDocumentsAndEditors', () => {
 
 	ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('The value of TextDocument.isClosed is incorrect when a text document is closed, #27949', () => {
+	test("The value of TextDocument.isClosed is incorrect when a text document is closed, #27949", () => {
 
 		editors.$acceptDocumentsAndEditorsDelta({
 			addedDocuments: [{
-				EOL: '\n',
+				EOL: "\n",
 				isDirty: true,
-				languageId: 'fooLang',
-				uri: URI.parse('foo:bar'),
+				languageId: "fooLang",
+				uri: URI.parse("foo:bar"),
 				versionId: 1,
 				lines: [
-					'first',
-					'second'
+					"first",
+					"second",
 				],
-				encoding: 'utf8'
-			}]
+				encoding: "utf8",
+			}],
 		});
 
 		return new Promise((resolve, reject) => {
@@ -54,7 +54,7 @@ suite('ExtHostDocumentsAndEditors', () => {
 			});
 
 			editors.$acceptDocumentsAndEditorsDelta({
-				removedDocuments: [URI.parse('foo:bar')]
+				removedDocuments: [URI.parse("foo:bar")],
 			});
 
 		});

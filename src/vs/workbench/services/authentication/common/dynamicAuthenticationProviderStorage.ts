@@ -3,11 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { IAuthorizationTokenResponse } from '../../../../base/common/oauth.js';
-import { Event } from '../../../../base/common/event.js';
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IAuthorizationTokenResponse } from "../../../../base/common/oauth.js";
+import { Event } from "../../../../base/common/event.js";
 
-export const IDynamicAuthenticationProviderStorageService = createDecorator<IDynamicAuthenticationProviderStorageService>('dynamicAuthenticationProviderStorageService');
+export const IDynamicAuthenticationProviderStorageService = createDecorator<IDynamicAuthenticationProviderStorageService>(
+  "dynamicAuthenticationProviderStorageService",
+);
 
 export interface DynamicAuthenticationProviderInfo {
 	readonly providerId: string;

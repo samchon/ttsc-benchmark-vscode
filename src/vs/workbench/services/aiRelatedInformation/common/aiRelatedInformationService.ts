@@ -3,13 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { CancelablePromise, createCancelablePromise, raceTimeout } from '../../../../base/common/async.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { StopWatch } from '../../../../base/common/stopwatch.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { IAiRelatedInformationService, IAiRelatedInformationProvider, RelatedInformationType, RelatedInformationResult } from './aiRelatedInformation.js';
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { CancelablePromise, createCancelablePromise, raceTimeout } from "../../../../base/common/async.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { StopWatch } from "../../../../base/common/stopwatch.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import {
+  IAiRelatedInformationService,
+  IAiRelatedInformationProvider,
+  RelatedInformationType,
+  RelatedInformationResult,
+} from "./aiRelatedInformation.js";
 
 export class AiRelatedInformationService implements IAiRelatedInformationService {
 	readonly _serviceBrand: undefined;
@@ -40,13 +45,13 @@ export class AiRelatedInformationService implements IAiRelatedInformationService
 				if (providers.length === 0) {
 					this._providers.delete(type);
 				}
-			}
+			},
 		};
 	}
 
 	async getRelatedInformation(query: string, types: RelatedInformationType[], token: CancellationToken): Promise<RelatedInformationResult[]> {
 		if (this._providers.size === 0) {
-			throw new Error('No related information providers registered');
+			throw new Error("No related information providers registered");
 		}
 
 		// get providers for each type
@@ -59,7 +64,9 @@ export class AiRelatedInformationService implements IAiRelatedInformationService
 		}
 
 		if (providers.length === 0) {
-			throw new Error('No related information providers registered for the given types');
+			throw new Error(
+        "No related information providers registered for the given types",
+      );
 		}
 
 		const stopwatch = StopWatch.create();
@@ -79,25 +86,33 @@ export class AiRelatedInformationService implements IAiRelatedInformationService
 
 		try {
 			const results = await raceTimeout(
-				Promise.allSettled(cancellablePromises),
-				AiRelatedInformationService.DEFAULT_TIMEOUT,
-				() => {
-					cancellablePromises.forEach(p => p.cancel());
-					this.logService.warn('[AiRelatedInformationService]: Related information provider timed out');
-				}
-			);
+        Promise.allSettled(cancellablePromises),
+        AiRelatedInformationService.DEFAULT_TIMEOUT,
+        () => {
+          cancellablePromises.forEach(p => p.cancel());
+          this.logService.warn(
+            "[AiRelatedInformationService]: Related information provider timed out",
+          );
+        },
+      );
 			if (!results) {
 				return [];
 			}
 			const result = results
-				.filter(r => r.status === 'fulfilled')
+				.filter(r => r.status === "fulfilled")
 				.flatMap(r => (r as PromiseFulfilledResult<RelatedInformationResult[]>).value);
 			return result;
 		} finally {
 			stopwatch.stop();
-			this.logService.trace(`[AiRelatedInformationService]: getRelatedInformation took ${stopwatch.elapsed()}ms`);
+			this.logService.trace(
+        `[AiRelatedInformationService]: getRelatedInformation took ${stopwatch.elapsed()}ms`,
+      );
 		}
 	}
 }
 
-registerSingleton(IAiRelatedInformationService, AiRelatedInformationService, InstantiationType.Delayed);
+registerSingleton(
+  IAiRelatedInformationService,
+  AiRelatedInformationService,
+  InstantiationType.Delayed,
+);

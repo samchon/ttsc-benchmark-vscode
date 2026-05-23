@@ -3,25 +3,36 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { URI } from '../../../../base/common/uri.js';
-import { NotebookProviderInfo } from './notebookProvider.js';
-import { Event } from '../../../../base/common/event.js';
-import { INotebookRendererInfo, NotebookData, TransientOptions, IOrderedMimeType, IOutputDto, INotebookContributionData, NotebookExtensionDescription, INotebookStaticPreloadInfo } from './notebookCommon.js';
-import { NotebookTextModel } from './model/notebookTextModel.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { NotebookCellTextModel } from './model/notebookCellTextModel.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { VSBuffer, VSBufferReadableStream } from '../../../../base/common/buffer.js';
-import { ConfigurationTarget } from '../../../../platform/configuration/common/configuration.js';
-import { IFileStatWithMetadata, IWriteFileOptions } from '../../../../platform/files/common/files.js';
-import { ITextQuery } from '../../../services/search/common/search.js';
-import { NotebookPriorityInfo } from '../../search/common/search.js';
-import { INotebookFileMatchNoModel } from '../../search/common/searchNotebookHelpers.js';
-import { SnapshotContext } from '../../../services/workingCopy/common/fileWorkingCopy.js';
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { URI } from "../../../../base/common/uri.js";
+import { NotebookProviderInfo } from "./notebookProvider.js";
+import { Event } from "../../../../base/common/event.js";
+import {
+  INotebookRendererInfo,
+  NotebookData,
+  TransientOptions,
+  IOrderedMimeType,
+  IOutputDto,
+  INotebookContributionData,
+  NotebookExtensionDescription,
+  INotebookStaticPreloadInfo,
+} from "./notebookCommon.js";
+import { NotebookTextModel } from "./model/notebookTextModel.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { NotebookCellTextModel } from "./model/notebookCellTextModel.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { VSBuffer, VSBufferReadableStream } from "../../../../base/common/buffer.js";
+import { ConfigurationTarget } from "../../../../platform/configuration/common/configuration.js";
+import { IFileStatWithMetadata, IWriteFileOptions } from "../../../../platform/files/common/files.js";
+import { ITextQuery } from "../../../services/search/common/search.js";
+import { NotebookPriorityInfo } from "../../search/common/search.js";
+import { INotebookFileMatchNoModel } from "../../search/common/searchNotebookHelpers.js";
+import { SnapshotContext } from "../../../services/workingCopy/common/fileWorkingCopy.js";
 
 
-export const INotebookService = createDecorator<INotebookService>('notebookService');
+export const INotebookService = createDecorator<INotebookService>(
+  "notebookService",
+);
 
 export interface INotebookContentProvider {
 	options: TransientOptions;
@@ -47,7 +58,7 @@ export class SimpleNotebookProviderInfo {
 	constructor(
 		readonly viewType: string,
 		readonly serializer: INotebookSerializer,
-		readonly extensionData: NotebookExtensionDescription
+		readonly extensionData: NotebookExtensionDescription,
 	) { }
 }
 

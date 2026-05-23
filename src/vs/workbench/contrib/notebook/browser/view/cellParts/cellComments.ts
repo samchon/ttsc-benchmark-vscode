@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { coalesce } from '../../../../../../base/common/arrays.js';
-import { DisposableMap, DisposableStore } from '../../../../../../base/common/lifecycle.js';
-import * as languages from '../../../../../../editor/common/languages.js';
-import { IContextKeyService } from '../../../../../../platform/contextkey/common/contextkey.js';
-import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { IThemeService } from '../../../../../../platform/theme/common/themeService.js';
-import { ICommentService, INotebookCommentInfo } from '../../../../comments/browser/commentService.js';
-import { CommentThreadWidget } from '../../../../comments/browser/commentThreadWidget.js';
-import { ICellViewModel, INotebookEditorDelegate } from '../../notebookBrowser.js';
-import { CellContentPart } from '../cellPart.js';
-import { ICellRange } from '../../../common/notebookRange.js';
+import { coalesce } from "../../../../../../base/common/arrays.js";
+import { DisposableMap, DisposableStore } from "../../../../../../base/common/lifecycle.js";
+import * as languages from "../../../../../../editor/common/languages.js";
+import { IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { IThemeService } from "../../../../../../platform/theme/common/themeService.js";
+import { ICommentService, INotebookCommentInfo } from "../../../../comments/browser/commentService.js";
+import { CommentThreadWidget } from "../../../../comments/browser/commentThreadWidget.js";
+import { ICellViewModel, INotebookEditorDelegate } from "../../notebookBrowser.js";
+import { CellContentPart } from "../cellPart.js";
+import { ICellRange } from "../../../common/notebookRange.js";
 
 export class CellComments extends CellContentPart {
 	// keyed by threadId
@@ -26,14 +26,18 @@ export class CellComments extends CellContentPart {
 		@IContextKeyService private readonly contextKeyService: IContextKeyService,
 		@IThemeService private readonly themeService: IThemeService,
 		@ICommentService private readonly commentService: ICommentService,
-		@IInstantiationService private readonly instantiationService: IInstantiationService
+		@IInstantiationService private readonly instantiationService: IInstantiationService,
 	) {
 		super();
-		this.container.classList.add('review-widget');
+		this.container.classList.add("review-widget");
 
-		this._register(this._commentThreadWidgets = new DisposableMap<string, { widget: CommentThreadWidget<ICellRange>; dispose: () => void }>());
+		this._register(
+      this._commentThreadWidgets = new DisposableMap<string, { widget: CommentThreadWidget<ICellRange>; dispose: () => void }>(),
+    );
 
-		this._register(this.themeService.onDidColorThemeChange(this._applyTheme, this));
+		this._register(
+      this.themeService.onDidColorThemeChange(this._applyTheme, this),
+    );
 		// TODO @rebornix onDidChangeLayout (font change)
 		// this._register(this.notebookEditor.onDidchangeLa)
 		this._applyTheme();
@@ -66,11 +70,14 @@ export class CellComments extends CellContentPart {
 			{
 				actionRunner: () => {
 				},
-				collapse: async () => { return true; }
-			}
+				collapse: async () => { return true; },
+			},
 		) as unknown as CommentThreadWidget<ICellRange>;
 		widgetDisposables.add(widget);
-		this._commentThreadWidgets.set(commentThread.threadId, { widget, dispose: () => widgetDisposables.dispose() });
+		this._commentThreadWidgets.set(commentThread.threadId, {
+      widget,
+      dispose: () => widgetDisposables.dispose(),
+    });
 
 		const layoutInfo = this.notebookEditor.getLayoutInfo();
 
@@ -85,7 +92,11 @@ export class CellComments extends CellContentPart {
 	}
 
 	private _bindListeners() {
-		this.cellDisposables.add(this.commentService.onDidUpdateCommentThreads(async () => this._updateThread()));
+		this.cellDisposables.add(
+      this.commentService.onDidUpdateCommentThreads(
+        async () => this._updateThread(),
+      ),
+    );
 	}
 
 	private async _updateThread() {
@@ -133,14 +144,18 @@ export class CellComments extends CellContentPart {
 		}
 		let height = 0;
 		for (const { widget } of this._commentThreadWidgets.values()) {
-			height += this._calculateCommentThreadHeight(widget.getDimensions().height);
+			height += this._calculateCommentThreadHeight(
+        widget.getDimensions().height,
+      );
 		}
 		this.currentElement.commentHeight = height;
 	}
 
 	private async _getCommentThreadsForCell(element: ICellViewModel): Promise<(INotebookCommentInfo | null)[]> {
 		if (this.notebookEditor.hasModel()) {
-			return coalesce(await this.commentService.getNotebookComments(element.uri));
+			return coalesce(
+        await this.commentService.getNotebookComments(element.uri),
+      );
 		}
 
 		return [];

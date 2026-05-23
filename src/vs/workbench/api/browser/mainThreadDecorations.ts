@@ -3,15 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI, UriComponents } from '../../../base/common/uri.js';
-import { Emitter } from '../../../base/common/event.js';
-import { IDisposable, dispose } from '../../../base/common/lifecycle.js';
-import { ExtHostContext, MainContext, MainThreadDecorationsShape, ExtHostDecorationsShape, DecorationData, DecorationRequest } from '../common/extHost.protocol.js';
-import { extHostNamedCustomer, IExtHostContext } from '../../services/extensions/common/extHostCustomers.js';
-import { IDecorationsService, IDecorationData } from '../../services/decorations/common/decorations.js';
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { DeferredPromise } from '../../../base/common/async.js';
-import { CancellationError } from '../../../base/common/errors.js';
+import { URI, UriComponents } from "../../../base/common/uri.js";
+import { Emitter } from "../../../base/common/event.js";
+import { IDisposable, dispose } from "../../../base/common/lifecycle.js";
+import {
+  ExtHostContext,
+  MainContext,
+  MainThreadDecorationsShape,
+  ExtHostDecorationsShape,
+  DecorationData,
+  DecorationRequest,
+} from "../common/extHost.protocol.js";
+import { extHostNamedCustomer, IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+import { IDecorationsService, IDecorationData } from "../../services/decorations/common/decorations.js";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { DeferredPromise } from "../../../base/common/async.js";
+import { CancellationError } from "../../../base/common/errors.js";
 
 class DecorationRequestsQueue {
 
@@ -23,7 +30,7 @@ class DecorationRequestsQueue {
 
 	constructor(
 		private readonly _proxy: ExtHostDecorationsShape,
-		private readonly _handle: number
+		private readonly _handle: number,
 	) {
 		//
 	}
@@ -37,10 +44,10 @@ class DecorationRequestsQueue {
 		this._processQueue();
 
 		const sub = token.onCancellationRequested(() => {
-			this._requests.delete(id);
-			this._resolver.delete(id);
-			defer.error(new CancellationError());
-		});
+      this._requests.delete(id);
+      this._resolver.delete(id);
+      defer.error(new CancellationError());
+    });
 		return defer.p.finally(() => sub.dispose());
 	}
 
@@ -75,7 +82,7 @@ export class MainThreadDecorations implements MainThreadDecorationsShape {
 
 	constructor(
 		context: IExtHostContext,
-		@IDecorationsService private readonly _decorationsService: IDecorationsService
+		@IDecorationsService private readonly _decorationsService: IDecorationsService,
 	) {
 		this._proxy = context.getProxy(ExtHostContext.ExtHostDecorations);
 	}
@@ -102,9 +109,9 @@ export class MainThreadDecorations implements MainThreadDecorationsShape {
 					bubble: bubble ?? false,
 					color: themeColor?.id,
 					tooltip,
-					letter
+					letter,
 				};
-			}
+			},
 		});
 		this._provider.set(handle, [emitter, registration]);
 	}

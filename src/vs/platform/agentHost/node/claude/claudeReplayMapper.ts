@@ -3,26 +3,32 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { SessionMessage } from '@anthropic-ai/claude-agent-sdk';
-import type { URI } from '../../../../base/common/uri.js';
-import type { ILogService } from '../../../log/common/log.js';
+import type { SessionMessage } from "@anthropic-ai/claude-agent-sdk";
+import type { URI } from "../../../../base/common/uri.js";
+import type { ILogService } from "../../../log/common/log.js";
 import {
-	ResponsePartKind,
-	ToolCallCancellationReason,
-	ToolCallConfirmationReason,
-	ToolCallStatus,
-	ToolResultContentType,
-	TurnState,
-	type ResponsePart,
-	type ToolCallCancelledState,
-	type ToolCallCompletedState,
-	type ToolCallResponsePart,
-	type ToolResultContent,
-	type Turn,
-} from '../../common/state/protocol/state.js';
-import { buildSubagentSessionUri } from '../../common/state/sessionState.js';
-import { buildClaudeToolMeta, getClaudeInvocationMessage, getClaudePastTenseMessage, getClaudeToolDisplayName, getClaudeToolInputString } from './claudeToolDisplay.js';
-import { stripClientToolNamePrefix } from './clientTools/claudeClientToolMcpServer.js';
+  ResponsePartKind,
+  ToolCallCancellationReason,
+  ToolCallConfirmationReason,
+  ToolCallStatus,
+  ToolResultContentType,
+  TurnState,
+  type ResponsePart,
+  type ToolCallCancelledState,
+  type ToolCallCompletedState,
+  type ToolCallResponsePart,
+  type ToolResultContent,
+  type Turn,
+} from "../../common/state/protocol/state.js";
+import { buildSubagentSessionUri } from "../../common/state/sessionState.js";
+import {
+  buildClaudeToolMeta,
+  getClaudeInvocationMessage,
+  getClaudePastTenseMessage,
+  getClaudeToolDisplayName,
+  getClaudeToolInputString,
+} from "./claudeToolDisplay.js";
+import { stripClientToolNamePrefix } from "./clientTools/claudeClientToolMcpServer.js";
 
 /**
  * Phase 13 — replay mapper. Reduces a flat `SessionMessage[]` (the SDK's
@@ -58,8 +64,8 @@ export function mapSessionMessagesToTurns(
 
 // #region Parsed message union — narrow-at-the-seam adapter
 
-interface UserTextBlock { readonly type: 'text'; readonly text: string }
-interface UserToolResultBlock { readonly type: 'tool_result'; readonly tool_use_id: string; readonly content: unknown; readonly is_error: boolean }
+interface UserTextBlock { readonly type: "text"; readonly text: string }
+interface UserToolResultBlock { readonly type: "tool_result"; readonly tool_use_id: string; readonly content: unknown; readonly is_error: boolean }
 interface AssistantBlock { readonly type: string; readonly text?: string; readonly thinking?: string; readonly id?: string; readonly name?: string; readonly input?: unknown }
 
 /**
@@ -72,16 +78,16 @@ interface AssistantBlock { readonly type: string; readonly text?: string; readon
  * stateful reduction (the {@link ReplayBuilder}) — see CONTEXT M7.
  */
 type ParsedSessionMessage =
-	| { readonly kind: 'user-text'; readonly uuid: string; readonly text: string }
-	| { readonly kind: 'user-tool-results'; readonly uuid: string; readonly results: readonly UserToolResultBlock[] }
-	| { readonly kind: 'assistant'; readonly uuid: string; readonly blocks: readonly AssistantBlock[] }
-	| { readonly kind: 'system-notification'; readonly uuid: string; readonly subtype: string; readonly text: string };
+	| { readonly kind: "user-text"; readonly uuid: string; readonly text: string }
+	| { readonly kind: "user-tool-results"; readonly uuid: string; readonly results: readonly UserToolResultBlock[] }
+	| { readonly kind: "assistant"; readonly uuid: string; readonly blocks: readonly AssistantBlock[] }
+	| { readonly kind: "system-notification"; readonly uuid: string; readonly subtype: string; readonly text: string };
 
 function parseSessionMessage(msg: SessionMessage): ParsedSessionMessage | undefined {
 	switch (msg.type) {
-		case 'user': return parseUserMessage(msg);
-		case 'assistant': return parseAssistantMessage(msg);
-		case 'system': return parseSystemMessage(msg);
+		case "user": return parseUserMessage(msg);
+		case "assistant": return parseAssistantMessage(msg);
+		case "system": return parseSystemMessage(msg);
 		default: return undefined;
 	}
 }
@@ -94,17 +100,29 @@ function parseUserMessage(msg: SessionMessage): ParsedSessionMessage | undefined
 	if (isCliEchoContent(content)) {
 		return undefined;
 	}
-	if (typeof content === 'string') {
-		return { kind: 'user-text', uuid: msg.uuid, text: content };
+	if (typeof content === "string") {
+		return { kind: "user-text", uuid: msg.uuid, text: content };
 	}
-	const textBlocks = content.filter((b): b is UserTextBlock => b.type === 'text');
+	const textBlocks = content.filter(
+    (b): b is UserTextBlock => b.type === "text",
+  );
 	if (textBlocks.length === 0) {
-		const results = content.filter((b): b is UserToolResultBlock => b.type === 'tool_result');
-		return results.length > 0 ? { kind: 'user-tool-results', uuid: msg.uuid, results } : undefined;
+		const results = content.filter(
+      (b): b is UserToolResultBlock => b.type === "tool_result",
+    );
+		return results.length > 0 ? {
+      kind: "user-tool-results",
+      uuid: msg.uuid,
+      results,
+    } : undefined;
 	}
 	// Mixed or text-only: text wins — matches prior behavior where tool_results
 	// in a text-bearing envelope are dropped (they should already have been delivered).
-	return { kind: 'user-text', uuid: msg.uuid, text: textBlocks.map(b => b.text).join('\n') };
+	return {
+    kind: "user-text",
+    uuid: msg.uuid,
+    text: textBlocks.map(b => b.text).join("\n"),
+  };
 }
 
 function parseAssistantMessage(msg: SessionMessage): ParsedSessionMessage | undefined {
@@ -112,7 +130,7 @@ function parseAssistantMessage(msg: SessionMessage): ParsedSessionMessage | unde
 	if (blocks === undefined || blocks.length === 0) {
 		return undefined;
 	}
-	return { kind: 'assistant', uuid: msg.uuid, blocks };
+	return { kind: "assistant", uuid: msg.uuid, blocks };
 }
 
 function parseSystemMessage(msg: SessionMessage): ParsedSessionMessage | undefined {
@@ -121,7 +139,7 @@ function parseSystemMessage(msg: SessionMessage): ParsedSessionMessage | undefin
 		return undefined;
 	}
 	const text = readSystemText(msg.message) ?? `[${subtype}]`;
-	return { kind: 'system-notification', uuid: msg.uuid, subtype, text };
+	return { kind: "system-notification", uuid: msg.uuid, subtype, text };
 }
 
 // #endregion
@@ -134,8 +152,8 @@ function parseSystemMessage(msg: SessionMessage): ParsedSessionMessage | undefin
  * Mirrors CONTEXT M7's table — anything not in this set is dropped.
  */
 const ALLOWED_SYSTEM_SUBTYPES: ReadonlySet<string> = new Set([
-	'compact_boundary',
-	'notification',
+  "compact_boundary",
+  "notification",
 ]);
 
 /**
@@ -191,33 +209,33 @@ class ReplayBuilder {
 
 	consume(msg: ParsedSessionMessage): void {
 		switch (msg.kind) {
-			case 'user-text':
+			case "user-text":
 				this._closeActive();
 				this._active = {
-					id: msg.uuid,
-					userText: msg.text,
-					responseParts: [],
-					pendingToolUseIds: new Set(),
-					toolCallParts: new Map(),
-				};
+          id: msg.uuid,
+          userText: msg.text,
+          responseParts: [],
+          pendingToolUseIds: new Set(),
+          toolCallParts: new Map(),
+        };
 				return;
-			case 'user-tool-results':
+			case "user-tool-results":
 				for (const block of msg.results) {
 					this._attachToolResult(block);
 				}
 				return;
-			case 'assistant':
+			case "assistant":
 				this._consumeAssistant(msg);
 				return;
-			case 'system-notification':
+			case "system-notification":
 				if (this._active === undefined) {
 					// System notification before any user message — drop. Without an active turn there's nowhere to attach.
 					return;
 				}
 				this._active.responseParts.push({
-					kind: ResponsePartKind.SystemNotification,
-					content: msg.text,
-				});
+          kind: ResponsePartKind.SystemNotification,
+          content: msg.text,
+        });
 				return;
 		}
 	}
@@ -227,33 +245,39 @@ class ReplayBuilder {
 		return this._turns;
 	}
 
-	private _consumeAssistant(msg: ParsedSessionMessage & { kind: 'assistant' }): void {
+	private _consumeAssistant(msg: ParsedSessionMessage & { kind: "assistant" }): void {
 		if (this._active === undefined) {
 			// Assistant message without a preceding user message — defensive: synthesize an empty user turn keyed on the assistant's parent uuid would be wrong; just drop with a warn.
-			this._logService.warn(`[claudeReplayMapper] assistant envelope ${msg.uuid} arrived before any user message; dropping`);
+			this._logService.warn(
+        `[claudeReplayMapper] assistant envelope ${msg.uuid} arrived before any user message; dropping`,
+      );
 			return;
 		}
 		let textPartCounter = 0;
 		let reasoningPartCounter = 0;
 		for (const block of msg.blocks) {
-			if (block.type === 'text' && typeof block.text === 'string') {
+			if (block.type === "text" && typeof block.text === "string") {
 				this._active.responseParts.push({
-					kind: ResponsePartKind.Markdown,
-					id: `${this._active.id}#${msg.uuid}#text-${textPartCounter++}`,
-					content: block.text,
-				});
-			} else if (block.type === 'thinking' && typeof block.thinking === 'string') {
+          kind: ResponsePartKind.Markdown,
+          id: `${this._active.id}#${msg.uuid}#text-${textPartCounter++}`,
+          content: block.text,
+        });
+			} else if (block.type === "thinking" && typeof block.thinking === "string") {
 				this._active.responseParts.push({
-					kind: ResponsePartKind.Reasoning,
-					id: `${this._active.id}#${msg.uuid}#thinking-${reasoningPartCounter++}`,
-					content: block.thinking,
-				});
-			} else if (block.type === 'tool_use' && typeof block.id === 'string' && typeof block.name === 'string') {
+          kind: ResponsePartKind.Reasoning,
+          id: `${this._active.id}#${msg.uuid}#thinking-${reasoningPartCounter++}`,
+          content: block.thinking,
+        });
+			} else if (block.type === "tool_use" && typeof block.id === "string" && typeof block.name === "string") {
 				// Strip the in-process MCP server prefix so the workbench resolves
 				// the workbench-registered tool by its unprefixed name (matches the
 				// live stream mapper). Without this, replayed client-tool calls
 				// fall back to the generic "Run MCP tool" rendering.
-				this._openToolUse(block.id, stripClientToolNamePrefix(block.name), block.input);
+				this._openToolUse(
+          block.id,
+          stripClientToolNamePrefix(block.name),
+          block.input,
+        );
 			}
 			// Other block types (server_tool_use, etc.) are dropped silently per M7.
 		}
@@ -264,23 +288,23 @@ class ReplayBuilder {
 			return;
 		}
 		const displayName = getClaudeToolDisplayName(toolName);
-		const parsedInput = input !== null && typeof input === 'object' ? input as Record<string, unknown> : undefined;
+		const parsedInput = input !== null && typeof input === "object" ? input as Record<string, unknown> : undefined;
 		const meta = buildClaudeToolMeta(toolName);
 		// Build a placeholder Cancelled state by default; replaced with Completed when the tool_result lands.
 		const placeholder: ToolCallCancelledState = {
-			status: ToolCallStatus.Cancelled,
-			toolCallId: toolUseId,
-			toolName,
-			displayName,
-			invocationMessage: getClaudeInvocationMessage(toolName, displayName, parsedInput),
-			toolInput: parsedInput !== undefined ? getClaudeToolInputString(toolName, parsedInput) : (typeof input === 'string' ? input : input !== undefined ? safeStringify(input) : undefined),
-			reason: ToolCallCancellationReason.Skipped,
-			...(meta ? { _meta: meta } : {}),
-		};
+      status: ToolCallStatus.Cancelled,
+      toolCallId: toolUseId,
+      toolName,
+      displayName,
+      invocationMessage: getClaudeInvocationMessage(toolName, displayName, parsedInput),
+      toolInput: parsedInput !== undefined ? getClaudeToolInputString(toolName, parsedInput) : (typeof input === "string" ? input : input !== undefined ? safeStringify(input) : undefined),
+      reason: ToolCallCancellationReason.Skipped,
+      ...(meta ? { _meta: meta } : {}),
+    };
 		const part: ToolCallResponsePart = {
-			kind: ResponsePartKind.ToolCall,
-			toolCall: placeholder,
-		};
+      kind: ResponsePartKind.ToolCall,
+      toolCall: placeholder,
+    };
 		this._active.responseParts.push(part);
 		this._active.toolCallParts.set(toolUseId, part);
 		this._active.pendingToolUseIds.add(toolUseId);
@@ -290,7 +314,9 @@ class ReplayBuilder {
 	private _attachToolResult(block: UserToolResultBlock): void {
 		const entry = this._toolUses.get(block.tool_use_id);
 		if (entry === undefined) {
-			this._logService.warn(`[claudeReplayMapper] tool_result for unknown tool_use_id ${block.tool_use_id}`);
+			this._logService.warn(
+        `[claudeReplayMapper] tool_result for unknown tool_use_id ${block.tool_use_id}`,
+      );
 			return;
 		}
 		const announcingTurnId = entry.turnId;
@@ -301,28 +327,30 @@ class ReplayBuilder {
 		}
 		const isError = block.is_error;
 		const previousState = part.toolCall;
-		const isSubagent = previousState._meta?.toolKind === 'subagent';
-		const content: ToolResultContent[] = extractToolResultContent(block.content) ?? [];
+		const isSubagent = previousState._meta?.toolKind === "subagent";
+		const content: ToolResultContent[] = extractToolResultContent(
+      block.content,
+    ) ?? [];
 		if (isSubagent) {
 			content.push({
-				type: ToolResultContentType.Subagent,
-				resource: buildSubagentSessionUri(this._session.toString(), previousState.toolCallId),
-				title: previousState.displayName,
-			});
+        type: ToolResultContentType.Subagent,
+        resource: buildSubagentSessionUri(this._session.toString(), previousState.toolCallId),
+        title: previousState.displayName,
+      });
 		}
 		const completed: ToolCallCompletedState = {
-			status: ToolCallStatus.Completed,
-			toolCallId: previousState.toolCallId,
-			toolName: previousState.toolName,
-			displayName: previousState.displayName,
-			invocationMessage: previousState.invocationMessage ?? previousState.displayName,
-			toolInput: previousState.status === ToolCallStatus.Streaming ? undefined : previousState.toolInput,
-			confirmed: ToolCallConfirmationReason.NotNeeded,
-			success: !isError,
-			pastTenseMessage: getClaudePastTenseMessage(previousState.toolName, previousState.displayName, entry.parsedInput, !isError),
-			content: content.length > 0 ? content : undefined,
-			...(previousState._meta ? { _meta: previousState._meta } : {}),
-		};
+      status: ToolCallStatus.Completed,
+      toolCallId: previousState.toolCallId,
+      toolName: previousState.toolName,
+      displayName: previousState.displayName,
+      invocationMessage: previousState.invocationMessage ?? previousState.displayName,
+      toolInput: previousState.status === ToolCallStatus.Streaming ? undefined : previousState.toolInput,
+      confirmed: ToolCallConfirmationReason.NotNeeded,
+      success: !isError,
+      pastTenseMessage: getClaudePastTenseMessage(previousState.toolName, previousState.displayName, entry.parsedInput, !isError),
+      content: content.length > 0 ? content : undefined,
+      ...(previousState._meta ? { _meta: previousState._meta } : {}),
+    };
 		part.toolCall = completed;
 		// Drain pending tracker on the announcing turn — but only if that
 		// turn is still in progress. Committed turns have their state
@@ -360,12 +388,12 @@ class ReplayBuilder {
 		const a = this._active;
 		const state = a.pendingToolUseIds.size === 0 ? TurnState.Complete : TurnState.Cancelled;
 		const turn: Turn = {
-			id: a.id,
-			userMessage: { text: a.userText },
-			responseParts: a.responseParts,
-			usage: undefined,
-			state,
-		};
+      id: a.id,
+      userMessage: { text: a.userText },
+      responseParts: a.responseParts,
+      usage: undefined,
+      state,
+    };
 		this._turns.push(turn);
 		this._active = undefined;
 	}
@@ -382,11 +410,11 @@ class ReplayBuilder {
  * semantics per CONTEXT M7 glossary.
  */
 function readUserContent(raw: unknown): string | ReadonlyArray<UserTextBlock | UserToolResultBlock> | undefined {
-	if (raw === null || typeof raw !== 'object') {
+	if (raw === null || typeof raw !== "object") {
 		return undefined;
 	}
 	const content = (raw as { content?: unknown }).content;
-	if (typeof content === 'string') {
+	if (typeof content === "string") {
 		return content.length > 0 ? content : undefined;
 	}
 	if (!Array.isArray(content) || content.length === 0) {
@@ -394,21 +422,26 @@ function readUserContent(raw: unknown): string | ReadonlyArray<UserTextBlock | U
 	}
 	const out: (UserTextBlock | UserToolResultBlock)[] = [];
 	for (const block of content) {
-		if (block === null || typeof block !== 'object') {
+		if (block === null || typeof block !== "object") {
 			continue;
 		}
 		const b = block as { type?: unknown; text?: unknown; tool_use_id?: unknown; content?: unknown; is_error?: unknown };
-		if (b.type === 'text' && typeof b.text === 'string') {
-			out.push({ type: 'text', text: b.text });
-		} else if (b.type === 'tool_result' && typeof b.tool_use_id === 'string') {
-			out.push({ type: 'tool_result', tool_use_id: b.tool_use_id, content: b.content, is_error: b.is_error === true });
+		if (b.type === "text" && typeof b.text === "string") {
+			out.push({ type: "text", text: b.text });
+		} else if (b.type === "tool_result" && typeof b.tool_use_id === "string") {
+			out.push({
+        type: "tool_result",
+        tool_use_id: b.tool_use_id,
+        content: b.content,
+        is_error: b.is_error === true,
+      });
 		}
 	}
 	return out.length > 0 ? out : undefined;
 }
 
 function readAssistantBlocks(raw: unknown): readonly AssistantBlock[] | undefined {
-	if (raw === null || typeof raw !== 'object') {
+	if (raw === null || typeof raw !== "object") {
 		return undefined;
 	}
 	const content = (raw as { content?: unknown }).content;
@@ -417,42 +450,42 @@ function readAssistantBlocks(raw: unknown): readonly AssistantBlock[] | undefine
 	}
 	const out: AssistantBlock[] = [];
 	for (const block of content) {
-		if (block === null || typeof block !== 'object') {
+		if (block === null || typeof block !== "object") {
 			continue;
 		}
 		const b = block as { type?: unknown; text?: unknown; thinking?: unknown; id?: unknown; name?: unknown; input?: unknown };
-		if (typeof b.type !== 'string') {
+		if (typeof b.type !== "string") {
 			continue;
 		}
 		out.push({
-			type: b.type,
-			text: typeof b.text === 'string' ? b.text : undefined,
-			thinking: typeof b.thinking === 'string' ? b.thinking : undefined,
-			id: typeof b.id === 'string' ? b.id : undefined,
-			name: typeof b.name === 'string' ? b.name : undefined,
-			input: b.input,
-		});
+      type: b.type,
+      text: typeof b.text === "string" ? b.text : undefined,
+      thinking: typeof b.thinking === "string" ? b.thinking : undefined,
+      id: typeof b.id === "string" ? b.id : undefined,
+      name: typeof b.name === "string" ? b.name : undefined,
+      input: b.input,
+    });
 	}
 	return out;
 }
 
 function readSystemSubtype(raw: unknown): string | undefined {
-	if (raw === null || typeof raw !== 'object') {
+	if (raw === null || typeof raw !== "object") {
 		return undefined;
 	}
 	const subtype = (raw as { subtype?: unknown }).subtype;
-	return typeof subtype === 'string' ? subtype : undefined;
+	return typeof subtype === "string" ? subtype : undefined;
 }
 
 function readSystemText(raw: unknown): string | undefined {
-	if (raw === null || typeof raw !== 'object') {
+	if (raw === null || typeof raw !== "object") {
 		return undefined;
 	}
 	const r = raw as { text?: unknown; message?: unknown };
-	if (typeof r.text === 'string') {
+	if (typeof r.text === "string") {
 		return r.text;
 	}
-	if (typeof r.message === 'string') {
+	if (typeof r.message === "string") {
 		return r.message;
 	}
 	return undefined;
@@ -464,19 +497,21 @@ function readSystemText(raw: unknown): string | undefined {
  * to `claudeToolResultContent.ts`.
  */
 function extractToolResultContent(content: unknown): { type: ToolResultContentType.Text; text: string }[] | undefined {
-	if (typeof content === 'string') {
-		return content.length > 0 ? [{ type: ToolResultContentType.Text, text: content }] : undefined;
+	if (typeof content === "string") {
+		return content.length > 0 ? [
+      { type: ToolResultContentType.Text, text: content },
+    ] : undefined;
 	}
 	if (!Array.isArray(content)) {
 		return undefined;
 	}
 	const out: { type: ToolResultContentType.Text; text: string }[] = [];
 	for (const block of content) {
-		if (block === null || typeof block !== 'object') {
+		if (block === null || typeof block !== "object") {
 			continue;
 		}
 		const b = block as { type?: unknown; text?: unknown };
-		if (b.type === 'text' && typeof b.text === 'string') {
+		if (b.type === "text" && typeof b.text === "string") {
 			out.push({ type: ToolResultContentType.Text, text: b.text });
 		}
 	}
@@ -499,11 +534,13 @@ function safeStringify(v: unknown): string | undefined {
  * content block is a real prompt are NOT filtered.
  */
 function isCliEchoContent(content: string | ReadonlyArray<UserTextBlock | UserToolResultBlock>): boolean {
-	if (typeof content === 'string') {
+	if (typeof content === "string") {
 		return CLI_ECHO_MARKER_PATTERN.test(content);
 	}
-	const firstText = content.find((b): b is UserTextBlock => b.type === 'text');
-	return firstText !== undefined && CLI_ECHO_MARKER_PATTERN.test(firstText.text);
+	const firstText = content.find((b): b is UserTextBlock => b.type === "text");
+	return firstText !== undefined && CLI_ECHO_MARKER_PATTERN.test(
+    firstText.text,
+  );
 }
 
 // #endregion

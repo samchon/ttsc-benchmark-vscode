@@ -3,33 +3,45 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { Schemas } from '../../../../../base/common/network.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { IResourceEditorInput, ITextResourceEditorInput } from '../../../../../platform/editor/common/editor.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { DEFAULT_EDITOR_ASSOCIATION, IResourceDiffEditorInput, IResourceMergeEditorInput, IResourceSideBySideEditorInput, isEditorInput, isResourceDiffEditorInput, isResourceEditorInput, isResourceMergeEditorInput, isResourceSideBySideEditorInput, isUntitledResourceEditorInput, IUntitledTextResourceEditorInput } from '../../../../common/editor.js';
-import { DiffEditorInput } from '../../../../common/editor/diffEditorInput.js';
-import { EditorInput } from '../../../../common/editor/editorInput.js';
-import { TextResourceEditorInput } from '../../../../common/editor/textResourceEditorInput.js';
-import { FileEditorInput } from '../../../../contrib/files/browser/editors/fileEditorInput.js';
-import { MergeEditorInput, MergeEditorInputData } from '../../../../contrib/mergeEditor/browser/mergeEditorInput.js';
-import { UntitledTextEditorInput } from '../../../../services/untitled/common/untitledTextEditorInput.js';
-import { TestEditorInput, TestServiceAccessor, workbenchInstantiationService } from '../../workbenchTestServices.js';
+import assert from "assert";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../../base/common/network.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { IResourceEditorInput, ITextResourceEditorInput } from "../../../../../platform/editor/common/editor.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import {
+  DEFAULT_EDITOR_ASSOCIATION,
+  IResourceDiffEditorInput,
+  IResourceMergeEditorInput,
+  IResourceSideBySideEditorInput,
+  isEditorInput,
+  isResourceDiffEditorInput,
+  isResourceEditorInput,
+  isResourceMergeEditorInput,
+  isResourceSideBySideEditorInput,
+  isUntitledResourceEditorInput,
+  IUntitledTextResourceEditorInput,
+} from "../../../../common/editor.js";
+import { DiffEditorInput } from "../../../../common/editor/diffEditorInput.js";
+import { EditorInput } from "../../../../common/editor/editorInput.js";
+import { TextResourceEditorInput } from "../../../../common/editor/textResourceEditorInput.js";
+import { FileEditorInput } from "../../../../contrib/files/browser/editors/fileEditorInput.js";
+import { MergeEditorInput, MergeEditorInputData } from "../../../../contrib/mergeEditor/browser/mergeEditorInput.js";
+import { UntitledTextEditorInput } from "../../../../services/untitled/common/untitledTextEditorInput.js";
+import { TestEditorInput, TestServiceAccessor, workbenchInstantiationService } from "../../workbenchTestServices.js";
 
-suite('EditorInput', () => {
+suite("EditorInput", () => {
 
 	let instantiationService: IInstantiationService;
 	let accessor: TestServiceAccessor;
 	const disposables = new DisposableStore();
 
-	const testResource: URI = URI.from({ scheme: 'random', path: '/path' });
+	const testResource: URI = URI.from({ scheme: "random", path: "/path" });
 	const untypedResourceEditorInput: IResourceEditorInput = { resource: testResource, options: { override: DEFAULT_EDITOR_ASSOCIATION.id } };
 	const untypedTextResourceEditorInput: ITextResourceEditorInput = { resource: testResource, options: { override: DEFAULT_EDITOR_ASSOCIATION.id } };
 	const untypedResourceSideBySideEditorInput: IResourceSideBySideEditorInput = { primary: untypedResourceEditorInput, secondary: untypedResourceEditorInput, options: { override: DEFAULT_EDITOR_ASSOCIATION.id } };
-	const untypedUntitledResourceEditorinput: IUntitledTextResourceEditorInput = { resource: URI.from({ scheme: Schemas.untitled, path: '/path' }), options: { override: DEFAULT_EDITOR_ASSOCIATION.id } };
+	const untypedUntitledResourceEditorinput: IUntitledTextResourceEditorInput = { resource: URI.from({ scheme: Schemas.untitled, path: "/path" }), options: { override: DEFAULT_EDITOR_ASSOCIATION.id } };
 	const untypedResourceDiffEditorInput: IResourceDiffEditorInput = { original: untypedResourceEditorInput, modified: untypedResourceEditorInput, options: { override: DEFAULT_EDITOR_ASSOCIATION.id } };
 	const untypedResourceMergeEditorInput: IResourceMergeEditorInput = { base: untypedResourceEditorInput, input1: untypedResourceEditorInput, input2: untypedResourceEditorInput, result: untypedResourceEditorInput, options: { override: DEFAULT_EDITOR_ASSOCIATION.id } };
 
@@ -42,7 +54,7 @@ suite('EditorInput', () => {
 			!untypedResourceDiffEditorInput.options ||
 			!untypedResourceMergeEditorInput.options
 		) {
-			throw new Error('Malformed options on untyped inputs');
+			throw new Error("Malformed options on untyped inputs");
 		}
 		// Some of the tests mutate the overrides so we want to reset them on each test
 		untypedResourceEditorInput.options.override = undefined;
@@ -63,7 +75,7 @@ suite('EditorInput', () => {
 			!untypedResourceDiffEditorInput.options ||
 			!untypedResourceMergeEditorInput.options
 		) {
-			throw new Error('Malformed options on untyped inputs');
+			throw new Error("Malformed options on untyped inputs");
 		}
 		// Some of the tests mutate the overrides so we want to reset them on each test
 		untypedResourceEditorInput.options.override = DEFAULT_EDITOR_ASSOCIATION.id;
@@ -80,18 +92,18 @@ suite('EditorInput', () => {
 	class MyEditorInput extends EditorInput {
 		readonly resource = undefined;
 
-		override get typeId(): string { return 'myEditorInput'; }
+		override get typeId(): string { return "myEditorInput"; }
 		override resolve(): any { return null; }
 	}
 
-	test('basics', () => {
+	test("basics", () => {
 		let counter = 0;
 		const input = disposables.add(new MyEditorInput());
 		const otherInput = disposables.add(new MyEditorInput());
 
 		assert.ok(isEditorInput(input));
 		assert.ok(!isEditorInput(undefined));
-		assert.ok(!isEditorInput({ resource: URI.file('/') }));
+		assert.ok(!isEditorInput({ resource: URI.file("/") }));
 		assert.ok(!isEditorInput({}));
 
 		assert.ok(!isResourceEditorInput(input));
@@ -114,14 +126,14 @@ suite('EditorInput', () => {
 		assert.strictEqual(counter, 1);
 	});
 
-	test('untyped matches', () => {
-		const testInputID = 'untypedMatches';
-		const testInputResource = URI.file('/fake');
+	test("untyped matches", () => {
+		const testInputID = "untypedMatches";
+		const testInputResource = URI.file("/fake");
 		const testInput = disposables.add(new TestEditorInput(testInputResource, testInputID));
 		const testUntypedInput = { resource: testInputResource, options: { override: testInputID } };
-		const tetUntypedInputWrongResource = { resource: URI.file('/incorrectFake'), options: { override: testInputID } };
-		const testUntypedInputWrongId = { resource: testInputResource, options: { override: 'wrongId' } };
-		const testUntypedInputWrong = { resource: URI.file('/incorrectFake'), options: { override: 'wrongId' } };
+		const tetUntypedInputWrongResource = { resource: URI.file("/incorrectFake"), options: { override: testInputID } };
+		const testUntypedInputWrongId = { resource: testInputResource, options: { override: "wrongId" } };
+		const testUntypedInputWrong = { resource: URI.file("/incorrectFake"), options: { override: "wrongId" } };
 
 		assert(testInput.matches(testUntypedInput));
 		assert.ok(!testInput.matches(tetUntypedInputWrongResource));
@@ -129,7 +141,7 @@ suite('EditorInput', () => {
 		assert.ok(!testInput.matches(testUntypedInputWrong));
 	});
 
-	test('Untpyed inputs properly match TextResourceEditorInput', () => {
+	test("Untpyed inputs properly match TextResourceEditorInput", () => {
 		const textResourceEditorInput = instantiationService.createInstance(TextResourceEditorInput, testResource, undefined, undefined, undefined, undefined);
 
 		assert.ok(textResourceEditorInput.matches(untypedResourceEditorInput));
@@ -142,7 +154,7 @@ suite('EditorInput', () => {
 		textResourceEditorInput.dispose();
 	});
 
-	test('Untyped inputs properly match FileEditorInput', () => {
+	test("Untyped inputs properly match FileEditorInput", () => {
 		const fileEditorInput = instantiationService.createInstance(FileEditorInput, testResource, undefined, undefined, undefined, undefined, undefined, undefined);
 
 		assert.ok(fileEditorInput.matches(untypedResourceEditorInput));
@@ -165,7 +177,7 @@ suite('EditorInput', () => {
 		fileEditorInput.dispose();
 	});
 
-	test('Untyped inputs properly match MergeEditorInput', () => {
+	test("Untyped inputs properly match MergeEditorInput", () => {
 		const mergeData: MergeEditorInputData = { uri: testResource, description: undefined, detail: undefined, title: undefined };
 		const mergeEditorInput = instantiationService.createInstance(MergeEditorInput, testResource, mergeData, mergeData, testResource);
 
@@ -188,8 +200,8 @@ suite('EditorInput', () => {
 		mergeEditorInput.dispose();
 	});
 
-	test('Untyped inputs properly match UntitledTextEditorInput', () => {
-		const untitledModel = accessor.untitledTextEditorService.create({ associatedResource: { authority: '', path: '/path', fragment: '', query: '' } });
+	test("Untyped inputs properly match UntitledTextEditorInput", () => {
+		const untitledModel = accessor.untitledTextEditorService.create({ associatedResource: { authority: "", path: "/path", fragment: "", query: "" } });
 		const untitledTextEditorInput: UntitledTextEditorInput = instantiationService.createInstance(UntitledTextEditorInput, untitledModel);
 
 		assert.ok(!untitledTextEditorInput.matches(untypedResourceEditorInput));
@@ -211,7 +223,7 @@ suite('EditorInput', () => {
 		untitledTextEditorInput.dispose();
 	});
 
-	test('Untyped inputs properly match DiffEditorInput', () => {
+	test("Untyped inputs properly match DiffEditorInput", () => {
 		const fileEditorInput1 = instantiationService.createInstance(FileEditorInput, testResource, undefined, undefined, undefined, undefined, undefined, undefined);
 		const fileEditorInput2 = instantiationService.createInstance(FileEditorInput, testResource, undefined, undefined, undefined, undefined, undefined, undefined);
 		const diffEditorInput: DiffEditorInput = instantiationService.createInstance(DiffEditorInput, undefined, undefined, fileEditorInput1, fileEditorInput2, false);

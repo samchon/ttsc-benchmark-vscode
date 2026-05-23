@@ -3,21 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Separator } from '../../../../../../../base/common/actions.js';
-import { Codicon } from '../../../../../../../base/common/codicons.js';
-import { toDisposable } from '../../../../../../../base/common/lifecycle.js';
-import { localize } from '../../../../../../../nls.js';
-import { IContextKeyService } from '../../../../../../../platform/contextkey/common/contextkey.js';
-import { IInstantiationService } from '../../../../../../../platform/instantiation/common/instantiation.js';
-import { IKeybindingService } from '../../../../../../../platform/keybinding/common/keybinding.js';
-import { ConfirmationOptionKind, ConfirmationOption } from '../../../../../../../platform/agentHost/common/state/protocol/state.js';
-import { ChatContextKeys } from '../../../../common/actions/chatContextKeys.js';
-import { ConfirmedReason, IChatToolInvocation, ToolConfirmKind } from '../../../../common/chatService/chatService.js';
-import { ILanguageModelToolsService } from '../../../../common/tools/languageModelToolsService.js';
-import { IChatWidgetService } from '../../../chat.js';
-import { ChatCustomConfirmationWidget, IChatConfirmationButton } from '../chatConfirmationWidget.js';
-import { IChatContentPartRenderContext } from '../chatContentParts.js';
-import { BaseChatToolInvocationSubPart } from './chatToolInvocationSubPart.js';
+import { Separator } from "../../../../../../../base/common/actions.js";
+import { Codicon } from "../../../../../../../base/common/codicons.js";
+import { toDisposable } from "../../../../../../../base/common/lifecycle.js";
+import { localize } from "../../../../../../../nls.js";
+import { IContextKeyService } from "../../../../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../../../../platform/keybinding/common/keybinding.js";
+import { ConfirmationOptionKind, ConfirmationOption } from "../../../../../../../platform/agentHost/common/state/protocol/state.js";
+import { ChatContextKeys } from "../../../../common/actions/chatContextKeys.js";
+import { ConfirmedReason, IChatToolInvocation, ToolConfirmKind } from "../../../../common/chatService/chatService.js";
+import { ILanguageModelToolsService } from "../../../../common/tools/languageModelToolsService.js";
+import { IChatWidgetService } from "../../../chat.js";
+import { ChatCustomConfirmationWidget, IChatConfirmationButton } from "../chatConfirmationWidget.js";
+import { IChatContentPartRenderContext } from "../chatContentParts.js";
+import { BaseChatToolInvocationSubPart } from "./chatToolInvocationSubPart.js";
 
 export interface IToolConfirmationConfig {
 	allowActionId: string;
@@ -29,7 +29,7 @@ export interface IToolConfirmationConfig {
 }
 
 export interface IAbstractToolPrimaryAction extends IChatConfirmationButton<(() => void)> {
-	scope?: 'session' | 'workspace' | 'profile';
+	scope?: "session" | "workspace" | "profile";
 }
 
 type AbstractToolPrimaryAction = IAbstractToolPrimaryAction | Separator;
@@ -53,8 +53,8 @@ export abstract class AbstractToolConfirmationSubPart extends BaseChatToolInvoca
 	) {
 		super(toolInvocation);
 
-		if (toolInvocation.kind !== 'toolInvocation') {
-			throw new Error('Confirmation only works with live tool invocations');
+		if (toolInvocation.kind !== "toolInvocation") {
+			throw new Error("Confirmation only works with live tool invocations");
 		}
 	}
 	protected render(config: IToolConfirmationConfig) {
@@ -70,22 +70,28 @@ export abstract class AbstractToolConfirmationSubPart extends BaseChatToolInvoca
 		if (customOptions && customOptions.length > 0) {
 			buttons = this.buildCustomOptionButtons(toolInvocation, customOptions);
 		} else {
-			const allowTooltip = keybindingService.appendKeybinding(config.allowLabel, config.allowActionId);
-			const skipTooltip = keybindingService.appendKeybinding(config.skipLabel, config.skipActionId);
+			const allowTooltip = keybindingService.appendKeybinding(
+        config.allowLabel,
+        config.allowActionId,
+      );
+			const skipTooltip = keybindingService.appendKeybinding(
+        config.skipLabel,
+        config.skipActionId,
+      );
 
 			const additionalActions = this.additionalPrimaryActions();
 
 			// find session scoped action
 			const sessionAction = this.useAllowOnceAsPrimary() ? undefined : additionalActions.find(
-				(action): action is IAbstractToolPrimaryAction => 'scope' in action && action.scope === 'session'
-			);
+        (action): action is IAbstractToolPrimaryAction => "scope" in action && action.scope === "session",
+      );
 
 			// regular allow action
 			const allowAction: IAbstractToolPrimaryAction = {
-				label: config.allowLabel,
-				tooltip: allowTooltip,
-				data: () => { this.confirmWith(toolInvocation, { type: ToolConfirmKind.UserAction }); },
-			};
+        label: config.allowLabel,
+        tooltip: allowTooltip,
+        data: () => { this.confirmWith(toolInvocation, { type: ToolConfirmKind.UserAction }); },
+      };
 
 			const primaryAction = sessionAction ?? allowAction;
 
@@ -102,13 +108,13 @@ export abstract class AbstractToolConfirmationSubPart extends BaseChatToolInvoca
 					moreActions: moreActions.length > 0 ? moreActions : undefined,
 				},
 				{
-					label: localize('skip', "Skip"),
+					label: localize("skip", "Skip"),
 					tooltip: skipTooltip,
 					data: () => {
 						this.confirmWith(toolInvocation, { type: ToolConfirmKind.Skipped });
 					},
 					isSecondary: true,
-				}
+				},
 			];
 		}
 
@@ -119,19 +125,21 @@ export abstract class AbstractToolConfirmationSubPart extends BaseChatToolInvoca
 			this.context,
 			{
 				title: this.getTitle(),
-				icon: tool?.icon && 'id' in tool.icon ? tool.icon : Codicon.tools,
+				icon: tool?.icon && "id" in tool.icon ? tool.icon : Codicon.tools,
 				subtitle: config.subtitle,
 				buttons,
 				message: contentElement,
 				toolbarData: {
 					arg: toolInvocation,
 					partType: config.partType,
-					partSource: toolInvocation.source.type
-				}
-			}
+					partSource: toolInvocation.source.type,
+				},
+			},
 		));
 
-		const hasToolConfirmation = ChatContextKeys.Editing.hasToolConfirmation.bindTo(this.contextKeyService);
+		const hasToolConfirmation = ChatContextKeys.Editing.hasToolConfirmation.bindTo(
+      this.contextKeyService,
+    );
 		hasToolConfirmation.set(true);
 
 		this._register(confirmWidget.onDidClick(({ button, isTouchClick }) => {
@@ -154,7 +162,9 @@ export abstract class AbstractToolConfirmationSubPart extends BaseChatToolInvoca
 		const approve: ConfirmationOption[] = [];
 		const deny: ConfirmationOption[] = [];
 		for (const option of options) {
-			(option.kind === ConfirmationOptionKind.Deny ? deny : approve).push(option);
+			(option.kind === ConfirmationOptionKind.Deny ? deny : approve).push(
+        option,
+      );
 		}
 
 		const makeAction = (option: ConfirmationOption): IChatConfirmationButton<(() => void)> => ({
@@ -167,9 +177,9 @@ export abstract class AbstractToolConfirmationSubPart extends BaseChatToolInvoca
 		const makeGroupButton = (group: ConfirmationOption[], isSecondary: boolean): IChatConfirmationButton<(() => void)> => {
 			const [primary, ...rest] = group;
 			const button: IChatConfirmationButton<(() => void)> = {
-				...makeAction(primary),
-				isSecondary,
-			};
+        ...makeAction(primary),
+        isSecondary,
+      };
 			if (rest.length > 0) {
 				const moreActions: (IChatConfirmationButton<(() => void)> | Separator)[] = [];
 				let prevGroup = primary.group;

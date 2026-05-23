@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { SDKMessage } from '@anthropic-ai/claude-agent-sdk';
-import { Disposable, IReference } from '../../../../base/common/lifecycle.js';
-import { IInstantiationService } from '../../../instantiation/common/instantiation.js';
-import { ILogService } from '../../../log/common/log.js';
-import { ISessionDatabase } from '../../common/sessionDataService.js';
-import { FileEditTracker } from '../shared/fileEditTracker.js';
-import type { ClaudeMapperState } from './claudeMapSessionEvents.js';
-import { getClaudeToolPath, isClaudeFileEditTool } from './claudeToolDisplay.js';
+import type { SDKMessage } from "@anthropic-ai/claude-agent-sdk";
+import { Disposable, IReference } from "../../../../base/common/lifecycle.js";
+import { IInstantiationService } from "../../../instantiation/common/instantiation.js";
+import { ILogService } from "../../../log/common/log.js";
+import { ISessionDatabase } from "../../common/sessionDataService.js";
+import { FileEditTracker } from "../shared/fileEditTracker.js";
+import type { ClaudeMapperState } from "./claudeMapSessionEvents.js";
+import { getClaudeToolPath, isClaudeFileEditTool } from "./claudeToolDisplay.js";
 
 /**
  * Phase 8 — file-edit observation off the SDK message stream.
@@ -67,10 +67,10 @@ export class ClaudeFileEditObserver extends Disposable {
 		// against an open DB.
 		this._register(dbRef);
 		this._editTracker = instantiationService.createInstance(
-			FileEditTracker,
-			sessionUri,
-			dbRef.object,
-		);
+      FileEditTracker,
+      sessionUri,
+      dbRef.object,
+    );
 	}
 
 	/**
@@ -79,13 +79,13 @@ export class ClaudeFileEditObserver extends Disposable {
 	 * the SDK yields a canonical `'assistant'` message (full
 	 * `tool_use.input` available).
 	 */
-	observeAssistant(message: Extract<SDKMessage, { type: 'assistant' }>): void {
+	observeAssistant(message: Extract<SDKMessage, { type: "assistant" }>): void {
 		const content = message.message.content;
 		if (!Array.isArray(content)) {
 			return;
 		}
 		for (const block of content) {
-			if (block.type !== 'tool_use' || !isClaudeFileEditTool(block.name)) {
+			if (block.type !== "tool_use" || !isClaudeFileEditTool(block.name)) {
 				continue;
 			}
 			const filePath = getClaudeToolPath(block.name, block.input);
@@ -107,7 +107,7 @@ export class ClaudeFileEditObserver extends Disposable {
 	 * `state.takeFileEdit`.
 	 */
 	async observeUser(
-		message: Extract<SDKMessage, { type: 'user' }>,
+		message: Extract<SDKMessage, { type: "user" }>,
 		turnId: string,
 		mapperState: ClaudeMapperState,
 	): Promise<void> {
@@ -116,7 +116,7 @@ export class ClaudeFileEditObserver extends Disposable {
 			return;
 		}
 		for (const block of content) {
-			if (block.type !== 'tool_result') {
+			if (block.type !== "tool_result") {
 				continue;
 			}
 			const filePath = this._editToolPaths.get(block.tool_use_id);
@@ -126,12 +126,18 @@ export class ClaudeFileEditObserver extends Disposable {
 			this._editToolPaths.delete(block.tool_use_id);
 			try {
 				await this._editTracker.completeEdit(filePath);
-				const fileEdit = await this._editTracker.takeCompletedEdit(turnId, block.tool_use_id, filePath);
+				const fileEdit = await this._editTracker.takeCompletedEdit(
+          turnId,
+          block.tool_use_id,
+          filePath,
+        );
 				if (fileEdit) {
 					mapperState.cacheFileEdit(block.tool_use_id, fileEdit);
 				}
 			} catch (err) {
-				this._logService.warn(`[ClaudeFileEditObserver] file edit tracking failed for ${filePath}: ${err}`);
+				this._logService.warn(
+          `[ClaudeFileEditObserver] file edit tracking failed for ${filePath}: ${err}`,
+        );
 			}
 		}
 	}

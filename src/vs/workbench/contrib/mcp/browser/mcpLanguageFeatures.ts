@@ -3,38 +3,46 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { computeLevenshteinDistance } from '../../../../base/common/diff/diff.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { createMarkdownCommandLink, MarkdownString } from '../../../../base/common/htmlContent.js';
-import { findNodeAtLocation, Node, parseTree } from '../../../../base/common/json.js';
-import { Disposable, DisposableStore, dispose, IDisposable, MutableDisposable } from '../../../../base/common/lifecycle.js';
-import { IObservable } from '../../../../base/common/observable.js';
-import { isEqual } from '../../../../base/common/resources.js';
-import { Range } from '../../../../editor/common/core/range.js';
-import { CodeLens, CodeLensList, CodeLensProvider, InlayHint, InlayHintList } from '../../../../editor/common/languages.js';
-import { ITextModel } from '../../../../editor/common/model.js';
-import { ILanguageFeaturesService } from '../../../../editor/common/services/languageFeatures.js';
-import { localize } from '../../../../nls.js';
-import { ConfigurationTarget } from '../../../../platform/configuration/common/configuration.js';
-import { IMarkerData, IMarkerService, MarkerSeverity } from '../../../../platform/markers/common/markers.js';
-import { StorageScope } from '../../../../platform/storage/common/storage.js';
-import { IWorkbenchContribution } from '../../../common/contributions.js';
-import { IConfigurationResolverService } from '../../../services/configurationResolver/common/configurationResolver.js';
-import { ConfigurationResolverExpression, IResolvedValue } from '../../../services/configurationResolver/common/configurationResolverExpression.js';
-import { McpCommandIds } from '../common/mcpCommandIds.js';
-import { mcpConfigurationSection } from '../common/mcpConfiguration.js';
-import { IMcpRegistry } from '../common/mcpRegistryTypes.js';
-import { isContributionDisabled } from '../../chat/common/enablement.js';
-import { IMcpConfigPath, IMcpServerStartOpts, IMcpService, IMcpWorkbenchService, McpConnectionState } from '../common/mcpTypes.js';
+import { computeLevenshteinDistance } from "../../../../base/common/diff/diff.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { createMarkdownCommandLink, MarkdownString } from "../../../../base/common/htmlContent.js";
+import { findNodeAtLocation, Node, parseTree } from "../../../../base/common/json.js";
+import { Disposable, DisposableStore, dispose, IDisposable, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { IObservable } from "../../../../base/common/observable.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { CodeLens, CodeLensList, CodeLensProvider, InlayHint, InlayHintList } from "../../../../editor/common/languages.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+import { ILanguageFeaturesService } from "../../../../editor/common/services/languageFeatures.js";
+import { localize } from "../../../../nls.js";
+import { ConfigurationTarget } from "../../../../platform/configuration/common/configuration.js";
+import { IMarkerData, IMarkerService, MarkerSeverity } from "../../../../platform/markers/common/markers.js";
+import { StorageScope } from "../../../../platform/storage/common/storage.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { IConfigurationResolverService } from "../../../services/configurationResolver/common/configurationResolver.js";
+import { ConfigurationResolverExpression, IResolvedValue } from "../../../services/configurationResolver/common/configurationResolverExpression.js";
+import { McpCommandIds } from "../common/mcpCommandIds.js";
+import { mcpConfigurationSection } from "../common/mcpConfiguration.js";
+import { IMcpRegistry } from "../common/mcpRegistryTypes.js";
+import { isContributionDisabled } from "../../chat/common/enablement.js";
+import {
+  IMcpConfigPath,
+  IMcpServerStartOpts,
+  IMcpService,
+  IMcpWorkbenchService,
+  McpConnectionState,
+} from "../common/mcpTypes.js";
 
-const diagnosticOwner = 'vscode.mcp';
+const diagnosticOwner = "vscode.mcp";
 
-type ConfigDescriptor = Pick<IMcpConfigPath, 'section' | 'scope' | 'target'> & {
+type ConfigDescriptor = Pick<IMcpConfigPath, "section" | "scope" | "target"> & {
 	serversKey?: string;
 };
 
 export class McpLanguageFeatures extends Disposable implements IWorkbenchContribution {
-	private readonly _cachedMcpSection = this._register(new MutableDisposable<{ model: ITextModel; inConfig: ConfigDescriptor; tree: Node } & IDisposable>());
+	private readonly _cachedMcpSection = this._register(
+    new MutableDisposable<{ model: ITextModel; inConfig: ConfigDescriptor; tree: Node } & IDisposable>(),
+  );
 
 	constructor(
 		@ILanguageFeaturesService languageFeaturesService: ILanguageFeaturesService,
@@ -47,17 +55,22 @@ export class McpLanguageFeatures extends Disposable implements IWorkbenchContrib
 		super();
 
 		const patterns = [
-			{ pattern: '**/mcp.json' },
-			{ pattern: '**/.mcp.json' },
-			{ pattern: '**/workspace.json' },
-		];
+      { pattern: "**/mcp.json" },
+      { pattern: "**/.mcp.json" },
+      { pattern: "**/workspace.json" },
+    ];
 
 		const onDidChangeCodeLens = this._register(new Emitter<CodeLensProvider>());
 		const codeLensProvider: CodeLensProvider = {
-			onDidChange: onDidChangeCodeLens.event,
-			provideCodeLenses: (model, range) => this._provideCodeLenses(model, () => onDidChangeCodeLens.fire(codeLensProvider)),
-		};
-		this._register(languageFeaturesService.codeLensProvider.register(patterns, codeLensProvider));
+      onDidChange: onDidChangeCodeLens.event,
+      provideCodeLenses: (model, range) => this._provideCodeLenses(model, () => onDidChangeCodeLens.fire(codeLensProvider)),
+    };
+		this._register(
+      languageFeaturesService.codeLensProvider.register(
+        patterns,
+        codeLensProvider,
+      ),
+    );
 
 		this._register(languageFeaturesService.inlayHintsProvider.register(patterns, {
 			onDidChangeInlayHints: _mcpRegistry.onDidChangeInputs,
@@ -72,8 +85,14 @@ export class McpLanguageFeatures extends Disposable implements IWorkbenchContrib
 		}
 
 		const uri = model.uri;
-		const inConfig: ConfigDescriptor | undefined = uri.path.endsWith('/.mcp.json')
-			? { scope: StorageScope.WORKSPACE, target: ConfigurationTarget.WORKSPACE_FOLDER, serversKey: 'mcpServers' }
+		const inConfig: ConfigDescriptor | undefined = uri.path.endsWith(
+      "/.mcp.json",
+    )
+			? {
+          scope: StorageScope.WORKSPACE,
+          target: ConfigurationTarget.WORKSPACE_FOLDER,
+          serversKey: "mcpServers",
+        }
 			: await this._mcpWorkbenchService.getMcpConfigPath(model.uri);
 		if (!inConfig) {
 			return undefined;
@@ -82,9 +101,9 @@ export class McpLanguageFeatures extends Disposable implements IWorkbenchContrib
 		const value = model.getValue();
 		const tree = parseTree(value);
 		const listeners = [
-			model.onDidChangeContent(() => this._cachedMcpSection.clear()),
-			model.onWillDispose(() => this._cachedMcpSection.clear()),
-		];
+      model.onDidChangeContent(() => this._cachedMcpSection.clear()),
+      model.onWillDispose(() => this._cachedMcpSection.clear()),
+    ];
 		this._addDiagnostics(model, value, tree, inConfig);
 
 		return this._cachedMcpSection.value = {
@@ -94,19 +113,22 @@ export class McpLanguageFeatures extends Disposable implements IWorkbenchContrib
 			dispose: () => {
 				this._markerService.remove(diagnosticOwner, [uri]);
 				dispose(listeners);
-			}
+			},
 		};
 	}
 
 	private _addDiagnostics(tm: ITextModel, value: string, tree: Node, inConfig: ConfigDescriptor) {
-		const serversKey = inConfig.serversKey ?? 'servers';
-		const serversNode = findNodeAtLocation(tree, inConfig.section ? [...inConfig.section, serversKey] : [serversKey]);
+		const serversKey = inConfig.serversKey ?? "servers";
+		const serversNode = findNodeAtLocation(
+      tree,
+      inConfig.section ? [...inConfig.section, serversKey] : [serversKey],
+    );
 		if (!serversNode) {
 			return;
 		}
 
 		const getClosestMatchingVariable = (name: string) => {
-			let bestValue = '';
+			let bestValue = "";
 			let bestDistance = Infinity;
 			for (const variable of this._configurationResolverService.resolvableVariables) {
 				const distance = computeLevenshteinDistance(name, variable);
@@ -131,7 +153,7 @@ export class McpLanguageFeatures extends Disposable implements IWorkbenchContrib
 					const end = tm.getPositionAt(position + id.length);
 					diagnostics.push({
 						severity: MarkerSeverity.Warning,
-						message: localize('mcp.variableNotFound', 'Variable `{0}` not found, did you mean ${{1}}?', name, getClosestMatchingVariable(name) + (arg ? `:${arg}` : '')),
+						message: localize("mcp.variableNotFound", "Variable `{0}` not found, did you mean ${{1}}?", name, getClosestMatchingVariable(name) + (arg ? `:${arg}` : "")),
 						startLineNumber: start.lineNumber,
 						startColumn: start.column,
 						endLineNumber: end.lineNumber,
@@ -156,8 +178,11 @@ export class McpLanguageFeatures extends Disposable implements IWorkbenchContrib
 		}
 
 		const { tree, inConfig } = parsed;
-		const serversKey = inConfig.serversKey ?? 'servers';
-		const serversNode = findNodeAtLocation(tree, inConfig.section ? [...inConfig.section, serversKey] : [serversKey]);
+		const serversKey = inConfig.serversKey ?? "servers";
+		const serversNode = findNodeAtLocation(
+      tree,
+      inConfig.section ? [...inConfig.section, serversKey] : [serversKey],
+    );
 		if (!serversNode) {
 			return undefined;
 		}
@@ -170,14 +195,18 @@ export class McpLanguageFeatures extends Disposable implements IWorkbenchContrib
 			return observable.get();
 		};
 
-		const collection = read(this._mcpRegistry.collections).find(c => isEqual(c.presentation?.origin, model.uri));
+		const collection = read(this._mcpRegistry.collections).find(
+      c => isEqual(c.presentation?.origin, model.uri),
+    );
 		if (!collection) {
 			return lensList;
 		}
 
-		const mcpServers = read(this._mcpService.servers).filter(s => s.collection.id === collection.id);
+		const mcpServers = read(this._mcpService.servers).filter(
+      s => s.collection.id === collection.id,
+    );
 		for (const node of serversNode.children || []) {
-			if (node.type !== 'property' || node.children?.[0]?.type !== 'string') {
+			if (node.type !== "property" || node.children?.[0]?.type !== "string") {
 				continue;
 			}
 
@@ -187,14 +216,16 @@ export class McpLanguageFeatures extends Disposable implements IWorkbenchContrib
 				continue;
 			}
 
-			const range = Range.fromPositions(model.getPositionAt(node.children[0].offset));
+			const range = Range.fromPositions(
+        model.getPositionAt(node.children[0].offset),
+      );
 
 			if (isContributionDisabled(read(server.enablement))) {
 				lenses.push({
 					range,
 					command: {
 						id: McpCommandIds.ServerOptions,
-						title: '$(circle-slash) ' + localize('server.disabled', 'Disabled'),
+						title: "$(circle-slash) " + localize("server.disabled", "Disabled"),
 						arguments: [server.definition.id],
 					},
 				});
@@ -209,14 +240,14 @@ export class McpLanguageFeatures extends Disposable implements IWorkbenchContrib
 						range,
 						command: {
 							id: McpCommandIds.ShowOutput,
-							title: '$(error) ' + localize('server.error', 'Error'),
+							title: "$(error) " + localize("server.error", "Error"),
 							arguments: [server.definition.id],
 						},
 					}, {
 						range,
 						command: {
 							id: McpCommandIds.RestartServer,
-							title: localize('mcp.restart', "Restart"),
+							title: localize("mcp.restart", "Restart"),
 							arguments: [server.definition.id, { autoTrustChanges: true } satisfies IMcpServerStartOpts],
 						},
 					});
@@ -225,7 +256,7 @@ export class McpLanguageFeatures extends Disposable implements IWorkbenchContrib
 							range,
 							command: {
 								id: McpCommandIds.RestartServer,
-								title: localize('mcp.debug', "Debug"),
+								title: localize("mcp.debug", "Debug"),
 								arguments: [server.definition.id, { debug: true, autoTrustChanges: true } satisfies IMcpServerStartOpts],
 							},
 						});
@@ -236,14 +267,14 @@ export class McpLanguageFeatures extends Disposable implements IWorkbenchContrib
 						range,
 						command: {
 							id: McpCommandIds.ShowOutput,
-							title: '$(loading~spin) ' + localize('server.starting', 'Starting'),
+							title: "$(loading~spin) " + localize("server.starting", "Starting"),
 							arguments: [server.definition.id],
 						},
 					}, {
 						range,
 						command: {
 							id: McpCommandIds.StopServer,
-							title: localize('cancel', "Cancel"),
+							title: localize("cancel", "Cancel"),
 							arguments: [server.definition.id],
 						},
 					});
@@ -253,21 +284,21 @@ export class McpLanguageFeatures extends Disposable implements IWorkbenchContrib
 						range,
 						command: {
 							id: McpCommandIds.ShowOutput,
-							title: '$(check) ' + localize('server.running', 'Running'),
+							title: "$(check) " + localize("server.running", "Running"),
 							arguments: [server.definition.id],
 						},
 					}, {
 						range,
 						command: {
 							id: McpCommandIds.StopServer,
-							title: localize('mcp.stop', "Stop"),
+							title: localize("mcp.stop", "Stop"),
 							arguments: [server.definition.id],
 						},
 					}, {
 						range,
 						command: {
 							id: McpCommandIds.RestartServer,
-							title: localize('mcp.restart', "Restart"),
+							title: localize("mcp.restart", "Restart"),
 							arguments: [server.definition.id, { autoTrustChanges: true } satisfies IMcpServerStartOpts],
 						},
 					});
@@ -276,7 +307,7 @@ export class McpLanguageFeatures extends Disposable implements IWorkbenchContrib
 							range,
 							command: {
 								id: McpCommandIds.RestartServer,
-								title: localize('mcp.debug', "Debug"),
+								title: localize("mcp.debug", "Debug"),
 								arguments: [server.definition.id, { autoTrustChanges: true, debug: true } satisfies IMcpServerStartOpts],
 							},
 						});
@@ -287,7 +318,7 @@ export class McpLanguageFeatures extends Disposable implements IWorkbenchContrib
 						range,
 						command: {
 							id: McpCommandIds.StartServer,
-							title: '$(debug-start) ' + localize('mcp.start', "Start"),
+							title: "$(debug-start) " + localize("mcp.start", "Start"),
 							arguments: [server.definition.id, { autoTrustChanges: true } satisfies IMcpServerStartOpts],
 						},
 					});
@@ -296,7 +327,7 @@ export class McpLanguageFeatures extends Disposable implements IWorkbenchContrib
 							range,
 							command: {
 								id: McpCommandIds.StartServer,
-								title: localize('mcp.debug', "Debug"),
+								title: localize("mcp.debug", "Debug"),
 								arguments: [server.definition.id, { autoTrustChanges: true, debug: true } satisfies IMcpServerStartOpts],
 							},
 						});
@@ -310,9 +341,9 @@ export class McpLanguageFeatures extends Disposable implements IWorkbenchContrib
 					lenses.push({
 						range,
 						command: {
-							id: '',
-							title: localize('server.toolCount', '{0} tools', toolCount),
-						}
+							id: "",
+							title: localize("server.toolCount", "{0} tools", toolCount),
+						},
 					});
 				}
 
@@ -323,9 +354,9 @@ export class McpLanguageFeatures extends Disposable implements IWorkbenchContrib
 						range,
 						command: {
 							id: McpCommandIds.StartPromptForServer,
-							title: localize('server.promptcount', '{0} prompts', promptCount),
+							title: localize("server.promptcount", "{0} prompts", promptCount),
 							arguments: [server],
-						}
+						},
 					});
 				}
 
@@ -333,9 +364,9 @@ export class McpLanguageFeatures extends Disposable implements IWorkbenchContrib
 					range,
 					command: {
 						id: McpCommandIds.ServerOptions,
-						title: localize('mcp.server.more', 'More...'),
+						title: localize("mcp.server.more", "More..."),
 						arguments: [server.definition.id],
-					}
+					},
 				});
 			}
 		}
@@ -350,12 +381,14 @@ export class McpLanguageFeatures extends Disposable implements IWorkbenchContrib
 		}
 
 		const { tree, inConfig } = parsed;
-		const mcpSection = inConfig.section ? findNodeAtLocation(tree, [...inConfig.section]) : tree;
+		const mcpSection = inConfig.section ? findNodeAtLocation(tree, [
+      ...inConfig.section,
+    ]) : tree;
 		if (!mcpSection) {
 			return undefined;
 		}
 
-		const inputsNode = findNodeAtLocation(mcpSection, ['inputs']);
+		const inputsNode = findNodeAtLocation(mcpSection, ["inputs"]);
 		if (!inputsNode) {
 			return undefined;
 		}
@@ -363,7 +396,9 @@ export class McpLanguageFeatures extends Disposable implements IWorkbenchContrib
 		const inputs = await this._mcpRegistry.getSavedInputs(inConfig.scope);
 		const hints: InlayHint[] = [];
 
-		const serversNode = findNodeAtLocation(mcpSection, [inConfig.serversKey ?? 'servers']);
+		const serversNode = findNodeAtLocation(mcpSection, [
+      inConfig.serversKey ?? "servers",
+    ]);
 		if (serversNode) {
 			annotateServers(serversNode);
 		}
@@ -384,26 +419,28 @@ export class McpLanguageFeatures extends Disposable implements IWorkbenchContrib
 		}
 
 		function annotateInputs(node: Node) {
-			if (node.type !== 'array' || !node.children) {
+			if (node.type !== "array" || !node.children) {
 				return;
 			}
 
 			for (const input of node.children) {
-				if (input.type !== 'object' || !input.children) {
+				if (input.type !== "object" || !input.children) {
 					continue;
 				}
 
-				const idProp = input.children.find(c => c.type === 'property' && c.children?.[0].value === 'id');
+				const idProp = input.children.find(
+          c => c.type === "property" && c.children?.[0].value === "id",
+        );
 				if (!idProp) {
 					continue;
 				}
 
 				const id = idProp.children![1];
-				if (!id || id.type !== 'string' || !id.value) {
+				if (!id || id.type !== "string" || !id.value) {
 					continue;
 				}
 
-				const savedId = '${input:' + id.value + '}';
+				const savedId = "${input:" + id.value + "}";
 				const saved = inputs[savedId];
 				if (saved) {
 					pushAnnotation(savedId, id.offset + 1 + id.length, saved);
@@ -413,17 +450,17 @@ export class McpLanguageFeatures extends Disposable implements IWorkbenchContrib
 
 		function pushAnnotation(savedId: string, offset: number, saved: IResolvedValue): InlayHint {
 			const tooltip = new MarkdownString([
-				createMarkdownCommandLink({ id: McpCommandIds.EditStoredInput, text: localize('edit', 'Edit'), arguments: [savedId, model.uri, mcpConfigurationSection, inConfig!.target], tooltip: localize('edit.savedValue.tooltip', 'Edit saved value') }),
-				createMarkdownCommandLink({ id: McpCommandIds.RemoveStoredInput, text: localize('clear', 'Clear'), arguments: [inConfig!.scope, savedId], tooltip: localize('clear.savedValue.tooltip', 'Clear saved value') }),
-				createMarkdownCommandLink({ id: McpCommandIds.RemoveStoredInput, text: localize('clearAll', 'Clear All'), arguments: [inConfig!.scope], tooltip: localize('clearAll.savedValues.tooltip', 'Clear all saved values') }),
-			].join(' | '), { isTrusted: true });
+				createMarkdownCommandLink({ id: McpCommandIds.EditStoredInput, text: localize("edit", "Edit"), arguments: [savedId, model.uri, mcpConfigurationSection, inConfig!.target], tooltip: localize("edit.savedValue.tooltip", "Edit saved value") }),
+				createMarkdownCommandLink({ id: McpCommandIds.RemoveStoredInput, text: localize("clear", "Clear"), arguments: [inConfig!.scope, savedId], tooltip: localize("clear.savedValue.tooltip", "Clear saved value") }),
+				createMarkdownCommandLink({ id: McpCommandIds.RemoveStoredInput, text: localize("clearAll", "Clear All"), arguments: [inConfig!.scope], tooltip: localize("clearAll.savedValues.tooltip", "Clear all saved values") }),
+			].join(" | "), { isTrusted: true });
 
 			const hint: InlayHint = {
-				label: '= ' + (saved.input?.type === 'promptString' && saved.input.password ? '*'.repeat(10) : (saved.value || '')),
-				position: model.getPositionAt(offset),
-				tooltip,
-				paddingLeft: true,
-			};
+        label: "= " + (saved.input?.type === "promptString" && saved.input.password ? "*".repeat(10) : (saved.value || "")),
+        position: model.getPositionAt(offset),
+        tooltip,
+        paddingLeft: true,
+      };
 
 			hints.push(hint);
 			return hint;
@@ -434,11 +471,15 @@ export class McpLanguageFeatures extends Disposable implements IWorkbenchContrib
 
 
 function forEachPropertyWithReplacement(node: Node, callback: (node: Node) => void) {
-	if (node.type === 'string' && typeof node.value === 'string' && node.value.includes(ConfigurationResolverExpression.VARIABLE_LHS)) {
+	if (node.type === "string" && typeof node.value === "string" && node.value.includes(
+    ConfigurationResolverExpression.VARIABLE_LHS,
+  )) {
 		callback(node);
-	} else if (node.type === 'property') {
+	} else if (node.type === "property") {
 		// skip the property name
-		node.children?.slice(1).forEach(n => forEachPropertyWithReplacement(n, callback));
+		node.children?.slice(1).forEach(
+      n => forEachPropertyWithReplacement(n, callback),
+    );
 	} else {
 		node.children?.forEach(n => forEachPropertyWithReplacement(n, callback));
 	}

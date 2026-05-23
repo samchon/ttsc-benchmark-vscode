@@ -3,19 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../../../nls.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable, DisposableStore } from '../../../../base/common/lifecycle.js';
-import { rtrim } from '../../../../base/common/strings.js';
-import { IContextKey, IContextKeyService, RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { IChatAgentService } from './participants/chatAgents.js';
-import { IChatModel } from './model/chatModel.js';
-import { chatAgentLeader, chatSubcommandLeader } from './requestParser/chatParserTypes.js';
-import { ISpeechService, ISpeechToTextEvent, SpeechToTextStatus } from '../../speech/common/speechService.js';
+import { localize } from "../../../../nls.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { rtrim } from "../../../../base/common/strings.js";
+import { IContextKey, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IChatAgentService } from "./participants/chatAgents.js";
+import { IChatModel } from "./model/chatModel.js";
+import { chatAgentLeader, chatSubcommandLeader } from "./requestParser/chatParserTypes.js";
+import { ISpeechService, ISpeechToTextEvent, SpeechToTextStatus } from "../../speech/common/speechService.js";
 
-export const IVoiceChatService = createDecorator<IVoiceChatService>('voiceChatService');
+export const IVoiceChatService = createDecorator<IVoiceChatService>(
+  "voiceChatService",
+);
 
 export interface IVoiceChatSessionOptions {
 	readonly usesAgents?: boolean;
@@ -60,7 +62,14 @@ enum PhraseTextType {
 	AGENT_AND_COMMAND = 3
 }
 
-export const VoiceChatInProgress = new RawContextKey<boolean>('voiceChatInProgress', false, { type: 'boolean', description: localize('voiceChatInProgress', "A speech-to-text session is in progress for chat.") });
+export const VoiceChatInProgress = new RawContextKey<boolean>(
+  "voiceChatInProgress",
+  false,
+  {
+    type: "boolean",
+    description: localize("voiceChatInProgress", "A speech-to-text session is in progress for chat."),
+  },
+);
 
 export class VoiceChatService extends Disposable implements IVoiceChatService {
 
@@ -70,16 +79,18 @@ export class VoiceChatService extends Disposable implements IVoiceChatService {
 	private static readonly COMMAND_PREFIX = chatSubcommandLeader;
 
 	private static readonly PHRASES_LOWER = {
-		[this.AGENT_PREFIX]: 'at',
-		[this.COMMAND_PREFIX]: 'slash'
-	};
+    [this.AGENT_PREFIX]: "at",
+    [this.COMMAND_PREFIX]: "slash",
+  };
 
 	private static readonly PHRASES_UPPER = {
-		[this.AGENT_PREFIX]: 'At',
-		[this.COMMAND_PREFIX]: 'Slash'
-	};
+    [this.AGENT_PREFIX]: "At",
+    [this.COMMAND_PREFIX]: "Slash",
+  };
 
-	private static readonly CHAT_AGENT_ALIAS = new Map<string, string>([['vscode', 'code']]);
+	private static readonly CHAT_AGENT_ALIAS = new Map<string, string>([
+    ["vscode", "code"],
+  ]);
 
 	private readonly voiceChatInProgress: IContextKey<boolean>;
 	private activeVoiceChatSessions = 0;
@@ -87,7 +98,7 @@ export class VoiceChatService extends Disposable implements IVoiceChatService {
 	constructor(
 		@ISpeechService private readonly speechService: ISpeechService,
 		@IChatAgentService private readonly chatAgentService: IChatAgentService,
-		@IContextKeyService contextKeyService: IContextKeyService
+		@IContextKeyService contextKeyService: IContextKeyService,
 	) {
 		super();
 
@@ -103,10 +114,16 @@ export class VoiceChatService extends Disposable implements IVoiceChatService {
 
 			for (const slashCommand of agent.slashCommands) {
 				const slashCommandPhrase = `${VoiceChatService.PHRASES_LOWER[VoiceChatService.COMMAND_PREFIX]} ${slashCommand.name}`.toLowerCase();
-				phrases.set(slashCommandPhrase, { agent: agent.name, command: slashCommand.name });
+				phrases.set(slashCommandPhrase, {
+          agent: agent.name,
+          command: slashCommand.name,
+        });
 
 				const agentSlashCommandPhrase = `${agentPhrase} ${slashCommandPhrase}`.toLowerCase();
-				phrases.set(agentSlashCommandPhrase, { agent: agent.name, command: slashCommand.name });
+				phrases.set(agentSlashCommandPhrase, {
+          agent: agent.name,
+          command: slashCommand.name,
+        });
 			}
 		}
 
@@ -128,7 +145,10 @@ export class VoiceChatService extends Disposable implements IVoiceChatService {
 		const disposables = new DisposableStore();
 
 		const onSessionStoppedOrCanceled = (dispose: boolean) => {
-			this.activeVoiceChatSessions = Math.max(0, this.activeVoiceChatSessions - 1);
+			this.activeVoiceChatSessions = Math.max(
+        0,
+        this.activeVoiceChatSessions - 1,
+      );
 			if (this.activeVoiceChatSessions === 0) {
 				this.voiceChatInProgress.reset();
 			}
@@ -138,13 +158,18 @@ export class VoiceChatService extends Disposable implements IVoiceChatService {
 			}
 		};
 
-		disposables.add(token.onCancellationRequested(() => onSessionStoppedOrCanceled(true)));
+		disposables.add(
+      token.onCancellationRequested(() => onSessionStoppedOrCanceled(true)),
+    );
 
 		let detectedAgent = false;
 		let detectedSlashCommand = false;
 
 		const emitter = disposables.add(new Emitter<IVoiceChatTextEvent>());
-		const session = await this.speechService.createSpeechToTextSession(token, 'chat');
+		const session = await this.speechService.createSpeechToTextSession(
+      token,
+      "chat",
+    );
 
 		if (token.isCancellationRequested) {
 			onSessionStoppedOrCanceled(true);
@@ -160,14 +185,14 @@ export class VoiceChatService extends Disposable implements IVoiceChatService {
 						const startsWithAgent = e.text.startsWith(VoiceChatService.PHRASES_UPPER[VoiceChatService.AGENT_PREFIX]) || e.text.startsWith(VoiceChatService.PHRASES_LOWER[VoiceChatService.AGENT_PREFIX]);
 						const startsWithSlashCommand = e.text.startsWith(VoiceChatService.PHRASES_UPPER[VoiceChatService.COMMAND_PREFIX]) || e.text.startsWith(VoiceChatService.PHRASES_LOWER[VoiceChatService.COMMAND_PREFIX]);
 						if (startsWithAgent || startsWithSlashCommand) {
-							const originalWords = e.text.split(' ');
+							const originalWords = e.text.split(" ");
 							let transformedWords: string[] | undefined;
 
 							let waitingForInput = false;
 
 							// Check for agent + slash command
 							if (options.usesAgents && startsWithAgent && !detectedAgent && !detectedSlashCommand && originalWords.length >= 4) {
-								const phrase = phrases.get(originalWords.slice(0, 4).map(word => this.normalizeWord(word)).join(' '));
+								const phrase = phrases.get(originalWords.slice(0, 4).map(word => this.normalizeWord(word)).join(" "));
 								if (phrase) {
 									transformedWords = [this.toText(phrase, PhraseTextType.AGENT_AND_COMMAND), ...originalWords.slice(4)];
 
@@ -182,7 +207,7 @@ export class VoiceChatService extends Disposable implements IVoiceChatService {
 
 							// Check for agent (if not done already)
 							if (options.usesAgents && startsWithAgent && !detectedAgent && !transformedWords && originalWords.length >= 2) {
-								const phrase = phrases.get(originalWords.slice(0, 2).map(word => this.normalizeWord(word)).join(' '));
+								const phrase = phrases.get(originalWords.slice(0, 2).map(word => this.normalizeWord(word)).join(" "));
 								if (phrase) {
 									transformedWords = [this.toText(phrase, PhraseTextType.AGENT), ...originalWords.slice(2)];
 
@@ -196,11 +221,11 @@ export class VoiceChatService extends Disposable implements IVoiceChatService {
 
 							// Check for slash command (if not done already)
 							if (startsWithSlashCommand && !detectedSlashCommand && !transformedWords && originalWords.length >= 2) {
-								const phrase = phrases.get(originalWords.slice(0, 2).map(word => this.normalizeWord(word)).join(' '));
+								const phrase = phrases.get(originalWords.slice(0, 2).map(word => this.normalizeWord(word)).join(" "));
 								if (phrase) {
 									transformedWords = [this.toText(phrase, options.usesAgents && !detectedAgent ?
 										PhraseTextType.AGENT_AND_COMMAND : 	// rewrite `/fix` to `@workspace /foo` in this case
-										PhraseTextType.COMMAND				// when we have not yet detected an agent before
+										PhraseTextType.COMMAND,				// when we have not yet detected an agent before
 									), ...originalWords.slice(2)];
 
 									waitingForInput = originalWords.length === 2;
@@ -213,8 +238,8 @@ export class VoiceChatService extends Disposable implements IVoiceChatService {
 
 							massagedEvent = {
 								status: e.status,
-								text: (transformedWords ?? originalWords).join(' '),
-								waitingForInput
+								text: (transformedWords ?? originalWords).join(" "),
+								waitingForInput,
 							};
 						}
 					}
@@ -237,14 +262,14 @@ export class VoiceChatService extends Disposable implements IVoiceChatService {
 		}));
 
 		return {
-			onDidChange: emitter.event
-		};
+      onDidChange: emitter.event,
+    };
 	}
 
 	private normalizeWord(word: string): string {
-		word = rtrim(word, '.');
-		word = rtrim(word, ',');
-		word = rtrim(word, '?');
+		word = rtrim(word, ".");
+		word = rtrim(word, ",");
+		word = rtrim(word, "?");
 
 		return word.toLowerCase();
 	}

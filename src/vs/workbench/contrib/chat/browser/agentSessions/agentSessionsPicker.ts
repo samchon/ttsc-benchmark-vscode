@@ -3,51 +3,65 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { renderAsPlaintext } from '../../../../../base/browser/markdownRenderer.js';
-import { Codicon } from '../../../../../base/common/codicons.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { localize } from '../../../../../nls.js';
-import { ICommandService } from '../../../../../platform/commands/common/commands.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IQuickInputButton, IQuickInputService, IQuickPickItem, IQuickPickSeparator } from '../../../../../platform/quickinput/common/quickInput.js';
-import { ISessionOpenOptions, openSession } from './agentSessionsOpener.js';
-import { IAgentSession, isLocalAgentSessionItem } from './agentSessionsModel.js';
-import { IAgentSessionsService } from './agentSessionsService.js';
-import { AgentSessionsSorter, groupAgentSessionsByDate, type IAgentSessionsFilter, sessionDateFromNow } from './agentSessionsViewer.js';
-import { AGENT_SESSION_DELETE_ACTION_ID, AGENT_SESSION_RENAME_ACTION_ID } from './agentSessions.js';
-import { AgentSessionsFilter } from './agentSessionsFilter.js';
+import { renderAsPlaintext } from "../../../../../base/browser/markdownRenderer.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { localize } from "../../../../../nls.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import {
+  IQuickInputButton,
+  IQuickInputService,
+  IQuickPickItem,
+  IQuickPickSeparator,
+} from "../../../../../platform/quickinput/common/quickInput.js";
+import { ISessionOpenOptions, openSession } from "./agentSessionsOpener.js";
+import { IAgentSession, isLocalAgentSessionItem } from "./agentSessionsModel.js";
+import { IAgentSessionsService } from "./agentSessionsService.js";
+import {
+  AgentSessionsSorter,
+  groupAgentSessionsByDate,
+  type IAgentSessionsFilter,
+  sessionDateFromNow,
+} from "./agentSessionsViewer.js";
+import { AGENT_SESSION_DELETE_ACTION_ID, AGENT_SESSION_RENAME_ACTION_ID } from "./agentSessions.js";
+import { AgentSessionsFilter } from "./agentSessionsFilter.js";
 
 interface ISessionPickItem extends IQuickPickItem {
 	readonly session: IAgentSession;
 }
 
 export const archiveButton: IQuickInputButton = {
-	iconClass: ThemeIcon.asClassName(Codicon.archive),
-	tooltip: localize('archiveSession', "Archive")
+  iconClass: ThemeIcon.asClassName(Codicon.archive),
+  tooltip: localize("archiveSession", "Archive"),
 };
 
 export const unarchiveButton: IQuickInputButton = {
-	iconClass: ThemeIcon.asClassName(Codicon.inbox),
-	tooltip: localize('unarchiveSession', "Unarchive")
+  iconClass: ThemeIcon.asClassName(Codicon.inbox),
+  tooltip: localize("unarchiveSession", "Unarchive"),
 };
 
 export const renameButton: IQuickInputButton = {
-	iconClass: ThemeIcon.asClassName(Codicon.edit),
-	tooltip: localize('renameSession', "Rename")
+  iconClass: ThemeIcon.asClassName(Codicon.edit),
+  tooltip: localize("renameSession", "Rename"),
 };
 
 export const deleteButton: IQuickInputButton = {
-	iconClass: ThemeIcon.asClassName(Codicon.trash),
-	tooltip: localize('deleteSession', "Delete")
+  iconClass: ThemeIcon.asClassName(Codicon.trash),
+  tooltip: localize("deleteSession", "Delete"),
 };
 
 export function getSessionDescription(session: IAgentSession): string {
-	const descriptionText = typeof session.description === 'string' ? session.description : session.description ? renderAsPlaintext(session.description) : undefined;
+	const descriptionText = typeof session.description === "string" ? session.description : session.description ? renderAsPlaintext(
+    session.description,
+  ) : undefined;
 	const timeAgo = sessionDateFromNow(session.timing.created);
-	const descriptionParts = [descriptionText, session.providerLabel, timeAgo].filter(part => !!part);
+	const descriptionParts = [descriptionText, session.providerLabel, timeAgo].filter(
+    part => !!part,
+  );
 
-	return descriptionParts.join(' • ');
+	return descriptionParts.join(" • ");
 }
 
 export function getSessionButtons(session: IAgentSession): IQuickInputButton[] {
@@ -85,13 +99,22 @@ export class AgentSessionsPicker {
 
 	async pickAgentSession(): Promise<void> {
 		const disposables = new DisposableStore();
-		const picker = disposables.add(this.quickInputService.createQuickPick<ISessionPickItem>({ useSeparators: true }));
-		const filter = disposables.add(this.instantiationService.createInstance(AgentSessionsFilter, {}));
+		const picker = disposables.add(
+      this.quickInputService.createQuickPick<ISessionPickItem>({
+        useSeparators: true,
+      }),
+    );
+		const filter = disposables.add(
+      this.instantiationService.createInstance(AgentSessionsFilter, {}),
+    );
 
 		picker.anchor = this.anchor;
 		picker.items = this.createPickerItems(filter);
 		picker.canAcceptInBackground = true;
-		picker.placeholder = localize('chatAgentPickerPlaceholder', "Search agent sessions by name");
+		picker.placeholder = localize(
+      "chatAgentPickerPlaceholder",
+      "Search agent sessions by name",
+    );
 
 		disposables.add(picker.onDidAccept(e => {
 			const pick = picker.selectedItems[0];
@@ -100,8 +123,8 @@ export class AgentSessionsPicker {
 					sideBySide: e.inBackground,
 					editorOptions: {
 						preserveFocus: e.inBackground,
-						pinned: e.inBackground
-					}
+						pinned: e.inBackground,
+					},
 				};
 
 				if (this.options?.overrideSessionOpen) {
@@ -152,7 +175,7 @@ export class AgentSessionsPicker {
 		const groupedSessions = groupAgentSessionsByDate(sessions);
 		for (const group of groupedSessions.values()) {
 			if (group.sessions.length > 0) {
-				items.push({ type: 'separator', label: group.label });
+				items.push({ type: "separator", label: group.label });
 				items.push(...group.sessions.map(session => this.toPickItem(session)));
 			}
 		}
@@ -165,13 +188,13 @@ export class AgentSessionsPicker {
 		const buttons = getSessionButtons(session);
 
 		return {
-			id: session.resource.toString(),
-			label: session.label,
-			tooltip: session.tooltip,
-			description,
-			iconClass: ThemeIcon.asClassName(session.icon),
-			buttons,
-			session
-		};
+      id: session.resource.toString(),
+      label: session.label,
+      tooltip: session.tooltip,
+      description,
+      iconClass: ThemeIcon.asClassName(session.icon),
+      buttons,
+      session,
+    };
 	}
 }

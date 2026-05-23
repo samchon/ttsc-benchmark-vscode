@@ -3,18 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import { URI } from '../../../../base/common/uri.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { IRange } from '../../../../editor/common/core/range.js';
-import { IStringDictionary } from '../../../../base/common/collections.js';
+import { Event } from "../../../../base/common/event.js";
+import { URI } from "../../../../base/common/uri.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IRange } from "../../../../editor/common/core/range.js";
+import { IStringDictionary } from "../../../../base/common/collections.js";
 
-export const ILanguageModelsConfigurationService = createDecorator<ILanguageModelsConfigurationService>('ILanguageModelsConfigurationService');
+export const ILanguageModelsConfigurationService = createDecorator<ILanguageModelsConfigurationService>(
+  "ILanguageModelsConfigurationService",
+);
 
 export interface ConfigureLanguageModelsOptions {
 	group: ILanguageModelsProviderGroup;
 	snippet?: string;
-	snippetTarget?: 'group' | 'models';
+	snippetTarget?: "group" | "models";
 }
 
 export interface ILanguageModelsConfigurationService {

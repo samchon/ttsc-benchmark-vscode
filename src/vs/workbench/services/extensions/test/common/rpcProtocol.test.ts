@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { VSBuffer } from '../../../../../base/common/buffer.js';
-import { CancellationToken, CancellationTokenSource } from '../../../../../base/common/cancellation.js';
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { IMessagePassingProtocol } from '../../../../../base/parts/ipc/common/ipc.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { ProxyIdentifier, SerializableObjectWithBuffers } from '../../common/proxyIdentifier.js';
-import { RPCProtocol } from '../../common/rpcProtocol.js';
+import assert from "assert";
+import { VSBuffer } from "../../../../../base/common/buffer.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../../base/common/cancellation.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { IMessagePassingProtocol } from "../../../../../base/parts/ipc/common/ipc.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { ProxyIdentifier, SerializableObjectWithBuffers } from "../../common/proxyIdentifier.js";
+import { RPCProtocol } from "../../common/rpcProtocol.js";
 
-suite('RPCProtocol', () => {
+suite("RPCProtocol", () => {
 
 	let disposables: DisposableStore;
 
@@ -53,7 +53,7 @@ suite('RPCProtocol', () => {
 		const A = disposables.add(new RPCProtocol(a_protocol));
 		const B = disposables.add(new RPCProtocol(b_protocol));
 
-		const bIdentifier = new ProxyIdentifier<BClass>('bb');
+		const bIdentifier = new ProxyIdentifier<BClass>("bb");
 		const bInstance = new BClass();
 		B.set(bIdentifier, bInstance);
 		bProxy = A.getProxy(bIdentifier);
@@ -65,7 +65,7 @@ suite('RPCProtocol', () => {
 
 	ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('simple call', function (done) {
+	test("simple call", function (done) {
 		delegate = (a1: number, a2: number) => a1 + a2;
 		bProxy.$m(4, 1).then((res: number) => {
 			assert.strictEqual(res, 5);
@@ -73,7 +73,7 @@ suite('RPCProtocol', () => {
 		}, done);
 	});
 
-	test('simple call without result', function (done) {
+	test("simple call without result", function (done) {
 		delegate = (a1: number, a2: number) => { };
 		bProxy.$m(4, 1).then((res: number) => {
 			assert.strictEqual(res, undefined);
@@ -81,7 +81,7 @@ suite('RPCProtocol', () => {
 		}, done);
 	});
 
-	test('passing buffer as argument', function (done) {
+	test("passing buffer as argument", function (done) {
 		delegate = (a1: VSBuffer, a2: number) => {
 			assert.ok(a1 instanceof VSBuffer);
 			return a1.buffer[a2];
@@ -97,7 +97,7 @@ suite('RPCProtocol', () => {
 		}, done);
 	});
 
-	test('returning a buffer', function (done) {
+	test("returning a buffer", function (done) {
 		delegate = (a1: number, a2: number) => {
 			const b = VSBuffer.alloc(4);
 			b.buffer[0] = 1;
@@ -116,18 +116,18 @@ suite('RPCProtocol', () => {
 		}, done);
 	});
 
-	test('cancelling a call via CancellationToken before', function (done) {
+	test("cancelling a call via CancellationToken before", function (done) {
 		delegate = (a1: number, a2: number) => a1 + a2;
 		const p = bProxy.$m(4, CancellationToken.Cancelled);
 		p.then((res: number) => {
-			assert.fail('should not receive result');
+			assert.fail("should not receive result");
 		}, (err) => {
 			assert.ok(true);
 			done(null);
 		});
 	});
 
-	test('passing CancellationToken.None', function (done) {
+	test("passing CancellationToken.None", function (done) {
 		delegate = (a1: number, token: CancellationToken) => {
 			assert.ok(!!token);
 			return a1 + 1;
@@ -138,7 +138,7 @@ suite('RPCProtocol', () => {
 		}, done);
 	});
 
-	test('cancelling a call via CancellationToken quickly', function (done) {
+	test("cancelling a call via CancellationToken quickly", function (done) {
 		// this is an implementation which, when cancellation is triggered, will return 7
 		delegate = (a1: number, token: CancellationToken) => {
 			return new Promise((resolve, reject) => {
@@ -153,34 +153,34 @@ suite('RPCProtocol', () => {
 		p.then((res: number) => {
 			assert.strictEqual(res, 7);
 		}, (err) => {
-			assert.fail('should not receive error');
+			assert.fail("should not receive error");
 		}).finally(done);
 		tokenSource.cancel();
 	});
 
-	test('throwing an error', function (done) {
+	test("throwing an error", function (done) {
 		delegate = (a1: number, a2: number) => {
 			throw new Error(`nope`);
 		};
 		bProxy.$m(4, 1).then((res) => {
-			assert.fail('unexpected');
+			assert.fail("unexpected");
 		}, (err) => {
-			assert.strictEqual(err.message, 'nope');
+			assert.strictEqual(err.message, "nope");
 		}).finally(done);
 	});
 
-	test('error promise', function (done) {
+	test("error promise", function (done) {
 		delegate = (a1: number, a2: number) => {
 			return Promise.reject(undefined);
 		};
 		bProxy.$m(4, 1).then((res) => {
-			assert.fail('unexpected');
+			assert.fail("unexpected");
 		}, (err) => {
 			assert.strictEqual(err, undefined);
 		}).finally(done);
 	});
 
-	test('issue #60450: Converting circular structure to JSON', function (done) {
+	test("issue #60450: Converting circular structure to JSON", function (done) {
 		delegate = (a1: number, a2: number) => {
 			// eslint-disable-next-line local/code-no-any-casts
 			const circular = <any>{};
@@ -190,25 +190,25 @@ suite('RPCProtocol', () => {
 		bProxy.$m(4, 1).then((res) => {
 			assert.strictEqual(res, null);
 		}, (err) => {
-			assert.fail('unexpected');
+			assert.fail("unexpected");
 		}).finally(done);
 	});
 
-	test('issue #72798: null errors are hard to digest', function (done) {
+	test("issue #72798: null errors are hard to digest", function (done) {
 		delegate = (a1: number, a2: number) => {
 			// eslint-disable-next-line no-throw-literal
-			throw { 'what': 'what' };
+			throw { "what": "what" };
 		};
 		bProxy.$m(4, 1).then((res) => {
-			assert.fail('unexpected');
+			assert.fail("unexpected");
 		}, (err) => {
-			assert.strictEqual(err.what, 'what');
+			assert.strictEqual(err.what, "what");
 		}).finally(done);
 	});
 
-	test('undefined arguments arrive as null', function () {
+	test("undefined arguments arrive as null", function () {
 		delegate = (a1: any, a2: any) => {
-			assert.strictEqual(typeof a1, 'undefined');
+			assert.strictEqual(typeof a1, "undefined");
 			assert.strictEqual(a2, null);
 			return 7;
 		};
@@ -217,19 +217,19 @@ suite('RPCProtocol', () => {
 		});
 	});
 
-	test('issue #81424: SerializeRequest should throw if an argument can not be serialized', () => {
+	test("issue #81424: SerializeRequest should throw if an argument can not be serialized", () => {
 		const badObject = {};
 		// eslint-disable-next-line local/code-no-any-casts
 		(<any>badObject).loop = badObject;
 
 		assert.throws(() => {
-			bProxy.$m(badObject, '2');
+			bProxy.$m(badObject, "2");
 		});
 	});
 
-	test('SerializableObjectWithBuffers is correctly transfered', function (done) {
+	test("SerializableObjectWithBuffers is correctly transfered", function (done) {
 		delegate = (a1: SerializableObjectWithBuffers<{ string: string; buff: VSBuffer }>, a2: number) => {
-			return new SerializableObjectWithBuffers({ string: a1.value.string + ' world', buff: a1.value.buff });
+			return new SerializableObjectWithBuffers({ string: a1.value.string + " world", buff: a1.value.buff });
 		};
 
 		const b = VSBuffer.alloc(4);
@@ -238,9 +238,9 @@ suite('RPCProtocol', () => {
 		b.buffer[2] = 3;
 		b.buffer[3] = 4;
 
-		bProxy.$m(new SerializableObjectWithBuffers({ string: 'hello', buff: b }), undefined).then((res: SerializableObjectWithBuffers<any>) => {
+		bProxy.$m(new SerializableObjectWithBuffers({ string: "hello", buff: b }), undefined).then((res: SerializableObjectWithBuffers<any>) => {
 			assert.ok(res instanceof SerializableObjectWithBuffers);
-			assert.strictEqual(res.value.string, 'hello world');
+			assert.strictEqual(res.value.string, "hello world");
 
 			assert.ok(res.value.buff instanceof VSBuffer);
 

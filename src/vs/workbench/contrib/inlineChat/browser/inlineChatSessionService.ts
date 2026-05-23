@@ -2,22 +2,24 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { Event } from '../../../../base/common/event.js';
-import { IMarkdownString } from '../../../../base/common/htmlContent.js';
-import { IObservable } from '../../../../base/common/observable.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IActiveCodeEditor, ICodeEditor } from '../../../../editor/browser/editorBrowser.js';
-import { Position } from '../../../../editor/common/core/position.js';
-import { Selection } from '../../../../editor/common/core/selection.js';
-import { createDecorator, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { IChatWidgetService } from '../../chat/browser/chat.js';
-import { IChatEditingSession } from '../../chat/common/editing/chatEditingService.js';
-import { IChatModel, IChatModelInputState, IChatRequestModel } from '../../chat/common/model/chatModel.js';
-import { IChatService } from '../../chat/common/chatService/chatService.js';
-import { ChatAgentLocation, ChatModeKind } from '../../chat/common/constants.js';
+import { Event } from "../../../../base/common/event.js";
+import { IMarkdownString } from "../../../../base/common/htmlContent.js";
+import { IObservable } from "../../../../base/common/observable.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IActiveCodeEditor, ICodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { Position } from "../../../../editor/common/core/position.js";
+import { Selection } from "../../../../editor/common/core/selection.js";
+import { createDecorator, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { IChatWidgetService } from "../../chat/browser/chat.js";
+import { IChatEditingSession } from "../../chat/common/editing/chatEditingService.js";
+import { IChatModel, IChatModelInputState, IChatRequestModel } from "../../chat/common/model/chatModel.js";
+import { IChatService } from "../../chat/common/chatService/chatService.js";
+import { ChatAgentLocation, ChatModeKind } from "../../chat/common/constants.js";
 
 
-export const IInlineChatSessionService = createDecorator<IInlineChatSessionService>('IInlineChatSessionService');
+export const IInlineChatSessionService = createDecorator<IInlineChatSessionService>(
+  "IInlineChatSessionService",
+);
 
 export type InlineChatSessionTerminationState = string | IMarkdownString;
 
@@ -57,15 +59,20 @@ async function askInPanelChat(accessor: ServicesAccessor, request: IChatRequestM
 	const newModel = newModelRef.object;
 
 	newModel.inputModel.setState({
-		...state,
-		mode: { id: 'agent', kind: ChatModeKind.Agent }
-	});
+    ...state,
+    mode: { id: "agent", kind: ChatModeKind.Agent },
+  });
 
-	const widget = await widgetService.openSession(newModelRef.object.sessionResource);
+	const widget = await widgetService.openSession(
+    newModelRef.object.sessionResource,
+  );
 
 	newModelRef.dispose(); // can be freed after opening because the widget also holds a reference
 	if (widget && fileContext && !fileContext.selection.isEmpty()) {
-		await widget.attachmentModel.addFile(fileContext.uri, fileContext.selection);
+		await widget.attachmentModel.addFile(
+      fileContext.uri,
+      fileContext.selection,
+    );
 	}
 	widget?.acceptInput(request.message.text);
 }
@@ -76,7 +83,12 @@ export async function continueInPanelChat(accessor: ServicesAccessor, session: I
 		return;
 	}
 
-	await askInPanelChat(accessor, request, session.chatModel.inputModel.state.get(), { uri: session.uri, selection: session.initialSelection });
+	await askInPanelChat(
+    accessor,
+    request,
+    session.chatModel.inputModel.state.get(),
+    { uri: session.uri, selection: session.initialSelection },
+  );
 	session.dispose();
 }
 
@@ -86,7 +98,10 @@ export function rephraseInlineChat(accessor: ServicesAccessor, session: IInlineC
 		return undefined;
 	}
 
-	accessor.get(IChatService).removeRequest(session.chatModel.sessionResource, request.id);
+	accessor.get(IChatService).removeRequest(
+    session.chatModel.sessionResource,
+    request.id,
+  );
 	session.chatModel.inputModel.setState({ inputText: request.message.text });
 	session.setTerminationState(undefined);
 	return request.message.text;

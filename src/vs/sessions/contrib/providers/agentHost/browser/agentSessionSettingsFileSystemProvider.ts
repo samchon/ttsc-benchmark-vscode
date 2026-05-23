@@ -3,29 +3,29 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IJSONSchema } from '../../../../../base/common/jsonSchema.js';
-import { DisposableStore, IDisposable } from '../../../../../base/common/lifecycle.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { localize } from '../../../../../nls.js';
-import { ILogService } from '../../../../../platform/log/common/log.js';
-import { ResolveSessionConfigResult } from '../../../../../platform/agentHost/common/state/protocol/commands.js';
-import { SessionConfigPropertySchema } from '../../../../../platform/agentHost/common/state/protocol/state.js';
-import { IAgentHostSessionsProvider } from '../../../../common/agentHostSessionsProvider.js';
-import { ISessionsProvidersService } from '../../../../services/sessions/browser/sessionsProvidersService.js';
-import { ISession, toSessionId } from '../../../../services/sessions/common/session.js';
+import { IJSONSchema } from "../../../../../base/common/jsonSchema.js";
+import { DisposableStore, IDisposable } from "../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { localize } from "../../../../../nls.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { ResolveSessionConfigResult } from "../../../../../platform/agentHost/common/state/protocol/commands.js";
+import { SessionConfigPropertySchema } from "../../../../../platform/agentHost/common/state/protocol/state.js";
+import { IAgentHostSessionsProvider } from "../../../../common/agentHostSessionsProvider.js";
+import { ISessionsProvidersService } from "../../../../services/sessions/browser/sessionsProvidersService.js";
+import { ISession, toSessionId } from "../../../../services/sessions/common/session.js";
 import {
-	AbstractAgentHostConfigFileSystemProvider,
-	AbstractAgentHostConfigSchemaRegistrar,
-	AgentHostConfigPropertyFilter,
-	buildAgentHostConfigJsonSchema,
-	IAgentHostConfigLike,
-	IAgentHostSettingsContext,
-	IAgentHostSettingsLocale,
-	serializeAgentHostConfigDocument,
-} from './agentHostSettingsShared.js';
+  AbstractAgentHostConfigFileSystemProvider,
+  AbstractAgentHostConfigSchemaRegistrar,
+  AgentHostConfigPropertyFilter,
+  buildAgentHostConfigJsonSchema,
+  IAgentHostConfigLike,
+  IAgentHostSettingsContext,
+  IAgentHostSettingsLocale,
+  serializeAgentHostConfigDocument,
+} from "./agentHostSettingsShared.js";
 
 /** Scheme for the synthetic agent-host session settings files. */
-export const AGENT_SESSION_SETTINGS_SCHEME = 'agent-session-settings';
+export const AGENT_SESSION_SETTINGS_SCHEME = "agent-session-settings";
 
 /**
  * Build the URI used to open the settings file for an agent-host session.
@@ -40,10 +40,10 @@ export const AGENT_SESSION_SETTINGS_SCHEME = 'agent-session-settings';
 export function agentSessionSettingsUri(session: ISession): URI {
 	// `resource.path` already starts with `/`, so splice it between the scheme and the `.jsonc` suffix.
 	return URI.from({
-		scheme: AGENT_SESSION_SETTINGS_SCHEME,
-		authority: session.providerId,
-		path: `/${session.resource.scheme}${session.resource.path}.jsonc`,
-	});
+    scheme: AGENT_SESSION_SETTINGS_SCHEME,
+    authority: session.providerId,
+    path: `/${session.resource.scheme}${session.resource.path}.jsonc`,
+  });
 }
 
 interface ISessionSettingsContext extends IAgentHostSettingsContext {
@@ -60,18 +60,18 @@ function parseSessionSettingsUri(uri: URI): ISessionSettingsContext | undefined 
 		return undefined;
 	}
 	// Path: /{resourceScheme}/{rawId}.jsonc
-	const path = uri.path.startsWith('/') ? uri.path.substring(1) : uri.path;
-	const firstSlash = path.indexOf('/');
+	const path = uri.path.startsWith("/") ? uri.path.substring(1) : uri.path;
+	const firstSlash = path.indexOf("/");
 	if (firstSlash <= 0) {
 		return undefined;
 	}
 	const resourceScheme = path.substring(0, firstSlash);
 	let rest = path.substring(firstSlash); // includes leading '/'
-	const lastDot = rest.lastIndexOf('.');
+	const lastDot = rest.lastIndexOf(".");
 	if (lastDot > 0) {
 		rest = rest.substring(0, lastDot);
 	}
-	if (!resourceScheme || rest === '/') {
+	if (!resourceScheme || rest === "/") {
 		return undefined;
 	}
 	const resource = URI.from({ scheme: resourceScheme, path: rest });
@@ -90,10 +90,10 @@ const sessionSettingsPropertyFilter: AgentHostConfigPropertyFilter = (_key, sche
 };
 
 const sessionSettingsLocale: IAgentHostSettingsLocale = {
-	get header() { return localize('agentSessionSettings.header', "Session settings for this agent host session."); },
-	get saveHint() { return localize('agentSessionSettings.saveHint', "Edit values below and save to apply. Unknown or non-mutable properties are ignored."); },
-	get parseError() { return localize('agentSessionSettings.parseError', "Failed to parse agent session settings as JSON."); },
-	get notObject() { return localize('agentSessionSettings.notObject', "Agent session settings must be a JSON object."); },
+  get header() { return localize("agentSessionSettings.header", "Session settings for this agent host session."); },
+  get saveHint() { return localize("agentSessionSettings.saveHint", "Edit values below and save to apply. Unknown or non-mutable properties are ignored."); },
+  get parseError() { return localize("agentSessionSettings.parseError", "Failed to parse agent session settings as JSON."); },
+  get notObject() { return localize("agentSessionSettings.notObject", "Agent session settings must be a JSON object."); },
 };
 
 /**
@@ -101,7 +101,11 @@ const sessionSettingsLocale: IAgentHostSettingsLocale = {
  * commented, pretty-printed JSON document.
  */
 export function serializeSessionSettings(provider: IAgentHostSessionsProvider, sessionId: string): string {
-	return serializeAgentHostConfigDocument(provider.getSessionConfig(sessionId), sessionSettingsPropertyFilter, sessionSettingsLocale);
+	return serializeAgentHostConfigDocument(
+    provider.getSessionConfig(sessionId),
+    sessionSettingsPropertyFilter,
+    sessionSettingsLocale,
+  );
 }
 
 /**
@@ -121,7 +125,7 @@ export function buildSessionSettingsJsonSchema(config: ResolveSessionConfigResul
 export class AgentSessionSettingsFileSystemProvider extends AbstractAgentHostConfigFileSystemProvider<ISessionSettingsContext> {
 
 	protected readonly _schemeLabel = AGENT_SESSION_SETTINGS_SCHEME;
-	protected readonly _traceTag = 'AgentSessionSettings';
+	protected readonly _traceTag = "AgentSessionSettings";
 	protected readonly _locale = sessionSettingsLocale;
 
 	constructor(
@@ -149,7 +153,9 @@ export class AgentSessionSettingsFileSystemProvider extends AbstractAgentHostCon
 	}
 
 	protected _ensureSchemaRegistered(provider: IAgentHostSessionsProvider, ctx: ISessionSettingsContext): void {
-		const session = provider.getSessions().find(s => s.sessionId === ctx.sessionId);
+		const session = provider.getSessions().find(
+      s => s.sessionId === ctx.sessionId,
+    );
 		if (session) {
 			this._schemaRegistrar.ensureRegistered(provider, session);
 		}

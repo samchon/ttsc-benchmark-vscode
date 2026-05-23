@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type * as vscode from 'vscode';
-import { MarkdownString as BaseMarkdownString, MarkdownStringTrustedOptions } from '../../../../base/common/htmlContent.js';
-import { es5ClassCompat } from './es5ClassCompat.js';
+import type * as vscode from "vscode";
+import { MarkdownString as BaseMarkdownString, MarkdownStringTrustedOptions } from "../../../../base/common/htmlContent.js";
+import { es5ClassCompat } from "./es5ClassCompat.js";
 
 @es5ClassCompat
 export class MarkdownString implements vscode.MarkdownString {
@@ -16,7 +16,7 @@ export class MarkdownString implements vscode.MarkdownString {
 		if (thing instanceof MarkdownString) {
 			return true;
 		}
-		if (!thing || typeof thing !== 'object') {
+		if (!thing || typeof thing !== "object") {
 			return false;
 		}
 		return (thing as vscode.MarkdownString).appendCodeblock && (thing as vscode.MarkdownString).appendMarkdown && (thing as vscode.MarkdownString).appendText && ((thing as vscode.MarkdownString).value !== undefined);
@@ -84,7 +84,7 @@ export class MarkdownString implements vscode.MarkdownString {
 	}
 
 	appendCodeblock(value: string, language?: string): vscode.MarkdownString {
-		this.#delegate.appendCodeblock(language ?? '', value);
+		this.#delegate.appendCodeblock(language ?? "", value);
 		return this;
 	}
 }

@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Schemas } from '../../../../base/common/network.js';
-import { basename } from '../../../../base/common/path.js';
-import { URI } from '../../../../base/common/uri.js';
-import type { IAgentSessionProjectInfo } from '../../common/agentService.js';
-import type { IAgentHostGitService } from '../agentHostGitService.js';
+import { Schemas } from "../../../../base/common/network.js";
+import { basename } from "../../../../base/common/path.js";
+import { URI } from "../../../../base/common/uri.js";
+import type { IAgentSessionProjectInfo } from "../../common/agentService.js";
+import type { IAgentHostGitService } from "../agentHostGitService.js";
 
 export interface ICopilotSessionContext {
 	readonly cwd?: string;
@@ -34,15 +34,17 @@ export async function resolveGitProject(workingDirectory: URI | undefined, gitSe
 
 export function projectFromRepository(repository: string): IAgentSessionProjectInfo | undefined {
 	const uri = repository.includes('://') ? URI.parse(repository) : URI.parse(`https://github.com/${repository}`);
-	const rawDisplayName = basename(uri.path) || repository.split('/').filter(Boolean).pop() || repository;
+	const rawDisplayName = basename(
+    uri.path,
+  ) || repository.split("/").filter(Boolean).pop() || repository;
 	const displayName = rawDisplayName.endsWith('.git') ? rawDisplayName.slice(0, -'.git'.length) : rawDisplayName;
 	return { uri, displayName };
 }
 
 export async function projectFromCopilotContext(context: ICopilotSessionContext | undefined, gitService: IAgentHostGitService): Promise<IAgentSessionProjectInfo | undefined> {
-	const workingDirectory = typeof context?.cwd === 'string'
+	const workingDirectory = typeof context?.cwd === "string"
 		? URI.file(context.cwd)
-		: typeof context?.gitRoot === 'string'
+		: typeof context?.gitRoot === "string"
 			? URI.file(context.gitRoot)
 			: undefined;
 	const gitProject = await resolveGitProject(workingDirectory, gitService);

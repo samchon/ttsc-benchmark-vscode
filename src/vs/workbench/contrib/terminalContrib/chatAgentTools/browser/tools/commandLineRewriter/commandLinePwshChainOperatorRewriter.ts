@@ -3,11 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { QueryCapture } from '@vscode/tree-sitter-wasm';
-import { Disposable } from '../../../../../../../base/common/lifecycle.js';
-import { isPowerShell } from '../../runInTerminalHelpers.js';
-import type { TreeSitterCommandParser } from '../../treeSitterCommandParser.js';
-import type { ICommandLineRewriter, ICommandLineRewriterOptions, ICommandLineRewriterResult } from './commandLineRewriter.js';
+import type { QueryCapture } from "@vscode/tree-sitter-wasm";
+import { Disposable } from "../../../../../../../base/common/lifecycle.js";
+import { isPowerShell } from "../../runInTerminalHelpers.js";
+import type { TreeSitterCommandParser } from "../../treeSitterCommandParser.js";
+import type {
+  ICommandLineRewriter,
+  ICommandLineRewriterOptions,
+  ICommandLineRewriterResult,
+} from "./commandLineRewriter.js";
 
 export class CommandLinePwshChainOperatorRewriter extends Disposable implements ICommandLineRewriter {
 	constructor(
@@ -22,7 +26,9 @@ export class CommandLinePwshChainOperatorRewriter extends Disposable implements 
 		if (isPowerShell(options.shell, options.os)) {
 			let doubleAmpersandCaptures: QueryCapture[] | undefined;
 			try {
-				doubleAmpersandCaptures = await this._treeSitterCommandParser.extractPwshDoubleAmpersandChainOperators(options.commandLine);
+				doubleAmpersandCaptures = await this._treeSitterCommandParser.extractPwshDoubleAmpersandChainOperators(
+          options.commandLine,
+        );
 			} catch {
 				// Swallow tree sitter failures
 			}
@@ -33,9 +39,9 @@ export class CommandLinePwshChainOperatorRewriter extends Disposable implements 
 					rewritten = `${rewritten.substring(0, capture.node.startIndex)};${rewritten.substring(capture.node.endIndex)}`;
 				}
 				return {
-					rewritten,
-					reasoning: '&& re-written to ;'
-				};
+          rewritten,
+          reasoning: "&& re-written to ;",
+        };
 			}
 		}
 

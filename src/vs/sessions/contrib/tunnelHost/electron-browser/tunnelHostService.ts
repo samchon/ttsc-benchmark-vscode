@@ -3,29 +3,29 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { joinPath } from '../../../../base/common/resources.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { ProxyChannel } from '../../../../base/parts/ipc/common/ipc.js';
-import { IAuthenticationService } from '../../../../workbench/services/authentication/common/authentication.js';
-import { IEnvironmentService } from '../../../../platform/environment/common/environment.js';
-import { ISharedProcessService } from '../../../../platform/ipc/electron-browser/services.js';
-import { ILogger, ILoggerService } from '../../../../platform/log/common/log.js';
-import { IProductService } from '../../../../platform/product/common/productService.js';
-import { localize } from '../../../../nls.js';
+import { joinPath } from "../../../../base/common/resources.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { ProxyChannel } from "../../../../base/parts/ipc/common/ipc.js";
+import { IAuthenticationService } from "../../../../workbench/services/authentication/common/authentication.js";
+import { IEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { ISharedProcessService } from "../../../../platform/ipc/electron-browser/services.js";
+import { ILogger, ILoggerService } from "../../../../platform/log/common/log.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { localize } from "../../../../nls.js";
 import {
-	ITunnelAgentHostHostingService,
-	TUNNEL_HOST_CHANNEL,
-	TUNNEL_HOST_LOG_ID,
-	type ITunnelHostInfo,
-	type TunnelHostStatus,
-} from '../../../../platform/agentHost/common/tunnelAgentHost.js';
-import { IAgentHostService } from '../../../../platform/agentHost/common/agentService.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { ITunnelHostService } from '../common/tunnelHost.js';
+  ITunnelAgentHostHostingService,
+  TUNNEL_HOST_CHANNEL,
+  TUNNEL_HOST_LOG_ID,
+  type ITunnelHostInfo,
+  type TunnelHostStatus,
+} from "../../../../platform/agentHost/common/tunnelAgentHost.js";
+import { IAgentHostService } from "../../../../platform/agentHost/common/agentService.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ITunnelHostService } from "../common/tunnelHost.js";
 
-export const CONFIGURATION_KEY_MICROSOFT_AUTH = 'remote.tunnels.access.enableMicrosoftAuth';
-export const SHOW_TUNNEL_HOST_OUTPUT_ID = 'sessions.tunnelHost.showOutput';
+export const CONFIGURATION_KEY_MICROSOFT_AUTH = "remote.tunnels.access.enableMicrosoftAuth";
+export const SHOW_TUNNEL_HOST_OUTPUT_ID = "sessions.tunnelHost.showOutput";
 
 export class TunnelHostService extends Disposable implements ITunnelHostService {
 	declare readonly _serviceBrand: undefined;
@@ -41,7 +41,7 @@ export class TunnelHostService extends Disposable implements ITunnelHostService 
 	private _sharingInfo: ITunnelHostInfo | undefined;
 
 	/** Tracks which auth provider was last used successfully. */
-	private _lastAuthProvider: 'github' | 'microsoft' | undefined;
+	private _lastAuthProvider: "github" | "microsoft" | undefined;
 
 	constructor(
 		@ISharedProcessService sharedProcessService: ISharedProcessService,
@@ -56,21 +56,28 @@ export class TunnelHostService extends Disposable implements ITunnelHostService 
 
 		// Register a renderer-side logger so that the output channel
 		// created in the shared process is visible in the workbench UI
-		this._logger = this._register(loggerService.createLogger(
-			joinPath(environmentService.logsHome, `${TUNNEL_HOST_LOG_ID}.log`),
-			{ id: TUNNEL_HOST_LOG_ID, name: localize('tunnelHost.outputChannel', "Remote Connections") },
-		));
+		this._logger = this._register(
+      loggerService.createLogger(
+        joinPath(environmentService.logsHome, `${TUNNEL_HOST_LOG_ID}.log`),
+        {
+          id: TUNNEL_HOST_LOG_ID,
+          name: localize("tunnelHost.outputChannel", "Remote Connections"),
+        },
+      ),
+    );
 
 		this._mainService = ProxyChannel.toService<ITunnelAgentHostHostingService>(
-			sharedProcessService.getChannel(TUNNEL_HOST_CHANNEL),
-		);
+      sharedProcessService.getChannel(TUNNEL_HOST_CHANNEL),
+    );
 
 		// Listen for status changes from the shared process
-		this._register(this._mainService.onDidChangeStatus((status: TunnelHostStatus) => {
-			this._isSharing = status.active;
-			this._sharingInfo = status.active ? status.info : undefined;
-			this._onDidChangeStatus.fire();
-		}));
+		this._register(
+      this._mainService.onDidChangeStatus((status: TunnelHostStatus) => {
+        this._isSharing = status.active;
+        this._sharingInfo = status.active ? status.info : undefined;
+        this._onDidChangeStatus.fire();
+      }),
+    );
 
 		// Restore status on construction
 		this._mainService.getStatus().then(status => {
@@ -102,13 +109,22 @@ export class TunnelHostService extends Disposable implements ITunnelHostService 
 			const auth = await this._getToken(false);
 			if (!auth) {
 				this._logger.warn(`No auth token available for tunnel hosting`);
-				throw new Error(localize('tunnelHost.noAuth', "No authentication token available. Please sign in and try again."));
+				throw new Error(
+          localize(
+            "tunnelHost.noAuth",
+            "No authentication token available. Please sign in and try again.",
+          ),
+        );
 			}
 
 			this._logger.info(`Starting tunnel hosting...`);
 
 			const socketInfo = await this._agentHostService.startWebSocketServer();
-			const info = await this._mainService.startHosting(auth.token, auth.provider, socketInfo);
+			const info = await this._mainService.startHosting(
+        auth.token,
+        auth.provider,
+        socketInfo,
+      );
 			this._isSharing = true;
 			this._sharingInfo = info;
 		} finally {
@@ -127,17 +143,24 @@ export class TunnelHostService extends Disposable implements ITunnelHostService 
 
 	// ---- Auth helpers (reused from TunnelAgentHostService) -------------------
 
-	private _getEnabledProviders(): readonly ('github' | 'microsoft')[] {
-		const microsoftEnabled = this._configurationService.getValue<boolean>(CONFIGURATION_KEY_MICROSOFT_AUTH);
-		return microsoftEnabled ? ['microsoft', 'github'] : ['github'];
+	private _getEnabledProviders(): readonly ("github" | "microsoft")[] {
+		const microsoftEnabled = this._configurationService.getValue<boolean>(
+      CONFIGURATION_KEY_MICROSOFT_AUTH,
+    );
+		return microsoftEnabled ? ["microsoft", "github"] : ["github"];
 	}
 
-	private async _getToken(silent: boolean): Promise<{ token: string; provider: 'github' | 'microsoft' } | undefined> {
+	private async _getToken(silent: boolean): Promise<{ token: string; provider: "github" | "microsoft" } | undefined> {
 		const enabledProviders = this._getEnabledProviders();
 
 		// Try the last known provider first
-		if (this._lastAuthProvider && enabledProviders.includes(this._lastAuthProvider)) {
-			const result = await this._getTokenForProvider(this._lastAuthProvider, silent);
+		if (this._lastAuthProvider && enabledProviders.includes(
+      this._lastAuthProvider,
+    )) {
+			const result = await this._getTokenForProvider(
+        this._lastAuthProvider,
+        silent,
+      );
 			if (result) {
 				return result;
 			}
@@ -167,15 +190,15 @@ export class TunnelHostService extends Disposable implements ITunnelHostService 
 		return undefined;
 	}
 
-	private _getScopesForProvider(provider: 'github' | 'microsoft'): string[] {
+	private _getScopesForProvider(provider: "github" | "microsoft"): string[] {
 		const config = this._productService.tunnelApplicationConfig?.authenticationProviders;
 		return config?.[provider]?.scopes ?? [];
 	}
 
 	private async _getTokenForProvider(
-		provider: 'github' | 'microsoft',
+		provider: "github" | "microsoft",
 		silent: boolean,
-	): Promise<{ token: string; provider: 'github' | 'microsoft' } | undefined> {
+	): Promise<{ token: string; provider: "github" | "microsoft" } | undefined> {
 		const scopes = this._getScopesForProvider(provider);
 		if (scopes.length === 0) {
 			return undefined;
@@ -183,11 +206,21 @@ export class TunnelHostService extends Disposable implements ITunnelHostService 
 
 		try {
 			// Try exact scope match first
-			let sessions = await this._authenticationService.getSessions(provider, scopes, {}, true);
+			let sessions = await this._authenticationService.getSessions(
+        provider,
+        scopes,
+        {},
+        true,
+      );
 
 			// Fall back: find any session whose scopes are a superset
 			if (sessions.length === 0) {
-				const allSessions = await this._authenticationService.getSessions(provider, undefined, {}, true);
+				const allSessions = await this._authenticationService.getSessions(
+          provider,
+          undefined,
+          {},
+          true,
+        );
 				const requestedSet = new Set(scopes);
 				let bestSession: typeof allSessions[number] | undefined;
 				let bestExtra = Infinity;
@@ -215,7 +248,11 @@ export class TunnelHostService extends Disposable implements ITunnelHostService 
 
 			// Interactive fallback: create a new session
 			if (sessions.length === 0 && !silent) {
-				const session = await this._authenticationService.createSession(provider, scopes, { activateImmediate: true });
+				const session = await this._authenticationService.createSession(
+          provider,
+          scopes,
+          { activateImmediate: true },
+        );
 				sessions = [session];
 			}
 

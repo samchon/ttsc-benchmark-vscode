@@ -3,15 +3,38 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ShiftCommand } from '../commands/shiftCommand.js';
-import { CompositionSurroundSelectionCommand } from '../commands/surroundSelectionCommand.js';
-import { CursorConfiguration, EditOperationResult, EditOperationType, ICursorSimpleModel, isQuote } from '../cursorCommon.js';
-import { Range } from '../core/range.js';
-import { Selection } from '../core/selection.js';
-import { Position } from '../core/position.js';
-import { ICommand } from '../editorCommon.js';
-import { ITextModel } from '../model.js';
-import { AutoClosingOpenCharTypeOperation, AutoClosingOvertypeOperation, AutoClosingOvertypeWithInterceptorsOperation, AutoIndentOperation, CompositionOperation, CompositionEndOvertypeOperation, EnterOperation, InterceptorElectricCharOperation, PasteOperation, shiftIndent, shouldSurroundChar, SimpleCharacterTypeOperation, SurroundSelectionOperation, TabOperation, TypeWithoutInterceptorsOperation, unshiftIndent } from './cursorTypeEditOperations.js';
+import { ShiftCommand } from "../commands/shiftCommand.js";
+import { CompositionSurroundSelectionCommand } from "../commands/surroundSelectionCommand.js";
+import {
+  CursorConfiguration,
+  EditOperationResult,
+  EditOperationType,
+  ICursorSimpleModel,
+  isQuote,
+} from "../cursorCommon.js";
+import { Range } from "../core/range.js";
+import { Selection } from "../core/selection.js";
+import { Position } from "../core/position.js";
+import { ICommand } from "../editorCommon.js";
+import { ITextModel } from "../model.js";
+import {
+  AutoClosingOpenCharTypeOperation,
+  AutoClosingOvertypeOperation,
+  AutoClosingOvertypeWithInterceptorsOperation,
+  AutoIndentOperation,
+  CompositionOperation,
+  CompositionEndOvertypeOperation,
+  EnterOperation,
+  InterceptorElectricCharOperation,
+  PasteOperation,
+  shiftIndent,
+  shouldSurroundChar,
+  SimpleCharacterTypeOperation,
+  SurroundSelectionOperation,
+  TabOperation,
+  TypeWithoutInterceptorsOperation,
+  unshiftIndent,
+} from "./cursorTypeEditOperations.js";
 
 export class TypeOperations {
 
@@ -22,14 +45,18 @@ export class TypeOperations {
 
 		const commands: ICommand[] = [];
 		for (let i = 0, len = selections.length; i < len; i++) {
-			commands[i] = new ShiftCommand(selections[i], {
-				isUnshift: false,
-				tabSize: config.tabSize,
-				indentSize: config.indentSize,
-				insertSpaces: config.insertSpaces,
-				useTabStops: config.useTabStops,
-				autoIndent: config.autoIndent
-			}, config.languageConfigurationService);
+			commands[i] = new ShiftCommand(
+        selections[i],
+        {
+          isUnshift: false,
+          tabSize: config.tabSize,
+          indentSize: config.indentSize,
+          insertSpaces: config.insertSpaces,
+          useTabStops: config.useTabStops,
+          autoIndent: config.autoIndent,
+        },
+        config.languageConfigurationService,
+      );
 		}
 		return commands;
 	}
@@ -37,14 +64,18 @@ export class TypeOperations {
 	public static outdent(config: CursorConfiguration, model: ICursorSimpleModel, selections: Selection[]): ICommand[] {
 		const commands: ICommand[] = [];
 		for (let i = 0, len = selections.length; i < len; i++) {
-			commands[i] = new ShiftCommand(selections[i], {
-				isUnshift: true,
-				tabSize: config.tabSize,
-				indentSize: config.indentSize,
-				insertSpaces: config.insertSpaces,
-				useTabStops: config.useTabStops,
-				autoIndent: config.autoIndent
-			}, config.languageConfigurationService);
+			commands[i] = new ShiftCommand(
+        selections[i],
+        {
+          isUnshift: true,
+          tabSize: config.tabSize,
+          indentSize: config.indentSize,
+          insertSpaces: config.insertSpaces,
+          useTabStops: config.useTabStops,
+          autoIndent: config.autoIndent,
+        },
+        config.languageConfigurationService,
+      );
 		}
 		return commands;
 	}
@@ -58,7 +89,14 @@ export class TypeOperations {
 	}
 
 	public static paste(config: CursorConfiguration, model: ICursorSimpleModel, selections: Selection[], text: string, pasteOnNewLine: boolean, multicursorText: string[]): EditOperationResult {
-		return PasteOperation.getEdits(config, model, selections, text, pasteOnNewLine, multicursorText);
+		return PasteOperation.getEdits(
+      config,
+      model,
+      selections,
+      text,
+      pasteOnNewLine,
+      multicursorText,
+    );
 	}
 
 	public static tab(config: CursorConfiguration, model: ITextModel, selections: Selection[]): ICommand[] {
@@ -66,7 +104,16 @@ export class TypeOperations {
 	}
 
 	public static compositionType(prevEditOperationType: EditOperationType, config: CursorConfiguration, model: ITextModel, selections: Selection[], text: string, replacePrevCharCnt: number, replaceNextCharCnt: number, positionDelta: number): EditOperationResult {
-		return CompositionOperation.getEdits(prevEditOperationType, config, model, selections, text, replacePrevCharCnt, replaceNextCharCnt, positionDelta);
+		return CompositionOperation.getEdits(
+      prevEditOperationType,
+      config,
+      model,
+      selections,
+      text,
+      replacePrevCharCnt,
+      replaceNextCharCnt,
+      positionDelta,
+    );
 	}
 
 	/**
@@ -106,7 +153,10 @@ export class TypeOperations {
 		if (hasDeletion) {
 			// Check if this could have been a surround selection
 
-			if (!shouldSurroundChar(config, ch) || !config.surroundingPairs.hasOwnProperty(ch)) {
+			if (!shouldSurroundChar(
+        config,
+        ch,
+      ) || !config.surroundingPairs.hasOwnProperty(ch)) {
 				return null;
 			}
 
@@ -141,20 +191,39 @@ export class TypeOperations {
 
 			const commands: ICommand[] = [];
 			for (let i = 0, len = positions.length; i < len; i++) {
-				commands.push(new CompositionSurroundSelectionCommand(positions[i], compositions[i].deletedText, config.surroundingPairs[ch]));
+				commands.push(
+          new CompositionSurroundSelectionCommand(
+            positions[i],
+            compositions[i].deletedText,
+            config.surroundingPairs[ch],
+          ),
+        );
 			}
 			return new EditOperationResult(EditOperationType.TypingOther, commands, {
-				shouldPushStackElementBefore: true,
-				shouldPushStackElementAfter: false
-			});
+        shouldPushStackElementBefore: true,
+        shouldPushStackElementAfter: false,
+      });
 		}
 
-		const autoClosingOvertypeEdits = AutoClosingOvertypeWithInterceptorsOperation.getEdits(config, model, selections, autoClosedCharacters, ch);
+		const autoClosingOvertypeEdits = AutoClosingOvertypeWithInterceptorsOperation.getEdits(
+      config,
+      model,
+      selections,
+      autoClosedCharacters,
+      ch,
+    );
 		if (autoClosingOvertypeEdits !== undefined) {
 			return autoClosingOvertypeEdits;
 		}
 
-		const autoClosingOpenCharEdits = AutoClosingOpenCharTypeOperation.getEdits(config, model, selections, ch, true, false);
+		const autoClosingOpenCharEdits = AutoClosingOpenCharTypeOperation.getEdits(
+      config,
+      model,
+      selections,
+      ch,
+      true,
+      false,
+    );
 		if (autoClosingOpenCharEdits !== undefined) {
 			return autoClosingOpenCharEdits;
 		}
@@ -164,41 +233,90 @@ export class TypeOperations {
 
 	public static typeWithInterceptors(isDoingComposition: boolean, prevEditOperationType: EditOperationType, config: CursorConfiguration, model: ITextModel, selections: Selection[], autoClosedCharacters: Range[], ch: string): EditOperationResult {
 
-		const enterEdits = EnterOperation.getEdits(config, model, selections, ch, isDoingComposition);
+		const enterEdits = EnterOperation.getEdits(
+      config,
+      model,
+      selections,
+      ch,
+      isDoingComposition,
+    );
 		if (enterEdits !== undefined) {
 			return enterEdits;
 		}
 
-		const autoIndentEdits = AutoIndentOperation.getEdits(config, model, selections, ch, isDoingComposition);
+		const autoIndentEdits = AutoIndentOperation.getEdits(
+      config,
+      model,
+      selections,
+      ch,
+      isDoingComposition,
+    );
 		if (autoIndentEdits !== undefined) {
 			return autoIndentEdits;
 		}
 
-		const autoClosingOverTypeEdits = AutoClosingOvertypeOperation.getEdits(prevEditOperationType, config, model, selections, autoClosedCharacters, ch);
+		const autoClosingOverTypeEdits = AutoClosingOvertypeOperation.getEdits(
+      prevEditOperationType,
+      config,
+      model,
+      selections,
+      autoClosedCharacters,
+      ch,
+    );
 		if (autoClosingOverTypeEdits !== undefined) {
 			return autoClosingOverTypeEdits;
 		}
 
-		const autoClosingOpenCharEdits = AutoClosingOpenCharTypeOperation.getEdits(config, model, selections, ch, false, isDoingComposition);
+		const autoClosingOpenCharEdits = AutoClosingOpenCharTypeOperation.getEdits(
+      config,
+      model,
+      selections,
+      ch,
+      false,
+      isDoingComposition,
+    );
 		if (autoClosingOpenCharEdits !== undefined) {
 			return autoClosingOpenCharEdits;
 		}
 
-		const surroundSelectionEdits = SurroundSelectionOperation.getEdits(config, model, selections, ch, isDoingComposition);
+		const surroundSelectionEdits = SurroundSelectionOperation.getEdits(
+      config,
+      model,
+      selections,
+      ch,
+      isDoingComposition,
+    );
 		if (surroundSelectionEdits !== undefined) {
 			return surroundSelectionEdits;
 		}
 
-		const interceptorElectricCharOperation = InterceptorElectricCharOperation.getEdits(prevEditOperationType, config, model, selections, ch, isDoingComposition);
+		const interceptorElectricCharOperation = InterceptorElectricCharOperation.getEdits(
+      prevEditOperationType,
+      config,
+      model,
+      selections,
+      ch,
+      isDoingComposition,
+    );
 		if (interceptorElectricCharOperation !== undefined) {
 			return interceptorElectricCharOperation;
 		}
 
-		return SimpleCharacterTypeOperation.getEdits(config, prevEditOperationType, selections, ch, isDoingComposition);
+		return SimpleCharacterTypeOperation.getEdits(
+      config,
+      prevEditOperationType,
+      selections,
+      ch,
+      isDoingComposition,
+    );
 	}
 
 	public static typeWithoutInterceptors(prevEditOperationType: EditOperationType, config: CursorConfiguration, model: ITextModel, selections: Selection[], str: string): EditOperationResult {
-		return TypeWithoutInterceptorsOperation.getEdits(prevEditOperationType, selections, str);
+		return TypeWithoutInterceptorsOperation.getEdits(
+      prevEditOperationType,
+      selections,
+      str,
+    );
 	}
 }
 

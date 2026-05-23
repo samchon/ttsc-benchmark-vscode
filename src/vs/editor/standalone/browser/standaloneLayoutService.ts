@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../base/browser/dom.js';
-import { mainWindow } from '../../../base/browser/window.js';
-import { coalesce } from '../../../base/common/arrays.js';
-import { Event } from '../../../base/common/event.js';
-import { ICodeEditorService } from '../../browser/services/codeEditorService.js';
-import { InstantiationType, registerSingleton } from '../../../platform/instantiation/common/extensions.js';
-import { ILayoutOffsetInfo, ILayoutService } from '../../../platform/layout/browser/layoutService.js';
+import * as dom from "../../../base/browser/dom.js";
+import { mainWindow } from "../../../base/browser/window.js";
+import { coalesce } from "../../../base/common/arrays.js";
+import { Event } from "../../../base/common/event.js";
+import { ICodeEditorService } from "../../browser/services/codeEditorService.js";
+import { InstantiationType, registerSingleton } from "../../../platform/instantiation/common/extensions.js";
+import { ILayoutOffsetInfo, ILayoutService } from "../../../platform/layout/browser/layoutService.js";
 
 class StandaloneLayoutService implements ILayoutService {
 	declare readonly _serviceBrand: undefined;
@@ -39,10 +39,17 @@ class StandaloneLayoutService implements ILayoutService {
 	}
 
 	readonly mainContainerOffset: ILayoutOffsetInfo = { top: 0, quickPickTop: 0 };
-	readonly activeContainerOffset: ILayoutOffsetInfo = { top: 0, quickPickTop: 0 };
+	readonly activeContainerOffset: ILayoutOffsetInfo = {
+    top: 0,
+    quickPickTop: 0,
+  };
 
 	get containers(): Iterable<HTMLElement> {
-		return coalesce(this._codeEditorService.listCodeEditors().map(codeEditor => codeEditor.getContainerDomNode()));
+		return coalesce(
+      this._codeEditorService.listCodeEditors().map(
+        codeEditor => codeEditor.getContainerDomNode(),
+      ),
+    );
 	}
 
 	getContainer() {
@@ -56,7 +63,7 @@ class StandaloneLayoutService implements ILayoutService {
 	}
 
 	constructor(
-		@ICodeEditorService private _codeEditorService: ICodeEditorService
+		@ICodeEditorService private _codeEditorService: ICodeEditorService,
 	) { }
 
 }
@@ -73,4 +80,8 @@ export class EditorScopedLayoutService extends StandaloneLayoutService {
 	}
 }
 
-registerSingleton(ILayoutService, StandaloneLayoutService, InstantiationType.Delayed);
+registerSingleton(
+  ILayoutService,
+  StandaloneLayoutService,
+  InstantiationType.Delayed,
+);

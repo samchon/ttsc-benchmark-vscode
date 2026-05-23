@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AbstractPaneCompositePart } from '../../../../workbench/browser/parts/paneCompositePart.js';
-import { SidebarPart } from '../sidebarPart.js';
-import { isPhoneLayout } from './mobileLayout.js';
+import { AbstractPaneCompositePart } from "../../../../workbench/browser/parts/paneCompositePart.js";
+import { SidebarPart } from "../sidebarPart.js";
+import { isPhoneLayout } from "./mobileLayout.js";
 
 /**
  * Mobile variant of SidebarPart.
@@ -29,9 +29,9 @@ export class MobileSidebarPart extends SidebarPart {
 
 		const container = this.getContainer();
 		if (container) {
-			container.style.backgroundColor = '';
-			container.style.color = '';
-			container.style.outlineColor = '';
+			container.style.backgroundColor = "";
+			container.style.color = "";
+			container.style.outlineColor = "";
 		}
 	}
 }

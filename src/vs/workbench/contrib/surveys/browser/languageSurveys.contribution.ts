@@ -3,24 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../../../nls.js';
-import { language } from '../../../../base/common/platform.js';
-import { ILanguageService } from '../../../../editor/common/languages/language.js';
-import { IWorkbenchContributionsRegistry, IWorkbenchContribution, Extensions as WorkbenchExtensions } from '../../../common/contributions.js';
-import { Registry } from '../../../../platform/registry/common/platform.js';
-import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { IProductService } from '../../../../platform/product/common/productService.js';
-import { ISurveyData } from '../../../../base/common/product.js';
-import { LifecyclePhase } from '../../../services/lifecycle/common/lifecycle.js';
-import { Severity, INotificationService, NotificationPriority } from '../../../../platform/notification/common/notification.js';
-import { ITextFileService, ITextFileEditorModel } from '../../../services/textfile/common/textfiles.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
-import { URI } from '../../../../base/common/uri.js';
-import { platform } from '../../../../base/common/process.js';
-import { RunOnceWorker } from '../../../../base/common/async.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { IExtensionService } from '../../../services/extensions/common/extensions.js';
+import { localize } from "../../../../nls.js";
+import { language } from "../../../../base/common/platform.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import {
+  IWorkbenchContributionsRegistry,
+  IWorkbenchContribution,
+  Extensions as WorkbenchExtensions,
+} from "../../../common/contributions.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { ISurveyData } from "../../../../base/common/product.js";
+import { LifecyclePhase } from "../../../services/lifecycle/common/lifecycle.js";
+import { Severity, INotificationService, NotificationPriority } from "../../../../platform/notification/common/notification.js";
+import { ITextFileService, ITextFileEditorModel } from "../../../services/textfile/common/textfiles.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { URI } from "../../../../base/common/uri.js";
+import { platform } from "../../../../base/common/process.js";
+import { RunOnceWorker } from "../../../../base/common/async.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
 
 class LanguageSurvey extends Disposable {
 
@@ -32,7 +36,7 @@ class LanguageSurvey extends Disposable {
 		languageService: ILanguageService,
 		textFileService: ITextFileService,
 		openerService: IOpenerService,
-		productService: IProductService
+		productService: IProductService,
 	) {
 		super();
 
@@ -43,14 +47,22 @@ class LanguageSurvey extends Disposable {
 		const EDITED_LANGUAGE_COUNT_KEY = `${data.surveyId}.editedCount`;
 		const EDITED_LANGUAGE_DATE_KEY = `${data.surveyId}.editedDate`;
 
-		const skipVersion = storageService.get(SKIP_VERSION_KEY, StorageScope.APPLICATION, '');
+		const skipVersion = storageService.get(
+      SKIP_VERSION_KEY,
+      StorageScope.APPLICATION,
+      "",
+    );
 		if (skipVersion) {
 			return;
 		}
 
 		const date = new Date().toDateString();
 
-		if (storageService.getNumber(EDITED_LANGUAGE_COUNT_KEY, StorageScope.APPLICATION, 0) < data.editCount) {
+		if (storageService.getNumber(
+      EDITED_LANGUAGE_COUNT_KEY,
+      StorageScope.APPLICATION,
+      0,
+    ) < data.editCount) {
 
 			// Process model-save event every 250ms to reduce load
 			const onModelsSavedWorker = this._register(new RunOnceWorker<ITextFileEditorModel>(models => {
@@ -63,63 +75,101 @@ class LanguageSurvey extends Disposable {
 				});
 			}, 250));
 
-			this._register(textFileService.files.onDidSave(e => onModelsSavedWorker.work(e.model)));
+			this._register(
+        textFileService.files.onDidSave(e => onModelsSavedWorker.work(e.model)),
+      );
 		}
 
-		const lastSessionDate = storageService.get(LAST_SESSION_DATE_KEY, StorageScope.APPLICATION, new Date(0).toDateString());
+		const lastSessionDate = storageService.get(
+      LAST_SESSION_DATE_KEY,
+      StorageScope.APPLICATION,
+      new Date(0).toDateString(),
+    );
 		if (date === lastSessionDate) {
 			return;
 		}
 
-		const sessionCount = storageService.getNumber(SESSION_COUNT_KEY, StorageScope.APPLICATION, 0) + 1;
-		storageService.store(LAST_SESSION_DATE_KEY, date, StorageScope.APPLICATION, StorageTarget.USER);
-		storageService.store(SESSION_COUNT_KEY, sessionCount, StorageScope.APPLICATION, StorageTarget.USER);
+		const sessionCount = storageService.getNumber(
+      SESSION_COUNT_KEY,
+      StorageScope.APPLICATION,
+      0,
+    ) + 1;
+		storageService.store(
+      LAST_SESSION_DATE_KEY,
+      date,
+      StorageScope.APPLICATION,
+      StorageTarget.USER,
+    );
+		storageService.store(
+      SESSION_COUNT_KEY,
+      sessionCount,
+      StorageScope.APPLICATION,
+      StorageTarget.USER,
+    );
 
 		if (sessionCount < 9) {
 			return;
 		}
 
-		if (storageService.getNumber(EDITED_LANGUAGE_COUNT_KEY, StorageScope.APPLICATION, 0) < data.editCount) {
+		if (storageService.getNumber(
+      EDITED_LANGUAGE_COUNT_KEY,
+      StorageScope.APPLICATION,
+      0,
+    ) < data.editCount) {
 			return;
 		}
 
-		const isCandidate = storageService.getBoolean(IS_CANDIDATE_KEY, StorageScope.APPLICATION, false)
+		const isCandidate = storageService.getBoolean(
+      IS_CANDIDATE_KEY,
+      StorageScope.APPLICATION,
+      false,
+    )
 			|| Math.random() < data.userProbability;
 
-		storageService.store(IS_CANDIDATE_KEY, isCandidate, StorageScope.APPLICATION, StorageTarget.USER);
+		storageService.store(
+      IS_CANDIDATE_KEY,
+      isCandidate,
+      StorageScope.APPLICATION,
+      StorageTarget.USER,
+    );
 
 		if (!isCandidate) {
-			storageService.store(SKIP_VERSION_KEY, productService.version, StorageScope.APPLICATION, StorageTarget.USER);
+			storageService.store(
+        SKIP_VERSION_KEY,
+        productService.version,
+        StorageScope.APPLICATION,
+        StorageTarget.USER,
+      );
 			return;
 		}
 
 		notificationService.prompt(
 			Severity.Info,
-			localize('helpUs', "Help us improve our support for {0}", languageService.getLanguageName(data.languageId) ?? data.languageId),
+			localize("helpUs", "Help us improve our support for {0}", languageService.getLanguageName(data.languageId) ?? data.languageId),
 			[{
-				label: localize('takeShortSurvey', "Take Short Survey"),
+				label: localize("takeShortSurvey", "Take Short Survey"),
 				run: () => {
 					telemetryService.publicLog(`${data.surveyId}.survey/takeShortSurvey`);
 					openerService.open(URI.parse(`${data.surveyUrl}?o=${encodeURIComponent(platform)}&v=${encodeURIComponent(productService.version)}&m=${encodeURIComponent(telemetryService.machineId)}`));
 					storageService.store(IS_CANDIDATE_KEY, false, StorageScope.APPLICATION, StorageTarget.USER);
 					storageService.store(SKIP_VERSION_KEY, productService.version, StorageScope.APPLICATION, StorageTarget.USER);
-				}
+				},
 			}, {
-				label: localize('remindLater', "Remind Me Later"),
+				label: localize("remindLater", "Remind Me Later"),
 				run: () => {
 					telemetryService.publicLog(`${data.surveyId}.survey/remindMeLater`);
 					storageService.store(SESSION_COUNT_KEY, sessionCount - 3, StorageScope.APPLICATION, StorageTarget.USER);
-				}
+				},
 			}, {
-				label: localize('neverAgain', "Don't Show Again"),
+				label: localize("neverAgain", "Don't Show Again"),
 				isSecondary: true,
 				run: () => {
 					telemetryService.publicLog(`${data.surveyId}.survey/dontShowAgain`);
 					storageService.store(IS_CANDIDATE_KEY, false, StorageScope.APPLICATION, StorageTarget.USER);
 					storageService.store(SKIP_VERSION_KEY, productService.version, StorageScope.APPLICATION, StorageTarget.USER);
-				}
+				},
 			}],
-			{ priority: NotificationPriority.OPTIONAL }
+			{ priority: NotificationPriority.OPTIONAL },
 		);
 	}
 }
@@ -134,7 +184,7 @@ class LanguageSurveysContribution implements IWorkbenchContribution {
 		@IOpenerService private readonly openerService: IOpenerService,
 		@IProductService private readonly productService: IProductService,
 		@ILanguageService private readonly languageService: ILanguageService,
-		@IExtensionService private readonly extensionService: IExtensionService
+		@IExtensionService private readonly extensionService: IExtensionService,
 	) {
 		this.handleSurveys();
 	}
@@ -156,7 +206,12 @@ class LanguageSurveysContribution implements IWorkbenchContribution {
 	}
 }
 
-if (language === 'en') {
-	const workbenchRegistry = Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench);
-	workbenchRegistry.registerWorkbenchContribution(LanguageSurveysContribution, LifecyclePhase.Restored);
+if (language === "en") {
+	const workbenchRegistry = Registry.as<IWorkbenchContributionsRegistry>(
+    WorkbenchExtensions.Workbench,
+  );
+	workbenchRegistry.registerWorkbenchContribution(
+    LanguageSurveysContribution,
+    LifecyclePhase.Restored,
+  );
 }

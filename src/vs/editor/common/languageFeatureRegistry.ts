@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter } from '../../base/common/event.js';
-import { IDisposable, toDisposable } from '../../base/common/lifecycle.js';
-import { ITextModel, shouldSynchronizeModel } from './model.js';
-import { LanguageFilter, LanguageSelector, score, selectLanguageIds } from './languageSelector.js';
-import { URI } from '../../base/common/uri.js';
+import { Emitter } from "../../base/common/event.js";
+import { IDisposable, toDisposable } from "../../base/common/lifecycle.js";
+import { ITextModel, shouldSynchronizeModel } from "./model.js";
+import { LanguageFilter, LanguageSelector, score, selectLanguageIds } from "./languageSelector.js";
+import { URI } from "../../base/common/uri.js";
 
 interface Entry<T> {
 	readonly selector: LanguageSelector;
@@ -17,7 +17,7 @@ interface Entry<T> {
 }
 
 function isExclusive(selector: LanguageSelector): boolean {
-	if (typeof selector === 'string') {
+	if (typeof selector === "string") {
 		return false;
 	} else if (Array.isArray(selector)) {
 		return selector.every(isExclusive);
@@ -66,11 +66,11 @@ export class LanguageFeatureRegistry<T> {
 	register(selector: LanguageSelector, provider: T): IDisposable {
 
 		let entry: Entry<T> | undefined = {
-			selector,
-			provider,
-			_score: -1,
-			_time: this._clock++
-		};
+      selector,
+      provider,
+      _score: -1,
+      _time: this._clock++,
+    };
 
 		this._entries.push(entry);
 		this._lastCandidate = undefined;
@@ -125,7 +125,11 @@ export class LanguageFeatureRegistry<T> {
 
 	ordered(model: ITextModel, recursive = false): T[] {
 		const result: T[] = [];
-		this._orderedForEach(model, recursive, entry => result.push(entry.provider));
+		this._orderedForEach(
+      model,
+      recursive,
+      entry => result.push(entry.provider),
+    );
 		return result;
 	}
 
@@ -167,8 +171,20 @@ export class LanguageFeatureRegistry<T> {
 		// use the uri (scheme, pattern) of the notebook info iff we have one
 		// otherwise it's the model's/document's uri
 		const candidate = notebookInfo
-			? new MatchCandidate(model.uri, model.getLanguageId(), notebookInfo.uri, notebookInfo.type, recursive)
-			: new MatchCandidate(model.uri, model.getLanguageId(), undefined, undefined, recursive);
+			? new MatchCandidate(
+          model.uri,
+          model.getLanguageId(),
+          notebookInfo.uri,
+          notebookInfo.type,
+          recursive,
+        )
+			: new MatchCandidate(
+          model.uri,
+          model.getLanguageId(),
+          undefined,
+          undefined,
+          recursive,
+        );
 
 		if (this._lastCandidate?.equals(candidate)) {
 			// nothing has changed
@@ -178,7 +194,14 @@ export class LanguageFeatureRegistry<T> {
 		this._lastCandidate = candidate;
 
 		for (const entry of this._entries) {
-			entry._score = score(entry.selector, candidate.uri, candidate.languageId, shouldSynchronizeModel(model), candidate.notebookUri, candidate.notebookType);
+			entry._score = score(
+        entry.selector,
+        candidate.uri,
+        candidate.languageId,
+        shouldSynchronizeModel(model),
+        candidate.notebookUri,
+        candidate.notebookType,
+      );
 
 			if (isExclusive(entry.selector) && entry._score > 0) {
 				if (recursive) {
@@ -224,7 +247,7 @@ export class LanguageFeatureRegistry<T> {
 }
 
 function isBuiltinSelector(selector: LanguageSelector): boolean {
-	if (typeof selector === 'string') {
+	if (typeof selector === "string") {
 		return false;
 	}
 

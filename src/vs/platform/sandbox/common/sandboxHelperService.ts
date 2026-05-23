@@ -3,9 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createDecorator } from '../../instantiation/common/instantiation.js';
+import { createDecorator } from "../../instantiation/common/instantiation.js";
 
-export const ISandboxHelperService = createDecorator<ISandboxHelperService>('sandboxHelperService');
+export const ISandboxHelperService = createDecorator<ISandboxHelperService>(
+  "sandboxHelperService",
+);
 
 export interface ISandboxDependencyStatus {
 	readonly bubblewrapInstalled: boolean;

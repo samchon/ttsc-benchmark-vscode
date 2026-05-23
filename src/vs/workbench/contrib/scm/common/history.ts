@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { IMarkdownString } from '../../../../base/common/htmlContent.js';
-import { IObservable } from '../../../../base/common/observable.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
-import { URI } from '../../../../base/common/uri.js';
-import { ColorIdentifier } from '../../../../platform/theme/common/colorUtils.js';
-import { ISCMRepository } from './scm.js';
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { IMarkdownString } from "../../../../base/common/htmlContent.js";
+import { IObservable } from "../../../../base/common/observable.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ColorIdentifier } from "../../../../platform/theme/common/colorUtils.js";
+import { ISCMRepository } from "./scm.js";
 
-export const SCMIncomingHistoryItemId = 'scm-graph-incoming-changes';
-export const SCMOutgoingHistoryItemId = 'scm-graph-outgoing-changes';
+export const SCMIncomingHistoryItemId = "scm-graph-incoming-changes";
+export const SCMOutgoingHistoryItemId = "scm-graph-outgoing-changes";
 
 export interface ISCMHistoryProvider {
 	readonly historyItemRef: IObservable<ISCMHistoryItemRef | undefined>;
@@ -84,13 +84,13 @@ export interface ISCMHistoryItemViewModel {
 	readonly historyItem: ISCMHistoryItem;
 	readonly inputSwimlanes: ISCMHistoryItemGraphNode[];
 	readonly outputSwimlanes: ISCMHistoryItemGraphNode[];
-	readonly kind: 'HEAD' | 'node' | 'incoming-changes' | 'outgoing-changes';
+	readonly kind: "HEAD" | "node" | "incoming-changes" | "outgoing-changes";
 }
 
 export interface SCMHistoryItemViewModelTreeElement {
 	readonly repository: ISCMRepository;
 	readonly historyItemViewModel: ISCMHistoryItemViewModel;
-	readonly type: 'historyItemViewModel';
+	readonly type: "historyItemViewModel";
 }
 
 export interface SCMHistoryItemChangeViewModelTreeElement {
@@ -98,13 +98,13 @@ export interface SCMHistoryItemChangeViewModelTreeElement {
 	readonly historyItemViewModel: ISCMHistoryItemViewModel;
 	readonly historyItemChange: ISCMHistoryItemChange;
 	readonly graphColumns: ISCMHistoryItemGraphNode[];
-	readonly type: 'historyItemChangeViewModel';
+	readonly type: "historyItemChangeViewModel";
 }
 
 export interface SCMHistoryItemLoadMoreTreeElement {
 	readonly repository: ISCMRepository;
 	readonly graphColumns: ISCMHistoryItemGraphNode[];
-	readonly type: 'historyItemLoadMore';
+	readonly type: "historyItemLoadMore";
 }
 
 export interface ISCMHistoryItemChange {

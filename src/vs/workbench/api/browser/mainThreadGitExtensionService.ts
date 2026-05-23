@@ -3,15 +3,36 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Sequencer } from '../../../base/common/async.js'; import { CancellationToken } from '../../../base/common/cancellation.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { ResourceMap } from '../../../base/common/map.js';
-import { waitForState } from '../../../base/common/observable.js';
-import { URI } from '../../../base/common/uri.js';
-import { GitRepository } from '../../contrib/git/browser/gitService.js';
-import { IGitExtensionDelegate, IGitService, GitRef, GitRefQuery, GitRefType, GitRepositoryState, GitBranch, GitChange, GitDiffChange, IGitRepository } from '../../contrib/git/common/gitService.js';
-import { extHostNamedCustomer, IExtHostContext } from '../../services/extensions/common/extHostCustomers.js';
-import { ExtHostContext, ExtHostGitExtensionShape, GitDiffChangeDto, GitRefTypeDto, GitRepositoryStateDto, MainContext, MainThreadGitExtensionShape } from '../common/extHost.protocol.js';
+import { Sequencer } from "../../../base/common/async.js"; import {
+  CancellationToken,
+} from "../../../base/common/cancellation.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { ResourceMap } from "../../../base/common/map.js";
+import { waitForState } from "../../../base/common/observable.js";
+import { URI } from "../../../base/common/uri.js";
+import { GitRepository } from "../../contrib/git/browser/gitService.js";
+import {
+  IGitExtensionDelegate,
+  IGitService,
+  GitRef,
+  GitRefQuery,
+  GitRefType,
+  GitRepositoryState,
+  GitBranch,
+  GitChange,
+  GitDiffChange,
+  IGitRepository,
+} from "../../contrib/git/common/gitService.js";
+import { extHostNamedCustomer, IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+import {
+  ExtHostContext,
+  ExtHostGitExtensionShape,
+  GitDiffChangeDto,
+  GitRefTypeDto,
+  GitRepositoryStateDto,
+  MainContext,
+  MainThreadGitExtensionShape,
+} from "../common/extHost.protocol.js";
 
 function toGitRefType(type: GitRefTypeDto): GitRefType {
 	switch (type) {
@@ -24,12 +45,12 @@ function toGitRefType(type: GitRefTypeDto): GitRefType {
 
 function toGitDiffChange(dto: GitDiffChangeDto): GitDiffChange {
 	return {
-		uri: URI.revive(dto.uri),
-		originalUri: dto.originalUri ? URI.revive(dto.originalUri) : undefined,
-		modifiedUri: dto.modifiedUri ? URI.revive(dto.modifiedUri) : undefined,
-		insertions: dto.insertions,
-		deletions: dto.deletions,
-	};
+    uri: URI.revive(dto.uri),
+    originalUri: dto.originalUri ? URI.revive(dto.originalUri) : undefined,
+    modifiedUri: dto.modifiedUri ? URI.revive(dto.modifiedUri) : undefined,
+    insertions: dto.insertions,
+    deletions: dto.deletions,
+  };
 }
 
 function toGitRepositoryState(dto: GitRepositoryStateDto | undefined): GitRepositoryState {
@@ -81,7 +102,7 @@ export class MainThreadGitExtensionService extends Disposable implements MainThr
 
 	constructor(
 		extHostContext: IExtHostContext,
-		@IGitService private readonly gitService: IGitService
+		@IGitService private readonly gitService: IGitService,
 	) {
 		super();
 
@@ -138,7 +159,7 @@ export class MainThreadGitExtensionService extends Disposable implements MainThr
 
 		return result.map(ref => ({
 			...ref,
-			type: toGitRefType(ref.type)
+			type: toGitRefType(ref.type),
 		} satisfies GitRef));
 	}
 
@@ -148,7 +169,12 @@ export class MainThreadGitExtensionService extends Disposable implements MainThr
 			return [];
 		}
 
-		const result = await this._proxy.$diffBetweenWithStats(handle, ref1, ref2, path);
+		const result = await this._proxy.$diffBetweenWithStats(
+      handle,
+      ref1,
+      ref2,
+      path,
+    );
 		return result.map(toGitDiffChange);
 	}
 

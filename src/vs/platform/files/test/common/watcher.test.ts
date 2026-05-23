@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable, DisposableStore } from '../../../../base/common/lifecycle.js';
-import { isLinux, isWindows } from '../../../../base/common/platform.js';
-import { isEqual } from '../../../../base/common/resources.js';
-import { URI } from '../../../../base/common/uri.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
-import { FileChangeFilter, FileChangesEvent, FileChangeType, IFileChange } from '../../common/files.js';
-import { coalesceEvents, reviveFileChanges, parseWatcherPatterns, isFiltered } from '../../common/watcher.js';
+import assert from "assert";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { isLinux, isWindows } from "../../../../base/common/platform.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
+import { FileChangeFilter, FileChangesEvent, FileChangeType, IFileChange } from "../../common/files.js";
+import { coalesceEvents, reviveFileChanges, parseWatcherPatterns, isFiltered } from "../../common/watcher.js";
 
 class TestFileWatcher extends Disposable {
 	private readonly _onDidFilesChange: Emitter<{ raw: IFileChange[]; event: FileChangesEvent }>;
@@ -19,7 +19,9 @@ class TestFileWatcher extends Disposable {
 	constructor() {
 		super();
 
-		this._onDidFilesChange = this._register(new Emitter<{ raw: IFileChange[]; event: FileChangesEvent }>());
+		this._onDidFilesChange = this._register(
+      new Emitter<{ raw: IFileChange[]; event: FileChangesEvent }>(),
+    );
 	}
 
 	get onDidFilesChange(): Event<{ raw: IFileChange[]; event: FileChangesEvent }> {
@@ -37,7 +39,10 @@ class TestFileWatcher extends Disposable {
 
 		// Emit through event emitter
 		if (coalescedEvents.length > 0) {
-			this._onDidFilesChange.fire({ raw: reviveFileChanges(coalescedEvents), event: this.toFileChangesEvent(coalescedEvents) });
+			this._onDidFilesChange.fire({
+        raw: reviveFileChanges(coalescedEvents),
+        event: this.toFileChangesEvent(coalescedEvents),
+      });
 		}
 	}
 
@@ -52,142 +57,142 @@ enum Path {
 	UNC
 }
 
-suite('Watcher', () => {
+suite("Watcher", () => {
 
-	(isWindows ? test.skip : test)('parseWatcherPatterns - posix', () => {
-		const path = '/users/data/src';
-		let parsedPattern = parseWatcherPatterns(path, ['*.js'], false)[0];
+	(isWindows ? test.skip : test)("parseWatcherPatterns - posix", () => {
+		const path = "/users/data/src";
+		let parsedPattern = parseWatcherPatterns(path, ["*.js"], false)[0];
 
-		assert.strictEqual(parsedPattern('/users/data/src/foo.js'), true);
-		assert.strictEqual(parsedPattern('/users/data/src/foo.ts'), false);
-		assert.strictEqual(parsedPattern('/users/data/src/bar/foo.js'), false);
+		assert.strictEqual(parsedPattern("/users/data/src/foo.js"), true);
+		assert.strictEqual(parsedPattern("/users/data/src/foo.ts"), false);
+		assert.strictEqual(parsedPattern("/users/data/src/bar/foo.js"), false);
 
-		parsedPattern = parseWatcherPatterns(path, ['/users/data/src/*.js'], false)[0];
+		parsedPattern = parseWatcherPatterns(path, ["/users/data/src/*.js"], false)[0];
 
-		assert.strictEqual(parsedPattern('/users/data/src/foo.js'), true);
-		assert.strictEqual(parsedPattern('/users/data/src/foo.ts'), false);
-		assert.strictEqual(parsedPattern('/users/data/src/bar/foo.js'), false);
+		assert.strictEqual(parsedPattern("/users/data/src/foo.js"), true);
+		assert.strictEqual(parsedPattern("/users/data/src/foo.ts"), false);
+		assert.strictEqual(parsedPattern("/users/data/src/bar/foo.js"), false);
 
-		parsedPattern = parseWatcherPatterns(path, ['/users/data/src/bar/*.js'], false)[0];
+		parsedPattern = parseWatcherPatterns(path, ["/users/data/src/bar/*.js"], false)[0];
 
-		assert.strictEqual(parsedPattern('/users/data/src/foo.js'), false);
-		assert.strictEqual(parsedPattern('/users/data/src/foo.ts'), false);
-		assert.strictEqual(parsedPattern('/users/data/src/bar/foo.js'), true);
+		assert.strictEqual(parsedPattern("/users/data/src/foo.js"), false);
+		assert.strictEqual(parsedPattern("/users/data/src/foo.ts"), false);
+		assert.strictEqual(parsedPattern("/users/data/src/bar/foo.js"), true);
 
-		parsedPattern = parseWatcherPatterns(path, ['**/*.js'], false)[0];
+		parsedPattern = parseWatcherPatterns(path, ["**/*.js"], false)[0];
 
-		assert.strictEqual(parsedPattern('/users/data/src/foo.js'), true);
-		assert.strictEqual(parsedPattern('/users/data/src/foo.ts'), false);
-		assert.strictEqual(parsedPattern('/users/data/src/bar/foo.js'), true);
+		assert.strictEqual(parsedPattern("/users/data/src/foo.js"), true);
+		assert.strictEqual(parsedPattern("/users/data/src/foo.ts"), false);
+		assert.strictEqual(parsedPattern("/users/data/src/bar/foo.js"), true);
 	});
 
-	(!isWindows ? test.skip : test)('parseWatcherPatterns - windows', () => {
-		const path = 'c:\\users\\data\\src';
-		let parsedPattern = parseWatcherPatterns(path, ['*.js'], true)[0];
+	(!isWindows ? test.skip : test)("parseWatcherPatterns - windows", () => {
+		const path = "c:\\users\\data\\src";
+		let parsedPattern = parseWatcherPatterns(path, ["*.js"], true)[0];
 
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\foo.js'), true);
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\foo.ts'), false);
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\bar/foo.js'), false);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\foo.js"), true);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\foo.ts"), false);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\bar/foo.js"), false);
 
-		parsedPattern = parseWatcherPatterns(path, ['c:\\users\\data\\src\\*.js'], true)[0];
+		parsedPattern = parseWatcherPatterns(path, ["c:\\users\\data\\src\\*.js"], true)[0];
 
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\foo.js'), true);
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\foo.ts'), false);
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\bar\\foo.js'), false);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\foo.js"), true);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\foo.ts"), false);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\bar\\foo.js"), false);
 
-		parsedPattern = parseWatcherPatterns(path, ['c:\\users\\data\\src\\bar/*.js'], true)[0];
+		parsedPattern = parseWatcherPatterns(path, ["c:\\users\\data\\src\\bar/*.js"], true)[0];
 
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\foo.js'), false);
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\foo.ts'), false);
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\bar\\foo.js'), true);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\foo.js"), false);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\foo.ts"), false);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\bar\\foo.js"), true);
 
-		parsedPattern = parseWatcherPatterns(path, ['**/*.js'], true)[0];
+		parsedPattern = parseWatcherPatterns(path, ["**/*.js"], true)[0];
 
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\foo.js'), true);
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\foo.ts'), false);
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\bar\\foo.js'), true);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\foo.js"), true);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\foo.ts"), false);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\bar\\foo.js"), true);
 	});
 
-	(isWindows ? test.skip : test)('parseWatcherPatterns - posix (case insensitive)', () => {
-		const path = '/users/data/src';
-		let parsedPattern = parseWatcherPatterns(path, ['*.JS'], false)[0];
+	(isWindows ? test.skip : test)("parseWatcherPatterns - posix (case insensitive)", () => {
+		const path = "/users/data/src";
+		let parsedPattern = parseWatcherPatterns(path, ["*.JS"], false)[0];
 
 		// Case sensitive by default on posix
-		assert.strictEqual(parsedPattern('/users/data/src/foo.js'), false);
-		assert.strictEqual(parsedPattern('/users/data/src/foo.JS'), true);
-		assert.strictEqual(parsedPattern('/users/data/src/foo.Js'), false);
+		assert.strictEqual(parsedPattern("/users/data/src/foo.js"), false);
+		assert.strictEqual(parsedPattern("/users/data/src/foo.JS"), true);
+		assert.strictEqual(parsedPattern("/users/data/src/foo.Js"), false);
 
 		// Now test with GlobCaseSensitivity.caseInsensitive
-		parsedPattern = parseWatcherPatterns(path, ['*.JS'], true)[0];
+		parsedPattern = parseWatcherPatterns(path, ["*.JS"], true)[0];
 
-		assert.strictEqual(parsedPattern('/users/data/src/foo.js'), true);
-		assert.strictEqual(parsedPattern('/users/data/src/foo.JS'), true);
-		assert.strictEqual(parsedPattern('/users/data/src/foo.Js'), true);
-		assert.strictEqual(parsedPattern('/users/data/src/foo.ts'), false);
+		assert.strictEqual(parsedPattern("/users/data/src/foo.js"), true);
+		assert.strictEqual(parsedPattern("/users/data/src/foo.JS"), true);
+		assert.strictEqual(parsedPattern("/users/data/src/foo.Js"), true);
+		assert.strictEqual(parsedPattern("/users/data/src/foo.ts"), false);
 
-		parsedPattern = parseWatcherPatterns(path, ['/users/data/src/*.JS'], true)[0];
+		parsedPattern = parseWatcherPatterns(path, ["/users/data/src/*.JS"], true)[0];
 
-		assert.strictEqual(parsedPattern('/users/data/src/foo.js'), true);
-		assert.strictEqual(parsedPattern('/users/data/src/foo.JS'), true);
-		assert.strictEqual(parsedPattern('/users/data/src/foo.ts'), false);
-		assert.strictEqual(parsedPattern('/users/data/src/bar/foo.js'), false);
+		assert.strictEqual(parsedPattern("/users/data/src/foo.js"), true);
+		assert.strictEqual(parsedPattern("/users/data/src/foo.JS"), true);
+		assert.strictEqual(parsedPattern("/users/data/src/foo.ts"), false);
+		assert.strictEqual(parsedPattern("/users/data/src/bar/foo.js"), false);
 
-		parsedPattern = parseWatcherPatterns(path, ['**/Test*.JS'], true)[0];
+		parsedPattern = parseWatcherPatterns(path, ["**/Test*.JS"], true)[0];
 
-		assert.strictEqual(parsedPattern('/users/data/src/test1.js'), true);
-		assert.strictEqual(parsedPattern('/users/data/src/Test1.js'), true);
-		assert.strictEqual(parsedPattern('/users/data/src/TEST1.JS'), true);
-		assert.strictEqual(parsedPattern('/users/data/src/bar/test2.js'), true);
-		assert.strictEqual(parsedPattern('/users/data/src/bar/TEST2.JS'), true);
-		assert.strictEqual(parsedPattern('/users/data/src/foo.js'), false);
+		assert.strictEqual(parsedPattern("/users/data/src/test1.js"), true);
+		assert.strictEqual(parsedPattern("/users/data/src/Test1.js"), true);
+		assert.strictEqual(parsedPattern("/users/data/src/TEST1.JS"), true);
+		assert.strictEqual(parsedPattern("/users/data/src/bar/test2.js"), true);
+		assert.strictEqual(parsedPattern("/users/data/src/bar/TEST2.JS"), true);
+		assert.strictEqual(parsedPattern("/users/data/src/foo.js"), false);
 	});
 
-	(!isWindows ? test.skip : test)('parseWatcherPatterns - windows (case insensitive)', () => {
-		const path = 'c:\\users\\data\\src';
-		let parsedPattern = parseWatcherPatterns(path, ['*.JS'], true)[0];
+	(!isWindows ? test.skip : test)("parseWatcherPatterns - windows (case insensitive)", () => {
+		const path = "c:\\users\\data\\src";
+		let parsedPattern = parseWatcherPatterns(path, ["*.JS"], true)[0];
 
 		// Windows is case insensitive by default
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\foo.js'), true);
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\foo.JS'), true);
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\foo.Js'), true);
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\foo.ts'), false);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\foo.js"), true);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\foo.JS"), true);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\foo.Js"), true);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\foo.ts"), false);
 
 		// Explicit GlobCaseSensitivity.caseInsensitive should work the same
-		parsedPattern = parseWatcherPatterns(path, ['*.JS'], true)[0];
+		parsedPattern = parseWatcherPatterns(path, ["*.JS"], true)[0];
 
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\foo.js'), true);
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\foo.JS'), true);
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\foo.Js'), true);
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\foo.ts'), false);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\foo.js"), true);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\foo.JS"), true);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\foo.Js"), true);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\foo.ts"), false);
 
-		parsedPattern = parseWatcherPatterns(path, ['c:\\users\\data\\src\\*.JS'], true)[0];
+		parsedPattern = parseWatcherPatterns(path, ["c:\\users\\data\\src\\*.JS"], true)[0];
 
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\foo.js'), true);
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\foo.JS'), true);
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\foo.ts'), false);
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\bar\\foo.js'), false);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\foo.js"), true);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\foo.JS"), true);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\foo.ts"), false);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\bar\\foo.js"), false);
 
-		parsedPattern = parseWatcherPatterns(path, ['**/Test*.JS'], true)[0];
+		parsedPattern = parseWatcherPatterns(path, ["**/Test*.JS"], true)[0];
 
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\test1.js'), true);
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\Test1.js'), true);
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\TEST1.JS'), true);
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\bar\\test2.js'), true);
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\bar\\TEST2.JS'), true);
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\foo.js'), false);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\test1.js"), true);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\Test1.js"), true);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\TEST1.JS"), true);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\bar\\test2.js"), true);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\bar\\TEST2.JS"), true);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\foo.js"), false);
 
 		// Test with case sensitive mode explicitly
-		parsedPattern = parseWatcherPatterns(path, ['*.JS'], false)[0];
+		parsedPattern = parseWatcherPatterns(path, ["*.JS"], false)[0];
 
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\foo.js'), false);
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\foo.JS'), true);
-		assert.strictEqual(parsedPattern('c:\\users\\data\\src\\foo.Js'), false);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\foo.js"), false);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\foo.JS"), true);
+		assert.strictEqual(parsedPattern("c:\\users\\data\\src\\foo.Js"), false);
 	});
 
 	ensureNoDisposablesAreLeakedInTestSuite();
 });
 
-suite('Watcher Events Normalizer', () => {
+suite("Watcher Events Normalizer", () => {
 
 	const disposables = new DisposableStore();
 
@@ -195,12 +200,12 @@ suite('Watcher Events Normalizer', () => {
 		disposables.clear();
 	});
 
-	test('simple add/update/delete', done => {
+	test("simple add/update/delete", done => {
 		const watch = disposables.add(new TestFileWatcher());
 
-		const added = URI.file('/users/data/src/added.txt');
-		const updated = URI.file('/users/data/src/updated.txt');
-		const deleted = URI.file('/users/data/src/deleted.txt');
+		const added = URI.file("/users/data/src/added.txt");
+		const updated = URI.file("/users/data/src/updated.txt");
+		const deleted = URI.file("/users/data/src/deleted.txt");
 
 		const raw: IFileChange[] = [
 			{ resource: added, type: FileChangeType.ADDED },
@@ -225,15 +230,15 @@ suite('Watcher Events Normalizer', () => {
 		test(`delete only reported for top level folder (${path})`, done => {
 			const watch = disposables.add(new TestFileWatcher());
 
-			const deletedFolderA = URI.file(path === Path.UNIX ? '/users/data/src/todelete1' : path === Path.WINDOWS ? 'C:\\users\\data\\src\\todelete1' : '\\\\localhost\\users\\data\\src\\todelete1');
-			const deletedFolderB = URI.file(path === Path.UNIX ? '/users/data/src/todelete2' : path === Path.WINDOWS ? 'C:\\users\\data\\src\\todelete2' : '\\\\localhost\\users\\data\\src\\todelete2');
-			const deletedFolderBF1 = URI.file(path === Path.UNIX ? '/users/data/src/todelete2/file.txt' : path === Path.WINDOWS ? 'C:\\users\\data\\src\\todelete2\\file.txt' : '\\\\localhost\\users\\data\\src\\todelete2\\file.txt');
-			const deletedFolderBF2 = URI.file(path === Path.UNIX ? '/users/data/src/todelete2/more/test.txt' : path === Path.WINDOWS ? 'C:\\users\\data\\src\\todelete2\\more\\test.txt' : '\\\\localhost\\users\\data\\src\\todelete2\\more\\test.txt');
-			const deletedFolderBF3 = URI.file(path === Path.UNIX ? '/users/data/src/todelete2/super/bar/foo.txt' : path === Path.WINDOWS ? 'C:\\users\\data\\src\\todelete2\\super\\bar\\foo.txt' : '\\\\localhost\\users\\data\\src\\todelete2\\super\\bar\\foo.txt');
-			const deletedFileA = URI.file(path === Path.UNIX ? '/users/data/src/deleteme.txt' : path === Path.WINDOWS ? 'C:\\users\\data\\src\\deleteme.txt' : '\\\\localhost\\users\\data\\src\\deleteme.txt');
+			const deletedFolderA = URI.file(path === Path.UNIX ? "/users/data/src/todelete1" : path === Path.WINDOWS ? "C:\\users\\data\\src\\todelete1" : "\\\\localhost\\users\\data\\src\\todelete1");
+			const deletedFolderB = URI.file(path === Path.UNIX ? "/users/data/src/todelete2" : path === Path.WINDOWS ? "C:\\users\\data\\src\\todelete2" : "\\\\localhost\\users\\data\\src\\todelete2");
+			const deletedFolderBF1 = URI.file(path === Path.UNIX ? "/users/data/src/todelete2/file.txt" : path === Path.WINDOWS ? "C:\\users\\data\\src\\todelete2\\file.txt" : "\\\\localhost\\users\\data\\src\\todelete2\\file.txt");
+			const deletedFolderBF2 = URI.file(path === Path.UNIX ? "/users/data/src/todelete2/more/test.txt" : path === Path.WINDOWS ? "C:\\users\\data\\src\\todelete2\\more\\test.txt" : "\\\\localhost\\users\\data\\src\\todelete2\\more\\test.txt");
+			const deletedFolderBF3 = URI.file(path === Path.UNIX ? "/users/data/src/todelete2/super/bar/foo.txt" : path === Path.WINDOWS ? "C:\\users\\data\\src\\todelete2\\super\\bar\\foo.txt" : "\\\\localhost\\users\\data\\src\\todelete2\\super\\bar\\foo.txt");
+			const deletedFileA = URI.file(path === Path.UNIX ? "/users/data/src/deleteme.txt" : path === Path.WINDOWS ? "C:\\users\\data\\src\\deleteme.txt" : "\\\\localhost\\users\\data\\src\\deleteme.txt");
 
-			const addedFile = URI.file(path === Path.UNIX ? '/users/data/src/added.txt' : path === Path.WINDOWS ? 'C:\\users\\data\\src\\added.txt' : '\\\\localhost\\users\\data\\src\\added.txt');
-			const updatedFile = URI.file(path === Path.UNIX ? '/users/data/src/updated.txt' : path === Path.WINDOWS ? 'C:\\users\\data\\src\\updated.txt' : '\\\\localhost\\users\\data\\src\\updated.txt');
+			const addedFile = URI.file(path === Path.UNIX ? "/users/data/src/added.txt" : path === Path.WINDOWS ? "C:\\users\\data\\src\\added.txt" : "\\\\localhost\\users\\data\\src\\added.txt");
+			const updatedFile = URI.file(path === Path.UNIX ? "/users/data/src/updated.txt" : path === Path.WINDOWS ? "C:\\users\\data\\src\\updated.txt" : "\\\\localhost\\users\\data\\src\\updated.txt");
 
 			const raw: IFileChange[] = [
 				{ resource: deletedFolderA, type: FileChangeType.DELETED },
@@ -243,7 +248,7 @@ suite('Watcher Events Normalizer', () => {
 				{ resource: deletedFolderBF3, type: FileChangeType.DELETED },
 				{ resource: deletedFileA, type: FileChangeType.DELETED },
 				{ resource: addedFile, type: FileChangeType.ADDED },
-				{ resource: updatedFile, type: FileChangeType.UPDATED }
+				{ resource: updatedFile, type: FileChangeType.UPDATED },
 			];
 
 			disposables.add(watch.onDidFilesChange(({ event, raw }) => {
@@ -263,12 +268,12 @@ suite('Watcher Events Normalizer', () => {
 		});
 	});
 
-	test('event coalescer: ignore CREATE followed by DELETE', done => {
+	test("event coalescer: ignore CREATE followed by DELETE", done => {
 		const watch = disposables.add(new TestFileWatcher());
 
-		const created = URI.file('/users/data/src/related');
-		const deleted = URI.file('/users/data/src/related');
-		const unrelated = URI.file('/users/data/src/unrelated');
+		const created = URI.file("/users/data/src/related");
+		const deleted = URI.file("/users/data/src/related");
+		const unrelated = URI.file("/users/data/src/unrelated");
 
 		const raw: IFileChange[] = [
 			{ resource: created, type: FileChangeType.ADDED },
@@ -288,12 +293,12 @@ suite('Watcher Events Normalizer', () => {
 		watch.report(raw);
 	});
 
-	test('event coalescer: flatten DELETE followed by CREATE into CHANGE', done => {
+	test("event coalescer: flatten DELETE followed by CREATE into CHANGE", done => {
 		const watch = disposables.add(new TestFileWatcher());
 
-		const deleted = URI.file('/users/data/src/related');
-		const created = URI.file('/users/data/src/related');
-		const unrelated = URI.file('/users/data/src/unrelated');
+		const deleted = URI.file("/users/data/src/related");
+		const created = URI.file("/users/data/src/related");
+		const unrelated = URI.file("/users/data/src/unrelated");
 
 		const raw: IFileChange[] = [
 			{ resource: deleted, type: FileChangeType.DELETED },
@@ -314,12 +319,12 @@ suite('Watcher Events Normalizer', () => {
 		watch.report(raw);
 	});
 
-	test('event coalescer: ignore UPDATE when CREATE received', done => {
+	test("event coalescer: ignore UPDATE when CREATE received", done => {
 		const watch = disposables.add(new TestFileWatcher());
 
-		const created = URI.file('/users/data/src/related');
-		const updated = URI.file('/users/data/src/related');
-		const unrelated = URI.file('/users/data/src/unrelated');
+		const created = URI.file("/users/data/src/related");
+		const updated = URI.file("/users/data/src/related");
+		const unrelated = URI.file("/users/data/src/unrelated");
 
 		const raw: IFileChange[] = [
 			{ resource: created, type: FileChangeType.ADDED },
@@ -341,19 +346,19 @@ suite('Watcher Events Normalizer', () => {
 		watch.report(raw);
 	});
 
-	test('event coalescer: apply DELETE', done => {
+	test("event coalescer: apply DELETE", done => {
 		const watch = disposables.add(new TestFileWatcher());
 
-		const updated = URI.file('/users/data/src/related');
-		const updated2 = URI.file('/users/data/src/related');
-		const deleted = URI.file('/users/data/src/related');
-		const unrelated = URI.file('/users/data/src/unrelated');
+		const updated = URI.file("/users/data/src/related");
+		const updated2 = URI.file("/users/data/src/related");
+		const deleted = URI.file("/users/data/src/related");
+		const unrelated = URI.file("/users/data/src/unrelated");
 
 		const raw: IFileChange[] = [
 			{ resource: updated, type: FileChangeType.UPDATED },
 			{ resource: updated2, type: FileChangeType.UPDATED },
 			{ resource: unrelated, type: FileChangeType.UPDATED },
-			{ resource: updated, type: FileChangeType.DELETED }
+			{ resource: updated, type: FileChangeType.DELETED },
 		];
 
 		disposables.add(watch.onDidFilesChange(({ event, raw }) => {
@@ -370,15 +375,15 @@ suite('Watcher Events Normalizer', () => {
 		watch.report(raw);
 	});
 
-	test('event coalescer: track case renames', done => {
+	test("event coalescer: track case renames", done => {
 		const watch = disposables.add(new TestFileWatcher());
 
-		const oldPath = URI.file('/users/data/src/added');
-		const newPath = URI.file('/users/data/src/ADDED');
+		const oldPath = URI.file("/users/data/src/added");
+		const newPath = URI.file("/users/data/src/ADDED");
 
 		const raw: IFileChange[] = [
 			{ resource: newPath, type: FileChangeType.ADDED },
-			{ resource: oldPath, type: FileChangeType.DELETED }
+			{ resource: oldPath, type: FileChangeType.DELETED },
 		];
 
 		disposables.add(watch.onDidFilesChange(({ event, raw }) => {
@@ -401,8 +406,8 @@ suite('Watcher Events Normalizer', () => {
 		watch.report(raw);
 	});
 
-	test('event type filter', () => {
-		const resource = URI.file('/users/data/src/related');
+	test("event type filter", () => {
+		const resource = URI.file("/users/data/src/related");
 
 		assert.strictEqual(isFiltered({ resource, type: FileChangeType.ADDED }, undefined), false);
 		assert.strictEqual(isFiltered({ resource, type: FileChangeType.UPDATED }, undefined), false);

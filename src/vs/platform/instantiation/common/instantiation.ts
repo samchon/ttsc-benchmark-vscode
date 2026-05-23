@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DisposableStore } from '../../../base/common/lifecycle.js';
-import * as descriptors from './descriptors.js';
-import { ServiceCollection } from './serviceCollection.js';
+import { DisposableStore } from "../../../base/common/lifecycle.js";
+import * as descriptors from "./descriptors.js";
+import { ServiceCollection } from "./serviceCollection.js";
 
 // ------ internal util
 
@@ -13,8 +13,8 @@ export namespace _util {
 
 	export const serviceIds = new Map<string, ServiceIdentifier<any>>();
 
-	export const DI_TARGET = '$di$target';
-	export const DI_DEPENDENCIES = '$di$dependencies';
+	export const DI_TARGET = "$di$target";
+	export const DI_DEPENDENCIES = "$di$dependencies";
 
 	export function getServiceDependencies(ctor: DI_TARGET_OBJ): { id: ServiceIdentifier<any>; index: number }[] {
 		return ctor[DI_DEPENDENCIES] || [];
@@ -38,7 +38,9 @@ export interface ServicesAccessor {
 	get<T>(id: ServiceIdentifier<T>): T;
 }
 
-export const IInstantiationService = createDecorator<IInstantiationService>('instantiationService');
+export const IInstantiationService = createDecorator<IInstantiationService>(
+  "instantiationService",
+);
 
 /**
  * Given a list of arguments as a tuple, attempt to extract the leading, non-service arguments
@@ -114,7 +116,9 @@ export function createDecorator<T>(serviceId: string): ServiceIdentifier<T> {
 
 	const id = function (target: Function, key: string, index: number) {
 		if (arguments.length !== 3) {
-			throw new Error('@IServiceName-decorator can only be used to decorate a parameter');
+			throw new Error(
+        "@IServiceName-decorator can only be used to decorate a parameter",
+      );
 		}
 		storeServiceDependency(id, target, index);
 	} as ServiceIdentifier<T>;

@@ -3,21 +3,31 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IBoundarySashes, ISashEvent, Orientation, Sash, SashState } from '../../../../../base/browser/ui/sash/sash.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { IObservable, IReader, ISettableObservable, autorun, derivedWithSetter, observableValue } from '../../../../../base/common/observable.js';
-import { DiffEditorOptions } from '../diffEditorOptions.js';
+import { IBoundarySashes, ISashEvent, Orientation, Sash, SashState } from "../../../../../base/browser/ui/sash/sash.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import {
+  IObservable,
+  IReader,
+  ISettableObservable,
+  autorun,
+  derivedWithSetter,
+  observableValue,
+} from "../../../../../base/common/observable.js";
+import { DiffEditorOptions } from "../diffEditorOptions.js";
 
 export class SashLayout {
 	public readonly sashLeft = derivedWithSetter(this, reader => {
-		const ratio = this._sashRatio.read(reader) ?? this._options.splitViewDefaultRatio.read(reader);
-		return this._computeSashLeft(ratio, reader);
-	}, (value, tx) => {
-		const contentWidth = this.dimensions.width.get();
-		this._sashRatio.set(value / contentWidth, tx);
-	});
+    const ratio = this._sashRatio.read(reader) ?? this._options.splitViewDefaultRatio.read(reader);
+    return this._computeSashLeft(ratio, reader);
+  }, (value, tx) => {
+    const contentWidth = this.dimensions.width.get();
+    this._sashRatio.set(value / contentWidth, tx);
+  });
 
-	private readonly _sashRatio = observableValue<number | undefined>(this, undefined);
+	private readonly _sashRatio = observableValue<number | undefined>(
+    this,
+    undefined,
+  );
 
 	public resetSash(): void {
 		this._sashRatio.set(undefined, undefined);
@@ -32,8 +42,12 @@ export class SashLayout {
 	/** @pure */
 	private _computeSashLeft(desiredRatio: number, reader: IReader | undefined): number {
 		const contentWidth = this.dimensions.width.read(reader);
-		const midPoint = Math.floor(this._options.splitViewDefaultRatio.read(reader) * contentWidth);
-		const sashLeft = this._options.enableSplitViewResizing.read(reader) ? Math.floor(desiredRatio * contentWidth) : midPoint;
+		const midPoint = Math.floor(
+      this._options.splitViewDefaultRatio.read(reader) * contentWidth,
+    );
+		const sashLeft = this._options.enableSplitViewResizing.read(
+      reader,
+    ) ? Math.floor(desiredRatio * contentWidth) : midPoint;
 
 		const MINIMUM_EDITOR_WIDTH = 100;
 		if (contentWidth <= MINIMUM_EDITOR_WIDTH * 2) {
@@ -70,12 +84,19 @@ export class DiffEditorSash extends Disposable {
 		}, { orientation: Orientation.VERTICAL }));
 		this._startSashPosition = undefined;
 
-		this._register(this._sash.onDidStart(() => {
-			this._startSashPosition = this.sashLeft.get();
-		}));
-		this._register(this._sash.onDidChange((e: ISashEvent) => {
-			this.sashLeft.set(this._startSashPosition! + (e.currentX - e.startX), undefined);
-		}));
+		this._register(
+      this._sash.onDidStart(() => {
+        this._startSashPosition = this.sashLeft.get();
+      }),
+    );
+		this._register(
+      this._sash.onDidChange((e: ISashEvent) => {
+        this.sashLeft.set(
+          this._startSashPosition! + (e.currentX - e.startX),
+          undefined,
+        );
+      }),
+    );
 		this._register(this._sash.onDidEnd(() => this._sash.layout()));
 		this._register(this._sash.onDidReset(() => this._resetSash()));
 

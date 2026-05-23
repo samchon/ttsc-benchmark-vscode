@@ -3,28 +3,39 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { KeyCode, KeyMod } from '../../../base/common/keyCodes.js';
-import { isMacintosh } from '../../../base/common/platform.js';
-import { PartialExcept } from '../../../base/common/types.js';
-import { localize } from '../../../nls.js';
-import { ICommandHandler } from '../../commands/common/commands.js';
-import { ContextKeyExpr } from '../../contextkey/common/contextkey.js';
-import { InputFocusedContext } from '../../contextkey/common/contextkeys.js';
-import { ICommandAndKeybindingRule, KeybindingWeight, KeybindingsRegistry } from '../../keybinding/common/keybindingsRegistry.js';
-import { endOfQuickInputBoxContext, inQuickInputContext, quickInputTypeContextKeyValue } from './quickInput.js';
-import { IInputBox, IQuickInputService, IQuickPick, IQuickTree, QuickInputType, QuickPickFocus } from '../common/quickInput.js';
+import { KeyCode, KeyMod } from "../../../base/common/keyCodes.js";
+import { isMacintosh } from "../../../base/common/platform.js";
+import { PartialExcept } from "../../../base/common/types.js";
+import { localize } from "../../../nls.js";
+import { ICommandHandler } from "../../commands/common/commands.js";
+import { ContextKeyExpr } from "../../contextkey/common/contextkey.js";
+import { InputFocusedContext } from "../../contextkey/common/contextkeys.js";
+import { ICommandAndKeybindingRule, KeybindingWeight, KeybindingsRegistry } from "../../keybinding/common/keybindingsRegistry.js";
+import {
+  endOfQuickInputBoxContext,
+  inQuickInputContext,
+  quickInputTypeContextKeyValue,
+} from "./quickInput.js";
+import {
+  IInputBox,
+  IQuickInputService,
+  IQuickPick,
+  IQuickTree,
+  QuickInputType,
+  QuickPickFocus,
+} from "../common/quickInput.js";
 
-function registerQuickInputCommandAndKeybindingRule(rule: PartialExcept<ICommandAndKeybindingRule, 'id' | 'handler'>, options: { withAltMod?: boolean; withCtrlMod?: boolean; withCmdMod?: boolean } = {}) {
+function registerQuickInputCommandAndKeybindingRule(rule: PartialExcept<ICommandAndKeybindingRule, "id" | "handler">, options: { withAltMod?: boolean; withCtrlMod?: boolean; withCmdMod?: boolean } = {}) {
 	KeybindingsRegistry.registerCommandAndKeybindingRule({
-		weight: KeybindingWeight.WorkbenchContrib,
-		when: inQuickInputContext,
-		metadata: { description: localize('quickInput', "Used while in the context of any kind of quick input. If you change one keybinding for this command, you should change all of the other keybindings (modifier variants) of this command as well.") },
-		...rule,
-		secondary: getSecondary(rule.primary!, rule.secondary ?? [], options)
-	});
+    weight: KeybindingWeight.WorkbenchContrib,
+    when: inQuickInputContext,
+    metadata: { description: localize("quickInput", "Used while in the context of any kind of quick input. If you change one keybinding for this command, you should change all of the other keybindings (modifier variants) of this command as well.") },
+    ...rule,
+    secondary: getSecondary(rule.primary!, rule.secondary ?? [], options),
+  });
 }
 
-function registerQuickPickCommandAndKeybindingRule(rule: PartialExcept<ICommandAndKeybindingRule, 'id' | 'handler'>, options: { withAltMod?: boolean; withCtrlMod?: boolean; withCmdMod?: boolean } = {}) {
+function registerQuickPickCommandAndKeybindingRule(rule: PartialExcept<ICommandAndKeybindingRule, "id" | "handler">, options: { withAltMod?: boolean; withCtrlMod?: boolean; withCmdMod?: boolean } = {}) {
 	KeybindingsRegistry.registerCommandAndKeybindingRule({
 		weight: KeybindingWeight.WorkbenchContrib,
 		when: ContextKeyExpr.and(
@@ -33,11 +44,11 @@ function registerQuickPickCommandAndKeybindingRule(rule: PartialExcept<ICommandA
 				ContextKeyExpr.equals(quickInputTypeContextKeyValue, QuickInputType.QuickPick),
 				ContextKeyExpr.equals(quickInputTypeContextKeyValue, QuickInputType.QuickTree),
 			),
-			inQuickInputContext
+			inQuickInputContext,
 		),
-		metadata: { description: localize('quickPick', "Used while in the context of the quick pick. If you change one keybinding for this command, you should change all of the other keybindings (modifier variants) of this command as well.") },
+		metadata: { description: localize("quickPick", "Used while in the context of the quick pick. If you change one keybinding for this command, you should change all of the other keybindings (modifier variants) of this command as well.") },
 		...rule,
-		secondary: getSecondary(rule.primary!, rule.secondary ?? [], options)
+		secondary: getSecondary(rule.primary!, rule.secondary ?? [], options),
 	});
 }
 
@@ -88,7 +99,9 @@ function getSecondary(primary: number, secondary: number[], options: { withAltMo
 function focusHandler(focus: QuickPickFocus, focusOnQuickNatigate?: QuickPickFocus): ICommandHandler {
 	return accessor => {
 		// Assuming this is a quick pick due to above when clause
-		const currentQuickPick = accessor.get(IQuickInputService).currentQuickInput as IQuickPick<any> | IQuickTree<any> | undefined;
+		const currentQuickPick = accessor.get(
+      IQuickInputService,
+    ).currentQuickInput as IQuickPick<any> | IQuickTree<any> | undefined;
 		if (!currentQuickPick) {
 			return;
 		}
@@ -99,110 +112,122 @@ function focusHandler(focus: QuickPickFocus, focusOnQuickNatigate?: QuickPickFoc
 	};
 }
 
-registerQuickPickCommandAndKeybindingRule(
-	{ id: 'quickInput.pageNext', primary: KeyCode.PageDown, handler: focusHandler(QuickPickFocus.NextPage) },
-	{ withAltMod: true, withCtrlMod: true, withCmdMod: true }
-);
-registerQuickPickCommandAndKeybindingRule(
-	{ id: 'quickInput.pagePrevious', primary: KeyCode.PageUp, handler: focusHandler(QuickPickFocus.PreviousPage) },
-	{ withAltMod: true, withCtrlMod: true, withCmdMod: true }
-);
-registerQuickPickCommandAndKeybindingRule(
-	{ id: 'quickInput.first', primary: ctrlKeyMod + KeyCode.Home, handler: focusHandler(QuickPickFocus.First) },
-	{ withAltMod: true, withCmdMod: true }
-);
-registerQuickPickCommandAndKeybindingRule(
-	{ id: 'quickInput.last', primary: ctrlKeyMod + KeyCode.End, handler: focusHandler(QuickPickFocus.Last) },
-	{ withAltMod: true, withCmdMod: true }
-);
-registerQuickPickCommandAndKeybindingRule(
-	{ id: 'quickInput.next', primary: KeyCode.DownArrow, handler: focusHandler(QuickPickFocus.Next) },
-	{ withCtrlMod: true }
-);
-registerQuickPickCommandAndKeybindingRule(
-	{ id: 'quickInput.previous', primary: KeyCode.UpArrow, handler: focusHandler(QuickPickFocus.Previous) },
-	{ withCtrlMod: true }
-);
+registerQuickPickCommandAndKeybindingRule({
+  id: "quickInput.pageNext",
+  primary: KeyCode.PageDown,
+  handler: focusHandler(QuickPickFocus.NextPage),
+}, {
+  withAltMod: true,
+  withCtrlMod: true,
+  withCmdMod: true,
+});
+registerQuickPickCommandAndKeybindingRule({
+  id: "quickInput.pagePrevious",
+  primary: KeyCode.PageUp,
+  handler: focusHandler(QuickPickFocus.PreviousPage),
+}, {
+  withAltMod: true,
+  withCtrlMod: true,
+  withCmdMod: true,
+});
+registerQuickPickCommandAndKeybindingRule({
+  id: "quickInput.first",
+  primary: ctrlKeyMod + KeyCode.Home,
+  handler: focusHandler(QuickPickFocus.First),
+}, {
+  withAltMod: true,
+  withCmdMod: true,
+});
+registerQuickPickCommandAndKeybindingRule({
+  id: "quickInput.last",
+  primary: ctrlKeyMod + KeyCode.End,
+  handler: focusHandler(QuickPickFocus.Last),
+}, {
+  withAltMod: true,
+  withCmdMod: true,
+});
+registerQuickPickCommandAndKeybindingRule({
+  id: "quickInput.next",
+  primary: KeyCode.DownArrow,
+  handler: focusHandler(QuickPickFocus.Next),
+}, {
+  withCtrlMod: true,
+});
+registerQuickPickCommandAndKeybindingRule({
+  id: "quickInput.previous",
+  primary: KeyCode.UpArrow,
+  handler: focusHandler(QuickPickFocus.Previous),
+}, {
+  withCtrlMod: true,
+});
 
 // The next & previous separator commands are interesting because if we are in quick access mode, we are already holding a modifier key down.
 // In this case, we want that modifier key+up/down to navigate to the next/previous item, not the next/previous separator.
 // To handle this, we have a separate command for navigating to the next/previous separator when we are not in quick access mode.
 // If, however, we are in quick access mode, and you hold down an additional modifier key, we will navigate to the next/previous separator.
 
-const nextSeparatorFallbackDesc = localize('quickInput.nextSeparatorWithQuickAccessFallback', "If we're in quick access mode, this will navigate to the next item. If we are not in quick access mode, this will navigate to the next separator.");
-const prevSeparatorFallbackDesc = localize('quickInput.previousSeparatorWithQuickAccessFallback', "If we're in quick access mode, this will navigate to the previous item. If we are not in quick access mode, this will navigate to the previous separator.");
+const nextSeparatorFallbackDesc = localize(
+  "quickInput.nextSeparatorWithQuickAccessFallback",
+  "If we're in quick access mode, this will navigate to the next item. If we are not in quick access mode, this will navigate to the next separator.",
+);
+const prevSeparatorFallbackDesc = localize(
+  "quickInput.previousSeparatorWithQuickAccessFallback",
+  "If we're in quick access mode, this will navigate to the previous item. If we are not in quick access mode, this will navigate to the previous separator.",
+);
 if (isMacintosh) {
-	registerQuickPickCommandAndKeybindingRule(
-		{
-			id: 'quickInput.nextSeparatorWithQuickAccessFallback',
-			primary: KeyMod.CtrlCmd + KeyCode.DownArrow,
-			handler: focusHandler(QuickPickFocus.NextSeparator, QuickPickFocus.Next),
-			metadata: { description: nextSeparatorFallbackDesc }
-		},
-	);
-	registerQuickPickCommandAndKeybindingRule(
-		{
-			id: 'quickInput.nextSeparator',
-			primary: KeyMod.CtrlCmd + KeyMod.Alt + KeyCode.DownArrow,
-			// Since macOS has the cmd key as the primary modifier, we need to add this additional
-			// keybinding to capture cmd+ctrl+upArrow
-			secondary: [KeyMod.CtrlCmd + KeyMod.WinCtrl + KeyCode.DownArrow],
-			handler: focusHandler(QuickPickFocus.NextSeparator)
-		},
-		{ withCtrlMod: true }
-	);
+	registerQuickPickCommandAndKeybindingRule({
+    id: "quickInput.nextSeparatorWithQuickAccessFallback",
+    primary: KeyMod.CtrlCmd + KeyCode.DownArrow,
+    handler: focusHandler(QuickPickFocus.NextSeparator, QuickPickFocus.Next),
+    metadata: { description: nextSeparatorFallbackDesc },
+  });
+	registerQuickPickCommandAndKeybindingRule({
+    id: "quickInput.nextSeparator",
+    primary: KeyMod.CtrlCmd + KeyMod.Alt + KeyCode.DownArrow,
+    secondary: [KeyMod.CtrlCmd + KeyMod.WinCtrl + KeyCode.DownArrow],
+    handler: focusHandler(QuickPickFocus.NextSeparator),
+  }, {
+    withCtrlMod: true,
+  });
 
-	registerQuickPickCommandAndKeybindingRule(
-		{
-			id: 'quickInput.previousSeparatorWithQuickAccessFallback',
-			primary: KeyMod.CtrlCmd + KeyCode.UpArrow,
-			handler: focusHandler(QuickPickFocus.PreviousSeparator, QuickPickFocus.Previous),
-			metadata: { description: prevSeparatorFallbackDesc }
-		},
-	);
-	registerQuickPickCommandAndKeybindingRule(
-		{
-			id: 'quickInput.previousSeparator',
-			primary: KeyMod.CtrlCmd + KeyMod.Alt + KeyCode.UpArrow,
-			// Since macOS has the cmd key as the primary modifier, we need to add this additional
-			// keybinding to capture cmd+ctrl+upArrow
-			secondary: [KeyMod.CtrlCmd + KeyMod.WinCtrl + KeyCode.UpArrow],
-			handler: focusHandler(QuickPickFocus.PreviousSeparator)
-		},
-		{ withCtrlMod: true }
-	);
+	registerQuickPickCommandAndKeybindingRule({
+    id: "quickInput.previousSeparatorWithQuickAccessFallback",
+    primary: KeyMod.CtrlCmd + KeyCode.UpArrow,
+    handler: focusHandler(QuickPickFocus.PreviousSeparator, QuickPickFocus.Previous),
+    metadata: { description: prevSeparatorFallbackDesc },
+  });
+	registerQuickPickCommandAndKeybindingRule({
+    id: "quickInput.previousSeparator",
+    primary: KeyMod.CtrlCmd + KeyMod.Alt + KeyCode.UpArrow,
+    secondary: [KeyMod.CtrlCmd + KeyMod.WinCtrl + KeyCode.UpArrow],
+    handler: focusHandler(QuickPickFocus.PreviousSeparator),
+  }, {
+    withCtrlMod: true,
+  });
 } else {
-	registerQuickPickCommandAndKeybindingRule(
-		{
-			id: 'quickInput.nextSeparatorWithQuickAccessFallback',
-			primary: KeyMod.Alt + KeyCode.DownArrow,
-			handler: focusHandler(QuickPickFocus.NextSeparator, QuickPickFocus.Next),
-			metadata: { description: nextSeparatorFallbackDesc }
-		},
-	);
-	registerQuickPickCommandAndKeybindingRule(
-		{
-			id: 'quickInput.nextSeparator',
-			primary: KeyMod.CtrlCmd + KeyMod.Alt + KeyCode.DownArrow,
-			handler: focusHandler(QuickPickFocus.NextSeparator)
-		},
-	);
+	registerQuickPickCommandAndKeybindingRule({
+    id: "quickInput.nextSeparatorWithQuickAccessFallback",
+    primary: KeyMod.Alt + KeyCode.DownArrow,
+    handler: focusHandler(QuickPickFocus.NextSeparator, QuickPickFocus.Next),
+    metadata: { description: nextSeparatorFallbackDesc },
+  });
+	registerQuickPickCommandAndKeybindingRule({
+    id: "quickInput.nextSeparator",
+    primary: KeyMod.CtrlCmd + KeyMod.Alt + KeyCode.DownArrow,
+    handler: focusHandler(QuickPickFocus.NextSeparator),
+  });
 
-	registerQuickPickCommandAndKeybindingRule(
-		{
-			id: 'quickInput.previousSeparatorWithQuickAccessFallback',
-			primary: KeyMod.Alt + KeyCode.UpArrow,
-			handler: focusHandler(QuickPickFocus.PreviousSeparator, QuickPickFocus.Previous),
-			metadata: { description: prevSeparatorFallbackDesc }
-		},
-	);
-	registerQuickPickCommandAndKeybindingRule(
-		{
-			id: 'quickInput.previousSeparator',
-			primary: KeyMod.CtrlCmd + KeyMod.Alt + KeyCode.UpArrow,
-			handler: focusHandler(QuickPickFocus.PreviousSeparator)
-		},
-	);
+	registerQuickPickCommandAndKeybindingRule({
+    id: "quickInput.previousSeparatorWithQuickAccessFallback",
+    primary: KeyMod.Alt + KeyCode.UpArrow,
+    handler: focusHandler(QuickPickFocus.PreviousSeparator, QuickPickFocus.Previous),
+    metadata: { description: prevSeparatorFallbackDesc },
+  });
+	registerQuickPickCommandAndKeybindingRule({
+    id: "quickInput.previousSeparator",
+    primary: KeyMod.CtrlCmd + KeyMod.Alt + KeyCode.UpArrow,
+    handler: focusHandler(QuickPickFocus.PreviousSeparator),
+  });
 }
 
 //#endregion
@@ -210,7 +235,7 @@ if (isMacintosh) {
 //#region Accept
 
 KeybindingsRegistry.registerCommandAndKeybindingRule({
-	id: 'quickInput.accept',
+	id: "quickInput.accept",
 	primary: KeyCode.Enter,
 	weight: KeybindingWeight.WorkbenchContrib,
 	when: ContextKeyExpr.and(
@@ -218,24 +243,24 @@ KeybindingsRegistry.registerCommandAndKeybindingRule({
 		// that extend IQuickInput
 		ContextKeyExpr.notEquals(quickInputTypeContextKeyValue, QuickInputType.QuickWidget),
 		inQuickInputContext,
-		ContextKeyExpr.not('isComposing')
+		ContextKeyExpr.not("isComposing"),
 	),
-	metadata: { description: localize('nonQuickWidget', "Used while in the context of some quick input. If you change one keybinding for this command, you should change all of the other keybindings (modifier variants) of this command as well.") },
+	metadata: { description: localize("nonQuickWidget", "Used while in the context of some quick input. If you change one keybinding for this command, you should change all of the other keybindings (modifier variants) of this command as well.") },
 	handler: (accessor) => {
 		const currentQuickPick = accessor.get(IQuickInputService).currentQuickInput as IQuickPick<any> | IQuickTree<any> | IInputBox;
 		currentQuickPick?.accept();
 	},
-	secondary: getSecondary(KeyCode.Enter, [], { withAltMod: true, withCtrlMod: true, withCmdMod: true, withShiftMod: true })
+	secondary: getSecondary(KeyCode.Enter, [], { withAltMod: true, withCtrlMod: true, withCmdMod: true, withShiftMod: true }),
 });
 
 registerQuickPickCommandAndKeybindingRule(
 	{
-		id: 'quickInput.acceptInBackground',
+		id: "quickInput.acceptInBackground",
 		// If we are in the quick pick but the input box is not focused or our cursor is at the end of the input box
 		when: ContextKeyExpr.and(
 			inQuickInputContext,
 			ContextKeyExpr.equals(quickInputTypeContextKeyValue, QuickInputType.QuickPick),
-			ContextKeyExpr.or(InputFocusedContext.negate(), endOfQuickInputBoxContext)
+			ContextKeyExpr.or(InputFocusedContext.negate(), endOfQuickInputBoxContext),
 		),
 		primary: KeyCode.RightArrow,
 		// Need a little extra weight to ensure this keybinding is preferred over the default cmd+alt+right arrow keybinding
@@ -246,7 +271,7 @@ registerQuickPickCommandAndKeybindingRule(
 			currentQuickPick?.accept(true);
 		},
 	},
-	{ withAltMod: true, withCtrlMod: true, withCmdMod: true }
+	{ withAltMod: true, withCtrlMod: true, withCmdMod: true },
 );
 
 //#endregion
@@ -255,14 +280,14 @@ registerQuickPickCommandAndKeybindingRule(
 
 registerQuickInputCommandAndKeybindingRule(
 	{
-		id: 'quickInput.hide',
+		id: "quickInput.hide",
 		primary: KeyCode.Escape,
 		handler: (accessor) => {
 			const currentQuickPick = accessor.get(IQuickInputService).currentQuickInput;
 			currentQuickPick?.hide();
-		}
+		},
 	},
-	{ withAltMod: true, withCtrlMod: true, withCmdMod: true }
+	{ withAltMod: true, withCtrlMod: true, withCmdMod: true },
 );
 
 //#endregion
@@ -271,21 +296,21 @@ registerQuickInputCommandAndKeybindingRule(
 
 registerQuickPickCommandAndKeybindingRule(
 	{
-		id: 'quickInput.toggleCheckbox',
+		id: "quickInput.toggleCheckbox",
 		when: ContextKeyExpr.and(
 			inQuickInputContext,
 			ContextKeyExpr.or(
 				ContextKeyExpr.equals(quickInputTypeContextKeyValue, QuickInputType.QuickPick),
 				ContextKeyExpr.equals(quickInputTypeContextKeyValue, QuickInputType.QuickTree),
 			),
-			InputFocusedContext.negate()
+			InputFocusedContext.negate(),
 		),
 		primary: KeyCode.Space,
 		handler: accessor => {
 			const quickInputService = accessor.get(IQuickInputService);
 			quickInputService.toggle();
-		}
-	}
+		},
+	},
 );
 
 //#endregion
@@ -294,13 +319,13 @@ registerQuickPickCommandAndKeybindingRule(
 
 registerQuickPickCommandAndKeybindingRule(
 	{
-		id: 'quickInput.toggleHover',
+		id: "quickInput.toggleHover",
 		primary: ctrlKeyMod | KeyCode.Space,
 		handler: accessor => {
 			const quickInputService = accessor.get(IQuickInputService);
 			quickInputService.toggleHover();
-		}
-	}
+		},
+	},
 );
 
 //#endregion

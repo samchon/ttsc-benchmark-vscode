@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Dimension } from '../../dom.js';
-import { Orientation, OrthogonalEdge, Sash, SashState } from '../sash/sash.js';
-import { Emitter, Event } from '../../../common/event.js';
-import { DisposableStore } from '../../../common/lifecycle.js';
+import { Dimension } from "../../dom.js";
+import { Orientation, OrthogonalEdge, Sash, SashState } from "../sash/sash.js";
+import { Emitter, Event } from "../../../common/event.js";
+import { DisposableStore } from "../../../common/lifecycle.js";
 
 
 export interface IResizeEvent {
@@ -36,15 +36,38 @@ export class ResizableHTMLElement {
 
 	private _size = new Dimension(0, 0);
 	private _minSize = new Dimension(0, 0);
-	private _maxSize = new Dimension(Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
+	private _maxSize = new Dimension(
+    Number.MAX_SAFE_INTEGER,
+    Number.MAX_SAFE_INTEGER,
+  );
 	private _preferredSize?: Dimension;
 
 	constructor() {
-		this.domNode = document.createElement('div');
-		this._eastSash = new Sash(this.domNode, { getVerticalSashLeft: () => this._size.width }, { orientation: Orientation.VERTICAL });
-		this._westSash = new Sash(this.domNode, { getVerticalSashLeft: () => 0 }, { orientation: Orientation.VERTICAL });
-		this._northSash = new Sash(this.domNode, { getHorizontalSashTop: () => 0 }, { orientation: Orientation.HORIZONTAL, orthogonalEdge: OrthogonalEdge.North });
-		this._southSash = new Sash(this.domNode, { getHorizontalSashTop: () => this._size.height }, { orientation: Orientation.HORIZONTAL, orthogonalEdge: OrthogonalEdge.South });
+		this.domNode = document.createElement("div");
+		this._eastSash = new Sash(
+      this.domNode,
+      { getVerticalSashLeft: () => this._size.width },
+      { orientation: Orientation.VERTICAL },
+    );
+		this._westSash = new Sash(this.domNode, { getVerticalSashLeft: () => 0 }, {
+      orientation: Orientation.VERTICAL,
+    });
+		this._northSash = new Sash(
+      this.domNode,
+      { getHorizontalSashTop: () => 0 },
+      {
+        orientation: Orientation.HORIZONTAL,
+        orthogonalEdge: OrthogonalEdge.North,
+      },
+    );
+		this._southSash = new Sash(
+      this.domNode,
+      { getHorizontalSashTop: () => this._size.height },
+      {
+        orientation: Orientation.HORIZONTAL,
+        orthogonalEdge: OrthogonalEdge.South,
+      },
+    );
 
 		this._northSash.orthogonalStartSash = this._westSash;
 		this._northSash.orthogonalEndSash = this._eastSash;
@@ -143,8 +166,8 @@ export class ResizableHTMLElement {
 
 		const newSize = new Dimension(width, height);
 		if (!Dimension.equals(newSize, this._size)) {
-			this.domNode.style.height = height + 'px';
-			this.domNode.style.width = width + 'px';
+			this.domNode.style.height = height + "px";
+			this.domNode.style.width = width + "px";
 			this._size = newSize;
 			this._northSash.layout();
 			this._eastSash.layout();

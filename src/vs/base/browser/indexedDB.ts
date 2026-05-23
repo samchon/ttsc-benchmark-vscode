@@ -3,18 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { toErrorMessage } from '../common/errorMessage.js';
-import { ErrorNoTelemetry, getErrorMessage } from '../common/errors.js';
-import { mark } from '../common/performance.js';
+import { toErrorMessage } from "../common/errorMessage.js";
+import { ErrorNoTelemetry, getErrorMessage } from "../common/errors.js";
+import { mark } from "../common/performance.js";
 
 class MissingStoresError extends Error {
 	constructor(readonly db: IDBDatabase) {
-		super('Missing stores');
+		super("Missing stores");
 	}
 }
 
 export class DBClosedError extends Error {
-	readonly code = 'DBClosed';
+	readonly code = "DBClosed";
 	constructor(dbName: string) {
 		super(`IndexedDB database '${dbName}' is closed.`);
 	}
@@ -39,7 +39,10 @@ export class IndexedDB {
 					// Try to delete the db
 					await IndexedDB.deleteDatabase(err.db);
 				} catch (error) {
-					console.error(`Error while deleting the IndexedDB`, getErrorMessage(error));
+					console.error(
+            `Error while deleting the IndexedDB`,
+            getErrorMessage(error),
+          );
 					throw error;
 				}
 
@@ -103,7 +106,9 @@ export class IndexedDB {
 
 	close(): void {
 		if (this.pendingTransactions.length) {
-			this.pendingTransactions.splice(0, this.pendingTransactions.length).forEach(transaction => transaction.abort());
+			this.pendingTransactions.splice(0, this.pendingTransactions.length).forEach(
+        transaction => transaction.abort(),
+      );
 		}
 		this.database?.close();
 		this.database = null;
@@ -125,8 +130,8 @@ export class IndexedDB {
 					c(request.result);
 				}
 			};
-			transaction.onerror = () => e(transaction.error ? ErrorNoTelemetry.fromError(transaction.error) : new ErrorNoTelemetry('unknown error'));
-			transaction.onabort = () => e(transaction.error ? ErrorNoTelemetry.fromError(transaction.error) : new ErrorNoTelemetry('unknown error'));
+			transaction.onerror = () => e(transaction.error ? ErrorNoTelemetry.fromError(transaction.error) : new ErrorNoTelemetry("unknown error"));
+			transaction.onabort = () => e(transaction.error ? ErrorNoTelemetry.fromError(transaction.error) : new ErrorNoTelemetry("unknown error"));
 			const request = dbRequestFn(transaction.objectStore(store));
 		}).finally(() => this.pendingTransactions.splice(this.pendingTransactions.indexOf(transaction), 1));
 	}
@@ -135,7 +140,7 @@ export class IndexedDB {
 		if (!this.database) {
 			throw new DBClosedError(this.name);
 		}
-		const transaction = this.database.transaction(store, 'readonly');
+		const transaction = this.database.transaction(store, "readonly");
 		this.pendingTransactions.push(transaction);
 		return new Promise<Map<string, V>>(resolve => {
 			const items = new Map<string, V>();

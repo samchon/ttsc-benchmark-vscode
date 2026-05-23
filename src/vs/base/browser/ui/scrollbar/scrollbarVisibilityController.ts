@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { FastDomNode } from '../../fastDomNode.js';
-import { TimeoutTimer } from '../../../common/async.js';
-import { Disposable } from '../../../common/lifecycle.js';
-import { ScrollbarVisibility } from '../../../common/scrollable.js';
+import { FastDomNode } from "../../fastDomNode.js";
+import { TimeoutTimer } from "../../../common/async.js";
+import { Disposable } from "../../../common/lifecycle.js";
+import { ScrollbarVisibility } from "../../../common/scrollable.js";
 
 export class ScrollbarVisibilityController extends Disposable {
 	private _visibility: ScrollbarVisibility;
@@ -102,9 +102,12 @@ export class ScrollbarVisibilityController extends Disposable {
 		this._isVisible = true;
 
 		// The CSS animation doesn't play otherwise
-		this._revealTimer.setIfNotSet(() => {
-			this._domNode?.setClassName(this._visibleClassName);
-		}, 0);
+		this._revealTimer.setIfNotSet(
+      () => {
+        this._domNode?.setClassName(this._visibleClassName);
+      },
+      0,
+    );
 	}
 
 	private _hide(withFadeAway: boolean): void {
@@ -113,6 +116,8 @@ export class ScrollbarVisibilityController extends Disposable {
 			return;
 		}
 		this._isVisible = false;
-		this._domNode?.setClassName(this._invisibleClassName + (withFadeAway ? ' fade' : ''));
+		this._domNode?.setClassName(
+      this._invisibleClassName + (withFadeAway ? " fade" : ""),
+    );
 	}
 }

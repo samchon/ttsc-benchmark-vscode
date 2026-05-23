@@ -3,27 +3,31 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter } from '../../../../../base/common/event.js';
-import { Disposable, DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { equals } from '../../../../../base/common/objects.js';
-import { localize } from '../../../../../nls.js';
-import { registerAction2, Action2, MenuId } from '../../../../../platform/actions/common/actions.js';
-import { ContextKeyExpr } from '../../../../../platform/contextkey/common/contextkey.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../../platform/storage/common/storage.js';
-import { IChatSessionsService } from '../../common/chatSessionsService.js';
-import { AgentSessionProviders, getAgentSessionProvider, getAgentSessionProviderName } from './agentSessions.js';
-import { AgentSessionStatus, IAgentSession } from './agentSessionsModel.js';
-import { IAgentSessionsFilter, IAgentSessionsFilterExcludes } from './agentSessionsViewer.js';
+import { Emitter } from "../../../../../base/common/event.js";
+import { Disposable, DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { equals } from "../../../../../base/common/objects.js";
+import { localize } from "../../../../../nls.js";
+import { registerAction2, Action2, MenuId } from "../../../../../platform/actions/common/actions.js";
+import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../../platform/storage/common/storage.js";
+import { IChatSessionsService } from "../../common/chatSessionsService.js";
+import {
+  AgentSessionProviders,
+  getAgentSessionProvider,
+  getAgentSessionProviderName,
+} from "./agentSessions.js";
+import { AgentSessionStatus, IAgentSession } from "./agentSessionsModel.js";
+import { IAgentSessionsFilter, IAgentSessionsFilterExcludes } from "./agentSessionsViewer.js";
 
 export enum AgentSessionsGrouping {
-	Capped = 'capped',
-	Date = 'date',
-	Repository = 'repository'
+	Capped = "capped",
+	Date = "date",
+	Repository = "repository"
 }
 
 export enum AgentSessionsSorting {
-	Created = 'created',
-	Updated = 'updated'
+	Created = "created",
+	Updated = "updated"
 }
 
 export interface IAgentSessionsFilterOptions extends Partial<IAgentSessionsFilter> {
@@ -52,11 +56,11 @@ export interface IAgentSessionsFilterOptions extends Partial<IAgentSessionsFilte
 }
 
 const DEFAULT_EXCLUDES: IAgentSessionsFilterExcludes = Object.freeze({
-	providers: [] as const,
-	states: [] as const,
-	archived: true as const /* archived are never excluded but toggle between expanded and collapsed */,
-	read: false as const,
-	repositoryGroupCapped: true as const /* when true, repo groups are capped at a limit with a "show more" item */,
+  providers: [] as const,
+  states: [] as const,
+  archived: true as const,
+  read: false as const,
+  repositoryGroupCapped: true as const,
 });
 
 export class AgentSessionsFilter extends Disposable implements Required<IAgentSessionsFilter> {
@@ -91,18 +95,35 @@ export class AgentSessionsFilter extends Disposable implements Required<IAgentSe
 	}
 
 	private registerListeners(): void {
-		this._register(this.chatSessionsService.onDidChangeItemsProviders(() => this.updateFilterActions()));
-		this._register(this.chatSessionsService.onDidChangeAvailability(() => this.updateFilterActions()));
+		this._register(
+      this.chatSessionsService.onDidChangeItemsProviders(
+        () => this.updateFilterActions(),
+      ),
+    );
+		this._register(
+      this.chatSessionsService.onDidChangeAvailability(
+        () => this.updateFilterActions(),
+      ),
+    );
 
-		this._register(this.storageService.onDidChangeValue(StorageScope.PROFILE, this.STORAGE_KEY, this._store)(() => this.updateExcludes(true)));
+		this._register(
+      this.storageService.onDidChangeValue(StorageScope.PROFILE, this.STORAGE_KEY, this._store)(
+        () => this.updateExcludes(true),
+      ),
+    );
 	}
 
 	private updateExcludes(fromEvent: boolean): void {
 		if (!this.isStoringExcludes) {
-			const excludedTypesRaw = this.storageService.get(this.STORAGE_KEY, StorageScope.PROFILE);
+			const excludedTypesRaw = this.storageService.get(
+        this.STORAGE_KEY,
+        StorageScope.PROFILE,
+      );
 			if (excludedTypesRaw) {
 				try {
-					this.excludes = JSON.parse(excludedTypesRaw) as IAgentSessionsFilterExcludes;
+					this.excludes = JSON.parse(
+            excludedTypesRaw,
+          ) as IAgentSessionsFilterExcludes;
 				} catch {
 					this.excludes = { ...DEFAULT_EXCLUDES };
 				}
@@ -128,7 +149,12 @@ export class AgentSessionsFilter extends Disposable implements Required<IAgentSe
 			if (equals(this.excludes, DEFAULT_EXCLUDES)) {
 				this.storageService.remove(this.STORAGE_KEY, StorageScope.PROFILE);
 			} else {
-				this.storageService.store(this.STORAGE_KEY, JSON.stringify(this.excludes), StorageScope.PROFILE, StorageTarget.USER);
+				this.storageService.store(
+          this.STORAGE_KEY,
+          JSON.stringify(this.excludes),
+          StorageScope.PROFILE,
+          StorageTarget.USER,
+        );
 			}
 		} finally {
 			this.isStoringExcludes = false;
@@ -136,8 +162,13 @@ export class AgentSessionsFilter extends Disposable implements Required<IAgentSe
 	}
 
 	private restoreSorting(): void {
-		const storedSorting = this.storageService.get(this.SORTING_STORAGE_KEY, StorageScope.PROFILE);
-		if (storedSorting && Object.values(AgentSessionsSorting).includes(storedSorting as AgentSessionsSorting)) {
+		const storedSorting = this.storageService.get(
+      this.SORTING_STORAGE_KEY,
+      StorageScope.PROFILE,
+    );
+		if (storedSorting && Object.values(AgentSessionsSorting).includes(
+      storedSorting as AgentSessionsSorting,
+    )) {
 			this.currentSorting = storedSorting as AgentSessionsSorting;
 		}
 	}
@@ -148,7 +179,12 @@ export class AgentSessionsFilter extends Disposable implements Required<IAgentSe
 		}
 
 		this.currentSorting = sorting;
-		this.storageService.store(this.SORTING_STORAGE_KEY, sorting, StorageScope.PROFILE, StorageTarget.USER);
+		this.storageService.store(
+      this.SORTING_STORAGE_KEY,
+      sorting,
+      StorageScope.PROFILE,
+      StorageTarget.USER,
+    );
 		this.updateFilterActions();
 		this._onDidChange.fire();
 	}
@@ -175,10 +211,10 @@ export class AgentSessionsFilter extends Disposable implements Required<IAgentSe
 			constructor() {
 				super({
 					id: `agentSessions.filter.sortByCreated.${menuId.id.toLowerCase()}`,
-					title: localize('agentSessions.filter.sortByCreated', 'Sort by Created'),
+					title: localize("agentSessions.filter.sortByCreated", "Sort by Created"),
 					menu: {
 						id: menuId,
-						group: '0_sort',
+						group: "0_sort",
 						order: 0,
 					},
 					toggled: that.currentSorting === AgentSessionsSorting.Created ? ContextKeyExpr.true() : ContextKeyExpr.false(),
@@ -193,10 +229,10 @@ export class AgentSessionsFilter extends Disposable implements Required<IAgentSe
 			constructor() {
 				super({
 					id: `agentSessions.filter.sortByUpdated.${menuId.id.toLowerCase()}`,
-					title: localize('agentSessions.filter.sortByUpdated', 'Sort by Updated'),
+					title: localize("agentSessions.filter.sortByUpdated", "Sort by Updated"),
 					menu: {
 						id: menuId,
-						group: '0_sort',
+						group: "0_sort",
 						order: 1,
 					},
 					toggled: that.currentSorting === AgentSessionsSorting.Updated ? ContextKeyExpr.true() : ContextKeyExpr.false(),
@@ -221,18 +257,26 @@ export class AgentSessionsFilter extends Disposable implements Required<IAgentSe
 		let providers: { id: string; label: string }[];
 		if (this.options.allowedProviders) {
 			// Opt-in: only show explicitly allowed providers
-			providers = this.options.allowedProviders.map(id => ({ id, label: resolveLabel(id) }));
+			providers = this.options.allowedProviders.map(id => ({
+        id,
+        label: resolveLabel(id),
+      }));
 		} else {
 			// Default: Local + all registered contributions
-			providers = [{ id: AgentSessionProviders.Local, label: resolveLabel(AgentSessionProviders.Local) }];
+			providers = [
+        {
+          id: AgentSessionProviders.Local,
+          label: resolveLabel(AgentSessionProviders.Local),
+        },
+      ];
 			for (const contribution of this.chatSessionsService.getAllChatSessionContributions()) {
 				if (providers.find(p => p.id === contribution.type)) {
 					continue; // already added
 				}
 				providers.push({
-					id: contribution.type,
-					label: resolveLabel(contribution.type)
-				});
+          id: contribution.type,
+          label: resolveLabel(contribution.type),
+        });
 			}
 		}
 
@@ -246,7 +290,7 @@ export class AgentSessionsFilter extends Disposable implements Required<IAgentSe
 						title: provider.label,
 						menu: {
 							id: menuId,
-							group: '1_providers',
+							group: "1_providers",
 							order: counter++,
 						},
 						toggled: that.excludes.providers.includes(provider.id) ? ContextKeyExpr.false() : ContextKeyExpr.true(),
@@ -266,11 +310,23 @@ export class AgentSessionsFilter extends Disposable implements Required<IAgentSe
 
 	private registerStateActions(disposables: DisposableStore, menuId: MenuId): void {
 		const states: { id: AgentSessionStatus; label: string }[] = [
-			{ id: AgentSessionStatus.Completed, label: localize('agentSessionStatus.completed', "Completed") },
-			{ id: AgentSessionStatus.InProgress, label: localize('agentSessionStatus.inProgress', "In Progress") },
-			{ id: AgentSessionStatus.NeedsInput, label: localize('agentSessionStatus.needsInput', "Input Needed") },
-			{ id: AgentSessionStatus.Failed, label: localize('agentSessionStatus.failed', "Failed") },
-		];
+      {
+        id: AgentSessionStatus.Completed,
+        label: localize("agentSessionStatus.completed", "Completed"),
+      },
+      {
+        id: AgentSessionStatus.InProgress,
+        label: localize("agentSessionStatus.inProgress", "In Progress"),
+      },
+      {
+        id: AgentSessionStatus.NeedsInput,
+        label: localize("agentSessionStatus.needsInput", "Input Needed"),
+      },
+      {
+        id: AgentSessionStatus.Failed,
+        label: localize("agentSessionStatus.failed", "Failed"),
+      },
+    ];
 
 		const that = this;
 		let counter = 0;
@@ -282,7 +338,7 @@ export class AgentSessionsFilter extends Disposable implements Required<IAgentSe
 						title: state.label,
 						menu: {
 							id: menuId,
-							group: '2_states',
+							group: "2_states",
 							order: counter++,
 						},
 						toggled: that.excludes.states.includes(state.id) ? ContextKeyExpr.false() : ContextKeyExpr.true(),
@@ -306,10 +362,10 @@ export class AgentSessionsFilter extends Disposable implements Required<IAgentSe
 			constructor() {
 				super({
 					id: `agentSessions.filter.toggleExcludeArchived.${menuId.id.toLowerCase()}`,
-					title: localize('agentSessions.filter.archived', 'Archived'),
+					title: localize("agentSessions.filter.archived", "Archived"),
 					menu: {
 						id: menuId,
-						group: '3_props',
+						group: "3_props",
 						order: 1000,
 					},
 					toggled: that.excludes.archived ? ContextKeyExpr.false() : ContextKeyExpr.true(),
@@ -327,10 +383,10 @@ export class AgentSessionsFilter extends Disposable implements Required<IAgentSe
 			constructor() {
 				super({
 					id: `agentSessions.filter.toggleExcludeRead.${menuId.id.toLowerCase()}`,
-					title: localize('agentSessions.filter.read', 'Read'),
+					title: localize("agentSessions.filter.read", "Read"),
 					menu: {
 						id: menuId,
-						group: '3_props',
+						group: "3_props",
 						order: 0,
 					},
 					toggled: that.excludes.read ? ContextKeyExpr.false() : ContextKeyExpr.true(),
@@ -357,10 +413,10 @@ export class AgentSessionsFilter extends Disposable implements Required<IAgentSe
 			constructor() {
 				super({
 					id: `agentSessions.filter.resetExcludes.${menuId.id.toLowerCase()}`,
-					title: localize('agentSessions.filter.reset', "Reset"),
+					title: localize("agentSessions.filter.reset", "Reset"),
 					menu: {
 						id: menuId,
-						group: '4_reset',
+						group: "4_reset",
 						order: 0,
 					},
 				});
@@ -372,7 +428,10 @@ export class AgentSessionsFilter extends Disposable implements Required<IAgentSe
 	}
 
 	isDefault(): boolean {
-		return equals(this.excludes, DEFAULT_EXCLUDES) && this.currentSorting === AgentSessionsSorting.Created;
+		return equals(
+      this.excludes,
+      DEFAULT_EXCLUDES,
+    ) && this.currentSorting === AgentSessionsSorting.Created;
 	}
 
 	getExcludes(): IAgentSessionsFilterExcludes {
@@ -381,11 +440,13 @@ export class AgentSessionsFilter extends Disposable implements Required<IAgentSe
 
 	exclude(session: IAgentSession): boolean {
 		const overrideExclude = this.options?.overrideExclude?.(session);
-		if (typeof overrideExclude === 'boolean') {
+		if (typeof overrideExclude === "boolean") {
 			return overrideExclude;
 		}
 
-		if (this.options.allowedProviders && !this.options.allowedProviders.includes(session.providerType as AgentSessionProviders)) {
+		if (this.options.allowedProviders && !this.options.allowedProviders.includes(
+      session.providerType as AgentSessionProviders,
+    )) {
 			return true;
 		}
 

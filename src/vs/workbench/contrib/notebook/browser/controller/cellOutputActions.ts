@@ -3,39 +3,48 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ServicesAccessor } from '../../../../../editor/browser/editorExtensions.js';
-import { localize } from '../../../../../nls.js';
-import { Action2, MenuId, registerAction2 } from '../../../../../platform/actions/common/actions.js';
-import { IClipboardService } from '../../../../../platform/clipboard/common/clipboardService.js';
-import { IOpenerService } from '../../../../../platform/opener/common/opener.js';
-import { INotebookOutputActionContext, NOTEBOOK_ACTIONS_CATEGORY } from './coreActions.js';
-import { NOTEBOOK_CELL_HAS_HIDDEN_OUTPUTS, NOTEBOOK_CELL_HAS_OUTPUTS, NOTEBOOK_CELL_OUTPUT_MIMETYPE } from '../../common/notebookContextKeys.js';
-import * as icons from '../notebookIcons.js';
-import { ILogService } from '../../../../../platform/log/common/log.js';
-import { copyCellOutput } from '../viewModel/cellOutputTextHelper.js';
-import { IEditorService } from '../../../../services/editor/common/editorService.js';
-import { ICellOutputViewModel, ICellViewModel, INotebookEditor, getNotebookEditorFromEditorPane } from '../notebookBrowser.js';
-import { CellKind, CellUri } from '../../common/notebookCommon.js';
-import { CodeCellViewModel } from '../viewModel/codeCellViewModel.js';
-import { ContextKeyExpr } from '../../../../../platform/contextkey/common/contextkey.js';
-import { INotebookEditorModelResolverService } from '../../common/notebookEditorModelResolverService.js';
-import { IFileDialogService } from '../../../../../platform/dialogs/common/dialogs.js';
-import { IFileService } from '../../../../../platform/files/common/files.js';
-import { URI } from '../../../../../base/common/uri.js';
+import { ServicesAccessor } from "../../../../../editor/browser/editorExtensions.js";
+import { localize } from "../../../../../nls.js";
+import { Action2, MenuId, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { IClipboardService } from "../../../../../platform/clipboard/common/clipboardService.js";
+import { IOpenerService } from "../../../../../platform/opener/common/opener.js";
+import { INotebookOutputActionContext, NOTEBOOK_ACTIONS_CATEGORY } from "./coreActions.js";
+import {
+  NOTEBOOK_CELL_HAS_HIDDEN_OUTPUTS,
+  NOTEBOOK_CELL_HAS_OUTPUTS,
+  NOTEBOOK_CELL_OUTPUT_MIMETYPE,
+} from "../../common/notebookContextKeys.js";
+import * as icons from "../notebookIcons.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { copyCellOutput } from "../viewModel/cellOutputTextHelper.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+import {
+  ICellOutputViewModel,
+  ICellViewModel,
+  INotebookEditor,
+  getNotebookEditorFromEditorPane,
+} from "../notebookBrowser.js";
+import { CellKind, CellUri } from "../../common/notebookCommon.js";
+import { CodeCellViewModel } from "../viewModel/codeCellViewModel.js";
+import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { INotebookEditorModelResolverService } from "../../common/notebookEditorModelResolverService.js";
+import { IFileDialogService } from "../../../../../platform/dialogs/common/dialogs.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { URI } from "../../../../../base/common/uri.js";
 
-export const COPY_OUTPUT_COMMAND_ID = 'notebook.cellOutput.copy';
+export const COPY_OUTPUT_COMMAND_ID = "notebook.cellOutput.copy";
 
 registerAction2(class ShowAllOutputsAction extends Action2 {
 	constructor() {
 		super({
-			id: 'notebook.cellOuput.showEmptyOutputs',
-			title: localize('notebookActions.showAllOutput', "Show Empty Outputs"),
+			id: "notebook.cellOuput.showEmptyOutputs",
+			title: localize("notebookActions.showAllOutput", "Show Empty Outputs"),
 			menu: {
 				id: MenuId.NotebookOutputToolbar,
-				when: ContextKeyExpr.and(NOTEBOOK_CELL_HAS_OUTPUTS, NOTEBOOK_CELL_HAS_HIDDEN_OUTPUTS)
+				when: ContextKeyExpr.and(NOTEBOOK_CELL_HAS_OUTPUTS, NOTEBOOK_CELL_HAS_HIDDEN_OUTPUTS),
 			},
 			f1: false,
-			category: NOTEBOOK_ACTIONS_CATEGORY
+			category: NOTEBOOK_ACTIONS_CATEGORY,
 		});
 	}
 
@@ -46,7 +55,7 @@ registerAction2(class ShowAllOutputsAction extends Action2 {
 			for (let i = 1; i < cell.outputsViewModels.length; i++) {
 				if (!cell.outputsViewModels[i].visible.get()) {
 					cell.outputsViewModels[i].setVisible(true, true);
-					(cell as CodeCellViewModel).updateOutputHeight(i, 1, 'command');
+					(cell as CodeCellViewModel).updateOutputHeight(i, 1, "command");
 				}
 			}
 		}
@@ -57,10 +66,10 @@ registerAction2(class CopyCellOutputAction extends Action2 {
 	constructor() {
 		super({
 			id: COPY_OUTPUT_COMMAND_ID,
-			title: localize('notebookActions.copyOutput', "Copy Cell Output"),
+			title: localize("notebookActions.copyOutput", "Copy Cell Output"),
 			menu: {
 				id: MenuId.NotebookOutputToolbar,
-				when: NOTEBOOK_CELL_HAS_OUTPUTS
+				when: NOTEBOOK_CELL_HAS_OUTPUTS,
 			},
 			category: NOTEBOOK_ACTIONS_CATEGORY,
 			icon: icons.copyIcon,
@@ -84,9 +93,9 @@ registerAction2(class CopyCellOutputAction extends Action2 {
 
 		const mimeType = outputViewModel.pickedMimeType?.mimeType;
 
-		if (mimeType?.startsWith('image/')) {
+		if (mimeType?.startsWith("image/")) {
 			const focusOptions = { skipReveal: true, outputId: outputViewModel.model.outputId, altOutputId: outputViewModel.model.alternativeOutputId };
-			await notebookEditor.focusNotebookCell(outputViewModel.cellViewModel as ICellViewModel, 'output', focusOptions);
+			await notebookEditor.focusNotebookCell(outputViewModel.cellViewModel as ICellViewModel, "output", focusOptions);
 			notebookEditor.copyOutputImage(outputViewModel);
 		} else {
 			copyCellOutput(mimeType, outputViewModel, clipboardService, logService);
@@ -98,9 +107,13 @@ registerAction2(class CopyCellOutputAction extends Action2 {
 export function getOutputViewModelFromId(outputId: string, notebookEditor: INotebookEditor): ICellOutputViewModel | undefined {
 	const notebookViewModel = notebookEditor.getViewModel();
 	if (notebookViewModel) {
-		const codeCells = notebookViewModel.viewCells.filter(cell => cell.cellKind === CellKind.Code) as CodeCellViewModel[];
+		const codeCells = notebookViewModel.viewCells.filter(
+      cell => cell.cellKind === CellKind.Code,
+    ) as CodeCellViewModel[];
 		for (const cell of codeCells) {
-			const output = cell.outputsViewModels.find(output => output.model.outputId === outputId || output.model.alternativeOutputId === outputId);
+			const output = cell.outputsViewModels.find(
+        output => output.model.outputId === outputId || output.model.alternativeOutputId === outputId,
+      );
 			if (output) {
 				return output;
 			}
@@ -111,7 +124,7 @@ export function getOutputViewModelFromId(outputId: string, notebookEditor: INote
 }
 
 function getNotebookEditorFromContext(editorService: IEditorService, outputContext: INotebookOutputActionContext | { outputViewModel: ICellOutputViewModel } | undefined): INotebookEditor | undefined {
-	if (outputContext && 'notebookEditor' in outputContext) {
+	if (outputContext && "notebookEditor" in outputContext) {
 		return outputContext.notebookEditor;
 	}
 	return getNotebookEditorFromEditorPane(editorService.activeEditorPane);
@@ -120,9 +133,12 @@ function getNotebookEditorFromContext(editorService: IEditorService, outputConte
 function getOutputViewModelFromContext(outputContext: INotebookOutputActionContext | { outputViewModel: ICellOutputViewModel } | undefined, notebookEditor: INotebookEditor): ICellOutputViewModel | undefined {
 	let outputViewModel: ICellOutputViewModel | undefined;
 
-	if (outputContext && 'outputId' in outputContext && typeof outputContext.outputId === 'string') {
-		outputViewModel = getOutputViewModelFromId(outputContext.outputId, notebookEditor);
-	} else if (outputContext && 'outputViewModel' in outputContext) {
+	if (outputContext && "outputId" in outputContext && typeof outputContext.outputId === "string") {
+		outputViewModel = getOutputViewModelFromId(
+      outputContext.outputId,
+      notebookEditor,
+    );
+	} else if (outputContext && "outputViewModel" in outputContext) {
 		outputViewModel = outputContext.outputViewModel;
 	}
 
@@ -135,23 +151,25 @@ function getOutputViewModelFromContext(outputContext: INotebookOutputActionConte
 
 		if (activeCell.focusedOutputId !== undefined) {
 			outputViewModel = activeCell.outputsViewModels.find(output => {
-				return output.model.outputId === activeCell.focusedOutputId;
-			});
+        return output.model.outputId === activeCell.focusedOutputId;
+      });
 		} else {
-			outputViewModel = activeCell.outputsViewModels.find(output => output.pickedMimeType?.isTrusted);
+			outputViewModel = activeCell.outputsViewModels.find(
+        output => output.pickedMimeType?.isTrusted,
+      );
 		}
 	}
 
 	return outputViewModel;
 }
 
-export const OPEN_OUTPUT_COMMAND_ID = 'notebook.cellOutput.openInTextEditor';
+export const OPEN_OUTPUT_COMMAND_ID = "notebook.cellOutput.openInTextEditor";
 
 registerAction2(class OpenCellOutputInEditorAction extends Action2 {
 	constructor() {
 		super({
 			id: OPEN_OUTPUT_COMMAND_ID,
-			title: localize('notebookActions.openOutputInEditor', "Open Cell Output in Text Editor"),
+			title: localize("notebookActions.openOutputInEditor", "Open Cell Output in Text Editor"),
 			f1: false,
 			category: NOTEBOOK_ACTIONS_CATEGORY,
 			icon: icons.copyIcon,
@@ -179,16 +197,16 @@ registerAction2(class OpenCellOutputInEditorAction extends Action2 {
 	}
 });
 
-export const SAVE_OUTPUT_IMAGE_COMMAND_ID = 'notebook.cellOutput.saveImage';
+export const SAVE_OUTPUT_IMAGE_COMMAND_ID = "notebook.cellOutput.saveImage";
 
 registerAction2(class SaveCellOutputImageAction extends Action2 {
 	constructor() {
 		super({
 			id: SAVE_OUTPUT_IMAGE_COMMAND_ID,
-			title: localize('notebookActions.saveOutputImage', "Save Image"),
+			title: localize("notebookActions.saveOutputImage", "Save Image"),
 			menu: {
 				id: MenuId.NotebookOutputToolbar,
-				when: ContextKeyExpr.regex(NOTEBOOK_CELL_OUTPUT_MIMETYPE.key, /^image\//)
+				when: ContextKeyExpr.regex(NOTEBOOK_CELL_OUTPUT_MIMETYPE.key, /^image\//),
 			},
 			f1: false,
 			category: NOTEBOOK_ACTIONS_CATEGORY,
@@ -215,41 +233,41 @@ registerAction2(class SaveCellOutputImageAction extends Action2 {
 		const mimeType = outputViewModel.pickedMimeType?.mimeType;
 
 		// Only handle image mime types
-		if (!mimeType?.startsWith('image/')) {
+		if (!mimeType?.startsWith("image/")) {
 			return;
 		}
 
 		const outputItem = outputViewModel.model.outputs.find(output => output.mime === mimeType);
 		if (!outputItem) {
-			logService.error('Could not find output item with mime type', mimeType);
+			logService.error("Could not find output item with mime type", mimeType);
 			return;
 		}
 
 		// Determine file extension based on mime type
 		const mimeToExt: { [key: string]: string } = {
-			'image/png': 'png',
-			'image/jpeg': 'jpg',
-			'image/jpg': 'jpg',
-			'image/gif': 'gif',
-			'image/svg+xml': 'svg',
-			'image/webp': 'webp',
-			'image/bmp': 'bmp',
-			'image/tiff': 'tiff'
+			"image/png": "png",
+			"image/jpeg": "jpg",
+			"image/jpg": "jpg",
+			"image/gif": "gif",
+			"image/svg+xml": "svg",
+			"image/webp": "webp",
+			"image/bmp": "bmp",
+			"image/tiff": "tiff",
 		};
 
-		const extension = mimeToExt[mimeType] || 'png';
+		const extension = mimeToExt[mimeType] || "png";
 		const defaultFileName = `image.${extension}`;
 
 		const defaultUri = notebookEditor.textModel?.uri
-			? URI.joinPath(URI.file(notebookEditor.textModel.uri.fsPath), '..', defaultFileName)
+			? URI.joinPath(URI.file(notebookEditor.textModel.uri.fsPath), "..", defaultFileName)
 			: undefined;
 
 		const uri = await fileDialogService.showSaveDialog({
 			defaultUri,
 			filters: [{
-				name: localize('imageFiles', "Image Files"),
-				extensions: [extension]
-			}]
+				name: localize("imageFiles", "Image Files"),
+				extensions: [extension],
+			}],
 		});
 
 		if (!uri) {
@@ -259,23 +277,23 @@ registerAction2(class SaveCellOutputImageAction extends Action2 {
 		try {
 			const imageData = outputItem.data;
 			await fileService.writeFile(uri, imageData);
-			logService.info('Saved image output to', uri.toString());
+			logService.info("Saved image output to", uri.toString());
 		} catch (error) {
-			logService.error('Failed to save image output', error);
+			logService.error("Failed to save image output", error);
 		}
 	}
 });
 
-export const OPEN_OUTPUT_IN_OUTPUT_PREVIEW_COMMAND_ID = 'notebook.cellOutput.openInOutputPreview';
+export const OPEN_OUTPUT_IN_OUTPUT_PREVIEW_COMMAND_ID = "notebook.cellOutput.openInOutputPreview";
 
 registerAction2(class OpenCellOutputInNotebookOutputEditorAction extends Action2 {
 	constructor() {
 		super({
 			id: OPEN_OUTPUT_IN_OUTPUT_PREVIEW_COMMAND_ID,
-			title: localize('notebookActions.openOutputInNotebookOutputEditor', "Open in Output Preview"),
+			title: localize("notebookActions.openOutputInNotebookOutputEditor", "Open in Output Preview"),
 			menu: {
 				id: MenuId.NotebookOutputToolbar,
-				when: ContextKeyExpr.and(NOTEBOOK_CELL_HAS_OUTPUTS, ContextKeyExpr.equals('config.notebook.output.openInPreviewEditor.enabled', true))
+				when: ContextKeyExpr.and(NOTEBOOK_CELL_HAS_OUTPUTS, ContextKeyExpr.equals("config.notebook.output.openInPreviewEditor.enabled", true)),
 			},
 			f1: false,
 			category: NOTEBOOK_ACTIONS_CATEGORY,

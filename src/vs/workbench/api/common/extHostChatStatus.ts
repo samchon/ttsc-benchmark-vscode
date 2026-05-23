@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type * as vscode from 'vscode';
-import * as extHostProtocol from './extHost.protocol.js';
-import { ExtensionIdentifier, IExtensionDescription } from '../../../platform/extensions/common/extensions.js';
+import type * as vscode from "vscode";
+import * as extHostProtocol from "./extHost.protocol.js";
+import { ExtensionIdentifier, IExtensionDescription } from "../../../platform/extensions/common/extensions.js";
 
 export class ExtHostChatStatus {
 
@@ -14,9 +14,11 @@ export class ExtHostChatStatus {
 	private readonly _items = new Map<string, vscode.ChatStatusItem>();
 
 	constructor(
-		mainContext: extHostProtocol.IMainContext
+		mainContext: extHostProtocol.IMainContext,
 	) {
-		this._proxy = mainContext.getProxy(extHostProtocol.MainContext.MainThreadChatStatus);
+		this._proxy = mainContext.getProxy(
+      extHostProtocol.MainContext.MainThreadChatStatus,
+    );
 	}
 
 	createChatStatusItem(extension: IExtensionDescription, id: string): vscode.ChatStatusItem {
@@ -26,18 +28,18 @@ export class ExtHostChatStatus {
 		}
 
 		const state: extHostProtocol.ChatStatusItemDto = {
-			id: internalId,
-			title: '',
-			description: '',
-			detail: '',
-			tooltip: undefined,
-		};
+      id: internalId,
+      title: "",
+      description: "",
+      detail: "",
+      tooltip: undefined,
+    };
 
 		let disposed = false;
 		let visible = false;
 		const syncState = () => {
 			if (disposed) {
-				throw new Error('Chat status item is disposed');
+				throw new Error("Chat status item is disposed");
 			}
 
 			if (!visible) {

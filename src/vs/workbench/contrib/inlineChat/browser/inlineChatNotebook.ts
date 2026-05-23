@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { isEqual } from '../../../../base/common/resources.js';
-import { ICodeEditor } from '../../../../editor/browser/editorBrowser.js';
-import { InlineChatController } from './inlineChatController.js';
-import { IInlineChatSessionService } from './inlineChatSessionService.js';
-import { INotebookEditorService } from '../../notebook/browser/services/notebookEditorService.js';
-import { CellUri } from '../../notebook/common/notebookCommon.js';
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { ICodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { InlineChatController } from "./inlineChatController.js";
+import { IInlineChatSessionService } from "./inlineChatSessionService.js";
+import { INotebookEditorService } from "../../notebook/browser/services/notebookEditorService.js";
+import { CellUri } from "../../notebook/common/notebookCommon.js";
 
 export class InlineChatNotebookContribution {
 

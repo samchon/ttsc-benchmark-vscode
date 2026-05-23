@@ -3,13 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from '../../../../../base/common/buffer.js';
-import { Platform } from '../../../../../base/common/platform.js';
-import { Mutable } from '../../../../../base/common/types.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { INativeMcpDiscoveryData } from '../../../../../platform/mcp/common/nativeMcpDiscoveryHelper.js';
-import { DiscoverySource } from '../mcpConfiguration.js';
-import { McpCollectionSortOrder, McpServerDefinition, McpServerLaunch, McpServerTransportType } from '../mcpTypes.js';
+import { VSBuffer } from "../../../../../base/common/buffer.js";
+import { Platform } from "../../../../../base/common/platform.js";
+import { Mutable } from "../../../../../base/common/types.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { INativeMcpDiscoveryData } from "../../../../../platform/mcp/common/nativeMcpDiscoveryHelper.js";
+import { DiscoverySource } from "../mcpConfiguration.js";
+import {
+  McpCollectionSortOrder,
+  McpServerDefinition,
+  McpServerLaunch,
+  McpServerTransportType,
+} from "../mcpTypes.js";
 
 export interface NativeMpcDiscoveryAdapter {
 	readonly remoteAuthority: string | null;
@@ -49,7 +54,7 @@ export async function claudeConfigToServerDefinition(idPrefix: string, contents:
 			env: server.env || {},
 			envFile: undefined,
 			cwd: cwd?.fsPath,
-			sandbox: undefined
+			sandbox: undefined,
 		};
 
 		return {
@@ -72,13 +77,19 @@ export class ClaudeDesktopMpcDiscoveryAdapter implements NativeMpcDiscoveryAdapt
 
 	getFilePath({ platform, winAppData, xdgHome, homedir }: INativeMcpDiscoveryData): URI | undefined {
 		if (platform === Platform.Windows) {
-			const appData = winAppData || URI.joinPath(homedir, 'AppData', 'Roaming');
-			return URI.joinPath(appData, 'Claude', 'claude_desktop_config.json');
+			const appData = winAppData || URI.joinPath(homedir, "AppData", "Roaming");
+			return URI.joinPath(appData, "Claude", "claude_desktop_config.json");
 		} else if (platform === Platform.Mac) {
-			return URI.joinPath(homedir, 'Library', 'Application Support', 'Claude', 'claude_desktop_config.json');
+			return URI.joinPath(
+        homedir,
+        "Library",
+        "Application Support",
+        "Claude",
+        "claude_desktop_config.json",
+      );
 		} else {
-			const configDir = xdgHome || URI.joinPath(homedir, '.config');
-			return URI.joinPath(configDir, 'Claude', 'claude_desktop_config.json');
+			const configDir = xdgHome || URI.joinPath(homedir, ".config");
+			return URI.joinPath(configDir, "Claude", "claude_desktop_config.json");
 		}
 	}
 
@@ -96,7 +107,7 @@ export class WindsurfDesktopMpcDiscoveryAdapter extends ClaudeDesktopMpcDiscover
 	}
 
 	override getFilePath({ homedir }: INativeMcpDiscoveryData): URI | undefined {
-		return URI.joinPath(homedir, '.codeium', 'windsurf', 'mcp_config.json');
+		return URI.joinPath(homedir, ".codeium", "windsurf", "mcp_config.json");
 	}
 }
 
@@ -109,6 +120,6 @@ export class CursorDesktopMpcDiscoveryAdapter extends ClaudeDesktopMpcDiscoveryA
 	}
 
 	override getFilePath({ homedir }: INativeMcpDiscoveryData): URI | undefined {
-		return URI.joinPath(homedir, '.cursor', 'mcp.json');
+		return URI.joinPath(homedir, ".cursor", "mcp.json");
 	}
 }

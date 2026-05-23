@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from './dom.js';
-import { DisposableStore, IDisposable, toDisposable } from '../common/lifecycle.js';
+import * as dom from "./dom.js";
+import { DisposableStore, IDisposable, toDisposable } from "../common/lifecycle.js";
 
 export interface IPointerMoveCallback {
 	(event: PointerEvent): void;
@@ -51,7 +51,7 @@ export class GlobalPointerMoveMonitor implements IDisposable {
 		pointerId: number,
 		initialButtons: number,
 		pointerMoveCallback: IPointerMoveCallback,
-		onStopCallback: IOnStopCallback
+		onStopCallback: IOnStopCallback,
 	): void {
 		if (this.isMonitoring()) {
 			this.stopMonitoring(false);
@@ -100,13 +100,15 @@ export class GlobalPointerMoveMonitor implements IDisposable {
 
 				e.preventDefault();
 				this._pointerMoveCallback!(e);
-			}
+			},
 		));
 
-		this._hooks.add(dom.addDisposableListener(
-			eventSource,
-			dom.EventType.POINTER_UP,
-			(e: PointerEvent) => this.stopMonitoring(true)
-		));
+		this._hooks.add(
+      dom.addDisposableListener(
+        eventSource,
+        dom.EventType.POINTER_UP,
+        (e: PointerEvent) => this.stopMonitoring(true),
+      ),
+    );
 	}
 }

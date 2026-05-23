@@ -3,41 +3,41 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { mapArrayOrNot } from '../../../../base/common/arrays.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import * as glob from '../../../../base/common/glob.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import * as objects from '../../../../base/common/objects.js';
-import * as extpath from '../../../../base/common/extpath.js';
-import { fuzzyContains, getNLines } from '../../../../base/common/strings.js';
-import { URI, UriComponents } from '../../../../base/common/uri.js';
-import { IFilesConfiguration } from '../../../../platform/files/common/files.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { ITelemetryData } from '../../../../platform/telemetry/common/telemetry.js';
-import { Event } from '../../../../base/common/event.js';
-import * as paths from '../../../../base/common/path.js';
-import { isCancellationError } from '../../../../base/common/errors.js';
-import { AISearchKeyword, GlobPattern, TextSearchCompleteMessageType } from './searchExtTypes.js';
-import { isThenable } from '../../../../base/common/async.js';
-import { ResourceSet } from '../../../../base/common/map.js';
+import { mapArrayOrNot } from "../../../../base/common/arrays.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import * as glob from "../../../../base/common/glob.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import * as objects from "../../../../base/common/objects.js";
+import * as extpath from "../../../../base/common/extpath.js";
+import { fuzzyContains, getNLines } from "../../../../base/common/strings.js";
+import { URI, UriComponents } from "../../../../base/common/uri.js";
+import { IFilesConfiguration } from "../../../../platform/files/common/files.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { ITelemetryData } from "../../../../platform/telemetry/common/telemetry.js";
+import { Event } from "../../../../base/common/event.js";
+import * as paths from "../../../../base/common/path.js";
+import { isCancellationError } from "../../../../base/common/errors.js";
+import { AISearchKeyword, GlobPattern, TextSearchCompleteMessageType } from "./searchExtTypes.js";
+import { isThenable } from "../../../../base/common/async.js";
+import { ResourceSet } from "../../../../base/common/map.js";
 
 export { TextSearchCompleteMessageType };
 
-export const VIEWLET_ID = 'workbench.view.search';
-export const PANEL_ID = 'workbench.panel.search';
-export const VIEW_ID = 'workbench.view.search';
-export const SEARCH_RESULT_LANGUAGE_ID = 'search-result';
+export const VIEWLET_ID = "workbench.view.search";
+export const PANEL_ID = "workbench.panel.search";
+export const VIEW_ID = "workbench.view.search";
+export const SEARCH_RESULT_LANGUAGE_ID = "search-result";
 
-export const SEARCH_EXCLUDE_CONFIG = 'search.exclude';
+export const SEARCH_EXCLUDE_CONFIG = "search.exclude";
 export const DEFAULT_MAX_SEARCH_RESULTS = 20000;
 
 // Warning: this pattern is used in the search editor to detect offsets. If you
 // change this, also change the search-result built-in extension
-const SEARCH_ELIDED_PREFIX = '⟪ ';
-const SEARCH_ELIDED_SUFFIX = ' characters skipped ⟫';
+const SEARCH_ELIDED_PREFIX = "⟪ ";
+const SEARCH_ELIDED_SUFFIX = " characters skipped ⟫";
 const SEARCH_ELIDED_MIN_LEN = (SEARCH_ELIDED_PREFIX.length + SEARCH_ELIDED_SUFFIX.length + 5) * 2;
 
-export const ISearchService = createDecorator<ISearchService>('searchService');
+export const ISearchService = createDecorator<ISearchService>("searchService");
 
 /**
  * A service that enables to search for files or with in files.
@@ -278,7 +278,7 @@ export const enum SearchCompletionExitCode {
 }
 
 export interface ITextSearchStats {
-	type: 'textSearchProvider' | 'searchProcess' | 'aiTextSearchProvider';
+	type: "textSearchProvider" | "searchProcess" | "aiTextSearchProvider";
 }
 
 export interface IFileSearchStats {
@@ -286,7 +286,7 @@ export interface IFileSearchStats {
 	detailStats: ISearchEngineStats | ICachedSearchStats | IFileSearchProviderStats;
 
 	resultCount: number;
-	type: 'fileSearchProvider' | 'searchProcess';
+	type: "fileSearchProvider" | "searchProcess";
 	sortingTime?: number;
 }
 
@@ -335,11 +335,13 @@ export class TextSearchMatch implements ITextSearchMatch {
 		// TODO this is fishy.
 		const rangesArr = Array.isArray(ranges) ? ranges : [ranges];
 
-		if (previewOptions && previewOptions.matchLines === 1 && isSingleLineRangeList(rangesArr)) {
+		if (previewOptions && previewOptions.matchLines === 1 && isSingleLineRangeList(
+      rangesArr,
+    )) {
 			// 1 line preview requested
 			text = getNLines(text, previewOptions.matchLines);
 
-			let result = '';
+			let result = "";
 			let shift = 0;
 			let lastEnd = 0;
 			const leadingChars = Math.floor(previewOptions.charsPerLine / 5);
@@ -356,20 +358,22 @@ export class TextSearchMatch implements ITextSearchMatch {
 
 				lastEnd = previewEnd;
 				this.rangeLocations.push({
-					source: range,
-					preview: new OneLineRange(0, range.startColumn - shift, range.endColumn - shift)
-				});
+          source: range,
+          preview: new OneLineRange(0, range.startColumn - shift, range.endColumn - shift),
+        });
 
 			}
 
 			this.previewText = result;
 		} else {
-			const firstMatchLine = Array.isArray(ranges) ? ranges[0].startLineNumber : ranges.startLineNumber;
+			const firstMatchLine = Array.isArray(
+        ranges,
+      ) ? ranges[0].startLineNumber : ranges.startLineNumber;
 
 			const rangeLocs = mapArrayOrNot(ranges, r => ({
-				preview: new SearchRange(r.startLineNumber - firstMatchLine, r.startColumn, r.endLineNumber - firstMatchLine, r.endColumn),
-				source: r
-			}));
+        preview: new SearchRange(r.startLineNumber - firstMatchLine, r.startColumn, r.endLineNumber - firstMatchLine, r.endColumn),
+        source: r,
+      }));
 
 			this.rangeLocations = Array.isArray(rangeLocs) ? rangeLocs : [rangeLocs];
 			this.previewText = text;
@@ -409,23 +413,23 @@ export class OneLineRange extends SearchRange {
 }
 
 export const enum ViewMode {
-	List = 'list',
-	Tree = 'tree'
+	List = "list",
+	Tree = "tree"
 }
 
 export const enum SearchSortOrder {
-	Default = 'default',
-	FileNames = 'fileNames',
-	Type = 'type',
-	Modified = 'modified',
-	CountDescending = 'countDescending',
-	CountAscending = 'countAscending'
+	Default = "default",
+	FileNames = "fileNames",
+	Type = "type",
+	Modified = "modified",
+	CountDescending = "countDescending",
+	CountAscending = "countAscending"
 }
 
 export const enum SemanticSearchBehavior {
-	Auto = 'auto',
-	Manual = 'manual',
-	RunOnEmpty = 'runOnEmpty',
+	Auto = "auto",
+	Manual = "manual",
+	RunOnEmpty = "runOnEmpty",
 }
 
 export interface ISearchConfigurationProperties {
@@ -440,22 +444,22 @@ export interface ISearchConfigurationProperties {
 	followSymlinks: boolean;
 	smartCase: boolean;
 	globalFindClipboard: boolean;
-	location: 'sidebar' | 'panel';
+	location: "sidebar" | "panel";
 	useReplacePreview: boolean;
 	showLineNumbers: boolean;
 	usePCRE2: boolean;
-	actionsPosition: 'auto' | 'right';
+	actionsPosition: "auto" | "right";
 	maintainFileSearchCache: boolean;
 	maxResults: number | null;
-	collapseResults: 'auto' | 'alwaysCollapse' | 'alwaysExpand';
+	collapseResults: "auto" | "alwaysCollapse" | "alwaysExpand";
 	searchOnType: boolean;
 	seedOnFocus: boolean;
 	seedWithNearestWord: boolean;
 	searchOnTypeDebouncePeriod: number;
-	mode: 'view' | 'reuseEditor' | 'newEditor';
+	mode: "view" | "reuseEditor" | "newEditor";
 	searchEditor: {
-		doubleClickBehaviour: 'selectWord' | 'goToLocation' | 'openLocationToSide';
-		singleClickBehaviour: 'default' | 'peekDefinition';
+		doubleClickBehaviour: "selectWord" | "goToLocation" | "openLocationToSide";
+		singleClickBehaviour: "default" | "peekDefinition";
 		reusePriorSearchConfiguration: boolean;
 		defaultNumberOfContextLines: number | null;
 		focusResultsOnSearch: boolean;
@@ -501,19 +505,33 @@ export function getExcludes(configuration: ISearchConfiguration, includeSearchEx
 	let allExcludes: glob.IExpression = Object.create(null);
 	// clone the config as it could be frozen
 	allExcludes = objects.mixin(allExcludes, objects.deepClone(fileExcludes));
-	allExcludes = objects.mixin(allExcludes, objects.deepClone(searchExcludes), true);
+	allExcludes = objects.mixin(
+    allExcludes,
+    objects.deepClone(searchExcludes),
+    true,
+  );
 
 	return allExcludes;
 }
 
 export function pathIncludedInQuery(queryProps: ICommonQueryProps<URI>, fsPath: string): boolean {
-	const globOptions = queryProps.ignoreGlobCase ? { ignoreCase: true } : undefined;
-	if (queryProps.excludePattern && glob.match(queryProps.excludePattern, fsPath, globOptions)) {
+	const globOptions = queryProps.ignoreGlobCase ? {
+    ignoreCase: true,
+  } : undefined;
+	if (queryProps.excludePattern && glob.match(
+    queryProps.excludePattern,
+    fsPath,
+    globOptions,
+  )) {
 		return false;
 	}
 
 	if (queryProps.includePattern || queryProps.usingSearchPaths) {
-		if (queryProps.includePattern && glob.match(queryProps.includePattern, fsPath, globOptions)) {
+		if (queryProps.includePattern && glob.match(
+      queryProps.includePattern,
+      fsPath,
+      globOptions,
+    )) {
 			return true;
 		}
 
@@ -605,7 +623,7 @@ export interface ISearchEngine<T> {
 }
 
 export interface ISerializedSearchSuccess {
-	type: 'success';
+	type: "success";
 	limitHit: boolean;
 	messages: ITextSearchCompleteMessage[];
 	stats?: IFileSearchStats | ITextSearchStats;
@@ -618,7 +636,7 @@ export interface ISearchEngineSuccess {
 }
 
 export interface ISerializedSearchError {
-	type: 'error';
+	type: "error";
 	error: {
 		message: string;
 		stack: string;
@@ -629,10 +647,10 @@ export type ISerializedSearchComplete = ISerializedSearchSuccess | ISerializedSe
 
 export function isSerializedSearchComplete(arg: ISerializedSearchProgressItem | ISerializedSearchComplete): arg is ISerializedSearchComplete {
 	// eslint-disable-next-line local/code-no-any-casts
-	if ((arg as any).type === 'error') {
+	if ((arg as any).type === "error") {
 		return true;
 		// eslint-disable-next-line local/code-no-any-casts
-	} else if ((arg as any).type === 'success') {
+	} else if ((arg as any).type === "success") {
 		return true;
 	} else {
 		return false;
@@ -640,7 +658,7 @@ export function isSerializedSearchComplete(arg: ISerializedSearchProgressItem | 
 }
 
 export function isSerializedSearchSuccess(arg: ISerializedSearchComplete): arg is ISerializedSearchSuccess {
-	return arg.type === 'success';
+	return arg.type === "success";
 }
 
 export function isSerializedFileMatch(arg: ISerializedSearchProgressItem): arg is ISerializedFileMatch {
@@ -653,7 +671,11 @@ export function isFilePatternMatch(candidate: IRawFileMatch, filePatternToUse: s
 	const pathToMatch = candidate.searchPath ? candidate.searchPath : candidate.relativePath;
 	return fuzzy ?
 		fuzzyContains(pathToMatch, filePatternToUse) :
-		glob.match(filePatternToUse, pathToMatch, ignoreCase ? filePatternIgnoreCaseOptions : undefined);
+		glob.match(
+      filePatternToUse,
+      pathToMatch,
+      ignoreCase ? filePatternIgnoreCaseOptions : undefined,
+    );
 }
 
 export interface ISerializedFileMatch {
@@ -682,10 +704,10 @@ export class SerializableFileMatch implements ISerializedFileMatch {
 
 	serialize(): ISerializedFileMatch {
 		return {
-			path: this.path,
-			results: this.results,
-			numMatches: this.results.length
-		};
+      path: this.path,
+      results: this.results,
+      numMatches: this.results.length,
+    };
 	}
 }
 
@@ -694,14 +716,14 @@ export class SerializableFileMatch implements ISerializedFileMatch {
  */
 export function resolvePatternsForProvider(globalPattern: glob.IExpression | undefined, folderPattern: glob.IExpression | undefined): string[] {
 	const merged = {
-		...(globalPattern || {}),
-		...(folderPattern || {})
-	};
+    ...(globalPattern || {}),
+    ...(folderPattern || {}),
+  };
 
 	return Object.keys(merged)
 		.filter(key => {
 			const value = merged[key];
-			return typeof value === 'boolean' && value;
+			return typeof value === "boolean" && value;
 		});
 }
 
@@ -713,13 +735,15 @@ export class QueryGlobTester {
 	private _parsedIncludeExpression: glob.ParsedExpression | null = null;
 
 	constructor(config: ISearchQuery, folderQuery: IFolderQuery) {
-		const globOptions = config.ignoreGlobCase || folderQuery.ignoreGlobCase ? { ignoreCase: true } : undefined;
+		const globOptions = config.ignoreGlobCase || folderQuery.ignoreGlobCase ? {
+      ignoreCase: true,
+    } : undefined;
 
 		// todo: try to incorporate folderQuery.excludePattern.folder if available
 		this._excludeExpression = folderQuery.excludePattern?.map(excludePattern => {
 			return {
 				...(config.excludePattern || {}),
-				...(excludePattern.pattern || {})
+				...(excludePattern.pattern || {}),
 			} satisfies glob.IExpression;
 		}) ?? [];
 
@@ -728,23 +752,28 @@ export class QueryGlobTester {
 			this._excludeExpression = [config.excludePattern || {}];
 		}
 
-		this._parsedExcludeExpression = this._excludeExpression.map(e => glob.parse(e, globOptions));
+		this._parsedExcludeExpression = this._excludeExpression.map(
+      e => glob.parse(e, globOptions),
+    );
 
 		// Empty includeExpression means include nothing, so no {} shortcuts
 		let includeExpression: glob.IExpression | undefined = config.includePattern;
 		if (folderQuery.includePattern) {
 			if (includeExpression) {
 				includeExpression = {
-					...includeExpression,
-					...folderQuery.includePattern
-				};
+          ...includeExpression,
+          ...folderQuery.includePattern,
+        };
 			} else {
 				includeExpression = folderQuery.includePattern;
 			}
 		}
 
 		if (includeExpression) {
-			this._parsedIncludeExpression = glob.parse(includeExpression, globOptions);
+			this._parsedIncludeExpression = glob.parse(
+        includeExpression,
+        globOptions,
+      );
 		}
 	}
 
@@ -757,7 +786,7 @@ export class QueryGlobTester {
 			// find first non-null result
 			const evaluation = folderExclude(testPath, basename, hasSibling);
 
-			if (typeof evaluation === 'string') {
+			if (typeof evaluation === "string") {
 				result = evaluation;
 				break;
 			}
@@ -767,7 +796,11 @@ export class QueryGlobTester {
 
 
 	matchesExcludesSync(testPath: string, basename?: string, hasSibling?: (name: string) => boolean): boolean {
-		if (this._parsedExcludeExpression && this._evalParsedExcludeExpression(testPath, basename, hasSibling)) {
+		if (this._parsedExcludeExpression && this._evalParsedExcludeExpression(
+      testPath,
+      basename,
+      hasSibling,
+    )) {
 			return true;
 		}
 
@@ -778,11 +811,19 @@ export class QueryGlobTester {
 	 * Guaranteed sync - siblingsFn should not return a promise.
 	 */
 	includedInQuerySync(testPath: string, basename?: string, hasSibling?: (name: string) => boolean): boolean {
-		if (this._parsedExcludeExpression && this._evalParsedExcludeExpression(testPath, basename, hasSibling)) {
+		if (this._parsedExcludeExpression && this._evalParsedExcludeExpression(
+      testPath,
+      basename,
+      hasSibling,
+    )) {
 			return false;
 		}
 
-		if (this._parsedIncludeExpression && !this._parsedIncludeExpression(testPath, basename, hasSibling)) {
+		if (this._parsedIncludeExpression && !this._parsedIncludeExpression(
+      testPath,
+      basename,
+      hasSibling,
+    )) {
 			return false;
 		}
 
@@ -821,13 +862,16 @@ export class QueryGlobTester {
 	}
 
 	hasSiblingExcludeClauses(): boolean {
-		return this._excludeExpression.reduce((prev, curr) => hasSiblingClauses(curr) || prev, false);
+		return this._excludeExpression.reduce(
+      (prev, curr) => hasSiblingClauses(curr) || prev,
+      false,
+    );
 	}
 }
 
 function hasSiblingClauses(pattern: glob.IExpression): boolean {
 	for (const key in pattern) {
-		if (typeof pattern[key] !== 'boolean') {
+		if (typeof pattern[key] !== "boolean") {
 			return true;
 		}
 	}
@@ -878,12 +922,12 @@ export function excludeToGlobPattern(excludesForFolder: { baseUri?: URI | undefi
 		return exclude.baseUri ?
 			{
 				baseUri: exclude.baseUri,
-				pattern: pattern
+				pattern: pattern,
 			} : pattern;
 	}));
 }
 
 export const DEFAULT_TEXT_SEARCH_PREVIEW_OPTIONS = {
-	matchLines: 100,
-	charsPerLine: 10000
+  matchLines: 100,
+  charsPerLine: 10000,
 };

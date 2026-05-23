@@ -3,16 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { groupBy } from '../../../../base/common/arrays.js';
-import { URI } from '../../../../base/common/uri.js';
-import { CommentThread } from '../../../../editor/common/languages.js';
-import { localize } from '../../../../nls.js';
-import { ResourceWithCommentThreads, ICommentThreadChangedEvent } from '../common/commentModel.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { isMarkdownString } from '../../../../base/common/htmlContent.js';
+import { groupBy } from "../../../../base/common/arrays.js";
+import { URI } from "../../../../base/common/uri.js";
+import { CommentThread } from "../../../../editor/common/languages.js";
+import { localize } from "../../../../nls.js";
+import { ResourceWithCommentThreads, ICommentThreadChangedEvent } from "../common/commentModel.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { isMarkdownString } from "../../../../base/common/htmlContent.js";
 
 export function threadHasMeaningfulComments(thread: CommentThread): boolean {
-	return !!thread.comments && !!thread.comments.length && thread.comments.some(comment => isMarkdownString(comment.body) ? comment.body.value.length > 0 : comment.body.length > 0);
+	return !!thread.comments && !!thread.comments.length && thread.comments.some(
+    comment => isMarkdownString(comment.body) ? comment.body.value.length > 0 : comment.body.length > 0,
+  );
 
 }
 
@@ -47,14 +49,20 @@ export class CommentsModel extends Disposable implements ICommentsModel {
 	}
 
 	public setCommentThreads(uniqueOwner: string, owner: string, ownerLabel: string, commentThreads: CommentThread[]): void {
-		this.commentThreadsMap.set(uniqueOwner, { ownerLabel, resourceWithCommentThreads: this.groupByResource(uniqueOwner, owner, commentThreads) });
+		this.commentThreadsMap.set(uniqueOwner, {
+      ownerLabel,
+      resourceWithCommentThreads: this.groupByResource(uniqueOwner, owner, commentThreads),
+    });
 		this.updateResourceCommentThreads();
 	}
 
 	public deleteCommentsByOwner(uniqueOwner?: string): void {
 		if (uniqueOwner) {
 			const existingOwner = this.commentThreadsMap.get(uniqueOwner);
-			this.commentThreadsMap.set(uniqueOwner, { ownerLabel: existingOwner?.ownerLabel, resourceWithCommentThreads: [] });
+			this.commentThreadsMap.set(uniqueOwner, {
+        ownerLabel: existingOwner?.ownerLabel,
+        resourceWithCommentThreads: [],
+      });
 		} else {
 			this.commentThreadsMap.clear();
 		}
@@ -64,7 +72,9 @@ export class CommentsModel extends Disposable implements ICommentsModel {
 	public updateCommentThreads(event: ICommentThreadChangedEvent): boolean {
 		const { uniqueOwner, owner, ownerLabel, removed, changed, added } = event;
 
-		const threadsForOwner = this.commentThreadsMap.get(uniqueOwner)?.resourceWithCommentThreads || [];
+		const threadsForOwner = this.commentThreadsMap.get(
+      uniqueOwner,
+    )?.resourceWithCommentThreads || [];
 
 		removed.forEach(thread => {
 			// Find resource that has the comment thread
@@ -112,7 +122,10 @@ export class CommentsModel extends Disposable implements ICommentsModel {
 			}
 		});
 
-		this.commentThreadsMap.set(uniqueOwner, { ownerLabel, resourceWithCommentThreads: threadsForOwner });
+		this.commentThreadsMap.set(uniqueOwner, {
+      ownerLabel,
+      resourceWithCommentThreads: threadsForOwner,
+    });
 		this.updateResourceCommentThreads();
 
 		return removed.length > 0 || changed.length > 0 || added.length > 0;
@@ -131,9 +144,12 @@ export class CommentsModel extends Disposable implements ICommentsModel {
 
 	public getMessage(): string {
 		if (!this._resourceCommentThreads.length) {
-			return localize('noComments', "There are no comments in this workspace yet.");
+			return localize(
+        "noComments",
+        "There are no comments in this workspace yet.",
+      );
 		} else {
-			return '';
+			return "";
 		}
 	}
 
@@ -141,12 +157,20 @@ export class CommentsModel extends Disposable implements ICommentsModel {
 		const resourceCommentThreads: ResourceWithCommentThreads[] = [];
 		const commentThreadsByResource = new Map<string, ResourceWithCommentThreads>();
 		for (const group of groupBy(commentThreads, CommentsModel._compareURIs)) {
-			commentThreadsByResource.set(group[0].resource!, new ResourceWithCommentThreads(uniqueOwner, owner, URI.parse(group[0].resource!), group));
+			commentThreadsByResource.set(
+        group[0].resource!,
+        new ResourceWithCommentThreads(
+          uniqueOwner,
+          owner,
+          URI.parse(group[0].resource!),
+          group,
+        ),
+      );
 		}
 
 		commentThreadsByResource.forEach((v, i, m) => {
-			resourceCommentThreads.push(v);
-		});
+      resourceCommentThreads.push(v);
+    });
 
 		return resourceCommentThreads;
 	}

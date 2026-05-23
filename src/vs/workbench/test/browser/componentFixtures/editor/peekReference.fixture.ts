@@ -3,23 +3,30 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter } from '../../../../../base/common/event.js';
-import { IReference } from '../../../../../base/common/lifecycle.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { mock } from '../../../../../base/test/common/mock.js';
-import { ComponentFixtureContext, createEditorServices, createTextModel, defineComponentFixture, defineThemedFixtureGroup, registerWorkbenchServices } from '../fixtureUtils.js';
-import { CodeEditorWidget, ICodeEditorWidgetOptions } from '../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js';
-import { LayoutData, ReferenceWidget } from '../../../../../editor/contrib/gotoSymbol/browser/peek/referencesWidget.js';
-import { ReferencesModel } from '../../../../../editor/contrib/gotoSymbol/browser/referencesModel.js';
-import * as peekView from '../../../../../editor/contrib/peekView/browser/peekView.js';
-import { IResolvedTextEditorModel, ITextModelService } from '../../../../../editor/common/services/resolverService.js';
-import { IListService, ListService } from '../../../../../platform/list/browser/listService.js';
-import { ICodeEditor } from '../../../../../editor/browser/editorBrowser.js';
-import { ITextModel } from '../../../../../editor/common/model.js';
+import { Emitter } from "../../../../../base/common/event.js";
+import { IReference } from "../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { mock } from "../../../../../base/test/common/mock.js";
+import {
+  ComponentFixtureContext,
+  createEditorServices,
+  createTextModel,
+  defineComponentFixture,
+  defineThemedFixtureGroup,
+  registerWorkbenchServices,
+} from "../fixtureUtils.js";
+import { CodeEditorWidget, ICodeEditorWidgetOptions } from "../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import { LayoutData, ReferenceWidget } from "../../../../../editor/contrib/gotoSymbol/browser/peek/referencesWidget.js";
+import { ReferencesModel } from "../../../../../editor/contrib/gotoSymbol/browser/referencesModel.js";
+import * as peekView from "../../../../../editor/contrib/peekView/browser/peekView.js";
+import { IResolvedTextEditorModel, ITextModelService } from "../../../../../editor/common/services/resolverService.js";
+import { IListService, ListService } from "../../../../../platform/list/browser/listService.js";
+import { ICodeEditor } from "../../../../../editor/browser/editorBrowser.js";
+import { ITextModel } from "../../../../../editor/common/model.js";
 
-import '../../../../../editor/contrib/peekView/browser/media/peekViewWidget.css';
-import '../../../../../editor/contrib/gotoSymbol/browser/peek/referencesWidget.css';
-import '../../../../../base/browser/ui/codicons/codiconStyles.js';
+import "../../../../../editor/contrib/peekView/browser/media/peekViewWidget.css";
+import "../../../../../editor/contrib/gotoSymbol/browser/peek/referencesWidget.css";
+import "../../../../../base/browser/ui/codicons/codiconStyles.js";
 
 const SAMPLE_CODE = `import { readFile, writeFile } from 'fs';
 
@@ -45,14 +52,16 @@ main();
 `;
 
 function renderPeekReference({ container, disposableStore, theme }: ComponentFixtureContext): void {
-	container.style.width = '700px';
-	container.style.height = '400px';
-	container.style.border = '1px solid var(--vscode-editorWidget-border)';
+	container.style.width = "700px";
+	container.style.height = "400px";
+	container.style.border = "1px solid var(--vscode-editorWidget-border)";
 
-	const uri = URI.parse('inmemory://peek-fixture.ts');
+	const uri = URI.parse("inmemory://peek-fixture.ts");
 
 	// Store text model reference for the mock service
-	const fixtureTextModel: { value: ITextModel | undefined } = { value: undefined };
+	const fixtureTextModel: { value: ITextModel | undefined } = {
+    value: undefined,
+  };
 
 	const instantiationService = createEditorServices(disposableStore, {
 		colorTheme: theme,
@@ -94,31 +103,28 @@ function renderPeekReference({ container, disposableStore, theme }: ComponentFix
 		},
 	});
 
-	const textModel = disposableStore.add(createTextModel(
-		instantiationService,
-		SAMPLE_CODE,
-		uri,
-		'typescript'
-	));
+	const textModel = disposableStore.add(
+    createTextModel(instantiationService, SAMPLE_CODE, uri, "typescript"),
+  );
 	fixtureTextModel.value = textModel;
 
 	const editorWidgetOptions: ICodeEditorWidgetOptions = {
-		contributions: []
-	};
+    contributions: [],
+  };
 
 	const editor = instantiationService.createInstance(
-		CodeEditorWidget,
-		container,
-		{
-			automaticLayout: true,
-			minimap: { enabled: false },
-			lineNumbers: 'on',
-			scrollBeyondLastLine: false,
-			fontSize: 14,
-			cursorBlinking: 'solid',
-		},
-		editorWidgetOptions
-	);
+    CodeEditorWidget,
+    container,
+    {
+      automaticLayout: true,
+      minimap: { enabled: false },
+      lineNumbers: "on",
+      scrollBeyondLastLine: false,
+      fontSize: 14,
+      cursorBlinking: "solid",
+    },
+    editorWidgetOptions,
+  );
 
 	editor.setModel(textModel);
 	editor.focus();
@@ -126,29 +132,43 @@ function renderPeekReference({ container, disposableStore, theme }: ComponentFix
 	const layoutData: LayoutData = { ratio: 0.7, heightInLines: 10 };
 
 	const referenceWidget = instantiationService.createInstance(
-		ReferenceWidget,
-		editor,
-		true,
-		layoutData,
-	);
+    ReferenceWidget,
+    editor,
+    true,
+    layoutData,
+  );
 	// Register widget BEFORE editor so widget.dispose() runs first; otherwise
 	// `ReferenceWidget.dispose()` calls `observableCodeEditor(disposed editor)`
 	// which creates a fresh untracked ObservableCodeEditor.
 	disposableStore.add(referenceWidget);
 	disposableStore.add(editor);
 
-	const range = { startLineNumber: 3, startColumn: 10, endLineNumber: 3, endColumn: 21 };
-	referenceWidget.setTitle('processFile');
-	referenceWidget.setMetaTitle('3 references');
+	const range = {
+    startLineNumber: 3,
+    startColumn: 10,
+    endLineNumber: 3,
+    endColumn: 21,
+  };
+	referenceWidget.setTitle("processFile");
+	referenceWidget.setMetaTitle("3 references");
 	referenceWidget.show(range);
 
 	const links = [
-		{ uri, range: { startLineNumber: 3, startColumn: 10, endLineNumber: 3, endColumn: 21 } },
-		{ uri, range: { startLineNumber: 16, startColumn: 26, endLineNumber: 16, endColumn: 37 } },
-		{ uri, range: { startLineNumber: 20, startColumn: 1, endLineNumber: 20, endColumn: 5 } },
-	];
+    {
+      uri,
+      range: { startLineNumber: 3, startColumn: 10, endLineNumber: 3, endColumn: 21 },
+    },
+    {
+      uri,
+      range: { startLineNumber: 16, startColumn: 26, endLineNumber: 16, endColumn: 37 },
+    },
+    {
+      uri,
+      range: { startLineNumber: 20, startColumn: 1, endLineNumber: 20, endColumn: 5 },
+    },
+  ];
 
-	const model = new ReferencesModel(links, 'processFile');
+	const model = new ReferencesModel(links, "processFile");
 	disposableStore.add(model);
 	referenceWidget.setModel(model);
 }

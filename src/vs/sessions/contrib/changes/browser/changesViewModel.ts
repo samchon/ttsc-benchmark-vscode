@@ -3,18 +3,33 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Codicon } from '../../../../base/common/codicons.js';
-import { structuralEquals } from '../../../../base/common/equals.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { derived, derivedOpts, IObservable, ISettableObservable, observableValue, observableSignalFromEvent, derivedObservableWithCache, autorun } from '../../../../base/common/observable.js';
-import { isEqual } from '../../../../base/common/resources.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { ISessionChangeset, ISessionFileChange } from '../../../services/sessions/common/session.js';
-import { ISessionsManagementService } from '../../../services/sessions/common/sessionsManagement.js';
-import { IAgentFeedbackService } from '../../agentFeedback/browser/agentFeedbackService.js';
-import { CodeReviewStateKind, getCodeReviewFilesFromSessionChanges, getCodeReviewVersion, ICodeReviewService, PRReviewStateKind } from '../../codeReview/browser/codeReviewService.js';
-import { ChangesViewMode, IsolationMode } from '../common/changes.js';
+import { Codicon } from "../../../../base/common/codicons.js";
+import { structuralEquals } from "../../../../base/common/equals.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import {
+  derived,
+  derivedOpts,
+  IObservable,
+  ISettableObservable,
+  observableValue,
+  observableSignalFromEvent,
+  derivedObservableWithCache,
+  autorun,
+} from "../../../../base/common/observable.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { ISessionChangeset, ISessionFileChange } from "../../../services/sessions/common/session.js";
+import { ISessionsManagementService } from "../../../services/sessions/common/sessionsManagement.js";
+import { IAgentFeedbackService } from "../../agentFeedback/browser/agentFeedbackService.js";
+import {
+  CodeReviewStateKind,
+  getCodeReviewFilesFromSessionChanges,
+  getCodeReviewVersion,
+  ICodeReviewService,
+  PRReviewStateKind,
+} from "../../codeReview/browser/codeReviewService.js";
+import { ChangesViewMode, IsolationMode } from "../common/changes.js";
 
 export interface ActiveSessionState {
 	readonly isolationMode: IsolationMode;
@@ -46,7 +61,10 @@ export class ChangesViewModel extends Disposable {
 	readonly activeSessionStateObs: IObservable<ActiveSessionState | undefined>;
 	readonly activeSessionIsLoadingObs: IObservable<boolean>;
 
-	private readonly _selectedChangesetId = observableValue<string | undefined>(this, undefined);
+	private readonly _selectedChangesetId = observableValue<string | undefined>(
+    this,
+    undefined,
+  );
 	setChangesetId(changesetId: string | undefined): void {
 		this._selectedChangesetId.set(changesetId, undefined);
 	}
@@ -57,7 +75,12 @@ export class ChangesViewModel extends Disposable {
 			return;
 		}
 		this.viewModeObs.set(mode, undefined);
-		this.storageService.store('changesView.viewMode', mode, StorageScope.WORKSPACE, StorageTarget.USER);
+		this.storageService.store(
+      "changesView.viewMode",
+      mode,
+      StorageScope.WORKSPACE,
+      StorageTarget.USER,
+    );
 	}
 
 	constructor(
@@ -76,14 +99,14 @@ export class ChangesViewModel extends Disposable {
 
 		// Active session type
 		this.activeSessionTypeObs = derived(reader => {
-			const activeSession = this.sessionManagementService.activeSession.read(reader);
-			return activeSession?.sessionType;
-		});
+      const activeSession = this.sessionManagementService.activeSession.read(reader);
+      return activeSession?.sessionType;
+    });
 
 		this.activeSessionIsVirtualWorkspaceObs = derived(reader => {
-			const activeSession = this.sessionManagementService.activeSession.read(reader);
-			return activeSession?.workspace.read(reader)?.isVirtualWorkspace ?? false;
-		});
+      const activeSession = this.sessionManagementService.activeSession.read(reader);
+      return activeSession?.workspace.read(reader)?.isVirtualWorkspace ?? false;
+    });
 
 		// Active session has git repository
 		this.activeSessionHasGitRepositoryObs = derived(reader => {
@@ -110,9 +133,9 @@ export class ChangesViewModel extends Disposable {
 
 		// Changeset
 		this.activeSessionChangesetsObs = derived(reader => {
-			const activeSession = this.sessionManagementService.activeSession.read(reader);
-			return activeSession?.changesets.read(reader);
-		});
+      const activeSession = this.sessionManagementService.activeSession.read(reader);
+      return activeSession?.changesets.read(reader);
+    });
 
 		this.activeSessionChangesetObs = derived<ISessionChangeset | undefined>(reader => {
 			const selectedChangesetId = this._selectedChangesetId.read(reader);
@@ -130,27 +153,32 @@ export class ChangesViewModel extends Disposable {
 
 		// Changes
 		this.activeSessionChangesObs = derived(reader => {
-			const changeset = this.activeSessionChangesetObs.read(reader);
-			return changeset?.changes.read(reader) ?? [];
-		});
+      const changeset = this.activeSessionChangesetObs.read(reader);
+      return changeset?.changes.read(reader) ?? [];
+    });
 
 		// View mode
-		const storedMode = this.storageService.get('changesView.viewMode', StorageScope.WORKSPACE);
+		const storedMode = this.storageService.get(
+      "changesView.viewMode",
+      StorageScope.WORKSPACE,
+    );
 		const initialMode = storedMode === ChangesViewMode.Tree ? ChangesViewMode.Tree : ChangesViewMode.List;
 		this.viewModeObs = observableValue<ChangesViewMode>(this, initialMode);
 
 		// Reset changeset selection
-		this._register(autorun(reader => {
-			this.activeSessionResourceObs.read(reader);
-			this.setChangesetId(undefined);
-		}));
+		this._register(
+      autorun(reader => {
+        this.activeSessionResourceObs.read(reader);
+        this.setChangesetId(undefined);
+      }),
+    );
 	}
 
 	private _getActiveSessionState(): { isLoading: IObservable<boolean>; state: IObservable<ActiveSessionState | undefined> } {
 		const isLoadingObs = derived(reader => {
-			const changeset = this.activeSessionChangesetObs.read(reader);
-			return changeset?.isLoadingChanges.read(reader) ?? false;
-		});
+      const changeset = this.activeSessionChangesetObs.read(reader);
+      return changeset?.isLoadingChanges.read(reader) ?? false;
+    });
 
 		const activeSessionStateObs = derivedObservableWithCache<ActiveSessionState | undefined>(this, (reader, lastValue) => {
 			const isLoading = isLoadingObs.read(reader);
@@ -205,14 +233,14 @@ export class ChangesViewModel extends Disposable {
 				hasGitHubRemote,
 				hasPullRequest,
 				hasOpenPullRequest,
-				hasGitOperationInProgress
+				hasGitOperationInProgress,
 			} satisfies ActiveSessionState;
 		});
 
 		return {
 			isLoading: isLoadingObs,
 			state: derivedOpts({ equalsFn: structuralEquals },
-				reader => activeSessionStateObs.read(reader))
+				reader => activeSessionStateObs.read(reader)),
 		};
 	}
 

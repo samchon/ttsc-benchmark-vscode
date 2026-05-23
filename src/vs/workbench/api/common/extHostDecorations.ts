@@ -3,19 +3,26 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type * as vscode from 'vscode';
-import { URI } from '../../../base/common/uri.js';
-import { MainContext, ExtHostDecorationsShape, MainThreadDecorationsShape, DecorationData, DecorationRequest, DecorationReply } from './extHost.protocol.js';
-import { Disposable, FileDecoration } from './extHostTypes.js';
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { IExtensionDescription } from '../../../platform/extensions/common/extensions.js';
-import { createDecorator } from '../../../platform/instantiation/common/instantiation.js';
-import { IExtHostRpcService } from './extHostRpcService.js';
-import { ILogService } from '../../../platform/log/common/log.js';
-import { asArray, groupBy } from '../../../base/common/arrays.js';
-import { compare, count } from '../../../base/common/strings.js';
-import { dirname } from '../../../base/common/path.js';
-import { checkProposedApiEnabled } from '../../services/extensions/common/extensions.js';
+import type * as vscode from "vscode";
+import { URI } from "../../../base/common/uri.js";
+import {
+  MainContext,
+  ExtHostDecorationsShape,
+  MainThreadDecorationsShape,
+  DecorationData,
+  DecorationRequest,
+  DecorationReply,
+} from "./extHost.protocol.js";
+import { Disposable, FileDecoration } from "./extHostTypes.js";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { IExtensionDescription } from "../../../platform/extensions/common/extensions.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { asArray, groupBy } from "../../../base/common/arrays.js";
+import { compare, count } from "../../../base/common/strings.js";
+import { dirname } from "../../../base/common/path.js";
+import { checkProposedApiEnabled } from "../../services/extensions/common/extensions.js";
 
 interface ProviderData {
 	provider: vscode.FileDecorationProvider;
@@ -41,7 +48,10 @@ export class ExtHostDecorations implements ExtHostDecorationsShape {
 	registerFileDecorationProvider(provider: vscode.FileDecorationProvider, extensionDescription: IExtensionDescription): vscode.Disposable {
 		const handle = ExtHostDecorations._handlePool++;
 		this._provider.set(handle, { provider, extensionDescription });
-		this._proxy.$registerDecorationProvider(handle, extensionDescription.identifier.value);
+		this._proxy.$registerDecorationProvider(
+      handle,
+      extensionDescription.identifier.value,
+    );
 
 		const listener = provider.onDidChangeFileDecorations && provider.onDidChangeFileDecorations(e => {
 			if (!e) {
@@ -56,8 +66,8 @@ export class ExtHostDecorations implements ExtHostDecorationsShape {
 
 			// too many resources per event. pick one resource per folder, starting
 			// with parent folders
-			this._logService.warn('[Decorations] CAPPING events from decorations provider', extensionDescription.identifier.value, array.length);
-			const mapped = array.map(uri => ({ uri, rank: count(uri.path, '/') }));
+			this._logService.warn("[Decorations] CAPPING events from decorations provider", extensionDescription.identifier.value, array.length);
+			const mapped = array.map(uri => ({ uri, rank: count(uri.path, "/") }));
 			const groups = groupBy(mapped, (a, b) => a.rank - b.rank || compare(a.uri.path, b.uri.path));
 			const picked: URI[] = [];
 			outer: for (const uris of groups) {
@@ -76,10 +86,10 @@ export class ExtHostDecorations implements ExtHostDecorationsShape {
 		});
 
 		return new Disposable(() => {
-			listener?.dispose();
-			this._proxy.$unregisterDecorationProvider(handle);
-			this._provider.delete(handle);
-		});
+      listener?.dispose();
+      this._proxy.$unregisterDecorationProvider(handle);
+      this._provider.delete(handle);
+    });
 	}
 
 	async $provideDecorations(handle: number, requests: DecorationRequest[], token: CancellationToken): Promise<DecorationReply> {
@@ -90,7 +100,9 @@ export class ExtHostDecorations implements ExtHostDecorationsShape {
 		}
 
 		const result: DecorationReply = Object.create(null);
-		const { provider, extensionDescription: extensionId } = this._provider.get(handle)!;
+		const { provider, extensionDescription: extensionId } = this._provider.get(
+      handle,
+    )!;
 
 		await Promise.all(requests.map(async request => {
 			try {
@@ -101,8 +113,8 @@ export class ExtHostDecorations implements ExtHostDecorationsShape {
 				}
 				try {
 					FileDecoration.validate(data);
-					if (data.badge && typeof data.badge !== 'string') {
-						checkProposedApiEnabled(extensionId, 'codiconDecoration');
+					if (data.badge && typeof data.badge !== "string") {
+						checkProposedApiEnabled(extensionId, "codiconDecoration");
 					}
 					result[id] = <DecorationData>[data.propagate, data.tooltip, data.badge, data.color];
 				} catch (e) {
@@ -117,5 +129,7 @@ export class ExtHostDecorations implements ExtHostDecorationsShape {
 	}
 }
 
-export const IExtHostDecorations = createDecorator<IExtHostDecorations>('IExtHostDecorations');
+export const IExtHostDecorations = createDecorator<IExtHostDecorations>(
+  "IExtHostDecorations",
+);
 export interface IExtHostDecorations extends ExtHostDecorations { }

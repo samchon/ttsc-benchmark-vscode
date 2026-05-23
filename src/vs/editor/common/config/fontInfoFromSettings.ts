@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { EditorOption, EditorOptions } from './editorOptions.js';
-import { IValidatedEditorOptions, BareFontInfo } from './fontInfo.js';
+import { EditorOption, EditorOptions } from "./editorOptions.js";
+import { IValidatedEditorOptions, BareFontInfo } from "./fontInfo.js";
 
 export function createBareFontInfoFromValidatedSettings(options: IValidatedEditorOptions, pixelRatio: number, ignoreEditorZoom: boolean): BareFontInfo {
 	const fontFamily = options.get(EditorOption.fontFamily);
@@ -14,7 +14,17 @@ export function createBareFontInfoFromValidatedSettings(options: IValidatedEdito
 	const fontVariationSettings = options.get(EditorOption.fontVariations);
 	const lineHeight = options.get(EditorOption.lineHeight);
 	const letterSpacing = options.get(EditorOption.letterSpacing);
-	return BareFontInfo._create(fontFamily, fontWeight, fontSize, fontFeatureSettings, fontVariationSettings, lineHeight, letterSpacing, pixelRatio, ignoreEditorZoom);
+	return BareFontInfo._create(
+    fontFamily,
+    fontWeight,
+    fontSize,
+    fontFeatureSettings,
+    fontVariationSettings,
+    lineHeight,
+    letterSpacing,
+    pixelRatio,
+    ignoreEditorZoom,
+  );
 }
 
 export function createBareFontInfoFromRawSettings(opts: {
@@ -29,9 +39,25 @@ export function createBareFontInfoFromRawSettings(opts: {
 	const fontFamily = EditorOptions.fontFamily.validate(opts.fontFamily);
 	const fontWeight = EditorOptions.fontWeight.validate(opts.fontWeight);
 	const fontSize = EditorOptions.fontSize.validate(opts.fontSize);
-	const fontFeatureSettings = EditorOptions.fontLigatures2.validate(opts.fontLigatures);
-	const fontVariationSettings = EditorOptions.fontVariations.validate(opts.fontVariations);
+	const fontFeatureSettings = EditorOptions.fontLigatures2.validate(
+    opts.fontLigatures,
+  );
+	const fontVariationSettings = EditorOptions.fontVariations.validate(
+    opts.fontVariations,
+  );
 	const lineHeight = EditorOptions.lineHeight.validate(opts.lineHeight);
-	const letterSpacing = EditorOptions.letterSpacing.validate(opts.letterSpacing);
-	return BareFontInfo._create(fontFamily, fontWeight, fontSize, fontFeatureSettings, fontVariationSettings, lineHeight, letterSpacing, pixelRatio, ignoreEditorZoom);
+	const letterSpacing = EditorOptions.letterSpacing.validate(
+    opts.letterSpacing,
+  );
+	return BareFontInfo._create(
+    fontFamily,
+    fontWeight,
+    fontSize,
+    fontFeatureSettings,
+    fontVariationSettings,
+    lineHeight,
+    letterSpacing,
+    pixelRatio,
+    ignoreEditorZoom,
+  );
 }

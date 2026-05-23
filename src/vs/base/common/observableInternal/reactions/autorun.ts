@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IReaderWithStore, IReader, IObservable, ISettableObservable } from '../base.js';
-import { IChangeTracker } from '../changeTracker.js';
-import { DisposableStore, IDisposable, toDisposable } from '../commonFacade/deps.js';
-import { DebugNameData, IDebugNameData } from '../debugName.js';
-import { AutorunObserver } from './autorunImpl.js';
-import { DebugLocation } from '../debugLocation.js';
-import { observableValue } from '../observables/observableValue.js';
-import { transaction } from '../transaction.js';
+import { IReaderWithStore, IReader, IObservable, ISettableObservable } from "../base.js";
+import { IChangeTracker } from "../changeTracker.js";
+import { DisposableStore, IDisposable, toDisposable } from "../commonFacade/deps.js";
+import { DebugNameData, IDebugNameData } from "../debugName.js";
+import { AutorunObserver } from "./autorunImpl.js";
+import { DebugLocation } from "../debugLocation.js";
+import { observableValue } from "../observables/observableValue.js";
+import { transaction } from "../transaction.js";
 
 /**
  * Runs immediately and whenever a transaction ends and an observed observable changed.
@@ -18,11 +18,11 @@ import { transaction } from '../transaction.js';
  */
 export function autorun(fn: (reader: IReaderWithStore) => void, debugLocation = DebugLocation.ofCaller()): IDisposable {
 	return new AutorunObserver(
-		new DebugNameData(undefined, undefined, fn),
-		fn,
-		undefined,
-		debugLocation
-	);
+    new DebugNameData(undefined, undefined, fn),
+    fn,
+    undefined,
+    debugLocation,
+  );
 }
 
 /**
@@ -31,11 +31,15 @@ export function autorun(fn: (reader: IReaderWithStore) => void, debugLocation = 
  */
 export function autorunOpts(options: IDebugNameData & {}, fn: (reader: IReaderWithStore) => void, debugLocation = DebugLocation.ofCaller()): IDisposable {
 	return new AutorunObserver(
-		new DebugNameData(options.owner, options.debugName, options.debugReferenceFn ?? fn),
-		fn,
-		undefined,
-		debugLocation
-	);
+    new DebugNameData(
+      options.owner,
+      options.debugName,
+      options.debugReferenceFn ?? fn,
+    ),
+    fn,
+    undefined,
+    debugLocation,
+  );
 }
 
 /**
@@ -54,14 +58,18 @@ export function autorunHandleChanges<TChangeSummary>(
 		changeTracker: IChangeTracker<TChangeSummary>;
 	},
 	fn: (reader: IReader, changeSummary: TChangeSummary) => void,
-	debugLocation = DebugLocation.ofCaller()
+	debugLocation = DebugLocation.ofCaller(),
 ): IDisposable {
 	return new AutorunObserver(
-		new DebugNameData(options.owner, options.debugName, options.debugReferenceFn ?? fn),
-		fn,
-		options.changeTracker,
-		debugLocation
-	);
+    new DebugNameData(
+      options.owner,
+      options.debugName,
+      options.debugReferenceFn ?? fn,
+    ),
+    fn,
+    options.changeTracker,
+    debugLocation,
+  );
 }
 
 /**
@@ -71,25 +79,22 @@ export function autorunWithStoreHandleChanges<TChangeSummary>(
 	options: IDebugNameData & {
 		changeTracker: IChangeTracker<TChangeSummary>;
 	},
-	fn: (reader: IReader, changeSummary: TChangeSummary, store: DisposableStore) => void
+	fn: (reader: IReader, changeSummary: TChangeSummary, store: DisposableStore) => void,
 ): IDisposable {
 	const store = new DisposableStore();
-	const disposable = autorunHandleChanges(
-		{
-			owner: options.owner,
-			debugName: options.debugName,
-			debugReferenceFn: options.debugReferenceFn ?? fn,
-			changeTracker: options.changeTracker,
-		},
-		(reader, changeSummary) => {
-			store.clear();
-			fn(reader, changeSummary, store);
-		}
-	);
+	const disposable = autorunHandleChanges({
+    owner: options.owner,
+    debugName: options.debugName,
+    debugReferenceFn: options.debugReferenceFn ?? fn,
+    changeTracker: options.changeTracker,
+  }, (reader, changeSummary) => {
+    store.clear();
+    fn(reader, changeSummary, store);
+  });
 	return toDisposable(() => {
-		disposable.dispose();
-		store.dispose();
-	});
+    disposable.dispose();
+    store.dispose();
+  });
 }
 
 /**
@@ -99,40 +104,37 @@ export function autorunWithStoreHandleChanges<TChangeSummary>(
  */
 export function autorunWithStore(fn: (reader: IReader, store: DisposableStore) => void): IDisposable {
 	const store = new DisposableStore();
-	const disposable = autorunOpts(
-		{
-			owner: undefined,
-			debugName: undefined,
-			debugReferenceFn: fn,
-		},
-		reader => {
-			store.clear();
-			fn(reader, store);
-		}
-	);
+	const disposable = autorunOpts({
+    owner: undefined,
+    debugName: undefined,
+    debugReferenceFn: fn,
+  }, reader => {
+    store.clear();
+    fn(reader, store);
+  });
 	return toDisposable(() => {
-		disposable.dispose();
-		store.dispose();
-	});
+    disposable.dispose();
+    store.dispose();
+  });
 }
 
 export function autorunDelta<T>(
 	observable: IObservable<T>,
-	handler: (args: { lastValue: T | undefined; newValue: T }) => void
+	handler: (args: { lastValue: T | undefined; newValue: T }) => void,
 ): IDisposable {
 	let _lastValue: T | undefined;
 	return autorunOpts({ debugReferenceFn: handler }, (reader) => {
-		const newValue = observable.read(reader);
-		const lastValue = _lastValue;
-		_lastValue = newValue;
-		handler({ lastValue, newValue });
-	});
+    const newValue = observable.read(reader);
+    const lastValue = _lastValue;
+    _lastValue = newValue;
+    handler({ lastValue, newValue });
+  });
 }
 
 export function autorunIterableDelta<T>(
 	getValue: (reader: IReader) => Iterable<T>,
 	handler: (args: { addedValues: T[]; removedValues: T[] }) => void,
-	getUniqueIdentifier: (value: T) => unknown = v => v
+	getUniqueIdentifier: (value: T) => unknown = v => v,
 ) {
 	const lastValues = new Map<unknown, T>();
 	return autorunOpts({ debugReferenceFn: getValue }, (reader) => {
@@ -179,7 +181,7 @@ export function autorunPerKeyedItem<TIn, TKey>(
 	items: IObservable<readonly TIn[]>,
 	keyFn: (input: TIn) => TKey,
 	setup: (key: TKey, value: IObservable<TIn>, store: DisposableStore) => void,
-	debugLocation = DebugLocation.ofCaller()
+	debugLocation = DebugLocation.ofCaller(),
 ): IDisposable {
 	interface ICell {
 		readonly value: ISettableObservable<TIn>;
@@ -199,7 +201,7 @@ export function autorunPerKeyedItem<TIn, TKey>(
 					existing.value.set(item, tx);
 				} else {
 					const store = new DisposableStore();
-					const value = observableValue<TIn>('keyedItem', item);
+					const value = observableValue<TIn>("keyedItem", item);
 					const cell: ICell = { value, store };
 					cells.set(key, cell);
 					additions.push({ key, cell });
@@ -247,7 +249,7 @@ export function autorunSelfDisposable(fn: (reader: IReaderWithDispose) => void, 
 			dispose: () => {
 				ar?.dispose();
 				disposed = true;
-			}
+			},
 		});
 	}, debugLocation);
 
@@ -282,7 +284,7 @@ export function registerAutorunSelfDisposable(store: DisposableStore, fn: (reade
 					// dispose on reaction, ar is already registered.
 					store.delete(ar);
 				}
-			}
+			},
 		});
 	}, debugLocation);
 

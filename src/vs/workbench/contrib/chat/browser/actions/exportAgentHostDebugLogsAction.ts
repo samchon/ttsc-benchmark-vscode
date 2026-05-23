@@ -3,37 +3,41 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from '../../../../../base/common/buffer.js';
-import { Schemas } from '../../../../../base/common/network.js';
-import { joinPath } from '../../../../../base/common/resources.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { localize, localize2 } from '../../../../../nls.js';
-import { Categories } from '../../../../../platform/action/common/actionCommonCategories.js';
-import { Action2 } from '../../../../../platform/actions/common/actions.js';
-import { agentHostAuthority, toAgentHostUri } from '../../../../../platform/agentHost/common/agentHostUri.js';
-import { AgentHostEnabledSettingId, IAgentHostService } from '../../../../../platform/agentHost/common/agentService.js';
-import { IRemoteAgentHostConnectionInfo, IRemoteAgentHostService } from '../../../../../platform/agentHost/common/remoteAgentHostService.js';
-import { ContextKeyExpr } from '../../../../../platform/contextkey/common/contextkey.js';
-import { IFileDialogService } from '../../../../../platform/dialogs/common/dialogs.js';
-import { IEnvironmentService } from '../../../../../platform/environment/common/environment.js';
-import { IFileService } from '../../../../../platform/files/common/files.js';
-import { createDecorator, ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../platform/log/common/log.js';
-import { INotificationService, Severity } from '../../../../../platform/notification/common/notification.js';
-import { IProductService } from '../../../../../platform/product/common/productService.js';
-import { ITextModelService } from '../../../../../editor/common/services/resolverService.js';
-import { IOutputService } from '../../../../services/output/common/output.js';
-import { IPathService } from '../../../../services/path/common/pathService.js';
-import { IChatWidgetService } from '../chat.js';
-import { ChatContextKeys } from '../../common/actions/chatContextKeys.js';
-import { COPILOT_CLI_LOCAL_AH_SCHEME, parseRemoteAuthorityFromScheme, resolveEventsUri } from '../copilotCliEventsUri.js';
+import { VSBuffer } from "../../../../../base/common/buffer.js";
+import { Schemas } from "../../../../../base/common/network.js";
+import { joinPath } from "../../../../../base/common/resources.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { localize, localize2 } from "../../../../../nls.js";
+import { Categories } from "../../../../../platform/action/common/actionCommonCategories.js";
+import { Action2 } from "../../../../../platform/actions/common/actions.js";
+import { agentHostAuthority, toAgentHostUri } from "../../../../../platform/agentHost/common/agentHostUri.js";
+import { AgentHostEnabledSettingId, IAgentHostService } from "../../../../../platform/agentHost/common/agentService.js";
+import { IRemoteAgentHostConnectionInfo, IRemoteAgentHostService } from "../../../../../platform/agentHost/common/remoteAgentHostService.js";
+import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IFileDialogService } from "../../../../../platform/dialogs/common/dialogs.js";
+import { IEnvironmentService } from "../../../../../platform/environment/common/environment.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { createDecorator, ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { INotificationService, Severity } from "../../../../../platform/notification/common/notification.js";
+import { IProductService } from "../../../../../platform/product/common/productService.js";
+import { ITextModelService } from "../../../../../editor/common/services/resolverService.js";
+import { IOutputService } from "../../../../services/output/common/output.js";
+import { IPathService } from "../../../../services/path/common/pathService.js";
+import { IChatWidgetService } from "../chat.js";
+import { ChatContextKeys } from "../../common/actions/chatContextKeys.js";
+import {
+  COPILOT_CLI_LOCAL_AH_SCHEME,
+  parseRemoteAuthorityFromScheme,
+  resolveEventsUri,
+} from "../copilotCliEventsUri.js";
 
 /** Output channel ID for the agent host process logger (forwarded via RemoteLoggerChannelClient). */
-const AGENT_HOST_LOGGER_CHANNEL_ID = 'agenthost';
+const AGENT_HOST_LOGGER_CHANNEL_ID = "agenthost";
 /** Output channel ID for the current window's renderer log. */
-const WINDOW_LOG_CHANNEL_ID = 'rendererLog';
+const WINDOW_LOG_CHANNEL_ID = "rendererLog";
 /** Output channel ID for the shared process compound log. */
-const SHARED_PROCESS_LOG_CHANNEL_ID = 'shared';
+const SHARED_PROCESS_LOG_CHANNEL_ID = "shared";
 
 /**
  * Description of the agent-host session whose logs should be exported. If
@@ -54,7 +58,9 @@ export interface IAgentHostDebugLogsExport {
 	readonly exportName: string;
 }
 
-export const IAgentHostDebugLogsExportService = createDecorator<IAgentHostDebugLogsExportService>('agentHostDebugLogsExportService');
+export const IAgentHostDebugLogsExportService = createDecorator<IAgentHostDebugLogsExportService>(
+  "agentHostDebugLogsExportService",
+);
 
 export interface IAgentHostDebugLogsExportService {
 	readonly _serviceBrand: undefined;
@@ -70,7 +76,12 @@ export class BrowserAgentHostDebugLogsExportService implements IAgentHostDebugLo
 	) { }
 
 	async save(exportName: string, files: readonly { path: string; contents: string }[]): Promise<void> {
-		await exportFilesToLocalFolder(this.fileDialogService, this.fileService, exportName, files);
+		await exportFilesToLocalFolder(
+      this.fileDialogService,
+      this.fileService,
+      exportName,
+      files,
+    );
 	}
 }
 
@@ -101,10 +112,12 @@ export async function collectAgentHostDebugLogs(
 	const userHome = pathService.userHome({ preferLocal: true });
 
 	const eventsResult = resolveEventsUri(
-		activeSession?.resource,
-		userHome,
-		authority => remoteAgentHostService.connections.find(c => agentHostAuthority(c.address) === authority),
-	);
+    activeSession?.resource,
+    userHome,
+    authority => remoteAgentHostService.connections.find(
+      c => agentHostAuthority(c.address) === authority,
+    ),
+  );
 
 	// Collect all output channel IDs relevant for the current session's agent host.
 	const channelIds = new Set<string>();
@@ -121,7 +134,10 @@ export async function collectAgentHostDebugLogs(
 			const localClientId = sanitizeFilePart(agentHostService.clientId);
 			ahpLogNameFilter = name => name.includes(localClientId);
 		} else {
-			remoteConnection = getRemoteConnectionForSession(activeSession.resource, remoteAgentHostService.connections);
+			remoteConnection = getRemoteConnectionForSession(
+        activeSession.resource,
+        remoteAgentHostService.connections,
+      );
 			if (remoteConnection) {
 				channelIds.add(`agenthost.${remoteConnection.clientId}`);
 			}
@@ -141,10 +157,10 @@ export async function collectAgentHostDebugLogs(
 	const files: { path: string; contents: string }[] = [];
 
 	// 1. events.jsonl
-	if (eventsResult.kind === 'ok') {
+	if (eventsResult.kind === "ok") {
 		try {
 			const content = await fileService.readFile(eventsResult.resource);
-			files.push({ path: 'events.jsonl', contents: content.value.toString() });
+			files.push({ path: "events.jsonl", contents: content.value.toString() });
 		} catch {
 			// File may not exist yet if the session never wrote any events
 		}
@@ -159,8 +175,11 @@ export async function collectAgentHostDebugLogs(
 		}
 		const modelRef = await textModelService.createModelReference(channel.uri);
 		try {
-			const filename = `${descriptor.label.replace(/[/\\:*?"<>|]/g, '-')}.log`;
-			files.push({ path: filename, contents: modelRef.object.textEditorModel.getValue() });
+			const filename = `${descriptor.label.replace(/[/\\:*?"<>|]/g, "-")}.log`;
+			files.push({
+        path: filename,
+        contents: modelRef.object.textEditorModel.getValue(),
+      });
 		} finally {
 			modelRef.dispose();
 		}
@@ -169,17 +188,24 @@ export async function collectAgentHostDebugLogs(
 	// 3. AHP transport JSONL logs (one file per remote connection, written under <logsHome>/ahp/).
 	// These replace the per-connection `agenthost.<clientId>` IPC traffic output channel.
 	try {
-		const ahpDir = joinPath(environmentService.logsHome, 'ahp');
+		const ahpDir = joinPath(environmentService.logsHome, "ahp");
 		const stat = await fileService.resolve(ahpDir, { resolveMetadata: true });
 		for (const child of stat.children ?? []) {
-			if (child.isDirectory || !child.name.endsWith('.jsonl') || ahpLogNameFilter && !ahpLogNameFilter(child.name)) {
+			if (child.isDirectory || !child.name.endsWith(
+        ".jsonl",
+      ) || ahpLogNameFilter && !ahpLogNameFilter(child.name)) {
 				continue;
 			}
 			try {
 				const content = await fileService.readFile(child.resource);
-				files.push({ path: `ahp/${child.name}`, contents: content.value.toString() });
+				files.push({
+          path: `ahp/${child.name}`,
+          contents: content.value.toString(),
+        });
 			} catch (error) {
-				logService.warn(`[ExportAgentHostDebugLogs] Failed to read AHP log '${child.name}': ${error instanceof Error ? error.message : String(error)}`);
+				logService.warn(
+          `[ExportAgentHostDebugLogs] Failed to read AHP log '${child.name}': ${error instanceof Error ? error.message : String(error)}`,
+        );
 			}
 		}
 	} catch {
@@ -191,12 +217,18 @@ export async function collectAgentHostDebugLogs(
 	// which lives at `<home>/<serverDataFolderName>/data/logs/<datestamp>/agenthost.log`.
 	if (remoteConnection?.defaultDirectory) {
 		try {
-			const remoteLog = await readRemoteAgentHostLog(remoteConnection, productService.serverDataFolderName, fileService);
+			const remoteLog = await readRemoteAgentHostLog(
+        remoteConnection,
+        productService.serverDataFolderName,
+        fileService,
+      );
 			if (remoteLog) {
-				files.push({ path: 'remote-agenthost.log', contents: remoteLog });
+				files.push({ path: "remote-agenthost.log", contents: remoteLog });
 			}
 		} catch (error) {
-			logService.warn(`[ExportAgentHostDebugLogs] Failed to download remote agenthost.log: ${error instanceof Error ? error.message : String(error)}`);
+			logService.warn(
+        `[ExportAgentHostDebugLogs] Failed to download remote agenthost.log: ${error instanceof Error ? error.message : String(error)}`,
+      );
 		}
 	}
 
@@ -204,15 +236,15 @@ export async function collectAgentHostDebugLogs(
 		notificationService.notify({
 			severity: Severity.Warning,
 			message: activeSession
-				? localize('exportDebugLogs.noFiles.activeSession', "No log files were found for the active Agent Host session.")
-				: localize('exportDebugLogs.noFiles.currentWindow', "No Agent Host log files were found for the current window."),
+				? localize("exportDebugLogs.noFiles.activeSession", "No log files were found for the active Agent Host session.")
+				: localize("exportDebugLogs.noFiles.currentWindow", "No Agent Host log files were found for the current window."),
 		});
 		return undefined;
 	}
 
 	const titleSlug = activeSession?.title
-		? `-${activeSession.title.replace(/[/\\:*?"<>|\s]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40)}`
-		: '';
+		? `-${activeSession.title.replace(/[/\\:*?"<>|\s]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40)}`
+		: "";
 	return { files, exportName: `ah-logs${titleSlug}` };
 }
 
@@ -230,9 +262,9 @@ export async function exportAgentHostDebugLogs(
 		await exportService.save(logs.exportName, logs.files);
 	} catch (error) {
 		notificationService.notify({
-			severity: Severity.Error,
-			message: localize('exportDebugLogs.saveError', "Failed to save debug logs: {0}", error instanceof Error ? error.message : String(error)),
-		});
+      severity: Severity.Error,
+      message: localize("exportDebugLogs.saveError", "Failed to save debug logs: {0}", error instanceof Error ? error.message : String(error)),
+    });
 	}
 }
 
@@ -243,12 +275,12 @@ export async function exportAgentHostDebugLogs(
  */
 export class ExportAgentHostDebugLogsAction extends Action2 {
 
-	static readonly ID = 'workbench.action.chat.exportAgentHostDebugLogs';
+	static readonly ID = "workbench.action.chat.exportAgentHostDebugLogs";
 
 	constructor() {
 		super({
 			id: ExportAgentHostDebugLogsAction.ID,
-			title: localize2('exportAgentHostDebugLogs', "Export Agent Host Debug Logs..."),
+			title: localize2("exportAgentHostDebugLogs", "Export Agent Host Debug Logs..."),
 			f1: true,
 			category: Categories.Developer,
 			precondition: ContextKeyExpr.and(
@@ -262,7 +294,10 @@ export class ExportAgentHostDebugLogsAction extends Action2 {
 		const chatWidgetService = accessor.get(IChatWidgetService);
 		const widget = chatWidgetService.lastFocusedWidget;
 		const model = widget?.viewModel?.model;
-		const activeSession = model ? toActiveAgentHostSession(model.sessionResource, model.title) : undefined;
+		const activeSession = model ? toActiveAgentHostSession(
+      model.sessionResource,
+      model.title,
+    ) : undefined;
 		await exportAgentHostDebugLogs(accessor, activeSession);
 	}
 }
@@ -284,11 +319,18 @@ export function toActiveAgentHostSession(resource: URI, title: string | undefine
 }
 
 function getRemoteConnectionForSession(sessionResource: URI, connections: readonly IRemoteAgentHostConnectionInfo[]): IRemoteAgentHostConnectionInfo | undefined {
-	return connections.find(connection => sessionResource.scheme.startsWith(`remote-${agentHostAuthority(connection.address)}-`));
+	return connections.find(
+    connection => sessionResource.scheme.startsWith(
+      `remote-${agentHostAuthority(connection.address)}-`,
+    ),
+  );
 }
 
 function sanitizeFilePart(value: string): string {
-	return value.replace(/[\\/:\*\?"<>|\s]+/g, '-').replace(/^-+|-+$/g, '') || 'connection';
+	return value.replace(/[\\/:\*\?"<>|\s]+/g, "-").replace(
+    /^-+|-+$/g,
+    "",
+  ) || "connection";
 }
 
 async function exportFilesToLocalFolder(
@@ -298,12 +340,12 @@ async function exportFilesToLocalFolder(
 	files: readonly { path: string; contents: string }[],
 ): Promise<void> {
 	const folders = await fileDialogService.showOpenDialog({
-		title: localize('exportDebugLogs.folderDialogTitle', "Select Folder for Agent Host Debug Logs"),
-		canSelectFiles: false,
-		canSelectFolders: true,
-		canSelectMany: false,
-		availableFileSystems: [Schemas.file],
-	});
+    title: localize("exportDebugLogs.folderDialogTitle", "Select Folder for Agent Host Debug Logs"),
+    canSelectFiles: false,
+    canSelectFolders: true,
+    canSelectMany: false,
+    availableFileSystems: [Schemas.file],
+  });
 
 	const parentFolder = folders?.[0];
 	if (!parentFolder) {
@@ -323,18 +365,21 @@ async function exportFilesToLocalFolder(
 			folder = joinPath(folder, segment);
 			await fileService.createFolder(folder);
 		}
-		await fileService.writeFile(joinPath(folder, segments[segments.length - 1]), VSBuffer.fromString(file.contents));
+		await fileService.writeFile(
+      joinPath(folder, segments[segments.length - 1]),
+      VSBuffer.fromString(file.contents),
+    );
 	}
 }
 
 function toSafeRelativePathSegments(path: string): string[] {
 	return path
-		.replace(/\\/g, '/')
-		.split('/')
+		.replace(/\\/g, "/")
+		.split("/")
 		.filter(segment => {
-			return segment.length > 0 && segment !== '.' && segment !== '..';
+			return segment.length > 0 && segment !== "." && segment !== "..";
 		})
-		.map(segment => segment.replace(/[/\\:*?"<>|]/g, '-'));
+		.map(segment => segment.replace(/[/\\:*?"<>|]/g, "-"));
 }
 
 /**
@@ -353,7 +398,10 @@ async function readRemoteAgentHostLog(
 		return undefined;
 	}
 	const authority = agentHostAuthority(connection.address);
-	const homeUri = toAgentHostUri(URI.from({ scheme: 'file', path: homePath }), authority);
+	const homeUri = toAgentHostUri(
+    URI.from({ scheme: "file", path: homePath }),
+    authority,
+  );
 
 	// Possible server data folder candidates. The renderer's own
 	// `serverDataFolderName` (which the user is running) is the most likely
@@ -363,14 +411,14 @@ async function readRemoteAgentHostLog(
 	const candidates = new Set<string>();
 	if (serverDataFolderName) {
 		candidates.add(serverDataFolderName);
-		if (serverDataFolderName.endsWith('-dev')) {
-			candidates.add(serverDataFolderName.slice(0, -'-dev'.length));
+		if (serverDataFolderName.endsWith("-dev")) {
+			candidates.add(serverDataFolderName.slice(0, -"-dev".length));
 		}
 	}
-	candidates.add('.vscode-server');
-	candidates.add('.vscode-server-insiders');
-	candidates.add('.vscode-server-oss');
-	candidates.add('.vscode-server-exploration');
+	candidates.add(".vscode-server");
+	candidates.add(".vscode-server-insiders");
+	candidates.add(".vscode-server-oss");
+	candidates.add(".vscode-server-exploration");
 
 	// Enumerate every `<home>/<candidate>/data/logs/<datestamp>/agenthost.log`
 	// across all candidates and pick the one with the newest mtime. This avoids
@@ -378,10 +426,12 @@ async function readRemoteAgentHostLog(
 	// more recent log (or vice versa).
 	let best: { uri: URI; mtime: number } | undefined;
 	for (const folderName of candidates) {
-		const logsDirUri = joinPath(homeUri, folderName, 'data', 'logs');
+		const logsDirUri = joinPath(homeUri, folderName, "data", "logs");
 		let entries;
 		try {
-			const stat = await fileService.resolve(logsDirUri, { resolveMetadata: true });
+			const stat = await fileService.resolve(logsDirUri, {
+        resolveMetadata: true,
+      });
 			entries = stat.children;
 		} catch {
 			continue;
@@ -393,7 +443,7 @@ async function readRemoteAgentHostLog(
 			if (!dir.isDirectory) {
 				continue;
 			}
-			const logUri = joinPath(dir.resource, 'agenthost.log');
+			const logUri = joinPath(dir.resource, "agenthost.log");
 			let logStat;
 			try {
 				logStat = await fileService.resolve(logUri, { resolveMetadata: true });

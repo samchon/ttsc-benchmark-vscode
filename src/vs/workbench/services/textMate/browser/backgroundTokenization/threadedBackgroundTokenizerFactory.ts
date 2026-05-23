@@ -3,30 +3,30 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { canASAR } from '../../../../../amdX.js';
-import { DisposableStore, IDisposable, toDisposable } from '../../../../../base/common/lifecycle.js';
-import { AppResourcePath, FileAccess, nodeModulesAsarPath, nodeModulesPath } from '../../../../../base/common/network.js';
-import { IObservable } from '../../../../../base/common/observable.js';
-import { isWeb } from '../../../../../base/common/platform.js';
-import { URI, UriComponents } from '../../../../../base/common/uri.js';
-import { IBackgroundTokenizationStore, IBackgroundTokenizer } from '../../../../../editor/common/languages.js';
-import { ILanguageService } from '../../../../../editor/common/languages/language.js';
-import { ITextModel } from '../../../../../editor/common/model.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { IEnvironmentService } from '../../../../../platform/environment/common/environment.js';
-import { IExtensionResourceLoaderService } from '../../../../../platform/extensionResourceLoader/common/extensionResourceLoader.js';
-import { INotificationService } from '../../../../../platform/notification/common/notification.js';
-import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
-import { ICreateData, StateDeltas, TextMateTokenizationWorker } from './worker/textMateTokenizationWorker.worker.js';
-import { TextMateWorkerHost } from './worker/textMateWorkerHost.js';
-import { TextMateWorkerTokenizerController } from './textMateWorkerTokenizerController.js';
-import { IValidGrammarDefinition } from '../../common/TMScopeRegistry.js';
-import type { IRawTheme } from 'vscode-textmate';
-import { WebWorkerDescriptor } from '../../../../../platform/webWorker/browser/webWorkerDescriptor.js';
-import { IWebWorkerService } from '../../../../../platform/webWorker/browser/webWorkerService.js';
-import { IWebWorkerClient, Proxied } from '../../../../../base/common/worker/webWorker.js';
-import { ISerializedAnnotation } from '../../../../../editor/common/model/tokens/annotations.js';
-import { IFontTokenOption } from '../../../../../editor/common/textModelEvents.js';
+import { canASAR } from "../../../../../amdX.js";
+import { DisposableStore, IDisposable, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { AppResourcePath, FileAccess, nodeModulesAsarPath, nodeModulesPath } from "../../../../../base/common/network.js";
+import { IObservable } from "../../../../../base/common/observable.js";
+import { isWeb } from "../../../../../base/common/platform.js";
+import { URI, UriComponents } from "../../../../../base/common/uri.js";
+import { IBackgroundTokenizationStore, IBackgroundTokenizer } from "../../../../../editor/common/languages.js";
+import { ILanguageService } from "../../../../../editor/common/languages/language.js";
+import { ITextModel } from "../../../../../editor/common/model.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IEnvironmentService } from "../../../../../platform/environment/common/environment.js";
+import { IExtensionResourceLoaderService } from "../../../../../platform/extensionResourceLoader/common/extensionResourceLoader.js";
+import { INotificationService } from "../../../../../platform/notification/common/notification.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
+import { ICreateData, StateDeltas, TextMateTokenizationWorker } from "./worker/textMateTokenizationWorker.worker.js";
+import { TextMateWorkerHost } from "./worker/textMateWorkerHost.js";
+import { TextMateWorkerTokenizerController } from "./textMateWorkerTokenizerController.js";
+import { IValidGrammarDefinition } from "../../common/TMScopeRegistry.js";
+import type { IRawTheme } from "vscode-textmate";
+import { WebWorkerDescriptor } from "../../../../../platform/webWorker/browser/webWorkerDescriptor.js";
+import { IWebWorkerService } from "../../../../../platform/webWorker/browser/webWorkerService.js";
+import { IWebWorkerClient, Proxied } from "../../../../../base/common/worker/webWorker.js";
+import { ISerializedAnnotation } from "../../../../../editor/common/model/tokens/annotations.js";
+import { IFontTokenOption } from "../../../../../editor/common/textModelEvents.js";
 
 export class ThreadedBackgroundTokenizerFactory implements IDisposable {
 	private static _reportedMismatchingTokens = false;
@@ -100,11 +100,11 @@ export class ThreadedBackgroundTokenizerFactory implements IDisposable {
 				ThreadedBackgroundTokenizerFactory._reportedMismatchingTokens = true;
 
 				this._notificationService.error({
-					message: 'Async Tokenization Token Mismatch in line ' + lineNumber,
-					name: 'Async Tokenization Token Mismatch',
+					message: "Async Tokenization Token Mismatch in line " + lineNumber,
+					name: "Async Tokenization Token Mismatch",
 				});
 
-				this._telemetryService.publicLog2<{}, { owner: 'hediet'; comment: 'Used to see if async tokenization is bug-free' }>('asyncTokenizationMismatchingTokens', {});
+				this._telemetryService.publicLog2<{}, { owner: "hediet"; comment: "Used to see if async tokenization is bug-free" }>("asyncTokenizationMismatchingTokens", {});
 			},
 		};
 	}
@@ -118,7 +118,10 @@ export class ThreadedBackgroundTokenizerFactory implements IDisposable {
 		this._currentTheme = theme;
 		this._currentTokenColorMap = colorMap;
 		if (this._currentTheme && this._currentTokenColorMap && this._workerProxy) {
-			this._workerProxy.$acceptTheme(this._currentTheme, this._currentTokenColorMap);
+			this._workerProxy.$acceptTheme(
+        this._currentTheme,
+        this._currentTokenColorMap,
+      );
 		}
 	}
 
@@ -138,15 +141,15 @@ export class ThreadedBackgroundTokenizerFactory implements IDisposable {
 		const onigurumaWASM: AppResourcePath = `${onigurumaLocation}/release/onig.wasm`;
 
 		const createData: ICreateData = {
-			grammarDefinitions: this._grammarDefinitions,
-			onigurumaWASMUri: FileAccess.asBrowserUri(onigurumaWASM).toString(true),
-		};
+      grammarDefinitions: this._grammarDefinitions,
+      onigurumaWASMUri: FileAccess.asBrowserUri(onigurumaWASM).toString(true),
+    };
 		const worker = this._worker = this._webWorkerService.createWorkerClient<TextMateTokenizationWorker>(
-			new WebWorkerDescriptor({
-				esmModuleLocation: FileAccess.asBrowserUri('vs/workbench/services/textMate/browser/backgroundTokenization/worker/textMateTokenizationWorker.workerMain.js'),
-				label: 'TextMateWorker'
-			})
-		);
+      new WebWorkerDescriptor({
+        esmModuleLocation: FileAccess.asBrowserUri("vs/workbench/services/textMate/browser/backgroundTokenization/worker/textMateTokenizationWorker.workerMain.js"),
+        label: "TextMateWorker",
+      }),
+    );
 		TextMateWorkerHost.setChannel(worker, {
 			$readFile: async (_resource: UriComponents): Promise<string> => {
 				const resource = URI.revive(_resource);
@@ -163,7 +166,7 @@ export class ThreadedBackgroundTokenizerFactory implements IDisposable {
 			},
 			$reportTokenizationTime: (timeMs: number, languageId: string, sourceExtensionId: string | undefined, lineLength: number, isRandomSample: boolean): void => {
 				this._reportTokenizationTime(timeMs, languageId, sourceExtensionId, lineLength, isRandomSample);
-			}
+			},
 		});
 		await worker.proxy.$init(createData);
 
@@ -173,7 +176,10 @@ export class ThreadedBackgroundTokenizerFactory implements IDisposable {
 		}
 		this._workerProxy = worker.proxy;
 		if (this._currentTheme && this._currentTokenColorMap) {
-			this._workerProxy.$acceptTheme(this._currentTheme, this._currentTokenColorMap);
+			this._workerProxy.$acceptTheme(
+        this._currentTheme,
+        this._currentTokenColorMap,
+      );
 		}
 		return worker.proxy;
 	}
@@ -206,8 +212,10 @@ function keepAliveWhenAttached(textModel: ITextModel, factory: () => IDisposable
 	}
 
 	checkAttached();
-	disposableStore.add(textModel.onDidChangeAttached(() => {
-		checkAttached();
-	}));
+	disposableStore.add(
+    textModel.onDidChangeAttached(() => {
+      checkAttached();
+    }),
+  );
 	return disposableStore;
 }

@@ -3,24 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IRange } from '../../../../editor/common/core/range.js';
-import { SymbolKind, ProviderResult, SymbolTag } from '../../../../editor/common/languages.js';
-import { ITextModel } from '../../../../editor/common/model.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { LanguageFeatureRegistry } from '../../../../editor/common/languageFeatureRegistry.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IPosition, Position } from '../../../../editor/common/core/position.js';
-import { isNonEmptyArray } from '../../../../base/common/arrays.js';
-import { onUnexpectedExternalError } from '../../../../base/common/errors.js';
-import { IDisposable, RefCountedDisposable } from '../../../../base/common/lifecycle.js';
-import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
-import { assertType } from '../../../../base/common/types.js';
-import { IModelService } from '../../../../editor/common/services/model.js';
-import { ITextModelService } from '../../../../editor/common/services/resolverService.js';
+import { IRange } from "../../../../editor/common/core/range.js";
+import { SymbolKind, ProviderResult, SymbolTag } from "../../../../editor/common/languages.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { LanguageFeatureRegistry } from "../../../../editor/common/languageFeatureRegistry.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IPosition, Position } from "../../../../editor/common/core/position.js";
+import { isNonEmptyArray } from "../../../../base/common/arrays.js";
+import { onUnexpectedExternalError } from "../../../../base/common/errors.js";
+import { IDisposable, RefCountedDisposable } from "../../../../base/common/lifecycle.js";
+import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+import { assertType } from "../../../../base/common/types.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { ITextModelService } from "../../../../editor/common/services/resolverService.js";
 
 export const enum CallHierarchyDirection {
-	CallsTo = 'incomingCalls',
-	CallsFrom = 'outgoingCalls'
+	CallsTo = "incomingCalls",
+	CallsFrom = "outgoingCalls"
 }
 
 export interface CallHierarchyItem {
@@ -73,7 +73,12 @@ export class CallHierarchyModel {
 		if (!session) {
 			return undefined;
 		}
-		return new CallHierarchyModel(session.roots.reduce((p, c) => p + c._sessionId, ''), provider, session.roots, new RefCountedDisposable(session));
+		return new CallHierarchyModel(
+      session.roots.reduce((p, c) => p + c._sessionId, ""),
+      provider,
+      session.roots,
+      new RefCountedDisposable(session),
+    );
 	}
 
 	readonly root: CallHierarchyItem;
@@ -129,7 +134,7 @@ export class CallHierarchyModel {
 
 const _models = new Map<string, CallHierarchyModel>();
 
-CommandsRegistry.registerCommand('_executePrepareCallHierarchy', async (accessor, ...args) => {
+CommandsRegistry.registerCommand("_executePrepareCallHierarchy", async (accessor, ...args) => {
 	const [resource, position] = args;
 	assertType(URI.isUri(resource));
 	assertType(Position.isIPosition(position));
@@ -168,7 +173,7 @@ function isCallHierarchyItemDto(obj: unknown): obj is CallHierarchyItem {
 	return true;
 }
 
-CommandsRegistry.registerCommand('_executeProvideIncomingCalls', async (_accessor, ...args) => {
+CommandsRegistry.registerCommand("_executeProvideIncomingCalls", async (_accessor, ...args) => {
 	const [item] = args;
 	assertType(isCallHierarchyItemDto(item));
 
@@ -181,7 +186,7 @@ CommandsRegistry.registerCommand('_executeProvideIncomingCalls', async (_accesso
 	return model.resolveIncomingCalls(item, CancellationToken.None);
 });
 
-CommandsRegistry.registerCommand('_executeProvideOutgoingCalls', async (_accessor, ...args) => {
+CommandsRegistry.registerCommand("_executeProvideOutgoingCalls", async (_accessor, ...args) => {
 	const [item] = args;
 	assertType(isCallHierarchyItemDto(item));
 

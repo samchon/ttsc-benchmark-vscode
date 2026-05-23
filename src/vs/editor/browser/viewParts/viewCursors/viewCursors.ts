@@ -3,25 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './viewCursors.css';
-import { FastDomNode, createFastDomNode } from '../../../../base/browser/fastDomNode.js';
-import { IntervalTimer, TimeoutTimer } from '../../../../base/common/async.js';
-import { ViewPart } from '../../view/viewPart.js';
-import { IViewCursorRenderData, ViewCursor, CursorPlurality } from './viewCursor.js';
-import { TextEditorCursorBlinkingStyle, TextEditorCursorStyle, EditorOption } from '../../../common/config/editorOptions.js';
-import { Position } from '../../../common/core/position.js';
+import "./viewCursors.css";
+import { FastDomNode, createFastDomNode } from "../../../../base/browser/fastDomNode.js";
+import { IntervalTimer, TimeoutTimer } from "../../../../base/common/async.js";
+import { ViewPart } from "../../view/viewPart.js";
+import { IViewCursorRenderData, ViewCursor, CursorPlurality } from "./viewCursor.js";
+import { TextEditorCursorBlinkingStyle, TextEditorCursorStyle, EditorOption } from "../../../common/config/editorOptions.js";
+import { Position } from "../../../common/core/position.js";
 import {
-	editorCursorBackground, editorCursorForeground,
-	editorMultiCursorPrimaryForeground, editorMultiCursorPrimaryBackground,
-	editorMultiCursorSecondaryForeground, editorMultiCursorSecondaryBackground
-} from '../../../common/core/editorColorRegistry.js';
-import { RenderingContext, RestrictedRenderingContext } from '../../view/renderingContext.js';
-import { ViewContext } from '../../../common/viewModel/viewContext.js';
-import * as viewEvents from '../../../common/viewEvents.js';
-import { registerThemingParticipant } from '../../../../platform/theme/common/themeService.js';
-import { isHighContrast } from '../../../../platform/theme/common/theme.js';
-import { CursorChangeReason } from '../../../common/cursorEvents.js';
-import { WindowIntervalTimer, getWindow } from '../../../../base/browser/dom.js';
+  editorCursorBackground,
+  editorCursorForeground,
+  editorMultiCursorPrimaryForeground,
+  editorMultiCursorPrimaryBackground,
+  editorMultiCursorSecondaryForeground,
+  editorMultiCursorSecondaryBackground,
+} from "../../../common/core/editorColorRegistry.js";
+import { RenderingContext, RestrictedRenderingContext } from "../../view/renderingContext.js";
+import { ViewContext } from "../../../common/viewModel/viewContext.js";
+import * as viewEvents from "../../../common/viewEvents.js";
+import { registerThemingParticipant } from "../../../../platform/theme/common/themeService.js";
+import { isHighContrast } from "../../../../platform/theme/common/theme.js";
+import { CursorChangeReason } from "../../../common/cursorEvents.js";
+import { WindowIntervalTimer, getWindow } from "../../../../base/browser/dom.js";
 
 /**
  * View cursors is a view part responsible for rendering the primary cursor and
@@ -34,7 +37,7 @@ export class ViewCursors extends ViewPart {
 	private _readOnly: boolean;
 	private _cursorBlinking: TextEditorCursorBlinkingStyle;
 	private _cursorStyle: TextEditorCursorStyle;
-	private _cursorSmoothCaretAnimation: 'off' | 'explicit' | 'on';
+	private _cursorSmoothCaretAnimation: "off" | "explicit" | "on";
 	private _editContextEnabled: boolean;
 	private _selectionIsEmpty: boolean;
 	private _isComposingInput: boolean;
@@ -60,7 +63,9 @@ export class ViewCursors extends ViewPart {
 		this._readOnly = options.get(EditorOption.readOnly);
 		this._cursorBlinking = options.get(EditorOption.cursorBlinking);
 		this._cursorStyle = options.get(EditorOption.effectiveCursorStyle);
-		this._cursorSmoothCaretAnimation = options.get(EditorOption.cursorSmoothCaretAnimation);
+		this._cursorSmoothCaretAnimation = options.get(
+      EditorOption.cursorSmoothCaretAnimation,
+    );
 		this._editContextEnabled = options.get(EditorOption.effectiveEditContext);
 		this._selectionIsEmpty = true;
 		this._isComposingInput = false;
@@ -71,9 +76,9 @@ export class ViewCursors extends ViewPart {
 		this._secondaryCursors = [];
 		this._renderData = [];
 
-		this._domNode = createFastDomNode(document.createElement('div'));
-		this._domNode.setAttribute('role', 'presentation');
-		this._domNode.setAttribute('aria-hidden', 'true');
+		this._domNode = createFastDomNode(document.createElement("div"));
+		this._domNode.setAttribute("role", "presentation");
+		this._domNode.setAttribute("aria-hidden", "true");
 		this._updateDomClassName();
 
 		this._domNode.appendChild(this._primaryCursor.getDomNode());
@@ -115,7 +120,9 @@ export class ViewCursors extends ViewPart {
 		this._readOnly = options.get(EditorOption.readOnly);
 		this._cursorBlinking = options.get(EditorOption.cursorBlinking);
 		this._cursorStyle = options.get(EditorOption.effectiveCursorStyle);
-		this._cursorSmoothCaretAnimation = options.get(EditorOption.cursorSmoothCaretAnimation);
+		this._cursorSmoothCaretAnimation = options.get(
+      EditorOption.cursorSmoothCaretAnimation,
+    );
 		this._editContextEnabled = options.get(EditorOption.effectiveEditContext);
 
 		this._updateBlinking();
@@ -130,9 +137,11 @@ export class ViewCursors extends ViewPart {
 	private _onCursorPositionChanged(position: Position, secondaryPositions: Position[], reason: CursorChangeReason): void {
 		const pauseAnimation = (
 			this._secondaryCursors.length !== secondaryPositions.length
-			|| (this._cursorSmoothCaretAnimation === 'explicit' && reason !== CursorChangeReason.Explicit)
+			|| (this._cursorSmoothCaretAnimation === "explicit" && reason !== CursorChangeReason.Explicit)
 		);
-		this._primaryCursor.setPlurality(secondaryPositions.length ? CursorPlurality.MultiPrimary : CursorPlurality.Single);
+		this._primaryCursor.setPlurality(
+      secondaryPositions.length ? CursorPlurality.MultiPrimary : CursorPlurality.Single,
+    );
 		this._primaryCursor.onCursorPositionChanged(position, pauseAnimation);
 		this._updateBlinking();
 
@@ -140,8 +149,14 @@ export class ViewCursors extends ViewPart {
 			// Create new cursors
 			const addCnt = secondaryPositions.length - this._secondaryCursors.length;
 			for (let i = 0; i < addCnt; i++) {
-				const newCursor = new ViewCursor(this._context, CursorPlurality.MultiSecondary);
-				this._domNode.domNode.insertBefore(newCursor.getDomNode().domNode, this._primaryCursor.getDomNode().domNode.nextSibling);
+				const newCursor = new ViewCursor(
+          this._context,
+          CursorPlurality.MultiSecondary,
+        );
+				this._domNode.domNode.insertBefore(
+          newCursor.getDomNode().domNode,
+          this._primaryCursor.getDomNode().domNode.nextSibling,
+        );
 				this._secondaryCursors.push(newCursor);
 			}
 		} else if (this._secondaryCursors.length > secondaryPositions.length) {
@@ -154,7 +169,10 @@ export class ViewCursors extends ViewPart {
 		}
 
 		for (let i = 0; i < secondaryPositions.length; i++) {
-			this._secondaryCursors[i].onCursorPositionChanged(secondaryPositions[i], pauseAnimation);
+			this._secondaryCursors[i].onCursorPositionChanged(
+        secondaryPositions[i],
+        pauseAnimation,
+      );
 		}
 
 	}
@@ -269,10 +287,13 @@ export class ViewCursors extends ViewPart {
 					}
 				}, ViewCursors.BLINK_INTERVAL, getWindow(this._domNode.domNode));
 			} else {
-				this._startCursorBlinkAnimation.setIfNotSet(() => {
-					this._blinkingEnabled = true;
-					this._updateDomClassName();
-				}, ViewCursors.BLINK_INTERVAL);
+				this._startCursorBlinkAnimation.setIfNotSet(
+          () => {
+            this._blinkingEnabled = true;
+            this._updateDomClassName();
+          },
+          ViewCursors.BLINK_INTERVAL,
+        );
 			}
 		}
 	}
@@ -284,57 +305,57 @@ export class ViewCursors extends ViewPart {
 	}
 
 	private _getClassName(): string {
-		let result = 'cursors-layer';
+		let result = "cursors-layer";
 		if (!this._selectionIsEmpty) {
-			result += ' has-selection';
+			result += " has-selection";
 		}
 		switch (this._cursorStyle) {
 			case TextEditorCursorStyle.Line:
-				result += ' cursor-line-style';
+				result += " cursor-line-style";
 				break;
 			case TextEditorCursorStyle.Block:
-				result += ' cursor-block-style';
+				result += " cursor-block-style";
 				break;
 			case TextEditorCursorStyle.Underline:
-				result += ' cursor-underline-style';
+				result += " cursor-underline-style";
 				break;
 			case TextEditorCursorStyle.LineThin:
-				result += ' cursor-line-thin-style';
+				result += " cursor-line-thin-style";
 				break;
 			case TextEditorCursorStyle.BlockOutline:
-				result += ' cursor-block-outline-style';
+				result += " cursor-block-outline-style";
 				break;
 			case TextEditorCursorStyle.UnderlineThin:
-				result += ' cursor-underline-thin-style';
+				result += " cursor-underline-thin-style";
 				break;
 			default:
-				result += ' cursor-line-style';
+				result += " cursor-line-style";
 		}
 		if (this._blinkingEnabled) {
 			switch (this._getCursorBlinking()) {
 				case TextEditorCursorBlinkingStyle.Blink:
-					result += ' cursor-blink';
+					result += " cursor-blink";
 					break;
 				case TextEditorCursorBlinkingStyle.Smooth:
-					result += ' cursor-smooth';
+					result += " cursor-smooth";
 					break;
 				case TextEditorCursorBlinkingStyle.Phase:
-					result += ' cursor-phase';
+					result += " cursor-phase";
 					break;
 				case TextEditorCursorBlinkingStyle.Expand:
-					result += ' cursor-expand';
+					result += " cursor-expand";
 					break;
 				case TextEditorCursorBlinkingStyle.Solid:
-					result += ' cursor-solid';
+					result += " cursor-solid";
 					break;
 				default:
-					result += ' cursor-solid';
+					result += " cursor-solid";
 			}
 		} else {
-			result += ' cursor-solid';
+			result += " cursor-solid";
 		}
-		if (this._cursorSmoothCaretAnimation === 'on' || this._cursorSmoothCaretAnimation === 'explicit') {
-			result += ' cursor-smooth-caret-animation';
+		if (this._cursorSmoothCaretAnimation === "on" || this._cursorSmoothCaretAnimation === "explicit") {
+			result += " cursor-smooth-caret-animation";
 		}
 		return result;
 	}
@@ -396,9 +417,9 @@ registerThemingParticipant((theme, collector) => {
 	};
 
 	const cursorThemes: CursorTheme[] = [
-		{ class: '.cursor', foreground: editorCursorForeground, background: editorCursorBackground },
-		{ class: '.cursor-primary', foreground: editorMultiCursorPrimaryForeground, background: editorMultiCursorPrimaryBackground },
-		{ class: '.cursor-secondary', foreground: editorMultiCursorSecondaryForeground, background: editorMultiCursorSecondaryBackground },
+		{ class: ".cursor", foreground: editorCursorForeground, background: editorCursorBackground },
+		{ class: ".cursor-primary", foreground: editorMultiCursorPrimaryForeground, background: editorMultiCursorPrimaryBackground },
+		{ class: ".cursor-secondary", foreground: editorMultiCursorSecondaryForeground, background: editorMultiCursorSecondaryBackground },
 	];
 
 	for (const cursorTheme of cursorThemes) {

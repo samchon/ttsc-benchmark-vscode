@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from '../../../base/common/buffer.js';
-import { SequencerByKey } from '../../../base/common/async.js';
-import { URI } from '../../../base/common/uri.js';
-import { IFileService } from '../../files/common/files.js';
-import { ILogService } from '../../log/common/log.js';
-import { IAgentPluginManager, type ISyncedCustomization } from '../common/agentPluginManager.js';
-import { CustomizationStatus, type CustomizationRef, type SessionCustomization } from '../common/state/sessionState.js';
-import { toAgentClientUri } from '../common/agentClientUri.js';
+import { VSBuffer } from "../../../base/common/buffer.js";
+import { SequencerByKey } from "../../../base/common/async.js";
+import { URI } from "../../../base/common/uri.js";
+import { IFileService } from "../../files/common/files.js";
+import { ILogService } from "../../log/common/log.js";
+import { IAgentPluginManager, type ISyncedCustomization } from "../common/agentPluginManager.js";
+import { CustomizationStatus, type CustomizationRef, type SessionCustomization } from "../common/state/sessionState.js";
+import { toAgentClientUri } from "../common/agentClientUri.js";
 
 const DEFAULT_MAX_PLUGINS = 20;
 
@@ -56,8 +56,8 @@ export class AgentPluginManager implements IAgentPluginManager {
 		@ILogService private readonly _logService: ILogService,
 		maxPlugins: number = DEFAULT_MAX_PLUGINS,
 	) {
-		this._basePath = URI.joinPath(userDataPath, 'agentPlugins');
-		this._cachePath = URI.joinPath(this._basePath, 'cache.json');
+		this._basePath = URI.joinPath(userDataPath, "agentPlugins");
+		this._cachePath = URI.joinPath(this._basePath, "cache.json");
 		this._maxPlugins = maxPlugins;
 	}
 
@@ -87,7 +87,7 @@ export class AgentPluginManager implements IAgentPluginManager {
 					progress?.(customization);
 					return { customization };
 				}
-			})
+			}),
 		));
 
 		return results;
@@ -107,11 +107,15 @@ export class AgentPluginManager implements IAgentPluginManager {
 		// Nonce cache hit — skip copy
 		if (ref.nonce && this._cachedNonces.get(ref.uri) === ref.nonce) {
 			this._touchLru(ref.uri);
-			this._logService.trace(`[AgentPluginManager] Nonce match for ${ref.uri}, skipping copy`);
+			this._logService.trace(
+        `[AgentPluginManager] Nonce match for ${ref.uri}, skipping copy`,
+      );
 			return destDir;
 		}
 
-		this._logService.info(`[AgentPluginManager] Syncing plugin: ${ref.uri} → ${destDir.toString()}`);
+		this._logService.info(
+      `[AgentPluginManager] Syncing plugin: ${ref.uri} → ${destDir.toString()}`,
+    );
 
 		await this._fileService.copy(pluginUri, destDir, true);
 
@@ -126,7 +130,10 @@ export class AgentPluginManager implements IAgentPluginManager {
 	}
 
 	private _keyForUri(uri: string): string {
-		return uri.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').substring(0, 128);
+		return uri.replace(/[^a-zA-Z0-9]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").substring(
+      0,
+      128,
+    );
 	}
 
 	private _touchLru(uri: string): void {
@@ -146,11 +153,16 @@ export class AgentPluginManager implements IAgentPluginManager {
 			this._cachedNonces.delete(evictUri);
 			const evictKey = this._keyForUri(evictUri);
 			const evictDir = URI.joinPath(this._basePath, evictKey);
-			this._logService.info(`[AgentPluginManager] Evicting plugin: ${evictUri}`);
+			this._logService.info(
+        `[AgentPluginManager] Evicting plugin: ${evictUri}`,
+      );
 			try {
 				await this._fileService.del(evictDir, { recursive: true });
 			} catch (err) {
-				this._logService.warn(`[AgentPluginManager] Failed to evict plugin: ${evictUri}`, err);
+				this._logService.warn(
+          `[AgentPluginManager] Failed to evict plugin: ${evictUri}`,
+          err,
+        );
 			}
 		}
 	}
@@ -175,14 +187,19 @@ export class AgentPluginManager implements IAgentPluginManager {
 
 			// Entries are stored in LRU order (oldest first)
 			for (const entry of entries) {
-				if (typeof entry.uri === 'string' && typeof entry.nonce === 'string') {
+				if (typeof entry.uri === "string" && typeof entry.nonce === "string") {
 					this._cachedNonces.set(entry.uri, entry.nonce);
 					this._lruOrder.push(entry.uri);
 				}
 			}
-			this._logService.trace(`[AgentPluginManager] Loaded ${entries.length} cache entries from disk`);
+			this._logService.trace(
+        `[AgentPluginManager] Loaded ${entries.length} cache entries from disk`,
+      );
 		} catch (err) {
-			this._logService.warn('[AgentPluginManager] Failed to load cache from disk', err);
+			this._logService.warn(
+        "[AgentPluginManager] Failed to load cache from disk",
+        err,
+      );
 		}
 	}
 
@@ -197,9 +214,15 @@ export class AgentPluginManager implements IAgentPluginManager {
 				}
 			}
 			await this._fileService.createFolder(this._basePath);
-			await this._fileService.writeFile(this._cachePath, VSBuffer.fromString(JSON.stringify(entries)));
+			await this._fileService.writeFile(
+        this._cachePath,
+        VSBuffer.fromString(JSON.stringify(entries)),
+      );
 		} catch (err) {
-			this._logService.warn('[AgentPluginManager] Failed to persist cache to disk', err);
+			this._logService.warn(
+        "[AgentPluginManager] Failed to persist cache to disk",
+        err,
+      );
 		}
 	}
 }

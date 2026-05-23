@@ -3,20 +3,26 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../../../base/common/cancellation.js';
-import { Emitter } from '../../../../../../base/common/event.js';
-import { Disposable } from '../../../../../../base/common/lifecycle.js';
-import { extUriBiasedIgnorePathCase } from '../../../../../../base/common/resources.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { generateUuid } from '../../../../../../base/common/uuid.js';
-import { AgentSession, type IAgentConnection } from '../../../../../../platform/agentHost/common/agentService.js';
-import type { ChangesetSummary } from '../../../../../../platform/agentHost/common/state/protocol/state.js';
-import { SessionStatus, type SessionSummary } from '../../../../../../platform/agentHost/common/state/sessionState.js';
-import { IProductService } from '../../../../../../platform/product/common/productService.js';
-import { IWorkspaceContextService } from '../../../../../../platform/workspace/common/workspace.js';
-import { ChatSessionStatus, IChatNewSessionRequest, IChatSessionItem, IChatSessionItemController, IChatSessionItemsDelta } from '../../../common/chatSessionsService.js';
-import { getAgentHostIcon } from '../agentSessions.js';
-import { IAgentHostUntitledProvisionalSessionService } from './agentHostUntitledProvisionalSessionService.js';
+import { CancellationToken } from "../../../../../../base/common/cancellation.js";
+import { Emitter } from "../../../../../../base/common/event.js";
+import { Disposable } from "../../../../../../base/common/lifecycle.js";
+import { extUriBiasedIgnorePathCase } from "../../../../../../base/common/resources.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { generateUuid } from "../../../../../../base/common/uuid.js";
+import { AgentSession, type IAgentConnection } from "../../../../../../platform/agentHost/common/agentService.js";
+import type { ChangesetSummary } from "../../../../../../platform/agentHost/common/state/protocol/state.js";
+import { SessionStatus, type SessionSummary } from "../../../../../../platform/agentHost/common/state/sessionState.js";
+import { IProductService } from "../../../../../../platform/product/common/productService.js";
+import { IWorkspaceContextService } from "../../../../../../platform/workspace/common/workspace.js";
+import {
+  ChatSessionStatus,
+  IChatNewSessionRequest,
+  IChatSessionItem,
+  IChatSessionItemController,
+  IChatSessionItemsDelta,
+} from "../../../common/chatSessionsService.js";
+import { getAgentHostIcon } from "../agentSessions.js";
+import { IAgentHostUntitledProvisionalSessionService } from "./agentHostUntitledProvisionalSessionService.js";
 
 /**
  * Picks the default catalogue entry to render the sidebar chip from.
@@ -27,7 +33,7 @@ import { IAgentHostUntitledProvisionalSessionService } from './agentHostUntitled
  * sidebar cannot perform.
  */
 function pickDefaultChangeset(catalogue: readonly ChangesetSummary[] | undefined): ChangesetSummary | undefined {
-	return catalogue?.find(c => !c.uriTemplate.includes('{'));
+	return catalogue?.find(c => !c.uriTemplate.includes("{"));
 }
 
 /**
@@ -36,15 +42,15 @@ function pickDefaultChangeset(catalogue: readonly ChangesetSummary[] | undefined
  * catalogue entry is missing or carries no counts so the sidebar
  * doesn't render an empty chip.
  */
-function changesetCountsToChanges(summary: ChangesetSummary | undefined): IChatSessionItem['changes'] {
+function changesetCountsToChanges(summary: ChangesetSummary | undefined): IChatSessionItem["changes"] {
 	if (!summary || summary.files === undefined || summary.files === 0) {
 		return undefined;
 	}
 	return {
-		files: summary.files,
-		insertions: summary.additions ?? 0,
-		deletions: summary.deletions ?? 0,
-	};
+    files: summary.files,
+    insertions: summary.additions ?? 0,
+    deletions: summary.deletions ?? 0,
+  };
 }
 
 function mapSessionStatus(status: SessionStatus | undefined): ChatSessionStatus {
@@ -70,7 +76,9 @@ function mapSessionStatus(status: SessionStatus | undefined): ChatSessionStatus 
  */
 export class AgentHostSessionListController extends Disposable implements IChatSessionItemController {
 
-	private readonly _onDidChangeChatSessionItems = this._register(new Emitter<IChatSessionItemsDelta>());
+	private readonly _onDidChangeChatSessionItems = this._register(
+    new Emitter<IChatSessionItemsDelta>(),
+  );
 	readonly onDidChangeChatSessionItems = this._onDidChangeChatSessionItems.event;
 
 	private _items: IChatSessionItem[] = [];
@@ -114,10 +122,10 @@ export class AgentHostSessionListController extends Disposable implements IChatS
 
 		// React to protocol notifications for session list changes
 		this._register(this._connection.onDidNotification(n => {
-			if (n.type === 'root/sessionAdded' && n.summary.provider === this._provider) {
+			if (n.type === "root/sessionAdded" && n.summary.provider === this._provider) {
 				const rawId = AgentSession.id(n.summary.resource);
 				this._pendingNewSessions.delete(rawId);
-				const workingDir = typeof n.summary.workingDirectory === 'string' ? URI.parse(n.summary.workingDirectory) : n.summary.workingDirectory;
+				const workingDir = typeof n.summary.workingDirectory === "string" ? URI.parse(n.summary.workingDirectory) : n.summary.workingDirectory;
 				if (!this._isWorkingDirectoryInWorkspace(workingDir)) {
 					return;
 				}
@@ -131,7 +139,7 @@ export class AgentHostSessionListController extends Disposable implements IChatS
 					this._items.push(item);
 				}
 				this._onDidChangeChatSessionItems.fire({ addedOrUpdated: [item] });
-			} else if (n.type === 'root/sessionRemoved' && AgentSession.provider(n.session) === this._provider) {
+			} else if (n.type === "root/sessionRemoved" && AgentSession.provider(n.session) === this._provider) {
 				const removedId = AgentSession.id(n.session);
 				this._pendingNewSessions.delete(removedId);
 				const idx = this._items.findIndex(item => item.resource.path === `/${removedId}`);
@@ -141,7 +149,7 @@ export class AgentHostSessionListController extends Disposable implements IChatS
 					this._cachedSummaries.delete(removedId);
 					this._onDidChangeChatSessionItems.fire({ removed: [removed.resource] });
 				}
-			} else if (n.type === 'root/sessionSummaryChanged' && AgentSession.provider(n.session) === this._provider) {
+			} else if (n.type === "root/sessionSummaryChanged" && AgentSession.provider(n.session) === this._provider) {
 				const rawId = AgentSession.id(n.session);
 				const cached = this._cachedSummaries.get(rawId);
 				if (!cached) {
@@ -166,10 +174,12 @@ export class AgentHostSessionListController extends Disposable implements IChatS
 		// folders changes, since filtering depends on it. The agent host
 		// itself doesn't know which workspace this VS Code window has open,
 		// so we have to drive the refresh from this side.
-		this._register(this._workspaceContextService.onDidChangeWorkspaceFolders(() => {
-			this._cacheValid = false;
-			void this.refresh(CancellationToken.None);
-		}));
+		this._register(
+      this._workspaceContextService.onDidChangeWorkspaceFolders(() => {
+        this._cacheValid = false;
+        void this.refresh(CancellationToken.None);
+      }),
+    );
 	}
 
 	/** Reset the list-sessions cache so the next {@link refresh} re-fetches from the agent host. */
@@ -182,7 +192,9 @@ export class AgentHostSessionListController extends Disposable implements IChatS
 	}
 
 	isNewSession(resource: URI): boolean {
-		return resource.scheme === this._sessionType && this._pendingNewSessions.has(resource.path.substring(1));
+		return resource.scheme === this._sessionType && this._pendingNewSessions.has(
+      resource.path.substring(1),
+    );
 	}
 
 	async newChatSessionItem(request: IChatNewSessionRequest, token: CancellationToken): Promise<IChatSessionItem | undefined> {
@@ -193,11 +205,11 @@ export class AgentHostSessionListController extends Disposable implements IChatS
 		this._pendingNewSessions.add(rawId);
 		const now = Date.now();
 		const item = this._makeItem(rawId, {
-			title: request.prompt.trim(),
-			status: SessionStatus.InProgress,
-			createdAt: now,
-			modifiedAt: now,
-		});
+      title: request.prompt.trim(),
+      status: SessionStatus.InProgress,
+      createdAt: now,
+      modifiedAt: now,
+    });
 
 		// Bridge any pre-creation provisional session the user built up
 		// against the untitled chat-input URI to the freshly-minted real
@@ -209,7 +221,12 @@ export class AgentHostSessionListController extends Disposable implements IChatS
 		// `_createAndSubscribe` path with no user selections.
 		if (request.untitledResource) {
 			const workingDirectory = this._workspaceContextService.getWorkspace().folders[0]?.uri;
-			await this._provisional.tryRebind(request.untitledResource, item.resource, this._provider, workingDirectory);
+			await this._provisional.tryRebind(
+        request.untitledResource,
+        item.resource,
+        this._provider,
+        workingDirectory,
+      );
 		}
 
 		return item;
@@ -255,7 +272,7 @@ export class AgentHostSessionListController extends Disposable implements IChatS
 		}
 		const filtered = sessions.filter(s =>
 			AgentSession.provider(s.session) === this._provider
-			&& this._isWorkingDirectoryInWorkspace(s.workingDirectory)
+			&& this._isWorkingDirectoryInWorkspace(s.workingDirectory),
 		);
 		this._cachedSummaries.clear();
 		this._items = filtered.map(s => {
@@ -290,15 +307,19 @@ export class AgentHostSessionListController extends Disposable implements IChatS
 			});
 		});
 		this._cacheValid = true;
-		const currentResources = new Set(this._items.map(item => item.resource.toString()));
-		const removed = previousResources.filter(r => !currentResources.has(r.toString()));
+		const currentResources = new Set(
+      this._items.map(item => item.resource.toString()),
+    );
+		const removed = previousResources.filter(
+      r => !currentResources.has(r.toString()),
+    );
 		if (this._items.length === 0 && removed.length === 0) {
 			return;
 		}
 		this._onDidChangeChatSessionItems.fire({
-			...(this._items.length > 0 ? { addedOrUpdated: this._items } : undefined),
-			...(removed.length > 0 ? { removed } : undefined),
-		});
+      ...(this._items.length > 0 ? { addedOrUpdated: this._items } : undefined),
+      ...(removed.length > 0 ? { removed } : undefined),
+    });
 	}
 
 	/**
@@ -318,20 +339,27 @@ export class AgentHostSessionListController extends Disposable implements IChatS
 		if (!workingDirectory) {
 			return false;
 		}
-		return folders.some(folder => extUriBiasedIgnorePathCase.isEqualOrParent(workingDirectory, folder.uri));
+		return folders.some(
+      folder => extUriBiasedIgnorePathCase.isEqualOrParent(
+        workingDirectory,
+        folder.uri,
+      ),
+    );
 	}
 
 	private _makeItemFromSummary(rawId: string, summary: SessionSummary): IChatSessionItem {
-		const workingDir = typeof summary.workingDirectory === 'string' ? URI.parse(summary.workingDirectory) : summary.workingDirectory;
+		const workingDir = typeof summary.workingDirectory === "string" ? URI.parse(
+      summary.workingDirectory,
+    ) : summary.workingDirectory;
 		return this._makeItem(rawId, {
-			title: summary.title,
-			status: summary.status,
-			activity: summary.activity,
-			workingDirectory: workingDir,
-			createdAt: summary.createdAt,
-			modifiedAt: summary.modifiedAt,
-			changesets: summary.changesets,
-		});
+      title: summary.title,
+      status: summary.status,
+      activity: summary.activity,
+      workingDirectory: workingDir,
+      createdAt: summary.createdAt,
+      modifiedAt: summary.modifiedAt,
+      changesets: summary.changesets,
+    });
 	}
 
 	private _makeItem(rawId: string, opts: {

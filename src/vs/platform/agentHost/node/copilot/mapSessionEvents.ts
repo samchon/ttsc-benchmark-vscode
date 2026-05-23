@@ -3,19 +3,43 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { MessageOptions } from '@github/copilot-sdk';
-import { decodeBase64 } from '../../../../base/common/buffer.js';
-import { basename } from '../../../../base/common/path.js';
-import { isString } from '../../../../base/common/types.js';
-import { URI } from '../../../../base/common/uri.js';
-import { generateUuid } from '../../../../base/common/uuid.js';
-import { stripRedundantCdPrefix } from '../../common/commandLineHelpers.js';
-import { IFileEditRecord, ISessionDatabase } from '../../common/sessionDataService.js';
-import { MessageAttachmentKind, type MessageAttachment } from '../../common/state/protocol/state.js';
-import { ResponsePartKind, ToolCallConfirmationReason, ToolCallStatus, ToolResultContentType, TurnState, buildSubagentSessionUri, type ResponsePart, type StringOrMarkdown, type ToolCallCompletedState, type ToolResultContent, type Turn, type UserMessage } from '../../common/state/sessionState.js';
-import { getInvocationMessage, getPastTenseMessage, getShellLanguage, getSubagentMetadata, getToolDisplayName, getToolInputString, getToolKind, isEditTool, isHiddenTool, synthesizeSkillToolCall } from './copilotToolDisplay.js';
-import { buildSessionDbUri } from '../shared/fileEditTracker.js';
-import { getMediaMime } from '../../../../base/common/mime.js';
+import { MessageOptions } from "@github/copilot-sdk";
+import { decodeBase64 } from "../../../../base/common/buffer.js";
+import { basename } from "../../../../base/common/path.js";
+import { isString } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { stripRedundantCdPrefix } from "../../common/commandLineHelpers.js";
+import { IFileEditRecord, ISessionDatabase } from "../../common/sessionDataService.js";
+import { MessageAttachmentKind, type MessageAttachment } from "../../common/state/protocol/state.js";
+import {
+  ResponsePartKind,
+  ToolCallConfirmationReason,
+  ToolCallStatus,
+  ToolResultContentType,
+  TurnState,
+  buildSubagentSessionUri,
+  type ResponsePart,
+  type StringOrMarkdown,
+  type ToolCallCompletedState,
+  type ToolResultContent,
+  type Turn,
+  type UserMessage,
+} from "../../common/state/sessionState.js";
+import {
+  getInvocationMessage,
+  getPastTenseMessage,
+  getShellLanguage,
+  getSubagentMetadata,
+  getToolDisplayName,
+  getToolInputString,
+  getToolKind,
+  isEditTool,
+  isHiddenTool,
+  synthesizeSkillToolCall,
+} from "./copilotToolDisplay.js";
+import { buildSessionDbUri } from "../shared/fileEditTracker.js";
+import { getMediaMime } from "../../../../base/common/mime.js";
 
 function tryStringify(value: unknown): string | undefined {
 	try {
@@ -29,7 +53,7 @@ function tryStringify(value: unknown): string | undefined {
 // Defined here so tests can construct events without importing the SDK.
 
 export interface ISessionEventToolStart {
-	type: 'tool.execution_start';
+	type: "tool.execution_start";
 	data: {
 		toolCallId: string;
 		toolName: string;
@@ -41,7 +65,7 @@ export interface ISessionEventToolStart {
 }
 
 export interface ISessionEventToolComplete {
-	type: 'tool.execution_complete';
+	type: "tool.execution_complete";
 	data: {
 		toolCallId: string;
 		success: boolean;
@@ -54,12 +78,12 @@ export interface ISessionEventToolComplete {
 }
 
 export interface ISessionEventMessage {
-	type: 'assistant.message' | 'user.message';
+	type: "assistant.message" | "user.message";
 	data?: {
 		messageId?: string;
 		interactionId?: string;
 		content?: string;
-		toolRequests?: readonly { toolCallId: string; name: string; arguments?: unknown; type?: 'function' | 'custom' }[];
+		toolRequests?: readonly { toolCallId: string; name: string; arguments?: unknown; type?: "function" | "custom" }[];
 		reasoningOpaque?: string;
 		reasoningText?: string;
 		encryptedContent?: string;
@@ -80,11 +104,11 @@ export interface ISessionEventMessage {
 	};
 }
 
-type ISdkUserMessageAttachment = Required<MessageOptions>['attachments'][number];
+type ISdkUserMessageAttachment = Required<MessageOptions>["attachments"][number];
 
 /** Minimal event shape for `skill.invoked`, used to synthesize a tool-style render. */
 export interface ISessionEventSkillInvoked {
-	type: 'skill.invoked';
+	type: "skill.invoked";
 	id?: string;
 	data: {
 		name: string;
@@ -94,7 +118,7 @@ export interface ISessionEventSkillInvoked {
 }
 
 export interface ISessionEventSubagentStarted {
-	type: 'subagent.started';
+	type: "subagent.started";
 	data: {
 		toolCallId: string;
 		agentName: string;
@@ -121,11 +145,11 @@ export type ISessionEvent =
  * leakage rather than guessed-at content sniffing.
  */
 function isSyntheticUserMessage(event: ISessionEvent): boolean {
-	if (event.type !== 'user.message') {
+	if (event.type !== "user.message") {
 		return false;
 	}
 	const source = (event as ISessionEventMessage).data?.source;
-	return !!source && source.toLowerCase() !== 'user';
+	return !!source && source.toLowerCase() !== "user";
 }
 
 // =============================================================================
@@ -138,7 +162,7 @@ interface IToolStartInfo {
 	readonly displayName: string;
 	readonly invocationMessage: StringOrMarkdown;
 	readonly toolInput?: string;
-	readonly toolKind?: 'terminal' | 'subagent' | 'search';
+	readonly toolKind?: "terminal" | "subagent" | "search";
 	readonly language?: string;
 	readonly subagentAgentName?: string;
 	readonly subagentDescription?: string;
@@ -146,7 +170,7 @@ interface IToolStartInfo {
 	readonly parentToolCallId?: string;
 }
 
-type IToolRequestInfo = NonNullable<NonNullable<ISessionEventMessage['data']>['toolRequests']>[number];
+type IToolRequestInfo = NonNullable<NonNullable<ISessionEventMessage["data"]>["toolRequests"]>[number];
 
 /** Subagent metadata seen via `subagent.started`, applied to the parent tool call's content at `tool.execution_complete`. */
 interface ISubagentInfo {
@@ -169,7 +193,12 @@ interface ITurnBuilder {
 }
 
 function newTurnBuilder(id: string, text: string, attachments?: MessageAttachment[]): ITurnBuilder {
-	const userMessage: UserMessage = attachments?.length ? { text, attachments } : { text };
+	const userMessage: UserMessage = attachments?.length ? {
+    text,
+    attachments,
+  } : {
+    text,
+  };
 	return { id, userMessage, responseParts: [], pendingTools: new Map() };
 }
 
@@ -177,41 +206,51 @@ function makeToolStartInfo(toolName: string, rawArguments: unknown, parentToolCa
 	if (isHiddenTool(toolName)) {
 		return undefined;
 	}
-	const rawArgs = rawArguments !== undefined ? tryStringify(rawArguments) : undefined;
+	const rawArgs = rawArguments !== undefined ? tryStringify(
+    rawArguments,
+  ) : undefined;
 	let parameters: Record<string, unknown> | undefined;
 	if (rawArgs) {
-		try { parameters = JSON.parse(rawArgs) as Record<string, unknown>; } catch { /* ignore */ }
+		try { parameters = JSON.parse(
+      rawArgs,
+    ) as Record<string, unknown>; } catch { /* ignore */ }
 	}
 	// stripRedundantCdPrefix mutates `parameters` and signals via its
 	// return value. We re-stringify only when it changed something so
 	// `getToolInputString` sees the cleaned command line.
-	const cleaned = stripRedundantCdPrefix(toolName, parameters, workingDirectory) ? tryStringify(parameters) : undefined;
+	const cleaned = stripRedundantCdPrefix(
+    toolName,
+    parameters,
+    workingDirectory,
+  ) ? tryStringify(parameters) : undefined;
 	const toolArgs = cleaned ?? rawArgs;
 	const toolKind = getToolKind(toolName);
-	const subagentMeta = toolKind === 'subagent' ? getSubagentMetadata(parameters) : undefined;
+	const subagentMeta = toolKind === "subagent" ? getSubagentMetadata(
+    parameters,
+  ) : undefined;
 	const displayName = getToolDisplayName(toolName);
 	return {
-		toolName,
-		displayName,
-		invocationMessage: getInvocationMessage(toolName, displayName, parameters),
-		toolInput: getToolInputString(toolName, parameters, toolArgs),
-		toolKind,
-		language: toolKind === 'terminal' ? getShellLanguage(toolName) : undefined,
-		subagentAgentName: subagentMeta?.agentName,
-		subagentDescription: subagentMeta?.description,
-		parameters,
-		parentToolCallId,
-	};
+    toolName,
+    displayName,
+    invocationMessage: getInvocationMessage(toolName, displayName, parameters),
+    toolInput: getToolInputString(toolName, parameters, toolArgs),
+    toolKind,
+    language: toolKind === "terminal" ? getShellLanguage(toolName) : undefined,
+    subagentAgentName: subagentMeta?.agentName,
+    subagentDescription: subagentMeta?.description,
+    parameters,
+    parentToolCallId,
+  };
 }
 
 function finalizeTurn(builder: ITurnBuilder, state: TurnState): Turn {
 	return {
-		id: builder.id,
-		userMessage: builder.userMessage,
-		responseParts: builder.responseParts,
-		usage: undefined,
-		state,
-	};
+    id: builder.id,
+    userMessage: builder.userMessage,
+    responseParts: builder.responseParts,
+    usage: undefined,
+    state,
+  };
 }
 
 /**
@@ -240,20 +279,27 @@ export async function mapSessionEvents(
 	// them at `tool.execution_complete` time.
 	const toolInfoByCallId = new Map<string, IToolStartInfo>();
 	const editToolCallIds: string[] = [];
-	const completionsByCallId = new Map<string, ISessionEventToolComplete['data']>();
+	const completionsByCallId = new Map<string, ISessionEventToolComplete["data"]>();
 	for (const e of events) {
-		if (e.type === 'tool.execution_complete') {
+		if (e.type === "tool.execution_complete") {
 			const d = (e as ISessionEventToolComplete).data;
 			completionsByCallId.set(d.toolCallId, d);
 		}
-		if (e.type === 'tool.execution_start') {
+		if (e.type === "tool.execution_start") {
 			const d = (e as ISessionEventToolStart).data;
-			const info = makeToolStartInfo(d.toolName, d.arguments, d.parentToolCallId, workingDirectory);
+			const info = makeToolStartInfo(
+        d.toolName,
+        d.arguments,
+        d.parentToolCallId,
+        workingDirectory,
+      );
 			if (!info) {
 				continue;
 			}
 			toolInfoByCallId.set(d.toolCallId, info);
-			const command = isString(info.parameters?.command) ? info.parameters.command : undefined;
+			const command = isString(
+        info.parameters?.command,
+      ) ? info.parameters.command : undefined;
 			if (isEditTool(d.toolName, command)) {
 				editToolCallIds.push(d.toolCallId);
 			}
@@ -310,7 +356,7 @@ export async function mapSessionEvents(
 	const ensureSubagentBuilder = (parentToolCallId: string): ITurnBuilder => {
 		let builder = subagentBuilders.get(parentToolCallId);
 		if (!builder) {
-			builder = newTurnBuilder(generateUuid(), '');
+			builder = newTurnBuilder(generateUuid(), "");
 			subagentBuilders.set(parentToolCallId, builder);
 		}
 		return builder;
@@ -325,13 +371,13 @@ export async function mapSessionEvents(
 
 	for (const e of events) {
 		switch (e.type) {
-			case 'user.message': {
+			case "user.message": {
 				if (isSyntheticUserMessage(e)) {
 					continue;
 				}
 				const d = (e as ISessionEventMessage).data;
-				const messageId = d?.messageId ?? d?.interactionId ?? '';
-				const content = d?.content ?? '';
+				const messageId = d?.messageId ?? d?.interactionId ?? "";
+				const content = d?.content ?? "";
 				const attachments = sdkAttachmentsToProtocol(d?.attachments);
 				if (d?.parentToolCallId) {
 					// User messages with a parent tool call route into the
@@ -341,10 +387,10 @@ export async function mapSessionEvents(
 					const builder = ensureSubagentBuilder(d.parentToolCallId);
 					if (content) {
 						builder.responseParts.push({
-							kind: ResponsePartKind.Markdown,
-							id: generateUuid(),
-							content,
-						});
+              kind: ResponsePartKind.Markdown,
+              id: generateUuid(),
+              content,
+            });
 					}
 					if (attachments?.length) {
 						builder.userMessage = { ...builder.userMessage, attachments };
@@ -358,30 +404,34 @@ export async function mapSessionEvents(
 				}
 				break;
 			}
-			case 'assistant.message': {
+			case "assistant.message": {
 				const d = (e as ISessionEventMessage).data;
-				const messageId = d?.messageId ?? d?.interactionId ?? '';
-				const content = d?.content ?? '';
+				const messageId = d?.messageId ?? d?.interactionId ?? "";
+				const content = d?.content ?? "";
 				const reasoningText = d?.reasoningText;
 				const hasToolRequests = !!d?.toolRequests && d.toolRequests.length > 0;
 				const builder = targetBuilderFor(d?.parentToolCallId)
-					?? (parentBuilder = newTurnBuilder(messageId, ''));
+					?? (parentBuilder = newTurnBuilder(messageId, ""));
 				if (reasoningText) {
 					builder.responseParts.push({
-						kind: ResponsePartKind.Reasoning,
-						id: generateUuid(),
-						content: reasoningText,
-					});
+            kind: ResponsePartKind.Reasoning,
+            id: generateUuid(),
+            content: reasoningText,
+          });
 				}
 				if (content) {
 					builder.responseParts.push({
-						kind: ResponsePartKind.Markdown,
-						id: generateUuid(),
-						content,
-					});
+            kind: ResponsePartKind.Markdown,
+            id: generateUuid(),
+            content,
+          });
 				}
 				if (d?.toolRequests?.length) {
-					appendFallbackToolRequests(builder, d.toolRequests, d.parentToolCallId);
+					appendFallbackToolRequests(
+            builder,
+            d.toolRequests,
+            d.parentToolCallId,
+          );
 				}
 				// A parent assistant message without further tool requests
 				// terminates the current parent turn (no more responses
@@ -393,21 +443,21 @@ export async function mapSessionEvents(
 				}
 				break;
 			}
-			case 'subagent.started': {
+			case "subagent.started": {
 				const d = (e as ISessionEventSubagentStarted).data;
 				subagentInfoByToolCallId.set(d.toolCallId, {
-					agentName: d.agentName,
-					agentDisplayName: d.agentDisplayName,
-					agentDescription: d.agentDescription,
-				});
+          agentName: d.agentName,
+          agentDisplayName: d.agentDisplayName,
+          agentDescription: d.agentDescription,
+        });
 				break;
 			}
-			case 'tool.execution_start': {
+			case "tool.execution_start": {
 				// Already collected in the first pass; no per-event work
 				// needed here. Hidden tools are filtered above.
 				break;
 			}
-			case 'tool.execution_complete': {
+			case "tool.execution_complete": {
 				const d = (e as ISessionEventToolComplete).data;
 				const info = toolInfoByCallId.get(d.toolCallId);
 				if (!info) {
@@ -420,7 +470,13 @@ export async function mapSessionEvents(
 					// No active turn to attach this completion to.
 					continue;
 				}
-				const completedPart = makeCompletedToolCallPart(d, info, sessionUriStr, storedEdits, subagentInfoByToolCallId.get(d.toolCallId));
+				const completedPart = makeCompletedToolCallPart(
+          d,
+          info,
+          sessionUriStr,
+          storedEdits,
+          subagentInfoByToolCallId.get(d.toolCallId),
+        );
 				builder.responseParts.push(completedPart);
 				// When a parent tool call that spawned a subagent completes,
 				// flush the subagent's accumulated turn.
@@ -429,10 +485,13 @@ export async function mapSessionEvents(
 				}
 				break;
 			}
-			case 'skill.invoked': {
+			case "skill.invoked": {
 				const skill = (e as ISessionEventSkillInvoked);
 				const synth = synthesizeSkillToolCall(skill.data, skill.id);
-				const builder = parentBuilder ?? (parentBuilder = newTurnBuilder(generateUuid(), ''));
+				const builder = parentBuilder ?? (parentBuilder = newTurnBuilder(
+          generateUuid(),
+          "",
+        ));
 				builder.responseParts.push({
 					kind: ResponsePartKind.ToolCall,
 					toolCall: {
@@ -471,17 +530,24 @@ export async function mapSessionEvents(
 				continue;
 			}
 			const info = toolInfoByCallId.get(request.toolCallId)
-				?? makeToolStartInfo(request.name, request.arguments, parentToolCallId, workingDirectory);
+				?? makeToolStartInfo(
+          request.name,
+          request.arguments,
+          parentToolCallId,
+          workingDirectory,
+        );
 			if (!info) {
 				continue;
 			}
-			builder.responseParts.push(makeCompletedToolCallPart(
-				completion ?? { toolCallId: request.toolCallId, success: true },
-				info,
-				sessionUriStr,
-				storedEdits,
-				subagentInfoByToolCallId.get(request.toolCallId),
-			));
+			builder.responseParts.push(
+        makeCompletedToolCallPart(
+          completion ?? { toolCallId: request.toolCallId, success: true },
+          info,
+          sessionUriStr,
+          storedEdits,
+          subagentInfoByToolCallId.get(request.toolCallId),
+        ),
+      );
 		}
 	}
 }
@@ -517,47 +583,49 @@ function sdkAttachmentToProtocol(
 	attachment: ISdkUserMessageAttachment,
 ): MessageAttachment | undefined {
 	switch (attachment.type) {
-		case 'file': {
+		case "file": {
 			return {
-				type: MessageAttachmentKind.Resource,
-				uri: URI.file(attachment.path).toString(),
-				label: attachment.displayName || basename(attachment.path),
-				displayKind: getMediaMime(attachment.path)?.startsWith('image/') ? 'image' : 'document',
-			};
+        type: MessageAttachmentKind.Resource,
+        uri: URI.file(attachment.path).toString(),
+        label: attachment.displayName || basename(attachment.path),
+        displayKind: getMediaMime(attachment.path)?.startsWith("image/") ? "image" : "document",
+      };
 		}
-		case 'directory': {
+		case "directory": {
 			return {
-				type: MessageAttachmentKind.Resource,
-				uri: URI.file(attachment.path).toString(),
-				label: attachment.displayName || basename(attachment.path),
-				displayKind: 'directory',
-			};
+        type: MessageAttachmentKind.Resource,
+        uri: URI.file(attachment.path).toString(),
+        label: attachment.displayName || basename(attachment.path),
+        displayKind: "directory",
+      };
 		}
-		case 'selection': {
+		case "selection": {
 			return {
-				type: MessageAttachmentKind.Resource,
-				uri: URI.file(attachment.filePath).toString(),
-				label: attachment.displayName,
-				displayKind: 'selection',
-				selection: { range: attachment.selection! },
-			};
+        type: MessageAttachmentKind.Resource,
+        uri: URI.file(attachment.filePath).toString(),
+        label: attachment.displayName,
+        displayKind: "selection",
+        selection: { range: attachment.selection! },
+      };
 		}
-		case 'blob': {
-			if (attachment.mimeType.startsWith('text/plain')) {
+		case "blob": {
+			if (attachment.mimeType.startsWith("text/plain")) {
 				return {
-					type: MessageAttachmentKind.Simple,
-					label: attachment.displayName ?? 'attachment',
-					modelRepresentation: decodeBase64(attachment.data).toString(),
-				};
+          type: MessageAttachmentKind.Simple,
+          label: attachment.displayName ?? "attachment",
+          modelRepresentation: decodeBase64(attachment.data).toString(),
+        };
 			}
-			const displayKind = attachment.mimeType.startsWith('image/') ? 'image' : undefined;
+			const displayKind = attachment.mimeType.startsWith(
+        "image/",
+      ) ? "image" : undefined;
 			return {
-				type: MessageAttachmentKind.EmbeddedResource,
-				label: attachment.displayName ?? 'attachment',
-				data: attachment.data,
-				contentType: attachment.mimeType,
-				displayKind,
-			};
+        type: MessageAttachmentKind.EmbeddedResource,
+        label: attachment.displayName ?? "attachment",
+        data: attachment.data,
+        contentType: attachment.mimeType,
+        displayKind,
+      };
 		}
 		default:
 			return undefined;
@@ -571,7 +639,7 @@ function sdkAttachmentToProtocol(
  * tool call spawned a child session.
  */
 function makeCompletedToolCallPart(
-	d: ISessionEventToolComplete['data'],
+	d: ISessionEventToolComplete["data"],
 	info: IToolStartInfo,
 	sessionUriStr: string,
 	storedEdits: Map<string, IFileEditRecord[]> | undefined,
@@ -587,21 +655,21 @@ function makeCompletedToolCallPart(
 	const edits = storedEdits?.get(d.toolCallId);
 	if (edits) {
 		for (const edit of edits) {
-			const beforeUri = edit.kind === 'rename' && edit.originalPath
+			const beforeUri = edit.kind === "rename" && edit.originalPath
 				? URI.file(edit.originalPath).toString()
 				: URI.file(edit.filePath).toString();
 			const afterUri = URI.file(edit.filePath).toString();
-			const hasBefore = edit.kind !== 'create';
-			const hasAfter = edit.kind !== 'delete';
+			const hasBefore = edit.kind !== "create";
+			const hasAfter = edit.kind !== "delete";
 			content.push({
 				type: ToolResultContentType.FileEdit,
 				before: hasBefore ? {
 					uri: beforeUri,
-					content: { uri: buildSessionDbUri(sessionUriStr, edit.toolCallId, edit.filePath, 'before') },
+					content: { uri: buildSessionDbUri(sessionUriStr, edit.toolCallId, edit.filePath, "before") },
 				} : undefined,
 				after: hasAfter ? {
 					uri: afterUri,
-					content: { uri: buildSessionDbUri(sessionUriStr, edit.toolCallId, edit.filePath, 'after') },
+					content: { uri: buildSessionDbUri(sessionUriStr, edit.toolCallId, edit.filePath, "after") },
 				} : undefined,
 				diff: (edit.addedLines !== undefined || edit.removedLines !== undefined)
 					? { added: edit.addedLines, removed: edit.removedLines }
@@ -612,12 +680,12 @@ function makeCompletedToolCallPart(
 
 	if (subagent) {
 		content.push({
-			type: ToolResultContentType.Subagent,
-			resource: buildSubagentSessionUri(sessionUriStr, d.toolCallId),
-			title: subagent.agentDisplayName,
-			agentName: subagent.agentName,
-			description: subagent.agentDescription,
-		});
+      type: ToolResultContentType.Subagent,
+      resource: buildSubagentSessionUri(sessionUriStr, d.toolCallId),
+      title: subagent.agentDisplayName,
+      agentName: subagent.agentName,
+      description: subagent.agentDescription,
+    });
 	}
 
 	const tc: ToolCallCompletedState = {

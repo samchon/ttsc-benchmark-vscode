@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DisposableStore, onUnexpectedError } from './commonFacade/deps.js';
+import { DisposableStore, onUnexpectedError } from "./commonFacade/deps.js";
 
 /**
  * Represents an observable value.
@@ -182,9 +182,9 @@ export interface ITransaction {
  * This function is used to indicate that the caller recovered from an error that indicates a bug.
 */
 export function handleBugIndicatingErrorRecovery(message: string) {
-	const err = new Error('BugIndicatingErrorRecovery: ' + message);
+	const err = new Error("BugIndicatingErrorRecovery: " + message);
 	onUnexpectedError(err);
-	console.error('recovered from an error that indicates a bug', err);
+	console.error("recovered from an error that indicates a bug", err);
 }
 
 /**

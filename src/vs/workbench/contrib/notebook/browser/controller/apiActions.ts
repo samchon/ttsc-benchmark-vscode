@@ -3,14 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as glob from '../../../../../base/common/glob.js';
-import { URI, UriComponents } from '../../../../../base/common/uri.js';
-import { CommandsRegistry } from '../../../../../platform/commands/common/commands.js';
-import { isDocumentExcludePattern, TransientCellMetadata, TransientDocumentMetadata } from '../../common/notebookCommon.js';
-import { INotebookKernelService } from '../../common/notebookKernelService.js';
-import { INotebookService } from '../../common/notebookService.js';
+import * as glob from "../../../../../base/common/glob.js";
+import { URI, UriComponents } from "../../../../../base/common/uri.js";
+import { CommandsRegistry } from "../../../../../platform/commands/common/commands.js";
+import {
+  isDocumentExcludePattern,
+  TransientCellMetadata,
+  TransientDocumentMetadata,
+} from "../../common/notebookCommon.js";
+import { INotebookKernelService } from "../../common/notebookKernelService.js";
+import { INotebookService } from "../../common/notebookService.js";
 
-CommandsRegistry.registerCommand('_resolveNotebookContentProvider', (accessor): {
+CommandsRegistry.registerCommand("_resolveNotebookContentProvider", (accessor): {
 	viewType: string;
 	displayName: string;
 	options: { transientOutputs: boolean; transientCellMetadata: TransientCellMetadata; transientDocumentMetadata: TransientDocumentMetadata };
@@ -20,7 +24,7 @@ CommandsRegistry.registerCommand('_resolveNotebookContentProvider', (accessor): 
 	const contentProviders = notebookService.getContributedNotebookTypes();
 	return contentProviders.map(provider => {
 		const filenamePatterns = provider.selectors.map(selector => {
-			if (typeof selector === 'string') {
+			if (typeof selector === "string") {
 				return selector;
 			}
 
@@ -31,7 +35,7 @@ CommandsRegistry.registerCommand('_resolveNotebookContentProvider', (accessor): 
 			if (isDocumentExcludePattern(selector)) {
 				return {
 					include: selector.include,
-					exclude: selector.exclude
+					exclude: selector.exclude,
 				};
 			}
 
@@ -45,13 +49,13 @@ CommandsRegistry.registerCommand('_resolveNotebookContentProvider', (accessor): 
 			options: {
 				transientCellMetadata: provider.options.transientCellMetadata,
 				transientDocumentMetadata: provider.options.transientDocumentMetadata,
-				transientOutputs: provider.options.transientOutputs
-			}
+				transientOutputs: provider.options.transientOutputs,
+			},
 		};
 	});
 });
 
-CommandsRegistry.registerCommand('_resolveNotebookKernels', async (accessor, args: {
+CommandsRegistry.registerCommand("_resolveNotebookKernels", async (accessor, args: {
 	viewType: string;
 	uri: UriComponents;
 }): Promise<{

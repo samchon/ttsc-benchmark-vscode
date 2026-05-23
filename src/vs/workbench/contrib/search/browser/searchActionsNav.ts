@@ -3,36 +3,46 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { isMacintosh } from '../../../../base/common/platform.js';
-import * as nls from '../../../../nls.js';
-import { ICommandHandler } from '../../../../platform/commands/common/commands.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { WorkbenchCompressibleAsyncDataTree } from '../../../../platform/list/browser/listService.js';
-import { IViewsService } from '../../../services/views/common/viewsService.js';
-import * as Constants from '../common/constants.js';
-import * as SearchEditorConstants from '../../searchEditor/browser/constants.js';
-import { SearchEditor } from '../../searchEditor/browser/searchEditor.js';
-import { SearchEditorInput } from '../../searchEditor/browser/searchEditorInput.js';
-import { IEditorService } from '../../../services/editor/common/editorService.js';
-import { IsSessionsWindowContext } from '../../../common/contextkeys.js';
-import { ContextKeyExpr, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { assertReturnsDefined } from '../../../../base/common/types.js';
-import { Action2, MenuId, registerAction2 } from '../../../../platform/actions/common/actions.js';
-import { KeybindingWeight } from '../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { KeyCode, KeyMod } from '../../../../base/common/keyCodes.js';
-import { ToggleCaseSensitiveKeybinding, TogglePreserveCaseKeybinding, ToggleRegexKeybinding, ToggleWholeWordKeybinding } from '../../../../editor/contrib/find/browser/findModel.js';
-import { category, getSearchView, openSearchView } from './searchActionsBase.js';
-import { CONTEXT_ACCESSIBILITY_MODE_ENABLED } from '../../../../platform/accessibility/common/accessibility.js';
-import { getActiveElement } from '../../../../base/browser/dom.js';
-import { FileMatchOrMatch, RenderableMatch, ISearchResult, isSearchTreeFolderMatch } from './searchTreeModel/searchTreeCommon.js';
+import { isMacintosh } from "../../../../base/common/platform.js";
+import * as nls from "../../../../nls.js";
+import { ICommandHandler } from "../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { WorkbenchCompressibleAsyncDataTree } from "../../../../platform/list/browser/listService.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import * as Constants from "../common/constants.js";
+import * as SearchEditorConstants from "../../searchEditor/browser/constants.js";
+import { SearchEditor } from "../../searchEditor/browser/searchEditor.js";
+import { SearchEditorInput } from "../../searchEditor/browser/searchEditorInput.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IsSessionsWindowContext } from "../../../common/contextkeys.js";
+import { ContextKeyExpr, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { assertReturnsDefined } from "../../../../base/common/types.js";
+import { Action2, MenuId, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import {
+  ToggleCaseSensitiveKeybinding,
+  TogglePreserveCaseKeybinding,
+  ToggleRegexKeybinding,
+  ToggleWholeWordKeybinding,
+} from "../../../../editor/contrib/find/browser/findModel.js";
+import { category, getSearchView, openSearchView } from "./searchActionsBase.js";
+import { CONTEXT_ACCESSIBILITY_MODE_ENABLED } from "../../../../platform/accessibility/common/accessibility.js";
+import { getActiveElement } from "../../../../base/browser/dom.js";
+import {
+  FileMatchOrMatch,
+  RenderableMatch,
+  ISearchResult,
+  isSearchTreeFolderMatch,
+} from "./searchTreeModel/searchTreeCommon.js";
 
 //#region Actions: Changing Search Input Options
 registerAction2(class ToggleQueryDetailsAction extends Action2 {
 	constructor() {
 		super({
 			id: Constants.SearchCommandIds.ToggleQueryDetailsActionId,
-			title: nls.localize2('ToggleQueryDetailsAction.label', "Toggle Query Details"),
+			title: nls.localize2("ToggleQueryDetailsAction.label", "Toggle Query Details"),
 			category,
 			keybinding: {
 				weight: KeybindingWeight.WorkbenchContrib,
@@ -57,7 +67,7 @@ registerAction2(class CloseReplaceAction extends Action2 {
 	constructor() {
 		super({
 			id: Constants.SearchCommandIds.CloseReplaceWidgetActionId,
-			title: nls.localize2('CloseReplaceWidget.label', "Close Replace Widget"),
+			title: nls.localize2("CloseReplaceWidget.label", "Close Replace Widget"),
 			category,
 			keybinding: {
 				weight: KeybindingWeight.WorkbenchContrib,
@@ -84,12 +94,12 @@ registerAction2(class ToggleCaseSensitiveCommandAction extends Action2 {
 
 		super({
 			id: Constants.SearchCommandIds.ToggleCaseSensitiveCommandId,
-			title: nls.localize2('ToggleCaseSensitiveCommandId.label', "Toggle Case Sensitive"),
+			title: nls.localize2("ToggleCaseSensitiveCommandId.label", "Toggle Case Sensitive"),
 			category,
 			keybinding: Object.assign({
 				weight: KeybindingWeight.WorkbenchContrib,
 				when: isMacintosh ? ContextKeyExpr.and(Constants.SearchContext.SearchViewFocusedKey, Constants.SearchContext.FileMatchOrFolderMatchFocusKey.toNegated()) : Constants.SearchContext.SearchViewFocusedKey,
-			}, ToggleCaseSensitiveKeybinding)
+			}, ToggleCaseSensitiveKeybinding),
 
 		});
 
@@ -104,7 +114,7 @@ registerAction2(class ToggleWholeWordCommandAction extends Action2 {
 	constructor() {
 		super({
 			id: Constants.SearchCommandIds.ToggleWholeWordCommandId,
-			title: nls.localize2('ToggleWholeWordCommandId.label', "Toggle Whole Word"),
+			title: nls.localize2("ToggleWholeWordCommandId.label", "Toggle Whole Word"),
 			keybinding: Object.assign({
 				weight: KeybindingWeight.WorkbenchContrib,
 				when: Constants.SearchContext.SearchViewFocusedKey,
@@ -122,7 +132,7 @@ registerAction2(class ToggleRegexCommandAction extends Action2 {
 	constructor() {
 		super({
 			id: Constants.SearchCommandIds.ToggleRegexCommandId,
-			title: nls.localize2('ToggleRegexCommandId.label', "Toggle Regex"),
+			title: nls.localize2("ToggleRegexCommandId.label", "Toggle Regex"),
 			keybinding: Object.assign({
 				weight: KeybindingWeight.WorkbenchContrib,
 				when: Constants.SearchContext.SearchViewFocusedKey,
@@ -140,7 +150,7 @@ registerAction2(class TogglePreserveCaseAction extends Action2 {
 	constructor() {
 		super({
 			id: Constants.SearchCommandIds.TogglePreserveCaseId,
-			title: nls.localize2('TogglePreserveCaseId.label', "Toggle Preserve Case"),
+			title: nls.localize2("TogglePreserveCaseId.label", "Toggle Preserve Case"),
 			keybinding: Object.assign({
 				weight: KeybindingWeight.WorkbenchContrib,
 				when: Constants.SearchContext.SearchViewFocusedKey,
@@ -160,7 +170,7 @@ registerAction2(class OpenMatchAction extends Action2 {
 	constructor() {
 		super({
 			id: Constants.SearchCommandIds.OpenMatch,
-			title: nls.localize2('OpenMatch.label', "Open Match"),
+			title: nls.localize2("OpenMatch.label", "Open Match"),
 			category,
 			keybinding: {
 				weight: KeybindingWeight.WorkbenchContrib,
@@ -168,7 +178,7 @@ registerAction2(class OpenMatchAction extends Action2 {
 				primary: KeyCode.Enter,
 				mac: {
 					primary: KeyCode.Enter,
-					secondary: [KeyMod.CtrlCmd | KeyCode.DownArrow]
+					secondary: [KeyMod.CtrlCmd | KeyCode.DownArrow],
 				},
 			},
 		});
@@ -193,14 +203,14 @@ registerAction2(class OpenMatchToSideAction extends Action2 {
 	constructor() {
 		super({
 			id: Constants.SearchCommandIds.OpenMatchToSide,
-			title: nls.localize2('OpenMatchToSide.label', "Open Match To Side"),
+			title: nls.localize2("OpenMatchToSide.label", "Open Match To Side"),
 			category,
 			keybinding: {
 				weight: KeybindingWeight.WorkbenchContrib,
 				when: ContextKeyExpr.and(Constants.SearchContext.SearchViewVisibleKey, Constants.SearchContext.FileMatchOrMatchFocusKey),
 				primary: KeyMod.CtrlCmd | KeyCode.Enter,
 				mac: {
-					primary: KeyMod.WinCtrl | KeyCode.Enter
+					primary: KeyMod.WinCtrl | KeyCode.Enter,
 				},
 			},
 		});
@@ -218,7 +228,7 @@ registerAction2(class AddCursorsAtSearchResultsAction extends Action2 {
 	constructor() {
 		super({
 			id: Constants.SearchCommandIds.AddCursorsAtSearchResults,
-			title: nls.localize2('AddCursorsAtSearchResults.label', "Add Cursors at Search Results"),
+			title: nls.localize2("AddCursorsAtSearchResults.label", "Add Cursors at Search Results"),
 			keybinding: {
 				weight: KeybindingWeight.WorkbenchContrib,
 				when: ContextKeyExpr.and(Constants.SearchContext.SearchViewVisibleKey, Constants.SearchContext.FileMatchOrMatchFocusKey),
@@ -243,7 +253,7 @@ registerAction2(class FocusNextInputAction extends Action2 {
 	constructor() {
 		super({
 			id: Constants.SearchCommandIds.FocusNextInputActionId,
-			title: nls.localize2('FocusNextInputAction.label', "Focus Next Input"),
+			title: nls.localize2("FocusNextInputAction.label", "Focus Next Input"),
 			category,
 			keybinding: {
 				weight: KeybindingWeight.WorkbenchContrib,
@@ -272,7 +282,7 @@ registerAction2(class FocusPreviousInputAction extends Action2 {
 	constructor() {
 		super({
 			id: Constants.SearchCommandIds.FocusPreviousInputActionId,
-			title: nls.localize2('FocusPreviousInputAction.label', "Focus Previous Input"),
+			title: nls.localize2("FocusPreviousInputAction.label", "Focus Previous Input"),
 			category,
 			keybinding: {
 				weight: KeybindingWeight.WorkbenchContrib,
@@ -301,7 +311,7 @@ registerAction2(class FocusSearchFromResultsAction extends Action2 {
 	constructor() {
 		super({
 			id: Constants.SearchCommandIds.FocusSearchFromResults,
-			title: nls.localize2('FocusSearchFromResults.label', "Focus Search From Results"),
+			title: nls.localize2("FocusSearchFromResults.label", "Focus Search From Results"),
 			category,
 			keybinding: {
 				weight: KeybindingWeight.WorkbenchContrib,
@@ -317,13 +327,13 @@ registerAction2(class FocusSearchFromResultsAction extends Action2 {
 });
 
 registerAction2(class ToggleSearchOnTypeAction extends Action2 {
-	private static readonly searchOnTypeKey = 'search.searchOnType';
+	private static readonly searchOnTypeKey = "search.searchOnType";
 
 	constructor(
 	) {
 		super({
 			id: Constants.SearchCommandIds.ToggleSearchOnTypeActionId,
-			title: nls.localize2('toggleTabs', "Toggle Search on Type"),
+			title: nls.localize2("toggleTabs", "Toggle Search on Type"),
 			category,
 		});
 
@@ -342,9 +352,9 @@ registerAction2(class FocusSearchListCommandAction extends Action2 {
 	) {
 		super({
 			id: Constants.SearchCommandIds.FocusSearchListCommandID,
-			title: nls.localize2('focusSearchListCommandLabel', "Focus List"),
+			title: nls.localize2("focusSearchListCommandLabel", "Focus List"),
 			category,
-			f1: true
+			f1: true,
 		});
 	}
 
@@ -357,7 +367,7 @@ registerAction2(class FocusNextSearchResultAction extends Action2 {
 	constructor() {
 		super({
 			id: Constants.SearchCommandIds.FocusNextSearchResultActionId,
-			title: nls.localize2('FocusNextSearchResult.label', "Focus Next Search Result"),
+			title: nls.localize2("FocusNextSearchResult.label", "Focus Next Search Result"),
 			keybinding: [{
 				primary: KeyCode.F4,
 				weight: KeybindingWeight.WorkbenchContrib,
@@ -377,7 +387,7 @@ registerAction2(class FocusPreviousSearchResultAction extends Action2 {
 	constructor() {
 		super({
 			id: Constants.SearchCommandIds.FocusPreviousSearchResultActionId,
-			title: nls.localize2('FocusPreviousSearchResult.label', "Focus Previous Search Result"),
+			title: nls.localize2("FocusPreviousSearchResult.label", "Focus Previous Search Result"),
 			keybinding: [{
 				primary: KeyMod.Shift | KeyCode.F4,
 				weight: KeybindingWeight.WorkbenchContrib,
@@ -397,7 +407,7 @@ registerAction2(class ReplaceInFilesAction extends Action2 {
 	constructor() {
 		super({
 			id: Constants.SearchCommandIds.ReplaceInFilesActionId,
-			title: nls.localize2('replaceInFiles', "Replace in Files"),
+			title: nls.localize2("replaceInFiles", "Replace in Files"),
 			keybinding: [{
 				primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyH,
 				weight: KeybindingWeight.WorkbenchContrib,
@@ -407,7 +417,7 @@ registerAction2(class ReplaceInFilesAction extends Action2 {
 			precondition: IsSessionsWindowContext.negate(),
 			menu: [{
 				id: MenuId.MenubarEditMenu,
-				group: '4_find_global',
+				group: "4_find_global",
 				order: 2,
 				when: IsSessionsWindowContext.negate(),
 			}],
@@ -445,8 +455,8 @@ function togglePreserveCaseCommand(accessor: ServicesAccessor) {
 const focusSearchListCommand: ICommandHandler = accessor => {
 	const viewsService = accessor.get(IViewsService);
 	openSearchView(viewsService).then(searchView => {
-		searchView?.moveFocusToResults();
-	});
+    searchView?.moveFocusToResults();
+  });
 };
 
 async function focusNextSearchResult(accessor: ServicesAccessor): Promise<any> {
@@ -457,7 +467,9 @@ async function focusNextSearchResult(accessor: ServicesAccessor): Promise<any> {
 		return (editorService.activeEditorPane as SearchEditor).focusNextResult();
 	}
 
-	return openSearchView(accessor.get(IViewsService)).then(searchView => searchView?.selectNextMatch());
+	return openSearchView(accessor.get(IViewsService)).then(
+    searchView => searchView?.selectNextMatch(),
+  );
 }
 
 async function focusPreviousSearchResult(accessor: ServicesAccessor): Promise<any> {
@@ -468,7 +480,9 @@ async function focusPreviousSearchResult(accessor: ServicesAccessor): Promise<an
 		return (editorService.activeEditorPane as SearchEditor).focusPreviousResult();
 	}
 
-	return openSearchView(accessor.get(IViewsService)).then(searchView => searchView?.selectPreviousMatch());
+	return openSearchView(accessor.get(IViewsService)).then(
+    searchView => searchView?.selectPreviousMatch(),
+  );
 }
 
 async function findOrReplaceInFiles(accessor: ServicesAccessor, expandSearchReplaceWidget: boolean): Promise<any> {

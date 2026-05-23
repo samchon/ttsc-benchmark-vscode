@@ -7,17 +7,17 @@
  * Color scheme used by the OS and by color themes.
  */
 export enum ColorScheme {
-	DARK = 'dark',
-	LIGHT = 'light',
-	HIGH_CONTRAST_DARK = 'hcDark',
-	HIGH_CONTRAST_LIGHT = 'hcLight'
+	DARK = "dark",
+	LIGHT = "light",
+	HIGH_CONTRAST_DARK = "hcDark",
+	HIGH_CONTRAST_LIGHT = "hcLight"
 }
 
 export enum ThemeTypeSelector {
-	VS = 'vs',
-	VS_DARK = 'vs-dark',
-	HC_BLACK = 'hc-black',
-	HC_LIGHT = 'hc-light'
+	VS = "vs",
+	VS_DARK = "vs-dark",
+	HC_BLACK = "hc-black",
+	HC_LIGHT = "hc-light"
 }
 
 

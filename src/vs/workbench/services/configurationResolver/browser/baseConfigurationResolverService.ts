@@ -2,31 +2,31 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { Queue } from '../../../../base/common/async.js';
-import { IStringDictionary } from '../../../../base/common/collections.js';
-import { Iterable } from '../../../../base/common/iterator.js';
-import { LRUCache } from '../../../../base/common/map.js';
-import { Schemas } from '../../../../base/common/network.js';
-import { IProcessEnvironment } from '../../../../base/common/platform.js';
-import * as Types from '../../../../base/common/types.js';
-import { URI as uri } from '../../../../base/common/uri.js';
-import { ICodeEditor, isCodeEditor, isDiffEditor } from '../../../../editor/browser/editorBrowser.js';
-import { localize } from '../../../../nls.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { ConfigurationTarget, IConfigurationOverrides, IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { ILabelService } from '../../../../platform/label/common/label.js';
-import { IInputOptions, IPickOptions, IQuickInputService, IQuickPickItem } from '../../../../platform/quickinput/common/quickInput.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { IWorkspaceContextService, IWorkspaceFolderData } from '../../../../platform/workspace/common/workspace.js';
-import { EditorResourceAccessor, SideBySideEditor } from '../../../common/editor.js';
-import { IEditorService } from '../../editor/common/editorService.js';
-import { IExtensionService } from '../../extensions/common/extensions.js';
-import { IPathService } from '../../path/common/pathService.js';
-import { ConfiguredInput, VariableError, VariableKind } from '../common/configurationResolver.js';
-import { ConfigurationResolverExpression, IResolvedValue } from '../common/configurationResolverExpression.js';
-import { AbstractVariableResolverService } from '../common/variableResolver.js';
+import { Queue } from "../../../../base/common/async.js";
+import { IStringDictionary } from "../../../../base/common/collections.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { LRUCache } from "../../../../base/common/map.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { IProcessEnvironment } from "../../../../base/common/platform.js";
+import * as Types from "../../../../base/common/types.js";
+import { URI as uri } from "../../../../base/common/uri.js";
+import { ICodeEditor, isCodeEditor, isDiffEditor } from "../../../../editor/browser/editorBrowser.js";
+import { localize } from "../../../../nls.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { ConfigurationTarget, IConfigurationOverrides, IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { IInputOptions, IPickOptions, IQuickInputService, IQuickPickItem } from "../../../../platform/quickinput/common/quickInput.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IWorkspaceContextService, IWorkspaceFolderData } from "../../../../platform/workspace/common/workspace.js";
+import { EditorResourceAccessor, SideBySideEditor } from "../../../common/editor.js";
+import { IEditorService } from "../../editor/common/editorService.js";
+import { IExtensionService } from "../../extensions/common/extensions.js";
+import { IPathService } from "../../path/common/pathService.js";
+import { ConfiguredInput, VariableError, VariableKind } from "../common/configurationResolver.js";
+import { ConfigurationResolverExpression, IResolvedValue } from "../common/configurationResolverExpression.js";
+import { AbstractVariableResolverService } from "../common/variableResolver.js";
 
-const LAST_INPUT_STORAGE_KEY = 'configResolveInputLru';
+const LAST_INPUT_STORAGE_KEY = "configResolveInputLru";
 const LAST_INPUT_CACHE_SIZE = 5;
 
 export abstract class BaseConfigurationResolverService extends AbstractVariableResolverService {
@@ -71,7 +71,7 @@ export abstract class BaseConfigurationResolverService extends AbstractVariableR
 			getFilePath: (): string | undefined => {
 				const fileResource = EditorResourceAccessor.getOriginalUri(editorService.activeEditor, {
 					supportSideBySide: SideBySideEditor.PRIMARY,
-					filterByScheme: [Schemas.file, Schemas.vscodeUserData, this.pathService.defaultUriScheme]
+					filterByScheme: [Schemas.file, Schemas.vscodeUserData, this.pathService.defaultUriScheme],
 				});
 				if (!fileResource) {
 					return undefined;
@@ -81,7 +81,7 @@ export abstract class BaseConfigurationResolverService extends AbstractVariableR
 			getWorkspaceFolderPathForFile: (): string | undefined => {
 				const fileResource = EditorResourceAccessor.getOriginalUri(editorService.activeEditor, {
 					supportSideBySide: SideBySideEditor.PRIMARY,
-					filterByScheme: [Schemas.file, Schemas.vscodeUserData, this.pathService.defaultUriScheme]
+					filterByScheme: [Schemas.file, Schemas.vscodeUserData, this.pathService.defaultUriScheme],
 				});
 				if (!fileResource) {
 					return undefined;
@@ -139,13 +139,19 @@ export abstract class BaseConfigurationResolverService extends AbstractVariableR
 			},
 		}, labelService, pathService.userHome().then(home => home.path), envVariablesPromise);
 
-		this.resolvableVariables.add('command');
-		this.resolvableVariables.add('input');
+		this.resolvableVariables.add("command");
+		this.resolvableVariables.add("input");
 	}
 
 	override async resolveWithInteractionReplace(folder: IWorkspaceFolderData | undefined, config: unknown, section?: string, variables?: IStringDictionary<string>, target?: ConfigurationTarget): Promise<unknown> {
 		const parsed = ConfigurationResolverExpression.parse(config);
-		const resolved = await this.resolveWithInteraction(folder, parsed, section, variables, target);
+		const resolved = await this.resolveWithInteraction(
+      folder,
+      parsed,
+      section,
+      variables,
+      target,
+    );
 
 		// Skip if input variable was canceled
 		if (resolved === undefined) {
@@ -163,32 +169,54 @@ export abstract class BaseConfigurationResolverService extends AbstractVariableR
 			let result: IResolvedValue | undefined;
 
 			// Command
-			if (variable.name === 'command') {
+			if (variable.name === "command") {
 				const commandId = (variableToCommandMap ? variableToCommandMap[variable.arg!] : undefined) || variable.arg!;
-				const value = await this.commandService.executeCommand(commandId, expr.toObject());
+				const value = await this.commandService.executeCommand(
+          commandId,
+          expr.toObject(),
+        );
 				if (!Types.isUndefinedOrNull(value)) {
-					if (typeof value !== 'string') {
-						throw new VariableError(VariableKind.Command, localize('commandVariable.noStringType', "Cannot substitute command variable '{0}' because command did not return a result of type string.", commandId));
+					if (typeof value !== "string") {
+						throw new VariableError(
+              VariableKind.Command,
+              localize(
+                "commandVariable.noStringType",
+                "Cannot substitute command variable '{0}' because command did not return a result of type string.",
+                commandId,
+              ),
+            );
 					}
 					result = { value };
 				}
 			}
 			// Input
-			else if (variable.name === 'input') {
-				result = await this.showUserInput(section!, variable.arg!, await this.resolveInputs(folder, section!, target), variableToCommandMap);
+			else if (variable.name === "input") {
+				result = await this.showUserInput(
+          section!,
+          variable.arg!,
+          await this.resolveInputs(folder, section!, target),
+          variableToCommandMap,
+        );
 			}
 			// Contributed variable
 			else if (this._contributedVariables.has(variable.inner)) {
-				result = { value: await this._contributedVariables.get(variable.inner)!() };
+				result = {
+          value: await this._contributedVariables.get(variable.inner)!(),
+        };
 			}
 			else {
 				// Fallback to parent evaluation
-				const resolvedValue = await this.evaluateSingleVariable(variable, folder?.uri);
+				const resolvedValue = await this.evaluateSingleVariable(
+          variable,
+          folder?.uri,
+        );
 				if (resolvedValue === undefined) {
 					// Not something we can handle
 					continue;
 				}
-				result = typeof resolvedValue === 'string' ? { value: resolvedValue } : resolvedValue;
+				result = typeof resolvedValue === "string" ? {
+          value: resolvedValue,
+        } : resolvedValue;
 			}
 
 			if (result === undefined) {
@@ -199,7 +227,9 @@ export abstract class BaseConfigurationResolverService extends AbstractVariableR
 			expr.resolve(variable, result);
 		}
 
-		return new Map(Iterable.map(expr.resolved(), ([key, value]) => [key.inner, value.value!]));
+		return new Map(
+      Iterable.map(expr.resolved(), ([key, value]) => [key.inner, value.value!]),
+    );
 	}
 
 	private async resolveInputs(folder: IWorkspaceFolderData | undefined, section: string, target?: ConfigurationTarget): Promise<ConfiguredInput[] | undefined> {
@@ -209,8 +239,13 @@ export abstract class BaseConfigurationResolverService extends AbstractVariableR
 
 		// Look at workspace configuration
 		let inputs: ConfiguredInput[] | undefined;
-		const overrides: IConfigurationOverrides = folder ? { resource: folder.uri } : {};
-		const result = this.configurationService.inspect<{ inputs?: ConfiguredInput[] }>(section, overrides);
+		const overrides: IConfigurationOverrides = folder ? {
+      resource: folder.uri,
+    } : {};
+		const result = this.configurationService.inspect<{ inputs?: ConfiguredInput[] }>(
+      section,
+      overrides,
+    );
 
 		if (result) {
 			switch (target) {
@@ -230,13 +265,19 @@ export abstract class BaseConfigurationResolverService extends AbstractVariableR
 		}
 
 
-		inputs ??= this.configurationService.getValue<{ inputs?: ConfiguredInput[] }>(section, overrides)?.inputs;
+		inputs ??= this.configurationService.getValue<{ inputs?: ConfiguredInput[] }>(
+      section,
+      overrides,
+    )?.inputs;
 
 		return inputs;
 	}
 
 	private readInputLru(): LRUCache<string, string> {
-		const contents = this.storageService.get(LAST_INPUT_STORAGE_KEY, StorageScope.WORKSPACE);
+		const contents = this.storageService.get(
+      LAST_INPUT_STORAGE_KEY,
+      StorageScope.WORKSPACE,
+    );
 		const lru = new LRUCache<string, string>(LAST_INPUT_CACHE_SIZE);
 		try {
 			if (contents) {
@@ -250,19 +291,41 @@ export abstract class BaseConfigurationResolverService extends AbstractVariableR
 	}
 
 	private storeInputLru(lru: LRUCache<string, string>): void {
-		this.storageService.store(LAST_INPUT_STORAGE_KEY, JSON.stringify(lru.toJSON()), StorageScope.WORKSPACE, StorageTarget.MACHINE);
+		this.storageService.store(
+      LAST_INPUT_STORAGE_KEY,
+      JSON.stringify(lru.toJSON()),
+      StorageScope.WORKSPACE,
+      StorageTarget.MACHINE,
+    );
 	}
 
 	private async showUserInput(section: string, variable: string, inputInfos: ConfiguredInput[] | undefined, variableToCommandMap?: IStringDictionary<string>): Promise<IResolvedValue | undefined> {
 		if (!inputInfos) {
-			throw new VariableError(VariableKind.Input, localize('inputVariable.noInputSection', "Variable '{0}' must be defined in an '{1}' section of the debug or task configuration.", variable, 'inputs'));
+			throw new VariableError(
+        VariableKind.Input,
+        localize(
+          "inputVariable.noInputSection",
+          "Variable '{0}' must be defined in an '{1}' section of the debug or task configuration.",
+          variable,
+          "inputs",
+        ),
+      );
 		}
 
 		// Find info for the given input variable
 		const info = inputInfos.filter(item => item.id === variable).pop();
 		if (info) {
 			const missingAttribute = (attrName: string) => {
-				throw new VariableError(VariableKind.Input, localize('inputVariable.missingAttribute', "Input variable '{0}' is of type '{1}' and must include '{2}'.", variable, info.type, attrName));
+				throw new VariableError(
+          VariableKind.Input,
+          localize(
+            "inputVariable.missingAttribute",
+            "Input variable '{0}' is of type '{1}' and must include '{2}'.",
+            variable,
+            info.type,
+            attrName,
+          ),
+        );
 			};
 
 			const defaultValueMap = this.readInputLru();
@@ -270,34 +333,38 @@ export abstract class BaseConfigurationResolverService extends AbstractVariableR
 			const previousPickedValue = defaultValueMap.get(defaultValueKey);
 
 			switch (info.type) {
-				case 'promptString': {
+				case "promptString": {
 					if (!Types.isString(info.description)) {
-						missingAttribute('description');
+						missingAttribute("description");
 					}
-					const inputOptions: IInputOptions = { prompt: info.description, ignoreFocusLost: true, value: variableToCommandMap?.[`input:${variable}`] ?? previousPickedValue ?? info.default };
+					const inputOptions: IInputOptions = {
+            prompt: info.description,
+            ignoreFocusLost: true,
+            value: variableToCommandMap?.[`input:${variable}`] ?? previousPickedValue ?? info.default,
+          };
 					if (info.password) {
 						inputOptions.password = info.password;
 					}
 					return this.userInputAccessQueue.queue(() => this.quickInputService.input(inputOptions)).then(resolvedInput => {
-						if (typeof resolvedInput === 'string' && !info.password) {
+						if (typeof resolvedInput === "string" && !info.password) {
 							this.storeInputLru(defaultValueMap.set(defaultValueKey, resolvedInput));
 						}
 						return resolvedInput !== undefined ? { value: resolvedInput as string, input: info } : undefined;
 					});
 				}
 
-				case 'pickString': {
+				case "pickString": {
 					if (!Types.isString(info.description)) {
-						missingAttribute('description');
+						missingAttribute("description");
 					}
 					if (Array.isArray(info.options)) {
 						for (const pickOption of info.options) {
 							if (!Types.isString(pickOption) && !Types.isString(pickOption.value)) {
-								missingAttribute('value');
+								missingAttribute("value");
 							}
 						}
 					} else {
-						missingAttribute('options');
+						missingAttribute("options");
 					}
 
 					interface PickStringItem extends IQuickPickItem {
@@ -305,17 +372,24 @@ export abstract class BaseConfigurationResolverService extends AbstractVariableR
 					}
 					const picks = new Array<PickStringItem>();
 					for (const pickOption of info.options) {
-						const value = Types.isString(pickOption) ? pickOption : pickOption.value;
-						const label = Types.isString(pickOption) ? undefined : pickOption.label;
+						const value = Types.isString(
+              pickOption,
+            ) ? pickOption : pickOption.value;
+						const label = Types.isString(
+              pickOption,
+            ) ? undefined : pickOption.label;
 
 						const item: PickStringItem = {
-							label: label ? `${label}: ${value}` : value,
-							value: value
-						};
+              label: label ? `${label}: ${value}` : value,
+              value: value,
+            };
 
 						const topValue = variableToCommandMap?.[`input:${variable}`] ?? previousPickedValue ?? info.default;
 						if (value === info.default) {
-							item.description = localize('inputVariable.defaultInputValue', "(Default)");
+							item.description = localize(
+                "inputVariable.defaultInputValue",
+                "(Default)",
+              );
 							picks.unshift(item);
 						} else if (value === topValue) {
 							picks.unshift(item);
@@ -324,7 +398,11 @@ export abstract class BaseConfigurationResolverService extends AbstractVariableR
 						}
 					}
 
-					const pickOptions: IPickOptions<PickStringItem> = { placeHolder: info.description, matchOnDetail: true, ignoreFocusLost: true };
+					const pickOptions: IPickOptions<PickStringItem> = {
+            placeHolder: info.description,
+            matchOnDetail: true,
+            ignoreFocusLost: true,
+          };
 					return this.userInputAccessQueue.queue(() => this.quickInputService.pick(picks, pickOptions, undefined)).then(resolvedInput => {
 						if (resolvedInput) {
 							const value = (resolvedInput as PickStringItem).value;
@@ -335,23 +413,37 @@ export abstract class BaseConfigurationResolverService extends AbstractVariableR
 					});
 				}
 
-				case 'command': {
+				case "command": {
 					if (!Types.isString(info.command)) {
-						missingAttribute('command');
+						missingAttribute("command");
 					}
 					return this.userInputAccessQueue.queue(() => this.commandService.executeCommand<string>(info.command, info.args)).then(result => {
-						if (typeof result === 'string' || Types.isUndefinedOrNull(result)) {
+						if (typeof result === "string" || Types.isUndefinedOrNull(result)) {
 							return { value: result, input: info };
 						}
-						throw new VariableError(VariableKind.Input, localize('inputVariable.command.noStringType', "Cannot substitute input variable '{0}' because command '{1}' did not return a result of type string.", variable, info.command));
+						throw new VariableError(VariableKind.Input, localize("inputVariable.command.noStringType", "Cannot substitute input variable '{0}' because command '{1}' did not return a result of type string.", variable, info.command));
 					});
 				}
 
 				default:
-					throw new VariableError(VariableKind.Input, localize('inputVariable.unknownType', "Input variable '{0}' can only be of type 'promptString', 'pickString', or 'command'.", variable));
+					throw new VariableError(
+            VariableKind.Input,
+            localize(
+              "inputVariable.unknownType",
+              "Input variable '{0}' can only be of type 'promptString', 'pickString', or 'command'.",
+              variable,
+            ),
+          );
 			}
 		}
 
-		throw new VariableError(VariableKind.Input, localize('inputVariable.undefinedVariable', "Undefined input variable '{0}' encountered. Remove or define '{0}' to continue.", variable));
+		throw new VariableError(
+      VariableKind.Input,
+      localize(
+        "inputVariable.undefinedVariable",
+        "Undefined input variable '{0}' encountered. Remove or define '{0}' to continue.",
+        variable,
+      ),
+    );
 	}
 }

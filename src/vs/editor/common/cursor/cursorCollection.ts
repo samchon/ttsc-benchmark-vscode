@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { compareBy } from '../../../base/common/arrays.js';
-import { findLastMax, findFirstMin } from '../../../base/common/arraysFind.js';
-import { CursorState, PartialCursorState } from '../cursorCommon.js';
-import { CursorContext } from './cursorContext.js';
-import { Cursor } from './oneCursor.js';
-import { Position } from '../core/position.js';
-import { Range } from '../core/range.js';
-import { ISelection, Selection } from '../core/selection.js';
+import { compareBy } from "../../../base/common/arrays.js";
+import { findLastMax, findFirstMin } from "../../../base/common/arraysFind.js";
+import { CursorState, PartialCursorState } from "../cursorCommon.js";
+import { CursorContext } from "./cursorContext.js";
+import { Cursor } from "./oneCursor.js";
+import { Position } from "../core/position.js";
+import { Range } from "../core/range.js";
+import { ISelection, Selection } from "../core/selection.js";
 
 export class CursorCollection {
 
@@ -74,16 +74,16 @@ export class CursorCollection {
 
 	public getTopMostViewPosition(): Position {
 		return findFirstMin(
-			this.cursors,
-			compareBy(c => c.viewState.position, Position.compare)
-		)!.viewState.position;
+      this.cursors,
+      compareBy(c => c.viewState.position, Position.compare),
+    )!.viewState.position;
 	}
 
 	public getBottomMostViewPosition(): Position {
 		return findLastMax(
-			this.cursors,
-			compareBy(c => c.viewState.position, Position.compare)
-		)!.viewState.position;
+      this.cursors,
+      compareBy(c => c.viewState.position, Position.compare),
+    )!.viewState.position;
 	}
 
 	public getSelections(): Selection[] {
@@ -106,7 +106,11 @@ export class CursorCollection {
 		if (states === null) {
 			return;
 		}
-		this.cursors[0].setState(this.context, states[0].modelState, states[0].viewState);
+		this.cursors[0].setState(
+      this.context,
+      states[0].modelState,
+      states[0].viewState,
+    );
 		this._setSecondaryStates(states.slice(1));
 	}
 
@@ -130,7 +134,11 @@ export class CursorCollection {
 		}
 
 		for (let i = 0; i < secondaryStatesLength; i++) {
-			this.cursors[i + 1].setState(this.context, secondaryStates[i].modelState, secondaryStates[i].viewState);
+			this.cursors[i + 1].setState(
+        this.context,
+        secondaryStates[i].modelState,
+        secondaryStates[i].viewState,
+      );
 		}
 	}
 
@@ -171,12 +179,14 @@ export class CursorCollection {
 		const sortedCursors: SortedCursor[] = [];
 		for (let i = 0, len = cursors.length; i < len; i++) {
 			sortedCursors.push({
-				index: i,
-				selection: cursors[i].modelState.selection,
-			});
+        index: i,
+        selection: cursors[i].modelState.selection,
+      });
 		}
 
-		sortedCursors.sort(compareBy(s => s.selection, Range.compareRangesUsingStarts));
+		sortedCursors.sort(
+      compareBy(s => s.selection, Range.compareRangesUsingStarts),
+    );
 
 		for (let sortedCursorIndex = 0; sortedCursorIndex < sortedCursors.length - 1; sortedCursorIndex++) {
 			const current = sortedCursors[sortedCursorIndex];
@@ -192,10 +202,14 @@ export class CursorCollection {
 			let shouldMergeCursors: boolean;
 			if (nextSelection.isEmpty() || currentSelection.isEmpty()) {
 				// Merge touching cursors if one of them is collapsed
-				shouldMergeCursors = nextSelection.getStartPosition().isBeforeOrEqual(currentSelection.getEndPosition());
+				shouldMergeCursors = nextSelection.getStartPosition().isBeforeOrEqual(
+          currentSelection.getEndPosition(),
+        );
 			} else {
 				// Merge only overlapping cursors (i.e. allow touching ranges)
-				shouldMergeCursors = nextSelection.getStartPosition().isBefore(currentSelection.getEndPosition());
+				shouldMergeCursors = nextSelection.getStartPosition().isBefore(
+          currentSelection.getEndPosition(),
+        );
 			}
 
 			if (shouldMergeCursors) {
@@ -225,14 +239,30 @@ export class CursorCollection {
 
 					let resultingSelection: Selection;
 					if (resultingSelectionIsLTR) {
-						resultingSelection = new Selection(resultingRange.startLineNumber, resultingRange.startColumn, resultingRange.endLineNumber, resultingRange.endColumn);
+						resultingSelection = new Selection(
+              resultingRange.startLineNumber,
+              resultingRange.startColumn,
+              resultingRange.endLineNumber,
+              resultingRange.endColumn,
+            );
 					} else {
-						resultingSelection = new Selection(resultingRange.endLineNumber, resultingRange.endColumn, resultingRange.startLineNumber, resultingRange.startColumn);
+						resultingSelection = new Selection(
+              resultingRange.endLineNumber,
+              resultingRange.endColumn,
+              resultingRange.startLineNumber,
+              resultingRange.startColumn,
+            );
 					}
 
 					sortedCursors[winnerSortedCursorIndex].selection = resultingSelection;
-					const resultingState = CursorState.fromModelSelection(resultingSelection);
-					cursors[winnerIndex].setState(this.context, resultingState.modelState, resultingState.viewState);
+					const resultingState = CursorState.fromModelSelection(
+            resultingSelection,
+          );
+					cursors[winnerIndex].setState(
+            this.context,
+            resultingState.modelState,
+            resultingState.viewState,
+          );
 				}
 
 				for (const sortedCursor of sortedCursors) {

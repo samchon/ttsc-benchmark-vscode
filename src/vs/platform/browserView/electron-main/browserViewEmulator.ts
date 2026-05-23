@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, toDisposable } from '../../../base/common/lifecycle.js';
-import { Emitter, Event } from '../../../base/common/event.js';
-import { IBrowserDeviceProfile } from '../common/browserView.js';
-import { ILogService } from '../../log/common/log.js';
-import type { BrowserView } from './browserView.js';
+import { Disposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { IBrowserDeviceProfile } from "../common/browserView.js";
+import { ILogService } from "../../log/common/log.js";
+import type { BrowserView } from "./browserView.js";
 
 /**
  * Manages device emulation for a browser view. The renderer is authoritative
@@ -21,7 +21,9 @@ export class BrowserViewEmulator extends Disposable {
 	private readonly _defaultUserAgent: string;
 	private _lastApplied: { viewportWidth: number; viewportHeight: number; scale: number; hostZoom: number } | undefined;
 
-	private readonly _onDidChange = this._register(new Emitter<IBrowserDeviceProfile | undefined>());
+	private readonly _onDidChange = this._register(
+    new Emitter<IBrowserDeviceProfile | undefined>(),
+  );
 	readonly onDidChange: Event<IBrowserDeviceProfile | undefined> = this._onDidChange.event;
 
 	constructor(
@@ -38,8 +40,15 @@ export class BrowserViewEmulator extends Disposable {
 				this._lastApplied = undefined;
 			}
 		};
-		this.browser.webContents.on('did-navigate', onNavigate);
-		this._register(toDisposable(() => this.browser.webContents.removeListener('did-navigate', onNavigate)));
+		this.browser.webContents.on("did-navigate", onNavigate);
+		this._register(
+      toDisposable(
+        () => this.browser.webContents.removeListener(
+          "did-navigate",
+          onNavigate,
+        ),
+      ),
+    );
 	}
 
 	get device(): IBrowserDeviceProfile | undefined {
@@ -88,15 +97,20 @@ export class BrowserViewEmulator extends Disposable {
 			&& Math.abs(last.scale - s) < 0.0001 && Math.abs(last.hostZoom - z) < 0.0001) {
 			return;
 		}
-		this._lastApplied = { viewportWidth: w, viewportHeight: h, scale: s, hostZoom: z };
+		this._lastApplied = {
+      viewportWidth: w,
+      viewportHeight: h,
+      scale: s,
+      hostZoom: z,
+    };
 		this.browser.webContents.enableDeviceEmulation({
-			screenPosition: this._device.mobile ? 'mobile' : 'desktop',
-			screenSize: { width: w, height: h },
-			viewSize: { width: w, height: h },
-			deviceScaleFactor: this._device.deviceScaleFactor ?? 0,
-			viewPosition: { x: 0, y: 0 },
-			scale: s * z,
-		});
+      screenPosition: this._device.mobile ? "mobile" : "desktop",
+      screenSize: { width: w, height: h },
+      viewSize: { width: w, height: h },
+      deviceScaleFactor: this._device.deviceScaleFactor ?? 0,
+      viewPosition: { x: 0, y: 0 },
+      scale: s * z,
+    });
 	}
 
 	private isSafeToApplyEmulation(): boolean {
@@ -109,11 +123,22 @@ export class BrowserViewEmulator extends Disposable {
 		}
 		const mobile = !!this._device?.mobile;
 		try {
-			await this.browser.debugger.sendCommand('Emulation.setTouchEmulationEnabled', { enabled: mobile, maxTouchPoints: mobile ? 5 : 1 });
-			await this.browser.debugger.sendCommand('Emulation.setEmulatedMedia', { features: this._device ? [{ name: 'pointer', value: mobile ? 'coarse' : 'fine' }] : [] });
-			await this.browser.debugger.sendCommand('Emulation.setEmitTouchEventsForMouse', { enabled: mobile });
+			await this.browser.debugger.sendCommand(
+        "Emulation.setTouchEmulationEnabled",
+        { enabled: mobile, maxTouchPoints: mobile ? 5 : 1 },
+      );
+			await this.browser.debugger.sendCommand("Emulation.setEmulatedMedia", {
+        features: this._device ? [{ name: "pointer", value: mobile ? "coarse" : "fine" }] : [],
+      });
+			await this.browser.debugger.sendCommand(
+        "Emulation.setEmitTouchEventsForMouse",
+        { enabled: mobile },
+      );
 		} catch (err) {
-			this.logService.error('[BrowserViewEmulator] _applyTouchAndMedia failed', err);
+			this.logService.error(
+        "[BrowserViewEmulator] _applyTouchAndMedia failed",
+        err,
+      );
 		}
 	}
 }

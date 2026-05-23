@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter } from '../../../../../base/common/event.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { INotebookRendererMessagingService, IScopedRendererMessaging } from '../../common/notebookRendererMessagingService.js';
-import { IExtensionService } from '../../../../services/extensions/common/extensions.js';
+import { Emitter } from "../../../../../base/common/event.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { INotebookRendererMessagingService, IScopedRendererMessaging } from "../../common/notebookRendererMessagingService.js";
+import { IExtensionService } from "../../../../services/extensions/common/extensions.js";
 
 type MessageToSend = { editorId: string; rendererId: string; message: unknown };
 
@@ -18,11 +18,13 @@ export class NotebookRendererMessagingService extends Disposable implements INot
 	 */
 	private readonly activations = new Map<string /* rendererId */, undefined | MessageToSend[]>();
 	private readonly scopedMessaging = new Map</* editorId */ string, IScopedRendererMessaging>();
-	private readonly postMessageEmitter = this._register(new Emitter<MessageToSend>());
+	private readonly postMessageEmitter = this._register(
+    new Emitter<MessageToSend>(),
+  );
 	public readonly onShouldPostMessage = this.postMessageEmitter.event;
 
 	constructor(
-		@IExtensionService private readonly extensionService: IExtensionService
+		@IExtensionService private readonly extensionService: IExtensionService,
 	) {
 		super();
 	}
@@ -30,11 +32,16 @@ export class NotebookRendererMessagingService extends Disposable implements INot
 	/** @inheritdoc */
 	public receiveMessage(editorId: string | undefined, rendererId: string, message: unknown): Promise<boolean> {
 		if (editorId === undefined) {
-			const sends = [...this.scopedMessaging.values()].map(e => e.receiveMessageHandler?.(rendererId, message));
+			const sends = [...this.scopedMessaging.values()].map(
+        e => e.receiveMessageHandler?.(rendererId, message),
+      );
 			return Promise.all(sends).then(s => s.some(s => !!s));
 		}
 
-		return this.scopedMessaging.get(editorId)?.receiveMessageHandler?.(rendererId, message) ?? Promise.resolve(false);
+		return this.scopedMessaging.get(editorId)?.receiveMessageHandler?.(
+      rendererId,
+      message,
+    ) ?? Promise.resolve(false);
 	}
 
 	/** @inheritdoc */
@@ -63,9 +70,9 @@ export class NotebookRendererMessagingService extends Disposable implements INot
 		}
 
 		const messaging: IScopedRendererMessaging = {
-			postMessage: (rendererId, message) => this.postMessage(editorId, rendererId, message),
-			dispose: () => this.scopedMessaging.delete(editorId),
-		};
+      postMessage: (rendererId, message) => this.postMessage(editorId, rendererId, message),
+      dispose: () => this.scopedMessaging.delete(editorId),
+    };
 
 		this.scopedMessaging.set(editorId, messaging);
 		return messaging;

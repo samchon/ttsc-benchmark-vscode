@@ -3,48 +3,63 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../../../base/browser/dom.js';
-import { renderIcon } from '../../../../../../base/browser/ui/iconLabel/iconLabels.js';
-import { Gesture, EventType as TouchEventType } from '../../../../../../base/browser/touch.js';
-import { BaseActionViewItem } from '../../../../../../base/browser/ui/actionbar/actionViewItems.js';
-import { Codicon } from '../../../../../../base/common/codicons.js';
-import { Disposable, DisposableMap, DisposableStore } from '../../../../../../base/common/lifecycle.js';
-import { autorun } from '../../../../../../base/common/observable.js';
-import { ThemeIcon } from '../../../../../../base/common/themables.js';
-import { localize, localize2 } from '../../../../../../nls.js';
-import { IActionViewItemService } from '../../../../../../platform/actions/browser/actionViewItemService.js';
-import { Action2, registerAction2 } from '../../../../../../platform/actions/common/actions.js';
-import { ContextKeyExpr } from '../../../../../../platform/contextkey/common/contextkey.js';
-import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { IStorageService, StorageScope } from '../../../../../../platform/storage/common/storage.js';
-import { SessionConfigKey } from '../../../../../../platform/agentHost/common/sessionConfigKeys.js';
-import { ITelemetryService } from '../../../../../../platform/telemetry/common/telemetry.js';
-import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../../../../workbench/common/contributions.js';
-import { type ILanguageModelChatMetadataAndIdentifier, ILanguageModelsService } from '../../../../../../workbench/contrib/chat/common/languageModels.js';
-import { IChatPhoneInputPresenter } from '../../../../../../workbench/contrib/chat/browser/widget/input/chatPhoneInputPresenter.js';
-import { Menus } from '../../../../../browser/menus.js';
-import { ActiveSessionProviderIdContext, IsPhoneLayoutContext } from '../../../../../common/contextkeys.js';
-import { type IAgentHostSessionsProvider, isAgentHostProvider, LOCAL_AGENT_HOST_PROVIDER_ID, REMOTE_AGENT_HOST_PROVIDER_RE } from '../../../../../common/agentHostSessionsProvider.js';
-import { ISessionsManagementService } from '../../../../../services/sessions/common/sessionsManagement.js';
-import { ISessionsProvidersService } from '../../../../../services/sessions/browser/sessionsProvidersService.js';
-import { type ISession } from '../../../../../services/sessions/common/session.js';
-import { isWellKnownModeSchema } from '../agentHostPermissionPickerDelegate.js';
-import { agentHostModelPickerStorageKey } from '../agentHostModelPicker.js';
-import { INewChatModelPickerService } from '../../../../chat/browser/newChatModelPicker.js';
-import { reportNewChatPickerClosed } from '../../../../chat/browser/newChatPickerTelemetry.js';
+import * as dom from "../../../../../../base/browser/dom.js";
+import { renderIcon } from "../../../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { Gesture, EventType as TouchEventType } from "../../../../../../base/browser/touch.js";
+import { BaseActionViewItem } from "../../../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { Codicon } from "../../../../../../base/common/codicons.js";
+import { Disposable, DisposableMap, DisposableStore } from "../../../../../../base/common/lifecycle.js";
+import { autorun } from "../../../../../../base/common/observable.js";
+import { ThemeIcon } from "../../../../../../base/common/themables.js";
+import { localize, localize2 } from "../../../../../../nls.js";
+import { IActionViewItemService } from "../../../../../../platform/actions/browser/actionViewItemService.js";
+import { Action2, registerAction2 } from "../../../../../../platform/actions/common/actions.js";
+import { ContextKeyExpr } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { IStorageService, StorageScope } from "../../../../../../platform/storage/common/storage.js";
+import { SessionConfigKey } from "../../../../../../platform/agentHost/common/sessionConfigKeys.js";
+import { ITelemetryService } from "../../../../../../platform/telemetry/common/telemetry.js";
+import {
+  IWorkbenchContribution,
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../../../../../workbench/common/contributions.js";
+import { type ILanguageModelChatMetadataAndIdentifier, ILanguageModelsService } from "../../../../../../workbench/contrib/chat/common/languageModels.js";
+import { IChatPhoneInputPresenter } from "../../../../../../workbench/contrib/chat/browser/widget/input/chatPhoneInputPresenter.js";
+import { Menus } from "../../../../../browser/menus.js";
+import { ActiveSessionProviderIdContext, IsPhoneLayoutContext } from "../../../../../common/contextkeys.js";
+import {
+  type IAgentHostSessionsProvider,
+  isAgentHostProvider,
+  LOCAL_AGENT_HOST_PROVIDER_ID,
+  REMOTE_AGENT_HOST_PROVIDER_RE,
+} from "../../../../../common/agentHostSessionsProvider.js";
+import { ISessionsManagementService } from "../../../../../services/sessions/common/sessionsManagement.js";
+import { ISessionsProvidersService } from "../../../../../services/sessions/browser/sessionsProvidersService.js";
+import { type ISession } from "../../../../../services/sessions/common/session.js";
+import { isWellKnownModeSchema } from "../agentHostPermissionPickerDelegate.js";
+import { agentHostModelPickerStorageKey } from "../agentHostModelPicker.js";
+import { INewChatModelPickerService } from "../../../../chat/browser/newChatModelPicker.js";
+import { reportNewChatPickerClosed } from "../../../../chat/browser/newChatPickerTelemetry.js";
 
 const IsActiveSessionAgentHost = ContextKeyExpr.or(
-	ContextKeyExpr.equals(ActiveSessionProviderIdContext.key, LOCAL_AGENT_HOST_PROVIDER_ID),
-	ContextKeyExpr.regex(ActiveSessionProviderIdContext.key, REMOTE_AGENT_HOST_PROVIDER_RE),
+  ContextKeyExpr.equals(
+    ActiveSessionProviderIdContext.key,
+    LOCAL_AGENT_HOST_PROVIDER_ID,
+  ),
+  ContextKeyExpr.regex(
+    ActiveSessionProviderIdContext.key,
+    REMOTE_AGENT_HOST_PROVIDER_RE,
+  ),
 );
 
-const MOBILE_CHAT_INPUT_CONFIG_PICKER_ID = 'sessions.agentHost.mobileChatInputConfigPicker';
+const MOBILE_CHAT_INPUT_CONFIG_PICKER_ID = "sessions.agentHost.mobileChatInputConfigPicker";
 
 function getModeIcon(value: string | undefined): ThemeIcon | undefined {
 	switch (value) {
-		case 'plan': return Codicon.checklist;
-		case 'autopilot': return Codicon.rocket;
-		case 'interactive': return Codicon.comment;
+		case "plan": return Codicon.checklist;
+		case "autopilot": return Codicon.rocket;
+		case "interactive": return Codicon.comment;
 		default: return undefined;
 	}
 }
@@ -100,7 +115,9 @@ interface IMobileConfigContext {
 class MobileChatInputConfigPicker extends Disposable {
 
 	private readonly _renderDisposables = this._register(new DisposableStore());
-	private readonly _providerListeners = this._register(new DisposableMap<string>());
+	private readonly _providerListeners = this._register(
+    new DisposableMap<string>(),
+  );
 	private _slotElement: HTMLElement | undefined;
 	private _triggerElement: HTMLElement | undefined;
 
@@ -114,7 +131,11 @@ class MobileChatInputConfigPicker extends Disposable {
 		@INewChatModelPickerService private readonly _newChatModelPickerService: INewChatModelPickerService,
 	) {
 		super();
-		this._register(this._newChatModelPickerService.registerModelPicker(() => { void this._showSheet(); }));
+		this._register(
+      this._newChatModelPickerService.registerModelPicker(() => {
+        void this._showSheet();
+      }),
+    );
 
 		// Re-render the trigger whenever the active session, its config,
 		// its model, or the available language models change. The
@@ -129,7 +150,11 @@ class MobileChatInputConfigPicker extends Disposable {
 			session?.modelId.read(reader);
 			this._updateTrigger();
 		}));
-		this._register(this._languageModelsService.onDidChangeLanguageModels(() => this._updateTrigger()));
+		this._register(
+      this._languageModelsService.onDidChangeLanguageModels(
+        () => this._updateTrigger(),
+      ),
+    );
 		this._register(this._sessionsProvidersService.onDidChangeProviders(e => {
 			for (const provider of e.removed) {
 				this._providerListeners.deleteAndDispose(provider.id);
@@ -155,31 +180,41 @@ class MobileChatInputConfigPicker extends Disposable {
 			if (!resolved || !isAgentHostProvider(resolved)) {
 				continue;
 			}
-			this._providerListeners.set(provider.id, resolved.onDidChangeSessionConfig(() => this._updateTrigger()));
+			this._providerListeners.set(
+        provider.id,
+        resolved.onDidChangeSessionConfig(() => this._updateTrigger()),
+      );
 		}
 	}
 
 	render(container: HTMLElement): void {
 		this._renderDisposables.clear();
 
-		const slot = dom.append(container, dom.$('.sessions-chat-picker-slot.sessions-chat-picker-slot-mobile-config'));
+		const slot = dom.append(
+      container,
+      dom.$(
+        ".sessions-chat-picker-slot.sessions-chat-picker-slot-mobile-config",
+      ),
+    );
 		this._renderDisposables.add({ dispose: () => slot.remove() });
 		this._slotElement = slot;
 
-		const trigger = dom.append(slot, dom.$('a.action-label'));
+		const trigger = dom.append(slot, dom.$("a.action-label"));
 		trigger.tabIndex = 0;
-		trigger.role = 'button';
+		trigger.role = "button";
 		this._triggerElement = trigger;
 
 		this._renderDisposables.add(Gesture.addTarget(trigger));
 		for (const eventType of [dom.EventType.CLICK, TouchEventType.Tap]) {
-			this._renderDisposables.add(dom.addDisposableListener(trigger, eventType, e => {
-				dom.EventHelper.stop(e, true);
-				this._showSheet();
-			}));
+			this._renderDisposables.add(
+        dom.addDisposableListener(trigger, eventType, e => {
+          dom.EventHelper.stop(e, true);
+          this._showSheet();
+        }),
+      );
 		}
 		this._renderDisposables.add(dom.addDisposableListener(trigger, dom.EventType.KEY_DOWN, e => {
-			if (e.key === 'Enter' || e.key === ' ') {
+			if (e.key === "Enter" || e.key === " ") {
 				dom.EventHelper.stop(e, true);
 				this._showSheet();
 			}
@@ -193,7 +228,9 @@ class MobileChatInputConfigPicker extends Disposable {
 		if (!session) {
 			return undefined;
 		}
-		const provider = this._sessionsProvidersService.getProvider(session.providerId);
+		const provider = this._sessionsProvidersService.getProvider(
+      session.providerId,
+    );
 		if (!provider || !isAgentHostProvider(provider)) {
 			return undefined;
 		}
@@ -203,21 +240,33 @@ class MobileChatInputConfigPicker extends Disposable {
 		const modeSchema = config?.schema.properties[SessionConfigKey.Mode];
 		const modeItems = (modeSchema && isWellKnownModeSchema(modeSchema))
 			? (modeSchema.enum ?? []).map((value, index) => ({
-				value,
-				label: modeSchema.enumLabels?.[index] ?? value,
-				description: modeSchema.enumDescriptions?.[index],
-			}))
+          value,
+          label: modeSchema.enumLabels?.[index] ?? value,
+          description: modeSchema.enumDescriptions?.[index],
+        }))
 			: [];
 		const rawCurrentMode = config?.values[SessionConfigKey.Mode] ?? modeSchema?.default;
-		const currentMode = (typeof rawCurrentMode === 'string' && modeItems.some(i => i.value === rawCurrentMode))
+		const currentMode = (typeof rawCurrentMode === "string" && modeItems.some(
+      i => i.value === rawCurrentMode,
+    ))
 			? rawCurrentMode
 			: modeItems[0]?.value;
 
 		// Model
 		const modelItems = getAgentHostModels(this._languageModelsService, session);
-		const currentModelId = session.modelId.get() ?? this._storageService.get(agentHostModelPickerStorageKey(session.resource.scheme), StorageScope.PROFILE);
+		const currentModelId = session.modelId.get() ?? this._storageService.get(
+      agentHostModelPickerStorageKey(session.resource.scheme),
+      StorageScope.PROFILE,
+    );
 
-		return { provider, session, modeItems, currentMode, modelItems, currentModelId };
+		return {
+      provider,
+      session,
+      modeItems,
+      currentMode,
+      modelItems,
+      currentModelId,
+    };
 	}
 
 	private _updateTrigger(): void {
@@ -230,10 +279,10 @@ class MobileChatInputConfigPicker extends Disposable {
 		// models). In that state the toolbar is more compact rather than
 		// showing a no-op trigger.
 		if (!ctx || (ctx.modeItems.length === 0 && ctx.modelItems.length === 0)) {
-			this._slotElement.style.display = 'none';
+			this._slotElement.style.display = "none";
 			return;
 		}
-		this._slotElement.style.display = '';
+		this._slotElement.style.display = "";
 
 		// Auto-resolve the model: if the session has no explicit model
 		// selection yet, push the remembered model (or first available)
@@ -261,8 +310,11 @@ class MobileChatInputConfigPicker extends Disposable {
 			? ctx.modelItems.find(m => m.identifier === resolvedModelId)
 			: undefined;
 		const labelText = currentModel?.metadata.name
-			?? localize('mobileChatInputConfigPicker.autoLabel', "Auto");
-		const labelSpan = dom.append(this._triggerElement, dom.$('span.chat-input-picker-label'));
+			?? localize("mobileChatInputConfigPicker.autoLabel", "Auto");
+		const labelSpan = dom.append(
+      this._triggerElement,
+      dom.$("span.chat-input-picker-label"),
+    );
 		labelSpan.textContent = labelText;
 
 		const ariaParts: string[] = [];
@@ -274,16 +326,19 @@ class MobileChatInputConfigPicker extends Disposable {
 		}
 		ariaParts.push(labelText);
 		this._triggerElement.ariaLabel = localize(
-			'mobileChatInputConfigPicker.triggerAriaLabel',
-			"Pick Mode and Model, {0}",
-			ariaParts.join(', '),
-		);
+      "mobileChatInputConfigPicker.triggerAriaLabel",
+      "Pick Mode and Model, {0}",
+      ariaParts.join(", "),
+    );
 
 		// Sheet's mode row writes through `setSessionConfigValue`, so
 		// disable the chip while a resolve is in flight.
 		const isResolving = ctx.provider.isSessionConfigResolving(ctx.session.sessionId).get();
-		this._slotElement.classList.toggle('disabled', isResolving);
-		this._triggerElement.setAttribute('aria-disabled', isResolving ? 'true' : 'false');
+		this._slotElement.classList.toggle("disabled", isResolving);
+		this._triggerElement.setAttribute(
+      "aria-disabled",
+      isResolving ? "true" : "false",
+    );
 	}
 
 	/**
@@ -302,8 +357,13 @@ class MobileChatInputConfigPicker extends Disposable {
 		if (ctx.modelItems.length === 0) {
 			return undefined;
 		}
-		const remembered = this._storageService.get(agentHostModelPickerStorageKey(ctx.session.resource.scheme), StorageScope.PROFILE);
-		const rememberedModel = remembered ? ctx.modelItems.find(m => m.identifier === remembered) : undefined;
+		const remembered = this._storageService.get(
+      agentHostModelPickerStorageKey(ctx.session.resource.scheme),
+      StorageScope.PROFILE,
+    );
+		const rememberedModel = remembered ? ctx.modelItems.find(
+      m => m.identifier === remembered,
+    ) : undefined;
 		const resolved = rememberedModel ?? ctx.modelItems[0];
 		ctx.provider.setModel(ctx.session.sessionId, resolved.identifier);
 		return resolved.identifier;
@@ -328,43 +388,55 @@ class MobileChatInputConfigPicker extends Disposable {
 		const trigger = this._triggerElement;
 		const beforeCtx = ctx;
 		const beforeMode = beforeCtx?.currentMode;
-		const beforeModeItem = beforeCtx?.modeItems.find(i => i.value === beforeMode);
+		const beforeModeItem = beforeCtx?.modeItems.find(
+      i => i.value === beforeMode,
+    );
 		const beforeModelId = beforeCtx?.currentModelId;
-		const beforeModel = beforeModelId ? beforeCtx?.modelItems.find(m => m.identifier === beforeModelId) : undefined;
-		trigger.setAttribute('aria-expanded', 'true');
+		const beforeModel = beforeModelId ? beforeCtx?.modelItems.find(
+      m => m.identifier === beforeModelId,
+    ) : undefined;
+		trigger.setAttribute("aria-expanded", "true");
 		try {
-			await this._phonePresenter.showCombinedModeAndModelSheet(trigger, undefined, undefined);
+			await this._phonePresenter.showCombinedModeAndModelSheet(
+        trigger,
+        undefined,
+        undefined,
+      );
 			const afterCtx = this._getContext();
 			if (beforeCtx && afterCtx) {
 				if (beforeCtx.modeItems.length > 0) {
 					const afterMode = afterCtx.currentMode;
-					const afterModeItem = afterCtx.modeItems.find(i => i.value === afterMode);
+					const afterModeItem = afterCtx.modeItems.find(
+            i => i.value === afterMode,
+          );
 					reportNewChatPickerClosed(this._telemetryService, {
-						id: 'NewChatMobileChatInputConfigPicker',
-						name: 'NewChatMobileChatInputConfigPicker.mode',
-						optionIdBefore: beforeMode,
-						optionIdAfter: afterMode,
-						optionLabelBefore: beforeModeItem?.label ?? beforeMode,
-						optionLabelAfter: afterModeItem?.label ?? afterMode,
-						isPII: false,
-					});
+            id: "NewChatMobileChatInputConfigPicker",
+            name: "NewChatMobileChatInputConfigPicker.mode",
+            optionIdBefore: beforeMode,
+            optionIdAfter: afterMode,
+            optionLabelBefore: beforeModeItem?.label ?? beforeMode,
+            optionLabelAfter: afterModeItem?.label ?? afterMode,
+            isPII: false,
+          });
 				}
 				if (beforeCtx.modelItems.length > 0) {
 					const afterModelId = afterCtx.currentModelId;
-					const afterModel = afterModelId ? afterCtx.modelItems.find(m => m.identifier === afterModelId) : undefined;
+					const afterModel = afterModelId ? afterCtx.modelItems.find(
+            m => m.identifier === afterModelId,
+          ) : undefined;
 					reportNewChatPickerClosed(this._telemetryService, {
-						id: 'NewChatMobileChatInputConfigPicker',
-						name: 'NewChatMobileChatInputConfigPicker.model',
-						optionIdBefore: beforeModelId,
-						optionIdAfter: afterModelId,
-						optionLabelBefore: beforeModel?.metadata.name,
-						optionLabelAfter: afterModel?.metadata.name,
-						isPII: false,
-					});
+            id: "NewChatMobileChatInputConfigPicker",
+            name: "NewChatMobileChatInputConfigPicker.model",
+            optionIdBefore: beforeModelId,
+            optionIdAfter: afterModelId,
+            optionLabelBefore: beforeModel?.metadata.name,
+            optionLabelAfter: afterModel?.metadata.name,
+            isPII: false,
+          });
 				}
 			}
 		} finally {
-			trigger.setAttribute('aria-expanded', 'false');
+			trigger.setAttribute("aria-expanded", "false");
 			trigger.focus();
 		}
 	}
@@ -380,11 +452,11 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: MOBILE_CHAT_INPUT_CONFIG_PICKER_ID,
-			title: localize2('mobileChatInputConfigPicker', "Mode and Model"),
+			title: localize2("mobileChatInputConfigPicker", "Mode and Model"),
 			f1: false,
 			menu: [{
 				id: Menus.NewSessionConfig,
-				group: 'navigation',
+				group: "navigation",
 				order: 0,
 				when: ContextKeyExpr.and(IsActiveSessionAgentHost, IsPhoneLayoutContext),
 			}],
@@ -404,7 +476,7 @@ registerAction2(class extends Action2 {
  */
 class MobileChatInputConfigPickerContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'sessions.contrib.mobileChatInputConfigPicker';
+	static readonly ID = "sessions.contrib.mobileChatInputConfigPicker";
 
 	constructor(
 		@IActionViewItemService actionViewItemService: IActionViewItemService,
@@ -425,12 +497,19 @@ class MobileChatInputConfigPickerContribution extends Disposable implements IWor
 
 class MobileChatInputConfigPickerActionViewItem extends BaseActionViewItem {
 	constructor(private readonly _picker: MobileChatInputConfigPicker) {
-		super(undefined, { id: '', label: '', enabled: true, class: undefined, tooltip: '', run: () => { } });
+		super(undefined, {
+      id: "",
+      label: "",
+      enabled: true,
+      class: undefined,
+      tooltip: "",
+      run: () => { },
+    });
 	}
 
 	override render(container: HTMLElement): void {
 		this._picker.render(container);
-		container.classList.add('chat-input-picker-item');
+		container.classList.add("chat-input-picker-item");
 	}
 
 	override dispose(): void {
@@ -439,4 +518,8 @@ class MobileChatInputConfigPickerActionViewItem extends BaseActionViewItem {
 	}
 }
 
-registerWorkbenchContribution2(MobileChatInputConfigPickerContribution.ID, MobileChatInputConfigPickerContribution, WorkbenchPhase.AfterRestored);
+registerWorkbenchContribution2(
+  MobileChatInputConfigPickerContribution.ID,
+  MobileChatInputConfigPickerContribution,
+  WorkbenchPhase.AfterRestored,
+);

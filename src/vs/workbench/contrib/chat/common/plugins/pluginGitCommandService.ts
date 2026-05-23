@@ -3,11 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../../base/common/cancellation.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
 
-export const IPluginGitService = createDecorator<IPluginGitService>('pluginGitService');
+export const IPluginGitService = createDecorator<IPluginGitService>(
+  "pluginGitService",
+);
 
 /**
  * Abstracts git operations used by the agent plugin system.

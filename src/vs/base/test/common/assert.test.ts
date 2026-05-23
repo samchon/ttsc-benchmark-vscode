@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { ok, assert as commonAssert } from '../../common/assert.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from './utils.js';
-import { CancellationError, ReadonlyError } from '../../common/errors.js';
+import assert from "assert";
+import { ok, assert as commonAssert } from "../../common/assert.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "./utils.js";
+import { CancellationError, ReadonlyError } from "../../common/errors.js";
 
-suite('Assert', () => {
-	test('ok', () => {
+suite("Assert", () => {
+	test("ok", () => {
 		assert.throws(function () {
 			ok(false);
 		});
@@ -23,20 +23,20 @@ suite('Assert', () => {
 		});
 
 		assert.throws(function () {
-			ok(null, 'Foo Bar');
+			ok(null, "Foo Bar");
 		}, function (e: Error) {
-			return e.message.indexOf('Foo Bar') >= 0;
+			return e.message.indexOf("Foo Bar") >= 0;
 		});
 
 		ok(true);
-		ok('foo');
+		ok("foo");
 		ok({});
 		ok(5);
 	});
 
-	suite('throws a provided error object', () => {
-		test('generic error', () => {
-			const originalError = new Error('Oh no!');
+	suite("throws a provided error object", () => {
+		test("generic error", () => {
+			const originalError = new Error("Oh no!");
 
 			try {
 				commonAssert(
@@ -47,18 +47,18 @@ suite('Assert', () => {
 				assert.strictEqual(
 					thrownError,
 					originalError,
-					'Must throw the provided error instance.',
+					"Must throw the provided error instance.",
 				);
 
 				assert.strictEqual(
 					thrownError.message,
-					'Oh no!',
-					'Must throw the provided error instance.',
+					"Oh no!",
+					"Must throw the provided error instance.",
 				);
 			}
 		});
 
-		test('cancellation error', () => {
+		test("cancellation error", () => {
 			const originalError = new CancellationError();
 
 			try {
@@ -70,13 +70,13 @@ suite('Assert', () => {
 				assert.strictEqual(
 					thrownError,
 					originalError,
-					'Must throw the provided error instance.',
+					"Must throw the provided error instance.",
 				);
 			}
 		});
 
-		test('readonly error', () => {
-			const originalError = new ReadonlyError('World');
+		test("readonly error", () => {
+			const originalError = new ReadonlyError("World");
 
 			try {
 				commonAssert(
@@ -87,13 +87,13 @@ suite('Assert', () => {
 				assert.strictEqual(
 					thrownError,
 					originalError,
-					'Must throw the provided error instance.',
+					"Must throw the provided error instance.",
 				);
 
 				assert.strictEqual(
 					thrownError.message,
-					'World is read-only and cannot be changed',
-					'Must throw the provided error instance.',
+					"World is read-only and cannot be changed",
+					"Must throw the provided error instance.",
 				);
 			}
 		});

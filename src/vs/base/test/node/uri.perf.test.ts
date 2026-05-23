@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { readFileSync } from 'fs';
-import { FileAccess } from '../../common/network.js';
-import { URI } from '../../common/uri.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../common/utils.js';
+import assert from "assert";
+import { readFileSync } from "fs";
+import { FileAccess } from "../../common/network.js";
+import { URI } from "../../common/uri.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../common/utils.js";
 
-suite('URI - perf', function () {
+suite("URI - perf", function () {
 
 	// COMMENT THIS OUT TO RUN TEST
 	if (1) {
@@ -21,8 +21,8 @@ suite('URI - perf', function () {
 	let manyFileUris: URI[];
 	setup(function () {
 		manyFileUris = [];
-		const data = readFileSync(FileAccess.asFileUri('vs/base/test/node/uri.perf.data.txt').fsPath).toString();
-		const lines = data.split('\n');
+		const data = readFileSync(FileAccess.asFileUri("vs/base/test/node/uri.perf.data.txt").fsPath).toString();
+		const lines = data.split("\n");
 		for (const line of lines) {
 			manyFileUris.push(URI.file(line));
 		}
@@ -38,28 +38,28 @@ suite('URI - perf', function () {
 		});
 	}
 
-	perfTest('toString', function () {
+	perfTest("toString", function () {
 		for (const uri of manyFileUris) {
 			const data = uri.toString();
 			assert.ok(data);
 		}
 	});
 
-	perfTest('toString(skipEncoding)', function () {
+	perfTest("toString(skipEncoding)", function () {
 		for (const uri of manyFileUris) {
 			const data = uri.toString(true);
 			assert.ok(data);
 		}
 	});
 
-	perfTest('fsPath', function () {
+	perfTest("fsPath", function () {
 		for (const uri of manyFileUris) {
 			const data = uri.fsPath;
 			assert.ok(data);
 		}
 	});
 
-	perfTest('toJSON', function () {
+	perfTest("toJSON", function () {
 		for (const uri of manyFileUris) {
 			const data = uri.toJSON();
 			assert.ok(data);

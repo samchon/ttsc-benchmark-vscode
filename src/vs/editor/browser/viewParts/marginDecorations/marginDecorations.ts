@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './marginDecorations.css';
-import { DecorationToRender, DedupOverlay } from '../glyphMargin/glyphMargin.js';
-import { RenderingContext } from '../../view/renderingContext.js';
-import { ViewContext } from '../../../common/viewModel/viewContext.js';
-import * as viewEvents from '../../../common/viewEvents.js';
+import "./marginDecorations.css";
+import { DecorationToRender, DedupOverlay } from "../glyphMargin/glyphMargin.js";
+import { RenderingContext } from "../../view/renderingContext.js";
+import { ViewContext } from "../../../common/viewModel/viewContext.js";
+import * as viewEvents from "../../../common/viewEvents.js";
 
 export class MarginViewLineDecorationsOverlay extends DedupOverlay {
 	private readonly _context: ViewContext;
@@ -64,7 +64,13 @@ export class MarginViewLineDecorationsOverlay extends DedupOverlay {
 			const marginClassName = d.options.marginClassName;
 			const zIndex = d.options.zIndex;
 			if (marginClassName) {
-				r[rLen++] = new DecorationToRender(d.range.startLineNumber, d.range.endLineNumber, marginClassName, null, zIndex);
+				r[rLen++] = new DecorationToRender(
+          d.range.startLineNumber,
+          d.range.endLineNumber,
+          marginClassName,
+          null,
+          zIndex,
+        );
 			}
 		}
 		return r;
@@ -73,13 +79,17 @@ export class MarginViewLineDecorationsOverlay extends DedupOverlay {
 	public prepareRender(ctx: RenderingContext): void {
 		const visibleStartLineNumber = ctx.visibleRange.startLineNumber;
 		const visibleEndLineNumber = ctx.visibleRange.endLineNumber;
-		const toRender = this._render(visibleStartLineNumber, visibleEndLineNumber, this._getDecorations(ctx));
+		const toRender = this._render(
+      visibleStartLineNumber,
+      visibleEndLineNumber,
+      this._getDecorations(ctx),
+    );
 
 		const output: string[] = [];
 		for (let lineNumber = visibleStartLineNumber; lineNumber <= visibleEndLineNumber; lineNumber++) {
 			const lineIndex = lineNumber - visibleStartLineNumber;
 			const decorations = toRender[lineIndex].getDecorations();
-			let lineOutput = '';
+			let lineOutput = "";
 			for (const decoration of decorations) {
 				lineOutput += '<div class="cmdr ' + decoration.className + '" style=""></div>';
 			}
@@ -91,7 +101,7 @@ export class MarginViewLineDecorationsOverlay extends DedupOverlay {
 
 	public render(startLineNumber: number, lineNumber: number): string {
 		if (!this._renderResult) {
-			return '';
+			return "";
 		}
 		return this._renderResult[lineNumber - startLineNumber];
 	}

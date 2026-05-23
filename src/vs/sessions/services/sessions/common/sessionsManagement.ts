@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import { IObservable } from '../../../../base/common/observable.js';
-import { URI } from '../../../../base/common/uri.js';
-import { localize } from '../../../../nls.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
-import { IChat, ISession, ISessionType, ISessionWorkspace } from './session.js';
-import { ISendRequestOptions } from './sessionsProvider.js';
+import { Event } from "../../../../base/common/event.js";
+import { IObservable } from "../../../../base/common/observable.js";
+import { URI } from "../../../../base/common/uri.js";
+import { localize } from "../../../../nls.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { IChat, ISession, ISessionType, ISessionWorkspace } from "./session.js";
+import { ISendRequestOptions } from "./sessionsProvider.js";
 
 /**
  * A (provider, session-type) pair returned by
@@ -41,7 +41,14 @@ export interface ICreateNewSessionOptions {
 	readonly sessionTypeId?: string;
 }
 
-export const ActiveSessionSupportsMultiChatContext = new RawContextKey<boolean>('activeSessionSupportsMultiChat', false, localize('activeSessionSupportsMultiChat', "Whether the active session supports multiple chats"));
+export const ActiveSessionSupportsMultiChatContext = new RawContextKey<boolean>(
+  "activeSessionSupportsMultiChat",
+  false,
+  localize(
+    "activeSessionSupportsMultiChat",
+    "Whether the active session supports multiple chats",
+  ),
+);
 
 /**
  * Event fired when sessions change within a provider.
@@ -200,6 +207,8 @@ export interface ISessionsManagementService {
 	renameChat(session: ISession, chatUri: URI, title: string): Promise<void>;
 }
 
-export const ISessionsManagementService = createDecorator<ISessionsManagementService>('sessionsManagementService');
+export const ISessionsManagementService = createDecorator<ISessionsManagementService>(
+  "sessionsManagementService",
+);
 
 //#endregion

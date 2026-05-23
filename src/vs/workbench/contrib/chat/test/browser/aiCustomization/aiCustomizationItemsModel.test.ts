@@ -3,32 +3,50 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { timeout } from '../../../../../../base/common/async.js';
-import { CancellationToken } from '../../../../../../base/common/cancellation.js';
-import { Codicon } from '../../../../../../base/common/codicons.js';
-import { Emitter, Event } from '../../../../../../base/common/event.js';
-import { DisposableStore } from '../../../../../../base/common/lifecycle.js';
-import { ResourceSet } from '../../../../../../base/common/map.js';
-import { derived, IObservable, ISettableObservable, observableValue } from '../../../../../../base/common/observable.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../../base/test/common/utils.js';
-import { TestInstantiationService } from '../../../../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { workbenchInstantiationService } from '../../../../../test/browser/workbenchTestServices.js';
-import { AICustomizationItemsModel } from '../../../browser/aiCustomization/aiCustomizationItemsModel.js';
-import { AICustomizationManagementSection, AICustomizationSources, BUILTIN_STORAGE, IAICustomizationWorkspaceService, IStorageSourceFilter } from '../../../common/aiCustomizationWorkspaceService.js';
-import { ICustomizationHarnessService, ICustomizationItem, ICustomizationItemProvider, ICustomizationSyncProvider, IHarnessDescriptor } from '../../../common/customizationHarnessService.js';
-import { ContributionEnablementState } from '../../../common/enablement.js';
-import { IAgentPluginService, type IAgentPlugin } from '../../../common/plugins/agentPluginService.js';
-import { PromptsType, Target } from '../../../common/promptSyntax/promptTypes.js';
-import { IAgentSource, ICustomAgent, IPromptPath, IPromptsService, PromptsStorage } from '../../../common/promptSyntax/service/promptsService.js';
-import { getChatSessionType } from '../../../common/model/chatUri.js';
-import { basename } from '../../../../../../base/common/resources.js';
+import assert from "assert";
+import { timeout } from "../../../../../../base/common/async.js";
+import { CancellationToken } from "../../../../../../base/common/cancellation.js";
+import { Codicon } from "../../../../../../base/common/codicons.js";
+import { Emitter, Event } from "../../../../../../base/common/event.js";
+import { DisposableStore } from "../../../../../../base/common/lifecycle.js";
+import { ResourceSet } from "../../../../../../base/common/map.js";
+import { derived, IObservable, ISettableObservable, observableValue } from "../../../../../../base/common/observable.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../../base/test/common/utils.js";
+import { TestInstantiationService } from "../../../../../../platform/instantiation/test/common/instantiationServiceMock.js";
+import { workbenchInstantiationService } from "../../../../../test/browser/workbenchTestServices.js";
+import { AICustomizationItemsModel } from "../../../browser/aiCustomization/aiCustomizationItemsModel.js";
+import {
+  AICustomizationManagementSection,
+  AICustomizationSources,
+  BUILTIN_STORAGE,
+  IAICustomizationWorkspaceService,
+  IStorageSourceFilter,
+} from "../../../common/aiCustomizationWorkspaceService.js";
+import {
+  ICustomizationHarnessService,
+  ICustomizationItem,
+  ICustomizationItemProvider,
+  ICustomizationSyncProvider,
+  IHarnessDescriptor,
+} from "../../../common/customizationHarnessService.js";
+import { ContributionEnablementState } from "../../../common/enablement.js";
+import { IAgentPluginService, type IAgentPlugin } from "../../../common/plugins/agentPluginService.js";
+import { PromptsType, Target } from "../../../common/promptSyntax/promptTypes.js";
+import {
+  IAgentSource,
+  ICustomAgent,
+  IPromptPath,
+  IPromptsService,
+  PromptsStorage,
+} from "../../../common/promptSyntax/service/promptsService.js";
+import { getChatSessionType } from "../../../common/model/chatUri.js";
+import { basename } from "../../../../../../base/common/resources.js";
 
-suite('AICustomizationItemsModel', () => {
+suite("AICustomizationItemsModel", () => {
 	ensureNoDisposablesAreLeakedInTestSuite();
 
-	suite('basics', () => {
+	suite("basics", () => {
 
 		let disposables: DisposableStore;
 		let instaService: TestInstantiationService;
@@ -41,7 +59,7 @@ suite('AICustomizationItemsModel', () => {
 		let providerA_callCount: number;
 		let providerA_items: ICustomizationItem[];
 		let plugins: ISettableObservable<readonly IAgentPlugin[]>;
-		let listPromptFilesResult: Awaited<ReturnType<IPromptsService['listPromptFiles']>>;
+		let listPromptFilesResult: Awaited<ReturnType<IPromptsService["listPromptFiles"]>>;
 		let disabledPromptFilesResult: ResourceSet;
 
 		function createDescriptor(id: string, provider: ICustomizationItemProvider | undefined, syncProvider?: ICustomizationSyncProvider): IHarnessDescriptor {
@@ -74,13 +92,13 @@ suite('AICustomizationItemsModel', () => {
 				onDidChange: Event.None,
 				provideChatSessionCustomizations: (sessionResource: URI, token: CancellationToken) => Promise.resolve([]),
 			};
-			descriptorA = createDescriptor('A', providerA);
-			descriptorB = createDescriptor('B', providerB);
+			descriptorA = createDescriptor("A", providerA);
+			descriptorB = createDescriptor("B", providerB);
 
-			activeSessionResource = observableValue('activeSessionResource', URI.parse(`A:///session`));
+			activeSessionResource = observableValue("activeSessionResource", URI.parse(`A:///session`));
 			activeHarness = derived(reader => getChatSessionType(activeSessionResource.read(reader)));
-			availableHarnesses = observableValue<readonly IHarnessDescriptor[]>('availableHarnesses', [descriptorA, descriptorB]);
-			plugins = observableValue<readonly IAgentPlugin[]>('plugins', []);
+			availableHarnesses = observableValue<readonly IHarnessDescriptor[]>("availableHarnesses", [descriptorA, descriptorB]);
+			plugins = observableValue<readonly IAgentPlugin[]>("plugins", []);
 
 			instaService = workbenchInstantiationService({}, disposables);
 
@@ -93,7 +111,7 @@ suite('AICustomizationItemsModel', () => {
 					visibility: { agentInvocable: true, userInvocable: true },
 					enabled: !disabledPromptFilesResult.has(promptFile.uri),
 					source: IAgentSource.fromPromptPath(promptFile),
-					agentInstructions: { content: '', toolReferences: [] },
+					agentInstructions: { content: "", toolReferences: [] },
 				};
 			}
 
@@ -114,14 +132,14 @@ suite('AICustomizationItemsModel', () => {
 			});
 
 			instaService.stub(IAICustomizationWorkspaceService, {
-				activeProjectRoot: observableValue('test', undefined),
+				activeProjectRoot: observableValue("test", undefined),
 				getActiveProjectRoot: () => undefined,
 				managementSections: [AICustomizationManagementSection.Agents],
 				isSessionsWindow: false,
 				welcomePageFeatures: { showGettingStartedBanner: false },
 				getStorageSourceFilter: () => ({ sources: [AICustomizationSources.local, AICustomizationSources.user, AICustomizationSources.plugin] }),
 				getSkillUIIntegrations: () => new Map(),
-				hasOverrideProjectRoot: observableValue('test', false),
+				hasOverrideProjectRoot: observableValue("test", false),
 				commitFiles: async () => { },
 				deleteFiles: async () => { },
 				generateCustomization: async () => { },
@@ -156,20 +174,20 @@ suite('AICustomizationItemsModel', () => {
 			return {
 				uri: URI.parse(`plugin-test://${name}`),
 				label: name,
-				enablement: observableValue('pluginEnablement', ContributionEnablementState.EnabledProfile),
+				enablement: observableValue("pluginEnablement", ContributionEnablementState.EnabledProfile),
 				remove: () => { },
-				hooks: observableValue('pluginHooks', []),
-				commands: observableValue('pluginCommands', []),
-				skills: observableValue('pluginSkills', []),
-				agents: observableValue('pluginAgents', []),
-				instructions: observableValue('pluginInstructions', []),
-				mcpServerDefinitions: observableValue('pluginMcpServerDefinitions', []),
+				hooks: observableValue("pluginHooks", []),
+				commands: observableValue("pluginCommands", []),
+				skills: observableValue("pluginSkills", []),
+				agents: observableValue("pluginAgents", []),
+				instructions: observableValue("pluginInstructions", []),
+				mcpServerDefinitions: observableValue("pluginMcpServerDefinitions", []),
 			};
 		}
 
 		teardown(() => disposables.dispose());
 
-		test('exposes per-section observables for all prompts-based sections', () => {
+		test("exposes per-section observables for all prompts-based sections", () => {
 			const model = disposables.add(instaService.createInstance(AICustomizationItemsModel));
 			assert.ok(model.getItems(AICustomizationManagementSection.Agents));
 			assert.ok(model.getItems(AICustomizationManagementSection.Skills));
@@ -178,13 +196,13 @@ suite('AICustomizationItemsModel', () => {
 			assert.ok(model.getItems(AICustomizationManagementSection.Hooks));
 		});
 
-		test('does not fetch on construction (lazy)', async () => {
+		test("does not fetch on construction (lazy)", async () => {
 			disposables.add(instaService.createInstance(AICustomizationItemsModel));
 			await timeout(0);
 			assert.strictEqual(providerA_callCount, 0);
 		});
 
-		test('first read of a section triggers a fetch', async () => {
+		test("first read of a section triggers a fetch", async () => {
 			const model = disposables.add(instaService.createInstance(AICustomizationItemsModel));
 			model.getItems(AICustomizationManagementSection.Agents);
 			await timeout(0);
@@ -201,7 +219,7 @@ suite('AICustomizationItemsModel', () => {
 			assert.strictEqual(providerA_callCount, 2);
 		});
 
-		test('source.onDidChange refetches only previously-observed sections', async () => {
+		test("source.onDidChange refetches only previously-observed sections", async () => {
 			const model = disposables.add(instaService.createInstance(AICustomizationItemsModel));
 			model.getItems(AICustomizationManagementSection.Agents);
 			await timeout(0);
@@ -212,22 +230,22 @@ suite('AICustomizationItemsModel', () => {
 			assert.strictEqual(providerA_callCount, before + 1);
 		});
 
-		test('switching harness re-binds and refetches observed sections', async () => {
+		test("switching harness re-binds and refetches observed sections", async () => {
 			const model = disposables.add(instaService.createInstance(AICustomizationItemsModel));
 			model.getItems(AICustomizationManagementSection.Agents);
 			await timeout(0);
 			const sourceA = model.getActiveItemSource();
-			activeSessionResource.set(URI.parse('B://session'), undefined);
+			activeSessionResource.set(URI.parse("B://session"), undefined);
 			await timeout(0);
 			const sourceB = model.getActiveItemSource();
 			assert.notStrictEqual(sourceA, sourceB);
 		});
 
-		test('preserves provider-supplied plugin storage when pluginUri is omitted', async () => {
+		test("preserves provider-supplied plugin storage when pluginUri is omitted", async () => {
 			providerA_items = [{
-				uri: URI.parse('agent-host://test-authority/plugins/my-plugin/skills/my-skill/SKILL.md'),
+				uri: URI.parse("agent-host://test-authority/plugins/my-plugin/skills/my-skill/SKILL.md"),
 				type: PromptsType.skill,
-				name: 'My Skill',
+				name: "My Skill",
 				source: PromptsStorage.plugin,
 				extensionId: undefined,
 				pluginUri: undefined,
@@ -242,16 +260,16 @@ suite('AICustomizationItemsModel', () => {
 				name: item.name,
 				source: item.source,
 			})), [{
-				name: 'My Skill',
+				name: "My Skill",
 				source: AICustomizationSources.plugin,
 			}]);
 		});
 
-		test('preserves provider-supplied builtin storage when groupKey is omitted', async () => {
+		test("preserves provider-supplied builtin storage when groupKey is omitted", async () => {
 			providerA_items = [{
-				uri: URI.parse('agent-host://test-authority/builtin/skills/github/SKILL.md'),
+				uri: URI.parse("agent-host://test-authority/builtin/skills/github/SKILL.md"),
 				type: PromptsType.skill,
-				name: 'Built-in Skill',
+				name: "Built-in Skill",
 				source: AICustomizationSources.builtin,
 				extensionId: undefined,
 				pluginUri: undefined,
@@ -268,14 +286,14 @@ suite('AICustomizationItemsModel', () => {
 				groupKey: item.groupKey,
 				isBuiltin: item.isBuiltin,
 			})), [{
-				name: 'Built-in Skill',
+				name: "Built-in Skill",
 				source: AICustomizationSources.builtin,
 				groupKey: BUILTIN_STORAGE,
 				isBuiltin: true,
 			}]);
 		});
 
-		test('preserves builtin grouping when only groupKey is set (no storage/extensionId/pluginUri)', async () => {
+		test("preserves builtin grouping when only groupKey is set (no storage/extensionId/pluginUri)", async () => {
 			// Repro of "Agents app built-in shown as User": the Agents app
 			// customization provider declares its built-in agents only via
 			// `groupKey: BUILTIN_STORAGE` — without `storage`, `extensionId`,
@@ -283,9 +301,9 @@ suite('AICustomizationItemsModel', () => {
 			// fallback in the normalizer must preserve groupKey/isBuiltin so
 			// the list widget renders them under "Built-in" instead of "User".
 			providerA_items = [{
-				uri: URI.parse('agent-app://builtin/coder.agent.md'),
+				uri: URI.parse("agent-app://builtin/coder.agent.md"),
 				type: PromptsType.agent,
-				name: 'Coder',
+				name: "Coder",
 				groupKey: BUILTIN_STORAGE,
 				enabled: true,
 				extensionId: undefined,
@@ -302,21 +320,21 @@ suite('AICustomizationItemsModel', () => {
 				groupKey: item.groupKey,
 				isBuiltin: item.isBuiltin,
 			})), [{
-				name: 'Coder',
+				name: "Coder",
 				groupKey: BUILTIN_STORAGE,
 				isBuiltin: true,
 			}]);
 		});
 
-		test('prompt service items preserve storage grouping, metadata, and disabled state without sync provider', async () => {
-			availableHarnesses.set([createDescriptor('A', undefined), descriptorB], undefined);
-			activeSessionResource.set(URI.parse('A:///session2'), undefined);
+		test("prompt service items preserve storage grouping, metadata, and disabled state without sync provider", async () => {
+			availableHarnesses.set([createDescriptor("A", undefined), descriptorB], undefined);
+			activeSessionResource.set(URI.parse("A:///session2"), undefined);
 			listPromptFilesResult = [{
-				uri: URI.parse('file:///workspace/agents/team-agent.agent.md'),
+				uri: URI.parse("file:///workspace/agents/team-agent.agent.md"),
 				storage: PromptsStorage.local,
 				type: PromptsType.agent,
-				name: 'Team Agent',
-				description: 'Workspace agent description',
+				name: "Team Agent",
+				description: "Workspace agent description",
 			}];
 			disabledPromptFilesResult = new ResourceSet([listPromptFilesResult[0].uri]);
 
@@ -335,10 +353,10 @@ suite('AICustomizationItemsModel', () => {
 				syncable: item.syncable,
 				synced: item.synced,
 			})), [{
-				id: 'file:///workspace/agents/team-agent.agent.md',
-				uri: 'file:///workspace/agents/team-agent.agent.md',
-				name: 'Team Agent',
-				description: 'Workspace agent description',
+				id: "file:///workspace/agents/team-agent.agent.md",
+				uri: "file:///workspace/agents/team-agent.agent.md",
+				name: "Team Agent",
+				description: "Workspace agent description",
 				source: AICustomizationSources.local,
 				disabled: true,
 				groupKey: undefined,
@@ -347,41 +365,41 @@ suite('AICustomizationItemsModel', () => {
 			}]);
 		});
 
-		test('plugin count includes provider-supplied plugin items', async () => {
+		test("plugin count includes provider-supplied plugin items", async () => {
 			providerA_items = [
 				{
-					uri: URI.parse('agent-host://test-authority/plugins/remote-one'),
-					type: 'plugin',
-					name: 'Remote One',
+					uri: URI.parse("agent-host://test-authority/plugins/remote-one"),
+					type: "plugin",
+					name: "Remote One",
 					source: AICustomizationSources.plugin,
 					extensionId: undefined,
 					pluginUri: undefined,
 					userInvocable: undefined,
 				},
 				{
-					uri: URI.parse('agent-host://test-authority/plugins/remote-two'),
+					uri: URI.parse("agent-host://test-authority/plugins/remote-two"),
 					type: AICustomizationManagementSection.Plugins,
-					name: 'Remote Two',
+					name: "Remote Two",
 					source: AICustomizationSources.plugin,
 					extensionId: undefined,
 					pluginUri: undefined,
 					userInvocable: undefined,
 				},
 				{
-					uri: URI.parse('agent-host://test-authority/plugins/remote-two/skills/my-skill/SKILL.md'),
+					uri: URI.parse("agent-host://test-authority/plugins/remote-two/skills/my-skill/SKILL.md"),
 					type: PromptsType.skill,
-					name: 'My Skill',
+					name: "My Skill",
 					source: AICustomizationSources.plugin,
 					extensionId: undefined,
 					pluginUri: undefined,
 					userInvocable: true,
 				},
 				{
-					uri: URI.parse('agent-host://test-authority/plugins/local-synced'),
-					type: 'plugin',
-					name: 'Local Synced',
+					uri: URI.parse("agent-host://test-authority/plugins/local-synced"),
+					type: "plugin",
+					name: "Local Synced",
 					source: AICustomizationSources.plugin,
-					groupKey: 'remote-client',
+					groupKey: "remote-client",
 					extensionId: undefined,
 					pluginUri: undefined,
 					userInvocable: undefined,
@@ -395,11 +413,11 @@ suite('AICustomizationItemsModel', () => {
 			assert.strictEqual(count.get(), 2);
 		});
 
-		test('local plugin changes update plugin count without refetching provider customizations', async () => {
+		test("local plugin changes update plugin count without refetching provider customizations", async () => {
 			providerA_items = [{
-				uri: URI.parse('agent-host://test-authority/plugins/remote-one'),
-				type: 'plugin',
-				name: 'Remote One',
+				uri: URI.parse("agent-host://test-authority/plugins/remote-one"),
+				type: "plugin",
+				name: "Remote One",
 				source: AICustomizationSources.plugin,
 				extensionId: undefined,
 				pluginUri: undefined,
@@ -411,7 +429,7 @@ suite('AICustomizationItemsModel', () => {
 			await timeout(0);
 			const callsAfterInitialCount = providerA_callCount;
 
-			plugins.set([createLocalPlugin('local-one')], undefined);
+			plugins.set([createLocalPlugin("local-one")], undefined);
 			await timeout(0);
 
 			assert.deepStrictEqual({
@@ -423,11 +441,11 @@ suite('AICustomizationItemsModel', () => {
 			});
 		});
 
-		test('plugin count dedupes provider plugins that are also installed locally', async () => {
+		test("plugin count dedupes provider plugins that are also installed locally", async () => {
 			providerA_items = [{
-				uri: URI.parse('agent-host://test-authority/plugins/model-council'),
-				type: 'plugin',
-				name: 'model-council',
+				uri: URI.parse("agent-host://test-authority/plugins/model-council"),
+				type: "plugin",
+				name: "model-council",
 				source: AICustomizationSources.plugin,
 				extensionId: undefined,
 				pluginUri: undefined,
@@ -437,15 +455,15 @@ suite('AICustomizationItemsModel', () => {
 			const model = disposables.add(instaService.createInstance(AICustomizationItemsModel));
 			const count = model.getPluginCount();
 			await timeout(0);
-			assert.strictEqual(count.get(), 1, 'before local install: only the harness-reported plugin counts');
+			assert.strictEqual(count.get(), 1, "before local install: only the harness-reported plugin counts");
 
-			plugins.set([createLocalPlugin('model-council')], undefined);
+			plugins.set([createLocalPlugin("model-council")], undefined);
 			await timeout(0);
 
-			assert.strictEqual(count.get(), 1, 'after local install: harness duplicate is folded into the local count');
+			assert.strictEqual(count.get(), 1, "after local install: harness duplicate is folded into the local count");
 		});
 
-		test('does not double-count local syncable items when itemProvider and syncProvider are both present', async () => {
+		test("does not double-count local syncable items when itemProvider and syncProvider are both present", async () => {
 			// Regression: ProviderCustomizationItemSource.fetchItems used to unconditionally
 			// append fetchLocalSyncableItems even when an itemProvider was present, causing
 			// items reported by the provider to also show up via local enumeration.
@@ -462,18 +480,18 @@ suite('AICustomizationItemsModel', () => {
 					return Promise.resolve(providerA_items.slice());
 				},
 			};
-			availableHarnesses.set([createDescriptor('A', providerWithSync, syncProvider), descriptorB], undefined);
+			availableHarnesses.set([createDescriptor("A", providerWithSync, syncProvider), descriptorB], undefined);
 
 			providerA_items = [{
-				uri: URI.parse('agent-host://test-authority/agents/coder.agent.md'),
+				uri: URI.parse("agent-host://test-authority/agents/coder.agent.md"),
 				type: PromptsType.agent,
-				name: 'Coder',
+				name: "Coder",
 				source: AICustomizationSources.user,
 				extensionId: undefined,
 				pluginUri: undefined,
 			}];
 			listPromptFilesResult = [{
-				uri: URI.parse('file:///user/agents/coder.agent.md'),
+				uri: URI.parse("file:///user/agents/coder.agent.md"),
 				storage: PromptsStorage.user,
 				type: PromptsType.agent,
 			}];
@@ -482,10 +500,10 @@ suite('AICustomizationItemsModel', () => {
 			const items = model.getItems(AICustomizationManagementSection.Agents);
 			await model.whenSectionLoaded(AICustomizationManagementSection.Agents);
 
-			assert.deepStrictEqual(items.get().map(i => i.name), ['Coder']);
+			assert.deepStrictEqual(items.get().map(i => i.name), ["Coder"]);
 		});
 
-		test('syncProvider.onDidChange does not refetch when itemProvider is present', async () => {
+		test("syncProvider.onDidChange does not refetch when itemProvider is present", async () => {
 			// The data path early-returns to provider items only when itemProvider exists,
 			// so subscribing to syncProvider/promptsService events would cause duplicate
 			// refreshes for providers that already forward those underlying events.
@@ -502,7 +520,7 @@ suite('AICustomizationItemsModel', () => {
 					return Promise.resolve(providerA_items.slice());
 				},
 			};
-			availableHarnesses.set([createDescriptor('A', providerWithSync, syncProvider), descriptorB], undefined);
+			availableHarnesses.set([createDescriptor("A", providerWithSync, syncProvider), descriptorB], undefined);
 
 			const model = disposables.add(instaService.createInstance(AICustomizationItemsModel));
 			model.getItems(AICustomizationManagementSection.Agents);
@@ -512,11 +530,11 @@ suite('AICustomizationItemsModel', () => {
 			syncProvider_didChange.fire();
 			await timeout(0);
 
-			assert.strictEqual(providerA_callCount, before, 'syncProvider events must not trigger refetches when itemProvider owns the data path');
+			assert.strictEqual(providerA_callCount, before, "syncProvider events must not trigger refetches when itemProvider owns the data path");
 		});
 	});
 
-	suite('data sources', () => {
+	suite("data sources", () => {
 
 		let disposables: DisposableStore;
 		let instaService: TestInstantiationService;
@@ -529,21 +547,21 @@ suite('AICustomizationItemsModel', () => {
 			disposables = new DisposableStore();
 			providerDidChange = disposables.add(new Emitter<void>());
 			providerItems = [];
-			plugins = observableValue<readonly IAgentPlugin[]>('plugins', []);
+			plugins = observableValue<readonly IAgentPlugin[]>("plugins", []);
 
 			const provider: ICustomizationItemProvider = {
 				onDidChange: providerDidChange.event,
 				provideChatSessionCustomizations: (sessionResource: URI, token: CancellationToken) => Promise.resolve(providerItems.slice()),
 			};
 			const descriptor: IHarnessDescriptor = {
-				id: 'A',
-				label: 'A',
+				id: "A",
+				label: "A",
 				icon: Codicon.settingsGear,
 				getStorageSourceFilter: (): IStorageSourceFilter => ({ sources: [PromptsStorage.local, PromptsStorage.user] }),
 				itemProvider: provider,
 			};
-			const sessionResource = URI.parse('A:///active-session');
-			const availableHarnesses = observableValue<readonly IHarnessDescriptor[]>('availableHarnesses', [descriptor]);
+			const sessionResource = URI.parse("A:///active-session");
+			const availableHarnesses = observableValue<readonly IHarnessDescriptor[]>("availableHarnesses", [descriptor]);
 
 			instaService = workbenchInstantiationService({}, disposables);
 			instaService.stub(IPromptsService, {
@@ -560,21 +578,21 @@ suite('AICustomizationItemsModel', () => {
 				getDisabledPromptFiles: () => new ResourceSet(),
 			});
 			instaService.stub(IAICustomizationWorkspaceService, {
-				activeProjectRoot: observableValue('test', undefined),
+				activeProjectRoot: observableValue("test", undefined),
 				getActiveProjectRoot: () => undefined,
 				managementSections: [AICustomizationManagementSection.Agents],
 				isSessionsWindow: false,
 				welcomePageFeatures: { showGettingStartedBanner: false },
 				getStorageSourceFilter: () => ({ sources: [] }),
 				getSkillUIIntegrations: () => new Map(),
-				hasOverrideProjectRoot: observableValue('test', false),
+				hasOverrideProjectRoot: observableValue("test", false),
 				commitFiles: async () => { },
 				deleteFiles: async () => { },
 				generateCustomization: async () => { },
 				setOverrideProjectRoot: () => { },
 				clearOverrideProjectRoot: () => { },
 			});
-			const activeSessionResource = observableValue('activeSessionResource', sessionResource);
+			const activeSessionResource = observableValue("activeSessionResource", sessionResource);
 			const activeHarness = derived(reader => getChatSessionType(activeSessionResource.read(reader)));
 			instaService.stub(ICustomizationHarnessService, {
 				activeSessionResource,
@@ -604,21 +622,21 @@ suite('AICustomizationItemsModel', () => {
 			return {
 				uri: URI.parse(`plugin-test://${name}`),
 				label: name,
-				enablement: observableValue('pluginEnablement', ContributionEnablementState.EnabledProfile),
+				enablement: observableValue("pluginEnablement", ContributionEnablementState.EnabledProfile),
 				remove: () => { },
-				hooks: observableValue('pluginHooks', []),
-				commands: observableValue('pluginCommands', []),
-				skills: observableValue('pluginSkills', []),
-				agents: observableValue('pluginAgents', []),
-				instructions: observableValue('pluginInstructions', []),
-				mcpServerDefinitions: observableValue('pluginMcpServerDefinitions', []),
+				hooks: observableValue("pluginHooks", []),
+				commands: observableValue("pluginCommands", []),
+				skills: observableValue("pluginSkills", []),
+				agents: observableValue("pluginAgents", []),
+				instructions: observableValue("pluginInstructions", []),
+				mcpServerDefinitions: observableValue("pluginMcpServerDefinitions", []),
 			};
 		}
 
 		function harnessPluginRow(name: string, overrides: Partial<ICustomizationItem> = {}): ICustomizationItem {
 			return {
 				uri: URI.parse(`agent-host://t/plugins/${name}`),
-				type: 'plugin',
+				type: "plugin",
 				name,
 				source: AICustomizationSources.plugin,
 				extensionId: undefined,
@@ -666,10 +684,10 @@ suite('AICustomizationItemsModel', () => {
 		for (const [section, type] of sectionsByType) {
 			test(`getCount(${section}) mirrors provider items filtered by type=${type}`, async () => {
 				providerItems = [
-					providerOfType(type, 'a'),
-					providerOfType(type, 'b'),
-					providerOfType(PromptsType.agent, 'unrelated-1'),
-					providerOfType(PromptsType.skill, 'unrelated-2'),
+					providerOfType(type, "a"),
+					providerOfType(type, "b"),
+					providerOfType(PromptsType.agent, "unrelated-1"),
+					providerOfType(PromptsType.skill, "unrelated-2"),
 				];
 
 				const model = disposables.add(instaService.createInstance(AICustomizationItemsModel));
@@ -681,37 +699,37 @@ suite('AICustomizationItemsModel', () => {
 			});
 		}
 
-		test('getCount reacts to provider onDidChange for observed sections', async () => {
-			providerItems = [providerSkill('one')];
+		test("getCount reacts to provider onDidChange for observed sections", async () => {
+			providerItems = [providerSkill("one")];
 
 			const model = disposables.add(instaService.createInstance(AICustomizationItemsModel));
 			const count = model.getCount(AICustomizationManagementSection.Skills);
 			await model.whenSectionLoaded(AICustomizationManagementSection.Skills);
-			assert.strictEqual(count.get(), 1, 'initial fetch reflects provider state');
+			assert.strictEqual(count.get(), 1, "initial fetch reflects provider state");
 
-			providerItems = [providerSkill('one'), providerSkill('two')];
+			providerItems = [providerSkill("one"), providerSkill("two")];
 			providerDidChange.fire();
 			await timeout(0);
 
-			assert.strictEqual(count.get(), 2, 'count refetches after provider change');
+			assert.strictEqual(count.get(), 2, "count refetches after provider change");
 		});
 
-		test('getPluginCount returns local plugin count when harness has no plugin rows', async () => {
-			providerItems = [providerSkill('not-a-plugin-row')];
-			plugins.set([localPlugin('local-a'), localPlugin('local-b')], undefined);
+		test("getPluginCount returns local plugin count when harness has no plugin rows", async () => {
+			providerItems = [providerSkill("not-a-plugin-row")];
+			plugins.set([localPlugin("local-a"), localPlugin("local-b")], undefined);
 
 			const model = disposables.add(instaService.createInstance(AICustomizationItemsModel));
 			const count = model.getPluginCount();
 			await timeout(0);
 
-			assert.strictEqual(count.get(), 2, 'plugin count uses local plugins when the harness exposes none');
+			assert.strictEqual(count.get(), 2, "plugin count uses local plugins when the harness exposes none");
 		});
 
-		test('getPluginCount returns harness plugin row count when no local plugins are installed', async () => {
+		test("getPluginCount returns harness plugin row count when no local plugins are installed", async () => {
 			providerItems = [
-				harnessPluginRow('x'),
-				harnessPluginRow('y', { type: AICustomizationManagementSection.Plugins }),
-				harnessPluginRow('synced', { groupKey: 'remote-client' }),
+				harnessPluginRow("x"),
+				harnessPluginRow("y", { type: AICustomizationManagementSection.Plugins }),
+				harnessPluginRow("synced", { groupKey: "remote-client" }),
 			];
 			plugins.set([], undefined);
 
@@ -722,30 +740,30 @@ suite('AICustomizationItemsModel', () => {
 			assert.strictEqual(count.get(), 2, 'remote-client harness rows are excluded; both internal "plugin" and API "plugins" types are recognised');
 		});
 
-		test('getPluginCount sums local plugins and unique harness plugin rows', async () => {
+		test("getPluginCount sums local plugins and unique harness plugin rows", async () => {
 			providerItems = [
-				harnessPluginRow('dup'),
-				harnessPluginRow('uniq'),
+				harnessPluginRow("dup"),
+				harnessPluginRow("uniq"),
 			];
-			plugins.set([localPlugin('dup'), localPlugin('local-only')], undefined);
+			plugins.set([localPlugin("dup"), localPlugin("local-only")], undefined);
 
 			const model = disposables.add(instaService.createInstance(AICustomizationItemsModel));
 			const count = model.getPluginCount();
 			await timeout(0);
 
-			assert.strictEqual(count.get(), 3, 'dup is counted once via the local source; uniq adds, local-only adds');
+			assert.strictEqual(count.get(), 3, "dup is counted once via the local source; uniq adds, local-only adds");
 		});
 
-		test('getPluginCount dedups against URI basename when local plugin label is empty', async () => {
+		test("getPluginCount dedups against URI basename when local plugin label is empty", async () => {
 			// Mirrors PluginListWidget: when an installed plugin has no label
 			// (`label === ''`), the editor renders it under `basename(plugin.uri)`
 			// and dedups remote rows against that. The model must use the same
 			// fallback or the sidebar count drifts above the editor count.
-			providerItems = [harnessPluginRow('basename-match')];
+			providerItems = [harnessPluginRow("basename-match")];
 			const labelless: IAgentPlugin = {
-				...localPlugin('basename-match'),
-				uri: URI.parse('plugin-test:///basename-match'),
-				label: '',
+				...localPlugin("basename-match"),
+				uri: URI.parse("plugin-test:///basename-match"),
+				label: "",
 			};
 			plugins.set([labelless], undefined);
 
@@ -753,7 +771,7 @@ suite('AICustomizationItemsModel', () => {
 			const count = model.getPluginCount();
 			await timeout(0);
 
-			assert.strictEqual(count.get(), 1, 'remote row is folded into the labelless local plugin via basename');
+			assert.strictEqual(count.get(), 1, "remote row is folded into the labelless local plugin via basename");
 		});
 	});
 });

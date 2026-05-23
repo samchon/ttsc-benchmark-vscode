@@ -2,14 +2,14 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { TimeoutTimer } from '../../../../../base/common/async.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { IObservableWithChange, IObservable, runOnChange } from '../../../../../base/common/observable.js';
-import { BaseStringEdit } from '../../../../../editor/common/core/edits/stringEdit.js';
-import { StringText } from '../../../../../editor/common/core/text/abstractText.js';
-import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
-import { ArcTracker } from '../../common/arcTracker.js';
-import type { ScmRepoAdapter } from './scmAdapter.js';
+import { TimeoutTimer } from "../../../../../base/common/async.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { IObservableWithChange, IObservable, runOnChange } from "../../../../../base/common/observable.js";
+import { BaseStringEdit } from "../../../../../editor/common/core/edits/stringEdit.js";
+import { StringText } from "../../../../../editor/common/core/text/abstractText.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
+import { ArcTracker } from "../../common/arcTracker.js";
+import type { ScmRepoAdapter } from "./scmAdapter.js";
 
 export class ArcTelemetryReporter extends Disposable {
 	private readonly _arcTracker;
@@ -26,11 +26,14 @@ export class ArcTelemetryReporter extends Disposable {
 		private readonly _trackedEdit: BaseStringEdit,
 		private readonly _sendTelemetryEvent: (res: ArcTelemetryReporterData) => void,
 		private readonly _dispose: () => void,
-		@ITelemetryService private readonly _telemetryService: ITelemetryService
+		@ITelemetryService private readonly _telemetryService: ITelemetryService,
 	) {
 		super();
 
-		this._arcTracker = new ArcTracker(this._documentValueBeforeTrackedEdit, this._trackedEdit);
+		this._arcTracker = new ArcTracker(
+      this._documentValueBeforeTrackedEdit,
+      this._trackedEdit,
+    );
 
 		this._store.add(runOnChange(this._document.value, (_val, _prevVal, changes) => {
 			const edit = BaseStringEdit.composeOrUndefined(changes.map(c => c.edit));
@@ -73,17 +76,16 @@ export class ArcTelemetryReporter extends Disposable {
 		const currentLineCounts = this._arcTracker.getLineCountInfo();
 
 		this._sendTelemetryEvent({
-			telemetryService: this._telemetryService,
-			timeDelayMs: timeMs,
-			didBranchChange,
-			arc: this._arcTracker.getAcceptedRestrainedCharactersCount(),
-			originalCharCount: this._arcTracker.getOriginalCharacterCount(),
-
-			currentLineCount: currentLineCounts.insertedLineCounts,
-			currentDeletedLineCount: currentLineCounts.deletedLineCounts,
-			originalLineCount: this._initialLineCounts.insertedLineCounts,
-			originalDeletedLineCount: this._initialLineCounts.deletedLineCounts,
-		});
+      telemetryService: this._telemetryService,
+      timeDelayMs: timeMs,
+      didBranchChange,
+      arc: this._arcTracker.getAcceptedRestrainedCharactersCount(),
+      originalCharCount: this._arcTracker.getOriginalCharacterCount(),
+      currentLineCount: currentLineCounts.insertedLineCounts,
+      currentDeletedLineCount: currentLineCounts.deletedLineCounts,
+      originalLineCount: this._initialLineCounts.insertedLineCounts,
+      originalDeletedLineCount: this._initialLineCounts.deletedLineCounts,
+    });
 	}
 }
 

@@ -3,28 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { homedir } from 'os';
-import { match as globMatch } from '../../../base/common/glob.js';
-import { untildify } from '../../../base/common/labels.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import * as path from '../../../base/common/path.js';
-import { extUriBiasedIgnorePathCase, normalizePath } from '../../../base/common/resources.js';
-import { URI } from '../../../base/common/uri.js';
-import { localize } from '../../../nls.js';
-import { ILogService } from '../../log/common/log.js';
-import { platformSessionSchema } from '../common/agentHostSchema.js';
-import type { IAgentToolPendingConfirmationSignal } from '../common/agentService.js';
-import { SessionConfigKey } from '../common/sessionConfigKeys.js';
-import { ConfirmationOptionKind, type ConfirmationOption } from '../common/state/protocol/state.js';
-import { ActionType, type IToolCallReadyAction } from '../common/state/sessionActions.js';
+import { homedir } from "os";
+import { match as globMatch } from "../../../base/common/glob.js";
+import { untildify } from "../../../base/common/labels.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import * as path from "../../../base/common/path.js";
+import { extUriBiasedIgnorePathCase, normalizePath } from "../../../base/common/resources.js";
+import { URI } from "../../../base/common/uri.js";
+import { localize } from "../../../nls.js";
+import { ILogService } from "../../log/common/log.js";
+import { platformSessionSchema } from "../common/agentHostSchema.js";
+import type { IAgentToolPendingConfirmationSignal } from "../common/agentService.js";
+import { SessionConfigKey } from "../common/sessionConfigKeys.js";
+import { ConfirmationOptionKind, type ConfirmationOption } from "../common/state/protocol/state.js";
+import { ActionType, type IToolCallReadyAction } from "../common/state/sessionActions.js";
 import {
 	ResponsePartKind,
 	ToolCallConfirmationReason,
 	type URI as ProtocolURI,
-} from '../common/state/sessionState.js';
-import { IAgentConfigurationService } from './agentConfigurationService.js';
-import { AgentHostStateManager } from './agentHostStateManager.js';
-import { CommandAutoApprover } from './commandAutoApprover.js';
+} from "../common/state/sessionState.js";
+import { IAgentConfigurationService } from "./agentConfigurationService.js";
+import { AgentHostStateManager } from "./agentHostStateManager.js";
+import { CommandAutoApprover } from "./commandAutoApprover.js";
 
 /**
  * Event fields needed for auto-approval decisions.
@@ -34,28 +34,42 @@ import { CommandAutoApprover } from './commandAutoApprover.js';
 export interface IToolApprovalEvent {
 	readonly toolCallId: string;
 	readonly session: URI;
-	readonly permissionKind?: IAgentToolPendingConfirmationSignal['permissionKind'];
+	readonly permissionKind?: IAgentToolPendingConfirmationSignal["permissionKind"];
 	readonly permissionPath?: string;
 	readonly toolInput?: string;
 }
 
 /** Standard per-tool confirmation options presented to the user. */
-const ALLOW_SESSION_OPTION_ID = 'allow-session';
+const ALLOW_SESSION_OPTION_ID = "allow-session";
 const CONFIRMATION_OPTIONS: readonly ConfirmationOption[] = [
-	{ id: ALLOW_SESSION_OPTION_ID, label: localize('sessionPermissions.allowSession', "Allow in this Session"), kind: ConfirmationOptionKind.Approve, group: 1 },
-	{ id: 'allow-once', label: localize('sessionPermissions.allowOnce', "Allow Once"), kind: ConfirmationOptionKind.Approve },
-	{ id: 'skip', label: localize('sessionPermissions.skip', "Skip"), kind: ConfirmationOptionKind.Deny, group: 2 },
+  {
+    id: ALLOW_SESSION_OPTION_ID,
+    label: localize("sessionPermissions.allowSession", "Allow in this Session"),
+    kind: ConfirmationOptionKind.Approve,
+    group: 1,
+  },
+  {
+    id: "allow-once",
+    label: localize("sessionPermissions.allowOnce", "Allow Once"),
+    kind: ConfirmationOptionKind.Approve,
+  },
+  {
+    id: "skip",
+    label: localize("sessionPermissions.skip", "Skip"),
+    kind: ConfirmationOptionKind.Deny,
+    group: 2,
+  },
 ];
 
 /** Default write-path glob rules applied to auto-approved edits. */
 const DEFAULT_EDIT_AUTO_APPROVE_PATTERNS: Readonly<Record<string, boolean>> = {
-	'**/*': true,
-	'**/.vscode/*.json': false,
-	'**/.git/**': false,
-	'**/{package.json,server.xml,build.rs,web.config,.gitattributes,.env}': false,
-	'**/*.{code-workspace,csproj,fsproj,vbproj,vcxproj,proj,targets,props}': false,
-	'**/*.lock': false,
-	'**/*-lock.{yaml,json}': false,
+  "**/*": true,
+  "**/.vscode/*.json": false,
+  "**/.git/**": false,
+  "**/{package.json,server.xml,build.rs,web.config,.gitattributes,.env}": false,
+  "**/*.{code-workspace,csproj,fsproj,vbproj,vcxproj,proj,targets,props}": false,
+  "**/*.lock": false,
+  "**/*-lock.{yaml,json}": false,
 };
 
 /**
@@ -91,7 +105,9 @@ export class SessionPermissionManager extends Disposable {
 		@ILogService private readonly _logService: ILogService,
 	) {
 		super();
-		this._commandAutoApprover = this._register(new CommandAutoApprover(this._logService));
+		this._commandAutoApprover = this._register(
+      new CommandAutoApprover(this._logService),
+    );
 	}
 
 	/**
@@ -119,12 +135,20 @@ export class SessionPermissionManager extends Disposable {
 	 * 5. Shell command rules (tree-sitter parsed, default allow/deny)
 	 */
 	getAutoApproval(e: IToolApprovalEvent, sessionKey: ProtocolURI): ToolCallConfirmationReason | undefined {
-		const autoApproveLevel = this._configService.getEffectiveValue(sessionKey, platformSessionSchema, SessionConfigKey.AutoApprove);
-		const workDir = this._configService.getEffectiveWorkingDirectory(sessionKey);
+		const autoApproveLevel = this._configService.getEffectiveValue(
+      sessionKey,
+      platformSessionSchema,
+      SessionConfigKey.AutoApprove,
+    );
+		const workDir = this._configService.getEffectiveWorkingDirectory(
+      sessionKey,
+    );
 
 		// 1. Session-level auto-approve
-		if (autoApproveLevel === 'autoApprove' || autoApproveLevel === 'autopilot') {
-			this._logService.trace(`[SessionPermissionManager] Auto-approving tool call (session autoApprove=${autoApproveLevel})`);
+		if (autoApproveLevel === "autoApprove" || autoApproveLevel === "autopilot") {
+			this._logService.trace(
+        `[SessionPermissionManager] Auto-approving tool call (session autoApprove=${autoApproveLevel})`,
+      );
 			return ToolCallConfirmationReason.Setting;
 		}
 
@@ -134,34 +158,45 @@ export class SessionPermissionManager extends Disposable {
 		}
 
 		// 3. Read auto-approval
-		if (e.permissionKind === 'read' && e.permissionPath) {
+		if (e.permissionKind === "read" && e.permissionPath) {
 			if (this._isPathInWorkingDirectory(e.permissionPath, workDir)) {
-				this._logService.trace(`[SessionPermissionManager] Auto-approving read of ${e.permissionPath}`);
+				this._logService.trace(
+          `[SessionPermissionManager] Auto-approving read of ${e.permissionPath}`,
+        );
 				return ToolCallConfirmationReason.NotNeeded;
 			}
 			return undefined;
 		}
 
 		// 4. Write auto-approval
-		if (e.permissionKind === 'write' && e.permissionPath) {
-			if (this._isPathInWorkingDirectory(e.permissionPath, workDir) && this._isEditAutoApproved(e.permissionPath)) {
-				this._logService.trace(`[SessionPermissionManager] Auto-approving write to ${e.permissionPath}`);
+		if (e.permissionKind === "write" && e.permissionPath) {
+			if (this._isPathInWorkingDirectory(
+        e.permissionPath,
+        workDir,
+      ) && this._isEditAutoApproved(e.permissionPath)) {
+				this._logService.trace(
+          `[SessionPermissionManager] Auto-approving write to ${e.permissionPath}`,
+        );
 				return ToolCallConfirmationReason.NotNeeded;
 			}
 			return undefined;
 		}
 
 		// 5. Shell auto-approval
-		if (e.permissionKind === 'shell' && e.toolInput) {
+		if (e.permissionKind === "shell" && e.toolInput) {
 			const result = this._commandAutoApprover.shouldAutoApprove(e.toolInput, {
-				isWriteDestApproved: (dest) => this._isShellWriteDestApproved(dest, workDir),
-			});
-			if (result === 'approved') {
-				this._logService.trace('[SessionPermissionManager] Auto-approving shell command');
+        isWriteDestApproved: (dest) => this._isShellWriteDestApproved(dest, workDir),
+      });
+			if (result === "approved") {
+				this._logService.trace(
+          "[SessionPermissionManager] Auto-approving shell command",
+        );
 				return ToolCallConfirmationReason.NotNeeded;
 			}
-			if (result === 'denied') {
-				this._logService.trace('[SessionPermissionManager] Shell command denied by rule');
+			if (result === "denied") {
+				this._logService.trace(
+          "[SessionPermissionManager] Shell command denied by rule",
+        );
 			}
 			return undefined;
 		}
@@ -196,13 +231,13 @@ export class SessionPermissionManager extends Disposable {
 			};
 		}
 		return {
-			type: ActionType.SessionToolCallReady,
-			turnId,
-			toolCallId: state.toolCallId,
-			invocationMessage: state.invocationMessage,
-			toolInput: state.toolInput,
-			confirmed: ToolCallConfirmationReason.NotNeeded,
-		};
+      type: ActionType.SessionToolCallReady,
+      turnId,
+      toolCallId: state.toolCallId,
+      invocationMessage: state.invocationMessage,
+      toolInput: state.toolInput,
+      confirmed: ToolCallConfirmationReason.NotNeeded,
+    };
 	}
 
 	// ---- Post-confirmation side effects -------------------------------------
@@ -228,7 +263,10 @@ export class SessionPermissionManager extends Disposable {
 			return false;
 		}
 		const workingDirectory = URI.parse(workDir);
-		return extUriBiasedIgnorePathCase.isEqualOrParent(normalizePath(URI.file(filePath)), workingDirectory);
+		return extUriBiasedIgnorePathCase.isEqualOrParent(
+      normalizePath(URI.file(filePath)),
+      workingDirectory,
+    );
 	}
 
 	/**
@@ -242,7 +280,10 @@ export class SessionPermissionManager extends Disposable {
 		if (!resolved) {
 			return false;
 		}
-		return this._isPathInWorkingDirectory(resolved, workDir) && this._isEditAutoApproved(resolved);
+		return this._isPathInWorkingDirectory(
+      resolved,
+      workDir,
+    ) && this._isEditAutoApproved(resolved);
 	}
 
 	/**
@@ -268,7 +309,9 @@ export class SessionPermissionManager extends Disposable {
 
 	private _isEditAutoApproved(filePath: string): boolean {
 		let approved = true;
-		for (const [pattern, isApproved] of Object.entries(DEFAULT_EDIT_AUTO_APPROVE_PATTERNS)) {
+		for (const [pattern, isApproved] of Object.entries(
+      DEFAULT_EDIT_AUTO_APPROVE_PATTERNS,
+    )) {
 			if (isApproved !== approved && globMatch(pattern, filePath)) {
 				approved = isApproved;
 			}
@@ -284,10 +327,16 @@ export class SessionPermissionManager extends Disposable {
 		// `getEffectiveValue` walks session → parent → host, so sessions
 		// that haven't materialized their own `permissions` yet transparently
 		// inherit from the host-level allow/deny lists.
-		const permissions = this._configService.getEffectiveValue(sessionKey, platformSessionSchema, SessionConfigKey.Permissions);
+		const permissions = this._configService.getEffectiveValue(
+      sessionKey,
+      platformSessionSchema,
+      SessionConfigKey.Permissions,
+    );
 		const allowed = permissions?.allow.includes(toolName) ?? false;
 		if (allowed) {
-			this._logService.trace(`[SessionPermissionManager] Auto-approving "${toolName}" via permissions`);
+			this._logService.trace(
+        `[SessionPermissionManager] Auto-approving "${toolName}" via permissions`,
+      );
 		}
 		return allowed;
 	}
@@ -307,7 +356,11 @@ export class SessionPermissionManager extends Disposable {
 	}
 
 	private _addToolToSessionPermissions(sessionKey: ProtocolURI, toolName: string): void {
-		const permissions = this._configService.getEffectiveValue(sessionKey, platformSessionSchema, SessionConfigKey.Permissions)
+		const permissions = this._configService.getEffectiveValue(
+      sessionKey,
+      platformSessionSchema,
+      SessionConfigKey.Permissions,
+    )
 			?? { allow: [], deny: [] };
 		if (permissions.allow.includes(toolName)) {
 			return;
@@ -318,6 +371,8 @@ export class SessionPermissionManager extends Disposable {
 				deny: [...permissions.deny],
 			},
 		});
-		this._logService.info(`[SessionPermissionManager] Added "${toolName}" to session permissions for ${sessionKey}`);
+		this._logService.info(
+      `[SessionPermissionManager] Added "${toolName}" to session permissions for ${sessionKey}`,
+    );
 	}
 }

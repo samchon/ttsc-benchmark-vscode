@@ -3,20 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Color } from '../../../../base/common/color.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { IconContribution } from '../../common/iconRegistry.js';
-import { ColorScheme } from '../../common/theme.js';
-import { IColorTheme, IFileIconTheme, IProductIconTheme, IThemeService, IFontTokenOptions, ITokenStyle } from '../../common/themeService.js';
+import { Color } from "../../../../base/common/color.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { IconContribution } from "../../common/iconRegistry.js";
+import { ColorScheme } from "../../common/theme.js";
+import {
+  IColorTheme,
+  IFileIconTheme,
+  IProductIconTheme,
+  IThemeService,
+  IFontTokenOptions,
+  ITokenStyle,
+} from "../../common/themeService.js";
 
 export class TestColorTheme implements IColorTheme {
 
-	public readonly label = 'test';
+	public readonly label = "test";
 
 	constructor(
 		private colors: { [id: string]: string | undefined } = {},
 		public type = ColorScheme.DARK,
-		public readonly semanticHighlighting = false
+		public readonly semanticHighlighting = false,
 	) { }
 
 	getColor(color: string, useDefault?: boolean): Color | undefined {
@@ -28,7 +35,7 @@ export class TestColorTheme implements IColorTheme {
 	}
 
 	defines(color: string): boolean {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 
 	getTokenStyleMetadata(type: string, modifiers: string[], modelLanguage: string): ITokenStyle | undefined {

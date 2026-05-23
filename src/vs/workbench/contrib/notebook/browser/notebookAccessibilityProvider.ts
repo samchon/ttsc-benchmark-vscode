@@ -3,26 +3,33 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IListAccessibilityProvider } from '../../../../base/browser/ui/list/listWidget.js';
-import { Event, Emitter } from '../../../../base/common/event.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { observableFromEvent } from '../../../../base/common/observable.js';
-import * as nls from '../../../../nls.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
-import { AccessibilityVerbositySettingId } from '../../accessibility/browser/accessibilityConfiguration.js';
-import { AccessibilityCommandId } from '../../accessibility/common/accessibilityCommands.js';
-import { CellViewModel, NotebookViewModel } from './viewModel/notebookViewModelImpl.js';
-import { CellKind, NotebookCellExecutionState } from '../common/notebookCommon.js';
-import { ICellExecutionStateChangedEvent, IExecutionStateChangedEvent, INotebookExecutionStateService, NotebookExecutionType } from '../common/notebookExecutionStateService.js';
-import { getAllOutputsText } from './viewModel/cellOutputTextHelper.js';
-import { IAccessibilityService } from '../../../../platform/accessibility/common/accessibility.js';
-import { alert } from '../../../../base/browser/ui/aria/aria.js';
+import { IListAccessibilityProvider } from "../../../../base/browser/ui/list/listWidget.js";
+import { Event, Emitter } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { observableFromEvent } from "../../../../base/common/observable.js";
+import * as nls from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { AccessibilityVerbositySettingId } from "../../accessibility/browser/accessibilityConfiguration.js";
+import { AccessibilityCommandId } from "../../accessibility/common/accessibilityCommands.js";
+import { CellViewModel, NotebookViewModel } from "./viewModel/notebookViewModelImpl.js";
+import { CellKind, NotebookCellExecutionState } from "../common/notebookCommon.js";
+import {
+  ICellExecutionStateChangedEvent,
+  IExecutionStateChangedEvent,
+  INotebookExecutionStateService,
+  NotebookExecutionType,
+} from "../common/notebookExecutionStateService.js";
+import { getAllOutputsText } from "./viewModel/cellOutputTextHelper.js";
+import { IAccessibilityService } from "../../../../platform/accessibility/common/accessibility.js";
+import { alert } from "../../../../base/browser/ui/aria/aria.js";
 
 type executionUpdate = { cellHandle: number; state: NotebookCellExecutionState | undefined };
 
 export class NotebookAccessibilityProvider extends Disposable implements IListAccessibilityProvider<CellViewModel> {
-	private readonly _onDidAriaLabelChange = this._register(new Emitter<CellViewModel>());
+	private readonly _onDidAriaLabelChange = this._register(
+    new Emitter<CellViewModel>(),
+  );
 	private readonly onDidAriaLabelChange = this._onDidAriaLabelChange.event;
 
 	constructor(
@@ -31,13 +38,13 @@ export class NotebookAccessibilityProvider extends Disposable implements IListAc
 		@INotebookExecutionStateService private readonly notebookExecutionStateService: INotebookExecutionStateService,
 		@IKeybindingService private readonly keybindingService: IKeybindingService,
 		@IConfigurationService private readonly configurationService: IConfigurationService,
-		@IAccessibilityService private readonly accessibilityService: IAccessibilityService
+		@IAccessibilityService private readonly accessibilityService: IAccessibilityService,
 	) {
 		super();
 		this._register(Event.debounce<ICellExecutionStateChangedEvent | IExecutionStateChangedEvent, executionUpdate[]>(
 			this.notebookExecutionStateService.onDidChangeExecution,
 			(last: executionUpdate[] | undefined, e: ICellExecutionStateChangedEvent | IExecutionStateChangedEvent) => this.mergeEvents(last, e),
-			100
+			100,
 		)((updates: executionUpdate[]) => {
 			if (!updates.length) {
 				return;
@@ -67,7 +74,9 @@ export class NotebookAccessibilityProvider extends Disposable implements IListAc
 		return state === undefined // execution completed
 			&& this.isReplHistory
 			&& this.accessibilityService.isScreenReaderOptimized()
-			&& this.configurationService.getValue<boolean>('accessibility.replEditor.readLastExecutionOutput');
+			&& this.configurationService.getValue<boolean>(
+        "accessibility.replEditor.readLastExecutionOutput",
+      );
 	}
 
 	get verbositySettingId() {
@@ -81,7 +90,7 @@ export class NotebookAccessibilityProvider extends Disposable implements IListAc
 		return observableFromEvent(this, event, () => {
 			const viewModel = this.viewModel();
 			if (!viewModel) {
-				return '';
+				return "";
 			}
 			const index = viewModel.getCellIndex(element);
 
@@ -89,32 +98,34 @@ export class NotebookAccessibilityProvider extends Disposable implements IListAc
 				return this.getLabel(element);
 			}
 
-			return '';
+			return "";
 		});
 	}
 
 	private createItemLabel(executionLabel: string, cellKind: CellKind) {
 		return this.isReplHistory ?
 			`cell${executionLabel}` :
-			`${cellKind === CellKind.Markup ? 'markdown' : 'code'} cell${executionLabel}`;
+			`${cellKind === CellKind.Markup ? "markdown" : "code"} cell${executionLabel}`;
 	}
 
 	private getLabel(element: CellViewModel) {
-		const executionState = this.notebookExecutionStateService.getCellExecution(element.uri)?.state;
+		const executionState = this.notebookExecutionStateService.getCellExecution(
+      element.uri,
+    )?.state;
 		const executionLabel =
 			executionState === NotebookCellExecutionState.Executing
-				? ', executing'
+				? ", executing"
 				: executionState === NotebookCellExecutionState.Pending
-					? ', pending'
-					: '';
+					? ", pending"
+					: "";
 
 		return this.createItemLabel(executionLabel, element.cellKind);
 	}
 
 	private get widgetAriaLabelName() {
 		return this.isReplHistory ?
-			nls.localize('replHistoryTreeAriaLabel', "REPL Editor History") :
-			nls.localize('notebookTreeAriaLabel', "Notebook");
+			nls.localize("replHistoryTreeAriaLabel", "REPL Editor History") :
+			nls.localize("notebookTreeAriaLabel", "Notebook");
 	}
 
 	getWidgetAriaLabel() {
@@ -122,8 +133,17 @@ export class NotebookAccessibilityProvider extends Disposable implements IListAc
 
 		if (this.configurationService.getValue(this.verbositySettingId)) {
 			return keybinding
-				? nls.localize('notebookTreeAriaLabelHelp', "{0}\nUse {1} for accessibility help", this.widgetAriaLabelName, keybinding)
-				: nls.localize('notebookTreeAriaLabelHelpNoKb', "{0}\nRun the Open Accessibility Help command for more information", this.widgetAriaLabelName);
+				? nls.localize(
+            "notebookTreeAriaLabelHelp",
+            "{0}\nUse {1} for accessibility help",
+            this.widgetAriaLabelName,
+            keybinding,
+          )
+				: nls.localize(
+            "notebookTreeAriaLabelHelpNoKb",
+            "{0}\nRun the Open Accessibility Help command for more information",
+            this.widgetAriaLabelName,
+          );
 		}
 		return this.widgetAriaLabelName;
 	}
@@ -131,8 +151,12 @@ export class NotebookAccessibilityProvider extends Disposable implements IListAc
 	private mergeEvents(last: executionUpdate[] | undefined, e: ICellExecutionStateChangedEvent | IExecutionStateChangedEvent): executionUpdate[] {
 		const viewModel = this.viewModel();
 		const result = last || [];
-		if (viewModel && e.type === NotebookExecutionType.cell && e.affectsNotebook(viewModel.uri)) {
-			const index = result.findIndex(update => update.cellHandle === e.cellHandle);
+		if (viewModel && e.type === NotebookExecutionType.cell && e.affectsNotebook(
+      viewModel.uri,
+    )) {
+			const index = result.findIndex(
+        update => update.cellHandle === e.cellHandle,
+      );
 			if (index >= 0) {
 				result.splice(index, 1);
 			}

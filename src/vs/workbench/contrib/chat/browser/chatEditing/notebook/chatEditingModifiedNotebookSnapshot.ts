@@ -3,36 +3,61 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { decodeBase64, encodeBase64, VSBuffer } from '../../../../../../base/common/buffer.js';
-import { filter } from '../../../../../../base/common/objects.js';
-import { URI, UriComponents } from '../../../../../../base/common/uri.js';
-import { IConfigurationService } from '../../../../../../platform/configuration/common/configuration.js';
-import { SnapshotContext } from '../../../../../services/workingCopy/common/fileWorkingCopy.js';
-import { NotebookCellTextModel } from '../../../../notebook/common/model/notebookCellTextModel.js';
-import { NotebookTextModel } from '../../../../notebook/common/model/notebookTextModel.js';
-import { CellEditType, ICellDto2, ICellEditOperation, INotebookTextModel, IOutputItemDto, NotebookData, NotebookSetting, TransientOptions } from '../../../../notebook/common/notebookCommon.js';
+import { decodeBase64, encodeBase64, VSBuffer } from "../../../../../../base/common/buffer.js";
+import { filter } from "../../../../../../base/common/objects.js";
+import { URI, UriComponents } from "../../../../../../base/common/uri.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { SnapshotContext } from "../../../../../services/workingCopy/common/fileWorkingCopy.js";
+import { NotebookCellTextModel } from "../../../../notebook/common/model/notebookCellTextModel.js";
+import { NotebookTextModel } from "../../../../notebook/common/model/notebookTextModel.js";
+import {
+  CellEditType,
+  ICellDto2,
+  ICellEditOperation,
+  INotebookTextModel,
+  IOutputItemDto,
+  NotebookData,
+  NotebookSetting,
+  TransientOptions,
+} from "../../../../notebook/common/notebookCommon.js";
 
-const BufferMarker = 'ArrayBuffer-4f56482b-5a03-49ba-8356-210d3b0c1c3d';
+const BufferMarker = "ArrayBuffer-4f56482b-5a03-49ba-8356-210d3b0c1c3d";
 
 type ChatEditingSnapshotNotebookContentQueryData = { session: UriComponents; requestId: string | undefined; undoStop: string | undefined; viewType: string };
-export const ChatEditingNotebookSnapshotScheme = 'chat-editing-notebook-snapshot-model';
+export const ChatEditingNotebookSnapshotScheme = "chat-editing-notebook-snapshot-model";
 
 export function getNotebookSnapshotFileURI(chatSessionResource: URI, requestId: string | undefined, undoStop: string | undefined, path: string, viewType: string): URI {
 	return URI.from({
-		scheme: ChatEditingNotebookSnapshotScheme,
-		path,
-		query: JSON.stringify({ session: chatSessionResource, requestId: requestId ?? '', undoStop: undoStop ?? '', viewType } satisfies ChatEditingSnapshotNotebookContentQueryData),
-	});
+    scheme: ChatEditingNotebookSnapshotScheme,
+    path,
+    query: JSON.stringify({ session: chatSessionResource, requestId: requestId ?? "", undoStop: undoStop ?? "", viewType } satisfies ChatEditingSnapshotNotebookContentQueryData),
+  });
 }
 
 export function parseNotebookSnapshotFileURI(resource: URI): ChatEditingSnapshotNotebookContentQueryData {
-	const data: ChatEditingSnapshotNotebookContentQueryData = JSON.parse(resource.query);
-	return { session: data.session, requestId: data.requestId ?? '', undoStop: data.undoStop ?? '', viewType: data.viewType };
+	const data: ChatEditingSnapshotNotebookContentQueryData = JSON.parse(
+    resource.query,
+  );
+	return {
+    session: data.session,
+    requestId: data.requestId ?? "",
+    undoStop: data.undoStop ?? "",
+    viewType: data.viewType,
+  };
 }
 
 export function createSnapshot(notebook: INotebookTextModel, transientOptions: TransientOptions | undefined, outputSizeConfig: IConfigurationService | number): string {
-	const outputSizeLimit = (typeof outputSizeConfig === 'number' ? outputSizeConfig : outputSizeConfig.getValue<number>(NotebookSetting.outputBackupSizeLimit)) * 1024;
-	return serializeSnapshot(notebook.createSnapshot({ context: SnapshotContext.Backup, outputSizeLimit, transientOptions }), transientOptions);
+	const outputSizeLimit = (typeof outputSizeConfig === "number" ? outputSizeConfig : outputSizeConfig.getValue<number>(
+    NotebookSetting.outputBackupSizeLimit,
+  )) * 1024;
+	return serializeSnapshot(
+    notebook.createSnapshot({
+      context: SnapshotContext.Backup,
+      outputSizeLimit,
+      transientOptions,
+    }),
+    transientOptions,
+  );
 }
 
 export function restoreSnapshot(notebook: INotebookTextModel, snapshot: string): void {
@@ -46,10 +71,17 @@ export function restoreSnapshot(notebook: INotebookTextModel, snapshot: string):
 				edits.push({ editType: CellEditType.PartialInternalMetadata, index, internalMetadata: { internalId } });
 			}
 		});
-		notebook.applyEdits(edits, true, undefined, () => undefined, undefined, false);
+		notebook.applyEdits(
+      edits,
+      true,
+      undefined,
+      () => undefined,
+      undefined,
+      false,
+    );
 	}
 	catch (ex) {
-		console.error('Error restoring Notebook snapshot', ex);
+		console.error("Error restoring Notebook snapshot", ex);
 	}
 }
 
@@ -67,8 +99,14 @@ export class SnapshotComparer {
 			return false;
 		}
 		const transientDocumentMetadata = this.transientOptions?.transientDocumentMetadata || {};
-		const notebookMetadata = filter(notebook.metadata || {}, key => !transientDocumentMetadata[key]);
-		const comparerMetadata = filter(this.data.metadata || {}, key => !transientDocumentMetadata[key]);
+		const notebookMetadata = filter(
+      notebook.metadata || {},
+      key => !transientDocumentMetadata[key],
+    );
+		const comparerMetadata = filter(
+      this.data.metadata || {},
+      key => !transientDocumentMetadata[key],
+    );
 		// When comparing ignore transient items.
 		if (JSON.stringify(notebookMetadata) !== JSON.stringify(comparerMetadata)) {
 			return false;
@@ -98,14 +136,24 @@ export class SnapshotComparer {
 					return false;
 				}
 				// When comparing ignore transient items.
-				const cellMetadata = filter(notebookCell.metadata || {}, key => !transientCellMetadata[key]);
-				const comparerCellMetadata = filter(comparerCell.metadata || {}, key => !transientCellMetadata[key]);
+				const cellMetadata = filter(
+          notebookCell.metadata || {},
+          key => !transientCellMetadata[key],
+        );
+				const comparerCellMetadata = filter(
+          comparerCell.metadata || {},
+          key => !transientCellMetadata[key],
+        );
 				if (JSON.stringify(cellMetadata) !== JSON.stringify(comparerCellMetadata)) {
 					return false;
 				}
 
 				// When comparing ignore transient items.
-				if (JSON.stringify(sanitizeCellDto2(notebookCell, true, this.transientOptions)) !== JSON.stringify(sanitizeCellDto2(comparerCell, true, this.transientOptions))) {
+				if (JSON.stringify(
+          sanitizeCellDto2(notebookCell, true, this.transientOptions),
+        ) !== JSON.stringify(
+          sanitizeCellDto2(comparerCell, true, this.transientOptions),
+        )) {
 					return false;
 				}
 			}
@@ -134,15 +182,15 @@ function sanitizeCellDto2(cell: ICellDto2, ignoreInternalMetadata?: boolean, tra
 	// Ensure we're in full control of the data being stored.
 	// Possible we have classes instead of plain objects.
 	return {
-		cellKind: cell.cellKind,
-		language: cell.language,
-		metadata: cell.metadata ? filter(cell.metadata, key => !transientCellMetadata[key]) : cell.metadata,
-		outputs,
-		mime: cell.mime,
-		source: cell.source,
-		collapseState: cell.collapseState,
-		internalMetadata: ignoreInternalMetadata ? undefined : cell.internalMetadata
-	} satisfies ICellDto2;
+    cellKind: cell.cellKind,
+    language: cell.language,
+    metadata: cell.metadata ? filter(cell.metadata, key => !transientCellMetadata[key]) : cell.metadata,
+    outputs,
+    mime: cell.mime,
+    source: cell.source,
+    collapseState: cell.collapseState,
+    internalMetadata: ignoreInternalMetadata ? undefined : cell.internalMetadata,
+  } satisfies ICellDto2;
 }
 
 function serializeSnapshot(data: NotebookData, transientOptions: TransientOptions | undefined): string {
@@ -160,17 +208,19 @@ function serializeSnapshot(data: NotebookData, transientOptions: TransientOption
 			if (value instanceof VSBuffer) {
 				return {
 					type: BufferMarker,
-					data: encodeBase64(value)
+					data: encodeBase64(value),
 				};
 			}
 			return value;
-		})
+		}),
 	]);
 }
 
 export function deserializeSnapshot(snapshot: string): { transientOptions: TransientOptions | undefined; data: NotebookData } {
 	const [transientOptionsStr, dataStr] = JSON.parse(snapshot);
-	const transientOptions = transientOptionsStr ? JSON.parse(transientOptionsStr) as TransientOptions : undefined;
+	const transientOptions = transientOptionsStr ? JSON.parse(
+    transientOptionsStr,
+  ) as TransientOptions : undefined;
 
 	const data: NotebookData = JSON.parse(dataStr, (_key, value) => {
 		if (value && value.type === BufferMarker) {

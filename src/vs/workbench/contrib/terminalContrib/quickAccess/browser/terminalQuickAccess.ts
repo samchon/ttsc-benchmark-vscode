@@ -3,26 +3,31 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../../../../nls.js';
-import { IQuickPickSeparator } from '../../../../../platform/quickinput/common/quickInput.js';
-import { IPickerQuickAccessItem, PickerQuickAccessProvider, TriggerAction } from '../../../../../platform/quickinput/browser/pickerQuickAccess.js';
-import { matchesFuzzyIconAware, parseLabelWithIcons } from '../../../../../base/common/iconLabels.js';
-import { ITerminalEditorService, ITerminalGroupService, ITerminalInstance, ITerminalService } from '../../../terminal/browser/terminal.js';
-import { ICommandService } from '../../../../../platform/commands/common/commands.js';
-import { TerminalCommandId } from '../../../terminal/common/terminal.js';
-import { IThemeService } from '../../../../../platform/theme/common/themeService.js';
-import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { killTerminalIcon, renameTerminalIcon } from '../../../terminal/browser/terminalIcons.js';
-import { getColorClass, getIconId, getUriClasses } from '../../../terminal/browser/terminalIcon.js';
-import { terminalStrings } from '../../../terminal/common/terminalStrings.js';
-import { TerminalLocation } from '../../../../../platform/terminal/common/terminal.js';
-import { IEditorService } from '../../../../services/editor/common/editorService.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
+import { localize } from "../../../../../nls.js";
+import { IQuickPickSeparator } from "../../../../../platform/quickinput/common/quickInput.js";
+import { IPickerQuickAccessItem, PickerQuickAccessProvider, TriggerAction } from "../../../../../platform/quickinput/browser/pickerQuickAccess.js";
+import { matchesFuzzyIconAware, parseLabelWithIcons } from "../../../../../base/common/iconLabels.js";
+import {
+  ITerminalEditorService,
+  ITerminalGroupService,
+  ITerminalInstance,
+  ITerminalService,
+} from "../../../terminal/browser/terminal.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { TerminalCommandId } from "../../../terminal/common/terminal.js";
+import { IThemeService } from "../../../../../platform/theme/common/themeService.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { killTerminalIcon, renameTerminalIcon } from "../../../terminal/browser/terminalIcons.js";
+import { getColorClass, getIconId, getUriClasses } from "../../../terminal/browser/terminalIcon.js";
+import { terminalStrings } from "../../../terminal/common/terminalStrings.js";
+import { TerminalLocation } from "../../../../../platform/terminal/common/terminal.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
 let terminalPicks: Array<IPickerQuickAccessItem | IQuickPickSeparator> = [];
 
 export class TerminalQuickAccessProvider extends PickerQuickAccessProvider<IPickerQuickAccessItem> {
 
-	static PREFIX = 'term ';
+	static PREFIX = "term ";
 
 	constructor(
 		@ICommandService private readonly _commandService: ICommandService,
@@ -38,13 +43,16 @@ export class TerminalQuickAccessProvider extends PickerQuickAccessProvider<IPick
 
 	protected _getPicks(filter: string): Array<IPickerQuickAccessItem | IQuickPickSeparator> {
 		terminalPicks = [];
-		terminalPicks.push({ type: 'separator', label: 'panel' });
+		terminalPicks.push({ type: "separator", label: "panel" });
 		const terminalGroups = this._terminalGroupService.groups;
 		for (let groupIndex = 0; groupIndex < terminalGroups.length; groupIndex++) {
 			const terminalGroup = terminalGroups[groupIndex];
 			for (let terminalIndex = 0; terminalIndex < terminalGroup.terminalInstances.length; terminalIndex++) {
 				const terminal = terminalGroup.terminalInstances[terminalIndex];
-				const pick = this._createPick(terminal, terminalIndex, filter, { groupIndex, groupSize: terminalGroup.terminalInstances.length });
+				const pick = this._createPick(terminal, terminalIndex, filter, {
+          groupIndex,
+          groupSize: terminalGroup.terminalInstances.length,
+        });
 				if (pick) {
 					terminalPicks.push(pick);
 				}
@@ -52,7 +60,7 @@ export class TerminalQuickAccessProvider extends PickerQuickAccessProvider<IPick
 		}
 
 		if (terminalPicks.length > 0) {
-			terminalPicks.push({ type: 'separator', label: 'editor' });
+			terminalPicks.push({ type: "separator", label: "editor" });
 		}
 
 		const terminalEditors = this._terminalEditorService.instances;
@@ -66,26 +74,35 @@ export class TerminalQuickAccessProvider extends PickerQuickAccessProvider<IPick
 		}
 
 		if (terminalPicks.length > 0) {
-			terminalPicks.push({ type: 'separator' });
+			terminalPicks.push({ type: "separator" });
 		}
 
-		const createTerminalLabel = localize("workbench.action.terminal.newplus", "Create New Terminal");
+		const createTerminalLabel = localize(
+      "workbench.action.terminal.newplus",
+      "Create New Terminal",
+    );
 		terminalPicks.push({
-			label: `$(plus) ${createTerminalLabel}`,
-			ariaLabel: createTerminalLabel,
-			accept: () => this._commandService.executeCommand(TerminalCommandId.New)
-		});
-		const createWithProfileLabel = localize("workbench.action.terminal.newWithProfilePlus", "Create New Terminal With Profile...");
+      label: `$(plus) ${createTerminalLabel}`,
+      ariaLabel: createTerminalLabel,
+      accept: () => this._commandService.executeCommand(TerminalCommandId.New),
+    });
+		const createWithProfileLabel = localize(
+      "workbench.action.terminal.newWithProfilePlus",
+      "Create New Terminal With Profile...",
+    );
 		terminalPicks.push({
-			label: `$(plus) ${createWithProfileLabel}`,
-			ariaLabel: createWithProfileLabel,
-			accept: () => this._commandService.executeCommand(TerminalCommandId.NewWithProfile)
-		});
+      label: `$(plus) ${createWithProfileLabel}`,
+      ariaLabel: createWithProfileLabel,
+      accept: () => this._commandService.executeCommand(TerminalCommandId.NewWithProfile),
+    });
 		return terminalPicks;
 	}
 
 	private _createPick(terminal: ITerminalInstance, terminalIndex: number, filter: string, groupInfo?: { groupIndex: number; groupSize: number }): IPickerQuickAccessItem | undefined {
-		const iconId = this._instantiationService.invokeFunction(getIconId, terminal);
+		const iconId = this._instantiationService.invokeFunction(
+      getIconId,
+      terminal,
+    );
 		const index = groupInfo
 			? (groupInfo.groupSize > 1
 				? `${groupInfo.groupIndex + 1}.${terminalIndex + 1}`
@@ -97,11 +114,18 @@ export class TerminalQuickAccessProvider extends PickerQuickAccessProvider<IPick
 		if (colorClass) {
 			iconClasses.push(colorClass);
 		}
-		const uriClasses = getUriClasses(terminal, this._themeService.getColorTheme().type);
+		const uriClasses = getUriClasses(
+      terminal,
+      this._themeService.getColorTheme().type,
+    );
 		if (uriClasses) {
 			iconClasses.push(...uriClasses);
 		}
-		const highlights = matchesFuzzyIconAware(filter, parseLabelWithIcons(label), true);
+		const highlights = matchesFuzzyIconAware(
+      filter,
+      parseLabelWithIcons(label),
+      true,
+    );
 		if (highlights) {
 			return {
 				label,
@@ -110,12 +134,12 @@ export class TerminalQuickAccessProvider extends PickerQuickAccessProvider<IPick
 				buttons: [
 					{
 						iconClass: ThemeIcon.asClassName(renameTerminalIcon),
-						tooltip: localize('renameTerminal', "Rename Terminal")
+						tooltip: localize("renameTerminal", "Rename Terminal"),
 					},
 					{
 						iconClass: ThemeIcon.asClassName(killTerminalIcon),
-						tooltip: terminalStrings.kill.value
-					}
+						tooltip: terminalStrings.kill.value,
+					},
 				],
 				iconClasses,
 				trigger: buttonIndex => {
@@ -139,7 +163,7 @@ export class TerminalQuickAccessProvider extends PickerQuickAccessProvider<IPick
 						this._terminalGroupService.showPanel(!event.inBackground);
 						this._terminalGroupService.setActiveInstance(terminal);
 					}
-				}
+				},
 			};
 		}
 		return undefined;

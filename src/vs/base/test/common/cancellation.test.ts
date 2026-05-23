@@ -2,20 +2,20 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import assert from 'assert';
-import { CancellationToken, CancellationTokenSource, CancellationTokenPool } from '../../common/cancellation.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from './utils.js';
+import assert from "assert";
+import { CancellationToken, CancellationTokenSource, CancellationTokenPool } from "../../common/cancellation.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "./utils.js";
 
-suite('CancellationToken', function () {
+suite("CancellationToken", function () {
 
 	const store = ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('None', () => {
+	test("None", () => {
 		assert.strictEqual(CancellationToken.None.isCancellationRequested, false);
-		assert.strictEqual(typeof CancellationToken.None.onCancellationRequested, 'function');
+		assert.strictEqual(typeof CancellationToken.None.onCancellationRequested, "function");
 	});
 
-	test('cancel before token', function () {
+	test("cancel before token", function () {
 
 		const source = new CancellationTokenSource();
 		assert.strictEqual(source.token.isCancellationRequested, false);
@@ -28,7 +28,7 @@ suite('CancellationToken', function () {
 		});
 	});
 
-	test('cancel happens only once', function () {
+	test("cancel happens only once", function () {
 
 		const source = new CancellationTokenSource();
 		assert.strictEqual(source.token.isCancellationRequested, false);
@@ -46,7 +46,7 @@ suite('CancellationToken', function () {
 		assert.strictEqual(cancelCount, 1);
 	});
 
-	test('cancel calls all listeners', function () {
+	test("cancel calls all listeners", function () {
 
 		let count = 0;
 
@@ -59,7 +59,7 @@ suite('CancellationToken', function () {
 		assert.strictEqual(count, 3);
 	});
 
-	test('token stays the same', function () {
+	test("token stays the same", function () {
 
 		let source = new CancellationTokenSource();
 		let token = source.token;
@@ -77,7 +77,7 @@ suite('CancellationToken', function () {
 		assert.ok(token === source.token); // doesn't change on get
 	});
 
-	test('dispose calls no listeners', function () {
+	test("dispose calls no listeners", function () {
 
 		let count = 0;
 
@@ -89,7 +89,7 @@ suite('CancellationToken', function () {
 		assert.strictEqual(count, 0);
 	});
 
-	test('dispose calls no listeners (unless told to cancel)', function () {
+	test("dispose calls no listeners (unless told to cancel)", function () {
 
 		let count = 0;
 
@@ -101,13 +101,13 @@ suite('CancellationToken', function () {
 		assert.strictEqual(count, 1);
 	});
 
-	test('dispose does not cancel', function () {
+	test("dispose does not cancel", function () {
 		const source = new CancellationTokenSource();
 		source.dispose();
 		assert.strictEqual(source.token.isCancellationRequested, false);
 	});
 
-	test('parent cancels child', function () {
+	test("parent cancels child", function () {
 
 		const parent = new CancellationTokenSource();
 		const child = new CancellationTokenSource(parent.token);
@@ -126,18 +126,18 @@ suite('CancellationToken', function () {
 	});
 });
 
-suite('CancellationTokenPool', function () {
+suite("CancellationTokenPool", function () {
 
 	const store = ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('empty pool token is not cancelled', function () {
+	test("empty pool token is not cancelled", function () {
 		const pool = new CancellationTokenPool();
 		store.add(pool);
 
 		assert.strictEqual(pool.token.isCancellationRequested, false);
 	});
 
-	test('pool token cancels when all tokens are cancelled', function () {
+	test("pool token cancels when all tokens are cancelled", function () {
 		const pool = new CancellationTokenPool();
 		store.add(pool);
 
@@ -165,7 +165,7 @@ suite('CancellationTokenPool', function () {
 		source3.dispose();
 	});
 
-	test('pool token fires cancellation event when all tokens are cancelled', function () {
+	test("pool token fires cancellation event when all tokens are cancelled", function () {
 		return new Promise<void>(resolve => {
 			const pool = new CancellationTokenPool();
 			store.add(pool);
@@ -186,7 +186,7 @@ suite('CancellationTokenPool', function () {
 		});
 	});
 
-	test('adding already cancelled token counts immediately', function () {
+	test("adding already cancelled token counts immediately", function () {
 		const pool = new CancellationTokenPool();
 		store.add(pool);
 
@@ -208,7 +208,7 @@ suite('CancellationTokenPool', function () {
 		source2.dispose();
 	});
 
-	test('adding single already cancelled token cancels pool immediately', function () {
+	test("adding single already cancelled token cancels pool immediately", function () {
 		const pool = new CancellationTokenPool();
 		store.add(pool);
 
@@ -221,7 +221,7 @@ suite('CancellationTokenPool', function () {
 		source.dispose();
 	});
 
-	test('adding token after pool is done has no effect', function () {
+	test("adding token after pool is done has no effect", function () {
 		const pool = new CancellationTokenPool();
 		store.add(pool);
 
@@ -243,7 +243,7 @@ suite('CancellationTokenPool', function () {
 		source2.dispose();
 	});
 
-	test('single token pool behaviour', function () {
+	test("single token pool behaviour", function () {
 		const pool = new CancellationTokenPool();
 		store.add(pool);
 
@@ -258,7 +258,7 @@ suite('CancellationTokenPool', function () {
 		source.dispose();
 	});
 
-	test('pool with only cancelled tokens', function () {
+	test("pool with only cancelled tokens", function () {
 		const pool = new CancellationTokenPool();
 		store.add(pool);
 

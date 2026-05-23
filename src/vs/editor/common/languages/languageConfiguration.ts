@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CharCode } from '../../../base/common/charCode.js';
-import { StandardTokenType } from '../encodedTokenAttributes.js';
-import { ScopedLineTokens } from './supports.js';
+import { CharCode } from "../../../base/common/charCode.js";
+import { StandardTokenType } from "../encodedTokenAttributes.js";
+import { ScopedLineTokens } from "./supports.js";
 
 /**
  * Configuration for line comments.
@@ -308,13 +308,13 @@ export class StandardAutoClosingPairConditional {
 			for (let i = 0, len = source.notIn.length; i < len; i++) {
 				const notIn: string = source.notIn[i];
 				switch (notIn) {
-					case 'string':
+					case "string":
 						this._inString = false;
 						break;
-					case 'comment':
+					case "comment":
 						this._inComment = false;
 						break;
-					case 'regex':
+					case "regex":
 						this._inRegEx = false;
 						break;
 				}
@@ -363,13 +363,22 @@ export class StandardAutoClosingPairConditional {
 		if (!this._neutralCharacterSearched) {
 			this._neutralCharacterSearched = true;
 			if (!this._neutralCharacter) {
-				this._neutralCharacter = this._findNeutralCharacterInRange(CharCode.Digit0, CharCode.Digit9);
+				this._neutralCharacter = this._findNeutralCharacterInRange(
+          CharCode.Digit0,
+          CharCode.Digit9,
+        );
 			}
 			if (!this._neutralCharacter) {
-				this._neutralCharacter = this._findNeutralCharacterInRange(CharCode.a, CharCode.z);
+				this._neutralCharacter = this._findNeutralCharacterInRange(
+          CharCode.a,
+          CharCode.z,
+        );
 			}
 			if (!this._neutralCharacter) {
-				this._neutralCharacter = this._findNeutralCharacterInRange(CharCode.A, CharCode.Z);
+				this._neutralCharacter = this._findNeutralCharacterInRange(
+          CharCode.A,
+          CharCode.Z,
+        );
 			}
 		}
 		return this._neutralCharacter;
@@ -401,9 +410,21 @@ export class AutoClosingPairs {
 		this.autoClosingPairsCloseSingleChar = new Map<string, StandardAutoClosingPairConditional[]>();
 		for (const pair of autoClosingPairs) {
 			appendEntry(this.autoClosingPairsOpenByStart, pair.open.charAt(0), pair);
-			appendEntry(this.autoClosingPairsOpenByEnd, pair.open.charAt(pair.open.length - 1), pair);
-			appendEntry(this.autoClosingPairsCloseByStart, pair.close.charAt(0), pair);
-			appendEntry(this.autoClosingPairsCloseByEnd, pair.close.charAt(pair.close.length - 1), pair);
+			appendEntry(
+        this.autoClosingPairsOpenByEnd,
+        pair.open.charAt(pair.open.length - 1),
+        pair,
+      );
+			appendEntry(
+        this.autoClosingPairsCloseByStart,
+        pair.close.charAt(0),
+        pair,
+      );
+			appendEntry(
+        this.autoClosingPairsCloseByEnd,
+        pair.close.charAt(pair.close.length - 1),
+        pair,
+      );
 			if (pair.close.length === 1 && pair.open.length === 1) {
 				appendEntry(this.autoClosingPairsCloseSingleChar, pair.close, pair);
 			}

@@ -3,26 +3,32 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as cp from 'child_process';
-import * as net from 'net';
-import * as stream from 'stream';
-import * as objects from '../../../../base/common/objects.js';
-import * as path from '../../../../base/common/path.js';
-import * as platform from '../../../../base/common/platform.js';
-import * as strings from '../../../../base/common/strings.js';
-import { Promises } from '../../../../base/node/pfs.js';
-import * as nls from '../../../../nls.js';
-import { IExtensionDescription } from '../../../../platform/extensions/common/extensions.js';
-import { IDebugAdapterExecutable, IDebugAdapterNamedPipeServer, IDebugAdapterServer, IDebuggerContribution, IPlatformSpecificAdapterContribution } from '../common/debug.js';
-import { AbstractDebugAdapter } from '../common/abstractDebugAdapter.js';
-import { killTree } from '../../../../base/node/processes.js';
+import * as cp from "child_process";
+import * as net from "net";
+import * as stream from "stream";
+import * as objects from "../../../../base/common/objects.js";
+import * as path from "../../../../base/common/path.js";
+import * as platform from "../../../../base/common/platform.js";
+import * as strings from "../../../../base/common/strings.js";
+import { Promises } from "../../../../base/node/pfs.js";
+import * as nls from "../../../../nls.js";
+import { IExtensionDescription } from "../../../../platform/extensions/common/extensions.js";
+import {
+  IDebugAdapterExecutable,
+  IDebugAdapterNamedPipeServer,
+  IDebugAdapterServer,
+  IDebuggerContribution,
+  IPlatformSpecificAdapterContribution,
+} from "../common/debug.js";
+import { AbstractDebugAdapter } from "../common/abstractDebugAdapter.js";
+import { killTree } from "../../../../base/node/processes.js";
 
 /**
  * An implementation that communicates via two streams with the debug adapter.
  */
 export abstract class StreamDebugAdapter extends AbstractDebugAdapter {
 
-	private static readonly TWO_CRLF = '\r\n\r\n';
+	private static readonly TWO_CRLF = "\r\n\r\n";
 	private static readonly HEADER_LINESEPARATOR = /\r?\n/;	// allow for non-RFC 2822 conforming line separators
 	private static readonly HEADER_FIELDSEPARATOR = /: */;
 
@@ -40,14 +46,17 @@ export abstract class StreamDebugAdapter extends AbstractDebugAdapter {
 		this.rawData = Buffer.allocUnsafe(0);
 		this.contentLength = -1;
 
-		readable.on('data', (data: Buffer) => this.handleData(data));
+		readable.on("data", (data: Buffer) => this.handleData(data));
 	}
 
 	sendMessage(message: DebugProtocol.ProtocolMessage): void {
 
 		if (this.outputStream) {
 			const json = JSON.stringify(message);
-			this.outputStream.write(`Content-Length: ${Buffer.byteLength(json, 'utf8')}${StreamDebugAdapter.TWO_CRLF}${json}`, 'utf8');
+			this.outputStream.write(
+        `Content-Length: ${Buffer.byteLength(json, "utf8")}${StreamDebugAdapter.TWO_CRLF}${json}`,
+        "utf8",
+      );
 		}
 	}
 
@@ -58,14 +67,16 @@ export abstract class StreamDebugAdapter extends AbstractDebugAdapter {
 		while (true) {
 			if (this.contentLength >= 0) {
 				if (this.rawData.length >= this.contentLength) {
-					const message = this.rawData.toString('utf8', 0, this.contentLength);
+					const message = this.rawData.toString("utf8", 0, this.contentLength);
 					this.rawData = this.rawData.slice(this.contentLength);
 					this.contentLength = -1;
 					if (message.length > 0) {
 						try {
-							this.acceptMessage(<DebugProtocol.ProtocolMessage>JSON.parse(message));
+							this.acceptMessage(
+                <DebugProtocol.ProtocolMessage>JSON.parse(message),
+              );
 						} catch (e) {
-							this._onError.fire(new Error((e.message || e) + '\n' + message));
+							this._onError.fire(new Error((e.message || e) + "\n" + message));
 						}
 					}
 					continue;	// there may be more complete messages to process
@@ -73,15 +84,17 @@ export abstract class StreamDebugAdapter extends AbstractDebugAdapter {
 			} else {
 				const idx = this.rawData.indexOf(StreamDebugAdapter.TWO_CRLF);
 				if (idx !== -1) {
-					const header = this.rawData.toString('utf8', 0, idx);
+					const header = this.rawData.toString("utf8", 0, idx);
 					const lines = header.split(StreamDebugAdapter.HEADER_LINESEPARATOR);
 					for (const h of lines) {
 						const kvPair = h.split(StreamDebugAdapter.HEADER_FIELDSEPARATOR);
-						if (kvPair[0] === 'Content-Length') {
+						if (kvPair[0] === "Content-Length") {
 							this.contentLength = Number(kvPair[1]);
 						}
 					}
-					this.rawData = this.rawData.slice(idx + StreamDebugAdapter.TWO_CRLF.length);
+					this.rawData = this.rawData.slice(
+            idx + StreamDebugAdapter.TWO_CRLF.length,
+          );
 					continue;
 				}
 			}
@@ -106,15 +119,15 @@ export abstract class NetworkDebugAdapter extends StreamDebugAdapter {
 				connected = true;
 			});
 
-			this.socket.on('close', () => {
+			this.socket.on("close", () => {
 				if (connected) {
-					this._onError.fire(new Error('connection closed'));
+					this._onError.fire(new Error("connection closed"));
 				} else {
-					reject(new Error('connection closed'));
+					reject(new Error("connection closed"));
 				}
 			});
 
-			this.socket.on('error', error => {
+			this.socket.on("error", error => {
 				// On ipv6 posix this can be an AggregateError which lacks a message. Use the first.
 				if (error instanceof AggregateError) {
 					error = error.errors[0];
@@ -148,7 +161,11 @@ export class SocketDebugAdapter extends NetworkDebugAdapter {
 	}
 
 	protected createConnection(connectionListener: () => void): net.Socket {
-		return net.createConnection(this.adapterServer.port, this.adapterServer.host || '127.0.0.1', connectionListener);
+		return net.createConnection(
+      this.adapterServer.port,
+      this.adapterServer.host || "127.0.0.1",
+      connectionListener,
+    );
 	}
 }
 
@@ -189,18 +206,32 @@ export class ExecutableDebugAdapter extends StreamDebugAdapter {
 				if (path.isAbsolute(command)) {
 					const commandExists = await Promises.exists(command);
 					if (!commandExists) {
-						throw new Error(nls.localize('debugAdapterBinNotFound', "Debug adapter executable '{0}' does not exist.", command));
+						throw new Error(
+              nls.localize(
+                "debugAdapterBinNotFound",
+                "Debug adapter executable '{0}' does not exist.",
+                command,
+              ),
+            );
 					}
 				} else {
 					// relative path
-					if (command.indexOf('/') < 0 && command.indexOf('\\') < 0) {
+					if (command.indexOf("/") < 0 && command.indexOf("\\") < 0) {
 						// no separators: command looks like a runtime name like 'node' or 'mono'
 						// TODO: check that the runtime is available on PATH
 					}
 				}
 			} else {
-				throw new Error(nls.localize({ key: 'debugAdapterCannotDetermineExecutable', comment: ['Adapter executable file not found'] },
-					"Cannot determine executable for debug adapter '{0}'.", this.debugType));
+				throw new Error(
+          nls.localize(
+            {
+              key: "debugAdapterCannotDetermineExecutable",
+              comment: ["Adapter executable file not found"],
+            },
+            "Cannot determine executable for debug adapter '{0}'.",
+            this.debugType,
+          ),
+        );
 			}
 
 			let env = process.env;
@@ -208,31 +239,42 @@ export class ExecutableDebugAdapter extends StreamDebugAdapter {
 				env = objects.mixin(objects.deepClone(process.env), options.env);
 			}
 
-			if (command === 'node') {
+			if (command === "node") {
 				if (Array.isArray(args) && args.length > 0) {
-					const isElectron = !!process.env['ELECTRON_RUN_AS_NODE'] || !!process.versions['electron'];
+					const isElectron = !!process.env["ELECTRON_RUN_AS_NODE"] || !!process.versions["electron"];
 					const forkOptions: cp.ForkOptions = {
-						env: env,
-						execArgv: isElectron ? ['-e', 'delete process.env.ELECTRON_RUN_AS_NODE;require(process.argv[1])'] : [],
-						silent: true
-					};
+            env: env,
+            execArgv: isElectron ? ["-e", "delete process.env.ELECTRON_RUN_AS_NODE;require(process.argv[1])"] : [],
+            silent: true,
+          };
 					if (options.cwd) {
 						forkOptions.cwd = options.cwd;
 					}
 					const child = cp.fork(args[0], args.slice(1), forkOptions);
 					if (!child.pid) {
-						throw new Error(nls.localize('unableToLaunchDebugAdapter', "Unable to launch debug adapter from '{0}'.", args[0]));
+						throw new Error(
+              nls.localize(
+                "unableToLaunchDebugAdapter",
+                "Unable to launch debug adapter from '{0}'.",
+                args[0],
+              ),
+            );
 					}
 					this.serverProcess = child;
 				} else {
-					throw new Error(nls.localize('unableToLaunchDebugAdapterNoArgs', "Unable to launch debug adapter."));
+					throw new Error(
+            nls.localize(
+              "unableToLaunchDebugAdapterNoArgs",
+              "Unable to launch debug adapter.",
+            ),
+          );
 				}
 			} else {
 				let spawnCommand = command;
 				let spawnArgs = args;
 				const spawnOptions: cp.SpawnOptions = {
-					env: env
-				};
+          env: env,
+        };
 				if (options.cwd) {
 					spawnOptions.cwd = options.cwd;
 				}
@@ -250,23 +292,23 @@ export class ExecutableDebugAdapter extends StreamDebugAdapter {
 				this.serverProcess = cp.spawn(spawnCommand, spawnArgs, spawnOptions);
 			}
 
-			this.serverProcess.on('error', err => {
-				this._onError.fire(err);
-			});
-			this.serverProcess.on('exit', (code, signal) => {
-				this._onExit.fire(code);
-			});
+			this.serverProcess.on("error", err => {
+        this._onError.fire(err);
+      });
+			this.serverProcess.on("exit", (code, signal) => {
+        this._onExit.fire(code);
+      });
 
-			this.serverProcess.stdout!.on('close', () => {
-				this._onError.fire(new Error('read error'));
-			});
-			this.serverProcess.stdout!.on('error', error => {
-				this._onError.fire(error);
-			});
+			this.serverProcess.stdout!.on("close", () => {
+        this._onError.fire(new Error("read error"));
+      });
+			this.serverProcess.stdout!.on("error", error => {
+        this._onError.fire(error);
+      });
 
-			this.serverProcess.stdin!.on('error', error => {
-				this._onError.fire(error);
-			});
+			this.serverProcess.stdin!.on("error", error => {
+        this._onError.fire(error);
+      });
 
 			this.serverProcess.stderr!.resume();
 
@@ -290,10 +332,10 @@ export class ExecutableDebugAdapter extends StreamDebugAdapter {
 		await this.cancelPendingRequests();
 		if (platform.isWindows) {
 			return killTree(this.serverProcess!.pid!, true).catch(() => {
-				this.serverProcess?.kill();
-			});
+        this.serverProcess?.kill();
+      });
 		} else {
-			this.serverProcess.kill('SIGTERM');
+			this.serverProcess.kill("SIGTERM");
 			return Promise.resolve(undefined);
 		}
 	}
@@ -305,8 +347,11 @@ export class ExecutableDebugAdapter extends StreamDebugAdapter {
 
 		const result: IDebuggerContribution = Object.create(null);
 		if (platformContribution.runtime) {
-			if (platformContribution.runtime.indexOf('./') === 0) {	// TODO
-				result.runtime = path.join(extensionFolderPath, platformContribution.runtime);
+			if (platformContribution.runtime.indexOf("./") === 0) {	// TODO
+				result.runtime = path.join(
+          extensionFolderPath,
+          platformContribution.runtime,
+        );
 			} else {
 				result.runtime = platformContribution.runtime;
 			}
@@ -316,7 +361,10 @@ export class ExecutableDebugAdapter extends StreamDebugAdapter {
 		}
 		if (platformContribution.program) {
 			if (!path.isAbsolute(platformContribution.program)) {
-				result.program = path.join(extensionFolderPath, platformContribution.program);
+				result.program = path.join(
+          extensionFolderPath,
+          platformContribution.program,
+        );
 			} else {
 				result.program = platformContribution.program;
 			}
@@ -328,19 +376,34 @@ export class ExecutableDebugAdapter extends StreamDebugAdapter {
 		const contribution = platformContribution as IDebuggerContribution;
 
 		if (contribution.win) {
-			result.win = ExecutableDebugAdapter.extract(contribution.win, extensionFolderPath);
+			result.win = ExecutableDebugAdapter.extract(
+        contribution.win,
+        extensionFolderPath,
+      );
 		}
 		if (contribution.winx86) {
-			result.winx86 = ExecutableDebugAdapter.extract(contribution.winx86, extensionFolderPath);
+			result.winx86 = ExecutableDebugAdapter.extract(
+        contribution.winx86,
+        extensionFolderPath,
+      );
 		}
 		if (contribution.windows) {
-			result.windows = ExecutableDebugAdapter.extract(contribution.windows, extensionFolderPath);
+			result.windows = ExecutableDebugAdapter.extract(
+        contribution.windows,
+        extensionFolderPath,
+      );
 		}
 		if (contribution.osx) {
-			result.osx = ExecutableDebugAdapter.extract(contribution.osx, extensionFolderPath);
+			result.osx = ExecutableDebugAdapter.extract(
+        contribution.osx,
+        extensionFolderPath,
+      );
 		}
 		if (contribution.linux) {
-			result.linux = ExecutableDebugAdapter.extract(contribution.linux, extensionFolderPath);
+			result.linux = ExecutableDebugAdapter.extract(
+        contribution.linux,
+        extensionFolderPath,
+      );
 		}
 		return result;
 	}
@@ -352,9 +415,9 @@ export class ExecutableDebugAdapter extends StreamDebugAdapter {
 		// merge all contributions into one
 		for (const ed of extensionDescriptions) {
 			if (ed.contributes) {
-				const debuggers = <IDebuggerContribution[]>ed.contributes['debuggers'];
+				const debuggers = <IDebuggerContribution[]>ed.contributes["debuggers"];
 				if (debuggers && debuggers.length > 0) {
-					debuggers.filter(dbg => typeof dbg.type === 'string' && strings.equalsIgnoreCase(dbg.type, debugType)).forEach(dbg => {
+					debuggers.filter(dbg => typeof dbg.type === "string" && strings.equalsIgnoreCase(dbg.type, debugType)).forEach(dbg => {
 						// extract relevant attributes and make them absolute where needed
 						const extractedDbg = ExecutableDebugAdapter.extract(dbg, ed.extensionLocation.fsPath);
 
@@ -367,7 +430,9 @@ export class ExecutableDebugAdapter extends StreamDebugAdapter {
 
 		// select the right platform
 		let platformInfo: IPlatformSpecificAdapterContribution | undefined;
-		if (platform.isWindows && !process.env.hasOwnProperty('PROCESSOR_ARCHITEW6432')) {
+		if (platform.isWindows && !process.env.hasOwnProperty(
+      "PROCESSOR_ARCHITEW6432",
+    )) {
 			platformInfo = result.winx86 || result.win || result.windows;
 		} else if (platform.isWindows) {
 			platformInfo = result.win || result.windows;
@@ -386,16 +451,16 @@ export class ExecutableDebugAdapter extends StreamDebugAdapter {
 
 		if (runtime) {
 			return {
-				type: 'executable',
-				command: runtime,
-				args: (runtimeArgs || []).concat(typeof program === 'string' ? [program] : []).concat(args || [])
-			};
+        type: "executable",
+        command: runtime,
+        args: (runtimeArgs || []).concat(typeof program === "string" ? [program] : []).concat(args || []),
+      };
 		} else if (program) {
 			return {
-				type: 'executable',
-				command: program,
-				args: args || []
-			};
+        type: "executable",
+        command: program,
+        args: args || [],
+      };
 		}
 
 		// nothing found

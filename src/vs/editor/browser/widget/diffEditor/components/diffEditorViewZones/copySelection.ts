@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { addDisposableListener } from '../../../../../../base/browser/dom.js';
-import { DisposableStore } from '../../../../../../base/common/lifecycle.js';
-import { Range } from '../../../../../common/core/range.js';
-import { DetailedLineRangeMapping } from '../../../../../common/diff/rangeMapping.js';
-import { ITextModel } from '../../../../../common/model.js';
-import { IClipboardService } from '../../../../../../platform/clipboard/common/clipboardService.js';
-import { RenderLinesResult } from './renderLines.js';
+import { addDisposableListener } from "../../../../../../base/browser/dom.js";
+import { DisposableStore } from "../../../../../../base/common/lifecycle.js";
+import { Range } from "../../../../../common/core/range.js";
+import { DetailedLineRangeMapping } from "../../../../../common/diff/rangeMapping.js";
+import { ITextModel } from "../../../../../common/model.js";
+import { IClipboardService } from "../../../../../../platform/clipboard/common/clipboardService.js";
+import { RenderLinesResult } from "./renderLines.js";
 
 export interface IEnableViewZoneCopySelectionOptions {
 	/** The view zone HTML element that contains the deleted codes. */
@@ -32,7 +32,7 @@ export function enableCopySelection(options: IEnableViewZoneCopySelectionOptions
 	const { domNode, renderLinesResult, diffEntry, originalModel, clipboardService } = options;
 	const viewZoneDisposable = new DisposableStore();
 
-	viewZoneDisposable.add(addDisposableListener(domNode, 'copy', (e) => {
+	viewZoneDisposable.add(addDisposableListener(domNode, "copy", (e) => {
 		e.preventDefault();
 		const selection = domNode.ownerDocument.getSelection();
 		if (!selection || selection.rangeCount === 0) {

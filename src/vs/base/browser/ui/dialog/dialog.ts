@@ -3,26 +3,46 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './dialog.css';
-import { localize } from '../../../../nls.js';
-import { $, addDisposableListener, addStandardDisposableListener, clearNode, EventHelper, EventType, getWindow, hide, isActiveElement, isAncestor, show } from '../../dom.js';
-import { StandardKeyboardEvent } from '../../keyboardEvent.js';
-import { ActionBar } from '../actionbar/actionbar.js';
-import { ButtonBar, ButtonBarAlignment, ButtonWithDescription, ButtonWithDropdown, IButton, IButtonStyles, IButtonWithDropdownOptions } from '../button/button.js';
-import { ICheckboxStyles, Checkbox } from '../toggle/toggle.js';
-import { IInputBoxStyles, InputBox } from '../inputbox/inputBox.js';
-import { Action, toAction } from '../../../common/actions.js';
-import { Codicon } from '../../../common/codicons.js';
-import { ThemeIcon } from '../../../common/themables.js';
-import { KeyCode, KeyMod } from '../../../common/keyCodes.js';
-import { mnemonicButtonLabel } from '../../../common/labels.js';
-import { Disposable, toDisposable } from '../../../common/lifecycle.js';
-import { isLinux, isMacintosh, isWindows } from '../../../common/platform.js';
-import { isActionProvider } from '../dropdown/dropdown.js';
+import "./dialog.css";
+import { localize } from "../../../../nls.js";
+import {
+  $,
+  addDisposableListener,
+  addStandardDisposableListener,
+  clearNode,
+  EventHelper,
+  EventType,
+  getWindow,
+  hide,
+  isActiveElement,
+  isAncestor,
+  show,
+} from "../../dom.js";
+import { StandardKeyboardEvent } from "../../keyboardEvent.js";
+import { ActionBar } from "../actionbar/actionbar.js";
+import {
+  ButtonBar,
+  ButtonBarAlignment,
+  ButtonWithDescription,
+  ButtonWithDropdown,
+  IButton,
+  IButtonStyles,
+  IButtonWithDropdownOptions,
+} from "../button/button.js";
+import { ICheckboxStyles, Checkbox } from "../toggle/toggle.js";
+import { IInputBoxStyles, InputBox } from "../inputbox/inputBox.js";
+import { Action, toAction } from "../../../common/actions.js";
+import { Codicon } from "../../../common/codicons.js";
+import { ThemeIcon } from "../../../common/themables.js";
+import { KeyCode, KeyMod } from "../../../common/keyCodes.js";
+import { mnemonicButtonLabel } from "../../../common/labels.js";
+import { Disposable, toDisposable } from "../../../common/lifecycle.js";
+import { isLinux, isMacintosh, isWindows } from "../../../common/platform.js";
+import { isActionProvider } from "../dropdown/dropdown.js";
 
 export interface IDialogInputOptions {
 	readonly placeholder?: string;
-	readonly type?: 'text' | 'password';
+	readonly type?: "text" | "password";
 	readonly value?: string;
 }
 
@@ -46,7 +66,7 @@ export interface IDialogOptions {
 	readonly alignment?: DialogContentsAlignment;
 	readonly checkboxLabel?: string;
 	readonly checkboxChecked?: boolean;
-	readonly type?: 'none' | 'info' | 'error' | 'question' | 'warning' | 'pending';
+	readonly type?: "none" | "info" | "error" | "question" | "warning" | "pending";
 	readonly extraClasses?: string[];
 	readonly inputs?: IDialogInputOptions[];
 	readonly keyEventProcessor?: (event: StandardKeyboardEvent) => void;
@@ -110,7 +130,9 @@ export class Dialog extends Disposable {
 		super();
 
 		// Modal background blocker
-		this.modalElement = this.container.appendChild($(`.monaco-dialog-modal-block.dimmed`));
+		this.modalElement = this.container.appendChild(
+      $(`.monaco-dialog-modal-block.dimmed`),
+    );
 		this._register(addStandardDisposableListener(this.modalElement, EventType.CLICK, e => {
 			if (e.target === this.modalElement) {
 				this.element.focus(); // guide users back into the dialog if clicked elsewhere
@@ -118,27 +140,29 @@ export class Dialog extends Disposable {
 		}));
 
 		// Dialog Box
-		this.shadowElement = this.modalElement.appendChild($('.dialog-shadow'));
-		this.element = this.shadowElement.appendChild($('.monaco-dialog-box'));
+		this.shadowElement = this.modalElement.appendChild($(".dialog-shadow"));
+		this.element = this.shadowElement.appendChild($(".monaco-dialog-box"));
 		if (options.alignment === DialogContentsAlignment.Vertical) {
-			this.element.classList.add('align-vertical');
+			this.element.classList.add("align-vertical");
 		}
 		if (options.extraClasses) {
 			this.element.classList.add(...options.extraClasses);
 		}
-		this.element.setAttribute('role', 'dialog');
+		this.element.setAttribute("role", "dialog");
 		this.element.tabIndex = -1;
 		hide(this.element);
 
 		// Footer
 		if (this.options.renderFooter) {
-			this.footerContainer = this.element.appendChild($('.dialog-footer-row'));
+			this.footerContainer = this.element.appendChild($(".dialog-footer-row"));
 
-			const customFooter = this.footerContainer.appendChild($('#monaco-dialog-footer.dialog-footer'));
+			const customFooter = this.footerContainer.appendChild(
+        $("#monaco-dialog-footer.dialog-footer"),
+      );
 			this.options.renderFooter(customFooter);
 
 			// eslint-disable-next-line no-restricted-syntax
-			for (const el of this.footerContainer.querySelectorAll('a')) {
+			for (const el of this.footerContainer.querySelectorAll("a")) {
 				el.tabIndex = 0;
 			}
 		}
@@ -149,38 +173,54 @@ export class Dialog extends Disposable {
 		if (Array.isArray(buttons) && buttons.length > 0) {
 			this.buttons = buttons;
 		} else if (!this.options.disableDefaultAction) {
-			this.buttons = [localize('ok', "OK")];
+			this.buttons = [localize("ok", "OK")];
 		} else {
 			this.buttons = [];
 		}
-		const buttonsRowElement = this.element.appendChild($('.dialog-buttons-row'));
-		this.buttonsContainer = buttonsRowElement.appendChild($('.dialog-buttons'));
+		const buttonsRowElement = this.element.appendChild(
+      $(".dialog-buttons-row"),
+    );
+		this.buttonsContainer = buttonsRowElement.appendChild($(".dialog-buttons"));
 
 		// Message
-		const messageRowElement = this.element.appendChild($('.dialog-message-row'));
-		this.iconElement = messageRowElement.appendChild($('#monaco-dialog-icon.dialog-icon'));
-		this.iconElement.setAttribute('aria-label', this.getIconAriaLabel());
-		this.messageContainer = messageRowElement.appendChild($('.dialog-message-container'));
+		const messageRowElement = this.element.appendChild(
+      $(".dialog-message-row"),
+    );
+		this.iconElement = messageRowElement.appendChild(
+      $("#monaco-dialog-icon.dialog-icon"),
+    );
+		this.iconElement.setAttribute("aria-label", this.getIconAriaLabel());
+		this.messageContainer = messageRowElement.appendChild(
+      $(".dialog-message-container"),
+    );
 
 		if (this.options.detail || this.options.renderBody) {
-			const messageElement = this.messageContainer.appendChild($('.dialog-message'));
-			const messageTextElement = messageElement.appendChild($('#monaco-dialog-message-text.dialog-message-text'));
+			const messageElement = this.messageContainer.appendChild(
+        $(".dialog-message"),
+      );
+			const messageTextElement = messageElement.appendChild(
+        $("#monaco-dialog-message-text.dialog-message-text"),
+      );
 			messageTextElement.innerText = this.message;
 		}
 
-		this.messageDetailElement = this.messageContainer.appendChild($('#monaco-dialog-message-detail.dialog-message-detail'));
+		this.messageDetailElement = this.messageContainer.appendChild(
+      $("#monaco-dialog-message-detail.dialog-message-detail"),
+    );
 		if (this.options.detail || !this.options.renderBody) {
 			this.messageDetailElement.innerText = this.options.detail ? this.options.detail : message;
 		} else {
-			this.messageDetailElement.style.display = 'none';
+			this.messageDetailElement.style.display = "none";
 		}
 
 		if (this.options.renderBody) {
-			const customBody = this.messageContainer.appendChild($('#monaco-dialog-message-body.dialog-message-body'));
+			const customBody = this.messageContainer.appendChild(
+        $("#monaco-dialog-message-body.dialog-message-body"),
+      );
 			this.options.renderBody(customBody);
 
 			// eslint-disable-next-line no-restricted-syntax
-			for (const el of this.messageContainer.querySelectorAll('a')) {
+			for (const el of this.messageContainer.querySelectorAll("a")) {
 				el.tabIndex = 0;
 			}
 		}
@@ -188,12 +228,12 @@ export class Dialog extends Disposable {
 		// Inputs
 		if (this.options.inputs) {
 			this.inputs = this.options.inputs.map(input => {
-				const inputRowElement = this.messageContainer.appendChild($('.dialog-message-input'));
+				const inputRowElement = this.messageContainer.appendChild($(".dialog-message-input"));
 
 				const inputBox = this._register(new InputBox(inputRowElement, undefined, {
 					placeholder: input.placeholder,
-					type: input.type ?? 'text',
-					inputBoxStyles: options.inputBoxStyles
+					type: input.type ?? "text",
+					inputBoxStyles: options.inputBoxStyles,
 				}));
 
 				if (input.value) {
@@ -208,41 +248,57 @@ export class Dialog extends Disposable {
 
 		// Checkbox
 		if (this.options.checkboxLabel) {
-			const checkboxRowElement = this.messageContainer.appendChild($('.dialog-checkbox-row'));
+			const checkboxRowElement = this.messageContainer.appendChild(
+        $(".dialog-checkbox-row"),
+      );
 
 			const checkbox = this.checkbox = this._register(
-				new Checkbox(this.options.checkboxLabel, !!this.options.checkboxChecked, options.checkboxStyles)
-			);
+        new Checkbox(
+          this.options.checkboxLabel,
+          !!this.options.checkboxChecked,
+          options.checkboxStyles,
+        ),
+      );
 
 			checkboxRowElement.appendChild(checkbox.domNode);
 
-			const checkboxMessageElement = checkboxRowElement.appendChild($('.dialog-checkbox-message'));
+			const checkboxMessageElement = checkboxRowElement.appendChild(
+        $(".dialog-checkbox-message"),
+      );
 			checkboxMessageElement.innerText = this.options.checkboxLabel;
-			this._register(addDisposableListener(checkboxMessageElement, EventType.CLICK, () => checkbox.checked = !checkbox.checked));
+			this._register(
+        addDisposableListener(
+          checkboxMessageElement,
+          EventType.CLICK,
+          () => checkbox.checked = !checkbox.checked,
+        ),
+      );
 		}
 
 		// Toolbar
-		const toolbarRowElement = this.element.appendChild($('.dialog-toolbar-row'));
-		this.toolbarContainer = toolbarRowElement.appendChild($('.dialog-toolbar'));
+		const toolbarRowElement = this.element.appendChild(
+      $(".dialog-toolbar-row"),
+    );
+		this.toolbarContainer = toolbarRowElement.appendChild($(".dialog-toolbar"));
 
 		this.applyStyles();
 	}
 
 	private getIconAriaLabel(): string {
-		let typeLabel = localize('dialogInfoMessage', 'Info');
+		let typeLabel = localize("dialogInfoMessage", "Info");
 		switch (this.options.type) {
-			case 'error':
-				typeLabel = localize('dialogErrorMessage', 'Error');
+			case "error":
+				typeLabel = localize("dialogErrorMessage", "Error");
 				break;
-			case 'warning':
-				typeLabel = localize('dialogWarningMessage', 'Warning');
+			case "warning":
+				typeLabel = localize("dialogWarningMessage", "Warning");
 				break;
-			case 'pending':
-				typeLabel = localize('dialogPendingMessage', 'In Progress');
+			case "pending":
+				typeLabel = localize("dialogPendingMessage", "In Progress");
 				break;
-			case 'none':
-			case 'info':
-			case 'question':
+			case "none":
+			case "info":
+			case "question":
 			default:
 				break;
 		}
@@ -263,7 +319,7 @@ export class Dialog extends Disposable {
 			const close = () => {
 				resolve({
 					button: this.options.cancelId || 0,
-					checkboxChecked: this.checkbox ? this.checkbox.checked : undefined
+					checkboxChecked: this.checkbox ? this.checkbox.checked : undefined,
 				});
 				return;
 			};
@@ -276,7 +332,7 @@ export class Dialog extends Disposable {
 				resolve({
 					button: buttonMap[index].index,
 					checkboxChecked: this.checkbox ? this.checkbox.checked : undefined,
-					values: this.inputs.length > 0 ? this.inputs.map(input => input.value) : undefined
+					values: this.inputs.length > 0 ? this.inputs.map(input => input.value) : undefined,
 				});
 			};
 
@@ -298,8 +354,8 @@ export class Dialog extends Disposable {
 								await action.run();
 
 								onButtonClick(index);
-							}
-						}))
+							},
+						})),
 					}));
 				} else if (buttonOptions?.sublabel) {
 					button = this._register(buttonBar.addButtonWithDescription({ secondary: !primary, ...this.buttonStyles }));
@@ -329,7 +385,7 @@ export class Dialog extends Disposable {
 			// Handle keyboard events globally: Tab, Arrow-Left/Right
 			const window = getWindow(this.container);
 			let sawEscapeKeyDown = false;
-			this._register(addDisposableListener(window, 'keydown', e => {
+			this._register(addDisposableListener(window, "keydown", e => {
 				const evt = new StandardKeyboardEvent(e);
 
 				if (evt.equals(KeyCode.Escape)) {
@@ -349,7 +405,7 @@ export class Dialog extends Disposable {
 						resolve({
 							button: buttonMap.find(button => button.index !== this.options.cancelId)?.index ?? 0,
 							checkboxChecked: this.checkbox ? this.checkbox.checked : undefined,
-							values: this.inputs.length > 0 ? this.inputs.map(input => input.value) : undefined
+							values: this.inputs.length > 0 ? this.inputs.map(input => input.value) : undefined,
 						});
 					}
 
@@ -365,7 +421,7 @@ export class Dialog extends Disposable {
 						resolve({
 							button: noButton.index,
 							checkboxChecked: this.checkbox ? this.checkbox.checked : undefined,
-							values: this.inputs.length > 0 ? this.inputs.map(input => input.value) : undefined
+							values: this.inputs.length > 0 ? this.inputs.map(input => input.value) : undefined,
 						});
 					}
 
@@ -387,7 +443,7 @@ export class Dialog extends Disposable {
 
 					if (this.messageContainer) {
 						// eslint-disable-next-line no-restricted-syntax
-						const links = this.messageContainer.querySelectorAll('a');
+						const links = this.messageContainer.querySelectorAll("a");
 						for (const link of links) {
 							focusableElements.push(link);
 							if (isActiveElement(link)) {
@@ -432,7 +488,7 @@ export class Dialog extends Disposable {
 
 					if (this.footerContainer) {
 						// eslint-disable-next-line no-restricted-syntax
-						const links = this.footerContainer.querySelectorAll('a');
+						const links = this.footerContainer.querySelectorAll("a");
 						for (const link of links) {
 							focusableElements.push(link);
 							if (isActiveElement(link)) {
@@ -471,7 +527,7 @@ export class Dialog extends Disposable {
 				}
 			}, true));
 
-			this._register(addDisposableListener(window, 'keyup', e => {
+			this._register(addDisposableListener(window, "keyup", e => {
 				EventHelper.stop(e, true);
 				const evt = new StandardKeyboardEvent(e);
 
@@ -481,7 +537,7 @@ export class Dialog extends Disposable {
 			}, true));
 
 			// Detect focus out
-			this._register(addDisposableListener(this.element, 'focusout', e => {
+			this._register(addDisposableListener(this.element, "focusout", e => {
 				if (!!e.relatedTarget && !!this.element) {
 					if (!isAncestor(e.relatedTarget as HTMLElement, this.element)) {
 						this.focusToReturn = e.relatedTarget as HTMLElement;
@@ -494,7 +550,7 @@ export class Dialog extends Disposable {
 				}
 			}, false));
 
-			const spinModifierClassName = 'codicon-modifier-spin';
+			const spinModifierClassName = "codicon-modifier-spin";
 
 			this.iconElement.classList.remove(...ThemeIcon.asClassNameArray(Codicon.dialogError), ...ThemeIcon.asClassNameArray(Codicon.dialogWarning), ...ThemeIcon.asClassNameArray(Codicon.dialogInfo), ...ThemeIcon.asClassNameArray(Codicon.loading), spinModifierClassName);
 
@@ -502,20 +558,20 @@ export class Dialog extends Disposable {
 				this.iconElement.classList.add(...ThemeIcon.asClassNameArray(this.options.icon));
 			} else {
 				switch (this.options.type) {
-					case 'error':
+					case "error":
 						this.iconElement.classList.add(...ThemeIcon.asClassNameArray(Codicon.dialogError));
 						break;
-					case 'warning':
+					case "warning":
 						this.iconElement.classList.add(...ThemeIcon.asClassNameArray(Codicon.dialogWarning));
 						break;
-					case 'pending':
+					case "pending":
 						this.iconElement.classList.add(...ThemeIcon.asClassNameArray(Codicon.loading), spinModifierClassName);
 						break;
-					case 'none':
-						this.iconElement.classList.add('no-codicon');
+					case "none":
+						this.iconElement.classList.add("no-codicon");
 						break;
-					case 'info':
-					case 'question':
+					case "info":
+					case "question":
 					default:
 						this.iconElement.classList.add(...ThemeIcon.asClassNameArray(Codicon.dialogInfo));
 						break;
@@ -525,10 +581,10 @@ export class Dialog extends Disposable {
 			if (!this.options.disableCloseAction && !this.options.disableCloseButton) {
 				const actionBar = this._register(new ActionBar(this.toolbarContainer, {}));
 
-				const action = this._register(new Action('dialog.close', localize('dialogClose', "Close Dialog"), ThemeIcon.asClassName(Codicon.dialogClose), true, async () => {
+				const action = this._register(new Action("dialog.close", localize("dialogClose", "Close Dialog"), ThemeIcon.asClassName(Codicon.dialogClose), true, async () => {
 					resolve({
 						button: this.options.cancelId || 0,
-						checkboxChecked: this.checkbox ? this.checkbox.checked : undefined
+						checkboxChecked: this.checkbox ? this.checkbox.checked : undefined,
 					});
 				}));
 
@@ -537,9 +593,9 @@ export class Dialog extends Disposable {
 
 			this.applyStyles();
 
-			this.element.setAttribute('aria-modal', 'true');
-			this.element.setAttribute('aria-labelledby', 'monaco-dialog-icon monaco-dialog-message-text');
-			this.element.setAttribute('aria-describedby', 'monaco-dialog-icon monaco-dialog-message-text monaco-dialog-message-detail monaco-dialog-message-body monaco-dialog-footer');
+			this.element.setAttribute("aria-modal", "true");
+			this.element.setAttribute("aria-labelledby", "monaco-dialog-icon monaco-dialog-message-text");
+			this.element.setAttribute("aria-describedby", "monaco-dialog-icon monaco-dialog-message-text monaco-dialog-message-detail monaco-dialog-message-body monaco-dialog-footer");
 			show(this.element);
 
 			// Notify visibility change
@@ -565,31 +621,34 @@ export class Dialog extends Disposable {
 
 		const fgColor = style.dialogForeground;
 		const bgColor = style.dialogBackground;
-		const shadowColor = style.dialogShadow ? `0 0px 8px ${style.dialogShadow}` : '';
-		const border = style.dialogBorder ? `1px solid ${style.dialogBorder}` : '';
+		const shadowColor = style.dialogShadow ? `0 0px 8px ${style.dialogShadow}` : "";
+		const border = style.dialogBorder ? `1px solid ${style.dialogBorder}` : "";
 		const linkFgColor = style.textLinkForeground;
 
 		this.shadowElement.style.boxShadow = shadowColor;
 
-		this.element.style.color = fgColor ?? '';
-		this.element.style.backgroundColor = bgColor ?? '';
+		this.element.style.color = fgColor ?? "";
+		this.element.style.backgroundColor = bgColor ?? "";
 		this.element.style.border = border;
 
 		if (linkFgColor) {
 			// eslint-disable-next-line no-restricted-syntax
-			for (const el of [...this.messageContainer.getElementsByTagName('a'), ...this.footerContainer?.getElementsByTagName('a') ?? []]) {
+			for (const el of [
+        ...this.messageContainer.getElementsByTagName("a"),
+        ...this.footerContainer?.getElementsByTagName("a") ?? [],
+      ]) {
 				el.style.color = linkFgColor;
 			}
 		}
 
 		let color;
 		switch (this.options.type) {
-			case 'none':
+			case "none":
 				break;
-			case 'error':
+			case "error":
 				color = style.errorIconForeground;
 				break;
-			case 'warning':
+			case "warning":
 				color = style.warningIconForeground;
 				break;
 			default:
@@ -609,7 +668,10 @@ export class Dialog extends Disposable {
 			this.modalElement = undefined;
 		}
 
-		if (this.focusToReturn && isAncestor(this.focusToReturn, this.container.ownerDocument.body)) {
+		if (this.focusToReturn && isAncestor(
+      this.focusToReturn,
+      this.container.ownerDocument.body,
+    )) {
 			this.focusToReturn.focus();
 			this.focusToReturn = undefined;
 		}
@@ -619,7 +681,10 @@ export class Dialog extends Disposable {
 
 		// Maps each button to its current label and old index
 		// so that when we move them around it's not a problem
-		const buttonMap: ButtonMapEntry[] = buttons.map((label, index) => ({ label, index }));
+		const buttonMap: ButtonMapEntry[] = buttons.map((label, index) => ({
+      label,
+      index,
+    }));
 
 		if (buttons.length < 2 || this.options.alignment === DialogContentsAlignment.Vertical) {
 			return buttonMap; // only need to rearrange if there are 2+ buttons and the alignment is left-to-right
@@ -639,7 +704,7 @@ export class Dialog extends Disposable {
 			//  row of buttons or at the top in a stack of buttons. Always place the default button on the trailing side of a row or at the
 			//  top of a stack. Cancel buttons are typically on the leading side of a row or at the bottom of a stack."
 
-			if (typeof cancelId === 'number' && buttonMap[cancelId]) {
+			if (typeof cancelId === "number" && buttonMap[cancelId]) {
 				const cancelButton = buttonMap.splice(cancelId, 1)[0];
 				buttonMap.splice(1, 0, cancelButton);
 			}
@@ -652,7 +717,7 @@ export class Dialog extends Disposable {
 			// "One of the following sets of concise commands: Yes/No, Yes/No/Cancel, [Do it]/Cancel,
 			//  [Do it]/[Don't do it], [Do it]/[Don't do it]/Cancel."
 
-			if (typeof cancelId === 'number' && buttonMap[cancelId]) {
+			if (typeof cancelId === "number" && buttonMap[cancelId]) {
 				const cancelButton = buttonMap.splice(cancelId, 1)[0];
 				buttonMap.push(cancelButton);
 			}

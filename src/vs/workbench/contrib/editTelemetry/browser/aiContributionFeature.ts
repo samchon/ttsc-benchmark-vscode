@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, DisposableStore } from '../../../../base/common/lifecycle.js';
-import { ResourceMap } from '../../../../base/common/map.js';
-import { autorun } from '../../../../base/common/observable.js';
-import { URI, UriComponents } from '../../../../base/common/uri.js';
-import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
-import { AnnotatedDocument, IAnnotatedDocuments } from './helpers/annotatedDocuments.js';
-import { createDocWithJustReason } from './helpers/documentWithAnnotatedEdits.js';
-import { DocumentEditSourceTracker } from './telemetry/editTracker.js';
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { autorun } from "../../../../base/common/observable.js";
+import { URI, UriComponents } from "../../../../base/common/uri.js";
+import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+import { AnnotatedDocument, IAnnotatedDocuments } from "./helpers/annotatedDocuments.js";
+import { createDocWithJustReason } from "./helpers/documentWithAnnotatedEdits.js";
+import { DocumentEditSourceTracker } from "./telemetry/editTracker.js";
 
-export type AiContributionLevel = 'chatAndAgent' | 'all';
+export type AiContributionLevel = "chatAndAgent" | "all";
 
 interface TrackerEntry {
 	readonly trackerStore: DisposableStore;
@@ -55,17 +55,32 @@ export class AiContributionFeature extends Disposable {
 			}
 		}));
 
-		this._register(CommandsRegistry.registerCommand('_aiEdits.hasAiContributions', (_accessor, resources: UriComponents[], level: AiContributionLevel) => {
-			return this._hasAiContributions(resources, level);
-		}));
+		this._register(
+      CommandsRegistry.registerCommand(
+        "_aiEdits.hasAiContributions",
+        (_accessor, resources: UriComponents[], level: AiContributionLevel) => {
+          return this._hasAiContributions(resources, level);
+        },
+      ),
+    );
 
-		this._register(CommandsRegistry.registerCommand('_aiEdits.clearAiContributions', (_accessor, resources: UriComponents[]) => {
-			this._clearAiContributions(resources);
-		}));
+		this._register(
+      CommandsRegistry.registerCommand(
+        "_aiEdits.clearAiContributions",
+        (_accessor, resources: UriComponents[]) => {
+          this._clearAiContributions(resources);
+        },
+      ),
+    );
 
-		this._register(CommandsRegistry.registerCommand('_aiEdits.clearAllAiContributions', () => {
-			this._clearAiContributions();
-		}));
+		this._register(
+      CommandsRegistry.registerCommand(
+        "_aiEdits.clearAllAiContributions",
+        () => {
+          this._clearAiContributions();
+        },
+      ),
+    );
 	}
 
 	override dispose(): void {
@@ -77,8 +92,13 @@ export class AiContributionFeature extends Disposable {
 
 	private _createTrackerEntry(doc: AnnotatedDocument): TrackerEntry {
 		const trackerStore = new DisposableStore();
-		const docWithJustReason = createDocWithJustReason(doc.documentWithAnnotations, trackerStore);
-		const tracker = trackerStore.add(new DocumentEditSourceTracker(docWithJustReason, undefined));
+		const docWithJustReason = createDocWithJustReason(
+      doc.documentWithAnnotations,
+      trackerStore,
+    );
+		const tracker = trackerStore.add(
+      new DocumentEditSourceTracker(docWithJustReason, undefined),
+    );
 		return { trackerStore, tracker };
 	}
 
@@ -87,7 +107,7 @@ export class AiContributionFeature extends Disposable {
 			const entry = this._trackers.get(URI.revive(resource));
 			if (entry) {
 				for (const edit of entry.tracker.getTrackedRanges()) {
-					if (edit.source.category === 'ai' && (level === 'all' || edit.source.feature === 'chat')) {
+					if (edit.source.category === "ai" && (level === "all" || edit.source.feature === "chat")) {
 						return true;
 					}
 				}

@@ -3,19 +3,32 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../../../nls.js';
-import { CancellationToken, CancellationTokenSource } from '../../../../base/common/cancellation.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable, DisposableStore, IDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { IContextKey, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { IHostService } from '../../../services/host/browser/host.js';
-import { DeferredPromise } from '../../../../base/common/async.js';
-import { ISpeechService, ISpeechProvider, HasSpeechProvider, ISpeechToTextSession, SpeechToTextInProgress, KeywordRecognitionStatus, SpeechToTextStatus, speechLanguageConfigToLanguage, SPEECH_LANGUAGE_CONFIG, ITextToSpeechSession, TextToSpeechInProgress, TextToSpeechStatus } from '../common/speechService.js';
-import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { ExtensionsRegistry } from '../../../services/extensions/common/extensionsRegistry.js';
-import { IExtensionService } from '../../../services/extensions/common/extensions.js';
+import { localize } from "../../../../nls.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable, DisposableStore, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { IContextKey, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IHostService } from "../../../services/host/browser/host.js";
+import { DeferredPromise } from "../../../../base/common/async.js";
+import {
+  ISpeechService,
+  ISpeechProvider,
+  HasSpeechProvider,
+  ISpeechToTextSession,
+  SpeechToTextInProgress,
+  KeywordRecognitionStatus,
+  SpeechToTextStatus,
+  speechLanguageConfigToLanguage,
+  SPEECH_LANGUAGE_CONFIG,
+  ITextToSpeechSession,
+  TextToSpeechInProgress,
+  TextToSpeechStatus,
+} from "../common/speechService.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ExtensionsRegistry } from "../../../services/extensions/common/extensionsRegistry.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
 
 export interface ISpeechProviderDescriptor {
 	readonly name: string;
@@ -23,34 +36,36 @@ export interface ISpeechProviderDescriptor {
 }
 
 const speechProvidersExtensionPoint = ExtensionsRegistry.registerExtensionPoint<ISpeechProviderDescriptor[]>({
-	extensionPoint: 'speechProviders',
+	extensionPoint: "speechProviders",
 	jsonSchema: {
-		description: localize('vscode.extension.contributes.speechProvider', 'Contributes a Speech Provider'),
-		type: 'array',
+		description: localize("vscode.extension.contributes.speechProvider", "Contributes a Speech Provider"),
+		type: "array",
 		items: {
 			additionalProperties: false,
-			type: 'object',
-			defaultSnippets: [{ body: { name: '', description: '' } }],
-			required: ['name'],
+			type: "object",
+			defaultSnippets: [{ body: { name: "", description: "" } }],
+			required: ["name"],
 			properties: {
 				name: {
-					description: localize('speechProviderName', "Unique name for this Speech Provider."),
-					type: 'string'
+					description: localize("speechProviderName", "Unique name for this Speech Provider."),
+					type: "string",
 				},
 				description: {
-					description: localize('speechProviderDescription', "A description of this Speech Provider, shown in the UI."),
-					type: 'string'
-				}
-			}
-		}
-	}
+					description: localize("speechProviderDescription", "A description of this Speech Provider, shown in the UI."),
+					type: "string",
+				},
+			},
+		},
+	},
 });
 
 export class SpeechService extends Disposable implements ISpeechService {
 
 	readonly _serviceBrand: undefined;
 
-	private readonly _onDidChangeHasSpeechProvider = this._register(new Emitter<void>());
+	private readonly _onDidChangeHasSpeechProvider = this._register(
+    new Emitter<void>(),
+  );
 	readonly onDidChangeHasSpeechProvider = this._onDidChangeHasSpeechProvider.event;
 
 	get hasSpeechProvider() { return this.providerDescriptors.size > 0 || this.providers.size > 0; }
@@ -66,13 +81,17 @@ export class SpeechService extends Disposable implements ISpeechService {
 		@IHostService private readonly hostService: IHostService,
 		@ITelemetryService private readonly telemetryService: ITelemetryService,
 		@IConfigurationService private readonly configurationService: IConfigurationService,
-		@IExtensionService private readonly extensionService: IExtensionService
+		@IExtensionService private readonly extensionService: IExtensionService,
 	) {
 		super();
 
 		this.hasSpeechProviderContext = HasSpeechProvider.bindTo(contextKeyService);
-		this.textToSpeechInProgress = TextToSpeechInProgress.bindTo(contextKeyService);
-		this.speechToTextInProgress = SpeechToTextInProgress.bindTo(contextKeyService);
+		this.textToSpeechInProgress = TextToSpeechInProgress.bindTo(
+      contextKeyService,
+    );
+		this.speechToTextInProgress = SpeechToTextInProgress.bindTo(
+      contextKeyService,
+    );
 
 		this.handleAndRegisterSpeechExtensions();
 	}
@@ -101,7 +120,9 @@ export class SpeechService extends Disposable implements ISpeechService {
 
 	registerSpeechProvider(identifier: string, provider: ISpeechProvider): IDisposable {
 		if (this.providers.has(identifier)) {
-			throw new Error(`Speech provider with identifier ${identifier} is already registered.`);
+			throw new Error(
+        `Speech provider with identifier ${identifier} is already registered.`,
+      );
 		}
 
 		const oldHasSpeechProvider = this.hasSpeechProvider;
@@ -131,10 +152,14 @@ export class SpeechService extends Disposable implements ISpeechService {
 
 	//#region Speech to Text
 
-	private readonly _onDidStartSpeechToTextSession = this._register(new Emitter<void>());
+	private readonly _onDidStartSpeechToTextSession = this._register(
+    new Emitter<void>(),
+  );
 	readonly onDidStartSpeechToTextSession = this._onDidStartSpeechToTextSession.event;
 
-	private readonly _onDidEndSpeechToTextSession = this._register(new Emitter<void>());
+	private readonly _onDidEndSpeechToTextSession = this._register(
+    new Emitter<void>(),
+  );
 	readonly onDidEndSpeechToTextSession = this._onDidEndSpeechToTextSession.event;
 
 	private activeSpeechToTextSessions = 0;
@@ -142,11 +167,16 @@ export class SpeechService extends Disposable implements ISpeechService {
 
 	private readonly speechToTextInProgress: IContextKey<boolean>;
 
-	async createSpeechToTextSession(token: CancellationToken, context: string = 'speech'): Promise<ISpeechToTextSession> {
+	async createSpeechToTextSession(token: CancellationToken, context: string = "speech"): Promise<ISpeechToTextSession> {
 		const provider = await this.getProvider();
 
-		const language = speechLanguageConfigToLanguage(this.configurationService.getValue<unknown>(SPEECH_LANGUAGE_CONFIG));
-		const session = provider.createSpeechToTextSession(token, typeof language === 'string' ? { language } : undefined);
+		const language = speechLanguageConfigToLanguage(
+      this.configurationService.getValue<unknown>(SPEECH_LANGUAGE_CONFIG),
+    );
+		const session = provider.createSpeechToTextSession(
+      token,
+      typeof language === "string" ? { language } : undefined,
+    );
 
 		const sessionStart = Date.now();
 		let sessionRecognized = false;
@@ -156,21 +186,24 @@ export class SpeechService extends Disposable implements ISpeechService {
 		const disposables = new DisposableStore();
 
 		const onSessionStoppedOrCanceled = () => {
-			this.activeSpeechToTextSessions = Math.max(0, this.activeSpeechToTextSessions - 1);
+			this.activeSpeechToTextSessions = Math.max(
+        0,
+        this.activeSpeechToTextSessions - 1,
+      );
 			if (!this.hasActiveSpeechToTextSession) {
 				this.speechToTextInProgress.reset();
 			}
 			this._onDidEndSpeechToTextSession.fire();
 
 			type SpeechToTextSessionClassification = {
-				owner: 'bpasero';
-				comment: 'An event that fires when a speech to text session is created';
-				context: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Context of the session.' };
-				sessionDuration: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Duration of the session.' };
-				sessionRecognized: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'If speech was recognized.' };
-				sessionError: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'If speech resulted in error.' };
-				sessionContentLength: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Length of the recognized text.' };
-				sessionLanguage: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Configured language for the session.' };
+				owner: "bpasero";
+				comment: "An event that fires when a speech to text session is created";
+				context: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Context of the session." };
+				sessionDuration: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Duration of the session." };
+				sessionRecognized: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "If speech was recognized." };
+				sessionError: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "If speech resulted in error." };
+				sessionContentLength: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Length of the recognized text." };
+				sessionLanguage: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Configured language for the session." };
 			};
 			type SpeechToTextSessionEvent = {
 				context: string;
@@ -180,19 +213,24 @@ export class SpeechService extends Disposable implements ISpeechService {
 				sessionContentLength: number;
 				sessionLanguage: string;
 			};
-			this.telemetryService.publicLog2<SpeechToTextSessionEvent, SpeechToTextSessionClassification>('speechToTextSession', {
-				context,
-				sessionDuration: Date.now() - sessionStart,
-				sessionRecognized,
-				sessionError,
-				sessionContentLength,
-				sessionLanguage: language
-			});
+			this.telemetryService.publicLog2<SpeechToTextSessionEvent, SpeechToTextSessionClassification>(
+        "speechToTextSession",
+        {
+          context,
+          sessionDuration: Date.now() - sessionStart,
+          sessionRecognized,
+          sessionError,
+          sessionContentLength,
+          sessionLanguage: language,
+        },
+      );
 
 			disposables.dispose();
 		};
 
-		disposables.add(token.onCancellationRequested(() => onSessionStoppedOrCanceled()));
+		disposables.add(
+      token.onCancellationRequested(() => onSessionStoppedOrCanceled()),
+    );
 		if (token.isCancellationRequested) {
 			onSessionStoppedOrCanceled();
 		}
@@ -208,7 +246,7 @@ export class SpeechService extends Disposable implements ISpeechService {
 					sessionRecognized = true;
 					break;
 				case SpeechToTextStatus.Recognized:
-					if (typeof e.text === 'string') {
+					if (typeof e.text === "string") {
 						sessionContentLength += e.text.length;
 					}
 					break;
@@ -228,13 +266,15 @@ export class SpeechService extends Disposable implements ISpeechService {
 	private async getProvider(): Promise<ISpeechProvider> {
 
 		// Send out extension activation to ensure providers can register
-		await this.extensionService.activateByEvent('onSpeech');
+		await this.extensionService.activateByEvent("onSpeech");
 
 		const provider = Array.from(this.providers.values()).at(0);
 		if (!provider) {
 			throw new Error(`No Speech provider is registered.`);
 		} else if (this.providers.size > 1) {
-			this.logService.warn(`Multiple speech providers registered. Picking first one: ${provider.metadata.displayName}`);
+			this.logService.warn(
+        `Multiple speech providers registered. Picking first one: ${provider.metadata.displayName}`,
+      );
 		}
 
 		return provider;
@@ -244,10 +284,14 @@ export class SpeechService extends Disposable implements ISpeechService {
 
 	//#region Text to Speech
 
-	private readonly _onDidStartTextToSpeechSession = this._register(new Emitter<void>());
+	private readonly _onDidStartTextToSpeechSession = this._register(
+    new Emitter<void>(),
+  );
 	readonly onDidStartTextToSpeechSession = this._onDidStartTextToSpeechSession.event;
 
-	private readonly _onDidEndTextToSpeechSession = this._register(new Emitter<void>());
+	private readonly _onDidEndTextToSpeechSession = this._register(
+    new Emitter<void>(),
+  );
 	readonly onDidEndTextToSpeechSession = this._onDidEndTextToSpeechSession.event;
 
 	private activeTextToSpeechSessions = 0;
@@ -255,11 +299,16 @@ export class SpeechService extends Disposable implements ISpeechService {
 
 	private readonly textToSpeechInProgress: IContextKey<boolean>;
 
-	async createTextToSpeechSession(token: CancellationToken, context: string = 'speech'): Promise<ITextToSpeechSession> {
+	async createTextToSpeechSession(token: CancellationToken, context: string = "speech"): Promise<ITextToSpeechSession> {
 		const provider = await this.getProvider();
 
-		const language = speechLanguageConfigToLanguage(this.configurationService.getValue<unknown>(SPEECH_LANGUAGE_CONFIG));
-		const session = provider.createTextToSpeechSession(token, typeof language === 'string' ? { language } : undefined);
+		const language = speechLanguageConfigToLanguage(
+      this.configurationService.getValue<unknown>(SPEECH_LANGUAGE_CONFIG),
+    );
+		const session = provider.createTextToSpeechSession(
+      token,
+      typeof language === "string" ? { language } : undefined,
+    );
 
 		const sessionStart = Date.now();
 		let sessionError = false;
@@ -267,19 +316,22 @@ export class SpeechService extends Disposable implements ISpeechService {
 		const disposables = new DisposableStore();
 
 		const onSessionStoppedOrCanceled = (dispose: boolean) => {
-			this.activeTextToSpeechSessions = Math.max(0, this.activeTextToSpeechSessions - 1);
+			this.activeTextToSpeechSessions = Math.max(
+        0,
+        this.activeTextToSpeechSessions - 1,
+      );
 			if (!this.hasActiveTextToSpeechSession) {
 				this.textToSpeechInProgress.reset();
 			}
 			this._onDidEndTextToSpeechSession.fire();
 
 			type TextToSpeechSessionClassification = {
-				owner: 'bpasero';
-				comment: 'An event that fires when a text to speech session is created';
-				context: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Context of the session.' };
-				sessionDuration: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Duration of the session.' };
-				sessionError: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'If speech resulted in error.' };
-				sessionLanguage: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Configured language for the session.' };
+				owner: "bpasero";
+				comment: "An event that fires when a text to speech session is created";
+				context: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Context of the session." };
+				sessionDuration: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Duration of the session." };
+				sessionError: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "If speech resulted in error." };
+				sessionLanguage: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Configured language for the session." };
 			};
 			type TextToSpeechSessionEvent = {
 				context: string;
@@ -287,19 +339,24 @@ export class SpeechService extends Disposable implements ISpeechService {
 				sessionError: boolean;
 				sessionLanguage: string;
 			};
-			this.telemetryService.publicLog2<TextToSpeechSessionEvent, TextToSpeechSessionClassification>('textToSpeechSession', {
-				context,
-				sessionDuration: Date.now() - sessionStart,
-				sessionError,
-				sessionLanguage: language
-			});
+			this.telemetryService.publicLog2<TextToSpeechSessionEvent, TextToSpeechSessionClassification>(
+        "textToSpeechSession",
+        {
+          context,
+          sessionDuration: Date.now() - sessionStart,
+          sessionError,
+          sessionLanguage: language,
+        },
+      );
 
 			if (dispose) {
 				disposables.dispose();
 			}
 		};
 
-		disposables.add(token.onCancellationRequested(() => onSessionStoppedOrCanceled(true)));
+		disposables.add(
+      token.onCancellationRequested(() => onSessionStoppedOrCanceled(true)),
+    );
 		if (token.isCancellationRequested) {
 			onSessionStoppedOrCanceled(true);
 		}
@@ -328,10 +385,14 @@ export class SpeechService extends Disposable implements ISpeechService {
 
 	//#region Keyword Recognition
 
-	private readonly _onDidStartKeywordRecognition = this._register(new Emitter<void>());
+	private readonly _onDidStartKeywordRecognition = this._register(
+    new Emitter<void>(),
+  );
 	readonly onDidStartKeywordRecognition = this._onDidStartKeywordRecognition.event;
 
-	private readonly _onDidEndKeywordRecognition = this._register(new Emitter<void>());
+	private readonly _onDidEndKeywordRecognition = this._register(
+    new Emitter<void>(),
+  );
 	readonly onDidEndKeywordRecognition = this._onDidEndKeywordRecognition.event;
 
 	private activeKeywordRecognitionSessions = 0;
@@ -341,10 +402,12 @@ export class SpeechService extends Disposable implements ISpeechService {
 		const result = new DeferredPromise<KeywordRecognitionStatus>();
 
 		const disposables = new DisposableStore();
-		disposables.add(token.onCancellationRequested(() => {
-			disposables.dispose();
-			result.complete(KeywordRecognitionStatus.Canceled);
-		}));
+		disposables.add(
+      token.onCancellationRequested(() => {
+        disposables.dispose();
+        result.complete(KeywordRecognitionStatus.Canceled);
+      }),
+    );
 
 		const recognizeKeywordDisposables = disposables.add(new DisposableStore());
 		let activeRecognizeKeywordSession: Promise<void> | undefined = undefined;
@@ -385,16 +448,19 @@ export class SpeechService extends Disposable implements ISpeechService {
 		}
 
 		type KeywordRecognitionClassification = {
-			owner: 'bpasero';
-			comment: 'An event that fires when a speech keyword detection is started';
-			keywordRecognized: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'If the keyword was recognized.' };
+			owner: "bpasero";
+			comment: "An event that fires when a speech keyword detection is started";
+			keywordRecognized: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "If the keyword was recognized." };
 		};
 		type KeywordRecognitionEvent = {
 			keywordRecognized: boolean;
 		};
-		this.telemetryService.publicLog2<KeywordRecognitionEvent, KeywordRecognitionClassification>('keywordRecognition', {
-			keywordRecognized: status === KeywordRecognitionStatus.Recognized
-		});
+		this.telemetryService.publicLog2<KeywordRecognitionEvent, KeywordRecognitionClassification>(
+      "keywordRecognition",
+      {
+        keywordRecognized: status === KeywordRecognitionStatus.Recognized,
+      },
+    );
 
 		return status;
 	}
@@ -409,13 +475,18 @@ export class SpeechService extends Disposable implements ISpeechService {
 		const disposables = new DisposableStore();
 
 		const onSessionStoppedOrCanceled = () => {
-			this.activeKeywordRecognitionSessions = Math.max(0, this.activeKeywordRecognitionSessions - 1);
+			this.activeKeywordRecognitionSessions = Math.max(
+        0,
+        this.activeKeywordRecognitionSessions - 1,
+      );
 			this._onDidEndKeywordRecognition.fire();
 
 			disposables.dispose();
 		};
 
-		disposables.add(token.onCancellationRequested(() => onSessionStoppedOrCanceled()));
+		disposables.add(
+      token.onCancellationRequested(() => onSessionStoppedOrCanceled()),
+    );
 		if (token.isCancellationRequested) {
 			onSessionStoppedOrCanceled();
 		}

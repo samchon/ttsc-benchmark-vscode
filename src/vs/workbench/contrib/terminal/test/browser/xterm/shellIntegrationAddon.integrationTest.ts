@@ -3,30 +3,30 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { Terminal } from '@xterm/xterm';
-import { deepStrictEqual, fail, strictEqual } from 'assert';
-import { importAMDNodeModule } from '../../../../../../amdX.js';
-import { getActiveDocument } from '../../../../../../base/browser/dom.js';
-import { timeout } from '../../../../../../base/common/async.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../../base/test/common/utils.js';
-import { TestConfigurationService } from '../../../../../../platform/configuration/test/common/testConfigurationService.js';
-import { NullLogService } from '../../../../../../platform/log/common/log.js';
-import { TerminalCapability, type ICommandDetectionCapability } from '../../../../../../platform/terminal/common/capabilities/capabilities.js';
-import type { TerminalCapabilityStore } from '../../../../../../platform/terminal/common/capabilities/terminalCapabilityStore.js';
-import { ShellIntegrationAddon } from '../../../../../../platform/terminal/common/xterm/shellIntegrationAddon.js';
-import { workbenchInstantiationService, type TestTerminalConfigurationService } from '../../../../../test/browser/workbenchTestServices.js';
-import { ITerminalConfigurationService } from '../../../../terminal/browser/terminal.js';
-import { TestXtermLogger } from '../../../../../../platform/terminal/test/common/terminalTestHelpers.js';
+import type { Terminal } from "@xterm/xterm";
+import { deepStrictEqual, fail, strictEqual } from "assert";
+import { importAMDNodeModule } from "../../../../../../amdX.js";
+import { getActiveDocument } from "../../../../../../base/browser/dom.js";
+import { timeout } from "../../../../../../base/common/async.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../../base/test/common/utils.js";
+import { TestConfigurationService } from "../../../../../../platform/configuration/test/common/testConfigurationService.js";
+import { NullLogService } from "../../../../../../platform/log/common/log.js";
+import { TerminalCapability, type ICommandDetectionCapability } from "../../../../../../platform/terminal/common/capabilities/capabilities.js";
+import type { TerminalCapabilityStore } from "../../../../../../platform/terminal/common/capabilities/terminalCapabilityStore.js";
+import { ShellIntegrationAddon } from "../../../../../../platform/terminal/common/xterm/shellIntegrationAddon.js";
+import { workbenchInstantiationService, type TestTerminalConfigurationService } from "../../../../../test/browser/workbenchTestServices.js";
+import { ITerminalConfigurationService } from "../../../../terminal/browser/terminal.js";
+import { TestXtermLogger } from "../../../../../../platform/terminal/test/common/terminalTestHelpers.js";
 
-import { NullTelemetryService } from '../../../../../../platform/telemetry/common/telemetryUtils.js';
-import { events as rich_windows11_pwsh7_echo_3_times } from './recordings/rich/windows11_pwsh7_echo_3_times.js';
-import { events as rich_windows11_pwsh7_ls_one_time } from './recordings/rich/windows11_pwsh7_ls_one_time.js';
-import { events as rich_windows11_pwsh7_type_foo } from './recordings/rich/windows11_pwsh7_type_foo.js';
-import { events as rich_windows11_pwsh7_type_foo_left_twice } from './recordings/rich/windows11_pwsh7_type_foo_left_twice.js';
-import { events as rich_macos_zsh_omz_echo_3_times } from './recordings/rich/macos_zsh_omz_echo_3_times.js';
-import { events as rich_macos_zsh_omz_ls_one_time } from './recordings/rich/macos_zsh_omz_ls_one_time.js';
-import { events as basic_macos_zsh_p10k_ls_one_time } from './recordings/basic/macos_zsh_p10k_ls_one_time.js';
-import type { ITerminalConfiguration } from '../../../common/terminal.js';
+import { NullTelemetryService } from "../../../../../../platform/telemetry/common/telemetryUtils.js";
+import { events as rich_windows11_pwsh7_echo_3_times } from "./recordings/rich/windows11_pwsh7_echo_3_times.js";
+import { events as rich_windows11_pwsh7_ls_one_time } from "./recordings/rich/windows11_pwsh7_ls_one_time.js";
+import { events as rich_windows11_pwsh7_type_foo } from "./recordings/rich/windows11_pwsh7_type_foo.js";
+import { events as rich_windows11_pwsh7_type_foo_left_twice } from "./recordings/rich/windows11_pwsh7_type_foo_left_twice.js";
+import { events as rich_macos_zsh_omz_echo_3_times } from "./recordings/rich/macos_zsh_omz_echo_3_times.js";
+import { events as rich_macos_zsh_omz_ls_one_time } from "./recordings/rich/macos_zsh_omz_ls_one_time.js";
+import { events as basic_macos_zsh_p10k_ls_one_time } from "./recordings/basic/macos_zsh_p10k_ls_one_time.js";
+import type { ITerminalConfiguration } from "../../../common/terminal.js";
 
 // These are test cases recorded with the `Developer: Record Terminal Session` command. Once that is
 // run, a terminal is created and the test case is manually executed. After nothing happens for a
@@ -57,63 +57,66 @@ type RecordedTestCase = {
 };
 const recordedTestCases: RecordedTestCase[] = [
 	{
-		name: 'rich_windows11_pwsh7_echo_3_times',
+		name: "rich_windows11_pwsh7_echo_3_times",
 		events: rich_windows11_pwsh7_echo_3_times as unknown as RecordedSessionEvent[],
 		finalAssertions: (commandDetection: ICommandDetectionCapability | undefined) => {
-			assertCommandDetectionState(commandDetection, ['echo a', 'echo b', 'echo c'], '|');
-		}
+			assertCommandDetectionState(commandDetection, ["echo a", "echo b", "echo c"], "|");
+		},
 	},
 	{
-		name: 'rich_windows11_pwsh7_ls_one_time',
+		name: "rich_windows11_pwsh7_ls_one_time",
 		events: rich_windows11_pwsh7_ls_one_time as unknown as RecordedSessionEvent[],
 		finalAssertions: (commandDetection: ICommandDetectionCapability | undefined) => {
-			assertCommandDetectionState(commandDetection, ['ls'], '|');
-		}
+			assertCommandDetectionState(commandDetection, ["ls"], "|");
+		},
 	},
 	{
-		name: 'rich_windows11_pwsh7_type_foo',
+		name: "rich_windows11_pwsh7_type_foo",
 		events: rich_windows11_pwsh7_type_foo as unknown as RecordedSessionEvent[],
 		finalAssertions: (commandDetection: ICommandDetectionCapability | undefined) => {
-			assertCommandDetectionState(commandDetection, [], 'foo|');
-		}
+			assertCommandDetectionState(commandDetection, [], "foo|");
+		},
 	},
 	{
-		name: 'rich_windows11_pwsh7_type_foo_left_twice',
+		name: "rich_windows11_pwsh7_type_foo_left_twice",
 		events: rich_windows11_pwsh7_type_foo_left_twice as unknown as RecordedSessionEvent[],
 		finalAssertions: (commandDetection: ICommandDetectionCapability | undefined) => {
-			assertCommandDetectionState(commandDetection, [], 'f|oo');
-		}
+			assertCommandDetectionState(commandDetection, [], "f|oo");
+		},
 	},
 	{
-		name: 'rich_macos_zsh_omz_echo_3_times',
+		name: "rich_macos_zsh_omz_echo_3_times",
 		events: rich_macos_zsh_omz_echo_3_times as unknown as RecordedSessionEvent[],
 		finalAssertions: (commandDetection: ICommandDetectionCapability | undefined) => {
-			assertCommandDetectionState(commandDetection, ['echo a', 'echo b', 'echo c'], '|');
-		}
+			assertCommandDetectionState(commandDetection, ["echo a", "echo b", "echo c"], "|");
+		},
 	},
 	{
-		name: 'rich_macos_zsh_omz_ls_one_time',
+		name: "rich_macos_zsh_omz_ls_one_time",
 		events: rich_macos_zsh_omz_ls_one_time as unknown as RecordedSessionEvent[],
 		finalAssertions: (commandDetection: ICommandDetectionCapability | undefined) => {
-			assertCommandDetectionState(commandDetection, ['ls'], '|');
-		}
+			assertCommandDetectionState(commandDetection, ["ls"], "|");
+		},
 	},
 	{
-		name: 'basic_macos_zsh_p10k_ls_one_time',
+		name: "basic_macos_zsh_p10k_ls_one_time",
 		events: basic_macos_zsh_p10k_ls_one_time as unknown as RecordedSessionEvent[],
 		finalAssertions: (commandDetection: ICommandDetectionCapability | undefined) => {
 			// Prompt input model doesn't work for p10k yet
 			// Assert a single command has completed
-			deepStrictEqual(commandDetection!.commands.map(e => e.command), ['']);
-		}
+			deepStrictEqual(commandDetection!.commands.map(e => e.command), [""]);
+		},
 	},
 ];
 function assertCommandDetectionState(commandDetection: ICommandDetectionCapability | undefined, commands: string[], promptInput: string) {
 	if (!commandDetection) {
-		fail('Command detection must be set');
+		fail("Command detection must be set");
 	}
 	deepStrictEqual(commandDetection!.commands.map(e => e.command), commands);
-	strictEqual(commandDetection!.promptInputModel.getCombinedString(), promptInput);
+	strictEqual(
+    commandDetection!.promptInputModel.getCombinedString(),
+    promptInput,
+  );
 }
 
 type RecordedSessionEvent = (
@@ -123,22 +126,22 @@ type RecordedSessionEvent = (
 );
 
 interface IRecordedSessionTerminalEvent {
-	type: 'output' | 'input' | 'sendText' | 'promptInputChange';
+	type: "output" | "input" | "sendText" | "promptInputChange";
 	data: string;
 }
 
 interface IRecordedSessionCommandEvent {
-	type: 'command';
+	type: "command";
 	id: string;
 }
 
 interface IRecordedSessionResizeEvent {
-	type: 'resize';
+	type: "resize";
 	cols: number;
 	rows: number;
 }
 
-suite('Terminal Contrib Shell Integration Recordings', () => {
+suite("Terminal Contrib Shell Integration Recordings", () => {
 	const store = ensureNoDisposablesAreLeakedInTestSuite();
 
 	let xterm: Terminal;
@@ -147,22 +150,22 @@ suite('Terminal Contrib Shell Integration Recordings', () => {
 	setup(async () => {
 		const terminalConfig = {
 			integrated: {
-			}
+			},
 		};
 		const instantiationService = workbenchInstantiationService({
 			configurationService: () => new TestConfigurationService({
 				files: { autoSave: false },
 				terminal: terminalConfig,
-				editor: { fontSize: 14, fontFamily: 'Arial', lineHeight: 12, fontWeight: 'bold' }
-			})
+				editor: { fontSize: 14, fontFamily: "Arial", lineHeight: 12, fontWeight: "bold" },
+			}),
 		}, store);
 		const terminalConfigurationService = instantiationService.get(ITerminalConfigurationService) as TestTerminalConfigurationService;
 		terminalConfigurationService.setConfig(terminalConfig as unknown as Partial<ITerminalConfiguration>);
-		const shellIntegrationAddon = store.add(new ShellIntegrationAddon('', true, undefined, NullTelemetryService, new NullLogService));
-		const TerminalCtor = (await importAMDNodeModule<typeof import('@xterm/xterm')>('@xterm/xterm', 'lib/xterm.js')).Terminal;
+		const shellIntegrationAddon = store.add(new ShellIntegrationAddon("", true, undefined, NullTelemetryService, new NullLogService));
+		const TerminalCtor = (await importAMDNodeModule<typeof import("@xterm/xterm")>("@xterm/xterm", "lib/xterm.js")).Terminal;
 		xterm = store.add(new TerminalCtor({ allowProposedApi: true, logger: TestXtermLogger }));
 		capabilities = shellIntegrationAddon.capabilities;
-		const testContainer = document.createElement('div');
+		const testContainer = document.createElement("div");
 		getActiveDocument().body.append(testContainer);
 
 		xterm.open(testContainer);
@@ -184,13 +187,13 @@ suite('Terminal Contrib Shell Integration Recordings', () => {
 				// );
 				// console.log('promptInputModel', capabilities.get(TerminalCapability.CommandDetection)?.promptInputModel.getCombinedString());
 				switch (event.type) {
-					case 'resize': {
+					case "resize": {
 						xterm.resize(event.cols, event.rows);
 						break;
 					}
-					case 'output': {
+					case "output": {
 						const promises: Promise<unknown>[] = [];
-						if (event.data.includes('\x1b]633;B')) {
+						if (event.data.includes("\x1b]633;B")) {
 							// If the output contains the command start sequence, allow time for the prompt to get
 							// adjusted.
 							promises.push(new Promise<void>(r => {
@@ -207,15 +210,15 @@ suite('Terminal Contrib Shell Integration Recordings', () => {
 						await Promise.all(promises);
 						break;
 					}
-					case 'input': {
+					case "input": {
 						xterm.input(event.data, true);
 						break;
 					}
-					case 'promptInputChange': {
+					case "promptInputChange": {
 						// Ignore this event if it's followed by another promptInputChange as that
 						// means this one isn't important and could cause a race condition in the
 						// test
-						if (testCase.events.length > i + 1 && testCase.events[i + 1].type === 'promptInputChange') {
+						if (testCase.events.length > i + 1 && testCase.events[i + 1].type === "promptInputChange") {
 							continue;
 						}
 						const promptInputModel = capabilities.get(TerminalCapability.CommandDetection)?.promptInputModel;
@@ -229,7 +232,7 @@ suite('Terminal Contrib Shell Integration Recordings', () => {
 											r();
 										}
 									});
-								})
+								}),
 							]);
 						}
 						break;

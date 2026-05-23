@@ -3,31 +3,51 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from '../../../../../../base/common/buffer.js';
-import { CancellationToken } from '../../../../../../base/common/cancellation.js';
-import { Event } from '../../../../../../base/common/event.js';
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { ResourceMap } from '../../../../../../base/common/map.js';
-import { ReadableStreamEvents } from '../../../../../../base/common/stream.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { FileSystemProviderCapabilities, FileType, IFileChange, IFileDeleteOptions, IFileOpenOptions, IFileOverwriteOptions, IFileReadStreamOptions, IFileService, IFileSystemProvider, IFileWriteOptions, IStat, IWatchOptions } from '../../../../../../platform/files/common/files.js';
-import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { IWorkbenchContribution } from '../../../../../common/contributions.js';
-import { IChatEditingService } from '../../../common/editing/chatEditingService.js';
-import { LocalChatSessionUri } from '../../../common/model/chatUri.js';
-import { ChatEditingNotebookSnapshotScheme } from './chatEditingModifiedNotebookSnapshot.js';
+import { VSBuffer } from "../../../../../../base/common/buffer.js";
+import { CancellationToken } from "../../../../../../base/common/cancellation.js";
+import { Event } from "../../../../../../base/common/event.js";
+import { Disposable, IDisposable } from "../../../../../../base/common/lifecycle.js";
+import { ResourceMap } from "../../../../../../base/common/map.js";
+import { ReadableStreamEvents } from "../../../../../../base/common/stream.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import {
+  FileSystemProviderCapabilities,
+  FileType,
+  IFileChange,
+  IFileDeleteOptions,
+  IFileOpenOptions,
+  IFileOverwriteOptions,
+  IFileReadStreamOptions,
+  IFileService,
+  IFileSystemProvider,
+  IFileWriteOptions,
+  IStat,
+  IWatchOptions,
+} from "../../../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { IWorkbenchContribution } from "../../../../../common/contributions.js";
+import { IChatEditingService } from "../../../common/editing/chatEditingService.js";
+import { LocalChatSessionUri } from "../../../common/model/chatUri.js";
+import { ChatEditingNotebookSnapshotScheme } from "./chatEditingModifiedNotebookSnapshot.js";
 
 
 export class ChatEditingNotebookFileSystemProviderContrib extends Disposable implements IWorkbenchContribution {
-	static ID = 'chatEditingNotebookFileSystemProviderContribution';
+	static ID = "chatEditingNotebookFileSystemProviderContribution";
 	constructor(
 		@IFileService private readonly fileService: IFileService,
 		@IInstantiationService instantiationService: IInstantiationService,
 	) {
 
 		super();
-		const fileSystemProvider = instantiationService.createInstance(ChatEditingNotebookFileSystemProvider);
-		this._register(this.fileService.registerProvider(ChatEditingNotebookSnapshotScheme, fileSystemProvider));
+		const fileSystemProvider = instantiationService.createInstance(
+      ChatEditingNotebookFileSystemProvider,
+    );
+		this._register(
+      this.fileService.registerProvider(
+        ChatEditingNotebookSnapshotScheme,
+        fileSystemProvider,
+      ),
+    );
 	}
 }
 
@@ -43,7 +63,7 @@ export class ChatEditingNotebookFileSystemProvider implements IFileSystemProvide
 				if (ChatEditingNotebookFileSystemProvider.registeredFiles.get(resource) === buffer) {
 					ChatEditingNotebookFileSystemProvider.registeredFiles.delete(resource);
 				}
-			}
+			},
 		};
 	}
 
@@ -56,67 +76,77 @@ export class ChatEditingNotebookFileSystemProvider implements IFileSystemProvide
 	}
 	async stat(_resource: URI): Promise<IStat> {
 		return {
-			type: FileType.File,
-			ctime: 0,
-			mtime: 0,
-			size: 0
-		};
+      type: FileType.File,
+      ctime: 0,
+      mtime: 0,
+      size: 0,
+    };
 	}
 	mkdir(_resource: URI): Promise<void> {
-		throw new Error('Method not implemented1.');
+		throw new Error("Method not implemented1.");
 	}
 	readdir(_resource: URI): Promise<[string, FileType][]> {
-		throw new Error('Method not implemented2.');
+		throw new Error("Method not implemented2.");
 	}
 	delete(_resource: URI, _opts: IFileDeleteOptions): Promise<void> {
-		throw new Error('Method not implemented3.');
+		throw new Error("Method not implemented3.");
 	}
 	rename(_from: URI, _to: URI, _opts: IFileOverwriteOptions): Promise<void> {
-		throw new Error('Method not implemented4.');
+		throw new Error("Method not implemented4.");
 	}
 	copy?(_from: URI, _to: URI, _opts: IFileOverwriteOptions): Promise<void> {
-		throw new Error('Method not implemented5.');
+		throw new Error("Method not implemented5.");
 	}
 	async readFile(resource: URI): Promise<Uint8Array> {
-		const buffer = ChatEditingNotebookFileSystemProvider.registeredFiles.get(resource);
+		const buffer = ChatEditingNotebookFileSystemProvider.registeredFiles.get(
+      resource,
+    );
 		if (buffer) {
 			return buffer.buffer;
 		}
-		const queryData = JSON.parse(resource.query) as ChatEditingSnapshotNotebookContentQueryData;
+		const queryData = JSON.parse(
+      resource.query,
+    ) as ChatEditingSnapshotNotebookContentQueryData;
 		if (!queryData.viewType) {
-			throw new Error('File not found, viewType not found');
+			throw new Error("File not found, viewType not found");
 		}
-		const session = this._chatEditingService.getEditingSession(LocalChatSessionUri.forSession(queryData.sessionId));
+		const session = this._chatEditingService.getEditingSession(
+      LocalChatSessionUri.forSession(queryData.sessionId),
+    );
 		if (!session || !queryData.requestId) {
-			throw new Error('File not found, session not found');
+			throw new Error("File not found, session not found");
 		}
-		const snapshotEntry = await session.getSnapshotContents(queryData.requestId, resource, queryData.undoStop || undefined);
+		const snapshotEntry = await session.getSnapshotContents(
+      queryData.requestId,
+      resource,
+      queryData.undoStop || undefined,
+    );
 		if (!snapshotEntry) {
-			throw new Error('File not found, snapshot not found');
+			throw new Error("File not found, snapshot not found");
 		}
 
 		return snapshotEntry.buffer;
 	}
 
 	writeFile?(__resource: URI, _content: Uint8Array, _opts: IFileWriteOptions): Promise<void> {
-		throw new Error('Method not implemented7.');
+		throw new Error("Method not implemented7.");
 	}
 	readFileStream?(__resource: URI, _opts: IFileReadStreamOptions, _token: CancellationToken): ReadableStreamEvents<Uint8Array> {
-		throw new Error('Method not implemented8.');
+		throw new Error("Method not implemented8.");
 	}
 	open?(__resource: URI, _opts: IFileOpenOptions): Promise<number> {
-		throw new Error('Method not implemented9.');
+		throw new Error("Method not implemented9.");
 	}
 	close?(_fd: number): Promise<void> {
-		throw new Error('Method not implemented10.');
+		throw new Error("Method not implemented10.");
 	}
 	read?(_fd: number, _pos: number, _data: Uint8Array, _offset: number, _length: number): Promise<number> {
-		throw new Error('Method not implemented11.');
+		throw new Error("Method not implemented11.");
 	}
 	write?(_fd: number, _pos: number, _data: Uint8Array, _offset: number, _length: number): Promise<number> {
-		throw new Error('Method not implemented12.');
+		throw new Error("Method not implemented12.");
 	}
 	cloneFile?(_from: URI, __to: URI): Promise<void> {
-		throw new Error('Method not implemented13.');
+		throw new Error("Method not implemented13.");
 	}
 }

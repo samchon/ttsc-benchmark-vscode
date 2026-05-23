@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { AbstractProgressScope, ScopedProgressIndicator } from '../../browser/progressIndicator.js';
-import { ProgressBar } from '../../../../../base/browser/ui/progressbar/progressbar.js';
+import assert from "assert";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { AbstractProgressScope, ScopedProgressIndicator } from "../../browser/progressIndicator.js";
+import { ProgressBar } from "../../../../../base/browser/ui/progressbar/progressbar.js";
 
 class TestProgressBar extends ProgressBar {
 	fTotal: number = 0;
@@ -64,7 +64,7 @@ class TestProgressBar extends ProgressBar {
 	override hide(): void { }
 }
 
-suite('Progress Indicator', () => {
+suite("Progress Indicator", () => {
 
 	const disposables = new DisposableStore();
 
@@ -72,10 +72,10 @@ suite('Progress Indicator', () => {
 		disposables.clear();
 	});
 
-	test('ScopedProgressIndicator', async () => {
-		const testProgressBar = disposables.add(new TestProgressBar(document.createElement('div')));
+	test("ScopedProgressIndicator", async () => {
+		const testProgressBar = disposables.add(new TestProgressBar(document.createElement("div")));
 		const progressScope = disposables.add(new class extends AbstractProgressScope {
-			constructor() { super('test.scopeId', true); }
+			constructor() { super("test.scopeId", true); }
 			testOnScopeOpened(scopeId: string) { super.onScopeOpened(scopeId); }
 			testOnScopeClosed(scopeId: string): void { super.onScopeClosed(scopeId); }
 		}());
@@ -99,19 +99,19 @@ suite('Progress Indicator', () => {
 		assert.strictEqual(true, testProgressBar.fDone);
 
 		// Inactive: Show (Infinite)
-		progressScope.testOnScopeClosed('test.scopeId');
+		progressScope.testOnScopeClosed("test.scopeId");
 		testObject.show(true);
 		assert.strictEqual(false, !!testProgressBar.fInfinite);
-		progressScope.testOnScopeOpened('test.scopeId');
+		progressScope.testOnScopeOpened("test.scopeId");
 		assert.strictEqual(true, testProgressBar.fInfinite);
 
 		// Inactive: Show (Total / Worked)
-		progressScope.testOnScopeClosed('test.scopeId');
+		progressScope.testOnScopeClosed("test.scopeId");
 		fn = testObject.show(100);
 		fn.total(80);
 		fn.worked(20);
 		assert.strictEqual(false, !!testProgressBar.fTotal);
-		progressScope.testOnScopeOpened('test.scopeId');
+		progressScope.testOnScopeOpened("test.scopeId");
 		assert.strictEqual(20, testProgressBar.fWorked);
 		assert.strictEqual(80, testProgressBar.fTotal);
 
@@ -119,11 +119,11 @@ suite('Progress Indicator', () => {
 		let p = Promise.resolve(null);
 		await testObject.showWhile(p);
 		assert.strictEqual(true, testProgressBar.fDone);
-		progressScope.testOnScopeClosed('test.scopeId');
+		progressScope.testOnScopeClosed("test.scopeId");
 		p = Promise.resolve(null);
 		await testObject.showWhile(p);
 		assert.strictEqual(true, testProgressBar.fDone);
-		progressScope.testOnScopeOpened('test.scopeId');
+		progressScope.testOnScopeOpened("test.scopeId");
 		assert.strictEqual(true, testProgressBar.fDone);
 	});
 

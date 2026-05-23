@@ -3,10 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { extUriBiasedIgnorePathCase } from '../../../base/common/resources.js';
-import { URI } from '../../../base/common/uri.js';
-import { ICodeWindow } from '../../window/electron-main/window.js';
-import { IResolvedWorkspace, ISingleFolderWorkspaceIdentifier, isSingleFolderWorkspaceIdentifier, isWorkspaceIdentifier, IWorkspaceIdentifier } from '../../workspace/common/workspace.js';
+import { extUriBiasedIgnorePathCase } from "../../../base/common/resources.js";
+import { URI } from "../../../base/common/uri.js";
+import { ICodeWindow } from "../../window/electron-main/window.js";
+import {
+  IResolvedWorkspace,
+  ISingleFolderWorkspaceIdentifier,
+  isSingleFolderWorkspaceIdentifier,
+  isWorkspaceIdentifier,
+  IWorkspaceIdentifier,
+} from "../../workspace/common/workspace.js";
 
 export async function findWindowOnFile(windows: ICodeWindow[], fileUri: URI, localWorkspaceResolver: (workspace: IWorkspaceIdentifier) => Promise<IResolvedWorkspace | undefined>): Promise<ICodeWindow | undefined> {
 
@@ -18,14 +24,22 @@ export async function findWindowOnFile(windows: ICodeWindow[], fileUri: URI, loc
 
 			// resolved workspace: folders are known and can be compared with
 			if (resolvedWorkspace) {
-				if (resolvedWorkspace.folders.some(folder => extUriBiasedIgnorePathCase.isEqualOrParent(fileUri, folder.uri))) {
+				if (resolvedWorkspace.folders.some(
+          folder => extUriBiasedIgnorePathCase.isEqualOrParent(
+            fileUri,
+            folder.uri,
+          ),
+        )) {
 					return window;
 				}
 			}
 
 			// unresolved: can only compare with workspace location
 			else {
-				if (extUriBiasedIgnorePathCase.isEqualOrParent(fileUri, workspace.configPath)) {
+				if (extUriBiasedIgnorePathCase.isEqualOrParent(
+          fileUri,
+          workspace.configPath,
+        )) {
 					return window;
 				}
 			}
@@ -33,9 +47,13 @@ export async function findWindowOnFile(windows: ICodeWindow[], fileUri: URI, loc
 	}
 
 	// Then go with single folder windows that are parent of the provided file path
-	const singleFolderWindowsOnFilePath = windows.filter(window => isSingleFolderWorkspaceIdentifier(window.openedWorkspace) && extUriBiasedIgnorePathCase.isEqualOrParent(fileUri, window.openedWorkspace.uri));
+	const singleFolderWindowsOnFilePath = windows.filter(
+    window => isSingleFolderWorkspaceIdentifier(window.openedWorkspace) && extUriBiasedIgnorePathCase.isEqualOrParent(fileUri, window.openedWorkspace.uri),
+  );
 	if (singleFolderWindowsOnFilePath.length) {
-		return singleFolderWindowsOnFilePath.sort((windowA, windowB) => -((windowA.openedWorkspace as ISingleFolderWorkspaceIdentifier).uri.path.length - (windowB.openedWorkspace as ISingleFolderWorkspaceIdentifier).uri.path.length))[0];
+		return singleFolderWindowsOnFilePath.sort(
+      (windowA, windowB) => -((windowA.openedWorkspace as ISingleFolderWorkspaceIdentifier).uri.path.length - (windowB.openedWorkspace as ISingleFolderWorkspaceIdentifier).uri.path.length),
+    )[0];
 	}
 
 	return undefined;
@@ -46,12 +64,22 @@ export function findWindowOnWorkspaceOrFolder(windows: ICodeWindow[], folderOrWo
 	for (const window of windows) {
 
 		// check for workspace config path
-		if (isWorkspaceIdentifier(window.openedWorkspace) && extUriBiasedIgnorePathCase.isEqual(window.openedWorkspace.configPath, folderOrWorkspaceConfigUri)) {
+		if (isWorkspaceIdentifier(
+      window.openedWorkspace,
+    ) && extUriBiasedIgnorePathCase.isEqual(
+      window.openedWorkspace.configPath,
+      folderOrWorkspaceConfigUri,
+    )) {
 			return window;
 		}
 
 		// check for folder path
-		if (isSingleFolderWorkspaceIdentifier(window.openedWorkspace) && extUriBiasedIgnorePathCase.isEqual(window.openedWorkspace.uri, folderOrWorkspaceConfigUri)) {
+		if (isSingleFolderWorkspaceIdentifier(
+      window.openedWorkspace,
+    ) && extUriBiasedIgnorePathCase.isEqual(
+      window.openedWorkspace.uri,
+      folderOrWorkspaceConfigUri,
+    )) {
 			return window;
 		}
 	}
@@ -63,7 +91,12 @@ export function findWindowOnWorkspaceOrFolder(windows: ICodeWindow[], folderOrWo
 export function findWindowOnExtensionDevelopmentPath(windows: ICodeWindow[], extensionDevelopmentPaths: string[]): ICodeWindow | undefined {
 
 	const matches = (uriString: string): boolean => {
-		return extensionDevelopmentPaths.some(path => extUriBiasedIgnorePathCase.isEqual(URI.file(path), URI.file(uriString)));
+		return extensionDevelopmentPaths.some(
+      path => extUriBiasedIgnorePathCase.isEqual(
+        URI.file(path),
+        URI.file(uriString),
+      ),
+    );
 	};
 
 	for (const window of windows) {

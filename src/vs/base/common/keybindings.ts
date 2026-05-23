@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { illegalArgument } from './errors.js';
-import { KeyCode, ScanCode } from './keyCodes.js';
-import { OperatingSystem } from './platform.js';
+import { illegalArgument } from "./errors.js";
+import { KeyCode, ScanCode } from "./keyCodes.js";
+import { OperatingSystem } from "./platform.js";
 
 /**
  * Binary encoding strategy:
@@ -29,7 +29,7 @@ const enum BinaryKeybindingsMask {
 }
 
 export function decodeKeybinding(keybinding: number | number[], OS: OperatingSystem): Keybinding | null {
-	if (typeof keybinding === 'number') {
+	if (typeof keybinding === "number") {
 		if (keybinding === 0) {
 			return null;
 		}
@@ -37,9 +37,9 @@ export function decodeKeybinding(keybinding: number | number[], OS: OperatingSys
 		const secondChord = (keybinding & 0xFFFF0000) >>> 16;
 		if (secondChord !== 0) {
 			return new Keybinding([
-				createSimpleKeybinding(firstChord, OS),
-				createSimpleKeybinding(secondChord, OS)
-			]);
+        createSimpleKeybinding(firstChord, OS),
+        createSimpleKeybinding(secondChord, OS),
+      ]);
 		}
 		return new Keybinding([createSimpleKeybinding(firstChord, OS)]);
 	} else {
@@ -83,7 +83,7 @@ export class KeyCodeChord implements Modifiers {
 		public readonly shiftKey: boolean,
 		public readonly altKey: boolean,
 		public readonly metaKey: boolean,
-		public readonly keyCode: KeyCode
+		public readonly keyCode: KeyCode,
 	) { }
 
 	public equals(other: Chord): boolean {
@@ -98,10 +98,10 @@ export class KeyCodeChord implements Modifiers {
 	}
 
 	public getHashCode(): string {
-		const ctrl = this.ctrlKey ? '1' : '0';
-		const shift = this.shiftKey ? '1' : '0';
-		const alt = this.altKey ? '1' : '0';
-		const meta = this.metaKey ? '1' : '0';
+		const ctrl = this.ctrlKey ? "1" : "0";
+		const shift = this.shiftKey ? "1" : "0";
+		const alt = this.altKey ? "1" : "0";
+		const meta = this.metaKey ? "1" : "0";
 		return `K${ctrl}${shift}${alt}${meta}${this.keyCode}`;
 	}
 
@@ -143,7 +143,7 @@ export class ScanCodeChord implements Modifiers {
 		public readonly shiftKey: boolean,
 		public readonly altKey: boolean,
 		public readonly metaKey: boolean,
-		public readonly scanCode: ScanCode
+		public readonly scanCode: ScanCode,
 	) { }
 
 	public equals(other: Chord): boolean {
@@ -158,10 +158,10 @@ export class ScanCodeChord implements Modifiers {
 	}
 
 	public getHashCode(): string {
-		const ctrl = this.ctrlKey ? '1' : '0';
-		const shift = this.shiftKey ? '1' : '0';
-		const alt = this.altKey ? '1' : '0';
-		const meta = this.metaKey ? '1' : '0';
+		const ctrl = this.ctrlKey ? "1" : "0";
+		const shift = this.shiftKey ? "1" : "0";
+		const alt = this.altKey ? "1" : "0";
+		const meta = this.metaKey ? "1" : "0";
 		return `S${ctrl}${shift}${alt}${meta}${this.scanCode}`;
 	}
 
@@ -195,10 +195,10 @@ export class Keybinding {
 	}
 
 	public getHashCode(): string {
-		let result = '';
+		let result = "";
 		for (let i = 0, len = this.chords.length; i < len; i++) {
 			if (i !== 0) {
-				result += ';';
+				result += ";";
 			}
 			result += this.chords[i].getHashCode();
 		}
@@ -228,11 +228,11 @@ export class ResolvedChord {
 		public readonly altKey: boolean,
 		public readonly metaKey: boolean,
 		public readonly keyLabel: string | null,
-		public readonly keyAriaLabel: string | null
+		public readonly keyAriaLabel: string | null,
 	) { }
 }
 
-export type SingleModifierChord = 'ctrl' | 'shift' | 'alt' | 'meta';
+export type SingleModifierChord = "ctrl" | "shift" | "alt" | "meta";
 
 /**
  * A resolved keybinding. Consists of one or multiple chords.

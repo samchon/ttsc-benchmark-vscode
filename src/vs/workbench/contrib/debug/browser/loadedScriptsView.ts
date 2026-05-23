@@ -3,45 +3,61 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IListVirtualDelegate } from '../../../../base/browser/ui/list/list.js';
-import { IListAccessibilityProvider } from '../../../../base/browser/ui/list/listWidget.js';
-import { TreeFindMode } from '../../../../base/browser/ui/tree/abstractTree.js';
-import type { ICompressedTreeNode } from '../../../../base/browser/ui/tree/compressedObjectTreeModel.js';
-import type { ICompressibleTreeRenderer } from '../../../../base/browser/ui/tree/objectTree.js';
-import { ITreeElement, ITreeFilter, ITreeNode, TreeFilterResult, TreeVisibility } from '../../../../base/browser/ui/tree/tree.js';
-import { RunOnceScheduler } from '../../../../base/common/async.js';
-import { Codicon } from '../../../../base/common/codicons.js';
-import { createMatches, FuzzyScore } from '../../../../base/common/filters.js';
-import { normalizeDriveLetter, tildify } from '../../../../base/common/labels.js';
-import { dispose, DisposableMap, DisposableStore } from '../../../../base/common/lifecycle.js';
-import { isAbsolute, normalize, posix } from '../../../../base/common/path.js';
-import { isWindows } from '../../../../base/common/platform.js';
-import { ltrim } from '../../../../base/common/strings.js';
-import { URI } from '../../../../base/common/uri.js';
-import * as nls from '../../../../nls.js';
-import { MenuId, registerAction2 } from '../../../../platform/actions/common/actions.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { ContextKeyExpr, IContextKey, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { IContextMenuService } from '../../../../platform/contextview/browser/contextView.js';
-import { FileKind } from '../../../../platform/files/common/files.js';
-import { IHoverService } from '../../../../platform/hover/browser/hover.js';
-import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
-import { ILabelService } from '../../../../platform/label/common/label.js';
-import { WorkbenchCompressibleObjectTree } from '../../../../platform/list/browser/listService.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
-import { IFileIconTheme, IThemeService } from '../../../../platform/theme/common/themeService.js';
-import { IWorkspaceContextService, IWorkspaceFolder } from '../../../../platform/workspace/common/workspace.js';
-import { IResourceLabel, IResourceLabelOptions, IResourceLabelProps, ResourceLabels } from '../../../browser/labels.js';
-import { ViewAction, ViewPane } from '../../../browser/parts/views/viewPane.js';
-import { IViewletViewOptions } from '../../../browser/parts/views/viewsViewlet.js';
-import { IViewDescriptorService } from '../../../common/views.js';
-import { IEditorService } from '../../../services/editor/common/editorService.js';
-import { IPathService } from '../../../services/path/common/pathService.js';
-import { CONTEXT_LOADED_SCRIPTS_ITEM_TYPE, IDebugService, IDebugSession, LOADED_SCRIPTS_VIEW_ID } from '../common/debug.js';
-import { DebugContentProvider } from '../common/debugContentProvider.js';
-import { Source } from '../common/debugSource.js';
-import { renderViewTree } from './baseDebugView.js';
+import { IListVirtualDelegate } from "../../../../base/browser/ui/list/list.js";
+import { IListAccessibilityProvider } from "../../../../base/browser/ui/list/listWidget.js";
+import { TreeFindMode } from "../../../../base/browser/ui/tree/abstractTree.js";
+import type { ICompressedTreeNode } from "../../../../base/browser/ui/tree/compressedObjectTreeModel.js";
+import type { ICompressibleTreeRenderer } from "../../../../base/browser/ui/tree/objectTree.js";
+import {
+  ITreeElement,
+  ITreeFilter,
+  ITreeNode,
+  TreeFilterResult,
+  TreeVisibility,
+} from "../../../../base/browser/ui/tree/tree.js";
+import { RunOnceScheduler } from "../../../../base/common/async.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { createMatches, FuzzyScore } from "../../../../base/common/filters.js";
+import { normalizeDriveLetter, tildify } from "../../../../base/common/labels.js";
+import { dispose, DisposableMap, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { isAbsolute, normalize, posix } from "../../../../base/common/path.js";
+import { isWindows } from "../../../../base/common/platform.js";
+import { ltrim } from "../../../../base/common/strings.js";
+import { URI } from "../../../../base/common/uri.js";
+import * as nls from "../../../../nls.js";
+import { MenuId, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ContextKeyExpr, IContextKey, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { FileKind } from "../../../../platform/files/common/files.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { WorkbenchCompressibleObjectTree } from "../../../../platform/list/browser/listService.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { IFileIconTheme, IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { IWorkspaceContextService, IWorkspaceFolder } from "../../../../platform/workspace/common/workspace.js";
+import {
+  IResourceLabel,
+  IResourceLabelOptions,
+  IResourceLabelProps,
+  ResourceLabels,
+} from "../../../browser/labels.js";
+import { ViewAction, ViewPane } from "../../../browser/parts/views/viewPane.js";
+import { IViewletViewOptions } from "../../../browser/parts/views/viewsViewlet.js";
+import { IViewDescriptorService } from "../../../common/views.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IPathService } from "../../../services/path/common/pathService.js";
+import {
+  CONTEXT_LOADED_SCRIPTS_ITEM_TYPE,
+  IDebugService,
+  IDebugSession,
+  LOADED_SCRIPTS_VIEW_ID,
+} from "../common/debug.js";
+import { DebugContentProvider } from "../common/debugContentProvider.js";
+import { Source } from "../common/debugSource.js";
+import { renderViewTree } from "./baseDebugView.js";
 
 const NEW_STYLE_COMPRESS = true;
 
@@ -117,7 +133,7 @@ class BaseTreeItem {
 	}
 
 	getTemplateId(): string {
-		return 'id';
+		return "id";
 	}
 
 	// a dynamic ID based on the parent chain; required for reparenting (see #55448)
@@ -177,7 +193,7 @@ class BaseTreeItem {
 	getLabel(separateRootFolder = true): string {
 		const child = this.oneChild();
 		if (child) {
-			const sep = (this instanceof RootFolderTreeItem && separateRootFolder) ? ' • ' : posix.sep;
+			const sep = (this instanceof RootFolderTreeItem && separateRootFolder) ? " • " : posix.sep;
 			return `${this._label}${sep}${child.getLabel()}`;
 		}
 		return this._label;
@@ -248,11 +264,20 @@ class RootFolderTreeItem extends BaseTreeItem {
 class RootTreeItem extends BaseTreeItem {
 
 	constructor(private _pathService: IPathService, private _contextService: IWorkspaceContextService, private _labelService: ILabelService) {
-		super(undefined, 'Root');
+		super(undefined, "Root");
 	}
 
 	add(session: IDebugSession): SessionTreeItem {
-		return this.createIfNeeded(session.getId(), () => new SessionTreeItem(this._labelService, this, session, this._pathService, this._contextService));
+		return this.createIfNeeded(
+      session.getId(),
+      () => new SessionTreeItem(
+        this._labelService,
+        this,
+        session,
+        this._pathService,
+        this._contextService,
+      ),
+    );
 	}
 
 	find(session: IDebugSession): SessionTreeItem {
@@ -339,10 +364,14 @@ class SessionTreeItem extends BaseTreeItem {
 				const resource = URI.file(path);
 
 				// return early if we can resolve a relative path label from the root folder
-				folder = this.rootProvider ? this.rootProvider.getWorkspaceFolder(resource) : null;
+				folder = this.rootProvider ? this.rootProvider.getWorkspaceFolder(
+          resource,
+        ) : null;
 				if (folder) {
 					// strip off the root folder path
-					path = normalize(ltrim(resource.path.substring(folder.uri.path.length), posix.sep));
+					path = normalize(
+            ltrim(resource.path.substring(folder.uri.path.length), posix.sep),
+          );
 					const hasMultipleRoots = this.rootProvider.getWorkspace().folders.length > 1;
 					if (hasMultipleRoots) {
 						path = posix.sep + path;
@@ -401,14 +430,16 @@ interface IViewState {
  */
 function asTreeElement(item: BaseTreeItem, viewState?: IViewState): ITreeElement<LoadedScriptsItem> {
 	const children = item.getChildren();
-	const collapsed = viewState ? !viewState.expanded.has(item.getId()) : !(item instanceof SessionTreeItem);
+	const collapsed = viewState ? !viewState.expanded.has(
+    item.getId(),
+  ) : !(item instanceof SessionTreeItem);
 
 	return {
-		element: item,
-		collapsed,
-		collapsible: item.hasChildren(),
-		children: children.map(i => asTreeElement(i, viewState))
-	};
+    element: item,
+    collapsed,
+    collapsible: item.hasChildren(),
+    children: children.map(i => asTreeElement(i, viewState)),
+  };
 }
 
 export class LoadedScriptsView extends ViewPane {
@@ -438,35 +469,62 @@ export class LoadedScriptsView extends ViewPane {
 		@IThemeService themeService: IThemeService,
 		@IHoverService hoverService: IHoverService,
 	) {
-		super(options, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, instantiationService, openerService, themeService, hoverService);
-		this.loadedScriptsItemType = CONTEXT_LOADED_SCRIPTS_ITEM_TYPE.bindTo(contextKeyService);
+		super(
+      options,
+      keybindingService,
+      contextMenuService,
+      configurationService,
+      contextKeyService,
+      viewDescriptorService,
+      instantiationService,
+      openerService,
+      themeService,
+      hoverService,
+    );
+		this.loadedScriptsItemType = CONTEXT_LOADED_SCRIPTS_ITEM_TYPE.bindTo(
+      contextKeyService,
+    );
 	}
 
 	protected override renderBody(container: HTMLElement): void {
 		super.renderBody(container);
 
-		this.element.classList.add('debug-pane');
-		container.classList.add('debug-loaded-scripts', 'show-file-icons');
+		this.element.classList.add("debug-pane");
+		container.classList.add("debug-loaded-scripts", "show-file-icons");
 
 		this.treeContainer = renderViewTree(container);
 
 		this.filter = new LoadedScriptsFilter();
 
-		const root = new RootTreeItem(this.pathService, this.contextService, this.labelService);
+		const root = new RootTreeItem(
+      this.pathService,
+      this.contextService,
+      this.labelService,
+    );
 
-		this.treeLabels = this.instantiationService.createInstance(ResourceLabels, { onDidChangeVisibility: this.onDidChangeBodyVisibility });
+		this.treeLabels = this.instantiationService.createInstance(ResourceLabels, {
+      onDidChangeVisibility: this.onDidChangeBodyVisibility,
+    });
 		this._register(this.treeLabels);
 
 		const onFileIconThemeChange = (fileIconTheme: IFileIconTheme) => {
-			this.treeContainer.classList.toggle('align-icons-and-twisties', fileIconTheme.hasFileIcons && !fileIconTheme.hasFolderIcons);
-			this.treeContainer.classList.toggle('hide-arrows', fileIconTheme.hidesExplorerArrows === true);
+			this.treeContainer.classList.toggle(
+        "align-icons-and-twisties",
+        fileIconTheme.hasFileIcons && !fileIconTheme.hasFolderIcons,
+      );
+			this.treeContainer.classList.toggle(
+        "hide-arrows",
+        fileIconTheme.hidesExplorerArrows === true,
+      );
 		};
 
-		this._register(this.themeService.onDidFileIconThemeChange(onFileIconThemeChange));
+		this._register(
+      this.themeService.onDidFileIconThemeChange(onFileIconThemeChange),
+    );
 		onFileIconThemeChange(this.themeService.getFileIconTheme());
 
 		this.tree = this.instantiationService.createInstance(WorkbenchCompressibleObjectTree<LoadedScriptsItem, FuzzyScore>,
-			'LoadedScriptsView',
+			"LoadedScriptsView",
 			this.treeContainer,
 			new LoadedScriptsDelegate(),
 			[new LoadedScriptsRenderer(this.treeLabels)],
@@ -475,23 +533,26 @@ export class LoadedScriptsView extends ViewPane {
 				collapseByDefault: true,
 				hideTwistiesOfChildlessElements: true,
 				identityProvider: {
-					getId: (element: LoadedScriptsItem) => element.getId()
+					getId: (element: LoadedScriptsItem) => element.getId(),
 				},
 				keyboardNavigationLabelProvider: {
 					getKeyboardNavigationLabel: (element: LoadedScriptsItem) => {
 						return element.getLabel();
 					},
 					getCompressedNodeKeyboardNavigationLabel: (elements: LoadedScriptsItem[]) => {
-						return elements.map(e => e.getLabel()).join('/');
-					}
+						return elements.map(e => e.getLabel()).join("/");
+					},
 				},
 				filter: this.filter,
 				accessibilityProvider: new LoadedSciptsAccessibilityProvider(),
-				overrideStyles: this.getLocationBasedColors().listOverrideStyles
-			}
+				overrideStyles: this.getLocationBasedColors().listOverrideStyles,
+			},
 		);
 
-		const updateView = (viewState?: IViewState) => this.tree.setChildren(null, asTreeElement(root, viewState).children);
+		const updateView = (viewState?: IViewState) => this.tree.setChildren(
+      null,
+      asTreeElement(root, viewState).children,
+    );
 
 		updateView();
 
@@ -516,7 +577,7 @@ export class LoadedScriptsView extends ViewPane {
 		this._register(this.tree.onDidChangeFocus(() => {
 			const focus = this.tree.getFocus();
 			if (focus instanceof SessionTreeItem) {
-				this.loadedScriptsItemType.set('session');
+				this.loadedScriptsItemType.set("session");
 			} else {
 				this.loadedScriptsItemType.reset();
 			}
@@ -542,7 +603,9 @@ export class LoadedScriptsView extends ViewPane {
 		};
 
 		// Track listeners per session to avoid leaking disposables
-		const sessionListeners = this._register(new DisposableMap<string, DisposableStore>());
+		const sessionListeners = this._register(
+      new DisposableMap<string, DisposableStore>(),
+    );
 
 		const registerSessionListeners = (session: IDebugSession) => {
 			const store = new DisposableStore();
@@ -558,16 +621,16 @@ export class LoadedScriptsView extends ViewPane {
 			store.add(session.onDidLoadedSource(async event => {
 				let sessionRoot: SessionTreeItem;
 				switch (event.reason) {
-					case 'new':
-					case 'changed':
+					case "new":
+					case "changed":
 						sessionRoot = root.add(session);
 						await sessionRoot.addPath(event.source);
 						scheduleRefreshOnVisible();
-						if (event.reason === 'changed') {
+						if (event.reason === "changed") {
 							DebugContentProvider.refreshDebugContent(event.source.uri);
 						}
 						break;
-					case 'removed':
+					case "removed":
 						sessionRoot = root.find(session);
 						if (sessionRoot && sessionRoot.removePath(event.source)) {
 							scheduleRefreshOnVisible();
@@ -582,13 +645,17 @@ export class LoadedScriptsView extends ViewPane {
 		};
 
 		this._register(this.debugService.onDidNewSession(registerSessionListeners));
-		this.debugService.getModel().getSessions().forEach(registerSessionListeners);
+		this.debugService.getModel().getSessions().forEach(
+      registerSessionListeners,
+    );
 
-		this._register(this.debugService.onDidEndSession(({ session }) => {
-			sessionListeners.deleteAndDispose(session.getId());
-			root.remove(session.getId());
-			this.changeScheduler.schedule();
-		}));
+		this._register(
+      this.debugService.onDidEndSession(({ session }) => {
+        sessionListeners.deleteAndDispose(session.getId());
+        root.remove(session.getId());
+        this.changeScheduler.schedule();
+      }),
+    );
 
 		this.changeScheduler.schedule(0);
 
@@ -628,7 +695,9 @@ export class LoadedScriptsView extends ViewPane {
 		}));
 
 		// populate tree model with source paths from all debug sessions
-		this.debugService.getModel().getSessions().forEach(session => addSourcePathsToSession(session));
+		this.debugService.getModel().getSessions().forEach(
+      session => addSourcePathsToSession(session),
+    );
 	}
 
 	protected override layoutBody(height: number, width: number): void {
@@ -664,10 +733,10 @@ interface ILoadedScriptsItemTemplateData {
 
 class LoadedScriptsRenderer implements ICompressibleTreeRenderer<BaseTreeItem, FuzzyScore, ILoadedScriptsItemTemplateData> {
 
-	static readonly ID = 'lsrenderer';
+	static readonly ID = "lsrenderer";
 
 	constructor(
-		private labels: ResourceLabels
+		private labels: ResourceLabels,
 	) {
 	}
 
@@ -699,11 +768,11 @@ class LoadedScriptsRenderer implements ICompressibleTreeRenderer<BaseTreeItem, F
 	private render(element: BaseTreeItem, labels: string | string[], data: ILoadedScriptsItemTemplateData, filterData: FuzzyScore | undefined) {
 
 		const label: IResourceLabelProps = {
-			name: labels
-		};
+      name: labels,
+    };
 		const options: IResourceLabelOptions = {
-			title: element.getHoverLabel()
-		};
+      title: element.getHoverLabel(),
+    };
 
 		if (element instanceof RootFolderTreeItem) {
 
@@ -711,7 +780,7 @@ class LoadedScriptsRenderer implements ICompressibleTreeRenderer<BaseTreeItem, F
 
 		} else if (element instanceof SessionTreeItem) {
 
-			options.title = nls.localize('loadedScriptsSession', "Debug Session");
+			options.title = nls.localize("loadedScriptsSession", "Debug Session");
 			options.hideIcon = true;
 
 		} else if (element instanceof BaseTreeItem) {
@@ -737,23 +806,45 @@ class LoadedScriptsRenderer implements ICompressibleTreeRenderer<BaseTreeItem, F
 class LoadedSciptsAccessibilityProvider implements IListAccessibilityProvider<LoadedScriptsItem> {
 
 	getWidgetAriaLabel(): string {
-		return nls.localize({ comment: ['Debug is a noun in this context, not a verb.'], key: 'loadedScriptsAriaLabel' }, "Debug Loaded Scripts");
+		return nls.localize(
+      {
+        comment: ["Debug is a noun in this context, not a verb."],
+        key: "loadedScriptsAriaLabel",
+      },
+      "Debug Loaded Scripts",
+    );
 	}
 
 	getAriaLabel(element: LoadedScriptsItem): string {
 
 		if (element instanceof RootFolderTreeItem) {
-			return nls.localize('loadedScriptsRootFolderAriaLabel', "Workspace folder {0}, loaded script, debug", element.getLabel());
+			return nls.localize(
+        "loadedScriptsRootFolderAriaLabel",
+        "Workspace folder {0}, loaded script, debug",
+        element.getLabel(),
+      );
 		}
 
 		if (element instanceof SessionTreeItem) {
-			return nls.localize('loadedScriptsSessionAriaLabel', "Session {0}, loaded script, debug", element.getLabel());
+			return nls.localize(
+        "loadedScriptsSessionAriaLabel",
+        "Session {0}, loaded script, debug",
+        element.getLabel(),
+      );
 		}
 
 		if (element.hasChildren()) {
-			return nls.localize('loadedScriptsFolderAriaLabel', "Folder {0}, loaded script, debug", element.getLabel());
+			return nls.localize(
+        "loadedScriptsFolderAriaLabel",
+        "Folder {0}, loaded script, debug",
+        element.getLabel(),
+      );
 		} else {
-			return nls.localize('loadedScriptsSourceAriaLabel', "{0}, loaded script, debug", element.getLabel());
+			return nls.localize(
+        "loadedScriptsSourceAriaLabel",
+        "{0}, loaded script, debug",
+        element.getLabel(),
+      );
 		}
 	}
 }
@@ -785,17 +876,17 @@ class LoadedScriptsFilter implements ITreeFilter<BaseTreeItem, FuzzyScore> {
 registerAction2(class Collapse extends ViewAction<LoadedScriptsView> {
 	constructor() {
 		super({
-			id: 'loadedScripts.collapse',
+			id: "loadedScripts.collapse",
 			viewId: LOADED_SCRIPTS_VIEW_ID,
-			title: nls.localize('collapse', "Collapse All"),
+			title: nls.localize("collapse", "Collapse All"),
 			f1: false,
 			icon: Codicon.collapseAll,
 			menu: {
 				id: MenuId.ViewTitle,
 				order: 30,
-				group: 'navigation',
-				when: ContextKeyExpr.equals('view', LOADED_SCRIPTS_VIEW_ID)
-			}
+				group: "navigation",
+				when: ContextKeyExpr.equals("view", LOADED_SCRIPTS_VIEW_ID),
+			},
 		});
 	}
 

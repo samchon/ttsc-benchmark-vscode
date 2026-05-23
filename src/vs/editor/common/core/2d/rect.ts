@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BugIndicatingError } from '../../../../base/common/errors.js';
-import { OffsetRange } from '../ranges/offsetRange.js';
-import { Point } from './point.js';
-import { Size2D } from './size.js';
+import { BugIndicatingError } from "../../../../base/common/errors.js";
+import { OffsetRange } from "../ranges/offsetRange.js";
+import { Point } from "./point.js";
+import { Size2D } from "./size.js";
 
 export class Rect {
 	public static fromPoint(point: Point): Rect {
@@ -30,7 +30,12 @@ export class Rect {
 	}
 
 	public static fromRanges(leftRight: OffsetRange, topBottom: OffsetRange): Rect {
-		return new Rect(leftRight.start, topBottom.start, leftRight.endExclusive, topBottom.endExclusive);
+		return new Rect(
+      leftRight.start,
+      topBottom.start,
+      leftRight.endExclusive,
+      topBottom.endExclusive,
+    );
 	}
 
 	public static hull(rects: Rect[]): Rect {
@@ -59,10 +64,14 @@ export class Rect {
 		public readonly bottom: number,
 	) {
 		if (left > right) {
-			throw new BugIndicatingError('Invalid arguments: Horizontally offset by ' + (left - right));
+			throw new BugIndicatingError(
+        "Invalid arguments: Horizontally offset by " + (left - right),
+      );
 		}
 		if (top > bottom) {
-			throw new BugIndicatingError('Invalid arguments: Vertically offset by ' + (top - bottom));
+			throw new BugIndicatingError(
+        "Invalid arguments: Vertically offset by " + (top - bottom),
+      );
 		}
 	}
 
@@ -90,33 +99,28 @@ export class Rect {
 		}
 
 		return new Rect(
-			this.left - marginLeft,
-			this.top - marginTop,
-			this.right + marginRight,
-			this.bottom + marginBottom,
-		);
+      this.left - marginLeft,
+      this.top - marginTop,
+      this.right + marginRight,
+      this.bottom + marginBottom,
+    );
 	}
 
 	intersectVertical(range: OffsetRange): Rect {
 		const newTop = Math.max(this.top, range.start);
 		const newBottom = Math.min(this.bottom, range.endExclusive);
-		return new Rect(
-			this.left,
-			newTop,
-			this.right,
-			Math.max(newTop, newBottom),
-		);
+		return new Rect(this.left, newTop, this.right, Math.max(newTop, newBottom));
 	}
 
 	intersectHorizontal(range: OffsetRange): Rect {
 		const newLeft = Math.max(this.left, range.start);
 		const newRight = Math.min(this.right, range.endExclusive);
 		return new Rect(
-			newLeft,
-			this.top,
-			Math.max(newLeft, newRight),
-			this.bottom,
-		);
+      newLeft,
+      this.top,
+      Math.max(newLeft, newRight),
+      this.bottom,
+    );
 	}
 
 	toString(): string {
@@ -138,11 +142,11 @@ export class Rect {
 
 	union(other: Rect): Rect {
 		return new Rect(
-			Math.min(this.left, other.left),
-			Math.min(this.top, other.top),
-			Math.max(this.right, other.right),
-			Math.max(this.bottom, other.bottom),
-		);
+      Math.min(this.left, other.left),
+      Math.min(this.top, other.top),
+      Math.max(this.right, other.right),
+      Math.max(this.bottom, other.bottom),
+    );
 	}
 
 	containsRect(other: Rect): boolean {
@@ -198,15 +202,30 @@ export class Rect {
 	}
 
 	translateX(delta: number): Rect {
-		return new Rect(this.left + delta, this.top, this.right + delta, this.bottom);
+		return new Rect(
+      this.left + delta,
+      this.top,
+      this.right + delta,
+      this.bottom,
+    );
 	}
 
 	translateY(delta: number): Rect {
-		return new Rect(this.left, this.top + delta, this.right, this.bottom + delta);
+		return new Rect(
+      this.left,
+      this.top + delta,
+      this.right,
+      this.bottom + delta,
+    );
 	}
 
 	translate(point: Point): Rect {
-		return new Rect(this.left + point.x, this.top + point.y, this.right + point.x, this.bottom + point.y);
+		return new Rect(
+      this.left + point.x,
+      this.top + point.y,
+      this.right + point.x,
+      this.bottom + point.y,
+    );
 	}
 
 	deltaRight(delta: number): Rect {
@@ -243,12 +262,12 @@ export class Rect {
 
 	toStyles() {
 		return {
-			position: 'absolute',
-			left: `${this.left}px`,
-			top: `${this.top}px`,
-			width: `${this.width}px`,
-			height: `${this.height}px`,
-		};
+      position: "absolute",
+      left: `${this.left}px`,
+      top: `${this.top}px`,
+      width: `${this.width}px`,
+      height: `${this.height}px`,
+    };
 	}
 
 	getHorizontalRange(): OffsetRange {

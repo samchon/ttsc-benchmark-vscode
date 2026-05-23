@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { compareProtocolVersions } from './registry.js';
+import { compareProtocolVersions } from "./registry.js";
 
 /**
  * Parses a `MAJOR.MINOR.PATCH` SemVer string. Returns `undefined` if the

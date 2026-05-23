@@ -3,53 +3,82 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { IDecoration, ITerminalAddon, Terminal } from '@xterm/xterm';
-import * as dom from '../../../../../base/browser/dom.js';
-import { IAction, Separator } from '../../../../../base/common/actions.js';
-import { Emitter } from '../../../../../base/common/event.js';
-import { Disposable, DisposableMap, DisposableStore, IDisposable, dispose, toDisposable } from '../../../../../base/common/lifecycle.js';
-import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { localize } from '../../../../../nls.js';
-import { AccessibilitySignal, IAccessibilitySignalService } from '../../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js';
-import { IClipboardService } from '../../../../../platform/clipboard/common/clipboardService.js';
-import { ICommandService } from '../../../../../platform/commands/common/commands.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { IContextMenuService } from '../../../../../platform/contextview/browser/contextView.js';
-import { INotificationService, Severity } from '../../../../../platform/notification/common/notification.js';
-import { IOpenerService } from '../../../../../platform/opener/common/opener.js';
-import { IQuickInputService, IQuickPickItem } from '../../../../../platform/quickinput/common/quickInput.js';
-import { CommandInvalidationReason, ICommandDetectionCapability, IMarkProperties, ITerminalCapabilityStore, ITerminalCommand, TerminalCapability } from '../../../../../platform/terminal/common/capabilities/capabilities.js';
-import { TerminalSettingId, type IDecorationAddon } from '../../../../../platform/terminal/common/terminal.js';
-import { IThemeService } from '../../../../../platform/theme/common/themeService.js';
-import { terminalDecorationMark } from '../terminalIcons.js';
-import { DecorationSelector, getTerminalCommandDecorationState, getTerminalDecorationHoverContent, updateLayout } from './decorationStyles.js';
-import { TERMINAL_COMMAND_DECORATION_DEFAULT_BACKGROUND_COLOR, TERMINAL_COMMAND_DECORATION_ERROR_BACKGROUND_COLOR, TERMINAL_COMMAND_DECORATION_SUCCESS_BACKGROUND_COLOR } from '../../common/terminalColorRegistry.js';
-import { ILifecycleService } from '../../../../services/lifecycle/common/lifecycle.js';
-import { IHoverService } from '../../../../../platform/hover/browser/hover.js';
-import { MarkdownString } from '../../../../../base/common/htmlContent.js';
-import { IChatContextPickService } from '../../../chat/browser/attachments/chatContextPickService.js';
-import { IChatWidgetService } from '../../../chat/browser/chat.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { TerminalContext } from '../../../chat/browser/actions/chatContext.js';
-import { getTerminalUri, parseTerminalUri } from '../terminalUri.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { ChatAgentLocation } from '../../../chat/common/constants.js';
-import { isString } from '../../../../../base/common/types.js';
+import type { IDecoration, ITerminalAddon, Terminal } from "@xterm/xterm";
+import * as dom from "../../../../../base/browser/dom.js";
+import { IAction, Separator } from "../../../../../base/common/actions.js";
+import { Emitter } from "../../../../../base/common/event.js";
+import {
+  Disposable,
+  DisposableMap,
+  DisposableStore,
+  IDisposable,
+  dispose,
+  toDisposable,
+} from "../../../../../base/common/lifecycle.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { localize } from "../../../../../nls.js";
+import { AccessibilitySignal, IAccessibilitySignalService } from "../../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";
+import { IClipboardService } from "../../../../../platform/clipboard/common/clipboardService.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IContextMenuService } from "../../../../../platform/contextview/browser/contextView.js";
+import { INotificationService, Severity } from "../../../../../platform/notification/common/notification.js";
+import { IOpenerService } from "../../../../../platform/opener/common/opener.js";
+import { IQuickInputService, IQuickPickItem } from "../../../../../platform/quickinput/common/quickInput.js";
+import {
+  CommandInvalidationReason,
+  ICommandDetectionCapability,
+  IMarkProperties,
+  ITerminalCapabilityStore,
+  ITerminalCommand,
+  TerminalCapability,
+} from "../../../../../platform/terminal/common/capabilities/capabilities.js";
+import { TerminalSettingId, type IDecorationAddon } from "../../../../../platform/terminal/common/terminal.js";
+import { IThemeService } from "../../../../../platform/theme/common/themeService.js";
+import { terminalDecorationMark } from "../terminalIcons.js";
+import {
+  DecorationSelector,
+  getTerminalCommandDecorationState,
+  getTerminalDecorationHoverContent,
+  updateLayout,
+} from "./decorationStyles.js";
+import {
+  TERMINAL_COMMAND_DECORATION_DEFAULT_BACKGROUND_COLOR,
+  TERMINAL_COMMAND_DECORATION_ERROR_BACKGROUND_COLOR,
+  TERMINAL_COMMAND_DECORATION_SUCCESS_BACKGROUND_COLOR,
+} from "../../common/terminalColorRegistry.js";
+import { ILifecycleService } from "../../../../services/lifecycle/common/lifecycle.js";
+import { IHoverService } from "../../../../../platform/hover/browser/hover.js";
+import { MarkdownString } from "../../../../../base/common/htmlContent.js";
+import { IChatContextPickService } from "../../../chat/browser/attachments/chatContextPickService.js";
+import { IChatWidgetService } from "../../../chat/browser/chat.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { TerminalContext } from "../../../chat/browser/actions/chatContext.js";
+import { getTerminalUri, parseTerminalUri } from "../terminalUri.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ChatAgentLocation } from "../../../chat/common/constants.js";
+import { isString } from "../../../../../base/common/types.js";
 
 interface IDisposableDecoration { decoration: IDecoration; disposables: IDisposable[]; command?: ITerminalCommand; markProperties?: IMarkProperties }
 
 export class DecorationAddon extends Disposable implements ITerminalAddon, IDecorationAddon {
 	protected _terminal: Terminal | undefined;
-	private _capabilityDisposables: DisposableMap<TerminalCapability> = this._register(new DisposableMap());
+	private _capabilityDisposables: DisposableMap<TerminalCapability> = this._register(
+    new DisposableMap(),
+  );
 	private _decorations: Map<number, IDisposableDecoration> = new Map();
 	private _placeholderDecoration: IDecoration | undefined;
 	private _showGutterDecorations?: boolean;
 	private _showOverviewRulerDecorations?: boolean;
 	private readonly _registeredMenuItems: Map<ITerminalCommand, IAction[]> = new Map();
 
-	private readonly _onDidRequestRunCommand = this._register(new Emitter<{ command: ITerminalCommand; noNewLine?: boolean }>());
+	private readonly _onDidRequestRunCommand = this._register(
+    new Emitter<{ command: ITerminalCommand; noNewLine?: boolean }>(),
+  );
 	readonly onDidRequestRunCommand = this._onDidRequestRunCommand.event;
-	private readonly _onDidRequestCopyAsHtml = this._register(new Emitter<{ command: ITerminalCommand }>());
+	private readonly _onDidRequestCopyAsHtml = this._register(
+    new Emitter<{ command: ITerminalCommand }>(),
+  );
 	readonly onDidRequestCopyAsHtml = this._onDidRequestCopyAsHtml.event;
 
 	constructor(
@@ -68,25 +97,37 @@ export class DecorationAddon extends Disposable implements ITerminalAddon, IDeco
 		@IHoverService private readonly _hoverService: IHoverService,
 		@IChatContextPickService private readonly _contextPickService: IChatContextPickService,
 		@IChatWidgetService private readonly _chatWidgetService: IChatWidgetService,
-		@IInstantiationService private readonly _instantiationService: IInstantiationService
+		@IInstantiationService private readonly _instantiationService: IInstantiationService,
 	) {
 		super();
 		this._register(toDisposable(() => this._dispose()));
 		this._register(this._configurationService.onDidChangeConfiguration(e => {
 			if (e.affectsConfiguration(TerminalSettingId.FontSize) || e.affectsConfiguration(TerminalSettingId.LineHeight)) {
 				this.refreshLayouts();
-			} else if (e.affectsConfiguration('workbench.colorCustomizations')) {
+			} else if (e.affectsConfiguration("workbench.colorCustomizations")) {
 				this._refreshStyles(true);
 			} else if (e.affectsConfiguration(TerminalSettingId.ShellIntegrationDecorationsEnabled)) {
 				this._removeCapabilityDisposables(TerminalCapability.CommandDetection);
 				this._updateDecorationVisibility();
 			}
 		}));
-		this._register(this._themeService.onDidColorThemeChange(() => this._refreshStyles(true)));
+		this._register(
+      this._themeService.onDidColorThemeChange(() => this._refreshStyles(true)),
+    );
 		this._updateDecorationVisibility();
-		this._register(this._capabilities.onDidAddCapability(c => this._createCapabilityDisposables(c.id)));
-		this._register(this._capabilities.onDidRemoveCapability(c => this._removeCapabilityDisposables(c.id)));
-		this._register(lifecycleService.onWillShutdown(() => this._disposeAllDecorations()));
+		this._register(
+      this._capabilities.onDidAddCapability(
+        c => this._createCapabilityDisposables(c.id),
+      ),
+    );
+		this._register(
+      this._capabilities.onDidRemoveCapability(
+        c => this._removeCapabilityDisposables(c.id),
+      ),
+    );
+		this._register(
+      lifecycleService.onWillShutdown(() => this._disposeAllDecorations()),
+    );
 	}
 
 	private _createCapabilityDisposables(c: TerminalCapability): void {
@@ -97,7 +138,9 @@ export class DecorationAddon extends Disposable implements ITerminalAddon, IDeco
 		const store = new DisposableStore();
 		switch (capability.type) {
 			case TerminalCapability.BufferMarkDetection:
-				store.add(capability.onMarkAdded(mark => this.registerMarkDecoration(mark)));
+				store.add(
+          capability.onMarkAdded(mark => this.registerMarkDecoration(mark)),
+        );
 				break;
 			case TerminalCapability.CommandDetection: {
 				const disposables = this._getCommandDetectionListeners(capability);
@@ -125,15 +168,19 @@ export class DecorationAddon extends Disposable implements ITerminalAddon, IDeco
 	}
 
 	private _updateDecorationVisibility(): void {
-		const showDecorations = this._configurationService.getValue(TerminalSettingId.ShellIntegrationDecorationsEnabled);
-		this._showGutterDecorations = (showDecorations === 'both' || showDecorations === 'gutter');
-		this._showOverviewRulerDecorations = (showDecorations === 'both' || showDecorations === 'overviewRuler');
+		const showDecorations = this._configurationService.getValue(
+      TerminalSettingId.ShellIntegrationDecorationsEnabled,
+    );
+		this._showGutterDecorations = (showDecorations === "both" || showDecorations === "gutter");
+		this._showOverviewRulerDecorations = (showDecorations === "both" || showDecorations === "overviewRuler");
 		this._disposeAllDecorations();
 		if (this._showGutterDecorations || this._showOverviewRulerDecorations) {
 			this._attachToCommandCapability();
 			this._updateGutterDecorationVisibility();
 		}
-		const currentCommand = this._capabilities.get(TerminalCapability.CommandDetection)?.executingCommandObject;
+		const currentCommand = this._capabilities.get(
+      TerminalCapability.CommandDetection,
+    )?.executingCommandObject;
 		if (currentCommand) {
 			this.registerCommandDecoration(currentCommand, true);
 		}
@@ -149,7 +196,9 @@ export class DecorationAddon extends Disposable implements ITerminalAddon, IDeco
 
 	private _updateGutterDecorationVisibility(): void {
 		// eslint-disable-next-line no-restricted-syntax
-		const commandDecorationElements = this._terminal?.element?.querySelectorAll(DecorationSelector.CommandDecoration);
+		const commandDecorationElements = this._terminal?.element?.querySelectorAll(
+      DecorationSelector.CommandDecoration,
+    );
 		if (commandDecorationElements) {
 			for (const commandDecorationElement of commandDecorationElements) {
 				this._updateCommandDecorationVisibility(commandDecorationElement);
@@ -166,16 +215,22 @@ export class DecorationAddon extends Disposable implements ITerminalAddon, IDeco
 	}
 
 	public refreshLayouts(): void {
-		updateLayout(this._configurationService, this._placeholderDecoration?.element);
+		updateLayout(
+      this._configurationService,
+      this._placeholderDecoration?.element,
+    );
 		for (const decoration of this._decorations) {
-			updateLayout(this._configurationService, decoration[1].decoration.element);
+			updateLayout(
+        this._configurationService,
+        decoration[1].decoration.element,
+      );
 		}
 	}
 
 	private _refreshStyles(refreshOverviewRulerColors?: boolean): void {
 		if (refreshOverviewRulerColors) {
 			for (const decoration of this._decorations.values()) {
-				const color = this._getDecorationCssColor(decoration.command)?.toString() ?? '';
+				const color = this._getDecorationCssColor(decoration.command)?.toString() ?? "";
 				if (decoration.decoration.options?.overviewRulerOptions) {
 					decoration.decoration.options.overviewRulerOptions.color = color;
 				} else if (decoration.decoration.options) {
@@ -185,7 +240,11 @@ export class DecorationAddon extends Disposable implements ITerminalAddon, IDeco
 		}
 		this._updateClasses(this._placeholderDecoration?.element);
 		for (const decoration of this._decorations.values()) {
-			this._updateClasses(decoration.decoration.element, decoration.command, decoration.markProperties);
+			this._updateClasses(
+        decoration.decoration.element,
+        decoration.command,
+        decoration.markProperties,
+      );
 		}
 	}
 
@@ -210,13 +269,18 @@ export class DecorationAddon extends Disposable implements ITerminalAddon, IDeco
 
 	private _attachToCommandCapability(): void {
 		if (this._capabilities.has(TerminalCapability.CommandDetection)) {
-			const capability = this._capabilities.get(TerminalCapability.CommandDetection)!;
+			const capability = this._capabilities.get(
+        TerminalCapability.CommandDetection,
+      )!;
 			const disposables = this._getCommandDetectionListeners(capability);
 			const store = new DisposableStore();
 			for (const d of disposables) {
 				store.add(d);
 			}
-			this._capabilityDisposables.set(TerminalCapability.CommandDetection, store);
+			this._capabilityDisposables.set(
+        TerminalCapability.CommandDetection,
+        store,
+      );
 		}
 	}
 
@@ -228,7 +292,11 @@ export class DecorationAddon extends Disposable implements ITerminalAddon, IDeco
 		if (capability.executingCommandObject?.marker) {
 			this.registerCommandDecoration(capability.executingCommandObject, true);
 		}
-		commandDetectionListeners.push(capability.onCommandStarted(command => this.registerCommandDecoration(command, true)));
+		commandDetectionListeners.push(
+      capability.onCommandStarted(
+        command => this.registerCommandDecoration(command, true),
+      ),
+    );
 		// Command finished
 		for (const command of capability.commands) {
 			this.registerCommandDecoration(command);
@@ -290,15 +358,17 @@ export class DecorationAddon extends Disposable implements ITerminalAddon, IDeco
 		}
 		const marker = command?.marker || markProperties?.marker;
 		if (!marker) {
-			throw new Error(`cannot add a decoration for a command ${JSON.stringify(command)} with no marker`);
+			throw new Error(
+        `cannot add a decoration for a command ${JSON.stringify(command)} with no marker`,
+      );
 		}
 		this._clearPlaceholder();
-		const color = this._getDecorationCssColor(command)?.toString() ?? '';
+		const color = this._getDecorationCssColor(command)?.toString() ?? "";
 		const decoration = this._terminal.registerDecoration({
 			marker,
 			overviewRulerOptions: this._showOverviewRulerDecorations ? (beforeCommandExecution
-				? { color, position: 'left' }
-				: { color, position: command?.exitCode ? 'right' : 'left' }) : undefined
+				? { color, position: "left" }
+				: { color, position: command?.exitCode ? "right" : "left" }) : undefined,
 		});
 		if (!decoration) {
 			return undefined;
@@ -317,7 +387,7 @@ export class DecorationAddon extends Disposable implements ITerminalAddon, IDeco
 						decoration,
 						disposables: this._createDisposables(element, command, markProperties),
 						command,
-						markProperties: command?.markProperties || markProperties
+						markProperties: command?.markProperties || markProperties,
 					});
 			}
 			if (!element.classList.contains(DecorationSelector.Codicon) || command?.marker?.line === 0) {
@@ -353,15 +423,24 @@ export class DecorationAddon extends Disposable implements ITerminalAddon, IDeco
 		if (command?.exitCode === undefined && !command?.markProperties) {
 			return [];
 		} else if (command?.markProperties || markProperties) {
-			return [this._createHover(element, command || markProperties, markProperties?.hoverMessage)];
+			return [
+        this._createHover(
+          element,
+          command || markProperties,
+          markProperties?.hoverMessage,
+        ),
+      ];
 		}
-		return [...this._createContextMenu(element, command), this._createHover(element, command)];
+		return [
+      ...this._createContextMenu(element, command),
+      this._createHover(element, command),
+    ];
 	}
 
 	private _createHover(element: HTMLElement, command: ITerminalCommand | undefined, hoverMessage?: string) {
 		return this._hoverService.setupDelayedHover(element, () => ({
-			content: new MarkdownString(getTerminalDecorationHoverContent(command, hoverMessage, true))
-		}));
+      content: new MarkdownString(getTerminalDecorationHoverContent(command, hoverMessage, true)),
+    }));
 	}
 
 	private _updateClasses(element?: HTMLElement, command?: ITerminalCommand, markProperties?: IMarkProperties): void {
@@ -371,10 +450,17 @@ export class DecorationAddon extends Disposable implements ITerminalAddon, IDeco
 		for (const classes of element.classList) {
 			element.classList.remove(classes);
 		}
-		element.classList.add(DecorationSelector.CommandDecoration, DecorationSelector.Codicon, DecorationSelector.XtermDecoration);
+		element.classList.add(
+      DecorationSelector.CommandDecoration,
+      DecorationSelector.Codicon,
+      DecorationSelector.XtermDecoration,
+    );
 
 		if (markProperties) {
-			element.classList.add(DecorationSelector.DefaultColor, ...ThemeIcon.asClassNameArray(terminalDecorationMark));
+			element.classList.add(
+        DecorationSelector.DefaultColor,
+        ...ThemeIcon.asClassNameArray(terminalDecorationMark),
+      );
 			if (!markProperties.hoverMessage) {
 				//disable the mouse pointer
 				element.classList.add(DecorationSelector.Default);
@@ -388,39 +474,56 @@ export class DecorationAddon extends Disposable implements ITerminalAddon, IDeco
 			}
 			element.classList.add(...ThemeIcon.asClassNameArray(state.icon));
 		}
-		element.removeAttribute('title');
-		element.removeAttribute('aria-label');
+		element.removeAttribute("title");
+		element.removeAttribute("aria-label");
 	}
 
 	private _createContextMenu(element: HTMLElement, command: ITerminalCommand): IDisposable[] {
 		// When the xterm Decoration gets disposed of, its element gets removed from the dom
 		// along with its listeners
 		return [
-			dom.addDisposableListener(element, dom.EventType.MOUSE_DOWN, async (e) => {
-				e.stopImmediatePropagation();
-			}),
-			dom.addDisposableListener(element, dom.EventType.CLICK, async (e) => {
-				e.stopImmediatePropagation();
-				const actions = await this._getCommandActions(command);
-				this._contextMenuService.showContextMenu({ getAnchor: () => element, getActions: () => actions });
-			}),
-			dom.addDisposableListener(element, dom.EventType.CONTEXT_MENU, async (e) => {
-				e.stopImmediatePropagation();
-				const chatActions = await this._getCommandActions(command);
-				const actions = this._getContextMenuActions();
-				this._contextMenuService.showContextMenu({ getAnchor: () => element, getActions: () => [...actions, ...chatActions] });
-			}),
-		];
+      dom.addDisposableListener(
+        element,
+        dom.EventType.MOUSE_DOWN,
+        async (e) => {
+          e.stopImmediatePropagation();
+        },
+      ),
+      dom.addDisposableListener(element, dom.EventType.CLICK, async (e) => {
+        e.stopImmediatePropagation();
+        const actions = await this._getCommandActions(command);
+        this._contextMenuService.showContextMenu({
+          getAnchor: () => element,
+          getActions: () => actions,
+        });
+      }),
+      dom.addDisposableListener(
+        element,
+        dom.EventType.CONTEXT_MENU,
+        async (e) => {
+          e.stopImmediatePropagation();
+          const chatActions = await this._getCommandActions(command);
+          const actions = this._getContextMenuActions();
+          this._contextMenuService.showContextMenu({
+            getAnchor: () => element,
+            getActions: () => [...actions, ...chatActions],
+          });
+        },
+      ),
+    ];
 	}
 	private _getContextMenuActions(): IAction[] {
-		const label = localize('workbench.action.terminal.toggleVisibility', "Toggle Visibility");
+		const label = localize(
+      "workbench.action.terminal.toggleVisibility",
+      "Toggle Visibility",
+    );
 		return [
 			{
-				class: undefined, tooltip: label, id: 'terminal.toggleVisibility', label, enabled: true,
+				class: undefined, tooltip: label, id: "terminal.toggleVisibility", label, enabled: true,
 				run: async () => {
 					this._showToggleVisibilityQuickPick();
-				}
-			}
+				},
+			},
 		];
 	}
 
@@ -437,22 +540,22 @@ export class DecorationAddon extends Disposable implements ITerminalAddon, IDeco
 			actions.push(attachToChatAction, new Separator());
 		}
 
-		if (command.command !== '') {
-			const labelRun = localize("terminal.rerunCommand", 'Rerun Command');
+		if (command.command !== "") {
+			const labelRun = localize("terminal.rerunCommand", "Rerun Command");
 			actions.push({
-				class: undefined, tooltip: labelRun, id: 'terminal.rerunCommand', label: labelRun, enabled: true,
+				class: undefined, tooltip: labelRun, id: "terminal.rerunCommand", label: labelRun, enabled: true,
 				run: async () => {
-					if (command.command === '') {
+					if (command.command === "") {
 						return;
 					}
 					if (!command.isTrusted) {
 						const shouldRun = await new Promise<boolean>(r => {
-							this._notificationService.prompt(Severity.Info, localize('rerun', 'Do you want to run the command: {0}', command.command), [{
-								label: localize('yes', 'Yes'),
-								run: () => r(true)
+							this._notificationService.prompt(Severity.Info, localize("rerun", "Do you want to run the command: {0}", command.command), [{
+								label: localize("yes", "Yes"),
+								run: () => r(true),
 							}, {
-								label: localize('no', 'No'),
-								run: () => r(false)
+								label: localize("no", "No"),
+								run: () => r(false),
 							}]);
 						});
 						if (!shouldRun) {
@@ -460,75 +563,115 @@ export class DecorationAddon extends Disposable implements ITerminalAddon, IDeco
 						}
 					}
 					this._onDidRequestRunCommand.fire({ command });
-				}
+				},
 			});
 			// The second section is the clipboard section
 			actions.push(new Separator());
-			const labelCopy = localize("terminal.copyCommand", 'Copy Command');
+			const labelCopy = localize("terminal.copyCommand", "Copy Command");
 			actions.push({
-				class: undefined, tooltip: labelCopy, id: 'terminal.copyCommand', label: labelCopy, enabled: true,
-				run: () => this._clipboardService.writeText(command.command)
-			});
+        class: undefined,
+        tooltip: labelCopy,
+        id: "terminal.copyCommand",
+        label: labelCopy,
+        enabled: true,
+        run: () => this._clipboardService.writeText(command.command),
+      });
 		}
 		if (command.hasOutput()) {
-			const labelCopyCommandAndOutput = localize("terminal.copyCommandAndOutput", 'Copy Command and Output');
+			const labelCopyCommandAndOutput = localize(
+        "terminal.copyCommandAndOutput",
+        "Copy Command and Output",
+      );
 			actions.push({
-				class: undefined, tooltip: labelCopyCommandAndOutput, id: 'terminal.copyCommandAndOutput', label: labelCopyCommandAndOutput, enabled: true,
+				class: undefined, tooltip: labelCopyCommandAndOutput, id: "terminal.copyCommandAndOutput", label: labelCopyCommandAndOutput, enabled: true,
 				run: () => {
 					const output = command.getOutput();
 					if (isString(output)) {
-						this._clipboardService.writeText(`${command.command !== '' ? command.command + '\n' : ''}${output}`);
+						this._clipboardService.writeText(`${command.command !== "" ? command.command + "\n" : ""}${output}`);
 					}
-				}
+				},
 			});
-			const labelText = localize("terminal.copyOutput", 'Copy Output');
+			const labelText = localize("terminal.copyOutput", "Copy Output");
 			actions.push({
-				class: undefined, tooltip: labelText, id: 'terminal.copyOutput', label: labelText, enabled: true,
+				class: undefined, tooltip: labelText, id: "terminal.copyOutput", label: labelText, enabled: true,
 				run: () => {
 					const text = command.getOutput();
 					if (isString(text)) {
 						this._clipboardService.writeText(text);
 					}
-				}
+				},
 			});
-			const labelHtml = localize("terminal.copyOutputAsHtml", 'Copy Output as HTML');
+			const labelHtml = localize(
+        "terminal.copyOutputAsHtml",
+        "Copy Output as HTML",
+      );
 			actions.push({
-				class: undefined, tooltip: labelHtml, id: 'terminal.copyOutputAsHtml', label: labelHtml, enabled: true,
-				run: () => this._onDidRequestCopyAsHtml.fire({ command })
-			});
+        class: undefined,
+        tooltip: labelHtml,
+        id: "terminal.copyOutputAsHtml",
+        label: labelHtml,
+        enabled: true,
+        run: () => this._onDidRequestCopyAsHtml.fire({ command }),
+      });
 		}
 		if (actions.length > 0) {
 			actions.push(new Separator());
 		}
-		const labelRunRecent = localize('workbench.action.terminal.runRecentCommand', "Run Recent Command");
+		const labelRunRecent = localize(
+      "workbench.action.terminal.runRecentCommand",
+      "Run Recent Command",
+    );
 		actions.push({
-			class: undefined, tooltip: labelRunRecent, id: 'workbench.action.terminal.runRecentCommand', label: labelRunRecent, enabled: true,
-			run: () => this._commandService.executeCommand('workbench.action.terminal.runRecentCommand')
-		});
-		const labelGoToRecent = localize('workbench.action.terminal.goToRecentDirectory', "Go To Recent Directory");
+      class: undefined,
+      tooltip: labelRunRecent,
+      id: "workbench.action.terminal.runRecentCommand",
+      label: labelRunRecent,
+      enabled: true,
+      run: () => this._commandService.executeCommand("workbench.action.terminal.runRecentCommand"),
+    });
+		const labelGoToRecent = localize(
+      "workbench.action.terminal.goToRecentDirectory",
+      "Go To Recent Directory",
+    );
 		actions.push({
-			class: undefined, tooltip: labelRunRecent, id: 'workbench.action.terminal.goToRecentDirectory', label: labelGoToRecent, enabled: true,
-			run: () => this._commandService.executeCommand('workbench.action.terminal.goToRecentDirectory')
-		});
+      class: undefined,
+      tooltip: labelRunRecent,
+      id: "workbench.action.terminal.goToRecentDirectory",
+      label: labelGoToRecent,
+      enabled: true,
+      run: () => this._commandService.executeCommand("workbench.action.terminal.goToRecentDirectory"),
+    });
 
 		actions.push(new Separator());
 
-		const labelAbout = localize("terminal.learnShellIntegration", 'Learn About Shell Integration');
+		const labelAbout = localize(
+      "terminal.learnShellIntegration",
+      "Learn About Shell Integration",
+    );
 		actions.push({
-			class: undefined, tooltip: labelAbout, id: 'terminal.learnShellIntegration', label: labelAbout, enabled: true,
-			run: () => this._openerService.open('https://code.visualstudio.com/docs/terminal/shell-integration')
-		});
+      class: undefined,
+      tooltip: labelAbout,
+      id: "terminal.learnShellIntegration",
+      label: labelAbout,
+      enabled: true,
+      run: () => this._openerService.open("https://code.visualstudio.com/docs/terminal/shell-integration"),
+    });
 		return actions;
 	}
 
 	private _createAttachToChatAction(command: ITerminalCommand): IAction | undefined {
-		const chatIsEnabled = this._chatWidgetService.getWidgetsByLocations(ChatAgentLocation.Chat).some(w => w.attachmentCapabilities.supportsTerminalAttachments);
+		const chatIsEnabled = this._chatWidgetService.getWidgetsByLocations(ChatAgentLocation.Chat).some(
+      w => w.attachmentCapabilities.supportsTerminalAttachments,
+    );
 		if (!chatIsEnabled) {
 			return undefined;
 		}
-		const labelAttachToChat = localize("terminal.attachToChat", 'Attach To Chat');
+		const labelAttachToChat = localize(
+      "terminal.attachToChat",
+      "Attach To Chat",
+    );
 		return {
-			class: undefined, tooltip: labelAttachToChat, id: 'terminal.attachToChat', label: labelAttachToChat, enabled: true,
+			class: undefined, tooltip: labelAttachToChat, id: "terminal.attachToChat", label: labelAttachToChat, enabled: true,
 			run: async () => {
 				let widget = this._chatWidgetService.lastFocusedWidget ?? this._chatWidgetService.getWidgetsByLocations(ChatAgentLocation.Chat)?.find(w => w.attachmentCapabilities.supportsTerminalAttachments);
 
@@ -559,7 +702,7 @@ export class DecorationAddon extends Disposable implements ITerminalAddon, IDeco
 					}
 					this._store.add(this._contextPickService.registerChatContextItem(terminalContext));
 				}
-			}
+			},
 		};
 	}
 
@@ -568,37 +711,39 @@ export class DecorationAddon extends Disposable implements ITerminalAddon, IDeco
 		quickPick.hideInput = true;
 		quickPick.hideCheckAll = true;
 		quickPick.canSelectMany = true;
-		quickPick.title = localize('toggleVisibility', 'Toggle visibility');
-		const configValue = this._configurationService.getValue(TerminalSettingId.ShellIntegrationDecorationsEnabled);
+		quickPick.title = localize("toggleVisibility", "Toggle visibility");
+		const configValue = this._configurationService.getValue(
+      TerminalSettingId.ShellIntegrationDecorationsEnabled,
+    );
 		const gutterIcon: IQuickPickItem = {
-			label: localize('gutter', 'Gutter command decorations'),
-			picked: configValue !== 'never' && configValue !== 'overviewRuler'
-		};
+      label: localize("gutter", "Gutter command decorations"),
+      picked: configValue !== "never" && configValue !== "overviewRuler",
+    };
 		const overviewRulerIcon: IQuickPickItem = {
-			label: localize('overviewRuler', 'Overview ruler command decorations'),
-			picked: configValue !== 'never' && configValue !== 'gutter'
-		};
+      label: localize("overviewRuler", "Overview ruler command decorations"),
+      picked: configValue !== "never" && configValue !== "gutter",
+    };
 		quickPick.items = [gutterIcon, overviewRulerIcon];
 		const selectedItems: IQuickPickItem[] = [];
-		if (configValue !== 'never') {
-			if (configValue !== 'gutter') {
+		if (configValue !== "never") {
+			if (configValue !== "gutter") {
 				selectedItems.push(gutterIcon);
 			}
-			if (configValue !== 'overviewRuler') {
+			if (configValue !== "overviewRuler") {
 				selectedItems.push(overviewRulerIcon);
 			}
 		}
 		quickPick.selectedItems = selectedItems;
 		this._register(quickPick.onDidChangeSelection(async e => {
-			let newValue: 'both' | 'gutter' | 'overviewRuler' | 'never' = 'never';
+			let newValue: "both" | "gutter" | "overviewRuler" | "never" = "never";
 			if (e.includes(gutterIcon)) {
 				if (e.includes(overviewRulerIcon)) {
-					newValue = 'both';
+					newValue = "both";
 				} else {
-					newValue = 'gutter';
+					newValue = "gutter";
 				}
 			} else if (e.includes(overviewRulerIcon)) {
-				newValue = 'overviewRuler';
+				newValue = "overviewRuler";
 			}
 			await this._configurationService.updateValue(TerminalSettingId.ShellIntegrationDecorationsEnabled, newValue);
 		}));

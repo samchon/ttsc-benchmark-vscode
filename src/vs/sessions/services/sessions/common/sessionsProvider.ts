@@ -3,11 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IChatRequestVariableEntry } from '../../../../workbench/contrib/chat/common/attachments/chatVariableEntries.js';
-import { IChat, ISession, ISessionType, ISessionWorkspace, ISessionWorkspaceBrowseAction } from './session.js';
+import { Event } from "../../../../base/common/event.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IChatRequestVariableEntry } from "../../../../workbench/contrib/chat/common/attachments/chatVariableEntries.js";
+import {
+  IChat,
+  ISession,
+  ISessionType,
+  ISessionWorkspace,
+  ISessionWorkspaceBrowseAction,
+} from "./session.js";
 
 /**
  * Event fired when sessions change within a provider.

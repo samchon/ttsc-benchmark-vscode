@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BrandedService, IConstructorSignature } from '../../../../platform/instantiation/common/instantiation.js';
-import { Registry } from '../../../../platform/registry/common/platform.js';
-import { IDetachedTerminalInstance, ITerminalContribution, ITerminalInstance } from './terminal.js';
-import { TerminalWidgetManager } from './widgets/widgetManager.js';
-import { ITerminalProcessInfo, ITerminalProcessManager } from '../common/terminal.js';
+import { BrandedService, IConstructorSignature } from "../../../../platform/instantiation/common/instantiation.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { IDetachedTerminalInstance, ITerminalContribution, ITerminalInstance } from "./terminal.js";
+import { TerminalWidgetManager } from "./widgets/widgetManager.js";
+import { ITerminalProcessInfo, ITerminalProcessManager } from "../common/terminal.js";
 
 export interface ITerminalContributionContext {
 	instance: ITerminalInstance;
@@ -43,7 +43,9 @@ export function registerTerminalContribution<Services extends BrandedService[]>(
 export function registerTerminalContribution<Services extends BrandedService[]>(id: string, ctor: { new(ctx: IDetachedCompatibleTerminalContributionContext, ...services: Services): ITerminalContribution }, canRunInDetachedTerminals: true): void;
 export function registerTerminalContribution(id: string, ctor: TerminalContributionCtor | DetachedCompatibleTerminalContributionCtor, canRunInDetachedTerminals: boolean = false): void {
 	// eslint-disable-next-line local/code-no-dangerous-type-assertions
-	TerminalContributionRegistry.INSTANCE.registerTerminalContribution({ id, ctor, canRunInDetachedTerminals } as ITerminalContributionDescription);
+	TerminalContributionRegistry.INSTANCE.registerTerminalContribution(
+    { id, ctor, canRunInDetachedTerminals } as ITerminalContributionDescription,
+  );
 }
 
 /**
@@ -77,7 +79,10 @@ class TerminalContributionRegistry {
 }
 
 const enum Extensions {
-	TerminalContributions = 'terminal.contributions'
+	TerminalContributions = "terminal.contributions"
 }
 
-Registry.add(Extensions.TerminalContributions, TerminalContributionRegistry.INSTANCE);
+Registry.add(
+  Extensions.TerminalContributions,
+  TerminalContributionRegistry.INSTANCE,
+);

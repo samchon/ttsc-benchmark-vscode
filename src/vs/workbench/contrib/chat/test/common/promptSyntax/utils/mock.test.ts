@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { mockObject, mockService } from './mock.js';
-import { typeCheck } from '../../../../../../../base/common/types.js';
-import { randomBoolean } from '../../../../../../../base/test/common/testUtils.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../../../base/test/common/utils.js';
+import assert from "assert";
+import { mockObject, mockService } from "./mock.js";
+import { typeCheck } from "../../../../../../../base/common/types.js";
+import { randomBoolean } from "../../../../../../../base/test/common/testUtils.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../../../base/test/common/utils.js";
 
-suite('mockService', () => {
+suite("mockService", () => {
 	ensureNoDisposablesAreLeakedInTestSuite();
 
-	suite('mockObject', () => {
-		test('overrides properties and functions', () => {
+	suite("mockObject", () => {
+		test("overrides properties and functions", () => {
 			interface ITestObject {
 				foo: string;
 				bar: string;
@@ -23,7 +23,7 @@ suite('mockService', () => {
 			}
 
 			const mock = mockObject<ITestObject>({
-				bar: 'oh hi!',
+				bar: "oh hi!",
 				baz: 42,
 				anotherMethod(arg: number): boolean {
 					return isNaN(arg);
@@ -34,24 +34,24 @@ suite('mockService', () => {
 
 			assert.strictEqual(
 				mock.bar,
-				'oh hi!',
-				'bar should be overriden',
+				"oh hi!",
+				"bar should be overriden",
 			);
 
 			assert.strictEqual(
 				mock.baz,
 				42,
-				'baz should be overriden',
+				"baz should be overriden",
 			);
 
 			assert(
 				!(mock.anotherMethod(490274)),
-				'Must execute overriden method correctly 1.',
+				"Must execute overriden method correctly 1.",
 			);
 
 			assert(
 				mock.anotherMethod(NaN),
-				'Must execute overriden method correctly 2.',
+				"Must execute overriden method correctly 2.",
 			);
 
 			assert.throws(() => {
@@ -66,7 +66,7 @@ suite('mockService', () => {
 			});
 		});
 
-		test('immutability of the overrides object', () => {
+		test("immutability of the overrides object", () => {
 			interface ITestObject {
 				foo: string;
 				bar: string;
@@ -84,12 +84,12 @@ suite('mockService', () => {
 			assert.strictEqual(
 				mock.baz,
 				4,
-				'baz should be overridden',
+				"baz should be overridden",
 			);
 
 			// overrides object must be immutable
 			assert.throws(() => {
-				overrides.foo = 'test';
+				overrides.foo = "test";
 			});
 
 			assert.throws(() => {
@@ -100,8 +100,8 @@ suite('mockService', () => {
 		});
 	});
 
-	suite('mockService', () => {
-		test('overrides properties and functions', () => {
+	suite("mockService", () => {
+		test("overrides properties and functions", () => {
 			interface ITestService {
 				readonly _serviceBrand: undefined;
 				prop1: string;
@@ -112,7 +112,7 @@ suite('mockService', () => {
 			}
 
 			const mock = mockService<ITestService>({
-				id: 'ciao!',
+				id: "ciao!",
 				counter: 74,
 				testMethod2(arg: number): boolean {
 					return !isNaN(arg);
@@ -123,24 +123,24 @@ suite('mockService', () => {
 
 			assert.strictEqual(
 				mock.id,
-				'ciao!',
-				'id should be overridden',
+				"ciao!",
+				"id should be overridden",
 			);
 
 			assert.strictEqual(
 				mock.counter,
 				74,
-				'counter should be overridden',
+				"counter should be overridden",
 			);
 
 			assert(
 				mock.testMethod2(74368),
-				'Must execute overridden method correctly 1.',
+				"Must execute overridden method correctly 1.",
 			);
 
 			assert(
 				!(mock.testMethod2(NaN)),
-				'Must execute overridden method correctly 2.',
+				"Must execute overridden method correctly 2.",
 			);
 
 			assert.throws(() => {
@@ -155,7 +155,7 @@ suite('mockService', () => {
 			});
 		});
 
-		test('immutability of the overrides object', () => {
+		test("immutability of the overrides object", () => {
 			interface ITestService {
 				readonly _serviceBrand: undefined;
 				foo: string;
@@ -174,12 +174,12 @@ suite('mockService', () => {
 			assert.strictEqual(
 				mock.baz,
 				false,
-				'baz should be overridden',
+				"baz should be overridden",
 			);
 
 			// overrides object must be immutable
 			assert.throws(() => {
-				overrides.foo = 'test';
+				overrides.foo = "test";
 			});
 
 			assert.throws(() => {

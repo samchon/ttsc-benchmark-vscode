@@ -10,9 +10,15 @@
 // (ProxyChannel), WebSocket, or stdio. This module defines the contract;
 // concrete implementations live in platform-specific folders.
 
-import { Event } from '../../../../base/common/event.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import type { ProtocolMessage, AhpServerNotification, JsonRpcNotification, JsonRpcResponse, JsonRpcRequest } from './sessionProtocol.js';
+import { Event } from "../../../../base/common/event.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import type {
+  ProtocolMessage,
+  AhpServerNotification,
+  JsonRpcNotification,
+  JsonRpcResponse,
+  JsonRpcRequest,
+} from "./sessionProtocol.js";
 
 /**
  * A bidirectional transport for protocol messages. Implementations handle
@@ -47,7 +53,7 @@ export interface IClientTransport extends IProtocolTransport {
 
 /** Type guard for transports that require an explicit connection step. */
 export function isClientTransport(transport: IProtocolTransport): transport is IClientTransport {
-	return typeof (transport as IClientTransport).connect === 'function';
+	return typeof (transport as IClientTransport).connect === "function";
 }
 
 /**

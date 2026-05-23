@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from '../../../../../base/common/buffer.js';
-import { IDisposable } from '../../../../../base/common/lifecycle.js';
-import { IObservable, IReader, ITransaction } from '../../../../../base/common/observable.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { IEditSessionDiffStats, IEditSessionEntryDiff } from '../../common/editing/chatEditingService.js';
-import { IChatRequestDisablement } from '../../common/model/chatModel.js';
-import { FileOperation, IChatEditingTimelineState, IFileBaseline } from './chatEditingOperations.js';
+import { VSBuffer } from "../../../../../base/common/buffer.js";
+import { IDisposable } from "../../../../../base/common/lifecycle.js";
+import { IObservable, IReader, ITransaction } from "../../../../../base/common/observable.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { IEditSessionDiffStats, IEditSessionEntryDiff } from "../../common/editing/chatEditingService.js";
+import { IChatRequestDisablement } from "../../common/model/chatModel.js";
+import { FileOperation, IChatEditingTimelineState, IFileBaseline } from "./chatEditingOperations.js";
 
 /**
  * Interface for the new checkpoint-based timeline system

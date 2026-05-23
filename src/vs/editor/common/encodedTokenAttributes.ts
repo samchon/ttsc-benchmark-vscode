@@ -124,20 +124,20 @@ export class TokenMetadata {
 
 	public static getClassNameFromMetadata(metadata: number): string {
 		const foreground = this.getForeground(metadata);
-		let className = 'mtk' + foreground;
+		let className = "mtk" + foreground;
 
 		const fontStyle = this.getFontStyle(metadata);
 		if (fontStyle & FontStyle.Italic) {
-			className += ' mtki';
+			className += " mtki";
 		}
 		if (fontStyle & FontStyle.Bold) {
-			className += ' mtkb';
+			className += " mtkb";
 		}
 		if (fontStyle & FontStyle.Underline) {
-			className += ' mtku';
+			className += " mtku";
 		}
 		if (fontStyle & FontStyle.Strikethrough) {
-			className += ' mtks';
+			className += " mtks";
 		}
 
 		return className;
@@ -149,17 +149,17 @@ export class TokenMetadata {
 
 		let result = `color: ${colorMap[foreground]};`;
 		if (fontStyle & FontStyle.Italic) {
-			result += 'font-style: italic;';
+			result += "font-style: italic;";
 		}
 		if (fontStyle & FontStyle.Bold) {
-			result += 'font-weight: bold;';
+			result += "font-weight: bold;";
 		}
-		let textDecoration = '';
+		let textDecoration = "";
 		if (fontStyle & FontStyle.Underline) {
-			textDecoration += ' underline';
+			textDecoration += " underline";
 		}
 		if (fontStyle & FontStyle.Strikethrough) {
-			textDecoration += ' line-through';
+			textDecoration += " line-through";
 		}
 		if (textDecoration) {
 			result += `text-decoration:${textDecoration};`;
@@ -173,12 +173,12 @@ export class TokenMetadata {
 		const fontStyle = this.getFontStyle(metadata);
 
 		return {
-			foreground: foreground,
-			italic: Boolean(fontStyle & FontStyle.Italic),
-			bold: Boolean(fontStyle & FontStyle.Bold),
-			underline: Boolean(fontStyle & FontStyle.Underline),
-			strikethrough: Boolean(fontStyle & FontStyle.Strikethrough),
-		};
+      foreground: foreground,
+      italic: Boolean(fontStyle & FontStyle.Italic),
+      bold: Boolean(fontStyle & FontStyle.Bold),
+      underline: Boolean(fontStyle & FontStyle.Underline),
+      strikethrough: Boolean(fontStyle & FontStyle.Strikethrough),
+    };
 	}
 }
 

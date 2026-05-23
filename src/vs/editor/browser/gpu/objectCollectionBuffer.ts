@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../base/common/event.js';
-import { Disposable, dispose, toDisposable, type IDisposable } from '../../../base/common/lifecycle.js';
-import { LinkedList } from '../../../base/common/linkedList.js';
-import { BufferDirtyTracker, type IBufferDirtyTrackerReader } from './bufferDirtyTracker.js';
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable, dispose, toDisposable, type IDisposable } from "../../../base/common/lifecycle.js";
+import { LinkedList } from "../../../base/common/linkedList.js";
+import { BufferDirtyTracker, type IBufferDirtyTrackerReader } from "./bufferDirtyTracker.js";
 
 export interface ObjectCollectionBufferPropertySpec {
 	name: string;
 }
 
 export type ObjectCollectionPropertyValues<T extends ObjectCollectionBufferPropertySpec[]> = {
-	[K in T[number]['name']]: number;
+	[K in T[number]["name"]]: number;
 };
 
 export interface IObjectCollectionBuffer<T extends ObjectCollectionBufferPropertySpec[]> extends IDisposable {
@@ -66,14 +66,14 @@ export interface IObjectCollectionBuffer<T extends ObjectCollectionBufferPropert
  * their values will be updated automatically in the buffer.
  */
 export interface IObjectCollectionBufferEntry<T extends ObjectCollectionBufferPropertySpec[]> extends IDisposable {
-	set(propertyName: T[number]['name'], value: number): void;
-	get(propertyName: T[number]['name']): number;
+	set(propertyName: T[number]["name"], value: number): void;
+	get(propertyName: T[number]["name"]): number;
 	setRaw(data: ArrayLike<number>): void;
 }
 
 export function createObjectCollectionBuffer<T extends ObjectCollectionBufferPropertySpec[]>(
 	propertySpecs: T,
-	capacity: number
+	capacity: number,
 ): IObjectCollectionBuffer<T> {
 	return new ObjectCollectionBuffer<T>(propertySpecs, capacity);
 }
@@ -106,7 +106,7 @@ class ObjectCollectionBuffer<T extends ObjectCollectionBufferPropertySpec[]> ext
 
 	constructor(
 		public propertySpecs: T,
-		public capacity: number
+		public capacity: number,
 	) {
 		super();
 
@@ -115,9 +115,9 @@ class ObjectCollectionBuffer<T extends ObjectCollectionBufferPropertySpec[]> ext
 		this._entrySize = propertySpecs.length;
 		for (let i = 0; i < propertySpecs.length; i++) {
 			const spec = {
-				offset: i,
-				...propertySpecs[i]
-			};
+        offset: i,
+        ...propertySpecs[i],
+      };
 			this._propertySpecsMap.set(spec.name, spec);
 		}
 		this._register(toDisposable(() => dispose(this._entries)));
@@ -129,7 +129,13 @@ class ObjectCollectionBuffer<T extends ObjectCollectionBufferPropertySpec[]> ext
 			this._onDidChangeBuffer.fire();
 		}
 
-		const value = new ObjectCollectionBufferEntry(this.view, this._propertySpecsMap, this._dirtyTracker, this._entries.size, data);
+		const value = new ObjectCollectionBufferEntry(
+      this.view,
+      this._propertySpecsMap,
+      this._dirtyTracker,
+      this._entries.size,
+      data,
+    );
 		const removeFromEntries = this._entries.push(value);
 		const listeners: IDisposable[] = [];
 		listeners.push(Event.forward(value.onDidChange, this._onDidChange));
@@ -179,7 +185,10 @@ class ObjectCollectionBufferEntry<T extends ObjectCollectionBufferPropertySpec[]
 		for (const propertySpec of this._propertySpecsMap.values()) {
 			this._view[this.i * this._propertySpecsMap.size + propertySpec.offset] = data[propertySpec.name as keyof typeof data];
 		}
-		this._dirtyTracker.flag(this.i * this._propertySpecsMap.size, this._propertySpecsMap.size);
+		this._dirtyTracker.flag(
+      this.i * this._propertySpecsMap.size,
+      this._propertySpecsMap.size,
+    );
 	}
 
 	override dispose() {
@@ -187,21 +196,30 @@ class ObjectCollectionBufferEntry<T extends ObjectCollectionBufferPropertySpec[]
 		super.dispose();
 	}
 
-	set(propertyName: T[number]['name'], value: number): void {
-		const i = this.i * this._propertySpecsMap.size + this._propertySpecsMap.get(propertyName)!.offset;
+	set(propertyName: T[number]["name"], value: number): void {
+		const i = this.i * this._propertySpecsMap.size + this._propertySpecsMap.get(
+      propertyName,
+    )!.offset;
 		this._view[this._dirtyTracker.flag(i)] = value;
 		this._onDidChange.fire();
 	}
 
-	get(propertyName: T[number]['name']): number {
-		return this._view[this.i * this._propertySpecsMap.size + this._propertySpecsMap.get(propertyName)!.offset];
+	get(propertyName: T[number]["name"]): number {
+		return this._view[this.i * this._propertySpecsMap.size + this._propertySpecsMap.get(
+      propertyName,
+    )!.offset];
 	}
 
 	setRaw(data: ArrayLike<number>): void {
 		if (data.length !== this._propertySpecsMap.size) {
-			throw new Error(`Data length ${data.length} does not match the number of properties in the collection (${this._propertySpecsMap.size})`);
+			throw new Error(
+        `Data length ${data.length} does not match the number of properties in the collection (${this._propertySpecsMap.size})`,
+      );
 		}
 		this._view.set(data, this.i * this._propertySpecsMap.size);
-		this._dirtyTracker.flag(this.i * this._propertySpecsMap.size, this._propertySpecsMap.size);
+		this._dirtyTracker.flag(
+      this.i * this._propertySpecsMap.size,
+      this._propertySpecsMap.size,
+    );
 	}
 }

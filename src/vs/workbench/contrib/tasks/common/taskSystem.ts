@@ -3,18 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../../base/common/uri.js';
-import Severity from '../../../../base/common/severity.js';
-import { TerminateResponse } from '../../../../base/common/processes.js';
-import { Event } from '../../../../base/common/event.js';
-import { Platform } from '../../../../base/common/platform.js';
-import { IWorkspaceFolder } from '../../../../platform/workspace/common/workspace.js';
-import { Task, ITaskEvent, KeyedTaskIdentifier } from './tasks.js';
-import { ConfigurationTarget } from '../../../../platform/configuration/common/configuration.js';
+import { URI } from "../../../../base/common/uri.js";
+import Severity from "../../../../base/common/severity.js";
+import { TerminateResponse } from "../../../../base/common/processes.js";
+import { Event } from "../../../../base/common/event.js";
+import { Platform } from "../../../../base/common/platform.js";
+import { IWorkspaceFolder } from "../../../../platform/workspace/common/workspace.js";
+import { Task, ITaskEvent, KeyedTaskIdentifier } from "./tasks.js";
+import { ConfigurationTarget } from "../../../../platform/configuration/common/configuration.js";
 
-import { IShellLaunchConfig } from '../../../../platform/terminal/common/terminal.js';
-import { IMarkerData } from '../../../../platform/markers/common/markers.js';
-import type { SingleOrMany } from '../../../../base/common/types.js';
+import { IShellLaunchConfig } from "../../../../platform/terminal/common/terminal.js";
+import { IMarkerData } from "../../../../platform/markers/common/markers.js";
+import type { SingleOrMany } from "../../../../base/common/types.js";
 
 export const enum TaskErrors {
 	NotConfigured,
@@ -52,9 +52,19 @@ export class VerifiedTask {
 
 	public getVerifiedTask(): { task: Task; resolver: ITaskResolver; trigger: string; resolvedVariables: IResolvedVariables; systemInfo: ITaskSystemInfo; workspaceFolder: IWorkspaceFolder; shellLaunchConfig: IShellLaunchConfig } {
 		if (this.verify()) {
-			return { task: this.task, resolver: this.resolver, trigger: this.trigger, resolvedVariables: this.resolvedVariables!, systemInfo: this.systemInfo!, workspaceFolder: this.workspaceFolder!, shellLaunchConfig: this.shellLaunchConfig! };
+			return {
+        task: this.task,
+        resolver: this.resolver,
+        trigger: this.trigger,
+        resolvedVariables: this.resolvedVariables!,
+        systemInfo: this.systemInfo!,
+        workspaceFolder: this.workspaceFolder!,
+        shellLaunchConfig: this.shellLaunchConfig!,
+      };
 		} else {
-			throw new Error('VerifiedTask was not checked. verify must be checked before getVerifiedTask.');
+			throw new Error(
+        "VerifiedTask was not checked. verify must be checked before getVerifiedTask.",
+      );
 		}
 	}
 }
@@ -72,9 +82,9 @@ export class TaskError {
 }
 
 export namespace Triggers {
-	export const shortcut: string = 'shortcut';
-	export const command: string = 'command';
-	export const reconnect: string = 'reconnect';
+	export const shortcut: string = "shortcut";
+	export const command: string = "command";
+	export const reconnect: string = "reconnect";
 }
 
 export interface ITaskSummary {

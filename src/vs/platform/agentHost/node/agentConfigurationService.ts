@@ -3,22 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as fs from 'fs';
-import { Emitter, Event } from '../../../base/common/event.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { dirname } from '../../../base/common/path.js';
-import { hasKey } from '../../../base/common/types.js';
-import { URI } from '../../../base/common/uri.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import { ILogService } from '../../log/common/log.js';
-import { AgentHostConfigKey, agentHostCustomizationConfigSchema, defaultAgentHostCustomizationConfigValues } from '../common/agentHostCustomizationConfig.js';
-import type { ISchema, SchemaDefinition, SchemaValue } from '../common/agentHostSchema.js';
-import { ProtocolError } from '../common/state/sessionProtocol.js';
-import { ActionType } from '../common/state/sessionActions.js';
-import { parseSubagentSessionUri, ROOT_STATE_URI, type URI as ProtocolURI } from '../common/state/sessionState.js';
-import { AgentHostStateManager } from './agentHostStateManager.js';
+import * as fs from "fs";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { dirname } from "../../../base/common/path.js";
+import { hasKey } from "../../../base/common/types.js";
+import { URI } from "../../../base/common/uri.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { ILogService } from "../../log/common/log.js";
+import {
+  AgentHostConfigKey,
+  agentHostCustomizationConfigSchema,
+  defaultAgentHostCustomizationConfigValues,
+} from "../common/agentHostCustomizationConfig.js";
+import type { ISchema, SchemaDefinition, SchemaValue } from "../common/agentHostSchema.js";
+import { ProtocolError } from "../common/state/sessionProtocol.js";
+import { ActionType } from "../common/state/sessionActions.js";
+import { parseSubagentSessionUri, ROOT_STATE_URI, type URI as ProtocolURI } from "../common/state/sessionState.js";
+import { AgentHostStateManager } from "./agentHostStateManager.js";
 
-export const IAgentConfigurationService = createDecorator<IAgentConfigurationService>('agentConfigurationService');
+export const IAgentConfigurationService = createDecorator<IAgentConfigurationService>(
+  "agentConfigurationService",
+);
 
 /**
  * Cohesive read/write surface for agent-host configuration.
@@ -127,7 +133,7 @@ export class AgentConfigurationService extends Disposable implements IAgentConfi
 		const ownSchema = agentHostCustomizationConfigSchema.toProtocol();
 		this._stateManager.rootState.config = {
 			schema: {
-				type: 'object',
+				type: "object",
 				properties: { ...existing?.schema.properties, ...ownSchema.properties },
 			},
 			values: { ...existing?.values, ...this._loadPersistedRootConfig() },
@@ -155,29 +161,35 @@ export class AgentConfigurationService extends Disposable implements IAgentConfi
 				return raw;
 			} catch (err) {
 				const reason = err instanceof ProtocolError ? err.message : String(err);
-				this._logService.warn(`[AgentConfigurationService] Value for '${key}' on ${session} failed schema validation, falling back: ${reason}`);
+				this._logService.warn(
+          `[AgentConfigurationService] Value for '${key}' on ${session} failed schema validation, falling back: ${reason}`,
+        );
 			}
 		}
 		return undefined;
 	}
 
 	getEffectiveWorkingDirectory(session: ProtocolURI): string | undefined {
-		const own = this._stateManager.getSessionState(session)?.summary.workingDirectory;
+		const own = this._stateManager.getSessionState(
+      session,
+    )?.summary.workingDirectory;
 		if (own !== undefined) {
 			return own;
 		}
 		const parentInfo = parseSubagentSessionUri(session);
 		if (parentInfo) {
-			return this._stateManager.getSessionState(parentInfo.parentSession.toString())?.summary.workingDirectory;
+			return this._stateManager.getSessionState(
+        parentInfo.parentSession.toString(),
+      )?.summary.workingDirectory;
 		}
 		return undefined;
 	}
 
 	updateSessionConfig(session: ProtocolURI, patch: Record<string, unknown>): void {
 		this._stateManager.dispatchServerAction(session, {
-			type: ActionType.SessionConfigChanged,
-			config: patch,
-		});
+      type: ActionType.SessionConfigChanged,
+      config: patch,
+    });
 	}
 
 	getSessionConfigValues(session: ProtocolURI): Record<string, unknown> | undefined {
@@ -198,17 +210,19 @@ export class AgentConfigurationService extends Disposable implements IAgentConfi
 			return raw;
 		} catch (err) {
 			const reason = err instanceof ProtocolError ? err.message : String(err);
-			this._logService.warn(`[AgentConfigurationService] Host value for '${key}' failed schema validation, ignoring: ${reason}`);
+			this._logService.warn(
+        `[AgentConfigurationService] Host value for '${key}' failed schema validation, ignoring: ${reason}`,
+      );
 			return undefined;
 		}
 	}
 
 	updateRootConfig(patch: Record<string, unknown>, replace = false): void {
 		this._stateManager.dispatchServerAction(ROOT_STATE_URI, {
-			type: ActionType.RootConfigChanged,
-			config: patch,
-			replace,
-		});
+      type: ActionType.RootConfigChanged,
+      config: patch,
+      replace,
+    });
 		this.persistRootConfig();
 	}
 
@@ -217,17 +231,19 @@ export class AgentConfigurationService extends Disposable implements IAgentConfi
 			return;
 		}
 
-		const values = this._stateManager.rootState.config?.values ?? { [AgentHostConfigKey.Customizations]: [] };
-		const content = JSON.stringify(values, undefined, '\t');
+		const values = this._stateManager.rootState.config?.values ?? {
+      [AgentHostConfigKey.Customizations]: [],
+    };
+		const content = JSON.stringify(values, undefined, "\t");
 		const resource = this._rootConfigResource;
 
 		this._rootConfigWrite = this._rootConfigWrite
 			.catch(err => {
-				this._logService.warn('[AgentConfigurationService] Previous host config write failed', err);
+				this._logService.warn("[AgentConfigurationService] Previous host config write failed", err);
 			})
 			.then(async () => {
 				await fs.promises.mkdir(dirname(resource.fsPath), { recursive: true });
-				await fs.promises.writeFile(resource.fsPath, `${content}\n`, 'utf8');
+				await fs.promises.writeFile(resource.fsPath, `${content}\n`, "utf8");
 			})
 			.catch(err => {
 				this._logService.error(`[AgentConfigurationService] Failed to persist host config to ${resource.fsPath}`, err);
@@ -246,7 +262,9 @@ export class AgentConfigurationService extends Disposable implements IAgentConfi
 		}
 		const parentInfo = parseSubagentSessionUri(session);
 		if (parentInfo) {
-			const parent = this._stateManager.getSessionState(parentInfo.parentSession.toString())?.config?.values;
+			const parent = this._stateManager.getSessionState(
+        parentInfo.parentSession.toString(),
+      )?.config?.values;
 			if (parent) {
 				yield parent;
 			}
@@ -264,13 +282,20 @@ export class AgentConfigurationService extends Disposable implements IAgentConfi
 		}
 
 		try {
-			const raw = fs.readFileSync(this._rootConfigResource.fsPath, 'utf8');
+			const raw = fs.readFileSync(this._rootConfigResource.fsPath, "utf8");
 			const parsed = JSON.parse(raw) as Record<string, unknown>;
-			return agentHostCustomizationConfigSchema.validateOrDefault(parsed, defaults);
+			return agentHostCustomizationConfigSchema.validateOrDefault(
+        parsed,
+        defaults,
+      );
 		} catch (err) {
-			const code = err && typeof err === 'object' && hasKey(err, { code: true }) ? String(err.code) : undefined;
-			if (code !== 'ENOENT') {
-				this._logService.warn(`[AgentConfigurationService] Failed to read host config from ${this._rootConfigResource.fsPath}: ${err instanceof Error ? err.message : String(err)}`);
+			const code = err && typeof err === "object" && hasKey(err, {
+        code: true,
+      }) ? String(err.code) : undefined;
+			if (code !== "ENOENT") {
+				this._logService.warn(
+          `[AgentConfigurationService] Failed to read host config from ${this._rootConfigResource.fsPath}: ${err instanceof Error ? err.message : String(err)}`,
+        );
 			}
 			return { ...defaults };
 		}

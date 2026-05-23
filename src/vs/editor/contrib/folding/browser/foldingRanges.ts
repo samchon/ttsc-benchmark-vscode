@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SelectedLines } from './folding.js';
+import { SelectedLines } from "./folding.js";
 
 export interface ILineRange {
 	startLineNumber: number;
@@ -17,9 +17,9 @@ export const enum FoldSource {
 }
 
 export const foldSourceAbbr = {
-	[FoldSource.provider]: ' ',
-	[FoldSource.userDefined]: 'u',
-	[FoldSource.recovered]: 'r',
+  [FoldSource.provider]: " ",
+  [FoldSource.userDefined]: "u",
+  [FoldSource.recovered]: "r",
 };
 
 export interface FoldRange {
@@ -72,7 +72,7 @@ export class FoldingRegions {
 
 	constructor(startIndexes: Uint32Array, endIndexes: Uint32Array, types?: Array<string | undefined>) {
 		if (startIndexes.length !== endIndexes.length || startIndexes.length > MAX_FOLDING_REGIONS) {
-			throw new Error('invalid startIndexes or endIndexes size');
+			throw new Error("invalid startIndexes or endIndexes size");
 		}
 		this._startIndexes = startIndexes;
 		this._endIndexes = endIndexes;
@@ -89,15 +89,22 @@ export class FoldingRegions {
 			const parentIndexes: number[] = [];
 			const isInsideLast = (startLineNumber: number, endLineNumber: number) => {
 				const index = parentIndexes[parentIndexes.length - 1];
-				return this.getStartLineNumber(index) <= startLineNumber && this.getEndLineNumber(index) >= endLineNumber;
+				return this.getStartLineNumber(
+          index,
+        ) <= startLineNumber && this.getEndLineNumber(index) >= endLineNumber;
 			};
 			for (let i = 0, len = this._startIndexes.length; i < len; i++) {
 				const startLineNumber = this._startIndexes[i];
 				const endLineNumber = this._endIndexes[i];
 				if (startLineNumber > MAX_LINE_NUMBER || endLineNumber > MAX_LINE_NUMBER) {
-					throw new Error('startLineNumber or endLineNumber must not exceed ' + MAX_LINE_NUMBER);
+					throw new Error(
+            "startLineNumber or endLineNumber must not exceed " + MAX_LINE_NUMBER,
+          );
 				}
-				while (parentIndexes.length > 0 && !isInsideLast(startLineNumber, endLineNumber)) {
+				while (parentIndexes.length > 0 && !isInsideLast(
+          startLineNumber,
+          endLineNumber,
+        )) {
 					parentIndexes.pop();
 				}
 				const parentIndex = parentIndexes.length > 0 ? parentIndexes[parentIndexes.length - 1] : -1;
@@ -242,19 +249,19 @@ export class FoldingRegions {
 	public toString() {
 		const res: string[] = [];
 		for (let i = 0; i < this.length; i++) {
-			res[i] = `[${foldSourceAbbr[this.getSource(i)]}${this.isCollapsed(i) ? '+' : '-'}] ${this.getStartLineNumber(i)}/${this.getEndLineNumber(i)}`;
+			res[i] = `[${foldSourceAbbr[this.getSource(i)]}${this.isCollapsed(i) ? "+" : "-"}] ${this.getStartLineNumber(i)}/${this.getEndLineNumber(i)}`;
 		}
-		return res.join(', ');
+		return res.join(", ");
 	}
 
 	public toFoldRange(index: number): FoldRange {
 		return {
-			startLineNumber: this._startIndexes[index] & MAX_LINE_NUMBER,
-			endLineNumber: this._endIndexes[index] & MAX_LINE_NUMBER,
-			type: this._types ? this._types[index] : undefined,
-			isCollapsed: this.isCollapsed(index),
-			source: this.getSource(index)
-		};
+      startLineNumber: this._startIndexes[index] & MAX_LINE_NUMBER,
+      endLineNumber: this._endIndexes[index] & MAX_LINE_NUMBER,
+      type: this._types ? this._types[index] : undefined,
+      isCollapsed: this.isCollapsed(index),
+      source: this.getSource(index),
+    };
 	}
 
 	public static fromFoldRanges(ranges: FoldRange[]): FoldingRegions {
@@ -302,7 +309,7 @@ export class FoldingRegions {
 		rangesA: FoldingRegions | FoldRange[],
 		rangesB: FoldingRegions | FoldRange[],
 		maxLineNumber: number | undefined,
-		selection?: SelectedLines
+		selection?: SelectedLines,
 	): FoldRange[] {
 
 		maxLineNumber = maxLineNumber ?? Number.MAX_VALUE;
@@ -310,7 +317,9 @@ export class FoldingRegions {
 		const getIndexedFunction = (r: FoldingRegions | FoldRange[], limit: number) => {
 			return Array.isArray(r)
 				? ((i: number) => { return (i < limit) ? r[i] : undefined; })
-				: ((i: number) => { return (i < limit) ? r.toFoldRange(i) : undefined; });
+				: ((i: number) => { return (i < limit) ? r.toFoldRange(
+            i,
+          ) : undefined; });
 		};
 		const getA = getIndexedFunction(rangesA, rangesA.length);
 		const getB = getIndexedFunction(rangesB, rangesB.length);
@@ -336,7 +345,10 @@ export class FoldingRegions {
 						// a previously folded range or a (possibly unfolded) recovered range
 						useRange = nextA;
 						// stays collapsed if the range still has the same number of lines or the selection is not in the range or after it
-						useRange.isCollapsed = nextB.isCollapsed && (nextA.endLineNumber === nextB.endLineNumber || !selection?.startsInside(nextA.startLineNumber + 1, nextA.endLineNumber + 1));
+						useRange.isCollapsed = nextB.isCollapsed && (nextA.endLineNumber === nextB.endLineNumber || !selection?.startsInside(
+              nextA.startLineNumber + 1,
+              nextA.endLineNumber + 1,
+            ));
 						useRange.source = FoldSource.provider;
 					}
 					nextA = getA(++indexA); // not necessary, just for speed

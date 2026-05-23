@@ -3,8 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ITerminalSandboxService } from '../../../common/terminalSandboxService.js';
-import type { ICommandLinePresenter, ICommandLinePresenterOptions, ICommandLinePresenterResult } from './commandLinePresenter.js';
+import { ITerminalSandboxService } from "../../../common/terminalSandboxService.js";
+import type {
+  ICommandLinePresenter,
+  ICommandLinePresenterOptions,
+  ICommandLinePresenterResult,
+} from "./commandLinePresenter.js";
 
 /**
  * Command line presenter for sandboxed commands.
@@ -23,8 +27,8 @@ export class SandboxedCommandLinePresenter implements ICommandLinePresenter {
 			return undefined;
 		}
 		return {
-			commandLine: options.commandLine.forDisplay,
-			processOtherPresenters: true
-		};
+      commandLine: options.commandLine.forDisplay,
+      processOtherPresenters: true,
+    };
 	}
 }

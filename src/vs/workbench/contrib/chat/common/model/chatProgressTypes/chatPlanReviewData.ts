@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DeferredPromise } from '../../../../../../base/common/async.js';
-import { UriComponents } from '../../../../../../base/common/uri.js';
-import { IChatPlanApprovalAction, IChatPlanReview, IChatPlanReviewResult } from '../../chatService/chatService.js';
-import { ToolDataSource } from '../../tools/languageModelToolsService.js';
+import { DeferredPromise } from "../../../../../../base/common/async.js";
+import { UriComponents } from "../../../../../../base/common/uri.js";
+import { IChatPlanApprovalAction, IChatPlanReview, IChatPlanReviewResult } from "../../chatService/chatService.js";
+import { ToolDataSource } from "../../tools/languageModelToolsService.js";
 
 /**
  * Runtime representation of a plan review widget with a {@link DeferredPromise}
@@ -14,7 +14,7 @@ import { ToolDataSource } from '../../tools/languageModelToolsService.js';
  * strips the completion so only serialisable data is persisted.
  */
 export class ChatPlanReviewData implements IChatPlanReview {
-	public readonly kind = 'planReview' as const;
+	public readonly kind = "planReview" as const;
 	public readonly completion = new DeferredPromise<IChatPlanReviewResult | undefined>();
 
 	public draftFeedback: string | undefined;
@@ -45,16 +45,16 @@ export class ChatPlanReviewData implements IChatPlanReview {
 
 	toJSON(): IChatPlanReview {
 		return {
-			kind: this.kind,
-			title: this.title,
-			content: this.content,
-			actions: this.actions,
-			canProvideFeedback: this.canProvideFeedback,
-			planUri: this.planUri,
-			resolveId: this.resolveId,
-			data: this.data,
-			isUsed: this.isUsed,
-			source: this.source,
-		};
+      kind: this.kind,
+      title: this.title,
+      content: this.content,
+      actions: this.actions,
+      canProvideFeedback: this.canProvideFeedback,
+      planUri: this.planUri,
+      resolveId: this.resolveId,
+      data: this.data,
+      isUsed: this.isUsed,
+      source: this.source,
+    };
 	}
 }

@@ -3,53 +3,58 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IEditorOptions } from '../../../../editor/common/config/editorOptions.js';
-import { ICodeEditorWidgetOptions } from '../../../../editor/browser/widget/codeEditor/codeEditorWidget.js';
-import { ContextMenuController } from '../../../../editor/contrib/contextmenu/browser/contextmenu.js';
-import { SnippetController2 } from '../../../../editor/contrib/snippet/browser/snippetController2.js';
-import { SuggestController } from '../../../../editor/contrib/suggest/browser/suggestController.js';
-import { MenuPreventer } from './menuPreventer.js';
-import { SelectionClipboardContributionID } from './selectionClipboard.js';
-import { TabCompletionController } from '../../snippets/browser/tabCompletion.js';
-import { EditorExtensionsRegistry } from '../../../../editor/browser/editorExtensions.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { registerThemingParticipant } from '../../../../platform/theme/common/themeService.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { selectionBackground, inputBackground, inputForeground, editorSelectionBackground } from '../../../../platform/theme/common/colorRegistry.js';
+import { IEditorOptions } from "../../../../editor/common/config/editorOptions.js";
+import { ICodeEditorWidgetOptions } from "../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import { ContextMenuController } from "../../../../editor/contrib/contextmenu/browser/contextmenu.js";
+import { SnippetController2 } from "../../../../editor/contrib/snippet/browser/snippetController2.js";
+import { SuggestController } from "../../../../editor/contrib/suggest/browser/suggestController.js";
+import { MenuPreventer } from "./menuPreventer.js";
+import { SelectionClipboardContributionID } from "./selectionClipboard.js";
+import { TabCompletionController } from "../../snippets/browser/tabCompletion.js";
+import { EditorExtensionsRegistry } from "../../../../editor/browser/editorExtensions.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { registerThemingParticipant } from "../../../../platform/theme/common/themeService.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import {
+  selectionBackground,
+  inputBackground,
+  inputForeground,
+  editorSelectionBackground,
+} from "../../../../platform/theme/common/colorRegistry.js";
 
 export function getSimpleEditorOptions(configurationService: IConfigurationService): IEditorOptions {
 	return {
-		wordWrap: 'on',
+		wordWrap: "on",
 		overviewRulerLanes: 0,
 		glyphMargin: false,
-		lineNumbers: 'off',
+		lineNumbers: "off",
 		folding: false,
 		selectOnLineNumbers: false,
 		hideCursorInOverviewRuler: true,
 		selectionHighlight: false,
 		scrollbar: {
-			horizontal: 'hidden',
-			alwaysConsumeMouseWheel: false
+			horizontal: "hidden",
+			alwaysConsumeMouseWheel: false,
 		},
 		lineDecorationsWidth: 0,
 		overviewRulerBorder: false,
 		scrollBeyondLastLine: false,
-		renderLineHighlight: 'none',
+		renderLineHighlight: "none",
 		fixedOverflowWidgets: true,
-		acceptSuggestionOnEnter: 'smart',
+		acceptSuggestionOnEnter: "smart",
 		dragAndDrop: false,
 		revealHorizontalRightPadding: 5,
 		minimap: {
-			enabled: false
+			enabled: false,
 		},
 		guides: {
-			indentation: false
+			indentation: false,
 		},
-		wordSegmenterLocales: configurationService.getValue<string | string[]>('editor.wordSegmenterLocales'),
-		accessibilitySupport: configurationService.getValue<'auto' | 'off' | 'on'>('editor.accessibilitySupport'),
-		cursorBlinking: configurationService.getValue<'blink' | 'smooth' | 'phase' | 'expand' | 'solid'>('editor.cursorBlinking'),
-		editContext: configurationService.getValue<boolean>('editor.editContext'),
-		defaultColorDecorators: 'never',
+		wordSegmenterLocales: configurationService.getValue<string | string[]>("editor.wordSegmenterLocales"),
+		accessibilitySupport: configurationService.getValue<"auto" | "off" | "on">("editor.accessibilitySupport"),
+		cursorBlinking: configurationService.getValue<"blink" | "smooth" | "phase" | "expand" | "solid">("editor.cursorBlinking"),
+		editContext: configurationService.getValue<boolean>("editor.editContext"),
+		defaultColorDecorators: "never",
 		allowVariableLineHeights: false,
 		allowVariableFonts: false,
 		allowVariableFontsInAccessibilityMode: false,
@@ -66,7 +71,7 @@ export function getSimpleCodeEditorWidgetOptions(): ICodeEditorWidgetOptions {
 			SuggestController.ID,
 			SnippetController2.ID,
 			TabCompletionController.ID,
-		])
+		]),
 	};
 }
 

@@ -3,22 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { VSBuffer } from '../../../../base/common/buffer.js';
-import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { Schemas } from '../../../../base/common/network.js';
-import { URI } from '../../../../base/common/uri.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
-import { FileService } from '../../../files/common/fileService.js';
-import { IFileService } from '../../../files/common/files.js';
-import { InMemoryFileSystemProvider } from '../../../files/common/inMemoryFilesystemProvider.js';
-import { TestInstantiationService } from '../../../instantiation/test/common/instantiationServiceMock.js';
-import { ILogService, NullLogService } from '../../../log/common/log.js';
-import { IAgentPluginManager } from '../../common/agentPluginManager.js';
-import { DiscoveredType, SessionCustomizationDiscovery } from '../../node/copilot/sessionCustomizationDiscovery.js';
-import { SessionPluginBundler } from '../../node/shared/sessionPluginBundler.js';
+import assert from "assert";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
+import { FileService } from "../../../files/common/fileService.js";
+import { IFileService } from "../../../files/common/files.js";
+import { InMemoryFileSystemProvider } from "../../../files/common/inMemoryFilesystemProvider.js";
+import { TestInstantiationService } from "../../../instantiation/test/common/instantiationServiceMock.js";
+import { ILogService, NullLogService } from "../../../log/common/log.js";
+import { IAgentPluginManager } from "../../common/agentPluginManager.js";
+import { DiscoveredType, SessionCustomizationDiscovery } from "../../node/copilot/sessionCustomizationDiscovery.js";
+import { SessionPluginBundler } from "../../node/shared/sessionPluginBundler.js";
 
-suite('SessionCustomizationDiscovery + SessionPluginBundler', () => {
+suite("SessionCustomizationDiscovery + SessionPluginBundler", () => {
 
 	const disposables = new DisposableStore();
 	let fileService: FileService;
@@ -36,9 +36,9 @@ suite('SessionCustomizationDiscovery + SessionPluginBundler', () => {
 		instantiationService.stub(IFileService, fileService);
 		instantiationService.stub(ILogService, new NullLogService());
 
-		workspace = URI.from({ scheme: Schemas.inMemory, path: '/workspace' });
-		userHome = URI.from({ scheme: Schemas.inMemory, path: '/home' });
-		pluginBasePath = URI.from({ scheme: Schemas.inMemory, path: '/agentPlugins' });
+		workspace = URI.from({ scheme: Schemas.inMemory, path: "/workspace" });
+		userHome = URI.from({ scheme: Schemas.inMemory, path: "/home" });
+		pluginBasePath = URI.from({ scheme: Schemas.inMemory, path: "/agentPlugins" });
 		instantiationService.stub(IAgentPluginManager, { basePath: pluginBasePath } as Partial<IAgentPluginManager>);
 	});
 
@@ -47,20 +47,20 @@ suite('SessionCustomizationDiscovery + SessionPluginBundler', () => {
 	});
 	ensureNoDisposablesAreLeakedInTestSuite();
 
-	async function seed(path: string, content = ''): Promise<URI> {
+	async function seed(path: string, content = ""): Promise<URI> {
 		const uri = URI.from({ scheme: Schemas.inMemory, path });
 		await fileService.writeFile(uri, VSBuffer.fromString(content));
 		return uri;
 	}
 
-	test('discovers agents, skills, and instructions across workspace and home roots', async () => {
-		const wsAgent = await seed('/workspace/.github/agents/foo.agent.md', 'agent body');
-		const wsSkill = await seed('/workspace/.github/skills/bar/SKILL.md', 'skill body');
-		const wsInstr = await seed('/workspace/.github/instructions/baz.instructions.md', 'instr body');
-		const userAgent = await seed('/home/.copilot/agents/qux.agent.md', 'user agent');
-		const userSkill = await seed('/home/.agents/skills/zap/SKILL.md', 'user skill');
+	test("discovers agents, skills, and instructions across workspace and home roots", async () => {
+		const wsAgent = await seed("/workspace/.github/agents/foo.agent.md", "agent body");
+		const wsSkill = await seed("/workspace/.github/skills/bar/SKILL.md", "skill body");
+		const wsInstr = await seed("/workspace/.github/instructions/baz.instructions.md", "instr body");
+		const userAgent = await seed("/home/.copilot/agents/qux.agent.md", "user agent");
+		const userSkill = await seed("/home/.agents/skills/zap/SKILL.md", "user skill");
 		// Noise that should not be picked up
-		await seed('/workspace/.github/agents/not-an-agent.txt', 'ignored');
+		await seed("/workspace/.github/agents/not-an-agent.txt", "ignored");
 
 		const discovery = disposables.add(instantiationService.createInstance(SessionCustomizationDiscovery, workspace, userHome));
 		const files = await discovery.files();
@@ -74,18 +74,18 @@ suite('SessionCustomizationDiscovery + SessionPluginBundler', () => {
 		].sort((a, b) => a.uri.toString().localeCompare(b.uri.toString())));
 	});
 
-	test('excludes exact-case README.md and more-specific prompt-type files inside agent folders', async () => {
+	test("excludes exact-case README.md and more-specific prompt-type files inside agent folders", async () => {
 		// `.github/agents/` is type-disambiguated, but the workbench
 		// classifier (`getPromptFileType`) gives precedence to more-specific
 		// suffixes and excludes README. Discovery must mirror those rules.
-		const wsAgent = await seed('/workspace/.github/agents/foo.agent.md', 'agent body');
-		const wsPlainAgent = await seed('/workspace/.github/agents/plain.md', 'plain agent body');
-		await seed('/workspace/.github/agents/README.md', 'docs');
-		const wsLowercaseReadmeAgent = await seed('/workspace/.github/agents/readme.md', 'docs lower');
-		await seed('/workspace/.github/agents/sub.instructions.md', 'instructions');
-		await seed('/workspace/.github/agents/sub.prompt.md', 'prompt');
-		await seed('/workspace/.github/agents/SKILL.md', 'skill');
-		await seed('/workspace/.github/agents/copilot-instructions.md', 'copilot instr');
+		const wsAgent = await seed("/workspace/.github/agents/foo.agent.md", "agent body");
+		const wsPlainAgent = await seed("/workspace/.github/agents/plain.md", "plain agent body");
+		await seed("/workspace/.github/agents/README.md", "docs");
+		const wsLowercaseReadmeAgent = await seed("/workspace/.github/agents/readme.md", "docs lower");
+		await seed("/workspace/.github/agents/sub.instructions.md", "instructions");
+		await seed("/workspace/.github/agents/sub.prompt.md", "prompt");
+		await seed("/workspace/.github/agents/SKILL.md", "skill");
+		await seed("/workspace/.github/agents/copilot-instructions.md", "copilot instr");
 
 		const discovery = disposables.add(instantiationService.createInstance(SessionCustomizationDiscovery, workspace, userHome));
 		const files = await discovery.files();
@@ -97,10 +97,10 @@ suite('SessionCustomizationDiscovery + SessionPluginBundler', () => {
 		].sort((a, b) => a.uri.toString().localeCompare(b.uri.toString())));
 	});
 
-	test('bundles discovered files into the synthetic plugin tree', async () => {
-		await seed('/workspace/.github/agents/foo.agent.md', 'agent body');
-		await seed('/workspace/.github/skills/bar/SKILL.md', 'skill body');
-		await seed('/workspace/.github/instructions/baz.instructions.md', 'instr body');
+	test("bundles discovered files into the synthetic plugin tree", async () => {
+		await seed("/workspace/.github/agents/foo.agent.md", "agent body");
+		await seed("/workspace/.github/skills/bar/SKILL.md", "skill body");
+		await seed("/workspace/.github/instructions/baz.instructions.md", "instr body");
 
 		const discovery = disposables.add(instantiationService.createInstance(SessionCustomizationDiscovery, workspace, userHome));
 		const bundler = disposables.add(instantiationService.createInstance(SessionPluginBundler, workspace));
@@ -108,24 +108,24 @@ suite('SessionCustomizationDiscovery + SessionPluginBundler', () => {
 		const result = await bundler.bundle(files);
 
 		assert.ok(result);
-		assert.strictEqual(result.ref.displayName, 'VS Code Synced Data');
+		assert.strictEqual(result.ref.displayName, "VS Code Synced Data");
 		assert.ok(result.ref.nonce);
 
 		const root = bundler.rootUri;
-		const manifest = await fileService.readFile(URI.joinPath(root, '.plugin', 'plugin.json'));
+		const manifest = await fileService.readFile(URI.joinPath(root, ".plugin", "plugin.json"));
 		assert.match(manifest.value.toString(), /"name": "VS Code Synced Data"/);
 
-		const agent = await fileService.readFile(URI.joinPath(root, 'agents', 'foo.agent.md'));
-		assert.strictEqual(agent.value.toString(), 'agent body');
+		const agent = await fileService.readFile(URI.joinPath(root, "agents", "foo.agent.md"));
+		assert.strictEqual(agent.value.toString(), "agent body");
 
-		const skill = await fileService.readFile(URI.joinPath(root, 'skills', 'bar', 'SKILL.md'));
-		assert.strictEqual(skill.value.toString(), 'skill body');
+		const skill = await fileService.readFile(URI.joinPath(root, "skills", "bar", "SKILL.md"));
+		assert.strictEqual(skill.value.toString(), "skill body");
 
-		const instr = await fileService.readFile(URI.joinPath(root, 'rules', 'baz.instructions.md'));
-		assert.strictEqual(instr.value.toString(), 'instr body');
+		const instr = await fileService.readFile(URI.joinPath(root, "rules", "baz.instructions.md"));
+		assert.strictEqual(instr.value.toString(), "instr body");
 	});
 
-	test('returns undefined when no files were discovered', async () => {
+	test("returns undefined when no files were discovered", async () => {
 		const discovery = disposables.add(instantiationService.createInstance(SessionCustomizationDiscovery, workspace, userHome));
 		const bundler = disposables.add(instantiationService.createInstance(SessionPluginBundler, workspace));
 		const files = await discovery.files();
@@ -133,9 +133,9 @@ suite('SessionCustomizationDiscovery + SessionPluginBundler', () => {
 		assert.strictEqual(result, undefined);
 	});
 
-	test('produces a stable nonce for identical content', async () => {
-		await seed('/workspace/.github/agents/foo.agent.md', 'agent body');
-		await seed('/workspace/.github/skills/bar/SKILL.md', 'skill body');
+	test("produces a stable nonce for identical content", async () => {
+		await seed("/workspace/.github/agents/foo.agent.md", "agent body");
+		await seed("/workspace/.github/skills/bar/SKILL.md", "skill body");
 
 		const discovery = disposables.add(instantiationService.createInstance(SessionCustomizationDiscovery, workspace, userHome));
 		const bundler = disposables.add(instantiationService.createInstance(SessionPluginBundler, workspace));
@@ -145,8 +145,8 @@ suite('SessionCustomizationDiscovery + SessionPluginBundler', () => {
 		assert.strictEqual(first.ref.nonce, second.ref.nonce);
 	});
 
-	test('different working directories produce different bundle authorities', async () => {
-		const otherWorkspace = URI.from({ scheme: Schemas.inMemory, path: '/other-workspace' });
+	test("different working directories produce different bundle authorities", async () => {
+		const otherWorkspace = URI.from({ scheme: Schemas.inMemory, path: "/other-workspace" });
 		const a = disposables.add(instantiationService.createInstance(SessionPluginBundler, workspace));
 		const b = disposables.add(instantiationService.createInstance(SessionPluginBundler, otherWorkspace));
 		assert.notStrictEqual(a.rootUri.toString(), b.rootUri.toString());

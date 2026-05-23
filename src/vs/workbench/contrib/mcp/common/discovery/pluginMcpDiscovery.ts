@@ -3,25 +3,31 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { hash } from '../../../../../base/common/hash.js';
-import { Disposable, DisposableResourceMap } from '../../../../../base/common/lifecycle.js';
-import { ResourceSet } from '../../../../../base/common/map.js';
-import { Schemas } from '../../../../../base/common/network.js';
-import { autorun } from '../../../../../base/common/observable.js';
-import { isDefined } from '../../../../../base/common/types.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { ConfigurationTarget } from '../../../../../platform/configuration/common/configuration.js';
-import { IMcpServerConfiguration, McpServerType } from '../../../../../platform/mcp/common/mcpPlatformTypes.js';
-import { StorageScope } from '../../../../../platform/storage/common/storage.js';
+import { hash } from "../../../../../base/common/hash.js";
+import { Disposable, DisposableResourceMap } from "../../../../../base/common/lifecycle.js";
+import { ResourceSet } from "../../../../../base/common/map.js";
+import { Schemas } from "../../../../../base/common/network.js";
+import { autorun } from "../../../../../base/common/observable.js";
+import { isDefined } from "../../../../../base/common/types.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ConfigurationTarget } from "../../../../../platform/configuration/common/configuration.js";
+import { IMcpServerConfiguration, McpServerType } from "../../../../../platform/mcp/common/mcpPlatformTypes.js";
+import { StorageScope } from "../../../../../platform/storage/common/storage.js";
 import {
 	IAgentPlugin,
 	IAgentPluginMcpServerDefinition,
-	IAgentPluginService
-} from '../../../chat/common/plugins/agentPluginService.js';
-import { isContributionEnabled } from '../../../chat/common/enablement.js';
-import { IMcpRegistry } from '../mcpRegistryTypes.js';
-import { McpCollectionSortOrder, McpServerDefinition, McpServerLaunch, McpServerTransportType, McpServerTrust } from '../mcpTypes.js';
-import { IMcpDiscovery } from './mcpDiscovery.js';
+	IAgentPluginService,
+} from "../../../chat/common/plugins/agentPluginService.js";
+import { isContributionEnabled } from "../../../chat/common/enablement.js";
+import { IMcpRegistry } from "../mcpRegistryTypes.js";
+import {
+  McpCollectionSortOrder,
+  McpServerDefinition,
+  McpServerLaunch,
+  McpServerTransportType,
+  McpServerTrust,
+} from "../mcpTypes.js";
+import { IMcpDiscovery } from "./mcpDiscovery.js";
 
 export class PluginMcpDiscovery extends Disposable implements IMcpDiscovery {
 	readonly fromGallery = false;
@@ -94,34 +100,34 @@ export class PluginMcpDiscovery extends Disposable implements IMcpDiscovery {
 		}
 
 		return {
-			id: `${collectionId}.${name}`,
-			label: name,
-			launch,
-			variableReplacement: { target: ConfigurationTarget.USER },
-			cacheNonce: String(hash(launch)),
-		};
+      id: `${collectionId}.${name}`,
+      label: name,
+      launch,
+      variableReplacement: { target: ConfigurationTarget.USER },
+      cacheNonce: String(hash(launch)),
+    };
 	}
 
 	private _toLaunch(config: IMcpServerConfiguration): McpServerLaunch | undefined {
 		if (config.type === McpServerType.LOCAL) {
 			return {
-				type: McpServerTransportType.Stdio,
-				command: config.command,
-				args: config.args ? [...config.args] : [],
-				env: config.env ? { ...config.env } : {},
-				envFile: config.envFile,
-				cwd: config.cwd,
-				sandbox: undefined,
-			};
+        type: McpServerTransportType.Stdio,
+        command: config.command,
+        args: config.args ? [...config.args] : [],
+        env: config.env ? { ...config.env } : {},
+        envFile: config.envFile,
+        cwd: config.cwd,
+        sandbox: undefined,
+      };
 		}
 
 		try {
 			return {
-				type: McpServerTransportType.HTTP,
-				uri: URI.parse(config.url),
-				headers: Object.entries(config.headers ?? {}),
-				oauth: config.oauth,
-			};
+        type: McpServerTransportType.HTTP,
+        uri: URI.parse(config.url),
+        headers: Object.entries(config.headers ?? {}),
+        oauth: config.oauth,
+      };
 		} catch {
 			return undefined;
 		}

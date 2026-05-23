@@ -3,32 +3,54 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
-import { IObservable, observableValue } from '../../../../../base/common/observable.js';
-import { ConfigurationTarget } from '../../../../../platform/configuration/common/configuration.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { LogLevel, NullLogger } from '../../../../../platform/log/common/log.js';
-import { StorageScope } from '../../../../../platform/storage/common/storage.js';
-import { IWorkspaceFolderData } from '../../../../../platform/workspace/common/workspace.js';
-import { IResolvedValue } from '../../../../services/configurationResolver/common/configurationResolverExpression.js';
-import { IMcpHostDelegate, IMcpMessageTransport, IMcpRegistry, IMcpResolveConnectionOptions } from '../../common/mcpRegistryTypes.js';
-import { McpServerConnection } from '../../common/mcpServerConnection.js';
-import { IMcpServerConnection, LazyCollectionState, McpCollectionDefinition, McpCollectionReference, McpConnectionState, McpDefinitionReference, McpServerDefinition, McpServerTransportType, McpServerTrust } from '../../common/mcpTypes.js';
-import { MCP } from '../../common/modelContextProtocol.js';
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { Disposable, IDisposable } from "../../../../../base/common/lifecycle.js";
+import { IObservable, observableValue } from "../../../../../base/common/observable.js";
+import { ConfigurationTarget } from "../../../../../platform/configuration/common/configuration.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { LogLevel, NullLogger } from "../../../../../platform/log/common/log.js";
+import { StorageScope } from "../../../../../platform/storage/common/storage.js";
+import { IWorkspaceFolderData } from "../../../../../platform/workspace/common/workspace.js";
+import { IResolvedValue } from "../../../../services/configurationResolver/common/configurationResolverExpression.js";
+import {
+  IMcpHostDelegate,
+  IMcpMessageTransport,
+  IMcpRegistry,
+  IMcpResolveConnectionOptions,
+} from "../../common/mcpRegistryTypes.js";
+import { McpServerConnection } from "../../common/mcpServerConnection.js";
+import {
+  IMcpServerConnection,
+  LazyCollectionState,
+  McpCollectionDefinition,
+  McpCollectionReference,
+  McpConnectionState,
+  McpDefinitionReference,
+  McpServerDefinition,
+  McpServerTransportType,
+  McpServerTrust,
+} from "../../common/mcpTypes.js";
+import { MCP } from "../../common/modelContextProtocol.js";
 
 /**
  * Implementation of IMcpMessageTransport for testing purposes.
  * Allows tests to easily send/receive messages and control the connection state.
  */
 export class TestMcpMessageTransport extends Disposable implements IMcpMessageTransport {
-	private readonly _onDidLog = this._register(new Emitter<{ level: LogLevel; message: string }>());
+	private readonly _onDidLog = this._register(
+    new Emitter<{ level: LogLevel; message: string }>(),
+  );
 	public readonly onDidLog = this._onDidLog.event;
 
-	private readonly _onDidReceiveMessage = this._register(new Emitter<MCP.JSONRPCMessage>());
+	private readonly _onDidReceiveMessage = this._register(
+    new Emitter<MCP.JSONRPCMessage>(),
+  );
 	public readonly onDidReceiveMessage = this._onDidReceiveMessage.event;
 
-	private readonly _stateValue = observableValue<McpConnectionState>('testTransportState', { state: McpConnectionState.Kind.Starting });
+	private readonly _stateValue = observableValue<McpConnectionState>(
+    "testTransportState",
+    { state: McpConnectionState.Kind.Starting },
+  );
 	public readonly state = this._stateValue;
 
 	private readonly _sentMessages: MCP.JSONRPCMessage[] = [];
@@ -36,24 +58,24 @@ export class TestMcpMessageTransport extends Disposable implements IMcpMessageTr
 	constructor() {
 		super();
 
-		this.setResponder('initialize', () => ({
+		this.setResponder("initialize", () => ({
 			jsonrpc: MCP.JSONRPC_VERSION,
 			id: 1, // The handler uses 1 for the first request
 			result: {
 				protocolVersion: MCP.LATEST_PROTOCOL_VERSION,
 				serverInfo: {
-					name: 'Test MCP Server',
-					version: '1.0.0',
+					name: "Test MCP Server",
+					version: "1.0.0",
 				},
 				capabilities: {
 					resources: {
-						supportedTypes: ['text/plain'],
+						supportedTypes: ["text/plain"],
 					},
 					tools: {
 						supportsCancellation: true,
-					}
-				}
-			}
+					},
+				},
+			},
 		}));
 	}
 
@@ -76,7 +98,7 @@ export class TestMcpMessageTransport extends Disposable implements IMcpMessageTr
 	 */
 	public send(message: MCP.JSONRPCMessage): void {
 		this._sentMessages.push(message);
-		if (this._responders && 'method' in message && typeof message.method === 'string') {
+		if (this._responders && "method" in message && typeof message.method === "string") {
 			const responder = this._responders.get(message.method);
 			if (responder) {
 				const response = responder(message);
@@ -108,7 +130,7 @@ export class TestMcpMessageTransport extends Disposable implements IMcpMessageTr
 	 */
 	public simulateInitialized() {
 		if (!this._sentMessages.length) {
-			throw new Error('initialize was not called yet');
+			throw new Error("initialize was not called yet");
 		}
 
 		this.simulateReceiveMessage({
@@ -120,10 +142,10 @@ export class TestMcpMessageTransport extends Disposable implements IMcpMessageTr
 					tools: {},
 				},
 				serverInfo: {
-					name: 'Test Server',
-					version: '1.0.0'
+					name: "Test Server",
+					version: "1.0.0",
 				},
-			} satisfies MCP.InitializeResult
+			} satisfies MCP.InitializeResult,
 		});
 	}
 
@@ -164,16 +186,16 @@ export class TestMcpRegistry implements IMcpRegistry {
 	_serviceBrand: undefined;
 	onDidChangeInputs = Event.None;
 	collections = observableValue<readonly McpCollectionDefinition[]>(this, [{
-		id: 'test-collection',
+		id: "test-collection",
 		remoteAuthority: null,
-		label: 'Test Collection',
+		label: "Test Collection",
 		configTarget: ConfigurationTarget.USER,
 		order: 0,
 		serverDefinitions: observableValue(this, [{
-			id: 'test-server',
-			label: 'Test Server',
-			launch: { type: McpServerTransportType.Stdio, command: 'echo', args: ['Hello MCP'], env: {}, envFile: undefined, cwd: undefined, sandbox: undefined },
-			cacheNonce: 'a',
+			id: "test-server",
+			label: "Test Server",
+			launch: { type: McpServerTransportType.Stdio, command: "echo", args: ["Hello MCP"], env: {}, envFile: undefined, cwd: undefined, sandbox: undefined },
+			cacheNonce: "a",
 		} satisfies McpServerDefinition]),
 		trustBehavior: McpServerTrust.Kind.Trusted,
 		scope: StorageScope.APPLICATION,
@@ -191,57 +213,70 @@ export class TestMcpRegistry implements IMcpRegistry {
 		},
 		waitForInitialProviderPromises: () => Promise.resolve(),
 	}]);
-	lazyCollectionState = observableValue(this, { state: LazyCollectionState.AllKnown, collections: [] });
+	lazyCollectionState = observableValue(this, {
+    state: LazyCollectionState.AllKnown,
+    collections: [],
+  });
 	collectionToolPrefix(collection: McpCollectionReference): IObservable<string> {
 		return observableValue<string>(this, `mcp-${collection.id}-`);
 	}
 	getServerDefinition(collectionRef: McpDefinitionReference, definitionRef: McpDefinitionReference): IObservable<{ server: McpServerDefinition | undefined; collection: McpCollectionDefinition | undefined }> {
-		const collectionObs = this.collections.map(cols => cols.find(c => c.id === collectionRef.id));
+		const collectionObs = this.collections.map(
+      cols => cols.find(c => c.id === collectionRef.id),
+    );
 		return collectionObs.map((collection, reader) => {
-			const server = collection?.serverDefinitions.read(reader).find(s => s.id === definitionRef.id);
-			return { collection, server };
-		});
+      const server = collection?.serverDefinitions.read(reader).find(s => s.id === definitionRef.id);
+      return { collection, server };
+    });
 	}
 	discoverCollections(): Promise<McpCollectionDefinition[]> {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 	registerDelegate(delegate: IMcpHostDelegate): IDisposable {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 	registerCollection(collection: McpCollectionDefinition): IDisposable {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 	resetTrust(): void {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 	clearSavedInputs(scope: StorageScope, inputId?: string): Promise<void> {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 	editSavedInput(inputId: string, folderData: IWorkspaceFolderData | undefined, configSection: string, target: ConfigurationTarget): Promise<void> {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 	setSavedInput(inputId: string, target: ConfigurationTarget, value: string): Promise<void> {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 	getSavedInputs(scope: StorageScope): Promise<{ [id: string]: IResolvedValue }> {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 	resolveConnection(options: IMcpResolveConnectionOptions): Promise<IMcpServerConnection | undefined> {
-		const collection = this.collections.get().find(c => c.id === options.collectionRef.id);
-		const definition = collection?.serverDefinitions.get().find(d => d.id === options.definitionRef.id);
+		const collection = this.collections.get().find(
+      c => c.id === options.collectionRef.id,
+    );
+		const definition = collection?.serverDefinitions.get().find(
+      d => d.id === options.definitionRef.id,
+    );
 		if (!collection || !definition) {
-			throw new Error(`Collection or definition not found: ${options.collectionRef.id}, ${options.definitionRef.id}`);
+			throw new Error(
+        `Collection or definition not found: ${options.collectionRef.id}, ${options.definitionRef.id}`,
+      );
 		}
 		const del = this.delegates.get()[0];
-		return Promise.resolve(new McpServerConnection(
-			collection,
-			definition,
-			del,
-			definition.launch,
-			new NullLogger(),
-			false,
-			options.taskManager,
-			this._instantiationService,
-		));
+		return Promise.resolve(
+      new McpServerConnection(
+        collection,
+        definition,
+        del,
+        definition.launch,
+        new NullLogger(),
+        false,
+        options.taskManager,
+        this._instantiationService,
+      ),
+    );
 	}
 }

@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ThrottledDelayer } from '../../../base/common/async.js';
-import { VSBuffer } from '../../../base/common/buffer.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { isUndefined, isUndefinedOrNull } from '../../../base/common/types.js';
-import { URI } from '../../../base/common/uri.js';
-import { IEnvironmentService } from '../../environment/common/environment.js';
-import { FileOperationError, FileOperationResult, IFileService } from '../../files/common/files.js';
-import { ILogService } from '../../log/common/log.js';
-import { IStateReadService, IStateService } from './state.js';
+import { ThrottledDelayer } from "../../../base/common/async.js";
+import { VSBuffer } from "../../../base/common/buffer.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { isUndefined, isUndefinedOrNull } from "../../../base/common/types.js";
+import { URI } from "../../../base/common/uri.js";
+import { IEnvironmentService } from "../../environment/common/environment.js";
+import { FileOperationError, FileOperationResult, IFileService } from "../../files/common/files.js";
+import { ILogService } from "../../log/common/log.js";
+import { IStateReadService, IStateService } from "./state.js";
 
 type StorageDatabase = { [key: string]: unknown };
 
@@ -23,7 +23,7 @@ export const enum SaveStrategy {
 export class FileStorage extends Disposable {
 
 	private storage: StorageDatabase = Object.create(null);
-	private lastSavedStorageContents = '';
+	private lastSavedStorageContents = "";
 
 	private readonly flushDelayer: ThrottledDelayer<void>;
 
@@ -38,7 +38,11 @@ export class FileStorage extends Disposable {
 	) {
 		super();
 
-		this.flushDelayer = this._register(new ThrottledDelayer<void>(saveStrategy === SaveStrategy.IMMEDIATE ? 0 : 100 /* buffer saves over a short time */));
+		this.flushDelayer = this._register(
+      new ThrottledDelayer<void>(
+        saveStrategy === SaveStrategy.IMMEDIATE ? 0 : 100,
+      ),
+    );
 	}
 
 	init(): Promise<void> {
@@ -138,7 +142,11 @@ export class FileStorage extends Disposable {
 
 		// Write to disk
 		try {
-			await this.fileService.writeFile(this.storagePath, VSBuffer.fromString(serializedDatabase), { atomic: { postfix: '.vsctmp' } });
+			await this.fileService.writeFile(
+        this.storagePath,
+        VSBuffer.fromString(serializedDatabase),
+        { atomic: { postfix: ".vsctmp" } },
+      );
 			this.lastSavedStorageContents = serializedDatabase;
 		} catch (error) {
 			this.logService.error(error);
@@ -164,11 +172,18 @@ export class StateReadonlyService extends Disposable implements IStateReadServic
 		saveStrategy: SaveStrategy,
 		@IEnvironmentService environmentService: IEnvironmentService,
 		@ILogService logService: ILogService,
-		@IFileService fileService: IFileService
+		@IFileService fileService: IFileService,
 	) {
 		super();
 
-		this.fileStorage = this._register(new FileStorage(environmentService.stateResource, saveStrategy, logService, fileService));
+		this.fileStorage = this._register(
+      new FileStorage(
+        environmentService.stateResource,
+        saveStrategy,
+        logService,
+        fileService,
+      ),
+    );
 	}
 
 	async init(): Promise<void> {

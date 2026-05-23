@@ -3,10 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
+import { Event } from "../../../../base/common/event.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
 
-export const IHostColorSchemeService = createDecorator<IHostColorSchemeService>('hostColorSchemeService');
+export const IHostColorSchemeService = createDecorator<IHostColorSchemeService>(
+  "hostColorSchemeService",
+);
 
 export interface IHostColorSchemeService {
 

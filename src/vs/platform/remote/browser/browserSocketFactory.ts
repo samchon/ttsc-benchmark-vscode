@@ -3,15 +3,26 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../base/browser/dom.js';
-import { RunOnceScheduler } from '../../../base/common/async.js';
-import { VSBuffer } from '../../../base/common/buffer.js';
-import { Emitter, Event } from '../../../base/common/event.js';
-import { Disposable, DisposableStore, IDisposable } from '../../../base/common/lifecycle.js';
-import { ISocket, SocketCloseEvent, SocketCloseEventType, SocketDiagnostics, SocketDiagnosticsEventType } from '../../../base/parts/ipc/common/ipc.net.js';
-import { ISocketFactory } from '../common/remoteSocketFactoryService.js';
-import { RemoteAuthorityResolverError, RemoteAuthorityResolverErrorCode, RemoteConnectionType, WebSocketRemoteConnection } from '../common/remoteAuthorityResolver.js';
-import { mainWindow } from '../../../base/browser/window.js';
+import * as dom from "../../../base/browser/dom.js";
+import { RunOnceScheduler } from "../../../base/common/async.js";
+import { VSBuffer } from "../../../base/common/buffer.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable, DisposableStore, IDisposable } from "../../../base/common/lifecycle.js";
+import {
+  ISocket,
+  SocketCloseEvent,
+  SocketCloseEventType,
+  SocketDiagnostics,
+  SocketDiagnosticsEventType,
+} from "../../../base/parts/ipc/common/ipc.net.js";
+import { ISocketFactory } from "../common/remoteSocketFactoryService.js";
+import {
+  RemoteAuthorityResolverError,
+  RemoteAuthorityResolverErrorCode,
+  RemoteConnectionType,
+  WebSocketRemoteConnection,
+} from "../common/remoteAuthorityResolver.js";
+import { mainWindow } from "../../../base/browser/window.js";
 
 export interface IWebSocketFactory {
 	create(url: string, debugLabel: string): IWebSocket;
@@ -55,7 +66,9 @@ class BrowserWebSocket extends Disposable implements IWebSocket {
 	private readonly _onOpen = this._register(new Emitter<void>());
 	public readonly onOpen = this._onOpen.event;
 
-	private readonly _onClose = this._register(new Emitter<IWebSocketCloseEvent>());
+	private readonly _onClose = this._register(
+    new Emitter<IWebSocketCloseEvent>(),
+  );
 	public readonly onClose = this._onClose.event;
 
 	private readonly _onError = this._register(new Emitter<unknown>());
@@ -71,14 +84,22 @@ class BrowserWebSocket extends Disposable implements IWebSocket {
 	private readonly _socketMessageListener: (ev: MessageEvent) => void;
 
 	public traceSocketEvent(type: SocketDiagnosticsEventType, data?: VSBuffer | Uint8Array | ArrayBuffer | ArrayBufferView | any): void {
-		SocketDiagnostics.traceSocketEvent(this._socket, this._debugLabel, type, data);
+		SocketDiagnostics.traceSocketEvent(
+      this._socket,
+      this._debugLabel,
+      type,
+      data,
+    );
 	}
 
 	constructor(url: string, debugLabel: string) {
 		super();
 		this._debugLabel = debugLabel;
 		this._socket = new WebSocket(url);
-		this.traceSocketEvent(SocketDiagnosticsEventType.Created, { type: 'BrowserWebSocket', url });
+		this.traceSocketEvent(SocketDiagnosticsEventType.Created, {
+      type: "BrowserWebSocket",
+      url,
+    });
 		this._fileReader = new FileReader();
 		this._queue = [];
 		this._isReading = false;
@@ -108,15 +129,20 @@ class BrowserWebSocket extends Disposable implements IWebSocket {
 
 		this._socketMessageListener = (ev: MessageEvent) => {
 			const blob = (<Blob>ev.data);
-			this.traceSocketEvent(SocketDiagnosticsEventType.BrowserWebSocketBlobReceived, { type: blob.type, size: blob.size });
+			this.traceSocketEvent(
+        SocketDiagnosticsEventType.BrowserWebSocketBlobReceived,
+        { type: blob.type, size: blob.size },
+      );
 			enqueue(blob);
 		};
-		this._socket.addEventListener('message', this._socketMessageListener);
+		this._socket.addEventListener("message", this._socketMessageListener);
 
-		this._register(dom.addDisposableListener(this._socket, 'open', (e) => {
-			this.traceSocketEvent(SocketDiagnosticsEventType.Open);
-			this._onOpen.fire();
-		}));
+		this._register(
+      dom.addDisposableListener(this._socket, "open", (e) => {
+        this.traceSocketEvent(SocketDiagnosticsEventType.Open);
+        this._onOpen.fire();
+      }),
+    );
 
 		// WebSockets emit error events that do not contain any real information
 		// Our only chance of getting to the root cause of an error is to
@@ -136,7 +162,9 @@ class BrowserWebSocket extends Disposable implements IWebSocket {
 			this._onError.fire(err);
 		};
 
-		const errorRunner = this._register(new RunOnceScheduler(sendPendingErrorNow, 0));
+		const errorRunner = this._register(
+      new RunOnceScheduler(sendPendingErrorNow, 0),
+    );
 
 		const sendErrorSoon = (err: unknown) => {
 			errorRunner.cancel();
@@ -150,7 +178,7 @@ class BrowserWebSocket extends Disposable implements IWebSocket {
 			sendPendingErrorNow();
 		};
 
-		this._register(dom.addDisposableListener(this._socket, 'close', (e: CloseEvent) => {
+		this._register(dom.addDisposableListener(this._socket, "close", (e: CloseEvent) => {
 			this.traceSocketEvent(SocketDiagnosticsEventType.Close, { code: e.code, reason: e.reason, wasClean: e.wasClean });
 
 			this._isClosed = true;
@@ -158,7 +186,7 @@ class BrowserWebSocket extends Disposable implements IWebSocket {
 			if (pendingErrorEvent) {
 				if (!navigator.onLine) {
 					// The browser is offline => this is a temporary error which might resolve itself
-					sendErrorNow(new RemoteAuthorityResolverError('Browser is offline', RemoteAuthorityResolverErrorCode.TemporarilyNotAvailable, e));
+					sendErrorNow(new RemoteAuthorityResolverError("Browser is offline", RemoteAuthorityResolverErrorCode.TemporarilyNotAvailable, e));
 				} else {
 					// An error event is pending
 					// The browser appears to be online...
@@ -176,10 +204,14 @@ class BrowserWebSocket extends Disposable implements IWebSocket {
 			this._onClose.fire({ code: e.code, reason: e.reason, wasClean: e.wasClean, event: e });
 		}));
 
-		this._register(dom.addDisposableListener(this._socket, 'error', (err) => {
-			this.traceSocketEvent(SocketDiagnosticsEventType.Error, { message: err?.message });
-			sendErrorSoon(err);
-		}));
+		this._register(
+      dom.addDisposableListener(this._socket, "error", (err) => {
+        this.traceSocketEvent(SocketDiagnosticsEventType.Error, {
+          message: err?.message,
+        });
+        sendErrorSoon(err);
+      }),
+    );
 	}
 
 	send(data: ArrayBuffer | ArrayBufferView<ArrayBuffer>): void {
@@ -195,7 +227,7 @@ class BrowserWebSocket extends Disposable implements IWebSocket {
 		this._isClosed = true;
 		this.traceSocketEvent(SocketDiagnosticsEventType.Close);
 		this._socket.close();
-		this._socket.removeEventListener('message', this._socketMessageListener);
+		this._socket.removeEventListener("message", this._socketMessageListener);
 		this.dispose();
 	}
 }
@@ -212,10 +244,15 @@ class BrowserSocket implements ISocket {
 	public readonly debugLabel: string;
 
 	public traceSocketEvent(type: SocketDiagnosticsEventType, data?: VSBuffer | Uint8Array | ArrayBuffer | ArrayBufferView | any): void {
-		if (typeof this.socket.traceSocketEvent === 'function') {
+		if (typeof this.socket.traceSocketEvent === "function") {
 			this.socket.traceSocketEvent(type, data);
 		} else {
-			SocketDiagnostics.traceSocketEvent(this.socket, this.debugLabel, type, data);
+			SocketDiagnostics.traceSocketEvent(
+        this.socket,
+        this.debugLabel,
+        type,
+        data,
+      );
 		}
 	}
 
@@ -229,21 +266,23 @@ class BrowserSocket implements ISocket {
 	}
 
 	public onData(listener: (e: VSBuffer) => void): IDisposable {
-		return this.socket.onData((data) => listener(VSBuffer.wrap(new Uint8Array(data))));
+		return this.socket.onData(
+      (data) => listener(VSBuffer.wrap(new Uint8Array(data))),
+    );
 	}
 
 	public onClose(listener: (e: SocketCloseEvent) => void): IDisposable {
 		const adapter = (e: IWebSocketCloseEvent | void) => {
-			if (typeof e === 'undefined') {
+			if (typeof e === "undefined") {
 				listener(e);
 			} else {
 				listener({
-					type: SocketCloseEventType.WebSocketCloseEvent,
-					code: e.code,
-					reason: e.reason,
-					wasClean: e.wasClean,
-					event: e.event
-				});
+          type: SocketCloseEventType.WebSocketCloseEvent,
+          code: e.code,
+          reason: e.reason,
+          wasClean: e.wasClean,
+          event: e.event,
+        });
 			}
 		};
 		return this.socket.onClose(adapter);
@@ -281,14 +320,16 @@ export class BrowserSocketFactory implements ISocketFactory<RemoteConnectionType
 
 	connect({ host, port }: WebSocketRemoteConnection, path: string, query: string, debugLabel: string): Promise<ISocket> {
 		return new Promise<ISocket>((resolve, reject) => {
-			const webSocketSchema = (/^https:/.test(mainWindow.location.href) ? 'wss' : 'ws');
-			const socket = this._webSocketFactory.create(`${webSocketSchema}://${(/:/.test(host) && !/\[/.test(host)) ? `[${host}]` : host}:${port}${path}?${query}&skipWebSocketFrames=false`, debugLabel);
-			const disposables = new DisposableStore();
-			disposables.add(socket.onError(reject));
-			disposables.add(socket.onOpen(() => {
-				disposables.dispose();
-				resolve(new BrowserSocket(socket, debugLabel));
-			}));
-		});
+      const webSocketSchema = (/^https:/.test(mainWindow.location.href) ? "wss" : "ws");
+      const socket = this._webSocketFactory.create(`${webSocketSchema}://${(/:/.test(host) && !/\[/.test(host)) ? `[${host}]` : host}:${port}${path}?${query}&skipWebSocketFrames=false`, debugLabel);
+      const disposables = new DisposableStore();
+      disposables.add(socket.onError(reject));
+      disposables.add(
+        socket.onOpen(() => {
+          disposables.dispose();
+          resolve(new BrowserSocket(socket, debugLabel));
+        }),
+      );
+    });
 	}
 }

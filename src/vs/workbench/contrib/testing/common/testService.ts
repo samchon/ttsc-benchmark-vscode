@@ -3,28 +3,43 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { assert } from '../../../../base/common/assert.js';
-import { DeferredPromise } from '../../../../base/common/async.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { Event } from '../../../../base/common/event.js';
-import { Iterable } from '../../../../base/common/iterator.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { LinkedList } from '../../../../base/common/linkedList.js';
-import { MarshalledId } from '../../../../base/common/marshallingIds.js';
-import { IObservable } from '../../../../base/common/observable.js';
-import { IPrefixTreeNode, WellDefinedPrefixTree } from '../../../../base/common/prefixTree.js';
-import { URI } from '../../../../base/common/uri.js';
-import { Position } from '../../../../editor/common/core/position.js';
-import { Location } from '../../../../editor/common/languages.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
-import { MutableObservableValue } from './observableValue.js';
-import { TestExclusions } from './testExclusions.js';
-import { TestId, TestIdPathParts } from './testId.js';
-import { ITestResult } from './testResult.js';
-import { AbstractIncrementalTestCollection, ICallProfileRunHandler, IncrementalTestCollectionItem, InternalTestItem, IStartControllerTests, IStartControllerTestsResult, ITestItemContext, ResolvedTestRunRequest, TestControllerCapability, TestItemExpandState, TestMessageFollowupRequest, TestMessageFollowupResponse, TestRunProfileBitset, TestsDiff } from './testTypes.js';
+import { assert } from "../../../../base/common/assert.js";
+import { DeferredPromise } from "../../../../base/common/async.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Event } from "../../../../base/common/event.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { LinkedList } from "../../../../base/common/linkedList.js";
+import { MarshalledId } from "../../../../base/common/marshallingIds.js";
+import { IObservable } from "../../../../base/common/observable.js";
+import { IPrefixTreeNode, WellDefinedPrefixTree } from "../../../../base/common/prefixTree.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Position } from "../../../../editor/common/core/position.js";
+import { Location } from "../../../../editor/common/languages.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { MutableObservableValue } from "./observableValue.js";
+import { TestExclusions } from "./testExclusions.js";
+import { TestId, TestIdPathParts } from "./testId.js";
+import { ITestResult } from "./testResult.js";
+import {
+  AbstractIncrementalTestCollection,
+  ICallProfileRunHandler,
+  IncrementalTestCollectionItem,
+  InternalTestItem,
+  IStartControllerTests,
+  IStartControllerTestsResult,
+  ITestItemContext,
+  ResolvedTestRunRequest,
+  TestControllerCapability,
+  TestItemExpandState,
+  TestMessageFollowupRequest,
+  TestMessageFollowupResponse,
+  TestRunProfileBitset,
+  TestsDiff,
+} from "./testTypes.js";
 
-export const ITestService = createDecorator<ITestService>('testService');
+export const ITestService = createDecorator<ITestService>("testService");
 
 export interface IMainThreadTestController {
 	readonly id: string;
@@ -98,7 +113,7 @@ export const testCollectionIsEmpty = (collection: IMainThreadTestCollection) =>
 	!Iterable.some(collection.rootItems, r => r.children.size > 0);
 
 export const getContextForTestItem = (collection: IMainThreadTestCollection, id: string | TestId) => {
-	if (typeof id === 'string') {
+	if (typeof id === "string") {
 		id = TestId.fromString(id);
 	}
 
@@ -106,7 +121,10 @@ export const getContextForTestItem = (collection: IMainThreadTestCollection, id:
 		return { controller: id.toString() };
 	}
 
-	const context: ITestItemContext = { $mid: MarshalledId.TestItemContext, tests: [] };
+	const context: ITestItemContext = {
+    $mid: MarshalledId.TestItemContext,
+    tests: [],
+  };
 	for (const i of id.idsFromRoot()) {
 		if (!i.isRoot) {
 			const test = collection.getNodeById(i.toString());
@@ -180,7 +198,9 @@ export const testsInFile = async function* (testService: ITestService, ident: IU
 	// would cause a long delay switching editors.
 	const queue = new LinkedList<Iterable<string> | DeferredPromise<Iterable<string>>>();
 
-	const existing = [...testService.collection.getNodeByUrl(uri)].sort((a, b) => a.item.extId.length - b.item.extId.length);
+	const existing = [...testService.collection.getNodeByUrl(uri)].sort(
+    (a, b) => a.item.extId.length - b.item.extId.length,
+  );
 
 	// getNodeByUrl will return all known tests in the URI, but this can include
 	// children of tests even when `descendInFile` is false. Remove those cases.
@@ -193,7 +213,9 @@ export const testsInFile = async function* (testService: ITestService, ident: IU
 		}
 	}
 
-	queue.push(existing.length ? existing.map(e => e.item.extId) : testService.collection.rootIds);
+	queue.push(
+    existing.length ? existing.map(e => e.item.extId) : testService.collection.rootIds,
+  );
 
 	let n = 0;
 	let gather: IncrementalTestCollectionItem[] = [];
@@ -246,7 +268,9 @@ export const testsInFile = async function* (testService: ITestService, ident: IU
 				}
 
 				if (prom) {
-					queue.push(DeferredPromise.fromPromise(prom.then(() => test.children)));
+					queue.push(
+            DeferredPromise.fromPromise(prom.then(() => test.children)),
+          );
 				} else if (test.children.size) {
 					queue.push(test.children);
 				}
@@ -275,9 +299,15 @@ export const testsUnderUri = async function* (testService: ITestService, ident: 
 			// tests already encompass their children.
 			if (!test) {
 				// no-op
-			} else if (test.item.uri && ident.extUri.isEqualOrParent(test.item.uri, uri)) {
+			} else if (test.item.uri && ident.extUri.isEqualOrParent(
+        test.item.uri,
+        uri,
+      )) {
 				yield test;
-			} else if (!test.item.uri || ident.extUri.isEqualOrParent(uri, test.item.uri)) {
+			} else if (!test.item.uri || ident.extUri.isEqualOrParent(
+        uri,
+        test.item.uri,
+      )) {
 				if (test.expand === TestItemExpandState.Expandable) {
 					await testService.collection.expand(test.item.extId, 1);
 				}
@@ -314,7 +344,7 @@ export const simplifyTestsToExecute = (collection: IMainThreadTestCollection, te
 			return node.value;
 		}
 
-		assert(!!node.children, 'expect to have children');
+		assert(!!node.children, "expect to have children");
 
 		const thisChildren: IncrementalTestCollectionItem[] = [];
 		for (const [part, child] of node.children) {

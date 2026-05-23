@@ -2,19 +2,30 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { Disposable } from '../../../../../../base/common/lifecycle.js';
-import { IModelDeltaDecoration } from '../../../../../../editor/common/model.js';
-import { ModelDecorationOptions } from '../../../../../../editor/common/model/textModel.js';
-import { FindDecorations } from '../../../../../../editor/contrib/find/browser/findDecorations.js';
-import { Range } from '../../../../../../editor/common/core/range.js';
-import { overviewRulerSelectionHighlightForeground, overviewRulerFindMatchForeground } from '../../../../../../platform/theme/common/colorRegistry.js';
-import { CellFindMatchWithIndex, ICellModelDecorations, ICellModelDeltaDecorations, ICellViewModel, INotebookDeltaDecoration, INotebookEditor, NotebookOverviewRulerLane, } from '../../notebookBrowser.js';
+import { Disposable } from "../../../../../../base/common/lifecycle.js";
+import { IModelDeltaDecoration } from "../../../../../../editor/common/model.js";
+import { ModelDecorationOptions } from "../../../../../../editor/common/model/textModel.js";
+import { FindDecorations } from "../../../../../../editor/contrib/find/browser/findDecorations.js";
+import { Range } from "../../../../../../editor/common/core/range.js";
+import {
+  overviewRulerSelectionHighlightForeground,
+  overviewRulerFindMatchForeground,
+} from "../../../../../../platform/theme/common/colorRegistry.js";
+import {
+  CellFindMatchWithIndex,
+  ICellModelDecorations,
+  ICellModelDeltaDecorations,
+  ICellViewModel,
+  INotebookDeltaDecoration,
+  INotebookEditor,
+  NotebookOverviewRulerLane,
+} from "../../notebookBrowser.js";
 
 export class FindMatchDecorationModel extends Disposable {
 	private _allMatchesDecorations: ICellModelDecorations[] = [];
 	private _currentMatchCellDecorations: string[] = [];
 	private _allMatchesCellDecorations: string[] = [];
-	private _currentMatchDecorations: { kind: 'input'; decorations: ICellModelDecorations[] } | { kind: 'output'; index: number } | null = null;
+	private _currentMatchDecorations: { kind: "input"; decorations: ICellModelDecorations[] } | { kind: "output"; index: number } | null = null;
 
 	constructor(
 		private readonly _notebookEditor: INotebookEditor,
@@ -43,16 +54,16 @@ export class FindMatchDecorationModel extends Disposable {
 			const findMatchesOptions: ModelDecorationOptions = FindDecorations._CURRENT_FIND_MATCH_DECORATION;
 
 			const decorations: IModelDeltaDecoration[] = [
-				{ range: cellRange, options: findMatchesOptions }
+				{ range: cellRange, options: findMatchesOptions },
 			];
 			const deltaDecoration: ICellModelDeltaDecorations = {
 				ownerId: cell.handle,
-				decorations: decorations
+				decorations: decorations,
 			};
 
 			this._currentMatchDecorations = {
-				kind: 'input',
-				decorations: accessor.deltaDecorations(this._currentMatchDecorations?.kind === 'input' ? this._currentMatchDecorations.decorations : [], [deltaDecoration])
+				kind: "input",
+				decorations: accessor.deltaDecorations(this._currentMatchDecorations?.kind === "input" ? this._currentMatchDecorations.decorations : [], [deltaDecoration]),
 			};
 		});
 
@@ -63,9 +74,9 @@ export class FindMatchDecorationModel extends Disposable {
 					color: overviewRulerSelectionHighlightForeground,
 					modelRanges: [cellRange],
 					includeOutput: false,
-					position: NotebookOverviewRulerLane.Center
-				}
-			}
+					position: NotebookOverviewRulerLane.Center,
+				},
+			},
 		}]);
 
 		return null;
@@ -75,8 +86,11 @@ export class FindMatchDecorationModel extends Disposable {
 
 		this.clearCurrentFindMatchDecoration();
 
-		const offset = await this._notebookEditor.findHighlightCurrent(index, this.ownerID);
-		this._currentMatchDecorations = { kind: 'output', index: index };
+		const offset = await this._notebookEditor.findHighlightCurrent(
+      index,
+      this.ownerID,
+    );
+		this._currentMatchDecorations = { kind: "output", index: index };
 
 		this._currentMatchCellDecorations = this._notebookEditor.deltaCellDecorations(this._currentMatchCellDecorations, [{
 			handle: cell.handle,
@@ -85,25 +99,34 @@ export class FindMatchDecorationModel extends Disposable {
 					color: overviewRulerSelectionHighlightForeground,
 					modelRanges: [],
 					includeOutput: true,
-					position: NotebookOverviewRulerLane.Center
-				}
-			}
+					position: NotebookOverviewRulerLane.Center,
+				},
+			},
 		} satisfies INotebookDeltaDecoration]);
 
 		return offset;
 	}
 
 	public clearCurrentFindMatchDecoration() {
-		if (this._currentMatchDecorations?.kind === 'input') {
+		if (this._currentMatchDecorations?.kind === "input") {
 			this._notebookEditor.changeModelDecorations(accessor => {
-				accessor.deltaDecorations(this._currentMatchDecorations?.kind === 'input' ? this._currentMatchDecorations.decorations : [], []);
-				this._currentMatchDecorations = null;
-			});
-		} else if (this._currentMatchDecorations?.kind === 'output') {
-			this._notebookEditor.findUnHighlightCurrent(this._currentMatchDecorations.index, this.ownerID);
+        accessor.deltaDecorations(
+          this._currentMatchDecorations?.kind === "input" ? this._currentMatchDecorations.decorations : [],
+          [],
+        );
+        this._currentMatchDecorations = null;
+      });
+		} else if (this._currentMatchDecorations?.kind === "output") {
+			this._notebookEditor.findUnHighlightCurrent(
+        this._currentMatchDecorations.index,
+        this.ownerID,
+      );
 		}
 
-		this._currentMatchCellDecorations = this._notebookEditor.deltaCellDecorations(this._currentMatchCellDecorations, []);
+		this._currentMatchCellDecorations = this._notebookEditor.deltaCellDecorations(
+      this._currentMatchCellDecorations,
+      [],
+    );
 	}
 
 	public setAllFindMatchesDecorations(cellFindMatches: CellFindMatchWithIndex[]) {
@@ -117,7 +140,7 @@ export class FindMatchDecorationModel extends Disposable {
 				for (let i = 0; i < cellFindMatch.contentMatches.length; i++) {
 					newFindMatchesDecorations[i] = {
 						range: cellFindMatch.contentMatches[i].range,
-						options: findMatchesOptions
+						options: findMatchesOptions,
 					};
 				}
 
@@ -136,9 +159,9 @@ export class FindMatchDecorationModel extends Disposable {
 						color: overviewRulerFindMatchForeground,
 						modelRanges: cellFindMatch.contentMatches.map(match => match.range),
 						includeOutput: cellFindMatch.webviewMatches.length > 0,
-						position: NotebookOverviewRulerLane.Center
-					}
-				}
+						position: NotebookOverviewRulerLane.Center,
+					},
+				},
 			};
 		}));
 	}

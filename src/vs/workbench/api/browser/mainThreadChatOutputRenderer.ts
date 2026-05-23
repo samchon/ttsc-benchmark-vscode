@@ -3,15 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from '../../../base/common/buffer.js';
-import { Disposable, IDisposable } from '../../../base/common/lifecycle.js';
-import { URI, UriComponents } from '../../../base/common/uri.js';
-import { ExtensionIdentifier } from '../../../platform/extensions/common/extensions.js';
-import { ILogService } from '../../../platform/log/common/log.js';
-import { IChatOutputRendererService } from '../../contrib/chat/browser/chatOutputItemRenderer.js';
-import { IExtHostContext } from '../../services/extensions/common/extHostCustomers.js';
-import { ExtHostChatOutputRendererShape, ExtHostContext, MainThreadChatOutputRendererShape } from '../common/extHost.protocol.js';
-import { MainThreadWebviews } from './mainThreadWebviews.js';
+import { VSBuffer } from "../../../base/common/buffer.js";
+import { Disposable, IDisposable } from "../../../base/common/lifecycle.js";
+import { URI, UriComponents } from "../../../base/common/uri.js";
+import { ExtensionIdentifier } from "../../../platform/extensions/common/extensions.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { IChatOutputRendererService } from "../../contrib/chat/browser/chatOutputItemRenderer.js";
+import { IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+import {
+  ExtHostChatOutputRendererShape,
+  ExtHostContext,
+  MainThreadChatOutputRendererShape,
+} from "../common/extHost.protocol.js";
+import { MainThreadWebviews } from "./mainThreadWebviews.js";
 
 export class MainThreadChatOutputRenderer extends Disposable implements MainThreadChatOutputRendererShape {
 
@@ -28,7 +32,9 @@ export class MainThreadChatOutputRenderer extends Disposable implements MainThre
 		@ILogService private readonly _logService: ILogService,
 	) {
 		super();
-		this._proxy = extHostContext.getProxy(ExtHostContext.ExtHostChatOutputRenderer);
+		this._proxy = extHostContext.getProxy(
+      ExtHostContext.ExtHostChatOutputRenderer,
+    );
 	}
 
 	override dispose(): void {
@@ -41,7 +47,9 @@ export class MainThreadChatOutputRenderer extends Disposable implements MainThre
 	$registerChatOutputRenderer(viewType: string, extensionId: ExtensionIdentifier, extensionLocation: UriComponents): void {
 		const existingRegistration = this.registeredRenderers.get(viewType);
 		if (existingRegistration) {
-			this._logService.warn(`Re-registering chat output renderer for view type '${viewType}' from extension '${extensionId.value}'.`);
+			this._logService.warn(
+        `Re-registering chat output renderer for view type '${viewType}' from extension '${extensionId.value}'.`,
+      );
 			existingRegistration.dispose();
 		}
 
@@ -56,7 +64,7 @@ export class MainThreadChatOutputRenderer extends Disposable implements MainThre
 				return this._proxy.$renderChatOutput(viewType, mime, VSBuffer.wrap(data), webviewHandle, context, token);
 			},
 		}, {
-			extension: { id: extensionId, location: URI.revive(extensionLocation) }
+			extension: { id: extensionId, location: URI.revive(extensionLocation) },
 		});
 		this.registeredRenderers.set(viewType, disposable);
 	}

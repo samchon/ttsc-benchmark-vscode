@@ -3,20 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { Emitter, Event } from '../../../base/common/event.js';
-import { DisposableMap, DisposableStore, IDisposable } from '../../../base/common/lifecycle.js';
-import { InstantiationType, registerSingleton } from '../../../platform/instantiation/common/extensions.js';
-import { createDecorator } from '../../../platform/instantiation/common/instantiation.js';
-import { ExtHostContext, ExtHostEmbeddingsShape, MainContext, MainThreadEmbeddingsShape } from '../common/extHost.protocol.js';
-import { extHostNamedCustomer, IExtHostContext } from '../../services/extensions/common/extHostCustomers.js';
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { DisposableMap, DisposableStore, IDisposable } from "../../../base/common/lifecycle.js";
+import { InstantiationType, registerSingleton } from "../../../platform/instantiation/common/extensions.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import {
+  ExtHostContext,
+  ExtHostEmbeddingsShape,
+  MainContext,
+  MainThreadEmbeddingsShape,
+} from "../common/extHost.protocol.js";
+import { extHostNamedCustomer, IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
 
 
 interface IEmbeddingsProvider {
 	provideEmbeddings(input: string[], token: CancellationToken): Promise<{ values: number[] }[]>;
 }
 
-const IEmbeddingsService = createDecorator<IEmbeddingsService>('embeddingsService');
+const IEmbeddingsService = createDecorator<IEmbeddingsService>(
+  "embeddingsService",
+);
 
 interface IEmbeddingsService {
 
@@ -54,7 +61,7 @@ class EmbeddingsService implements IEmbeddingsService {
 			dispose: () => {
 				this.providers.delete(id);
 				this._onDidChange.fire();
-			}
+			},
 		};
 	}
 
@@ -63,13 +70,19 @@ class EmbeddingsService implements IEmbeddingsService {
 		if (provider) {
 			return provider.provideEmbeddings(input, token);
 		} else {
-			return Promise.reject(new Error(`No embeddings provider registered with id: ${id}`));
+			return Promise.reject(
+        new Error(`No embeddings provider registered with id: ${id}`),
+      );
 		}
 	}
 }
 
 
-registerSingleton(IEmbeddingsService, EmbeddingsService, InstantiationType.Delayed);
+registerSingleton(
+  IEmbeddingsService,
+  EmbeddingsService,
+  InstantiationType.Delayed,
+);
 
 @extHostNamedCustomer(MainContext.MainThreadEmbeddings)
 export class MainThreadEmbeddings implements MainThreadEmbeddingsShape {
@@ -80,13 +93,19 @@ export class MainThreadEmbeddings implements MainThreadEmbeddingsShape {
 
 	constructor(
 		context: IExtHostContext,
-		@IEmbeddingsService private readonly embeddingsService: IEmbeddingsService
+		@IEmbeddingsService private readonly embeddingsService: IEmbeddingsService,
 	) {
 		this._proxy = context.getProxy(ExtHostContext.ExtHostEmbeddings);
 
-		this._store.add(embeddingsService.onDidChange((() => {
-			this._proxy.$acceptEmbeddingModels(Array.from(embeddingsService.allProviders));
-		})));
+		this._store.add(
+      embeddingsService.onDidChange(
+        (() => {
+          this._proxy.$acceptEmbeddingModels(
+            Array.from(embeddingsService.allProviders),
+          );
+        }),
+      ),
+    );
 	}
 
 	dispose(): void {
@@ -97,7 +116,7 @@ export class MainThreadEmbeddings implements MainThreadEmbeddingsShape {
 		const registration = this.embeddingsService.registerProvider(identifier, {
 			provideEmbeddings: (input: string[], token: CancellationToken): Promise<{ values: number[] }[]> => {
 				return this._proxy.$provideEmbeddings(handle, input, token);
-			}
+			},
 		});
 		this._providers.set(handle, registration);
 	}
@@ -107,6 +126,10 @@ export class MainThreadEmbeddings implements MainThreadEmbeddingsShape {
 	}
 
 	$computeEmbeddings(embeddingsModel: string, input: string[], token: CancellationToken): Promise<{ values: number[] }[]> {
-		return this.embeddingsService.computeEmbeddings(embeddingsModel, input, token);
+		return this.embeddingsService.computeEmbeddings(
+      embeddingsModel,
+      input,
+      token,
+    );
 	}
 }

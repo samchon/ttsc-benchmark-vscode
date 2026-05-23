@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './media/chatPullRequestContent.css';
-import * as dom from '../../../../../../base/browser/dom.js';
-import { Disposable, IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { IChatPullRequestContent } from '../../../common/chatService/chatService.js';
-import { IChatRendererContent } from '../../../common/model/chatViewModel.js';
-import { ChatTreeItem } from '../../chat.js';
-import { IChatContentPart } from './chatContentParts.js';
-import { Codicon } from '../../../../../../base/common/codicons.js';
-import { ThemeIcon } from '../../../../../../base/common/themables.js';
-import { addDisposableListener } from '../../../../../../base/browser/dom.js';
-import { ICommandService } from '../../../../../../platform/commands/common/commands.js';
+import "./media/chatPullRequestContent.css";
+import * as dom from "../../../../../../base/browser/dom.js";
+import { Disposable, IDisposable } from "../../../../../../base/common/lifecycle.js";
+import { IChatPullRequestContent } from "../../../common/chatService/chatService.js";
+import { IChatRendererContent } from "../../../common/model/chatViewModel.js";
+import { ChatTreeItem } from "../../chat.js";
+import { IChatContentPart } from "./chatContentParts.js";
+import { Codicon } from "../../../../../../base/common/codicons.js";
+import { ThemeIcon } from "../../../../../../base/common/themables.js";
+import { addDisposableListener } from "../../../../../../base/browser/dom.js";
+import { ICommandService } from "../../../../../../platform/commands/common/commands.js";
 
 export class ChatPullRequestContentPart extends Disposable implements IChatContentPart {
 	public readonly domNode: HTMLElement;
@@ -23,27 +23,38 @@ export class ChatPullRequestContentPart extends Disposable implements IChatConte
 		@ICommandService private readonly commandService: ICommandService) {
 		super();
 
-		this.domNode = dom.$('.chat-pull-request-content-part');
-		const container = dom.append(this.domNode, dom.$('.container'));
-		const contentContainer = dom.append(container, dom.$('.content-container'));
+		this.domNode = dom.$(".chat-pull-request-content-part");
+		const container = dom.append(this.domNode, dom.$(".container"));
+		const contentContainer = dom.append(container, dom.$(".content-container"));
 
-		const titleContainer = dom.append(contentContainer, dom.$('.title-container'));
-		const icon = dom.append(titleContainer, dom.$('.icon'));
+		const titleContainer = dom.append(
+      contentContainer,
+      dom.$(".title-container"),
+    );
+		const icon = dom.append(titleContainer, dom.$(".icon"));
 		icon.classList.add(...ThemeIcon.asClassNameArray(Codicon.gitPullRequest));
-		const titleLink: HTMLAnchorElement = dom.append(titleContainer, dom.$('a.title'));
+		const titleLink: HTMLAnchorElement = dom.append(
+      titleContainer,
+      dom.$("a.title"),
+    );
 		titleLink.textContent = `${this.pullRequestContent.title} - ${this.pullRequestContent.author}`;
 		if (this.pullRequestContent.uri) {
 			titleLink.href = this.pullRequestContent.uri?.toString();
 		}
-		this._register(addDisposableListener(titleLink, 'click', (e) => {
-			e.preventDefault();
-			e.stopPropagation();
-			this.commandService.executeCommand(this.pullRequestContent.command.id, ...(this.pullRequestContent.command.arguments ?? []));
-		}));
+		this._register(
+      addDisposableListener(titleLink, "click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.commandService.executeCommand(
+          this.pullRequestContent.command.id,
+          ...(this.pullRequestContent.command.arguments ?? []),
+        );
+      }),
+    );
 	}
 
 	hasSameContent(other: IChatRendererContent, followingContent: IChatRendererContent[], element: ChatTreeItem): boolean {
-		return other.kind === 'pullRequest';
+		return other.kind === "pullRequest";
 	}
 
 	addDisposable(disposable: IDisposable): void {

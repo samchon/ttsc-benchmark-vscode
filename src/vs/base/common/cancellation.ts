@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from './event.js';
-import { DisposableStore, IDisposable } from './lifecycle.js';
+import { Emitter, Event } from "./event.js";
+import { DisposableStore, IDisposable } from "./lifecycle.js";
 
 export interface CancellationToken {
 
@@ -24,10 +24,12 @@ export interface CancellationToken {
 	readonly onCancellationRequested: (listener: (e: void) => unknown, thisArgs?: unknown, disposables?: IDisposable[]) => IDisposable;
 }
 
-const shortcutEvent: Event<void> = Object.freeze(function (callback, context?): IDisposable {
-	const handle = setTimeout(callback.bind(context), 0);
-	return { dispose() { clearTimeout(handle); } };
-});
+const shortcutEvent: Event<void> = Object.freeze(
+  function (callback, context?): IDisposable {
+    const handle = setTimeout(callback.bind(context), 0);
+    return { dispose() { clearTimeout(handle); } };
+  },
+);
 
 export namespace CancellationToken {
 
@@ -38,23 +40,23 @@ export namespace CancellationToken {
 		if (thing instanceof MutableToken) {
 			return true;
 		}
-		if (!thing || typeof thing !== 'object') {
+		if (!thing || typeof thing !== "object") {
 			return false;
 		}
-		return typeof (thing as CancellationToken).isCancellationRequested === 'boolean'
-			&& typeof (thing as CancellationToken).onCancellationRequested === 'function';
+		return typeof (thing as CancellationToken).isCancellationRequested === "boolean"
+			&& typeof (thing as CancellationToken).onCancellationRequested === "function";
 	}
 
 
 	export const None = Object.freeze<CancellationToken>({
-		isCancellationRequested: false,
-		onCancellationRequested: Event.None
-	});
+    isCancellationRequested: false,
+    onCancellationRequested: Event.None,
+  });
 
 	export const Cancelled = Object.freeze<CancellationToken>({
-		isCancellationRequested: true,
-		onCancellationRequested: shortcutEvent
-	});
+    isCancellationRequested: true,
+    onCancellationRequested: shortcutEvent,
+  });
 }
 
 class MutableToken implements CancellationToken {
@@ -100,7 +102,10 @@ export class CancellationTokenSource {
 	private _parentListener?: IDisposable = undefined;
 
 	constructor(parent?: CancellationToken) {
-		this._parentListener = parent && parent.onCancellationRequested(this.cancel, this);
+		this._parentListener = parent && parent.onCancellationRequested(
+      this.cancel,
+      this,
+    );
 	}
 
 	get token(): CancellationToken {
@@ -184,10 +189,10 @@ export class CancellationTokenPool {
 		}
 
 		const d = token.onCancellationRequested(() => {
-			d.dispose();
-			this._cancelled++;
-			this._check();
-		});
+      d.dispose();
+      this._cancelled++;
+      this._check();
+    });
 		this._listeners.add(d);
 	}
 

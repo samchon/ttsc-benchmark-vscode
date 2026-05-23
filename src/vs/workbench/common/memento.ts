@@ -3,11 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IStorageService, IStorageValueChangeEvent, StorageScope, StorageTarget } from '../../platform/storage/common/storage.js';
-import { isEmptyObject } from '../../base/common/types.js';
-import { onUnexpectedError } from '../../base/common/errors.js';
-import { DisposableStore } from '../../base/common/lifecycle.js';
-import { Event } from '../../base/common/event.js';
+import {
+  IStorageService,
+  IStorageValueChangeEvent,
+  StorageScope,
+  StorageTarget,
+} from "../../platform/storage/common/storage.js";
+import { isEmptyObject } from "../../base/common/types.js";
+import { onUnexpectedError } from "../../base/common/errors.js";
+import { DisposableStore } from "../../base/common/lifecycle.js";
+import { Event } from "../../base/common/event.js";
 
 export class Memento<T extends object> {
 
@@ -16,7 +21,7 @@ export class Memento<T extends object> {
 	private static readonly profileMementos = new Map<string, ScopedMemento<unknown>>();
 	private static readonly workspaceMementos = new Map<string, ScopedMemento<unknown>>();
 
-	private static readonly COMMON_PREFIX = 'memento/';
+	private static readonly COMMON_PREFIX = "memento/";
 
 	private readonly id: string;
 
@@ -29,7 +34,12 @@ export class Memento<T extends object> {
 			case StorageScope.WORKSPACE: {
 				let workspaceMemento = Memento.workspaceMementos.get(this.id);
 				if (!workspaceMemento) {
-					workspaceMemento = new ScopedMemento(this.id, scope, target, this.storageService);
+					workspaceMemento = new ScopedMemento(
+            this.id,
+            scope,
+            target,
+            this.storageService,
+          );
 					Memento.workspaceMementos.set(this.id, workspaceMemento);
 				}
 
@@ -39,7 +49,12 @@ export class Memento<T extends object> {
 			case StorageScope.PROFILE: {
 				let profileMemento = Memento.profileMementos.get(this.id);
 				if (!profileMemento) {
-					profileMemento = new ScopedMemento(this.id, scope, target, this.storageService);
+					profileMemento = new ScopedMemento(
+            this.id,
+            scope,
+            target,
+            this.storageService,
+          );
 					Memento.profileMementos.set(this.id, profileMemento);
 				}
 
@@ -49,7 +64,12 @@ export class Memento<T extends object> {
 			case StorageScope.APPLICATION: {
 				let applicationMemento = Memento.applicationMementos.get(this.id);
 				if (!applicationMemento) {
-					applicationMemento = new ScopedMemento(this.id, scope, target, this.storageService);
+					applicationMemento = new ScopedMemento(
+            this.id,
+            scope,
+            target,
+            this.storageService,
+          );
 					Memento.applicationMementos.set(this.id, applicationMemento);
 				}
 
@@ -57,10 +77,20 @@ export class Memento<T extends object> {
 			}
 
 			case StorageScope.APPLICATION_SHARED: {
-				let applicationSharedMemento = Memento.applicationSharedMementos.get(this.id);
+				let applicationSharedMemento = Memento.applicationSharedMementos.get(
+          this.id,
+        );
 				if (!applicationSharedMemento) {
-					applicationSharedMemento = new ScopedMemento(this.id, scope, target, this.storageService);
-					Memento.applicationSharedMementos.set(this.id, applicationSharedMemento);
+					applicationSharedMemento = new ScopedMemento(
+            this.id,
+            scope,
+            target,
+            this.storageService,
+          );
+					Memento.applicationSharedMementos.set(
+            this.id,
+            applicationSharedMemento,
+          );
 				}
 
 				return applicationSharedMemento.getMemento();
@@ -133,7 +163,9 @@ class ScopedMemento<T> {
 			// from memento parsing exceptions. Log the contents
 			// to diagnose further
 			// https://github.com/microsoft/vscode/issues/102251
-			onUnexpectedError(`[memento]: failed to parse contents: ${error} (id: ${this.id}, scope: ${this.scope}, contents: ${this.storageService.get(this.id, this.scope)})`);
+			onUnexpectedError(
+        `[memento]: failed to parse contents: ${error} (id: ${this.id}, scope: ${this.scope}, contents: ${this.storageService.get(this.id, this.scope)})`,
+      );
 		}
 
 		return {};
@@ -156,7 +188,12 @@ class ScopedMemento<T> {
 
 	save(): void {
 		if (!isEmptyObject(this.mementoObj)) {
-			this.storageService.store(this.id, this.mementoObj, this.scope, this.target);
+			this.storageService.store(
+        this.id,
+        this.mementoObj,
+        this.scope,
+        this.target,
+      );
 		} else {
 			this.storageService.remove(this.id, this.scope);
 		}

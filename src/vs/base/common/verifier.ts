@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { isObject } from './types.js';
+import { isObject } from "./types.js";
 
 interface IVerifier<T> {
 	verify(value: unknown): T;
@@ -26,13 +26,13 @@ abstract class Verifier<T> implements IVerifier<T> {
 
 export class BooleanVerifier extends Verifier<boolean> {
 	protected isType(value: unknown): value is boolean {
-		return typeof value === 'boolean';
+		return typeof value === "boolean";
 	}
 }
 
 export class NumberVerifier extends Verifier<number> {
 	protected isType(value: unknown): value is number {
-		return typeof value === 'number';
+		return typeof value === "number";
 	}
 }
 

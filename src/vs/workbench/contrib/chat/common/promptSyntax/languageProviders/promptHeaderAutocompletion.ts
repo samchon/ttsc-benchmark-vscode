@@ -3,36 +3,59 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../../../base/common/cancellation.js';
-import { CharCode } from '../../../../../../base/common/charCode.js';
-import { Position } from '../../../../../../editor/common/core/position.js';
-import { Range } from '../../../../../../editor/common/core/range.js';
-import { CompletionContext, CompletionItem, CompletionItemInsertTextRule, CompletionItemKind, CompletionItemProvider, CompletionList } from '../../../../../../editor/common/languages.js';
-import { ITextModel } from '../../../../../../editor/common/model.js';
-import { ILanguageModelChatMetadata, ILanguageModelsService } from '../../languageModels.js';
-import { ILanguageModelToolsService } from '../../tools/languageModelToolsService.js';
-import { IChatModeService } from '../../chatModes.js';
-import { getPromptsTypeForLanguageId, PromptsType, Target } from '../promptTypes.js';
-import { IPromptsService } from '../service/promptsService.js';
-import { Iterable } from '../../../../../../base/common/iterator.js';
-import { IMapValue, ISequenceValue, IValue, IHeaderAttribute, parseCommaSeparatedList, PromptHeader, PromptHeaderAttributes } from '../promptFileParser.js';
-import { getAttributeDefinition, getTarget, getValidAttributeNames, knownClaudeTools, knownGithubCopilotTools, IValueEntry, ClaudeHeaderAttributes, } from './promptFileAttributes.js';
-import { localize } from '../../../../../../nls.js';
-import { formatArrayValue, getQuotePreference } from '../utils/promptEditHelper.js';
-import { HOOKS_BY_TARGET, HOOK_METADATA } from '../hookTypes.js';
-import { HOOK_COMMAND_FIELD_DESCRIPTIONS } from '../hookSchema.js';
-import { IWorkbenchEnvironmentService } from '../../../../../services/environment/common/environmentService.js';
+import { CancellationToken } from "../../../../../../base/common/cancellation.js";
+import { CharCode } from "../../../../../../base/common/charCode.js";
+import { Position } from "../../../../../../editor/common/core/position.js";
+import { Range } from "../../../../../../editor/common/core/range.js";
+import {
+  CompletionContext,
+  CompletionItem,
+  CompletionItemInsertTextRule,
+  CompletionItemKind,
+  CompletionItemProvider,
+  CompletionList,
+} from "../../../../../../editor/common/languages.js";
+import { ITextModel } from "../../../../../../editor/common/model.js";
+import { ILanguageModelChatMetadata, ILanguageModelsService } from "../../languageModels.js";
+import { ILanguageModelToolsService } from "../../tools/languageModelToolsService.js";
+import { IChatModeService } from "../../chatModes.js";
+import { getPromptsTypeForLanguageId, PromptsType, Target } from "../promptTypes.js";
+import { IPromptsService } from "../service/promptsService.js";
+import { Iterable } from "../../../../../../base/common/iterator.js";
+import {
+  IMapValue,
+  ISequenceValue,
+  IValue,
+  IHeaderAttribute,
+  parseCommaSeparatedList,
+  PromptHeader,
+  PromptHeaderAttributes,
+} from "../promptFileParser.js";
+import {
+  getAttributeDefinition,
+  getTarget,
+  getValidAttributeNames,
+  knownClaudeTools,
+  knownGithubCopilotTools,
+  IValueEntry,
+  ClaudeHeaderAttributes,
+} from "./promptFileAttributes.js";
+import { localize } from "../../../../../../nls.js";
+import { formatArrayValue, getQuotePreference } from "../utils/promptEditHelper.js";
+import { HOOKS_BY_TARGET, HOOK_METADATA } from "../hookTypes.js";
+import { HOOK_COMMAND_FIELD_DESCRIPTIONS } from "../hookSchema.js";
+import { IWorkbenchEnvironmentService } from "../../../../../services/environment/common/environmentService.js";
 
 export class PromptHeaderAutocompletion implements CompletionItemProvider {
 	/**
 	 * Debug display name for this provider.
 	 */
-	public readonly _debugDisplayName: string = 'PromptHeaderAutocompletion';
+	public readonly _debugDisplayName: string = "PromptHeaderAutocompletion";
 
 	/**
 	 * List of trigger characters handled by this provider.
 	 */
-	public readonly triggerCharacters = [':'];
+	public readonly triggerCharacters = [":"];
 
 	constructor(
 		@IPromptsService private readonly promptsService: IPromptsService,
@@ -63,17 +86,17 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 		if (/^\s*$/.test(model.getValue())) {
 			return {
 				suggestions: [{
-					label: localize('promptHeaderAutocompletion.addHeader', "Add Prompt Header"),
+					label: localize("promptHeaderAutocompletion.addHeader", "Add Prompt Header"),
 					kind: CompletionItemKind.Snippet,
 					insertText: [
 						`---`,
 						`description: $1`,
 						`---`,
-						`$0`
-					].join('\n'),
+						`$0`,
+					].join("\n"),
 					insertTextRules: CompletionItemInsertTextRule.InsertAsSnippet,
 					range: model.getFullModelRange(),
-				}]
+				}],
 			};
 		}
 
@@ -91,8 +114,11 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 		}
 
 		const lineText = model.getLineContent(position.lineNumber);
-		const colonIndex = lineText.indexOf(':');
-		const colonPosition = colonIndex !== -1 ? new Position(position.lineNumber, colonIndex + 1) : undefined;
+		const colonIndex = lineText.indexOf(":");
+		const colonPosition = colonIndex !== -1 ? new Position(
+      position.lineNumber,
+      colonIndex + 1,
+    ) : undefined;
 
 		if (!colonPosition || position.isBeforeOrEqual(colonPosition)) {
 			// Check if the position is inside a multi-line attribute (e.g., hooks map).
@@ -105,7 +131,7 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 				// an empty line before the next attribute still belongs to the map.
 				for (let i = header.attributes.length - 1; i >= 0; i--) {
 					const attr = header.attributes[i];
-					if (attr.range.endLineNumber < position.lineNumber && attr.value.type === 'map') {
+					if (attr.range.endLineNumber < position.lineNumber && attr.value.type === "map") {
 						const nextAttr = header.attributes[i + 1];
 						const nextStartLine = nextAttr ? nextAttr.range.startLineNumber : headerRange.endLineNumber;
 						if (position.lineNumber < nextStartLine) {
@@ -116,15 +142,39 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 				}
 			}
 			if (containingAttribute) {
-				const attrLineText = model.getLineContent(containingAttribute.range.startLineNumber);
-				const attrColonIndex = attrLineText.indexOf(':');
+				const attrLineText = model.getLineContent(
+          containingAttribute.range.startLineNumber,
+        );
+				const attrColonIndex = attrLineText.indexOf(":");
 				if (attrColonIndex !== -1) {
-					return this.provideValueCompletions(model, position, header, new Position(containingAttribute.range.startLineNumber, attrColonIndex + 1), promptType, containingAttribute);
+					return this.provideValueCompletions(
+            model,
+            position,
+            header,
+            new Position(
+              containingAttribute.range.startLineNumber,
+              attrColonIndex + 1,
+            ),
+            promptType,
+            containingAttribute,
+          );
 				}
 			}
-			return this.provideAttributeNameCompletions(model, position, header, colonPosition, promptType);
+			return this.provideAttributeNameCompletions(
+        model,
+        position,
+        header,
+        colonPosition,
+        promptType,
+      );
 		} else if (colonPosition && colonPosition.isBefore(position)) {
-			return this.provideValueCompletions(model, position, header, colonPosition, promptType);
+			return this.provideValueCompletions(
+        model,
+        position,
+        header,
+        colonPosition,
+        promptType,
+      );
 		}
 		return undefined;
 	}
@@ -139,7 +189,9 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 		const suggestions: CompletionItem[] = [];
 
 		const target = getTarget(promptType, header);
-		const attributesToPropose = new Set(getValidAttributeNames(promptType, false, target));
+		const attributesToPropose = new Set(
+      getValidAttributeNames(promptType, false, target),
+    );
 		for (const attr of header.attributes) {
 			attributesToPropose.delete(attr.key);
 		}
@@ -149,10 +201,16 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 			}
 			// For map-valued attributes, insert a snippet with the nested structure
 			if (key === PromptHeaderAttributes.hooks && promptType === PromptsType.agent && target !== Target.Claude) {
-				const hookNames = Object.keys(HOOKS_BY_TARGET[target] ?? HOOKS_BY_TARGET[Target.Undefined]);
-				return `${key}:\n  \${1|${hookNames.join(',')}|}:\n    - type: command\n      command: "$2"`;
+				const hookNames = Object.keys(
+          HOOKS_BY_TARGET[target] ?? HOOKS_BY_TARGET[Target.Undefined],
+        );
+				return `${key}:\n  \${1|${hookNames.join(",")}|}:\n    - type: command\n      command: "$2"`;
 			}
-			const valueSuggestions = await this.getValueSuggestions(promptType, key, target);
+			const valueSuggestions = await this.getValueSuggestions(
+        promptType,
+        key,
+        target,
+      );
 			if (valueSuggestions.length > 0) {
 				return `${key}: \${0:${valueSuggestions[0].name}}`;
 			} else {
@@ -163,13 +221,13 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 
 		for (const attribute of attributesToPropose) {
 			const item: CompletionItem = {
-				label: attribute,
-				documentation: getAttributeDefinition(attribute, promptType, target)?.description,
-				kind: CompletionItemKind.Property,
-				insertText: await getInsertText(attribute),
-				insertTextRules: CompletionItemInsertTextRule.InsertAsSnippet,
-				range: new Range(position.lineNumber, 1, position.lineNumber, !colonPosition ? model.getLineMaxColumn(position.lineNumber) : colonPosition.column),
-			};
+        label: attribute,
+        documentation: getAttributeDefinition(attribute, promptType, target)?.description,
+        kind: CompletionItemKind.Property,
+        insertText: await getInsertText(attribute),
+        insertTextRules: CompletionItemInsertTextRule.InsertAsSnippet,
+        range: new Range(position.lineNumber, 1, position.lineNumber, !colonPosition ? model.getLineMaxColumn(position.lineNumber) : colonPosition.column),
+      };
 			suggestions.push(item);
 		}
 
@@ -186,18 +244,22 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 	): Promise<CompletionList | undefined> {
 		const suggestions: CompletionItem[] = [];
 		const posLineNumber = position.lineNumber;
-		const attribute = preFoundAttribute ?? header.attributes.find(({ range }) => range.startLineNumber <= posLineNumber && posLineNumber <= range.endLineNumber);
+		const attribute = preFoundAttribute ?? header.attributes.find(
+      ({ range }) => range.startLineNumber <= posLineNumber && posLineNumber <= range.endLineNumber,
+    );
 		if (!attribute) {
 			return undefined;
 		}
 		const target = getTarget(promptType, header);
-		if (!getValidAttributeNames(promptType, true, target).includes(attribute.key)) {
+		if (!getValidAttributeNames(promptType, true, target).includes(
+      attribute.key,
+    )) {
 			return undefined;
 		}
 
 		if (promptType === PromptsType.prompt || promptType === PromptsType.agent) {
 			if (attribute.key === PromptHeaderAttributes.model) {
-				if (attribute.value.type === 'sequence') {
+				if (attribute.value.type === "sequence") {
 					// if the position is inside the tools metadata, we provide tool name completions
 					const getValues = async () => {
 						if (target === Target.Claude) {
@@ -206,15 +268,20 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 							return this.getModelNames(promptType === PromptsType.agent);
 						}
 					};
-					return this.provideArrayCompletions(model, position, attribute.value, getValues);
+					return this.provideArrayCompletions(
+            model,
+            position,
+            attribute.value,
+            getValues,
+          );
 				}
 			}
 			if (attribute.key === PromptHeaderAttributes.tools || attribute.key === ClaudeHeaderAttributes.disallowedTools) {
 				let value = attribute.value;
-				if (value.type === 'scalar') {
+				if (value.type === "scalar") {
 					value = parseCommaSeparatedList(value);
 				}
-				if (value.type === 'sequence') {
+				if (value.type === "sequence") {
 					// if the position is inside the tools metadata, we provide tool name completions
 					const getValues = async () => {
 						if (target === Target.GitHubCopilot || this.environmentService.isSessionsWindow) {
@@ -223,75 +290,109 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 						} else if (target === Target.Claude) {
 							return knownClaudeTools;
 						} else {
-							return Array.from(this.languageModelToolsService.getFullReferenceNames()).map(name => ({ name }));
+							return Array.from(this.languageModelToolsService.getFullReferenceNames()).map(
+                name => ({ name }),
+              );
 						}
 					};
-					return this.provideArrayCompletions(model, position, value, getValues);
+					return this.provideArrayCompletions(
+            model,
+            position,
+            value,
+            getValues,
+          );
 				}
 			}
 		}
 		if (attribute.key === PromptHeaderAttributes.agents) {
-			if (attribute.value.type === 'sequence') {
-				return this.provideArrayCompletions(model, position, attribute.value, async () => {
-					return (await this.promptsService.getCustomAgents(CancellationToken.None)).filter(a => a.enabled);
-				});
+			if (attribute.value.type === "sequence") {
+				return this.provideArrayCompletions(
+          model,
+          position,
+          attribute.value,
+          async () => {
+            return (await this.promptsService.getCustomAgents(CancellationToken.None)).filter(
+              a => a.enabled,
+            );
+          },
+        );
 			}
 		}
 		if (attribute.key === PromptHeaderAttributes.hooks) {
-			if (attribute.value.type === 'map') {
+			if (attribute.value.type === "map") {
 				// Inside the hooks map — suggest hook event type names as sub-keys
-				return this.provideHookEventCompletions(model, position, attribute.value, target);
+				return this.provideHookEventCompletions(
+          model,
+          position,
+          attribute.value,
+          target,
+        );
 			}
 			// When hooks value is not yet a map (e.g., user is mid-edit on a nested line),
 			// still provide hook event completions with no existing keys.
 			if (position.lineNumber !== attribute.range.startLineNumber) {
-				const emptyMap: IMapValue = { type: 'map', properties: [], range: attribute.value.range };
-				return this.provideHookEventCompletions(model, position, emptyMap, target);
+				const emptyMap: IMapValue = {
+          type: "map",
+          properties: [],
+          range: attribute.value.range,
+        };
+				return this.provideHookEventCompletions(
+          model,
+          position,
+          emptyMap,
+          target,
+        );
 			}
 		}
 		const lineContent = model.getLineContent(attribute.range.startLineNumber);
-		const whilespaceAfterColon = (lineContent.substring(colonPosition.column).match(/^\s*/)?.[0].length) ?? 0;
-		const entries = await this.getValueSuggestions(promptType, attribute.key, target);
+		const whilespaceAfterColon = (lineContent.substring(colonPosition.column).match(
+      /^\s*/,
+    )?.[0].length) ?? 0;
+		const entries = await this.getValueSuggestions(
+      promptType,
+      attribute.key,
+      target,
+    );
 		for (const entry of entries) {
 			const item: CompletionItem = {
-				label: entry.name,
-				documentation: entry.description,
-				kind: CompletionItemKind.Value,
-				insertText: whilespaceAfterColon === 0 ? ` ${entry.name}` : entry.name,
-				range: new Range(position.lineNumber, colonPosition.column + whilespaceAfterColon + 1, position.lineNumber, model.getLineMaxColumn(position.lineNumber)),
-			};
+        label: entry.name,
+        documentation: entry.description,
+        kind: CompletionItemKind.Value,
+        insertText: whilespaceAfterColon === 0 ? ` ${entry.name}` : entry.name,
+        range: new Range(position.lineNumber, colonPosition.column + whilespaceAfterColon + 1, position.lineNumber, model.getLineMaxColumn(position.lineNumber)),
+      };
 			suggestions.push(item);
 		}
 		if (attribute.key === PromptHeaderAttributes.handOffs) {
 			const value = [
-				'',
-				'  - label: Start Implementation',
-				'    agent: agent',
-				'    prompt: Implement the plan',
-				'    send: true'
-			].join('\n');
+				"",
+				"  - label: Start Implementation",
+				"    agent: agent",
+				"    prompt: Implement the plan",
+				"    send: true",
+			].join("\n");
 			const item: CompletionItem = {
-				label: localize('promptHeaderAutocompletion.handoffsExample', "Handoff Example"),
-				kind: CompletionItemKind.Value,
-				insertText: whilespaceAfterColon === 0 ? ` ${value}` : value,
-				range: new Range(position.lineNumber, colonPosition.column + whilespaceAfterColon + 1, position.lineNumber, model.getLineMaxColumn(position.lineNumber)),
-			};
+        label: localize("promptHeaderAutocompletion.handoffsExample", "Handoff Example"),
+        kind: CompletionItemKind.Value,
+        insertText: whilespaceAfterColon === 0 ? ` ${value}` : value,
+        range: new Range(position.lineNumber, colonPosition.column + whilespaceAfterColon + 1, position.lineNumber, model.getLineMaxColumn(position.lineNumber)),
+      };
 			suggestions.push(item);
 		}
 		if (attribute.key === PromptHeaderAttributes.hooks && promptType === PromptsType.agent) {
 			const hookSnippet = [
-				'',
-				'  ${1|' + Object.keys(HOOKS_BY_TARGET[target] ?? HOOKS_BY_TARGET[Target.Undefined]).join(',') + '|}:',
-				'    - type: command',
-				'      command: "$2"'
-			].join('\n');
+				"",
+				"  ${1|" + Object.keys(HOOKS_BY_TARGET[target] ?? HOOKS_BY_TARGET[Target.Undefined]).join(",") + "|}:",
+				"    - type: command",
+				'      command: "$2"',
+			].join("\n");
 			const item: CompletionItem = {
-				label: localize('promptHeaderAutocompletion.newHook', "New Hook"),
-				kind: CompletionItemKind.Snippet,
-				insertText: whilespaceAfterColon === 0 ? ` ${hookSnippet}` : hookSnippet,
-				insertTextRules: CompletionItemInsertTextRule.InsertAsSnippet,
-				range: new Range(position.lineNumber, colonPosition.column + whilespaceAfterColon + 1, position.lineNumber, model.getLineMaxColumn(position.lineNumber)),
-			};
+        label: localize("promptHeaderAutocompletion.newHook", "New Hook"),
+        kind: CompletionItemKind.Snippet,
+        insertText: whilespaceAfterColon === 0 ? ` ${hookSnippet}` : hookSnippet,
+        insertTextRules: CompletionItemInsertTextRule.InsertAsSnippet,
+        range: new Range(position.lineNumber, colonPosition.column + whilespaceAfterColon + 1, position.lineNumber, model.getLineMaxColumn(position.lineNumber)),
+      };
 			suggestions.push(item);
 		}
 		return { suggestions };
@@ -311,32 +412,41 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 	): CompletionList | undefined {
 		// Check if the cursor is on the value side of an existing hook event key (e.g., "SessionEnd:|")
 		// In that case, offer a command entry snippet instead of event name completions.
-		const hookEventOnLine = hooksMap.properties.find(p => p.key.range.startLineNumber === position.lineNumber);
+		const hookEventOnLine = hooksMap.properties.find(
+      p => p.key.range.startLineNumber === position.lineNumber,
+    );
 		if (hookEventOnLine) {
 			const lineText = model.getLineContent(position.lineNumber);
-			const colonIdx = lineText.indexOf(':');
+			const colonIdx = lineText.indexOf(":");
 			if (colonIdx !== -1 && position.column > colonIdx + 1) {
-				const whilespaceAfterColon = (lineText.substring(colonIdx + 1).match(/^\s*/)?.[0].length) ?? 0;
+				const whilespaceAfterColon = (lineText.substring(colonIdx + 1).match(
+          /^\s*/,
+        )?.[0].length) ?? 0;
 				const commandSnippet = [
-					'',
-					'  - type: command',
+					"",
+					"  - type: command",
 					'    command: "$1"',
-				].join('\n');
+				].join("\n");
 				return {
 					suggestions: [{
-						label: localize('promptHeaderAutocompletion.newCommand', "New Command"),
-						documentation: localize('promptHeaderAutocompletion.newCommand.description', "Add a new command entry to this hook."),
+						label: localize("promptHeaderAutocompletion.newCommand", "New Command"),
+						documentation: localize("promptHeaderAutocompletion.newCommand.description", "Add a new command entry to this hook."),
 						kind: CompletionItemKind.Snippet,
 						insertText: whilespaceAfterColon === 0 ? ` ${commandSnippet}` : commandSnippet,
 						insertTextRules: CompletionItemInsertTextRule.InsertAsSnippet,
 						range: new Range(position.lineNumber, colonIdx + 1 + whilespaceAfterColon + 1, position.lineNumber, model.getLineMaxColumn(position.lineNumber)),
-					}]
+					}],
 				};
 			}
 		}
 
 		// Try to provide command field completions if cursor is inside a command object
-		const commandFieldCompletions = this.provideHookCommandFieldCompletions(model, position, hooksMap, target);
+		const commandFieldCompletions = this.provideHookCommandFieldCompletions(
+      model,
+      position,
+      hooksMap,
+      target,
+    );
 		if (commandFieldCompletions) {
 			return commandFieldCompletions;
 		}
@@ -356,7 +466,7 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 		const existingKeys = new Set(
 			hooksMap.properties
 				.filter(p => p.key.range.startLineNumber !== position.lineNumber)
-				.map(p => p.key.value)
+				.map(p => p.key.value),
 		);
 
 		// Supplement with text-based scanning: when incomplete YAML causes the
@@ -390,7 +500,7 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 		}
 
 		// Check whether the current line already has a colon (editing an existing key)
-		const lineHasColon = lineText.indexOf(':') !== -1;
+		const lineHasColon = lineText.indexOf(":") !== -1;
 
 		for (const [hookName, hookType] of Object.entries(hooksByTarget)) {
 			if (existingKeys.has(hookName)) {
@@ -404,7 +514,7 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 					`${hookName}:`,
 					`  - type: command`,
 					`    command: "$1"`,
-				].join('\n');
+				].join("\n");
 			} else if (lineHasColon) {
 				// On existing key lines, only replace the key name to preserve nested content
 				insertText = `${hookName}:`;
@@ -414,13 +524,13 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 				insertText = hookName;
 			}
 			suggestions.push({
-				label: hookName,
-				documentation: meta?.description,
-				kind: CompletionItemKind.Property,
-				insertText,
-				insertTextRules: CompletionItemInsertTextRule.InsertAsSnippet,
-				range: new Range(position.lineNumber, rangeStartColumn, position.lineNumber, model.getLineMaxColumn(position.lineNumber)),
-			});
+        label: hookName,
+        documentation: meta?.description,
+        kind: CompletionItemKind.Property,
+        insertText,
+        insertTextRules: CompletionItemInsertTextRule.InsertAsSnippet,
+        range: new Range(position.lineNumber, rangeStartColumn, position.lineNumber, model.getLineMaxColumn(position.lineNumber)),
+      });
 		}
 
 		return { suggestions };
@@ -439,20 +549,35 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 		target: Target,
 	): CompletionList | undefined {
 		// Find which hook event's command list the cursor is in
-		const containingCommandMap = this.findContainingCommandMap(model, position, hooksMap);
+		const containingCommandMap = this.findContainingCommandMap(
+      model,
+      position,
+      hooksMap,
+    );
 		if (!containingCommandMap) {
 			return undefined;
 		}
 
 		const isCopilotCli = target === Target.GitHubCopilot;
 		const validFields = isCopilotCli
-			? ['type', 'bash', 'powershell', 'cwd', 'env', 'timeoutSec']
-			: ['type', 'command', 'windows', 'linux', 'osx', 'bash', 'powershell', 'cwd', 'env', 'timeout'];
+			? ["type", "bash", "powershell", "cwd", "env", "timeoutSec"]
+			: [
+          "type",
+          "command",
+          "windows",
+          "linux",
+          "osx",
+          "bash",
+          "powershell",
+          "cwd",
+          "env",
+          "timeout",
+        ];
 
 		const existingFields = new Set(
 			containingCommandMap.properties
 				.filter(p => p.key.range.startLineNumber !== position.lineNumber)
-				.map(p => p.key.value)
+				.map(p => p.key.value),
 		);
 
 		const lineText = model.getLineContent(position.lineNumber);
@@ -464,7 +589,7 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 		const dashPrefixMatch = lineText.match(/^(\s*-\s+)/);
 		const fieldStart = dashPrefixMatch ? dashPrefixMatch[1].length : firstNonWhitespace;
 		const rangeStartColumn = isEmptyLine ? position.column : fieldStart + 1;
-		const colonIndex = lineText.indexOf(':');
+		const colonIndex = lineText.indexOf(":");
 
 		const suggestions: CompletionItem[] = [];
 		for (const fieldName of validFields) {
@@ -474,13 +599,13 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 			const desc = HOOK_COMMAND_FIELD_DESCRIPTIONS[fieldName];
 			const insertText = colonIndex !== -1 ? fieldName : `${fieldName}: $0`;
 			suggestions.push({
-				label: fieldName,
-				documentation: desc,
-				kind: CompletionItemKind.Property,
-				insertText,
-				insertTextRules: CompletionItemInsertTextRule.InsertAsSnippet,
-				range: new Range(position.lineNumber, rangeStartColumn, position.lineNumber, colonIndex !== -1 ? colonIndex + 1 : model.getLineMaxColumn(position.lineNumber)),
-			});
+        label: fieldName,
+        documentation: desc,
+        kind: CompletionItemKind.Property,
+        insertText,
+        insertTextRules: CompletionItemInsertTextRule.InsertAsSnippet,
+        range: new Range(position.lineNumber, rangeStartColumn, position.lineNumber, colonIndex !== -1 ? colonIndex + 1 : model.getLineMaxColumn(position.lineNumber)),
+      });
 		}
 
 		return suggestions.length > 0 ? { suggestions } : undefined;
@@ -494,7 +619,7 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 	private findContainingCommandMap(model: ITextModel, position: Position, hooksMap: IMapValue): IMapValue | undefined {
 		for (let i = 0; i < hooksMap.properties.length; i++) {
 			const prop = hooksMap.properties[i];
-			if (prop.value.type !== 'sequence') {
+			if (prop.value.type !== "sequence") {
 				continue;
 			}
 			// Check if cursor is within the sequence's range, or on a trailing line after it
@@ -529,11 +654,11 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 	private findCommandMapInSequence(position: Position, sequence: ISequenceValue): IMapValue | undefined {
 		for (let i = 0; i < sequence.items.length; i++) {
 			const item = sequence.items[i];
-			if (item.type !== 'map') {
+			if (item.type !== "map") {
 				// Handle partial typing: a scalar on the cursor line means the user
 				// is starting to type a command entry (e.g., "- t").
-				if (item.type === 'scalar' && item.range.startLineNumber === position.lineNumber) {
-					return { type: 'map', properties: [], range: item.range };
+				if (item.type === "scalar" && item.range.startLineNumber === position.lineNumber) {
+					return { type: "map", properties: [], range: item.range };
 				}
 				continue;
 			}
@@ -550,9 +675,12 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 			}
 
 			// Check for nested matcher format: { hooks: [...] }
-			const nestedHooks = item.properties.find(p => p.key.value === 'hooks');
-			if (nestedHooks?.value.type === 'sequence') {
-				const result = this.findCommandMapInSequence(position, nestedHooks.value);
+			const nestedHooks = item.properties.find(p => p.key.value === "hooks");
+			if (nestedHooks?.value.type === "sequence") {
+				const result = this.findCommandMapInSequence(
+          position,
+          nestedHooks.value,
+        );
 				if (result) {
 					return result;
 				}
@@ -578,7 +706,10 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 					const agents = await this.chatModeService.getLocalModes();
 					const suggestions: IValueEntry[] = [];
 					for (const agent of Iterable.concat(agents.builtin, agents.custom)) {
-						suggestions.push({ name: agent.name.get(), description: agent.label.get() });
+						suggestions.push({
+              name: agent.name.get(),
+              description: agent.label.get(),
+            });
 					}
 					return suggestions;
 				}
@@ -598,11 +729,13 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 		for (const model of this.languageModelsService.getLanguageModelIds()) {
 			const metadata = this.languageModelsService.lookupLanguageModel(model);
 			if (metadata && metadata.isUserSelectable !== false && !metadata.targetChatSessionType) {
-				if (!agentModeOnly || ILanguageModelChatMetadata.suitableForAgentMode(metadata)) {
+				if (!agentModeOnly || ILanguageModelChatMetadata.suitableForAgentMode(
+          metadata,
+        )) {
 					result.push({
-						name: ILanguageModelChatMetadata.asQualifiedName(metadata),
-						description: metadata.tooltip
-					});
+            name: ILanguageModelChatMetadata.asQualifiedName(metadata),
+            description: metadata.tooltip,
+          });
 				}
 			}
 		}
@@ -614,7 +747,11 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 			const suggestions: CompletionItem[] = [];
 			const entries = await getValues();
 			const quotePreference = getQuotePreference(arrayValue, model);
-			const existingValues = new Set<string>(arrayValue.items.filter(item => item !== currentItem).filter(item => item.type === 'scalar').map(item => item.value));
+			const existingValues = new Set<string>(
+        arrayValue.items.filter(item => item !== currentItem).filter(item => item.type === "scalar").map(
+          item => item.value,
+        ),
+      );
 			for (const entry of entries) {
 				const entryName = entry.name;
 				if (existingValues.has(entryName)) {
@@ -628,13 +765,13 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 					insertText = formatArrayValue(entryName, quotePreference);
 				}
 				suggestions.push({
-					label: entryName,
-					documentation: entry.description,
-					kind: CompletionItemKind.Value,
-					filterText: insertText,
-					insertText: insertText,
-					range: toolRange,
-				});
+          label: entryName,
+          documentation: entry.description,
+          kind: CompletionItemKind.Value,
+          filterText: insertText,
+          insertText: insertText,
+          range: toolRange,
+        });
 			}
 			return { suggestions };
 		};
@@ -645,10 +782,19 @@ export class PromptHeaderAutocompletion implements CompletionItemProvider {
 				return await getSuggestions(item.range, item);
 			}
 		}
-		const prefix = model.getValueInRange(new Range(position.lineNumber, 1, position.lineNumber, position.column));
+		const prefix = model.getValueInRange(
+      new Range(position.lineNumber, 1, position.lineNumber, position.column),
+    );
 		if (prefix.match(/[:,[]\s*$/)) {
 			// if the position is after a comma or bracket
-			return await getSuggestions(new Range(position.lineNumber, position.column, position.lineNumber, position.column));
+			return await getSuggestions(
+        new Range(
+          position.lineNumber,
+          position.column,
+          position.lineNumber,
+          position.column,
+        ),
+      );
 		}
 		return undefined;
 

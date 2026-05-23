@@ -3,23 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IAsyncDataSource } from '../../../../../../base/browser/ui/tree/tree.js';
-import { CancellationTokenSource } from '../../../../../../base/common/cancellation.js';
-import { localize } from '../../../../../../nls.js';
-import { NotebookTextModel } from '../../../common/model/notebookTextModel.js';
-import { INotebookKernel, INotebookKernelService, VariablesResult, variablePageSize } from '../../../common/notebookKernelService.js';
+import { IAsyncDataSource } from "../../../../../../base/browser/ui/tree/tree.js";
+import { CancellationTokenSource } from "../../../../../../base/common/cancellation.js";
+import { localize } from "../../../../../../nls.js";
+import { NotebookTextModel } from "../../../common/model/notebookTextModel.js";
+import {
+  INotebookKernel,
+  INotebookKernelService,
+  VariablesResult,
+  variablePageSize,
+} from "../../../common/notebookKernelService.js";
 
 export interface IEmptyScope {
-	kind: 'empty';
+	kind: "empty";
 }
 
 export interface INotebookScope {
-	kind: 'root';
+	kind: "root";
 	readonly notebook: NotebookTextModel;
 }
 
 export interface INotebookVariableElement {
-	kind: 'variable';
+	kind: "variable";
 	readonly id: string;
 	readonly extHostId: number;
 	readonly name: string;
@@ -44,7 +49,7 @@ export class NotebookVariableDataSource implements IAsyncDataSource<INotebookSco
 	}
 
 	hasChildren(element: INotebookScope | INotebookVariableElement): boolean {
-		return element.kind === 'root' || element.hasNamedChildren || element.indexedChildrenCount > 0;
+		return element.kind === "root" || element.hasNamedChildren || element.indexedChildrenCount > 0;
 	}
 
 	public cancel(): void {
@@ -54,9 +59,9 @@ export class NotebookVariableDataSource implements IAsyncDataSource<INotebookSco
 	}
 
 	async getChildren(element: INotebookScope | INotebookVariableElement | IEmptyScope): Promise<Array<INotebookVariableElement>> {
-		if (element.kind === 'empty') {
+		if (element.kind === "empty") {
 			return [];
-		} else if (element.kind === 'root') {
+		} else if (element.kind === "root") {
 			return this.getRootVariables(element.notebook);
 		} else {
 			return this.getVariables(element);
@@ -64,18 +69,29 @@ export class NotebookVariableDataSource implements IAsyncDataSource<INotebookSco
 	}
 
 	private async getVariables(parent: INotebookVariableElement): Promise<INotebookVariableElement[]> {
-		const selectedKernel = this.notebookKernelService.getMatchingKernel(parent.notebook).selected;
+		const selectedKernel = this.notebookKernelService.getMatchingKernel(
+      parent.notebook,
+    ).selected;
 		if (selectedKernel && selectedKernel.hasVariableProvider) {
 
 			let children: INotebookVariableElement[] = [];
 			if (parent.hasNamedChildren) {
-				const variables = selectedKernel.provideVariables(parent.notebook.uri, parent.extHostId, 'named', 0, this.cancellationTokenSource.token);
+				const variables = selectedKernel.provideVariables(
+          parent.notebook.uri,
+          parent.extHostId,
+          "named",
+          0,
+          this.cancellationTokenSource.token,
+        );
 				for await (const variable of variables) {
 					children.push(this.createVariableElement(variable, parent.notebook));
 				}
 			}
 			if (parent.indexedChildrenCount > 0) {
-				const childNodes = await this.getIndexedChildren(parent, selectedKernel);
+				const childNodes = await this.getIndexedChildren(
+          parent,
+          selectedKernel,
+        );
 				children = children.concat(childNodes);
 			}
 
@@ -89,11 +105,16 @@ export class NotebookVariableDataSource implements IAsyncDataSource<INotebookSco
 
 		if (parent.indexedChildrenCount > variablePageSize) {
 
-			const nestedPageSize = Math.floor(Math.max(parent.indexedChildrenCount / variablePageSize, 100));
+			const nestedPageSize = Math.floor(
+        Math.max(parent.indexedChildrenCount / variablePageSize, 100),
+      );
 
 			const indexedChildCountLimit = 1_000_000;
 			let start = parent.indexStart ?? 0;
-			const last = start + Math.min(parent.indexedChildrenCount, indexedChildCountLimit);
+			const last = start + Math.min(
+        parent.indexedChildrenCount,
+        indexedChildCountLimit,
+      );
 			for (; start < last; start += nestedPageSize) {
 				let end = start + nestedPageSize;
 				if (end > last) {
@@ -101,33 +122,39 @@ export class NotebookVariableDataSource implements IAsyncDataSource<INotebookSco
 				}
 
 				childNodes.push({
-					kind: 'variable',
-					notebook: parent.notebook,
-					id: parent.id + `${start}`,
-					extHostId: parent.extHostId,
-					name: `[${start}..${end - 1}]`,
-					value: '',
-					indexedChildrenCount: end - start,
-					indexStart: start,
-					hasNamedChildren: false
-				});
+          kind: "variable",
+          notebook: parent.notebook,
+          id: parent.id + `${start}`,
+          extHostId: parent.extHostId,
+          name: `[${start}..${end - 1}]`,
+          value: "",
+          indexedChildrenCount: end - start,
+          indexStart: start,
+          hasNamedChildren: false,
+        });
 			}
 
 			if (parent.indexedChildrenCount > indexedChildCountLimit) {
 				childNodes.push({
-					kind: 'variable',
-					notebook: parent.notebook,
-					id: parent.id + `${last + 1}`,
-					extHostId: parent.extHostId,
-					name: localize('notebook.indexedChildrenLimitReached', "Display limit reached"),
-					value: '',
-					indexedChildrenCount: 0,
-					hasNamedChildren: false
-				});
+          kind: "variable",
+          notebook: parent.notebook,
+          id: parent.id + `${last + 1}`,
+          extHostId: parent.extHostId,
+          name: localize("notebook.indexedChildrenLimitReached", "Display limit reached"),
+          value: "",
+          indexedChildrenCount: 0,
+          hasNamedChildren: false,
+        });
 			}
 		}
 		else if (parent.indexedChildrenCount > 0) {
-			const variables = kernel.provideVariables(parent.notebook.uri, parent.extHostId, 'indexed', parent.indexStart ?? 0, this.cancellationTokenSource.token);
+			const variables = kernel.provideVariables(
+        parent.notebook.uri,
+        parent.extHostId,
+        "indexed",
+        parent.indexStart ?? 0,
+        this.cancellationTokenSource.token,
+      );
 
 			for await (const variable of variables) {
 				childNodes.push(this.createVariableElement(variable, parent.notebook));
@@ -141,9 +168,17 @@ export class NotebookVariableDataSource implements IAsyncDataSource<INotebookSco
 	}
 
 	private async getRootVariables(notebook: NotebookTextModel): Promise<INotebookVariableElement[]> {
-		const selectedKernel = this.notebookKernelService.getMatchingKernel(notebook).selected;
+		const selectedKernel = this.notebookKernelService.getMatchingKernel(
+      notebook,
+    ).selected;
 		if (selectedKernel && selectedKernel.hasVariableProvider) {
-			const variables = selectedKernel.provideVariables(notebook.uri, undefined, 'named', 0, this.cancellationTokenSource.token);
+			const variables = selectedKernel.provideVariables(
+        notebook.uri,
+        undefined,
+        "named",
+        0,
+        this.cancellationTokenSource.token,
+      );
 			const varElements: INotebookVariableElement[] = [];
 			for await (const variable of variables) {
 				varElements.push(this.createVariableElement(variable, notebook));
@@ -156,11 +191,11 @@ export class NotebookVariableDataSource implements IAsyncDataSource<INotebookSco
 
 	private createVariableElement(variable: VariablesResult, notebook: NotebookTextModel): INotebookVariableElement {
 		return {
-			...variable,
-			kind: 'variable',
-			notebook,
-			extHostId: variable.id,
-			id: `${variable.id}`
-		};
+      ...variable,
+      kind: "variable",
+      notebook,
+      extHostId: variable.id,
+      id: `${variable.id}`,
+    };
 	}
 }

@@ -3,16 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { raceCancellation } from '../../../../base/common/async.js';
-import { CancellationToken, CancellationTokenSource } from '../../../../base/common/cancellation.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { IProgress, IProgressService, IProgressStep, ProgressLocation } from '../../../../platform/progress/common/progress.js';
-import { ITextFileSaveParticipant, ITextFileEditorModel, ITextFileSaveParticipantContext } from './textfiles.js';
-import { IDisposable, Disposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { LinkedList } from '../../../../base/common/linkedList.js';
-import { localize } from '../../../../nls.js';
-import { NotificationPriority } from '../../../../platform/notification/common/notification.js';
-import { CancellationError, isCancellationError } from '../../../../base/common/errors.js';
+import { raceCancellation } from "../../../../base/common/async.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IProgress, IProgressService, IProgressStep, ProgressLocation } from "../../../../platform/progress/common/progress.js";
+import {
+  ITextFileSaveParticipant,
+  ITextFileEditorModel,
+  ITextFileSaveParticipantContext,
+} from "./textfiles.js";
+import { IDisposable, Disposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { LinkedList } from "../../../../base/common/linkedList.js";
+import { localize } from "../../../../nls.js";
+import { NotificationPriority } from "../../../../platform/notification/common/notification.js";
+import { CancellationError, isCancellationError } from "../../../../base/common/errors.js";
 
 export class TextFileSaveParticipant extends Disposable {
 
@@ -39,8 +43,8 @@ export class TextFileSaveParticipant extends Disposable {
 
 		// report to the "outer" progress
 		progress.report({
-			message: localize('saveParticipants1', "Running Code Actions and Formatters...")
-		});
+      message: localize("saveParticipants1", "Running Code Actions and Formatters..."),
+    });
 
 		let bubbleCancel = false;
 
@@ -48,8 +52,8 @@ export class TextFileSaveParticipant extends Disposable {
 		await this.progressService.withProgress({
 			priority: NotificationPriority.URGENT,
 			location: ProgressLocation.Notification,
-			cancellable: localize('skip', "Skip"),
-			delay: model.isDirty() ? 5000 : 3000
+			cancellable: localize("skip", "Skip"),
+			delay: model.isDirty() ? 5000 : 3000,
 		}, async progress => {
 
 			const participants = Array.from(this.saveParticipants).sort((a, b) => {

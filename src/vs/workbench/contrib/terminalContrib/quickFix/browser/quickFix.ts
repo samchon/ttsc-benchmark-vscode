@@ -3,16 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
-import { Event } from '../../../../../base/common/event.js';
-import { IDisposable } from '../../../../../base/common/lifecycle.js';
-import { IAction } from '../../../../../base/common/actions.js';
-import { CancellationToken } from '../../../../../base/common/cancellation.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { ITerminalCommandSelector, ITerminalOutputMatch, ITerminalOutputMatcher } from '../../../../../platform/terminal/common/terminal.js';
-import { ITerminalCommand } from '../../../../../platform/terminal/common/capabilities/capabilities.js';
+import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
+import { Event } from "../../../../../base/common/event.js";
+import { IDisposable } from "../../../../../base/common/lifecycle.js";
+import { IAction } from "../../../../../base/common/actions.js";
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { URI } from "../../../../../base/common/uri.js";
+import {
+  ITerminalCommandSelector,
+  ITerminalOutputMatch,
+  ITerminalOutputMatcher,
+} from "../../../../../platform/terminal/common/terminal.js";
+import { ITerminalCommand } from "../../../../../platform/terminal/common/capabilities/capabilities.js";
 
-export const ITerminalQuickFixService = createDecorator<ITerminalQuickFixService>('terminalQuickFixService');
+export const ITerminalQuickFixService = createDecorator<ITerminalQuickFixService>(
+  "terminalQuickFixService",
+);
 export interface ITerminalQuickFixService {
 	readonly onDidRegisterProvider: Event<ITerminalQuickFixProviderSelector>;
 	readonly onDidRegisterCommandSelector: Event<ITerminalCommandSelector>;
@@ -51,12 +57,12 @@ export enum TerminalQuickFixType {
 }
 
 export interface ITerminalQuickFixOptions {
-	type: 'internal' | 'resolved' | 'unresolved';
+	type: "internal" | "resolved" | "unresolved";
 	id: string;
 	commandLineMatcher: string | RegExp;
 	outputMatcher?: ITerminalOutputMatcher;
-	commandExitResult: 'success' | 'error';
-	kind?: 'fix' | 'explain';
+	commandExitResult: "success" | "error";
+	kind?: "fix" | "explain";
 }
 
 export interface ITerminalQuickFix {
@@ -86,15 +92,15 @@ export interface ITerminalCommandMatchResult {
 }
 
 export interface ITerminalQuickFixInternalOptions extends ITerminalQuickFixOptions {
-	type: 'internal';
+	type: "internal";
 	getQuickFixes: TerminalQuickFixCallback;
 }
 
 export interface ITerminalQuickFixResolvedExtensionOptions extends ITerminalQuickFixOptions {
-	type: 'resolved';
+	type: "resolved";
 	getQuickFixes: TerminalQuickFixCallbackExtension;
 }
 
 export interface ITerminalQuickFixUnresolvedExtensionOptions extends ITerminalQuickFixOptions {
-	type: 'unresolved';
+	type: "unresolved";
 }

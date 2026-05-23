@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { ICodeBlockActionContextProvider, IChatCodeBlockContextProviderService } from './chat.js';
+import { IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { ICodeBlockActionContextProvider, IChatCodeBlockContextProviderService } from "./chat.js";
 
 export class ChatCodeBlockContextProviderService implements IChatCodeBlockContextProviderService {
 	declare _serviceBrand: undefined;

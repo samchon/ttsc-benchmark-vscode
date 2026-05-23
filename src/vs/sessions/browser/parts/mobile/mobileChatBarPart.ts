@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Parts } from '../../../../workbench/services/layout/browser/layoutService.js';
-import { AbstractPaneCompositePart } from '../../../../workbench/browser/parts/paneCompositePart.js';
-import { ChatBarPart } from '../chatBarPart.js';
-import { isPhoneLayout } from './mobileLayout.js';
+import { Parts } from "../../../../workbench/services/layout/browser/layoutService.js";
+import { AbstractPaneCompositePart } from "../../../../workbench/browser/parts/paneCompositePart.js";
+import { ChatBarPart } from "../chatBarPart.js";
+import { isPhoneLayout } from "./mobileLayout.js";
 
 /**
  * Mobile variant of ChatBarPart.
@@ -31,10 +31,10 @@ export class MobileChatBarPart extends ChatBarPart {
 
 		const container = this.getContainer();
 		if (container) {
-			container.style.backgroundColor = '';
-			container.style.removeProperty('--part-background');
-			container.style.removeProperty('--part-border-color');
-			container.style.color = '';
+			container.style.backgroundColor = "";
+			container.style.removeProperty("--part-background");
+			container.style.removeProperty("--part-border-color");
+			container.style.color = "";
 		}
 	}
 
@@ -53,6 +53,12 @@ export class MobileChatBarPart extends ChatBarPart {
 		// Full dimensions — no card margins or session-bar subtraction.
 		// AbstractPaneCompositePart.layout internally calls Part.layout so
 		// there is no need to invoke Part.prototype.layout separately.
-		AbstractPaneCompositePart.prototype.layout.call(this, width, height, top, left);
+		AbstractPaneCompositePart.prototype.layout.call(
+      this,
+      width,
+      height,
+      top,
+      left,
+    );
 	}
 }

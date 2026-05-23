@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { PermissionMode } from '@anthropic-ai/claude-agent-sdk';
-import type { URI } from '../../../../base/common/uri.js';
-import { ClaudeSessionConfigKey, narrowClaudePermissionMode } from '../../common/claudeSessionConfigKeys.js';
-import type { IAgentConfigurationService } from '../agentConfigurationService.js';
+import type { PermissionMode } from "@anthropic-ai/claude-agent-sdk";
+import type { URI } from "../../../../base/common/uri.js";
+import { ClaudeSessionConfigKey, narrowClaudePermissionMode } from "../../common/claudeSessionConfigKeys.js";
+import type { IAgentConfigurationService } from "../agentConfigurationService.js";
 
 /**
  * Read the live `permissionMode` for a session from
@@ -25,6 +25,6 @@ export function readClaudePermissionMode(
 	sessionUri: URI,
 ): PermissionMode | undefined {
 	return narrowClaudePermissionMode(
-		configurationService.getSessionConfigValues(sessionUri.toString())?.[ClaudeSessionConfigKey.PermissionMode],
-	);
+    configurationService.getSessionConfigValues(sessionUri.toString())?.[ClaudeSessionConfigKey.PermissionMode],
+  );
 }

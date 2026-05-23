@@ -3,58 +3,58 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
-import { NullLogService } from '../../../log/common/log.js';
-import { IRawRequestFunction, lookupKerberosAuthorization, nodeRequest } from '../../node/requestService.js';
-import { isWindows } from '../../../../base/common/platform.js';
-import { CancellationToken, CancellationTokenSource } from '../../../../base/common/cancellation.js';
-import { CancellationError } from '../../../../base/common/errors.js';
+import assert from "assert";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
+import { NullLogService } from "../../../log/common/log.js";
+import { IRawRequestFunction, lookupKerberosAuthorization, nodeRequest } from "../../node/requestService.js";
+import { isWindows } from "../../../../base/common/platform.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { CancellationError } from "../../../../base/common/errors.js";
 
-suite('Request Service', () => {
+suite("Request Service", () => {
 	const store = ensureNoDisposablesAreLeakedInTestSuite();
 
 	// Kerberos module fails to load on local macOS and Linux CI.
-	(isWindows ? test : test.skip)('Kerberos lookup', async () => {
+	(isWindows ? test : test.skip)("Kerberos lookup", async () => {
 		try {
 			const logService = store.add(new NullLogService());
-			const response = await lookupKerberosAuthorization('http://localhost:9999', undefined, logService, 'requestService.test.ts');
+			const response = await lookupKerberosAuthorization("http://localhost:9999", undefined, logService, "requestService.test.ts");
 			assert.ok(response);
 		} catch (err) {
 			assert.ok(
-				err?.message?.includes('No authority could be contacted for authentication')
-				|| err?.message?.includes('No Kerberos credentials available')
-				|| err?.message?.includes('No credentials are available in the security package')
-				|| err?.message?.includes('no credential for')
+				err?.message?.includes("No authority could be contacted for authentication")
+				|| err?.message?.includes("No Kerberos credentials available")
+				|| err?.message?.includes("No credentials are available in the security package")
+				|| err?.message?.includes("no credential for")
 				, `Unexpected error: ${err}`);
 		}
 	});
 
-	test('Request cancellation during retry backoff', async () => {
+	test("Request cancellation during retry backoff", async () => {
 		const cts = store.add(new CancellationTokenSource());
 		const startTime = Date.now();
 		setTimeout(() => cts.cancel(), 50);
 
 		try {
-			await nodeRequest({ url: 'http://localhost:9999/nonexistent', callSite: 'requestService.test.cancellation' }, cts.token);
-			assert.fail('Request should have been cancelled');
+			await nodeRequest({ url: "http://localhost:9999/nonexistent", callSite: "requestService.test.cancellation" }, cts.token);
+			assert.fail("Request should have been cancelled");
 		} catch (err) {
 			const elapsed = Date.now() - startTime;
-			assert.ok(err instanceof CancellationError, 'Error should be CancellationError');
+			assert.ok(err instanceof CancellationError, "Error should be CancellationError");
 			assert.ok(elapsed < 200, `Request should be cancelled quickly, but took ${elapsed}ms`);
 		}
 	});
 
-	test('should retry GET requests on transient errors', async () => {
+	test("should retry GET requests on transient errors", async () => {
 		let attemptCount = 0;
 		const mockRawRequest = (_opts: any, callback: Function) => {
 			attemptCount++;
 			const currentAttempt = attemptCount;
 			const mockReq: any = {
 				on: (event: string, handler: Function) => {
-					if (event === 'error' && currentAttempt < 3) {
-						const err = new Error('Connection refused') as NodeJS.ErrnoException;
-						err.code = 'ECONNREFUSED';
+					if (event === "error" && currentAttempt < 3) {
+						const err = new Error("Connection refused") as NodeJS.ErrnoException;
+						err.code = "ECONNREFUSED";
 						setTimeout(() => handler(err), 0);
 					}
 				},
@@ -65,69 +65,69 @@ suite('Request Service', () => {
 					}
 				},
 				abort: () => { },
-				setTimeout: () => { }
+				setTimeout: () => { },
 			};
 			return mockReq;
 		};
 
 		try {
 			await nodeRequest({
-				url: 'http://example.com',
-				type: 'GET',
+				url: "http://example.com",
+				type: "GET",
 				getRawRequest: () => mockRawRequest as IRawRequestFunction,
-				callSite: 'requestService.test.retryGET'
+				callSite: "requestService.test.retryGET",
 			}, CancellationToken.None);
 		} catch (err) {
 			// Expected to eventually succeed or fail after retries
 		}
 
-		assert.ok(attemptCount > 1, 'GET request should have been retried');
+		assert.ok(attemptCount > 1, "GET request should have been retried");
 	});
 
-	test('should NOT retry POST requests', async () => {
+	test("should NOT retry POST requests", async () => {
 		let attemptCount = 0;
 		const mockRawRequest = () => {
 			attemptCount++;
 			const mockReq: any = {
 				on: (event: string, handler: Function) => {
-					if (event === 'error') {
-						const err = new Error('Connection refused') as NodeJS.ErrnoException;
-						err.code = 'ECONNREFUSED';
+					if (event === "error") {
+						const err = new Error("Connection refused") as NodeJS.ErrnoException;
+						err.code = "ECONNREFUSED";
 						setTimeout(() => handler(err), 0);
 					}
 				},
 				end: () => { },
 				abort: () => { },
-				setTimeout: () => { }
+				setTimeout: () => { },
 			};
 			return mockReq;
 		};
 
 		try {
 			await nodeRequest({
-				url: 'http://example.com',
-				type: 'POST',
+				url: "http://example.com",
+				type: "POST",
 				getRawRequest: () => mockRawRequest,
-				callSite: 'requestService.test.noRetryPOST'
+				callSite: "requestService.test.noRetryPOST",
 			}, CancellationToken.None);
-			assert.fail('Should have thrown an error');
+			assert.fail("Should have thrown an error");
 		} catch (err) {
 			assert.ok(err instanceof Error);
 		}
 
-		assert.strictEqual(attemptCount, 1, 'POST request should not have been retried');
+		assert.strictEqual(attemptCount, 1, "POST request should not have been retried");
 	});
 
-	test('should retry HEAD requests on transient errors', async () => {
+	test("should retry HEAD requests on transient errors", async () => {
 		let attemptCount = 0;
 		const mockRawRequest = (_opts: any, callback: Function) => {
 			attemptCount++;
 			const currentAttempt = attemptCount;
 			const mockReq: any = {
 				on: (event: string, handler: Function) => {
-					if (event === 'error' && currentAttempt < 3) {
-						const err = new Error('Host unreachable') as NodeJS.ErrnoException;
-						err.code = 'EHOSTUNREACH';
+					if (event === "error" && currentAttempt < 3) {
+						const err = new Error("Host unreachable") as NodeJS.ErrnoException;
+						err.code = "EHOSTUNREACH";
 						setTimeout(() => handler(err), 0);
 					}
 				},
@@ -137,35 +137,35 @@ suite('Request Service', () => {
 					}
 				},
 				abort: () => { },
-				setTimeout: () => { }
+				setTimeout: () => { },
 			};
 			return mockReq;
 		};
 
 		try {
 			await nodeRequest({
-				url: 'http://example.com',
-				type: 'HEAD',
+				url: "http://example.com",
+				type: "HEAD",
 				getRawRequest: () => mockRawRequest as IRawRequestFunction,
-				callSite: 'requestService.test.retryHEAD'
+				callSite: "requestService.test.retryHEAD",
 			}, CancellationToken.None);
 		} catch (err) {
 			// Expected to eventually succeed or fail after retries
 		}
 
-		assert.ok(attemptCount > 1, 'HEAD request should have been retried');
+		assert.ok(attemptCount > 1, "HEAD request should have been retried");
 	});
 
-	test('should retry OPTIONS requests on transient errors', async () => {
+	test("should retry OPTIONS requests on transient errors", async () => {
 		let attemptCount = 0;
 		const mockRawRequest = (_opts: any, callback: Function) => {
 			attemptCount++;
 			const currentAttempt = attemptCount;
 			const mockReq: any = {
 				on: (event: string, handler: Function) => {
-					if (event === 'error' && currentAttempt < 3) {
-						const err = new Error('Network unreachable') as NodeJS.ErrnoException;
-						err.code = 'ENETUNREACH';
+					if (event === "error" && currentAttempt < 3) {
+						const err = new Error("Network unreachable") as NodeJS.ErrnoException;
+						err.code = "ENETUNREACH";
 						setTimeout(() => handler(err), 0);
 					}
 				},
@@ -175,124 +175,124 @@ suite('Request Service', () => {
 					}
 				},
 				abort: () => { },
-				setTimeout: () => { }
+				setTimeout: () => { },
 			};
 			return mockReq;
 		};
 
 		try {
 			await nodeRequest({
-				url: 'http://example.com',
-				type: 'OPTIONS',
+				url: "http://example.com",
+				type: "OPTIONS",
 				getRawRequest: () => mockRawRequest as IRawRequestFunction,
-				callSite: 'requestService.test.retryOPTIONS'
+				callSite: "requestService.test.retryOPTIONS",
 			}, CancellationToken.None);
 		} catch (err) {
 			// Expected to eventually succeed or fail after retries
 		}
 
-		assert.ok(attemptCount > 1, 'OPTIONS request should have been retried');
+		assert.ok(attemptCount > 1, "OPTIONS request should have been retried");
 	});
 
-	test('should NOT retry DELETE requests', async () => {
+	test("should NOT retry DELETE requests", async () => {
 		let attemptCount = 0;
 		const mockRawRequest = () => {
 			attemptCount++;
 			const mockReq: any = {
 				on: (event: string, handler: Function) => {
-					if (event === 'error') {
-						const err = new Error('Connection refused') as NodeJS.ErrnoException;
-						err.code = 'ECONNREFUSED';
+					if (event === "error") {
+						const err = new Error("Connection refused") as NodeJS.ErrnoException;
+						err.code = "ECONNREFUSED";
 						setTimeout(() => handler(err), 0);
 					}
 				},
 				end: () => { },
 				abort: () => { },
-				setTimeout: () => { }
+				setTimeout: () => { },
 			};
 			return mockReq;
 		};
 
 		try {
 			await nodeRequest({
-				url: 'http://example.com',
-				type: 'DELETE',
+				url: "http://example.com",
+				type: "DELETE",
 				getRawRequest: () => mockRawRequest,
-				callSite: 'requestService.test.noRetryDELETE'
+				callSite: "requestService.test.noRetryDELETE",
 			}, CancellationToken.None);
-			assert.fail('Should have thrown an error');
+			assert.fail("Should have thrown an error");
 		} catch (err) {
 			assert.ok(err instanceof Error);
 		}
 
-		assert.strictEqual(attemptCount, 1, 'DELETE request should not have been retried');
+		assert.strictEqual(attemptCount, 1, "DELETE request should not have been retried");
 	});
 
-	test('should NOT retry PUT requests', async () => {
+	test("should NOT retry PUT requests", async () => {
 		let attemptCount = 0;
 		const mockRawRequest = () => {
 			attemptCount++;
 			const mockReq: any = {
 				on: (event: string, handler: Function) => {
-					if (event === 'error') {
-						const err = new Error('Connection refused') as NodeJS.ErrnoException;
-						err.code = 'ECONNREFUSED';
+					if (event === "error") {
+						const err = new Error("Connection refused") as NodeJS.ErrnoException;
+						err.code = "ECONNREFUSED";
 						setTimeout(() => handler(err), 0);
 					}
 				},
 				end: () => { },
 				abort: () => { },
-				setTimeout: () => { }
+				setTimeout: () => { },
 			};
 			return mockReq;
 		};
 
 		try {
 			await nodeRequest({
-				url: 'http://example.com',
-				type: 'PUT',
+				url: "http://example.com",
+				type: "PUT",
 				getRawRequest: () => mockRawRequest,
-				callSite: 'requestService.test.noRetryPUT'
+				callSite: "requestService.test.noRetryPUT",
 			}, CancellationToken.None);
-			assert.fail('Should have thrown an error');
+			assert.fail("Should have thrown an error");
 		} catch (err) {
 			assert.ok(err instanceof Error);
 		}
 
-		assert.strictEqual(attemptCount, 1, 'PUT request should not have been retried');
+		assert.strictEqual(attemptCount, 1, "PUT request should not have been retried");
 	});
 
-	test('should NOT retry PATCH requests', async () => {
+	test("should NOT retry PATCH requests", async () => {
 		let attemptCount = 0;
 		const mockRawRequest = () => {
 			attemptCount++;
 			const mockReq: any = {
 				on: (event: string, handler: Function) => {
-					if (event === 'error') {
-						const err = new Error('Connection refused') as NodeJS.ErrnoException;
-						err.code = 'ECONNREFUSED';
+					if (event === "error") {
+						const err = new Error("Connection refused") as NodeJS.ErrnoException;
+						err.code = "ECONNREFUSED";
 						setTimeout(() => handler(err), 0);
 					}
 				},
 				end: () => { },
 				abort: () => { },
-				setTimeout: () => { }
+				setTimeout: () => { },
 			};
 			return mockReq;
 		};
 
 		try {
 			await nodeRequest({
-				url: 'http://example.com',
-				type: 'PATCH',
+				url: "http://example.com",
+				type: "PATCH",
 				getRawRequest: () => mockRawRequest,
-				callSite: 'requestService.test.noRetryPATCH'
+				callSite: "requestService.test.noRetryPATCH",
 			}, CancellationToken.None);
-			assert.fail('Should have thrown an error');
+			assert.fail("Should have thrown an error");
 		} catch (err) {
 			assert.ok(err instanceof Error);
 		}
 
-		assert.strictEqual(attemptCount, 1, 'PATCH request should not have been retried');
+		assert.strictEqual(attemptCount, 1, "PATCH request should not have been retried");
 	});
 });

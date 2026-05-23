@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
-import { IWorkbenchContribution } from '../../../common/contributions.js';
-import { IBrowserWorkbenchEnvironmentService } from '../../../services/environment/browser/environmentService.js';
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { IBrowserWorkbenchEnvironmentService } from "../../../services/environment/browser/environmentService.js";
 
 export class ExternalUriResolverContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'workbench.contrib.externalUriResolver';
+	static readonly ID = "workbench.contrib.externalUriResolver";
 
 	constructor(
 		@IOpenerService _openerService: IOpenerService,
@@ -25,9 +25,9 @@ export class ExternalUriResolverContribution extends Disposable implements IWork
 						resolved: await _workbenchEnvironmentService.options!.resolveExternalUri!(resource),
 						dispose: () => {
 							// TODO@mjbvz - do we need to do anything here?
-						}
+						},
 					};
-				}
+				},
 			}));
 		}
 	}

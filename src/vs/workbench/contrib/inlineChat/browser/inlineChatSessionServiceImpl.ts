@@ -2,29 +2,38 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable, dispose, DisposableStore, toDisposable } from '../../../../base/common/lifecycle.js';
-import { ResourceMap } from '../../../../base/common/map.js';
-import { autorun, observableFromEvent, observableValue } from '../../../../base/common/observable.js';
-import { isEqual } from '../../../../base/common/resources.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IActiveCodeEditor, isCodeEditor, isCompositeEditor, isDiffEditor } from '../../../../editor/browser/editorBrowser.js';
-import { localize } from '../../../../nls.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IContextKey, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { observableConfigValue } from '../../../../platform/observable/common/platformObservableUtils.js';
-import { IEditorService } from '../../../services/editor/common/editorService.js';
-import { IChatAgentService } from '../../chat/common/participants/chatAgents.js';
-import { ModifiedFileEntryState } from '../../chat/common/editing/chatEditingService.js';
-import { IChatService } from '../../chat/common/chatService/chatService.js';
-import { ChatAgentLocation } from '../../chat/common/constants.js';
-import { ILanguageModelToolsService, IToolData, ToolDataSource } from '../../chat/common/tools/languageModelToolsService.js';
-import { CTX_INLINE_CHAT_HAS_AGENT, CTX_INLINE_CHAT_HAS_NOTEBOOK_AGENT, CTX_INLINE_CHAT_POSSIBLE, InlineChatConfigKeys } from '../common/inlineChat.js';
-import { IInlineChatSession, IInlineChatSessionService, InlineChatSessionTerminationState } from './inlineChatSessionService.js';
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable, dispose, DisposableStore, toDisposable } from "../../../../base/common/lifecycle.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { autorun, observableFromEvent, observableValue } from "../../../../base/common/observable.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IActiveCodeEditor, isCodeEditor, isCompositeEditor, isDiffEditor } from "../../../../editor/browser/editorBrowser.js";
+import { localize } from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKey, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { observableConfigValue } from "../../../../platform/observable/common/platformObservableUtils.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IChatAgentService } from "../../chat/common/participants/chatAgents.js";
+import { ModifiedFileEntryState } from "../../chat/common/editing/chatEditingService.js";
+import { IChatService } from "../../chat/common/chatService/chatService.js";
+import { ChatAgentLocation } from "../../chat/common/constants.js";
+import { ILanguageModelToolsService, IToolData, ToolDataSource } from "../../chat/common/tools/languageModelToolsService.js";
+import {
+  CTX_INLINE_CHAT_HAS_AGENT,
+  CTX_INLINE_CHAT_HAS_NOTEBOOK_AGENT,
+  CTX_INLINE_CHAT_POSSIBLE,
+  InlineChatConfigKeys,
+} from "../common/inlineChat.js";
+import {
+  IInlineChatSession,
+  IInlineChatSessionService,
+  InlineChatSessionTerminationState,
+} from "./inlineChatSessionService.js";
 
 export class InlineChatError extends Error {
-	static readonly code = 'InlineChatError';
+	static readonly code = "InlineChatError";
 	constructor(message: string) {
 		super(message);
 		this.name = InlineChatError.code;
@@ -38,7 +47,9 @@ export class InlineChatSessionServiceImpl implements IInlineChatSessionService {
 	readonly #store = new DisposableStore();
 	readonly #sessions = new ResourceMap<IInlineChatSession>();
 
-	readonly #onWillStartSession = this.#store.add(new Emitter<IActiveCodeEditor>());
+	readonly #onWillStartSession = this.#store.add(
+    new Emitter<IActiveCodeEditor>(),
+  );
 	readonly onWillStartSession: Event<IActiveCodeEditor> = this.#onWillStartSession.event;
 
 	readonly #onDidChangeSessions = this.#store.add(new Emitter<this>());
@@ -52,7 +63,11 @@ export class InlineChatSessionServiceImpl implements IInlineChatSessionService {
 	) {
 		this.#chatService = chatService;
 		// Listen for agent changes and dispose all sessions when there is no agent
-		const agentObs = observableFromEvent(this, chatAgentService.onDidChangeAgents, () => chatAgentService.getDefaultAgent(ChatAgentLocation.EditorInline));
+		const agentObs = observableFromEvent(
+      this,
+      chatAgentService.onDidChangeAgents,
+      () => chatAgentService.getDefaultAgent(ChatAgentLocation.EditorInline),
+    );
 		this.#store.add(autorun(r => {
 			const agent = agentObs.read(r);
 			if (!agent) {
@@ -72,19 +87,25 @@ export class InlineChatSessionServiceImpl implements IInlineChatSessionService {
 		const uri = editor.getModel().uri;
 
 		if (this.#sessions.has(uri)) {
-			throw new Error('Session already exists');
+			throw new Error("Session already exists");
 		}
 
 		this.#onWillStartSession.fire(editor);
 
-		const chatModelRef = this.#chatService.startNewLocalSession(ChatAgentLocation.EditorInline, { canUseTools: false /* SEE https://github.com/microsoft/vscode/issues/279946 */ });
+		const chatModelRef = this.#chatService.startNewLocalSession(
+      ChatAgentLocation.EditorInline,
+      { canUseTools: false },
+    );
 		const chatModel = chatModelRef.object;
 		chatModel.startEditingSession(false);
-		const terminationState = observableValue<InlineChatSessionTerminationState | undefined>(this, undefined);
+		const terminationState = observableValue<InlineChatSessionTerminationState | undefined>(
+      this,
+      undefined,
+    );
 
 		const store = new DisposableStore();
 		store.add(toDisposable(() => {
-			void this.#chatService.cancelCurrentRequestForSession(chatModel.sessionResource, 'inlineChatSession');
+			void this.#chatService.cancelCurrentRequestForSession(chatModel.sessionResource, "inlineChatSession");
 			chatModel.editingSession?.reject();
 			this.#sessions.delete(uri);
 			this.#onDidChangeSessions.fire(this);
@@ -109,9 +130,9 @@ export class InlineChatSessionServiceImpl implements IInlineChatSessionService {
 						command: response.slashCommand?.name,
 						result: response.result,
 						action: {
-							kind: 'inlineChat',
-							action: state === ModifiedFileEntryState.Accepted ? 'accepted' : 'discarded'
-						}
+							kind: "inlineChat",
+							action: state === ModifiedFileEntryState.Accepted ? "accepted" : "discarded",
+						},
 					});
 				}
 			}
@@ -139,7 +160,7 @@ export class InlineChatSessionServiceImpl implements IInlineChatSessionService {
 				terminationState.set(state, undefined);
 				this.#onDidChangeSessions.fire(this);
 			},
-			dispose: store.dispose.bind(store)
+			dispose: store.dispose.bind(store),
 		};
 		this.#sessions.set(uri, result);
 		this.#onDidChangeSessions.fire(this);
@@ -173,7 +194,7 @@ export class InlineChatSessionServiceImpl implements IInlineChatSessionService {
 
 export class InlineChatEnabler {
 
-	static Id = 'inlineChat.enabler';
+	static Id = "inlineChat.enabler";
 
 	readonly #ctxHasProvider: IContextKey<boolean>;
 	readonly #ctxHasNotebookProvider: IContextKey<boolean>;
@@ -188,12 +209,26 @@ export class InlineChatEnabler {
 		@IConfigurationService configService: IConfigurationService,
 	) {
 		this.#ctxHasProvider = CTX_INLINE_CHAT_HAS_AGENT.bindTo(contextKeyService);
-		this.#ctxHasNotebookProvider = CTX_INLINE_CHAT_HAS_NOTEBOOK_AGENT.bindTo(contextKeyService);
+		this.#ctxHasNotebookProvider = CTX_INLINE_CHAT_HAS_NOTEBOOK_AGENT.bindTo(
+      contextKeyService,
+    );
 		this.#ctxPossible = CTX_INLINE_CHAT_POSSIBLE.bindTo(contextKeyService);
 
-		const agentObs = observableFromEvent(this, chatAgentService.onDidChangeAgents, () => chatAgentService.getDefaultAgent(ChatAgentLocation.EditorInline));
-		const notebookAgentObs = observableFromEvent(this, chatAgentService.onDidChangeAgents, () => chatAgentService.getDefaultAgent(ChatAgentLocation.Notebook));
-		const notebookAgentConfigObs = observableConfigValue(InlineChatConfigKeys.NotebookAgent, false, configService);
+		const agentObs = observableFromEvent(
+      this,
+      chatAgentService.onDidChangeAgents,
+      () => chatAgentService.getDefaultAgent(ChatAgentLocation.EditorInline),
+    );
+		const notebookAgentObs = observableFromEvent(
+      this,
+      chatAgentService.onDidChangeAgents,
+      () => chatAgentService.getDefaultAgent(ChatAgentLocation.Notebook),
+    );
+		const notebookAgentConfigObs = observableConfigValue(
+      InlineChatConfigKeys.NotebookAgent,
+      false,
+      configService,
+    );
 
 		this.#store.add(autorun(r => {
 			const agent = agentObs.read(r);
@@ -204,9 +239,13 @@ export class InlineChatEnabler {
 			}
 		}));
 
-		this.#store.add(autorun(r => {
-			this.#ctxHasNotebookProvider.set(notebookAgentConfigObs.read(r) && !!notebookAgentObs.read(r));
-		}));
+		this.#store.add(
+      autorun(r => {
+        this.#ctxHasNotebookProvider.set(
+          notebookAgentConfigObs.read(r) && !!notebookAgentObs.read(r),
+        );
+      }),
+    );
 
 		const updateEditor = () => {
 			const ctrl = editorService.activeEditorPane?.getControl();
@@ -228,25 +267,25 @@ export class InlineChatEnabler {
 
 export class InlineChatEscapeToolContribution extends Disposable {
 
-	static readonly Id = 'inlineChat.escapeTool';
+	static readonly Id = "inlineChat.escapeTool";
 	static readonly #data: IToolData = {
-		id: 'inline_chat_exit',
+		id: "inline_chat_exit",
 		source: ToolDataSource.Internal,
 		canBeReferencedInPrompt: false,
 		alwaysDisplayInputOutput: false,
-		displayName: localize('name', "Inline Chat to Panel Chat"),
-		modelDescription: 'Show a short textual response when not being able to make code changes and when not having been asked for code changes. Can also be used to move the request to the richer panel chat which supports edits across files, creating and deleting files, multi-turn conversations between the user and the assistant, and access to more IDE tools, like retrieve problems, interact with source control, run terminal commands etc.',
+		displayName: localize("name", "Inline Chat to Panel Chat"),
+		modelDescription: "Show a short textual response when not being able to make code changes and when not having been asked for code changes. Can also be used to move the request to the richer panel chat which supports edits across files, creating and deleting files, multi-turn conversations between the user and the assistant, and access to more IDE tools, like retrieve problems, interact with source control, run terminal commands etc.",
 		inputSchema: {
-			type: 'object',
+			type: "object",
 			additionalProperties: false,
 			properties: {
 				response: {
-					type: 'string',
-					description: localize('response.description', "Optional brief response for inline chat. Keep it at 10 words or fewer."),
+					type: "string",
+					description: localize("response.description", "Optional brief response for inline chat. Keep it at 10 words or fewer."),
 					maxLength: 200,
-				}
-			}
-		}
+				},
+			},
+		},
 	};
 
 	constructor(
@@ -263,30 +302,30 @@ export class InlineChatEscapeToolContribution extends Disposable {
 				const sessionResource = invocation.context?.sessionResource;
 
 				if (!sessionResource) {
-					logService.warn('InlineChatEscapeToolContribution: no sessionId in tool invocation context');
-					return { content: [{ kind: 'text', value: 'Cancel' }] };
+					logService.warn("InlineChatEscapeToolContribution: no sessionId in tool invocation context");
+					return { content: [{ kind: "text", value: "Cancel" }] };
 				}
 
 				const session = inlineChatSessionService.getSessionBySessionUri(sessionResource);
 
 				if (!session) {
 					logService.warn(`InlineChatEscapeToolContribution: no session found for id ${sessionResource}`);
-					return { content: [{ kind: 'text', value: 'Cancel' }] };
+					return { content: [{ kind: "text", value: "Cancel" }] };
 				}
 
 				const lastRequest = session.chatModel.getRequests().at(-1);
 				if (!lastRequest) {
 					logService.warn(`InlineChatEscapeToolContribution: no request found for id ${sessionResource}`);
-					return { content: [{ kind: 'text', value: 'Cancel' }], toolResultMessage: localize('tool.cancel', "Cancel") };
+					return { content: [{ kind: "text", value: "Cancel" }], toolResultMessage: localize("tool.cancel", "Cancel") };
 				}
 
-				const response = typeof invocation.parameters?.response === 'string' && invocation.parameters.response.trim().length > 0
+				const response = typeof invocation.parameters?.response === "string" && invocation.parameters.response.trim().length > 0
 					? invocation.parameters.response.trim()
-					: localize('terminated.message', "Inline chat is designed for making single-file code changes. Continue your request in the Chat view or rephrase it for inline chat.");
+					: localize("terminated.message", "Inline chat is designed for making single-file code changes. Continue your request in the Chat view or rephrase it for inline chat.");
 
 				session.setTerminationState(response);
-				return { content: [{ kind: 'text', value: 'Success' }] };
-			}
+				return { content: [{ kind: "text", value: "Success" }] };
+			},
 		}));
 	}
 }

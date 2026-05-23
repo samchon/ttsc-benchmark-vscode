@@ -2,16 +2,16 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { CancellationToken, CancellationTokenSource } from '../../../../../base/common/cancellation.js';
-import { IDisposable, toDisposable } from '../../../../../base/common/lifecycle.js';
-import { derived, IObservable, ObservablePromise } from '../../../../../base/common/observable.js';
-import { compare } from '../../../../../base/common/strings.js';
-import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { isObject } from '../../../../../base/common/types.js';
-import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IQuickItem, IQuickPickSeparator } from '../../../../../platform/quickinput/common/quickInput.js';
-import { IChatRequestVariableEntry } from '../../common/attachments/chatVariableEntries.js';
-import { IChatWidget } from '../chat.js';
+import { CancellationToken, CancellationTokenSource } from "../../../../../base/common/cancellation.js";
+import { IDisposable, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { derived, IObservable, ObservablePromise } from "../../../../../base/common/observable.js";
+import { compare } from "../../../../../base/common/strings.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { isObject } from "../../../../../base/common/types.js";
+import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IQuickItem, IQuickPickSeparator } from "../../../../../platform/quickinput/common/quickInput.js";
+import { IChatRequestVariableEntry } from "../../common/attachments/chatVariableEntries.js";
+import { IChatWidget } from "../chat.js";
 
 
 export interface IChatContextPickerPickItem extends Partial<IQuickItem> {
@@ -24,10 +24,12 @@ export interface IChatContextPickerPickItem extends Partial<IQuickItem> {
 	asAttachment(): ChatContextPickAttachment | Promise<ChatContextPickAttachment>;
 }
 
-export type ChatContextPickAttachment = IChatRequestVariableEntry | IChatRequestVariableEntry[] | 'noop';
+export type ChatContextPickAttachment = IChatRequestVariableEntry | IChatRequestVariableEntry[] | "noop";
 
 export function isChatContextPickerPickItem(item: unknown): item is IChatContextPickerPickItem {
-	return isObject(item) && typeof (item as IChatContextPickerPickItem).asAttachment === 'function';
+	return isObject(
+    item,
+  ) && typeof (item as IChatContextPickerPickItem).asAttachment === "function";
 }
 
 interface IChatContextItem {
@@ -39,7 +41,7 @@ interface IChatContextItem {
 }
 
 export interface IChatContextValueItem extends IChatContextItem {
-	readonly type: 'valuePick';
+	readonly type: "valuePick";
 
 	asAttachment(widget: IChatWidget): Promise<IChatRequestVariableEntry | IChatRequestVariableEntry[] | undefined>;
 }
@@ -67,7 +69,7 @@ export interface IChatContextPicker {
 }
 
 export interface IChatContextPickerItem extends IChatContextItem {
-	readonly type: 'pickerPick';
+	readonly type: "pickerPick";
 
 	asPicker(widget: IChatWidget): IChatContextPicker;
 }
@@ -79,16 +81,16 @@ export interface IChatContextPickerItem extends IChatContextItem {
 export function picksWithPromiseFn(fn: (query: string, token: CancellationToken) => Promise<ChatContextPick[]>): (query: IObservable<string>, token: CancellationToken) => IObservable<{ busy: boolean; picks: ChatContextPick[] }> {
 	return (query, token) => {
 		const promise = derived(reader => {
-			const queryValue = query.read(reader);
-			const cts = new CancellationTokenSource(token);
-			reader.store.add(toDisposable(() => cts.dispose(true)));
-			return new ObservablePromise(fn(queryValue, cts.token));
-		});
+      const queryValue = query.read(reader);
+      const cts = new CancellationTokenSource(token);
+      reader.store.add(toDisposable(() => cts.dispose(true)));
+      return new ObservablePromise(fn(queryValue, cts.token));
+    });
 
 		return promise.map((value, reader) => {
-			const result = value.promiseResult.read(reader);
-			return { picks: result?.data || [], busy: result === undefined };
-		});
+      const result = value.promiseResult.read(reader);
+      return { picks: result?.data || [], busy: result === undefined };
+    });
 	};
 }
 
@@ -105,7 +107,9 @@ export interface IChatContextPickService {
 	registerChatContextItem(item: IChatContextValueItem | IChatContextPickerItem): IDisposable;
 }
 
-export const IChatContextPickService = createDecorator<IChatContextPickService>('IContextPickService');
+export const IChatContextPickService = createDecorator<IChatContextPickService>(
+  "IContextPickService",
+);
 
 export class ChatContextPickService implements IChatContextPickService {
 

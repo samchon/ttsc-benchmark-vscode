@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from './event.js';
-import { Disposable, IDisposable } from './lifecycle.js';
-import * as nls from '../../nls.js';
+import { Emitter, Event } from "./event.js";
+import { Disposable, IDisposable } from "./lifecycle.js";
+import * as nls from "../../nls.js";
 
 export interface ITelemetryData {
 	readonly from?: string;
@@ -14,11 +14,11 @@ export interface ITelemetryData {
 }
 
 export type WorkbenchActionExecutedClassification = {
-	id: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The identifier of the action that was run.' };
-	from: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The name of the component the action was run from.' };
-	detail?: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Optional details about how the action was run, e.g which keybinding was used.' };
-	owner: 'isidorn';
-	comment: 'Provides insight into actions that are executed within the workbench.';
+	id: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The identifier of the action that was run." };
+	from: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The name of the component the action was run from." };
+	detail?: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Optional details about how the action was run, e.g which keybinding was used." };
+	owner: "isidorn";
+	comment: "Provides insight into actions that are executed within the workbench.";
 };
 
 export type WorkbenchActionExecutedEvent = {
@@ -70,7 +70,7 @@ export class Action extends Disposable implements IAction {
 	protected _checked?: boolean;
 	protected readonly _actionCallback?: (event?: unknown) => unknown;
 
-	constructor(id: string, label: string = '', cssClass: string = '', enabled: boolean = true, actionCallback?: (event?: unknown) => unknown) {
+	constructor(id: string, label: string = "", cssClass: string = "", enabled: boolean = true, actionCallback?: (event?: unknown) => unknown) {
 		super();
 		this._id = id;
 		this._label = label;
@@ -99,7 +99,7 @@ export class Action extends Disposable implements IAction {
 	}
 
 	get tooltip(): string {
-		return this._tooltip || '';
+		return this._tooltip || "";
 	}
 
 	set tooltip(value: string) {
@@ -238,13 +238,13 @@ export class Separator implements IAction {
 		return actions;
 	}
 
-	static readonly ID = 'vs.actions.separator';
+	static readonly ID = "vs.actions.separator";
 
 	readonly id: string = Separator.ID;
 
-	readonly label: string = '';
-	readonly tooltip: string = '';
-	readonly class: string = 'separator';
+	readonly label: string = "";
+	readonly tooltip: string = "";
+	readonly class: string = "separator";
 	readonly enabled: boolean = false;
 	readonly checked: undefined = undefined;
 	async run() { }
@@ -255,7 +255,7 @@ export class SubmenuAction implements IAction {
 	readonly id: string;
 	readonly label: string;
 	readonly class: string | undefined;
-	readonly tooltip: string = '';
+	readonly tooltip: string = "";
 	readonly enabled: boolean = true;
 	readonly checked: undefined = undefined;
 
@@ -274,21 +274,26 @@ export class SubmenuAction implements IAction {
 
 export class EmptySubmenuAction extends Action {
 
-	static readonly ID = 'vs.actions.empty';
+	static readonly ID = "vs.actions.empty";
 
 	constructor() {
-		super(EmptySubmenuAction.ID, nls.localize('submenu.empty', '(empty)'), undefined, false);
+		super(
+      EmptySubmenuAction.ID,
+      nls.localize("submenu.empty", "(empty)"),
+      undefined,
+      false,
+    );
 	}
 }
 
 export function toAction(props: { id: string; label: string; tooltip?: string; enabled?: boolean; checked?: boolean; class?: string; run: Function }): IAction {
 	return {
-		id: props.id,
-		label: props.label,
-		tooltip: props.tooltip ?? props.label,
-		class: props.class,
-		enabled: props.enabled ?? true,
-		checked: props.checked,
-		run: async (...args: unknown[]) => props.run(...args),
-	};
+    id: props.id,
+    label: props.label,
+    tooltip: props.tooltip ?? props.label,
+    class: props.class,
+    enabled: props.enabled ?? true,
+    checked: props.checked,
+    run: async (...args: unknown[]) => props.run(...args),
+  };
 }

@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ITextModel } from '../model.js';
-import { CursorConfiguration, ICursorSimpleModel } from '../cursorCommon.js';
-import { ICoordinatesConverter } from '../coordinatesConverter.js';
+import { ITextModel } from "../model.js";
+import { CursorConfiguration, ICursorSimpleModel } from "../cursorCommon.js";
+import { ICoordinatesConverter } from "../coordinatesConverter.js";
 
 export class CursorContext {
 	_cursorContextBrand: void = undefined;

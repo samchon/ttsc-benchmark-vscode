@@ -3,27 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../../../../base/browser/dom.js';
-import { Button } from '../../../../../../../base/browser/ui/button/button.js';
-import { Codicon } from '../../../../../../../base/common/codicons.js';
-import { Event } from '../../../../../../../base/common/event.js';
-import { MarkdownString } from '../../../../../../../base/common/htmlContent.js';
-import { MutableDisposable } from '../../../../../../../base/common/lifecycle.js';
-import { autorun, observableValue } from '../../../../../../../base/common/observable.js';
-import { ThemeIcon } from '../../../../../../../base/common/themables.js';
-import { URI } from '../../../../../../../base/common/uri.js';
-import { localize } from '../../../../../../../nls.js';
-import { IInstantiationService } from '../../../../../../../platform/instantiation/common/instantiation.js';
-import { IMarkdownRendererService } from '../../../../../../../platform/markdown/browser/markdownRenderer.js';
-import { defaultButtonStyles } from '../../../../../../../platform/theme/browser/defaultStyles.js';
-import { ChatErrorLevel, IChatToolInvocation, IChatToolInvocationSerialized } from '../../../../common/chatService/chatService.js';
-import { IChatCodeBlockInfo } from '../../../chat.js';
-import { IChatContentPartRenderContext } from '../chatContentParts.js';
-import { ChatErrorWidget } from '../chatErrorContentPart.js';
-import { ChatProgressSubPart } from '../chatProgressContentPart.js';
-import { ChatResourceGroupWidget } from '../chatResourceGroupWidget.js';
-import { ChatMcpAppModel, McpAppLoadState } from './chatMcpAppModel.js';
-import { BaseChatToolInvocationSubPart } from './chatToolInvocationSubPart.js';
+import * as dom from "../../../../../../../base/browser/dom.js";
+import { Button } from "../../../../../../../base/browser/ui/button/button.js";
+import { Codicon } from "../../../../../../../base/common/codicons.js";
+import { Event } from "../../../../../../../base/common/event.js";
+import { MarkdownString } from "../../../../../../../base/common/htmlContent.js";
+import { MutableDisposable } from "../../../../../../../base/common/lifecycle.js";
+import { autorun, observableValue } from "../../../../../../../base/common/observable.js";
+import { ThemeIcon } from "../../../../../../../base/common/themables.js";
+import { URI } from "../../../../../../../base/common/uri.js";
+import { localize } from "../../../../../../../nls.js";
+import { IInstantiationService } from "../../../../../../../platform/instantiation/common/instantiation.js";
+import { IMarkdownRendererService } from "../../../../../../../platform/markdown/browser/markdownRenderer.js";
+import { defaultButtonStyles } from "../../../../../../../platform/theme/browser/defaultStyles.js";
+import { ChatErrorLevel, IChatToolInvocation, IChatToolInvocationSerialized } from "../../../../common/chatService/chatService.js";
+import { IChatCodeBlockInfo } from "../../../chat.js";
+import { IChatContentPartRenderContext } from "../chatContentParts.js";
+import { ChatErrorWidget } from "../chatErrorContentPart.js";
+import { ChatProgressSubPart } from "../chatProgressContentPart.js";
+import { ChatResourceGroupWidget } from "../chatResourceGroupWidget.js";
+import { ChatMcpAppModel, McpAppLoadState } from "./chatMcpAppModel.js";
+import { BaseChatToolInvocationSubPart } from "./chatToolInvocationSubPart.js";
 
 /**
  * Data needed to render an MCP App, available before tool completion.
@@ -59,7 +59,9 @@ export class ChatMcpAppSubPart extends BaseChatToolInvocationSubPart {
 	private readonly _webviewContainer: HTMLElement;
 
 	/** Current progress part for loading state */
-	private readonly _progressPart = this._register(new MutableDisposable<ChatProgressSubPart>());
+	private readonly _progressPart = this._register(
+    new MutableDisposable<ChatProgressSubPart>(),
+  );
 
 	/** Current error node */
 	private _errorNode: HTMLElement | undefined;
@@ -68,7 +70,9 @@ export class ChatMcpAppSubPart extends BaseChatToolInvocationSubPart {
 	private readonly _downloadContainer: HTMLElement;
 
 	/** Current resource group widget for downloads */
-	private readonly _downloadWidget = this._register(new MutableDisposable<ChatResourceGroupWidget>());
+	private readonly _downloadWidget = this._register(
+    new MutableDisposable<ChatResourceGroupWidget>(),
+  );
 
 	constructor(
 		toolInvocation: IChatToolInvocation | IChatToolInvocationSerialized,
@@ -81,45 +85,55 @@ export class ChatMcpAppSubPart extends BaseChatToolInvocationSubPart {
 		super(toolInvocation);
 
 		// Create the DOM structure
-		this.domNode = dom.$('div.mcp-app-part');
-		this._webviewContainer = dom.$('div.mcp-app-webview');
+		this.domNode = dom.$("div.mcp-app-part");
+		this._webviewContainer = dom.$("div.mcp-app-webview");
 		this._webviewContainer.style.maxHeight = `${maxWebviewHeightPct * 100}vh`;
-		this._webviewContainer.style.minHeight = '100px';
-		this._webviewContainer.style.height = '300px'; // Initial height, will be updated by model
+		this._webviewContainer.style.minHeight = "100px";
+		this._webviewContainer.style.height = "300px"; // Initial height, will be updated by model
 		this.domNode.appendChild(this._webviewContainer);
 
 		// Download container — below webview, for ui/download-file resources
-		this._downloadContainer = dom.$('div.mcp-app-downloads');
+		this._downloadContainer = dom.$("div.mcp-app-downloads");
 		this.domNode.appendChild(this._downloadContainer);
 
 		const targetWindow = dom.getWindow(this.domNode);
 		const getMaxHeight = () => maxWebviewHeightPct * targetWindow.innerHeight;
-		const maxHeight = observableValue('mcpAppMaxHeight', getMaxHeight());
-		dom.addDisposableListener(targetWindow, 'resize', () => maxHeight.set(getMaxHeight(), undefined));
+		const maxHeight = observableValue("mcpAppMaxHeight", getMaxHeight());
+		dom.addDisposableListener(
+      targetWindow,
+      "resize",
+      () => maxHeight.set(getMaxHeight(), undefined),
+    );
 
 		// Create the model - it will mount the webview to the container
-		this._model = this._register(this._instantiationService.createInstance(
-			ChatMcpAppModel,
-			toolInvocation,
-			this._renderData,
-			this._webviewContainer,
-			maxHeight,
-			context.currentWidth,
-		));
+		this._model = this._register(
+      this._instantiationService.createInstance(
+        ChatMcpAppModel,
+        toolInvocation,
+        this._renderData,
+        this._webviewContainer,
+        maxHeight,
+        context.currentWidth,
+      ),
+    );
 
 		// Update container height from model
 		this._updateContainerHeight();
 
 		// Set up load state handling
-		this._register(autorun(reader => {
-			const loadState = this._model.loadState.read(reader);
-			this._handleLoadStateChange(this._webviewContainer, loadState);
-		}));
+		this._register(
+      autorun(reader => {
+        const loadState = this._model.loadState.read(reader);
+        this._handleLoadStateChange(this._webviewContainer, loadState);
+      }),
+    );
 
 		// Subscribe to model height changes
-		this._register(this._model.onDidChangeHeight(() => {
-			this._updateContainerHeight();
-		}));
+		this._register(
+      this._model.onDidChangeHeight(() => {
+        this._updateContainerHeight();
+      }),
+    );
 
 		// Observe download parts and render resource group widget
 		this._register(autorun(reader => {
@@ -136,9 +150,11 @@ export class ChatMcpAppSubPart extends BaseChatToolInvocationSubPart {
 			this._downloadContainer.appendChild(widget.domNode);
 		}));
 
-		this._register(onDidRemount(() => {
-			this._model.remount();
-		}));
+		this._register(
+      onDidRemount(() => {
+        this._model.remount();
+      }),
+    );
 
 		this._register(context.onDidChangeVisibility(visible => {
 			if (visible) {
@@ -159,31 +175,34 @@ export class ChatMcpAppSubPart extends BaseChatToolInvocationSubPart {
 		}
 
 		switch (loadState.status) {
-			case 'loading': {
+			case "loading": {
 				// Hide the webview container while loading
-				container.style.display = 'none';
+				container.style.display = "none";
 
-				const progressMessage = dom.$('span');
-				progressMessage.textContent = localize('loadingMcpApp', 'Loading MCP App...');
+				const progressMessage = dom.$("span");
+				progressMessage.textContent = localize(
+          "loadingMcpApp",
+          "Loading MCP App...",
+        );
 				const progressPart = this._instantiationService.createInstance(
-					ChatProgressSubPart,
-					progressMessage,
-					ThemeIcon.modify(Codicon.loading, 'spin'),
-					undefined
-				);
+          ChatProgressSubPart,
+          progressMessage,
+          ThemeIcon.modify(Codicon.loading, "spin"),
+          undefined,
+        );
 				this._progressPart.value = progressPart;
 				// Append to domNode (parent), not the webview container
 				this.domNode.appendChild(progressPart.domNode);
 				break;
 			}
-			case 'loaded': {
+			case "loaded": {
 				// Show the webview container
-				container.style.display = '';
+				container.style.display = "";
 				break;
 			}
-			case 'error': {
+			case "error": {
 				// Hide the webview container on error
-				container.style.display = 'none';
+				container.style.display = "none";
 				this._showError(this.domNode, loadState.error);
 				break;
 			}
@@ -198,23 +217,42 @@ export class ChatMcpAppSubPart extends BaseChatToolInvocationSubPart {
 	 * Shows an error message in the container.
 	 */
 	private _showError(container: HTMLElement, error: Error): void {
-		const errorNode = dom.$('.mcp-app-error');
+		const errorNode = dom.$(".mcp-app-error");
 
 		// Create error message with markdown
 		const errorMessage = new MarkdownString();
-		errorMessage.appendText(localize('mcpAppError', 'Error loading MCP App: {0}', error.message || String(error)));
+		errorMessage.appendText(
+      localize(
+        "mcpAppError",
+        "Error loading MCP App: {0}",
+        error.message || String(error),
+      ),
+    );
 
 		// Use ChatErrorWidget for consistent error styling
-		const errorWidget = this._register(new ChatErrorWidget(ChatErrorLevel.Error, errorMessage, this._markdownRendererService));
+		const errorWidget = this._register(
+      new ChatErrorWidget(
+        ChatErrorLevel.Error,
+        errorMessage,
+        this._markdownRendererService,
+      ),
+    );
 		errorNode.appendChild(errorWidget.domNode);
 
 		// Add retry button
-		const buttonContainer = dom.append(errorNode, dom.$('.chat-buttons-container'));
-		const retryButton = this._register(new Button(buttonContainer, defaultButtonStyles));
-		retryButton.label = localize('retry', 'Retry');
-		this._register(retryButton.onDidClick(() => {
-			this._model.retry();
-		}));
+		const buttonContainer = dom.append(
+      errorNode,
+      dom.$(".chat-buttons-container"),
+    );
+		const retryButton = this._register(
+      new Button(buttonContainer, defaultButtonStyles),
+    );
+		retryButton.label = localize("retry", "Retry");
+		this._register(
+      retryButton.onDidClick(() => {
+        this._model.retry();
+      }),
+    );
 
 		container.appendChild(errorNode);
 		this._errorNode = errorNode;

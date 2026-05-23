@@ -3,11 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IIdentityProvider, IListVirtualDelegate } from '../list/list.js';
-import { AbstractTree, AbstractTreeViewState, IAbstractTreeOptions } from './abstractTree.js';
-import { ObjectTreeModel } from './objectTreeModel.js';
-import { IDataSource, ITreeElement, ITreeModel, ITreeNode, ITreeRenderer, ITreeSorter, TreeError } from './tree.js';
-import { Iterable } from '../../../common/iterator.js';
+import { IIdentityProvider, IListVirtualDelegate } from "../list/list.js";
+import { AbstractTree, AbstractTreeViewState, IAbstractTreeOptions } from "./abstractTree.js";
+import { ObjectTreeModel } from "./objectTreeModel.js";
+import {
+  IDataSource,
+  ITreeElement,
+  ITreeModel,
+  ITreeNode,
+  ITreeRenderer,
+  ITreeSorter,
+  TreeError,
+} from "./tree.js";
+import { Iterable } from "../../../common/iterator.js";
 
 export interface IDataTreeOptions<T, TFilterData = void> extends IAbstractTreeOptions<T, TFilterData> {
 	readonly sorter?: ITreeSorter<T>;
@@ -27,9 +35,15 @@ export class DataTree<TInput, T, TFilterData = void> extends AbstractTree<T | nu
 		delegate: IListVirtualDelegate<T>,
 		renderers: ITreeRenderer<T, TFilterData, unknown>[],
 		private dataSource: IDataSource<TInput, T>,
-		options: IDataTreeOptions<T, TFilterData> = {}
+		options: IDataTreeOptions<T, TFilterData> = {},
 	) {
-		super(user, container, delegate, renderers, options as IDataTreeOptions<T | null, TFilterData>);
+		super(
+      user,
+      container,
+      delegate,
+      renderers,
+      options as IDataTreeOptions<T | null, TFilterData>,
+    );
 		this.identityProvider = options.identityProvider;
 	}
 
@@ -41,7 +55,10 @@ export class DataTree<TInput, T, TFilterData = void> extends AbstractTree<T | nu
 
 	setInput(input: TInput | undefined, viewState?: AbstractTreeViewState): void {
 		if (viewState && !this.identityProvider) {
-			throw new TreeError(this.user, 'Can\'t restore tree view state without an identity provider');
+			throw new TreeError(
+        this.user,
+        "Can't restore tree view state without an identity provider",
+      );
 		}
 
 		this.input = input;
@@ -81,14 +98,14 @@ export class DataTree<TInput, T, TFilterData = void> extends AbstractTree<T | nu
 		this.setFocus(focus);
 		this.setSelection(selection);
 
-		if (viewState && typeof viewState.scrollTop === 'number') {
+		if (viewState && typeof viewState.scrollTop === "number") {
 			this.scrollTop = viewState.scrollTop;
 		}
 	}
 
 	updateChildren(element: TInput | T = this.input!): void {
-		if (typeof this.input === 'undefined') {
-			throw new TreeError(this.user, 'Tree input not set');
+		if (typeof this.input === "undefined") {
+			throw new TreeError(this.user, "Tree input not set");
 		}
 
 		let isCollapsed: ((el: T) => boolean | undefined) | undefined;
@@ -110,7 +127,10 @@ export class DataTree<TInput, T, TFilterData = void> extends AbstractTree<T | nu
 	}
 
 	resort(element: T | TInput = this.input!, recursive = true): void {
-		this.model.resort((element === this.input ? null : element) as T, recursive);
+		this.model.resort(
+      (element === this.input ? null : element) as T,
+      recursive,
+    );
 	}
 
 	// View
@@ -151,18 +171,22 @@ export class DataTree<TInput, T, TFilterData = void> extends AbstractTree<T | nu
 			};
 		}
 
-		this.model.setChildren((element === this.input ? null : element) as T, this.iterate(element, isCollapsed).elements, { onDidCreateNode, onDidDeleteNode });
+		this.model.setChildren(
+      (element === this.input ? null : element) as T,
+      this.iterate(element, isCollapsed).elements,
+      { onDidCreateNode, onDidDeleteNode },
+    );
 	}
 
 	private iterate(element: TInput | T, isCollapsed?: (el: T) => boolean | undefined): { elements: Iterable<ITreeElement<T>>; size: number } {
 		const children = [...this.dataSource.getChildren(element)];
 		const elements = Iterable.map(children, element => {
-			const { elements: children, size } = this.iterate(element, isCollapsed);
-			const collapsible = this.dataSource.hasChildren ? this.dataSource.hasChildren(element) : undefined;
-			const collapsed = size === 0 ? undefined : (isCollapsed && isCollapsed(element));
+      const { elements: children, size } = this.iterate(element, isCollapsed);
+      const collapsible = this.dataSource.hasChildren ? this.dataSource.hasChildren(element) : undefined;
+      const collapsed = size === 0 ? undefined : (isCollapsed && isCollapsed(element));
 
-			return { element, children, collapsible, collapsed };
-		});
+      return { element, children, collapsible, collapsed };
+    });
 
 		return { elements, size: children.length };
 	}

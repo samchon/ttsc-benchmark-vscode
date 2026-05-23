@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { assert } from './assert.js';
+import { assert } from "./assert.js";
 
 /**
  * @returns whether the provided parameter is a JavaScript String or not.
  */
 export function isString(str: unknown): str is string {
-	return (typeof str === 'string');
+	return (typeof str === "string");
 }
 
 /**
@@ -34,7 +34,7 @@ export function isObject(obj: unknown): obj is Object {
 	// The method can't do a type cast since there are type (like strings) which
 	// are subclasses of any put not positvely matched by the function. Hence type
 	// narrowing results in wrong results.
-	return typeof obj === 'object'
+	return typeof obj === "object"
 		&& obj !== null
 		&& !Array.isArray(obj)
 		&& !(obj instanceof RegExp)
@@ -46,7 +46,7 @@ export function isObject(obj: unknown): obj is Object {
  */
 export function isTypedArray(obj: unknown): obj is Object {
 	const TypedArray = Object.getPrototypeOf(Uint8Array);
-	return typeof obj === 'object'
+	return typeof obj === "object"
 		&& obj instanceof TypedArray;
 }
 
@@ -55,7 +55,7 @@ export function isTypedArray(obj: unknown): obj is Object {
  * @returns whether the provided parameter is a JavaScript Number or not.
  */
 export function isNumber(obj: unknown): obj is number {
-	return (typeof obj === 'number' && !isNaN(obj));
+	return (typeof obj === "number" && !isNaN(obj));
 }
 
 /**
@@ -63,7 +63,7 @@ export function isNumber(obj: unknown): obj is number {
  */
 export function isIterable<T>(obj: unknown): obj is Iterable<T> {
 	// eslint-disable-next-line local/code-no-any-casts
-	return !!obj && typeof (obj as any)[Symbol.iterator] === 'function';
+	return !!obj && typeof (obj as any)[Symbol.iterator] === "function";
 }
 
 /**
@@ -71,7 +71,7 @@ export function isIterable<T>(obj: unknown): obj is Iterable<T> {
  */
 export function isAsyncIterable<T>(obj: unknown): obj is AsyncIterable<T> {
 	// eslint-disable-next-line local/code-no-any-casts
-	return !!obj && typeof (obj as any)[Symbol.asyncIterator] === 'function';
+	return !!obj && typeof (obj as any)[Symbol.asyncIterator] === "function";
 }
 
 /**
@@ -85,7 +85,7 @@ export function isBoolean(obj: unknown): obj is boolean {
  * @returns whether the provided parameter is undefined.
  */
 export function isUndefined(obj: unknown): obj is undefined {
-	return (typeof obj === 'undefined');
+	return (typeof obj === "undefined");
 }
 
 /**
@@ -105,7 +105,9 @@ export function isUndefinedOrNull(obj: unknown): obj is undefined | null {
 
 export function assertType(condition: unknown, type?: string): asserts condition {
 	if (!condition) {
-		throw new Error(type ? `Unexpected type, expected '${type}'` : 'Unexpected type');
+		throw new Error(
+      type ? `Unexpected type, expected '${type}'` : "Unexpected type",
+    );
 	}
 }
 
@@ -116,9 +118,9 @@ export function assertType(condition: unknown, type?: string): asserts condition
  */
 export function assertReturnsDefined<T>(arg: T | null | undefined): NonNullable<T> {
 	assert(
-		arg !== null && arg !== undefined,
-		'Argument is `undefined` or `null`.',
-	);
+    arg !== null && arg !== undefined,
+    "Argument is `undefined` or `null`.",
+  );
 
 	return arg;
 }
@@ -151,7 +153,7 @@ export function assertReturnsDefined<T>(arg: T | null | undefined): NonNullable<
  */
 export function assertDefined<T>(value: T, error: string | NonNullable<Error>): asserts value is NonNullable<T> {
 	if (value === null || value === undefined) {
-		const errorToThrow = typeof error === 'string' ? new Error(error) : error;
+		const errorToThrow = typeof error === "string" ? new Error(error) : error;
 
 		throw errorToThrow;
 	}
@@ -170,7 +172,9 @@ export function assertReturnsAllDefined(...args: (unknown | null | undefined)[])
 		const arg = args[i];
 
 		if (isUndefinedOrNull(arg)) {
-			throw new Error(`Assertion Failed: argument at index ${i} is undefined or null`);
+			throw new Error(
+        `Assertion Failed: argument at index ${i} is undefined or null`,
+      );
 		}
 
 		result.push(arg);
@@ -239,7 +243,7 @@ export function isEmptyObject(obj: unknown): obj is object {
  * @returns whether the provided parameter is a JavaScript Function or not.
  */
 export function isFunction(obj: unknown): obj is Function {
-	return (typeof obj === 'function');
+	return (typeof obj === "function");
 }
 
 /**
@@ -262,7 +266,9 @@ export function validateConstraint(arg: unknown, constraint: TypeConstraint | un
 
 	if (isString(constraint)) {
 		if (typeof arg !== constraint) {
-			throw new Error(`argument does not match constraint: typeof ${constraint}`);
+			throw new Error(
+        `argument does not match constraint: typeof ${constraint}`,
+      );
 		}
 	} else if (isFunction(constraint)) {
 		try {
@@ -279,7 +285,9 @@ export function validateConstraint(arg: unknown, constraint: TypeConstraint | un
 		if (constraint.length === 1 && constraint.call(undefined, arg) === true) {
 			return;
 		}
-		throw new Error(`argument does not match one of these constraints: arg instanceof constraint, arg.constructor === constraint, nor constraint(arg) === true`);
+		throw new Error(
+      `argument does not match one of these constraints: arg instanceof constraint, arg.constructor === constraint, nor constraint(arg) === true`,
+    );
 	}
 }
 

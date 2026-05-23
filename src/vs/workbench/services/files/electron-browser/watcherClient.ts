@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { getDelayedChannel, ProxyChannel } from '../../../../base/parts/ipc/common/ipc.js';
-import { IFileChange } from '../../../../platform/files/common/files.js';
-import { AbstractUniversalWatcherClient, ILogMessage, IRecursiveWatcher } from '../../../../platform/files/common/watcher.js';
-import { IUtilityProcessWorkerWorkbenchService } from '../../utilityProcess/electron-browser/utilityProcessWorkerWorkbenchService.js';
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { getDelayedChannel, ProxyChannel } from "../../../../base/parts/ipc/common/ipc.js";
+import { IFileChange } from "../../../../platform/files/common/files.js";
+import { AbstractUniversalWatcherClient, ILogMessage, IRecursiveWatcher } from "../../../../platform/files/common/watcher.js";
+import { IUtilityProcessWorkerWorkbenchService } from "../../utilityProcess/electron-browser/utilityProcessWorkerWorkbenchService.js";
 
 export class UniversalWatcherClient extends AbstractUniversalWatcherClient {
 
@@ -15,7 +15,7 @@ export class UniversalWatcherClient extends AbstractUniversalWatcherClient {
 		onFileChanges: (changes: IFileChange[]) => void,
 		onLogMessage: (msg: ILogMessage) => void,
 		verboseLogging: boolean,
-		private readonly utilityProcessWorkerWorkbenchService: IUtilityProcessWorkerWorkbenchService
+		private readonly utilityProcessWorkerWorkbenchService: IUtilityProcessWorkerWorkbenchService,
 	) {
 		super(onFileChanges, onLogMessage, verboseLogging);
 
@@ -34,9 +34,9 @@ export class UniversalWatcherClient extends AbstractUniversalWatcherClient {
 			// The utility process worker services ensures to terminate
 			// the process automatically when the window closes or reloads.
 			const { client, onDidTerminate } = disposables.add(await this.utilityProcessWorkerWorkbenchService.createWorker({
-				moduleId: 'vs/platform/files/node/watcher/watcherMain',
-				type: 'fileWatcher',
-				name: 'file-watcher'
+				moduleId: "vs/platform/files/node/watcher/watcherMain",
+				type: "fileWatcher",
+				name: "file-watcher",
 			}));
 
 			// React on unexpected termination of the watcher process
@@ -51,7 +51,7 @@ export class UniversalWatcherClient extends AbstractUniversalWatcherClient {
 				}
 			});
 
-			return client.getChannel('watcher');
+			return client.getChannel("watcher");
 		})()));
 
 		return watcher;

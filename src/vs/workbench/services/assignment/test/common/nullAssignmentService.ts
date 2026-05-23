@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../../base/common/event.js';
-import { IAssignmentFilter, IWorkbenchAssignmentService } from '../../common/assignmentService.js';
+import { Event } from "../../../../../base/common/event.js";
+import { IAssignmentFilter, IWorkbenchAssignmentService } from "../../common/assignmentService.js";
 
 export class NullWorkbenchAssignmentService implements IWorkbenchAssignmentService {
 	_serviceBrand: undefined;

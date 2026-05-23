@@ -3,16 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BrowserWindow } from 'electron';
-import { Limiter } from '../../../base/common/async.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { URI } from '../../../base/common/uri.js';
-import { ILogService } from '../../log/common/log.js';
-import { IAgentNetworkFilterService } from '../../networkFilter/common/networkFilterService.js';
-import { isURLDomainTrusted } from '../../url/common/trustedDomains.js';
-import { IWebContentExtractorOptions, IWebContentExtractorService, WebContentExtractResult } from '../common/webContentExtractor.js';
-import { WebContentCache } from './webContentCache.js';
-import { WebPageLoader } from './webPageLoader.js';
+import { BrowserWindow } from "electron";
+import { Limiter } from "../../../base/common/async.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { URI } from "../../../base/common/uri.js";
+import { ILogService } from "../../log/common/log.js";
+import { IAgentNetworkFilterService } from "../../networkFilter/common/networkFilterService.js";
+import { isURLDomainTrusted } from "../../url/common/trustedDomains.js";
+import {
+  IWebContentExtractorOptions,
+  IWebContentExtractorService,
+  WebContentExtractResult,
+} from "../common/webContentExtractor.js";
+import { WebContentCache } from "./webContentCache.js";
+import { WebPageLoader } from "./webPageLoader.js";
 
 export class NativeWebContentExtractorService extends Disposable implements IWebContentExtractorService {
 	_serviceBrand: undefined;
@@ -27,16 +31,22 @@ export class NativeWebContentExtractorService extends Disposable implements IWeb
 		@IAgentNetworkFilterService private readonly _agentNetworkFilterService: IAgentNetworkFilterService,
 	) {
 		super();
-		this._register(this._agentNetworkFilterService.onDidChange(() => this._webContentsCache.clear()));
+		this._register(
+      this._agentNetworkFilterService.onDidChange(
+        () => this._webContentsCache.clear(),
+      ),
+    );
 	}
 
 	extract(uris: URI[], options?: IWebContentExtractorOptions): Promise<WebContentExtractResult[]> {
 		if (uris.length === 0) {
-			this._logger.info('No URIs provided for extraction');
+			this._logger.info("No URIs provided for extraction");
 			return Promise.resolve([]);
 		}
 		this._logger.info(`Extracting content from ${uris.length} URIs`);
-		return Promise.all(uris.map((uri) => this._limiter.queue(() => this.doExtract(uri, options))));
+		return Promise.all(
+      uris.map((uri) => this._limiter.queue(() => this.doExtract(uri, options))),
+    );
 	}
 
 	async doExtract(uri: URI, options: IWebContentExtractorOptions | undefined): Promise<WebContentExtractResult> {
@@ -47,12 +57,13 @@ export class NativeWebContentExtractorService extends Disposable implements IWeb
 		}
 
 		const loader = new WebPageLoader(
-			(options) => new BrowserWindow(options),
-			this._logger,
-			uri,
-			options,
-			(uri) => isURLDomainTrusted(uri, options?.trustedDomains || []),
-			this._agentNetworkFilterService);
+      (options) => new BrowserWindow(options),
+      this._logger,
+      uri,
+      options,
+      (uri) => isURLDomainTrusted(uri, options?.trustedDomains || []),
+      this._agentNetworkFilterService,
+    );
 
 		try {
 			const result = await loader.load();

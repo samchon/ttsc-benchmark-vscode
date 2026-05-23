@@ -3,41 +3,49 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './media/sessionsSetUp.css';
-import { Disposable, DisposableStore, IDisposable, MutableDisposable, toDisposable } from '../../base/common/lifecycle.js';
-import { DeferredPromise, disposableTimeout } from '../../base/common/async.js';
-import { createDecorator, IInstantiationService } from '../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../platform/log/common/log.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../platform/storage/common/storage.js';
-import { IUserDataProfileStorageService } from '../../platform/userDataProfile/common/userDataProfileStorageService.js';
-import { IUserDataProfilesService } from '../../platform/userDataProfile/common/userDataProfile.js';
-import { ServiceCollection } from '../../platform/instantiation/common/serviceCollection.js';
-import { ChatEntitlementContext, IChatEntitlementService } from '../../workbench/services/chat/common/chatEntitlementService.js';
-import { isWeb } from '../../base/common/platform.js';
-import { GitHubPaths, IDefaultAccountService } from '../../platform/defaultAccount/common/defaultAccount.js';
-import { IProductService } from '../../platform/product/common/productService.js';
-import { IContextKeyService } from '../../platform/contextkey/common/contextkey.js';
-import { IWorkbenchEnvironmentService } from '../../workbench/services/environment/common/environmentService.js';
-import { IAuthenticationService } from '../../workbench/services/authentication/common/authentication.js';
-import { ICommandService } from '../../platform/commands/common/commands.js';
-import { IWorkbenchLayoutService } from '../../workbench/services/layout/browser/layoutService.js';
-import { IKeybindingService } from '../../platform/keybinding/common/keybinding.js';
-import { IHostService } from '../../workbench/services/host/browser/host.js';
-import { IMarkdownRendererService } from '../../platform/markdown/browser/markdownRenderer.js';
-import { WELCOME_COMPLETE_KEY } from '../common/welcome.js';
-import { SessionsWelcomeVisibleContext } from '../common/contextkeys.js';
+import "./media/sessionsSetUp.css";
+import {
+  Disposable,
+  DisposableStore,
+  IDisposable,
+  MutableDisposable,
+  toDisposable,
+} from "../../base/common/lifecycle.js";
+import { DeferredPromise, disposableTimeout } from "../../base/common/async.js";
+import { createDecorator, IInstantiationService } from "../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../platform/log/common/log.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../platform/storage/common/storage.js";
+import { IUserDataProfileStorageService } from "../../platform/userDataProfile/common/userDataProfileStorageService.js";
+import { IUserDataProfilesService } from "../../platform/userDataProfile/common/userDataProfile.js";
+import { ServiceCollection } from "../../platform/instantiation/common/serviceCollection.js";
+import { ChatEntitlementContext, IChatEntitlementService } from "../../workbench/services/chat/common/chatEntitlementService.js";
+import { isWeb } from "../../base/common/platform.js";
+import { GitHubPaths, IDefaultAccountService } from "../../platform/defaultAccount/common/defaultAccount.js";
+import { IProductService } from "../../platform/product/common/productService.js";
+import { IContextKeyService } from "../../platform/contextkey/common/contextkey.js";
+import { IWorkbenchEnvironmentService } from "../../workbench/services/environment/common/environmentService.js";
+import { IAuthenticationService } from "../../workbench/services/authentication/common/authentication.js";
+import { ICommandService } from "../../platform/commands/common/commands.js";
+import { IWorkbenchLayoutService } from "../../workbench/services/layout/browser/layoutService.js";
+import { IKeybindingService } from "../../platform/keybinding/common/keybinding.js";
+import { IHostService } from "../../workbench/services/host/browser/host.js";
+import { IMarkdownRendererService } from "../../platform/markdown/browser/markdownRenderer.js";
+import { WELCOME_COMPLETE_KEY } from "../common/welcome.js";
+import { SessionsWelcomeVisibleContext } from "../common/contextkeys.js";
 
-import { IConfigurationService } from '../../platform/configuration/common/configuration.js';
-import { Codicon } from '../../base/common/codicons.js';
-import { $, append } from '../../base/browser/dom.js';
-import { Dialog, DialogContentsAlignment } from '../../base/browser/ui/dialog/dialog.js';
-import { createWorkbenchDialogOptions } from '../../workbench/browser/parts/dialogs/dialog.js';
-import { MarkdownString } from '../../base/common/htmlContent.js';
-import { localize } from '../../nls.js';
+import { IConfigurationService } from "../../platform/configuration/common/configuration.js";
+import { Codicon } from "../../base/common/codicons.js";
+import { $, append } from "../../base/browser/dom.js";
+import { Dialog, DialogContentsAlignment } from "../../base/browser/ui/dialog/dialog.js";
+import { createWorkbenchDialogOptions } from "../../workbench/browser/parts/dialogs/dialog.js";
+import { MarkdownString } from "../../base/common/htmlContent.js";
+import { localize } from "../../nls.js";
 
-const AIDisabledConfig = 'chat.disableAIFeatures';
+const AIDisabledConfig = "chat.disableAIFeatures";
 
-export const ISessionsSetUpService = createDecorator<ISessionsSetUpService>('sessionsSetUpService');
+export const ISessionsSetUpService = createDecorator<ISessionsSetUpService>(
+  "sessionsSetUpService",
+);
 
 export interface ISessionsSetUpService {
 	readonly _serviceBrand: undefined;
@@ -59,15 +67,19 @@ function shouldSkipSessionsWelcome(environmentService: IWorkbenchEnvironmentServ
 		return true;
 	}
 	const envArgs = (environmentService as IWorkbenchEnvironmentService & { args?: Record<string, unknown> }).args;
-	if (envArgs?.['skip-sessions-welcome']) {
+	if (envArgs?.["skip-sessions-welcome"]) {
 		return true;
 	}
-	return typeof globalThis.location !== 'undefined' && new URLSearchParams(globalThis.location.search).has('skip-sessions-welcome');
+	return typeof globalThis.location !== "undefined" && new URLSearchParams(globalThis.location.search).has(
+    "skip-sessions-welcome",
+  );
 }
 
 class SessionsSetUpWidget extends Disposable {
 
-	private readonly dialogRef = this._register(new MutableDisposable<DisposableStore>());
+	private readonly dialogRef = this._register(
+    new MutableDisposable<DisposableStore>(),
+  );
 	private readonly watcherRef = this._register(new MutableDisposable());
 
 	// Non-service params must come before @-decorated service params
@@ -110,7 +122,11 @@ class SessionsSetUpWidget extends Disposable {
 			return;
 		}
 
-		const isFirstLaunch = !this.storageService.getBoolean(WELCOME_COMPLETE_KEY, StorageScope.APPLICATION, false);
+		const isFirstLaunch = !this.storageService.getBoolean(
+      WELCOME_COMPLETE_KEY,
+      StorageScope.APPLICATION,
+      false,
+    );
 
 		if (isFirstLaunch) {
 			this._showWelcome(true);
@@ -121,10 +137,17 @@ class SessionsSetUpWidget extends Disposable {
 
 	private async _checkWebAuth(): Promise<void> {
 		try {
-			const sessions = await this.authenticationService.getSessions('github');
+			const sessions = await this.authenticationService.getSessions("github");
 			if (sessions.length > 0) {
-				this.logService.info('[sessions welcome] GitHub session found on web, skipping welcome');
-				this.storageService.store(WELCOME_COMPLETE_KEY, true, StorageScope.APPLICATION, StorageTarget.MACHINE);
+				this.logService.info(
+          "[sessions welcome] GitHub session found on web, skipping welcome",
+        );
+				this.storageService.store(
+          WELCOME_COMPLETE_KEY,
+          true,
+          StorageScope.APPLICATION,
+          StorageTarget.MACHINE,
+        );
 				this.onCompleted();
 				return;
 			}
@@ -136,18 +159,18 @@ class SessionsSetUpWidget extends Disposable {
 
 	private _watchWebAuth(): void {
 		this._register(this.authenticationService.onDidChangeSessions(async e => {
-			if (e.providerId !== 'github' || !e.event.removed?.length) {
+			if (e.providerId !== "github" || !e.event.removed?.length) {
 				return;
 			}
 			try {
-				const remaining = await this.authenticationService.getSessions('github');
+				const remaining = await this.authenticationService.getSessions("github");
 				if (remaining.length > 0) {
 					return;
 				}
 			} catch {
 				// Provider became unavailable — treat as signed out
 			}
-			this.logService.info('[sessions welcome] GitHub session removed on web, re-showing welcome');
+			this.logService.info("[sessions welcome] GitHub session removed on web, re-showing welcome");
 			this.storageService.remove(WELCOME_COMPLETE_KEY, StorageScope.APPLICATION);
 			this._showWelcome(false);
 		}));
@@ -195,7 +218,7 @@ class SessionsSetUpWidget extends Disposable {
 
 	private async _ensureAIFeaturesEnabled(): Promise<void> {
 		if (this.configurationService.getValue<boolean>(AIDisabledConfig)) {
-			this.logService.info('[sessions welcome] AI features disabled, enabling');
+			this.logService.info("[sessions welcome] AI features disabled, enabling");
 			await this.configurationService.updateValue(AIDisabledConfig, false);
 		}
 	}
@@ -205,29 +228,33 @@ class SessionsSetUpWidget extends Disposable {
 			return;
 		}
 
-		this.logService.info('[sessions welcome] AI features disabled, showing enable dialog');
+		this.logService.info(
+      "[sessions welcome] AI features disabled, showing enable dialog",
+    );
 
 		const disposables = new DisposableStore();
 		this.dialogRef.value = disposables;
 
-		const welcomeVisibleKey = SessionsWelcomeVisibleContext.bindTo(this.contextKeyService);
+		const welcomeVisibleKey = SessionsWelcomeVisibleContext.bindTo(
+      this.contextKeyService,
+    );
 		welcomeVisibleKey.set(true);
 		disposables.add(toDisposable(() => welcomeVisibleKey.reset()));
 
 		const dialog = disposables.add(new Dialog(
 			this.layoutService.activeContainer,
-			'',
-			[localize('sessions.aiDisabled.enable', "Enable AI Features")],
+			"",
+			[localize("sessions.aiDisabled.enable", "Enable AI Features")],
 			createWorkbenchDialogOptions({
-				type: 'none',
-				extraClasses: ['chat-setup-dialog', 'sessions-welcome-dialog'],
-				detail: localize('sessions.aiDisabled.detail', "Enable AI features to continue using Agents."),
+				type: "none",
+				extraClasses: ["chat-setup-dialog", "sessions-welcome-dialog"],
+				detail: localize("sessions.aiDisabled.detail", "Enable AI features to continue using Agents."),
 				icon: Codicon.agent,
 				alignment: DialogContentsAlignment.Vertical,
 				cancelId: 1,
 				disableCloseButton: true,
 				disableCloseAction: true,
-			}, this.keybindingService, this.layoutService, this.hostService)
+			}, this.keybindingService, this.layoutService, this.hostService),
 		));
 
 		const { button } = await dialog.show();
@@ -235,7 +262,9 @@ class SessionsSetUpWidget extends Disposable {
 		this.dialogRef.clear();
 
 		if (button === 0) {
-			this.logService.info('[sessions welcome] User chose to enable AI features');
+			this.logService.info(
+        "[sessions welcome] User chose to enable AI features",
+      );
 			await this.configurationService.updateValue(AIDisabledConfig, false);
 		}
 	}
@@ -248,7 +277,9 @@ class SessionsSetUpWidget extends Disposable {
 		this.watcherRef.clear();
 		this.dialogRef.value = new DisposableStore();
 
-		const welcomeVisibleKey = SessionsWelcomeVisibleContext.bindTo(this.contextKeyService);
+		const welcomeVisibleKey = SessionsWelcomeVisibleContext.bindTo(
+      this.contextKeyService,
+    );
 		welcomeVisibleKey.set(true);
 		this.dialogRef.value.add(toDisposable(() => welcomeVisibleKey.reset()));
 
@@ -261,8 +292,10 @@ class SessionsSetUpWidget extends Disposable {
 				return;
 			}
 
-			overlay.element.classList.add('sessions-loading-dismissed');
-			this.dialogRef.value.add(disposableTimeout(() => overlay.element.remove(), 200));
+			overlay.element.classList.add("sessions-loading-dismissed");
+			this.dialogRef.value.add(
+        disposableTimeout(() => overlay.element.remove(), 200),
+      );
 
 			if (account) {
 				const setupDone = await this.serviceWhenSetupDone();
@@ -271,7 +304,12 @@ class SessionsSetUpWidget extends Disposable {
 				}
 
 				if (setupDone) {
-					this.storageService.store(WELCOME_COMPLETE_KEY, true, StorageScope.APPLICATION, StorageTarget.MACHINE);
+					this.storageService.store(
+            WELCOME_COMPLETE_KEY,
+            true,
+            StorageScope.APPLICATION,
+            StorageTarget.MACHINE,
+          );
 					this.dialogRef.clear();
 					this._watchSignInState();
 					return;
@@ -291,101 +329,134 @@ class SessionsSetUpWidget extends Disposable {
 	}
 
 	private _showLoadingOverlay(): { element: HTMLElement } & IDisposable {
-		const overlay = append(this.layoutService.mainContainer, $('div.sessions-loading-overlay'));
-		overlay.setAttribute('role', 'status');
-		overlay.setAttribute('aria-busy', 'true');
-		overlay.setAttribute('aria-label', localize('loading', "Loading"));
-		append(overlay, $('div.sessions-loading-icon.codicon.codicon-agent'));
+		const overlay = append(
+      this.layoutService.mainContainer,
+      $("div.sessions-loading-overlay"),
+    );
+		overlay.setAttribute("role", "status");
+		overlay.setAttribute("aria-busy", "true");
+		overlay.setAttribute("aria-label", localize("loading", "Loading"));
+		append(overlay, $("div.sessions-loading-icon.codicon.codicon-agent"));
 		return { element: overlay, dispose: () => overlay.remove() };
 	}
 
 	private async _showSignInDialog(): Promise<void> {
-		this.logService.info('[sessions welcome] Showing sign-in dialog');
+		this.logService.info("[sessions welcome] Showing sign-in dialog");
 
 		const signingInDialogRef = new MutableDisposable<DisposableStore>();
 
-		const success = await this.commandService.executeCommand<boolean>('workbench.action.chat.triggerSetup', undefined, {
+		const success = await this.commandService.executeCommand<boolean>("workbench.action.chat.triggerSetup", undefined, {
 			forceSignInDialog: true,
 			dialogIcon: Codicon.agent,
-			dialogTitle: localize('sessions.signIn', "Sign in to use Agents"),
+			dialogTitle: localize("sessions.signIn", "Sign in to use Agents"),
 			disableCloseButton: true,
 			onSignInStarted: () => {
 				const disposables = new DisposableStore();
 				signingInDialogRef.value = disposables;
 				const dialog = disposables.add(new Dialog(
 					this.layoutService.activeContainer,
-					localize('sessions.signingIn', "Signing in…"),
+					localize("sessions.signingIn", "Signing in…"),
 					[],
 					createWorkbenchDialogOptions({
-						type: 'none',
-						extraClasses: ['chat-setup-dialog', 'sessions-welcome-dialog'],
-						detail: localize('sessions.signingIn.detail', "Please complete sign-in in the browser."),
+						type: "none",
+						extraClasses: ["chat-setup-dialog", "sessions-welcome-dialog"],
+						detail: localize("sessions.signingIn.detail", "Please complete sign-in in the browser."),
 						icon: Codicon.agent,
 						alignment: DialogContentsAlignment.Vertical,
 						cancelId: 0,
 						disableCloseButton: true,
 						disableDefaultAction: true,
-					}, this.keybindingService, this.layoutService, this.hostService)
+					}, this.keybindingService, this.layoutService, this.hostService),
 				));
 				dialog.show();
-			}
+			},
 		});
 
 		signingInDialogRef.dispose();
 
 		if (success) {
-			this.logService.info('[sessions welcome] Sign-in completed successfully');
-			this.storageService.store(WELCOME_COMPLETE_KEY, true, StorageScope.APPLICATION, StorageTarget.MACHINE);
+			this.logService.info("[sessions welcome] Sign-in completed successfully");
+			this.storageService.store(
+        WELCOME_COMPLETE_KEY,
+        true,
+        StorageScope.APPLICATION,
+        StorageTarget.MACHINE,
+      );
 			this.serviceMarkDone();
 		} else {
-			this.logService.info('[sessions welcome] Sign-in was canceled or failed');
+			this.logService.info("[sessions welcome] Sign-in was canceled or failed");
 		}
 	}
 
 	private async _showWelcomeDialog(): Promise<void> {
-		this.logService.info('[sessions welcome] Showing welcome dialog');
+		this.logService.info("[sessions welcome] Showing welcome dialog");
 
 		const disposables = new DisposableStore();
-		const productName = localize('walkthrough.productName', "{0} - Agents", this.productService.nameLong);
+		const productName = localize(
+      "walkthrough.productName",
+      "{0} - Agents",
+      this.productService.nameLong,
+    );
 
 		const dialog = disposables.add(new Dialog(
 			this.layoutService.activeContainer,
-			localize('sessions.welcome.title', "Welcome to {0}", productName),
-			[localize('sessions.welcome.getStarted', "Get Started")],
+			localize("sessions.welcome.title", "Welcome to {0}", productName),
+			[localize("sessions.welcome.getStarted", "Get Started")],
 			createWorkbenchDialogOptions({
-				type: 'none',
-				extraClasses: ['chat-setup-dialog', 'sessions-welcome-dialog', 'sessions-main-welcome-dialog'],
-				detail: localize('sessions.welcome.detail', "Your AI-powered coding experience where agents explore, build, and iterate with you."),
+				type: "none",
+				extraClasses: ["chat-setup-dialog", "sessions-welcome-dialog", "sessions-main-welcome-dialog"],
+				detail: localize("sessions.welcome.detail", "Your AI-powered coding experience where agents explore, build, and iterate with you."),
 				icon: Codicon.agent,
 				alignment: DialogContentsAlignment.Vertical,
 				cancelId: 1,
 				disableCloseButton: true,
 				renderFooter: footer => footer.appendChild(this._createWelcomeFooter(disposables)),
-			}, this.keybindingService, this.layoutService, this.hostService)
+			}, this.keybindingService, this.layoutService, this.hostService),
 		));
 
 		await dialog.show();
 		disposables.dispose();
 
-		this.storageService.store(WELCOME_COMPLETE_KEY, true, StorageScope.APPLICATION, StorageTarget.MACHINE);
+		this.storageService.store(
+      WELCOME_COMPLETE_KEY,
+      true,
+      StorageScope.APPLICATION,
+      StorageTarget.MACHINE,
+    );
 		this.serviceMarkDone();
 	}
 
 	private _createWelcomeFooter(disposables: DisposableStore): HTMLElement {
-		const element = $('.chat-setup-dialog-footer');
+		const element = $(".chat-setup-dialog-footer");
 		const defaultChatAgent = this.productService.defaultChatAgent;
-		const providerName = defaultChatAgent?.provider?.default?.name ?? 'GitHub';
-		const termsUrl = defaultChatAgent?.termsStatementUrl ?? '';
-		const privacyUrl = defaultChatAgent?.privacyStatementUrl ?? '';
-		const publicCodeUrl = defaultChatAgent?.publicCodeMatchesUrl ?? '';
-		const settingsUrl = this.defaultAccountService.resolveGitHubUrl(GitHubPaths.copilotSettings);
+		const providerName = defaultChatAgent?.provider?.default?.name ?? "GitHub";
+		const termsUrl = defaultChatAgent?.termsStatementUrl ?? "";
+		const privacyUrl = defaultChatAgent?.privacyStatementUrl ?? "";
+		const publicCodeUrl = defaultChatAgent?.publicCodeMatchesUrl ?? "";
+		const settingsUrl = this.defaultAccountService.resolveGitHubUrl(
+      GitHubPaths.copilotSettings,
+    );
 
 		const footer = localize(
-			{ key: 'welcomeFooter', comment: ['{Locked="["}', '{Locked="]({1})"}', '{Locked="]({2})"}', '{Locked="]({4})"}', '{Locked="]({5})"}'] },
-			"By continuing, you agree to {0}'s [Terms]({1}) and [Privacy Statement]({2}). {3} Copilot may show [public code]({4}) suggestions and use your data to improve the product. You can change these [settings]({5}) anytime.",
-			providerName, termsUrl, privacyUrl, providerName, publicCodeUrl, settingsUrl
-		);
-		element.appendChild($('p', undefined, disposables.add(this.markdownRendererService.render(new MarkdownString(footer, { isTrusted: true }))).element));
+      {
+        key: "welcomeFooter",
+        comment: ['{Locked="["}', '{Locked="]({1})"}', '{Locked="]({2})"}', '{Locked="]({4})"}', '{Locked="]({5})"}'],
+      },
+      "By continuing, you agree to {0}'s [Terms]({1}) and [Privacy Statement]({2}). {3} Copilot may show [public code]({4}) suggestions and use your data to improve the product. You can change these [settings]({5}) anytime.",
+      providerName,
+      termsUrl,
+      privacyUrl,
+      providerName,
+      publicCodeUrl,
+      settingsUrl,
+    );
+		element.appendChild(
+      $(
+        "p",
+        undefined,
+        disposables.add(this.markdownRendererService.render(new MarkdownString(footer, { isTrusted: true }))).element,
+      ),
+    );
 
 		return element;
 	}
@@ -413,12 +484,14 @@ export class SessionsSetUpService extends Disposable implements ISessionsSetUpSe
 
 		this._initPromise = this.initialize();
 
-		this._register(this.instantiationService.createInstance(
-			SessionsSetUpWidget,
-			() => this._welcomeDoneDeferred.complete(),
-			() => this.whenSetupDone(),
-			() => this.markDone()
-		));
+		this._register(
+      this.instantiationService.createInstance(
+        SessionsSetUpWidget,
+        () => this._welcomeDoneDeferred.complete(),
+        () => this.whenSetupDone(),
+        () => this.markDone(),
+      ),
+    );
 	}
 
 	private async whenSetupDone(): Promise<boolean> {
@@ -447,7 +520,7 @@ export class SessionsSetUpService extends Disposable implements ISessionsSetUpSe
 					.createInstance(ChatEntitlementContext);
 				try {
 					if (defaultContext.state.completed) {
-						this.logService.info('[sessions welcome] Setup already completed in default profile, marking done locally');
+						this.logService.info("[sessions welcome] Setup already completed in default profile, marking done locally");
 						this.markDone();
 					}
 				} finally {
@@ -455,7 +528,10 @@ export class SessionsSetUpService extends Disposable implements ISessionsSetUpSe
 				}
 			});
 		} catch (error) {
-			this.logService.error('[sessions welcome] Failed to read setup state from default profile:', error);
+			this.logService.error(
+        "[sessions welcome] Failed to read setup state from default profile:",
+        error,
+      );
 		}
 	}
 }

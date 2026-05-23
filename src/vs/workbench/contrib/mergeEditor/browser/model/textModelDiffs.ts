@@ -3,22 +3,36 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { compareBy, numberComparator } from '../../../../../base/common/arrays.js';
-import { BugIndicatingError } from '../../../../../base/common/errors.js';
-import { Disposable, toDisposable } from '../../../../../base/common/lifecycle.js';
-import { ITextModel } from '../../../../../editor/common/model.js';
-import { DetailedLineRangeMapping } from './mapping.js';
-import { LineRangeEdit } from './editing.js';
-import { MergeEditorLineRange } from './lineRange.js';
-import { ReentrancyBarrier } from '../../../../../base/common/controlFlow.js';
-import { IMergeDiffComputer } from './diffComputer.js';
-import { autorun, IObservableWithChange, IReader, ITransaction, observableSignal, observableValue, transaction } from '../../../../../base/common/observable.js';
-import { UndoRedoGroup } from '../../../../../platform/undoRedo/common/undoRedo.js';
+import { compareBy, numberComparator } from "../../../../../base/common/arrays.js";
+import { BugIndicatingError } from "../../../../../base/common/errors.js";
+import { Disposable, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { ITextModel } from "../../../../../editor/common/model.js";
+import { DetailedLineRangeMapping } from "./mapping.js";
+import { LineRangeEdit } from "./editing.js";
+import { MergeEditorLineRange } from "./lineRange.js";
+import { ReentrancyBarrier } from "../../../../../base/common/controlFlow.js";
+import { IMergeDiffComputer } from "./diffComputer.js";
+import {
+  autorun,
+  IObservableWithChange,
+  IReader,
+  ITransaction,
+  observableSignal,
+  observableValue,
+  transaction,
+} from "../../../../../base/common/observable.js";
+import { UndoRedoGroup } from "../../../../../platform/undoRedo/common/undoRedo.js";
 
 export class TextModelDiffs extends Disposable {
 	private _recomputeCount = 0;
-	private readonly _state = observableValue<TextModelDiffState, TextModelDiffChangeReason>(this, TextModelDiffState.initializing);
-	private readonly _diffs = observableValue<DetailedLineRangeMapping[], TextModelDiffChangeReason>(this, []);
+	private readonly _state = observableValue<TextModelDiffState, TextModelDiffChangeReason>(
+    this,
+    TextModelDiffState.initializing,
+  );
+	private readonly _diffs = observableValue<DetailedLineRangeMapping[], TextModelDiffChangeReason>(
+    this,
+    [],
+  );
 
 	private readonly _barrier = new ReentrancyBarrier();
 	private _isDisposed = false;
@@ -34,7 +48,7 @@ export class TextModelDiffs extends Disposable {
 	) {
 		super();
 
-		const recomputeSignal = observableSignal('recompute');
+		const recomputeSignal = observableSignal("recompute");
 
 		this._register(autorun(reader => {
 			/** @description Update diff state */
@@ -43,22 +57,24 @@ export class TextModelDiffs extends Disposable {
 		}));
 
 		this._register(
-			baseTextModel.onDidChangeContent(
-				this._barrier.makeExclusiveOrSkip(() => {
-					recomputeSignal.trigger(undefined);
-				})
-			)
-		);
+      baseTextModel.onDidChangeContent(
+        this._barrier.makeExclusiveOrSkip(() => {
+          recomputeSignal.trigger(undefined);
+        }),
+      ),
+    );
 		this._register(
-			textModel.onDidChangeContent(
-				this._barrier.makeExclusiveOrSkip(() => {
-					recomputeSignal.trigger(undefined);
-				})
-			)
-		);
-		this._register(toDisposable(() => {
-			this._isDisposed = true;
-		}));
+      textModel.onDidChangeContent(
+        this._barrier.makeExclusiveOrSkip(() => {
+          recomputeSignal.trigger(undefined);
+        }),
+      ),
+    );
+		this._register(
+      toDisposable(() => {
+        this._isDisposed = true;
+      }),
+    );
 	}
 
 	public get state(): IObservableWithChange<TextModelDiffState, TextModelDiffChangeReason> {
@@ -87,11 +103,15 @@ export class TextModelDiffs extends Disposable {
 			this._state.set(
 				this._isInitializing ? TextModelDiffState.initializing : TextModelDiffState.updating,
 				tx,
-				TextModelDiffChangeReason.other
+				TextModelDiffChangeReason.other,
 			);
 		});
 
-		const result = this.diffComputer.computeDiff(this.baseTextModel, this.textModel, reader);
+		const result = this.diffComputer.computeDiff(
+      this.baseTextModel,
+      this.textModel,
+      reader,
+    );
 
 		result.then((result) => {
 			if (this._isDisposed) {
@@ -118,14 +138,18 @@ export class TextModelDiffs extends Disposable {
 
 	private ensureUpToDate(): void {
 		if (this.state.get() !== TextModelDiffState.upToDate) {
-			throw new BugIndicatingError('Cannot remove diffs when the model is not up to date');
+			throw new BugIndicatingError(
+        "Cannot remove diffs when the model is not up to date",
+      );
 		}
 	}
 
 	public removeDiffs(diffToRemoves: DetailedLineRangeMapping[], transaction: ITransaction | undefined, group?: UndoRedoGroup): void {
 		this.ensureUpToDate();
 
-		diffToRemoves.sort(compareBy((d) => d.inputRange.startLineNumber, numberComparator));
+		diffToRemoves.sort(
+      compareBy((d) => d.inputRange.startLineNumber, numberComparator),
+    );
 		diffToRemoves.reverse(); // process from bottom of document upward
 
 		const diffs = this._diffs.get();
@@ -145,9 +169,9 @@ export class TextModelDiffs extends Disposable {
 		// Apply text model edits in reverse document order (bottom-up, safe for line shifting)
 		for (const diffToRemove of diffToRemoves) {
 			this._barrier.runExclusivelyOrThrow(() => {
-				const edits = diffToRemove.getReverseLineEdit().toEdits(this.textModel.getLineCount());
-				this.textModel.pushEditOperations(null, edits, () => null, group);
-			});
+        const edits = diffToRemove.getReverseLineEdit().toEdits(this.textModel.getLineCount());
+        this.textModel.pushEditOperations(null, edits, () => null, group);
+      });
 		}
 
 		// Single forward pass: accumulate delta from removed diffs above, apply to remaining diffs below
@@ -158,7 +182,9 @@ export class TextModelDiffs extends Disposable {
 			if (toRemoveSet.has(d)) {
 				cumulativeDelta += d.inputRange.length - d.outputRange.length;
 			} else {
-				newDiffs.push(cumulativeDelta !== 0 ? d.addOutputLineDelta(cumulativeDelta) : d);
+				newDiffs.push(
+          cumulativeDelta !== 0 ? d.addOutputLineDelta(cumulativeDelta) : d,
+        );
 			}
 		}
 
@@ -172,25 +198,30 @@ export class TextModelDiffs extends Disposable {
 		this.ensureUpToDate();
 
 		const editMapping = new DetailedLineRangeMapping(
-			edit.range,
-			this.baseTextModel,
-			MergeEditorLineRange.fromLength(edit.range.startLineNumber, edit.newLines.length),
-			this.textModel
-		);
+      edit.range,
+      this.baseTextModel,
+      MergeEditorLineRange.fromLength(
+        edit.range.startLineNumber,
+        edit.newLines.length,
+      ),
+      this.textModel,
+    );
 
 		let firstAfter = false;
 		let delta = 0;
 		const newDiffs = new Array<DetailedLineRangeMapping>();
 		for (const diff of this.diffs.get()) {
 			if (diff.inputRange.intersectsOrTouches(edit.range)) {
-				throw new BugIndicatingError('Edit must be conflict free.');
+				throw new BugIndicatingError("Edit must be conflict free.");
 			} else if (diff.inputRange.isAfter(edit.range)) {
 				if (!firstAfter) {
 					firstAfter = true;
 					newDiffs.push(editMapping.addOutputLineDelta(delta));
 				}
 
-				newDiffs.push(diff.addOutputLineDelta(edit.newLines.length - edit.range.length));
+				newDiffs.push(
+          diff.addOutputLineDelta(edit.newLines.length - edit.range.length),
+        );
 			} else {
 				newDiffs.push(diff);
 			}
@@ -206,21 +237,25 @@ export class TextModelDiffs extends Disposable {
 		}
 
 		this._barrier.runExclusivelyOrThrow(() => {
-			const edits = new LineRangeEdit(edit.range.delta(delta), edit.newLines).toEdits(this.textModel.getLineCount());
-			this.textModel.pushEditOperations(null, edits, () => null, group);
-		});
+      const edits = new LineRangeEdit(edit.range.delta(delta), edit.newLines).toEdits(this.textModel.getLineCount());
+      this.textModel.pushEditOperations(null, edits, () => null, group);
+    });
 		this._diffs.set(newDiffs, transaction, TextModelDiffChangeReason.other);
 	}
 
 	public findTouchingDiffs(baseRange: MergeEditorLineRange): DetailedLineRangeMapping[] {
-		return this.diffs.get().filter(d => d.inputRange.intersectsOrTouches(baseRange));
+		return this.diffs.get().filter(
+      d => d.inputRange.intersectsOrTouches(baseRange),
+    );
 	}
 
 	private getResultLine(lineNumber: number, reader?: IReader): number | DetailedLineRangeMapping {
 		let offset = 0;
 		const diffs = reader ? this.diffs.read(reader) : this.diffs.get();
 		for (const diff of diffs) {
-			if (diff.inputRange.contains(lineNumber) || diff.inputRange.endLineNumberExclusive === lineNumber) {
+			if (diff.inputRange.contains(
+        lineNumber,
+      ) || diff.inputRange.endLineNumberExclusive === lineNumber) {
 				return diff;
 			} else if (diff.inputRange.endLineNumberExclusive < lineNumber) {
 				offset = diff.resultingDeltaFromOriginalToModified;
@@ -233,11 +268,14 @@ export class TextModelDiffs extends Disposable {
 
 	public getResultLineRange(baseRange: MergeEditorLineRange, reader?: IReader): MergeEditorLineRange {
 		let start = this.getResultLine(baseRange.startLineNumber, reader);
-		if (typeof start !== 'number') {
+		if (typeof start !== "number") {
 			start = start.outputRange.startLineNumber;
 		}
-		let endExclusive = this.getResultLine(baseRange.endLineNumberExclusive, reader);
-		if (typeof endExclusive !== 'number') {
+		let endExclusive = this.getResultLine(
+      baseRange.endLineNumberExclusive,
+      reader,
+    );
+		if (typeof endExclusive !== "number") {
 			endExclusive = endExclusive.outputRange.endLineNumberExclusive;
 		}
 

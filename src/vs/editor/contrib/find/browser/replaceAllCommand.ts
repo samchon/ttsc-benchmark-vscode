@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Range } from '../../../common/core/range.js';
-import { Selection } from '../../../common/core/selection.js';
-import { ICommand, ICursorStateComputerData, IEditOperationBuilder } from '../../../common/editorCommon.js';
-import { ITextModel } from '../../../common/model.js';
+import { Range } from "../../../common/core/range.js";
+import { Selection } from "../../../common/core/selection.js";
+import { ICommand, ICursorStateComputerData, IEditOperationBuilder } from "../../../common/editorCommon.js";
+import { ITextModel } from "../../../common/model.js";
 
 interface IEditOperation {
 	range: Range;
@@ -33,15 +33,15 @@ export class ReplaceAllCommand implements ICommand {
 			const ops: IEditOperation[] = [];
 			for (let i = 0; i < this._ranges.length; i++) {
 				ops.push({
-					range: this._ranges[i],
-					text: this._replaceStrings[i]
-				});
+          range: this._ranges[i],
+          text: this._replaceStrings[i],
+        });
 			}
 
 			// Sort them in ascending order by range starts
 			ops.sort((o1, o2) => {
-				return Range.compareRangesUsingStarts(o1.range, o2.range);
-			});
+        return Range.compareRangesUsingStarts(o1.range, o2.range);
+      });
 
 			// Merge operations that touch each other
 			const resultOps: IEditOperation[] = [];
@@ -63,7 +63,9 @@ export class ReplaceAllCommand implements ICommand {
 			}
 		}
 
-		this._trackedEditorSelectionId = builder.trackSelection(this._editorSelection);
+		this._trackedEditorSelectionId = builder.trackSelection(
+      this._editorSelection,
+    );
 	}
 
 	public computeCursorState(model: ITextModel, helper: ICursorStateComputerData): Selection {

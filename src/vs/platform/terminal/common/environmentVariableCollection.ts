@@ -3,18 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IProcessEnvironment, isWindows } from '../../../base/common/platform.js';
-import { EnvironmentVariableMutatorType, EnvironmentVariableScope, IEnvironmentVariableCollection, IExtensionOwnedEnvironmentDescriptionMutator, IExtensionOwnedEnvironmentVariableMutator, IMergedEnvironmentVariableCollection, IMergedEnvironmentVariableCollectionDiff } from './environmentVariable.js';
+import { IProcessEnvironment, isWindows } from "../../../base/common/platform.js";
+import {
+  EnvironmentVariableMutatorType,
+  EnvironmentVariableScope,
+  IEnvironmentVariableCollection,
+  IExtensionOwnedEnvironmentDescriptionMutator,
+  IExtensionOwnedEnvironmentVariableMutator,
+  IMergedEnvironmentVariableCollection,
+  IMergedEnvironmentVariableCollectionDiff,
+} from "./environmentVariable.js";
 
 type VariableResolver = (str: string) => Promise<string>;
 
-const mutatorTypeToLabelMap: Map<EnvironmentVariableMutatorType, string> = new Map([
-	[EnvironmentVariableMutatorType.Append, 'APPEND'],
-	[EnvironmentVariableMutatorType.Prepend, 'PREPEND'],
-	[EnvironmentVariableMutatorType.Replace, 'REPLACE']
-]);
+const mutatorTypeToLabelMap: Map<EnvironmentVariableMutatorType, string> = new Map(
+  [
+    [EnvironmentVariableMutatorType.Append, "APPEND"],
+    [EnvironmentVariableMutatorType.Prepend, "PREPEND"],
+    [EnvironmentVariableMutatorType.Replace, "REPLACE"],
+  ],
+);
 const PYTHON_ACTIVATION_VARS_PATTERN = /^VSCODE_PYTHON_(PWSH|ZSH|BASH|FISH)_ACTIVATE/;
-const PYTHON_ENV_EXTENSION_ID = 'ms-python.vscode-python-envs';
+const PYTHON_ENV_EXTENSION_ID = "ms-python.vscode-python-envs";
 
 export class MergedEnvironmentVariableCollection implements IMergedEnvironmentVariableCollection {
 	private readonly map: Map<string, IExtensionOwnedEnvironmentVariableMutator[]> = new Map();
@@ -55,7 +65,7 @@ export class MergedEnvironmentVariableCollection implements IMergedEnvironmentVa
 					type: mutator.type,
 					scope: mutator.scope,
 					variable: mutator.variable,
-					options: mutator.options
+					options: mutator.options,
 				};
 				if (!extensionMutator.scope) {
 					delete extensionMutator.scope; // Convenient for tests
@@ -72,14 +82,21 @@ export class MergedEnvironmentVariableCollection implements IMergedEnvironmentVa
 		let lowerToActualVariableNames: { [lowerKey: string]: string | undefined } | undefined;
 		if (isWindows) {
 			lowerToActualVariableNames = {};
-			Object.keys(env).forEach(e => lowerToActualVariableNames![e.toLowerCase()] = e);
+			Object.keys(env).forEach(
+        e => lowerToActualVariableNames![e.toLowerCase()] = e,
+      );
 		}
 		for (const [variable, mutators] of this.getVariableMap(scope)) {
 			const actualVariable = isWindows ? lowerToActualVariableNames![variable.toLowerCase()] || variable : variable;
 			for (const mutator of mutators) {
-				const value = variableResolver ? await variableResolver(mutator.value) : mutator.value;
+				const value = variableResolver ? await variableResolver(
+          mutator.value,
+        ) : mutator.value;
 
-				if (this.blockPythonActivationVar(mutator.variable, mutator.extensionIdentifier)) {
+				if (this.blockPythonActivationVar(
+          mutator.variable,
+          mutator.extensionIdentifier,
+        )) {
 					continue;
 				}
 
@@ -87,10 +104,10 @@ export class MergedEnvironmentVariableCollection implements IMergedEnvironmentVa
 				if (mutator.options?.applyAtProcessCreation ?? true) {
 					switch (mutator.type) {
 						case EnvironmentVariableMutatorType.Append:
-							env[actualVariable] = (env[actualVariable] || '') + value;
+							env[actualVariable] = (env[actualVariable] || "") + value;
 							break;
 						case EnvironmentVariableMutatorType.Prepend:
-							env[actualVariable] = value + (env[actualVariable] || '');
+							env[actualVariable] = value + (env[actualVariable] || "");
 							break;
 						case EnvironmentVariableMutatorType.Replace:
 							env[actualVariable] = value;
@@ -100,19 +117,23 @@ export class MergedEnvironmentVariableCollection implements IMergedEnvironmentVa
 				// Default: false
 				if (mutator.options?.applyAtShellIntegration ?? false) {
 					const key = `VSCODE_ENV_${mutatorTypeToLabelMap.get(mutator.type)!}`;
-					env[key] = (env[key] ? env[key] + ':' : '') + variable + '=' + this._encodeColons(value);
+					env[key] = (env[key] ? env[key] + ":" : "") + variable + "=" + this._encodeColons(
+            value,
+          );
 				}
 			}
 		}
 	}
 
 	private _encodeColons(value: string): string {
-		return value.replaceAll(':', '\\x3a');
+		return value.replaceAll(":", "\\x3a");
 	}
 
 	private blockPythonActivationVar(variable: string, extensionIdentifier: string): boolean {
 		// Only Python env extension can modify Python activate env var.
-		if (PYTHON_ACTIVATION_VARS_PATTERN.test(variable) && PYTHON_ENV_EXTENSION_ID !== extensionIdentifier) {
+		if (PYTHON_ACTIVATION_VARS_PATTERN.test(
+      variable,
+    ) && PYTHON_ENV_EXTENSION_ID !== extensionIdentifier) {
 			return true;
 		}
 		return false;
@@ -172,7 +193,9 @@ export class MergedEnvironmentVariableCollection implements IMergedEnvironmentVa
 	getDescriptionMap(scope: EnvironmentVariableScope | undefined): Map<string, string | undefined> {
 		const result = new Map<string, string | undefined>();
 		for (const mutators of this.descriptionMap.values()) {
-			const filteredMutators = mutators.filter(m => filterScope(m, scope, true));
+			const filteredMutators = mutators.filter(
+        m => filterScope(m, scope, true),
+      );
 			for (const mutator of filteredMutators) {
 				result.set(mutator.extensionIdentifier, mutator.description);
 			}
@@ -195,10 +218,10 @@ export class MergedEnvironmentVariableCollection implements IMergedEnvironmentVa
 				this.descriptionMap.set(key, entry);
 			}
 			const extensionMutator = {
-				extensionIdentifier,
-				scope: mutator.scope,
-				description: mutator.description
-			};
+        extensionIdentifier,
+        scope: mutator.scope,
+        description: mutator.description,
+      };
 			if (!extensionMutator.scope) {
 				delete extensionMutator.scope; // Convenient for tests
 			}
@@ -220,7 +243,7 @@ export class MergedEnvironmentVariableCollection implements IMergedEnvironmentVa
 function filterScope(
 	mutator: IExtensionOwnedEnvironmentVariableMutator | IExtensionOwnedEnvironmentDescriptionMutator,
 	scope: EnvironmentVariableScope | undefined,
-	strictFilter = false
+	strictFilter = false,
 ): boolean {
 	if (!mutator.scope) {
 		if (strictFilter) {
@@ -238,7 +261,7 @@ function filterScope(
 
 function getMissingMutatorsFromArray(
 	current: IExtensionOwnedEnvironmentVariableMutator[],
-	other: IExtensionOwnedEnvironmentVariableMutator[] | undefined
+	other: IExtensionOwnedEnvironmentVariableMutator[] | undefined,
 ): IExtensionOwnedEnvironmentVariableMutator[] | undefined {
 	// If it doesn't exist, all are removed
 	if (!other) {
@@ -262,7 +285,7 @@ function getMissingMutatorsFromArray(
 
 function getChangedMutatorsFromArray(
 	current: IExtensionOwnedEnvironmentVariableMutator[],
-	other: IExtensionOwnedEnvironmentVariableMutator[] | undefined
+	other: IExtensionOwnedEnvironmentVariableMutator[] | undefined,
 ): IExtensionOwnedEnvironmentVariableMutator[] | undefined {
 	// If it doesn't exist, none are changed (they are removed)
 	if (!other) {

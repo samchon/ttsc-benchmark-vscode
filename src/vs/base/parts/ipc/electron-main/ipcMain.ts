@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import electron from 'electron';
-import { onUnexpectedError } from '../../../common/errors.js';
-import { Event } from '../../../common/event.js';
-import { VSCODE_AUTHORITY } from '../../../common/network.js';
+import electron from "electron";
+import { onUnexpectedError } from "../../../common/errors.js";
+import { Event } from "../../../common/event.js";
+import { VSCODE_AUTHORITY } from "../../../common/network.js";
 
 type ipcMainListener = (event: electron.IpcMainEvent, ...args: any[]) => void;
 
@@ -104,8 +104,10 @@ class ValidatedIpcMain implements Event.NodeEventEmitter {
 	}
 
 	private validateEvent(channel: string, event: electron.IpcMainEvent | electron.IpcMainInvokeEvent): boolean {
-		if (!channel?.startsWith('vscode:')) {
-			onUnexpectedError(`Refused to handle ipcMain event for channel '${channel}' because the channel is unknown.`);
+		if (!channel?.startsWith("vscode:")) {
+			onUnexpectedError(
+        `Refused to handle ipcMain event for channel '${channel}' because the channel is unknown.`,
+      );
 			return false; // unexpected channel
 		}
 
@@ -116,31 +118,39 @@ class ValidatedIpcMain implements Event.NodeEventEmitter {
 		// and `url` can be `about:blank` when reloading the window
 		// from performance tab of devtools https://github.com/electron/electron/issues/39427.
 		// It is fine to skip the checks in these cases.
-		if (!url || url === 'about:blank') {
+		if (!url || url === "about:blank") {
 			return true;
 		}
 
-		let host = 'unknown';
+		let host = "unknown";
 		try {
 			host = new URL(url).host;
 		} catch (error) {
-			onUnexpectedError(`Refused to handle ipcMain event for channel '${channel}' because of a malformed URL '${url}'.`);
+			onUnexpectedError(
+        `Refused to handle ipcMain event for channel '${channel}' because of a malformed URL '${url}'.`,
+      );
 			return false; // unexpected URL
 		}
 
 		if (process.env.VSCODE_DEV) {
-			if (url === process.env.DEV_WINDOW_SRC && (host === 'localhost' || host.startsWith('localhost:'))) {
+			if (url === process.env.DEV_WINDOW_SRC && (host === "localhost" || host.startsWith(
+        "localhost:",
+      ))) {
 				return true; // development support where the window is served from localhost
 			}
 		}
 
 		if (host !== VSCODE_AUTHORITY) {
-			onUnexpectedError(`Refused to handle ipcMain event for channel '${channel}' because of a bad origin of '${host}'.`);
+			onUnexpectedError(
+        `Refused to handle ipcMain event for channel '${channel}' because of a bad origin of '${host}'.`,
+      );
 			return false; // unexpected sender
 		}
 
 		if (sender?.parent !== null) {
-			onUnexpectedError(`Refused to handle ipcMain event for channel '${channel}' because sender of origin '${host}' is not a main frame.`);
+			onUnexpectedError(
+        `Refused to handle ipcMain event for channel '${channel}' because sender of origin '${host}' is not a main frame.`,
+      );
 			return false; // unexpected frame
 		}
 

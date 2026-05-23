@@ -3,27 +3,47 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event, PauseableEmitter } from '../../../../../base/common/event.js';
-import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { ITextModel } from '../../../../../editor/common/model.js';
-import { IModelService } from '../../../../../editor/common/services/model.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IProgress, IProgressStep } from '../../../../../platform/progress/common/progress.js';
-import { NotebookEditorWidget } from '../../../notebook/browser/notebookEditorWidget.js';
-import { INotebookEditorService } from '../../../notebook/browser/services/notebookEditorService.js';
-import { IAITextQuery, IFileMatch, ISearchComplete, ITextQuery, QueryType } from '../../../../services/search/common/search.js';
-import { arrayContainsElementOrParent, IChangeEvent, ISearchTreeFileMatch, ISearchTreeFolderMatch, IPlainTextSearchHeading, ISearchModel, ISearchResult, isSearchTreeFileMatch, isSearchTreeFolderMatch, isSearchTreeFolderMatchNoRoot, isSearchTreeFolderMatchWithResource, isSearchTreeMatch, isTextSearchHeading, ITextSearchHeading, mergeSearchResultEvents, RenderableMatch, SEARCH_RESULT_PREFIX } from './searchTreeCommon.js';
+import { Event, PauseableEmitter } from "../../../../../base/common/event.js";
+import { Disposable, IDisposable } from "../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ITextModel } from "../../../../../editor/common/model.js";
+import { IModelService } from "../../../../../editor/common/services/model.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IProgress, IProgressStep } from "../../../../../platform/progress/common/progress.js";
+import { NotebookEditorWidget } from "../../../notebook/browser/notebookEditorWidget.js";
+import { INotebookEditorService } from "../../../notebook/browser/services/notebookEditorService.js";
+import { IAITextQuery, IFileMatch, ISearchComplete, ITextQuery, QueryType } from "../../../../services/search/common/search.js";
+import {
+  arrayContainsElementOrParent,
+  IChangeEvent,
+  ISearchTreeFileMatch,
+  ISearchTreeFolderMatch,
+  IPlainTextSearchHeading,
+  ISearchModel,
+  ISearchResult,
+  isSearchTreeFileMatch,
+  isSearchTreeFolderMatch,
+  isSearchTreeFolderMatchNoRoot,
+  isSearchTreeFolderMatchWithResource,
+  isSearchTreeMatch,
+  isTextSearchHeading,
+  ITextSearchHeading,
+  mergeSearchResultEvents,
+  RenderableMatch,
+  SEARCH_RESULT_PREFIX,
+} from "./searchTreeCommon.js";
 
-import { RangeHighlightDecorations } from './rangeDecorations.js';
-import { PlainTextSearchHeadingImpl } from './textSearchHeading.js';
-import { AITextSearchHeadingImpl } from '../AISearch/aiSearchModel.js';
+import { RangeHighlightDecorations } from "./rangeDecorations.js";
+import { PlainTextSearchHeadingImpl } from "./textSearchHeading.js";
+import { AITextSearchHeadingImpl } from "../AISearch/aiSearchModel.js";
 
 export class SearchResultImpl extends Disposable implements ISearchResult {
 
-	private _onChange = this._register(new PauseableEmitter<IChangeEvent>({
-		merge: mergeSearchResultEvents
-	}));
+	private _onChange = this._register(
+    new PauseableEmitter<IChangeEvent>({
+      merge: mergeSearchResultEvents,
+    }),
+  );
 	readonly onChange: Event<IChangeEvent> = this._onChange.event;
 	private _onWillChangeModelListener: IDisposable | undefined;
 	private _onDidChangeModelListener: IDisposable | undefined;
@@ -38,14 +58,24 @@ export class SearchResultImpl extends Disposable implements ISearchResult {
 		@INotebookEditorService private readonly notebookEditorService: INotebookEditorService,
 	) {
 		super();
-		this._plainTextSearchResult = this._register(this.instantiationService.createInstance(PlainTextSearchHeadingImpl, this));
-		this._aiTextSearchResult = this._register(this.instantiationService.createInstance(AITextSearchHeadingImpl, this));
+		this._plainTextSearchResult = this._register(
+      this.instantiationService.createInstance(PlainTextSearchHeadingImpl, this),
+    );
+		this._aiTextSearchResult = this._register(
+      this.instantiationService.createInstance(AITextSearchHeadingImpl, this),
+    );
 
-		this._register(this._plainTextSearchResult.onChange((e) => this._onChange.fire(e)));
-		this._register(this._aiTextSearchResult.onChange((e) => this._onChange.fire(e)));
+		this._register(
+      this._plainTextSearchResult.onChange((e) => this._onChange.fire(e)),
+    );
+		this._register(
+      this._aiTextSearchResult.onChange((e) => this._onChange.fire(e)),
+    );
 
 		this.modelService.getModels().forEach(model => this.onModelAdded(model));
-		this._register(this.modelService.onModelAdded(model => this.onModelAdded(model)));
+		this._register(
+      this.modelService.onModelAdded(model => this.onModelAdded(model)),
+    );
 
 		this._register(this.notebookEditorService.onDidAddNotebookEditor(widget => {
 			if (widget instanceof NotebookEditorWidget) {
@@ -129,7 +159,7 @@ export class SearchResultImpl extends Disposable implements ISearchResult {
 						removedElems.push(currentElement);
 					}
 				}
-			}
+			},
 			);
 		} finally {
 			this._onChange.resume();
@@ -163,7 +193,7 @@ export class SearchResultImpl extends Disposable implements ISearchResult {
 				if (model) {
 					this.onNotebookEditorWidgetRemoved(widget, model?.uri);
 				}
-			}
+			},
 		);
 
 		this._onDidChangeModelListener?.dispose();
@@ -173,7 +203,7 @@ export class SearchResultImpl extends Disposable implements ISearchResult {
 				if (widget.hasModel()) {
 					this.onNotebookEditorWidgetAdded(widget, widget.textModel.uri);
 				}
-			}
+			},
 		);
 	}
 
@@ -229,7 +259,9 @@ export class SearchResultImpl extends Disposable implements ISearchResult {
 
 	matches(ai?: boolean): ISearchTreeFileMatch[] {
 		if (ai === undefined) {
-			return this._plainTextSearchResult.matches().concat(this._aiTextSearchResult.matches());
+			return this._plainTextSearchResult.matches().concat(
+        this._aiTextSearchResult.matches(),
+      );
 		} else if (ai === true) {
 			return this._aiTextSearchResult.matches();
 		}
@@ -298,5 +330,9 @@ export class SearchResultImpl extends Disposable implements ISearchResult {
 }
 
 function aiTextQueryFromTextQuery(query: ITextQuery | null): IAITextQuery | null {
-	return query === null ? null : { ...query, contentPattern: query.contentPattern.pattern, type: QueryType.aiText };
+	return query === null ? null : {
+    ...query,
+    contentPattern: query.contentPattern.pattern,
+    type: QueryType.aiText,
+  };
 }

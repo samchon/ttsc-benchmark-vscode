@@ -3,15 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../base/common/event.js';
-import { Disposable, toDisposable, type IDisposable } from '../../../base/common/lifecycle.js';
-import { TerminalCapability, type ITerminalCommand } from '../../../platform/terminal/common/capabilities/capabilities.js';
-import { ExtHostContext, MainContext, type ExtHostTerminalShellIntegrationShape, type MainThreadTerminalShellIntegrationShape } from '../common/extHost.protocol.js';
-import { ITerminalService, type ITerminalInstance } from '../../contrib/terminal/browser/terminal.js';
-import { IWorkbenchEnvironmentService } from '../../services/environment/common/environmentService.js';
-import { extHostNamedCustomer, type IExtHostContext } from '../../services/extensions/common/extHostCustomers.js';
-import { TerminalShellExecutionCommandLineConfidence } from '../common/extHostTypes.js';
-import { IExtensionService } from '../../services/extensions/common/extensions.js';
+import { Event } from "../../../base/common/event.js";
+import { Disposable, toDisposable, type IDisposable } from "../../../base/common/lifecycle.js";
+import { TerminalCapability, type ITerminalCommand } from "../../../platform/terminal/common/capabilities/capabilities.js";
+import {
+  ExtHostContext,
+  MainContext,
+  type ExtHostTerminalShellIntegrationShape,
+  type MainThreadTerminalShellIntegrationShape,
+} from "../common/extHost.protocol.js";
+import { ITerminalService, type ITerminalInstance } from "../../contrib/terminal/browser/terminal.js";
+import { IWorkbenchEnvironmentService } from "../../services/environment/common/environmentService.js";
+import { extHostNamedCustomer, type IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+import { TerminalShellExecutionCommandLineConfidence } from "../common/extHostTypes.js";
+import { IExtensionService } from "../../services/extensions/common/extensions.js";
 
 @extHostNamedCustomer(MainContext.MainThreadTerminalShellIntegration)
 export class MainThreadTerminalShellIntegration extends Disposable implements MainThreadTerminalShellIntegrationShape {
@@ -21,11 +26,13 @@ export class MainThreadTerminalShellIntegration extends Disposable implements Ma
 		extHostContext: IExtHostContext,
 		@ITerminalService private readonly _terminalService: ITerminalService,
 		@IWorkbenchEnvironmentService workbenchEnvironmentService: IWorkbenchEnvironmentService,
-		@IExtensionService private readonly _extensionService: IExtensionService
+		@IExtensionService private readonly _extensionService: IExtensionService,
 	) {
 		super();
 
-		this._proxy = extHostContext.getProxy(ExtHostContext.ExtHostTerminalShellIntegration);
+		this._proxy = extHostContext.getProxy(
+      ExtHostContext.ExtHostTerminalShellIntegration,
+    );
 
 		const instanceDataListeners: Map<number, IDisposable> = new Map();
 		this._register(toDisposable(() => {
@@ -36,31 +43,49 @@ export class MainThreadTerminalShellIntegration extends Disposable implements Ma
 
 		// onDidChangeTerminalShellIntegration initial state
 		for (const terminal of this._terminalService.instances) {
-			const cmdDetection = terminal.capabilities.get(TerminalCapability.CommandDetection);
+			const cmdDetection = terminal.capabilities.get(
+        TerminalCapability.CommandDetection,
+      );
 			if (cmdDetection) {
 				this._enableShellIntegration(terminal);
 			}
 		}
 
 		// onDidChangeTerminalShellIntegration via command detection
-		const onDidAddCommandDetection = this._store.add(this._terminalService.createOnInstanceEvent(instance => {
-			return Event.map(
-				instance.capabilities.onDidAddCommandDetectionCapability,
-				() => instance
-			);
-		})).event;
-		this._store.add(onDidAddCommandDetection(e => this._enableShellIntegration(e)));
+		const onDidAddCommandDetection = this._store.add(
+      this._terminalService.createOnInstanceEvent(instance => {
+        return Event.map(
+          instance.capabilities.onDidAddCommandDetectionCapability,
+          () => instance,
+        );
+      }),
+    ).event;
+		this._store.add(
+      onDidAddCommandDetection(e => this._enableShellIntegration(e)),
+    );
 
 		// onDidChangeTerminalShellIntegration via cwd
-		const cwdChangeEvent = this._store.add(this._terminalService.createOnInstanceCapabilityEvent(TerminalCapability.CwdDetection, e => e.onDidChangeCwd));
-		this._store.add(cwdChangeEvent.event(e => {
-			this._proxy.$cwdChange(e.instance.instanceId, e.data);
-		}));
+		const cwdChangeEvent = this._store.add(
+      this._terminalService.createOnInstanceCapabilityEvent(
+        TerminalCapability.CwdDetection,
+        e => e.onDidChangeCwd,
+      ),
+    );
+		this._store.add(
+      cwdChangeEvent.event(e => {
+        this._proxy.$cwdChange(e.instance.instanceId, e.data);
+      }),
+    );
 
 		// onDidChangeTerminalShellIntegration via env
-		const envChangeEvent = this._store.add(this._terminalService.createOnInstanceCapabilityEvent(TerminalCapability.ShellEnvDetection, e => e.onDidChangeEnv));
+		const envChangeEvent = this._store.add(
+      this._terminalService.createOnInstanceCapabilityEvent(
+        TerminalCapability.ShellEnvDetection,
+        e => e.onDidChangeEnv,
+      ),
+    );
 		this._store.add(envChangeEvent.event(e => {
-			if (e.data.value && typeof e.data.value === 'object') {
+			if (e.data.value && typeof e.data.value === "object") {
 				const envValue = e.data.value as { [key: string]: string | undefined };
 
 				// Extract keys and values
@@ -71,7 +96,12 @@ export class MainThreadTerminalShellIntegration extends Disposable implements Ma
 		}));
 
 		// onDidStartTerminalShellExecution
-		const commandDetectionStartEvent = this._store.add(this._terminalService.createOnInstanceCapabilityEvent(TerminalCapability.CommandDetection, e => e.onCommandExecuted));
+		const commandDetectionStartEvent = this._store.add(
+      this._terminalService.createOnInstanceCapabilityEvent(
+        TerminalCapability.CommandDetection,
+        e => e.onCommandExecuted,
+      ),
+    );
 		let currentCommand: ITerminalCommand | undefined;
 		this._store.add(commandDetectionStartEvent.event(e => {
 			// Prevent duplicate events from being sent in case command detection double fires the
@@ -88,12 +118,17 @@ export class MainThreadTerminalShellIntegration extends Disposable implements Ma
 			// Debounce events to reduce the message count - when this listener is disposed the events will be flushed
 			instanceDataListeners.get(instanceId)?.dispose();
 			instanceDataListeners.set(instanceId, Event.accumulate(e.instance.onData, 50, true, this._store)(events => {
-				this._proxy.$shellExecutionData(instanceId, events.join(''));
+				this._proxy.$shellExecutionData(instanceId, events.join(""));
 			}));
 		}));
 
 		// onDidEndTerminalShellExecution
-		const commandDetectionEndEvent = this._store.add(this._terminalService.createOnInstanceCapabilityEvent(TerminalCapability.CommandDetection, e => e.onCommandFinished));
+		const commandDetectionEndEvent = this._store.add(
+      this._terminalService.createOnInstanceCapabilityEvent(
+        TerminalCapability.CommandDetection,
+        e => e.onCommandFinished,
+      ),
+    );
 		this._store.add(commandDetectionEndEvent.event(e => {
 			currentCommand = undefined;
 			const instanceId = e.instance.instanceId;
@@ -105,20 +140,34 @@ export class MainThreadTerminalShellIntegration extends Disposable implements Ma
 		}));
 
 		// Clean up after dispose
-		this._store.add(this._terminalService.onDidDisposeInstance(e => this._proxy.$closeTerminal(e.instanceId)));
+		this._store.add(
+      this._terminalService.onDidDisposeInstance(
+        e => this._proxy.$closeTerminal(e.instanceId),
+      ),
+    );
 	}
 
 	$executeCommand(terminalId: number, commandLine: string): void {
-		this._terminalService.getInstanceFromId(terminalId)?.runCommand(commandLine, true);
+		this._terminalService.getInstanceFromId(terminalId)?.runCommand(
+      commandLine,
+      true,
+    );
 	}
 
 	private _enableShellIntegration(instance: ITerminalInstance): void {
-		this._extensionService.activateByEvent('onTerminalShellIntegration:*');
+		this._extensionService.activateByEvent("onTerminalShellIntegration:*");
 		if (instance.shellType) {
-			this._extensionService.activateByEvent(`onTerminalShellIntegration:${instance.shellType}`);
+			this._extensionService.activateByEvent(
+        `onTerminalShellIntegration:${instance.shellType}`,
+      );
 		}
-		this._proxy.$shellIntegrationChange(instance.instanceId, instanceSupportsExecuteCommandApi(instance));
-		const cwdDetection = instance.capabilities.get(TerminalCapability.CwdDetection);
+		this._proxy.$shellIntegrationChange(
+      instance.instanceId,
+      instanceSupportsExecuteCommandApi(instance),
+    );
+		const cwdDetection = instance.capabilities.get(
+      TerminalCapability.CwdDetection,
+    );
 		if (cwdDetection) {
 			this._proxy.$cwdChange(instance.instanceId, cwdDetection.getCwd());
 		}
@@ -127,16 +176,16 @@ export class MainThreadTerminalShellIntegration extends Disposable implements Ma
 
 function convertToExtHostCommandLineConfidence(command: ITerminalCommand): TerminalShellExecutionCommandLineConfidence {
 	switch (command.commandLineConfidence) {
-		case 'high':
+		case "high":
 			return TerminalShellExecutionCommandLineConfidence.High;
-		case 'medium':
+		case "medium":
 			return TerminalShellExecutionCommandLineConfidence.Medium;
-		case 'low':
+		case "low":
 		default:
 			return TerminalShellExecutionCommandLineConfidence.Low;
 	}
 }
 
 function instanceSupportsExecuteCommandApi(instance: ITerminalInstance): boolean {
-	return instance.shellLaunchConfig.type !== 'Task';
+	return instance.shellLaunchConfig.type !== "Task";
 }

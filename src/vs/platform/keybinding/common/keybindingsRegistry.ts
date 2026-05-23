@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { decodeKeybinding, Keybinding } from '../../../base/common/keybindings.js';
-import { OperatingSystem, OS } from '../../../base/common/platform.js';
-import { CommandsRegistry, ICommandHandler, ICommandMetadata } from '../../commands/common/commands.js';
-import { ContextKeyExpression } from '../../contextkey/common/contextkey.js';
-import { Registry } from '../../registry/common/platform.js';
-import { combinedDisposable, DisposableStore, IDisposable, toDisposable } from '../../../base/common/lifecycle.js';
-import { LinkedList } from '../../../base/common/linkedList.js';
+import { decodeKeybinding, Keybinding } from "../../../base/common/keybindings.js";
+import { OperatingSystem, OS } from "../../../base/common/platform.js";
+import { CommandsRegistry, ICommandHandler, ICommandMetadata } from "../../commands/common/commands.js";
+import { ContextKeyExpression } from "../../contextkey/common/contextkey.js";
+import { Registry } from "../../registry/common/platform.js";
+import { combinedDisposable, DisposableStore, IDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { LinkedList } from "../../../base/common/linkedList.js";
 
 export interface IKeybindingItem {
 	keybinding: Keybinding | null;
@@ -128,7 +128,16 @@ class KeybindingsRegistryImpl implements IKeybindingsRegistry {
 		if (actualKb && actualKb.primary) {
 			const kk = decodeKeybinding(actualKb.primary, OS);
 			if (kk) {
-				result.add(this._registerDefaultKeybinding(kk, rule.id, rule.args, rule.weight, 0, rule.when));
+				result.add(
+          this._registerDefaultKeybinding(
+            kk,
+            rule.id,
+            rule.args,
+            rule.weight,
+            0,
+            rule.when,
+          ),
+        );
 			}
 		}
 
@@ -137,7 +146,16 @@ class KeybindingsRegistryImpl implements IKeybindingsRegistry {
 				const k = actualKb.secondary[i];
 				const kk = decodeKeybinding(k, OS);
 				if (kk) {
-					result.add(this._registerDefaultKeybinding(kk, rule.id, rule.args, rule.weight, -i - 1, rule.when));
+					result.add(
+            this._registerDefaultKeybinding(
+              kk,
+              rule.id,
+              rule.args,
+              rule.weight,
+              -i - 1,
+              rule.when,
+            ),
+          );
 				}
 			}
 		}
@@ -154,15 +172,15 @@ class KeybindingsRegistryImpl implements IKeybindingsRegistry {
 		for (const rule of rules) {
 			if (rule.keybinding) {
 				result[keybindingsLen++] = {
-					keybinding: rule.keybinding,
-					command: rule.id,
-					commandArgs: rule.args,
-					when: rule.when,
-					weight1: rule.weight,
-					weight2: 0,
-					extensionId: rule.extensionId || null,
-					isBuiltinExtension: rule.isBuiltinExtension || false
-				};
+          keybinding: rule.keybinding,
+          command: rule.id,
+          commandArgs: rule.args,
+          when: rule.when,
+          weight1: rule.weight,
+          weight2: 0,
+          extensionId: rule.extensionId || null,
+          isBuiltinExtension: rule.isBuiltinExtension || false,
+        };
 			}
 		}
 
@@ -172,33 +190,35 @@ class KeybindingsRegistryImpl implements IKeybindingsRegistry {
 
 	public registerCommandAndKeybindingRule(desc: ICommandAndKeybindingRule): IDisposable {
 		return combinedDisposable(
-			this.registerKeybindingRule(desc),
-			CommandsRegistry.registerCommand(desc)
-		);
+      this.registerKeybindingRule(desc),
+      CommandsRegistry.registerCommand(desc),
+    );
 	}
 
 	private _registerDefaultKeybinding(keybinding: Keybinding, commandId: string, commandArgs: any, weight1: number, weight2: number, when: ContextKeyExpression | null | undefined): IDisposable {
 		const remove = this._coreKeybindings.push({
-			keybinding: keybinding,
-			command: commandId,
-			commandArgs: commandArgs,
-			when: when,
-			weight1: weight1,
-			weight2: weight2,
-			extensionId: null,
-			isBuiltinExtension: false
-		});
+      keybinding: keybinding,
+      command: commandId,
+      commandArgs: commandArgs,
+      when: when,
+      weight1: weight1,
+      weight2: weight2,
+      extensionId: null,
+      isBuiltinExtension: false,
+    });
 		this._cachedMergedKeybindings = null;
 
 		return toDisposable(() => {
-			remove();
-			this._cachedMergedKeybindings = null;
-		});
+      remove();
+      this._cachedMergedKeybindings = null;
+    });
 	}
 
 	public getDefaultKeybindings(): IKeybindingItem[] {
 		if (!this._cachedMergedKeybindings) {
-			this._cachedMergedKeybindings = Array.from(this._coreKeybindings).concat(this._extensionKeybindings);
+			this._cachedMergedKeybindings = Array.from(this._coreKeybindings).concat(
+        this._extensionKeybindings,
+      );
 			this._cachedMergedKeybindings.sort(sorter);
 		}
 		return this._cachedMergedKeybindings.slice(0);
@@ -213,15 +233,15 @@ class KeybindingsRegistryImpl implements IKeybindingsRegistry {
 				const kk = decodeKeybinding(actualKb.primary, os);
 				if (kk) {
 					result.push({
-						keybinding: kk,
-						command: rule.id,
-						commandArgs: rule.args,
-						when: rule.when,
-						weight1: rule.weight,
-						weight2: 0,
-						extensionId: null,
-						isBuiltinExtension: false
-					});
+            keybinding: kk,
+            command: rule.id,
+            commandArgs: rule.args,
+            when: rule.when,
+            weight1: rule.weight,
+            weight2: 0,
+            extensionId: null,
+            isBuiltinExtension: false,
+          });
 				}
 			}
 
@@ -231,15 +251,15 @@ class KeybindingsRegistryImpl implements IKeybindingsRegistry {
 					const kk = decodeKeybinding(k, os);
 					if (kk) {
 						result.push({
-							keybinding: kk,
-							command: rule.id,
-							commandArgs: rule.args,
-							when: rule.when,
-							weight1: rule.weight,
-							weight2: -i - 1,
-							extensionId: null,
-							isBuiltinExtension: false
-						});
+              keybinding: kk,
+              command: rule.id,
+              commandArgs: rule.args,
+              when: rule.when,
+              weight1: rule.weight,
+              weight2: -i - 1,
+              extensionId: null,
+              isBuiltinExtension: false,
+            });
 					}
 				}
 			}
@@ -253,7 +273,7 @@ export const KeybindingsRegistry: IKeybindingsRegistry = new KeybindingsRegistry
 
 // Define extension point ids
 export const Extensions = {
-	EditorModes: 'platform.keybindingsRegistry'
+  EditorModes: "platform.keybindingsRegistry",
 };
 Registry.add(Extensions.EditorModes, KeybindingsRegistry);
 

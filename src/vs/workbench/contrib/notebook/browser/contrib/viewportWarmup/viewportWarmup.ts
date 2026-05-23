@@ -3,18 +3,25 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { RunOnceScheduler } from '../../../../../../base/common/async.js';
-import { Disposable } from '../../../../../../base/common/lifecycle.js';
-import { IAccessibilityService } from '../../../../../../platform/accessibility/common/accessibility.js';
-import { CellEditState, IInsetRenderOutput, INotebookEditor, INotebookEditorContribution, INotebookEditorDelegate, RenderOutputType } from '../../notebookBrowser.js';
-import { registerNotebookContribution } from '../../notebookEditorExtensions.js';
-import { CodeCellViewModel, outputDisplayLimit } from '../../viewModel/codeCellViewModel.js';
-import { CellKind } from '../../../common/notebookCommon.js';
-import { cellRangesToIndexes } from '../../../common/notebookRange.js';
-import { INotebookService } from '../../../common/notebookService.js';
+import { RunOnceScheduler } from "../../../../../../base/common/async.js";
+import { Disposable } from "../../../../../../base/common/lifecycle.js";
+import { IAccessibilityService } from "../../../../../../platform/accessibility/common/accessibility.js";
+import {
+  CellEditState,
+  IInsetRenderOutput,
+  INotebookEditor,
+  INotebookEditorContribution,
+  INotebookEditorDelegate,
+  RenderOutputType,
+} from "../../notebookBrowser.js";
+import { registerNotebookContribution } from "../../notebookEditorExtensions.js";
+import { CodeCellViewModel, outputDisplayLimit } from "../../viewModel/codeCellViewModel.js";
+import { CellKind } from "../../../common/notebookCommon.js";
+import { cellRangesToIndexes } from "../../../common/notebookRange.js";
+import { INotebookService } from "../../../common/notebookService.js";
 
 class NotebookViewportContribution extends Disposable implements INotebookEditorContribution {
-	static id: string = 'workbench.notebook.viewportWarmup';
+	static id: string = "workbench.notebook.viewportWarmup";
 	private readonly _warmupViewport: RunOnceScheduler;
 	private readonly _warmupDocument: RunOnceScheduler | null = null;
 
@@ -25,13 +32,21 @@ class NotebookViewportContribution extends Disposable implements INotebookEditor
 	) {
 		super();
 
-		this._warmupViewport = new RunOnceScheduler(() => this._warmupViewportNow(), 200);
+		this._warmupViewport = new RunOnceScheduler(
+      () => this._warmupViewportNow(),
+      200,
+    );
 		this._register(this._warmupViewport);
-		this._register(this._notebookEditor.onDidScroll(() => {
-			this._warmupViewport.schedule();
-		}));
+		this._register(
+      this._notebookEditor.onDidScroll(() => {
+        this._warmupViewport.schedule();
+      }),
+    );
 
-		this._warmupDocument = new RunOnceScheduler(() => this._warmupDocumentNow(), 200);
+		this._warmupDocument = new RunOnceScheduler(
+      () => this._warmupDocumentNow(),
+      200,
+    );
 		this._register(this._warmupDocument);
 		this._register(this._notebookEditor.onDidAttachViewModel(() => {
 			if (this._notebookEditor.hasModel()) {
@@ -87,8 +102,13 @@ class NotebookViewportContribution extends Disposable implements INotebookEditor
 
 		const outputs = viewCell.outputsViewModels;
 		for (const output of outputs.slice(0, outputDisplayLimit)) {
-			const [mimeTypes, pick] = output.resolveMimeTypes(this._notebookEditor.textModel!, undefined);
-			if (!mimeTypes.find(mimeType => mimeType.isTrusted) || mimeTypes.length === 0) {
+			const [mimeTypes, pick] = output.resolveMimeTypes(
+        this._notebookEditor.textModel!,
+        undefined,
+      );
+			if (!mimeTypes.find(
+        mimeType => mimeType.isTrusted,
+      ) || mimeTypes.length === 0) {
 				continue;
 			}
 
@@ -102,17 +122,27 @@ class NotebookViewportContribution extends Disposable implements INotebookEditor
 				return;
 			}
 
-			const renderer = this._notebookService.getRendererInfo(pickedMimeTypeRenderer.rendererId);
+			const renderer = this._notebookService.getRendererInfo(
+        pickedMimeTypeRenderer.rendererId,
+      );
 
 			if (!renderer) {
 				return;
 			}
 
-			const result: IInsetRenderOutput = { type: RenderOutputType.Extension, renderer, source: output, mimeType: pickedMimeTypeRenderer.mimeType };
+			const result: IInsetRenderOutput = {
+        type: RenderOutputType.Extension,
+        renderer,
+        source: output,
+        mimeType: pickedMimeTypeRenderer.mimeType,
+      };
 			this._notebookEditor.createOutput(viewCell, result, 0, true);
 		}
 
 	}
 }
 
-registerNotebookContribution(NotebookViewportContribution.id, NotebookViewportContribution);
+registerNotebookContribution(
+  NotebookViewportContribution.id,
+  NotebookViewportContribution,
+);

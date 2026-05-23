@@ -3,18 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IKeyboardEvent } from '../../../../base/browser/keyboardEvent.js';
-import { isModifierKey } from '../../../../base/common/keyCodes.js';
-import { Disposable, DisposableStore } from '../../../../base/common/lifecycle.js';
-import { ICodeEditor, IEditorMouseEvent, IPartialEditorMouseEvent } from '../../../browser/editorBrowser.js';
-import { ConfigurationChangedEvent, EditorOption } from '../../../common/config/editorOptions.js';
-import { IEditorContribution, IScrollEvent } from '../../../common/editorCommon.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { IHoverWidget } from './hoverTypes.js';
-import { RunOnceScheduler } from '../../../../base/common/async.js';
-import { isMousePositionWithinElement, isTriggerModifierPressed, shouldShowHover } from './hoverUtils.js';
-import './hover.css';
-import { GlyphHoverWidget } from './glyphHoverWidget.js';
+import { IKeyboardEvent } from "../../../../base/browser/keyboardEvent.js";
+import { isModifierKey } from "../../../../base/common/keyCodes.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { ICodeEditor, IEditorMouseEvent, IPartialEditorMouseEvent } from "../../../browser/editorBrowser.js";
+import { ConfigurationChangedEvent, EditorOption } from "../../../common/config/editorOptions.js";
+import { IEditorContribution, IScrollEvent } from "../../../common/editorCommon.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IHoverWidget } from "./hoverTypes.js";
+import { RunOnceScheduler } from "../../../../base/common/async.js";
+import {
+  isMousePositionWithinElement,
+  isTriggerModifierPressed,
+  shouldShowHover,
+} from "./hoverUtils.js";
+import "./hover.css";
+import { GlyphHoverWidget } from "./glyphHoverWidget.js";
 
 // sticky hover widget which doesn't disappear on focus out and such
 const _sticky = false
@@ -22,7 +26,7 @@ const _sticky = false
 	;
 
 interface IHoverSettings {
-	readonly enabled: 'on' | 'off' | 'onKeyboardModifier';
+	readonly enabled: "on" | "off" | "onKeyboardModifier";
 	readonly sticky: boolean;
 	readonly hidingDelay: number;
 }
@@ -33,7 +37,7 @@ interface IHoverState {
 
 export class GlyphHoverController extends Disposable implements IEditorContribution {
 
-	public static readonly ID = 'editor.contrib.marginHover';
+	public static readonly ID = "editor.contrib.marginHover";
 
 	public shouldKeepOpenOnEditorMouseMoveOrLeave: boolean = false;
 
@@ -45,19 +49,20 @@ export class GlyphHoverController extends Disposable implements IEditorContribut
 
 	private _hoverSettings!: IHoverSettings;
 	private _hoverState: IHoverState = {
-		mouseDown: false
-	};
+    mouseDown: false,
+  };
 
 	constructor(
 		private readonly _editor: ICodeEditor,
-		@IInstantiationService private readonly _instantiationService: IInstantiationService
+		@IInstantiationService private readonly _instantiationService: IInstantiationService,
 	) {
 		super();
 		this._reactToEditorMouseMoveRunner = this._register(
-			new RunOnceScheduler(
-				() => this._reactToEditorMouseMove(this._mouseMoveEvent), 0
-			)
-		);
+      new RunOnceScheduler(
+        () => this._reactToEditorMouseMove(this._mouseMoveEvent),
+        0,
+      ),
+    );
 		this._hookListeners();
 		this._register(this._editor.onDidChangeConfiguration((e: ConfigurationChangedEvent) => {
 			if (e.hasChanged(EditorOption.hover)) {
@@ -68,35 +73,65 @@ export class GlyphHoverController extends Disposable implements IEditorContribut
 	}
 
 	static get(editor: ICodeEditor): GlyphHoverController | null {
-		return editor.getContribution<GlyphHoverController>(GlyphHoverController.ID);
+		return editor.getContribution<GlyphHoverController>(
+      GlyphHoverController.ID,
+    );
 	}
 
 	private _hookListeners(): void {
 
 		const hoverOpts = this._editor.getOption(EditorOption.hover);
 		this._hoverSettings = {
-			enabled: hoverOpts.enabled,
-			sticky: hoverOpts.sticky,
-			hidingDelay: hoverOpts.hidingDelay
-		};
+      enabled: hoverOpts.enabled,
+      sticky: hoverOpts.sticky,
+      hidingDelay: hoverOpts.hidingDelay,
+    };
 
-		if (hoverOpts.enabled !== 'off') {
-			this._listenersStore.add(this._editor.onMouseDown((e: IEditorMouseEvent) => this._onEditorMouseDown(e)));
-			this._listenersStore.add(this._editor.onMouseUp(() => this._onEditorMouseUp()));
-			this._listenersStore.add(this._editor.onMouseMove((e: IEditorMouseEvent) => this._onEditorMouseMove(e)));
-			this._listenersStore.add(this._editor.onKeyDown((e: IKeyboardEvent) => this._onKeyDown(e)));
+		if (hoverOpts.enabled !== "off") {
+			this._listenersStore.add(
+        this._editor.onMouseDown(
+          (e: IEditorMouseEvent) => this._onEditorMouseDown(e),
+        ),
+      );
+			this._listenersStore.add(
+        this._editor.onMouseUp(() => this._onEditorMouseUp()),
+      );
+			this._listenersStore.add(
+        this._editor.onMouseMove(
+          (e: IEditorMouseEvent) => this._onEditorMouseMove(e),
+        ),
+      );
+			this._listenersStore.add(
+        this._editor.onKeyDown((e: IKeyboardEvent) => this._onKeyDown(e)),
+      );
 		} else {
-			this._listenersStore.add(this._editor.onMouseMove((e: IEditorMouseEvent) => this._onEditorMouseMove(e)));
-			this._listenersStore.add(this._editor.onKeyDown((e: IKeyboardEvent) => this._onKeyDown(e)));
+			this._listenersStore.add(
+        this._editor.onMouseMove(
+          (e: IEditorMouseEvent) => this._onEditorMouseMove(e),
+        ),
+      );
+			this._listenersStore.add(
+        this._editor.onKeyDown((e: IKeyboardEvent) => this._onKeyDown(e)),
+      );
 		}
 
-		this._listenersStore.add(this._editor.onMouseLeave((e) => this._onEditorMouseLeave(e)));
-		this._listenersStore.add(this._editor.onDidChangeModel(() => {
-			this._cancelScheduler();
-			this.hideGlyphHover();
-		}));
-		this._listenersStore.add(this._editor.onDidChangeModelContent(() => this._cancelScheduler()));
-		this._listenersStore.add(this._editor.onDidScrollChange((e: IScrollEvent) => this._onEditorScrollChanged(e)));
+		this._listenersStore.add(
+      this._editor.onMouseLeave((e) => this._onEditorMouseLeave(e)),
+    );
+		this._listenersStore.add(
+      this._editor.onDidChangeModel(() => {
+        this._cancelScheduler();
+        this.hideGlyphHover();
+      }),
+    );
+		this._listenersStore.add(
+      this._editor.onDidChangeModelContent(() => this._cancelScheduler()),
+    );
+		this._listenersStore.add(
+      this._editor.onDidScrollChange(
+        (e: IScrollEvent) => this._onEditorScrollChanged(e),
+      ),
+    );
 	}
 
 	private _unhookListeners(): void {
@@ -116,7 +151,9 @@ export class GlyphHoverController extends Disposable implements IEditorContribut
 
 	private _onEditorMouseDown(mouseEvent: IEditorMouseEvent): void {
 		this._hoverState.mouseDown = true;
-		const shouldNotHideCurrentHoverWidget = this._isMouseOnGlyphHoverWidget(mouseEvent);
+		const shouldNotHideCurrentHoverWidget = this._isMouseOnGlyphHoverWidget(
+      mouseEvent,
+    );
 		if (shouldNotHideCurrentHoverWidget) {
 			return;
 		}
@@ -126,7 +163,11 @@ export class GlyphHoverController extends Disposable implements IEditorContribut
 	private _isMouseOnGlyphHoverWidget(mouseEvent: IPartialEditorMouseEvent): boolean {
 		const glyphHoverWidgetNode = this._glyphWidget?.getDomNode();
 		if (glyphHoverWidgetNode) {
-			return isMousePositionWithinElement(glyphHoverWidgetNode, mouseEvent.event.posx, mouseEvent.event.posy);
+			return isMousePositionWithinElement(
+        glyphHoverWidgetNode,
+        mouseEvent.event.posx,
+        mouseEvent.event.posy,
+      );
 		}
 		return false;
 	}
@@ -141,7 +182,9 @@ export class GlyphHoverController extends Disposable implements IEditorContribut
 		}
 
 		this._cancelScheduler();
-		const shouldNotHideCurrentHoverWidget = this._isMouseOnGlyphHoverWidget(mouseEvent);
+		const shouldNotHideCurrentHoverWidget = this._isMouseOnGlyphHoverWidget(
+      mouseEvent,
+    );
 		if (shouldNotHideCurrentHoverWidget) {
 			return;
 		}
@@ -153,7 +196,9 @@ export class GlyphHoverController extends Disposable implements IEditorContribut
 
 	private _shouldNotRecomputeCurrentHoverWidget(mouseEvent: IEditorMouseEvent): boolean {
 		const isHoverSticky = this._hoverSettings.sticky;
-		const isMouseOnGlyphHoverWidget = this._isMouseOnGlyphHoverWidget(mouseEvent);
+		const isMouseOnGlyphHoverWidget = this._isMouseOnGlyphHoverWidget(
+      mouseEvent,
+    );
 		return isHoverSticky && isMouseOnGlyphHoverWidget;
 	}
 
@@ -163,7 +208,9 @@ export class GlyphHoverController extends Disposable implements IEditorContribut
 		}
 
 		this._mouseMoveEvent = mouseEvent;
-		const shouldNotRecomputeCurrentHoverWidget = this._shouldNotRecomputeCurrentHoverWidget(mouseEvent);
+		const shouldNotRecomputeCurrentHoverWidget = this._shouldNotRecomputeCurrentHoverWidget(
+      mouseEvent,
+    );
 		if (shouldNotRecomputeCurrentHoverWidget) {
 			this._reactToEditorMouseMoveRunner.cancel();
 			return;
@@ -177,10 +224,10 @@ export class GlyphHoverController extends Disposable implements IEditorContribut
 			return;
 		}
 		if (!shouldShowHover(
-			this._hoverSettings.enabled,
-			this._editor.getOption(EditorOption.multiCursorModifier),
-			mouseEvent
-		)) {
+      this._hoverSettings.enabled,
+      this._editor.getOption(EditorOption.multiCursorModifier),
+      mouseEvent,
+    )) {
 			if (_sticky) {
 				return;
 			}
@@ -207,8 +254,11 @@ export class GlyphHoverController extends Disposable implements IEditorContribut
 			return;
 		}
 
-		if (this._hoverSettings.enabled === 'onKeyboardModifier'
-			&& isTriggerModifierPressed(this._editor.getOption(EditorOption.multiCursorModifier), e)
+		if (this._hoverSettings.enabled === "onKeyboardModifier"
+			&& isTriggerModifierPressed(
+        this._editor.getOption(EditorOption.multiCursorModifier),
+        e,
+      )
 			&& this._mouseMoveEvent) {
 			this._tryShowHoverWidget(this._mouseMoveEvent);
 			return;
@@ -230,7 +280,10 @@ export class GlyphHoverController extends Disposable implements IEditorContribut
 
 	private _getOrCreateGlyphWidget(): GlyphHoverWidget {
 		if (!this._glyphWidget) {
-			this._glyphWidget = this._instantiationService.createInstance(GlyphHoverWidget, this._editor);
+			this._glyphWidget = this._instantiationService.createInstance(
+        GlyphHoverWidget,
+        this._editor,
+      );
 		}
 		return this._glyphWidget;
 	}

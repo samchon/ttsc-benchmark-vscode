@@ -3,19 +3,34 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { $, append, clearNode, getContentHeight, getContentWidth } from '../../dom.js';
-import { createStyleSheet } from '../../domStylesheets.js';
-import { getBaseLayerHoverDelegate } from '../hover/hoverDelegate2.js';
-import { getDefaultHoverDelegate } from '../hover/hoverDelegateFactory.js';
-import { IListElementRenderDetails, IListRenderer, IListVirtualDelegate } from '../list/list.js';
-import { IListOptions, IListOptionsUpdate, IListStyles, List, unthemedListStyles } from '../list/listWidget.js';
-import { ISplitViewDescriptor, IView, Orientation, SplitView } from '../splitview/splitview.js';
-import { ITableColumn, ITableContextMenuEvent, ITableEvent, ITableGestureEvent, ITableMouseEvent, ITableRenderer, ITableTouchEvent, ITableVirtualDelegate } from './table.js';
-import { Emitter, Event } from '../../../common/event.js';
-import { Disposable, DisposableStore, IDisposable } from '../../../common/lifecycle.js';
-import { ScrollbarVisibility, ScrollEvent } from '../../../common/scrollable.js';
-import { ISpliceable } from '../../../common/sequence.js';
-import './table.css';
+import { $, append, clearNode, getContentHeight, getContentWidth } from "../../dom.js";
+import { createStyleSheet } from "../../domStylesheets.js";
+import { getBaseLayerHoverDelegate } from "../hover/hoverDelegate2.js";
+import { getDefaultHoverDelegate } from "../hover/hoverDelegateFactory.js";
+import { IListElementRenderDetails, IListRenderer, IListVirtualDelegate } from "../list/list.js";
+import {
+  IListOptions,
+  IListOptionsUpdate,
+  IListStyles,
+  List,
+  unthemedListStyles,
+} from "../list/listWidget.js";
+import { ISplitViewDescriptor, IView, Orientation, SplitView } from "../splitview/splitview.js";
+import {
+  ITableColumn,
+  ITableContextMenuEvent,
+  ITableEvent,
+  ITableGestureEvent,
+  ITableMouseEvent,
+  ITableRenderer,
+  ITableTouchEvent,
+  ITableVirtualDelegate,
+} from "./table.js";
+import { Emitter, Event } from "../../../common/event.js";
+import { Disposable, DisposableStore, IDisposable } from "../../../common/lifecycle.js";
+import { ScrollbarVisibility, ScrollEvent } from "../../../common/scrollable.js";
+import { ISpliceable } from "../../../common/sequence.js";
+import "./table.css";
 
 // TODO@joao
 type TCell = any;
@@ -28,7 +43,7 @@ interface RowTemplateData {
 
 class TableListRenderer<TRow> implements IListRenderer<TRow, RowTemplateData> {
 
-	static TemplateId = 'row';
+	static TemplateId = "row";
 	readonly templateId = TableListRenderer.TemplateId;
 	private renderers: ITableRenderer<TCell, unknown>[];
 	private renderedTemplates = new Set<RowTemplateData>();
@@ -36,7 +51,7 @@ class TableListRenderer<TRow> implements IListRenderer<TRow, RowTemplateData> {
 	constructor(
 		private columns: ITableColumn<TRow, TCell>[],
 		renderers: ITableRenderer<TCell, unknown>[],
-		private getColumnSize: (index: number) => number
+		private getColumnSize: (index: number) => number,
 	) {
 		const rendererMap = new Map(renderers.map(r => [r.templateId, r]));
 		this.renderers = [];
@@ -45,7 +60,9 @@ class TableListRenderer<TRow> implements IListRenderer<TRow, RowTemplateData> {
 			const renderer = rendererMap.get(column.templateId);
 
 			if (!renderer) {
-				throw new Error(`Table cell renderer for template id ${column.templateId} not found.`);
+				throw new Error(
+          `Table cell renderer for template id ${column.templateId} not found.`,
+        );
 			}
 
 			this.renderers.push(renderer);
@@ -53,13 +70,16 @@ class TableListRenderer<TRow> implements IListRenderer<TRow, RowTemplateData> {
 	}
 
 	renderTemplate(container: HTMLElement) {
-		const rowContainer = append(container, $('.monaco-table-tr'));
+		const rowContainer = append(container, $(".monaco-table-tr"));
 		const cellContainers: HTMLElement[] = [];
 		const cellTemplateData: unknown[] = [];
 
 		for (let i = 0; i < this.columns.length; i++) {
 			const renderer = this.renderers[i];
-			const cellContainer = append(rowContainer, $('.monaco-table-td', { 'data-col-index': i }));
+			const cellContainer = append(
+        rowContainer,
+        $(".monaco-table-td", { "data-col-index": i }),
+      );
 
 			cellContainer.style.width = `${this.getColumnSize(i)}px`;
 			cellContainers.push(cellContainer);
@@ -77,7 +97,12 @@ class TableListRenderer<TRow> implements IListRenderer<TRow, RowTemplateData> {
 			const column = this.columns[i];
 			const cell = column.project(element);
 			const renderer = this.renderers[i];
-			renderer.renderElement(cell, index, templateData.cellTemplateData[i], renderDetails);
+			renderer.renderElement(
+        cell,
+        index,
+        templateData.cellTemplateData[i],
+        renderDetails,
+      );
 		}
 	}
 
@@ -89,7 +114,12 @@ class TableListRenderer<TRow> implements IListRenderer<TRow, RowTemplateData> {
 				const column = this.columns[i];
 				const cell = column.project(element);
 
-				renderer.disposeElement(cell, index, templateData.cellTemplateData[i], renderDetails);
+				renderer.disposeElement(
+          cell,
+          index,
+          templateData.cellTemplateData[i],
+          renderDetails,
+        );
 			}
 		}
 	}
@@ -113,9 +143,9 @@ class TableListRenderer<TRow> implements IListRenderer<TRow, RowTemplateData> {
 
 function asListVirtualDelegate<TRow>(delegate: ITableVirtualDelegate<TRow>): IListVirtualDelegate<TRow> {
 	return {
-		getHeight(row) { return delegate.getHeight(row); },
-		getTemplateId() { return TableListRenderer.TemplateId; },
-	};
+    getHeight(row) { return delegate.getHeight(row); },
+    getTemplateId() { return TableListRenderer.TemplateId; },
+  };
 }
 
 class ColumnHeader<TRow, TCell> extends Disposable implements IView {
@@ -132,10 +162,20 @@ class ColumnHeader<TRow, TCell> extends Disposable implements IView {
 	constructor(readonly column: ITableColumn<TRow, TCell>, private index: number) {
 		super();
 
-		this.element = $('.monaco-table-th', { 'data-col-index': index }, column.label);
+		this.element = $(
+      ".monaco-table-th",
+      { "data-col-index": index },
+      column.label,
+    );
 
 		if (column.tooltip) {
-			this._register(getBaseLayerHoverDelegate().setupManagedHover(getDefaultHoverDelegate('mouse'), this.element, column.tooltip));
+			this._register(
+        getBaseLayerHoverDelegate().setupManagedHover(
+          getDefaultHoverDelegate("mouse"),
+          this.element,
+          column.tooltip,
+        ),
+      );
 		}
 	}
 
@@ -196,37 +236,60 @@ export class Table<TRow> implements ISpliceable<TRow>, IDisposable {
 		private virtualDelegate: ITableVirtualDelegate<TRow>,
 		private columns: ITableColumn<TRow, TCell>[],
 		renderers: ITableRenderer<TCell, unknown>[],
-		_options?: ITableOptions<TRow>
+		_options?: ITableOptions<TRow>,
 	) {
 		this.domNode = append(container, $(`.monaco-table.${this.domId}`));
 
-		const headers = columns.map((c, i) => this.disposables.add(new ColumnHeader(c, i)));
+		const headers = columns.map(
+      (c, i) => this.disposables.add(new ColumnHeader(c, i)),
+    );
 		const descriptor: ISplitViewDescriptor = {
-			size: headers.reduce((a, b) => a + b.column.weight, 0),
-			views: headers.map(view => ({ size: view.column.weight, view }))
-		};
+      size: headers.reduce((a, b) => a + b.column.weight, 0),
+      views: headers.map(view => ({ size: view.column.weight, view })),
+    };
 
-		this.splitview = this.disposables.add(new SplitView(this.domNode, {
-			orientation: Orientation.HORIZONTAL,
-			scrollbarVisibility: ScrollbarVisibility.Hidden,
-			getSashOrthogonalSize: () => this.cachedHeight,
-			descriptor
-		}));
+		this.splitview = this.disposables.add(
+      new SplitView(this.domNode, {
+        orientation: Orientation.HORIZONTAL,
+        scrollbarVisibility: ScrollbarVisibility.Hidden,
+        getSashOrthogonalSize: () => this.cachedHeight,
+        descriptor,
+      }),
+    );
 
 		this.splitview.el.style.height = `${virtualDelegate.headerRowHeight}px`;
 		this.splitview.el.style.lineHeight = `${virtualDelegate.headerRowHeight}px`;
 
-		const renderer = new TableListRenderer(columns, renderers, i => this.splitview.getViewSize(i));
-		this.list = this.disposables.add(new List(user, this.domNode, asListVirtualDelegate(virtualDelegate), [renderer], _options));
+		const renderer = new TableListRenderer(
+      columns,
+      renderers,
+      i => this.splitview.getViewSize(i),
+    );
+		this.list = this.disposables.add(
+      new List(
+        user,
+        this.domNode,
+        asListVirtualDelegate(virtualDelegate),
+        [renderer],
+        _options,
+      ),
+    );
 
-		Event.any(...headers.map(h => h.onDidLayout))
-			(([index, size]) => renderer.layoutColumn(index, size), null, this.disposables);
+		Event.any(...headers.map(h => h.onDidLayout))(
+      ([index, size]) => renderer.layoutColumn(index, size),
+      null,
+      this.disposables,
+    );
 
-		this.splitview.onDidSashReset(index => {
-			const totalWeight = columns.reduce((r, c) => r + c.weight, 0);
-			const size = columns[index].weight / totalWeight * this.cachedWidth;
-			this.splitview.resizeView(index, size);
-		}, null, this.disposables);
+		this.splitview.onDidSashReset(
+      index => {
+        const totalWeight = columns.reduce((r, c) => r + c.weight, 0);
+        const size = columns[index].weight / totalWeight * this.cachedWidth;
+        this.splitview.resizeView(index, size);
+      },
+      null,
+      this.disposables,
+    );
 
 		this.styleElement = createStyleSheet(this.domNode);
 		this.style(unthemedListStyles);
@@ -294,7 +357,7 @@ export class Table<TRow> implements ISpliceable<TRow>, IDisposable {
 			height: calc(100% - ${this.virtualDelegate.headerRowHeight}px);
 		}`);
 
-		this.styleElement.textContent = content.join('\n');
+		this.styleElement.textContent = content.join("\n");
 		this.list.style(styles);
 	}
 

@@ -3,20 +3,29 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, type IDisposable } from '../../../../../base/common/lifecycle.js';
-import { basename } from '../../../../../base/common/path.js';
-import { isWindows } from '../../../../../base/common/platform.js';
-import { localize } from '../../../../../nls.js';
-import { IExtensionManagementService } from '../../../../../platform/extensionManagement/common/extensionManagement.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { INotificationService, NeverShowAgainScope, NotificationPriority, Severity } from '../../../../../platform/notification/common/notification.js';
-import { IProductService } from '../../../../../platform/product/common/productService.js';
-import { registerWorkbenchContribution2, WorkbenchPhase, type IWorkbenchContribution } from '../../../../common/contributions.js';
-import { InstallRecommendedExtensionAction } from '../../../extensions/browser/extensionsActions.js';
-import { ITerminalService } from '../../../terminal/browser/terminal.js';
+import { Disposable, type IDisposable } from "../../../../../base/common/lifecycle.js";
+import { basename } from "../../../../../base/common/path.js";
+import { isWindows } from "../../../../../base/common/platform.js";
+import { localize } from "../../../../../nls.js";
+import { IExtensionManagementService } from "../../../../../platform/extensionManagement/common/extensionManagement.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import {
+  INotificationService,
+  NeverShowAgainScope,
+  NotificationPriority,
+  Severity,
+} from "../../../../../platform/notification/common/notification.js";
+import { IProductService } from "../../../../../platform/product/common/productService.js";
+import {
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+  type IWorkbenchContribution,
+} from "../../../../common/contributions.js";
+import { InstallRecommendedExtensionAction } from "../../../extensions/browser/extensionsActions.js";
+import { ITerminalService } from "../../../terminal/browser/terminal.js";
 
 export class TerminalWslRecommendationContribution extends Disposable implements IWorkbenchContribution {
-	static ID = 'terminalWslRecommendation';
+	static ID = "terminalWslRecommendation";
 
 	constructor(
 		@IExtensionManagementService extensionManagementService: IExtensionManagementService,
@@ -42,7 +51,7 @@ export class TerminalWslRecommendationContribution extends Disposable implements
 				return extensions.some(e => e.identifier.id === id);
 			}
 
-			if (!instance.shellLaunchConfig.executable || basename(instance.shellLaunchConfig.executable).toLowerCase() !== 'wsl.exe') {
+			if (!instance.shellLaunchConfig.executable || basename(instance.shellLaunchConfig.executable).toLowerCase() !== "wsl.exe") {
 				return;
 			}
 
@@ -56,23 +65,27 @@ export class TerminalWslRecommendationContribution extends Disposable implements
 
 			notificationService.prompt(
 				Severity.Info,
-				localize('useWslExtension.title', "The '{0}' extension is recommended for opening a terminal in WSL.", exeBasedExtensionTips.wsl.friendlyName),
+				localize("useWslExtension.title", "The '{0}' extension is recommended for opening a terminal in WSL.", exeBasedExtensionTips.wsl.friendlyName),
 				[
 					{
-						label: localize('install', 'Install'),
+						label: localize("install", "Install"),
 						run: () => {
 							instantiationService.createInstance(InstallRecommendedExtensionAction, extId).run();
-						}
-					}
+						},
+					},
 				],
 				{
 					priority: NotificationPriority.OPTIONAL,
-					neverShowAgain: { id: 'terminalConfigHelper/launchRecommendationsIgnore', scope: NeverShowAgainScope.APPLICATION },
-					onCancel: () => { }
-				}
+					neverShowAgain: { id: "terminalConfigHelper/launchRecommendationsIgnore", scope: NeverShowAgainScope.APPLICATION },
+					onCancel: () => { },
+				},
 			);
 		});
 	}
 }
 
-registerWorkbenchContribution2(TerminalWslRecommendationContribution.ID, TerminalWslRecommendationContribution, WorkbenchPhase.Eventually);
+registerWorkbenchContribution2(
+  TerminalWslRecommendationContribution.ID,
+  TerminalWslRecommendationContribution,
+  WorkbenchPhase.Eventually,
+);

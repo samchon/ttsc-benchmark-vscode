@@ -3,8 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { isHotReloadEnabled, registerHotReloadHandler } from './hotReload.js';
-import { constObservable, IObservable, IReader, ISettableObservable, observableSignalFromEvent, observableValue } from './observable.js';
+import { isHotReloadEnabled, registerHotReloadHandler } from "./hotReload.js";
+import {
+  constObservable,
+  IObservable,
+  IReader,
+  ISettableObservable,
+  observableSignalFromEvent,
+  observableValue,
+} from "./observable.js";
 
 export function readHotReloadableExport<T>(value: T, reader: IReader | undefined): T {
 	observeHotReloadableExports([value], reader);
@@ -14,7 +21,7 @@ export function readHotReloadableExport<T>(value: T, reader: IReader | undefined
 export function observeHotReloadableExports(values: any[], reader: IReader | undefined): void {
 	if (isHotReloadEnabled()) {
 		const o = observableSignalFromEvent(
-			'reload',
+			"reload",
 			event => registerHotReloadHandler(({ oldExports }) => {
 				if (![...Object.values(oldExports)].some(v => values.includes(v))) {
 					return undefined;
@@ -23,7 +30,7 @@ export function observeHotReloadableExports(values: any[], reader: IReader | und
 					event(undefined);
 					return true;
 				};
-			})
+			}),
 		);
 		o.read(reader);
 	}
@@ -44,9 +51,12 @@ export function createHotClass<T>(clazz: T): IObservable<T> {
 		existing = observableValue(id, clazz);
 		classes.set(id, existing);
 	} else {
-		setTimeout(() => {
-			existing!.set(clazz, undefined);
-		}, 0);
+		setTimeout(
+      () => {
+        existing!.set(clazz, undefined);
+      },
+      0,
+    );
 	}
 	return existing as IObservable<T>;
 }

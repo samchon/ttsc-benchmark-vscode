@@ -3,17 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, DisposableMap } from '../../../../../base/common/lifecycle.js';
-import { AgentHostEnabledSettingId } from '../../../../../platform/agentHost/common/agentService.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../../../workbench/common/contributions.js';
-import { AgentHostContribution } from '../../../../../workbench/contrib/chat/browser/agentSessions/agentHost/agentHostChatContribution.js';
-import { IAgentHostSessionWorkingDirectoryResolver } from '../../../../../workbench/contrib/chat/browser/agentSessions/agentHost/agentHostSessionWorkingDirectoryResolver.js';
-import { AgentHostTerminalContribution } from '../../../../../workbench/contrib/chat/browser/agentSessions/agentHost/agentHostTerminalContribution.js';
-import { ISessionsProvidersService } from '../../../../services/sessions/browser/sessionsProvidersService.js';
-import { SessionStatus } from '../../../../services/sessions/common/session.js';
-import { LocalAgentHostSessionsProvider } from './localAgentHostSessionsProvider.js';
+import { Disposable, DisposableMap } from "../../../../../base/common/lifecycle.js";
+import { AgentHostEnabledSettingId } from "../../../../../platform/agentHost/common/agentService.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import {
+  IWorkbenchContribution,
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../../../../workbench/common/contributions.js";
+import { AgentHostContribution } from "../../../../../workbench/contrib/chat/browser/agentSessions/agentHost/agentHostChatContribution.js";
+import { IAgentHostSessionWorkingDirectoryResolver } from "../../../../../workbench/contrib/chat/browser/agentSessions/agentHost/agentHostSessionWorkingDirectoryResolver.js";
+import { AgentHostTerminalContribution } from "../../../../../workbench/contrib/chat/browser/agentSessions/agentHost/agentHostTerminalContribution.js";
+import { ISessionsProvidersService } from "../../../../services/sessions/browser/sessionsProvidersService.js";
+import { SessionStatus } from "../../../../services/sessions/common/session.js";
+import { LocalAgentHostSessionsProvider } from "./localAgentHostSessionsProvider.js";
 
 /**
  * Registers the {@link LocalAgentHostSessionsProvider} as a sessions provider
@@ -27,7 +31,7 @@ import { LocalAgentHostSessionsProvider } from './localAgentHostSessionsProvider
  */
 class LocalAgentHostContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'sessions.contrib.localAgentHostContribution';
+	static readonly ID = "sessions.contrib.localAgentHostContribution";
 
 	constructor(
 		@IConfigurationService configurationService: IConfigurationService,
@@ -41,12 +45,16 @@ class LocalAgentHostContribution extends Disposable implements IWorkbenchContrib
 			return;
 		}
 
-		const provider = this._register(instantiationService.createInstance(LocalAgentHostSessionsProvider));
+		const provider = this._register(
+      instantiationService.createInstance(LocalAgentHostSessionsProvider),
+    );
 		this._register(sessionsProvidersService.registerProvider(provider));
 
 		const resolverRegistrations = this._register(new DisposableMap<string>());
 		const registerResolvers = () => {
-			const sessionTypeIds = new Set(provider.sessionTypes.map(sessionType => `agent-host-${sessionType.id}`));
+			const sessionTypeIds = new Set(
+        provider.sessionTypes.map(sessionType => `agent-host-${sessionType.id}`),
+      );
 			for (const [sessionTypeId] of resolverRegistrations) {
 				if (!sessionTypeIds.has(sessionTypeId)) {
 					resolverRegistrations.deleteAndDispose(sessionTypeId);
@@ -58,11 +66,18 @@ class LocalAgentHostContribution extends Disposable implements IWorkbenchContrib
 				if (resolverRegistrations.has(resourceScheme)) {
 					continue;
 				}
-				resolverRegistrations.set(resourceScheme, workingDirectoryResolver.registerResolver(resourceScheme, sessionResource => {
-					return provider.getSessionByResource(sessionResource)?.workspace.get()?.folders[0]?.workingDirectory;
-				}, sessionResource => {
-					return provider.getSessionByResource(sessionResource)?.status.get() === SessionStatus.Untitled;
-				}));
+				resolverRegistrations.set(
+          resourceScheme,
+          workingDirectoryResolver.registerResolver(
+            resourceScheme,
+            sessionResource => {
+              return provider.getSessionByResource(sessionResource)?.workspace.get()?.folders[0]?.workingDirectory;
+            },
+            sessionResource => {
+              return provider.getSessionByResource(sessionResource)?.status.get() === SessionStatus.Untitled;
+            },
+          ),
+        );
 			}
 		};
 		registerResolvers();
@@ -70,6 +85,18 @@ class LocalAgentHostContribution extends Disposable implements IWorkbenchContrib
 	}
 }
 
-registerWorkbenchContribution2(AgentHostContribution.ID, AgentHostContribution, WorkbenchPhase.AfterRestored);
-registerWorkbenchContribution2(AgentHostTerminalContribution.ID, AgentHostTerminalContribution, WorkbenchPhase.AfterRestored);
-registerWorkbenchContribution2(LocalAgentHostContribution.ID, LocalAgentHostContribution, WorkbenchPhase.AfterRestored);
+registerWorkbenchContribution2(
+  AgentHostContribution.ID,
+  AgentHostContribution,
+  WorkbenchPhase.AfterRestored,
+);
+registerWorkbenchContribution2(
+  AgentHostTerminalContribution.ID,
+  AgentHostTerminalContribution,
+  WorkbenchPhase.AfterRestored,
+);
+registerWorkbenchContribution2(
+  LocalAgentHostContribution.ID,
+  LocalAgentHostContribution,
+  WorkbenchPhase.AfterRestored,
+);

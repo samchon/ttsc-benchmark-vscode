@@ -3,21 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Codicon } from '../../../../base/common/codicons.js';
-import { Color } from '../../../../base/common/color.js';
-import { Event } from '../../../../base/common/event.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { activityErrorBadgeBackground, activityErrorBadgeForeground, activityWarningBadgeBackground, activityWarningBadgeForeground } from '../../../../platform/theme/common/colors/miscColors.js';
-import { IColorTheme } from '../../../../platform/theme/common/themeService.js';
-import { ViewContainer } from '../../../common/views.js';
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Color } from "../../../../base/common/color.js";
+import { Event } from "../../../../base/common/event.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import {
+  activityErrorBadgeBackground,
+  activityErrorBadgeForeground,
+  activityWarningBadgeBackground,
+  activityWarningBadgeForeground,
+} from "../../../../platform/theme/common/colors/miscColors.js";
+import { IColorTheme } from "../../../../platform/theme/common/themeService.js";
+import { ViewContainer } from "../../../common/views.js";
 
 export interface IActivity {
 	readonly badge: IBadge;
 }
 
-export const IActivityService = createDecorator<IActivityService>('activityService');
+export const IActivityService = createDecorator<IActivityService>(
+  "activityService",
+);
 
 export interface IActivityService {
 
@@ -119,19 +126,19 @@ export class ProgressBadge extends BaseBadge<void> {
 export class WarningBadge extends IconBadge {
 	constructor(descriptorFn: () => string) {
 		super(Codicon.warning, descriptorFn, (theme: IColorTheme) => ({
-			badgeBackground: theme.getColor(activityWarningBadgeBackground),
-			badgeForeground: theme.getColor(activityWarningBadgeForeground),
-			badgeBorder: undefined,
-		}));
+      badgeBackground: theme.getColor(activityWarningBadgeBackground),
+      badgeForeground: theme.getColor(activityWarningBadgeForeground),
+      badgeBorder: undefined,
+    }));
 	}
 }
 
 export class ErrorBadge extends IconBadge {
 	constructor(descriptorFn: () => string) {
 		super(Codicon.error, descriptorFn, (theme: IColorTheme) => ({
-			badgeBackground: theme.getColor(activityErrorBadgeBackground),
-			badgeForeground: theme.getColor(activityErrorBadgeForeground),
-			badgeBorder: undefined,
-		}));
+      badgeBackground: theme.getColor(activityErrorBadgeBackground),
+      badgeForeground: theme.getColor(activityErrorBadgeForeground),
+      badgeBorder: undefined,
+    }));
 	}
 }

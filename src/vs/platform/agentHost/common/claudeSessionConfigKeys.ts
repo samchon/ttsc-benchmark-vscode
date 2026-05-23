@@ -20,14 +20,14 @@
  */
 export const enum ClaudeSessionConfigKey {
 	/** `'permissionMode'` — Claude SDK approval mode. */
-	PermissionMode = 'permissionMode',
+	PermissionMode = "permissionMode",
 }
 
 /**
  * Permission-mode values advertised in the Claude session-config schema.
  * Mirror of the SDK's `PermissionMode` union for protocol-stable strings.
  */
-export type ClaudePermissionMode = 'default' | 'acceptEdits' | 'bypassPermissions' | 'plan' | 'dontAsk' | 'auto';
+export type ClaudePermissionMode = "default" | "acceptEdits" | "bypassPermissions" | "plan" | "dontAsk" | "auto";
 
 /**
  * Single source of truth for narrowing an arbitrary runtime value to the
@@ -36,12 +36,12 @@ export type ClaudePermissionMode = 'default' | 'acceptEdits' | 'bypassPermission
  */
 export function narrowClaudePermissionMode(raw: unknown): ClaudePermissionMode | undefined {
 	switch (raw) {
-		case 'default':
-		case 'acceptEdits':
-		case 'bypassPermissions':
-		case 'plan':
-		case 'dontAsk':
-		case 'auto':
+		case "default":
+		case "acceptEdits":
+		case "bypassPermissions":
+		case "plan":
+		case "dontAsk":
+		case "auto":
 			return raw;
 		default:
 			return undefined;

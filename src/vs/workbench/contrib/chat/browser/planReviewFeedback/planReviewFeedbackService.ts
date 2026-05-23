@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { Disposable, IDisposable, toDisposable } from '../../../../../base/common/lifecycle.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { generateUuid } from '../../../../../base/common/uuid.js';
-import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IChatPlanReviewResult } from '../../common/chatService/chatService.js';
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { Disposable, IDisposable, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { generateUuid } from "../../../../../base/common/uuid.js";
+import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IChatPlanReviewResult } from "../../common/chatService/chatService.js";
 
 export interface IPlanReviewFeedbackItem {
 	readonly id: string;
@@ -17,7 +17,9 @@ export interface IPlanReviewFeedbackItem {
 	readonly text: string;
 }
 
-export const IPlanReviewFeedbackService = createDecorator<IPlanReviewFeedbackService>('planReviewFeedbackService');
+export const IPlanReviewFeedbackService = createDecorator<IPlanReviewFeedbackService>(
+  "planReviewFeedbackService",
+);
 
 export interface IPlanReviewFeedbackService {
 	readonly _serviceBrand: undefined;
@@ -57,17 +59,23 @@ export class PlanReviewFeedbackService extends Disposable implements IPlanReview
 	private readonly _onDidChangeNavigation = this._register(new Emitter<URI>());
 	readonly onDidChangeNavigation: Event<URI> = this._onDidChangeNavigation.event;
 
-	private readonly _onDidChangeRegistrations = this._register(new Emitter<void>());
+	private readonly _onDidChangeRegistrations = this._register(
+    new Emitter<void>(),
+  );
 	readonly onDidChangeRegistrations: Event<void> = this._onDidChangeRegistrations.event;
 
 	registerPlanReview(planUri: URI, onSubmit: (result: IChatPlanReviewResult) => void): IDisposable {
 		const key = planUri.toString();
-		this._registrations.set(key, { onSubmit, items: [], navigationAnchor: undefined });
+		this._registrations.set(key, {
+      onSubmit,
+      items: [],
+      navigationAnchor: undefined,
+    });
 		this._onDidChangeRegistrations.fire();
 		return toDisposable(() => {
-			this._registrations.delete(key);
-			this._onDidChangeRegistrations.fire();
-		});
+      this._registrations.delete(key);
+      this._onDidChangeRegistrations.fire();
+    });
 	}
 
 	isActivePlanReview(uri: URI): boolean {
@@ -78,7 +86,7 @@ export class PlanReviewFeedbackService extends Disposable implements IPlanReview
 		const key = planUri.toString();
 		const registration = this._registrations.get(key);
 		if (!registration) {
-			return '';
+			return "";
 		}
 
 		const id = generateUuid();
@@ -113,7 +121,12 @@ export class PlanReviewFeedbackService extends Disposable implements IPlanReview
 		const idx = registration.items.findIndex(item => item.id === feedbackId);
 		if (idx >= 0) {
 			const old = registration.items[idx];
-			registration.items[idx] = { id: old.id, line: old.line, column: old.column, text: newText };
+			registration.items[idx] = {
+        id: old.id,
+        line: old.line,
+        column: old.column,
+        text: newText,
+      };
 			this._onDidChangeFeedback.fire(planUri);
 		}
 	}
@@ -172,7 +185,9 @@ export class PlanReviewFeedbackService extends Disposable implements IPlanReview
 			return { activeIdx: -1, totalCount };
 		}
 
-		const activeIdx = registration.items.findIndex(item => item.id === registration.navigationAnchor);
+		const activeIdx = registration.items.findIndex(
+      item => item.id === registration.navigationAnchor,
+    );
 		return { activeIdx, totalCount };
 	}
 
@@ -197,7 +212,7 @@ export class PlanReviewFeedbackService extends Disposable implements IPlanReview
 	}
 
 	private _formatFeedback(items: readonly IPlanReviewFeedbackItem[]): string {
-		const parts: string[] = ['Here\'s the feedback:'];
+		const parts: string[] = ["Here's the feedback:"];
 		for (const item of items) {
 			if (item.column > 1) {
 				parts.push(`Line ${item.line}: Column ${item.column}: ${item.text}`);
@@ -205,6 +220,6 @@ export class PlanReviewFeedbackService extends Disposable implements IPlanReview
 				parts.push(`Line ${item.line}: ${item.text}`);
 			}
 		}
-		return parts.join('\n');
+		return parts.join("\n");
 	}
 }

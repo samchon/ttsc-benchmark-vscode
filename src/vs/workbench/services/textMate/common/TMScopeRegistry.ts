@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as resources from '../../../../base/common/resources.js';
-import { URI } from '../../../../base/common/uri.js';
-import { LanguageId, StandardTokenType } from '../../../../editor/common/encodedTokenAttributes.js';
+import * as resources from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { LanguageId, StandardTokenType } from "../../../../editor/common/encodedTokenAttributes.js";
 
 export interface IValidGrammarDefinition {
 	location: URI;
@@ -46,7 +46,7 @@ export class TMScopeRegistry {
 				console.warn(
 					`Overwriting grammar scope name to file mapping for scope ${def.scopeName}.\n` +
 					`Old grammar file: ${existingRegistration.location.toString()}.\n` +
-					`New grammar file: ${def.location.toString()}`
+					`New grammar file: ${def.location.toString()}`,
 				);
 			}
 		}

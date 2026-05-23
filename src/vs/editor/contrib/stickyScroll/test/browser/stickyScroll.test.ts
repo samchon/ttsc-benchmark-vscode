@@ -2,29 +2,29 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import assert from 'assert';
-import { withAsyncTestCodeEditor } from '../../../../test/browser/testCodeEditor.js';
-import { StickyScrollController } from '../../browser/stickyScrollController.js';
-import { ServiceCollection } from '../../../../../platform/instantiation/common/serviceCollection.js';
-import { ILanguageFeaturesService } from '../../../../common/services/languageFeatures.js';
-import { createTextModel } from '../../../../test/common/testTextModel.js';
-import { LanguageFeaturesService } from '../../../../common/services/languageFeaturesService.js';
-import { DocumentSymbol, SymbolKind } from '../../../../common/languages.js';
-import { StickyLineCandidate, StickyLineCandidateProvider } from '../../browser/stickyScrollProvider.js';
-import { EditorOption } from '../../../../common/config/editorOptions.js';
-import { ILogService, NullLogService } from '../../../../../platform/log/common/log.js';
-import { IContextMenuService } from '../../../../../platform/contextview/browser/contextView.js';
-import { mock } from '../../../../../base/test/common/mock.js';
-import { ILanguageConfigurationService } from '../../../../common/languages/languageConfigurationRegistry.js';
-import { ILanguageFeatureDebounceService, LanguageFeatureDebounceService } from '../../../../common/services/languageFeatureDebounce.js';
-import { TestLanguageConfigurationService } from '../../../../test/common/modes/testLanguageConfigurationService.js';
-import { SyncDescriptor } from '../../../../../platform/instantiation/common/descriptors.js';
-import { runWithFakedTimers } from '../../../../../base/test/common/timeTravelScheduler.js';
-import { IEnvironmentService } from '../../../../../platform/environment/common/environment.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
+import assert from "assert";
+import { withAsyncTestCodeEditor } from "../../../../test/browser/testCodeEditor.js";
+import { StickyScrollController } from "../../browser/stickyScrollController.js";
+import { ServiceCollection } from "../../../../../platform/instantiation/common/serviceCollection.js";
+import { ILanguageFeaturesService } from "../../../../common/services/languageFeatures.js";
+import { createTextModel } from "../../../../test/common/testTextModel.js";
+import { LanguageFeaturesService } from "../../../../common/services/languageFeaturesService.js";
+import { DocumentSymbol, SymbolKind } from "../../../../common/languages.js";
+import { StickyLineCandidate, StickyLineCandidateProvider } from "../../browser/stickyScrollProvider.js";
+import { EditorOption } from "../../../../common/config/editorOptions.js";
+import { ILogService, NullLogService } from "../../../../../platform/log/common/log.js";
+import { IContextMenuService } from "../../../../../platform/contextview/browser/contextView.js";
+import { mock } from "../../../../../base/test/common/mock.js";
+import { ILanguageConfigurationService } from "../../../../common/languages/languageConfigurationRegistry.js";
+import { ILanguageFeatureDebounceService, LanguageFeatureDebounceService } from "../../../../common/services/languageFeatureDebounce.js";
+import { TestLanguageConfigurationService } from "../../../../test/common/modes/testLanguageConfigurationService.js";
+import { SyncDescriptor } from "../../../../../platform/instantiation/common/descriptors.js";
+import { runWithFakedTimers } from "../../../../../base/test/common/timeTravelScheduler.js";
+import { IEnvironmentService } from "../../../../../platform/environment/common/environment.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
 
-suite('Sticky Scroll Tests', () => {
+suite("Sticky Scroll Tests", () => {
 
 	const disposables = new DisposableStore();
 
@@ -41,21 +41,21 @@ suite('Sticky Scroll Tests', () => {
 	);
 
 	const text = [
-		'function foo() {',
-		'',
-		'}',
-		'/* comment related to TestClass',
-		' end of the comment */',
-		'@classDecorator',
-		'class TestClass {',
-		'// comment related to the function functionOfClass',
-		'functionOfClass(){',
-		'function function1(){',
-		'}',
-		'}}',
-		'function bar() { function insideBar() {}',
-		'}'
-	].join('\n');
+		"function foo() {",
+		"",
+		"}",
+		"/* comment related to TestClass",
+		" end of the comment */",
+		"@classDecorator",
+		"class TestClass {",
+		"// comment related to the function functionOfClass",
+		"functionOfClass(){",
+		"function function1(){",
+		"}",
+		"}}",
+		"function bar() { function insideBar() {}",
+		"}",
+	].join("\n");
 
 	setup(() => {
 		disposables.clear();
@@ -71,81 +71,81 @@ suite('Sticky Scroll Tests', () => {
 			provideDocumentSymbols() {
 				return [
 					{
-						name: 'foo',
-						detail: 'foo',
+						name: "foo",
+						detail: "foo",
 						kind: SymbolKind.Function,
 						tags: [],
 						range: { startLineNumber: 1, endLineNumber: 3, startColumn: 1, endColumn: 1 },
-						selectionRange: { startLineNumber: 1, endLineNumber: 1, startColumn: 1, endColumn: 1 }
+						selectionRange: { startLineNumber: 1, endLineNumber: 1, startColumn: 1, endColumn: 1 },
 					} as DocumentSymbol,
 					{
-						name: 'TestClass',
-						detail: 'TestClass',
+						name: "TestClass",
+						detail: "TestClass",
 						kind: SymbolKind.Class,
 						tags: [],
 						range: { startLineNumber: 4, endLineNumber: 12, startColumn: 1, endColumn: 1 },
 						selectionRange: { startLineNumber: 7, endLineNumber: 7, startColumn: 1, endColumn: 1 },
 						children: [
 							{
-								name: 'functionOfClass',
-								detail: 'functionOfClass',
+								name: "functionOfClass",
+								detail: "functionOfClass",
 								kind: SymbolKind.Function,
 								tags: [],
 								range: { startLineNumber: 8, endLineNumber: 12, startColumn: 1, endColumn: 1 },
 								selectionRange: { startLineNumber: 9, endLineNumber: 9, startColumn: 1, endColumn: 1 },
 								children: [
 									{
-										name: 'function1',
-										detail: 'function1',
+										name: "function1",
+										detail: "function1",
 										kind: SymbolKind.Function,
 										tags: [],
 										range: { startLineNumber: 10, endLineNumber: 11, startColumn: 1, endColumn: 1 },
 										selectionRange: { startLineNumber: 10, endLineNumber: 10, startColumn: 1, endColumn: 1 },
-									}
-								]
-							} as DocumentSymbol
-						]
+									},
+								],
+							} as DocumentSymbol,
+						],
 					} as DocumentSymbol,
 					{
-						name: 'bar',
-						detail: 'bar',
+						name: "bar",
+						detail: "bar",
 						kind: SymbolKind.Function,
 						tags: [],
 						range: { startLineNumber: 13, endLineNumber: 14, startColumn: 1, endColumn: 1 },
 						selectionRange: { startLineNumber: 13, endLineNumber: 13, startColumn: 1, endColumn: 1 },
 						children: [
 							{
-								name: 'insideBar',
-								detail: 'insideBar',
+								name: "insideBar",
+								detail: "insideBar",
 								kind: SymbolKind.Function,
 								tags: [],
 								range: { startLineNumber: 13, endLineNumber: 13, startColumn: 1, endColumn: 1 },
 								selectionRange: { startLineNumber: 13, endLineNumber: 13, startColumn: 1, endColumn: 1 },
-							} as DocumentSymbol
-						]
-					} as DocumentSymbol
+							} as DocumentSymbol,
+						],
+					} as DocumentSymbol,
 				];
-			}
+			},
 		};
 	}
 
-	test('Testing the function getCandidateStickyLinesIntersecting', () => {
+	test("Testing the function getCandidateStickyLinesIntersecting", () => {
 		return runWithFakedTimers({ useFakeTimers: true }, async () => {
 			const model = createTextModel(text);
 			await withAsyncTestCodeEditor(model, {
 				stickyScroll: {
 					enabled: true,
 					maxLineCount: 5,
-					defaultModel: 'outlineModel'
+					defaultModel: "outlineModel",
 				},
 				envConfig: {
-					outerHeight: 500
+					outerHeight: 500,
 				},
-				serviceCollection: serviceCollection
+				serviceCollection: serviceCollection,
 			}, async (editor, _viewModel, instantiationService) => {
 				const languageService = instantiationService.get(ILanguageFeaturesService);
 				const languageConfigurationService = instantiationService.get(ILanguageConfigurationService);
-				disposables.add(languageService.documentSymbolProvider.register('*', documentSymbolProviderForTestModel()));
+				disposables.add(languageService.documentSymbolProvider.register("*", documentSymbolProviderForTestModel()));
 				const provider: StickyLineCandidateProvider = new StickyLineCandidateProvider(editor, languageService, languageConfigurationService);
 				await provider.update();
 				assert.deepStrictEqual(provider.getCandidateStickyLinesIntersecting({ startLineNumber: 1, endLineNumber: 4 }), [new StickyLineCandidate(1, 2, 0, 19)]);
@@ -158,25 +158,25 @@ suite('Sticky Scroll Tests', () => {
 		});
 	});
 
-	test('issue #157180: Render the correct line corresponding to the scope definition', () => {
+	test("issue #157180: Render the correct line corresponding to the scope definition", () => {
 		return runWithFakedTimers({ useFakeTimers: true }, async () => {
 			const model = createTextModel(text);
 			await withAsyncTestCodeEditor(model, {
 				stickyScroll: {
 					enabled: true,
 					maxLineCount: 5,
-					defaultModel: 'outlineModel'
+					defaultModel: "outlineModel",
 				},
 				envConfig: {
-					outerHeight: 500
+					outerHeight: 500,
 				},
-				serviceCollection
+				serviceCollection,
 			}, async (editor, _viewModel, instantiationService) => {
 
 				const stickyScrollController: StickyScrollController = editor.registerAndInstantiateContribution(StickyScrollController.ID, StickyScrollController);
 				const lineHeight: number = editor.getOption(EditorOption.lineHeight);
 				const languageService: ILanguageFeaturesService = instantiationService.get(ILanguageFeaturesService);
-				disposables.add(languageService.documentSymbolProvider.register('*', documentSymbolProviderForTestModel()));
+				disposables.add(languageService.documentSymbolProvider.register("*", documentSymbolProviderForTestModel()));
 				await stickyScrollController.stickyScrollCandidateProvider.update();
 				let state;
 
@@ -211,26 +211,26 @@ suite('Sticky Scroll Tests', () => {
 		});
 	});
 
-	test('issue #156268 : Do not reveal sticky lines when they are in a folded region ', () => {
+	test("issue #156268 : Do not reveal sticky lines when they are in a folded region ", () => {
 		return runWithFakedTimers({ useFakeTimers: true }, async () => {
 			const model = createTextModel(text);
 			await withAsyncTestCodeEditor(model, {
 				stickyScroll: {
 					enabled: true,
 					maxLineCount: 5,
-					defaultModel: 'outlineModel'
+					defaultModel: "outlineModel",
 				},
 				envConfig: {
-					outerHeight: 500
+					outerHeight: 500,
 				},
-				serviceCollection
+				serviceCollection,
 			}, async (editor, viewModel, instantiationService) => {
 
 				const stickyScrollController: StickyScrollController = editor.registerAndInstantiateContribution(StickyScrollController.ID, StickyScrollController);
 				const lineHeight = editor.getOption(EditorOption.lineHeight);
 
 				const languageService = instantiationService.get(ILanguageFeaturesService);
-				disposables.add(languageService.documentSymbolProvider.register('*', documentSymbolProviderForTestModel()));
+				disposables.add(languageService.documentSymbolProvider.register("*", documentSymbolProviderForTestModel()));
 				await stickyScrollController.stickyScrollCandidateProvider.update();
 				editor.setHiddenAreas([{ startLineNumber: 2, endLineNumber: 2, startColumn: 1, endColumn: 1 }, { startLineNumber: 10, endLineNumber: 11, startColumn: 1, endColumn: 1 }]);
 				let state;
@@ -263,65 +263,65 @@ suite('Sticky Scroll Tests', () => {
 	});
 
 	const textWithScopesWithSameStartingLines = [
-		'class TestClass { foo() {',
-		'function bar(){',
-		'',
-		'}}',
-		'}',
-		''
-	].join('\n');
+		"class TestClass { foo() {",
+		"function bar(){",
+		"",
+		"}}",
+		"}",
+		"",
+	].join("\n");
 
 	function documentSymbolProviderForSecondTestModel() {
 		return {
 			provideDocumentSymbols() {
 				return [
 					{
-						name: 'TestClass',
-						detail: 'TestClass',
+						name: "TestClass",
+						detail: "TestClass",
 						kind: SymbolKind.Class,
 						tags: [],
 						range: { startLineNumber: 1, endLineNumber: 5, startColumn: 1, endColumn: 1 },
 						selectionRange: { startLineNumber: 1, endLineNumber: 1, startColumn: 1, endColumn: 1 },
 						children: [
 							{
-								name: 'foo',
-								detail: 'foo',
+								name: "foo",
+								detail: "foo",
 								kind: SymbolKind.Function,
 								tags: [],
 								range: { startLineNumber: 1, endLineNumber: 4, startColumn: 1, endColumn: 1 },
 								selectionRange: { startLineNumber: 1, endLineNumber: 1, startColumn: 1, endColumn: 1 },
 								children: [
 									{
-										name: 'bar',
-										detail: 'bar',
+										name: "bar",
+										detail: "bar",
 										kind: SymbolKind.Function,
 										tags: [],
 										range: { startLineNumber: 2, endLineNumber: 4, startColumn: 1, endColumn: 1 },
 										selectionRange: { startLineNumber: 2, endLineNumber: 2, startColumn: 1, endColumn: 1 },
-										children: []
-									} as DocumentSymbol
-								]
+										children: [],
+									} as DocumentSymbol,
+								],
 							} as DocumentSymbol,
-						]
-					} as DocumentSymbol
+						],
+					} as DocumentSymbol,
 				];
-			}
+			},
 		};
 	}
 
-	test('issue #159271 : render the correct widget state when the child scope starts on the same line as the parent scope', () => {
+	test("issue #159271 : render the correct widget state when the child scope starts on the same line as the parent scope", () => {
 		return runWithFakedTimers({ useFakeTimers: true }, async () => {
 			const model = createTextModel(textWithScopesWithSameStartingLines);
 			await withAsyncTestCodeEditor(model, {
 				stickyScroll: {
 					enabled: true,
 					maxLineCount: 5,
-					defaultModel: 'outlineModel'
+					defaultModel: "outlineModel",
 				},
 				envConfig: {
-					outerHeight: 500
+					outerHeight: 500,
 				},
-				serviceCollection
+				serviceCollection,
 			}, async (editor, _viewModel, instantiationService) => {
 
 				const stickyScrollController: StickyScrollController = editor.registerAndInstantiateContribution(StickyScrollController.ID, StickyScrollController);
@@ -329,7 +329,7 @@ suite('Sticky Scroll Tests', () => {
 				const lineHeight = editor.getOption(EditorOption.lineHeight);
 
 				const languageService = instantiationService.get(ILanguageFeaturesService);
-				disposables.add(languageService.documentSymbolProvider.register('*', documentSymbolProviderForSecondTestModel()));
+				disposables.add(languageService.documentSymbolProvider.register("*", documentSymbolProviderForSecondTestModel()));
 				await stickyScrollController.stickyScrollCandidateProvider.update();
 				let state;
 

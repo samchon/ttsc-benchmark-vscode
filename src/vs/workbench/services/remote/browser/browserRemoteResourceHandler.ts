@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from '../../../../base/common/buffer.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { getMediaOrTextMime } from '../../../../base/common/mime.js';
-import { URI, UriComponents } from '../../../../base/common/uri.js';
-import { FileOperationError, FileOperationResult, IFileContent, IFileService } from '../../../../platform/files/common/files.js';
-import { IRemoteResourceProvider, IResourceUriProvider } from '../../../browser/web.api.js';
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { getMediaOrTextMime } from "../../../../base/common/mime.js";
+import { URI, UriComponents } from "../../../../base/common/uri.js";
+import { FileOperationError, FileOperationResult, IFileContent, IFileService } from "../../../../platform/files/common/files.js";
+import { IRemoteResourceProvider, IResourceUriProvider } from "../../../browser/web.api.js";
 
 export class BrowserRemoteResourceLoader extends Disposable {
 	constructor(
@@ -38,15 +38,15 @@ export class BrowserRemoteResourceLoader extends Disposable {
 			}
 
 			const mime = uri.path && getMediaOrTextMime(uri.path);
-			request.respondWith(200, content.value.buffer, mime ? { 'content-type': mime } : {});
+			request.respondWith(200, content.value.buffer, mime ? { "content-type": mime } : {});
 		}));
 	}
 
 	public getResourceUriProvider(): IResourceUriProvider {
 		const baseUri = URI.parse(document.location.href);
 		return uri => baseUri.with({
-			path: this.provider.path,
-			query: JSON.stringify(uri),
-		});
+      path: this.provider.path,
+      query: JSON.stringify(uri),
+    });
 	}
 }

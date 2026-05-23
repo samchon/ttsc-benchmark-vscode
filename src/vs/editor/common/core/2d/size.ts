@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDimension } from './dimension.js';
+import { IDimension } from "./dimension.js";
 
 export class Size2D {
 	static equals(a: Size2D, b: Size2D): boolean {

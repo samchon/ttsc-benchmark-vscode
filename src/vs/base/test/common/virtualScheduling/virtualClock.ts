@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { compareBy, numberComparator, tieBreakComparators } from '../../../common/arrays.js';
-import { Emitter } from '../../../common/event.js';
-import { IDisposable } from '../../../common/lifecycle.js';
-import { Trace } from './trace.js';
+import { compareBy, numberComparator, tieBreakComparators } from "../../../common/arrays.js";
+import { Emitter } from "../../../common/event.js";
+import { IDisposable } from "../../../common/lifecycle.js";
+import { Trace } from "./trace.js";
 
 export type VirtualTime = number;
 
@@ -39,8 +39,8 @@ export interface VirtualEvent {
 interface QueuedEvent extends VirtualEvent { readonly id: number }
 
 const eventComparator = tieBreakComparators<QueuedEvent>(
-	compareBy(e => e.time, numberComparator),
-	compareBy(e => e.id, numberComparator),
+  compareBy(e => e.time, numberComparator),
+  compareBy(e => e.id, numberComparator),
 );
 
 /**
@@ -55,7 +55,9 @@ const eventComparator = tieBreakComparators<QueuedEvent>(
 export class VirtualClock {
 	private _now: VirtualTime;
 	private _idCounter = 0;
-	private readonly _queue = new SimplePriorityQueue<QueuedEvent>(eventComparator);
+	private readonly _queue = new SimplePriorityQueue<QueuedEvent>(
+    eventComparator,
+  );
 	private readonly _onEventScheduled = new Emitter<VirtualEvent>();
 
 	public readonly onEventScheduled = this._onEventScheduled.event;
@@ -69,7 +71,9 @@ export class VirtualClock {
 
 	schedule(event: VirtualEvent): IDisposable {
 		if (event.time < this._now) {
-			throw new Error(`Scheduled time (${event.time}) must be >= now (${this._now}).`);
+			throw new Error(
+        `Scheduled time (${event.time}) must be >= now (${this._now}).`,
+      );
 		}
 		const queued: QueuedEvent = { ...event, id: this._idCounter++ };
 		this._queue.add(queued);

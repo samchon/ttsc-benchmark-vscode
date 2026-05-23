@@ -3,43 +3,63 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../base/browser/dom.js';
-import { IKeyboardEvent } from '../../../../base/browser/keyboardEvent.js';
-import { IMouseEvent } from '../../../../base/browser/mouseEvent.js';
-import { IListVirtualDelegate } from '../../../../base/browser/ui/list/list.js';
-import { IListAccessibilityProvider } from '../../../../base/browser/ui/list/listWidget.js';
-import { DomScrollableElement } from '../../../../base/browser/ui/scrollbar/scrollableElement.js';
-import { AsyncDataTree } from '../../../../base/browser/ui/tree/asyncDataTree.js';
-import { ITreeContextMenuEvent } from '../../../../base/browser/ui/tree/tree.js';
-import { coalesce } from '../../../../base/common/arrays.js';
-import { CancellationToken, CancellationTokenSource } from '../../../../base/common/cancellation.js';
-import { KeyCode } from '../../../../base/common/keyCodes.js';
-import * as lifecycle from '../../../../base/common/lifecycle.js';
-import { clamp } from '../../../../base/common/numbers.js';
-import { isMacintosh } from '../../../../base/common/platform.js';
-import { ScrollbarVisibility } from '../../../../base/common/scrollable.js';
-import { ContentWidgetPositionPreference, ICodeEditor, IContentWidget, IContentWidgetPosition } from '../../../../editor/browser/editorBrowser.js';
-import { ConfigurationChangedEvent, EditorOption } from '../../../../editor/common/config/editorOptions.js';
-import { IDimension } from '../../../../editor/common/core/2d/dimension.js';
-import { Position } from '../../../../editor/common/core/position.js';
-import { Range } from '../../../../editor/common/core/range.js';
-import { IEditorDecorationsCollection } from '../../../../editor/common/editorCommon.js';
-import { ModelDecorationOptions } from '../../../../editor/common/model/textModel.js';
-import { ILanguageFeaturesService } from '../../../../editor/common/services/languageFeatures.js';
-import * as nls from '../../../../nls.js';
-import { IMenuService, MenuId } from '../../../../platform/actions/common/actions.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { IContextMenuService } from '../../../../platform/contextview/browser/contextView.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { WorkbenchAsyncDataTree } from '../../../../platform/list/browser/listService.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { asCssVariable, editorHoverBackground, editorHoverBorder, editorHoverForeground } from '../../../../platform/theme/common/colorRegistry.js';
-import { IDebugService, IDebugSession, IExpression, IExpressionContainer, IStackFrame } from '../common/debug.js';
-import { Expression, Variable, VisualizedExpression } from '../common/debugModel.js';
-import { getEvaluatableExpressionAtPosition } from '../common/debugUtils.js';
-import { AbstractExpressionDataSource } from './baseDebugView.js';
-import { DebugExpressionRenderer } from './debugExpressionRenderer.js';
-import { VariablesRenderer, VisualizedVariableRenderer, openContextMenuForVariableTreeElement } from './variablesView.js';
+import * as dom from "../../../../base/browser/dom.js";
+import { IKeyboardEvent } from "../../../../base/browser/keyboardEvent.js";
+import { IMouseEvent } from "../../../../base/browser/mouseEvent.js";
+import { IListVirtualDelegate } from "../../../../base/browser/ui/list/list.js";
+import { IListAccessibilityProvider } from "../../../../base/browser/ui/list/listWidget.js";
+import { DomScrollableElement } from "../../../../base/browser/ui/scrollbar/scrollableElement.js";
+import { AsyncDataTree } from "../../../../base/browser/ui/tree/asyncDataTree.js";
+import { ITreeContextMenuEvent } from "../../../../base/browser/ui/tree/tree.js";
+import { coalesce } from "../../../../base/common/arrays.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { KeyCode } from "../../../../base/common/keyCodes.js";
+import * as lifecycle from "../../../../base/common/lifecycle.js";
+import { clamp } from "../../../../base/common/numbers.js";
+import { isMacintosh } from "../../../../base/common/platform.js";
+import { ScrollbarVisibility } from "../../../../base/common/scrollable.js";
+import {
+  ContentWidgetPositionPreference,
+  ICodeEditor,
+  IContentWidget,
+  IContentWidgetPosition,
+} from "../../../../editor/browser/editorBrowser.js";
+import { ConfigurationChangedEvent, EditorOption } from "../../../../editor/common/config/editorOptions.js";
+import { IDimension } from "../../../../editor/common/core/2d/dimension.js";
+import { Position } from "../../../../editor/common/core/position.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { IEditorDecorationsCollection } from "../../../../editor/common/editorCommon.js";
+import { ModelDecorationOptions } from "../../../../editor/common/model/textModel.js";
+import { ILanguageFeaturesService } from "../../../../editor/common/services/languageFeatures.js";
+import * as nls from "../../../../nls.js";
+import { IMenuService, MenuId } from "../../../../platform/actions/common/actions.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { WorkbenchAsyncDataTree } from "../../../../platform/list/browser/listService.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import {
+  asCssVariable,
+  editorHoverBackground,
+  editorHoverBorder,
+  editorHoverForeground,
+} from "../../../../platform/theme/common/colorRegistry.js";
+import {
+  IDebugService,
+  IDebugSession,
+  IExpression,
+  IExpressionContainer,
+  IStackFrame,
+} from "../common/debug.js";
+import { Expression, Variable, VisualizedExpression } from "../common/debugModel.js";
+import { getEvaluatableExpressionAtPosition } from "../common/debugUtils.js";
+import { AbstractExpressionDataSource } from "./baseDebugView.js";
+import { DebugExpressionRenderer } from "./debugExpressionRenderer.js";
+import {
+  VariablesRenderer,
+  VisualizedVariableRenderer,
+  openContextMenuForVariableTreeElement,
+} from "./variablesView.js";
 
 const $ = dom.$;
 
@@ -71,15 +91,19 @@ async function doFindExpression(container: IExpressionContainer, namesToFind: st
 export async function findExpressionInStackFrame(stackFrame: IStackFrame, namesToFind: string[]): Promise<IExpression | undefined> {
 	const scopes = await stackFrame.getScopes();
 	const nonExpensive = scopes.filter(s => !s.expensive);
-	const expressions = coalesce(await Promise.all(nonExpensive.map(scope => doFindExpression(scope, namesToFind))));
+	const expressions = coalesce(
+    await Promise.all(nonExpensive.map(scope => doFindExpression(scope, namesToFind))),
+  );
 
 	// only show if all expressions found have the same value
-	return expressions.length > 0 && expressions.every(e => e.value === expressions[0].value) ? expressions[0] : undefined;
+	return expressions.length > 0 && expressions.every(
+    e => e.value === expressions[0].value,
+  ) ? expressions[0] : undefined;
 }
 
 export class DebugHoverWidget implements IContentWidget {
 
-	static readonly ID = 'debug.hoverWidget';
+	static readonly ID = "debug.hoverWidget";
 	// editor.IContentWidget.allowEditorOverflow
 	readonly allowEditorOverflow = true;
 
@@ -123,21 +147,44 @@ export class DebugHoverWidget implements IContentWidget {
 		this.toDispose = [];
 
 		this.showAtPosition = null;
-		this.positionPreference = [ContentWidgetPositionPreference.ABOVE, ContentWidgetPositionPreference.BELOW];
-		this.debugHoverComputer = this.instantiationService.createInstance(DebugHoverComputer, this.editor);
-		this.expressionRenderer = this.instantiationService.createInstance(DebugExpressionRenderer);
+		this.positionPreference = [
+      ContentWidgetPositionPreference.ABOVE,
+      ContentWidgetPositionPreference.BELOW,
+    ];
+		this.debugHoverComputer = this.instantiationService.createInstance(
+      DebugHoverComputer,
+      this.editor,
+    );
+		this.expressionRenderer = this.instantiationService.createInstance(
+      DebugExpressionRenderer,
+    );
 	}
 
 	private create(): void {
-		this.domNode = $('.debug-hover-widget');
-		this.complexValueContainer = dom.append(this.domNode, $('.complex-value'));
-		this.complexValueTitle = dom.append(this.complexValueContainer, $('.title'));
-		this.treeContainer = dom.append(this.complexValueContainer, $('.debug-hover-tree'));
-		this.treeContainer.setAttribute('role', 'tree');
-		const tip = dom.append(this.complexValueContainer, $('.tip'));
-		tip.textContent = nls.localize({ key: 'quickTip', comment: ['"switch to editor language hover" means to show the programming language hover widget instead of the debug hover'] }, 'Hold {0} key to switch to editor language hover', isMacintosh ? 'Option' : 'Alt');
-		const dataSource = this.instantiationService.createInstance(DebugHoverDataSource);
-		this.tree = this.instantiationService.createInstance(WorkbenchAsyncDataTree<IExpression, IExpression, any>, 'DebugHover', this.treeContainer, new DebugHoverDelegate(), [
+		this.domNode = $(".debug-hover-widget");
+		this.complexValueContainer = dom.append(this.domNode, $(".complex-value"));
+		this.complexValueTitle = dom.append(
+      this.complexValueContainer,
+      $(".title"),
+    );
+		this.treeContainer = dom.append(
+      this.complexValueContainer,
+      $(".debug-hover-tree"),
+    );
+		this.treeContainer.setAttribute("role", "tree");
+		const tip = dom.append(this.complexValueContainer, $(".tip"));
+		tip.textContent = nls.localize(
+      {
+        key: "quickTip",
+        comment: ['"switch to editor language hover" means to show the programming language hover widget instead of the debug hover'],
+      },
+      "Hold {0} key to switch to editor language hover",
+      isMacintosh ? "Option" : "Alt",
+    );
+		const dataSource = this.instantiationService.createInstance(
+      DebugHoverDataSource,
+    );
+		this.tree = this.instantiationService.createInstance(WorkbenchAsyncDataTree<IExpression, IExpression, any>, "DebugHover", this.treeContainer, new DebugHoverDelegate(), [
 			this.instantiationService.createInstance(VariablesRenderer, this.expressionRenderer),
 			this.instantiationService.createInstance(VisualizedVariableRenderer, this.expressionRenderer),
 		],
@@ -148,17 +195,24 @@ export class DebugHoverWidget implements IContentWidget {
 			useShadows: false,
 			keyboardNavigationLabelProvider: { getKeyboardNavigationLabel: (e: IExpression) => e.name },
 			overrideStyles: {
-				listBackground: editorHoverBackground
-			}
+				listBackground: editorHoverBackground,
+			},
 		});
 
-		this.toDispose.push(VisualizedVariableRenderer.rendererOnVisualizationRange(this.debugService.getViewModel(), this.tree));
+		this.toDispose.push(
+      VisualizedVariableRenderer.rendererOnVisualizationRange(
+        this.debugService.getViewModel(),
+        this.tree,
+      ),
+    );
 		this.toDispose.push(this.tree);
 
-		this.valueContainer = $('.value');
+		this.valueContainer = $(".value");
 		this.valueContainer.tabIndex = 0;
-		this.valueContainer.setAttribute('role', 'tooltip');
-		this.scrollbar = new DomScrollableElement(this.valueContainer, { horizontal: ScrollbarVisibility.Hidden });
+		this.valueContainer.setAttribute("role", "tooltip");
+		this.scrollbar = new DomScrollableElement(this.valueContainer, {
+      horizontal: ScrollbarVisibility.Hidden,
+    });
 		this.domNode.appendChild(this.scrollbar.getDomNode());
 		this.toDispose.push(this.scrollbar);
 
@@ -167,7 +221,9 @@ export class DebugHoverWidget implements IContentWidget {
 		this.domNode.style.border = `1px solid ${asCssVariable(editorHoverBorder)}`;
 		this.domNode.style.color = asCssVariable(editorHoverForeground);
 
-		this.toDispose.push(this.tree.onContextMenu(async e => await this.onContextMenu(e)));
+		this.toDispose.push(
+      this.tree.onContextMenu(async e => await this.onContextMenu(e)),
+    );
 
 		this.toDispose.push(this.tree.onDidChangeContentHeight(() => {
 			if (!this.isUpdatingTree) {
@@ -192,11 +248,17 @@ export class DebugHoverWidget implements IContentWidget {
 			return;
 		}
 
-		return openContextMenuForVariableTreeElement(this.contextKeyService, this.menuService, this.contextMenuService, MenuId.DebugHoverContext, e);
+		return openContextMenuForVariableTreeElement(
+      this.contextKeyService,
+      this.menuService,
+      this.contextMenuService,
+      MenuId.DebugHoverContext,
+      e,
+    );
 	}
 
 	private registerListeners(): void {
-		this.toDispose.push(dom.addStandardDisposableListener(this.domNode, 'keydown', (e: IKeyboardEvent) => {
+		this.toDispose.push(dom.addStandardDisposableListener(this.domNode, "keydown", (e: IKeyboardEvent) => {
 			if (e.equals(KeyCode.Escape)) {
 				this.hide();
 			}
@@ -216,7 +278,7 @@ export class DebugHoverWidget implements IContentWidget {
 	}
 
 	isHovered(): boolean {
-		return !!this.domNode?.matches(':hover');
+		return !!this.domNode?.matches(":hover");
 	}
 
 	isVisible(): boolean {
@@ -253,7 +315,10 @@ export class DebugHoverWidget implements IContentWidget {
 			return ShowDebugHoverResult.NOT_AVAILABLE;
 		}
 
-		const result = await this.debugHoverComputer.compute(position, cancellationSource.token);
+		const result = await this.debugHoverComputer.compute(
+      position,
+      cancellationSource.token,
+    );
 		if (cancellationSource.token.isCancellationRequested) {
 			this.hide();
 			return ShowDebugHoverResult.CANCELLED;
@@ -279,18 +344,28 @@ export class DebugHoverWidget implements IContentWidget {
 			return ShowDebugHoverResult.NOT_AVAILABLE;
 		}
 
-		this.highlightDecorations.set([{
-			range: result.range,
-			options: DebugHoverWidget._HOVER_HIGHLIGHT_DECORATION_OPTIONS
-		}]);
+		this.highlightDecorations.set([
+      {
+        range: result.range,
+        options: DebugHoverWidget._HOVER_HIGHLIGHT_DECORATION_OPTIONS,
+      },
+    ]);
 
-		return this.doShow(session, result.range.getStartPosition(), expression, focus, mouseEvent);
+		return this.doShow(
+      session,
+      result.range.getStartPosition(),
+      expression,
+      focus,
+      mouseEvent,
+    );
 	}
 
-	private static readonly _HOVER_HIGHLIGHT_DECORATION_OPTIONS = ModelDecorationOptions.register({
-		description: 'bdebug-hover-highlight',
-		className: 'hoverHighlight'
-	});
+	private static readonly _HOVER_HIGHLIGHT_DECORATION_OPTIONS = ModelDecorationOptions.register(
+    {
+      description: "bdebug-hover-highlight",
+      className: "hoverHighlight",
+    },
+  );
 
 	private async doShow(session: IDebugSession | undefined, position: Position, expression: IExpression, focus: boolean, mouseEvent: IMouseEvent | undefined): Promise<void> {
 		if (!this.domNode) {
@@ -304,15 +379,21 @@ export class DebugHoverWidget implements IContentWidget {
 		if (!expression.hasChildren) {
 			this.complexValueContainer.hidden = true;
 			this.valueContainer.hidden = false;
-			store.add(this.expressionRenderer.renderValue(this.valueContainer, expression, {
-				showChanged: false,
-				colorize: true,
-				hover: false,
-				session,
-			}));
-			this.valueContainer.title = '';
+			store.add(
+        this.expressionRenderer.renderValue(this.valueContainer, expression, {
+          showChanged: false,
+          colorize: true,
+          hover: false,
+          session,
+        }),
+      );
+			this.valueContainer.title = "";
 			this.editor.layoutContentWidget(this);
-			this.safeTriangle = mouseEvent && new dom.SafeTriangle(mouseEvent.posx, mouseEvent.posy, this.domNode);
+			this.safeTriangle = mouseEvent && new dom.SafeTriangle(
+        mouseEvent.posx,
+        mouseEvent.posy,
+        this.domNode,
+      );
 			this.scrollbar.scanDomNode();
 			if (focus) {
 				this.editor.render();
@@ -325,9 +406,18 @@ export class DebugHoverWidget implements IContentWidget {
 		this.valueContainer.hidden = true;
 
 		this.expressionToRender = expression;
-		store.add(this.expressionRenderer.renderValue(this.complexValueTitle, expression, { hover: false, session }));
+		store.add(
+      this.expressionRenderer.renderValue(this.complexValueTitle, expression, {
+        hover: false,
+        session,
+      }),
+    );
 		this.editor.layoutContentWidget(this);
-		this.safeTriangle = mouseEvent && new dom.SafeTriangle(mouseEvent.posx, mouseEvent.posy, this.domNode);
+		this.safeTriangle = mouseEvent && new dom.SafeTriangle(
+      mouseEvent.posx,
+      mouseEvent.posy,
+      this.domNode,
+    );
 		this.tree.scrollTop = 0;
 		this.tree.scrollLeft = 0;
 		this.complexValueContainer.hidden = false;
@@ -349,12 +439,19 @@ export class DebugHoverWidget implements IContentWidget {
 		if (this.showAtPosition) {
 			const editorTop = this.editor.getDomNode()?.offsetTop || 0;
 			const containerTop = this.treeContainer.offsetTop + editorTop;
-			const hoveredCharTop = this.editor.getTopForLineNumber(this.showAtPosition.lineNumber, true) - this.editor.getScrollTop();
+			const hoveredCharTop = this.editor.getTopForLineNumber(
+        this.showAtPosition.lineNumber,
+        true,
+      ) - this.editor.getScrollTop();
 			if (containerTop < hoveredCharTop) {
 				maxHeightToAvoidCursorOverlay = hoveredCharTop + editorTop - 22; // 22 is monaco top padding https://github.com/microsoft/vscode/blob/a1df2d7319382d42f66ad7f411af01e4cc49c80a/src/vs/editor/browser/viewParts/contentWidgets/contentWidgets.ts#L364
 			}
 		}
-		const treeHeight = Math.min(Math.max(266, this.editor.getLayoutInfo().height * 0.55), this.tree.contentHeight + scrollBarHeight, maxHeightToAvoidCursorOverlay);
+		const treeHeight = Math.min(
+      Math.max(266, this.editor.getLayoutInfo().height * 0.55),
+      this.tree.contentHeight + scrollBarHeight,
+      maxHeightToAvoidCursorOverlay,
+    );
 
 		const realTreeWidth = this.tree.contentWidth;
 		const treeWidth = clamp(realTreeWidth, 400, 550);
@@ -372,8 +469,8 @@ export class DebugHoverWidget implements IContentWidget {
 			// Do this in beforeRender once the content widget is no longer display=none so that its elements' sizes will be measured correctly.
 			this.isUpdatingTree = true;
 			this.tree.setInput(expression).finally(() => {
-				this.isUpdatingTree = false;
-			});
+        this.isUpdatingTree = false;
+      });
 		}
 
 		return null;
@@ -405,14 +502,17 @@ export class DebugHoverWidget implements IContentWidget {
 
 		this.highlightDecorations.clear();
 		this.editor.layoutContentWidget(this);
-		this.positionPreference = [ContentWidgetPositionPreference.ABOVE, ContentWidgetPositionPreference.BELOW];
+		this.positionPreference = [
+      ContentWidgetPositionPreference.ABOVE,
+      ContentWidgetPositionPreference.BELOW,
+    ];
 	}
 
 	getPosition(): IContentWidgetPosition | null {
 		return this._isVisible ? {
-			position: this.showAtPosition,
-			preference: this.positionPreference
-		} : null;
+      position: this.showAtPosition,
+      preference: this.positionPreference,
+    } : null;
 	}
 
 	dispose(): void {
@@ -423,11 +523,19 @@ export class DebugHoverWidget implements IContentWidget {
 class DebugHoverAccessibilityProvider implements IListAccessibilityProvider<IExpression> {
 
 	getWidgetAriaLabel(): string {
-		return nls.localize('treeAriaLabel', "Debug Hover");
+		return nls.localize("treeAriaLabel", "Debug Hover");
 	}
 
 	getAriaLabel(element: IExpression): string {
-		return nls.localize({ key: 'variableAriaLabel', comment: ['Do not translate placeholders. Placeholders are name and value of a variable.'] }, "{0}, value {1}, variables, debug", element.name, element.value);
+		return nls.localize(
+      {
+        key: "variableAriaLabel",
+        comment: ["Do not translate placeholders. Placeholders are name and value of a variable."],
+      },
+      "{0}, value {1}, variables, debug",
+      element.name,
+      element.value,
+    );
 	}
 }
 
@@ -480,20 +588,28 @@ class DebugHoverComputer {
 		}
 
 		const model = this.editor.getModel();
-		const result = await getEvaluatableExpressionAtPosition(this.languageFeaturesService, model, position, token);
+		const result = await getEvaluatableExpressionAtPosition(
+      this.languageFeaturesService,
+      model,
+      position,
+      token,
+    );
 		if (!result) {
 			return { rangeChanged: false };
 		}
 
 		const { range, matchingExpression } = result;
 		const rangeChanged = !this._current?.range.equalsRange(range);
-		this._current = { expression: matchingExpression, range: Range.lift(range) };
+		this._current = {
+      expression: matchingExpression,
+      range: Range.lift(range),
+    };
 		return { rangeChanged, range: this._current.range };
 	}
 
 	async evaluate(session: IDebugSession): Promise<IExpression | undefined> {
 		if (!this._current) {
-			this.logService.error('No expression to evaluate');
+			this.logService.error("No expression to evaluate");
 			return;
 		}
 
@@ -502,7 +618,7 @@ class DebugHoverComputer {
 
 		if (session.capabilities.supportsEvaluateForHovers) {
 			const expression = new Expression(this._current.expression);
-			await expression.evaluate(session, this.debugService.getViewModel().focusedStackFrame, 'hover', undefined, debugSource ? {
+			await expression.evaluate(session, this.debugService.getViewModel().focusedStackFrame, "hover", undefined, debugSource ? {
 				line: this._current.range.startLineNumber,
 				column: this._current.range.startColumn,
 				source: debugSource.raw,
@@ -512,9 +628,9 @@ class DebugHoverComputer {
 			const focusedStackFrame = this.debugService.getViewModel().focusedStackFrame;
 			if (focusedStackFrame) {
 				return await findExpressionInStackFrame(
-					focusedStackFrame,
-					coalesce(this._current.expression.split('.').map(word => word.trim()))
-				);
+          focusedStackFrame,
+          coalesce(this._current.expression.split(".").map(word => word.trim())),
+        );
 			}
 		}
 

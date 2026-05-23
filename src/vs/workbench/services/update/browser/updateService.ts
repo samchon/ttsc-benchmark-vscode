@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event, Emitter } from '../../../../base/common/event.js';
-import { IUpdateService, State, UpdateType } from '../../../../platform/update/common/update.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { IBrowserWorkbenchEnvironmentService } from '../../environment/browser/environmentService.js';
-import { IHostService } from '../../host/browser/host.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
+import { Event, Emitter } from "../../../../base/common/event.js";
+import { IUpdateService, State, UpdateType } from "../../../../platform/update/common/update.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IBrowserWorkbenchEnvironmentService } from "../../environment/browser/environmentService.js";
+import { IHostService } from "../../host/browser/host.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
 
 export interface IUpdate {
 	version: string;
@@ -40,7 +40,7 @@ export class BrowserUpdateService extends Disposable implements IUpdateService {
 
 	constructor(
 		@IBrowserWorkbenchEnvironmentService private readonly environmentService: IBrowserWorkbenchEnvironmentService,
-		@IHostService private readonly hostService: IHostService
+		@IHostService private readonly hostService: IHostService,
 	) {
 		super();
 
@@ -70,7 +70,11 @@ export class BrowserUpdateService extends Disposable implements IUpdateService {
 			const update = await updateProvider.checkForUpdate();
 			if (update) {
 				// State -> Downloaded
-				this.state = State.Ready({ version: update.version, productVersion: update.version }, explicit, false);
+				this.state = State.Ready(
+          { version: update.version, productVersion: update.version },
+          explicit,
+          false,
+        );
 			} else {
 				// State -> Idle
 				this.state = State.Idle(UpdateType.Archive);
@@ -103,4 +107,8 @@ export class BrowserUpdateService extends Disposable implements IUpdateService {
 	}
 }
 
-registerSingleton(IUpdateService, BrowserUpdateService, InstantiationType.Eager);
+registerSingleton(
+  IUpdateService,
+  BrowserUpdateService,
+  InstantiationType.Eager,
+);

@@ -3,19 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../../base/common/uri.js';
-import { isEqual } from '../../../../base/common/resources.js';
-import { ICodeEditor, IDiffEditor } from '../../../../editor/browser/editorBrowser.js';
-import { ICodeEditorService } from '../../../../editor/browser/services/codeEditorService.js';
-import { IRange } from '../../../../editor/common/core/range.js';
-import { DetailedLineRangeMapping } from '../../../../editor/common/diff/rangeMapping.js';
-import { EditorResourceAccessor, SideBySideEditor } from '../../../../workbench/common/editor.js';
-import { IChatEditingService } from '../../../../workbench/contrib/chat/common/editing/chatEditingService.js';
-import { editingEntriesContainResource } from '../../../../workbench/contrib/chat/browser/sessionResourceMatching.js';
-import { isIChatSessionFileChange2 } from '../../../../workbench/contrib/chat/common/chatSessionsService.js';
-import { ISessionsManagementService } from '../../../services/sessions/common/sessionsManagement.js';
-import { MultiDiffEditorInput } from '../../../../workbench/contrib/multiDiffEditor/browser/multiDiffEditorInput.js';
-import { ISessionFileChange } from '../../../services/sessions/common/session.js';
+import { URI } from "../../../../base/common/uri.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { ICodeEditor, IDiffEditor } from "../../../../editor/browser/editorBrowser.js";
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { IRange } from "../../../../editor/common/core/range.js";
+import { DetailedLineRangeMapping } from "../../../../editor/common/diff/rangeMapping.js";
+import { EditorResourceAccessor, SideBySideEditor } from "../../../../workbench/common/editor.js";
+import { IChatEditingService } from "../../../../workbench/contrib/chat/common/editing/chatEditingService.js";
+import { editingEntriesContainResource } from "../../../../workbench/contrib/chat/browser/sessionResourceMatching.js";
+import { isIChatSessionFileChange2 } from "../../../../workbench/contrib/chat/common/chatSessionsService.js";
+import { ISessionsManagementService } from "../../../services/sessions/common/sessionsManagement.js";
+import { MultiDiffEditorInput } from "../../../../workbench/contrib/multiDiffEditor/browser/multiDiffEditorInput.js";
+import { ISessionFileChange } from "../../../services/sessions/common/session.js";
 
 /**
  * Find the session that contains the given resource by checking editing sessions,
@@ -27,7 +27,10 @@ export function getSessionForResource(
 	sessionsManagementService: ISessionsManagementService,
 ): URI | undefined {
 	for (const editingSession of chatEditingService.editingSessionsObs.get()) {
-		if (editingEntriesContainResource(editingSession.entries.get(), resourceUri)) {
+		if (editingEntriesContainResource(
+      editingSession.entries.get(),
+      resourceUri,
+    )) {
 			return editingSession.chatSessionResource;
 		}
 	}
@@ -81,7 +84,12 @@ export function createAgentFeedbackContext(
 	resourceUri: URI,
 	range: IRange,
 ): IAgentFeedbackContext {
-	const codeSelection = getCodeSelection(editor, codeEditorService, resourceUri, range);
+	const codeSelection = getCodeSelection(
+    editor,
+    codeEditorService,
+    resourceUri,
+    range,
+  );
 	const diffHunks = getDiffHunks(editor, codeEditorService, resourceUri, range);
 	return { codeSelection, diffHunks };
 }
@@ -131,33 +139,39 @@ function getDiffHunks(
 
 	const selectionIsEmpty = range.startLineNumber === range.endLineNumber && range.startColumn === range.endColumn;
 	const relevantGroups = groupChanges(diffResult.changes2).filter(group => {
-		const changeTouchesSelection = (change: DetailedLineRangeMapping) => rangeTouchesChange(range, selectionIsInOriginal ? change.original : change.modified);
-		return selectionIsEmpty ? group.some(changeTouchesSelection) : group.every(changeTouchesSelection);
-	});
+    const changeTouchesSelection = (change: DetailedLineRangeMapping) => rangeTouchesChange(range, selectionIsInOriginal ? change.original : change.modified);
+    return selectionIsEmpty ? group.some(changeTouchesSelection) : group.every(changeTouchesSelection);
+  });
 	if (relevantGroups.length === 0) {
 		return undefined;
 	}
 
 	const originalText = originalModel.getValue();
 	const modifiedText = modifiedModel.getValue();
-	const originalEndsWithNewline = originalText.length > 0 && originalText.endsWith('\n');
-	const modifiedEndsWithNewline = modifiedText.length > 0 && modifiedText.endsWith('\n');
-	const originalLines = originalText.split('\n');
-	const modifiedLines = modifiedText.split('\n');
+	const originalEndsWithNewline = originalText.length > 0 && originalText.endsWith(
+    "\n",
+  );
+	const modifiedEndsWithNewline = modifiedText.length > 0 && modifiedText.endsWith(
+    "\n",
+  );
+	const originalLines = originalText.split("\n");
+	const modifiedLines = modifiedText.split("\n");
 
-	if (originalEndsWithNewline && originalLines[originalLines.length - 1] === '') {
+	if (originalEndsWithNewline && originalLines[originalLines.length - 1] === "") {
 		originalLines.pop();
 	}
-	if (modifiedEndsWithNewline && modifiedLines[modifiedLines.length - 1] === '') {
+	if (modifiedEndsWithNewline && modifiedLines[modifiedLines.length - 1] === "") {
 		modifiedLines.pop();
 	}
 
-	return relevantGroups.map(group => renderHunkGroup(group, originalLines, modifiedLines, originalEndsWithNewline, modifiedEndsWithNewline)).join('\n');
+	return relevantGroups.map(group => renderHunkGroup(group, originalLines, modifiedLines, originalEndsWithNewline, modifiedEndsWithNewline)).join(
+    "\n",
+  );
 }
 
 function getContainingDiffEditor(editor: ICodeEditor, codeEditorService: ICodeEditorService): IDiffEditor | undefined {
 	return codeEditorService.listDiffEditors().find(diffEditor =>
-		diffEditor.getModifiedEditor() === editor || diffEditor.getOriginalEditor() === editor
+		diffEditor.getModifiedEditor() === editor || diffEditor.getOriginalEditor() === editor,
 	);
 }
 
@@ -234,9 +248,18 @@ function renderHunkGroup(
 	const contextSize = 3;
 	const firstChange = group[0];
 	const lastChange = group[group.length - 1];
-	const hunkOrigStart = Math.max(1, firstChange.original.startLineNumber - contextSize);
-	const hunkOrigEnd = Math.min(originalLines.length, lastChange.original.endLineNumberExclusive - 1 + contextSize);
-	const hunkModStart = Math.max(1, firstChange.modified.startLineNumber - contextSize);
+	const hunkOrigStart = Math.max(
+    1,
+    firstChange.original.startLineNumber - contextSize,
+  );
+	const hunkOrigEnd = Math.min(
+    originalLines.length,
+    lastChange.original.endLineNumberExclusive - 1 + contextSize,
+  );
+	const hunkModStart = Math.max(
+    1,
+    firstChange.modified.startLineNumber - contextSize,
+  );
 
 	const hunkLines: string[] = [];
 	let lastOriginalLineIndex = -1;
@@ -305,12 +328,12 @@ function renderHunkGroup(
 	const result = [header, ...hunkLines];
 
 	if (!originalEndsWithNewline && lastOriginalLineIndex >= 0) {
-		result.splice(lastOriginalLineIndex + 2, 0, '\\ No newline at end of file');
+		result.splice(lastOriginalLineIndex + 2, 0, "\\ No newline at end of file");
 	} else if (!modifiedEndsWithNewline && lastModifiedLineIndex >= 0) {
-		result.splice(lastModifiedLineIndex + 2, 0, '\\ No newline at end of file');
+		result.splice(lastModifiedLineIndex + 2, 0, "\\ No newline at end of file");
 	}
 
-	return result.join('\n');
+	return result.join("\n");
 }
 
 export function getActiveResourceCandidates(input: Parameters<typeof EditorResourceAccessor.getOriginalUri>[0]): URI[] {
@@ -327,7 +350,9 @@ export function getActiveResourceCandidates(input: Parameters<typeof EditorResou
 		return result;
 	}
 
-	const resources = EditorResourceAccessor.getOriginalUri(input, { supportSideBySide: SideBySideEditor.BOTH });
+	const resources = EditorResourceAccessor.getOriginalUri(input, {
+    supportSideBySide: SideBySideEditor.BOTH,
+  });
 	if (!resources) {
 		return result;
 	}

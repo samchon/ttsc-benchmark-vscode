@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CharCode } from '../../../../base/common/charCode.js';
-import { LineRange } from '../../core/ranges/lineRange.js';
-import { DetailedLineRangeMapping } from '../rangeMapping.js';
+import { CharCode } from "../../../../base/common/charCode.js";
+import { LineRange } from "../../core/ranges/lineRange.js";
+import { DetailedLineRangeMapping } from "../rangeMapping.js";
 
 export class Array2D<T> {
 	private readonly array: T[] = [];
@@ -56,7 +56,7 @@ export class LineRangeFragment {
 				this.histogram[key] = (this.histogram[key] || 0) + 1;
 			}
 			counter++;
-			const key = LineRangeFragment.getKey('\n');
+			const key = LineRangeFragment.getKey("\n");
 			this.histogram[key] = (this.histogram[key] || 0) + 1;
 		}
 
@@ -67,7 +67,9 @@ export class LineRangeFragment {
 		let sumDifferences = 0;
 		const maxLength = Math.max(this.histogram.length, other.histogram.length);
 		for (let i = 0; i < maxLength; i++) {
-			sumDifferences += Math.abs((this.histogram[i] ?? 0) - (other.histogram[i] ?? 0));
+			sumDifferences += Math.abs(
+        (this.histogram[i] ?? 0) - (other.histogram[i] ?? 0),
+      );
 		}
 		return 1 - (sumDifferences / (this.totalCount + other.totalCount));
 	}

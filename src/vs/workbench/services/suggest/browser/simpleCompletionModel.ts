@@ -3,10 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SimpleCompletionItem } from './simpleCompletionItem.js';
-import { quickSelect } from '../../../../base/common/arrays.js';
-import { CharCode } from '../../../../base/common/charCode.js';
-import { FuzzyScore, fuzzyScore, fuzzyScoreGracefulAggressive, FuzzyScoreOptions, FuzzyScorer } from '../../../../base/common/filters.js';
+import { SimpleCompletionItem } from "./simpleCompletionItem.js";
+import { quickSelect } from "../../../../base/common/arrays.js";
+import { CharCode } from "../../../../base/common/charCode.js";
+import {
+  FuzzyScore,
+  fuzzyScore,
+  fuzzyScoreGracefulAggressive,
+  FuzzyScoreOptions,
+  FuzzyScorer,
+} from "../../../../base/common/filters.js";
 
 export interface ISimpleCompletionStats {
 	pLabelLen: number;
@@ -30,9 +36,9 @@ export class SimpleCompletionModel<T extends SimpleCompletionItem> {
 	private _filteredItems?: T[];
 	private _refilterKind: Refilter = Refilter.All;
 	private _fuzzyScoreOptions: FuzzyScoreOptions | undefined = {
-		...FuzzyScoreOptions.default,
-		firstMatchCanBeWeak: true
-	};
+    ...FuzzyScoreOptions.default,
+    firstMatchCanBeWeak: true,
+  };
 
 	// TODO: Pass in options
 	private _options: {
@@ -86,8 +92,8 @@ export class SimpleCompletionModel<T extends SimpleCompletionItem> {
 		const labelLengths: number[] = [];
 
 		const { leadingLineContent, characterCountDelta } = this._lineContext;
-		let word = '';
-		let wordLow = '';
+		let word = "";
+		let wordLow = "";
 
 		// incrementally filter less
 		const source = this._refilterKind === Refilter.All ? this._items : this._filteredItems!;
@@ -116,7 +122,7 @@ export class SimpleCompletionModel<T extends SimpleCompletionItem> {
 			const overwriteBefore = item.completion.replacementRange ? (item.completion.replacementRange[1] - item.completion.replacementRange[0]) : 0;
 			const wordLen = overwriteBefore + characterCountDelta;
 			if (word.length !== wordLen) {
-				word = wordLen === 0 ? '' : leadingLineContent.slice(-wordLen);
+				word = wordLen === 0 ? "" : leadingLineContent.slice(-wordLen);
 				wordLow = word.toLowerCase();
 			}
 
@@ -170,8 +176,16 @@ export class SimpleCompletionModel<T extends SimpleCompletionItem> {
 
 				} else {
 					// by default match `word` against the `label`
-					const match = scoreFn(word, wordLow, wordPos, item.textLabel, item.labelLow, 0, this._fuzzyScoreOptions);
-					if (!match && word !== '') {
+					const match = scoreFn(
+            word,
+            wordLow,
+            wordPos,
+            item.textLabel,
+            item.labelLow,
+            0,
+            this._fuzzyScoreOptions,
+          );
+					if (!match && word !== "") {
 						continue; // NO match
 					}
 					// Use default sorting when word is empty
@@ -185,13 +199,15 @@ export class SimpleCompletionModel<T extends SimpleCompletionItem> {
 			labelLengths.push(item.textLabel.length);
 		}
 
-		this._filteredItems = target.sort(this._rawCompareFn?.bind(undefined, leadingLineContent));
+		this._filteredItems = target.sort(
+      this._rawCompareFn?.bind(undefined, leadingLineContent),
+    );
 		this._refilterKind = Refilter.Nothing;
 
 		this._stats = {
 			pLabelLen: labelLengths.length ?
 				quickSelect(labelLengths.length - .85, labelLengths, (a, b) => a - b)
-				: 0
+				: 0,
 		};
 	}
 }

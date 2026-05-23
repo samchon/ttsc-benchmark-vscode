@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from './buffer.js';
-import { URI, UriComponents } from './uri.js';
-import { MarshalledId } from './marshallingIds.js';
+import { VSBuffer } from "./buffer.js";
+import { URI, UriComponents } from "./uri.js";
+import { MarshalledId } from "./marshallingIds.js";
 
 export function stringify(obj: unknown): string {
 	return JSON.stringify(obj, replacer);
@@ -25,10 +25,10 @@ function replacer(key: string, value: any): any {
 	// URI is done via toJSON-member
 	if (value instanceof RegExp) {
 		return {
-			$mid: MarshalledId.Regexp,
-			source: value.source,
-			flags: value.flags,
-		};
+      $mid: MarshalledId.Regexp,
+      source: value.source,
+      flags: value.flags,
+    };
 	}
 	return value;
 }
@@ -47,7 +47,7 @@ export function revive<T = any>(obj: any, depth = 0): Revived<T> {
 		return obj;
 	}
 
-	if (typeof obj === 'object') {
+	if (typeof obj === "object") {
 
 		switch ((<MarshalledObject>obj).$mid) {
 			// eslint-disable-next-line local/code-no-any-casts

@@ -3,29 +3,37 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancelablePromise, createCancelablePromise, TimeoutTimer } from '../../../../base/common/async.js';
-import { isCancellationError } from '../../../../base/common/errors.js';
-import { Emitter } from '../../../../base/common/event.js';
-import { HierarchicalKind } from '../../../../base/common/hierarchicalKind.js';
-import { Disposable, IDisposable, MutableDisposable } from '../../../../base/common/lifecycle.js';
-import { isEqual } from '../../../../base/common/resources.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IContextKey, IContextKeyService, RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
-import { IMarkerService } from '../../../../platform/markers/common/markers.js';
-import { IEditorProgressService, Progress } from '../../../../platform/progress/common/progress.js';
-import { ICodeEditor } from '../../../browser/editorBrowser.js';
-import { EditorOption, ShowLightbulbIconMode } from '../../../common/config/editorOptions.js';
-import { Position } from '../../../common/core/position.js';
-import { Selection } from '../../../common/core/selection.js';
-import { LanguageFeatureRegistry } from '../../../common/languageFeatureRegistry.js';
-import { CodeActionProvider, CodeActionTriggerType } from '../../../common/languages.js';
-import { CodeActionKind, CodeActionSet, CodeActionTrigger, CodeActionTriggerSource } from '../common/types.js';
-import { getCodeActions } from './codeAction.js';
+import { CancelablePromise, createCancelablePromise, TimeoutTimer } from "../../../../base/common/async.js";
+import { isCancellationError } from "../../../../base/common/errors.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { HierarchicalKind } from "../../../../base/common/hierarchicalKind.js";
+import { Disposable, IDisposable, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKey, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { IMarkerService } from "../../../../platform/markers/common/markers.js";
+import { IEditorProgressService, Progress } from "../../../../platform/progress/common/progress.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { EditorOption, ShowLightbulbIconMode } from "../../../common/config/editorOptions.js";
+import { Position } from "../../../common/core/position.js";
+import { Selection } from "../../../common/core/selection.js";
+import { LanguageFeatureRegistry } from "../../../common/languageFeatureRegistry.js";
+import { CodeActionProvider, CodeActionTriggerType } from "../../../common/languages.js";
+import {
+  CodeActionKind,
+  CodeActionSet,
+  CodeActionTrigger,
+  CodeActionTriggerSource,
+} from "../common/types.js";
+import { getCodeActions } from "./codeAction.js";
 
-export const SUPPORTED_CODE_ACTIONS = new RawContextKey<string>('supportedCodeAction', '');
+export const SUPPORTED_CODE_ACTIONS = new RawContextKey<string>(
+  "supportedCodeAction",
+  "",
+);
 
-export const APPLY_FIX_ALL_COMMAND_ID = '_typescript.applyFixAllCodeAction';
+export const APPLY_FIX_ALL_COMMAND_ID = "_typescript.applyFixAllCodeAction";
 
 type TriggeredCodeAction = {
 	readonly selection: Selection;
@@ -45,12 +53,18 @@ class CodeActionOracle extends Disposable {
 		private readonly _delay: number = 250,
 	) {
 		super();
-		this._register(this._markerService.onMarkerChanged(e => this._onMarkerChanges(e)));
-		this._register(this._editor.onDidChangeCursorPosition(() => this._tryAutoTrigger()));
+		this._register(
+      this._markerService.onMarkerChanged(e => this._onMarkerChanges(e)),
+    );
+		this._register(
+      this._editor.onDidChangeCursorPosition(() => this._tryAutoTrigger()),
+    );
 	}
 
 	public trigger(trigger: CodeActionTrigger): void {
-		const selection = this._getRangeOfSelectionUnlessWhitespaceEnclosed(trigger);
+		const selection = this._getRangeOfSelectionUnlessWhitespaceEnclosed(
+      trigger,
+    );
 		this._signalChange(selection ? { trigger, selection } : undefined);
 	}
 
@@ -62,9 +76,15 @@ class CodeActionOracle extends Disposable {
 	}
 
 	private _tryAutoTrigger() {
-		this._autoTriggerTimer.cancelAndSet(() => {
-			this.trigger({ type: CodeActionTriggerType.Auto, triggerAction: CodeActionTriggerSource.Default });
-		}, this._delay);
+		this._autoTriggerTimer.cancelAndSet(
+      () => {
+        this.trigger({
+          type: CodeActionTriggerType.Auto,
+          triggerAction: CodeActionTriggerSource.Default,
+        });
+      },
+      this._delay,
+    );
 	}
 
 	private _getRangeOfSelectionUnlessWhitespaceEnclosed(trigger: CodeActionTrigger): Selection | undefined {
@@ -145,27 +165,33 @@ export namespace CodeActionsState {
 }
 
 const emptyCodeActionSet = Object.freeze<CodeActionSet>({
-	allActions: [],
-	validActions: [],
-	dispose: () => { },
-	documentation: [],
-	hasAutoFix: false,
-	hasAIFix: false,
-	allAIFixes: false,
+  allActions: [],
+  validActions: [],
+  dispose: () => { },
+  documentation: [],
+  hasAutoFix: false,
+  hasAIFix: false,
+  allAIFixes: false,
 });
 
 
 export class CodeActionModel extends Disposable {
 
-	private readonly _codeActionOracle = this._register(new MutableDisposable<CodeActionOracle>());
+	private readonly _codeActionOracle = this._register(
+    new MutableDisposable<CodeActionOracle>(),
+  );
 	private _state: CodeActionsState.State = CodeActionsState.Empty;
 
 	private readonly _supportedCodeActions: IContextKey<string>;
 
-	private readonly _onDidChangeState = this._register(new Emitter<CodeActionsState.State>());
+	private readonly _onDidChangeState = this._register(
+    new Emitter<CodeActionsState.State>(),
+  );
 	public readonly onDidChangeState = this._onDidChangeState.event;
 
-	private readonly codeActionsDisposable: MutableDisposable<IDisposable> = this._register(new MutableDisposable());
+	private readonly codeActionsDisposable: MutableDisposable<IDisposable> = this._register(
+    new MutableDisposable(),
+  );
 
 	private _disposed = false;
 
@@ -180,7 +206,10 @@ export class CodeActionModel extends Disposable {
 		if (oracle) {
 			oracle.ignoreLightbulbOff = value;
 			if (value) {
-				oracle.trigger({ type: CodeActionTriggerType.Auto, triggerAction: CodeActionTriggerSource.Default });
+				oracle.trigger({
+          type: CodeActionTriggerType.Auto,
+          triggerAction: CodeActionTriggerSource.Default,
+        });
 			}
 		}
 	}
@@ -194,7 +223,9 @@ export class CodeActionModel extends Disposable {
 		private readonly _configurationService?: IConfigurationService,
 	) {
 		super();
-		this._supportedCodeActions = SUPPORTED_CODE_ACTIONS.bindTo(contextKeyService);
+		this._supportedCodeActions = SUPPORTED_CODE_ACTIONS.bindTo(
+      contextKeyService,
+    );
 
 		this._register(this._editor.onDidChangeModel(() => this._update()));
 		this._register(this._editor.onDidChangeModelLanguage(() => this._update()));
@@ -219,7 +250,10 @@ export class CodeActionModel extends Disposable {
 
 	private _settingEnabledNearbyQuickfixes(): boolean {
 		const model = this._editor?.getModel();
-		return this._configurationService ? this._configurationService.getValue('editor.codeActionWidget.includeNearbyQuickFixes', { resource: model?.uri }) : false;
+		return this._configurationService ? this._configurationService.getValue(
+      "editor.codeActionWidget.includeNearbyQuickFixes",
+      { resource: model?.uri },
+    ) : false;
 	}
 
 	private _update(): void {
@@ -236,8 +270,10 @@ export class CodeActionModel extends Disposable {
 			&& this._registry.has(model)
 			&& !this._editor.getOption(EditorOption.readOnly)
 		) {
-			const supportedActions: string[] = this._registry.all(model).flatMap(provider => provider.providedCodeActionKinds ?? []);
-			this._supportedCodeActions.set(supportedActions.join(' '));
+			const supportedActions: string[] = this._registry.all(model).flatMap(
+        provider => provider.providedCodeActionKinds ?? [],
+      );
+			this._supportedCodeActions.set(supportedActions.join(" "));
 
 			const oracle = new CodeActionOracle(this._editor, this._markerService, trigger => {
 				if (!trigger) {
@@ -266,7 +302,7 @@ export class CodeActionModel extends Disposable {
 						const allMarkers = this._markerService.read({ resource: model.uri });
 						if (foundQuickfix) {
 							for (const action of codeActionSet.validActions) {
-								if (action.action.command?.arguments?.some(arg => typeof arg === 'string' && arg.includes(APPLY_FIX_ALL_COMMAND_ID))) {
+								if (action.action.command?.arguments?.some(arg => typeof arg === "string" && arg.includes(APPLY_FIX_ALL_COMMAND_ID))) {
 									action.action.diagnostics = [...allMarkers.filter(marker => marker.relatedInformation)];
 								}
 							}
@@ -292,7 +328,7 @@ export class CodeActionModel extends Disposable {
 											triggerAction: trigger.trigger.triggerAction,
 											filter: { include: trigger.trigger.filter?.include ? trigger.trigger.filter?.include : CodeActionKind.QuickFix },
 											autoApply: trigger.trigger.autoApply,
-											context: { notAvailableMessage: trigger.trigger.context?.notAvailableMessage || '', position: trackedPosition }
+											context: { notAvailableMessage: trigger.trigger.context?.notAvailableMessage || "", position: trackedPosition },
 										};
 
 										const selectionAsPosition = new Selection(trackedPosition.lineNumber, trackedPosition.column, trackedPosition.lineNumber, trackedPosition.column);
@@ -304,7 +340,7 @@ export class CodeActionModel extends Disposable {
 
 										if (actionsAtMarker.validActions.length !== 0) {
 											for (const action of actionsAtMarker.validActions) {
-												if (action.action.command?.arguments?.some(arg => typeof arg === 'string' && arg.includes(APPLY_FIX_ALL_COMMAND_ID))) {
+												if (action.action.command?.arguments?.some(arg => typeof arg === "string" && arg.includes(APPLY_FIX_ALL_COMMAND_ID))) {
 													action.action.diagnostics = [...allMarkers.filter(marker => marker.relatedInformation)];
 												}
 											}
@@ -383,7 +419,10 @@ export class CodeActionModel extends Disposable {
 			}, undefined);
 			oracle.ignoreLightbulbOff = this._ignoreLightbulbOff;
 			this._codeActionOracle.value = oracle;
-			this._codeActionOracle.value.trigger({ type: CodeActionTriggerType.Auto, triggerAction: CodeActionTriggerSource.Default });
+			this._codeActionOracle.value.trigger({
+        type: CodeActionTriggerType.Auto,
+        triggerAction: CodeActionTriggerSource.Default,
+      });
 		} else {
 			this._supportedCodeActions.reset();
 		}

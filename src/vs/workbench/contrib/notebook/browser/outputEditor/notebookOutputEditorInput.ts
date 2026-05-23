@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as nls from '../../../../../nls.js';
-import { IDisposable, IReference } from '../../../../../base/common/lifecycle.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { EditorInputCapabilities } from '../../../../common/editor.js';
-import { EditorInput } from '../../../../common/editor/editorInput.js';
-import { IResolvedNotebookEditorModel } from '../../common/notebookCommon.js';
-import { INotebookEditorModelResolverService } from '../../common/notebookEditorModelResolverService.js';
-import { isEqual } from '../../../../../base/common/resources.js';
-import { NotebookCellTextModel } from '../../common/model/notebookCellTextModel.js';
+import * as nls from "../../../../../nls.js";
+import { IDisposable, IReference } from "../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { EditorInputCapabilities } from "../../../../common/editor.js";
+import { EditorInput } from "../../../../common/editor/editorInput.js";
+import { IResolvedNotebookEditorModel } from "../../common/notebookCommon.js";
+import { INotebookEditorModelResolverService } from "../../common/notebookEditorModelResolverService.js";
+import { isEqual } from "../../../../../base/common/resources.js";
+import { NotebookCellTextModel } from "../../common/model/notebookCellTextModel.js";
 
 
 class ResolvedNotebookOutputEditorInputModel implements IDisposable {
@@ -33,7 +33,7 @@ class ResolvedNotebookOutputEditorInputModel implements IDisposable {
 // }
 
 export class NotebookOutputEditorInput extends EditorInput {
-	static readonly ID: string = 'workbench.input.notebookOutputEditorInput';
+	static readonly ID: string = "workbench.input.notebookOutputEditorInput";
 
 	private _notebookRef: IReference<IResolvedNotebookEditorModel> | undefined;
 	private readonly _notebookUri: URI;
@@ -68,19 +68,21 @@ export class NotebookOutputEditorInput extends EditorInput {
 
 	override async resolve(): Promise<ResolvedNotebookOutputEditorInputModel> {
 		if (!this._notebookRef) {
-			this._notebookRef = await this.notebookEditorModelResolverService.resolve(this._notebookUri);
+			this._notebookRef = await this.notebookEditorModelResolverService.resolve(
+        this._notebookUri,
+      );
 		}
 
 		const cell = this._notebookRef.object.notebook.cells[this.cellIndex];
 		if (!cell) {
-			throw new Error('Cell not found');
+			throw new Error("Cell not found");
 		}
 
 		this.cellUri = cell.uri;
 
 		const resolvedOutputId = cell.outputs[this.outputIndex]?.outputId;
 		if (!resolvedOutputId) {
-			throw new Error('Output not found');
+			throw new Error("Output not found");
 		}
 
 		if (!this.outputId) {
@@ -88,11 +90,11 @@ export class NotebookOutputEditorInput extends EditorInput {
 		}
 
 		return new ResolvedNotebookOutputEditorInputModel(
-			this._notebookRef.object,
-			this._notebookUri,
-			cell,
-			resolvedOutputId,
-		);
+      this._notebookRef.object,
+      this._notebookUri,
+      cell,
+      resolvedOutputId,
+    );
 	}
 
 	public getSerializedData(): { notebookUri: URI; cellIndex: number; outputIndex: number } | undefined {
@@ -103,30 +105,34 @@ export class NotebookOutputEditorInput extends EditorInput {
 			return;
 		}
 
-		const cellIndex = this._notebookRef.object.notebook.cells.findIndex(c => isEqual(c.uri, this.cellUri));
+		const cellIndex = this._notebookRef.object.notebook.cells.findIndex(
+      c => isEqual(c.uri, this.cellUri),
+    );
 		const cell = this._notebookRef.object.notebook.cells[cellIndex];
 		if (!cell) {
 			return;
 		}
 
-		const outputIndex = cell.outputs.findIndex(o => o.outputId === this.outputId);
+		const outputIndex = cell.outputs.findIndex(
+      o => o.outputId === this.outputId,
+    );
 		if (outputIndex === -1) {
 			return;
 		}
 
 		return {
-			notebookUri: this._notebookUri,
-			cellIndex: cellIndex,
-			outputIndex: outputIndex,
-		};
+      notebookUri: this._notebookUri,
+      cellIndex: cellIndex,
+      outputIndex: outputIndex,
+    };
 	}
 
 	override getName(): string {
-		return nls.localize('notebookOutputEditorInput', "Notebook Output Preview");
+		return nls.localize("notebookOutputEditorInput", "Notebook Output Preview");
 	}
 
 	override get editorId(): string {
-		return 'notebookOutputEditor';
+		return "notebookOutputEditor";
 	}
 
 	override get resource(): URI | undefined {

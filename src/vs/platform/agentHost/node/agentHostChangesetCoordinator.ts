@@ -3,26 +3,26 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { URI } from '../../../base/common/uri.js';
-import { IAgentSessionMetadata } from '../common/agentService.js';
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { URI } from "../../../base/common/uri.js";
+import { IAgentSessionMetadata } from "../common/agentService.js";
 import {
-	buildSessionChangesetUri,
-	buildUncommittedChangesetUri,
-	ChangesetKind,
-	parseChangesetUri,
-} from '../common/changesetUri.js';
-import { ChangesetStatus } from '../common/state/sessionState.js';
-import { IAgentConfigurationService } from './agentConfigurationService.js';
-import { AgentHostStateManager } from './agentHostStateManager.js';
+  buildSessionChangesetUri,
+  buildUncommittedChangesetUri,
+  ChangesetKind,
+  parseChangesetUri,
+} from "../common/changesetUri.js";
+import { ChangesetStatus } from "../common/state/sessionState.js";
+import { IAgentConfigurationService } from "./agentConfigurationService.js";
+import { AgentHostStateManager } from "./agentHostStateManager.js";
 import {
-	buildCatalogueFromLiveState,
-	buildCatalogueFromPersistedDiffs,
-	IAgentHostChangesetService,
-	META_CHANGESET_SESSION,
-	META_CHANGESET_UNCOMMITTED,
-	META_LEGACY_DIFFS,
-} from './agentHostChangesetService.js';
+  buildCatalogueFromLiveState,
+  buildCatalogueFromPersistedDiffs,
+  IAgentHostChangesetService,
+  META_CHANGESET_SESSION,
+  META_CHANGESET_UNCOMMITTED,
+  META_LEGACY_DIFFS,
+} from "./agentHostChangesetService.js";
 
 /**
  * Raw metadata blob values for the session DB, batch-read by the caller.
@@ -40,9 +40,9 @@ export type IChangesetSessionMetadata = Record<string, string | undefined>;
  * apply methods.
  */
 export const CHANGESET_DB_METADATA_KEYS: Record<string, true> = {
-	[META_CHANGESET_UNCOMMITTED]: true,
-	[META_CHANGESET_SESSION]: true,
-	[META_LEGACY_DIFFS]: true,
+  [META_CHANGESET_UNCOMMITTED]: true,
+  [META_CHANGESET_SESSION]: true,
+  [META_LEGACY_DIFFS]: true,
 };
 
 /**
@@ -86,7 +86,9 @@ export class ChangesetSessionCoordinator extends Disposable {
 		private readonly _configurationService: IAgentConfigurationService,
 	) {
 		super();
-		this._changesets.setTurnSubscriberProbe((session, turnId) => this.hasTurnSubscribers(session, turnId));
+		this._changesets.setTurnSubscriberProbe(
+      (session, turnId) => this.hasTurnSubscribers(session, turnId),
+    );
 	}
 
 	/**
@@ -125,10 +127,10 @@ export class ChangesetSessionCoordinator extends Disposable {
 	onSessionRestored(sessionStr: string, metadata: IChangesetSessionMetadata): void {
 		this._changesets.registerStaticChangesets(sessionStr);
 		this._changesets.restorePersistedStaticChangesets(sessionStr, {
-			uncommittedRaw: metadata[META_CHANGESET_UNCOMMITTED],
-			sessionRaw: metadata[META_CHANGESET_SESSION],
-			legacyRaw: metadata[META_LEGACY_DIFFS],
-		});
+      uncommittedRaw: metadata[META_CHANGESET_UNCOMMITTED],
+      sessionRaw: metadata[META_CHANGESET_SESSION],
+      legacyRaw: metadata[META_LEGACY_DIFFS],
+    });
 		// `addSubscriber`'s 0→1 trigger may have fired before the session
 		// state existed; now that `summary.workingDirectory` is populated,
 		// drain the deferred refresh. Idempotent — the per-session
@@ -249,19 +251,28 @@ export class ChangesetSessionCoordinator extends Disposable {
 			return false;
 		}
 		if (parsed.kind === ChangesetKind.Unknown) {
-			throw new Error(`Cannot subscribe to unknown changeset resource: ${resourceStr}`);
+			throw new Error(
+        `Cannot subscribe to unknown changeset resource: ${resourceStr}`,
+      );
 		}
 		if (!this._stateManager.getSessionState(parsed.sessionUri)) {
 			await restoreSession(URI.parse(parsed.sessionUri));
 		}
 		if (parsed.kind === ChangesetKind.Turn && parsed.turnId) {
-			await this._changesets.computeTurnChangeset(parsed.sessionUri, parsed.turnId);
+			await this._changesets.computeTurnChangeset(
+        parsed.sessionUri,
+        parsed.turnId,
+      );
 		} else if (parsed.kind === ChangesetKind.Compare && parsed.originalTurnId && parsed.modifiedTurnId) {
 			// Compare-turns is computed once on subscribe. Both turns are
 			// typically historical so the snapshot doesn't need to track
 			// live edits; `onFirstSubscriber` / `onLastSubscriber` do not
 			// need to participate.
-			await this._changesets.computeCompareTurnsChangeset(parsed.sessionUri, parsed.originalTurnId, parsed.modifiedTurnId);
+			await this._changesets.computeCompareTurnsChangeset(
+        parsed.sessionUri,
+        parsed.originalTurnId,
+        parsed.modifiedTurnId,
+      );
 		} else {
 			// Static changesets are seeded by `onSessionRestored` /
 			// `onSessionCreated`. Re-register defensively in case the
@@ -310,8 +321,12 @@ export class ChangesetSessionCoordinator extends Disposable {
 	decorateListEntry(entry: IAgentSessionMetadata, metadata: IChangesetSessionMetadata): IAgentSessionMetadata {
 		const sessionStr = entry.session.toString();
 		const liveSessionState = this._stateManager.getSessionState(sessionStr);
-		const liveUncommitted = this._stateManager.getChangesetState(buildUncommittedChangesetUri(sessionStr));
-		const liveSession = this._stateManager.getChangesetState(buildSessionChangesetUri(sessionStr));
+		const liveUncommitted = this._stateManager.getChangesetState(
+      buildUncommittedChangesetUri(sessionStr),
+    );
+		const liveSession = this._stateManager.getChangesetState(
+      buildSessionChangesetUri(sessionStr),
+    );
 		const hasReadyLiveCatalogue = liveUncommitted?.status === ChangesetStatus.Ready
 			|| liveSession?.status === ChangesetStatus.Ready;
 
@@ -319,7 +334,11 @@ export class ChangesetSessionCoordinator extends Disposable {
 		// from that live state. Counts stay in lockstep with the actual
 		// changeset state for the session-list chip.
 		if (!liveSessionState && hasReadyLiveCatalogue) {
-			const catalogue = buildCatalogueFromLiveState(sessionStr, liveUncommitted, liveSession);
+			const catalogue = buildCatalogueFromLiveState(
+        sessionStr,
+        liveUncommitted,
+        liveSession,
+      );
 			if (catalogue) {
 				return { ...entry, changesets: catalogue };
 			}
@@ -333,17 +352,24 @@ export class ChangesetSessionCoordinator extends Disposable {
 		if (uncommittedRaw === undefined && sessionRaw === undefined && legacyRaw === undefined) {
 			return entry;
 		}
-		const restored = this._changesets.restorePersistedStaticChangesets(sessionStr, {
-			uncommittedRaw,
-			sessionRaw,
-			legacyRaw,
-		});
+		const restored = this._changesets.restorePersistedStaticChangesets(
+      sessionStr,
+      {
+        uncommittedRaw,
+        sessionRaw,
+        legacyRaw,
+      },
+    );
 		// `restorePersistedStaticChangesets` seeds the state manager; the
 		// catalogue itself is built here for unopened sessions only. Once
 		// the session is opened via `restoreSession`, the live overlay in
 		// `AgentService.listSessions` replaces this.
 		if (!liveSessionState) {
-			const catalogue = buildCatalogueFromPersistedDiffs(sessionStr, restored.uncommitted, restored.session);
+			const catalogue = buildCatalogueFromPersistedDiffs(
+        sessionStr,
+        restored.uncommitted,
+        restored.session,
+      );
 			if (catalogue) {
 				return { ...entry, changesets: catalogue };
 			}
@@ -354,11 +380,15 @@ export class ChangesetSessionCoordinator extends Disposable {
 	// ---- Internal -----------------------------------------------------------
 
 	private _readyLiveCatalogueExists(sessionStr: string): boolean {
-		const uncommitted = this._stateManager.getChangesetState(buildUncommittedChangesetUri(sessionStr));
+		const uncommitted = this._stateManager.getChangesetState(
+      buildUncommittedChangesetUri(sessionStr),
+    );
 		if (uncommitted?.status === ChangesetStatus.Ready) {
 			return true;
 		}
-		const session = this._stateManager.getChangesetState(buildSessionChangesetUri(sessionStr));
+		const session = this._stateManager.getChangesetState(
+      buildSessionChangesetUri(sessionStr),
+    );
 		return session?.status === ChangesetStatus.Ready;
 	}
 
@@ -374,7 +404,9 @@ export class ChangesetSessionCoordinator extends Disposable {
 	 * closed.
 	 */
 	private _triggerUncommittedRefresh(sessionStr: string): void {
-		const wd = this._configurationService.getEffectiveWorkingDirectory(sessionStr);
+		const wd = this._configurationService.getEffectiveWorkingDirectory(
+      sessionStr,
+    );
 		if (!wd) {
 			this._pendingUncommittedRefreshes.add(sessionStr);
 			return;

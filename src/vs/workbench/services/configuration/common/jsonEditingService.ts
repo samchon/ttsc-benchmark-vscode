@@ -3,23 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as nls from '../../../../nls.js';
-import { URI } from '../../../../base/common/uri.js';
-import * as json from '../../../../base/common/json.js';
-import { setProperty } from '../../../../base/common/jsonEdit.js';
-import { Queue } from '../../../../base/common/async.js';
-import { Edit } from '../../../../base/common/jsonFormatter.js';
-import { IDisposable, IReference } from '../../../../base/common/lifecycle.js';
-import { EditOperation } from '../../../../editor/common/core/editOperation.js';
-import { Range } from '../../../../editor/common/core/range.js';
-import { Selection } from '../../../../editor/common/core/selection.js';
-import { ITextFileService } from '../../textfile/common/textfiles.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { ITextModelService, IResolvedTextEditorModel } from '../../../../editor/common/services/resolverService.js';
-import { IJSONEditingService, IJSONValue, JSONEditingError, JSONEditingErrorCode } from './jsonEditing.js';
-import { ITextModel } from '../../../../editor/common/model.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { IFilesConfigurationService } from '../../filesConfiguration/common/filesConfigurationService.js';
+import * as nls from "../../../../nls.js";
+import { URI } from "../../../../base/common/uri.js";
+import * as json from "../../../../base/common/json.js";
+import { setProperty } from "../../../../base/common/jsonEdit.js";
+import { Queue } from "../../../../base/common/async.js";
+import { Edit } from "../../../../base/common/jsonFormatter.js";
+import { IDisposable, IReference } from "../../../../base/common/lifecycle.js";
+import { EditOperation } from "../../../../editor/common/core/editOperation.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { Selection } from "../../../../editor/common/core/selection.js";
+import { ITextFileService } from "../../textfile/common/textfiles.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { ITextModelService, IResolvedTextEditorModel } from "../../../../editor/common/services/resolverService.js";
+import {
+  IJSONEditingService,
+  IJSONValue,
+  JSONEditingError,
+  JSONEditingErrorCode,
+} from "./jsonEditing.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IFilesConfigurationService } from "../../filesConfiguration/common/filesConfigurationService.js";
 
 export class JSONEditingService implements IJSONEditingService {
 
@@ -31,13 +36,15 @@ export class JSONEditingService implements IJSONEditingService {
 		@IFileService private readonly fileService: IFileService,
 		@ITextModelService private readonly textModelResolverService: ITextModelService,
 		@ITextFileService private readonly textFileService: ITextFileService,
-		@IFilesConfigurationService private readonly filesConfigurationService: IFilesConfigurationService
+		@IFilesConfigurationService private readonly filesConfigurationService: IFilesConfigurationService,
 	) {
 		this.queue = new Queue<void>();
 	}
 
 	write(resource: URI, values: IJSONValue[]): Promise<void> {
-		return Promise.resolve(this.queue.queue(() => this.doWriteConfiguration(resource, values))); // queue up writes to prevent race conditions
+		return Promise.resolve(
+      this.queue.queue(() => this.doWriteConfiguration(resource, values)),
+    ); // queue up writes to prevent race conditions
 	}
 
 	private async doWriteConfiguration(resource: URI, values: IJSONValue[]): Promise<void> {
@@ -56,7 +63,9 @@ export class JSONEditingService implements IJSONEditingService {
 			// right after. Use the files config service to signal this
 			// to the workbench to optimise the UI during this operation.
 			// For example, avoids to briefly show dirty indicators.
-			disposable = this.filesConfigurationService.enableAutoSaveAfterShortDelay(model.uri);
+			disposable = this.filesConfigurationService.enableAutoSaveAfterShortDelay(
+        model.uri,
+      );
 
 			let hasEdits: boolean = false;
 			for (const value of values) {
@@ -76,11 +85,30 @@ export class JSONEditingService implements IJSONEditingService {
 	private applyEditsToBuffer(edit: Edit, model: ITextModel): boolean {
 		const startPosition = model.getPositionAt(edit.offset);
 		const endPosition = model.getPositionAt(edit.offset + edit.length);
-		const range = new Range(startPosition.lineNumber, startPosition.column, endPosition.lineNumber, endPosition.column);
+		const range = new Range(
+      startPosition.lineNumber,
+      startPosition.column,
+      endPosition.lineNumber,
+      endPosition.column,
+    );
 		const currentText = model.getValueInRange(range);
 		if (edit.content !== currentText) {
-			const editOperation = currentText ? EditOperation.replace(range, edit.content) : EditOperation.insert(startPosition, edit.content);
-			model.pushEditOperations([new Selection(startPosition.lineNumber, startPosition.column, startPosition.lineNumber, startPosition.column)], [editOperation], () => []);
+			const editOperation = currentText ? EditOperation.replace(
+        range,
+        edit.content,
+      ) : EditOperation.insert(startPosition, edit.content);
+			model.pushEditOperations(
+        [
+          new Selection(
+            startPosition.lineNumber,
+            startPosition.column,
+            startPosition.lineNumber,
+            startPosition.column,
+          ),
+        ],
+        [editOperation],
+        () => [],
+      );
 			return true;
 		}
 		return false;
@@ -93,28 +121,41 @@ export class JSONEditingService implements IJSONEditingService {
 
 		// With empty path the entire file is being replaced, so we just use JSON.stringify
 		if (!path.length) {
-			const content = JSON.stringify(value, null, insertSpaces ? ' '.repeat(tabSize) : '\t');
-			return [{
-				content,
-				length: content.length,
-				offset: 0
-			}];
+			const content = JSON.stringify(
+        value,
+        null,
+        insertSpaces ? " ".repeat(tabSize) : "\t",
+      );
+			return [
+        {
+          content,
+          length: content.length,
+          offset: 0,
+        },
+      ];
 		}
 
-		return setProperty(model.getValue(), path, value, { tabSize, insertSpaces, eol });
+		return setProperty(model.getValue(), path, value, {
+      tabSize,
+      insertSpaces,
+      eol,
+    });
 	}
 
 	private async resolveModelReference(resource: URI): Promise<IReference<IResolvedTextEditorModel>> {
 		const exists = await this.fileService.exists(resource);
 		if (!exists) {
-			await this.textFileService.write(resource, '{}', { encoding: 'utf8' });
+			await this.textFileService.write(resource, "{}", { encoding: "utf8" });
 		}
 		return this.textModelResolverService.createModelReference(resource);
 	}
 
 	private hasParseErrors(model: ITextModel): boolean {
 		const parseErrors: json.ParseError[] = [];
-		json.parse(model.getValue(), parseErrors, { allowTrailingComma: true, allowEmptyContent: true });
+		json.parse(model.getValue(), parseErrors, {
+      allowTrailingComma: true,
+      allowEmptyContent: true,
+    });
 		return parseErrors.length > 0;
 	}
 
@@ -125,7 +166,9 @@ export class JSONEditingService implements IJSONEditingService {
 
 		if (this.hasParseErrors(model)) {
 			reference.dispose();
-			return this.reject<IReference<IResolvedTextEditorModel>>(JSONEditingErrorCode.ERROR_INVALID_FILE);
+			return this.reject<IReference<IResolvedTextEditorModel>>(
+        JSONEditingErrorCode.ERROR_INVALID_FILE,
+      );
 		}
 
 		return reference;
@@ -140,10 +183,17 @@ export class JSONEditingService implements IJSONEditingService {
 		switch (error) {
 			// User issues
 			case JSONEditingErrorCode.ERROR_INVALID_FILE: {
-				return nls.localize('errorInvalidFile', "Unable to write into the file. Please open the file to correct errors/warnings in the file and try again.");
+				return nls.localize(
+          "errorInvalidFile",
+          "Unable to write into the file. Please open the file to correct errors/warnings in the file and try again.",
+        );
 			}
 		}
 	}
 }
 
-registerSingleton(IJSONEditingService, JSONEditingService, InstantiationType.Delayed);
+registerSingleton(
+  IJSONEditingService,
+  JSONEditingService,
+  InstantiationType.Delayed,
+);

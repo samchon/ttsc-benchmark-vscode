@@ -3,23 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { URI, UriComponents } from '../../../../base/common/uri.js';
-import { ExtHostDocumentsAndEditors } from '../../common/extHostDocumentsAndEditors.js';
-import { SingleProxyRPCProtocol } from '../common/testRPCProtocol.js';
-import { NullLogService } from '../../../../platform/log/common/log.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
-import { ExtHostDocumentContentProvider } from '../../common/extHostDocumentContentProviders.js';
-import { Emitter } from '../../../../base/common/event.js';
-import { MainThreadDocumentContentProvidersShape } from '../../common/extHost.protocol.js';
-import { timeout } from '../../../../base/common/async.js';
-import { runWithFakedTimers } from '../../../../base/test/common/timeTravelScheduler.js';
+import assert from "assert";
+import { URI, UriComponents } from "../../../../base/common/uri.js";
+import { ExtHostDocumentsAndEditors } from "../../common/extHostDocumentsAndEditors.js";
+import { SingleProxyRPCProtocol } from "../common/testRPCProtocol.js";
+import { NullLogService } from "../../../../platform/log/common/log.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
+import { ExtHostDocumentContentProvider } from "../../common/extHostDocumentContentProviders.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { MainThreadDocumentContentProvidersShape } from "../../common/extHost.protocol.js";
+import { timeout } from "../../../../base/common/async.js";
+import { runWithFakedTimers } from "../../../../base/test/common/timeTravelScheduler.js";
 
-suite('ExtHostDocumentContentProvider', () => {
+suite("ExtHostDocumentContentProvider", () => {
 
 	ensureNoDisposablesAreLeakedInTestSuite();
 
-	const resource = URI.parse('foo:bar');
+	const resource = URI.parse("foo:bar");
 	let documentContentProvider: ExtHostDocumentContentProvider;
 	let mainThreadContentProvider: MainThreadDocumentContentProvidersShape;
 	const changes: [uri: UriComponents, value: string][] = [];
@@ -40,7 +40,7 @@ suite('ExtHostDocumentContentProvider', () => {
 				changes.push([uri, value]);
 			}
 			dispose(): void {
-				throw new Error('Method not implemented.');
+				throw new Error("Method not implemented.");
 			}
 		};
 
@@ -49,22 +49,22 @@ suite('ExtHostDocumentContentProvider', () => {
 		documentsAndEditors.$acceptDocumentsAndEditorsDelta({
 			addedDocuments: [{
 				isDirty: false,
-				languageId: 'foo',
+				languageId: "foo",
 				uri: resource,
 				versionId: 1,
-				lines: ['foo'],
-				EOL: '\n',
-				encoding: 'utf8'
-			}]
+				lines: ["foo"],
+				EOL: "\n",
+				encoding: "utf8",
+			}],
 		});
 		documentContentProvider = new ExtHostDocumentContentProvider(ehContext, documentsAndEditors, new NullLogService());
 	});
 
-	test('TextDocumentContentProvider drops onDidChange events when they happen quickly #179711', async () => {
+	test("TextDocumentContentProvider drops onDidChange events when they happen quickly #179711", async () => {
 		await runWithFakedTimers({}, async function () {
 
 			const emitter = new Emitter<URI>();
-			const contents = ['X', 'Y'];
+			const contents = ["X", "Y"];
 			let counter = 0;
 
 			let stack = 0;
@@ -80,7 +80,7 @@ suite('ExtHostDocumentContentProvider', () => {
 					} finally {
 						stack--;
 					}
-				}
+				},
 			});
 
 			emitter.fire(resource);
@@ -89,8 +89,8 @@ suite('ExtHostDocumentContentProvider', () => {
 			await timeout(100);
 
 			assert.strictEqual(changes.length, 2);
-			assert.strictEqual(changes[0][1], 'X');
-			assert.strictEqual(changes[1][1], 'Y');
+			assert.strictEqual(changes[0][1], "X");
+			assert.strictEqual(changes[1][1], "Y");
 
 			d.dispose();
 		});

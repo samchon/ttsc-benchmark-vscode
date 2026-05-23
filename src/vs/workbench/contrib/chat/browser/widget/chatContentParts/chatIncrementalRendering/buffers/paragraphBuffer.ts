@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IIncrementalRenderingBuffer } from './buffer.js';
+import { IIncrementalRenderingBuffer } from "./buffer.js";
 
 /**
  * Maximum number of characters that may accumulate beyond the last
@@ -29,15 +29,15 @@ export function lastBlockBoundary(text: string): number {
 
 	for (let i = 0; i < text.length; i++) {
 		// Detect fenced code blocks: ``` or ~~~ at the start of a line.
-		if ((i === 0 || text[i - 1] === '\n') &&
-			((text[i] === '`' && text[i + 1] === '`' && text[i + 2] === '`') ||
-				(text[i] === '~' && text[i + 1] === '~' && text[i + 2] === '~'))) {
+		if ((i === 0 || text[i - 1] === "\n") &&
+			((text[i] === "`" && text[i + 1] === "`" && text[i + 2] === "`") ||
+				(text[i] === "~" && text[i + 1] === "~" && text[i + 2] === "~"))) {
 			inFence = !inFence;
 			i += 2; // skip past the triple backtick/tilde
 			continue;
 		}
 		// Detect block boundary outside code fences.
-		if (!inFence && text[i] === '\n' && text[i + 1] === '\n') {
+		if (!inFence && text[i] === "\n" && text[i + 1] === "\n") {
 			lastValid = i;
 		}
 	}

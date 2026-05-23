@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { IStringDictionary } from '../../../../base/common/collections.js';
-import { Event } from '../../../../base/common/event.js';
-import { URI } from '../../../../base/common/uri.js';
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IStringDictionary } from "../../../../base/common/collections.js";
+import { Event } from "../../../../base/common/event.js";
+import { URI } from "../../../../base/common/uri.js";
 
 export const enum ExtensionRecommendationReason {
 	Workspace,
@@ -23,7 +23,9 @@ export interface IExtensionRecommendationReason {
 	reasonText: string;
 }
 
-export const IExtensionRecommendationsService = createDecorator<IExtensionRecommendationsService>('extensionRecommendationsService');
+export const IExtensionRecommendationsService = createDecorator<IExtensionRecommendationsService>(
+  "extensionRecommendationsService",
+);
 
 export interface IExtensionRecommendationsService {
 	readonly _serviceBrand: undefined;
@@ -47,7 +49,9 @@ export type IgnoredRecommendationChangeNotification = {
 	isRecommended: boolean;
 };
 
-export const IExtensionIgnoredRecommendationsService = createDecorator<IExtensionIgnoredRecommendationsService>('IExtensionIgnoredRecommendationsService');
+export const IExtensionIgnoredRecommendationsService = createDecorator<IExtensionIgnoredRecommendationsService>(
+  "IExtensionIgnoredRecommendationsService",
+);
 
 export interface IExtensionIgnoredRecommendationsService {
 	readonly _serviceBrand: undefined;

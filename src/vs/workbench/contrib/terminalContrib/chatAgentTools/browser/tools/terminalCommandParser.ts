@@ -21,9 +21,21 @@
 
 /** Programs that "wrap" the actual program we want to identify. */
 const WRAPPER_PROGRAMS = new Set([
-	'sudo', 'doas', 'time', 'command', 'builtin', 'exec',
-	'nice', 'ionice', 'nohup', 'env', 'xargs', 'stdbuf',
-	'unbuffer', 'script', 'timeout',
+  "sudo",
+  "doas",
+  "time",
+  "command",
+  "builtin",
+  "exec",
+  "nice",
+  "ionice",
+  "nohup",
+  "env",
+  "xargs",
+  "stdbuf",
+  "unbuffer",
+  "script",
+  "timeout",
 ]);
 
 const ENV_ASSIGN_RE = /^[A-Za-z_][A-Za-z0-9_]*=.*$/;
@@ -38,14 +50,14 @@ const ENV_ASSIGN_RE = /^[A-Za-z_][A-Za-z0-9_]*=.*$/;
  */
 export function tokenize(segment: string): string[] {
 	const tokens: string[] = [];
-	let cur = '';
+	let cur = "";
 	let inSingle = false;
 	let inDouble = false;
 	let hasContent = false;
 	for (let i = 0; i < segment.length; i++) {
 		const ch = segment[i];
 		if (inSingle) {
-			if (ch === '\'') {
+			if (ch === "'") {
 				inSingle = false;
 			} else {
 				cur += ch;
@@ -53,10 +65,10 @@ export function tokenize(segment: string): string[] {
 			continue;
 		}
 		if (inDouble) {
-			if (ch === '\\' && i + 1 < segment.length) {
+			if (ch === "\\" && i + 1 < segment.length) {
 				const next = segment[i + 1];
 				// Inside double quotes, only \, ", $, ` are escaped.
-				if (next === '\\' || next === '"' || next === '$' || next === '`') {
+				if (next === "\\" || next === '"' || next === "$" || next === "`") {
 					cur += next;
 					i++;
 					continue;
@@ -71,13 +83,13 @@ export function tokenize(segment: string): string[] {
 			}
 			continue;
 		}
-		if (ch === '\\' && i + 1 < segment.length) {
+		if (ch === "\\" && i + 1 < segment.length) {
 			cur += segment[i + 1];
 			i++;
 			hasContent = true;
 			continue;
 		}
-		if (ch === '\'') {
+		if (ch === "'") {
 			inSingle = true;
 			hasContent = true;
 			continue;
@@ -90,7 +102,7 @@ export function tokenize(segment: string): string[] {
 		if (/\s/.test(ch)) {
 			if (cur.length > 0 || hasContent) {
 				tokens.push(cur);
-				cur = '';
+				cur = "";
 				hasContent = false;
 			}
 			continue;
@@ -104,7 +116,7 @@ export function tokenize(segment: string): string[] {
 	return tokens;
 }
 
-export type SegmentSeparator = '|' | '&&' | '||' | ';' | '|&';
+export type SegmentSeparator = "|" | "&&" | "||" | ";" | "|&";
 
 export interface ICommandSegment {
 	readonly raw: string;
@@ -132,7 +144,7 @@ export interface IParsedCommand {
  */
 function splitSegments(command: string): Array<{ raw: string; sep: SegmentSeparator | undefined }> {
 	const out: Array<{ raw: string; sep: SegmentSeparator | undefined }> = [];
-	let cur = '';
+	let cur = "";
 	let inSingle = false;
 	let inDouble = false;
 	const push = (sep: SegmentSeparator | undefined) => {
@@ -140,19 +152,19 @@ function splitSegments(command: string): Array<{ raw: string; sep: SegmentSepara
 		if (trimmed.length > 0 || sep !== undefined) {
 			out.push({ raw: trimmed, sep });
 		}
-		cur = '';
+		cur = "";
 	};
 	for (let i = 0; i < command.length; i++) {
 		const ch = command[i];
 		if (inSingle) {
 			cur += ch;
-			if (ch === '\'') {
+			if (ch === "'") {
 				inSingle = false;
 			}
 			continue;
 		}
 		if (inDouble) {
-			if (ch === '\\' && i + 1 < command.length) {
+			if (ch === "\\" && i + 1 < command.length) {
 				cur += ch + command[i + 1];
 				i++;
 				continue;
@@ -163,12 +175,12 @@ function splitSegments(command: string): Array<{ raw: string; sep: SegmentSepara
 			}
 			continue;
 		}
-		if (ch === '\\' && i + 1 < command.length) {
+		if (ch === "\\" && i + 1 < command.length) {
 			cur += ch + command[i + 1];
 			i++;
 			continue;
 		}
-		if (ch === '\'') {
+		if (ch === "'") {
 			inSingle = true;
 			cur += ch;
 			continue;
@@ -178,27 +190,27 @@ function splitSegments(command: string): Array<{ raw: string; sep: SegmentSepara
 			cur += ch;
 			continue;
 		}
-		if (ch === '|' && command[i + 1] === '|') {
-			push('||');
+		if (ch === "|" && command[i + 1] === "|") {
+			push("||");
 			i++;
 			continue;
 		}
-		if (ch === '|' && command[i + 1] === '&') {
-			push('|&');
+		if (ch === "|" && command[i + 1] === "&") {
+			push("|&");
 			i++;
 			continue;
 		}
-		if (ch === '|') {
-			push('|');
+		if (ch === "|") {
+			push("|");
 			continue;
 		}
-		if (ch === '&' && command[i + 1] === '&') {
-			push('&&');
+		if (ch === "&" && command[i + 1] === "&") {
+			push("&&");
 			i++;
 			continue;
 		}
-		if (ch === ';') {
-			push(';');
+		if (ch === ";") {
+			push(";");
 			continue;
 		}
 		cur += ch;
@@ -237,11 +249,11 @@ function stripPrefixesAndWrappers(rawTokens: readonly string[]): {
 			// (e.g. `env -i PATH=/usr/bin prog`).
 			while (i < rawTokens.length) {
 				const next = rawTokens[i];
-				if (next === '--') {
+				if (next === "--") {
 					i++;
 					break;
 				}
-				if (next.startsWith('-')) {
+				if (next.startsWith("-")) {
 					i++;
 					continue;
 				}
@@ -252,7 +264,9 @@ function stripPrefixesAndWrappers(rawTokens: readonly string[]): {
 				}
 				// `timeout` and `nice` take a numeric / signal value before the
 				// program; consume one such token if present.
-				if ((tok === 'timeout' || tok === 'nice' || tok === 'ionice') && /^\d/.test(next)) {
+				if ((tok === "timeout" || tok === "nice" || tok === "ionice") && /^\d/.test(
+          next,
+        )) {
 					i++;
 					continue;
 				}
@@ -263,10 +277,10 @@ function stripPrefixesAndWrappers(rawTokens: readonly string[]): {
 		break;
 	}
 	return {
-		tokens: rawTokens.slice(i),
-		envPrefixes,
-		wrappers,
-	};
+    tokens: rawTokens.slice(i),
+    envPrefixes,
+    wrappers,
+  };
 }
 
 /**
@@ -286,17 +300,17 @@ export function parseCommand(command: string | undefined): IParsedCommand | unde
 		return undefined;
 	}
 	const segments: ICommandSegment[] = rawSegments.map(seg => {
-		const rawTokens = tokenize(seg.raw);
-		const { tokens, envPrefixes, wrappers } = stripPrefixesAndWrappers(rawTokens);
-		return {
-			raw: seg.raw,
-			rawTokens,
-			tokens,
-			envPrefixes,
-			wrappers,
-			trailingSeparator: seg.sep,
-		};
-	});
+    const rawTokens = tokenize(seg.raw);
+    const { tokens, envPrefixes, wrappers } = stripPrefixesAndWrappers(rawTokens);
+    return {
+      raw: seg.raw,
+      rawTokens,
+      tokens,
+      envPrefixes,
+      wrappers,
+      trailingSeparator: seg.sep,
+    };
+  });
 	return { raw: trimmed, segments };
 }
 
@@ -313,7 +327,7 @@ export function segmentHead(segment: ICommandSegment): { head: string; sub: stri
 	const head = tokens[0];
 	let sub: string | undefined;
 	for (let i = 1; i < tokens.length; i++) {
-		if (tokens[i].startsWith('--')) {
+		if (tokens[i].startsWith("--")) {
 			continue;
 		}
 		sub = tokens[i];
@@ -339,11 +353,11 @@ export function segmentHasFlag(segment: ICommandSegment, flags: readonly string[
 	const longFlags = flags.filter(f => f.length > 1).map(f => `--${f}`);
 	const shortFlags = flags.filter(f => f.length === 1);
 	for (const tok of segment.tokens) {
-		if (!tok.startsWith('-') || tok === '--') {
+		if (!tok.startsWith("-") || tok === "--") {
 			continue;
 		}
-		if (tok.startsWith('--')) {
-			const name = tok.slice(2).split('=')[0];
+		if (tok.startsWith("--")) {
+			const name = tok.slice(2).split("=")[0];
 			if (longFlags.includes(`--${name}`)) {
 				return true;
 			}

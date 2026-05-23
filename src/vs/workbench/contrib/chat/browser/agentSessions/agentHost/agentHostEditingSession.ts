@@ -3,35 +3,56 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Sequencer } from '../../../../../../base/common/async.js';
-import { VSBuffer } from '../../../../../../base/common/buffer.js';
-import { Emitter, Event } from '../../../../../../base/common/event.js';
-import { MarkdownString } from '../../../../../../base/common/htmlContent.js';
-import { Disposable, DisposableStore } from '../../../../../../base/common/lifecycle.js';
-import { Schemas } from '../../../../../../base/common/network.js';
-import { constObservable, derived, derivedOpts, IObservable, IReader, ObservablePromise, observableValue, transaction } from '../../../../../../base/common/observable.js';
-import { isEqual } from '../../../../../../base/common/resources.js';
-import { isDefined } from '../../../../../../base/common/types.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { IDocumentDiff } from '../../../../../../editor/common/diff/documentDiffProvider.js';
-import { ITextModel } from '../../../../../../editor/common/model.js';
-import { IEditorWorkerService } from '../../../../../../editor/common/services/editorWorker.js';
-import { ITextModelService } from '../../../../../../editor/common/services/resolverService.js';
-import { localize } from '../../../../../../nls.js';
-import { toAgentHostUri } from '../../../../../../platform/agentHost/common/agentHostUri.js';
-import { FileEditKind, ToolCallStatus, type ToolCallState } from '../../../../../../platform/agentHost/common/state/sessionState.js';
-import { EditorActivation } from '../../../../../../platform/editor/common/editor.js';
-import { IFileService } from '../../../../../../platform/files/common/files.js';
-import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { IEditorPane } from '../../../../../common/editor.js';
-import { IEditorService } from '../../../../../services/editor/common/editorService.js';
-import { MultiDiffEditor } from '../../../../multiDiffEditor/browser/multiDiffEditor.js';
-import { MultiDiffEditorInput } from '../../../../multiDiffEditor/browser/multiDiffEditorInput.js';
-import { IChatProgress, IChatWorkspaceEdit } from '../../../common/chatService/chatService.js';
-import { ChatEditingSessionState, emptySessionEntryDiff, getMultiDiffSourceUri, IChatEditingSession, IEditSessionDiffStats, IEditSessionEntryDiff, IModifiedFileEntry, IModifiedFileEntryChangeHunk, IModifiedFileEntryEditorIntegration, IStreamingEdits, ModifiedFileEntryState } from '../../../common/editing/chatEditingService.js';
-import { IChatRequestDisablement, IChatResponseModel } from '../../../common/model/chatModel.js';
-import { fileEditsToExternalEdits, type IToolCallFileEdit } from './stateToProgressAdapter.js';
+import { Sequencer } from "../../../../../../base/common/async.js";
+import { VSBuffer } from "../../../../../../base/common/buffer.js";
+import { Emitter, Event } from "../../../../../../base/common/event.js";
+import { MarkdownString } from "../../../../../../base/common/htmlContent.js";
+import { Disposable, DisposableStore } from "../../../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../../../base/common/network.js";
+import {
+  constObservable,
+  derived,
+  derivedOpts,
+  IObservable,
+  IReader,
+  ObservablePromise,
+  observableValue,
+  transaction,
+} from "../../../../../../base/common/observable.js";
+import { isEqual } from "../../../../../../base/common/resources.js";
+import { isDefined } from "../../../../../../base/common/types.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { IDocumentDiff } from "../../../../../../editor/common/diff/documentDiffProvider.js";
+import { ITextModel } from "../../../../../../editor/common/model.js";
+import { IEditorWorkerService } from "../../../../../../editor/common/services/editorWorker.js";
+import { ITextModelService } from "../../../../../../editor/common/services/resolverService.js";
+import { localize } from "../../../../../../nls.js";
+import { toAgentHostUri } from "../../../../../../platform/agentHost/common/agentHostUri.js";
+import { FileEditKind, ToolCallStatus, type ToolCallState } from "../../../../../../platform/agentHost/common/state/sessionState.js";
+import { EditorActivation } from "../../../../../../platform/editor/common/editor.js";
+import { IFileService } from "../../../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../../../platform/log/common/log.js";
+import { IEditorPane } from "../../../../../common/editor.js";
+import { IEditorService } from "../../../../../services/editor/common/editorService.js";
+import { MultiDiffEditor } from "../../../../multiDiffEditor/browser/multiDiffEditor.js";
+import { MultiDiffEditorInput } from "../../../../multiDiffEditor/browser/multiDiffEditorInput.js";
+import { IChatProgress, IChatWorkspaceEdit } from "../../../common/chatService/chatService.js";
+import {
+  ChatEditingSessionState,
+  emptySessionEntryDiff,
+  getMultiDiffSourceUri,
+  IChatEditingSession,
+  IEditSessionDiffStats,
+  IEditSessionEntryDiff,
+  IModifiedFileEntry,
+  IModifiedFileEntryChangeHunk,
+  IModifiedFileEntryEditorIntegration,
+  IStreamingEdits,
+  ModifiedFileEntryState,
+} from "../../../common/editing/chatEditingService.js";
+import { IChatRequestDisablement, IChatResponseModel } from "../../../common/model/chatModel.js";
+import { fileEditsToExternalEdits, type IToolCallFileEdit } from "./stateToProgressAdapter.js";
 
 // ---- Internal data model ----------------------------------------------------
 
@@ -52,12 +73,18 @@ class AgentHostModifiedFileEntry implements IModifiedFileEntry {
 	readonly lastModifyingRequestId: string;
 
 	readonly state = constObservable(ModifiedFileEntryState.Accepted);
-	readonly isCurrentlyBeingModifiedBy = constObservable<{ responseModel: IChatResponseModel; undoStopId: string | undefined } | undefined>(undefined);
-	readonly lastModifyingResponse = constObservable<IChatResponseModel | undefined>(undefined);
+	readonly isCurrentlyBeingModifiedBy = constObservable<{ responseModel: IChatResponseModel; undoStopId: string | undefined } | undefined>(
+    undefined,
+  );
+	readonly lastModifyingResponse = constObservable<IChatResponseModel | undefined>(
+    undefined,
+  );
 	readonly rewriteRatio = constObservable(1);
 	readonly waitsForLastEdits = constObservable(false);
 	readonly reviewMode = constObservable(false);
-	readonly autoAcceptController = constObservable<{ total: number; remaining: number; cancel(): void } | undefined>(undefined);
+	readonly autoAcceptController = constObservable<{ total: number; remaining: number; cancel(): void } | undefined>(
+    undefined,
+  );
 	readonly changesCount = constObservable(0);
 	readonly diffInfo?: IObservable<IDocumentDiff>;
 	readonly linesAdded?: IObservable<number>;
@@ -86,16 +113,16 @@ class AgentHostModifiedFileEntry implements IModifiedFileEntry {
 
 	getEditorIntegration(_editor: IEditorPane): IModifiedFileEntryEditorIntegration {
 		return {
-			currentIndex: observableValue('currentIndex', 0),
-			reveal(): void { /* no-op */ },
-			next(): boolean { return false; },
-			previous(): boolean { return false; },
-			enableAccessibleDiffView(): void { /* no-op */ },
-			async acceptNearestChange(_change?: IModifiedFileEntryChangeHunk): Promise<void> { /* no-op */ },
-			async rejectNearestChange(_change?: IModifiedFileEntryChangeHunk): Promise<void> { /* no-op */ },
-			async toggleDiff(_change: IModifiedFileEntryChangeHunk | undefined, _show?: boolean): Promise<void> { /* no-op */ },
-			dispose(): void { /* no-op */ },
-		};
+      currentIndex: observableValue("currentIndex", 0),
+      reveal(): void { /* no-op */ },
+      next(): boolean { return false; },
+      previous(): boolean { return false; },
+      enableAccessibleDiffView(): void { /* no-op */ },
+      async acceptNearestChange(_change?: IModifiedFileEntryChangeHunk): Promise<void> { /* no-op */ },
+      async rejectNearestChange(_change?: IModifiedFileEntryChangeHunk): Promise<void> { /* no-op */ },
+      async toggleDiff(_change: IModifiedFileEntryChangeHunk | undefined, _show?: boolean): Promise<void> { /* no-op */ },
+      dispose(): void { /* no-op */ },
+    };
 	}
 }
 
@@ -106,10 +133,16 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 	readonly supportsKeepUndo = true;
 	readonly isGlobalEditingSession = false;
 
-	private readonly _state = observableValue<ChatEditingSessionState>(this, ChatEditingSessionState.Idle);
+	private readonly _state = observableValue<ChatEditingSessionState>(
+    this,
+    ChatEditingSessionState.Idle,
+  );
 	readonly state: IObservable<ChatEditingSessionState> = this._state;
 
-	private readonly _entriesObs = observableValue<readonly AgentHostModifiedFileEntry[]>(this, []);
+	private readonly _entriesObs = observableValue<readonly AgentHostModifiedFileEntry[]>(
+    this,
+    [],
+  );
 	readonly entries: IObservable<readonly IModifiedFileEntry[]> = this._entriesObs;
 
 	readonly requestDisablement: IObservable<IChatRequestDisablement[]> = derivedOpts(
@@ -144,8 +177,14 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 	private _editorPane: MultiDiffEditor | undefined;
 	private _hasExplanations = false;
 
-	readonly canUndo: IObservable<boolean> = derived(this, r => this._currentCheckpointIndex.read(r) >= 0);
-	readonly canRedo: IObservable<boolean> = derived(this, r => this._currentCheckpointIndex.read(r) < this._checkpoints.length - 1);
+	readonly canUndo: IObservable<boolean> = derived(
+    this,
+    r => this._currentCheckpointIndex.read(r) >= 0,
+  );
+	readonly canRedo: IObservable<boolean> = derived(
+    this,
+    r => this._currentCheckpointIndex.read(r) < this._checkpoints.length - 1,
+  );
 
 	constructor(
 		readonly chatSessionResource: URI,
@@ -214,10 +253,10 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 		}));
 
 		const checkpoint: IAgentHostCheckpoint = {
-			requestId,
-			undoStopId: tc.toolCallId,
-			edits,
-		};
+      requestId,
+      undoStopId: tc.toolCallId,
+      edits,
+    };
 
 		this._checkpoints.push(checkpoint);
 
@@ -236,7 +275,7 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 			// Emit workspace file edit progress for creates, deletes, and renames
 			if (edit.kind === FileEditKind.Create || edit.kind === FileEditKind.Delete || edit.kind === FileEditKind.Rename) {
 				progressParts.push({
-					kind: 'workspaceEdit',
+					kind: "workspaceEdit",
 					edits: [{
 						oldResource: edit.originalResource ?? (edit.kind === FileEditKind.Delete ? edit.resource : undefined),
 						newResource: edit.kind === FileEditKind.Delete ? undefined : edit.resource,
@@ -245,11 +284,34 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 			}
 			// Emit code-block UI for content edits (and renames/creates with content)
 			if (edit.afterContentUri) {
-				progressParts.push({ kind: 'markdownContent', content: new MarkdownString('\n````\n') });
-				progressParts.push({ kind: 'codeblockUri', uri: edit.resource, isEdit: true, undoStopId: tc.toolCallId });
-				progressParts.push({ kind: 'textEdit', uri: edit.resource, edits: [], done: false, isExternalEdit: true });
-				progressParts.push({ kind: 'textEdit', uri: edit.resource, edits: [], done: true, isExternalEdit: true });
-				progressParts.push({ kind: 'markdownContent', content: new MarkdownString('\n````\n') });
+				progressParts.push({
+          kind: "markdownContent",
+          content: new MarkdownString("\n````\n"),
+        });
+				progressParts.push({
+          kind: "codeblockUri",
+          uri: edit.resource,
+          isEdit: true,
+          undoStopId: tc.toolCallId,
+        });
+				progressParts.push({
+          kind: "textEdit",
+          uri: edit.resource,
+          edits: [],
+          done: false,
+          isExternalEdit: true,
+        });
+				progressParts.push({
+          kind: "textEdit",
+          uri: edit.resource,
+          edits: [],
+          done: true,
+          isExternalEdit: true,
+        });
+				progressParts.push({
+          kind: "markdownContent",
+          content: new MarkdownString("\n````\n"),
+        });
 			}
 		}
 		return progressParts;
@@ -263,16 +325,25 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 		}
 
 		if (this._editorPane?.input) {
-			await this._editorService.openEditor(this._editorPane.input, { pinned: true, activation: EditorActivation.ACTIVATE });
+			await this._editorService.openEditor(this._editorPane.input, {
+        pinned: true,
+        activation: EditorActivation.ACTIVATE,
+      });
 			return;
 		}
 
-		const input = MultiDiffEditorInput.fromResourceMultiDiffEditorInput({
-			multiDiffSource: getMultiDiffSourceUri(this, previousChanges),
-			label: localize('multiDiffEditorInput.name', "Suggested Edits")
-		}, this._instantiationService);
+		const input = MultiDiffEditorInput.fromResourceMultiDiffEditorInput(
+      {
+        multiDiffSource: getMultiDiffSourceUri(this, previousChanges),
+        label: localize("multiDiffEditorInput.name", "Suggested Edits"),
+      },
+      this._instantiationService,
+    );
 
-		this._editorPane = await this._editorService.openEditor(input, { pinned: true, activation: EditorActivation.ACTIVATE }) as MultiDiffEditor | undefined;
+		this._editorPane = await this._editorService.openEditor(input, {
+      pinned: true,
+      activation: EditorActivation.ACTIVATE,
+    }) as MultiDiffEditor | undefined;
 	}
 
 	// ---- Entry lookups ------------------------------------------------------
@@ -294,11 +365,15 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 
 	private _findCheckpointIndex(requestId: string, stopId: string | undefined): number {
 		if (stopId !== undefined) {
-			return this._checkpoints.findIndex(cp => cp.requestId === requestId && cp.undoStopId === stopId);
+			return this._checkpoints.findIndex(
+        cp => cp.requestId === requestId && cp.undoStopId === stopId,
+      );
 		}
 		// No specific stop: find the sentinel checkpoint (undoStopId === undefined)
 		// for this request, which marks the request boundary.
-		return this._checkpoints.findIndex(cp => cp.requestId === requestId && cp.undoStopId === undefined);
+		return this._checkpoints.findIndex(
+      cp => cp.requestId === requestId && cp.undoStopId === undefined,
+    );
 	}
 
 	private _findCheckpoint(requestId: string, stopId: string | undefined): IAgentHostCheckpoint | undefined {
@@ -320,7 +395,9 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 	async restoreSnapshot(requestId: string, stopId: string | undefined): Promise<void> {
 		const cpIdx = this._findCheckpointIndex(requestId, stopId);
 		if (cpIdx < 0) {
-			this._logService.warn(`[AgentHostEditingSession] No checkpoint found for requestId=${requestId}${stopId ? `, stopId=${stopId}` : ''}`);
+			this._logService.warn(
+        `[AgentHostEditingSession] No checkpoint found for requestId=${requestId}${stopId ? `, stopId=${stopId}` : ""}`,
+      );
 			return;
 		}
 
@@ -333,18 +410,18 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 		if (targetIdx < currentIdx) {
 			// Undo forward checkpoints
 			for (let i = currentIdx; i > targetIdx; i--) {
-				await this._writeCheckpointContent(this._checkpoints[i], 'before');
+				await this._writeCheckpointContent(this._checkpoints[i], "before");
 			}
 		} else if (targetIdx > currentIdx) {
 			// Redo to reach the target
 			for (let i = currentIdx + 1; i <= targetIdx; i++) {
-				await this._writeCheckpointContent(this._checkpoints[i], 'after');
+				await this._writeCheckpointContent(this._checkpoints[i], "after");
 			}
 		}
 
 		transaction(tx => {
-			this._currentCheckpointIndex.set(targetIdx, tx);
-		});
+      this._currentCheckpointIndex.set(targetIdx, tx);
+    });
 		this._rebuildEntries();
 	}
 
@@ -361,10 +438,10 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 		}
 
 		return URI.from({
-			scheme: Schemas.chatEditingSnapshotScheme,
-			path: uri.path,
-			query: JSON.stringify({ session: this.chatSessionResource.toString(), requestId, undoStop: stopId ?? '' }),
-		});
+      scheme: Schemas.chatEditingSnapshotScheme,
+      path: uri.path,
+      query: JSON.stringify({ session: this.chatSessionResource.toString(), requestId, undoStop: stopId ?? "" }),
+    });
 	}
 
 	async getSnapshotContents(requestId: string, uri: URI, stopId: string | undefined): Promise<VSBuffer | undefined> {
@@ -386,7 +463,10 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 			const content = await this._fileService.readFile(edit.afterContentUri);
 			return content.value;
 		} catch (err) {
-			this._logService.warn(`[AgentHostEditingSession] Failed to fetch snapshot content`, err);
+			this._logService.warn(
+        `[AgentHostEditingSession] Failed to fetch snapshot content`,
+        err,
+      );
 			return undefined;
 		}
 	}
@@ -400,7 +480,9 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 	getEntryDiffBetweenStops(uri: URI, requestId: string | undefined, stopId: string | undefined): IObservable<IEditSessionEntryDiff | undefined> | undefined {
 		// Find the checkpoint for this stop
 		const startIdx = requestId !== undefined
-			? this._checkpoints.findIndex(cp => cp.requestId === requestId && (stopId === undefined || cp.undoStopId === stopId))
+			? this._checkpoints.findIndex(
+          cp => cp.requestId === requestId && (stopId === undefined || cp.undoStopId === stopId),
+        )
 			: -1;
 		if (startIdx < 0 && requestId !== undefined) {
 			return undefined;
@@ -467,7 +549,10 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 		// in the range. Also pick up the first beforeContentUri if we didn't
 		// find one above (file wasn't edited before fromIdx).
 		let afterContentUri: URI | undefined;
-		for (let i = Math.max(0, fromIdx); i <= toIdx && i < this._checkpoints.length; i++) {
+		for (let i = Math.max(
+      0,
+      fromIdx,
+    ); i <= toIdx && i < this._checkpoints.length; i++) {
 			for (const edit of this._checkpoints[i].edits) {
 				if (edit.resource.toString() === uriStr) {
 					if (!beforeContentUri) {
@@ -484,7 +569,11 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 			return constObservable(undefined);
 		}
 
-		return this._computeFileDiffObservable(beforeContentUri, afterContentUri, uri);
+		return this._computeFileDiffObservable(
+      beforeContentUri,
+      afterContentUri,
+      uri,
+    );
 	}
 
 	/**
@@ -498,7 +587,9 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 			return constObservable(cached);
 		}
 
-		const promise = new ObservablePromise(this._computeFileDiff(beforeUri, afterUri, fileUri));
+		const promise = new ObservablePromise(
+      this._computeFileDiff(beforeUri, afterUri, fileUri),
+    );
 
 		return derivedOpts({ owner: this }, reader => {
 			const result = promise.promiseResult.read(reader);
@@ -520,28 +611,36 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 	private async _computeFileDiff(beforeUri: URI, afterUri: URI, fileUri: URI): Promise<IEditSessionEntryDiff> {
 		const refs = new DisposableStore();
 		try {
-			const beforeRef = await this._textModelService.createModelReference(beforeUri);
+			const beforeRef = await this._textModelService.createModelReference(
+        beforeUri,
+      );
 			refs.add(beforeRef);
-			const afterRef = await this._textModelService.createModelReference(afterUri);
+			const afterRef = await this._textModelService.createModelReference(
+        afterUri,
+      );
 			refs.add(afterRef);
 
 			const diff = await this._editorWorkerService.computeDiff(
-				beforeRef.object.textEditorModel.uri,
-				afterRef.object.textEditorModel.uri,
-				{ ignoreTrimWhitespace: false, computeMoves: false, maxComputationTimeMs: 3000 },
-				'advanced',
-			);
+        beforeRef.object.textEditorModel.uri,
+        afterRef.object.textEditorModel.uri,
+        {
+          ignoreTrimWhitespace: false,
+          computeMoves: false,
+          maxComputationTimeMs: 3000,
+        },
+        "advanced",
+      );
 
 			const entryDiff: IEditSessionEntryDiff = {
-				originalURI: beforeUri,
-				modifiedURI: fileUri,
-				identical: !!diff?.identical,
-				isFinal: true,
-				quitEarly: !diff || diff.quitEarly,
-				added: 0,
-				removed: 0,
-				isBusy: false,
-			};
+        originalURI: beforeUri,
+        modifiedURI: fileUri,
+        identical: !!diff?.identical,
+        isFinal: true,
+        quitEarly: !diff || diff.quitEarly,
+        added: 0,
+        removed: 0,
+        isBusy: false,
+      };
 
 			if (diff) {
 				for (const change of diff.changes) {
@@ -552,7 +651,10 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 
 			return entryDiff;
 		} catch (err) {
-			this._logService.warn('[AgentHostEditingSession] diff computation failed', err);
+			this._logService.warn(
+        "[AgentHostEditingSession] diff computation failed",
+        err,
+      );
 			return { ...emptySessionEntryDiff(beforeUri, afterUri), isFinal: true };
 		} finally {
 			refs.dispose();
@@ -616,7 +718,7 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 			return;
 		}
 
-		await this._writeCheckpointContent(this._checkpoints[idx], 'before');
+		await this._writeCheckpointContent(this._checkpoints[idx], "before");
 
 		// Skip past any sentinel checkpoints (they have no edits)
 		let newIdx = idx - 1;
@@ -625,8 +727,8 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 		}
 
 		transaction(tx => {
-			this._currentCheckpointIndex.set(newIdx, tx);
-		});
+      this._currentCheckpointIndex.set(newIdx, tx);
+    });
 		this._rebuildEntries();
 	}
 
@@ -645,11 +747,11 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 			return;
 		}
 
-		await this._writeCheckpointContent(this._checkpoints[nextIdx], 'after');
+		await this._writeCheckpointContent(this._checkpoints[nextIdx], "after");
 
 		transaction(tx => {
-			this._currentCheckpointIndex.set(nextIdx, tx);
-		});
+      this._currentCheckpointIndex.set(nextIdx, tx);
+    });
 		this._rebuildEntries();
 	}
 
@@ -670,19 +772,19 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 	// ---- Unsupported operations (agent host owns edits server-side) ----------
 
 	startStreamingEdits(_resource: URI, _responseModel: IChatResponseModel, _inUndoStop: string | undefined): IStreamingEdits {
-		throw new Error('Not supported for agent host sessions');
+		throw new Error("Not supported for agent host sessions");
 	}
 
 	applyWorkspaceEdit(_edit: IChatWorkspaceEdit, _responseModel: IChatResponseModel, _undoStopId: string): void {
-		throw new Error('Not supported for agent host sessions');
+		throw new Error("Not supported for agent host sessions");
 	}
 
 	async startExternalEdits(_responseModel: IChatResponseModel, _operationId: number, _resources: URI[], _undoStopId: string, _contentFor?: URI[]): Promise<IChatProgress[]> {
-		throw new Error('Not supported for agent host sessions');
+		throw new Error("Not supported for agent host sessions");
 	}
 
 	async stopExternalEdits(_responseModel: IChatResponseModel, _operationId: number, _contentFor?: URI[]): Promise<IChatProgress[]> {
-		throw new Error('Not supported for agent host sessions');
+		throw new Error("Not supported for agent host sessions");
 	}
 
 	// ---- Stop / Dispose -----------------------------------------------------
@@ -719,13 +821,13 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 					existing.removed += edit.diff?.removed ?? 0;
 				} else {
 					resourceMap.set(key, {
-						resource: edit.resource,
-						beforeContentUri: edit.beforeContentUri,
-						afterContentUri: edit.afterContentUri,
-						requestId: cp.requestId,
-						added: edit.diff?.added ?? 0,
-						removed: edit.diff?.removed ?? 0,
-					});
+            resource: edit.resource,
+            beforeContentUri: edit.beforeContentUri,
+            afterContentUri: edit.afterContentUri,
+            requestId: cp.requestId,
+            added: edit.diff?.added ?? 0,
+            removed: edit.diff?.removed ?? 0,
+          });
 				}
 			}
 		}
@@ -733,16 +835,16 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 		const entries = [...resourceMap.values()]
 			.filter(v => v.beforeContentUri && v.afterContentUri)
 			.map(v =>
-				new AgentHostModifiedFileEntry(v.resource, v.beforeContentUri!, v.requestId, v.added, v.removed)
+				new AgentHostModifiedFileEntry(v.resource, v.beforeContentUri!, v.requestId, v.added, v.removed),
 			);
 
 		this._entriesObs.set(entries, undefined);
 	}
 
-	private async _writeCheckpointContent(checkpoint: IAgentHostCheckpoint, direction: 'before' | 'after'): Promise<void> {
+	private async _writeCheckpointContent(checkpoint: IAgentHostCheckpoint, direction: "before" | "after"): Promise<void> {
 		const ops = checkpoint.edits.map(async edit => {
 			try {
-				if (direction === 'before') {
+				if (direction === "before") {
 					// Undoing this edit
 					switch (edit.kind) {
 						case FileEditKind.Create:
@@ -810,7 +912,7 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 					}
 				}
 			} catch (err) {
-				this._logService.warn(`[AgentHostEditingSession] Failed to ${direction === 'before' ? 'undo' : 'redo'} ${edit.kind} for ${edit.resource.toString()}`, err);
+				this._logService.warn(`[AgentHostEditingSession] Failed to ${direction === "before" ? "undo" : "redo"} ${edit.kind} for ${edit.resource.toString()}`, err);
 			}
 		});
 		await Promise.all(ops);
@@ -827,7 +929,10 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 		// Collect unique resource URIs from checkpoints in the range
 		const seen = new Set<string>();
 		const uris: URI[] = [];
-		for (let i = Math.max(0, fromIdx + 1); i <= toIdx && i < this._checkpoints.length; i++) {
+		for (let i = Math.max(
+      0,
+      fromIdx + 1,
+    ); i <= toIdx && i < this._checkpoints.length; i++) {
 			for (const edit of this._checkpoints[i].edits) {
 				const key = edit.resource.toString();
 				if (!seen.has(key)) {
@@ -837,8 +942,12 @@ export class AgentHostEditingSession extends Disposable implements IChatEditingS
 			}
 		}
 
-		const observables = uris.map(uri => this._getFileDiffObservable(uri, fromIdx, toIdx));
+		const observables = uris.map(
+      uri => this._getFileDiffObservable(uri, fromIdx, toIdx),
+    );
 
-		return derived(reader => observables.flatMap(o => o.read(reader)).filter(isDefined));
+		return derived(
+      reader => observables.flatMap(o => o.read(reader)).filter(isDefined),
+    );
 	}
 }

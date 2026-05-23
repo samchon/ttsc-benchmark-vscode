@@ -3,18 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { IIdentityProvider, IListVirtualDelegate } from '../../../../browser/ui/list/list.js';
-import { DataTree } from '../../../../browser/ui/tree/dataTree.js';
-import { IDataSource, ITreeNode, ITreeRenderer } from '../../../../browser/ui/tree/tree.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../common/utils.js';
+import assert from "assert";
+import { IIdentityProvider, IListVirtualDelegate } from "../../../../browser/ui/list/list.js";
+import { DataTree } from "../../../../browser/ui/tree/dataTree.js";
+import { IDataSource, ITreeNode, ITreeRenderer } from "../../../../browser/ui/tree/tree.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../common/utils.js";
 
 interface E {
 	value: number;
 	children?: E[];
 }
 
-suite('DataTree', function () {
+suite("DataTree", function () {
 	let tree: DataTree<E, E>;
 
 	const root: E = {
@@ -23,12 +23,12 @@ suite('DataTree', function () {
 			{ value: 0, children: [{ value: 10 }, { value: 11 }, { value: 12 }] },
 			{ value: 1 },
 			{ value: 2 },
-		]
+		],
 	};
 
 	const empty: E = {
 		value: -1,
-		children: []
+		children: [],
 	};
 
 	teardown(() => tree.dispose());
@@ -36,17 +36,17 @@ suite('DataTree', function () {
 	ensureNoDisposablesAreLeakedInTestSuite();
 
 	setup(() => {
-		const container = document.createElement('div');
-		container.style.width = '200px';
-		container.style.height = '200px';
+		const container = document.createElement("div");
+		container.style.width = "200px";
+		container.style.height = "200px";
 
 		const delegate = new class implements IListVirtualDelegate<E> {
 			getHeight() { return 20; }
-			getTemplateId(): string { return 'default'; }
+			getTemplateId(): string { return "default"; }
 		};
 
 		const renderer = new class implements ITreeRenderer<E, void, HTMLElement> {
-			readonly templateId = 'default';
+			readonly templateId = "default";
 			renderTemplate(container: HTMLElement): HTMLElement {
 				return container;
 			}
@@ -68,11 +68,11 @@ suite('DataTree', function () {
 			}
 		};
 
-		tree = new DataTree<E, E>('test', container, delegate, [renderer], dataSource, { identityProvider });
+		tree = new DataTree<E, E>("test", container, delegate, [renderer], dataSource, { identityProvider });
 		tree.layout(200);
 	});
 
-	test('view state is lost implicitly', () => {
+	test("view state is lost implicitly", () => {
 		tree.setInput(root);
 
 		let navigator = tree.navigate();
@@ -109,7 +109,7 @@ suite('DataTree', function () {
 		assert.deepStrictEqual(tree.getFocus(), []);
 	});
 
-	test('view state can be preserved', () => {
+	test("view state can be preserved", () => {
 		tree.setInput(root);
 
 		let navigator = tree.navigate();

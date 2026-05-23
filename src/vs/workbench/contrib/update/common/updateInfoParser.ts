@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { hasKey, Mutable } from '../../../../base/common/types.js';
+import { hasKey, Mutable } from "../../../../base/common/types.js";
 
 const MAX_FEATURES = 5;
 
-export type UpdateInfoButtonStyle = 'primary' | 'secondary';
+export type UpdateInfoButtonStyle = "primary" | "secondary";
 
 export interface IUpdateInfoButton {
 	readonly label: string;
@@ -88,19 +88,19 @@ export interface IParsedUpdateInfoInput {
  * At most 5 feature entries are retained; any additional ones are silently dropped.
  */
 export function parseUpdateInfoInput(text: string): IParsedUpdateInfoInput {
-	const normalized = text.replace(/^\uFEFF/, '');
+	const normalized = text.replace(/^\uFEFF/, "");
 	return tryParseUpdateInfoEnvelope(normalized) ?? parseUpdateInfoFrontmatter(normalized);
 }
 
 function tryParseUpdateInfoEnvelope(text: string): IParsedUpdateInfoInput | undefined {
 	const trimmed = text.trim();
-	if (!trimmed.startsWith('{') || !trimmed.endsWith('}')) {
+	if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) {
 		return undefined;
 	}
 
 	try {
 		const value = JSON.parse(trimmed) as { markdown?: string; buttons?: unknown; bannerImageUrl?: unknown; badge?: unknown; title?: unknown; features?: unknown };
-		if (typeof value.markdown !== 'string') {
+		if (typeof value.markdown !== "string") {
 			return undefined;
 		}
 
@@ -112,26 +112,38 @@ function tryParseUpdateInfoEnvelope(text: string): IParsedUpdateInfoInput | unde
 
 function buildParsedInput(markdown: string, meta: { buttons?: unknown; bannerImageUrl?: unknown; badge?: unknown; title?: unknown; features?: unknown }): IParsedUpdateInfoInput {
 	const result: Mutable<IParsedUpdateInfoInput> = {
-		markdown,
-		buttons: parseUpdateInfoButtons(meta.buttons),
-	};
-	if (typeof meta.bannerImageUrl === 'string') { result.bannerImageUrl = meta.bannerImageUrl; }
-	if (typeof meta.badge === 'string') { result.badge = meta.badge; }
-	if (typeof meta.title === 'string') { result.title = meta.title; }
+    markdown,
+    buttons: parseUpdateInfoButtons(meta.buttons),
+  };
+	if (typeof meta.bannerImageUrl === "string") { result.bannerImageUrl = meta.bannerImageUrl; }
+	if (typeof meta.badge === "string") { result.badge = meta.badge; }
+	if (typeof meta.title === "string") { result.title = meta.title; }
 	const features = parseUpdateInfoFeatures(meta.features);
 	if (features) { result.features = features; }
 	return result;
 }
 
 function parseUpdateInfoFrontmatter(text: string): IParsedUpdateInfoInput {
-	const blockMatch = text.match(/^---[ \t]*\r?\n(?<json>[\s\S]*?)\r?\n---[ \t]*(?:\r?\n(?<body>[\s\S]*))?$/);
+	const blockMatch = text.match(
+    /^---[ \t]*\r?\n(?<json>[\s\S]*?)\r?\n---[ \t]*(?:\r?\n(?<body>[\s\S]*))?$/,
+  );
 	if (blockMatch?.groups) {
-		return parseUpdateInfoFrontmatterMatch(text, blockMatch.groups['json'], blockMatch.groups['body'] ?? '');
+		return parseUpdateInfoFrontmatterMatch(
+      text,
+      blockMatch.groups["json"],
+      blockMatch.groups["body"] ?? "",
+    );
 	}
 
-	const inlineMatch = text.match(/^---[ \t]*(?<json>\{.*\})[ \t]*---[ \t]*(?<body>[\s\S]*)$/);
+	const inlineMatch = text.match(
+    /^---[ \t]*(?<json>\{.*\})[ \t]*---[ \t]*(?<body>[\s\S]*)$/,
+  );
 	if (inlineMatch?.groups) {
-		return parseUpdateInfoFrontmatterMatch(text, inlineMatch.groups['json'], inlineMatch.groups['body']);
+		return parseUpdateInfoFrontmatterMatch(
+      text,
+      inlineMatch.groups["json"],
+      inlineMatch.groups["body"],
+    );
 	}
 
 	return { markdown: text };
@@ -153,22 +165,28 @@ function parseUpdateInfoButtons(buttons: unknown): IUpdateInfoButton[] | undefin
 
 	const parsedButtons: IUpdateInfoButton[] = [];
 	for (const button of buttons) {
-		if (typeof button !== 'object' || button === null) {
+		if (typeof button !== "object" || button === null) {
 			continue;
 		}
 
-		if (!hasKey(button, { label: true, commandId: true }) || typeof button.label !== 'string' || typeof button.commandId !== 'string') {
+		if (!hasKey(
+      button,
+      {
+        label: true,
+        commandId: true,
+      },
+    ) || typeof button.label !== "string" || typeof button.commandId !== "string") {
 			continue;
 		}
 
-		const style = hasKey(button, { style: true }) && (button.style === 'primary' || button.style === 'secondary') ? button.style : undefined;
+		const style = hasKey(button, { style: true }) && (button.style === "primary" || button.style === "secondary") ? button.style : undefined;
 		const args = hasKey(button, { args: true }) && Array.isArray(button.args) ? button.args : undefined;
 		parsedButtons.push({
-			label: button.label,
-			commandId: button.commandId,
-			args,
-			style,
-		});
+      label: button.label,
+      commandId: button.commandId,
+      args,
+      style,
+    });
 	}
 
 	return parsedButtons.length ? parsedButtons : undefined;
@@ -187,15 +205,19 @@ function parseUpdateInfoFeatures(features: unknown): IUpdateInfoFeature[] | unde
 
 	const parsed: IUpdateInfoFeature[] = [];
 	for (const feature of features) {
-		if (typeof feature !== 'object' || feature === null) {
+		if (typeof feature !== "object" || feature === null) {
 			continue;
 		}
 		const candidate = feature as { title?: unknown; description?: unknown; icon?: unknown };
-		if (typeof candidate.title !== 'string' || typeof candidate.description !== 'string') {
+		if (typeof candidate.title !== "string" || typeof candidate.description !== "string") {
 			continue;
 		}
-		const icon = typeof candidate.icon === 'string' ? candidate.icon : undefined;
-		parsed.push({ icon, title: candidate.title, description: candidate.description });
+		const icon = typeof candidate.icon === "string" ? candidate.icon : undefined;
+		parsed.push({
+      icon,
+      title: candidate.title,
+      description: candidate.description,
+    });
 		if (parsed.length >= MAX_FEATURES) {
 			break;
 		}

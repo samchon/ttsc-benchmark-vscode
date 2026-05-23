@@ -3,10 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, DisposableMap } from '../../../base/common/lifecycle.js';
-import { extHostNamedCustomer, IExtHostContext } from '../../services/extensions/common/extHostCustomers.js';
-import { AiSettingsSearchResult, IAiSettingsSearchProvider, IAiSettingsSearchService } from '../../services/aiSettingsSearch/common/aiSettingsSearch.js';
-import { ExtHostContext, ExtHostAiSettingsSearchShape, MainContext, MainThreadAiSettingsSearchShape, } from '../common/extHost.protocol.js';
+import { Disposable, DisposableMap } from "../../../base/common/lifecycle.js";
+import { extHostNamedCustomer, IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+import {
+  AiSettingsSearchResult,
+  IAiSettingsSearchProvider,
+  IAiSettingsSearchService,
+} from "../../services/aiSettingsSearch/common/aiSettingsSearch.js";
+import {
+  ExtHostContext,
+  ExtHostAiSettingsSearchShape,
+  MainContext,
+  MainThreadAiSettingsSearchShape,
+} from "../common/extHost.protocol.js";
 
 @extHostNamedCustomer(MainContext.MainThreadAiSettingsSearch)
 export class MainThreadAiSettingsSearch extends Disposable implements MainThreadAiSettingsSearchShape {
@@ -25,9 +34,12 @@ export class MainThreadAiSettingsSearch extends Disposable implements MainThread
 		const provider: IAiSettingsSearchProvider = {
 			searchSettings: (query, option, token) => {
 				return this._proxy.$startSearch(handle, query, option, token);
-			}
+			},
 		};
-		this._registrations.set(handle, this._settingsSearchService.registerSettingsSearchProvider(provider));
+		this._registrations.set(
+      handle,
+      this._settingsSearchService.registerSettingsSearchProvider(provider),
+    );
 	}
 
 	$unregisterAiSettingsSearchProvider(handle: number): void {

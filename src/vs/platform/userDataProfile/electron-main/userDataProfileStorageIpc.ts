@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../base/common/event.js';
-import { Disposable, DisposableStore, IDisposable, MutableDisposable } from '../../../base/common/lifecycle.js';
-import { IServerChannel } from '../../../base/parts/ipc/common/ipc.js';
-import { ILogService } from '../../log/common/log.js';
-import { IProfileStorageChanges, IProfileStorageValueChanges } from '../common/userDataProfileStorageService.js';
-import { loadKeyTargets, StorageScope, TARGET_KEY } from '../../storage/common/storage.js';
-import { IBaseSerializableStorageRequest } from '../../storage/common/storageIpc.js';
-import { IStorageMain } from '../../storage/electron-main/storageMain.js';
-import { IStorageMainService } from '../../storage/electron-main/storageMainService.js';
-import { IUserDataProfile, IUserDataProfilesService } from '../common/userDataProfile.js';
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable, DisposableStore, IDisposable, MutableDisposable } from "../../../base/common/lifecycle.js";
+import { IServerChannel } from "../../../base/parts/ipc/common/ipc.js";
+import { ILogService } from "../../log/common/log.js";
+import { IProfileStorageChanges, IProfileStorageValueChanges } from "../common/userDataProfileStorageService.js";
+import { loadKeyTargets, StorageScope, TARGET_KEY } from "../../storage/common/storage.js";
+import { IBaseSerializableStorageRequest } from "../../storage/common/storageIpc.js";
+import { IStorageMain } from "../../storage/electron-main/storageMain.js";
+import { IStorageMainService } from "../../storage/electron-main/storageMainService.js";
+import { IUserDataProfile, IUserDataProfilesService } from "../common/userDataProfile.js";
 
 export class ProfileStorageChangesListenerChannel extends Disposable implements IServerChannel {
 
@@ -21,22 +21,22 @@ export class ProfileStorageChangesListenerChannel extends Disposable implements 
 	constructor(
 		private readonly storageMainService: IStorageMainService,
 		private readonly userDataProfilesService: IUserDataProfilesService,
-		private readonly logService: ILogService
+		private readonly logService: ILogService,
 	) {
 		super();
 		const disposable = this._register(new MutableDisposable<IDisposable>());
-		this._onDidChange = this._register(new Emitter<IProfileStorageChanges>(
-			{
-				// Start listening to profile storage changes only when someone is listening
-				onWillAddFirstListener: () => disposable.value = this.registerStorageChangeListeners(),
-				// Stop listening to profile storage changes when no one is listening
-				onDidRemoveLastListener: () => disposable.value = undefined
-			}
-		));
+		this._onDidChange = this._register(
+      new Emitter<IProfileStorageChanges>({
+        onWillAddFirstListener: () => disposable.value = this.registerStorageChangeListeners(),
+        onDidRemoveLastListener: () => disposable.value = undefined,
+      }),
+    );
 	}
 
 	private registerStorageChangeListeners(): IDisposable {
-		this.logService.debug('ProfileStorageChangesListenerChannel#registerStorageChangeListeners');
+		this.logService.debug(
+      "ProfileStorageChangesListenerChannel#registerStorageChangeListeners",
+    );
 		const disposables = new DisposableStore();
 		disposables.add(Event.debounce(this.storageMainService.applicationStorage.onDidChangeStorage, (keys: string[] | undefined, e) => {
 			if (keys) {
@@ -61,12 +61,19 @@ export class ProfileStorageChangesListenerChannel extends Disposable implements 
 	}
 
 	private onDidChangeApplicationStorage(keys: string[]): void {
-		const targetChangedProfiles: IUserDataProfile[] = keys.includes(TARGET_KEY) ? [this.userDataProfilesService.defaultProfile] : [];
+		const targetChangedProfiles: IUserDataProfile[] = keys.includes(
+      TARGET_KEY,
+    ) ? [this.userDataProfilesService.defaultProfile] : [];
 		const profileStorageValueChanges: IProfileStorageValueChanges[] = [];
 		keys = keys.filter(key => key !== TARGET_KEY);
 		if (keys.length) {
-			const keyTargets = loadKeyTargets(this.storageMainService.applicationStorage.storage);
-			profileStorageValueChanges.push({ profile: this.userDataProfilesService.defaultProfile, changes: keys.map(key => ({ key, scope: StorageScope.PROFILE, target: keyTargets[key] })) });
+			const keyTargets = loadKeyTargets(
+        this.storageMainService.applicationStorage.storage,
+      );
+			profileStorageValueChanges.push({
+        profile: this.userDataProfilesService.defaultProfile,
+        changes: keys.map(key => ({ key, scope: StorageScope.PROFILE, target: keyTargets[key] })),
+      });
 		}
 		this.triggerEvents(targetChangedProfiles, profileStorageValueChanges);
 	}
@@ -81,10 +88,15 @@ export class ProfileStorageChangesListenerChannel extends Disposable implements 
 			const keys = profileChanges.keys.filter(key => key !== TARGET_KEY);
 			if (keys.length) {
 				const keyTargets = loadKeyTargets(profileChanges.storage.storage);
-				profileStorageValueChanges.set(profileId, { profile: profileChanges.profile, changes: keys.map(key => ({ key, scope: StorageScope.PROFILE, target: keyTargets[key] })) });
+				profileStorageValueChanges.set(profileId, {
+          profile: profileChanges.profile,
+          changes: keys.map(key => ({ key, scope: StorageScope.PROFILE, target: keyTargets[key] })),
+        });
 			}
 		}
-		this.triggerEvents(targetChangedProfiles, [...profileStorageValueChanges.values()]);
+		this.triggerEvents(targetChangedProfiles, [
+      ...profileStorageValueChanges.values(),
+    ]);
 	}
 
 	private triggerEvents(targetChanges: IUserDataProfile[], valueChanges: IProfileStorageValueChanges[]): void {
@@ -95,9 +107,11 @@ export class ProfileStorageChangesListenerChannel extends Disposable implements 
 
 	listen(_: unknown, event: string, arg: IBaseSerializableStorageRequest): Event<any> {
 		switch (event) {
-			case 'onDidChange': return this._onDidChange.event;
+			case "onDidChange": return this._onDidChange.event;
 		}
-		throw new Error(`[ProfileStorageChangesListenerChannel] Event not found: ${event}`);
+		throw new Error(
+      `[ProfileStorageChangesListenerChannel] Event not found: ${event}`,
+    );
 	}
 
 	async call(_: unknown, command: string): Promise<any> {

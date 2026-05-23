@@ -3,58 +3,58 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Codicon } from '../../../../base/common/codicons.js';
-import { dirname } from '../../../../base/common/resources.js';
-import { URI } from '../../../../base/common/uri.js';
-import { KeyCode, KeyMod } from '../../../../base/common/keyCodes.js';
-import { localize, localize2 } from '../../../../nls.js';
-import { Action2, MenuId, MenuRegistry, registerAction2 } from '../../../../platform/actions/common/actions.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
-import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { KeybindingWeight, KeybindingsRegistry } from '../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
-import { ExplorerFolderContext } from '../../../../workbench/contrib/files/common/files.js';
-import { IExplorerService } from '../../../../workbench/contrib/files/browser/files.js';
-import { OpenEditorCommandId } from '../../../../workbench/contrib/searchEditor/browser/constants.js';
-import { resolveResourcesForSearchIncludes } from '../../../../workbench/services/search/common/queryBuilder.js';
-import { SESSIONS_FILES_VIEW_ID } from '../../files/browser/filesView.js';
+import { Codicon } from "../../../../base/common/codicons.js";
+import { dirname } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { Action2, MenuId, MenuRegistry, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingWeight, KeybindingsRegistry } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { ExplorerFolderContext } from "../../../../workbench/contrib/files/common/files.js";
+import { IExplorerService } from "../../../../workbench/contrib/files/browser/files.js";
+import { OpenEditorCommandId } from "../../../../workbench/contrib/searchEditor/browser/constants.js";
+import { resolveResourcesForSearchIncludes } from "../../../../workbench/services/search/common/queryBuilder.js";
+import { SESSIONS_FILES_VIEW_ID } from "../../files/browser/filesView.js";
 
 KeybindingsRegistry.registerKeybindingRule({
-	id: OpenEditorCommandId,
-	primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyF,
-	weight: KeybindingWeight.WorkbenchContrib,
+  id: OpenEditorCommandId,
+  primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyF,
+  weight: KeybindingWeight.WorkbenchContrib,
 });
 
 MenuRegistry.appendMenuItem(MenuId.ViewTitle, {
 	command: {
 		id: OpenEditorCommandId,
-		title: localize2('openSearch', "Search"),
+		title: localize2("openSearch", "Search"),
 		icon: Codicon.search,
 	},
-	group: '1_files',
+	group: "1_files",
 	order: 0,
-	when: ContextKeyExpr.equals('view', SESSIONS_FILES_VIEW_ID),
+	when: ContextKeyExpr.equals("view", SESSIONS_FILES_VIEW_ID),
 });
 
 MenuRegistry.appendMenuItem(MenuId.MenubarViewMenu, {
 	command: {
 		id: OpenEditorCommandId,
-		title: localize({ key: 'miSearch', comment: ['&& denotes a mnemonic'] }, "&&Search"),
+		title: localize({ key: "miSearch", comment: ["&& denotes a mnemonic"] }, "&&Search"),
 	},
-	group: '4_auxbar',
+	group: "4_auxbar",
 	order: 1,
 });
 
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'sessions.files.action.findInFolder',
-			title: localize2('findInFolder', "Find in Folder..."),
+			id: "sessions.files.action.findInFolder",
+			title: localize2("findInFolder", "Find in Folder..."),
 			menu: {
 				id: MenuId.ExplorerContext,
-				group: '4_search',
+				group: "4_search",
 				order: 10,
 				when: ExplorerFolderContext,
 			},
@@ -79,9 +79,9 @@ registerAction2(class extends Action2 {
 
 		const filesToInclude = resolveResourcesForSearchIncludes(folders, contextService);
 		await commandService.executeCommand(OpenEditorCommandId, {
-			filesToInclude: filesToInclude.join(', '),
+			filesToInclude: filesToInclude.join(", "),
 			showIncludesExcludes: true,
-			location: 'reuse',
+			location: "reuse",
 		});
 	}
 });

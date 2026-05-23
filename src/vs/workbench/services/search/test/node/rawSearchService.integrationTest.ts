@@ -3,32 +3,50 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { CancelablePromise, createCancelablePromise } from '../../../../../base/common/async.js';
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { IDisposable } from '../../../../../base/common/lifecycle.js';
-import { FileAccess } from '../../../../../base/common/network.js';
-import * as path from '../../../../../base/common/path.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { flakySuite } from '../../../../../base/test/node/testUtils.js';
-import { IFileQuery, IFileSearchStats, IFolderQuery, IProgressMessage, IRawFileMatch, ISearchEngine, ISearchEngineStats, ISearchEngineSuccess, ISerializedFileMatch, ISerializedSearchComplete, ISerializedSearchProgressItem, ISerializedSearchSuccess, isSerializedSearchComplete, isSerializedSearchSuccess, QueryType } from '../../common/search.js';
-import { IProgressCallback, SearchService as RawSearchService } from '../../node/rawSearchService.js';
+import assert from "assert";
+import { CancelablePromise, createCancelablePromise } from "../../../../../base/common/async.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { IDisposable } from "../../../../../base/common/lifecycle.js";
+import { FileAccess } from "../../../../../base/common/network.js";
+import * as path from "../../../../../base/common/path.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { flakySuite } from "../../../../../base/test/node/testUtils.js";
+import {
+  IFileQuery,
+  IFileSearchStats,
+  IFolderQuery,
+  IProgressMessage,
+  IRawFileMatch,
+  ISearchEngine,
+  ISearchEngineStats,
+  ISearchEngineSuccess,
+  ISerializedFileMatch,
+  ISerializedSearchComplete,
+  ISerializedSearchProgressItem,
+  ISerializedSearchSuccess,
+  isSerializedSearchComplete,
+  isSerializedSearchSuccess,
+  QueryType,
+} from "../../common/search.js";
+import { IProgressCallback, SearchService as RawSearchService } from "../../node/rawSearchService.js";
 
 const TEST_FOLDER_QUERIES = [
-	{ folder: URI.file(path.normalize('/some/where')) }
+  { folder: URI.file(path.normalize("/some/where")) },
 ];
 
-const TEST_FIXTURES = path.normalize(FileAccess.asFileUri('vs/workbench/services/search/test/node/fixtures').fsPath);
+const TEST_FIXTURES = path.normalize(
+  FileAccess.asFileUri("vs/workbench/services/search/test/node/fixtures").fsPath,
+);
 const MULTIROOT_QUERIES: IFolderQuery[] = [
-	{ folder: URI.file(path.join(TEST_FIXTURES, 'examples')) },
-	{ folder: URI.file(path.join(TEST_FIXTURES, 'more')) }
+  { folder: URI.file(path.join(TEST_FIXTURES, "examples")) },
+  { folder: URI.file(path.join(TEST_FIXTURES, "more")) },
 ];
 
 const stats: ISearchEngineStats = {
-	fileWalkTime: 0,
-	cmdTime: 1,
-	directoriesWalked: 2,
-	filesWalked: 3
+  fileWalkTime: 0,
+  cmdTime: 1,
+  directoriesWalked: 2,
+  filesWalked: 3,
 };
 
 class TestSearchEngine implements ISearchEngine<IRawFileMatch> {
@@ -73,25 +91,25 @@ class TestSearchEngine implements ISearchEngine<IRawFileMatch> {
 	}
 }
 
-flakySuite('RawSearchService', () => {
+flakySuite("RawSearchService", () => {
 
 	const rawSearch: IFileQuery = {
 		type: QueryType.File,
 		folderQueries: TEST_FOLDER_QUERIES,
-		filePattern: 'a'
+		filePattern: "a",
 	};
 
 	const rawMatch: IRawFileMatch = {
-		base: path.normalize('/some'),
-		relativePath: 'where',
-		searchPath: undefined
+		base: path.normalize("/some"),
+		relativePath: "where",
+		searchPath: undefined,
 	};
 
 	const match: ISerializedFileMatch = {
-		path: path.normalize('/some/where')
+		path: path.normalize("/some/where"),
 	};
 
-	test('Individual results', async function () {
+	test("Individual results", async function () {
 		let i = 5;
 		const Engine = TestSearchEngine.bind(null, () => i-- ? rawMatch : null);
 		const service = new RawSearchService();
@@ -113,7 +131,7 @@ flakySuite('RawSearchService', () => {
 		return assert.strictEqual(results, 5);
 	});
 
-	test('Batch results', async function () {
+	test("Batch results", async function () {
 		let i = 25;
 		const Engine = TestSearchEngine.bind(null, () => i-- ? rawMatch : null);
 		const service = new RawSearchService();
@@ -137,8 +155,8 @@ flakySuite('RawSearchService', () => {
 		assert.deepStrictEqual(results, [10, 10, 5]);
 	});
 
-	test('Collect batched results', async function () {
-		const uriPath = '/some/where';
+	test("Collect batched results", async function () {
+		const uriPath = "/some/where";
 		let i = 25;
 		const Engine = TestSearchEngine.bind(null, () => i-- ? rawMatch : null);
 		const service = new RawSearchService();
@@ -149,11 +167,11 @@ flakySuite('RawSearchService', () => {
 			const emitter = new Emitter<ISerializedSearchProgressItem | ISerializedSearchComplete>({
 				onWillAddFirstListener: () => {
 					promise = createCancelablePromise(token => service.doFileSearchWithEngine(Engine, config, p => emitter.fire(p), token, batchSize)
-						.then(c => emitter.fire(c), err => emitter.fire({ type: 'error', error: err })));
+						.then(c => emitter.fire(c), err => emitter.fire({ type: "error", error: err })));
 				},
 				onDidRemoveLastListener: () => {
 					promise.cancel();
-				}
+				},
 			});
 
 			return emitter.event;
@@ -161,12 +179,12 @@ flakySuite('RawSearchService', () => {
 
 		const result = await collectResultsFromEvent(fileSearch(rawSearch, 10));
 		result.files.forEach(f => {
-			assert.strictEqual(f.path.replace(/\\/g, '/'), uriPath);
+			assert.strictEqual(f.path.replace(/\\/g, "/"), uriPath);
 		});
-		assert.strictEqual(result.files.length, 25, 'Result');
+		assert.strictEqual(result.files.length, 25, "Result");
 	});
 
-	test('Multi-root with include pattern and maxResults', async function () {
+	test("Multi-root with include pattern and maxResults", async function () {
 		const service = new RawSearchService();
 
 		const query: IFileQuery = {
@@ -174,16 +192,16 @@ flakySuite('RawSearchService', () => {
 			folderQueries: MULTIROOT_QUERIES,
 			maxResults: 1,
 			includePattern: {
-				'*.txt': true,
-				'*.js': true
+				"*.txt": true,
+				"*.js": true,
 			},
 		};
 
 		const result = await collectResultsFromEvent(service.fileSearch(query));
-		assert.strictEqual(result.files.length, 1, 'Result');
+		assert.strictEqual(result.files.length, 1, "Result");
 	});
 
-	test('Handles maxResults=0 correctly', async function () {
+	test("Handles maxResults=0 correctly", async function () {
 		const service = new RawSearchService();
 
 		const query: IFileQuery = {
@@ -192,16 +210,16 @@ flakySuite('RawSearchService', () => {
 			maxResults: 0,
 			sortByScore: true,
 			includePattern: {
-				'*.txt': true,
-				'*.js': true
+				"*.txt": true,
+				"*.js": true,
 			},
 		};
 
 		const result = await collectResultsFromEvent(service.fileSearch(query));
-		assert.strictEqual(result.files.length, 0, 'Result');
+		assert.strictEqual(result.files.length, 0, "Result");
 	});
 
-	test('Multi-root with include pattern and exists', async function () {
+	test("Multi-root with include pattern and exists", async function () {
 		const service = new RawSearchService();
 
 		const query: IFileQuery = {
@@ -209,24 +227,24 @@ flakySuite('RawSearchService', () => {
 			folderQueries: MULTIROOT_QUERIES,
 			exists: true,
 			includePattern: {
-				'*.txt': true,
-				'*.js': true
+				"*.txt": true,
+				"*.js": true,
 			},
 		};
 
 		const result = await collectResultsFromEvent(service.fileSearch(query));
-		assert.strictEqual(result.files.length, 0, 'Result');
+		assert.strictEqual(result.files.length, 0, "Result");
 		assert.ok(result.limitHit);
 	});
 
-	test('Sorted results', async function () {
-		const paths = ['bab', 'bbc', 'abb'];
+	test("Sorted results", async function () {
+		const paths = ["bab", "bbc", "abb"];
 		const matches: IRawFileMatch[] = paths.map(relativePath => ({
-			base: path.normalize('/some/where'),
+			base: path.normalize("/some/where"),
 			relativePath,
 			basename: relativePath,
 			size: 3,
-			searchPath: undefined
+			searchPath: undefined,
 		}));
 		const Engine = TestSearchEngine.bind(null, () => matches.shift()!);
 		const service = new RawSearchService();
@@ -246,15 +264,15 @@ flakySuite('RawSearchService', () => {
 		await service.doFileSearchWithEngine(Engine, {
 			type: QueryType.File,
 			folderQueries: TEST_FOLDER_QUERIES,
-			filePattern: 'bb',
+			filePattern: "bb",
 			sortByScore: true,
-			maxResults: 2
+			maxResults: 2,
 		}, cb, undefined, 1);
-		assert.notStrictEqual(typeof TestSearchEngine.last.config!.maxResults, 'number');
-		assert.deepStrictEqual(results, [path.normalize('/some/where/bbc'), path.normalize('/some/where/bab')]);
+		assert.notStrictEqual(typeof TestSearchEngine.last.config!.maxResults, "number");
+		assert.deepStrictEqual(results, [path.normalize("/some/where/bbc"), path.normalize("/some/where/bab")]);
 	});
 
-	test('Sorted result batches', async function () {
+	test("Sorted result batches", async function () {
 		let i = 25;
 		const Engine = TestSearchEngine.bind(null, () => i-- ? rawMatch : null);
 		const service = new RawSearchService();
@@ -276,21 +294,21 @@ flakySuite('RawSearchService', () => {
 		await service.doFileSearchWithEngine(Engine, {
 			type: QueryType.File,
 			folderQueries: TEST_FOLDER_QUERIES,
-			filePattern: 'a',
+			filePattern: "a",
 			sortByScore: true,
-			maxResults: 23
+			maxResults: 23,
 		}, cb, undefined, 10);
 		assert.deepStrictEqual(results, [10, 10, 3]);
 	});
 
-	test('Cached results', function () {
-		const paths = ['bcb', 'bbc', 'aab'];
+	test("Cached results", function () {
+		const paths = ["bcb", "bbc", "aab"];
 		const matches: IRawFileMatch[] = paths.map(relativePath => ({
-			base: path.normalize('/some/where'),
+			base: path.normalize("/some/where"),
 			relativePath,
 			basename: relativePath,
 			size: 3,
-			searchPath: undefined
+			searchPath: undefined,
 		}));
 		const Engine = TestSearchEngine.bind(null, () => matches.shift()!);
 		const service = new RawSearchService();
@@ -309,12 +327,12 @@ flakySuite('RawSearchService', () => {
 		return service.doFileSearchWithEngine(Engine, {
 			type: QueryType.File,
 			folderQueries: TEST_FOLDER_QUERIES,
-			filePattern: 'b',
+			filePattern: "b",
 			sortByScore: true,
-			cacheKey: 'x'
+			cacheKey: "x",
 		}, cb, undefined, -1).then(complete => {
 			assert.strictEqual((<IFileSearchStats>complete.stats).fromCache, false);
-			assert.deepStrictEqual(results, [path.normalize('/some/where/bcb'), path.normalize('/some/where/bbc'), path.normalize('/some/where/aab')]);
+			assert.deepStrictEqual(results, [path.normalize("/some/where/bcb"), path.normalize("/some/where/bbc"), path.normalize("/some/where/aab")]);
 		}).then(async () => {
 			const results: any[] = [];
 			const cb: IProgressCallback = value => {
@@ -328,21 +346,21 @@ flakySuite('RawSearchService', () => {
 				const complete = await service.doFileSearchWithEngine(Engine, {
 					type: QueryType.File,
 					folderQueries: TEST_FOLDER_QUERIES,
-					filePattern: 'bc',
+					filePattern: "bc",
 					sortByScore: true,
-					cacheKey: 'x'
+					cacheKey: "x",
 				}, cb, undefined, -1);
 				assert.ok((<IFileSearchStats>complete.stats).fromCache);
-				assert.deepStrictEqual(results, [path.normalize('/some/where/bcb'), path.normalize('/some/where/bbc')]);
+				assert.deepStrictEqual(results, [path.normalize("/some/where/bcb"), path.normalize("/some/where/bbc")]);
 			}
 			catch (e) { }
 		}).then(() => {
-			return service.clearCache('x');
+			return service.clearCache("x");
 		}).then(async () => {
 			matches.push({
-				base: path.normalize('/some/where'),
-				relativePath: 'bc',
-				searchPath: undefined
+				base: path.normalize("/some/where"),
+				relativePath: "bc",
+				searchPath: undefined,
 			});
 			const results: any[] = [];
 			const cb: IProgressCallback = value => {
@@ -358,12 +376,12 @@ flakySuite('RawSearchService', () => {
 			const complete = await service.doFileSearchWithEngine(Engine, {
 				type: QueryType.File,
 				folderQueries: TEST_FOLDER_QUERIES,
-				filePattern: 'bc',
+				filePattern: "bc",
 				sortByScore: true,
-				cacheKey: 'x'
+				cacheKey: "x",
 			}, cb, undefined, -1);
 			assert.strictEqual((<IFileSearchStats>complete.stats).fromCache, false);
-			assert.deepStrictEqual(results, [path.normalize('/some/where/bc')]);
+			assert.deepStrictEqual(results, [path.normalize("/some/where/bc")]);
 		});
 	});
 });

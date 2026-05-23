@@ -3,11 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../base/common/uri.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import type { CustomizationRef, SessionCustomization } from './state/sessionState.js';
+import { URI } from "../../../base/common/uri.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import type { CustomizationRef, SessionCustomization } from "./state/sessionState.js";
 
-export const IAgentPluginManager = createDecorator<IAgentPluginManager>('agentPluginManager');
+export const IAgentPluginManager = createDecorator<IAgentPluginManager>(
+  "agentPluginManager",
+);
 
 /**
  * A synced customization with its local plugin directory (when available).

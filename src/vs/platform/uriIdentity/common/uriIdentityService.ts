@@ -3,14 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IUriIdentityService } from './uriIdentity.js';
-import { URI } from '../../../base/common/uri.js';
-import { InstantiationType, registerSingleton } from '../../instantiation/common/extensions.js';
-import { IFileService, FileSystemProviderCapabilities, IFileSystemProviderCapabilitiesChangeEvent, IFileSystemProviderRegistrationEvent } from '../../files/common/files.js';
-import { ExtUri, IExtUri, normalizePath } from '../../../base/common/resources.js';
-import { Event } from '../../../base/common/event.js';
-import { DisposableStore } from '../../../base/common/lifecycle.js';
-import { quickSelect } from '../../../base/common/arrays.js';
+import { IUriIdentityService } from "./uriIdentity.js";
+import { URI } from "../../../base/common/uri.js";
+import { InstantiationType, registerSingleton } from "../../instantiation/common/extensions.js";
+import {
+  IFileService,
+  FileSystemProviderCapabilities,
+  IFileSystemProviderCapabilitiesChangeEvent,
+  IFileSystemProviderRegistrationEvent,
+} from "../../files/common/files.js";
+import { ExtUri, IExtUri, normalizePath } from "../../../base/common/resources.js";
+import { Event } from "../../../base/common/event.js";
+import { DisposableStore } from "../../../base/common/lifecycle.js";
+import { quickSelect } from "../../../base/common/arrays.js";
 
 class Entry {
 	static _clock = 0;
@@ -45,14 +50,19 @@ export class UriIdentityService implements IUriIdentityService {
 			let ignorePathCasing = schemeIgnoresPathCasingCache.get(uri.scheme);
 			if (ignorePathCasing === undefined) {
 				// retrieve once and then case per scheme until a change happens
-				ignorePathCasing = _fileService.hasProvider(uri) && !this._fileService.hasCapability(uri, FileSystemProviderCapabilities.PathCaseSensitive);
+				ignorePathCasing = _fileService.hasProvider(
+          uri,
+        ) && !this._fileService.hasCapability(
+          uri,
+          FileSystemProviderCapabilities.PathCaseSensitive,
+        );
 				schemeIgnoresPathCasingCache.set(uri.scheme, ignorePathCasing);
 			}
 			return ignorePathCasing;
 		};
 		this._dispooables.add(Event.any<IFileSystemProviderCapabilitiesChangeEvent | IFileSystemProviderRegistrationEvent>(
 			_fileService.onDidChangeFileSystemProviderRegistrations,
-			_fileService.onDidChangeFileSystemProviderCapabilities
+			_fileService.onDidChangeFileSystemProviderCapabilities,
 		)(e => {
 			const oldIgnorePathCasingValue = schemeIgnoresPathCasingCache.get(e.scheme);
 			if (oldIgnorePathCasingValue === undefined) {
@@ -109,9 +119,10 @@ export class UriIdentityService implements IUriIdentityService {
 		Entry._clock = 1;
 		const times = [...this._canonicalUris.values()].map(e => e.time);
 		const median = quickSelect(
-			Math.floor(times.length / 2),
-			times,
-			(a, b) => a - b);
+      Math.floor(times.length / 2),
+      times,
+      (a, b) => a - b,
+    );
 		for (const [key, entry] of this._canonicalUris.entries()) {
 			// Its important to remove the median value here (<= not <).
 			// If we have not touched any items since the last trim, the
@@ -125,4 +136,8 @@ export class UriIdentityService implements IUriIdentityService {
 	}
 }
 
-registerSingleton(IUriIdentityService, UriIdentityService, InstantiationType.Delayed);
+registerSingleton(
+  IUriIdentityService,
+  UriIdentityService,
+  InstantiationType.Delayed,
+);

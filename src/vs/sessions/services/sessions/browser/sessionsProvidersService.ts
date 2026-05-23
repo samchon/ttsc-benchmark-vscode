@@ -3,13 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable, IDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { ISessionsProvider } from '../common/sessionsProvider.js';
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { ISessionsProvider } from "../common/sessionsProvider.js";
 
-export const ISessionsProvidersService = createDecorator<ISessionsProvidersService>('sessionsProvidersService');
+export const ISessionsProvidersService = createDecorator<ISessionsProvidersService>(
+  "sessionsProvidersService",
+);
 
 export interface ISessionsProvidersChangeEvent {
 	readonly added: readonly ISessionsProvider[];
@@ -30,12 +32,16 @@ class SessionsProvidersService extends Disposable implements ISessionsProvidersS
 
 	private readonly _providers = new Map<string, ISessionsProvider>();
 
-	private readonly _onDidChangeProviders = this._register(new Emitter<ISessionsProvidersChangeEvent>());
+	private readonly _onDidChangeProviders = this._register(
+    new Emitter<ISessionsProvidersChangeEvent>(),
+  );
 	readonly onDidChangeProviders: Event<ISessionsProvidersChangeEvent> = this._onDidChangeProviders.event;
 
 	registerProvider(provider: ISessionsProvider): IDisposable {
 		if (this._providers.has(provider.id)) {
-			throw new Error(`Sessions provider '${provider.id}' is already registered.`);
+			throw new Error(
+        `Sessions provider '${provider.id}' is already registered.`,
+      );
 		}
 
 		this._providers.set(provider.id, provider);
@@ -59,4 +65,8 @@ class SessionsProvidersService extends Disposable implements ISessionsProvidersS
 	}
 }
 
-registerSingleton(ISessionsProvidersService, SessionsProvidersService, InstantiationType.Delayed);
+registerSingleton(
+  ISessionsProvidersService,
+  SessionsProvidersService,
+  InstantiationType.Delayed,
+);

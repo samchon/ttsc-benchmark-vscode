@@ -3,37 +3,39 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { Event, MicrotaskEmitter } from '../../../../base/common/event.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { getDomNodePagePosition, IDomNodePagePosition } from '../../../../base/browser/dom.js';
-import { CodeWindow } from '../../../../base/browser/window.js';
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { Event, MicrotaskEmitter } from "../../../../base/common/event.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { getDomNodePagePosition, IDomNodePagePosition } from "../../../../base/browser/dom.js";
+import { CodeWindow } from "../../../../base/browser/window.js";
 
 export enum BrowserOverlayType {
-	Menu = 'menu',
-	QuickInput = 'quickInput',
-	Hover = 'hover',
-	Dialog = 'dialog',
-	Notification = 'notification',
-	Unknown = 'unknown'
+	Menu = "menu",
+	QuickInput = "quickInput",
+	Hover = "hover",
+	Dialog = "dialog",
+	Notification = "notification",
+	Unknown = "unknown"
 }
 
 const OVERLAY_DEFINITIONS: ReadonlyArray<{ className: string; type: BrowserOverlayType }> = [
-	{ className: 'monaco-menu-container', type: BrowserOverlayType.Menu },
-	{ className: 'action-list-submenu-panel', type: BrowserOverlayType.Menu },
-	{ className: 'quick-input-widget', type: BrowserOverlayType.QuickInput },
-	{ className: 'monaco-hover', type: BrowserOverlayType.Hover },
-	{ className: 'editor-widget', type: BrowserOverlayType.Hover },
-	{ className: 'suggest-details-container', type: BrowserOverlayType.Hover },
-	{ className: 'monaco-dialog-modal-block', type: BrowserOverlayType.Dialog },
-	{ className: 'monaco-modal-editor-block', type: BrowserOverlayType.Dialog },
-	{ className: 'notifications-center', type: BrowserOverlayType.Notification },
-	{ className: 'notification-toast-container', type: BrowserOverlayType.Notification },
+	{ className: "monaco-menu-container", type: BrowserOverlayType.Menu },
+	{ className: "action-list-submenu-panel", type: BrowserOverlayType.Menu },
+	{ className: "quick-input-widget", type: BrowserOverlayType.QuickInput },
+	{ className: "monaco-hover", type: BrowserOverlayType.Hover },
+	{ className: "editor-widget", type: BrowserOverlayType.Hover },
+	{ className: "suggest-details-container", type: BrowserOverlayType.Hover },
+	{ className: "monaco-dialog-modal-block", type: BrowserOverlayType.Dialog },
+	{ className: "monaco-modal-editor-block", type: BrowserOverlayType.Dialog },
+	{ className: "notifications-center", type: BrowserOverlayType.Notification },
+	{ className: "notification-toast-container", type: BrowserOverlayType.Notification },
 	// Context view is very generic, so treat the content as unknown
-	{ className: 'context-view', type: BrowserOverlayType.Unknown }
+	{ className: "context-view", type: BrowserOverlayType.Unknown },
 ];
 
-export const IBrowserOverlayManager = createDecorator<IBrowserOverlayManager>('browserOverlayManager');
+export const IBrowserOverlayManager = createDecorator<IBrowserOverlayManager>(
+  "browserOverlayManager",
+);
 
 export interface IBrowserOverlayInfo {
 	type: BrowserOverlayType;
@@ -63,7 +65,7 @@ export class BrowserOverlayManager extends Disposable implements IBrowserOverlay
 			this._observerIsConnected = true;
 			this._structuralObserver.observe(this.targetWindow.document.body, {
 				childList: true,
-				subtree: true
+				subtree: true,
 			});
 			this.updateTrackedElements();
 		},
@@ -75,7 +77,7 @@ export class BrowserOverlayManager extends Disposable implements IBrowserOverlay
 		},
 
 		// Must be passed to prevent duplicate emits
-		merge: () => { }
+		merge: () => { },
 	}));
 	readonly onDidChangeOverlayState = this._onDidChangeOverlayState.event;
 
@@ -89,24 +91,24 @@ export class BrowserOverlayManager extends Disposable implements IBrowserOverlay
 	private _shadowRootOverlayCache = new WeakMap<ShadowRoot, Array<{ element: HTMLElement; type: BrowserOverlayType }>>();
 
 	constructor(
-		private readonly targetWindow: CodeWindow
+		private readonly targetWindow: CodeWindow,
 	) {
 		super();
 
 		// Initialize live collections for each overlay selector in main document
 		for (const overlayDefinition of OVERLAY_DEFINITIONS) {
 			this._overlayCollections.set(overlayDefinition.className, {
-				type: overlayDefinition.type,
-				// We need dynamic collections for overlay detection, using getElementsByClassName is intentional here
-				// eslint-disable-next-line no-restricted-syntax
-				collection: this.targetWindow.document.getElementsByClassName(overlayDefinition.className)
-			});
+        type: overlayDefinition.type,
+        collection: this.targetWindow.document.getElementsByClassName(overlayDefinition.className),
+      });
 		}
 
 		// Initialize live collection for shadow root hosts
 		// We need dynamic collections for overlay detection, using getElementsByClassName is intentional here
 		// eslint-disable-next-line no-restricted-syntax
-		this._shadowRootHostCollection = this.targetWindow.document.getElementsByClassName('shadow-root-host');
+		this._shadowRootHostCollection = this.targetWindow.document.getElementsByClassName(
+      "shadow-root-host",
+    );
 
 		// Setup structural observer to watch for element additions/removals
 		this._structuralObserver = new targetWindow.MutationObserver((mutations) => {
@@ -162,9 +164,14 @@ export class BrowserOverlayManager extends Disposable implements IBrowserOverlay
 					for (const overlayDefinition of OVERLAY_DEFINITIONS) {
 						// We need to query shadow roots for overlay detection, using querySelectorAll is intentional here
 						// eslint-disable-next-line no-restricted-syntax
-						const elements = shadowRoot.querySelectorAll(`.${overlayDefinition.className}`);
+						const elements = shadowRoot.querySelectorAll(
+              `.${overlayDefinition.className}`,
+            );
 						for (const element of elements) {
-							cache.push({ element: element as HTMLElement, type: overlayDefinition.type });
+							cache.push({
+                element: element as HTMLElement,
+                type: overlayDefinition.type,
+              });
 						}
 					}
 					this._shadowRootOverlayCache.set(shadowRoot, cache);
@@ -189,9 +196,9 @@ export class BrowserOverlayManager extends Disposable implements IBrowserOverlay
 				});
 
 				observer.observe(shadowRoot, {
-					childList: true,
-					subtree: true
-				});
+          childList: true,
+          subtree: true,
+        });
 
 				this._shadowRootObservers.set(shadowRoot, observer);
 				shouldEmit = true;
@@ -204,7 +211,7 @@ export class BrowserOverlayManager extends Disposable implements IBrowserOverlay
 			if (!this._elementObservers.has(overlay.element)) {
 				const observer = new this.targetWindow.MutationObserver((records) => {
 					// If all changes are within a browser container within the overlay, ignore.
-					if (records.every(record => record.target.parentElement?.closest('.browser-container'))) {
+					if (records.every(record => record.target.parentElement?.closest(".browser-container"))) {
 						return;
 					}
 
@@ -217,11 +224,11 @@ export class BrowserOverlayManager extends Disposable implements IBrowserOverlay
 
 				// Start observing this element
 				observer.observe(overlay.element, {
-					attributes: true,
-					attributeFilter: ['style', 'class'],
-					childList: true,
-					subtree: true
-				});
+          attributes: true,
+          attributeFilter: ["style", "class"],
+          childList: true,
+          subtree: true,
+        });
 
 				shouldEmit = true;
 			}
@@ -256,22 +263,33 @@ export class BrowserOverlayManager extends Disposable implements IBrowserOverlay
 				continue;
 			}
 			const overlayRect = this.getRect(overlay.element);
-			const overlapCenter = getOverlappingRectangleCenterPoint(elementRect, overlayRect);
+			const overlapCenter = getOverlappingRectangleCenterPoint(
+        elementRect,
+        overlayRect,
+      );
 			if (overlapCenter) {
 				// z-index check. If the overlay isn't the topmost element, ignore it
 				// (the overlay either doesn't cover the element, or is also covered by another overlay).
 				const clientX = overlapCenter.x - this.targetWindow.scrollX;
 				const clientY = overlapCenter.y - this.targetWindow.scrollY;
-				let elementAtPoint = this.targetWindow.document.elementFromPoint(clientX, clientY);
+				let elementAtPoint = this.targetWindow.document.elementFromPoint(
+          clientX,
+          clientY,
+        );
 				// Account for shadow roots
-				if (elementAtPoint?.shadowRoot && !overlay.element.contains(elementAtPoint)) {
-					elementAtPoint = elementAtPoint.shadowRoot.elementFromPoint(clientX, clientY);
+				if (elementAtPoint?.shadowRoot && !overlay.element.contains(
+          elementAtPoint,
+        )) {
+					elementAtPoint = elementAtPoint.shadowRoot.elementFromPoint(
+            clientX,
+            clientY,
+          );
 				}
 				if (elementAtPoint && overlay.element.contains(elementAtPoint)) {
 					overlappingOverlays.push({
-						type: overlay.type,
-						rect: overlayRect
-					});
+            type: overlay.type,
+            rect: overlayRect,
+          });
 				}
 			}
 		}
@@ -310,15 +328,21 @@ export class BrowserOverlayManager extends Disposable implements IBrowserOverlay
 
 function getOverlappingRectangleCenterPoint(rect1: IDomNodePagePosition, rect2: IDomNodePagePosition): { x: number; y: number } | null {
 	const overlapLeft = Math.max(rect1.left, rect2.left);
-	const overlapRight = Math.min(rect1.left + rect1.width, rect2.left + rect2.width);
+	const overlapRight = Math.min(
+    rect1.left + rect1.width,
+    rect2.left + rect2.width,
+  );
 	const overlapTop = Math.max(rect1.top, rect2.top);
-	const overlapBottom = Math.min(rect1.top + rect1.height, rect2.top + rect2.height);
+	const overlapBottom = Math.min(
+    rect1.top + rect1.height,
+    rect2.top + rect2.height,
+  );
 
 	if (overlapRight > overlapLeft && overlapBottom > overlapTop) {
 		return {
-			x: (overlapLeft + overlapRight) / 2,
-			y: (overlapTop + overlapBottom) / 2
-		};
+      x: (overlapLeft + overlapRight) / 2,
+      y: (overlapTop + overlapBottom) / 2,
+    };
 	}
 
 	return null;

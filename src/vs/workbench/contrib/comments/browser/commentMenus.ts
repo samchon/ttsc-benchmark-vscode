@@ -3,14 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { Comment } from '../../../../editor/common/languages.js';
-import { IMenu, IMenuActionOptions, IMenuCreateOptions, IMenuService, MenuId, MenuItemAction, SubmenuItemAction } from '../../../../platform/actions/common/actions.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { Comment } from "../../../../editor/common/languages.js";
+import {
+  IMenu,
+  IMenuActionOptions,
+  IMenuCreateOptions,
+  IMenuService,
+  MenuId,
+  MenuItemAction,
+  SubmenuItemAction,
+} from "../../../../platform/actions/common/actions.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
 
 export class CommentMenus implements IDisposable {
 	constructor(
-		@IMenuService private readonly menuService: IMenuService
+		@IMenuService private readonly menuService: IMenuService,
 	) { }
 
 	getCommentThreadTitleActions(contextKeyService: IContextKeyService): IMenu {
@@ -26,7 +34,11 @@ export class CommentMenus implements IDisposable {
 	}
 
 	getCommentThreadAdditionalActions(contextKeyService: IContextKeyService): IMenu {
-		return this.getMenu(MenuId.CommentThreadAdditionalActions, contextKeyService, { emitEventsForSubmenuChanges: true });
+		return this.getMenu(
+      MenuId.CommentThreadAdditionalActions,
+      contextKeyService,
+      { emitEventsForSubmenuChanges: true },
+    );
 	}
 
 	getCommentTitleActions(comment: Comment, contextKeyService: IContextKeyService): IMenu {
@@ -38,7 +50,11 @@ export class CommentMenus implements IDisposable {
 	}
 
 	getCommentThreadTitleContextActions(contextKeyService: IContextKeyService) {
-		return this.getActions(MenuId.CommentThreadTitleContext, contextKeyService, { shouldForwardArgs: true });
+		return this.getActions(
+      MenuId.CommentThreadTitleContext,
+      contextKeyService,
+      { shouldForwardArgs: true },
+    );
 	}
 
 	private getMenu(menuId: MenuId, contextKeyService: IContextKeyService, options?: IMenuCreateOptions): IMenu {

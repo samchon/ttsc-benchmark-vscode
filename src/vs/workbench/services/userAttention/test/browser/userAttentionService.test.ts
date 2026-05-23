@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import * as sinon from 'sinon';
-import { IObservable, observableValue } from '../../../../../base/common/observable.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { TestInstantiationService } from '../../../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { ILogService, NullLogService } from '../../../../../platform/log/common/log.js';
-import { UserAttentionServiceEnv, UserAttentionService } from '../../browser/userAttentionBrowser.js';
+import assert from "assert";
+import * as sinon from "sinon";
+import { IObservable, observableValue } from "../../../../../base/common/observable.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { TestInstantiationService } from "../../../../../platform/instantiation/test/common/instantiationServiceMock.js";
+import { ILogService, NullLogService } from "../../../../../platform/log/common/log.js";
+import { UserAttentionServiceEnv, UserAttentionService } from "../../browser/userAttentionBrowser.js";
 
-suite('UserAttentionService', () => {
+suite("UserAttentionService", () => {
 	let userAttentionService: UserAttentionService;
 	let insta: TestInstantiationService;
 	let clock: sinon.SinonFakeTimers;
@@ -32,19 +32,19 @@ suite('UserAttentionService', () => {
 		insta = store.add(new TestInstantiationService());
 		insta.stub(ILogService, new NullLogService());
 
-		const isVsCodeFocused = observableValue('focused', true);
-		const isUserActive = observableValue('active', false);
+		const isVsCodeFocused = observableValue("focused", true);
+		const isUserActive = observableValue("active", false);
 
 		hostAdapterMock = {
 			isVsCodeFocused,
 			isUserActive,
 			setFocus: (f) => isVsCodeFocused.set(f, undefined),
 			setActive: (a) => isUserActive.set(a, undefined),
-			dispose: () => { }
+			dispose: () => { },
 		};
 
 		const originalCreateInstance = insta.createInstance;
-		sinon.stub(insta, 'createInstance').callsFake((ctor: any, ...args: unknown[]) => {
+		sinon.stub(insta, "createInstance").callsFake((ctor: any, ...args: unknown[]) => {
 			if (ctor === UserAttentionServiceEnv) {
 				return hostAdapterMock;
 			}
@@ -62,7 +62,7 @@ suite('UserAttentionService', () => {
 		clock.restore();
 	});
 
-	test('isVsCodeFocused reflects window focus state', () => {
+	test("isVsCodeFocused reflects window focus state", () => {
 		assert.strictEqual(userAttentionService.isVsCodeFocused.get(), true);
 
 		hostAdapterMock.setFocus(false);
@@ -72,12 +72,12 @@ suite('UserAttentionService', () => {
 		assert.strictEqual(userAttentionService.isVsCodeFocused.get(), true);
 	});
 
-	test('hasUserAttention is true when focused and has recent activity', () => {
+	test("hasUserAttention is true when focused and has recent activity", () => {
 		// Initially focused with activity
 		assert.strictEqual(userAttentionService.hasUserAttention.get(), true);
 	});
 
-	test('hasUserAttention becomes false after attention timeout without activity', () => {
+	test("hasUserAttention becomes false after attention timeout without activity", () => {
 		assert.strictEqual(userAttentionService.hasUserAttention.get(), true);
 
 		// Advance time past the attention timeout (5 seconds)
@@ -86,7 +86,7 @@ suite('UserAttentionService', () => {
 		assert.strictEqual(userAttentionService.hasUserAttention.get(), false);
 	});
 
-	test('hasUserAttention is false when window loses focus', () => {
+	test("hasUserAttention is false when window loses focus", () => {
 		assert.strictEqual(userAttentionService.hasUserAttention.get(), true);
 
 		hostAdapterMock.setFocus(false);
@@ -95,7 +95,7 @@ suite('UserAttentionService', () => {
 		assert.strictEqual(userAttentionService.hasUserAttention.get(), true);
 	});
 
-	test('hasUserAttention is restored when activity occurs', () => {
+	test("hasUserAttention is restored when activity occurs", () => {
 		// Wait for attention to expire
 		clock.tick(ATTENTION_TIMEOUT + 1);
 		assert.strictEqual(userAttentionService.hasUserAttention.get(), false);
@@ -106,7 +106,7 @@ suite('UserAttentionService', () => {
 		assert.strictEqual(userAttentionService.hasUserAttention.get(), true);
 	});
 
-	test('activity keeps attention alive', () => {
+	test("activity keeps attention alive", () => {
 		// Start with attention
 		assert.strictEqual(userAttentionService.hasUserAttention.get(), true);
 
@@ -124,8 +124,8 @@ suite('UserAttentionService', () => {
 		assert.strictEqual(userAttentionService.hasUserAttention.get(), false);
 	});
 
-	suite('fireAfterGivenFocusTimePassed', () => {
-		test('fires callback after accumulated focus time', () => {
+	suite("fireAfterGivenFocusTimePassed", () => {
+		test("fires callback after accumulated focus time", () => {
 			let callbackFired = false;
 			const disposable = userAttentionService.fireAfterGivenFocusTimePassed(3 * ONE_MINUTE, () => {
 				callbackFired = true;
@@ -151,7 +151,7 @@ suite('UserAttentionService', () => {
 			assert.strictEqual(callbackFired, true);
 		});
 
-		test('does not accumulate time when user has no attention', () => {
+		test("does not accumulate time when user has no attention", () => {
 			let callbackFired = false;
 			const disposable = userAttentionService.fireAfterGivenFocusTimePassed(2 * ONE_MINUTE, () => {
 				callbackFired = true;
@@ -173,7 +173,7 @@ suite('UserAttentionService', () => {
 			assert.strictEqual(callbackFired, true);
 		});
 
-		test('stops accumulating time when attention expires', () => {
+		test("stops accumulating time when attention expires", () => {
 			let callbackFired = false;
 			const disposable = userAttentionService.fireAfterGivenFocusTimePassed(2 * ONE_MINUTE, () => {
 				callbackFired = true;
@@ -203,7 +203,7 @@ suite('UserAttentionService', () => {
 			assert.strictEqual(callbackFired, true);
 		});
 
-		test('can be disposed before callback fires', () => {
+		test("can be disposed before callback fires", () => {
 			let callbackFired = false;
 			const disposable = userAttentionService.fireAfterGivenFocusTimePassed(2 * ONE_MINUTE, () => {
 				callbackFired = true;
@@ -225,7 +225,7 @@ suite('UserAttentionService', () => {
 			assert.strictEqual(callbackFired, false);
 		});
 
-		test('callback fires only once', () => {
+		test("callback fires only once", () => {
 			let callCount = 0;
 			const disposable = userAttentionService.fireAfterGivenFocusTimePassed(ONE_MINUTE, () => {
 				callCount++;

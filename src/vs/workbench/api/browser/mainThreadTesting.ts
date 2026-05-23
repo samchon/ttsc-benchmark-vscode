@@ -3,24 +3,50 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from '../../../base/common/buffer.js';
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { Event } from '../../../base/common/event.js';
-import { Disposable, DisposableStore, IDisposable, MutableDisposable, toDisposable } from '../../../base/common/lifecycle.js';
-import { ISettableObservable, observableValue, transaction } from '../../../base/common/observable.js';
-import { WellDefinedPrefixTree } from '../../../base/common/prefixTree.js';
-import { URI, UriComponents } from '../../../base/common/uri.js';
-import { Range } from '../../../editor/common/core/range.js';
-import { IUriIdentityService } from '../../../platform/uriIdentity/common/uriIdentity.js';
-import { TestCoverage } from '../../contrib/testing/common/testCoverage.js';
-import { TestId } from '../../contrib/testing/common/testId.js';
-import { ITestProfileService } from '../../contrib/testing/common/testProfileService.js';
-import { LiveTestResult } from '../../contrib/testing/common/testResult.js';
-import { ITestResultService } from '../../contrib/testing/common/testResultService.js';
-import { IMainThreadTestController, ITestService } from '../../contrib/testing/common/testService.js';
-import { CoverageDetails, ExtensionRunTestsRequest, IFileCoverage, ITestItem, ITestMessage, ITestRunProfile, ITestRunTask, ResolvedTestRunRequest, TestControllerCapability, TestResultState, TestRunProfileBitset, TestsDiffOp } from '../../contrib/testing/common/testTypes.js';
-import { IExtHostContext, extHostNamedCustomer } from '../../services/extensions/common/extHostCustomers.js';
-import { ExtHostContext, ExtHostTestingShape, ILocationDto, ITestControllerPatch, MainContext, MainThreadTestingShape } from '../common/extHost.protocol.js';
+import { VSBuffer } from "../../../base/common/buffer.js";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { Event } from "../../../base/common/event.js";
+import {
+  Disposable,
+  DisposableStore,
+  IDisposable,
+  MutableDisposable,
+  toDisposable,
+} from "../../../base/common/lifecycle.js";
+import { ISettableObservable, observableValue, transaction } from "../../../base/common/observable.js";
+import { WellDefinedPrefixTree } from "../../../base/common/prefixTree.js";
+import { URI, UriComponents } from "../../../base/common/uri.js";
+import { Range } from "../../../editor/common/core/range.js";
+import { IUriIdentityService } from "../../../platform/uriIdentity/common/uriIdentity.js";
+import { TestCoverage } from "../../contrib/testing/common/testCoverage.js";
+import { TestId } from "../../contrib/testing/common/testId.js";
+import { ITestProfileService } from "../../contrib/testing/common/testProfileService.js";
+import { LiveTestResult } from "../../contrib/testing/common/testResult.js";
+import { ITestResultService } from "../../contrib/testing/common/testResultService.js";
+import { IMainThreadTestController, ITestService } from "../../contrib/testing/common/testService.js";
+import {
+  CoverageDetails,
+  ExtensionRunTestsRequest,
+  IFileCoverage,
+  ITestItem,
+  ITestMessage,
+  ITestRunProfile,
+  ITestRunTask,
+  ResolvedTestRunRequest,
+  TestControllerCapability,
+  TestResultState,
+  TestRunProfileBitset,
+  TestsDiffOp,
+} from "../../contrib/testing/common/testTypes.js";
+import { IExtHostContext, extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
+import {
+  ExtHostContext,
+  ExtHostTestingShape,
+  ILocationDto,
+  ITestControllerPatch,
+  MainContext,
+  MainThreadTestingShape,
+} from "../common/extHost.protocol.js";
 
 @extHostNamedCustomer(MainContext.MainThreadTesting)
 export class MainThreadTesting extends Disposable implements MainThreadTestingShape {
@@ -50,9 +76,11 @@ export class MainThreadTesting extends Disposable implements MainThreadTestingSh
 			getTestsRelatedToCode: (uri, position, token) => this.proxy.$getTestsRelatedToCode(uri, position, token),
 		}));
 
-		this._register(this.testService.onDidCancelTestRun(({ runId, taskId }) => {
-			this.proxy.$cancelExtensionTestRun(runId, taskId);
-		}));
+		this._register(
+      this.testService.onDidCancelTestRun(({ runId, taskId }) => {
+        this.proxy.$cancelExtensionTestRun(runId, taskId);
+      }),
+    );
 
 		this._register(Event.debounce(testProfiles.onDidChange, (_last, e) => e)(() => {
 			const obj: Record</* controller id */string, /* profile id */ number[]> = {};
@@ -67,12 +95,12 @@ export class MainThreadTesting extends Disposable implements MainThreadTestingSh
 		}));
 
 		this._register(resultService.onResultsChanged(evt => {
-			if ('completed' in evt) {
+			if ("completed" in evt) {
 				const serialized = evt.completed.toJSONWithMessages();
 				if (serialized) {
 					this.proxy.$publishTestResults([serialized]);
 				}
-			} else if ('removed' in evt) {
+			} else if ("removed" in evt) {
 				evt.removed.forEach(r => {
 					if (r instanceof LiveTestResult) {
 						this.proxy.$disposeRun(r.id);
@@ -130,8 +158,13 @@ export class MainThreadTesting extends Disposable implements MainThreadTestingSh
 	 * @inheritdoc
 	 */
 	$addTestsToRun(controllerId: string, runId: string, tests: ITestItem.Serialized[]): void {
-		this.withLiveRun(runId, r => r.addTestChainToRun(controllerId,
-			tests.map(t => ITestItem.deserialize(this.uriIdentityService, t))));
+		this.withLiveRun(
+      runId,
+      r => r.addTestChainToRun(
+        controllerId,
+        tests.map(t => ITestItem.deserialize(this.uriIdentityService, t)),
+      ),
+    );
 	}
 
 	/**
@@ -194,7 +227,10 @@ export class MainThreadTesting extends Disposable implements MainThreadTestingSh
 	 * @inheritdoc
 	 */
 	public $updateTestStateInRun(runId: string, taskId: string, testId: string, state: TestResultState, duration?: number): void {
-		this.withLiveRun(runId, r => r.updateState(testId, taskId, state, duration));
+		this.withLiveRun(
+      runId,
+      r => r.updateState(testId, taskId, state, duration),
+    );
 	}
 
 	/**
@@ -202,11 +238,14 @@ export class MainThreadTesting extends Disposable implements MainThreadTestingSh
 	 */
 	public $appendOutputToRun(runId: string, taskId: string, output: VSBuffer, locationDto?: ILocationDto, testId?: string): void {
 		const location = locationDto && {
-			uri: URI.revive(locationDto.uri),
-			range: Range.lift(locationDto.range)
-		};
+      uri: URI.revive(locationDto.uri),
+      range: Range.lift(locationDto.range),
+    };
 
-		this.withLiveRun(runId, r => r.appendOutput(output, taskId, location, testId));
+		this.withLiveRun(
+      runId,
+      r => r.appendOutput(output, taskId, location, testId),
+    );
 	}
 
 
@@ -217,7 +256,11 @@ export class MainThreadTesting extends Disposable implements MainThreadTestingSh
 		const r = this.resultService.getResult(runId);
 		if (r && r instanceof LiveTestResult) {
 			for (const message of messages) {
-				r.appendMessage(testId, taskId, ITestMessage.deserialize(this.uriIdentityService, message));
+				r.appendMessage(
+          testId,
+          taskId,
+          ITestMessage.deserialize(this.uriIdentityService, message),
+        );
 			}
 		}
 	}
@@ -242,20 +285,24 @@ export class MainThreadTesting extends Disposable implements MainThreadTestingSh
 			getRelatedCode: (testId, token) => this.proxy.$getCodeRelatedToTest(testId, token).then(locations =>
 				locations.map(l => ({
 					uri: URI.revive(l.uri),
-					range: Range.lift(l.range)
+					range: Range.lift(l.range),
 				})),
 			),
 		};
 
-		disposable.add(toDisposable(() => this.testProfiles.removeProfile(controllerId)));
-		disposable.add(this.testService.registerTestController(controllerId, controller));
+		disposable.add(
+      toDisposable(() => this.testProfiles.removeProfile(controllerId)),
+    );
+		disposable.add(
+      this.testService.registerTestController(controllerId, controller),
+    );
 
 		this.testProviderRegistrations.set(controllerId, {
-			instance: controller,
-			label,
-			capabilities,
-			disposable
-		});
+      instance: controller,
+      label,
+      capabilities,
+      disposable,
+    });
 	}
 
 	/**
@@ -291,8 +338,13 @@ export class MainThreadTesting extends Disposable implements MainThreadTestingSh
 	 * @inheritdoc
 	 */
 	public $subscribeToDiffs(): void {
-		this.proxy.$acceptDiff(this.testService.collection.getReviverDiff().map(TestsDiffOp.serialize));
-		this.diffListener.value = this.testService.onDidProcessDiff(this.proxy.$acceptDiff, this.proxy);
+		this.proxy.$acceptDiff(
+      this.testService.collection.getReviverDiff().map(TestsDiffOp.serialize),
+    );
+		this.diffListener.value = this.testService.onDidProcessDiff(
+      this.proxy.$acceptDiff,
+      this.proxy,
+    );
 	}
 
 	/**
@@ -306,8 +358,10 @@ export class MainThreadTesting extends Disposable implements MainThreadTestingSh
 	 * @inheritdoc
 	 */
 	public $publishDiff(controllerId: string, diff: TestsDiffOp.Serialized[]): void {
-		this.testService.publishDiff(controllerId,
-			diff.map(d => TestsDiffOp.deserialize(this.uriIdentityService, d)));
+		this.testService.publishDiff(
+      controllerId,
+      diff.map(d => TestsDiffOp.deserialize(this.uriIdentityService, d)),
+    );
 	}
 
 	/**

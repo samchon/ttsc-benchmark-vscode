@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, dispose, IDisposable } from '../../../../base/common/lifecycle.js';
-import { ICodeEditor } from '../../../../editor/browser/editorBrowser.js';
-import { IRange } from '../../../../editor/common/core/range.js';
-import { CommentThread, CommentThreadCollapsibleState } from '../../../../editor/common/languages.js';
-import { IModelDecorationOptions, IModelDeltaDecoration } from '../../../../editor/common/model.js';
-import { ModelDecorationOptions } from '../../../../editor/common/model/textModel.js';
-import { ICommentInfo, ICommentService } from './commentService.js';
+import { Disposable, dispose, IDisposable } from "../../../../base/common/lifecycle.js";
+import { ICodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { IRange } from "../../../../editor/common/core/range.js";
+import { CommentThread, CommentThreadCollapsibleState } from "../../../../editor/common/languages.js";
+import { IModelDecorationOptions, IModelDeltaDecoration } from "../../../../editor/common/model.js";
+import { ModelDecorationOptions } from "../../../../editor/common/model/textModel.js";
+import { ICommentInfo, ICommentService } from "./commentService.js";
 
 class CommentThreadRangeDecoration implements IModelDeltaDecoration {
 	private _decorationId: string | undefined;
@@ -29,7 +29,7 @@ class CommentThreadRangeDecoration implements IModelDeltaDecoration {
 }
 
 export class CommentThreadRangeDecorator extends Disposable {
-	private static description = 'comment-thread-range-decorator';
+	private static description = "comment-thread-range-decorator";
 	private decorationOptions: ModelDecorationOptions;
 	private activeDecorationOptions: ModelDecorationOptions;
 	private decorationIds: string[] = [];
@@ -41,30 +41,38 @@ export class CommentThreadRangeDecorator extends Disposable {
 	constructor(commentService: ICommentService) {
 		super();
 		const decorationOptions: IModelDecorationOptions = {
-			description: CommentThreadRangeDecorator.description,
-			isWholeLine: false,
-			zIndex: 20,
-			className: 'comment-thread-range',
-			shouldFillLineOnLineBreak: true
-		};
+      description: CommentThreadRangeDecorator.description,
+      isWholeLine: false,
+      zIndex: 20,
+      className: "comment-thread-range",
+      shouldFillLineOnLineBreak: true,
+    };
 
-		this.decorationOptions = ModelDecorationOptions.createDynamic(decorationOptions);
+		this.decorationOptions = ModelDecorationOptions.createDynamic(
+      decorationOptions,
+    );
 
 		const activeDecorationOptions: IModelDecorationOptions = {
-			description: CommentThreadRangeDecorator.description,
-			isWholeLine: false,
-			zIndex: 20,
-			className: 'comment-thread-range-current',
-			shouldFillLineOnLineBreak: true
-		};
+      description: CommentThreadRangeDecorator.description,
+      isWholeLine: false,
+      zIndex: 20,
+      className: "comment-thread-range-current",
+      shouldFillLineOnLineBreak: true,
+    };
 
-		this.activeDecorationOptions = ModelDecorationOptions.createDynamic(activeDecorationOptions);
-		this._register(commentService.onDidChangeCurrentCommentThread(thread => {
-			this.updateCurrent(thread);
-		}));
-		this._register(commentService.onDidUpdateCommentThreads(() => {
-			this.updateCurrent(undefined);
-		}));
+		this.activeDecorationOptions = ModelDecorationOptions.createDynamic(
+      activeDecorationOptions,
+    );
+		this._register(
+      commentService.onDidChangeCurrentCommentThread(thread => {
+        this.updateCurrent(thread);
+      }),
+    );
+		this._register(
+      commentService.onDidUpdateCommentThreads(() => {
+        this.updateCurrent(undefined);
+      }),
+    );
 	}
 
 	private updateCurrent(thread: CommentThread<IRange> | undefined) {
@@ -82,14 +90,21 @@ export class CommentThreadRangeDecorator extends Disposable {
 							this.updateCurrent(undefined);
 						}
 					});
-					newDecoration.push(new CommentThreadRangeDecoration(range, this.activeDecorationOptions));
+					newDecoration.push(
+            new CommentThreadRangeDecoration(
+              range,
+              this.activeDecorationOptions,
+            ),
+          );
 				}
 			}
 		}
 		this.editor.changeDecorations((changeAccessor) => {
-			this.activeDecorationIds = changeAccessor.deltaDecorations(this.activeDecorationIds, newDecoration);
-			newDecoration.forEach((decoration, index) => decoration.id = this.decorationIds[index]);
-		});
+      this.activeDecorationIds = changeAccessor.deltaDecorations(this.activeDecorationIds, newDecoration);
+      newDecoration.forEach(
+        (decoration, index) => decoration.id = this.decorationIds[index],
+      );
+    });
 	}
 
 	public update(editor: ICodeEditor | undefined, commentInfos: ICommentInfo[]) {
@@ -127,9 +142,11 @@ export class CommentThreadRangeDecorator extends Disposable {
 		}
 
 		editor.changeDecorations((changeAccessor) => {
-			this.decorationIds = changeAccessor.deltaDecorations(this.decorationIds, commentThreadRangeDecorations);
-			commentThreadRangeDecorations.forEach((decoration, index) => decoration.id = this.decorationIds[index]);
-		});
+      this.decorationIds = changeAccessor.deltaDecorations(this.decorationIds, commentThreadRangeDecorations);
+      commentThreadRangeDecorations.forEach(
+        (decoration, index) => decoration.id = this.decorationIds[index],
+      );
+    });
 	}
 
 	override dispose() {

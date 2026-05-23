@@ -3,58 +3,76 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { pushMany } from '../../../base/common/arrays.js';
-import { VSBuffer, VSBufferReadableStream } from '../../../base/common/buffer.js';
-import { CharCode } from '../../../base/common/charCode.js';
-import { SetWithKey } from '../../../base/common/collections.js';
-import { Color } from '../../../base/common/color.js';
-import { BugIndicatingError, illegalArgument, onUnexpectedError } from '../../../base/common/errors.js';
-import { Emitter, Event } from '../../../base/common/event.js';
-import { IMarkdownString } from '../../../base/common/htmlContent.js';
-import { Disposable, IDisposable, MutableDisposable } from '../../../base/common/lifecycle.js';
-import { listenStream } from '../../../base/common/stream.js';
-import * as strings from '../../../base/common/strings.js';
-import { ThemeColor } from '../../../base/common/themables.js';
-import { Constants } from '../../../base/common/uint.js';
-import { URI } from '../../../base/common/uri.js';
-import { IInstantiationService } from '../../../platform/instantiation/common/instantiation.js';
-import { isDark } from '../../../platform/theme/common/theme.js';
-import { IColorTheme } from '../../../platform/theme/common/themeService.js';
-import { IUndoRedoService, ResourceEditStackSnapshot, UndoRedoGroup } from '../../../platform/undoRedo/common/undoRedo.js';
-import { ISingleEditOperation } from '../core/editOperation.js';
-import { TextEdit } from '../core/edits/textEdit.js';
-import { countEOL } from '../core/misc/eolCounter.js';
-import { normalizeIndentation } from '../core/misc/indentation.js';
-import { EDITOR_MODEL_DEFAULTS } from '../core/misc/textModelDefaults.js';
-import { IPosition, Position } from '../core/position.js';
-import { IRange, Range } from '../core/range.js';
-import { Selection } from '../core/selection.js';
-import { TextChange } from '../core/textChange.js';
-import { IWordAtPosition } from '../core/wordHelper.js';
-import { FormattingOptions } from '../languages.js';
-import { ILanguageSelection, ILanguageService } from '../languages/language.js';
-import { ILanguageConfigurationService } from '../languages/languageConfigurationRegistry.js';
-import * as model from '../model.js';
-import { IBracketPairsTextModelPart } from '../textModelBracketPairs.js';
-import { EditSources, TextModelEditSource } from '../textModelEditSource.js';
-import { IModelContentChangedEvent, IModelDecorationsChangedEvent, IModelOptionsChangedEvent, InternalModelContentChangeEvent, LineInjectedText, ModelFontChanged, ModelFontChangedEvent, ModelInjectedTextChangedEvent, ModelLineHeightChanged, ModelLineHeightChangedEvent, ModelRawChange, ModelRawContentChangedEvent, ModelRawEOLChanged, ModelRawFlush, ModelRawLineChanged, ModelRawLinesDeleted, ModelRawLinesInserted } from '../textModelEvents.js';
-import { IGuidesTextModelPart } from '../textModelGuides.js';
-import { ITokenizationTextModelPart } from '../tokenizationTextModelPart.js';
-import { LineTokens, TokenArray } from '../tokens/lineTokens.js';
-import { BracketPairsTextModelPart } from './bracketPairsTextModelPart/bracketPairsImpl.js';
-import { ColorizedBracketPairsDecorationProvider } from './bracketPairsTextModelPart/colorizedBracketPairsDecorationProvider.js';
-import { EditStack } from './editStack.js';
-import { GuidesTextModelPart } from './guidesTextModelPart.js';
-import { guessIndentation } from './indentationGuesser.js';
-import { IntervalNode, IntervalTree, recomputeMaxEnd } from './intervalTree.js';
-import { PieceTreeTextBuffer } from './pieceTreeTextBuffer/pieceTreeTextBuffer.js';
-import { PieceTreeTextBufferBuilder } from './pieceTreeTextBuffer/pieceTreeTextBufferBuilder.js';
-import { SearchParams, TextModelSearch } from './textModelSearch.js';
-import { AttachedViews } from './tokens/abstractSyntaxTokenBackend.js';
-import { TokenizationFontDecorationProvider } from './tokens/tokenizationFontDecorationsProvider.js';
-import { LineFontChangingDecoration, LineHeightChangingDecoration } from './decorationProvider.js';
-import { TokenizationTextModelPart } from './tokens/tokenizationTextModelPart.js';
-import { IViewModel } from '../viewModel.js';
+import { pushMany } from "../../../base/common/arrays.js";
+import { VSBuffer, VSBufferReadableStream } from "../../../base/common/buffer.js";
+import { CharCode } from "../../../base/common/charCode.js";
+import { SetWithKey } from "../../../base/common/collections.js";
+import { Color } from "../../../base/common/color.js";
+import { BugIndicatingError, illegalArgument, onUnexpectedError } from "../../../base/common/errors.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { IMarkdownString } from "../../../base/common/htmlContent.js";
+import { Disposable, IDisposable, MutableDisposable } from "../../../base/common/lifecycle.js";
+import { listenStream } from "../../../base/common/stream.js";
+import * as strings from "../../../base/common/strings.js";
+import { ThemeColor } from "../../../base/common/themables.js";
+import { Constants } from "../../../base/common/uint.js";
+import { URI } from "../../../base/common/uri.js";
+import { IInstantiationService } from "../../../platform/instantiation/common/instantiation.js";
+import { isDark } from "../../../platform/theme/common/theme.js";
+import { IColorTheme } from "../../../platform/theme/common/themeService.js";
+import { IUndoRedoService, ResourceEditStackSnapshot, UndoRedoGroup } from "../../../platform/undoRedo/common/undoRedo.js";
+import { ISingleEditOperation } from "../core/editOperation.js";
+import { TextEdit } from "../core/edits/textEdit.js";
+import { countEOL } from "../core/misc/eolCounter.js";
+import { normalizeIndentation } from "../core/misc/indentation.js";
+import { EDITOR_MODEL_DEFAULTS } from "../core/misc/textModelDefaults.js";
+import { IPosition, Position } from "../core/position.js";
+import { IRange, Range } from "../core/range.js";
+import { Selection } from "../core/selection.js";
+import { TextChange } from "../core/textChange.js";
+import { IWordAtPosition } from "../core/wordHelper.js";
+import { FormattingOptions } from "../languages.js";
+import { ILanguageSelection, ILanguageService } from "../languages/language.js";
+import { ILanguageConfigurationService } from "../languages/languageConfigurationRegistry.js";
+import * as model from "../model.js";
+import { IBracketPairsTextModelPart } from "../textModelBracketPairs.js";
+import { EditSources, TextModelEditSource } from "../textModelEditSource.js";
+import {
+  IModelContentChangedEvent,
+  IModelDecorationsChangedEvent,
+  IModelOptionsChangedEvent,
+  InternalModelContentChangeEvent,
+  LineInjectedText,
+  ModelFontChanged,
+  ModelFontChangedEvent,
+  ModelInjectedTextChangedEvent,
+  ModelLineHeightChanged,
+  ModelLineHeightChangedEvent,
+  ModelRawChange,
+  ModelRawContentChangedEvent,
+  ModelRawEOLChanged,
+  ModelRawFlush,
+  ModelRawLineChanged,
+  ModelRawLinesDeleted,
+  ModelRawLinesInserted,
+} from "../textModelEvents.js";
+import { IGuidesTextModelPart } from "../textModelGuides.js";
+import { ITokenizationTextModelPart } from "../tokenizationTextModelPart.js";
+import { LineTokens, TokenArray } from "../tokens/lineTokens.js";
+import { BracketPairsTextModelPart } from "./bracketPairsTextModelPart/bracketPairsImpl.js";
+import { ColorizedBracketPairsDecorationProvider } from "./bracketPairsTextModelPart/colorizedBracketPairsDecorationProvider.js";
+import { EditStack } from "./editStack.js";
+import { GuidesTextModelPart } from "./guidesTextModelPart.js";
+import { guessIndentation } from "./indentationGuesser.js";
+import { IntervalNode, IntervalTree, recomputeMaxEnd } from "./intervalTree.js";
+import { PieceTreeTextBuffer } from "./pieceTreeTextBuffer/pieceTreeTextBuffer.js";
+import { PieceTreeTextBufferBuilder } from "./pieceTreeTextBuffer/pieceTreeTextBufferBuilder.js";
+import { SearchParams, TextModelSearch } from "./textModelSearch.js";
+import { AttachedViews } from "./tokens/abstractSyntaxTokenBackend.js";
+import { TokenizationFontDecorationProvider } from "./tokens/tokenizationFontDecorationsProvider.js";
+import { LineFontChangingDecoration, LineHeightChangingDecoration } from "./decorationProvider.js";
+import { TokenizationTextModelPart } from "./tokens/tokenizationTextModelPart.js";
+import { IViewModel } from "../viewModel.js";
 
 export function createTextBufferFactory(text: string): model.ITextBufferFactory {
 	const builder = new PieceTreeTextBufferBuilder();
@@ -63,9 +81,9 @@ export function createTextBufferFactory(text: string): model.ITextBufferFactory 
 }
 
 interface ITextStream {
-	on(event: 'data', callback: (data: string) => void): void;
-	on(event: 'error', callback: (err: Error) => void): void;
-	on(event: 'end', callback: () => void): void;
+	on(event: "data", callback: (data: string) => void): void;
+	on(event: "error", callback: (err: Error) => void): void;
+	on(event: "end", callback: () => void): void;
 	on(event: string, callback: (...args: unknown[]) => void): void;
 }
 
@@ -79,7 +97,7 @@ export function createTextBufferFactoryFromStream(stream: ITextStream | VSBuffer
 
 		listenStream<string | VSBuffer>(stream, {
 			onData: chunk => {
-				builder.acceptChunk((typeof chunk === 'string') ? chunk : chunk.toString());
+				builder.acceptChunk((typeof chunk === "string") ? chunk : chunk.toString());
 			},
 			onError: error => {
 				if (!done) {
@@ -92,7 +110,7 @@ export function createTextBufferFactoryFromStream(stream: ITextStream | VSBuffer
 					done = true;
 					resolve(builder.finish());
 				}
-			}
+			},
 		});
 	});
 }
@@ -101,7 +119,7 @@ export function createTextBufferFactoryFromSnapshot(snapshot: model.ITextSnapsho
 	const builder = new PieceTreeTextBufferBuilder();
 
 	let chunk: string | null;
-	while (typeof (chunk = snapshot.read()) === 'string') {
+	while (typeof (chunk = snapshot.read()) === "string") {
 		builder.acceptChunk(chunk);
 	}
 
@@ -110,7 +128,7 @@ export function createTextBufferFactoryFromSnapshot(snapshot: model.ITextSnapsho
 
 export function createTextBuffer(value: string | model.ITextBufferFactory | model.ITextSnapshot, defaultEOL: model.DefaultEndOfLine): { textBuffer: model.ITextBuffer; disposable: IDisposable } {
 	let factory: model.ITextBufferFactory;
-	if (typeof value === 'string') {
+	if (typeof value === "string") {
 		factory = createTextBufferFactory(value);
 	} else if (model.isITextSnapshot(value)) {
 		factory = createTextBufferFactoryFromSnapshot(value);
@@ -154,7 +172,7 @@ class TextModelSnapshot implements model.ITextSnapshot {
 				if (resultCnt === 0) {
 					return null;
 				} else {
-					return result.join('');
+					return result.join("");
 				}
 			}
 
@@ -164,7 +182,7 @@ class TextModelSnapshot implements model.ITextSnapshot {
 			}
 
 			if (resultLength >= 64 * 1024) {
-				return result.join('');
+				return result.join("");
 			}
 		} while (true);
 	}
@@ -191,59 +209,85 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 	private static readonly LARGE_FILE_HEAP_OPERATION_THRESHOLD = 256 * 1024 * 1024; // 256M characters, usually ~> 512MB memory usage
 
 	public static DEFAULT_CREATION_OPTIONS: model.ITextModelCreationOptions = {
-		isForSimpleWidget: false,
-		tabSize: EDITOR_MODEL_DEFAULTS.tabSize,
-		indentSize: EDITOR_MODEL_DEFAULTS.indentSize,
-		insertSpaces: EDITOR_MODEL_DEFAULTS.insertSpaces,
-		detectIndentation: false,
-		defaultEOL: model.DefaultEndOfLine.LF,
-		trimAutoWhitespace: EDITOR_MODEL_DEFAULTS.trimAutoWhitespace,
-		largeFileOptimizations: EDITOR_MODEL_DEFAULTS.largeFileOptimizations,
-		bracketPairColorizationOptions: EDITOR_MODEL_DEFAULTS.bracketPairColorizationOptions,
-	};
+    isForSimpleWidget: false,
+    tabSize: EDITOR_MODEL_DEFAULTS.tabSize,
+    indentSize: EDITOR_MODEL_DEFAULTS.indentSize,
+    insertSpaces: EDITOR_MODEL_DEFAULTS.insertSpaces,
+    detectIndentation: false,
+    defaultEOL: model.DefaultEndOfLine.LF,
+    trimAutoWhitespace: EDITOR_MODEL_DEFAULTS.trimAutoWhitespace,
+    largeFileOptimizations: EDITOR_MODEL_DEFAULTS.largeFileOptimizations,
+    bracketPairColorizationOptions: EDITOR_MODEL_DEFAULTS.bracketPairColorizationOptions,
+  };
 
 	public static resolveOptions(textBuffer: model.ITextBuffer, options: model.ITextModelCreationOptions): model.TextModelResolvedOptions {
 		if (options.detectIndentation) {
-			const guessedIndentation = guessIndentation(textBuffer, options.tabSize, options.insertSpaces);
+			const guessedIndentation = guessIndentation(
+        textBuffer,
+        options.tabSize,
+        options.insertSpaces,
+      );
 			return new model.TextModelResolvedOptions({
-				tabSize: guessedIndentation.tabSize,
-				indentSize: 'tabSize', // TODO@Alex: guess indentSize independent of tabSize
-				insertSpaces: guessedIndentation.insertSpaces,
-				trimAutoWhitespace: options.trimAutoWhitespace,
-				defaultEOL: options.defaultEOL,
-				bracketPairColorizationOptions: options.bracketPairColorizationOptions,
-			});
+        tabSize: guessedIndentation.tabSize,
+        indentSize: "tabSize",
+        insertSpaces: guessedIndentation.insertSpaces,
+        trimAutoWhitespace: options.trimAutoWhitespace,
+        defaultEOL: options.defaultEOL,
+        bracketPairColorizationOptions: options.bracketPairColorizationOptions,
+      });
 		}
 
 		return new model.TextModelResolvedOptions(options);
 	}
 
 	//#region Events
-	private readonly _onWillDispose: Emitter<void> = this._register(new Emitter<void>());
+	private readonly _onWillDispose: Emitter<void> = this._register(
+    new Emitter<void>(),
+  );
 	public readonly onWillDispose: Event<void> = this._onWillDispose.event;
 
-	private readonly _onDidChangeDecorations: DidChangeDecorationsEmitter = this._register(new DidChangeDecorationsEmitter((affectedInjectedTextLines, affectedLineHeights, affectedFontLines) => this.handleBeforeFireDecorationsChangedEvent(affectedInjectedTextLines, affectedLineHeights, affectedFontLines)));
+	private readonly _onDidChangeDecorations: DidChangeDecorationsEmitter = this._register(
+    new DidChangeDecorationsEmitter(
+      (affectedInjectedTextLines, affectedLineHeights, affectedFontLines) => this.handleBeforeFireDecorationsChangedEvent(
+        affectedInjectedTextLines,
+        affectedLineHeights,
+        affectedFontLines,
+      ),
+    ),
+  );
 	public readonly onDidChangeDecorations: Event<IModelDecorationsChangedEvent> = this._onDidChangeDecorations.event;
 
 	public get onDidChangeLanguage() { return this._tokenizationTextModelPart.onDidChangeLanguage; }
 	public get onDidChangeLanguageConfiguration() { return this._tokenizationTextModelPart.onDidChangeLanguageConfiguration; }
 	public get onDidChangeTokens() { return this._tokenizationTextModelPart.onDidChangeTokens; }
 
-	private readonly _onDidChangeOptions: Emitter<IModelOptionsChangedEvent> = this._register(new Emitter<IModelOptionsChangedEvent>());
+	private readonly _onDidChangeOptions: Emitter<IModelOptionsChangedEvent> = this._register(
+    new Emitter<IModelOptionsChangedEvent>(),
+  );
 	public get onDidChangeOptions(): Event<IModelOptionsChangedEvent> { return this._onDidChangeOptions.event; }
 
-	private readonly _onDidChangeAttached: Emitter<void> = this._register(new Emitter<void>());
+	private readonly _onDidChangeAttached: Emitter<void> = this._register(
+    new Emitter<void>(),
+  );
 	public get onDidChangeAttached(): Event<void> { return this._onDidChangeAttached.event; }
 
-	private readonly _onDidChangeLineHeight: Emitter<ModelLineHeightChangedEvent> = this._register(new Emitter<ModelLineHeightChangedEvent>());
+	private readonly _onDidChangeLineHeight: Emitter<ModelLineHeightChangedEvent> = this._register(
+    new Emitter<ModelLineHeightChangedEvent>(),
+  );
 	public get onDidChangeLineHeight(): Event<ModelLineHeightChangedEvent> { return this._onDidChangeLineHeight.event; }
 
-	private readonly _onDidChangeFont: Emitter<ModelFontChangedEvent> = this._register(new Emitter<ModelFontChangedEvent>());
+	private readonly _onDidChangeFont: Emitter<ModelFontChangedEvent> = this._register(
+    new Emitter<ModelFontChangedEvent>(),
+  );
 	public get onDidChangeFont(): Event<ModelFontChangedEvent> { return this._onDidChangeFont.event; }
 
-	private readonly _eventEmitter: DidChangeContentEmitter = this._register(new DidChangeContentEmitter());
+	private readonly _eventEmitter: DidChangeContentEmitter = this._register(
+    new DidChangeContentEmitter(),
+  );
 	public onDidChangeContent(listener: (e: IModelContentChangedEvent) => void): IDisposable {
-		return this._eventEmitter.event((e: InternalModelContentChangeEvent) => listener(e.contentChangedEvent));
+		return this._eventEmitter.event(
+      (e: InternalModelContentChangeEvent) => listener(e.contentChangedEvent),
+    );
 	}
 	//#endregion
 
@@ -254,7 +298,9 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 	private _buffer: model.ITextBuffer;
 	private _bufferDisposable: IDisposable;
 	private _options: model.TextModelResolvedOptions;
-	private readonly _languageSelectionListener = this._register(new MutableDisposable<IDisposable>());
+	private readonly _languageSelectionListener = this._register(
+    new MutableDisposable<IDisposable>(),
+  );
 
 	private _isDisposed: boolean;
 	private __isDisposing: boolean;
@@ -310,27 +356,38 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 		@IUndoRedoService private readonly _undoRedoService: IUndoRedoService,
 		@ILanguageService private readonly _languageService: ILanguageService,
 		@ILanguageConfigurationService private readonly _languageConfigurationService: ILanguageConfigurationService,
-		@IInstantiationService private readonly instantiationService: IInstantiationService
+		@IInstantiationService private readonly instantiationService: IInstantiationService,
 	) {
 		super();
 
 		// Generate a new unique model id
 		MODEL_ID++;
-		this.id = '$model' + MODEL_ID;
+		this.id = "$model" + MODEL_ID;
 		this.isForSimpleWidget = creationOptions.isForSimpleWidget;
-		if (typeof associatedResource === 'undefined' || associatedResource === null) {
-			this._associatedResource = URI.parse('inmemory://model/' + MODEL_ID);
+		if (typeof associatedResource === "undefined" || associatedResource === null) {
+			this._associatedResource = URI.parse("inmemory://model/" + MODEL_ID);
 		} else {
 			this._associatedResource = associatedResource;
 		}
 		this._attachedEditorCount = 0;
 
-		const { textBuffer, disposable } = createTextBuffer(source, creationOptions.defaultEOL);
+		const { textBuffer, disposable } = createTextBuffer(
+      source,
+      creationOptions.defaultEOL,
+    );
 		this._buffer = textBuffer;
 		this._bufferDisposable = disposable;
 
 		const bufferLineCount = this._buffer.getLineCount();
-		const bufferTextLength = this._buffer.getValueLengthInRange(new Range(1, 1, bufferLineCount, this._buffer.getLineLength(bufferLineCount) + 1), model.EndOfLinePreference.TextDefined);
+		const bufferTextLength = this._buffer.getValueLengthInRange(
+      new Range(
+        1,
+        1,
+        bufferLineCount,
+        this._buffer.getLineLength(bufferLineCount) + 1,
+      ),
+      model.EndOfLinePreference.TextDefined,
+    );
 
 		// !!! Make a decision in the ctor and permanently respect this decision !!!
 		// If a model is too large at construction time, it will never get tokenized,
@@ -349,21 +406,35 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 
 		this._options = TextModel.resolveOptions(this._buffer, creationOptions);
 
-		const languageId = (typeof languageIdOrSelection === 'string' ? languageIdOrSelection : languageIdOrSelection.languageId);
-		if (typeof languageIdOrSelection !== 'string') {
-			this._languageSelectionListener.value = languageIdOrSelection.onDidChange(() => this._setLanguage(languageIdOrSelection.languageId));
+		const languageId = (typeof languageIdOrSelection === "string" ? languageIdOrSelection : languageIdOrSelection.languageId);
+		if (typeof languageIdOrSelection !== "string") {
+			this._languageSelectionListener.value = languageIdOrSelection.onDidChange(
+        () => this._setLanguage(languageIdOrSelection.languageId),
+      );
 		}
 
-		this._bracketPairs = this._register(new BracketPairsTextModelPart(this, this._languageConfigurationService));
-		this._guidesTextModelPart = this._register(new GuidesTextModelPart(this, this._languageConfigurationService));
-		this._decorationProvider = this._register(new ColorizedBracketPairsDecorationProvider(this));
-		this._tokenizationTextModelPart = this.instantiationService.createInstance(TokenizationTextModelPart,
-			this,
-			this._bracketPairs,
-			languageId,
-			this._attachedViews
-		);
-		this._fontTokenDecorationsProvider = this._register(new TokenizationFontDecorationProvider(this, this._tokenizationTextModelPart));
+		this._bracketPairs = this._register(
+      new BracketPairsTextModelPart(this, this._languageConfigurationService),
+    );
+		this._guidesTextModelPart = this._register(
+      new GuidesTextModelPart(this, this._languageConfigurationService),
+    );
+		this._decorationProvider = this._register(
+      new ColorizedBracketPairsDecorationProvider(this),
+    );
+		this._tokenizationTextModelPart = this.instantiationService.createInstance(
+      TokenizationTextModelPart,
+      this,
+      this._bracketPairs,
+      languageId,
+      this._attachedViews,
+    );
+		this._fontTokenDecorationsProvider = this._register(
+      new TokenizationFontDecorationProvider(
+        this,
+        this._tokenizationTextModelPart,
+      ),
+    );
 
 		this._isTooLargeForSyncing = (bufferTextLength > TextModel._MODEL_SYNC_LIMIT);
 
@@ -385,30 +456,44 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 		this._trimAutoWhitespaceLines = null;
 
 
-		this._register(this._decorationProvider.onDidChange(() => {
-			this._onDidChangeDecorations.beginDeferredEmit();
-			this._onDidChangeDecorations.fire();
-			this._onDidChangeDecorations.endDeferredEmit();
-		}));
-		this._register(this._fontTokenDecorationsProvider.onDidChangeLineHeight((affectedLineHeights) => {
-			this._onDidChangeDecorations.beginDeferredEmit();
-			this._onDidChangeDecorations.fire();
-			this._fireOnDidChangeLineHeight(affectedLineHeights);
-			this._onDidChangeDecorations.endDeferredEmit();
-		}));
-		this._register(this._fontTokenDecorationsProvider.onDidChangeFont((affectedFontLines) => {
-			this._onDidChangeDecorations.beginDeferredEmit();
-			this._onDidChangeDecorations.fire();
-			this._fireOnDidChangeFont(affectedFontLines);
-			this._onDidChangeDecorations.endDeferredEmit();
-		}));
+		this._register(
+      this._decorationProvider.onDidChange(() => {
+        this._onDidChangeDecorations.beginDeferredEmit();
+        this._onDidChangeDecorations.fire();
+        this._onDidChangeDecorations.endDeferredEmit();
+      }),
+    );
+		this._register(
+      this._fontTokenDecorationsProvider.onDidChangeLineHeight(
+        (affectedLineHeights) => {
+          this._onDidChangeDecorations.beginDeferredEmit();
+          this._onDidChangeDecorations.fire();
+          this._fireOnDidChangeLineHeight(affectedLineHeights);
+          this._onDidChangeDecorations.endDeferredEmit();
+        },
+      ),
+    );
+		this._register(
+      this._fontTokenDecorationsProvider.onDidChangeFont(
+        (affectedFontLines) => {
+          this._onDidChangeDecorations.beginDeferredEmit();
+          this._onDidChangeDecorations.fire();
+          this._fireOnDidChangeFont(affectedFontLines);
+          this._onDidChangeDecorations.endDeferredEmit();
+        },
+      ),
+    );
 
 		this._languageService.requestRichLanguageFeatures(languageId);
 
-		this._register(this._languageConfigurationService.onDidChange(e => {
-			this._bracketPairs.handleLanguageConfigurationServiceChange(e);
-			this._tokenizationTextModelPart.handleLanguageConfigurationServiceChange(e);
-		}));
+		this._register(
+      this._languageConfigurationService.onDidChange(e => {
+        this._bracketPairs.handleLanguageConfigurationServiceChange(e);
+        this._tokenizationTextModelPart.handleLanguageConfigurationServiceChange(
+          e,
+        );
+      }),
+    );
 	}
 
 	public override dispose(): void {
@@ -421,7 +506,15 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 		this.__isDisposing = false;
 		// Manually release reference to previous text buffer to avoid large leaks
 		// in case someone leaks a TextModel reference
-		const emptyDisposedTextBuffer = new PieceTreeTextBuffer([], '', '\n', false, false, true, true);
+		const emptyDisposedTextBuffer = new PieceTreeTextBuffer(
+      [],
+      "",
+      "\n",
+      false,
+      false,
+      true,
+      true,
+    );
 		emptyDisposedTextBuffer.dispose();
 		this._buffer = emptyDisposedTextBuffer;
 		this._bufferDisposable = Disposable.None;
@@ -442,7 +535,7 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 
 	private _assertNotDisposed(): void {
 		if (this._isDisposed) {
-			throw new BugIndicatingError('Model is disposed!');
+			throw new BugIndicatingError("Model is disposed!");
 		}
 	}
 
@@ -472,7 +565,10 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 		this._tokenizationTextModelPart.handleDidChangeContent(change);
 		this._bracketPairs.handleDidChangeContent(change);
 		this._fontTokenDecorationsProvider.handleDidChangeContent(change);
-		const contentChangeEvent = new InternalModelContentChangeEvent(rawChange, change);
+		const contentChangeEvent = new InternalModelContentChangeEvent(
+      rawChange,
+      change,
+    );
 		// Set resultingSelection early so viewModels can use it for cursor positioning
 		if (resultingSelection) {
 			contentChangeEvent.rawContentChangedEvent.resultingSelection = resultingSelection;
@@ -488,7 +584,10 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 			throw illegalArgument();
 		}
 
-		const { textBuffer, disposable } = createTextBuffer(value, this._options.defaultEOL);
+		const { textBuffer, disposable } = createTextBuffer(
+      value,
+      this._options.defaultEOL,
+    );
 		this._setValueFromTextBuffer(textBuffer, disposable, reason);
 	}
 
@@ -532,21 +631,30 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 		this._trimAutoWhitespaceLines = null;
 
 		this._emitContentChangedEvent(
-			new ModelRawContentChangedEvent(
-				[
-					new ModelRawFlush()
-				],
-				this._versionId,
-				false,
-				false
-			),
-			this._createContentChanged2(new Range(1, 1, endLineNumber, endColumn), 0, oldModelValueLength, new Position(endLineNumber, endColumn), this.getValue(), false, false, true, false, reason)
-		);
+      new ModelRawContentChangedEvent(
+        [new ModelRawFlush()],
+        this._versionId,
+        false,
+        false,
+      ),
+      this._createContentChanged2(
+        new Range(1, 1, endLineNumber, endColumn),
+        0,
+        oldModelValueLength,
+        new Position(endLineNumber, endColumn),
+        this.getValue(),
+        false,
+        false,
+        true,
+        false,
+        reason,
+      ),
+    );
 	}
 
 	public setEOL(eol: model.EndOfLineSequence): void {
 		this._assertNotDisposed();
-		const newEOL = (eol === model.EndOfLineSequence.CRLF ? '\r\n' : '\n');
+		const newEOL = (eol === model.EndOfLineSequence.CRLF ? "\r\n" : "\n");
 		if (this._buffer.getEOL() === newEOL) {
 			// Nothing to do
 			return;
@@ -563,16 +671,25 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 		this._onAfterEOLChange();
 
 		this._emitContentChangedEvent(
-			new ModelRawContentChangedEvent(
-				[
-					new ModelRawEOLChanged()
-				],
-				this._versionId,
-				false,
-				false
-			),
-			this._createContentChanged2(new Range(1, 1, endLineNumber, endColumn), 0, oldModelValueLength, new Position(endLineNumber, endColumn), this.getValue(), false, false, false, true, EditSources.eolChange())
-		);
+      new ModelRawContentChangedEvent(
+        [new ModelRawEOLChanged()],
+        this._versionId,
+        false,
+        false,
+      ),
+      this._createContentChanged2(
+        new Range(1, 1, endLineNumber, endColumn),
+        0,
+        oldModelValueLength,
+        new Position(endLineNumber, endColumn),
+        this.getValue(),
+        false,
+        false,
+        false,
+        true,
+        EditSources.eolChange(),
+      ),
+    );
 	}
 
 	private _onBeforeEOLChange(): void {
@@ -590,8 +707,14 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 
 			const delta = node.cachedAbsoluteStart - node.start;
 
-			const startOffset = this._buffer.getOffsetAt(range.startLineNumber, range.startColumn);
-			const endOffset = this._buffer.getOffsetAt(range.endLineNumber, range.endColumn);
+			const startOffset = this._buffer.getOffsetAt(
+        range.startLineNumber,
+        range.startColumn,
+      );
+			const endOffset = this._buffer.getOffsetAt(
+        range.endLineNumber,
+        range.endColumn,
+      );
 
 			node.cachedAbsoluteStart = startOffset;
 			node.cachedAbsoluteEnd = endOffset;
@@ -681,27 +804,27 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 
 	public getFormattingOptions(): FormattingOptions {
 		return {
-			tabSize: this._options.indentSize,
-			insertSpaces: this._options.insertSpaces
-		};
+      tabSize: this._options.indentSize,
+      insertSpaces: this._options.insertSpaces,
+    };
 	}
 
 	public updateOptions(_newOpts: model.ITextModelUpdateOptions): void {
 		this._assertNotDisposed();
-		const tabSize = (typeof _newOpts.tabSize !== 'undefined') ? _newOpts.tabSize : this._options.tabSize;
-		const indentSize = (typeof _newOpts.indentSize !== 'undefined') ? _newOpts.indentSize : this._options.originalIndentSize;
-		const insertSpaces = (typeof _newOpts.insertSpaces !== 'undefined') ? _newOpts.insertSpaces : this._options.insertSpaces;
-		const trimAutoWhitespace = (typeof _newOpts.trimAutoWhitespace !== 'undefined') ? _newOpts.trimAutoWhitespace : this._options.trimAutoWhitespace;
-		const bracketPairColorizationOptions = (typeof _newOpts.bracketColorizationOptions !== 'undefined') ? _newOpts.bracketColorizationOptions : this._options.bracketPairColorizationOptions;
+		const tabSize = (typeof _newOpts.tabSize !== "undefined") ? _newOpts.tabSize : this._options.tabSize;
+		const indentSize = (typeof _newOpts.indentSize !== "undefined") ? _newOpts.indentSize : this._options.originalIndentSize;
+		const insertSpaces = (typeof _newOpts.insertSpaces !== "undefined") ? _newOpts.insertSpaces : this._options.insertSpaces;
+		const trimAutoWhitespace = (typeof _newOpts.trimAutoWhitespace !== "undefined") ? _newOpts.trimAutoWhitespace : this._options.trimAutoWhitespace;
+		const bracketPairColorizationOptions = (typeof _newOpts.bracketColorizationOptions !== "undefined") ? _newOpts.bracketColorizationOptions : this._options.bracketPairColorizationOptions;
 
 		const newOpts = new model.TextModelResolvedOptions({
-			tabSize: tabSize,
-			indentSize: indentSize,
-			insertSpaces: insertSpaces,
-			defaultEOL: this._options.defaultEOL,
-			trimAutoWhitespace: trimAutoWhitespace,
-			bracketPairColorizationOptions,
-		});
+      tabSize: tabSize,
+      indentSize: indentSize,
+      insertSpaces: insertSpaces,
+      defaultEOL: this._options.defaultEOL,
+      trimAutoWhitespace: trimAutoWhitespace,
+      bracketPairColorizationOptions,
+    });
 
 		if (this._options.equals(newOpts)) {
 			return;
@@ -717,17 +840,25 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 
 	public detectIndentation(defaultInsertSpaces: boolean, defaultTabSize: number): void {
 		this._assertNotDisposed();
-		const guessedIndentation = guessIndentation(this._buffer, defaultTabSize, defaultInsertSpaces);
+		const guessedIndentation = guessIndentation(
+      this._buffer,
+      defaultTabSize,
+      defaultInsertSpaces,
+    );
 		this.updateOptions({
-			insertSpaces: guessedIndentation.insertSpaces,
-			tabSize: guessedIndentation.tabSize,
-			indentSize: guessedIndentation.tabSize, // TODO@Alex: guess indentSize independent of tabSize
-		});
+      insertSpaces: guessedIndentation.insertSpaces,
+      tabSize: guessedIndentation.tabSize,
+      indentSize: guessedIndentation.tabSize,
+    });
 	}
 
 	public normalizeIndentation(str: string): string {
 		this._assertNotDisposed();
-		return normalizeIndentation(str, this._options.indentSize, this._options.insertSpaces);
+		return normalizeIndentation(
+      str,
+      this._options.indentSize,
+      this._options.insertSpaces,
+    );
 	}
 
 	//#endregion
@@ -748,9 +879,21 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 	}
 
 	public removeUnusualLineTerminators(selections: Selection[] | null = null): void {
-		const matches = this.findMatches(strings.UNUSUAL_LINE_TERMINATORS.source, false, true, false, null, false, Constants.MAX_SAFE_SMALL_INTEGER);
+		const matches = this.findMatches(
+      strings.UNUSUAL_LINE_TERMINATORS.source,
+      false,
+      true,
+      false,
+      null,
+      false,
+      Constants.MAX_SAFE_SMALL_INTEGER,
+    );
 		this._buffer.resetMightContainUnusualLineTerminators();
-		this.pushEditOperations(selections, matches.map(m => ({ range: m.range, text: null })), () => null);
+		this.pushEditOperations(
+      selections,
+      matches.map(m => ({ range: m.range, text: null })),
+      () => null,
+    );
 	}
 
 	public mightContainNonBasicASCII(): boolean {
@@ -769,7 +912,11 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 
 	public getOffsetAt(rawPosition: IPosition): number {
 		this._assertNotDisposed();
-		const position = this._validatePosition(rawPosition.lineNumber, rawPosition.column, StringOffsetValidationType.Relaxed);
+		const position = this._validatePosition(
+      rawPosition.lineNumber,
+      rawPosition.column,
+      StringOffsetValidationType.Relaxed,
+    );
 		return this._buffer.getOffsetAt(position.lineNumber, position.column);
 	}
 
@@ -799,7 +946,7 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 	public getValue(eol?: model.EndOfLinePreference, preserveBOM: boolean = false): string {
 		this._assertNotDisposed();
 		if (this.isTooLargeForHeapOperation()) {
-			throw new BugIndicatingError('Operation would exceed heap memory limits');
+			throw new BugIndicatingError("Operation would exceed heap memory limits");
 		}
 
 		const fullModelRange = this.getFullModelRange();
@@ -835,12 +982,18 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 
 	public getValueLengthInRange(rawRange: IRange, eol: model.EndOfLinePreference = model.EndOfLinePreference.TextDefined): number {
 		this._assertNotDisposed();
-		return this._buffer.getValueLengthInRange(this.validateRange(rawRange), eol);
+		return this._buffer.getValueLengthInRange(
+      this.validateRange(rawRange),
+      eol,
+    );
 	}
 
 	public getCharacterCountInRange(rawRange: IRange, eol: model.EndOfLinePreference = model.EndOfLinePreference.TextDefined): number {
 		this._assertNotDisposed();
-		return this._buffer.getCharacterCountInRange(this.validateRange(rawRange), eol);
+		return this._buffer.getCharacterCountInRange(
+      this.validateRange(rawRange),
+      eol,
+    );
 	}
 
 	public getLineCount(): number {
@@ -851,7 +1004,7 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 	public getLineContent(lineNumber: number): string {
 		this._assertNotDisposed();
 		if (lineNumber < 1 || lineNumber > this.getLineCount()) {
-			throw new BugIndicatingError('Illegal value for lineNumber');
+			throw new BugIndicatingError("Illegal value for lineNumber");
 		}
 
 		return this._buffer.getLineContent(lineNumber);
@@ -860,7 +1013,7 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 	public getLineLength(lineNumber: number): number {
 		this._assertNotDisposed();
 		if (lineNumber < 1 || lineNumber > this.getLineCount()) {
-			throw new BugIndicatingError('Illegal value for lineNumber');
+			throw new BugIndicatingError("Illegal value for lineNumber");
 		}
 
 		return this._buffer.getLineLength(lineNumber);
@@ -869,7 +1022,7 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 	public getLinesContent(): string[] {
 		this._assertNotDisposed();
 		if (this.isTooLargeForHeapOperation()) {
-			throw new BugIndicatingError('Operation would exceed heap memory limits');
+			throw new BugIndicatingError("Operation would exceed heap memory limits");
 		}
 
 		return this._buffer.getLinesContent();
@@ -883,7 +1036,7 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 	public getEndOfLineSequence(): model.EndOfLineSequence {
 		this._assertNotDisposed();
 		return (
-			this._buffer.getEOL() === '\n'
+			this._buffer.getEOL() === "\n"
 				? model.EndOfLineSequence.LF
 				: model.EndOfLineSequence.CRLF
 		);
@@ -897,7 +1050,7 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 	public getLineMaxColumn(lineNumber: number): number {
 		this._assertNotDisposed();
 		if (lineNumber < 1 || lineNumber > this.getLineCount()) {
-			throw new BugIndicatingError('Illegal value for lineNumber');
+			throw new BugIndicatingError("Illegal value for lineNumber");
 		}
 		return this._buffer.getLineLength(lineNumber) + 1;
 	}
@@ -905,7 +1058,7 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 	public getLineFirstNonWhitespaceColumn(lineNumber: number): number {
 		this._assertNotDisposed();
 		if (lineNumber < 1 || lineNumber > this.getLineCount()) {
-			throw new BugIndicatingError('Illegal value for lineNumber');
+			throw new BugIndicatingError("Illegal value for lineNumber");
 		}
 		return this._buffer.getLineFirstNonWhitespaceColumn(lineNumber);
 	}
@@ -913,7 +1066,7 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 	public getLineLastNonWhitespaceColumn(lineNumber: number): number {
 		this._assertNotDisposed();
 		if (lineNumber < 1 || lineNumber > this.getLineCount()) {
-			throw new BugIndicatingError('Illegal value for lineNumber');
+			throw new BugIndicatingError("Illegal value for lineNumber");
 		}
 		return this._buffer.getLineLastNonWhitespaceColumn(lineNumber);
 	}
@@ -927,8 +1080,12 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 
 		const initialStartLineNumber = range.startLineNumber;
 		const initialStartColumn = range.startColumn;
-		let startLineNumber = Math.floor((typeof initialStartLineNumber === 'number' && !isNaN(initialStartLineNumber)) ? initialStartLineNumber : 1);
-		let startColumn = Math.floor((typeof initialStartColumn === 'number' && !isNaN(initialStartColumn)) ? initialStartColumn : 1);
+		let startLineNumber = Math.floor(
+      (typeof initialStartLineNumber === "number" && !isNaN(initialStartLineNumber)) ? initialStartLineNumber : 1,
+    );
+		let startColumn = Math.floor(
+      (typeof initialStartColumn === "number" && !isNaN(initialStartColumn)) ? initialStartColumn : 1,
+    );
 
 		if (startLineNumber < 1) {
 			startLineNumber = 1;
@@ -949,8 +1106,12 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 
 		const initialEndLineNumber = range.endLineNumber;
 		const initialEndColumn = range.endColumn;
-		let endLineNumber = Math.floor((typeof initialEndLineNumber === 'number' && !isNaN(initialEndLineNumber)) ? initialEndLineNumber : 1);
-		let endColumn = Math.floor((typeof initialEndColumn === 'number' && !isNaN(initialEndColumn)) ? initialEndColumn : 1);
+		let endLineNumber = Math.floor(
+      (typeof initialEndLineNumber === "number" && !isNaN(initialEndLineNumber)) ? initialEndLineNumber : 1,
+    );
+		let endColumn = Math.floor(
+      (typeof initialEndColumn === "number" && !isNaN(initialEndColumn)) ? initialEndColumn : 1,
+    );
 
 		if (endLineNumber < 1) {
 			endLineNumber = 1;
@@ -984,7 +1145,7 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 	}
 
 	private _isValidPosition(lineNumber: number, column: number, validationType: StringOffsetValidationType): boolean {
-		if (typeof lineNumber !== 'number' || typeof column !== 'number') {
+		if (typeof lineNumber !== "number" || typeof column !== "number") {
 			return false;
 		}
 
@@ -1016,7 +1177,10 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 
 		if (validationType === StringOffsetValidationType.SurrogatePairs) {
 			// !!At this point, column > 1
-			const charCodeBefore = this._buffer.getLineCharCode(lineNumber, column - 2);
+			const charCodeBefore = this._buffer.getLineCharCode(
+        lineNumber,
+        column - 2,
+      );
 			if (strings.isHighSurrogate(charCodeBefore)) {
 				return false;
 			}
@@ -1026,8 +1190,12 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 	}
 
 	private _validatePosition(_lineNumber: number, _column: number, validationType: StringOffsetValidationType): Position {
-		const lineNumber = Math.floor((typeof _lineNumber === 'number' && !isNaN(_lineNumber)) ? _lineNumber : 1);
-		const column = Math.floor((typeof _column === 'number' && !isNaN(_column)) ? _column : 1);
+		const lineNumber = Math.floor(
+      (typeof _lineNumber === "number" && !isNaN(_lineNumber)) ? _lineNumber : 1,
+    );
+		const column = Math.floor(
+      (typeof _column === "number" && !isNaN(_column)) ? _column : 1,
+    );
 		const lineCount = this._buffer.getLineCount();
 
 		if (lineNumber < 1) {
@@ -1051,7 +1219,10 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 			// If the position would end up in the middle of a high-low surrogate pair,
 			// we move it to before the pair
 			// !!At this point, column > 1
-			const charCodeBefore = this._buffer.getLineCharCode(lineNumber, column - 2);
+			const charCodeBefore = this._buffer.getLineCharCode(
+        lineNumber,
+        column - 2,
+      );
 			if (strings.isHighSurrogate(charCodeBefore)) {
 				return new Position(lineNumber, column - 1);
 			}
@@ -1066,12 +1237,20 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 
 		// Avoid object allocation and cover most likely case
 		if (position instanceof Position) {
-			if (this._isValidPosition(position.lineNumber, position.column, validationType)) {
+			if (this._isValidPosition(
+        position.lineNumber,
+        position.column,
+        validationType,
+      )) {
 				return position;
 			}
 		}
 
-		return this._validatePosition(position.lineNumber, position.column, validationType);
+		return this._validatePosition(
+      position.lineNumber,
+      position.column,
+      validationType,
+    );
 	}
 
 	public isValidRange(range: Range): boolean {
@@ -1084,18 +1263,33 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 		const endLineNumber = range.endLineNumber;
 		const endColumn = range.endColumn;
 
-		if (!this._isValidPosition(startLineNumber, startColumn, StringOffsetValidationType.Relaxed)) {
+		if (!this._isValidPosition(
+      startLineNumber,
+      startColumn,
+      StringOffsetValidationType.Relaxed,
+    )) {
 			return false;
 		}
-		if (!this._isValidPosition(endLineNumber, endColumn, StringOffsetValidationType.Relaxed)) {
+		if (!this._isValidPosition(
+      endLineNumber,
+      endColumn,
+      StringOffsetValidationType.Relaxed,
+    )) {
 			return false;
 		}
 
 		if (validationType === StringOffsetValidationType.SurrogatePairs) {
-			const charCodeBeforeStart = (startColumn > 1 ? this._buffer.getLineCharCode(startLineNumber, startColumn - 2) : 0);
-			const charCodeBeforeEnd = (endColumn > 1 && endColumn <= this._buffer.getLineLength(endLineNumber) ? this._buffer.getLineCharCode(endLineNumber, endColumn - 2) : 0);
+			const charCodeBeforeStart = (startColumn > 1 ? this._buffer.getLineCharCode(
+        startLineNumber,
+        startColumn - 2,
+      ) : 0);
+			const charCodeBeforeEnd = (endColumn > 1 && endColumn <= this._buffer.getLineLength(
+        endLineNumber,
+      ) ? this._buffer.getLineCharCode(endLineNumber, endColumn - 2) : 0);
 
-			const startInsideSurrogatePair = strings.isHighSurrogate(charCodeBeforeStart);
+			const startInsideSurrogatePair = strings.isHighSurrogate(
+        charCodeBeforeStart,
+      );
 			const endInsideSurrogatePair = strings.isHighSurrogate(charCodeBeforeEnd);
 
 			if (!startInsideSurrogatePair && !endInsideSurrogatePair) {
@@ -1118,8 +1312,16 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 			}
 		}
 
-		const start = this._validatePosition(_range.startLineNumber, _range.startColumn, StringOffsetValidationType.Relaxed);
-		const end = this._validatePosition(_range.endLineNumber, _range.endColumn, StringOffsetValidationType.Relaxed);
+		const start = this._validatePosition(
+      _range.startLineNumber,
+      _range.startColumn,
+      StringOffsetValidationType.Relaxed,
+    );
+		const end = this._validatePosition(
+      _range.endLineNumber,
+      _range.endColumn,
+      StringOffsetValidationType.Relaxed,
+    );
 
 		const startLineNumber = start.lineNumber;
 		const startColumn = start.column;
@@ -1127,33 +1329,65 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 		const endColumn = end.column;
 
 		if (validationType === StringOffsetValidationType.SurrogatePairs) {
-			const charCodeBeforeStart = (startColumn > 1 ? this._buffer.getLineCharCode(startLineNumber, startColumn - 2) : 0);
-			const charCodeBeforeEnd = (endColumn > 1 && endColumn <= this._buffer.getLineLength(endLineNumber) ? this._buffer.getLineCharCode(endLineNumber, endColumn - 2) : 0);
+			const charCodeBeforeStart = (startColumn > 1 ? this._buffer.getLineCharCode(
+        startLineNumber,
+        startColumn - 2,
+      ) : 0);
+			const charCodeBeforeEnd = (endColumn > 1 && endColumn <= this._buffer.getLineLength(
+        endLineNumber,
+      ) ? this._buffer.getLineCharCode(endLineNumber, endColumn - 2) : 0);
 
-			const startInsideSurrogatePair = strings.isHighSurrogate(charCodeBeforeStart);
+			const startInsideSurrogatePair = strings.isHighSurrogate(
+        charCodeBeforeStart,
+      );
 			const endInsideSurrogatePair = strings.isHighSurrogate(charCodeBeforeEnd);
 
 			if (!startInsideSurrogatePair && !endInsideSurrogatePair) {
-				return new Range(startLineNumber, startColumn, endLineNumber, endColumn);
+				return new Range(
+          startLineNumber,
+          startColumn,
+          endLineNumber,
+          endColumn,
+        );
 			}
 
 			if (startLineNumber === endLineNumber && startColumn === endColumn) {
 				// do not expand a collapsed range, simply move it to a valid location
-				return new Range(startLineNumber, startColumn - 1, endLineNumber, endColumn - 1);
+				return new Range(
+          startLineNumber,
+          startColumn - 1,
+          endLineNumber,
+          endColumn - 1,
+        );
 			}
 
 			if (startInsideSurrogatePair && endInsideSurrogatePair) {
 				// expand range at both ends
-				return new Range(startLineNumber, startColumn - 1, endLineNumber, endColumn + 1);
+				return new Range(
+          startLineNumber,
+          startColumn - 1,
+          endLineNumber,
+          endColumn + 1,
+        );
 			}
 
 			if (startInsideSurrogatePair) {
 				// only expand range at the start
-				return new Range(startLineNumber, startColumn - 1, endLineNumber, endColumn);
+				return new Range(
+          startLineNumber,
+          startColumn - 1,
+          endLineNumber,
+          endColumn,
+        );
 			}
 
 			// only expand range at the end
-			return new Range(startLineNumber, startColumn, endLineNumber, endColumn + 1);
+			return new Range(
+        startLineNumber,
+        startColumn,
+        endLineNumber,
+        endColumn + 1,
+      );
 		}
 
 		return new Range(startLineNumber, startColumn, endLineNumber, endColumn);
@@ -1162,7 +1396,9 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 	public modifyPosition(rawPosition: IPosition, offset: number): Position {
 		this._assertNotDisposed();
 		const candidate = this.getOffsetAt(rawPosition) + offset;
-		return this.getPositionAt(Math.min(this._buffer.getLength(), Math.max(0, candidate)));
+		return this.getPositionAt(
+      Math.min(this._buffer.getLength(), Math.max(0, candidate)),
+    );
 	}
 
 	public getFullModelRange(): Range {
@@ -1172,7 +1408,12 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 	}
 
 	private findMatchesLineByLine(searchRange: Range, searchData: model.SearchData, captureMatches: boolean, limitResultCount: number): model.FindMatch[] {
-		return this._buffer.findMatchesLineByLine(searchRange, searchData, captureMatches, limitResultCount);
+		return this._buffer.findMatchesLineByLine(
+      searchRange,
+      searchData,
+      captureMatches,
+      limitResultCount,
+    );
 	}
 
 	public findMatches(searchString: string, rawSearchScope: boolean | IRange | IRange[] | null, isRegex: boolean, matchCase: boolean, wordSeparators: string | null, captureMatches: boolean, limitResultCount: number = LIMIT_FIND_COUNT): model.FindMatch[] {
@@ -1180,13 +1421,17 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 
 		let searchRanges: Range[] | null = null;
 
-		if (rawSearchScope !== null && typeof rawSearchScope !== 'boolean') {
+		if (rawSearchScope !== null && typeof rawSearchScope !== "boolean") {
 			if (!Array.isArray(rawSearchScope)) {
 				rawSearchScope = [rawSearchScope];
 			}
 
-			if (rawSearchScope.every((searchScope: IRange) => Range.isIRange(searchScope))) {
-				searchRanges = rawSearchScope.map((searchScope: IRange) => this.validateRange(searchScope));
+			if (rawSearchScope.every(
+        (searchScope: IRange) => Range.isIRange(searchScope),
+      )) {
+				searchRanges = rawSearchScope.map(
+          (searchScope: IRange) => this.validateRange(searchScope),
+        );
 			}
 		}
 
@@ -1194,7 +1439,9 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 			searchRanges = [this.getFullModelRange()];
 		}
 
-		searchRanges = searchRanges.sort((d1, d2) => d1.startLineNumber - d2.startLineNumber || d1.startColumn - d2.startColumn);
+		searchRanges = searchRanges.sort(
+      (d1, d2) => d1.startLineNumber - d2.startLineNumber || d1.startColumn - d2.startColumn,
+    );
 
 		const uniqueSearchRanges: Range[] = [];
 		uniqueSearchRanges.push(searchRanges.reduce((prev, curr) => {
@@ -1207,44 +1454,93 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 		}));
 
 		let matchMapper: (value: Range, index: number, array: Range[]) => model.FindMatch[];
-		if (!isRegex && searchString.indexOf('\n') < 0) {
+		if (!isRegex && searchString.indexOf("\n") < 0) {
 			// not regex, not multi line
-			const searchParams = new SearchParams(searchString, isRegex, matchCase, wordSeparators);
+			const searchParams = new SearchParams(
+        searchString,
+        isRegex,
+        matchCase,
+        wordSeparators,
+      );
 			const searchData = searchParams.parseSearchRequest();
 
 			if (!searchData) {
 				return [];
 			}
 
-			matchMapper = (searchRange: Range) => this.findMatchesLineByLine(searchRange, searchData, captureMatches, limitResultCount);
+			matchMapper = (searchRange: Range) => this.findMatchesLineByLine(
+        searchRange,
+        searchData,
+        captureMatches,
+        limitResultCount,
+      );
 		} else {
-			matchMapper = (searchRange: Range) => TextModelSearch.findMatches(this, new SearchParams(searchString, isRegex, matchCase, wordSeparators), searchRange, captureMatches, limitResultCount);
+			matchMapper = (searchRange: Range) => TextModelSearch.findMatches(
+        this,
+        new SearchParams(searchString, isRegex, matchCase, wordSeparators),
+        searchRange,
+        captureMatches,
+        limitResultCount,
+      );
 		}
 
-		return uniqueSearchRanges.map(matchMapper).reduce((arr, matches: model.FindMatch[]) => arr.concat(matches), []);
+		return uniqueSearchRanges.map(matchMapper).reduce(
+      (arr, matches: model.FindMatch[]) => arr.concat(matches),
+      [],
+    );
 	}
 
 	public findNextMatch(searchString: string, rawSearchStart: IPosition, isRegex: boolean, matchCase: boolean, wordSeparators: string, captureMatches: boolean): model.FindMatch | null {
 		this._assertNotDisposed();
 		const searchStart = this.validatePosition(rawSearchStart);
 
-		if (!isRegex && searchString.indexOf('\n') < 0) {
-			const searchParams = new SearchParams(searchString, isRegex, matchCase, wordSeparators);
+		if (!isRegex && searchString.indexOf("\n") < 0) {
+			const searchParams = new SearchParams(
+        searchString,
+        isRegex,
+        matchCase,
+        wordSeparators,
+      );
 			const searchData = searchParams.parseSearchRequest();
 			if (!searchData) {
 				return null;
 			}
 
 			const lineCount = this.getLineCount();
-			let searchRange = new Range(searchStart.lineNumber, searchStart.column, lineCount, this.getLineMaxColumn(lineCount));
-			let ret = this.findMatchesLineByLine(searchRange, searchData, captureMatches, 1);
-			TextModelSearch.findNextMatch(this, new SearchParams(searchString, isRegex, matchCase, wordSeparators), searchStart, captureMatches);
+			let searchRange = new Range(
+        searchStart.lineNumber,
+        searchStart.column,
+        lineCount,
+        this.getLineMaxColumn(lineCount),
+      );
+			let ret = this.findMatchesLineByLine(
+        searchRange,
+        searchData,
+        captureMatches,
+        1,
+      );
+			TextModelSearch.findNextMatch(
+        this,
+        new SearchParams(searchString, isRegex, matchCase, wordSeparators),
+        searchStart,
+        captureMatches,
+      );
 			if (ret.length > 0) {
 				return ret[0];
 			}
 
-			searchRange = new Range(1, 1, searchStart.lineNumber, this.getLineMaxColumn(searchStart.lineNumber));
-			ret = this.findMatchesLineByLine(searchRange, searchData, captureMatches, 1);
+			searchRange = new Range(
+        1,
+        1,
+        searchStart.lineNumber,
+        this.getLineMaxColumn(searchStart.lineNumber),
+      );
+			ret = this.findMatchesLineByLine(
+        searchRange,
+        searchData,
+        captureMatches,
+        1,
+      );
 
 			if (ret.length > 0) {
 				return ret[0];
@@ -1253,13 +1549,23 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 			return null;
 		}
 
-		return TextModelSearch.findNextMatch(this, new SearchParams(searchString, isRegex, matchCase, wordSeparators), searchStart, captureMatches);
+		return TextModelSearch.findNextMatch(
+      this,
+      new SearchParams(searchString, isRegex, matchCase, wordSeparators),
+      searchStart,
+      captureMatches,
+    );
 	}
 
 	public findPreviousMatch(searchString: string, rawSearchStart: IPosition, isRegex: boolean, matchCase: boolean, wordSeparators: string, captureMatches: boolean): model.FindMatch | null {
 		this._assertNotDisposed();
 		const searchStart = this.validatePosition(rawSearchStart);
-		return TextModelSearch.findPreviousMatch(this, new SearchParams(searchString, isRegex, matchCase, wordSeparators), searchStart, captureMatches);
+		return TextModelSearch.findPreviousMatch(
+      this,
+      new SearchParams(searchString, isRegex, matchCase, wordSeparators),
+      searchStart,
+      captureMatches,
+    );
 	}
 
 	//#endregion
@@ -1275,7 +1581,7 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 	}
 
 	public pushEOL(eol: model.EndOfLineSequence): void {
-		const currentEOL = (this.getEOL() === '\n' ? model.EndOfLineSequence.LF : model.EndOfLineSequence.CRLF);
+		const currentEOL = (this.getEOL() === "\n" ? model.EndOfLineSequence.LF : model.EndOfLineSequence.CRLF);
 		if (currentEOL === eol) {
 			return;
 		}
@@ -1283,7 +1589,9 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 			this._onDidChangeDecorations.beginDeferredEmit();
 			this._eventEmitter.beginDeferredEmit();
 			if (this._initialUndoRedoSnapshot === null) {
-				this._initialUndoRedoSnapshot = this._undoRedoService.createSnapshot(this.uri);
+				this._initialUndoRedoSnapshot = this._undoRedoService.createSnapshot(
+          this.uri,
+        );
 			}
 			this._commandManager.pushEOL(eol);
 		} finally {
@@ -1305,10 +1613,14 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 		let opText = rawOperation.text;
 		if (opText) {
 			const endsWithLoneCR = (
-				opText.length > 0 && opText.charCodeAt(opText.length - 1) === CharCode.CarriageReturn
+				opText.length > 0 && opText.charCodeAt(
+          opText.length - 1,
+        ) === CharCode.CarriageReturn
 			);
 			const removeTrailingCR = (
-				this.getEOL() === '\r\n' && endsWithLoneCR && validatedRange.endColumn === this.getLineMaxColumn(validatedRange.endLineNumber)
+				this.getEOL() === "\r\n" && endsWithLoneCR && validatedRange.endColumn === this.getLineMaxColumn(
+          validatedRange.endLineNumber,
+        )
 			);
 			if (removeTrailingCR) {
 				opText = opText.substring(0, opText.length - 1);
@@ -1316,13 +1628,13 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 		}
 
 		return new model.ValidAnnotatedEditOperation(
-			rawOperation.identifier || null,
-			validatedRange,
-			opText,
-			rawOperation.forceMoveMarkers || false,
-			rawOperation.isAutoWhitespaceEdit || false,
-			rawOperation._isTracked || false
-		);
+      rawOperation.identifier || null,
+      validatedRange,
+      opText,
+      rawOperation.forceMoveMarkers || false,
+      rawOperation.isAutoWhitespaceEdit || false,
+      rawOperation._isTracked || false,
+    );
 	}
 
 	private _validateEditOperations(rawOperations: readonly model.IIdentifiedSingleEditOperation[]): model.ValidAnnotatedEditOperation[] {
@@ -1334,14 +1646,24 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 	}
 
 	public edit(edit: TextEdit, options?: { reason?: TextModelEditSource }): void {
-		this.pushEditOperations(null, edit.replacements.map(r => ({ range: r.range, text: r.text })), null);
+		this.pushEditOperations(
+      null,
+      edit.replacements.map(r => ({ range: r.range, text: r.text })),
+      null,
+    );
 	}
 
 	public pushEditOperations(beforeCursorState: Selection[] | null, editOperations: model.IIdentifiedSingleEditOperation[], cursorStateComputer: model.ICursorStateComputer | null, group?: UndoRedoGroup, reason?: TextModelEditSource): Selection[] | null {
 		try {
 			this._onDidChangeDecorations.beginDeferredEmit();
 			this._eventEmitter.beginDeferredEmit();
-			return this._pushEditOperations(beforeCursorState, this._validateEditOperations(editOperations), cursorStateComputer, group, reason);
+			return this._pushEditOperations(
+        beforeCursorState,
+        this._validateEditOperations(editOperations),
+        cursorStateComputer,
+        group,
+        reason,
+      );
 		} finally {
 			this._eventEmitter.endDeferredEmit();
 			this._onDidChangeDecorations.endDeferredEmit();
@@ -1354,11 +1676,11 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 			// if it is safe to do so (no conflicts with other edits).
 
 			const incomingEdits = editOperations.map((op) => {
-				return {
-					range: this.validateRange(op.range),
-					text: op.text
-				};
-			});
+        return {
+          range: this.validateRange(op.range),
+          text: op.text,
+        };
+      });
 
 			// Sometimes, auto-formatters change ranges automatically which can cause undesired auto whitespace trimming near the cursor
 			// We'll use the following heuristic: if the edits occur near the cursor, then it's ok to trim auto whitespace
@@ -1403,7 +1725,9 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 
 						if (
 							trimLineNumber === editRange.startLineNumber && editRange.startColumn === maxLineColumn
-							&& editRange.isEmpty() && editText && editText.length > 0 && editText.charAt(0) === '\n'
+							&& editRange.isEmpty() && editText && editText.length > 0 && editText.charAt(
+                0,
+              ) === "\n"
 						) {
 							// This edit inserts a new line (and maybe other text) after `trimLine`
 							continue;
@@ -1411,7 +1735,9 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 
 						if (
 							trimLineNumber === editRange.startLineNumber && editRange.startColumn === 1
-							&& editRange.isEmpty() && editText && editText.length > 0 && editText.charAt(editText.length - 1) === '\n'
+							&& editRange.isEmpty() && editText && editText.length > 0 && editText.charAt(
+                editText.length - 1,
+              ) === "\n"
 						) {
 							// This edit inserts a new line (and maybe other text) before `trimLine`
 							continue;
@@ -1423,8 +1749,22 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 					}
 
 					if (allowTrimLine) {
-						const trimRange = new Range(trimLineNumber, 1, trimLineNumber, maxLineColumn);
-						editOperations.push(new model.ValidAnnotatedEditOperation(null, trimRange, null, false, false, false));
+						const trimRange = new Range(
+              trimLineNumber,
+              1,
+              trimLineNumber,
+              maxLineColumn,
+            );
+						editOperations.push(
+              new model.ValidAnnotatedEditOperation(
+                null,
+                trimRange,
+                null,
+                false,
+                false,
+                false,
+              ),
+            );
 					}
 
 				}
@@ -1433,33 +1773,55 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 			this._trimAutoWhitespaceLines = null;
 		}
 		if (this._initialUndoRedoSnapshot === null) {
-			this._initialUndoRedoSnapshot = this._undoRedoService.createSnapshot(this.uri);
+			this._initialUndoRedoSnapshot = this._undoRedoService.createSnapshot(
+        this.uri,
+      );
 		}
-		return this._commandManager.pushEditOperation(beforeCursorState, editOperations, cursorStateComputer, group, reason);
+		return this._commandManager.pushEditOperation(
+      beforeCursorState,
+      editOperations,
+      cursorStateComputer,
+      group,
+      reason,
+    );
 	}
 
 	_applyUndo(changes: TextChange[], eol: model.EndOfLineSequence, resultingAlternativeVersionId: number, resultingSelection: Selection[] | null): void {
 		const edits = changes.map<ISingleEditOperation>((change) => {
-			const rangeStart = this.getPositionAt(change.newPosition);
-			const rangeEnd = this.getPositionAt(change.newEnd);
-			return {
-				range: new Range(rangeStart.lineNumber, rangeStart.column, rangeEnd.lineNumber, rangeEnd.column),
-				text: change.oldText
-			};
-		});
-		this._applyUndoRedoEdits(edits, eol, true, false, resultingAlternativeVersionId, resultingSelection);
+      const rangeStart = this.getPositionAt(change.newPosition);
+      const rangeEnd = this.getPositionAt(change.newEnd);
+      return {
+        range: new Range(rangeStart.lineNumber, rangeStart.column, rangeEnd.lineNumber, rangeEnd.column),
+        text: change.oldText,
+      };
+    });
+		this._applyUndoRedoEdits(
+      edits,
+      eol,
+      true,
+      false,
+      resultingAlternativeVersionId,
+      resultingSelection,
+    );
 	}
 
 	_applyRedo(changes: TextChange[], eol: model.EndOfLineSequence, resultingAlternativeVersionId: number, resultingSelection: Selection[] | null): void {
 		const edits = changes.map<ISingleEditOperation>((change) => {
-			const rangeStart = this.getPositionAt(change.oldPosition);
-			const rangeEnd = this.getPositionAt(change.oldEnd);
-			return {
-				range: new Range(rangeStart.lineNumber, rangeStart.column, rangeEnd.lineNumber, rangeEnd.column),
-				text: change.newText
-			};
-		});
-		this._applyUndoRedoEdits(edits, eol, false, true, resultingAlternativeVersionId, resultingSelection);
+      const rangeStart = this.getPositionAt(change.oldPosition);
+      const rangeEnd = this.getPositionAt(change.oldEnd);
+      return {
+        range: new Range(rangeStart.lineNumber, rangeStart.column, rangeEnd.lineNumber, rangeEnd.column),
+        text: change.newText,
+      };
+    });
+		this._applyUndoRedoEdits(
+      edits,
+      eol,
+      false,
+      true,
+      resultingAlternativeVersionId,
+      resultingSelection,
+    );
 	}
 
 	private _applyUndoRedoEdits(edits: ISingleEditOperation[], eol: model.EndOfLineSequence, isUndoing: boolean, isRedoing: boolean, resultingAlternativeVersionId: number, resultingSelection: Selection[] | null): void {
@@ -1469,7 +1831,12 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 			this._isUndoing = isUndoing;
 			this._isRedoing = isRedoing;
 			const operations = this._validateEditOperations(edits);
-			this._doApplyEdits(operations, false, EditSources.applyEdits(), resultingSelection);
+			this._doApplyEdits(
+        operations,
+        false,
+        EditSources.applyEdits(),
+        resultingSelection,
+      );
 			this.setEOL(eol);
 			this._overwriteAlternativeVersionId(resultingAlternativeVersionId);
 		} finally {
@@ -1493,7 +1860,11 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 			this._eventEmitter.beginDeferredEmit();
 			const operations = this._validateEditOperations(rawOperations);
 
-			return this._doApplyEdits(operations, computeUndoEdits ?? false, reason ?? EditSources.applyEdits());
+			return this._doApplyEdits(
+        operations,
+        computeUndoEdits ?? false,
+        reason ?? EditSources.applyEdits(),
+      );
 		} finally {
 			this._eventEmitter.endDeferredEmit();
 			this._onDidChangeDecorations.endDeferredEmit();
@@ -1503,7 +1874,11 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 	private _doApplyEdits(rawOperations: model.ValidAnnotatedEditOperation[], computeUndoEdits: boolean, reason: TextModelEditSource, resultingSelection: Selection[] | null = null): void | model.IValidEditOperation[] {
 
 		const oldLineCount = this._buffer.getLineCount();
-		const result = this._buffer.applyEdits(rawOperations, this._options.trimAutoWhitespace, computeUndoEdits);
+		const result = this._buffer.applyEdits(
+      rawOperations,
+      this._options.trimAutoWhitespace,
+      computeUndoEdits,
+    );
 		const newLineCount = this._buffer.getLineCount();
 
 		const contentChanges = result.changes;
@@ -1516,7 +1891,12 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 			// and we want to read the final decorations
 			for (let i = 0, len = contentChanges.length; i < len; i++) {
 				const change = contentChanges[i];
-				this._decorationsTree.acceptReplace(change.rangeOffset, change.rangeLength, change.text.length, change.forceMoveMarkers);
+				this._decorationsTree.acceptReplace(
+          change.rangeOffset,
+          change.rangeLength,
+          change.text.length,
+          change.forceMoveMarkers,
+        );
 			}
 
 			const rawContentChanges: ModelRawChange[] = [];
@@ -1545,10 +1925,8 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 					const currentEditLineNumber = currentEditStartLineNumber + j;
 
 					rawContentChanges.push(
-						new ModelRawLineChanged(
-							editLineNumber,
-							currentEditLineNumber
-						));
+            new ModelRawLineChanged(editLineNumber, currentEditLineNumber),
+          );
 				}
 
 				if (editingLinesCnt < deletingLinesCnt) {
@@ -1556,7 +1934,13 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 					const spliceStartLineNumber = startLineNumber + editingLinesCnt;
 					const cnt = insertingLinesCnt - deletingLinesCnt;
 					const lastUntouchedLinePostEdit = newLineCount - lineCount - cnt + spliceStartLineNumber;
-					rawContentChanges.push(new ModelRawLinesDeleted(spliceStartLineNumber + 1, endLineNumber, lastUntouchedLinePostEdit));
+					rawContentChanges.push(
+            new ModelRawLinesDeleted(
+              spliceStartLineNumber + 1,
+              endLineNumber,
+              lastUntouchedLinePostEdit,
+            ),
+          );
 				}
 
 				if (editingLinesCnt < insertingLinesCnt) {
@@ -1568,8 +1952,8 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 						new ModelRawLinesInserted(
 							spliceLineNumber + 1,
 							fromLineNumber,
-							cnt
-						)
+							cnt,
+						),
 					);
 				}
 
@@ -1577,25 +1961,25 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 			}
 
 			this._emitContentChangedEvent(
-				new ModelRawContentChangedEvent(
-					rawContentChanges,
-					this.getVersionId(),
-					this._isUndoing,
-					this._isRedoing
-				),
-				{
-					changes: contentChanges,
-					eol: this._buffer.getEOL(),
-					isEolChange: false,
-					versionId: this.getVersionId(),
-					isUndoing: this._isUndoing,
-					isRedoing: this._isRedoing,
-					isFlush: false,
-					detailedReasons: [reason],
-					detailedReasonsChangeLengths: [contentChanges.length],
-				},
-				resultingSelection
-			);
+        new ModelRawContentChangedEvent(
+          rawContentChanges,
+          this.getVersionId(),
+          this._isUndoing,
+          this._isRedoing,
+        ),
+        {
+          changes: contentChanges,
+          eol: this._buffer.getEOL(),
+          isEolChange: false,
+          versionId: this.getVersionId(),
+          isUndoing: this._isUndoing,
+          isRedoing: this._isRedoing,
+          isFlush: false,
+          detailedReasons: [reason],
+          detailedReasonsChangeLengths: [contentChanges.length],
+        },
+        resultingSelection,
+      );
 		}
 
 		return (result.reverseEdits === null ? undefined : result.reverseEdits);
@@ -1626,8 +2010,12 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 
 		if (affectedInjectedTextLines && affectedInjectedTextLines.size > 0) {
 			const affectedLines = Array.from(affectedInjectedTextLines);
-			const lineChangeEvents = affectedLines.map(lineNumber => new ModelRawLineChanged(lineNumber, lineNumber));
-			this._onDidChangeContentOrInjectedText(new ModelInjectedTextChangedEvent(lineChangeEvents));
+			const lineChangeEvents = affectedLines.map(
+        lineNumber => new ModelRawLineChanged(lineNumber, lineNumber),
+      );
+			this._onDidChangeContentOrInjectedText(
+        new ModelInjectedTextChangedEvent(lineChangeEvents),
+      );
 		}
 		this._fireOnDidChangeLineHeight(affectedLineHeights);
 		this._fireOnDidChangeFont(affectedFontLines);
@@ -1636,15 +2024,29 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 	private _fireOnDidChangeLineHeight(affectedLineHeights: Set<LineHeightChangingDecoration> | null): void {
 		if (affectedLineHeights && affectedLineHeights.size > 0) {
 			const affectedLines = Array.from(affectedLineHeights);
-			const lineHeightChangeEvent = affectedLines.map(specialLineHeightChange => new ModelLineHeightChanged(specialLineHeightChange.ownerId, specialLineHeightChange.decorationId, specialLineHeightChange.lineNumber, specialLineHeightChange.lineHeight));
-			this._onDidChangeLineHeight.fire(new ModelLineHeightChangedEvent(lineHeightChangeEvent));
+			const lineHeightChangeEvent = affectedLines.map(
+        specialLineHeightChange => new ModelLineHeightChanged(
+          specialLineHeightChange.ownerId,
+          specialLineHeightChange.decorationId,
+          specialLineHeightChange.lineNumber,
+          specialLineHeightChange.lineHeight,
+        ),
+      );
+			this._onDidChangeLineHeight.fire(
+        new ModelLineHeightChangedEvent(lineHeightChangeEvent),
+      );
 		}
 	}
 
 	private _fireOnDidChangeFont(affectedFontLines: Set<LineFontChangingDecoration> | null): void {
 		if (affectedFontLines && affectedFontLines.size > 0) {
 			const affectedLines = Array.from(affectedFontLines);
-			const fontChangeEvent = affectedLines.map(fontChange => new ModelFontChanged(fontChange.ownerId, fontChange.lineNumber));
+			const fontChangeEvent = affectedLines.map(
+        fontChange => new ModelFontChanged(
+          fontChange.ownerId,
+          fontChange.lineNumber,
+        ),
+      );
 			this._onDidChangeFont.fire(new ModelFontChangedEvent(fontChangeEvent));
 		}
 	}
@@ -1697,7 +2099,7 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 					return [];
 				}
 				return this._deltaDecorationsImpl(ownerId, oldDecorations, newDecorations);
-			}
+			},
 		};
 		let result: T | null = null;
 		try {
@@ -1727,11 +2129,21 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 		try {
 			this._deltaDecorationCallCnt++;
 			if (this._deltaDecorationCallCnt > 1) {
-				console.warn(`Invoking deltaDecorations recursively could lead to leaking decorations.`);
-				onUnexpectedError(new Error(`Invoking deltaDecorations recursively could lead to leaking decorations.`));
+				console.warn(
+          `Invoking deltaDecorations recursively could lead to leaking decorations.`,
+        );
+				onUnexpectedError(
+          new Error(
+            `Invoking deltaDecorations recursively could lead to leaking decorations.`,
+          ),
+        );
 			}
 			this._onDidChangeDecorations.beginDeferredEmit();
-			return this._deltaDecorationsImpl(ownerId, oldDecorations, newDecorations);
+			return this._deltaDecorationsImpl(
+        ownerId,
+        oldDecorations,
+        newDecorations,
+      );
 		} finally {
 			this._onDidChangeDecorations.endDeferredEmit();
 			this._deltaDecorationCallCnt--;
@@ -1753,7 +2165,12 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 				return null;
 			}
 			// node doesn't exist, the request is to set => add the tracked range
-			return this._deltaDecorationsImpl(0, [], [{ range: newRange, options: TRACKED_RANGE_OPTIONS[newStickiness] }], true)[0];
+			return this._deltaDecorationsImpl(
+        0,
+        [],
+        [{ range: newRange, options: TRACKED_RANGE_OPTIONS[newStickiness] }],
+        true,
+      )[0];
 		}
 
 		if (!newRange) {
@@ -1765,8 +2182,14 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 
 		// node exists, the request is to set => change the tracked range and its options
 		const range = this._validateRangeRelaxedNoAllocations(newRange);
-		const startOffset = this._buffer.getOffsetAt(range.startLineNumber, range.startColumn);
-		const endOffset = this._buffer.getOffsetAt(range.endLineNumber, range.endColumn);
+		const startOffset = this._buffer.getOffsetAt(
+      range.startLineNumber,
+      range.startColumn,
+    );
+		const endOffset = this._buffer.getOffsetAt(
+      range.endLineNumber,
+      range.endColumn,
+    );
 		this._decorationsTree.delete(node);
 		node.reset(this.getVersionId(), startOffset, endOffset, range);
 		node.setOptions(TRACKED_RANGE_OPTIONS[newStickiness]);
@@ -1807,7 +2230,13 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 		if (lineNumber < 1 || lineNumber > this.getLineCount()) {
 			return [];
 		}
-		return this.getLinesDecorations(lineNumber, lineNumber, ownerId, filterOutValidation, filterFontDecorations);
+		return this.getLinesDecorations(
+      lineNumber,
+      lineNumber,
+      ownerId,
+      filterOutValidation,
+      filterFontDecorations,
+    );
 	}
 
 	public getLinesDecorations(_startLineNumber: number, _endLineNumber: number, ownerId: number = 0, filterOutValidation: boolean = false, filterFontDecorations: boolean = false, onlyMarginDecorations: boolean = false): model.IModelDecoration[] {
@@ -1817,23 +2246,76 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 		const endColumn = this.getLineMaxColumn(endLineNumber);
 		const range = new Range(startLineNumber, 1, endLineNumber, endColumn);
 
-		const decorations = this._getDecorationsInRange(range, ownerId, filterOutValidation, filterFontDecorations, onlyMarginDecorations);
-		pushMany(decorations, this._decorationProvider.getDecorationsInRange(range, ownerId, filterOutValidation, filterFontDecorations));
-		pushMany(decorations, this._fontTokenDecorationsProvider.getDecorationsInRange(range, ownerId, filterOutValidation, filterFontDecorations));
+		const decorations = this._getDecorationsInRange(
+      range,
+      ownerId,
+      filterOutValidation,
+      filterFontDecorations,
+      onlyMarginDecorations,
+    );
+		pushMany(
+      decorations,
+      this._decorationProvider.getDecorationsInRange(
+        range,
+        ownerId,
+        filterOutValidation,
+        filterFontDecorations,
+      ),
+    );
+		pushMany(
+      decorations,
+      this._fontTokenDecorationsProvider.getDecorationsInRange(
+        range,
+        ownerId,
+        filterOutValidation,
+        filterFontDecorations,
+      ),
+    );
 		return decorations;
 	}
 
 	public getDecorationsInRange(range: IRange, ownerId: number = 0, filterOutValidation: boolean = false, filterFontDecorations: boolean = false, onlyMinimapDecorations: boolean = false, onlyMarginDecorations: boolean = false): model.IModelDecoration[] {
 		const validatedRange = this.validateRange(range);
 
-		const decorations = this._getDecorationsInRange(validatedRange, ownerId, filterOutValidation, filterFontDecorations, onlyMarginDecorations);
-		pushMany(decorations, this._decorationProvider.getDecorationsInRange(validatedRange, ownerId, filterOutValidation, filterFontDecorations, onlyMinimapDecorations));
-		pushMany(decorations, this._fontTokenDecorationsProvider.getDecorationsInRange(validatedRange, ownerId, filterOutValidation, filterFontDecorations, onlyMinimapDecorations));
+		const decorations = this._getDecorationsInRange(
+      validatedRange,
+      ownerId,
+      filterOutValidation,
+      filterFontDecorations,
+      onlyMarginDecorations,
+    );
+		pushMany(
+      decorations,
+      this._decorationProvider.getDecorationsInRange(
+        validatedRange,
+        ownerId,
+        filterOutValidation,
+        filterFontDecorations,
+        onlyMinimapDecorations,
+      ),
+    );
+		pushMany(
+      decorations,
+      this._fontTokenDecorationsProvider.getDecorationsInRange(
+        validatedRange,
+        ownerId,
+        filterOutValidation,
+        filterFontDecorations,
+        onlyMinimapDecorations,
+      ),
+    );
 		return decorations;
 	}
 
 	public getOverviewRulerDecorations(ownerId: number = 0, filterOutValidation: boolean = false, filterFontDecorations: boolean = false): model.IModelDecoration[] {
-		return this._decorationsTree.getAll(this, ownerId, filterOutValidation, filterFontDecorations, true, false);
+		return this._decorationsTree.getAll(
+      this,
+      ownerId,
+      filterOutValidation,
+      filterFontDecorations,
+      true,
+      false,
+    );
 	}
 
 	public getInjectedTextDecorations(ownerId: number = 0): model.IModelDecoration[] {
@@ -1842,13 +2324,24 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 
 	public getCustomLineHeightsDecorations(ownerId: number = 0): model.IModelDecoration[] {
 		const decs = this._decorationsTree.getAllCustomLineHeights(this, ownerId);
-		pushMany(decs, this._fontTokenDecorationsProvider.getAllDecorations(ownerId));
+		pushMany(
+      decs,
+      this._fontTokenDecorationsProvider.getAllDecorations(ownerId),
+    );
 		return decs;
 	}
 
 	public getCustomLineHeightsDecorationsInRange(range: Range, ownerId: number = 0): model.IModelDecoration[] {
-		const decs = this._decorationsTree.getCustomLineHeightsInInterval(this, this.getOffsetAt(range.getStartPosition()), this.getOffsetAt(range.getEndPosition()), ownerId);
-		pushMany(decs, this._fontTokenDecorationsProvider.getDecorationsInRange(range, ownerId));
+		const decs = this._decorationsTree.getCustomLineHeightsInInterval(
+      this,
+      this.getOffsetAt(range.getStartPosition()),
+      this.getOffsetAt(range.getEndPosition()),
+      ownerId,
+    );
+		pushMany(
+      decs,
+      this._fontTokenDecorationsProvider.getDecorationsInRange(range, ownerId),
+    );
 		return decs;
 	}
 
@@ -1856,31 +2349,84 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 		const startOffset = this._buffer.getOffsetAt(lineNumber, 1);
 		const endOffset = startOffset + this._buffer.getLineLength(lineNumber);
 
-		const result = this._decorationsTree.getInjectedTextInInterval(this, startOffset, endOffset, ownerId);
-		return LineInjectedText.fromDecorations(result).filter(t => t.lineNumber === lineNumber);
+		const result = this._decorationsTree.getInjectedTextInInterval(
+      this,
+      startOffset,
+      endOffset,
+      ownerId,
+    );
+		return LineInjectedText.fromDecorations(result).filter(
+      t => t.lineNumber === lineNumber,
+    );
 	}
 
 	public getFontDecorationsInRange(range: IRange, ownerId: number = 0): model.IModelDecoration[] {
-		const startOffset = this._buffer.getOffsetAt(range.startLineNumber, range.startColumn);
-		const endOffset = this._buffer.getOffsetAt(range.endLineNumber, range.endColumn);
-		return this._decorationsTree.getFontDecorationsInInterval(this, startOffset, endOffset, ownerId);
+		const startOffset = this._buffer.getOffsetAt(
+      range.startLineNumber,
+      range.startColumn,
+    );
+		const endOffset = this._buffer.getOffsetAt(
+      range.endLineNumber,
+      range.endColumn,
+    );
+		return this._decorationsTree.getFontDecorationsInInterval(
+      this,
+      startOffset,
+      endOffset,
+      ownerId,
+    );
 	}
 
 	public getAllDecorations(ownerId: number = 0, filterOutValidation: boolean = false, filterFontDecorations: boolean = false): model.IModelDecoration[] {
-		let result = this._decorationsTree.getAll(this, ownerId, filterOutValidation, filterFontDecorations, false, false);
-		result = result.concat(this._decorationProvider.getAllDecorations(ownerId, filterOutValidation));
-		result = result.concat(this._fontTokenDecorationsProvider.getAllDecorations(ownerId, filterOutValidation));
+		let result = this._decorationsTree.getAll(
+      this,
+      ownerId,
+      filterOutValidation,
+      filterFontDecorations,
+      false,
+      false,
+    );
+		result = result.concat(
+      this._decorationProvider.getAllDecorations(ownerId, filterOutValidation),
+    );
+		result = result.concat(
+      this._fontTokenDecorationsProvider.getAllDecorations(
+        ownerId,
+        filterOutValidation,
+      ),
+    );
 		return result;
 	}
 
 	public getAllMarginDecorations(ownerId: number = 0): model.IModelDecoration[] {
-		return this._decorationsTree.getAll(this, ownerId, false, false, false, true);
+		return this._decorationsTree.getAll(
+      this,
+      ownerId,
+      false,
+      false,
+      false,
+      true,
+    );
 	}
 
 	private _getDecorationsInRange(filterRange: Range, filterOwnerId: number, filterOutValidation: boolean, filterFontDecorations: boolean, onlyMarginDecorations: boolean): model.IModelDecoration[] {
-		const startOffset = this._buffer.getOffsetAt(filterRange.startLineNumber, filterRange.startColumn);
-		const endOffset = this._buffer.getOffsetAt(filterRange.endLineNumber, filterRange.endColumn);
-		return this._decorationsTree.getAllInInterval(this, startOffset, endOffset, filterOwnerId, filterOutValidation, filterFontDecorations, onlyMarginDecorations);
+		const startOffset = this._buffer.getOffsetAt(
+      filterRange.startLineNumber,
+      filterRange.startColumn,
+    );
+		const endOffset = this._buffer.getOffsetAt(
+      filterRange.endLineNumber,
+      filterRange.endColumn,
+    );
+		return this._decorationsTree.getAllInInterval(
+      this,
+      startOffset,
+      endOffset,
+      filterOwnerId,
+      filterOutValidation,
+      filterFontDecorations,
+      onlyMarginDecorations,
+    );
 	}
 
 	public getRangeAt(start: number, end: number): Range {
@@ -1895,24 +2441,43 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 
 		if (node.options.after) {
 			const oldRange = this.getDecorationRange(decorationId);
-			this._onDidChangeDecorations.recordLineAffectedByInjectedText(oldRange!.endLineNumber);
+			this._onDidChangeDecorations.recordLineAffectedByInjectedText(
+        oldRange!.endLineNumber,
+      );
 		}
 		if (node.options.before) {
 			const oldRange = this.getDecorationRange(decorationId);
-			this._onDidChangeDecorations.recordLineAffectedByInjectedText(oldRange!.startLineNumber);
+			this._onDidChangeDecorations.recordLineAffectedByInjectedText(
+        oldRange!.startLineNumber,
+      );
 		}
 		if (node.options.lineHeight !== null) {
 			const oldRange = this.getDecorationRange(decorationId);
-			this._onDidChangeDecorations.recordLineAffectedByLineHeightChange(ownerId, decorationId, oldRange!.startLineNumber, null);
+			this._onDidChangeDecorations.recordLineAffectedByLineHeightChange(
+        ownerId,
+        decorationId,
+        oldRange!.startLineNumber,
+        null,
+      );
 		}
 		if (node.options.affectsFont) {
 			const oldRange = this.getDecorationRange(decorationId);
-			this._onDidChangeDecorations.recordLineAffectedByFontChange(ownerId, node.id, oldRange!.startLineNumber);
+			this._onDidChangeDecorations.recordLineAffectedByFontChange(
+        ownerId,
+        node.id,
+        oldRange!.startLineNumber,
+      );
 		}
 
 		const range = this._validateRangeRelaxedNoAllocations(_range);
-		const startOffset = this._buffer.getOffsetAt(range.startLineNumber, range.startColumn);
-		const endOffset = this._buffer.getOffsetAt(range.endLineNumber, range.endColumn);
+		const startOffset = this._buffer.getOffsetAt(
+      range.startLineNumber,
+      range.startColumn,
+    );
+		const endOffset = this._buffer.getOffsetAt(
+      range.endLineNumber,
+      range.endColumn,
+    );
 
 		this._decorationsTree.delete(node);
 		node.reset(this.getVersionId(), startOffset, endOffset, range);
@@ -1920,16 +2485,29 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 		this._onDidChangeDecorations.checkAffectedAndFire(node.options);
 
 		if (node.options.after) {
-			this._onDidChangeDecorations.recordLineAffectedByInjectedText(range.endLineNumber);
+			this._onDidChangeDecorations.recordLineAffectedByInjectedText(
+        range.endLineNumber,
+      );
 		}
 		if (node.options.before) {
-			this._onDidChangeDecorations.recordLineAffectedByInjectedText(range.startLineNumber);
+			this._onDidChangeDecorations.recordLineAffectedByInjectedText(
+        range.startLineNumber,
+      );
 		}
 		if (node.options.lineHeight !== null) {
-			this._onDidChangeDecorations.recordLineAffectedByLineHeightChange(ownerId, decorationId, range.startLineNumber, node.options.lineHeight);
+			this._onDidChangeDecorations.recordLineAffectedByLineHeightChange(
+        ownerId,
+        decorationId,
+        range.startLineNumber,
+        node.options.lineHeight,
+      );
 		}
 		if (node.options.affectsFont) {
-			this._onDidChangeDecorations.recordLineAffectedByFontChange(ownerId, node.id, range.startLineNumber);
+			this._onDidChangeDecorations.recordLineAffectedByFontChange(
+        ownerId,
+        node.id,
+        range.startLineNumber,
+      );
 		}
 	}
 
@@ -1947,23 +2525,38 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 
 		if (node.options.after || options.after) {
 			const nodeRange = this._decorationsTree.getNodeRange(this, node);
-			this._onDidChangeDecorations.recordLineAffectedByInjectedText(nodeRange.endLineNumber);
+			this._onDidChangeDecorations.recordLineAffectedByInjectedText(
+        nodeRange.endLineNumber,
+      );
 		}
 		if (node.options.before || options.before) {
 			const nodeRange = this._decorationsTree.getNodeRange(this, node);
-			this._onDidChangeDecorations.recordLineAffectedByInjectedText(nodeRange.startLineNumber);
+			this._onDidChangeDecorations.recordLineAffectedByInjectedText(
+        nodeRange.startLineNumber,
+      );
 		}
 		if (node.options.lineHeight !== null || options.lineHeight !== null) {
 			const nodeRange = this._decorationsTree.getNodeRange(this, node);
-			this._onDidChangeDecorations.recordLineAffectedByLineHeightChange(ownerId, decorationId, nodeRange.startLineNumber, options.lineHeight);
+			this._onDidChangeDecorations.recordLineAffectedByLineHeightChange(
+        ownerId,
+        decorationId,
+        nodeRange.startLineNumber,
+        options.lineHeight,
+      );
 		}
 		if (node.options.affectsFont || options.affectsFont) {
 			const nodeRange = this._decorationsTree.getNodeRange(this, node);
-			this._onDidChangeDecorations.recordLineAffectedByFontChange(ownerId, decorationId, nodeRange.startLineNumber);
+			this._onDidChangeDecorations.recordLineAffectedByFontChange(
+        ownerId,
+        decorationId,
+        nodeRange.startLineNumber,
+      );
 		}
 
 		const movedInOverviewRuler = nodeWasInOverviewRuler !== nodeIsInOverviewRuler;
-		const changedWhetherInjectedText = isOptionsInjectedText(options) !== isNodeInjectedText(node);
+		const changedWhetherInjectedText = isOptionsInjectedText(
+      options,
+    ) !== isNodeInjectedText(node);
 		if (movedInOverviewRuler || changedWhetherInjectedText) {
 			this._decorationsTree.delete(node);
 			node.setOptions(options);
@@ -2001,19 +2594,32 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 					if (node) {
 						if (node.options.after) {
 							const nodeRange = this._decorationsTree.getNodeRange(this, node);
-							this._onDidChangeDecorations.recordLineAffectedByInjectedText(nodeRange.endLineNumber);
+							this._onDidChangeDecorations.recordLineAffectedByInjectedText(
+                nodeRange.endLineNumber,
+              );
 						}
 						if (node.options.before) {
 							const nodeRange = this._decorationsTree.getNodeRange(this, node);
-							this._onDidChangeDecorations.recordLineAffectedByInjectedText(nodeRange.startLineNumber);
+							this._onDidChangeDecorations.recordLineAffectedByInjectedText(
+                nodeRange.startLineNumber,
+              );
 						}
 						if (node.options.lineHeight !== null) {
 							const nodeRange = this._decorationsTree.getNodeRange(this, node);
-							this._onDidChangeDecorations.recordLineAffectedByLineHeightChange(ownerId, decorationId, nodeRange.startLineNumber, null);
+							this._onDidChangeDecorations.recordLineAffectedByLineHeightChange(
+                ownerId,
+                decorationId,
+                nodeRange.startLineNumber,
+                null,
+              );
 						}
 						if (node.options.affectsFont) {
 							const nodeRange = this._decorationsTree.getNodeRange(this, node);
-							this._onDidChangeDecorations.recordLineAffectedByFontChange(ownerId, decorationId, nodeRange.startLineNumber);
+							this._onDidChangeDecorations.recordLineAffectedByFontChange(
+                ownerId,
+                decorationId,
+                nodeRange.startLineNumber,
+              );
 						}
 						this._decorationsTree.delete(node);
 
@@ -2034,26 +2640,47 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 
 					// (4) initialize node
 					const newDecoration = newDecorations[newDecorationIndex];
-					const range = this._validateRangeRelaxedNoAllocations(newDecoration.range);
+					const range = this._validateRangeRelaxedNoAllocations(
+            newDecoration.range,
+          );
 					const options = _normalizeOptions(newDecoration.options);
-					const startOffset = this._buffer.getOffsetAt(range.startLineNumber, range.startColumn);
-					const endOffset = this._buffer.getOffsetAt(range.endLineNumber, range.endColumn);
+					const startOffset = this._buffer.getOffsetAt(
+            range.startLineNumber,
+            range.startColumn,
+          );
+					const endOffset = this._buffer.getOffsetAt(
+            range.endLineNumber,
+            range.endColumn,
+          );
 
 					node.ownerId = ownerId;
 					node.reset(versionId, startOffset, endOffset, range);
 					node.setOptions(options);
 
 					if (node.options.after) {
-						this._onDidChangeDecorations.recordLineAffectedByInjectedText(range.endLineNumber);
+						this._onDidChangeDecorations.recordLineAffectedByInjectedText(
+              range.endLineNumber,
+            );
 					}
 					if (node.options.before) {
-						this._onDidChangeDecorations.recordLineAffectedByInjectedText(range.startLineNumber);
+						this._onDidChangeDecorations.recordLineAffectedByInjectedText(
+              range.startLineNumber,
+            );
 					}
 					if (node.options.lineHeight !== null) {
-						this._onDidChangeDecorations.recordLineAffectedByLineHeightChange(ownerId, node.id, range.startLineNumber, node.options.lineHeight);
+						this._onDidChangeDecorations.recordLineAffectedByLineHeightChange(
+              ownerId,
+              node.id,
+              range.startLineNumber,
+              node.options.lineHeight,
+            );
 					}
 					if (node.options.affectsFont) {
-						this._onDidChangeDecorations.recordLineAffectedByFontChange(ownerId, node.id, range.startLineNumber);
+						this._onDidChangeDecorations.recordLineAffectedByFontChange(
+              ownerId,
+              node.id,
+              range.startLineNumber,
+            );
 					}
 					if (!suppressEvents) {
 						this._onDidChangeDecorations.checkAffectedAndFire(options);
@@ -2087,11 +2714,13 @@ export class TextModel extends Disposable implements model.ITextModel, IDecorati
 	}
 
 	public setLanguage(languageIdOrSelection: string | ILanguageSelection, source?: string): void {
-		if (typeof languageIdOrSelection === 'string') {
+		if (typeof languageIdOrSelection === "string") {
 			this._languageSelectionListener.clear();
 			this._setLanguage(languageIdOrSelection, source);
 		} else {
-			this._languageSelectionListener.value = languageIdOrSelection.onDidChange(() => this._setLanguage(languageIdOrSelection.languageId, source));
+			this._languageSelectionListener.value = languageIdOrSelection.onDidChange(
+        () => this._setLanguage(languageIdOrSelection.languageId, source),
+      );
 			this._setLanguage(languageIdOrSelection.languageId, source);
 		}
 	}
@@ -2142,18 +2771,18 @@ export function getLineTokensWithInjections(tokens: LineTokens, injectionOptions
 			const tokens = injectionOptions![idx].tokens;
 			if (tokens) {
 				tokens.forEach((range, info) => {
-					tokensToInsert.push({
-						offset,
-						text: range.substring(injectionOptions![idx].content),
-						tokenMetadata: info.metadata,
-					});
-				});
+          tokensToInsert.push({
+            offset,
+            text: range.substring(injectionOptions![idx].content),
+            tokenMetadata: info.metadata,
+          });
+        });
 			} else {
 				tokensToInsert.push({
-					offset,
-					text: injectionOptions![idx].content,
-					tokenMetadata: LineTokens.defaultTokenMetadata,
-				});
+          offset,
+          text: injectionOptions![idx].content,
+          tokenMetadata: LineTokens.defaultTokenMetadata,
+        });
 			}
 		}
 		lineTokens = tokens.withInserted(tokensToInsert);
@@ -2166,7 +2795,7 @@ export function getLineTokensWithInjections(tokens: LineTokens, injectionOptions
 export function indentOfLine(line: string): number {
 	let indent = 0;
 	for (const c of line) {
-		if (c === ' ' || c === '\t') {
+		if (c === " " || c === "\t") {
 			indent++;
 		} else {
 			break;
@@ -2224,7 +2853,10 @@ class DecorationsTrees {
 	private _ensureNodesHaveRanges(host: IDecorationsTreesHost, nodes: IntervalNode[]): model.IModelDecoration[] {
 		for (const node of nodes) {
 			if (node.range === null) {
-				node.range = host.getRangeAt(node.cachedAbsoluteStart, node.cachedAbsoluteEnd);
+				node.range = host.getRangeAt(
+          node.cachedAbsoluteStart,
+          node.cachedAbsoluteEnd,
+        );
 			}
 		}
 		return <model.IModelDecoration[]>nodes;
@@ -2232,60 +2864,170 @@ class DecorationsTrees {
 
 	public getAllInInterval(host: IDecorationsTreesHost, start: number, end: number, filterOwnerId: number, filterOutValidation: boolean, filterFontDecorations: boolean, onlyMarginDecorations: boolean): model.IModelDecoration[] {
 		const versionId = host.getVersionId();
-		const result = this._intervalSearch(start, end, filterOwnerId, filterOutValidation, filterFontDecorations, versionId, onlyMarginDecorations);
+		const result = this._intervalSearch(
+      start,
+      end,
+      filterOwnerId,
+      filterOutValidation,
+      filterFontDecorations,
+      versionId,
+      onlyMarginDecorations,
+    );
 		return this._ensureNodesHaveRanges(host, result);
 	}
 
 	private _intervalSearch(start: number, end: number, filterOwnerId: number, filterOutValidation: boolean, filterFontDecorations: boolean, cachedVersionId: number, onlyMarginDecorations: boolean): IntervalNode[] {
-		const r0 = this._decorationsTree0.intervalSearch(start, end, filterOwnerId, filterOutValidation, filterFontDecorations, cachedVersionId, onlyMarginDecorations);
-		const r1 = this._decorationsTree1.intervalSearch(start, end, filterOwnerId, filterOutValidation, filterFontDecorations, cachedVersionId, onlyMarginDecorations);
-		const r2 = this._injectedTextDecorationsTree.intervalSearch(start, end, filterOwnerId, filterOutValidation, filterFontDecorations, cachedVersionId, onlyMarginDecorations);
+		const r0 = this._decorationsTree0.intervalSearch(
+      start,
+      end,
+      filterOwnerId,
+      filterOutValidation,
+      filterFontDecorations,
+      cachedVersionId,
+      onlyMarginDecorations,
+    );
+		const r1 = this._decorationsTree1.intervalSearch(
+      start,
+      end,
+      filterOwnerId,
+      filterOutValidation,
+      filterFontDecorations,
+      cachedVersionId,
+      onlyMarginDecorations,
+    );
+		const r2 = this._injectedTextDecorationsTree.intervalSearch(
+      start,
+      end,
+      filterOwnerId,
+      filterOutValidation,
+      filterFontDecorations,
+      cachedVersionId,
+      onlyMarginDecorations,
+    );
 		return r0.concat(r1).concat(r2);
 	}
 
 	public getInjectedTextInInterval(host: IDecorationsTreesHost, start: number, end: number, filterOwnerId: number): model.IModelDecoration[] {
 		const versionId = host.getVersionId();
-		const result = this._injectedTextDecorationsTree.intervalSearch(start, end, filterOwnerId, false, false, versionId, false);
-		return this._ensureNodesHaveRanges(host, result).filter((i) => i.options.showIfCollapsed || !i.range.isEmpty());
+		const result = this._injectedTextDecorationsTree.intervalSearch(
+      start,
+      end,
+      filterOwnerId,
+      false,
+      false,
+      versionId,
+      false,
+    );
+		return this._ensureNodesHaveRanges(host, result).filter(
+      (i) => i.options.showIfCollapsed || !i.range.isEmpty(),
+    );
 	}
 
 	public getFontDecorationsInInterval(host: IDecorationsTreesHost, start: number, end: number, filterOwnerId: number): model.IModelDecoration[] {
 		const versionId = host.getVersionId();
-		const decorations = this._decorationsTree0.intervalSearch(start, end, filterOwnerId, false, false, versionId, false);
-		return this._ensureNodesHaveRanges(host, decorations).filter((i) => i.options.affectsFont);
+		const decorations = this._decorationsTree0.intervalSearch(
+      start,
+      end,
+      filterOwnerId,
+      false,
+      false,
+      versionId,
+      false,
+    );
+		return this._ensureNodesHaveRanges(host, decorations).filter(
+      (i) => i.options.affectsFont,
+    );
 	}
 
 	public getAllInjectedText(host: IDecorationsTreesHost, filterOwnerId: number): model.IModelDecoration[] {
 		const versionId = host.getVersionId();
-		const result = this._injectedTextDecorationsTree.search(filterOwnerId, false, false, versionId, false);
-		return this._ensureNodesHaveRanges(host, result).filter((i) => i.options.showIfCollapsed || !i.range.isEmpty());
+		const result = this._injectedTextDecorationsTree.search(
+      filterOwnerId,
+      false,
+      false,
+      versionId,
+      false,
+    );
+		return this._ensureNodesHaveRanges(host, result).filter(
+      (i) => i.options.showIfCollapsed || !i.range.isEmpty(),
+    );
 	}
 
 	public getAllCustomLineHeights(host: IDecorationsTreesHost, filterOwnerId: number): model.IModelDecoration[] {
 		const versionId = host.getVersionId();
-		const result = this._search(filterOwnerId, false, false, false, versionId, false);
-		return this._ensureNodesHaveRanges(host, result).filter((i) => typeof i.options.lineHeight === 'number');
+		const result = this._search(
+      filterOwnerId,
+      false,
+      false,
+      false,
+      versionId,
+      false,
+    );
+		return this._ensureNodesHaveRanges(host, result).filter(
+      (i) => typeof i.options.lineHeight === "number",
+    );
 	}
 
 	public getCustomLineHeightsInInterval(host: IDecorationsTreesHost, start: number, end: number, filterOwnerId: number): model.IModelDecoration[] {
 		const versionId = host.getVersionId();
-		const result = this._intervalSearch(start, end, filterOwnerId, false, false, versionId, false);
-		return this._ensureNodesHaveRanges(host, result).filter((i) => typeof i.options.lineHeight === 'number');
+		const result = this._intervalSearch(
+      start,
+      end,
+      filterOwnerId,
+      false,
+      false,
+      versionId,
+      false,
+    );
+		return this._ensureNodesHaveRanges(host, result).filter(
+      (i) => typeof i.options.lineHeight === "number",
+    );
 	}
 
 	public getAll(host: IDecorationsTreesHost, filterOwnerId: number, filterOutValidation: boolean, filterFontDecorations: boolean, overviewRulerOnly: boolean, onlyMarginDecorations: boolean): model.IModelDecoration[] {
 		const versionId = host.getVersionId();
-		const result = this._search(filterOwnerId, filterOutValidation, filterFontDecorations, overviewRulerOnly, versionId, onlyMarginDecorations);
+		const result = this._search(
+      filterOwnerId,
+      filterOutValidation,
+      filterFontDecorations,
+      overviewRulerOnly,
+      versionId,
+      onlyMarginDecorations,
+    );
 		return this._ensureNodesHaveRanges(host, result);
 	}
 
 	private _search(filterOwnerId: number, filterOutValidation: boolean, filterFontDecorations: boolean, overviewRulerOnly: boolean, cachedVersionId: number, onlyMarginDecorations: boolean): IntervalNode[] {
 		if (overviewRulerOnly) {
-			return this._decorationsTree1.search(filterOwnerId, filterOutValidation, filterFontDecorations, cachedVersionId, onlyMarginDecorations);
+			return this._decorationsTree1.search(
+        filterOwnerId,
+        filterOutValidation,
+        filterFontDecorations,
+        cachedVersionId,
+        onlyMarginDecorations,
+      );
 		} else {
-			const r0 = this._decorationsTree0.search(filterOwnerId, filterOutValidation, filterFontDecorations, cachedVersionId, onlyMarginDecorations);
-			const r1 = this._decorationsTree1.search(filterOwnerId, filterOutValidation, filterFontDecorations, cachedVersionId, onlyMarginDecorations);
-			const r2 = this._injectedTextDecorationsTree.search(filterOwnerId, filterOutValidation, filterFontDecorations, cachedVersionId, onlyMarginDecorations);
+			const r0 = this._decorationsTree0.search(
+        filterOwnerId,
+        filterOutValidation,
+        filterFontDecorations,
+        cachedVersionId,
+        onlyMarginDecorations,
+      );
+			const r1 = this._decorationsTree1.search(
+        filterOwnerId,
+        filterOutValidation,
+        filterFontDecorations,
+        cachedVersionId,
+        onlyMarginDecorations,
+      );
+			const r2 = this._injectedTextDecorationsTree.search(
+        filterOwnerId,
+        filterOutValidation,
+        filterFontDecorations,
+        cachedVersionId,
+        onlyMarginDecorations,
+      );
 			return r0.concat(r1).concat(r2);
 		}
 	}
@@ -2330,7 +3072,10 @@ class DecorationsTrees {
 			this._resolveNode(node, versionId);
 		}
 		if (node.range === null) {
-			node.range = host.getRangeAt(node.cachedAbsoluteStart, node.cachedAbsoluteEnd);
+			node.range = host.getRangeAt(
+        node.cachedAbsoluteStart,
+        node.cachedAbsoluteEnd,
+      );
 		}
 		return node.range;
 	}
@@ -2346,14 +3091,29 @@ class DecorationsTrees {
 	}
 
 	public acceptReplace(offset: number, length: number, textLength: number, forceMoveMarkers: boolean): void {
-		this._decorationsTree0.acceptReplace(offset, length, textLength, forceMoveMarkers);
-		this._decorationsTree1.acceptReplace(offset, length, textLength, forceMoveMarkers);
-		this._injectedTextDecorationsTree.acceptReplace(offset, length, textLength, forceMoveMarkers);
+		this._decorationsTree0.acceptReplace(
+      offset,
+      length,
+      textLength,
+      forceMoveMarkers,
+    );
+		this._decorationsTree1.acceptReplace(
+      offset,
+      length,
+      textLength,
+      forceMoveMarkers,
+    );
+		this._injectedTextDecorationsTree.acceptReplace(
+      offset,
+      length,
+      textLength,
+      forceMoveMarkers,
+    );
 	}
 }
 
 function cleanClassName(className: string): string {
-	return className.replace(/[^a-z0-9\-_]/gi, ' ');
+	return className.replace(/[^a-z0-9\-_]/gi, " ");
 }
 
 class DecorationOptions implements model.IDecorationOptions {
@@ -2361,8 +3121,8 @@ class DecorationOptions implements model.IDecorationOptions {
 	readonly darkColor: string | ThemeColor;
 
 	constructor(options: model.IDecorationOptions) {
-		this.color = options.color || '';
-		this.darkColor = options.darkColor || '';
+		this.color = options.color || "";
+		this.darkColor = options.darkColor || "";
 
 	}
 }
@@ -2374,7 +3134,7 @@ export class ModelDecorationOverviewRulerOptions extends DecorationOptions {
 	constructor(options: model.IModelDecorationOverviewRulerOptions) {
 		super(options);
 		this._resolvedColor = null;
-		this.position = (typeof options.position === 'number' ? options.position : model.OverviewRulerLane.Center);
+		this.position = (typeof options.position === "number" ? options.position : model.OverviewRulerLane.Center);
 	}
 
 	public getColor(theme: IColorTheme): string {
@@ -2393,12 +3153,12 @@ export class ModelDecorationOverviewRulerOptions extends DecorationOptions {
 	}
 
 	private _resolveColor(color: string | ThemeColor, theme: IColorTheme): string {
-		if (typeof color === 'string') {
+		if (typeof color === "string") {
 			return color;
 		}
 		const c = color ? theme.getColor(color.id) : null;
 		if (!c) {
-			return '';
+			return "";
 		}
 		return c.toString();
 	}
@@ -2444,7 +3204,7 @@ export class ModelDecorationMinimapOptions extends DecorationOptions {
 	}
 
 	private _resolveColor(color: string | ThemeColor, theme: IColorTheme): Color | undefined {
-		if (typeof color === 'string') {
+		if (typeof color === "string") {
 			return Color.fromHex(color);
 		}
 		return theme.getColor(color.id);
@@ -2467,7 +3227,7 @@ export class ModelDecorationInjectedTextOptions implements model.InjectedTextOpt
 	readonly cursorStops: model.InjectedTextCursorStops | null;
 
 	private constructor(options: model.InjectedTextOptions) {
-		this.content = options.content || '';
+		this.content = options.content || "";
 		this.tokens = options.tokens ?? null;
 		this.inlineClassName = options.inlineClassName || null;
 		this.inlineClassNameAffectsLetterSpacing = options.inlineClassNameAffectsLetterSpacing || false;
@@ -2526,53 +3286,102 @@ export class ModelDecorationOptions implements model.IModelDecorationOptions {
 
 	private constructor(options: model.IModelDecorationOptions) {
 		this.description = options.description;
-		this.blockClassName = options.blockClassName ? cleanClassName(options.blockClassName) : null;
+		this.blockClassName = options.blockClassName ? cleanClassName(
+      options.blockClassName,
+    ) : null;
 		this.blockDoesNotCollapse = options.blockDoesNotCollapse ?? null;
 		this.blockIsAfterEnd = options.blockIsAfterEnd ?? null;
 		this.blockPadding = options.blockPadding ?? null;
 		this.stickiness = options.stickiness || model.TrackedRangeStickiness.AlwaysGrowsWhenTypingAtEdges;
 		this.zIndex = options.zIndex || 0;
-		this.className = options.className ? cleanClassName(options.className) : null;
+		this.className = options.className ? cleanClassName(
+      options.className,
+    ) : null;
 		this.shouldFillLineOnLineBreak = options.shouldFillLineOnLineBreak ?? null;
 		this.hoverMessage = options.hoverMessage || null;
 		this.glyphMarginHoverMessage = options.glyphMarginHoverMessage || null;
 		this.lineNumberHoverMessage = options.lineNumberHoverMessage || null;
 		this.isWholeLine = options.isWholeLine || false;
-		this.lineHeight = options.lineHeight ? Math.min(options.lineHeight, LINE_HEIGHT_CEILING) : null;
+		this.lineHeight = options.lineHeight ? Math.min(
+      options.lineHeight,
+      LINE_HEIGHT_CEILING,
+    ) : null;
 		this.fontSize = options.fontSize || null;
 		this.affectsFont = !!options.fontSize || !!options.fontFamily || !!options.fontWeight || !!options.fontStyle;
 		this.showIfCollapsed = options.showIfCollapsed || false;
 		this.collapseOnReplaceEdit = options.collapseOnReplaceEdit || false;
-		this.overviewRuler = options.overviewRuler ? new ModelDecorationOverviewRulerOptions(options.overviewRuler) : null;
-		this.minimap = options.minimap ? new ModelDecorationMinimapOptions(options.minimap) : null;
-		this.glyphMargin = options.glyphMarginClassName ? new ModelDecorationGlyphMarginOptions(options.glyphMargin) : null;
-		this.glyphMarginClassName = options.glyphMarginClassName ? cleanClassName(options.glyphMarginClassName) : null;
-		this.linesDecorationsClassName = options.linesDecorationsClassName ? cleanClassName(options.linesDecorationsClassName) : null;
-		this.lineNumberClassName = options.lineNumberClassName ? cleanClassName(options.lineNumberClassName) : null;
-		this.linesDecorationsTooltip = options.linesDecorationsTooltip ? strings.htmlAttributeEncodeValue(options.linesDecorationsTooltip) : null;
-		this.firstLineDecorationClassName = options.firstLineDecorationClassName ? cleanClassName(options.firstLineDecorationClassName) : null;
-		this.marginClassName = options.marginClassName ? cleanClassName(options.marginClassName) : null;
-		this.inlineClassName = options.inlineClassName ? cleanClassName(options.inlineClassName) : null;
+		this.overviewRuler = options.overviewRuler ? new ModelDecorationOverviewRulerOptions(
+      options.overviewRuler,
+    ) : null;
+		this.minimap = options.minimap ? new ModelDecorationMinimapOptions(
+      options.minimap,
+    ) : null;
+		this.glyphMargin = options.glyphMarginClassName ? new ModelDecorationGlyphMarginOptions(
+      options.glyphMargin,
+    ) : null;
+		this.glyphMarginClassName = options.glyphMarginClassName ? cleanClassName(
+      options.glyphMarginClassName,
+    ) : null;
+		this.linesDecorationsClassName = options.linesDecorationsClassName ? cleanClassName(
+      options.linesDecorationsClassName,
+    ) : null;
+		this.lineNumberClassName = options.lineNumberClassName ? cleanClassName(
+      options.lineNumberClassName,
+    ) : null;
+		this.linesDecorationsTooltip = options.linesDecorationsTooltip ? strings.htmlAttributeEncodeValue(
+      options.linesDecorationsTooltip,
+    ) : null;
+		this.firstLineDecorationClassName = options.firstLineDecorationClassName ? cleanClassName(
+      options.firstLineDecorationClassName,
+    ) : null;
+		this.marginClassName = options.marginClassName ? cleanClassName(
+      options.marginClassName,
+    ) : null;
+		this.inlineClassName = options.inlineClassName ? cleanClassName(
+      options.inlineClassName,
+    ) : null;
 		this.inlineClassNameAffectsLetterSpacing = options.inlineClassNameAffectsLetterSpacing || false;
-		this.beforeContentClassName = options.beforeContentClassName ? cleanClassName(options.beforeContentClassName) : null;
-		this.afterContentClassName = options.afterContentClassName ? cleanClassName(options.afterContentClassName) : null;
-		this.after = options.after ? ModelDecorationInjectedTextOptions.from(options.after) : null;
-		this.before = options.before ? ModelDecorationInjectedTextOptions.from(options.before) : null;
+		this.beforeContentClassName = options.beforeContentClassName ? cleanClassName(
+      options.beforeContentClassName,
+    ) : null;
+		this.afterContentClassName = options.afterContentClassName ? cleanClassName(
+      options.afterContentClassName,
+    ) : null;
+		this.after = options.after ? ModelDecorationInjectedTextOptions.from(
+      options.after,
+    ) : null;
+		this.before = options.before ? ModelDecorationInjectedTextOptions.from(
+      options.before,
+    ) : null;
 		this.hideInCommentTokens = options.hideInCommentTokens ?? false;
 		this.hideInStringTokens = options.hideInStringTokens ?? false;
 		this.textDirection = options.textDirection ?? null;
 	}
 }
-ModelDecorationOptions.EMPTY = ModelDecorationOptions.register({ description: 'empty' });
+ModelDecorationOptions.EMPTY = ModelDecorationOptions.register({
+  description: "empty",
+});
 
 /**
  * The order carefully matches the values of the enum.
  */
 const TRACKED_RANGE_OPTIONS = [
-	ModelDecorationOptions.register({ description: 'tracked-range-always-grows-when-typing-at-edges', stickiness: model.TrackedRangeStickiness.AlwaysGrowsWhenTypingAtEdges }),
-	ModelDecorationOptions.register({ description: 'tracked-range-never-grows-when-typing-at-edges', stickiness: model.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges }),
-	ModelDecorationOptions.register({ description: 'tracked-range-grows-only-when-typing-before', stickiness: model.TrackedRangeStickiness.GrowsOnlyWhenTypingBefore }),
-	ModelDecorationOptions.register({ description: 'tracked-range-grows-only-when-typing-after', stickiness: model.TrackedRangeStickiness.GrowsOnlyWhenTypingAfter }),
+  ModelDecorationOptions.register({
+    description: "tracked-range-always-grows-when-typing-at-edges",
+    stickiness: model.TrackedRangeStickiness.AlwaysGrowsWhenTypingAtEdges,
+  }),
+  ModelDecorationOptions.register({
+    description: "tracked-range-never-grows-when-typing-at-edges",
+    stickiness: model.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+  }),
+  ModelDecorationOptions.register({
+    description: "tracked-range-grows-only-when-typing-before",
+    stickiness: model.TrackedRangeStickiness.GrowsOnlyWhenTypingBefore,
+  }),
+  ModelDecorationOptions.register({
+    description: "tracked-range-grows-only-when-typing-after",
+    stickiness: model.TrackedRangeStickiness.GrowsOnlyWhenTypingAfter,
+  }),
 ];
 
 function _normalizeOptions(options: model.IModelDecorationOptions): ModelDecorationOptions {
@@ -2585,7 +3394,9 @@ function _normalizeOptions(options: model.IModelDecorationOptions): ModelDecorat
 
 class DidChangeDecorationsEmitter extends Disposable {
 
-	private readonly _actual: Emitter<IModelDecorationsChangedEvent> = this._register(new Emitter<IModelDecorationsChangedEvent>());
+	private readonly _actual: Emitter<IModelDecorationsChangedEvent> = this._register(
+    new Emitter<IModelDecorationsChangedEvent>(),
+  );
 	public readonly event: Event<IModelDecorationsChangedEvent> = this._actual.event;
 
 	private _deferredCnt: number;
@@ -2641,16 +3452,31 @@ class DidChangeDecorationsEmitter extends Disposable {
 
 	public recordLineAffectedByLineHeightChange(ownerId: number, decorationId: string, lineNumber: number, lineHeight: number | null): void {
 		if (!this._affectedLineHeights) {
-			this._affectedLineHeights = new SetWithKey<LineHeightChangingDecoration>([], LineHeightChangingDecoration.toKey);
+			this._affectedLineHeights = new SetWithKey<LineHeightChangingDecoration>(
+        [],
+        LineHeightChangingDecoration.toKey,
+      );
 		}
-		this._affectedLineHeights.add(new LineHeightChangingDecoration(ownerId, decorationId, lineNumber, lineHeight));
+		this._affectedLineHeights.add(
+      new LineHeightChangingDecoration(
+        ownerId,
+        decorationId,
+        lineNumber,
+        lineHeight,
+      ),
+    );
 	}
 
 	public recordLineAffectedByFontChange(ownerId: number, decorationId: string, lineNumber: number): void {
 		if (!this._affectedFontLines) {
-			this._affectedFontLines = new SetWithKey<LineFontChangingDecoration>([], LineFontChangingDecoration.toKey);
+			this._affectedFontLines = new SetWithKey<LineFontChangingDecoration>(
+        [],
+        LineFontChangingDecoration.toKey,
+      );
 		}
-		this._affectedFontLines.add(new LineFontChangingDecoration(ownerId, decorationId, lineNumber));
+		this._affectedFontLines.add(
+      new LineFontChangingDecoration(ownerId, decorationId, lineNumber),
+    );
 	}
 
 	public checkAffectedAndFire(options: ModelDecorationOptions): void {
@@ -2677,14 +3503,18 @@ class DidChangeDecorationsEmitter extends Disposable {
 	}
 
 	private doFire() {
-		this.handleBeforeFire(this._affectedInjectedTextLines, this._affectedLineHeights, this._affectedFontLines);
+		this.handleBeforeFire(
+      this._affectedInjectedTextLines,
+      this._affectedLineHeights,
+      this._affectedFontLines,
+    );
 
 		const event: IModelDecorationsChangedEvent = {
-			affectsMinimap: this._affectsMinimap,
-			affectsOverviewRuler: this._affectsOverviewRuler,
-			affectsGlyphMargin: this._affectsGlyphMargin,
-			affectsLineNumber: this._affectsLineNumber,
-		};
+      affectsMinimap: this._affectsMinimap,
+      affectsOverviewRuler: this._affectsOverviewRuler,
+      affectsGlyphMargin: this._affectsGlyphMargin,
+      affectsLineNumber: this._affectsLineNumber,
+    };
 		this._shouldFireDeferred = false;
 		this._affectsMinimap = false;
 		this._affectsOverviewRuler = false;
@@ -2697,7 +3527,9 @@ class DidChangeDecorationsEmitter extends Disposable {
 
 class DidChangeContentEmitter extends Disposable {
 
-	private readonly _emitter: Emitter<InternalModelContentChangeEvent> = this._register(new Emitter<InternalModelContentChangeEvent>());
+	private readonly _emitter: Emitter<InternalModelContentChangeEvent> = this._register(
+    new Emitter<InternalModelContentChangeEvent>(),
+  );
 	public readonly event: Event<InternalModelContentChangeEvent> = this._emitter.event;
 
 	private _deferredCnt: number;

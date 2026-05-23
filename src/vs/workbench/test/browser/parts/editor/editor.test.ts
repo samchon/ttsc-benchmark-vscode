@@ -3,27 +3,58 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { EditorResourceAccessor, SideBySideEditor, EditorInputWithPreferredResource, EditorInputCapabilities, isEditorIdentifier, IResourceDiffEditorInput, IUntitledTextResourceEditorInput, isResourceEditorInput, isUntitledResourceEditorInput, isResourceDiffEditorInput, isEditorInputWithOptionsAndGroup, EditorInputWithOptions, isEditorInputWithOptions, isEditorInput, EditorInputWithOptionsAndGroup, isResourceSideBySideEditorInput, IResourceSideBySideEditorInput, isTextEditorViewState, isResourceMergeEditorInput, IResourceMergeEditorInput } from '../../../../common/editor.js';
-import { DiffEditorInput } from '../../../../common/editor/diffEditorInput.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { workbenchInstantiationService, TestServiceAccessor, TestEditorInput, registerTestEditor, registerTestFileEditor, registerTestResourceEditor, TestFileEditorInput, createEditorPart, registerTestSideBySideEditor } from '../../workbenchTestServices.js';
-import { Schemas } from '../../../../../base/common/network.js';
-import { UntitledTextEditorInput } from '../../../../services/untitled/common/untitledTextEditorInput.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { ensureNoDisposablesAreLeakedInTestSuite, toResource } from '../../../../../base/test/common/utils.js';
-import { SyncDescriptor } from '../../../../../platform/instantiation/common/descriptors.js';
-import { whenEditorClosed } from '../../../../browser/editor.js';
-import { IEditorGroupsService } from '../../../../services/editor/common/editorGroupsService.js';
-import { EditorService } from '../../../../services/editor/browser/editorService.js';
-import { IEditorService } from '../../../../services/editor/common/editorService.js';
-import { SideBySideEditorInput } from '../../../../common/editor/sideBySideEditorInput.js';
-import { EditorResolution, IResourceEditorInput } from '../../../../../platform/editor/common/editor.js';
-import { ICodeEditorViewState, IDiffEditorViewState } from '../../../../../editor/common/editorCommon.js';
-import { Position } from '../../../../../editor/common/core/position.js';
+import assert from "assert";
+import {
+  EditorResourceAccessor,
+  SideBySideEditor,
+  EditorInputWithPreferredResource,
+  EditorInputCapabilities,
+  isEditorIdentifier,
+  IResourceDiffEditorInput,
+  IUntitledTextResourceEditorInput,
+  isResourceEditorInput,
+  isUntitledResourceEditorInput,
+  isResourceDiffEditorInput,
+  isEditorInputWithOptionsAndGroup,
+  EditorInputWithOptions,
+  isEditorInputWithOptions,
+  isEditorInput,
+  EditorInputWithOptionsAndGroup,
+  isResourceSideBySideEditorInput,
+  IResourceSideBySideEditorInput,
+  isTextEditorViewState,
+  isResourceMergeEditorInput,
+  IResourceMergeEditorInput,
+} from "../../../../common/editor.js";
+import { DiffEditorInput } from "../../../../common/editor/diffEditorInput.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import {
+  workbenchInstantiationService,
+  TestServiceAccessor,
+  TestEditorInput,
+  registerTestEditor,
+  registerTestFileEditor,
+  registerTestResourceEditor,
+  TestFileEditorInput,
+  createEditorPart,
+  registerTestSideBySideEditor,
+} from "../../workbenchTestServices.js";
+import { Schemas } from "../../../../../base/common/network.js";
+import { UntitledTextEditorInput } from "../../../../services/untitled/common/untitledTextEditorInput.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { ensureNoDisposablesAreLeakedInTestSuite, toResource } from "../../../../../base/test/common/utils.js";
+import { SyncDescriptor } from "../../../../../platform/instantiation/common/descriptors.js";
+import { whenEditorClosed } from "../../../../browser/editor.js";
+import { IEditorGroupsService } from "../../../../services/editor/common/editorGroupsService.js";
+import { EditorService } from "../../../../services/editor/browser/editorService.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+import { SideBySideEditorInput } from "../../../../common/editor/sideBySideEditorInput.js";
+import { EditorResolution, IResourceEditorInput } from "../../../../../platform/editor/common/editor.js";
+import { ICodeEditorViewState, IDiffEditorViewState } from "../../../../../editor/common/editorCommon.js";
+import { Position } from "../../../../../editor/common/core/position.js";
 
-suite('Workbench editor utils', () => {
+suite("Workbench editor utils", () => {
 
 	class TestEditorInputWithPreferredResource extends TestEditorInput implements EditorInputWithPreferredResource {
 
@@ -34,7 +65,7 @@ suite('Workbench editor utils', () => {
 
 	const disposables = new DisposableStore();
 
-	const TEST_EDITOR_ID = 'MyTestEditorForEditors';
+	const TEST_EDITOR_ID = "MyTestEditorForEditors";
 
 	let instantiationService: IInstantiationService;
 	let accessor: TestServiceAccessor;
@@ -54,40 +85,40 @@ suite('Workbench editor utils', () => {
 		disposables.clear();
 	});
 
-	test('untyped check functions', () => {
+	test("untyped check functions", () => {
 		assert.ok(!isResourceEditorInput(undefined));
 		assert.ok(!isResourceEditorInput({}));
-		assert.ok(!isResourceEditorInput({ original: { resource: URI.file('/') }, modified: { resource: URI.file('/') } }));
-		assert.ok(isResourceEditorInput({ resource: URI.file('/') }));
+		assert.ok(!isResourceEditorInput({ original: { resource: URI.file("/") }, modified: { resource: URI.file("/") } }));
+		assert.ok(isResourceEditorInput({ resource: URI.file("/") }));
 
 		assert.ok(!isUntitledResourceEditorInput(undefined));
 		assert.ok(isUntitledResourceEditorInput({}));
-		assert.ok(isUntitledResourceEditorInput({ resource: URI.file('/').with({ scheme: Schemas.untitled }) }));
-		assert.ok(isUntitledResourceEditorInput({ resource: URI.file('/'), forceUntitled: true }));
+		assert.ok(isUntitledResourceEditorInput({ resource: URI.file("/").with({ scheme: Schemas.untitled }) }));
+		assert.ok(isUntitledResourceEditorInput({ resource: URI.file("/"), forceUntitled: true }));
 
 		assert.ok(!isResourceDiffEditorInput(undefined));
 		assert.ok(!isResourceDiffEditorInput({}));
-		assert.ok(!isResourceDiffEditorInput({ resource: URI.file('/') }));
-		assert.ok(isResourceDiffEditorInput({ original: { resource: URI.file('/') }, modified: { resource: URI.file('/') } }));
-		assert.ok(isResourceDiffEditorInput({ original: { resource: URI.file('/') }, modified: { resource: URI.file('/') }, primary: { resource: URI.file('/') }, secondary: { resource: URI.file('/') } }));
-		assert.ok(!isResourceDiffEditorInput({ primary: { resource: URI.file('/') }, secondary: { resource: URI.file('/') } }));
+		assert.ok(!isResourceDiffEditorInput({ resource: URI.file("/") }));
+		assert.ok(isResourceDiffEditorInput({ original: { resource: URI.file("/") }, modified: { resource: URI.file("/") } }));
+		assert.ok(isResourceDiffEditorInput({ original: { resource: URI.file("/") }, modified: { resource: URI.file("/") }, primary: { resource: URI.file("/") }, secondary: { resource: URI.file("/") } }));
+		assert.ok(!isResourceDiffEditorInput({ primary: { resource: URI.file("/") }, secondary: { resource: URI.file("/") } }));
 
 		assert.ok(!isResourceSideBySideEditorInput(undefined));
 		assert.ok(!isResourceSideBySideEditorInput({}));
-		assert.ok(!isResourceSideBySideEditorInput({ resource: URI.file('/') }));
-		assert.ok(isResourceSideBySideEditorInput({ primary: { resource: URI.file('/') }, secondary: { resource: URI.file('/') } }));
-		assert.ok(!isResourceSideBySideEditorInput({ original: { resource: URI.file('/') }, modified: { resource: URI.file('/') } }));
-		assert.ok(!isResourceSideBySideEditorInput({ primary: { resource: URI.file('/') }, secondary: { resource: URI.file('/') }, original: { resource: URI.file('/') }, modified: { resource: URI.file('/') } }));
+		assert.ok(!isResourceSideBySideEditorInput({ resource: URI.file("/") }));
+		assert.ok(isResourceSideBySideEditorInput({ primary: { resource: URI.file("/") }, secondary: { resource: URI.file("/") } }));
+		assert.ok(!isResourceSideBySideEditorInput({ original: { resource: URI.file("/") }, modified: { resource: URI.file("/") } }));
+		assert.ok(!isResourceSideBySideEditorInput({ primary: { resource: URI.file("/") }, secondary: { resource: URI.file("/") }, original: { resource: URI.file("/") }, modified: { resource: URI.file("/") } }));
 
 		assert.ok(!isResourceMergeEditorInput(undefined));
 		assert.ok(!isResourceMergeEditorInput({}));
-		assert.ok(!isResourceMergeEditorInput({ resource: URI.file('/') }));
-		assert.ok(isResourceMergeEditorInput({ input1: { resource: URI.file('/') }, input2: { resource: URI.file('/') }, base: { resource: URI.file('/') }, result: { resource: URI.file('/') } }));
+		assert.ok(!isResourceMergeEditorInput({ resource: URI.file("/") }));
+		assert.ok(isResourceMergeEditorInput({ input1: { resource: URI.file("/") }, input2: { resource: URI.file("/") }, base: { resource: URI.file("/") }, result: { resource: URI.file("/") } }));
 	});
 
-	test('EditorInputCapabilities', () => {
-		const testInput1 = disposables.add(new TestFileEditorInput(URI.file('resource1'), 'testTypeId'));
-		const testInput2 = disposables.add(new TestFileEditorInput(URI.file('resource2'), 'testTypeId'));
+	test("EditorInputCapabilities", () => {
+		const testInput1 = disposables.add(new TestFileEditorInput(URI.file("resource1"), "testTypeId"));
+		const testInput2 = disposables.add(new TestFileEditorInput(URI.file("resource2"), "testTypeId"));
 
 		testInput1.capabilities = EditorInputCapabilities.None;
 		assert.strictEqual(testInput1.hasCapability(EditorInputCapabilities.None), true);
@@ -108,7 +139,7 @@ suite('Workbench editor utils', () => {
 		testInput1.capabilities = EditorInputCapabilities.None;
 		testInput2.capabilities = EditorInputCapabilities.None;
 
-		const sideBySideInput = instantiationService.createInstance(SideBySideEditorInput, 'name', undefined, testInput1, testInput2);
+		const sideBySideInput = instantiationService.createInstance(SideBySideEditorInput, "name", undefined, testInput1, testInput2);
 		assert.strictEqual(sideBySideInput.hasCapability(EditorInputCapabilities.MultipleEditors), true);
 		assert.strictEqual(sideBySideInput.hasCapability(EditorInputCapabilities.Readonly), false);
 		assert.strictEqual(sideBySideInput.isReadonly(), false);
@@ -143,7 +174,7 @@ suite('Workbench editor utils', () => {
 		assert.strictEqual(sideBySideInput.hasCapability(EditorInputCapabilities.Singleton), true);
 	});
 
-	test('EditorResourceAccessor - typed inputs', () => {
+	test("EditorResourceAccessor - typed inputs", () => {
 		const service = accessor.untitledTextEditorService;
 
 		assert.ok(!EditorResourceAccessor.getCanonicalUri(null));
@@ -169,7 +200,7 @@ suite('Workbench editor utils', () => {
 		assert.strictEqual(EditorResourceAccessor.getOriginalUri(untitled, { filterByScheme: [Schemas.file, Schemas.untitled] })?.toString(), untitled.resource.toString());
 		assert.ok(!EditorResourceAccessor.getOriginalUri(untitled, { filterByScheme: Schemas.file }));
 
-		const file = disposables.add(new TestEditorInput(URI.file('/some/path.txt'), 'editorResourceFileTest'));
+		const file = disposables.add(new TestEditorInput(URI.file("/some/path.txt"), "editorResourceFileTest"));
 
 		assert.strictEqual(EditorResourceAccessor.getCanonicalUri(file)?.toString(), file.resource.toString());
 		assert.strictEqual(EditorResourceAccessor.getCanonicalUri(file, { supportSideBySide: SideBySideEditor.PRIMARY })?.toString(), file.resource.toString());
@@ -189,8 +220,8 @@ suite('Workbench editor utils', () => {
 		assert.strictEqual(EditorResourceAccessor.getOriginalUri(file, { filterByScheme: [Schemas.file, Schemas.untitled] })?.toString(), file.resource.toString());
 		assert.ok(!EditorResourceAccessor.getOriginalUri(file, { filterByScheme: Schemas.untitled }));
 
-		const diffInput = instantiationService.createInstance(DiffEditorInput, 'name', 'description', untitled, file, undefined);
-		const sideBySideInput = instantiationService.createInstance(SideBySideEditorInput, 'name', 'description', untitled, file);
+		const diffInput = instantiationService.createInstance(DiffEditorInput, "name", "description", untitled, file, undefined);
+		const sideBySideInput = instantiationService.createInstance(SideBySideEditorInput, "name", "description", untitled, file);
 		for (const input of [diffInput, sideBySideInput]) {
 			assert.ok(!EditorResourceAccessor.getCanonicalUri(input));
 			assert.ok(!EditorResourceAccessor.getCanonicalUri(input, { filterByScheme: Schemas.file }));
@@ -231,26 +262,26 @@ suite('Workbench editor utils', () => {
 			assert.strictEqual((EditorResourceAccessor.getOriginalUri(input, { supportSideBySide: SideBySideEditor.BOTH, filterByScheme: [Schemas.file, Schemas.untitled] }) as { primary: URI; secondary: URI }).secondary.toString(), untitled.resource.toString());
 		}
 
-		const resource = URI.file('/some/path.txt');
-		const preferredResource = URI.file('/some/PATH.txt');
-		const fileWithPreferredResource = disposables.add(new TestEditorInputWithPreferredResource(URI.file('/some/path.txt'), URI.file('/some/PATH.txt'), 'editorResourceFileTest'));
+		const resource = URI.file("/some/path.txt");
+		const preferredResource = URI.file("/some/PATH.txt");
+		const fileWithPreferredResource = disposables.add(new TestEditorInputWithPreferredResource(URI.file("/some/path.txt"), URI.file("/some/PATH.txt"), "editorResourceFileTest"));
 
 		assert.strictEqual(EditorResourceAccessor.getCanonicalUri(fileWithPreferredResource)?.toString(), resource.toString());
 		assert.strictEqual(EditorResourceAccessor.getOriginalUri(fileWithPreferredResource)?.toString(), preferredResource.toString());
 	});
 
-	test('EditorResourceAccessor - untyped inputs', () => {
+	test("EditorResourceAccessor - untyped inputs", () => {
 
 		assert.ok(!EditorResourceAccessor.getCanonicalUri(null));
 		assert.ok(!EditorResourceAccessor.getOriginalUri(null));
 
 		const untitledURI = URI.from({
 			scheme: Schemas.untitled,
-			authority: 'foo',
-			path: '/bar'
+			authority: "foo",
+			path: "/bar",
 		});
 		const untitled: IUntitledTextResourceEditorInput = {
-			resource: untitledURI
+			resource: untitledURI,
 		};
 
 		assert.strictEqual(EditorResourceAccessor.getCanonicalUri(untitled)?.toString(), untitled.resource?.toString());
@@ -272,7 +303,7 @@ suite('Workbench editor utils', () => {
 		assert.ok(!EditorResourceAccessor.getOriginalUri(untitled, { filterByScheme: Schemas.file }));
 
 		const file: IResourceEditorInput = {
-			resource: URI.file('/some/path.txt')
+			resource: URI.file("/some/path.txt"),
 		};
 
 		assert.strictEqual(EditorResourceAccessor.getCanonicalUri(file)?.toString(), file.resource.toString());
@@ -336,27 +367,27 @@ suite('Workbench editor utils', () => {
 		}
 
 		const fileMerge: IResourceMergeEditorInput = {
-			input1: { resource: URI.file('/some/remote.txt') },
-			input2: { resource: URI.file('/some/local.txt') },
-			base: { resource: URI.file('/some/base.txt') },
-			result: { resource: URI.file('/some/merged.txt') }
+			input1: { resource: URI.file("/some/remote.txt") },
+			input2: { resource: URI.file("/some/local.txt") },
+			base: { resource: URI.file("/some/base.txt") },
+			result: { resource: URI.file("/some/merged.txt") },
 		};
 
 		assert.strictEqual(EditorResourceAccessor.getCanonicalUri(fileMerge)?.toString(), fileMerge.result.resource.toString());
 		assert.strictEqual(EditorResourceAccessor.getOriginalUri(fileMerge)?.toString(), fileMerge.result.resource.toString());
 	});
 
-	test('isEditorIdentifier', () => {
+	test("isEditorIdentifier", () => {
 		assert.strictEqual(isEditorIdentifier(undefined), false);
-		assert.strictEqual(isEditorIdentifier('undefined'), false);
+		assert.strictEqual(isEditorIdentifier("undefined"), false);
 
-		const testInput1 = disposables.add(new TestFileEditorInput(URI.file('resource1'), 'testTypeId'));
+		const testInput1 = disposables.add(new TestFileEditorInput(URI.file("resource1"), "testTypeId"));
 		assert.strictEqual(isEditorIdentifier(testInput1), false);
 		assert.strictEqual(isEditorIdentifier({ editor: testInput1, groupId: 3 }), true);
 	});
 
-	test('isEditorInputWithOptionsAndGroup', () => {
-		const editorInput = disposables.add(new TestFileEditorInput(URI.file('resource1'), 'testTypeId'));
+	test("isEditorInputWithOptionsAndGroup", () => {
+		const editorInput = disposables.add(new TestFileEditorInput(URI.file("resource1"), "testTypeId"));
 		assert.strictEqual(isEditorInput(editorInput), true);
 		assert.strictEqual(isEditorInputWithOptions(editorInput), false);
 		assert.strictEqual(isEditorInputWithOptionsAndGroup(editorInput), false);
@@ -373,7 +404,7 @@ suite('Workbench editor utils', () => {
 		assert.strictEqual(isEditorInputWithOptionsAndGroup(editorInputWithOptionsAndGroup), true);
 	});
 
-	test('isTextEditorViewState', () => {
+	test("isTextEditorViewState", () => {
 		assert.strictEqual(isTextEditorViewState(undefined), false);
 		assert.strictEqual(isTextEditorViewState({}), false);
 
@@ -383,42 +414,42 @@ suite('Workbench editor utils', () => {
 			viewState: {
 				scrollLeft: 0,
 				firstPosition: new Position(1, 1),
-				firstPositionDeltaTop: 1
-			}
+				firstPositionDeltaTop: 1,
+			},
 		};
 
 		assert.strictEqual(isTextEditorViewState(codeEditorViewState), true);
 
 		const diffEditorViewState: IDiffEditorViewState = {
 			original: codeEditorViewState,
-			modified: codeEditorViewState
+			modified: codeEditorViewState,
 		};
 
 		assert.strictEqual(isTextEditorViewState(diffEditorViewState), true);
 	});
 
-	test('whenEditorClosed (single editor)', async function () {
-		return testWhenEditorClosed(false, false, toResource.call(this, '/path/index.txt'));
+	test("whenEditorClosed (single editor)", async function () {
+		return testWhenEditorClosed(false, false, toResource.call(this, "/path/index.txt"));
 	});
 
-	test('whenEditorClosed (multiple editor)', async function () {
-		return testWhenEditorClosed(false, false, toResource.call(this, '/path/index.txt'), toResource.call(this, '/test.html'));
+	test("whenEditorClosed (multiple editor)", async function () {
+		return testWhenEditorClosed(false, false, toResource.call(this, "/path/index.txt"), toResource.call(this, "/test.html"));
 	});
 
-	test('whenEditorClosed (single editor, diff editor)', async function () {
-		return testWhenEditorClosed(true, false, toResource.call(this, '/path/index.txt'));
+	test("whenEditorClosed (single editor, diff editor)", async function () {
+		return testWhenEditorClosed(true, false, toResource.call(this, "/path/index.txt"));
 	});
 
-	test('whenEditorClosed (multiple editor, diff editor)', async function () {
-		return testWhenEditorClosed(true, false, toResource.call(this, '/path/index.txt'), toResource.call(this, '/test.html'));
+	test("whenEditorClosed (multiple editor, diff editor)", async function () {
+		return testWhenEditorClosed(true, false, toResource.call(this, "/path/index.txt"), toResource.call(this, "/test.html"));
 	});
 
-	test('whenEditorClosed (single custom editor)', async function () {
-		return testWhenEditorClosed(false, true, toResource.call(this, '/path/index.txt'));
+	test("whenEditorClosed (single custom editor)", async function () {
+		return testWhenEditorClosed(false, true, toResource.call(this, "/path/index.txt"));
 	});
 
-	test('whenEditorClosed (multiple custom editor)', async function () {
-		return testWhenEditorClosed(false, true, toResource.call(this, '/path/index.txt'), toResource.call(this, '/test.html'));
+	test("whenEditorClosed (multiple custom editor)", async function () {
+		return testWhenEditorClosed(false, true, toResource.call(this, "/path/index.txt"), toResource.call(this, "/test.html"));
 	});
 
 	async function createServices(): Promise<TestServiceAccessor> {
@@ -438,9 +469,9 @@ suite('Workbench editor utils', () => {
 
 		for (const resource of resources) {
 			if (custom) {
-				await accessor.editorService.openEditor(new TestFileEditorInput(resource, 'testTypeId'), { pinned: true });
+				await accessor.editorService.openEditor(new TestFileEditorInput(resource, "testTypeId"), { pinned: true });
 			} else if (sideBySide) {
-				await accessor.editorService.openEditor(instantiationService.createInstance(SideBySideEditorInput, 'testSideBySideEditor', undefined, new TestFileEditorInput(resource, 'testTypeId'), new TestFileEditorInput(resource, 'testTypeId')), { pinned: true });
+				await accessor.editorService.openEditor(instantiationService.createInstance(SideBySideEditorInput, "testSideBySideEditor", undefined, new TestFileEditorInput(resource, "testTypeId"), new TestFileEditorInput(resource, "testTypeId")), { pinned: true });
 			} else {
 				await accessor.editorService.openEditor({ resource, options: { pinned: true } });
 			}

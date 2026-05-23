@@ -3,21 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../../../base/common/cancellation.js';
-import { Disposable } from '../../../../../../base/common/lifecycle.js';
-import { derived, IObservable, ObservableMap } from '../../../../../../base/common/observable.js';
-import { isObject } from '../../../../../../base/common/types.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ObservableMemento, observableMemento } from '../../../../../../platform/observable/common/observableMemento.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../../../platform/storage/common/storage.js';
-import { IChatMode } from '../../../common/chatModes.js';
-import { ChatModeKind } from '../../../common/constants.js';
-import { ILanguageModelChatMetadataAndIdentifier } from '../../../common/languageModels.js';
-import { UserSelectedTools } from '../../../common/participants/chatAgents.js';
-import { PromptsStorage } from '../../../common/promptSyntax/service/promptsService.js';
-import { ILanguageModelToolsService, IToolAndToolSetEnablementMap, IToolData, IToolSet, isToolSet } from '../../../common/tools/languageModelToolsService.js';
-import { PromptFileRewriter } from '../../promptSyntax/promptFileRewriter.js';
+import { CancellationToken } from "../../../../../../base/common/cancellation.js";
+import { Disposable } from "../../../../../../base/common/lifecycle.js";
+import { derived, IObservable, ObservableMap } from "../../../../../../base/common/observable.js";
+import { isObject } from "../../../../../../base/common/types.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { ObservableMemento, observableMemento } from "../../../../../../platform/observable/common/observableMemento.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../../../platform/storage/common/storage.js";
+import { IChatMode } from "../../../common/chatModes.js";
+import { ChatModeKind } from "../../../common/constants.js";
+import { ILanguageModelChatMetadataAndIdentifier } from "../../../common/languageModels.js";
+import { UserSelectedTools } from "../../../common/participants/chatAgents.js";
+import { PromptsStorage } from "../../../common/promptSyntax/service/promptsService.js";
+import {
+  ILanguageModelToolsService,
+  IToolAndToolSetEnablementMap,
+  IToolData,
+  IToolSet,
+  isToolSet,
+} from "../../../common/tools/languageModelToolsService.js";
+import { PromptFileRewriter } from "../../promptSyntax/promptFileRewriter.js";
 
 
 // todo@connor4312/bhavyaus: make tools key off displayName so model-specific tool
@@ -55,22 +61,36 @@ namespace ToolEnablementStates {
 	function isStoredDataV1(data: StoredDataV1 | StoredDataV2 | undefined): data is StoredDataV1 {
 		return isObject(data) && data.version === undefined
 			&& (data.disabledTools === undefined || Array.isArray(data.disabledTools))
-			&& (data.disabledToolSets === undefined || Array.isArray(data.disabledToolSets));
+			&& (data.disabledToolSets === undefined || Array.isArray(
+        data.disabledToolSets,
+      ));
 	}
 
 	function isStoredDataV2(data: StoredDataV1 | StoredDataV2 | undefined): data is StoredDataV2 {
-		return isObject(data) && data.version === 2 && Array.isArray(data.toolSetEntries) && Array.isArray(data.toolEntries);
+		return isObject(data) && data.version === 2 && Array.isArray(
+      data.toolSetEntries,
+    ) && Array.isArray(data.toolEntries);
 	}
 
 	export function fromStorage(storage: string): ToolEnablementStates {
 		try {
 			const parsed = JSON.parse(storage);
 			if (isStoredDataV2(parsed)) {
-				return { toolSets: new Map(parsed.toolSetEntries), tools: new Map(parsed.toolEntries) };
+				return {
+          toolSets: new Map(parsed.toolSetEntries),
+          tools: new Map(parsed.toolEntries),
+        };
 			} else if (isStoredDataV1(parsed)) {
-				const toolSetEntries = parsed.disabledToolSets?.map(id => [id, false] as [string, boolean]);
-				const toolEntries = parsed.disabledTools?.map(id => [id, false] as [string, boolean]);
-				return { toolSets: new Map(toolSetEntries), tools: new Map(toolEntries) };
+				const toolSetEntries = parsed.disabledToolSets?.map(
+          id => [id, false] as [string, boolean],
+        );
+				const toolEntries = parsed.disabledTools?.map(
+          id => [id, false] as [string, boolean],
+        );
+				return {
+          toolSets: new Map(toolSetEntries),
+          tools: new Map(toolEntries),
+        };
 			}
 		} catch {
 			// ignore
@@ -81,10 +101,10 @@ namespace ToolEnablementStates {
 
 	export function toStorage(state: ToolEnablementStates): string {
 		const storageData: StoredDataV2 = {
-			version: 2,
-			toolSetEntries: Array.from(state.toolSets.entries()),
-			toolEntries: Array.from(state.tools.entries())
-		};
+      version: 2,
+      toolSetEntries: Array.from(state.toolSets.entries()),
+      toolEntries: Array.from(state.tools.entries()),
+    };
 		return JSON.stringify(storageData);
 	}
 }
@@ -113,13 +133,19 @@ export class ChatSelectedTools extends Disposable {
 		super();
 
 		const globalStateMemento = observableMemento<ToolEnablementStates>({
-			key: 'chat/selectedTools',
-			defaultValue: { toolSets: new Map(), tools: new Map() },
-			fromStorage: ToolEnablementStates.fromStorage,
-			toStorage: ToolEnablementStates.toStorage
-		});
+      key: "chat/selectedTools",
+      defaultValue: { toolSets: new Map(), tools: new Map() },
+      fromStorage: ToolEnablementStates.fromStorage,
+      toStorage: ToolEnablementStates.toStorage,
+    });
 
-		this._globalState = this._store.add(globalStateMemento(StorageScope.PROFILE, StorageTarget.MACHINE, _storageService));
+		this._globalState = this._store.add(
+      globalStateMemento(
+        StorageScope.PROFILE,
+        StorageTarget.MACHINE,
+        _storageService,
+      ),
+    );
 		this._currentTools = languageModel.map(lm =>
 			_toolsService.observeTools(lm?.metadata)).map((o, r) => o.read(r));
 	}
@@ -195,7 +221,10 @@ export class ChatSelectedTools extends Disposable {
 	set(enablementMap: IToolAndToolSetEnablementMap, sessionOnly: boolean): void {
 		const mode = this._mode.get();
 		if (sessionOnly || this._sessionStates.has(mode.id)) {
-			this._sessionStates.set(mode.id, ToolEnablementStates.fromMap(enablementMap));
+			this._sessionStates.set(
+        mode.id,
+        ToolEnablementStates.fromMap(enablementMap),
+      );
 			return;
 		}
 		if (mode.kind === ChatModeKind.Agent && mode.customTools?.get() && mode.uri) {
@@ -205,14 +234,24 @@ export class ChatSelectedTools extends Disposable {
 				return;
 			} else {
 				// can not write to extensions, store
-				this._sessionStates.set(mode.id, ToolEnablementStates.fromMap(enablementMap));
+				this._sessionStates.set(
+          mode.id,
+          ToolEnablementStates.fromMap(enablementMap),
+        );
 				return;
 			}
 		}
-		this._globalState.set(ToolEnablementStates.fromMap(enablementMap), undefined);
+		this._globalState.set(
+      ToolEnablementStates.fromMap(enablementMap),
+      undefined,
+    );
 	}
 
 	private async updateCustomModeTools(uri: URI, enablementMap: IToolAndToolSetEnablementMap): Promise<void> {
-		await this._instantiationService.createInstance(PromptFileRewriter).openAndRewriteTools(uri, enablementMap, CancellationToken.None);
+		await this._instantiationService.createInstance(PromptFileRewriter).openAndRewriteTools(
+      uri,
+      enablementMap,
+      CancellationToken.None,
+    );
 	}
 }

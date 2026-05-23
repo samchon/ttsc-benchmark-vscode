@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IClipboardService } from '../../../../../platform/clipboard/common/clipboardService.js';
-import { ILogService } from '../../../../../platform/log/common/log.js';
-import { NotebookTextModel } from '../../common/model/notebookTextModel.js';
-import { IOutputItemDto } from '../../common/notebookCommon.js';
-import { isTextStreamMime } from '../../../../../base/common/mime.js';
-import { ICellOutputViewModel, ICellViewModel } from '../notebookBrowser.js';
+import { IClipboardService } from "../../../../../platform/clipboard/common/clipboardService.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { NotebookTextModel } from "../../common/model/notebookTextModel.js";
+import { IOutputItemDto } from "../../common/notebookCommon.js";
+import { isTextStreamMime } from "../../../../../base/common/mime.js";
+import { ICellOutputViewModel, ICellViewModel } from "../notebookBrowser.js";
 
 interface Error {
 	name: string;
@@ -21,19 +21,26 @@ export function getAllOutputsText(notebook: NotebookTextModel, viewCell: ICellVi
 	for (let i = 0; i < viewCell.outputsViewModels.length; i++) {
 		const outputViewModel = viewCell.outputsViewModels[i];
 		const outputTextModel = viewCell.model.outputs[i];
-		const [mimeTypes, pick] = outputViewModel.resolveMimeTypes(notebook, undefined);
+		const [mimeTypes, pick] = outputViewModel.resolveMimeTypes(
+      notebook,
+      undefined,
+    );
 		const mimeType = mimeTypes[pick].mimeType;
-		let buffer = outputTextModel.outputs.find(output => output.mime === mimeType);
+		let buffer = outputTextModel.outputs.find(
+      output => output.mime === mimeType,
+    );
 
-		if (!buffer || mimeType.startsWith('image')) {
-			buffer = outputTextModel.outputs.find(output => !output.mime.startsWith('image'));
+		if (!buffer || mimeType.startsWith("image")) {
+			buffer = outputTextModel.outputs.find(
+        output => !output.mime.startsWith("image"),
+      );
 		}
 
 		if (!buffer) {
 			continue;
 		}
 
-		let text = '';
+		let text = "";
 		if (isTextStreamMime(mimeType)) {
 			const { text: stream, count } = getOutputStreamText(outputViewModel);
 			text = stream;
@@ -51,22 +58,24 @@ export function getAllOutputsText(notebook: NotebookTextModel, viewCell: ICellVi
 	if (outputText.length > 1) {
 		outputContent = outputText.map((output, i) => {
 			return `Cell output ${i + 1} of ${outputText.length}\n${output}`;
-		}).join('\n');
+		}).join("\n");
 	} else {
-		outputContent = outputText[0] ?? '';
+		outputContent = outputText[0] ?? "";
 	}
 
 	return outputContent;
 }
 
 export function getOutputStreamText(output: ICellOutputViewModel): { text: string; count: number } {
-	let text = '';
+	let text = "";
 	const cellViewModel = output.cellViewModel as ICellViewModel;
 	let index = cellViewModel.outputsViewModels.indexOf(output);
 	let count = 0;
 	while (index < cellViewModel.model.outputs.length) {
 		const nextCellOutput = cellViewModel.model.outputs[index];
-		const nextOutput = nextCellOutput.outputs.find(output => isTextStreamMime(output.mime));
+		const nextOutput = nextCellOutput.outputs.find(
+      output => isTextStreamMime(output.mime),
+    );
 		if (!nextOutput) {
 			break;
 		}
@@ -88,9 +97,9 @@ export function getOutputText(mimeType: string, buffer: IOutputItemDto, shortErr
 	text = decoder.decode(buffer.data.slice(0, charLimit).buffer);
 
 	if (buffer.data.byteLength > charLimit) {
-		text = text + '...(truncated)';
-	} else if (mimeType === 'application/vnd.code.notebook.error') {
-		text = text.replace(/\\u001b\[[0-9;]*m/gi, '');
+		text = text + "...(truncated)";
+	} else if (mimeType === "application/vnd.code.notebook.error") {
+		text = text.replace(/\\u001b\[[0-9;]*m/gi, "");
 		try {
 			const error = JSON.parse(text) as Error;
 			if (!error.stack || shortError) {
@@ -110,7 +119,9 @@ export async function copyCellOutput(mimeType: string | undefined, outputViewMod
 	const cellOutput = outputViewModel.model;
 	const output = mimeType && TEXT_BASED_MIMETYPES.includes(mimeType) ?
 		cellOutput.outputs.find(output => output.mime === mimeType) :
-		cellOutput.outputs.find(output => TEXT_BASED_MIMETYPES.includes(output.mime));
+		cellOutput.outputs.find(
+      output => TEXT_BASED_MIMETYPES.includes(output.mime),
+    );
 
 	mimeType = output?.mime;
 
@@ -129,15 +140,15 @@ export async function copyCellOutput(mimeType: string | undefined, outputViewMod
 }
 
 export const TEXT_BASED_MIMETYPES = [
-	'text/latex',
-	'text/html',
-	'application/vnd.code.notebook.error',
-	'application/vnd.code.notebook.stdout',
-	'application/x.notebook.stdout',
-	'application/x.notebook.stream',
-	'application/vnd.code.notebook.stderr',
-	'application/x.notebook.stderr',
-	'text/plain',
-	'text/markdown',
-	'application/json'
+  "text/latex",
+  "text/html",
+  "application/vnd.code.notebook.error",
+  "application/vnd.code.notebook.stdout",
+  "application/x.notebook.stdout",
+  "application/x.notebook.stream",
+  "application/vnd.code.notebook.stderr",
+  "application/x.notebook.stderr",
+  "text/plain",
+  "text/markdown",
+  "application/json",
 ];

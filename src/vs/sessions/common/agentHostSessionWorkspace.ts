@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Codicon } from '../../base/common/codicons.js';
-import { match as matchGlob } from '../../base/common/glob.js';
-import { IObservable } from '../../base/common/observable.js';
-import { extUri, basename } from '../../base/common/resources.js';
-import { ThemeIcon } from '../../base/common/themables.js';
-import { URI } from '../../base/common/uri.js';
-import type { ISessionGitState } from '../../platform/agentHost/common/state/sessionState.js';
-import { IConfigurationService } from '../../platform/configuration/common/configuration.js';
-import { IGitHubInfo, ISessionWorkspace } from '../services/sessions/common/session.js';
+import { Codicon } from "../../base/common/codicons.js";
+import { match as matchGlob } from "../../base/common/glob.js";
+import { IObservable } from "../../base/common/observable.js";
+import { extUri, basename } from "../../base/common/resources.js";
+import { ThemeIcon } from "../../base/common/themables.js";
+import { URI } from "../../base/common/uri.js";
+import type { ISessionGitState } from "../../platform/agentHost/common/state/sessionState.js";
+import { IConfigurationService } from "../../platform/configuration/common/configuration.js";
+import { IGitHubInfo, ISessionWorkspace } from "../services/sessions/common/session.js";
 
 export interface IAgentHostSessionProjectSummary {
 	readonly uri: URI;
@@ -63,11 +63,13 @@ export function matchesAnyBranchProtectionPattern(branchName: string, patterns: 
  * window's active workspace.
  */
 export function readBranchProtectionPatterns(configurationService: IConfigurationService, resource?: URI): readonly string[] {
-	const raw = configurationService.getValue<unknown>('git.branchProtection', { resource }) ?? [];
+	const raw = configurationService.getValue<unknown>("git.branchProtection", {
+    resource,
+  }) ?? [];
 	const list = Array.isArray(raw) ? raw : [raw];
 	return list
-		.map(p => typeof p === 'string' ? p.trim() : '')
-		.filter(p => p !== '');
+		.map(p => typeof p === "string" ? p.trim() : "")
+		.filter(p => p !== "");
 }
 
 export function agentHostSessionWorkspaceKey(workspace: ISessionWorkspace | undefined): string | undefined {
@@ -79,22 +81,25 @@ export function agentHostSessionWorkspaceKey(workspace: ISessionWorkspace | unde
 	return [
 		workspace.label,
 		extUri.getComparisonKey(folder.root),
-		folder.workingDirectory ? extUri.getComparisonKey(folder.workingDirectory) : '',
-		repo?.branchName ?? '',
-		repo?.baseBranchName ?? '',
-		String(repo?.baseBranchProtected ?? ''),
-		String(repo?.hasGitHubRemote ?? ''),
-		repo?.upstreamBranchName ?? '',
-		String(repo?.incomingChanges ?? ''),
-		String(repo?.outgoingChanges ?? ''),
-		String(repo?.uncommittedChanges ?? ''),
-	].join('\n');
+		folder.workingDirectory ? extUri.getComparisonKey(folder.workingDirectory) : "",
+		repo?.branchName ?? "",
+		repo?.baseBranchName ?? "",
+		String(repo?.baseBranchProtected ?? ""),
+		String(repo?.hasGitHubRemote ?? ""),
+		repo?.upstreamBranchName ?? "",
+		String(repo?.incomingChanges ?? ""),
+		String(repo?.outgoingChanges ?? ""),
+		String(repo?.uncommittedChanges ?? ""),
+	].join("\n");
 }
 
 export function buildAgentHostSessionWorkspace(project: IAgentHostSessionProjectSummary | undefined, workingDirectory: URI | undefined, options: IAgentHostSessionWorkspaceOptions, gitHubInfo: IObservable<IGitHubInfo | undefined>, gitState?: ISessionGitState): ISessionWorkspace | undefined {
 	const baseBranchName = gitState?.baseBranchName;
 	const baseBranchProtected = baseBranchName !== undefined
-		? matchesAnyBranchProtectionPattern(baseBranchName, options.branchProtectionPatterns)
+		? matchesAnyBranchProtectionPattern(
+        baseBranchName,
+        options.branchProtectionPatterns,
+      )
 		: undefined;
 	const hasGitHubRemote = gitState?.hasGitHubRemote;
 	const upstreamBranchName = gitState?.upstreamBranchName;
@@ -102,9 +107,21 @@ export function buildAgentHostSessionWorkspace(project: IAgentHostSessionProject
 	const outgoingChanges = gitState?.outgoingChanges;
 	const uncommittedChanges = gitState?.uncommittedChanges;
 	const branchName = gitState?.branchName;
-	const gitFields = { branchName, baseBranchName, baseBranchProtected, hasGitHubRemote, upstreamBranchName, incomingChanges, outgoingChanges, uncommittedChanges };
+	const gitFields = {
+    branchName,
+    baseBranchName,
+    baseBranchProtected,
+    hasGitHubRemote,
+    upstreamBranchName,
+    incomingChanges,
+    outgoingChanges,
+    uncommittedChanges,
+  };
 	if (project) {
-		const workTreeUri = extUri.isEqual(workingDirectory, project.uri) ? undefined : workingDirectory;
+		const workTreeUri = extUri.isEqual(
+      workingDirectory,
+      project.uri,
+    ) ? undefined : workingDirectory;
 		const label = options.providerLabel ? `${project.displayName} [${options.providerLabel}]` : project.displayName;
 		return {
 			uri: project.uri,

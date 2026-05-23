@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { MarkdownString } from '../../../../../base/common/htmlContent.js';
-import { escapeRegExpCharacters } from '../../../../../base/common/strings.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { ITextModel } from '../../../../../editor/common/model.js';
-import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
-import { IToolResult } from '../../common/tools/languageModelToolsService.js';
-import { createToolSimpleTextResult } from '../../common/tools/builtinTools/toolHelpers.js';
-import { WorkingDirectory } from '../../common/workingDirectory.js';
+import { MarkdownString } from "../../../../../base/common/htmlContent.js";
+import { escapeRegExpCharacters } from "../../../../../base/common/strings.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ITextModel } from "../../../../../editor/common/model.js";
+import { IWorkspaceContextService } from "../../../../../platform/workspace/common/workspace.js";
+import { IToolResult } from "../../common/tools/languageModelToolsService.js";
+import { createToolSimpleTextResult } from "../../common/tools/builtinTools/toolHelpers.js";
+import { WorkingDirectory } from "../../common/workingDirectory.js";
 
 export interface ISymbolToolInput {
 	symbol: string;
@@ -29,7 +29,10 @@ export function resolveToolUri(input: ISymbolToolInput, workspaceContextService:
 		return URI.parse(input.uri);
 	}
 	if (input.filePath) {
-		const workingDir = new WorkingDirectory(workspaceContextService, workingDirectory);
+		const workingDir = new WorkingDirectory(
+      workspaceContextService,
+      workingDirectory,
+    );
 		return workingDir.resolveRelativePath(input.filePath);
 	}
 	return undefined;
@@ -43,8 +46,16 @@ export function resolveToolUri(input: ISymbolToolInput, workspaceContextService:
  */
 export function findLineNumber(model: ITextModel, lineContent: string): number | undefined {
 	const parts = lineContent.trim().split(/\s+/);
-	const pattern = parts.map(escapeRegExpCharacters).join('\\s+');
-	const matches = model.findMatches(pattern, false, true, false, null, false, 1);
+	const pattern = parts.map(escapeRegExpCharacters).join("\\s+");
+	const matches = model.findMatches(
+    pattern,
+    false,
+    true,
+    false,
+    null,
+    false,
+    1,
+  );
 	if (matches.length === 0) {
 		return undefined;
 	}

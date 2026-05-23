@@ -3,44 +3,49 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../base/browser/dom.js';
-import { DragAndDropObserver } from '../../../../base/browser/dom.js';
-import { Codicon } from '../../../../base/common/codicons.js';
-import { Disposable, DisposableStore } from '../../../../base/common/lifecycle.js';
-import { URI } from '../../../../base/common/uri.js';
-import { CancellationToken, CancellationTokenSource } from '../../../../base/common/cancellation.js';
-import { Emitter } from '../../../../base/common/event.js';
-import { renderIcon, renderLabelWithIcons } from '../../../../base/browser/ui/iconLabel/iconLabels.js';
-import { localize } from '../../../../nls.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
-import { registerOpenEditorListeners } from '../../../../platform/editor/browser/editor.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
-import { ChatConfiguration } from '../../../../workbench/contrib/chat/common/constants.js';
-import { IChatImageCarouselService } from '../../../../workbench/contrib/chat/browser/chatImageCarouselService.js';
-import { coerceImageBuffer } from '../../../../workbench/contrib/chat/common/chatImageExtraction.js';
+import * as dom from "../../../../base/browser/dom.js";
+import { DragAndDropObserver } from "../../../../base/browser/dom.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { renderIcon, renderLabelWithIcons } from "../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { localize } from "../../../../nls.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { registerOpenEditorListeners } from "../../../../platform/editor/browser/editor.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { ChatConfiguration } from "../../../../workbench/contrib/chat/common/constants.js";
+import { IChatImageCarouselService } from "../../../../workbench/contrib/chat/browser/chatImageCarouselService.js";
+import { coerceImageBuffer } from "../../../../workbench/contrib/chat/common/chatImageExtraction.js";
 
-import { IQuickInputService, IQuickPickItem, IQuickPickSeparator } from '../../../../platform/quickinput/common/quickInput.js';
-import { ITextModelService } from '../../../../editor/common/services/resolverService.js';
-import { FileKind, IFileService } from '../../../../platform/files/common/files.js';
-import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
-import { IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
-import { ILabelService } from '../../../../platform/label/common/label.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { IModelService } from '../../../../editor/common/services/model.js';
-import { ILanguageService } from '../../../../editor/common/languages/language.js';
-import { getIconClasses } from '../../../../editor/common/services/getIconClasses.js';
-import { basename } from '../../../../base/common/resources.js';
-import { Schemas } from '../../../../base/common/network.js';
-import { DEFAULT_LABELS_CONTAINER, ResourceLabels } from '../../../../workbench/browser/labels.js';
+import { IQuickInputService, IQuickPickItem, IQuickPickSeparator } from "../../../../platform/quickinput/common/quickInput.js";
+import { ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import { FileKind, IFileService } from "../../../../platform/files/common/files.js";
+import { IClipboardService } from "../../../../platform/clipboard/common/clipboardService.js";
+import { IFileDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { getIconClasses } from "../../../../editor/common/services/getIconClasses.js";
+import { basename } from "../../../../base/common/resources.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { DEFAULT_LABELS_CONTAINER, ResourceLabels } from "../../../../workbench/browser/labels.js";
 
-import { IChatRequestVariableEntry, OmittedState } from '../../../../workbench/contrib/chat/common/attachments/chatVariableEntries.js';
-import { isLocation } from '../../../../editor/common/languages.js';
-import { resizeImage } from '../../../../workbench/contrib/chat/browser/chatImageUtils.js';
-import { imageToHash, isImage } from '../../../../workbench/contrib/chat/browser/widget/input/editor/chatPasteProviders.js';
-import { CodeDataTransfers, containsDragType, extractEditorsDropData, getPathForFile } from '../../../../platform/dnd/browser/dnd.js';
-import { DataTransfers } from '../../../../base/browser/dnd.js';
-import { getExcludes, ISearchConfiguration, ISearchService, QueryType } from '../../../../workbench/services/search/common/search.js';
+import { IChatRequestVariableEntry, OmittedState } from "../../../../workbench/contrib/chat/common/attachments/chatVariableEntries.js";
+import { isLocation } from "../../../../editor/common/languages.js";
+import { resizeImage } from "../../../../workbench/contrib/chat/browser/chatImageUtils.js";
+import { imageToHash, isImage } from "../../../../workbench/contrib/chat/browser/widget/input/editor/chatPasteProviders.js";
+import {
+  CodeDataTransfers,
+  containsDragType,
+  extractEditorsDropData,
+  getPathForFile,
+} from "../../../../platform/dnd/browser/dnd.js";
+import { DataTransfers } from "../../../../base/browser/dnd.js";
+import { getExcludes, ISearchConfiguration, ISearchService, QueryType } from "../../../../workbench/services/search/common/search.js";
 
 /**
  * Manages context attachments for the sessions new-chat widget.
@@ -89,7 +94,12 @@ export class NewChatContextAttachments extends Disposable {
 		@IChatImageCarouselService private readonly chatImageCarouselService: IChatImageCarouselService,
 	) {
 		super();
-		this._resourceLabels = this._register(this.instantiationService.createInstance(ResourceLabels, DEFAULT_LABELS_CONTAINER));
+		this._resourceLabels = this._register(
+      this.instantiationService.createInstance(
+        ResourceLabels,
+        DEFAULT_LABELS_CONTAINER,
+      ),
+    );
 	}
 
 	// --- Rendering ---
@@ -109,92 +119,123 @@ export class NewChatContextAttachments extends Disposable {
 		dom.clearNode(this._container);
 
 		if (this._attachedContext.length === 0) {
-			this._container.style.display = 'none';
+			this._container.style.display = "none";
 			return;
 		}
 
-		this._container.style.display = '';
-		this._container.classList.add('show-file-icons');
+		this._container.style.display = "";
+		this._container.classList.add("show-file-icons");
 
 		for (const entry of this._attachedContext) {
-			const pill = dom.append(this._container, dom.$('.sessions-chat-attachment-pill'));
+			const pill = dom.append(
+        this._container,
+        dom.$(".sessions-chat-attachment-pill"),
+      );
 			pill.tabIndex = 0;
-			pill.role = 'button';
+			pill.role = "button";
 			const resource = URI.isUri(entry.value) ? entry.value : isLocation(entry.value) ? entry.value.uri : undefined;
-			if (entry.kind === 'image') {
+			if (entry.kind === "image") {
 				dom.append(pill, renderIcon(Codicon.fileMedia));
-				dom.append(pill, dom.$('span.sessions-chat-attachment-name', undefined, entry.name));
+				dom.append(
+          pill,
+          dom.$("span.sessions-chat-attachment-name", undefined, entry.name),
+        );
 			} else {
 				const label = this._resourceLabels.create(pill, { supportIcons: true });
 				this._renderDisposables.add(label);
 				if (resource) {
 					label.setFile(resource, {
-						fileKind: entry.kind === 'directory' ? FileKind.FOLDER : FileKind.FILE,
-						hidePath: true,
-					});
+            fileKind: entry.kind === "directory" ? FileKind.FOLDER : FileKind.FILE,
+            hidePath: true,
+          });
 				} else {
 					label.setLabel(entry.name);
 				}
 			}
 
 			// Click to open the resource or image
-			const imageData = entry.kind === 'image' ? coerceImageBuffer(entry.value) : undefined;
+			const imageData = entry.kind === "image" ? coerceImageBuffer(
+        entry.value,
+      ) : undefined;
 			if (imageData) {
-				pill.style.cursor = 'pointer';
+				pill.style.cursor = "pointer";
 				this._renderDisposables.add(registerOpenEditorListeners(pill, async () => {
 					if (this.configurationService.getValue<boolean>(ChatConfiguration.ImageCarouselEnabled)) {
-						const imageResource = resource ?? URI.from({ scheme: 'data', path: entry.name });
+						const imageResource = resource ?? URI.from({ scheme: "data", path: entry.name });
 						await this.chatImageCarouselService.openCarouselAtResource(imageResource, imageData);
 					} else if (resource) {
 						await this.openerService.open(resource, { fromUserGesture: true });
 					}
 				}));
 			} else if (resource) {
-				pill.style.cursor = 'pointer';
-				this._renderDisposables.add(registerOpenEditorListeners(pill, async () => {
-					await this.openerService.open(resource, { fromUserGesture: true });
-				}));
+				pill.style.cursor = "pointer";
+				this._renderDisposables.add(
+          registerOpenEditorListeners(pill, async () => {
+            await this.openerService.open(resource, { fromUserGesture: true });
+          }),
+        );
 			}
 
-			const removeButton = dom.append(pill, dom.$('.sessions-chat-attachment-remove'));
-			removeButton.title = localize('removeAttachment', "Remove");
+			const removeButton = dom.append(
+        pill,
+        dom.$(".sessions-chat-attachment-remove"),
+      );
+			removeButton.title = localize("removeAttachment", "Remove");
 			removeButton.tabIndex = -1;
 			dom.append(removeButton, renderIcon(Codicon.close));
-			this._renderDisposables.add(dom.addDisposableListener(removeButton, dom.EventType.CLICK, (e) => {
-				e.stopPropagation();
-				this._removeAttachment(entry.id);
-			}));
+			this._renderDisposables.add(
+        dom.addDisposableListener(removeButton, dom.EventType.CLICK, (e) => {
+          e.stopPropagation();
+          this._removeAttachment(entry.id);
+        }),
+      );
 		}
 	}
 
 	// --- Drag and drop ---
 
 	registerDropTarget(dndContainer: HTMLElement): void {
-		const overlay = dom.append(dndContainer, dom.$('.sessions-chat-dnd-overlay'));
+		const overlay = dom.append(
+      dndContainer,
+      dom.$(".sessions-chat-dnd-overlay"),
+    );
 		let overlayText: HTMLElement | undefined;
 
 		const isDropSupported = (e: DragEvent): boolean => {
-			return containsDragType(e, DataTransfers.FILES, CodeDataTransfers.EDITORS, CodeDataTransfers.FILES, DataTransfers.RESOURCES, DataTransfers.INTERNAL_URI_LIST);
+			return containsDragType(
+        e,
+        DataTransfers.FILES,
+        CodeDataTransfers.EDITORS,
+        CodeDataTransfers.FILES,
+        DataTransfers.RESOURCES,
+        DataTransfers.INTERNAL_URI_LIST,
+      );
 		};
 
 		const showOverlay = () => {
-			overlay.classList.add('visible');
+			overlay.classList.add("visible");
 			if (!overlayText) {
-				const label = localize('attachAsContext', "Attach as Context");
-				const iconAndTextElements = renderLabelWithIcons(`$(${Codicon.attach.id}) ${label}`);
+				const label = localize("attachAsContext", "Attach as Context");
+				const iconAndTextElements = renderLabelWithIcons(
+          `$(${Codicon.attach.id}) ${label}`,
+        );
 				const htmlElements = iconAndTextElements.map(element => {
-					if (typeof element === 'string') {
-						return dom.$('span.overlay-text', undefined, element);
+					if (typeof element === "string") {
+						return dom.$("span.overlay-text", undefined, element);
 					}
 					return element;
 				});
-				overlayText = dom.$('span.attach-context-overlay-text', undefined, ...htmlElements);
+				overlayText = dom.$(
+          "span.attach-context-overlay-text",
+          undefined,
+          ...htmlElements,
+        );
 				overlay.appendChild(overlayText);
 			}
 		};
 
 		const hideOverlay = () => {
-			overlay.classList.remove('visible');
+			overlay.classList.remove("visible");
 			overlayText?.remove();
 			overlayText = undefined;
 		};
@@ -205,7 +246,7 @@ export class NewChatContextAttachments extends Disposable {
 					e.preventDefault();
 					e.stopPropagation();
 					if (e.dataTransfer) {
-						e.dataTransfer.dropEffect = 'copy';
+						e.dataTransfer.dropEffect = "copy";
 					}
 					showOverlay();
 				}
@@ -233,7 +274,7 @@ export class NewChatContextAttachments extends Disposable {
 				const items = e.dataTransfer?.items;
 				if (items) {
 					for (const item of Array.from(items)) {
-						if (item.kind === 'file') {
+						if (item.kind === "file") {
 							const file = item.getAsFile();
 							if (!file) {
 								continue;
@@ -255,13 +296,13 @@ export class NewChatContextAttachments extends Disposable {
 
 	registerPasteHandler(element: HTMLElement): void {
 		const supportedMimeTypes = [
-			'image/png',
-			'image/jpeg',
-			'image/jpg',
-			'image/bmp',
-			'image/gif',
-			'image/tiff'
-		];
+      "image/png",
+      "image/jpeg",
+      "image/jpg",
+      "image/bmp",
+      "image/gif",
+      "image/tiff",
+    ];
 
 		this._register(dom.addDisposableListener(element, dom.EventType.PASTE, async (e: ClipboardEvent) => {
 			const items = e.clipboardData?.items;
@@ -273,7 +314,7 @@ export class NewChatContextAttachments extends Disposable {
 			// so preventDefault stops the editor from inserting text.
 			let imageFile: File | undefined;
 			for (const item of Array.from(items)) {
-				if (!item.type.startsWith('image/') || !supportedMimeTypes.includes(item.type)) {
+				if (!item.type.startsWith("image/") || !supportedMimeTypes.includes(item.type)) {
 					continue;
 				}
 				const file = item.getAsFile();
@@ -304,7 +345,7 @@ export class NewChatContextAttachments extends Disposable {
 				name: displayName,
 				fullName: displayName,
 				value: resizedData,
-				kind: 'image',
+				kind: "image",
 			});
 		}, true));
 	}
@@ -312,24 +353,29 @@ export class NewChatContextAttachments extends Disposable {
 	// --- Picker ---
 
 	showPicker(folderUri?: URI): void {
-		const picker = this.quickInputService.createQuickPick<IQuickPickItem>({ useSeparators: true });
+		const picker = this.quickInputService.createQuickPick<IQuickPickItem>({
+      useSeparators: true,
+    });
 		const disposables = new DisposableStore();
-		picker.placeholder = localize('chatContext.attach.placeholder', "Attach as context...");
+		picker.placeholder = localize(
+      "chatContext.attach.placeholder",
+      "Attach as context...",
+    );
 		picker.matchOnDescription = true;
 		picker.sortByLabel = false;
 
 		const staticPicks: (IQuickPickItem | IQuickPickSeparator)[] = [
-			{
-				label: localize('files', "Files..."),
-				iconClass: ThemeIcon.asClassName(Codicon.file),
-				id: 'sessions.filesAndFolders',
-			},
-			{
-				label: localize('imageFromClipboard', "Image from Clipboard"),
-				iconClass: ThemeIcon.asClassName(Codicon.fileMedia),
-				id: 'sessions.imageFromClipboard',
-			},
-		];
+      {
+        label: localize("files", "Files..."),
+        iconClass: ThemeIcon.asClassName(Codicon.file),
+        id: "sessions.filesAndFolders",
+      },
+      {
+        label: localize("imageFromClipboard", "Image from Clipboard"),
+        iconClass: ThemeIcon.asClassName(Codicon.fileMedia),
+        id: "sessions.imageFromClipboard",
+      },
+    ];
 
 		picker.items = staticPicks;
 		picker.show();
@@ -352,7 +398,7 @@ export class NewChatContextAttachments extends Disposable {
 					if (filePicks.length > 0) {
 						picker.items = [
 							...staticPicks,
-							{ type: 'separator', label: basename(folderUri) },
+							{ type: "separator", label: basename(folderUri) },
 							...filePicks,
 						];
 					} else {
@@ -372,7 +418,9 @@ export class NewChatContextAttachments extends Disposable {
 				debounceTimer = setTimeout(() => runSearch(value || undefined), 200);
 			}));
 
-			disposables.add({ dispose: () => { searchCts?.dispose(true); if (debounceTimer) { clearTimeout(debounceTimer); } } });
+			disposables.add({
+        dispose: () => { searchCts?.dispose(true); if (debounceTimer) { clearTimeout(debounceTimer); } },
+      });
 		}
 
 		disposables.add(picker.onDidAccept(async () => {
@@ -384,19 +432,21 @@ export class NewChatContextAttachments extends Disposable {
 
 			picker.hide();
 
-			if (selected.id === 'sessions.filesAndFolders') {
+			if (selected.id === "sessions.filesAndFolders") {
 				await this._handleFileDialog();
-			} else if (selected.id === 'sessions.imageFromClipboard') {
+			} else if (selected.id === "sessions.imageFromClipboard") {
 				await this._handleClipboardImage();
 			} else if (selected.id) {
 				await this._attachFileUri(URI.parse(selected.id), selected.label);
 			}
 		}));
 
-		disposables.add(picker.onDidHide(() => {
-			picker.dispose();
-			disposables.dispose();
-		}));
+		disposables.add(
+      picker.onDidHide(() => {
+        picker.dispose();
+        disposables.dispose();
+      }),
+    );
 	}
 
 	private async _collectFilePicks(rootUri: URI, filePattern?: string, token?: CancellationToken): Promise<IQuickPickItem[]> {
@@ -404,7 +454,12 @@ export class NewChatContextAttachments extends Disposable {
 
 		// For local file:// URIs, use the search service which respects .gitignore and excludes
 		if (rootUri.scheme === Schemas.file || rootUri.scheme === Schemas.vscodeRemote) {
-			return this._collectFilePicksViaSearch(rootUri, maxFiles, filePattern, token);
+			return this._collectFilePicksViaSearch(
+        rootUri,
+        maxFiles,
+        filePattern,
+        token,
+      );
 		}
 
 		// For virtual filesystems (e.g. github-remote-file://), walk the tree via IFileService
@@ -412,7 +467,11 @@ export class NewChatContextAttachments extends Disposable {
 	}
 
 	private async _collectFilePicksViaSearch(rootUri: URI, maxFiles: number, filePattern?: string, token?: CancellationToken): Promise<IQuickPickItem[]> {
-		const excludePattern = getExcludes(this.configurationService.getValue<ISearchConfiguration>({ resource: rootUri }));
+		const excludePattern = getExcludes(
+      this.configurationService.getValue<ISearchConfiguration>({
+        resource: rootUri,
+      }),
+    );
 
 		try {
 			const searchResult = await this.searchService.fileSearch({
@@ -421,7 +480,7 @@ export class NewChatContextAttachments extends Disposable {
 					disregardIgnoreFiles: false,
 				}],
 				type: QueryType.File,
-				filePattern: filePattern || '',
+				filePattern: filePattern || "",
 				excludePattern,
 				sortByScore: true,
 				maxResults: maxFiles,
@@ -468,15 +527,17 @@ export class NewChatContextAttachments extends Disposable {
 					if (child.isDirectory) {
 						await collect(child.resource, depth + 1);
 					} else {
-						if (patternLower && !child.name.toLowerCase().includes(patternLower)) {
+						if (patternLower && !child.name.toLowerCase().includes(
+              patternLower,
+            )) {
 							continue;
 						}
 						picks.push({
-							label: child.name,
-							description: this.labelService.getUriLabel(child.resource, { relative: true }),
-							iconClasses: getIconClasses(this.modelService, this.languageService, child.resource, FileKind.FILE),
-							id: child.resource.toString(),
-						});
+              label: child.name,
+              description: this.labelService.getUriLabel(child.resource, { relative: true }),
+              iconClasses: getIconClasses(this.modelService, this.languageService, child.resource, FileKind.FILE),
+              id: child.resource.toString(),
+            });
 					}
 				}
 			} catch {
@@ -490,11 +551,11 @@ export class NewChatContextAttachments extends Disposable {
 
 	private async _handleFileDialog(): Promise<void> {
 		const selected = await this.fileDialogService.showOpenDialog({
-			canSelectFiles: true,
-			canSelectFolders: true,
-			canSelectMany: true,
-			title: localize('selectFilesOrFolders', "Select Files or Folders"),
-		});
+      canSelectFiles: true,
+      canSelectFolders: true,
+      canSelectMany: true,
+      title: localize("selectFilesOrFolders", "Select Files or Folders"),
+    });
 		if (!selected) {
 			return;
 		}
@@ -514,11 +575,11 @@ export class NewChatContextAttachments extends Disposable {
 
 		if (stat.isDirectory) {
 			this._addAttachments({
-				kind: 'directory',
-				id: uri.toString(),
-				value: uri,
-				name,
-			});
+        kind: "directory",
+        id: uri.toString(),
+        value: uri,
+        name,
+      });
 			return;
 		}
 
@@ -526,13 +587,13 @@ export class NewChatContextAttachments extends Disposable {
 			const readFile = await this.fileService.readFile(uri);
 			const resizedImage = await resizeImage(readFile.value.buffer);
 			this._addAttachments({
-				id: uri.toString(),
-				name,
-				fullName: name,
-				value: resizedImage,
-				kind: 'image',
-				references: [{ reference: uri, kind: 'reference' }]
-			});
+        id: uri.toString(),
+        name,
+        fullName: name,
+        value: resizedImage,
+        kind: "image",
+        references: [{ reference: uri, kind: "reference" }],
+      });
 		} else {
 			let omittedState = OmittedState.NotOmitted;
 			try {
@@ -543,12 +604,12 @@ export class NewChatContextAttachments extends Disposable {
 			}
 
 			this._addAttachments({
-				kind: 'file',
-				id: uri.toString(),
-				value: uri,
-				name,
-				omittedState,
-			});
+        kind: "file",
+        id: uri.toString(),
+        value: uri,
+        name,
+        omittedState,
+      });
 		}
 	}
 
@@ -561,18 +622,18 @@ export class NewChatContextAttachments extends Disposable {
 		const displayName = this._getUniqueImageName();
 
 		this._addAttachments({
-			id: await imageToHash(imageData),
-			name: displayName,
-			fullName: displayName,
-			value: imageData,
-			kind: 'image',
-		});
+      id: await imageToHash(imageData),
+      name: displayName,
+      fullName: displayName,
+      value: imageData,
+      kind: "image",
+    });
 	}
 
 	// --- State management ---
 
 	private _getUniqueImageName(): string {
-		const baseName = localize('pastedImage', "Pasted Image");
+		const baseName = localize("pastedImage", "Pasted Image");
 		let name = baseName;
 		for (let i = 2; this._attachedContext.some(a => a.name === name); i++) {
 			name = `${baseName} ${i}`;

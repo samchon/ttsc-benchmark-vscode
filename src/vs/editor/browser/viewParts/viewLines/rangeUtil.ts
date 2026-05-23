@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Constants } from '../../../../base/common/uint.js';
-import { FloatHorizontalRange } from '../../view/renderingContext.js';
-import { DomReadingContext } from './domReadingContext.js';
+import { Constants } from "../../../../base/common/uint.js";
+import { FloatHorizontalRange } from "../../view/renderingContext.js";
+import { DomReadingContext } from "./domReadingContext.js";
 
 export class RangeUtil {
 
@@ -82,7 +82,10 @@ export class RangeUtil {
 		const result: FloatHorizontalRange[] = [];
 		for (let i = 0, len = clientRects.length; i < len; i++) {
 			const clientRect = clientRects[i];
-			result[i] = new FloatHorizontalRange(Math.max(0, (clientRect.left - clientRectDeltaLeft) / clientRectScale), clientRect.width / clientRectScale);
+			result[i] = new FloatHorizontalRange(
+        Math.max(0, (clientRect.left - clientRectDeltaLeft) / clientRectScale),
+        clientRect.width / clientRectScale,
+      );
 		}
 
 		return this._mergeAdjacentRanges(result);
@@ -103,7 +106,11 @@ export class RangeUtil {
 			// To cover cases of empty <span>s, avoid using a range and use the <span>'s bounding box
 			const clientRects = domNode.children[startChildIndex].getClientRects();
 			context.markDidDomLayout();
-			return this._createHorizontalRangesFromClientRects(clientRects, context.clientRectDeltaLeft, context.clientRectScale);
+			return this._createHorizontalRangesFromClientRects(
+        clientRects,
+        context.clientRectDeltaLeft,
+        context.clientRectScale,
+      );
 		}
 
 		// If crossing over to a span only to select offset 0, then use the previous span's maximum offset
@@ -134,11 +141,27 @@ export class RangeUtil {
 			return null;
 		}
 
-		startOffset = Math.min(startElement.textContent!.length, Math.max(0, startOffset));
-		endOffset = Math.min(endElement.textContent!.length, Math.max(0, endOffset));
+		startOffset = Math.min(
+      startElement.textContent!.length,
+      Math.max(0, startOffset),
+    );
+		endOffset = Math.min(
+      endElement.textContent!.length,
+      Math.max(0, endOffset),
+    );
 
-		const clientRects = this._readClientRects(startElement, startOffset, endElement, endOffset, context.endNode);
+		const clientRects = this._readClientRects(
+      startElement,
+      startOffset,
+      endElement,
+      endOffset,
+      context.endNode,
+    );
 		context.markDidDomLayout();
-		return this._createHorizontalRangesFromClientRects(clientRects, context.clientRectDeltaLeft, context.clientRectScale);
+		return this._createHorizontalRangesFromClientRects(
+      clientRects,
+      context.clientRectDeltaLeft,
+      context.clientRectScale,
+    );
 	}
 }

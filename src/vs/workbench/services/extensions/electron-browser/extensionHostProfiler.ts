@@ -3,13 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { TernarySearchTree } from '../../../../base/common/ternarySearchTree.js';
-import { IExtensionHostProfile, IExtensionService, ProfileSegmentId, ProfileSession } from '../common/extensions.js';
-import { IExtensionDescription } from '../../../../platform/extensions/common/extensions.js';
-import { Schemas } from '../../../../base/common/network.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IV8InspectProfilingService, IV8Profile, IV8ProfileNode } from '../../../../platform/profiling/common/profiling.js';
-import { createSingleCallFunction } from '../../../../base/common/functional.js';
+import { TernarySearchTree } from "../../../../base/common/ternarySearchTree.js";
+import {
+  IExtensionHostProfile,
+  IExtensionService,
+  ProfileSegmentId,
+  ProfileSession,
+} from "../common/extensions.js";
+import { IExtensionDescription } from "../../../../platform/extensions/common/extensions.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IV8InspectProfilingService, IV8Profile, IV8ProfileNode } from "../../../../platform/profiling/common/profiling.js";
+import { createSingleCallFunction } from "../../../../base/common/functional.js";
 
 export class ExtensionHostProfiler {
 
@@ -23,7 +28,10 @@ export class ExtensionHostProfiler {
 
 	public async start(): Promise<ProfileSession> {
 
-		const id = await this._profilingService.startProfiling({ host: this._host, port: this._port });
+		const id = await this._profilingService.startProfiling({
+      host: this._host,
+      port: this._port,
+    });
 
 		return {
 			stop: createSingleCallFunction(async () => {
@@ -31,7 +39,7 @@ export class ExtensionHostProfiler {
 				await this._extensionService.whenInstalledExtensionsRegistered();
 				const extensions = this._extensionService.extensions;
 				return this._distill(profile, extensions);
-			})
+			}),
 		};
 	}
 
@@ -53,19 +61,19 @@ export class ExtensionHostProfiler {
 		function visit(node: IV8ProfileNode, segmentId: ProfileSegmentId | null) {
 			if (!segmentId) {
 				switch (node.callFrame.functionName) {
-					case '(root)':
+					case "(root)":
 						break;
-					case '(program)':
-						segmentId = 'program';
+					case "(program)":
+						segmentId = "program";
 						break;
-					case '(garbage collector)':
-						segmentId = 'gc';
+					case "(garbage collector)":
+						segmentId = "gc";
 						break;
 					default:
-						segmentId = 'self';
+						segmentId = "self";
 						break;
 				}
-			} else if (segmentId === 'self' && node.callFrame.url) {
+			} else if (segmentId === "self" && node.callFrame.url) {
 				let extension: IExtensionDescription | undefined;
 				try {
 					extension = searchTree.findSubstr(URI.parse(node.callFrame.url));
@@ -127,7 +135,7 @@ export class ExtensionHostProfiler {
 					segmentsToTime.set(id, (segmentsToTime.get(id) || 0) + distilledDeltas[i]);
 				}
 				return segmentsToTime;
-			}
+			},
 		};
 	}
 }

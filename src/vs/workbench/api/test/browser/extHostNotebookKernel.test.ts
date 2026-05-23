@@ -3,36 +3,45 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { Barrier } from '../../../../base/common/async.js';
-import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { URI, UriComponents } from '../../../../base/common/uri.js';
-import { ExtensionIdentifier } from '../../../../platform/extensions/common/extensions.js';
-import { NullLogService } from '../../../../platform/log/common/log.js';
-import { ICellExecuteUpdateDto, ICellExecutionCompleteDto, INotebookKernelDto2, MainContext, MainThreadCommandsShape, MainThreadNotebookDocumentsShape, MainThreadNotebookKernelsShape, MainThreadNotebookShape } from '../../common/extHost.protocol.js';
-import { ExtHostCommands } from '../../common/extHostCommands.js';
-import { ExtHostDocuments } from '../../common/extHostDocuments.js';
-import { ExtHostDocumentsAndEditors } from '../../common/extHostDocumentsAndEditors.js';
-import { IExtHostInitDataService } from '../../common/extHostInitDataService.js';
-import { ExtHostNotebookController } from '../../common/extHostNotebook.js';
-import { ExtHostNotebookDocument } from '../../common/extHostNotebookDocument.js';
-import { ExtHostNotebookDocuments } from '../../common/extHostNotebookDocuments.js';
-import { ExtHostNotebookKernels } from '../../common/extHostNotebookKernels.js';
-import { NotebookCellOutput, NotebookCellOutputItem } from '../../common/extHostTypes.js';
-import { CellKind, CellUri, NotebookCellsChangeType } from '../../../contrib/notebook/common/notebookCommon.js';
-import { CellExecutionUpdateType } from '../../../contrib/notebook/common/notebookExecutionService.js';
-import { nullExtensionDescription } from '../../../services/extensions/common/extensions.js';
-import { SerializableObjectWithBuffers } from '../../../services/extensions/common/proxyIdentifier.js';
-import { TestRPCProtocol } from '../common/testRPCProtocol.js';
-import { mock } from '../../../test/common/workbenchTestServices.js';
-import { IExtHostTelemetry } from '../../common/extHostTelemetry.js';
-import { ExtHostConsumerFileSystem } from '../../common/extHostFileSystemConsumer.js';
-import { ExtHostFileSystemInfo } from '../../common/extHostFileSystemInfo.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
-import { ExtHostSearch } from '../../common/extHostSearch.js';
-import { URITransformerService } from '../../common/extHostUriTransformerService.js';
+import assert from "assert";
+import { Barrier } from "../../../../base/common/async.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { URI, UriComponents } from "../../../../base/common/uri.js";
+import { ExtensionIdentifier } from "../../../../platform/extensions/common/extensions.js";
+import { NullLogService } from "../../../../platform/log/common/log.js";
+import {
+  ICellExecuteUpdateDto,
+  ICellExecutionCompleteDto,
+  INotebookKernelDto2,
+  MainContext,
+  MainThreadCommandsShape,
+  MainThreadNotebookDocumentsShape,
+  MainThreadNotebookKernelsShape,
+  MainThreadNotebookShape,
+} from "../../common/extHost.protocol.js";
+import { ExtHostCommands } from "../../common/extHostCommands.js";
+import { ExtHostDocuments } from "../../common/extHostDocuments.js";
+import { ExtHostDocumentsAndEditors } from "../../common/extHostDocumentsAndEditors.js";
+import { IExtHostInitDataService } from "../../common/extHostInitDataService.js";
+import { ExtHostNotebookController } from "../../common/extHostNotebook.js";
+import { ExtHostNotebookDocument } from "../../common/extHostNotebookDocument.js";
+import { ExtHostNotebookDocuments } from "../../common/extHostNotebookDocuments.js";
+import { ExtHostNotebookKernels } from "../../common/extHostNotebookKernels.js";
+import { NotebookCellOutput, NotebookCellOutputItem } from "../../common/extHostTypes.js";
+import { CellKind, CellUri, NotebookCellsChangeType } from "../../../contrib/notebook/common/notebookCommon.js";
+import { CellExecutionUpdateType } from "../../../contrib/notebook/common/notebookExecutionService.js";
+import { nullExtensionDescription } from "../../../services/extensions/common/extensions.js";
+import { SerializableObjectWithBuffers } from "../../../services/extensions/common/proxyIdentifier.js";
+import { TestRPCProtocol } from "../common/testRPCProtocol.js";
+import { mock } from "../../../test/common/workbenchTestServices.js";
+import { IExtHostTelemetry } from "../../common/extHostTelemetry.js";
+import { ExtHostConsumerFileSystem } from "../../common/extHostFileSystemConsumer.js";
+import { ExtHostFileSystemInfo } from "../../common/extHostFileSystemInfo.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
+import { ExtHostSearch } from "../../common/extHostSearch.js";
+import { URITransformerService } from "../../common/extHostUriTransformerService.js";
 
-suite('NotebookKernel', function () {
+suite("NotebookKernel", function () {
 	let rpcProtocol: TestRPCProtocol;
 	let extHostNotebookKernels: ExtHostNotebookKernels;
 	let notebook: ExtHostNotebookDocument;
@@ -44,7 +53,7 @@ suite('NotebookKernel', function () {
 	let extHostConsumerFileSystem: ExtHostConsumerFileSystem;
 	let extHostSearch: ExtHostSearch;
 
-	const notebookUri = URI.parse('test:///notebook.file');
+	const notebookUri = URI.parse("test:///notebook.file");
 	const kernelData = new Map<number, INotebookKernelDto2>();
 	const disposables = new DisposableStore();
 
@@ -112,35 +121,35 @@ suite('NotebookKernel', function () {
 		extHostNotebooks.$acceptDocumentAndEditorsDelta(new SerializableObjectWithBuffers({
 			addedDocuments: [{
 				uri: notebookUri,
-				viewType: 'test',
+				viewType: "test",
 				versionId: 0,
 				cells: [{
 					handle: 0,
 					uri: CellUri.generate(notebookUri, 0),
-					source: ['### Heading'],
-					eol: '\n',
-					language: 'markdown',
+					source: ["### Heading"],
+					eol: "\n",
+					language: "markdown",
 					cellKind: CellKind.Markup,
 					outputs: [],
 				}, {
 					handle: 1,
 					uri: CellUri.generate(notebookUri, 1),
 					source: ['console.log("aaa")', 'console.log("bbb")'],
-					eol: '\n',
-					language: 'javascript',
+					eol: "\n",
+					language: "javascript",
 					cellKind: CellKind.Code,
 					outputs: [],
 				}],
 			}],
 			addedEditors: [{
 				documentUri: notebookUri,
-				id: '_notebook_editor_0',
+				id: "_notebook_editor_0",
 				selections: [{ start: 0, end: 1 }],
 				visibleRanges: [],
-				viewType: 'test',
-			}]
+				viewType: "test",
+			}],
 		}));
-		extHostNotebooks.$acceptDocumentAndEditorsDelta(new SerializableObjectWithBuffers({ newActiveEditor: '_notebook_editor_0' }));
+		extHostNotebooks.$acceptDocumentAndEditorsDelta(new SerializableObjectWithBuffers({ newActiveEditor: "_notebook_editor_0" }));
 
 		notebook = extHostNotebooks.notebookDocuments[0]!;
 
@@ -153,60 +162,60 @@ suite('NotebookKernel', function () {
 			new class extends mock<IExtHostInitDataService>() { },
 			extHostNotebooks,
 			extHostCommands,
-			new NullLogService()
+			new NullLogService(),
 		);
 	});
 
-	test('create/dispose kernel', async function () {
+	test("create/dispose kernel", async function () {
 
-		const kernel = extHostNotebookKernels.createNotebookController(nullExtensionDescription, 'foo', '*', 'Foo');
+		const kernel = extHostNotebookKernels.createNotebookController(nullExtensionDescription, "foo", "*", "Foo");
 
 		// eslint-disable-next-line local/code-no-any-casts
-		assert.throws(() => (<any>kernel).id = 'dd');
+		assert.throws(() => (<any>kernel).id = "dd");
 		// eslint-disable-next-line local/code-no-any-casts
-		assert.throws(() => (<any>kernel).notebookType = 'dd');
+		assert.throws(() => (<any>kernel).notebookType = "dd");
 
 		assert.ok(kernel);
-		assert.strictEqual(kernel.id, 'foo');
-		assert.strictEqual(kernel.label, 'Foo');
-		assert.strictEqual(kernel.notebookType, '*');
+		assert.strictEqual(kernel.id, "foo");
+		assert.strictEqual(kernel.label, "Foo");
+		assert.strictEqual(kernel.notebookType, "*");
 
 		await rpcProtocol.sync();
 		assert.strictEqual(kernelData.size, 1);
 
 		const [first] = kernelData.values();
-		assert.strictEqual(first.id, 'nullExtensionDescription/foo');
+		assert.strictEqual(first.id, "nullExtensionDescription/foo");
 		assert.strictEqual(ExtensionIdentifier.equals(first.extensionId, nullExtensionDescription.identifier), true);
-		assert.strictEqual(first.label, 'Foo');
-		assert.strictEqual(first.notebookType, '*');
+		assert.strictEqual(first.label, "Foo");
+		assert.strictEqual(first.notebookType, "*");
 
 		kernel.dispose();
 		await rpcProtocol.sync();
 		assert.strictEqual(kernelData.size, 0);
 	});
 
-	test('update kernel', async function () {
+	test("update kernel", async function () {
 
-		const kernel = disposables.add(extHostNotebookKernels.createNotebookController(nullExtensionDescription, 'foo', '*', 'Foo'));
+		const kernel = disposables.add(extHostNotebookKernels.createNotebookController(nullExtensionDescription, "foo", "*", "Foo"));
 
 		await rpcProtocol.sync();
 		assert.ok(kernel);
 
 		let [first] = kernelData.values();
-		assert.strictEqual(first.id, 'nullExtensionDescription/foo');
-		assert.strictEqual(first.label, 'Foo');
+		assert.strictEqual(first.id, "nullExtensionDescription/foo");
+		assert.strictEqual(first.label, "Foo");
 
-		kernel.label = 'Far';
-		assert.strictEqual(kernel.label, 'Far');
+		kernel.label = "Far";
+		assert.strictEqual(kernel.label, "Far");
 
 		await rpcProtocol.sync();
 		[first] = kernelData.values();
-		assert.strictEqual(first.id, 'nullExtensionDescription/foo');
-		assert.strictEqual(first.label, 'Far');
+		assert.strictEqual(first.id, "nullExtensionDescription/foo");
+		assert.strictEqual(first.label, "Far");
 	});
 
-	test('execute - simple createNotebookCellExecution', function () {
-		const kernel = disposables.add(extHostNotebookKernels.createNotebookController(nullExtensionDescription, 'foo', '*', 'Foo'));
+	test("execute - simple createNotebookCellExecution", function () {
+		const kernel = disposables.add(extHostNotebookKernels.createNotebookController(nullExtensionDescription, "foo", "*", "Foo"));
 
 		extHostNotebookKernels.$acceptNotebookAssociation(0, notebook.uri, true);
 
@@ -216,8 +225,8 @@ suite('NotebookKernel', function () {
 		task.end(undefined);
 	});
 
-	test('createNotebookCellExecution, must be selected/associated', function () {
-		const kernel = disposables.add(extHostNotebookKernels.createNotebookController(nullExtensionDescription, 'foo', '*', 'Foo'));
+	test("createNotebookCellExecution, must be selected/associated", function () {
+		const kernel = disposables.add(extHostNotebookKernels.createNotebookController(nullExtensionDescription, "foo", "*", "Foo"));
 		assert.throws(() => {
 			kernel.createNotebookCellExecution(notebook.apiNotebook.cellAt(0));
 		});
@@ -227,8 +236,8 @@ suite('NotebookKernel', function () {
 		execution.end(true);
 	});
 
-	test('createNotebookCellExecution, cell must be alive', function () {
-		const kernel = disposables.add(extHostNotebookKernels.createNotebookController(nullExtensionDescription, 'foo', '*', 'Foo'));
+	test("createNotebookCellExecution, cell must be alive", function () {
+		const kernel = disposables.add(extHostNotebookKernels.createNotebookController(nullExtensionDescription, "foo", "*", "Foo"));
 
 		const cell1 = notebook.apiNotebook.cellAt(0);
 
@@ -237,8 +246,8 @@ suite('NotebookKernel', function () {
 			versionId: 12,
 			rawEvents: [{
 				kind: NotebookCellsChangeType.ModelChange,
-				changes: [[0, notebook.apiNotebook.cellCount, []]]
-			}]
+				changes: [[0, notebook.apiNotebook.cellCount, []]],
+			}],
 		}), true);
 
 		assert.strictEqual(cell1.index, -1);
@@ -248,12 +257,12 @@ suite('NotebookKernel', function () {
 		});
 	});
 
-	test('interrupt handler, cancellation', async function () {
+	test("interrupt handler, cancellation", async function () {
 
 		let interruptCallCount = 0;
 		let tokenCancelCount = 0;
 
-		const kernel = disposables.add(extHostNotebookKernels.createNotebookController(nullExtensionDescription, 'foo', '*', 'Foo'));
+		const kernel = disposables.add(extHostNotebookKernels.createNotebookController(nullExtensionDescription, "foo", "*", "Foo"));
 		kernel.interruptHandler = () => { interruptCallCount += 1; };
 		extHostNotebookKernels.$acceptNotebookAssociation(0, notebook.uri, true);
 
@@ -274,9 +283,9 @@ suite('NotebookKernel', function () {
 		task.end(false);
 	});
 
-	test('set outputs on cancel', async function () {
+	test("set outputs on cancel", async function () {
 
-		const kernel = disposables.add(extHostNotebookKernels.createNotebookController(nullExtensionDescription, 'foo', '*', 'Foo'));
+		const kernel = disposables.add(extHostNotebookKernels.createNotebookController(nullExtensionDescription, "foo", "*", "Foo"));
 		extHostNotebookKernels.$acceptNotebookAssociation(0, notebook.uri, true);
 
 		const cell1 = notebook.apiNotebook.cellAt(0);
@@ -287,10 +296,10 @@ suite('NotebookKernel', function () {
 
 		disposables.add(
 			task.token.onCancellationRequested(async () => {
-				await task.replaceOutput(new NotebookCellOutput([NotebookCellOutputItem.text('canceled')]));
+				await task.replaceOutput(new NotebookCellOutput([NotebookCellOutputItem.text("canceled")]));
 				task.end(true);
 				b.open(); // use barrier to signal that cancellation has happened
-			})
+			}),
 		);
 
 		cellExecuteUpdates.length = 0;
@@ -306,16 +315,16 @@ suite('NotebookKernel', function () {
 				assert.strictEqual(edit.append, false);
 				assert.strictEqual(edit.outputs.length, 1);
 				assert.strictEqual(edit.outputs[0].items.length, 1);
-				assert.deepStrictEqual(Array.from(edit.outputs[0].items[0].valueBytes.buffer), Array.from(new TextEncoder().encode('canceled')));
+				assert.deepStrictEqual(Array.from(edit.outputs[0].items[0].valueBytes.buffer), Array.from(new TextEncoder().encode("canceled")));
 				found = true;
 			}
 		}
 		assert.ok(found);
 	});
 
-	test('set outputs on interrupt', async function () {
+	test("set outputs on interrupt", async function () {
 
-		const kernel = extHostNotebookKernels.createNotebookController(nullExtensionDescription, 'foo', '*', 'Foo');
+		const kernel = extHostNotebookKernels.createNotebookController(nullExtensionDescription, "foo", "*", "Foo");
 		extHostNotebookKernels.$acceptNotebookAssociation(0, notebook.uri, true);
 
 
@@ -325,7 +334,7 @@ suite('NotebookKernel', function () {
 
 		kernel.interruptHandler = async _notebook => {
 			assert.ok(notebook.apiNotebook === _notebook);
-			await task.replaceOutput(new NotebookCellOutput([NotebookCellOutputItem.text('interrupted')]));
+			await task.replaceOutput(new NotebookCellOutput([NotebookCellOutputItem.text("interrupted")]));
 			task.end(true);
 		};
 
@@ -340,7 +349,7 @@ suite('NotebookKernel', function () {
 				assert.strictEqual(edit.append, false);
 				assert.strictEqual(edit.outputs.length, 1);
 				assert.strictEqual(edit.outputs[0].items.length, 1);
-				assert.deepStrictEqual(Array.from(edit.outputs[0].items[0].valueBytes.buffer), Array.from(new TextEncoder().encode('interrupted')));
+				assert.deepStrictEqual(Array.from(edit.outputs[0].items[0].valueBytes.buffer), Array.from(new TextEncoder().encode("interrupted")));
 				found = true;
 			}
 		}

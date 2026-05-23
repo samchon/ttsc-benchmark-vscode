@@ -3,19 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { coalesce } from '../../../../base/common/arrays.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { onUnexpectedExternalError } from '../../../../base/common/errors.js';
-import { DisposableStore, isDisposable } from '../../../../base/common/lifecycle.js';
-import { assertType } from '../../../../base/common/types.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IRange, Range } from '../../../common/core/range.js';
-import { ITextModel } from '../../../common/model.js';
-import { ILink, ILinksList, LinkProvider } from '../../../common/languages.js';
-import { IModelService } from '../../../common/services/model.js';
-import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
-import { LanguageFeatureRegistry } from '../../../common/languageFeatureRegistry.js';
-import { ILanguageFeaturesService } from '../../../common/services/languageFeatures.js';
+import { coalesce } from "../../../../base/common/arrays.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { onUnexpectedExternalError } from "../../../../base/common/errors.js";
+import { DisposableStore, isDisposable } from "../../../../base/common/lifecycle.js";
+import { assertType } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IRange, Range } from "../../../common/core/range.js";
+import { ITextModel } from "../../../common/model.js";
+import { ILink, ILinksList, LinkProvider } from "../../../common/languages.js";
+import { IModelService } from "../../../common/services/model.js";
+import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+import { LanguageFeatureRegistry } from "../../../common/languageFeatureRegistry.js";
+import { ILanguageFeaturesService } from "../../../common/services/languageFeatures.js";
 
 export class Link implements ILink {
 
@@ -29,10 +29,10 @@ export class Link implements ILink {
 
 	toJSON(): ILink {
 		return {
-			range: this.range,
-			url: this.url,
-			tooltip: this.tooltip
-		};
+      range: this.range,
+      url: this.url,
+      tooltip: this.tooltip,
+    };
 	}
 
 	get range(): IRange {
@@ -52,7 +52,7 @@ export class Link implements ILink {
 			return this._link.url;
 		}
 
-		if (typeof this._provider.resolveLink === 'function') {
+		if (typeof this._provider.resolveLink === "function") {
 			return Promise.resolve(this._provider.resolveLink(this._link, token)).then(value => {
 				this._link = value || this._link;
 				if (this._link.url) {
@@ -60,11 +60,11 @@ export class Link implements ILink {
 					return this.resolve(token);
 				}
 
-				return Promise.reject(new Error('missing'));
+				return Promise.reject(new Error("missing"));
 			});
 		}
 
-		return Promise.reject(new Error('missing'));
+		return Promise.reject(new Error("missing"));
 	}
 }
 
@@ -115,7 +115,10 @@ export class LinksList {
 				continue;
 			}
 
-			const comparisonResult = Range.compareRangesUsingStarts(oldLink.range, newLink.range);
+			const comparisonResult = Range.compareRangesUsingStarts(
+        oldLink.range,
+        newLink.range,
+      );
 
 			if (comparisonResult < 0) {
 				// oldLink is before
@@ -168,11 +171,11 @@ export async function getLinks(providers: LanguageFeatureRegistry<LinkProvider>,
 }
 
 
-CommandsRegistry.registerCommand('_executeLinkProvider', async (accessor, ...args): Promise<ILink[]> => {
+CommandsRegistry.registerCommand("_executeLinkProvider", async (accessor, ...args): Promise<ILink[]> => {
 	let [uri, resolveCount] = args;
 	assertType(uri instanceof URI);
 
-	if (typeof resolveCount !== 'number') {
+	if (typeof resolveCount !== "number") {
 		resolveCount = 0;
 	}
 

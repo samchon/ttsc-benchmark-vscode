@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../base/common/lifecycle.js';
+import { Disposable } from "../../../../base/common/lifecycle.js";
 import {
-	ResponsePartKind,
-	ToolCallStatus,
-	ToolResultContentType,
-	type ResponsePart,
-	type Turn,
-} from '../../common/state/protocol/state.js';
+  ResponsePartKind,
+  ToolCallStatus,
+  ToolResultContentType,
+  type ResponsePart,
+  type Turn,
+} from "../../common/state/protocol/state.js";
 
 /**
  * Tool names whose `tool_use` blocks spawn a subagent. The SDK's
@@ -18,7 +18,10 @@ import {
  * normal tool_use entries; we observe them here at spawn time and
  * track each one as a {@link SubagentSpawn}.
  */
-export const SUBAGENT_TOOL_NAMES: ReadonlySet<string> = new Set(['Task', 'Agent']);
+export const SUBAGENT_TOOL_NAMES: ReadonlySet<string> = new Set([
+  "Task",
+  "Agent",
+]);
 
 /**
  * Regex matching the SDK's synthetic per-subagent suffix appended to

@@ -3,23 +3,25 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { IViewportRange, IBufferRange, ILink, ILinkDecorations, Terminal } from '@xterm/xterm';
-import { Disposable, DisposableStore, MutableDisposable } from '../../../../../base/common/lifecycle.js';
-import * as dom from '../../../../../base/browser/dom.js';
-import { RunOnceScheduler } from '../../../../../base/common/async.js';
-import { convertBufferRangeToViewport } from './terminalLinkHelpers.js';
-import { isMacintosh } from '../../../../../base/common/platform.js';
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { TerminalLinkType } from './links.js';
-import type { URI } from '../../../../../base/common/uri.js';
-import type { IParsedLink } from './terminalLinkParsing.js';
-import type { IHoverAction } from '../../../../../base/browser/ui/hover/hover.js';
+import type { IViewportRange, IBufferRange, ILink, ILinkDecorations, Terminal } from "@xterm/xterm";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../../../base/common/lifecycle.js";
+import * as dom from "../../../../../base/browser/dom.js";
+import { RunOnceScheduler } from "../../../../../base/common/async.js";
+import { convertBufferRangeToViewport } from "./terminalLinkHelpers.js";
+import { isMacintosh } from "../../../../../base/common/platform.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { TerminalLinkType } from "./links.js";
+import type { URI } from "../../../../../base/common/uri.js";
+import type { IParsedLink } from "./terminalLinkParsing.js";
+import type { IHoverAction } from "../../../../../base/browser/ui/hover/hover.js";
 
 export class TerminalLink extends Disposable implements ILink {
 	decorations: ILinkDecorations;
 
-	private readonly _tooltipScheduler: MutableDisposable<RunOnceScheduler> = this._register(new MutableDisposable());
+	private readonly _tooltipScheduler: MutableDisposable<RunOnceScheduler> = this._register(
+    new MutableDisposable(),
+  );
 	private readonly _hoverListeners = this._register(new MutableDisposable());
 
 	private readonly _onInvalidated = this._register(new Emitter<void>());
@@ -40,13 +42,13 @@ export class TerminalLink extends Disposable implements ILink {
 		private readonly _isHighConfidenceLink: boolean,
 		readonly label: string | undefined,
 		private readonly _type: TerminalLinkType,
-		@IConfigurationService private readonly _configurationService: IConfigurationService
+		@IConfigurationService private readonly _configurationService: IConfigurationService,
 	) {
 		super();
 		this.decorations = {
-			pointerCursor: false,
-			underline: this._isHighConfidenceLink
-		};
+      pointerCursor: false,
+      underline: this._isHighConfidenceLink,
+    };
 	}
 
 	activate(event: MouseEvent | undefined, text: string): void {
@@ -58,12 +60,12 @@ export class TerminalLink extends Disposable implements ILink {
 		const d = w.document;
 		// Listen for modifier before handing it off to the hover to handle so it gets disposed correctly
 		const hoverListeners = this._hoverListeners.value = new DisposableStore();
-		hoverListeners.add(dom.addDisposableListener(d, 'keydown', e => {
+		hoverListeners.add(dom.addDisposableListener(d, "keydown", e => {
 			if (!e.repeat && this._isModifierDown(e)) {
 				this._enableDecorations();
 			}
 		}));
-		hoverListeners.add(dom.addDisposableListener(d, 'keyup', e => {
+		hoverListeners.add(dom.addDisposableListener(d, "keyup", e => {
 			if (!e.repeat && !this._isModifierDown(e)) {
 				this._disableDecorations();
 			}
@@ -85,11 +87,11 @@ export class TerminalLink extends Disposable implements ILink {
 					this,
 					convertBufferRangeToViewport(this.range, this._viewportY),
 					this._isHighConfidenceLink ? () => this._enableDecorations() : undefined,
-					this._isHighConfidenceLink ? () => this._disableDecorations() : undefined
+					this._isHighConfidenceLink ? () => this._disableDecorations() : undefined,
 				);
 				// Clear out scheduler until next hover event
 				this._tooltipScheduler.clear();
-			}, this._configurationService.getValue('workbench.hover.delay'));
+			}, this._configurationService.getValue("workbench.hover.delay"));
 			this._tooltipScheduler.value.schedule();
 		}
 
@@ -135,8 +137,10 @@ export class TerminalLink extends Disposable implements ILink {
 	}
 
 	private _isModifierDown(event: MouseEvent | KeyboardEvent): boolean {
-		const multiCursorModifier = this._configurationService.getValue<'ctrlCmd' | 'alt'>('editor.multiCursorModifier');
-		if (multiCursorModifier === 'ctrlCmd') {
+		const multiCursorModifier = this._configurationService.getValue<"ctrlCmd" | "alt">(
+      "editor.multiCursorModifier",
+    );
+		if (multiCursorModifier === "ctrlCmd") {
 			return !!event.altKey;
 		}
 		return isMacintosh ? event.metaKey : event.ctrlKey;

@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Position } from './core/position.js';
-import { Range } from './core/range.js';
-import { ITextModel, PositionAffinity } from './model.js';
+import { Position } from "./core/position.js";
+import { Range } from "./core/range.js";
+import { ITextModel, PositionAffinity } from "./model.js";
 
 export interface ICoordinatesConverter {
 	// View -> Model conversion and related methods

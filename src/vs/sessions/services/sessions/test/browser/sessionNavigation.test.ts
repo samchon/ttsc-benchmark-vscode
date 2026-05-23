@@ -3,87 +3,95 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { constObservable, observableValue } from '../../../../../base/common/observable.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { Codicon } from '../../../../../base/common/codicons.js';
-import { NullLogService } from '../../../../../platform/log/common/log.js';
-import { MockContextKeyService } from '../../../../../platform/keybinding/test/common/mockKeybindingService.js';
-import { IActiveSession, ICreateNewSessionOptions, IProviderSessionType, ISessionsManagementService } from '../../common/sessionsManagement.js';
-import { IChat, ISession, ISessionType, ISessionWorkspace, SessionStatus } from '../../common/session.js';
-import { SessionsNavigation } from '../../browser/sessionNavigation.js';
-import { Event } from '../../../../../base/common/event.js';
-import { ISendRequestOptions } from '../../common/sessionsProvider.js';
+import assert from "assert";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { constObservable, observableValue } from "../../../../../base/common/observable.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { NullLogService } from "../../../../../platform/log/common/log.js";
+import { MockContextKeyService } from "../../../../../platform/keybinding/test/common/mockKeybindingService.js";
+import {
+  IActiveSession,
+  ICreateNewSessionOptions,
+  IProviderSessionType,
+  ISessionsManagementService,
+} from "../../common/sessionsManagement.js";
+import { IChat, ISession, ISessionType, ISessionWorkspace, SessionStatus } from "../../common/session.js";
+import { SessionsNavigation } from "../../browser/sessionNavigation.js";
+import { Event } from "../../../../../base/common/event.js";
+import { ISendRequestOptions } from "../../common/sessionsProvider.js";
 
 const stubChat = {
-	resource: URI.parse('test:///chat'),
-	createdAt: new Date(),
-	title: constObservable('Chat'),
-	updatedAt: constObservable(new Date()),
-	status: constObservable(SessionStatus.Completed),
-	changes: constObservable([]),
-	checkpoints: constObservable(undefined),
-	modelId: constObservable(undefined),
-	mode: constObservable(undefined),
-	isArchived: constObservable(false),
-	isRead: constObservable(true),
-	description: constObservable(undefined),
-	lastTurnEnd: constObservable(undefined),
+  resource: URI.parse("test:///chat"),
+  createdAt: new Date(),
+  title: constObservable("Chat"),
+  updatedAt: constObservable(new Date()),
+  status: constObservable(SessionStatus.Completed),
+  changes: constObservable([]),
+  checkpoints: constObservable(undefined),
+  modelId: constObservable(undefined),
+  mode: constObservable(undefined),
+  isArchived: constObservable(false),
+  isRead: constObservable(true),
+  description: constObservable(undefined),
+  lastTurnEnd: constObservable(undefined),
 };
 
 function stubChatWithId(id: string, status: SessionStatus = SessionStatus.Completed): IChat {
 	return {
-		resource: URI.parse(`test:///chat-${id}`),
-		createdAt: new Date(),
-		title: constObservable(`Chat ${id}`),
-		updatedAt: constObservable(new Date()),
-		status: constObservable(status),
-		checkpoints: constObservable(undefined),
-		changes: constObservable([]),
-		modelId: constObservable(undefined),
-		mode: constObservable(undefined),
-		isArchived: constObservable(false),
-		isRead: constObservable(true),
-		description: constObservable(undefined),
-		lastTurnEnd: constObservable(undefined),
-	};
+    resource: URI.parse(`test:///chat-${id}`),
+    createdAt: new Date(),
+    title: constObservable(`Chat ${id}`),
+    updatedAt: constObservable(new Date()),
+    status: constObservable(status),
+    checkpoints: constObservable(undefined),
+    changes: constObservable([]),
+    modelId: constObservable(undefined),
+    mode: constObservable(undefined),
+    isArchived: constObservable(false),
+    isRead: constObservable(true),
+    description: constObservable(undefined),
+    lastTurnEnd: constObservable(undefined),
+  };
 }
 
 function stubSession(id: string, status: SessionStatus = SessionStatus.Completed, chats?: IChat[]): ISession {
 	const sessionChats = chats ?? [stubChat];
 	return {
-		sessionId: id,
-		resource: URI.parse(`test:///${id}`),
-		providerId: 'test',
-		sessionType: 'test',
-		icon: Codicon.vm,
-		createdAt: new Date(),
-		workspace: constObservable(undefined),
-		title: constObservable(`Session ${id}`),
-		updatedAt: constObservable(new Date()),
-		status: constObservable(status),
-		changesets: constObservable([]),
-		changes: constObservable([]),
-		modelId: constObservable(undefined),
-		mode: constObservable(undefined),
-		loading: constObservable(false),
-		isArchived: constObservable(false),
-		isRead: constObservable(true),
-		description: constObservable(undefined),
-		lastTurnEnd: constObservable(undefined),
-		chats: constObservable(sessionChats),
-		mainChat: constObservable(sessionChats[0]),
-		capabilities: { supportsMultipleChats: chats !== undefined && chats.length > 1 },
-	};
+    sessionId: id,
+    resource: URI.parse(`test:///${id}`),
+    providerId: "test",
+    sessionType: "test",
+    icon: Codicon.vm,
+    createdAt: new Date(),
+    workspace: constObservable(undefined),
+    title: constObservable(`Session ${id}`),
+    updatedAt: constObservable(new Date()),
+    status: constObservable(status),
+    changesets: constObservable([]),
+    changes: constObservable([]),
+    modelId: constObservable(undefined),
+    mode: constObservable(undefined),
+    loading: constObservable(false),
+    isArchived: constObservable(false),
+    isRead: constObservable(true),
+    description: constObservable(undefined),
+    lastTurnEnd: constObservable(undefined),
+    chats: constObservable(sessionChats),
+    mainChat: constObservable(sessionChats[0]),
+    capabilities: { supportsMultipleChats: chats !== undefined && chats.length > 1 },
+  };
 }
 
 class MockSessionStore implements ISessionsManagementService {
 
 	readonly _serviceBrand: undefined;
 
-	readonly activeSession = observableValue<IActiveSession | undefined>('test.activeSession', undefined);
+	readonly activeSession = observableValue<IActiveSession | undefined>(
+    "test.activeSession",
+    undefined,
+  );
 	readonly onDidChangeSessions = Event.None;
 	readonly onDidChangeSessionTypes = Event.None;
 
@@ -100,9 +108,9 @@ class MockSessionStore implements ISessionsManagementService {
 		if (session) {
 			const activeChat = chat ?? session.chats.get()[0] ?? stubChat;
 			const active: IActiveSession = {
-				...session,
-				activeChat: observableValue<IChat>(`test.activeChat-${session.sessionId}`, activeChat),
-			};
+        ...session,
+        activeChat: observableValue<IChat>(`test.activeChat-${session.sessionId}`, activeChat),
+      };
 			this.activeSession.set(active, undefined);
 		} else {
 			this.activeSession.set(undefined, undefined);
@@ -112,7 +120,10 @@ class MockSessionStore implements ISessionsManagementService {
 	setActiveChat(chat: IChat): void {
 		const active = this.activeSession.get();
 		if (active) {
-			(active.activeChat as ReturnType<typeof observableValue<IChat>>).set(chat, undefined);
+			(active.activeChat as ReturnType<typeof observableValue<IChat>>).set(
+        chat,
+        undefined,
+      );
 		}
 	}
 
@@ -151,27 +162,49 @@ class MockSessionStore implements ISessionsManagementService {
 		this._openedResource = session.resource;
 		this._openedChatResource = chatUri;
 		this._openedNewSession = false;
-		const chat = session.chats.get().find(c => c.resource.toString() === chatUri.toString());
+		const chat = session.chats.get().find(
+      c => c.resource.toString() === chatUri.toString(),
+    );
 		if (chat) {
 			this.setActiveSession(session, chat);
 		}
 	}
-	restoreLastActiveSession(): Promise<void> { throw new Error('not implemented'); }
-	createNewSession(_folderUri: URI, _options?: ICreateNewSessionOptions): ISession { throw new Error('not implemented'); }
-	unsetNewSession(): void { throw new Error('not implemented'); }
-	sendNewChatRequest(_session: ISession, _options: ISendRequestOptions): Promise<void> { throw new Error('not implemented'); }
-	sendRequest(_session: ISession, _chat: IChat, _options: ISendRequestOptions): Promise<void> { throw new Error('not implemented'); }
-	openNewChatInSession(_session: ISession): Promise<void> { throw new Error('not implemented'); }
-	openPreviousSession(): Promise<void> { throw new Error('not implemented'); }
-	openNextSession(): Promise<void> { throw new Error('not implemented'); }
-	archiveSession(_session: ISession): Promise<void> { throw new Error('not implemented'); }
-	unarchiveSession(_session: ISession): Promise<void> { throw new Error('not implemented'); }
-	deleteSession(_session: ISession): Promise<void> { throw new Error('not implemented'); }
-	deleteChat(_session: ISession, _chatUri: URI): Promise<void> { throw new Error('not implemented'); }
-	renameChat(_session: ISession, _chatUri: URI, _title: string): Promise<void> { throw new Error('not implemented'); }
+	restoreLastActiveSession(): Promise<void> { throw new Error(
+    "not implemented",
+  ); }
+	createNewSession(_folderUri: URI, _options?: ICreateNewSessionOptions): ISession { throw new Error(
+    "not implemented",
+  ); }
+	unsetNewSession(): void { throw new Error("not implemented"); }
+	sendNewChatRequest(_session: ISession, _options: ISendRequestOptions): Promise<void> { throw new Error(
+    "not implemented",
+  ); }
+	sendRequest(_session: ISession, _chat: IChat, _options: ISendRequestOptions): Promise<void> { throw new Error(
+    "not implemented",
+  ); }
+	openNewChatInSession(_session: ISession): Promise<void> { throw new Error(
+    "not implemented",
+  ); }
+	openPreviousSession(): Promise<void> { throw new Error("not implemented"); }
+	openNextSession(): Promise<void> { throw new Error("not implemented"); }
+	archiveSession(_session: ISession): Promise<void> { throw new Error(
+    "not implemented",
+  ); }
+	unarchiveSession(_session: ISession): Promise<void> { throw new Error(
+    "not implemented",
+  ); }
+	deleteSession(_session: ISession): Promise<void> { throw new Error(
+    "not implemented",
+  ); }
+	deleteChat(_session: ISession, _chatUri: URI): Promise<void> { throw new Error(
+    "not implemented",
+  ); }
+	renameChat(_session: ISession, _chatUri: URI, _title: string): Promise<void> { throw new Error(
+    "not implemented",
+  ); }
 }
 
-suite('SessionsNavigation', () => {
+suite("SessionsNavigation", () => {
 
 	const ds = ensureNoDisposablesAreLeakedInTestSuite();
 	let store: MockSessionStore;
@@ -192,21 +225,21 @@ suite('SessionsNavigation', () => {
 	});
 
 	function canGoBack(): boolean {
-		return contextKeyService.getContextKeyValue('sessionsCanGoBack') ?? false;
+		return contextKeyService.getContextKeyValue("sessionsCanGoBack") ?? false;
 	}
 
 	function canGoForward(): boolean {
-		return contextKeyService.getContextKeyValue('sessionsCanGoForward') ?? false;
+		return contextKeyService.getContextKeyValue("sessionsCanGoForward") ?? false;
 	}
 
-	test('initially cannot go back or forward', () => {
+	test("initially cannot go back or forward", () => {
 		assert.strictEqual(canGoBack(), false);
 		assert.strictEqual(canGoForward(), false);
 	});
 
-	test('can go back after navigating to two sessions', () => {
-		const s1 = stubSession('s1');
-		const s2 = stubSession('s2');
+	test("can go back after navigating to two sessions", () => {
+		const s1 = stubSession("s1");
+		const s2 = stubSession("s2");
 		store.addSession(s1);
 		store.addSession(s2);
 
@@ -217,9 +250,9 @@ suite('SessionsNavigation', () => {
 		assert.strictEqual(canGoForward(), false);
 	});
 
-	test('goBack restores previous session', async () => {
-		const s1 = stubSession('s1');
-		const s2 = stubSession('s2');
+	test("goBack restores previous session", async () => {
+		const s1 = stubSession("s1");
+		const s2 = stubSession("s2");
 		store.addSession(s1);
 		store.addSession(s2);
 
@@ -233,9 +266,9 @@ suite('SessionsNavigation', () => {
 		assert.strictEqual(canGoForward(), true);
 	});
 
-	test('goForward restores next session after goBack', async () => {
-		const s1 = stubSession('s1');
-		const s2 = stubSession('s2');
+	test("goForward restores next session after goBack", async () => {
+		const s1 = stubSession("s1");
+		const s2 = stubSession("s2");
 		store.addSession(s1);
 		store.addSession(s2);
 
@@ -250,10 +283,10 @@ suite('SessionsNavigation', () => {
 		assert.strictEqual(canGoForward(), false);
 	});
 
-	test('navigating to a new session after goBack clears forward history', async () => {
-		const s1 = stubSession('s1');
-		const s2 = stubSession('s2');
-		const s3 = stubSession('s3');
+	test("navigating to a new session after goBack clears forward history", async () => {
+		const s1 = stubSession("s1");
+		const s2 = stubSession("s2");
+		const s3 = stubSession("s3");
 		store.addSession(s1);
 		store.addSession(s2);
 		store.addSession(s3);
@@ -273,12 +306,12 @@ suite('SessionsNavigation', () => {
 		assert.strictEqual(store.lastOpenedResource?.toString(), s1.resource.toString());
 	});
 
-	test('reopening an earlier session removes it from history and appends at end (no duplicates)', async () => {
+	test("reopening an earlier session removes it from history and appends at end (no duplicates)", async () => {
 		// Regression: A→B→C, back→back→fwd→fwd, open A again
 		// should produce history [B,C,A] not [A,B,C,A]
-		const s1 = stubSession('s1');
-		const s2 = stubSession('s2');
-		const s3 = stubSession('s3');
+		const s1 = stubSession("s1");
+		const s2 = stubSession("s2");
+		const s3 = stubSession("s3");
 		store.addSession(s1);
 		store.addSession(s2);
 		store.addSession(s3);
@@ -307,8 +340,8 @@ suite('SessionsNavigation', () => {
 		assert.strictEqual(canGoBack(), false);
 	});
 
-	test('navigating to new-session view after a session enables go back', async () => {
-		const s1 = stubSession('s1');
+	test("navigating to new-session view after a session enables go back", async () => {
+		const s1 = stubSession("s1");
 		store.addSession(s1);
 
 		store.setActiveSession(s1);
@@ -321,14 +354,14 @@ suite('SessionsNavigation', () => {
 		assert.strictEqual(store.lastOpenedResource?.toString(), s1.resource.toString());
 	});
 
-	test('navigating to new-session view with no history does not enable go back', () => {
+	test("navigating to new-session view with no history does not enable go back", () => {
 		store.setActiveSession(undefined); // new-session view with empty history
 
 		assert.strictEqual(canGoBack(), false);
 	});
 
-	test('duplicate consecutive session is not added to history', () => {
-		const s1 = stubSession('s1');
+	test("duplicate consecutive session is not added to history", () => {
+		const s1 = stubSession("s1");
 		store.addSession(s1);
 
 		store.setActiveSession(s1);
@@ -338,10 +371,10 @@ suite('SessionsNavigation', () => {
 		assert.strictEqual(canGoBack(), false);
 	});
 
-	test('removed sessions are cleaned from history', async () => {
-		const s1 = stubSession('s1');
-		const s2 = stubSession('s2');
-		const s3 = stubSession('s3');
+	test("removed sessions are cleaned from history", async () => {
+		const s1 = stubSession("s1");
+		const s2 = stubSession("s2");
+		const s3 = stubSession("s3");
 		store.addSession(s1);
 		store.addSession(s2);
 		store.addSession(s3);
@@ -358,50 +391,50 @@ suite('SessionsNavigation', () => {
 		assert.strictEqual(store.lastOpenedResource?.toString(), s1.resource.toString());
 	});
 
-	test('untitled (new) session is not recorded in history and does not enable go back', () => {
-		const pending = stubSession('pending', SessionStatus.Untitled);
+	test("untitled (new) session is not recorded in history and does not enable go back", () => {
+		const pending = stubSession("pending", SessionStatus.Untitled);
 		store.addSession(pending);
 		store.setActiveSession(pending); // untitled on startup — must not be recorded or set beyondHistory
 
 		assert.strictEqual(canGoBack(), false);
 
 		// Opening a real session: history is [s1], cannot go back
-		const s1 = stubSession('s1');
+		const s1 = stubSession("s1");
 		store.addSession(s1);
 		store.setActiveSession(s1);
 
 		assert.strictEqual(canGoBack(), false);
 
 		// Opening a second real session: history is [s1, s2], can go back
-		const s2 = stubSession('s2');
+		const s2 = stubSession("s2");
 		store.addSession(s2);
 		store.setActiveSession(s2);
 
 		assert.strictEqual(canGoBack(), true);
 	});
 
-	test('go to new-session, goBack, go to new-session again still enables back', async () => {
+	test("go to new-session, goBack, go to new-session again still enables back", async () => {
 		// Regression: after goBack from new-session view, going to new-session again
 		// must still enable back. The autorun must keep activeSession tracked even
 		// when it returns early during navigation (_navigating=true).
-		const s1 = stubSession('s1');
+		const s1 = stubSession("s1");
 		store.addSession(s1);
 		store.setActiveSession(s1); // history=[s1], idx=0
 
 		store.setActiveSession(undefined); // go to new-session view
-		assert.strictEqual(canGoBack(), true, 'back enabled after first new-session view');
+		assert.strictEqual(canGoBack(), true, "back enabled after first new-session view");
 
 		await nav.goBack(); // back to s1
-		assert.strictEqual(canGoBack(), false, 'back disabled on s1');
+		assert.strictEqual(canGoBack(), false, "back disabled on s1");
 
 		store.setActiveSession(undefined); // go to new-session view again
-		assert.strictEqual(canGoBack(), true, 'back enabled after second new-session view');
+		assert.strictEqual(canGoBack(), true, "back enabled after second new-session view");
 	});
 
-	test('switching chats within a session is recorded in history', () => {
-		const chatA = stubChatWithId('a');
-		const chatB = stubChatWithId('b');
-		const s1 = stubSession('s1', SessionStatus.Completed, [chatA, chatB]);
+	test("switching chats within a session is recorded in history", () => {
+		const chatA = stubChatWithId("a");
+		const chatB = stubChatWithId("b");
+		const s1 = stubSession("s1", SessionStatus.Completed, [chatA, chatB]);
 		store.addSession(s1);
 
 		store.setActiveSession(s1, chatA);
@@ -409,13 +442,13 @@ suite('SessionsNavigation', () => {
 
 		// Switch to chat B within the same session
 		store.setActiveChat(chatB);
-		assert.strictEqual(canGoBack(), true, 'back enabled after switching chat within session');
+		assert.strictEqual(canGoBack(), true, "back enabled after switching chat within session");
 	});
 
-	test('goBack restores previous chat within a session', async () => {
-		const chatA = stubChatWithId('a');
-		const chatB = stubChatWithId('b');
-		const s1 = stubSession('s1', SessionStatus.Completed, [chatA, chatB]);
+	test("goBack restores previous chat within a session", async () => {
+		const chatA = stubChatWithId("a");
+		const chatB = stubChatWithId("b");
+		const s1 = stubSession("s1", SessionStatus.Completed, [chatA, chatB]);
 		store.addSession(s1);
 
 		store.setActiveSession(s1, chatA);
@@ -426,11 +459,11 @@ suite('SessionsNavigation', () => {
 		assert.strictEqual(store.lastOpenedResource?.toString(), s1.resource.toString());
 	});
 
-	test('navigation across sessions and chats works together', async () => {
-		const chatA = stubChatWithId('a');
-		const chatB = stubChatWithId('b');
-		const s1 = stubSession('s1', SessionStatus.Completed, [chatA, chatB]);
-		const s2 = stubSession('s2');
+	test("navigation across sessions and chats works together", async () => {
+		const chatA = stubChatWithId("a");
+		const chatB = stubChatWithId("b");
+		const s1 = stubSession("s1", SessionStatus.Completed, [chatA, chatB]);
+		const s2 = stubSession("s2");
 		store.addSession(s1);
 		store.addSession(s2);
 
@@ -456,24 +489,24 @@ suite('SessionsNavigation', () => {
 		assert.strictEqual(store.lastOpenedResource?.toString(), s2.resource.toString());
 	});
 
-	test('untitled chats are not recorded with a chat resource', () => {
-		const chatUntitled = stubChatWithId('untitled', SessionStatus.Untitled);
-		const s1 = stubSession('s1', SessionStatus.Completed, [chatUntitled]);
+	test("untitled chats are not recorded with a chat resource", () => {
+		const chatUntitled = stubChatWithId("untitled", SessionStatus.Untitled);
+		const s1 = stubSession("s1", SessionStatus.Completed, [chatUntitled]);
 		store.addSession(s1);
 
 		store.setActiveSession(s1, chatUntitled);
-		assert.strictEqual(canGoBack(), false, 'untitled chat produces a session-only entry, no second entry');
+		assert.strictEqual(canGoBack(), false, "untitled chat produces a session-only entry, no second entry");
 	});
 
-	test('goBack falls back to openSession when chat was deleted', async () => {
-		const chatA = stubChatWithId('a');
-		const chatB = stubChatWithId('b');
-		const chatsObs = observableValue<readonly IChat[]>('test.chats', [chatA, chatB]);
+	test("goBack falls back to openSession when chat was deleted", async () => {
+		const chatA = stubChatWithId("a");
+		const chatB = stubChatWithId("b");
+		const chatsObs = observableValue<readonly IChat[]>("test.chats", [chatA, chatB]);
 		const s1: ISession = {
-			...stubSession('s1', SessionStatus.Completed, [chatA, chatB]),
+			...stubSession("s1", SessionStatus.Completed, [chatA, chatB]),
 			chats: chatsObs,
 		};
-		const s2 = stubSession('s2');
+		const s2 = stubSession("s2");
 		store.addSession(s1);
 		store.addSession(s2);
 
@@ -488,6 +521,6 @@ suite('SessionsNavigation', () => {
 		// Go back — chatB is stale, should fall back to openSession(s1)
 		await nav.goBack();
 		assert.strictEqual(store.lastOpenedResource?.toString(), s1.resource.toString());
-		assert.strictEqual(store.lastOpenedChatResource, undefined, 'should not open a stale chat');
+		assert.strictEqual(store.lastOpenedChatResource, undefined, "should not open a stale chat");
 	});
 });

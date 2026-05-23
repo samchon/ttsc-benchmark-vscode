@@ -3,21 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IMarkdownString } from '../../../../base/common/htmlContent.js';
-import { Event } from '../../../../base/common/event.js';
-import { ExtensionIdentifier, IExtensionManifest } from '../../../../platform/extensions/common/extensions.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { Registry } from '../../../../platform/registry/common/platform.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { SyncDescriptor } from '../../../../platform/instantiation/common/descriptors.js';
-import Severity from '../../../../base/common/severity.js';
-import { IStringDictionary } from '../../../../base/common/collections.js';
-import { ResolvedKeybinding } from '../../../../base/common/keybindings.js';
-import { Color } from '../../../../base/common/color.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
+import { IMarkdownString } from "../../../../base/common/htmlContent.js";
+import { Event } from "../../../../base/common/event.js";
+import { ExtensionIdentifier, IExtensionManifest } from "../../../../platform/extensions/common/extensions.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
+import Severity from "../../../../base/common/severity.js";
+import { IStringDictionary } from "../../../../base/common/collections.js";
+import { ResolvedKeybinding } from "../../../../base/common/keybindings.js";
+import { Color } from "../../../../base/common/color.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
 
 export namespace Extensions {
-	export const ExtensionFeaturesRegistry = 'workbench.registry.extensionFeatures';
+	export const ExtensionFeaturesRegistry = "workbench.registry.extensionFeatures";
 }
 
 export interface IExtensionFeatureRenderer extends IDisposable {
@@ -32,7 +32,7 @@ export interface IRenderedData<T> extends IDisposable {
 }
 
 export interface IExtensionFeatureMarkdownRenderer extends IExtensionFeatureRenderer {
-	type: 'markdown';
+	type: "markdown";
 	render(manifest: IExtensionManifest): IRenderedData<IMarkdownString>;
 }
 
@@ -44,12 +44,12 @@ export interface ITableData {
 }
 
 export interface IExtensionFeatureTableRenderer extends IExtensionFeatureRenderer {
-	type: 'table';
+	type: "table";
 	render(manifest: IExtensionManifest): IRenderedData<ITableData>;
 }
 
 export interface IExtensionFeatureMarkdownAndTableRenderer extends IExtensionFeatureRenderer {
-	type: 'markdown+table';
+	type: "markdown+table";
 	render(manifest: IExtensionManifest): IRenderedData<Array<IMarkdownString | ITableData>>;
 }
 
@@ -86,7 +86,9 @@ export interface IExtensionFeatureAccessData {
 	readonly accessTimes: Date[];
 }
 
-export const IExtensionFeaturesManagementService = createDecorator<IExtensionFeaturesManagementService>('IExtensionFeaturesManagementService');
+export const IExtensionFeaturesManagementService = createDecorator<IExtensionFeaturesManagementService>(
+  "IExtensionFeaturesManagementService",
+);
 export interface IExtensionFeaturesManagementService {
 	readonly _serviceBrand: undefined;
 
@@ -109,12 +111,14 @@ class ExtensionFeaturesRegistry implements IExtensionFeaturesRegistry {
 
 	registerExtensionFeature(descriptor: IExtensionFeatureDescriptor): IDisposable {
 		if (this.extensionFeatures.has(descriptor.id)) {
-			throw new Error(`Extension feature with id '${descriptor.id}' already exists`);
+			throw new Error(
+        `Extension feature with id '${descriptor.id}' already exists`,
+      );
 		}
 		this.extensionFeatures.set(descriptor.id, descriptor);
 		return {
-			dispose: () => this.extensionFeatures.delete(descriptor.id)
-		};
+      dispose: () => this.extensionFeatures.delete(descriptor.id),
+    };
 	}
 
 	getExtensionFeature(id: string): IExtensionFeatureDescriptor | undefined {
@@ -126,4 +130,7 @@ class ExtensionFeaturesRegistry implements IExtensionFeaturesRegistry {
 	}
 }
 
-Registry.add(Extensions.ExtensionFeaturesRegistry, new ExtensionFeaturesRegistry());
+Registry.add(
+  Extensions.ExtensionFeaturesRegistry,
+  new ExtensionFeaturesRegistry(),
+);

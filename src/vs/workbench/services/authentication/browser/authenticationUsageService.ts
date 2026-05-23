@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Queue } from '../../../../base/common/async.js';
-import { Disposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { IProductService } from '../../../../platform/product/common/productService.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { IAuthenticationService } from '../common/authentication.js';
+import { Queue } from "../../../../base/common/async.js";
+import { Disposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IAuthenticationService } from "../common/authentication.js";
 
 export interface IAccountUsage {
 	extensionId: string;
@@ -19,7 +19,9 @@ export interface IAccountUsage {
 	scopes?: string[];
 }
 
-export const IAuthenticationUsageService = createDecorator<IAuthenticationUsageService>('IAuthenticationUsageService');
+export const IAuthenticationUsageService = createDecorator<IAuthenticationUsageService>(
+  "IAuthenticationUsageService",
+);
 export interface IAuthenticationUsageService {
 	readonly _serviceBrand: undefined;
 	/**
@@ -83,15 +85,23 @@ export class AuthenticationUsageService extends Disposable implements IAuthentic
 			}
 		}
 
-		this._register(this._authenticationService.onDidRegisterAuthenticationProvider(
-			provider => this._queue.queue(
-				() => this._addExtensionsToCache(provider.id)
-			)
-		));
+		this._register(
+      this._authenticationService.onDidRegisterAuthenticationProvider(
+        provider => this._queue.queue(
+          () => this._addExtensionsToCache(provider.id),
+        ),
+      ),
+    );
 	}
 
 	async initializeExtensionUsageCache(): Promise<void> {
-		await this._queue.queue(() => Promise.all(this._authenticationService.getProviderIds().map(providerId => this._addExtensionsToCache(providerId))));
+		await this._queue.queue(
+      () => Promise.all(
+        this._authenticationService.getProviderIds().map(
+          providerId => this._addExtensionsToCache(providerId),
+        ),
+      ),
+    );
 	}
 
 	async extensionUsesAuth(extensionId: string): Promise<boolean> {
@@ -101,7 +111,10 @@ export class AuthenticationUsageService extends Disposable implements IAuthentic
 
 	readAccountUsages(providerId: string, accountName: string): IAccountUsage[] {
 		const accountKey = `${providerId}-${accountName}-usages`;
-		const storedUsages = this._storageService.get(accountKey, StorageScope.APPLICATION);
+		const storedUsages = this._storageService.get(
+      accountKey,
+      StorageScope.APPLICATION,
+    );
 		let usages: IAccountUsage[] = [];
 		if (storedUsages) {
 			try {
@@ -123,24 +136,31 @@ export class AuthenticationUsageService extends Disposable implements IAuthentic
 		const accountKey = `${providerId}-${accountName}-usages`;
 		const usages = this.readAccountUsages(providerId, accountName);
 
-		const existingUsageIndex = usages.findIndex(usage => usage.extensionId === extensionId);
+		const existingUsageIndex = usages.findIndex(
+      usage => usage.extensionId === extensionId,
+    );
 		if (existingUsageIndex > -1) {
 			usages.splice(existingUsageIndex, 1, {
-				extensionId,
-				extensionName,
-				scopes,
-				lastUsed: Date.now()
-			});
+        extensionId,
+        extensionName,
+        scopes,
+        lastUsed: Date.now(),
+      });
 		} else {
 			usages.push({
-				extensionId,
-				extensionName,
-				scopes,
-				lastUsed: Date.now()
-			});
+        extensionId,
+        extensionName,
+        scopes,
+        lastUsed: Date.now(),
+      });
 		}
 
-		this._storageService.store(accountKey, JSON.stringify(usages), StorageScope.APPLICATION, StorageTarget.MACHINE);
+		this._storageService.store(
+      accountKey,
+      JSON.stringify(usages),
+      StorageScope.APPLICATION,
+      StorageTarget.MACHINE,
+    );
 		this._extensionsUsingAuth.add(extensionId);
 	}
 
@@ -149,7 +169,9 @@ export class AuthenticationUsageService extends Disposable implements IAuthentic
 			return;
 		}
 		try {
-			const accounts = await this._authenticationService.getAccounts(providerId);
+			const accounts = await this._authenticationService.getAccounts(
+        providerId,
+      );
 			for (const account of accounts) {
 				const usage = this.readAccountUsages(providerId, account.label);
 				for (const u of usage) {
@@ -162,4 +184,8 @@ export class AuthenticationUsageService extends Disposable implements IAuthentic
 	}
 }
 
-registerSingleton(IAuthenticationUsageService, AuthenticationUsageService, InstantiationType.Delayed);
+registerSingleton(
+  IAuthenticationUsageService,
+  AuthenticationUsageService,
+  InstantiationType.Delayed,
+);

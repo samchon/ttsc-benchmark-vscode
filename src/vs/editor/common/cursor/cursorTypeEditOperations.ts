@@ -3,43 +3,77 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CharCode } from '../../../base/common/charCode.js';
-import { onUnexpectedError } from '../../../base/common/errors.js';
-import * as strings from '../../../base/common/strings.js';
-import { ReplaceCommand, ReplaceCommandWithOffsetCursorState, ReplaceCommandWithoutChangingPosition, ReplaceCommandThatPreservesSelection, ReplaceOvertypeCommand, ReplaceOvertypeCommandOnCompositionEnd } from '../commands/replaceCommand.js';
-import { ShiftCommand } from '../commands/shiftCommand.js';
-import { SurroundSelectionCommand } from '../commands/surroundSelectionCommand.js';
-import { CursorConfiguration, EditOperationResult, EditOperationType, ICursorSimpleModel, isQuote } from '../cursorCommon.js';
-import { WordCharacterClass, getMapForWordSeparators } from '../core/wordCharacterClassifier.js';
-import { Range } from '../core/range.js';
-import { Selection } from '../core/selection.js';
-import { Position } from '../core/position.js';
-import { ICommand, ICursorStateComputerData, IEditOperationBuilder } from '../editorCommon.js';
-import { ITextModel } from '../model.js';
-import { EnterAction, IndentAction, StandardAutoClosingPairConditional } from '../languages/languageConfiguration.js';
-import { getIndentationAtPosition } from '../languages/languageConfigurationRegistry.js';
-import { IElectricAction } from '../languages/supports/electricCharacter.js';
-import { EditorAutoClosingStrategy, EditorAutoIndentStrategy } from '../config/editorOptions.js';
-import { createScopedLineTokens } from '../languages/supports.js';
-import { getIndentActionForType, getIndentForEnter, getInheritIndentForLine } from '../languages/autoIndent.js';
-import { getEnterAction } from '../languages/enterAction.js';
-import { CompositionOutcome } from './cursorTypeOperations.js';
+import { CharCode } from "../../../base/common/charCode.js";
+import { onUnexpectedError } from "../../../base/common/errors.js";
+import * as strings from "../../../base/common/strings.js";
+import {
+  ReplaceCommand,
+  ReplaceCommandWithOffsetCursorState,
+  ReplaceCommandWithoutChangingPosition,
+  ReplaceCommandThatPreservesSelection,
+  ReplaceOvertypeCommand,
+  ReplaceOvertypeCommandOnCompositionEnd,
+} from "../commands/replaceCommand.js";
+import { ShiftCommand } from "../commands/shiftCommand.js";
+import { SurroundSelectionCommand } from "../commands/surroundSelectionCommand.js";
+import {
+  CursorConfiguration,
+  EditOperationResult,
+  EditOperationType,
+  ICursorSimpleModel,
+  isQuote,
+} from "../cursorCommon.js";
+import { WordCharacterClass, getMapForWordSeparators } from "../core/wordCharacterClassifier.js";
+import { Range } from "../core/range.js";
+import { Selection } from "../core/selection.js";
+import { Position } from "../core/position.js";
+import { ICommand, ICursorStateComputerData, IEditOperationBuilder } from "../editorCommon.js";
+import { ITextModel } from "../model.js";
+import { EnterAction, IndentAction, StandardAutoClosingPairConditional } from "../languages/languageConfiguration.js";
+import { getIndentationAtPosition } from "../languages/languageConfigurationRegistry.js";
+import { IElectricAction } from "../languages/supports/electricCharacter.js";
+import { EditorAutoClosingStrategy, EditorAutoIndentStrategy } from "../config/editorOptions.js";
+import { createScopedLineTokens } from "../languages/supports.js";
+import { getIndentActionForType, getIndentForEnter, getInheritIndentForLine } from "../languages/autoIndent.js";
+import { getEnterAction } from "../languages/enterAction.js";
+import { CompositionOutcome } from "./cursorTypeOperations.js";
 
 export class AutoIndentOperation {
 
 	public static getEdits(config: CursorConfiguration, model: ITextModel, selections: Selection[], ch: string, isDoingComposition: boolean): EditOperationResult | undefined {
-		if (!isDoingComposition && this._isAutoIndentType(config, model, selections)) {
+		if (!isDoingComposition && this._isAutoIndentType(
+      config,
+      model,
+      selections,
+    )) {
 			const indentationForSelections: { selection: Selection; indentation: string }[] = [];
 			for (const selection of selections) {
-				const indentation = this._findActualIndentationForSelection(config, model, selection, ch);
+				const indentation = this._findActualIndentationForSelection(
+          config,
+          model,
+          selection,
+          ch,
+        );
 				if (indentation === null) {
 					// Auto indentation failed
 					return;
 				}
 				indentationForSelections.push({ selection, indentation });
 			}
-			const autoClosingPairClose = AutoClosingOpenCharTypeOperation.getAutoClosingPairClose(config, model, selections, ch, false);
-			return this._getIndentationAndAutoClosingPairEdits(config, model, indentationForSelections, ch, autoClosingPairClose);
+			const autoClosingPairClose = AutoClosingOpenCharTypeOperation.getAutoClosingPairClose(
+        config,
+        model,
+        selections,
+        ch,
+        false,
+      );
+			return this._getIndentationAndAutoClosingPairEdits(
+        config,
+        model,
+        indentationForSelections,
+        ch,
+        autoClosingPairClose,
+      );
 		}
 		return;
 	}
@@ -49,7 +83,9 @@ export class AutoIndentOperation {
 			return false;
 		}
 		for (let i = 0, len = selections.length; i < len; i++) {
-			if (!model.tokenization.isCheapToTokenize(selections[i].getEndPosition().lineNumber)) {
+			if (!model.tokenization.isCheapToTokenize(
+        selections[i].getEndPosition().lineNumber,
+      )) {
 				return false;
 			}
 		}
@@ -70,7 +106,11 @@ export class AutoIndentOperation {
 			return null;
 		}
 
-		const currentIndentation = getIndentationAtPosition(model, selection.startLineNumber, selection.startColumn);
+		const currentIndentation = getIndentationAtPosition(
+      model,
+      selection.startLineNumber,
+      selection.startColumn,
+    );
 		if (actualIndentation === config.normalizeIndentation(currentIndentation)) {
 			return null;
 		}
@@ -89,20 +129,37 @@ export class AutoIndentOperation {
 				return typeCommand(indentationEdit.range, indentationEdit.text, false);
 			}
 		});
-		const editOptions = { shouldPushStackElementBefore: true, shouldPushStackElementAfter: false };
-		return new EditOperationResult(EditOperationType.TypingOther, commands, editOptions);
+		const editOptions = {
+      shouldPushStackElementBefore: true,
+      shouldPushStackElementAfter: false,
+    };
+		return new EditOperationResult(
+      EditOperationType.TypingOther,
+      commands,
+      editOptions,
+    );
 	}
 
 	private static _getEditFromIndentationAndSelection(config: CursorConfiguration, model: ITextModel, indentation: string, selection: Selection, ch: string, includeChInEdit: boolean = true): { range: Range; text: string } {
 		const startLineNumber = selection.startLineNumber;
-		const firstNonWhitespaceColumn = model.getLineFirstNonWhitespaceColumn(startLineNumber);
+		const firstNonWhitespaceColumn = model.getLineFirstNonWhitespaceColumn(
+      startLineNumber,
+    );
 		let text: string = config.normalizeIndentation(indentation);
 		if (firstNonWhitespaceColumn !== 0) {
 			const startLine = model.getLineContent(startLineNumber);
-			text += startLine.substring(firstNonWhitespaceColumn - 1, selection.startColumn - 1);
+			text += startLine.substring(
+        firstNonWhitespaceColumn - 1,
+        selection.startColumn - 1,
+      );
 		}
-		text += includeChInEdit ? ch : '';
-		const range = new Range(startLineNumber, 1, selection.endLineNumber, selection.endColumn);
+		text += includeChInEdit ? ch : "";
+		const range = new Range(
+      startLineNumber,
+      1,
+      selection.endLineNumber,
+      selection.endColumn,
+    );
 		return { range, text };
 	}
 }
@@ -110,8 +167,18 @@ export class AutoIndentOperation {
 export class AutoClosingOvertypeOperation {
 
 	public static getEdits(prevEditOperationType: EditOperationType, config: CursorConfiguration, model: ITextModel, selections: Selection[], autoClosedCharacters: Range[], ch: string): EditOperationResult | undefined {
-		if (isAutoClosingOvertype(config, model, selections, autoClosedCharacters, ch)) {
-			return this._runAutoClosingOvertype(prevEditOperationType, selections, ch);
+		if (isAutoClosingOvertype(
+      config,
+      model,
+      selections,
+      autoClosedCharacters,
+      ch,
+    )) {
+			return this._runAutoClosingOvertype(
+        prevEditOperationType,
+        selections,
+        ch,
+      );
 		}
 		return;
 	}
@@ -121,26 +188,48 @@ export class AutoClosingOvertypeOperation {
 		for (let i = 0, len = selections.length; i < len; i++) {
 			const selection = selections[i];
 			const position = selection.getPosition();
-			const typeSelection = new Range(position.lineNumber, position.column, position.lineNumber, position.column + 1);
+			const typeSelection = new Range(
+        position.lineNumber,
+        position.column,
+        position.lineNumber,
+        position.column + 1,
+      );
 			commands[i] = new ReplaceCommand(typeSelection, ch);
 		}
 		return new EditOperationResult(EditOperationType.TypingOther, commands, {
-			shouldPushStackElementBefore: shouldPushStackElementBetween(prevEditOperationType, EditOperationType.TypingOther),
-			shouldPushStackElementAfter: false
-		});
+      shouldPushStackElementBefore: shouldPushStackElementBetween(prevEditOperationType, EditOperationType.TypingOther),
+      shouldPushStackElementAfter: false,
+    });
 	}
 }
 
 export class AutoClosingOvertypeWithInterceptorsOperation {
 
 	public static getEdits(config: CursorConfiguration, model: ITextModel, selections: Selection[], autoClosedCharacters: Range[], ch: string): EditOperationResult | undefined {
-		if (isAutoClosingOvertype(config, model, selections, autoClosedCharacters, ch)) {
+		if (isAutoClosingOvertype(
+      config,
+      model,
+      selections,
+      autoClosedCharacters,
+      ch,
+    )) {
 			// Unfortunately, the close character is at this point "doubled", so we need to delete it...
-			const commands = selections.map(s => new ReplaceCommand(new Range(s.positionLineNumber, s.positionColumn, s.positionLineNumber, s.positionColumn + 1), '', false));
+			const commands = selections.map(
+        s => new ReplaceCommand(
+          new Range(
+            s.positionLineNumber,
+            s.positionColumn,
+            s.positionLineNumber,
+            s.positionColumn + 1,
+          ),
+          "",
+          false,
+        ),
+      );
 			return new EditOperationResult(EditOperationType.TypingOther, commands, {
-				shouldPushStackElementBefore: true,
-				shouldPushStackElementAfter: false
-			});
+        shouldPushStackElementBefore: true,
+        shouldPushStackElementAfter: false,
+      });
 		}
 		return;
 	}
@@ -150,9 +239,20 @@ export class AutoClosingOpenCharTypeOperation {
 
 	public static getEdits(config: CursorConfiguration, model: ITextModel, selections: Selection[], ch: string, chIsAlreadyTyped: boolean, isDoingComposition: boolean): EditOperationResult | undefined {
 		if (!isDoingComposition) {
-			const autoClosingPairClose = this.getAutoClosingPairClose(config, model, selections, ch, chIsAlreadyTyped);
+			const autoClosingPairClose = this.getAutoClosingPairClose(
+        config,
+        model,
+        selections,
+        ch,
+        chIsAlreadyTyped,
+      );
 			if (autoClosingPairClose !== null) {
-				return this._runAutoClosingOpenCharType(selections, ch, chIsAlreadyTyped, autoClosingPairClose);
+				return this._runAutoClosingOpenCharType(
+          selections,
+          ch,
+          chIsAlreadyTyped,
+          autoClosingPairClose,
+        );
 			}
 		}
 		return;
@@ -162,12 +262,17 @@ export class AutoClosingOpenCharTypeOperation {
 		const commands: ICommand[] = [];
 		for (let i = 0, len = selections.length; i < len; i++) {
 			const selection = selections[i];
-			commands[i] = new TypeWithAutoClosingCommand(selection, ch, !chIsAlreadyTyped, autoClosingPairClose);
+			commands[i] = new TypeWithAutoClosingCommand(
+        selection,
+        ch,
+        !chIsAlreadyTyped,
+        autoClosingPairClose,
+      );
 		}
 		return new EditOperationResult(EditOperationType.TypingOther, commands, {
-			shouldPushStackElementBefore: true,
-			shouldPushStackElementAfter: false
-		});
+      shouldPushStackElementBefore: true,
+      shouldPushStackElementAfter: false,
+    });
 	}
 
 	public static getAutoClosingPairClose(config: CursorConfiguration, model: ITextModel, selections: Selection[], ch: string, chIsAlreadyTyped: boolean): string | null {
@@ -193,7 +298,12 @@ export class AutoClosingOpenCharTypeOperation {
 		});
 		// Find the longest auto-closing open pair in case of multiple ending in `ch`
 		// e.g. when having [f","] and [","], it picks [f","] if the character before is f
-		const pair = this._findAutoClosingPairOpen(config, model, positions.map(p => new Position(p.lineNumber, p.beforeColumn)), ch);
+		const pair = this._findAutoClosingPairOpen(
+      config,
+      model,
+      positions.map(p => new Position(p.lineNumber, p.beforeColumn)),
+      ch,
+    );
 		if (!pair) {
 			return null;
 		}
@@ -205,7 +315,9 @@ export class AutoClosingOpenCharTypeOperation {
 			autoCloseConfig = config.autoClosingQuotes;
 			shouldAutoCloseBefore = config.shouldAutoCloseBefore.quote;
 		} else {
-			const pairIsForComments = config.blockCommentStartToken ? pair.open.includes(config.blockCommentStartToken) : false;
+			const pairIsForComments = config.blockCommentStartToken ? pair.open.includes(
+        config.blockCommentStartToken,
+      ) : false;
 			if (pairIsForComments) {
 				autoCloseConfig = config.autoClosingComments;
 				shouldAutoCloseBefore = config.shouldAutoCloseBefore.comment;
@@ -214,7 +326,7 @@ export class AutoClosingOpenCharTypeOperation {
 				shouldAutoCloseBefore = config.shouldAutoCloseBefore.bracket;
 			}
 		}
-		if (autoCloseConfig === 'never') {
+		if (autoCloseConfig === "never") {
 			return null;
 		}
 		// Sometimes, it is possible to have two auto-closing pairs that have a containment relationship
@@ -222,7 +334,7 @@ export class AutoClosingOpenCharTypeOperation {
 		// - when typing (, the resulting state is (|)
 		// - when typing *, the desired resulting state is (*|*), not (*|*))
 		const containedPair = this._findContainedAutoClosingPair(config, pair);
-		const containedPairClose = containedPair ? containedPair.close : '';
+		const containedPairClose = containedPair ? containedPair.close : "";
 		let isContainedPairPresent = true;
 
 		for (const position of positions) {
@@ -237,17 +349,25 @@ export class AutoClosingOpenCharTypeOperation {
 			// Only consider auto closing the pair if an allowed character follows or if another autoclosed pair closing brace follows
 			if (lineAfter.length > 0) {
 				const characterAfter = lineAfter.charAt(0);
-				const isBeforeCloseBrace = this._isBeforeClosingBrace(config, lineAfter);
+				const isBeforeCloseBrace = this._isBeforeClosingBrace(
+          config,
+          lineAfter,
+        );
 				if (!isBeforeCloseBrace && !shouldAutoCloseBefore(characterAfter)) {
 					return null;
 				}
 			}
 			// Do not auto-close ' or " after a word character
-			if (pair.open.length === 1 && (ch === '\'' || ch === '"') && autoCloseConfig !== 'always') {
-				const wordSeparators = getMapForWordSeparators(config.wordSeparators, []);
+			if (pair.open.length === 1 && (ch === "'" || ch === '"') && autoCloseConfig !== "always") {
+				const wordSeparators = getMapForWordSeparators(
+          config.wordSeparators,
+          [],
+        );
 				if (lineBefore.length > 0) {
 					const characterBefore = lineBefore.charCodeAt(lineBefore.length - 1);
-					if (wordSeparators.get(characterBefore) === WordCharacterClass.Regular) {
+					if (wordSeparators.get(
+            characterBefore,
+          ) === WordCharacterClass.Regular) {
 						return null;
 					}
 				}
@@ -258,8 +378,14 @@ export class AutoClosingOpenCharTypeOperation {
 			}
 			model.tokenization.forceTokenization(lineNumber);
 			const lineTokens = model.tokenization.getLineTokens(lineNumber);
-			const scopedLineTokens = createScopedLineTokens(lineTokens, beforeColumn - 1);
-			if (!pair.shouldAutoClose(scopedLineTokens, beforeColumn - scopedLineTokens.firstCharOffset)) {
+			const scopedLineTokens = createScopedLineTokens(
+        lineTokens,
+        beforeColumn - 1,
+      );
+			if (!pair.shouldAutoClose(
+        scopedLineTokens,
+        beforeColumn - scopedLineTokens.firstCharOffset,
+      )) {
 				return null;
 			}
 			// Typing for example a quote could either start a new string, in which case auto-closing is desirable
@@ -272,14 +398,21 @@ export class AutoClosingOpenCharTypeOperation {
 			//
 			const neutralCharacter = pair.findNeutralCharacter();
 			if (neutralCharacter) {
-				const tokenType = model.tokenization.getTokenTypeIfInsertingCharacter(lineNumber, beforeColumn, neutralCharacter);
+				const tokenType = model.tokenization.getTokenTypeIfInsertingCharacter(
+          lineNumber,
+          beforeColumn,
+          neutralCharacter,
+        );
 				if (!pair.isOK(tokenType)) {
 					return null;
 				}
 			}
 		}
 		if (isContainedPairPresent) {
-			return pair.close.substring(0, pair.close.length - containedPairClose.length);
+			return pair.close.substring(
+        0,
+        pair.close.length - containedPairClose.length,
+      );
 		} else {
 			return pair.close;
 		}
@@ -297,10 +430,14 @@ export class AutoClosingOpenCharTypeOperation {
 		}
 		const lastChar = pair.close.charAt(pair.close.length - 1);
 		// get candidates with the same last character as close
-		const candidates = config.autoClosingPairs.autoClosingPairsCloseByEnd.get(lastChar) || [];
+		const candidates = config.autoClosingPairs.autoClosingPairsCloseByEnd.get(
+      lastChar,
+    ) || [];
 		let result: StandardAutoClosingPairConditional | null = null;
 		for (const candidate of candidates) {
-			if (candidate.open !== pair.open && pair.open.includes(candidate.open) && pair.close.endsWith(candidate.close)) {
+			if (candidate.open !== pair.open && pair.open.includes(
+        candidate.open,
+      ) && pair.close.endsWith(candidate.close)) {
 				if (!result || candidate.open.length > result.open.length) {
 					result = candidate;
 				}
@@ -318,7 +455,9 @@ export class AutoClosingOpenCharTypeOperation {
 	 * sequence is returned.
 	 */
 	private static _findAutoClosingPairOpen(config: CursorConfiguration, model: ITextModel, positions: Position[], ch: string): StandardAutoClosingPairConditional | null {
-		const candidates = config.autoClosingPairs.autoClosingPairsOpenByEnd.get(ch);
+		const candidates = config.autoClosingPairs.autoClosingPairsOpenByEnd.get(
+      ch,
+    );
 		if (!candidates) {
 			return null;
 		}
@@ -328,7 +467,14 @@ export class AutoClosingOpenCharTypeOperation {
 			if (result === null || candidate.open.length > result.open.length) {
 				let candidateIsMatch = true;
 				for (const position of positions) {
-					const relevantText = model.getValueInRange(new Range(position.lineNumber, position.column - candidate.open.length + 1, position.lineNumber, position.column));
+					const relevantText = model.getValueInRange(
+            new Range(
+              position.lineNumber,
+              position.column - candidate.open.length + 1,
+              position.lineNumber,
+              position.column,
+            ),
+          );
 					if (relevantText + ch !== candidate.open) {
 						candidateIsMatch = false;
 						break;
@@ -345,11 +491,19 @@ export class AutoClosingOpenCharTypeOperation {
 	private static _isBeforeClosingBrace(config: CursorConfiguration, lineAfter: string) {
 		// If the start of lineAfter can be interpretted as both a starting or ending brace, default to returning false
 		const nextChar = lineAfter.charAt(0);
-		const potentialStartingBraces = config.autoClosingPairs.autoClosingPairsOpenByStart.get(nextChar) || [];
-		const potentialClosingBraces = config.autoClosingPairs.autoClosingPairsCloseByStart.get(nextChar) || [];
+		const potentialStartingBraces = config.autoClosingPairs.autoClosingPairsOpenByStart.get(
+      nextChar,
+    ) || [];
+		const potentialClosingBraces = config.autoClosingPairs.autoClosingPairsCloseByStart.get(
+      nextChar,
+    ) || [];
 
-		const isBeforeStartingBrace = potentialStartingBraces.some(x => lineAfter.startsWith(x.open));
-		const isBeforeClosingBrace = potentialClosingBraces.some(x => lineAfter.startsWith(x.close));
+		const isBeforeStartingBrace = potentialStartingBraces.some(
+      x => lineAfter.startsWith(x.open),
+    );
+		const isBeforeClosingBrace = potentialClosingBraces.some(
+      x => lineAfter.startsWith(x.close),
+    );
 
 		return !isBeforeStartingBrace && isBeforeClosingBrace;
 	}
@@ -358,22 +512,31 @@ export class AutoClosingOpenCharTypeOperation {
 export class CompositionEndOvertypeOperation {
 
 	public static getEdits(config: CursorConfiguration, compositions: CompositionOutcome[]): EditOperationResult | null {
-		const isOvertypeMode = config.inputMode === 'overtype';
+		const isOvertypeMode = config.inputMode === "overtype";
 		if (!isOvertypeMode) {
 			return null;
 		}
-		const commands = compositions.map(composition => new ReplaceOvertypeCommandOnCompositionEnd(composition.insertedTextRange));
+		const commands = compositions.map(
+      composition => new ReplaceOvertypeCommandOnCompositionEnd(
+        composition.insertedTextRange,
+      ),
+    );
 		return new EditOperationResult(EditOperationType.TypingOther, commands, {
-			shouldPushStackElementBefore: true,
-			shouldPushStackElementAfter: false
-		});
+      shouldPushStackElementBefore: true,
+      shouldPushStackElementAfter: false,
+    });
 	}
 }
 
 export class SurroundSelectionOperation {
 
 	public static getEdits(config: CursorConfiguration, model: ITextModel, selections: Selection[], ch: string, isDoingComposition: boolean): EditOperationResult | undefined {
-		if (!isDoingComposition && this._isSurroundSelectionType(config, model, selections, ch)) {
+		if (!isDoingComposition && this._isSurroundSelectionType(
+      config,
+      model,
+      selections,
+      ch,
+    )) {
 			return this._runSurroundSelectionType(config, selections, ch);
 		}
 		return;
@@ -387,13 +550,16 @@ export class SurroundSelectionOperation {
 			commands[i] = new SurroundSelectionCommand(selection, ch, closeCharacter);
 		}
 		return new EditOperationResult(EditOperationType.Other, commands, {
-			shouldPushStackElementBefore: true,
-			shouldPushStackElementAfter: true
-		});
+      shouldPushStackElementBefore: true,
+      shouldPushStackElementAfter: true,
+    });
 	}
 
 	private static _isSurroundSelectionType(config: CursorConfiguration, model: ITextModel, selections: Selection[], ch: string): boolean {
-		if (!shouldSurroundChar(config, ch) || !config.surroundingPairs.hasOwnProperty(ch)) {
+		if (!shouldSurroundChar(
+      config,
+      ch,
+    ) || !config.surroundingPairs.hasOwnProperty(ch)) {
 			return false;
 		}
 		const isTypingAQuoteCharacter = isQuote(ch);
@@ -434,8 +600,18 @@ export class InterceptorElectricCharOperation {
 	public static getEdits(prevEditOperationType: EditOperationType, config: CursorConfiguration, model: ITextModel, selections: Selection[], ch: string, isDoingComposition: boolean): EditOperationResult | undefined {
 		// Electric characters make sense only when dealing with a single cursor,
 		// as multiple cursors typing brackets for example would interfer with bracket matching
-		if (!isDoingComposition && this._isTypeInterceptorElectricChar(config, model, selections)) {
-			const r = this._typeInterceptorElectricChar(prevEditOperationType, config, model, selections[0], ch);
+		if (!isDoingComposition && this._isTypeInterceptorElectricChar(
+      config,
+      model,
+      selections,
+    )) {
+			const r = this._typeInterceptorElectricChar(
+        prevEditOperationType,
+        config,
+        model,
+        selections[0],
+        ch,
+      );
 			if (r) {
 				return r;
 			}
@@ -444,7 +620,9 @@ export class InterceptorElectricCharOperation {
 	}
 
 	private static _isTypeInterceptorElectricChar(config: CursorConfiguration, model: ITextModel, selections: Selection[]) {
-		if (selections.length === 1 && model.tokenization.isCheapToTokenize(selections[0].getEndPosition().lineNumber)) {
+		if (selections.length === 1 && model.tokenization.isCheapToTokenize(
+      selections[0].getEndPosition().lineNumber,
+    )) {
 			return true;
 		}
 		return false;
@@ -459,7 +637,11 @@ export class InterceptorElectricCharOperation {
 		const lineTokens = model.tokenization.getLineTokens(position.lineNumber);
 		let electricAction: IElectricAction | null;
 		try {
-			electricAction = config.onElectricCharacter(ch, lineTokens, position.column);
+			electricAction = config.onElectricCharacter(
+        ch,
+        lineTokens,
+        position.column,
+      );
 		} catch (e) {
 			onUnexpectedError(e);
 			return null;
@@ -468,10 +650,12 @@ export class InterceptorElectricCharOperation {
 			return null;
 		}
 		if (electricAction.matchOpenBracket) {
-			const endColumn = (lineTokens.getLineContent() + ch).lastIndexOf(electricAction.matchOpenBracket) + 1;
+			const endColumn = (lineTokens.getLineContent() + ch).lastIndexOf(
+        electricAction.matchOpenBracket,
+      ) + 1;
 			const match = model.bracketPairs.findMatchingBracketUp(electricAction.matchOpenBracket, {
 				lineNumber: position.lineNumber,
-				column: endColumn
+				column: endColumn,
 			}, 500 /* give at most 500ms to compute */);
 			if (match) {
 				if (match.startLineNumber === position.lineNumber) {
@@ -480,17 +664,33 @@ export class InterceptorElectricCharOperation {
 				}
 				const matchLine = model.getLineContent(match.startLineNumber);
 				const matchLineIndentation = strings.getLeadingWhitespace(matchLine);
-				const newIndentation = config.normalizeIndentation(matchLineIndentation);
+				const newIndentation = config.normalizeIndentation(
+          matchLineIndentation,
+        );
 				const lineText = model.getLineContent(position.lineNumber);
-				const lineFirstNonBlankColumn = model.getLineFirstNonWhitespaceColumn(position.lineNumber) || position.column;
-				const prefix = lineText.substring(lineFirstNonBlankColumn - 1, position.column - 1);
+				const lineFirstNonBlankColumn = model.getLineFirstNonWhitespaceColumn(
+          position.lineNumber,
+        ) || position.column;
+				const prefix = lineText.substring(
+          lineFirstNonBlankColumn - 1,
+          position.column - 1,
+        );
 				const typeText = newIndentation + prefix + ch;
-				const typeSelection = new Range(position.lineNumber, 1, position.lineNumber, position.column);
+				const typeSelection = new Range(
+          position.lineNumber,
+          1,
+          position.lineNumber,
+          position.column,
+        );
 				const command = new ReplaceCommand(typeSelection, typeText);
-				return new EditOperationResult(getTypingOperation(typeText, prevEditOperationType), [command], {
-					shouldPushStackElementBefore: false,
-					shouldPushStackElementAfter: true
-				});
+				return new EditOperationResult(
+          getTypingOperation(typeText, prevEditOperationType),
+          [command],
+          {
+            shouldPushStackElementBefore: false,
+            shouldPushStackElementAfter: true,
+          },
+        );
 			}
 		}
 		return null;
@@ -503,71 +703,112 @@ export class SimpleCharacterTypeOperation {
 		// A simple character type
 		const commands: ICommand[] = [];
 		for (let i = 0, len = selections.length; i < len; i++) {
-			const ChosenReplaceCommand = config.inputMode === 'overtype' && !isDoingComposition ? ReplaceOvertypeCommand : ReplaceCommand;
+			const ChosenReplaceCommand = config.inputMode === "overtype" && !isDoingComposition ? ReplaceOvertypeCommand : ReplaceCommand;
 			commands[i] = new ChosenReplaceCommand(selections[i], ch);
 		}
 
 		const opType = getTypingOperation(ch, prevEditOperationType);
 		return new EditOperationResult(opType, commands, {
-			shouldPushStackElementBefore: shouldPushStackElementBetween(prevEditOperationType, opType),
-			shouldPushStackElementAfter: false
-		});
+      shouldPushStackElementBefore: shouldPushStackElementBetween(prevEditOperationType, opType),
+      shouldPushStackElementAfter: false,
+    });
 	}
 }
 
 export class EnterOperation {
 
 	public static getEdits(config: CursorConfiguration, model: ITextModel, selections: Selection[], ch: string, isDoingComposition: boolean): EditOperationResult | undefined {
-		if (!isDoingComposition && ch === '\n') {
+		if (!isDoingComposition && ch === "\n") {
 			const commands: ICommand[] = [];
 			for (let i = 0, len = selections.length; i < len; i++) {
 				commands[i] = this._enter(config, model, false, selections[i]);
 			}
 			return new EditOperationResult(EditOperationType.TypingOther, commands, {
-				shouldPushStackElementBefore: true,
-				shouldPushStackElementAfter: false,
-			});
+        shouldPushStackElementBefore: true,
+        shouldPushStackElementAfter: false,
+      });
 		}
 		return;
 	}
 
 	private static _enter(config: CursorConfiguration, model: ITextModel, keepPosition: boolean, range: Range): ICommand {
 		if (config.autoIndent === EditorAutoIndentStrategy.None) {
-			return typeCommand(range, '\n', keepPosition);
+			return typeCommand(range, "\n", keepPosition);
 		}
-		if (!model.tokenization.isCheapToTokenize(range.getStartPosition().lineNumber) || config.autoIndent === EditorAutoIndentStrategy.Keep) {
+		if (!model.tokenization.isCheapToTokenize(
+      range.getStartPosition().lineNumber,
+    ) || config.autoIndent === EditorAutoIndentStrategy.Keep) {
 			const lineText = model.getLineContent(range.startLineNumber);
-			const indentation = strings.getLeadingWhitespace(lineText).substring(0, range.startColumn - 1);
-			return typeCommand(range, '\n' + config.normalizeIndentation(indentation), keepPosition);
+			const indentation = strings.getLeadingWhitespace(lineText).substring(
+        0,
+        range.startColumn - 1,
+      );
+			return typeCommand(
+        range,
+        "\n" + config.normalizeIndentation(indentation),
+        keepPosition,
+      );
 		}
-		const r = getEnterAction(config.autoIndent, model, range, config.languageConfigurationService);
+		const r = getEnterAction(
+      config.autoIndent,
+      model,
+      range,
+      config.languageConfigurationService,
+    );
 		if (r) {
 			if (r.indentAction === IndentAction.None) {
 				// Nothing special
-				return typeCommand(range, '\n' + config.normalizeIndentation(r.indentation + r.appendText), keepPosition);
+				return typeCommand(
+          range,
+          "\n" + config.normalizeIndentation(r.indentation + r.appendText),
+          keepPosition,
+        );
 
 			} else if (r.indentAction === IndentAction.Indent) {
 				// Indent once
-				return typeCommand(range, '\n' + config.normalizeIndentation(r.indentation + r.appendText), keepPosition);
+				return typeCommand(
+          range,
+          "\n" + config.normalizeIndentation(r.indentation + r.appendText),
+          keepPosition,
+        );
 
 			} else if (r.indentAction === IndentAction.IndentOutdent) {
 				// Ultra special
 				const normalIndent = config.normalizeIndentation(r.indentation);
-				const increasedIndent = config.normalizeIndentation(r.indentation + r.appendText);
-				const typeText = '\n' + increasedIndent + '\n' + normalIndent;
+				const increasedIndent = config.normalizeIndentation(
+          r.indentation + r.appendText,
+        );
+				const typeText = "\n" + increasedIndent + "\n" + normalIndent;
 				if (keepPosition) {
-					return new ReplaceCommandWithoutChangingPosition(range, typeText, true);
+					return new ReplaceCommandWithoutChangingPosition(
+            range,
+            typeText,
+            true,
+          );
 				} else {
-					return new ReplaceCommandWithOffsetCursorState(range, typeText, -1, increasedIndent.length - normalIndent.length, true);
+					return new ReplaceCommandWithOffsetCursorState(
+            range,
+            typeText,
+            -1,
+            increasedIndent.length - normalIndent.length,
+            true,
+          );
 				}
 			} else if (r.indentAction === IndentAction.Outdent) {
 				const actualIndentation = unshiftIndent(config, r.indentation);
-				return typeCommand(range, '\n' + config.normalizeIndentation(actualIndentation + r.appendText), keepPosition);
+				return typeCommand(
+          range,
+          "\n" + config.normalizeIndentation(actualIndentation + r.appendText),
+          keepPosition,
+        );
 			}
 		}
 
 		const lineText = model.getLineContent(range.startLineNumber);
-		const indentation = strings.getLeadingWhitespace(lineText).substring(0, range.startColumn - 1);
+		const indentation = strings.getLeadingWhitespace(lineText).substring(
+      0,
+      range.startColumn - 1,
+    );
 
 		if (config.autoIndent >= EditorAutoIndentStrategy.Full) {
 			const ir = getIndentForEnter(config.autoIndent, model, range, {
@@ -579,34 +820,64 @@ export class EnterOperation {
 				},
 				normalizeIndentation: (indent) => {
 					return config.normalizeIndentation(indent);
-				}
+				},
 			}, config.languageConfigurationService);
 
 			if (ir) {
-				let oldEndViewColumn = config.visibleColumnFromColumn(model, range.getEndPosition());
+				let oldEndViewColumn = config.visibleColumnFromColumn(
+          model,
+          range.getEndPosition(),
+        );
 				const oldEndColumn = range.endColumn;
 				const newLineContent = model.getLineContent(range.endLineNumber);
-				const firstNonWhitespace = strings.firstNonWhitespaceIndex(newLineContent);
+				const firstNonWhitespace = strings.firstNonWhitespaceIndex(
+          newLineContent,
+        );
 				if (firstNonWhitespace >= 0) {
-					range = range.setEndPosition(range.endLineNumber, Math.max(range.endColumn, firstNonWhitespace + 1));
+					range = range.setEndPosition(
+            range.endLineNumber,
+            Math.max(range.endColumn, firstNonWhitespace + 1),
+          );
 				} else {
-					range = range.setEndPosition(range.endLineNumber, model.getLineMaxColumn(range.endLineNumber));
+					range = range.setEndPosition(
+            range.endLineNumber,
+            model.getLineMaxColumn(range.endLineNumber),
+          );
 				}
 				if (keepPosition) {
-					return new ReplaceCommandWithoutChangingPosition(range, '\n' + config.normalizeIndentation(ir.afterEnter), true);
+					return new ReplaceCommandWithoutChangingPosition(
+            range,
+            "\n" + config.normalizeIndentation(ir.afterEnter),
+            true,
+          );
 				} else {
 					let offset = 0;
 					if (oldEndColumn <= firstNonWhitespace + 1) {
 						if (!config.insertSpaces) {
-							oldEndViewColumn = Math.ceil(oldEndViewColumn / config.indentSize);
+							oldEndViewColumn = Math.ceil(
+                oldEndViewColumn / config.indentSize,
+              );
 						}
-						offset = Math.min(oldEndViewColumn + 1 - config.normalizeIndentation(ir.afterEnter).length - 1, 0);
+						offset = Math.min(
+              oldEndViewColumn + 1 - config.normalizeIndentation(ir.afterEnter).length - 1,
+              0,
+            );
 					}
-					return new ReplaceCommandWithOffsetCursorState(range, '\n' + config.normalizeIndentation(ir.afterEnter), 0, offset, true);
+					return new ReplaceCommandWithOffsetCursorState(
+            range,
+            "\n" + config.normalizeIndentation(ir.afterEnter),
+            0,
+            offset,
+            true,
+          );
 				}
 			}
 		}
-		return typeCommand(range, '\n' + config.normalizeIndentation(indentation), keepPosition);
+		return typeCommand(
+      range,
+      "\n" + config.normalizeIndentation(indentation),
+      keepPosition,
+    );
 	}
 
 
@@ -618,12 +889,20 @@ export class EnterOperation {
 		for (let i = 0, len = selections.length; i < len; i++) {
 			let lineNumber = selections[i].positionLineNumber;
 			if (lineNumber === 1) {
-				commands[i] = new ReplaceCommandWithoutChangingPosition(new Range(1, 1, 1, 1), '\n');
+				commands[i] = new ReplaceCommandWithoutChangingPosition(
+          new Range(1, 1, 1, 1),
+          "\n",
+        );
 			} else {
 				lineNumber--;
 				const column = model.getLineMaxColumn(lineNumber);
 
-				commands[i] = this._enter(config, model, false, new Range(lineNumber, column, lineNumber, column));
+				commands[i] = this._enter(
+          config,
+          model,
+          false,
+          new Range(lineNumber, column, lineNumber, column),
+        );
 			}
 		}
 		return commands;
@@ -637,7 +916,12 @@ export class EnterOperation {
 		for (let i = 0, len = selections.length; i < len; i++) {
 			const lineNumber = selections[i].positionLineNumber;
 			const column = model.getLineMaxColumn(lineNumber);
-			commands[i] = this._enter(config, model, false, new Range(lineNumber, column, lineNumber, column));
+			commands[i] = this._enter(
+        config,
+        model,
+        false,
+        new Range(lineNumber, column, lineNumber, column),
+      );
 		}
 		return commands;
 	}
@@ -654,10 +938,21 @@ export class EnterOperation {
 export class PasteOperation {
 
 	public static getEdits(config: CursorConfiguration, model: ICursorSimpleModel, selections: Selection[], text: string, pasteOnNewLine: boolean, multicursorText: string[]) {
-		const distributedPaste = this._distributePasteToCursors(config, selections, text, pasteOnNewLine, multicursorText);
+		const distributedPaste = this._distributePasteToCursors(
+      config,
+      selections,
+      text,
+      pasteOnNewLine,
+      multicursorText,
+    );
 		if (distributedPaste) {
 			selections = selections.sort(Range.compareRangesUsingStarts);
-			return this._distributedPaste(config, model, selections, distributedPaste);
+			return this._distributedPaste(
+        config,
+        model,
+        selections,
+        distributedPaste,
+      );
 		} else {
 			return this._simplePaste(config, model, selections, text, pasteOnNewLine);
 		}
@@ -673,7 +968,7 @@ export class PasteOperation {
 		if (pasteOnNewLine) {
 			return null;
 		}
-		if (config.multiCursorPaste === 'spread') {
+		if (config.multiCursorPaste === "spread") {
 			// Try to spread the pasted text in case the line count matches the cursor count
 			// Remove trailing \n if present
 			if (text.charCodeAt(text.length - 1) === CharCode.LineFeed) {
@@ -694,14 +989,14 @@ export class PasteOperation {
 	private static _distributedPaste(config: CursorConfiguration, model: ICursorSimpleModel, selections: Selection[], text: string[]): EditOperationResult {
 		const commands: ICommand[] = [];
 		for (let i = 0, len = selections.length; i < len; i++) {
-			const shouldOvertypeOnPaste = config.overtypeOnPaste && config.inputMode === 'overtype';
+			const shouldOvertypeOnPaste = config.overtypeOnPaste && config.inputMode === "overtype";
 			const ChosenReplaceCommand = shouldOvertypeOnPaste ? ReplaceOvertypeCommand : ReplaceCommand;
 			commands[i] = new ChosenReplaceCommand(selections[i], text[i]);
 		}
 		return new EditOperationResult(EditOperationType.Other, commands, {
-			shouldPushStackElementBefore: true,
-			shouldPushStackElementAfter: true
-		});
+      shouldPushStackElementBefore: true,
+      shouldPushStackElementAfter: true,
+    });
 	}
 
 	private static _simplePaste(config: CursorConfiguration, model: ICursorSimpleModel, selections: Selection[], text: string, pasteOnNewLine: boolean): EditOperationResult {
@@ -712,34 +1007,53 @@ export class PasteOperation {
 			if (pasteOnNewLine && !selection.isEmpty()) {
 				pasteOnNewLine = false;
 			}
-			if (pasteOnNewLine && text.indexOf('\n') !== text.length - 1) {
+			if (pasteOnNewLine && text.indexOf("\n") !== text.length - 1) {
 				pasteOnNewLine = false;
 			}
 			if (pasteOnNewLine) {
 				// Paste entire line at the beginning of line
-				const typeSelection = new Range(position.lineNumber, 1, position.lineNumber, 1);
-				commands[i] = new ReplaceCommandThatPreservesSelection(typeSelection, text, selection, true);
+				const typeSelection = new Range(
+          position.lineNumber,
+          1,
+          position.lineNumber,
+          1,
+        );
+				commands[i] = new ReplaceCommandThatPreservesSelection(
+          typeSelection,
+          text,
+          selection,
+          true,
+        );
 			} else {
-				const shouldOvertypeOnPaste = config.overtypeOnPaste && config.inputMode === 'overtype';
+				const shouldOvertypeOnPaste = config.overtypeOnPaste && config.inputMode === "overtype";
 				const ChosenReplaceCommand = shouldOvertypeOnPaste ? ReplaceOvertypeCommand : ReplaceCommand;
 				commands[i] = new ChosenReplaceCommand(selection, text);
 			}
 		}
 		return new EditOperationResult(EditOperationType.Other, commands, {
-			shouldPushStackElementBefore: true,
-			shouldPushStackElementAfter: true
-		});
+      shouldPushStackElementBefore: true,
+      shouldPushStackElementAfter: true,
+    });
 	}
 }
 
 export class CompositionOperation {
 
 	public static getEdits(prevEditOperationType: EditOperationType, config: CursorConfiguration, model: ITextModel, selections: Selection[], text: string, replacePrevCharCnt: number, replaceNextCharCnt: number, positionDelta: number) {
-		const commands = selections.map(selection => this._compositionType(model, selection, text, replacePrevCharCnt, replaceNextCharCnt, positionDelta));
+		const commands = selections.map(
+      selection => this._compositionType(
+        model,
+        selection,
+        text,
+        replacePrevCharCnt,
+        replaceNextCharCnt,
+        positionDelta,
+      ),
+    );
 		return new EditOperationResult(EditOperationType.TypingOther, commands, {
-			shouldPushStackElementBefore: shouldPushStackElementBetween(prevEditOperationType, EditOperationType.TypingOther),
-			shouldPushStackElementAfter: false
-		});
+      shouldPushStackElementBefore: shouldPushStackElementBetween(prevEditOperationType, EditOperationType.TypingOther),
+      shouldPushStackElementAfter: false,
+    });
 	}
 
 	private static _compositionType(model: ITextModel, selection: Selection, text: string, replacePrevCharCnt: number, replaceNextCharCnt: number, positionDelta: number): ICommand | null {
@@ -751,9 +1065,22 @@ export class CompositionOperation {
 		}
 		const pos = selection.getPosition();
 		const startColumn = Math.max(1, pos.column - replacePrevCharCnt);
-		const endColumn = Math.min(model.getLineMaxColumn(pos.lineNumber), pos.column + replaceNextCharCnt);
-		const range = new Range(pos.lineNumber, startColumn, pos.lineNumber, endColumn);
-		return new ReplaceCommandWithOffsetCursorState(range, text, 0, positionDelta);
+		const endColumn = Math.min(
+      model.getLineMaxColumn(pos.lineNumber),
+      pos.column + replaceNextCharCnt,
+    );
+		const range = new Range(
+      pos.lineNumber,
+      startColumn,
+      pos.lineNumber,
+      endColumn,
+    );
+		return new ReplaceCommandWithOffsetCursorState(
+      range,
+      text,
+      0,
+      positionDelta,
+    );
 	}
 }
 
@@ -766,9 +1093,9 @@ export class TypeWithoutInterceptorsOperation {
 		}
 		const opType = getTypingOperation(str, prevEditOperationType);
 		return new EditOperationResult(opType, commands, {
-			shouldPushStackElementBefore: shouldPushStackElementBetween(prevEditOperationType, opType),
-			shouldPushStackElementAfter: false
-		});
+      shouldPushStackElementBefore: shouldPushStackElementBetween(prevEditOperationType, opType),
+      shouldPushStackElementAfter: false,
+    });
 	}
 }
 
@@ -781,32 +1108,61 @@ export class TabOperation {
 			if (selection.isEmpty()) {
 				const lineText = model.getLineContent(selection.startLineNumber);
 				if (/^\s*$/.test(lineText) && model.tokenization.isCheapToTokenize(selection.startLineNumber)) {
-					let goodIndent = this._goodIndentForLine(config, model, selection.startLineNumber);
-					goodIndent = goodIndent || '\t';
+					let goodIndent = this._goodIndentForLine(
+            config,
+            model,
+            selection.startLineNumber,
+          );
+					goodIndent = goodIndent || "\t";
 					const possibleTypeText = config.normalizeIndentation(goodIndent);
 					if (!lineText.startsWith(possibleTypeText)) {
-						commands[i] = new ReplaceCommand(new Range(selection.startLineNumber, 1, selection.startLineNumber, lineText.length + 1), possibleTypeText, true);
+						commands[i] = new ReplaceCommand(
+              new Range(
+                selection.startLineNumber,
+                1,
+                selection.startLineNumber,
+                lineText.length + 1,
+              ),
+              possibleTypeText,
+              true,
+            );
 						continue;
 					}
 				}
-				commands[i] = this._replaceJumpToNextIndent(config, model, selection, true);
+				commands[i] = this._replaceJumpToNextIndent(
+          config,
+          model,
+          selection,
+          true,
+        );
 			} else {
 				if (selection.startLineNumber === selection.endLineNumber) {
-					const lineMaxColumn = model.getLineMaxColumn(selection.startLineNumber);
+					const lineMaxColumn = model.getLineMaxColumn(
+            selection.startLineNumber,
+          );
 					if (selection.startColumn !== 1 || selection.endColumn !== lineMaxColumn) {
 						// This is a single line selection that is not the entire line
-						commands[i] = this._replaceJumpToNextIndent(config, model, selection, false);
+						commands[i] = this._replaceJumpToNextIndent(
+              config,
+              model,
+              selection,
+              false,
+            );
 						continue;
 					}
 				}
-				commands[i] = new ShiftCommand(selection, {
-					isUnshift: false,
-					tabSize: config.tabSize,
-					indentSize: config.indentSize,
-					insertSpaces: config.insertSpaces,
-					useTabStops: config.useTabStops,
-					autoIndent: config.autoIndent
-				}, config.languageConfigurationService);
+				commands[i] = new ShiftCommand(
+          selection,
+          {
+            isUnshift: false,
+            tabSize: config.tabSize,
+            indentSize: config.indentSize,
+            insertSpaces: config.insertSpaces,
+            useTabStops: config.useTabStops,
+            autoIndent: config.autoIndent,
+          },
+          config.languageConfigurationService,
+        );
 			}
 		}
 		return commands;
@@ -814,8 +1170,14 @@ export class TabOperation {
 
 	private static _goodIndentForLine(config: CursorConfiguration, model: ITextModel, lineNumber: number): string | null {
 		let action: IndentAction | EnterAction | null = null;
-		let indentation: string = '';
-		const expectedIndentAction = getInheritIndentForLine(config.autoIndent, model, lineNumber, false, config.languageConfigurationService);
+		let indentation: string = "";
+		const expectedIndentAction = getInheritIndentForLine(
+      config.autoIndent,
+      model,
+      lineNumber,
+      false,
+      config.languageConfigurationService,
+    );
 		if (expectedIndentAction) {
 			action = expectedIndentAction.action;
 			indentation = expectedIndentAction.indentation;
@@ -833,7 +1195,12 @@ export class TabOperation {
 				return null;
 			}
 			const maxColumn = model.getLineMaxColumn(lastLineNumber);
-			const expectedEnterAction = getEnterAction(config.autoIndent, model, new Range(lastLineNumber, maxColumn, lastLineNumber, maxColumn), config.languageConfigurationService);
+			const expectedEnterAction = getEnterAction(
+        config.autoIndent,
+        model,
+        new Range(lastLineNumber, maxColumn, lastLineNumber, maxColumn),
+        config.languageConfigurationService,
+      );
 			if (expectedEnterAction) {
 				indentation = expectedEnterAction.indentation + expectedEnterAction.appendText;
 			}
@@ -854,17 +1221,20 @@ export class TabOperation {
 	}
 
 	private static _replaceJumpToNextIndent(config: CursorConfiguration, model: ICursorSimpleModel, selection: Selection, insertsAutoWhitespace: boolean): ReplaceCommand {
-		let typeText = '';
+		let typeText = "";
 		const position = selection.getStartPosition();
 		if (config.insertSpaces) {
-			const visibleColumnFromColumn = config.visibleColumnFromColumn(model, position);
+			const visibleColumnFromColumn = config.visibleColumnFromColumn(
+        model,
+        position,
+      );
 			const indentSize = config.indentSize;
 			const spacesCnt = indentSize - (visibleColumnFromColumn % indentSize);
 			for (let i = 0; i < spacesCnt; i++) {
-				typeText += ' ';
+				typeText += " ";
 			}
 		} else {
-			typeText = '\t';
+			typeText = "\t";
 		}
 		return new ReplaceCommand(selection, typeText, insertsAutoWhitespace);
 	}
@@ -886,8 +1256,18 @@ export class BaseTypeWithAutoClosingCommand extends ReplaceCommandWithOffsetCurs
 	}
 
 	protected _computeCursorStateWithRange(model: ITextModel, range: Range, helper: ICursorStateComputerData): Selection {
-		this.closeCharacterRange = new Range(range.startLineNumber, range.endColumn - this._closeCharacter.length, range.endLineNumber, range.endColumn);
-		this.enclosingRange = new Range(range.startLineNumber, range.endColumn - this._openCharacter.length - this._closeCharacter.length, range.endLineNumber, range.endColumn);
+		this.closeCharacterRange = new Range(
+      range.startLineNumber,
+      range.endColumn - this._closeCharacter.length,
+      range.endLineNumber,
+      range.endColumn,
+    );
+		this.enclosingRange = new Range(
+      range.startLineNumber,
+      range.endColumn - this._openCharacter.length - this._closeCharacter.length,
+      range.endLineNumber,
+      range.endColumn,
+    );
 		return super.computeCursorState(model, helper);
 	}
 }
@@ -895,10 +1275,17 @@ export class BaseTypeWithAutoClosingCommand extends ReplaceCommandWithOffsetCurs
 class TypeWithAutoClosingCommand extends BaseTypeWithAutoClosingCommand {
 
 	constructor(selection: Selection, openCharacter: string, insertOpenCharacter: boolean, closeCharacter: string) {
-		const text = (insertOpenCharacter ? openCharacter : '') + closeCharacter;
+		const text = (insertOpenCharacter ? openCharacter : "") + closeCharacter;
 		const lineNumberDeltaOffset = 0;
 		const columnDeltaOffset = -closeCharacter.length;
-		super(selection, text, lineNumberDeltaOffset, columnDeltaOffset, openCharacter, closeCharacter);
+		super(
+      selection,
+      text,
+      lineNumberDeltaOffset,
+      columnDeltaOffset,
+      openCharacter,
+      closeCharacter,
+    );
 	}
 
 	public override computeCursorState(model: ITextModel, helper: ICursorStateComputerData): Selection {
@@ -917,20 +1304,33 @@ class TypeWithIndentationAndAutoClosingCommand extends BaseTypeWithAutoClosingCo
 		const text = openCharacter + closeCharacter;
 		const lineNumberDeltaOffset = 0;
 		const columnDeltaOffset = openCharacter.length;
-		super(selection, text, lineNumberDeltaOffset, columnDeltaOffset, openCharacter, closeCharacter);
+		super(
+      selection,
+      text,
+      lineNumberDeltaOffset,
+      columnDeltaOffset,
+      openCharacter,
+      closeCharacter,
+    );
 		this._autoIndentationEdit = autoIndentationEdit;
 		this._autoClosingEdit = { range: selection, text };
 	}
 
 	public override getEditOperations(model: ITextModel, builder: IEditOperationBuilder): void {
-		builder.addTrackedEditOperation(this._autoIndentationEdit.range, this._autoIndentationEdit.text);
-		builder.addTrackedEditOperation(this._autoClosingEdit.range, this._autoClosingEdit.text);
+		builder.addTrackedEditOperation(
+      this._autoIndentationEdit.range,
+      this._autoIndentationEdit.text,
+    );
+		builder.addTrackedEditOperation(
+      this._autoClosingEdit.range,
+      this._autoClosingEdit.text,
+    );
 	}
 
 	public override computeCursorState(model: ITextModel, helper: ICursorStateComputerData): Selection {
 		const inverseEditOperations = helper.getInverseEditOperations();
 		if (inverseEditOperations.length !== 2) {
-			throw new Error('There should be two inverse edit operations!');
+			throw new Error("There should be two inverse edit operations!");
 		}
 		const range1 = inverseEditOperations[0].range;
 		const range2 = inverseEditOperations[1].range;
@@ -940,7 +1340,7 @@ class TypeWithIndentationAndAutoClosingCommand extends BaseTypeWithAutoClosingCo
 }
 
 function getTypingOperation(typedText: string, previousTypingOperation: EditOperationType): EditOperationType {
-	if (typedText === ' ') {
+	if (typedText === " ") {
 		return previousTypingOperation === EditOperationType.TypingFirstSpace
 			|| previousTypingOperation === EditOperationType.TypingConsecutiveSpace
 			? EditOperationType.TypingConsecutiveSpace
@@ -961,12 +1361,14 @@ function shouldPushStackElementBetween(previousTypingOperation: EditOperationTyp
 		return false;
 	}
 	// Insert undo stop between different operation types
-	return normalizeOperationType(previousTypingOperation) !== normalizeOperationType(typingOperation);
+	return normalizeOperationType(
+    previousTypingOperation,
+  ) !== normalizeOperationType(typingOperation);
 }
 
-function normalizeOperationType(type: EditOperationType): EditOperationType | 'space' {
+function normalizeOperationType(type: EditOperationType): EditOperationType | "space" {
 	return (type === EditOperationType.TypingConsecutiveSpace || type === EditOperationType.TypingFirstSpace)
-		? 'space'
+		? "space"
 		: type;
 }
 
@@ -977,7 +1379,7 @@ function isTypingOperation(type: EditOperationType): boolean {
 }
 
 function isAutoClosingOvertype(config: CursorConfiguration, model: ITextModel, selections: Selection[], autoClosedCharacters: Range[], ch: string): boolean {
-	if (config.autoClosingOvertype === 'never') {
+	if (config.autoClosingOvertype === "never") {
 		return false;
 	}
 	if (!config.autoClosingPairs.autoClosingPairsCloseSingleChar.has(ch)) {
@@ -996,12 +1398,14 @@ function isAutoClosingOvertype(config: CursorConfiguration, model: ITextModel, s
 		}
 		// Do not over-type quotes after a backslash
 		const chIsQuote = isQuote(ch);
-		const beforeCharacter = position.column > 2 ? lineText.charCodeAt(position.column - 2) : CharCode.Null;
+		const beforeCharacter = position.column > 2 ? lineText.charCodeAt(
+      position.column - 2,
+    ) : CharCode.Null;
 		if (beforeCharacter === CharCode.Backslash && chIsQuote) {
 			return false;
 		}
 		// Must over-type a closing character typed by the editor
-		if (config.autoClosingOvertype === 'auto') {
+		if (config.autoClosingOvertype === "auto") {
 			let found = false;
 			for (let j = 0, lenJ = autoClosedCharacters.length; j < lenJ; j++) {
 				const autoClosedCharacter = autoClosedCharacters[j];
@@ -1028,19 +1432,31 @@ function typeCommand(range: Range, text: string, keepPosition: boolean): IComman
 
 export function shiftIndent(config: CursorConfiguration, indentation: string, count?: number): string {
 	count = count || 1;
-	return ShiftCommand.shiftIndent(indentation, indentation.length + count, config.tabSize, config.indentSize, config.insertSpaces);
+	return ShiftCommand.shiftIndent(
+    indentation,
+    indentation.length + count,
+    config.tabSize,
+    config.indentSize,
+    config.insertSpaces,
+  );
 }
 
 export function unshiftIndent(config: CursorConfiguration, indentation: string, count?: number): string {
 	count = count || 1;
-	return ShiftCommand.unshiftIndent(indentation, indentation.length + count, config.tabSize, config.indentSize, config.insertSpaces);
+	return ShiftCommand.unshiftIndent(
+    indentation,
+    indentation.length + count,
+    config.tabSize,
+    config.indentSize,
+    config.insertSpaces,
+  );
 }
 
 export function shouldSurroundChar(config: CursorConfiguration, ch: string): boolean {
 	if (isQuote(ch)) {
-		return (config.autoSurround === 'quotes' || config.autoSurround === 'languageDefined');
+		return (config.autoSurround === "quotes" || config.autoSurround === "languageDefined");
 	} else {
 		// Character is a bracket
-		return (config.autoSurround === 'brackets' || config.autoSurround === 'languageDefined');
+		return (config.autoSurround === "brackets" || config.autoSurround === "languageDefined");
 	}
 }

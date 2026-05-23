@@ -3,17 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../../base/common/uri.js';
-import { createDecorator, IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { UntitledTextEditorModel, IUntitledTextEditorModel } from './untitledTextEditorModel.js';
-import { IFilesConfiguration } from '../../../../platform/files/common/files.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { Event, Emitter } from '../../../../base/common/event.js';
-import { Schemas } from '../../../../base/common/network.js';
-import { Disposable, DisposableResourceMap, DisposableStore } from '../../../../base/common/lifecycle.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
+import { URI } from "../../../../base/common/uri.js";
+import { createDecorator, IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { UntitledTextEditorModel, IUntitledTextEditorModel } from "./untitledTextEditorModel.js";
+import { IFilesConfiguration } from "../../../../platform/files/common/files.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { Event, Emitter } from "../../../../base/common/event.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { Disposable, DisposableResourceMap, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
 
-export const IUntitledTextEditorService = createDecorator<IUntitledTextEditorService>('untitledTextEditorService');
+export const IUntitledTextEditorService = createDecorator<IUntitledTextEditorService>(
+  "untitledTextEditorService",
+);
 
 export interface INewUntitledTextEditorOptions {
 
@@ -166,29 +168,43 @@ export class UntitledTextEditorService extends Disposable implements IUntitledTe
 
 	private static readonly UNTITLED_WITHOUT_ASSOCIATED_RESOURCE_REGEX = /Untitled-\d+/;
 
-	private readonly _onDidSave = this._register(new Emitter<IUntitledTextEditorModelSaveEvent>());
+	private readonly _onDidSave = this._register(
+    new Emitter<IUntitledTextEditorModelSaveEvent>(),
+  );
 	readonly onDidSave = this._onDidSave.event;
 
-	private readonly _onDidChangeDirty = this._register(new Emitter<IUntitledTextEditorModel>());
+	private readonly _onDidChangeDirty = this._register(
+    new Emitter<IUntitledTextEditorModel>(),
+  );
 	readonly onDidChangeDirty = this._onDidChangeDirty.event;
 
-	private readonly _onDidChangeEncoding = this._register(new Emitter<IUntitledTextEditorModel>());
+	private readonly _onDidChangeEncoding = this._register(
+    new Emitter<IUntitledTextEditorModel>(),
+  );
 	readonly onDidChangeEncoding = this._onDidChangeEncoding.event;
 
-	private readonly _onDidCreate = this._register(new Emitter<IUntitledTextEditorModel>());
+	private readonly _onDidCreate = this._register(
+    new Emitter<IUntitledTextEditorModel>(),
+  );
 	readonly onDidCreate = this._onDidCreate.event;
 
-	private readonly _onWillDispose = this._register(new Emitter<IUntitledTextEditorModel>());
+	private readonly _onWillDispose = this._register(
+    new Emitter<IUntitledTextEditorModel>(),
+  );
 	readonly onWillDispose = this._onWillDispose.event;
 
-	private readonly _onDidChangeLabel = this._register(new Emitter<IUntitledTextEditorModel>());
+	private readonly _onDidChangeLabel = this._register(
+    new Emitter<IUntitledTextEditorModel>(),
+  );
 	readonly onDidChangeLabel = this._onDidChangeLabel.event;
 
-	private readonly mapResourceToModel = this._register(new DisposableResourceMap<UntitledTextEditorModel>());
+	private readonly mapResourceToModel = this._register(
+    new DisposableResourceMap<UntitledTextEditorModel>(),
+  );
 
 	constructor(
 		@IInstantiationService private readonly instantiationService: IInstantiationService,
-		@IConfigurationService private readonly configurationService: IConfigurationService
+		@IConfigurationService private readonly configurationService: IConfigurationService,
 	) {
 		super();
 	}
@@ -212,11 +228,15 @@ export class UntitledTextEditorService extends Disposable implements IUntitledTe
 		return this.doCreateOrGet(options);
 	}
 
-	private doCreateOrGet(options: IInternalUntitledTextEditorOptions = Object.create(null)): UntitledTextEditorModel {
+	private doCreateOrGet(options: IInternalUntitledTextEditorOptions = Object.create(
+    null,
+  )): UntitledTextEditorModel {
 		const massagedOptions = this.massageOptions(options);
 
 		// Return existing instance if asked for it
-		if (massagedOptions.untitledResource && this.mapResourceToModel.has(massagedOptions.untitledResource)) {
+		if (massagedOptions.untitledResource && this.mapResourceToModel.has(
+      massagedOptions.untitledResource,
+    )) {
 			return this.mapResourceToModel.get(massagedOptions.untitledResource)!;
 		}
 
@@ -225,17 +245,19 @@ export class UntitledTextEditorService extends Disposable implements IUntitledTe
 	}
 
 	private massageOptions(options: IInternalUntitledTextEditorOptions): IInternalUntitledTextEditorOptions {
-		const massagedOptions: IInternalUntitledTextEditorOptions = Object.create(null);
+		const massagedOptions: IInternalUntitledTextEditorOptions = Object.create(
+      null,
+    );
 
 		// Figure out associated and untitled resource
 		if (options.associatedResource) {
 			massagedOptions.untitledResource = URI.from({
-				scheme: Schemas.untitled,
-				authority: options.associatedResource.authority,
-				fragment: options.associatedResource.fragment,
-				path: options.associatedResource.path,
-				query: options.associatedResource.query
-			});
+        scheme: Schemas.untitled,
+        authority: options.associatedResource.authority,
+        fragment: options.associatedResource.fragment,
+        path: options.associatedResource.path,
+        query: options.associatedResource.query,
+      });
 			massagedOptions.associatedResource = options.associatedResource;
 		} else {
 			if (options.untitledResource?.scheme === Schemas.untitled) {
@@ -267,13 +289,23 @@ export class UntitledTextEditorService extends Disposable implements IUntitledTe
 		if (!untitledResource) {
 			let counter = 1;
 			do {
-				untitledResource = URI.from({ scheme: Schemas.untitled, path: `Untitled-${counter}` });
+				untitledResource = URI.from({
+          scheme: Schemas.untitled,
+          path: `Untitled-${counter}`,
+        });
 				counter++;
 			} while (this.mapResourceToModel.has(untitledResource));
 		}
 
 		// Create new model with provided options
-		const model = this.instantiationService.createInstance(UntitledTextEditorModel, untitledResource, !!options.associatedResource, options.initialValue, options.languageId, options.encoding);
+		const model = this.instantiationService.createInstance(
+      UntitledTextEditorModel,
+      untitledResource,
+      !!options.associatedResource,
+      options.initialValue,
+      options.languageId,
+      options.encoding,
+    );
 
 		this.registerModel(model);
 
@@ -284,10 +316,18 @@ export class UntitledTextEditorService extends Disposable implements IUntitledTe
 
 		// Install model listeners
 		const modelListeners = new DisposableStore();
-		modelListeners.add(model.onDidChangeDirty(() => this._onDidChangeDirty.fire(model)));
-		modelListeners.add(model.onDidChangeName(() => this._onDidChangeLabel.fire(model)));
-		modelListeners.add(model.onDidChangeEncoding(() => this._onDidChangeEncoding.fire(model)));
-		modelListeners.add(model.onWillDispose(() => this._onWillDispose.fire(model)));
+		modelListeners.add(
+      model.onDidChangeDirty(() => this._onDidChangeDirty.fire(model)),
+    );
+		modelListeners.add(
+      model.onDidChangeName(() => this._onDidChangeLabel.fire(model)),
+    );
+		modelListeners.add(
+      model.onDidChangeEncoding(() => this._onDidChangeEncoding.fire(model)),
+    );
+		modelListeners.add(
+      model.onWillDispose(() => this._onWillDispose.fire(model)),
+    );
 
 		// Remove from cache on dispose
 		Event.once(model.onWillDispose)(() => {
@@ -313,7 +353,9 @@ export class UntitledTextEditorService extends Disposable implements IUntitledTe
 	}
 
 	isUntitledWithAssociatedResource(resource: URI): boolean {
-		return resource.scheme === Schemas.untitled && resource.path.length > 1 && !UntitledTextEditorService.UNTITLED_WITHOUT_ASSOCIATED_RESOURCE_REGEX.test(resource.path);
+		return resource.scheme === Schemas.untitled && resource.path.length > 1 && !UntitledTextEditorService.UNTITLED_WITHOUT_ASSOCIATED_RESOURCE_REGEX.test(
+      resource.path,
+    );
 	}
 
 	canDispose(model: UntitledTextEditorModel): true | Promise<true> {
@@ -344,4 +386,8 @@ export class UntitledTextEditorService extends Disposable implements IUntitledTe
 	}
 }
 
-registerSingleton(IUntitledTextEditorService, UntitledTextEditorService, InstantiationType.Delayed);
+registerSingleton(
+  IUntitledTextEditorService,
+  UntitledTextEditorService,
+  InstantiationType.Delayed,
+);

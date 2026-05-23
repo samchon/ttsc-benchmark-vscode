@@ -3,37 +3,44 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../base/browser/dom.js';
-import { parentOriginHash } from '../../../../base/browser/iframe.js';
-import { mainWindow } from '../../../../base/browser/window.js';
-import { Barrier } from '../../../../base/common/async.js';
-import { VSBuffer } from '../../../../base/common/buffer.js';
-import { canceled, onUnexpectedError } from '../../../../base/common/errors.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { AppResourcePath, COI, FileAccess } from '../../../../base/common/network.js';
-import * as platform from '../../../../base/common/platform.js';
-import { joinPath } from '../../../../base/common/resources.js';
-import { URI } from '../../../../base/common/uri.js';
-import { generateUuid } from '../../../../base/common/uuid.js';
-import { IMessagePassingProtocol } from '../../../../base/parts/ipc/common/ipc.js';
-import { getNLSLanguage, getNLSMessages } from '../../../../nls.js';
-import { ILabelService } from '../../../../platform/label/common/label.js';
-import { ILayoutService } from '../../../../platform/layout/browser/layoutService.js';
-import { ILogService, ILoggerService } from '../../../../platform/log/common/log.js';
-import { IProductService } from '../../../../platform/product/common/productService.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
-import { isLoggingOnly } from '../../../../platform/telemetry/common/telemetryUtils.js';
-import { IUserDataProfilesService } from '../../../../platform/userDataProfile/common/userDataProfile.js';
-import { WebWorkerDescriptor } from '../../../../platform/webWorker/browser/webWorkerDescriptor.js';
-import { IWebWorkerService } from '../../../../platform/webWorker/browser/webWorkerService.js';
-import { IWorkspaceContextService, WorkbenchState } from '../../../../platform/workspace/common/workspace.js';
-import { IBrowserWorkbenchEnvironmentService } from '../../environment/browser/environmentService.js';
-import { IDefaultLogLevelsService } from '../../log/common/defaultLogLevels.js';
-import { ExtensionHostExitCode, IExtensionHostInitData, MessageType, UIKind, createMessageOfType, isMessageOfType } from '../common/extensionHostProtocol.js';
-import { LocalWebWorkerRunningLocation } from '../common/extensionRunningLocation.js';
-import { ExtensionHostExtensions, ExtensionHostStartup, IExtensionHost } from '../common/extensions.js';
+import * as dom from "../../../../base/browser/dom.js";
+import { parentOriginHash } from "../../../../base/browser/iframe.js";
+import { mainWindow } from "../../../../base/browser/window.js";
+import { Barrier } from "../../../../base/common/async.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { canceled, onUnexpectedError } from "../../../../base/common/errors.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { AppResourcePath, COI, FileAccess } from "../../../../base/common/network.js";
+import * as platform from "../../../../base/common/platform.js";
+import { joinPath } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { IMessagePassingProtocol } from "../../../../base/parts/ipc/common/ipc.js";
+import { getNLSLanguage, getNLSMessages } from "../../../../nls.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { ILayoutService } from "../../../../platform/layout/browser/layoutService.js";
+import { ILogService, ILoggerService } from "../../../../platform/log/common/log.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { isLoggingOnly } from "../../../../platform/telemetry/common/telemetryUtils.js";
+import { IUserDataProfilesService } from "../../../../platform/userDataProfile/common/userDataProfile.js";
+import { WebWorkerDescriptor } from "../../../../platform/webWorker/browser/webWorkerDescriptor.js";
+import { IWebWorkerService } from "../../../../platform/webWorker/browser/webWorkerService.js";
+import { IWorkspaceContextService, WorkbenchState } from "../../../../platform/workspace/common/workspace.js";
+import { IBrowserWorkbenchEnvironmentService } from "../../environment/browser/environmentService.js";
+import { IDefaultLogLevelsService } from "../../log/common/defaultLogLevels.js";
+import {
+  ExtensionHostExitCode,
+  IExtensionHostInitData,
+  MessageType,
+  UIKind,
+  createMessageOfType,
+  isMessageOfType,
+} from "../common/extensionHostProtocol.js";
+import { LocalWebWorkerRunningLocation } from "../common/extensionRunningLocation.js";
+import { ExtensionHostExtensions, ExtensionHostStartup, IExtensionHost } from "../common/extensions.js";
 
 export interface IWebWorkerExtensionHostInitData {
 	readonly extensions: ExtensionHostExtensions;
@@ -49,7 +56,9 @@ export class WebWorkerExtensionHost extends Disposable implements IExtensionHost
 	public readonly remoteAuthority = null;
 	public extensions: ExtensionHostExtensions | null = null;
 
-	private readonly _onDidExit = this._register(new Emitter<[number, string | null]>());
+	private readonly _onDidExit = this._register(
+    new Emitter<[number, string | null]>(),
+  );
 	public readonly onExit: Event<[number, string | null]> = this._onDidExit.event;
 
 	private _isTerminating: boolean;
@@ -79,13 +88,16 @@ export class WebWorkerExtensionHost extends Disposable implements IExtensionHost
 		this._isTerminating = false;
 		this._protocolPromise = null;
 		this._protocol = null;
-		this._extensionHostLogsLocation = joinPath(this._environmentService.extHostLogsPath, 'webWorker');
+		this._extensionHostLogsLocation = joinPath(
+      this._environmentService.extHostLogsPath,
+      "webWorker",
+    );
 	}
 
 	private async _getWebWorkerExtensionHostIframeSrc(): Promise<string> {
 		const suffixSearchParams = new URLSearchParams();
 		if (this._environmentService.debugExtensionHost && this._environmentService.debugRenderer) {
-			suffixSearchParams.set('debugged', '1');
+			suffixSearchParams.set("debugged", "1");
 		}
 		COI.addSearchParam(suffixSearchParams, true, true);
 
@@ -98,33 +110,46 @@ export class WebWorkerExtensionHost extends Disposable implements IExtensionHost
 			const quality = this._productService.quality;
 			if (webEndpointUrlTemplate && commit && quality) {
 				// Try to keep the web worker extension host iframe origin stable by storing it in workspace storage
-				const key = 'webWorkerExtensionHostIframeStableOriginUUID';
-				let stableOriginUUID = this._storageService.get(key, StorageScope.WORKSPACE);
-				if (typeof stableOriginUUID === 'undefined') {
+				const key = "webWorkerExtensionHostIframeStableOriginUUID";
+				let stableOriginUUID = this._storageService.get(
+          key,
+          StorageScope.WORKSPACE,
+        );
+				if (typeof stableOriginUUID === "undefined") {
 					stableOriginUUID = generateUuid();
-					this._storageService.store(key, stableOriginUUID, StorageScope.WORKSPACE, StorageTarget.MACHINE);
+					this._storageService.store(
+            key,
+            stableOriginUUID,
+            StorageScope.WORKSPACE,
+            StorageTarget.MACHINE,
+          );
 				}
-				const hash = await parentOriginHash(mainWindow.origin, stableOriginUUID);
+				const hash = await parentOriginHash(
+          mainWindow.origin,
+          stableOriginUUID,
+        );
 				const baseUrl = (
 					webEndpointUrlTemplate
-						.replace('{{uuid}}', `v--${hash}`) // using `v--` as a marker to require `parentOrigin`/`salt` verification
-						.replace('{{commit}}', commit)
-						.replace('{{quality}}', quality)
+						.replace("{{uuid}}", `v--${hash}`) // using `v--` as a marker to require `parentOrigin`/`salt` verification
+						.replace("{{commit}}", commit)
+						.replace("{{quality}}", quality)
 				);
 
 				const res = new URL(`${baseUrl}/out/${iframeModulePath}${suffix}`);
-				res.searchParams.set('parentOrigin', mainWindow.origin);
-				res.searchParams.set('salt', stableOriginUUID);
+				res.searchParams.set("parentOrigin", mainWindow.origin);
+				res.searchParams.set("salt", stableOriginUUID);
 				return res.toString();
 			}
 
-			console.warn(`The web worker extension host is started in a same-origin iframe!`);
+			console.warn(
+        `The web worker extension host is started in a same-origin iframe!`,
+      );
 		}
 
 		const relativeExtensionHostIframeSrc = this._webWorkerService.getWorkerUrl(new WebWorkerDescriptor({
 			esmModuleLocation: FileAccess.asBrowserUri(iframeModulePath),
 			esmModuleLocationBundler: new URL(`../worker/webWorkerExtensionHostIframe.html`, import.meta.url),
-			label: 'webWorkerExtensionHostIframe'
+			label: "webWorkerExtensionHostIframe",
 		}));
 
 		return `${relativeExtensionHostIframeSrc}${suffix}`;
@@ -142,15 +167,21 @@ export class WebWorkerExtensionHost extends Disposable implements IExtensionHost
 		const webWorkerExtensionHostIframeSrc = await this._getWebWorkerExtensionHostIframeSrc();
 		const emitter = this._register(new Emitter<VSBuffer>());
 
-		const iframe = document.createElement('iframe');
-		iframe.setAttribute('class', 'web-worker-ext-host-iframe');
-		iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin');
-		iframe.setAttribute('allow', 'usb; serial; hid; cross-origin-isolated; local-network-access;');
-		iframe.setAttribute('aria-hidden', 'true');
-		iframe.style.display = 'none';
+		const iframe = document.createElement("iframe");
+		iframe.setAttribute("class", "web-worker-ext-host-iframe");
+		iframe.setAttribute("sandbox", "allow-scripts allow-same-origin");
+		iframe.setAttribute(
+      "allow",
+      "usb; serial; hid; cross-origin-isolated; local-network-access;",
+    );
+		iframe.setAttribute("aria-hidden", "true");
+		iframe.style.display = "none";
 
 		const vscodeWebWorkerExtHostId = generateUuid();
-		iframe.setAttribute('src', `${webWorkerExtensionHostIframeSrc}&vscodeWebWorkerExtHostId=${vscodeWebWorkerExtHostId}`);
+		iframe.setAttribute(
+      "src",
+      `${webWorkerExtensionHostIframeSrc}&vscodeWebWorkerExtHostId=${vscodeWebWorkerExtHostId}`,
+    );
 
 		const barrier = new Barrier();
 		let port!: MessagePort;
@@ -163,7 +194,10 @@ export class WebWorkerExtensionHost extends Disposable implements IExtensionHost
 			barrierHasError = true;
 			onUnexpectedError(barrierError);
 			clearTimeout(startTimeout);
-			this._onDidExit.fire([ExtensionHostExitCode.UnexpectedError, barrierError.message]);
+			this._onDidExit.fire([
+        ExtensionHostExitCode.UnexpectedError,
+        barrierError.message,
+      ]);
 			barrier.open();
 		};
 
@@ -173,11 +207,16 @@ export class WebWorkerExtensionHost extends Disposable implements IExtensionHost
 			barrier.open();
 		};
 
-		startTimeout = setTimeout(() => {
-			console.warn(`The Web Worker Extension Host did not start in 60s, that might be a problem.`);
-		}, 60000);
+		startTimeout = setTimeout(
+      () => {
+        console.warn(
+          `The Web Worker Extension Host did not start in 60s, that might be a problem.`,
+        );
+      },
+      60000,
+    );
 
-		this._register(dom.addDisposableListener(mainWindow, 'message', (event) => {
+		this._register(dom.addDisposableListener(mainWindow, "message", (event) => {
 			if (event.source !== iframe.contentWindow) {
 				return;
 			}
@@ -192,7 +231,7 @@ export class WebWorkerExtensionHost extends Disposable implements IExtensionHost
 				err.stack = stack;
 				return rejectBarrier(ExtensionHostExitCode.UnexpectedError, err);
 			}
-			if (event.data.type === 'vscode.bootstrap.nls') {
+			if (event.data.type === "vscode.bootstrap.nls") {
 				iframe.contentWindow!.postMessage({
 					type: event.data.type,
 					data: {
@@ -200,16 +239,16 @@ export class WebWorkerExtensionHost extends Disposable implements IExtensionHost
 						fileRoot: globalThis._VSCODE_FILE_ROOT,
 						nls: {
 							messages: getNLSMessages(),
-							language: getNLSLanguage()
-						}
-					}
-				}, '*');
+							language: getNLSLanguage(),
+						},
+					},
+				}, "*");
 				return;
 			}
 			const { data } = event.data;
 			if (barrier.isOpen() || !(data instanceof MessagePort)) {
-				console.warn('UNEXPECTED message', event);
-				const err = new Error('UNEXPECTED message');
+				console.warn("UNEXPECTED message", event);
+				const err = new Error("UNEXPECTED message");
 				return rejectBarrier(ExtensionHostExitCode.UnexpectedError, err);
 			}
 			resolveBarrier(data);
@@ -228,13 +267,17 @@ export class WebWorkerExtensionHost extends Disposable implements IExtensionHost
 
 		// Send over message ports for extension API
 		const messagePorts = this._environmentService.options?.messagePorts ?? new Map();
-		iframe.contentWindow!.postMessage({ type: 'vscode.init', data: messagePorts }, '*', [...messagePorts.values()]);
+		iframe.contentWindow!.postMessage(
+      { type: "vscode.init", data: messagePorts },
+      "*",
+      [...messagePorts.values()],
+    );
 
 		port.onmessage = (event) => {
 			const { data } = event;
 			if (!(data instanceof ArrayBuffer)) {
-				console.warn('UNKNOWN data received', data);
-				this._onDidExit.fire([77, 'UNKNOWN data received']);
+				console.warn("UNKNOWN data received", data);
+				this._onDidExit.fire([77, "UNKNOWN data received"]);
 				return;
 			}
 			emitter.fire(VSBuffer.wrap(new Uint8Array(data, 0, data.byteLength)));
@@ -245,7 +288,7 @@ export class WebWorkerExtensionHost extends Disposable implements IExtensionHost
 			send: vsbuf => {
 				const data = vsbuf.buffer.buffer.slice(vsbuf.buffer.byteOffset, vsbuf.buffer.byteOffset + vsbuf.buffer.byteLength);
 				port.postMessage(data, [data]);
-			}
+			},
 		};
 
 		return this._performHandshake(protocol);
@@ -257,15 +300,27 @@ export class WebWorkerExtensionHost extends Disposable implements IExtensionHost
 		// (2) ==> send: init data
 		// (3) <== wait for: Initialized
 
-		await Event.toPromise(Event.filter(protocol.onMessage, msg => isMessageOfType(msg, MessageType.Ready)));
+		await Event.toPromise(
+      Event.filter(
+        protocol.onMessage,
+        msg => isMessageOfType(msg, MessageType.Ready),
+      ),
+    );
 		if (this._isTerminating) {
 			throw canceled();
 		}
-		protocol.send(VSBuffer.fromString(JSON.stringify(await this._createExtHostInitData())));
+		protocol.send(
+      VSBuffer.fromString(JSON.stringify(await this._createExtHostInitData())),
+    );
 		if (this._isTerminating) {
 			throw canceled();
 		}
-		await Event.toPromise(Event.filter(protocol.onMessage, msg => isMessageOfType(msg, MessageType.Initialized)));
+		await Event.toPromise(
+      Event.filter(
+        protocol.onMessage,
+        msg => isMessageOfType(msg, MessageType.Initialized),
+      ),
+    );
 		if (this._isTerminating) {
 			throw canceled();
 		}
@@ -298,7 +353,12 @@ export class WebWorkerExtensionHost extends Disposable implements IExtensionHost
 		let nlsUrlWithDetails: URI | undefined = undefined;
 		// Only use the nlsBaseUrl if we are using a language other than the default, English.
 		if (nlsBaseUrl && this._productService.commit && !platform.Language.isDefaultVariant()) {
-			nlsUrlWithDetails = URI.joinPath(URI.parse(nlsBaseUrl), this._productService.commit, this._productService.version, platform.Language.value());
+			nlsUrlWithDetails = URI.joinPath(
+        URI.parse(nlsBaseUrl),
+        this._productService.commit,
+        this._productService.version,
+        platform.Language.value(),
+      );
 		}
 		return {
 			commit: this._productService.commit,
@@ -309,7 +369,7 @@ export class WebWorkerExtensionHost extends Disposable implements IExtensionHost
 			environment: {
 				isExtensionDevelopmentDebug: this._environmentService.debugRenderer,
 				appName: this._productService.nameLong,
-				appHost: this._productService.embedderIdentifier ?? (platform.isWeb ? 'web' : 'desktop'),
+				appHost: this._productService.embedderIdentifier ?? (platform.isWeb ? "web" : "desktop"),
 				appUriScheme: this._productService.urlProtocol,
 				appLanguage: platform.language,
 				isExtensionTelemetryLoggingOnly: isLoggingOnly(this._productService, this._environmentService),
@@ -319,17 +379,17 @@ export class WebWorkerExtensionHost extends Disposable implements IExtensionHost
 				globalStorageHome: this._userDataProfilesService.defaultProfile.globalStorageHome,
 				workspaceStorageHome: this._environmentService.workspaceStorageHome,
 				extensionLogLevel: this._defaultLogLevelsService.defaultLogLevels.extensions,
-				isSessionsWindow: this._environmentService.isSessionsWindow
+				isSessionsWindow: this._environmentService.isSessionsWindow,
 			},
 			workspace: this._contextService.getWorkbenchState() === WorkbenchState.EMPTY ? undefined : {
 				configuration: workspace.configuration || undefined,
 				id: workspace.id,
 				name: this._labelService.getWorkspaceLabel(workspace),
-				transient: workspace.transient
+				transient: workspace.transient,
 			},
 			consoleForward: {
 				includeStack: false,
-				logNative: this._environmentService.debugRenderer
+				logNative: this._environmentService.debugRenderer,
 			},
 			extensions: this.extensions.toSnapshot(),
 			nlsBaseUrl: nlsUrlWithDetails,
@@ -339,7 +399,7 @@ export class WebWorkerExtensionHost extends Disposable implements IExtensionHost
 				sqmId: this._telemetryService.sqmId,
 				devDeviceId: this._telemetryService.devDeviceId ?? this._telemetryService.machineId,
 				firstSessionDate: this._telemetryService.firstSessionDate,
-				msftInternal: this._telemetryService.msftInternal
+				msftInternal: this._telemetryService.msftInternal,
 			},
 			remoteExtensionTips: this._productService.remoteExtensionTips,
 			virtualWorkspaceExtensionTips: this._productService.virtualWorkspaceExtensionTips,
@@ -350,15 +410,15 @@ export class WebWorkerExtensionHost extends Disposable implements IExtensionHost
 			remote: {
 				authority: this._environmentService.remoteAuthority,
 				connectionData: null,
-				isRemote: false
+				isRemote: false,
 			},
-			uiKind: platform.isWeb ? UIKind.Web : UIKind.Desktop
+			uiKind: platform.isWeb ? UIKind.Web : UIKind.Desktop,
 		};
 	}
 }
 
 const extensionHostWorkerMainDescriptor = new WebWorkerDescriptor({
-	label: 'extensionHostWorkerMain',
-	esmModuleLocation: () => FileAccess.asBrowserUri('vs/workbench/api/worker/extensionHostWorkerMain.js'),
-	esmModuleLocationBundler: () => new URL('../../../api/worker/extensionHostWorkerMain.ts?esm', import.meta.url),
+  label: "extensionHostWorkerMain",
+  esmModuleLocation: () => FileAccess.asBrowserUri("vs/workbench/api/worker/extensionHostWorkerMain.js"),
+  esmModuleLocationBundler: () => new URL("../../../api/worker/extensionHostWorkerMain.ts?esm", import.meta.url),
 });

@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationTokenSource } from '../../../common/cancellation.js';
-import { drainMicrotasksEmbedding } from './embedding.js';
-import { pushGlobalTimeApi } from './globalTimeApi.js';
-import { realTimeApi } from './timeApi.js';
-import { untilToken, VirtualTimeProcessor } from './processor.js';
-import { createRecordingRealTimeApi, RecordedTimerEvent } from './recordingTimeApi.js';
-import { VirtualClock } from './virtualClock.js';
-import { createVirtualTimeApi } from './virtualTimeApi.js';
+import { CancellationTokenSource } from "../../../common/cancellation.js";
+import { drainMicrotasksEmbedding } from "./embedding.js";
+import { pushGlobalTimeApi } from "./globalTimeApi.js";
+import { realTimeApi } from "./timeApi.js";
+import { untilToken, VirtualTimeProcessor } from "./processor.js";
+import { createRecordingRealTimeApi, RecordedTimerEvent } from "./recordingTimeApi.js";
+import { VirtualClock } from "./virtualClock.js";
+import { createVirtualTimeApi } from "./virtualTimeApi.js";
 
 export interface RunWithFakedTimersOptions {
 	readonly startTime?: number;
@@ -64,11 +64,11 @@ export async function runWithFakedTimers<T>(
 	const restoreGlobals = pushGlobalTimeApi(virtualApi);
 
 	const processor = new VirtualTimeProcessor(
-		clock,
-		drainMicrotasksEmbedding(realTimeApi),
-		realTimeApi,
-		{ defaultMaxEvents: options.maxTaskCount ?? 100 },
-	);
+    clock,
+    drainMicrotasksEmbedding(realTimeApi),
+    realTimeApi,
+    { defaultMaxEvents: options.maxTaskCount ?? 100 },
+  );
 
 	const cts = new CancellationTokenSource();
 	const runPromise = processor.run({ until: untilToken(cts.token) });

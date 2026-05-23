@@ -2,31 +2,85 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { Event } from '../../../../../base/common/event.js';
-import { DisposableMap, DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { autorun, constObservable, derived, IObservable, observableFromEvent } from '../../../../../base/common/observable.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { localize } from '../../../../../nls.js';
-import { IContextKey, RawContextKey } from '../../../../../platform/contextkey/common/contextkey.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IWorkbenchContribution } from '../../../../common/contributions.js';
-import { EditorResourceAccessor, SideBySideEditor } from '../../../../common/editor.js';
-import { IEditorGroup, IEditorGroupsService } from '../../../../services/editor/common/editorGroupsService.js';
-import { IInlineChatSessionService } from '../../../inlineChat/browser/inlineChatSessionService.js';
-import { IChatEditingService, IChatEditingSession, IModifiedFileEntry, ModifiedFileEntryState } from '../../common/editing/chatEditingService.js';
-import { IChatService } from '../../common/chatService/chatService.js';
+import { Event } from "../../../../../base/common/event.js";
+import { DisposableMap, DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { autorun, constObservable, derived, IObservable, observableFromEvent } from "../../../../../base/common/observable.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { localize } from "../../../../../nls.js";
+import { IContextKey, RawContextKey } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IWorkbenchContribution } from "../../../../common/contributions.js";
+import { EditorResourceAccessor, SideBySideEditor } from "../../../../common/editor.js";
+import { IEditorGroup, IEditorGroupsService } from "../../../../services/editor/common/editorGroupsService.js";
+import { IInlineChatSessionService } from "../../../inlineChat/browser/inlineChatSessionService.js";
+import {
+  IChatEditingService,
+  IChatEditingSession,
+  IModifiedFileEntry,
+  ModifiedFileEntryState,
+} from "../../common/editing/chatEditingService.js";
+import { IChatService } from "../../common/chatService/chatService.js";
 
-export const ctxIsGlobalEditingSession = new RawContextKey<boolean>('chatEdits.isGlobalEditingSession', undefined, localize('chat.ctxEditSessionIsGlobal', "The current editor is part of the global edit session"));
-export const ctxHasEditorModification = new RawContextKey<boolean>('chatEdits.hasEditorModifications', undefined, localize('chat.hasEditorModifications', "The current editor contains chat modifications"));
-export const ctxIsCurrentlyBeingModified = new RawContextKey<boolean>('chatEdits.isCurrentlyBeingModified', undefined, localize('chat.isCurrentlyBeingModified', "The current editor is currently being modified"));
-export const ctxReviewModeEnabled = new RawContextKey<boolean>('chatEdits.isReviewModeEnabled', true, localize('chat.ctxReviewModeEnabled', "Review mode for chat changes is enabled"));
-export const ctxHasRequestInProgress = new RawContextKey<boolean>('chatEdits.isRequestInProgress', false, localize('chat.ctxHasRequestInProgress', "The current editor shows a file from an edit session which is still in progress"));
-export const ctxRequestCount = new RawContextKey<number>('chatEdits.requestCount', 0, localize('chatEdits.requestCount', "The number of turns the editing session in this editor has"));
-export const ctxCursorInChangeRange = new RawContextKey<boolean>('chatEdits.cursorInChangeRange', false, localize('chat.ctxCursorInChangeRange', "The cursor is inside a change range made by chat editing."));
+export const ctxIsGlobalEditingSession = new RawContextKey<boolean>(
+  "chatEdits.isGlobalEditingSession",
+  undefined,
+  localize(
+    "chat.ctxEditSessionIsGlobal",
+    "The current editor is part of the global edit session",
+  ),
+);
+export const ctxHasEditorModification = new RawContextKey<boolean>(
+  "chatEdits.hasEditorModifications",
+  undefined,
+  localize(
+    "chat.hasEditorModifications",
+    "The current editor contains chat modifications",
+  ),
+);
+export const ctxIsCurrentlyBeingModified = new RawContextKey<boolean>(
+  "chatEdits.isCurrentlyBeingModified",
+  undefined,
+  localize(
+    "chat.isCurrentlyBeingModified",
+    "The current editor is currently being modified",
+  ),
+);
+export const ctxReviewModeEnabled = new RawContextKey<boolean>(
+  "chatEdits.isReviewModeEnabled",
+  true,
+  localize(
+    "chat.ctxReviewModeEnabled",
+    "Review mode for chat changes is enabled",
+  ),
+);
+export const ctxHasRequestInProgress = new RawContextKey<boolean>(
+  "chatEdits.isRequestInProgress",
+  false,
+  localize(
+    "chat.ctxHasRequestInProgress",
+    "The current editor shows a file from an edit session which is still in progress",
+  ),
+);
+export const ctxRequestCount = new RawContextKey<number>(
+  "chatEdits.requestCount",
+  0,
+  localize(
+    "chatEdits.requestCount",
+    "The number of turns the editing session in this editor has",
+  ),
+);
+export const ctxCursorInChangeRange = new RawContextKey<boolean>(
+  "chatEdits.cursorInChangeRange",
+  false,
+  localize(
+    "chat.ctxCursorInChangeRange",
+    "The cursor is inside a change range made by chat editing.",
+  ),
+);
 
 export class ChatEditingEditorContextKeys implements IWorkbenchContribution {
 
-	static readonly ID = 'chat.edits.editorContextKeys';
+	static readonly ID = "chat.edits.editorContextKeys";
 
 	private readonly _store = new DisposableStore();
 
@@ -38,9 +92,13 @@ export class ChatEditingEditorContextKeys implements IWorkbenchContribution {
 		const editorGroupCtx = this._store.add(new DisposableMap<IEditorGroup>());
 
 		const editorGroups = observableFromEvent(
-			this,
-			Event.any(editorGroupsService.onDidAddGroup, editorGroupsService.onDidRemoveGroup),
-			() => editorGroupsService.groups);
+      this,
+      Event.any(
+        editorGroupsService.onDidAddGroup,
+        editorGroupsService.onDidRemoveGroup,
+      ),
+      () => editorGroupsService.groups,
+    );
 
 
 		this._store.add(autorun(r => {
@@ -87,14 +145,30 @@ class ContextKeyGroup {
 		@IChatEditingService chatEditingService: IChatEditingService,
 		@IChatService chatService: IChatService,
 	) {
-		this._ctxIsGlobalEditingSession = ctxIsGlobalEditingSession.bindTo(group.scopedContextKeyService);
-		this._ctxHasEditorModification = ctxHasEditorModification.bindTo(group.scopedContextKeyService);
-		this._ctxIsCurrentlyBeingModified = ctxIsCurrentlyBeingModified.bindTo(group.scopedContextKeyService);
-		this._ctxHasRequestInProgress = ctxHasRequestInProgress.bindTo(group.scopedContextKeyService);
-		this._ctxReviewModeEnabled = ctxReviewModeEnabled.bindTo(group.scopedContextKeyService);
-		this._ctxRequestCount = ctxRequestCount.bindTo(group.scopedContextKeyService);
+		this._ctxIsGlobalEditingSession = ctxIsGlobalEditingSession.bindTo(
+      group.scopedContextKeyService,
+    );
+		this._ctxHasEditorModification = ctxHasEditorModification.bindTo(
+      group.scopedContextKeyService,
+    );
+		this._ctxIsCurrentlyBeingModified = ctxIsCurrentlyBeingModified.bindTo(
+      group.scopedContextKeyService,
+    );
+		this._ctxHasRequestInProgress = ctxHasRequestInProgress.bindTo(
+      group.scopedContextKeyService,
+    );
+		this._ctxReviewModeEnabled = ctxReviewModeEnabled.bindTo(
+      group.scopedContextKeyService,
+    );
+		this._ctxRequestCount = ctxRequestCount.bindTo(
+      group.scopedContextKeyService,
+    );
 
-		const editorObs = observableFromEvent(this, group.onDidModelChange, () => group.activeEditor);
+		const editorObs = observableFromEvent(
+      this,
+      group.onDidModelChange,
+      () => group.activeEditor,
+    );
 		const tupleObs = derived(r => {
 			const editor = editorObs.read(r);
 			const uri = EditorResourceAccessor.getOriginalUri(editor, { supportSideBySide: SideBySideEditor.PRIMARY });
@@ -154,10 +228,14 @@ export class ObservableEditorSession {
 	constructor(
 		uri: URI,
 		@IChatEditingService chatEditingService: IChatEditingService,
-		@IInlineChatSessionService inlineChatService: IInlineChatSessionService
+		@IInlineChatSessionService inlineChatService: IInlineChatSessionService,
 	) {
 
-		const inlineSessionObs = observableFromEvent(this, inlineChatService.onDidChangeSessions, () => inlineChatService.getSessionByTextModel(uri));
+		const inlineSessionObs = observableFromEvent(
+      this,
+      inlineChatService.onDidChangeSessions,
+      () => inlineChatService.getSessionByTextModel(uri),
+    );
 
 		const sessionObs = chatEditingService.editingSessionsObs.map((value, r) => {
 			for (const session of value) {

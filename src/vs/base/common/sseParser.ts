@@ -49,8 +49,8 @@ const enum Chr {
  * Parser for Server-Sent Events (SSE) streams.
  */
 export class SSEParser {
-	private dataBuffer = '';
-	private eventTypeBuffer = '';
+	private dataBuffer = "";
+	private eventTypeBuffer = "";
 	private currentEventId?: string;
 	private lastEventIdBuffer?: string;
 	private reconnectionTime?: number;
@@ -64,7 +64,7 @@ export class SSEParser {
 	 */
 	constructor(onEvent: SSEEventHandler) {
 		this.onEventHandler = onEvent;
-		this.decoder = new TextDecoder('utf-8');
+		this.decoder = new TextDecoder("utf-8");
 	}
 
 	/**
@@ -101,12 +101,15 @@ export class SSEParser {
 		while (offset < chunk.length) {
 			const indexCR = chunk.indexOf(Chr.CR, offset);
 			const indexLF = chunk.indexOf(Chr.LF, offset);
-			const index = indexCR === -1 ? indexLF : (indexLF === -1 ? indexCR : Math.min(indexCR, indexLF));
+			const index = indexCR === -1 ? indexLF : (indexLF === -1 ? indexCR : Math.min(
+        indexCR,
+        indexLF,
+      ));
 			if (index === -1) {
 				break;
 			}
 
-			let str = '';
+			let str = "";
 			for (const buf of this.buffer) {
 				str += this.decoder.decode(buf, { stream: true });
 			}
@@ -133,7 +136,7 @@ export class SSEParser {
 			return;
 		}
 
-		if (line.startsWith(':')) {
+		if (line.startsWith(":")) {
 			return;
 		}
 
@@ -141,18 +144,18 @@ export class SSEParser {
 		let field: string;
 		let value: string;
 
-		const colonIndex = line.indexOf(':');
+		const colonIndex = line.indexOf(":");
 		if (colonIndex === -1) {
 			// Line with no colon - the entire line is the field name, value is empty
 			field = line;
-			value = '';
+			value = "";
 		} else {
 			// Line with a colon - split into field name and value
 			field = line.substring(0, colonIndex);
 			value = line.substring(colonIndex + 1);
 
 			// If value starts with a space, remove it
-			if (value.startsWith(' ')) {
+			if (value.startsWith(" ")) {
 				value = value.substring(1);
 			}
 		}
@@ -164,26 +167,26 @@ export class SSEParser {
 	 */
 	private processField(field: string, value: string): void {
 		switch (field) {
-			case 'event':
+			case "event":
 				this.eventTypeBuffer = value;
 				break;
 
-			case 'data':
+			case "data":
 				// Append the value to the data buffer, followed by a newline
 				this.dataBuffer += value;
-				this.dataBuffer += '\n';
+				this.dataBuffer += "\n";
 				break;
 
-			case 'id':
+			case "id":
 				// If the field value doesn't contain NULL, set the last event ID buffer
-				if (!value.includes('\0')) {
+				if (!value.includes("\0")) {
 					this.currentEventId = this.lastEventIdBuffer = value;
 				} else {
 					this.currentEventId = undefined;
 				}
 				break;
 
-			case 'retry':
+			case "retry":
 				// If the field value consists only of ASCII digits, set the reconnection time
 				if (/^\d+$/.test(value)) {
 					this.reconnectionTime = parseInt(value, 10);
@@ -198,22 +201,25 @@ export class SSEParser {
 	 */
 	private dispatchEvent(): void {
 		// If the data buffer is empty, reset the buffers and return
-		if (this.dataBuffer === '') {
-			this.dataBuffer = '';
-			this.eventTypeBuffer = '';
+		if (this.dataBuffer === "") {
+			this.dataBuffer = "";
+			this.eventTypeBuffer = "";
 			return;
 		}
 
 		// If the data buffer's last character is a newline, remove it
-		if (this.dataBuffer.endsWith('\n')) {
-			this.dataBuffer = this.dataBuffer.substring(0, this.dataBuffer.length - 1);
+		if (this.dataBuffer.endsWith("\n")) {
+			this.dataBuffer = this.dataBuffer.substring(
+        0,
+        this.dataBuffer.length - 1,
+      );
 		}
 
 		// Create and dispatch the event
 		const event: ISSEEvent = {
-			type: this.eventTypeBuffer || 'message',
-			data: this.dataBuffer,
-		};
+      type: this.eventTypeBuffer || "message",
+      data: this.dataBuffer,
+    };
 
 		// Add optional fields if they exist
 		if (this.currentEventId !== undefined) {
@@ -235,8 +241,8 @@ export class SSEParser {
 	 * Resets the parser state.
 	 */
 	public reset(): void {
-		this.dataBuffer = '';
-		this.eventTypeBuffer = '';
+		this.dataBuffer = "";
+		this.eventTypeBuffer = "";
 		this.currentEventId = undefined;
 		// Note: lastEventIdBuffer is not reset as it's used for reconnection
 	}

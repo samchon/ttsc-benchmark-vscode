@@ -3,12 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as glob from '../../../../base/common/glob.js';
-import { Iterable } from '../../../../base/common/iterator.js';
-import { joinPath } from '../../../../base/common/resources.js';
-import { URI } from '../../../../base/common/uri.js';
-import { ExtensionIdentifier, IExtensionDescription } from '../../../../platform/extensions/common/extensions.js';
-import { INotebookRendererInfo, ContributedNotebookRendererEntrypoint, NotebookRendererMatch, RendererMessagingSpec, NotebookRendererEntrypoint, INotebookStaticPreloadInfo } from './notebookCommon.js';
+import * as glob from "../../../../base/common/glob.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { joinPath } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ExtensionIdentifier, IExtensionDescription } from "../../../../platform/extensions/common/extensions.js";
+import {
+  INotebookRendererInfo,
+  ContributedNotebookRendererEntrypoint,
+  NotebookRendererMatch,
+  RendererMessagingSpec,
+  NotebookRendererEntrypoint,
+  INotebookStaticPreloadInfo,
+} from "./notebookCommon.js";
 
 class DependencyList {
 	private readonly value: ReadonlySet<string>;
@@ -58,23 +65,29 @@ export class NotebookOutputRendererInfo implements INotebookRendererInfo {
 		this.extensionLocation = descriptor.extension.extensionLocation;
 		this.isBuiltin = descriptor.extension.isBuiltin;
 
-		if (typeof descriptor.entrypoint === 'string') {
+		if (typeof descriptor.entrypoint === "string") {
 			this.entrypoint = {
-				extends: undefined,
-				path: joinPath(this.extensionLocation, descriptor.entrypoint)
-			};
+        extends: undefined,
+        path: joinPath(this.extensionLocation, descriptor.entrypoint),
+      };
 		} else {
 			this.entrypoint = {
-				extends: descriptor.entrypoint.extends,
-				path: joinPath(this.extensionLocation, descriptor.entrypoint.path)
-			};
+        extends: descriptor.entrypoint.extends,
+        path: joinPath(this.extensionLocation, descriptor.entrypoint.path),
+      };
 		}
 
 		this.displayName = descriptor.displayName;
 		this.mimeTypes = descriptor.mimeTypes;
-		this.mimeTypeGlobs = this.mimeTypes.map(pattern => glob.parse(pattern, { ignoreCase: true }));
-		this.hardDependencies = new DependencyList(descriptor.dependencies ?? Iterable.empty());
-		this.optionalDependencies = new DependencyList(descriptor.optionalDependencies ?? Iterable.empty());
+		this.mimeTypeGlobs = this.mimeTypes.map(
+      pattern => glob.parse(pattern, { ignoreCase: true }),
+    );
+		this.hardDependencies = new DependencyList(
+      descriptor.dependencies ?? Iterable.empty(),
+    );
+		this.optionalDependencies = new DependencyList(
+      descriptor.optionalDependencies ?? Iterable.empty(),
+    );
 		this.messaging = descriptor.requiresMessaging ?? RendererMessagingSpec.Never;
 	}
 
@@ -115,7 +128,11 @@ export class NotebookOutputRendererInfo implements INotebookRendererInfo {
 			return false;
 		}
 
-		return this.mimeTypeGlobs.some(pattern => pattern(mimeType)) || this.mimeTypes.some(pattern => pattern === mimeType);
+		return this.mimeTypeGlobs.some(
+      pattern => pattern(
+        mimeType,
+      ),
+    ) || this.mimeTypes.some(pattern => pattern === mimeType);
 	}
 }
 
@@ -134,8 +151,13 @@ export class NotebookStaticPreloadInfo implements INotebookStaticPreloadInfo {
 	}) {
 		this.type = descriptor.type;
 
-		this.entrypoint = joinPath(descriptor.extension.extensionLocation, descriptor.entrypoint);
+		this.entrypoint = joinPath(
+      descriptor.extension.extensionLocation,
+      descriptor.entrypoint,
+    );
 		this.extensionLocation = descriptor.extension.extensionLocation;
-		this.localResourceRoots = descriptor.localResourceRoots.map(root => joinPath(descriptor.extension.extensionLocation, root));
+		this.localResourceRoots = descriptor.localResourceRoots.map(
+      root => joinPath(descriptor.extension.extensionLocation, root),
+    );
 	}
 }

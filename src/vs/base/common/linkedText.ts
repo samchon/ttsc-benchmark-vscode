@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { memoize } from './decorators.js';
+import { memoize } from "./decorators.js";
 
 export interface ILink {
 	readonly label: string;
@@ -19,7 +19,9 @@ export class LinkedText {
 
 	@memoize
 	toString(): string {
-		return this.nodes.map(node => typeof node === 'string' ? node : node.label).join('');
+		return this.nodes.map(node => typeof node === "string" ? node : node.label).join(
+      "",
+    );
 	}
 }
 

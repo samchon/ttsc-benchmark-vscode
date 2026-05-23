@@ -3,43 +3,48 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IStringDictionary } from '../../../../base/common/collections.js';
-import { Event } from '../../../../base/common/event.js';
-import { IMatch } from '../../../../base/common/filters.js';
-import { IJSONSchema, IJSONSchemaMap } from '../../../../base/common/jsonSchema.js';
-import { ResolvedKeybinding } from '../../../../base/common/keybindings.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IRange } from '../../../../editor/common/core/range.js';
-import { IEditorContribution } from '../../../../editor/common/editorCommon.js';
-import { ConfigurationTarget } from '../../../../platform/configuration/common/configuration.js';
-import { ConfigurationDefaultValueSource, ConfigurationScope, EditPresentationTypes, IExtensionInfo } from '../../../../platform/configuration/common/configurationRegistry.js';
-import { IEditorOptions } from '../../../../platform/editor/common/editor.js';
-import { IExtensionDescription } from '../../../../platform/extensions/common/extensions.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { ResolvedKeybindingItem } from '../../../../platform/keybinding/common/resolvedKeybindingItem.js';
-import { DEFAULT_EDITOR_ASSOCIATION, IEditorPane } from '../../../common/editor.js';
-import { EditorInput } from '../../../common/editor/editorInput.js';
-import { Settings2EditorModel } from './preferencesModels.js';
+import { IStringDictionary } from "../../../../base/common/collections.js";
+import { Event } from "../../../../base/common/event.js";
+import { IMatch } from "../../../../base/common/filters.js";
+import { IJSONSchema, IJSONSchemaMap } from "../../../../base/common/jsonSchema.js";
+import { ResolvedKeybinding } from "../../../../base/common/keybindings.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IRange } from "../../../../editor/common/core/range.js";
+import { IEditorContribution } from "../../../../editor/common/editorCommon.js";
+import { ConfigurationTarget } from "../../../../platform/configuration/common/configuration.js";
+import {
+  ConfigurationDefaultValueSource,
+  ConfigurationScope,
+  EditPresentationTypes,
+  IExtensionInfo,
+} from "../../../../platform/configuration/common/configurationRegistry.js";
+import { IEditorOptions } from "../../../../platform/editor/common/editor.js";
+import { IExtensionDescription } from "../../../../platform/extensions/common/extensions.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { ResolvedKeybindingItem } from "../../../../platform/keybinding/common/resolvedKeybindingItem.js";
+import { DEFAULT_EDITOR_ASSOCIATION, IEditorPane } from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { Settings2EditorModel } from "./preferencesModels.js";
 
 export enum SettingValueType {
-	Null = 'null',
-	Enum = 'enum',
-	String = 'string',
-	MultilineString = 'multiline-string',
-	Integer = 'integer',
-	Number = 'number',
-	Boolean = 'boolean',
-	Array = 'array',
-	Exclude = 'exclude',
-	Include = 'include',
-	Complex = 'complex',
-	NullableInteger = 'nullable-integer',
-	NullableNumber = 'nullable-number',
-	Object = 'object',
-	BooleanObject = 'boolean-object',
-	LanguageTag = 'language-tag',
-	ExtensionToggle = 'extension-toggle',
-	ComplexObject = 'complex-object',
+	Null = "null",
+	Enum = "enum",
+	String = "string",
+	MultilineString = "multiline-string",
+	Integer = "integer",
+	Number = "number",
+	Boolean = "boolean",
+	Array = "array",
+	Exclude = "exclude",
+	Include = "include",
+	Complex = "complex",
+	NullableInteger = "nullable-integer",
+	NullableNumber = "nullable-number",
+	Object = "object",
+	BooleanObject = "boolean-object",
+	LanguageTag = "language-tag",
+	ExtensionToggle = "extension-toggle",
+	ComplexObject = "complex-object",
 }
 
 export interface ISettingsGroup {
@@ -233,7 +238,7 @@ export function validateSettingsEditorOptions(options: ISettingsEditorOptions): 
 
 		// Enforce some options for settings specifically
 		override: DEFAULT_EDITOR_ASSOCIATION.id,
-		pinned: true
+		pinned: true,
 	};
 }
 
@@ -248,7 +253,9 @@ export interface IOpenKeybindingsEditorOptions extends IKeybindingsEditorOptions
 	groupId?: number;
 }
 
-export const IPreferencesService = createDecorator<IPreferencesService>('preferencesService');
+export const IPreferencesService = createDecorator<IPreferencesService>(
+  "preferencesService",
+);
 
 export interface IPreferencesService {
 	readonly _serviceBrand: undefined;
@@ -272,7 +279,7 @@ export interface IPreferencesService {
 	openUserSettings(options?: IOpenSettingsOptions): Promise<IEditorPane | undefined>;
 	openRemoteSettings(options?: IOpenSettingsOptions): Promise<IEditorPane | undefined>;
 	openWorkspaceSettings(options?: IOpenSettingsOptions): Promise<IEditorPane | undefined>;
-	openFolderSettings(options: IOpenSettingsOptions & { folderUri: IOpenSettingsOptions['folderUri'] }): Promise<IEditorPane | undefined>;
+	openFolderSettings(options: IOpenSettingsOptions & { folderUri: IOpenSettingsOptions["folderUri"] }): Promise<IEditorPane | undefined>;
 	openGlobalKeybindingSettings(textual: boolean, options?: IOpenKeybindingsEditorOptions): Promise<void>;
 	openDefaultKeybindingsFile(): Promise<IEditorPane | undefined>;
 	openLanguageSpecificSettings(languageId: string, options?: IOpenSettingsOptions): Promise<IEditorPane | undefined>;
@@ -342,14 +349,14 @@ export interface IKeybindingsEditorPane extends IEditorPane {
 	showSimilarKeybindings(keybindingEntry: IKeybindingItemEntry): void;
 }
 
-export const DEFINE_KEYBINDING_EDITOR_CONTRIB_ID = 'editor.contrib.defineKeybinding';
+export const DEFINE_KEYBINDING_EDITOR_CONTRIB_ID = "editor.contrib.defineKeybinding";
 export interface IDefineKeybindingEditorContribution extends IEditorContribution {
 	showDefineKeybindingWidget(): void;
 }
 
-export const FOLDER_SETTINGS_PATH = '.vscode/settings.json';
-export const DEFAULT_SETTINGS_EDITOR_SETTING = 'workbench.settings.openDefaultSettings';
-export const USE_SPLIT_JSON_SETTING = 'workbench.settings.useSplitJSON';
-export const ALWAYS_SHOW_ADVANCED_SETTINGS_SETTING = 'workbench.settings.alwaysShowAdvancedSettings';
+export const FOLDER_SETTINGS_PATH = ".vscode/settings.json";
+export const DEFAULT_SETTINGS_EDITOR_SETTING = "workbench.settings.openDefaultSettings";
+export const USE_SPLIT_JSON_SETTING = "workbench.settings.useSplitJSON";
+export const ALWAYS_SHOW_ADVANCED_SETTINGS_SETTING = "workbench.settings.alwaysShowAdvancedSettings";
 
-export const SETTINGS_AUTHORITY = 'settings';
+export const SETTINGS_AUTHORITY = "settings";

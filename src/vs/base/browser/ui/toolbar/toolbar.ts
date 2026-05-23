@@ -3,30 +3,30 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IContextMenuProvider } from '../../contextmenu.js';
-import * as DOM from '../../dom.js';
-import { ActionBar, ActionsOrientation, IActionViewItemProvider } from '../actionbar/actionbar.js';
-import { AnchorAlignment } from '../contextview/contextview.js';
-import { DropdownMenuActionViewItem } from '../dropdown/dropdownActionViewItem.js';
-import { Action, IAction, IActionRunner, Separator, SubmenuAction } from '../../../common/actions.js';
-import { Codicon } from '../../../common/codicons.js';
-import { ThemeIcon } from '../../../common/themables.js';
-import { EventMultiplexer } from '../../../common/event.js';
-import { ResolvedKeybinding } from '../../../common/keybindings.js';
-import { Disposable, DisposableStore, toDisposable } from '../../../common/lifecycle.js';
-import './toolbar.css';
-import * as nls from '../../../../nls.js';
-import { IHoverDelegate } from '../hover/hoverDelegate.js';
-import { createInstantHoverDelegate } from '../hover/hoverDelegateFactory.js';
+import { IContextMenuProvider } from "../../contextmenu.js";
+import * as DOM from "../../dom.js";
+import { ActionBar, ActionsOrientation, IActionViewItemProvider } from "../actionbar/actionbar.js";
+import { AnchorAlignment } from "../contextview/contextview.js";
+import { DropdownMenuActionViewItem } from "../dropdown/dropdownActionViewItem.js";
+import { Action, IAction, IActionRunner, Separator, SubmenuAction } from "../../../common/actions.js";
+import { Codicon } from "../../../common/codicons.js";
+import { ThemeIcon } from "../../../common/themables.js";
+import { EventMultiplexer } from "../../../common/event.js";
+import { ResolvedKeybinding } from "../../../common/keybindings.js";
+import { Disposable, DisposableStore, toDisposable } from "../../../common/lifecycle.js";
+import "./toolbar.css";
+import * as nls from "../../../../nls.js";
+import { IHoverDelegate } from "../hover/hoverDelegate.js";
+import { createInstantHoverDelegate } from "../hover/hoverDelegateFactory.js";
 
 const ACTION_MIN_WIDTH = 20; /* 20px codicon */
 const ACTION_PADDING = 4; /* 4px padding */
 
-const ACTION_MIN_WIDTH_VAR = '--vscode-toolbar-action-min-width';
+const ACTION_MIN_WIDTH_VAR = "--vscode-toolbar-action-min-width";
 
 export interface IToolBarResponsiveBehaviorOptions {
 	readonly enabled: boolean;
-	readonly kind: 'last' | 'all';
+	readonly kind: "last" | "all";
 	readonly minItems?: number;
 	readonly actionMinWidth?: number;
 	readonly getActionMinWidth?: (action: IAction) => number | undefined;
@@ -85,23 +85,34 @@ export class ToolBar extends Disposable {
 	private hasSecondaryActions: boolean = false;
 	private readonly element: HTMLElement;
 
-	private _onDidChangeDropdownVisibility = this._register(new EventMultiplexer<boolean>());
+	private _onDidChangeDropdownVisibility = this._register(
+    new EventMultiplexer<boolean>(),
+  );
 	get onDidChangeDropdownVisibility() { return this._onDidChangeDropdownVisibility.event; }
 	private originalPrimaryActions: ReadonlyArray<IAction> = [];
 	private originalSecondaryActions: ReadonlyArray<IAction> = [];
 	private hiddenActions: { action: IAction; size: number }[] = [];
 	private readonly disposables = this._register(new DisposableStore());
 
-	constructor(private readonly container: HTMLElement, contextMenuProvider: IContextMenuProvider, options: IToolBarOptions = { orientation: ActionsOrientation.HORIZONTAL }) {
+	constructor(private readonly container: HTMLElement, contextMenuProvider: IContextMenuProvider, options: IToolBarOptions = {
+    orientation: ActionsOrientation.HORIZONTAL,
+  }) {
 		super();
 
-		options.hoverDelegate = options.hoverDelegate ?? this._register(createInstantHoverDelegate());
+		options.hoverDelegate = options.hoverDelegate ?? this._register(
+      createInstantHoverDelegate(),
+    );
 		this.options = options;
 
-		this.toggleMenuAction = this._register(new ToggleMenuAction(() => this.toggleMenuActionViewItem?.show(), options.toggleMenuTitle));
+		this.toggleMenuAction = this._register(
+      new ToggleMenuAction(
+        () => this.toggleMenuActionViewItem?.show(),
+        options.toggleMenuTitle,
+      ),
+    );
 
-		this.element = document.createElement('div');
-		this.element.className = 'monaco-toolbar';
+		this.element = document.createElement("div");
+		this.element.className = "monaco-toolbar";
 		container.appendChild(this.element);
 
 		this.actionBar = this._register(new ActionBar(this.element, {
@@ -126,8 +137,8 @@ export class ToolBar extends Disposable {
 							menuAsChild: !!this.options.renderDropdownAsChildElement,
 							skipTelemetry: this.options.skipTelemetry,
 							isMenu: true,
-							hoverDelegate: this.options.hoverDelegate
-						}
+							hoverDelegate: this.options.hoverDelegate,
+						},
 					);
 					this.toggleMenuActionViewItem.setActionContext(this.actionBar.context);
 					this.disposables.add(this._onDidChangeDropdownVisibility.add(this.toggleMenuActionViewItem.onDidChangeVisibility));
@@ -156,8 +167,8 @@ export class ToolBar extends Disposable {
 							anchorAlignmentProvider: this.options.anchorAlignmentProvider,
 							menuAsChild: !!this.options.renderDropdownAsChildElement,
 							skipTelemetry: this.options.skipTelemetry,
-							hoverDelegate: this.options.hoverDelegate
-						}
+							hoverDelegate: this.options.hoverDelegate,
+						},
 					);
 					result.setActionContext(this.actionBar.context);
 					this.submenuActionViewItems.push(result);
@@ -167,19 +178,28 @@ export class ToolBar extends Disposable {
 				}
 
 				return undefined;
-			}
+			},
 		}));
 
 		// Responsive support
 		if (this.options.responsiveBehavior?.enabled) {
-			this.element.classList.toggle('responsive', true);
-			this.element.classList.toggle('responsive-all', this.options.responsiveBehavior.kind === 'all');
-			this.element.classList.toggle('responsive-last', this.options.responsiveBehavior.kind === 'last');
-			this.element.style.setProperty(ACTION_MIN_WIDTH_VAR, `${this.getConfiguredActionMinWidth()}px`);
+			this.element.classList.toggle("responsive", true);
+			this.element.classList.toggle(
+        "responsive-all",
+        this.options.responsiveBehavior.kind === "all",
+      );
+			this.element.classList.toggle(
+        "responsive-last",
+        this.options.responsiveBehavior.kind === "last",
+      );
+			this.element.style.setProperty(
+        ACTION_MIN_WIDTH_VAR,
+        `${this.getConfiguredActionMinWidth()}px`,
+      );
 
 			const observer = new ResizeObserver(() => {
-				this.updateActions(this.element.getBoundingClientRect().width);
-			});
+        this.updateActions(this.element.getBoundingClientRect().width);
+      });
 			observer.observe(this.element);
 			this._store.add(toDisposable(() => observer.disconnect()));
 		}
@@ -250,7 +270,9 @@ export class ToolBar extends Disposable {
 
 		// Store primary and secondary actions as rendered initially
 		this.originalPrimaryActions = primaryActions ? primaryActions.slice(0) : [];
-		this.originalSecondaryActions = secondaryActions ? secondaryActions.slice(0) : [];
+		this.originalSecondaryActions = secondaryActions ? secondaryActions.slice(
+      0,
+    ) : [];
 
 		const primaryActionsToSet = primaryActions ? primaryActions.slice(0) : [];
 
@@ -266,8 +288,12 @@ export class ToolBar extends Disposable {
 		}
 
 		primaryActionsToSet.forEach(action => {
-			this.actionBar.push(action, { icon: this.options.icon ?? true, label: this.options.label ?? false, keybinding: this.getKeybindingLabel(action) });
-		});
+      this.actionBar.push(action, {
+        icon: this.options.icon ?? true,
+        label: this.options.label ?? false,
+        keybinding: this.getKeybindingLabel(action),
+      });
+    });
 
 		this.updateOverflowClassName();
 		this.applyResponsiveActionMinWidths();
@@ -295,7 +321,9 @@ export class ToolBar extends Disposable {
 				this.container.style.minWidth = `${primaryActionsMinWidth + overflowWidth}px`;
 				this.element.style.minWidth = `${primaryActionsMinWidth + overflowWidth}px`;
 			} else {
-				const minimumActionWidth = this.originalPrimaryActions.length > 0 ? this.getActionMinWidth(this.originalPrimaryActions[0]) : ACTION_MIN_WIDTH + ACTION_PADDING;
+				const minimumActionWidth = this.originalPrimaryActions.length > 0 ? this.getActionMinWidth(
+          this.originalPrimaryActions[0],
+        ) : ACTION_MIN_WIDTH + ACTION_PADDING;
 				this.container.style.minWidth = `${minimumActionWidth}px`;
 				this.element.style.minWidth = `${minimumActionWidth}px`;
 			}
@@ -320,7 +348,9 @@ export class ToolBar extends Disposable {
 			return ACTION_MIN_WIDTH;
 		}
 
-		return this.options.responsiveBehavior?.getActionMinWidth?.(action ?? this.toggleMenuAction)
+		return this.options.responsiveBehavior?.getActionMinWidth?.(
+      action ?? this.toggleMenuAction,
+    )
 			?? this.options.responsiveBehavior?.actionMinWidth
 			?? ACTION_MIN_WIDTH;
 	}
@@ -334,12 +364,18 @@ export class ToolBar extends Disposable {
 			return;
 		}
 
-		if (this.options.responsiveBehavior.kind === 'last') {
-			const hasToggleMenuAction = this.actionBar.hasAction(this.toggleMenuAction);
+		if (this.options.responsiveBehavior.kind === "last") {
+			const hasToggleMenuAction = this.actionBar.hasAction(
+        this.toggleMenuAction,
+      );
 			const shrinkableIndex = hasToggleMenuAction ? this.actionBar.length() - 2 : this.actionBar.length() - 1;
-			const shrinkableAction = shrinkableIndex >= 0 ? this.actionBar.getAction(shrinkableIndex) : undefined;
+			const shrinkableAction = shrinkableIndex >= 0 ? this.actionBar.getAction(
+        shrinkableIndex,
+      ) : undefined;
 			const minWidth = `${this.getConfiguredActionMinWidth(shrinkableAction)}px`;
-			if (this.element.style.getPropertyValue(ACTION_MIN_WIDTH_VAR) !== minWidth) {
+			if (this.element.style.getPropertyValue(
+        ACTION_MIN_WIDTH_VAR,
+      ) !== minWidth) {
 				this.element.style.setProperty(ACTION_MIN_WIDTH_VAR, minWidth);
 			}
 			return;
@@ -375,14 +411,19 @@ export class ToolBar extends Disposable {
 		// Ensure that the container width respects the minimum width of the
 		// element which is set based on the `responsiveBehavior.minItems` option
 		const parsedMinWidth = parseInt(this.element.style.minWidth);
-		containerWidth = Math.max(containerWidth, Number.isNaN(parsedMinWidth) ? 0 : parsedMinWidth);
+		containerWidth = Math.max(
+      containerWidth,
+      Number.isNaN(parsedMinWidth) ? 0 : parsedMinWidth,
+    );
 
 		// Each action is assumed to have a minimum width so that actions with a label
 		// can shrink to the action's minimum width. We do this so that action visibility
 		// takes precedence over the action label.
 		const actionBarWidth = (actualWidth: boolean) => {
-			if (this.options.responsiveBehavior?.kind === 'last') {
-				const hasToggleMenuAction = this.actionBar.hasAction(this.toggleMenuAction);
+			if (this.options.responsiveBehavior?.kind === "last") {
+				const hasToggleMenuAction = this.actionBar.hasAction(
+          this.toggleMenuAction,
+        );
 				const primaryActionsCount = hasToggleMenuAction
 					? this.actionBar.length() - 1
 					: this.actionBar.length();
@@ -396,14 +437,18 @@ export class ToolBar extends Disposable {
 				}
 
 				const action = this.actionBar.getAction(primaryActionsCount - 1);
-				itemsWidth += actualWidth ? this.actionBar.getWidth(primaryActionsCount - 1) : this.getActionMinWidth(action); // item to shrink
+				itemsWidth += actualWidth ? this.actionBar.getWidth(
+          primaryActionsCount - 1,
+        ) : this.getActionMinWidth(action); // item to shrink
 				itemsWidth += hasToggleMenuAction ? ACTION_MIN_WIDTH + ACTION_PADDING : 0; // toggle menu action
 
 				return itemsWidth;
 			} else {
 				let itemsWidth = 0;
 				for (let i = 0; i < this.actionBar.length(); i++) {
-					itemsWidth += actualWidth ? this.actionBar.getWidth(i) : this.getActionMinWidth(this.actionBar.getAction(i));
+					itemsWidth += actualWidth ? this.actionBar.getWidth(
+            i,
+          ) : this.getActionMinWidth(this.actionBar.getAction(i));
 				}
 				return itemsWidth;
 			}
@@ -419,7 +464,9 @@ export class ToolBar extends Disposable {
 		if (minimumWidth > containerWidth) {
 			// Check for max items limit
 			if (this.options.responsiveBehavior?.minItems !== undefined) {
-				const primaryActionsCount = this.actionBar.hasAction(this.toggleMenuAction)
+				const primaryActionsCount = this.actionBar.hasAction(
+          this.toggleMenuAction,
+        )
 					? this.actionBar.length() - 1
 					: this.actionBar.length();
 
@@ -429,7 +476,9 @@ export class ToolBar extends Disposable {
 			}
 
 			// Hide actions from the right
-			while (actionBarWidth(false) > containerWidth && this.actionBar.length() > 0) {
+			while (actionBarWidth(
+        false,
+      ) > containerWidth && this.actionBar.length() > 0) {
 				const index = this.originalPrimaryActions.length - this.hiddenActions.length - 1;
 				if (index < 0) {
 					break;
@@ -437,7 +486,10 @@ export class ToolBar extends Disposable {
 
 				// Store the action and its size
 				const action = this.originalPrimaryActions[index];
-				const size = Math.min(this.getActionMinWidth(action), this.getItemWidth(index));
+				const size = Math.min(
+          this.getActionMinWidth(action),
+          this.getItemWidth(index),
+        );
 				this.hiddenActions.unshift({ action, size });
 
 				// Remove the action
@@ -448,10 +500,10 @@ export class ToolBar extends Disposable {
 				// removed making space for the overflow menu.
 				if (this.originalSecondaryActions.length === 0 && this.hiddenActions.length === 1) {
 					this.actionBar.push(this.toggleMenuAction, {
-						icon: this.options.icon ?? true,
-						label: this.options.label ?? false,
-						keybinding: this.getKeybindingLabel(this.toggleMenuAction),
-					});
+            icon: this.options.icon ?? true,
+            label: this.options.label ?? false,
+            keybinding: this.getKeybindingLabel(this.toggleMenuAction),
+          });
 					this.updateOverflowClassName();
 				}
 
@@ -469,11 +521,11 @@ export class ToolBar extends Disposable {
 
 				// Add the action
 				this.actionBar.push(entry.action, {
-					icon: this.options.icon ?? true,
-					label: this.options.label ?? false,
-					keybinding: this.getKeybindingLabel(entry.action),
-					index: this.originalPrimaryActions.length - this.hiddenActions.length - 1
-				});
+          icon: this.options.icon ?? true,
+          label: this.options.label ?? false,
+          keybinding: this.getKeybindingLabel(entry.action),
+          index: this.originalPrimaryActions.length - this.hiddenActions.length - 1,
+        });
 
 				// There are no secondary actions, and there is only one hidden item left so we
 				// remove the overflow menu making space for the last hidden action to be shown.
@@ -491,7 +543,10 @@ export class ToolBar extends Disposable {
 		const hiddenActions = this.hiddenActions.map(entry => entry.action);
 		if (this.originalSecondaryActions.length > 0 || hiddenActions.length > 0) {
 			const secondaryActions = this.originalSecondaryActions.slice(0);
-			this.toggleMenuAction.menuActions = Separator.join(hiddenActions, secondaryActions);
+			this.toggleMenuAction.menuActions = Separator.join(
+        hiddenActions,
+        secondaryActions,
+      );
 		}
 
 		this.updateOverflowClassName();
@@ -499,7 +554,10 @@ export class ToolBar extends Disposable {
 	}
 
 	private updateOverflowClassName(): void {
-		this.actionBar.domNode.classList.toggle('has-overflow', this.actionBar.hasAction(this.toggleMenuAction));
+		this.actionBar.domNode.classList.toggle(
+      "has-overflow",
+      this.actionBar.hasAction(this.toggleMenuAction),
+    );
 	}
 
 	private clear(): void {
@@ -518,13 +576,13 @@ export class ToolBar extends Disposable {
 
 export class ToggleMenuAction extends Action {
 
-	static readonly ID = 'toolbar.toggle.more';
+	static readonly ID = "toolbar.toggle.more";
 
 	private _menuActions: ReadonlyArray<IAction>;
 	private toggleDropdownMenu: () => void;
 
 	constructor(toggleDropdownMenu: () => void, title?: string) {
-		title = title || nls.localize('moreActions', "More Actions...");
+		title = title || nls.localize("moreActions", "More Actions...");
 		super(ToggleMenuAction.ID, title, undefined, true);
 
 		this._menuActions = [];

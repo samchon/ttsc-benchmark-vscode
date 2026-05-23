@@ -3,18 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { MainContext, MainThreadLanguagesShape, IMainContext, ExtHostLanguagesShape } from './extHost.protocol.js';
-import type * as vscode from 'vscode';
-import { ExtHostDocuments } from './extHostDocuments.js';
-import * as typeConvert from './extHostTypeConverters.js';
-import { StandardTokenType, Range, Position, LanguageStatusSeverity } from './extHostTypes.js';
-import Severity from '../../../base/common/severity.js';
-import { disposableTimeout } from '../../../base/common/async.js';
-import { DisposableStore, IDisposable } from '../../../base/common/lifecycle.js';
-import { IExtensionDescription } from '../../../platform/extensions/common/extensions.js';
-import { CommandsConverter } from './extHostCommands.js';
-import { IURITransformer } from '../../../base/common/uriIpc.js';
-import { checkProposedApiEnabled } from '../../services/extensions/common/extensions.js';
+import {
+  MainContext,
+  MainThreadLanguagesShape,
+  IMainContext,
+  ExtHostLanguagesShape,
+} from "./extHost.protocol.js";
+import type * as vscode from "vscode";
+import { ExtHostDocuments } from "./extHostDocuments.js";
+import * as typeConvert from "./extHostTypeConverters.js";
+import { StandardTokenType, Range, Position, LanguageStatusSeverity } from "./extHostTypes.js";
+import Severity from "../../../base/common/severity.js";
+import { disposableTimeout } from "../../../base/common/async.js";
+import { DisposableStore, IDisposable } from "../../../base/common/lifecycle.js";
+import { IExtensionDescription } from "../../../platform/extensions/common/extensions.js";
+import { CommandsConverter } from "./extHostCommands.js";
+import { IURITransformer } from "../../../base/common/uriIpc.js";
+import { checkProposedApiEnabled } from "../../services/extensions/common/extensions.js";
 
 export class ExtHostLanguages implements ExtHostLanguagesShape {
 
@@ -26,7 +31,7 @@ export class ExtHostLanguages implements ExtHostLanguagesShape {
 		mainContext: IMainContext,
 		private readonly _documents: ExtHostDocuments,
 		private readonly _commands: CommandsConverter,
-		private readonly _uriTransformer: IURITransformer | undefined
+		private readonly _uriTransformer: IURITransformer | undefined,
 	) {
 		this._proxy = mainContext.getProxy(MainContext.MainThreadLanguages);
 	}
@@ -53,17 +58,17 @@ export class ExtHostLanguages implements ExtHostLanguagesShape {
 		const pos = typeConvert.Position.from(position);
 		const info = await this._proxy.$tokensAtPosition(document.uri, pos);
 		const defaultRange = {
-			type: StandardTokenType.Other,
-			range: document.getWordRangeAtPosition(position) ?? new Range(position.line, position.character, position.line, position.character)
-		};
+      type: StandardTokenType.Other,
+      range: document.getWordRangeAtPosition(position) ?? new Range(position.line, position.character, position.line, position.character),
+    };
 		if (!info) {
 			// no result
 			return defaultRange;
 		}
 		const result = {
-			range: typeConvert.Range.to(info.range),
-			type: typeConvert.TokenType.to(info.type)
-		};
+      range: typeConvert.Range.to(info.range),
+      type: typeConvert.TokenType.to(info.type),
+    };
 		if (!result.range.contains(<Position>position)) {
 			// bogous result
 			return defaultRange;
@@ -91,16 +96,16 @@ export class ExtHostLanguages implements ExtHostLanguagesShape {
 		}
 		ids.add(fullyQualifiedId);
 
-		const data: Omit<vscode.LanguageStatusItem, 'dispose' | 'text2'> = {
-			selector,
-			id,
-			name: extension.displayName ?? extension.name,
-			severity: LanguageStatusSeverity.Information,
-			command: undefined,
-			text: '',
-			detail: '',
-			busy: false
-		};
+		const data: Omit<vscode.LanguageStatusItem, "dispose" | "text2"> = {
+      selector,
+      id,
+      name: extension.displayName ?? extension.name,
+      severity: LanguageStatusSeverity.Information,
+      command: undefined,
+      text: "",
+      detail: "",
+      busy: false,
+    };
 
 
 		let soonHandle: IDisposable | undefined;
@@ -109,7 +114,9 @@ export class ExtHostLanguages implements ExtHostLanguagesShape {
 			soonHandle?.dispose();
 
 			if (!ids.has(fullyQualifiedId)) {
-				console.warn(`LanguageStatusItem (${id}) from ${extension.identifier.value} has been disposed and CANNOT be updated anymore`);
+				console.warn(
+          `LanguageStatusItem (${id}) from ${extension.identifier.value} has been disposed and CANNOT be updated anymore`,
+        );
 				return; // disposed in the meantime
 			}
 
@@ -121,11 +128,11 @@ export class ExtHostLanguages implements ExtHostLanguagesShape {
 					source: extension.displayName ?? extension.name,
 					selector: typeConvert.DocumentSelector.from(data.selector, this._uriTransformer),
 					label: data.text,
-					detail: data.detail ?? '',
+					detail: data.detail ?? "",
 					severity: data.severity === LanguageStatusSeverity.Error ? Severity.Error : data.severity === LanguageStatusSeverity.Warning ? Severity.Warning : Severity.Info,
 					command: data.command && this._commands.toInternal(data.command, commandDisposables),
 					accessibilityInfo: data.accessibilityInformation,
-					busy: data.busy
+					busy: data.busy,
 				});
 			}, 0);
 		};
@@ -162,12 +169,12 @@ export class ExtHostLanguages implements ExtHostLanguagesShape {
 				updateAsync();
 			},
 			set text2(value) {
-				checkProposedApiEnabled(extension, 'languageStatusText');
+				checkProposedApiEnabled(extension, "languageStatusText");
 				data.text = value;
 				updateAsync();
 			},
 			get text2() {
-				checkProposedApiEnabled(extension, 'languageStatusText');
+				checkProposedApiEnabled(extension, "languageStatusText");
 				return data.text;
 			},
 			get detail() {
@@ -204,7 +211,7 @@ export class ExtHostLanguages implements ExtHostLanguagesShape {
 			set busy(value: boolean) {
 				data.busy = value;
 				updateAsync();
-			}
+			},
 		};
 		updateAsync();
 		return result;

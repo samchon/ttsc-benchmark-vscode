@@ -3,44 +3,48 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as DOM from '../../../../../base/browser/dom.js';
-import { IWorkbenchUIElementFactory, type IResourceLabel } from '../../../../../editor/browser/widget/multiDiffEditor/workbenchUIElementFactory.js';
-import { IStorageService } from '../../../../../platform/storage/common/storage.js';
-import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
-import { IThemeService } from '../../../../../platform/theme/common/themeService.js';
-import { IEditorOpenContext } from '../../../../common/editor.js';
-import { IEditorGroup } from '../../../../services/editor/common/editorGroupsService.js';
-import { CancellationToken, CancellationTokenSource } from '../../../../../base/common/cancellation.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IContextKey, IContextKeyService } from '../../../../../platform/contextkey/common/contextkey.js';
-import { INotebookEditorWorkerService } from '../../common/services/notebookWorkerService.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { IEditorOptions as ICodeEditorOptions } from '../../../../../editor/common/config/editorOptions.js';
-import { FontInfo } from '../../../../../editor/common/config/fontInfo.js';
-import { createBareFontInfoFromRawSettings } from '../../../../../editor/common/config/fontInfoFromSettings.js';
-import { PixelRatio } from '../../../../../base/browser/pixelRatio.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { EditorPane } from '../../../../browser/parts/editor/editorPane.js';
-import { CellUri, INotebookDiffEditorModel, NOTEBOOK_MULTI_DIFF_EDITOR_ID } from '../../common/notebookCommon.js';
-import { FontMeasurements } from '../../../../../editor/browser/config/fontMeasurements.js';
-import { NotebookOptions } from '../notebookOptions.js';
-import { INotebookService } from '../../common/notebookService.js';
-import { NotebookMultiDiffEditorInput, NotebookMultiDiffEditorWidgetInput } from './notebookMultiDiffEditorInput.js';
-import { MultiDiffEditorWidget } from '../../../../../editor/browser/widget/multiDiffEditor/multiDiffEditorWidget.js';
-import { ResourceLabel } from '../../../../browser/labels.js';
-import type { IMultiDiffEditorOptions } from '../../../../../editor/browser/widget/multiDiffEditor/multiDiffEditorWidgetImpl.js';
-import { INotebookDocumentService } from '../../../../services/notebook/common/notebookDocumentService.js';
-import { localize } from '../../../../../nls.js';
-import { Schemas } from '../../../../../base/common/network.js';
-import { getIconClassesForLanguageId } from '../../../../../editor/common/services/getIconClasses.js';
-import { NotebookDiffViewModel } from './notebookDiffViewModel.js';
-import { NotebookDiffEditorEventDispatcher } from './eventDispatcher.js';
-import { NOTEBOOK_DIFF_CELLS_COLLAPSED, NOTEBOOK_DIFF_HAS_UNCHANGED_CELLS, NOTEBOOK_DIFF_UNCHANGED_CELLS_HIDDEN } from './notebookDiffEditorBrowser.js';
-import type { DocumentDiffItemViewModel, MultiDiffEditorViewModel } from '../../../../../editor/browser/widget/multiDiffEditor/multiDiffEditorViewModel.js';
-import type { URI } from '../../../../../base/common/uri.js';
-import { type IDiffElementViewModelBase } from './diffElementViewModel.js';
-import { autorun, transaction } from '../../../../../base/common/observable.js';
-import { DiffEditorHeightCalculatorService } from './editorHeightCalculator.js';
+import * as DOM from "../../../../../base/browser/dom.js";
+import { IWorkbenchUIElementFactory, type IResourceLabel } from "../../../../../editor/browser/widget/multiDiffEditor/workbenchUIElementFactory.js";
+import { IStorageService } from "../../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
+import { IThemeService } from "../../../../../platform/theme/common/themeService.js";
+import { IEditorOpenContext } from "../../../../common/editor.js";
+import { IEditorGroup } from "../../../../services/editor/common/editorGroupsService.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../../base/common/cancellation.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IContextKey, IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { INotebookEditorWorkerService } from "../../common/services/notebookWorkerService.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IEditorOptions as ICodeEditorOptions } from "../../../../../editor/common/config/editorOptions.js";
+import { FontInfo } from "../../../../../editor/common/config/fontInfo.js";
+import { createBareFontInfoFromRawSettings } from "../../../../../editor/common/config/fontInfoFromSettings.js";
+import { PixelRatio } from "../../../../../base/browser/pixelRatio.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { EditorPane } from "../../../../browser/parts/editor/editorPane.js";
+import { CellUri, INotebookDiffEditorModel, NOTEBOOK_MULTI_DIFF_EDITOR_ID } from "../../common/notebookCommon.js";
+import { FontMeasurements } from "../../../../../editor/browser/config/fontMeasurements.js";
+import { NotebookOptions } from "../notebookOptions.js";
+import { INotebookService } from "../../common/notebookService.js";
+import { NotebookMultiDiffEditorInput, NotebookMultiDiffEditorWidgetInput } from "./notebookMultiDiffEditorInput.js";
+import { MultiDiffEditorWidget } from "../../../../../editor/browser/widget/multiDiffEditor/multiDiffEditorWidget.js";
+import { ResourceLabel } from "../../../../browser/labels.js";
+import type { IMultiDiffEditorOptions } from "../../../../../editor/browser/widget/multiDiffEditor/multiDiffEditorWidgetImpl.js";
+import { INotebookDocumentService } from "../../../../services/notebook/common/notebookDocumentService.js";
+import { localize } from "../../../../../nls.js";
+import { Schemas } from "../../../../../base/common/network.js";
+import { getIconClassesForLanguageId } from "../../../../../editor/common/services/getIconClasses.js";
+import { NotebookDiffViewModel } from "./notebookDiffViewModel.js";
+import { NotebookDiffEditorEventDispatcher } from "./eventDispatcher.js";
+import {
+  NOTEBOOK_DIFF_CELLS_COLLAPSED,
+  NOTEBOOK_DIFF_HAS_UNCHANGED_CELLS,
+  NOTEBOOK_DIFF_UNCHANGED_CELLS_HIDDEN,
+} from "./notebookDiffEditorBrowser.js";
+import type { DocumentDiffItemViewModel, MultiDiffEditorViewModel } from "../../../../../editor/browser/widget/multiDiffEditor/multiDiffEditorViewModel.js";
+import type { URI } from "../../../../../base/common/uri.js";
+import { type IDiffElementViewModelBase } from "./diffElementViewModel.js";
+import { autorun, transaction } from "../../../../../base/common/observable.js";
+import { DiffEditorHeightCalculatorService } from "./editorHeightCalculator.js";
 
 export class NotebookMultiTextDiffEditor extends EditorPane {
 	private _multiDiffEditorWidget?: MultiDiffEditorWidget;
@@ -73,12 +77,32 @@ export class NotebookMultiTextDiffEditor extends EditorPane {
 		@IStorageService storageService: IStorageService,
 		@INotebookService private readonly notebookService: INotebookService,
 	) {
-		super(NotebookMultiTextDiffEditor.ID, group, telemetryService, themeService, storageService);
+		super(
+      NotebookMultiTextDiffEditor.ID,
+      group,
+      telemetryService,
+      themeService,
+      storageService,
+    );
 		this.modelSpecificResources = this._register(new DisposableStore());
-		this.ctxAllCollapsed = this._parentContextKeyService.createKey<boolean>(NOTEBOOK_DIFF_CELLS_COLLAPSED.key, false);
-		this.ctxHasUnchangedCells = this._parentContextKeyService.createKey<boolean>(NOTEBOOK_DIFF_HAS_UNCHANGED_CELLS.key, false);
-		this.ctxHiddenUnchangedCells = this._parentContextKeyService.createKey<boolean>(NOTEBOOK_DIFF_UNCHANGED_CELLS_HIDDEN.key, true);
-		this._notebookOptions = instantiationService.createInstance(NotebookOptions, this.window, false, undefined);
+		this.ctxAllCollapsed = this._parentContextKeyService.createKey<boolean>(
+      NOTEBOOK_DIFF_CELLS_COLLAPSED.key,
+      false,
+    );
+		this.ctxHasUnchangedCells = this._parentContextKeyService.createKey<boolean>(
+      NOTEBOOK_DIFF_HAS_UNCHANGED_CELLS.key,
+      false,
+    );
+		this.ctxHiddenUnchangedCells = this._parentContextKeyService.createKey<boolean>(
+      NOTEBOOK_DIFF_UNCHANGED_CELLS_HIDDEN.key,
+      true,
+    );
+		this._notebookOptions = instantiationService.createInstance(
+      NotebookOptions,
+      this.window,
+      false,
+      undefined,
+    );
 		this._register(this._notebookOptions);
 	}
 
@@ -94,20 +118,32 @@ export class NotebookMultiTextDiffEditor extends EditorPane {
 	}
 
 	private createFontInfo() {
-		const editorOptions = this.configurationService.getValue<ICodeEditorOptions>('editor');
-		return FontMeasurements.readFontInfo(this.window, createBareFontInfoFromRawSettings(editorOptions, PixelRatio.getInstance(this.window).value));
+		const editorOptions = this.configurationService.getValue<ICodeEditorOptions>(
+      "editor",
+    );
+		return FontMeasurements.readFontInfo(
+      this.window,
+      createBareFontInfoFromRawSettings(
+        editorOptions,
+        PixelRatio.getInstance(this.window).value,
+      ),
+    );
 	}
 
 	protected createEditor(parent: HTMLElement): void {
-		this._multiDiffEditorWidget = this._register(this.instantiationService.createInstance(
-			MultiDiffEditorWidget,
-			parent,
-			this.instantiationService.createInstance(WorkbenchUIElementFactory),
-		));
+		this._multiDiffEditorWidget = this._register(
+      this.instantiationService.createInstance(
+        MultiDiffEditorWidget,
+        parent,
+        this.instantiationService.createInstance(WorkbenchUIElementFactory),
+      ),
+    );
 
-		this._register(this._multiDiffEditorWidget.onDidChangeActiveControl(() => {
-			this._onDidChangeControl.fire();
-		}));
+		this._register(
+      this._multiDiffEditorWidget.onDidChangeActiveControl(() => {
+        this._onDidChangeControl.fire();
+      }),
+    );
 	}
 	override async setInput(input: NotebookMultiDiffEditorInput, options: IMultiDiffEditorOptions | undefined, context: IEditorOpenContext, token: CancellationToken): Promise<void> {
 		super.setInput(input, options, context, token);
@@ -116,15 +152,40 @@ export class NotebookMultiTextDiffEditor extends EditorPane {
 			this._detachModel();
 			this._model = model;
 		}
-		const eventDispatcher = this.modelSpecificResources.add(new NotebookDiffEditorEventDispatcher());
-		const diffEditorHeightCalculator = this.instantiationService.createInstance(DiffEditorHeightCalculatorService, this.fontInfo.lineHeight);
-		this.viewModel = this.modelSpecificResources.add(new NotebookDiffViewModel(model, this.notebookEditorWorkerService, this.configurationService, eventDispatcher, this.notebookService, diffEditorHeightCalculator, undefined, true));
-		await this.viewModel.computeDiff(this.modelSpecificResources.add(new CancellationTokenSource()).token);
+		const eventDispatcher = this.modelSpecificResources.add(
+      new NotebookDiffEditorEventDispatcher(),
+    );
+		const diffEditorHeightCalculator = this.instantiationService.createInstance(
+      DiffEditorHeightCalculatorService,
+      this.fontInfo.lineHeight,
+    );
+		this.viewModel = this.modelSpecificResources.add(
+      new NotebookDiffViewModel(
+        model,
+        this.notebookEditorWorkerService,
+        this.configurationService,
+        eventDispatcher,
+        this.notebookService,
+        diffEditorHeightCalculator,
+        undefined,
+        true,
+      ),
+    );
+		await this.viewModel.computeDiff(
+      this.modelSpecificResources.add(new CancellationTokenSource()).token,
+    );
 		this.ctxHasUnchangedCells.set(this.viewModel.hasUnchangedCells);
 		this.ctxHasUnchangedCells.set(this.viewModel.hasUnchangedCells);
 
-		const widgetInput = this.modelSpecificResources.add(NotebookMultiDiffEditorWidgetInput.createInput(this.viewModel, this.instantiationService));
-		this.widgetViewModel = this.modelSpecificResources.add(await widgetInput.getViewModel());
+		const widgetInput = this.modelSpecificResources.add(
+      NotebookMultiDiffEditorWidgetInput.createInput(
+        this.viewModel,
+        this.instantiationService,
+      ),
+    );
+		this.widgetViewModel = this.modelSpecificResources.add(
+      await widgetInput.getViewModel(),
+    );
 
 		const itemsWeHaveSeen = new WeakSet<DocumentDiffItemViewModel>();
 		this.modelSpecificResources.add(autorun(reader => {
@@ -148,7 +209,7 @@ export class NotebookMultiTextDiffEditor extends EditorPane {
 					}
 					itemsWeHaveSeen.add(item);
 					const diffItem = diffItems.find(d => d.modifiedUri?.toString() === item.modifiedUri?.toString() && d.originalUri?.toString() === item.originalUri?.toString());
-					if (diffItem && diffItem.type === 'unchanged') {
+					if (diffItem && diffItem.type === "unchanged") {
 						item.collapsed.set(true, tx);
 					}
 				});
@@ -230,18 +291,18 @@ export class NotebookMultiTextDiffEditor extends EditorPane {
 		}
 		if (uri.scheme === Schemas.vscodeNotebookMetadata) {
 			return this.viewModel?.items.find(item =>
-				item.type === 'modifiedMetadata' ||
-				item.type === 'unchangedMetadata'
+				item.type === "modifiedMetadata" ||
+				item.type === "unchangedMetadata",
 			);
 		}
 		return this.viewModel?.items.find(c => {
 			switch (c.type) {
-				case 'delete':
+				case "delete":
 					return c.original?.uri.toString() === uri.toString();
-				case 'insert':
+				case "insert":
 					return c.modified?.uri.toString() === uri.toString();
-				case 'modified':
-				case 'unchanged':
+				case "modified":
+				case "unchanged":
 					return c.modified?.uri.toString() === uri.toString() || c.original?.uri.toString() === uri.toString();
 				default:
 					return;
@@ -255,34 +316,38 @@ class WorkbenchUIElementFactory implements IWorkbenchUIElementFactory {
 	constructor(
 		@IInstantiationService private readonly _instantiationService: IInstantiationService,
 		@INotebookDocumentService private readonly notebookDocumentService: INotebookDocumentService,
-		@INotebookService private readonly notebookService: INotebookService
+		@INotebookService private readonly notebookService: INotebookService,
 	) { }
 
 	createResourceLabel(element: HTMLElement): IResourceLabel {
-		const label = this._instantiationService.createInstance(ResourceLabel, element, {});
+		const label = this._instantiationService.createInstance(
+      ResourceLabel,
+      element,
+      {},
+    );
 		const that = this;
 		return {
 			setUri(uri, options = {}) {
 				if (!uri) {
 					label.element.clear();
 				} else {
-					let name = '';
-					let description = '';
+					let name = "";
+					let description = "";
 					let extraClasses: string[] | undefined = undefined;
 
 					if (uri.scheme === Schemas.vscodeNotebookCell) {
 						const notebookDocument = uri.scheme === Schemas.vscodeNotebookCell ? that.notebookDocumentService.getNotebook(uri) : undefined;
 						const cellIndex = Schemas.vscodeNotebookCell ? that.notebookDocumentService.getNotebook(uri)?.getCellIndex(uri) : undefined;
 						if (notebookDocument && cellIndex !== undefined) {
-							name = localize('notebookCellLabel', "Cell {0}", `${cellIndex + 1}`);
+							name = localize("notebookCellLabel", "Cell {0}", `${cellIndex + 1}`);
 							const nb = notebookDocument ? that.notebookService.getNotebookTextModel(notebookDocument?.uri) : undefined;
 							const cellLanguage = nb && cellIndex !== undefined ? nb.cells[cellIndex].language : undefined;
 							extraClasses = cellLanguage ? getIconClassesForLanguageId(cellLanguage) : undefined;
 						}
 					} else if (uri.scheme === Schemas.vscodeNotebookCellMetadata || uri.scheme === Schemas.vscodeNotebookCellMetadataDiff) {
-						description = localize('notebookCellMetadataLabel', "Metadata");
+						description = localize("notebookCellMetadataLabel", "Metadata");
 					} else if (uri.scheme === Schemas.vscodeNotebookCellOutput || uri.scheme === Schemas.vscodeNotebookCellOutputDiff) {
-						description = localize('notebookCellOutputLabel', "Output");
+						description = localize("notebookCellOutputLabel", "Output");
 					}
 
 					label.element.setResource({ name, description }, { strikethrough: options.strikethrough, forceLabel: true, hideIcon: !extraClasses, extraClasses });
@@ -290,7 +355,7 @@ class WorkbenchUIElementFactory implements IWorkbenchUIElementFactory {
 			},
 			dispose() {
 				label.dispose();
-			}
+			},
 		};
 	}
 }

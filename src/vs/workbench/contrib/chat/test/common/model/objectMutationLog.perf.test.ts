@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { VSBuffer } from '../../../../../../base/common/buffer.js';
-import { StopWatch } from '../../../../../../base/common/stopwatch.js';
-import { isUndefinedOrNull } from '../../../../../../base/common/types.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../../base/test/common/utils.js';
-import * as Adapt from '../../../common/model/objectMutationLog.js';
+import assert from "assert";
+import { VSBuffer } from "../../../../../../base/common/buffer.js";
+import { StopWatch } from "../../../../../../base/common/stopwatch.js";
+import { isUndefinedOrNull } from "../../../../../../base/common/types.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../../base/test/common/utils.js";
+import * as Adapt from "../../../common/model/objectMutationLog.js";
 
-const enablePerf = process.env.VSCODE_PERF_CHAT_OBJECT_MUTATION_LOG === 'true';
+const enablePerf = process.env.VSCODE_PERF_CHAT_OBJECT_MUTATION_LOG === "true";
 
 function perfSuite(name: string, callback: (this: Mocha.Suite) => void): void {
 	if (enablePerf) {
@@ -53,21 +53,21 @@ interface BenchmarkResult {
 
 interface BenchmarkWriter<T> {
 	createInitial(current: T): VSBuffer;
-	write(current: T): { op: 'append' | 'replace'; data: VSBuffer };
+	write(current: T): { op: "append" | "replace"; data: VSBuffer };
 	confirmWrite(): void;
 	readonly reusedReferences?: number;
 }
 
 function isTransformValue<TFrom, TTo>(transform: Adapt.Transform<TFrom, TTo>): transform is Adapt.TransformValue<TFrom, TTo> {
-	return 'equals' in transform;
+	return "equals" in transform;
 }
 
 function isTransformArray<TFrom, TTo>(transform: Adapt.Transform<TFrom, TTo>): transform is Adapt.TransformArray<TFrom, TTo> {
-	return 'itemSchema' in transform;
+	return "itemSchema" in transform;
 }
 
 function isTransformObject<TFrom, TTo>(transform: Adapt.Transform<TFrom, TTo>): transform is Adapt.TransformObject<TFrom, TTo> {
-	return 'children' in transform;
+	return "children" in transform;
 }
 
 function isKeyTransform(transform: Adapt.Transform<unknown, unknown>): transform is Adapt.TransformValue<unknown, unknown> {
@@ -75,15 +75,15 @@ function isKeyTransform(transform: Adapt.Transform<unknown, unknown>): transform
 }
 
 function isVoidFunction(value: unknown): value is () => void {
-	return typeof value === 'function';
+	return typeof value === "function";
 }
 
 const benchmarkConfig = {
-	iterations: 120,
-	sealedItems: 1500,
-	activeItems: 4,
-	payloadSize: 128,
-	rounds: 5,
+  iterations: 120,
+  sealedItems: 1500,
+  activeItems: 4,
+  payloadSize: 128,
+  rounds: 5,
 } as const;
 
 class ReferenceReusingObjectMutationLog<TFrom, TTo> implements BenchmarkWriter<TFrom> {
@@ -101,35 +101,38 @@ class ReferenceReusingObjectMutationLog<TFrom, TTo> implements BenchmarkWriter<T
 		this._previous = value;
 		this._entryCount = 1;
 		const entry: Entry = { kind: EntryKind.Initial, v: value };
-		return VSBuffer.fromString(JSON.stringify(entry) + '\n');
+		return VSBuffer.fromString(JSON.stringify(entry) + "\n");
 	}
 
-	write(current: TFrom): { op: 'append' | 'replace'; data: VSBuffer } {
+	write(current: TFrom): { op: "append" | "replace"; data: VSBuffer } {
 		const currentValue = this._transform.extract(current);
 
 		if (!this._previous || this._entryCount > this._compactAfterEntries) {
 			this._previous = currentValue;
 			this._entryCount = 1;
 			const entry: Entry = { kind: EntryKind.Initial, v: currentValue };
-			return { op: 'replace', data: VSBuffer.fromString(JSON.stringify(entry) + '\n') };
+			return {
+        op: "replace",
+        data: VSBuffer.fromString(JSON.stringify(entry) + "\n"),
+      };
 		}
 
 		const entries: Entry[] = [];
 		this._diff(this._transform, [], this._previous, currentValue, entries);
 
 		if (entries.length === 0) {
-			return { op: 'append', data: VSBuffer.fromString('') };
+			return { op: "append", data: VSBuffer.fromString("") };
 		}
 
 		this._entryCount += entries.length;
 		this._previous = currentValue;
 
-		let data = '';
+		let data = "";
 		for (const entry of entries) {
-			data += JSON.stringify(entry) + '\n';
+			data += JSON.stringify(entry) + "\n";
 		}
 
-		return { op: 'append', data: VSBuffer.fromString(data) };
+		return { op: "append", data: VSBuffer.fromString(data) };
 	}
 
 	confirmWrite(): void {
@@ -141,7 +144,7 @@ class ReferenceReusingObjectMutationLog<TFrom, TTo> implements BenchmarkWriter<T
 		path: ObjectPath,
 		prev: R,
 		curr: R,
-		entries: Entry[]
+		entries: Entry[],
 	): void {
 		if (isTransformValue(transform)) {
 			if (!transform.equals(prev, curr)) {
@@ -158,9 +161,22 @@ class ReferenceReusingObjectMutationLog<TFrom, TTo> implements BenchmarkWriter<T
 				}
 			}
 		} else if (isTransformArray(transform)) {
-			this._diffArray(transform, path, prev as unknown[], curr as unknown[], entries);
+			this._diffArray(
+        transform,
+        path,
+        prev as unknown[],
+        curr as unknown[],
+        entries,
+      );
 		} else if (isTransformObject(transform)) {
-			this._diffObject(transform.children, path, prev, curr, entries, transform.sealed as ((obj: unknown, wasSerialized: boolean) => boolean) | undefined);
+			this._diffObject(
+        transform.children,
+        path,
+        prev,
+        curr,
+        entries,
+        transform.sealed as ((obj: unknown, wasSerialized: boolean) => boolean) | undefined,
+      );
 		} else {
 			throw new Error(`Unknown transform kind ${JSON.stringify(transform)}`);
 		}
@@ -209,7 +225,7 @@ class ReferenceReusingObjectMutationLog<TFrom, TTo> implements BenchmarkWriter<T
 		path: ObjectPath,
 		prev: unknown[] | undefined,
 		curr: unknown[] | undefined,
-		entries: Entry[]
+		entries: Entry[],
 	): void {
 		const prevArr = prev || [];
 		const currArr = curr || [];
@@ -225,12 +241,24 @@ class ReferenceReusingObjectMutationLog<TFrom, TTo> implements BenchmarkWriter<T
 
 				if (this._hasKeyMismatch(childEntries, prevItem, currItem)) {
 					const newItems = currArr.slice(i);
-					entries.push({ kind: EntryKind.Push, k: path.slice(), v: newItems.length > 0 ? newItems : undefined, i });
+					entries.push({
+            kind: EntryKind.Push,
+            k: path.slice(),
+            v: newItems.length > 0 ? newItems : undefined,
+            i,
+          });
 					return;
 				}
 
 				path.push(i);
-				const wasSealed = this._diffObject(childEntries, path, prevItem, currItem, entries, itemSchema.sealed);
+				const wasSealed = this._diffObject(
+          childEntries,
+          path,
+          prevItem,
+          currItem,
+          entries,
+          itemSchema.sealed,
+        );
 				path.pop();
 
 				if (wasSealed) {
@@ -240,9 +268,17 @@ class ReferenceReusingObjectMutationLog<TFrom, TTo> implements BenchmarkWriter<T
 			}
 
 			if (currArr.length > prevArr.length) {
-				entries.push({ kind: EntryKind.Push, k: path.slice(), v: currArr.slice(prevArr.length) });
+				entries.push({
+          kind: EntryKind.Push,
+          k: path.slice(),
+          v: currArr.slice(prevArr.length),
+        });
 			} else if (currArr.length < prevArr.length) {
-				entries.push({ kind: EntryKind.Push, k: path.slice(), i: currArr.length });
+				entries.push({
+          kind: EntryKind.Push,
+          k: path.slice(),
+          i: currArr.length,
+        });
 			}
 		} else {
 			let firstMismatch = -1;
@@ -256,13 +292,26 @@ class ReferenceReusingObjectMutationLog<TFrom, TTo> implements BenchmarkWriter<T
 
 			if (firstMismatch === -1) {
 				if (currArr.length > prevArr.length) {
-					entries.push({ kind: EntryKind.Push, k: path.slice(), v: currArr.slice(prevArr.length) });
+					entries.push({
+            kind: EntryKind.Push,
+            k: path.slice(),
+            v: currArr.slice(prevArr.length),
+          });
 				} else if (currArr.length < prevArr.length) {
-					entries.push({ kind: EntryKind.Push, k: path.slice(), i: currArr.length });
+					entries.push({
+            kind: EntryKind.Push,
+            k: path.slice(),
+            i: currArr.length,
+          });
 				}
 			} else {
 				const newItems = currArr.slice(firstMismatch);
-				entries.push({ kind: EntryKind.Push, k: path.slice(), v: newItems.length > 0 ? newItems : undefined, i: firstMismatch });
+				entries.push({
+          kind: EntryKind.Push,
+          k: path.slice(),
+          v: newItems.length > 0 ? newItems : undefined,
+          i: firstMismatch,
+        });
 			}
 		}
 	}
@@ -287,21 +336,21 @@ class ReferenceReusingObjectMutationLog<TFrom, TTo> implements BenchmarkWriter<T
 
 function createBenchmarkSchema(): Adapt.TransformObject<BenchmarkState, BenchmarkState> {
 	const itemSchema = Adapt.object<BenchmarkItem, BenchmarkItem>({
-		id: Adapt.t(item => item.id, Adapt.key()),
-		content: Adapt.t(item => item.content, Adapt.value()),
-		references: Adapt.t(item => item.references, Adapt.array(Adapt.value())),
-		isSealed: Adapt.t(item => item.isSealed, Adapt.value()),
-	}, {
-		sealed: item => item.isSealed,
-	});
+    id: Adapt.t(item => item.id, Adapt.key()),
+    content: Adapt.t(item => item.content, Adapt.value()),
+    references: Adapt.t(item => item.references, Adapt.array(Adapt.value())),
+    isSealed: Adapt.t(item => item.isSealed, Adapt.value()),
+  }, {
+    sealed: item => item.isSealed,
+  });
 
 	return Adapt.object<BenchmarkState, BenchmarkState>({
-		items: Adapt.t(state => state.items, Adapt.array(itemSchema)),
-	});
+    items: Adapt.t(state => state.items, Adapt.array(itemSchema)),
+  });
 }
 
 function createPayload(label: string, size: number): string {
-	return `${label}:${'x'.repeat(size)}`;
+	return `${label}:${"x".repeat(size)}`;
 }
 
 function createBenchmarkState(iteration: number): BenchmarkState {
@@ -343,8 +392,8 @@ function createBenchmarkStates(): BenchmarkState[] {
 	return states;
 }
 
-function appendToLog(current: VSBuffer, result: { op: 'append' | 'replace'; data: VSBuffer }): VSBuffer {
-	if (result.op === 'replace') {
+function appendToLog(current: VSBuffer, result: { op: "append" | "replace"; data: VSBuffer }): VSBuffer {
+	if (result.op === "replace") {
 		return result.data;
 	}
 
@@ -352,7 +401,7 @@ function appendToLog(current: VSBuffer, result: { op: 'append' | 'replace'; data
 }
 
 function collectGarbage(): void {
-	const gc = Reflect.get(globalThis, 'gc');
+	const gc = Reflect.get(globalThis, "gc");
 	if (isVoidFunction(gc)) {
 		gc();
 	}
@@ -377,11 +426,11 @@ function runBenchmarkRound(writer: BenchmarkWriter<BenchmarkState>, states: read
 	assert.deepStrictEqual(reader.read(serialized), states[states.length - 1]);
 
 	return {
-		elapsedMs,
-		heapDeltaBytes: finalHeap - initialHeap,
-		serialized,
-		reusedReferences: writer.reusedReferences ?? 0,
-	};
+    elapsedMs,
+    heapDeltaBytes: finalHeap - initialHeap,
+    serialized,
+    reusedReferences: writer.reusedReferences ?? 0,
+  };
 }
 
 function median(values: readonly number[]): number {
@@ -395,7 +444,7 @@ function median(values: readonly number[]): number {
 }
 
 function formatBytes(bytes: number): string {
-	const sign = bytes < 0 ? '-' : '';
+	const sign = bytes < 0 ? "-" : "";
 	const absolute = Math.abs(bytes);
 	if (absolute < 1024) {
 		return `${bytes} B`;
@@ -407,13 +456,13 @@ function formatBytes(bytes: number): string {
 	return `${sign}${(absolute / (1024 * 1024)).toFixed(2)} MB`;
 }
 
-perfSuite('Chat ObjectMutationLog - perf', function () {
+perfSuite("Chat ObjectMutationLog - perf", function () {
 	ensureNoDisposablesAreLeakedInTestSuite();
 
 	const schema = createBenchmarkSchema();
 	const states = createBenchmarkStates();
 
-	test('compares baseline writes against sealed-reference reuse', function () {
+	test("compares baseline writes against sealed-reference reuse", function () {
 		this.timeout(120_000);
 
 		// Warm up both variants once so the measured rounds are less noisy.
@@ -436,19 +485,19 @@ perfSuite('Chat ObjectMutationLog - perf', function () {
 		const optimizedHeap = median(optimizedResults.map(result => result.heapDeltaBytes));
 		const optimizedReusedReferences = median(optimizedResults.map(result => result.reusedReferences));
 
-		console.log('[chat objectMutationLog perf] config', benchmarkConfig);
-		console.log('[chat objectMutationLog perf] baseline', {
+		console.log("[chat objectMutationLog perf] config", benchmarkConfig);
+		console.log("[chat objectMutationLog perf] baseline", {
 			medianElapsedMs: baselineElapsed,
 			medianHeapDelta: formatBytes(baselineHeap),
 			serializedBytes: baselineResults[0].serialized.byteLength,
 		});
-		console.log('[chat objectMutationLog perf] optimized', {
+		console.log("[chat objectMutationLog perf] optimized", {
 			medianElapsedMs: optimizedElapsed,
 			medianHeapDelta: formatBytes(optimizedHeap),
 			serializedBytes: optimizedResults[0].serialized.byteLength,
 			reusedReferences: optimizedReusedReferences,
 		});
-		console.log('[chat objectMutationLog perf] delta', {
+		console.log("[chat objectMutationLog perf] delta", {
 			elapsedMs: optimizedElapsed - baselineElapsed,
 			heapDelta: formatBytes(optimizedHeap - baselineHeap),
 			elapsedRatio: Number((optimizedElapsed / baselineElapsed).toFixed(3)),

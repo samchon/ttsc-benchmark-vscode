@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import Severity from '../../../base/common/severity.js';
-import * as strings from '../../../base/common/strings.js';
-import { URI } from '../../../base/common/uri.js';
-import { ILocalizedString } from '../../action/common/action.js';
-import { ExtensionKind } from '../../environment/common/environment.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import { getRemoteName } from '../../remote/common/remoteHosts.js';
+import Severity from "../../../base/common/severity.js";
+import * as strings from "../../../base/common/strings.js";
+import { URI } from "../../../base/common/uri.js";
+import { ILocalizedString } from "../../action/common/action.js";
+import { ExtensionKind } from "../../environment/common/environment.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { getRemoteName } from "../../remote/common/remoteHosts.js";
 
-export const USER_MANIFEST_CACHE_FILE = 'extensions.user.cache';
-export const BUILTIN_MANIFEST_CACHE_FILE = 'extensions.builtin.cache';
-export const UNDEFINED_PUBLISHER = 'undefined_publisher';
+export const USER_MANIFEST_CACHE_FILE = "extensions.user.cache";
+export const BUILTIN_MANIFEST_CACHE_FILE = "extensions.builtin.cache";
+export const UNDEFINED_PUBLISHER = "undefined_publisher";
 
 export interface ICommand {
 	command: string;
@@ -137,7 +137,7 @@ export interface IStartEntry {
 	readonly description: string;
 	readonly command: string;
 	readonly when?: string;
-	readonly category: 'file' | 'folder' | 'notebook';
+	readonly category: "file" | "folder" | "notebook";
 }
 
 export interface INotebookEntry {
@@ -250,9 +250,13 @@ export interface IExtensionCapabilities {
 }
 
 
-export const ALL_EXTENSION_KINDS: readonly ExtensionKind[] = ['ui', 'workspace', 'web'];
+export const ALL_EXTENSION_KINDS: readonly ExtensionKind[] = [
+  "ui",
+  "workspace",
+  "web",
+];
 
-export type LimitedWorkspaceSupportType = 'limited';
+export type LimitedWorkspaceSupportType = "limited";
 export type ExtensionUntrustedWorkspaceSupportType = boolean | LimitedWorkspaceSupportType;
 export type ExtensionUntrustedWorkspaceSupport = { supported: true } | { supported: false; description: string } | { supported: LimitedWorkspaceSupportType; description: string; restrictedConfigurations?: string[] };
 
@@ -260,7 +264,7 @@ export type ExtensionVirtualWorkspaceSupportType = boolean | LimitedWorkspaceSup
 export type ExtensionVirtualWorkspaceSupport = boolean | { supported: true } | { supported: false | LimitedWorkspaceSupportType; description: string };
 
 export function getWorkspaceSupportTypeMessage(supportType: ExtensionUntrustedWorkspaceSupport | ExtensionVirtualWorkspaceSupport | undefined): string | undefined {
-	if (typeof supportType === 'object' && supportType !== null) {
+	if (typeof supportType === "object" && supportType !== null) {
 		if (supportType.supported !== true) {
 			return supportType.description;
 		}
@@ -275,26 +279,26 @@ export interface IExtensionIdentifier {
 }
 
 export const EXTENSION_CATEGORIES = [
-	'AI',
-	'Azure',
-	'Chat',
-	'Data Science',
-	'Debuggers',
-	'Extension Packs',
-	'Education',
-	'Formatters',
-	'Keymaps',
-	'Language Packs',
-	'Linters',
-	'Machine Learning',
-	'Notebooks',
-	'Programming Languages',
-	'SCM Providers',
-	'Snippets',
-	'Testing',
-	'Themes',
-	'Visualization',
-	'Other',
+  "AI",
+  "Azure",
+  "Chat",
+  "Data Science",
+  "Debuggers",
+  "Extension Packs",
+  "Education",
+  "Formatters",
+  "Keymaps",
+  "Language Packs",
+  "Linters",
+  "Machine Learning",
+  "Notebooks",
+  "Programming Languages",
+  "SCM Providers",
+  "Snippets",
+  "Testing",
+  "Themes",
+  "Visualization",
+  "Other",
 ];
 
 export interface IRelaxedExtensionManifest {
@@ -337,24 +341,24 @@ export const enum ExtensionType {
 }
 
 export const enum TargetPlatform {
-	WIN32_X64 = 'win32-x64',
-	WIN32_ARM64 = 'win32-arm64',
+	WIN32_X64 = "win32-x64",
+	WIN32_ARM64 = "win32-arm64",
 
-	LINUX_X64 = 'linux-x64',
-	LINUX_ARM64 = 'linux-arm64',
-	LINUX_ARMHF = 'linux-armhf',
+	LINUX_X64 = "linux-x64",
+	LINUX_ARM64 = "linux-arm64",
+	LINUX_ARMHF = "linux-armhf",
 
-	ALPINE_X64 = 'alpine-x64',
-	ALPINE_ARM64 = 'alpine-arm64',
+	ALPINE_X64 = "alpine-x64",
+	ALPINE_ARM64 = "alpine-arm64",
 
-	DARWIN_X64 = 'darwin-x64',
-	DARWIN_ARM64 = 'darwin-arm64',
+	DARWIN_X64 = "darwin-x64",
+	DARWIN_ARM64 = "darwin-arm64",
 
-	WEB = 'web',
+	WEB = "web",
 
-	UNIVERSAL = 'universal',
-	UNKNOWN = 'unknown',
-	UNDEFINED = 'undefined',
+	UNIVERSAL = "universal",
+	UNKNOWN = "unknown",
+	UNDEFINED = "undefined",
 }
 
 export interface IExtension {
@@ -403,17 +407,17 @@ export class ExtensionIdentifier {
 	}
 
 	public static equals(a: ExtensionIdentifier | string | null | undefined, b: ExtensionIdentifier | string | null | undefined) {
-		if (typeof a === 'undefined' || a === null) {
-			return (typeof b === 'undefined' || b === null);
+		if (typeof a === "undefined" || a === null) {
+			return (typeof b === "undefined" || b === null);
 		}
-		if (typeof b === 'undefined' || b === null) {
+		if (typeof b === "undefined" || b === null) {
 			return false;
 		}
-		if (typeof a === 'string' || typeof b === 'string') {
+		if (typeof a === "string" || typeof b === "string") {
 			// At least one of the arguments is an extension id in string form,
 			// so we have to use the string comparison which ignores case.
-			const aValue = (typeof a === 'string' ? a : a.value);
-			const bValue = (typeof b === 'string' ? b : b.value);
+			const aValue = (typeof a === "string" ? a : a.value);
+			const bValue = (typeof b === "string" ? b : b.value);
 			return strings.equalsIgnoreCase(aValue, bValue);
 		}
 
@@ -425,7 +429,7 @@ export class ExtensionIdentifier {
 	 * Gives the value by which to index (for equality).
 	 */
 	public static toKey(id: ExtensionIdentifier | string): string {
-		if (typeof id === 'string') {
+		if (typeof id === "string") {
 			return id.toLowerCase();
 		}
 		return id._lower;
@@ -506,8 +510,11 @@ export class ExtensionError extends Error {
 	readonly extension: ExtensionIdentifier;
 
 	constructor(extensionIdentifier: ExtensionIdentifier, cause: Error, message?: string) {
-		super(`Error in extension ${ExtensionIdentifier.toKey(extensionIdentifier)}: ${message ?? cause.message}`, { cause });
-		this.name = 'ExtensionError';
+		super(
+      `Error in extension ${ExtensionIdentifier.toKey(extensionIdentifier)}: ${message ?? cause.message}`,
+      { cause },
+    );
+		this.name = "ExtensionError";
 		this.extension = extensionIdentifier;
 	}
 }
@@ -549,16 +556,18 @@ export function isResolverExtension(manifest: IExtensionManifest, remoteAuthorit
 
 export function parseApiProposals(enabledApiProposals: string[]): { proposalName: string; version?: number }[] {
 	return enabledApiProposals.map(proposal => {
-		const [proposalName, version] = proposal.split('@');
-		return { proposalName, version: version ? parseInt(version) : undefined };
-	});
+    const [proposalName, version] = proposal.split("@");
+    return { proposalName, version: version ? parseInt(version) : undefined };
+  });
 }
 
 export function parseEnabledApiProposalNames(enabledApiProposals: string[]): string[] {
-	return enabledApiProposals.map(proposal => proposal.split('@')[0]);
+	return enabledApiProposals.map(proposal => proposal.split("@")[0]);
 }
 
-export const IBuiltinExtensionsScannerService = createDecorator<IBuiltinExtensionsScannerService>('IBuiltinExtensionsScannerService');
+export const IBuiltinExtensionsScannerService = createDecorator<IBuiltinExtensionsScannerService>(
+  "IBuiltinExtensionsScannerService",
+);
 export interface IBuiltinExtensionsScannerService {
 	readonly _serviceBrand: undefined;
 	scanBuiltinExtensions(): Promise<IExtension[]>;

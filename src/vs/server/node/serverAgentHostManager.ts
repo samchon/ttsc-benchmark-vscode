@@ -3,17 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../base/common/event.js';
-import { Disposable, MutableDisposable, toDisposable } from '../../base/common/lifecycle.js';
-import { ProxyChannel } from '../../base/parts/ipc/common/ipc.js';
-import { IAgentHostConnection, IAgentHostStarter } from '../../platform/agentHost/common/agent.js';
-import { AgentHostIpcChannels, IAgentService } from '../../platform/agentHost/common/agentService.js';
-import { createDecorator } from '../../platform/instantiation/common/instantiation.js';
-import { ILogService, ILoggerService } from '../../platform/log/common/log.js';
-import { RemoteLoggerChannelClient } from '../../platform/log/common/logIpc.js';
-import { IServerLifetimeService } from './serverLifetimeService.js';
+import { Event } from "../../base/common/event.js";
+import { Disposable, MutableDisposable, toDisposable } from "../../base/common/lifecycle.js";
+import { ProxyChannel } from "../../base/parts/ipc/common/ipc.js";
+import { IAgentHostConnection, IAgentHostStarter } from "../../platform/agentHost/common/agent.js";
+import { AgentHostIpcChannels, IAgentService } from "../../platform/agentHost/common/agentService.js";
+import { createDecorator } from "../../platform/instantiation/common/instantiation.js";
+import { ILogService, ILoggerService } from "../../platform/log/common/log.js";
+import { RemoteLoggerChannelClient } from "../../platform/log/common/logIpc.js";
+import { IServerLifetimeService } from "./serverLifetimeService.js";
 
-export const IServerAgentHostManager = createDecorator<IServerAgentHostManager>('serverAgentHostManager');
+export const IServerAgentHostManager = createDecorator<IServerAgentHostManager>(
+  "serverAgentHostManager",
+);
 
 /**
  * Server-specific agent host manager. Eagerly starts the agent host process,
@@ -72,10 +74,15 @@ export class ServerAgentHostManager extends Disposable implements IServerAgentHo
 				return;
 			}
 
-			this._logService.info('ServerAgentHostManager: agent host started');
+			this._logService.info("ServerAgentHostManager: agent host started");
 
 			// Connect logger channel so agent host logs appear in the output channel
-			connection.store.add(new RemoteLoggerChannelClient(this._loggerService, connection.client.getChannel(AgentHostIpcChannels.Logger)));
+			connection.store.add(
+        new RemoteLoggerChannelClient(
+          this._loggerService,
+          connection.client.getChannel(AgentHostIpcChannels.Logger),
+        ),
+      );
 
 			this._trackActiveSessions(connection);
 			this._trackClientConnections(connection);
@@ -106,19 +113,27 @@ export class ServerAgentHostManager extends Disposable implements IServerAgentHo
 			}
 
 			if (this._restartCount <= Constants.MaxRestarts) {
-				this._logService.error('ServerAgentHostManager: agent host failed to start', error);
+				this._logService.error(
+          "ServerAgentHostManager: agent host failed to start",
+          error,
+        );
 				this._restartCount++;
 				this._start();
 			} else {
-				this._logService.error(`ServerAgentHostManager: agent host failed to start, giving up after ${Constants.MaxRestarts} restarts`, error);
+				this._logService.error(
+          `ServerAgentHostManager: agent host failed to start, giving up after ${Constants.MaxRestarts} restarts`,
+          error,
+        );
 			}
 		}
 	}
 
 	private _trackActiveSessions(connection: IAgentHostConnection): void {
-		const agentService = ProxyChannel.toService<IAgentService>(connection.client.getChannel(AgentHostIpcChannels.AgentHost));
+		const agentService = ProxyChannel.toService<IAgentService>(
+      connection.client.getChannel(AgentHostIpcChannels.AgentHost),
+    );
 		connection.store.add(agentService.onDidAction(envelope => {
-			if (envelope.action.type === 'root/activeSessionsChanged') {
+			if (envelope.action.type === "root/activeSessionsChanged") {
 				this._hasActiveSessions = envelope.action.activeSessions > 0;
 				this._updateLifetimeToken();
 			}
@@ -126,16 +141,22 @@ export class ServerAgentHostManager extends Disposable implements IServerAgentHo
 	}
 
 	private _trackClientConnections(connection: IAgentHostConnection): void {
-		const connectionTracker = ProxyChannel.toService<IConnectionTrackerService>(connection.client.getChannel(AgentHostIpcChannels.ConnectionTracker));
-		connection.store.add(connectionTracker.onDidChangeConnectionCount(count => {
-			this._connectionCount = count;
-			this._updateLifetimeToken();
-		}));
+		const connectionTracker = ProxyChannel.toService<IConnectionTrackerService>(
+      connection.client.getChannel(AgentHostIpcChannels.ConnectionTracker),
+    );
+		connection.store.add(
+      connectionTracker.onDidChangeConnectionCount(count => {
+        this._connectionCount = count;
+        this._updateLifetimeToken();
+      }),
+    );
 	}
 
 	private _updateLifetimeToken(): void {
 		if (this._hasActiveSessions || this._connectionCount > 0) {
-			this._lifetimeToken.value ??= this._serverLifetimeService.active('AgentHost');
+			this._lifetimeToken.value ??= this._serverLifetimeService.active(
+        "AgentHost",
+      );
 		} else {
 			this._lifetimeToken.clear();
 		}

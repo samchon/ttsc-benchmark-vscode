@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { WebglAddon } from '@xterm/addon-webgl';
-import type { IEvent } from '@xterm/xterm';
-import { Emitter } from '../../../../../../base/common/event.js';
-import { XtermAddonImporter, type IXtermAddonNameToCtor } from '../../../browser/xterm/xtermAddonImporter.js';
+import type { WebglAddon } from "@xterm/addon-webgl";
+import type { IEvent } from "@xterm/xterm";
+import { Emitter } from "../../../../../../base/common/event.js";
+import { XtermAddonImporter, type IXtermAddonNameToCtor } from "../../../browser/xterm/xtermAddonImporter.js";
 
 export class TestWebglAddon implements WebglAddon {
 	static shouldThrow = false;
@@ -24,7 +24,7 @@ export class TestWebglAddon implements WebglAddon {
 	activate(): void {
 		TestWebglAddon.isEnabled = !TestWebglAddon.shouldThrow;
 		if (TestWebglAddon.shouldThrow) {
-			throw new Error('Test webgl set to throw');
+			throw new Error("Test webgl set to throw");
 		}
 	}
 	dispose(): void {
@@ -39,7 +39,7 @@ export class TestWebglAddon implements WebglAddon {
 
 export class TestXtermAddonImporter extends XtermAddonImporter {
 	override async importAddon<T extends keyof IXtermAddonNameToCtor>(name: T): Promise<IXtermAddonNameToCtor[T]> {
-		if (name === 'webgl') {
+		if (name === "webgl") {
 			return TestWebglAddon as unknown as IXtermAddonNameToCtor[T];
 		}
 		return super.importAddon(name);

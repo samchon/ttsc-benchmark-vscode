@@ -3,24 +3,31 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { isFirefox } from '../../browser.js';
-import { DataTransfers } from '../../dnd.js';
-import { addDisposableListener, EventHelper, EventLike, EventType } from '../../dom.js';
-import { EventType as TouchEventType, Gesture } from '../../touch.js';
-import { IActionViewItem } from './actionbar.js';
-import { IContextViewProvider } from '../contextview/contextview.js';
-import { getDefaultHoverDelegate } from '../hover/hoverDelegateFactory.js';
-import { IHoverDelegate } from '../hover/hoverDelegate.js';
-import { ISelectBoxOptions, ISelectBoxStyles, ISelectOptionItem, SelectBox } from '../selectBox/selectBox.js';
-import { IToggleStyles } from '../toggle/toggle.js';
-import { Action, ActionRunner, IAction, IActionChangeEvent, IActionRunner, Separator } from '../../../common/actions.js';
-import { Disposable } from '../../../common/lifecycle.js';
-import * as platform from '../../../common/platform.js';
-import * as types from '../../../common/types.js';
-import './actionbar.css';
-import * as nls from '../../../../nls.js';
-import type { IManagedHover, IManagedHoverContent } from '../hover/hover.js';
-import { getBaseLayerHoverDelegate } from '../hover/hoverDelegate2.js';
+import { isFirefox } from "../../browser.js";
+import { DataTransfers } from "../../dnd.js";
+import { addDisposableListener, EventHelper, EventLike, EventType } from "../../dom.js";
+import { EventType as TouchEventType, Gesture } from "../../touch.js";
+import { IActionViewItem } from "./actionbar.js";
+import { IContextViewProvider } from "../contextview/contextview.js";
+import { getDefaultHoverDelegate } from "../hover/hoverDelegateFactory.js";
+import { IHoverDelegate } from "../hover/hoverDelegate.js";
+import { ISelectBoxOptions, ISelectBoxStyles, ISelectOptionItem, SelectBox } from "../selectBox/selectBox.js";
+import { IToggleStyles } from "../toggle/toggle.js";
+import {
+  Action,
+  ActionRunner,
+  IAction,
+  IActionChangeEvent,
+  IActionRunner,
+  Separator,
+} from "../../../common/actions.js";
+import { Disposable } from "../../../common/lifecycle.js";
+import * as platform from "../../../common/platform.js";
+import * as types from "../../../common/types.js";
+import "./actionbar.css";
+import * as nls from "../../../../nls.js";
+import type { IManagedHover, IManagedHoverContent } from "../hover/hover.js";
+import { getBaseLayerHoverDelegate } from "../hover/hoverDelegate2.js";
 
 export interface IBaseActionViewItemOptions {
 	readonly draggable?: boolean;
@@ -48,7 +55,7 @@ export class BaseActionViewItem extends Disposable implements IActionViewItem {
 	constructor(
 		context: unknown,
 		action: IAction,
-		protected readonly options: IBaseActionViewItemOptions = {}
+		protected readonly options: IBaseActionViewItemOptions = {},
 	) {
 		super();
 
@@ -121,11 +128,23 @@ export class BaseActionViewItem extends Disposable implements IActionViewItem {
 
 			if (isFirefox) {
 				// Firefox: requires to set a text data transfer to get going
-				this._register(addDisposableListener(container, EventType.DRAG_START, e => e.dataTransfer?.setData(DataTransfers.TEXT, this._action.label)));
+				this._register(
+          addDisposableListener(
+            container,
+            EventType.DRAG_START,
+            e => e.dataTransfer?.setData(DataTransfers.TEXT, this._action.label),
+          ),
+        );
 			}
 		}
 
-		this._register(addDisposableListener(element, TouchEventType.Tap, e => this.onClick(e, true))); // Preserve focus on tap #125470
+		this._register(
+      addDisposableListener(
+        element,
+        TouchEventType.Tap,
+        e => this.onClick(e, true),
+      ),
+    ); // Preserve focus on tap #125470
 
 		this._register(addDisposableListener(element, EventType.MOUSE_DOWN, e => {
 			if (!enableDragging) {
@@ -133,7 +152,7 @@ export class BaseActionViewItem extends Disposable implements IActionViewItem {
 			}
 
 			if (this._action.enabled && e.button === 0) {
-				element.classList.add('active');
+				element.classList.add("active");
 			}
 		}));
 
@@ -158,22 +177,30 @@ export class BaseActionViewItem extends Disposable implements IActionViewItem {
 			}
 		}));
 
-		this._register(addDisposableListener(element, EventType.DBLCLICK, e => {
-			EventHelper.stop(e, true);
-		}));
+		this._register(
+      addDisposableListener(element, EventType.DBLCLICK, e => {
+        EventHelper.stop(e, true);
+      }),
+    );
 
 		[EventType.MOUSE_UP, EventType.MOUSE_OUT].forEach(event => {
-			this._register(addDisposableListener(element, event, e => {
-				EventHelper.stop(e);
-				element.classList.remove('active');
-			}));
-		});
+      this._register(
+        addDisposableListener(element, event, e => {
+          EventHelper.stop(e);
+          element.classList.remove("active");
+        }),
+      );
+    });
 	}
 
 	onClick(event: EventLike, preserveFocus = false): void {
 		EventHelper.stop(event, true);
 
-		const context = types.isUndefinedOrNull(this._context) ? this.options?.useEventAsContext ? event : { preserveFocus } : this._context;
+		const context = types.isUndefinedOrNull(
+      this._context,
+    ) ? this.options?.useEventAsContext ? event : {
+      preserveFocus,
+    } : this._context;
 		this.actionRunner.run(this._action, context);
 	}
 
@@ -183,19 +210,19 @@ export class BaseActionViewItem extends Disposable implements IActionViewItem {
 		if (this.element) {
 			this.element.tabIndex = 0;
 			this.element.focus();
-			this.element.classList.add('focused');
+			this.element.classList.add("focused");
 		}
 	}
 
 	isFocused(): boolean {
-		return !!this.element?.classList.contains('focused');
+		return !!this.element?.classList.contains("focused");
 	}
 
 	blur(): void {
 		if (this.element) {
 			this.element.blur();
 			this.element.tabIndex = -1;
-			this.element.classList.remove('focused');
+			this.element.classList.remove("focused");
 		}
 	}
 
@@ -233,12 +260,20 @@ export class BaseActionViewItem extends Disposable implements IActionViewItem {
 		if (!this.element) {
 			return;
 		}
-		const title = this.getHoverContents() ?? '';
+		const title = this.getHoverContents() ?? "";
 		this.updateAriaLabel();
 
-		if (!this.customHover && title !== '') {
-			const hoverDelegate = this.options.hoverDelegate ?? getDefaultHoverDelegate('element');
-			this.customHover = this._store.add(getBaseLayerHoverDelegate().setupManagedHover(hoverDelegate, this.element, title));
+		if (!this.customHover && title !== "") {
+			const hoverDelegate = this.options.hoverDelegate ?? getDefaultHoverDelegate(
+        "element",
+      );
+			this.customHover = this._store.add(
+        getBaseLayerHoverDelegate().setupManagedHover(
+          hoverDelegate,
+          this.element,
+          title,
+        ),
+      );
 		} else if (this.customHover) {
 			this.customHover.update(title);
 		}
@@ -246,8 +281,8 @@ export class BaseActionViewItem extends Disposable implements IActionViewItem {
 
 	protected updateAriaLabel(): void {
 		if (this.element) {
-			const title = this.getTooltip() ?? '';
-			this.element.setAttribute('aria-label', title);
+			const title = this.getTooltip() ?? "";
+			this.element.setAttribute("aria-label", title);
 		}
 	}
 
@@ -286,30 +321,30 @@ export class ActionViewItem extends BaseActionViewItem {
 
 	constructor(context: unknown, action: IAction, options: IActionViewItemOptions) {
 		options = {
-			...options,
-			icon: options.icon !== undefined ? options.icon : false,
-			label: options.label !== undefined ? options.label : true,
-		};
+      ...options,
+      icon: options.icon !== undefined ? options.icon : false,
+      label: options.label !== undefined ? options.label : true,
+    };
 		super(context, action, options);
 
 		this.options = options;
-		this.cssClass = '';
+		this.cssClass = "";
 	}
 
 	override render(container: HTMLElement): void {
 		super.render(container);
 		types.assertType(this.element);
 
-		const label = document.createElement('a');
-		label.classList.add('action-label');
-		label.setAttribute('role', this.getDefaultAriaRole());
+		const label = document.createElement("a");
+		label.classList.add("action-label");
+		label.setAttribute("role", this.getDefaultAriaRole());
 
 		this.label = label;
 		this.element.appendChild(label);
 
 		if (this.options.label && this.options.keybinding && !this.options.keybindingNotRenderedWithLabel) {
-			const kbLabel = document.createElement('span');
-			kbLabel.classList.add('keybinding');
+			const kbLabel = document.createElement("span");
+			kbLabel.classList.add("keybinding");
 			kbLabel.textContent = this.options.keybinding;
 			this.element.appendChild(kbLabel);
 		}
@@ -321,16 +356,16 @@ export class ActionViewItem extends BaseActionViewItem {
 		this.updateChecked();
 	}
 
-	private getDefaultAriaRole(): 'presentation' | 'menuitem' | 'tab' | 'button' {
+	private getDefaultAriaRole(): "presentation" | "menuitem" | "tab" | "button" {
 		if (this._action.id === Separator.ID) {
-			return 'presentation'; // A separator is a presentation item
+			return "presentation"; // A separator is a presentation item
 		} else {
 			if (this.options.isMenu) {
-				return 'menuitem';
+				return "menuitem";
 			} else if (this.options.isTabList) {
-				return 'tab';
+				return "tab";
 			} else {
-				return 'button';
+				return "button";
 			}
 		}
 	}
@@ -375,7 +410,12 @@ export class ActionViewItem extends BaseActionViewItem {
 		} else if (this.action.label) {
 			title = this.action.label;
 			if (this.options.keybinding) {
-				title = nls.localize({ key: 'titleLabel', comment: ['action title', 'action keybinding'] }, "{0} ({1})", title, this.options.keybinding);
+				title = nls.localize(
+          { key: "titleLabel", comment: ["action title", "action keybinding"] },
+          "{0} ({1})",
+          title,
+          this.options.keybinding,
+        );
 			}
 		}
 		return title ?? undefined;
@@ -383,7 +423,7 @@ export class ActionViewItem extends BaseActionViewItem {
 
 	protected override updateClass(): void {
 		if (this.cssClass && this.label) {
-			this.label.classList.remove(...this.cssClass.split(' '));
+			this.label.classList.remove(...this.cssClass.split(" "));
 		}
 		if (this.action.id === Separator.ID && this.action.class) {
 			this.label?.classList.add(this.action.class);
@@ -392,57 +432,65 @@ export class ActionViewItem extends BaseActionViewItem {
 			this.cssClass = this.getClass();
 
 			if (this.label) {
-				this.label.classList.add('codicon');
+				this.label.classList.add("codicon");
 				if (this.cssClass) {
-					this.label.classList.add(...this.cssClass.split(' '));
+					this.label.classList.add(...this.cssClass.split(" "));
 				}
 			}
 
 			this.updateEnabled();
 		} else {
-			this.label?.classList.remove('codicon');
+			this.label?.classList.remove("codicon");
 		}
 	}
 
 	protected override updateEnabled(): void {
 		if (this.action.enabled) {
 			if (this.label) {
-				this.label.removeAttribute('aria-disabled');
-				this.label.classList.remove('disabled');
+				this.label.removeAttribute("aria-disabled");
+				this.label.classList.remove("disabled");
 			}
 
-			this.element?.classList.remove('disabled');
+			this.element?.classList.remove("disabled");
 		} else {
 			if (this.label) {
-				this.label.setAttribute('aria-disabled', 'true');
-				this.label.classList.add('disabled');
+				this.label.setAttribute("aria-disabled", "true");
+				this.label.classList.add("disabled");
 			}
 
-			this.element?.classList.add('disabled');
+			this.element?.classList.add("disabled");
 		}
 	}
 
 	protected override updateAriaLabel(): void {
 		if (this.label) {
-			const title = this.getTooltip() ?? '';
-			this.label.setAttribute('aria-label', title);
+			const title = this.getTooltip() ?? "";
+			this.label.setAttribute("aria-label", title);
 		}
 	}
 
 	protected override updateChecked(): void {
 		if (this.label) {
 			if (this.action.checked !== undefined) {
-				this.label.classList.toggle('checked', this.action.checked);
+				this.label.classList.toggle("checked", this.action.checked);
 				if (this.options.isTabList) {
-					this.label.setAttribute('aria-selected', this.action.checked ? 'true' : 'false');
+					this.label.setAttribute(
+            "aria-selected",
+            this.action.checked ? "true" : "false",
+          );
 				} else {
-					this.label.setAttribute('aria-pressed', this.action.checked ? 'true' : 'false');
-					this.label.setAttribute('role', 'button');
+					this.label.setAttribute(
+            "aria-pressed",
+            this.action.checked ? "true" : "false",
+          );
+					this.label.setAttribute("role", "button");
 				}
 			} else {
-				this.label.classList.remove('checked');
-				this.label.removeAttribute(this.options.isTabList ? 'aria-selected' : 'aria-pressed');
-				this.label.setAttribute('role', this.getDefaultAriaRole());
+				this.label.classList.remove("checked");
+				this.label.removeAttribute(
+          this.options.isTabList ? "aria-selected" : "aria-pressed",
+        );
+				this.label.setAttribute("role", this.getDefaultAriaRole());
 			}
 		}
 	}
@@ -454,7 +502,13 @@ export class SelectActionViewItem<T = string> extends BaseActionViewItem {
 	constructor(ctx: unknown, action: IAction, options: ISelectOptionItem[], selected: number, contextViewProvider: IContextViewProvider, styles: ISelectBoxStyles, selectBoxOptions?: ISelectBoxOptions) {
 		super(ctx, action);
 
-		this.selectBox = new SelectBox(options, selected, contextViewProvider, styles, selectBoxOptions);
+		this.selectBox = new SelectBox(
+      options,
+      selected,
+      contextViewProvider,
+      styles,
+      selectBoxOptions,
+    );
 		this.selectBox.setFocusable(false);
 
 		this._register(this.selectBox);
@@ -470,7 +524,9 @@ export class SelectActionViewItem<T = string> extends BaseActionViewItem {
 	}
 
 	private registerListeners(): void {
-		this._register(this.selectBox.onDidSelect(e => this.runAction(e.selected, e.index)));
+		this._register(
+      this.selectBox.onDidSelect(e => this.runAction(e.selected, e.index)),
+    );
 	}
 
 	protected runAction(option: string, index: number): void {

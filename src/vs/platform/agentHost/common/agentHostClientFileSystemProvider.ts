@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../base/common/uri.js';
-import { AHPFileSystemProvider } from './agentHostFileSystemProvider.js';
-import { fromAgentClientUri } from './agentClientUri.js';
+import { URI } from "../../../base/common/uri.js";
+import { AHPFileSystemProvider } from "./agentHostFileSystemProvider.js";
+import { fromAgentClientUri } from "./agentClientUri.js";
 
 /**
  * Read-only filesystem provider for accessing client-side files from the

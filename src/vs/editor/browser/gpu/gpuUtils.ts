@@ -3,16 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BugIndicatingError } from '../../../base/common/errors.js';
-import { toDisposable, type IDisposable } from '../../../base/common/lifecycle.js';
+import { BugIndicatingError } from "../../../base/common/errors.js";
+import { toDisposable, type IDisposable } from "../../../base/common/lifecycle.js";
 
 export const quadVertices = new Float32Array([
-	1, 0,
-	1, 1,
-	0, 1,
-	0, 0,
-	0, 1,
-	1, 0,
+  1,
+  0,
+  1,
+  1,
+  0,
+  1,
+  0,
+  0,
+  0,
+  1,
+  1,
+  0,
 ]);
 
 export function ensureNonNullable<T>(value: T | null): T {
@@ -35,7 +41,7 @@ export function observeDevicePixelDimensions(element: HTMLElement, parentWindow:
 		}
 
 		// Disconnect if devicePixelContentBoxSize isn't supported by the browser
-		if (!('devicePixelContentBoxSize' in entry)) {
+		if (!("devicePixelContentBoxSize" in entry)) {
 			observer?.disconnect();
 			observer = undefined;
 			return;
@@ -50,11 +56,11 @@ export function observeDevicePixelDimensions(element: HTMLElement, parentWindow:
 	});
 	try {
 		// eslint-disable-next-line local/code-no-any-casts, @typescript-eslint/no-explicit-any
-		observer.observe(element, { box: ['device-pixel-content-box'] } as any);
+		observer.observe(element, { box: ["device-pixel-content-box"] } as any);
 	} catch {
 		observer.disconnect();
 		observer = undefined;
-		throw new BugIndicatingError('Could not observe device pixel dimensions');
+		throw new BugIndicatingError("Could not observe device pixel dimensions");
 	}
 	return toDisposable(() => observer?.disconnect());
 }

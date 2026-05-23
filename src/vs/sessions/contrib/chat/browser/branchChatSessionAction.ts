@@ -3,24 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize2 } from '../../../../nls.js';
-import { Action2, MenuId } from '../../../../platform/actions/common/actions.js';
-import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
-import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { ChatContextKeys } from '../../../../workbench/contrib/chat/common/actions/chatContextKeys.js';
-import { Codicon } from '../../../../base/common/codicons.js';
-import { generateUuid } from '../../../../base/common/uuid.js';
-import { ChatTreeItem, ChatViewPaneTarget, IChatWidgetService } from '../../../../workbench/contrib/chat/browser/chat.js';
-import { ChatModel, ISerializableChatData } from '../../../../workbench/contrib/chat/common/model/chatModel.js';
-import { isRequestVM, isResponseVM } from '../../../../workbench/contrib/chat/common/model/chatViewModel.js';
-import { revive } from '../../../../base/common/marshalling.js';
-import { IChatService } from '../../../../workbench/contrib/chat/common/chatService/chatService.js';
+import { localize2 } from "../../../../nls.js";
+import { Action2, MenuId } from "../../../../platform/actions/common/actions.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { ChatContextKeys } from "../../../../workbench/contrib/chat/common/actions/chatContextKeys.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { ChatTreeItem, ChatViewPaneTarget, IChatWidgetService } from "../../../../workbench/contrib/chat/browser/chat.js";
+import { ChatModel, ISerializableChatData } from "../../../../workbench/contrib/chat/common/model/chatModel.js";
+import { isRequestVM, isResponseVM } from "../../../../workbench/contrib/chat/common/model/chatViewModel.js";
+import { revive } from "../../../../base/common/marshalling.js";
+import { IChatService } from "../../../../workbench/contrib/chat/common/chatService/chatService.js";
 
 
 /**
  * Action ID for branching chat session to a new local session.
  */
-export const ACTION_ID_BRANCH_CHAT_SESSION = 'workbench.action.chat.branchChatSession';
+export const ACTION_ID_BRANCH_CHAT_SESSION = "workbench.action.chat.branchChatSession";
 
 /**
  * Action that allows users to branch the current chat session from a specific checkpoint.
@@ -34,8 +34,8 @@ export class BranchChatSessionAction extends Action2 {
 	constructor() {
 		super({
 			id: BranchChatSessionAction.ID,
-			title: localize2('branchChatSession', "Branch Chat"),
-			tooltip: localize2('branchChatSessionTooltip', "Branch to new session"),
+			title: localize2("branchChatSession", "Branch Chat"),
+			tooltip: localize2("branchChatSessionTooltip", "Branch to new session"),
 			icon: Codicon.reply,
 			f1: false,
 			precondition: ContextKeyExpr.and(
@@ -44,13 +44,13 @@ export class BranchChatSessionAction extends Action2 {
 			),
 			menu: [{
 				id: MenuId.ChatMessageCheckpoint,
-				group: 'navigation',
+				group: "navigation",
 				order: 3,
 				when: ContextKeyExpr.and(
 					ChatContextKeys.isRequest,
 					ChatContextKeys.lockedToCodingAgent.negate(),
 				),
-			}]
+			}],
 		});
 	}
 
@@ -64,7 +64,9 @@ export class BranchChatSessionAction extends Action2 {
 			return;
 		}
 
-		const widget = widgetService.getWidgetBySessionResource(item.sessionResource);
+		const widget = widgetService.getWidgetBySessionResource(
+      item.sessionResource,
+    );
 		if (!widget || !widget.viewModel) {
 			return;
 		}
@@ -76,12 +78,16 @@ export class BranchChatSessionAction extends Action2 {
 		}
 
 		const checkpointRequestId = isRequestVM(item) ? item.id : item.requestId;
-		const serializedData = revive(structuredClone(chatModel.toJSON())) as ISerializableChatData;
+		const serializedData = revive(
+      structuredClone(chatModel.toJSON()),
+    ) as ISerializableChatData;
 		serializedData.sessionId = generateUuid();
 
 		delete serializedData.customTitle;
 
-		const checkpointIndex = serializedData.requests.findIndex(r => r.requestId === checkpointRequestId);
+		const checkpointIndex = serializedData.requests.findIndex(
+      r => r.requestId === checkpointRequestId,
+    );
 		if (checkpointIndex === -1) {
 			return;
 		}
@@ -104,6 +110,9 @@ export class BranchChatSessionAction extends Action2 {
 		const modelRef = chatService.loadSessionFromData(serializedData);
 
 		// Open the branched session in the chat view pane
-		await widgetService.openSession(modelRef.object.sessionResource, ChatViewPaneTarget);
+		await widgetService.openSession(
+      modelRef.object.sessionResource,
+      ChatViewPaneTarget,
+    );
 	}
 }

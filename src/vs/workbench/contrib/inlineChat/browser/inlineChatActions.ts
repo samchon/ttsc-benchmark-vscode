@@ -3,46 +3,73 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Codicon } from '../../../../base/common/codicons.js';
-import { KeyCode, KeyMod } from '../../../../base/common/keyCodes.js';
-import { ICodeEditor, isCodeEditor, isDiffEditor } from '../../../../editor/browser/editorBrowser.js';
-import { EditorAction2 } from '../../../../editor/browser/editorExtensions.js';
-import { EmbeddedDiffEditorWidget } from '../../../../editor/browser/widget/diffEditor/embeddedDiffEditorWidget.js';
-import { EmbeddedCodeEditorWidget } from '../../../../editor/browser/widget/codeEditor/embeddedCodeEditorWidget.js';
-import { EditorContextKeys } from '../../../../editor/common/editorContextKeys.js';
-import { InlineChatController, InlineChatRunOptions } from './inlineChatController.js';
-import { ACTION_ASK_IN_CHAT, CTX_INLINE_CHAT_FOCUSED, CTX_INLINE_CHAT_VISIBLE, CTX_INLINE_CHAT_OUTER_CURSOR_POSITION, CTX_INLINE_CHAT_POSSIBLE, ACTION_START, CTX_INLINE_CHAT_V2_ENABLED, CTX_INLINE_CHAT_FILE_BELONGS_TO_CHAT, CTX_INLINE_CHAT_TERMINATED, CTX_FIX_DIAGNOSTICS_ENABLED, CTX_INLINE_CHAT_AFFORDANCE_VISIBLE, CTX_ASK_IN_CHAT_ENABLED, CTX_INLINE_CHAT_HAS_NOTEBOOK_INLINE } from '../common/inlineChat.js';
-import { ctxHasEditorModification, ctxHasRequestInProgress } from '../../chat/browser/chatEditing/chatEditingEditorContextKeys.js';
-import { localize, localize2 } from '../../../../nls.js';
-import { Action2, IAction2Options, MenuId, MenuRegistry } from '../../../../platform/actions/common/actions.js';
-import { ContextKeyExpr, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { KeybindingWeight } from '../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { IEditorService } from '../../../services/editor/common/editorService.js';
-import { ICodeEditorService } from '../../../../editor/browser/services/codeEditorService.js';
-import { CONTEXT_ACCESSIBILITY_MODE_ENABLED } from '../../../../platform/accessibility/common/accessibility.js';
-import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
-import { registerIcon } from '../../../../platform/theme/common/iconRegistry.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { ChatContextKeys } from '../../chat/common/actions/chatContextKeys.js';
-import { IChatEditingService } from '../../chat/common/editing/chatEditingService.js';
-import { IChatWidgetService } from '../../chat/browser/chat.js';
-import { ChatEntitlementContextKeys } from '../../../services/chat/common/chatEntitlementService.js';
-import { NOTEBOOK_IS_ACTIVE_EDITOR } from '../../notebook/common/notebookContextKeys.js';
+import { Codicon } from "../../../../base/common/codicons.js";
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { ICodeEditor, isCodeEditor, isDiffEditor } from "../../../../editor/browser/editorBrowser.js";
+import { EditorAction2 } from "../../../../editor/browser/editorExtensions.js";
+import { EmbeddedDiffEditorWidget } from "../../../../editor/browser/widget/diffEditor/embeddedDiffEditorWidget.js";
+import { EmbeddedCodeEditorWidget } from "../../../../editor/browser/widget/codeEditor/embeddedCodeEditorWidget.js";
+import { EditorContextKeys } from "../../../../editor/common/editorContextKeys.js";
+import { InlineChatController, InlineChatRunOptions } from "./inlineChatController.js";
+import {
+  ACTION_ASK_IN_CHAT,
+  CTX_INLINE_CHAT_FOCUSED,
+  CTX_INLINE_CHAT_VISIBLE,
+  CTX_INLINE_CHAT_OUTER_CURSOR_POSITION,
+  CTX_INLINE_CHAT_POSSIBLE,
+  ACTION_START,
+  CTX_INLINE_CHAT_V2_ENABLED,
+  CTX_INLINE_CHAT_FILE_BELONGS_TO_CHAT,
+  CTX_INLINE_CHAT_TERMINATED,
+  CTX_FIX_DIAGNOSTICS_ENABLED,
+  CTX_INLINE_CHAT_AFFORDANCE_VISIBLE,
+  CTX_ASK_IN_CHAT_ENABLED,
+  CTX_INLINE_CHAT_HAS_NOTEBOOK_INLINE,
+} from "../common/inlineChat.js";
+import { ctxHasEditorModification, ctxHasRequestInProgress } from "../../chat/browser/chatEditing/chatEditingEditorContextKeys.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { Action2, IAction2Options, MenuId, MenuRegistry } from "../../../../platform/actions/common/actions.js";
+import { ContextKeyExpr, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { CONTEXT_ACCESSIBILITY_MODE_ENABLED } from "../../../../platform/accessibility/common/accessibility.js";
+import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+import { registerIcon } from "../../../../platform/theme/common/iconRegistry.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { ChatContextKeys } from "../../chat/common/actions/chatContextKeys.js";
+import { IChatEditingService } from "../../chat/common/editing/chatEditingService.js";
+import { IChatWidgetService } from "../../chat/browser/chat.js";
+import { ChatEntitlementContextKeys } from "../../../services/chat/common/chatEntitlementService.js";
+import { NOTEBOOK_IS_ACTIVE_EDITOR } from "../../notebook/common/notebookContextKeys.js";
 
-CommandsRegistry.registerCommandAlias('interactiveEditor.start', 'inlineChat.start');
+CommandsRegistry.registerCommandAlias(
+  "interactiveEditor.start",
+  "inlineChat.start",
+);
 
-const START_INLINE_CHAT = registerIcon('start-inline-chat', Codicon.sparkle, localize('startInlineChat', 'Icon which spawns the inline chat from the editor toolbar.'));
+const START_INLINE_CHAT = registerIcon(
+  "start-inline-chat",
+  Codicon.sparkle,
+  localize(
+    "startInlineChat",
+    "Icon which spawns the inline chat from the editor toolbar.",
+  ),
+);
 
 const inlineChatNotebooksOldEnabled = ContextKeyExpr.or(
-	ContextKeyExpr.and(NOTEBOOK_IS_ACTIVE_EDITOR, CTX_INLINE_CHAT_HAS_NOTEBOOK_INLINE)
+  ContextKeyExpr.and(
+    NOTEBOOK_IS_ACTIVE_EDITOR,
+    CTX_INLINE_CHAT_HAS_NOTEBOOK_INLINE,
+  ),
 );
 
 const inlineChatContextKey = ContextKeyExpr.and(
-	ContextKeyExpr.or(inlineChatNotebooksOldEnabled, CTX_INLINE_CHAT_V2_ENABLED),
-	CTX_INLINE_CHAT_POSSIBLE,
-	EditorContextKeys.writable,
-	EditorContextKeys.editorSimpleInput.negate()
+  ContextKeyExpr.or(inlineChatNotebooksOldEnabled, CTX_INLINE_CHAT_V2_ENABLED),
+  CTX_INLINE_CHAT_POSSIBLE,
+  EditorContextKeys.writable,
+  EditorContextKeys.editorSimpleInput.negate(),
 );
 
 export class StartSessionAction extends Action2 {
@@ -50,8 +77,8 @@ export class StartSessionAction extends Action2 {
 	constructor() {
 		super({
 			id: ACTION_START,
-			title: localize2('run', 'Open Inline Chat'),
-			shortTitle: localize2('runShort', 'Inline Chat'),
+			title: localize2("run", "Open Inline Chat"),
+			shortTitle: localize2("runShort", "Inline Chat"),
 			category: AbstractInlineChatAction.category,
 			f1: true,
 			precondition: ContextKeyExpr.and(inlineChatContextKey, ContextKeyExpr.or(CTX_INLINE_CHAT_FILE_BELONGS_TO_CHAT.negate(), CTX_ASK_IN_CHAT_ENABLED.negate())),
@@ -59,22 +86,22 @@ export class StartSessionAction extends Action2 {
 				when: ContextKeyExpr.and(
 					EditorContextKeys.focus,
 					inlineChatContextKey,
-					ContextKeyExpr.or(CTX_INLINE_CHAT_FILE_BELONGS_TO_CHAT.negate(), CTX_ASK_IN_CHAT_ENABLED.negate())
+					ContextKeyExpr.or(CTX_INLINE_CHAT_FILE_BELONGS_TO_CHAT.negate(), CTX_ASK_IN_CHAT_ENABLED.negate()),
 				),
 				weight: KeybindingWeight.WorkbenchContrib,
-				primary: KeyMod.CtrlCmd | KeyCode.KeyI
+				primary: KeyMod.CtrlCmd | KeyCode.KeyI,
 			},
 			icon: START_INLINE_CHAT,
 			menu: [{
 				id: MenuId.EditorContext,
-				group: '1_chat',
+				group: "1_chat",
 				order: 3,
-				when: ContextKeyExpr.and(inlineChatContextKey, ContextKeyExpr.or(CTX_INLINE_CHAT_FILE_BELONGS_TO_CHAT.negate(), CTX_ASK_IN_CHAT_ENABLED.negate()))
+				when: ContextKeyExpr.and(inlineChatContextKey, ContextKeyExpr.or(CTX_INLINE_CHAT_FILE_BELONGS_TO_CHAT.negate(), CTX_ASK_IN_CHAT_ENABLED.negate())),
 			}, {
 				id: MenuId.ChatTitleBarMenu,
-				group: 'a_open',
+				group: "a_open",
 				order: 3,
-			}]
+			}],
 		});
 	}
 	override run(accessor: ServicesAccessor, ...args: unknown[]): any {
@@ -120,35 +147,35 @@ export class StartSessionAction extends Action2 {
 // --- InlineChatEditorAffordance menu ---
 
 MenuRegistry.appendMenuItem(MenuId.InlineChatEditorAffordance, {
-	group: '0_chat',
+	group: "0_chat",
 	order: 1,
 	when: ContextKeyExpr.and(EditorContextKeys.writable, EditorContextKeys.hasNonEmptySelection, ContextKeyExpr.or(CTX_INLINE_CHAT_FILE_BELONGS_TO_CHAT.negate(), CTX_ASK_IN_CHAT_ENABLED.negate()), ChatEntitlementContextKeys.Setup.hidden.negate()),
 	command: {
 		id: ACTION_START,
-		title: localize('editCode', "Ask for Edits"),
-		shortTitle: localize('editCodeShort', "Ask for Edits"),
+		title: localize("editCode", "Ask for Edits"),
+		shortTitle: localize("editCodeShort", "Ask for Edits"),
 		icon: Codicon.sparkle,
-	}
+	},
 });
 
 export class FocusInlineChat extends EditorAction2 {
 
 	constructor() {
 		super({
-			id: 'inlineChat.focus',
-			title: localize2('focus', "Focus Input"),
+			id: "inlineChat.focus",
+			title: localize2("focus", "Focus Input"),
 			f1: true,
 			category: AbstractInlineChatAction.category,
 			precondition: ContextKeyExpr.and(EditorContextKeys.editorTextFocus, CTX_INLINE_CHAT_VISIBLE, CTX_INLINE_CHAT_FOCUSED.negate(), CONTEXT_ACCESSIBILITY_MODE_ENABLED.negate()),
 			keybinding: [{
 				weight: KeybindingWeight.EditorCore + 10, // win against core_command
-				when: ContextKeyExpr.and(CTX_INLINE_CHAT_OUTER_CURSOR_POSITION.isEqualTo('above'), EditorContextKeys.isEmbeddedDiffEditor.negate()),
+				when: ContextKeyExpr.and(CTX_INLINE_CHAT_OUTER_CURSOR_POSITION.isEqualTo("above"), EditorContextKeys.isEmbeddedDiffEditor.negate()),
 				primary: KeyMod.CtrlCmd | KeyCode.DownArrow,
 			}, {
 				weight: KeybindingWeight.EditorCore + 10, // win against core_command
-				when: ContextKeyExpr.and(CTX_INLINE_CHAT_OUTER_CURSOR_POSITION.isEqualTo('below'), EditorContextKeys.isEmbeddedDiffEditor.negate()),
+				when: ContextKeyExpr.and(CTX_INLINE_CHAT_OUTER_CURSOR_POSITION.isEqualTo("below"), EditorContextKeys.isEmbeddedDiffEditor.negate()),
 				primary: KeyMod.CtrlCmd | KeyCode.UpArrow,
-			}]
+			}],
 		});
 	}
 
@@ -160,13 +187,16 @@ export class FocusInlineChat extends EditorAction2 {
 //#region --- VERSION 2
 export abstract class AbstractInlineChatAction extends EditorAction2 {
 
-	static readonly category = localize2('cat', "Inline Chat");
+	static readonly category = localize2("cat", "Inline Chat");
 
 	constructor(desc: IAction2Options) {
-		const massageMenu = (menu: IAction2Options['menu'] | undefined) => {
+		const massageMenu = (menu: IAction2Options["menu"] | undefined) => {
 			if (Array.isArray(menu)) {
 				for (const entry of menu) {
-					entry.when = ContextKeyExpr.and(CTX_INLINE_CHAT_V2_ENABLED, entry.when);
+					entry.when = ContextKeyExpr.and(
+            CTX_INLINE_CHAT_V2_ENABLED,
+            entry.when,
+          );
 				}
 			} else if (menu) {
 				menu.when = ContextKeyExpr.and(CTX_INLINE_CHAT_V2_ENABLED, menu.when);
@@ -179,10 +209,10 @@ export abstract class AbstractInlineChatAction extends EditorAction2 {
 		}
 
 		super({
-			...desc,
-			category: AbstractInlineChatAction.category,
-			precondition: ContextKeyExpr.and(CTX_INLINE_CHAT_V2_ENABLED, desc.precondition)
-		});
+      ...desc,
+      category: AbstractInlineChatAction.category,
+      precondition: ContextKeyExpr.and(CTX_INLINE_CHAT_V2_ENABLED, desc.precondition),
+    });
 	}
 
 	override runEditorCommand(accessor: ServicesAccessor, editor: ICodeEditor, ..._args: unknown[]) {
@@ -201,7 +231,11 @@ export abstract class AbstractInlineChatAction extends EditorAction2 {
 		}
 
 		if (!ctrl) {
-			logService.warn('[IE] NO controller found for action', this.desc.id, editor.getModel()?.uri);
+			logService.warn(
+        "[IE] NO controller found for action",
+        this.desc.id,
+        editor.getModel()?.uri,
+      );
 			return;
 		}
 
@@ -212,7 +246,11 @@ export abstract class AbstractInlineChatAction extends EditorAction2 {
 			for (const diffEditor of accessor.get(ICodeEditorService).listDiffEditors()) {
 				if (diffEditor.getOriginalEditor() === editor || diffEditor.getModifiedEditor() === editor) {
 					if (diffEditor instanceof EmbeddedDiffEditorWidget) {
-						this.runEditorCommand(accessor, diffEditor.getParentEditor(), ..._args);
+						this.runEditorCommand(
+              accessor,
+              diffEditor.getParentEditor(),
+              ..._args,
+            );
 					}
 				}
 			}
@@ -228,27 +266,27 @@ export class FixDiagnosticsAction extends AbstractInlineChatAction {
 
 	constructor() {
 		super({
-			id: 'inlineChat.fixDiagnostics',
-			title: localize2('fix', 'Fix'),
+			id: "inlineChat.fixDiagnostics",
+			title: localize2("fix", "Fix"),
 			icon: Codicon.editSparkle,
 			precondition: ContextKeyExpr.and(CTX_FIX_DIAGNOSTICS_ENABLED, EditorContextKeys.selectionHasDiagnostics, CTX_INLINE_CHAT_FILE_BELONGS_TO_CHAT.negate()),
 			menu: [{
 				id: MenuId.InlineChatEditorAffordance,
-				group: '1_quickfix',
+				group: "1_quickfix",
 				order: 100,
 				when: ContextKeyExpr.and(CTX_FIX_DIAGNOSTICS_ENABLED, EditorContextKeys.selectionHasDiagnostics, CTX_INLINE_CHAT_FILE_BELONGS_TO_CHAT.negate()),
 			}, {
 				id: MenuId.ChatEditorInlineMenu,
-				group: '2_chat',
+				group: "2_chat",
 				order: 1,
 				when: ContextKeyExpr.and(CTX_FIX_DIAGNOSTICS_ENABLED, EditorContextKeys.selectionHasDiagnostics, CTX_INLINE_CHAT_FILE_BELONGS_TO_CHAT.negate()),
 			}, {
 				id: MenuId.MarkerHoverStatusBar,
-				group: '1_fix',
+				group: "1_fix",
 				order: 1,
 				when: ContextKeyExpr.and(CTX_FIX_DIAGNOSTICS_ENABLED, CTX_INLINE_CHAT_FILE_BELONGS_TO_CHAT.negate()),
 				precondition: null,
-			}]
+			}],
 		});
 	}
 
@@ -278,8 +316,8 @@ class KeepOrUndoSessionAction extends AbstractInlineChatAction {
 export class KeepSessionAction2 extends KeepOrUndoSessionAction {
 	constructor() {
 		super(true, {
-			id: 'inlineChat2.keep',
-			title: localize2('Keep', "Keep"),
+			id: "inlineChat2.keep",
+			title: localize2("Keep", "Keep"),
 			f1: true,
 			icon: Codicon.check,
 			precondition: ContextKeyExpr.and(
@@ -290,21 +328,21 @@ export class KeepSessionAction2 extends KeepOrUndoSessionAction {
 			keybinding: [{
 				when: ContextKeyExpr.and(ChatContextKeys.inputHasFocus, ChatContextKeys.inputHasText.negate()),
 				weight: KeybindingWeight.WorkbenchContrib,
-				primary: KeyCode.Enter
+				primary: KeyCode.Enter,
 			}, {
 				weight: KeybindingWeight.WorkbenchContrib + 10,
-				primary: KeyMod.CtrlCmd | KeyCode.Enter
+				primary: KeyMod.CtrlCmd | KeyCode.Enter,
 			}],
 			menu: [{
 				id: MenuId.ChatEditorInlineExecute,
-				group: 'navigation',
+				group: "navigation",
 				order: 4,
 				when: ContextKeyExpr.and(
 					ctxHasRequestInProgress.negate(),
 					ctxHasEditorModification,
-					ChatContextKeys.inputHasText.toNegated()
+					ChatContextKeys.inputHasText.toNegated(),
 				),
-			}]
+			}],
 		});
 	}
 }
@@ -313,8 +351,8 @@ export class UndoAndCloseSessionAction2 extends KeepOrUndoSessionAction {
 
 	constructor() {
 		super(false, {
-			id: 'inlineChat2.close',
-			title: localize2('close2', "Close"),
+			id: "inlineChat2.close",
+			title: localize2("close2", "Close"),
 			f1: true,
 			icon: Codicon.close,
 			precondition: ContextKeyExpr.and(CTX_INLINE_CHAT_VISIBLE),
@@ -328,9 +366,9 @@ export class UndoAndCloseSessionAction2 extends KeepOrUndoSessionAction {
 			}],
 			menu: [{
 				id: MenuId.ChatEditorInlineExecute,
-				group: 'navigation',
+				group: "navigation",
 				order: 100,
-			}]
+			}],
 		});
 	}
 }
@@ -339,8 +377,8 @@ export class CancelSessionAction extends KeepOrUndoSessionAction {
 
 	constructor() {
 		super(false, {
-			id: 'inlineChat2.cancel',
-			title: localize2('cancel', "Cancel"),
+			id: "inlineChat2.cancel",
+			title: localize2("cancel", "Cancel"),
 			precondition: ContextKeyExpr.and(CTX_INLINE_CHAT_VISIBLE, ctxHasRequestInProgress),
 			keybinding: [{
 				when: ContextKeyExpr.or(
@@ -350,7 +388,7 @@ export class CancelSessionAction extends KeepOrUndoSessionAction {
 				weight: KeybindingWeight.WorkbenchContrib + 1,
 				primary: KeyCode.Escape,
 			}],
-			menu: []
+			menu: [],
 		});
 	}
 }
@@ -359,16 +397,16 @@ export class ContinueInlineChatInChatViewAction extends AbstractInlineChatAction
 
 	constructor() {
 		super({
-			id: 'inlineChat2.continueInChat',
-			title: localize2('continueInChat', "Ask in Chat"),
+			id: "inlineChat2.continueInChat",
+			title: localize2("continueInChat", "Ask in Chat"),
 			icon: Codicon.chatSparkle,
 			precondition: ContextKeyExpr.and(CTX_INLINE_CHAT_VISIBLE, CTX_INLINE_CHAT_TERMINATED),
 			menu: [{
 				id: MenuId.ChatEditorInlineExecute,
-				group: 'navigation',
+				group: "navigation",
 				order: 2,
-				when: CTX_INLINE_CHAT_TERMINATED
-			}]
+				when: CTX_INLINE_CHAT_TERMINATED,
+			}],
 		});
 	}
 
@@ -381,15 +419,15 @@ export class RephraseInlineChatSessionAction extends AbstractInlineChatAction {
 
 	constructor() {
 		super({
-			id: 'inlineChat2.rephrase',
-			title: localize2('rephrase', "Rephrase"),
+			id: "inlineChat2.rephrase",
+			title: localize2("rephrase", "Rephrase"),
 			precondition: ContextKeyExpr.and(CTX_INLINE_CHAT_VISIBLE, CTX_INLINE_CHAT_TERMINATED),
 			menu: [{
 				id: MenuId.ChatEditorInlineExecute,
-				group: 'navigation',
+				group: "navigation",
 				order: 1,
-				when: CTX_INLINE_CHAT_TERMINATED
-			}]
+				when: CTX_INLINE_CHAT_TERMINATED,
+			}],
 		});
 	}
 
@@ -404,27 +442,27 @@ export class AskInChatAction extends EditorAction2 {
 	constructor() {
 		super({
 			id: ACTION_ASK_IN_CHAT,
-			title: localize2('askInChat', 'Ask in Chat'),
+			title: localize2("askInChat", "Ask in Chat"),
 			category: AbstractInlineChatAction.category,
 			f1: true,
 			precondition: ContextKeyExpr.and(inlineChatContextKey, CTX_INLINE_CHAT_FILE_BELONGS_TO_CHAT, CTX_ASK_IN_CHAT_ENABLED),
 			keybinding: {
 				when: EditorContextKeys.focus,
 				weight: KeybindingWeight.WorkbenchContrib,
-				primary: KeyMod.CtrlCmd | KeyCode.KeyI
+				primary: KeyMod.CtrlCmd | KeyCode.KeyI,
 			},
 			icon: Codicon.chatSparkle,
 			menu: [{
 				id: MenuId.EditorContext,
-				group: '1_chat',
+				group: "1_chat",
 				order: 3,
-				when: ContextKeyExpr.and(inlineChatContextKey, CTX_INLINE_CHAT_FILE_BELONGS_TO_CHAT, CTX_ASK_IN_CHAT_ENABLED)
+				when: ContextKeyExpr.and(inlineChatContextKey, CTX_INLINE_CHAT_FILE_BELONGS_TO_CHAT, CTX_ASK_IN_CHAT_ENABLED),
 			}, {
 				id: MenuId.InlineChatEditorAffordance,
-				group: '0_chat',
+				group: "0_chat",
 				order: 1,
-				when: ContextKeyExpr.and(EditorContextKeys.hasNonEmptySelection, CTX_INLINE_CHAT_FILE_BELONGS_TO_CHAT, CTX_ASK_IN_CHAT_ENABLED)
-			}]
+				when: ContextKeyExpr.and(EditorContextKeys.hasNonEmptySelection, CTX_INLINE_CHAT_FILE_BELONGS_TO_CHAT, CTX_ASK_IN_CHAT_ENABLED),
+			}],
 		});
 	}
 
@@ -434,11 +472,15 @@ export class AskInChatAction extends EditorAction2 {
 		if (!editor.hasModel()) {
 			return;
 		}
-		const session = chatEditingService.editingSessionsObs.get().find(s => s.getEntry(editor.getModel().uri));
+		const session = chatEditingService.editingSessionsObs.get().find(
+      s => s.getEntry(editor.getModel().uri),
+    );
 		if (!session) {
 			return;
 		}
-		const widget = await chatWidgetService.openSession(session.chatSessionResource);
+		const widget = await chatWidgetService.openSession(
+      session.chatSessionResource,
+    );
 		if (!widget) {
 			return;
 		}
@@ -453,14 +495,14 @@ export class DismissEditorAffordanceAction extends EditorAction2 {
 
 	constructor() {
 		super({
-			id: 'inlineChat.dismissEditorAffordance',
-			title: localize2('dismissAffordance', "Dismiss Editor Affordance"),
-			precondition: ContextKeyExpr.and(CTX_INLINE_CHAT_AFFORDANCE_VISIBLE, ContextKeyExpr.equals('config.inlineChat.affordance', 'editor')),
+			id: "inlineChat.dismissEditorAffordance",
+			title: localize2("dismissAffordance", "Dismiss Editor Affordance"),
+			precondition: ContextKeyExpr.and(CTX_INLINE_CHAT_AFFORDANCE_VISIBLE, ContextKeyExpr.equals("config.inlineChat.affordance", "editor")),
 			keybinding: {
 				when: EditorContextKeys.editorTextFocus,
 				weight: KeybindingWeight.EditorContrib,
 				primary: KeyCode.Escape,
-			}
+			},
 		});
 	}
 

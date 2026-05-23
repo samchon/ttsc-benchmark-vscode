@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { strictEquals } from '../../../base/common/equals.js';
-import { DisposableStore, IDisposable } from '../../../base/common/lifecycle.js';
-import { DebugLocation } from '../../../base/common/observable.js';
+import { strictEquals } from "../../../base/common/equals.js";
+import { DisposableStore, IDisposable } from "../../../base/common/lifecycle.js";
+import { DebugLocation } from "../../../base/common/observable.js";
 // eslint-disable-next-line local/code-no-deep-import-of-internal
-import { DebugNameData } from '../../../base/common/observableInternal/debugName.js';
+import { DebugNameData } from "../../../base/common/observableInternal/debugName.js";
 // eslint-disable-next-line local/code-no-deep-import-of-internal
-import { ObservableValue } from '../../../base/common/observableInternal/observables/observableValue.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../storage/common/storage.js';
+import { ObservableValue } from "../../../base/common/observableInternal/observables/observableValue.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../storage/common/storage.js";
 
 interface IObservableMementoOpts<T> {
 	defaultValue: T;
@@ -58,9 +58,18 @@ export class ObservableMemento<T> extends ObservableValue<T> implements IDisposa
 		};
 
 		const initialValue = getStorageValue();
-		super(new DebugNameData(undefined, `storage/${opts.key}`, undefined), initialValue, strictEquals, DebugLocation.ofCaller());
+		super(
+      new DebugNameData(undefined, `storage/${opts.key}`, undefined),
+      initialValue,
+      strictEquals,
+      DebugLocation.ofCaller(),
+    );
 
-		const didChange = storageService.onDidChangeValue(storageScope, opts.key, this._store);
+		const didChange = storageService.onDidChangeValue(
+      storageScope,
+      opts.key,
+      this._store,
+    );
 		this._store.add(didChange((e) => {
 			if (e.external && e.key === opts.key) {
 				this._noStorageUpdateNeeded = true;
@@ -79,7 +88,12 @@ export class ObservableMemento<T> extends ObservableValue<T> implements IDisposa
 			return;
 		}
 		const valueToStore = this.opts.toStorage(this.get());
-		this.storageService.store(this.opts.key, valueToStore, this.storageScope, this.storageTarget);
+		this.storageService.store(
+      this.opts.key,
+      valueToStore,
+      this.storageScope,
+      this.storageTarget,
+    );
 	}
 
 	dispose(): void {

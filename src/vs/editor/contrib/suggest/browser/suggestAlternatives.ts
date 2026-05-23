@@ -3,15 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { ICodeEditor } from '../../../browser/editorBrowser.js';
-import { IContextKey, IContextKeyService, RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
-import { CompletionModel } from './completionModel.js';
-import { ISelectedSuggestion } from './suggestWidget.js';
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { IContextKey, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { CompletionModel } from "./completionModel.js";
+import { ISelectedSuggestion } from "./suggestWidget.js";
 
 export class SuggestAlternatives {
 
-	static readonly OtherSuggestions = new RawContextKey<boolean>('hasOtherSuggestions', false);
+	static readonly OtherSuggestions = new RawContextKey<boolean>(
+    "hasOtherSuggestions",
+    false,
+  );
 
 	private readonly _ckOtherSuggestions: IContextKey<boolean>;
 
@@ -23,9 +26,11 @@ export class SuggestAlternatives {
 
 	constructor(
 		private readonly _editor: ICodeEditor,
-		@IContextKeyService contextKeyService: IContextKeyService
+		@IContextKeyService contextKeyService: IContextKeyService,
 	) {
-		this._ckOtherSuggestions = SuggestAlternatives.OtherSuggestions.bindTo(contextKeyService);
+		this._ckOtherSuggestions = SuggestAlternatives.OtherSuggestions.bindTo(
+      contextKeyService,
+    );
 	}
 
 	dispose(): void {
@@ -95,8 +100,16 @@ export class SuggestAlternatives {
 		}
 		try {
 			this._ignore = true;
-			this._index = SuggestAlternatives._moveIndex(fwd, this._model, this._index);
-			this._acceptNext!({ index: this._index, item: this._model.items[this._index], model: this._model });
+			this._index = SuggestAlternatives._moveIndex(
+        fwd,
+        this._model,
+        this._index,
+      );
+			this._acceptNext!({
+        index: this._index,
+        item: this._model.items[this._index],
+        model: this._model,
+      });
 		} finally {
 			this._ignore = false;
 		}

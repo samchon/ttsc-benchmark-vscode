@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import { IDisposable, dispose } from '../../../../base/common/lifecycle.js';
-import { IProgressService, ProgressLocation } from '../../../../platform/progress/common/progress.js';
-import { IWorkbenchContribution } from '../../../common/contributions.js';
-import { IDebugService, IDebugSession, VIEWLET_ID } from '../common/debug.js';
-import { IViewsService } from '../../../services/views/common/viewsService.js';
+import { Event } from "../../../../base/common/event.js";
+import { IDisposable, dispose } from "../../../../base/common/lifecycle.js";
+import { IProgressService, ProgressLocation } from "../../../../platform/progress/common/progress.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { IDebugService, IDebugSession, VIEWLET_ID } from "../common/debug.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
 
 export class DebugProgressContribution implements IWorkbenchContribution {
 
@@ -17,7 +17,7 @@ export class DebugProgressContribution implements IWorkbenchContribution {
 	constructor(
 		@IDebugService debugService: IDebugService,
 		@IProgressService progressService: IProgressService,
-		@IViewsService viewsService: IViewsService
+		@IViewsService viewsService: IViewsService,
 	) {
 		let progressListener: IDisposable | undefined;
 		const listenOnProgress = (session: IDebugSession | undefined) => {
@@ -45,19 +45,19 @@ export class DebugProgressContribution implements IWorkbenchContribution {
 						title: progressStartEvent.body.title,
 						cancellable: progressStartEvent.body.cancellable,
 						source,
-						delay: 500
+						delay: 500,
 					}, progressStep => {
 						let total = 0;
 						const reportProgress = (progress: { message?: string; percentage?: number }) => {
 							let increment = undefined;
-							if (typeof progress.percentage === 'number') {
+							if (typeof progress.percentage === "number") {
 								increment = progress.percentage - total;
 								total += increment;
 							}
 							progressStep.report({
 								message: progress.message,
 								increment,
-								total: typeof increment === 'number' ? 100 : undefined,
+								total: typeof increment === "number" ? 100 : undefined,
 							});
 						};
 
@@ -75,7 +75,9 @@ export class DebugProgressContribution implements IWorkbenchContribution {
 				});
 			}
 		};
-		this.toDispose.push(debugService.getViewModel().onDidFocusSession(listenOnProgress));
+		this.toDispose.push(
+      debugService.getViewModel().onDidFocusSession(listenOnProgress),
+    );
 		listenOnProgress(debugService.getViewModel().focusedSession);
 		this.toDispose.push(debugService.onWillNewSession(session => {
 			if (!progressListener) {

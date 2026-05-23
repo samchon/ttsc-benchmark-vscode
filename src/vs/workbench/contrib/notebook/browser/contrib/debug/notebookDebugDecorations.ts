@@ -3,18 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Delayer } from '../../../../../../base/common/async.js';
-import { Disposable } from '../../../../../../base/common/lifecycle.js';
-import { IRange, Range } from '../../../../../../editor/common/core/range.js';
-import { IConfigurationService } from '../../../../../../platform/configuration/common/configuration.js';
-import { debugIconBreakpointForeground } from '../../../../debug/browser/breakpointEditorContribution.js';
-import { focusedStackFrameColor, topStackFrameColor } from '../../../../debug/browser/callStackEditorContribution.js';
-import { IDebugService, IStackFrame } from '../../../../debug/common/debug.js';
-import { INotebookCellDecorationOptions, INotebookDeltaCellDecoration, INotebookEditor, INotebookEditorContribution, NotebookOverviewRulerLane } from '../../notebookBrowser.js';
-import { registerNotebookContribution } from '../../notebookEditorExtensions.js';
-import { runningCellRulerDecorationColor } from '../../notebookEditorWidget.js';
-import { CellUri, NotebookCellExecutionState } from '../../../common/notebookCommon.js';
-import { INotebookExecutionStateService, NotebookExecutionType } from '../../../common/notebookExecutionStateService.js';
+import { Delayer } from "../../../../../../base/common/async.js";
+import { Disposable } from "../../../../../../base/common/lifecycle.js";
+import { IRange, Range } from "../../../../../../editor/common/core/range.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { debugIconBreakpointForeground } from "../../../../debug/browser/breakpointEditorContribution.js";
+import { focusedStackFrameColor, topStackFrameColor } from "../../../../debug/browser/callStackEditorContribution.js";
+import { IDebugService, IStackFrame } from "../../../../debug/common/debug.js";
+import {
+  INotebookCellDecorationOptions,
+  INotebookDeltaCellDecoration,
+  INotebookEditor,
+  INotebookEditorContribution,
+  NotebookOverviewRulerLane,
+} from "../../notebookBrowser.js";
+import { registerNotebookContribution } from "../../notebookEditorExtensions.js";
+import { runningCellRulerDecorationColor } from "../../notebookEditorWidget.js";
+import { CellUri, NotebookCellExecutionState } from "../../../common/notebookCommon.js";
+import { INotebookExecutionStateService, NotebookExecutionType } from "../../../common/notebookExecutionStateService.js";
 
 interface ICellAndRange {
 	handle: number;
@@ -22,7 +28,7 @@ interface ICellAndRange {
 }
 
 export class PausedCellDecorationContribution extends Disposable implements INotebookEditorContribution {
-	static id: string = 'workbench.notebook.debug.pausedCellDecorations';
+	static id: string = "workbench.notebook.debug.pausedCellDecorations";
 
 	private _currentTopDecorations: string[] = [];
 	private _currentOtherDecorations: string[] = [];
@@ -36,8 +42,16 @@ export class PausedCellDecorationContribution extends Disposable implements INot
 		super();
 
 		const delayer = this._register(new Delayer(200));
-		this._register(_debugService.getModel().onDidChangeCallStack(() => this.updateExecutionDecorations()));
-		this._register(_debugService.getViewModel().onDidFocusStackFrame(() => this.updateExecutionDecorations()));
+		this._register(
+      _debugService.getModel().onDidChangeCallStack(
+        () => this.updateExecutionDecorations(),
+      ),
+    );
+		this._register(
+      _debugService.getViewModel().onDidFocusStackFrame(
+        () => this.updateExecutionDecorations(),
+      ),
+    );
 		this._register(_notebookExecutionStateService.onDidChangeExecution(e => {
 			if (e.type === NotebookExecutionType.cell && this._notebookEditor.textModel && e.affectsNotebook(this._notebookEditor.textModel.uri)) {
 				delayer.trigger(() => this.updateExecutionDecorations());
@@ -47,7 +61,9 @@ export class PausedCellDecorationContribution extends Disposable implements INot
 
 	private updateExecutionDecorations(): void {
 		const exes = this._notebookEditor.textModel ?
-			this._notebookExecutionStateService.getCellExecutionsByHandleForNotebook(this._notebookEditor.textModel.uri)
+			this._notebookExecutionStateService.getCellExecutionsByHandleForNotebook(
+        this._notebookEditor.textModel.uri,
+      )
 			: undefined;
 
 		const topFrameCellsAndRanges: ICellAndRange[] = [];
@@ -76,9 +92,13 @@ export class PausedCellDecorationContribution extends Disposable implements INot
 
 		const focusedFrame = this._debugService.getViewModel().focusedStackFrame;
 		if (focusedFrame && focusedFrame.thread.stopped) {
-			const thisFocusedFrameCellAndRange = getNotebookCellAndRange(focusedFrame);
+			const thisFocusedFrameCellAndRange = getNotebookCellAndRange(
+        focusedFrame,
+      );
 			if (thisFocusedFrameCellAndRange &&
-				!topFrameCellsAndRanges.some(topFrame => topFrame.handle === thisFocusedFrameCellAndRange?.handle && Range.equalsRange(topFrame.range, thisFocusedFrameCellAndRange?.range))) {
+				!topFrameCellsAndRanges.some(
+          topFrame => topFrame.handle === thisFocusedFrameCellAndRange?.handle && Range.equalsRange(topFrame.range, thisFocusedFrameCellAndRange?.range),
+        )) {
 				focusedFrameCellAndRange = thisFocusedFrameCellAndRange;
 				exes?.delete(focusedFrameCellAndRange.handle);
 			}
@@ -102,16 +122,19 @@ export class PausedCellDecorationContribution extends Disposable implements INot
 					color: topStackFrameColor,
 					includeOutput: false,
 					modelRanges: [range],
-					position: NotebookOverviewRulerLane.Full
-				}
+					position: NotebookOverviewRulerLane.Full,
+				},
 			};
 			return {
 				handle,
-				options
+				options,
 			};
 		});
 
-		this._currentTopDecorations = this._notebookEditor.deltaCellDecorations(this._currentTopDecorations, newDecorations);
+		this._currentTopDecorations = this._notebookEditor.deltaCellDecorations(
+      this._currentTopDecorations,
+      newDecorations,
+    );
 	}
 
 	private setFocusedFrameDecoration(focusedFrameCellAndRange: ICellAndRange | undefined): void {
@@ -122,16 +145,21 @@ export class PausedCellDecorationContribution extends Disposable implements INot
 					color: focusedStackFrameColor,
 					includeOutput: false,
 					modelRanges: [focusedFrameCellAndRange.range],
-					position: NotebookOverviewRulerLane.Full
-				}
+					position: NotebookOverviewRulerLane.Full,
+				},
 			};
-			newDecorations = [{
-				handle: focusedFrameCellAndRange.handle,
-				options
-			}];
+			newDecorations = [
+        {
+          handle: focusedFrameCellAndRange.handle,
+          options,
+        },
+      ];
 		}
 
-		this._currentOtherDecorations = this._notebookEditor.deltaCellDecorations(this._currentOtherDecorations, newDecorations);
+		this._currentOtherDecorations = this._notebookEditor.deltaCellDecorations(
+      this._currentOtherDecorations,
+      newDecorations,
+    );
 	}
 
 	private setExecutingCellDecorations(handles: number[]): void {
@@ -141,23 +169,29 @@ export class PausedCellDecorationContribution extends Disposable implements INot
 					color: runningCellRulerDecorationColor,
 					includeOutput: false,
 					modelRanges: [new Range(0, 0, 0, 0)],
-					position: NotebookOverviewRulerLane.Left
-				}
+					position: NotebookOverviewRulerLane.Left,
+				},
 			};
 			return {
 				handle,
-				options
+				options,
 			};
 		});
 
-		this._executingCellDecorations = this._notebookEditor.deltaCellDecorations(this._executingCellDecorations, newDecorations);
+		this._executingCellDecorations = this._notebookEditor.deltaCellDecorations(
+      this._executingCellDecorations,
+      newDecorations,
+    );
 	}
 }
 
-registerNotebookContribution(PausedCellDecorationContribution.id, PausedCellDecorationContribution);
+registerNotebookContribution(
+  PausedCellDecorationContribution.id,
+  PausedCellDecorationContribution,
+);
 
 export class NotebookBreakpointDecorations extends Disposable implements INotebookEditorContribution {
-	static id: string = 'workbench.notebook.debug.notebookBreakpointDecorations';
+	static id: string = "workbench.notebook.debug.notebookBreakpointDecorations";
 
 	private _currentDecorations: string[] = [];
 
@@ -167,12 +201,22 @@ export class NotebookBreakpointDecorations extends Disposable implements INotebo
 		@IConfigurationService private readonly _configService: IConfigurationService,
 	) {
 		super();
-		this._register(_debugService.getModel().onDidChangeBreakpoints(() => this.updateDecorations()));
-		this._register(_configService.onDidChangeConfiguration(e => e.affectsConfiguration('debug.showBreakpointsInOverviewRuler') && this.updateDecorations()));
+		this._register(
+      _debugService.getModel().onDidChangeBreakpoints(
+        () => this.updateDecorations(),
+      ),
+    );
+		this._register(
+      _configService.onDidChangeConfiguration(
+        e => e.affectsConfiguration("debug.showBreakpointsInOverviewRuler") && this.updateDecorations(),
+      ),
+    );
 	}
 
 	private updateDecorations(): void {
-		const enabled = this._configService.getValue('debug.showBreakpointsInOverviewRuler');
+		const enabled = this._configService.getValue(
+      "debug.showBreakpointsInOverviewRuler",
+    );
 		const newDecorations = enabled ?
 			this._debugService.getModel().getBreakpoints().map(breakpoint => {
 				const parsed = CellUri.parse(breakpoint.uri);
@@ -185,14 +229,20 @@ export class NotebookBreakpointDecorations extends Disposable implements INotebo
 						color: debugIconBreakpointForeground,
 						includeOutput: false,
 						modelRanges: [new Range(breakpoint.lineNumber, 0, breakpoint.lineNumber, 0)],
-						position: NotebookOverviewRulerLane.Left
-					}
+						position: NotebookOverviewRulerLane.Left,
+					},
 				};
 				return { handle: parsed.handle, options };
 			}).filter(x => !!x) as INotebookDeltaCellDecoration[]
 			: [];
-		this._currentDecorations = this._notebookEditor.deltaCellDecorations(this._currentDecorations, newDecorations);
+		this._currentDecorations = this._notebookEditor.deltaCellDecorations(
+      this._currentDecorations,
+      newDecorations,
+    );
 	}
 }
 
-registerNotebookContribution(NotebookBreakpointDecorations.id, NotebookBreakpointDecorations);
+registerNotebookContribution(
+  NotebookBreakpointDecorations.id,
+  NotebookBreakpointDecorations,
+);

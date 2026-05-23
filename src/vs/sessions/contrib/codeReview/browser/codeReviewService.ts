@@ -3,22 +3,29 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { autorun, derivedOpts, IObservable, ISettableObservable, observableValue, transaction } from '../../../../base/common/observable.js';
-import { isEqual } from '../../../../base/common/resources.js';
-import { URI, UriComponents } from '../../../../base/common/uri.js';
-import { IRange, Range } from '../../../../editor/common/core/range.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { generateUuid } from '../../../../base/common/uuid.js';
-import { hash } from '../../../../base/common/hash.js';
-import { hasKey } from '../../../../base/common/types.js';
-import { isIChatSessionFileChange2 } from '../../../../workbench/contrib/chat/common/chatSessionsService.js';
-import { IGitHubService } from '../../github/browser/githubService.js';
-import { ISessionsManagementService } from '../../../services/sessions/common/sessionsManagement.js';
-import { ISessionFileChange } from '../../../services/sessions/common/session.js';
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import {
+  autorun,
+  derivedOpts,
+  IObservable,
+  ISettableObservable,
+  observableValue,
+  transaction,
+} from "../../../../base/common/observable.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { URI, UriComponents } from "../../../../base/common/uri.js";
+import { IRange, Range } from "../../../../editor/common/core/range.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { hash } from "../../../../base/common/hash.js";
+import { hasKey } from "../../../../base/common/types.js";
+import { isIChatSessionFileChange2 } from "../../../../workbench/contrib/chat/common/chatSessionsService.js";
+import { IGitHubService } from "../../github/browser/githubService.js";
+import { ISessionsManagementService } from "../../../services/sessions/common/sessionsManagement.js";
+import { ISessionFileChange } from "../../../services/sessions/common/session.js";
 
 // --- Types -------------------------------------------------------------------
 
@@ -65,7 +72,7 @@ export function getCodeReviewFilesFromSessionChanges(changes: readonly ISessionF
 
 export function getCodeReviewVersion(files: readonly ICodeReviewFile[]): string {
 	const stableFileList = files
-		.map(file => `${file.currentUri.toString()}|${file.baseUri?.toString() ?? ''}`)
+		.map(file => `${file.currentUri.toString()}|${file.baseUri?.toString() ?? ""}`)
 		.sort();
 
 	return `v1:${stableFileList.length}:${hash(stableFileList)}`;
@@ -74,10 +81,10 @@ export function getCodeReviewVersion(files: readonly ICodeReviewFile[]): string 
 export const MAX_CODE_REVIEWS_PER_SESSION_VERSION = 5;
 
 export const enum CodeReviewStateKind {
-	Idle = 'idle',
-	Loading = 'loading',
-	Result = 'result',
-	Error = 'error',
+	Idle = "idle",
+	Loading = "loading",
+	Result = "result",
+	Error = "error",
 }
 
 export type ICodeReviewState =
@@ -89,10 +96,10 @@ export type ICodeReviewState =
 // --- PR Review Types ---------------------------------------------------------
 
 export const enum PRReviewStateKind {
-	None = 'none',
-	Loading = 'loading',
-	Loaded = 'loaded',
-	Error = 'error',
+	None = "none",
+	Loading = "loading",
+	Loaded = "loaded",
+	Error = "error",
 }
 
 export type IPRReviewState =
@@ -154,7 +161,9 @@ interface IRawCodeReviewSuggestionChange {
 
 // --- Service Interface -------------------------------------------------------
 
-export const ICodeReviewService = createDecorator<ICodeReviewService>('codeReviewService');
+export const ICodeReviewService = createDecorator<ICodeReviewService>(
+  "codeReviewService",
+);
 
 export interface ICodeReviewService {
 	readonly _serviceBrand: undefined;
@@ -241,7 +250,10 @@ interface IPRSessionReviewData {
 }
 
 function isRawCodeReviewRangeWithPositions(range: IRawCodeReviewRange): range is IRawCodeReviewRangeWithPositions {
-	return typeof range === 'object' && range !== null && hasKey(range, { start: true, end: true });
+	return typeof range === "object" && range !== null && hasKey(range, {
+    start: true,
+    end: true,
+  });
 }
 
 function isRawCodeReviewRangeTuple(range: IRawCodeReviewRange): range is IRawCodeReviewRangeTuple {
@@ -249,7 +261,7 @@ function isRawCodeReviewRangeTuple(range: IRawCodeReviewRange): range is IRawCod
 }
 
 function normalizeCodeReviewUri(uri: IRawCodeReviewUri): URI {
-	return typeof uri === 'string' ? URI.parse(uri) : URI.revive(uri);
+	return typeof uri === "string" ? URI.parse(uri) : URI.revive(uri);
 }
 
 function normalizeCodeReviewRange(range: IRawCodeReviewRange): IRange {
@@ -260,29 +272,29 @@ function normalizeCodeReviewRange(range: IRawCodeReviewRange): IRange {
 	if (isRawCodeReviewRangeTuple(range)) {
 		const [start, end] = range;
 		return new Range(
-			(start.line ?? 0) + 1,
-			(start.character ?? 0) + 1,
-			(end.line ?? start.line ?? 0) + 1,
-			(end.character ?? start.character ?? 0) + 1,
-		);
+      (start.line ?? 0) + 1,
+      (start.character ?? 0) + 1,
+      (end.line ?? start.line ?? 0) + 1,
+      (end.character ?? start.character ?? 0) + 1,
+    );
 	}
 
 	if (isRawCodeReviewRangeWithPositions(range) && range.start && range.end) {
 		return new Range(
-			(range.start.line ?? 0) + 1,
-			(range.start.character ?? 0) + 1,
-			(range.end.line ?? range.start.line ?? 0) + 1,
-			(range.end.character ?? range.start.character ?? 0) + 1,
-		);
+      (range.start.line ?? 0) + 1,
+      (range.start.character ?? 0) + 1,
+      (range.end.line ?? range.start.line ?? 0) + 1,
+      (range.end.character ?? range.start.character ?? 0) + 1,
+    );
 	}
 
 	const lineRange = range as IRawCodeReviewRangeWithLines;
 	return new Range(
-		(lineRange.startLine ?? 0) + 1,
-		(lineRange.startColumn ?? 0) + 1,
-		(lineRange.endLine ?? lineRange.startLine ?? 0) + 1,
-		(lineRange.endColumn ?? lineRange.startColumn ?? 0) + 1,
-	);
+    (lineRange.startLine ?? 0) + 1,
+    (lineRange.startColumn ?? 0) + 1,
+    (lineRange.endLine ?? lineRange.startLine ?? 0) + 1,
+    (lineRange.endColumn ?? lineRange.startColumn ?? 0) + 1,
+  );
 }
 
 function normalizeCodeReviewSuggestion(suggestion: IRawCodeReviewSuggestion | undefined): ICodeReviewSuggestion | undefined {
@@ -303,7 +315,7 @@ export class CodeReviewService extends Disposable implements ICodeReviewService 
 
 	declare readonly _serviceBrand: undefined;
 
-	private static readonly _STORAGE_KEY = 'codeReview.reviews';
+	private static readonly _STORAGE_KEY = "codeReview.reviews";
 
 	private readonly _reviewsBySession = new Map<string, ISessionReviewData>();
 	private readonly _prReviewBySession = new Map<string, IPRSessionReviewData>();
@@ -373,8 +385,8 @@ export class CodeReviewService extends Disposable implements ICodeReviewService 
 						id: String(thread.id),
 						uri: fileUri,
 						range: new Range(line, 1, line, 1),
-						body: firstComment?.body ?? '',
-						author: firstComment?.author.login ?? '',
+						body: firstComment?.body ?? "",
+						author: firstComment?.author.login ?? "",
 					});
 				}
 
@@ -412,7 +424,14 @@ export class CodeReviewService extends Disposable implements ICodeReviewService 
 			return;
 		}
 
-		data.state.set({ kind: CodeReviewStateKind.Loading, version, reviewCount: currentReviewCount + 1 }, undefined);
+		data.state.set(
+      {
+        kind: CodeReviewStateKind.Loading,
+        version,
+        reviewCount: currentReviewCount + 1,
+      },
+      undefined,
+    );
 
 		this._executeReview(sessionResource, version, files, data);
 	}
@@ -429,7 +448,16 @@ export class CodeReviewService extends Disposable implements ICodeReviewService 
 		}
 
 		const filtered = state.comments.filter(c => c.id !== commentId);
-		data.state.set({ kind: CodeReviewStateKind.Result, version: state.version, reviewCount: state.reviewCount, comments: filtered, didProduceComments: state.didProduceComments }, undefined);
+		data.state.set(
+      {
+        kind: CodeReviewStateKind.Result,
+        version: state.version,
+        reviewCount: state.reviewCount,
+        comments: filtered,
+        didProduceComments: state.didProduceComments,
+      },
+      undefined,
+    );
 		this._saveToStorage();
 	}
 
@@ -444,8 +472,19 @@ export class CodeReviewService extends Disposable implements ICodeReviewService 
 			return;
 		}
 
-		const updated = state.comments.map(c => c.id === commentId ? { ...c, body: newBody } : c);
-		data.state.set({ kind: CodeReviewStateKind.Result, version: state.version, reviewCount: state.reviewCount, comments: updated, didProduceComments: state.didProduceComments }, undefined);
+		const updated = state.comments.map(
+      c => c.id === commentId ? { ...c, body: newBody } : c,
+    );
+		data.state.set(
+      {
+        kind: CodeReviewStateKind.Result,
+        version: state.version,
+        reviewCount: state.reviewCount,
+        comments: updated,
+        didProduceComments: state.didProduceComments,
+      },
+      undefined,
+    );
 		this._saveToStorage();
 	}
 
@@ -462,8 +501,8 @@ export class CodeReviewService extends Disposable implements ICodeReviewService 
 		let data = this._reviewsBySession.get(key);
 		if (!data) {
 			data = {
-				state: observableValue<ICodeReviewState>(`codeReview.state.${key}`, { kind: CodeReviewStateKind.Idle }),
-			};
+        state: observableValue<ICodeReviewState>(`codeReview.state.${key}`, { kind: CodeReviewStateKind.Idle }),
+      };
 			this._reviewsBySession.set(key, data);
 		}
 		return data;
@@ -477,7 +516,7 @@ export class CodeReviewService extends Disposable implements ICodeReviewService 
 	): Promise<void> {
 		try {
 			const result: { type: string; comments?: IRawCodeReviewComment[]; reason?: string } | undefined =
-				await this._commandService.executeCommand('chat.internal.codeReview.run', {
+				await this._commandService.executeCommand("chat.internal.codeReview.run", {
 					files: files.map(f => ({
 						currentUri: f.currentUri,
 						baseUri: f.baseUri,
@@ -490,42 +529,72 @@ export class CodeReviewService extends Disposable implements ICodeReviewService 
 				return;
 			}
 
-			if (!result || result.type === 'cancelled') {
+			if (!result || result.type === "cancelled") {
 				data.state.set({ kind: CodeReviewStateKind.Idle }, undefined);
 				return;
 			}
 
-			if (result.type === 'error') {
-				data.state.set({ kind: CodeReviewStateKind.Error, version, reviewCount: currentState.reviewCount, reason: result.reason ?? 'Unknown error' }, undefined);
+			if (result.type === "error") {
+				data.state.set(
+          {
+            kind: CodeReviewStateKind.Error,
+            version,
+            reviewCount: currentState.reviewCount,
+            reason: result.reason ?? "Unknown error",
+          },
+          undefined,
+        );
 				return;
 			}
 
-			if (result.type === 'success') {
-				const comments: ICodeReviewComment[] = (result.comments ?? []).map((raw) => ({
-					id: generateUuid(),
-					uri: normalizeCodeReviewUri(raw.uri),
-					range: normalizeCodeReviewRange(raw.range),
-					body: raw.body ?? '',
-					kind: raw.kind ?? '',
-					severity: raw.severity ?? '',
-					suggestion: normalizeCodeReviewSuggestion(raw.suggestion),
-				}));
+			if (result.type === "success") {
+				const comments: ICodeReviewComment[] = (result.comments ?? []).map(
+          (raw) => ({
+            id: generateUuid(),
+            uri: normalizeCodeReviewUri(raw.uri),
+            range: normalizeCodeReviewRange(raw.range),
+            body: raw.body ?? "",
+            kind: raw.kind ?? "",
+            severity: raw.severity ?? "",
+            suggestion: normalizeCodeReviewSuggestion(raw.suggestion),
+          }),
+        );
 
 				transaction(tx => {
-					data.state.set({ kind: CodeReviewStateKind.Result, version, reviewCount: currentState.reviewCount, comments, didProduceComments: comments.length > 0 }, tx);
-				});
+          data.state.set(
+            {
+              kind: CodeReviewStateKind.Result,
+              version,
+              reviewCount: currentState.reviewCount,
+              comments,
+              didProduceComments: comments.length > 0,
+            },
+            tx,
+          );
+        });
 				this._saveToStorage();
 			}
 		} catch (err) {
 			const currentState = data.state.get();
 			if (currentState.kind === CodeReviewStateKind.Loading && currentState.version === version) {
-				data.state.set({ kind: CodeReviewStateKind.Error, version, reviewCount: currentState.reviewCount, reason: String(err) }, undefined);
+				data.state.set(
+          {
+            kind: CodeReviewStateKind.Error,
+            version,
+            reviewCount: currentState.reviewCount,
+            reason: String(err),
+          },
+          undefined,
+        );
 			}
 		}
 	}
 
 	private _loadFromStorage(): void {
-		const raw = this._storageService.get(CodeReviewService._STORAGE_KEY, StorageScope.WORKSPACE);
+		const raw = this._storageService.get(
+      CodeReviewService._STORAGE_KEY,
+      StorageScope.WORKSPACE,
+    );
 		if (!raw) {
 			return;
 		}
@@ -534,16 +603,25 @@ export class CodeReviewService extends Disposable implements ICodeReviewService 
 			const stored: Record<string, IStoredCodeReview> = JSON.parse(raw);
 			for (const [key, review] of Object.entries(stored)) {
 				const comments: ICodeReviewComment[] = review.comments.map(c => ({
-					id: c.id,
-					uri: URI.revive(c.uri),
-					range: c.range,
-					body: c.body,
-					kind: c.kind,
-					severity: c.severity,
-					suggestion: c.suggestion,
-				}));
+          id: c.id,
+          uri: URI.revive(c.uri),
+          range: c.range,
+          body: c.body,
+          kind: c.kind,
+          severity: c.severity,
+          suggestion: c.suggestion,
+        }));
 				const data = this._getOrCreateData(URI.parse(key));
-				data.state.set({ kind: CodeReviewStateKind.Result, version: review.version, reviewCount: review.reviewCount ?? 1, comments, didProduceComments: review.didProduceComments ?? comments.length > 0 }, undefined);
+				data.state.set(
+          {
+            kind: CodeReviewStateKind.Result,
+            version: review.version,
+            reviewCount: review.reviewCount ?? 1,
+            comments,
+            didProduceComments: review.didProduceComments ?? comments.length > 0,
+          },
+          undefined,
+        );
 			}
 		} catch {
 			// Corrupted storage data - ignore
@@ -573,9 +651,17 @@ export class CodeReviewService extends Disposable implements ICodeReviewService 
 		}
 
 		if (Object.keys(stored).length === 0) {
-			this._storageService.remove(CodeReviewService._STORAGE_KEY, StorageScope.WORKSPACE);
+			this._storageService.remove(
+        CodeReviewService._STORAGE_KEY,
+        StorageScope.WORKSPACE,
+      );
 		} else {
-			this._storageService.store(CodeReviewService._STORAGE_KEY, JSON.stringify(stored), StorageScope.WORKSPACE, StorageTarget.MACHINE);
+			this._storageService.store(
+        CodeReviewService._STORAGE_KEY,
+        JSON.stringify(stored),
+        StorageScope.WORKSPACE,
+        StorageTarget.MACHINE,
+      );
 		}
 	}
 
@@ -641,11 +727,18 @@ export class CodeReviewService extends Disposable implements ICodeReviewService 
 		const session = this._sessionsManagementService.getSession(sessionResource);
 		const gitHubInfo = session?.workspace.get()?.folders[0]?.gitRepository?.gitHubInfo.get();
 		if (gitHubInfo?.pullRequest) {
-			const modelRef = this._gitHubService.createPullRequestReviewThreadsModelReference(gitHubInfo.owner, gitHubInfo.repo, gitHubInfo.pullRequest.number);
+			const modelRef = this._gitHubService.createPullRequestReviewThreadsModelReference(
+        gitHubInfo.owner,
+        gitHubInfo.repo,
+        gitHubInfo.pullRequest.number,
+      );
 			try {
 				await modelRef.object.resolveThread(threadId);
 			} catch (err) {
-				this._logService.warn('[CodeReviewService] Failed to resolve PR thread on GitHub:', err);
+				this._logService.warn(
+          "[CodeReviewService] Failed to resolve PR thread on GitHub:",
+          err,
+        );
 			} finally {
 				modelRef.dispose();
 			}
@@ -657,7 +750,10 @@ export class CodeReviewService extends Disposable implements ICodeReviewService 
 			const currentState = data.state.get();
 			if (currentState.kind === PRReviewStateKind.Loaded) {
 				const filtered = currentState.comments.filter(c => c.id !== threadId);
-				data.state.set({ kind: PRReviewStateKind.Loaded, comments: filtered }, undefined);
+				data.state.set(
+          { kind: PRReviewStateKind.Loaded, comments: filtered },
+          undefined,
+        );
 			}
 		}
 	}
@@ -677,7 +773,10 @@ export class CodeReviewService extends Disposable implements ICodeReviewService 
 			const currentState = data.state.get();
 			if (currentState.kind === PRReviewStateKind.Loaded) {
 				const filtered = currentState.comments.filter(c => c.id !== commentId);
-				data.state.set({ kind: PRReviewStateKind.Loaded, comments: filtered }, undefined);
+				data.state.set(
+          { kind: PRReviewStateKind.Loaded, comments: filtered },
+          undefined,
+        );
 			}
 		}
 	}
@@ -687,8 +786,8 @@ export class CodeReviewService extends Disposable implements ICodeReviewService 
 		let data = this._prReviewBySession.get(key);
 		if (!data) {
 			data = {
-				state: observableValue<IPRReviewState>(`prReview.state.${key}`, { kind: PRReviewStateKind.None }),
-			};
+        state: observableValue<IPRReviewState>(`prReview.state.${key}`, { kind: PRReviewStateKind.None }),
+      };
 			this._prReviewBySession.set(key, data);
 		}
 		return data;

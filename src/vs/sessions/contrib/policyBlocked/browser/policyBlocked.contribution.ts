@@ -3,19 +3,31 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, MutableDisposable } from '../../../../base/common/lifecycle.js';
-import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../../workbench/common/contributions.js';
-import { IWorkbenchLayoutService } from '../../../../workbench/services/layout/browser/layoutService.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IDefaultAccountService } from '../../../../platform/defaultAccount/common/defaultAccount.js';
-import { ChatConfiguration } from '../../../../workbench/contrib/chat/common/constants.js';
-import { ISessionsBlockedOverlayOptions, SessionsBlockedReason, SessionsPolicyBlockedOverlay } from './sessionsPolicyBlocked.js';
-import { AccountPolicyGateState, AccountPolicyGateUnsatisfiedReason, IAccountPolicyGateService } from '../../../../workbench/services/policies/common/accountPolicyService.js';
+import { Disposable, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import {
+  IWorkbenchContribution,
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../../../workbench/common/contributions.js";
+import { IWorkbenchLayoutService } from "../../../../workbench/services/layout/browser/layoutService.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IDefaultAccountService } from "../../../../platform/defaultAccount/common/defaultAccount.js";
+import { ChatConfiguration } from "../../../../workbench/contrib/chat/common/constants.js";
+import {
+  ISessionsBlockedOverlayOptions,
+  SessionsBlockedReason,
+  SessionsPolicyBlockedOverlay,
+} from "./sessionsPolicyBlocked.js";
+import {
+  AccountPolicyGateState,
+  AccountPolicyGateUnsatisfiedReason,
+  IAccountPolicyGateService,
+} from "../../../../workbench/services/policies/common/accountPolicyService.js";
 
 export class SessionsPolicyBlockedContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'workbench.contrib.sessionsPolicyBlocked';
+	static readonly ID = "workbench.contrib.sessionsPolicyBlocked";
 
 	private readonly overlayRef = this._register(new MutableDisposable());
 	private currentReason: SessionsBlockedReason | undefined;
@@ -49,7 +61,9 @@ export class SessionsPolicyBlockedContribution extends Disposable implements IWo
 		const gateForcesAgentDisabled = gateInfo.state === AccountPolicyGateState.Restricted
 			&& gateInfo.reason !== AccountPolicyGateUnsatisfiedReason.PolicyNotResolved;
 
-		const agentEnabled = this.configurationService.getValue<boolean>(ChatConfiguration.AgentEnabled);
+		const agentEnabled = this.configurationService.getValue<boolean>(
+      ChatConfiguration.AgentEnabled,
+    );
 		if (agentEnabled === false && !gateForcesAgentDisabled) {
 			this.showOverlay({ reason: SessionsBlockedReason.AgentDisabled });
 			return;
@@ -69,10 +83,10 @@ export class SessionsPolicyBlockedContribution extends Disposable implements IWo
 			} else {
 				const accountName = this.defaultAccountService.currentDefaultAccount?.accountName;
 				this.showOverlay({
-					reason: SessionsBlockedReason.AccountPolicyGate,
-					approvedOrganizations: gateInfo.approvedOrganizations,
-					accountName,
-				});
+          reason: SessionsBlockedReason.AccountPolicyGate,
+          approvedOrganizations: gateInfo.approvedOrganizations,
+          accountName,
+        });
 			}
 			return;
 		}
@@ -90,11 +104,15 @@ export class SessionsPolicyBlockedContribution extends Disposable implements IWo
 		this.currentReason = options.reason;
 
 		this.overlayRef.value = this.instantiationService.createInstance(
-			SessionsPolicyBlockedOverlay,
-			this.layoutService.mainContainer,
-			options,
-		);
+      SessionsPolicyBlockedOverlay,
+      this.layoutService.mainContainer,
+      options,
+    );
 	}
 }
 
-registerWorkbenchContribution2(SessionsPolicyBlockedContribution.ID, SessionsPolicyBlockedContribution, WorkbenchPhase.BlockRestore);
+registerWorkbenchContribution2(
+  SessionsPolicyBlockedContribution.ID,
+  SessionsPolicyBlockedContribution,
+  WorkbenchPhase.BlockRestore,
+);

@@ -3,35 +3,35 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import type { ICodeEditor } from '../../../../browser/editorBrowser.js';
-import { EditorAction } from '../../../../browser/editorExtensions.js';
-import { Position } from '../../../../common/core/position.js';
-import { Selection } from '../../../../common/core/selection.js';
-import { ExpandLineSelectionAction } from '../../browser/lineSelection.js';
-import { withTestCodeEditor } from '../../../../test/browser/testCodeEditor.js';
+import assert from "assert";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import type { ICodeEditor } from "../../../../browser/editorBrowser.js";
+import { EditorAction } from "../../../../browser/editorExtensions.js";
+import { Position } from "../../../../common/core/position.js";
+import { Selection } from "../../../../common/core/selection.js";
+import { ExpandLineSelectionAction } from "../../browser/lineSelection.js";
+import { withTestCodeEditor } from "../../../../test/browser/testCodeEditor.js";
 
 function executeAction(action: EditorAction, editor: ICodeEditor): void {
 	action.run(null!, editor, undefined);
 }
 
-suite('LineSelection', () => {
+suite("LineSelection", () => {
 
 	ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('', () => {
-		const LINE1 = '    \tMy First Line\t ';
-		const LINE2 = '\tMy Second Line';
-		const LINE3 = '    Third Line🐶';
-		const LINE4 = '';
-		const LINE5 = '1';
+	test("", () => {
+		const LINE1 = "    \tMy First Line\t ";
+		const LINE2 = "\tMy Second Line";
+		const LINE3 = "    Third Line🐶";
+		const LINE4 = "";
+		const LINE5 = "1";
 
 		const TEXT =
-			LINE1 + '\r\n' +
-			LINE2 + '\n' +
-			LINE3 + '\n' +
-			LINE4 + '\r\n' +
+			LINE1 + "\r\n" +
+			LINE2 + "\n" +
+			LINE3 + "\n" +
+			LINE4 + "\r\n" +
 			LINE5;
 
 		withTestCodeEditor(TEXT, {}, (editor, viewModel) => {

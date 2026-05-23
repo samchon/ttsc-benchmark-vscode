@@ -3,47 +3,53 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize, localize2 } from '../../../../../nls.js';
-import { $ } from '../../../../../base/browser/dom.js';
-import { IContextKey, IContextKeyService, ContextKeyExpr, RawContextKey } from '../../../../../platform/contextkey/common/contextkey.js';
-import { Action2, registerAction2, MenuId } from '../../../../../platform/actions/common/actions.js';
-import { ServicesAccessor, IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { KeybindingWeight } from '../../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { KeyMod, KeyCode } from '../../../../../base/common/keyCodes.js';
-import { IEditorService } from '../../../../services/editor/common/editorService.js';
-import { Codicon } from '../../../../../base/common/codicons.js';
-import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { ILogService } from '../../../../../platform/log/common/log.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { IDialogService } from '../../../../../platform/dialogs/common/dialogs.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../../platform/storage/common/storage.js';
-import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
-import { IWorkspaceTrustManagementService } from '../../../../../platform/workspace/common/workspaceTrust.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { IChatWidgetService } from '../../../chat/browser/chat.js';
-import { IChatService } from '../../../chat/common/chatService/chatService.js';
-import { IChatRequestVariableEntry } from '../../../chat/common/attachments/chatVariableEntries.js';
-import { ChatContextKeys } from '../../../chat/common/actions/chatContextKeys.js';
-import { IElementData, IElementAncestor, BrowserViewCommandId } from '../../../../../platform/browserView/common/browserView.js';
-import { IBrowserViewModel, BrowserViewSharingState } from '../../../browserView/common/browserView.js';
-import { BrowserEditorInput } from '../../common/browserEditorInput.js';
-import { Button } from '../../../../../base/browser/ui/button/button.js';
-import { WorkbenchHoverDelegate } from '../../../../../platform/hover/browser/hover.js';
-import { HoverPosition } from '../../../../../base/browser/ui/hover/hoverWidget.js';
-import { BrowserEditor, BrowserEditorContribution, IBrowserEditorWidgetContribution, CONTEXT_BROWSER_HAS_ERROR, CONTEXT_BROWSER_HAS_URL } from '../browserEditor.js';
-import { IConfigurationRegistry, Extensions as ConfigurationExtensions } from '../../../../../platform/configuration/common/configurationRegistry.js';
-import { Registry } from '../../../../../platform/registry/common/platform.js';
-import { PolicyCategory } from '../../../../../base/common/policy.js';
-import product from '../../../../../platform/product/common/product.js';
-import { AgentHostEnabledSettingId } from '../../../../../platform/agentHost/common/agentService.js';
-import { workbenchConfigurationNodeBase } from '../../../../common/configuration.js';
-import { safeSetInnerHtml } from '../../../../../base/browser/domSanitize.js';
-import { BrowserActionCategory } from '../browserViewActions.js';
-import { AgentHostChatToolsEnabledSettingId } from '../browserViewWorkbenchService.js';
+import { localize, localize2 } from "../../../../../nls.js";
+import { $ } from "../../../../../base/browser/dom.js";
+import { IContextKey, IContextKeyService, ContextKeyExpr, RawContextKey } from "../../../../../platform/contextkey/common/contextkey.js";
+import { Action2, registerAction2, MenuId } from "../../../../../platform/actions/common/actions.js";
+import { ServicesAccessor, IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingWeight } from "../../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { KeyMod, KeyCode } from "../../../../../base/common/keyCodes.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IDialogService } from "../../../../../platform/dialogs/common/dialogs.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
+import { IWorkspaceTrustManagementService } from "../../../../../platform/workspace/common/workspaceTrust.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { IChatWidgetService } from "../../../chat/browser/chat.js";
+import { IChatService } from "../../../chat/common/chatService/chatService.js";
+import { IChatRequestVariableEntry } from "../../../chat/common/attachments/chatVariableEntries.js";
+import { ChatContextKeys } from "../../../chat/common/actions/chatContextKeys.js";
+import { IElementData, IElementAncestor, BrowserViewCommandId } from "../../../../../platform/browserView/common/browserView.js";
+import { IBrowserViewModel, BrowserViewSharingState } from "../../../browserView/common/browserView.js";
+import { BrowserEditorInput } from "../../common/browserEditorInput.js";
+import { Button } from "../../../../../base/browser/ui/button/button.js";
+import { WorkbenchHoverDelegate } from "../../../../../platform/hover/browser/hover.js";
+import { HoverPosition } from "../../../../../base/browser/ui/hover/hoverWidget.js";
+import {
+  BrowserEditor,
+  BrowserEditorContribution,
+  IBrowserEditorWidgetContribution,
+  CONTEXT_BROWSER_HAS_ERROR,
+  CONTEXT_BROWSER_HAS_URL,
+} from "../browserEditor.js";
+import { IConfigurationRegistry, Extensions as ConfigurationExtensions } from "../../../../../platform/configuration/common/configurationRegistry.js";
+import { Registry } from "../../../../../platform/registry/common/platform.js";
+import { PolicyCategory } from "../../../../../base/common/policy.js";
+import product from "../../../../../platform/product/common/product.js";
+import { AgentHostEnabledSettingId } from "../../../../../platform/agentHost/common/agentService.js";
+import { workbenchConfigurationNodeBase } from "../../../../common/configuration.js";
+import { safeSetInnerHtml } from "../../../../../base/browser/domSanitize.js";
+import { BrowserActionCategory } from "../browserViewActions.js";
+import { AgentHostChatToolsEnabledSettingId } from "../browserViewWorkbenchService.js";
 
 // Register tools
-import '../tools/browserTools.contribution.js';
+import "../tools/browserTools.contribution.js";
 
 /**
  * Format an array of element ancestors into a CSS-selector-like path string.
@@ -55,16 +61,16 @@ function formatElementPath(ancestors: readonly IElementAncestor[] | undefined): 
 
 	return ancestors
 		.map(ancestor => {
-			const classes = ancestor.classNames?.length ? `.${ancestor.classNames.join('.')}` : '';
-			const id = ancestor.id ? `#${ancestor.id}` : '';
+			const classes = ancestor.classNames?.length ? `.${ancestor.classNames.join(".")}` : "";
+			const id = ancestor.id ? `#${ancestor.id}` : "";
 			return `${ancestor.tagName}${id}${classes}`;
 		})
-		.join(' > ');
+		.join(" > ");
 }
 
 function createElementContextValue(elementData: IElementData, displayName: string): string {
 	const sections: string[] = [];
-	sections.push('Attached Element Context from Integrated Browser');
+	sections.push("Attached Element Context from Integrated Browser");
 	sections.push(`Element: ${displayName}`);
 
 	if (elementData.url) {
@@ -81,20 +87,30 @@ function createElementContextValue(elementData: IElementData, displayName: strin
 	if (elementData.dimensions) {
 		const { top, left, width, height } = elementData.dimensions;
 		sections.push(
-			`Dimensions:\n- top: ${Math.round(top)}px\n- left: ${Math.round(left)}px\n- width: ${Math.round(width)}px\n- height: ${Math.round(height)}px`
-		);
+      `Dimensions:\n- top: ${Math.round(top)}px\n- left: ${Math.round(left)}px\n- width: ${Math.round(width)}px\n- height: ${Math.round(height)}px`,
+    );
 	}
 
 	sections.push(`CSS:\n\`\`\`css\n${elementData.computedStyle}\n\`\`\``);
 
-	return sections.join('\n\n');
+	return sections.join("\n\n");
 }
 
 // Context key expression to check if browser editor is active
-const BROWSER_EDITOR_ACTIVE = ContextKeyExpr.equals('activeEditor', BrowserEditorInput.EDITOR_ID);
-const BrowserCategory = localize2('browserCategory', "Browser");
+const BROWSER_EDITOR_ACTIVE = ContextKeyExpr.equals(
+  "activeEditor",
+  BrowserEditorInput.EDITOR_ID,
+);
+const BrowserCategory = localize2("browserCategory", "Browser");
 
-const CONTEXT_BROWSER_ELEMENT_SELECTION_ACTIVE = new RawContextKey<boolean>('browserElementSelectionActive', false, localize('browser.elementSelectionActive', "Whether element selection is currently active"));
+const CONTEXT_BROWSER_ELEMENT_SELECTION_ACTIVE = new RawContextKey<boolean>(
+  "browserElementSelectionActive",
+  false,
+  localize(
+    "browser.elementSelectionActive",
+    "Whether element selection is currently active",
+  ),
+);
 
 
 /**
@@ -122,29 +138,37 @@ export class BrowserEditorChatIntegration extends BrowserEditorContribution {
 		@IWorkspaceTrustManagementService private readonly workspaceTrustManagementService: IWorkspaceTrustManagementService,
 	) {
 		super(editor);
-		this._elementSelectionActiveContext = CONTEXT_BROWSER_ELEMENT_SELECTION_ACTIVE.bindTo(contextKeyService);
+		this._elementSelectionActiveContext = CONTEXT_BROWSER_ELEMENT_SELECTION_ACTIVE.bindTo(
+      contextKeyService,
+    );
 
 		// Build share toggle button
-		const hoverDelegate = this._register(instantiationService.createInstance(
-			WorkbenchHoverDelegate,
-			'element',
-			undefined,
-			{ position: { hoverPosition: HoverPosition.ABOVE } }
-		));
+		const hoverDelegate = this._register(
+      instantiationService.createInstance(
+        WorkbenchHoverDelegate,
+        "element",
+        undefined,
+        { position: { hoverPosition: HoverPosition.ABOVE } },
+      ),
+    );
 
-		this._shareButtonContainer = $('.browser-share-toggle-container');
-		this._shareButton = this._register(new Button(this._shareButtonContainer, {
-			supportIcons: true,
-			title: localize('browser.shareWithAgent', "Share with Agent"),
-			small: true,
-			hoverDelegate
-		}));
-		this._shareButton.element.classList.add('browser-share-toggle');
-		this._shareButton.label = '$(share-window)';
+		this._shareButtonContainer = $(".browser-share-toggle-container");
+		this._shareButton = this._register(
+      new Button(this._shareButtonContainer, {
+        supportIcons: true,
+        title: localize("browser.shareWithAgent", "Share with Agent"),
+        small: true,
+        hoverDelegate,
+      }),
+    );
+		this._shareButton.element.classList.add("browser-share-toggle");
+		this._shareButton.label = "$(share-window)";
 
-		this._register(this._shareButton.onDidClick(() => {
-			this._toggleShareWithAgent();
-		}));
+		this._register(
+      this._shareButton.onDidClick(() => {
+        this._toggleShareWithAgent();
+      }),
+    );
 
 		// Auto-disable element selection when the user sends a chat request.
 		this._register(this.chatService.onDidSubmitRequest(() => {
@@ -161,22 +185,26 @@ export class BrowserEditorChatIntegration extends BrowserEditorContribution {
 	protected override subscribeToModel(model: IBrowserViewModel, store: DisposableStore): void {
 		// Manage sharing state
 		this._updateSharingState(true);
-		store.add(model.onDidChangeSharingState(() => {
-			this._updateSharingState(false);
-		}));
+		store.add(
+      model.onDidChangeSharingState(() => {
+        this._updateSharingState(false);
+      }),
+    );
 		store.add(model.onDidSelectElement(async data => {
 			try {
 				await this._attachElementDataToChat(data, model);
 			} catch (error) {
-				this.logService.error('BrowserEditor.addElementToChat: Failed to attach element', error);
+				this.logService.error("BrowserEditor.addElementToChat: Failed to attach element", error);
 			}
 		}));
 
 		// Sync context key with model state
 		this._elementSelectionActiveContext.set(model.isElementSelectionActive);
-		store.add(model.onDidChangeElementSelectionActive(active => {
-			this._elementSelectionActiveContext.set(active);
-		}));
+		store.add(
+      model.onDidChangeElementSelectionActive(active => {
+        this._elementSelectionActiveContext.set(active);
+      }),
+    );
 	}
 
 	override clear(): void {
@@ -190,7 +218,9 @@ export class BrowserEditorChatIntegration extends BrowserEditorContribution {
 		if (!model) {
 			return;
 		}
-		model.setSharedWithAgent(model.sharingState !== BrowserViewSharingState.Shared);
+		model.setSharedWithAgent(
+      model.sharingState !== BrowserViewSharingState.Shared,
+    );
 	}
 
 	private _updateSharingState(isInitialState: boolean): void {
@@ -198,23 +228,26 @@ export class BrowserEditorChatIntegration extends BrowserEditorContribution {
 		const isShared = model?.sharingState === BrowserViewSharingState.Shared;
 		const isUnavailable = !model || model.sharingState === BrowserViewSharingState.Unavailable;
 
-		this.editor.browserContainer.classList.toggle('animate', !isInitialState);
-		this.editor.browserContainer.classList.toggle('shared', isShared);
+		this.editor.browserContainer.classList.toggle("animate", !isInitialState);
+		this.editor.browserContainer.classList.toggle("shared", isShared);
 
-		this._shareButtonContainer.style.display = isUnavailable ? 'none' : '';
+		this._shareButtonContainer.style.display = isUnavailable ? "none" : "";
 		this._shareButton.checked = isShared;
 		this._shareButton.label = isShared
-			? localize('browser.sharingWithAgent', "Sharing with Agent") + ' $(share-window)'
-			: '$(share-window)';
+			? localize(
+          "browser.sharingWithAgent",
+          "Sharing with Agent",
+        ) + " $(share-window)"
+			: "$(share-window)";
 
 		const title = isShared
-			? localize('browser.unshareWithAgent', "Stop Sharing with Agent")
-			: localize('browser.shareWithAgent', "Share with Agent");
+			? localize("browser.unshareWithAgent", "Stop Sharing with Agent")
+			: localize("browser.shareWithAgent", "Share with Agent");
 		this._shareButton.setTitle(title);
-		this._shareButton.element.setAttribute('aria-label', title);
+		this._shareButton.element.setAttribute("aria-label", title);
 	}
 
-	private static readonly SHARING_CONTENT_WARNING_DONT_ASK_KEY = 'browserView.agentSharingContentWarning.dontAskAgain';
+	private static readonly SHARING_CONTENT_WARNING_DONT_ASK_KEY = "browserView.agentSharingContentWarning.dontAskAgain";
 
 	/**
 	 * Confirm with the user that they understand the risks of sharing content on untrusted pages.
@@ -223,19 +256,24 @@ export class BrowserEditorChatIntegration extends BrowserEditorContribution {
 	 */
 	private async _confirmContentAttachmentRisk(url: string): Promise<boolean> {
 		// If the user previously chose "Don't show again", skip the dialog
-		if (this.storageService.getBoolean(BrowserEditorChatIntegration.SHARING_CONTENT_WARNING_DONT_ASK_KEY, StorageScope.PROFILE)) {
+		if (this.storageService.getBoolean(
+      BrowserEditorChatIntegration.SHARING_CONTENT_WARNING_DONT_ASK_KEY,
+      StorageScope.PROFILE,
+    )) {
 			return true;
 		}
 
 		try {
 			const parsedUrl = new URL(url);
-			if (parsedUrl.protocol === 'file:') {
+			if (parsedUrl.protocol === "file:") {
 				// Query the workspace trust service for file URLs
-				const trustInfo = await this.workspaceTrustManagementService.getUriTrustInfo(URI.file(parsedUrl.pathname));
+				const trustInfo = await this.workspaceTrustManagementService.getUriTrustInfo(
+          URI.file(parsedUrl.pathname),
+        );
 				if (trustInfo.trusted) {
 					return true;
 				}
-			} else if (parsedUrl.hostname === 'localhost' || parsedUrl.hostname === '127.0.0.1' || parsedUrl.hostname === '::1') {
+			} else if (parsedUrl.hostname === "localhost" || parsedUrl.hostname === "127.0.0.1" || parsedUrl.hostname === "::1") {
 				// Consider localhost URLs trusted
 				return true;
 			}
@@ -244,15 +282,20 @@ export class BrowserEditorChatIntegration extends BrowserEditorContribution {
 		}
 
 		const result = await this.dialogService.confirm({
-			type: 'warning',
-			message: localize('browser.agentSharingContentWarning.message', "Use caution when attaching content from untrusted sources."),
-			detail: localize('browser.agentSharingContentWarning.detail', "Pages may contain hidden prompts that can influence agent behavior. Double-check the attached contents before sending."),
-			primaryButton: localize('browser.agentSharingContentWarning.ok', "&&OK"),
-			checkbox: { label: localize('browser.agentSharingContentWarning.dontShowAgain', "Don't show again"), checked: false },
-		});
+      type: "warning",
+      message: localize("browser.agentSharingContentWarning.message", "Use caution when attaching content from untrusted sources."),
+      detail: localize("browser.agentSharingContentWarning.detail", "Pages may contain hidden prompts that can influence agent behavior. Double-check the attached contents before sending."),
+      primaryButton: localize("browser.agentSharingContentWarning.ok", "&&OK"),
+      checkbox: { label: localize("browser.agentSharingContentWarning.dontShowAgain", "Don't show again"), checked: false },
+    });
 
 		if (result.confirmed && result.checkboxChecked) {
-			this.storageService.store(BrowserEditorChatIntegration.SHARING_CONTENT_WARNING_DONT_ASK_KEY, true, StorageScope.PROFILE, StorageTarget.USER);
+			this.storageService.store(
+        BrowserEditorChatIntegration.SHARING_CONTENT_WARNING_DONT_ASK_KEY,
+        true,
+        StorageScope.PROFILE,
+        StorageTarget.USER,
+      );
 		}
 
 		return result.confirmed;
@@ -264,58 +307,62 @@ export class BrowserEditorChatIntegration extends BrowserEditorContribution {
 		const bounds = elementData.bounds;
 		const toAttach: IChatRequestVariableEntry[] = [];
 
-		const container = document.createElement('div');
+		const container = document.createElement("div");
 		safeSetInnerHtml(container, elementData.outerHTML);
 		const element = container.firstElementChild;
 		const innerText = container.textContent;
 
-		let displayNameShort = element ? `${element.tagName.toLowerCase()}${element.id ? `#${element.id}` : ''}` : '';
-		let displayNameFull = element ? `${displayNameShort}${element.classList.length ? `.${[...element.classList].join('.')}` : ''}` : '';
+		let displayNameShort = element ? `${element.tagName.toLowerCase()}${element.id ? `#${element.id}` : ""}` : "";
+		let displayNameFull = element ? `${displayNameShort}${element.classList.length ? `.${[...element.classList].join(".")}` : ""}` : "";
 		if (elementData.ancestors && elementData.ancestors.length > 0) {
 			let last = elementData.ancestors[elementData.ancestors.length - 1];
-			let pseudo = '';
-			if (last.tagName.startsWith('::') && elementData.ancestors.length > 1) {
+			let pseudo = "";
+			if (last.tagName.startsWith("::") && elementData.ancestors.length > 1) {
 				pseudo = last.tagName;
 				last = elementData.ancestors[elementData.ancestors.length - 2];
 			}
-			displayNameShort = `${last.tagName.toLowerCase()}${last.id ? `#${last.id}` : ''}${pseudo}`;
-			displayNameFull = `${last.tagName.toLowerCase()}${last.id ? `#${last.id}` : ''}${last.classNames && last.classNames.length ? `.${last.classNames.join('.')}` : ''}${pseudo}`;
+			displayNameShort = `${last.tagName.toLowerCase()}${last.id ? `#${last.id}` : ""}${pseudo}`;
+			displayNameFull = `${last.tagName.toLowerCase()}${last.id ? `#${last.id}` : ""}${last.classNames && last.classNames.length ? `.${last.classNames.join(".")}` : ""}${pseudo}`;
 		}
 
 		const value = createElementContextValue(elementData, displayNameFull);
 
 		toAttach.push({
-			id: 'element-' + Date.now(),
-			name: displayNameShort,
-			fullName: displayNameFull,
-			value: value,
-			modelDescription: 'Structured browser element context with HTML path, outer HTML, dimensions, and computed styles.',
-			kind: 'element',
-			icon: ThemeIcon.fromId(Codicon.layout.id),
-			ancestors: elementData.ancestors,
-			attributes: elementData.attributes,
-			computedStyles: elementData.computedStyles,
-			dimensions: elementData.dimensions,
-			innerText,
-		});
+      id: "element-" + Date.now(),
+      name: displayNameShort,
+      fullName: displayNameFull,
+      value: value,
+      modelDescription: "Structured browser element context with HTML path, outer HTML, dimensions, and computed styles.",
+      kind: "element",
+      icon: ThemeIcon.fromId(Codicon.layout.id),
+      ancestors: elementData.ancestors,
+      attributes: elementData.attributes,
+      computedStyles: elementData.computedStyles,
+      dimensions: elementData.dimensions,
+      innerText,
+    });
 
-		const attachImages = this.configurationService.getValue<boolean>('chat.sendElementsToChat.attachImages');
+		const attachImages = this.configurationService.getValue<boolean>(
+      "chat.sendElementsToChat.attachImages",
+    );
 		if (attachImages) {
 			const screenshotBuffer = await model.captureScreenshot({
-				quality: 90,
-				pageRect: bounds
-			});
+        quality: 90,
+        pageRect: bounds,
+      });
 
 			toAttach.push({
-				id: 'element-screenshot-' + Date.now(),
-				name: 'Element Screenshot',
-				fullName: 'Element Screenshot',
-				kind: 'image',
-				value: screenshotBuffer.buffer
-			});
+        id: "element-screenshot-" + Date.now(),
+        name: "Element Screenshot",
+        fullName: "Element Screenshot",
+        kind: "image",
+        value: screenshotBuffer.buffer,
+      });
 		}
 
-		if (!await this._confirmContentAttachmentRisk(elementData.url ?? model.url)) {
+		if (!await this._confirmContentAttachmentRisk(
+      elementData.url ?? model.url,
+    )) {
 			return;
 		}
 
@@ -327,14 +374,17 @@ export class BrowserEditorChatIntegration extends BrowserEditorContribution {
 		};
 
 		type IntegratedBrowserAddElementToChatAddedClassification = {
-			attachImages: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; isMeasurement: true; comment: 'Whether chat.sendElementsToChat.attachImages was enabled.' };
-			owner: 'jruales';
-			comment: 'An element was successfully added to chat from Integrated Browser.';
+			attachImages: { classification: "SystemMetaData"; purpose: "FeatureInsight"; isMeasurement: true; comment: "Whether chat.sendElementsToChat.attachImages was enabled." };
+			owner: "jruales";
+			comment: "An element was successfully added to chat from Integrated Browser.";
 		};
 
-		this.telemetryService.publicLog2<IntegratedBrowserAddElementToChatAddedEvent, IntegratedBrowserAddElementToChatAddedClassification>('integratedBrowser.addElementToChat.added', {
-			attachImages
-		});
+		this.telemetryService.publicLog2<IntegratedBrowserAddElementToChatAddedEvent, IntegratedBrowserAddElementToChatAddedClassification>(
+      "integratedBrowser.addElementToChat.added",
+      {
+        attachImages,
+      },
+    );
 	}
 
 	// -- Console Logs ---------------------------------------------------
@@ -360,19 +410,22 @@ export class BrowserEditorChatIntegration extends BrowserEditorContribution {
 
 			const toAttach: IChatRequestVariableEntry[] = [];
 			toAttach.push({
-				id: 'console-logs-' + Date.now(),
-				name: localize('consoleLogs', 'Console Logs'),
-				fullName: localize('consoleLogs', 'Console Logs'),
-				value: logs,
-				modelDescription: 'Console logs captured from Integrated Browser.',
-				kind: 'element',
-				icon: ThemeIcon.fromId(Codicon.terminal.id),
-			});
+        id: "console-logs-" + Date.now(),
+        name: localize("consoleLogs", "Console Logs"),
+        fullName: localize("consoleLogs", "Console Logs"),
+        value: logs,
+        modelDescription: "Console logs captured from Integrated Browser.",
+        kind: "element",
+        icon: ThemeIcon.fromId(Codicon.terminal.id),
+      });
 
 			const widget = await this.chatWidgetService.revealWidget() ?? this.chatWidgetService.lastFocusedWidget;
 			widget?.attachmentModel?.addContext(...toAttach);
 		} catch (error) {
-			this.logService.error('BrowserEditor.addConsoleLogsToChat: Failed to get console logs', error);
+			this.logService.error(
+        "BrowserEditor.addConsoleLogsToChat: Failed to get console logs",
+        error,
+      );
 		}
 	}
 }
@@ -388,7 +441,7 @@ class AddElementToChatAction extends Action2 {
 	constructor() {
 		super({
 			id: AddElementToChatAction.ID,
-			title: localize2('browser.addElementToChatAction', 'Add Element to Chat'),
+			title: localize2("browser.addElementToChatAction", "Add Element to Chat"),
 			category: BrowserCategory,
 			icon: Codicon.inspect,
 			f1: true,
@@ -396,9 +449,9 @@ class AddElementToChatAction extends Action2 {
 			toggled: CONTEXT_BROWSER_ELEMENT_SELECTION_ACTIVE,
 			menu: {
 				id: MenuId.BrowserActionsToolbar,
-				group: 'actions',
+				group: "actions",
 				order: 1,
-				when: ChatContextKeys.enabled
+				when: ChatContextKeys.enabled,
 			},
 			keybinding: [{
 				weight: KeybindingWeight.WorkbenchContrib + 50, // Priority over terminal
@@ -406,12 +459,14 @@ class AddElementToChatAction extends Action2 {
 			}, {
 				when: CONTEXT_BROWSER_ELEMENT_SELECTION_ACTIVE,
 				weight: KeybindingWeight.WorkbenchContrib,
-				primary: KeyCode.Escape
-			}]
+				primary: KeyCode.Escape,
+			}],
 		});
 	}
 
-	async run(accessor: ServicesAccessor, browserEditor = accessor.get(IEditorService).activeEditorPane): Promise<void> {
+	async run(accessor: ServicesAccessor, browserEditor = accessor.get(
+    IEditorService,
+  ).activeEditorPane): Promise<void> {
 		if (browserEditor instanceof BrowserEditor) {
 			browserEditor.ensureBrowserFocus();
 			void browserEditor.model?.toggleElementSelection(undefined);
@@ -425,21 +480,23 @@ class AddConsoleLogsToChatAction extends Action2 {
 	constructor() {
 		super({
 			id: AddConsoleLogsToChatAction.ID,
-			title: localize2('browser.addConsoleLogsToChatAction', 'Add Console Logs to Chat'),
+			title: localize2("browser.addConsoleLogsToChatAction", "Add Console Logs to Chat"),
 			category: BrowserActionCategory,
 			icon: Codicon.output,
 			f1: true,
 			precondition: ContextKeyExpr.and(BROWSER_EDITOR_ACTIVE, CONTEXT_BROWSER_HAS_URL, CONTEXT_BROWSER_HAS_ERROR.negate(), ChatContextKeys.enabled),
 			menu: {
 				id: MenuId.BrowserActionsToolbar,
-				group: 'actions',
+				group: "actions",
 				order: 2,
-				when: ChatContextKeys.enabled
-			}
+				when: ChatContextKeys.enabled,
+			},
 		});
 	}
 
-	async run(accessor: ServicesAccessor, browserEditor = accessor.get(IEditorService).activeEditorPane): Promise<void> {
+	async run(accessor: ServicesAccessor, browserEditor = accessor.get(
+    IEditorService,
+  ).activeEditorPane): Promise<void> {
 		if (browserEditor instanceof BrowserEditor) {
 			await browserEditor.getContribution(BrowserEditorChatIntegration)?.addConsoleLogsToChat();
 		}
@@ -452,36 +509,36 @@ registerAction2(AddConsoleLogsToChatAction);
 Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).registerConfiguration({
 	...workbenchConfigurationNodeBase,
 	properties: {
-		'workbench.browser.enableChatTools': {
-			type: 'boolean',
+		"workbench.browser.enableChatTools": {
+			type: "boolean",
 			default: false,
-			experiment: { mode: 'startup' },
-			tags: ['experimental'],
+			experiment: { mode: "startup" },
+			tags: ["experimental"],
 			markdownDescription: localize(
-				{ comment: ['This is the description for a setting.'], key: 'browser.enableChatTools' },
-				'When enabled, chat agents can use browser tools to open and interact with pages in the Integrated Browser.'
+				{ comment: ["This is the description for a setting."], key: "browser.enableChatTools" },
+				"When enabled, chat agents can use browser tools to open and interact with pages in the Integrated Browser.",
 			),
 			policy: {
-				name: 'BrowserChatTools',
+				name: "BrowserChatTools",
 				category: PolicyCategory.InteractiveSession,
-				minimumVersion: '1.110',
+				minimumVersion: "1.110",
 				value: (policyData) => policyData.chat_preview_features_enabled === false ? false : undefined,
 				localization: {
 					description: {
-						key: 'browser.enableChatTools',
-						value: localize('browser.enableChatTools', 'When enabled, chat agents can use browser tools to open and interact with pages in the Integrated Browser.')
-					}
+						key: "browser.enableChatTools",
+						value: localize("browser.enableChatTools", "When enabled, chat agents can use browser tools to open and interact with pages in the Integrated Browser."),
+					},
 				},
 			},
 			agentsWindow: { default: true },
 		},
 		[AgentHostChatToolsEnabledSettingId]: {
-			type: 'boolean',
-			markdownDescription: localize('workbench.browser.agentHostChatToolsEnabled', "When enabled, integrated browser tools are exposed as client-provided tools to agent host sessions in the Sessions window. Requires {0} and {1}.", `\`#${AgentHostEnabledSettingId}#\``, '`#workbench.browser.enableChatTools#`'),
+			type: "boolean",
+			markdownDescription: localize("workbench.browser.agentHostChatToolsEnabled", "When enabled, integrated browser tools are exposed as client-provided tools to agent host sessions in the Sessions window. Requires {0} and {1}.", `\`#${AgentHostEnabledSettingId}#\``, "`#workbench.browser.enableChatTools#`"),
 			default: false,
-			experiment: { mode: 'startup' },
-			tags: ['experimental', 'advanced'],
-			included: product.quality !== 'stable',
-		}
-	}
+			experiment: { mode: "startup" },
+			tags: ["experimental", "advanced"],
+			included: product.quality !== "stable",
+		},
+	},
 });

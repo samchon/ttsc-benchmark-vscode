@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { getActiveWindow } from './dom.js';
-import { IReader, observableSignal } from '../common/observable.js';
+import { getActiveWindow } from "./dom.js";
+import { IReader, observableSignal } from "../common/observable.js";
 
 export interface IAnimatedValue {
 	/**
@@ -20,7 +20,13 @@ export class AnimatedValue implements IAnimatedValue {
 	}
 
 	public static startNow(startValue: number, endValue: number, durationMs: number, interpolationFunction: InterpolationFunction = easeOutExpo): AnimatedValue {
-		return new AnimatedValue(startValue, endValue, durationMs, Date.now(), interpolationFunction);
+		return new AnimatedValue(
+      startValue,
+      endValue,
+      durationMs,
+      Date.now(),
+      interpolationFunction,
+    );
 	}
 
 	constructor(
@@ -44,7 +50,12 @@ export class AnimatedValue implements IAnimatedValue {
 		if (timePassed >= this.durationMs) {
 			return this.endValue;
 		}
-		const value = this._interpolationFunction(timePassed, this.startValue, this.endValue - this.startValue, this.durationMs);
+		const value = this._interpolationFunction(
+      timePassed,
+      this.startValue,
+      this.endValue - this.startValue,
+      this.durationMs,
+    );
 		return value;
 	}
 }
@@ -67,7 +78,13 @@ export function linear(passedTime: number, start: number, length: number, totalD
 
 export class LoopingAnimatedValue implements IAnimatedValue {
 	public static startNow(startValue: number, endValue: number, durationMs: number, interpolationFunction: InterpolationFunction): LoopingAnimatedValue {
-		return new LoopingAnimatedValue(startValue, endValue, durationMs, Date.now(), interpolationFunction);
+		return new LoopingAnimatedValue(
+      startValue,
+      endValue,
+      durationMs,
+      Date.now(),
+      interpolationFunction,
+    );
 	}
 
 	constructor(
@@ -84,7 +101,12 @@ export class LoopingAnimatedValue implements IAnimatedValue {
 
 	getValue(nowMs: number): number {
 		const timePassed = (nowMs - this._startTimeMs) % this._durationMs;
-		return this._interpolationFunction(timePassed, this._startValue, this._endValue - this._startValue, this._durationMs);
+		return this._interpolationFunction(
+      timePassed,
+      this._startValue,
+      this._endValue - this._startValue,
+      this._durationMs,
+    );
 	}
 }
 
@@ -127,9 +149,9 @@ export class AnimationFrameScheduler {
 		if (!this._isScheduled) {
 			this._isScheduled = true;
 			getActiveWindow().requestAnimationFrame(() => {
-				this._isScheduled = false;
-				this._update();
-			});
+        this._isScheduled = false;
+        this._update();
+      });
 		}
 	}
 

@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { findFirstIdxMonotonousOrArrLen } from './arraysFind.js';
-import { CancellationToken } from './cancellation.js';
-import { CancellationError } from './errors.js';
-import { ISplice } from './sequence.js';
+import { findFirstIdxMonotonousOrArrLen } from "./arraysFind.js";
+import { CancellationToken } from "./cancellation.js";
+import { CancellationError } from "./errors.js";
+import { ISplice } from "./sequence.js";
 
 /**
  * Returns the last entry and the initial N-1 entries of the array, as a tuple of [rest, last].
@@ -19,7 +19,7 @@ import { ISplice } from './sequence.js';
  */
 export function tail<T>(arr: T[]): [T[], T] {
 	if (arr.length === 0) {
-		throw new Error('Invalid tail call');
+		throw new Error("Invalid tail call");
 	}
 
 	return [arr.slice(0, arr.length - 1), arr[arr.length - 1]];
@@ -124,7 +124,7 @@ export function quickSelect<T>(nth: number, data: T[], compare: Compare<T>): T {
 	nth = nth | 0;
 
 	if (nth >= data.length) {
-		throw new TypeError('invalid index');
+		throw new TypeError("invalid index");
 	}
 
 	const pivotValue = data[Math.floor(data.length * Math.random())];
@@ -198,7 +198,11 @@ export function forEachAdjacent<T>(arr: T[], f: (item1: T | undefined, item2: T 
 
 export function forEachWithNeighbors<T>(arr: T[], f: (before: T | undefined, element: T, after: T | undefined) => void): void {
 	for (let i = 0; i < arr.length; i++) {
-		f(i === 0 ? undefined : arr[i - 1], arr[i], i + 1 === arr.length ? undefined : arr[i + 1]);
+		f(
+      i === 0 ? undefined : arr[i - 1],
+      arr[i],
+      i + 1 === arr.length ? undefined : arr[i + 1],
+    );
 	}
 }
 
@@ -276,7 +280,9 @@ export function delta<T>(before: ReadonlyArray<T>, after: ReadonlyArray<T>, comp
 	const added: T[] = [];
 
 	for (const splice of splices) {
-		removed.push(...before.slice(splice.start, splice.start + splice.deleteCount));
+		removed.push(
+      ...before.slice(splice.start, splice.start + splice.deleteCount),
+    );
 		added.push(...splice.toInsert);
 	}
 
@@ -344,7 +350,10 @@ function topStep<T>(array: ReadonlyArray<T>, compare: (a: T, b: T) => number, re
 		const element = array[i];
 		if (compare(element, result[n - 1]) < 0) {
 			result.pop();
-			const j = findFirstIdxMonotonousOrArrLen(result, e => compare(element, e) < 0);
+			const j = findFirstIdxMonotonousOrArrLen(
+        result,
+        e => compare(element, e) < 0,
+      );
 			result.splice(j, 0, element);
 		}
 	}
@@ -439,9 +448,9 @@ export function commonPrefixLength<T>(one: ReadonlyArray<T>, other: ReadonlyArra
 export function range(to: number): number[];
 export function range(from: number, to: number): number[];
 export function range(arg: number, to?: number): number[] {
-	let from = typeof to === 'number' ? arg : 0;
+	let from = typeof to === "number" ? arg : 0;
 
-	if (typeof to === 'number') {
+	if (typeof to === "number") {
 		from = arg;
 	} else {
 		from = 0;
@@ -466,10 +475,13 @@ export function range(arg: number, to?: number): number[] {
 export function index<T>(array: ReadonlyArray<T>, indexer: (t: T) => string): { [key: string]: T };
 export function index<T, R>(array: ReadonlyArray<T>, indexer: (t: T) => string, mapper: (t: T) => R): { [key: string]: R };
 export function index<T, R>(array: ReadonlyArray<T>, indexer: (t: T) => string, mapper?: (t: T) => R): { [key: string]: R } {
-	return array.reduce((r, t) => {
-		r[indexer(t)] = mapper ? mapper(t) : t;
-		return r;
-	}, Object.create(null));
+	return array.reduce(
+    (r, t) => {
+      r[indexer(t)] = mapper ? mapper(t) : t;
+      return r;
+    },
+    Object.create(null),
+  );
 }
 
 /**
@@ -516,7 +528,7 @@ export function arrayInsert<T>(target: T[], insertIndex: number, insertArr: T[])
 export function shuffle<T>(array: T[], _seed?: number): void {
 	let rand: () => number;
 
-	if (typeof _seed === 'number') {
+	if (typeof _seed === "number") {
 		let seed = _seed;
 		// Seeded random number generator in JS. Modified from:
 		// https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript
@@ -709,7 +721,10 @@ export function tieBreakComparators<TItem>(...comparators: Comparator<TItem>[]):
 */
 export const numberComparator: Comparator<number> = (a, b) => a - b;
 
-export const booleanComparator: Comparator<boolean> = (a, b) => numberComparator(a ? 1 : 0, b ? 1 : 0);
+export const booleanComparator: Comparator<boolean> = (a, b) => numberComparator(
+  a ? 1 : 0,
+  b ? 1 : 0,
+);
 
 export function reverseOrder<TItem>(comparator: Comparator<TItem>): Comparator<TItem> {
 	return (a, b) => -comparator(a, b);
@@ -760,7 +775,10 @@ export class ArrayQueue<T> {
 		while (startIdx < this.items.length && predicate(this.items[startIdx])) {
 			startIdx++;
 		}
-		const result = startIdx === this.firstIdx ? null : this.items.slice(this.firstIdx, startIdx);
+		const result = startIdx === this.firstIdx ? null : this.items.slice(
+      this.firstIdx,
+      startIdx,
+    );
 		this.firstIdx = startIdx;
 		return result;
 	}
@@ -778,7 +796,10 @@ export class ArrayQueue<T> {
 		while (endIdx >= 0 && predicate(this.items[endIdx])) {
 			endIdx--;
 		}
-		const result = endIdx === this.lastIdx ? null : this.items.slice(endIdx + 1, this.lastIdx + 1);
+		const result = endIdx === this.lastIdx ? null : this.items.slice(
+      endIdx + 1,
+      this.lastIdx + 1,
+    );
 		this.lastIdx = endIdx;
 		return result;
 	}
@@ -827,7 +848,7 @@ export class CallbackIterable<T> {
 		 * Calls the callback for every item.
 		 * Stops when the callback returns false.
 		*/
-		public readonly iterate: (callback: (item: T) => boolean) => void
+		public readonly iterate: (callback: (item: T) => boolean) => void,
 	) {
 	}
 
@@ -842,11 +863,15 @@ export class CallbackIterable<T> {
 	}
 
 	filter(predicate: (item: T) => boolean): CallbackIterable<T> {
-		return new CallbackIterable(cb => this.iterate(item => predicate(item) ? cb(item) : true));
+		return new CallbackIterable(
+      cb => this.iterate(item => predicate(item) ? cb(item) : true),
+    );
 	}
 
 	map<TResult>(mapFn: (item: T) => TResult): CallbackIterable<TResult> {
-		return new CallbackIterable<TResult>(cb => this.iterate(item => cb(mapFn(item))));
+		return new CallbackIterable<TResult>(
+      cb => this.iterate(item => cb(mapFn(item))),
+    );
 	}
 
 	some(predicate: (item: T) => boolean): boolean {
@@ -902,7 +927,9 @@ export class Permutation {
 	 * Returns a permutation that sorts the given array according to the given compare function.
 	 */
 	public static createSortPermutation<T>(arr: readonly T[], compareFn: (a: T, b: T) => number): Permutation {
-		const sortIndices = Array.from(arr.keys()).sort((index1, index2) => compareFn(arr[index1], arr[index2]));
+		const sortIndices = Array.from(arr.keys()).sort(
+      (index1, index2) => compareFn(arr[index1], arr[index2]),
+    );
 		return new Permutation(sortIndices);
 	}
 
@@ -933,9 +960,12 @@ export class Permutation {
  * resolve before returning.
  */
 export async function findAsync<T>(array: readonly T[], predicate: (element: T, index: number) => Promise<boolean>): Promise<T | undefined> {
-	const results = await Promise.all(array.map(
-		async (element, index) => ({ element, ok: await predicate(element, index) })
-	));
+	const results = await Promise.all(
+    array.map(async (element, index) => ({
+      element,
+      ok: await predicate(element, index),
+    })),
+  );
 
 	return results.find(r => r.ok)?.element;
 }

@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as DOM from '../../../../../../base/browser/dom.js';
-import { INotebookEditor } from '../../notebookBrowser.js';
-import { CellContentPart } from '../cellPart.js';
-import { CodeCellViewModel } from '../../viewModel/codeCellViewModel.js';
+import * as DOM from "../../../../../../base/browser/dom.js";
+import { INotebookEditor } from "../../notebookBrowser.js";
+import { CellContentPart } from "../cellPart.js";
+import { CodeCellViewModel } from "../../viewModel/codeCellViewModel.js";
 
 export class CellFocusPart extends CellContentPart {
 	constructor(
 		containerElement: HTMLElement,
 		focusSinkElement: HTMLElement | undefined,
-		notebookEditor: INotebookEditor
+		notebookEditor: INotebookEditor,
 	) {
 		super();
 
@@ -25,7 +25,7 @@ export class CellFocusPart extends CellContentPart {
 		if (focusSinkElement) {
 			this._register(DOM.addDisposableListener(focusSinkElement, DOM.EventType.FOCUS, () => {
 				if (this.currentCell && (this.currentCell as CodeCellViewModel).outputsViewModels.length) {
-					notebookEditor.focusNotebookCell(this.currentCell, 'output');
+					notebookEditor.focusNotebookCell(this.currentCell, "output");
 				}
 			}));
 		}

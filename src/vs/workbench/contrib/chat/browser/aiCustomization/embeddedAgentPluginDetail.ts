@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as DOM from '../../../../../base/browser/dom.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { localize } from '../../../../../nls.js';
-import { AgentPluginItemKind, IAgentPluginItem } from '../agentPluginEditor/agentPluginItems.js';
-import { extensionIcon, pluginIcon } from './aiCustomizationIcons.js';
+import * as DOM from "../../../../../base/browser/dom.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { localize } from "../../../../../nls.js";
+import { AgentPluginItemKind, IAgentPluginItem } from "../agentPluginEditor/agentPluginItems.js";
+import { extensionIcon, pluginIcon } from "./aiCustomizationIcons.js";
 
 const $ = DOM.$;
 
@@ -34,19 +34,28 @@ export class EmbeddedAgentPluginDetail extends Disposable {
 	) {
 		super();
 
-		this.root = DOM.append(parent, $('.ai-customization-embedded-detail.embedded-plugin-detail'));
+		this.root = DOM.append(
+      parent,
+      $(".ai-customization-embedded-detail.embedded-plugin-detail"),
+    );
 
-		const header = DOM.append(this.root, $('.embedded-detail-header'));
-		this.iconEl = DOM.append(header, $('.embedded-detail-icon'));
-		const headerText = DOM.append(header, $('.embedded-detail-header-text'));
-		this.nameEl = DOM.append(headerText, $('h2.embedded-detail-name'));
-		this.nameEl.setAttribute('role', 'heading');
-		this.sourceEl = DOM.append(headerText, $('.embedded-detail-scope'));
+		const header = DOM.append(this.root, $(".embedded-detail-header"));
+		this.iconEl = DOM.append(header, $(".embedded-detail-icon"));
+		const headerText = DOM.append(header, $(".embedded-detail-header-text"));
+		this.nameEl = DOM.append(headerText, $("h2.embedded-detail-name"));
+		this.nameEl.setAttribute("role", "heading");
+		this.sourceEl = DOM.append(headerText, $(".embedded-detail-scope"));
 
-		this.descriptionEl = DOM.append(this.root, $('.embedded-detail-description'));
+		this.descriptionEl = DOM.append(
+      this.root,
+      $(".embedded-detail-description"),
+    );
 
-		this.emptyEl = DOM.append(this.root, $('.embedded-detail-empty'));
-		this.emptyEl.textContent = localize('pluginDetailEmpty', "No plugin selected.");
+		this.emptyEl = DOM.append(this.root, $(".embedded-detail-empty"));
+		this.emptyEl.textContent = localize(
+      "pluginDetailEmpty",
+      "No plugin selected.",
+    );
 
 		this.renderItem();
 	}
@@ -68,13 +77,13 @@ export class EmbeddedAgentPluginDetail extends Disposable {
 	private renderItem(): void {
 		const item = this.current;
 		const hasItem = !!item;
-		this.emptyEl.style.display = hasItem ? 'none' : '';
-		this.root.classList.toggle('is-empty', !hasItem);
+		this.emptyEl.style.display = hasItem ? "none" : "";
+		this.root.classList.toggle("is-empty", !hasItem);
 		if (!item) {
-			this.nameEl.textContent = '';
-			this.sourceEl.textContent = '';
-			this.descriptionEl.textContent = '';
-			this.iconEl.className = 'embedded-detail-icon';
+			this.nameEl.textContent = "";
+			this.sourceEl.textContent = "";
+			this.descriptionEl.textContent = "";
+			this.iconEl.className = "embedded-detail-icon";
 			return;
 		}
 
@@ -86,16 +95,23 @@ export class EmbeddedAgentPluginDetail extends Disposable {
 
 		const sourceLabel = item.marketplace
 			? (isMarketplace
-				? localize('pluginSourceMarketplace', "From {0}", item.marketplace)
-				: localize('pluginSourceInstalled', "Installed from {0}", item.marketplace))
+				? localize("pluginSourceMarketplace", "From {0}", item.marketplace)
+				: localize(
+            "pluginSourceInstalled",
+            "Installed from {0}",
+            item.marketplace,
+          ))
 			: (isMarketplace
-				? localize('pluginSourceMarketplaceUnknown', "Marketplace plugin")
-				: localize('pluginSourceLocal', "Installed plugin"));
+				? localize("pluginSourceMarketplaceUnknown", "Marketplace plugin")
+				: localize("pluginSourceLocal", "Installed plugin"));
 		const iconSpan = $(`span.codicon.codicon-${iconId}`);
-		this.sourceEl.replaceChildren(iconSpan, document.createTextNode(' ' + sourceLabel));
+		this.sourceEl.replaceChildren(
+      iconSpan,
+      document.createTextNode(" " + sourceLabel),
+    );
 
-		const description = (item.description || '').trim();
+		const description = (item.description || "").trim();
 		this.descriptionEl.textContent = description;
-		this.descriptionEl.style.display = description ? '' : 'none';
+		this.descriptionEl.style.display = description ? "" : "none";
 	}
 }

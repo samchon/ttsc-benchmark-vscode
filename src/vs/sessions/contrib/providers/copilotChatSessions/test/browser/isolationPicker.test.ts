@@ -3,23 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { Event } from '../../../../../../base/common/event.js';
-import { DisposableStore } from '../../../../../../base/common/lifecycle.js';
-import { observableValue } from '../../../../../../base/common/observable.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../../base/test/common/utils.js';
-import { IActionWidgetService } from '../../../../../../platform/actionWidget/browser/actionWidget.js';
-import { IActionListItem } from '../../../../../../platform/actionWidget/browser/actionList.js';
-import { IConfigurationService } from '../../../../../../platform/configuration/common/configuration.js';
-import { TestConfigurationService } from '../../../../../../platform/configuration/test/common/testConfigurationService.js';
-import { TestInstantiationService } from '../../../../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { ITelemetryService } from '../../../../../../platform/telemetry/common/telemetry.js';
-import { NullTelemetryService } from '../../../../../../platform/telemetry/common/telemetryUtils.js';
-import { GitRefType } from '../../../../../../workbench/contrib/git/common/gitService.js';
-import { ISessionsProvidersService } from '../../../../../services/sessions/browser/sessionsProvidersService.js';
-import { IActiveSession, ISessionsManagementService } from '../../../../../services/sessions/common/sessionsManagement.js';
-import { CopilotChatSessionsProvider } from '../../browser/copilotChatSessionsProvider.js';
-import { IsolationMode, IsolationPicker } from '../../browser/isolationPicker.js';
+import assert from "assert";
+import { Event } from "../../../../../../base/common/event.js";
+import { DisposableStore } from "../../../../../../base/common/lifecycle.js";
+import { observableValue } from "../../../../../../base/common/observable.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../../base/test/common/utils.js";
+import { IActionWidgetService } from "../../../../../../platform/actionWidget/browser/actionWidget.js";
+import { IActionListItem } from "../../../../../../platform/actionWidget/browser/actionList.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { TestConfigurationService } from "../../../../../../platform/configuration/test/common/testConfigurationService.js";
+import { TestInstantiationService } from "../../../../../../platform/instantiation/test/common/instantiationServiceMock.js";
+import { ITelemetryService } from "../../../../../../platform/telemetry/common/telemetry.js";
+import { NullTelemetryService } from "../../../../../../platform/telemetry/common/telemetryUtils.js";
+import { GitRefType } from "../../../../../../workbench/contrib/git/common/gitService.js";
+import { ISessionsProvidersService } from "../../../../../services/sessions/browser/sessionsProvidersService.js";
+import { IActiveSession, ISessionsManagementService } from "../../../../../services/sessions/common/sessionsManagement.js";
+import { CopilotChatSessionsProvider } from "../../browser/copilotChatSessionsProvider.js";
+import { IsolationMode, IsolationPicker } from "../../browser/isolationPicker.js";
 
 interface IIsolationActionItem {
 	readonly mode: IsolationMode;
@@ -27,7 +27,7 @@ interface IIsolationActionItem {
 }
 
 function showPicker(container: HTMLElement): void {
-	const trigger = container.querySelector<HTMLElement>('a.action-label');
+	const trigger = container.querySelector<HTMLElement>("a.action-label");
 	assert.ok(trigger);
 	trigger.click();
 }
@@ -39,19 +39,22 @@ function createPicker(
 ): IsolationPicker {
 	const instantiationService = disposables.add(new TestInstantiationService());
 	const activeSession = {
-		providerId: 'default-copilot',
-		sessionId: 'session-id',
-		loading: observableValue('loading', false),
-	} as unknown as IActiveSession;
-	const isolationMode = observableValue<IsolationMode | undefined>('isolationMode', mode);
-	const gitState = observableValue('gitState', {
-		HEAD: { type: GitRefType.Head, name: 'main', commit: 'abc123' },
-		remotes: [],
-		mergeChanges: [],
-		indexChanges: [],
-		workingTreeChanges: [],
-		untrackedChanges: [],
-	});
+    providerId: "default-copilot",
+    sessionId: "session-id",
+    loading: observableValue("loading", false),
+  } as unknown as IActiveSession;
+	const isolationMode = observableValue<IsolationMode | undefined>(
+    "isolationMode",
+    mode,
+  );
+	const gitState = observableValue("gitState", {
+    HEAD: { type: GitRefType.Head, name: "main", commit: "abc123" },
+    remotes: [],
+    mergeChanges: [],
+    indexChanges: [],
+    workingTreeChanges: [],
+    untrackedChanges: [],
+  });
 	const provider = Object.assign(Object.create(CopilotChatSessionsProvider.prototype), {
 		getSession: () => ({
 			gitRepository: { state: gitState },
@@ -66,9 +69,12 @@ function createPicker(
 			actionWidgetItems.splice(0, actionWidgetItems.length, ...(items as IActionListItem<IIsolationActionItem>[]));
 		},
 	});
-	instantiationService.stub(IConfigurationService, new TestConfigurationService());
+	instantiationService.stub(
+    IConfigurationService,
+    new TestConfigurationService(),
+  );
 	instantiationService.stub(ISessionsManagementService, {
-		activeSession: observableValue<IActiveSession | undefined>('activeSession', activeSession),
+		activeSession: observableValue<IActiveSession | undefined>("activeSession", activeSession),
 	} as unknown as ISessionsManagementService);
 	instantiationService.stub(ISessionsProvidersService, {
 		onDidChangeProviders: Event.None,
@@ -80,44 +86,44 @@ function createPicker(
 	return disposables.add(instantiationService.createInstance(IsolationPicker));
 }
 
-suite('IsolationPicker', () => {
-	const disposables = new DisposableStore();
+suite("IsolationPicker", () => {
+  const disposables = new DisposableStore();
 
-	teardown(() => {
-		disposables.clear();
-	});
+  teardown(() => {
+    disposables.clear();
+  });
 
-	ensureNoDisposablesAreLeakedInTestSuite();
+  ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('marks folder as checked when workspace isolation is selected', () => {
-		const actionWidgetItems: IActionListItem<IIsolationActionItem>[] = [];
-		const picker = createPicker(disposables, 'workspace', actionWidgetItems);
-		const container = document.createElement('div');
-		picker.render(container);
-		showPicker(container);
+  test("marks folder as checked when workspace isolation is selected", () => {
+    const actionWidgetItems: IActionListItem<IIsolationActionItem>[] = [];
+    const picker = createPicker(disposables, "workspace", actionWidgetItems);
+    const container = document.createElement("div");
+    picker.render(container);
+    showPicker(container);
 
-		assert.deepStrictEqual(
-			actionWidgetItems.map(item => ({ label: item.label, checked: item.item?.checked })),
-			[
-				{ label: 'Worktree', checked: undefined },
-				{ label: 'Folder', checked: true },
-			],
-		);
-	});
+    assert.deepStrictEqual(actionWidgetItems.map(item => ({
+      label: item.label,
+      checked: item.item?.checked,
+    })), [
+      { label: "Worktree", checked: undefined },
+      { label: "Folder", checked: true },
+    ]);
+  });
 
-	test('marks worktree as checked when worktree isolation is selected', () => {
-		const actionWidgetItems: IActionListItem<IIsolationActionItem>[] = [];
-		const picker = createPicker(disposables, 'worktree', actionWidgetItems);
-		const container = document.createElement('div');
-		picker.render(container);
-		showPicker(container);
+  test("marks worktree as checked when worktree isolation is selected", () => {
+    const actionWidgetItems: IActionListItem<IIsolationActionItem>[] = [];
+    const picker = createPicker(disposables, "worktree", actionWidgetItems);
+    const container = document.createElement("div");
+    picker.render(container);
+    showPicker(container);
 
-		assert.deepStrictEqual(
-			actionWidgetItems.map(item => ({ label: item.label, checked: item.item?.checked })),
-			[
-				{ label: 'Worktree', checked: true },
-				{ label: 'Folder', checked: undefined },
-			],
-		);
-	});
+    assert.deepStrictEqual(actionWidgetItems.map(item => ({
+      label: item.label,
+      checked: item.item?.checked,
+    })), [
+      { label: "Worktree", checked: true },
+      { label: "Folder", checked: undefined },
+    ]);
+  });
 });

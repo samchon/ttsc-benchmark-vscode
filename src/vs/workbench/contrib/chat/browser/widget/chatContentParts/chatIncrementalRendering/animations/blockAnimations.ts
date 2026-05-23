@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IIncrementalRenderingAnimation } from './animation.js';
+import { IIncrementalRenderingAnimation } from "./animation.js";
 
 /** Duration of the animation applied to newly rendered blocks. */
 export const ANIMATION_DURATION_MS = 600;
@@ -22,7 +22,7 @@ const STAGGER_DELAY_MS = 150;
  */
 export class BlockAnimation implements IIncrementalRenderingAnimation {
 
-	constructor(private readonly _style: 'fade' | 'rise' | 'blur' | 'scale' | 'slide' | 'reveal') { }
+	constructor(private readonly _style: "fade" | "rise" | "blur" | "scale" | "slide" | "reveal") { }
 
 	animate(children: HTMLCollection, fromIndex: number, currentCount: number, elapsed: number): void {
 		const className = `chat-smooth-animate-${this._style}`;
@@ -37,16 +37,19 @@ export class BlockAnimation implements IIncrementalRenderingAnimation {
 			const childDelay = -elapsed + staggerOffset;
 
 			child.classList.add(className);
-			child.style.setProperty('--chat-smooth-duration', `${ANIMATION_DURATION_MS}ms`);
-			child.style.setProperty('--chat-smooth-delay', `${childDelay}ms`);
+			child.style.setProperty(
+        "--chat-smooth-duration",
+        `${ANIMATION_DURATION_MS}ms`,
+      );
+			child.style.setProperty("--chat-smooth-delay", `${childDelay}ms`);
 
-			child.addEventListener('animationend', (e) => {
+			child.addEventListener("animationend", (e) => {
 				if (e.target !== child) {
 					return;
 				}
 				child.classList.remove(className);
-				child.style.removeProperty('--chat-smooth-duration');
-				child.style.removeProperty('--chat-smooth-delay');
+				child.style.removeProperty("--chat-smooth-duration");
+				child.style.removeProperty("--chat-smooth-delay");
 			}, { once: true });
 		}
 	}

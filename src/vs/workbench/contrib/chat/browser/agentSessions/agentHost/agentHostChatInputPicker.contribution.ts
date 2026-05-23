@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize2 } from '../../../../../../nls.js';
-import { Action2, MenuId, registerAction2 } from '../../../../../../platform/actions/common/actions.js';
-import { ContextKeyExpr } from '../../../../../../platform/contextkey/common/contextkey.js';
-import { IsSessionsWindowContext } from '../../../../../common/contextkeys.js';
-import { ChatContextKeys, ChatContextKeyExprs } from '../../../common/actions/chatContextKeys.js';
+import { localize2 } from "../../../../../../nls.js";
+import { Action2, MenuId, registerAction2 } from "../../../../../../platform/actions/common/actions.js";
+import { ContextKeyExpr } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { IsSessionsWindowContext } from "../../../../../common/contextkeys.js";
+import { ChatContextKeys, ChatContextKeyExprs } from "../../../common/actions/chatContextKeys.js";
 
 /**
  * All three agent-host pickers live under `MenuId.ChatInputSecondary` group
@@ -30,16 +30,16 @@ import { ChatContextKeys, ChatContextKeyExprs } from '../../../common/actions/ch
  */
 
 export class OpenAgentHostModePickerAction extends Action2 {
-	static readonly ID = 'workbench.action.chat.openAgentHostModePicker';
+	static readonly ID = "workbench.action.chat.openAgentHostModePicker";
 	constructor() {
 		super({
 			id: OpenAgentHostModePickerAction.ID,
-			title: localize2('agentHost.modePicker', "Agent Mode"),
+			title: localize2("agentHost.modePicker", "Agent Mode"),
 			f1: false,
 			precondition: ChatContextKeys.enabled,
 			menu: [{
 				id: MenuId.ChatInputSecondary,
-				group: 'navigation',
+				group: "navigation",
 				order: 0.7,
 				when: ChatContextKeyExprs.isAgentHostSession,
 			}],
@@ -49,16 +49,16 @@ export class OpenAgentHostModePickerAction extends Action2 {
 }
 
 export class OpenAgentHostAutoApprovePickerAction extends Action2 {
-	static readonly ID = 'workbench.action.chat.openAgentHostAutoApprovePicker';
+	static readonly ID = "workbench.action.chat.openAgentHostAutoApprovePicker";
 	constructor() {
 		super({
 			id: OpenAgentHostAutoApprovePickerAction.ID,
-			title: localize2('agentHost.autoApprovePicker', "Auto-Approve"),
+			title: localize2("agentHost.autoApprovePicker", "Auto-Approve"),
 			f1: false,
 			precondition: ChatContextKeys.enabled,
 			menu: [{
 				id: MenuId.ChatInputSecondary,
-				group: 'navigation',
+				group: "navigation",
 				order: 0.8,
 				when: ChatContextKeyExprs.isAgentHostSession,
 			}],
@@ -68,16 +68,16 @@ export class OpenAgentHostAutoApprovePickerAction extends Action2 {
 }
 
 export class OpenAgentHostPermissionModePickerAction extends Action2 {
-	static readonly ID = 'workbench.action.chat.openAgentHostPermissionModePicker';
+	static readonly ID = "workbench.action.chat.openAgentHostPermissionModePicker";
 	constructor() {
 		super({
 			id: OpenAgentHostPermissionModePickerAction.ID,
-			title: localize2('agentHost.permissionModePicker', "Approvals"),
+			title: localize2("agentHost.permissionModePicker", "Approvals"),
 			f1: false,
 			precondition: ChatContextKeys.enabled,
 			menu: [{
 				id: MenuId.ChatInputSecondary,
-				group: 'navigation',
+				group: "navigation",
 				order: 0.9,
 				when: ChatContextKeyExprs.isAgentHostSession,
 			}],
@@ -87,16 +87,16 @@ export class OpenAgentHostPermissionModePickerAction extends Action2 {
 }
 
 export class OpenAgentHostBranchPickerAction extends Action2 {
-	static readonly ID = 'workbench.action.chat.openAgentHostBranchPicker';
+	static readonly ID = "workbench.action.chat.openAgentHostBranchPicker";
 	constructor() {
 		super({
 			id: OpenAgentHostBranchPickerAction.ID,
-			title: localize2('agentHost.branchPicker', "Branch"),
+			title: localize2("agentHost.branchPicker", "Branch"),
 			f1: false,
 			precondition: ChatContextKeys.enabled,
 			menu: [{
 				id: MenuId.ChatInputSecondary,
-				group: 'navigation',
+				group: "navigation",
 				// Large order so Branch always sorts after the existing
 				// secondary chips (SessionTarget, Mode, Approvals, ...).
 				order: 100,
@@ -111,16 +111,16 @@ export class OpenAgentHostBranchPickerAction extends Action2 {
 }
 
 export class OpenAgentHostIsolationPickerAction extends Action2 {
-	static readonly ID = 'workbench.action.chat.openAgentHostIsolationPicker';
+	static readonly ID = "workbench.action.chat.openAgentHostIsolationPicker";
 	constructor() {
 		super({
 			id: OpenAgentHostIsolationPickerAction.ID,
-			title: localize2('agentHost.isolationPicker', "Isolation"),
+			title: localize2("agentHost.isolationPicker", "Isolation"),
 			f1: false,
 			precondition: ChatContextKeys.enabled,
 			menu: [{
 				id: MenuId.ChatInputSecondary,
-				group: 'navigation',
+				group: "navigation",
 				order: 101,
 				when: ContextKeyExpr.and(ChatContextKeyExprs.isAgentHostSession, IsSessionsWindowContext),
 			}],
@@ -138,16 +138,16 @@ export class OpenAgentHostIsolationPickerAction extends Action2 {
  * same menu (see `vs/sessions/.../agentHostAgentPicker.ts`).
  */
 export class OpenAgentHostCustomAgentPickerAction extends Action2 {
-	static readonly ID = 'workbench.action.chat.openAgentHostCustomAgentPicker';
+	static readonly ID = "workbench.action.chat.openAgentHostCustomAgentPicker";
 	constructor() {
 		super({
 			id: OpenAgentHostCustomAgentPickerAction.ID,
-			title: localize2('agentHost.customAgentPicker', "Agent"),
+			title: localize2("agentHost.customAgentPicker", "Agent"),
 			f1: false,
 			precondition: ChatContextKeys.enabled,
 			menu: [{
 				id: MenuId.ChatInput,
-				group: 'navigation',
+				group: "navigation",
 				order: 0,
 				when: ContextKeyExpr.and(ChatContextKeyExprs.isAgentHostSession, IsSessionsWindowContext.negate()),
 			}],

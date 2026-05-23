@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as arrays from './arrays.js';
+import * as arrays from "./arrays.js";
 
 /*
  * Each function in this file which offers an equality comparison, has an accompanying
@@ -67,7 +67,7 @@ export function structuralEquals<T>(a: T, b: T): boolean {
 		return true;
 	}
 
-	if (a && typeof a === 'object' && b && typeof b === 'object') {
+	if (a && typeof a === "object" && b && typeof b === "object") {
 		if (Object.getPrototypeOf(a) === Object.prototype && Object.getPrototypeOf(b) === Object.prototype) {
 			const aObj = a as Record<string, unknown>;
 			const bObj = b as Record<string, unknown>;
@@ -115,7 +115,7 @@ function toNormalizedJsonStructure(t: unknown): unknown {
 		return t.map(toNormalizedJsonStructure);
 	}
 
-	if (t && typeof t === 'object') {
+	if (t && typeof t === "object") {
 		if (Object.getPrototypeOf(t) === Object.prototype) {
 			const tObj = t as Record<string, unknown>;
 			const res: Record<string, unknown> = Object.create(null);
@@ -130,7 +130,7 @@ function toNormalizedJsonStructure(t: unknown): unknown {
 				objIds.set(t, objId);
 			}
 			// Random string to prevent collisions
-			return objId + '----2b76a038c20c4bcc';
+			return objId + "----2b76a038c20c4bcc";
 		}
 	}
 	return t;

@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter } from '../../../base/common/event.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { CDPTargetInfo, ICDPConnection, ICDPTarget } from '../common/cdp/types.js';
-import type { BrowserView } from './browserView.js';
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { CDPTargetInfo, ICDPConnection, ICDPTarget } from "../common/cdp/types.js";
+import type { BrowserView } from "./browserView.js";
 
 /**
  * Wraps a {@link BrowserViewDebugger} transport as an {@link ICDPTarget},
@@ -17,20 +17,24 @@ export class BrowserViewCDPTarget extends Disposable implements ICDPTarget {
 	protected readonly _sessions = new Map<string, ICDPConnection>();
 	get sessions(): ReadonlyMap<string, ICDPConnection> { return this._sessions; }
 
-	private readonly _onSessionCreated = this._register(new Emitter<{ session: ICDPConnection; waitingForDebugger: boolean }>());
+	private readonly _onSessionCreated = this._register(
+    new Emitter<{ session: ICDPConnection; waitingForDebugger: boolean }>(),
+  );
 	readonly onSessionCreated = this._onSessionCreated.event;
 
 	private readonly _onClose = this._register(new Emitter<void>());
 	readonly onClose = this._onClose.event;
 
-	private readonly _onTargetInfoChanged = this._register(new Emitter<CDPTargetInfo>());
+	private readonly _onTargetInfoChanged = this._register(
+    new Emitter<CDPTargetInfo>(),
+  );
 	readonly onTargetInfoChanged = this._onTargetInfoChanged.event;
 
 	private _isDisposed = false;
 
 	constructor(
 		readonly view: BrowserView,
-		protected readonly _targetInfo: CDPTargetInfo
+		protected readonly _targetInfo: CDPTargetInfo,
 	) {
 		super();
 
@@ -55,14 +59,16 @@ export class BrowserViewCDPTarget extends Disposable implements ICDPTarget {
 
 	get targetInfo(): CDPTargetInfo {
 		return {
-			...this._targetInfo,
-			attached: this._sessions.size > 0,
-			browserContextId: this.view.session.id
-		};
+      ...this._targetInfo,
+      attached: this._sessions.size > 0,
+      browserContextId: this.view.session.id,
+    };
 	}
 
 	async attach(): Promise<ICDPConnection> {
-		const session = await this.view.debugger.attachToTarget(this.targetInfo.targetId);
+		const session = await this.view.debugger.attachToTarget(
+      this.targetInfo.targetId,
+    );
 		this.notifySessionCreated(session, false);
 		return session;
 	}

@@ -35,7 +35,7 @@ export class SmallImmutableSet<T> {
 
 	private constructor(
 		private readonly items: number,
-		private readonly additionalItems: readonly number[]
+		private readonly additionalItems: readonly number[],
 	) {
 	}
 
@@ -89,7 +89,10 @@ export class SmallImmutableSet<T> {
 
 		// This can be optimized, but it's not a common case
 		const newItems: number[] = [];
-		for (let i = 0; i < Math.max(this.additionalItems.length, other.additionalItems.length); i++) {
+		for (let i = 0; i < Math.max(
+      this.additionalItems.length,
+      other.additionalItems.length,
+    ); i++) {
 			const item1 = this.additionalItems[i] || 0;
 			const item2 = other.additionalItems[i] || 0;
 			newItems.push(item1 | item2);
@@ -103,7 +106,10 @@ export class SmallImmutableSet<T> {
 			return true;
 		}
 
-		for (let i = 0; i < Math.min(this.additionalItems.length, other.additionalItems.length); i++) {
+		for (let i = 0; i < Math.min(
+      this.additionalItems.length,
+      other.additionalItems.length,
+    ); i++) {
 			if ((this.additionalItems[i] & other.additionalItems[i]) !== 0) {
 				return true;
 			}
@@ -138,7 +144,7 @@ export interface IDenseKeyProvider<T> {
 export const identityKeyProvider: IDenseKeyProvider<number> = {
 	getKey(value: number) {
 		return value;
-	}
+	},
 };
 
 /**

@@ -3,19 +3,25 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Color } from '../../../../base/common/color.js';
-import { Emitter } from '../../../../base/common/event.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { Range } from '../../core/range.js';
-import { BracketPairColorizationOptions, IModelDecoration } from '../../model.js';
-import { BracketInfo } from '../../textModelBracketPairs.js';
-import { DecorationProvider } from '../decorationProvider.js';
-import { TextModel } from '../textModel.js';
+import { Color } from "../../../../base/common/color.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { Range } from "../../core/range.js";
+import { BracketPairColorizationOptions, IModelDecoration } from "../../model.js";
+import { BracketInfo } from "../../textModelBracketPairs.js";
+import { DecorationProvider } from "../decorationProvider.js";
+import { TextModel } from "../textModel.js";
 import {
-	editorBracketHighlightingForeground1, editorBracketHighlightingForeground2, editorBracketHighlightingForeground3, editorBracketHighlightingForeground4, editorBracketHighlightingForeground5, editorBracketHighlightingForeground6, editorBracketHighlightingUnexpectedBracketForeground
-} from '../../core/editorColorRegistry.js';
-import { registerThemingParticipant } from '../../../../platform/theme/common/themeService.js';
-import { IModelOptionsChangedEvent } from '../../textModelEvents.js';
+  editorBracketHighlightingForeground1,
+  editorBracketHighlightingForeground2,
+  editorBracketHighlightingForeground3,
+  editorBracketHighlightingForeground4,
+  editorBracketHighlightingForeground5,
+  editorBracketHighlightingForeground6,
+  editorBracketHighlightingUnexpectedBracketForeground,
+} from "../../core/editorColorRegistry.js";
+import { registerThemingParticipant } from "../../../../platform/theme/common/themeService.js";
+import { IModelOptionsChangedEvent } from "../../textModelEvents.js";
 
 export class ColorizedBracketPairsDecorationProvider extends Disposable implements DecorationProvider {
 	private colorizationOptions: BracketPairColorizationOptions;
@@ -29,9 +35,11 @@ export class ColorizedBracketPairsDecorationProvider extends Disposable implemen
 
 		this.colorizationOptions = textModel.getOptions().bracketPairColorizationOptions;
 
-		this._register(textModel.bracketPairs.onDidChange(e => {
-			this.onDidChangeEmitter.fire();
-		}));
+		this._register(
+      textModel.bracketPairs.onDidChange(e => {
+        this.onDidChangeEmitter.fire();
+      }),
+    );
 	}
 
 	//#region TextModel events
@@ -57,10 +65,10 @@ export class ColorizedBracketPairsDecorationProvider extends Disposable implemen
 		const result = this.textModel.bracketPairs.getBracketsInRange(range, true).map<IModelDecoration>(bracket => ({
 			id: `bracket${bracket.range.toString()}-${bracket.nestingLevel}`,
 			options: {
-				description: 'BracketPairColorization',
+				description: "BracketPairColorization",
 				inlineClassName: this.colorProvider.getInlineClassName(
 					bracket,
-					this.colorizationOptions.independentColorPoolPerBracketType
+					this.colorizationOptions.independentColorPoolPerBracketType,
 				),
 			},
 			ownerId: 0,
@@ -78,22 +86,24 @@ export class ColorizedBracketPairsDecorationProvider extends Disposable implemen
 			return [];
 		}
 		return this.getDecorationsInRange(
-			new Range(1, 1, this.textModel.getLineCount(), 1),
-			ownerId,
-			filterOutValidation,
-			filterFontDecorations
-		);
+      new Range(1, 1, this.textModel.getLineCount(), 1),
+      ownerId,
+      filterOutValidation,
+      filterFontDecorations,
+    );
 	}
 }
 
 class ColorProvider {
-	public readonly unexpectedClosingBracketClassName = 'unexpected-closing-bracket';
+	public readonly unexpectedClosingBracketClassName = "unexpected-closing-bracket";
 
 	getInlineClassName(bracket: BracketInfo, independentColorPoolPerBracketType: boolean): string {
 		if (bracket.isInvalid) {
 			return this.unexpectedClosingBracketClassName;
 		}
-		return this.getInlineClassNameOfLevel(independentColorPoolPerBracketType ? bracket.nestingLevelOfEqualBracketType : bracket.nestingLevel);
+		return this.getInlineClassNameOfLevel(
+      independentColorPoolPerBracketType ? bracket.nestingLevelOfEqualBracketType : bracket.nestingLevel,
+    );
 	}
 
 	getInlineClassNameOfLevel(level: number): string {
@@ -110,7 +120,7 @@ registerThemingParticipant((theme, collector) => {
 		editorBracketHighlightingForeground3,
 		editorBracketHighlightingForeground4,
 		editorBracketHighlightingForeground5,
-		editorBracketHighlightingForeground6
+		editorBracketHighlightingForeground6,
 	];
 	const colorProvider = new ColorProvider();
 

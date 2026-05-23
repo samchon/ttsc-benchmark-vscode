@@ -29,15 +29,15 @@ export namespace DebugLocation {
 
 class DebugLocationImpl implements ILocation {
 	public static fromStack(stack: string, parentIdx: number): DebugLocationImpl | undefined {
-		const lines = stack.split('\n');
+		const lines = stack.split("\n");
 		const location = parseLine(lines[parentIdx + 1]);
 		if (location) {
 			return new DebugLocationImpl(
-				location.fileName,
-				location.line,
-				location.column,
-				location.id
-			);
+        location.fileName,
+        location.line,
+        location.column,
+        location.id,
+      );
 		} else {
 			return undefined;
 		}
@@ -64,22 +64,22 @@ function parseLine(stackLine: string): ILocation | undefined {
 	const match = stackLine.match(/\((.*):(\d+):(\d+)\)/);
 	if (match) {
 		return {
-			fileName: match[1],
-			line: parseInt(match[2]),
-			column: parseInt(match[3]),
-			id: stackLine,
-		};
+      fileName: match[1],
+      line: parseInt(match[2]),
+      column: parseInt(match[3]),
+      id: stackLine,
+    };
 	}
 
 	const match2 = stackLine.match(/at ([^\(\)]*):(\d+):(\d+)/);
 
 	if (match2) {
 		return {
-			fileName: match2[1],
-			line: parseInt(match2[2]),
-			column: parseInt(match2[3]),
-			id: stackLine,
-		};
+      fileName: match2[1],
+      line: parseInt(match2[2]),
+      column: parseInt(match2[3]),
+      id: stackLine,
+    };
 	}
 
 	return undefined;

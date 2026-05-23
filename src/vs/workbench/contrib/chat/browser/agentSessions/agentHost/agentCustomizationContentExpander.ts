@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../../../base/common/cancellation.js';
-import { extname } from '../../../../../../base/common/path.js';
-import { joinPath } from '../../../../../../base/common/resources.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { parseFrontMatter } from '../../../../../../base/common/yaml.js';
-import { IFileService } from '../../../../../../platform/files/common/files.js';
-import { ILogService } from '../../../../../../platform/log/common/log.js';
-import { AICustomizationSource } from '../../../common/aiCustomizationWorkspaceService.js';
-import { ICustomizationItem } from '../../../common/customizationHarnessService.js';
-import { SKILL_FILENAME } from '../../../common/promptSyntax/config/promptFileLocations.js';
-import { PromptsType } from '../../../common/promptSyntax/promptTypes.js';
+import { CancellationToken } from "../../../../../../base/common/cancellation.js";
+import { extname } from "../../../../../../base/common/path.js";
+import { joinPath } from "../../../../../../base/common/resources.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { parseFrontMatter } from "../../../../../../base/common/yaml.js";
+import { IFileService } from "../../../../../../platform/files/common/files.js";
+import { ILogService } from "../../../../../../platform/log/common/log.js";
+import { AICustomizationSource } from "../../../common/aiCustomizationWorkspaceService.js";
+import { ICustomizationItem } from "../../../common/customizationHarnessService.js";
+import { SKILL_FILENAME } from "../../../common/promptSyntax/config/promptFileLocations.js";
+import { PromptsType } from "../../../common/promptSyntax/promptTypes.js";
 
 /**
  * Expands plugin roots into individual customization items by scanning the
@@ -40,9 +40,16 @@ export class AgentCustomizationContentExpander {
 				return [];
 			}
 
-			const dirNames = ['agents', 'skills', 'commands', 'rules'] as const;
-			const promptTypes = [PromptsType.agent, PromptsType.skill, PromptsType.prompt, PromptsType.instructions] as const;
-			const stats = await this.fileService.resolveAll(dirNames.map(name => ({ resource: URI.joinPath(fsRoot, name) })));
+			const dirNames = ["agents", "skills", "commands", "rules"] as const;
+			const promptTypes = [
+        PromptsType.agent,
+        PromptsType.skill,
+        PromptsType.prompt,
+        PromptsType.instructions,
+      ] as const;
+			const stats = await this.fileService.resolveAll(
+        dirNames.map(name => ({ resource: URI.joinPath(fsRoot, name) })),
+      );
 
 			if (token.isCancellationRequested) {
 				return [];
@@ -55,14 +62,22 @@ export class AgentCustomizationContentExpander {
 					continue;
 				}
 				if (promptType === PromptsType.skill) {
-					children.push(...await this.collectFromSkillDir(stat.stat.children, pluginUri, source, groupKey, isBundleItem, token));
+					children.push(
+            ...await this.collectFromSkillDir(stat.stat.children, pluginUri, source, groupKey, isBundleItem, token),
+          );
 				} else {
-					children.push(...await this.collectFromRegularDir(stat.stat.children, pluginUri, source, promptType, groupKey, isBundleItem, token));
+					children.push(
+            ...await this.collectFromRegularDir(stat.stat.children, pluginUri, source, promptType, groupKey, isBundleItem, token),
+          );
 				}
 			}
-			children.sort((a, b) => `${a.type}:${a.name}`.localeCompare(`${b.type}:${b.name}`));
+			children.sort(
+        (a, b) => `${a.type}:${a.name}`.localeCompare(`${b.type}:${b.name}`),
+      );
 		} catch (err) {
-			this.logService.trace(`[AgentCustomizationContentExpander] Failed to expand plugin ${pluginUri.toString()}: ${err}`);
+			this.logService.trace(
+        `[AgentCustomizationContentExpander] Failed to expand plugin ${pluginUri.toString()}: ${err}`,
+      );
 			return [];
 		}
 		return children;
@@ -78,14 +93,16 @@ export class AgentCustomizationContentExpander {
 		const readMetaDataPromises = [];
 		for (const child of entries) {
 			// Skip dotfiles (e.g. .DS_Store)
-			if (child.name.startsWith('.')) {
+			if (child.name.startsWith(".")) {
 				continue;
 			}
 			if (!child.isDirectory) {
 				continue;
 			}
 			eligible.push(child);
-			readMetaDataPromises.push(this.readPromptMetadata(joinPath(child.resource, SKILL_FILENAME), token));
+			readMetaDataPromises.push(
+        this.readPromptMetadata(joinPath(child.resource, SKILL_FILENAME), token),
+      );
 		}
 
 		const promptMetadata = await Promise.all(readMetaDataPromises);
@@ -113,7 +130,7 @@ export class AgentCustomizationContentExpander {
 				groupKey,
 				extensionId: undefined,
 				pluginUri: isBundleItem ? undefined : pluginUri,
-				userInvocable
+				userInvocable,
 			} satisfies ICustomizationItem);
 		}
 		return items;
@@ -128,17 +145,19 @@ export class AgentCustomizationContentExpander {
 		type Entry = { name: string; resource: URI; isDirectory: boolean };
 		const eligible: Entry[] = [];
 		for (const child of entries) {
-			if (child.name.startsWith('.')) {
+			if (child.name.startsWith(".")) {
 				continue;
 			}
-			if (child.isDirectory || extname(child.name) !== '.md') {
+			if (child.isDirectory || extname(child.name) !== ".md") {
 				continue;
 			}
 			eligible.push(child);
 		}
 
 		const parseMetadata = promptType === PromptsType.agent || promptType === PromptsType.instructions;
-		const promptMetadata = parseMetadata ? await Promise.all(eligible.map(child => this.readPromptMetadata(child.resource, token))) : undefined;
+		const promptMetadata = parseMetadata ? await Promise.all(
+      eligible.map(child => this.readPromptMetadata(child.resource, token)),
+    ) : undefined;
 
 		if (token.isCancellationRequested) {
 			return [];
@@ -169,7 +188,7 @@ export class AgentCustomizationContentExpander {
 	 * when it cannot be read/parsed.
 	 */
 	private async readPromptMetadata(promptFileUri: URI, token: CancellationToken): Promise<{ name: string | undefined; description: string | undefined; userInvocable: boolean | undefined } | undefined> {
-		if (extname(promptFileUri.path) !== '.md') {
+		if (extname(promptFileUri.path) !== ".md") {
 			return undefined;
 		}
 		try {
@@ -179,15 +198,21 @@ export class AgentCustomizationContentExpander {
 			}
 			const frontmatter = parseFrontMatter(content.value.toString());
 			if (frontmatter) {
-				const name = frontmatter.getStringValue('name');
-				const description = frontmatter.getStringValue('description');
-				const userInvocableStr = frontmatter.getStringValue('user-invocable');
-				const userInvocable = userInvocableStr === 'true' ? true : userInvocableStr === 'false' ? false : undefined;
+				const name = frontmatter.getStringValue("name");
+				const description = frontmatter.getStringValue("description");
+				const userInvocableStr = frontmatter.getStringValue("user-invocable");
+				const userInvocable = userInvocableStr === "true" ? true : userInvocableStr === "false" ? false : undefined;
 				return { name, description, userInvocable };
 			}
-			return { name: undefined, description: undefined, userInvocable: undefined };
+			return {
+        name: undefined,
+        description: undefined,
+        userInvocable: undefined,
+      };
 		} catch (err) {
-			this.logService.trace(`[AgentCustomizationContentExpander] Failed to read prompt metadata ${promptFileUri.toString()}: ${err}`);
+			this.logService.trace(
+        `[AgentCustomizationContentExpander] Failed to read prompt metadata ${promptFileUri.toString()}: ${err}`,
+      );
 			return undefined;
 		}
 	}
@@ -203,6 +228,6 @@ function stripPromptFileExtensions(filename: string): string {
 		return filename;
 	}
 	const stem = filename.slice(0, -ext.length);
-	const dotInStem = stem.lastIndexOf('.');
+	const dotInStem = stem.lastIndexOf(".");
 	return dotInStem > 0 ? stem.slice(0, dotInStem) : stem;
 }

@@ -3,18 +3,32 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ITunnel, ITunnelOptions, IWorkbench, IWorkbenchConstructionOptions, Menu } from './web.api.js';
-import { BrowserMain } from './web.main.js';
-import { URI, UriComponents } from '../../base/common/uri.js';
-import { IDisposable, toDisposable } from '../../base/common/lifecycle.js';
-import { CommandsRegistry } from '../../platform/commands/common/commands.js';
-import { mark, PerformanceMark } from '../../base/common/performance.js';
-import { MenuId, MenuRegistry } from '../../platform/actions/common/actions.js';
-import { DeferredPromise } from '../../base/common/async.js';
-import { asArray } from '../../base/common/arrays.js';
-import { IProgress, IProgressCompositeOptions, IProgressDialogOptions, IProgressNotificationOptions, IProgressOptions, IProgressStep, IProgressWindowOptions } from '../../platform/progress/common/progress.js';
-import { LogLevel } from '../../platform/log/common/log.js';
-import { IEmbedderTerminalOptions } from '../services/terminal/common/embedderTerminalService.js';
+import {
+  ITunnel,
+  ITunnelOptions,
+  IWorkbench,
+  IWorkbenchConstructionOptions,
+  Menu,
+} from "./web.api.js";
+import { BrowserMain } from "./web.main.js";
+import { URI, UriComponents } from "../../base/common/uri.js";
+import { IDisposable, toDisposable } from "../../base/common/lifecycle.js";
+import { CommandsRegistry } from "../../platform/commands/common/commands.js";
+import { mark, PerformanceMark } from "../../base/common/performance.js";
+import { MenuId, MenuRegistry } from "../../platform/actions/common/actions.js";
+import { DeferredPromise } from "../../base/common/async.js";
+import { asArray } from "../../base/common/arrays.js";
+import {
+  IProgress,
+  IProgressCompositeOptions,
+  IProgressDialogOptions,
+  IProgressNotificationOptions,
+  IProgressOptions,
+  IProgressStep,
+  IProgressWindowOptions,
+} from "../../platform/progress/common/progress.js";
+import { LogLevel } from "../../platform/log/common/log.js";
+import { IEmbedderTerminalOptions } from "../services/terminal/common/embedderTerminalService.js";
 
 let created = false;
 const workbenchPromise = new DeferredPromise<IWorkbench>();
@@ -28,12 +42,12 @@ const workbenchPromise = new DeferredPromise<IWorkbench>();
 export function create(domElement: HTMLElement, options: IWorkbenchConstructionOptions): IDisposable {
 
 	// Mark start of workbench
-	mark('code/didLoadWorkbenchMain');
+	mark("code/didLoadWorkbenchMain");
 
 	// Assert that the workbench is not created more than once. We currently
 	// do not support this and require a full context switch to clean-up.
 	if (created) {
-		throw new Error('Unable to create the VSCode workbench more than once.');
+		throw new Error("Unable to create the VSCode workbench more than once.");
 	} else {
 		created = true;
 	}
@@ -51,7 +65,9 @@ export function create(domElement: HTMLElement, options: IWorkbenchConstructionO
 			// Commands with labels appear in the command palette
 			if (command.label) {
 				for (const menu of asArray(command.menu ?? Menu.CommandPalette)) {
-					MenuRegistry.appendMenuItem(asMenuId(menu), { command: { id: command.id, title: command.label } });
+					MenuRegistry.appendMenuItem(asMenuId(menu), {
+            command: { id: command.id, title: command.label },
+          });
 				}
 			}
 		}
@@ -60,9 +76,9 @@ export function create(domElement: HTMLElement, options: IWorkbenchConstructionO
 	// Startup workbench and resolve waiters
 	let instantiatedWorkbench: IWorkbench | undefined = undefined;
 	new BrowserMain(domElement, options).open().then(workbench => {
-		instantiatedWorkbench = workbench;
-		workbenchPromise.complete(workbench);
-	});
+    instantiatedWorkbench = workbench;
+    workbenchPromise.complete(workbench);
+  });
 
 	return toDisposable(() => {
 		if (instantiatedWorkbench) {
@@ -139,7 +155,7 @@ export namespace window {
 	 */
 	export async function withProgress<R>(
 		options: IProgressOptions | IProgressDialogOptions | IProgressNotificationOptions | IProgressWindowOptions | IProgressCompositeOptions,
-		task: (progress: IProgress<IProgressStep>) => Promise<R>
+		task: (progress: IProgress<IProgressStep>) => Promise<R>,
 	): Promise<R> {
 		const workbench = await workbenchPromise.p;
 

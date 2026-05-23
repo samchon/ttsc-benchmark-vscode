@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IQuickPickSeparator } from '../../../../platform/quickinput/common/quickInput.js';
-import { PickerQuickAccessProvider, IPickerQuickAccessItem, TriggerAction } from '../../../../platform/quickinput/browser/pickerQuickAccess.js';
-import { localize } from '../../../../nls.js';
-import { INotificationService } from '../../../../platform/notification/common/notification.js';
-import { IDebugService } from '../common/debug.js';
-import { IWorkspaceContextService, WorkbenchState } from '../../../../platform/workspace/common/workspace.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { matchesFuzzy } from '../../../../base/common/filters.js';
-import { ADD_CONFIGURATION_ID, DEBUG_QUICK_ACCESS_PREFIX } from './debugCommands.js';
-import { debugConfigure, debugRemoveConfig } from './debugIcons.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
+import { IQuickPickSeparator } from "../../../../platform/quickinput/common/quickInput.js";
+import { PickerQuickAccessProvider, IPickerQuickAccessItem, TriggerAction } from "../../../../platform/quickinput/browser/pickerQuickAccess.js";
+import { localize } from "../../../../nls.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { IDebugService } from "../common/debug.js";
+import { IWorkspaceContextService, WorkbenchState } from "../../../../platform/workspace/common/workspace.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { matchesFuzzy } from "../../../../base/common/filters.js";
+import { ADD_CONFIGURATION_ID, DEBUG_QUICK_ACCESS_PREFIX } from "./debugCommands.js";
+import { debugConfigure, debugRemoveConfig } from "./debugIcons.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
 
 export class StartDebugQuickAccessProvider extends PickerQuickAccessProvider<IPickerQuickAccessItem> {
 
@@ -25,8 +25,8 @@ export class StartDebugQuickAccessProvider extends PickerQuickAccessProvider<IPi
 	) {
 		super(DEBUG_QUICK_ACCESS_PREFIX, {
 			noResultsPick: {
-				label: localize('noDebugResults', "No matching launch configurations")
-			}
+				label: localize("noDebugResults", "No matching launch configurations"),
+			},
 		});
 	}
 
@@ -36,7 +36,7 @@ export class StartDebugQuickAccessProvider extends PickerQuickAccessProvider<IPi
 			return [];
 		}
 
-		picks.push({ type: 'separator', label: 'launch.json' });
+		picks.push({ type: "separator", label: "launch.json" });
 
 		const configManager = this.debugService.getConfigurationManager();
 		const selectedConfiguration = configManager.selectedConfiguration;
@@ -49,11 +49,11 @@ export class StartDebugQuickAccessProvider extends PickerQuickAccessProvider<IPi
 
 				const pick = {
 					label: config.name,
-					description: this.contextService.getWorkbenchState() === WorkbenchState.WORKSPACE ? config.launch.name : '',
+					description: this.contextService.getWorkbenchState() === WorkbenchState.WORKSPACE ? config.launch.name : "",
 					highlights: { label: highlights },
 					buttons: [{
 						iconClass: ThemeIcon.asClassName(debugConfigure),
-						tooltip: localize('customizeLaunchConfig', "Configure Launch Configuration")
+						tooltip: localize("customizeLaunchConfig", "Configure Launch Configuration"),
 					}],
 					trigger: () => {
 						config.launch.openConfigFile({ preserveFocus: false });
@@ -67,19 +67,22 @@ export class StartDebugQuickAccessProvider extends PickerQuickAccessProvider<IPi
 						} catch (error) {
 							this.notificationService.error(error);
 						}
-					}
+					},
 				};
 
 				// Most recently used configuration
 				if (selectedConfiguration.name === config.name && selectedConfiguration.launch === config.launch) {
-					const separator: IQuickPickSeparator = { type: 'separator', label: localize('mostRecent', 'Most Recent') };
+					const separator: IQuickPickSeparator = {
+            type: "separator",
+            label: localize("mostRecent", "Most Recent"),
+          };
 					picks.unshift(separator, pick);
 					continue;
 				}
 
 				// Separator
 				if (lastGroup !== config.presentation?.group) {
-					picks.push({ type: 'separator' });
+					picks.push({ type: "separator" });
 					lastGroup = config.presentation?.group;
 				}
 
@@ -93,10 +96,10 @@ export class StartDebugQuickAccessProvider extends PickerQuickAccessProvider<IPi
 		const dynamicProviders = await configManager.getDynamicProviders();
 		if (dynamicProviders.length > 0) {
 			picks.push({
-				type: 'separator', label: localize({
-					key: 'contributed',
-					comment: ['contributed is lower case because it looks better like that in UI. Nothing preceeds it. It is a name of the grouping of debug configurations.']
-				}, "contributed")
+				type: "separator", label: localize({
+					key: "contributed",
+					comment: ["contributed is lower case because it looks better like that in UI. Nothing preceeds it. It is a name of the grouping of debug configurations."],
+				}, "contributed"),
 			});
 		}
 
@@ -108,7 +111,7 @@ export class StartDebugQuickAccessProvider extends PickerQuickAccessProvider<IPi
 					highlights: { label: highlights },
 					buttons: [{
 						iconClass: ThemeIcon.asClassName(debugRemoveConfig),
-						tooltip: localize('removeLaunchConfig', "Remove Launch Configuration")
+						tooltip: localize("removeLaunchConfig", "Remove Launch Configuration"),
 					}],
 					trigger: () => {
 						configManager.removeRecentDynamicConfigurations(name, type);
@@ -123,7 +126,7 @@ export class StartDebugQuickAccessProvider extends PickerQuickAccessProvider<IPi
 						} catch (error) {
 							this.notificationService.error(error);
 						}
-					}
+					},
 				});
 			}
 		});
@@ -131,7 +134,7 @@ export class StartDebugQuickAccessProvider extends PickerQuickAccessProvider<IPi
 		dynamicProviders.forEach(provider => {
 			picks.push({
 				label: `$(folder) ${provider.label}...`,
-				ariaLabel: localize({ key: 'providerAriaLabel', comment: ['Placeholder stands for the provider label. For example "NodeJS".'] }, "{0} contributed configurations", provider.label),
+				ariaLabel: localize({ key: "providerAriaLabel", comment: ['Placeholder stands for the provider label. For example "NodeJS".'] }, "{0} contributed configurations", provider.label),
 				accept: async () => {
 					const pick = await provider.pick();
 					if (pick) {
@@ -139,31 +142,36 @@ export class StartDebugQuickAccessProvider extends PickerQuickAccessProvider<IPi
 						await configManager.selectConfiguration(pick.launch, pick.config.name, pick.config, { type: provider.type });
 						this.debugService.startDebugging(pick.launch, pick.config, { startedByUser: true });
 					}
-				}
+				},
 			});
 		});
 
 
 		// Entries: launches
-		const visibleLaunches = configManager.getLaunches().filter(launch => !launch.hidden);
+		const visibleLaunches = configManager.getLaunches().filter(
+      launch => !launch.hidden,
+    );
 
 		// Separator
 		if (visibleLaunches.length > 0) {
-			picks.push({ type: 'separator', label: localize('configure', "configure") });
+			picks.push({
+        type: "separator",
+        label: localize("configure", "configure"),
+      });
 		}
 
 		for (const launch of visibleLaunches) {
 			const label = this.contextService.getWorkbenchState() === WorkbenchState.WORKSPACE ?
 				localize("addConfigTo", "Add Config ({0})...", launch.name) :
-				localize('addConfiguration', "Add Configuration...");
+				localize("addConfiguration", "Add Configuration...");
 
 			// Add Config entry
 			picks.push({
-				label,
-				description: this.contextService.getWorkbenchState() === WorkbenchState.WORKSPACE ? launch.name : '',
-				highlights: { label: matchesFuzzy(filter, label, true) ?? undefined },
-				accept: () => this.commandService.executeCommand(ADD_CONFIGURATION_ID, launch.uri.toString())
-			});
+        label,
+        description: this.contextService.getWorkbenchState() === WorkbenchState.WORKSPACE ? launch.name : "",
+        highlights: { label: matchesFuzzy(filter, label, true) ?? undefined },
+        accept: () => this.commandService.executeCommand(ADD_CONFIGURATION_ID, launch.uri.toString()),
+      });
 		}
 
 		return picks;

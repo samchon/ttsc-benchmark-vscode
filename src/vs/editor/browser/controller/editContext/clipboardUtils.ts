@@ -2,16 +2,16 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { IViewModel } from '../../../common/viewModel.js';
-import { Range } from '../../../common/core/range.js';
-import { isWindows } from '../../../../base/common/platform.js';
-import { Mimes } from '../../../../base/common/mime.js';
-import { ViewContext } from '../../../common/viewModel/viewContext.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { EditorOption } from '../../../common/config/editorOptions.js';
-import { generateUuid } from '../../../../base/common/uuid.js';
-import { VSDataTransfer } from '../../../../base/common/dataTransfer.js';
-import { toExternalVSDataTransfer } from '../../dataTransfer.js';
+import { IViewModel } from "../../../common/viewModel.js";
+import { Range } from "../../../common/core/range.js";
+import { isWindows } from "../../../../base/common/platform.js";
+import { Mimes } from "../../../../base/common/mime.js";
+import { ViewContext } from "../../../common/viewModel/viewContext.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { EditorOption } from "../../../common/config/editorOptions.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { VSDataTransfer } from "../../../../base/common/dataTransfer.js";
+import { toExternalVSDataTransfer } from "../../dataTransfer.js";
 
 export function generateDataToCopyAndStoreInMemory(viewModel: IViewModel, id: string | undefined, isFirefox: boolean): { dataToCopy: ClipboardDataToCopy; metadata: ClipboardStoredMetadata } {
 	const { dataToCopy, metadata } = generateDataToCopy(viewModel);
@@ -23,28 +23,43 @@ function storeMetadataInMemory(textToCopy: string, metadata: ClipboardStoredMeta
 	InMemoryClipboardMetadataManager.INSTANCE.set(
 		// When writing "LINE\r\n" to the clipboard and then pasting,
 		// Firefox pastes "LINE\n", so let's work around this quirk
-		(isFirefox ? textToCopy.replace(/\r\n/g, '\n') : textToCopy),
-		metadata
+		(isFirefox ? textToCopy.replace(/\r\n/g, "\n") : textToCopy),
+		metadata,
 	);
 }
 
 function generateDataToCopy(viewModel: IViewModel): { dataToCopy: ClipboardDataToCopy; metadata: ClipboardStoredMetadata } {
-	const emptySelectionClipboard = viewModel.getEditorOption(EditorOption.emptySelectionClipboard);
-	const copyWithSyntaxHighlighting = viewModel.getEditorOption(EditorOption.copyWithSyntaxHighlighting);
-	const selections = viewModel.getCursorStates().map(cursorState => cursorState.modelState.selection);
-	const dataToCopy = getDataToCopy(viewModel, selections, emptySelectionClipboard, copyWithSyntaxHighlighting);
+	const emptySelectionClipboard = viewModel.getEditorOption(
+    EditorOption.emptySelectionClipboard,
+  );
+	const copyWithSyntaxHighlighting = viewModel.getEditorOption(
+    EditorOption.copyWithSyntaxHighlighting,
+  );
+	const selections = viewModel.getCursorStates().map(
+    cursorState => cursorState.modelState.selection,
+  );
+	const dataToCopy = getDataToCopy(
+    viewModel,
+    selections,
+    emptySelectionClipboard,
+    copyWithSyntaxHighlighting,
+  );
 	const metadata: ClipboardStoredMetadata = {
-		version: 1,
-		id: generateUuid(),
-		isFromEmptySelection: dataToCopy.isFromEmptySelection,
-		multicursorText: dataToCopy.multicursorText,
-		mode: dataToCopy.mode
-	};
+    version: 1,
+    id: generateUuid(),
+    isFromEmptySelection: dataToCopy.isFromEmptySelection,
+    multicursorText: dataToCopy.multicursorText,
+    mode: dataToCopy.mode,
+  };
 	return { dataToCopy, metadata };
 }
 
 function getDataToCopy(viewModel: IViewModel, modelSelections: Range[], emptySelectionClipboard: boolean, copyWithSyntaxHighlighting: boolean): ClipboardDataToCopy {
-	const { sourceRanges, sourceText } = viewModel.getPlainTextToCopy(modelSelections, emptySelectionClipboard, isWindows);
+	const { sourceRanges, sourceText } = viewModel.getPlainTextToCopy(
+    modelSelections,
+    emptySelectionClipboard,
+    isWindows,
+  );
 	const newLineCharacter = viewModel.model.getEOL();
 
 	const isFromEmptySelection = (emptySelectionClipboard && modelSelections.length === 1 && modelSelections[0].isEmpty());
@@ -54,20 +69,23 @@ function getDataToCopy(viewModel: IViewModel, modelSelections: Range[], emptySel
 	let html: string | null | undefined = undefined;
 	let mode: string | null = null;
 	if (CopyOptions.forceCopyWithSyntaxHighlighting || (copyWithSyntaxHighlighting && sourceText.length < 65536)) {
-		const richText = viewModel.getRichTextToCopy(modelSelections, emptySelectionClipboard);
+		const richText = viewModel.getRichTextToCopy(
+      modelSelections,
+      emptySelectionClipboard,
+    );
 		if (richText) {
 			html = richText.html;
 			mode = richText.mode;
 		}
 	}
 	const dataToCopy: ClipboardDataToCopy = {
-		isFromEmptySelection,
-		sourceRanges,
-		multicursorText,
-		text,
-		html,
-		mode
-	};
+    isFromEmptySelection,
+    sourceRanges,
+    multicursorText,
+    text,
+    html,
+    mode,
+  };
 	return dataToCopy;
 }
 
@@ -117,8 +135,8 @@ export interface ClipboardStoredMetadata {
 }
 
 export const CopyOptions = {
-	forceCopyWithSyntaxHighlighting: false,
-	electronBugWorkaroundCopyEventHasFired: false
+  forceCopyWithSyntaxHighlighting: false,
+  electronBugWorkaroundCopyEventHasFired: false,
 };
 
 interface InMemoryClipboardMetadata {
@@ -131,8 +149,8 @@ const ClipboardEventUtils = {
 	getTextData(clipboardData: IReadableClipboardData | DataTransfer): [string, ClipboardStoredMetadata | null] {
 		const text = clipboardData.getData(Mimes.text);
 		let metadata: ClipboardStoredMetadata | null = null;
-		const rawmetadata = clipboardData.getData('vscode-editor-data');
-		if (typeof rawmetadata === 'string') {
+		const rawmetadata = clipboardData.getData("vscode-editor-data");
+		if (typeof rawmetadata === "string") {
 			try {
 				metadata = <ClipboardStoredMetadata>JSON.parse(rawmetadata);
 				if (metadata.version !== 1) {
@@ -145,18 +163,18 @@ const ClipboardEventUtils = {
 		if (text.length === 0 && metadata === null && clipboardData.files.length > 0) {
 			// no textual data pasted, generate text from file names
 			const files: File[] = Array.prototype.slice.call(clipboardData.files, 0);
-			return [files.map(file => file.name).join('\n'), null];
+			return [files.map(file => file.name).join("\n"), null];
 		}
 		return [text, metadata];
 	},
 
 	setTextData(clipboardData: IWritableClipboardData, text: string, html: string | null | undefined, metadata: ClipboardStoredMetadata): void {
 		clipboardData.setData(Mimes.text, text);
-		if (typeof html === 'string') {
-			clipboardData.setData('text/html', html);
+		if (typeof html === "string") {
+			clipboardData.setData("text/html", html);
 		}
-		clipboardData.setData('vscode-editor-data', JSON.stringify(metadata));
-	}
+		clipboardData.setData("vscode-editor-data", JSON.stringify(metadata));
+	},
 };
 
 /**
@@ -282,7 +300,7 @@ export function createClipboardCopyEvent(e: ClipboardEvent, isCut: boolean, cont
 				ClipboardEventUtils.setTextData(e.clipboardData, dataToCopy.text, dataToCopy.html, metadata);
 			}
 			storeMetadataInMemory(dataToCopy.text, metadata, isFirefox);
-			logService.trace('ensureClipboardGetsEditorSelection with id : ', metadata.id, ' with text.length: ', dataToCopy.text.length);
+			logService.trace("ensureClipboardGetsEditorSelection with id : ", metadata.id, " with text.length: ", dataToCopy.text.length);
 		},
 		setHandled: () => {
 			handled = true;
@@ -298,7 +316,9 @@ export function createClipboardCopyEvent(e: ClipboardEvent, isCut: boolean, cont
  */
 export function createClipboardPasteEvent(e: ClipboardEvent): IClipboardPasteEvent {
 	let handled = false;
-	let [text, metadata] = e.clipboardData ? ClipboardEventUtils.getTextData(e.clipboardData) : ['', null];
+	let [text, metadata] = e.clipboardData ? ClipboardEventUtils.getTextData(
+    e.clipboardData,
+  ) : ["", null];
 	metadata = metadata || InMemoryClipboardMetadataManager.INSTANCE.get(text);
 	return {
 		clipboardData: createReadableClipboardData(e.clipboardData),
@@ -317,14 +337,14 @@ export function createClipboardPasteEvent(e: ClipboardEvent): IClipboardPasteEve
 
 export function createReadableClipboardData(dataTransfer: DataTransfer | undefined | null): IReadableClipboardData {
 	return {
-		types: Array.from(dataTransfer?.types ?? []),
-		files: Array.prototype.slice.call(dataTransfer?.files ?? [], 0),
-		getData: (type: string) => dataTransfer?.getData(type) ?? '',
-	};
+    types: Array.from(dataTransfer?.types ?? []),
+    files: Array.prototype.slice.call(dataTransfer?.files ?? [], 0),
+    getData: (type: string) => dataTransfer?.getData(type) ?? "",
+  };
 }
 
 export function createWritableClipboardData(dataTransfer: DataTransfer | undefined | null): IWritableClipboardData {
 	return {
-		setData: (type: string, value: string) => dataTransfer?.setData(type, value),
-	};
+    setData: (type: string, value: string) => dataTransfer?.setData(type, value),
+  };
 }

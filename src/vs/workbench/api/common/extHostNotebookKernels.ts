@@ -3,29 +3,42 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { asArray } from '../../../base/common/arrays.js';
-import { DeferredPromise, timeout } from '../../../base/common/async.js';
-import { CancellationToken, CancellationTokenSource } from '../../../base/common/cancellation.js';
-import { Emitter } from '../../../base/common/event.js';
-import { Disposable, DisposableStore, IDisposable } from '../../../base/common/lifecycle.js';
-import { ResourceMap } from '../../../base/common/map.js';
-import { URI, UriComponents } from '../../../base/common/uri.js';
-import { ExtensionIdentifier, IExtensionDescription } from '../../../platform/extensions/common/extensions.js';
-import { ILogService } from '../../../platform/log/common/log.js';
-import { ExtHostNotebookKernelsShape, ICellExecuteUpdateDto, IMainContext, INotebookKernelDto2, MainContext, MainThreadNotebookKernelsShape, NotebookOutputDto, VariablesResult } from './extHost.protocol.js';
-import { ApiCommand, ApiCommandArgument, ApiCommandResult, ExtHostCommands } from './extHostCommands.js';
-import { IExtHostInitDataService } from './extHostInitDataService.js';
-import { ExtHostNotebookController } from './extHostNotebook.js';
-import { ExtHostCell, ExtHostNotebookDocument } from './extHostNotebookDocument.js';
-import * as extHostTypeConverters from './extHostTypeConverters.js';
-import { NotebookCellOutput, NotebookControllerAffinity2, NotebookVariablesRequestKind } from './extHostTypes.js';
-import { asWebviewUri } from '../../contrib/webview/common/webview.js';
-import { INotebookKernelSourceAction } from '../../contrib/notebook/common/notebookCommon.js';
-import { CellExecutionUpdateType } from '../../contrib/notebook/common/notebookExecutionService.js';
-import { checkProposedApiEnabled } from '../../services/extensions/common/extensions.js';
-import { SerializableObjectWithBuffers } from '../../services/extensions/common/proxyIdentifier.js';
-import * as vscode from 'vscode';
-import { variablePageSize } from '../../contrib/notebook/common/notebookKernelService.js';
+import { asArray } from "../../../base/common/arrays.js";
+import { DeferredPromise, timeout } from "../../../base/common/async.js";
+import { CancellationToken, CancellationTokenSource } from "../../../base/common/cancellation.js";
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable, DisposableStore, IDisposable } from "../../../base/common/lifecycle.js";
+import { ResourceMap } from "../../../base/common/map.js";
+import { URI, UriComponents } from "../../../base/common/uri.js";
+import { ExtensionIdentifier, IExtensionDescription } from "../../../platform/extensions/common/extensions.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import {
+  ExtHostNotebookKernelsShape,
+  ICellExecuteUpdateDto,
+  IMainContext,
+  INotebookKernelDto2,
+  MainContext,
+  MainThreadNotebookKernelsShape,
+  NotebookOutputDto,
+  VariablesResult,
+} from "./extHost.protocol.js";
+import { ApiCommand, ApiCommandArgument, ApiCommandResult, ExtHostCommands } from "./extHostCommands.js";
+import { IExtHostInitDataService } from "./extHostInitDataService.js";
+import { ExtHostNotebookController } from "./extHostNotebook.js";
+import { ExtHostCell, ExtHostNotebookDocument } from "./extHostNotebookDocument.js";
+import * as extHostTypeConverters from "./extHostTypeConverters.js";
+import {
+  NotebookCellOutput,
+  NotebookControllerAffinity2,
+  NotebookVariablesRequestKind,
+} from "./extHostTypes.js";
+import { asWebviewUri } from "../../contrib/webview/common/webview.js";
+import { INotebookKernelSourceAction } from "../../contrib/notebook/common/notebookCommon.js";
+import { CellExecutionUpdateType } from "../../contrib/notebook/common/notebookExecutionService.js";
+import { checkProposedApiEnabled } from "../../services/extensions/common/extensions.js";
+import { SerializableObjectWithBuffers } from "../../services/extensions/common/proxyIdentifier.js";
+import * as vscode from "vscode";
+import { variablePageSize } from "../../contrib/notebook/common/notebookKernelService.js";
 
 interface IKernelData {
 	extensionId: ExtensionIdentifier;
@@ -66,37 +79,37 @@ export class ExtHostNotebookKernels implements ExtHostNotebookKernelsShape {
 
 		// todo@rebornix @joyceerhl: move to APICommands once stabilized.
 		const selectKernelApiCommand = new ApiCommand(
-			'notebook.selectKernel',
-			'_notebook.selectKernel',
-			'Trigger kernel picker for specified notebook editor widget',
+			"notebook.selectKernel",
+			"_notebook.selectKernel",
+			"Trigger kernel picker for specified notebook editor widget",
 			[
-				new ApiCommandArgument<ExtHostSelectKernelArgs, SelectKernelReturnArgs>('options', 'Select kernel options', v => true, (v: ExtHostSelectKernelArgs) => {
-					if (v && 'notebookEditor' in v && 'id' in v) {
+				new ApiCommandArgument<ExtHostSelectKernelArgs, SelectKernelReturnArgs>("options", "Select kernel options", v => true, (v: ExtHostSelectKernelArgs) => {
+					if (v && "notebookEditor" in v && "id" in v) {
 						const notebookEditorId = this._extHostNotebook.getIdByEditor(v.notebookEditor);
 						return {
-							id: v.id, extension: v.extension, notebookEditorId
+							id: v.id, extension: v.extension, notebookEditorId,
 						};
-					} else if (v && 'notebookEditor' in v) {
+					} else if (v && "notebookEditor" in v) {
 						const notebookEditorId = this._extHostNotebook.getIdByEditor(v.notebookEditor);
 						if (notebookEditorId === undefined) {
 							throw new Error(`Cannot invoke 'notebook.selectKernel' for unrecognized notebook editor ${v.notebookEditor.notebook.uri.toString()}`);
 						}
-						if ('skipIfAlreadySelected' in v) {
+						if ("skipIfAlreadySelected" in v) {
 							return { notebookEditorId, skipIfAlreadySelected: v.skipIfAlreadySelected };
 						}
 						return { notebookEditorId };
 					}
 					return v;
-				})
+				}),
 			],
 			ApiCommandResult.Void);
 
 		const requestKernelVariablesApiCommand = new ApiCommand(
-			'vscode.executeNotebookVariableProvider',
-			'_executeNotebookVariableProvider',
-			'Execute notebook variable provider',
+			"vscode.executeNotebookVariableProvider",
+			"_executeNotebookVariableProvider",
+			"Execute notebook variable provider",
 			[ApiCommandArgument.Uri],
-			new ApiCommandResult<VariablesResult[], vscode.VariablesResult[]>('A promise that resolves to an array of variables', (value, apiArgs) => {
+			new ApiCommandResult<VariablesResult[], vscode.VariablesResult[]>("A promise that resolves to an array of variables", (value, apiArgs) => {
 				return value.map(variable => {
 					return {
 						variable: {
@@ -104,13 +117,13 @@ export class ExtHostNotebookKernels implements ExtHostNotebookKernelsShape {
 							value: variable.value,
 							expression: variable.expression,
 							type: variable.type,
-							language: variable.language
+							language: variable.language,
 						},
 						hasNamedChildren: variable.hasNamedChildren,
-						indexedChildrenCount: variable.indexedChildrenCount
+						indexedChildrenCount: variable.indexedChildrenCount,
 					};
 				});
-			})
+			}),
 		);
 		this._commands.registerApiCommand(selectKernelApiCommand);
 		this._commands.registerApiCommand(requestKernelVariablesApiCommand);
@@ -119,7 +132,10 @@ export class ExtHostNotebookKernels implements ExtHostNotebookKernelsShape {
 	createNotebookController(extension: IExtensionDescription, id: string, viewType: string, label: string, handler?: (cells: vscode.NotebookCell[], notebook: vscode.NotebookDocument, controller: vscode.NotebookController) => void | Thenable<void>, preloads?: vscode.NotebookRendererScript[]): vscode.NotebookController {
 
 		for (const data of this._kernelData.values()) {
-			if (data.controller.id === id && ExtensionIdentifier.equals(extension.identifier, data.extensionId)) {
+			if (data.controller.id === id && ExtensionIdentifier.equals(
+        extension.identifier,
+        data.extensionId,
+      )) {
 				throw new Error(`notebook controller with id '${id}' ALREADY exist`);
 			}
 		}
@@ -128,9 +144,13 @@ export class ExtHostNotebookKernels implements ExtHostNotebookKernelsShape {
 		const handle = this._handlePool++;
 		const that = this;
 
-		this._logService.trace(`NotebookController[${handle}], CREATED by ${extension.identifier.value}, ${id}`);
+		this._logService.trace(
+      `NotebookController[${handle}], CREATED by ${extension.identifier.value}, ${id}`,
+    );
 
-		const _defaultExecutHandler = () => console.warn(`NO execute handler from notebook controller '${data.id}' of extension: '${extension.identifier}'`);
+		const _defaultExecutHandler = () => console.warn(
+      `NO execute handler from notebook controller '${data.id}' of extension: '${extension.identifier}'`,
+    );
 
 		let isDisposed = false;
 
@@ -138,13 +158,13 @@ export class ExtHostNotebookKernels implements ExtHostNotebookKernelsShape {
 		const onDidReceiveMessage = new Emitter<{ editor: vscode.NotebookEditor; message: unknown }>();
 
 		const data: INotebookKernelDto2 = {
-			id: createKernelId(extension.identifier, id),
-			notebookType: viewType,
-			extensionId: extension.identifier,
-			extensionLocation: extension.extensionLocation,
-			label: label || extension.identifier.value,
-			preloads: preloads ? preloads.map(extHostTypeConverters.NotebookRendererScript.from) : []
-		};
+      id: createKernelId(extension.identifier, id),
+      notebookType: viewType,
+      extensionId: extension.identifier,
+      extensionLocation: extension.extensionLocation,
+      label: label || extension.identifier.value,
+      preloads: preloads ? preloads.map(extHostTypeConverters.NotebookRendererScript.from) : [],
+    };
 
 		//
 		let _executeHandler = handler ?? _defaultExecutHandler;
@@ -189,14 +209,14 @@ export class ExtHostNotebookKernels implements ExtHostNotebookKernelsShape {
 				_update();
 			},
 			get detail() {
-				return data.detail ?? '';
+				return data.detail ?? "";
 			},
 			set detail(value) {
 				data.detail = value;
 				_update();
 			},
 			get description() {
-				return data.description ?? '';
+				return data.description ?? "";
 			},
 			set description(value) {
 				data.description = value;
@@ -234,7 +254,7 @@ export class ExtHostNotebookKernels implements ExtHostNotebookKernelsShape {
 				_update();
 			},
 			set variableProvider(value) {
-				checkProposedApiEnabled(extension, 'notebookVariableProvider');
+				checkProposedApiEnabled(extension, "notebookVariableProvider");
 				_variableProviderDisposable?.dispose();
 				_variableProvider = value;
 				data.hasVariableProvider = !!value;
@@ -246,7 +266,7 @@ export class ExtHostNotebookKernels implements ExtHostNotebookKernelsShape {
 			},
 			createNotebookCellExecution(cell) {
 				if (isDisposed) {
-					throw new Error('notebook controller is DISPOSED');
+					throw new Error("notebook controller is DISPOSED");
 				}
 				if (!associatedNotebooks.has(cell.notebook.uri)) {
 					that._logService.trace(`NotebookController[${handle}] NOT associated to notebook, associated to THESE notebooks:`, Array.from(associatedNotebooks.keys()).map(u => u.toString()));
@@ -255,9 +275,9 @@ export class ExtHostNotebookKernels implements ExtHostNotebookKernelsShape {
 				return that._createNotebookCellExecution(cell, createKernelId(extension.identifier, this.id));
 			},
 			createNotebookExecution(notebook) {
-				checkProposedApiEnabled(extension, 'notebookExecution');
+				checkProposedApiEnabled(extension, "notebookExecution");
 				if (isDisposed) {
-					throw new Error('notebook controller is DISPOSED');
+					throw new Error("notebook controller is DISPOSED");
 				}
 				if (!associatedNotebooks.has(notebook.uri)) {
 					that._logService.trace(`NotebookController[${handle}] NOT associated to notebook, associated to THESE notebooks:`, Array.from(associatedNotebooks.keys()).map(u => u.toString()));
@@ -281,29 +301,29 @@ export class ExtHostNotebookKernels implements ExtHostNotebookKernelsShape {
 				if (priority === NotebookControllerAffinity2.Hidden) {
 					// This api only adds an extra enum value, the function is the same, so just gate on the new value being passed
 					// for proposedAPI check.
-					checkProposedApiEnabled(extension, 'notebookControllerAffinityHidden');
+					checkProposedApiEnabled(extension, "notebookControllerAffinityHidden");
 				}
 				that._proxy.$updateNotebookPriority(handle, notebook.uri, priority);
 			},
 			// --- ipc
 			onDidReceiveMessage: onDidReceiveMessage.event,
 			postMessage(message, editor) {
-				checkProposedApiEnabled(extension, 'notebookMessaging');
+				checkProposedApiEnabled(extension, "notebookMessaging");
 				return that._proxy.$postMessage(handle, editor && that._extHostNotebook.getIdByEditor(editor), message);
 			},
 			asWebviewUri(uri: URI) {
-				checkProposedApiEnabled(extension, 'notebookMessaging');
+				checkProposedApiEnabled(extension, "notebookMessaging");
 				return asWebviewUri(uri, that._initData.remote);
 			},
 		};
 
 		this._kernelData.set(handle, {
-			extensionId: extension.identifier,
-			controller,
-			onDidReceiveMessage,
-			onDidChangeSelection,
-			associatedNotebooks
-		});
+      extensionId: extension.identifier,
+      controller,
+      onDidReceiveMessage,
+      onDidChangeSelection,
+      associatedNotebooks,
+    });
 		return controller;
 	}
 
@@ -320,14 +340,16 @@ export class ExtHostNotebookKernels implements ExtHostNotebookKernelsShape {
 		const handle = this._kernelDetectionTaskHandlePool++;
 		const that = this;
 
-		this._logService.trace(`NotebookControllerDetectionTask[${handle}], CREATED by ${extension.identifier.value}`);
+		this._logService.trace(
+      `NotebookControllerDetectionTask[${handle}], CREATED by ${extension.identifier.value}`,
+    );
 		this._proxy.$addKernelDetectionTask(handle, viewType);
 
 		const detectionTask: vscode.NotebookControllerDetectionTask = {
 			dispose: () => {
 				this._kernelDetectionTask.delete(handle);
 				that._proxy.$removeKernelDetectionTask(handle);
-			}
+			},
 		};
 
 		this._kernelDetectionTask.set(handle, detectionTask);
@@ -336,16 +358,22 @@ export class ExtHostNotebookKernels implements ExtHostNotebookKernelsShape {
 
 	registerKernelSourceActionProvider(extension: IExtensionDescription, viewType: string, provider: vscode.NotebookKernelSourceActionProvider) {
 		const handle = this._kernelSourceActionProviderHandlePool++;
-		const eventHandle = typeof provider.onDidChangeNotebookKernelSourceActions === 'function' ? handle : undefined;
+		const eventHandle = typeof provider.onDidChangeNotebookKernelSourceActions === "function" ? handle : undefined;
 		const that = this;
 
 		this._kernelSourceActionProviders.set(handle, provider);
-		this._logService.trace(`NotebookKernelSourceActionProvider[${handle}], CREATED by ${extension.identifier.value}`);
+		this._logService.trace(
+      `NotebookKernelSourceActionProvider[${handle}], CREATED by ${extension.identifier.value}`,
+    );
 		this._proxy.$addKernelSourceActionProvider(handle, handle, viewType);
 
 		let subscription: vscode.Disposable | undefined;
 		if (eventHandle !== undefined) {
-			subscription = provider.onDidChangeNotebookKernelSourceActions!(_ => this._proxy.$emitNotebookKernelSourceActionsChangeEvent(eventHandle));
+			subscription = provider.onDidChangeNotebookKernelSourceActions!(
+        _ => this._proxy.$emitNotebookKernelSourceActionsChangeEvent(
+          eventHandle,
+        ),
+      );
 		}
 
 		return {
@@ -353,7 +381,7 @@ export class ExtHostNotebookKernels implements ExtHostNotebookKernelsShape {
 				this._kernelSourceActionProviders.delete(handle);
 				that._proxy.$removeKernelSourceActionProvider(handle, handle);
 				subscription?.dispose();
-			}
+			},
 		};
 	}
 
@@ -362,7 +390,13 @@ export class ExtHostNotebookKernels implements ExtHostNotebookKernelsShape {
 		if (provider) {
 			const disposables = new DisposableStore();
 			const ret = await provider.provideNotebookKernelSourceActions(token);
-			return (ret ?? []).map(item => extHostTypeConverters.NotebookKernelSourceAction.from(item, this._commands.converter, disposables));
+			return (ret ?? []).map(
+        item => extHostTypeConverters.NotebookKernelSourceAction.from(
+          item,
+          this._commands.converter,
+          disposables,
+        ),
+      );
 		}
 		return [];
 	}
@@ -371,18 +405,24 @@ export class ExtHostNotebookKernels implements ExtHostNotebookKernelsShape {
 		const obj = this._kernelData.get(handle);
 		if (obj) {
 			// update data structure
-			const notebook = this._extHostNotebook.getNotebookDocument(URI.revive(uri))!;
+			const notebook = this._extHostNotebook.getNotebookDocument(
+        URI.revive(uri),
+      )!;
 			if (value) {
 				obj.associatedNotebooks.set(notebook.uri, true);
 			} else {
 				obj.associatedNotebooks.delete(notebook.uri);
 			}
-			this._logService.trace(`NotebookController[${handle}] ASSOCIATE notebook`, notebook.uri.toString(), value);
+			this._logService.trace(
+        `NotebookController[${handle}] ASSOCIATE notebook`,
+        notebook.uri.toString(),
+        value,
+      );
 			// send event
 			obj.onDidChangeSelection.fire({
-				selected: value,
-				notebook: notebook.apiNotebook
-			});
+        selected: value,
+        notebook: notebook.apiNotebook,
+      });
 		}
 	}
 
@@ -402,11 +442,23 @@ export class ExtHostNotebookKernels implements ExtHostNotebookKernelsShape {
 		}
 
 		try {
-			this._logService.trace(`NotebookController[${handle}] EXECUTE cells`, document.uri.toString(), cells.length);
-			await obj.controller.executeHandler.call(obj.controller, cells, document.apiNotebook, obj.controller);
+			this._logService.trace(
+        `NotebookController[${handle}] EXECUTE cells`,
+        document.uri.toString(),
+        cells.length,
+      );
+			await obj.controller.executeHandler.call(
+        obj.controller,
+        cells,
+        document.apiNotebook,
+        obj.controller,
+      );
 		} catch (err) {
 			//
-			this._logService.error(`NotebookController[${handle}] execute cells FAILED`, err);
+			this._logService.error(
+        `NotebookController[${handle}] execute cells FAILED`,
+        err,
+      );
 			console.error(err);
 		}
 	}
@@ -422,7 +474,10 @@ export class ExtHostNotebookKernels implements ExtHostNotebookKernelsShape {
 		// don't trigger the cancelation token of executions.
 		const document = this._extHostNotebook.getNotebookDocument(URI.revive(uri));
 		if (obj.controller.interruptHandler) {
-			await obj.controller.interruptHandler.call(obj.controller, document.apiNotebook);
+			await obj.controller.interruptHandler.call(
+        obj.controller,
+        document.apiNotebook,
+      );
 
 		} else {
 			for (const cellHandle of handles) {
@@ -446,13 +501,15 @@ export class ExtHostNotebookKernels implements ExtHostNotebookKernelsShape {
 	private id = 0;
 	private variableStore: Record<string, vscode.Variable> = {};
 
-	async $provideVariables(handle: number, requestId: string, notebookUri: UriComponents, parentId: number | undefined, kind: 'named' | 'indexed', start: number, token: CancellationToken): Promise<void> {
+	async $provideVariables(handle: number, requestId: string, notebookUri: UriComponents, parentId: number | undefined, kind: "named" | "indexed", start: number, token: CancellationToken): Promise<void> {
 		const obj = this._kernelData.get(handle);
 		if (!obj) {
 			return;
 		}
 
-		const document = this._extHostNotebook.getNotebookDocument(URI.revive(notebookUri));
+		const document = this._extHostNotebook.getNotebookDocument(
+      URI.revive(notebookUri),
+    );
 		const variableProvider = obj.controller.variableProvider;
 		if (!variableProvider) {
 			return;
@@ -471,8 +528,14 @@ export class ExtHostNotebookKernels implements ExtHostNotebookKernelsShape {
 		}
 
 
-		const requestKind = kind === 'named' ? NotebookVariablesRequestKind.Named : NotebookVariablesRequestKind.Indexed;
-		const variableResults = variableProvider.provideVariables(document.apiNotebook, parent, requestKind, start, token);
+		const requestKind = kind === "named" ? NotebookVariablesRequestKind.Named : NotebookVariablesRequestKind.Indexed;
+		const variableResults = variableProvider.provideVariables(
+      document.apiNotebook,
+      parent,
+      requestKind,
+      start,
+      token,
+    );
 
 		let resultCount = 0;
 		for await (const result of variableResults) {
@@ -480,17 +543,17 @@ export class ExtHostNotebookKernels implements ExtHostNotebookKernelsShape {
 				return;
 			}
 			const variable = {
-				id: this.id++,
-				name: result.variable.name,
-				value: result.variable.value,
-				type: result.variable.type,
-				interfaces: result.variable.interfaces,
-				language: result.variable.language,
-				expression: result.variable.expression,
-				hasNamedChildren: result.hasNamedChildren,
-				indexedChildrenCount: result.indexedChildrenCount,
-				extensionId: obj.extensionId.value,
-			};
+        id: this.id++,
+        name: result.variable.name,
+        value: result.variable.value,
+        type: result.variable.type,
+        interfaces: result.variable.interfaces,
+        language: result.variable.language,
+        expression: result.variable.expression,
+        hasNamedChildren: result.hasNamedChildren,
+        indexedChildrenCount: result.indexedChildrenCount,
+        extensionId: obj.extensionId.value,
+      };
 			this.variableStore[variable.id] = result.variable;
 			this._proxy.$receiveVariable(requestId, variable);
 
@@ -508,7 +571,9 @@ export class ExtHostNotebookKernels implements ExtHostNotebookKernelsShape {
 		}
 
 		const editor = this._extHostNotebook.getEditorById(editorId);
-		obj.onDidReceiveMessage.fire(Object.freeze({ editor: editor.apiEditor, message }));
+		obj.onDidReceiveMessage.fire(
+      Object.freeze({ editor: editor.apiEditor, message }),
+    );
 	}
 
 
@@ -516,17 +581,25 @@ export class ExtHostNotebookKernels implements ExtHostNotebookKernelsShape {
 
 	_createNotebookCellExecution(cell: vscode.NotebookCell, controllerId: string): vscode.NotebookCellExecution {
 		if (cell.index < 0) {
-			throw new Error('CANNOT execute cell that has been REMOVED from notebook');
+			throw new Error(
+        "CANNOT execute cell that has been REMOVED from notebook",
+      );
 		}
-		const notebook = this._extHostNotebook.getNotebookDocument(cell.notebook.uri);
+		const notebook = this._extHostNotebook.getNotebookDocument(
+      cell.notebook.uri,
+    );
 		const cellObj = notebook.getCellFromApiCell(cell);
 		if (!cellObj) {
-			throw new Error('invalid cell');
+			throw new Error("invalid cell");
 		}
 		if (this._activeExecutions.has(cellObj.uri)) {
 			throw new Error(`duplicate execution for ${cellObj.uri}`);
 		}
-		const execution = new NotebookCellExecutionTask(controllerId, cellObj, this._proxy);
+		const execution = new NotebookCellExecutionTask(
+      controllerId,
+      cellObj,
+      this._proxy,
+    );
 		this._activeExecutions.set(cellObj.uri, execution);
 		const listener = execution.onDidChangeState(() => {
 			if (execution.state === NotebookCellExecutionTaskState.Resolved) {
@@ -543,16 +616,22 @@ export class ExtHostNotebookKernels implements ExtHostNotebookKernelsShape {
 	_createNotebookExecution(nb: vscode.NotebookDocument, controllerId: string): vscode.NotebookExecution {
 		const notebook = this._extHostNotebook.getNotebookDocument(nb.uri);
 		const runningCell = nb.getCells().find(cell => {
-			const apiCell = notebook.getCellFromApiCell(cell);
-			return apiCell && this._activeExecutions.has(apiCell.uri);
-		});
+      const apiCell = notebook.getCellFromApiCell(cell);
+      return apiCell && this._activeExecutions.has(apiCell.uri);
+    });
 		if (runningCell) {
-			throw new Error(`duplicate cell execution for ${runningCell.document.uri}`);
+			throw new Error(
+        `duplicate cell execution for ${runningCell.document.uri}`,
+      );
 		}
 		if (this._activeNotebookExecutions.has(notebook.uri)) {
 			throw new Error(`duplicate notebook execution for ${notebook.uri}`);
 		}
-		const execution = new NotebookExecutionTask(controllerId, notebook, this._proxy);
+		const execution = new NotebookExecutionTask(
+      controllerId,
+      notebook,
+      this._proxy,
+    );
 		const listener = execution.onDidChangeState(() => {
 			if (execution.state === NotebookExecutionTaskState.Resolved) {
 				execution.dispose();
@@ -591,14 +670,22 @@ class NotebookCellExecutionTask extends Disposable {
 	constructor(
 		controllerId: string,
 		private readonly _cell: ExtHostCell,
-		private readonly _proxy: MainThreadNotebookKernelsShape
+		private readonly _proxy: MainThreadNotebookKernelsShape,
 	) {
 		super();
 
-		this._collector = new TimeoutBasedCollector(10, updates => this.update(updates));
+		this._collector = new TimeoutBasedCollector(
+      10,
+      updates => this.update(updates),
+    );
 
 		this._executionOrder = _cell.internalMetadata.executionOrder;
-		this._proxy.$createExecution(this._handle, controllerId, this._cell.notebook.uri, this._cell.handle);
+		this._proxy.$createExecution(
+      this._handle,
+      controllerId,
+      this._cell.notebook.uri,
+      this._cell.handle,
+    );
 	}
 
 	cancel(): void {
@@ -611,16 +698,19 @@ class NotebookCellExecutionTask extends Disposable {
 
 	private async update(update: ICellExecuteUpdateDto | ICellExecuteUpdateDto[]): Promise<void> {
 		const updates = Array.isArray(update) ? update : [update];
-		return this._proxy.$updateExecution(this._handle, new SerializableObjectWithBuffers(updates));
+		return this._proxy.$updateExecution(
+      this._handle,
+      new SerializableObjectWithBuffers(updates),
+    );
 	}
 
 	private verifyStateForOutput() {
 		if (this._state === NotebookCellExecutionTaskState.Init) {
-			throw new Error('Must call start before modifying cell output');
+			throw new Error("Must call start before modifying cell output");
 		}
 
 		if (this._state === NotebookCellExecutionTaskState.Resolved) {
-			throw new Error('Cannot modify cell output after calling resolve');
+			throw new Error("Cannot modify cell output after calling resolve");
 		}
 	}
 
@@ -630,7 +720,7 @@ class NotebookCellExecutionTask extends Disposable {
 			cell = this._cell.notebook.getCellFromApiCell(cellOrCellIndex);
 		}
 		if (!cell) {
-			throw new Error('INVALID cell');
+			throw new Error("INVALID cell");
 		}
 		return cell.handle;
 	}
@@ -644,7 +734,7 @@ class NotebookCellExecutionTask extends Disposable {
 			return extHostTypeConverters.NotebookCellOutput.from({
 				items: newOutput,
 				id: output.id,
-				metadata: output.metadata
+				metadata: output.metadata,
 			});
 		});
 	}
@@ -652,23 +742,22 @@ class NotebookCellExecutionTask extends Disposable {
 	private async updateOutputs(outputs: vscode.NotebookCellOutput | vscode.NotebookCellOutput[], cell: vscode.NotebookCell | undefined, append: boolean): Promise<void> {
 		const handle = this.cellIndexToHandle(cell);
 		const outputDtos = this.validateAndConvertOutputs(asArray(outputs));
-		return this.updateSoon(
-			{
-				editType: CellExecutionUpdateType.Output,
-				cellHandle: handle,
-				append,
-				outputs: outputDtos
-			});
+		return this.updateSoon({
+      editType: CellExecutionUpdateType.Output,
+      cellHandle: handle,
+      append,
+      outputs: outputDtos,
+    });
 	}
 
 	private async updateOutputItems(items: vscode.NotebookCellOutputItem | vscode.NotebookCellOutputItem[], output: vscode.NotebookCellOutput, append: boolean): Promise<void> {
 		items = NotebookCellOutput.ensureUniqueMimeTypes(asArray(items), true);
 		return this.updateSoon({
-			editType: CellExecutionUpdateType.OutputItems,
-			items: items.map(extHostTypeConverters.NotebookCellOutputItem.from),
-			outputId: output.id,
-			append
-		});
+      editType: CellExecutionUpdateType.OutputItems,
+      items: items.map(extHostTypeConverters.NotebookCellOutputItem.from),
+      outputId: output.id,
+      append,
+    });
 	}
 
 	asApiObject(): vscode.NotebookCellExecution {
@@ -681,13 +770,13 @@ class NotebookCellExecutionTask extends Disposable {
 				that._executionOrder = v;
 				that.update([{
 					editType: CellExecutionUpdateType.ExecutionState,
-					executionOrder: that._executionOrder
+					executionOrder: that._executionOrder,
 				}]);
 			},
 
 			start(startTime?: number): void {
 				if (that._state === NotebookCellExecutionTaskState.Resolved || that._state === NotebookCellExecutionTaskState.Started) {
-					throw new Error('Cannot call start again');
+					throw new Error("Cannot call start again");
 				}
 
 				that._state = NotebookCellExecutionTaskState.Started;
@@ -695,13 +784,13 @@ class NotebookCellExecutionTask extends Disposable {
 
 				that.update({
 					editType: CellExecutionUpdateType.ExecutionState,
-					runStartTime: startTime
+					runStartTime: startTime,
 				});
 			},
 
 			end(success: boolean | undefined, endTime?: number, executionError?: vscode.CellExecutionError): void {
 				if (that._state === NotebookCellExecutionTaskState.Resolved) {
-					throw new Error('Cannot call resolve twice');
+					throw new Error("Cannot call resolve twice");
 				}
 
 				that._state = NotebookCellExecutionTaskState.Resolved;
@@ -716,7 +805,7 @@ class NotebookCellExecutionTask extends Disposable {
 				that._proxy.$completeExecution(that._handle, new SerializableObjectWithBuffers({
 					runEndTime: endTime,
 					lastRunSuccess: success,
-					error
+					error,
 				}));
 			},
 
@@ -743,7 +832,7 @@ class NotebookCellExecutionTask extends Disposable {
 			replaceOutputItems(items: vscode.NotebookCellOutputItem | vscode.NotebookCellOutputItem[], output: vscode.NotebookCellOutput): Promise<void> {
 				that.verifyStateForOutput();
 				return that.updateOutputItems(items, output, false);
-			}
+			},
 		};
 		return Object.freeze(result);
 	}
@@ -751,17 +840,17 @@ class NotebookCellExecutionTask extends Disposable {
 
 function createSerializeableError(executionError: vscode.CellExecutionError | undefined) {
 	const convertRange = (range: vscode.Range | undefined) => (range ? {
-		startLineNumber: range.start.line,
-		startColumn: range.start.character,
-		endLineNumber: range.end.line,
-		endColumn: range.end.character
-	} : undefined);
+    startLineNumber: range.start.line,
+    startColumn: range.start.character,
+    endLineNumber: range.end.line,
+    endColumn: range.end.character,
+  } : undefined);
 
 	const convertStackFrame = (frame: vscode.CellErrorStackFrame) => ({
-		uri: frame.uri,
-		position: frame.position,
-		label: frame.label
-	});
+    uri: frame.uri,
+    position: frame.position,
+    label: frame.label,
+  });
 
 	const error = executionError ? {
 		name: executionError.name,
@@ -770,7 +859,7 @@ function createSerializeableError(executionError: vscode.CellExecutionError | un
 			? executionError.stack.map(frame => convertStackFrame(frame))
 			: executionError.stack,
 		location: convertRange(executionError.location),
-		uri: executionError.uri
+		uri: executionError.uri,
 	} : undefined;
 	return error;
 }
@@ -797,11 +886,15 @@ class NotebookExecutionTask extends Disposable {
 	constructor(
 		controllerId: string,
 		private readonly _notebook: ExtHostNotebookDocument,
-		private readonly _proxy: MainThreadNotebookKernelsShape
+		private readonly _proxy: MainThreadNotebookKernelsShape,
 	) {
 		super();
 
-		this._proxy.$createNotebookExecution(this._handle, controllerId, this._notebook.uri);
+		this._proxy.$createNotebookExecution(
+      this._handle,
+      controllerId,
+      this._notebook.uri,
+    );
 	}
 
 	cancel(): void {
@@ -811,7 +904,7 @@ class NotebookExecutionTask extends Disposable {
 		const result: vscode.NotebookExecution = {
 			start: () => {
 				if (this._state === NotebookExecutionTaskState.Resolved || this._state === NotebookExecutionTaskState.Started) {
-					throw new Error('Cannot call start again');
+					throw new Error("Cannot call start again");
 				}
 
 				this._state = NotebookExecutionTaskState.Started;
@@ -822,7 +915,7 @@ class NotebookExecutionTask extends Disposable {
 
 			end: () => {
 				if (this._state === NotebookExecutionTaskState.Resolved) {
-					throw new Error('Cannot call resolve twice');
+					throw new Error("Cannot call resolve twice");
 				}
 
 				this._state = NotebookExecutionTaskState.Resolved;
@@ -851,8 +944,8 @@ class TimeoutBasedCollector<T> {
 			this.currentDeferred = new DeferredPromise<void>();
 			this.startedTimer = Date.now();
 			timeout(this.delay).then(() => {
-				return this.flush();
-			});
+        return this.flush();
+      });
 		}
 
 		// This can be called by the extension repeatedly for a long time before the timeout is able to run.

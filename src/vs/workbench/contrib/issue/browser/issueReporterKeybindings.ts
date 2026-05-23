@@ -3,24 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../base/browser/dom.js';
-import { mainWindow } from '../../../../base/browser/window.js';
-import { StandardKeyboardEvent } from '../../../../base/browser/keyboardEvent.js';
-import { Event } from '../../../../base/common/event.js';
-import { KeyCode, KeyMod } from '../../../../base/common/keyCodes.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { isMacintosh } from '../../../../base/common/platform.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { KeybindingsRegistry, KeybindingWeight } from '../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { registerWorkbenchContribution2, WorkbenchPhase } from '../../../common/contributions.js';
-import { IEditorService } from '../../../services/editor/common/editorService.js';
-import { IssueReporterEditorInput } from './issueReporterEditorInput.js';
-import { IssueReporterEditorPane, IssueReporterOpenContext } from './issueReporterEditorPane.js';
-import { IssueReporterOverlay } from './issueReporterOverlay.js';
+import * as dom from "../../../../base/browser/dom.js";
+import { mainWindow } from "../../../../base/browser/window.js";
+import { StandardKeyboardEvent } from "../../../../base/browser/keyboardEvent.js";
+import { Event } from "../../../../base/common/event.js";
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { isMacintosh } from "../../../../base/common/platform.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { KeybindingsRegistry, KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { registerWorkbenchContribution2, WorkbenchPhase } from "../../../common/contributions.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IssueReporterEditorInput } from "./issueReporterEditorInput.js";
+import { IssueReporterEditorPane, IssueReporterOpenContext } from "./issueReporterEditorPane.js";
+import { IssueReporterOverlay } from "./issueReporterOverlay.js";
 
-export const ISSUE_REPORTER_CAPTURE_SCREENSHOT_COMMAND_ID = 'workbench.action.issueReporter.captureScreenshot';
-export const ISSUE_REPORTER_TOGGLE_RECORDING_COMMAND_ID = 'workbench.action.issueReporter.toggleRecording';
+export const ISSUE_REPORTER_CAPTURE_SCREENSHOT_COMMAND_ID = "workbench.action.issueReporter.captureScreenshot";
+export const ISSUE_REPORTER_TOGGLE_RECORDING_COMMAND_ID = "workbench.action.issueReporter.toggleRecording";
 
 /**
  * Watches the editor service to keep the `issueReporterOpen` context key in
@@ -33,7 +33,7 @@ export const ISSUE_REPORTER_TOGGLE_RECORDING_COMMAND_ID = 'workbench.action.issu
  */
 class IssueReporterOpenStateContribution extends Disposable {
 
-	static readonly ID = 'workbench.contrib.issueReporterOpenState';
+	static readonly ID = "workbench.contrib.issueReporterOpenState";
 
 	private issueReporterOpen = false;
 
@@ -45,15 +45,30 @@ class IssueReporterOpenStateContribution extends Disposable {
 		super();
 		const ctx = IssueReporterOpenContext.bindTo(contextKeyService);
 		const update = () => {
-			this.issueReporterOpen = this.editorService.editors.some(e => e instanceof IssueReporterEditorInput);
+			this.issueReporterOpen = this.editorService.editors.some(
+        e => e instanceof IssueReporterEditorInput,
+      );
 			ctx.set(this.issueReporterOpen);
 		};
 		this._register(this.editorService.onDidEditorsChange(update));
 		update();
 
-		this._register(Event.runAndSubscribe(dom.onDidRegisterWindow, ({ window, disposables }) => {
-			disposables.add(dom.addDisposableListener(window, dom.EventType.KEY_DOWN, e => this.dispatchCapturePhase(e), true /* capture */));
-		}, { window: mainWindow, disposables: this._store }));
+		this._register(
+      Event.runAndSubscribe(
+        dom.onDidRegisterWindow,
+        ({ window, disposables }) => {
+          disposables.add(
+            dom.addDisposableListener(
+              window,
+              dom.EventType.KEY_DOWN,
+              e => this.dispatchCapturePhase(e),
+              true,
+            ),
+          );
+        },
+        { window: mainWindow, disposables: this._store },
+      ),
+    );
 	}
 
 	private dispatchCapturePhase(e: KeyboardEvent): void {
@@ -81,7 +96,11 @@ class IssueReporterOpenStateContribution extends Disposable {
 	}
 }
 
-registerWorkbenchContribution2(IssueReporterOpenStateContribution.ID, IssueReporterOpenStateContribution, WorkbenchPhase.AfterRestored);
+registerWorkbenchContribution2(
+  IssueReporterOpenStateContribution.ID,
+  IssueReporterOpenStateContribution,
+  WorkbenchPhase.AfterRestored,
+);
 
 function withWizard(fn: (pane: IssueReporterEditorPane, wizard: IssueReporterOverlay) => void): void {
 	// Look up any live issue reporter pane regardless of whether its tab is the
@@ -96,17 +115,17 @@ function withWizard(fn: (pane: IssueReporterEditorPane, wizard: IssueReporterOve
 }
 
 KeybindingsRegistry.registerCommandAndKeybindingRule({
-	id: ISSUE_REPORTER_CAPTURE_SCREENSHOT_COMMAND_ID,
-	weight: KeybindingWeight.WorkbenchContrib,
-	when: IssueReporterOpenContext,
-	primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyS,
-	handler: () => withWizard((_pane, wizard) => wizard.triggerCaptureScreenshot()),
+  id: ISSUE_REPORTER_CAPTURE_SCREENSHOT_COMMAND_ID,
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: IssueReporterOpenContext,
+  primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyS,
+  handler: () => withWizard((_pane, wizard) => wizard.triggerCaptureScreenshot()),
 });
 
 KeybindingsRegistry.registerCommandAndKeybindingRule({
-	id: ISSUE_REPORTER_TOGGLE_RECORDING_COMMAND_ID,
-	weight: KeybindingWeight.WorkbenchContrib,
-	when: IssueReporterOpenContext,
-	primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyR,
-	handler: () => withWizard((_pane, wizard) => wizard.triggerToggleRecording()),
+  id: ISSUE_REPORTER_TOGGLE_RECORDING_COMMAND_ID,
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: IssueReporterOpenContext,
+  primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyR,
+  handler: () => withWizard((_pane, wizard) => wizard.triggerToggleRecording()),
 });

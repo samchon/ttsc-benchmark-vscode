@@ -3,29 +3,38 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { getZoomFactor } from '../../../base/browser/browser.js';
-import { $, addDisposableListener, append, EventType, getWindow, getWindowId, hide, show } from '../../../base/browser/dom.js';
-import { Codicon } from '../../../base/common/codicons.js';
-import { Event } from '../../../base/common/event.js';
-import { ThemeIcon } from '../../../base/common/themables.js';
-import { IConfigurationService } from '../../../platform/configuration/common/configuration.js';
-import { IContextKeyService } from '../../../platform/contextkey/common/contextkey.js';
-import { IContextMenuService } from '../../../platform/contextview/browser/contextView.js';
-import { IInstantiationService } from '../../../platform/instantiation/common/instantiation.js';
-import { INativeHostService } from '../../../platform/native/common/native.js';
-import { IProductService } from '../../../platform/product/common/productService.js';
-import { IStorageService } from '../../../platform/storage/common/storage.js';
-import { IThemeService } from '../../../platform/theme/common/themeService.js';
-import { hasNativeTitlebar, useWindowControlsOverlay } from '../../../platform/window/common/window.js';
-import { IsWindowAlwaysOnTopContext } from '../../../workbench/common/contextkeys.js';
-import { IHostService } from '../../../workbench/services/host/browser/host.js';
-import { IWorkbenchLayoutService, Parts } from '../../../workbench/services/layout/browser/layoutService.js';
-import { IAuxiliaryTitlebarPart } from '../../../workbench/browser/parts/titlebar/titlebarPart.js';
-import { IEditorGroupsContainer } from '../../../workbench/services/editor/common/editorGroupsService.js';
-import { CodeWindow, mainWindow } from '../../../base/browser/window.js';
-import { TitlebarPart, TitleService } from '../../browser/parts/titlebarPart.js';
-import { isMacintosh, isWindows } from '../../../base/common/platform.js';
-import { localize } from '../../../nls.js';
+import { getZoomFactor } from "../../../base/browser/browser.js";
+import {
+  $,
+  addDisposableListener,
+  append,
+  EventType,
+  getWindow,
+  getWindowId,
+  hide,
+  show,
+} from "../../../base/browser/dom.js";
+import { Codicon } from "../../../base/common/codicons.js";
+import { Event } from "../../../base/common/event.js";
+import { ThemeIcon } from "../../../base/common/themables.js";
+import { IConfigurationService } from "../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../platform/contextview/browser/contextView.js";
+import { IInstantiationService } from "../../../platform/instantiation/common/instantiation.js";
+import { INativeHostService } from "../../../platform/native/common/native.js";
+import { IProductService } from "../../../platform/product/common/productService.js";
+import { IStorageService } from "../../../platform/storage/common/storage.js";
+import { IThemeService } from "../../../platform/theme/common/themeService.js";
+import { hasNativeTitlebar, useWindowControlsOverlay } from "../../../platform/window/common/window.js";
+import { IsWindowAlwaysOnTopContext } from "../../../workbench/common/contextkeys.js";
+import { IHostService } from "../../../workbench/services/host/browser/host.js";
+import { IWorkbenchLayoutService, Parts } from "../../../workbench/services/layout/browser/layoutService.js";
+import { IAuxiliaryTitlebarPart } from "../../../workbench/browser/parts/titlebar/titlebarPart.js";
+import { IEditorGroupsContainer } from "../../../workbench/services/editor/common/editorGroupsService.js";
+import { CodeWindow, mainWindow } from "../../../base/browser/window.js";
+import { TitlebarPart, TitleService } from "../../browser/parts/titlebarPart.js";
+import { isMacintosh, isWindows } from "../../../base/common/platform.js";
+import { localize } from "../../../nls.js";
 
 export class NativeTitlebarPart extends TitlebarPart {
 
@@ -49,9 +58,23 @@ export class NativeTitlebarPart extends TitlebarPart {
 		@IProductService private readonly productService: IProductService,
 		@INativeHostService private readonly nativeHostService: INativeHostService,
 	) {
-		super(id, targetWindow, contextMenuService, configurationService, instantiationService, themeService, storageService, layoutService, contextKeyService, hostService);
+		super(
+      id,
+      targetWindow,
+      contextMenuService,
+      configurationService,
+      instantiationService,
+      themeService,
+      storageService,
+      layoutService,
+      contextKeyService,
+      hostService,
+    );
 
-		this.handleWindowsAlwaysOnTop(targetWindow.vscodeWindowId, contextKeyService);
+		this.handleWindowsAlwaysOnTop(
+      targetWindow.vscodeWindowId,
+      contextKeyService,
+    );
 	}
 
 	protected override createContentArea(parent: HTMLElement): HTMLElement {
@@ -61,7 +84,7 @@ export class NativeTitlebarPart extends TitlebarPart {
 		// matches the BrowserWindow's initial title.
 		// See: https://github.com/microsoft/vscode/issues/191288
 		const window = getWindow(this.element);
-		const agentsTitle = localize('agentsWindowTitle', "Agents");
+		const agentsTitle = localize("agentsWindowTitle", "Agents");
 		if (isMacintosh) {
 			const initialTitle = this.productService.nameLong;
 			if (!window.document.title || window.document.title === initialTitle) {
@@ -76,19 +99,33 @@ export class NativeTitlebarPart extends TitlebarPart {
 
 		// Custom Window Controls (Native Windows/Linux) when window.controlsStyle is "custom"
 		if (
-			!hasNativeTitlebar(this.configurationService) &&		// not for native title bars
-			!useWindowControlsOverlay(this.configurationService) &&	// not when controls are natively drawn
+			!hasNativeTitlebar(
+        this.configurationService,
+      ) &&		// not for native title bars
+			!useWindowControlsOverlay(
+        this.configurationService,
+      ) &&	// not when controls are natively drawn
 			this.windowControlsContainer
 		) {
 
 			// Minimize
-			const minimizeIcon = append(this.windowControlsContainer, $('div.window-icon.window-minimize' + ThemeIcon.asCSSSelector(Codicon.chromeMinimize)));
-			this._register(addDisposableListener(minimizeIcon, EventType.CLICK, () => {
-				this.nativeHostService.minimizeWindow({ targetWindowId });
-			}));
+			const minimizeIcon = append(
+        this.windowControlsContainer,
+        $(
+          "div.window-icon.window-minimize" + ThemeIcon.asCSSSelector(Codicon.chromeMinimize),
+        ),
+      );
+			this._register(
+        addDisposableListener(minimizeIcon, EventType.CLICK, () => {
+          this.nativeHostService.minimizeWindow({ targetWindowId });
+        }),
+      );
 
 			// Restore
-			this.maxRestoreControl = append(this.windowControlsContainer, $('div.window-icon.window-max-restore'));
+			this.maxRestoreControl = append(
+        this.windowControlsContainer,
+        $("div.window-icon.window-max-restore"),
+      );
 			this._register(addDisposableListener(this.maxRestoreControl, EventType.CLICK, async () => {
 				const maximized = await this.nativeHostService.isMaximized({ targetWindowId });
 				if (maximized) {
@@ -99,13 +136,20 @@ export class NativeTitlebarPart extends TitlebarPart {
 			}));
 
 			// Close
-			const closeIcon = append(this.windowControlsContainer, $('div.window-icon.window-close' + ThemeIcon.asCSSSelector(Codicon.chromeClose)));
-			this._register(addDisposableListener(closeIcon, EventType.CLICK, () => {
-				this.nativeHostService.closeWindow({ targetWindowId });
-			}));
+			const closeIcon = append(
+        this.windowControlsContainer,
+        $(
+          "div.window-icon.window-close" + ThemeIcon.asCSSSelector(Codicon.chromeClose),
+        ),
+      );
+			this._register(
+        addDisposableListener(closeIcon, EventType.CLICK, () => {
+          this.nativeHostService.closeWindow({ targetWindowId });
+        }),
+      );
 
 			// Resizer
-			this.resizer = append(this.rootContainer, $('div.resizer'));
+			this.resizer = append(this.rootContainer, $("div.resizer"));
 			this._register(Event.runAndSubscribe(this.layoutService.onDidChangeWindowMaximized, ({ windowId, maximized }) => {
 				if (windowId === targetWindowId) {
 					this.onDidChangeWindowMaximized(maximized);
@@ -132,11 +176,19 @@ export class NativeTitlebarPart extends TitlebarPart {
 	private onDidChangeWindowMaximized(maximized: boolean): void {
 		if (this.maxRestoreControl) {
 			if (maximized) {
-				this.maxRestoreControl.classList.remove(...ThemeIcon.asClassNameArray(Codicon.chromeMaximize));
-				this.maxRestoreControl.classList.add(...ThemeIcon.asClassNameArray(Codicon.chromeRestore));
+				this.maxRestoreControl.classList.remove(
+          ...ThemeIcon.asClassNameArray(Codicon.chromeMaximize),
+        );
+				this.maxRestoreControl.classList.add(
+          ...ThemeIcon.asClassNameArray(Codicon.chromeRestore),
+        );
 			} else {
-				this.maxRestoreControl.classList.remove(...ThemeIcon.asClassNameArray(Codicon.chromeRestore));
-				this.maxRestoreControl.classList.add(...ThemeIcon.asClassNameArray(Codicon.chromeMaximize));
+				this.maxRestoreControl.classList.remove(
+          ...ThemeIcon.asClassNameArray(Codicon.chromeRestore),
+        );
+				this.maxRestoreControl.classList.add(
+          ...ThemeIcon.asClassNameArray(Codicon.chromeMaximize),
+        );
 			}
 		}
 
@@ -150,7 +202,9 @@ export class NativeTitlebarPart extends TitlebarPart {
 	}
 
 	private async handleWindowsAlwaysOnTop(targetWindowId: number, contextKeyService: IContextKeyService): Promise<void> {
-		const isWindowAlwaysOnTopContext = IsWindowAlwaysOnTopContext.bindTo(contextKeyService);
+		const isWindowAlwaysOnTopContext = IsWindowAlwaysOnTopContext.bindTo(
+      contextKeyService,
+    );
 
 		this._register(this.nativeHostService.onDidChangeWindowAlwaysOnTop(({ windowId, alwaysOnTop }) => {
 			if (windowId === targetWindowId) {
@@ -158,7 +212,9 @@ export class NativeTitlebarPart extends TitlebarPart {
 			}
 		}));
 
-		isWindowAlwaysOnTopContext.set(await this.nativeHostService.isWindowAlwaysOnTop({ targetWindowId }));
+		isWindowAlwaysOnTopContext.set(
+      await this.nativeHostService.isWindowAlwaysOnTop({ targetWindowId }),
+    );
 	}
 
 	override updateStyles(): void {
@@ -172,14 +228,14 @@ export class NativeTitlebarPart extends TitlebarPart {
 					this.cachedWindowControlStyles.fgColor !== this.element.style.color
 				) {
 					this.cachedWindowControlStyles = {
-						bgColor: this.element.style.backgroundColor,
-						fgColor: this.element.style.color
-					};
+            bgColor: this.element.style.backgroundColor,
+            fgColor: this.element.style.color,
+          };
 					this.nativeHostService.updateWindowControls({
-						targetWindowId: getWindowId(getWindow(this.element)),
-						backgroundColor: this.element.style.backgroundColor,
-						foregroundColor: this.element.style.color
-					});
+            targetWindowId: getWindowId(getWindow(this.element)),
+            backgroundColor: this.element.style.backgroundColor,
+            foregroundColor: this.element.style.color,
+          });
 				}
 			}
 		}
@@ -189,13 +245,15 @@ export class NativeTitlebarPart extends TitlebarPart {
 		super.layout(width, height);
 
 		if (useWindowControlsOverlay(this.configurationService)) {
-			const newHeight = Math.round(height * getZoomFactor(getWindow(this.element)));
+			const newHeight = Math.round(
+        height * getZoomFactor(getWindow(this.element)),
+      );
 			if (newHeight !== this.cachedWindowControlHeight) {
 				this.cachedWindowControlHeight = newHeight;
 				this.nativeHostService.updateWindowControls({
-					targetWindowId: getWindowId(getWindow(this.element)),
-					height: newHeight
-				});
+          targetWindowId: getWindowId(getWindow(this.element)),
+          height: newHeight,
+        });
 			}
 		}
 	}
@@ -215,7 +273,20 @@ class MainNativeTitlebarPart extends NativeTitlebarPart {
 		@IProductService productService: IProductService,
 		@INativeHostService nativeHostService: INativeHostService,
 	) {
-		super(Parts.TITLEBAR_PART, mainWindow, contextMenuService, configurationService, instantiationService, themeService, storageService, layoutService, contextKeyService, hostService, productService, nativeHostService);
+		super(
+      Parts.TITLEBAR_PART,
+      mainWindow,
+      contextMenuService,
+      configurationService,
+      instantiationService,
+      themeService,
+      storageService,
+      layoutService,
+      contextKeyService,
+      hostService,
+      productService,
+      nativeHostService,
+    );
 	}
 }
 
@@ -240,11 +311,26 @@ class AuxiliaryNativeTitlebarPart extends NativeTitlebarPart implements IAuxilia
 		@INativeHostService nativeHostService: INativeHostService,
 	) {
 		const id = AuxiliaryNativeTitlebarPart.COUNTER++;
-		super(`workbench.parts.auxiliaryTitle.${id}`, getWindow(container), contextMenuService, configurationService, instantiationService, themeService, storageService, layoutService, contextKeyService, hostService, productService, nativeHostService);
+		super(
+      `workbench.parts.auxiliaryTitle.${id}`,
+      getWindow(container),
+      contextMenuService,
+      configurationService,
+      instantiationService,
+      themeService,
+      storageService,
+      layoutService,
+      contextKeyService,
+      hostService,
+      productService,
+      nativeHostService,
+    );
 	}
 
 	override get preventZoom(): boolean {
-		return getZoomFactor(getWindow(this.element)) < 1 || !this.mainTitlebar.hasZoomableElements;
+		return getZoomFactor(
+      getWindow(this.element),
+    ) < 1 || !this.mainTitlebar.hasZoomableElements;
 	}
 }
 
@@ -255,6 +341,10 @@ export class NativeTitleService extends TitleService {
 	}
 
 	protected override doCreateAuxiliaryTitlebarPart(container: HTMLElement, _editorGroupsContainer: IEditorGroupsContainer, instantiationService: IInstantiationService): AuxiliaryNativeTitlebarPart {
-		return instantiationService.createInstance(AuxiliaryNativeTitlebarPart, container, this.mainPart);
+		return instantiationService.createInstance(
+      AuxiliaryNativeTitlebarPart,
+      container,
+      this.mainPart,
+    );
 	}
 }

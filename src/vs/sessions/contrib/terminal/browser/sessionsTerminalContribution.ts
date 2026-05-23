@@ -3,38 +3,46 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Codicon } from '../../../../base/common/codicons.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { autorun, derived, IReader } from '../../../../base/common/observable.js';
-import { URI } from '../../../../base/common/uri.js';
-import { ServicesAccessor } from '../../../../editor/browser/editorExtensions.js';
-import { localize, localize2 } from '../../../../nls.js';
-import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
-import { AGENT_HOST_SCHEME, fromAgentHostUri } from '../../../../platform/agentHost/common/agentHostUri.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { IWorkbenchContribution, getWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../../workbench/common/contributions.js';
-import { IAgentHostTerminalService } from '../../../../workbench/contrib/terminal/browser/agentHostTerminalService.js';
-import { ITerminalInstance, ITerminalService } from '../../../../workbench/contrib/terminal/browser/terminal.js';
-import { TerminalCapability } from '../../../../platform/terminal/common/capabilities/capabilities.js';
-import { IPathService } from '../../../../workbench/services/path/common/pathService.js';
-import { Menus } from '../../../browser/menus.js';
-import { isAgentHostProvider, LOCAL_AGENT_HOST_PROVIDER_ID } from '../../../common/agentHostSessionsProvider.js';
-import { SessionsWelcomeVisibleContext, IsPhoneLayoutContext } from '../../../common/contextkeys.js';
-import { ISessionsManagementService } from '../../../services/sessions/common/sessionsManagement.js';
-import { ISession } from '../../../services/sessions/common/session.js';
-import { ISessionsProvidersService } from '../../../services/sessions/browser/sessionsProvidersService.js';
-import { IsAuxiliaryWindowContext } from '../../../../workbench/common/contextkeys.js';
-import { ContextKeyExpr, IContextKeyService, RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
-import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
-import { logSessionsInteraction } from '../../../common/sessionsTelemetry.js';
-import { IViewsService } from '../../../../workbench/services/views/common/viewsService.js';
-import { ITerminalProfileService, TERMINAL_VIEW_ID } from '../../../../workbench/contrib/terminal/common/terminal.js';
-import { IWorkbenchLayoutService, Parts } from '../../../../workbench/services/layout/browser/layoutService.js';
-import { ISessionTaskRunnerRegistry } from '../../chat/browser/sessionTaskRunner.js';
-import { AgentHostSessionTaskRunner } from './agentHostSessionTaskRunner.js';
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { autorun, derived, IReader } from "../../../../base/common/observable.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ServicesAccessor } from "../../../../editor/browser/editorExtensions.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { Action2, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { AGENT_HOST_SCHEME, fromAgentHostUri } from "../../../../platform/agentHost/common/agentHostUri.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import {
+  IWorkbenchContribution,
+  getWorkbenchContribution,
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../../../workbench/common/contributions.js";
+import { IAgentHostTerminalService } from "../../../../workbench/contrib/terminal/browser/agentHostTerminalService.js";
+import { ITerminalInstance, ITerminalService } from "../../../../workbench/contrib/terminal/browser/terminal.js";
+import { TerminalCapability } from "../../../../platform/terminal/common/capabilities/capabilities.js";
+import { IPathService } from "../../../../workbench/services/path/common/pathService.js";
+import { Menus } from "../../../browser/menus.js";
+import { isAgentHostProvider, LOCAL_AGENT_HOST_PROVIDER_ID } from "../../../common/agentHostSessionsProvider.js";
+import { SessionsWelcomeVisibleContext, IsPhoneLayoutContext } from "../../../common/contextkeys.js";
+import { ISessionsManagementService } from "../../../services/sessions/common/sessionsManagement.js";
+import { ISession } from "../../../services/sessions/common/session.js";
+import { ISessionsProvidersService } from "../../../services/sessions/browser/sessionsProvidersService.js";
+import { IsAuxiliaryWindowContext } from "../../../../workbench/common/contextkeys.js";
+import { ContextKeyExpr, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { logSessionsInteraction } from "../../../common/sessionsTelemetry.js";
+import { IViewsService } from "../../../../workbench/services/views/common/viewsService.js";
+import { ITerminalProfileService, TERMINAL_VIEW_ID } from "../../../../workbench/contrib/terminal/common/terminal.js";
+import { IWorkbenchLayoutService, Parts } from "../../../../workbench/services/layout/browser/layoutService.js";
+import { ISessionTaskRunnerRegistry } from "../../chat/browser/sessionTaskRunner.js";
+import { AgentHostSessionTaskRunner } from "./agentHostSessionTaskRunner.js";
 
-const SessionsTerminalViewVisibleContext = new RawContextKey<boolean>('sessionsTerminalViewVisible', false);
+const SessionsTerminalViewVisibleContext = new RawContextKey<boolean>(
+  "sessionsTerminalViewVisible",
+  false,
+);
 
 interface ISessionTerminalInfo {
 	/** The cwd to use for terminal matching/creation. For agent host sessions this is the unwrapped file URI. */
@@ -52,7 +60,9 @@ function getSessionTerminalInfo(session: ISession | undefined, reader?: IReader)
 	if (!session) {
 		return undefined;
 	}
-	const workspace = reader ? session.workspace.read(reader) : session.workspace.get();
+	const workspace = reader ? session.workspace.read(
+    reader,
+  ) : session.workspace.get();
 	if (workspace?.isVirtualWorkspace !== false) {
 		return undefined;
 	}
@@ -77,7 +87,7 @@ function getSessionTerminalInfo(session: ISession | undefined, reader?: IReader)
  */
 export class SessionsTerminalContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'workbench.contrib.sessionsTerminal';
+	static readonly ID = "workbench.contrib.sessionsTerminal";
 
 	private _activeKey: string | undefined;
 
@@ -133,7 +143,9 @@ export class SessionsTerminalContribution extends Disposable implements IWorkben
 
 		// Track whether the terminal view is visible so the titlebar toggle
 		// button shows the correct checked state.
-		const terminalViewVisible = SessionsTerminalViewVisibleContext.bindTo(contextKeyService);
+		const terminalViewVisible = SessionsTerminalViewVisibleContext.bindTo(
+      contextKeyService,
+    );
 		terminalViewVisible.set(viewsService.isViewVisible(TERMINAL_VIEW_ID));
 		this._register(viewsService.onDidChangeViewVisibility(e => {
 			if (e.id === TERMINAL_VIEW_ID) {
@@ -220,15 +232,22 @@ export class SessionsTerminalContribution extends Disposable implements IWorkben
 		if (existing.length === 0) {
 			try {
 				const instance = await this._createTerminalForSession(cwd, session);
-				const createdInstance = this._getAvailableTerminal(instance, `activate created terminal for ${cwd.fsPath}`);
+				const createdInstance = this._getAvailableTerminal(
+          instance,
+          `activate created terminal for ${cwd.fsPath}`,
+        );
 				if (!createdInstance) {
 					return [];
 				}
 				existing = [createdInstance];
 				this._terminalService.setActiveInstance(createdInstance);
-				this._logService.trace(`[SessionsTerminal] Created terminal ${createdInstance.instanceId} for ${cwd.fsPath}`);
+				this._logService.trace(
+          `[SessionsTerminal] Created terminal ${createdInstance.instanceId} for ${cwd.fsPath}`,
+        );
 			} catch (e) {
-				this._logService.trace(`[SessionsTerminal] Cannot create terminal for ${cwd.fsPath}: ${e}`);
+				this._logService.trace(
+          `[SessionsTerminal] Cannot create terminal for ${cwd.fsPath}: ${e}`,
+        );
 				return [];
 			}
 		}
@@ -247,7 +266,10 @@ export class SessionsTerminalContribution extends Disposable implements IWorkben
 	private async _createTerminalForSession(cwd: URI, session: ISession | undefined): Promise<ITerminalInstance> {
 		const address = session && this._getSessionAgentHostAddress(session);
 		if (address) {
-			const instance = await this._agentHostTerminalService.createTerminalForEntry(address, { cwd });
+			const instance = await this._agentHostTerminalService.createTerminalForEntry(
+        address,
+        { cwd },
+      );
 			if (instance) {
 				return instance;
 			}
@@ -263,11 +285,13 @@ export class SessionsTerminalContribution extends Disposable implements IWorkben
 		if (!session) {
 			return undefined;
 		}
-		const provider = this._sessionsProvidersService.getProvider(session.providerId);
+		const provider = this._sessionsProvidersService.getProvider(
+      session.providerId,
+    );
 		if (!provider || !isAgentHostProvider(provider)) {
 			return undefined;
 		}
-		return provider.remoteAddress ?? '__local__';
+		return provider.remoteAddress ?? "__local__";
 	}
 
 	private async _onActiveSessionChanged(session: ISession | undefined): Promise<void> {
@@ -283,14 +307,21 @@ export class SessionsTerminalContribution extends Disposable implements IWorkben
 		}
 		this._activeKey = targetKey;
 
-		const instances = await this.ensureTerminal(targetPath, false, info?.agentHostCwd ? session : undefined);
+		const instances = await this.ensureTerminal(
+      targetPath,
+      false,
+      info?.agentHostCwd ? session : undefined,
+    );
 
 		// If the active key changed while we were awaiting, a newer call has
 		// taken over — skip the visibility update to avoid flicker.
 		if (this._activeKey !== targetKey) {
 			return;
 		}
-		await this._updateTerminalVisibility(targetKey, instances.map(instance => instance.instanceId));
+		await this._updateTerminalVisibility(
+      targetKey,
+      instances.map(instance => instance.instanceId),
+    );
 	}
 
 	/**
@@ -317,9 +348,13 @@ export class SessionsTerminalContribution extends Disposable implements IWorkben
 	}
 
 	private _getAvailableTerminal(instance: ITerminalInstance, action: string): ITerminalInstance | undefined {
-		const currentInstance = this._terminalService.getInstanceFromId(instance.instanceId);
+		const currentInstance = this._terminalService.getInstanceFromId(
+      instance.instanceId,
+    );
 		if (!currentInstance || currentInstance.isDisposed) {
-			this._logService.trace(`[SessionsTerminal] Cannot ${action}; terminal ${instance.instanceId} is no longer available`);
+			this._logService.trace(
+        `[SessionsTerminal] Cannot ${action}; terminal ${instance.instanceId} is no longer available`,
+      );
 			return undefined;
 		}
 		return currentInstance;
@@ -344,13 +379,20 @@ export class SessionsTerminalContribution extends Disposable implements IWorkben
 			} catch {
 				continue;
 			}
-			const currentInstance = this._getAvailableTerminal(instance, `update visibility for ${cwd}`);
+			const currentInstance = this._getAvailableTerminal(
+        instance,
+        `update visibility for ${cwd}`,
+      );
 			if (!currentInstance) {
 				continue;
 			}
 
-			const isForeground = this._terminalService.foregroundInstances.includes(currentInstance);
-			const isForceVisible = forceForegroundTerminalIds.includes(currentInstance.instanceId);
+			const isForeground = this._terminalService.foregroundInstances.includes(
+        currentInstance,
+      );
+			const isForceVisible = forceForegroundTerminalIds.includes(
+        currentInstance.instanceId,
+      );
 			const belongsToActiveSession = cwd === activeKey;
 			if ((belongsToActiveSession || isForceVisible) && !isForeground) {
 				toShow.push(currentInstance);
@@ -360,13 +402,22 @@ export class SessionsTerminalContribution extends Disposable implements IWorkben
 		}
 
 		for (const instance of toShow) {
-			const availableInstance = this._getAvailableTerminal(instance, 'show background terminal');
+			const availableInstance = this._getAvailableTerminal(
+        instance,
+        "show background terminal",
+      );
 			if (availableInstance) {
-				await this._terminalService.showBackgroundTerminal(availableInstance, true);
+				await this._terminalService.showBackgroundTerminal(
+          availableInstance,
+          true,
+        );
 			}
 		}
 		for (const instance of toHide) {
-			const availableInstance = this._getAvailableTerminal(instance, 'move terminal to background');
+			const availableInstance = this._getAvailableTerminal(
+        instance,
+        "move terminal to background",
+      );
 			if (availableInstance) {
 				this._terminalService.moveToBackground(availableInstance);
 			}
@@ -377,7 +428,9 @@ export class SessionsTerminalContribution extends Disposable implements IWorkben
 		let mostRecent: ITerminalInstance | undefined;
 		let mostRecentTimestamp = -1;
 		for (const instance of foreground) {
-			const cmdDetection = instance.capabilities.get(TerminalCapability.CommandDetection);
+			const cmdDetection = instance.capabilities.get(
+        TerminalCapability.CommandDetection,
+      );
 			const lastCmd = cmdDetection?.commands.at(-1);
 			if (lastCmd && lastCmd.timestamp > mostRecentTimestamp) {
 				mostRecentTimestamp = lastCmd.timestamp;
@@ -401,12 +454,17 @@ export class SessionsTerminalContribution extends Disposable implements IWorkben
 			try {
 				const cwd = (await instance.getInitialCwd()).toLowerCase();
 				if (cwd === key) {
-					const availableInstance = this._getAvailableTerminal(instance, `close archived terminal for ${fsPath}`);
+					const availableInstance = this._getAvailableTerminal(
+            instance,
+            `close archived terminal for ${fsPath}`,
+          );
 					if (!availableInstance) {
 						continue;
 					}
 					this._terminalService.safeDisposeTerminal(availableInstance);
-					this._logService.trace(`[SessionsTerminal] Closed archived terminal ${availableInstance.instanceId}`);
+					this._logService.trace(
+            `[SessionsTerminal] Closed archived terminal ${availableInstance.instanceId}`,
+          );
 				}
 			} catch {
 				// ignore
@@ -415,13 +473,19 @@ export class SessionsTerminalContribution extends Disposable implements IWorkben
 	}
 
 	async dumpTracking(): Promise<void> {
-		console.log(`[SessionsTerminal] Active key: ${this._activeKey ?? '<none>'}`);
-		console.log('[SessionsTerminal] === All Terminals ===');
+		console.log(
+      `[SessionsTerminal] Active key: ${this._activeKey ?? "<none>"}`,
+    );
+		console.log("[SessionsTerminal] === All Terminals ===");
 		for (const instance of this._terminalService.instances) {
-			let cwd = '<unknown>';
+			let cwd = "<unknown>";
 			try { cwd = await instance.getInitialCwd(); } catch { /* ignored */ }
-			const isForeground = this._terminalService.foregroundInstances.includes(instance);
-			console.log(`  ${instance.instanceId} - ${cwd} - ${isForeground ? 'foreground' : 'background'}`);
+			const isForeground = this._terminalService.foregroundInstances.includes(
+        instance,
+      );
+			console.log(
+        `  ${instance.instanceId} - ${cwd} - ${isForeground ? "foreground" : "background"}`,
+      );
 		}
 	}
 
@@ -429,13 +493,19 @@ export class SessionsTerminalContribution extends Disposable implements IWorkben
 		for (const instance of this._terminalService.instances) {
 			if (!this._terminalService.foregroundInstances.includes(instance)) {
 				await this._terminalService.showBackgroundTerminal(instance, true);
-				this._logService.trace(`[SessionsTerminal] Moved terminal ${instance.instanceId} to foreground`);
+				this._logService.trace(
+          `[SessionsTerminal] Moved terminal ${instance.instanceId} to foreground`,
+        );
 			}
 		}
 	}
 }
 
-registerWorkbenchContribution2(SessionsTerminalContribution.ID, SessionsTerminalContribution, WorkbenchPhase.AfterRestored);
+registerWorkbenchContribution2(
+  SessionsTerminalContribution.ID,
+  SessionsTerminalContribution,
+  WorkbenchPhase.AfterRestored,
+);
 
 /**
  * Registers an {@link AgentHostSessionTaskRunner} with the
@@ -445,43 +515,49 @@ registerWorkbenchContribution2(SessionsTerminalContribution.ID, SessionsTerminal
  */
 class RegisterAgentHostSessionTaskRunnerContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'workbench.contrib.sessions.registerAgentHostTaskRunner';
+	static readonly ID = "workbench.contrib.sessions.registerAgentHostTaskRunner";
 
 	constructor(
 		@IInstantiationService instantiationService: IInstantiationService,
 		@ISessionTaskRunnerRegistry registry: ISessionTaskRunnerRegistry,
 	) {
 		super();
-		const runner = instantiationService.createInstance(AgentHostSessionTaskRunner);
+		const runner = instantiationService.createInstance(
+      AgentHostSessionTaskRunner,
+    );
 		this._register(registry.register(runner));
 	}
 }
 
-registerWorkbenchContribution2(RegisterAgentHostSessionTaskRunnerContribution.ID, RegisterAgentHostSessionTaskRunnerContribution, WorkbenchPhase.BlockStartup);
+registerWorkbenchContribution2(
+  RegisterAgentHostSessionTaskRunnerContribution.ID,
+  RegisterAgentHostSessionTaskRunnerContribution,
+  WorkbenchPhase.BlockStartup,
+);
 
 class OpenSessionInTerminalAction extends Action2 {
 
 	constructor() {
 		super({
-			id: 'agentSession.openInTerminal',
-			title: localize2('openInTerminal', "Open Terminal"),
+			id: "agentSession.openInTerminal",
+			title: localize2("openInTerminal", "Open Terminal"),
 			icon: Codicon.terminal,
 			toggled: {
 				condition: SessionsTerminalViewVisibleContext,
-				title: localize('hideTerminal', "Hide Terminal"),
+				title: localize("hideTerminal", "Hide Terminal"),
 			},
 			menu: [{
 				id: Menus.TitleBarSessionMenu,
-				group: 'navigation',
+				group: "navigation",
 				order: 10,
 				when: ContextKeyExpr.and(IsAuxiliaryWindowContext.toNegated(), SessionsWelcomeVisibleContext.toNegated(), IsPhoneLayoutContext.negate()),
-			}]
+			}],
 		});
 	}
 
 	override async run(_accessor: ServicesAccessor): Promise<void> {
 		const telemetryService = _accessor.get(ITelemetryService);
-		logSessionsInteraction(telemetryService, 'openTerminal');
+		logSessionsInteraction(telemetryService, "openTerminal");
 
 		const layoutService = _accessor.get(IWorkbenchLayoutService);
 		const viewsService = _accessor.get(IViewsService);
@@ -495,14 +571,20 @@ class OpenSessionInTerminalAction extends Action2 {
 			}
 		}
 
-		const contribution = getWorkbenchContribution<SessionsTerminalContribution>(SessionsTerminalContribution.ID);
+		const contribution = getWorkbenchContribution<SessionsTerminalContribution>(
+      SessionsTerminalContribution.ID,
+    );
 		const sessionsManagementService = _accessor.get(ISessionsManagementService);
 		const pathService = _accessor.get(IPathService);
 
 		const activeSession = sessionsManagementService.activeSession.get();
 		const info = getSessionTerminalInfo(activeSession);
 		const cwd = info?.cwd ?? await pathService.userHome();
-		await contribution.ensureTerminal(cwd, true, info?.agentHostCwd ? activeSession : undefined);
+		await contribution.ensureTerminal(
+      cwd,
+      true,
+      info?.agentHostCwd ? activeSession : undefined,
+    );
 		viewsService.openView(TERMINAL_VIEW_ID);
 	}
 }
@@ -513,14 +595,16 @@ class DumpTerminalTrackingAction extends Action2 {
 
 	constructor() {
 		super({
-			id: 'agentSession.dumpTerminalTracking',
-			title: localize2('dumpTerminalTracking', "Dump Terminal Tracking"),
-			f1: true,
-		});
+      id: "agentSession.dumpTerminalTracking",
+      title: localize2("dumpTerminalTracking", "Dump Terminal Tracking"),
+      f1: true,
+    });
 	}
 
 	override async run(): Promise<void> {
-		const contribution = getWorkbenchContribution<SessionsTerminalContribution>(SessionsTerminalContribution.ID);
+		const contribution = getWorkbenchContribution<SessionsTerminalContribution>(
+      SessionsTerminalContribution.ID,
+    );
 		await contribution.dumpTracking();
 	}
 }
@@ -531,14 +615,16 @@ class ShowAllTerminalsAction extends Action2 {
 
 	constructor() {
 		super({
-			id: 'agentSession.showAllTerminals',
-			title: localize2('showAllTerminals', "Show All Terminals"),
-			f1: true,
-		});
+      id: "agentSession.showAllTerminals",
+      title: localize2("showAllTerminals", "Show All Terminals"),
+      f1: true,
+    });
 	}
 
 	override async run(): Promise<void> {
-		const contribution = getWorkbenchContribution<SessionsTerminalContribution>(SessionsTerminalContribution.ID);
+		const contribution = getWorkbenchContribution<SessionsTerminalContribution>(
+      SessionsTerminalContribution.ID,
+    );
 		await contribution.showAllTerminals();
 	}
 }

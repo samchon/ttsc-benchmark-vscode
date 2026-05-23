@@ -2,29 +2,34 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { $, n } from '../../../../../../../base/browser/dom.js';
-import { Emitter } from '../../../../../../../base/common/event.js';
-import { Disposable } from '../../../../../../../base/common/lifecycle.js';
-import { constObservable, derived, IObservable, observableValue } from '../../../../../../../base/common/observable.js';
-import { IInstantiationService } from '../../../../../../../platform/instantiation/common/instantiation.js';
-import { asCssVariable } from '../../../../../../../platform/theme/common/colorUtils.js';
-import { ICodeEditor } from '../../../../../../browser/editorBrowser.js';
-import { ObservableCodeEditor, observableCodeEditor } from '../../../../../../browser/observableCodeEditor.js';
-import { LineSource, renderLines, RenderOptions } from '../../../../../../browser/widget/diffEditor/components/diffEditorViewZones/renderLines.js';
-import { Rect } from '../../../../../../common/core/2d/rect.js';
-import { Position } from '../../../../../../common/core/position.js';
-import { Range } from '../../../../../../common/core/range.js';
-import { LineRange } from '../../../../../../common/core/ranges/lineRange.js';
-import { OffsetRange } from '../../../../../../common/core/ranges/offsetRange.js';
-import { ILanguageService } from '../../../../../../common/languages/language.js';
-import { LineTokens, TokenArray } from '../../../../../../common/tokens/lineTokens.js';
-import { InlineDecoration, InlineDecorationType } from '../../../../../../common/viewModel/inlineDecorations.js';
-import { GhostText, GhostTextPart } from '../../../model/ghostText.js';
-import { InlineCompletionEditorType } from '../../../model/provideInlineCompletions.js';
-import { GhostTextView, IGhostTextWidgetData } from '../../ghostText/ghostTextView.js';
-import { IInlineEditsView, InlineEditClickEvent, InlineEditTabAction } from '../inlineEditsViewInterface.js';
-import { getEditorBackgroundColor, getModifiedBorderColor, INLINE_EDITS_BORDER_RADIUS, modifiedBackgroundColor } from '../theme.js';
-import { getPrefixTrim, mapOutFalsy } from '../utils/utils.js';
+import { $, n } from "../../../../../../../base/browser/dom.js";
+import { Emitter } from "../../../../../../../base/common/event.js";
+import { Disposable } from "../../../../../../../base/common/lifecycle.js";
+import { constObservable, derived, IObservable, observableValue } from "../../../../../../../base/common/observable.js";
+import { IInstantiationService } from "../../../../../../../platform/instantiation/common/instantiation.js";
+import { asCssVariable } from "../../../../../../../platform/theme/common/colorUtils.js";
+import { ICodeEditor } from "../../../../../../browser/editorBrowser.js";
+import { ObservableCodeEditor, observableCodeEditor } from "../../../../../../browser/observableCodeEditor.js";
+import { LineSource, renderLines, RenderOptions } from "../../../../../../browser/widget/diffEditor/components/diffEditorViewZones/renderLines.js";
+import { Rect } from "../../../../../../common/core/2d/rect.js";
+import { Position } from "../../../../../../common/core/position.js";
+import { Range } from "../../../../../../common/core/range.js";
+import { LineRange } from "../../../../../../common/core/ranges/lineRange.js";
+import { OffsetRange } from "../../../../../../common/core/ranges/offsetRange.js";
+import { ILanguageService } from "../../../../../../common/languages/language.js";
+import { LineTokens, TokenArray } from "../../../../../../common/tokens/lineTokens.js";
+import { InlineDecoration, InlineDecorationType } from "../../../../../../common/viewModel/inlineDecorations.js";
+import { GhostText, GhostTextPart } from "../../../model/ghostText.js";
+import { InlineCompletionEditorType } from "../../../model/provideInlineCompletions.js";
+import { GhostTextView, IGhostTextWidgetData } from "../../ghostText/ghostTextView.js";
+import { IInlineEditsView, InlineEditClickEvent, InlineEditTabAction } from "../inlineEditsViewInterface.js";
+import {
+  getEditorBackgroundColor,
+  getModifiedBorderColor,
+  INLINE_EDITS_BORDER_RADIUS,
+  modifiedBackgroundColor,
+} from "../theme.js";
+import { getPrefixTrim, mapOutFalsy } from "../utils/utils.js";
 
 const BORDER_WIDTH = 1;
 const WIDGET_SEPARATOR_WIDTH = 1;
@@ -34,7 +39,9 @@ const BORDER_RADIUS = INLINE_EDITS_BORDER_RADIUS;
 export class InlineEditsInsertionView extends Disposable implements IInlineEditsView {
 	private readonly _editorObs: ObservableCodeEditor;
 
-	private readonly _onDidClick = this._register(new Emitter<InlineEditClickEvent>());
+	private readonly _onDidClick = this._register(
+    new Emitter<InlineEditClickEvent>(),
+  );
 	readonly onDidClick = this._onDidClick.event;
 
 	private readonly _state = derived(this, reader => {
@@ -55,7 +62,7 @@ export class InlineEditsInsertionView extends Disposable implements IInlineEdits
 	private readonly _trimVertically = derived(this, reader => {
 		const state = this._state.read(reader);
 		const text = state?.text;
-		if (!text || text.trim() === '') {
+		if (!text || text.trim() === "") {
 			return { topOffset: 0, bottomOffset: 0, linesTop: 0, linesBottom: 0 };
 		}
 
@@ -110,8 +117,8 @@ export class InlineEditsInsertionView extends Disposable implements IInlineEdits
 
 		const inlineDecorations = modifiedLines.map((line, i) => new InlineDecoration(
 			new Range(i + 1, i === 0 ? 1 : prefixTrim.prefixTrim + 1, i + 1, line.length + 1),
-			'modified-background',
-			InlineDecorationType.Regular
+			"modified-background",
+			InlineDecorationType.Regular,
 		));
 
 		return new GhostText(state.lineNumber, [new GhostTextPart(state.column, state.text, false, inlineDecorations)]);
@@ -153,17 +160,19 @@ export class InlineEditsInsertionView extends Disposable implements IInlineEdits
 				} satisfies IGhostTextWidgetData;
 			}),
 			{
-				extraClasses: ['inline-edit'],
+				extraClasses: ["inline-edit"],
 				isClickable: true,
 				shouldKeepCursorStable: true,
-			}
+			},
 		));
 
 		this.isHovered = this._ghostTextView.isHovered;
 
-		this._register(this._ghostTextView.onDidClick((e) => {
-			this._onDidClick.fire(new InlineEditClickEvent(e));
-		}));
+		this._register(
+      this._ghostTextView.onDidClick((e) => {
+        this._onDidClick.fire(new InlineEditClickEvent(e));
+      }),
+    );
 
 		this._register(this._editorObs.createOverlayWidget({
 			domNode: this._view.element,
@@ -177,7 +186,10 @@ export class InlineEditsInsertionView extends Disposable implements IInlineEdits
 		}));
 	}
 
-	private readonly _display = derived(this, reader => !!this._state.read(reader) ? 'block' : 'none');
+	private readonly _display = derived(
+    this,
+    reader => !!this._state.read(reader) ? "block" : "none",
+  );
 
 	private readonly _editorMaxContentWidthInRange = derived(this, reader => {
 		const state = this._state.read(reader);
@@ -188,7 +200,7 @@ export class InlineEditsInsertionView extends Disposable implements IInlineEdits
 		const textModel = this._editor.getModel()!;
 		const eol = textModel.getEOL();
 
-		const textBeforeInsertion = state.text.startsWith(eol) ? '' : textModel.getValueInRange(new Range(state.lineNumber, 1, state.lineNumber, state.column));
+		const textBeforeInsertion = state.text.startsWith(eol) ? "" : textModel.getValueInRange(new Range(state.lineNumber, 1, state.lineNumber, state.column));
 		const textAfterInsertion = textModel.getValueInRange(new Range(state.lineNumber, state.column, state.lineNumber, textModel.getLineLength(state.lineNumber) + 1));
 		const text = textBeforeInsertion + state.text + textAfterInsertion;
 		const lines = text.split(eol);
@@ -203,7 +215,7 @@ export class InlineEditsInsertionView extends Disposable implements IInlineEdits
 				tokens = LineTokens.createEmpty(line, this._languageService.languageIdCodec);
 			}
 
-			return renderLines(new LineSource([tokens]), renderOptions, [], $('div'), true).minWidthInPx;
+			return renderLines(new LineSource([tokens]), renderOptions, [], $("div"), true).minWidthInPx;
 		});
 
 		// Take the max value that we observed.
@@ -215,8 +227,8 @@ export class InlineEditsInsertionView extends Disposable implements IInlineEdits
 	public readonly originalLines = this._state.map(s => s ?
 		new LineRange(
 			s.lineNumber,
-			Math.min(s.lineNumber + 2, this._editor.getModel()!.getLineCount() + 1)
-		) : undefined
+			Math.min(s.lineNumber + 2, this._editor.getModel()!.getLineCount() + 1),
+		) : undefined,
 	);
 
 	private readonly _overlayLayout = derived(this, (reader) => {
@@ -258,7 +270,7 @@ export class InlineEditsInsertionView extends Disposable implements IInlineEdits
 	}).recomputeInitiallyAndOnChange(this._store);
 
 	private readonly _modifiedOverlay = n.div({
-		style: { pointerEvents: 'none', }
+		style: { pointerEvents: "none", },
 	}, derived(this, reader => {
 		const overlayLayoutObs = mapOutFalsy(this._overlayLayout).read(reader);
 		if (!overlayLayoutObs) { return undefined; }
@@ -269,7 +281,7 @@ export class InlineEditsInsertionView extends Disposable implements IInlineEdits
 			layoutInfo.contentLeft - BORDER_RADIUS - BORDER_WIDTH,
 			layoutInfo.overlay.top,
 			layoutInfo.contentLeft,
-			layoutInfo.overlay.bottom
+			layoutInfo.overlay.bottom,
 		)).read(reader);
 
 		const separatorWidth = this._input.map(i => i?.editorType === InlineCompletionEditorType.DiffEditor ? WIDGET_SEPARATOR_DIFF_EDITOR_WIDTH : WIDGET_SEPARATOR_WIDTH).read(reader);
@@ -279,41 +291,41 @@ export class InlineEditsInsertionView extends Disposable implements IInlineEdits
 		const editorBackground = getEditorBackgroundColor(this._input.read(undefined)?.editorType ?? InlineCompletionEditorType.TextEditor);
 		return [
 			n.div({
-				class: 'originalUnderlayInsertion',
+				class: "originalUnderlayInsertion",
 				style: {
 					...underlayRect.read(reader).toStyles(),
 					borderRadius: BORDER_RADIUS,
 					border: `${BORDER_WIDTH + separatorWidth}px solid ${editorBackground}`,
-					boxSizing: 'border-box',
-				}
+					boxSizing: "border-box",
+				},
 			}),
 			n.div({
-				class: 'originalOverlayInsertion',
+				class: "originalOverlayInsertion",
 				style: {
 					...overlayRect.read(reader).toStyles(),
 					borderRadius: BORDER_RADIUS,
 					border: getModifiedBorderColor(this._tabAction).map(bc => `${BORDER_WIDTH}px solid ${asCssVariable(bc)}`),
-					boxSizing: 'border-box',
+					boxSizing: "border-box",
 					backgroundColor: asCssVariable(modifiedBackgroundColor),
-				}
+				},
 			}),
 			n.div({
-				class: 'originalOverlayHiderInsertion',
+				class: "originalOverlayHiderInsertion",
 				style: {
 					...overlayHider.toStyles(),
 					backgroundColor: editorBackground,
-				}
-			})
+				},
+			}),
 		];
 	})).keepUpdated(this._store);
 
 	private readonly _view = n.div({
-		class: 'inline-edits-view',
+		class: "inline-edits-view",
 		style: {
-			position: 'absolute',
-			overflow: 'visible',
-			top: '0px',
-			left: '0px',
+			position: "absolute",
+			overflow: "visible",
+			top: "0px",
+			left: "0px",
 			display: this._display,
 		},
 	}, [

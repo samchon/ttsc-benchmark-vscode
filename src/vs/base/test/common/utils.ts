@@ -3,19 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DisposableStore, DisposableTracker, IDisposable, setDisposableTracker } from '../../common/lifecycle.js';
-import { join } from '../../common/path.js';
-import { isWindows } from '../../common/platform.js';
-import { URI } from '../../common/uri.js';
+import { DisposableStore, DisposableTracker, IDisposable, setDisposableTracker } from "../../common/lifecycle.js";
+import { join } from "../../common/path.js";
+import { isWindows } from "../../common/platform.js";
+import { URI } from "../../common/uri.js";
 
 export type ValueCallback<T = any> = (value: T | Promise<T>) => void;
 
 export function toResource(this: any, path: string): URI {
 	if (isWindows) {
-		return URI.file(join('C:\\', btoa(this.test.fullTitle()), path));
+		return URI.file(join("C:\\", btoa(this.test.fullTitle()), path));
 	}
 
-	return URI.file(join('/', btoa(this.test.fullTitle()), path));
+	return URI.file(join("/", btoa(this.test.fullTitle()), path));
 }
 
 export function suiteRepeat(n: number, description: string, callback: (this: any) => void): void {
@@ -30,7 +30,7 @@ export function testRepeat(n: number, description: string, callback: (this: any)
 	}
 }
 
-export async function assertThrowsAsync(block: () => any, message: string | Error = 'Missing expected exception'): Promise<void> {
+export async function assertThrowsAsync(block: () => any, message: string | Error = "Missing expected exception"): Promise<void> {
 	try {
 		await block();
 	} catch {
@@ -50,19 +50,19 @@ export async function assertThrowsAsync(block: () => any, message: string | Erro
  * @returns A {@link DisposableStore} that can optionally be used to track disposables in the test.
  * This will be automatically disposed on test teardown.
 */
-export function ensureNoDisposablesAreLeakedInTestSuite(): Pick<DisposableStore, 'add'> {
+export function ensureNoDisposablesAreLeakedInTestSuite(): Pick<DisposableStore, "add"> {
 	let tracker: DisposableTracker | undefined;
 	let store: DisposableStore;
 	setup(() => {
-		store = new DisposableStore();
-		tracker = new DisposableTracker();
-		setDisposableTracker(tracker);
-	});
+    store = new DisposableStore();
+    tracker = new DisposableTracker();
+    setDisposableTracker(tracker);
+  });
 
-	teardown(function (this: import('mocha').Context) {
+	teardown(function (this: import("mocha").Context) {
 		store.dispose();
 		setDisposableTracker(null);
-		if (this.currentTest?.state !== 'failed') {
+		if (this.currentTest?.state !== "failed") {
 			const result = tracker!.computeLeakingDisposables();
 			if (result) {
 				console.error(result.details);
@@ -75,7 +75,7 @@ export function ensureNoDisposablesAreLeakedInTestSuite(): Pick<DisposableStore,
 	const testContext = {
 		add<T extends IDisposable>(o: T): T {
 			return store.add(o);
-		}
+		},
 	};
 	return testContext;
 }
@@ -102,6 +102,8 @@ function computeLeakingDisposables(tracker: DisposableTracker, logToConsole = tr
 		if (logToConsole) {
 			console.error(result.details);
 		}
-		throw new Error(`There are ${result.leaks.length} undisposed disposables!${result.details}`);
+		throw new Error(
+      `There are ${result.leaks.length} undisposed disposables!${result.details}`,
+    );
 	}
 }

@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { PROTOCOL_VERSION } from './state/protocol/version/registry.js';
+import { PROTOCOL_VERSION } from "./state/protocol/version/registry.js";
 
 export const remoteAgentHostStateSchemaVersion = 1;
 
@@ -40,19 +40,19 @@ export function createRemoteAgentHostState(options: {
 	readonly tunnelName?: string;
 }): IRemoteAgentHostState {
 	return {
-		schemaVersion: remoteAgentHostStateSchemaVersion,
-		pid: options.pid,
-		port: options.port,
-		host: options.host,
-		connectionToken: options.connectionToken ?? null,
-		protocolVersion: PROTOCOL_VERSION,
-		quality: options.quality,
-		tunnelName: options.tunnelName,
-	};
+    schemaVersion: remoteAgentHostStateSchemaVersion,
+    pid: options.pid,
+    port: options.port,
+    host: options.host,
+    connectionToken: options.connectionToken ?? null,
+    protocolVersion: PROTOCOL_VERSION,
+    quality: options.quality,
+    tunnelName: options.tunnelName,
+  };
 }
 
 export function parseRemoteAgentHostState(raw: unknown): IRemoteAgentHostState | undefined {
-	if (typeof raw !== 'object' || raw === null) {
+	if (typeof raw !== "object" || raw === null) {
 		return undefined;
 	}
 
@@ -60,36 +60,40 @@ export function parseRemoteAgentHostState(raw: unknown): IRemoteAgentHostState |
 	if (obj.schemaVersion !== remoteAgentHostStateSchemaVersion) {
 		return undefined;
 	}
-	if (typeof obj.pid !== 'number' || !Number.isSafeInteger(obj.pid) || obj.pid <= 0) {
+	if (typeof obj.pid !== "number" || !Number.isSafeInteger(
+    obj.pid,
+  ) || obj.pid <= 0) {
 		return undefined;
 	}
-	if (typeof obj.port !== 'number' || !Number.isSafeInteger(obj.port) || obj.port <= 0 || obj.port > 65535) {
+	if (typeof obj.port !== "number" || !Number.isSafeInteger(
+    obj.port,
+  ) || obj.port <= 0 || obj.port > 65535) {
 		return undefined;
 	}
-	if (obj.host !== undefined && typeof obj.host !== 'string') {
+	if (obj.host !== undefined && typeof obj.host !== "string") {
 		return undefined;
 	}
-	if (obj.connectionToken !== undefined && obj.connectionToken !== null && typeof obj.connectionToken !== 'string') {
+	if (obj.connectionToken !== undefined && obj.connectionToken !== null && typeof obj.connectionToken !== "string") {
 		return undefined;
 	}
-	if (typeof obj.protocolVersion !== 'string') {
+	if (typeof obj.protocolVersion !== "string") {
 		return undefined;
 	}
-	if (obj.quality !== undefined && typeof obj.quality !== 'string') {
+	if (obj.quality !== undefined && typeof obj.quality !== "string") {
 		return undefined;
 	}
-	if (obj.tunnelName !== undefined && typeof obj.tunnelName !== 'string') {
+	if (obj.tunnelName !== undefined && typeof obj.tunnelName !== "string") {
 		return undefined;
 	}
 
 	return {
-		schemaVersion: remoteAgentHostStateSchemaVersion,
-		pid: obj.pid,
-		port: obj.port,
-		host: obj.host as string | undefined,
-		connectionToken: (obj.connectionToken as string | null | undefined) ?? null,
-		protocolVersion: obj.protocolVersion,
-		quality: obj.quality,
-		tunnelName: obj.tunnelName,
-	};
+    schemaVersion: remoteAgentHostStateSchemaVersion,
+    pid: obj.pid,
+    port: obj.port,
+    host: obj.host as string | undefined,
+    connectionToken: (obj.connectionToken as string | null | undefined) ?? null,
+    protocolVersion: obj.protocolVersion,
+    quality: obj.quality,
+    tunnelName: obj.tunnelName,
+  };
 }

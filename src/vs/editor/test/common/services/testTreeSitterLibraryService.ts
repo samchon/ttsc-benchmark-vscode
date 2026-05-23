@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { Parser, Language, Query } from '@vscode/tree-sitter-wasm';
-import { IReader } from '../../../../base/common/observable.js';
-import { ITreeSitterLibraryService } from '../../../../editor/common/services/treeSitter/treeSitterLibraryService.js';
+import type { Parser, Language, Query } from "@vscode/tree-sitter-wasm";
+import { IReader } from "../../../../base/common/observable.js";
+import { ITreeSitterLibraryService } from "../../../../editor/common/services/treeSitter/treeSitterLibraryService.js";
 
 export class TestTreeSitterLibraryService implements ITreeSitterLibraryService {
 	readonly _serviceBrand: undefined;
 
 	getParserClass(): Promise<typeof Parser> {
-		throw new Error('not implemented in TestTreeSitterLibraryService');
+		throw new Error("not implemented in TestTreeSitterLibraryService");
 	}
 
 	supportsLanguage(languageId: string, reader: IReader | undefined): boolean {
@@ -35,6 +35,6 @@ export class TestTreeSitterLibraryService implements ITreeSitterLibraryService {
 	}
 
 	async createQuery(language: Language, querySource: string): Promise<Query> {
-		throw new Error('not implemented in TestTreeSitterLibraryService');
+		throw new Error("not implemented in TestTreeSitterLibraryService");
 	}
 }

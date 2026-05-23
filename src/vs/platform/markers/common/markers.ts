@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../base/common/event.js';
-import { IDisposable } from '../../../base/common/lifecycle.js';
-import Severity from '../../../base/common/severity.js';
-import { URI } from '../../../base/common/uri.js';
-import { localize } from '../../../nls.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
+import { Event } from "../../../base/common/event.js";
+import { IDisposable } from "../../../base/common/lifecycle.js";
+import Severity from "../../../base/common/severity.js";
+import { URI } from "../../../base/common/uri.js";
+import { localize } from "../../../nls.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
 
 export interface IMarkerReadOptions {
 	owner?: string;
@@ -67,21 +67,29 @@ export namespace MarkerSeverity {
 	}
 
 	const _displayStrings: { [value: number]: string } = Object.create(null);
-	_displayStrings[MarkerSeverity.Error] = localize('sev.error', "Error");
-	_displayStrings[MarkerSeverity.Warning] = localize('sev.warning', "Warning");
-	_displayStrings[MarkerSeverity.Info] = localize('sev.info', "Info");
+	_displayStrings[MarkerSeverity.Error] = localize("sev.error", "Error");
+	_displayStrings[MarkerSeverity.Warning] = localize("sev.warning", "Warning");
+	_displayStrings[MarkerSeverity.Info] = localize("sev.info", "Info");
 
 	export function toString(a: MarkerSeverity): string {
-		return _displayStrings[a] || '';
+		return _displayStrings[a] || "";
 	}
 
-	const _displayStringsPlural: { [value: number]: string } = Object.create(null);
-	_displayStringsPlural[MarkerSeverity.Error] = localize('sev.errors', "Errors");
-	_displayStringsPlural[MarkerSeverity.Warning] = localize('sev.warnings', "Warnings");
-	_displayStringsPlural[MarkerSeverity.Info] = localize('sev.infos', "Infos");
+	const _displayStringsPlural: { [value: number]: string } = Object.create(
+    null,
+  );
+	_displayStringsPlural[MarkerSeverity.Error] = localize(
+    "sev.errors",
+    "Errors",
+  );
+	_displayStringsPlural[MarkerSeverity.Warning] = localize(
+    "sev.warnings",
+    "Warnings",
+  );
+	_displayStringsPlural[MarkerSeverity.Info] = localize("sev.infos", "Infos");
 
 	export function toStringPlural(a: MarkerSeverity): string {
-		return _displayStringsPlural[a] || '';
+		return _displayStringsPlural[a] || "";
 	}
 
 	export function fromSeverity(severity: Severity): MarkerSeverity {
@@ -151,7 +159,7 @@ export interface MarkerStatistics {
 }
 
 export namespace IMarkerData {
-	const emptyString = '';
+	const emptyString = "";
 	export function makeKey(markerData: IMarkerData): string {
 		return makeKeyOptionalMessage(markerData, true);
 	}
@@ -159,15 +167,15 @@ export namespace IMarkerData {
 	export function makeKeyOptionalMessage(markerData: IMarkerData, useMessage: boolean): string {
 		const result: string[] = [emptyString];
 		if (markerData.source) {
-			result.push(markerData.source.replace('¦', '\\¦'));
+			result.push(markerData.source.replace("¦", "\\¦"));
 		} else {
 			result.push(emptyString);
 		}
 		if (markerData.code) {
-			if (typeof markerData.code === 'string') {
-				result.push(markerData.code.replace('¦', '\\¦'));
+			if (typeof markerData.code === "string") {
+				result.push(markerData.code.replace("¦", "\\¦"));
 			} else {
-				result.push(markerData.code.value.replace('¦', '\\¦'));
+				result.push(markerData.code.value.replace("¦", "\\¦"));
 			}
 		} else {
 			result.push(emptyString);
@@ -181,7 +189,7 @@ export namespace IMarkerData {
 		// Modifed to not include the message as part of the marker key to work around
 		// https://github.com/microsoft/vscode/issues/77475
 		if (markerData.message && useMessage) {
-			result.push(markerData.message.replace('¦', '\\¦'));
+			result.push(markerData.message.replace("¦", "\\¦"));
 		} else {
 			result.push(emptyString);
 		}
@@ -206,8 +214,8 @@ export namespace IMarkerData {
 			result.push(emptyString);
 		}
 		result.push(emptyString);
-		return result.join('¦');
+		return result.join("¦");
 	}
 }
 
-export const IMarkerService = createDecorator<IMarkerService>('markerService');
+export const IMarkerService = createDecorator<IMarkerService>("markerService");

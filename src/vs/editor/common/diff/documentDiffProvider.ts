@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { Event } from '../../../base/common/event.js';
-import { MovedText } from './linesDiffComputer.js';
-import { DetailedLineRangeMapping } from './rangeMapping.js';
-import { ITextModel } from '../model.js';
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { Event } from "../../../base/common/event.js";
+import { MovedText } from "./linesDiffComputer.js";
+import { DetailedLineRangeMapping } from "./rangeMapping.js";
+import { ITextModel } from "../model.js";
 
 /**
  * A document diff provider computes the diff between two text models.
@@ -78,8 +78,8 @@ export interface IDocumentDiff {
 
 
 export const nullDocumentDiff: IDocumentDiff = Object.freeze({
-	identical: true,
-	quitEarly: false,
-	changes: Object.freeze([]),
-	moves: Object.freeze([])
+  identical: true,
+  quitEarly: false,
+  changes: Object.freeze([]),
+  moves: Object.freeze([]),
 });

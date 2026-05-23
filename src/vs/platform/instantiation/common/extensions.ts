@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SyncDescriptor } from './descriptors.js';
-import { BrandedService, ServiceIdentifier } from './instantiation.js';
+import { SyncDescriptor } from "./descriptors.js";
+import { BrandedService, ServiceIdentifier } from "./instantiation.js";
 
 const _registry: [ServiceIdentifier<any>, SyncDescriptor<any>][] = [];
 
@@ -26,7 +26,11 @@ export function registerSingleton<T, Services extends BrandedService[]>(id: Serv
 export function registerSingleton<T, Services extends BrandedService[]>(id: ServiceIdentifier<T>, descriptor: SyncDescriptor<any>): void;
 export function registerSingleton<T, Services extends BrandedService[]>(id: ServiceIdentifier<T>, ctorOrDescriptor: { new(...services: Services): T } | SyncDescriptor<any>, supportsDelayedInstantiation?: boolean | InstantiationType): void {
 	if (!(ctorOrDescriptor instanceof SyncDescriptor)) {
-		ctorOrDescriptor = new SyncDescriptor<T>(ctorOrDescriptor as new (...args: unknown[]) => T, [], Boolean(supportsDelayedInstantiation));
+		ctorOrDescriptor = new SyncDescriptor<T>(
+      ctorOrDescriptor as new (...args: unknown[]) => T,
+      [],
+      Boolean(supportsDelayedInstantiation),
+    );
 	}
 
 	_registry.push([id, ctorOrDescriptor]);

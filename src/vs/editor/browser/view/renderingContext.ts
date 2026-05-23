@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Position } from '../../common/core/position.js';
-import { Range } from '../../common/core/range.js';
-import { ViewportData } from '../../common/viewLayout/viewLinesViewportData.js';
-import { IViewLayout } from '../../common/viewModel.js';
-import { ViewModelDecoration } from '../../common/viewModel/viewModelDecoration.js';
+import { Position } from "../../common/core/position.js";
+import { Range } from "../../common/core/range.js";
+import { ViewportData } from "../../common/viewLayout/viewLinesViewportData.js";
+import { IViewLayout } from "../../common/viewModel.js";
+import { ViewModelDecoration } from "../../common/viewModel/viewModelDecoration.js";
 
 export interface IViewLines {
 	linesVisibleRangesForRange(range: Range, includeNewLines: boolean): LineVisibleRanges[] | null;
@@ -55,11 +55,17 @@ export abstract class RestrictedRenderingContext {
 	}
 
 	public getVerticalOffsetForLineNumber(lineNumber: number, includeViewZones?: boolean): number {
-		return this._viewLayout.getVerticalOffsetForLineNumber(lineNumber, includeViewZones);
+		return this._viewLayout.getVerticalOffsetForLineNumber(
+      lineNumber,
+      includeViewZones,
+    );
 	}
 
 	public getVerticalOffsetAfterLineNumber(lineNumber: number, includeViewZones?: boolean): number {
-		return this._viewLayout.getVerticalOffsetAfterLineNumber(lineNumber, includeViewZones);
+		return this._viewLayout.getVerticalOffsetAfterLineNumber(
+      lineNumber,
+      includeViewZones,
+    );
 	}
 
 	public getLineHeightForLineNumber(lineNumber: number): number {
@@ -85,22 +91,32 @@ export class RenderingContext extends RestrictedRenderingContext {
 	}
 
 	public linesVisibleRangesForRange(range: Range, includeNewLines: boolean): LineVisibleRanges[] | null {
-		const domRanges = this._viewLines.linesVisibleRangesForRange(range, includeNewLines);
+		const domRanges = this._viewLines.linesVisibleRangesForRange(
+      range,
+      includeNewLines,
+    );
 		if (!this._viewLinesGpu) {
 			return domRanges;
 		}
-		const gpuRanges = this._viewLinesGpu.linesVisibleRangesForRange(range, includeNewLines);
+		const gpuRanges = this._viewLinesGpu.linesVisibleRangesForRange(
+      range,
+      includeNewLines,
+    );
 		if (!domRanges) {
 			return gpuRanges;
 		}
 		if (!gpuRanges) {
 			return domRanges;
 		}
-		return domRanges.concat(gpuRanges).sort((a, b) => a.lineNumber - b.lineNumber);
+		return domRanges.concat(gpuRanges).sort(
+      (a, b) => a.lineNumber - b.lineNumber,
+    );
 	}
 
 	public visibleRangeForPosition(position: Position): HorizontalPosition | null {
-		return this._viewLines.visibleRangeForPosition(position) ?? this._viewLinesGpu?.visibleRangeForPosition(position) ?? null;
+		return this._viewLines.visibleRangeForPosition(
+      position,
+    ) ?? this._viewLinesGpu?.visibleRangeForPosition(position) ?? null;
 	}
 }
 
@@ -211,7 +227,7 @@ export class HorizontalPosition {
 export class VisibleRanges {
 	constructor(
 		public readonly outsideRenderedLine: boolean,
-		public readonly ranges: FloatHorizontalRange[]
+		public readonly ranges: FloatHorizontalRange[],
 	) {
 	}
 }

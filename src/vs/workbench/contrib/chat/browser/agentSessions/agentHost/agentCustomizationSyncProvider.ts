@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../../../../base/common/event.js';
-import { Disposable } from '../../../../../../base/common/lifecycle.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../../../platform/storage/common/storage.js';
-import { type ICustomizationSyncProvider } from '../../../common/customizationHarnessService.js';
+import { Emitter, Event } from "../../../../../../base/common/event.js";
+import { Disposable } from "../../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../../../platform/storage/common/storage.js";
+import { type ICustomizationSyncProvider } from "../../../common/customizationHarnessService.js";
 
-const SYNC_STORAGE_KEY_PREFIX = 'customizationSync.disabled.';
+const SYNC_STORAGE_KEY_PREFIX = "customizationSync.disabled.";
 
 /**
  * Per-harness sync provider that tracks which local customization URIs the
@@ -53,14 +53,19 @@ export class AgentCustomizationSyncProvider extends Disposable implements ICusto
 	}
 
 	private _load(): Set<string> {
-		const stored = this._storageService.get(this._storageKey, StorageScope.PROFILE);
+		const stored = this._storageService.get(
+      this._storageKey,
+      StorageScope.PROFILE,
+    );
 		if (!stored) {
 			return new Set();
 		}
 		try {
 			const parsed = JSON.parse(stored) as unknown;
 			if (Array.isArray(parsed)) {
-				return new Set(parsed.filter((v): v is string => typeof v === 'string'));
+				return new Set(
+          parsed.filter((v): v is string => typeof v === "string"),
+        );
 			}
 		} catch {
 			// fall through
@@ -70,10 +75,10 @@ export class AgentCustomizationSyncProvider extends Disposable implements ICusto
 
 	private _persist(): void {
 		this._storageService.store(
-			this._storageKey,
-			JSON.stringify([...this._disabled]),
-			StorageScope.PROFILE,
-			StorageTarget.MACHINE,
-		);
+      this._storageKey,
+      JSON.stringify([...this._disabled]),
+      StorageScope.PROFILE,
+      StorageTarget.MACHINE,
+    );
 	}
 }

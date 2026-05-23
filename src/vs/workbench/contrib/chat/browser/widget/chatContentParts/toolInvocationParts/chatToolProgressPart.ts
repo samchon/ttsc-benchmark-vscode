@@ -3,22 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../../../../base/browser/dom.js';
-import { renderAsPlaintext } from '../../../../../../../base/browser/markdownRenderer.js';
-import { status } from '../../../../../../../base/browser/ui/aria/aria.js';
-import { IMarkdownString, MarkdownString } from '../../../../../../../base/common/htmlContent.js';
-import { stripIcons } from '../../../../../../../base/common/iconLabels.js';
-import { autorun } from '../../../../../../../base/common/observable.js';
-import { IMarkdownRenderer } from '../../../../../../../platform/markdown/browser/markdownRenderer.js';
-import { IConfigurationService } from '../../../../../../../platform/configuration/common/configuration.js';
-import { IInstantiationService } from '../../../../../../../platform/instantiation/common/instantiation.js';
-import { IChatProgressMessage, IChatToolInvocation, IChatToolInvocationSerialized, ToolConfirmKind } from '../../../../common/chatService/chatService.js';
-import { AccessibilityWorkbenchSettingId } from '../../../../../accessibility/browser/accessibilityConfiguration.js';
-import { IChatCodeBlockInfo } from '../../../chat.js';
-import { IChatContentPartRenderContext } from '../chatContentParts.js';
-import { ChatProgressContentPart } from '../chatProgressContentPart.js';
-import { BaseChatToolInvocationSubPart } from './chatToolInvocationSubPart.js';
-import { shouldShimmerForTool } from './chatToolPartUtilities.js';
+import * as dom from "../../../../../../../base/browser/dom.js";
+import { renderAsPlaintext } from "../../../../../../../base/browser/markdownRenderer.js";
+import { status } from "../../../../../../../base/browser/ui/aria/aria.js";
+import { IMarkdownString, MarkdownString } from "../../../../../../../base/common/htmlContent.js";
+import { stripIcons } from "../../../../../../../base/common/iconLabels.js";
+import { autorun } from "../../../../../../../base/common/observable.js";
+import { IMarkdownRenderer } from "../../../../../../../platform/markdown/browser/markdownRenderer.js";
+import { IConfigurationService } from "../../../../../../../platform/configuration/common/configuration.js";
+import { IInstantiationService } from "../../../../../../../platform/instantiation/common/instantiation.js";
+import {
+  IChatProgressMessage,
+  IChatToolInvocation,
+  IChatToolInvocationSerialized,
+  ToolConfirmKind,
+} from "../../../../common/chatService/chatService.js";
+import { AccessibilityWorkbenchSettingId } from "../../../../../accessibility/browser/accessibilityConfiguration.js";
+import { IChatCodeBlockInfo } from "../../../chat.js";
+import { IChatContentPartRenderContext } from "../chatContentParts.js";
+import { ChatProgressContentPart } from "../chatProgressContentPart.js";
+import { BaseChatToolInvocationSubPart } from "./chatToolInvocationSubPart.js";
+import { shouldShimmerForTool } from "./chatToolPartUtilities.js";
 
 export class ChatToolProgressSubPart extends BaseChatToolInvocationSubPart {
 	public readonly domNode: HTMLElement;
@@ -42,23 +47,28 @@ export class ChatToolProgressSubPart extends BaseChatToolInvocationSubPart {
 		const isComplete = IChatToolInvocation.isComplete(this.toolInvocation);
 
 		if (isComplete && this.toolIsConfirmed && (this.toolInvocation.pastTenseMessage || this.toolInvocation.invocationMessage)) {
-			const key = this.getAnnouncementKey('complete');
+			const key = this.getAnnouncementKey("complete");
 			const completionContent = this.toolInvocation.pastTenseMessage ?? this.toolInvocation.invocationMessage;
 			// Don't render anything if there's no meaningful content
 			if (!this.hasMeaningfulContent(completionContent)) {
-				return document.createElement('div');
+				return document.createElement("div");
 			}
-			const shouldAnnounce = this.toolInvocation.kind === 'toolInvocation' && this.hasMeaningfulContent(completionContent) ? this.computeShouldAnnounce(key) : false;
-			const part = this.renderProgressContent(completionContent!, shouldAnnounce);
+			const shouldAnnounce = this.toolInvocation.kind === "toolInvocation" && this.hasMeaningfulContent(
+        completionContent,
+      ) ? this.computeShouldAnnounce(key) : false;
+			const part = this.renderProgressContent(
+        completionContent!,
+        shouldAnnounce,
+      );
 			this._register(part);
 			return part.domNode;
 		} else {
-			const container = document.createElement('div');
+			const container = document.createElement("div");
 			this._register(autorun(reader => {
 				let progressContent: IMarkdownString | string | undefined;
-				const key = this.getAnnouncementKey('progress');
+				const key = this.getAnnouncementKey("progress");
 
-				if (this.toolInvocation.kind === 'toolInvocation') {
+				if (this.toolInvocation.kind === "toolInvocation") {
 					const state = this.toolInvocation.state.read(reader);
 
 					// Handle cancelled state with reason message
@@ -79,7 +89,7 @@ export class ChatToolProgressSubPart extends BaseChatToolInvocationSubPart {
 					dom.clearNode(container);
 					return;
 				}
-				const shouldAnnounce = this.toolInvocation.kind === 'toolInvocation' && this.hasMeaningfulContent(progressContent) ? this.computeShouldAnnounce(key) : false;
+				const shouldAnnounce = this.toolInvocation.kind === "toolInvocation" && this.hasMeaningfulContent(progressContent) ? this.computeShouldAnnounce(key) : false;
 				const part = reader.store.add(this.renderProgressContent(progressContent!, shouldAnnounce));
 				dom.reset(container, part.domNode);
 			}));
@@ -88,28 +98,40 @@ export class ChatToolProgressSubPart extends BaseChatToolInvocationSubPart {
 	}
 
 	private get toolIsConfirmed() {
-		const c = IChatToolInvocation.executionConfirmedOrDenied(this.toolInvocation);
+		const c = IChatToolInvocation.executionConfirmedOrDenied(
+      this.toolInvocation,
+    );
 		return !!c && c.type !== ToolConfirmKind.Denied;
 	}
 
 	private renderProgressContent(content: IMarkdownString | string, shouldAnnounce: boolean) {
-		if (typeof content === 'string') {
+		if (typeof content === "string") {
 			content = new MarkdownString().appendText(content);
 		}
 
 		const progressMessage: IChatProgressMessage = {
-			kind: 'progressMessage',
-			content
-		};
+      kind: "progressMessage",
+      content,
+    };
 
 		if (shouldAnnounce) {
 			this.provideScreenReaderStatus(content);
 		}
 
-		return this.instantiationService.createInstance(ChatProgressContentPart, progressMessage, this.renderer, this.context, undefined, true, this.getIcon(), this.toolInvocation, shouldShimmerForTool(this.toolInvocation));
+		return this.instantiationService.createInstance(
+      ChatProgressContentPart,
+      progressMessage,
+      this.renderer,
+      this.context,
+      undefined,
+      true,
+      this.getIcon(),
+      this.toolInvocation,
+      shouldShimmerForTool(this.toolInvocation),
+    );
 	}
 
-	private getAnnouncementKey(kind: 'progress' | 'complete'): string {
+	private getAnnouncementKey(kind: "progress" | "complete"): string {
 		return `${kind}:${this.toolInvocation.toolCallId}`;
 	}
 
@@ -117,7 +139,9 @@ export class ChatToolProgressSubPart extends BaseChatToolInvocationSubPart {
 		if (!this.announcedToolProgressKeys) {
 			return false;
 		}
-		if (!this.configurationService.getValue(AccessibilityWorkbenchSettingId.VerboseChatProgressUpdates)) {
+		if (!this.configurationService.getValue(
+      AccessibilityWorkbenchSettingId.VerboseChatProgressUpdates,
+    )) {
 			return false;
 		}
 		if (this.announcedToolProgressKeys.has(key)) {
@@ -128,7 +152,9 @@ export class ChatToolProgressSubPart extends BaseChatToolInvocationSubPart {
 	}
 
 	private provideScreenReaderStatus(content: IMarkdownString | string): void {
-		const message = typeof content === 'string' ? content : stripIcons(renderAsPlaintext(content, { useLinkFormatter: true }));
+		const message = typeof content === "string" ? content : stripIcons(
+      renderAsPlaintext(content, { useLinkFormatter: true }),
+    );
 		status(message);
 	}
 
@@ -137,7 +163,7 @@ export class ChatToolProgressSubPart extends BaseChatToolInvocationSubPart {
 			return false;
 		}
 
-		const text = typeof content === 'string' ? content : content.value;
+		const text = typeof content === "string" ? content : content.value;
 		return text.trim().length > 0;
 	}
 }

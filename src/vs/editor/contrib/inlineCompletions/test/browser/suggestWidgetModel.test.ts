@@ -3,44 +3,48 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { timeout } from '../../../../../base/common/async.js';
-import { Event } from '../../../../../base/common/event.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { mock } from '../../../../../base/test/common/mock.js';
-import { runWithFakedTimers } from '../../../../../base/test/common/timeTravelScheduler.js';
-import { Range } from '../../../../common/core/range.js';
-import { CompletionItemKind, CompletionItemProvider } from '../../../../common/languages.js';
-import { IEditorWorkerService } from '../../../../common/services/editorWorker.js';
-import { ViewModel } from '../../../../common/viewModel/viewModelImpl.js';
-import { GhostTextContext } from './utils.js';
-import { SnippetController2 } from '../../../snippet/browser/snippetController2.js';
-import { SuggestController } from '../../../suggest/browser/suggestController.js';
-import { ISuggestMemoryService } from '../../../suggest/browser/suggestMemory.js';
-import { ITestCodeEditor, TestCodeEditorInstantiationOptions, withAsyncTestCodeEditor } from '../../../../test/browser/testCodeEditor.js';
-import { IMenu, IMenuService } from '../../../../../platform/actions/common/actions.js';
-import { ServiceCollection } from '../../../../../platform/instantiation/common/serviceCollection.js';
-import { IKeybindingService } from '../../../../../platform/keybinding/common/keybinding.js';
-import { MockKeybindingService } from '../../../../../platform/keybinding/test/common/mockKeybindingService.js';
-import { ILogService, NullLogService } from '../../../../../platform/log/common/log.js';
-import { InMemoryStorageService, IStorageService } from '../../../../../platform/storage/common/storage.js';
-import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
-import { NullTelemetryService } from '../../../../../platform/telemetry/common/telemetryUtils.js';
-import assert from 'assert';
-import { ILabelService } from '../../../../../platform/label/common/label.js';
-import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
-import { LanguageFeaturesService } from '../../../../common/services/languageFeaturesService.js';
-import { ILanguageFeaturesService } from '../../../../common/services/languageFeatures.js';
-import { InlineCompletionsModel } from '../../browser/model/inlineCompletionsModel.js';
-import { InlineCompletionsController } from '../../browser/controller/inlineCompletionsController.js';
-import { autorun } from '../../../../../base/common/observable.js';
-import { setUnexpectedErrorHandler } from '../../../../../base/common/errors.js';
-import { IAccessibilitySignalService } from '../../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { IDefaultAccountService } from '../../../../../platform/defaultAccount/common/defaultAccount.js';
-import { ModifierKeyEmitter } from '../../../../../base/browser/dom.js';
-import { InlineSuggestionsView } from '../../browser/view/inlineSuggestionsView.js';
+import { timeout } from "../../../../../base/common/async.js";
+import { Event } from "../../../../../base/common/event.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { mock } from "../../../../../base/test/common/mock.js";
+import { runWithFakedTimers } from "../../../../../base/test/common/timeTravelScheduler.js";
+import { Range } from "../../../../common/core/range.js";
+import { CompletionItemKind, CompletionItemProvider } from "../../../../common/languages.js";
+import { IEditorWorkerService } from "../../../../common/services/editorWorker.js";
+import { ViewModel } from "../../../../common/viewModel/viewModelImpl.js";
+import { GhostTextContext } from "./utils.js";
+import { SnippetController2 } from "../../../snippet/browser/snippetController2.js";
+import { SuggestController } from "../../../suggest/browser/suggestController.js";
+import { ISuggestMemoryService } from "../../../suggest/browser/suggestMemory.js";
+import {
+  ITestCodeEditor,
+  TestCodeEditorInstantiationOptions,
+  withAsyncTestCodeEditor,
+} from "../../../../test/browser/testCodeEditor.js";
+import { IMenu, IMenuService } from "../../../../../platform/actions/common/actions.js";
+import { ServiceCollection } from "../../../../../platform/instantiation/common/serviceCollection.js";
+import { IKeybindingService } from "../../../../../platform/keybinding/common/keybinding.js";
+import { MockKeybindingService } from "../../../../../platform/keybinding/test/common/mockKeybindingService.js";
+import { ILogService, NullLogService } from "../../../../../platform/log/common/log.js";
+import { InMemoryStorageService, IStorageService } from "../../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
+import { NullTelemetryService } from "../../../../../platform/telemetry/common/telemetryUtils.js";
+import assert from "assert";
+import { ILabelService } from "../../../../../platform/label/common/label.js";
+import { IWorkspaceContextService } from "../../../../../platform/workspace/common/workspace.js";
+import { LanguageFeaturesService } from "../../../../common/services/languageFeaturesService.js";
+import { ILanguageFeaturesService } from "../../../../common/services/languageFeatures.js";
+import { InlineCompletionsModel } from "../../browser/model/inlineCompletionsModel.js";
+import { InlineCompletionsController } from "../../browser/controller/inlineCompletionsController.js";
+import { autorun } from "../../../../../base/common/observable.js";
+import { setUnexpectedErrorHandler } from "../../../../../base/common/errors.js";
+import { IAccessibilitySignalService } from "../../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { IDefaultAccountService } from "../../../../../platform/defaultAccount/common/defaultAccount.js";
+import { ModifierKeyEmitter } from "../../../../../base/browser/dom.js";
+import { InlineSuggestionsView } from "../../browser/view/inlineSuggestionsView.js";
 
-suite('Suggest Widget Model', () => {
+suite("Suggest Widget Model", () => {
 	ensureNoDisposablesAreLeakedInTestSuite();
 
 	setup(() => {
@@ -50,8 +54,8 @@ suite('Suggest Widget Model', () => {
 	});
 
 	// This test is skipped because the fix for this causes https://github.com/microsoft/vscode/issues/166023
-	test.skip('Active', async () => {
-		await withAsyncTestCodeEditorAndInlineCompletionsModel('',
+	test.skip("Active", async () => {
+		await withAsyncTestCodeEditorAndInlineCompletionsModel("",
 			{ fakeClock: true, provider, },
 			async ({ editor, editorViewModel, context, model }) => {
 				let last: boolean | undefined = undefined;
@@ -65,13 +69,13 @@ suite('Suggest Widget Model', () => {
 					}
 				});
 
-				context.keyboardType('h');
+				context.keyboardType("h");
 				const suggestController = (editor.getContribution(SuggestController.ID) as SuggestController);
 				suggestController.triggerSuggest();
 				await timeout(1000);
 				assert.deepStrictEqual(history.splice(0), [false, true]);
 
-				context.keyboardType('.');
+				context.keyboardType(".");
 				await timeout(1000);
 
 				// No flicker here
@@ -82,36 +86,36 @@ suite('Suggest Widget Model', () => {
 				assert.deepStrictEqual(history.splice(0), [false]);
 
 				d.dispose();
-			}
+			},
 		);
 	});
 
-	test('Ghost Text', async () => {
-		await withAsyncTestCodeEditorAndInlineCompletionsModel('',
-			{ fakeClock: true, provider, suggest: { preview: true }, quickSuggestions: { other: 'on', comments: 'off', strings: 'off' } },
+	test("Ghost Text", async () => {
+		await withAsyncTestCodeEditorAndInlineCompletionsModel("",
+			{ fakeClock: true, provider, suggest: { preview: true }, quickSuggestions: { other: "on", comments: "off", strings: "off" } },
 			async ({ editor, editorViewModel, context, model }) => {
-				context.keyboardType('h');
+				context.keyboardType("h");
 				const suggestController = (editor.getContribution(SuggestController.ID) as SuggestController);
 				suggestController.triggerSuggest();
 				await timeout(1000);
-				assert.deepStrictEqual(context.getAndClearViewStates(), ['', 'h[ello]']);
+				assert.deepStrictEqual(context.getAndClearViewStates(), ["", "h[ello]"]);
 
-				context.keyboardType('.');
+				context.keyboardType(".");
 				await timeout(1000);
-				assert.deepStrictEqual(context.getAndClearViewStates(), ['h', 'hello.[hello]']);
+				assert.deepStrictEqual(context.getAndClearViewStates(), ["h", "hello.[hello]"]);
 
 				suggestController.cancelSuggestWidget();
 
 				await timeout(1000);
-				assert.deepStrictEqual(context.getAndClearViewStates(), ['hello.']);
-			}
+				assert.deepStrictEqual(context.getAndClearViewStates(), ["hello."]);
+			},
 		);
 	});
 });
 
 const provider: CompletionItemProvider = {
-	_debugDisplayName: 'test',
-	triggerCharacters: ['.'],
+	_debugDisplayName: "test",
+	triggerCharacters: ["."],
 	async provideCompletionItems(model, pos) {
 		const word = model.getWordAtPosition(pos);
 		const range = word
@@ -120,12 +124,12 @@ const provider: CompletionItemProvider = {
 
 		return {
 			suggestions: [{
-				insertText: 'hello',
+				insertText: "hello",
 				kind: CompletionItemKind.Text,
-				label: 'hello',
+				label: "hello",
 				range,
-				commitCharacters: ['.'],
-			}]
+				commitCharacters: ["."],
+			}],
 		};
 	},
 };
@@ -133,7 +137,7 @@ const provider: CompletionItemProvider = {
 async function withAsyncTestCodeEditorAndInlineCompletionsModel(
 	text: string,
 	options: TestCodeEditorInstantiationOptions & { provider?: CompletionItemProvider; fakeClock?: boolean; serviceCollection?: never },
-	callback: (args: { editor: ITestCodeEditor; editorViewModel: ViewModel; model: InlineCompletionsModel; context: GhostTextContext }) => Promise<void>
+	callback: (args: { editor: ITestCodeEditor; editorViewModel: ViewModel; model: InlineCompletionsModel; context: GhostTextContext }) => Promise<void>,
 ): Promise<void> {
 	await runWithFakedTimers({ useFakeTimers: options.fakeClock }, async () => {
 		const disposableStore = new DisposableStore();
@@ -178,12 +182,12 @@ async function withAsyncTestCodeEditorAndInlineCompletionsModel(
 			if (options.provider) {
 				const languageFeaturesService = new LanguageFeaturesService();
 				serviceCollection.set(ILanguageFeaturesService, languageFeaturesService);
-				disposableStore.add(languageFeaturesService.completionProvider.register({ pattern: '**' }, options.provider));
+				disposableStore.add(languageFeaturesService.completionProvider.register({ pattern: "**" }, options.provider));
 			}
 
 			await withAsyncTestCodeEditor(text, { ...options, serviceCollection }, async (editor, editorViewModel, instantiationService) => {
 				instantiationService.stubInstance(InlineSuggestionsView, {
-					dispose: () => { }
+					dispose: () => { },
 				});
 				editor.registerAndInstantiateContribution(SnippetController2.ID, SnippetController2);
 				editor.registerAndInstantiateContribution(SuggestController.ID, SuggestController);

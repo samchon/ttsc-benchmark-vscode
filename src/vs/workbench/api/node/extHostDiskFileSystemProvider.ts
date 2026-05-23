@@ -3,25 +3,29 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type * as vscode from 'vscode';
-import { IExtHostConsumerFileSystem } from '../common/extHostFileSystemConsumer.js';
-import { Schemas } from '../../../base/common/network.js';
-import { ILogService } from '../../../platform/log/common/log.js';
-import { DiskFileSystemProvider } from '../../../platform/files/node/diskFileSystemProvider.js';
-import { FilePermission } from '../../../platform/files/common/files.js';
-import { isLinux } from '../../../base/common/platform.js';
+import type * as vscode from "vscode";
+import { IExtHostConsumerFileSystem } from "../common/extHostFileSystemConsumer.js";
+import { Schemas } from "../../../base/common/network.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { DiskFileSystemProvider } from "../../../platform/files/node/diskFileSystemProvider.js";
+import { FilePermission } from "../../../platform/files/common/files.js";
+import { isLinux } from "../../../base/common/platform.js";
 
 export class ExtHostDiskFileSystemProvider {
 
 	constructor(
 		@IExtHostConsumerFileSystem extHostConsumerFileSystem: IExtHostConsumerFileSystem,
-		@ILogService logService: ILogService
+		@ILogService logService: ILogService,
 	) {
 
 		// Register disk file system provider so that certain
 		// file operations can execute fast within the extension
 		// host without roundtripping.
-		extHostConsumerFileSystem.addFileSystemProvider(Schemas.file, new DiskFileSystemProviderAdapter(logService), { isCaseSensitive: isLinux });
+		extHostConsumerFileSystem.addFileSystemProvider(
+      Schemas.file,
+      new DiskFileSystemProviderAdapter(logService),
+      { isCaseSensitive: isLinux },
+    );
 	}
 }
 
@@ -37,12 +41,12 @@ class DiskFileSystemProviderAdapter implements vscode.FileSystemProvider {
 		const stat = await this.impl.stat(uri);
 
 		return {
-			type: stat.type,
-			ctime: stat.ctime,
-			mtime: stat.mtime,
-			size: stat.size,
-			permissions: stat.permissions === FilePermission.Readonly ? 1 : undefined
-		};
+      type: stat.type,
+      ctime: stat.ctime,
+      mtime: stat.mtime,
+      size: stat.size,
+      permissions: stat.permissions === FilePermission.Readonly ? 1 : undefined,
+    };
 	}
 
 	readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
@@ -58,11 +62,19 @@ class DiskFileSystemProviderAdapter implements vscode.FileSystemProvider {
 	}
 
 	writeFile(uri: vscode.Uri, content: Uint8Array, options: { readonly create: boolean; readonly overwrite: boolean }): Promise<void> {
-		return this.impl.writeFile(uri, content, { ...options, unlock: false, atomic: false });
+		return this.impl.writeFile(uri, content, {
+      ...options,
+      unlock: false,
+      atomic: false,
+    });
 	}
 
 	delete(uri: vscode.Uri, options: { readonly recursive: boolean }): Promise<void> {
-		return this.impl.delete(uri, { ...options, useTrash: false, atomic: false });
+		return this.impl.delete(uri, {
+      ...options,
+      useTrash: false,
+      atomic: false,
+    });
 	}
 
 	rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { readonly overwrite: boolean }): Promise<void> {
@@ -75,6 +87,8 @@ class DiskFileSystemProviderAdapter implements vscode.FileSystemProvider {
 
 	// --- Not Implemented ---
 
-	get onDidChangeFile(): never { throw new Error('Method not implemented.'); }
-	watch(uri: vscode.Uri, options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable { throw new Error('Method not implemented.'); }
+	get onDidChangeFile(): never { throw new Error("Method not implemented."); }
+	watch(uri: vscode.Uri, options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable { throw new Error(
+    "Method not implemented.",
+  ); }
 }

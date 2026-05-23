@@ -3,18 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { VSBuffer } from '../../../../base/common/buffer.js';
-import { runWithFakedTimers } from '../../../../base/test/common/timeTravelScheduler.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
-import { IFileService } from '../../../files/common/files.js';
-import { ILogService } from '../../../log/common/log.js';
-import { IUserDataProfilesService } from '../../../userDataProfile/common/userDataProfile.js';
-import { getMcpContentFromSyncContent, McpSynchroniser } from '../../common/mcpSync.js';
-import { Change, IUserDataSyncStoreService, MergeState, SyncResource, SyncStatus } from '../../common/userDataSync.js';
-import { UserDataSyncClient, UserDataSyncTestServer } from './userDataSyncClient.js';
+import assert from "assert";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { runWithFakedTimers } from "../../../../base/test/common/timeTravelScheduler.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
+import { IFileService } from "../../../files/common/files.js";
+import { ILogService } from "../../../log/common/log.js";
+import { IUserDataProfilesService } from "../../../userDataProfile/common/userDataProfile.js";
+import { getMcpContentFromSyncContent, McpSynchroniser } from "../../common/mcpSync.js";
+import {
+  Change,
+  IUserDataSyncStoreService,
+  MergeState,
+  SyncResource,
+  SyncStatus,
+} from "../../common/userDataSync.js";
+import { UserDataSyncClient, UserDataSyncTestServer } from "./userDataSyncClient.js";
 
-suite('McpSync', () => {
+suite("McpSync", () => {
 
 	const server = new UserDataSyncTestServer();
 	let client: UserDataSyncClient;
@@ -33,7 +39,7 @@ suite('McpSync', () => {
 		testObject = client.getSynchronizer(SyncResource.Mcp) as McpSynchroniser;
 	});
 
-	test('when mcp file does not exist', async () => {
+	test("when mcp file does not exist", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const fileService = client.instantiationService.get(IFileService);
 			const mcpResource = client.instantiationService.get(IUserDataProfilesService).defaultProfile.mcpResource;
@@ -64,17 +70,17 @@ suite('McpSync', () => {
 		});
 	});
 
-	test('when mcp file does not exist and remote has changes', async () => {
+	test("when mcp file does not exist and remote has changes", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const client2 = disposableStore.add(new UserDataSyncClient(server));
 			await client2.setUp(true);
 			const content = JSON.stringify({
-				'mcpServers': {
-					'test-server': {
-						'command': 'node',
-						'args': ['./server.js']
-					}
-				}
+				"mcpServers": {
+					"test-server": {
+						"command": "node",
+						"args": ["./server.js"],
+					},
+				},
 			});
 			const mcpResource2 = client2.instantiationService.get(IUserDataProfilesService).defaultProfile.mcpResource;
 			await client2.instantiationService.get(IFileService).writeFile(mcpResource2, VSBuffer.fromString(content));
@@ -94,17 +100,17 @@ suite('McpSync', () => {
 		});
 	});
 
-	test('when mcp file exists locally and remote has no mcp', async () => {
+	test("when mcp file exists locally and remote has no mcp", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const fileService = client.instantiationService.get(IFileService);
 			const mcpResource = client.instantiationService.get(IUserDataProfilesService).defaultProfile.mcpResource;
 			const content = JSON.stringify({
-				'mcpServers': {
-					'test-server': {
-						'command': 'node',
-						'args': ['./server.js']
-					}
-				}
+				"mcpServers": {
+					"test-server": {
+						"command": "node",
+						"args": ["./server.js"],
+					},
+				},
 			});
 			fileService.writeFile(mcpResource, VSBuffer.fromString(content));
 
@@ -118,17 +124,17 @@ suite('McpSync', () => {
 		});
 	});
 
-	test('first time sync: when mcp file exists locally with same content as remote', async () => {
+	test("first time sync: when mcp file exists locally with same content as remote", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const client2 = disposableStore.add(new UserDataSyncClient(server));
 			await client2.setUp(true);
 			const content = JSON.stringify({
-				'mcpServers': {
-					'test-server': {
-						'command': 'node',
-						'args': ['./server.js']
-					}
-				}
+				"mcpServers": {
+					"test-server": {
+						"command": "node",
+						"args": ["./server.js"],
+					},
+				},
 			});
 			const mcpResource2 = client2.instantiationService.get(IUserDataProfilesService).defaultProfile.mcpResource;
 			await client2.instantiationService.get(IFileService).writeFile(mcpResource2, VSBuffer.fromString(content));
@@ -149,23 +155,23 @@ suite('McpSync', () => {
 		});
 	});
 
-	test('when mcp file locally has moved forward', async () => {
+	test("when mcp file locally has moved forward", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const fileService = client.instantiationService.get(IFileService);
 			const mcpResource = client.instantiationService.get(IUserDataProfilesService).defaultProfile.mcpResource;
 			fileService.writeFile(mcpResource, VSBuffer.fromString(JSON.stringify({
-				'mcpServers': {}
+				"mcpServers": {},
 			})));
 
 			await testObject.sync(await client.getLatestRef(SyncResource.Mcp));
 
 			const content = JSON.stringify({
-				'mcpServers': {
-					'test-server': {
-						'command': 'node',
-						'args': ['./server.js']
-					}
-				}
+				"mcpServers": {
+					"test-server": {
+						"command": "node",
+						"args": ["./server.js"],
+					},
+				},
 			});
 			fileService.writeFile(mcpResource, VSBuffer.fromString(content));
 
@@ -179,14 +185,14 @@ suite('McpSync', () => {
 		});
 	});
 
-	test('when mcp file remotely has moved forward', async () => {
+	test("when mcp file remotely has moved forward", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const client2 = disposableStore.add(new UserDataSyncClient(server));
 			await client2.setUp(true);
 			const mcpResource2 = client2.instantiationService.get(IUserDataProfilesService).defaultProfile.mcpResource;
 			const fileService2 = client2.instantiationService.get(IFileService);
 			await fileService2.writeFile(mcpResource2, VSBuffer.fromString(JSON.stringify({
-				'mcpServers': {}
+				"mcpServers": {},
 			})));
 
 			const fileService = client.instantiationService.get(IFileService);
@@ -196,12 +202,12 @@ suite('McpSync', () => {
 			await testObject.sync(await client.getLatestRef(SyncResource.Mcp));
 
 			const content = JSON.stringify({
-				'mcpServers': {
-					'test-server': {
-						'command': 'node',
-						'args': ['./server.js']
-					}
-				}
+				"mcpServers": {
+					"test-server": {
+						"command": "node",
+						"args": ["./server.js"],
+					},
+				},
 			});
 			fileService2.writeFile(mcpResource2, VSBuffer.fromString(content));
 
@@ -217,14 +223,14 @@ suite('McpSync', () => {
 		});
 	});
 
-	test('when mcp file has moved forward locally and remotely with same changes', async () => {
+	test("when mcp file has moved forward locally and remotely with same changes", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const client2 = disposableStore.add(new UserDataSyncClient(server));
 			await client2.setUp(true);
 			const mcpResource2 = client2.instantiationService.get(IUserDataProfilesService).defaultProfile.mcpResource;
 			const fileService2 = client2.instantiationService.get(IFileService);
 			await fileService2.writeFile(mcpResource2, VSBuffer.fromString(JSON.stringify({
-				'mcpServers': {}
+				"mcpServers": {},
 			})));
 
 			const fileService = client.instantiationService.get(IFileService);
@@ -234,12 +240,12 @@ suite('McpSync', () => {
 			await testObject.sync(await client.getLatestRef(SyncResource.Mcp));
 
 			const content = JSON.stringify({
-				'mcpServers': {
-					'test-server': {
-						'command': 'node',
-						'args': ['./server.js']
-					}
-				}
+				"mcpServers": {
+					"test-server": {
+						"command": "node",
+						"args": ["./server.js"],
+					},
+				},
 			});
 			fileService2.writeFile(mcpResource2, VSBuffer.fromString(content));
 			await client2.sync();
@@ -256,14 +262,14 @@ suite('McpSync', () => {
 		});
 	});
 
-	test('when mcp file has moved forward locally and remotely - accept preview', async () => {
+	test("when mcp file has moved forward locally and remotely - accept preview", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const client2 = disposableStore.add(new UserDataSyncClient(server));
 			await client2.setUp(true);
 			const mcpResource2 = client2.instantiationService.get(IUserDataProfilesService).defaultProfile.mcpResource;
 			const fileService2 = client2.instantiationService.get(IFileService);
 			await fileService2.writeFile(mcpResource2, VSBuffer.fromString(JSON.stringify({
-				'mcpServers': {}
+				"mcpServers": {},
 			})));
 
 			const fileService = client.instantiationService.get(IFileService);
@@ -273,22 +279,22 @@ suite('McpSync', () => {
 			await testObject.sync(await client.getLatestRef(SyncResource.Mcp));
 
 			fileService2.writeFile(mcpResource2, VSBuffer.fromString(JSON.stringify({
-				'mcpServers': {
-					'server1': {
-						'command': 'node',
-						'args': ['./server1.js']
-					}
-				}
+				"mcpServers": {
+					"server1": {
+						"command": "node",
+						"args": ["./server1.js"],
+					},
+				},
 			})));
 			await client2.sync();
 
 			const content = JSON.stringify({
-				'mcpServers': {
-					'server2': {
-						'command': 'node',
-						'args': ['./server2.js']
-					}
-				}
+				"mcpServers": {
+					"server2": {
+						"command": "node",
+						"args": ["./server2.js"],
+					},
+				},
 			});
 			fileService.writeFile(mcpResource, VSBuffer.fromString(content));
 			await testObject.sync(await client.getLatestRef(SyncResource.Mcp));
@@ -311,14 +317,14 @@ suite('McpSync', () => {
 		});
 	});
 
-	test('when mcp file has moved forward locally and remotely - accept modified preview', async () => {
+	test("when mcp file has moved forward locally and remotely - accept modified preview", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const client2 = disposableStore.add(new UserDataSyncClient(server));
 			await client2.setUp(true);
 			const mcpResource2 = client2.instantiationService.get(IUserDataProfilesService).defaultProfile.mcpResource;
 			const fileService2 = client2.instantiationService.get(IFileService);
 			await fileService2.writeFile(mcpResource2, VSBuffer.fromString(JSON.stringify({
-				'mcpServers': {}
+				"mcpServers": {},
 			})));
 
 			const fileService = client.instantiationService.get(IFileService);
@@ -328,36 +334,36 @@ suite('McpSync', () => {
 			await testObject.sync(await client.getLatestRef(SyncResource.Mcp));
 
 			fileService2.writeFile(mcpResource2, VSBuffer.fromString(JSON.stringify({
-				'mcpServers': {
-					'server1': {
-						'command': 'node',
-						'args': ['./server1.js']
-					}
-				}
+				"mcpServers": {
+					"server1": {
+						"command": "node",
+						"args": ["./server1.js"],
+					},
+				},
 			})));
 			await client2.sync();
 
 			fileService.writeFile(mcpResource, VSBuffer.fromString(JSON.stringify({
-				'mcpServers': {
-					'server2': {
-						'command': 'node',
-						'args': ['./server2.js']
-					}
-				}
+				"mcpServers": {
+					"server2": {
+						"command": "node",
+						"args": ["./server2.js"],
+					},
+				},
 			})));
 			await testObject.sync(await client.getLatestRef(SyncResource.Mcp));
 
 			const content = JSON.stringify({
-				'mcpServers': {
-					'server1': {
-						'command': 'node',
-						'args': ['./server1.js']
+				"mcpServers": {
+					"server1": {
+						"command": "node",
+						"args": ["./server1.js"],
 					},
-					'server2': {
-						'command': 'node',
-						'args': ['./server2.js']
-					}
-				}
+					"server2": {
+						"command": "node",
+						"args": ["./server2.js"],
+					},
+				},
 			});
 			await testObject.accept(testObject.conflicts.conflicts[0].previewResource, content);
 			await testObject.apply(false);
@@ -370,14 +376,14 @@ suite('McpSync', () => {
 		});
 	});
 
-	test('when mcp file has moved forward locally and remotely - accept remote', async () => {
+	test("when mcp file has moved forward locally and remotely - accept remote", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const client2 = disposableStore.add(new UserDataSyncClient(server));
 			await client2.setUp(true);
 			const mcpResource2 = client2.instantiationService.get(IUserDataProfilesService).defaultProfile.mcpResource;
 			const fileService2 = client2.instantiationService.get(IFileService);
 			await fileService2.writeFile(mcpResource2, VSBuffer.fromString(JSON.stringify({
-				'mcpServers': {}
+				"mcpServers": {},
 			})));
 
 			const fileService = client.instantiationService.get(IFileService);
@@ -387,23 +393,23 @@ suite('McpSync', () => {
 			await testObject.sync(await client.getLatestRef(SyncResource.Mcp));
 
 			const content = JSON.stringify({
-				'mcpServers': {
-					'server1': {
-						'command': 'node',
-						'args': ['./server1.js']
-					}
-				}
+				"mcpServers": {
+					"server1": {
+						"command": "node",
+						"args": ["./server1.js"],
+					},
+				},
 			});
 			fileService2.writeFile(mcpResource2, VSBuffer.fromString(content));
 			await client2.sync();
 
 			fileService.writeFile(mcpResource, VSBuffer.fromString(JSON.stringify({
-				'mcpServers': {
-					'server2': {
-						'command': 'node',
-						'args': ['./server2.js']
-					}
-				}
+				"mcpServers": {
+					"server2": {
+						"command": "node",
+						"args": ["./server2.js"],
+					},
+				},
 			})));
 			await testObject.sync(await client.getLatestRef(SyncResource.Mcp));
 			assert.deepStrictEqual(testObject.status, SyncStatus.HasConflicts);
@@ -419,14 +425,14 @@ suite('McpSync', () => {
 		});
 	});
 
-	test('when mcp file has moved forward locally and remotely - accept local', async () => {
+	test("when mcp file has moved forward locally and remotely - accept local", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const client2 = disposableStore.add(new UserDataSyncClient(server));
 			await client2.setUp(true);
 			const mcpResource2 = client2.instantiationService.get(IUserDataProfilesService).defaultProfile.mcpResource;
 			const fileService2 = client2.instantiationService.get(IFileService);
 			await fileService2.writeFile(mcpResource2, VSBuffer.fromString(JSON.stringify({
-				'mcpServers': {}
+				"mcpServers": {},
 			})));
 
 			const fileService = client.instantiationService.get(IFileService);
@@ -436,22 +442,22 @@ suite('McpSync', () => {
 			await testObject.sync(await client.getLatestRef(SyncResource.Mcp));
 
 			fileService2.writeFile(mcpResource2, VSBuffer.fromString(JSON.stringify({
-				'mcpServers': {
-					'server1': {
-						'command': 'node',
-						'args': ['./server1.js']
-					}
-				}
+				"mcpServers": {
+					"server1": {
+						"command": "node",
+						"args": ["./server1.js"],
+					},
+				},
 			})));
 			await client2.sync();
 
 			const content = JSON.stringify({
-				'mcpServers': {
-					'server2': {
-						'command': 'node',
-						'args': ['./server2.js']
-					}
-				}
+				"mcpServers": {
+					"server2": {
+						"command": "node",
+						"args": ["./server2.js"],
+					},
+				},
 			});
 			fileService.writeFile(mcpResource, VSBuffer.fromString(content));
 			await testObject.sync(await client.getLatestRef(SyncResource.Mcp));
@@ -468,12 +474,12 @@ suite('McpSync', () => {
 		});
 	});
 
-	test('when mcp file was removed in one client', async () => {
+	test("when mcp file was removed in one client", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const fileService = client.instantiationService.get(IFileService);
 			const mcpResource = client.instantiationService.get(IUserDataProfilesService).defaultProfile.mcpResource;
 			await fileService.writeFile(mcpResource, VSBuffer.fromString(JSON.stringify({
-				'mcpServers': {}
+				"mcpServers": {},
 			})));
 			await testObject.sync(await client.getLatestRef(SyncResource.Mcp));
 
@@ -497,19 +503,19 @@ suite('McpSync', () => {
 		});
 	});
 
-	test('when mcp file is created after first sync', async () => {
+	test("when mcp file is created after first sync", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const fileService = client.instantiationService.get(IFileService);
 			const mcpResource = client.instantiationService.get(IUserDataProfilesService).defaultProfile.mcpResource;
 			await testObject.sync(await client.getLatestRef(SyncResource.Mcp));
 
 			const content = JSON.stringify({
-				'mcpServers': {
-					'test-server': {
-						'command': 'node',
-						'args': ['./server.js']
-					}
-				}
+				"mcpServers": {
+					"test-server": {
+						"command": "node",
+						"args": ["./server.js"],
+					},
+				},
 			});
 			await fileService.createFile(mcpResource, VSBuffer.fromString(content));
 
@@ -519,7 +525,7 @@ suite('McpSync', () => {
 			await testObject.sync(manifest);
 
 			assert.deepStrictEqual(server.requests, [
-				{ type: 'POST', url: `${server.url}/v1/resource/${testObject.resource}`, headers: { 'If-Match': lastSyncUserData?.ref } },
+				{ type: "POST", url: `${server.url}/v1/resource/${testObject.resource}`, headers: { "If-Match": lastSyncUserData?.ref } },
 			]);
 
 			lastSyncUserData = await testObject.getLastSyncUserData();
@@ -530,7 +536,7 @@ suite('McpSync', () => {
 		});
 	});
 
-	test('apply remote when mcp file does not exist', async () => {
+	test("apply remote when mcp file does not exist", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const fileService = client.instantiationService.get(IFileService);
 			const mcpResource = client.instantiationService.get(IUserDataProfilesService).defaultProfile.mcpResource;
@@ -548,18 +554,18 @@ suite('McpSync', () => {
 		});
 	});
 
-	test('sync profile mcp', async () => {
+	test("sync profile mcp", async () => {
 		await runWithFakedTimers<void>({}, async () => {
 			const client2 = disposableStore.add(new UserDataSyncClient(server));
 			await client2.setUp(true);
-			const profile = await client2.instantiationService.get(IUserDataProfilesService).createNamedProfile('profile1');
+			const profile = await client2.instantiationService.get(IUserDataProfilesService).createNamedProfile("profile1");
 			const expected = JSON.stringify({
-				'mcpServers': {
-					'test-server': {
-						'command': 'node',
-						'args': ['./server.js']
-					}
-				}
+				"mcpServers": {
+					"test-server": {
+						"command": "node",
+						"args": ["./server.js"],
+					},
+				},
 			});
 			await client2.instantiationService.get(IFileService).createFile(profile.mcpResource, VSBuffer.fromString(expected));
 			await client2.sync();

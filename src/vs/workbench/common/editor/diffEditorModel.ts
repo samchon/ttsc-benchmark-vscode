@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { EditorModel } from './editorModel.js';
-import { IResolvableEditorModel } from '../../../platform/editor/common/editor.js';
+import { EditorModel } from "./editorModel.js";
+import { IResolvableEditorModel } from "../../../platform/editor/common/editor.js";
 
 /**
  * The base editor model for the diff editor. It is made up of two editor models, the original version
@@ -27,9 +27,9 @@ export class DiffEditorModel extends EditorModel {
 
 	override async resolve(): Promise<void> {
 		await Promise.all([
-			this._originalModel?.resolve(),
-			this._modifiedModel?.resolve()
-		]);
+      this._originalModel?.resolve(),
+      this._modifiedModel?.resolve(),
+    ]);
 	}
 
 	override isResolved(): boolean {

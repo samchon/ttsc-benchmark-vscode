@@ -3,29 +3,46 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
-import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { IFilesConfiguration, ISortOrderConfiguration, SortOrder, LexicographicOptions } from '../common/files.js';
-import { ExplorerItem, ExplorerModel } from '../common/explorerModel.js';
-import { URI } from '../../../../base/common/uri.js';
-import { FileOperationEvent, FileOperation, IFileService, FileChangesEvent, FileChangeType, IResolveFileOptions } from '../../../../platform/files/common/files.js';
-import { dirname, basename } from '../../../../base/common/resources.js';
-import { IConfigurationService, IConfigurationChangeEvent } from '../../../../platform/configuration/common/configuration.js';
-import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
-import { IEditorService } from '../../../services/editor/common/editorService.js';
-import { IEditableData } from '../../../common/views.js';
-import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
-import { IBulkEditService, ResourceFileEdit } from '../../../../editor/browser/services/bulkEditService.js';
-import { UndoRedoSource } from '../../../../platform/undoRedo/common/undoRedo.js';
-import { IExplorerView, IExplorerService } from './files.js';
-import { IProgressService, ProgressLocation, IProgressCompositeOptions, IProgressOptions } from '../../../../platform/progress/common/progress.js';
-import { CancellationTokenSource } from '../../../../base/common/cancellation.js';
-import { RunOnceScheduler } from '../../../../base/common/async.js';
-import { IHostService } from '../../../services/host/browser/host.js';
-import { IExpression } from '../../../../base/common/glob.js';
-import { ResourceGlobMatcher } from '../../../common/resources.js';
-import { IFilesConfigurationService } from '../../../services/filesConfiguration/common/filesConfigurationService.js';
+import { Event } from "../../../../base/common/event.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import {
+  IFilesConfiguration,
+  ISortOrderConfiguration,
+  SortOrder,
+  LexicographicOptions,
+} from "../common/files.js";
+import { ExplorerItem, ExplorerModel } from "../common/explorerModel.js";
+import { URI } from "../../../../base/common/uri.js";
+import {
+  FileOperationEvent,
+  FileOperation,
+  IFileService,
+  FileChangesEvent,
+  FileChangeType,
+  IResolveFileOptions,
+} from "../../../../platform/files/common/files.js";
+import { dirname, basename } from "../../../../base/common/resources.js";
+import { IConfigurationService, IConfigurationChangeEvent } from "../../../../platform/configuration/common/configuration.js";
+import { IClipboardService } from "../../../../platform/clipboard/common/clipboardService.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IEditableData } from "../../../common/views.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IBulkEditService, ResourceFileEdit } from "../../../../editor/browser/services/bulkEditService.js";
+import { UndoRedoSource } from "../../../../platform/undoRedo/common/undoRedo.js";
+import { IExplorerView, IExplorerService } from "./files.js";
+import {
+  IProgressService,
+  ProgressLocation,
+  IProgressCompositeOptions,
+  IProgressOptions,
+} from "../../../../platform/progress/common/progress.js";
+import { CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { RunOnceScheduler } from "../../../../base/common/async.js";
+import { IHostService } from "../../../services/host/browser/host.js";
+import { IExpression } from "../../../../base/common/glob.js";
+import { ResourceGlobMatcher } from "../../../common/resources.js";
+import { IFilesConfigurationService } from "../../../services/filesConfiguration/common/filesConfigurationService.js";
 
 export const UNDO_REDO_SOURCE = new UndoRedoSource();
 
@@ -36,7 +53,7 @@ export class ExplorerService implements IExplorerService {
 
 	private readonly disposables = new DisposableStore();
 	private editable: { stat: ExplorerItem; data: IEditableData } | undefined;
-	private config: IFilesConfiguration['explorer'];
+	private config: IFilesConfiguration["explorer"];
 	private cutItems: ExplorerItem[] | undefined;
 	private view: IExplorerView | undefined;
 	private model: ExplorerModel;
@@ -54,13 +71,21 @@ export class ExplorerService implements IExplorerService {
 		@IBulkEditService private readonly bulkEditService: IBulkEditService,
 		@IProgressService private readonly progressService: IProgressService,
 		@IHostService hostService: IHostService,
-		@IFilesConfigurationService private readonly filesConfigurationService: IFilesConfigurationService
+		@IFilesConfigurationService private readonly filesConfigurationService: IFilesConfigurationService,
 	) {
-		this.config = this.configurationService.getValue('explorer');
+		this.config = this.configurationService.getValue("explorer");
 
-		this.model = new ExplorerModel(this.contextService, this.uriIdentityService, this.fileService, this.configurationService, this.filesConfigurationService);
+		this.model = new ExplorerModel(
+      this.contextService,
+      this.uriIdentityService,
+      this.fileService,
+      this.configurationService,
+      this.filesConfigurationService,
+    );
 		this.disposables.add(this.model);
-		this.disposables.add(this.fileService.onDidRunOperation(e => this.onDidRunOperation(e)));
+		this.disposables.add(
+      this.fileService.onDidRunOperation(e => this.onDidRunOperation(e)),
+    );
 
 		this.onFileChangesScheduler = this.disposables.add(new RunOnceScheduler(async () => {
 			const events = this.fileChangeEvents;
@@ -110,7 +135,11 @@ export class ExplorerService implements IExplorerService {
 				this.onFileChangesScheduler.schedule();
 			}
 		}));
-		this.disposables.add(this.configurationService.onDidChangeConfiguration(e => this.onConfigurationUpdated(e)));
+		this.disposables.add(
+      this.configurationService.onDidChangeConfiguration(
+        e => this.onConfigurationUpdated(e),
+      ),
+    );
 		this.disposables.add(Event.any<{ scheme: string }>(this.fileService.onDidChangeFileSystemProviderRegistrations, this.fileService.onDidChangeFileSystemProviderCapabilities)(async e => {
 			let affected = false;
 			this.model.roots.forEach(r => {
@@ -125,9 +154,11 @@ export class ExplorerService implements IExplorerService {
 				}
 			}
 		}));
-		this.disposables.add(this.model.onDidChangeRoots(() => {
-			this.view?.setTreeInput();
-		}));
+		this.disposables.add(
+      this.model.onDidChangeRoots(() => {
+        this.view?.setTreeInput();
+      }),
+    );
 
 		// Refresh explorer when window gets focus to compensate for missing file events #126817
 		this.disposables.add(hostService.onDidChangeFocus(hasFocus => {
@@ -136,9 +167,13 @@ export class ExplorerService implements IExplorerService {
 			}
 		}));
 		this.revealExcludeMatcher = new ResourceGlobMatcher(
-			(uri) => getRevealExcludes(configurationService.getValue<IFilesConfiguration>({ resource: uri })),
-			(event) => event.affectsConfiguration('explorer.autoRevealExclude'),
-			contextService, configurationService);
+      (uri) => getRevealExcludes(
+        configurationService.getValue<IFilesConfiguration>({ resource: uri }),
+      ),
+      (event) => event.affectsConfiguration("explorer.autoRevealExclude"),
+      contextService,
+      configurationService,
+    );
 		this.disposables.add(this.revealExcludeMatcher);
 	}
 
@@ -148,10 +183,10 @@ export class ExplorerService implements IExplorerService {
 
 	get sortOrderConfiguration(): ISortOrderConfiguration {
 		return {
-			sortOrder: this.config.sortOrder,
-			lexicographicOptions: this.config.sortOrderLexicographicOptions,
-			reverse: this.config.sortOrderReverse,
-		};
+      sortOrder: this.config.sortOrder,
+      lexicographicOptions: this.config.sortOrderLexicographicOptions,
+      reverse: this.config.sortOrderReverse,
+    };
 	}
 
 	registerView(contextProvider: IExplorerView): void {
@@ -163,7 +198,9 @@ export class ExplorerService implements IExplorerService {
 			return [];
 		}
 
-		const items = new Set<ExplorerItem>(this.view.getContext(respectMultiSelection));
+		const items = new Set<ExplorerItem>(
+      this.view.getContext(respectMultiSelection),
+    );
 		items.forEach(item => {
 			try {
 				if (respectMultiSelection && !ignoreNestedChildren && this.view?.isItemCollapsed(item) && item.nestedChildren) {
@@ -187,29 +224,32 @@ export class ExplorerService implements IExplorerService {
 		let progressOptions;
 		if (location === ProgressLocation.Window) {
 			progressOptions = {
-				location: location,
-				title: options.progressLabel,
-				cancellable: edit.length > 1,
-			} satisfies IProgressOptions;
+        location: location,
+        title: options.progressLabel,
+        cancellable: edit.length > 1,
+      } satisfies IProgressOptions;
 		} else {
 			progressOptions = {
-				location: location,
-				title: options.progressLabel,
-				cancellable: edit.length > 1,
-				delay: 500,
-			} satisfies IProgressCompositeOptions;
+        location: location,
+        title: options.progressLabel,
+        cancellable: edit.length > 1,
+        delay: 500,
+      } satisfies IProgressCompositeOptions;
 		}
 		const promise = this.progressService.withProgress(progressOptions, async progress => {
 			await this.bulkEditService.apply(edit, {
 				undoRedoSource: UNDO_REDO_SOURCE,
 				label: options.undoLabel,
-				code: 'undoredo.explorerOperation',
+				code: "undoredo.explorerOperation",
 				progress,
 				token: cancellationTokenSource.token,
-				confirmBeforeUndo: options.confirmBeforeUndo
+				confirmBeforeUndo: options.confirmBeforeUndo,
 			});
 		}, () => cancellationTokenSource.cancel());
-		await this.progressService.withProgress({ location: ProgressLocation.Explorer, delay: 500 }, () => promise);
+		await this.progressService.withProgress(
+      { location: ProgressLocation.Explorer, delay: 500 },
+      () => promise,
+    );
 		cancellationTokenSource.dispose();
 	}
 
@@ -261,7 +301,9 @@ export class ExplorerService implements IExplorerService {
 	}
 
 	isCut(item: ExplorerItem): boolean {
-		return !!this.cutItems && this.cutItems.some(i => this.uriIdentityService.extUri.isEqual(i.resource, item.resource));
+		return !!this.cutItems && this.cutItems.some(
+      i => this.uriIdentityService.extUri.isEqual(i.resource, item.resource),
+    );
 	}
 
 	getEditable(): { stat: ExplorerItem; data: IEditableData } | undefined {
@@ -282,7 +324,7 @@ export class ExplorerService implements IExplorerService {
 		}
 
 		// If file or parent matches exclude patterns, do not reveal unless reveal argument is 'force'
-		const ignoreRevealExcludes = reveal === 'force';
+		const ignoreRevealExcludes = reveal === "force";
 
 		const fileStat = this.findClosest(resource);
 		if (fileStat) {
@@ -294,7 +336,10 @@ export class ExplorerService implements IExplorerService {
 		}
 
 		// Stat needs to be resolved first and then revealed
-		const options: IResolveFileOptions = { resolveTo: [resource], resolveMetadata: this.config.sortOrder === SortOrder.Modified };
+		const options: IResolveFileOptions = {
+      resolveTo: [resource],
+      resolveMetadata: this.config.sortOrder === SortOrder.Modified,
+    };
 		const root = this.findClosestRoot(resource);
 		if (!root) {
 			return undefined;
@@ -304,7 +349,14 @@ export class ExplorerService implements IExplorerService {
 			const stat = await this.fileService.resolve(root.resource, options);
 
 			// Convert to model
-			const modelStat = ExplorerItem.create(this.fileService, this.configurationService, this.filesConfigurationService, stat, undefined, options.resolveTo);
+			const modelStat = ExplorerItem.create(
+        this.fileService,
+        this.configurationService,
+        this.filesConfigurationService,
+        stat,
+        undefined,
+        options.resolveTo,
+      );
 			// Update Input with disk Stat
 			ExplorerItem.mergeLocalWithDisk(modelStat, root);
 			const item = root.find(resource);
@@ -385,7 +437,12 @@ export class ExplorerService implements IExplorerService {
 			const oldParentResource = dirname(oldResource);
 			const newParentResource = dirname(newElement.resource);
 			const modelElements = this.model.findAll(oldResource);
-			const sameParentMove = modelElements.every(e => !e.nestedParent) && this.uriIdentityService.extUri.isEqual(oldParentResource, newParentResource);
+			const sameParentMove = modelElements.every(
+        e => !e.nestedParent,
+      ) && this.uriIdentityService.extUri.isEqual(
+        oldParentResource,
+        newParentResource,
+      );
 
 			// Handle Rename
 			if (sameParentMove) {
@@ -446,7 +503,10 @@ export class ExplorerService implements IExplorerService {
 		if (item === undefined || ignore) {
 			return true;
 		}
-		if (this.revealExcludeMatcher.matches(item.resource, name => !!(item.parent?.getChild(name)))) {
+		if (this.revealExcludeMatcher.matches(
+      item.resource,
+      name => !!(item.parent?.getChild(name)),
+    )) {
 			return false;
 		}
 		const root = item.root;
@@ -464,13 +524,13 @@ export class ExplorerService implements IExplorerService {
 	}
 
 	private async onConfigurationUpdated(event: IConfigurationChangeEvent): Promise<void> {
-		if (!event.affectsConfiguration('explorer')) {
+		if (!event.affectsConfiguration("explorer")) {
 			return;
 		}
 
 		let shouldRefresh = false;
 
-		if (event.affectsConfiguration('explorer.fileNesting')) {
+		if (event.affectsConfiguration("explorer.fileNesting")) {
 			shouldRefresh = true;
 		}
 

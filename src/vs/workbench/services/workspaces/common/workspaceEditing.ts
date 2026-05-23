@@ -3,13 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { IWorkspaceFolderCreationData } from '../../../../platform/workspaces/common/workspaces.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IAnyWorkspaceIdentifier, IWorkspaceIdentifier } from '../../../../platform/workspace/common/workspace.js';
+import { Event } from "../../../../base/common/event.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IWorkspaceFolderCreationData } from "../../../../platform/workspaces/common/workspaces.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IAnyWorkspaceIdentifier, IWorkspaceIdentifier } from "../../../../platform/workspace/common/workspace.js";
 
-export const IWorkspaceEditingService = createDecorator<IWorkspaceEditingService>('workspaceEditingService');
+export const IWorkspaceEditingService = createDecorator<IWorkspaceEditingService>(
+  "workspaceEditingService",
+);
 
 /**
  * An event that is fired after entering a workspace. Clients can join the entering

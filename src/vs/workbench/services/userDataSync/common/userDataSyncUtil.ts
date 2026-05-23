@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
-import { IUserDataSyncUtilService, getDefaultIgnoredSettings } from '../../../../platform/userDataSync/common/userDataSync.js';
-import { IStringDictionary } from '../../../../base/common/collections.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { FormattingOptions } from '../../../../base/common/jsonFormatter.js';
-import { URI } from '../../../../base/common/uri.js';
-import { ITextModelService } from '../../../../editor/common/services/resolverService.js';
-import { ITextResourcePropertiesService, ITextResourceConfigurationService } from '../../../../editor/common/services/textResourceConfiguration.js';
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { IUserDataSyncUtilService, getDefaultIgnoredSettings } from "../../../../platform/userDataSync/common/userDataSync.js";
+import { IStringDictionary } from "../../../../base/common/collections.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { FormattingOptions } from "../../../../base/common/jsonFormatter.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import { ITextResourcePropertiesService, ITextResourceConfigurationService } from "../../../../editor/common/services/textResourceConfiguration.js";
 
 class UserDataSyncUtilService implements IUserDataSyncUtilService {
 
@@ -30,14 +30,18 @@ class UserDataSyncUtilService implements IUserDataSyncUtilService {
 	async resolveUserBindings(userBindings: string[]): Promise<IStringDictionary<string>> {
 		const keys: IStringDictionary<string> = {};
 		for (const userbinding of userBindings) {
-			keys[userbinding] = this.keybindingsService.resolveUserBinding(userbinding).map(part => part.getUserSettingsLabel()).join(' ');
+			keys[userbinding] = this.keybindingsService.resolveUserBinding(userbinding).map(part => part.getUserSettingsLabel()).join(
+        " ",
+      );
 		}
 		return keys;
 	}
 
 	async resolveFormattingOptions(resource: URI): Promise<FormattingOptions> {
 		try {
-			const modelReference = await this.textModelService.createModelReference(resource);
+			const modelReference = await this.textModelService.createModelReference(
+        resource,
+      );
 			const { insertSpaces, tabSize } = modelReference.object.textEditorModel.getOptions();
 			const eol = modelReference.object.textEditorModel.getEOL();
 			modelReference.dispose();
@@ -45,12 +49,16 @@ class UserDataSyncUtilService implements IUserDataSyncUtilService {
 		} catch (e) {
 		}
 		return {
-			eol: this.textResourcePropertiesService.getEOL(resource),
-			insertSpaces: !!this.textResourceConfigurationService.getValue(resource, 'editor.insertSpaces'),
-			tabSize: this.textResourceConfigurationService.getValue(resource, 'editor.tabSize')
-		};
+      eol: this.textResourcePropertiesService.getEOL(resource),
+      insertSpaces: !!this.textResourceConfigurationService.getValue(resource, "editor.insertSpaces"),
+      tabSize: this.textResourceConfigurationService.getValue(resource, "editor.tabSize"),
+    };
 	}
 
 }
 
-registerSingleton(IUserDataSyncUtilService, UserDataSyncUtilService, InstantiationType.Delayed);
+registerSingleton(
+  IUserDataSyncUtilService,
+  UserDataSyncUtilService,
+  InstantiationType.Delayed,
+);

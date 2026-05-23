@@ -3,38 +3,49 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IMouseWheelEvent } from '../../../../base/browser/mouseEvent.js';
-import { CodeWindow } from '../../../../base/browser/window.js';
-import { equals } from '../../../../base/common/arrays.js';
-import { Event } from '../../../../base/common/event.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { IObservable } from '../../../../base/common/observable.js';
-import { isEqual } from '../../../../base/common/resources.js';
-import { URI } from '../../../../base/common/uri.js';
-import { generateUuid } from '../../../../base/common/uuid.js';
-import { IContextKeyService, RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
-import { ExtensionIdentifier } from '../../../../platform/extensions/common/extensions.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { IWebviewPortMapping } from '../../../../platform/webview/common/webviewPortMapping.js';
-import { Memento } from '../../../common/memento.js';
+import { IMouseWheelEvent } from "../../../../base/browser/mouseEvent.js";
+import { CodeWindow } from "../../../../base/browser/window.js";
+import { equals } from "../../../../base/common/arrays.js";
+import { Event } from "../../../../base/common/event.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { IObservable } from "../../../../base/common/observable.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { ExtensionIdentifier } from "../../../../platform/extensions/common/extensions.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IWebviewPortMapping } from "../../../../platform/webview/common/webviewPortMapping.js";
+import { Memento } from "../../../common/memento.js";
 
 /**
  * Set when the find widget in a webview in a webview is visible.
  */
-export const KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_VISIBLE = new RawContextKey<boolean>('webviewFindWidgetVisible', false);
+export const KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_VISIBLE = new RawContextKey<boolean>(
+  "webviewFindWidgetVisible",
+  false,
+);
 
 /**
  * Set when the find widget in a webview is focused.
  */
-export const KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_FOCUSED = new RawContextKey<boolean>('webviewFindWidgetFocused', false);
+export const KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_FOCUSED = new RawContextKey<boolean>(
+  "webviewFindWidgetFocused",
+  false,
+);
 
 /**
  * Set when the find widget in a webview is enabled in a webview
  */
-export const KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_ENABLED = new RawContextKey<boolean>('webviewFindWidgetEnabled', false);
+export const KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_ENABLED = new RawContextKey<boolean>(
+  "webviewFindWidgetEnabled",
+  false,
+);
 
-export const IWebviewService = createDecorator<IWebviewService>('webviewService');
+export const IWebviewService = createDecorator<IWebviewService>(
+  "webviewService",
+);
 
 export interface IWebviewService {
 	readonly _serviceBrand: undefined;
@@ -81,10 +92,10 @@ export interface WebviewInitInfo {
 }
 
 export const enum WebviewContentPurpose {
-	NotebookRenderer = 'notebookRenderer',
-	CustomEditor = 'customEditor',
-	WebviewView = 'webviewView',
-	ChatOutputItem = 'chatOutputItem',
+	NotebookRenderer = "notebookRenderer",
+	CustomEditor = "customEditor",
+	WebviewView = "webviewView",
+	ChatOutputItem = "chatOutputItem",
 }
 
 export type WebviewStyles = { readonly [key: string]: string | number };
@@ -150,7 +161,11 @@ export function areWebviewContentOptionsEqual(a: WebviewContentOptions, b: Webvi
 		&& a.allowScripts === b.allowScripts
 		&& a.allowForms === b.allowForms
 		&& equals(a.localResourceRoots, b.localResourceRoots, isEqual)
-		&& equals(a.portMapping, b.portMapping, (a, b) => a.extensionHostPort === b.extensionHostPort && a.webviewPort === b.webviewPort)
+		&& equals(
+      a.portMapping,
+      b.portMapping,
+      (a, b) => a.extensionHostPort === b.extensionHostPort && a.webviewPort === b.webviewPort,
+    )
 		&& areEnableCommandUrisEqual(a, b)
 	);
 }
@@ -354,14 +369,17 @@ export class WebviewOriginStore {
 		@IStorageService storageService: IStorageService,
 	) {
 		this._memento = new Memento(rootStorageKey, storageService);
-		this._state = this._memento.getMemento(StorageScope.APPLICATION, StorageTarget.MACHINE);
+		this._state = this._memento.getMemento(
+      StorageScope.APPLICATION,
+      StorageTarget.MACHINE,
+    );
 	}
 
 	public getOrigin(viewType: string, additionalKey: string | undefined): string {
 		const key = this._getKey(viewType, additionalKey);
 
 		const existing = this._state[key];
-		if (existing && typeof existing === 'string') {
+		if (existing && typeof existing === "string") {
 			return existing;
 		}
 

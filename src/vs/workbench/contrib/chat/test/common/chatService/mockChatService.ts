@@ -3,20 +3,38 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../../../base/common/cancellation.js';
-import { Emitter, Event } from '../../../../../../base/common/event.js';
-import { ResourceMap } from '../../../../../../base/common/map.js';
-import { ISettableObservable, observableValue } from '../../../../../../base/common/observable.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { ChatRequestQueueKind, ChatSendResult, IChatDetail, IChatModelReference, IChatProgress, IChatSendRequestOptions, IChatService, IChatSessionStartOptions, IChatUserActionEvent } from '../../../common/chatService/chatService.js';
-import { ChatAgentLocation } from '../../../common/constants.js';
-import { IChatModel, IChatRequestModel, IExportableChatData, ISerializableChatData } from '../../../common/model/chatModel.js';
-import type { IChatModelReferenceDebugSnapshot } from '../../../common/model/chatModelStore.js';
+import { CancellationToken } from "../../../../../../base/common/cancellation.js";
+import { Emitter, Event } from "../../../../../../base/common/event.js";
+import { ResourceMap } from "../../../../../../base/common/map.js";
+import { ISettableObservable, observableValue } from "../../../../../../base/common/observable.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import {
+  ChatRequestQueueKind,
+  ChatSendResult,
+  IChatDetail,
+  IChatModelReference,
+  IChatProgress,
+  IChatSendRequestOptions,
+  IChatService,
+  IChatSessionStartOptions,
+  IChatUserActionEvent,
+} from "../../../common/chatService/chatService.js";
+import { ChatAgentLocation } from "../../../common/constants.js";
+import {
+  IChatModel,
+  IChatRequestModel,
+  IExportableChatData,
+  ISerializableChatData,
+} from "../../../common/model/chatModel.js";
+import type { IChatModelReferenceDebugSnapshot } from "../../../common/model/chatModelStore.js";
 
 export class MockChatService implements IChatService {
-	private readonly _chatModels: ISettableObservable<Iterable<IChatModel>> = observableValue('chatModels', []);
+	private readonly _chatModels: ISettableObservable<Iterable<IChatModel>> = observableValue(
+    "chatModels",
+    [],
+  );
 	readonly chatModels = this._chatModels;
-	requestInProgressObs = observableValue('name', false);
+	requestInProgressObs = observableValue("name", false);
 	_serviceBrand: undefined;
 	editingSessions = [];
 	transferredSessionResource = undefined;
@@ -29,11 +47,11 @@ export class MockChatService implements IChatService {
 	private liveSessionItems: IChatDetail[] = [];
 	private historySessionItems: IChatDetail[] = [];
 
-	private readonly _onDidDisposeSession = new Emitter<{ sessionResources: URI[]; reason: 'cleared' }>();
+	private readonly _onDidDisposeSession = new Emitter<{ sessionResources: URI[]; reason: "cleared" }>();
 	readonly onDidDisposeSession = this._onDidDisposeSession.event;
 
 	fireDidDisposeSession(sessionResources: URI[]): void {
-		this._onDidDisposeSession.fire({ sessionResources, reason: 'cleared' });
+		this._onDidDisposeSession.fire({ sessionResources, reason: "cleared" });
 	}
 
 	setSaveModelsEnabled(enabled: boolean): void {
@@ -78,7 +96,7 @@ export class MockChatService implements IChatService {
 	}
 
 	startNewLocalSession(_location: ChatAgentLocation, _options?: IChatSessionStartOptions): IChatModelReference {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 
 	getSession(sessionResource: URI): IChatModel | undefined {
@@ -90,7 +108,7 @@ export class MockChatService implements IChatService {
 	}
 
 	acquireOrRestoreSession(_sessionResource: URI): Promise<IChatModelReference | undefined> {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 
 	getSessionTitle(_sessionResource: URI): string | undefined {
@@ -98,7 +116,7 @@ export class MockChatService implements IChatService {
 	}
 
 	loadSessionFromData(data: IExportableChatData | ISerializableChatData, _debugOwner?: string): IChatModelReference {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 
 	getChatModelReferenceDebugInfo(): IChatModelReferenceDebugSnapshot {
@@ -106,7 +124,7 @@ export class MockChatService implements IChatService {
 	}
 
 	acquireOrLoadSession(_resource: URI, _position: ChatAgentLocation, _token: CancellationToken, _debugOwner?: string): Promise<IChatModelReference | undefined> {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 
 	acquireExistingSession(_sessionResource: URI, _debugOwner?: string): IChatModelReference | undefined {
@@ -118,19 +136,19 @@ export class MockChatService implements IChatService {
 	appendProgress(_request: IChatRequestModel, _progress: IChatProgress): void { }
 
 	sendRequest(_sessionResource: URI, _message: string): Promise<ChatSendResult> {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 
 	resendRequest(_request: IChatRequestModel, _options?: IChatSendRequestOptions): Promise<void> {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 
 	adoptRequest(_sessionResource: URI, _request: IChatRequestModel): Promise<void> {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 
 	removeRequest(_sessionResource: URI, _requestId: string): Promise<void> {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 
 	async cancelCurrentRequestForSession(_sessionResource: URI, _source?: string): Promise<void> { }
@@ -170,7 +188,7 @@ export class MockChatService implements IChatService {
 	}
 
 	getChatStorageFolder(): URI {
-		return URI.file('/tmp');
+		return URI.file("/tmp");
 	}
 
 	logChatIndex(): void { }
@@ -192,6 +210,10 @@ export class MockChatService implements IChatService {
 	}
 
 	getMetadataForSession(sessionResource: URI): Promise<IChatDetail | undefined> {
-		return Promise.resolve(this.liveSessionItems.find(item => item.sessionResource.toString() === sessionResource.toString()));
+		return Promise.resolve(
+      this.liveSessionItems.find(
+        item => item.sessionResource.toString() === sessionResource.toString(),
+      ),
+    );
 	}
 }

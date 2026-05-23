@@ -3,21 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import { Iterable } from '../../../../base/common/iterator.js';
-import { Disposable, IDisposable } from '../../../../base/common/lifecycle.js';
-import { URI } from '../../../../base/common/uri.js';
-import { Position } from '../../../../editor/common/core/position.js';
-import { Location } from '../../../../editor/common/languages.js';
-import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
-import { MainThreadTestCollection } from './mainThreadTestCollection.js';
-import { MutableObservableValue } from './observableValue.js';
-import { TestExclusions } from './testExclusions.js';
-import { ITestProfileService } from './testProfileService.js';
-import { ITestResult, LiveTestResult } from './testResult.js';
-import { ITestResultService } from './testResultService.js';
-import { IMainThreadTestCollection, ITestFollowups, ITestService } from './testService.js';
-import { InternalTestItem } from './testTypes.js';
+import { Event } from "../../../../base/common/event.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { Disposable, IDisposable } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Position } from "../../../../editor/common/core/position.js";
+import { Location } from "../../../../editor/common/languages.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { MainThreadTestCollection } from "./mainThreadTestCollection.js";
+import { MutableObservableValue } from "./observableValue.js";
+import { TestExclusions } from "./testExclusions.js";
+import { ITestProfileService } from "./testProfileService.js";
+import { ITestResult, LiveTestResult } from "./testResult.js";
+import { ITestResultService } from "./testResultService.js";
+import { IMainThreadTestCollection, ITestFollowups, ITestService } from "./testService.js";
+import { InternalTestItem } from "./testTypes.js";
 
 class NullTestExclusions extends Disposable {
 	readonly onTestExclusionsChanged = Event.None;
@@ -36,13 +36,20 @@ export class NullTestService extends Disposable implements ITestService {
 	readonly onWillProcessDiff = Event.None;
 	readonly onDidProcessDiff = Event.None;
 
-	readonly excluded = this._register(new NullTestExclusions()) as unknown as TestExclusions;
+	readonly excluded = this._register(
+    new NullTestExclusions(),
+  ) as unknown as TestExclusions;
 	readonly collection: IMainThreadTestCollection;
-	readonly showInlineOutput = this._register(new MutableObservableValue<boolean>(false));
+	readonly showInlineOutput = this._register(
+    new MutableObservableValue<boolean>(false),
+  );
 
 	constructor(@IUriIdentityService uriIdentityService: IUriIdentityService) {
 		super();
-		this.collection = new MainThreadTestCollection(uriIdentityService, () => Promise.resolve());
+		this.collection = new MainThreadTestCollection(
+      uriIdentityService,
+      () => Promise.resolve(),
+    );
 	}
 
 	registerExtHost(): IDisposable { return Disposable.None; }
@@ -51,8 +58,12 @@ export class NullTestService extends Disposable implements ITestService {
 	async refreshTests(): Promise<void> { }
 	cancelRefreshTests(): void { }
 	async startContinuousRun(): Promise<void> { }
-	async runTests(): Promise<ITestResult> { throw new Error('Tests are not supported in this window.'); }
-	async runResolvedTests(): Promise<ITestResult> { throw new Error('Tests are not supported in this window.'); }
+	async runTests(): Promise<ITestResult> { throw new Error(
+    "Tests are not supported in this window.",
+  ); }
+	async runResolvedTests(): Promise<ITestResult> { throw new Error(
+    "Tests are not supported in this window.",
+  ); }
 	async provideTestFollowups(): Promise<ITestFollowups> {
 		return { followups: [], dispose() { } };
 	}
@@ -90,7 +101,9 @@ export class NullTestResultService extends Disposable implements ITestResultServ
 	readonly results: ReadonlyArray<ITestResult> = [];
 
 	clear(): void { }
-	createLiveResult(): LiveTestResult { throw new Error('Tests are not supported in this window.'); }
+	createLiveResult(): LiveTestResult { throw new Error(
+    "Tests are not supported in this window.",
+  ); }
 	push<T extends ITestResult>(result: T): T { return result; }
 	getResult(): ITestResult | undefined { return undefined; }
 	getStateById() { return undefined; }

@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as net from 'net';
+import * as net from "net";
 
 /**
  * Given a start point and a max number of retries, will find a port that
@@ -38,21 +38,21 @@ function doFindFreePort(startPort: number, giveUpAfter: number, stride: number, 
 	const client = new net.Socket();
 
 	// If we can connect to the port it means the port is already taken so we continue searching
-	client.once('connect', () => {
-		dispose(client);
+	client.once("connect", () => {
+    dispose(client);
 
-		return doFindFreePort(startPort + stride, giveUpAfter - 1, stride, clb);
-	});
+    return doFindFreePort(startPort + stride, giveUpAfter - 1, stride, clb);
+  });
 
-	client.once('data', () => {
+	client.once("data", () => {
 		// this listener is required since node.js 8.x
 	});
 
-	client.once('error', (err: Error & { code?: string }) => {
+	client.once("error", (err: Error & { code?: string }) => {
 		dispose(client);
 
 		// If we receive any non ECONNREFUSED error, it means the port is used but we cannot connect
-		if (err.code !== 'ECONNREFUSED') {
+		if (err.code !== "ECONNREFUSED") {
 			return doFindFreePort(startPort + stride, giveUpAfter - 1, stride, clb);
 		}
 
@@ -60,7 +60,7 @@ function doFindFreePort(startPort: number, giveUpAfter: number, stride: number, 
 		return clb(startPort);
 	});
 
-	client.connect(startPort, '127.0.0.1');
+	client.connect(startPort, "127.0.0.1");
 }
 
 // Reference: https://chromium.googlesource.com/chromium/src.git/+/refs/heads/main/net/base/port_util.cc#56
@@ -144,7 +144,7 @@ export const BROWSER_RESTRICTED_PORTS: Record<number, boolean> = {
 	6668: true,   // Alternate IRC [Apple addition]
 	6669: true,   // Alternate IRC [Apple addition]
 	6697: true,   // IRC + TLS
-	10080: true   // Amanda
+	10080: true,   // Amanda
 };
 
 export function isPortFree(port: number, timeout: number): Promise<boolean> {
@@ -158,7 +158,7 @@ interface ServerError {
 /**
  * Uses listen instead of connect. Is faster, but if there is another listener on 0.0.0.0 then this will take 127.0.0.1 from that listener.
  */
-export function findFreePortFaster(startPort: number, giveUpAfter: number, timeout: number, hostname: string = '127.0.0.1'): Promise<number> {
+export function findFreePortFaster(startPort: number, giveUpAfter: number, timeout: number, hostname: string = "127.0.0.1"): Promise<number> {
 	let resolved: boolean = false;
 	let timeoutHandle: Timeout | undefined = undefined;
 	let countTried: number = 1;
@@ -179,11 +179,11 @@ export function findFreePortFaster(startPort: number, giveUpAfter: number, timeo
 			doResolve(0, resolve);
 		}, timeout);
 
-		server.on('listening', () => {
+		server.on("listening", () => {
 			doResolve(startPort, resolve);
 		});
-		server.on('error', (err: ServerError) => {
-			if (err && (err.code === 'EADDRINUSE' || err.code === 'EACCES') && (countTried < giveUpAfter)) {
+		server.on("error", (err: ServerError) => {
+			if (err && (err.code === "EADDRINUSE" || err.code === "EACCES") && (countTried < giveUpAfter)) {
 				startPort++;
 				countTried++;
 				server.listen(startPort, hostname);
@@ -191,7 +191,7 @@ export function findFreePortFaster(startPort: number, giveUpAfter: number, timeo
 				doResolve(0, resolve);
 			}
 		});
-		server.on('close', () => {
+		server.on("close", () => {
 			doResolve(0, resolve);
 		});
 		server.listen(startPort, hostname);
@@ -200,12 +200,14 @@ export function findFreePortFaster(startPort: number, giveUpAfter: number, timeo
 
 function dispose(socket: net.Socket): void {
 	try {
-		socket.removeAllListeners('connect');
-		socket.removeAllListeners('error');
+		socket.removeAllListeners("connect");
+		socket.removeAllListeners("error");
 		socket.end();
 		socket.destroy();
 		socket.unref();
 	} catch (error) {
-		console.error(error); // otherwise this error would get lost in the callback chain
+		console.error(
+      error,
+    ); // otherwise this error would get lost in the callback chain
 	}
 }

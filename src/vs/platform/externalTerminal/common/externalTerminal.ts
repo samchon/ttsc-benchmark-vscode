@@ -3,10 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import { ITerminalEnvironment } from '../../terminal/common/terminal.js';
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { ITerminalEnvironment } from "../../terminal/common/terminal.js";
 
-export const IExternalTerminalService = createDecorator<IExternalTerminalService>('externalTerminal');
+export const IExternalTerminalService = createDecorator<IExternalTerminalService>(
+  "externalTerminal",
+);
 
 export interface IExternalTerminalSettings {
 	linuxExec?: string;
@@ -29,9 +31,9 @@ export interface IExternalTerminalService {
 
 export interface IExternalTerminalConfiguration {
 	terminal: {
-		explorerKind: 'integrated' | 'external' | 'both';
+		explorerKind: "integrated" | "external" | "both";
 		external: IExternalTerminalSettings;
 	};
 }
 
-export const DEFAULT_TERMINAL_OSX = 'Terminal.app';
+export const DEFAULT_TERMINAL_OSX = "Terminal.app";

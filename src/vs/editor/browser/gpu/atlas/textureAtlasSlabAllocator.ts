@@ -3,12 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { getActiveWindow } from '../../../../base/browser/dom.js';
-import { BugIndicatingError } from '../../../../base/common/errors.js';
-import { NKeyMap } from '../../../../base/common/map.js';
-import { ensureNonNullable } from '../gpuUtils.js';
-import type { IRasterizedGlyph } from '../raster/raster.js';
-import { UsagePreviewColors, type ITextureAtlasAllocator, type ITextureAtlasPageGlyph } from './atlas.js';
+import { getActiveWindow } from "../../../../base/browser/dom.js";
+import { BugIndicatingError } from "../../../../base/common/errors.js";
+import { NKeyMap } from "../../../../base/common/map.js";
+import { ensureNonNullable } from "../gpuUtils.js";
+import type { IRasterizedGlyph } from "../raster/raster.js";
+import {
+  UsagePreviewColors,
+  type ITextureAtlasAllocator,
+  type ITextureAtlasPageGlyph,
+} from "./atlas.js";
 
 export interface TextureAtlasSlabAllocatorOptions {
 	slabW?: number;
@@ -48,20 +52,19 @@ export class TextureAtlasSlabAllocator implements ITextureAtlasAllocator {
 	constructor(
 		private readonly _canvas: OffscreenCanvas,
 		private readonly _textureIndex: number,
-		options?: TextureAtlasSlabAllocatorOptions
+		options?: TextureAtlasSlabAllocatorOptions,
 	) {
-		this._ctx = ensureNonNullable(this._canvas.getContext('2d', {
-			willReadFrequently: true
-		}));
+		this._ctx = ensureNonNullable(
+      this._canvas.getContext("2d", {
+        willReadFrequently: true,
+      }),
+    );
 
 		this._slabW = Math.min(
-			options?.slabW ?? (64 << Math.max(Math.floor(getActiveWindow().devicePixelRatio) - 1, 0)),
-			this._canvas.width
-		);
-		this._slabH = Math.min(
-			options?.slabH ?? this._slabW,
-			this._canvas.height
-		);
+      options?.slabW ?? (64 << Math.max(Math.floor(getActiveWindow().devicePixelRatio) - 1, 0)),
+      this._canvas.width,
+    );
+		this._slabH = Math.min(options?.slabH ?? this._slabW, this._canvas.height);
 		this._slabsPerRow = Math.floor(this._canvas.width / this._slabW);
 		this._slabsPerColumn = Math.floor(this._canvas.height / this._slabH);
 	}
@@ -73,7 +76,7 @@ export class TextureAtlasSlabAllocator implements ITextureAtlasAllocator {
 
 		// The glyph does not fit into the atlas page, glyphs should never be this large in practice
 		if (glyphWidth > this._canvas.width || glyphHeight > this._canvas.height) {
-			throw new BugIndicatingError('Glyph is too large for the atlas page');
+			throw new BugIndicatingError("Glyph is too large for the atlas page");
 		}
 
 		// The glyph does not fit into a slab
@@ -121,7 +124,10 @@ export class TextureAtlasSlabAllocator implements ITextureAtlasAllocator {
 		};
 
 		// Get any existing slab
-		let slab = this._activeSlabsByDims.get(desiredSlabSize.w, desiredSlabSize.h);
+		let slab = this._activeSlabsByDims.get(
+      desiredSlabSize.w,
+      desiredSlabSize.h,
+    );
 
 		// Check if the slab is full
 		if (slab) {
@@ -149,11 +155,11 @@ export class TextureAtlasSlabAllocator implements ITextureAtlasAllocator {
 							dy = r.y;
 							if (glyphWidth < r.w) {
 								this._unusedRects.push({
-									x: r.x + glyphWidth,
-									y: r.y,
-									w: r.w - glyphWidth,
-									h: glyphHeight
-								});
+                  x: r.x + glyphWidth,
+                  y: r.y,
+                  w: r.w - glyphWidth,
+                  h: glyphHeight,
+                });
 							}
 							r.y += glyphHeight;
 							r.h -= glyphHeight;
@@ -180,11 +186,11 @@ export class TextureAtlasSlabAllocator implements ITextureAtlasAllocator {
 							dy = r.y;
 							if (glyphHeight < r.h) {
 								this._unusedRects.push({
-									x: r.x,
-									y: r.y + glyphHeight,
-									w: glyphWidth,
-									h: r.h - glyphHeight
-								});
+                  x: r.x,
+                  y: r.y + glyphHeight,
+                  w: glyphWidth,
+                  h: r.h - glyphHeight,
+                });
 							}
 							r.x += glyphWidth;
 							r.w -= glyphWidth;
@@ -210,12 +216,12 @@ export class TextureAtlasSlabAllocator implements ITextureAtlasAllocator {
 				}
 
 				slab = {
-					x: Math.floor(this._slabs.length % this._slabsPerRow) * this._slabW,
-					y: Math.floor(this._slabs.length / this._slabsPerRow) * this._slabH,
-					entryW: desiredSlabSize.w,
-					entryH: desiredSlabSize.h,
-					count: 0
-				};
+          x: Math.floor(this._slabs.length % this._slabsPerRow) * this._slabW,
+          y: Math.floor(this._slabs.length / this._slabsPerRow) * this._slabH,
+          entryW: desiredSlabSize.w,
+          entryH: desiredSlabSize.h,
+          count: 0,
+        };
 				// Track unused regions to use for small glyphs
 				// +-------------+----+
 				// |             |    |
@@ -228,19 +234,19 @@ export class TextureAtlasSlabAllocator implements ITextureAtlasAllocator {
 				const unusedH = this._slabH % slab.entryH;
 				if (unusedW) {
 					addEntryToMapArray(this._openRegionsByWidth, unusedW, {
-						x: slab.x + this._slabW - unusedW,
-						w: unusedW,
-						y: slab.y,
-						h: this._slabH - (unusedH ?? 0)
-					});
+            x: slab.x + this._slabW - unusedW,
+            w: unusedW,
+            y: slab.y,
+            h: this._slabH - (unusedH ?? 0),
+          });
 				}
 				if (unusedH) {
 					addEntryToMapArray(this._openRegionsByHeight, unusedH, {
-						x: slab.x,
-						w: this._slabW,
-						y: slab.y + this._slabH - unusedH,
-						h: unusedH
-					});
+            x: slab.x,
+            w: this._slabW,
+            y: slab.y + this._slabH - unusedH,
+            h: unusedH,
+          });
 				}
 				this._slabs.push(slab);
 				this._activeSlabsByDims.set(slab, desiredSlabSize.w, desiredSlabSize.h);
@@ -266,22 +272,22 @@ export class TextureAtlasSlabAllocator implements ITextureAtlasAllocator {
 			dx,
 			dy,
 			glyphWidth,
-			glyphHeight
+			glyphHeight,
 		);
 
 		// Create glyph object
 		const glyph: ITextureAtlasPageGlyph = {
-			pageIndex: this._textureIndex,
-			glyphIndex: this._nextIndex++,
-			x: dx,
-			y: dy,
-			w: glyphWidth,
-			h: glyphHeight,
-			originOffsetX: rasterizedGlyph.originOffset.x,
-			originOffsetY: rasterizedGlyph.originOffset.y,
-			fontBoundingBoxAscent: rasterizedGlyph.fontBoundingBoxAscent,
-			fontBoundingBoxDescent: rasterizedGlyph.fontBoundingBoxDescent,
-		};
+      pageIndex: this._textureIndex,
+      glyphIndex: this._nextIndex++,
+      x: dx,
+      y: dy,
+      w: glyphWidth,
+      h: glyphHeight,
+      originOffsetX: rasterizedGlyph.originOffset.x,
+      originOffsetY: rasterizedGlyph.originOffset.y,
+      fontBoundingBoxAscent: rasterizedGlyph.fontBoundingBoxAscent,
+      fontBoundingBoxDescent: rasterizedGlyph.fontBoundingBoxDescent,
+    };
 
 		// Set the glyph
 		this._allocatedGlyphs.add(glyph);
@@ -293,7 +299,7 @@ export class TextureAtlasSlabAllocator implements ITextureAtlasAllocator {
 		const w = this._canvas.width;
 		const h = this._canvas.height;
 		const canvas = new OffscreenCanvas(w, h);
-		const ctx = ensureNonNullable(canvas.getContext('2d'));
+		const ctx = ensureNonNullable(canvas.getContext("2d"));
 
 		ctx.fillStyle = UsagePreviewColors.Unused;
 		ctx.fillRect(0, 0, w, h);
@@ -334,7 +340,9 @@ export class TextureAtlasSlabAllocator implements ITextureAtlasAllocator {
 		}
 
 		// Draw unused space on side
-		const unusedRegions = Array.from(this._openRegionsByWidth.values()).flat().concat(Array.from(this._openRegionsByHeight.values()).flat());
+		const unusedRegions = Array.from(this._openRegionsByWidth.values()).flat().concat(
+      Array.from(this._openRegionsByHeight.values()).flat(),
+    );
 		for (const r of unusedRegions) {
 			ctx.fillStyle = UsagePreviewColors.Restricted;
 			ctx.fillRect(r.x, r.y, r.w, r.h);
@@ -387,7 +395,9 @@ export class TextureAtlasSlabAllocator implements ITextureAtlasAllocator {
 		}
 
 		// Draw unused space on side
-		const unusedRegions = Array.from(this._openRegionsByWidth.values()).flat().concat(Array.from(this._openRegionsByHeight.values()).flat());
+		const unusedRegions = Array.from(this._openRegionsByWidth.values()).flat().concat(
+      Array.from(this._openRegionsByHeight.values()).flat(),
+    );
 		for (const r of unusedRegions) {
 			restrictedPixels += r.w * r.h;
 		}
@@ -404,9 +414,9 @@ export class TextureAtlasSlabAllocator implements ITextureAtlasAllocator {
 			`      Used: ${usedPixels}px (${((usedPixels / totalPixels) * 100).toFixed(2)}%)`,
 			`    Wasted: ${wastedPixels}px (${((wastedPixels / totalPixels) * 100).toFixed(2)}%)`,
 			`Restricted: ${restrictedPixels}px (${((restrictedPixels / totalPixels) * 100).toFixed(2)}%) (hard to allocate)`,
-			`Efficiency: ${efficiency === 1 ? '100' : (efficiency * 100).toFixed(2)}%`,
-			`     Slabs: ${this._slabs.length} of ${Math.floor(this._canvas.width / slabW) * Math.floor(this._canvas.height / slabH)}`
-		].join('\n');
+			`Efficiency: ${efficiency === 1 ? "100" : (efficiency * 100).toFixed(2)}%`,
+			`     Slabs: ${this._slabs.length} of ${Math.floor(this._canvas.width / slabW) * Math.floor(this._canvas.height / slabH)}`,
+		].join("\n");
 	}
 }
 

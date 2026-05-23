@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { MinimapCharRenderer } from './minimapCharRenderer.js';
-import { allCharCodes, Constants } from './minimapCharSheet.js';
-import { prebakedMiniMaps } from './minimapPreBaked.js';
-import { toUint8 } from '../../../../base/common/uint.js';
+import { MinimapCharRenderer } from "./minimapCharRenderer.js";
+import { allCharCodes, Constants } from "./minimapCharSheet.js";
+import { prebakedMiniMaps } from "./minimapPreBaked.js";
+import { toUint8 } from "../../../../base/common/uint.js";
 
 /**
  * Creates character renderers. It takes a 'scale' that determines how large
@@ -34,9 +34,9 @@ export class MinimapCharRendererFactory {
 			factory = new MinimapCharRenderer(prebakedMiniMaps[scale](), scale);
 		} else {
 			factory = MinimapCharRendererFactory.createFromSampleData(
-				MinimapCharRendererFactory.createSampleData(fontFamily).data,
-				scale
-			);
+        MinimapCharRendererFactory.createSampleData(fontFamily).data,
+        scale,
+      );
 		}
 
 		this.lastFontFamily = fontFamily;
@@ -48,25 +48,34 @@ export class MinimapCharRendererFactory {
 	 * Creates the font sample data, writing to a canvas.
 	 */
 	public static createSampleData(fontFamily: string): ImageData {
-		const canvas = document.createElement('canvas');
-		const ctx = canvas.getContext('2d')!;
+		const canvas = document.createElement("canvas");
+		const ctx = canvas.getContext("2d")!;
 
 		canvas.style.height = `${Constants.SAMPLED_CHAR_HEIGHT}px`;
 		canvas.height = Constants.SAMPLED_CHAR_HEIGHT;
 		canvas.width = Constants.CHAR_COUNT * Constants.SAMPLED_CHAR_WIDTH;
-		canvas.style.width = Constants.CHAR_COUNT * Constants.SAMPLED_CHAR_WIDTH + 'px';
+		canvas.style.width = Constants.CHAR_COUNT * Constants.SAMPLED_CHAR_WIDTH + "px";
 
-		ctx.fillStyle = '#ffffff';
+		ctx.fillStyle = "#ffffff";
 		ctx.font = `bold ${Constants.SAMPLED_CHAR_HEIGHT}px ${fontFamily}`;
-		ctx.textBaseline = 'middle';
+		ctx.textBaseline = "middle";
 
 		let x = 0;
 		for (const code of allCharCodes) {
-			ctx.fillText(String.fromCharCode(code), x, Constants.SAMPLED_CHAR_HEIGHT / 2);
+			ctx.fillText(
+        String.fromCharCode(code),
+        x,
+        Constants.SAMPLED_CHAR_HEIGHT / 2,
+      );
 			x += Constants.SAMPLED_CHAR_WIDTH;
 		}
 
-		return ctx.getImageData(0, 0, Constants.CHAR_COUNT * Constants.SAMPLED_CHAR_WIDTH, Constants.SAMPLED_CHAR_HEIGHT);
+		return ctx.getImageData(
+      0,
+      0,
+      Constants.CHAR_COUNT * Constants.SAMPLED_CHAR_WIDTH,
+      Constants.SAMPLED_CHAR_HEIGHT,
+    );
 	}
 
 	/**
@@ -76,7 +85,7 @@ export class MinimapCharRendererFactory {
 		const expectedLength =
 			Constants.SAMPLED_CHAR_HEIGHT * Constants.SAMPLED_CHAR_WIDTH * Constants.RGBA_CHANNELS_CNT * Constants.CHAR_COUNT;
 		if (source.length !== expectedLength) {
-			throw new Error('Unexpected source in MinimapCharRenderer');
+			throw new Error("Unexpected source in MinimapCharRenderer");
 		}
 
 		const charData = MinimapCharRendererFactory._downsample(source, scale);
@@ -88,7 +97,7 @@ export class MinimapCharRendererFactory {
 		sourceOffset: number,
 		dest: Uint8ClampedArray,
 		destOffset: number,
-		scale: number
+		scale: number,
 	): number {
 		const width = Constants.BASE_CHAR_WIDTH * scale;
 		const height = Constants.BASE_CHAR_HEIGHT * scale;
@@ -121,11 +130,15 @@ export class MinimapCharRendererFactory {
 				let value = 0;
 				let samples = 0;
 				for (let sy = sourceY1; sy < sourceY2; sy++) {
-					const sourceRow = sourceOffset + Math.floor(sy) * Constants.RGBA_SAMPLED_ROW_WIDTH;
+					const sourceRow = sourceOffset + Math.floor(
+            sy,
+          ) * Constants.RGBA_SAMPLED_ROW_WIDTH;
 					const yBalance = 1 - (sy - Math.floor(sy));
 					for (let sx = sourceX1; sx < sourceX2; sx++) {
 						const xBalance = 1 - (sx - Math.floor(sx));
-						const sourceIndex = sourceRow + Math.floor(sx) * Constants.RGBA_CHANNELS_CNT;
+						const sourceIndex = sourceRow + Math.floor(
+              sx,
+            ) * Constants.RGBA_CHANNELS_CNT;
 
 						const weight = xBalance * yBalance;
 						samples += weight;
@@ -151,7 +164,10 @@ export class MinimapCharRendererFactory {
 		let sourceOffset = 0;
 		let brightest = 0;
 		for (let charIndex = 0; charIndex < Constants.CHAR_COUNT; charIndex++) {
-			brightest = Math.max(brightest, this._downsampleChar(data, sourceOffset, result, resultOffset, scale));
+			brightest = Math.max(
+        brightest,
+        this._downsampleChar(data, sourceOffset, result, resultOffset, scale),
+      );
 			resultOffset += pixelsPerCharacter;
 			sourceOffset += Constants.SAMPLED_CHAR_WIDTH * Constants.RGBA_CHANNELS_CNT;
 		}

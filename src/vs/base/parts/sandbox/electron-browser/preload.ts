@@ -7,14 +7,14 @@
 
 (function () {
 
-	const { ipcRenderer, webFrame, contextBridge, webUtils } = require('electron');
+	const { ipcRenderer, webFrame, contextBridge, webUtils } = require("electron");
 
-	type ISandboxConfiguration = import('../common/sandboxTypes.js').ISandboxConfiguration;
+	type ISandboxConfiguration = import("../common/sandboxTypes.js").ISandboxConfiguration;
 
 	//#region Utilities
 
 	function validateIPC(channel: string): true | never {
-		if (!channel?.startsWith('vscode:')) {
+		if (!channel?.startsWith("vscode:")) {
 			throw new Error(`Unsupported event IPC channel '${channel}'`);
 		}
 
@@ -24,7 +24,7 @@
 	function parseArgv(key: string): string | undefined {
 		for (const arg of process.argv) {
 			if (arg.indexOf(`--${key}=`) === 0) {
-				return arg.split('=')[1];
+				return arg.split("=")[1];
 			}
 		}
 
@@ -38,9 +38,9 @@
 	let configuration: ISandboxConfiguration | undefined = undefined;
 
 	const resolveConfiguration: Promise<ISandboxConfiguration> = (async () => {
-		const windowConfigIpcChannel = parseArgv('vscode-window-config');
+		const windowConfigIpcChannel = parseArgv("vscode-window-config");
 		if (!windowConfigIpcChannel) {
-			throw new Error('Preload: did not find expected vscode-window-config in renderer process arguments list.');
+			throw new Error("Preload: did not find expected vscode-window-config in renderer process arguments list.");
 		}
 
 		try {
@@ -82,7 +82,7 @@
 		// `shellEnv` from the main side
 		const [userEnv, shellEnv] = await Promise.all([
 			(async () => (await resolveConfiguration).userEnv)(),
-			ipcRenderer.invoke('vscode:fetchShellEnv')
+			ipcRenderer.invoke("vscode:fetchShellEnv"),
 		]);
 
 		return { ...process.env, ...shellEnv, ...userEnv };
@@ -143,7 +143,7 @@
 				ipcRenderer.removeListener(channel, listener);
 
 				return this;
-			}
+			},
 		},
 
 		ipcMessagePort: {
@@ -157,14 +157,14 @@
 						// isolation is enabled
 						if (nonce === responseNonce) {
 							ipcRenderer.off(responseChannel, responseListener);
-							window.postMessage(nonce, '*', e.ports);
+							window.postMessage(nonce, "*", e.ports);
 						}
 					};
 
 					// handle reply from main
 					ipcRenderer.on(responseChannel, responseListener);
 				}
-			}
+			},
 		},
 
 		/**
@@ -173,10 +173,10 @@
 		webFrame: {
 
 			setZoomLevel(level: number): void {
-				if (typeof level === 'number') {
+				if (typeof level === "number") {
 					webFrame.setZoomLevel(level);
 				}
-			}
+			},
 		},
 
 		/**
@@ -186,7 +186,7 @@
 
 			getPathForFile(file: File): string {
 				return webUtils.getPathForFile(file);
-			}
+			},
 		},
 
 		/**
@@ -200,11 +200,11 @@
 			get arch() { return process.arch; },
 			get env() { return { ...process.env }; },
 			get versions() { return process.versions; },
-			get type() { return 'renderer'; },
+			get type() { return "renderer"; },
 			get execPath() { return process.execPath; },
 
 			cwd(): string {
-				return process.env['VSCODE_CWD'] || process.execPath.substr(0, process.execPath.lastIndexOf(process.platform === 'win32' ? '\\' : '/'));
+				return process.env["VSCODE_CWD"] || process.execPath.substr(0, process.execPath.lastIndexOf(process.platform === "win32" ? "\\" : "/"));
 			},
 
 			shellEnv(): Promise<typeof process.env> {
@@ -217,7 +217,7 @@
 
 			on(type: string, callback: (...args: unknown[]) => void): void {
 				process.on(type, callback);
-			}
+			},
 		},
 
 		/**
@@ -242,13 +242,13 @@
 			 */
 			async resolveConfiguration(): Promise<ISandboxConfiguration> {
 				return resolveConfiguration;
-			}
-		}
+			},
+		},
 	};
 
 	try {
 		// Use `contextBridge` APIs to expose globals to VSCode
-		contextBridge.exposeInMainWorld('vscode', globals);
+		contextBridge.exposeInMainWorld("vscode", globals);
 	} catch (error) {
 		console.error(error);
 	}

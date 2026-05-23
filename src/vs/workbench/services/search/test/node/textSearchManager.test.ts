@@ -3,35 +3,44 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { CancellationToken } from '../../../../../base/common/cancellation.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { Progress } from '../../../../../platform/progress/common/progress.js';
-import { ITextQuery, QueryType } from '../../common/search.js';
-import { ProviderResult, Range, TextSearchComplete2, TextSearchMatch2, TextSearchProviderOptions, TextSearchProvider2, TextSearchQuery2, TextSearchResult2 } from '../../common/searchExtTypes.js';
-import { NativeTextSearchManager } from '../../node/textSearchManager.js';
+import assert from "assert";
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { Progress } from "../../../../../platform/progress/common/progress.js";
+import { ITextQuery, QueryType } from "../../common/search.js";
+import {
+  ProviderResult,
+  Range,
+  TextSearchComplete2,
+  TextSearchMatch2,
+  TextSearchProviderOptions,
+  TextSearchProvider2,
+  TextSearchQuery2,
+  TextSearchResult2,
+} from "../../common/searchExtTypes.js";
+import { NativeTextSearchManager } from "../../node/textSearchManager.js";
 
-suite('NativeTextSearchManager', () => {
-	test('fixes encoding', async () => {
+suite("NativeTextSearchManager", () => {
+	test("fixes encoding", async () => {
 		let correctEncoding = false;
 		const provider: TextSearchProvider2 = {
 			provideTextSearchResults(query: TextSearchQuery2, options: TextSearchProviderOptions, progress: Progress<TextSearchResult2>, token: CancellationToken): ProviderResult<TextSearchComplete2> {
-				correctEncoding = options.folderOptions[0].encoding === 'windows-1252';
+				correctEncoding = options.folderOptions[0].encoding === "windows-1252";
 
 				return null;
-			}
+			},
 		};
 
 		const query: ITextQuery = {
 			type: QueryType.Text,
 			contentPattern: {
-				pattern: 'a'
+				pattern: "a",
 			},
 			folderQueries: [{
-				folder: URI.file('/some/folder'),
-				fileEncoding: 'windows1252'
-			}]
+				folder: URI.file("/some/folder"),
+				fileEncoding: "windows1252",
+			}],
 		};
 
 		const m = new NativeTextSearchManager(query, provider);
@@ -40,7 +49,7 @@ suite('NativeTextSearchManager', () => {
 		assert.ok(correctEncoding);
 	});
 
-	test('handles result from unmatched folder gracefully via optional chaining', async () => {
+	test("handles result from unmatched folder gracefully via optional chaining", async () => {
 		let receivedResults = 0;
 		const provider: TextSearchProvider2 = {
 			provideTextSearchResults(query: TextSearchQuery2, options: TextSearchProviderOptions, progress: Progress<TextSearchResult2>, token: CancellationToken): ProviderResult<TextSearchComplete2> {
@@ -48,32 +57,32 @@ suite('NativeTextSearchManager', () => {
 
 				// Report a result from a folder that IS in the query - should be received
 				progress.report(new TextSearchMatch2(
-					URI.file('/folder1/test.txt'),
+					URI.file("/folder1/test.txt"),
 					[{ sourceRange: range, previewRange: range }],
-					'test match'
+					"test match",
 				));
 
 				// Report a result from a folder that is NOT in the query
 				// This exercises: folderQuery?.folder?.scheme where folderQuery is undefined
 				// The optional chaining should handle this gracefully without throwing
 				progress.report(new TextSearchMatch2(
-					URI.file('/unknown/folder/file.txt'),
+					URI.file("/unknown/folder/file.txt"),
 					[{ sourceRange: range, previewRange: range }],
-					'unmatched result'
+					"unmatched result",
 				));
 
 				return null;
-			}
+			},
 		};
 
 		const query: ITextQuery = {
 			type: QueryType.Text,
 			contentPattern: {
-				pattern: 'a'
+				pattern: "a",
 			},
 			folderQueries: [
-				{ folder: URI.file('/folder1') }
-			]
+				{ folder: URI.file("/folder1") },
+			],
 		};
 
 		const m = new NativeTextSearchManager(query, provider);

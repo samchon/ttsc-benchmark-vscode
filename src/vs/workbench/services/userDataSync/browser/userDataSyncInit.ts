@@ -3,38 +3,51 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IStorageService, StorageScope } from '../../../../platform/storage/common/storage.js';
-import { AbstractExtensionsInitializer, IExtensionsInitializerPreviewResult } from '../../../../platform/userDataSync/common/extensionsSync.js';
-import { GlobalStateInitializer, UserDataSyncStoreTypeSynchronizer } from '../../../../platform/userDataSync/common/globalStateSync.js';
-import { KeybindingsInitializer } from '../../../../platform/userDataSync/common/keybindingsSync.js';
-import { SettingsInitializer } from '../../../../platform/userDataSync/common/settingsSync.js';
-import { SnippetsInitializer } from '../../../../platform/userDataSync/common/snippetsSync.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { UserDataSyncStoreClient } from '../../../../platform/userDataSync/common/userDataSyncStoreService.js';
-import { IProductService } from '../../../../platform/product/common/productService.js';
-import { IRequestService } from '../../../../platform/request/common/request.js';
-import { IRemoteUserData, IUserData, IUserDataSyncResourceInitializer, IUserDataSyncLogService, IUserDataSyncStoreManagementService, SyncResource } from '../../../../platform/userDataSync/common/userDataSync.js';
-import { AuthenticationSessionInfo, getCurrentAuthenticationSessionInfo } from '../../authentication/browser/authenticationService.js';
-import { getSyncAreaLabel } from '../common/userDataSync.js';
-import { isWeb } from '../../../../base/common/platform.js';
-import { Barrier, Promises } from '../../../../base/common/async.js';
-import { EXTENSION_INSTALL_SKIP_PUBLISHER_TRUST_CONTEXT, IExtensionGalleryService, IExtensionManagementService, IGlobalExtensionEnablementService, ILocalExtension } from '../../../../platform/extensionManagement/common/extensionManagement.js';
-import { IEnvironmentService } from '../../../../platform/environment/common/environment.js';
-import { IExtensionService, toExtensionDescription } from '../../extensions/common/extensions.js';
-import { areSameExtensions } from '../../../../platform/extensionManagement/common/extensionManagementUtil.js';
-import { IIgnoredExtensionsManagementService } from '../../../../platform/userDataSync/common/ignoredExtensions.js';
-import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { isEqual } from '../../../../base/common/resources.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
-import { IExtensionStorageService } from '../../../../platform/extensionManagement/common/extensionStorage.js';
-import { TasksInitializer } from '../../../../platform/userDataSync/common/tasksSync.js';
-import { IUserDataProfilesService } from '../../../../platform/userDataProfile/common/userDataProfile.js';
-import { IBrowserWorkbenchEnvironmentService } from '../../environment/browser/environmentService.js';
-import { IUserDataInitializer } from '../../userData/browser/userDataInit.js';
-import { ISecretStorageService } from '../../../../platform/secrets/common/secrets.js';
+import { IStorageService, StorageScope } from "../../../../platform/storage/common/storage.js";
+import { AbstractExtensionsInitializer, IExtensionsInitializerPreviewResult } from "../../../../platform/userDataSync/common/extensionsSync.js";
+import { GlobalStateInitializer, UserDataSyncStoreTypeSynchronizer } from "../../../../platform/userDataSync/common/globalStateSync.js";
+import { KeybindingsInitializer } from "../../../../platform/userDataSync/common/keybindingsSync.js";
+import { SettingsInitializer } from "../../../../platform/userDataSync/common/settingsSync.js";
+import { SnippetsInitializer } from "../../../../platform/userDataSync/common/snippetsSync.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { UserDataSyncStoreClient } from "../../../../platform/userDataSync/common/userDataSyncStoreService.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IRequestService } from "../../../../platform/request/common/request.js";
+import {
+  IRemoteUserData,
+  IUserData,
+  IUserDataSyncResourceInitializer,
+  IUserDataSyncLogService,
+  IUserDataSyncStoreManagementService,
+  SyncResource,
+} from "../../../../platform/userDataSync/common/userDataSync.js";
+import { AuthenticationSessionInfo, getCurrentAuthenticationSessionInfo } from "../../authentication/browser/authenticationService.js";
+import { getSyncAreaLabel } from "../common/userDataSync.js";
+import { isWeb } from "../../../../base/common/platform.js";
+import { Barrier, Promises } from "../../../../base/common/async.js";
+import {
+  EXTENSION_INSTALL_SKIP_PUBLISHER_TRUST_CONTEXT,
+  IExtensionGalleryService,
+  IExtensionManagementService,
+  IGlobalExtensionEnablementService,
+  ILocalExtension,
+} from "../../../../platform/extensionManagement/common/extensionManagement.js";
+import { IEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { IExtensionService, toExtensionDescription } from "../../extensions/common/extensions.js";
+import { areSameExtensions } from "../../../../platform/extensionManagement/common/extensionManagementUtil.js";
+import { IIgnoredExtensionsManagementService } from "../../../../platform/userDataSync/common/ignoredExtensions.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IExtensionStorageService } from "../../../../platform/extensionManagement/common/extensionStorage.js";
+import { TasksInitializer } from "../../../../platform/userDataSync/common/tasksSync.js";
+import { IUserDataProfilesService } from "../../../../platform/userDataProfile/common/userDataProfile.js";
+import { IBrowserWorkbenchEnvironmentService } from "../../environment/browser/environmentService.js";
+import { IUserDataInitializer } from "../../userData/browser/userDataInit.js";
+import { ISecretStorageService } from "../../../../platform/secrets/common/secrets.js";
 
 export class UserDataSyncInitializer implements IUserDataInitializer {
 
@@ -138,20 +151,43 @@ export class UserDataSyncInitializer implements IUserDataInitializer {
 
 		const disposables = new DisposableStore();
 		try {
-			const userDataSyncStoreClient = disposables.add(new UserDataSyncStoreClient(userDataSyncStore.url, this.productService, this.requestService, this.logService, this.environmentService, this.fileService, this.storageService));
-			userDataSyncStoreClient.setAuthToken(authenticationSession.accessToken, authenticationSession.providerId);
+			const userDataSyncStoreClient = disposables.add(
+        new UserDataSyncStoreClient(
+          userDataSyncStore.url,
+          this.productService,
+          this.requestService,
+          this.logService,
+          this.environmentService,
+          this.fileService,
+          this.storageService,
+        ),
+      );
+			userDataSyncStoreClient.setAuthToken(
+        authenticationSession.accessToken,
+        authenticationSession.providerId,
+      );
 
 			// Cache global state data for global state initialization
-			this.globalStateUserData = await userDataSyncStoreClient.readResource(SyncResource.GlobalState, null);
+			this.globalStateUserData = await userDataSyncStoreClient.readResource(
+        SyncResource.GlobalState,
+        null,
+      );
 
 			if (this.globalStateUserData) {
-				const userDataSyncStoreType = new UserDataSyncStoreTypeSynchronizer(userDataSyncStoreClient, this.storageService, this.environmentService, this.fileService, this.logService).getSyncStoreType(this.globalStateUserData);
+				const userDataSyncStoreType = new UserDataSyncStoreTypeSynchronizer(userDataSyncStoreClient, this.storageService, this.environmentService, this.fileService, this.logService).getSyncStoreType(
+          this.globalStateUserData,
+        );
 				if (userDataSyncStoreType) {
-					await this.userDataSyncStoreManagementService.switch(userDataSyncStoreType);
+					await this.userDataSyncStoreManagementService.switch(
+            userDataSyncStoreType,
+          );
 
 					// Unset cached global state data if urls are changed
-					if (!isEqual(userDataSyncStore.url, this.userDataSyncStoreManagementService.userDataSyncStore?.url)) {
-						this.logService.info('Switched settings sync store');
+					if (!isEqual(
+            userDataSyncStore.url,
+            this.userDataSyncStoreManagementService.userDataSyncStore?.url,
+          )) {
+						this.logService.info("Switched settings sync store");
 						this.globalStateUserData = null;
 					}
 				}
@@ -166,20 +202,33 @@ export class UserDataSyncInitializer implements IUserDataInitializer {
 	}
 
 	async requiresInitialization(): Promise<boolean> {
-		this.logService.trace(`UserDataInitializationService#requiresInitialization`);
+		this.logService.trace(
+      `UserDataInitializationService#requiresInitialization`,
+    );
 		const userDataSyncStoreClient = await this.createUserDataSyncStoreClient();
 		return !!userDataSyncStoreClient;
 	}
 
 	async initializeRequiredResources(): Promise<void> {
-		this.logService.trace(`UserDataInitializationService#initializeRequiredResources`);
+		this.logService.trace(
+      `UserDataInitializationService#initializeRequiredResources`,
+    );
 		return this.initialize([SyncResource.Settings, SyncResource.GlobalState]);
 	}
 
 	async initializeOtherResources(instantiationService: IInstantiationService): Promise<void> {
 		try {
-			this.logService.trace(`UserDataInitializationService#initializeOtherResources`);
-			await Promise.allSettled([this.initialize([SyncResource.Keybindings, SyncResource.Snippets, SyncResource.Tasks]), this.initializeExtensions(instantiationService)]);
+			this.logService.trace(
+        `UserDataInitializationService#initializeOtherResources`,
+      );
+			await Promise.allSettled([
+        this.initialize([
+          SyncResource.Keybindings,
+          SyncResource.Snippets,
+          SyncResource.Tasks,
+        ]),
+        this.initializeExtensions(instantiationService),
+      ]);
 		} finally {
 			this.initializationFinished.open();
 		}
@@ -187,7 +236,10 @@ export class UserDataSyncInitializer implements IUserDataInitializer {
 
 	private async initializeExtensions(instantiationService: IInstantiationService): Promise<void> {
 		try {
-			await Promise.all([this.initializeInstalledExtensions(instantiationService), this.initializeNewExtensions(instantiationService)]);
+			await Promise.all([
+        this.initializeInstalledExtensions(instantiationService),
+        this.initializeNewExtensions(instantiationService),
+      ]);
 		} finally {
 			this.initialized.push(SyncResource.Extensions);
 		}
@@ -263,11 +315,46 @@ export class UserDataSyncInitializer implements IUserDataInitializer {
 
 	private createSyncResourceInitializer(syncResource: SyncResource): IUserDataSyncResourceInitializer {
 		switch (syncResource) {
-			case SyncResource.Settings: return new SettingsInitializer(this.fileService, this.userDataProfilesService, this.environmentService, this.logService, this.storageService, this.uriIdentityService);
-			case SyncResource.Keybindings: return new KeybindingsInitializer(this.fileService, this.userDataProfilesService, this.environmentService, this.logService, this.storageService, this.uriIdentityService);
-			case SyncResource.Tasks: return new TasksInitializer(this.fileService, this.userDataProfilesService, this.environmentService, this.logService, this.storageService, this.uriIdentityService);
-			case SyncResource.Snippets: return new SnippetsInitializer(this.fileService, this.userDataProfilesService, this.environmentService, this.logService, this.storageService, this.uriIdentityService);
-			case SyncResource.GlobalState: return new GlobalStateInitializer(this.storageService, this.fileService, this.userDataProfilesService, this.environmentService, this.logService, this.uriIdentityService);
+			case SyncResource.Settings: return new SettingsInitializer(
+        this.fileService,
+        this.userDataProfilesService,
+        this.environmentService,
+        this.logService,
+        this.storageService,
+        this.uriIdentityService,
+      );
+			case SyncResource.Keybindings: return new KeybindingsInitializer(
+        this.fileService,
+        this.userDataProfilesService,
+        this.environmentService,
+        this.logService,
+        this.storageService,
+        this.uriIdentityService,
+      );
+			case SyncResource.Tasks: return new TasksInitializer(
+        this.fileService,
+        this.userDataProfilesService,
+        this.environmentService,
+        this.logService,
+        this.storageService,
+        this.uriIdentityService,
+      );
+			case SyncResource.Snippets: return new SnippetsInitializer(
+        this.fileService,
+        this.userDataProfilesService,
+        this.environmentService,
+        this.logService,
+        this.storageService,
+        this.uriIdentityService,
+      );
+			case SyncResource.GlobalState: return new GlobalStateInitializer(
+        this.storageService,
+        this.fileService,
+        this.userDataProfilesService,
+        this.environmentService,
+        this.logService,
+        this.uriIdentityService,
+      );
 		}
 		throw new Error(`Cannot create initializer for ${syncResource}`);
 	}
@@ -290,24 +377,37 @@ class ExtensionsPreviewInitializer extends AbstractExtensionsInitializer {
 		@IStorageService storageService: IStorageService,
 		@IUriIdentityService uriIdentityService: IUriIdentityService,
 	) {
-		super(extensionManagementService, ignoredExtensionsManagementService, fileService, userDataProfilesService, environmentService, logService, storageService, uriIdentityService);
+		super(
+      extensionManagementService,
+      ignoredExtensionsManagementService,
+      fileService,
+      userDataProfilesService,
+      environmentService,
+      logService,
+      storageService,
+      uriIdentityService,
+    );
 	}
 
 	getPreview(): Promise<IExtensionsInitializerPreviewResult | null> {
 		if (!this.previewPromise) {
-			this.previewPromise = super.initialize(this.extensionsData).then(() => this.preview);
+			this.previewPromise = super.initialize(this.extensionsData).then(
+        () => this.preview,
+      );
 		}
 		return this.previewPromise;
 	}
 
 	override initialize(): Promise<void> {
-		throw new Error('should not be called directly');
+		throw new Error("should not be called directly");
 	}
 
 	protected override async doInitialize(remoteUserData: IRemoteUserData): Promise<void> {
 		const remoteExtensions = await this.parseExtensions(remoteUserData);
 		if (!remoteExtensions) {
-			this.logService.info('Skipping initializing extensions because remote extensions does not exist.');
+			this.logService.info(
+        "Skipping initializing extensions because remote extensions does not exist.",
+      );
 			return;
 		}
 		const installedExtensions = await this.extensionManagementService.getInstalled();
@@ -333,11 +433,25 @@ class InstalledExtensionsInitializer implements IUserDataSyncResourceInitializer
 
 		// 1. Initialise already installed extensions state
 		for (const installedExtension of preview.installedExtensions) {
-			const syncExtension = preview.remoteExtensions.find(({ identifier }) => areSameExtensions(identifier, installedExtension.identifier));
+			const syncExtension = preview.remoteExtensions.find(
+        ({ identifier }) => areSameExtensions(
+          identifier,
+          installedExtension.identifier,
+        ),
+      );
 			if (syncExtension?.state) {
-				const extensionState = this.extensionStorageService.getExtensionState(installedExtension, true) || {};
-				Object.keys(syncExtension.state).forEach(key => extensionState[key] = syncExtension.state![key]);
-				this.extensionStorageService.setExtensionState(installedExtension, extensionState, true);
+				const extensionState = this.extensionStorageService.getExtensionState(
+          installedExtension,
+          true,
+        ) || {};
+				Object.keys(syncExtension.state).forEach(
+          key => extensionState[key] = syncExtension.state![key],
+        );
+				this.extensionStorageService.setExtensionState(
+          installedExtension,
+          extensionState,
+          true,
+        );
 			}
 		}
 
@@ -372,34 +486,63 @@ class NewExtensionsInitializer implements IUserDataSyncResourceInitializer {
 
 		const newlyEnabledExtensions: ILocalExtension[] = [];
 		const targetPlatform = await this.extensionManagementService.getTargetPlatform();
-		const galleryExtensions = await this.galleryService.getExtensions(preview.newExtensions, { targetPlatform, compatible: true }, CancellationToken.None);
+		const galleryExtensions = await this.galleryService.getExtensions(
+      preview.newExtensions,
+      { targetPlatform, compatible: true },
+      CancellationToken.None,
+    );
 		for (const galleryExtension of galleryExtensions) {
 			try {
-				const extensionToSync = preview.remoteExtensions.find(({ identifier }) => areSameExtensions(identifier, galleryExtension.identifier));
+				const extensionToSync = preview.remoteExtensions.find(
+          ({ identifier }) => areSameExtensions(
+            identifier,
+            galleryExtension.identifier,
+          ),
+        );
 				if (!extensionToSync) {
 					continue;
 				}
 				if (extensionToSync.state) {
-					this.extensionStorageService.setExtensionState(galleryExtension, extensionToSync.state, true);
+					this.extensionStorageService.setExtensionState(
+            galleryExtension,
+            extensionToSync.state,
+            true,
+          );
 				}
-				this.logService.trace(`Installing extension...`, galleryExtension.identifier.id);
-				const local = await this.extensionManagementService.installFromGallery(galleryExtension, {
-					isMachineScoped: false, /* set isMachineScoped to prevent install and sync dialog in web */
-					donotIncludePackAndDependencies: true,
-					installGivenVersion: !!extensionToSync.version,
-					installPreReleaseVersion: extensionToSync.preRelease,
-					context: { [EXTENSION_INSTALL_SKIP_PUBLISHER_TRUST_CONTEXT]: true }
-				});
-				if (!preview.disabledExtensions.some(identifier => areSameExtensions(identifier, galleryExtension.identifier))) {
+				this.logService.trace(
+          `Installing extension...`,
+          galleryExtension.identifier.id,
+        );
+				const local = await this.extensionManagementService.installFromGallery(
+          galleryExtension,
+          {
+            isMachineScoped: false,
+            donotIncludePackAndDependencies: true,
+            installGivenVersion: !!extensionToSync.version,
+            installPreReleaseVersion: extensionToSync.preRelease,
+            context: { [EXTENSION_INSTALL_SKIP_PUBLISHER_TRUST_CONTEXT]: true },
+          },
+        );
+				if (!preview.disabledExtensions.some(
+          identifier => areSameExtensions(
+            identifier,
+            galleryExtension.identifier,
+          ),
+        )) {
 					newlyEnabledExtensions.push(local);
 				}
-				this.logService.info(`Installed extension.`, galleryExtension.identifier.id);
+				this.logService.info(
+          `Installed extension.`,
+          galleryExtension.identifier.id,
+        );
 			} catch (error) {
 				this.logService.error(error);
 			}
 		}
 
-		const canEnabledExtensions = newlyEnabledExtensions.filter(e => this.extensionService.canAddExtension(toExtensionDescription(e)));
+		const canEnabledExtensions = newlyEnabledExtensions.filter(
+      e => this.extensionService.canAddExtension(toExtensionDescription(e)),
+    );
 		if (!(await this.areExtensionsRunning(canEnabledExtensions))) {
 			await new Promise<void>((c, e) => {
 				const disposable = this.extensionService.onDidChangeExtensions(async () => {
@@ -419,6 +562,10 @@ class NewExtensionsInitializer implements IUserDataSyncResourceInitializer {
 	private async areExtensionsRunning(extensions: ILocalExtension[]): Promise<boolean> {
 		await this.extensionService.whenInstalledExtensionsRegistered();
 		const runningExtensions = this.extensionService.extensions;
-		return extensions.every(e => runningExtensions.some(r => areSameExtensions({ id: r.identifier.value }, e.identifier)));
+		return extensions.every(
+      e => runningExtensions.some(
+        r => areSameExtensions({ id: r.identifier.value }, e.identifier),
+      ),
+    );
 	}
 }

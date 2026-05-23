@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable } from '../../../../../base/common/lifecycle.js';
-import { ITextModel } from '../../../model.js';
+import { IDisposable } from "../../../../../base/common/lifecycle.js";
+import { ITextModel } from "../../../model.js";
 
 // Exported for tests
 export class ListNode implements IDisposable {
@@ -30,7 +30,7 @@ export class ListNode implements IDisposable {
 
 	appendChild(node: Node) {
 		if (!this.canAppendChild()) {
-			throw new Error('Cannot insert more than 3 children in a ListNode');
+			throw new Error("Cannot insert more than 3 children in a ListNode");
 		}
 		this._children.push(node);
 
@@ -58,7 +58,7 @@ export class ListNode implements IDisposable {
 
 	prependChild(node: Node) {
 		if (this._children.length >= 3) {
-			throw new Error('Cannot prepend more than 3 children in a ListNode');
+			throw new Error("Cannot prepend more than 3 children in a ListNode");
 		}
 		this._children.unshift(node);
 
@@ -124,7 +124,7 @@ function append(node: Node, nodeToAppend: Node): Node {
 		}
 
 		if (isLeaf(curNode)) {
-			throw new Error('unexpected');
+			throw new Error("unexpected");
 		}
 		parents.push(curNode);
 		curNode = curNode.lastChild();
@@ -136,7 +136,10 @@ function append(node: Node, nodeToAppend: Node): Node {
 			if (parent.children.length >= 3) {
 				// we need to split to maintain (2,3)-tree property.
 				// Send the third element + the new element to the parent.
-				const newList = ListNode.create(parent.unappendChild(), nodeToAppendOfCorrectHeight);
+				const newList = ListNode.create(
+          parent.unappendChild(),
+          nodeToAppendOfCorrectHeight,
+        );
 				nodeToAppendOfCorrectHeight = newList;
 			} else {
 				parent.appendChild(nodeToAppendOfCorrectHeight);
@@ -159,7 +162,7 @@ function prepend(list: Node, nodeToAppend: Node): Node {
 	const parents: ListNode[] = [];
 	while (nodeToAppend.height !== curNode.height) {
 		if (isLeaf(curNode)) {
-			throw new Error('unexpected');
+			throw new Error("unexpected");
 		}
 		parents.push(curNode);
 		// assert 2 <= curNode.childrenFast.length <= 3
@@ -174,7 +177,10 @@ function prepend(list: Node, nodeToAppend: Node): Node {
 			if (parent.children.length >= 3) {
 				// we need to split to maintain (2,3)-tree property.
 				// Send the third element + the new element to the parent.
-				nodeToPrependOfCorrectHeight = ListNode.create(nodeToPrependOfCorrectHeight, parent.unprependChild());
+				nodeToPrependOfCorrectHeight = ListNode.create(
+          nodeToPrependOfCorrectHeight,
+          parent.unprependChild(),
+        );
 			} else {
 				parent.prependChild(nodeToPrependOfCorrectHeight);
 				nodeToPrependOfCorrectHeight = undefined;
@@ -212,11 +218,11 @@ export class TokenStore implements IDisposable {
 
 	private createEmptyRoot(): Node {
 		return {
-			length: this._textModel.getValueLength(),
-			token: 0,
-			height: 0,
-			tokenQuality: TokenQuality.None
-		};
+      length: this._textModel.getValueLength(),
+      token: 0,
+      height: 0,
+      tokenQuality: TokenQuality.None,
+    };
 	}
 
 	/**
@@ -232,13 +238,18 @@ export class TokenStore implements IDisposable {
 			return this.createEmptyRoot();
 		}
 		let newRoot: Node = {
-			length: tokens[0].length,
-			token: tokens[0].token,
-			height: 0,
-			tokenQuality
-		};
+      length: tokens[0].length,
+      token: tokens[0].token,
+      height: 0,
+      tokenQuality,
+    };
 		for (let j = 1; j < tokens.length; j++) {
-			newRoot = append(newRoot, { length: tokens[j].length, token: tokens[j].token, height: 0, tokenQuality });
+			newRoot = append(newRoot, {
+        length: tokens[j].length,
+        token: tokens[j].token,
+        height: 0,
+        tokenQuality,
+      });
 		}
 		return newRoot;
 	}
@@ -268,7 +279,9 @@ export class TokenStore implements IDisposable {
 		const precedingNodes: Node[] = [];
 		// Find the first unchanged node after the update
 		const postcedingNodes: Node[] = [];
-		const stack: { node: Node; offset: number }[] = [{ node: this._root, offset: 0 }];
+		const stack: { node: Node; offset: number }[] = [
+      { node: this._root, offset: 0 },
+    ];
 
 		while (stack.length > 0) {
 			const node = stack.pop()!;
@@ -282,7 +295,12 @@ export class TokenStore implements IDisposable {
 				continue;
 			} else if (isLeaf(node.node) && (currentOffset < updateOffsetStart)) {
 				// We have a partial preceding node
-				precedingNodes.push({ length: updateOffsetStart - currentOffset, token: node.node.token, height: 0, tokenQuality: node.node.tokenQuality });
+				precedingNodes.push({
+          length: updateOffsetStart - currentOffset,
+          token: node.node.token,
+          height: 0,
+          tokenQuality: node.node.tokenQuality,
+        });
 				// Node could also be postceeding, so don't continue
 			}
 
@@ -296,9 +314,16 @@ export class TokenStore implements IDisposable {
 				}
 				postcedingNodes.push(node.node);
 				continue;
-			} else if (isLeaf(node.node) && (currentOffset + node.node.length > firstUnchangedOffsetAfterUpdate)) {
+			} else if (isLeaf(
+        node.node,
+      ) && (currentOffset + node.node.length > firstUnchangedOffsetAfterUpdate)) {
 				// we have a partial postceeding node
-				postcedingNodes.push({ length: currentOffset + node.node.length - firstUnchangedOffsetAfterUpdate, token: node.node.token, height: 0, tokenQuality: node.node.tokenQuality });
+				postcedingNodes.push({
+          length: currentOffset + node.node.length - firstUnchangedOffsetAfterUpdate,
+          token: node.node.token,
+          height: 0,
+          tokenQuality: node.node.tokenQuality,
+        });
 				continue;
 			}
 
@@ -314,7 +339,10 @@ export class TokenStore implements IDisposable {
 
 		let allNodes: Node[];
 		if (tokens.length > 0) {
-			allNodes = precedingNodes.concat(this.createFromUpdates(tokens, tokenQuality), postcedingNodes);
+			allNodes = precedingNodes.concat(
+        this.createFromUpdates(tokens, tokenQuality),
+        postcedingNodes,
+      );
 		} else {
 			allNodes = precedingNodes.concat(postcedingNodes);
 		}
@@ -334,7 +362,9 @@ export class TokenStore implements IDisposable {
 	 * @returns
 	 */
 	private traverseInOrderInRange(startOffsetInclusive: number, endOffsetExclusive: number, visitor: (node: Node, offset: number) => boolean): void {
-		const stack: { node: Node; offset: number }[] = [{ node: this._root, offset: 0 }];
+		const stack: { node: Node; offset: number }[] = [
+      { node: this._root, offset: 0 },
+    ];
 
 		while (stack.length > 0) {
 			const { node, offset } = stack.pop()!;
@@ -449,7 +479,12 @@ export class TokenStore implements IDisposable {
 
 	private _copyNodeIterative(root: Node): Node {
 		const newRoot = isLeaf(root)
-			? { length: root.length, token: root.token, tokenQuality: root.tokenQuality, height: root.height }
+			? {
+          length: root.length,
+          token: root.token,
+          tokenQuality: root.tokenQuality,
+          height: root.height,
+        }
 			: new ListNode(root.height);
 
 		const stack: Array<[Node, Node]> = [[root, newRoot]];
@@ -459,7 +494,12 @@ export class TokenStore implements IDisposable {
 			if (!isLeaf(oldNode)) {
 				for (const child of oldNode.children) {
 					const childCopy = isLeaf(child)
-						? { length: child.length, token: child.token, tokenQuality: child.tokenQuality, height: child.height }
+						? {
+                length: child.length,
+                token: child.token,
+                tokenQuality: child.tokenQuality,
+                height: child.height,
+              }
 						: new ListNode(child.height);
 
 					(clonedNode as ListNode).appendChild(childCopy);
@@ -480,10 +520,12 @@ export class TokenStore implements IDisposable {
 
 		while (stack.length > 0) {
 			const [node, depth] = stack.pop()!;
-			const indent = '  '.repeat(depth);
+			const indent = "  ".repeat(depth);
 
 			if (isLeaf(node)) {
-				result.push(`${indent}Leaf(length: ${node.length}, token: ${node.token}, refresh: ${node.tokenQuality})\n`);
+				result.push(
+          `${indent}Leaf(length: ${node.length}, token: ${node.token}, refresh: ${node.tokenQuality})\n`,
+        );
 			} else {
 				result.push(`${indent}List(length: ${node.length})\n`);
 				// Push children in reverse order so they get processed left-to-right
@@ -493,7 +535,7 @@ export class TokenStore implements IDisposable {
 			}
 		}
 
-		return result.join('');
+		return result.join("");
 	}
 
 	dispose(): void {

@@ -3,26 +3,26 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './media/chatContextUsageWidget.css';
-import * as dom from '../../../../../../base/browser/dom.js';
-import { EventType, addDisposableListener } from '../../../../../../base/browser/dom.js';
-import { IDelayedHoverOptions } from '../../../../../../base/browser/ui/hover/hover.js';
-import { Emitter, Event } from '../../../../../../base/common/event.js';
-import { Disposable, DisposableStore, MutableDisposable } from '../../../../../../base/common/lifecycle.js';
-import { IObservable, observableValue } from '../../../../../../base/common/observable.js';
-import { localize } from '../../../../../../nls.js';
-import { IHoverService } from '../../../../../../platform/hover/browser/hover.js';
-import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { IContextKey, IContextKeyService } from '../../../../../../platform/contextkey/common/contextkey.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../../../platform/storage/common/storage.js';
-import { IConfigurationService } from '../../../../../../platform/configuration/common/configuration.js';
-import { ChatContextKeys } from '../../../common/actions/chatContextKeys.js';
-import { ChatConfiguration } from '../../../common/constants.js';
-import { IChatRequestModel, IChatResponseModel } from '../../../common/model/chatModel.js';
-import { ILanguageModelsService } from '../../../common/languageModels.js';
-import { ChatContextUsageDetails, IChatContextUsageData } from './chatContextUsageDetails.js';
-import { StandardKeyboardEvent } from '../../../../../../base/browser/keyboardEvent.js';
-import { KeyCode } from '../../../../../../base/common/keyCodes.js';
+import "./media/chatContextUsageWidget.css";
+import * as dom from "../../../../../../base/browser/dom.js";
+import { EventType, addDisposableListener } from "../../../../../../base/browser/dom.js";
+import { IDelayedHoverOptions } from "../../../../../../base/browser/ui/hover/hover.js";
+import { Emitter, Event } from "../../../../../../base/common/event.js";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../../../../base/common/lifecycle.js";
+import { IObservable, observableValue } from "../../../../../../base/common/observable.js";
+import { localize } from "../../../../../../nls.js";
+import { IHoverService } from "../../../../../../platform/hover/browser/hover.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { IContextKey, IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../../../platform/storage/common/storage.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { ChatContextKeys } from "../../../common/actions/chatContextKeys.js";
+import { ChatConfiguration } from "../../../common/constants.js";
+import { IChatRequestModel, IChatResponseModel } from "../../../common/model/chatModel.js";
+import { ILanguageModelsService } from "../../../common/languageModels.js";
+import { ChatContextUsageDetails, IChatContextUsageData } from "./chatContextUsageDetails.js";
+import { StandardKeyboardEvent } from "../../../../../../base/browser/keyboardEvent.js";
+import { KeyCode } from "../../../../../../base/common/keyCodes.js";
 
 const $ = dom.$;
 
@@ -45,26 +45,47 @@ export class CircularProgressIndicator {
 		const r = CircularProgressIndicator.RADIUS;
 		this.circumference = 2 * Math.PI * r;
 
-		this.domNode = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-		this.domNode.setAttribute('viewBox', '0 0 36 36');
-		this.domNode.classList.add('circular-progress');
+		this.domNode = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "svg",
+    );
+		this.domNode.setAttribute("viewBox", "0 0 36 36");
+		this.domNode.classList.add("circular-progress");
 
 		// Background circle
-		const bgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-		bgCircle.setAttribute('cx', String(CircularProgressIndicator.CENTER_X));
-		bgCircle.setAttribute('cy', String(CircularProgressIndicator.CENTER_Y));
-		bgCircle.setAttribute('r', String(r));
-		bgCircle.classList.add('progress-bg');
+		const bgCircle = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "circle",
+    );
+		bgCircle.setAttribute("cx", String(CircularProgressIndicator.CENTER_X));
+		bgCircle.setAttribute("cy", String(CircularProgressIndicator.CENTER_Y));
+		bgCircle.setAttribute("r", String(r));
+		bgCircle.classList.add("progress-bg");
 		this.domNode.appendChild(bgCircle);
 
 		// Progress arc (stroke-based ring)
-		this.progressCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-		this.progressCircle.setAttribute('cx', String(CircularProgressIndicator.CENTER_X));
-		this.progressCircle.setAttribute('cy', String(CircularProgressIndicator.CENTER_Y));
-		this.progressCircle.setAttribute('r', String(r));
-		this.progressCircle.classList.add('progress-arc');
-		this.progressCircle.setAttribute('stroke-dasharray', String(this.circumference));
-		this.progressCircle.setAttribute('stroke-dashoffset', String(this.circumference));
+		this.progressCircle = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "circle",
+    );
+		this.progressCircle.setAttribute(
+      "cx",
+      String(CircularProgressIndicator.CENTER_X),
+    );
+		this.progressCircle.setAttribute(
+      "cy",
+      String(CircularProgressIndicator.CENTER_Y),
+    );
+		this.progressCircle.setAttribute("r", String(r));
+		this.progressCircle.classList.add("progress-arc");
+		this.progressCircle.setAttribute(
+      "stroke-dasharray",
+      String(this.circumference),
+    );
+		this.progressCircle.setAttribute(
+      "stroke-dashoffset",
+      String(this.circumference),
+    );
 		this.domNode.appendChild(this.progressCircle);
 	}
 
@@ -75,7 +96,7 @@ export class CircularProgressIndicator {
 	setProgress(percentage: number): void {
 		const clamped = Math.max(0, Math.min(100, percentage));
 		const offset = this.circumference - (clamped / 100) * this.circumference;
-		this.progressCircle.setAttribute('stroke-dashoffset', String(offset));
+		this.progressCircle.setAttribute("stroke-dashoffset", String(offset));
 	}
 }
 
@@ -97,14 +118,20 @@ export class ChatContextUsageWidget extends Disposable {
 	private readonly _isVisible = observableValue<boolean>(this, false);
 	get isVisible(): IObservable<boolean> { return this._isVisible; }
 
-	private readonly _lastRequestDisposable = this._register(new MutableDisposable());
-	private readonly _hoverDisposable = this._register(new MutableDisposable<DisposableStore>());
-	private readonly _contextUsageDetails = this._register(new MutableDisposable<ChatContextUsageDetails>());
+	private readonly _lastRequestDisposable = this._register(
+    new MutableDisposable(),
+  );
+	private readonly _hoverDisposable = this._register(
+    new MutableDisposable<DisposableStore>(),
+  );
+	private readonly _contextUsageDetails = this._register(
+    new MutableDisposable<ChatContextUsageDetails>(),
+  );
 
 	private currentData: IChatContextUsageData | undefined;
 
-	private static readonly _OPENED_STORAGE_KEY = 'chat.contextUsage.hasBeenOpened';
-	private static readonly _HOVER_ID = 'chat.contextUsage';
+	private static readonly _OPENED_STORAGE_KEY = "chat.contextUsage.hasBeenOpened";
+	private static readonly _HOVER_ID = "chat.contextUsage";
 
 	private readonly _contextUsageOpenedKey: IContextKey<boolean>;
 
@@ -120,30 +147,41 @@ export class ChatContextUsageWidget extends Disposable {
 	) {
 		super();
 
-		this.domNode = $('.chat-context-usage-widget');
-		this.domNode.style.display = 'none';
-		this.domNode.setAttribute('tabindex', '0');
-		this.domNode.setAttribute('role', 'button');
-		this.domNode.setAttribute('aria-label', localize('contextUsageLabel', "Context window usage"));
+		this.domNode = $(".chat-context-usage-widget");
+		this.domNode.style.display = "none";
+		this.domNode.setAttribute("tabindex", "0");
+		this.domNode.setAttribute("role", "button");
+		this.domNode.setAttribute(
+      "aria-label",
+      localize("contextUsageLabel", "Context window usage"),
+    );
 
 		// Icon container (always visible, contains the pie chart)
-		const iconContainer = this.domNode.appendChild($('.icon-container'));
+		const iconContainer = this.domNode.appendChild($(".icon-container"));
 		this.progressIndicator = new CircularProgressIndicator();
 		iconContainer.appendChild(this.progressIndicator.domNode);
 
 		// Percentage label (visible on hover/focus)
-		this.percentageLabel = this.domNode.appendChild($('.percentage-label'));
+		this.percentageLabel = this.domNode.appendChild($(".percentage-label"));
 
 		// Track context usage opened state
-		this._contextUsageOpenedKey = ChatContextKeys.contextUsageHasBeenOpened.bindTo(this.contextKeyService);
+		this._contextUsageOpenedKey = ChatContextKeys.contextUsageHasBeenOpened.bindTo(
+      this.contextKeyService,
+    );
 
 		// Restore persisted state
-		if (this.storageService.getBoolean(ChatContextUsageWidget._OPENED_STORAGE_KEY, StorageScope.WORKSPACE, false)) {
+		if (this.storageService.getBoolean(
+      ChatContextUsageWidget._OPENED_STORAGE_KEY,
+      StorageScope.WORKSPACE,
+      false,
+    )) {
 			this._contextUsageOpenedKey.set(true);
 		}
 
 		// Track enabled state from configuration
-		this._enabled = this.configurationService.getValue<boolean>(ChatConfiguration.ChatContextUsageEnabled) !== false;
+		this._enabled = this.configurationService.getValue<boolean>(
+      ChatConfiguration.ChatContextUsageEnabled,
+    ) !== false;
 		this._register(this.configurationService.onDidChangeConfiguration(e => {
 			if (e.affectsConfiguration(ChatConfiguration.ChatContextUsageEnabled)) {
 				this._enabled = this.configurationService.getValue<boolean>(ChatConfiguration.ChatContextUsageEnabled) !== false;
@@ -169,26 +207,33 @@ export class ChatContextUsageWidget extends Disposable {
 			return false;
 		}
 		this.hoverService.showInstantHover(
-			{ ...this._hoverOptions, content: details.domNode, target: this.domNode, persistence: { hideOnHover: false, sticky: true } },
-			true
-		);
+      {
+        ...this._hoverOptions,
+        content: details.domNode,
+        target: this.domNode,
+        persistence: { hideOnHover: false, sticky: true },
+      },
+      true,
+    );
 		this._markOpened();
 		return true;
 	}
 
-	private readonly _hoverOptions: Omit<IDelayedHoverOptions, 'content'> = {
-		id: ChatContextUsageWidget._HOVER_ID,
-		appearance: { showPointer: true, compact: true },
-		persistence: { hideOnHover: false },
-		trapFocus: true
-	};
+	private readonly _hoverOptions: Omit<IDelayedHoverOptions, "content"> = {
+    id: ChatContextUsageWidget._HOVER_ID,
+    appearance: { showPointer: true, compact: true },
+    persistence: { hideOnHover: false },
+    trapFocus: true,
+  };
 
 	private _createDetails(): ChatContextUsageDetails | undefined {
 		if (!this._isVisible.get() || !this.currentData) {
 			return undefined;
 		}
 		if (!this._contextUsageDetails.value) {
-			this._contextUsageDetails.value = this.instantiationService.createInstance(ChatContextUsageDetails);
+			this._contextUsageDetails.value = this.instantiationService.createInstance(
+        ChatContextUsageDetails,
+      );
 		}
 		this._contextUsageDetails.value.update(this.currentData);
 		return this._contextUsageDetails.value;
@@ -196,7 +241,12 @@ export class ChatContextUsageWidget extends Disposable {
 
 	private _markOpened(): void {
 		this._contextUsageOpenedKey.set(true);
-		this.storageService.store(ChatContextUsageWidget._OPENED_STORAGE_KEY, true, StorageScope.WORKSPACE, StorageTarget.MACHINE);
+		this.storageService.store(
+      ChatContextUsageWidget._OPENED_STORAGE_KEY,
+      true,
+      StorageScope.WORKSPACE,
+      StorageTarget.MACHINE,
+    );
 	}
 
 	private setupHover(): void {
@@ -204,16 +254,20 @@ export class ChatContextUsageWidget extends Disposable {
 		const store = new DisposableStore();
 		this._hoverDisposable.value = store;
 
-		store.add(this.hoverService.setupDelayedHover(this.domNode, () => ({
-			...this._hoverOptions,
-			content: this._createDetails()?.domNode ?? ''
-		})));
+		store.add(
+      this.hoverService.setupDelayedHover(this.domNode, () => ({
+        ...this._hoverOptions,
+        content: this._createDetails()?.domNode ?? "",
+      })),
+    );
 
 		// Show sticky + focused hover on click
-		store.add(addDisposableListener(this.domNode, EventType.CLICK, e => {
-			e.stopPropagation();
-			this.showDetails();
-		}));
+		store.add(
+      addDisposableListener(this.domNode, EventType.CLICK, e => {
+        e.stopPropagation();
+        this.showDetails();
+      }),
+    );
 
 		// Show sticky + focused hover on keyboard activation (Space/Enter)
 		store.add(addDisposableListener(this.domNode, EventType.KEY_DOWN, e => {
@@ -256,13 +310,15 @@ export class ChatContextUsageWidget extends Disposable {
 
 		// Subscribe to response changes to update whenever usage data changes
 		this._lastRequestDisposable.value = response.onDidChange(() => {
-			this.updateFromResponse(response, modelId);
-		});
+      this.updateFromResponse(response, modelId);
+    });
 	}
 
 	private updateFromResponse(response: IChatResponseModel, modelId: string): void {
 		const usage = response.usage;
-		const modelMetadata = this.languageModelsService.lookupLanguageModel(modelId);
+		const modelMetadata = this.languageModelsService.lookupLanguageModel(
+      modelId,
+    );
 		const maxInputTokens = modelMetadata?.maxInputTokens;
 		const maxOutputTokens = modelMetadata?.maxOutputTokens;
 
@@ -284,16 +340,33 @@ export class ChatContextUsageWidget extends Disposable {
 		// Remaining reserve = whatever the model reserved minus what completions
 		// have already consumed. Once completions exceed the reserve, it drops to 0.
 		const outputBufferPercentage = outputBuffer !== undefined
-			? (Math.max(0, outputBuffer - completionTokens) / totalContextWindow) * 100
+			? (Math.max(
+          0,
+          outputBuffer - completionTokens,
+        ) / totalContextWindow) * 100
 			: undefined;
 
-		this.render(percentage, completionTokens, usedTokens, totalContextWindow, outputBufferPercentage, promptTokenDetails);
+		this.render(
+      percentage,
+      completionTokens,
+      usedTokens,
+      totalContextWindow,
+      outputBufferPercentage,
+      promptTokenDetails,
+    );
 		this.show();
 	}
 
 	private render(percentage: number, completionTokens: number, usedTokens: number, totalContextWindow: number, outputBufferPercentage: number | undefined, promptTokenDetails?: readonly { category: string; label: string; percentageOfPrompt: number }[]): void {
 		// Store current data for use in details popup
-		this.currentData = { usedTokens, completionTokens, totalContextWindow, percentage, outputBufferPercentage, promptTokenDetails };
+		this.currentData = {
+      usedTokens,
+      completionTokens,
+      totalContextWindow,
+      percentage,
+      outputBufferPercentage,
+      promptTokenDetails,
+    };
 
 		// Pie chart shows actual usage percentage only
 		this.progressIndicator.setProgress(percentage);
@@ -301,14 +374,21 @@ export class ChatContextUsageWidget extends Disposable {
 		// Update percentage label and aria-label (clamp display to 100)
 		const roundedPercentage = Math.min(100, Math.round(percentage));
 		this.percentageLabel.textContent = `${roundedPercentage}%`;
-		this.domNode.setAttribute('aria-label', localize('contextUsagePercentageLabel', "Context window usage: {0}%", roundedPercentage));
+		this.domNode.setAttribute(
+      "aria-label",
+      localize(
+        "contextUsagePercentageLabel",
+        "Context window usage: {0}%",
+        roundedPercentage,
+      ),
+    );
 
 		// Color based on actual usage percentage
-		this.domNode.classList.remove('warning', 'error');
+		this.domNode.classList.remove("warning", "error");
 		if (percentage >= 90) {
-			this.domNode.classList.add('error');
+			this.domNode.classList.add("error");
 		} else if (percentage >= 75) {
-			this.domNode.classList.add('warning');
+			this.domNode.classList.add("warning");
 		}
 	}
 
@@ -316,16 +396,16 @@ export class ChatContextUsageWidget extends Disposable {
 		if (!this._enabled) {
 			return;
 		}
-		if (this.domNode.style.display === 'none') {
-			this.domNode.style.display = '';
+		if (this.domNode.style.display === "none") {
+			this.domNode.style.display = "";
 			this._isVisible.set(true, undefined);
 			this._onDidChangeVisibility.fire();
 		}
 	}
 
 	private hide(): void {
-		if (this.domNode.style.display !== 'none') {
-			this.domNode.style.display = 'none';
+		if (this.domNode.style.display !== "none") {
+			this.domNode.style.display = "none";
 			this._isVisible.set(false, undefined);
 			this._onDidChangeVisibility.fire();
 		}

@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BugIndicatingError } from '../../../../base/common/errors.js';
-import { OffsetRange } from './offsetRange.js';
-import { Range } from '../range.js';
+import { BugIndicatingError } from "../../../../base/common/errors.js";
+import { OffsetRange } from "./offsetRange.js";
+import { Range } from "../range.js";
 
 /**
  * Represents a 1-based range of columns.
@@ -19,15 +19,22 @@ export class ColumnRange {
 	constructor(
 		/** 1-based */
 		public readonly startColumn: number,
-		public readonly endColumnExclusive: number
+		public readonly endColumnExclusive: number,
 	) {
 		if (startColumn > endColumnExclusive) {
-			throw new BugIndicatingError(`startColumn ${startColumn} cannot be after endColumnExclusive ${endColumnExclusive}`);
+			throw new BugIndicatingError(
+        `startColumn ${startColumn} cannot be after endColumnExclusive ${endColumnExclusive}`,
+      );
 		}
 	}
 
 	toRange(lineNumber: number): Range {
-		return new Range(lineNumber, this.startColumn, lineNumber, this.endColumnExclusive);
+		return new Range(
+      lineNumber,
+      this.startColumn,
+      lineNumber,
+      this.endColumnExclusive,
+    );
 	}
 
 	equals(other: ColumnRange): boolean {

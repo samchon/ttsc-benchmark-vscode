@@ -3,21 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../../../nls.js';
-import { Schemas } from '../../../../base/common/network.js';
-import { URI } from '../../../../base/common/uri.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { AGENT_HOST_SCHEME, fromAgentHostUri } from '../../../../platform/agentHost/common/agentHostUri.js';
-import { IAgentHostTerminalService } from '../../../../workbench/contrib/terminal/browser/agentHostTerminalService.js';
-import { ITerminalGroupService, ITerminalService } from '../../../../workbench/contrib/terminal/browser/terminal.js';
-import { isAgentHostProvider } from '../../../common/agentHostSessionsProvider.js';
-import { ISessionTaskRunner } from '../../chat/browser/sessionTaskRunner.js';
-import { resolveTaskCommand } from '../../chat/browser/taskCommand.js';
-import { ITaskEntry, ISessionsTasksService } from '../../chat/browser/sessionsTasksService.js';
-import { ISession } from '../../../services/sessions/common/session.js';
-import { ISessionsProvidersService } from '../../../services/sessions/browser/sessionsProvidersService.js';
+import { localize } from "../../../../nls.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { AGENT_HOST_SCHEME, fromAgentHostUri } from "../../../../platform/agentHost/common/agentHostUri.js";
+import { IAgentHostTerminalService } from "../../../../workbench/contrib/terminal/browser/agentHostTerminalService.js";
+import { ITerminalGroupService, ITerminalService } from "../../../../workbench/contrib/terminal/browser/terminal.js";
+import { isAgentHostProvider } from "../../../common/agentHostSessionsProvider.js";
+import { ISessionTaskRunner } from "../../chat/browser/sessionTaskRunner.js";
+import { resolveTaskCommand } from "../../chat/browser/taskCommand.js";
+import { ITaskEntry, ISessionsTasksService } from "../../chat/browser/sessionsTasksService.js";
+import { ISession } from "../../../services/sessions/common/session.js";
+import { ISessionsProvidersService } from "../../../services/sessions/browser/sessionsProvidersService.js";
 
-const LOG_PREFIX = '[AgentHostSessionTaskRunner]';
+const LOG_PREFIX = "[AgentHostSessionTaskRunner]";
 
 /**
  * Task runner for sessions backed by an agent host (local or remote). Resolves
@@ -27,7 +27,7 @@ const LOG_PREFIX = '[AgentHostSessionTaskRunner]';
  */
 export class AgentHostSessionTaskRunner implements ISessionTaskRunner {
 
-	readonly id = 'agentHost';
+	readonly id = "agentHost";
 	readonly priority = 100;
 
 	constructor(
@@ -55,19 +55,28 @@ export class AgentHostSessionTaskRunner implements ISessionTaskRunner {
 			byLabel.set(entry.task.label, entry.task);
 		}
 
-		const command = resolveTaskCommand(task, { lookup: label => byLabel.get(label) });
+		const command = resolveTaskCommand(task, {
+      lookup: label => byLabel.get(label),
+    });
 		if (!command) {
-			this._logService.trace(`${LOG_PREFIX} Skipping task '${task.label}' — no command could be resolved.`);
+			this._logService.trace(
+        `${LOG_PREFIX} Skipping task '${task.label}' — no command could be resolved.`,
+      );
 			return;
 		}
 
 		const cwd = this._getCwd(session);
-		const instance = await this._agentHostTerminalService.createTerminalForEntry(address, {
-			cwd,
-			name: localize('agentHostSessionTaskTerminalName', "Task: {0}", task.label),
-		});
+		const instance = await this._agentHostTerminalService.createTerminalForEntry(
+      address,
+      {
+        cwd,
+        name: localize("agentHostSessionTaskTerminalName", "Task: {0}", task.label),
+      },
+    );
 		if (!instance) {
-			this._logService.warn(`${LOG_PREFIX} Failed to create terminal for task '${task.label}' on '${address}'.`);
+			this._logService.warn(
+        `${LOG_PREFIX} Failed to create terminal for task '${task.label}' on '${address}'.`,
+      );
 			return;
 		}
 
@@ -77,11 +86,13 @@ export class AgentHostSessionTaskRunner implements ISessionTaskRunner {
 	}
 
 	private _getAddress(session: ISession): string | undefined {
-		const provider = this._sessionsProvidersService.getProvider(session.providerId);
+		const provider = this._sessionsProvidersService.getProvider(
+      session.providerId,
+    );
 		if (!provider || !isAgentHostProvider(provider)) {
 			return undefined;
 		}
-		return provider.remoteAddress ?? '__local__';
+		return provider.remoteAddress ?? "__local__";
 	}
 
 	private _getCwd(session: ISession): URI | undefined {

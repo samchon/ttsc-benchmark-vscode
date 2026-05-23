@@ -3,27 +3,39 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../../../base/browser/dom.js';
-import { renderLabelWithIcons } from '../../../../../../base/browser/ui/iconLabel/iconLabels.js';
-import { IAction } from '../../../../../../base/common/actions.js';
-import { Codicon } from '../../../../../../base/common/codicons.js';
-import { IDisposable } from '../../../../../../base/common/lifecycle.js';
-import { ThemeIcon } from '../../../../../../base/common/themables.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { localize } from '../../../../../../nls.js';
-import { MenuItemAction } from '../../../../../../platform/actions/common/actions.js';
-import { IActionWidgetService } from '../../../../../../platform/actionWidget/browser/actionWidget.js';
-import { IActionWidgetDropdownAction, IActionWidgetDropdownActionProvider, IActionWidgetDropdownOptions } from '../../../../../../platform/actionWidget/browser/actionWidgetDropdown.js';
-import { ICommandService } from '../../../../../../platform/commands/common/commands.js';
-import { IContextKeyService } from '../../../../../../platform/contextkey/common/contextkey.js';
-import { IKeybindingService } from '../../../../../../platform/keybinding/common/keybinding.js';
-import { IOpenerService } from '../../../../../../platform/opener/common/opener.js';
-import { ITelemetryService } from '../../../../../../platform/telemetry/common/telemetry.js';
-import { IChatSessionsService } from '../../../common/chatSessionsService.js';
-import { AgentSessionProviders, AgentSessionTarget, getAgentSessionProvider, getAgentSessionProviderDescription, getAgentSessionProviderIcon, getAgentSessionProviderName, isFirstPartyAgentSessionProvider } from '../../agentSessions/agentSessions.js';
-import { ChatInputPickerActionViewItem, IChatInputPickerOptions } from './chatInputPickerActionItem.js';
-import { ISessionTypePickerDelegate } from '../../chat.js';
-import { IActionProvider } from '../../../../../../base/browser/ui/dropdown/dropdown.js';
+import * as dom from "../../../../../../base/browser/dom.js";
+import { renderLabelWithIcons } from "../../../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { IAction } from "../../../../../../base/common/actions.js";
+import { Codicon } from "../../../../../../base/common/codicons.js";
+import { IDisposable } from "../../../../../../base/common/lifecycle.js";
+import { ThemeIcon } from "../../../../../../base/common/themables.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { localize } from "../../../../../../nls.js";
+import { MenuItemAction } from "../../../../../../platform/actions/common/actions.js";
+import { IActionWidgetService } from "../../../../../../platform/actionWidget/browser/actionWidget.js";
+import {
+  IActionWidgetDropdownAction,
+  IActionWidgetDropdownActionProvider,
+  IActionWidgetDropdownOptions,
+} from "../../../../../../platform/actionWidget/browser/actionWidgetDropdown.js";
+import { ICommandService } from "../../../../../../platform/commands/common/commands.js";
+import { IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { IKeybindingService } from "../../../../../../platform/keybinding/common/keybinding.js";
+import { IOpenerService } from "../../../../../../platform/opener/common/opener.js";
+import { ITelemetryService } from "../../../../../../platform/telemetry/common/telemetry.js";
+import { IChatSessionsService } from "../../../common/chatSessionsService.js";
+import {
+  AgentSessionProviders,
+  AgentSessionTarget,
+  getAgentSessionProvider,
+  getAgentSessionProviderDescription,
+  getAgentSessionProviderIcon,
+  getAgentSessionProviderName,
+  isFirstPartyAgentSessionProvider,
+} from "../../agentSessions/agentSessions.js";
+import { ChatInputPickerActionViewItem, IChatInputPickerOptions } from "./chatInputPickerActionItem.js";
+import { ISessionTypePickerDelegate } from "../../chat.js";
+import { IActionProvider } from "../../../../../../base/browser/ui/dropdown/dropdown.js";
 
 
 export interface ISessionTypeItem {
@@ -33,8 +45,14 @@ export interface ISessionTypeItem {
 	commandId: string;
 }
 
-const firstPartyCategory = { label: localize('chat.sessionTarget.category.agent', "Agent Types"), order: 1 };
-const otherCategory = { label: localize('chat.sessionTarget.category.other', "Other"), order: 2 };
+const firstPartyCategory = {
+  label: localize("chat.sessionTarget.category.agent", "Agent Types"),
+  order: 1,
+};
+const otherCategory = {
+  label: localize("chat.sessionTarget.category.other", "Other"),
+  order: 2,
+};
 
 /**
  * Action view item for selecting a session target in the chat interface.
@@ -45,7 +63,7 @@ export class SessionTypePickerActionItem extends ChatInputPickerActionViewItem {
 
 	constructor(
 		action: MenuItemAction,
-		protected readonly chatSessionPosition: 'sidebar' | 'editor',
+		protected readonly chatSessionPosition: "sidebar" | "editor",
 		protected readonly delegate: ISessionTypePickerDelegate,
 		pickerOptions: IChatInputPickerOptions,
 		@IActionWidgetService actionWidgetService: IActionWidgetService,
@@ -76,7 +94,7 @@ export class SessionTypePickerActionItem extends ChatInputPickerActionViewItem {
 						enabled: this._isSessionTypeEnabled(sessionTypeItem.type),
 						category: this._getSessionCategory(sessionTypeItem),
 						description: this._getSessionDescription(sessionTypeItem),
-						tooltip: '',
+						tooltip: "",
 						hover: { content: sessionTypeItem.hoverDescription },
 						run: async () => {
 							this._run(sessionTypeItem);
@@ -85,27 +103,37 @@ export class SessionTypePickerActionItem extends ChatInputPickerActionViewItem {
 				}
 
 				return actions;
-			}
+			},
 		};
 
 		const actionBarActionProvider: IActionProvider = {
 			getActions: () => {
 				return [this._getLearnMore()];
-			}
+			},
 		};
 
-		const sessionTargetPickerOptions: Omit<IActionWidgetDropdownOptions, 'label' | 'labelRenderer'> = {
-			actionProvider,
-			actionBarActionProvider,
-			showItemKeybindings: true,
-			reporter: { id: 'ChatSessionTypePicker', name: `ChatSessionTypePicker`, includeOptions: true },
-		};
+		const sessionTargetPickerOptions: Omit<IActionWidgetDropdownOptions, "label" | "labelRenderer"> = {
+      actionProvider,
+      actionBarActionProvider,
+      showItemKeybindings: true,
+      reporter: { id: "ChatSessionTypePicker", name: `ChatSessionTypePicker`, includeOptions: true },
+    };
 
-		super(action, sessionTargetPickerOptions, pickerOptions, actionWidgetService, keybindingService, contextKeyService, telemetryService);
+		super(
+      action,
+      sessionTargetPickerOptions,
+      pickerOptions,
+      actionWidgetService,
+      keybindingService,
+      contextKeyService,
+      telemetryService,
+    );
 
-		this._register(this.chatSessionsService.onDidChangeAvailability(() => {
-			this._updateAgentSessionItems();
-		}));
+		this._register(
+      this.chatSessionsService.onDidChangeAvailability(() => {
+        this._updateAgentSessionItems();
+      }),
+    );
 
 		this._updateAgentSessionItems();
 	}
@@ -116,7 +144,10 @@ export class SessionTypePickerActionItem extends ChatInputPickerActionViewItem {
 			this.delegate.setActiveSessionProvider(sessionTypeItem.type);
 		} else {
 			// Execute command to create new session
-			this.commandService.executeCommand(sessionTypeItem.commandId, this.chatSessionPosition);
+			this.commandService.executeCommand(
+        sessionTypeItem.commandId,
+        this.chatSessionPosition,
+      );
 		}
 		if (this.element) {
 			this.renderLabel(this.element);
@@ -132,26 +163,26 @@ export class SessionTypePickerActionItem extends ChatInputPickerActionViewItem {
 	}
 
 	protected _getLearnMore(): IAction {
-		const learnMoreUrl = 'https://code.visualstudio.com/docs/copilot/agents/overview';
+		const learnMoreUrl = "https://code.visualstudio.com/docs/copilot/agents/overview";
 		return {
-			id: 'workbench.action.chat.agentOverview.learnMore',
-			label: localize('chat.learnMoreAgentTypes', "Learn about agent types..."),
+			id: "workbench.action.chat.agentOverview.learnMore",
+			label: localize("chat.learnMoreAgentTypes", "Learn about agent types..."),
 			tooltip: learnMoreUrl,
 			class: undefined,
 			enabled: true,
 			run: async () => {
 				await this.openerService.open(URI.parse(learnMoreUrl));
-			}
+			},
 		};
 	}
 
 	private _updateAgentSessionItems(): void {
 		const localSessionItem: ISessionTypeItem = {
-			type: AgentSessionProviders.Local,
-			label: getAgentSessionProviderName(AgentSessionProviders.Local),
-			hoverDescription: getAgentSessionProviderDescription(AgentSessionProviders.Local),
-			commandId: `workbench.action.chat.openNewChatSessionInPlace.${AgentSessionProviders.Local}`,
-		};
+      type: AgentSessionProviders.Local,
+      label: getAgentSessionProviderName(AgentSessionProviders.Local),
+      hoverDescription: getAgentSessionProviderDescription(AgentSessionProviders.Local),
+      commandId: `workbench.action.chat.openNewChatSessionInPlace.${AgentSessionProviders.Local}`,
+    };
 
 		const agentSessionItems: ISessionTypeItem[] = [localSessionItem];
 
@@ -174,11 +205,11 @@ export class SessionTypePickerActionItem extends ChatInputPickerActionViewItem {
 				// (openNewChatSessionExternal requires a menu action registered
 				// by _registerMenuItems, which may not exist for extensions)
 				agentSessionItems.push({
-					type: contribution.type,
-					label: contribution.displayName ?? contribution.name ?? contribution.type,
-					hoverDescription: contribution.description ?? '',
-					commandId: `workbench.action.chat.openNewChatSessionInPlace.${contribution.type}`,
-				});
+          type: contribution.type,
+          label: contribution.displayName ?? contribution.name ?? contribution.type,
+          hoverDescription: contribution.description ?? "",
+          commandId: `workbench.action.chat.openNewChatSessionInPlace.${contribution.type}`,
+        });
 			}
 		}
 		this._sessionTypeItems = agentSessionItems;
@@ -199,7 +230,9 @@ export class SessionTypePickerActionItem extends ChatInputPickerActionViewItem {
 	protected _getSessionCategory(sessionTypeItem: ISessionTypeItem) {
 		// TODO: Remove hardcoded providers from core
 		const knownType = getAgentSessionProvider(sessionTypeItem.type);
-		return knownType && isFirstPartyAgentSessionProvider(knownType) ? firstPartyCategory : otherCategory;
+		return knownType && isFirstPartyAgentSessionProvider(
+      knownType,
+    ) ? firstPartyCategory : otherCategory;
 	}
 
 	protected _getSessionDescription(sessionTypeItem: ISessionTypeItem): string | undefined {
@@ -213,7 +246,9 @@ export class SessionTypePickerActionItem extends ChatInputPickerActionViewItem {
 			return getAgentSessionProviderIcon(knownType);
 		}
 		// Extension-contributed: look up icon from the contribution
-		const contribution = this.chatSessionsService.getChatSessionContribution(sessionTypeItem.type);
+		const contribution = this.chatSessionsService.getChatSessionContribution(
+      sessionTypeItem.type,
+    );
 		if (contribution && ThemeIcon.isThemeIcon(contribution.icon)) {
 			return contribution.icon;
 		}
@@ -222,7 +257,7 @@ export class SessionTypePickerActionItem extends ChatInputPickerActionViewItem {
 
 	override render(container: HTMLElement): void {
 		super.render(container);
-		container.classList.add('chat-session-target-picker-item');
+		container.classList.add("chat-session-target-picker-item");
 	}
 
 	protected override renderLabel(element: HTMLElement): IDisposable | null {
@@ -233,12 +268,19 @@ export class SessionTypePickerActionItem extends ChatInputPickerActionViewItem {
 		const knownType = getAgentSessionProvider(currentType);
 		const label = knownType
 			? getAgentSessionProviderName(knownType)
-			: (this.chatSessionsService.getChatSessionContribution(currentType)?.displayName ?? currentType);
-		const icon = this._getSessionIcon({ type: currentType, label, hoverDescription: '', commandId: '' });
+			: (this.chatSessionsService.getChatSessionContribution(
+          currentType,
+        )?.displayName ?? currentType);
+		const icon = this._getSessionIcon({
+      type: currentType,
+      label,
+      hoverDescription: "",
+      commandId: "",
+    });
 
 		const labelElements = [];
 		labelElements.push(...renderLabelWithIcons(`$(${icon.id})`));
-		labelElements.push(dom.$('span.chat-input-picker-label', undefined, label));
+		labelElements.push(dom.$("span.chat-input-picker-label", undefined, label));
 
 		dom.reset(element, ...labelElements);
 

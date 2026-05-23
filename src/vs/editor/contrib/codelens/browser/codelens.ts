@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { illegalArgument, onUnexpectedExternalError } from '../../../../base/common/errors.js';
-import { DisposableStore, isDisposable } from '../../../../base/common/lifecycle.js';
-import { assertType } from '../../../../base/common/types.js';
-import { URI } from '../../../../base/common/uri.js';
-import { ITextModel } from '../../../common/model.js';
-import { CodeLens, CodeLensList, CodeLensProvider } from '../../../common/languages.js';
-import { IModelService } from '../../../common/services/model.js';
-import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
-import { LanguageFeatureRegistry } from '../../../common/languageFeatureRegistry.js';
-import { ILanguageFeaturesService } from '../../../common/services/languageFeatures.js';
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { illegalArgument, onUnexpectedExternalError } from "../../../../base/common/errors.js";
+import { DisposableStore, isDisposable } from "../../../../base/common/lifecycle.js";
+import { assertType } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ITextModel } from "../../../common/model.js";
+import { CodeLens, CodeLensList, CodeLensProvider } from "../../../common/languages.js";
+import { IModelService } from "../../../common/services/model.js";
+import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+import { LanguageFeatureRegistry } from "../../../common/languageFeatureRegistry.js";
+import { ILanguageFeaturesService } from "../../../common/services/languageFeatures.js";
 
 export interface CodeLensItem {
 	readonly symbol: CodeLens;
@@ -95,10 +95,10 @@ export async function getCodeLensModel(registry: LanguageFeatureRegistry<CodeLen
 	return result;
 }
 
-CommandsRegistry.registerCommand('_executeCodeLensProvider', function (accessor, ...args: [URI, number | undefined | null]) {
+CommandsRegistry.registerCommand("_executeCodeLensProvider", function (accessor, ...args: [URI, number | undefined | null]) {
 	let [uri, itemResolveCount] = args;
 	assertType(URI.isUri(uri));
-	assertType(typeof itemResolveCount === 'number' || !itemResolveCount);
+	assertType(typeof itemResolveCount === "number" || !itemResolveCount);
 
 	const { codeLensProvider } = accessor.get(ILanguageFeaturesService);
 

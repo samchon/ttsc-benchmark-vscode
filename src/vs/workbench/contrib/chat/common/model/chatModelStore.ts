@@ -3,14 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter } from '../../../../../base/common/event.js';
-import { Disposable, IReference, ReferenceCollection } from '../../../../../base/common/lifecycle.js';
-import { ObservableMap } from '../../../../../base/common/observable.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { ILogService } from '../../../../../platform/log/common/log.js';
-import { ChatAgentLocation } from '../constants.js';
-import { IChatEditingSession, ModifiedFileEntryState } from '../editing/chatEditingService.js';
-import { ChatModel, ISerializableChatModelInputState, ISerializedChatDataReference } from './chatModel.js';
+import { Emitter } from "../../../../../base/common/event.js";
+import { Disposable, IReference, ReferenceCollection } from "../../../../../base/common/lifecycle.js";
+import { ObservableMap } from "../../../../../base/common/observable.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { ChatAgentLocation } from "../constants.js";
+import { IChatEditingSession, ModifiedFileEntryState } from "../editing/chatEditingService.js";
+import {
+  ChatModel,
+  ISerializableChatModelInputState,
+  ISerializedChatDataReference,
+} from "./chatModel.js";
 
 export interface IStartSessionProps {
 	readonly initialData?: ISerializedChatDataReference;
@@ -61,7 +65,9 @@ export class ChatModelStore extends Disposable {
 	private readonly _referenceOwners = new Map<string, Map<number, string>>();
 	private _referenceOwnerIds = 0;
 
-	private readonly _onDidDisposeModel = this._register(new Emitter<ChatModel>());
+	private readonly _onDidDisposeModel = this._register(
+    new Emitter<ChatModel>(),
+  );
 	public readonly onDidDisposeModel = this._onDidDisposeModel.event;
 
 	private readonly _onDidCreateModel = this._register(new Emitter<ChatModel>());
@@ -109,12 +115,20 @@ export class ChatModelStore extends Disposable {
 			return undefined;
 		}
 
-		return this.wrapReference(key, this._refCollection.acquire(key, undefined, debugOwner), debugOwner);
+		return this.wrapReference(
+      key,
+      this._refCollection.acquire(key, undefined, debugOwner),
+      debugOwner,
+    );
 	}
 
 	public acquireOrCreate(props: IStartSessionProps, debugOwner?: string): IReference<ChatModel> {
 		const key = this.toKey(props.sessionResource);
-		return this.wrapReference(key, this._refCollection.acquire(key, props, debugOwner), debugOwner);
+		return this.wrapReference(
+      key,
+      this._refCollection.acquire(key, props, debugOwner),
+      debugOwner,
+    );
 	}
 
 	public getReferenceDebugSnapshot(): IChatModelReferenceDebugSnapshot {
@@ -134,7 +148,7 @@ export class ChatModelStore extends Disposable {
 				return {
 					sessionResource: model.sessionResource,
 					title: model.title,
-					createdBy: this._modelCreateOwners.get(key) ?? 'unknown',
+					createdBy: this._modelCreateOwners.get(key) ?? "unknown",
 					initialLocation: model.initialLocation,
 					isImported: !!model.isImported,
 					willKeepAlive: model.willKeepAlive,
@@ -147,10 +161,10 @@ export class ChatModelStore extends Disposable {
 			.sort((a, b) => b.referenceCount - a.referenceCount || Number(b.hasPendingEdits) - Number(a.hasPendingEdits) || a.sessionResource.toString().localeCompare(b.sessionResource.toString()));
 
 		return {
-			totalModels: models.length,
-			totalReferences: models.reduce((total, model) => total + model.referenceCount, 0),
-			models,
-		};
+      totalModels: models.length,
+      totalReferences: models.reduce((total, model) => total + model.referenceCount, 0),
+      models,
+    };
 	}
 
 	private createReferencedObject(key: string, props?: IStartSessionProps, debugOwner?: string): ChatModel {
@@ -161,12 +175,14 @@ export class ChatModelStore extends Disposable {
 		}
 
 		if (!props) {
-			throw new Error(`No start session props provided for chat session ${key}`);
+			throw new Error(
+        `No start session props provided for chat session ${key}`,
+      );
 		}
 
 		this.logService.trace(`Creating chat session ${key}`);
 		const model = this.delegate.createModel(props);
-		this._modelCreateOwners.set(key, debugOwner ?? 'unspecified');
+		this._modelCreateOwners.set(key, debugOwner ?? "unspecified");
 		if (model.sessionResource.toString() !== key) {
 			throw new Error(`Chat session key mismatch for ${key}`);
 		}
@@ -180,8 +196,8 @@ export class ChatModelStore extends Disposable {
 		const promise = this.doDestroyReferencedObject(key, object);
 		this._pendingDisposals.add(promise);
 		promise.finally(() => {
-			this._pendingDisposals.delete(promise);
-		});
+      this._pendingDisposals.delete(promise);
+    });
 	}
 
 	private async doDestroyReferencedObject(key: string, object: ChatModel): Promise<void> {
@@ -209,7 +225,7 @@ export class ChatModelStore extends Disposable {
 			ownerEntries = new Map();
 			this._referenceOwners.set(key, ownerEntries);
 		}
-		ownerEntries.set(ownerId, debugOwner ?? 'unspecified');
+		ownerEntries.set(ownerId, debugOwner ?? "unspecified");
 
 		let isDisposed = false;
 		const wrapped: IReference<ChatModel> = {
@@ -230,7 +246,7 @@ export class ChatModelStore extends Disposable {
 				// Break the reference from this wrapper to the ChatModel so that
 				// stale holders of this IChatModelReference cannot retain the model.
 				(wrapped as { object: ChatModel | null }).object = null;
-			}
+			},
 		};
 		return wrapped;
 	}

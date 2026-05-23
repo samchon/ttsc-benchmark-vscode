@@ -3,28 +3,38 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize, localize2 } from '../../../../nls.js';
-import { Action2, MenuRegistry, registerAction2 } from '../../../../platform/actions/common/actions.js';
-import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
-import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { AI_CUSTOMIZATION_CATEGORY, AI_CUSTOMIZATION_VIEW_ID, AICustomizationItemMenuId, FOCUS_AI_CUSTOMIZATION_VIEW_ID } from './aiCustomizationTreeView.js';
-import { AICustomizationItemDisabledContextKey, AICustomizationItemStorageContextKey, AICustomizationItemTypeContextKey, AICustomizationViewPane } from './aiCustomizationTreeViewViews.js';
-import { PromptsType } from '../../../../workbench/contrib/chat/common/promptSyntax/promptTypes.js';
-import { Codicon } from '../../../../base/common/codicons.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IEditorService } from '../../../../workbench/services/editor/common/editorService.js';
-import { IFileService, FileSystemProviderCapabilities } from '../../../../platform/files/common/files.js';
-import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
-import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
-import { IPromptsService } from '../../../../workbench/contrib/chat/common/promptSyntax/service/promptsService.js';
-import { IViewsService } from '../../../../workbench/services/views/common/viewsService.js';
-import { BUILTIN_STORAGE } from '../../chat/common/builtinPromptsStorage.js';
-import { KeyCode, KeyMod } from '../../../../base/common/keyCodes.js';
-import { KeybindingWeight } from '../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { SessionsView, SessionsViewId } from '../../sessions/browser/views/sessionsView.js';
-import { IsSessionsWindowContext } from '../../../../workbench/common/contextkeys.js';
-import { TerminalContextKeys } from '../../../../workbench/contrib/terminal/common/terminalContextKey.js';
+import { localize, localize2 } from "../../../../nls.js";
+import { Action2, MenuRegistry, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import {
+  AI_CUSTOMIZATION_CATEGORY,
+  AI_CUSTOMIZATION_VIEW_ID,
+  AICustomizationItemMenuId,
+  FOCUS_AI_CUSTOMIZATION_VIEW_ID,
+} from "./aiCustomizationTreeView.js";
+import {
+  AICustomizationItemDisabledContextKey,
+  AICustomizationItemStorageContextKey,
+  AICustomizationItemTypeContextKey,
+  AICustomizationViewPane,
+} from "./aiCustomizationTreeViewViews.js";
+import { PromptsType } from "../../../../workbench/contrib/chat/common/promptSyntax/promptTypes.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IEditorService } from "../../../../workbench/services/editor/common/editorService.js";
+import { IFileService, FileSystemProviderCapabilities } from "../../../../platform/files/common/files.js";
+import { IClipboardService } from "../../../../platform/clipboard/common/clipboardService.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IPromptsService } from "../../../../workbench/contrib/chat/common/promptSyntax/service/promptsService.js";
+import { IViewsService } from "../../../../workbench/services/views/common/viewsService.js";
+import { BUILTIN_STORAGE } from "../../chat/common/builtinPromptsStorage.js";
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { SessionsView, SessionsViewId } from "../../sessions/browser/views/sessionsView.js";
+import { IsSessionsWindowContext } from "../../../../workbench/common/contextkeys.js";
+import { TerminalContextKeys } from "../../../../workbench/contrib/terminal/common/terminalContextKey.js";
 
 //#region Utilities
 
@@ -42,7 +52,7 @@ function extractURI(context: ItemContext): URI {
 	if (URI.isUri(context)) {
 		return context;
 	}
-	if (typeof context === 'string') {
+	if (typeof context === "string") {
 		return URI.parse(context);
 	}
 	if (URI.isUri(context.uri)) {
@@ -56,47 +66,47 @@ function extractURI(context: ItemContext): URI {
 //#region Context Menu Actions
 
 // Open file action
-const OPEN_AI_CUSTOMIZATION_FILE_ID = 'aiCustomization.openFile';
+const OPEN_AI_CUSTOMIZATION_FILE_ID = "aiCustomization.openFile";
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: OPEN_AI_CUSTOMIZATION_FILE_ID,
-			title: localize2('open', "Open"),
+			title: localize2("open", "Open"),
 			icon: Codicon.goToFile,
 		});
 	}
 	async run(accessor: ServicesAccessor, context: ItemContext): Promise<void> {
 		const editorService = accessor.get(IEditorService);
 		await editorService.openEditor({
-			resource: extractURI(context)
+			resource: extractURI(context),
 		});
 	}
 });
 
 
 // Run prompt action
-const RUN_PROMPT_FROM_VIEW_ID = 'aiCustomization.runPrompt';
+const RUN_PROMPT_FROM_VIEW_ID = "aiCustomization.runPrompt";
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: RUN_PROMPT_FROM_VIEW_ID,
-			title: localize2('runPrompt', "Run Prompt"),
+			title: localize2("runPrompt", "Run Prompt"),
 			icon: Codicon.play,
 		});
 	}
 	async run(accessor: ServicesAccessor, context: ItemContext): Promise<void> {
 		const commandService = accessor.get(ICommandService);
-		await commandService.executeCommand('workbench.action.chat.run.prompt.current', extractURI(context));
+		await commandService.executeCommand("workbench.action.chat.run.prompt.current", extractURI(context));
 	}
 });
 
 // Delete file action
-const DELETE_AI_CUSTOMIZATION_FILE_ID = 'aiCustomization.deleteFile';
+const DELETE_AI_CUSTOMIZATION_FILE_ID = "aiCustomization.deleteFile";
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: DELETE_AI_CUSTOMIZATION_FILE_ID,
-			title: localize2('delete', "Delete"),
+			title: localize2("delete", "Delete"),
 			icon: Codicon.trash,
 		});
 	}
@@ -104,15 +114,15 @@ registerAction2(class extends Action2 {
 		const fileService = accessor.get(IFileService);
 		const dialogService = accessor.get(IDialogService);
 		const uri = extractURI(context);
-		const name = typeof context === 'object' && !URI.isUri(context) ? (context as { name?: string }).name ?? '' : '';
+		const name = typeof context === "object" && !URI.isUri(context) ? (context as { name?: string }).name ?? "" : "";
 
-		if (uri.scheme !== 'file') {
+		if (uri.scheme !== "file") {
 			return;
 		}
 
 		const confirmation = await dialogService.confirm({
-			message: localize('confirmDelete', "Are you sure you want to delete '{0}'?", name || uri.path),
-			primaryButton: localize('delete', "Delete"),
+			message: localize("confirmDelete", "Are you sure you want to delete '{0}'?", name || uri.path),
+			primaryButton: localize("delete", "Delete"),
 		});
 
 		if (confirmation.confirmed) {
@@ -123,19 +133,19 @@ registerAction2(class extends Action2 {
 });
 
 // Copy path action
-const COPY_AI_CUSTOMIZATION_PATH_ID = 'aiCustomization.copyPath';
+const COPY_AI_CUSTOMIZATION_PATH_ID = "aiCustomization.copyPath";
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: COPY_AI_CUSTOMIZATION_PATH_ID,
-			title: localize2('copyPath', "Copy Path"),
+			title: localize2("copyPath", "Copy Path"),
 			icon: Codicon.clippy,
 		});
 	}
 	async run(accessor: ServicesAccessor, context: ItemContext): Promise<void> {
 		const clipboardService = accessor.get(IClipboardService);
 		const uri = extractURI(context);
-		const textToCopy = uri.scheme === 'file' ? uri.fsPath : uri.toString(true);
+		const textToCopy = uri.scheme === "file" ? uri.fsPath : uri.toString(true);
 		await clipboardService.writeText(textToCopy);
 	}
 });
@@ -144,49 +154,49 @@ registerAction2(class extends Action2 {
 
 // Inline hover actions (shown as icon buttons on hover)
 MenuRegistry.appendMenuItem(AICustomizationItemMenuId, {
-	command: { id: DELETE_AI_CUSTOMIZATION_FILE_ID, title: localize('delete', "Delete"), icon: Codicon.trash },
-	group: 'inline',
-	order: 10,
+  command: { id: DELETE_AI_CUSTOMIZATION_FILE_ID, title: localize("delete", "Delete"), icon: Codicon.trash },
+  group: "inline",
+  order: 10,
 });
 
 // Context menu items (shown on right-click)
 MenuRegistry.appendMenuItem(AICustomizationItemMenuId, {
-	command: { id: OPEN_AI_CUSTOMIZATION_FILE_ID, title: localize('open', "Open") },
-	group: '1_open',
-	order: 1,
+  command: { id: OPEN_AI_CUSTOMIZATION_FILE_ID, title: localize("open", "Open") },
+  group: "1_open",
+  order: 1,
 });
 
 MenuRegistry.appendMenuItem(AICustomizationItemMenuId, {
-	command: { id: RUN_PROMPT_FROM_VIEW_ID, title: localize('runPrompt', "Run Prompt"), icon: Codicon.play },
-	group: '2_run',
-	order: 1,
-	when: ContextKeyExpr.equals(AICustomizationItemTypeContextKey.key, PromptsType.prompt),
+  command: { id: RUN_PROMPT_FROM_VIEW_ID, title: localize("runPrompt", "Run Prompt"), icon: Codicon.play },
+  group: "2_run",
+  order: 1,
+  when: ContextKeyExpr.equals(AICustomizationItemTypeContextKey.key, PromptsType.prompt),
 });
 
 MenuRegistry.appendMenuItem(AICustomizationItemMenuId, {
-	command: { id: COPY_AI_CUSTOMIZATION_PATH_ID, title: localize('copyPath', "Copy Path") },
-	group: '3_modify',
-	order: 1,
+  command: { id: COPY_AI_CUSTOMIZATION_PATH_ID, title: localize("copyPath", "Copy Path") },
+  group: "3_modify",
+  order: 1,
 });
 
 MenuRegistry.appendMenuItem(AICustomizationItemMenuId, {
-	command: { id: DELETE_AI_CUSTOMIZATION_FILE_ID, title: localize('delete', "Delete") },
-	group: '3_modify',
-	order: 10,
+  command: { id: DELETE_AI_CUSTOMIZATION_FILE_ID, title: localize("delete", "Delete") },
+  group: "3_modify",
+  order: 10,
 });
 
 // Disable item action
-const DISABLE_AI_CUSTOMIZATION_ITEM_ID = 'aiCustomization.disableItem';
+const DISABLE_AI_CUSTOMIZATION_ITEM_ID = "aiCustomization.disableItem";
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: DISABLE_AI_CUSTOMIZATION_ITEM_ID,
-			title: localize2('disable', "Disable"),
+			title: localize2("disable", "Disable"),
 			icon: Codicon.eyeClosed,
 		});
 	}
 	async run(accessor: ServicesAccessor, context: ItemContext): Promise<void> {
-		if (typeof context !== 'object' || URI.isUri(context)) {
+		if (typeof context !== "object" || URI.isUri(context)) {
 			return;
 		}
 		const promptsService = accessor.get(IPromptsService);
@@ -207,17 +217,17 @@ registerAction2(class extends Action2 {
 });
 
 // Enable item action
-const ENABLE_AI_CUSTOMIZATION_ITEM_ID = 'aiCustomization.enableItem';
+const ENABLE_AI_CUSTOMIZATION_ITEM_ID = "aiCustomization.enableItem";
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: ENABLE_AI_CUSTOMIZATION_ITEM_ID,
-			title: localize2('enable', "Enable"),
+			title: localize2("enable", "Enable"),
 			icon: Codicon.eye,
 		});
 	}
 	async run(accessor: ServicesAccessor, context: ItemContext): Promise<void> {
-		if (typeof context !== 'object' || URI.isUri(context)) {
+		if (typeof context !== "object" || URI.isUri(context)) {
 			return;
 		}
 		const promptsService = accessor.get(IPromptsService);
@@ -239,8 +249,8 @@ registerAction2(class extends Action2 {
 
 // Context menu: Disable (shown when builtin item is enabled)
 MenuRegistry.appendMenuItem(AICustomizationItemMenuId, {
-	command: { id: DISABLE_AI_CUSTOMIZATION_ITEM_ID, title: localize('disable', "Disable") },
-	group: '4_toggle',
+	command: { id: DISABLE_AI_CUSTOMIZATION_ITEM_ID, title: localize("disable", "Disable") },
+	group: "4_toggle",
 	order: 1,
 	when: ContextKeyExpr.and(
 		ContextKeyExpr.equals(AICustomizationItemDisabledContextKey.key, false),
@@ -251,8 +261,8 @@ MenuRegistry.appendMenuItem(AICustomizationItemMenuId, {
 
 // Context menu: Enable (shown when builtin item is disabled)
 MenuRegistry.appendMenuItem(AICustomizationItemMenuId, {
-	command: { id: ENABLE_AI_CUSTOMIZATION_ITEM_ID, title: localize('enable', "Enable") },
-	group: '4_toggle',
+	command: { id: ENABLE_AI_CUSTOMIZATION_ITEM_ID, title: localize("enable", "Enable") },
+	group: "4_toggle",
 	order: 1,
 	when: ContextKeyExpr.and(
 		ContextKeyExpr.equals(AICustomizationItemDisabledContextKey.key, true),
@@ -263,8 +273,8 @@ MenuRegistry.appendMenuItem(AICustomizationItemMenuId, {
 
 // Inline hover: Disable (shown when builtin item is enabled)
 MenuRegistry.appendMenuItem(AICustomizationItemMenuId, {
-	command: { id: DISABLE_AI_CUSTOMIZATION_ITEM_ID, title: localize('disable', "Disable"), icon: Codicon.eyeClosed },
-	group: 'inline',
+	command: { id: DISABLE_AI_CUSTOMIZATION_ITEM_ID, title: localize("disable", "Disable"), icon: Codicon.eyeClosed },
+	group: "inline",
 	order: 5,
 	when: ContextKeyExpr.and(
 		ContextKeyExpr.equals(AICustomizationItemDisabledContextKey.key, false),
@@ -275,8 +285,8 @@ MenuRegistry.appendMenuItem(AICustomizationItemMenuId, {
 
 // Inline hover: Enable (shown when builtin item is disabled)
 MenuRegistry.appendMenuItem(AICustomizationItemMenuId, {
-	command: { id: ENABLE_AI_CUSTOMIZATION_ITEM_ID, title: localize('enable', "Enable"), icon: Codicon.eye },
-	group: 'inline',
+	command: { id: ENABLE_AI_CUSTOMIZATION_ITEM_ID, title: localize("enable", "Enable"), icon: Codicon.eye },
+	group: "inline",
 	order: 5,
 	when: ContextKeyExpr.and(
 		ContextKeyExpr.equals(AICustomizationItemDisabledContextKey.key, true),
@@ -293,7 +303,7 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: FOCUS_AI_CUSTOMIZATION_VIEW_ID,
-			title: localize2('focusCustomizations', "Focus Chat Customizations"),
+			title: localize2("focusCustomizations", "Focus Chat Customizations"),
 			category: AI_CUSTOMIZATION_CATEGORY,
 			precondition: IsSessionsWindowContext,
 			f1: true,

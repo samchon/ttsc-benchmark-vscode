@@ -3,19 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Schemas } from '../../../../base/common/network.js';
-import { URI } from '../../../../base/common/uri.js';
-import { localize2 } from '../../../../nls.js';
-import { INativeEnvironmentService } from '../../../../platform/environment/common/environment.js';
-import { IRemoteAuthorityResolverService } from '../../../../platform/remote/common/remoteAuthorityResolver.js';
-import { registerTerminalAction } from '../browser/terminalActions.js';
-import { TerminalCommandId } from '../common/terminal.js';
-import { IHistoryService } from '../../../services/history/common/history.js';
+import { Schemas } from "../../../../base/common/network.js";
+import { URI } from "../../../../base/common/uri.js";
+import { localize2 } from "../../../../nls.js";
+import { INativeEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { IRemoteAuthorityResolverService } from "../../../../platform/remote/common/remoteAuthorityResolver.js";
+import { registerTerminalAction } from "../browser/terminalActions.js";
+import { TerminalCommandId } from "../common/terminal.js";
+import { IHistoryService } from "../../../services/history/common/history.js";
 
 export function registerRemoteContributions() {
 	registerTerminalAction({
 		id: TerminalCommandId.NewLocal,
-		title: localize2('workbench.action.terminal.newLocal', 'Create New Integrated Terminal (Local)'),
+		title: localize2("workbench.action.terminal.newLocal", "Create New Integrated Terminal (Local)"),
 		run: async (c, accessor) => {
 			const historyService = accessor.get(IHistoryService);
 			const remoteAuthorityResolverService = accessor.get(IRemoteAuthorityResolverService);
@@ -40,6 +40,6 @@ export function registerRemoteContributions() {
 
 			c.service.setActiveInstance(instance);
 			return c.groupService.showPanel(true);
-		}
+		},
 	});
 }

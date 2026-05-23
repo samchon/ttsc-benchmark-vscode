@@ -2,16 +2,20 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { Disposable, MutableDisposable } from '../../../../../base/common/lifecycle.js';
-import { IModelService } from '../../../../../editor/common/services/model.js';
-import { ILanguageService } from '../../../../../editor/common/languages/language.js';
-import { ITextModelContentProvider, ITextModelService } from '../../../../../editor/common/services/resolverService.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { ITextModel } from '../../../../../editor/common/model.js';
-import { Schemas } from '../../../../../base/common/network.js';
-import { ICommandDetectionCapability, ITerminalCapabilityStore, TerminalCapability } from '../../../../../platform/terminal/common/capabilities/capabilities.js';
-import { TerminalShellType } from '../../../../../platform/terminal/common/terminal.js';
-import { VSCODE_LSP_TERMINAL_PROMPT_TRACKER } from './lspTerminalUtil.js';
+import { Disposable, MutableDisposable } from "../../../../../base/common/lifecycle.js";
+import { IModelService } from "../../../../../editor/common/services/model.js";
+import { ILanguageService } from "../../../../../editor/common/languages/language.js";
+import { ITextModelContentProvider, ITextModelService } from "../../../../../editor/common/services/resolverService.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ITextModel } from "../../../../../editor/common/model.js";
+import { Schemas } from "../../../../../base/common/network.js";
+import {
+  ICommandDetectionCapability,
+  ITerminalCapabilityStore,
+  TerminalCapability,
+} from "../../../../../platform/terminal/common/capabilities/capabilities.js";
+import { TerminalShellType } from "../../../../../platform/terminal/common/terminal.js";
+import { VSCODE_LSP_TERMINAL_PROMPT_TRACKER } from "./lspTerminalUtil.js";
 
 export interface ILspTerminalModelContentProvider extends ITextModelContentProvider {
 	setContent(content: string): void;
@@ -24,7 +28,9 @@ export class LspTerminalModelContentProvider extends Disposable implements ILspT
 	private _capabilitiesStore: ITerminalCapabilityStore;
 	private readonly _virtualTerminalDocumentUri: URI;
 	private _shellType: TerminalShellType | undefined;
-	private readonly _onCommandFinishedListener = this._register(new MutableDisposable());
+	private readonly _onCommandFinishedListener = this._register(
+    new MutableDisposable(),
+  );
 
 	constructor(
 		capabilityStore: ITerminalCapabilityStore,
@@ -37,9 +43,16 @@ export class LspTerminalModelContentProvider extends Disposable implements ILspT
 
 	) {
 		super();
-		this._register(textModelService.registerTextModelContentProvider(LspTerminalModelContentProvider.scheme, this));
+		this._register(
+      textModelService.registerTextModelContentProvider(
+        LspTerminalModelContentProvider.scheme,
+        this,
+      ),
+    );
 		this._capabilitiesStore = capabilityStore;
-		this._commandDetection = this._capabilitiesStore.get(TerminalCapability.CommandDetection);
+		this._commandDetection = this._capabilitiesStore.get(
+      TerminalCapability.CommandDetection,
+    );
 		this._registerTerminalCommandFinishedListener();
 		this._virtualTerminalDocumentUri = virtualTerminalDocument;
 		this._shellType = shellType;
@@ -60,16 +73,18 @@ export class LspTerminalModelContentProvider extends Disposable implements ILspT
 		if (this._shellType) {
 			if (model) {
 				const existingContent = model.getValue();
-				if (existingContent === '') {
+				if (existingContent === "") {
 					model.setValue(VSCODE_LSP_TERMINAL_PROMPT_TRACKER);
 				} else {
 					// If we are appending to existing content, remove delimiter, attach new content, and re-add delimiter
-					const delimiterIndex = existingContent.lastIndexOf(VSCODE_LSP_TERMINAL_PROMPT_TRACKER);
+					const delimiterIndex = existingContent.lastIndexOf(
+            VSCODE_LSP_TERMINAL_PROMPT_TRACKER,
+          );
 					const sanitizedExistingContent = delimiterIndex !== -1 ?
 						existingContent.substring(0, delimiterIndex) :
 						existingContent;
 
-					const newContent = sanitizedExistingContent + '\n' + content + '\n' + VSCODE_LSP_TERMINAL_PROMPT_TRACKER;
+					const newContent = sanitizedExistingContent + "\n" + content + "\n" + VSCODE_LSP_TERMINAL_PROMPT_TRACKER;
 					model.setValue(newContent);
 				}
 			}
@@ -83,12 +98,16 @@ export class LspTerminalModelContentProvider extends Disposable implements ILspT
 	 * Note: This is for non-executed command.
 	*/
 	trackPromptInputToVirtualFile(content: string): void {
-		this._commandDetection = this._capabilitiesStore.get(TerminalCapability.CommandDetection);
+		this._commandDetection = this._capabilitiesStore.get(
+      TerminalCapability.CommandDetection,
+    );
 		const model = this._modelService.getModel(this._virtualTerminalDocumentUri);
 		if (this._shellType) {
 			if (model) {
 				const existingContent = model.getValue();
-				const delimiterIndex = existingContent.lastIndexOf(VSCODE_LSP_TERMINAL_PROMPT_TRACKER);
+				const delimiterIndex = existingContent.lastIndexOf(
+          VSCODE_LSP_TERMINAL_PROMPT_TRACKER,
+        );
 
 				// Keep content only up to delimiter
 				const sanitizedExistingContent = delimiterIndex !== -1 ?
@@ -122,10 +141,12 @@ export class LspTerminalModelContentProvider extends Disposable implements ILspT
 		attachListener();
 
 		// Listen to onDidAddCapabilityType because command detection is not available until later
-		this._register(this._capabilitiesStore.onDidAddCommandDetectionCapability(e => {
-			this._commandDetection = e;
-			attachListener();
-		}));
+		this._register(
+      this._capabilitiesStore.onDidAddCommandDetectionCapability(e => {
+        this._commandDetection = e;
+        attachListener();
+      }),
+    );
 	}
 
 	async provideTextContent(resource: URI): Promise<ITextModel | null> {
@@ -135,13 +156,20 @@ export class LspTerminalModelContentProvider extends Disposable implements ILspT
 			return existing;
 		}
 
-		const languageId = this._languageService.guessLanguageIdByFilepathOrFirstLine(resource);
+		const languageId = this._languageService.guessLanguageIdByFilepathOrFirstLine(
+      resource,
+    );
 
 		const languageSelection = languageId ?
 			this._languageService.createById(languageId) :
-			this._languageService.createById('plaintext');
+			this._languageService.createById("plaintext");
 
-		return this._modelService.createModel('', languageSelection, resource, false);
+		return this._modelService.createModel(
+      "",
+      languageSelection,
+      resource,
+      false,
+    );
 	}
 
 }
@@ -152,7 +180,7 @@ export class LspTerminalModelContentProvider extends Disposable implements ILspT
 // TODO: Make this [OS generic](https://github.com/microsoft/vscode/issues/249477)
 export function createTerminalLanguageVirtualUri(terminalId: number, languageExtension: string): URI {
 	return URI.from({
-		scheme: Schemas.vscodeTerminal,
-		path: `/terminal${terminalId}.${languageExtension}`,
-	});
+    scheme: Schemas.vscodeTerminal,
+    path: `/terminal${terminalId}.${languageExtension}`,
+  });
 }

@@ -3,20 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IExtensionTipsService, IExecutableBasedExtensionTip } from '../../../../platform/extensionManagement/common/extensionManagement.js';
-import { ExtensionRecommendations, ExtensionRecommendation } from './extensionRecommendations.js';
-import { localize } from '../../../../nls.js';
-import { ExtensionRecommendationReason } from '../../../services/extensionRecommendations/common/extensionRecommendations.js';
+import { IExtensionTipsService, IExecutableBasedExtensionTip } from "../../../../platform/extensionManagement/common/extensionManagement.js";
+import { ExtensionRecommendations, ExtensionRecommendation } from "./extensionRecommendations.js";
+import { localize } from "../../../../nls.js";
+import { ExtensionRecommendationReason } from "../../../services/extensionRecommendations/common/extensionRecommendations.js";
 
 export class ExeBasedRecommendations extends ExtensionRecommendations {
 
 	private _otherTips: IExecutableBasedExtensionTip[] = [];
 	private _importantTips: IExecutableBasedExtensionTip[] = [];
 
-	get otherRecommendations(): ReadonlyArray<ExtensionRecommendation> { return this._otherTips.map(tip => this.toExtensionRecommendation(tip)); }
-	get importantRecommendations(): ReadonlyArray<ExtensionRecommendation> { return this._importantTips.map(tip => this.toExtensionRecommendation(tip)); }
+	get otherRecommendations(): ReadonlyArray<ExtensionRecommendation> { return this._otherTips.map(
+    tip => this.toExtensionRecommendation(tip),
+  ); }
+	get importantRecommendations(): ReadonlyArray<ExtensionRecommendation> { return this._importantTips.map(
+    tip => this.toExtensionRecommendation(tip),
+  ); }
 
-	get recommendations(): ReadonlyArray<ExtensionRecommendation> { return [...this.importantRecommendations, ...this.otherRecommendations]; }
+	get recommendations(): ReadonlyArray<ExtensionRecommendation> { return [
+    ...this.importantRecommendations,
+    ...this.otherRecommendations,
+  ]; }
 
 	constructor(
 		@IExtensionTipsService private readonly extensionTipsService: IExtensionTipsService,
@@ -52,7 +59,12 @@ export class ExeBasedRecommendations extends ExtensionRecommendations {
 	private async doFetchImportantExeBasedRecommendations(): Promise<Map<string, IExecutableBasedExtensionTip>> {
 		const importantExeBasedRecommendations = new Map<string, IExecutableBasedExtensionTip>();
 		this._importantTips = await this.extensionTipsService.getImportantExecutableBasedTips();
-		this._importantTips.forEach(tip => importantExeBasedRecommendations.set(tip.extensionId.toLowerCase(), tip));
+		this._importantTips.forEach(
+      tip => importantExeBasedRecommendations.set(
+        tip.extensionId.toLowerCase(),
+        tip,
+      ),
+    );
 		return importantExeBasedRecommendations;
 	}
 
@@ -61,8 +73,8 @@ export class ExeBasedRecommendations extends ExtensionRecommendations {
 			extension: tip.extensionId.toLowerCase(),
 			reason: {
 				reasonId: ExtensionRecommendationReason.Executable,
-				reasonText: localize('exeBasedRecommendation', "This extension is recommended because you have {0} installed.", tip.exeFriendlyName)
-			}
+				reasonText: localize("exeBasedRecommendation", "This extension is recommended because you have {0} installed.", tip.exeFriendlyName),
+			},
 		};
 	}
 

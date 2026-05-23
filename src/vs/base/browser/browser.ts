@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CodeWindow, mainWindow } from './window.js';
-import { Emitter } from '../common/event.js';
+import { CodeWindow, mainWindow } from "./window.js";
+import { Emitter } from "../common/event.js";
 
 class WindowManager {
 
@@ -35,10 +35,15 @@ class WindowManager {
 	private readonly mapWindowIdToZoomFactor = new Map<number, number>();
 
 	getZoomFactor(targetWindow: Window): number {
-		return this.mapWindowIdToZoomFactor.get(this.getWindowId(targetWindow)) ?? 1;
+		return this.mapWindowIdToZoomFactor.get(
+      this.getWindowId(targetWindow),
+    ) ?? 1;
 	}
 	setZoomFactor(zoomFactor: number, targetWindow: Window): void {
-		this.mapWindowIdToZoomFactor.set(this.getWindowId(targetWindow), zoomFactor);
+		this.mapWindowIdToZoomFactor.set(
+      this.getWindowId(targetWindow),
+      zoomFactor,
+    );
 	}
 
 	// --- Fullscreen
@@ -67,10 +72,10 @@ class WindowManager {
 }
 
 export function addMatchMediaChangeListener(targetWindow: Window, query: string | MediaQueryList, callback: (this: MediaQueryList, ev: MediaQueryListEvent) => unknown): void {
-	if (typeof query === 'string') {
+	if (typeof query === "string") {
 		query = targetWindow.matchMedia(query);
 	}
-	query.addEventListener('change', callback);
+	query.addEventListener("change", callback);
 }
 
 /** A zoom index, e.g. 1, 2, 3 */
@@ -100,18 +105,22 @@ export const onDidChangeFullscreen = WindowManager.INSTANCE.onDidChangeFullscree
 
 const userAgent = navigator.userAgent;
 
-export const isFirefox = (userAgent.indexOf('Firefox') >= 0);
-export const isWebKit = (userAgent.indexOf('AppleWebKit') >= 0);
-export const isChrome = (userAgent.indexOf('Chrome') >= 0);
-export const isSafari = (!isChrome && (userAgent.indexOf('Safari') >= 0));
+export const isFirefox = (userAgent.indexOf("Firefox") >= 0);
+export const isWebKit = (userAgent.indexOf("AppleWebKit") >= 0);
+export const isChrome = (userAgent.indexOf("Chrome") >= 0);
+export const isSafari = (!isChrome && (userAgent.indexOf("Safari") >= 0));
 export const isWebkitWebView = (!isChrome && !isSafari && isWebKit);
-export const isElectron = (userAgent.indexOf('Electron/') >= 0);
-export const isAndroid = (userAgent.indexOf('Android') >= 0);
+export const isElectron = (userAgent.indexOf("Electron/") >= 0);
+export const isAndroid = (userAgent.indexOf("Android") >= 0);
 
 let standalone = false;
-if (typeof mainWindow.matchMedia === 'function') {
-	const standaloneMatchMedia = mainWindow.matchMedia('(display-mode: standalone) or (display-mode: window-controls-overlay)');
-	const fullScreenMatchMedia = mainWindow.matchMedia('(display-mode: fullscreen)');
+if (typeof mainWindow.matchMedia === "function") {
+	const standaloneMatchMedia = mainWindow.matchMedia(
+    "(display-mode: standalone) or (display-mode: window-controls-overlay)",
+  );
+	const fullScreenMatchMedia = mainWindow.matchMedia(
+    "(display-mode: fullscreen)",
+  );
 	standalone = standaloneMatchMedia.matches;
 	addMatchMediaChangeListener(mainWindow, standaloneMatchMedia, ({ matches }) => {
 		// entering fullscreen would change standaloneMatchMedia.matches to false
@@ -145,7 +154,7 @@ export interface IMonacoEnvironment {
 	createTrustedTypesPolicy?<Options extends TrustedTypePolicyOptions>(
 		policyName: string,
 		policyOptions?: Options,
-	): undefined | Pick<TrustedTypePolicy, 'name' | Extract<keyof Options, keyof TrustedTypePolicyOptions>>;
+	): undefined | Pick<TrustedTypePolicy, "name" | Extract<keyof Options, keyof TrustedTypePolicyOptions>>;
 
 	getWorker?(moduleId: string, label: string): Worker | Promise<Worker>;
 

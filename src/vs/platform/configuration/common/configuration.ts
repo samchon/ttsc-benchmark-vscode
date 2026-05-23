@@ -3,21 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { assertNever } from '../../../base/common/assert.js';
-import { IStringDictionary } from '../../../base/common/collections.js';
-import { Event } from '../../../base/common/event.js';
-import * as types from '../../../base/common/types.js';
-import { URI, UriComponents } from '../../../base/common/uri.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import { IWorkspaceFolder } from '../../workspace/common/workspace.js';
+import { assertNever } from "../../../base/common/assert.js";
+import { IStringDictionary } from "../../../base/common/collections.js";
+import { Event } from "../../../base/common/event.js";
+import * as types from "../../../base/common/types.js";
+import { URI, UriComponents } from "../../../base/common/uri.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { IWorkspaceFolder } from "../../workspace/common/workspace.js";
 
-export const IConfigurationService = createDecorator<IConfigurationService>('configurationService');
+export const IConfigurationService = createDecorator<IConfigurationService>(
+  "configurationService",
+);
 
 export function isConfigurationOverrides(obj: unknown): obj is IConfigurationOverrides {
 	const thing = obj as IConfigurationOverrides;
 	return thing
-		&& typeof thing === 'object'
-		&& (!thing.overrideIdentifier || typeof thing.overrideIdentifier === 'string')
+		&& typeof thing === "object"
+		&& (!thing.overrideIdentifier || typeof thing.overrideIdentifier === "string")
 		&& (!thing.resource || thing.resource instanceof URI);
 }
 
@@ -29,13 +31,15 @@ export interface IConfigurationOverrides {
 export function isConfigurationUpdateOverrides(obj: unknown): obj is IConfigurationUpdateOverrides {
 	const thing = obj as IConfigurationUpdateOverrides | IConfigurationOverrides;
 	return thing
-		&& typeof thing === 'object'
-		&& (!(thing as IConfigurationUpdateOverrides).overrideIdentifiers || Array.isArray((thing as IConfigurationUpdateOverrides).overrideIdentifiers))
+		&& typeof thing === "object"
+		&& (!(thing as IConfigurationUpdateOverrides).overrideIdentifiers || Array.isArray(
+      (thing as IConfigurationUpdateOverrides).overrideIdentifiers,
+    ))
 		&& !(thing as IConfigurationOverrides).overrideIdentifier
 		&& (!thing.resource || thing.resource instanceof URI);
 }
 
-export type IConfigurationUpdateOverrides = Omit<IConfigurationOverrides, 'overrideIdentifier'> & { overrideIdentifiers?: string[] | null };
+export type IConfigurationUpdateOverrides = Omit<IConfigurationOverrides, "overrideIdentifier"> & { overrideIdentifiers?: string[] | null };
 
 export const enum ConfigurationTarget {
 	APPLICATION = 1,
@@ -49,14 +53,14 @@ export const enum ConfigurationTarget {
 }
 export function ConfigurationTargetToString(configurationTarget: ConfigurationTarget) {
 	switch (configurationTarget) {
-		case ConfigurationTarget.APPLICATION: return 'APPLICATION';
-		case ConfigurationTarget.USER: return 'USER';
-		case ConfigurationTarget.USER_LOCAL: return 'USER_LOCAL';
-		case ConfigurationTarget.USER_REMOTE: return 'USER_REMOTE';
-		case ConfigurationTarget.WORKSPACE: return 'WORKSPACE';
-		case ConfigurationTarget.WORKSPACE_FOLDER: return 'WORKSPACE_FOLDER';
-		case ConfigurationTarget.DEFAULT: return 'DEFAULT';
-		case ConfigurationTarget.MEMORY: return 'MEMORY';
+		case ConfigurationTarget.APPLICATION: return "APPLICATION";
+		case ConfigurationTarget.USER: return "USER";
+		case ConfigurationTarget.USER_LOCAL: return "USER_LOCAL";
+		case ConfigurationTarget.USER_REMOTE: return "USER_REMOTE";
+		case ConfigurationTarget.WORKSPACE: return "WORKSPACE";
+		case ConfigurationTarget.WORKSPACE_FOLDER: return "WORKSPACE_FOLDER";
+		case ConfigurationTarget.DEFAULT: return "DEFAULT";
+		case ConfigurationTarget.MEMORY: return "MEMORY";
 	}
 }
 
@@ -146,7 +150,7 @@ export interface IConfigurationUpdateOptions {
 	/**
 	 * How to handle dirty file when updating the configuration.
 	 */
-	handleDirtyFile?: 'save' | 'revert';
+	handleDirtyFile?: "save" | "revert";
 }
 
 export interface IConfigurationService {
@@ -247,7 +251,7 @@ export function toValuesTree(properties: IStringDictionary<unknown>, conflictRep
 }
 
 export function addToValueTree(settingsTreeRoot: IStringDictionary<unknown>, key: string, value: unknown, conflictReporter: (message: string) => void): void {
-	const segments = key.split('.');
+	const segments = key.split(".");
 	const last = segments.pop()!;
 
 	let curr: IStringDictionary<unknown> = settingsTreeRoot;
@@ -255,35 +259,43 @@ export function addToValueTree(settingsTreeRoot: IStringDictionary<unknown>, key
 		const s = segments[i];
 		let obj = curr[s];
 		switch (typeof obj) {
-			case 'undefined':
+			case "undefined":
 				obj = curr[s] = Object.create(null);
 				break;
-			case 'object':
+			case "object":
 				if (obj === null) {
-					conflictReporter(`Ignoring ${key} as ${segments.slice(0, i + 1).join('.')} is null`);
+					conflictReporter(
+            `Ignoring ${key} as ${segments.slice(0, i + 1).join(".")} is null`,
+          );
 					return;
 				}
 				break;
 			default:
-				conflictReporter(`Ignoring ${key} as ${segments.slice(0, i + 1).join('.')} is ${JSON.stringify(obj)}`);
+				conflictReporter(
+          `Ignoring ${key} as ${segments.slice(0, i + 1).join(".")} is ${JSON.stringify(obj)}`,
+        );
 				return;
 		}
 		curr = obj as IStringDictionary<unknown>;
 	}
 
-	if (typeof curr === 'object' && curr !== null) {
+	if (typeof curr === "object" && curr !== null) {
 		try {
 			(curr as IStringDictionary<unknown>)[last] = value; // workaround https://github.com/microsoft/vscode/issues/13606
 		} catch (e) {
-			conflictReporter(`Ignoring ${key} as ${segments.join('.')} is ${JSON.stringify(curr)}`);
+			conflictReporter(
+        `Ignoring ${key} as ${segments.join(".")} is ${JSON.stringify(curr)}`,
+      );
 		}
 	} else {
-		conflictReporter(`Ignoring ${key} as ${segments.join('.')} is ${JSON.stringify(curr)}`);
+		conflictReporter(
+      `Ignoring ${key} as ${segments.join(".")} is ${JSON.stringify(curr)}`,
+    );
 	}
 }
 
 export function removeFromValueTree(valueTree: IStringDictionary<unknown>, key: string): void {
-	const segments = key.split('.');
+	const segments = key.split(".");
 	doRemoveFromValueTree(valueTree, segments);
 }
 
@@ -302,7 +314,7 @@ function doRemoveFromValueTree(valueTree: IStringDictionary<unknown> | unknown, 
 
 	if (Object.keys(valueTreeRecord).indexOf(first) !== -1) {
 		const value = valueTreeRecord[first];
-		if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+		if (typeof value === "object" && value !== null && !Array.isArray(value)) {
 			doRemoveFromValueTree(value, segments);
 			if (Object.keys(value as object).length === 0) {
 				delete valueTreeRecord[first];
@@ -320,7 +332,7 @@ export function getConfigurationValue<T>(config: IStringDictionary<unknown>, set
 	function accessSetting(config: IStringDictionary<unknown>, path: string[]): unknown {
 		let current: unknown = config;
 		for (const component of path) {
-			if (typeof current !== 'object' || current === null) {
+			if (typeof current !== "object" || current === null) {
 				return undefined;
 			}
 			current = (current as IStringDictionary<unknown>)[component];
@@ -328,15 +340,15 @@ export function getConfigurationValue<T>(config: IStringDictionary<unknown>, set
 		return current as T;
 	}
 
-	const path = settingPath.split('.');
+	const path = settingPath.split(".");
 	const result = accessSetting(config, path);
 
-	return typeof result === 'undefined' ? defaultValue : result as T;
+	return typeof result === "undefined" ? defaultValue : result as T;
 }
 
 export function merge(base: IStringDictionary<unknown>, add: IStringDictionary<unknown>, overwrite: boolean): void {
 	Object.keys(add).forEach(key => {
-		if (key !== '__proto__') {
+		if (key !== "__proto__") {
 			if (key in base) {
 				if (types.isObject(base[key]) && types.isObject(add[key])) {
 					merge(base[key] as IStringDictionary<unknown>, add[key] as IStringDictionary<unknown>, overwrite);
@@ -352,7 +364,7 @@ export function merge(base: IStringDictionary<unknown>, add: IStringDictionary<u
 
 export function getLanguageTagSettingPlainKey(settingKey: string) {
 	return settingKey
-		.replace(/^\[/, '')
-		.replace(/]$/g, '')
-		.replace(/\]\[/g, ', ');
+		.replace(/^\[/, "")
+		.replace(/]$/g, "")
+		.replace(/\]\[/g, ", ");
 }

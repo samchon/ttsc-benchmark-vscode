@@ -3,26 +3,35 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IMatch, matchesFuzzy } from './filters.js';
-import { ltrim } from './strings.js';
-import { ThemeIcon } from './themables.js';
+import { IMatch, matchesFuzzy } from "./filters.js";
+import { ltrim } from "./strings.js";
+import { ThemeIcon } from "./themables.js";
 
-const iconStartMarker = '$(';
+const iconStartMarker = "$(";
 
-const iconsRegex = new RegExp(`\\$\\(${ThemeIcon.iconNameExpression}(?:${ThemeIcon.iconModifierExpression})?\\)`, 'g'); // no capturing groups
+const iconsRegex = new RegExp(
+  `\\$\\(${ThemeIcon.iconNameExpression}(?:${ThemeIcon.iconModifierExpression})?\\)`,
+  "g",
+); // no capturing groups
 
-const escapeIconsRegex = new RegExp(`(\\\\)?${iconsRegex.source}`, 'g');
+const escapeIconsRegex = new RegExp(`(\\\\)?${iconsRegex.source}`, "g");
 export function escapeIcons(text: string): string {
-	return text.replace(escapeIconsRegex, (match, escaped) => escaped ? match : `\\${match}`);
+	return text.replace(
+    escapeIconsRegex,
+    (match, escaped) => escaped ? match : `\\${match}`,
+  );
 }
 
-const markdownEscapedIconsRegex = new RegExp(`\\\\${iconsRegex.source}`, 'g');
+const markdownEscapedIconsRegex = new RegExp(`\\\\${iconsRegex.source}`, "g");
 export function markdownEscapeEscapedIcons(text: string): string {
 	// Need to add an extra \ for escaping in markdown
 	return text.replace(markdownEscapedIconsRegex, match => `\\${match}`);
 }
 
-const stripIconsRegex = new RegExp(`(\\s)?(\\\\)?${iconsRegex.source}(\\s)?`, 'g');
+const stripIconsRegex = new RegExp(
+  `(\\s)?(\\\\)?${iconsRegex.source}(\\s)?`,
+  "g",
+);
 
 /**
  * Takes a label with icons (`$(iconId)xyz`)  and strips the icons out (`xyz`)
@@ -32,7 +41,10 @@ export function stripIcons(text: string): string {
 		return text;
 	}
 
-	return text.replace(stripIconsRegex, (match, preWhitespace, escaped, postWhitespace) => escaped ? match : preWhitespace || postWhitespace || '');
+	return text.replace(
+    stripIconsRegex,
+    (match, preWhitespace, escaped, postWhitespace) => escaped ? match : preWhitespace || postWhitespace || "",
+  );
 }
 
 
@@ -41,7 +53,7 @@ export function stripIcons(text: string): string {
  */
 export function getCodiconAriaLabel(text: string | undefined) {
 	if (!text) {
-		return '';
+		return "";
 	}
 
 	return text.replace(/\$\((.*?)\)/g, (_match, codiconName) => ` ${codiconName} `).trim();
@@ -53,7 +65,10 @@ export interface IParsedLabelWithIcons {
 	readonly iconOffsets?: readonly number[];
 }
 
-const _parseIconsRegex = new RegExp(`\\$\\(${ThemeIcon.iconNameCharacter}+\\)`, 'g');
+const _parseIconsRegex = new RegExp(
+  `\\$\\(${ThemeIcon.iconNameCharacter}+\\)`,
+  "g",
+);
 
 /**
  * Takes a label with icons (`abc $(iconId)xyz`) and returns the text (`abc xyz`) and the offsets of the icons (`[3]`)
@@ -62,7 +77,7 @@ export function parseLabelWithIcons(input: string): IParsedLabelWithIcons {
 
 	_parseIconsRegex.lastIndex = 0;
 
-	let text = '';
+	let text = "";
 	const iconOffsets: number[] = [];
 	let iconsOffset = 0;
 
@@ -97,11 +112,15 @@ export function matchesFuzzyIconAware(query: string, target: IParsedLabelWithIco
 
 	// Trim the word to match against because it could have leading
 	// whitespace now if the word started with an icon
-	const wordToMatchAgainstWithoutIconsTrimmed = ltrim(text, ' ');
+	const wordToMatchAgainstWithoutIconsTrimmed = ltrim(text, " ");
 	const leadingWhitespaceOffset = text.length - wordToMatchAgainstWithoutIconsTrimmed.length;
 
 	// match on value without icon
-	const matches = matchesFuzzy(query, wordToMatchAgainstWithoutIconsTrimmed, enableSeparateSubstringMatching);
+	const matches = matchesFuzzy(
+    query,
+    wordToMatchAgainstWithoutIconsTrimmed,
+    enableSeparateSubstringMatching,
+  );
 
 	// Map matches back to offsets with icon and trimming
 	if (matches) {

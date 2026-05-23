@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type * as vscode from 'vscode';
-import { es5ClassCompat } from './es5ClassCompat.js';
-import { illegalArgument } from '../../../../base/common/errors.js';
-import { Mimes, normalizeMimeType, isTextStreamMime } from '../../../../base/common/mime.js';
-import { generateUuid } from '../../../../base/common/uuid.js';
+import type * as vscode from "vscode";
+import { es5ClassCompat } from "./es5ClassCompat.js";
+import { illegalArgument } from "../../../../base/common/errors.js";
+import { Mimes, normalizeMimeType, isTextStreamMime } from "../../../../base/common/mime.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
 
 export enum NotebookCellKind {
 	Markup = 1,
@@ -22,8 +22,8 @@ export class NotebookRange {
 		if (!thing) {
 			return false;
 		}
-		return typeof (<NotebookRange>thing).start === 'number'
-			&& typeof (<NotebookRange>thing).end === 'number';
+		return typeof (<NotebookRange>thing).start === "number"
+			&& typeof (<NotebookRange>thing).end === "number";
 	}
 
 	private _start: number;
@@ -43,10 +43,10 @@ export class NotebookRange {
 
 	constructor(start: number, end: number) {
 		if (start < 0) {
-			throw illegalArgument('start must be positive');
+			throw illegalArgument("start must be positive");
 		}
 		if (end < 0) {
-			throw illegalArgument('end must be positive');
+			throw illegalArgument("end must be positive");
 		}
 		if (start <= end) {
 			this._start = start;
@@ -77,19 +77,21 @@ export class NotebookRange {
 export class NotebookCellData {
 
 	static validate(data: NotebookCellData): void {
-		if (typeof data.kind !== 'number') {
-			throw new Error('NotebookCellData MUST have \'kind\' property');
+		if (typeof data.kind !== "number") {
+			throw new Error("NotebookCellData MUST have 'kind' property");
 		}
-		if (typeof data.value !== 'string') {
-			throw new Error('NotebookCellData MUST have \'value\' property');
+		if (typeof data.value !== "string") {
+			throw new Error("NotebookCellData MUST have 'value' property");
 		}
-		if (typeof data.languageId !== 'string') {
-			throw new Error('NotebookCellData MUST have \'languageId\' property');
+		if (typeof data.languageId !== "string") {
+			throw new Error("NotebookCellData MUST have 'languageId' property");
 		}
 	}
 
 	static isNotebookCellDataArray(value: unknown): value is vscode.NotebookCellData[] {
-		return Array.isArray(value) && (<unknown[]>value).every(elem => NotebookCellData.isNotebookCellData(elem));
+		return Array.isArray(value) && (<unknown[]>value).every(
+      elem => NotebookCellData.isNotebookCellData(elem),
+    );
 	}
 
 	static isNotebookCellData(value: unknown): value is vscode.NotebookCellData {
@@ -186,28 +188,37 @@ export class NotebookCellOutputItem {
 		if (!obj) {
 			return false;
 		}
-		return typeof (<vscode.NotebookCellOutputItem>obj).mime === 'string'
+		return typeof (<vscode.NotebookCellOutputItem>obj).mime === "string"
 			&& (<vscode.NotebookCellOutputItem>obj).data instanceof Uint8Array;
 	}
 
 	static error(err: Error | { name: string; message?: string; stack?: string }): NotebookCellOutputItem {
 		const obj = {
-			name: err.name,
-			message: err.message,
-			stack: err.stack
-		};
-		return NotebookCellOutputItem.json(obj, 'application/vnd.code.notebook.error');
+      name: err.name,
+      message: err.message,
+      stack: err.stack,
+    };
+		return NotebookCellOutputItem.json(
+      obj,
+      "application/vnd.code.notebook.error",
+    );
 	}
 
 	static stdout(value: string): NotebookCellOutputItem {
-		return NotebookCellOutputItem.text(value, 'application/vnd.code.notebook.stdout');
+		return NotebookCellOutputItem.text(
+      value,
+      "application/vnd.code.notebook.stdout",
+    );
 	}
 
 	static stderr(value: string): NotebookCellOutputItem {
-		return NotebookCellOutputItem.text(value, 'application/vnd.code.notebook.stderr');
+		return NotebookCellOutputItem.text(
+      value,
+      "application/vnd.code.notebook.stderr",
+    );
 	}
 
-	static bytes(value: Uint8Array, mime: string = 'application/octet-stream'): NotebookCellOutputItem {
+	static bytes(value: Uint8Array, mime: string = "application/octet-stream"): NotebookCellOutputItem {
 		return new NotebookCellOutputItem(value, mime);
 	}
 
@@ -218,18 +229,20 @@ export class NotebookCellOutputItem {
 		return new NotebookCellOutputItem(bytes, mime);
 	}
 
-	static json(value: unknown, mime: string = 'text/x-json'): NotebookCellOutputItem {
-		const rawStr = JSON.stringify(value, undefined, '\t');
+	static json(value: unknown, mime: string = "text/x-json"): NotebookCellOutputItem {
+		const rawStr = JSON.stringify(value, undefined, "\t");
 		return NotebookCellOutputItem.text(rawStr, mime);
 	}
 
 	constructor(
 		public data: Uint8Array,
-		public mime: string
+		public mime: string,
 	) {
 		const mimeNormalized = normalizeMimeType(mime, true);
 		if (!mimeNormalized) {
-			throw new Error(`INVALID mime type: ${mime}. Must be in the format "type/subtype[;optionalparameter]"`);
+			throw new Error(
+        `INVALID mime type: ${mime}. Must be in the format "type/subtype[;optionalparameter]"`,
+      );
 		}
 		this.mime = mimeNormalized;
 	}
@@ -241,10 +254,12 @@ export class NotebookCellOutput {
 		if (candidate instanceof NotebookCellOutput) {
 			return true;
 		}
-		if (!candidate || typeof candidate !== 'object') {
+		if (!candidate || typeof candidate !== "object") {
 			return false;
 		}
-		return typeof (<NotebookCellOutput>candidate).id === 'string' && Array.isArray((<NotebookCellOutput>candidate).items);
+		return typeof (<NotebookCellOutput>candidate).id === "string" && Array.isArray(
+      (<NotebookCellOutput>candidate).items,
+    );
 	}
 
 	static ensureUniqueMimeTypes(items: NotebookCellOutputItem[], warn: boolean = false): NotebookCellOutputItem[] {
@@ -277,10 +292,10 @@ export class NotebookCellOutput {
 	constructor(
 		items: NotebookCellOutputItem[],
 		idOrMetadata?: string | Record<string, unknown>,
-		metadata?: Record<string, unknown>
+		metadata?: Record<string, unknown>,
 	) {
 		this.items = NotebookCellOutput.ensureUniqueMimeTypes(items, true);
-		if (typeof idOrMetadata === 'string') {
+		if (typeof idOrMetadata === "string") {
 			this.id = idOrMetadata;
 			this.metadata = metadata;
 		} else {

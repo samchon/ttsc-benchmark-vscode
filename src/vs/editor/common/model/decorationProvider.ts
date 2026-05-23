@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Range } from '../core/range.js';
-import { IModelDecoration } from '../model.js';
+import { Range } from "../core/range.js";
+import { IModelDecoration } from "../model.js";
 
 export interface DecorationProvider {
 	/**
@@ -36,7 +36,7 @@ export class LineHeightChangingDecoration {
 		public readonly ownerId: number,
 		public readonly decorationId: string,
 		public readonly lineNumber: number,
-		public readonly lineHeight: number | null
+		public readonly lineHeight: number | null,
 	) { }
 }
 
@@ -49,6 +49,6 @@ export class LineFontChangingDecoration {
 	constructor(
 		public readonly ownerId: number,
 		public readonly decorationId: string,
-		public readonly lineNumber: number
+		public readonly lineNumber: number,
 	) { }
 }

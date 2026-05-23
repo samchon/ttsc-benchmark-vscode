@@ -3,40 +3,43 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './media/aiCustomizationManagement.css';
-import * as DOM from '../../../../base/browser/dom.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { autorun } from '../../../../base/common/observable.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
-import { localize } from '../../../../nls.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { IViewPaneOptions, ViewPane } from '../../../../workbench/browser/parts/views/viewPane.js';
-import { IViewDescriptorService } from '../../../../workbench/common/views.js';
-import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
-import { IContextMenuService } from '../../../../platform/contextview/browser/contextView.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
-import { IThemeService } from '../../../../platform/theme/common/themeService.js';
-import { IHoverService } from '../../../../platform/hover/browser/hover.js';
-import { ResourceSet } from '../../../../base/common/map.js';
-import { IPromptsService } from '../../../../workbench/contrib/chat/common/promptSyntax/service/promptsService.js';
-import { PromptsType } from '../../../../workbench/contrib/chat/common/promptSyntax/promptTypes.js';
-import { AICustomizationManagementSection, AI_CUSTOMIZATION_MANAGEMENT_EDITOR_ID } from '../../../../workbench/contrib/chat/browser/aiCustomization/aiCustomizationManagement.js';
-import { AICustomizationManagementEditorInput } from '../../../../workbench/contrib/chat/browser/aiCustomization/aiCustomizationManagementEditorInput.js';
-import { agentIcon, instructionsIcon, mcpServerIcon, pluginIcon, skillIcon } from '../../../../workbench/contrib/chat/browser/aiCustomization/aiCustomizationIcons.js';
-import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
-import { IAICustomizationWorkspaceService } from '../../../../workbench/contrib/chat/common/aiCustomizationWorkspaceService.js';
-import { IEditorService } from '../../../../workbench/services/editor/common/editorService.js';
-import { IMcpService } from '../../../../workbench/contrib/mcp/common/mcpTypes.js';
-import { IAgentPluginService } from '../../../../workbench/contrib/chat/common/plugins/agentPluginService.js';
+import "./media/aiCustomizationManagement.css";
+import * as DOM from "../../../../base/browser/dom.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { autorun } from "../../../../base/common/observable.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { localize } from "../../../../nls.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IViewPaneOptions, ViewPane } from "../../../../workbench/browser/parts/views/viewPane.js";
+import { IViewDescriptorService } from "../../../../workbench/common/views.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { ResourceSet } from "../../../../base/common/map.js";
+import { IPromptsService } from "../../../../workbench/contrib/chat/common/promptSyntax/service/promptsService.js";
+import { PromptsType } from "../../../../workbench/contrib/chat/common/promptSyntax/promptTypes.js";
+import {
+  AICustomizationManagementSection,
+  AI_CUSTOMIZATION_MANAGEMENT_EDITOR_ID,
+} from "../../../../workbench/contrib/chat/browser/aiCustomization/aiCustomizationManagement.js";
+import { AICustomizationManagementEditorInput } from "../../../../workbench/contrib/chat/browser/aiCustomization/aiCustomizationManagementEditorInput.js";
+import { agentIcon, instructionsIcon, mcpServerIcon, pluginIcon, skillIcon } from "../../../../workbench/contrib/chat/browser/aiCustomization/aiCustomizationIcons.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { IAICustomizationWorkspaceService } from "../../../../workbench/contrib/chat/common/aiCustomizationWorkspaceService.js";
+import { IEditorService } from "../../../../workbench/services/editor/common/editorService.js";
+import { IMcpService } from "../../../../workbench/contrib/mcp/common/mcpTypes.js";
+import { IAgentPluginService } from "../../../../workbench/contrib/chat/common/plugins/agentPluginService.js";
 
 const $ = DOM.$;
 
-export const AI_CUSTOMIZATION_OVERVIEW_VIEW_ID = 'workbench.view.aiCustomizationOverview';
+export const AI_CUSTOMIZATION_OVERVIEW_VIEW_ID = "workbench.view.aiCustomizationOverview";
 
 function isWelcomePageEditor(editor: unknown): editor is { showWelcomePage(): void } {
-	return typeof (editor as { showWelcomePage?: unknown })?.showWelcomePage === 'function';
+	return typeof (editor as { showWelcomePage?: unknown })?.showWelcomePage === "function";
 }
 
 interface ISectionSummary {
@@ -77,27 +80,67 @@ export class AICustomizationOverviewView extends ViewPane {
 		@IMcpService private readonly mcpService: IMcpService,
 		@IAgentPluginService private readonly agentPluginService: IAgentPluginService,
 	) {
-		super(options, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, instantiationService, openerService, themeService, hoverService);
+		super(
+      options,
+      keybindingService,
+      contextMenuService,
+      configurationService,
+      contextKeyService,
+      viewDescriptorService,
+      instantiationService,
+      openerService,
+      themeService,
+      hoverService,
+    );
 
 		// Initialize sections
-		this.sections.push(
-			{ id: AICustomizationManagementSection.Agents, label: localize('agents', "Agents"), icon: agentIcon, count: 0 },
-			{ id: AICustomizationManagementSection.Skills, label: localize('skills', "Skills"), icon: skillIcon, count: 0 },
-			{ id: AICustomizationManagementSection.Instructions, label: localize('instructions', "Instructions"), icon: instructionsIcon, count: 0 },
-			{ id: AICustomizationManagementSection.McpServers, label: localize('mcpServers', "MCP Servers"), icon: mcpServerIcon, count: 0 },
-			{ id: AICustomizationManagementSection.Plugins, label: localize('plugins', "Plugins"), icon: pluginIcon, count: 0 },
-		);
+		this.sections.push({
+      id: AICustomizationManagementSection.Agents,
+      label: localize("agents", "Agents"),
+      icon: agentIcon,
+      count: 0,
+    }, {
+      id: AICustomizationManagementSection.Skills,
+      label: localize("skills", "Skills"),
+      icon: skillIcon,
+      count: 0,
+    }, {
+      id: AICustomizationManagementSection.Instructions,
+      label: localize("instructions", "Instructions"),
+      icon: instructionsIcon,
+      count: 0,
+    }, {
+      id: AICustomizationManagementSection.McpServers,
+      label: localize("mcpServers", "MCP Servers"),
+      icon: mcpServerIcon,
+      count: 0,
+    }, {
+      id: AICustomizationManagementSection.Plugins,
+      label: localize("plugins", "Plugins"),
+      icon: pluginIcon,
+      count: 0,
+    });
 
 		// Listen to changes
-		this._register(this.promptsService.onDidChangeCustomAgents(() => this.loadCounts()));
-		this._register(this.promptsService.onDidChangeSlashCommands(() => this.loadCounts()));
+		this._register(
+      this.promptsService.onDidChangeCustomAgents(() => this.loadCounts()),
+    );
+		this._register(
+      this.promptsService.onDidChangeSlashCommands(() => this.loadCounts()),
+    );
 
 		// Listen to workspace folder changes to update counts
-		this._register(this.workspaceContextService.onDidChangeWorkspaceFolders(() => this.loadCounts()));
-		this._register(autorun(reader => {
-			this.workspaceService.activeProjectRoot.read(reader);
-			this.loadCounts();
-		}));
+		this._register(
+      this.workspaceContextService.onDidChangeWorkspaceFolders(
+        () => this.loadCounts(),
+      ),
+    );
+		this._register(
+      autorun(reader => {
+        this.workspaceService.activeProjectRoot.read(reader);
+        this.loadCounts();
+      }),
+    );
 
 	}
 
@@ -105,14 +148,20 @@ export class AICustomizationOverviewView extends ViewPane {
 		super.renderBody(container);
 
 		this.bodyElement = container;
-		this.container = DOM.append(container, $('.ai-customization-overview'));
-		this.sectionsContainer = DOM.append(this.container, $('.overview-sections'));
+		this.container = DOM.append(container, $(".ai-customization-overview"));
+		this.sectionsContainer = DOM.append(
+      this.container,
+      $(".overview-sections"),
+    );
 
 		this.renderSections();
 		void this.loadCounts();
 
 		// Force initial layout
-		this.layoutBody(this.bodyElement.offsetHeight, this.bodyElement.offsetWidth);
+		this.layoutBody(
+      this.bodyElement.offsetHeight,
+      this.bodyElement.offsetWidth,
+    );
 	}
 
 	private renderSections(): void {
@@ -121,50 +170,69 @@ export class AICustomizationOverviewView extends ViewPane {
 		this.sectionElements.clear();
 
 		for (const section of this.sections) {
-			const sectionElement = DOM.append(this.sectionsContainer, $('.overview-section'));
+			const sectionElement = DOM.append(
+        this.sectionsContainer,
+        $(".overview-section"),
+      );
 			sectionElement.tabIndex = 0;
-			sectionElement.setAttribute('role', 'button');
-			sectionElement.setAttribute('aria-label', this.getSectionAriaLabel(section));
+			sectionElement.setAttribute("role", "button");
+			sectionElement.setAttribute(
+        "aria-label",
+        this.getSectionAriaLabel(section),
+      );
 			this.sectionElements.set(section.id, sectionElement);
 
-			const iconElement = DOM.append(sectionElement, $('.section-icon'));
+			const iconElement = DOM.append(sectionElement, $(".section-icon"));
 			iconElement.classList.add(...ThemeIcon.asClassNameArray(section.icon));
 
-			const textContainer = DOM.append(sectionElement, $('.section-text'));
-			const labelElement = DOM.append(textContainer, $('.section-label'));
+			const textContainer = DOM.append(sectionElement, $(".section-text"));
+			const labelElement = DOM.append(textContainer, $(".section-label"));
 			labelElement.textContent = section.label;
 
-			const countElement = DOM.append(sectionElement, $('.section-count'));
+			const countElement = DOM.append(sectionElement, $(".section-count"));
 			countElement.textContent = `${section.count}`;
 			this.countElements.set(section.id, countElement);
 
 			// Click handler to open the management editor overview
-			this._register(DOM.addDisposableListener(sectionElement, 'click', () => {
-				this.openOverview();
-			}));
+			this._register(
+        DOM.addDisposableListener(sectionElement, "click", () => {
+          this.openOverview();
+        }),
+      );
 
 			// Keyboard support
-			this._register(DOM.addDisposableListener(sectionElement, 'keydown', (e: KeyboardEvent) => {
-				if (e.key === 'Enter' || e.key === ' ') {
+			this._register(DOM.addDisposableListener(sectionElement, "keydown", (e: KeyboardEvent) => {
+				if (e.key === "Enter" || e.key === " ") {
 					e.preventDefault();
 					this.openOverview();
 				}
 			}));
 
 			// Hover tooltip
-			this._register(this.hoverService.setupDelayedHoverAtMouse(sectionElement, () => ({
-				content: localize('openOverview', "Open Chat Customizations editor"),
-				appearance: { compact: true, skipFadeInAnimation: true }
-			})));
+			this._register(
+        this.hoverService.setupDelayedHoverAtMouse(sectionElement, () => ({
+          content: localize("openOverview", "Open Chat Customizations editor"),
+          appearance: { compact: true, skipFadeInAnimation: true },
+        })),
+      );
 		}
 	}
 
 	private async loadCounts(): Promise<void> {
 		const sectionPromptTypes: Array<{ section: AICustomizationManagementSection; type: PromptsType }> = [
-			{ section: AICustomizationManagementSection.Agents, type: PromptsType.agent },
-			{ section: AICustomizationManagementSection.Skills, type: PromptsType.skill },
-			{ section: AICustomizationManagementSection.Instructions, type: PromptsType.instructions },
-		];
+      {
+        section: AICustomizationManagementSection.Agents,
+        type: PromptsType.agent,
+      },
+      {
+        section: AICustomizationManagementSection.Skills,
+        type: PromptsType.skill,
+      },
+      {
+        section: AICustomizationManagementSection.Instructions,
+        type: PromptsType.instructions,
+      },
+    ];
 
 		await Promise.all(sectionPromptTypes.map(async ({ section, type }) => {
 			let count = 0;
@@ -196,30 +264,43 @@ export class AICustomizationOverviewView extends ViewPane {
 		}));
 
 		// Update MCP server count reactively
-		const mcpSection = this.sections.find(s => s.id === AICustomizationManagementSection.McpServers);
+		const mcpSection = this.sections.find(
+      s => s.id === AICustomizationManagementSection.McpServers,
+    );
 		if (mcpSection) {
-			this._register(autorun(reader => {
-				const servers = this.mcpService.servers.read(reader);
-				mcpSection.count = servers.length;
-				this.updateCountElements();
-			}));
+			this._register(
+        autorun(reader => {
+          const servers = this.mcpService.servers.read(reader);
+          mcpSection.count = servers.length;
+          this.updateCountElements();
+        }),
+      );
 		}
 
 		// Update plugin count reactively
-		const pluginSection = this.sections.find(s => s.id === AICustomizationManagementSection.Plugins);
+		const pluginSection = this.sections.find(
+      s => s.id === AICustomizationManagementSection.Plugins,
+    );
 		if (pluginSection) {
-			this._register(autorun(reader => {
-				const plugins = this.agentPluginService.plugins.read(reader);
-				pluginSection.count = plugins.length;
-				this.updateCountElements();
-			}));
+			this._register(
+        autorun(reader => {
+          const plugins = this.agentPluginService.plugins.read(reader);
+          pluginSection.count = plugins.length;
+          this.updateCountElements();
+        }),
+      );
 		}
 
 		this.updateCountElements();
 	}
 
 	private getSectionAriaLabel(section: ISectionSummary): string {
-		return localize('overviewSectionAriaLabelWithCount', "{0}, {1} items", section.label, section.count);
+		return localize(
+      "overviewSectionAriaLabelWithCount",
+      "{0}, {1} items",
+      section.label,
+      section.count,
+    );
 	}
 
 	private updateCountElements(): void {
@@ -230,7 +311,10 @@ export class AICustomizationOverviewView extends ViewPane {
 			}
 			const sectionElement = this.sectionElements.get(section.id);
 			if (sectionElement) {
-				sectionElement.setAttribute('aria-label', this.getSectionAriaLabel(section));
+				sectionElement.setAttribute(
+          "aria-label",
+          this.getSectionAriaLabel(section),
+        );
 			}
 		}
 	}
@@ -241,7 +325,9 @@ export class AICustomizationOverviewView extends ViewPane {
 
 		// Always reset to the welcome page when opening from the sidebar,
 		// so we don't restore the previously selected section.
-		if (editor?.getId() === AI_CUSTOMIZATION_MANAGEMENT_EDITOR_ID && isWelcomePageEditor(editor)) {
+		if (editor?.getId() === AI_CUSTOMIZATION_MANAGEMENT_EDITOR_ID && isWelcomePageEditor(
+      editor,
+    )) {
 			editor.showWelcomePage();
 		}
 	}

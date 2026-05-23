@@ -3,33 +3,33 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { Event } from '../../../../../base/common/event.js';
-import { TestContextService, TestWorkingCopy } from '../../../../test/common/workbenchTestServices.js';
-import { randomPath } from '../../../../../base/common/extpath.js';
-import { join } from '../../../../../base/common/path.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { WorkingCopyHistoryTracker } from '../../common/workingCopyHistoryTracker.js';
-import { WorkingCopyService } from '../../common/workingCopyService.js';
-import { UriIdentityService } from '../../../../../platform/uriIdentity/common/uriIdentityService.js';
-import { TestFileService, TestPathService } from '../../../../test/browser/workbenchTestServices.js';
-import { DeferredPromise } from '../../../../../base/common/async.js';
-import { IFileService } from '../../../../../platform/files/common/files.js';
-import { Schemas } from '../../../../../base/common/network.js';
-import { basename, dirname, isEqual, joinPath } from '../../../../../base/common/resources.js';
-import { TestConfigurationService } from '../../../../../platform/configuration/test/common/testConfigurationService.js';
-import { UndoRedoService } from '../../../../../platform/undoRedo/common/undoRedoService.js';
-import { TestDialogService } from '../../../../../platform/dialogs/test/common/testDialogService.js';
-import { TestNotificationService } from '../../../../../platform/notification/test/common/testNotificationService.js';
-import { CancellationToken } from '../../../../../base/common/cancellation.js';
-import { IWorkingCopyHistoryEntry, IWorkingCopyHistoryEntryDescriptor } from '../../common/workingCopyHistory.js';
-import { assertReturnsDefined } from '../../../../../base/common/types.js';
-import { VSBuffer } from '../../../../../base/common/buffer.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { TestWorkingCopyHistoryService } from './workingCopyHistoryService.test.js';
+import assert from "assert";
+import { Event } from "../../../../../base/common/event.js";
+import { TestContextService, TestWorkingCopy } from "../../../../test/common/workbenchTestServices.js";
+import { randomPath } from "../../../../../base/common/extpath.js";
+import { join } from "../../../../../base/common/path.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { WorkingCopyHistoryTracker } from "../../common/workingCopyHistoryTracker.js";
+import { WorkingCopyService } from "../../common/workingCopyService.js";
+import { UriIdentityService } from "../../../../../platform/uriIdentity/common/uriIdentityService.js";
+import { TestFileService, TestPathService } from "../../../../test/browser/workbenchTestServices.js";
+import { DeferredPromise } from "../../../../../base/common/async.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { Schemas } from "../../../../../base/common/network.js";
+import { basename, dirname, isEqual, joinPath } from "../../../../../base/common/resources.js";
+import { TestConfigurationService } from "../../../../../platform/configuration/test/common/testConfigurationService.js";
+import { UndoRedoService } from "../../../../../platform/undoRedo/common/undoRedoService.js";
+import { TestDialogService } from "../../../../../platform/dialogs/test/common/testDialogService.js";
+import { TestNotificationService } from "../../../../../platform/notification/test/common/testNotificationService.js";
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { IWorkingCopyHistoryEntry, IWorkingCopyHistoryEntryDescriptor } from "../../common/workingCopyHistory.js";
+import { assertReturnsDefined } from "../../../../../base/common/types.js";
+import { VSBuffer } from "../../../../../base/common/buffer.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { TestWorkingCopyHistoryService } from "./workingCopyHistoryService.test.js";
 
-suite('WorkingCopyHistoryTracker', () => {
+suite("WorkingCopyHistoryTracker", () => {
 
 	let testDir: URI;
 	let historyHome: URI;
@@ -47,29 +47,29 @@ suite('WorkingCopyHistoryTracker', () => {
 
 	const disposables = new DisposableStore();
 
-	const testFile1PathContents = 'Hello Foo';
+	const testFile1PathContents = "Hello Foo";
 	const testFile2PathContents = [
-		'Lorem ipsum ',
-		'dolor öäü sit amet ',
-		'adipiscing ßß elit',
-		'consectetur '
-	].join('').repeat(1000);
+		"Lorem ipsum ",
+		"dolor öäü sit amet ",
+		"adipiscing ßß elit",
+		"consectetur ",
+	].join("").repeat(1000);
 
 	let increasingTimestampCounter = 1;
 
 	async function addEntry(descriptor: IWorkingCopyHistoryEntryDescriptor, token: CancellationToken): Promise<IWorkingCopyHistoryEntry> {
 		const entry = await workingCopyHistoryService.addEntry({
 			...descriptor,
-			timestamp: increasingTimestampCounter++ // very important to get tests to not be flaky with stable sort order
+			timestamp: increasingTimestampCounter++, // very important to get tests to not be flaky with stable sort order
 		}, token);
 
 		return assertReturnsDefined(entry);
 	}
 
 	setup(async () => {
-		testDir = URI.file(randomPath(join('vsctests', 'workingcopyhistorytracker'))).with({ scheme: Schemas.inMemory });
-		historyHome = joinPath(testDir, 'User', 'History');
-		workHome = joinPath(testDir, 'work');
+		testDir = URI.file(randomPath(join("vsctests", "workingcopyhistorytracker"))).with({ scheme: Schemas.inMemory });
+		historyHome = joinPath(testDir, "User", "History");
+		workHome = joinPath(testDir, "work");
 
 		workingCopyHistoryService = disposables.add(new TestWorkingCopyHistoryService(disposables));
 		workingCopyService = disposables.add(new WorkingCopyService());
@@ -81,8 +81,8 @@ suite('WorkingCopyHistoryTracker', () => {
 		await fileService.createFolder(historyHome);
 		await fileService.createFolder(workHome);
 
-		testFile1Path = joinPath(workHome, 'foo.txt');
-		testFile2Path = joinPath(workHome, 'bar.txt');
+		testFile1Path = joinPath(workHome, "foo.txt");
+		testFile2Path = joinPath(workHome, "bar.txt");
 
 		await fileService.writeFile(testFile1Path, VSBuffer.fromString(testFile1PathContents));
 		await fileService.writeFile(testFile2Path, VSBuffer.fromString(testFile2PathContents));
@@ -97,7 +97,7 @@ suite('WorkingCopyHistoryTracker', () => {
 			configurationService,
 			new UndoRedoService(new TestDialogService(), new TestNotificationService()),
 			new TestContextService(),
-			workingCopyHistoryService._fileService
+			workingCopyHistoryService._fileService,
 		);
 	}
 
@@ -106,7 +106,7 @@ suite('WorkingCopyHistoryTracker', () => {
 		disposables.clear();
 	});
 
-	test('history entry added on save', async () => {
+	test("history entry added on save", async () => {
 		const workingCopy1 = disposables.add(new TestWorkingCopy(testFile1Path));
 		const workingCopy2 = disposables.add(new TestWorkingCopy(testFile2Path));
 
@@ -134,14 +134,14 @@ suite('WorkingCopyHistoryTracker', () => {
 		await saveResult.p;
 	});
 
-	test('history entry skipped when setting disabled (globally)', async () => {
-		configurationService.setUserConfiguration('workbench.localHistory.enabled', false, testFile1Path);
+	test("history entry skipped when setting disabled (globally)", async () => {
+		configurationService.setUserConfiguration("workbench.localHistory.enabled", false, testFile1Path);
 
 		return assertNoLocalHistoryEntryAddedWithSettingsConfigured();
 	});
 
-	test('history entry skipped when setting disabled (exclude)', () => {
-		configurationService.setUserConfiguration('workbench.localHistory.exclude', { '**/foo.txt': true });
+	test("history entry skipped when setting disabled (exclude)", () => {
+		configurationService.setUserConfiguration("workbench.localHistory.exclude", { "**/foo.txt": true });
 
 		// Recreate to apply settings
 		tracker.dispose();
@@ -150,8 +150,8 @@ suite('WorkingCopyHistoryTracker', () => {
 		return assertNoLocalHistoryEntryAddedWithSettingsConfigured();
 	});
 
-	test('history entry skipped when too large', async () => {
-		configurationService.setUserConfiguration('workbench.localHistory.maxFileSize', 0, testFile1Path);
+	test("history entry skipped when too large", async () => {
+		configurationService.setUserConfiguration("workbench.localHistory.maxFileSize", 0, testFile1Path);
 
 		return assertNoLocalHistoryEntryAddedWithSettingsConfigured();
 	});
@@ -169,7 +169,7 @@ suite('WorkingCopyHistoryTracker', () => {
 		const saveResult = new DeferredPromise<void>();
 		disposables.add(workingCopyHistoryService.onDidAddEntry(e => {
 			if (isEqual(e.entry.workingCopy.resource, workingCopy1.resource)) {
-				assert.fail('Unexpected working copy history entry: ' + e.entry.workingCopy.resource.toString());
+				assert.fail("Unexpected working copy history entry: " + e.entry.workingCopy.resource.toString());
 			}
 
 			if (isEqual(e.entry.workingCopy.resource, workingCopy2.resource)) {
@@ -183,19 +183,19 @@ suite('WorkingCopyHistoryTracker', () => {
 		await saveResult.p;
 	}
 
-	test('entries moved (file rename)', async () => {
+	test("entries moved (file rename)", async () => {
 		const entriesMoved = Event.toPromise(workingCopyHistoryService.onDidMoveEntries);
 
 		const workingCopy = disposables.add(new TestWorkingCopy(testFile1Path));
 
-		const entry1 = await addEntry({ resource: workingCopy.resource, source: 'test-source' }, CancellationToken.None);
-		const entry2 = await addEntry({ resource: workingCopy.resource, source: 'test-source' }, CancellationToken.None);
-		const entry3 = await addEntry({ resource: workingCopy.resource, source: 'test-source' }, CancellationToken.None);
+		const entry1 = await addEntry({ resource: workingCopy.resource, source: "test-source" }, CancellationToken.None);
+		const entry2 = await addEntry({ resource: workingCopy.resource, source: "test-source" }, CancellationToken.None);
+		const entry3 = await addEntry({ resource: workingCopy.resource, source: "test-source" }, CancellationToken.None);
 
 		let entries = await workingCopyHistoryService.getEntries(workingCopy.resource, CancellationToken.None);
 		assert.strictEqual(entries.length, 3);
 
-		const renamedWorkingCopyResource = joinPath(dirname(workingCopy.resource), 'renamed.txt');
+		const renamedWorkingCopyResource = joinPath(dirname(workingCopy.resource), "renamed.txt");
 		await workingCopyHistoryService._fileService.move(workingCopy.resource, renamedWorkingCopyResource);
 
 		await entriesMoved;
@@ -229,19 +229,19 @@ suite('WorkingCopyHistoryTracker', () => {
 		assert.strictEqual(all[0].toString(), renamedWorkingCopyResource.toString());
 	});
 
-	test('entries moved (folder rename)', async () => {
+	test("entries moved (folder rename)", async () => {
 		const entriesMoved = Event.toPromise(workingCopyHistoryService.onDidMoveEntries);
 
 		const workingCopy1 = disposables.add(new TestWorkingCopy(testFile1Path));
 		const workingCopy2 = disposables.add(new TestWorkingCopy(testFile2Path));
 
-		const entry1A = await addEntry({ resource: workingCopy1.resource, source: 'test-source' }, CancellationToken.None);
-		const entry2A = await addEntry({ resource: workingCopy1.resource, source: 'test-source' }, CancellationToken.None);
-		const entry3A = await addEntry({ resource: workingCopy1.resource, source: 'test-source' }, CancellationToken.None);
+		const entry1A = await addEntry({ resource: workingCopy1.resource, source: "test-source" }, CancellationToken.None);
+		const entry2A = await addEntry({ resource: workingCopy1.resource, source: "test-source" }, CancellationToken.None);
+		const entry3A = await addEntry({ resource: workingCopy1.resource, source: "test-source" }, CancellationToken.None);
 
-		const entry1B = await addEntry({ resource: workingCopy2.resource, source: 'test-source' }, CancellationToken.None);
-		const entry2B = await addEntry({ resource: workingCopy2.resource, source: 'test-source' }, CancellationToken.None);
-		const entry3B = await addEntry({ resource: workingCopy2.resource, source: 'test-source' }, CancellationToken.None);
+		const entry1B = await addEntry({ resource: workingCopy2.resource, source: "test-source" }, CancellationToken.None);
+		const entry2B = await addEntry({ resource: workingCopy2.resource, source: "test-source" }, CancellationToken.None);
+		const entry3B = await addEntry({ resource: workingCopy2.resource, source: "test-source" }, CancellationToken.None);
 
 		let entries = await workingCopyHistoryService.getEntries(workingCopy1.resource, CancellationToken.None);
 		assert.strictEqual(entries.length, 3);
@@ -249,7 +249,7 @@ suite('WorkingCopyHistoryTracker', () => {
 		entries = await workingCopyHistoryService.getEntries(workingCopy2.resource, CancellationToken.None);
 		assert.strictEqual(entries.length, 3);
 
-		const renamedWorkHome = joinPath(dirname(testDir), 'renamed');
+		const renamedWorkHome = joinPath(dirname(testDir), "renamed");
 		await workingCopyHistoryService._fileService.move(workHome, renamedWorkHome);
 
 		const renamedWorkingCopy1Resource = joinPath(renamedWorkHome, basename(workingCopy1.resource));

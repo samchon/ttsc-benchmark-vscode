@@ -3,25 +3,29 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable, DisposableStore, IDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { autorun } from '../../../../base/common/observable.js';
-import { isWeb } from '../../../../base/common/platform.js';
-import { IRemoteAgentHostService, RemoteAgentHostConnectionStatus } from '../../../../platform/agentHost/common/remoteAgentHostService.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { isAgentHostProvider, IAgentHostSessionsProvider } from '../../../common/agentHostSessionsProvider.js';
-import { ISessionsProvidersService } from '../../sessions/browser/sessionsProvidersService.js';
-import { AgentHostFilterConnectionStatus, IAgentHostFilterEntry, IAgentHostFilterService } from '../common/agentHostFilter.js';
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable, DisposableStore, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { autorun } from "../../../../base/common/observable.js";
+import { isWeb } from "../../../../base/common/platform.js";
+import { IRemoteAgentHostService, RemoteAgentHostConnectionStatus } from "../../../../platform/agentHost/common/remoteAgentHostService.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { isAgentHostProvider, IAgentHostSessionsProvider } from "../../../common/agentHostSessionsProvider.js";
+import { ISessionsProvidersService } from "../../sessions/browser/sessionsProvidersService.js";
+import {
+  AgentHostFilterConnectionStatus,
+  IAgentHostFilterEntry,
+  IAgentHostFilterService,
+} from "../common/agentHostFilter.js";
 
-const STORAGE_KEY = 'sessions.agentHostFilter.selectedProviderId';
+const STORAGE_KEY = "sessions.agentHostFilter.selectedProviderId";
 
 function mapStatus(s: RemoteAgentHostConnectionStatus): AgentHostFilterConnectionStatus {
 	switch (s.kind) {
-		case 'connected': return AgentHostFilterConnectionStatus.Connected;
-		case 'connecting': return AgentHostFilterConnectionStatus.Connecting;
-		case 'disconnected':
-		case 'incompatible':
+		case "connected": return AgentHostFilterConnectionStatus.Connected;
+		case "connecting": return AgentHostFilterConnectionStatus.Connecting;
+		case "disconnected":
+		case "incompatible":
 		default: return AgentHostFilterConnectionStatus.Disconnected;
 	}
 }
@@ -32,11 +36,13 @@ function mapStatus(s: RemoteAgentHostConnectionStatus): AgentHostFilterConnectio
  * the host filter combo is responsible for surfacing.
  */
 function isRemoteAgentHostProvider(provider: unknown): provider is IAgentHostSessionsProvider & { readonly remoteAddress: string } {
-	if (!provider || typeof provider !== 'object' || !('id' in provider)) {
+	if (!provider || typeof provider !== "object" || !("id" in provider)) {
 		return false;
 	}
 	const p = provider as IAgentHostSessionsProvider;
-	return isAgentHostProvider(p) && p.connectionStatus !== undefined && typeof p.remoteAddress === 'string';
+	return isAgentHostProvider(
+    p,
+  ) && p.connectionStatus !== undefined && typeof p.remoteAddress === "string";
 }
 
 export class AgentHostFilterService extends Disposable implements IAgentHostFilterService {
@@ -46,7 +52,9 @@ export class AgentHostFilterService extends Disposable implements IAgentHostFilt
 	private readonly _onDidChange = this._register(new Emitter<void>());
 	readonly onDidChange: Event<void> = this._onDidChange.event;
 
-	private readonly _onDidChangeDiscovering = this._register(new Emitter<void>());
+	private readonly _onDidChangeDiscovering = this._register(
+    new Emitter<void>(),
+  );
 	readonly onDidChangeDiscovering: Event<void> = this._onDidChangeDiscovering.event;
 
 	private _selectedProviderId: string | undefined;
@@ -79,10 +87,18 @@ export class AgentHostFilterService extends Disposable implements IAgentHostFilt
 	) {
 		super();
 
-		this._selectedProviderId = this._storageService.get(STORAGE_KEY, StorageScope.PROFILE, undefined);
+		this._selectedProviderId = this._storageService.get(
+      STORAGE_KEY,
+      StorageScope.PROFILE,
+      undefined,
+    );
 
 		this._rewatchProviders();
-		this._register(this._sessionsProvidersService.onDidChangeProviders(() => this._rewatchProviders()));
+		this._register(
+      this._sessionsProvidersService.onDidChangeProviders(
+        () => this._rewatchProviders(),
+      ),
+    );
 	}
 
 	get selectedProviderId(): string | undefined {
@@ -107,8 +123,10 @@ export class AgentHostFilterService extends Disposable implements IAgentHostFilt
 		}
 		try {
 			await Promise.allSettled(
-				[...this._discoveryHandlers].map(h => h().catch(() => { /* swallowed */ }))
-			);
+        [...this._discoveryHandlers].map(
+          h => h().catch(() => { /* swallowed */ }),
+        ),
+      );
 		} finally {
 			this._discoveringCount--;
 			if (this._discoveringCount === 0) {
@@ -137,7 +155,9 @@ export class AgentHostFilterService extends Disposable implements IAgentHostFilt
 	reconnect(providerId: string): void {
 		const provider = this._sessionsProvidersService.getProvider(providerId);
 		if (provider && isAgentHostProvider(provider) && provider.connect) {
-			provider.connect().catch(() => { /* errors are surfaced by the provider */ });
+			provider.connect().catch(
+        () => { /* errors are surfaced by the provider */ },
+      );
 			return;
 		}
 		const host = this._hosts.find(h => h.providerId === providerId);
@@ -150,12 +170,16 @@ export class AgentHostFilterService extends Disposable implements IAgentHostFilt
 	disconnect(providerId: string): void {
 		const provider = this._sessionsProvidersService.getProvider(providerId);
 		if (provider && isAgentHostProvider(provider) && provider.disconnect) {
-			provider.disconnect().catch(() => { /* errors are surfaced by the provider */ });
+			provider.disconnect().catch(
+        () => { /* errors are surfaced by the provider */ },
+      );
 		}
 	}
 
 	private _validate(providerId: string | undefined): string | undefined {
-		if (providerId !== undefined && this._hosts.some(h => h.providerId === providerId)) {
+		if (providerId !== undefined && this._hosts.some(
+      h => h.providerId === providerId,
+    )) {
 			return providerId;
 		}
 		return this._hosts.length > 0 ? this._hosts[0].providerId : undefined;
@@ -170,7 +194,9 @@ export class AgentHostFilterService extends Disposable implements IAgentHostFilt
 	private _rewatchProviders(): void {
 		this._providerWatchers.clear();
 
-		const providers = this._sessionsProvidersService.getProviders().filter(isRemoteAgentHostProvider);
+		const providers = this._sessionsProvidersService.getProviders().filter(
+      isRemoteAgentHostProvider,
+    );
 
 		this._providerWatchers.add(autorun(reader => {
 			const hosts: IAgentHostFilterEntry[] = providers.map(provider => ({
@@ -193,7 +219,9 @@ export class AgentHostFilterService extends Disposable implements IAgentHostFilt
 
 		this._hosts = hosts;
 
-		const validated = isWeb ? this._validate(this._selectedProviderId) : undefined;
+		const validated = isWeb ? this._validate(
+      this._selectedProviderId,
+    ) : undefined;
 		const selectionChanged = validated !== this._selectedProviderId;
 		if (selectionChanged) {
 			this._selectedProviderId = validated;
@@ -209,9 +237,18 @@ export class AgentHostFilterService extends Disposable implements IAgentHostFilt
 		if (this._selectedProviderId === undefined) {
 			this._storageService.remove(STORAGE_KEY, StorageScope.PROFILE);
 		} else {
-			this._storageService.store(STORAGE_KEY, this._selectedProviderId, StorageScope.PROFILE, StorageTarget.USER);
+			this._storageService.store(
+        STORAGE_KEY,
+        this._selectedProviderId,
+        StorageScope.PROFILE,
+        StorageTarget.USER,
+      );
 		}
 	}
 }
 
-registerSingleton(IAgentHostFilterService, AgentHostFilterService, InstantiationType.Delayed);
+registerSingleton(
+  IAgentHostFilterService,
+  AgentHostFilterService,
+  InstantiationType.Delayed,
+);

@@ -3,22 +3,25 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Range } from '../core/range.js';
-import { TrackedRangeStickiness, TrackedRangeStickiness as ActualTrackedRangeStickiness } from '../model.js';
-import { ModelDecorationOptions } from './textModel.js';
+import { Range } from "../core/range.js";
+import {
+  TrackedRangeStickiness,
+  TrackedRangeStickiness as ActualTrackedRangeStickiness,
+} from "../model.js";
+import { ModelDecorationOptions } from "./textModel.js";
 
 //
 // The red-black tree is based on the "Introduction to Algorithms" by Cormen, Leiserson and Rivest.
 //
 
 export const enum ClassName {
-	EditorHintDecoration = 'squiggly-hint',
-	EditorInfoDecoration = 'squiggly-info',
-	EditorWarningDecoration = 'squiggly-warning',
-	EditorErrorDecoration = 'squiggly-error',
-	EditorUnnecessaryDecoration = 'squiggly-unnecessary',
-	EditorUnnecessaryInlineDecoration = 'squiggly-inline-unnecessary',
-	EditorDeprecatedInlineDecoration = 'squiggly-inline-deprecated'
+	EditorHintDecoration = "squiggly-hint",
+	EditorInfoDecoration = "squiggly-info",
+	EditorWarningDecoration = "squiggly-warning",
+	EditorErrorDecoration = "squiggly-error",
+	EditorUnnecessaryDecoration = "squiggly-unnecessary",
+	EditorUnnecessaryInlineDecoration = "squiggly-inline-unnecessary",
+	EditorDeprecatedInlineDecoration = "squiggly-inline-deprecated"
 }
 
 export const enum NodeColor {
@@ -182,7 +185,10 @@ export class IntervalNode {
 		this.options = null!;
 		setNodeIsForValidation(this, false);
 		setNodeIsInGlyphMargin(this, false);
-		_setNodeStickiness(this, TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges);
+		_setNodeStickiness(
+      this,
+      TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+    );
 		setCollapseOnReplaceEdit(this, false);
 		setNodeAffectsFont(this, false);
 
@@ -254,14 +260,30 @@ export class IntervalTree {
 		if (this.root === SENTINEL) {
 			return [];
 		}
-		return intervalSearch(this, start, end, filterOwnerId, filterOutValidation, filterFontDecorations, cachedVersionId, onlyMarginDecorations);
+		return intervalSearch(
+      this,
+      start,
+      end,
+      filterOwnerId,
+      filterOutValidation,
+      filterFontDecorations,
+      cachedVersionId,
+      onlyMarginDecorations,
+    );
 	}
 
 	public search(filterOwnerId: number, filterOutValidation: boolean, filterFontDecorations: boolean, cachedVersionId: number, onlyMarginDecorations: boolean): IntervalNode[] {
 		if (this.root === SENTINEL) {
 			return [];
 		}
-		return search(this, filterOwnerId, filterOutValidation, filterFontDecorations, cachedVersionId, onlyMarginDecorations);
+		return search(
+      this,
+      filterOwnerId,
+      filterOutValidation,
+      filterFontDecorations,
+      cachedVersionId,
+      onlyMarginDecorations,
+    );
 	}
 
 	/**
@@ -325,7 +347,13 @@ export class IntervalTree {
 			const node = nodesOfInterest[i];
 			node.start = node.cachedAbsoluteStart;
 			node.end = node.cachedAbsoluteEnd;
-			nodeAcceptEdit(node, offset, (offset + length), textLength, forceMoveMarkers);
+			nodeAcceptEdit(
+        node,
+        offset,
+        (offset + length),
+        textLength,
+        forceMoveMarkers,
+      );
 			node.maxEnd = node.end;
 			rbTreeInsert(this, node);
 		}
@@ -445,31 +473,61 @@ export function nodeAcceptEdit(node: IntervalNode, start: number, end: number, t
 
 	{
 		const moveSemantics = forceMoveMarkers ? MarkerMoveSemantics.ForceMove : (deletingCnt > 0 ? MarkerMoveSemantics.ForceStay : MarkerMoveSemantics.MarkerDefined);
-		if (!startDone && adjustMarkerBeforeColumn(nodeStart, startStickToPreviousCharacter, start, moveSemantics)) {
+		if (!startDone && adjustMarkerBeforeColumn(
+      nodeStart,
+      startStickToPreviousCharacter,
+      start,
+      moveSemantics,
+    )) {
 			startDone = true;
 		}
-		if (!endDone && adjustMarkerBeforeColumn(nodeEnd, endStickToPreviousCharacter, start, moveSemantics)) {
+		if (!endDone && adjustMarkerBeforeColumn(
+      nodeEnd,
+      endStickToPreviousCharacter,
+      start,
+      moveSemantics,
+    )) {
 			endDone = true;
 		}
 	}
 
 	if (commonLength > 0 && !forceMoveMarkers) {
 		const moveSemantics = (deletingCnt > insertingCnt ? MarkerMoveSemantics.ForceStay : MarkerMoveSemantics.MarkerDefined);
-		if (!startDone && adjustMarkerBeforeColumn(nodeStart, startStickToPreviousCharacter, start + commonLength, moveSemantics)) {
+		if (!startDone && adjustMarkerBeforeColumn(
+      nodeStart,
+      startStickToPreviousCharacter,
+      start + commonLength,
+      moveSemantics,
+    )) {
 			startDone = true;
 		}
-		if (!endDone && adjustMarkerBeforeColumn(nodeEnd, endStickToPreviousCharacter, start + commonLength, moveSemantics)) {
+		if (!endDone && adjustMarkerBeforeColumn(
+      nodeEnd,
+      endStickToPreviousCharacter,
+      start + commonLength,
+      moveSemantics,
+    )) {
 			endDone = true;
 		}
 	}
 
 	{
 		const moveSemantics = forceMoveMarkers ? MarkerMoveSemantics.ForceMove : MarkerMoveSemantics.MarkerDefined;
-		if (!startDone && adjustMarkerBeforeColumn(nodeStart, startStickToPreviousCharacter, end, moveSemantics)) {
+		if (!startDone && adjustMarkerBeforeColumn(
+      nodeStart,
+      startStickToPreviousCharacter,
+      end,
+      moveSemantics,
+    )) {
 			node.start = start + insertingCnt;
 			startDone = true;
 		}
-		if (!endDone && adjustMarkerBeforeColumn(nodeEnd, endStickToPreviousCharacter, end, moveSemantics)) {
+		if (!endDone && adjustMarkerBeforeColumn(
+      nodeEnd,
+      endStickToPreviousCharacter,
+      end,
+      moveSemantics,
+    )) {
 			node.end = start + insertingCnt;
 			endDone = true;
 		}
@@ -933,7 +991,12 @@ function treeInsert(T: IntervalTree, z: IntervalNode): void {
 	const zAbsoluteStart = z.start;
 	const zAbsoluteEnd = z.end;
 	while (true) {
-		const cmp = intervalCompare(zAbsoluteStart, zAbsoluteEnd, x.start + delta, x.end + delta);
+		const cmp = intervalCompare(
+      zAbsoluteStart,
+      zAbsoluteEnd,
+      x.start + delta,
+      x.end + delta,
+    );
 		if (cmp < 0) {
 			// this node should be inserted to the left
 			// => it is not affected by the node's delta

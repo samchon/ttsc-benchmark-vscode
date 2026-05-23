@@ -3,22 +3,41 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import { IInstantiationService, createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { IEditorPane, GroupIdentifier, EditorInputWithOptions, CloseDirection, IEditorPartOptions, IEditorPartOptionsChangeEvent, EditorsOrder, IVisibleEditorPane, IEditorCloseEvent, IUntypedEditorInput, isEditorInput, IEditorWillMoveEvent, IMatchEditorOptions, IActiveEditorChangeEvent, IFindEditorOptions, IToolbarActions } from '../../../common/editor.js';
-import { EditorInput } from '../../../common/editor/editorInput.js';
-import { IEditorOptions, IModalEditorNavigation, IModalEditorPartOptions } from '../../../../platform/editor/common/editor.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IDimension } from '../../../../editor/common/core/2d/dimension.js';
-import { DisposableStore, IDisposable } from '../../../../base/common/lifecycle.js';
-import { ContextKeyValue, IContextKeyService, RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IGroupModelChangeEvent } from '../../../common/editor/editorGroupModel.js';
-import { IRectangle } from '../../../../platform/window/common/window.js';
-import { IMenuChangeEvent, MenuId } from '../../../../platform/actions/common/actions.js';
-import { DeepPartial } from '../../../../base/common/types.js';
+import { Event } from "../../../../base/common/event.js";
+import { IInstantiationService, createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import {
+  IEditorPane,
+  GroupIdentifier,
+  EditorInputWithOptions,
+  CloseDirection,
+  IEditorPartOptions,
+  IEditorPartOptionsChangeEvent,
+  EditorsOrder,
+  IVisibleEditorPane,
+  IEditorCloseEvent,
+  IUntypedEditorInput,
+  isEditorInput,
+  IEditorWillMoveEvent,
+  IMatchEditorOptions,
+  IActiveEditorChangeEvent,
+  IFindEditorOptions,
+  IToolbarActions,
+} from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { IEditorOptions, IModalEditorNavigation, IModalEditorPartOptions } from "../../../../platform/editor/common/editor.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IDimension } from "../../../../editor/common/core/2d/dimension.js";
+import { DisposableStore, IDisposable } from "../../../../base/common/lifecycle.js";
+import { ContextKeyValue, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IGroupModelChangeEvent } from "../../../common/editor/editorGroupModel.js";
+import { IRectangle } from "../../../../platform/window/common/window.js";
+import { IMenuChangeEvent, MenuId } from "../../../../platform/actions/common/actions.js";
+import { DeepPartial } from "../../../../base/common/types.js";
 
-export const IEditorGroupsService = createDecorator<IEditorGroupsService>('editorGroupsService');
+export const IEditorGroupsService = createDecorator<IEditorGroupsService>(
+  "editorGroupsService",
+);
 
 export const enum GroupActivationReason {
 
@@ -707,7 +726,7 @@ export interface IEditorGroupsService extends IEditorGroupsContainer {
 	 *
 	 * @returns `true` when the working set as applied.
 	 */
-	applyWorkingSet(workingSet: IEditorWorkingSet | 'empty', options?: IEditorWorkingSetOptions): Promise<boolean>;
+	applyWorkingSet(workingSet: IEditorWorkingSet | "empty", options?: IEditorWorkingSetOptions): Promise<boolean>;
 
 	/**
 	 * Deletes a working set.
@@ -1073,15 +1092,19 @@ export interface IEditorGroup {
 export function isEditorGroup(obj: unknown): obj is IEditorGroup {
 	const group = obj as IEditorGroup | undefined;
 
-	return !!group && typeof group.id === 'number' && Array.isArray(group.editors);
+	return !!group && typeof group.id === "number" && Array.isArray(
+    group.editors,
+  );
 }
 
 //#region Editor Group Helpers
 
 export function preferredSideBySideGroupDirection(configurationService: IConfigurationService): GroupDirection.DOWN | GroupDirection.RIGHT {
-	const openSideBySideDirection = configurationService.getValue('workbench.editor.openSideBySideDirection');
+	const openSideBySideDirection = configurationService.getValue(
+    "workbench.editor.openSideBySideDirection",
+  );
 
-	if (openSideBySideDirection === 'down') {
+	if (openSideBySideDirection === "down") {
 		return GroupDirection.DOWN;
 	}
 

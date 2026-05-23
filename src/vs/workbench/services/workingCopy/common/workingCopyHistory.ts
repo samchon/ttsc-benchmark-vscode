@@ -3,13 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { URI } from '../../../../base/common/uri.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { SaveSource } from '../../../common/editor.js';
+import { Event } from "../../../../base/common/event.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { URI } from "../../../../base/common/uri.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { SaveSource } from "../../../common/editor.js";
 
-export const IWorkingCopyHistoryService = createDecorator<IWorkingCopyHistoryService>('workingCopyHistoryService');
+export const IWorkingCopyHistoryService = createDecorator<IWorkingCopyHistoryService>(
+  "workingCopyHistoryService",
+);
 
 export interface IWorkingCopyHistoryEvent {
 

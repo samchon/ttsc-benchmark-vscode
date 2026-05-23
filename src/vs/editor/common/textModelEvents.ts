@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IPosition } from './core/position.js';
-import { IRange, Range } from './core/range.js';
-import { Selection } from './core/selection.js';
-import { IModelDecoration, InjectedTextOptions } from './model.js';
-import { IModelContentChange } from './model/mirrorTextModel.js';
-import { AnnotationsUpdate } from './model/tokens/annotations.js';
-import { TextModelEditSource } from './textModelEditSource.js';
+import { IPosition } from "./core/position.js";
+import { IRange, Range } from "./core/range.js";
+import { Selection } from "./core/selection.js";
+import { IModelDecoration, InjectedTextOptions } from "./model.js";
+import { IModelContentChange } from "./model/mirrorTextModel.js";
+import { AnnotationsUpdate } from "./model/tokens/annotations.js";
+import { TextModelEditSource } from "./textModelEditSource.js";
 
 /**
  * An event describing that the current language associated with a model has changed.
@@ -188,10 +188,10 @@ export type FontTokensUpdate = AnnotationsUpdate<IFontTokenOption | undefined>;
 export function serializeFontTokenOptions(): (options: IFontTokenOption) => IFontTokenOption {
 	return (annotation: IFontTokenOption) => {
 		return {
-			fontFamily: annotation.fontFamily ?? '',
-			fontSizeMultiplier: annotation.fontSizeMultiplier ?? 0,
-			lineHeightMultiplier: annotation.lineHeightMultiplier ?? 0
-		};
+      fontFamily: annotation.fontFamily ?? "",
+      fontSizeMultiplier: annotation.fontSizeMultiplier ?? 0,
+      lineHeightMultiplier: annotation.lineHeightMultiplier ?? 0,
+    };
 	};
 }
 
@@ -201,10 +201,10 @@ export function serializeFontTokenOptions(): (options: IFontTokenOption) => IFon
 export function deserializeFontTokenOptions(): (options: IFontTokenOption) => IFontTokenOption {
 	return (annotation: IFontTokenOption) => {
 		return {
-			fontFamily: annotation.fontFamily ? String(annotation.fontFamily) : undefined,
-			fontSizeMultiplier: annotation.fontSizeMultiplier ? Number(annotation.fontSizeMultiplier) : undefined,
-			lineHeightMultiplier: annotation.lineHeightMultiplier ? Number(annotation.lineHeightMultiplier) : undefined
-		};
+      fontFamily: annotation.fontFamily ? String(annotation.fontFamily) : undefined,
+      fontSizeMultiplier: annotation.fontSizeMultiplier ? Number(annotation.fontSizeMultiplier) : undefined,
+      lineHeightMultiplier: annotation.lineHeightMultiplier ? Number(annotation.lineHeightMultiplier) : undefined,
+    };
 	};
 }
 
@@ -243,7 +243,7 @@ export class LineInjectedText {
 		if (!injectedTexts || injectedTexts.length === 0) {
 			return lineText;
 		}
-		let result = '';
+		let result = "";
 		let lastOriginalOffset = 0;
 		for (const injectedText of injectedTexts) {
 			result += lineText.substring(lastOriginalOffset, injectedText.column - 1);
@@ -258,22 +258,26 @@ export class LineInjectedText {
 		const result: LineInjectedText[] = [];
 		for (const decoration of decorations) {
 			if (decoration.options.before && decoration.options.before.content.length > 0) {
-				result.push(new LineInjectedText(
-					decoration.ownerId,
-					decoration.range.startLineNumber,
-					decoration.range.startColumn,
-					decoration.options.before,
-					0,
-				));
+				result.push(
+          new LineInjectedText(
+            decoration.ownerId,
+            decoration.range.startLineNumber,
+            decoration.range.startColumn,
+            decoration.options.before,
+            0,
+          ),
+        );
 			}
 			if (decoration.options.after && decoration.options.after.content.length > 0) {
-				result.push(new LineInjectedText(
-					decoration.ownerId,
-					decoration.range.endLineNumber,
-					decoration.range.endColumn,
-					decoration.options.after,
-					1,
-				));
+				result.push(
+          new LineInjectedText(
+            decoration.ownerId,
+            decoration.range.endLineNumber,
+            decoration.range.endColumn,
+            decoration.options.after,
+            1,
+          ),
+        );
 			}
 		}
 		result.sort((a, b) => {
@@ -293,11 +297,17 @@ export class LineInjectedText {
 		public readonly lineNumber: number,
 		public readonly column: number,
 		public readonly options: InjectedTextOptions,
-		public readonly order: number
+		public readonly order: number,
 	) { }
 
 	public withText(text: string): LineInjectedText {
-		return new LineInjectedText(this.ownerId, this.lineNumber, this.column, { ...this.options, content: text }, this.order);
+		return new LineInjectedText(
+      this.ownerId,
+      this.lineNumber,
+      this.column,
+      { ...this.options, content: text },
+      this.order,
+    );
 	}
 }
 
@@ -491,11 +501,18 @@ export class ModelRawContentChangedEvent {
 	}
 
 	public static merge(a: ModelRawContentChangedEvent, b: ModelRawContentChangedEvent): ModelRawContentChangedEvent {
-		const changes = ([] as ModelRawChange[]).concat(a.changes).concat(b.changes);
+		const changes = ([] as ModelRawChange[]).concat(a.changes).concat(
+      b.changes,
+    );
 		const versionId = b.versionId;
 		const isUndoing = (a.isUndoing || b.isUndoing);
 		const isRedoing = (a.isRedoing || b.isRedoing);
-		return new ModelRawContentChangedEvent(changes, versionId, isUndoing, isRedoing);
+		return new ModelRawContentChangedEvent(
+      changes,
+      versionId,
+      isUndoing,
+      isRedoing,
+    );
 	}
 }
 
@@ -566,13 +583,24 @@ export class InternalModelContentChangeEvent {
 	) { }
 
 	public merge(other: InternalModelContentChangeEvent): InternalModelContentChangeEvent {
-		const rawContentChangedEvent = ModelRawContentChangedEvent.merge(this.rawContentChangedEvent, other.rawContentChangedEvent);
-		const contentChangedEvent = InternalModelContentChangeEvent._mergeChangeEvents(this.contentChangedEvent, other.contentChangedEvent);
-		return new InternalModelContentChangeEvent(rawContentChangedEvent, contentChangedEvent);
+		const rawContentChangedEvent = ModelRawContentChangedEvent.merge(
+      this.rawContentChangedEvent,
+      other.rawContentChangedEvent,
+    );
+		const contentChangedEvent = InternalModelContentChangeEvent._mergeChangeEvents(
+      this.contentChangedEvent,
+      other.contentChangedEvent,
+    );
+		return new InternalModelContentChangeEvent(
+      rawContentChangedEvent,
+      contentChangedEvent,
+    );
 	}
 
 	private static _mergeChangeEvents(a: IModelContentChangedEvent, b: IModelContentChangedEvent): IModelContentChangedEvent {
-		const changes = ([] as IModelContentChange[]).concat(a.changes).concat(b.changes);
+		const changes = ([] as IModelContentChange[]).concat(a.changes).concat(
+      b.changes,
+    );
 		const eol = b.eol;
 		const versionId = b.versionId;
 		const isUndoing = (a.isUndoing || b.isUndoing);
@@ -580,15 +608,15 @@ export class InternalModelContentChangeEvent {
 		const isFlush = (a.isFlush || b.isFlush);
 		const isEolChange = a.isEolChange && b.isEolChange; // both must be true to not confuse listeners who skip such edits
 		return {
-			changes: changes,
-			eol: eol,
-			isEolChange: isEolChange,
-			versionId: versionId,
-			isUndoing: isUndoing,
-			isRedoing: isRedoing,
-			isFlush: isFlush,
-			detailedReasons: a.detailedReasons.concat(b.detailedReasons),
-			detailedReasonsChangeLengths: a.detailedReasonsChangeLengths.concat(b.detailedReasonsChangeLengths),
-		};
+      changes: changes,
+      eol: eol,
+      isEolChange: isEolChange,
+      versionId: versionId,
+      isUndoing: isUndoing,
+      isRedoing: isRedoing,
+      isFlush: isFlush,
+      detailedReasons: a.detailedReasons.concat(b.detailedReasons),
+      detailedReasonsChangeLengths: a.detailedReasonsChangeLengths.concat(b.detailedReasonsChangeLengths),
+    };
 	}
 }

@@ -3,10 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer, encodeBase64 } from '../../../base/common/buffer.js';
-import { Emitter, Event, PauseableEmitter } from '../../../base/common/event.js';
-import { Disposable, DisposableStore } from '../../../base/common/lifecycle.js';
-import { ISocket, SocketCloseEvent, SocketDiagnostics, SocketDiagnosticsEventType } from '../../../base/parts/ipc/common/ipc.net.js';
+import { VSBuffer, encodeBase64 } from "../../../base/common/buffer.js";
+import { Emitter, Event, PauseableEmitter } from "../../../base/common/event.js";
+import { Disposable, DisposableStore } from "../../../base/common/lifecycle.js";
+import {
+  ISocket,
+  SocketCloseEvent,
+  SocketDiagnostics,
+  SocketDiagnosticsEventType,
+} from "../../../base/parts/ipc/common/ipc.net.js";
 
 export const makeRawSocketHeaders = (path: string, query: string, deubgLabel: string) => {
 	// https://tools.ietf.org/html/rfc6455#section-4
@@ -17,16 +22,16 @@ export const makeRawSocketHeaders = (path: string, query: string, deubgLabel: st
 	const nonce = encodeBase64(VSBuffer.wrap(buffer));
 
 	const headers = [
-		`GET ws://localhost${path}?${query}&skipWebSocketFrames=true HTTP/1.1`,
-		`Connection: Upgrade`,
-		`Upgrade: websocket`,
-		`Sec-WebSocket-Key: ${nonce}`
-	];
+    `GET ws://localhost${path}?${query}&skipWebSocketFrames=true HTTP/1.1`,
+    `Connection: Upgrade`,
+    `Upgrade: websocket`,
+    `Sec-WebSocket-Key: ${nonce}`,
+  ];
 
-	return headers.join('\r\n') + '\r\n\r\n';
+	return headers.join("\r\n") + "\r\n\r\n";
 };
 
-export const socketRawEndHeaderSequence = VSBuffer.fromString('\r\n\r\n');
+export const socketRawEndHeaderSequence = VSBuffer.fromString("\r\n\r\n");
 
 export interface RemoteSocketHalf {
 	onData: Emitter<VSBuffer>;
@@ -38,9 +43,11 @@ export interface RemoteSocketHalf {
 export async function connectManagedSocket<T extends ManagedSocket>(
 	socket: T,
 	path: string, query: string, debugLabel: string,
-	half: RemoteSocketHalf
+	half: RemoteSocketHalf,
 ): Promise<T> {
-	socket.write(VSBuffer.fromString(makeRawSocketHeaders(path, query, debugLabel)));
+	socket.write(
+    VSBuffer.fromString(makeRawSocketHeaders(path, query, debugLabel)),
+  );
 
 	const d = new DisposableStore();
 	try {
@@ -70,8 +77,8 @@ export async function connectManagedSocket<T extends ManagedSocket>(
 				}
 			}));
 
-			d.add(socket.onClose(err => reject(err ?? new Error('socket closed'))));
-			d.add(socket.onEnd(() => reject(new Error('socket ended'))));
+			d.add(socket.onClose(err => reject(err ?? new Error("socket closed"))));
+			d.add(socket.onEnd(() => reject(new Error("socket ended"))));
 		});
 	} catch (e) {
 		socket.dispose();
@@ -82,7 +89,9 @@ export async function connectManagedSocket<T extends ManagedSocket>(
 }
 
 export abstract class ManagedSocket extends Disposable implements ISocket {
-	private readonly pausableDataEmitter = this._register(new PauseableEmitter<VSBuffer>());
+	private readonly pausableDataEmitter = this._register(
+    new PauseableEmitter<VSBuffer>(),
+  );
 
 	public onData: Event<VSBuffer> = (...args) => {
 		if (this.pausableDataEmitter.isPaused) {
@@ -105,7 +114,9 @@ export abstract class ManagedSocket extends Disposable implements ISocket {
 		super();
 
 		this._register(half.onData);
-		this._register(half.onData.event(data => this.pausableDataEmitter.fire(data)));
+		this._register(
+      half.onData.event(data => this.pausableDataEmitter.fire(data)),
+    );
 
 		this.onClose = this._register(half.onClose).event;
 		this.onEnd = this._register(half.onEnd).event;

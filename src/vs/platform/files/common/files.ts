@@ -3,27 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer, VSBufferReadable, VSBufferReadableStream } from '../../../base/common/buffer.js';
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { Event } from '../../../base/common/event.js';
-import { IExpression, IRelativePattern } from '../../../base/common/glob.js';
-import { IDisposable } from '../../../base/common/lifecycle.js';
-import { TernarySearchTree } from '../../../base/common/ternarySearchTree.js';
-import { sep } from '../../../base/common/path.js';
-import { ReadableStreamEvents } from '../../../base/common/stream.js';
-import { startsWithIgnoreCase } from '../../../base/common/strings.js';
-import { isNumber } from '../../../base/common/types.js';
-import { URI } from '../../../base/common/uri.js';
-import { localize } from '../../../nls.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import { isWeb } from '../../../base/common/platform.js';
-import { Schemas } from '../../../base/common/network.js';
-import { IMarkdownString } from '../../../base/common/htmlContent.js';
-import { Lazy } from '../../../base/common/lazy.js';
+import { VSBuffer, VSBufferReadable, VSBufferReadableStream } from "../../../base/common/buffer.js";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { Event } from "../../../base/common/event.js";
+import { IExpression, IRelativePattern } from "../../../base/common/glob.js";
+import { IDisposable } from "../../../base/common/lifecycle.js";
+import { TernarySearchTree } from "../../../base/common/ternarySearchTree.js";
+import { sep } from "../../../base/common/path.js";
+import { ReadableStreamEvents } from "../../../base/common/stream.js";
+import { startsWithIgnoreCase } from "../../../base/common/strings.js";
+import { isNumber } from "../../../base/common/types.js";
+import { URI } from "../../../base/common/uri.js";
+import { localize } from "../../../nls.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { isWeb } from "../../../base/common/platform.js";
+import { Schemas } from "../../../base/common/network.js";
+import { IMarkdownString } from "../../../base/common/htmlContent.js";
+import { Lazy } from "../../../base/common/lazy.js";
 
 //#region file service & providers
 
-export const IFileService = createDecorator<IFileService>('fileService');
+export const IFileService = createDecorator<IFileService>("fileService");
 
 export interface IFileService {
 
@@ -592,7 +592,7 @@ export interface IFileSystemWatcher extends IDisposable {
 export function isFileSystemWatcher(thing: unknown): thing is IFileSystemWatcher {
 	const candidate = thing as IFileSystemWatcher | undefined;
 
-	return !!candidate && typeof candidate.onDidChange === 'function';
+	return !!candidate && typeof candidate.onDidChange === "function";
 }
 
 export const enum FileSystemProviderCapabilities {
@@ -811,16 +811,16 @@ export function hasReadonlyCapability(provider: IFileSystemProvider): provider i
 }
 
 export enum FileSystemProviderErrorCode {
-	FileExists = 'EntryExists',
-	FileNotFound = 'EntryNotFound',
-	FileNotADirectory = 'EntryNotADirectory',
-	FileIsADirectory = 'EntryIsADirectory',
-	FileExceedsStorageQuota = 'EntryExceedsStorageQuota',
-	FileTooLarge = 'EntryTooLarge',
-	FileWriteLocked = 'EntryWriteLocked',
-	NoPermissions = 'NoPermissions',
-	Unavailable = 'Unavailable',
-	Unknown = 'Unknown'
+	FileExists = "EntryExists",
+	FileNotFound = "EntryNotFound",
+	FileNotADirectory = "EntryNotADirectory",
+	FileIsADirectory = "EntryIsADirectory",
+	FileExceedsStorageQuota = "EntryExceedsStorageQuota",
+	FileTooLarge = "EntryTooLarge",
+	FileWriteLocked = "EntryWriteLocked",
+	NoPermissions = "NoPermissions",
+	Unavailable = "Unavailable",
+	Unknown = "Unknown"
 }
 
 export interface IFileSystemProviderError extends Error {
@@ -848,7 +848,10 @@ export function createFileSystemProviderError(error: Error | string, code: FileS
 
 export function ensureFileSystemProviderError(error?: Error): Error {
 	if (!error) {
-		return createFileSystemProviderError(localize('unknownError', "Unknown Error"), FileSystemProviderErrorCode.Unknown); // https://github.com/microsoft/vscode/issues/72798
+		return createFileSystemProviderError(
+      localize("unknownError", "Unknown Error"),
+      FileSystemProviderErrorCode.Unknown,
+    ); // https://github.com/microsoft/vscode/issues/72798
 	}
 
 	return error;
@@ -1028,7 +1031,7 @@ export class FileChangesEvent {
 
 			// Figure out events correlation
 			if (this.correlationId !== FileChangesEvent.MIXED_CORRELATION) {
-				if (typeof change.cId === 'number') {
+				if (typeof change.cId === "number") {
 					if (this.correlationId === undefined) {
 						this.correlationId = change.cId; 							// correlation not yet set, just take it
 					} else if (this.correlationId !== change.cId) {
@@ -1044,25 +1047,25 @@ export class FileChangesEvent {
 	}
 
 	private readonly added = new Lazy(() => {
-		const added = TernarySearchTree.forUris<boolean>(() => this.ignorePathCasing);
-		added.fill(this.rawAdded.map(resource => [resource, true]));
+    const added = TernarySearchTree.forUris<boolean>(() => this.ignorePathCasing);
+    added.fill(this.rawAdded.map(resource => [resource, true]));
 
-		return added;
-	});
+    return added;
+  });
 
 	private readonly updated = new Lazy(() => {
-		const updated = TernarySearchTree.forUris<boolean>(() => this.ignorePathCasing);
-		updated.fill(this.rawUpdated.map(resource => [resource, true]));
+    const updated = TernarySearchTree.forUris<boolean>(() => this.ignorePathCasing);
+    updated.fill(this.rawUpdated.map(resource => [resource, true]));
 
-		return updated;
-	});
+    return updated;
+  });
 
 	private readonly deleted = new Lazy(() => {
-		const deleted = TernarySearchTree.forUris<boolean>(() => this.ignorePathCasing);
-		deleted.fill(this.rawDeleted.map(resource => [resource, true]));
+    const deleted = TernarySearchTree.forUris<boolean>(() => this.ignorePathCasing);
+    deleted.fill(this.rawDeleted.map(resource => [resource, true]));
 
-		return deleted;
-	});
+    return deleted;
+  });
 
 	/**
 	 * Find out if the file change events match the provided resource.
@@ -1106,18 +1109,24 @@ export class FileChangesEvent {
 				return true;
 			}
 
-			if (options.includeChildren && this.updated.value.findSuperstr(resource)) {
+			if (options.includeChildren && this.updated.value.findSuperstr(
+        resource,
+      )) {
 				return true;
 			}
 		}
 
 		// Deleted
 		if (!hasTypesFilter || types.includes(FileChangeType.DELETED)) {
-			if (this.deleted.value.findSubstr(resource) /* deleted also considers parent folders */) {
+			if (this.deleted.value.findSubstr(
+        resource,
+      ) /* deleted also considers parent folders */) {
 				return true;
 			}
 
-			if (options.includeChildren && this.deleted.value.findSuperstr(resource)) {
+			if (options.includeChildren && this.deleted.value.findSuperstr(
+        resource,
+      )) {
 				return true;
 			}
 		}
@@ -1169,7 +1178,7 @@ export class FileChangesEvent {
 	 * only to the requestor and not emit them to all listeners.
 	 */
 	hasCorrelation(): boolean {
-		return typeof this.correlationId === 'number';
+		return typeof this.correlationId === "number";
 	}
 
 	/**
@@ -1334,7 +1343,7 @@ export interface IFileStatResultWithMetadata extends IFileStatResult {
 	readonly stat?: IFileStatWithMetadata;
 }
 
-export interface IFileStatWithPartialMetadata extends Omit<IFileStatWithMetadata, 'children'> { }
+export interface IFileStatWithPartialMetadata extends Omit<IFileStatWithMetadata, "children"> { }
 
 export interface IFileContent extends IBaseFileStatWithMetadata {
 
@@ -1454,7 +1463,7 @@ export class FileOperationError extends Error {
 	constructor(
 		message: string,
 		readonly fileOperationResult: FileOperationResult,
-		readonly options?: IReadFileOptions | IWriteFileOptions | ICreateFileOptions
+		readonly options?: IReadFileOptions | IWriteFileOptions | ICreateFileOptions,
 	) {
 		super(message);
 	}
@@ -1465,7 +1474,7 @@ export class TooLargeFileOperationError extends FileOperationError {
 		message: string,
 		override readonly fileOperationResult: FileOperationResult.FILE_TOO_LARGE,
 		readonly size: number,
-		options?: IReadFileOptions
+		options?: IReadFileOptions,
 	) {
 		super(message, fileOperationResult, options);
 	}
@@ -1476,7 +1485,7 @@ export class NotModifiedSinceFileOperationError extends FileOperationError {
 	constructor(
 		message: string,
 		readonly stat: IFileStatWithMetadata,
-		options?: IReadFileOptions
+		options?: IReadFileOptions,
 	) {
 		super(message, FileOperationResult.FILE_NOT_MODIFIED_SINCE, options);
 	}
@@ -1501,23 +1510,23 @@ export const enum FileOperationResult {
 //#region Settings
 
 export const AutoSaveConfiguration = {
-	OFF: 'off',
-	AFTER_DELAY: 'afterDelay',
-	ON_FOCUS_CHANGE: 'onFocusChange',
-	ON_WINDOW_CHANGE: 'onWindowChange'
+  OFF: "off",
+  AFTER_DELAY: "afterDelay",
+  ON_FOCUS_CHANGE: "onFocusChange",
+  ON_WINDOW_CHANGE: "onWindowChange",
 };
 
 export const HotExitConfiguration = {
-	OFF: 'off',
-	ON_EXIT: 'onExit',
-	ON_EXIT_AND_WINDOW_CLOSE: 'onExitAndWindowClose'
+  OFF: "off",
+  ON_EXIT: "onExit",
+  ON_EXIT_AND_WINDOW_CLOSE: "onExitAndWindowClose",
 };
 
-export const FILES_ASSOCIATIONS_CONFIG = 'files.associations';
-export const FILES_EXCLUDE_CONFIG = 'files.exclude';
-export const FILES_READONLY_INCLUDE_CONFIG = 'files.readonlyInclude';
-export const FILES_READONLY_EXCLUDE_CONFIG = 'files.readonlyExclude';
-export const FILES_READONLY_FROM_PERMISSIONS_CONFIG = 'files.readonlyFromPermissions';
+export const FILES_ASSOCIATIONS_CONFIG = "files.associations";
+export const FILES_EXCLUDE_CONFIG = "files.exclude";
+export const FILES_READONLY_INCLUDE_CONFIG = "files.readonlyInclude";
+export const FILES_READONLY_EXCLUDE_CONFIG = "files.readonlyExclude";
+export const FILES_READONLY_FROM_PERMISSIONS_CONFIG = "files.readonlyFromPermissions";
 
 export interface IGlobPatterns {
 	[filepattern: string]: boolean;
@@ -1544,7 +1553,7 @@ export interface IFilesConfigurationNode {
 	eol: string;
 	enableTrash: boolean;
 	hotExit: string;
-	saveConflictResolution: 'askUser' | 'overwriteFileOnDisk';
+	saveConflictResolution: "askUser" | "overwriteFileOnDisk";
 	readonlyInclude: IGlobPatterns;
 	readonlyExclude: IGlobPatterns;
 	readonlyFromPermissions: boolean;
@@ -1563,12 +1572,12 @@ export enum FileKind {
 /**
  * A hint to disable etag checking for reading/writing.
  */
-export const ETAG_DISABLED = '';
+export const ETAG_DISABLED = "";
 
 export function etag(stat: { mtime: number; size: number }): string;
 export function etag(stat: { mtime: number | undefined; size: number | undefined }): string | undefined;
 export function etag(stat: { mtime: number | undefined; size: number | undefined }): string | undefined {
-	if (typeof stat.size !== 'number' || typeof stat.mtime !== 'number') {
+	if (typeof stat.size !== "number" || typeof stat.mtime !== "number") {
 		return undefined;
 	}
 
@@ -1606,22 +1615,22 @@ export class ByteSize {
 		}
 
 		if (size < ByteSize.KB) {
-			return localize('sizeB', "{0}B", size.toFixed(0));
+			return localize("sizeB", "{0}B", size.toFixed(0));
 		}
 
 		if (size < ByteSize.MB) {
-			return localize('sizeKB', "{0}KB", (size / ByteSize.KB).toFixed(2));
+			return localize("sizeKB", "{0}KB", (size / ByteSize.KB).toFixed(2));
 		}
 
 		if (size < ByteSize.GB) {
-			return localize('sizeMB', "{0}MB", (size / ByteSize.MB).toFixed(2));
+			return localize("sizeMB", "{0}MB", (size / ByteSize.MB).toFixed(2));
 		}
 
 		if (size < ByteSize.TB) {
-			return localize('sizeGB', "{0}GB", (size / ByteSize.GB).toFixed(2));
+			return localize("sizeGB", "{0}GB", (size / ByteSize.GB).toFixed(2));
 		}
 
-		return localize('sizeTB', "{0}TB", (size / ByteSize.TB).toFixed(2));
+		return localize("sizeTB", "{0}TB", (size / ByteSize.TB).toFixed(2));
 	}
 }
 
@@ -1630,8 +1639,8 @@ export class ByteSize {
 export function getLargeFileConfirmationLimit(remoteAuthority?: string): number;
 export function getLargeFileConfirmationLimit(uri?: URI): number;
 export function getLargeFileConfirmationLimit(arg?: string | URI): number {
-	const isRemote = typeof arg === 'string' || arg?.scheme === Schemas.vscodeRemote;
-	const isLocal = typeof arg !== 'string' && arg?.scheme === Schemas.file;
+	const isRemote = typeof arg === "string" || arg?.scheme === Schemas.vscodeRemote;
+	const isLocal = typeof arg !== "string" && arg?.scheme === Schemas.file;
 
 	if (isLocal) {
 		// Local almost has no limit in file size

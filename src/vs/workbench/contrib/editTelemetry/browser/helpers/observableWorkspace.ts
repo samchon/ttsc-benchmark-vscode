@@ -3,12 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IObservableWithChange, derivedHandleChanges, observableValue, runOnChange, IObservable, autorun, derived } from '../../../../../base/common/observable.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { StringEdit, StringReplacement } from '../../../../../editor/common/core/edits/stringEdit.js';
-import { OffsetRange } from '../../../../../editor/common/core/ranges/offsetRange.js';
-import { StringText } from '../../../../../editor/common/core/text/abstractText.js';
-import { EditSources, TextModelEditSource } from '../../../../../editor/common/textModelEditSource.js';
+import {
+  IObservableWithChange,
+  derivedHandleChanges,
+  observableValue,
+  runOnChange,
+  IObservable,
+  autorun,
+  derived,
+} from "../../../../../base/common/observable.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { StringEdit, StringReplacement } from "../../../../../editor/common/core/edits/stringEdit.js";
+import { OffsetRange } from "../../../../../editor/common/core/ranges/offsetRange.js";
+import { StringText } from "../../../../../editor/common/core/text/abstractText.js";
+import { EditSources, TextModelEditSource } from "../../../../../editor/common/textModelEditSource.js";
 
 export abstract class ObservableWorkspace {
 	abstract get documents(): IObservable<readonly IObservableDocument[]>;
@@ -19,7 +27,9 @@ export abstract class ObservableWorkspace {
 	}
 
 	getDocument(documentId: URI): IObservableDocument | undefined {
-		return this.documents.get().find(d => d.uri.toString() === documentId.toString());
+		return this.documents.get().find(
+      d => d.uri.toString() === documentId.toString(),
+    );
 	}
 
 	private _version = 0;
@@ -36,8 +46,8 @@ export abstract class ObservableWorkspace {
 					changeSummary.didChange = true; // A document changed
 				}
 				return true;
-			}
-		}
+			},
+		},
 	}, (reader, changeSummary) => {
 		const docs = this.documents.read(reader);
 		for (const d of docs) {
@@ -61,7 +71,7 @@ export abstract class ObservableWorkspace {
 	});
 
 	public readonly lastActiveDocument = derived((reader) => {
-		const obs = observableValue('lastActiveDocument', undefined as IObservableDocument | undefined);
+		const obs = observableValue("lastActiveDocument", undefined as IObservableDocument | undefined);
 		reader.store.add(autorun((reader) => {
 			const docs = this.documents.read(reader);
 			for (const d of docs) {
@@ -86,12 +96,17 @@ export interface IObservableDocument {
 }
 
 export class StringEditWithReason extends StringEdit {
-	public static override replace(range: OffsetRange, newText: string, source: TextModelEditSource = EditSources.unknown({})): StringEditWithReason {
-		return new StringEditWithReason([new StringReplacement(range, newText)], source);
+	public static override replace(range: OffsetRange, newText: string, source: TextModelEditSource = EditSources.unknown(
+    {},
+  )): StringEditWithReason {
+		return new StringEditWithReason(
+      [new StringReplacement(range, newText)],
+      source,
+    );
 	}
 
 	constructor(
-		replacements: StringEdit['replacements'],
+		replacements: StringEdit["replacements"],
 		public readonly reason: TextModelEditSource,
 	) {
 		super(replacements);

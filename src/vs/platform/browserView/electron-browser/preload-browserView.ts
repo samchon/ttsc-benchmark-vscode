@@ -7,7 +7,7 @@
 /* eslint-disable no-restricted-syntax */
 
 // Only `import type` is allowed in preload scripts — Electron preloads cannot resolve module imports at runtime.
-import type { IBrowserViewTheme } from '../common/browserView.js';
+import type { IBrowserViewTheme } from "../common/browserView.js";
 
 /**
  * Preload script for pages loaded in Integrated Browser
@@ -20,7 +20,7 @@ import type { IBrowserViewTheme } from '../common/browserView.js';
  * Learn more: see Electron docs for Security, contextBridge, and Context Isolation.
  */
 function init() {
-	const { contextBridge, ipcRenderer } = require('electron');
+	const { contextBridge, ipcRenderer } = require("electron");
 
 	// #######################################################################
 	// ###                                                                 ###
@@ -33,19 +33,19 @@ function init() {
 	// Ctrl/Cmd keybindings that correspond to native editing shortcuts and should be handled by the browser / OS and not forwarded to the workbench.
 	const nativeCtrlCmdKeybindings = {
 		mac: {
-			always: new Set(['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'backspace', 'delete']),
-			noShift: new Set(['a', 'c', 'v', 'x', 'z']),
-			withShift: new Set(['v', 'z']),
+			always: new Set(["arrowup", "arrowdown", "arrowleft", "arrowright", "backspace", "delete"]),
+			noShift: new Set(["a", "c", "v", "x", "z"]),
+			withShift: new Set(["v", "z"]),
 		},
 		nonMac: {
-			always: new Set(['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'home', 'end', 'backspace', 'delete']),
-			noShift: new Set(['a', 'c', 'v', 'x', 'z', 'y']),
-			withShift: new Set(['v', 'z']),
-		}
+			always: new Set(["arrowup", "arrowdown", "arrowleft", "arrowright", "home", "end", "backspace", "delete"]),
+			noShift: new Set(["a", "c", "v", "x", "z", "y"]),
+			withShift: new Set(["v", "z"]),
+		},
 	};
 
 	// Listen for keydown events that the page did not handle and forward them for shortcut handling.
-	window.addEventListener('keydown', (event) => {
+	window.addEventListener("keydown", (event) => {
 		// Require that the event is trusted -- i.e. user-initiated.
 		if (!(event instanceof KeyboardEvent) || !event.isTrusted) {
 			return;
@@ -57,9 +57,9 @@ function init() {
 		}
 
 		const isNonEditingKey =
-			event.key === 'Escape' ||
+			event.key === "Escape" ||
 			/^F\d+$/.test(event.key) ||
-			event.key.startsWith('Audio') || event.key.startsWith('Media') || event.key.startsWith('Browser');
+			event.key.startsWith("Audio") || event.key.startsWith("Media") || event.key.startsWith("Browser");
 
 		// Only forward if there's a command modifier or it's a non-editing key
 		// (most plain key events should just be handled natively by the browser and not forwarded)
@@ -68,11 +68,11 @@ function init() {
 		}
 
 		// Never handle plain modifier key presses as keybindings
-		if (event.key === 'Control' || event.key === 'Shift' || event.key === 'Alt' || event.key === 'Meta') {
+		if (event.key === "Control" || event.key === "Shift" || event.key === "Alt" || event.key === "Meta") {
 			return;
 		}
 
-		const isMac = navigator.platform.indexOf('Mac') >= 0;
+		const isMac = navigator.platform.indexOf("Mac") >= 0;
 
 		// Alt+Key special character handling (Alt + Numpad keys on Windows/Linux, Alt + any key on Mac)
 		if (event.altKey && !event.ctrlKey && !event.metaKey) {
@@ -82,7 +82,7 @@ function init() {
 		}
 
 		// Allow Shift+F10 for context menu
-		if (event.key === 'F10' && event.shiftKey && !event.ctrlKey && !event.altKey && !event.metaKey) {
+		if (event.key === "F10" && event.shiftKey && !event.ctrlKey && !event.altKey && !event.metaKey) {
 			return;
 		}
 
@@ -91,15 +91,15 @@ function init() {
 		if (ctrlCmd && !event.altKey) {
 			const key = event.key.toLowerCase();
 			const keySetsToCheck = [
-				nativeCtrlCmdKeybindings[isMac ? 'mac' : 'nonMac'].always,
-				nativeCtrlCmdKeybindings[isMac ? 'mac' : 'nonMac'][event.shiftKey ? 'withShift' : 'noShift'],
+				nativeCtrlCmdKeybindings[isMac ? "mac" : "nonMac"].always,
+				nativeCtrlCmdKeybindings[isMac ? "mac" : "nonMac"][event.shiftKey ? "withShift" : "noShift"],
 			];
 			if (keySetsToCheck.some(set => set.has(key))) {
 				return;
 			}
 
 			// Emoji picker on Mac
-			if (isMac && event.ctrlKey && !event.shiftKey && key === ' ') {
+			if (isMac && event.ctrlKey && !event.shiftKey && key === " ") {
 				return;
 			}
 		}
@@ -107,7 +107,7 @@ function init() {
 		// Everything else should be forwarded to the workbench for potential shortcut handling.
 		event.preventDefault();
 		event.stopPropagation();
-		ipcRenderer.send('vscode:browserView:keydown', {
+		ipcRenderer.send("vscode:browserView:keydown", {
 			key: event.key,
 			keyCode: event.keyCode,
 			code: event.code,
@@ -115,19 +115,19 @@ function init() {
 			shiftKey: event.shiftKey,
 			altKey: event.altKey,
 			metaKey: event.metaKey,
-			repeat: event.repeat
+			repeat: event.repeat,
 		});
 	});
 
 	const elementPicker = new ElementPicker(
-		el => ipcRenderer.send('vscode:browserView:elementPicked', track(el)),
-		() => ipcRenderer.send('vscode:browserView:elementPickStopped')
-	);
+    el => ipcRenderer.send("vscode:browserView:elementPicked", track(el)),
+    () => ipcRenderer.send("vscode:browserView:elementPickStopped"),
+  );
 
 	const trackedElementsById = new Map<string, WeakRef<Element>>();
 	const finalizationRegistry = new FinalizationRegistry<string>(id => {
-		trackedElementsById.delete(id);
-	});
+    trackedElementsById.delete(id);
+  });
 
 	function track(element: Element): string {
 		const id = `el-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -137,7 +137,7 @@ function init() {
 	}
 
 	let contextMenuTargetRef: WeakRef<Element> | undefined;
-	window.addEventListener('contextmenu', (event) => {
+	window.addEventListener("contextmenu", (event) => {
 		if (!event.isTrusted) {
 			return;
 		}
@@ -156,30 +156,33 @@ function init() {
 	}, { capture: true });
 
 	// Invoked over IPC to support frames (executeJavaScriptInIsolatedWorld doesn't exist on WebFrameMain).
-	ipcRenderer.on('vscode:browserView:setTheme', (_event: unknown, theme: IBrowserViewTheme) => {
-		elementPicker.setTheme(theme);
-	});
-	ipcRenderer.on('vscode:browserView:startElementPicker', (_event: unknown) => {
-		elementPicker.start();
-	});
-	ipcRenderer.on('vscode:browserView:stopElementPicker', (_event: unknown) => {
-		elementPicker.stop();
-	});
-	ipcRenderer.on('vscode:browserView:highlightElement', (_event: unknown, { elementId }: { elementId: string }) => {
+	ipcRenderer.on(
+    "vscode:browserView:setTheme",
+    (_event: unknown, theme: IBrowserViewTheme) => {
+      elementPicker.setTheme(theme);
+    },
+  );
+	ipcRenderer.on("vscode:browserView:startElementPicker", (_event: unknown) => {
+    elementPicker.start();
+  });
+	ipcRenderer.on("vscode:browserView:stopElementPicker", (_event: unknown) => {
+    elementPicker.stop();
+  });
+	ipcRenderer.on("vscode:browserView:highlightElement", (_event: unknown, { elementId }: { elementId: string }) => {
 		const element = getElement(elementId);
 		if (element) {
 			elementPicker.highlight(element);
 		}
 	});
-	ipcRenderer.on('vscode:browserView:hideHighlight', (_event: unknown) => {
-		elementPicker.hideHighlight();
-	});
+	ipcRenderer.on("vscode:browserView:hideHighlight", (_event: unknown) => {
+    elementPicker.hideHighlight();
+  });
 
 	const getElement = (id: string): Element | null => {
 		switch (id) {
-			case 'active':
+			case "active":
 				return document.activeElement;
-			case 'context-menu-target':
+			case "context-menu-target":
 				return contextMenuTargetRef?.deref() ?? null;
 			default:
 				return trackedElementsById.get(id)?.deref() ?? null;
@@ -195,11 +198,11 @@ function init() {
 				// Even if the page has overridden window.getSelection, our call here will still reach the original
 				// implementation. That's because Electron proxies functions, such as getSelectedText here, that are
 				// exposed to a different context via exposeInIsolatedWorld or exposeInMainWorld.
-				return window.getSelection()?.toString() ?? '';
+				return window.getSelection()?.toString() ?? "";
 			} catch {
-				return '';
+				return "";
 			}
-		}
+		},
 	};
 
 	// Generate a unique token for this frame instance. This token is used to
@@ -210,22 +213,22 @@ function init() {
 	const mainWorldHelpers = {
 		getElement,
 		/** Opaque token exposed for CDP-side frame matching. */
-		getFrameToken(): string { return frameToken; }
+		getFrameToken(): string { return frameToken; },
 	};
 
 	try {
 		// Use `contextBridge` APIs to expose globals to the same isolated world where this preload script runs (worldId 999).
 		// The isolatedHelpers object will be recursively frozen (and for functions also proxied) by Electron to prevent
 		// modification within the given context.
-		contextBridge.exposeInIsolatedWorld(999, 'browserViewAPI', isolatedHelpers);
+		contextBridge.exposeInIsolatedWorld(999, "browserViewAPI", isolatedHelpers);
 		// Expose helpers on `window.__vscode_helpers` in the page's main world
 		// for CDP `Runtime.evaluate` (which runs against the main world) to use.
-		contextBridge.exposeInMainWorld('__vscode_helpers', mainWorldHelpers);
+		contextBridge.exposeInMainWorld("__vscode_helpers", mainWorldHelpers);
 	} catch (error) {
 		console.error(error);
 	}
 
-	ipcRenderer.send('vscode:browserView:preloadReady', frameToken);
+	ipcRenderer.send("vscode:browserView:preloadReady", frameToken);
 }
 
 /**
@@ -236,7 +239,9 @@ function init() {
  */
 function findCommonVisibleAncestor(candidates: readonly (Node | null | undefined)[]): Element | undefined {
 	const filteredNodes = candidates.filter(c => !!c) as Node[];
-	const unique = [...new Set(filteredNodes.map(node => node instanceof Element ? node : node.parentElement).filter(e => !!e))] as Element[];
+	const unique = [
+    ...new Set(filteredNodes.map(node => node instanceof Element ? node : node.parentElement).filter(e => !!e)),
+  ] as Element[];
 	if (unique.length === 0) {
 		return undefined;
 	}
@@ -295,8 +300,8 @@ function findCommonVisibleAncestor(candidates: readonly (Node | null | undefined
  */
 class ElementPicker {
 	private static readonly _DRAG_THRESHOLD_PX = 4;
-	private static readonly _CURSOR_DEFAULT = '/* VS Code injected style */ * { cursor: default !important; }';
-	private static readonly _CURSOR_CROSSHAIR = '/* VS Code injected style */ * { cursor: crosshair !important; }';
+	private static readonly _CURSOR_DEFAULT = "/* VS Code injected style */ * { cursor: default !important; }";
+	private static readonly _CURSOR_CROSSHAIR = "/* VS Code injected style */ * { cursor: crosshair !important; }";
 
 	private _selectionActive = false;
 	private _continuous = false;
@@ -318,60 +323,63 @@ class ElementPicker {
 
 	constructor(
 		private readonly _onPicked: (element: Element) => void,
-		private readonly _onStopped: () => void
+		private readonly _onStopped: () => void,
 	) {
 		// Build the shadow DOM tree once. The host is appended/removed from the
 		// document on start/stop so the overlay only captures events when active.
-		const shadowHost = document.createElement('div');
-		shadowHost.setAttribute('data-vscode-pick-host', '');
-		shadowHost.style.cssText = 'position: absolute; top: 0; left: 0; width: 0; height: 0; z-index: 2147483647; pointer-events: none;';
-		const root = shadowHost.attachShadow({ mode: 'closed' });
+		const shadowHost = document.createElement("div");
+		shadowHost.setAttribute("data-vscode-pick-host", "");
+		shadowHost.style.cssText = "position: absolute; top: 0; left: 0; width: 0; height: 0; z-index: 2147483647; pointer-events: none;";
+		const root = shadowHost.attachShadow({ mode: "closed" });
 		root.appendChild(ElementPicker._buildStyle());
 		this._shadowHost = shadowHost;
 
-		const highlight = document.createElement('div');
-		highlight.className = 'highlight';
-		highlight.style.display = 'none';
+		const highlight = document.createElement("div");
+		highlight.className = "highlight";
+		highlight.style.display = "none";
 		root.appendChild(highlight);
 		this._highlight = highlight;
 
-		const overlay = document.createElement('div');
-		overlay.className = 'overlay';
+		const overlay = document.createElement("div");
+		overlay.className = "overlay";
 		root.appendChild(overlay);
 
-		const label = document.createElement('div');
-		label.className = 'label';
-		label.style.display = 'none';
+		const label = document.createElement("div");
+		label.className = "label";
+		label.style.display = "none";
 		root.appendChild(label);
 		this._label = label;
 
-		const labelInfo = document.createElement('span');
-		labelInfo.className = 'label-info';
+		const labelInfo = document.createElement("span");
+		labelInfo.className = "label-info";
 		label.appendChild(labelInfo);
 
-		const labelSelector = document.createElement('span');
-		labelSelector.className = 'label-selector';
+		const labelSelector = document.createElement("span");
+		labelSelector.className = "label-selector";
 		labelInfo.appendChild(labelSelector);
 		this._labelSelector = labelSelector;
 
-		const labelClasses = document.createElement('span');
-		labelClasses.className = 'label-classes';
+		const labelClasses = document.createElement("span");
+		labelClasses.className = "label-classes";
 		labelInfo.appendChild(labelClasses);
 		this._labelClasses = labelClasses;
 
-		const labelDims = document.createElement('span');
-		labelDims.className = 'label-dims';
+		const labelDims = document.createElement("span");
+		labelDims.className = "label-dims";
 		label.appendChild(labelDims);
 		this._labelDims = labelDims;
 
-		const dragbox = document.createElement('div');
-		dragbox.className = 'dragbox';
-		dragbox.style.display = 'none';
+		const dragbox = document.createElement("div");
+		dragbox.className = "dragbox";
+		dragbox.style.display = "none";
 		root.appendChild(dragbox);
 		this._dragbox = dragbox;
 
-		window.addEventListener('scroll', () => this._onScrollOrResize(), { passive: true, capture: true });
-		window.addEventListener('resize', () => this._onScrollOrResize());
+		window.addEventListener("scroll", () => this._onScrollOrResize(), {
+      passive: true,
+      capture: true,
+    });
+		window.addEventListener("resize", () => this._onScrollOrResize());
 	}
 
 	start(): boolean {
@@ -385,19 +393,19 @@ class ElementPicker {
 		// Inject a stylesheet into the page to override all cursors while element selection is active,
 		// so the cursor always appears as a normal pointer even when over e.g. links.
 		// Updated to crosshair in _onPointerDown, reset in _onPointerUp.
-		const cursorStyle = document.createElement('style');
+		const cursorStyle = document.createElement("style");
 		cursorStyle.textContent = ElementPicker._CURSOR_DEFAULT;
 		document.head.appendChild(cursorStyle);
 		this._cursorStylesheet = cursorStyle;
 
 		// Register high-frequency listeners only while selection is active.
-		window.addEventListener('pointermove', this._onPointerMove, true);
-		document.addEventListener('pointerleave', this._onPointerLeave, true);
-		window.addEventListener('pointerdown', this._onPointerDown, true);
-		window.addEventListener('pointerup', this._onPointerUp, true);
-		window.addEventListener('click', this._onClick, true);
-		window.addEventListener('contextmenu', this._onClick, true);
-		window.addEventListener('keydown', this._onKeyDown, true);
+		window.addEventListener("pointermove", this._onPointerMove, true);
+		document.addEventListener("pointerleave", this._onPointerLeave, true);
+		window.addEventListener("pointerdown", this._onPointerDown, true);
+		window.addEventListener("pointerup", this._onPointerUp, true);
+		window.addEventListener("click", this._onClick, true);
+		window.addEventListener("contextmenu", this._onClick, true);
+		window.addEventListener("keydown", this._onKeyDown, true);
 
 		return true;
 	}
@@ -413,17 +421,17 @@ class ElementPicker {
 		this._cursorStylesheet = undefined;
 
 		// Remove high-frequency listeners.
-		window.removeEventListener('pointermove', this._onPointerMove, true);
-		document.removeEventListener('pointerleave', this._onPointerLeave, true);
-		window.removeEventListener('pointerdown', this._onPointerDown, true);
-		window.removeEventListener('pointerup', this._onPointerUp, true);
-		window.removeEventListener('click', this._onClick, true);
-		window.removeEventListener('contextmenu', this._onClick, true);
-		window.removeEventListener('keydown', this._onKeyDown, true);
+		window.removeEventListener("pointermove", this._onPointerMove, true);
+		document.removeEventListener("pointerleave", this._onPointerLeave, true);
+		window.removeEventListener("pointerdown", this._onPointerDown, true);
+		window.removeEventListener("pointerup", this._onPointerUp, true);
+		window.removeEventListener("click", this._onClick, true);
+		window.removeEventListener("contextmenu", this._onClick, true);
+		window.removeEventListener("keydown", this._onKeyDown, true);
 
-		this._highlight.style.display = 'none';
-		this._label.style.display = 'none';
-		this._dragbox.style.display = 'none';
+		this._highlight.style.display = "none";
+		this._label.style.display = "none";
+		this._dragbox.style.display = "none";
 		this._dragStart = undefined;
 		this._dragStartTarget = undefined;
 		this._highlightTarget = undefined;
@@ -481,7 +489,7 @@ class ElementPicker {
 		const left = Math.min(this._dragStart.x, e.clientX);
 		const top = Math.min(this._dragStart.y, e.clientY);
 		if (this._dragbox) {
-			this._dragbox.style.display = 'block';
+			this._dragbox.style.display = "block";
 			this._dragbox.style.left = `${left}px`;
 			this._dragbox.style.top = `${top}px`;
 			this._dragbox.style.width = `${dx}px`;
@@ -490,7 +498,9 @@ class ElementPicker {
 		// Live preview of the deepest common ancestor that the region
 		// currently resolves to, so the user sees exactly what will be
 		// selected if they release the drag now.
-		this._updateHighlight(this._pickRegionAncestor({ x: left, y: top, width: dx, height: dy }));
+		this._updateHighlight(
+      this._pickRegionAncestor({ x: left, y: top, width: dx, height: dy }),
+    );
 	};
 
 	private _onPointerLeave = (): void => {
@@ -532,7 +542,10 @@ class ElementPicker {
 
 		if (dx < ElementPicker._DRAG_THRESHOLD_PX && dy < ElementPicker._DRAG_THRESHOLD_PX) {
 			// Click → pick the element under the pointer.
-			const target = this._dragStartTarget ?? this._pickElementAt(e.clientX, e.clientY);
+			const target = this._dragStartTarget ?? this._pickElementAt(
+        e.clientX,
+        e.clientY,
+      );
 			this._dragStartTarget = undefined;
 			if (target) {
 				this._commit(target);
@@ -541,12 +554,17 @@ class ElementPicker {
 			// Drag → pick the deepest common ancestor of the region.
 			this._dragStartTarget = undefined;
 			if (this._dragbox) {
-				this._dragbox.style.display = 'none';
+				this._dragbox.style.display = "none";
 			}
 			this._updateHighlight(undefined);
 			const left = Math.min(start.x, e.clientX);
 			const top = Math.min(start.y, e.clientY);
-			const ancestor = this._pickRegionAncestor({ x: left, y: top, width: dx, height: dy });
+			const ancestor = this._pickRegionAncestor({
+        x: left,
+        y: top,
+        width: dx,
+        height: dy,
+      });
 			if (ancestor) {
 				this._commit(ancestor);
 			}
@@ -567,7 +585,7 @@ class ElementPicker {
 		if (!this._selectionActive) {
 			return;
 		}
-		if (e.key === 'Escape') {
+		if (e.key === "Escape") {
 			this.stop();
 			e.preventDefault();
 			e.stopPropagation();
@@ -610,7 +628,7 @@ class ElementPicker {
 		for (const [sx, sy] of [
 			[x, y], [x2, y], [x, y2], [x2, y2],       // corners
 			[cx, y], [cx, y2], [x, cy], [x2, cy],      // edge midpoints
-			[cx, cy]                                     // center
+			[cx, cy],                                     // center
 		]) {
 			const el = this._pickElementAt(sx, sy);
 			if (el) {
@@ -633,33 +651,39 @@ class ElementPicker {
 		const labelHeight = 22; // label height (20) + 2px gap above the box.
 
 		// Highlight box is in *page* coordinates so it scrolls with the document.
-		highlight.style.display = 'block';
+		highlight.style.display = "block";
 		highlight.style.left = `${rect.left + scrollX}px`;
 		highlight.style.top = `${rect.top + scrollY}px`;
 		highlight.style.width = `${rect.width}px`;
 		highlight.style.height = `${rect.height}px`;
 
 		// Label is in *viewport* coordinates and sticky-clamped to the viewport.
-		const tagName = String(target.tagName || '').toLowerCase();
-		const idPart = target.id ? `#${target.id}` : '';
+		const tagName = String(target.tagName || "").toLowerCase();
+		const idPart = target.id ? `#${target.id}` : "";
 		const classPart = target.classList.length
-			? '.' + [...target.classList].join('.')
-			: '';
+			? "." + [...target.classList].join(".")
+			: "";
 		this._labelSelector.textContent = tagName + idPart;
 		this._labelClasses.textContent = classPart;
 		this._labelDims.textContent = `${Math.round(rect.width)} \u00d7 ${Math.round(rect.height)}`;
-		label.style.display = 'inline-flex';
+		label.style.display = "inline-flex";
 		const idealTop = rect.top - labelHeight;
-		const labelTop = Math.max(0, Math.min(viewportHeight - labelHeight, idealTop));
+		const labelTop = Math.max(
+      0,
+      Math.min(viewportHeight - labelHeight, idealTop),
+    );
 		// Use clientWidth (excludes scrollbar) rather than innerWidth so the
 		// label doesn't extend behind the scrollbar on Windows/Linux.
 		const viewportWidth = document.documentElement.clientWidth;
 		// Position label at the element's left edge, but push it left if it
 		// would overflow the viewport. Clamp to 0 so it never goes off-screen.
-		label.style.left = '0';
+		label.style.left = "0";
 		const naturalWidth = label.offsetWidth;
 		const idealLeft = rect.left;
-		const labelLeft = Math.max(0, Math.min(idealLeft, viewportWidth - naturalWidth));
+		const labelLeft = Math.max(
+      0,
+      Math.min(idealLeft, viewportWidth - naturalWidth),
+    );
 		label.style.left = `${labelLeft}px`;
 		label.style.top = `${labelTop}px`;
 	}
@@ -667,8 +691,8 @@ class ElementPicker {
 	private _updateHighlight(target: Element | undefined): void {
 		this._highlightTarget = target;
 		if (!target) {
-			this._highlight.style.display = 'none';
-			this._label.style.display = 'none';
+			this._highlight.style.display = "none";
+			this._label.style.display = "none";
 			return;
 		}
 		this._renderHighlight(target);
@@ -704,7 +728,7 @@ class ElementPicker {
 	 * the literal CSS source to render as page text.
 	 */
 	private static _buildStyle(): HTMLStyleElement {
-		const style = document.createElement('style');
+		const style = document.createElement("style");
 		style.textContent = `
 			:host {
 				all: initial;
@@ -755,10 +779,16 @@ class ElementPicker {
 	}
 
 	private static _applyTheme(host: HTMLElement, theme: IBrowserViewTheme | undefined): void {
-		host.style.setProperty('--vscode-focusBorder', theme?.focusBorder ?? null);
-		host.style.setProperty('--vscode-button-background', theme?.buttonBackground ?? null);
-		host.style.setProperty('--vscode-button-foreground', theme?.buttonForeground ?? null);
-		host.style.setProperty('--pick-font', theme?.font ?? null);
+		host.style.setProperty("--vscode-focusBorder", theme?.focusBorder ?? null);
+		host.style.setProperty(
+      "--vscode-button-background",
+      theme?.buttonBackground ?? null,
+    );
+		host.style.setProperty(
+      "--vscode-button-foreground",
+      theme?.buttonForeground ?? null,
+    );
+		host.style.setProperty("--pick-font", theme?.font ?? null);
 	}
 }
 

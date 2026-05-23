@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { INodeProcess, IProcessEnvironment } from '../../../common/platform.js';
-import { ISandboxConfiguration } from '../common/sandboxTypes.js';
-import { IpcRenderer, ProcessMemoryInfo, WebFrame, WebUtils } from './electronTypes.js';
+import { INodeProcess, IProcessEnvironment } from "../../../common/platform.js";
+import { ISandboxConfiguration } from "../common/sandboxTypes.js";
+import { IpcRenderer, ProcessMemoryInfo, WebFrame, WebUtils } from "./electronTypes.js";
 
 /**
  * In Electron renderers we cannot expose all of the `process` global of node.js
@@ -152,6 +152,6 @@ export interface IMainWindowSandboxGlobals {
  * depend on `preload.js` or `preload-aux.js`.
  */
 export interface ISandboxGlobals {
-	readonly ipcRenderer: Pick<import('./electronTypes.js').IpcRenderer, 'send' | 'invoke'>;
-	readonly webFrame: import('./electronTypes.js').WebFrame;
+	readonly ipcRenderer: Pick<import("./electronTypes.js").IpcRenderer, "send" | "invoke">;
+	readonly webFrame: import("./electronTypes.js").WebFrame;
 }

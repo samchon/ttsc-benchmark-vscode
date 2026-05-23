@@ -3,18 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Codicon } from '../../../base/common/codicons.js';
-import { Color } from '../../../base/common/color.js';
-import { Emitter, Event } from '../../../base/common/event.js';
-import { Disposable, IDisposable, toDisposable } from '../../../base/common/lifecycle.js';
-import { IEnvironmentService } from '../../environment/common/environment.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import * as platform from '../../registry/common/platform.js';
-import { ColorIdentifier } from './colorRegistry.js';
-import { IconContribution, IconDefinition } from './iconRegistry.js';
-import { ColorScheme, ThemeTypeSelector } from './theme.js';
+import { Codicon } from "../../../base/common/codicons.js";
+import { Color } from "../../../base/common/color.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable, IDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { IEnvironmentService } from "../../environment/common/environment.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import * as platform from "../../registry/common/platform.js";
+import { ColorIdentifier } from "./colorRegistry.js";
+import { IconContribution, IconDefinition } from "./iconRegistry.js";
+import { ColorScheme, ThemeTypeSelector } from "./theme.js";
 
-export const IThemeService = createDecorator<IThemeService>('themeService');
+export const IThemeService = createDecorator<IThemeService>("themeService");
 
 export function themeColorFromId(id: ColorIdentifier) {
 	return { id };
@@ -130,7 +130,7 @@ export interface IThemeService {
 
 // static theming participant
 export const Extensions = {
-	ThemingContribution: 'base.contributions.theming'
+  ThemingContribution: "base.contributions.theming",
 };
 
 export interface IThemingRegistry {
@@ -152,16 +152,18 @@ class ThemingRegistry extends Disposable implements IThemingRegistry {
 	constructor() {
 		super();
 		this.themingParticipants = [];
-		this.onThemingParticipantAddedEmitter = this._register(new Emitter<IThemingParticipant>());
+		this.onThemingParticipantAddedEmitter = this._register(
+      new Emitter<IThemingParticipant>(),
+    );
 	}
 
 	public onColorThemeChange(participant: IThemingParticipant): IDisposable {
 		this.themingParticipants.push(participant);
 		this.onThemingParticipantAddedEmitter.fire(participant);
 		return toDisposable(() => {
-			const idx = this.themingParticipants.indexOf(participant);
-			this.themingParticipants.splice(idx, 1);
-		});
+      const idx = this.themingParticipants.indexOf(participant);
+      this.themingParticipants.splice(idx, 1);
+    });
 	}
 
 	public get onThemingParticipantAdded(): Event<IThemingParticipant> {
@@ -187,14 +189,18 @@ export class Themable extends Disposable {
 	protected theme: IColorTheme;
 
 	constructor(
-		protected themeService: IThemeService
+		protected themeService: IThemeService,
 	) {
 		super();
 
 		this.theme = themeService.getColorTheme();
 
 		// Hook up to theme changes
-		this._register(this.themeService.onDidColorThemeChange(theme => this.onThemeChange(theme)));
+		this._register(
+      this.themeService.onDidColorThemeChange(
+        theme => this.onThemeChange(theme),
+      ),
+    );
 	}
 
 	protected onThemeChange(theme: IColorTheme): void {

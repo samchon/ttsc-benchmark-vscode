@@ -3,43 +3,92 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { MessageOptions, PermissionRequestResult, SessionConfig, Tool, ToolResultObject } from '@github/copilot-sdk';
-import { DeferredPromise } from '../../../../base/common/async.js';
-import { encodeBase64, VSBuffer } from '../../../../base/common/buffer.js';
-import { Emitter } from '../../../../base/common/event.js';
-import { Disposable, IReference, toDisposable } from '../../../../base/common/lifecycle.js';
-import { Schemas } from '../../../../base/common/network.js';
-import { isAbsolute, join } from '../../../../base/common/path.js';
-import { extUriBiasedIgnorePathCase, normalizePath } from '../../../../base/common/resources.js';
-import { splitLinesIncludeSeparators } from '../../../../base/common/strings.js';
-import { hasKey, isDefined, isObject, isString } from '../../../../base/common/types.js';
-import { URI } from '../../../../base/common/uri.js';
-import { generateUuid } from '../../../../base/common/uuid.js';
-import { localize } from '../../../../nls.js';
-import type { IParsedPlugin } from '../../../agentPlugins/common/pluginParsers.js';
-import { INativeEnvironmentService } from '../../../environment/common/environment.js';
-import { IFileService } from '../../../files/common/files.js';
-import { IInstantiationService } from '../../../instantiation/common/instantiation.js';
-import { ILogService } from '../../../log/common/log.js';
-import { ITelemetryService } from '../../../telemetry/common/telemetry.js';
-import { platformSessionSchema } from '../../common/agentHostSchema.js';
-import { AgentSignal } from '../../common/agentService.js';
-import { stripRedundantCdPrefix } from '../../common/commandLineHelpers.js';
-import type { LanguageModelToolInvokedClassification, LanguageModelToolInvokedEvent } from '../../../telemetry/common/languageModelToolTelemetry.js';
-import { SessionConfigKey } from '../../common/sessionConfigKeys.js';
-import { ISessionDatabase, ISessionDataService, SESSION_ATTACHMENTS_DIRNAME } from '../../common/sessionDataService.js';
-import { MessageAttachmentKind, type AgentSelection, type FileEdit, type MessageAttachment, type ToolDefinition } from '../../common/state/protocol/state.js';
-import { ActionType, type SessionAction } from '../../common/state/sessionActions.js';
-import { ResponsePartKind, SessionInputAnswerState, SessionInputAnswerValueKind, SessionInputQuestionKind, SessionInputResponseKind, ToolCallConfirmationReason, ToolCallStatus, ToolResultContentType, type PendingMessage, type SessionInputAnswer, type SessionInputOption, type SessionInputQuestion, type SessionInputRequest, type ToolCallResult, type ToolResultContent, type Turn, type UsageInfo } from '../../common/state/sessionState.js';
-import { IAgentConfigurationService } from '../agentConfigurationService.js';
-import type { IExitPlanModeRequestParams, IExitPlanModeResponse } from './copilotAgent.js';
-import { CopilotSessionWrapper } from './copilotSessionWrapper.js';
-import { parseLeadingSlashCommand } from './copilotSlashCommandCompletionProvider.js';
-import type { ShellManager } from './copilotShellTools.js';
-import { getEditFilePaths, getInvocationMessage, getPastTenseMessage, getPermissionDisplay, getShellLanguage, getSubagentMetadata, getToolDisplayName, getToolInputString, getToolKind, isEditTool, isHiddenTool, isShellTool, synthesizeSkillToolCall, tryStringify, type ITypedPermissionRequest } from './copilotToolDisplay.js';
-import { FileEditTracker } from '../shared/fileEditTracker.js';
-import { mapSessionEvents } from './mapSessionEvents.js';
-import { buildPendingEditContentUri } from './pendingEditContentStore.js';
+import type {
+  MessageOptions,
+  PermissionRequestResult,
+  SessionConfig,
+  Tool,
+  ToolResultObject,
+} from "@github/copilot-sdk";
+import { DeferredPromise } from "../../../../base/common/async.js";
+import { encodeBase64, VSBuffer } from "../../../../base/common/buffer.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { Disposable, IReference, toDisposable } from "../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { isAbsolute, join } from "../../../../base/common/path.js";
+import { extUriBiasedIgnorePathCase, normalizePath } from "../../../../base/common/resources.js";
+import { splitLinesIncludeSeparators } from "../../../../base/common/strings.js";
+import { hasKey, isDefined, isObject, isString } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { localize } from "../../../../nls.js";
+import type { IParsedPlugin } from "../../../agentPlugins/common/pluginParsers.js";
+import { INativeEnvironmentService } from "../../../environment/common/environment.js";
+import { IFileService } from "../../../files/common/files.js";
+import { IInstantiationService } from "../../../instantiation/common/instantiation.js";
+import { ILogService } from "../../../log/common/log.js";
+import { ITelemetryService } from "../../../telemetry/common/telemetry.js";
+import { platformSessionSchema } from "../../common/agentHostSchema.js";
+import { AgentSignal } from "../../common/agentService.js";
+import { stripRedundantCdPrefix } from "../../common/commandLineHelpers.js";
+import type {
+  LanguageModelToolInvokedClassification,
+  LanguageModelToolInvokedEvent,
+} from "../../../telemetry/common/languageModelToolTelemetry.js";
+import { SessionConfigKey } from "../../common/sessionConfigKeys.js";
+import { ISessionDatabase, ISessionDataService, SESSION_ATTACHMENTS_DIRNAME } from "../../common/sessionDataService.js";
+import {
+  MessageAttachmentKind,
+  type AgentSelection,
+  type FileEdit,
+  type MessageAttachment,
+  type ToolDefinition,
+} from "../../common/state/protocol/state.js";
+import { ActionType, type SessionAction } from "../../common/state/sessionActions.js";
+import {
+  ResponsePartKind,
+  SessionInputAnswerState,
+  SessionInputAnswerValueKind,
+  SessionInputQuestionKind,
+  SessionInputResponseKind,
+  ToolCallConfirmationReason,
+  ToolCallStatus,
+  ToolResultContentType,
+  type PendingMessage,
+  type SessionInputAnswer,
+  type SessionInputOption,
+  type SessionInputQuestion,
+  type SessionInputRequest,
+  type ToolCallResult,
+  type ToolResultContent,
+  type Turn,
+  type UsageInfo,
+} from "../../common/state/sessionState.js";
+import { IAgentConfigurationService } from "../agentConfigurationService.js";
+import type { IExitPlanModeRequestParams, IExitPlanModeResponse } from "./copilotAgent.js";
+import { CopilotSessionWrapper } from "./copilotSessionWrapper.js";
+import { parseLeadingSlashCommand } from "./copilotSlashCommandCompletionProvider.js";
+import type { ShellManager } from "./copilotShellTools.js";
+import {
+  getEditFilePaths,
+  getInvocationMessage,
+  getPastTenseMessage,
+  getPermissionDisplay,
+  getShellLanguage,
+  getSubagentMetadata,
+  getToolDisplayName,
+  getToolInputString,
+  getToolKind,
+  isEditTool,
+  isHiddenTool,
+  isShellTool,
+  synthesizeSkillToolCall,
+  tryStringify,
+  type ITypedPermissionRequest,
+} from "./copilotToolDisplay.js";
+import { FileEditTracker } from "../shared/fileEditTracker.js";
+import { mapSessionEvents } from "./mapSessionEvents.js";
+import { buildPendingEditContentUri } from "./pendingEditContentStore.js";
 
 /**
  * The full set of agent modes the Copilot SDK accepts. Wider than the
@@ -49,11 +98,11 @@ import { buildPendingEditContentUri } from './pendingEditContentStore.js';
  * translates between the two views in {@link CopilotAgentSession.send}
  * and the `session.mode_changed` listener.
  */
-export type CopilotSdkMode = 'interactive' | 'plan' | 'autopilot';
-type CopilotSdkAttachment = Required<MessageOptions>['attachments'][number];
+export type CopilotSdkMode = "interactive" | "plan" | "autopilot";
+type CopilotSdkAttachment = Required<MessageOptions>["attachments"][number];
 
-const COPILOT_HOME_DIRECTORY = '.copilot';
-const SESSION_STATE_DIRECTORY = join(COPILOT_HOME_DIRECTORY, 'session-state');
+const COPILOT_HOME_DIRECTORY = ".copilot";
+const SESSION_STATE_DIRECTORY = join(COPILOT_HOME_DIRECTORY, "session-state");
 
 /**
  * Display labels and descriptions for the SDK's `exit_plan_mode` action ids.
@@ -61,43 +110,43 @@ const SESSION_STATE_DIRECTORY = join(COPILOT_HOME_DIRECTORY, 'session-state');
  */
 function getPlanActionDescription(actionId: string): { label: string; description: string } | undefined {
 	switch (actionId) {
-		case 'autopilot':
+		case "autopilot":
 			return {
-				label: localize('agentHost.planReview.autopilot.label', "Implement with Autopilot"),
-				description: localize('agentHost.planReview.autopilot.description', "Auto-approve all tool calls and continue until done."),
-			};
-		case 'autopilot_fleet':
+        label: localize("agentHost.planReview.autopilot.label", "Implement with Autopilot"),
+        description: localize("agentHost.planReview.autopilot.description", "Auto-approve all tool calls and continue until done."),
+      };
+		case "autopilot_fleet":
 			return {
-				label: localize('agentHost.planReview.autopilotFleet.label', "Implement with Autopilot Fleet"),
-				description: localize('agentHost.planReview.autopilotFleet.description', "Auto-approve all tool calls, including fleet management actions, and continue until done."),
-			};
-		case 'interactive':
+        label: localize("agentHost.planReview.autopilotFleet.label", "Implement with Autopilot Fleet"),
+        description: localize("agentHost.planReview.autopilotFleet.description", "Auto-approve all tool calls, including fleet management actions, and continue until done."),
+      };
+		case "interactive":
 			return {
-				label: localize('agentHost.planReview.interactive.label', "Implement Plan"),
-				description: localize('agentHost.planReview.interactive.description', "Implement the plan, asking for input and approval for each action."),
-			};
-		case 'exit_only':
+        label: localize("agentHost.planReview.interactive.label", "Implement Plan"),
+        description: localize("agentHost.planReview.interactive.description", "Implement the plan, asking for input and approval for each action."),
+      };
+		case "exit_only":
 			return {
-				label: localize('agentHost.planReview.exitOnly.label', "Approve Plan Only"),
-				description: localize('agentHost.planReview.exitOnly.description', "Approve the plan without executing it. I will implement it myself."),
-			};
+        label: localize("agentHost.planReview.exitOnly.label", "Approve Plan Only"),
+        description: localize("agentHost.planReview.exitOnly.description", "Approve the plan without executing it. I will implement it myself."),
+      };
 		default:
 			return undefined;
 	}
 }
 
-type UserInputHandler = NonNullable<SessionConfig['onUserInputRequest']>;
+type UserInputHandler = NonNullable<SessionConfig["onUserInputRequest"]>;
 type UserInputRequest = Parameters<UserInputHandler>[0];
 type UserInputResponse = Awaited<ReturnType<UserInputHandler>>;
-type ElicitationHandler = NonNullable<SessionConfig['onElicitationRequest']>;
+type ElicitationHandler = NonNullable<SessionConfig["onElicitationRequest"]>;
 type ElicitationContext = Parameters<ElicitationHandler>[0];
 type ElicitationResult = Awaited<ReturnType<ElicitationHandler>>;
-type ElicitationSchema = NonNullable<ElicitationContext['requestedSchema']>;
-type ElicitationSchemaField = ElicitationSchema['properties'][string];
-type ElicitationFieldValue = NonNullable<ElicitationResult['content']>[string];
-type SessionHooks = NonNullable<SessionConfig['hooks']>;
-type PreToolUseHookInput = Parameters<NonNullable<SessionHooks['onPreToolUse']>>[0];
-type PostToolUseHookInput = Parameters<NonNullable<SessionHooks['onPostToolUse']>>[0];
+type ElicitationSchema = NonNullable<ElicitationContext["requestedSchema"]>;
+type ElicitationSchemaField = ElicitationSchema["properties"][string];
+type ElicitationFieldValue = NonNullable<ElicitationResult["content"]>[string];
+type SessionHooks = NonNullable<SessionConfig["hooks"]>;
+type PreToolUseHookInput = Parameters<NonNullable<SessionHooks["onPreToolUse"]>>[0];
+type PostToolUseHookInput = Parameters<NonNullable<SessionHooks["onPostToolUse"]>>[0];
 type ToolUseHookInput = PreToolUseHookInput | PostToolUseHookInput;
 
 function getToolCommand(input: ToolUseHookInput): string | undefined {
@@ -112,54 +161,75 @@ function getToolCommand(input: ToolUseHookInput): string | undefined {
  */
 function elicitationFieldToQuestion(fieldName: string, field: ElicitationSchemaField, required: boolean): SessionInputQuestion {
 	const base = {
-		id: fieldName,
-		title: field.title ?? fieldName,
-		message: field.description ?? field.title ?? fieldName,
-		required,
-	};
+    id: fieldName,
+    title: field.title ?? fieldName,
+    message: field.description ?? field.title ?? fieldName,
+    required,
+  };
 
 	switch (field.type) {
-		case 'boolean':
-			return { ...base, kind: SessionInputQuestionKind.Boolean, defaultValue: field.default };
-		case 'integer':
-		case 'number':
+		case "boolean":
 			return {
-				...base,
-				kind: field.type === 'integer' ? SessionInputQuestionKind.Integer : SessionInputQuestionKind.Number,
-				min: field.minimum,
-				max: field.maximum,
-				defaultValue: field.default,
-			};
-		case 'array': {
+        ...base,
+        kind: SessionInputQuestionKind.Boolean,
+        defaultValue: field.default,
+      };
+		case "integer":
+		case "number":
+			return {
+        ...base,
+        kind: field.type === "integer" ? SessionInputQuestionKind.Integer : SessionInputQuestionKind.Number,
+        min: field.minimum,
+        max: field.maximum,
+        defaultValue: field.default,
+      };
+		case "array": {
 			const options: SessionInputOption[] = hasKey(field.items, { enum: true })
 				? field.items.enum.map(value => ({ id: value, label: value }))
-				: field.items.anyOf.map(option => ({ id: option.const, label: option.title }));
+				: field.items.anyOf.map(option => ({
+            id: option.const,
+            label: option.title,
+          }));
 			return {
-				...base,
-				kind: SessionInputQuestionKind.MultiSelect,
-				options,
-				min: field.minItems,
-				max: field.maxItems,
-			};
+        ...base,
+        kind: SessionInputQuestionKind.MultiSelect,
+        options,
+        min: field.minItems,
+        max: field.maxItems,
+      };
 		}
-		case 'string': {
+		case "string": {
 			if (hasKey(field, { enum: true })) {
 				const enumNames = field.enumNames;
-				const options: SessionInputOption[] = field.enum.map((value, idx) => ({ id: value, label: enumNames?.[idx] ?? value }));
-				return { ...base, kind: SessionInputQuestionKind.SingleSelect, options };
+				const options: SessionInputOption[] = field.enum.map((value, idx) => ({
+          id: value,
+          label: enumNames?.[idx] ?? value,
+        }));
+				return {
+          ...base,
+          kind: SessionInputQuestionKind.SingleSelect,
+          options,
+        };
 			}
 			if (hasKey(field, { oneOf: true })) {
-				const options: SessionInputOption[] = field.oneOf.map(option => ({ id: option.const, label: option.title }));
-				return { ...base, kind: SessionInputQuestionKind.SingleSelect, options };
+				const options: SessionInputOption[] = field.oneOf.map(option => ({
+          id: option.const,
+          label: option.title,
+        }));
+				return {
+          ...base,
+          kind: SessionInputQuestionKind.SingleSelect,
+          options,
+        };
 			}
 			return {
-				...base,
-				kind: SessionInputQuestionKind.Text,
-				format: field.format,
-				min: field.minLength,
-				max: field.maxLength,
-				defaultValue: field.default,
-			};
+        ...base,
+        kind: SessionInputQuestionKind.Text,
+        format: field.format,
+        min: field.minLength,
+        max: field.maxLength,
+        defaultValue: field.default,
+      };
 		}
 	}
 }
@@ -175,27 +245,27 @@ function elicitationAnswerToFieldValue(field: ElicitationSchemaField, answer: Se
 		return undefined;
 	}
 	const value = answer.value;
-	if (field.type === 'boolean') {
+	if (field.type === "boolean") {
 		if (value.kind === SessionInputAnswerValueKind.Boolean) { return value.value; }
 		if (value.kind === SessionInputAnswerValueKind.Text) {
-			if (value.value === 'true') { return true; }
-			if (value.value === 'false') { return false; }
+			if (value.value === "true") { return true; }
+			if (value.value === "false") { return false; }
 			return undefined;
 		}
 		return undefined;
 	}
-	if (field.type === 'number' || field.type === 'integer') {
+	if (field.type === "number" || field.type === "integer") {
 		if (value.kind === SessionInputAnswerValueKind.Number) {
-			return field.type === 'integer' ? Math.trunc(value.value) : value.value;
+			return field.type === "integer" ? Math.trunc(value.value) : value.value;
 		}
 		if (value.kind === SessionInputAnswerValueKind.Text) {
-			if (value.value.trim() === '') { return undefined; }
+			if (value.value.trim() === "") { return undefined; }
 			const n = Number(value.value);
-			return Number.isFinite(n) ? (field.type === 'integer' ? Math.trunc(n) : n) : undefined;
+			return Number.isFinite(n) ? (field.type === "integer" ? Math.trunc(n) : n) : undefined;
 		}
 		return undefined;
 	}
-	if (field.type === 'array') {
+	if (field.type === "array") {
 		if (value.kind === SessionInputAnswerValueKind.SelectedMany) {
 			return [...value.value, ...(value.freeformValues ?? [])];
 		}
@@ -214,7 +284,7 @@ function elicitationAnswerToFieldValue(field: ElicitationSchemaField, answer: Se
 }
 
 function getCopilotCLISessionStateDir(userHome: string): string {
-	const xdgHome = process.env['XDG_STATE_HOME'];
+	const xdgHome = process.env["XDG_STATE_HOME"];
 	return xdgHome ? join(xdgHome, SESSION_STATE_DIRECTORY) : join(userHome, SESSION_STATE_DIRECTORY);
 }
 
@@ -235,12 +305,17 @@ const COPILOT_SDK_TOOL_OUTPUT_BASENAME_RE = /^(?:\d{10,}-copilot-tool-output-[a-
 function isCopilotSdkToolOutputTempFile(filePath: string, tmpDir: string): boolean {
 	const fileUri = normalizePath(URI.file(filePath));
 	const tmpDirUri = normalizePath(URI.file(tmpDir));
-	const parentUri = normalizePath(URI.joinPath(fileUri, '..'));
+	const parentUri = normalizePath(URI.joinPath(fileUri, ".."));
 	if (!extUriBiasedIgnorePathCase.isEqual(parentUri, tmpDirUri)) {
 		return false;
 	}
-	const lastSlash = Math.max(filePath.lastIndexOf('/'), filePath.lastIndexOf('\\'));
-	const basename = lastSlash >= 0 ? filePath.substring(lastSlash + 1) : filePath;
+	const lastSlash = Math.max(
+    filePath.lastIndexOf("/"),
+    filePath.lastIndexOf("\\"),
+  );
+	const basename = lastSlash >= 0 ? filePath.substring(
+    lastSlash + 1,
+  ) : filePath;
 	return COPILOT_SDK_TOOL_OUTPUT_BASENAME_RE.test(basename);
 }
 
@@ -341,7 +416,7 @@ export class CopilotAgentSession extends Disposable {
 	/** On-disk root for per-session data (database, attachments, …). */
 	private readonly _sessionDataDir: URI;
 	/** Protocol turn ID set by {@link send}, used for file edit tracking. */
-	private _turnId = '';
+	private _turnId = "";
 	/** Accumulated Copilot usage for the current top-level turn, in nano-AIU. */
 	private _turnCopilotUsageTotalNanoAiu = 0;
 	/** SDK session wrapper, set by {@link initializeSession}. */
@@ -399,14 +474,26 @@ export class CopilotAgentSession extends Disposable {
 		this._workingDirectory = options.workingDirectory;
 		this._customizationDirectory = options.customizationDirectory;
 
-		this._appliedSnapshot = options.clientSnapshot ?? { clientId: '', tools: [], plugins: [] };
-		this._clientToolNames = new Set(this._appliedSnapshot.tools.map(t => t.name));
+		this._appliedSnapshot = options.clientSnapshot ?? {
+      clientId: "",
+      tools: [],
+      plugins: [],
+    };
+		this._clientToolNames = new Set(
+      this._appliedSnapshot.tools.map(t => t.name),
+    );
 
 		this._databaseRef = sessionDataService.openDatabase(options.sessionUri);
 		this._register(toDisposable(() => this._databaseRef.dispose()));
-		this._sessionDataDir = sessionDataService.getSessionDataDir(options.sessionUri);
+		this._sessionDataDir = sessionDataService.getSessionDataDir(
+      options.sessionUri,
+    );
 
-		this._editTracker = this._instantiationService.createInstance(FileEditTracker, options.sessionUri.toString(), this._databaseRef.object);
+		this._editTracker = this._instantiationService.createInstance(
+      FileEditTracker,
+      options.sessionUri.toString(),
+      this._databaseRef.object,
+    );
 
 		this._register(toDisposable(() => this._denyPendingPermissions()));
 		this._register(toDisposable(() => this._shellManager?.dispose()));
@@ -446,11 +533,11 @@ export class CopilotAgentSession extends Disposable {
 	/** Wraps a {@link SessionAction} in an {@link AgentSignal} envelope and emits it. */
 	private _emitAction(action: SessionAction, parentToolCallId?: string): void {
 		this._onDidSessionProgress.fire({
-			kind: 'action',
-			session: this.sessionUri,
-			action,
-			parentToolCallId,
-		});
+      kind: "action",
+      session: this.sessionUri,
+      action,
+      parentToolCallId,
+    });
 		if (action.type === ActionType.SessionToolCallStart && !parentToolCallId) {
 			this._flushConsumedSteeringMessages();
 		} else if (action.type === ActionType.SessionTurnComplete) {
@@ -466,21 +553,25 @@ export class CopilotAgentSession extends Disposable {
 		this._consumedSteeringMessages.clear();
 		for (const id of ids) {
 			this._onDidSessionProgress.fire({
-				kind: 'steering_consumed',
-				session: this.sessionUri,
-				id,
-			});
+        kind: "steering_consumed",
+        session: this.sessionUri,
+        id,
+      });
 		}
 	}
 
 	private _parentToolCallIdForSubagentEvent(e: { readonly agentId?: string }): string | undefined {
-		return e.agentId ? this._parentToolCallIdsByAgentId.get(e.agentId) : undefined;
+		return e.agentId ? this._parentToolCallIdsByAgentId.get(
+      e.agentId,
+    ) : undefined;
 	}
 
 	private _shouldDropUnmappedSubagentEvent(e: { readonly agentId?: string }, eventName: string): boolean {
 		const parentToolCallId = this._parentToolCallIdForSubagentEvent(e);
 		if (!parentToolCallId && e.agentId) {
-			this._logService.warn(`[Copilot:${this.sessionId}] Dropping ${eventName} for unknown subagent agentId=${e.agentId}`);
+			this._logService.warn(
+        `[Copilot:${this.sessionId}] Dropping ${eventName} for unknown subagent agentId=${e.agentId}`,
+      );
 			return true;
 		}
 		return false;
@@ -500,7 +591,9 @@ export class CopilotAgentSession extends Disposable {
 	}
 
 	private _getEditFilePaths(parameters: unknown): string[] {
-		return getEditFilePaths(parameters).map(path => this._resolveEditFilePath(path));
+		return getEditFilePaths(parameters).map(
+      path => this._resolveEditFilePath(path),
+    );
 	}
 
 	private _resolveEditFilePath(path: string): string {
@@ -511,27 +604,30 @@ export class CopilotAgentSession extends Disposable {
 	}
 
 	private _sendToolInvokedTelemetry(success: boolean, errorCode: string | undefined, toolCall: { readonly toolName: string; readonly startTimeMs: number; readonly mcpServerName: string | undefined }): void {
-		let result: LanguageModelToolInvokedEvent['result'];
+		let result: LanguageModelToolInvokedEvent["result"];
 		if (success) {
-			result = 'success';
-		} else if (errorCode === 'rejected' || errorCode === 'denied' || errorCode === 'cancelled') {
-			result = 'userCancelled';
+			result = "success";
+		} else if (errorCode === "rejected" || errorCode === "denied" || errorCode === "cancelled") {
+			result = "userCancelled";
 		} else {
-			result = 'error';
+			result = "error";
 		}
 
 		const isClientTool = this._clientToolNames.has(toolCall.toolName);
-		const toolSourceKind = toolCall.mcpServerName ? 'mcp' : isClientTool ? 'client' : 'agentHost';
+		const toolSourceKind = toolCall.mcpServerName ? "mcp" : isClientTool ? "client" : "agentHost";
 		const invocationTimeMs = Date.now() - toolCall.startTimeMs;
 
-		this._telemetryService.publicLog2<LanguageModelToolInvokedEvent, LanguageModelToolInvokedClassification>('languageModelToolInvoked', {
-			result,
-			chatSessionId: this.sessionUri.toString(),
-			toolId: toolCall.toolName,
-			toolExtensionId: undefined,
-			toolSourceKind,
-			invocationTimeMs,
-		});
+		this._telemetryService.publicLog2<LanguageModelToolInvokedEvent, LanguageModelToolInvokedClassification>(
+      "languageModelToolInvoked",
+      {
+        result,
+        chatSessionId: this.sessionUri.toString(),
+        toolId: toolCall.toolName,
+        toolExtensionId: undefined,
+        toolSourceKind,
+        invocationTimeMs,
+      },
+    );
 	}
 
 	/**
@@ -550,46 +646,58 @@ export class CopilotAgentSession extends Disposable {
 	 * markdown response part; subsequent deltas append to it.
 	 */
 	private _emitMarkdownDelta(content: string, parentToolCallId?: string): void {
-		const markdownScope = parentToolCallId ?? '';
+		const markdownScope = parentToolCallId ?? "";
 		let partId = this._currentMarkdownPartIds.get(markdownScope);
 		if (!partId) {
 			partId = generateUuid();
 			this._currentMarkdownPartIds.set(markdownScope, partId);
-			this._emitAction({
-				type: ActionType.SessionResponsePart,
-				turnId: this._turnId,
-				part: { kind: ResponsePartKind.Markdown, id: partId, content },
-			}, parentToolCallId);
+			this._emitAction(
+        {
+          type: ActionType.SessionResponsePart,
+          turnId: this._turnId,
+          part: { kind: ResponsePartKind.Markdown, id: partId, content },
+        },
+        parentToolCallId,
+      );
 			return;
 		}
-		this._emitAction({
-			type: ActionType.SessionDelta,
-			turnId: this._turnId,
-			partId,
-			content,
-		}, parentToolCallId);
+		this._emitAction(
+      {
+        type: ActionType.SessionDelta,
+        turnId: this._turnId,
+        partId,
+        content,
+      },
+      parentToolCallId,
+    );
 	}
 
 	/** Emits a reasoning delta, similar to {@link _emitMarkdownDelta} but for reasoning parts. */
 	private _emitReasoningDelta(content: string, parentToolCallId?: string): void {
-		const reasoningScope = parentToolCallId ?? '';
+		const reasoningScope = parentToolCallId ?? "";
 		let partId = this._currentReasoningPartIds.get(reasoningScope);
 		if (!partId) {
 			partId = generateUuid();
 			this._currentReasoningPartIds.set(reasoningScope, partId);
-			this._emitAction({
-				type: ActionType.SessionResponsePart,
-				turnId: this._turnId,
-				part: { kind: ResponsePartKind.Reasoning, id: partId, content },
-			}, parentToolCallId);
+			this._emitAction(
+        {
+          type: ActionType.SessionResponsePart,
+          turnId: this._turnId,
+          part: { kind: ResponsePartKind.Reasoning, id: partId, content },
+        },
+        parentToolCallId,
+      );
 			return;
 		}
-		this._emitAction({
-			type: ActionType.SessionReasoning,
-			turnId: this._turnId,
-			partId,
-			content,
-		}, parentToolCallId);
+		this._emitAction(
+      {
+        type: ActionType.SessionReasoning,
+        turnId: this._turnId,
+        partId,
+        content,
+      },
+      parentToolCallId,
+    );
 	}
 
 	/**
@@ -617,8 +725,8 @@ export class CopilotAgentSession extends Disposable {
 		}
 		return tools.map(def => ({
 			name: def.name,
-			description: def.description ?? '',
-			parameters: def.inputSchema ?? { type: 'object' as const, properties: {} },
+			description: def.description ?? "",
+			parameters: def.inputSchema ?? { type: "object" as const, properties: {} },
 			handler: async (_args: Record<string, unknown>, { toolCallId }) => {
 				try {
 					let deferred = this._pendingClientToolCalls.get(toolCallId);
@@ -651,25 +759,25 @@ export class CopilotAgentSession extends Disposable {
 		const textContent = result.content
 			?.filter(c => c.type === ToolResultContentType.Text)
 			.map(c => c.text)
-			.join('\n') ?? '';
+			.join("\n") ?? "";
 
 		const binaryResults = result.content
 			?.filter(c => c.type === ToolResultContentType.EmbeddedResource)
-			.map(c => ({ data: c.data, mimeType: c.contentType, type: /^image(\/|$)/.test(c.contentType) ? 'image' : 'resource' }));
+			.map(c => ({ data: c.data, mimeType: c.contentType, type: /^image(\/|$)/.test(c.contentType) ? "image" : "resource" }));
 
 		if (result.success) {
 			deferred.complete({
-				textResultForLlm: textContent,
-				resultType: 'success',
-				binaryResultsForLlm: binaryResults?.length ? binaryResults : undefined,
-			});
+        textResultForLlm: textContent,
+        resultType: "success",
+        binaryResultsForLlm: binaryResults?.length ? binaryResults : undefined,
+      });
 		} else {
 			deferred.complete({
-				textResultForLlm: textContent || result.error?.message || 'Tool call failed',
-				resultType: 'failure',
-				error: result.error?.message,
-				binaryResultsForLlm: binaryResults?.length ? binaryResults : undefined,
-			});
+        textResultForLlm: textContent || result.error?.message || "Tool call failed",
+        resultType: "failure",
+        error: result.error?.message,
+        binaryResultsForLlm: binaryResults?.length ? binaryResults : undefined,
+      });
 		}
 	}
 
@@ -700,33 +808,47 @@ export class CopilotAgentSession extends Disposable {
 			this._turnId = turnId;
 			this._turnCopilotUsageTotalNanoAiu = 0;
 		}
-		this._logService.info(`[Copilot:${this.sessionId}] sendMessage called: "${prompt.substring(0, 100)}${prompt.length > 100 ? '...' : ''}" (${attachments?.length ?? 0} attachments)`);
+		this._logService.info(
+      `[Copilot:${this.sessionId}] sendMessage called: "${prompt.substring(0, 100)}${prompt.length > 100 ? "..." : ""}" (${attachments?.length ?? 0} attachments)`,
+    );
 
 		const slashCommand = parseLeadingSlashCommand(prompt);
-		if (slashCommand?.command === 'compact') {
+		if (slashCommand?.command === "compact") {
 			try {
 				await this._wrapper.session.rpc.history.compact();
 			} catch (err) {
-				this._logService.error(err, `[Copilot:${this.sessionId}] rpc.history.compact failed`);
+				this._logService.error(
+          err,
+          `[Copilot:${this.sessionId}] rpc.history.compact failed`,
+        );
 				throw err;
 			}
 			return;
 		}
-		if (slashCommand?.command === 'plan') {
-			mode = 'plan';
+		if (slashCommand?.command === "plan") {
+			mode = "plan";
 			prompt = slashCommand.rest;
 		}
 
 		const sdkAttachments = attachments?.length
-			? (await Promise.all(attachments.map(a => this._toSdkAttachment(a)))).filter(isDefined)
+			? (await Promise.all(attachments.map(a => this._toSdkAttachment(a)))).filter(
+          isDefined,
+        )
 			: undefined;
 		if (sdkAttachments?.length) {
-			this._logService.trace(`[Copilot:${this.sessionId}] Attachments: ${JSON.stringify(sdkAttachments.map(a => ({ type: a.type })))}`);
+			this._logService.trace(
+        `[Copilot:${this.sessionId}] Attachments: ${JSON.stringify(sdkAttachments.map(a => ({ type: a.type })))}`,
+      );
 		}
 
 		await this.applyMode(mode);
-		await this._wrapper.session.send({ prompt, attachments: sdkAttachments?.length ? sdkAttachments : undefined });
-		this._logService.info(`[Copilot:${this.sessionId}] session.send() returned`);
+		await this._wrapper.session.send({
+      prompt,
+      attachments: sdkAttachments?.length ? sdkAttachments : undefined,
+    });
+		this._logService.info(
+      `[Copilot:${this.sessionId}] session.send() returned`,
+    );
 	}
 
 	/**
@@ -748,36 +870,52 @@ export class CopilotAgentSession extends Disposable {
 		if (attachment.type === MessageAttachmentKind.Simple) {
 			if (attachment.modelRepresentation) {
 				return {
-					type: 'blob' as const,
-					data: encodeBase64(VSBuffer.fromString(attachment.modelRepresentation)),
-					mimeType: 'text/plain',
-					displayName: attachment.label,
-				};
+          type: "blob" as const,
+          data: encodeBase64(VSBuffer.fromString(attachment.modelRepresentation)),
+          mimeType: "text/plain",
+          displayName: attachment.label,
+        };
 			}
 			return undefined;
 		}
 		if (attachment.type === MessageAttachmentKind.EmbeddedResource) {
-			return { type: 'blob' as const, data: attachment.data, mimeType: attachment.contentType, displayName: attachment.label };
+			return {
+        type: "blob" as const,
+        data: attachment.data,
+        mimeType: attachment.contentType,
+        displayName: attachment.label,
+      };
 		}
 		if (attachment.type !== MessageAttachmentKind.Resource) {
 			return undefined;
 		}
 		const uri = URI.parse(attachment.uri);
-		const path = uri.scheme === 'file' ? uri.fsPath : uri.toString();
+		const path = uri.scheme === "file" ? uri.fsPath : uri.toString();
 		const displayName = attachment.label ?? path;
-		if (attachment.displayKind === 'selection' && attachment.selection) {
+		if (attachment.displayKind === "selection" && attachment.selection) {
 			try {
-				const text = await this._readSelectedText(uri, attachment.selection.range);
-				return { type: 'selection' as const, filePath: path, displayName, text, selection: attachment.selection.range };
+				const text = await this._readSelectedText(
+          uri,
+          attachment.selection.range,
+        );
+				return {
+          type: "selection" as const,
+          filePath: path,
+          displayName,
+          text,
+          selection: attachment.selection.range,
+        };
 			} catch (err) {
-				this._logService.warn(`[Copilot:${this.sessionId}] Failed to read selected text for ${uri.toString()}: ${err}`);
-				return { type: 'file' as const, path, displayName };
+				this._logService.warn(
+          `[Copilot:${this.sessionId}] Failed to read selected text for ${uri.toString()}: ${err}`,
+        );
+				return { type: "file" as const, path, displayName };
 			}
 		}
-		if (attachment.displayKind === 'selection') {
-			return { type: 'file' as const, path, displayName };
+		if (attachment.displayKind === "selection") {
+			return { type: "file" as const, path, displayName };
 		}
-		const type = attachment.displayKind === 'directory' ? 'directory' : 'file';
+		const type = attachment.displayKind === "directory" ? "directory" : "file";
 		return { type, path, displayName };
 	}
 
@@ -798,7 +936,7 @@ export class CopilotAgentSession extends Disposable {
 		for (let i = 0; i < line; i++) {
 			offset += lines[i].length;
 		}
-		const lineText = lines[line].replace(/\r\n|\r|\n$/, '');
+		const lineText = lines[line].replace(/\r\n|\r|\n$/, "");
 		return offset + Math.max(0, Math.min(position.character, lineText.length));
 	}
 
@@ -814,26 +952,38 @@ export class CopilotAgentSession extends Disposable {
 		try {
 			await this._wrapper.session.rpc.mode.set({ mode });
 			this._lastAppliedMode = mode;
-			this._logService.info(`[Copilot:${this.sessionId}] rpc.mode.set succeeded: mode=${mode}`);
+			this._logService.info(
+        `[Copilot:${this.sessionId}] rpc.mode.set succeeded: mode=${mode}`,
+      );
 		} catch (err) {
-			this._logService.error(err, `[Copilot:${this.sessionId}] rpc.mode.set failed: mode=${mode}`);
+			this._logService.error(
+        err,
+        `[Copilot:${this.sessionId}] rpc.mode.set failed: mode=${mode}`,
+      );
 		}
 	}
 
 	async sendSteering(steeringMessage: PendingMessage): Promise<void> {
-		if (this._steeringMessagesInFlight.has(steeringMessage.id) || this._consumedSteeringMessages.has(steeringMessage.id)) {
+		if (this._steeringMessagesInFlight.has(
+      steeringMessage.id,
+    ) || this._consumedSteeringMessages.has(steeringMessage.id)) {
 			return;
 		}
 		this._steeringMessagesInFlight.add(steeringMessage.id);
-		this._logService.info(`[Copilot:${this.sessionId}] Sending steering message: "${steeringMessage.userMessage.text.substring(0, 100)}"`);
+		this._logService.info(
+      `[Copilot:${this.sessionId}] Sending steering message: "${steeringMessage.userMessage.text.substring(0, 100)}"`,
+    );
 		try {
 			await this._wrapper.session.send({
-				prompt: steeringMessage.userMessage.text,
-				mode: 'immediate',
-			});
+        prompt: steeringMessage.userMessage.text,
+        mode: "immediate",
+      });
 			this._consumedSteeringMessages.add(steeringMessage.id);
 		} catch (err) {
-			this._logService.error(`[Copilot:${this.sessionId}] Steering message failed`, err);
+			this._logService.error(
+        `[Copilot:${this.sessionId}] Steering message failed`,
+        err,
+      );
 		} finally {
 			this._steeringMessagesInFlight.delete(steeringMessage.id);
 		}
@@ -847,7 +997,12 @@ export class CopilotAgentSession extends Disposable {
 		} catch {
 			// Database may not exist yet — that's fine
 		}
-		const result = await mapSessionEvents(this.sessionUri, db, events, this._workingDirectory);
+		const result = await mapSessionEvents(
+      this.sessionUri,
+      db,
+      events,
+      this._workingDirectory,
+    );
 		return result.turns;
 	}
 
@@ -859,7 +1014,12 @@ export class CopilotAgentSession extends Disposable {
 		} catch {
 			// Database may not exist yet — that's fine
 		}
-		const result = await mapSessionEvents(this.sessionUri, db, events, this._workingDirectory);
+		const result = await mapSessionEvents(
+      this.sessionUri,
+      db,
+      events,
+      this._workingDirectory,
+    );
 		return result.subagentTurnsByToolCallId.get(parentToolCallId) ?? [];
 	}
 
@@ -880,8 +1040,10 @@ export class CopilotAgentSession extends Disposable {
 		await this._wrapper.session.destroy();
 	}
 
-	async setModel(model: string, reasoningEffort?: SessionConfig['reasoningEffort']): Promise<void> {
-		this._logService.info(`[Copilot:${this.sessionId}] Changing model to: ${model}`);
+	async setModel(model: string, reasoningEffort?: SessionConfig["reasoningEffort"]): Promise<void> {
+		this._logService.info(
+      `[Copilot:${this.sessionId}] Changing model to: ${model}`,
+    );
 		await this._wrapper.session.setModel(model, { reasoningEffort });
 	}
 
@@ -892,19 +1054,29 @@ export class CopilotAgentSession extends Disposable {
 	async setAgent(agent: AgentSelection | undefined, agentName?: string): Promise<void> {
 		if (agent) {
 			const name = agentName ?? agent.uri;
-			this._logService.info(`[Copilot:${this.sessionId}] Selecting custom agent: ${name}`);
+			this._logService.info(
+        `[Copilot:${this.sessionId}] Selecting custom agent: ${name}`,
+      );
 			try {
 				await this._wrapper.session.rpc.agent.select({ name });
 			} catch (err) {
-				this._logService.error(err, `[Copilot:${this.sessionId}] rpc.agent.select failed: name=${name}`);
+				this._logService.error(
+          err,
+          `[Copilot:${this.sessionId}] rpc.agent.select failed: name=${name}`,
+        );
 				throw err;
 			}
 		} else {
-			this._logService.info(`[Copilot:${this.sessionId}] Clearing custom agent selection`);
+			this._logService.info(
+        `[Copilot:${this.sessionId}] Clearing custom agent selection`,
+      );
 			try {
 				await this._wrapper.session.rpc.agent.deselect();
 			} catch (err) {
-				this._logService.error(err, `[Copilot:${this.sessionId}] rpc.agent.deselect failed`);
+				this._logService.error(
+          err,
+          `[Copilot:${this.sessionId}] rpc.agent.deselect failed`,
+        );
 				throw err;
 			}
 		}
@@ -920,20 +1092,26 @@ export class CopilotAgentSession extends Disposable {
 	async handlePermissionRequest(
 		request: ITypedPermissionRequest,
 	): Promise<PermissionRequestResult> {
-		this._logService.info(`[Copilot:${this.sessionId}] Permission request: kind=${request.kind}`);
+		this._logService.info(
+      `[Copilot:${this.sessionId}] Permission request: kind=${request.kind}`,
+    );
 
 		try {
 			const toolCallId = request.toolCallId;
 			if (!toolCallId) {
 				// TODO: handle permission requests without a toolCallId by creating a synthetic tool call
-				this._logService.warn(`[Copilot:${this.sessionId}] Permission request without toolCallId, auto-denying: kind=${request.kind}`);
-				return { kind: 'reject' };
+				this._logService.warn(
+          `[Copilot:${this.sessionId}] Permission request without toolCallId, auto-denying: kind=${request.kind}`,
+        );
+				return { kind: "reject" };
 			}
 
 			const sessionResourcePath = this._getInternalSessionResourcePath(request);
 			if (sessionResourcePath) {
-				this._logService.info(`[Copilot:${this.sessionId}] Auto-approving internal session resource ${sessionResourcePath}`);
-				return { kind: 'approve-once' };
+				this._logService.info(
+          `[Copilot:${this.sessionId}] Auto-approving internal session resource ${sessionResourcePath}`,
+        );
+				return { kind: "approve-once" };
 			}
 
 			// Auto-approve reads of files under the session's attachments
@@ -943,31 +1121,43 @@ export class CopilotAgentSession extends Disposable {
 			// read those same files back, and prompting the user to
 			// approve a read of bytes they themselves attached is
 			// redundant.
-			if (request.kind === 'read' && typeof request.path === 'string'
+			if (request.kind === "read" && typeof request.path === "string"
 				&& this._isSessionAttachmentPath(request.path)
 			) {
-				this._logService.info(`[Copilot:${this.sessionId}] Auto-approving session attachment ${request.path}`);
-				return { kind: 'approve-once' };
+				this._logService.info(
+          `[Copilot:${this.sessionId}] Auto-approving session attachment ${request.path}`,
+        );
+				return { kind: "approve-once" };
 			}
 
 			// Auto-approve reads of large-tool-output temp files written by the
 			// Copilot SDK itself. The SDK spills oversized tool results to
 			// `os.tmpdir()/copilot-tool-output-…txt` and then asks the model
 			// to read them back in a follow-up turn — no need to confirm.
-			if (request.kind === 'read' && typeof request.path === 'string') {
-				if (isCopilotSdkToolOutputTempFile(request.path, this._environmentService.tmpDir.fsPath)) {
-					this._logService.info(`[Copilot:${this.sessionId}] Auto-approving Copilot SDK tool-output temp file ${request.path}`);
-					return { kind: 'approve-once' };
+			if (request.kind === "read" && typeof request.path === "string") {
+				if (isCopilotSdkToolOutputTempFile(
+          request.path,
+          this._environmentService.tmpDir.fsPath,
+        )) {
+					this._logService.info(
+            `[Copilot:${this.sessionId}] Auto-approving Copilot SDK tool-output temp file ${request.path}`,
+          );
+					return { kind: "approve-once" };
 				}
 			}
 
-			this._logService.info(`[Copilot:${this.sessionId}] Requesting confirmation for tool call: ${toolCallId}`);
+			this._logService.info(
+        `[Copilot:${this.sessionId}] Requesting confirmation for tool call: ${toolCallId}`,
+      );
 
 			const deferred = new DeferredPromise<boolean>();
 			this._pendingPermissions.set(toolCallId, deferred);
 
 			// Derive display information from the permission request kind
-			const { confirmationTitle, invocationMessage, toolInput, permissionKind, permissionPath } = getPermissionDisplay(request, this._workingDirectory);
+			const { confirmationTitle, invocationMessage, toolInput, permissionKind, permissionPath } = getPermissionDisplay(
+        request,
+        this._workingDirectory,
+      );
 
 			// For write permission requests, build an FileEdit preview so the
 			// client can show a diff before the user approves or denies. This
@@ -981,7 +1171,7 @@ export class CopilotAgentSession extends Disposable {
 			// `pending-edit-content:` entry has been cleaned up. Bail without
 			// firing tool_ready.
 			if (!this._pendingPermissions.has(toolCallId)) {
-				return { kind: 'reject' };
+				return { kind: "reject" };
 			}
 
 			// Fire a pending_confirmation signal to transition the tool to PendingConfirmation
@@ -990,9 +1180,11 @@ export class CopilotAgentSession extends Disposable {
 			// route the resulting SessionToolCallReady to the correct
 			// subagent session — without it the action would land on the
 			// parent session, which has no matching SessionToolCallStart.
-			const parentToolCallId = this._activeToolCalls.get(toolCallId)?.parentToolCallId;
+			const parentToolCallId = this._activeToolCalls.get(
+        toolCallId,
+      )?.parentToolCallId;
 			this._onDidSessionProgress.fire({
-				kind: 'pending_confirmation',
+				kind: "pending_confirmation",
 				session: this.sessionUri,
 				state: {
 					status: ToolCallStatus.PendingConfirmation,
@@ -1010,34 +1202,51 @@ export class CopilotAgentSession extends Disposable {
 			});
 
 			const approved = await deferred.p;
-			this._logService.info(`[Copilot:${this.sessionId}] Permission response: toolCallId=${toolCallId}, approved=${approved}`);
-			return { kind: approved ? 'approve-once' : 'reject' };
+			this._logService.info(
+        `[Copilot:${this.sessionId}] Permission response: toolCallId=${toolCallId}, approved=${approved}`,
+      );
+			return { kind: approved ? "approve-once" : "reject" };
 		} catch (error) {
-			this._logService.error(error, `[Copilot:${this.sessionId}] Failed to handle permission request: kind=${request.kind}, toolCallId=${request.toolCallId ?? 'missing'}`);
+			this._logService.error(
+        error,
+        `[Copilot:${this.sessionId}] Failed to handle permission request: kind=${request.kind}, toolCallId=${request.toolCallId ?? "missing"}`,
+      );
 			throw error;
 		}
 	}
 
 	private _getInternalSessionResourcePath(request: ITypedPermissionRequest): string | undefined {
 		let permissionPath: string | undefined;
-		if (request.kind === 'read') {
-			permissionPath = typeof request.path === 'string' ? request.path : undefined;
-		} else if (request.kind === 'write') {
-			permissionPath = typeof request.fileName === 'string' ? request.fileName : undefined;
+		if (request.kind === "read") {
+			permissionPath = typeof request.path === "string" ? request.path : undefined;
+		} else if (request.kind === "write") {
+			permissionPath = typeof request.fileName === "string" ? request.fileName : undefined;
 		}
 
 		if (!permissionPath) {
 			return undefined;
 		}
 
-		const sessionStateDir = normalizePath(URI.file(getCopilotCLISessionStateDir(this._environmentService.userHome.fsPath)));
-		const sessionDir = normalizePath(URI.joinPath(sessionStateDir, this.sessionId));
-		if (!extUriBiasedIgnorePathCase.isEqualOrParent(sessionDir, sessionStateDir)) {
+		const sessionStateDir = normalizePath(
+      URI.file(
+        getCopilotCLISessionStateDir(this._environmentService.userHome.fsPath),
+      ),
+    );
+		const sessionDir = normalizePath(
+      URI.joinPath(sessionStateDir, this.sessionId),
+    );
+		if (!extUriBiasedIgnorePathCase.isEqualOrParent(
+      sessionDir,
+      sessionStateDir,
+    )) {
 			return undefined;
 		}
 
 		const permissionUri = normalizePath(URI.file(permissionPath));
-		return extUriBiasedIgnorePathCase.isEqualOrParent(permissionUri, sessionDir) ? permissionPath : undefined;
+		return extUriBiasedIgnorePathCase.isEqualOrParent(
+      permissionUri,
+      sessionDir,
+    ) ? permissionPath : undefined;
 	}
 
 	/**
@@ -1048,9 +1257,14 @@ export class CopilotAgentSession extends Disposable {
 	 * re-confirmed via a permission prompt.
 	 */
 	private _isSessionAttachmentPath(permissionPath: string): boolean {
-		const attachmentsDir = normalizePath(URI.joinPath(this._sessionDataDir, SESSION_ATTACHMENTS_DIRNAME));
+		const attachmentsDir = normalizePath(
+      URI.joinPath(this._sessionDataDir, SESSION_ATTACHMENTS_DIRNAME),
+    );
 		const permissionUri = normalizePath(URI.file(permissionPath));
-		return extUriBiasedIgnorePathCase.isEqualOrParent(permissionUri, attachmentsDir);
+		return extUriBiasedIgnorePathCase.isEqualOrParent(
+      permissionUri,
+      attachmentsDir,
+    );
 	}
 
 	/**
@@ -1067,11 +1281,11 @@ export class CopilotAgentSession extends Disposable {
 	 * just-written entry is deleted so it cannot leak.
 	 */
 	private async _buildEditsForPermission(request: ITypedPermissionRequest, toolCallId: string): Promise<{ items: FileEdit[] } | undefined> {
-		if (request.kind !== 'write') {
+		if (request.kind !== "write") {
 			return undefined;
 		}
-		const filePath = typeof request.fileName === 'string' ? request.fileName : undefined;
-		const newFileContents = typeof request.newFileContents === 'string' ? request.newFileContents : undefined;
+		const filePath = typeof request.fileName === "string" ? request.fileName : undefined;
+		const newFileContents = typeof request.newFileContents === "string" ? request.newFileContents : undefined;
 		if (!filePath || newFileContents === undefined) {
 			return undefined;
 		}
@@ -1083,14 +1297,27 @@ export class CopilotAgentSession extends Disposable {
 		try {
 			beforeExists = await this._fileService.exists(fileUri);
 		} catch (err) {
-			this._logService.warn(`[Copilot:${this.sessionId}] Failed to check file for edit preview: ${filePath}`, err);
+			this._logService.warn(
+        `[Copilot:${this.sessionId}] Failed to check file for edit preview: ${filePath}`,
+        err,
+      );
 		}
 
-		const afterUri = buildPendingEditContentUri(this.sessionUri.toString(), toolCallId, filePath);
+		const afterUri = buildPendingEditContentUri(
+      this.sessionUri.toString(),
+      toolCallId,
+      filePath,
+    );
 		try {
-			await this._fileService.writeFile(afterUri, VSBuffer.fromString(newFileContents));
+			await this._fileService.writeFile(
+        afterUri,
+        VSBuffer.fromString(newFileContents),
+      );
 		} catch (err) {
-			this._logService.warn(`[Copilot:${this.sessionId}] Failed to write pending edit content for ${filePath}`, err);
+			this._logService.warn(
+        `[Copilot:${this.sessionId}] Failed to write pending edit content for ${filePath}`,
+        err,
+      );
 			return undefined;
 		}
 
@@ -1099,19 +1326,24 @@ export class CopilotAgentSession extends Disposable {
 		// `_deletePendingEditContent` has already run and won't run again.
 		if (!this._pendingPermissions.has(toolCallId)) {
 			this._fileService.del(afterUri).catch(err => {
-				this._logService.warn(`[Copilot:${this.sessionId}] Failed to delete orphaned pending edit content: ${afterUri.toString()}`, err);
-			});
+        this._logService.warn(
+          `[Copilot:${this.sessionId}] Failed to delete orphaned pending edit content: ${afterUri.toString()}`,
+          err,
+        );
+      });
 			return undefined;
 		}
 		this._pendingEditContentUris.set(toolCallId, afterUri);
 
-		const diffCounts = typeof request.diff === 'string' ? countUnifiedDiffLines(request.diff) : undefined;
+		const diffCounts = typeof request.diff === "string" ? countUnifiedDiffLines(
+      request.diff,
+    ) : undefined;
 
 		const edit: FileEdit = {
-			...(beforeExists ? { before: { uri: fileUriStr, content: { uri: fileUriStr } } } : {}),
-			after: { uri: fileUriStr, content: { uri: afterUri.toString() } },
-			...(diffCounts ? { diff: diffCounts } : {}),
-		};
+      ...(beforeExists ? { before: { uri: fileUriStr, content: { uri: fileUriStr } } } : {}),
+      after: { uri: fileUriStr, content: { uri: afterUri.toString() } },
+      ...(diffCounts ? { diff: diffCounts } : {}),
+    };
 		return { items: [edit] };
 	}
 
@@ -1137,19 +1369,25 @@ export class CopilotAgentSession extends Disposable {
 		request: UserInputRequest,
 		_invocation: { sessionId: string },
 	): Promise<UserInputResponse> {
-		const isAutopilot = this._configurationService.getEffectiveValue(this.sessionUri.toString(), platformSessionSchema, SessionConfigKey.AutoApprove) === 'autopilot';
+		const isAutopilot = this._configurationService.getEffectiveValue(
+      this.sessionUri.toString(),
+      platformSessionSchema,
+      SessionConfigKey.AutoApprove,
+    ) === "autopilot";
 		if (isAutopilot) {
 			return {
-				answer: 'The user is not available to answer your question. Choose a pragmatic option best aligned with the context of the request.',
-				wasFreeform: true,
-			};
+        answer: "The user is not available to answer your question. Choose a pragmatic option best aligned with the context of the request.",
+        wasFreeform: true,
+      };
 		}
 
 		const questionPreview = request.question.substring(0, 100);
 		try {
 			const requestId = generateUuid();
 			const questionId = generateUuid();
-			this._logService.info(`[Copilot:${this.sessionId}] User input request: requestId=${requestId}, question="${questionPreview}"`);
+			this._logService.info(
+        `[Copilot:${this.sessionId}] User input request: requestId=${requestId}, question="${questionPreview}"`,
+      );
 
 			const deferred = new DeferredPromise<{ response: SessionInputResponseKind; answers?: Record<string, SessionInputAnswer> }>();
 			this._pendingUserInputs.set(requestId, { deferred, questionId });
@@ -1176,21 +1414,23 @@ export class CopilotAgentSession extends Disposable {
 			};
 
 			this._emitAction({
-				type: ActionType.SessionInputRequested,
-				request: inputRequest,
-			});
+        type: ActionType.SessionInputRequested,
+        request: inputRequest,
+      });
 
 			const result = await deferred.p;
-			this._logService.info(`[Copilot:${this.sessionId}] User input response: requestId=${requestId}, response=${result.response}`);
+			this._logService.info(
+        `[Copilot:${this.sessionId}] User input response: requestId=${requestId}, response=${result.response}`,
+      );
 
 			if (result.response !== SessionInputResponseKind.Accept || !result.answers) {
-				return { answer: '', wasFreeform: true };
+				return { answer: "", wasFreeform: true };
 			}
 
 			// Extract the answer for our single question
 			const answer = result.answers[questionId];
 			if (!answer || answer.state === SessionInputAnswerState.Skipped) {
-				return { answer: '', wasFreeform: true };
+				return { answer: "", wasFreeform: true };
 			}
 
 			const { value: val } = answer;
@@ -1201,9 +1441,12 @@ export class CopilotAgentSession extends Disposable {
 				return { answer: val.value, wasFreeform };
 			}
 
-			return { answer: '', wasFreeform: true };
+			return { answer: "", wasFreeform: true };
 		} catch (error) {
-			this._logService.error(error, `[Copilot:${this.sessionId}] Failed to handle user input request: question="${questionPreview}"`);
+			this._logService.error(
+        error,
+        `[Copilot:${this.sessionId}] Failed to handle user input request: question="${questionPreview}"`,
+      );
 			throw error;
 		}
 	}
@@ -1225,53 +1468,70 @@ export class CopilotAgentSession extends Disposable {
 	 * be misleading to the MCP server.
 	 */
 	async handleElicitationRequest(context: ElicitationContext): Promise<ElicitationResult> {
-		const isAutopilot = this._configurationService.getEffectiveValue(this.sessionUri.toString(), platformSessionSchema, SessionConfigKey.AutoApprove) === 'autopilot';
+		const isAutopilot = this._configurationService.getEffectiveValue(
+      this.sessionUri.toString(),
+      platformSessionSchema,
+      SessionConfigKey.AutoApprove,
+    ) === "autopilot";
 		if (isAutopilot) {
-			return { action: 'cancel' };
+			return { action: "cancel" };
 		}
 
 		const messagePreview = context.message.substring(0, 100);
 		try {
 			const requestId = generateUuid();
-			this._logService.info(`[Copilot:${this.sessionId}] Elicitation request: requestId=${requestId}, mode=${context.mode ?? 'form'}, source=${context.elicitationSource ?? '<unknown>'}, message="${messagePreview}"`);
+			this._logService.info(
+        `[Copilot:${this.sessionId}] Elicitation request: requestId=${requestId}, mode=${context.mode ?? "form"}, source=${context.elicitationSource ?? "<unknown>"}, message="${messagePreview}"`,
+      );
 
-			const schema = context.mode === 'url' ? undefined : context.requestedSchema;
+			const schema = context.mode === "url" ? undefined : context.requestedSchema;
 			const requiredSet = new Set(schema?.required ?? []);
 			const questions: SessionInputQuestion[] | undefined = schema
-				? Object.entries(schema.properties).map(([fieldName, field]) => elicitationFieldToQuestion(fieldName, field, requiredSet.has(fieldName)))
+				? Object.entries(schema.properties).map(
+            ([fieldName, field]) => elicitationFieldToQuestion(
+              fieldName,
+              field,
+              requiredSet.has(fieldName),
+            ),
+          )
 				: undefined;
 
 			const deferred = new DeferredPromise<{ response: SessionInputResponseKind; answers?: Record<string, SessionInputAnswer> }>();
 			this._pendingElicitations.set(requestId, { deferred, schema });
 
 			const inputRequest: SessionInputRequest = {
-				id: requestId,
-				message: context.message,
-				...(context.mode === 'url' && context.url ? { url: context.url } : {}),
-				...(questions && questions.length > 0 ? { questions } : {}),
-			};
+        id: requestId,
+        message: context.message,
+        ...(context.mode === "url" && context.url ? { url: context.url } : {}),
+        ...(questions && questions.length > 0 ? { questions } : {}),
+      };
 
 			this._emitAction({
-				type: ActionType.SessionInputRequested,
-				request: inputRequest,
-			});
+        type: ActionType.SessionInputRequested,
+        request: inputRequest,
+      });
 
 			const result = await deferred.p;
-			this._logService.info(`[Copilot:${this.sessionId}] Elicitation response: requestId=${requestId}, response=${result.response}`);
+			this._logService.info(
+        `[Copilot:${this.sessionId}] Elicitation response: requestId=${requestId}, response=${result.response}`,
+      );
 
 			if (result.response === SessionInputResponseKind.Decline) {
-				return { action: 'decline' };
+				return { action: "decline" };
 			}
 			if (result.response !== SessionInputResponseKind.Accept) {
-				return { action: 'cancel' };
+				return { action: "cancel" };
 			}
 			const answers = result.answers ?? {};
 			if (!schema) {
 				const freeform = answers.answer;
 				if (freeform && freeform.state !== SessionInputAnswerState.Skipped && freeform.value.kind === SessionInputAnswerValueKind.Text) {
-					return { action: 'accept', content: { answer: freeform.value.value } };
+					return {
+            action: "accept",
+            content: { answer: freeform.value.value },
+          };
 				}
-				return { action: 'accept' };
+				return { action: "accept" };
 			}
 			const content: Record<string, ElicitationFieldValue> = {};
 			for (const [fieldName, field] of Object.entries(schema.properties)) {
@@ -1280,9 +1540,12 @@ export class CopilotAgentSession extends Disposable {
 					content[fieldName] = value;
 				}
 			}
-			return { action: 'accept', content };
+			return { action: "accept", content };
 		} catch (error) {
-			this._logService.error(error, `[Copilot:${this.sessionId}] Failed to handle elicitation request: message="${messagePreview}"`);
+			this._logService.error(
+        error,
+        `[Copilot:${this.sessionId}] Failed to handle elicitation request: message="${messagePreview}"`,
+      );
 			throw error;
 		}
 	}
@@ -1291,7 +1554,9 @@ export class CopilotAgentSession extends Disposable {
 		const pendingPlanReview = this._pendingPlanReviews.get(requestId);
 		if (pendingPlanReview) {
 			this._pendingPlanReviews.delete(requestId);
-			pendingPlanReview.deferred.complete(this._resolveExitPlanMode(pendingPlanReview, response, answers));
+			pendingPlanReview.deferred.complete(
+        this._resolveExitPlanMode(pendingPlanReview, response, answers),
+      );
 			return true;
 		}
 
@@ -1362,7 +1627,9 @@ export class CopilotAgentSession extends Disposable {
 		// (including freeform text smuggled into the `value` field) falls
 		// back to the recommended action so we never feed the SDK a value
 		// it can't act on.
-		const selectedAction = candidateAction && pending.actions.includes(candidateAction)
+		const selectedAction = candidateAction && pending.actions.includes(
+      candidateAction,
+    )
 			? candidateAction
 			: pending.actions.includes(pending.recommendedAction)
 				? pending.recommendedAction
@@ -1373,10 +1640,10 @@ export class CopilotAgentSession extends Disposable {
 		// the plan and re-emit `exit_plan_mode.requested`.
 		if (feedback) {
 			return {
-				approved: false,
-				feedback,
-				...(selectedAction ? { selectedAction } : {}),
-			};
+        approved: false,
+        feedback,
+        ...(selectedAction ? { selectedAction } : {}),
+      };
 		}
 
 		// No selectable action and no feedback — nothing actionable.
@@ -1384,22 +1651,27 @@ export class CopilotAgentSession extends Disposable {
 			return { approved: false };
 		}
 
-		const isAutopilot = selectedAction === 'autopilot' || selectedAction === 'autopilot_fleet';
+		const isAutopilot = selectedAction === "autopilot" || selectedAction === "autopilot_fleet";
 		return {
-			approved: true,
-			selectedAction,
-			...(isAutopilot ? { autoApproveEdits: true } : {}),
-		};
+      approved: true,
+      selectedAction,
+      ...(isAutopilot ? { autoApproveEdits: true } : {}),
+    };
 	}
 
 	private async _handlePreToolUse(input: PreToolUseHookInput): Promise<void> {
 		try {
 			if (isEditTool(input.toolName, getToolCommand(input))) {
 				const filePaths = this._getEditFilePaths(input.toolArgs);
-				await Promise.all(filePaths.map(p => this._editTracker.trackEditStart(p)));
+				await Promise.all(
+          filePaths.map(p => this._editTracker.trackEditStart(p)),
+        );
 			}
 		} catch (error) {
-			this._logService.error(error, `[Copilot:${this.sessionId}] Failed in onPreToolUse: tool=${input.toolName}`);
+			this._logService.error(
+        error,
+        `[Copilot:${this.sessionId}] Failed in onPreToolUse: tool=${input.toolName}`,
+      );
 			throw error;
 		}
 	}
@@ -1408,10 +1680,15 @@ export class CopilotAgentSession extends Disposable {
 		try {
 			if (isEditTool(input.toolName, getToolCommand(input))) {
 				const filePaths = this._getEditFilePaths(input.toolArgs);
-				await Promise.all(filePaths.map(p => this._editTracker.completeEdit(p)));
+				await Promise.all(
+          filePaths.map(p => this._editTracker.completeEdit(p)),
+        );
 			}
 		} catch (error) {
-			this._logService.error(error, `[Copilot:${this.sessionId}] Failed in onPostToolUse: tool=${input.toolName}`);
+			this._logService.error(
+        error,
+        `[Copilot:${this.sessionId}] Failed in onPostToolUse: tool=${input.toolName}`,
+      );
 			throw error;
 		}
 	}
@@ -1433,7 +1710,7 @@ export class CopilotAgentSession extends Disposable {
 
 		this._register(wrapper.onMessageDelta(e => {
 			this._logService.trace(`[Copilot:${sessionId}] delta: ${e.data.deltaContent}`);
-			if (this._shouldDropUnmappedSubagentEvent(e, 'assistant.message_delta')) {
+			if (this._shouldDropUnmappedSubagentEvent(e, "assistant.message_delta")) {
 				return;
 			}
 			this._emitMarkdownDelta(e.data.deltaContent, this._parentToolCallIdForSubagentEvent(e));
@@ -1453,11 +1730,11 @@ export class CopilotAgentSession extends Disposable {
 			if (!e.data.content) {
 				return;
 			}
-			if (this._shouldDropUnmappedSubagentEvent(e, 'assistant.message')) {
+			if (this._shouldDropUnmappedSubagentEvent(e, "assistant.message")) {
 				return;
 			}
 			const parentToolCallId = this._parentToolCallIdForSubagentEvent(e);
-			const markdownScope = parentToolCallId ?? '';
+			const markdownScope = parentToolCallId ?? "";
 			if (this._currentMarkdownPartIds.has(markdownScope)) {
 				return;
 			}
@@ -1477,9 +1754,9 @@ export class CopilotAgentSession extends Disposable {
 				// agent is currently doing. Surface this as session activity
 				// so the UI can show a live "what is the agent doing now?"
 				// hint while the turn is in progress.
-				if (e.data.toolName === 'report_intent') {
+				if (e.data.toolName === "report_intent") {
 					const intent = (e.data.arguments as { intent?: unknown } | undefined)?.intent;
-					if (typeof intent === 'string' && intent.length > 0) {
+					if (typeof intent === "string" && intent.length > 0) {
 						this._hasReportedActivity = true;
 						this._emitAction({
 							type: ActionType.SessionActivityChanged,
@@ -1502,13 +1779,13 @@ export class CopilotAgentSession extends Disposable {
 				toolArgs = tryStringify(parameters);
 			}
 			const displayName = getToolDisplayName(e.data.toolName);
-			if (this._shouldDropUnmappedSubagentEvent(e, 'tool.execution_start')) {
+			if (this._shouldDropUnmappedSubagentEvent(e, "tool.execution_start")) {
 				return;
 			}
 			const parentToolCallId = this._parentToolCallIdForSubagentEvent(e);
 			this._activeToolCalls.set(e.data.toolCallId, { toolName: e.data.toolName, displayName, parameters, content: [], parentToolCallId, startTimeMs: Date.now(), mcpServerName: e.data.mcpServerName });
 			const toolKind = getToolKind(e.data.toolName);
-			const subagentMeta = toolKind === 'subagent' ? getSubagentMetadata(parameters) : undefined;
+			const subagentMeta = toolKind === "subagent" ? getSubagentMetadata(parameters) : undefined;
 			const toolClientId = this._clientToolNames.has(e.data.toolName) ? this._appliedSnapshot.clientId : undefined;
 
 			// A new tool call invalidates the current markdown and reasoning
@@ -1516,10 +1793,10 @@ export class CopilotAgentSession extends Disposable {
 			// starts a fresh part. Without invalidating reasoning here, a
 			// later round of reasoning (after tool_start/tool_complete)
 			// would silently append to the pre-tool-call reasoning block.
-			this._currentMarkdownPartIds.delete(parentToolCallId ?? '');
-			this._currentReasoningPartIds.delete(parentToolCallId ?? '');
+			this._currentMarkdownPartIds.delete(parentToolCallId ?? "");
+			this._currentReasoningPartIds.delete(parentToolCallId ?? "");
 
-			const meta: Record<string, unknown> = { toolKind, language: toolKind === 'terminal' ? getShellLanguage(e.data.toolName) : undefined };
+			const meta: Record<string, unknown> = { toolKind, language: toolKind === "terminal" ? getShellLanguage(e.data.toolName) : undefined };
 			if (subagentMeta?.description) {
 				meta.subagentDescription = subagentMeta.description;
 			}
@@ -1679,7 +1956,7 @@ export class CopilotAgentSession extends Disposable {
 			}
 			this._logService.info(`[Copilot:${sessionId}] Subagent started: toolCallId=${e.data.toolCallId}, agent=${e.data.agentName}`);
 			this._onDidSessionProgress.fire({
-				kind: 'subagent_started',
+				kind: "subagent_started",
 				session: this.sessionUri,
 				toolCallId: e.data.toolCallId,
 				agentName: e.data.agentName,
@@ -1703,17 +1980,17 @@ export class CopilotAgentSession extends Disposable {
 
 		this._register(wrapper.onUsage(e => {
 			const metadata: Record<string, unknown> = {};
-			if (typeof e.data.cost === 'number') {
+			if (typeof e.data.cost === "number") {
 				metadata.cost = e.data.cost;
 			}
-			if (typeof e.data.copilotUsage?.totalNanoAiu === 'number') {
+			if (typeof e.data.copilotUsage?.totalNanoAiu === "number") {
 				this._turnCopilotUsageTotalNanoAiu += e.data.copilotUsage.totalNanoAiu;
 				metadata.copilotUsage = {
 					...e.data.copilotUsage,
 					totalNanoAiu: this._turnCopilotUsageTotalNanoAiu,
 				};
 			}
-			this._logService.trace(`[Copilot:${sessionId}] Usage: model=${e.data.model}, in=${e.data.inputTokens ?? '?'}, out=${e.data.outputTokens ?? '?'}, cacheRead=${e.data.cacheReadTokens ?? '?'}, cost=${e.data.cost ?? '?'}, totalNanoAiu=${this._turnCopilotUsageTotalNanoAiu || '?'}`);
+			this._logService.trace(`[Copilot:${sessionId}] Usage: model=${e.data.model}, in=${e.data.inputTokens ?? "?"}, out=${e.data.outputTokens ?? "?"}, cacheRead=${e.data.cacheReadTokens ?? "?"}, cost=${e.data.cost ?? "?"}, totalNanoAiu=${this._turnCopilotUsageTotalNanoAiu || "?"}`);
 			const usage: UsageInfo = {
 				inputTokens: e.data.inputTokens,
 				outputTokens: e.data.outputTokens,
@@ -1730,7 +2007,7 @@ export class CopilotAgentSession extends Disposable {
 
 		this._register(wrapper.onReasoningDelta(e => {
 			this._logService.trace(`[Copilot:${sessionId}] Reasoning delta: ${e.data.deltaContent.length} chars`);
-			if (this._shouldDropUnmappedSubagentEvent(e, 'assistant.reasoning_delta')) {
+			if (this._shouldDropUnmappedSubagentEvent(e, "assistant.reasoning_delta")) {
 				return;
 			}
 			this._emitReasoningDelta(e.data.deltaContent, this._parentToolCallIdForSubagentEvent(e));
@@ -1745,7 +2022,7 @@ export class CopilotAgentSession extends Disposable {
 		this._register(wrapper.onSessionModeChanged(e => {
 			this._logService.info(`[Copilot:${sessionId}] session.mode_changed: ${e.data.previousMode} -> ${e.data.newMode}`);
 			const newMode = e.data.newMode;
-			if (newMode !== 'interactive' && newMode !== 'plan' && newMode !== 'autopilot') {
+			if (newMode !== "interactive" && newMode !== "plan" && newMode !== "autopilot") {
 				return;
 			}
 			this._lastAppliedMode = newMode;
@@ -1771,15 +2048,15 @@ export class CopilotAgentSession extends Disposable {
 		const sessionUri = this.sessionUri.toString();
 		const patch: Record<string, unknown> = {};
 		switch (sdkMode) {
-			case 'plan':
-				patch[SessionConfigKey.Mode] = 'plan';
+			case "plan":
+				patch[SessionConfigKey.Mode] = "plan";
 				break;
-			case 'autopilot':
-				patch[SessionConfigKey.Mode] = 'interactive';
-				patch[SessionConfigKey.AutoApprove] = 'autopilot';
+			case "autopilot":
+				patch[SessionConfigKey.Mode] = "interactive";
+				patch[SessionConfigKey.AutoApprove] = "autopilot";
 				break;
-			case 'interactive':
-				patch[SessionConfigKey.Mode] = 'interactive';
+			case "interactive":
+				patch[SessionConfigKey.Mode] = "interactive";
 				break;
 		}
 		this._configurationService.updateSessionConfig(sessionUri, patch);
@@ -1796,16 +2073,24 @@ export class CopilotAgentSession extends Disposable {
 	async handleExitPlanModeRequest(data: IExitPlanModeRequestParams): Promise<IExitPlanModeResponse> {
 		const requestId = generateUuid();
 		const questionId = generateUuid();
-		this._logService.info(`[Copilot:${this.sessionId}] exitPlanMode.request: rpcId=${requestId}, actions=[${data.actions.join(',')}], recommended=${data.recommendedAction}`);
+		this._logService.info(
+      `[Copilot:${this.sessionId}] exitPlanMode.request: rpcId=${requestId}, actions=[${data.actions.join(",")}], recommended=${data.recommendedAction}`,
+    );
 
 		// When the session's effective auto-approval level is `autopilot`,
 		// approve the plan automatically without surfacing a question to
 		// the user. Mirrors the "autopilot fast-path" in the Copilot CLI's
 		// own plan-mode handler.
-		const autoApprove = this._configurationService.getEffectiveValue(this.sessionUri.toString(), platformSessionSchema, SessionConfigKey.AutoApprove);
-		if (autoApprove === 'autopilot') {
+		const autoApprove = this._configurationService.getEffectiveValue(
+      this.sessionUri.toString(),
+      platformSessionSchema,
+      SessionConfigKey.AutoApprove,
+    );
+		if (autoApprove === "autopilot") {
 			const response = autoApproveExitPlanMode(data);
-			this._logService.info(`[Copilot:${this.sessionId}] exitPlanMode.request auto-accepted (autoApprove=autopilot): selectedAction=${response.selectedAction ?? '(none)'}`);
+			this._logService.info(
+        `[Copilot:${this.sessionId}] exitPlanMode.request auto-accepted (autoApprove=autopilot): selectedAction=${response.selectedAction ?? "(none)"}`,
+      );
 			return response;
 		}
 
@@ -1815,35 +2100,40 @@ export class CopilotAgentSession extends Disposable {
 			const planRead = await this._wrapper.session.rpc.plan.read();
 			planPath = planRead.path ?? null;
 		} catch (err) {
-			this._logService.warn(`[Copilot:${this.sessionId}] rpc.plan.read failed for exit_plan_mode: ${err instanceof Error ? err.message : String(err)}`);
+			this._logService.warn(
+        `[Copilot:${this.sessionId}] rpc.plan.read failed for exit_plan_mode: ${err instanceof Error ? err.message : String(err)}`,
+      );
 		}
 
 		// Build the input-request markdown: summary + link to the plan file.
-		let message = data.summary || localize('agentHost.planReview.fallbackSummary', "A plan is ready for review.");
+		let message = data.summary || localize(
+      "agentHost.planReview.fallbackSummary",
+      "A plan is ready for review.",
+    );
 		if (planPath) {
 			const planUri = URI.file(planPath);
-			message += `\n\n[${localize('agentHost.planReview.viewPlanLink', "View full plan")}](${planUri.toString()})`;
+			message += `\n\n[${localize("agentHost.planReview.viewPlanLink", "View full plan")}](${planUri.toString()})`;
 		}
 
 		this._emitMarkdownDelta(message);
 
 		const options = data.actions.map(actionId => {
-			const desc = getPlanActionDescription(actionId);
-			return {
-				id: actionId,
-				label: desc?.label ?? actionId,
-				description: desc?.description,
-				recommended: actionId === data.recommendedAction,
-			};
-		});
+      const desc = getPlanActionDescription(actionId);
+      return {
+        id: actionId,
+        label: desc?.label ?? actionId,
+        description: desc?.description,
+        recommended: actionId === data.recommendedAction,
+      };
+    });
 
 		const inputRequest: SessionInputRequest = {
 			id: requestId,
 			questions: [{
 				kind: SessionInputQuestionKind.SingleSelect,
 				id: questionId,
-				title: localize('agentHost.planReview.title', "Review Plan"),
-				message: localize('agentHost.planReview.questionMessage', "How would you like to proceed?"),
+				title: localize("agentHost.planReview.title", "Review Plan"),
+				message: localize("agentHost.planReview.questionMessage", "How would you like to proceed?"),
 				required: true,
 				options,
 				allowFreeformInput: true,
@@ -1852,25 +2142,28 @@ export class CopilotAgentSession extends Disposable {
 
 		const deferred = new DeferredPromise<IExitPlanModeResponse>();
 		this._pendingPlanReviews.set(requestId, {
-			actions: data.actions,
-			recommendedAction: data.recommendedAction,
-			questionId,
-			deferred,
-		});
+      actions: data.actions,
+      recommendedAction: data.recommendedAction,
+      questionId,
+      deferred,
+    });
 
 		this._onDidSessionProgress.fire({
-			kind: 'action',
+			kind: "action",
 			session: this.sessionUri,
 			action: {
 				type: ActionType.SessionInputRequested,
 				request: inputRequest,
-			}
+			},
 		});
 
 		try {
 			return await deferred.p;
 		} catch (err) {
-			this._logService.error(err, `[Copilot:${this.sessionId}] exitPlanMode.request handler failed: rpcId=${requestId}`);
+			this._logService.error(
+        err,
+        `[Copilot:${this.sessionId}] exitPlanMode.request handler failed: rpcId=${requestId}`,
+      );
 			return { approved: false };
 		}
 	}
@@ -1879,97 +2172,187 @@ export class CopilotAgentSession extends Disposable {
 		const wrapper = this._wrapper;
 		const sessionId = this.sessionId;
 
-		this._register(wrapper.onSessionStart(e => {
-			this._logService.trace(`[Copilot:${sessionId}] Session started: model=${e.data.selectedModel ?? 'default'}, producer=${e.data.producer}`);
-		}));
+		this._register(
+      wrapper.onSessionStart(e => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] Session started: model=${e.data.selectedModel ?? "default"}, producer=${e.data.producer}`,
+        );
+      }),
+    );
 
-		this._register(wrapper.onSessionResume(e => {
-			this._logService.trace(`[Copilot:${sessionId}] Session resumed: eventCount=${e.data.eventCount}`);
-		}));
+		this._register(
+      wrapper.onSessionResume(e => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] Session resumed: eventCount=${e.data.eventCount}`,
+        );
+      }),
+    );
 
-		this._register(wrapper.onSessionInfo(e => {
-			this._logService.trace(`[Copilot:${sessionId}] Session info [${e.data.infoType}]: ${e.data.message}`);
-		}));
+		this._register(
+      wrapper.onSessionInfo(e => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] Session info [${e.data.infoType}]: ${e.data.message}`,
+        );
+      }),
+    );
 
-		this._register(wrapper.onSessionModelChange(e => {
-			this._logService.trace(`[Copilot:${sessionId}] Model changed: ${e.data.previousModel ?? '(none)'} -> ${e.data.newModel}`);
-		}));
+		this._register(
+      wrapper.onSessionModelChange(e => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] Model changed: ${e.data.previousModel ?? "(none)"} -> ${e.data.newModel}`,
+        );
+      }),
+    );
 
-		this._register(wrapper.onSessionHandoff(e => {
-			this._logService.trace(`[Copilot:${sessionId}] Session handoff: sourceType=${e.data.sourceType}, remoteSessionId=${e.data.remoteSessionId ?? '(none)'}`);
-		}));
+		this._register(
+      wrapper.onSessionHandoff(e => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] Session handoff: sourceType=${e.data.sourceType}, remoteSessionId=${e.data.remoteSessionId ?? "(none)"}`,
+        );
+      }),
+    );
 
-		this._register(wrapper.onSessionTruncation(e => {
-			this._logService.trace(`[Copilot:${sessionId}] Session truncation: removed ${e.data.tokensRemovedDuringTruncation} tokens, ${e.data.messagesRemovedDuringTruncation} messages`);
-		}));
+		this._register(
+      wrapper.onSessionTruncation(e => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] Session truncation: removed ${e.data.tokensRemovedDuringTruncation} tokens, ${e.data.messagesRemovedDuringTruncation} messages`,
+        );
+      }),
+    );
 
-		this._register(wrapper.onSessionSnapshotRewind(e => {
-			this._logService.trace(`[Copilot:${sessionId}] Snapshot rewind: upTo=${e.data.upToEventId}, eventsRemoved=${e.data.eventsRemoved}`);
-		}));
+		this._register(
+      wrapper.onSessionSnapshotRewind(e => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] Snapshot rewind: upTo=${e.data.upToEventId}, eventsRemoved=${e.data.eventsRemoved}`,
+        );
+      }),
+    );
 
-		this._register(wrapper.onSessionShutdown(e => {
-			this._logService.trace(`[Copilot:${sessionId}] Session shutdown: type=${e.data.shutdownType}, premiumRequests=${e.data.totalPremiumRequests}, apiDuration=${e.data.totalApiDurationMs}ms`);
-		}));
+		this._register(
+      wrapper.onSessionShutdown(e => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] Session shutdown: type=${e.data.shutdownType}, premiumRequests=${e.data.totalPremiumRequests}, apiDuration=${e.data.totalApiDurationMs}ms`,
+        );
+      }),
+    );
 
-		this._register(wrapper.onSessionUsageInfo(e => {
-			this._logService.trace(`[Copilot:${sessionId}] Usage info: ${e.data.currentTokens}/${e.data.tokenLimit} tokens, ${e.data.messagesLength} messages`);
-		}));
+		this._register(
+      wrapper.onSessionUsageInfo(e => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] Usage info: ${e.data.currentTokens}/${e.data.tokenLimit} tokens, ${e.data.messagesLength} messages`,
+        );
+      }),
+    );
 
-		this._register(wrapper.onSessionCompactionStart(() => {
-			this._logService.trace(`[Copilot:${sessionId}] Compaction started`);
-		}));
+		this._register(
+      wrapper.onSessionCompactionStart(() => {
+        this._logService.trace(`[Copilot:${sessionId}] Compaction started`);
+      }),
+    );
 
-		this._register(wrapper.onSessionCompactionComplete(e => {
-			this._logService.trace(`[Copilot:${sessionId}] Compaction complete: success=${e.data.success}, tokensRemoved=${e.data.tokensRemoved ?? '?'}`);
-		}));
+		this._register(
+      wrapper.onSessionCompactionComplete(e => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] Compaction complete: success=${e.data.success}, tokensRemoved=${e.data.tokensRemoved ?? "?"}`,
+        );
+      }),
+    );
 
-		this._register(wrapper.onUserMessage(e => {
-			this._logService.trace(`[Copilot:${sessionId}] User message: ${e.data.content.length} chars, ${e.data.attachments?.length ?? 0} attachments`);
-		}));
+		this._register(
+      wrapper.onUserMessage(e => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] User message: ${e.data.content.length} chars, ${e.data.attachments?.length ?? 0} attachments`,
+        );
+      }),
+    );
 
-		this._register(wrapper.onPendingMessagesModified(() => {
-			this._logService.trace(`[Copilot:${sessionId}] Pending messages modified`);
-		}));
+		this._register(
+      wrapper.onPendingMessagesModified(() => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] Pending messages modified`,
+        );
+      }),
+    );
 
-		this._register(wrapper.onTurnStart(e => {
-			this._logService.trace(`[Copilot:${sessionId}] Turn started: ${e.data.turnId}`);
-		}));
+		this._register(
+      wrapper.onTurnStart(e => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] Turn started: ${e.data.turnId}`,
+        );
+      }),
+    );
 
-		this._register(wrapper.onIntent(e => {
-			this._logService.trace(`[Copilot:${sessionId}] Intent: ${e.data.intent}`);
-		}));
+		this._register(
+      wrapper.onIntent(e => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] Intent: ${e.data.intent}`,
+        );
+      }),
+    );
 
-		this._register(wrapper.onReasoning(e => {
-			this._logService.trace(`[Copilot:${sessionId}] Reasoning: ${e.data.content.length} chars`);
-		}));
+		this._register(
+      wrapper.onReasoning(e => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] Reasoning: ${e.data.content.length} chars`,
+        );
+      }),
+    );
 
-		this._register(wrapper.onTurnEnd(e => {
-			this._logService.trace(`[Copilot:${sessionId}] Turn ended: ${e.data.turnId}`);
-		}));
+		this._register(
+      wrapper.onTurnEnd(e => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] Turn ended: ${e.data.turnId}`,
+        );
+      }),
+    );
 
-		this._register(wrapper.onAbort(e => {
-			this._logService.trace(`[Copilot:${sessionId}] Aborted: ${e.data.reason}`);
-		}));
+		this._register(
+      wrapper.onAbort(e => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] Aborted: ${e.data.reason}`,
+        );
+      }),
+    );
 
-		this._register(wrapper.onToolUserRequested(e => {
-			this._logService.trace(`[Copilot:${sessionId}] Tool user-requested: ${e.data.toolName} (${e.data.toolCallId})`);
-		}));
+		this._register(
+      wrapper.onToolUserRequested(e => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] Tool user-requested: ${e.data.toolName} (${e.data.toolCallId})`,
+        );
+      }),
+    );
 
-		this._register(wrapper.onToolPartialResult(e => {
-			this._logService.trace(`[Copilot:${sessionId}] Tool partial result: ${e.data.toolCallId} (${e.data.partialOutput.length} chars)`);
-		}));
+		this._register(
+      wrapper.onToolPartialResult(e => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] Tool partial result: ${e.data.toolCallId} (${e.data.partialOutput.length} chars)`,
+        );
+      }),
+    );
 
-		this._register(wrapper.onToolProgress(e => {
-			this._logService.trace(`[Copilot:${sessionId}] Tool progress: ${e.data.toolCallId} - ${e.data.progressMessage}`);
-		}));
+		this._register(
+      wrapper.onToolProgress(e => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] Tool progress: ${e.data.toolCallId} - ${e.data.progressMessage}`,
+        );
+      }),
+    );
 
-		this._register(wrapper.onSkillInvoked(e => {
-			this._logService.trace(`[Copilot:${sessionId}] Skill invoked: ${e.data.name} (${e.data.path})`);
-		}));
+		this._register(
+      wrapper.onSkillInvoked(e => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] Skill invoked: ${e.data.name} (${e.data.path})`,
+        );
+      }),
+    );
 
-		this._register(wrapper.onSubagentStarted(e => {
-			this._logService.trace(`[Copilot:${sessionId}] Subagent started: ${e.data.agentName} (${e.data.agentDisplayName})`);
-		}));
+		this._register(
+      wrapper.onSubagentStarted(e => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] Subagent started: ${e.data.agentName} (${e.data.agentDisplayName})`,
+        );
+      }),
+    );
 
 		this._register(wrapper.onSubagentCompleted(e => {
 			if (e.agentId) {
@@ -1977,7 +2360,7 @@ export class CopilotAgentSession extends Disposable {
 			}
 			this._logService.trace(`[Copilot:${sessionId}] Subagent completed: ${e.data.agentName}`);
 			this._onDidSessionProgress.fire({
-				kind: 'subagent_completed',
+				kind: "subagent_completed",
 				session: this.sessionUri,
 				toolCallId: e.data.toolCallId,
 			});
@@ -1989,27 +2372,43 @@ export class CopilotAgentSession extends Disposable {
 			}
 			this._logService.error(`[Copilot:${sessionId}] Subagent failed: ${e.data.agentName} - ${e.data.error}`);
 			this._onDidSessionProgress.fire({
-				kind: 'subagent_completed',
+				kind: "subagent_completed",
 				session: this.sessionUri,
 				toolCallId: e.data.toolCallId,
 			});
 		}));
 
-		this._register(wrapper.onSubagentSelected(e => {
-			this._logService.trace(`[Copilot:${sessionId}] Subagent selected: ${e.data.agentName}`);
-		}));
+		this._register(
+      wrapper.onSubagentSelected(e => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] Subagent selected: ${e.data.agentName}`,
+        );
+      }),
+    );
 
-		this._register(wrapper.onHookStart(e => {
-			this._logService.trace(`[Copilot:${sessionId}] Hook started: ${e.data.hookType} (${e.data.hookInvocationId})`);
-		}));
+		this._register(
+      wrapper.onHookStart(e => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] Hook started: ${e.data.hookType} (${e.data.hookInvocationId})`,
+        );
+      }),
+    );
 
-		this._register(wrapper.onHookEnd(e => {
-			this._logService.trace(`[Copilot:${sessionId}] Hook ended: ${e.data.hookType} (${e.data.hookInvocationId}), success=${e.data.success}`);
-		}));
+		this._register(
+      wrapper.onHookEnd(e => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] Hook ended: ${e.data.hookType} (${e.data.hookInvocationId}), success=${e.data.success}`,
+        );
+      }),
+    );
 
-		this._register(wrapper.onSystemMessage(e => {
-			this._logService.trace(`[Copilot:${sessionId}] System message [${e.data.role}]: ${e.data.content.length} chars`);
-		}));
+		this._register(
+      wrapper.onSystemMessage(e => {
+        this._logService.trace(
+          `[Copilot:${sessionId}] System message [${e.data.role}]: ${e.data.content.length} chars`,
+        );
+      }),
+    );
 	}
 
 	// ---- SDK event ID tracking & truncation ---------------------------------
@@ -2039,9 +2438,15 @@ export class CopilotAgentSession extends Disposable {
 	 *        deleted from the DB. If omitted, all turns are deleted.
 	 */
 	async truncateAtEventId(eventId: string, keepTurnId?: string): Promise<void> {
-		this._logService.info(`[Copilot:${this.sessionId}] Truncating via SDK RPC at eventId=${eventId}`);
-		const result = await this._wrapper.session.rpc.history.truncate({ eventId });
-		this._logService.info(`[Copilot:${this.sessionId}] SDK truncation removed ${result.eventsRemoved} events`);
+		this._logService.info(
+      `[Copilot:${this.sessionId}] Truncating via SDK RPC at eventId=${eventId}`,
+    );
+		const result = await this._wrapper.session.rpc.history.truncate({
+      eventId,
+    });
+		this._logService.info(
+      `[Copilot:${this.sessionId}] SDK truncation removed ${result.eventsRemoved} events`,
+    );
 
 		// Clean up stale turns from our DB so getNextTurnEventId doesn't
 		// return event IDs for turns that no longer exist in the SDK.
@@ -2081,8 +2486,11 @@ export class CopilotAgentSession extends Disposable {
 		}
 		this._pendingEditContentUris.delete(toolCallId);
 		this._fileService.del(uri).catch(err => {
-			this._logService.warn(`[Copilot:${this.sessionId}] Failed to delete pending edit content: ${uri.toString()}`, err);
-		});
+      this._logService.warn(
+        `[Copilot:${this.sessionId}] Failed to delete pending edit content: ${uri.toString()}`,
+        err,
+      );
+    });
 	}
 
 	private _cancelPendingUserInputs(): void {
@@ -2108,7 +2516,11 @@ export class CopilotAgentSession extends Disposable {
 
 	private _cancelPendingClientToolCalls(): void {
 		for (const [, deferred] of this._pendingClientToolCalls) {
-			deferred.complete({ textResultForLlm: 'Tool call cancelled: session ended', resultType: 'failure', error: 'Session ended' });
+			deferred.complete({
+        textResultForLlm: "Tool call cancelled: session ended",
+        resultType: "failure",
+        error: "Session ended",
+      });
 		}
 		this._pendingClientToolCalls.clear();
 	}
@@ -2131,24 +2543,29 @@ export class CopilotAgentSession extends Disposable {
  */
 function autoApproveExitPlanMode(data: IExitPlanModeRequestParams): IExitPlanModeResponse {
 	const choices = data.actions ?? [];
-	const isAutopilotAction = (action: string) => action === 'autopilot' || action === 'autopilot_fleet';
+	const isAutopilotAction = (action: string) => action === "autopilot" || action === "autopilot_fleet";
 
 	if (data.recommendedAction && choices.includes(data.recommendedAction)) {
 		const selectedAction = data.recommendedAction;
 		return {
-			approved: true,
-			selectedAction,
-			...(isAutopilotAction(selectedAction) ? { autoApproveEdits: true } : {}),
-		};
+      approved: true,
+      selectedAction,
+      ...(isAutopilotAction(selectedAction) ? { autoApproveEdits: true } : {}),
+    };
 	}
 
-	for (const action of ['autopilot', 'autopilot_fleet', 'interactive', 'exit_only']) {
+	for (const action of [
+    "autopilot",
+    "autopilot_fleet",
+    "interactive",
+    "exit_only",
+  ]) {
 		if (choices.includes(action)) {
 			return {
-				approved: true,
-				selectedAction: action,
-				...(isAutopilotAction(action) ? { autoApproveEdits: true } : {}),
-			};
+        approved: true,
+        selectedAction: action,
+        ...(isAutopilotAction(action) ? { autoApproveEdits: true } : {}),
+      };
 		}
 	}
 
@@ -2162,13 +2579,13 @@ function autoApproveExitPlanMode(data: IExitPlanModeRequestParams): IExitPlanMod
 function countUnifiedDiffLines(diff: string): { added: number; removed: number } | undefined {
 	let added = 0;
 	let removed = 0;
-	for (const line of diff.split('\n')) {
-		if (line.startsWith('+++') || line.startsWith('---')) {
+	for (const line of diff.split("\n")) {
+		if (line.startsWith("+++") || line.startsWith("---")) {
 			continue;
 		}
-		if (line.startsWith('+')) {
+		if (line.startsWith("+")) {
 			added++;
-		} else if (line.startsWith('-')) {
+		} else if (line.startsWith("-")) {
 			removed++;
 		}
 	}

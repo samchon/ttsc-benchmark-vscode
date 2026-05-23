@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, DisposableMap, DisposableStore } from '../../../../base/common/lifecycle.js';
-import { autorun } from '../../../../base/common/observable.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { IWorkbenchContribution } from '../../../../workbench/common/contributions.js';
-import { ISession, SessionStatus } from '../../../services/sessions/common/session.js';
-import { ISessionsChangeEvent, ISessionsManagementService } from '../../../services/sessions/common/sessionsManagement.js';
-import { ISessionsTasksService } from './sessionsTasksService.js';
+import { Disposable, DisposableMap, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { autorun } from "../../../../base/common/observable.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IWorkbenchContribution } from "../../../../workbench/common/contributions.js";
+import { ISession, SessionStatus } from "../../../services/sessions/common/session.js";
+import { ISessionsChangeEvent, ISessionsManagementService } from "../../../services/sessions/common/sessionsManagement.js";
+import { ISessionsTasksService } from "./sessionsTasksService.js";
 
-const LOG_PREFIX = '[WorktreeCreatedTaskDispatcher]';
+const LOG_PREFIX = "[WorktreeCreatedTaskDispatcher]";
 
 /**
  * Workbench contribution that runs all tasks tagged with
@@ -27,11 +27,13 @@ const LOG_PREFIX = '[WorktreeCreatedTaskDispatcher]';
  */
 export class WorktreeCreatedTaskDispatcher extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'workbench.contrib.sessions.worktreeCreatedTaskDispatcher';
+	static readonly ID = "workbench.contrib.sessions.worktreeCreatedTaskDispatcher";
 
 	// Track per-session disposables (one per in-flight session subscription) so
 	// we tear them down when the session is removed.
-	private readonly _sessionDisposables = this._register(new DisposableMap<string>());
+	private readonly _sessionDisposables = this._register(
+    new DisposableMap<string>(),
+  );
 	private readonly _dispatchedSessions = new Set<string>();
 
 	constructor(
@@ -45,13 +47,19 @@ export class WorktreeCreatedTaskDispatcher extends Disposable implements IWorkbe
 			this._trackSession(session);
 		}
 
-		this._register(this._sessionsManagementService.onDidChangeSessions(e => this._onDidChangeSessions(e)));
+		this._register(
+      this._sessionsManagementService.onDidChangeSessions(
+        e => this._onDidChangeSessions(e),
+      ),
+    );
 	}
 
 	private _onDidChangeSessions(e: ISessionsChangeEvent): void {
 		const removedTrackedSessions: ISession[] = [];
 		for (const session of e.removed) {
-			if (this._sessionDisposables.get(session.sessionId) && !this._dispatchedSessions.has(session.sessionId)) {
+			if (this._sessionDisposables.get(
+        session.sessionId,
+      ) && !this._dispatchedSessions.has(session.sessionId)) {
 				removedTrackedSessions.push(session);
 			}
 			this._sessionDisposables.deleteAndDispose(session.sessionId);
@@ -64,7 +72,10 @@ export class WorktreeCreatedTaskDispatcher extends Disposable implements IWorkbe
 			? removedTrackedSessions[0]
 			: undefined;
 		for (const session of e.changed) {
-			this._trackSession(session, replacement?.providerId === session.providerId && replacement.sessionType === session.sessionType);
+			this._trackSession(
+        session,
+        replacement?.providerId === session.providerId && replacement.sessionType === session.sessionType,
+      );
 		}
 	}
 
@@ -105,11 +116,15 @@ export class WorktreeCreatedTaskDispatcher extends Disposable implements IWorkbe
 	}
 
 	private _isPendingWorktreeSession(session: ISession): boolean {
-		return session.status.get() === SessionStatus.Untitled || session.loading.get() || !this._hasWorktree(session);
+		return session.status.get() === SessionStatus.Untitled || session.loading.get() || !this._hasWorktree(
+      session,
+    );
 	}
 
 	private _hasWorktree(session: ISession): boolean {
-		return session.workspace.get()?.folders.some(folder => !!folder.gitRepository?.workTreeUri) ?? false;
+		return session.workspace.get()?.folders.some(
+      folder => !!folder.gitRepository?.workTreeUri,
+    ) ?? false;
 	}
 
 	private async _dispatchWorktreeCreatedTasks(session: ISession): Promise<void> {
@@ -117,19 +132,25 @@ export class WorktreeCreatedTaskDispatcher extends Disposable implements IWorkbe
 		try {
 			tasks = await this._sessionsTasksService.getSessionTasksOnce(session);
 		} catch (err) {
-			this._logService.warn(`${LOG_PREFIX} Failed to read tasks for session '${session.sessionId}': ${err}`);
+			this._logService.warn(
+        `${LOG_PREFIX} Failed to read tasks for session '${session.sessionId}': ${err}`,
+      );
 			return;
 		}
 
 		for (const { task } of tasks) {
-			if (task.runOptions?.runOn !== 'worktreeCreated') {
+			if (task.runOptions?.runOn !== "worktreeCreated") {
 				continue;
 			}
-			this._logService.trace(`${LOG_PREFIX} Running worktreeCreated task '${task.label}' for session '${session.sessionId}'`);
+			this._logService.trace(
+        `${LOG_PREFIX} Running worktreeCreated task '${task.label}' for session '${session.sessionId}'`,
+      );
 			try {
 				await this._sessionsTasksService.runTask(task, session);
 			} catch (err) {
-				this._logService.warn(`${LOG_PREFIX} Failed to run task '${task.label}' for session '${session.sessionId}': ${err}`);
+				this._logService.warn(
+          `${LOG_PREFIX} Failed to run task '${task.label}' for session '${session.sessionId}': ${err}`,
+        );
 			}
 		}
 	}

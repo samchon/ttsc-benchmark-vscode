@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { status } from '../../../../../../base/browser/ui/aria/aria.js';
-import { renderAsPlaintext } from '../../../../../../base/browser/markdownRenderer.js';
-import { Emitter, Event } from '../../../../../../base/common/event.js';
-import { IMarkdownString } from '../../../../../../base/common/htmlContent.js';
-import { Disposable } from '../../../../../../base/common/lifecycle.js';
-import { InstantiationType, registerSingleton } from '../../../../../../platform/instantiation/common/extensions.js';
-import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
+import { status } from "../../../../../../base/browser/ui/aria/aria.js";
+import { renderAsPlaintext } from "../../../../../../base/browser/markdownRenderer.js";
+import { Emitter, Event } from "../../../../../../base/common/event.js";
+import { IMarkdownString } from "../../../../../../base/common/htmlContent.js";
+import { Disposable } from "../../../../../../base/common/lifecycle.js";
+import { InstantiationType, registerSingleton } from "../../../../../../platform/instantiation/common/extensions.js";
+import { createDecorator } from "../../../../../../platform/instantiation/common/instantiation.js";
 
 export const enum ChatInputNotificationSeverity {
 	Info = 0,
@@ -33,7 +33,9 @@ export interface IChatInputNotification {
 	readonly autoDismissOnMessage: boolean;
 }
 
-export const IChatInputNotificationService = createDecorator<IChatInputNotificationService>('chatInputNotificationService');
+export const IChatInputNotificationService = createDecorator<IChatInputNotificationService>(
+  "chatInputNotificationService",
+);
 
 export interface IChatInputNotificationService {
 	readonly _serviceBrand: undefined;
@@ -138,7 +140,9 @@ class ChatInputNotificationService extends Disposable implements IChatInputNotif
 	handleMessageSent(): void {
 		let changed = false;
 		for (const notification of this._notifications.values()) {
-			if (notification.autoDismissOnMessage && !this._dismissed.has(notification.id)) {
+			if (notification.autoDismissOnMessage && !this._dismissed.has(
+        notification.id,
+      )) {
 				this._dismissed.add(notification.id);
 				changed = true;
 			}
@@ -169,8 +173,8 @@ class ChatInputNotificationService extends Disposable implements IChatInputNotif
 			this._lastAnnouncedSignature = undefined;
 			return;
 		}
-		const rawMessage = typeof active.message === 'string' ? active.message : active.message.value;
-		const signature = `${active.id}\u0000${rawMessage}\u0000${active.description ?? ''}`;
+		const rawMessage = typeof active.message === "string" ? active.message : active.message.value;
+		const signature = `${active.id}\u0000${rawMessage}\u0000${active.description ?? ""}`;
 		if (signature === this._lastAnnouncedSignature) {
 			return;
 		}
@@ -184,4 +188,8 @@ class ChatInputNotificationService extends Disposable implements IChatInputNotif
 	}
 }
 
-registerSingleton(IChatInputNotificationService, ChatInputNotificationService, InstantiationType.Delayed);
+registerSingleton(
+  IChatInputNotificationService,
+  ChatInputNotificationService,
+  InstantiationType.Delayed,
+);

@@ -3,23 +3,35 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../nls.js';
-import { EditorResourceAccessor, EditorExtensions, SideBySideEditor, IEditorDescriptor as ICommonEditorDescriptor, EditorCloseContext, IWillInstantiateEditorPaneEvent } from '../common/editor.js';
-import { EditorInput } from '../common/editor/editorInput.js';
-import { SyncDescriptor } from '../../platform/instantiation/common/descriptors.js';
-import { Registry } from '../../platform/registry/common/platform.js';
-import { EditorPane } from './parts/editor/editorPane.js';
-import { IConstructorSignature, IInstantiationService, BrandedService, ServicesAccessor } from '../../platform/instantiation/common/instantiation.js';
-import { IDisposable, toDisposable } from '../../base/common/lifecycle.js';
-import { Promises } from '../../base/common/async.js';
-import { IEditorService } from '../services/editor/common/editorService.js';
-import { IUriIdentityService } from '../../platform/uriIdentity/common/uriIdentity.js';
-import { IWorkingCopyService } from '../services/workingCopy/common/workingCopyService.js';
-import { URI } from '../../base/common/uri.js';
-import { Schemas } from '../../base/common/network.js';
-import { IEditorGroup } from '../services/editor/common/editorGroupsService.js';
-import { Iterable } from '../../base/common/iterator.js';
-import { Emitter } from '../../base/common/event.js';
+import { localize } from "../../nls.js";
+import {
+  EditorResourceAccessor,
+  EditorExtensions,
+  SideBySideEditor,
+  IEditorDescriptor as ICommonEditorDescriptor,
+  EditorCloseContext,
+  IWillInstantiateEditorPaneEvent,
+} from "../common/editor.js";
+import { EditorInput } from "../common/editor/editorInput.js";
+import { SyncDescriptor } from "../../platform/instantiation/common/descriptors.js";
+import { Registry } from "../../platform/registry/common/platform.js";
+import { EditorPane } from "./parts/editor/editorPane.js";
+import {
+  IConstructorSignature,
+  IInstantiationService,
+  BrandedService,
+  ServicesAccessor,
+} from "../../platform/instantiation/common/instantiation.js";
+import { IDisposable, toDisposable } from "../../base/common/lifecycle.js";
+import { Promises } from "../../base/common/async.js";
+import { IEditorService } from "../services/editor/common/editorService.js";
+import { IUriIdentityService } from "../../platform/uriIdentity/common/uriIdentity.js";
+import { IWorkingCopyService } from "../services/workingCopy/common/workingCopyService.js";
+import { URI } from "../../base/common/uri.js";
+import { Schemas } from "../../base/common/network.js";
+import { IEditorGroup } from "../services/editor/common/editorGroupsService.js";
+import { Iterable } from "../../base/common/iterator.js";
+import { Emitter } from "../../base/common/event.js";
 
 //#region Editor Pane Registry
 
@@ -61,19 +73,25 @@ export class EditorPaneDescriptor implements IEditorPaneDescriptor {
 	static create<Services extends BrandedService[]>(
 		ctor: { new(group: IEditorGroup, ...services: Services): EditorPane },
 		typeId: string,
-		name: string
+		name: string,
 	): EditorPaneDescriptor {
-		return new EditorPaneDescriptor(ctor as IConstructorSignature<EditorPane, [IEditorGroup]>, typeId, name);
+		return new EditorPaneDescriptor(
+      ctor as IConstructorSignature<EditorPane, [IEditorGroup]>,
+      typeId,
+      name,
+    );
 	}
 
 	private constructor(
 		private readonly ctor: IConstructorSignature<EditorPane, [IEditorGroup]>,
 		readonly typeId: string,
-		readonly name: string
+		readonly name: string,
 	) { }
 
 	instantiate(instantiationService: IInstantiationService, group: IEditorGroup): EditorPane {
-		EditorPaneDescriptor._onWillInstantiateEditorPane.fire({ typeId: this.typeId });
+		EditorPaneDescriptor._onWillInstantiateEditorPane.fire({
+      typeId: this.typeId,
+    });
 
 		const pane = instantiationService.createInstance(this.ctor, group);
 		EditorPaneDescriptor.instantiatedEditorPanes.add(this.typeId);
@@ -94,8 +112,8 @@ export class EditorPaneRegistry implements IEditorPaneRegistry {
 		this.mapEditorPanesToEditors.set(editorPaneDescriptor, editorDescriptors);
 
 		return toDisposable(() => {
-			this.mapEditorPanesToEditors.delete(editorPaneDescriptor);
-		});
+      this.mapEditorPanesToEditors.delete(editorPaneDescriptor);
+    });
 	}
 
 	getEditorPane(editor: EditorInput): EditorPaneDescriptor | undefined {
@@ -116,7 +134,9 @@ export class EditorPaneRegistry implements IEditorPaneRegistry {
 		const matchingEditorPaneDescriptors: EditorPaneDescriptor[] = [];
 
 		for (const editorPane of this.mapEditorPanesToEditors.keys()) {
-			const editorDescriptors = this.mapEditorPanesToEditors.get(editorPane) || [];
+			const editorDescriptors = this.mapEditorPanesToEditors.get(
+        editorPane,
+      ) || [];
 			for (const editorDescriptor of editorDescriptors) {
 				const editorClass = editorDescriptor.ctor;
 
@@ -145,7 +165,10 @@ export class EditorPaneRegistry implements IEditorPaneRegistry {
 	//#region Used for tests only
 
 	getEditorPaneByType(typeId: string): EditorPaneDescriptor | undefined {
-		return Iterable.find(this.mapEditorPanesToEditors.keys(), editor => editor.typeId === typeId);
+		return Iterable.find(
+      this.mapEditorPanesToEditors.keys(),
+      editor => editor.typeId === typeId,
+    );
 	}
 
 	getEditorPanes(): readonly EditorPaneDescriptor[] {
@@ -157,7 +180,9 @@ export class EditorPaneRegistry implements IEditorPaneRegistry {
 		for (const editorPane of this.mapEditorPanesToEditors.keys()) {
 			const editorDescriptors = this.mapEditorPanesToEditors.get(editorPane);
 			if (editorDescriptors) {
-				editorClasses.push(...editorDescriptors.map(editorDescriptor => editorDescriptor.ctor));
+				editorClasses.push(
+          ...editorDescriptors.map(editorDescriptor => editorDescriptor.ctor),
+        );
 			}
 		}
 
@@ -275,17 +300,17 @@ export function whenEditorClosed(accessor: ServicesAccessor, resources: URI[]): 
 export function computeEditorAriaLabel(input: EditorInput, index: number | undefined, group: IEditorGroup | undefined, groupCount: number | undefined): string {
 	let ariaLabel = input.getAriaLabel();
 	if (group && !group.isPinned(input)) {
-		ariaLabel = localize('preview', "{0}, preview", ariaLabel);
+		ariaLabel = localize("preview", "{0}, preview", ariaLabel);
 	}
 
 	if (group?.isSticky(index ?? input)) {
-		ariaLabel = localize('pinned', "{0}, pinned", ariaLabel);
+		ariaLabel = localize("pinned", "{0}, pinned", ariaLabel);
 	}
 
 	// Apply group information to help identify in
 	// which group we are (only if more than one group
 	// is actually opened)
-	if (group && typeof groupCount === 'number' && groupCount > 1) {
+	if (group && typeof groupCount === "number" && groupCount > 1) {
 		ariaLabel = `${ariaLabel}, ${group.ariaLabel}`;
 	}
 

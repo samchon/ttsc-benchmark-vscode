@@ -3,9 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { OperatingSystem } from '../../../../../../../base/common/platform.js';
-import { isPowerShell } from '../../runInTerminalHelpers.js';
-import type { ICommandLinePresenter, ICommandLinePresenterOptions, ICommandLinePresenterResult } from './commandLinePresenter.js';
+import { OperatingSystem } from "../../../../../../../base/common/platform.js";
+import { isPowerShell } from "../../runInTerminalHelpers.js";
+import type {
+  ICommandLinePresenter,
+  ICommandLinePresenterOptions,
+  ICommandLinePresenterResult,
+} from "./commandLinePresenter.js";
 
 /**
  * Command line presenter for Ruby inline commands (`ruby -e "..."`).
@@ -14,13 +18,17 @@ import type { ICommandLinePresenter, ICommandLinePresenterOptions, ICommandLineP
 export class RubyCommandLinePresenter implements ICommandLinePresenter {
 	present(options: ICommandLinePresenterOptions): ICommandLinePresenterResult | undefined {
 		const commandLine = options.commandLine.forDisplay;
-		const extractedRuby = extractRubyCommand(commandLine, options.shell, options.os);
+		const extractedRuby = extractRubyCommand(
+      commandLine,
+      options.shell,
+      options.os,
+    );
 		if (extractedRuby) {
 			return {
-				commandLine: extractedRuby,
-				language: 'ruby',
-				languageDisplayName: 'Ruby',
-			};
+        commandLine: extractedRuby,
+        language: "ruby",
+        languageDisplayName: "Ruby",
+      };
 		}
 		return undefined;
 	}

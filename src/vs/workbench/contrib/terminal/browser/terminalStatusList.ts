@@ -3,30 +3,30 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Codicon } from '../../../../base/common/codicons.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import Severity from '../../../../base/common/severity.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { TerminalSettingId } from '../../../../platform/terminal/common/terminal.js';
-import { listErrorForeground, listWarningForeground } from '../../../../platform/theme/common/colorRegistry.js';
-import { spinningLoading } from '../../../../platform/theme/common/iconRegistry.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
-import { ITerminalStatus } from '../common/terminal.js';
-import { mainWindow } from '../../../../base/browser/window.js';
-import { isString } from '../../../../base/common/types.js';
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import Severity from "../../../../base/common/severity.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { TerminalSettingId } from "../../../../platform/terminal/common/terminal.js";
+import { listErrorForeground, listWarningForeground } from "../../../../platform/theme/common/colorRegistry.js";
+import { spinningLoading } from "../../../../platform/theme/common/iconRegistry.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { ITerminalStatus } from "../common/terminal.js";
+import { mainWindow } from "../../../../base/browser/window.js";
+import { isString } from "../../../../base/common/types.js";
 
 /**
  * The set of _internal_ terminal statuses, other components building on the terminal should put
  * their statuses within their component.
  */
 export const enum TerminalStatus {
-	Bell = 'bell',
-	Disconnected = 'disconnected',
-	RelaunchNeeded = 'relaunch-needed',
-	EnvironmentVariableInfoChangesActive = 'env-var-info-changes-active',
-	ShellIntegrationInfo = 'shell-integration-info',
-	ShellIntegrationAttentionNeeded = 'shell-integration-attention-needed'
+	Bell = "bell",
+	Disconnected = "disconnected",
+	RelaunchNeeded = "relaunch-needed",
+	EnvironmentVariableInfoChangesActive = "env-var-info-changes-active",
+	ShellIntegrationInfo = "shell-integration-info",
+	ShellIntegrationAttentionNeeded = "shell-integration-attention-needed"
 }
 
 export interface ITerminalStatusList {
@@ -56,15 +56,21 @@ export class TerminalStatusList extends Disposable implements ITerminalStatusLis
 	private readonly _statuses: Map<string, ITerminalStatus> = new Map();
 	private readonly _statusTimeouts: Map<string, number> = new Map();
 
-	private readonly _onDidAddStatus = this._register(new Emitter<ITerminalStatus>());
+	private readonly _onDidAddStatus = this._register(
+    new Emitter<ITerminalStatus>(),
+  );
 	get onDidAddStatus(): Event<ITerminalStatus> { return this._onDidAddStatus.event; }
-	private readonly _onDidRemoveStatus = this._register(new Emitter<ITerminalStatus>());
+	private readonly _onDidRemoveStatus = this._register(
+    new Emitter<ITerminalStatus>(),
+  );
 	get onDidRemoveStatus(): Event<ITerminalStatus> { return this._onDidRemoveStatus.event; }
-	private readonly _onDidChangePrimaryStatus = this._register(new Emitter<ITerminalStatus | undefined>());
+	private readonly _onDidChangePrimaryStatus = this._register(
+    new Emitter<ITerminalStatus | undefined>(),
+  );
 	get onDidChangePrimaryStatus(): Event<ITerminalStatus | undefined> { return this._onDidChangePrimaryStatus.event; }
 
 	constructor(
-		@IConfigurationService private readonly _configurationService: IConfigurationService
+		@IConfigurationService private readonly _configurationService: IConfigurationService,
 	) {
 		super();
 	}
@@ -81,7 +87,9 @@ export class TerminalStatusList extends Disposable implements ITerminalStatusLis
 		return result;
 	}
 
-	get statuses(): ITerminalStatus[] { return Array.from(this._statuses.values()); }
+	get statuses(): ITerminalStatus[] { return Array.from(
+    this._statuses.values(),
+  ); }
 
 	add(status: ITerminalStatus, duration?: number) {
 		status = this._applyAnimationSetting(status);
@@ -91,7 +99,10 @@ export class TerminalStatusList extends Disposable implements ITerminalStatusLis
 			this._statusTimeouts.delete(status.id);
 		}
 		if (duration && duration > 0) {
-			const timeout = mainWindow.setTimeout(() => this.remove(status), duration);
+			const timeout = mainWindow.setTimeout(
+        () => this.remove(status),
+        duration,
+      );
 			this._statusTimeouts.set(status.id, timeout);
 		}
 		const existingStatus = this._statuses.get(status.id);
@@ -134,7 +145,11 @@ export class TerminalStatusList extends Disposable implements ITerminalStatusLis
 	}
 
 	private _applyAnimationSetting(status: ITerminalStatus): ITerminalStatus {
-		if (!status.icon || ThemeIcon.getModifier(status.icon) !== 'spin' || this._configurationService.getValue(TerminalSettingId.TabsEnableAnimation)) {
+		if (!status.icon || ThemeIcon.getModifier(
+      status.icon,
+    ) !== "spin" || this._configurationService.getValue(
+      TerminalSettingId.TabsEnableAnimation,
+    )) {
 			return status;
 		}
 		let icon;
@@ -147,9 +162,9 @@ export class TerminalStatusList extends Disposable implements ITerminalStatusLis
 		// Clone the status when changing the icon so that setting changes are applied without a
 		// reload being needed
 		return {
-			...status,
-			icon
-		};
+      ...status,
+      icon,
+    };
 	}
 }
 
@@ -160,6 +175,6 @@ export function getColorForSeverity(severity: Severity): string {
 		case Severity.Warning:
 			return listWarningForeground;
 		default:
-			return '';
+			return "";
 	}
 }

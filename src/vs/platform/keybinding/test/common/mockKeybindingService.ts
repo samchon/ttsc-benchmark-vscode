@@ -3,15 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import { KeyCodeChord, Keybinding, ResolvedKeybinding } from '../../../../base/common/keybindings.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { OS } from '../../../../base/common/platform.js';
-import { ContextKeyExpression, ContextKeyValue, IContextKey, IContextKeyChangeEvent, IContextKeyService, IContextKeyServiceTarget, IScopedContextKeyService } from '../../../contextkey/common/contextkey.js';
-import { IKeybindingService, IKeyboardEvent } from '../../common/keybinding.js';
-import { NoMatchingKb, ResolutionResult } from '../../common/keybindingResolver.js';
-import { ResolvedKeybindingItem } from '../../common/resolvedKeybindingItem.js';
-import { USLayoutResolvedKeybinding } from '../../common/usLayoutResolvedKeybinding.js';
+import { Event } from "../../../../base/common/event.js";
+import { KeyCodeChord, Keybinding, ResolvedKeybinding } from "../../../../base/common/keybindings.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { OS } from "../../../../base/common/platform.js";
+import {
+  ContextKeyExpression,
+  ContextKeyValue,
+  IContextKey,
+  IContextKeyChangeEvent,
+  IContextKeyService,
+  IContextKeyServiceTarget,
+  IScopedContextKeyService,
+} from "../../../contextkey/common/contextkey.js";
+import { IKeybindingService, IKeyboardEvent } from "../../common/keybinding.js";
+import { NoMatchingKb, ResolutionResult } from "../../common/keybindingResolver.js";
+import { ResolvedKeybindingItem } from "../../common/resolvedKeybindingItem.js";
+import { USLayoutResolvedKeybinding } from "../../common/usLayoutResolvedKeybinding.js";
 
 class MockKeybindingContextKey<T extends ContextKeyValue = ContextKeyValue> implements IContextKey<T> {
 	private _defaultValue: T | undefined;
@@ -94,7 +102,7 @@ export class MockKeybindingService implements IKeybindingService {
 	}
 
 	public getDefaultKeybindingsContent(): string {
-		return '';
+		return "";
 	}
 
 	public getDefaultKeybindings(): ResolvedKeybindingItem[] {
@@ -111,12 +119,12 @@ export class MockKeybindingService implements IKeybindingService {
 
 	public resolveKeyboardEvent(keyboardEvent: IKeyboardEvent): ResolvedKeybinding {
 		const chord = new KeyCodeChord(
-			keyboardEvent.ctrlKey,
-			keyboardEvent.shiftKey,
-			keyboardEvent.altKey,
-			keyboardEvent.metaKey,
-			keyboardEvent.keyCode
-		);
+      keyboardEvent.ctrlKey,
+      keyboardEvent.shiftKey,
+      keyboardEvent.altKey,
+      keyboardEvent.metaKey,
+      keyboardEvent.keyCode,
+    );
 		return this.resolveKeybinding(chord.toKeybinding())[0];
 	}
 
@@ -161,11 +169,11 @@ export class MockKeybindingService implements IKeybindingService {
 	}
 
 	public _dumpDebugInfo(): string {
-		return '';
+		return "";
 	}
 
 	public _dumpDebugInfoJSON(): string {
-		return '';
+		return "";
 	}
 
 	public registerSchemaContribution() {

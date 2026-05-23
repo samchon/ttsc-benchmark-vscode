@@ -3,22 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { onUnexpectedExternalError } from '../../../../base/common/errors.js';
-import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { ITextModel } from '../../../common/model.js';
-import { FoldingContext, FoldingRange, FoldingRangeProvider } from '../../../common/languages.js';
-import { FoldingLimitReporter, RangeProvider } from './folding.js';
-import { FoldingRegions, MAX_LINE_NUMBER } from './foldingRanges.js';
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { onUnexpectedExternalError } from "../../../../base/common/errors.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { ITextModel } from "../../../common/model.js";
+import { FoldingContext, FoldingRange, FoldingRangeProvider } from "../../../common/languages.js";
+import { FoldingLimitReporter, RangeProvider } from "./folding.js";
+import { FoldingRegions, MAX_LINE_NUMBER } from "./foldingRanges.js";
 
 export interface IFoldingRangeData extends FoldingRange {
 	rank: number;
 }
 
-const foldingContext: FoldingContext = {
-};
+const foldingContext: FoldingContext = {};
 
-const ID_SYNTAX_PROVIDER = 'syntax';
+const ID_SYNTAX_PROVIDER = "syntax";
 
 export class SyntaxRangeProvider implements RangeProvider {
 
@@ -31,7 +30,7 @@ export class SyntaxRangeProvider implements RangeProvider {
 		private readonly providers: FoldingRangeProvider[],
 		readonly handleFoldingRangesChange: () => void,
 		private readonly foldingRangesLimit: FoldingLimitReporter,
-		private readonly fallbackRangeProvider: RangeProvider | undefined // used when all providers return null
+		private readonly fallbackRangeProvider: RangeProvider | undefined, // used when all providers return null
 	) {
 		this.disposables = new DisposableStore();
 		if (fallbackRangeProvider) {
@@ -39,7 +38,7 @@ export class SyntaxRangeProvider implements RangeProvider {
 		}
 
 		for (const provider of providers) {
-			if (typeof provider.onDidChange === 'function') {
+			if (typeof provider.onDidChange === "function") {
 				this.disposables.add(provider.onDidChange(handleFoldingRangesChange));
 			}
 		}
@@ -84,8 +83,8 @@ function collectSyntaxRanges(providers: FoldingRangeProvider[], model: ITextMode
 		}, onUnexpectedExternalError);
 	});
 	return Promise.all(promises).then(_ => {
-		return rangeData;
-	});
+    return rangeData;
+  });
 }
 
 class RangesCollector {
@@ -184,13 +183,23 @@ export function sanitizeRanges(rangeData: IFoldingRangeData[], foldingRangesLimi
 	for (const entry of sorted) {
 		if (!top) {
 			top = entry;
-			collector.add(entry.start, entry.end, entry.kind && entry.kind.value, previous.length);
+			collector.add(
+        entry.start,
+        entry.end,
+        entry.kind && entry.kind.value,
+        previous.length,
+      );
 		} else {
 			if (entry.start > top.start) {
 				if (entry.end <= top.end) {
 					previous.push(top);
 					top = entry;
-					collector.add(entry.start, entry.end, entry.kind && entry.kind.value, previous.length);
+					collector.add(
+            entry.start,
+            entry.end,
+            entry.kind && entry.kind.value,
+            previous.length,
+          );
 				} else {
 					if (entry.start > top.end) {
 						do {
@@ -201,7 +210,12 @@ export function sanitizeRanges(rangeData: IFoldingRangeData[], foldingRangesLimi
 						}
 						top = entry;
 					}
-					collector.add(entry.start, entry.end, entry.kind && entry.kind.value, previous.length);
+					collector.add(
+            entry.start,
+            entry.end,
+            entry.kind && entry.kind.value,
+            previous.length,
+          );
 				}
 			}
 		}

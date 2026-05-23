@@ -3,12 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../../../../../base/common/uri.js';
-import { VSBuffer } from '../../../../../../../base/common/buffer.js';
-import { FileSystemProviderCapabilities, FileType, IFileService, IFileSystemProviderWithFileRealpathCapability, IStat } from '../../../../../../../platform/files/common/files.js';
-import { dirname } from '../../../../../../../base/common/resources.js';
-import { InMemoryFileSystemProvider } from '../../../../../../../platform/files/common/inMemoryFilesystemProvider.js';
-import { ResourceMap } from '../../../../../../../base/common/map.js';
+import { URI } from "../../../../../../../base/common/uri.js";
+import { VSBuffer } from "../../../../../../../base/common/buffer.js";
+import {
+  FileSystemProviderCapabilities,
+  FileType,
+  IFileService,
+  IFileSystemProviderWithFileRealpathCapability,
+  IStat,
+} from "../../../../../../../platform/files/common/files.js";
+import { dirname } from "../../../../../../../base/common/resources.js";
+import { InMemoryFileSystemProvider } from "../../../../../../../platform/files/common/inMemoryFilesystemProvider.js";
+import { ResourceMap } from "../../../../../../../base/common/map.js";
 
 /**
  * Test file system provider that extends InMemoryFileSystemProvider with realpath support.
@@ -59,9 +65,9 @@ export class TestInMemoryFileSystemProviderWithRealPath extends InMemoryFileSyst
 		const isSymlink = this.realPathMappings.has(resource);
 		if (isSymlink) {
 			return {
-				...baseStat,
-				type: baseStat.type | FileType.SymbolicLink
-			};
+        ...baseStat,
+        type: baseStat.type | FileType.SymbolicLink,
+      };
 		}
 		return baseStat;
 	}
@@ -141,7 +147,7 @@ export class MockFilesystem {
 	 */
 	public async mock(parentFolder?: URI): Promise<void> {
 		// Check if input is the new simplified format
-		if (this.input.length > 0 && 'path' in this.input[0]) {
+		if (this.input.length > 0 && "path" in this.input[0]) {
 			return this.mockFromFileEntries(this.input as IMockFileEntry[]);
 		}
 
@@ -161,7 +167,7 @@ export class MockFilesystem {
 			await this.ensureParentDirectories(dirname(fileUri));
 
 			// Create the file
-			const contents = fileEntry.contents.join('\n');
+			const contents = fileEntry.contents.join("\n");
 			await this.fileService.writeFile(fileUri, VSBuffer.fromString(contents));
 
 			this.createdFiles.push(fileUri);
@@ -172,7 +178,9 @@ export class MockFilesystem {
 	 * Mock using the old nested folder format.
 	 */
 	private async mockFromFolders(folders: IMockFolder[], parentFolder?: URI): Promise<void> {
-		const result = await Promise.all(folders.map((folder) => this.mockFolder(folder, parentFolder)));
+		const result = await Promise.all(
+      folders.map((folder) => this.mockFolder(folder, parentFolder)),
+    );
 		this.createdRootFolders.push(...result);
 	}
 
@@ -186,7 +194,10 @@ export class MockFilesystem {
 
 		for (const folderUri of this.createdFolders.reverse()) { // reverse to delete children first
 			if (await this.fileService.exists(folderUri)) {
-				await this.fileService.del(folderUri, { recursive: true, useTrash: false });
+				await this.fileService.del(folderUri, {
+          recursive: true,
+          useTrash: false,
+        });
 			}
 		}
 
@@ -208,7 +219,9 @@ export class MockFilesystem {
 			try {
 				await this.fileService.createFolder(folderUri);
 			} catch (error) {
-				throw new Error(`Failed to create folder '${folderUri.fsPath}': ${error}.`);
+				throw new Error(
+          `Failed to create folder '${folderUri.fsPath}': ${error}.`,
+        );
 			}
 		}
 
@@ -216,12 +229,15 @@ export class MockFilesystem {
 		for (const child of folder.children) {
 			const childUri = URI.joinPath(folderUri, child.name);
 			// create child file
-			if ('contents' in child) {
-				const contents: string = (typeof child.contents === 'string')
+			if ("contents" in child) {
+				const contents: string = (typeof child.contents === "string")
 					? child.contents
-					: child.contents.join('\n');
+					: child.contents.join("\n");
 
-				await this.fileService.writeFile(childUri, VSBuffer.fromString(contents));
+				await this.fileService.writeFile(
+          childUri,
+          VSBuffer.fromString(contents),
+        );
 
 				resolvedChildren.push(childUri);
 
@@ -241,7 +257,7 @@ export class MockFilesystem {
 	private async ensureParentDirectories(dirUri: URI): Promise<void> {
 		if (!await this.fileService.exists(dirUri)) {
 			// First ensure the parent directory exists (recursive call)
-			if (dirUri.path !== '/') {
+			if (dirUri.path !== "/") {
 				await this.ensureParentDirectories(dirname(dirUri));
 			}
 			// Then create this directory
@@ -249,7 +265,9 @@ export class MockFilesystem {
 				await this.fileService.createFolder(dirUri);
 				this.createdFolders.push(dirUri);
 			} catch (error) {
-				throw new Error(`Failed to create directory '${dirUri.toString()}': ${error}.`);
+				throw new Error(
+          `Failed to create directory '${dirUri.toString()}': ${error}.`,
+        );
 			}
 		}
 	}

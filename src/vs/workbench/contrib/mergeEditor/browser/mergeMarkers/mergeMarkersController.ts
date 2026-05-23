@@ -3,18 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { h } from '../../../../../base/browser/dom.js';
-import { Disposable, DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { autorun, IObservable } from '../../../../../base/common/observable.js';
-import { ICodeEditor } from '../../../../../editor/browser/editorBrowser.js';
-import { ITextModel } from '../../../../../editor/common/model.js';
-import { MergeEditorLineRange } from '../model/lineRange.js';
-import { MergeEditorViewModel } from '../view/viewModel.js';
-import * as nls from '../../../../../nls.js';
+import { h } from "../../../../../base/browser/dom.js";
+import { Disposable, DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { autorun, IObservable } from "../../../../../base/common/observable.js";
+import { ICodeEditor } from "../../../../../editor/browser/editorBrowser.js";
+import { ITextModel } from "../../../../../editor/common/model.js";
+import { MergeEditorLineRange } from "../model/lineRange.js";
+import { MergeEditorViewModel } from "../view/viewModel.js";
+import * as nls from "../../../../../nls.js";
 
 export const conflictMarkers = {
-	start: '<<<<<<<',
-	end: '>>>>>>>',
+  start: "<<<<<<<",
+  end: ">>>>>>>",
 };
 
 export class MergeMarkersController extends Disposable {
@@ -27,22 +27,34 @@ export class MergeMarkersController extends Disposable {
 	) {
 		super();
 
-		this._register(editor.onDidChangeModelContent(e => {
-			this.updateDecorations();
-		}));
+		this._register(
+      editor.onDidChangeModelContent(e => {
+        this.updateDecorations();
+      }),
+    );
 
-		this._register(editor.onDidChangeModel(e => {
-			this.updateDecorations();
-		}));
+		this._register(
+      editor.onDidChangeModel(e => {
+        this.updateDecorations();
+      }),
+    );
 
 		this.updateDecorations();
 	}
 
 	private updateDecorations() {
 		const model = this.editor.getModel();
-		const blocks = model ? getBlocks(model, { blockToRemoveStartLinePrefix: conflictMarkers.start, blockToRemoveEndLinePrefix: conflictMarkers.end }) : { blocks: [] };
+		const blocks = model ? getBlocks(model, {
+      blockToRemoveStartLinePrefix: conflictMarkers.start,
+      blockToRemoveEndLinePrefix: conflictMarkers.end,
+    }) : {
+      blocks: [],
+    };
 
-		this.editor.setHiddenAreas(blocks.blocks.map(b => b.lineRange.deltaEnd(-1).toExclusiveRange()), this);
+		this.editor.setHiddenAreas(
+      blocks.blocks.map(b => b.lineRange.deltaEnd(-1).toExclusiveRange()),
+      this,
+    );
 		this.editor.changeViewZones(c => {
 			this.disposableStore.clear();
 			for (const id of this.viewZoneIds) {
@@ -56,15 +68,15 @@ export class MergeMarkersController extends Disposable {
 
 				const conflictingLinesCount = b.lineRange.length - 2;
 
-				const domNode = h('div', [
-					h('div.conflict-zone-root', [
-						h('pre', [startLine]),
-						h('span.dots', ['...']),
-						h('pre', [endLine]),
-						h('span.text', [
+				const domNode = h("div", [
+					h("div.conflict-zone-root", [
+						h("pre", [startLine]),
+						h("span.dots", ["..."]),
+						h("pre", [endLine]),
+						h("span.text", [
 							conflictingLinesCount === 1
-								? nls.localize('conflictingLine', "1 Conflicting Line")
-								: nls.localize('conflictingLines', "{0} Conflicting Lines", conflictingLinesCount)
+								? nls.localize("conflictingLine", "1 Conflicting Line")
+								: nls.localize("conflictingLines", "{0} Conflicting Lines", conflictingLinesCount),
 						]),
 					]),
 				]).root;
@@ -82,7 +94,7 @@ export class MergeMarkersController extends Disposable {
 				this.disposableStore.add(
 					this.editor.onDidLayoutChange(() => {
 						updateWidth();
-					})
+					}),
 				);
 				updateWidth();
 
@@ -96,16 +108,16 @@ export class MergeMarkersController extends Disposable {
 					const activeRange = vm.activeModifiedBaseRange.read(reader);
 
 					const classNames: string[] = [];
-					classNames.push('conflict-zone');
+					classNames.push("conflict-zone");
 
 					if (activeRange) {
 						const activeRangeInResult = vm.model.getLineRangeInResult(activeRange.baseRange, reader);
 						if (activeRangeInResult.intersectsOrTouches(b.lineRange)) {
-							classNames.push('focused');
+							classNames.push("focused");
 						}
 					}
 
-					domNode.className = classNames.join(' ');
+					domNode.className = classNames.join(" ");
 				}));
 			}
 		});
@@ -133,16 +145,23 @@ function getBlocks(document: ITextModel, configuration: ProjectionConfiguration)
 		} else {
 			if (line.startsWith(configuration.blockToRemoveEndLinePrefix)) {
 				inBlock = false;
-				blocks.push(new Block(MergeEditorLineRange.fromLength(startLineNumber, curLine - startLineNumber + 1)));
-				transformedContent.push('');
+				blocks.push(
+          new Block(
+            MergeEditorLineRange.fromLength(
+              startLineNumber,
+              curLine - startLineNumber + 1,
+            ),
+          ),
+        );
+				transformedContent.push("");
 			}
 		}
 	}
 
 	return {
-		blocks,
-		transformedContent: transformedContent.join('\n')
-	};
+    blocks,
+    transformedContent: transformedContent.join("\n"),
+  };
 }
 
 class Block {

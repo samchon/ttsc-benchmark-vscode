@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as css from '../../../base/browser/cssValue.js';
-import { Emitter, Event } from '../../../base/common/event.js';
-import { DisposableStore, IDisposable } from '../../../base/common/lifecycle.js';
-import { ThemeIcon } from '../../../base/common/themables.js';
-import { getIconRegistry, IconContribution, IconFontDefinition } from '../common/iconRegistry.js';
-import { IProductIconTheme, IThemeService } from '../common/themeService.js';
+import * as css from "../../../base/browser/cssValue.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { DisposableStore, IDisposable } from "../../../base/common/lifecycle.js";
+import { ThemeIcon } from "../../../base/common/themables.js";
+import { getIconRegistry, IconContribution, IconFontDefinition } from "../common/iconRegistry.js";
+import { IProductIconTheme, IThemeService } from "../common/themeService.js";
 
 export interface IIconsStyleSheet extends IDisposable {
 	getCSS(): css.CssFragment;
@@ -22,7 +22,9 @@ export function getIconsStyleSheet(themeService: IThemeService | undefined): IIc
 	const iconRegistry = getIconRegistry();
 	disposable.add(iconRegistry.onDidChange(() => onDidChangeEmmiter.fire()));
 	if (themeService) {
-		disposable.add(themeService.onDidProductIconThemeChange(() => onDidChangeEmmiter.fire()));
+		disposable.add(
+      themeService.onDidProductIconThemeChange(() => onDidChangeEmmiter.fire()),
+    );
 	}
 
 	return {
@@ -65,13 +67,13 @@ export function getIconsStyleSheet(themeService: IThemeService | undefined): IIc
 				for (const l of definition.src) {
 					src.push(css.inline`${css.asCSSUrl(l.location)} format(${css.stringValue(l.format)})`);
 				}
-				rules.push(css.inline`@font-face { src: ${src.join(', ')}; font-family: ${css.stringValue(id)};${fontWeight}${fontStyle} font-display: block; }`);
+				rules.push(css.inline`@font-face { src: ${src.join(", ")}; font-family: ${css.stringValue(id)};${fontWeight}${fontStyle} font-display: block; }`);
 			}
 
-			rules.push(css.inline`:root { ${rootAttribs.join(' ')} }`);
+			rules.push(css.inline`:root { ${rootAttribs.join(" ")} }`);
 
-			return rules.join('\n');
-		}
+			return rules.join("\n");
+		},
 	};
 }
 

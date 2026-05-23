@@ -3,21 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { parse as jsonParse, getNodeType } from '../../../../base/common/json.js';
-import { localize } from '../../../../nls.js';
-import { extname, basename } from '../../../../base/common/path.js';
-import { SnippetParser, Variable, Placeholder, Text } from '../../../../editor/contrib/snippet/browser/snippetParser.js';
-import { KnownSnippetVariableNames } from '../../../../editor/contrib/snippet/browser/snippetVariables.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { ExtensionIdentifier, IExtensionDescription } from '../../../../platform/extensions/common/extensions.js';
-import { IExtensionResourceLoaderService } from '../../../../platform/extensionResourceLoader/common/extensionResourceLoader.js';
-import { relativePath } from '../../../../base/common/resources.js';
-import { isObject } from '../../../../base/common/types.js';
-import { Iterable } from '../../../../base/common/iterator.js';
-import { WindowIdleValue, getActiveWindow } from '../../../../base/browser/dom.js';
-import { match as matchGlob } from '../../../../base/common/glob.js';
-import { Schemas } from '../../../../base/common/network.js';
+import { parse as jsonParse, getNodeType } from "../../../../base/common/json.js";
+import { localize } from "../../../../nls.js";
+import { extname, basename } from "../../../../base/common/path.js";
+import { SnippetParser, Variable, Placeholder, Text } from "../../../../editor/contrib/snippet/browser/snippetParser.js";
+import { KnownSnippetVariableNames } from "../../../../editor/contrib/snippet/browser/snippetVariables.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { ExtensionIdentifier, IExtensionDescription } from "../../../../platform/extensions/common/extensions.js";
+import { IExtensionResourceLoaderService } from "../../../../platform/extensionResourceLoader/common/extensionResourceLoader.js";
+import { relativePath } from "../../../../base/common/resources.js";
+import { isObject } from "../../../../base/common/types.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { WindowIdleValue, getActiveWindow } from "../../../../base/browser/dom.js";
+import { match as matchGlob } from "../../../../base/common/glob.js";
+import { Schemas } from "../../../../base/common/network.js";
 
 class SnippetBodyInsights {
 
@@ -71,17 +71,19 @@ class SnippetBodyInsights {
 					const index = placeholders.has(marker.name) ? placeholders.get(marker.name)! : ++placeholderMax;
 					placeholders.set(marker.name, index);
 
-					const synthetic = new Placeholder(index).appendChild(new Text(marker.name));
+					const synthetic = new Placeholder(index).appendChild(
+            new Text(marker.name),
+          );
 					textmateSnippet.replace(marker, [synthetic]);
 					this.isBogous = true;
 				}
 
 				switch (marker.name) {
-					case 'CLIPBOARD':
+					case "CLIPBOARD":
 						this.usesClipboardVariable = true;
 						break;
-					case 'SELECTION':
-					case 'TM_SELECTED_TEXT':
+					case "SELECTION":
+					case "TM_SELECTED_TEXT":
 						this.usesSelectionVariable = true;
 						break;
 				}
@@ -120,7 +122,10 @@ export class Snippet {
 		readonly extensionId?: ExtensionIdentifier,
 	) {
 		this.prefixLow = prefix.toLowerCase();
-		this._bodyInsights = new WindowIdleValue(getActiveWindow(), () => new SnippetBodyInsights(this.body));
+		this._bodyInsights = new WindowIdleValue(
+      getActiveWindow(),
+      () => new SnippetBodyInsights(this.body),
+    );
 	}
 
 	get codeSnippet(): string {
@@ -148,7 +153,7 @@ export class Snippet {
 		const fileName = basename(uriPath);
 
 		const getMatchTarget = (pattern: string): string => {
-			return pattern.includes('/') ? uriPath : fileName;
+			return pattern.includes("/") ? uriPath : fileName;
 		};
 
 		if (this.exclude) {
@@ -213,7 +218,7 @@ export class SnippetFile {
 		private readonly _fileService: IFileService,
 		private readonly _extensionResourceLoaderService: IExtensionResourceLoaderService,
 	) {
-		this.isGlobalSnippets = extname(location.path) === '.code-snippets';
+		this.isGlobalSnippets = extname(location.path) === ".code-snippets";
 		this.isUserSnippets = !this._extension;
 	}
 
@@ -227,7 +232,7 @@ export class SnippetFile {
 
 	private _filepathSelect(selector: string, bucket: Snippet[]): void {
 		// for `fooLang.json` files apply inclusion/exclusion rules only
-		if (selector + '.json' === basename(this.location.path)) {
+		if (selector + ".json" === basename(this.location.path)) {
 			bucket.push(...this.data);
 		}
 	}
@@ -251,7 +256,7 @@ export class SnippetFile {
 			}
 		}
 
-		const idx = selector.lastIndexOf('.');
+		const idx = selector.lastIndexOf(".");
 		if (idx >= 0) {
 			this._scopeSelect(selector.substring(0, idx), bucket);
 		}
@@ -259,7 +264,9 @@ export class SnippetFile {
 
 	private async _load(): Promise<string> {
 		if (this._extension) {
-			return this._extensionResourceLoaderService.readExtensionResource(this.location);
+			return this._extensionResourceLoaderService.readExtensionResource(
+        this.location,
+      );
 		} else {
 			const content = await this._fileService.readFile(this.location);
 			return content.value.toString();
@@ -270,7 +277,7 @@ export class SnippetFile {
 		if (!this._loadPromise) {
 			this._loadPromise = Promise.resolve(this._load()).then(content => {
 				const data = <JsonSerializedSnippets>jsonParse(content);
-				if (getNodeType(data) === 'object') {
+				if (getNodeType(data) === "object") {
 					for (const [name, scopeOrTemplate] of Object.entries(data)) {
 						if (isJsonSerializedSnippet(scopeOrTemplate)) {
 							this._parseSnippet(name, scopeOrTemplate, this.data);
@@ -297,25 +304,25 @@ export class SnippetFile {
 		let { isFileTemplate, prefix, body, description } = snippet;
 
 		if (!prefix) {
-			prefix = '';
+			prefix = "";
 		}
 
 		if (Array.isArray(body)) {
-			body = body.join('\n');
+			body = body.join("\n");
 		}
-		if (typeof body !== 'string') {
+		if (typeof body !== "string") {
 			return;
 		}
 
 		if (Array.isArray(description)) {
-			description = description.join('\n');
+			description = description.join("\n");
 		}
 
 		let scopes: string[];
 		if (this.defaultScopes) {
 			scopes = this.defaultScopes;
-		} else if (typeof snippet.scope === 'string') {
-			scopes = snippet.scope.split(',').map(s => s.trim()).filter(Boolean);
+		} else if (typeof snippet.scope === "string") {
+			scopes = snippet.scope.split(",").map(s => s.trim()).filter(Boolean);
 		} else {
 			scopes = [];
 		}
@@ -324,7 +331,7 @@ export class SnippetFile {
 		if (snippet.include) {
 			if (Array.isArray(snippet.include)) {
 				include = snippet.include;
-			} else if (typeof snippet.include === 'string') {
+			} else if (typeof snippet.include === "string") {
 				include = [snippet.include];
 			}
 		}
@@ -333,7 +340,7 @@ export class SnippetFile {
 		if (snippet.exclude) {
 			if (Array.isArray(snippet.exclude)) {
 				exclude = snippet.exclude;
-			} else if (typeof snippet.exclude === 'string') {
+			} else if (typeof snippet.exclude === "string") {
 				exclude = [snippet.exclude];
 			}
 		}
@@ -345,13 +352,13 @@ export class SnippetFile {
 
 		} else if (this.source === SnippetSource.Workspace) {
 			// workspace -> only *.code-snippets files
-			source = localize('source.workspaceSnippetGlobal', "Workspace Snippet");
+			source = localize("source.workspaceSnippetGlobal", "Workspace Snippet");
 		} else {
 			// user -> global (*.code-snippets) and language snippets
 			if (this.isGlobalSnippets) {
-				source = localize('source.userSnippetGlobal', "Global User Snippet");
+				source = localize("source.userSnippetGlobal", "Global User Snippet");
 			} else {
-				source = localize('source.userSnippet', "User Snippet");
+				source = localize("source.userSnippet", "User Snippet");
 			}
 		}
 

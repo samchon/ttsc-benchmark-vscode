@@ -3,49 +3,73 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { renderAsPlaintext } from '../../../../base/browser/markdownRenderer.js';
-import { alert } from '../../../../base/browser/ui/aria/aria.js';
-import { onUnexpectedError } from '../../../../base/common/errors.js';
-import { Event } from '../../../../base/common/event.js';
-import { Lazy } from '../../../../base/common/lazy.js';
-import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { autorun, derived, IObservable, observableFromEvent, observableSignalFromEvent, observableValue, waitForState } from '../../../../base/common/observable.js';
-import { isEqual } from '../../../../base/common/resources.js';
-import { assertType } from '../../../../base/common/types.js';
-import { URI } from '../../../../base/common/uri.js';
-import { ICodeEditor } from '../../../../editor/browser/editorBrowser.js';
-import { observableCodeEditor } from '../../../../editor/browser/observableCodeEditor.js';
-import { ICodeEditorService } from '../../../../editor/browser/services/codeEditorService.js';
-import { IPosition, Position } from '../../../../editor/common/core/position.js';
-import { IRange, Range } from '../../../../editor/common/core/range.js';
-import { ISelection, Selection } from '../../../../editor/common/core/selection.js';
-import { IEditorContribution } from '../../../../editor/common/editorCommon.js';
-import { ITextModel } from '../../../../editor/common/model.js';
-import { IMarkerDecorationsService } from '../../../../editor/common/services/markerDecorations.js';
-import { localize } from '../../../../nls.js';
-import { MenuId } from '../../../../platform/actions/common/actions.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { observableConfigValue } from '../../../../platform/observable/common/platformObservableUtils.js';
-import { IEditorService, SIDE_GROUP } from '../../../services/editor/common/editorService.js';
-import { IChatWidgetLocationOptions } from '../../chat/browser/widget/chatWidget.js';
-import { IChatEditingService, ModifiedFileEntryState } from '../../chat/common/editing/chatEditingService.js';
-import { ChatMode } from '../../chat/common/chatModes.js';
-import { IChatService, IChatToolInvocation, ToolConfirmKind } from '../../chat/common/chatService/chatService.js';
-import { IChatRequestVariableEntry, IDiagnosticVariableEntryFilterData } from '../../chat/common/attachments/chatVariableEntries.js';
-import { isResponseVM } from '../../chat/common/model/chatViewModel.js';
-import { ChatAgentLocation } from '../../chat/common/constants.js';
-import { ILanguageModelChatMetadata, ILanguageModelChatSelector, ILanguageModelsService, isILanguageModelChatSelector } from '../../chat/common/languageModels.js';
-import { isNotebookContainingCellEditor as isNotebookWithCellEditor } from '../../notebook/browser/notebookEditor.js';
-import { INotebookEditorService } from '../../notebook/browser/services/notebookEditorService.js';
-import { CellUri } from '../../notebook/common/notebookCommon.js';
-import { CTX_INLINE_CHAT_FILE_BELONGS_TO_CHAT, CTX_INLINE_CHAT_TERMINATED, CTX_INLINE_CHAT_VISIBLE, INLINE_CHAT_ID, InlineChatConfigKeys } from '../common/inlineChat.js';
-import { InlineChatAffordance } from './inlineChatAffordance.js';
-import { continueInPanelChat, IInlineChatSession, IInlineChatSessionService, rephraseInlineChat } from './inlineChatSessionService.js';
-import { EditorBasedInlineChatWidget } from './inlineChatWidget.js';
-import { InlineChatZoneWidget } from './inlineChatZoneWidget.js';
+import { renderAsPlaintext } from "../../../../base/browser/markdownRenderer.js";
+import { alert } from "../../../../base/browser/ui/aria/aria.js";
+import { onUnexpectedError } from "../../../../base/common/errors.js";
+import { Event } from "../../../../base/common/event.js";
+import { Lazy } from "../../../../base/common/lazy.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import {
+  autorun,
+  derived,
+  IObservable,
+  observableFromEvent,
+  observableSignalFromEvent,
+  observableValue,
+  waitForState,
+} from "../../../../base/common/observable.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { assertType } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ICodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { observableCodeEditor } from "../../../../editor/browser/observableCodeEditor.js";
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { IPosition, Position } from "../../../../editor/common/core/position.js";
+import { IRange, Range } from "../../../../editor/common/core/range.js";
+import { ISelection, Selection } from "../../../../editor/common/core/selection.js";
+import { IEditorContribution } from "../../../../editor/common/editorCommon.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+import { IMarkerDecorationsService } from "../../../../editor/common/services/markerDecorations.js";
+import { localize } from "../../../../nls.js";
+import { MenuId } from "../../../../platform/actions/common/actions.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { observableConfigValue } from "../../../../platform/observable/common/platformObservableUtils.js";
+import { IEditorService, SIDE_GROUP } from "../../../services/editor/common/editorService.js";
+import { IChatWidgetLocationOptions } from "../../chat/browser/widget/chatWidget.js";
+import { IChatEditingService, ModifiedFileEntryState } from "../../chat/common/editing/chatEditingService.js";
+import { ChatMode } from "../../chat/common/chatModes.js";
+import { IChatService, IChatToolInvocation, ToolConfirmKind } from "../../chat/common/chatService/chatService.js";
+import { IChatRequestVariableEntry, IDiagnosticVariableEntryFilterData } from "../../chat/common/attachments/chatVariableEntries.js";
+import { isResponseVM } from "../../chat/common/model/chatViewModel.js";
+import { ChatAgentLocation } from "../../chat/common/constants.js";
+import {
+  ILanguageModelChatMetadata,
+  ILanguageModelChatSelector,
+  ILanguageModelsService,
+  isILanguageModelChatSelector,
+} from "../../chat/common/languageModels.js";
+import { isNotebookContainingCellEditor as isNotebookWithCellEditor } from "../../notebook/browser/notebookEditor.js";
+import { INotebookEditorService } from "../../notebook/browser/services/notebookEditorService.js";
+import { CellUri } from "../../notebook/common/notebookCommon.js";
+import {
+  CTX_INLINE_CHAT_FILE_BELONGS_TO_CHAT,
+  CTX_INLINE_CHAT_TERMINATED,
+  CTX_INLINE_CHAT_VISIBLE,
+  INLINE_CHAT_ID,
+  InlineChatConfigKeys,
+} from "../common/inlineChat.js";
+import { InlineChatAffordance } from "./inlineChatAffordance.js";
+import {
+  continueInPanelChat,
+  IInlineChatSession,
+  IInlineChatSessionService,
+  rephraseInlineChat,
+} from "./inlineChatSessionService.js";
+import { EditorBasedInlineChatWidget } from "./inlineChatWidget.js";
+import { InlineChatZoneWidget } from "./inlineChatZoneWidget.js";
 
 export abstract class InlineChatRunOptions {
 
@@ -61,21 +85,27 @@ export abstract class InlineChatRunOptions {
 
 	static isInlineChatRunOptions(options: unknown): options is InlineChatRunOptions {
 
-		if (typeof options !== 'object' || options === null) {
+		if (typeof options !== "object" || options === null) {
 			return false;
 		}
 
 		const { initialSelection, initialRange, message, autoSend, position, attachments, modelSelector, resolveOnResponse, attachDiagnostics } = <InlineChatRunOptions>options;
 		if (
-			typeof message !== 'undefined' && typeof message !== 'string'
-			|| typeof autoSend !== 'undefined' && typeof autoSend !== 'boolean'
-			|| typeof initialRange !== 'undefined' && !Range.isIRange(initialRange)
-			|| typeof initialSelection !== 'undefined' && !Selection.isISelection(initialSelection)
-			|| typeof position !== 'undefined' && !Position.isIPosition(position)
-			|| typeof attachments !== 'undefined' && (!Array.isArray(attachments) || !attachments.every(item => item instanceof URI))
-			|| typeof modelSelector !== 'undefined' && !isILanguageModelChatSelector(modelSelector)
-			|| typeof resolveOnResponse !== 'undefined' && typeof resolveOnResponse !== 'boolean'
-			|| typeof attachDiagnostics !== 'undefined' && typeof attachDiagnostics !== 'boolean'
+			typeof message !== "undefined" && typeof message !== "string"
+			|| typeof autoSend !== "undefined" && typeof autoSend !== "boolean"
+			|| typeof initialRange !== "undefined" && !Range.isIRange(initialRange)
+			|| typeof initialSelection !== "undefined" && !Selection.isISelection(
+        initialSelection,
+      )
+			|| typeof position !== "undefined" && !Position.isIPosition(position)
+			|| typeof attachments !== "undefined" && (!Array.isArray(
+        attachments,
+      ) || !attachments.every(item => item instanceof URI))
+			|| typeof modelSelector !== "undefined" && !isILanguageModelChatSelector(
+        modelSelector,
+      )
+			|| typeof resolveOnResponse !== "undefined" && typeof resolveOnResponse !== "boolean"
+			|| typeof attachDiagnostics !== "undefined" && typeof attachDiagnostics !== "boolean"
 		) {
 			return false;
 		}
@@ -94,7 +124,9 @@ export class InlineChatController implements IEditorContribution {
 	static readonly ID = INLINE_CHAT_ID;
 
 	static get(editor: ICodeEditor): InlineChatController | undefined {
-		return editor.getContribution<InlineChatController>(InlineChatController.ID) ?? undefined;
+		return editor.getContribution<InlineChatController>(
+      InlineChatController.ID,
+    ) ?? undefined;
 	}
 
 	/**
@@ -159,10 +191,18 @@ export class InlineChatController implements IEditorContribution {
 
 		const editorObs = observableCodeEditor(editor);
 
-		const ctxInlineChatVisible = CTX_INLINE_CHAT_VISIBLE.bindTo(contextKeyService);
-		const ctxFileBelongsToChat = CTX_INLINE_CHAT_FILE_BELONGS_TO_CHAT.bindTo(contextKeyService);
+		const ctxInlineChatVisible = CTX_INLINE_CHAT_VISIBLE.bindTo(
+      contextKeyService,
+    );
+		const ctxFileBelongsToChat = CTX_INLINE_CHAT_FILE_BELONGS_TO_CHAT.bindTo(
+      contextKeyService,
+    );
 		const ctxTerminated = CTX_INLINE_CHAT_TERMINATED.bindTo(contextKeyService);
-		const notebookAgentConfig = observableConfigValue(InlineChatConfigKeys.NotebookAgent, false, this.#configurationService);
+		const notebookAgentConfig = observableConfigValue(
+      InlineChatConfigKeys.NotebookAgent,
+      false,
+      this.#configurationService,
+    );
 
 		// Track whether the current editor's file is being edited by any chat editing session
 		this.#store.add(autorun(r => {
@@ -188,11 +228,13 @@ export class InlineChatController implements IEditorContribution {
 			ctxFileBelongsToChat.set(hasEdits);
 		}));
 
-		this.inputOverlayWidget = this.#store.add(this.#instaService.createInstance(InlineChatAffordance, this.#editor));
+		this.inputOverlayWidget = this.#store.add(
+      this.#instaService.createInstance(InlineChatAffordance, this.#editor),
+    );
 
 		this.#zone = new Lazy<InlineChatZoneWidget>(() => {
 
-			assertType(this.#editor.hasModel(), '[Illegal State] widget should only be created when the editor has a model');
+			assertType(this.#editor.hasModel(), "[Illegal State] widget should only be created when the editor has a model");
 
 			const location: IChatWidgetLocationOptions = {
 				location: ChatAgentLocation.EditorInline,
@@ -206,9 +248,9 @@ export class InlineChatController implements IEditorContribution {
 						id: getEditorId(this.#editor, this.#editor.getModel()),
 						selection: this.#editor.getSelection(),
 						document,
-						wholeRange
+						wholeRange,
 					};
-				}
+				},
 			};
 
 			// inline chat in notebooks
@@ -232,7 +274,7 @@ export class InlineChatController implements IEditorContribution {
 			const result = this.#instaService.createInstance(InlineChatZoneWidget,
 				location,
 				{
-					enableWorkingSet: 'implicit',
+					enableWorkingSet: "implicit",
 					enableImplicitContext: false,
 					renderInputOnTop: false,
 					renderInputToolbarBelowInput: true,
@@ -243,11 +285,11 @@ export class InlineChatController implements IEditorContribution {
 						return !!item.model.isPendingConfirmation.get();
 					},
 					menus: {
-						telemetrySource: 'inlineChatWidget',
+						telemetrySource: "inlineChatWidget",
 						executeToolbar: MenuId.ChatEditorInlineExecute,
-						inputSideToolbar: MenuId.ChatEditorInlineInputSide
+						inputSideToolbar: MenuId.ChatEditorInlineInputSide,
 					},
-					defaultMode: ChatMode.Ask
+					defaultMode: ChatMode.Ask,
 				},
 				{ editor: this.#editor, notebookEditor },
 				() => Promise.resolve(),
@@ -255,19 +297,22 @@ export class InlineChatController implements IEditorContribution {
 
 			this.#store.add(result);
 
-			result.domNode.classList.add('inline-chat-2');
+			result.domNode.classList.add("inline-chat-2");
 
 			return result;
 		});
 
-		const sessionsSignal = observableSignalFromEvent(this, inlineChatSessionService.onDidChangeSessions);
+		const sessionsSignal = observableSignalFromEvent(
+      this,
+      inlineChatSessionService.onDidChangeSessions,
+    );
 
 		this.#currentSession = derived(r => {
-			sessionsSignal.read(r);
-			const model = editorObs.model.read(r);
-			const session = model && inlineChatSessionService.getSessionByTextModel(model.uri);
-			return session ?? undefined;
-		});
+      sessionsSignal.read(r);
+      const model = editorObs.model.read(r);
+      const session = model && inlineChatSessionService.getSessionByTextModel(model.uri);
+      return session ?? undefined;
+    });
 
 
 		let lastSession: IInlineChatSession | undefined = undefined;
@@ -302,7 +347,10 @@ export class InlineChatController implements IEditorContribution {
 			}
 		}));
 
-		const visibleSessionObs = observableValue<IInlineChatSession | undefined>(this, undefined);
+		const visibleSessionObs = observableValue<IInlineChatSession | undefined>(
+      this,
+      undefined,
+    );
 
 		this.#store.add(autorun(r => {
 
@@ -319,14 +367,16 @@ export class InlineChatController implements IEditorContribution {
 
 		const defaultPlaceholderObs = visibleSessionObs.map((session, r) => {
 			return session?.initialSelection.isEmpty()
-				? localize('placeholder', "Generate code")
-				: localize('placeholderWithSelection', "Modify selected code");
+				? localize("placeholder", "Generate code")
+				: localize("placeholderWithSelection", "Modify selected code");
 		});
 
-		this.#store.add(autorun(r => {
-			const session = visibleSessionObs.read(r);
-			ctxTerminated.set(!!session?.terminationState.read(r));
-		}));
+		this.#store.add(
+      autorun(r => {
+        const session = visibleSessionObs.read(r);
+        ctxTerminated.set(!!session?.terminationState.read(r));
+      }),
+    );
 
 
 		this.#store.add(autorun(r => {
@@ -363,10 +413,10 @@ export class InlineChatController implements IEditorContribution {
 			const response = lastRequest?.response;
 			const pending = response?.isPendingConfirmation.read(r);
 			if (pending) {
-				this.#logService.info(`[InlineChat] auto-approving: ${pending.detail ?? 'unknown'}`);
+				this.#logService.info(`[InlineChat] auto-approving: ${pending.detail ?? "unknown"}`);
 				for (const part of response!.response.value) {
-					if (part.kind === 'toolInvocation') {
-						IChatToolInvocation.confirmWith(part as IChatToolInvocation, { type: ToolConfirmKind.ConfirmationNotNeeded, reason: 'inlineChat' });
+					if (part.kind === "toolInvocation") {
+						IChatToolInvocation.confirmWith(part as IChatToolInvocation, { type: ToolConfirmKind.ConfirmationNotNeeded, reason: "inlineChat" });
 					}
 				}
 			}
@@ -407,7 +457,7 @@ export class InlineChatController implements IEditorContribution {
 			if (!response) {
 				return;
 			}
-			return observableFromEvent(this, response.onDidChange, () => response.response.value.findLast(part => part.kind === 'progressMessage')).read(r);
+			return observableFromEvent(this, response.onDidChange, () => response.response.value.findLast(part => part.kind === "progressMessage")).read(r);
 		});
 
 
@@ -416,11 +466,11 @@ export class InlineChatController implements IEditorContribution {
 			const response = lastResponseObs.read(r);
 			const terminationState = session?.terminationState.read(r);
 
-			this.#zone.rawValue?.widget.updateInfo('');
+			this.#zone.rawValue?.widget.updateInfo("");
 
 			if (!response?.isInProgress.read(r)) {
 
-				this.#zone.rawValue?.status.set(response?.result?.details ?? '', undefined);
+				this.#zone.rawValue?.status.set(response?.result?.details ?? "", undefined);
 
 				if (response?.result?.errorDetails) {
 					// ERROR case
@@ -435,18 +485,18 @@ export class InlineChatController implements IEditorContribution {
 				}
 
 				// no response or not in progress
-				this.#zone.rawValue?.widget.domNode.classList.toggle('request-in-progress', false);
+				this.#zone.rawValue?.widget.domNode.classList.toggle("request-in-progress", false);
 				this.#zone.rawValue?.widget.chatWidget.setInputPlaceholder(defaultPlaceholderObs.read(r));
 
 			} else {
-				this.#zone.rawValue?.widget.domNode.classList.toggle('request-in-progress', true);
-				this.#zone.rawValue?.status.set('', undefined);
+				this.#zone.rawValue?.widget.domNode.classList.toggle("request-in-progress", true);
+				this.#zone.rawValue?.status.set("", undefined);
 				let placeholder = response.request?.message.text;
 				const lastProgress = lastResponseProgressObs.read(r);
 				if (lastProgress) {
 					placeholder = renderAsPlaintext(lastProgress.content);
 				}
-				this.#zone.rawValue?.widget.chatWidget.setInputPlaceholder(placeholder || localize('loading', "Working..."));
+				this.#zone.rawValue?.widget.chatWidget.setInputPlaceholder(placeholder || localize("loading", "Working..."));
 			}
 
 		}));
@@ -506,7 +556,9 @@ export class InlineChatController implements IEditorContribution {
 		assertType(this.#editor.hasModel());
 		const uri = this.#editor.getModel().uri;
 
-		const existingSession = this.#inlineChatSessionService.getSessionByTextModel(uri);
+		const existingSession = this.#inlineChatSessionService.getSessionByTextModel(
+      uri,
+    );
 		if (existingSession) {
 			await existingSession.editingSession.accept();
 			existingSession.dispose();
@@ -538,20 +590,28 @@ export class InlineChatController implements IEditorContribution {
 			// ADD diagnostics (only when explicitly requested)
 			if (arg?.attachDiagnostics) {
 				const entries: IChatRequestVariableEntry[] = [];
-				for (const [range, marker] of this.#markerDecorationsService.getLiveMarkers(uri)) {
+				for (const [range, marker] of this.#markerDecorationsService.getLiveMarkers(
+          uri,
+        )) {
 					if (range.intersectRanges(this.#editor.getSelection())) {
-						const filter = IDiagnosticVariableEntryFilterData.fromMarker(marker);
+						const filter = IDiagnosticVariableEntryFilterData.fromMarker(
+              marker,
+            );
 						entries.push(IDiagnosticVariableEntryFilterData.toEntry(filter));
 					}
 				}
 				if (entries.length > 0) {
-					this.#zone.value.widget.chatWidget.attachmentModel.addContext(...entries);
+					this.#zone.value.widget.chatWidget.attachmentModel.addContext(
+            ...entries,
+          );
 					const msg = entries.length > 1
-						? localize('fixN', "Fix the attached problems")
-						: localize('fix1', "Fix the attached problem");
+						? localize("fixN", "Fix the attached problems")
+						: localize("fix1", "Fix the attached problem");
 					this.#zone.value.widget.chatWidget.input.setValue(msg, true);
 					arg.message = msg;
-					this.#zone.value.widget.chatWidget.inputEditor.setSelection(new Selection(1, 1, Number.MAX_SAFE_INTEGER, 1));
+					this.#zone.value.widget.chatWidget.inputEditor.setSelection(
+            new Selection(1, 1, Number.MAX_SAFE_INTEGER, 1),
+          );
 				}
 			}
 
@@ -570,15 +630,22 @@ export class InlineChatController implements IEditorContribution {
 					delete arg.attachments;
 				}
 				if (arg.modelSelector) {
-					const id = (await this.#languageModelService.selectLanguageModels(arg.modelSelector)).sort().at(0);
+					const id = (await this.#languageModelService.selectLanguageModels(arg.modelSelector)).sort().at(
+            0,
+          );
 					if (!id) {
-						throw new Error(`No language models found matching selector: ${JSON.stringify(arg.modelSelector)}.`);
+						throw new Error(
+              `No language models found matching selector: ${JSON.stringify(arg.modelSelector)}.`,
+            );
 					}
 					const model = this.#languageModelService.lookupLanguageModel(id);
 					if (!model) {
 						throw new Error(`Language model not loaded: ${id}.`);
 					}
-					this.#zone.value.widget.chatWidget.input.setCurrentLanguageModel({ metadata: model, identifier: id });
+					this.#zone.value.widget.chatWidget.input.setCurrentLanguageModel({
+            metadata: model,
+            identifier: id,
+          });
 				}
 				if (arg.message) {
 					this.#zone.value.widget.chatWidget.setInput(arg.message);
@@ -597,9 +664,9 @@ export class InlineChatController implements IEditorContribution {
 			} else {
 				// resolveOnResponse: ONLY wait for the file to be modified
 				const modifiedObs = derived(r => {
-					const entry = session.editingSession.readEntry(uri, r);
-					return entry?.state.read(r) === ModifiedFileEntryState.Modified && !entry?.isCurrentlyBeingModifiedBy.read(r);
-				});
+          const entry = session.editingSession.readEntry(uri, r);
+          return entry?.state.read(r) === ModifiedFileEntryState.Modified && !entry?.isCurrentlyBeingModifiedBy.read(r);
+        });
 				await waitForState(modifiedObs, state => state === true);
 				return true;
 			}
@@ -622,7 +689,10 @@ export class InlineChatController implements IEditorContribution {
 		if (!session) {
 			return;
 		}
-		await this.#chatService.cancelCurrentRequestForSession(session.chatModel.sessionResource, 'inlineChatReject');
+		await this.#chatService.cancelCurrentRequestForSession(
+      session.chatModel.sessionResource,
+      "inlineChatReject",
+    );
 		await session.editingSession.reject();
 		session.dispose();
 	}
@@ -644,7 +714,10 @@ export class InlineChatController implements IEditorContribution {
 
 		// Clear termination state and restore input text in the chat widget.
 		// The autorun watching terminationState will flip the card back automatically.
-		const requestText = this.#instaService.invokeFunction(rephraseInlineChat, session);
+		const requestText = this.#instaService.invokeFunction(
+      rephraseInlineChat,
+      session,
+    );
 		if (requestText) {
 			this.#zone.rawValue?.widget.chatWidget.setInput(requestText);
 		}
@@ -654,11 +727,18 @@ export class InlineChatController implements IEditorContribution {
 	async #selectVendorDefaultModel(session: IInlineChatSession): Promise<void> {
 		const model = this.#zone.value.widget.chatWidget.input.selectedLanguageModel.get();
 		if (model && !model.metadata.isDefaultForLocation[session.chatModel.initialLocation]) {
-			const ids = await this.#languageModelService.selectLanguageModels({ vendor: model.metadata.vendor });
+			const ids = await this.#languageModelService.selectLanguageModels({
+        vendor: model.metadata.vendor,
+      });
 			for (const identifier of ids) {
-				const candidate = this.#languageModelService.lookupLanguageModel(identifier);
+				const candidate = this.#languageModelService.lookupLanguageModel(
+          identifier,
+        );
 				if (candidate?.isDefaultForLocation[session.chatModel.initialLocation]) {
-					this.#zone.value.widget.chatWidget.input.setCurrentLanguageModel({ metadata: candidate, identifier });
+					this.#zone.value.widget.chatWidget.input.setCurrentLanguageModel({
+            metadata: candidate,
+            identifier,
+          });
 					break;
 				}
 			}
@@ -671,13 +751,17 @@ export class InlineChatController implements IEditorContribution {
 	 */
 	async #applyModelDefaults(session: IInlineChatSession, sessionStore: DisposableStore): Promise<void> {
 		const userSelectedModel = InlineChatController.#userSelectedModel;
-		const defaultModelSetting = this.#configurationService.getValue<string>(InlineChatConfigKeys.DefaultModel);
+		const defaultModelSetting = this.#configurationService.getValue<string>(
+      InlineChatConfigKeys.DefaultModel,
+    );
 
 		let modelApplied = false;
 
 		// 1. Try user's explicitly chosen model from a previous inline chat in the same session
 		if (userSelectedModel) {
-			modelApplied = this.#zone.value.widget.chatWidget.input.switchModelByQualifiedName([userSelectedModel]);
+			modelApplied = this.#zone.value.widget.chatWidget.input.switchModelByQualifiedName(
+        [userSelectedModel],
+      );
 			if (!modelApplied) {
 				// User's previously selected model is no longer available, clear it
 				InlineChatController.#userSelectedModel = undefined;
@@ -686,9 +770,13 @@ export class InlineChatController implements IEditorContribution {
 
 		// 2. Try inlineChat.defaultModel setting
 		if (!modelApplied && defaultModelSetting) {
-			modelApplied = this.#zone.value.widget.chatWidget.input.switchModelByQualifiedName([defaultModelSetting]);
+			modelApplied = this.#zone.value.widget.chatWidget.input.switchModelByQualifiedName(
+        [defaultModelSetting],
+      );
 			if (!modelApplied) {
-				this.#logService.warn(`inlineChat.defaultModel setting value '${defaultModelSetting}' did not match any available model. Falling back to vendor default.`);
+				this.#logService.warn(
+          `inlineChat.defaultModel setting value '${defaultModelSetting}' did not match any available model. Falling back to vendor default.`,
+        );
 			}
 		}
 

@@ -3,49 +3,81 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './media/browser.css';
-import { localize } from '../../../../nls.js';
-import { $, addDisposableListener, Dimension, EventType, IDomPosition, registerExternalFocusChecker } from '../../../../base/browser/dom.js';
-import { ButtonBar } from '../../../../base/browser/ui/button/button.js';
-import { defaultButtonStyles } from '../../../../platform/theme/browser/defaultStyles.js';
-import { renderIcon } from '../../../../base/browser/ui/iconLabel/iconLabels.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { RawContextKey, IContextKey, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { MenuId } from '../../../../platform/actions/common/actions.js';
-import { IInstantiationService, IConstructorSignature, BrandedService } from '../../../../platform/instantiation/common/instantiation.js';
-import { ServiceCollection } from '../../../../platform/instantiation/common/serviceCollection.js';
-import { EditorPane } from '../../../browser/parts/editor/editorPane.js';
-import { IEditorOpenContext } from '../../../common/editor.js';
-import { BrowserEditorInput } from '../common/browserEditorInput.js';
-import { IBrowserViewModel } from '../../browserView/common/browserView.js';
-import { IThemeService } from '../../../../platform/theme/common/themeService.js';
-import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
-import { IStorageService } from '../../../../platform/storage/common/storage.js';
-import { IBrowserViewKeyDownEvent, IBrowserViewNavigationEvent, IBrowserViewLoadError, IBrowserViewCertificateError } from '../../../../platform/browserView/common/browserView.js';
-import { IEditorGroup } from '../../../services/editor/common/editorGroupsService.js';
-import { IEditorOptions } from '../../../../platform/editor/common/editor.js';
-import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
-import { isMacintosh, isLinux } from '../../../../base/common/platform.js';
-import { StandardKeyboardEvent } from '../../../../base/browser/keyboardEvent.js';
-import { BrowserOverlayManager, BrowserOverlayType, IBrowserOverlayInfo } from './overlayManager.js';
-import { getZoomFactor, onDidChangeZoomLevel } from '../../../../base/browser/browser.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { Disposable, DisposableStore, MutableDisposable } from '../../../../base/common/lifecycle.js';
-import { WorkbenchHoverDelegate } from '../../../../platform/hover/browser/hover.js';
-import { HoverPosition } from '../../../../base/browser/ui/hover/hoverWidget.js';
-import { MenuWorkbenchToolBar } from '../../../../platform/actions/browser/toolbar.js';
-import { ChatContextKeys } from '../../chat/common/actions/chatContextKeys.js';
-import { Codicon } from '../../../../base/common/codicons.js';
-import { encodeBase64, VSBuffer } from '../../../../base/common/buffer.js';
-import { SiteInfoWidget } from './siteInfoWidget.js';
-import { Emitter } from '../../../../base/common/event.js';
-import { ILayoutService } from '../../../../platform/layout/browser/layoutService.js';
+import "./media/browser.css";
+import { localize } from "../../../../nls.js";
+import {
+  $,
+  addDisposableListener,
+  Dimension,
+  EventType,
+  IDomPosition,
+  registerExternalFocusChecker,
+} from "../../../../base/browser/dom.js";
+import { ButtonBar } from "../../../../base/browser/ui/button/button.js";
+import { defaultButtonStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { renderIcon } from "../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { RawContextKey, IContextKey, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { MenuId } from "../../../../platform/actions/common/actions.js";
+import { IInstantiationService, IConstructorSignature, BrandedService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ServiceCollection } from "../../../../platform/instantiation/common/serviceCollection.js";
+import { EditorPane } from "../../../browser/parts/editor/editorPane.js";
+import { IEditorOpenContext } from "../../../common/editor.js";
+import { BrowserEditorInput } from "../common/browserEditorInput.js";
+import { IBrowserViewModel } from "../../browserView/common/browserView.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import {
+  IBrowserViewKeyDownEvent,
+  IBrowserViewNavigationEvent,
+  IBrowserViewLoadError,
+  IBrowserViewCertificateError,
+} from "../../../../platform/browserView/common/browserView.js";
+import { IEditorGroup } from "../../../services/editor/common/editorGroupsService.js";
+import { IEditorOptions } from "../../../../platform/editor/common/editor.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { isMacintosh, isLinux } from "../../../../base/common/platform.js";
+import { StandardKeyboardEvent } from "../../../../base/browser/keyboardEvent.js";
+import { BrowserOverlayManager, BrowserOverlayType, IBrowserOverlayInfo } from "./overlayManager.js";
+import { getZoomFactor, onDidChangeZoomLevel } from "../../../../base/browser/browser.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { WorkbenchHoverDelegate } from "../../../../platform/hover/browser/hover.js";
+import { HoverPosition } from "../../../../base/browser/ui/hover/hoverWidget.js";
+import { MenuWorkbenchToolBar } from "../../../../platform/actions/browser/toolbar.js";
+import { ChatContextKeys } from "../../chat/common/actions/chatContextKeys.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { encodeBase64, VSBuffer } from "../../../../base/common/buffer.js";
+import { SiteInfoWidget } from "./siteInfoWidget.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { ILayoutService } from "../../../../platform/layout/browser/layoutService.js";
 
-export const CONTEXT_BROWSER_CAN_GO_BACK = new RawContextKey<boolean>('browserCanGoBack', false, localize('browser.canGoBack', "Whether the browser can go back"));
-export const CONTEXT_BROWSER_CAN_GO_FORWARD = new RawContextKey<boolean>('browserCanGoForward', false, localize('browser.canGoForward', "Whether the browser can go forward"));
-export const CONTEXT_BROWSER_FOCUSED = new RawContextKey<boolean>('browserFocused', true, localize('browser.editorFocused', "Whether the browser editor is focused"));
-export const CONTEXT_BROWSER_HAS_URL = new RawContextKey<boolean>('browserHasUrl', false, localize('browser.hasUrl', "Whether the browser has a URL loaded"));
-export const CONTEXT_BROWSER_HAS_ERROR = new RawContextKey<boolean>('browserHasError', false, localize('browser.hasError', "Whether the browser has a load error"));
+export const CONTEXT_BROWSER_CAN_GO_BACK = new RawContextKey<boolean>(
+  "browserCanGoBack",
+  false,
+  localize("browser.canGoBack", "Whether the browser can go back"),
+);
+export const CONTEXT_BROWSER_CAN_GO_FORWARD = new RawContextKey<boolean>(
+  "browserCanGoForward",
+  false,
+  localize("browser.canGoForward", "Whether the browser can go forward"),
+);
+export const CONTEXT_BROWSER_FOCUSED = new RawContextKey<boolean>(
+  "browserFocused",
+  true,
+  localize("browser.editorFocused", "Whether the browser editor is focused"),
+);
+export const CONTEXT_BROWSER_HAS_URL = new RawContextKey<boolean>(
+  "browserHasUrl",
+  false,
+  localize("browser.hasUrl", "Whether the browser has a URL loaded"),
+);
+export const CONTEXT_BROWSER_HAS_ERROR = new RawContextKey<boolean>(
+  "browserHasError",
+  false,
+  localize("browser.hasError", "Whether the browser has a load error"),
+);
 
 /**
  * Get the original implementation of HTMLElement focus (without window auto-focusing)
@@ -163,25 +195,25 @@ class BrowserNavigationBar extends Disposable {
 		editor: BrowserEditor,
 		container: HTMLElement,
 		instantiationService: IInstantiationService,
-		scopedContextKeyService: IContextKeyService
+		scopedContextKeyService: IContextKeyService,
 	) {
 		super();
 
 		// Create hover delegate for toolbar buttons
 		const hoverDelegate = this._register(
-			instantiationService.createInstance(
-				WorkbenchHoverDelegate,
-				'element',
-				undefined,
-				{ position: { hoverPosition: HoverPosition.ABOVE } }
-			)
-		);
+      instantiationService.createInstance(
+        WorkbenchHoverDelegate,
+        "element",
+        undefined,
+        { position: { hoverPosition: HoverPosition.ABOVE } },
+      ),
+    );
 
 		// Create navigation toolbar (left side) with scoped context
-		const navContainer = $('.browser-nav-toolbar');
-		const scopedInstantiationService = instantiationService.createChild(new ServiceCollection(
-			[IContextKeyService, scopedContextKeyService]
-		));
+		const navContainer = $(".browser-nav-toolbar");
+		const scopedInstantiationService = instantiationService.createChild(
+      new ServiceCollection([IContextKeyService, scopedContextKeyService]),
+    );
 		const navToolbar = this._register(scopedInstantiationService.createInstance(
 			MenuWorkbenchToolBar,
 			navContainer,
@@ -191,42 +223,47 @@ class BrowserNavigationBar extends Disposable {
 				highlightToggledItems: true,
 				// Render all actions inline regardless of group
 				toolbarOptions: { primaryGroup: () => true, useSeparatorsInPrimaryActions: true },
-				menuOptions: { shouldForwardArgs: true }
-			}
+				menuOptions: { shouldForwardArgs: true },
+			},
 		));
 
 		// URL input container (wraps input + share toggle)
-		const urlContainer = $('.browser-url-container');
+		const urlContainer = $(".browser-url-container");
 
 		// Site info widget (inside URL bar, left side, hidden by default)
-		const siteInfoContainer = $('.browser-site-info-slot');
-		this._siteInfoWidget = this._register(instantiationService.createInstance(
-			SiteInfoWidget,
-			siteInfoContainer,
-			editor
-		));
+		const siteInfoContainer = $(".browser-site-info-slot");
+		this._siteInfoWidget = this._register(
+      instantiationService.createInstance(
+        SiteInfoWidget,
+        siteInfoContainer,
+        editor,
+      ),
+    );
 
 		// URL input (hidden by default; shown when user clicks the display)
-		this._urlInput = $<HTMLInputElement>('input.browser-url-input');
-		this._urlInput.type = 'text';
-		this._urlInput.placeholder = localize('browser.urlPlaceholder', "Enter a URL");
-		this._urlInput.style.display = 'none';
+		this._urlInput = $<HTMLInputElement>("input.browser-url-input");
+		this._urlInput.type = "text";
+		this._urlInput.placeholder = localize(
+      "browser.urlPlaceholder",
+      "Enter a URL",
+    );
+		this._urlInput.style.display = "none";
 
 		// URL display — shows the URL when not editing; clickable to switch to input
-		const urlInputWrapper = $('.browser-url-input-wrapper');
-		this._urlDisplay = $('span.browser-url-display');
+		const urlInputWrapper = $(".browser-url-input-wrapper");
+		this._urlDisplay = $("span.browser-url-display");
 		this._urlDisplay.tabIndex = 0;
 		urlInputWrapper.appendChild(this._urlDisplay);
 		urlInputWrapper.appendChild(this._urlInput);
 
-		this._urlBarWidgetsContainer = $('.browser-url-bar-widgets');
+		this._urlBarWidgetsContainer = $(".browser-url-bar-widgets");
 
 		urlContainer.appendChild(siteInfoContainer);
 		urlContainer.appendChild(urlInputWrapper);
 		urlContainer.appendChild(this._urlBarWidgetsContainer);
 
 		// Create actions toolbar (right side) with scoped context
-		const actionsContainer = $('.browser-actions-toolbar');
+		const actionsContainer = $(".browser-actions-toolbar");
 		const actionsToolbar = this._register(scopedInstantiationService.createInstance(
 			MenuWorkbenchToolBar,
 			actionsContainer,
@@ -234,9 +271,9 @@ class BrowserNavigationBar extends Disposable {
 			{
 				hoverDelegate,
 				highlightToggledItems: true,
-				toolbarOptions: { primaryGroup: (group) => group.startsWith('actions'), useSeparatorsInPrimaryActions: true },
-				menuOptions: { shouldForwardArgs: true }
-			}
+				toolbarOptions: { primaryGroup: (group) => group.startsWith("actions"), useSeparatorsInPrimaryActions: true },
+				menuOptions: { shouldForwardArgs: true },
+			},
 		));
 
 		navToolbar.context = editor;
@@ -249,7 +286,7 @@ class BrowserNavigationBar extends Disposable {
 
 		// Setup URL input handler
 		this._register(addDisposableListener(this._urlInput, EventType.KEY_DOWN, (e: KeyboardEvent) => {
-			if (e.key === 'Enter') {
+			if (e.key === "Enter") {
 				const url = this._urlInput.value.trim();
 				if (url) {
 					editor.navigateToUrl(url);
@@ -258,17 +295,23 @@ class BrowserNavigationBar extends Disposable {
 		}));
 
 		// Select all URL bar text when the URL bar receives focus (like in regular browsers)
-		this._register(addDisposableListener(this._urlInput, EventType.FOCUS, () => {
-			this._urlInput.select();
-		}));
+		this._register(
+      addDisposableListener(this._urlInput, EventType.FOCUS, () => {
+        this._urlInput.select();
+      }),
+    );
 
 		// Switch back to display mode when the URL bar loses focus
-		this._register(addDisposableListener(this._urlInput, EventType.BLUR, () => {
-			this._showDisplay();
-		}));
-		this._register(addDisposableListener(this._urlDisplay, EventType.FOCUS, () => {
-			this._showInput();
-		}));
+		this._register(
+      addDisposableListener(this._urlInput, EventType.BLUR, () => {
+        this._showDisplay();
+      }),
+    );
+		this._register(
+      addDisposableListener(this._urlDisplay, EventType.FOCUS, () => {
+        this._showInput();
+      }),
+    );
 	}
 
 	/**
@@ -291,7 +334,7 @@ class BrowserNavigationBar extends Disposable {
 	 */
 	setCertificateError(certError: IBrowserViewCertificateError | undefined): void {
 		this._siteInfoWidget.setCertificateError(certError);
-		this._urlInput.classList.toggle('cert-error', !!certError);
+		this._urlInput.classList.toggle("cert-error", !!certError);
 		this._updateDisplay();
 	}
 
@@ -299,8 +342,8 @@ class BrowserNavigationBar extends Disposable {
 	 * Switch to input-editing mode: hide display, show and focus input.
 	 */
 	private _showInput(): void {
-		this._urlDisplay.style.display = 'none';
-		this._urlInput.style.display = '';
+		this._urlDisplay.style.display = "none";
+		this._urlInput.style.display = "";
 		this._urlInput.select();
 		this._urlInput.focus();
 	}
@@ -319,8 +362,8 @@ class BrowserNavigationBar extends Disposable {
 	 * Switch to display mode: hide the input and show the styled display.
 	 */
 	private _showDisplay(): void {
-		this._urlInput.style.display = 'none';
-		this._urlDisplay.style.display = '';
+		this._urlInput.style.display = "none";
+		this._urlDisplay.style.display = "";
 		this._updateDisplay();
 	}
 
@@ -331,29 +374,32 @@ class BrowserNavigationBar extends Disposable {
 	 */
 	private _updateDisplay(): void {
 		const url = this._urlInput.value;
-		const hasCertError = this._urlInput.classList.contains('cert-error');
-		const httpsPrefix = 'https:';
+		const hasCertError = this._urlInput.classList.contains("cert-error");
+		const httpsPrefix = "https:";
 
 		// Clear previous content
-		this._urlDisplay.textContent = '';
-		this._urlDisplay.classList.toggle('placeholder', !url);
+		this._urlDisplay.textContent = "";
+		this._urlDisplay.classList.toggle("placeholder", !url);
 
 		if (hasCertError && url.startsWith(httpsPrefix)) {
-			const protocol = document.createElement('span');
-			protocol.className = 'browser-url-display-protocol-bad';
+			const protocol = document.createElement("span");
+			protocol.className = "browser-url-display-protocol-bad";
 			protocol.textContent = httpsPrefix;
 			this._urlDisplay.appendChild(protocol);
 
-			const rest = document.createElement('span');
+			const rest = document.createElement("span");
 			rest.textContent = url.slice(httpsPrefix.length);
 			this._urlDisplay.appendChild(rest);
 		} else {
-			this._urlDisplay.textContent = url || localize('browser.urlPlaceholder', "Enter a URL");
+			this._urlDisplay.textContent = url || localize(
+        "browser.urlPlaceholder",
+        "Enter a URL",
+      );
 		}
 	}
 
 	clear(): void {
-		this._urlInput.value = '';
+		this._urlInput.value = "";
 		this._siteInfoWidget.setCertificateError(undefined);
 		this._updateDisplay();
 	}
@@ -365,22 +411,28 @@ export class BrowserEditor extends EditorPane {
 
 	private static readonly _contributions: IConstructorSignature<BrowserEditorContribution, [BrowserEditor]>[] = [];
 	static registerContribution<Services extends BrandedService[]>(ctor: { new(editor: BrowserEditor, ...services: Services): BrowserEditorContribution }): void {
-		BrowserEditor._contributions.push(ctor as IConstructorSignature<BrowserEditorContribution, [BrowserEditor]>);
+		BrowserEditor._contributions.push(
+      ctor as IConstructorSignature<BrowserEditorContribution, [BrowserEditor]>,
+    );
 	}
 
 	private readonly _contributionInstances = new Map<IConstructorSignature<BrowserEditorContribution, [BrowserEditor]>, BrowserEditorContribution>();
 	getContribution<T extends BrowserEditorContribution, Services extends BrandedService[]>(ctor: { new(editor: BrowserEditor, ...services: Services): T }): T | undefined {
-		return this._contributionInstances.get(ctor as IConstructorSignature<BrowserEditorContribution, [BrowserEditor]>) as T | undefined;
+		return this._contributionInstances.get(
+      ctor as IConstructorSignature<BrowserEditorContribution, [BrowserEditor]>,
+    ) as T | undefined;
 	}
 
 	// -- Model lifecycle ------------------------------------------------
 
 	private _model: IBrowserViewModel | undefined;
 	get model(): IBrowserViewModel | undefined { return this._model; }
-	private readonly _onDidChangeModel = this._register(new Emitter<{
+	private readonly _onDidChangeModel = this._register(
+    new Emitter<{
 		model: IBrowserViewModel | undefined;
 		isNew: boolean;
-	}>());
+	}>(),
+  );
 	readonly onDidChangeModel = this._onDidChangeModel.event;
 
 	// -- State ----------------------------------------------------------
@@ -404,8 +456,15 @@ export class BrowserEditor extends EditorPane {
 	private readonly _inputDisposables = this._register(new DisposableStore());
 	private overlayManager: BrowserOverlayManager | undefined;
 	private _screenshotTimeout: ReturnType<typeof setTimeout> | undefined;
-	private readonly _certActionButton = this._register(new MutableDisposable<ButtonBar>());
-	private _currentPadding: { top: number; right: number; bottom: number; left: number } = { top: 0, right: 3, bottom: 3, left: 3 };
+	private readonly _certActionButton = this._register(
+    new MutableDisposable<ButtonBar>(),
+  );
+	private _currentPadding: { top: number; right: number; bottom: number; left: number } = {
+    top: 0,
+    right: 3,
+    bottom: 3,
+    left: 3,
+  };
 
 	constructor(
 		group: IEditorGroup,
@@ -418,19 +477,33 @@ export class BrowserEditor extends EditorPane {
 		@IContextKeyService private readonly contextKeyService: IContextKeyService,
 		@ILayoutService private readonly layoutService: ILayoutService,
 	) {
-		super(BrowserEditorInput.EDITOR_ID, group, telemetryService, themeService, storageService);
+		super(
+      BrowserEditorInput.EDITOR_ID,
+      group,
+      telemetryService,
+      themeService,
+      storageService,
+    );
 	}
 
 	protected override createEditor(parent: HTMLElement): void {
 		// Create scoped context key service for this editor instance
-		const contextKeyService = this._register(this.contextKeyService.createScoped(parent));
+		const contextKeyService = this._register(
+      this.contextKeyService.createScoped(parent),
+    );
 
 		// Create window-specific overlay manager for this editor
-		this.overlayManager = this._register(new BrowserOverlayManager(this.window));
+		this.overlayManager = this._register(
+      new BrowserOverlayManager(this.window),
+    );
 
 		// Bind navigation capability context keys
-		this._canGoBackContext = CONTEXT_BROWSER_CAN_GO_BACK.bindTo(contextKeyService);
-		this._canGoForwardContext = CONTEXT_BROWSER_CAN_GO_FORWARD.bindTo(contextKeyService);
+		this._canGoBackContext = CONTEXT_BROWSER_CAN_GO_BACK.bindTo(
+      contextKeyService,
+    );
+		this._canGoForwardContext = CONTEXT_BROWSER_CAN_GO_FORWARD.bindTo(
+      contextKeyService,
+    );
 		this._hasUrlContext = CONTEXT_BROWSER_HAS_URL.bindTo(contextKeyService);
 		this._hasErrorContext = CONTEXT_BROWSER_HAS_ERROR.bindTo(contextKeyService);
 
@@ -438,26 +511,37 @@ export class BrowserEditor extends EditorPane {
 		CONTEXT_BROWSER_FOCUSED.bindTo(contextKeyService);
 
 		// Create a scoped instantiation service so contributions get the scoped context key service
-		const scopedInstantiationService = this._register(this.instantiationService.createChild(
-			new ServiceCollection([IContextKeyService, contextKeyService])
-		));
+		const scopedInstantiationService = this._register(
+      this.instantiationService.createChild(
+        new ServiceCollection([IContextKeyService, contextKeyService]),
+      ),
+    );
 
 		// Instantiate all registered contributions
 		for (const ctor of BrowserEditor._contributions) {
-			const instance = this._register(scopedInstantiationService.createInstance(ctor, this));
+			const instance = this._register(
+        scopedInstantiationService.createInstance(ctor, this),
+      );
 			this._contributionInstances.set(ctor, instance);
 		}
 
 		// Create root container
-		const root = $('.browser-root');
+		const root = $(".browser-root");
 		root.tabIndex = -1; // Click focusable (for kb shortcuts), but not in tab order
 		parent.appendChild(root);
 
 		// Create navbar with navigation buttons and URL input
-		const navbar = $('.browser-navbar');
+		const navbar = $(".browser-navbar");
 
 		// Create navigation bar widget with scoped context
-		this._navigationBar = this._register(new BrowserNavigationBar(this, navbar, this.instantiationService, contextKeyService));
+		this._navigationBar = this._register(
+      new BrowserNavigationBar(
+        this,
+        navbar,
+        this.instantiationService,
+        contextKeyService,
+      ),
+    );
 
 		// Inject URL bar widgets from contributions
 		const allWidgets: IBrowserEditorWidgetContribution[] = [];
@@ -476,12 +560,15 @@ export class BrowserEditor extends EditorPane {
 		}
 
 		// Create browser container wrapper (flex item that fills remaining space)
-		this._browserContainerWrapper = $('.browser-container-wrapper');
-		this._browserContainerWrapper.style.setProperty('--zoom-factor', String(getZoomFactor(this.window)));
+		this._browserContainerWrapper = $(".browser-container-wrapper");
+		this._browserContainerWrapper.style.setProperty(
+      "--zoom-factor",
+      String(getZoomFactor(this.window)),
+    );
 		root.appendChild(this._browserContainerWrapper);
 
 		// Create browser container (stub element for positioning)
-		this._browserContainer = $('.browser-container');
+		this._browserContainer = $(".browser-container");
 		this._browserContainer.tabIndex = 0; // make focusable
 		this._browserContainerWrapper.appendChild(this._browserContainer);
 
@@ -492,28 +579,34 @@ export class BrowserEditor extends EditorPane {
 		}
 
 		// Create additional wrapper around placeholder contents for applying border radius clipping.
-		const placeholderContents = $('.browser-placeholder-contents');
+		const placeholderContents = $(".browser-placeholder-contents");
 		this._browserContainer.appendChild(placeholderContents);
 
 		// Create placeholder screenshot (background placeholder when WebContentsView is hidden)
-		this._placeholderScreenshot = $('.browser-placeholder-screenshot');
+		this._placeholderScreenshot = $(".browser-placeholder-screenshot");
 		placeholderContents.appendChild(this._placeholderScreenshot);
 
 		// Create overlay pause container (hidden by default via CSS)
-		this._overlayPauseContainer = $('.browser-overlay-paused');
-		const overlayPauseMessage = $('.browser-overlay-paused-message');
-		const overlayPauseHeading = $('.browser-overlay-paused-heading');
-		const overlayPauseDetail = $('.browser-overlay-paused-detail');
-		overlayPauseHeading.textContent = localize('browser.overlayPauseHeading.notification', "Paused due to Notification");
-		overlayPauseDetail.textContent = localize('browser.overlayPauseDetail.notification', "Dismiss the notification to continue using the browser.");
+		this._overlayPauseContainer = $(".browser-overlay-paused");
+		const overlayPauseMessage = $(".browser-overlay-paused-message");
+		const overlayPauseHeading = $(".browser-overlay-paused-heading");
+		const overlayPauseDetail = $(".browser-overlay-paused-detail");
+		overlayPauseHeading.textContent = localize(
+      "browser.overlayPauseHeading.notification",
+      "Paused due to Notification",
+    );
+		overlayPauseDetail.textContent = localize(
+      "browser.overlayPauseDetail.notification",
+      "Dismiss the notification to continue using the browser.",
+    );
 		overlayPauseMessage.appendChild(overlayPauseHeading);
 		overlayPauseMessage.appendChild(overlayPauseDetail);
 		this._overlayPauseContainer.appendChild(overlayPauseMessage);
 		placeholderContents.appendChild(this._overlayPauseContainer);
 
 		// Create error container (hidden by default)
-		this._errorContainer = $('.browser-error-container');
-		this._errorContainer.style.display = 'none';
+		this._errorContainer = $(".browser-error-container");
+		this._errorContainer.style.display = "none";
 		placeholderContents.appendChild(this._errorContainer);
 
 		// Create welcome container (shown when no URL is loaded)
@@ -537,10 +630,12 @@ export class BrowserEditor extends EditorPane {
 		// Register external focus checker so that cross-window focus logic knows when
 		// this browser view has focus (since it's outside the normal DOM tree).
 		// Include window info so that UI like dialogs appear in the correct window.
-		this._register(registerExternalFocusChecker(() => ({
-			hasFocus: this._model?.focused ?? false,
-			window: this._model?.focused ? this.window : undefined
-		})));
+		this._register(
+      registerExternalFocusChecker(() => ({
+        hasFocus: this._model?.focused ?? false,
+        window: this._model?.focused ? this.window : undefined,
+      })),
+    );
 	}
 
 	override focus(): void {
@@ -585,12 +680,12 @@ export class BrowserEditor extends EditorPane {
 		if (!model) {
 			// Set initial navigation state from the input so that the UI is populated while the model is loading.
 			this.updateNavigationState({
-				url: input.url || '',
-				title: input.title || '',
-				canGoBack: false,
-				canGoForward: false,
-				certificateError: undefined
-			});
+        url: input.url || "",
+        title: input.title || "",
+        canGoBack: false,
+        canGoForward: false,
+        certificateError: undefined,
+      });
 
 			// Resolve the browser view model from the input
 			model = await input.resolve();
@@ -605,22 +700,26 @@ export class BrowserEditor extends EditorPane {
 
 		// Initialize UI state and context keys from model
 		this.updateNavigationState({
-			url: this._model.url,
-			title: this._model.title,
-			canGoBack: this._model.canGoBack,
-			canGoForward: this._model.canGoForward,
-			certificateError: this._model.certificateError
-		});
+      url: this._model.url,
+      title: this._model.title,
+      canGoBack: this._model.canGoBack,
+      canGoForward: this._model.canGoForward,
+      certificateError: this._model.certificateError,
+    });
 		this.setBackgroundImage(this._model.screenshot);
 
 		// When closing a tab, the model gets disposed before the editor input is cleared.
 		// So we make sure we don't keep a reference to the disposed model.
-		this._inputDisposables.add(this._model.onWillDispose(() => {
-			this._model = undefined;
-		}));
+		this._inputDisposables.add(
+      this._model.onWillDispose(() => {
+        this._model = undefined;
+      }),
+    );
 
 		// Start / stop screenshots when the model visibility changes
-		this._inputDisposables.add(this._model.onDidChangeVisibility(() => this.doScreenshot()));
+		this._inputDisposables.add(
+      this._model.onDidChangeVisibility(() => this.doScreenshot()),
+    );
 
 		// Listen to model events for UI updates
 		this._inputDisposables.add(this._model.onDidKeyCommand(keyEvent => {
@@ -635,9 +734,11 @@ export class BrowserEditor extends EditorPane {
 			this.updateNavigationState(navEvent);
 		}));
 
-		this._inputDisposables.add(this._model.onDidChangeLoadingState(() => {
-			this.updateErrorDisplay();
-		}));
+		this._inputDisposables.add(
+      this._model.onDidChangeLoadingState(() => {
+        this.updateErrorDisplay();
+      }),
+    );
 
 		this._inputDisposables.add(this._model.onDidChangeFocus(({ focused }) => {
 			// When the view gets focused, make sure the editor reports that it has focus,
@@ -648,15 +749,17 @@ export class BrowserEditor extends EditorPane {
 			}
 		}));
 
-		this._inputDisposables.add(this.overlayManager!.onDidChangeOverlayState(() => {
-			this.checkOverlays();
-		}));
+		this._inputDisposables.add(
+      this.overlayManager!.onDidChangeOverlayState(() => {
+        this.checkOverlays();
+      }),
+    );
 
 		// Listen for workbench zoom level changes and update browser view placeholder screenshot's zoom factor
 		this._inputDisposables.add(onDidChangeZoomLevel(targetWindowId => {
 			if (targetWindowId === this.window.vscodeWindowId) {
 				// Update CSS variable for size calculations
-				this._browserContainerWrapper.style.setProperty('--zoom-factor', String(getZoomFactor(this.window)));
+				this._browserContainerWrapper.style.setProperty("--zoom-factor", String(getZoomFactor(this.window)));
 				// Re-push container bounds and emulation: zoom-factor affects
 				// both the screen-px conversion in main and the Chromium
 				// emulation scale (so the emulated viewport fills the WCV).
@@ -689,16 +792,16 @@ export class BrowserEditor extends EditorPane {
 		const isPaused = isViewingPage && this._editorVisible && this._overlayVisible;
 
 		// Welcome container: shown when no URL is loaded
-		this._welcomeContainer.style.display = hasUrl ? 'none' : '';
+		this._welcomeContainer.style.display = hasUrl ? "none" : "";
 
 		// Error container: shown when there's a load error
-		this._errorContainer.style.display = hasError ? '' : 'none';
+		this._errorContainer.style.display = hasError ? "" : "none";
 
 		// Placeholder screenshot: shown when there is a page loaded (even when the view is not hidden, so hiding is smooth)
-		this._placeholderScreenshot.style.display = isViewingPage ? '' : 'none';
+		this._placeholderScreenshot.style.display = isViewingPage ? "" : "none";
 
 		// Pause overlay: fades in when an overlay is detected
-		this._overlayPauseContainer.classList.toggle('visible', isPaused);
+		this._overlayPauseContainer.classList.toggle("visible", isPaused);
 
 		if (this._model) {
 			const show = this.shouldShowView;
@@ -734,7 +837,9 @@ export class BrowserEditor extends EditorPane {
 		if (!this.overlayManager) {
 			return;
 		}
-		const overlappingOverlays = this.overlayManager.getOverlappingOverlays(this._browserContainer);
+		const overlappingOverlays = this.overlayManager.getOverlappingOverlays(
+      this._browserContainer,
+    );
 		const hasOverlappingOverlay = overlappingOverlays.length > 0;
 		this.updateOverlayPauseMessage(overlappingOverlays);
 		if (hasOverlappingOverlay !== this._overlayVisible) {
@@ -745,8 +850,13 @@ export class BrowserEditor extends EditorPane {
 
 	private updateOverlayPauseMessage(overlappingOverlays: readonly IBrowserOverlayInfo[]): void {
 		// Only show the pause message for notification overlays
-		const hasNotificationOverlay = overlappingOverlays.some(overlay => overlay.type === BrowserOverlayType.Notification);
-		this._overlayPauseContainer.classList.toggle('show-message', hasNotificationOverlay);
+		const hasNotificationOverlay = overlappingOverlays.some(
+      overlay => overlay.type === BrowserOverlayType.Notification,
+    );
+		this._overlayPauseContainer.classList.toggle(
+      "show-message",
+      hasNotificationOverlay,
+    );
 	}
 
 	private updateErrorDisplay(): void {
@@ -758,8 +868,8 @@ export class BrowserEditor extends EditorPane {
 		this._hasErrorContext.set(!!error);
 
 		this._navigationBar.setCertificateError(
-			this._model.certificateError ?? error?.certificateError
-		);
+      this._model.certificateError ?? error?.certificateError,
+    );
 
 		if (error) {
 			// Update error content
@@ -769,32 +879,37 @@ export class BrowserEditor extends EditorPane {
 				this._errorContainer.removeChild(this._errorContainer.firstChild);
 			}
 
-			const errorContent = $('.browser-error-content');
+			const errorContent = $(".browser-error-content");
 			const isCertError = !!error.certificateError;
 
-			const errorIcon = $('.browser-error-icon');
-			errorIcon.classList.toggle('cert-error', isCertError);
-			errorIcon.appendChild(renderIcon(isCertError ? Codicon.workspaceUntrusted : Codicon.globe));
+			const errorIcon = $(".browser-error-icon");
+			errorIcon.classList.toggle("cert-error", isCertError);
+			errorIcon.appendChild(
+        renderIcon(isCertError ? Codicon.workspaceUntrusted : Codicon.globe),
+      );
 
-			const errorTitle = $('.browser-error-title');
+			const errorTitle = $(".browser-error-title");
 			errorTitle.textContent = isCertError
-				? localize('browser.certErrorLabel', "Certificate Error")
-				: localize('browser.loadErrorLabel', "Failed to Load Page");
+				? localize("browser.certErrorLabel", "Certificate Error")
+				: localize("browser.loadErrorLabel", "Failed to Load Page");
 
-			const errorMessage = $('.browser-error-detail');
-			const errorText = $('span');
+			const errorMessage = $(".browser-error-detail");
+			const errorText = $("span");
 			errorText.textContent = isCertError
-				? localize('browser.certErrorDescription', "This site's security certificate could not be verified.")
+				? localize(
+            "browser.certErrorDescription",
+            "This site's security certificate could not be verified.",
+          )
 				: `${error.errorDescription} (${error.errorCode})`;
 			errorMessage.appendChild(errorText);
 
-			const errorUrl = $('.browser-error-detail');
-			const urlLabel = $('strong');
-			urlLabel.textContent = localize('browser.errorUrlLabel', "URL:");
-			const urlValue = $('code');
+			const errorUrl = $(".browser-error-detail");
+			const urlLabel = $("strong");
+			urlLabel.textContent = localize("browser.errorUrlLabel", "URL:");
+			const urlValue = $("code");
 			urlValue.textContent = error.url;
 			errorUrl.appendChild(urlLabel);
-			errorUrl.appendChild(document.createTextNode(' '));
+			errorUrl.appendChild(document.createTextNode(" "));
 			errorUrl.appendChild(urlValue);
 
 			errorContent.appendChild(errorIcon);
@@ -803,8 +918,11 @@ export class BrowserEditor extends EditorPane {
 
 			// Show cert error name below description, above URL
 			if (error.certificateError) {
-				const extraWarning = $('b.browser-error-detail');
-				extraWarning.textContent = localize('browser.certErrorExtraWarning', " Your connection is not private.");
+				const extraWarning = $("b.browser-error-detail");
+				extraWarning.textContent = localize(
+          "browser.certErrorExtraWarning",
+          " Your connection is not private.",
+        );
 				errorMessage.appendChild(extraWarning);
 			}
 
@@ -814,47 +932,56 @@ export class BrowserEditor extends EditorPane {
 			if (error.certificateError) {
 				const certError = error.certificateError;
 
-				const certDetailsTable = $('.browser-cert-details-table');
+				const certDetailsTable = $(".browser-cert-details-table");
 
-				const heading = $('.browser-cert-details-heading');
-				heading.textContent = localize('browser.certDetailsHeading', "Certificate Details");
+				const heading = $(".browser-cert-details-heading");
+				heading.textContent = localize(
+          "browser.certDetailsHeading",
+          "Certificate Details",
+        );
 				certDetailsTable.appendChild(heading);
 
 				const addRow = (label: string, value: string) => {
-					const row = $('.browser-cert-details-row');
-					const labelEl = $('.browser-cert-details-label');
+					const row = $(".browser-cert-details-row");
+					const labelEl = $(".browser-cert-details-label");
 					labelEl.textContent = label;
-					const valueEl = $('.browser-cert-details-value');
+					const valueEl = $(".browser-cert-details-value");
 					valueEl.textContent = value;
 					row.appendChild(labelEl);
 					row.appendChild(valueEl);
 					certDetailsTable.appendChild(row);
 				};
 
-				addRow(localize('browser.certError', "Error"), certError.error);
-				addRow(localize('browser.certIssuer', "Issuer"), certError.issuerName);
-				addRow(localize('browser.certSubject', "Subject"), certError.subjectName);
+				addRow(localize("browser.certError", "Error"), certError.error);
+				addRow(localize("browser.certIssuer", "Issuer"), certError.issuerName);
+				addRow(
+          localize("browser.certSubject", "Subject"),
+          certError.subjectName,
+        );
 
 				const formatDate = (epoch: number) => new Date(epoch * 1000).toLocaleDateString();
 				addRow(
-					localize('browser.certValid', "Valid"),
-					`${formatDate(certError.validStart)} - ${formatDate(certError.validExpiry)}`
-				);
+          localize("browser.certValid", "Valid"),
+          `${formatDate(certError.validStart)} - ${formatDate(certError.validExpiry)}`,
+        );
 
-				addRow(localize('browser.certFingerprint', "Fingerprint"), certError.fingerprint);
+				addRow(
+          localize("browser.certFingerprint", "Fingerprint"),
+          certError.fingerprint,
+        );
 
 				errorContent.appendChild(certDetailsTable);
 
-				const actionContainer = $('.browser-cert-action');
-				actionContainer.classList.toggle('reverse', isMacintosh || isLinux);
+				const actionContainer = $(".browser-cert-action");
+				actionContainer.classList.toggle("reverse", isMacintosh || isLinux);
 				const canGoBack = this._model.canGoBack;
 				const buttonBar = new ButtonBar(actionContainer);
 				this._certActionButton.value = buttonBar;
 
 				const primaryButton = buttonBar.addButton({ ...defaultButtonStyles });
 				primaryButton.label = canGoBack
-					? localize('browser.certGoBack', "Go Back")
-					: localize('browser.certCloseTab', "Close Tab");
+					? localize("browser.certGoBack", "Go Back")
+					: localize("browser.certCloseTab", "Close Tab");
 				primaryButton.onDidClick(() => {
 					if (canGoBack) {
 						this.goBack();
@@ -863,11 +990,17 @@ export class BrowserEditor extends EditorPane {
 					}
 				});
 
-				const secondaryButton = buttonBar.addButton({ ...defaultButtonStyles, secondary: true });
-				secondaryButton.label = localize('browser.certProceed', "Proceed anyway (unsafe)");
+				const secondaryButton = buttonBar.addButton({
+          ...defaultButtonStyles,
+          secondary: true,
+        });
+				secondaryButton.label = localize(
+          "browser.certProceed",
+          "Proceed anyway (unsafe)",
+        );
 				secondaryButton.onDidClick(() => {
-					this._model?.trustCertificate(certError.host, certError.fingerprint);
-				});
+          this._model?.trustCertificate(certError.host, certError.fingerprint);
+        });
 
 				errorContent.appendChild(actionContainer);
 			}
@@ -904,10 +1037,10 @@ export class BrowserEditor extends EditorPane {
 
 			// Special case localhost URLs (e.g., "localhost:3000") to add http://
 			if (/^localhost(:|\/|$)/i.test(url)) {
-				url = 'http://' + url;
+				url = "http://" + url;
 			} else if (!URL.parse(url)?.protocol) {
 				// If no scheme provided, default to http (sites will generally upgrade to https)
-				url = 'http://' + url;
+				url = "http://" + url;
 			}
 
 			this.ensureBrowserFocus();
@@ -960,22 +1093,30 @@ export class BrowserEditor extends EditorPane {
 	 * Create the welcome container shown when no URL is loaded
 	 */
 	private createWelcomeContainer(): HTMLElement {
-		const container = $('.browser-welcome-container');
-		const content = $('.browser-welcome-content');
+		const container = $(".browser-welcome-container");
+		const content = $(".browser-welcome-content");
 
-		const iconContainer = $('.browser-welcome-icon');
+		const iconContainer = $(".browser-welcome-icon");
 		iconContainer.appendChild(renderIcon(Codicon.globe));
 		content.appendChild(iconContainer);
 
-		const title = $('.browser-welcome-title');
-		title.textContent = localize('browser.welcomeTitle', "Browser");
+		const title = $(".browser-welcome-title");
+		title.textContent = localize("browser.welcomeTitle", "Browser");
 		content.appendChild(title);
 
-		const subtitle = $('.browser-welcome-subtitle');
-		const chatEnabled = this.contextKeyService.getContextKeyValue<boolean>(ChatContextKeys.enabled.key);
+		const subtitle = $(".browser-welcome-subtitle");
+		const chatEnabled = this.contextKeyService.getContextKeyValue<boolean>(
+      ChatContextKeys.enabled.key,
+    );
 		subtitle.textContent = chatEnabled
-			? localize('browser.welcomeSubtitleChat', "Use Add Element to Chat to reference UI elements in chat prompts.")
-			: localize('browser.welcomeSubtitle', "Enter a URL above to get started.");
+			? localize(
+          "browser.welcomeSubtitleChat",
+          "Use Add Element to Chat to reference UI elements in chat prompts.",
+        )
+			: localize(
+          "browser.welcomeSubtitle",
+          "Enter a URL above to get started.",
+        );
 		content.appendChild(subtitle);
 
 		container.appendChild(content);
@@ -987,7 +1128,7 @@ export class BrowserEditor extends EditorPane {
 			const dataUrl = `data:image/jpeg;base64,${encodeBase64(buffer)}`;
 			this._placeholderScreenshot.style.backgroundImage = `url('${dataUrl}')`;
 		} else {
-			this._placeholderScreenshot.style.backgroundImage = '';
+			this._placeholderScreenshot.style.backgroundImage = "";
 		}
 	}
 
@@ -1009,7 +1150,7 @@ export class BrowserEditor extends EditorPane {
 			const screenshot = await this._model.captureScreenshot({ quality: 80 });
 			this.setBackgroundImage(screenshot);
 		} catch (error) {
-			this.logService.error('Failed to capture browser view screenshot', error);
+			this.logService.error("Failed to capture browser view screenshot", error);
 		}
 
 		// Schedule next screenshot in 1 second
@@ -1025,12 +1166,18 @@ export class BrowserEditor extends EditorPane {
 
 	private async handleKeyEventFromBrowserView(keyEvent: IBrowserViewKeyDownEvent): Promise<void> {
 		try {
-			const syntheticEvent = new KeyboardEvent('keydown', keyEvent);
+			const syntheticEvent = new KeyboardEvent("keydown", keyEvent);
 			const standardEvent = new StandardKeyboardEvent(syntheticEvent);
 
-			this.keybindingService.dispatchEvent(standardEvent, this._browserContainer);
+			this.keybindingService.dispatchEvent(
+        standardEvent,
+        this._browserContainer,
+      );
 		} catch (error) {
-			this.logService.error('BrowserEditor.handleKeyEventFromBrowserView: Error dispatching key event', error);
+			this.logService.error(
+        "BrowserEditor.handleKeyEventFromBrowserView: Error dispatching key event",
+        error,
+      );
 		}
 	}
 
@@ -1041,7 +1188,9 @@ export class BrowserEditor extends EditorPane {
 			}
 		}
 
-		const whenContainerStylesLoaded = this.layoutService.whenContainerStylesLoaded(this.window);
+		const whenContainerStylesLoaded = this.layoutService.whenContainerStylesLoaded(
+      this.window,
+    );
 		if (whenContainerStylesLoaded) {
 			// In floating windows, we need to ensure that the
 			// container is ready for us to compute certain
@@ -1079,23 +1228,31 @@ export class BrowserEditor extends EditorPane {
 		// room (and resize sashes that sit on those edges remain reachable).
 		const raw = override?.padding;
 		const padding = {
-			top: raw?.top ?? 0,
-			right: Math.max(3, raw?.right ?? 0),
-			bottom: Math.max(3, raw?.bottom ?? 0),
-			left: Math.max(3, raw?.left ?? 0),
-		};
+      top: raw?.top ?? 0,
+      right: Math.max(3, raw?.right ?? 0),
+      bottom: Math.max(3, raw?.bottom ?? 0),
+      left: Math.max(3, raw?.left ?? 0),
+    };
 		this._currentPadding = padding;
 		this._browserContainerWrapper.style.padding = `${padding.top}px ${padding.right}px ${padding.bottom}px ${padding.left}px`;
 
 		const wrapperRect = this._browserContainerWrapper.getBoundingClientRect();
 		if ((wrapperRect.width === 0 || wrapperRect.height === 0) && retries > 0) {
 			// Wrapper not measured yet; retry on the next frame.
-			this.window.requestAnimationFrame(() => this.layoutBrowserContainer(retries - 1));
+			this.window.requestAnimationFrame(
+        () => this.layoutBrowserContainer(retries - 1),
+      );
 			return;
 		}
 
-		const paneWidth = Math.max(0, wrapperRect.width - padding.left - padding.right);
-		const paneHeight = Math.max(0, wrapperRect.height - padding.top - padding.bottom);
+		const paneWidth = Math.max(
+      0,
+      wrapperRect.width - padding.left - padding.right,
+    );
+		const paneHeight = Math.max(
+      0,
+      wrapperRect.height - padding.top - padding.bottom,
+    );
 		let layout: IContainerLayout;
 		if (override) {
 			layout = override.compute(paneWidth, paneHeight);
@@ -1111,17 +1268,19 @@ export class BrowserEditor extends EditorPane {
 		this._browserContainer.style.height = `${layout.height}px`;
 		const containerLeft = wrapperRect.left + padding.left + (paneWidth - layout.width) / 2;
 		const containerTop = wrapperRect.top + padding.top + (paneHeight - layout.height) / 2;
-		const cornerRadius = parseFloat(this.window.getComputedStyle(this._browserContainer).borderTopLeftRadius ?? '0');
+		const cornerRadius = parseFloat(
+      this.window.getComputedStyle(this._browserContainer).borderTopLeftRadius ?? "0",
+    );
 		void this._model.layout({
-			windowId: this.group.windowId,
-			x: containerLeft,
-			y: containerTop,
-			width: layout.width,
-			height: layout.height,
-			zoomFactor: getZoomFactor(this.window),
-			cornerRadius,
-			emulation: layout.emulation,
-		});
+      windowId: this.group.windowId,
+      x: containerLeft,
+      y: containerTop,
+      width: layout.width,
+      height: layout.height,
+      zoomFactor: getZoomFactor(this.window),
+      cornerRadius,
+      emulation: layout.emulation,
+    });
 	}
 
 	/**
@@ -1134,9 +1293,9 @@ export class BrowserEditor extends EditorPane {
 		const r = this._browserContainerWrapper.getBoundingClientRect();
 		const p = this._currentPadding;
 		return {
-			width: Math.max(0, r.width - p.left - p.right),
-			height: Math.max(0, r.height - p.top - p.bottom),
-		};
+      width: Math.max(0, r.width - p.left - p.right),
+      height: Math.max(0, r.height - p.top - p.bottom),
+    };
 	}
 
 	override clearInput(): void {

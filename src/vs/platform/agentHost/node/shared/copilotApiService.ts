@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type Anthropic from '@anthropic-ai/sdk';
-import { CAPIClient, RequestType, type CCAModel, type IExtensionInformation } from '@vscode/copilot-api';
-import { generateUuid } from '../../../../base/common/uuid.js';
-import { getDevDeviceId, getMachineId } from '../../../../base/node/id.js';
-import { createDecorator } from '../../../instantiation/common/instantiation.js';
-import { ILogService } from '../../../log/common/log.js';
-import { IProductService } from '../../../product/common/productService.js';
+import type Anthropic from "@anthropic-ai/sdk";
+import { CAPIClient, RequestType, type CCAModel, type IExtensionInformation } from "@vscode/copilot-api";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { getDevDeviceId, getMachineId } from "../../../../base/node/id.js";
+import { createDecorator } from "../../../instantiation/common/instantiation.js";
+import { ILogService } from "../../../log/common/log.js";
+import { IProductService } from "../../../product/common/productService.js";
 
 // #region Types
 
@@ -40,7 +40,7 @@ interface ICopilotUserResponse {
 		readonly api?: string;
 		readonly telemetry?: string;
 		readonly proxy?: string;
-		readonly 'origin-tracker'?: string;
+		readonly "origin-tracker"?: string;
 	};
 	readonly access_type_sku?: string;
 }
@@ -83,7 +83,7 @@ const CAPI_CONTEXT_REFRESH_BUFFER_SECONDS = 5 * 60;
 /** Conservative TTL for the `/copilot_internal/user` discovery result. */
 const CAPI_CONTEXT_TTL_SECONDS = 30 * 60;
 
-const USER_API_VERSION = '2025-04-01';
+const USER_API_VERSION = "2025-04-01";
 
 // #endregion
 
@@ -117,7 +117,7 @@ export class CopilotApiError extends Error {
 		message?: string,
 	) {
 		super(message ?? envelope.error.message);
-		this.name = 'CopilotApiError';
+		this.name = "CopilotApiError";
 	}
 }
 
@@ -132,20 +132,20 @@ export class CopilotApiError extends Error {
  * defaults to `"CAPI request failed"` (the historical wording for
  * `messages`); pass `"CAPI models request failed"` for the `models()` path.
  */
-function buildCopilotApiHttpError(status: number, statusText: string, bodyText: string, prefix = 'CAPI request failed'): CopilotApiError {
+function buildCopilotApiHttpError(status: number, statusText: string, bodyText: string, prefix = "CAPI request failed"): CopilotApiError {
 	let envelope: Anthropic.ErrorResponse | undefined;
 	if (bodyText) {
 		try {
 			const parsed = JSON.parse(bodyText) as unknown;
 			if (
-				parsed && typeof parsed === 'object'
-				&& (parsed as { type?: unknown }).type === 'error'
+				parsed && typeof parsed === "object"
+				&& (parsed as { type?: unknown }).type === "error"
 			) {
 				const err = (parsed as { error?: unknown }).error;
 				if (
-					err && typeof err === 'object'
-					&& typeof (err as { type?: unknown }).type === 'string'
-					&& typeof (err as { message?: unknown }).message === 'string'
+					err && typeof err === "object"
+					&& typeof (err as { type?: unknown }).type === "string"
+					&& typeof (err as { message?: unknown }).message === "string"
 				) {
 					envelope = parsed as Anthropic.ErrorResponse;
 				}
@@ -156,26 +156,28 @@ function buildCopilotApiHttpError(status: number, statusText: string, bodyText: 
 	}
 	if (!envelope) {
 		envelope = {
-			type: 'error',
+			type: "error",
 			error: {
-				type: 'api_error',
+				type: "api_error",
 				message: bodyText || `${status} ${statusText}`,
 			},
 			request_id: null,
 		};
 	}
 	return new CopilotApiError(
-		status,
-		envelope,
-		`${prefix}: ${status} ${statusText} \u2014 ${envelope.error.message}`,
-	);
+    status,
+    envelope,
+    `${prefix}: ${status} ${statusText} \u2014 ${envelope.error.message}`,
+  );
 }
 
 // #endregion
 
 export type FetchFunction = typeof globalThis.fetch;
 
-export const ICopilotApiService = createDecorator<ICopilotApiService>('copilotApiService');
+export const ICopilotApiService = createDecorator<ICopilotApiService>(
+  "copilotApiService",
+);
 
 /**
  * Foundational gateway between the agent host and GitHub Copilot's CAPI proxy
@@ -346,20 +348,20 @@ export class CopilotApiService implements ICopilotApiService {
 		_req: Anthropic.MessageCountTokensParams,
 		_options?: ICopilotApiServiceRequestOptions,
 	): Promise<Anthropic.MessageTokensCount> {
-		throw new Error('countTokens not supported by CAPI');
+		throw new Error("countTokens not supported by CAPI");
 	}
 
 	async models(githubToken: string, options?: ICopilotApiServiceRequestOptions): Promise<CCAModel[]> {
 		const capiClient = await this._getClientForToken(githubToken);
 
-		this._logService.debug('[CopilotApiService] GET models');
+		this._logService.debug("[CopilotApiService] GET models");
 
 		const response = await capiClient.makeRequest<Response>(
 			{
-				method: 'GET',
+				method: "GET",
 				headers: {
 					...options?.headers,
-					'Authorization': `Bearer ${githubToken}`,
+					"Authorization": `Bearer ${githubToken}`,
 				},
 				signal: options?.signal,
 			},
@@ -370,8 +372,13 @@ export class CopilotApiService implements ICopilotApiService {
 			if (response.status === 401 || response.status === 403) {
 				this._invalidateClientForToken(githubToken);
 			}
-			const text = await response.text().catch(() => '');
-			throw buildCopilotApiHttpError(response.status, response.statusText, text, 'CAPI models request failed');
+			const text = await response.text().catch(() => "");
+			throw buildCopilotApiHttpError(
+        response.status,
+        response.statusText,
+        text,
+        "CAPI models request failed",
+      );
 		}
 
 		const json = await response.json();
@@ -385,33 +392,43 @@ export class CopilotApiService implements ICopilotApiService {
 	private _getCapiBase(): Promise<ICapiBase> {
 		if (!this._capiBasePromise) {
 			this._capiBasePromise = this._buildCapiBase().catch(err => {
-				this._capiBasePromise = null;
-				throw err;
-			});
+        this._capiBasePromise = null;
+        throw err;
+      });
 		}
 		return this._capiBasePromise;
 	}
 
 	private async _buildCapiBase(): Promise<ICapiBase> {
 		const [machineId, deviceId] = await Promise.all([
-			getMachineId(err => this._logService.warn('[CopilotApiService] getMachineId failed', err)),
-			getDevDeviceId(err => this._logService.warn('[CopilotApiService] getDevDeviceId failed', err)),
-		]);
+      getMachineId(
+        err => this._logService.warn(
+          "[CopilotApiService] getMachineId failed",
+          err,
+        ),
+      ),
+      getDevDeviceId(
+        err => this._logService.warn(
+          "[CopilotApiService] getDevDeviceId failed",
+          err,
+        ),
+      ),
+    ]);
 
 		const extensionInfo: IExtensionInformation = {
-			name: 'agent-host',
-			sessionId: generateUuid(),
-			machineId,
-			deviceId,
-			vscodeVersion: this._productService.version,
-			version: this._productService.version,
-			buildType: this._productService.quality === 'stable' ? 'prod' : 'dev',
-		};
+      name: "agent-host",
+      sessionId: generateUuid(),
+      machineId,
+      deviceId,
+      vscodeVersion: this._productService.version,
+      version: this._productService.version,
+      buildType: this._productService.quality === "stable" ? "prod" : "dev",
+    };
 
 		// The user-info endpoint is hosted on api.github.com for consumer accounts.
 		// For GitHub Enterprise the host changes, but we don't currently support
 		// GHE in the agent host — see CopilotAgent for the same assumption.
-		const userUrl = 'https://api.github.com/copilot_internal/user';
+		const userUrl = "https://api.github.com/copilot_internal/user";
 
 		return { extensionInfo, userUrl };
 	}
@@ -425,10 +442,15 @@ export class CopilotApiService implements ICopilotApiService {
 		request: Anthropic.MessageCreateParams,
 		options?: ICopilotApiServiceRequestOptions,
 	): AsyncGenerator<Anthropic.MessageStreamEvent> {
-		const response = await this._sendRequest(githubToken, request, true, options);
+		const response = await this._sendRequest(
+      githubToken,
+      request,
+      true,
+      options,
+    );
 
 		if (!response.body) {
-			throw new Error('CAPI response has no body');
+			throw new Error("CAPI response has no body");
 		}
 
 		yield* this._readSSE(response.body);
@@ -443,7 +465,12 @@ export class CopilotApiService implements ICopilotApiService {
 		request: Anthropic.MessageCreateParams,
 		options?: ICopilotApiServiceRequestOptions,
 	): Promise<Anthropic.Message> {
-		const response = await this._sendRequest(githubToken, request, false, options);
+		const response = await this._sendRequest(
+      githubToken,
+      request,
+      false,
+      options,
+    );
 		return response.json() as Promise<Anthropic.Message>;
 	}
 
@@ -460,7 +487,10 @@ export class CopilotApiService implements ICopilotApiService {
 		const capiClient = await this._getClientForToken(githubToken);
 		const requestId = generateUuid();
 
-		this._logService.debug('[CopilotApiService] POST messages', `model=${request.model} stream=${stream} requestId=${requestId}`);
+		this._logService.debug(
+      "[CopilotApiService] POST messages",
+      `model=${request.model} stream=${stream} requestId=${requestId}`,
+    );
 
 		const { system, ...rest } = request;
 		const body = JSON.stringify({
@@ -468,19 +498,19 @@ export class CopilotApiService implements ICopilotApiService {
 			stream,
 			// CAPI requires system as a text-block array, not a raw string
 			...(system !== undefined
-				? { system: typeof system === 'string' ? [{ type: 'text', text: system }] : system }
+				? { system: typeof system === "string" ? [{ type: "text", text: system }] : system }
 				: {}),
 		});
 
 		const response = await capiClient.makeRequest<Response>(
 			{
-				method: 'POST',
+				method: "POST",
 				headers: {
 					...options?.headers,
-					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${githubToken}`,
-					'X-Request-Id': requestId,
-					'OpenAI-Intent': 'conversation',
+					"Content-Type": "application/json",
+					"Authorization": `Bearer ${githubToken}`,
+					"X-Request-Id": requestId,
+					"OpenAI-Intent": "conversation",
 				},
 				body,
 				signal: options?.signal,
@@ -491,8 +521,12 @@ export class CopilotApiService implements ICopilotApiService {
 			if (response.status === 401 || response.status === 403) {
 				this._invalidateClientForToken(githubToken);
 			}
-			const text = await response.text().catch(() => '');
-			throw buildCopilotApiHttpError(response.status, response.statusText, text);
+			const text = await response.text().catch(() => "");
+			throw buildCopilotApiHttpError(
+        response.status,
+        response.statusText,
+        text,
+      );
 		}
 
 		return response;
@@ -532,9 +566,9 @@ export class CopilotApiService implements ICopilotApiService {
 		// concurrent callers, so aborting one must not cancel it for the
 		// others. Each caller still forwards its signal to the API call.
 		const pending = this._buildClientForToken(githubToken).catch(err => {
-			this._clientsByToken.delete(githubToken);
-			throw err;
-		});
+      this._clientsByToken.delete(githubToken);
+      throw err;
+    });
 		this._clientsByToken.set(githubToken, pending);
 		return pending.then(entry => entry.capiClient);
 	}
@@ -548,42 +582,52 @@ export class CopilotApiService implements ICopilotApiService {
 		const fetch = this._fetch;
 		const capiClient = new CAPIClient(extensionInfo, undefined, {
 			fetch: (url, options) => fetch(url, {
-				method: options.method ?? 'GET',
+				method: options.method ?? "GET",
 				headers: options.headers,
 				body: options.body,
 				signal: options.signal as AbortSignal | undefined,
 			}),
 		});
 
-		this._logService.debug('[CopilotApiService] Discovering CAPI endpoints via /copilot_internal/user');
+		this._logService.debug(
+      "[CopilotApiService] Discovering CAPI endpoints via /copilot_internal/user",
+    );
 
 		const response = await this._fetch(userUrl, {
-			method: 'GET',
+			method: "GET",
 			headers: {
-				'Authorization': `Bearer ${githubToken}`,
-				'Accept': 'application/json',
-				'X-GitHub-Api-Version': USER_API_VERSION,
+				"Authorization": `Bearer ${githubToken}`,
+				"Accept": "application/json",
+				"X-GitHub-Api-Version": USER_API_VERSION,
 			},
 		});
 
 		if (!response.ok) {
-			const text = await response.text().catch(() => '');
-			throw new Error(`Copilot endpoint discovery failed: ${response.status} ${response.statusText} — ${text}`);
+			const text = await response.text().catch(() => "");
+			throw new Error(
+        `Copilot endpoint discovery failed: ${response.status} ${response.statusText} — ${text}`,
+      );
 		}
 
 		const envelope: ICopilotUserResponse = await response.json();
 
 		capiClient.updateDomains(
-			{ endpoints: envelope.endpoints ?? {}, sku: envelope.access_type_sku ?? '' },
-			undefined,
-		);
+      {
+        endpoints: envelope.endpoints ?? {},
+        sku: envelope.access_type_sku ?? "",
+      },
+      undefined,
+    );
 
-		this._logService.debug('[CopilotApiService] CAPI endpoint discovered, api=', envelope.endpoints?.api);
+		this._logService.debug(
+      "[CopilotApiService] CAPI endpoint discovered, api=",
+      envelope.endpoints?.api,
+    );
 
 		return {
-			capiClient,
-			expiresAt: Date.now() / 1000 + CAPI_CONTEXT_TTL_SECONDS,
-		};
+      capiClient,
+      expiresAt: Date.now() / 1000 + CAPI_CONTEXT_TTL_SECONDS,
+    };
 	}
 
 	// #endregion
@@ -593,7 +637,7 @@ export class CopilotApiService implements ICopilotApiService {
 	private async *_readSSE(body: ReadableStream<Uint8Array>): AsyncGenerator<Anthropic.MessageStreamEvent> {
 		const reader = body.getReader();
 		const decoder = new TextDecoder();
-		let buffer = '';
+		let buffer = "";
 
 		try {
 			while (true) {
@@ -603,14 +647,14 @@ export class CopilotApiService implements ICopilotApiService {
 				}
 
 				buffer += decoder.decode(value, { stream: true });
-				const lines = buffer.split('\n');
-				buffer = lines.pop() ?? '';
+				const lines = buffer.split("\n");
+				buffer = lines.pop() ?? "";
 
 				for (const line of lines) {
 					const event = this._parseDataLine(line);
 					if (event !== undefined) {
 						yield event;
-						if (event.type === 'message_stop') {
+						if (event.type === "message_stop") {
 							return;
 						}
 					}
@@ -621,7 +665,7 @@ export class CopilotApiService implements ICopilotApiService {
 				const event = this._parseDataLine(buffer);
 				if (event !== undefined) {
 					yield event;
-					if (event.type === 'message_stop') {
+					if (event.type === "message_stop") {
 						return;
 					}
 				}
@@ -645,31 +689,34 @@ export class CopilotApiService implements ICopilotApiService {
 	 * @throws on `error` events from the server.
 	 */
 	private _parseDataLine(line: string): Anthropic.MessageStreamEvent | undefined {
-		if (!line.startsWith('data: ')) {
+		if (!line.startsWith("data: ")) {
 			return undefined;
 		}
 
-		const data = line.slice('data: '.length).trim();
+		const data = line.slice("data: ".length).trim();
 
 		let parsed: unknown;
 		try {
 			parsed = JSON.parse(data);
 		} catch {
-			this._logService.warn('[CopilotApiService] Failed to parse SSE data:', data);
+			this._logService.warn(
+        "[CopilotApiService] Failed to parse SSE data:",
+        data,
+      );
 			return undefined;
 		}
 
-		if (typeof parsed !== 'object' || parsed === null) {
+		if (typeof parsed !== "object" || parsed === null) {
 			return undefined;
 		}
 
 		const record = parsed as Record<string, unknown>;
 		const type = record.type;
-		if (typeof type !== 'string') {
+		if (typeof type !== "string") {
 			return undefined;
 		}
 
-		if (type === 'error') {
+		if (type === "error") {
 			// Preserve the upstream envelope verbatim when it conforms to the
 			// Anthropic shape (so any extra fields propagate to Phase 2's
 			// passthrough proxy). Fall back to a clean api_error synthesis
@@ -677,25 +724,25 @@ export class CopilotApiService implements ICopilotApiService {
 			const rawError = (parsed as { error?: unknown }).error;
 			let envelope: Anthropic.ErrorResponse;
 			if (
-				rawError && typeof rawError === 'object'
-				&& typeof (rawError as { type?: unknown }).type === 'string'
-				&& typeof (rawError as { message?: unknown }).message === 'string'
+				rawError && typeof rawError === "object"
+				&& typeof (rawError as { type?: unknown }).type === "string"
+				&& typeof (rawError as { message?: unknown }).message === "string"
 			) {
 				envelope = parsed as Anthropic.ErrorResponse;
 			} else {
 				let errorMessage: string;
-				if (typeof rawError === 'string') {
+				if (typeof rawError === "string") {
 					errorMessage = rawError;
-				} else if (typeof (rawError as { message?: unknown } | undefined)?.message === 'string') {
+				} else if (typeof (rawError as { message?: unknown } | undefined)?.message === "string") {
 					errorMessage = (rawError as { message: string }).message;
 				} else {
-					errorMessage = 'Unknown streaming error';
+					errorMessage = "Unknown streaming error";
 				}
 				envelope = {
-					type: 'error',
-					error: { type: 'api_error', message: errorMessage },
-					request_id: null,
-				};
+          type: "error",
+          error: { type: "api_error", message: errorMessage },
+          request_id: null,
+        };
 			}
 			throw new CopilotApiError(COPILOT_API_ERROR_STATUS_STREAMING, envelope);
 		}
@@ -711,6 +758,10 @@ export class CopilotApiService implements ICopilotApiService {
 }
 
 const KNOWN_SSE_EVENT_TYPES = new Set([
-	'message_start', 'message_delta', 'message_stop',
-	'content_block_start', 'content_block_delta', 'content_block_stop',
+  "message_start",
+  "message_delta",
+  "message_stop",
+  "content_block_start",
+  "content_block_delta",
+  "content_block_stop",
 ]);

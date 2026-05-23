@@ -2,11 +2,11 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import assert from 'assert';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
-import { EditorWhitespace, LinesLayout } from '../../../common/viewLayout/linesLayout.js';
+import assert from "assert";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
+import { EditorWhitespace, LinesLayout } from "../../../common/viewLayout/linesLayout.js";
 
-suite('Editor ViewLayout - LinesLayout', () => {
+suite("Editor ViewLayout - LinesLayout", () => {
 
 	ensureNoDisposablesAreLeakedInTestSuite();
 
@@ -30,7 +30,7 @@ suite('Editor ViewLayout - LinesLayout', () => {
 		});
 	}
 
-	test('LinesLayout 1', () => {
+	test("LinesLayout 1", () => {
 
 		// Start off with 10 lines
 		const linesLayout = new LinesLayout(10, 10, 0, 0, []);
@@ -139,7 +139,7 @@ suite('Editor ViewLayout - LinesLayout', () => {
 
 	});
 
-	test('LinesLayout 2', () => {
+	test("LinesLayout 2", () => {
 
 		// Start off with 10 lines and one whitespace after line 2, of height 5
 		const linesLayout = new LinesLayout(10, 1, 0, 0, []);
@@ -237,7 +237,7 @@ suite('Editor ViewLayout - LinesLayout', () => {
 		assert.strictEqual(linesLayout.getVerticalOffsetForLineNumber(10), 9);
 	});
 
-	test('LinesLayout Padding', () => {
+	test("LinesLayout Padding", () => {
 		// Start off with 10 lines
 		const linesLayout = new LinesLayout(10, 10, 15, 20, []);
 
@@ -332,7 +332,7 @@ suite('Editor ViewLayout - LinesLayout', () => {
 		assert.strictEqual(linesLayout.getWhitespaceIndexAtOrAfterVerticallOffset(70), -1);
 	});
 
-	test('LinesLayout getLineNumberAtOrAfterVerticalOffset', () => {
+	test("LinesLayout getLineNumberAtOrAfterVerticalOffset", () => {
 		const linesLayout = new LinesLayout(10, 1, 0, 0, []);
 		insertWhitespace(linesLayout, 6, 0, 10, 0);
 
@@ -381,7 +381,7 @@ suite('Editor ViewLayout - LinesLayout', () => {
 		assert.strictEqual(linesLayout.getLineNumberAtOrAfterVerticalOffset(23), 10);
 	});
 
-	test('LinesLayout getCenteredLineInViewport', () => {
+	test("LinesLayout getCenteredLineInViewport", () => {
 		const linesLayout = new LinesLayout(10, 1, 0, 0, []);
 		insertWhitespace(linesLayout, 6, 0, 10, 0);
 
@@ -464,7 +464,7 @@ suite('Editor ViewLayout - LinesLayout', () => {
 		assert.strictEqual(linesLayout.getLinesViewportData(22, 23).centeredLineNumber, 10);
 	});
 
-	test('LinesLayout getLinesViewportData 1', () => {
+	test("LinesLayout getLinesViewportData 1", () => {
 		const linesLayout = new LinesLayout(10, 10, 0, 0, []);
 		insertWhitespace(linesLayout, 6, 0, 100, 0);
 
@@ -597,7 +597,7 @@ suite('Editor ViewLayout - LinesLayout', () => {
 		assert.deepStrictEqual(viewportData.relativeVerticalOffset, [160, 170, 180, 190]);
 	});
 
-	test('LinesLayout getLinesViewportData 2 & getWhitespaceViewportData', () => {
+	test("LinesLayout getLinesViewportData 2 & getWhitespaceViewportData", () => {
 		const linesLayout = new LinesLayout(10, 10, 0, 0, []);
 		const a = insertWhitespace(linesLayout, 6, 0, 100, 0);
 		const b = insertWhitespace(linesLayout, 7, 0, 50, 0);
@@ -628,7 +628,7 @@ suite('Editor ViewLayout - LinesLayout', () => {
 			id: a,
 			afterLineNumber: 6,
 			verticalOffset: 60,
-			height: 100
+			height: 100,
 		}]);
 
 		// viewport 50->219
@@ -643,12 +643,12 @@ suite('Editor ViewLayout - LinesLayout', () => {
 			id: a,
 			afterLineNumber: 6,
 			verticalOffset: 60,
-			height: 100
+			height: 100,
 		}, {
 			id: b,
 			afterLineNumber: 7,
 			verticalOffset: 170,
-			height: 50
+			height: 50,
 		}]);
 
 		// viewport 50->220
@@ -668,7 +668,7 @@ suite('Editor ViewLayout - LinesLayout', () => {
 		assert.deepStrictEqual(viewportData.relativeVerticalOffset, [50, 160, 220, 230, 240]);
 	});
 
-	test('LinesLayout getWhitespaceAtVerticalOffset', () => {
+	test("LinesLayout getWhitespaceAtVerticalOffset", () => {
 		const linesLayout = new LinesLayout(10, 10, 0, 0, []);
 		const a = insertWhitespace(linesLayout, 6, 0, 100, 0);
 		const b = insertWhitespace(linesLayout, 7, 0, 50, 0);
@@ -710,7 +710,7 @@ suite('Editor ViewLayout - LinesLayout', () => {
 		assert.strictEqual(whitespace, null);
 	});
 
-	test('LinesLayout', () => {
+	test("LinesLayout", () => {
 
 		const linesLayout = new LinesLayout(100, 20, 0, 0, []);
 
@@ -943,10 +943,10 @@ suite('Editor ViewLayout - LinesLayout', () => {
 		assert.strictEqual(linesLayout.getWhitespaceAccumulatedHeightBeforeLineNumber(5), 50);
 	});
 
-	test('LinesLayout findInsertionIndex', () => {
+	test("LinesLayout findInsertionIndex", () => {
 
 		const makeInternalWhitespace = (afterLineNumbers: number[], ordinal: number = 0) => {
-			return afterLineNumbers.map((afterLineNumber) => new EditorWhitespace('', afterLineNumber, ordinal, 0, 0));
+			return afterLineNumbers.map((afterLineNumber) => new EditorWhitespace("", afterLineNumber, ordinal, 0, 0));
 		};
 
 		let arr: EditorWhitespace[];
@@ -1062,7 +1062,7 @@ suite('Editor ViewLayout - LinesLayout', () => {
 		assert.strictEqual(LinesLayout.findInsertionIndex(arr, 16, 0), 8);
 	});
 
-	test('LinesLayout changeWhitespaceAfterLineNumber & getFirstWhitespaceIndexAfterLineNumber', () => {
+	test("LinesLayout changeWhitespaceAfterLineNumber & getFirstWhitespaceIndexAfterLineNumber", () => {
 		const linesLayout = new LinesLayout(100, 20, 0, 0, []);
 
 		const a = insertWhitespace(linesLayout, 0, 0, 1, 0);
@@ -1186,7 +1186,7 @@ suite('Editor ViewLayout - LinesLayout', () => {
 		assert.strictEqual(linesLayout.getFirstWhitespaceIndexAfterLineNumber(8), -1); // --
 	});
 
-	test('LinesLayout Bug', () => {
+	test("LinesLayout Bug", () => {
 		const linesLayout = new LinesLayout(100, 20, 0, 0, []);
 
 		const a = insertWhitespace(linesLayout, 0, 0, 1, 0);

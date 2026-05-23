@@ -3,11 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable } from '../../../base/common/lifecycle.js';
-import { URI } from '../../../base/common/uri.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
+import { IDisposable } from "../../../base/common/lifecycle.js";
+import { URI } from "../../../base/common/uri.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
 
-export const IUndoRedoService = createDecorator<IUndoRedoService>('undoRedoService');
+export const IUndoRedoService = createDecorator<IUndoRedoService>(
+  "undoRedoService",
+);
 
 export const enum UndoRedoElementType {
 	Resource,
@@ -84,7 +86,7 @@ export interface UriComparisonKeyComputer {
 export class ResourceEditStackSnapshot {
 	constructor(
 		public readonly resource: URI,
-		public readonly elements: number[]
+		public readonly elements: number[],
 	) { }
 }
 

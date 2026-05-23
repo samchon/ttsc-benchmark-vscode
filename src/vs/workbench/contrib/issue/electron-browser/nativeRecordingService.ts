@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { isMacintosh } from '../../../../base/common/platform.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { INativeHostService } from '../../../../platform/native/common/native.js';
-import { IRecordingData, IRecordingService, RecordingState } from '../browser/recordingService.js';
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { isMacintosh } from "../../../../base/common/platform.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { INativeHostService } from "../../../../platform/native/common/native.js";
+import { IRecordingData, IRecordingService, RecordingState } from "../browser/recordingService.js";
 
 const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB — GitHub upload limit
 const SIZE_LIMIT_THRESHOLD = 0.9; // Stop at 90% to account for chunk overshoot
@@ -18,12 +18,14 @@ export class NativeRecordingService extends Disposable implements IRecordingServ
 	// MediaRecorder + getDisplayMedia may be absent if the renderer is run with reduced
 	// APIs (e.g. some test/runtime configurations); derive support from feature detection
 	// so startRecording can early-reject rather than blowing up with ReferenceError.
-	readonly isSupported = typeof MediaRecorder !== 'undefined'
-		&& typeof navigator !== 'undefined'
+	readonly isSupported = typeof MediaRecorder !== "undefined"
+		&& typeof navigator !== "undefined"
 		&& !!navigator.mediaDevices?.getDisplayMedia;
 
 	private _state = RecordingState.Idle;
-	private readonly _onDidChangeState = this._register(new Emitter<RecordingState>());
+	private readonly _onDidChangeState = this._register(
+    new Emitter<RecordingState>(),
+  );
 	readonly onDidChangeState: Event<RecordingState> = this._onDidChangeState.event;
 
 	private mediaRecorder: MediaRecorder | undefined;
@@ -42,14 +44,16 @@ export class NativeRecordingService extends Disposable implements IRecordingServ
 		this._register(toDisposable(() => this.cleanup()));
 	}
 
-	getScreenCapturePermissionStatus(): Promise<'not-determined' | 'granted' | 'denied' | 'restricted' | 'unknown'> {
-		return this.nativeHostService.getMediaAccessStatus('screen');
+	getScreenCapturePermissionStatus(): Promise<"not-determined" | "granted" | "denied" | "restricted" | "unknown"> {
+		return this.nativeHostService.getMediaAccessStatus("screen");
 	}
 
 	openScreenCapturePermissionSettings(): void {
 		if (isMacintosh) {
 			// Deep-link to the Screen Recording pane in macOS Privacy & Security.
-			void this.nativeHostService.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture');
+			void this.nativeHostService.openExternal(
+        "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",
+      );
 		}
 	}
 
@@ -66,14 +70,22 @@ export class NativeRecordingService extends Disposable implements IRecordingServ
 
 	getSupportedFormats(): { mimeType: string; label: string; extension: string }[] {
 		const formats: { mimeType: string; label: string; extension: string }[] = [];
-		if (typeof MediaRecorder !== 'undefined') {
-			if (MediaRecorder.isTypeSupported('video/mp4')) {
-				formats.push({ mimeType: 'video/mp4', label: 'MP4', extension: 'mp4' });
+		if (typeof MediaRecorder !== "undefined") {
+			if (MediaRecorder.isTypeSupported("video/mp4")) {
+				formats.push({ mimeType: "video/mp4", label: "MP4", extension: "mp4" });
 			}
-			if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
-				formats.push({ mimeType: 'video/webm;codecs=vp9', label: 'WebM', extension: 'webm' });
-			} else if (MediaRecorder.isTypeSupported('video/webm')) {
-				formats.push({ mimeType: 'video/webm', label: 'WebM', extension: 'webm' });
+			if (MediaRecorder.isTypeSupported("video/webm;codecs=vp9")) {
+				formats.push({
+          mimeType: "video/webm;codecs=vp9",
+          label: "WebM",
+          extension: "webm",
+        });
+			} else if (MediaRecorder.isTypeSupported("video/webm")) {
+				formats.push({
+          mimeType: "video/webm",
+          label: "WebM",
+          extension: "webm",
+        });
 			}
 		}
 		return formats;
@@ -81,10 +93,12 @@ export class NativeRecordingService extends Disposable implements IRecordingServ
 
 	async startRecording(preferredMimeType?: string): Promise<void> {
 		if (!this.isSupported) {
-			throw new Error('Recording is not supported in this environment (MediaRecorder / getDisplayMedia unavailable).');
+			throw new Error(
+        "Recording is not supported in this environment (MediaRecorder / getDisplayMedia unavailable).",
+      );
 		}
 		if (this._state === RecordingState.Recording) {
-			throw new Error('Recording already in progress.');
+			throw new Error("Recording already in progress.");
 		}
 
 		this.cleanup();
@@ -94,24 +108,29 @@ export class NativeRecordingService extends Disposable implements IRecordingServ
 		// desktopCapturer.getSources() (cached for subsequent recordings).
 		try {
 			this.mediaStream = await navigator.mediaDevices.getDisplayMedia({
-				video: true,
-				audio: false,
-			});
+        video: true,
+        audio: false,
+      });
 		} catch (err) {
-			this.logService.error('[RecordingService] Failed to get display media:', err);
-			throw new Error('Failed to start recording. The user may have cancelled the source picker.');
+			this.logService.error(
+        "[RecordingService] Failed to get display media:",
+        err,
+      );
+			throw new Error(
+        "Failed to start recording. The user may have cancelled the source picker.",
+      );
 		}
 
 		// Select mime type: prefer caller's choice, fall back to best available
 		let mimeType: string;
 		if (preferredMimeType && MediaRecorder.isTypeSupported(preferredMimeType)) {
 			mimeType = preferredMimeType;
-		} else if (MediaRecorder.isTypeSupported('video/mp4')) {
-			mimeType = 'video/mp4';
-		} else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
-			mimeType = 'video/webm;codecs=vp9';
+		} else if (MediaRecorder.isTypeSupported("video/mp4")) {
+			mimeType = "video/mp4";
+		} else if (MediaRecorder.isTypeSupported("video/webm;codecs=vp9")) {
+			mimeType = "video/webm;codecs=vp9";
 		} else {
-			mimeType = 'video/webm';
+			mimeType = "video/webm";
 		}
 
 		this.chunks = [];
@@ -121,13 +140,16 @@ export class NativeRecordingService extends Disposable implements IRecordingServ
 
 		try {
 			this.mediaRecorder = new MediaRecorder(this.mediaStream, {
-				mimeType,
-				videoBitsPerSecond: 2_500_000, // 2.5 Mbps — good quality, reasonable file size
-			});
+        mimeType,
+        videoBitsPerSecond: 2_500_000,
+      });
 		} catch (err) {
-			this.logService.error('[RecordingService] Failed to create MediaRecorder:', err);
+			this.logService.error(
+        "[RecordingService] Failed to create MediaRecorder:",
+        err,
+      );
 			this.stopTracks();
-			throw new Error('Failed to create media recorder.');
+			throw new Error("Failed to create media recorder.");
 		}
 
 		this.mediaRecorder.ondataavailable = e => {
@@ -141,7 +163,9 @@ export class NativeRecordingService extends Disposable implements IRecordingServ
 				this.chunks.push(e.data);
 				this.bytesRecorded += e.data.size;
 				if (this.bytesRecorded >= MAX_FILE_SIZE_BYTES * SIZE_LIMIT_THRESHOLD && this._state === RecordingState.Recording) {
-					this.logService.info('[RecordingService] Max file size reached, stopping recording.');
+					this.logService.info(
+            "[RecordingService] Max file size reached, stopping recording.",
+          );
 					this.stoppedBySize = true;
 					this.mediaRecorder?.stop();
 				}
@@ -160,7 +184,7 @@ export class NativeRecordingService extends Disposable implements IRecordingServ
 		// Also handle the stream ending externally (user clicked "Stop sharing")
 		for (const track of this.mediaStream.getTracks()) {
 			track.onended = () => {
-				if (this._state === RecordingState.Recording && this.mediaRecorder?.state === 'recording') {
+				if (this._state === RecordingState.Recording && this.mediaRecorder?.state === "recording") {
 					this.mediaRecorder.stop();
 				}
 			};
@@ -176,7 +200,7 @@ export class NativeRecordingService extends Disposable implements IRecordingServ
 		}
 
 		// If still recording, stop the recorder and wait for it to finish
-		if (this._state === RecordingState.Recording && this.mediaRecorder?.state === 'recording') {
+		if (this._state === RecordingState.Recording && this.mediaRecorder?.state === "recording") {
 			const recorder = this.mediaRecorder;
 			await new Promise<void>(resolve => {
 				// Replace onstop entirely so the original "external stop" handler doesn't
@@ -201,17 +225,17 @@ export class NativeRecordingService extends Disposable implements IRecordingServ
 			return undefined;
 		}
 
-		const mimeType = this.mediaRecorder?.mimeType ?? 'video/webm';
+		const mimeType = this.mediaRecorder?.mimeType ?? "video/webm";
 		const blob = new Blob(this.chunks, { type: mimeType });
 		const durationMs = Date.now() - this.startTime;
 
 		const data: IRecordingData = {
-			blob,
-			mimeType,
-			durationMs,
-			sizeBytes: blob.size,
-			stoppedBySize: this.stoppedBySize,
-		};
+      blob,
+      mimeType,
+      durationMs,
+      sizeBytes: blob.size,
+      stoppedBySize: this.stoppedBySize,
+    };
 
 		this.chunks = [];
 		this.mediaRecorder = undefined;
@@ -226,7 +250,7 @@ export class NativeRecordingService extends Disposable implements IRecordingServ
 			// does not append a chunk that we'd then have to GC explicitly.
 			this.mediaRecorder.ondataavailable = null;
 			this.mediaRecorder.onstop = null;
-			if (this._state === RecordingState.Recording && this.mediaRecorder.state === 'recording') {
+			if (this._state === RecordingState.Recording && this.mediaRecorder.state === "recording") {
 				this.mediaRecorder.stop();
 			}
 		}

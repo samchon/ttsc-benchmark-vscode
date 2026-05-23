@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../base/common/event.js';
-import { getCompressedContent, IJSONSchema } from '../../../base/common/jsonSchema.js';
-import { Disposable, DisposableStore, IDisposable, toDisposable } from '../../../base/common/lifecycle.js';
-import * as platform from '../../registry/common/platform.js';
+import { Emitter, Event } from "../../../base/common/event.js";
+import { getCompressedContent, IJSONSchema } from "../../../base/common/jsonSchema.js";
+import { Disposable, DisposableStore, IDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import * as platform from "../../registry/common/platform.js";
 
 export const Extensions = {
-	JSONContribution: 'base.contributions.json'
+  JSONContribution: "base.contributions.json",
 };
 
 export interface ISchemaContributions {
@@ -57,7 +57,7 @@ export interface IJSONContributionRegistry {
 
 
 function normalizeId(id: string) {
-	if (id.length > 0 && id.charAt(id.length - 1) === '#') {
+	if (id.length > 0 && id.charAt(id.length - 1) === "#") {
 		return id.substring(0, id.length - 1);
 	}
 	return id;
@@ -73,7 +73,9 @@ class JSONContributionRegistry extends Disposable implements IJSONContributionRe
 	private readonly _onDidChangeSchema = this._register(new Emitter<string>());
 	readonly onDidChangeSchema: Event<string> = this._onDidChangeSchema.event;
 
-	private readonly _onDidChangeSchemaAssociations = this._register(new Emitter<void>());
+	private readonly _onDidChangeSchemaAssociations = this._register(
+    new Emitter<void>(),
+  );
 	readonly onDidChangeSchemaAssociations: Event<void> = this._onDidChangeSchemaAssociations.event;
 
 	public registerSchema(uri: string, unresolvedSchemaContent: IJSONSchema, store?: DisposableStore): void {
@@ -82,10 +84,12 @@ class JSONContributionRegistry extends Disposable implements IJSONContributionRe
 		this._onDidChangeSchema.fire(uri);
 
 		if (store) {
-			store.add(toDisposable(() => {
-				delete this.schemasById[normalizedUri];
-				this._onDidChangeSchema.fire(uri);
-			}));
+			store.add(
+        toDisposable(() => {
+          delete this.schemasById[normalizedUri];
+          this._onDidChangeSchema.fire(uri);
+        }),
+      );
 		}
 	}
 
@@ -120,8 +124,8 @@ class JSONContributionRegistry extends Disposable implements IJSONContributionRe
 
 	public getSchemaContributions(): ISchemaContributions {
 		return {
-			schemas: this.schemasById,
-		};
+      schemas: this.schemasById,
+    };
 	}
 
 	public getSchemaContent(uri: string): string | undefined {

@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ExtHostTestItemEvent, InvalidTestItemError } from '../../contrib/testing/common/testItemCollection.js';
-import * as vscode from 'vscode';
+import { ExtHostTestItemEvent, InvalidTestItemError } from "../../contrib/testing/common/testItemCollection.js";
+import * as vscode from "vscode";
 
 export interface IExtHostTestItemApi {
 	controllerId: string;
@@ -28,7 +28,7 @@ export const createPrivateApiFor = (impl: vscode.TestItem, controllerId: string)
 export const getPrivateApiFor = (impl: vscode.TestItem) => {
 	const api = eventPrivateApis.get(impl);
 	if (!api) {
-		throw new InvalidTestItemError(impl?.id || '<unknown>');
+		throw new InvalidTestItemError(impl?.id || "<unknown>");
 	}
 
 	return api;

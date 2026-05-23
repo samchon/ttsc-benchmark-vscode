@@ -3,23 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Position } from '../../../../common/core/position.js';
-import { ITestCodeEditor, TestCodeEditorInstantiationOptions, withTestCodeEditor } from '../../../../test/browser/testCodeEditor.js';
+import { Position } from "../../../../common/core/position.js";
+import {
+  ITestCodeEditor,
+  TestCodeEditorInstantiationOptions,
+  withTestCodeEditor,
+} from "../../../../test/browser/testCodeEditor.js";
 
 export function deserializePipePositions(text: string): [string, Position[]] {
-	let resultText = '';
+	let resultText = "";
 	let lineNumber = 1;
 	let charIndex = 0;
 	const positions: Position[] = [];
 	for (let i = 0, len = text.length; i < len; i++) {
 		const chr = text.charAt(i);
-		if (chr === '\n') {
+		if (chr === "\n") {
 			resultText += chr;
 			lineNumber++;
 			charIndex = 0;
 			continue;
 		}
-		if (chr === '|') {
+		if (chr === "|") {
 			positions.push(new Position(lineNumber, charIndex + 1));
 		} else {
 			resultText += chr;
@@ -31,17 +35,17 @@ export function deserializePipePositions(text: string): [string, Position[]] {
 
 export function serializePipePositions(text: string, positions: Position[]): string {
 	positions.sort(Position.compare);
-	let resultText = '';
+	let resultText = "";
 	let lineNumber = 1;
 	let charIndex = 0;
 	for (let i = 0, len = text.length; i < len; i++) {
 		const chr = text.charAt(i);
 		if (positions.length > 0 && positions[0].lineNumber === lineNumber && positions[0].column === charIndex + 1) {
-			resultText += '|';
+			resultText += "|";
 			positions.shift();
 		}
 		resultText += chr;
-		if (chr === '\n') {
+		if (chr === "\n") {
 			lineNumber++;
 			charIndex = 0;
 		} else {
@@ -49,7 +53,7 @@ export function serializePipePositions(text: string, positions: Position[]): str
 		}
 	}
 	if (positions.length > 0 && positions[0].lineNumber === lineNumber && positions[0].column === charIndex + 1) {
-		resultText += '|';
+		resultText += "|";
 		positions.shift();
 	}
 	if (positions.length > 0) {

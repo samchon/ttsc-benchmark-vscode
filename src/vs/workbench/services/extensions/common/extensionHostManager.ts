@@ -3,52 +3,59 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IntervalTimer } from '../../../../base/common/async.js';
-import { VSBuffer } from '../../../../base/common/buffer.js';
-import * as errors from '../../../../base/common/errors.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable, IDisposable } from '../../../../base/common/lifecycle.js';
-import { StopWatch } from '../../../../base/common/stopwatch.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IMessagePassingProtocol } from '../../../../base/parts/ipc/common/ipc.js';
-import * as nls from '../../../../nls.js';
-import { Categories } from '../../../../platform/action/common/actionCommonCategories.js';
-import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
-import { ExtensionIdentifier, IExtensionDescription } from '../../../../platform/extensions/common/extensions.js';
-import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { RemoteAuthorityResolverErrorCode, getRemoteAuthorityPrefix } from '../../../../platform/remote/common/remoteAuthorityResolver.js';
-import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
-import { IEditorService } from '../../editor/common/editorService.js';
-import { IWorkbenchEnvironmentService } from '../../environment/common/environmentService.js';
-import { ExtHostCustomersRegistry, IInternalExtHostContext } from './extHostCustomers.js';
-import { ExtensionHostKind, extensionHostKindToString } from './extensionHostKind.js';
-import { IExtensionHostManager } from './extensionHostManagers.js';
-import { IExtensionDescriptionDelta } from './extensionHostProtocol.js';
-import { IExtensionHostProxy, IResolveAuthorityResult } from './extensionHostProxy.js';
-import { ExtensionRunningLocation } from './extensionRunningLocation.js';
-import { ActivationKind, ExtensionActivationReason, ExtensionHostStartup, IExtensionHost, IExtensionInspectInfo, IInternalExtensionService } from './extensions.js';
-import { Proxied, ProxyIdentifier } from './proxyIdentifier.js';
-import { IRPCProtocolLogger, RPCProtocol, RequestInitiator, ResponsiveState } from './rpcProtocol.js';
+import { IntervalTimer } from "../../../../base/common/async.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import * as errors from "../../../../base/common/errors.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable, IDisposable } from "../../../../base/common/lifecycle.js";
+import { StopWatch } from "../../../../base/common/stopwatch.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IMessagePassingProtocol } from "../../../../base/parts/ipc/common/ipc.js";
+import * as nls from "../../../../nls.js";
+import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
+import { Action2, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { ExtensionIdentifier, IExtensionDescription } from "../../../../platform/extensions/common/extensions.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { RemoteAuthorityResolverErrorCode, getRemoteAuthorityPrefix } from "../../../../platform/remote/common/remoteAuthorityResolver.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IEditorService } from "../../editor/common/editorService.js";
+import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
+import { ExtHostCustomersRegistry, IInternalExtHostContext } from "./extHostCustomers.js";
+import { ExtensionHostKind, extensionHostKindToString } from "./extensionHostKind.js";
+import { IExtensionHostManager } from "./extensionHostManagers.js";
+import { IExtensionDescriptionDelta } from "./extensionHostProtocol.js";
+import { IExtensionHostProxy, IResolveAuthorityResult } from "./extensionHostProxy.js";
+import { ExtensionRunningLocation } from "./extensionRunningLocation.js";
+import {
+  ActivationKind,
+  ExtensionActivationReason,
+  ExtensionHostStartup,
+  IExtensionHost,
+  IExtensionInspectInfo,
+  IInternalExtensionService,
+} from "./extensions.js";
+import { Proxied, ProxyIdentifier } from "./proxyIdentifier.js";
+import { IRPCProtocolLogger, RPCProtocol, RequestInitiator, ResponsiveState } from "./rpcProtocol.js";
 
 // Enable to see detailed message communication between window and extension host
 const LOG_EXTENSION_HOST_COMMUNICATION = false;
 const LOG_USE_COLORS = true;
 
 type ExtensionHostStartupClassification = {
-	owner: 'alexdima';
-	comment: 'The startup state of the extension host';
-	time: { classification: 'SystemMetaData'; purpose: 'PerformanceAndHealth'; comment: 'The time reported by Date.now().' };
-	action: { classification: 'SystemMetaData'; purpose: 'PerformanceAndHealth'; comment: 'The action: starting, success or error.' };
-	kind: { classification: 'SystemMetaData'; purpose: 'PerformanceAndHealth'; comment: 'The extension host kind: LocalProcess, LocalWebWorker or Remote.' };
-	errorName?: { classification: 'SystemMetaData'; purpose: 'PerformanceAndHealth'; comment: 'The error name.' };
-	errorMessage?: { classification: 'SystemMetaData'; purpose: 'PerformanceAndHealth'; comment: 'The error message.' };
-	errorStack?: { classification: 'SystemMetaData'; purpose: 'PerformanceAndHealth'; comment: 'The error stack.' };
+	owner: "alexdima";
+	comment: "The startup state of the extension host";
+	time: { classification: "SystemMetaData"; purpose: "PerformanceAndHealth"; comment: "The time reported by Date.now()." };
+	action: { classification: "SystemMetaData"; purpose: "PerformanceAndHealth"; comment: "The action: starting, success or error." };
+	kind: { classification: "SystemMetaData"; purpose: "PerformanceAndHealth"; comment: "The extension host kind: LocalProcess, LocalWebWorker or Remote." };
+	errorName?: { classification: "SystemMetaData"; purpose: "PerformanceAndHealth"; comment: "The error name." };
+	errorMessage?: { classification: "SystemMetaData"; purpose: "PerformanceAndHealth"; comment: "The error message." };
+	errorStack?: { classification: "SystemMetaData"; purpose: "PerformanceAndHealth"; comment: "The error stack." };
 };
 
 type ExtensionHostStartupEvent = {
 	time: number;
-	action: 'starting' | 'success' | 'error';
+	action: "starting" | "success" | "error";
 	kind: string;
 	errorName?: string;
 	errorMessage?: string;
@@ -59,7 +66,9 @@ export class ExtensionHostManager extends Disposable implements IExtensionHostMa
 
 	public readonly onDidExit: Event<[number, string | null]>;
 
-	private readonly _onDidChangeResponsiveState: Emitter<ResponsiveState> = this._register(new Emitter<ResponsiveState>());
+	private readonly _onDidChangeResponsiveState: Emitter<ResponsiveState> = this._register(
+    new Emitter<ResponsiveState>(),
+  );
 	public readonly onDidChangeResponsiveState: Event<ResponsiveState> = this._onDidChangeResponsiveState.event;
 
 	/**
@@ -108,11 +117,14 @@ export class ExtensionHostManager extends Disposable implements IExtensionHostMa
 		this.onDidExit = this._extensionHost.onExit;
 
 		const startingTelemetryEvent: ExtensionHostStartupEvent = {
-			time: Date.now(),
-			action: 'starting',
-			kind: extensionHostKindToString(this.kind)
-		};
-		this._telemetryService.publicLog2<ExtensionHostStartupEvent, ExtensionHostStartupClassification>('extensionHostStartup', startingTelemetryEvent);
+      time: Date.now(),
+      action: "starting",
+      kind: extensionHostKindToString(this.kind),
+    };
+		this._telemetryService.publicLog2<ExtensionHostStartupEvent, ExtensionHostStartupClassification>(
+      "extensionHostStartup",
+      startingTelemetryEvent,
+    );
 
 		this._proxy = this._extensionHost.start().then(
 			(protocol) => {
@@ -120,10 +132,10 @@ export class ExtensionHostManager extends Disposable implements IExtensionHostMa
 				// Track healthy extension host startup
 				const successTelemetryEvent: ExtensionHostStartupEvent = {
 					time: Date.now(),
-					action: 'success',
-					kind: extensionHostKindToString(this.kind)
+					action: "success",
+					kind: extensionHostKindToString(this.kind),
 				};
-				this._telemetryService.publicLog2<ExtensionHostStartupEvent, ExtensionHostStartupClassification>('extensionHostStartup', successTelemetryEvent);
+				this._telemetryService.publicLog2<ExtensionHostStartupEvent, ExtensionHostStartupClassification>("extensionHostStartup", successTelemetryEvent);
 
 				return this._createExtensionHostCustomers(this.kind, protocol);
 			},
@@ -134,8 +146,8 @@ export class ExtensionHostManager extends Disposable implements IExtensionHostMa
 				// Track errors during extension host startup
 				const failureTelemetryEvent: ExtensionHostStartupEvent = {
 					time: Date.now(),
-					action: 'error',
-					kind: extensionHostKindToString(this.kind)
+					action: "error",
+					kind: extensionHostKindToString(this.kind),
 				};
 
 				if (err && err.name) {
@@ -147,18 +159,25 @@ export class ExtensionHostManager extends Disposable implements IExtensionHostMa
 				if (err && err.stack) {
 					failureTelemetryEvent.errorStack = err.stack;
 				}
-				this._telemetryService.publicLog2<ExtensionHostStartupEvent, ExtensionHostStartupClassification>('extensionHostStartup', failureTelemetryEvent);
+				this._telemetryService.publicLog2<ExtensionHostStartupEvent, ExtensionHostStartupClassification>("extensionHostStartup", failureTelemetryEvent);
 
 				return null;
-			}
+			},
 		);
 		this._proxy.then(() => {
-			this._hasStarted = true;
-			initialActivationEvents.forEach((activationEvent) => this.activateByEvent(activationEvent, ActivationKind.Normal));
-			this._register(registerLatencyTestProvider({
-				measure: () => this.measure()
-			}));
-		});
+      this._hasStarted = true;
+      initialActivationEvents.forEach(
+        (activationEvent) => this.activateByEvent(
+          activationEvent,
+          ActivationKind.Normal,
+        ),
+      );
+      this._register(
+        registerLatencyTestProvider({
+          measure: () => this.measure(),
+        }),
+      );
+    });
 	}
 
 	public async disconnect(): Promise<void> {
@@ -191,11 +210,11 @@ export class ExtensionHostManager extends Disposable implements IExtensionHostMa
 		const down = await this._measureDown(proxy);
 		const up = await this._measureUp(proxy);
 		return {
-			remoteAuthority: this._extensionHost.remoteAuthority,
-			latency,
-			down,
-			up
-		};
+      remoteAuthority: this._extensionHost.remoteAuthority,
+      latency,
+      down,
+      up,
+    };
 	}
 
 	public get isReady(): boolean {
@@ -256,7 +275,13 @@ export class ExtensionHostManager extends Disposable implements IExtensionHostMa
 		}
 
 		this._rpcProtocol = new RPCProtocol(protocol, logger);
-		this._register(this._rpcProtocol.onDidChangeResponsiveState((responsiveState: ResponsiveState) => this._onDidChangeResponsiveState.fire(responsiveState)));
+		this._register(
+      this._rpcProtocol.onDidChangeResponsiveState(
+        (responsiveState: ResponsiveState) => this._onDidChangeResponsiveState.fire(
+          responsiveState,
+        ),
+      ),
+    );
 		let extensionHostProxy: IExtensionHostProxy | null = null as IExtensionHostProxy | null;
 		let mainProxyIdentifiers: ProxyIdentifier<any>[] = [];
 		const extHostContext: IInternalExtHostContext = {
@@ -284,11 +309,16 @@ export class ExtensionHostManager extends Disposable implements IExtensionHostMa
 		for (let i = 0, len = namedCustomers.length; i < len; i++) {
 			const [id, ctor] = namedCustomers[i];
 			try {
-				const instance = this._instantiationService.createInstance(ctor, extHostContext);
+				const instance = this._instantiationService.createInstance(
+          ctor,
+          extHostContext,
+        );
 				this._customers.push(instance);
 				this._rpcProtocol.set(id, instance);
 			} catch (err) {
-				this._logService.error(`Cannot instantiate named customer: '${id.sid}'`);
+				this._logService.error(
+          `Cannot instantiate named customer: '${id.sid}'`,
+        );
 				this._logService.error(err);
 				errors.onUnexpectedError(err);
 			}
@@ -298,7 +328,10 @@ export class ExtensionHostManager extends Disposable implements IExtensionHostMa
 		const customers = ExtHostCustomersRegistry.getCustomers();
 		for (const ctor of customers) {
 			try {
-				const instance = this._instantiationService.createInstance(ctor, extHostContext);
+				const instance = this._instantiationService.createInstance(
+          ctor,
+          extHostContext,
+        );
 				this._customers.push(instance);
 			} catch (err) {
 				this._logService.error(err);
@@ -326,7 +359,10 @@ export class ExtensionHostManager extends Disposable implements IExtensionHostMa
 
 	public activateByEvent(activationEvent: string, activationKind: ActivationKind): Promise<void> {
 		if (!this._cachedActivationEvents.has(activationEvent)) {
-			this._cachedActivationEvents.set(activationEvent, this._activateByEvent(activationEvent, activationKind));
+			this._cachedActivationEvents.set(
+        activationEvent,
+        this._activateByEvent(activationEvent, activationKind),
+      );
 		}
 		return this._cachedActivationEvents.get(activationEvent)!;
 	}
@@ -346,7 +382,9 @@ export class ExtensionHostManager extends Disposable implements IExtensionHostMa
 			return;
 		}
 
-		if (!this._extensionHost.extensions!.containsActivationEvent(activationEvent)) {
+		if (!this._extensionHost.extensions!.containsActivationEvent(
+      activationEvent,
+    )) {
 			this._resolvedActivationEvents.add(activationEvent);
 			return;
 		}
@@ -373,28 +411,34 @@ export class ExtensionHostManager extends Disposable implements IExtensionHostMa
 		const sw = StopWatch.create(false);
 		const prefix = () => `[${extensionHostKindToString(this._extensionHost.runningLocation.kind)}${this._extensionHost.runningLocation.affinity}][resolveAuthority(${getRemoteAuthorityPrefix(remoteAuthority)},${resolveAttempt})][${sw.elapsed()}ms] `;
 		const logInfo = (msg: string) => this._logService.info(`${prefix()}${msg}`);
-		const logError = (msg: string, err: any = undefined) => this._logService.error(`${prefix()}${msg}`, err);
+		const logError = (msg: string, err: any = undefined) => this._logService.error(
+      `${prefix()}${msg}`,
+      err,
+    );
 
 		logInfo(`obtaining proxy...`);
 		const proxy = await this._proxy;
 		if (!proxy) {
 			logError(`no proxy`);
 			return {
-				type: 'error',
+				type: "error",
 				error: {
 					message: `Cannot resolve authority`,
 					code: RemoteAuthorityResolverErrorCode.Unknown,
-					detail: undefined
-				}
+					detail: undefined,
+				},
 			};
 		}
 		logInfo(`invoking...`);
 		const intervalLogger = new IntervalTimer();
 		try {
-			intervalLogger.cancelAndSet(() => logInfo('waiting...'), 1000);
-			const resolverResult = await proxy.resolveAuthority(remoteAuthority, resolveAttempt);
+			intervalLogger.cancelAndSet(() => logInfo("waiting..."), 1000);
+			const resolverResult = await proxy.resolveAuthority(
+        remoteAuthority,
+        resolveAttempt,
+      );
 			intervalLogger.dispose();
-			if (resolverResult.type === 'ok') {
+			if (resolverResult.type === "ok") {
 				logInfo(`returned ${resolverResult.value.authority.connectTo}`);
 			} else {
 				logError(`returned an error`, resolverResult.error);
@@ -404,12 +448,12 @@ export class ExtensionHostManager extends Disposable implements IExtensionHostMa
 			intervalLogger.dispose();
 			logError(`returned an error`, err);
 			return {
-				type: 'error',
+				type: "error",
 				error: {
 					message: err.message,
 					code: RemoteAuthorityResolverErrorCode.Unknown,
-					detail: err
-				}
+					detail: err,
+				},
 			};
 		}
 	}
@@ -427,14 +471,18 @@ export class ExtensionHostManager extends Disposable implements IExtensionHostMa
 		if (!proxy) {
 			return;
 		}
-		const deltaExtensions = this._extensionHost.extensions!.set(extensionRegistryVersionId, allExtensions, myExtensions);
+		const deltaExtensions = this._extensionHost.extensions!.set(
+      extensionRegistryVersionId,
+      allExtensions,
+      myExtensions,
+    );
 		return proxy.startExtensionHost(deltaExtensions);
 	}
 
 	public async extensionTestsExecute(): Promise<number> {
 		const proxy = await this._proxy;
 		if (!proxy) {
-			throw new Error('Could not obtain Extension Host Proxy');
+			throw new Error("Could not obtain Extension Host Proxy");
 		}
 		return proxy.extensionTestsExecute();
 	}
@@ -448,7 +496,9 @@ export class ExtensionHostManager extends Disposable implements IExtensionHostMa
 		if (!proxy) {
 			return;
 		}
-		const outgoingExtensionsDelta = this._extensionHost.extensions!.delta(incomingExtensionsDelta);
+		const outgoingExtensionsDelta = this._extensionHost.extensions!.delta(
+      incomingExtensionsDelta,
+    );
 		if (!outgoingExtensionsDelta) {
 			// The extension host already has this version of the extensions.
 			return;
@@ -457,7 +507,9 @@ export class ExtensionHostManager extends Disposable implements IExtensionHostMa
 	}
 
 	public containsExtension(extensionId: ExtensionIdentifier): boolean {
-		return this._extensionHost.extensions?.containsExtension(extensionId) ?? false;
+		return this._extensionHost.extensions?.containsExtension(
+      extensionId,
+    ) ?? false;
 	}
 
 	public async setRemoteEnvironment(env: { [key: string]: string | null }): Promise<void> {
@@ -478,17 +530,17 @@ export function friendlyExtHostName(kind: ExtensionHostKind, pid: number | null)
 }
 
 const colorTables = [
-	['#2977B1', '#FC802D', '#34A13A', '#D3282F', '#9366BA'],
-	['#8B564C', '#E177C0', '#7F7F7F', '#BBBE3D', '#2EBECD']
+  ["#2977B1", "#FC802D", "#34A13A", "#D3282F", "#9366BA"],
+  ["#8B564C", "#E177C0", "#7F7F7F", "#BBBE3D", "#2EBECD"],
 ];
 
 function prettyWithoutArrays(data: any): any {
 	if (Array.isArray(data)) {
 		return data;
 	}
-	if (data && typeof data === 'object' && typeof data.toString === 'function') {
+	if (data && typeof data === "object" && typeof data.toString === "function") {
 		const result = data.toString();
-		if (result !== '[object Object]') {
+		if (result !== "[object Object]") {
 			return result;
 		}
 	}
@@ -508,18 +560,24 @@ class RPCLogger implements IRPCProtocolLogger {
 	private _totalOutgoing = 0;
 
 	constructor(
-		private readonly _kind: ExtensionHostKind
+		private readonly _kind: ExtensionHostKind,
 	) { }
 
 	private _log(direction: string, totalLength: number, msgLength: number, req: number, initiator: RequestInitiator, str: string, data: any): void {
 		data = pretty(data);
 
 		const colorTable = colorTables[initiator];
-		const color = LOG_USE_COLORS ? colorTable[req % colorTable.length] : '#000000';
-		let args = [`%c[${extensionHostKindToString(this._kind)}][${direction}]%c[${String(totalLength).padStart(7)}]%c[len: ${String(msgLength).padStart(5)}]%c${String(req).padStart(5)} - ${str}`, 'color: darkgreen', 'color: grey', 'color: grey', `color: ${color}`];
+		const color = LOG_USE_COLORS ? colorTable[req % colorTable.length] : "#000000";
+		let args = [
+      `%c[${extensionHostKindToString(this._kind)}][${direction}]%c[${String(totalLength).padStart(7)}]%c[len: ${String(msgLength).padStart(5)}]%c${String(req).padStart(5)} - ${str}`,
+      "color: darkgreen",
+      "color: grey",
+      "color: grey",
+      `color: ${color}`,
+    ];
 		if (/\($/.test(str)) {
 			args = args.concat(data);
-			args.push(')');
+			args.push(")");
 		} else {
 			args.push(data);
 		}
@@ -528,12 +586,28 @@ class RPCLogger implements IRPCProtocolLogger {
 
 	logIncoming(msgLength: number, req: number, initiator: RequestInitiator, str: string, data?: any): void {
 		this._totalIncoming += msgLength;
-		this._log('Ext \u2192 Win', this._totalIncoming, msgLength, req, initiator, str, data);
+		this._log(
+      "Ext \u2192 Win",
+      this._totalIncoming,
+      msgLength,
+      req,
+      initiator,
+      str,
+      data,
+    );
 	}
 
 	logOutgoing(msgLength: number, req: number, initiator: RequestInitiator, str: string, data?: any): void {
 		this._totalOutgoing += msgLength;
-		this._log('Win \u2192 Ext', this._totalOutgoing, msgLength, req, initiator, str, data);
+		this._log(
+      "Win \u2192 Ext",
+      this._totalOutgoing,
+      msgLength,
+      req,
+      initiator,
+      str,
+      data,
+    );
 	}
 }
 
@@ -543,10 +617,10 @@ interface RPCTelemetryData {
 }
 
 type RPCTelemetryDataClassification = {
-	owner: 'jrieken';
-	comment: 'Insights about RPC message sizes';
-	type: { classification: 'SystemMetaData'; purpose: 'PerformanceAndHealth'; comment: 'The type of the RPC message' };
-	length: { classification: 'SystemMetaData'; purpose: 'PerformanceAndHealth'; comment: 'The byte-length of the RPC message' };
+	owner: "jrieken";
+	comment: "Insights about RPC message sizes";
+	type: { classification: "SystemMetaData"; purpose: "PerformanceAndHealth"; comment: "The type of the RPC message" };
+	length: { classification: "SystemMetaData"; purpose: "PerformanceAndHealth"; comment: "The byte-length of the RPC message" };
 };
 
 class TelemetryRPCLogger implements IRPCProtocolLogger {
@@ -561,33 +635,48 @@ class TelemetryRPCLogger implements IRPCProtocolLogger {
 
 	logIncoming(msgLength: number, req: number, initiator: RequestInitiator, str: string): void {
 
-		if (initiator === RequestInitiator.LocalSide && /^receiveReply(Err)?:/.test(str)) {
+		if (initiator === RequestInitiator.LocalSide && /^receiveReply(Err)?:/.test(
+      str,
+    )) {
 			// log the size of reply messages
-			const requestStr = this._pendingRequests.get(req) ?? 'unknown_reply';
+			const requestStr = this._pendingRequests.get(req) ?? "unknown_reply";
 			this._pendingRequests.delete(req);
-			this._telemetryService.publicLog2<RPCTelemetryData, RPCTelemetryDataClassification>('extensionhost.incoming', {
-				type: `${str} ${requestStr}`,
-				length: msgLength
-			});
+			this._telemetryService.publicLog2<RPCTelemetryData, RPCTelemetryDataClassification>(
+        "extensionhost.incoming",
+        {
+          type: `${str} ${requestStr}`,
+          length: msgLength,
+        },
+      );
 		}
 
-		if (initiator === RequestInitiator.OtherSide && /^receiveRequest /.test(str)) {
+		if (initiator === RequestInitiator.OtherSide && /^receiveRequest /.test(
+      str,
+    )) {
 			// incoming request
-			this._telemetryService.publicLog2<RPCTelemetryData, RPCTelemetryDataClassification>('extensionhost.incoming', {
-				type: `${str}`,
-				length: msgLength
-			});
+			this._telemetryService.publicLog2<RPCTelemetryData, RPCTelemetryDataClassification>(
+        "extensionhost.incoming",
+        {
+          type: `${str}`,
+          length: msgLength,
+        },
+      );
 		}
 	}
 
 	logOutgoing(msgLength: number, req: number, initiator: RequestInitiator, str: string): void {
 
-		if (initiator === RequestInitiator.LocalSide && str.startsWith('request: ')) {
+		if (initiator === RequestInitiator.LocalSide && str.startsWith(
+      "request: ",
+    )) {
 			this._pendingRequests.set(req, str);
-			this._telemetryService.publicLog2<RPCTelemetryData, RPCTelemetryDataClassification>('extensionhost.outgoing', {
-				type: str,
-				length: msgLength
-			});
+			this._telemetryService.publicLog2<RPCTelemetryData, RPCTelemetryDataClassification>(
+        "extensionhost.outgoing",
+        {
+          type: str,
+          length: msgLength,
+        },
+      );
 		}
 	}
 }
@@ -614,7 +703,7 @@ function registerLatencyTestProvider(provider: ExtHostLatencyProvider): IDisposa
 					return;
 				}
 			}
-		}
+		},
 	};
 }
 
@@ -626,10 +715,10 @@ registerAction2(class MeasureExtHostLatencyAction extends Action2 {
 
 	constructor() {
 		super({
-			id: 'editor.action.measureExtHostLatency',
-			title: nls.localize2('measureExtHostLatency', "Measure Extension Host Latency"),
+			id: "editor.action.measureExtHostLatency",
+			title: nls.localize2("measureExtHostLatency", "Measure Extension Host Latency"),
 			category: Categories.Developer,
-			f1: true
+			f1: true,
 		});
 	}
 
@@ -638,12 +727,12 @@ registerAction2(class MeasureExtHostLatencyAction extends Action2 {
 		const editorService = accessor.get(IEditorService);
 
 		const measurements = await Promise.all(getLatencyTestProviders().map(provider => provider.measure()));
-		editorService.openEditor({ resource: undefined, contents: measurements.map(MeasureExtHostLatencyAction._print).join('\n\n'), options: { pinned: true } });
+		editorService.openEditor({ resource: undefined, contents: measurements.map(MeasureExtHostLatencyAction._print).join("\n\n"), options: { pinned: true } });
 	}
 
 	private static _print(m: ExtHostLatencyResult | null): string {
 		if (!m) {
-			return '';
+			return "";
 		}
 		return `${m.remoteAuthority ? `Authority: ${m.remoteAuthority}\n` : ``}Roundtrip latency: ${m.latency.toFixed(3)}ms\nUp: ${MeasureExtHostLatencyAction._printSpeed(m.up)}\nDown: ${MeasureExtHostLatencyAction._printSpeed(m.down)}\n`;
 	}

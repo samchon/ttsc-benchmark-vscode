@@ -3,19 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../../../base/common/event.js';
-import { Disposable, DisposableStore } from '../../../../../../base/common/lifecycle.js';
-import { ICodeEditor } from '../../../../../../editor/browser/editorBrowser.js';
-import { Selection, SelectionDirection } from '../../../../../../editor/common/core/selection.js';
-import { CursorChangeReason } from '../../../../../../editor/common/cursorEvents.js';
-import { FindMatch, IModelDeltaDecoration, ITextModel } from '../../../../../../editor/common/model.js';
-import { IConfigurationService } from '../../../../../../platform/configuration/common/configuration.js';
-import { IActiveNotebookEditor, ICellViewModel, INotebookEditor, INotebookEditorContribution } from '../../notebookBrowser.js';
-import { registerNotebookContribution } from '../../notebookEditorExtensions.js';
+import { Event } from "../../../../../../base/common/event.js";
+import { Disposable, DisposableStore } from "../../../../../../base/common/lifecycle.js";
+import { ICodeEditor } from "../../../../../../editor/browser/editorBrowser.js";
+import { Selection, SelectionDirection } from "../../../../../../editor/common/core/selection.js";
+import { CursorChangeReason } from "../../../../../../editor/common/cursorEvents.js";
+import { FindMatch, IModelDeltaDecoration, ITextModel } from "../../../../../../editor/common/model.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import {
+  IActiveNotebookEditor,
+  ICellViewModel,
+  INotebookEditor,
+  INotebookEditorContribution,
+} from "../../notebookBrowser.js";
+import { registerNotebookContribution } from "../../notebookEditorExtensions.js";
 
 class NotebookSelectionHighlighter extends Disposable implements INotebookEditorContribution {
 
-	static readonly id: string = 'notebook.selectionHighlighter';
+	static readonly id: string = "notebook.selectionHighlighter";
 	private isEnabled: boolean = false;
 
 	private cellDecorationIds = new Map<ICellViewModel, string[]>();
@@ -32,10 +37,12 @@ class NotebookSelectionHighlighter extends Disposable implements INotebookEditor
 	) {
 		super();
 
-		this.isEnabled = this.configurationService.getValue<boolean>('editor.selectionHighlight');
+		this.isEnabled = this.configurationService.getValue<boolean>(
+      "editor.selectionHighlight",
+    );
 		this._register(this.configurationService.onDidChangeConfiguration(e => {
-			if (e.affectsConfiguration('editor.selectionHighlight')) {
-				this.isEnabled = this.configurationService.getValue<boolean>('editor.selectionHighlight');
+			if (e.affectsConfiguration("editor.selectionHighlight")) {
+				this.isEnabled = this.configurationService.getValue<boolean>("editor.selectionHighlight");
 			}
 		}));
 
@@ -107,12 +114,7 @@ class NotebookSelectionHighlighter extends Disposable implements INotebookEditor
 			return;
 		}
 
-		const results = editor.textModel.findMatches(
-			searchText,
-			false,
-			true,
-			null,
-		);
+		const results = editor.textModel.findMatches(searchText, false, true, null);
 
 		for (const res of results) {
 			const cell = editor.getCellByHandle(res.cell.handle);
@@ -126,8 +128,8 @@ class NotebookSelectionHighlighter extends Disposable implements INotebookEditor
 
 	private updateCellDecorations(cell: ICellViewModel, matches: FindMatch[]) {
 		const selections: Selection[] = matches.map(m => {
-			return Selection.fromRange(m.range, SelectionDirection.LTR);
-		});
+      return Selection.fromRange(m.range, SelectionDirection.LTR);
+    });
 
 		const newDecorations: IModelDeltaDecoration[] = [];
 		selections?.map(selection => {
@@ -137,18 +139,18 @@ class NotebookSelectionHighlighter extends Disposable implements INotebookEditor
 				newDecorations.push({
 					range: selection,
 					options: {
-						description: '',
-						className: '.nb-selection-highlight',
-					}
+						description: "",
+						className: ".nb-selection-highlight",
+					},
 				});
 			}
 		});
 
 		const oldDecorations = this.cellDecorationIds.get(cell) ?? [];
-		this.cellDecorationIds.set(cell, cell.deltaModelDecorations(
-			oldDecorations,
-			newDecorations
-		));
+		this.cellDecorationIds.set(
+      cell,
+      cell.deltaModelDecorations(oldDecorations, newDecorations),
+    );
 	}
 
 	private clearNotebookSelectionDecorations() {
@@ -162,7 +164,7 @@ class NotebookSelectionHighlighter extends Disposable implements INotebookEditor
 	}
 
 	private getSearchText(selection: Selection, model: ITextModel): string {
-		return model.getValueInRange(selection).replace(/\r\n/g, '\n');
+		return model.getValueInRange(selection).replace(/\r\n/g, "\n");
 	}
 
 	override dispose(): void {
@@ -171,4 +173,7 @@ class NotebookSelectionHighlighter extends Disposable implements INotebookEditor
 	}
 }
 
-registerNotebookContribution(NotebookSelectionHighlighter.id, NotebookSelectionHighlighter);
+registerNotebookContribution(
+  NotebookSelectionHighlighter.id,
+  NotebookSelectionHighlighter,
+);

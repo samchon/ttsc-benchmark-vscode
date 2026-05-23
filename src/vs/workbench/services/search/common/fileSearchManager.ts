@@ -3,18 +3,33 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as path from '../../../../base/common/path.js';
-import { CancellationToken, CancellationTokenSource } from '../../../../base/common/cancellation.js';
-import { toErrorMessage } from '../../../../base/common/errorMessage.js';
-import * as strings from '../../../../base/common/strings.js';
-import * as glob from '../../../../base/common/glob.js';
-import * as resources from '../../../../base/common/resources.js';
-import { StopWatch } from '../../../../base/common/stopwatch.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IFileMatch, IFileSearchProviderStats, IFolderQuery, ISearchCompleteStats, IFileQuery, QueryGlobTester, resolvePatternsForProvider, hasSiblingFn, excludeToGlobPattern, DEFAULT_MAX_SEARCH_RESULTS } from './search.js';
-import { FileSearchProviderFolderOptions, FileSearchProvider2, FileSearchProviderOptions } from './searchExtTypes.js';
-import { OldFileSearchProviderConverter } from './searchExtConversionTypes.js';
-import { FolderQuerySearchTree } from './folderQuerySearchTree.js';
+import * as path from "../../../../base/common/path.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { toErrorMessage } from "../../../../base/common/errorMessage.js";
+import * as strings from "../../../../base/common/strings.js";
+import * as glob from "../../../../base/common/glob.js";
+import * as resources from "../../../../base/common/resources.js";
+import { StopWatch } from "../../../../base/common/stopwatch.js";
+import { URI } from "../../../../base/common/uri.js";
+import {
+  IFileMatch,
+  IFileSearchProviderStats,
+  IFolderQuery,
+  ISearchCompleteStats,
+  IFileQuery,
+  QueryGlobTester,
+  resolvePatternsForProvider,
+  hasSiblingFn,
+  excludeToGlobPattern,
+  DEFAULT_MAX_SEARCH_RESULTS,
+} from "./search.js";
+import {
+  FileSearchProviderFolderOptions,
+  FileSearchProvider2,
+  FileSearchProviderOptions,
+} from "./searchExtTypes.js";
+import { OldFileSearchProviderConverter } from "./searchExtConversionTypes.js";
+import { FolderQuerySearchTree } from "./folderQuerySearchTree.js";
 
 interface IInternalFileMatch {
 	base: URI;
@@ -57,13 +72,21 @@ class FileSearchEngine {
 
 	constructor(private config: IFileQuery, private provider: FileSearchProvider2, private sessionLifecycle?: SessionLifecycle) {
 		this.filePattern = config.filePattern;
-		const globOptions = config.ignoreGlobCase ? { ignoreCase: true } : undefined;
-		this.includePattern = config.includePattern && glob.parse(config.includePattern, globOptions);
+		const globOptions = config.ignoreGlobCase ? {
+      ignoreCase: true,
+    } : undefined;
+		this.includePattern = config.includePattern && glob.parse(
+      config.includePattern,
+      globOptions,
+    );
 		this.maxResults = config.maxResults || undefined;
 		this.exists = config.exists;
 		this.activeCancellationTokens = new Set<CancellationTokenSource>();
 
-		this.globalExcludePattern = config.excludePattern && glob.parse(config.excludePattern, globOptions);
+		this.globalExcludePattern = config.excludePattern && glob.parse(
+      config.excludePattern,
+      globOptions,
+    );
 	}
 
 	cancel(): void {
@@ -107,7 +130,7 @@ class FileSearchEngine {
 			this.doSearch(folderQueries, onResult).then(stats => {
 				resolve({
 					limitHit: this.isLimitHit,
-					stats: stats || undefined // Only looking at single-folder workspace stats...
+					stats: stats || undefined, // Only looking at single-folder workspace stats...
 				});
 			}, (err: Error) => {
 				reject(new Error(toErrorMessage(err)));
@@ -121,19 +144,27 @@ class FileSearchEngine {
 		const folderOptions = fqs.map(fq => this.getSearchOptionsForFolder(fq));
 		const session = this.provider instanceof OldFileSearchProviderConverter ? this.sessionLifecycle?.tokenSource.token : this.sessionLifecycle?.obj;
 		const options: FileSearchProviderOptions = {
-			folderOptions,
-			maxResults: this.config.maxResults ?? DEFAULT_MAX_SEARCH_RESULTS,
-			session
-		};
+      folderOptions,
+      maxResults: this.config.maxResults ?? DEFAULT_MAX_SEARCH_RESULTS,
+      session,
+    };
 
 
 		const getFolderQueryInfo = (fq: IFolderQuery) => {
 			const queryTester = new QueryGlobTester(this.config, fq);
 			const noSiblingsClauses = !queryTester.hasSiblingExcludeClauses();
-			return { queryTester, noSiblingsClauses, folder: fq.folder, tree: this.initDirectoryTree() };
+			return {
+        queryTester,
+        noSiblingsClauses,
+        folder: fq.folder,
+        tree: this.initDirectoryTree(),
+      };
 		};
 
-		const folderMappings: FolderQuerySearchTree<FolderQueryInfo> = new FolderQuerySearchTree<FolderQueryInfo>(fqs, getFolderQueryInfo);
+		const folderMappings: FolderQuerySearchTree<FolderQueryInfo> = new FolderQuerySearchTree<FolderQueryInfo>(
+      fqs,
+      getFolderQueryInfo,
+    );
 
 		let providerSW: StopWatch;
 
@@ -142,9 +173,10 @@ class FileSearchEngine {
 
 			providerSW = StopWatch.create();
 			const results = await this.provider.provideFileSearchResults(
-				this.config.filePattern || '',
-				options,
-				cancellation.token);
+        this.config.filePattern || "",
+        options,
+        cancellation.token,
+      );
 			const providerTime = providerSW.elapsed();
 			const postProcessSW = StopWatch.create();
 
@@ -175,13 +207,13 @@ class FileSearchEngine {
 			}
 
 			folderMappings.forEachFolderQueryInfo(e => {
-				this.matchDirectoryTree(e.tree, e.queryTester, onResult);
-			});
+        this.matchDirectoryTree(e.tree, e.queryTester, onResult);
+      });
 
 			return {
-				providerTime,
-				postProcessTime: postProcessSW.elapsed()
-			};
+        providerTime,
+        postProcessTime: postProcessSW.elapsed(),
+      };
 		} finally {
 			cancellation.dispose();
 			this.activeCancellationTokens.delete(cancellation);
@@ -189,15 +221,18 @@ class FileSearchEngine {
 	}
 
 	private getSearchOptionsForFolder(fq: IFolderQuery<URI>): FileSearchProviderFolderOptions {
-		const includes = resolvePatternsForProvider(this.config.includePattern, fq.includePattern);
+		const includes = resolvePatternsForProvider(
+      this.config.includePattern,
+      fq.includePattern,
+    );
 		let excludePattern = fq.excludePattern?.map(e => ({
-			folder: e.folder,
-			patterns: resolvePatternsForProvider(this.config.excludePattern, e.pattern)
-		}));
+      folder: e.folder,
+      patterns: resolvePatternsForProvider(this.config.excludePattern, e.pattern),
+    }));
 		if (!excludePattern?.length) {
 			excludePattern = [{
 				folder: undefined,
-				patterns: resolvePatternsForProvider(this.config.excludePattern, undefined)
+				patterns: resolvePatternsForProvider(this.config.excludePattern, undefined),
 			}];
 		}
 		const excludes = excludeToGlobPattern(excludePattern);
@@ -209,7 +244,7 @@ class FileSearchEngine {
 			useIgnoreFiles: {
 				local: !fq.disregardIgnoreFiles,
 				parent: !fq.disregardParentIgnoreFiles,
-				global: !fq.disregardGlobalIgnoreFiles
+				global: !fq.disregardGlobalIgnoreFiles,
 			},
 			followSymlinks: !fq.ignoreSymlinks,
 		};
@@ -217,18 +252,26 @@ class FileSearchEngine {
 
 	private initDirectoryTree(): IDirectoryTree {
 		const tree: IDirectoryTree = {
-			rootEntries: [],
-			pathToEntries: Object.create(null)
-		};
-		tree.pathToEntries['.'] = tree.rootEntries;
+      rootEntries: [],
+      pathToEntries: Object.create(null),
+    };
+		tree.pathToEntries["."] = tree.rootEntries;
 		return tree;
 	}
 
 	private addDirectoryEntries({ pathToEntries }: IDirectoryTree, base: URI, relativeFile: string, onResult: (result: IInternalFileMatch) => void) {
 		// Support relative paths to files from a root resource (ignores excludes)
-		if (this.filePattern && strings.equals(relativeFile, this.filePattern, this.config.ignoreGlobCase)) {
+		if (this.filePattern && strings.equals(
+      relativeFile,
+      this.filePattern,
+      this.config.ignoreGlobCase,
+    )) {
 			const basename = path.basename(this.filePattern);
-			this.matchFile(onResult, { base: base, relativePath: this.filePattern, basename });
+			this.matchFile(onResult, {
+        base: base,
+        relativePath: this.filePattern,
+        basename,
+      });
 		}
 
 		function add(relativePath: string) {
@@ -240,10 +283,10 @@ class FileSearchEngine {
 				add(dirname);
 			}
 			entries.push({
-				base,
-				relativePath,
-				basename
-			});
+        base,
+        relativePath,
+        basename,
+      });
 		}
 
 		add(relativeFile);
@@ -254,7 +297,9 @@ class FileSearchEngine {
 		const filePattern = this.filePattern;
 		const ignoreGlobCase = this.config.ignoreGlobCase;
 		function matchDirectory(entries: IDirectoryEntry[]) {
-			const hasSibling = hasSiblingFn(() => entries.map(entry => entry.basename));
+			const hasSibling = hasSiblingFn(
+        () => entries.map(entry => entry.basename),
+      );
 			for (let i = 0, n = entries.length; i < n; i++) {
 				const entry = entries[i];
 				const { relativePath, basename } = entry;
@@ -263,7 +308,11 @@ class FileSearchEngine {
 				// If the user searches for the exact file name, we adjust the glob matching
 				// to ignore filtering by siblings because the user seems to know what they
 				// are searching for and we want to include the result in that case anyway
-				if (queryTester.matchesExcludesSync(relativePath, basename, !strings.equals(filePattern, basename, ignoreGlobCase) ? hasSibling : undefined)) {
+				if (queryTester.matchesExcludesSync(
+          relativePath,
+          basename,
+          !strings.equals(filePattern, basename, ignoreGlobCase) ? hasSibling : undefined,
+        )) {
 					continue;
 				}
 
@@ -287,7 +336,10 @@ class FileSearchEngine {
 	}
 
 	private matchFile(onResult: (result: IInternalFileMatch) => void, candidate: IInternalFileMatch): void {
-		if (!this.includePattern || (candidate.relativePath && this.includePattern(candidate.relativePath, candidate.basename))) {
+		if (!this.includePattern || (candidate.relativePath && this.includePattern(
+      candidate.relativePath,
+      candidate.basename,
+    ))) {
 			if (this.exists || (this.maxResults && this.resultCount >= this.maxResults)) {
 				this.isLimitHit = true;
 				this.cancel();
@@ -322,7 +374,7 @@ class SessionLifecycle {
 			return this._obj;
 		}
 
-		throw new Error('Session object has been dereferenced.');
+		throw new Error("Session object has been dereferenced.");
 	}
 
 	cancel() {
@@ -353,11 +405,11 @@ export class FileSearchManager {
 					limitHit: result.limitHit,
 					stats: result.stats ? {
 						fromCache: false,
-						type: 'fileSearchProvider',
+						type: "fileSearchProvider",
 						resultCount,
-						detailStats: result.stats
+						detailStats: result.stats,
 					} : undefined,
-					messages: []
+					messages: [],
 				};
 			});
 	}
@@ -384,20 +436,20 @@ export class FileSearchManager {
 	private rawMatchToSearchItem(match: IInternalFileMatch): IFileMatch {
 		if (match.relativePath) {
 			return {
-				resource: resources.joinPath(match.base, match.relativePath)
-			};
+        resource: resources.joinPath(match.base, match.relativePath),
+      };
 		} else {
 			// extraFileResources
 			return {
-				resource: match.base
-			};
+        resource: match.base,
+      };
 		}
 	}
 
 	private doSearch(engine: FileSearchEngine, batchSize: number, onResultBatch: (matches: IInternalFileMatch[]) => void, token: CancellationToken): Promise<IInternalSearchComplete> {
 		const listener = token.onCancellationRequested(() => {
-			engine.cancel();
-		});
+      engine.cancel();
+    });
 
 		const _onResult = (match: IInternalFileMatch) => {
 			if (match) {

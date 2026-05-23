@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { assertFn, checkAdjacentItems } from '../../../../../base/common/assert.js';
-import { IReader } from '../../../../../base/common/observable.js';
-import { RangeMapping as DiffRangeMapping } from '../../../../../editor/common/diff/rangeMapping.js';
-import { ITextModel } from '../../../../../editor/common/model.js';
-import { IEditorWorkerService } from '../../../../../editor/common/services/editorWorker.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { MergeEditorLineRange } from './lineRange.js';
-import { DetailedLineRangeMapping, RangeMapping } from './mapping.js';
-import { observableConfigValue } from '../../../../../platform/observable/common/platformObservableUtils.js';
-import { LineRange } from '../../../../../editor/common/core/ranges/lineRange.js';
+import { assertFn, checkAdjacentItems } from "../../../../../base/common/assert.js";
+import { IReader } from "../../../../../base/common/observable.js";
+import { RangeMapping as DiffRangeMapping } from "../../../../../editor/common/diff/rangeMapping.js";
+import { ITextModel } from "../../../../../editor/common/model.js";
+import { IEditorWorkerService } from "../../../../../editor/common/services/editorWorker.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { MergeEditorLineRange } from "./lineRange.js";
+import { DetailedLineRangeMapping, RangeMapping } from "./mapping.js";
+import { observableConfigValue } from "../../../../../platform/observable/common/platformObservableUtils.js";
+import { LineRange } from "../../../../../editor/common/core/ranges/lineRange.js";
 
 export interface IMergeDiffComputer {
 	computeDiff(textModel1: ITextModel, textModel2: ITextModel, reader: IReader): Promise<IMergeDiffComputerResult>;
@@ -29,9 +29,9 @@ export class MergeDiffComputer implements IMergeDiffComputer {
 		@IEditorWorkerService private readonly editorWorkerService: IEditorWorkerService,
 		@IConfigurationService private readonly configurationService: IConfigurationService,
 	) {
-		this.mergeAlgorithm = observableConfigValue<'smart' | 'experimental' | 'legacy' | 'advanced'>(
-			'mergeEditor.diffAlgorithm', 'advanced', this.configurationService)
-			.map(v => v === 'smart' ? 'legacy' : v === 'experimental' ? 'advanced' : v);
+		this.mergeAlgorithm = observableConfigValue<"smart" | "experimental" | "legacy" | "advanced">(
+			"mergeEditor.diffAlgorithm", "advanced", this.configurationService)
+			.map(v => v === "smart" ? "legacy" : v === "experimental" ? "advanced" : v);
 	}
 
 	async computeDiff(textModel1: ITextModel, textModel2: ITextModel, reader: IReader): Promise<IMergeDiffComputerResult> {
@@ -40,18 +40,18 @@ export class MergeDiffComputer implements IMergeDiffComputer {
 		const outputVersion = textModel2.getVersionId();
 
 		const result = await this.editorWorkerService.computeDiff(
-			textModel1.uri,
-			textModel2.uri,
-			{
-				ignoreTrimWhitespace: false,
-				maxComputationTimeMs: 0,
-				computeMoves: false,
-			},
-			diffAlgorithm,
-		);
+      textModel1.uri,
+      textModel2.uri,
+      {
+        ignoreTrimWhitespace: false,
+        maxComputationTimeMs: 0,
+        computeMoves: false,
+      },
+      diffAlgorithm,
+    );
 
 		if (!result) {
-			throw new Error('Diff computation failed');
+			throw new Error("Diff computation failed");
 		}
 
 		if (textModel1.isDisposed() || textModel2.isDisposed()) {
@@ -64,8 +64,8 @@ export class MergeDiffComputer implements IMergeDiffComputer {
 				textModel1,
 				toLineRange(c.modified),
 				textModel2,
-				c.innerChanges?.map(ic => toRangeMapping(ic))
-			)
+				c.innerChanges?.map(ic => toRangeMapping(ic)),
+			),
 		);
 
 		const newInputVersion = textModel1.getVersionId();
@@ -121,8 +121,8 @@ export class MergeDiffComputer implements IMergeDiffComputer {
 		});
 
 		return {
-			diffs: changes
-		};
+      diffs: changes,
+    };
 	}
 }
 

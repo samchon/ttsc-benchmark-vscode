@@ -98,7 +98,7 @@ export const enum ParseErrorCode {
 	InvalidCharacter = 16
 }
 
-export type NodeType = 'object' | 'array' | 'property' | 'string' | 'number' | 'boolean' | 'null';
+export type NodeType = "object" | "array" | "property" | "string" | "number" | "boolean" | "null";
 
 export interface Node {
 	readonly type: NodeType;
@@ -143,8 +143,8 @@ export interface ParseOptions {
 
 export namespace ParseOptions {
 	export const DEFAULT = {
-		allowTrailingComma: true
-	};
+    allowTrailingComma: true,
+  };
 }
 
 export interface JSONVisitor {
@@ -202,7 +202,7 @@ export function createScanner(text: string, ignoreTrivia: boolean = false): JSON
 
 	let pos = 0;
 	const len = text.length;
-	let value: string = '';
+	let value: string = "";
 	let tokenOffset = 0;
 	let token: SyntaxKind = SyntaxKind.Unknown;
 	let scanError: ScanError = ScanError.None;
@@ -235,7 +235,7 @@ export function createScanner(text: string, ignoreTrivia: boolean = false): JSON
 
 	function setPosition(newPosition: number) {
 		pos = newPosition;
-		value = '';
+		value = "";
 		tokenOffset = 0;
 		token = SyntaxKind.Unknown;
 		scanError = ScanError.None;
@@ -264,9 +264,15 @@ export function createScanner(text: string, ignoreTrivia: boolean = false): JSON
 			}
 		}
 		let end = pos;
-		if (pos < text.length && (text.charCodeAt(pos) === CharacterCodes.E || text.charCodeAt(pos) === CharacterCodes.e)) {
+		if (pos < text.length && (text.charCodeAt(
+      pos,
+    ) === CharacterCodes.E || text.charCodeAt(pos) === CharacterCodes.e)) {
 			pos++;
-			if (pos < text.length && text.charCodeAt(pos) === CharacterCodes.plus || text.charCodeAt(pos) === CharacterCodes.minus) {
+			if (pos < text.length && text.charCodeAt(
+        pos,
+      ) === CharacterCodes.plus || text.charCodeAt(
+        pos,
+      ) === CharacterCodes.minus) {
 				pos++;
 			}
 			if (pos < text.length && isDigit(text.charCodeAt(pos))) {
@@ -284,7 +290,7 @@ export function createScanner(text: string, ignoreTrivia: boolean = false): JSON
 
 	function scanString(): string {
 
-		let result = '',
+		let result = "",
 			start = pos;
 
 		while (true) {
@@ -309,28 +315,28 @@ export function createScanner(text: string, ignoreTrivia: boolean = false): JSON
 				const ch2 = text.charCodeAt(pos++);
 				switch (ch2) {
 					case CharacterCodes.doubleQuote:
-						result += '\"';
+						result += "\"";
 						break;
 					case CharacterCodes.backslash:
-						result += '\\';
+						result += "\\";
 						break;
 					case CharacterCodes.slash:
-						result += '/';
+						result += "/";
 						break;
 					case CharacterCodes.b:
-						result += '\b';
+						result += "\b";
 						break;
 					case CharacterCodes.f:
-						result += '\f';
+						result += "\f";
 						break;
 					case CharacterCodes.n:
-						result += '\n';
+						result += "\n";
 						break;
 					case CharacterCodes.r:
-						result += '\r';
+						result += "\r";
 						break;
 					case CharacterCodes.t:
-						result += '\t';
+						result += "\t";
 						break;
 					case CharacterCodes.u: {
 						const ch3 = scanHexDigits(4);
@@ -364,7 +370,7 @@ export function createScanner(text: string, ignoreTrivia: boolean = false): JSON
 
 	function scanNext(): SyntaxKind {
 
-		value = '';
+		value = "";
 		scanError = ScanError.None;
 
 		tokenOffset = pos;
@@ -391,9 +397,11 @@ export function createScanner(text: string, ignoreTrivia: boolean = false): JSON
 		if (isLineBreak(code)) {
 			pos++;
 			value += String.fromCharCode(code);
-			if (code === CharacterCodes.carriageReturn && text.charCodeAt(pos) === CharacterCodes.lineFeed) {
+			if (code === CharacterCodes.carriageReturn && text.charCodeAt(
+        pos,
+      ) === CharacterCodes.lineFeed) {
 				pos++;
-				value += '\n';
+				value += "\n";
 			}
 			return token = SyntaxKind.LineBreakTrivia;
 		}
@@ -452,7 +460,9 @@ export function createScanner(text: string, ignoreTrivia: boolean = false): JSON
 					while (pos < safeLength) {
 						const ch = text.charCodeAt(pos);
 
-						if (ch === CharacterCodes.asterisk && text.charCodeAt(pos + 1) === CharacterCodes.slash) {
+						if (ch === CharacterCodes.asterisk && text.charCodeAt(
+              pos + 1,
+            ) === CharacterCodes.slash) {
 							pos += 2;
 							commentClosed = true;
 							break;
@@ -506,9 +516,9 @@ export function createScanner(text: string, ignoreTrivia: boolean = false): JSON
 					value = text.substring(tokenOffset, pos);
 					// keywords: true, false, null
 					switch (value) {
-						case 'true': return token = SyntaxKind.TrueKeyword;
-						case 'false': return token = SyntaxKind.FalseKeyword;
-						case 'null': return token = SyntaxKind.NullKeyword;
+						case "true": return token = SyntaxKind.TrueKeyword;
+						case "false": return token = SyntaxKind.FalseKeyword;
+						case "null": return token = SyntaxKind.NullKeyword;
 					}
 					return token = SyntaxKind.Unknown;
 				}
@@ -547,15 +557,15 @@ export function createScanner(text: string, ignoreTrivia: boolean = false): JSON
 	}
 
 	return {
-		setPosition: setPosition,
-		getPosition: () => pos,
-		scan: ignoreTrivia ? scanNextNonTrivia : scanNext,
-		getToken: () => token,
-		getTokenValue: () => value,
-		getTokenOffset: () => tokenOffset,
-		getTokenLength: () => pos - tokenOffset,
-		getTokenError: () => scanError
-	};
+    setPosition: setPosition,
+    getPosition: () => pos,
+    scan: ignoreTrivia ? scanNextNonTrivia : scanNext,
+    getToken: () => token,
+    getTokenValue: () => value,
+    getTokenOffset: () => tokenOffset,
+    getTokenLength: () => pos - tokenOffset,
+    getTokenError: () => scanError,
+  };
 }
 
 function isWhitespace(ch: number): boolean {
@@ -727,12 +737,12 @@ export function getLocation(text: string, position: number): Location {
 	const earlyReturnException = new Object();
 	let previousNode: NodeImpl | undefined = undefined;
 	const previousNodeInst: NodeImpl = {
-		value: {},
-		offset: 0,
-		length: 0,
-		type: 'object',
-		parent: undefined
-	};
+    value: {},
+    offset: 0,
+    length: 0,
+    type: "object",
+    parent: undefined,
+  };
 	let isAtPropertyKey = false;
 	function setPreviousNode(value: string, offset: number, length: number, type: NodeType) {
 		previousNodeInst.value = value;
@@ -751,13 +761,13 @@ export function getLocation(text: string, position: number): Location {
 				}
 				previousNode = undefined;
 				isAtPropertyKey = position > offset;
-				segments.push(''); // push a placeholder (will be replaced)
+				segments.push(""); // push a placeholder (will be replaced)
 			},
 			onObjectProperty: (name: string, offset: number, length: number) => {
 				if (position < offset) {
 					throw earlyReturnException;
 				}
-				setPreviousNode(name, offset, length, 'property');
+				setPreviousNode(name, offset, length, "property");
 				segments[segments.length - 1] = name;
 				if (position <= offset + length) {
 					throw earlyReturnException;
@@ -798,21 +808,21 @@ export function getLocation(text: string, position: number): Location {
 				if (position <= offset) {
 					throw earlyReturnException;
 				}
-				if (sep === ':' && previousNode && previousNode.type === 'property') {
+				if (sep === ":" && previousNode && previousNode.type === "property") {
 					previousNode.colonOffset = offset;
 					isAtPropertyKey = false;
 					previousNode = undefined;
-				} else if (sep === ',') {
+				} else if (sep === ",") {
 					const last = segments[segments.length - 1];
-					if (typeof last === 'number') {
+					if (typeof last === "number") {
 						segments[segments.length - 1] = last + 1;
 					} else {
 						isAtPropertyKey = true;
-						segments[segments.length - 1] = '';
+						segments[segments.length - 1] = "";
 					}
 					previousNode = undefined;
 				}
-			}
+			},
 		});
 	} catch (e) {
 		if (e !== earlyReturnException) {
@@ -827,14 +837,14 @@ export function getLocation(text: string, position: number): Location {
 		matches: (pattern: Segment[]) => {
 			let k = 0;
 			for (let i = 0; k < pattern.length && i < segments.length; i++) {
-				if (pattern[k] === segments[i] || pattern[k] === '*') {
+				if (pattern[k] === segments[i] || pattern[k] === "*") {
 					k++;
-				} else if (pattern[k] !== '**') {
+				} else if (pattern[k] !== "**") {
 					return false;
 				}
 			}
 			return k === pattern.length;
-		}
+		},
 	};
 }
 
@@ -883,7 +893,7 @@ export function parse(text: string, errors: ParseError[] = [], options: ParseOpt
 		onLiteralValue: onValue,
 		onError: (error: ParseErrorCode, offset: number, length: number) => {
 			errors.push({ error, offset, length });
-		}
+		},
 	};
 	visit(text, visitor, options);
 	return currentParent[0];
@@ -894,10 +904,16 @@ export function parse(text: string, errors: ParseError[] = [], options: ParseOpt
  * Parses the given text and returns a tree representation the JSON content. On invalid input, the parser tries to be as fault tolerant as possible, but still return a result.
  */
 export function parseTree(text: string, errors: ParseError[] = [], options: ParseOptions = ParseOptions.DEFAULT): Node {
-	let currentParent: NodeImpl = { type: 'array', offset: -1, length: -1, children: [], parent: undefined }; // artificial root
+	let currentParent: NodeImpl = {
+    type: "array",
+    offset: -1,
+    length: -1,
+    children: [],
+    parent: undefined,
+  }; // artificial root
 
 	function ensurePropertyComplete(endOffset: number) {
-		if (currentParent.type === 'property') {
+		if (currentParent.type === "property") {
 			currentParent.length = endOffset - currentParent.offset;
 			currentParent = currentParent.parent!;
 		}
@@ -910,11 +926,11 @@ export function parseTree(text: string, errors: ParseError[] = [], options: Pars
 
 	const visitor: JSONVisitor = {
 		onObjectBegin: (offset: number) => {
-			currentParent = onValue({ type: 'object', offset, length: -1, parent: currentParent, children: [] });
+			currentParent = onValue({ type: "object", offset, length: -1, parent: currentParent, children: [] });
 		},
 		onObjectProperty: (name: string, offset: number, length: number) => {
-			currentParent = onValue({ type: 'property', offset, length: -1, parent: currentParent, children: [] });
-			currentParent.children!.push({ type: 'string', value: name, offset, length, parent: currentParent });
+			currentParent = onValue({ type: "property", offset, length: -1, parent: currentParent, children: [] });
+			currentParent.children!.push({ type: "string", value: name, offset, length, parent: currentParent });
 		},
 		onObjectEnd: (offset: number, length: number) => {
 			currentParent.length = offset + length - currentParent.offset;
@@ -922,7 +938,7 @@ export function parseTree(text: string, errors: ParseError[] = [], options: Pars
 			ensurePropertyComplete(offset + length);
 		},
 		onArrayBegin: (offset: number, length: number) => {
-			currentParent = onValue({ type: 'array', offset, length: -1, parent: currentParent, children: [] });
+			currentParent = onValue({ type: "array", offset, length: -1, parent: currentParent, children: [] });
 		},
 		onArrayEnd: (offset: number, length: number) => {
 			currentParent.length = offset + length - currentParent.offset;
@@ -934,17 +950,17 @@ export function parseTree(text: string, errors: ParseError[] = [], options: Pars
 			ensurePropertyComplete(offset + length);
 		},
 		onSeparator: (sep: string, offset: number, length: number) => {
-			if (currentParent.type === 'property') {
-				if (sep === ':') {
+			if (currentParent.type === "property") {
+				if (sep === ":") {
 					currentParent.colonOffset = offset;
-				} else if (sep === ',') {
+				} else if (sep === ",") {
 					ensurePropertyComplete(offset);
 				}
 			}
 		},
 		onError: (error: ParseErrorCode, offset: number, length: number) => {
 			errors.push({ error, offset, length });
-		}
+		},
 	};
 	visit(text, visitor, options);
 
@@ -964,13 +980,15 @@ export function findNodeAtLocation(root: Node, path: JSONPath): Node | undefined
 	}
 	let node = root;
 	for (const segment of path) {
-		if (typeof segment === 'string') {
-			if (node.type !== 'object' || !Array.isArray(node.children)) {
+		if (typeof segment === "string") {
+			if (node.type !== "object" || !Array.isArray(node.children)) {
 				return undefined;
 			}
 			let found = false;
 			for (const propertyNode of node.children) {
-				if (Array.isArray(propertyNode.children) && propertyNode.children[0].value === segment) {
+				if (Array.isArray(
+          propertyNode.children,
+        ) && propertyNode.children[0].value === segment) {
 					node = propertyNode.children[1];
 					found = true;
 					break;
@@ -981,7 +999,9 @@ export function findNodeAtLocation(root: Node, path: JSONPath): Node | undefined
 			}
 		} else {
 			const index = segment;
-			if (node.type !== 'array' || index < 0 || !Array.isArray(node.children) || index >= node.children.length) {
+			if (node.type !== "array" || index < 0 || !Array.isArray(
+        node.children,
+      ) || index >= node.children.length) {
 				return undefined;
 			}
 			node = node.children[index];
@@ -998,10 +1018,10 @@ export function getNodePath(node: Node): JSONPath {
 		return [];
 	}
 	const path = getNodePath(node.parent);
-	if (node.parent.type === 'property') {
+	if (node.parent.type === "property") {
 		const key = node.parent.children[0].value;
 		path.push(key);
-	} else if (node.parent.type === 'array') {
+	} else if (node.parent.type === "array") {
 		const index = node.parent.children.indexOf(node);
 		if (index !== -1) {
 			path.push(index);
@@ -1015,9 +1035,9 @@ export function getNodePath(node: Node): JSONPath {
  */
 export function getNodeValue(node: Node): any {
 	switch (node.type) {
-		case 'array':
+		case "array":
 			return node.children!.map(getNodeValue);
-		case 'object': {
+		case "object": {
 			const obj = Object.create(null);
 			for (const prop of node.children!) {
 				const valueNode = prop.children![1];
@@ -1027,10 +1047,10 @@ export function getNodeValue(node: Node): any {
 			}
 			return obj;
 		}
-		case 'null':
-		case 'string':
-		case 'number':
-		case 'boolean':
+		case "null":
+		case "string":
+		case "number":
+		case "boolean":
 			return node.value;
 		default:
 			return undefined;
@@ -1071,10 +1091,17 @@ export function visit(text: string, visitor: JSONVisitor, options: ParseOptions 
 	const _scanner = createScanner(text, false);
 
 	function toNoArgVisit(visitFunction?: (offset: number, length: number) => void): () => void {
-		return visitFunction ? () => visitFunction(_scanner.getTokenOffset(), _scanner.getTokenLength()) : () => true;
+		return visitFunction ? () => visitFunction(
+      _scanner.getTokenOffset(),
+      _scanner.getTokenLength(),
+    ) : () => true;
 	}
 	function toOneArgVisit<T>(visitFunction?: (arg: T, offset: number, length: number) => void): (arg: T) => void {
-		return visitFunction ? (arg: T) => visitFunction(arg, _scanner.getTokenOffset(), _scanner.getTokenLength()) : () => true;
+		return visitFunction ? (arg: T) => visitFunction(
+      arg,
+      _scanner.getTokenOffset(),
+      _scanner.getTokenLength(),
+    ) : () => true;
 	}
 
 	const onObjectBegin = toNoArgVisit(visitor.onObjectBegin),
@@ -1168,7 +1195,7 @@ export function visit(text: string, visitor: JSONVisitor, options: ParseOptions 
 				let value = 0;
 				try {
 					value = JSON.parse(_scanner.getTokenValue());
-					if (typeof value !== 'number') {
+					if (typeof value !== "number") {
 						handleError(ParseErrorCode.InvalidNumberFormat);
 						value = 0;
 					}
@@ -1196,19 +1223,28 @@ export function visit(text: string, visitor: JSONVisitor, options: ParseOptions 
 
 	function parseProperty(): boolean {
 		if (_scanner.getToken() !== SyntaxKind.StringLiteral) {
-			handleError(ParseErrorCode.PropertyNameExpected, [], [SyntaxKind.CloseBraceToken, SyntaxKind.CommaToken]);
+			handleError(ParseErrorCode.PropertyNameExpected, [], [
+        SyntaxKind.CloseBraceToken,
+        SyntaxKind.CommaToken,
+      ]);
 			return false;
 		}
 		parseString(false);
 		if (_scanner.getToken() === SyntaxKind.ColonToken) {
-			onSeparator(':');
+			onSeparator(":");
 			scanNext(); // consume colon
 
 			if (!parseValue()) {
-				handleError(ParseErrorCode.ValueExpected, [], [SyntaxKind.CloseBraceToken, SyntaxKind.CommaToken]);
+				handleError(ParseErrorCode.ValueExpected, [], [
+          SyntaxKind.CloseBraceToken,
+          SyntaxKind.CommaToken,
+        ]);
 			}
 		} else {
-			handleError(ParseErrorCode.ColonExpected, [], [SyntaxKind.CloseBraceToken, SyntaxKind.CommaToken]);
+			handleError(ParseErrorCode.ColonExpected, [], [
+        SyntaxKind.CloseBraceToken,
+        SyntaxKind.CommaToken,
+      ]);
 		}
 		return true;
 	}
@@ -1223,7 +1259,7 @@ export function visit(text: string, visitor: JSONVisitor, options: ParseOptions 
 				if (!needsComma) {
 					handleError(ParseErrorCode.ValueExpected, [], []);
 				}
-				onSeparator(',');
+				onSeparator(",");
 				scanNext(); // consume comma
 				if (_scanner.getToken() === SyntaxKind.CloseBraceToken && allowTrailingComma) {
 					break;
@@ -1232,13 +1268,20 @@ export function visit(text: string, visitor: JSONVisitor, options: ParseOptions 
 				handleError(ParseErrorCode.CommaExpected, [], []);
 			}
 			if (!parseProperty()) {
-				handleError(ParseErrorCode.ValueExpected, [], [SyntaxKind.CloseBraceToken, SyntaxKind.CommaToken]);
+				handleError(ParseErrorCode.ValueExpected, [], [
+          SyntaxKind.CloseBraceToken,
+          SyntaxKind.CommaToken,
+        ]);
 			}
 			needsComma = true;
 		}
 		onObjectEnd();
 		if (_scanner.getToken() !== SyntaxKind.CloseBraceToken) {
-			handleError(ParseErrorCode.CloseBraceExpected, [SyntaxKind.CloseBraceToken], []);
+			handleError(
+        ParseErrorCode.CloseBraceExpected,
+        [SyntaxKind.CloseBraceToken],
+        [],
+      );
 		} else {
 			scanNext(); // consume close brace
 		}
@@ -1255,7 +1298,7 @@ export function visit(text: string, visitor: JSONVisitor, options: ParseOptions 
 				if (!needsComma) {
 					handleError(ParseErrorCode.ValueExpected, [], []);
 				}
-				onSeparator(',');
+				onSeparator(",");
 				scanNext(); // consume comma
 				if (_scanner.getToken() === SyntaxKind.CloseBracketToken && allowTrailingComma) {
 					break;
@@ -1264,13 +1307,20 @@ export function visit(text: string, visitor: JSONVisitor, options: ParseOptions 
 				handleError(ParseErrorCode.CommaExpected, [], []);
 			}
 			if (!parseValue()) {
-				handleError(ParseErrorCode.ValueExpected, [], [SyntaxKind.CloseBracketToken, SyntaxKind.CommaToken]);
+				handleError(ParseErrorCode.ValueExpected, [], [
+          SyntaxKind.CloseBracketToken,
+          SyntaxKind.CommaToken,
+        ]);
 			}
 			needsComma = true;
 		}
 		onArrayEnd();
 		if (_scanner.getToken() !== SyntaxKind.CloseBracketToken) {
-			handleError(ParseErrorCode.CloseBracketExpected, [SyntaxKind.CloseBracketToken], []);
+			handleError(
+        ParseErrorCode.CloseBracketExpected,
+        [SyntaxKind.CloseBracketToken],
+        [],
+      );
 		} else {
 			scanNext(); // consume close bracket
 		}
@@ -1310,17 +1360,17 @@ export function visit(text: string, visitor: JSONVisitor, options: ParseOptions 
 
 export function getNodeType(value: unknown): NodeType {
 	switch (typeof value) {
-		case 'boolean': return 'boolean';
-		case 'number': return 'number';
-		case 'string': return 'string';
-		case 'object': {
+		case "boolean": return "boolean";
+		case "number": return "number";
+		case "string": return "string";
+		case "object": {
 			if (!value) {
-				return 'null';
+				return "null";
 			} else if (Array.isArray(value)) {
-				return 'array';
+				return "array";
 			}
-			return 'object';
+			return "object";
 		}
-		default: return 'null';
+		default: return "null";
 	}
 }

@@ -3,28 +3,33 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, dispose, IDisposable } from '../../../../base/common/lifecycle.js';
-import { isEqual } from '../../../../base/common/resources.js';
-import * as nls from '../../../../nls.js';
-import { ConfigurationTarget, IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { ConfigurationScope, Extensions, IConfigurationRegistry } from '../../../../platform/configuration/common/configurationRegistry.js';
-import { Registry } from '../../../../platform/registry/common/platform.js';
-import { IWorkspaceContextService, WorkbenchState } from '../../../../platform/workspace/common/workspace.js';
-import { workbenchConfigurationNodeBase } from '../../../common/configuration.js';
-import { IWorkbenchContribution } from '../../../common/contributions.js';
-import { EditorInputWithOptions } from '../../../common/editor.js';
-import { SideBySideEditorInput } from '../../../common/editor/sideBySideEditorInput.js';
-import { RegisteredEditorPriority, IEditorResolverService } from '../../../services/editor/common/editorResolverService.js';
-import { ITextEditorService } from '../../../services/textfile/common/textEditorService.js';
-import { DEFAULT_SETTINGS_EDITOR_SETTING, FOLDER_SETTINGS_PATH, IPreferencesService, USE_SPLIT_JSON_SETTING } from '../../../services/preferences/common/preferences.js';
-import { IUserDataProfileService } from '../../../services/userDataProfile/common/userDataProfile.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { SettingsFileSystemProvider } from './settingsFilesystemProvider.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
+import { Disposable, dispose, IDisposable } from "../../../../base/common/lifecycle.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import * as nls from "../../../../nls.js";
+import { ConfigurationTarget, IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ConfigurationScope, Extensions, IConfigurationRegistry } from "../../../../platform/configuration/common/configurationRegistry.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { IWorkspaceContextService, WorkbenchState } from "../../../../platform/workspace/common/workspace.js";
+import { workbenchConfigurationNodeBase } from "../../../common/configuration.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { EditorInputWithOptions } from "../../../common/editor.js";
+import { SideBySideEditorInput } from "../../../common/editor/sideBySideEditorInput.js";
+import { RegisteredEditorPriority, IEditorResolverService } from "../../../services/editor/common/editorResolverService.js";
+import { ITextEditorService } from "../../../services/textfile/common/textEditorService.js";
+import {
+  DEFAULT_SETTINGS_EDITOR_SETTING,
+  FOLDER_SETTINGS_PATH,
+  IPreferencesService,
+  USE_SPLIT_JSON_SETTING,
+} from "../../../services/preferences/common/preferences.js";
+import { IUserDataProfileService } from "../../../services/userDataProfile/common/userDataProfile.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { SettingsFileSystemProvider } from "./settingsFilesystemProvider.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
 
 export class PreferencesContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'workbench.contrib.preferences';
+	static readonly ID = "workbench.contrib.preferences";
 
 	private editorOpeningListener: IDisposable | undefined;
 
@@ -46,8 +51,15 @@ export class PreferencesContribution extends Disposable implements IWorkbenchCon
 		}));
 		this.handleSettingsEditorRegistration();
 
-		const fileSystemProvider = this._register(this.instantiationService.createInstance(SettingsFileSystemProvider));
-		this._register(fileService.registerProvider(SettingsFileSystemProvider.SCHEMA, fileSystemProvider));
+		const fileSystemProvider = this._register(
+      this.instantiationService.createInstance(SettingsFileSystemProvider),
+    );
+		this._register(
+      fileService.registerProvider(
+        SettingsFileSystemProvider.SCHEMA,
+        fileSystemProvider,
+      ),
+    );
 	}
 
 	private handleSettingsEditorRegistration(): void {
@@ -56,12 +68,16 @@ export class PreferencesContribution extends Disposable implements IWorkbenchCon
 		dispose(this.editorOpeningListener);
 
 		// install editor opening listener unless user has disabled this
-		if (!!this.configurationService.getValue(USE_SPLIT_JSON_SETTING) || !!this.configurationService.getValue(DEFAULT_SETTINGS_EDITOR_SETTING)) {
+		if (!!this.configurationService.getValue(
+      USE_SPLIT_JSON_SETTING,
+    ) || !!this.configurationService.getValue(
+      DEFAULT_SETTINGS_EDITOR_SETTING,
+    )) {
 			this.editorOpeningListener = this.editorResolverService.registerEditor(
-				'**/settings.json',
+				"**/settings.json",
 				{
 					id: SideBySideEditorInput.ID,
-					label: nls.localize('splitSettingsEditorLabel', "Split Settings Editor"),
+					label: nls.localize("splitSettingsEditorLabel", "Split Settings Editor"),
 					priority: RegisteredEditorPriority.builtin,
 				},
 				{},
@@ -92,8 +108,8 @@ export class PreferencesContribution extends Disposable implements IWorkbenchCon
 						}
 
 						return { editor: this.textEditorService.createTextEditor({ resource }), options };
-					}
-				}
+					},
+				},
 			);
 		}
 	}
@@ -107,24 +123,24 @@ export class PreferencesContribution extends Disposable implements IWorkbenchCon
 const registry = Registry.as<IConfigurationRegistry>(Extensions.Configuration);
 registry.registerConfiguration({
 	...workbenchConfigurationNodeBase,
-	'properties': {
-		'workbench.settings.enableNaturalLanguageSearch': {
-			'type': 'boolean',
-			'description': nls.localize('enableNaturalLanguageSettingsSearch', "Controls whether to enable the natural language search mode for settings. The natural language search is provided by a Microsoft online service."),
-			'default': true,
-			'scope': ConfigurationScope.WINDOW,
-			'tags': ['usesOnlineServices']
+	"properties": {
+		"workbench.settings.enableNaturalLanguageSearch": {
+			"type": "boolean",
+			"description": nls.localize("enableNaturalLanguageSettingsSearch", "Controls whether to enable the natural language search mode for settings. The natural language search is provided by a Microsoft online service."),
+			"default": true,
+			"scope": ConfigurationScope.WINDOW,
+			"tags": ["usesOnlineServices"],
 		},
-		'workbench.settings.settingsSearchTocBehavior': {
-			'type': 'string',
-			'enum': ['hide', 'filter'],
-			'enumDescriptions': [
-				nls.localize('settingsSearchTocBehavior.hide', "Hide the Table of Contents while searching."),
-				nls.localize('settingsSearchTocBehavior.filter', "Filter the Table of Contents to just categories that have matching settings. Clicking on a category will filter the results to that category."),
+		"workbench.settings.settingsSearchTocBehavior": {
+			"type": "string",
+			"enum": ["hide", "filter"],
+			"enumDescriptions": [
+				nls.localize("settingsSearchTocBehavior.hide", "Hide the Table of Contents while searching."),
+				nls.localize("settingsSearchTocBehavior.filter", "Filter the Table of Contents to just categories that have matching settings. Clicking on a category will filter the results to that category."),
 			],
-			'description': nls.localize('settingsSearchTocBehavior', "Controls the behavior of the Settings editor Table of Contents while searching. If this setting is being changed in the Settings editor, the setting will take effect after the search query is modified."),
-			'default': 'filter',
-			'scope': ConfigurationScope.WINDOW
-		}
-	}
+			"description": nls.localize("settingsSearchTocBehavior", "Controls the behavior of the Settings editor Table of Contents while searching. If this setting is being changed in the Settings editor, the setting will take effect after the search query is modified."),
+			"default": "filter",
+			"scope": ConfigurationScope.WINDOW,
+		},
+	},
 });

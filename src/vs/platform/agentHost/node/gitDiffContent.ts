@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { decodeHex, encodeHex, VSBuffer } from '../../../base/common/buffer.js';
-import { basename } from '../../../base/common/path.js';
-import { URI } from '../../../base/common/uri.js';
+import { decodeHex, encodeHex, VSBuffer } from "../../../base/common/buffer.js";
+import { basename } from "../../../base/common/path.js";
+import { URI } from "../../../base/common/uri.js";
 
-const GIT_BLOB_SCHEME = 'git-blob';
+const GIT_BLOB_SCHEME = "git-blob";
 
 /**
  * Builds a `git-blob:` URI that references a file blob at a specific git
@@ -47,16 +47,16 @@ export function parseGitBlobUri(raw: string): IGitBlobUriFields | undefined {
 	if (parsed.scheme !== GIT_BLOB_SCHEME) {
 		return undefined;
 	}
-	const [, sha, encodedPath] = parsed.path.split('/');
+	const [, sha, encodedPath] = parsed.path.split("/");
 	if (!sha || !encodedPath) {
 		return undefined;
 	}
 	try {
 		return {
-			sessionUri: decodeHex(parsed.authority).toString(),
-			sha: decodeURIComponent(sha),
-			repoRelativePath: decodeHex(encodedPath).toString(),
-		};
+      sessionUri: decodeHex(parsed.authority).toString(),
+      sha: decodeURIComponent(sha),
+      repoRelativePath: decodeHex(encodedPath).toString(),
+    };
 	} catch {
 		return undefined;
 	}

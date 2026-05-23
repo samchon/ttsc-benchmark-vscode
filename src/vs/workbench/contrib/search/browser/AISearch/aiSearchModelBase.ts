@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ISearchTreeFileMatch } from '../searchTreeModel/searchTreeCommon.js';
-import { Range } from '../../../../../editor/common/core/range.js';
+import { ISearchTreeFileMatch } from "../searchTreeModel/searchTreeCommon.js";
+import { Range } from "../../../../../editor/common/core/range.js";
 
 export interface ISearchTreeAIFileMatch extends ISearchTreeFileMatch {
 	getFullRange(): Range | undefined;

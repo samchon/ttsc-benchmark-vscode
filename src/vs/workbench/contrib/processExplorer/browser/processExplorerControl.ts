@@ -3,36 +3,36 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './media/processExplorer.css';
-import { localize } from '../../../../nls.js';
-import { $, append, Dimension, getDocument } from '../../../../base/browser/dom.js';
-import { StandardKeyboardEvent } from '../../../../base/browser/keyboardEvent.js';
-import { IIdentityProvider, IListVirtualDelegate } from '../../../../base/browser/ui/list/list.js';
-import { IDataSource, ITreeRenderer, ITreeNode, ITreeContextMenuEvent } from '../../../../base/browser/ui/tree/tree.js';
-import { ProcessItem } from '../../../../base/common/processes.js';
-import { IRemoteDiagnosticError, isRemoteDiagnosticError } from '../../../../platform/diagnostics/common/diagnostics.js';
-import { ByteSize } from '../../../../platform/files/common/files.js';
-import { KeyCode } from '../../../../base/common/keyCodes.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { WorkbenchDataTree } from '../../../../platform/list/browser/listService.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { IListAccessibilityProvider } from '../../../../base/browser/ui/list/listWidget.js';
-import { IProductService } from '../../../../platform/product/common/productService.js';
-import { IAction, Separator, toAction } from '../../../../base/common/actions.js';
-import { IContextMenuService } from '../../../../platform/contextview/browser/contextView.js';
-import { coalesce } from '../../../../base/common/arrays.js';
-import { ICommandService } from '../../../../platform/commands/common/commands.js';
-import { RenderIndentGuides } from '../../../../base/browser/ui/tree/abstractTree.js';
-import { Delayer } from '../../../../base/common/async.js';
-import { IHoverService } from '../../../../platform/hover/browser/hover.js';
-import { IManagedHover } from '../../../../base/browser/ui/hover/hover.js';
-import { getDefaultHoverDelegate } from '../../../../base/browser/ui/hover/hoverDelegateFactory.js';
-import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
-import { IResolvedProcessInformation } from '../../../../platform/process/common/process.js';
-import { IRemoteAgentService } from '../../../services/remote/common/remoteAgentService.js';
-import { ILabelService } from '../../../../platform/label/common/label.js';
-import { Schemas } from '../../../../base/common/network.js';
-import { isWeb } from '../../../../base/common/platform.js';
+import "./media/processExplorer.css";
+import { localize } from "../../../../nls.js";
+import { $, append, Dimension, getDocument } from "../../../../base/browser/dom.js";
+import { StandardKeyboardEvent } from "../../../../base/browser/keyboardEvent.js";
+import { IIdentityProvider, IListVirtualDelegate } from "../../../../base/browser/ui/list/list.js";
+import { IDataSource, ITreeRenderer, ITreeNode, ITreeContextMenuEvent } from "../../../../base/browser/ui/tree/tree.js";
+import { ProcessItem } from "../../../../base/common/processes.js";
+import { IRemoteDiagnosticError, isRemoteDiagnosticError } from "../../../../platform/diagnostics/common/diagnostics.js";
+import { ByteSize } from "../../../../platform/files/common/files.js";
+import { KeyCode } from "../../../../base/common/keyCodes.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { WorkbenchDataTree } from "../../../../platform/list/browser/listService.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IListAccessibilityProvider } from "../../../../base/browser/ui/list/listWidget.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IAction, Separator, toAction } from "../../../../base/common/actions.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { coalesce } from "../../../../base/common/arrays.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { RenderIndentGuides } from "../../../../base/browser/ui/tree/abstractTree.js";
+import { Delayer } from "../../../../base/common/async.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { IManagedHover } from "../../../../base/browser/ui/hover/hover.js";
+import { getDefaultHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { IClipboardService } from "../../../../platform/clipboard/common/clipboardService.js";
+import { IResolvedProcessInformation } from "../../../../platform/process/common/process.js";
+import { IRemoteAgentService } from "../../../services/remote/common/remoteAgentService.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { isWeb } from "../../../../base/common/platform.js";
 
 const DEBUG_FLAGS_PATTERN = /\s--inspect(?:-brk|port)?=(?<port>\d+)?/;
 const DEBUG_PORT_PATTERN = /\s--inspect-port=(?<port>\d+)/;
@@ -67,7 +67,7 @@ function isProcessInformation(item: unknown): item is IProcessInformation {
 function isProcessItem(item: unknown): item is ProcessItem {
 	const candidate = item as ProcessItem | undefined;
 
-	return typeof candidate?.pid === 'number';
+	return typeof candidate?.pid === "number";
 }
 
 class ProcessListDelegate implements IListVirtualDelegate<IMachineProcessInformation | ProcessItem | IRemoteDiagnosticError> {
@@ -78,22 +78,22 @@ class ProcessListDelegate implements IListVirtualDelegate<IMachineProcessInforma
 
 	getTemplateId(element: IProcessInformation | IMachineProcessInformation | ProcessItem | IRemoteDiagnosticError) {
 		if (isProcessItem(element)) {
-			return 'process';
+			return "process";
 		}
 
 		if (isMachineProcessInformation(element)) {
-			return 'machine';
+			return "machine";
 		}
 
 		if (isRemoteDiagnosticError(element)) {
-			return 'error';
+			return "error";
 		}
 
 		if (isProcessInformation(element)) {
-			return 'header';
+			return "header";
 		}
 
-		return '';
+		return "";
 	}
 }
 
@@ -141,15 +141,15 @@ class ProcessTreeDataSource implements IDataSource<IProcessTree, IProcessInforma
 }
 
 function createRow(container: HTMLElement, extraClass?: string) {
-	const row = append(container, $('.row'));
+	const row = append(container, $(".row"));
 	if (extraClass) {
 		row.classList.add(extraClass);
 	}
 
-	const name = append(row, $('.cell.name'));
-	const cpu = append(row, $('.cell.cpu'));
-	const memory = append(row, $('.cell.memory'));
-	const pid = append(row, $('.cell.pid'));
+	const name = append(row, $(".cell.name"));
+	const cpu = append(row, $(".cell.cpu"));
+	const memory = append(row, $(".cell.memory"));
+	const pid = append(row, $(".cell.pid"));
 
 	return { name, cpu, memory, pid };
 }
@@ -167,19 +167,21 @@ interface IProcessItemTemplateData extends IProcessRowTemplateData {
 
 class ProcessHeaderTreeRenderer implements ITreeRenderer<IProcessInformation, void, IProcessItemTemplateData> {
 
-	readonly templateId: string = 'header';
+	readonly templateId: string = "header";
 
 	renderTemplate(container: HTMLElement): IProcessItemTemplateData {
-		container.previousElementSibling?.classList.add('force-no-twistie'); // hack, but no API for hiding twistie on tree
+		container.previousElementSibling?.classList.add(
+      "force-no-twistie",
+    ); // hack, but no API for hiding twistie on tree
 
-		return createRow(container, 'header');
+		return createRow(container, "header");
 	}
 
 	renderElement(node: ITreeNode<IProcessInformation, void>, index: number, templateData: IProcessItemTemplateData): void {
-		templateData.name.textContent = localize('processName', "Process Name");
-		templateData.cpu.textContent = localize('processCpu', "CPU (%)");
-		templateData.pid.textContent = localize('processPid', "PID");
-		templateData.memory.textContent = localize('processMemory', "Memory (MB)");
+		templateData.name.textContent = localize("processName", "Process Name");
+		templateData.cpu.textContent = localize("processCpu", "CPU (%)");
+		templateData.pid.textContent = localize("processPid", "PID");
+		templateData.memory.textContent = localize("processMemory", "Memory (MB)");
 	}
 
 	disposeTemplate(templateData: unknown): void {
@@ -189,7 +191,7 @@ class ProcessHeaderTreeRenderer implements ITreeRenderer<IProcessInformation, vo
 
 class MachineRenderer implements ITreeRenderer<IMachineProcessInformation, void, IProcessRowTemplateData> {
 
-	readonly templateId: string = 'machine';
+	readonly templateId: string = "machine";
 
 	renderTemplate(container: HTMLElement): IProcessRowTemplateData {
 		return createRow(container);
@@ -206,7 +208,7 @@ class MachineRenderer implements ITreeRenderer<IMachineProcessInformation, void,
 
 class ErrorRenderer implements ITreeRenderer<IRemoteDiagnosticError, void, IProcessRowTemplateData> {
 
-	readonly templateId: string = 'error';
+	readonly templateId: string = "error";
 
 	renderTemplate(container: HTMLElement): IProcessRowTemplateData {
 		return createRow(container);
@@ -224,15 +226,21 @@ class ErrorRenderer implements ITreeRenderer<IRemoteDiagnosticError, void, IProc
 class ProcessItemHover extends Disposable {
 
 	private hover: IManagedHover;
-	private content = '';
+	private content = "";
 
 	constructor(
 		container: HTMLElement,
-		@IHoverService hoverService: IHoverService
+		@IHoverService hoverService: IHoverService,
 	) {
 		super();
 
-		this.hover = this._register(hoverService.setupManagedHover(getDefaultHoverDelegate('mouse'), container, this.content));
+		this.hover = this._register(
+      hoverService.setupManagedHover(
+        getDefaultHoverDelegate("mouse"),
+        container,
+        this.content,
+      ),
+    );
 	}
 
 	update(content: string): void {
@@ -245,23 +253,23 @@ class ProcessItemHover extends Disposable {
 
 class ProcessRenderer implements ITreeRenderer<ProcessItem, void, IProcessItemTemplateData> {
 
-	readonly templateId: string = 'process';
+	readonly templateId: string = "process";
 
 	constructor(
 		private model: ProcessExplorerModel,
-		@IHoverService private readonly hoverService: IHoverService
+		@IHoverService private readonly hoverService: IHoverService,
 	) { }
 
 	renderTemplate(container: HTMLElement): IProcessItemTemplateData {
 		const row = createRow(container);
 
 		return {
-			name: row.name,
-			cpu: row.cpu,
-			memory: row.memory,
-			pid: row.pid,
-			hover: new ProcessItemHover(row.name, this.hoverService)
-		};
+      name: row.name,
+      cpu: row.cpu,
+      memory: row.memory,
+      pid: row.pid,
+      hover: new ProcessItemHover(row.name, this.hoverService),
+    };
 	}
 
 	renderElement(node: ITreeNode<ProcessItem, void>, index: number, templateData: IProcessItemTemplateData): void {
@@ -269,7 +277,10 @@ class ProcessRenderer implements ITreeRenderer<ProcessItem, void, IProcessItemTe
 
 		const pid = element.pid.toFixed(0);
 
-		templateData.name.textContent = this.model.getName(element.pid, element.name);
+		templateData.name.textContent = this.model.getName(
+      element.pid,
+      element.name,
+    );
 		templateData.cpu.textContent = element.load.toFixed(0);
 		templateData.memory.textContent = (element.mem / ByteSize.MB).toFixed(0);
 		templateData.pid.textContent = pid;
@@ -286,7 +297,7 @@ class ProcessRenderer implements ITreeRenderer<ProcessItem, void, IProcessItemTe
 class ProcessAccessibilityProvider implements IListAccessibilityProvider<IMachineProcessInformation | ProcessItem | IRemoteDiagnosticError> {
 
 	getWidgetAriaLabel(): string {
-		return localize('processExplorer', "Process Explorer");
+		return localize("processExplorer", "Process Explorer");
 	}
 
 	getAriaLabel(element: IMachineProcessInformation | ProcessItem | IRemoteDiagnosticError): string | null {
@@ -314,14 +325,14 @@ class ProcessIdentityProvider implements IIdentityProvider<IMachineProcessInform
 		}
 
 		if (isProcessInformation(element)) {
-			return 'processes';
+			return "processes";
 		}
 
 		if (isMachineProcessInformation(element)) {
 			return element.name;
 		}
 
-		return 'header';
+		return "header";
 	}
 }
 
@@ -341,7 +352,7 @@ export abstract class ProcessExplorerControl extends Disposable {
 		@IProductService private readonly productService: IProductService,
 		@IContextMenuService private readonly contextMenuService: IContextMenuService,
 		@ICommandService private readonly commandService: ICommandService,
-		@IClipboardService private readonly clipboardService: IClipboardService
+		@IClipboardService private readonly clipboardService: IClipboardService,
 	) {
 		super();
 
@@ -358,19 +369,19 @@ export abstract class ProcessExplorerControl extends Disposable {
 	}
 
 	private createProcessTree(container: HTMLElement): void {
-		container.classList.add('process-explorer');
-		container.id = 'process-explorer';
+		container.classList.add("process-explorer");
+		container.id = "process-explorer";
 
 		const renderers = [
-			this.instantiationService.createInstance(ProcessRenderer, this.model),
-			new ProcessHeaderTreeRenderer(),
-			new MachineRenderer(),
-			new ErrorRenderer()
-		];
+      this.instantiationService.createInstance(ProcessRenderer, this.model),
+      new ProcessHeaderTreeRenderer(),
+      new MachineRenderer(),
+      new ErrorRenderer(),
+    ];
 
 		this.tree = this._register(this.instantiationService.createInstance(
 			WorkbenchDataTree<IProcessTree, IProcessTree | IMachineProcessInformation | ProcessItem | IProcessInformation | IRemoteDiagnosticError>,
-			'processExplorer',
+			"processExplorer",
 			container,
 			new ProcessListDelegate(),
 			renderers,
@@ -379,11 +390,13 @@ export abstract class ProcessExplorerControl extends Disposable {
 				accessibilityProvider: new ProcessAccessibilityProvider(),
 				identityProvider: new ProcessIdentityProvider(),
 				expandOnlyOnTwistieClick: true,
-				renderIndentGuides: RenderIndentGuides.OnHover
+				renderIndentGuides: RenderIndentGuides.OnHover,
 			}));
 
 		this._register(this.tree.onKeyDown(e => this.onTreeKeyDown(e)));
-		this._register(this.tree.onContextMenu(e => this.onTreeContextMenu(container, e)));
+		this._register(
+      this.tree.onContextMenu(e => this.onTreeContextMenu(container, e)),
+    );
 
 		this.tree.setInput(this.model);
 		this.layoutTree();
@@ -393,7 +406,9 @@ export abstract class ProcessExplorerControl extends Disposable {
 		const event = new StandardKeyboardEvent(e);
 		if (event.keyCode === KeyCode.KeyE && event.altKey) {
 			const selectionPids = this.getSelectedPids();
-			await Promise.all(selectionPids.map(pid => this.killProcess?.(pid, 'SIGTERM')));
+			await Promise.all(
+        selectionPids.map(pid => this.killProcess?.(pid, "SIGTERM")),
+      );
 		}
 	}
 
@@ -407,16 +422,28 @@ export abstract class ProcessExplorerControl extends Disposable {
 
 		const actions: IAction[] = [];
 
-		if (typeof this.killProcess === 'function') {
-			actions.push(toAction({ id: 'killProcess', label: localize('killProcess', "Kill Process"), run: () => this.killProcess?.(pid, 'SIGTERM') }));
-			actions.push(toAction({ id: 'forceKillProcess', label: localize('forceKillProcess', "Force Kill Process"), run: () => this.killProcess?.(pid, 'SIGKILL') }));
+		if (typeof this.killProcess === "function") {
+			actions.push(
+        toAction({
+          id: "killProcess",
+          label: localize("killProcess", "Kill Process"),
+          run: () => this.killProcess?.(pid, "SIGTERM"),
+        }),
+      );
+			actions.push(
+        toAction({
+          id: "forceKillProcess",
+          label: localize("forceKillProcess", "Force Kill Process"),
+          run: () => this.killProcess?.(pid, "SIGKILL"),
+        }),
+      );
 
 			actions.push(new Separator());
 		}
 
 		actions.push(toAction({
-			id: 'copy',
-			label: localize('copy', "Copy"),
+			id: "copy",
+			label: localize("copy", "Copy"),
 			run: () => {
 				const selectionPids = this.getSelectedPids();
 
@@ -429,32 +456,38 @@ export abstract class ProcessExplorerControl extends Disposable {
 				const rows = selectionPids?.map(e => getDocument(container).getElementById(`pid-${e}`)).filter(e => !!e);
 				if (rows) {
 					const text = rows.map(e => e.innerText).filter(e => !!e);
-					this.clipboardService.writeText(text.join('\n'));
+					this.clipboardService.writeText(text.join("\n"));
 				}
-			}
+			},
 		}));
 
 		actions.push(toAction({
-			id: 'copyAll',
-			label: localize('copyAll', "Copy All"),
+			id: "copyAll",
+			label: localize("copyAll", "Copy All"),
 			run: () => {
 				// eslint-disable-next-line no-restricted-syntax
-				const processList = getDocument(container).getElementById('process-explorer');
+				const processList = getDocument(container).getElementById("process-explorer");
 				if (processList) {
 					this.clipboardService.writeText(processList.innerText);
 				}
-			}
+			},
 		}));
 
 		if (this.isDebuggable(item.cmd)) {
 			actions.push(new Separator());
-			actions.push(toAction({ id: 'debug', label: localize('debug', "Debug"), run: () => this.attachTo(item) }));
+			actions.push(
+        toAction({
+          id: "debug",
+          label: localize("debug", "Debug"),
+          run: () => this.attachTo(item),
+        }),
+      );
 		}
 
 		this.contextMenuService.showContextMenu({
-			getAnchor: () => e.anchor,
-			getActions: () => actions
-		});
+      getAnchor: () => e.anchor,
+      getActions: () => actions,
+    });
 	}
 
 	private isDebuggable(cmd: string): boolean {
@@ -464,21 +497,25 @@ export abstract class ProcessExplorerControl extends Disposable {
 
 		const matches = DEBUG_FLAGS_PATTERN.exec(cmd);
 
-		return (matches && matches.groups!.port !== '0') || cmd.indexOf('node ') >= 0 || cmd.indexOf('node.exe') >= 0;
+		return (matches && matches.groups!.port !== "0") || cmd.indexOf(
+      "node ",
+    ) >= 0 || cmd.indexOf("node.exe") >= 0;
 	}
 
 	private attachTo(item: ProcessItem): void {
 		const config: { type: string; request: string; name: string; port?: number; processId?: string } = {
-			type: 'node',
-			request: 'attach',
-			name: `process ${item.pid}`
-		};
+      type: "node",
+      request: "attach",
+      name: `process ${item.pid}`,
+    };
 
 		let matches = DEBUG_FLAGS_PATTERN.exec(item.cmd);
 		if (matches) {
 			config.port = Number(matches.groups!.port);
 		} else {
-			config.processId = String(item.pid); // no port -> try to attach via pid (send SIGUSR1)
+			config.processId = String(
+        item.pid,
+      ); // no port -> try to attach via pid (send SIGUSR1)
 		}
 
 		// a debug-port=n or inspect-port=n overrides the port
@@ -487,7 +524,7 @@ export abstract class ProcessExplorerControl extends Disposable {
 			config.port = Number(matches.groups!.port); // override port
 		}
 
-		this.commandService.executeCommand('debug.startFromConfig', config);
+		this.commandService.executeCommand("debug.startFromConfig", config);
 	}
 
 	private getSelectedPids(): number[] {
@@ -548,7 +585,7 @@ class ProcessExplorerModel implements IProcessTree {
 		// Processes
 		processRoots.forEach((info, index) => {
 			if (isProcessItem(info.rootProcess)) {
-				info.rootProcess.name = index === 0 ? this.productService.applicationName : 'remote-server';
+				info.rootProcess.name = index === 0 ? this.productService.applicationName : "remote-server";
 			}
 		});
 
@@ -570,9 +607,15 @@ export class BrowserProcessExplorerControl extends ProcessExplorerControl {
 		@ICommandService commandService: ICommandService,
 		@IClipboardService clipboardService: IClipboardService,
 		@IRemoteAgentService private readonly remoteAgentService: IRemoteAgentService,
-		@ILabelService private readonly labelService: ILabelService
+		@ILabelService private readonly labelService: ILabelService,
 	) {
-		super(instantiationService, productService, contextMenuService, commandService, clipboardService);
+		super(
+      instantiationService,
+      productService,
+      contextMenuService,
+      commandService,
+      clipboardService,
+    );
 
 		this.create(container);
 	}
@@ -585,8 +628,13 @@ export class BrowserProcessExplorerControl extends ProcessExplorerControl {
 
 		const processes: { name: string; rootProcess: ProcessItem | IRemoteDiagnosticError }[] = [];
 
-		const hostName = this.labelService.getHostLabel(Schemas.vscodeRemote, connection.remoteAuthority);
-		const result = await this.remoteAgentService.getDiagnosticInfo({ includeProcesses: true });
+		const hostName = this.labelService.getHostLabel(
+      Schemas.vscodeRemote,
+      connection.remoteAuthority,
+    );
+		const result = await this.remoteAgentService.getDiagnosticInfo({
+      includeProcesses: true,
+    });
 		if (result) {
 			if (isRemoteDiagnosticError(result)) {
 				processes.push({ name: result.hostName, rootProcess: result });

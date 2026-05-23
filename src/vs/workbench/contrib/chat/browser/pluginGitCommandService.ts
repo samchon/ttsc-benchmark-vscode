@@ -3,28 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { CancellationError } from '../../../../base/common/errors.js';
-import { getComparisonKey } from '../../../../base/common/resources.js';
-import { URI } from '../../../../base/common/uri.js';
-import { localize } from '../../../../nls.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { IRequestService } from '../../../../platform/request/common/request.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { IAuthenticationService } from '../../../services/authentication/common/authentication.js';
-import { IPluginGitService } from '../common/plugins/pluginGitService.js';
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { CancellationError } from "../../../../base/common/errors.js";
+import { getComparisonKey } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { localize } from "../../../../nls.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IRequestService } from "../../../../platform/request/common/request.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IAuthenticationService } from "../../../services/authentication/common/authentication.js";
+import { IPluginGitService } from "../common/plugins/pluginGitService.js";
 import {
-	GitHubAuthRequiredError,
-	GitHubRateLimitError,
-	IGitHubRepoRef,
-	fetchAndExtractGitHubRepo,
-	parseGitHubCloneUrl,
-	resolveGitHubRefToSha,
-} from './githubRepoFetcher.js';
+  GitHubAuthRequiredError,
+  GitHubRateLimitError,
+  IGitHubRepoRef,
+  fetchAndExtractGitHubRepo,
+  parseGitHubCloneUrl,
+  resolveGitHubRefToSha,
+} from "./githubRepoFetcher.js";
 
 /** Storage key for the per-target metadata index used by this service. */
-const BROWSER_CACHE_STORAGE_KEY = 'chat.plugins.browserCache.v1';
+const BROWSER_CACHE_STORAGE_KEY = "chat.plugins.browserCache.v1";
 
 /**
  * Per-target metadata persisted via {@link IStorageService}. Keyed by the
@@ -78,9 +78,30 @@ export class BrowserPluginGitCommandService implements IPluginGitService {
 		const repo = this._parseOrThrow(cloneUrl);
 		const cancel = token ?? CancellationToken.None;
 		const cloneWithToken = async (authToken: string | undefined): Promise<void> => {
-			const sha = await resolveGitHubRefToSha(this._requestService, repo, ref, authToken, cancel);
-			await fetchAndExtractGitHubRepo(this._requestService, this._fileService, this._logService, repo, sha, targetDir, authToken, cancel);
-			this._setCacheEntry(targetDir, { owner: repo.owner, repo: repo.repo, ref, sha, fetchedAt: Date.now() });
+			const sha = await resolveGitHubRefToSha(
+        this._requestService,
+        repo,
+        ref,
+        authToken,
+        cancel,
+      );
+			await fetchAndExtractGitHubRepo(
+        this._requestService,
+        this._fileService,
+        this._logService,
+        repo,
+        sha,
+        targetDir,
+        authToken,
+        cancel,
+      );
+			this._setCacheEntry(targetDir, {
+        owner: repo.owner,
+        repo: repo.repo,
+        ref,
+        sha,
+        fetchedAt: Date.now(),
+      });
 		};
 
 		// Auth ladder: signed-in token → anonymous → freshly-requested repo session.
@@ -88,8 +109,8 @@ export class BrowserPluginGitCommandService implements IPluginGitService {
 		// `GitHubAuthRequiredError`); other errors propagate immediately.
 		const initialAuthToken = await this._lookupGitHubToken();
 		const attempts: Array<() => Promise<string | undefined>> = [
-			async () => initialAuthToken,
-		];
+      async () => initialAuthToken,
+    ];
 		if (initialAuthToken) {
 			attempts.push(async () => undefined);
 		}
@@ -114,7 +135,7 @@ export class BrowserPluginGitCommandService implements IPluginGitService {
 
 		if (lastErr instanceof GitHubAuthRequiredError) {
 			throw new Error(localize(
-				'pluginsBrowserGitHubAccessRequired',
+				"pluginsBrowserGitHubAccessRequired",
 				"GitHub authentication is required to install '{0}'. Sign in with an account that has access to this repository, then try again.",
 				`${repo.owner}/${repo.repo}`,
 			));
@@ -125,18 +146,39 @@ export class BrowserPluginGitCommandService implements IPluginGitService {
 	async pull(repoDir: URI, token?: CancellationToken): Promise<boolean> {
 		const entry = this._getCacheEntry(repoDir);
 		if (!entry) {
-			throw new Error(`Cannot pull plugin: no cached metadata for ${repoDir.toString()}`);
+			throw new Error(
+        `Cannot pull plugin: no cached metadata for ${repoDir.toString()}`,
+      );
 		}
 		const cancel = token ?? CancellationToken.None;
 		const authToken = await this._lookupGitHubToken();
 		const repo: IGitHubRepoRef = { owner: entry.owner, repo: entry.repo };
 		try {
-			const newSha = await resolveGitHubRefToSha(this._requestService, repo, entry.ref, authToken, cancel);
+			const newSha = await resolveGitHubRefToSha(
+        this._requestService,
+        repo,
+        entry.ref,
+        authToken,
+        cancel,
+      );
 			if (newSha === entry.sha) {
 				return false;
 			}
-			await fetchAndExtractGitHubRepo(this._requestService, this._fileService, this._logService, repo, newSha, repoDir, authToken, cancel);
-			this._setCacheEntry(repoDir, { ...entry, sha: newSha, fetchedAt: Date.now() });
+			await fetchAndExtractGitHubRepo(
+        this._requestService,
+        this._fileService,
+        this._logService,
+        repo,
+        newSha,
+        repoDir,
+        authToken,
+        cancel,
+      );
+			this._setCacheEntry(repoDir, {
+        ...entry,
+        sha: newSha,
+        fetchedAt: Date.now(),
+      });
 			return true;
 		} catch (err) {
 			this._maybeLogTransientError(err, repo);
@@ -147,7 +189,9 @@ export class BrowserPluginGitCommandService implements IPluginGitService {
 	async checkout(repoDir: URI, treeish: string, _detached?: boolean, token?: CancellationToken): Promise<void> {
 		const entry = this._getCacheEntry(repoDir);
 		if (!entry) {
-			throw new Error(`Cannot checkout plugin: no cached metadata for ${repoDir.toString()}`);
+			throw new Error(
+        `Cannot checkout plugin: no cached metadata for ${repoDir.toString()}`,
+      );
 		}
 
 		const cancel = token ?? CancellationToken.None;
@@ -159,20 +203,35 @@ export class BrowserPluginGitCommandService implements IPluginGitService {
 		const isFullSha = /^[0-9a-f]{40}$/i.test(requestedRef);
 		const requestedSha = isFullSha
 			? requestedRef.toLowerCase()
-			: await resolveGitHubRefToSha(this._requestService, repo, requestedRef, authToken, cancel);
+			: await resolveGitHubRefToSha(
+          this._requestService,
+          repo,
+          requestedRef,
+          authToken,
+          cancel,
+        );
 
 		if (requestedSha === entry.sha.toLowerCase()) {
 			return;
 		}
 
 		try {
-			await fetchAndExtractGitHubRepo(this._requestService, this._fileService, this._logService, repo, requestedSha, repoDir, authToken, cancel);
+			await fetchAndExtractGitHubRepo(
+        this._requestService,
+        this._fileService,
+        this._logService,
+        repo,
+        requestedSha,
+        repoDir,
+        authToken,
+        cancel,
+      );
 			this._setCacheEntry(repoDir, {
-				...entry,
-				ref: isFullSha ? entry.ref : requestedRef,
-				sha: requestedSha,
-				fetchedAt: Date.now(),
-			});
+        ...entry,
+        ref: isFullSha ? entry.ref : requestedRef,
+        sha: requestedSha,
+        fetchedAt: Date.now(),
+      });
 		} catch (err) {
 			this._maybeLogTransientError(err, repo);
 			throw err;
@@ -182,13 +241,17 @@ export class BrowserPluginGitCommandService implements IPluginGitService {
 	async revParse(repoDir: URI, ref: string): Promise<string> {
 		const entry = this._getCacheEntry(repoDir);
 		if (!entry) {
-			throw new Error(`Cannot resolve ref: no cached metadata for ${repoDir.toString()}`);
+			throw new Error(
+        `Cannot resolve ref: no cached metadata for ${repoDir.toString()}`,
+      );
 		}
 		// Reject unrelated SHAs so callers notice they got a cache hit instead of `git rev-parse`.
 		const trimmed = ref.trim();
 		const isFullSha = /^[0-9a-f]{40}$/i.test(trimmed);
 		if (isFullSha && trimmed.toLowerCase() !== entry.sha.toLowerCase()) {
-			throw new Error(`Cannot resolve ref '${ref}' in tree-cached plugin: only HEAD/${entry.sha} is materialised`);
+			throw new Error(
+        `Cannot resolve ref '${ref}' in tree-cached plugin: only HEAD/${entry.sha} is materialised`,
+      );
 		}
 		return entry.sha;
 	}
@@ -213,7 +276,7 @@ export class BrowserPluginGitCommandService implements IPluginGitService {
 		const parsed = parseGitHubCloneUrl(cloneUrl);
 		if (!parsed) {
 			throw new Error(localize(
-				'pluginsBrowserUnsupportedHost',
+				"pluginsBrowserUnsupportedHost",
 				"Agent plugins in the browser can only be installed from GitHub HTTPS URLs. To install '{0}', use the desktop application or connect to a remote agent host.",
 				cloneUrl,
 			));
@@ -223,15 +286,21 @@ export class BrowserPluginGitCommandService implements IPluginGitService {
 
 	private _maybeLogTransientError(err: unknown, repo: IGitHubRepoRef): void {
 		if (err instanceof GitHubAuthRequiredError) {
-			this._logService.warn(`[BrowserPluginGitCommandService] GitHub auth required for ${repo.owner}/${repo.repo}: ${err.message}`);
+			this._logService.warn(
+        `[BrowserPluginGitCommandService] GitHub auth required for ${repo.owner}/${repo.repo}: ${err.message}`,
+      );
 		} else if (err instanceof GitHubRateLimitError) {
-			const wait = err.retryAfterSeconds !== undefined ? ` (retry after ${err.retryAfterSeconds}s)` : '';
-			this._logService.warn(`[BrowserPluginGitCommandService] GitHub rate limit hit for ${repo.owner}/${repo.repo}${wait}: ${err.message}`);
+			const wait = err.retryAfterSeconds !== undefined ? ` (retry after ${err.retryAfterSeconds}s)` : "";
+			this._logService.warn(
+        `[BrowserPluginGitCommandService] GitHub rate limit hit for ${repo.owner}/${repo.repo}${wait}: ${err.message}`,
+      );
 		} else if (err instanceof Error) {
 			// Surface the URL + cause so opaque `TypeError: Failed to fetch` errors
 			// (CORS, DNS, offline) don't reach the user without context.
-			const cause = err.cause instanceof Error ? ` (cause: ${err.cause.name}: ${err.cause.message})` : '';
-			this._logService.error(`[BrowserPluginGitCommandService] Clone failed for ${repo.owner}/${repo.repo}: ${err.message}${cause}`);
+			const cause = err.cause instanceof Error ? ` (cause: ${err.cause.name}: ${err.cause.message})` : "";
+			this._logService.error(
+        `[BrowserPluginGitCommandService] Clone failed for ${repo.owner}/${repo.repo}: ${err.message}${cause}`,
+      );
 		}
 	}
 
@@ -243,26 +312,42 @@ export class BrowserPluginGitCommandService implements IPluginGitService {
 	 */
 	private async _lookupGitHubToken(): Promise<string | undefined> {
 		try {
-			const sessions = await this._authenticationService.getSessions('github', [], { silent: true });
+			const sessions = await this._authenticationService.getSessions(
+        "github",
+        [],
+        { silent: true },
+      );
 			if (sessions.length === 0) {
 				return undefined;
 			}
-			const repoScopeSession = sessions.find(session => session.scopes.includes('repo'));
+			const repoScopeSession = sessions.find(
+        session => session.scopes.includes("repo"),
+      );
 			return repoScopeSession?.accessToken ?? sessions[0].accessToken;
 		} catch (err) {
-			this._logService.trace('[BrowserPluginGitCommandService] Silent GitHub session lookup failed:', err);
+			this._logService.trace(
+        "[BrowserPluginGitCommandService] Silent GitHub session lookup failed:",
+        err,
+      );
 			return undefined;
 		}
 	}
 
 	private async _requestGitHubToken(repo: IGitHubRepoRef): Promise<string> {
 		try {
-			const session = await this._authenticationService.createSession('github', ['repo'], { activateImmediate: true });
+			const session = await this._authenticationService.createSession(
+        "github",
+        ["repo"],
+        { activateImmediate: true },
+      );
 			return session.accessToken;
 		} catch (err) {
-			this._logService.trace('[BrowserPluginGitCommandService] GitHub session request failed:', err);
+			this._logService.trace(
+        "[BrowserPluginGitCommandService] GitHub session request failed:",
+        err,
+      );
 			throw new Error(localize(
-				'pluginsBrowserGitHubSignInRequired',
+				"pluginsBrowserGitHubSignInRequired",
 				"Sign in to GitHub with an account that has access to '{0}' to install this plugin.",
 				`${repo.owner}/${repo.repo}`,
 			));
@@ -295,7 +380,9 @@ export class BrowserPluginGitCommandService implements IPluginGitService {
 		for (const key of removed) {
 			cache.delete(key);
 		}
-		this._logService.trace(`[BrowserPluginGitCommandService] Pruned ${removed.length} stale cache entries`);
+		this._logService.trace(
+      `[BrowserPluginGitCommandService] Pruned ${removed.length} stale cache entries`,
+    );
 		this._persistCache();
 	}
 
@@ -304,18 +391,21 @@ export class BrowserPluginGitCommandService implements IPluginGitService {
 			return this._cache;
 		}
 		const cache = new Map<string, IBrowserPluginCacheEntry>();
-		const stored = this._storageService.getObject<IStoredBrowserPluginCache>(BROWSER_CACHE_STORAGE_KEY, StorageScope.APPLICATION);
+		const stored = this._storageService.getObject<IStoredBrowserPluginCache>(
+      BROWSER_CACHE_STORAGE_KEY,
+      StorageScope.APPLICATION,
+    );
 		const knownDirs = new Map<string, URI>();
 		if (stored) {
 			for (const [key, entry] of Object.entries(stored)) {
-				if (entry && typeof entry.sha === 'string' && typeof entry.owner === 'string' && typeof entry.repo === 'string') {
+				if (entry && typeof entry.sha === "string" && typeof entry.owner === "string" && typeof entry.repo === "string") {
 					cache.set(key, {
-						owner: entry.owner,
-						repo: entry.repo,
-						ref: typeof entry.ref === 'string' ? entry.ref : undefined,
-						sha: entry.sha,
-						fetchedAt: typeof entry.fetchedAt === 'number' ? entry.fetchedAt : 0,
-					});
+            owner: entry.owner,
+            repo: entry.repo,
+            ref: typeof entry.ref === "string" ? entry.ref : undefined,
+            sha: entry.sha,
+            fetchedAt: typeof entry.fetchedAt === "number" ? entry.fetchedAt : 0,
+          });
 					try {
 						knownDirs.set(key, URI.parse(key));
 					} catch {
@@ -329,8 +419,11 @@ export class BrowserPluginGitCommandService implements IPluginGitService {
 		// Fire-and-forget prune of dirs that no longer exist on disk.
 		if (knownDirs.size > 0) {
 			this._pruneStaleEntries(cache, knownDirs).catch(err => {
-				this._logService.trace('[BrowserPluginGitCommandService] Cache prune failed:', err);
-			});
+        this._logService.trace(
+          "[BrowserPluginGitCommandService] Cache prune failed:",
+          err,
+        );
+      });
 		}
 		return cache;
 	}
@@ -354,9 +447,17 @@ export class BrowserPluginGitCommandService implements IPluginGitService {
 			serialized[key] = entry;
 		}
 		if (Object.keys(serialized).length === 0) {
-			this._storageService.remove(BROWSER_CACHE_STORAGE_KEY, StorageScope.APPLICATION);
+			this._storageService.remove(
+        BROWSER_CACHE_STORAGE_KEY,
+        StorageScope.APPLICATION,
+      );
 			return;
 		}
-		this._storageService.store(BROWSER_CACHE_STORAGE_KEY, JSON.stringify(serialized), StorageScope.APPLICATION, StorageTarget.MACHINE);
+		this._storageService.store(
+      BROWSER_CACHE_STORAGE_KEY,
+      JSON.stringify(serialized),
+      StorageScope.APPLICATION,
+      StorageTarget.MACHINE,
+    );
 	}
 }

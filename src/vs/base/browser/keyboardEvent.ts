@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as browser from './browser.js';
-import { EVENT_KEY_CODE_MAP, isModifierKey, KeyCode, KeyCodeUtils, KeyMod } from '../common/keyCodes.js';
-import { KeyCodeChord } from '../common/keybindings.js';
-import * as platform from '../common/platform.js';
+import * as browser from "./browser.js";
+import { EVENT_KEY_CODE_MAP, isModifierKey, KeyCode, KeyCodeUtils, KeyMod } from "../common/keyCodes.js";
+import { KeyCodeChord } from "../common/keybindings.js";
+import * as platform from "../common/platform.js";
 
 function extractKeyCode(e: KeyboardEvent): KeyCode {
 	if (e.charCode) {
@@ -92,7 +92,7 @@ export function printKeyboardEvent(e: KeyboardEvent): string {
 	if (e.metaKey) {
 		modifiers.push(`meta`);
 	}
-	return `modifiers: [${modifiers.join(',')}], code: ${e.code}, keyCode: ${e.keyCode}, key: ${e.key}`;
+	return `modifiers: [${modifiers.join(",")}], code: ${e.code}, keyCode: ${e.keyCode}, key: ${e.key}`;
 }
 
 export function printStandardKeyboardEvent(e: StandardKeyboardEvent): string {
@@ -109,7 +109,7 @@ export function printStandardKeyboardEvent(e: StandardKeyboardEvent): string {
 	if (e.metaKey) {
 		modifiers.push(`meta`);
 	}
-	return `modifiers: [${modifiers.join(',')}], code: ${e.code}, keyCode: ${e.keyCode} ('${KeyCodeUtils.toString(e.keyCode)}')`;
+	return `modifiers: [${modifiers.join(",")}], code: ${e.code}, keyCode: ${e.keyCode} ('${KeyCodeUtils.toString(e.keyCode)}')`;
 }
 
 export function hasModifierKeys(keyStatus: {
@@ -149,7 +149,7 @@ export class StandardKeyboardEvent implements IKeyboardEvent {
 		this.shiftKey = e.shiftKey;
 		this.altKey = e.altKey;
 		this.metaKey = e.metaKey;
-		this.altGraphKey = e.getModifierState?.('AltGraph');
+		this.altGraphKey = e.getModifierState?.("AltGraph");
 		this.keyCode = extractKeyCode(e);
 		this.code = e.code;
 
@@ -215,6 +215,12 @@ export class StandardKeyboardEvent implements IKeyboardEvent {
 		if (!isModifierKey(this.keyCode)) {
 			key = this.keyCode;
 		}
-		return new KeyCodeChord(this.ctrlKey, this.shiftKey, this.altKey, this.metaKey, key);
+		return new KeyCodeChord(
+      this.ctrlKey,
+      this.shiftKey,
+      this.altKey,
+      this.metaKey,
+      key,
+    );
 	}
 }

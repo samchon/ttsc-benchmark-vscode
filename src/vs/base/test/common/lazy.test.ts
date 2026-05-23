@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { Lazy } from '../../common/lazy.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from './utils.js';
+import assert from "assert";
+import { Lazy } from "../../common/lazy.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "./utils.js";
 
-suite('Lazy', () => {
+suite("Lazy", () => {
 
-	test('lazy values should only be resolved once', () => {
+	test("lazy values should only be resolved once", () => {
 		let counter = 0;
 		const value = new Lazy(() => ++counter);
 
@@ -19,7 +19,7 @@ suite('Lazy', () => {
 		assert.strictEqual(value.value, 1); // make sure we did not evaluate again
 	});
 
-	test('lazy values handle error case', () => {
+	test("lazy values handle error case", () => {
 		let counter = 0;
 		const value = new Lazy(() => { throw new Error(`${++counter}`); });
 
@@ -29,7 +29,7 @@ suite('Lazy', () => {
 		assert.throws(() => value.value, /\b1\b/);
 	});
 
-	test('Should throw when accessing lazy value in initializer', () => {
+	test("Should throw when accessing lazy value in initializer", () => {
 		const value = new Lazy<string>((): string => { return value.value; });
 
 		assert.throws(() => value.value, /Cannot read the value of a lazy that is being initialized/);

@@ -3,25 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, DisposableMap, DisposableStore } from '../../../../base/common/lifecycle.js';
-import { IWorkbenchContribution } from '../../../../workbench/common/contributions.js';
-import { IBrowserViewWorkbenchService } from '../../../../workbench/contrib/browserView/common/browserView.js';
-import { BrowserEditorInput } from '../../../../workbench/contrib/browserView/common/browserEditorInput.js';
-import { IEditorService } from '../../../../workbench/services/editor/common/editorService.js';
-import { IEditorGroupsService } from '../../../../workbench/services/editor/common/editorGroupsService.js';
-import { ISessionsManagementService } from '../../../services/sessions/common/sessionsManagement.js';
-import { ISession } from '../../../services/sessions/common/session.js';
-import { runOnChange } from '../../../../base/common/observable.js';
+import { Disposable, DisposableMap, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { IWorkbenchContribution } from "../../../../workbench/common/contributions.js";
+import { IBrowserViewWorkbenchService } from "../../../../workbench/contrib/browserView/common/browserView.js";
+import { BrowserEditorInput } from "../../../../workbench/contrib/browserView/common/browserEditorInput.js";
+import { IEditorService } from "../../../../workbench/services/editor/common/editorService.js";
+import { IEditorGroupsService } from "../../../../workbench/services/editor/common/editorGroupsService.js";
+import { ISessionsManagementService } from "../../../services/sessions/common/sessionsManagement.js";
+import { ISession } from "../../../services/sessions/common/session.js";
+import { runOnChange } from "../../../../base/common/observable.js";
 
 export class SessionBrowserViewController extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'workbench.contrib.sessionBrowserViewController';
+	static readonly ID = "workbench.contrib.sessionBrowserViewController";
 
 	/**
 	 * Tracks browser view inputs with their owning session. The
 	 * DisposableMap cleans up lifecycle listeners on deletion/disposal.
 	 */
-	private readonly _trackedInputs = this._register(new DisposableMap<string, { session: ISession; dispose: () => void }>());
+	private readonly _trackedInputs = this._register(
+    new DisposableMap<string, { session: ISession; dispose: () => void }>(),
+  );
 
 	constructor(
 		@ISessionsManagementService private readonly _sessionManagementService: ISessionsManagementService,
@@ -73,13 +75,18 @@ export class SessionBrowserViewController extends Disposable implements IWorkben
 			return;
 		}
 
-		const session = this._sessionManagementService.activeSession.read(undefined);
+		const session = this._sessionManagementService.activeSession.read(
+      undefined,
+    );
 		if (!session) {
 			return; // no session, no lifecycle management needed
 		}
 
 		const store = new DisposableStore();
-		this._trackedInputs.set(input.id, { session, dispose: () => store.dispose() });
+		this._trackedInputs.set(input.id, {
+      session,
+      dispose: () => store.dispose(),
+    });
 
 		// When the owning session is archived, force-dispose the browser view.
 		store.add(runOnChange(session.isArchived, (isArchived) => {
@@ -98,9 +105,11 @@ export class SessionBrowserViewController extends Disposable implements IWorkben
 			}
 		}));
 
-		store.add(input.onWillDispose(() => {
-			store.dispose();
-			this._trackedInputs.deleteAndDispose(input.id);
-		}));
+		store.add(
+      input.onWillDispose(() => {
+        store.dispose();
+        this._trackedInputs.deleteAndDispose(input.id);
+      }),
+    );
 	}
 }

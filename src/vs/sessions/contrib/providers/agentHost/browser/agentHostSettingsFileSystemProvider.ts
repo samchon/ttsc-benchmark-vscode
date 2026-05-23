@@ -3,27 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IJSONSchema } from '../../../../../base/common/jsonSchema.js';
-import { IDisposable } from '../../../../../base/common/lifecycle.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { localize } from '../../../../../nls.js';
-import { ILogService } from '../../../../../platform/log/common/log.js';
-import { RootConfigState } from '../../../../../platform/agentHost/common/state/protocol/state.js';
-import { IAgentHostSessionsProvider } from '../../../../common/agentHostSessionsProvider.js';
-import { ISessionsProvidersService } from '../../../../services/sessions/browser/sessionsProvidersService.js';
+import { IJSONSchema } from "../../../../../base/common/jsonSchema.js";
+import { IDisposable } from "../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { localize } from "../../../../../nls.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { RootConfigState } from "../../../../../platform/agentHost/common/state/protocol/state.js";
+import { IAgentHostSessionsProvider } from "../../../../common/agentHostSessionsProvider.js";
+import { ISessionsProvidersService } from "../../../../services/sessions/browser/sessionsProvidersService.js";
 import {
-	AbstractAgentHostConfigFileSystemProvider,
-	AbstractAgentHostConfigSchemaRegistrar,
-	AgentHostConfigPropertyFilter,
-	buildAgentHostConfigJsonSchema,
-	IAgentHostConfigLike,
-	IAgentHostSettingsContext,
-	IAgentHostSettingsLocale,
-	serializeAgentHostConfigDocument,
-} from './agentHostSettingsShared.js';
+  AbstractAgentHostConfigFileSystemProvider,
+  AbstractAgentHostConfigSchemaRegistrar,
+  AgentHostConfigPropertyFilter,
+  buildAgentHostConfigJsonSchema,
+  IAgentHostConfigLike,
+  IAgentHostSettingsContext,
+  IAgentHostSettingsLocale,
+  serializeAgentHostConfigDocument,
+} from "./agentHostSettingsShared.js";
 
 /** Scheme for the synthetic agent-host settings files. */
-export const AGENT_HOST_SETTINGS_SCHEME = 'agent-host-settings';
+export const AGENT_HOST_SETTINGS_SCHEME = "agent-host-settings";
 
 /**
  * Build the URI used to open the settings file for an agent host provider.
@@ -32,10 +32,10 @@ export const AGENT_HOST_SETTINGS_SCHEME = 'agent-host-settings';
  */
 export function agentHostSettingsUri(providerId: string): URI {
 	return URI.from({
-		scheme: AGENT_HOST_SETTINGS_SCHEME,
-		authority: providerId,
-		path: `/settings.jsonc`,
-	});
+    scheme: AGENT_HOST_SETTINGS_SCHEME,
+    authority: providerId,
+    path: `/settings.jsonc`,
+  });
 }
 
 function parseHostSettingsUri(uri: URI): IAgentHostSettingsContext | undefined {
@@ -53,10 +53,10 @@ function parseHostSettingsUri(uri: URI): IAgentHostSettingsContext | undefined {
 const hostSettingsPropertyFilter: AgentHostConfigPropertyFilter = () => true;
 
 const hostSettingsLocale: IAgentHostSettingsLocale = {
-	get header() { return localize('agentHostSettings.header', "Agent host settings."); },
-	get saveHint() { return localize('agentHostSettings.saveHint', "Edit values below and save to apply. Unknown properties are ignored."); },
-	get parseError() { return localize('agentHostSettings.parseError', "Failed to parse agent host settings as JSON."); },
-	get notObject() { return localize('agentHostSettings.notObject', "Agent host settings must be a JSON object."); },
+  get header() { return localize("agentHostSettings.header", "Agent host settings."); },
+  get saveHint() { return localize("agentHostSettings.saveHint", "Edit values below and save to apply. Unknown properties are ignored."); },
+  get parseError() { return localize("agentHostSettings.parseError", "Failed to parse agent host settings as JSON."); },
+  get notObject() { return localize("agentHostSettings.notObject", "Agent host settings must be a JSON object."); },
 };
 
 /**
@@ -64,7 +64,11 @@ const hostSettingsLocale: IAgentHostSettingsLocale = {
  * commented, pretty-printed JSON document.
  */
 export function serializeHostSettings(provider: IAgentHostSessionsProvider): string {
-	return serializeAgentHostConfigDocument(provider.getRootConfig(), hostSettingsPropertyFilter, hostSettingsLocale);
+	return serializeAgentHostConfigDocument(
+    provider.getRootConfig(),
+    hostSettingsPropertyFilter,
+    hostSettingsLocale,
+  );
 }
 
 /**
@@ -81,7 +85,7 @@ export function buildHostSettingsJsonSchema(config: RootConfigState): IJSONSchem
 export class AgentHostSettingsFileSystemProvider extends AbstractAgentHostConfigFileSystemProvider<IAgentHostSettingsContext> {
 
 	protected readonly _schemeLabel = AGENT_HOST_SETTINGS_SCHEME;
-	protected readonly _traceTag = 'AgentHostSettings';
+	protected readonly _traceTag = "AgentHostSettings";
 	protected readonly _locale = hostSettingsLocale;
 
 	constructor(

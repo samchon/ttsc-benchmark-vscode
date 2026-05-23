@@ -3,44 +3,65 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CodeWindow } from '../../../../base/browser/window.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { Event } from '../../../../base/common/event.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IEditorContributionDescription } from '../../../../editor/browser/editorExtensions.js';
-import * as editorCommon from '../../../../editor/common/editorCommon.js';
-import { FontInfo } from '../../../../editor/common/config/fontInfo.js';
-import { IPosition } from '../../../../editor/common/core/position.js';
-import { IRange, Range } from '../../../../editor/common/core/range.js';
-import { Selection } from '../../../../editor/common/core/selection.js';
-import { FindMatch, IModelDeltaDecoration, IReadonlyTextBuffer, ITextModel, TrackedRangeStickiness } from '../../../../editor/common/model.js';
-import { MenuId } from '../../../../platform/actions/common/actions.js';
-import { ITextEditorOptions, ITextResourceEditorInput } from '../../../../platform/editor/common/editor.js';
-import { IConstructorSignature } from '../../../../platform/instantiation/common/instantiation.js';
-import { IEditorPane, IEditorPaneWithSelection } from '../../../common/editor.js';
-import { CellViewModelStateChangeEvent, NotebookCellStateChangedEvent, NotebookLayoutInfo } from './notebookViewEvents.js';
-import { NotebookCellTextModel } from '../common/model/notebookCellTextModel.js';
-import { NotebookTextModel } from '../common/model/notebookTextModel.js';
-import { CellKind, ICellOutput, INotebookCellStatusBarItem, INotebookRendererInfo, INotebookFindOptions, IOrderedMimeType, NotebookCellInternalMetadata, NotebookCellMetadata, NOTEBOOK_EDITOR_ID, NOTEBOOK_DIFF_EDITOR_ID } from '../common/notebookCommon.js';
-import { isCompositeNotebookEditorInput } from '../common/notebookEditorInput.js';
-import { INotebookKernel } from '../common/notebookKernelService.js';
-import { NotebookOptions } from './notebookOptions.js';
-import { cellRangesToIndexes, ICellRange, reduceCellRanges } from '../common/notebookRange.js';
-import { IWebviewElement } from '../../webview/browser/webview.js';
-import { IEditorCommentsOptions, IEditorOptions } from '../../../../editor/common/config/editorOptions.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { ICodeEditor } from '../../../../editor/browser/editorBrowser.js';
-import { IObservable } from '../../../../base/common/observable.js';
-import { INotebookTextDiffEditor } from './diff/notebookDiffEditorBrowser.js';
+import { CodeWindow } from "../../../../base/browser/window.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Event } from "../../../../base/common/event.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IEditorContributionDescription } from "../../../../editor/browser/editorExtensions.js";
+import * as editorCommon from "../../../../editor/common/editorCommon.js";
+import { FontInfo } from "../../../../editor/common/config/fontInfo.js";
+import { IPosition } from "../../../../editor/common/core/position.js";
+import { IRange, Range } from "../../../../editor/common/core/range.js";
+import { Selection } from "../../../../editor/common/core/selection.js";
+import {
+  FindMatch,
+  IModelDeltaDecoration,
+  IReadonlyTextBuffer,
+  ITextModel,
+  TrackedRangeStickiness,
+} from "../../../../editor/common/model.js";
+import { MenuId } from "../../../../platform/actions/common/actions.js";
+import { ITextEditorOptions, ITextResourceEditorInput } from "../../../../platform/editor/common/editor.js";
+import { IConstructorSignature } from "../../../../platform/instantiation/common/instantiation.js";
+import { IEditorPane, IEditorPaneWithSelection } from "../../../common/editor.js";
+import {
+  CellViewModelStateChangeEvent,
+  NotebookCellStateChangedEvent,
+  NotebookLayoutInfo,
+} from "./notebookViewEvents.js";
+import { NotebookCellTextModel } from "../common/model/notebookCellTextModel.js";
+import { NotebookTextModel } from "../common/model/notebookTextModel.js";
+import {
+  CellKind,
+  ICellOutput,
+  INotebookCellStatusBarItem,
+  INotebookRendererInfo,
+  INotebookFindOptions,
+  IOrderedMimeType,
+  NotebookCellInternalMetadata,
+  NotebookCellMetadata,
+  NOTEBOOK_EDITOR_ID,
+  NOTEBOOK_DIFF_EDITOR_ID,
+} from "../common/notebookCommon.js";
+import { isCompositeNotebookEditorInput } from "../common/notebookEditorInput.js";
+import { INotebookKernel } from "../common/notebookKernelService.js";
+import { NotebookOptions } from "./notebookOptions.js";
+import { cellRangesToIndexes, ICellRange, reduceCellRanges } from "../common/notebookRange.js";
+import { IWebviewElement } from "../../webview/browser/webview.js";
+import { IEditorCommentsOptions, IEditorOptions } from "../../../../editor/common/config/editorOptions.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { ICodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { IObservable } from "../../../../base/common/observable.js";
+import { INotebookTextDiffEditor } from "./diff/notebookDiffEditorBrowser.js";
 
 //#region Shared commands
-export const EXPAND_CELL_INPUT_COMMAND_ID = 'notebook.cell.expandCellInput';
-export const EXECUTE_CELL_COMMAND_ID = 'notebook.cell.execute';
-export const DETECT_CELL_LANGUAGE = 'notebook.cell.detectLanguage';
-export const CHANGE_CELL_LANGUAGE = 'notebook.cell.changeLanguage';
-export const QUIT_EDIT_CELL_COMMAND_ID = 'notebook.cell.quitEdit';
-export const EXPAND_CELL_OUTPUT_COMMAND_ID = 'notebook.cell.expandCellOutput';
+export const EXPAND_CELL_INPUT_COMMAND_ID = "notebook.cell.expandCellInput";
+export const EXECUTE_CELL_COMMAND_ID = "notebook.cell.execute";
+export const DETECT_CELL_LANGUAGE = "notebook.cell.detectLanguage";
+export const CHANGE_CELL_LANGUAGE = "notebook.cell.changeLanguage";
+export const QUIT_EDIT_CELL_COMMAND_ID = "notebook.cell.quitEdit";
+export const EXPAND_CELL_OUTPUT_COMMAND_ID = "notebook.cell.expandCellOutput";
 
 
 //#endregion
@@ -49,21 +70,24 @@ export const EXPAND_CELL_OUTPUT_COMMAND_ID = 'notebook.cell.expandCellOutput';
 
 // Hardcoding viewType/extension ID for now. TODO these should be replaced once we can
 // look them up in the marketplace dynamically.
-export const IPYNB_VIEW_TYPE = 'jupyter-notebook';
-export const JUPYTER_EXTENSION_ID = 'ms-toolsai.jupyter';
+export const IPYNB_VIEW_TYPE = "jupyter-notebook";
+export const JUPYTER_EXTENSION_ID = "ms-toolsai.jupyter";
 /** @deprecated use the notebookKernel<Type> "keyword" instead */
 export const KERNEL_EXTENSIONS = new Map<string, string>([
-	[IPYNB_VIEW_TYPE, JUPYTER_EXTENSION_ID],
+  [IPYNB_VIEW_TYPE, JUPYTER_EXTENSION_ID],
 ]);
 // @TODO lramos15, place this in a similar spot to our normal recommendations.
 export const KERNEL_RECOMMENDATIONS = new Map<string, Map<string, INotebookExtensionRecommendation>>();
-KERNEL_RECOMMENDATIONS.set(IPYNB_VIEW_TYPE, new Map<string, INotebookExtensionRecommendation>());
-KERNEL_RECOMMENDATIONS.get(IPYNB_VIEW_TYPE)?.set('python', {
+KERNEL_RECOMMENDATIONS.set(
+  IPYNB_VIEW_TYPE,
+  new Map<string, INotebookExtensionRecommendation>(),
+);
+KERNEL_RECOMMENDATIONS.get(IPYNB_VIEW_TYPE)?.set("python", {
 	extensionIds: [
-		'ms-python.python',
-		JUPYTER_EXTENSION_ID
+		"ms-python.python",
+		JUPYTER_EXTENSION_ID,
 	],
-	displayName: 'Python + Jupyter',
+	displayName: "Python + Jupyter",
 });
 
 export interface INotebookExtensionRecommendation {
@@ -259,7 +283,7 @@ export interface ICellViewModel extends IGenericCellViewModel {
 	language: string;
 	readonly mime: string;
 	cellKind: CellKind;
-	lineNumbers: 'on' | 'off' | 'inherit';
+	lineNumbers: "on" | "off" | "inherit";
 	commentOptions: IEditorCommentsOptions;
 	chatHeight: number;
 	commentHeight: number;
@@ -352,11 +376,11 @@ export interface INotebookDeltaViewZoneDecoration {
 }
 
 export function isNotebookCellDecoration(obj: unknown): obj is INotebookDeltaCellDecoration {
-	return !!obj && typeof (obj as INotebookDeltaCellDecoration).handle === 'number';
+	return !!obj && typeof (obj as INotebookDeltaCellDecoration).handle === "number";
 }
 
 export function isNotebookViewZoneDecoration(obj: unknown): obj is INotebookDeltaViewZoneDecoration {
-	return !!obj && typeof (obj as INotebookDeltaViewZoneDecoration).viewZoneId === 'string';
+	return !!obj && typeof (obj as INotebookDeltaViewZoneDecoration).viewZoneId === "string";
 }
 
 export type INotebookDeltaDecoration = INotebookDeltaCellDecoration | INotebookDeltaViewZoneDecoration;
@@ -425,7 +449,7 @@ export interface INotebookEditorViewState {
 	editingCells: { [key: number]: boolean };
 	collapsedInputCells: { [key: number]: boolean };
 	collapsedOutputCells: { [key: number]: boolean };
-	cellLineNumberStates: { [key: number]: 'on' | 'off' };
+	cellLineNumberStates: { [key: number]: "on" | "off" };
 	editorViewStates: { [key: number]: editorCommon.ICodeEditorViewState | null };
 	hiddenFoldingRanges?: ICellRange[];
 	cellTotalHeights?: { [key: number]: number };
@@ -480,7 +504,7 @@ export interface INotebookCellOverlayChangeAccessor {
 export type NotebookViewCellsSplice = [
 	number /* start */,
 	number /* delete count */,
-	ICellViewModel[]
+	ICellViewModel[],
 ];
 
 export interface INotebookViewCellsUpdateEvent {
@@ -603,7 +627,7 @@ export interface INotebookEditor {
 	/**
 	 * Focus the container of a cell (the monaco editor inside is not focused).
 	 */
-	focusNotebookCell(cell: ICellViewModel, focus: 'editor' | 'container' | 'output', options?: IFocusNotebookCellOptions): Promise<void>;
+	focusNotebookCell(cell: ICellViewModel, focus: "editor" | "container" | "output", options?: IFocusNotebookCellOptions): Promise<void>;
 
 	/**
 	 * Execute the given notebook cells
@@ -983,8 +1007,8 @@ export function expandCellRangesWithHiddenCells(editor: INotebookEditor, ranges:
 export function cellRangeToViewCells(editor: IActiveNotebookEditor, ranges: ICellRange[]) {
 	const cells: ICellViewModel[] = [];
 	reduceCellRanges(ranges).forEach(range => {
-		cells.push(...editor.getCellsInRange(range));
-	});
+    cells.push(...editor.getCellsInRange(range));
+  });
 
 	return cells;
 }

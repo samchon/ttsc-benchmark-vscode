@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../../../nls.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { getLocation, parse } from '../../../../base/common/json.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { Position } from '../../../../editor/common/core/position.js';
-import { ITextModel } from '../../../../editor/common/model.js';
-import { CompletionContext, CompletionList, CompletionItemKind, CompletionItem } from '../../../../editor/common/languages.js';
-import { IExtensionManagementService } from '../../../../platform/extensionManagement/common/extensionManagement.js';
-import { IWorkbenchContribution } from '../../../common/contributions.js';
-import { Range } from '../../../../editor/common/core/range.js';
-import { ILanguageFeaturesService } from '../../../../editor/common/services/languageFeatures.js';
+import { localize } from "../../../../nls.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { getLocation, parse } from "../../../../base/common/json.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { Position } from "../../../../editor/common/core/position.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+import { CompletionContext, CompletionList, CompletionItemKind, CompletionItem } from "../../../../editor/common/languages.js";
+import { IExtensionManagementService } from "../../../../platform/extensionManagement/common/extensionManagement.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { ILanguageFeaturesService } from "../../../../editor/common/services/languageFeatures.js";
 
 
 export class ExtensionsCompletionItemsProvider extends Disposable implements IWorkbenchContribution {
@@ -23,8 +23,8 @@ export class ExtensionsCompletionItemsProvider extends Disposable implements IWo
 	) {
 		super();
 
-		this._register(languageFeaturesService.completionProvider.register({ language: 'jsonc', pattern: '**/settings.json' }, {
-			_debugDisplayName: 'extensionsCompletionProvider',
+		this._register(languageFeaturesService.completionProvider.register({ language: "jsonc", pattern: "**/settings.json" }, {
+			_debugDisplayName: "extensionsCompletionProvider",
 			provideCompletionItems: async (model: ITextModel, position: Position, _context: CompletionContext, token: CancellationToken): Promise<CompletionList> => {
 				const getWordRangeAtPosition = (model: ITextModel, position: Position): Range | null => {
 					const wordAtPosition = model.getWordAtPosition(position);
@@ -35,24 +35,28 @@ export class ExtensionsCompletionItemsProvider extends Disposable implements IWo
 				const range = getWordRangeAtPosition(model, position) ?? Range.fromPositions(position, position);
 
 				// extensions.supportUntrustedWorkspaces
-				if (location.path[0] === 'extensions.supportUntrustedWorkspaces' && location.path.length === 2 && location.isAtPropertyKey) {
+				if (location.path[0] === "extensions.supportUntrustedWorkspaces" && location.path.length === 2 && location.isAtPropertyKey) {
 					let alreadyConfigured: string[] = [];
 					try {
-						alreadyConfigured = Object.keys(parse(model.getValue())['extensions.supportUntrustedWorkspaces']);
+						alreadyConfigured = Object.keys(parse(model.getValue())["extensions.supportUntrustedWorkspaces"]);
 					} catch (e) {/* ignore error */ }
 
 					return { suggestions: await this.provideSupportUntrustedWorkspacesExtensionProposals(alreadyConfigured, range) };
 				}
 
 				return { suggestions: [] };
-			}
+			},
 		}));
 	}
 
 	private async provideSupportUntrustedWorkspacesExtensionProposals(alreadyConfigured: string[], range: Range): Promise<CompletionItem[]> {
 		const suggestions: CompletionItem[] = [];
-		const installedExtensions = (await this.extensionManagementService.getInstalled()).filter(e => e.manifest.main);
-		const proposedExtensions = installedExtensions.filter(e => alreadyConfigured.indexOf(e.identifier.id) === -1);
+		const installedExtensions = (await this.extensionManagementService.getInstalled()).filter(
+      e => e.manifest.main,
+    );
+		const proposedExtensions = installedExtensions.filter(
+      e => alreadyConfigured.indexOf(e.identifier.id) === -1,
+    );
 
 		if (proposedExtensions.length) {
 			suggestions.push(...proposedExtensions.map(e => {
@@ -61,7 +65,13 @@ export class ExtensionsCompletionItemsProvider extends Disposable implements IWo
 			}));
 		} else {
 			const text = '"vscode.csharp": {\n\t"supported": true,\n\t"version": "0.0.0"\n},';
-			suggestions.push({ label: localize('exampleExtension', "Example"), kind: CompletionItemKind.Value, insertText: text, filterText: text, range });
+			suggestions.push({
+        label: localize("exampleExtension", "Example"),
+        kind: CompletionItemKind.Value,
+        insertText: text,
+        filterText: text,
+        range,
+      });
 		}
 
 		return suggestions;

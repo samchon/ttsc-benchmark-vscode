@@ -3,23 +3,32 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { joinPath } from '../../../../base/common/resources.js';
-import { URI } from '../../../../base/common/uri.js';
-import { coalesce } from '../../../../base/common/arrays.js';
-import { equals, deepClone } from '../../../../base/common/objects.js';
-import { Promises, ResourceQueue } from '../../../../base/common/async.js';
-import { IResolvedWorkingCopyBackup, IWorkingCopyBackupService } from './workingCopyBackup.js';
-import { IFileService, FileOperationError, FileOperationResult } from '../../../../platform/files/common/files.js';
-import { ResourceMap } from '../../../../base/common/map.js';
-import { isReadableStream, peekStream } from '../../../../base/common/stream.js';
-import { bufferToStream, prefixedBufferReadable, prefixedBufferStream, readableToBuffer, streamToBuffer, VSBuffer, VSBufferReadable, VSBufferReadableStream } from '../../../../base/common/buffer.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { Schemas } from '../../../../base/common/network.js';
-import { hash } from '../../../../base/common/hash.js';
-import { isEmptyObject } from '../../../../base/common/types.js';
-import { IWorkingCopyBackupMeta, IWorkingCopyIdentifier, NO_TYPE_ID } from './workingCopy.js';
+import { joinPath } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { coalesce } from "../../../../base/common/arrays.js";
+import { equals, deepClone } from "../../../../base/common/objects.js";
+import { Promises, ResourceQueue } from "../../../../base/common/async.js";
+import { IResolvedWorkingCopyBackup, IWorkingCopyBackupService } from "./workingCopyBackup.js";
+import { IFileService, FileOperationError, FileOperationResult } from "../../../../platform/files/common/files.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { isReadableStream, peekStream } from "../../../../base/common/stream.js";
+import {
+  bufferToStream,
+  prefixedBufferReadable,
+  prefixedBufferStream,
+  readableToBuffer,
+  streamToBuffer,
+  VSBuffer,
+  VSBufferReadable,
+  VSBufferReadableStream,
+} from "../../../../base/common/buffer.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { hash } from "../../../../base/common/hash.js";
+import { isEmptyObject } from "../../../../base/common/types.js";
+import { IWorkingCopyBackupMeta, IWorkingCopyIdentifier, NO_TYPE_ID } from "./workingCopy.js";
 
 export class WorkingCopyBackupsModel {
 
@@ -70,9 +79,9 @@ export class WorkingCopyBackupsModel {
 
 	add(resource: URI, versionId = 0, meta?: IWorkingCopyBackupMeta): void {
 		this.cache.set(resource, {
-			versionId,
-			meta: deepClone(meta)
-		});
+      versionId,
+      meta: deepClone(meta),
+    });
 	}
 
 	update(resource: URI, meta?: IWorkingCopyBackupMeta): void {
@@ -92,7 +101,7 @@ export class WorkingCopyBackupsModel {
 			return false; // unknown resource
 		}
 
-		if (typeof versionId === 'number' && versionId !== entry.versionId) {
+		if (typeof versionId === "number" && versionId !== entry.versionId) {
 			return false; // different versionId
 		}
 
@@ -125,7 +134,7 @@ export abstract class WorkingCopyBackupService extends Disposable implements IWo
 	constructor(
 		backupWorkspaceHome: URI | undefined,
 		@IFileService protected fileService: IFileService,
-		@ILogService private readonly logService: ILogService
+		@ILogService private readonly logService: ILogService,
 	) {
 		super();
 
@@ -134,7 +143,11 @@ export abstract class WorkingCopyBackupService extends Disposable implements IWo
 
 	private initialize(backupWorkspaceHome: URI | undefined): WorkingCopyBackupServiceImpl | InMemoryWorkingCopyBackupService {
 		if (backupWorkspaceHome) {
-			return new WorkingCopyBackupServiceImpl(backupWorkspaceHome, this.fileService, this.logService);
+			return new WorkingCopyBackupServiceImpl(
+        backupWorkspaceHome,
+        this.fileService,
+        this.logService,
+      );
 		}
 
 		return new InMemoryWorkingCopyBackupService();
@@ -187,14 +200,16 @@ export abstract class WorkingCopyBackupService extends Disposable implements IWo
 
 class WorkingCopyBackupServiceImpl extends Disposable implements IWorkingCopyBackupService {
 
-	private static readonly PREAMBLE_END_MARKER = '\n';
-	private static readonly PREAMBLE_END_MARKER_CHARCODE = '\n'.charCodeAt(0);
-	private static readonly PREAMBLE_META_SEPARATOR = ' '; // using a character that is know to be escaped in a URI as separator
+	private static readonly PREAMBLE_END_MARKER = "\n";
+	private static readonly PREAMBLE_END_MARKER_CHARCODE = "\n".charCodeAt(0);
+	private static readonly PREAMBLE_META_SEPARATOR = " "; // using a character that is know to be escaped in a URI as separator
 	private static readonly PREAMBLE_MAX_LENGTH = 10000;
 
 	declare readonly _serviceBrand: undefined;
 
-	private readonly ioOperationQueues = this._register(new ResourceQueue()); // queue IO operations to ensure write/delete file order
+	private readonly ioOperationQueues = this._register(
+    new ResourceQueue(),
+  ); // queue IO operations to ensure write/delete file order
 
 	private ready!: Promise<WorkingCopyBackupsModel>;
 	private model: WorkingCopyBackupsModel | undefined = undefined;
@@ -202,7 +217,7 @@ class WorkingCopyBackupServiceImpl extends Disposable implements IWorkingCopyBac
 	constructor(
 		private backupWorkspaceHome: URI,
 		@IFileService private readonly fileService: IFileService,
-		@ILogService private readonly logService: ILogService
+		@ILogService private readonly logService: ILogService,
 	) {
 		super();
 
@@ -218,7 +233,10 @@ class WorkingCopyBackupServiceImpl extends Disposable implements IWorkingCopyBac
 	private async doInitialize(): Promise<WorkingCopyBackupsModel> {
 
 		// Create backup model
-		this.model = await WorkingCopyBackupsModel.create(this.backupWorkspaceHome, this.fileService);
+		this.model = await WorkingCopyBackupsModel.create(
+      this.backupWorkspaceHome,
+      this.fileService,
+    );
 
 		return this.model;
 	}
@@ -273,7 +291,7 @@ class WorkingCopyBackupServiceImpl extends Disposable implements IWorkingCopyBac
 			} else if (content) {
 				backupBuffer = prefixedBufferReadable(preambleBuffer, content);
 			} else {
-				backupBuffer = VSBuffer.concat([preambleBuffer, VSBuffer.fromString('')]);
+				backupBuffer = VSBuffer.concat([preambleBuffer, VSBuffer.fromString("")]);
 			}
 
 			// Write backup via file service
@@ -365,7 +383,11 @@ class WorkingCopyBackupServiceImpl extends Disposable implements IWorkingCopyBac
 		// Ensure to await any pending backup operations
 		await this.joinBackups();
 
-		const backups = await Promise.all(model.get().map(backupResource => this.resolveIdentifier(backupResource, model)));
+		const backups = await Promise.all(
+      model.get().map(
+        backupResource => this.resolveIdentifier(backupResource, model),
+      ),
+    );
 
 		return coalesce(backups);
 	}
@@ -411,7 +433,7 @@ class WorkingCopyBackupServiceImpl extends Disposable implements IWorkingCopyBac
 
 			res = {
 				typeId: typeId ?? NO_TYPE_ID,
-				resource: URI.parse(resourcePreamble)
+				resource: URI.parse(resourcePreamble),
 			};
 		});
 
@@ -498,7 +520,7 @@ class WorkingCopyBackupServiceImpl extends Disposable implements IWorkingCopyBac
 
 				// `typeId` is a property that we add so we
 				// remove it when returning to clients.
-				if (typeof meta?.typeId === 'string') {
+				if (typeof meta?.typeId === "string") {
 					delete meta.typeId;
 
 					if (isEmptyObject(meta)) {
@@ -514,7 +536,11 @@ class WorkingCopyBackupServiceImpl extends Disposable implements IWorkingCopyBac
 	}
 
 	toBackupResource(identifier: IWorkingCopyIdentifier): URI {
-		return joinPath(this.backupWorkspaceHome, identifier.resource.scheme, hashIdentifier(identifier));
+		return joinPath(
+      this.backupWorkspaceHome,
+      identifier.resource.scheme,
+      hashIdentifier(identifier),
+    );
 	}
 
 	joinBackups(): Promise<void> {
@@ -537,24 +563,30 @@ export class InMemoryWorkingCopyBackupService extends Disposable implements IWor
 	async backup(identifier: IWorkingCopyIdentifier, content?: VSBufferReadable | VSBufferReadableStream, versionId?: number, meta?: IWorkingCopyBackupMeta, token?: CancellationToken): Promise<void> {
 		const backupResource = this.toBackupResource(identifier);
 		this.backups.set(backupResource, {
-			typeId: identifier.typeId,
-			content: content instanceof VSBuffer ? content : content ? isReadableStream(content) ? await streamToBuffer(content) : readableToBuffer(content) : VSBuffer.fromString(''),
-			meta
-		});
+      typeId: identifier.typeId,
+      content: content instanceof VSBuffer ? content : content ? isReadableStream(content) ? await streamToBuffer(content) : readableToBuffer(content) : VSBuffer.fromString(""),
+      meta,
+    });
 	}
 
 	async resolve<T extends IWorkingCopyBackupMeta>(identifier: IWorkingCopyIdentifier): Promise<IResolvedWorkingCopyBackup<T> | undefined> {
 		const backupResource = this.toBackupResource(identifier);
 		const backup = this.backups.get(backupResource);
 		if (backup) {
-			return { value: bufferToStream(backup.content), meta: backup.meta as T | undefined };
+			return {
+        value: bufferToStream(backup.content),
+        meta: backup.meta as T | undefined,
+      };
 		}
 
 		return undefined;
 	}
 
 	async getBackups(): Promise<IWorkingCopyIdentifier[]> {
-		return Array.from(this.backups.entries()).map(([resource, backup]) => ({ typeId: backup.typeId, resource }));
+		return Array.from(this.backups.entries()).map(([resource, backup]) => ({
+      typeId: backup.typeId,
+      resource,
+    }));
 	}
 
 	async discardBackup(identifier: IWorkingCopyIdentifier): Promise<void> {
@@ -580,7 +612,10 @@ export class InMemoryWorkingCopyBackupService extends Disposable implements IWor
 	}
 
 	toBackupResource(identifier: IWorkingCopyIdentifier): URI {
-		return URI.from({ scheme: Schemas.inMemory, path: hashIdentifier(identifier) });
+		return URI.from({
+      scheme: Schemas.inMemory,
+      path: hashIdentifier(identifier),
+    });
 	}
 
 	async joinBackups(): Promise<void> {

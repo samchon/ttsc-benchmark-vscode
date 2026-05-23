@@ -3,15 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../base/common/event.js';
-import { IMarkdownString } from '../../../base/common/htmlContent.js';
-import { IDisposable, IReference } from '../../../base/common/lifecycle.js';
-import { URI } from '../../../base/common/uri.js';
-import { ITextModel, ITextSnapshot } from '../model.js';
-import { IResolvableEditorModel } from '../../../platform/editor/common/editor.js';
-import { createDecorator } from '../../../platform/instantiation/common/instantiation.js';
+import { Event } from "../../../base/common/event.js";
+import { IMarkdownString } from "../../../base/common/htmlContent.js";
+import { IDisposable, IReference } from "../../../base/common/lifecycle.js";
+import { URI } from "../../../base/common/uri.js";
+import { ITextModel, ITextSnapshot } from "../model.js";
+import { IResolvableEditorModel } from "../../../platform/editor/common/editor.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
 
-export const ITextModelService = createDecorator<ITextModelService>('textModelService');
+export const ITextModelService = createDecorator<ITextModelService>(
+  "textModelService",
+);
 
 export interface ITextModelService {
 	readonly _serviceBrand: undefined;

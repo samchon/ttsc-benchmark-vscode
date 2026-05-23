@@ -3,29 +3,43 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { $, addDisposableListener, getWindow, h, reset } from '../../../../../base/browser/dom.js';
-import { renderIcon, renderLabelWithIcons } from '../../../../../base/browser/ui/iconLabel/iconLabels.js';
-import { Codicon } from '../../../../../base/common/codicons.js';
-import { MarkdownString } from '../../../../../base/common/htmlContent.js';
-import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
-import { IObservable, IReader, autorun, derived, derivedDisposable, observableValue, transaction } from '../../../../../base/common/observable.js';
-import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { isDefined } from '../../../../../base/common/types.js';
-import { localize } from '../../../../../nls.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { EditorOption } from '../../../../common/config/editorOptions.js';
-import { LineRange } from '../../../../common/core/ranges/lineRange.js';
-import { Position } from '../../../../common/core/position.js';
-import { Range } from '../../../../common/core/range.js';
-import { CursorChangeReason } from '../../../../common/cursorEvents.js';
-import { SymbolKind, SymbolKinds } from '../../../../common/languages.js';
-import { IModelDecorationOptions, IModelDeltaDecoration, ITextModel } from '../../../../common/model.js';
-import { ICodeEditor } from '../../../editorBrowser.js';
-import { observableCodeEditor } from '../../../observableCodeEditor.js';
-import { DiffEditorEditors } from '../components/diffEditorEditors.js';
-import { DiffEditorOptions } from '../diffEditorOptions.js';
-import { DiffEditorViewModel, RevealPreference, UnchangedRegion } from '../diffEditorViewModel.js';
-import { IObservableViewZone, PlaceholderViewZone, ViewZoneOverlayWidget, applyObservableDecorations, applyStyle } from '../utils.js';
+import { $, addDisposableListener, getWindow, h, reset } from "../../../../../base/browser/dom.js";
+import { renderIcon, renderLabelWithIcons } from "../../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { MarkdownString } from "../../../../../base/common/htmlContent.js";
+import { Disposable, IDisposable } from "../../../../../base/common/lifecycle.js";
+import {
+  IObservable,
+  IReader,
+  autorun,
+  derived,
+  derivedDisposable,
+  observableValue,
+  transaction,
+} from "../../../../../base/common/observable.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { isDefined } from "../../../../../base/common/types.js";
+import { localize } from "../../../../../nls.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { EditorOption } from "../../../../common/config/editorOptions.js";
+import { LineRange } from "../../../../common/core/ranges/lineRange.js";
+import { Position } from "../../../../common/core/position.js";
+import { Range } from "../../../../common/core/range.js";
+import { CursorChangeReason } from "../../../../common/cursorEvents.js";
+import { SymbolKind, SymbolKinds } from "../../../../common/languages.js";
+import { IModelDecorationOptions, IModelDeltaDecoration, ITextModel } from "../../../../common/model.js";
+import { ICodeEditor } from "../../../editorBrowser.js";
+import { observableCodeEditor } from "../../../observableCodeEditor.js";
+import { DiffEditorEditors } from "../components/diffEditorEditors.js";
+import { DiffEditorOptions } from "../diffEditorOptions.js";
+import { DiffEditorViewModel, RevealPreference, UnchangedRegion } from "../diffEditorViewModel.js";
+import {
+  IObservableViewZone,
+  PlaceholderViewZone,
+  ViewZoneOverlayWidget,
+  applyObservableDecorations,
+  applyStyle,
+} from "../utils.js";
 
 /**
  * Make sure to add the view zones to the editor!
@@ -179,15 +193,15 @@ export class HideUnchangedRegionsFeature extends Disposable {
 
 
 		const unchangedLinesDecoration: IModelDecorationOptions = {
-			description: 'unchanged lines',
-			className: 'diff-unchanged-lines',
-			isWholeLine: true,
-		};
+      description: "unchanged lines",
+      className: "diff-unchanged-lines",
+      isWholeLine: true,
+    };
 		const unchangedLinesDecorationShow: IModelDecorationOptions = {
-			description: 'Fold Unchanged',
+			description: "Fold Unchanged",
 			glyphMarginHoverMessage: new MarkdownString(undefined, { isTrusted: true, supportThemeIcons: true })
-				.appendMarkdown(localize('foldUnchanged', 'Fold Unchanged Region')),
-			glyphMarginClassName: 'fold-unchanged ' + ThemeIcon.asClassName(Codicon.fold),
+				.appendMarkdown(localize("foldUnchanged", "Fold Unchanged Region")),
+			glyphMarginClassName: "fold-unchanged " + ThemeIcon.asClassName(Codicon.fold),
 			zIndex: 10001,
 		};
 
@@ -240,7 +254,7 @@ export class HideUnchangedRegionsFeature extends Disposable {
 		}));
 
 		this._register(this._editors.modified.onMouseUp(event => {
-			if (!event.event.rightButton && event.target.position && event.target.element?.className.includes('fold-unchanged')) {
+			if (!event.event.rightButton && event.target.position && event.target.element?.className.includes("fold-unchanged")) {
 				const lineNumber = event.target.position.lineNumber;
 				const model = this._diffModel.get();
 				if (!model) { return; }
@@ -253,7 +267,7 @@ export class HideUnchangedRegionsFeature extends Disposable {
 		}));
 
 		this._register(this._editors.original.onMouseUp(event => {
-			if (!event.event.rightButton && event.target.position && event.target.element?.className.includes('fold-unchanged')) {
+			if (!event.event.rightButton && event.target.position && event.target.element?.className.includes("fold-unchanged")) {
 				const lineNumber = event.target.position.lineNumber;
 				const model = this._diffModel.get();
 				if (!model) { return; }
@@ -268,11 +282,11 @@ export class HideUnchangedRegionsFeature extends Disposable {
 }
 
 class CompactCollapsedCodeOverlayWidget extends ViewZoneOverlayWidget {
-	private readonly _nodes = h('div.diff-hidden-lines-compact', [
-		h('div.line-left', []),
-		h('div.text@text', []),
-		h('div.line-right', [])
-	]);
+	private readonly _nodes = h("div.diff-hidden-lines-compact", [
+    h("div.line-left", []),
+    h("div.text@text", []),
+    h("div.line-right", []),
+  ]);
 
 	constructor(
 		editor: ICodeEditor,
@@ -280,7 +294,7 @@ class CompactCollapsedCodeOverlayWidget extends ViewZoneOverlayWidget {
 		private readonly _unchangedRegion: UnchangedRegion,
 		private readonly _hide: boolean = false,
 	) {
-		const root = h('div.diff-hidden-lines-widget');
+		const root = h("div.diff-hidden-lines-widget");
 		super(editor, _viewZone, root.root);
 		root.root.appendChild(this._nodes.root);
 
@@ -293,7 +307,7 @@ class CompactCollapsedCodeOverlayWidget extends ViewZoneOverlayWidget {
 
 			if (!this._hide) {
 				const lineCount = this._unchangedRegion.getHiddenModifiedRange(reader).length;
-				const linesHiddenText = localize('hiddenLines', '{0} hidden lines', lineCount);
+				const linesHiddenText = localize("hiddenLines", "{0} hidden lines", lineCount);
 				this._nodes.text.innerText = linesHiddenText;
 			}
 		}));
@@ -301,17 +315,33 @@ class CompactCollapsedCodeOverlayWidget extends ViewZoneOverlayWidget {
 }
 
 class CollapsedCodeOverlayWidget extends ViewZoneOverlayWidget {
-	private readonly _nodes = h('div.diff-hidden-lines', [
-		h('div.top@top', { title: localize('diff.hiddenLines.top', 'Click or drag to show more above') }),
-		h('div.center@content', { style: { display: 'flex' } }, [
-			h('div@first', { style: { display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: '0' } },
-				[$('a', { title: localize('showUnchangedRegion', 'Show Unchanged Region'), role: 'button', onclick: () => { this._unchangedRegion.showAll(undefined); } },
-					...renderLabelWithIcons('$(unfold)'))]
-			),
-			h('div@others', { style: { display: 'flex', justifyContent: 'center', alignItems: 'center' } }),
-		]),
-		h('div.bottom@bottom', { title: localize('diff.bottom', 'Click or drag to show more below'), role: 'button' }),
-	]);
+	private readonly _nodes = h("div.diff-hidden-lines", [
+    h("div.top@top", {
+      title: localize("diff.hiddenLines.top", "Click or drag to show more above"),
+    }),
+    h("div.center@content", { style: { display: "flex" } }, [
+      h("div@first", {
+        style: { display: "flex", justifyContent: "center", alignItems: "center", flexShrink: "0" },
+      }, [
+        $(
+          "a",
+          {
+            title: localize("showUnchangedRegion", "Show Unchanged Region"),
+            role: "button",
+            onclick: () => { this._unchangedRegion.showAll(undefined); },
+          },
+          ...renderLabelWithIcons("$(unfold)"),
+        ),
+      ]),
+      h("div@others", {
+        style: { display: "flex", justifyContent: "center", alignItems: "center" },
+      }),
+    ]),
+    h("div.bottom@bottom", {
+      title: localize("diff.bottom", "Click or drag to show more below"),
+      role: "button",
+    }),
+  ]);
 
 	constructor(
 		private readonly _editor: ICodeEditor,
@@ -323,12 +353,16 @@ class CollapsedCodeOverlayWidget extends ViewZoneOverlayWidget {
 		private readonly _revealModifiedHiddenLine: (lineNumber: number) => void,
 		private readonly _options: DiffEditorOptions,
 	) {
-		const root = h('div.diff-hidden-lines-widget');
+		const root = h("div.diff-hidden-lines-widget");
 		super(_editor, _viewZone, root.root);
 		root.root.appendChild(this._nodes.root);
 
 		if (!this._hide) {
-			this._register(applyStyle(this._nodes.first, { width: observableCodeEditor(this._editor).layoutInfoContentLeft }));
+			this._register(
+        applyStyle(this._nodes.first, {
+          width: observableCodeEditor(this._editor).layoutInfoContentLeft,
+        }),
+      );
 		} else {
 			reset(this._nodes.first);
 		}
@@ -337,44 +371,44 @@ class CollapsedCodeOverlayWidget extends ViewZoneOverlayWidget {
 			/** @description Update CollapsedCodeOverlayWidget canMove* css classes */
 			const isFullyRevealed = this._unchangedRegion.visibleLineCountTop.read(reader) + this._unchangedRegion.visibleLineCountBottom.read(reader) === this._unchangedRegion.lineCount;
 
-			this._nodes.bottom.classList.toggle('canMoveTop', !isFullyRevealed);
-			this._nodes.bottom.classList.toggle('canMoveBottom', this._unchangedRegion.visibleLineCountBottom.read(reader) > 0);
-			this._nodes.top.classList.toggle('canMoveTop', this._unchangedRegion.visibleLineCountTop.read(reader) > 0);
-			this._nodes.top.classList.toggle('canMoveBottom', !isFullyRevealed);
+			this._nodes.bottom.classList.toggle("canMoveTop", !isFullyRevealed);
+			this._nodes.bottom.classList.toggle("canMoveBottom", this._unchangedRegion.visibleLineCountBottom.read(reader) > 0);
+			this._nodes.top.classList.toggle("canMoveTop", this._unchangedRegion.visibleLineCountTop.read(reader) > 0);
+			this._nodes.top.classList.toggle("canMoveBottom", !isFullyRevealed);
 			const isDragged = this._unchangedRegion.isDragged.read(reader);
 			const domNode = this._editor.getDomNode();
 			if (domNode) {
-				domNode.classList.toggle('draggingUnchangedRegion', !!isDragged);
-				if (isDragged === 'top') {
-					domNode.classList.toggle('canMoveTop', this._unchangedRegion.visibleLineCountTop.read(reader) > 0);
-					domNode.classList.toggle('canMoveBottom', !isFullyRevealed);
-				} else if (isDragged === 'bottom') {
-					domNode.classList.toggle('canMoveTop', !isFullyRevealed);
-					domNode.classList.toggle('canMoveBottom', this._unchangedRegion.visibleLineCountBottom.read(reader) > 0);
+				domNode.classList.toggle("draggingUnchangedRegion", !!isDragged);
+				if (isDragged === "top") {
+					domNode.classList.toggle("canMoveTop", this._unchangedRegion.visibleLineCountTop.read(reader) > 0);
+					domNode.classList.toggle("canMoveBottom", !isFullyRevealed);
+				} else if (isDragged === "bottom") {
+					domNode.classList.toggle("canMoveTop", !isFullyRevealed);
+					domNode.classList.toggle("canMoveBottom", this._unchangedRegion.visibleLineCountBottom.read(reader) > 0);
 				} else {
-					domNode.classList.toggle('canMoveTop', false);
-					domNode.classList.toggle('canMoveBottom', false);
+					domNode.classList.toggle("canMoveTop", false);
+					domNode.classList.toggle("canMoveBottom", false);
 				}
 			}
 		}));
 
 		const editor = this._editor;
 
-		this._register(addDisposableListener(this._nodes.top, 'mousedown', e => {
+		this._register(addDisposableListener(this._nodes.top, "mousedown", e => {
 			if (e.button !== 0) {
 				return;
 			}
-			this._nodes.top.classList.toggle('dragging', true);
-			this._nodes.root.classList.toggle('dragging', true);
+			this._nodes.top.classList.toggle("dragging", true);
+			this._nodes.root.classList.toggle("dragging", true);
 			e.preventDefault();
 			const startTop = e.clientY;
 			let didMove = false;
 			const cur = this._unchangedRegion.visibleLineCountTop.get();
-			this._unchangedRegion.isDragged.set('top', undefined);
+			this._unchangedRegion.isDragged.set("top", undefined);
 
 			const window = getWindow(this._nodes.top);
 
-			const mouseMoveListener = addDisposableListener(window, 'mousemove', e => {
+			const mouseMoveListener = addDisposableListener(window, "mousemove", e => {
 				const currentTop = e.clientY;
 				const delta = currentTop - startTop;
 				didMove = didMove || Math.abs(delta) > 2;
@@ -383,33 +417,33 @@ class CollapsedCodeOverlayWidget extends ViewZoneOverlayWidget {
 				this._unchangedRegion.visibleLineCountTop.set(newVal, undefined);
 			});
 
-			const mouseUpListener = addDisposableListener(window, 'mouseup', e => {
+			const mouseUpListener = addDisposableListener(window, "mouseup", e => {
 				if (!didMove) {
 					this._unchangedRegion.showMoreAbove(this._options.hideUnchangedRegionsRevealLineCount.get(), undefined);
 				}
-				this._nodes.top.classList.toggle('dragging', false);
-				this._nodes.root.classList.toggle('dragging', false);
+				this._nodes.top.classList.toggle("dragging", false);
+				this._nodes.root.classList.toggle("dragging", false);
 				this._unchangedRegion.isDragged.set(undefined, undefined);
 				mouseMoveListener.dispose();
 				mouseUpListener.dispose();
 			});
 		}));
 
-		this._register(addDisposableListener(this._nodes.bottom, 'mousedown', e => {
+		this._register(addDisposableListener(this._nodes.bottom, "mousedown", e => {
 			if (e.button !== 0) {
 				return;
 			}
-			this._nodes.bottom.classList.toggle('dragging', true);
-			this._nodes.root.classList.toggle('dragging', true);
+			this._nodes.bottom.classList.toggle("dragging", true);
+			this._nodes.root.classList.toggle("dragging", true);
 			e.preventDefault();
 			const startTop = e.clientY;
 			let didMove = false;
 			const cur = this._unchangedRegion.visibleLineCountBottom.get();
-			this._unchangedRegion.isDragged.set('bottom', undefined);
+			this._unchangedRegion.isDragged.set("bottom", undefined);
 
 			const window = getWindow(this._nodes.bottom);
 
-			const mouseMoveListener = addDisposableListener(window, 'mousemove', e => {
+			const mouseMoveListener = addDisposableListener(window, "mousemove", e => {
 				const currentTop = e.clientY;
 				const delta = currentTop - startTop;
 				didMove = didMove || Math.abs(delta) > 2;
@@ -425,7 +459,7 @@ class CollapsedCodeOverlayWidget extends ViewZoneOverlayWidget {
 				editor.setScrollTop(editor.getScrollTop() + (top2 - top));
 			});
 
-			const mouseUpListener = addDisposableListener(window, 'mouseup', e => {
+			const mouseUpListener = addDisposableListener(window, "mouseup", e => {
 				this._unchangedRegion.isDragged.set(undefined, undefined);
 
 				if (!didMove) {
@@ -435,8 +469,8 @@ class CollapsedCodeOverlayWidget extends ViewZoneOverlayWidget {
 					const top2 = editor.getTopForLineNumber(this._unchangedRegionRange.endLineNumberExclusive);
 					editor.setScrollTop(editor.getScrollTop() + (top2 - top));
 				}
-				this._nodes.bottom.classList.toggle('dragging', false);
-				this._nodes.root.classList.toggle('dragging', false);
+				this._nodes.bottom.classList.toggle("dragging", false);
+				this._nodes.root.classList.toggle("dragging", false);
 				mouseMoveListener.dispose();
 				mouseUpListener.dispose();
 			});
@@ -448,9 +482,9 @@ class CollapsedCodeOverlayWidget extends ViewZoneOverlayWidget {
 			const children: HTMLElement[] = [];
 			if (!this._hide) {
 				const lineCount = _unchangedRegion.getHiddenModifiedRange(reader).length;
-				const linesHiddenText = localize('hiddenLines', '{0} hidden lines', lineCount);
-				const span = $('span', { title: localize('diff.hiddenLines.expandAll', 'Double click to unfold') }, linesHiddenText);
-				span.addEventListener('dblclick', e => {
+				const linesHiddenText = localize("hiddenLines", "{0} hidden lines", lineCount);
+				const span = $("span", { title: localize("diff.hiddenLines.expandAll", "Double click to unfold") }, linesHiddenText);
+				span.addEventListener("dblclick", e => {
 					if (e.button !== 0) { return; }
 					e.preventDefault();
 					this._unchangedRegion.showAll(undefined);
@@ -461,21 +495,21 @@ class CollapsedCodeOverlayWidget extends ViewZoneOverlayWidget {
 				const items = this._modifiedOutlineSource.getBreadcrumbItems(range, reader);
 
 				if (items.length > 0) {
-					children.push($('span', undefined, '\u00a0\u00a0|\u00a0\u00a0'));
+					children.push($("span", undefined, "\u00a0\u00a0|\u00a0\u00a0"));
 
 					for (let i = 0; i < items.length; i++) {
 						const item = items[i];
 						const icon = SymbolKinds.toIcon(item.kind);
-						const divItem = h('div.breadcrumb-item', {
-							style: { display: 'flex', alignItems: 'center' },
+						const divItem = h("div.breadcrumb-item", {
+							style: { display: "flex", alignItems: "center" },
 						}, [
 							renderIcon(icon),
-							'\u00a0',
+							"\u00a0",
 							item.name,
 							...(i === items.length - 1
 								? []
 								: [renderIcon(Codicon.chevronRight)]
-							)
+							),
 						]).root;
 						children.push(divItem);
 						divItem.onclick = () => {

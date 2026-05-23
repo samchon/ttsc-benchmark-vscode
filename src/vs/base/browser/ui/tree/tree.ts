@@ -3,11 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDragAndDropData } from '../../dnd.js';
-import { IMouseEvent } from '../../mouseEvent.js';
-import { IListDragAndDrop, IListDragOverReaction, IListElementRenderDetails, IListRenderer, ListDragOverEffectPosition, ListDragOverEffectType } from '../list/list.js';
-import { ListViewTargetSector } from '../list/listView.js';
-import { Event } from '../../../common/event.js';
+import { IDragAndDropData } from "../../dnd.js";
+import { IMouseEvent } from "../../mouseEvent.js";
+import {
+  IListDragAndDrop,
+  IListDragOverReaction,
+  IListElementRenderDetails,
+  IListRenderer,
+  ListDragOverEffectPosition,
+  ListDragOverEffectType,
+} from "../list/list.js";
+import { ListViewTargetSector } from "../list/listView.js";
+import { Event } from "../../../common/event.js";
 
 export const enum TreeVisibility {
 
@@ -225,10 +232,10 @@ export interface ITreeDragOverReaction extends IListDragOverReaction {
 }
 
 export const TreeDragOverReactions = {
-	acceptBubbleUp(): ITreeDragOverReaction { return { accept: true, bubble: TreeDragOverBubble.Up }; },
-	acceptBubbleDown(autoExpand = false): ITreeDragOverReaction { return { accept: true, bubble: TreeDragOverBubble.Down, autoExpand }; },
-	acceptCopyBubbleUp(): ITreeDragOverReaction { return { accept: true, bubble: TreeDragOverBubble.Up, effect: { type: ListDragOverEffectType.Copy, position: ListDragOverEffectPosition.Over } }; },
-	acceptCopyBubbleDown(autoExpand = false): ITreeDragOverReaction { return { accept: true, bubble: TreeDragOverBubble.Down, effect: { type: ListDragOverEffectType.Copy, position: ListDragOverEffectPosition.Over }, autoExpand }; }
+  acceptBubbleUp(): ITreeDragOverReaction { return { accept: true, bubble: TreeDragOverBubble.Up }; },
+  acceptBubbleDown(autoExpand = false): ITreeDragOverReaction { return { accept: true, bubble: TreeDragOverBubble.Down, autoExpand }; },
+  acceptCopyBubbleUp(): ITreeDragOverReaction { return { accept: true, bubble: TreeDragOverBubble.Up, effect: { type: ListDragOverEffectType.Copy, position: ListDragOverEffectPosition.Over } }; },
+  acceptCopyBubbleDown(autoExpand = false): ITreeDragOverReaction { return { accept: true, bubble: TreeDragOverBubble.Down, effect: { type: ListDragOverEffectType.Copy, position: ListDragOverEffectPosition.Over }, autoExpand }; },
 };
 
 export interface ITreeDragAndDrop<T> extends IListDragAndDrop<T> {

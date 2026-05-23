@@ -3,21 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { deepStrictEqual, strictEqual } from 'assert';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
-import { createObjectCollectionBuffer, type IObjectCollectionBuffer } from '../../../browser/gpu/objectCollectionBuffer.js';
+import { deepStrictEqual, strictEqual } from "assert";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
+import { createObjectCollectionBuffer, type IObjectCollectionBuffer } from "../../../browser/gpu/objectCollectionBuffer.js";
 
-suite('ObjectCollectionBuffer', () => {
+suite("ObjectCollectionBuffer", () => {
 	const store = ensureNoDisposablesAreLeakedInTestSuite();
 
 	function assertUsedData(buffer: IObjectCollectionBuffer<any>, expected: number[]) {
 		deepStrictEqual(Array.from(buffer.view.subarray(0, buffer.viewUsedSize)), expected);
 	}
 
-	test('createEntry', () => {
+	test("createEntry", () => {
 		const buffer = store.add(createObjectCollectionBuffer([
-			{ name: 'a' },
-			{ name: 'b' },
+			{ name: "a" },
+			{ name: "b" },
 		] as const, 5));
 		assertUsedData(buffer, []);
 
@@ -29,10 +29,10 @@ suite('ObjectCollectionBuffer', () => {
 		assertUsedData(buffer, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 	});
 
-	test('createEntry beyond capacity', () => {
+	test("createEntry beyond capacity", () => {
 		const buffer = store.add(createObjectCollectionBuffer([
-			{ name: 'a' },
-			{ name: 'b' },
+			{ name: "a" },
+			{ name: "b" },
 		] as const, 1));
 		store.add(buffer.createEntry({ a: 1, b: 2 }));
 		strictEqual(buffer.entryCount, 1);
@@ -42,10 +42,10 @@ suite('ObjectCollectionBuffer', () => {
 		strictEqual(buffer.buffer.byteLength, 16);
 	});
 
-	test('dispose entry', () => {
+	test("dispose entry", () => {
 		const buffer = store.add(createObjectCollectionBuffer([
-			{ name: 'a' },
-			{ name: 'b' },
+			{ name: "a" },
+			{ name: "b" },
 		] as const, 5));
 		store.add(buffer.createEntry({ a: 1, b: 2 }));
 		const entry1 = buffer.createEntry({ a: 3, b: 4 });
@@ -58,10 +58,10 @@ suite('ObjectCollectionBuffer', () => {
 		assertUsedData(buffer, [1, 2, 5, 6, 9, 10]);
 	});
 
-	test('entryCount, viewUsedSize, bufferUsedSize', () => {
+	test("entryCount, viewUsedSize, bufferUsedSize", () => {
 		const buffer = store.add(createObjectCollectionBuffer([
-			{ name: 'foo' },
-			{ name: 'bar' },
+			{ name: "foo" },
+			{ name: "bar" },
 		] as const, 5));
 		strictEqual(buffer.entryCount, 0);
 		strictEqual(buffer.bufferUsedSize, 0);
@@ -80,29 +80,29 @@ suite('ObjectCollectionBuffer', () => {
 		strictEqual(buffer.bufferUsedSize, 8);
 	});
 
-	test('entry.get', () => {
+	test("entry.get", () => {
 		const buffer = store.add(createObjectCollectionBuffer([
-			{ name: 'foo' },
-			{ name: 'bar' },
+			{ name: "foo" },
+			{ name: "bar" },
 		] as const, 5));
 		const entry = store.add(buffer.createEntry({ foo: 1, bar: 2 }));
-		strictEqual(entry.get('foo'), 1);
-		strictEqual(entry.get('bar'), 2);
+		strictEqual(entry.get("foo"), 1);
+		strictEqual(entry.get("bar"), 2);
 	});
 
-	test('entry.set', () => {
+	test("entry.set", () => {
 		const buffer = store.add(createObjectCollectionBuffer([
-			{ name: 'foo' },
-			{ name: 'bar' },
+			{ name: "foo" },
+			{ name: "bar" },
 		] as const, 5));
 		const entry = store.add(buffer.createEntry({ foo: 1, bar: 2 }));
 		let changeCount = 0;
 		store.add(buffer.onDidChange(() => changeCount++));
-		entry.set('foo', 3);
+		entry.set("foo", 3);
 		strictEqual(changeCount, 1);
-		strictEqual(entry.get('foo'), 3);
-		entry.set('bar', 4);
+		strictEqual(entry.get("foo"), 3);
+		entry.set("bar", 4);
 		strictEqual(changeCount, 2);
-		strictEqual(entry.get('bar'), 4);
+		strictEqual(entry.get("bar"), 4);
 	});
 });

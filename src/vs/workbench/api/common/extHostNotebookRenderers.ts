@@ -3,12 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter } from '../../../base/common/event.js';
-import { IExtensionDescription } from '../../../platform/extensions/common/extensions.js';
-import { ExtHostNotebookRenderersShape, IMainContext, MainContext, MainThreadNotebookRenderersShape } from './extHost.protocol.js';
-import { ExtHostNotebookController } from './extHostNotebook.js';
-import { ExtHostNotebookEditor } from './extHostNotebookEditor.js';
-import * as vscode from 'vscode';
+import { Emitter } from "../../../base/common/event.js";
+import { IExtensionDescription } from "../../../platform/extensions/common/extensions.js";
+import {
+  ExtHostNotebookRenderersShape,
+  IMainContext,
+  MainContext,
+  MainThreadNotebookRenderersShape,
+} from "./extHost.protocol.js";
+import { ExtHostNotebookController } from "./extHostNotebook.js";
+import { ExtHostNotebookEditor } from "./extHostNotebookEditor.js";
+import * as vscode from "vscode";
 
 
 export class ExtHostNotebookRenderers implements ExtHostNotebookRenderersShape {
@@ -21,12 +26,19 @@ export class ExtHostNotebookRenderers implements ExtHostNotebookRenderersShape {
 
 	public $postRendererMessage(editorId: string, rendererId: string, message: unknown): void {
 		const editor = this._extHostNotebook.getEditorById(editorId);
-		this._rendererMessageEmitters.get(rendererId)?.fire({ editor: editor.apiEditor, message });
+		this._rendererMessageEmitters.get(rendererId)?.fire({
+      editor: editor.apiEditor,
+      message,
+    });
 	}
 
 	public createRendererMessaging(manifest: IExtensionDescription, rendererId: string): vscode.NotebookRendererMessaging {
-		if (!manifest.contributes?.notebookRenderer?.some(r => r.id === rendererId)) {
-			throw new Error(`Extensions may only call createRendererMessaging() for renderers they contribute (got ${rendererId})`);
+		if (!manifest.contributes?.notebookRenderer?.some(
+      r => r.id === rendererId,
+    )) {
+			throw new Error(
+        `Extensions may only call createRendererMessaging() for renderers they contribute (got ${rendererId})`,
+      );
 		}
 
 		const messaging: vscode.NotebookRendererMessaging = {
@@ -56,7 +68,7 @@ export class ExtHostNotebookRenderers implements ExtHostNotebookRenderersShape {
 			onDidRemoveLastListener: () => {
 				emitter?.dispose();
 				this._rendererMessageEmitters.delete(rendererId);
-			}
+			},
 		});
 
 		this._rendererMessageEmitters.set(rendererId, emitter);

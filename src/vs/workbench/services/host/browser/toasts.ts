@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { addDisposableListener } from '../../../../base/browser/dom.js';
-import { CancellationToken, CancellationTokenSource } from '../../../../base/common/cancellation.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { DisposableStore, IDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { IToastOptions, IToastResult } from './host.js';
+import { addDisposableListener } from "../../../../base/browser/dom.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { DisposableStore, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { IToastOptions, IToastResult } from "./host.js";
 
 export interface IShowToastController {
 	onDidCreateToast: (toast: IDisposable) => void;
@@ -16,9 +16,9 @@ export interface IShowToastController {
 
 export async function showBrowserToast(controller: IShowToastController, options: IToastOptions, token: CancellationToken): Promise<IToastResult> {
 	const toast = await triggerBrowserToast(options.title, {
-		detail: options.body,
-		sticky: !options.silent
-	});
+    detail: options.body,
+    sticky: !options.silent,
+  });
 
 	if (!toast) {
 		return { supported: false, clicked: false };
@@ -29,11 +29,13 @@ export async function showBrowserToast(controller: IShowToastController, options
 
 	const cts = new CancellationTokenSource(token);
 
-	disposables.add(toDisposable(() => {
-		controller.onDidDisposeToast(toast);
-		toast.dispose();
-		cts.dispose(true);
-	}));
+	disposables.add(
+    toDisposable(() => {
+      controller.onDidDisposeToast(toast);
+      toast.dispose();
+      cts.dispose(true);
+    }),
+  );
 
 	return new Promise<IToastResult>(r => {
 		const resolve = (result: IToastResult) => {
@@ -57,31 +59,37 @@ interface INotification extends IDisposable {
 
 async function triggerBrowserToast(message: string, options?: { detail?: string; sticky?: boolean }): Promise<INotification | undefined> {
 	const permission = await Notification.requestPermission();
-	if (permission !== 'granted') {
+	if (permission !== "granted") {
 		return;
 	}
 
 	const disposables = new DisposableStore();
 
 	const notification = new Notification(message, {
-		body: options?.detail,
-		requireInteraction: options?.sticky,
-	});
+    body: options?.detail,
+    requireInteraction: options?.sticky,
+  });
 
 	const onClick = disposables.add(new Emitter<void>());
 	const onClose = disposables.add(new Emitter<void>());
 	const onError = disposables.add(new Emitter<void>());
 
-	disposables.add(addDisposableListener(notification, 'click', () => onClick.fire()));
-	disposables.add(addDisposableListener(notification, 'close', () => onClose.fire()));
-	disposables.add(addDisposableListener(notification, 'error', () => onError.fire()));
+	disposables.add(
+    addDisposableListener(notification, "click", () => onClick.fire()),
+  );
+	disposables.add(
+    addDisposableListener(notification, "close", () => onClose.fire()),
+  );
+	disposables.add(
+    addDisposableListener(notification, "error", () => onError.fire()),
+  );
 
 	disposables.add(toDisposable(() => notification.close()));
 
 	return {
-		onClick: onClick.event,
-		onClose: onClose.event,
-		onError: onError.event,
-		dispose: () => disposables.dispose()
-	};
+    onClick: onClick.event,
+    onClose: onClose.event,
+    onError: onError.event,
+    dispose: () => disposables.dispose(),
+  };
 }

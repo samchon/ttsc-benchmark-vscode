@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type * as vscode from 'vscode';
-import { illegalArgument } from '../../../../base/common/errors.js';
-import { es5ClassCompat } from './es5ClassCompat.js';
+import type * as vscode from "vscode";
+import { illegalArgument } from "../../../../base/common/errors.js";
+import { es5ClassCompat } from "./es5ClassCompat.js";
 
 @es5ClassCompat
 export class Position {
@@ -46,7 +46,7 @@ export class Position {
 			return true;
 		}
 		const { line, character } = <Position>other;
-		if (typeof line === 'number' && typeof character === 'number') {
+		if (typeof line === "number" && typeof character === "number") {
 			return true;
 		}
 		return false;
@@ -58,7 +58,7 @@ export class Position {
 		} else if (this.isPosition(obj)) {
 			return new Position(obj.line, obj.character);
 		}
-		throw new Error('Invalid argument, is NOT a position-like object');
+		throw new Error("Invalid argument, is NOT a position-like object");
 	}
 
 	private _line: number;
@@ -74,10 +74,10 @@ export class Position {
 
 	constructor(line: number, character: number) {
 		if (line < 0) {
-			throw illegalArgument('line must be non-negative');
+			throw illegalArgument("line must be non-negative");
 		}
 		if (character < 0) {
-			throw illegalArgument('character must be non-negative');
+			throw illegalArgument("character must be non-negative");
 		}
 		this._line = line;
 		this._character = character;
@@ -142,13 +142,13 @@ export class Position {
 		}
 
 		let lineDelta: number;
-		if (typeof lineDeltaOrChange === 'undefined') {
+		if (typeof lineDeltaOrChange === "undefined") {
 			lineDelta = 0;
-		} else if (typeof lineDeltaOrChange === 'number') {
+		} else if (typeof lineDeltaOrChange === "number") {
 			lineDelta = lineDeltaOrChange;
 		} else {
-			lineDelta = typeof lineDeltaOrChange.lineDelta === 'number' ? lineDeltaOrChange.lineDelta : 0;
-			characterDelta = typeof lineDeltaOrChange.characterDelta === 'number' ? lineDeltaOrChange.characterDelta : 0;
+			lineDelta = typeof lineDeltaOrChange.lineDelta === "number" ? lineDeltaOrChange.lineDelta : 0;
+			characterDelta = typeof lineDeltaOrChange.characterDelta === "number" ? lineDeltaOrChange.characterDelta : 0;
 		}
 
 		if (lineDelta === 0 && characterDelta === 0) {
@@ -166,15 +166,15 @@ export class Position {
 		}
 
 		let line: number;
-		if (typeof lineOrChange === 'undefined') {
+		if (typeof lineOrChange === "undefined") {
 			line = this.line;
 
-		} else if (typeof lineOrChange === 'number') {
+		} else if (typeof lineOrChange === "number") {
 			line = lineOrChange;
 
 		} else {
-			line = typeof lineOrChange.line === 'number' ? lineOrChange.line : this.line;
-			character = typeof lineOrChange.character === 'number' ? lineOrChange.character : this.character;
+			line = typeof lineOrChange.line === "number" ? lineOrChange.line : this.line;
+			character = typeof lineOrChange.character === "number" ? lineOrChange.character : this.character;
 		}
 
 		if (line === this.line && character === this.character) {
@@ -187,7 +187,7 @@ export class Position {
 		return { line: this.line, character: this.character };
 	}
 
-	[Symbol.for('debug.description')]() {
+	[Symbol.for("debug.description")]() {
 		return `(${this.line}:${this.character})`;
 	}
 }

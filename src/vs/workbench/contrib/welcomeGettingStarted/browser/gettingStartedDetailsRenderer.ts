@@ -3,21 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { generateUuid } from '../../../../base/common/uuid.js';
-import { generateTokensCSSForColorMap } from '../../../../editor/common/languages/supports/tokenization.js';
-import { TokenizationRegistry } from '../../../../editor/common/languages.js';
-import { DEFAULT_MARKDOWN_STYLES, renderMarkdownDocument } from '../../markdown/browser/markdownDocumentRenderer.js';
-import { URI } from '../../../../base/common/uri.js';
-import { language } from '../../../../base/common/platform.js';
-import { joinPath } from '../../../../base/common/resources.js';
-import { assertReturnsDefined } from '../../../../base/common/types.js';
-import { asWebviewUri } from '../../webview/common/webview.js';
-import { ResourceMap } from '../../../../base/common/map.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { INotificationService } from '../../../../platform/notification/common/notification.js';
-import { ILanguageService } from '../../../../editor/common/languages/language.js';
-import { IExtensionService } from '../../../services/extensions/common/extensions.js';
-import { gettingStartedContentRegistry } from '../common/gettingStartedContent.js';
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { generateTokensCSSForColorMap } from "../../../../editor/common/languages/supports/tokenization.js";
+import { TokenizationRegistry } from "../../../../editor/common/languages.js";
+import { DEFAULT_MARKDOWN_STYLES, renderMarkdownDocument } from "../../markdown/browser/markdownDocumentRenderer.js";
+import { URI } from "../../../../base/common/uri.js";
+import { language } from "../../../../base/common/platform.js";
+import { joinPath } from "../../../../base/common/resources.js";
+import { assertReturnsDefined } from "../../../../base/common/types.js";
+import { asWebviewUri } from "../../webview/common/webview.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { gettingStartedContentRegistry } from "../common/gettingStartedContent.js";
 
 
 export class GettingStartedDetailsRenderer {
@@ -36,10 +36,10 @@ export class GettingStartedDetailsRenderer {
 		const nonce = generateUuid();
 		const colorMap = TokenizationRegistry.getColorMap();
 
-		const css = colorMap ? generateTokensCSSForColorMap(colorMap) : '';
+		const css = colorMap ? generateTokensCSSForColorMap(colorMap) : "";
 
-		const inDev = document.location.protocol === 'http:';
-		const imgSrcCsp = inDev ? 'img-src https: data: http:' : 'img-src https: data:';
+		const inDev = document.location.protocol === "http:";
+		const imgSrcCsp = inDev ? "img-src https: data: http:" : "img-src https: data:";
 
 		return `<!DOCTYPE html>
 		<html>
@@ -174,7 +174,7 @@ export class GettingStartedDetailsRenderer {
 		const nonce = generateUuid();
 		const colorMap = TokenizationRegistry.getColorMap();
 
-		const css = colorMap ? generateTokensCSSForColorMap(colorMap) : '';
+		const css = colorMap ? generateTokensCSSForColorMap(colorMap) : "";
 		return `<!DOCTYPE html>
 		<html>
 			<head>
@@ -218,7 +218,7 @@ export class GettingStartedDetailsRenderer {
 				</style>
 			</head>
 			<body>
-				<video controls autoplay ${poster ? `poster="${poster.toString(true)}"` : ''} muted ${description ? `aria-label="${description}"` : ''}>
+				<video controls autoplay ${poster ? `poster="${poster.toString(true)}"` : ""} muted ${description ? `aria-label="${description}"` : ""}>
 					<source src="${path.toString(true)}" type="video/mp4">
 				</video>
 			</body>
@@ -239,25 +239,25 @@ export class GettingStartedDetailsRenderer {
 			const markdownContents = await renderMarkdownDocument(transformUris(contents, base), this.extensionService, this.languageService, {
 				sanitizerConfig: {
 					allowedLinkProtocols: {
-						override: '*'
+						override: "*",
 					},
 					allowedTags: {
 						augment: [
-							'select',
-							'checkbox',
-							'checklist',
-						]
+							"select",
+							"checkbox",
+							"checklist",
+						],
 					},
 					allowedAttributes: {
 						augment: [
-							'x-dispatch',
-							'data-command',
-							'when-checked',
-							'checked-on',
-							'checked',
-						]
+							"x-dispatch",
+							"data-command",
+							"when-checked",
+							"checked-on",
+							"checked",
+						],
 					},
-				}
+				},
 			});
 			this.mdCache.set(path, markdownContents);
 		}
@@ -281,20 +281,23 @@ export class GettingStartedDetailsRenderer {
 		} catch { }
 
 		try {
-			const localizedPath = path.with({ path: path.path.replace(/\.md$/, `.nls.${language}.md`) });
+			const localizedPath = path.with({
+        path: path.path.replace(/\.md$/, `.nls.${language}.md`),
+      });
 
-			const generalizedLocale = language?.replace(/-.*$/, '');
-			const generalizedLocalizedPath = path.with({ path: path.path.replace(/\.md$/, `.nls.${generalizedLocale}.md`) });
+			const generalizedLocale = language?.replace(/-.*$/, "");
+			const generalizedLocalizedPath = path.with({
+        path: path.path.replace(/\.md$/, `.nls.${generalizedLocale}.md`),
+      });
 
 			const fileExists = (file: URI) => this.fileService
 				.stat(file)
 				.then((stat) => !!stat.size) // Double check the file actually has content for fileSystemProviders that fake `stat`. #131809
 				.catch(() => false);
 
-			const [localizedFileExists, generalizedLocalizedFileExists] = await Promise.all([
-				fileExists(localizedPath),
-				fileExists(generalizedLocalizedPath),
-			]);
+			const [localizedFileExists, generalizedLocalizedFileExists] = await Promise.all(
+        [fileExists(localizedPath), fileExists(generalizedLocalizedPath)],
+      );
 
 			const bytes = await this.fileService.readFile(
 				localizedFileExists
@@ -305,8 +308,10 @@ export class GettingStartedDetailsRenderer {
 
 			return bytes.value.toString();
 		} catch (e) {
-			this.notificationService.error('Error reading markdown document at `' + path + '`: ' + e);
-			return '';
+			this.notificationService.error(
+        "Error reading markdown document at `" + path + "`: " + e,
+      );
+			return "";
 		}
 	}
 }
@@ -318,10 +323,10 @@ const transformUri = (src: string, base: URI) => {
 
 const transformUris = (content: string, base: URI): string => content
 	.replace(/src="([^"]*)"/g, (_, src: string) => {
-		if (src.startsWith('https://')) { return `src="${src}"`; }
+		if (src.startsWith("https://")) { return `src="${src}"`; }
 		return `src="${transformUri(src, base)}"`;
 	})
 	.replace(/!\[([^\]]*)\]\(([^)]*)\)/g, (_, title: string, src: string) => {
-		if (src.startsWith('https://')) { return `![${title}](${src})`; }
+		if (src.startsWith("https://")) { return `![${title}](${src})`; }
 		return `![${title}](${transformUri(src, base)})`;
 	});

@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IProcessEnvironment } from '../../../base/common/platform.js';
-import { IWorkspaceFolderData } from '../../workspace/common/workspace.js';
+import { IProcessEnvironment } from "../../../base/common/platform.js";
+import { IWorkspaceFolderData } from "../../workspace/common/workspace.js";
 
 export enum EnvironmentVariableMutatorType {
 	Replace = 1,

@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IObservable, ITransaction } from '../observable.js';
-import { observableValueOpts } from './observables/observableValueOpts.js';
+import { IObservable, ITransaction } from "../observable.js";
+import { observableValueOpts } from "./observables/observableValueOpts.js";
 
 export class ObservableSet<T> implements Set<T> {
 
@@ -72,6 +72,6 @@ export class ObservableSet<T> implements Set<T> {
 	}
 
 	get [Symbol.toStringTag](): string {
-		return 'ObservableSet';
+		return "ObservableSet";
 	}
 }

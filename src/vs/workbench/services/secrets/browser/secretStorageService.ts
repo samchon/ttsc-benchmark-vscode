@@ -3,13 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SequencerByKey } from '../../../../base/common/async.js';
-import { IEncryptionService } from '../../../../platform/encryption/common/encryptionService.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { ISecretStorageProvider, ISecretStorageService, BaseSecretStorageService } from '../../../../platform/secrets/common/secrets.js';
-import { IStorageService } from '../../../../platform/storage/common/storage.js';
-import { IBrowserWorkbenchEnvironmentService } from '../../environment/browser/environmentService.js';
+import { SequencerByKey } from "../../../../base/common/async.js";
+import { IEncryptionService } from "../../../../platform/encryption/common/encryptionService.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import {
+  ISecretStorageProvider,
+  ISecretStorageService,
+  BaseSecretStorageService,
+} from "../../../../platform/secrets/common/secrets.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { IBrowserWorkbenchEnvironmentService } from "../../environment/browser/environmentService.js";
 
 export class BrowserSecretStorageService extends BaseSecretStorageService {
 
@@ -20,7 +24,7 @@ export class BrowserSecretStorageService extends BaseSecretStorageService {
 		@IStorageService storageService: IStorageService,
 		@IEncryptionService encryptionService: IEncryptionService,
 		@IBrowserWorkbenchEnvironmentService environmentService: IBrowserWorkbenchEnvironmentService,
-		@ILogService logService: ILogService
+		@ILogService logService: ILogService,
 	) {
 		// We don't have encryption in the browser so instead we use the
 		// in-memory base class implementation instead.
@@ -34,7 +38,10 @@ export class BrowserSecretStorageService extends BaseSecretStorageService {
 
 	override get(key: string): Promise<string | undefined> {
 		if (this._secretStorageProvider) {
-			return this._embedderSequencer!.queue(key, () => this._secretStorageProvider!.get(key));
+			return this._embedderSequencer!.queue(
+        key,
+        () => this._secretStorageProvider!.get(key),
+      );
 		}
 
 		return super.get(key);
@@ -43,9 +50,9 @@ export class BrowserSecretStorageService extends BaseSecretStorageService {
 	override set(key: string, value: string): Promise<void> {
 		if (this._secretStorageProvider) {
 			return this._embedderSequencer!.queue(key, async () => {
-				await this._secretStorageProvider!.set(key, value);
-				this.onDidChangeSecretEmitter.fire(key);
-			});
+        await this._secretStorageProvider!.set(key, value);
+        this.onDidChangeSecretEmitter.fire(key);
+      });
 		}
 
 		return super.set(key, value);
@@ -54,9 +61,9 @@ export class BrowserSecretStorageService extends BaseSecretStorageService {
 	override delete(key: string): Promise<void> {
 		if (this._secretStorageProvider) {
 			return this._embedderSequencer!.queue(key, async () => {
-				await this._secretStorageProvider!.delete(key);
-				this.onDidChangeSecretEmitter.fire(key);
-			});
+        await this._secretStorageProvider!.delete(key);
+        this.onDidChangeSecretEmitter.fire(key);
+      });
 		}
 
 		return super.delete(key);
@@ -73,7 +80,9 @@ export class BrowserSecretStorageService extends BaseSecretStorageService {
 	override keys(): Promise<string[]> {
 		if (this._secretStorageProvider) {
 			if (!this._secretStorageProvider.keys) {
-				throw new Error('Secret storage provider does not support keys() method');
+				throw new Error(
+          "Secret storage provider does not support keys() method",
+        );
 			}
 			return this._secretStorageProvider!.keys();
 		}
@@ -83,4 +92,8 @@ export class BrowserSecretStorageService extends BaseSecretStorageService {
 	}
 }
 
-registerSingleton(ISecretStorageService, BrowserSecretStorageService, InstantiationType.Delayed);
+registerSingleton(
+  ISecretStorageService,
+  BrowserSecretStorageService,
+  InstantiationType.Delayed,
+);

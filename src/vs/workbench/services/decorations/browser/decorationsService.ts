@@ -3,33 +3,39 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../../base/common/uri.js';
-import { Emitter, DebounceEmitter, Event } from '../../../../base/common/event.js';
-import { IDecorationsService, IDecoration, IResourceDecorationChangeEvent, IDecorationsProvider, IDecorationData } from '../common/decorations.js';
-import { TernarySearchTree } from '../../../../base/common/ternarySearchTree.js';
-import { IDisposable, toDisposable, DisposableStore } from '../../../../base/common/lifecycle.js';
-import { isThenable } from '../../../../base/common/async.js';
-import { LinkedList } from '../../../../base/common/linkedList.js';
-import { createStyleSheet, createCSSRule, removeCSSRulesContainingSelector } from '../../../../base/browser/domStylesheets.js';
-import * as cssValue from '../../../../base/browser/cssValue.js';
-import { IThemeService } from '../../../../platform/theme/common/themeService.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
-import { isFalsyOrWhitespace } from '../../../../base/common/strings.js';
-import { localize } from '../../../../nls.js';
-import { isCancellationError } from '../../../../base/common/errors.js';
-import { CancellationTokenSource } from '../../../../base/common/cancellation.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { hash } from '../../../../base/common/hash.js';
-import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
-import { asArray, distinct } from '../../../../base/common/arrays.js';
-import { asCssVariable, ColorIdentifier } from '../../../../platform/theme/common/colorRegistry.js';
-import { getIconRegistry } from '../../../../platform/theme/common/iconRegistry.js';
+import { URI } from "../../../../base/common/uri.js";
+import { Emitter, DebounceEmitter, Event } from "../../../../base/common/event.js";
+import {
+  IDecorationsService,
+  IDecoration,
+  IResourceDecorationChangeEvent,
+  IDecorationsProvider,
+  IDecorationData,
+} from "../common/decorations.js";
+import { TernarySearchTree } from "../../../../base/common/ternarySearchTree.js";
+import { IDisposable, toDisposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { isThenable } from "../../../../base/common/async.js";
+import { LinkedList } from "../../../../base/common/linkedList.js";
+import { createStyleSheet, createCSSRule, removeCSSRulesContainingSelector } from "../../../../base/browser/domStylesheets.js";
+import * as cssValue from "../../../../base/browser/cssValue.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { isFalsyOrWhitespace } from "../../../../base/common/strings.js";
+import { localize } from "../../../../nls.js";
+import { isCancellationError } from "../../../../base/common/errors.js";
+import { CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { hash } from "../../../../base/common/hash.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { asArray, distinct } from "../../../../base/common/arrays.js";
+import { asCssVariable, ColorIdentifier } from "../../../../platform/theme/common/colorRegistry.js";
+import { getIconRegistry } from "../../../../platform/theme/common/iconRegistry.js";
 
 class DecorationRule {
 
 	static keyOf(data: IDecorationData | IDecorationData[]): string {
 		if (Array.isArray(data)) {
-			return data.map(DecorationRule.keyOf).join(',');
+			return data.map(DecorationRule.keyOf).join(",");
 		} else {
 			const { color, letter } = data;
 			if (ThemeIcon.isThemeIcon(letter)) {
@@ -40,7 +46,7 @@ class DecorationRule {
 		}
 	}
 
-	private static readonly _classNamesPrefix = 'monaco-decoration';
+	private static readonly _classNamesPrefix = "monaco-decoration";
 
 	readonly data: IDecorationData | IDecorationData[];
 	readonly itemColorClassName: string;
@@ -78,18 +84,30 @@ class DecorationRule {
 	private _appendForOne(data: IDecorationData, element: HTMLStyleElement): void {
 		const { color, letter } = data;
 		// label
-		createCSSRule(`.${this.itemColorClassName}`, `color: ${getColor(color)};`, element);
+		createCSSRule(
+      `.${this.itemColorClassName}`,
+      `color: ${getColor(color)};`,
+      element,
+    );
 		if (ThemeIcon.isThemeIcon(letter)) {
 			this._createIconCSSRule(letter, color, element);
 		} else if (letter) {
-			createCSSRule(`.${this.itemBadgeClassName}::after`, `content: "${letter}"; color: ${getColor(color)};`, element);
+			createCSSRule(
+        `.${this.itemBadgeClassName}::after`,
+        `content: "${letter}"; color: ${getColor(color)};`,
+        element,
+      );
 		}
 	}
 
 	private _appendForMany(data: IDecorationData[], element: HTMLStyleElement): void {
 		// label
 		const { color } = data.find(d => !!d.color) ?? data[0];
-		createCSSRule(`.${this.itemColorClassName}`, `color: ${getColor(color)};`, element);
+		createCSSRule(
+      `.${this.itemColorClassName}`,
+      `color: ${getColor(color)};`,
+      element,
+    );
 
 		// badge or icon
 		const letters: string[] = [];
@@ -108,16 +126,20 @@ class DecorationRule {
 			this._createIconCSSRule(icon, color, element);
 		} else {
 			if (letters.length) {
-				createCSSRule(`.${this.itemBadgeClassName}::after`, `content: "${letters.join(', ')}"; color: ${getColor(color)};`, element);
+				createCSSRule(
+          `.${this.itemBadgeClassName}::after`,
+          `content: "${letters.join(", ")}"; color: ${getColor(color)};`,
+          element,
+        );
 			}
 
 			// bubble badge
 			// TODO @misolori update bubble badge to adopt letter: ThemeIcon instead of unicode
 			createCSSRule(
-				`.${this.bubbleBadgeClassName}::after`,
-				`content: "\uea71"; color: ${getColor(color)}; font-family: codicon; font-size: 14px; margin-right: 14px; opacity: 0.4;`,
-				element
-			);
+        `.${this.bubbleBadgeClassName}::after`,
+        `content: "\uea71"; color: ${getColor(color)}; font-family: codicon; font-size: 14px; margin-right: 14px; opacity: 0.4;`,
+        element,
+      );
 		}
 	}
 
@@ -131,7 +153,9 @@ class DecorationRule {
 		if (!iconContribution) {
 			return;
 		}
-		const definition = this.themeService.getProductIconTheme().getIcon(iconContribution);
+		const definition = this.themeService.getProductIconTheme().getIcon(
+      iconContribution,
+    );
 		if (!definition) {
 			return;
 		}
@@ -139,13 +163,13 @@ class DecorationRule {
 			`.${this.iconBadgeClassName}::after`,
 			`content: '${definition.fontCharacter}';
 			color: ${icon.color ? getColor(icon.color.id) : getColor(color)};
-			font-family: ${cssValue.stringValue(definition.font?.id ?? 'codicon')};
+			font-family: ${cssValue.stringValue(definition.font?.id ?? "codicon")};
 			font-size: 16px;
 			margin-right: 14px;
 			font-weight: normal;
-			${modifier === 'spin' ? 'animation: codicon-spin 1.5s steps(30) infinite; font-style: normal !important; transform-origin: center center;' : ''};
+			${modifier === "spin" ? "animation: codicon-spin 1.5s steps(30) infinite; font-style: normal !important; transform-origin: center center;" : ""};
 			`,
-			element
+			element,
 		);
 	}
 
@@ -160,7 +184,11 @@ class DecorationRule {
 class DecorationStyles {
 
 	private readonly _dispoables = new DisposableStore();
-	private readonly _styleElement = createStyleSheet(undefined, undefined, this._dispoables);
+	private readonly _styleElement = createStyleSheet(
+    undefined,
+    undefined,
+    this._dispoables,
+  );
 	private readonly _decorationRules = new Map<string, DecorationRule>();
 
 	constructor(private readonly _themeService: IThemeService) {
@@ -190,13 +218,15 @@ class DecorationStyles {
 		const labelClassName = rule.itemColorClassName;
 		let badgeClassName = rule.itemBadgeClassName;
 		const iconClassName = rule.iconBadgeClassName;
-		let tooltip = distinct(data.filter(d => !isFalsyOrWhitespace(d.tooltip)).map(d => d.tooltip)).join(' • ');
+		let tooltip = distinct(data.filter(d => !isFalsyOrWhitespace(d.tooltip)).map(d => d.tooltip)).join(
+      " • ",
+    );
 		const strikethrough = data.some(d => d.strikethrough);
 
 		if (onlyChildren) {
 			// show items from its children only
 			badgeClassName = rule.bubbleBadgeClassName;
-			tooltip = localize('bubbleTitle', "Contains emphasized items");
+			tooltip = localize("bubbleTitle", "Contains emphasized items");
 		}
 
 		return {
@@ -211,14 +241,16 @@ class DecorationStyles {
 					rule.removeCSSRules(this._styleElement);
 					rule = undefined;
 				}
-			}
+			},
 		};
 	}
 }
 
 class FileDecorationChangeEvent implements IResourceDecorationChangeEvent {
 
-	private readonly _data = TernarySearchTree.forUris<true>(_uri => true); // events ignore all path casings
+	private readonly _data = TernarySearchTree.forUris<true>(
+    _uri => true,
+  ); // events ignore all path casings
 
 	constructor(all: URI | URI[]) {
 		this._data.fill(true, asArray(all));
@@ -237,7 +269,7 @@ class DecorationDataRequest {
 }
 
 function getColor(color: ColorIdentifier | undefined) {
-	return color ? asCssVariable(color) : 'inherit';
+	return color ? asCssVariable(color) : "inherit";
 }
 
 type DecorationEntry = Map<IDecorationsProvider, DecorationDataRequest | IDecorationData | null>;
@@ -247,8 +279,12 @@ export class DecorationsService implements IDecorationsService {
 	declare _serviceBrand: undefined;
 
 	private readonly _store = new DisposableStore();
-	private readonly _onDidChangeDecorationsDelayed = this._store.add(new DebounceEmitter<URI | URI[]>({ merge: all => all.flat() }));
-	private readonly _onDidChangeDecorations = this._store.add(new Emitter<IResourceDecorationChangeEvent>());
+	private readonly _onDidChangeDecorationsDelayed = this._store.add(
+    new DebounceEmitter<URI | URI[]>({ merge: all => all.flat() }),
+  );
+	private readonly _onDidChangeDecorations = this._store.add(
+    new Emitter<IResourceDecorationChangeEvent>(),
+  );
 
 	readonly onDidChangeDecorations: Event<IResourceDecorationChangeEvent> = this._onDidChangeDecorations.event;
 
@@ -261,9 +297,15 @@ export class DecorationsService implements IDecorationsService {
 		@IThemeService themeService: IThemeService,
 	) {
 		this._decorationStyles = new DecorationStyles(themeService);
-		this._data = TernarySearchTree.forUris(key => uriIdentityService.extUri.ignorePathCasing(key));
+		this._data = TernarySearchTree.forUris(
+      key => uriIdentityService.extUri.ignorePathCasing(key),
+    );
 
-		this._store.add(this._onDidChangeDecorationsDelayed.event(event => { this._onDidChangeDecorations.fire(new FileDecorationChangeEvent(event)); }));
+		this._store.add(
+      this._onDidChangeDecorationsDelayed.event(event => {
+        this._onDidChangeDecorations.fire(new FileDecorationChangeEvent(event));
+      }),
+    );
 	}
 
 	dispose(): void {
@@ -275,9 +317,8 @@ export class DecorationsService implements IDecorationsService {
 		const rm = this._provider.unshift(provider);
 
 		this._onDidChangeDecorations.fire({
-			// everything might have changed
-			affectsResource() { return true; }
-		});
+      affectsResource() { return true; },
+    });
 
 		// remove everything what came from this provider
 		const removeAll = () => {
@@ -307,10 +348,10 @@ export class DecorationsService implements IDecorationsService {
 		});
 
 		return toDisposable(() => {
-			rm();
-			listener.dispose();
-			removeAll();
-		});
+      rm();
+      listener.dispose();
+      removeAll();
+    });
 	}
 
 	private _ensureEntry(uri: URI): DecorationEntry {
@@ -377,7 +418,9 @@ export class DecorationsService implements IDecorationsService {
 
 		const cts = new CancellationTokenSource();
 		const dataOrThenable = provider.provideDecorations(uri, cts.token);
-		if (!isThenable<IDecorationData | Promise<IDecorationData | undefined> | undefined>(dataOrThenable)) {
+		if (!isThenable<IDecorationData | Promise<IDecorationData | undefined> | undefined>(
+      dataOrThenable,
+    )) {
 			// sync -> we have a result now
 			cts.dispose();
 			return this._keepItem(map, provider, uri, dataOrThenable);
@@ -413,4 +456,8 @@ export class DecorationsService implements IDecorationsService {
 	}
 }
 
-registerSingleton(IDecorationsService, DecorationsService, InstantiationType.Delayed);
+registerSingleton(
+  IDecorationsService,
+  DecorationsService,
+  InstantiationType.Delayed,
+);

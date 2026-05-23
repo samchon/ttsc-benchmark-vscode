@@ -3,20 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter } from '../../../base/common/event.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { IChannel } from '../../../base/parts/ipc/common/ipc.js';
-import { IMeteredConnectionService } from './meteredConnection.js';
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { IChannel } from "../../../base/parts/ipc/common/ipc.js";
+import { IMeteredConnectionService } from "./meteredConnection.js";
 
-export const METERED_CONNECTION_CHANNEL = 'meteredConnection';
+export const METERED_CONNECTION_CHANNEL = "meteredConnection";
 
 /**
  * Commands supported by the metered connection IPC channel.
  */
 export enum MeteredConnectionCommand {
-	OnDidChangeIsConnectionMetered = 'OnDidChangeIsConnectionMetered',
-	IsConnectionMetered = 'IsConnectionMetered',
-	SetIsBrowserConnectionMetered = 'SetIsBrowserConnectionMetered',
+	OnDidChangeIsConnectionMetered = "OnDidChangeIsConnectionMetered",
+	IsConnectionMetered = "IsConnectionMetered",
+	SetIsBrowserConnectionMetered = "SetIsBrowserConnectionMetered",
 }
 
 /**
@@ -25,7 +25,9 @@ export enum MeteredConnectionCommand {
 export class MeteredConnectionChannelClient extends Disposable implements IMeteredConnectionService {
 	declare readonly _serviceBrand: undefined;
 
-	private readonly _onDidChangeIsConnectionMetered = this._register(new Emitter<boolean>());
+	private readonly _onDidChangeIsConnectionMetered = this._register(
+    new Emitter<boolean>(),
+  );
 	public readonly onDidChangeIsConnectionMetered = this._onDidChangeIsConnectionMetered.event;
 
 	private _isConnectionMetered = false;

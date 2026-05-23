@@ -3,16 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { RemoteAgentConnectionContext, IRemoteAgentEnvironment } from '../../../../platform/remote/common/remoteAgentEnvironment.js';
-import { IChannel, IServerChannel } from '../../../../base/parts/ipc/common/ipc.js';
-import { IDiagnosticInfoOptions, IDiagnosticInfo } from '../../../../platform/diagnostics/common/diagnostics.js';
-import { Event } from '../../../../base/common/event.js';
-import { PersistentConnectionEvent } from '../../../../platform/remote/common/remoteAgentConnection.js';
-import { ITelemetryData, TelemetryLevel } from '../../../../platform/telemetry/common/telemetry.js';
-import { timeout } from '../../../../base/common/async.js';
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { RemoteAgentConnectionContext, IRemoteAgentEnvironment } from "../../../../platform/remote/common/remoteAgentEnvironment.js";
+import { IChannel, IServerChannel } from "../../../../base/parts/ipc/common/ipc.js";
+import { IDiagnosticInfoOptions, IDiagnosticInfo } from "../../../../platform/diagnostics/common/diagnostics.js";
+import { Event } from "../../../../base/common/event.js";
+import { PersistentConnectionEvent } from "../../../../platform/remote/common/remoteAgentConnection.js";
+import { ITelemetryData, TelemetryLevel } from "../../../../platform/telemetry/common/telemetry.js";
+import { timeout } from "../../../../base/common/async.js";
 
-export const IRemoteAgentService = createDecorator<IRemoteAgentService>('remoteAgentService');
+export const IRemoteAgentService = createDecorator<IRemoteAgentService>(
+  "remoteAgentService",
+);
 
 export interface IRemoteAgentService {
 	readonly _serviceBrand: undefined;
@@ -138,7 +140,7 @@ export const remoteConnectionLatencyMeasurer = new class {
 				// - we require the current latency to be above the average latency by a factor of highLatencyMultiple
 				// - but not if the latency is actually above highLatencyMaxThreshold
 
-				if (typeof initialLatency === 'undefined') {
+				if (typeof initialLatency === "undefined") {
 					return false;
 				}
 
@@ -151,7 +153,7 @@ export const remoteConnectionLatencyMeasurer = new class {
 				}
 
 				return false;
-			})()
+			})(),
 		};
 
 		return this.lastMeasurement;

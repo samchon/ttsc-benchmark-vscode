@@ -3,28 +3,35 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, DisposableMap } from '../../../../../base/common/lifecycle.js';
-import { observableValue } from '../../../../../base/common/observable.js';
-import { isFalsyOrWhitespace } from '../../../../../base/common/strings.js';
-import { localize } from '../../../../../nls.js';
-import { ConfigurationTarget } from '../../../../../platform/configuration/common/configuration.js';
-import { ContextKeyExpr, IContextKeyService } from '../../../../../platform/contextkey/common/contextkey.js';
-import { IMcpCollectionContribution } from '../../../../../platform/extensions/common/extensions.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../../platform/storage/common/storage.js';
-import { IExtensionService } from '../../../../services/extensions/common/extensions.js';
-import * as extensionsRegistry from '../../../../services/extensions/common/extensionsRegistry.js';
-import { mcpActivationEvent, mcpContributionPoint } from '../mcpConfiguration.js';
-import { IMcpRegistry } from '../mcpRegistryTypes.js';
-import { extensionPrefixedIdentifier, McpCollectionSortOrder, McpServerDefinition, McpServerTrust } from '../mcpTypes.js';
-import { IMcpDiscovery } from './mcpDiscovery.js';
+import { Disposable, DisposableMap } from "../../../../../base/common/lifecycle.js";
+import { observableValue } from "../../../../../base/common/observable.js";
+import { isFalsyOrWhitespace } from "../../../../../base/common/strings.js";
+import { localize } from "../../../../../nls.js";
+import { ConfigurationTarget } from "../../../../../platform/configuration/common/configuration.js";
+import { ContextKeyExpr, IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IMcpCollectionContribution } from "../../../../../platform/extensions/common/extensions.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../../platform/storage/common/storage.js";
+import { IExtensionService } from "../../../../services/extensions/common/extensions.js";
+import * as extensionsRegistry from "../../../../services/extensions/common/extensionsRegistry.js";
+import { mcpActivationEvent, mcpContributionPoint } from "../mcpConfiguration.js";
+import { IMcpRegistry } from "../mcpRegistryTypes.js";
+import {
+  extensionPrefixedIdentifier,
+  McpCollectionSortOrder,
+  McpServerDefinition,
+  McpServerTrust,
+} from "../mcpTypes.js";
+import { IMcpDiscovery } from "./mcpDiscovery.js";
 
-const cacheKey = 'mcp.extCachedServers';
+const cacheKey = "mcp.extCachedServers";
 
 interface IServerCacheEntry {
 	readonly servers: readonly McpServerDefinition.Serialized[];
 }
 
-const _mcpExtensionPoint = extensionsRegistry.ExtensionsRegistry.registerExtensionPoint(mcpContributionPoint);
+const _mcpExtensionPoint = extensionsRegistry.ExtensionsRegistry.registerExtensionPoint(
+  mcpContributionPoint,
+);
 
 const enum PersistWhen {
 	CollectionExists,
@@ -37,7 +44,9 @@ export class ExtensionMcpDiscovery extends Disposable implements IMcpDiscovery {
 
 	private readonly _extensionCollectionIdsToPersist = new Map<string, PersistWhen>();
 	private readonly cachedServers: { [collcetionId: string]: IServerCacheEntry };
-	private readonly _conditionalCollections = this._register(new DisposableMap<string>());
+	private readonly _conditionalCollections = this._register(
+    new DisposableMap<string>(),
+  );
 
 	constructor(
 		@IMcpRegistry private readonly _mcpRegistry: IMcpRegistry,
@@ -46,7 +55,11 @@ export class ExtensionMcpDiscovery extends Disposable implements IMcpDiscovery {
 		@IContextKeyService private readonly _contextKeyService: IContextKeyService,
 	) {
 		super();
-		this.cachedServers = storageService.getObject(cacheKey, StorageScope.WORKSPACE, {});
+		this.cachedServers = storageService.getObject(
+      cacheKey,
+      StorageScope.WORKSPACE,
+      {},
+    );
 
 		this._register(storageService.onWillSaveState(() => {
 			let updated = false;
@@ -112,9 +125,11 @@ export class ExtensionMcpDiscovery extends Disposable implements IMcpDiscovery {
 		id: string,
 		coll: IMcpCollectionContribution,
 		collections: extensionsRegistry.IExtensionPointUser<IMcpCollectionContribution[]>,
-		extensionCollections: DisposableMap<string>
+		extensionCollections: DisposableMap<string>,
 	) {
-		const serverDefs = this.cachedServers.hasOwnProperty(id) ? this.cachedServers[id].servers : undefined;
+		const serverDefs = this.cachedServers.hasOwnProperty(
+      id,
+    ) ? this.cachedServers[id].servers : undefined;
 		const dispo = this._mcpRegistry.registerCollection({
 			id,
 			label: coll.label,
@@ -135,7 +150,7 @@ export class ExtensionMcpDiscovery extends Disposable implements IMcpDiscovery {
 					this._conditionalCollections.deleteAndDispose(id);
 				},
 			},
-			source: collections.description.identifier
+			source: collections.description.identifier,
 		});
 
 		extensionCollections.set(id, dispo);
@@ -145,7 +160,7 @@ export class ExtensionMcpDiscovery extends Disposable implements IMcpDiscovery {
 		id: string,
 		coll: IMcpCollectionContribution,
 		collections: extensionsRegistry.IExtensionPointUser<IMcpCollectionContribution[]>,
-		extensionCollections: DisposableMap<string>
+		extensionCollections: DisposableMap<string>,
 	) {
 		const whenClause = ContextKeyExpr.deserialize(coll.when!);
 		if (!whenClause) {
@@ -154,7 +169,9 @@ export class ExtensionMcpDiscovery extends Disposable implements IMcpDiscovery {
 		}
 
 		const evaluate = () => {
-			const nowSatisfied = this._contextKeyService.contextMatchesRules(whenClause);
+			const nowSatisfied = this._contextKeyService.contextMatchesRules(
+        whenClause,
+      );
 			const isRegistered = extensionCollections.has(id);
 			if (nowSatisfied && !isRegistered) {
 				this._registerCollection(id, coll, collections, extensionCollections);
@@ -163,7 +180,9 @@ export class ExtensionMcpDiscovery extends Disposable implements IMcpDiscovery {
 			}
 		};
 
-		const contextKeyListener = this._contextKeyService.onDidChangeContext(evaluate);
+		const contextKeyListener = this._contextKeyService.onDidChangeContext(
+      evaluate,
+    );
 		evaluate();
 
 		// Store disposable for this conditional collection
@@ -171,7 +190,9 @@ export class ExtensionMcpDiscovery extends Disposable implements IMcpDiscovery {
 	}
 
 	private async _activateExtensionServers(collectionId: string): Promise<void> {
-		await this._extensionService.activateByEvent(mcpActivationEvent(collectionId));
+		await this._extensionService.activateByEvent(
+      mcpActivationEvent(collectionId),
+    );
 		await Promise.all(this._mcpRegistry.delegates.get()
 			.map(r => r.waitForInitialProviderPromises()));
 	}
@@ -179,21 +200,35 @@ export class ExtensionMcpDiscovery extends Disposable implements IMcpDiscovery {
 	private static _validate(user: extensionsRegistry.IExtensionPointUser<IMcpCollectionContribution[]>): boolean {
 
 		if (!Array.isArray(user.value)) {
-			user.collector.error(localize('invalidData', "Expected an array of MCP collections"));
+			user.collector.error(
+        localize("invalidData", "Expected an array of MCP collections"),
+      );
 			return false;
 		}
 
 		for (const contribution of user.value) {
-			if (typeof contribution.id !== 'string' || isFalsyOrWhitespace(contribution.id)) {
-				user.collector.error(localize('invalidId', "Expected 'id' to be a non-empty string."));
+			if (typeof contribution.id !== "string" || isFalsyOrWhitespace(
+        contribution.id,
+      )) {
+				user.collector.error(
+          localize("invalidId", "Expected 'id' to be a non-empty string."),
+        );
 				return false;
 			}
-			if (typeof contribution.label !== 'string' || isFalsyOrWhitespace(contribution.label)) {
-				user.collector.error(localize('invalidLabel', "Expected 'label' to be a non-empty string."));
+			if (typeof contribution.label !== "string" || isFalsyOrWhitespace(
+        contribution.label,
+      )) {
+				user.collector.error(
+          localize("invalidLabel", "Expected 'label' to be a non-empty string."),
+        );
 				return false;
 			}
-			if (contribution.when !== undefined && (typeof contribution.when !== 'string' || isFalsyOrWhitespace(contribution.when))) {
-				user.collector.error(localize('invalidWhen', "Expected 'when' to be a non-empty string."));
+			if (contribution.when !== undefined && (typeof contribution.when !== "string" || isFalsyOrWhitespace(
+        contribution.when,
+      ))) {
+				user.collector.error(
+          localize("invalidWhen", "Expected 'when' to be a non-empty string."),
+        );
 				return false;
 			}
 		}

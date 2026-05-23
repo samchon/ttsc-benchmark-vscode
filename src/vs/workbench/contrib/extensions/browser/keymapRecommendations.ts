@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ExtensionRecommendations, ExtensionRecommendation } from './extensionRecommendations.js';
-import { IProductService } from '../../../../platform/product/common/productService.js';
-import { ExtensionRecommendationReason } from '../../../services/extensionRecommendations/common/extensionRecommendations.js';
+import { ExtensionRecommendations, ExtensionRecommendation } from "./extensionRecommendations.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { ExtensionRecommendationReason } from "../../../services/extensionRecommendations/common/extensionRecommendations.js";
 
 export class KeymapRecommendations extends ExtensionRecommendations {
 
@@ -24,8 +24,8 @@ export class KeymapRecommendations extends ExtensionRecommendations {
 				extension: extensionId.toLowerCase(),
 				reason: {
 					reasonId: ExtensionRecommendationReason.Application,
-					reasonText: ''
-				}
+					reasonText: "",
+				},
 			}));
 		}
 	}

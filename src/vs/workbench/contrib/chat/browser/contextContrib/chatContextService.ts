@@ -3,20 +3,31 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { LanguageSelector, score } from '../../../../../editor/common/languageSelector.js';
-import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IChatContextPicker, IChatContextPickerItem, IChatContextPickService } from '../attachments/chatContextPickService.js';
-import { IChatContextItem, IChatExplicitContextProvider, IChatResourceContextProvider, IChatWorkspaceContextProvider } from '../../common/contextContrib/chatContext.js';
-import { CancellationToken } from '../../../../../base/common/cancellation.js';
-import { IChatRequestWorkspaceVariableEntry, IGenericChatRequestVariableEntry, StringChatContextValue } from '../../common/attachments/chatVariableEntries.js';
-import { IExtensionService } from '../../../../services/extensions/common/extensions.js';
-import { InstantiationType, registerSingleton } from '../../../../../platform/instantiation/common/extensions.js';
-import { Disposable, DisposableMap, IDisposable } from '../../../../../base/common/lifecycle.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { basename } from '../../../../../base/common/resources.js';
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { LanguageSelector, score } from "../../../../../editor/common/languageSelector.js";
+import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IChatContextPicker, IChatContextPickerItem, IChatContextPickService } from "../attachments/chatContextPickService.js";
+import {
+  IChatContextItem,
+  IChatExplicitContextProvider,
+  IChatResourceContextProvider,
+  IChatWorkspaceContextProvider,
+} from "../../common/contextContrib/chatContext.js";
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import {
+  IChatRequestWorkspaceVariableEntry,
+  IGenericChatRequestVariableEntry,
+  StringChatContextValue,
+} from "../../common/attachments/chatVariableEntries.js";
+import { IExtensionService } from "../../../../services/extensions/common/extensions.js";
+import { InstantiationType, registerSingleton } from "../../../../../platform/instantiation/common/extensions.js";
+import { Disposable, DisposableMap, IDisposable } from "../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { basename } from "../../../../../base/common/resources.js";
 
-export const IChatContextService = createDecorator<IChatContextService>('chatContextService');
+export const IChatContextService = createDecorator<IChatContextService>(
+  "chatContextService",
+);
 
 export interface IChatContextService extends ChatContextService { }
 
@@ -35,13 +46,15 @@ export class ChatContextService extends Disposable {
 
 	private readonly _providers = new Map<string, IChatContextProviderEntry>();
 	private readonly _workspaceContext = new Map<string, IChatContextItem[]>();
-	private readonly _registeredPickers = this._register(new DisposableMap<string, IDisposable>());
+	private readonly _registeredPickers = this._register(
+    new DisposableMap<string, IDisposable>(),
+  );
 	private _lastResourceContext: Map<StringChatContextValue, { originalItem: IChatContextItem; provider: IChatResourceContextProvider }> = new Map();
 	private _executeCommandCallback: ((itemHandle: number) => Promise<void>) | undefined;
 
 	constructor(
 		@IChatContextPickService private readonly _contextPickService: IChatContextPickService,
-		@IExtensionService private readonly _extensionService: IExtensionService
+		@IExtensionService private readonly _extensionService: IExtensionService,
 	) {
 		super();
 	}
@@ -69,8 +82,13 @@ export class ChatContextService extends Disposable {
 		if (!providerEntry || !providerEntry.picker || !providerEntry.explicitProvider) {
 			return;
 		}
-		const title = `${providerEntry.picker.title.replace(/\.+$/, '')}...`;
-		this._registeredPickers.set(id, this._contextPickService.registerChatContextItem(this._asPicker(title, providerEntry.picker.icon, id)));
+		const title = `${providerEntry.picker.title.replace(/\.+$/, "")}...`;
+		this._registeredPickers.set(
+      id,
+      this._contextPickService.registerChatContextItem(
+        this._asPicker(title, providerEntry.picker.icon, id),
+      ),
+    );
 	}
 
 	registerChatWorkspaceContextProvider(id: string, provider: IChatWorkspaceContextProvider): void {
@@ -109,14 +127,16 @@ export class ChatContextService extends Disposable {
 					continue;
 				}
 				// Derive label from resourceUri if label is not set
-				const derivedLabel = item.label ?? (item.resourceUri ? basename(item.resourceUri) : 'Unknown');
+				const derivedLabel = item.label ?? (item.resourceUri ? basename(
+          item.resourceUri,
+        ) : "Unknown");
 				items.push({
-					value: item.value,
-					name: derivedLabel,
-					modelDescription: item.modelDescription,
-					id: derivedLabel,
-					kind: 'workspace'
-				});
+          value: item.value,
+          name: derivedLabel,
+          modelDescription: item.modelDescription,
+          id: derivedLabel,
+          kind: "workspace",
+        });
 			}
 		}
 		return items;
@@ -132,15 +152,29 @@ export class ChatContextService extends Disposable {
 			if (!providerEntry.resourceProvider) {
 				continue;
 			}
-			const matchScore = score(providerEntry.resourceProvider.selector, uri, language ?? '', true, undefined, undefined);
-			scoredProviders.push({ score: matchScore, provider: providerEntry.resourceProvider.provider });
+			const matchScore = score(
+        providerEntry.resourceProvider.selector,
+        uri,
+        language ?? "",
+        true,
+        undefined,
+        undefined,
+      );
+			scoredProviders.push({
+        score: matchScore,
+        provider: providerEntry.resourceProvider.provider,
+      });
 		}
 		scoredProviders.sort((a, b) => b.score - a.score);
 		if (scoredProviders.length === 0 || scoredProviders[0].score <= 0) {
 			return;
 		}
 		const provider = scoredProviders[0].provider;
-		const context = (await provider.provideChatContext(uri, withValue, CancellationToken.None));
+		const context = (await provider.provideChatContext(
+      uri,
+      withValue,
+      CancellationToken.None,
+    ));
 		if (!context) {
 			return;
 		}
@@ -148,18 +182,21 @@ export class ChatContextService extends Disposable {
 		const effectiveResourceUri = context.resourceUri ?? uri;
 		const derivedLabel = context.label ?? basename(effectiveResourceUri);
 		const contextValue: StringChatContextValue = {
-			value: undefined,
-			name: derivedLabel,
-			icon: context.icon,
-			uri: uri,
-			resourceUri: context.resourceUri,
-			modelDescription: context.modelDescription,
-			tooltip: context.tooltip,
-			commandId: context.command?.id,
-			handle: context.handle
-		};
+      value: undefined,
+      name: derivedLabel,
+      icon: context.icon,
+      uri: uri,
+      resourceUri: context.resourceUri,
+      modelDescription: context.modelDescription,
+      tooltip: context.tooltip,
+      commandId: context.command?.id,
+      handle: context.handle,
+    };
 		this._lastResourceContext.clear();
-		this._lastResourceContext.set(contextValue, { originalItem: context, provider });
+		this._lastResourceContext.set(contextValue, {
+      originalItem: context,
+      provider,
+    });
 		return contextValue;
 	}
 
@@ -170,13 +207,20 @@ export class ChatContextService extends Disposable {
 
 		const item = this._lastResourceContext.get(context);
 		if (!item) {
-			const resolved = await this._contextForResource(context.uri, true, language);
+			const resolved = await this._contextForResource(
+        context.uri,
+        true,
+        language,
+      );
 			context.value = resolved?.value;
 			context.modelDescription = resolved?.modelDescription;
 			context.tooltip = resolved?.tooltip;
 			return context;
 		} else {
-			const resolved = await item.provider.resolveChatContext(item.originalItem, CancellationToken.None);
+			const resolved = await item.provider.resolveChatContext(
+        item.originalItem,
+        CancellationToken.None,
+      );
 			if (resolved) {
 				context.value = resolved.value;
 				context.modelDescription = resolved.modelDescription;
@@ -191,19 +235,23 @@ export class ChatContextService extends Disposable {
 		const asPicker = (): IChatContextPicker => {
 			let providerEntry = this._providers.get(id);
 			if (!providerEntry) {
-				throw new Error('No chat context provider registered');
+				throw new Error("No chat context provider registered");
 			}
 
 			const picks = async (): Promise<IChatContextItem[]> => {
 				if (providerEntry && !providerEntry.explicitProvider) {
 					// Activate the extension providing the chat context provider
-					await this._extensionService.activateByEvent(`onChatContextProvider:${id}`);
+					await this._extensionService.activateByEvent(
+            `onChatContextProvider:${id}`,
+          );
 					providerEntry = this._providers.get(id);
 					if (!providerEntry?.explicitProvider) {
 						return [];
 					}
 				}
-				const results = await providerEntry?.explicitProvider!.provideChatContext(CancellationToken.None);
+				const results = await providerEntry?.explicitProvider!.provideChatContext(
+          CancellationToken.None,
+        );
 				return results || [];
 			};
 
@@ -211,7 +259,7 @@ export class ChatContextService extends Disposable {
 				picks: picks().then(items => {
 					return items.map(item => {
 						// Derive label from resourceUri if label is not set
-						const derivedLabel = item.label ?? (item.resourceUri ? basename(item.resourceUri) : 'Unknown');
+						const derivedLabel = item.label ?? (item.resourceUri ? basename(item.resourceUri) : "Unknown");
 						return {
 							label: derivedLabel,
 							iconClass: item.icon ? ThemeIcon.asClassName(item.icon) : undefined,
@@ -221,31 +269,35 @@ export class ChatContextService extends Disposable {
 									contextValue = await providerEntry.explicitProvider.resolveChatContext(item, CancellationToken.None);
 								}
 								// Derive label from resourceUri if label is not set
-								const resolvedLabel = contextValue.label ?? (contextValue.resourceUri ? basename(contextValue.resourceUri) : 'Unknown');
+								const resolvedLabel = contextValue.label ?? (contextValue.resourceUri ? basename(contextValue.resourceUri) : "Unknown");
 								return {
-									kind: 'generic',
+									kind: "generic",
 									id: resolvedLabel,
 									name: resolvedLabel,
 									icon: contextValue.icon,
 									value: contextValue.value,
 								};
-							}
+							},
 						};
 					});
 				}),
-				placeholder: title
+				placeholder: title,
 			};
 		};
 
 		const picker: IChatContextPickerItem = {
-			asPicker,
-			type: 'pickerPick',
-			label: title,
-			icon
-		};
+      asPicker,
+      type: "pickerPick",
+      label: title,
+      icon,
+    };
 
 		return picker;
 	}
 }
 
-registerSingleton(IChatContextService, ChatContextService, InstantiationType.Delayed);
+registerSingleton(
+  IChatContextService,
+  ChatContextService,
+  InstantiationType.Delayed,
+);

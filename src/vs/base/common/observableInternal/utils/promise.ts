@@ -2,12 +2,12 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { DisposableStore } from '../../lifecycle.js';
-import { IObservable, ISettableObservable } from '../base.js';
-import { autorun } from '../reactions/autorun.js';
-import { transaction } from '../transaction.js';
-import { derived } from '../observables/derived.js';
-import { observableValue } from '../observables/observableValue.js';
+import { DisposableStore } from "../../lifecycle.js";
+import { IObservable, ISettableObservable } from "../base.js";
+import { autorun } from "../reactions/autorun.js";
+import { transaction } from "../transaction.js";
+import { derived } from "../observables/derived.js";
+import { observableValue } from "../observables/observableValue.js";
 
 export class ObservableLazy<T> {
 	private readonly _value = observableValue<T | undefined>(this, undefined);
@@ -47,7 +47,10 @@ export class ObservablePromise<T> {
 		return new ObservablePromise(Promise.resolve(value));
 	}
 
-	private readonly _value = observableValue<PromiseResult<T> | undefined>(this, undefined);
+	private readonly _value = observableValue<PromiseResult<T> | undefined>(
+    this,
+    undefined,
+  );
 
 	/**
 	 * The promise that this object wraps.
@@ -154,13 +157,20 @@ export class ObservableResolvedPromise<T> {
  * A lazy promise whose state is observable.
  */
 export class ObservableLazyPromise<T> {
-	private readonly _lazyValue = new ObservableLazy(() => new ObservablePromise(this._computePromise()));
+	private readonly _lazyValue = new ObservableLazy(
+    () => new ObservablePromise(this._computePromise()),
+  );
 
 	/**
 	 * Does not enforce evaluation of the promise compute function.
 	 * Is undefined if the promise has not been computed yet.
 	 */
-	public readonly cachedPromiseResult = derived(this, reader => this._lazyValue.cachedValue.read(reader)?.promiseResult.read(reader));
+	public readonly cachedPromiseResult = derived(
+    this,
+    reader => this._lazyValue.cachedValue.read(reader)?.promiseResult.read(
+      reader,
+    ),
+  );
 
 	constructor(private readonly _computePromise: () => Promise<T>) {
 	}

@@ -11,7 +11,7 @@ let currentTest: Mocha.Test | undefined;
 const snapshotsToAssert: ({ counts: Promise<number[]>; file: string; test: string; opts: ISnapshotAssertOptions })[] = [];
 
 setup(function () {
-	currentTest = this.currentTest;
+  currentTest = this.currentTest;
 });
 
 suiteTeardown(async () => {
@@ -65,7 +65,7 @@ const snapshotMinTime = 20_000;
  */
 export async function assertHeap(opts: ISnapshotAssertOptions) {
 	if (!currentTest) {
-		throw new Error('assertSnapshot can only be used when a test is running');
+		throw new Error("assertSnapshot can only be used when a test is running");
 	}
 
 	// snapshotting can take a moment, ensure the test timeout is decently long
@@ -74,11 +74,19 @@ export async function assertHeap(opts: ISnapshotAssertOptions) {
 		currentTest.timeout(snapshotMinTime);
 	}
 
-	if (typeof __analyzeSnapshotInTests === 'undefined') {
+	if (typeof __analyzeSnapshotInTests === "undefined") {
 		return; // running in browser, no-op
 	}
 
-	const { done, file } = await __analyzeSnapshotInTests(currentTest.fullTitle(), Object.keys(opts.classes));
-	snapshotsToAssert.push({ counts: done, file, test: currentTest.fullTitle(), opts });
+	const { done, file } = await __analyzeSnapshotInTests(
+    currentTest.fullTitle(),
+    Object.keys(opts.classes),
+  );
+	snapshotsToAssert.push({
+    counts: done,
+    file,
+    test: currentTest.fullTitle(),
+    opts,
+  });
 }
 

@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IModelDecoration, IModelDecorationOptions, ITextModel } from '../model.js';
-import { Range } from '../core/range.js';
-import { StandardTokenType } from '../encodedTokenAttributes.js';
+import { IModelDecoration, IModelDecorationOptions, ITextModel } from "../model.js";
+import { Range } from "../core/range.js";
+import { StandardTokenType } from "../encodedTokenAttributes.js";
 
 export class ViewModelDecoration {
 	_viewModelDecorationBrand: void = undefined;
@@ -20,11 +20,17 @@ export class ViewModelDecoration {
 }
 
 export function isModelDecorationVisible(model: ITextModel, decoration: IModelDecoration): boolean {
-	if (decoration.options.hideInCommentTokens && isModelDecorationInComment(model, decoration)) {
+	if (decoration.options.hideInCommentTokens && isModelDecorationInComment(
+    model,
+    decoration,
+  )) {
 		return false;
 	}
 
-	if (decoration.options.hideInStringTokens && isModelDecorationInString(model, decoration)) {
+	if (decoration.options.hideInStringTokens && isModelDecorationInString(
+    model,
+    decoration,
+  )) {
 		return false;
 	}
 
@@ -33,18 +39,18 @@ export function isModelDecorationVisible(model: ITextModel, decoration: IModelDe
 
 export function isModelDecorationInComment(model: ITextModel, decoration: IModelDecoration): boolean {
 	return testTokensInRange(
-		model,
-		decoration.range,
-		(tokenType) => tokenType === StandardTokenType.Comment
-	);
+    model,
+    decoration.range,
+    (tokenType) => tokenType === StandardTokenType.Comment,
+  );
 }
 
 export function isModelDecorationInString(model: ITextModel, decoration: IModelDecoration): boolean {
 	return testTokensInRange(
-		model,
-		decoration.range,
-		(tokenType) => tokenType === StandardTokenType.String
-	);
+    model,
+    decoration.range,
+    (tokenType) => tokenType === StandardTokenType.String,
+  );
 }
 
 /**
@@ -58,7 +64,9 @@ function testTokensInRange(model: ITextModel, range: Range, callback: (tokenType
 		const isFirstLine = lineNumber === range.startLineNumber;
 		const isEndLine = lineNumber === range.endLineNumber;
 
-		let tokenIdx = isFirstLine ? lineTokens.findTokenIndexAtOffset(range.startColumn - 1) : 0;
+		let tokenIdx = isFirstLine ? lineTokens.findTokenIndexAtOffset(
+      range.startColumn - 1,
+    ) : 0;
 		while (tokenIdx < lineTokens.getCount()) {
 			if (isEndLine) {
 				const startOffset = lineTokens.getStartOffset(tokenIdx);
@@ -67,7 +75,9 @@ function testTokensInRange(model: ITextModel, range: Range, callback: (tokenType
 				}
 			}
 
-			const callbackResult = callback(lineTokens.getStandardTokenType(tokenIdx));
+			const callbackResult = callback(
+        lineTokens.getStandardTokenType(tokenIdx),
+      );
 			if (!callbackResult) {
 				return false;
 			}

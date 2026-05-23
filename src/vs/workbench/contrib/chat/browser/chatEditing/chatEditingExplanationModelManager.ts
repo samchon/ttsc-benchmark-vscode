@@ -3,18 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken, CancellationTokenSource } from '../../../../../base/common/cancellation.js';
-import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
-import { ResourceMap } from '../../../../../base/common/map.js';
-import { IObservable, observableValue } from '../../../../../base/common/observable.js';
-import { basename } from '../../../../../base/common/resources.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { ITextModel } from '../../../../../editor/common/model.js';
-import { DetailedLineRangeMapping, LineRangeMapping } from '../../../../../editor/common/diff/rangeMapping.js';
-import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
-import { InstantiationType, registerSingleton } from '../../../../../platform/instantiation/common/extensions.js';
-import { ChatMessageRole, ILanguageModelsService } from '../../common/languageModels.js';
-import * as nls from '../../../../../nls.js';
+import { CancellationToken, CancellationTokenSource } from "../../../../../base/common/cancellation.js";
+import { Disposable, IDisposable } from "../../../../../base/common/lifecycle.js";
+import { ResourceMap } from "../../../../../base/common/map.js";
+import { IObservable, observableValue } from "../../../../../base/common/observable.js";
+import { basename } from "../../../../../base/common/resources.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ITextModel } from "../../../../../editor/common/model.js";
+import { DetailedLineRangeMapping, LineRangeMapping } from "../../../../../editor/common/diff/rangeMapping.js";
+import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
+import { InstantiationType, registerSingleton } from "../../../../../platform/instantiation/common/extensions.js";
+import { ChatMessageRole, ILanguageModelsService } from "../../common/languageModels.js";
+import * as nls from "../../../../../nls.js";
 
 /**
  * Simple diff info interface for explanation generation
@@ -41,7 +41,7 @@ export interface IChangeExplanation {
 /**
  * Progress state for explanation generation
  */
-export type ExplanationProgress = 'idle' | 'loading' | 'complete' | 'error';
+export type ExplanationProgress = "idle" | "loading" | "complete" | "error";
 
 /**
  * Explanation state for a single URI
@@ -69,7 +69,9 @@ export interface IExplanationGenerationHandle extends IDisposable {
 	readonly completed: Promise<void>;
 }
 
-export const IChatEditingExplanationModelManager = createDecorator<IChatEditingExplanationModelManager>('chatEditingExplanationModelManager');
+export const IChatEditingExplanationModelManager = createDecorator<IChatEditingExplanationModelManager>(
+  "chatEditingExplanationModelManager",
+);
 
 export interface IChatEditingExplanationModelManager {
 	readonly _serviceBrand: undefined;
@@ -118,15 +120,18 @@ function getChangeTexts(change: LineRangeMapping | DetailedLineRangeMapping, dif
 	}
 
 	return {
-		originalText: originalLines.join('\n'),
-		modifiedText: modifiedLines.join('\n')
-	};
+    originalText: originalLines.join("\n"),
+    modifiedText: modifiedLines.join("\n"),
+  };
 }
 
 export class ChatEditingExplanationModelManager extends Disposable implements IChatEditingExplanationModelManager {
 	declare readonly _serviceBrand: undefined;
 
-	private readonly _state = observableValue<ResourceMap<IExplanationState>>(this, new ResourceMap<IExplanationState>());
+	private readonly _state = observableValue<ResourceMap<IExplanationState>>(
+    this,
+    new ResourceMap<IExplanationState>(),
+  );
 	readonly state: IObservable<ResourceMap<IExplanationState>> = this._state;
 
 	constructor(
@@ -168,11 +173,11 @@ export class ChatEditingExplanationModelManager extends Disposable implements IC
 		// Set loading state for all URIs with diffInfo and chatSessionResource
 		for (const diffInfo of diffInfos) {
 			this._updateUriState(diffInfo.modifiedModel.uri, {
-				progress: 'loading',
-				explanations: [],
-				diffInfo,
-				chatSessionResource,
-			});
+        progress: "loading",
+        explanations: [],
+        diffInfo,
+        chatSessionResource,
+      });
 		}
 
 		const completed = this._doGenerateExplanations(diffInfos, cts.token);
@@ -183,7 +188,7 @@ export class ChatEditingExplanationModelManager extends Disposable implements IC
 			dispose: () => {
 				cts.dispose(true);
 				this._removeUris(uris);
-			}
+			},
 		};
 	}
 
@@ -193,9 +198,9 @@ export class ChatEditingExplanationModelManager extends Disposable implements IC
 		for (const diffInfo of diffInfos) {
 			if (diffInfo.changes.length === 0 || diffInfo.identical) {
 				this._updateUriStatePartial(diffInfo.modifiedModel.uri, {
-					progress: 'complete',
-					explanations: [],
-				});
+          progress: "complete",
+          explanations: [],
+        });
 			} else {
 				nonEmptyDiffs.push(diffInfo);
 			}
@@ -233,18 +238,24 @@ export class ChatEditingExplanationModelManager extends Disposable implements IC
 		});
 
 		// Total number of changes across all files
-		const totalChanges = fileChanges.reduce((sum, f) => sum + f.changes.length, 0);
+		const totalChanges = fileChanges.reduce(
+      (sum, f) => sum + f.changes.length,
+      0,
+    );
 
 		try {
 			// Select a model for understanding all changes together
-			const models = await this._languageModelsService.selectLanguageModels({ vendor: 'copilot', id: 'copilot-utility-small' });
+			const models = await this._languageModelsService.selectLanguageModels({
+        vendor: "copilot",
+        id: "copilot-utility-small",
+      });
 			if (!models.length) {
 				for (const fileData of fileChanges) {
 					this._updateUriStatePartial(fileData.uri, {
-						progress: 'error',
-						explanations: [],
-						errorMessage: nls.localize('noModelAvailable', "No language model available"),
-					});
+            progress: "error",
+            explanations: [],
+            errorMessage: nls.localize("noModelAvailable", "No language model available"),
+          });
 				}
 				return;
 			}
@@ -259,17 +270,17 @@ export class ChatEditingExplanationModelManager extends Disposable implements IC
 				return fileData.changes.map(data => {
 					const desc = `=== CHANGE ${changeIndex} (File: ${fileData.fileName}, Lines ${data.startLineNumber}-${data.endLineNumber}) ===
 BEFORE:
-${data.originalText || '(empty)'}
+${data.originalText || "(empty)"}
 
 AFTER:
-${data.modifiedText || '(empty)'}`;
+${data.modifiedText || "(empty)"}`;
 					changeIndex++;
 					return desc;
-				}).join('\n\n');
-			}).join('\n\n');
+				}).join("\n\n");
+			}).join("\n\n");
 
 			const fileCount = fileChanges.length;
-			const prompt = `Analyze these ${totalChanges} code changes across ${fileCount} file${fileCount > 1 ? 's' : ''} and provide a brief explanation for each one.
+			const prompt = `Analyze these ${totalChanges} code changes across ${fileCount} file${fileCount > 1 ? "s" : ""} and provide a brief explanation for each one.
 These changes are part of a single coherent modification, so consider how they relate to each other.
 
 ${changesDescription}
@@ -282,25 +293,30 @@ Example response format:
 [{"explanation": "Added null check to prevent crash"}, {"explanation": "Renamed variable for clarity"}]`;
 
 			const response = await this._languageModelsService.sendChatRequest(
-				models[0],
-				undefined,
-				[{ role: ChatMessageRole.User, content: [{ type: 'text', value: prompt }] }],
-				{},
-				cancellationToken
-			);
+        models[0],
+        undefined,
+        [
+          {
+            role: ChatMessageRole.User,
+            content: [{ type: "text", value: prompt }],
+          },
+        ],
+        {},
+        cancellationToken,
+      );
 
-			let responseText = '';
+			let responseText = "";
 			for await (const part of response.stream) {
 				if (cancellationToken.isCancellationRequested) {
 					return;
 				}
 				if (Array.isArray(part)) {
 					for (const p of part) {
-						if (p.type === 'text') {
+						if (p.type === "text") {
 							responseText += p.value;
 						}
 					}
-				} else if (part.type === 'text') {
+				} else if (part.type === "text") {
 					responseText += part.value;
 				}
 			}
@@ -316,8 +332,11 @@ Example response format:
 			try {
 				// Handle potential markdown wrapping
 				let jsonText = responseText.trim();
-				if (jsonText.startsWith('```')) {
-					jsonText = jsonText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+				if (jsonText.startsWith("```")) {
+					jsonText = jsonText.replace(/^```(?:json)?\n?/, "").replace(
+            /\n?```$/,
+            "",
+          );
 				}
 				parsed = JSON.parse(jsonText);
 			} catch {
@@ -329,36 +348,46 @@ Example response format:
 			for (const fileData of fileChanges) {
 				const explanations: IChangeExplanation[] = [];
 				for (const data of fileData.changes) {
-					const parsedExplanation = parsed[parsedIndex]?.explanation?.trim() || nls.localize('codeWasModified', "Code was modified.");
+					const parsedExplanation = parsed[parsedIndex]?.explanation?.trim() || nls.localize(
+            "codeWasModified",
+            "Code was modified.",
+          );
 					explanations.push({
-						uri: fileData.uri,
-						startLineNumber: data.startLineNumber,
-						endLineNumber: data.endLineNumber,
-						originalText: data.originalText,
-						modifiedText: data.modifiedText,
-						explanation: parsedExplanation,
-					});
+            uri: fileData.uri,
+            startLineNumber: data.startLineNumber,
+            endLineNumber: data.endLineNumber,
+            originalText: data.originalText,
+            modifiedText: data.modifiedText,
+            explanation: parsedExplanation,
+          });
 					parsedIndex++;
 				}
 
 				this._updateUriStatePartial(fileData.uri, {
-					progress: 'complete',
-					explanations,
-				});
+          progress: "complete",
+          explanations,
+        });
 			}
 		} catch (e) {
 			if (!cancellationToken.isCancellationRequested) {
-				const errorMessage = e instanceof Error ? e.message : nls.localize('explanationFailed', "Failed to generate explanations");
+				const errorMessage = e instanceof Error ? e.message : nls.localize(
+          "explanationFailed",
+          "Failed to generate explanations",
+        );
 				for (const fileData of fileChanges) {
 					this._updateUriStatePartial(fileData.uri, {
-						progress: 'error',
-						explanations: [],
-						errorMessage,
-					});
+            progress: "error",
+            explanations: [],
+            errorMessage,
+          });
 				}
 			}
 		}
 	}
 }
 
-registerSingleton(IChatEditingExplanationModelManager, ChatEditingExplanationModelManager, InstantiationType.Delayed);
+registerSingleton(
+  IChatEditingExplanationModelManager,
+  ChatEditingExplanationModelManager,
+  InstantiationType.Delayed,
+);

@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../../../../base/browser/dom.js';
-import { IMarkdownString, MarkdownString } from '../../../../../../../base/common/htmlContent.js';
-import { autorun } from '../../../../../../../base/common/observable.js';
-import { IMarkdownRenderer } from '../../../../../../../platform/markdown/browser/markdownRenderer.js';
-import { IInstantiationService } from '../../../../../../../platform/instantiation/common/instantiation.js';
-import { IChatProgressMessage, IChatToolInvocation } from '../../../../common/chatService/chatService.js';
-import { IChatCodeBlockInfo } from '../../../chat.js';
-import { IChatContentPartRenderContext } from '../chatContentParts.js';
-import { ChatProgressContentPart } from '../chatProgressContentPart.js';
-import { BaseChatToolInvocationSubPart } from './chatToolInvocationSubPart.js';
+import * as dom from "../../../../../../../base/browser/dom.js";
+import { IMarkdownString, MarkdownString } from "../../../../../../../base/common/htmlContent.js";
+import { autorun } from "../../../../../../../base/common/observable.js";
+import { IMarkdownRenderer } from "../../../../../../../platform/markdown/browser/markdownRenderer.js";
+import { IInstantiationService } from "../../../../../../../platform/instantiation/common/instantiation.js";
+import { IChatProgressMessage, IChatToolInvocation } from "../../../../common/chatService/chatService.js";
+import { IChatCodeBlockInfo } from "../../../chat.js";
+import { IChatContentPartRenderContext } from "../chatContentParts.js";
+import { ChatProgressContentPart } from "../chatProgressContentPart.js";
+import { BaseChatToolInvocationSubPart } from "./chatToolInvocationSubPart.js";
 
 /**
  * Sub-part for rendering a tool invocation in the streaming state.
@@ -35,9 +35,9 @@ export class ChatToolStreamingSubPart extends BaseChatToolInvocationSubPart {
 	}
 
 	private createStreamingPart(): HTMLElement {
-		const container = document.createElement('div');
+		const container = document.createElement("div");
 
-		if (this.toolInvocation.kind !== 'toolInvocation') {
+		if (this.toolInvocation.kind !== "toolInvocation") {
 			return container;
 		}
 
@@ -63,19 +63,19 @@ export class ChatToolStreamingSubPart extends BaseChatToolInvocationSubPart {
 			const displayMessage = streamingMessage ?? toolInvocation.invocationMessage;
 
 			// Don't render anything if there's no meaningful content
-			const messageText = typeof displayMessage === 'string' ? displayMessage : displayMessage.value;
+			const messageText = typeof displayMessage === "string" ? displayMessage : displayMessage.value;
 			if (!messageText || messageText.trim().length === 0) {
 				dom.clearNode(container);
 				return;
 			}
 
-			const content: IMarkdownString = typeof displayMessage === 'string'
+			const content: IMarkdownString = typeof displayMessage === "string"
 				? new MarkdownString().appendText(displayMessage)
 				: displayMessage;
 
 			const progressMessage: IChatProgressMessage = {
-				kind: 'progressMessage',
-				content
+				kind: "progressMessage",
+				content,
 			};
 
 			const part = reader.store.add(this.instantiationService.createInstance(
@@ -87,7 +87,7 @@ export class ChatToolStreamingSubPart extends BaseChatToolInvocationSubPart {
 				true,
 				this.getIcon(),
 				toolInvocation,
-				false
+				false,
 			));
 
 			dom.reset(container, part.domNode);

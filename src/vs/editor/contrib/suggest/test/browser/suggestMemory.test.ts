@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { IPosition } from '../../../../common/core/position.js';
-import { ITextModel } from '../../../../common/model.js';
-import { CompletionItem } from '../../browser/suggest.js';
-import { LRUMemory, Memory, NoMemory, PrefixMemory } from '../../browser/suggestMemory.js';
-import { createSuggestItem } from './completionModel.test.js';
-import { createTextModel } from '../../../../test/common/testTextModel.js';
+import assert from "assert";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { IPosition } from "../../../../common/core/position.js";
+import { ITextModel } from "../../../../common/model.js";
+import { CompletionItem } from "../../browser/suggest.js";
+import { LRUMemory, Memory, NoMemory, PrefixMemory } from "../../browser/suggestMemory.js";
+import { createSuggestItem } from "./completionModel.test.js";
+import { createTextModel } from "../../../../test/common/testTextModel.js";
 
-suite('SuggestMemories', function () {
+suite("SuggestMemories", function () {
 
 	let pos: IPosition;
 	let buffer: ITextModel;
@@ -20,10 +20,10 @@ suite('SuggestMemories', function () {
 
 	setup(function () {
 		pos = { lineNumber: 1, column: 1 };
-		buffer = createTextModel('This is some text.\nthis.\nfoo: ,');
+		buffer = createTextModel("This is some text.\nthis.\nfoo: ,");
 		items = [
-			createSuggestItem('foo', 0),
-			createSuggestItem('bar', 0)
+			createSuggestItem("foo", 0),
+			createSuggestItem("bar", 0),
 		];
 	});
 
@@ -33,26 +33,26 @@ suite('SuggestMemories', function () {
 
 	ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('AbstractMemory, select', function () {
+	test("AbstractMemory, select", function () {
 
 		const mem = new class extends Memory {
 			constructor() {
-				super('first');
+				super("first");
 			}
 			memorize(model: ITextModel, pos: IPosition, item: CompletionItem): void {
-				throw new Error('Method not implemented.');
+				throw new Error("Method not implemented.");
 			} toJSON(): object {
-				throw new Error('Method not implemented.');
+				throw new Error("Method not implemented.");
 			}
 			fromJSON(data: object): void {
-				throw new Error('Method not implemented.');
+				throw new Error("Method not implemented.");
 			}
 		};
 
-		const item1 = createSuggestItem('fazz', 0);
-		const item2 = createSuggestItem('bazz', 0);
-		const item3 = createSuggestItem('bazz', 0);
-		const item4 = createSuggestItem('bazz', 0);
+		const item1 = createSuggestItem("fazz", 0);
+		const item2 = createSuggestItem("bazz", 0);
+		const item3 = createSuggestItem("bazz", 0);
+		const item4 = createSuggestItem("bazz", 0);
 		item1.completion.preselect = false;
 		item2.completion.preselect = true;
 		item3.completion.preselect = true;
@@ -60,11 +60,11 @@ suite('SuggestMemories', function () {
 		assert.strictEqual(mem.select(buffer, pos, [item1, item2, item3, item4]), 1);
 	});
 
-	test('[No|Prefix|LRU]Memory honor selection boost', function () {
-		const item1 = createSuggestItem('fazz', 0);
-		const item2 = createSuggestItem('bazz', 0);
-		const item3 = createSuggestItem('bazz', 0);
-		const item4 = createSuggestItem('bazz', 0);
+	test("[No|Prefix|LRU]Memory honor selection boost", function () {
+		const item1 = createSuggestItem("fazz", 0);
+		const item2 = createSuggestItem("bazz", 0);
+		const item3 = createSuggestItem("bazz", 0);
+		const item4 = createSuggestItem("bazz", 0);
 		item1.completion.preselect = false;
 		item2.completion.preselect = true;
 		item3.completion.preselect = true;
@@ -76,7 +76,7 @@ suite('SuggestMemories', function () {
 		assert.strictEqual(new PrefixMemory().select(buffer, pos, items), 1);
 	});
 
-	test('NoMemory', () => {
+	test("NoMemory", () => {
 
 		const mem = new NoMemory();
 
@@ -87,7 +87,7 @@ suite('SuggestMemories', function () {
 		mem.memorize(buffer, pos, null!);
 	});
 
-	test('LRUMemory', () => {
+	test("LRUMemory", () => {
 
 		pos = { lineNumber: 2, column: 6 };
 
@@ -101,24 +101,24 @@ suite('SuggestMemories', function () {
 		assert.strictEqual(mem.select(buffer, pos, items), 0);
 
 		assert.strictEqual(mem.select(buffer, pos, [
-			createSuggestItem('new', 0),
-			createSuggestItem('bar', 0)
+			createSuggestItem("new", 0),
+			createSuggestItem("bar", 0),
 		]), 1);
 
 		assert.strictEqual(mem.select(buffer, pos, [
-			createSuggestItem('new1', 0),
-			createSuggestItem('new2', 0)
+			createSuggestItem("new1", 0),
+			createSuggestItem("new2", 0),
 		]), 0);
 	});
 
 	test('`"editor.suggestSelection": "recentlyUsed"` should be a little more sticky #78571', function () {
 
-		const item1 = createSuggestItem('gamma', 0);
-		const item2 = createSuggestItem('game', 0);
+		const item1 = createSuggestItem("gamma", 0);
+		const item2 = createSuggestItem("game", 0);
 		items = [item1, item2];
 
 		const mem = new LRUMemory();
-		buffer.setValue('    foo.');
+		buffer.setValue("    foo.");
 		mem.memorize(buffer, { lineNumber: 1, column: 1 }, item2);
 
 		assert.strictEqual(mem.select(buffer, { lineNumber: 1, column: 2 }, items), 0); // leading whitespace -> ignore recent items
@@ -126,7 +126,7 @@ suite('SuggestMemories', function () {
 		mem.memorize(buffer, { lineNumber: 1, column: 9 }, item2);
 		assert.strictEqual(mem.select(buffer, { lineNumber: 1, column: 9 }, items), 1); // foo.
 
-		buffer.setValue('    foo.g');
+		buffer.setValue("    foo.g");
 		assert.strictEqual(mem.select(buffer, { lineNumber: 1, column: 10 }, items), 1); // foo.g, 'gamma' and 'game' have the same score
 
 		item1.score = [10, 0, 0];
@@ -134,7 +134,7 @@ suite('SuggestMemories', function () {
 
 	});
 
-	test('intellisense is not showing top options first #43429', function () {
+	test("intellisense is not showing top options first #43429", function () {
 		// ensure we don't memorize for whitespace prefixes
 
 		pos = { lineNumber: 2, column: 6 };
@@ -147,14 +147,14 @@ suite('SuggestMemories', function () {
 		assert.strictEqual(mem.select(buffer, { lineNumber: 3, column: 6 }, items), 1); // foo: ,|
 	});
 
-	test('PrefixMemory', () => {
+	test("PrefixMemory", () => {
 
 		const mem = new PrefixMemory();
-		buffer.setValue('constructor');
-		const item0 = createSuggestItem('console', 0);
-		const item1 = createSuggestItem('const', 0);
-		const item2 = createSuggestItem('constructor', 0);
-		const item3 = createSuggestItem('constant', 0);
+		buffer.setValue("constructor");
+		const item0 = createSuggestItem("console", 0);
+		const item1 = createSuggestItem("const", 0);
+		const item2 = createSuggestItem("constructor", 0);
+		const item3 = createSuggestItem("constant", 0);
 		const items = [item0, item1, item2, item3];
 
 		mem.memorize(buffer, { lineNumber: 1, column: 2 }, item1); // c -> const

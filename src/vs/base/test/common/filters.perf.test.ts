@@ -2,11 +2,22 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { importAMDNodeModule } from '../../../amdX.js';
-import * as filters from '../../common/filters.js';
-import { FileAccess } from '../../common/network.js';
+import { importAMDNodeModule } from "../../../amdX.js";
+import * as filters from "../../common/filters.js";
+import { FileAccess } from "../../common/network.js";
 
-const patterns = ['cci', 'ida', 'pos', 'CCI', 'enbled', 'callback', 'gGame', 'cons', 'zyx', 'aBc'];
+const patterns = [
+  "cci",
+  "ida",
+  "pos",
+  "CCI",
+  "enbled",
+  "callback",
+  "gGame",
+  "cons",
+  "zyx",
+  "aBc",
+];
 
 const _enablePerf = false;
 
@@ -16,10 +27,10 @@ function perfSuite(name: string, callback: (this: Mocha.Suite) => void) {
 	}
 }
 
-perfSuite('Performance - fuzzyMatch', async function () {
+perfSuite("Performance - fuzzyMatch", async function () {
 
-	const uri = FileAccess.asBrowserUri('vs/base/test/common/filters.perf.data').toString(true);
-	const { data } = await importAMDNodeModule<typeof import('./filters.perf.data.js')>(uri, '');
+	const uri = FileAccess.asBrowserUri("vs/base/test/common/filters.perf.data").toString(true);
+	const { data } = await importAMDNodeModule<typeof import("./filters.perf.data.js")>(uri, "");
 
 	// suiteSetup(() => console.profile());
 	// suiteTeardown(() => console.profileEnd());
@@ -45,16 +56,16 @@ perfSuite('Performance - fuzzyMatch', async function () {
 		});
 	}
 
-	perfTest('fuzzyScore', filters.fuzzyScore);
-	perfTest('fuzzyScoreGraceful', filters.fuzzyScoreGraceful);
-	perfTest('fuzzyScoreGracefulAggressive', filters.fuzzyScoreGracefulAggressive);
+	perfTest("fuzzyScore", filters.fuzzyScore);
+	perfTest("fuzzyScoreGraceful", filters.fuzzyScoreGraceful);
+	perfTest("fuzzyScoreGracefulAggressive", filters.fuzzyScoreGracefulAggressive);
 });
 
 
-perfSuite('Performance - IFilter', async function () {
+perfSuite("Performance - IFilter", async function () {
 
-	const uri = FileAccess.asBrowserUri('vs/base/test/common/filters.perf.data').toString(true);
-	const { data } = await importAMDNodeModule<typeof import('./filters.perf.data.js')>(uri, '');
+	const uri = FileAccess.asBrowserUri("vs/base/test/common/filters.perf.data").toString(true);
+	const { data } = await importAMDNodeModule<typeof import("./filters.perf.data.js")>(uri, "");
 
 	function perfTest(name: string, match: filters.IFilter) {
 		test(name, () => {
@@ -74,9 +85,9 @@ perfSuite('Performance - IFilter', async function () {
 		});
 	}
 
-	perfTest('matchesFuzzy', filters.matchesFuzzy);
-	perfTest('matchesFuzzy2', filters.matchesFuzzy2);
-	perfTest('matchesPrefix', filters.matchesPrefix);
-	perfTest('matchesContiguousSubString', filters.matchesContiguousSubString);
-	perfTest('matchesCamelCase', filters.matchesCamelCase);
+	perfTest("matchesFuzzy", filters.matchesFuzzy);
+	perfTest("matchesFuzzy2", filters.matchesFuzzy2);
+	perfTest("matchesPrefix", filters.matchesPrefix);
+	perfTest("matchesContiguousSubString", filters.matchesContiguousSubString);
+	perfTest("matchesCamelCase", filters.matchesCamelCase);
 });

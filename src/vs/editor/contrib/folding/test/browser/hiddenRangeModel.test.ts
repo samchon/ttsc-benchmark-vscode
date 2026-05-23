@@ -2,14 +2,14 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import assert from 'assert';
-import { IRange } from '../../../../common/core/range.js';
-import { FoldingModel } from '../../browser/foldingModel.js';
-import { HiddenRangeModel } from '../../browser/hiddenRangeModel.js';
-import { computeRanges } from '../../browser/indentRangeProvider.js';
-import { createTextModel } from '../../../../test/common/testTextModel.js';
-import { TestDecorationProvider } from './foldingModel.test.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
+import assert from "assert";
+import { IRange } from "../../../../common/core/range.js";
+import { FoldingModel } from "../../browser/foldingModel.js";
+import { HiddenRangeModel } from "../../browser/hiddenRangeModel.js";
+import { computeRanges } from "../../browser/indentRangeProvider.js";
+import { createTextModel } from "../../../../test/common/testTextModel.js";
+import { TestDecorationProvider } from "./foldingModel.test.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
 
 
 interface ExpectedRange {
@@ -17,7 +17,7 @@ interface ExpectedRange {
 	endLineNumber: number;
 }
 
-suite('Hidden Range Model', () => {
+suite("Hidden Range Model", () => {
 	ensureNoDisposablesAreLeakedInTestSuite();
 
 	function r(startLineNumber: number, endLineNumber: number): ExpectedRange {
@@ -28,20 +28,20 @@ suite('Hidden Range Model', () => {
 		assert.deepStrictEqual(actual.map(r => ({ startLineNumber: r.startLineNumber, endLineNumber: r.endLineNumber })), expectedRegions, message);
 	}
 
-	test('hasRanges', () => {
+	test("hasRanges", () => {
 		const lines = [
-		/* 1*/	'/**',
-		/* 2*/	' * Comment',
-		/* 3*/	' */',
-		/* 4*/	'class A {',
-		/* 5*/	'  void foo() {',
-		/* 6*/	'    if (true) {',
-		/* 7*/	'      //hello',
-		/* 8*/	'    }',
-		/* 9*/	'  }',
-		/* 10*/	'}'];
+		/* 1*/	"/**",
+		/* 2*/	" * Comment",
+		/* 3*/	" */",
+		/* 4*/	"class A {",
+		/* 5*/	"  void foo() {",
+		/* 6*/	"    if (true) {",
+		/* 7*/	"      //hello",
+		/* 8*/	"    }",
+		/* 9*/	"  }",
+		/* 10*/	"}"];
 
-		const textModel = createTextModel(lines.join('\n'));
+		const textModel = createTextModel(lines.join("\n"));
 		const foldingModel = new FoldingModel(textModel, new TestDecorationProvider(textModel));
 		const hiddenRangeModel = new HiddenRangeModel(foldingModel);
 		try {

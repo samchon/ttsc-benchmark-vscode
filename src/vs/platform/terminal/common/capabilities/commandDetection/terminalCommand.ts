@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IMarkProperties, ISerializedTerminalCommand, ITerminalCommand } from '../capabilities.js';
-import { ITerminalOutputMatcher, ITerminalOutputMatch } from '../../terminal.js';
-import type { IBuffer, IBufferLine, IMarker, Terminal } from '@xterm/headless';
-import { generateUuid } from '../../../../../base/common/uuid.js';
-import { isString } from '../../../../../base/common/types.js';
+import { IMarkProperties, ISerializedTerminalCommand, ITerminalCommand } from "../capabilities.js";
+import { ITerminalOutputMatcher, ITerminalOutputMatch } from "../../terminal.js";
+import type { IBuffer, IBufferLine, IMarker, Terminal } from "@xterm/headless";
+import { generateUuid } from "../../../../../base/common/uuid.js";
+import { isString } from "../../../../../base/common/types.js";
 
 export interface ITerminalCommandProperties {
 	command: string;
-	commandLineConfidence: 'low' | 'medium' | 'high';
+	commandLineConfidence: "low" | "medium" | "high";
 	isTrusted: boolean;
 	timestamp: number;
 	duration: number;
@@ -59,65 +59,80 @@ export class TerminalCommand implements ITerminalCommand {
 	) {
 	}
 
-	static deserialize(xterm: Terminal, serialized: ISerializedTerminalCommand & Required<Pick<ISerializedTerminalCommand, 'endLine'>>, isCommandStorageDisabled: boolean): TerminalCommand | undefined {
+	static deserialize(xterm: Terminal, serialized: ISerializedTerminalCommand & Required<Pick<ISerializedTerminalCommand, "endLine">>, isCommandStorageDisabled: boolean): TerminalCommand | undefined {
 		const buffer = xterm.buffer.normal;
-		const marker = serialized.startLine !== undefined ? xterm.registerMarker(serialized.startLine - (buffer.baseY + buffer.cursorY)) : undefined;
+		const marker = serialized.startLine !== undefined ? xterm.registerMarker(
+      serialized.startLine - (buffer.baseY + buffer.cursorY),
+    ) : undefined;
 
 		// Check for invalid command
 		if (!marker) {
 			return undefined;
 		}
-		const promptStartMarker = serialized.promptStartLine !== undefined ? xterm.registerMarker(serialized.promptStartLine - (buffer.baseY + buffer.cursorY)) : undefined;
+		const promptStartMarker = serialized.promptStartLine !== undefined ? xterm.registerMarker(
+      serialized.promptStartLine - (buffer.baseY + buffer.cursorY),
+    ) : undefined;
 
 		// Valid full command
-		const endMarker = serialized.endLine !== undefined ? xterm.registerMarker(serialized.endLine - (buffer.baseY + buffer.cursorY)) : undefined;
-		const executedMarker = serialized.executedLine !== undefined ? xterm.registerMarker(serialized.executedLine - (buffer.baseY + buffer.cursorY)) : undefined;
+		const endMarker = serialized.endLine !== undefined ? xterm.registerMarker(
+      serialized.endLine - (buffer.baseY + buffer.cursorY),
+    ) : undefined;
+		const executedMarker = serialized.executedLine !== undefined ? xterm.registerMarker(
+      serialized.executedLine - (buffer.baseY + buffer.cursorY),
+    ) : undefined;
 		const newCommand = new TerminalCommand(xterm, {
-			command: isCommandStorageDisabled ? '' : serialized.command,
-			commandLineConfidence: serialized.commandLineConfidence ?? 'low',
-			isTrusted: serialized.isTrusted,
-			id: serialized.id,
-			promptStartMarker,
-			marker,
-			startX: serialized.startX,
-			endMarker,
-			executedMarker,
-			executedX: serialized.executedX,
-			timestamp: serialized.timestamp,
-			duration: serialized.duration,
-			cwd: serialized.cwd,
-			commandStartLineContent: serialized.commandStartLineContent,
-			exitCode: serialized.exitCode,
-			markProperties: serialized.markProperties,
-			aliases: undefined,
-			wasReplayed: true
-		});
+      command: isCommandStorageDisabled ? "" : serialized.command,
+      commandLineConfidence: serialized.commandLineConfidence ?? "low",
+      isTrusted: serialized.isTrusted,
+      id: serialized.id,
+      promptStartMarker,
+      marker,
+      startX: serialized.startX,
+      endMarker,
+      executedMarker,
+      executedX: serialized.executedX,
+      timestamp: serialized.timestamp,
+      duration: serialized.duration,
+      cwd: serialized.cwd,
+      commandStartLineContent: serialized.commandStartLineContent,
+      exitCode: serialized.exitCode,
+      markProperties: serialized.markProperties,
+      aliases: undefined,
+      wasReplayed: true,
+    });
 		return newCommand;
 	}
 
 	serialize(isCommandStorageDisabled: boolean): ISerializedTerminalCommand {
 		return {
-			promptStartLine: this.promptStartMarker?.line,
-			startLine: this.marker?.line,
-			startX: undefined,
-			endLine: this.endMarker?.line,
-			executedLine: this.executedMarker?.line,
-			executedX: this.executedX,
-			command: isCommandStorageDisabled ? '' : this.command,
-			commandLineConfidence: isCommandStorageDisabled ? 'low' : this.commandLineConfidence,
-			isTrusted: this.isTrusted,
-			cwd: this.cwd,
-			exitCode: this.exitCode,
-			commandStartLineContent: this.commandStartLineContent,
-			timestamp: this.timestamp,
-			duration: this.duration,
-			markProperties: this.markProperties,
-			id: this.id,
-		};
+      promptStartLine: this.promptStartMarker?.line,
+      startLine: this.marker?.line,
+      startX: undefined,
+      endLine: this.endMarker?.line,
+      executedLine: this.executedMarker?.line,
+      executedX: this.executedX,
+      command: isCommandStorageDisabled ? "" : this.command,
+      commandLineConfidence: isCommandStorageDisabled ? "low" : this.commandLineConfidence,
+      isTrusted: this.isTrusted,
+      cwd: this.cwd,
+      exitCode: this.exitCode,
+      commandStartLineContent: this.commandStartLineContent,
+      timestamp: this.timestamp,
+      duration: this.duration,
+      markProperties: this.markProperties,
+      id: this.id,
+    };
 	}
 
 	extractCommandLine(): string {
-		return extractCommandLine(this._xterm.buffer.active, this._xterm.cols, this.marker, this.startX, this.executedMarker, this.executedX);
+		return extractCommandLine(
+      this._xterm.buffer.active,
+      this._xterm.cols,
+      this.marker,
+      this.startX,
+      this.executedMarker,
+      this.executedX,
+    );
 	}
 
 	getOutput(): string | undefined {
@@ -130,8 +145,8 @@ export class TerminalCommand implements ITerminalCommand {
 		if (startLine === endLine) {
 			return undefined;
 		}
-		let output = '';
-		let currentLine = '';
+		let output = "";
+		let currentLine = "";
 		let line: IBufferLine | undefined;
 		const buffer = this._xterm.buffer.active;
 		for (let i = startLine; i < endLine; i++) {
@@ -141,17 +156,19 @@ export class TerminalCommand implements ITerminalCommand {
 			}
 			// NOTE: xterm stores wrapping state on the *next* line, not the current one.
 			// Use next line's `isWrapped` to determine whether this line should be joined.
-			const isWrapped = i + 1 < endLine ? !!buffer.getLine(i + 1)?.isWrapped : false;
+			const isWrapped = i + 1 < endLine ? !!buffer.getLine(
+        i + 1,
+      )?.isWrapped : false;
 			currentLine += line.translateToString(!isWrapped);
 			if (!isWrapped) {
-				output += currentLine + '\n';
-				currentLine = '';
+				output += currentLine + "\n";
+				currentLine = "";
 			}
 		}
 		if (currentLine.length > 0) {
 			output += currentLine;
 		}
-		return output === '' ? undefined : output;
+		return output === "" ? undefined : output;
 	}
 
 	getOutputMatch(outputMatcher: ITerminalOutputMatcher): ITerminalOutputMatch | undefined {
@@ -166,18 +183,29 @@ export class TerminalCommand implements ITerminalCommand {
 		const buffer = this._xterm.buffer.active;
 		const startLine = Math.max(this.executedMarker.line, 0);
 		const matcher = outputMatcher.lineMatcher;
-		const linesToCheck = isString(matcher) ? 1 : outputMatcher.length || countNewLines(matcher);
+		const linesToCheck = isString(
+      matcher,
+    ) ? 1 : outputMatcher.length || countNewLines(matcher);
 		const lines: string[] = [];
 		let match: RegExpMatchArray | null | undefined;
-		if (outputMatcher.anchor === 'bottom') {
+		if (outputMatcher.anchor === "bottom") {
 			for (let i = endLine - (outputMatcher.offset || 0); i >= startLine; i--) {
 				let wrappedLineStart = i;
 				const wrappedLineEnd = i;
-				while (wrappedLineStart >= startLine && buffer.getLine(wrappedLineStart)?.isWrapped) {
+				while (wrappedLineStart >= startLine && buffer.getLine(
+          wrappedLineStart,
+        )?.isWrapped) {
 					wrappedLineStart--;
 				}
 				i = wrappedLineStart;
-				lines.unshift(getXtermLineContent(buffer, wrappedLineStart, wrappedLineEnd, this._xterm.cols));
+				lines.unshift(
+          getXtermLineContent(
+            buffer,
+            wrappedLineStart,
+            wrappedLineEnd,
+            this._xterm.cols,
+          ),
+        );
 				if (!match) {
 					match = lines[0].match(matcher);
 				}
@@ -189,11 +217,20 @@ export class TerminalCommand implements ITerminalCommand {
 			for (let i = startLine + (outputMatcher.offset || 0); i < endLine; i++) {
 				const wrappedLineStart = i;
 				let wrappedLineEnd = i;
-				while (wrappedLineEnd + 1 < endLine && buffer.getLine(wrappedLineEnd + 1)?.isWrapped) {
+				while (wrappedLineEnd + 1 < endLine && buffer.getLine(
+          wrappedLineEnd + 1,
+        )?.isWrapped) {
 					wrappedLineEnd++;
 				}
 				i = wrappedLineEnd;
-				lines.push(getXtermLineContent(buffer, wrappedLineStart, wrappedLineEnd, this._xterm.cols));
+				lines.push(
+          getXtermLineContent(
+            buffer,
+            wrappedLineStart,
+            wrappedLineEnd,
+            this._xterm.cols,
+          ),
+        );
 				if (!match) {
 					match = lines[lines.length - 1].match(matcher);
 				}
@@ -288,7 +325,7 @@ export class PartialTerminalCommand implements ICurrentPartialCommand {
 
 	cwd?: string;
 	command?: string;
-	commandLineConfidence?: 'low' | 'medium' | 'high';
+	commandLineConfidence?: "low" | "medium" | "high";
 	id: string | undefined;
 
 	isTrusted?: boolean;
@@ -301,7 +338,7 @@ export class PartialTerminalCommand implements ICurrentPartialCommand {
 
 	constructor(
 		private readonly _xterm: Terminal,
-		id?: string
+		id?: string,
 	) {
 		this.id = id ?? generateUuid();
 	}
@@ -312,50 +349,52 @@ export class PartialTerminalCommand implements ICurrentPartialCommand {
 		}
 
 		return {
-			promptStartLine: this.promptStartMarker?.line,
-			startLine: this.commandStartMarker.line,
-			startX: this.commandStartX,
-			endLine: undefined,
-			executedLine: undefined,
-			executedX: undefined,
-			command: '',
-			commandLineConfidence: 'low',
-			isTrusted: true,
-			cwd,
-			exitCode: undefined,
-			commandStartLineContent: undefined,
-			timestamp: 0,
-			duration: 0,
-			markProperties: undefined,
-			id: this.id
-		};
+      promptStartLine: this.promptStartMarker?.line,
+      startLine: this.commandStartMarker.line,
+      startX: this.commandStartX,
+      endLine: undefined,
+      executedLine: undefined,
+      executedX: undefined,
+      command: "",
+      commandLineConfidence: "low",
+      isTrusted: true,
+      cwd,
+      exitCode: undefined,
+      commandStartLineContent: undefined,
+      timestamp: 0,
+      duration: 0,
+      markProperties: undefined,
+      id: this.id,
+    };
 	}
 
 	promoteToFullCommand(cwd: string | undefined, exitCode: number | undefined, ignoreCommandLine: boolean, markProperties: IMarkProperties | undefined): TerminalCommand | undefined {
 		// When the command finishes and executed never fires the placeholder selector should be used.
 		if (exitCode === undefined && this.command === undefined) {
-			this.command = '';
+			this.command = "";
 		}
 
-		if ((this.command !== undefined && !this.command.startsWith('\\')) || ignoreCommandLine) {
+		if ((this.command !== undefined && !this.command.startsWith(
+      "\\",
+    )) || ignoreCommandLine) {
 			return new TerminalCommand(this._xterm, {
-				command: ignoreCommandLine ? '' : (this.command || ''),
-				commandLineConfidence: ignoreCommandLine ? 'low' : (this.commandLineConfidence || 'low'),
-				isTrusted: !!this.isTrusted,
-				id: this.id,
-				promptStartMarker: this.promptStartMarker,
-				marker: this.commandStartMarker,
-				startX: this.commandStartX,
-				endMarker: this.commandFinishedMarker,
-				executedMarker: this.commandExecutedMarker,
-				executedX: this.commandExecutedX,
-				timestamp: Date.now(),
-				duration: this.commandDuration || 0,
-				cwd,
-				exitCode,
-				commandStartLineContent: this.commandStartLineContent,
-				markProperties
-			});
+        command: ignoreCommandLine ? "" : (this.command || ""),
+        commandLineConfidence: ignoreCommandLine ? "low" : (this.commandLineConfidence || "low"),
+        isTrusted: !!this.isTrusted,
+        id: this.id,
+        promptStartMarker: this.promptStartMarker,
+        marker: this.commandStartMarker,
+        startX: this.commandStartX,
+        endMarker: this.commandFinishedMarker,
+        executedMarker: this.commandExecutedMarker,
+        executedX: this.commandExecutedX,
+        timestamp: Date.now(),
+        duration: this.commandDuration || 0,
+        cwd,
+        exitCode,
+        commandStartLineContent: this.commandStartLineContent,
+        markProperties,
+      });
 		}
 
 		return undefined;
@@ -374,7 +413,14 @@ export class PartialTerminalCommand implements ICurrentPartialCommand {
 	}
 
 	extractCommandLine(): string {
-		return extractCommandLine(this._xterm.buffer.active, this._xterm.cols, this.commandStartMarker, this.commandStartX, this.commandExecutedMarker, this.commandExecutedX);
+		return extractCommandLine(
+      this._xterm.buffer.active,
+      this._xterm.cols,
+      this.commandStartMarker,
+      this.commandStartX,
+      this.commandExecutedMarker,
+      this.commandExecutedX,
+    );
 	}
 
 	getPromptRowCount(): number {
@@ -392,16 +438,20 @@ function extractCommandLine(
 	commandStartMarker: IMarker | undefined,
 	commandStartX: number | undefined,
 	commandExecutedMarker: IMarker | undefined,
-	commandExecutedX: number | undefined
+	commandExecutedX: number | undefined,
 ): string {
 	if (!commandStartMarker || !commandExecutedMarker || commandStartX === undefined || commandExecutedX === undefined) {
-		return '';
+		return "";
 	}
-	let content = '';
+	let content = "";
 	for (let i = commandStartMarker.line; i <= commandExecutedMarker.line; i++) {
 		const line = buffer.getLine(i);
 		if (line) {
-			content += line.translateToString(true, i === commandStartMarker.line ? commandStartX : 0, i === commandExecutedMarker.line ? commandExecutedX : cols);
+			content += line.translateToString(
+        true,
+        i === commandStartMarker.line ? commandStartX : 0,
+        i === commandExecutedMarker.line ? commandExecutedX : cols,
+      );
 		}
 	}
 	return content;
@@ -412,7 +462,7 @@ function getXtermLineContent(buffer: IBuffer, lineStart: number, lineEnd: number
 	// more of a sanity check as the wrapped line should already be trimmed down at this point.
 	const maxLineLength = Math.max(2048 / cols * 2);
 	lineEnd = Math.min(lineEnd, lineStart + maxLineLength);
-	let content = '';
+	let content = "";
 	for (let i = lineStart; i <= lineEnd; i++) {
 		// Make sure only 0 to cols are considered as resizing when windows mode is enabled will
 		// retain buffer data outside of the terminal width as reflow is disabled.
@@ -430,23 +480,27 @@ function countNewLines(regex: RegExp): number {
 	}
 	const source = regex.source;
 	let count = 1;
-	let i = source.indexOf('\\n');
+	let i = source.indexOf("\\n");
 	while (i !== -1) {
 		count++;
-		i = source.indexOf('\\n', i + 1);
+		i = source.indexOf("\\n", i + 1);
 	}
 	return count;
 }
 
 function getPromptRowCount(command: ITerminalCommand | ICurrentPartialCommand, buffer: IBuffer): number {
-	const marker = isFullTerminalCommand(command) ? command.marker : command.commandStartMarker;
+	const marker = isFullTerminalCommand(
+    command,
+  ) ? command.marker : command.commandStartMarker;
 	if (!marker || !command.promptStartMarker) {
 		return 1;
 	}
 	let promptRowCount = 1;
 	let promptStartLine = command.promptStartMarker.line;
 	// Trim any leading whitespace-only lines to retain vertical space
-	while (promptStartLine < marker.line && (buffer.getLine(promptStartLine)?.translateToString(true) ?? '').length === 0) {
+	while (promptStartLine < marker.line && (buffer.getLine(promptStartLine)?.translateToString(
+    true,
+  ) ?? "").length === 0) {
 		promptStartLine++;
 	}
 	promptRowCount = marker.line - promptStartLine + 1;
@@ -454,15 +508,21 @@ function getPromptRowCount(command: ITerminalCommand | ICurrentPartialCommand, b
 }
 
 function getCommandRowCount(command: ITerminalCommand | ICurrentPartialCommand): number {
-	const marker = isFullTerminalCommand(command) ? command.marker : command.commandStartMarker;
-	const executedMarker = isFullTerminalCommand(command) ? command.executedMarker : command.commandExecutedMarker;
+	const marker = isFullTerminalCommand(
+    command,
+  ) ? command.marker : command.commandStartMarker;
+	const executedMarker = isFullTerminalCommand(
+    command,
+  ) ? command.executedMarker : command.commandExecutedMarker;
 	if (!marker || !executedMarker) {
 		return 1;
 	}
 	const commandExecutedLine = Math.max(executedMarker.line, marker.line);
 	let commandRowCount = commandExecutedLine - marker.line + 1;
 	// Trim the last line if the cursor X is in the left-most cell
-	const executedX = isFullTerminalCommand(command) ? command.executedX : command.commandExecutedX;
+	const executedX = isFullTerminalCommand(
+    command,
+  ) ? command.executedX : command.commandExecutedX;
 	if (executedX === 0) {
 		commandRowCount--;
 	}

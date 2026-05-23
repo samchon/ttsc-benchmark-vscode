@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { ThreadStatusScheduler } from '../../browser/debugSession.js';
+import assert from "assert";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { ThreadStatusScheduler } from "../../browser/debugSession.js";
 
 
-suite('DebugSession - ThreadStatusScheduler', () => {
+suite("DebugSession - ThreadStatusScheduler", () => {
 	const ds = ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('cancel base case', async () => {
+	test("cancel base case", async () => {
 		const scheduler = ds.add(new ThreadStatusScheduler());
 
 		await scheduler.run(Promise.resolve([1]), async (threadId, token) => {
@@ -22,7 +22,7 @@ suite('DebugSession - ThreadStatusScheduler', () => {
 		});
 	});
 
-	test('cancel global', async () => {
+	test("cancel global", async () => {
 		const scheduler = ds.add(new ThreadStatusScheduler());
 
 		await scheduler.run(Promise.resolve([1]), async (threadId, token) => {
@@ -33,7 +33,7 @@ suite('DebugSession - ThreadStatusScheduler', () => {
 		});
 	});
 
-	test('cancels when new work comes in', async () => {
+	test("cancels when new work comes in", async () => {
 		const scheduler = ds.add(new ThreadStatusScheduler());
 		let innerCalled = false;
 
@@ -50,7 +50,7 @@ suite('DebugSession - ThreadStatusScheduler', () => {
 		assert.strictEqual(innerCalled, true);
 	});
 
-	test('cancels slower lookups when new lookup is made', async () => {
+	test("cancels slower lookups when new lookup is made", async () => {
 		const scheduler = ds.add(new ThreadStatusScheduler());
 		const innerCalled1: number[] = [];
 		const innerCalled2: number[] = [];
@@ -61,14 +61,14 @@ suite('DebugSession - ThreadStatusScheduler', () => {
 			}),
 			scheduler.run(Promise.resolve([1, 2]), async threadId => {
 				innerCalled2.push(threadId);
-			})
+			}),
 		]);
 
 		assert.deepEqual(innerCalled1, [3]);
 		assert.deepEqual(innerCalled2, [1, 2]);
 	});
 
-	test('allows work with other IDs', async () => {
+	test("allows work with other IDs", async () => {
 		const scheduler = ds.add(new ThreadStatusScheduler());
 		let innerCalled = false;
 
@@ -85,7 +85,7 @@ suite('DebugSession - ThreadStatusScheduler', () => {
 		assert.strictEqual(innerCalled, true);
 	});
 
-	test('cancels when called during reslution', async () => {
+	test("cancels when called during reslution", async () => {
 		const scheduler = ds.add(new ThreadStatusScheduler());
 		let innerCalled = false;
 
@@ -96,7 +96,7 @@ suite('DebugSession - ThreadStatusScheduler', () => {
 		assert.strictEqual(innerCalled, false);
 	});
 
-	test('global cancels when called during reslution', async () => {
+	test("global cancels when called during reslution", async () => {
 		const scheduler = ds.add(new ThreadStatusScheduler());
 		let innerCalled = false;
 

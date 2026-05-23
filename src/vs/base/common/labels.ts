@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { hasDriveLetter, toSlashes } from './extpath.js';
-import { posix, sep, win32 } from './path.js';
-import { isMacintosh, isWindows, OperatingSystem, OS } from './platform.js';
-import { extUri, extUriIgnorePathCase } from './resources.js';
-import { rtrim, startsWithIgnoreCase } from './strings.js';
-import { URI } from './uri.js';
+import { hasDriveLetter, toSlashes } from "./extpath.js";
+import { posix, sep, win32 } from "./path.js";
+import { isMacintosh, isWindows, OperatingSystem, OS } from "./platform.js";
+import { extUri, extUriIgnorePathCase } from "./resources.js";
+import { rtrim, startsWithIgnoreCase } from "./strings.js";
+import { URI } from "./uri.js";
 
 export interface IPathLabelFormatting {
 
@@ -55,7 +55,7 @@ export function getPathLabel(resource: URI, formatting: IPathLabelFormatting): s
 	// return early with a relative path if we can resolve one
 	if (relatifier) {
 		const relativePath = getRelativePathLabel(resource, relatifier, os);
-		if (typeof relativePath === 'string') {
+		if (typeof relativePath === "string") {
 			return relativePath;
 		}
 	}
@@ -65,9 +65,9 @@ export function getPathLabel(resource: URI, formatting: IPathLabelFormatting): s
 	// OS differs from actual OS we are running in
 	let absolutePath = resource.fsPath;
 	if (os === OperatingSystem.Windows && !isWindows) {
-		absolutePath = absolutePath.replace(/\//g, '\\');
+		absolutePath = absolutePath.replace(/\//g, "\\");
 	} else if (os !== OperatingSystem.Windows && isWindows) {
-		absolutePath = absolutePath.replace(/\\/g, '/');
+		absolutePath = absolutePath.replace(/\\/g, "/");
 	}
 
 	// macOS/Linux: tildify with provided user home directory
@@ -80,7 +80,9 @@ export function getPathLabel(resource: URI, formatting: IPathLabelFormatting): s
 		// already a user home resource.
 		let userHomeCandidate: string;
 		if (resource.scheme !== tildifier.userHome.scheme && resource.path[0] === posix.sep && resource.path[1] !== posix.sep) {
-			userHomeCandidate = tildifier.userHome.with({ path: resource.path }).fsPath;
+			userHomeCandidate = tildifier.userHome.with({
+        path: resource.path,
+      }).fsPath;
 		} else {
 			userHomeCandidate = absolutePath;
 		}
@@ -90,7 +92,9 @@ export function getPathLabel(resource: URI, formatting: IPathLabelFormatting): s
 
 	// normalize
 	const pathLib = os === OperatingSystem.Windows ? win32 : posix;
-	return pathLib.normalize(normalizeDriveLetter(absolutePath, os === OperatingSystem.Windows));
+	return pathLib.normalize(
+    normalizeDriveLetter(absolutePath, os === OperatingSystem.Windows),
+  );
 }
 
 function getRelativePathLabel(resource: URI, relativePathProvider: IRelativePathProvider, os: OperatingSystem): string | undefined {
@@ -118,9 +122,9 @@ function getRelativePathLabel(resource: URI, relativePathProvider: IRelativePath
 
 	let relativePathLabel: string | undefined = undefined;
 	if (extUriLib.isEqual(folder.uri, resource)) {
-		relativePathLabel = ''; // no label if paths are identical
+		relativePathLabel = ""; // no label if paths are identical
 	} else {
-		relativePathLabel = extUriLib.relativePath(folder.uri, resource) ?? '';
+		relativePathLabel = extUriLib.relativePath(folder.uri, resource) ?? "";
 	}
 
 	// normalize
@@ -130,7 +134,9 @@ function getRelativePathLabel(resource: URI, relativePathProvider: IRelativePath
 
 	// always show root basename if there are multiple folders
 	if (workspace.folders.length > 1 && !relativePathProvider.noPrefix) {
-		const rootName = folder.name ? folder.name : extUriLib.basenameOrAuthority(folder.uri);
+		const rootName = folder.name ? folder.name : extUriLib.basenameOrAuthority(
+      folder.uri,
+    );
 		relativePathLabel = relativePathLabel ? `${rootName} • ${relativePathLabel}` : rootName;
 	}
 
@@ -145,7 +151,9 @@ export function normalizeDriveLetter(path: string, isWindowsOS: boolean = isWind
 	return path;
 }
 
-let normalizedUserHomeCached: { original: string; normalized: string } = Object.create(null);
+let normalizedUserHomeCached: { original: string; normalized: string } = Object.create(
+  null,
+);
 export function tildify(path: string, userHome: string, os = OS): string {
 	if (os === OperatingSystem.Windows || !path || !userHome) {
 		return path; // unsupported on Windows
@@ -155,19 +163,28 @@ export function tildify(path: string, userHome: string, os = OS): string {
 	if (!normalizedUserHome) {
 		normalizedUserHome = userHome;
 		if (isWindows) {
-			normalizedUserHome = toSlashes(normalizedUserHome); // make sure that the path is POSIX normalized on Windows
+			normalizedUserHome = toSlashes(
+        normalizedUserHome,
+      ); // make sure that the path is POSIX normalized on Windows
 		}
 		normalizedUserHome = `${rtrim(normalizedUserHome, posix.sep)}${posix.sep}`;
-		normalizedUserHomeCached = { original: userHome, normalized: normalizedUserHome };
+		normalizedUserHomeCached = {
+      original: userHome,
+      normalized: normalizedUserHome,
+    };
 	}
 
 	let normalizedPath = path;
 	if (isWindows) {
-		normalizedPath = toSlashes(normalizedPath); // make sure that the path is POSIX normalized on Windows
+		normalizedPath = toSlashes(
+      normalizedPath,
+    ); // make sure that the path is POSIX normalized on Windows
 	}
 
 	// Linux: case sensitive, macOS: case insensitive
-	if (os === OperatingSystem.Linux ? normalizedPath.startsWith(normalizedUserHome) : startsWithIgnoreCase(normalizedPath, normalizedUserHome)) {
+	if (os === OperatingSystem.Linux ? normalizedPath.startsWith(
+    normalizedUserHome,
+  ) : startsWithIgnoreCase(normalizedPath, normalizedUserHome)) {
 		return `~/${normalizedPath.substr(normalizedUserHome.length)}`;
 	}
 
@@ -207,10 +224,10 @@ export function untildify(path: string, userHome: string): string {
  * 	a. Even if 'b' is present in path2, as 'b' is suffix of path1 and is not suffix of path2, unique path will be '...\\b'.
  * 2. for path2, 'c' is not present in path1 hence unique path is '..\\c'.
  */
-const ellipsis = '\u2026';
-const unc = '\\\\';
+const ellipsis = "\u2026";
+const unc = "\\\\";
 const urlSchemaRegexp = /^[^:/\\?#]+?:\/\//;
-const home = '~';
+const home = "~";
 export function shorten(paths: string[], defaultPathSeparator: string = sep): string[] {
 	const shortenedPaths: string[] = new Array(paths.length);
 
@@ -220,7 +237,7 @@ export function shorten(paths: string[], defaultPathSeparator: string = sep): st
 		let pathSeparator = defaultPathSeparator;
 		const originalPath = paths[pathIndex];
 
-		if (originalPath === '') {
+		if (originalPath === "") {
 			shortenedPaths[pathIndex] = `.${pathSeparator}`;
 			continue;
 		}
@@ -233,18 +250,23 @@ export function shorten(paths: string[], defaultPathSeparator: string = sep): st
 		match = true;
 
 		// trim for now and concatenate unc path (e.g. \\network) or root path (/etc, ~/etc) later
-		let prefix = '';
+		let prefix = "";
 		let trimmedPath = originalPath;
 		if (urlSchemaRegexp.test(trimmedPath)) {
-			prefix = trimmedPath.substr(0, trimmedPath.indexOf('//') + 2);
-			trimmedPath = trimmedPath.substr(trimmedPath.indexOf('//') + 2);
-			pathSeparator = '/';
+			prefix = trimmedPath.substr(0, trimmedPath.indexOf("//") + 2);
+			trimmedPath = trimmedPath.substr(trimmedPath.indexOf("//") + 2);
+			pathSeparator = "/";
 		} else if (trimmedPath.indexOf(unc) === 0) {
 			prefix = trimmedPath.substr(0, trimmedPath.indexOf(unc) + unc.length);
 			trimmedPath = trimmedPath.substr(trimmedPath.indexOf(unc) + unc.length);
 		} else if (trimmedPath.indexOf(pathSeparator) === 0) {
-			prefix = trimmedPath.substr(0, trimmedPath.indexOf(pathSeparator) + pathSeparator.length);
-			trimmedPath = trimmedPath.substr(trimmedPath.indexOf(pathSeparator) + pathSeparator.length);
+			prefix = trimmedPath.substr(
+        0,
+        trimmedPath.indexOf(pathSeparator) + pathSeparator.length,
+      );
+			trimmedPath = trimmedPath.substr(
+        trimmedPath.indexOf(pathSeparator) + pathSeparator.length,
+      );
 		} else if (trimmedPath.indexOf(home) === 0) {
 			prefix = trimmedPath.substr(0, trimmedPath.indexOf(home) + home.length);
 			trimmedPath = trimmedPath.substr(trimmedPath.indexOf(home) + home.length);
@@ -255,19 +277,27 @@ export function shorten(paths: string[], defaultPathSeparator: string = sep): st
 		for (let subpathLength = 1; match && subpathLength <= segments.length; subpathLength++) {
 			for (let start = segments.length - subpathLength; match && start >= 0; start--) {
 				match = false;
-				let subpath = segments.slice(start, start + subpathLength).join(pathSeparator);
+				let subpath = segments.slice(start, start + subpathLength).join(
+          pathSeparator,
+        );
 
 				// that is unique to any other path
 				for (let otherPathIndex = 0; !match && otherPathIndex < paths.length; otherPathIndex++) {
 
 					// suffix subpath treated specially as we consider no match 'x' and 'x/...'
-					if (otherPathIndex !== pathIndex && paths[otherPathIndex] && paths[otherPathIndex].indexOf(subpath) > -1) {
+					if (otherPathIndex !== pathIndex && paths[otherPathIndex] && paths[otherPathIndex].indexOf(
+            subpath,
+          ) > -1) {
 						const isSubpathEnding: boolean = (start + subpathLength === segments.length);
 
 						// Adding separator as prefix for subpath, such that 'endsWith(src, trgt)' considers subpath as directory name instead of plain string.
 						// prefix is not added when either subpath is root directory or path[otherPathIndex] does not have multiple directories.
-						const subpathWithSep: string = (start > 0 && paths[otherPathIndex].indexOf(pathSeparator) > -1) ? pathSeparator + subpath : subpath;
-						const isOtherPathEnding: boolean = paths[otherPathIndex].endsWith(subpathWithSep);
+						const subpathWithSep: string = (start > 0 && paths[otherPathIndex].indexOf(
+              pathSeparator,
+            ) > -1) ? pathSeparator + subpath : subpath;
+						const isOtherPathEnding: boolean = paths[otherPathIndex].endsWith(
+              subpathWithSep,
+            );
 
 						match = !isSubpathEnding || isOtherPathEnding;
 					}
@@ -275,10 +305,10 @@ export function shorten(paths: string[], defaultPathSeparator: string = sep): st
 
 				// found unique subpath
 				if (!match) {
-					let result = '';
+					let result = "";
 
 					// preserve disk drive or root prefix
-					if (segments[0].endsWith(':') || prefix !== '') {
+					if (segments[0].endsWith(":") || prefix !== "") {
 						if (start === 1) {
 							// extend subpath to include disk drive prefix
 							start = 0;
@@ -303,7 +333,7 @@ export function shorten(paths: string[], defaultPathSeparator: string = sep): st
 					// add ellipsis at the end if needed
 					if (start + subpathLength < segments.length) {
 						// If the last segment is empty, preserve the trailing slash.
-						if (start + subpathLength === segments.length - 1 && segments[segments.length - 1] === '') {
+						if (start + subpathLength === segments.length - 1 && segments[segments.length - 1] === "") {
 							result = result + pathSeparator;
 						} else {
 							result = result + pathSeparator + ellipsis;
@@ -344,28 +374,30 @@ interface ISegment {
  * @param value string to which template is applied
  * @param values the values of the templates to use
  */
-export function template(template: string, values: { [key: string]: string | ISeparator | undefined | null } = Object.create(null)): string {
+export function template(template: string, values: { [key: string]: string | ISeparator | undefined | null } = Object.create(
+  null,
+)): string {
 	const segments: ISegment[] = [];
 
 	let inVariable = false;
-	let curVal = '';
+	let curVal = "";
 	for (const char of template) {
 		// Beginning of variable
-		if (char === '$' || (inVariable && char === '{')) {
+		if (char === "$" || (inVariable && char === "{")) {
 			if (curVal) {
 				segments.push({ value: curVal, type: Type.TEXT });
 			}
 
-			curVal = '';
+			curVal = "";
 			inVariable = true;
 		}
 
 		// End of variable
-		else if (char === '}' && inVariable) {
+		else if (char === "}" && inVariable) {
 			const resolved = values[curVal];
 
 			// Variable
-			if (typeof resolved === 'string') {
+			if (typeof resolved === "string") {
 				if (resolved.length) {
 					segments.push({ value: resolved, type: Type.VARIABLE });
 				}
@@ -375,11 +407,14 @@ export function template(template: string, values: { [key: string]: string | ISe
 			else if (resolved) {
 				const prevSegment = segments[segments.length - 1];
 				if (!prevSegment || prevSegment.type !== Type.SEPARATOR) {
-					segments.push({ value: resolved.label, type: Type.SEPARATOR }); // prevent duplicate separators
+					segments.push({
+            value: resolved.label,
+            type: Type.SEPARATOR,
+          }); // prevent duplicate separators
 				}
 			}
 
-			curVal = '';
+			curVal = "";
 			inVariable = false;
 		}
 
@@ -406,7 +441,7 @@ export function template(template: string, values: { [key: string]: string | ISe
 
 		// accept any TEXT and VARIABLE
 		return true;
-	}).map(segment => segment.value).join('');
+	}).map(segment => segment.value).join("");
 }
 
 /**
@@ -417,10 +452,13 @@ export function template(template: string, values: { [key: string]: string | ISe
  */
 export function mnemonicMenuLabel(label: string, forceDisableMnemonics?: boolean): string {
 	if (isMacintosh || forceDisableMnemonics) {
-		return label.replace(/\(&&\w\)|&&/g, '').replace(/&/g, isMacintosh ? '&' : '&&');
+		return label.replace(/\(&&\w\)|&&/g, "").replace(
+      /&/g,
+      isMacintosh ? "&" : "&&",
+    );
 	}
 
-	return label.replace(/&&|&/g, m => m === '&' ? '&&' : '&');
+	return label.replace(/&&|&/g, m => m === "&" ? "&&" : "&");
 }
 
 /**
@@ -433,7 +471,7 @@ export function mnemonicMenuLabel(label: string, forceDisableMnemonics?: boolean
 export function mnemonicButtonLabel(label: string, forceDisableMnemonics: true): string;
 export function mnemonicButtonLabel(label: string, forceDisableMnemonics?: false): { readonly withMnemonic: string; readonly withoutMnemonic: string };
 export function mnemonicButtonLabel(label: string, forceDisableMnemonics?: boolean): { readonly withMnemonic: string; readonly withoutMnemonic: string } | string {
-	const withoutMnemonic = label.replace(/\(&&\w\)|&&/g, '');
+	const withoutMnemonic = label.replace(/\(&&\w\)|&&/g, "");
 
 	if (forceDisableMnemonics) {
 		return withoutMnemonic;
@@ -444,15 +482,15 @@ export function mnemonicButtonLabel(label: string, forceDisableMnemonics?: boole
 
 	let withMnemonic: string;
 	if (isWindows) {
-		withMnemonic = label.replace(/&&|&/g, m => m === '&' ? '&&' : '&');
+		withMnemonic = label.replace(/&&|&/g, m => m === "&" ? "&&" : "&");
 	} else {
-		withMnemonic = label.replace(/&&/g, '_');
+		withMnemonic = label.replace(/&&/g, "_");
 	}
 	return { withMnemonic, withoutMnemonic };
 }
 
 export function unmnemonicLabel(label: string): string {
-	return label.replace(/&/g, '&&');
+	return label.replace(/&/g, "&&");
 }
 
 /**
@@ -460,25 +498,35 @@ export function unmnemonicLabel(label: string): string {
  * If the location is remote, the remote name is included in the name part.
  */
 export function splitRecentLabel(recentLabel: string): { name: string; parentPath: string } {
-	if (recentLabel.endsWith(']')) {
+	if (recentLabel.endsWith("]")) {
 		// label with workspace suffix
-		const lastIndexOfSquareBracket = recentLabel.lastIndexOf(' [', recentLabel.length - 2);
+		const lastIndexOfSquareBracket = recentLabel.lastIndexOf(
+      " [",
+      recentLabel.length - 2,
+    );
 		if (lastIndexOfSquareBracket !== -1) {
-			const split = splitName(recentLabel.substring(0, lastIndexOfSquareBracket));
-			const remoteNameWithSpace = recentLabel.substring(lastIndexOfSquareBracket);
-			return { name: split.name + remoteNameWithSpace, parentPath: split.parentPath };
+			const split = splitName(
+        recentLabel.substring(0, lastIndexOfSquareBracket),
+      );
+			const remoteNameWithSpace = recentLabel.substring(
+        lastIndexOfSquareBracket,
+      );
+			return {
+        name: split.name + remoteNameWithSpace,
+        parentPath: split.parentPath,
+      };
 		}
 	}
 	return splitName(recentLabel);
 }
 
 function splitName(fullPath: string): { name: string; parentPath: string } {
-	const p = fullPath.indexOf('/') !== -1 ? posix : win32;
+	const p = fullPath.indexOf("/") !== -1 ? posix : win32;
 	const name = p.basename(fullPath);
 	const parentPath = p.dirname(fullPath);
 	if (name.length) {
 		return { name, parentPath };
 	}
 	// only the root segment
-	return { name: parentPath, parentPath: '' };
+	return { name: parentPath, parentPath: "" };
 }

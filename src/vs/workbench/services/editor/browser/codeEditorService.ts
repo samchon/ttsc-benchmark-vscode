@@ -3,18 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ICodeEditor, isCodeEditor, isDiffEditor, isCompositeEditor, getCodeEditor } from '../../../../editor/browser/editorBrowser.js';
-import { AbstractCodeEditorService } from '../../../../editor/browser/services/abstractCodeEditorService.js';
-import { ScrollType } from '../../../../editor/common/editorCommon.js';
-import { IResourceEditorInput } from '../../../../platform/editor/common/editor.js';
-import { IThemeService } from '../../../../platform/theme/common/themeService.js';
-import { IWorkbenchEditorConfiguration } from '../../../common/editor.js';
-import { ACTIVE_GROUP, IEditorService, SIDE_GROUP } from '../common/editorService.js';
-import { ICodeEditorService } from '../../../../editor/browser/services/codeEditorService.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { isEqual } from '../../../../base/common/resources.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { applyTextEditorOptions } from '../../../common/editor/editorOptions.js';
+import {
+  ICodeEditor,
+  isCodeEditor,
+  isDiffEditor,
+  isCompositeEditor,
+  getCodeEditor,
+} from "../../../../editor/browser/editorBrowser.js";
+import { AbstractCodeEditorService } from "../../../../editor/browser/services/abstractCodeEditorService.js";
+import { ScrollType } from "../../../../editor/common/editorCommon.js";
+import { IResourceEditorInput } from "../../../../platform/editor/common/editor.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { IWorkbenchEditorConfiguration } from "../../../common/editor.js";
+import { ACTIVE_GROUP, IEditorService, SIDE_GROUP } from "../common/editorService.js";
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { applyTextEditorOptions } from "../../../common/editor/editorOptions.js";
 
 export class CodeEditorService extends AbstractCodeEditorService {
 
@@ -25,8 +31,14 @@ export class CodeEditorService extends AbstractCodeEditorService {
 	) {
 		super(themeService);
 
-		this._register(this.registerCodeEditorOpenHandler(this.doOpenCodeEditor.bind(this)));
-		this._register(this.registerCodeEditorOpenHandler(this.doOpenCodeEditorFromDiff.bind(this)));
+		this._register(
+      this.registerCodeEditorOpenHandler(this.doOpenCodeEditor.bind(this)),
+    );
+		this._register(
+      this.registerCodeEditorOpenHandler(
+        this.doOpenCodeEditorFromDiff.bind(this),
+      ),
+    );
 	}
 
 	getActiveCodeEditor(): ICodeEditor | null {
@@ -55,12 +67,17 @@ export class CodeEditorService extends AbstractCodeEditorService {
 		const activeTextEditorControl = this.editorService.activeTextEditorControl;
 		if (
 			!sideBySide &&																// we need the current active group to be the target
-			isDiffEditor(activeTextEditorControl) && 									// we only support this for active text diff editors
+			isDiffEditor(
+        activeTextEditorControl,
+      ) && 									// we only support this for active text diff editors
 			input.options &&															// we need options to apply
 			input.resource &&															// we need a request resource to compare with
 			source === activeTextEditorControl.getModifiedEditor() && 					// we need the source of this request to be the modified side of the diff editor
 			activeTextEditorControl.getModel() &&										// we need a target model to compare with
-			isEqual(input.resource, activeTextEditorControl.getModel()?.modified.uri) 	// we need the input resources to match with modified side
+			isEqual(
+        input.resource,
+        activeTextEditorControl.getModel()?.modified.uri,
+      ) 	// we need the input resources to match with modified side
 		) {
 			const targetEditor = activeTextEditorControl.getModifiedEditor();
 
@@ -86,7 +103,10 @@ export class CodeEditorService extends AbstractCodeEditorService {
 			source &&											// we need to know the origin of the navigation
 			!input.options?.pinned &&							// we only need to look at preview editors that open
 			!sideBySide &&										// we only need to care if editor opens in same group
-			!isEqual(source.getModel()?.uri, input.resource)	// we only need to do this if the editor is about to change
+			!isEqual(
+        source.getModel()?.uri,
+        input.resource,
+      )	// we only need to do this if the editor is about to change
 		) {
 			for (const visiblePane of this.editorService.visibleEditorPanes) {
 				if (getCodeEditor(visiblePane.getControl()) === source) {
@@ -97,7 +117,10 @@ export class CodeEditorService extends AbstractCodeEditorService {
 		}
 
 		// Open as editor
-		const control = await this.editorService.openEditor(input, sideBySide ? SIDE_GROUP : ACTIVE_GROUP);
+		const control = await this.editorService.openEditor(
+      input,
+      sideBySide ? SIDE_GROUP : ACTIVE_GROUP,
+    );
 		if (control) {
 			const widget = control.getControl();
 			if (isCodeEditor(widget)) {
@@ -113,4 +136,8 @@ export class CodeEditorService extends AbstractCodeEditorService {
 	}
 }
 
-registerSingleton(ICodeEditorService, CodeEditorService, InstantiationType.Delayed);
+registerSingleton(
+  ICodeEditorService,
+  CodeEditorService,
+  InstantiationType.Delayed,
+);

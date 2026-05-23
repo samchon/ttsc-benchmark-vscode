@@ -123,27 +123,29 @@ function _parse(content: string, filename: string | null, locationKeyName: strin
 
 	function popState(): void {
 		if (stateStack.length === 0) {
-			return fail('illegal state stack');
+			return fail("illegal state stack");
 		}
 		state = stateStack.pop()!;
 		cur = objStack.pop();
 	}
 
 	function fail(msg: string): void {
-		throw new Error('Near offset ' + pos + ': ' + msg + ' ~~~' + content.substr(pos, 50) + '~~~');
+		throw new Error(
+      "Near offset " + pos + ": " + msg + " ~~~" + content.substr(pos, 50) + "~~~",
+    );
 	}
 
 	const dictState = {
 		enterDict: function () {
 			if (curKey === null) {
-				return fail('missing <key>');
+				return fail("missing <key>");
 			}
 			const newDict: { [key: string]: any } = {};
 			if (locationKeyName !== null) {
 				newDict[locationKeyName] = {
 					filename: filename,
 					line: line,
-					char: char
+					char: char,
 				};
 			}
 			cur[curKey] = newDict;
@@ -152,13 +154,13 @@ function _parse(content: string, filename: string | null, locationKeyName: strin
 		},
 		enterArray: function () {
 			if (curKey === null) {
-				return fail('missing <key>');
+				return fail("missing <key>");
 			}
 			const newArr: any[] = [];
 			cur[curKey] = newArr;
 			curKey = null;
 			pushState(State.ARR_STATE, newArr);
-		}
+		},
 	};
 
 	const arrState = {
@@ -168,7 +170,7 @@ function _parse(content: string, filename: string | null, locationKeyName: strin
 				newDict[locationKeyName] = {
 					filename: filename,
 					line: line,
-					char: char
+					char: char,
 				};
 			}
 			cur.push(newDict);
@@ -178,7 +180,7 @@ function _parse(content: string, filename: string | null, locationKeyName: strin
 			const newArr: any[] = [];
 			cur.push(newArr);
 			pushState(State.ARR_STATE, newArr);
-		}
+		},
 	};
 
 
@@ -191,10 +193,10 @@ function _parse(content: string, filename: string | null, locationKeyName: strin
 			cur = {};
 			if (locationKeyName !== null) {
 				cur[locationKeyName] = {
-					filename: filename,
-					line: line,
-					char: char
-				};
+          filename: filename,
+          line: line,
+          char: char,
+        };
 			}
 			pushState(State.DICT_STATE, cur);
 		}
@@ -203,9 +205,9 @@ function _parse(content: string, filename: string | null, locationKeyName: strin
 		if (state === State.DICT_STATE) {
 			popState();
 		} else if (state === State.ARR_STATE) {
-			return fail('unexpected </dict>');
+			return fail("unexpected </dict>");
 		} else { // ROOT_STATE
-			return fail('unexpected </dict>');
+			return fail("unexpected </dict>");
 		}
 	}
 	function enterArray() {
@@ -220,29 +222,29 @@ function _parse(content: string, filename: string | null, locationKeyName: strin
 	}
 	function leaveArray() {
 		if (state === State.DICT_STATE) {
-			return fail('unexpected </array>');
+			return fail("unexpected </array>");
 		} else if (state === State.ARR_STATE) {
 			popState();
 		} else { // ROOT_STATE
-			return fail('unexpected </array>');
+			return fail("unexpected </array>");
 		}
 	}
 	function acceptKey(val: string) {
 		if (state === State.DICT_STATE) {
 			if (curKey !== null) {
-				return fail('too many <key>');
+				return fail("too many <key>");
 			}
 			curKey = val;
 		} else if (state === State.ARR_STATE) {
-			return fail('unexpected <key>');
+			return fail("unexpected <key>");
 		} else { // ROOT_STATE
-			return fail('unexpected <key>');
+			return fail("unexpected <key>");
 		}
 	}
 	function acceptString(val: string) {
 		if (state === State.DICT_STATE) {
 			if (curKey === null) {
-				return fail('missing <key>');
+				return fail("missing <key>");
 			}
 			cur[curKey] = val;
 			curKey = null;
@@ -254,11 +256,11 @@ function _parse(content: string, filename: string | null, locationKeyName: strin
 	}
 	function acceptReal(val: number) {
 		if (isNaN(val)) {
-			return fail('cannot parse float');
+			return fail("cannot parse float");
 		}
 		if (state === State.DICT_STATE) {
 			if (curKey === null) {
-				return fail('missing <key>');
+				return fail("missing <key>");
 			}
 			cur[curKey] = val;
 			curKey = null;
@@ -270,11 +272,11 @@ function _parse(content: string, filename: string | null, locationKeyName: strin
 	}
 	function acceptInteger(val: number) {
 		if (isNaN(val)) {
-			return fail('cannot parse integer');
+			return fail("cannot parse integer");
 		}
 		if (state === State.DICT_STATE) {
 			if (curKey === null) {
-				return fail('missing <key>');
+				return fail("missing <key>");
 			}
 			cur[curKey] = val;
 			curKey = null;
@@ -287,7 +289,7 @@ function _parse(content: string, filename: string | null, locationKeyName: strin
 	function acceptDate(val: Date) {
 		if (state === State.DICT_STATE) {
 			if (curKey === null) {
-				return fail('missing <key>');
+				return fail("missing <key>");
 			}
 			cur[curKey] = val;
 			curKey = null;
@@ -300,7 +302,7 @@ function _parse(content: string, filename: string | null, locationKeyName: strin
 	function acceptData(val: string) {
 		if (state === State.DICT_STATE) {
 			if (curKey === null) {
-				return fail('missing <key>');
+				return fail("missing <key>");
 			}
 			cur[curKey] = val;
 			curKey = null;
@@ -313,7 +315,7 @@ function _parse(content: string, filename: string | null, locationKeyName: strin
 	function acceptBool(val: boolean) {
 		if (state === State.DICT_STATE) {
 			if (curKey === null) {
-				return fail('missing <key>');
+				return fail("missing <key>");
 			}
 			cur[curKey] = val;
 			curKey = null;
@@ -331,11 +333,11 @@ function _parse(content: string, filename: string | null, locationKeyName: strin
 			return String.fromCodePoint(parseInt(m0, 16));
 		}).replace(/&amp;|&lt;|&gt;|&quot;|&apos;/g, function (_: string) {
 			switch (_) {
-				case '&amp;': return '&';
-				case '&lt;': return '<';
-				case '&gt;': return '>';
-				case '&quot;': return '"';
-				case '&apos;': return '\'';
+				case "&amp;": return "&";
+				case "&lt;": return "<";
+				case "&gt;": return ">";
+				case "&quot;": return '"';
+				case "&apos;": return "'";
 			}
 			return _;
 		});
@@ -347,7 +349,7 @@ function _parse(content: string, filename: string | null, locationKeyName: strin
 	}
 
 	function parseOpenTag(): IParsedTag {
-		let r = captureUntil('>');
+		let r = captureUntil(">");
 		let isClosed = false;
 		if (r.charCodeAt(r.length - 1) === ChCode.SLASH) {
 			isClosed = true;
@@ -355,17 +357,17 @@ function _parse(content: string, filename: string | null, locationKeyName: strin
 		}
 
 		return {
-			name: r.trim(),
-			isClosed: isClosed
-		};
+      name: r.trim(),
+      isClosed: isClosed,
+    };
 	}
 
 	function parseTagValue(tag: IParsedTag): string {
 		if (tag.isClosed) {
-			return '';
+			return "";
 		}
-		const val = captureUntil('</');
-		advanceUntil('>');
+		const val = captureUntil("</");
+		advanceUntil(">");
 		return escapeVal(val);
 	}
 
@@ -378,30 +380,30 @@ function _parse(content: string, filename: string | null, locationKeyName: strin
 		const chCode = content.charCodeAt(pos);
 		advancePosBy(1);
 		if (chCode !== ChCode.LESS_THAN) {
-			return fail('expected <');
+			return fail("expected <");
 		}
 
 		if (pos >= len) {
-			return fail('unexpected end of input');
+			return fail("unexpected end of input");
 		}
 
 		const peekChCode = content.charCodeAt(pos);
 
 		if (peekChCode === ChCode.QUESTION_MARK) {
 			advancePosBy(1);
-			advanceUntil('?>');
+			advanceUntil("?>");
 			continue;
 		}
 
 		if (peekChCode === ChCode.EXCLAMATION_MARK) {
 			advancePosBy(1);
 
-			if (advanceIfStartsWith('--')) {
-				advanceUntil('-->');
+			if (advanceIfStartsWith("--")) {
+				advanceUntil("-->");
 				continue;
 			}
 
-			advanceUntil('>');
+			advanceUntil(">");
 			continue;
 		}
 
@@ -409,73 +411,73 @@ function _parse(content: string, filename: string | null, locationKeyName: strin
 			advancePosBy(1);
 			skipWhitespace();
 
-			if (advanceIfStartsWith('plist')) {
-				advanceUntil('>');
+			if (advanceIfStartsWith("plist")) {
+				advanceUntil(">");
 				continue;
 			}
 
-			if (advanceIfStartsWith('dict')) {
-				advanceUntil('>');
+			if (advanceIfStartsWith("dict")) {
+				advanceUntil(">");
 				leaveDict();
 				continue;
 			}
 
-			if (advanceIfStartsWith('array')) {
-				advanceUntil('>');
+			if (advanceIfStartsWith("array")) {
+				advanceUntil(">");
 				leaveArray();
 				continue;
 			}
 
-			return fail('unexpected closed tag');
+			return fail("unexpected closed tag");
 		}
 
 		const tag = parseOpenTag();
 
 		switch (tag.name) {
-			case 'dict':
+			case "dict":
 				enterDict();
 				if (tag.isClosed) {
 					leaveDict();
 				}
 				continue;
 
-			case 'array':
+			case "array":
 				enterArray();
 				if (tag.isClosed) {
 					leaveArray();
 				}
 				continue;
 
-			case 'key':
+			case "key":
 				acceptKey(parseTagValue(tag));
 				continue;
 
-			case 'string':
+			case "string":
 				acceptString(parseTagValue(tag));
 				continue;
 
-			case 'real':
+			case "real":
 				acceptReal(parseFloat(parseTagValue(tag)));
 				continue;
 
-			case 'integer':
+			case "integer":
 				acceptInteger(parseInt(parseTagValue(tag), 10));
 				continue;
 
-			case 'date':
+			case "date":
 				acceptDate(new Date(parseTagValue(tag)));
 				continue;
 
-			case 'data':
+			case "data":
 				acceptData(parseTagValue(tag));
 				continue;
 
-			case 'true':
+			case "true":
 				parseTagValue(tag);
 				acceptBool(true);
 				continue;
 
-			case 'false':
+			case "false":
 				parseTagValue(tag);
 				acceptBool(false);
 				continue;
@@ -485,7 +487,7 @@ function _parse(content: string, filename: string | null, locationKeyName: strin
 			continue;
 		}
 
-		return fail('unexpected opened tag ' + tag.name);
+		return fail("unexpected opened tag " + tag.name);
 	}
 
 	return cur;

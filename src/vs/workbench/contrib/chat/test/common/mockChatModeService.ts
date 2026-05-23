@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 
-import { Emitter } from '../../../../../base/common/event.js';
-import { IDisposable } from '../../../../../base/common/lifecycle.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { ChatMode, IChatMode, IChatModes, IChatModeService } from '../../common/chatModes.js';
+import { Emitter } from "../../../../../base/common/event.js";
+import { IDisposable } from "../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ChatMode, IChatMode, IChatModes, IChatModeService } from "../../common/chatModes.js";
 
 export class MockChatModeService implements IChatModeService {
 	declare readonly _serviceBrand: undefined;
@@ -16,7 +16,10 @@ export class MockChatModeService implements IChatModeService {
 	private readonly _modesView: IChatModes & IDisposable;
 
 	constructor(
-		private readonly _modes: { builtin: readonly IChatMode[]; custom: readonly IChatMode[] } = { builtin: [ChatMode.Ask], custom: [] }
+		private readonly _modes: { builtin: readonly IChatMode[]; custom: readonly IChatMode[] } = {
+      builtin: [ChatMode.Ask],
+      custom: [],
+    },
 	) {
 		const modes = this._modes;
 		const onDidChange = this._onDidChange.event;

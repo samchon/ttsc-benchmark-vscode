@@ -3,44 +3,52 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { addDisposableListener, getWindow, isHTMLElement, reset } from '../../../../base/browser/dom.js';
-import { StandardKeyboardEvent } from '../../../../base/browser/keyboardEvent.js';
-import { getDefaultHoverDelegate } from '../../../../base/browser/ui/hover/hoverDelegateFactory.js';
-import { KeyCode } from '../../../../base/common/keyCodes.js';
-import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { Schemas } from '../../../../base/common/network.js';
-import * as osPath from '../../../../base/common/path.js';
-import * as platform from '../../../../base/common/platform.js';
-import { URI } from '../../../../base/common/uri.js';
-import { localize } from '../../../../nls.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { IHoverService } from '../../../../platform/hover/browser/hover.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
-import { ITunnelService } from '../../../../platform/tunnel/common/tunnel.js';
-import { IWorkspaceFolder } from '../../../../platform/workspace/common/workspace.js';
-import { IDebugSession } from '../common/debug.js';
-import { IEditorService } from '../../../services/editor/common/editorService.js';
-import { IWorkbenchEnvironmentService } from '../../../services/environment/common/environmentService.js';
-import { IPathService } from '../../../services/path/common/pathService.js';
-import { IHighlight } from '../../../../base/browser/ui/highlightedlabel/highlightedLabel.js';
-import { Iterable } from '../../../../base/common/iterator.js';
+import { addDisposableListener, getWindow, isHTMLElement, reset } from "../../../../base/browser/dom.js";
+import { StandardKeyboardEvent } from "../../../../base/browser/keyboardEvent.js";
+import { getDefaultHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { KeyCode } from "../../../../base/common/keyCodes.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../base/common/network.js";
+import * as osPath from "../../../../base/common/path.js";
+import * as platform from "../../../../base/common/platform.js";
+import { URI } from "../../../../base/common/uri.js";
+import { localize } from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { ITunnelService } from "../../../../platform/tunnel/common/tunnel.js";
+import { IWorkspaceFolder } from "../../../../platform/workspace/common/workspace.js";
+import { IDebugSession } from "../common/debug.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IWorkbenchEnvironmentService } from "../../../services/environment/common/environmentService.js";
+import { IPathService } from "../../../services/path/common/pathService.js";
+import { IHighlight } from "../../../../base/browser/ui/highlightedlabel/highlightedLabel.js";
+import { Iterable } from "../../../../base/common/iterator.js";
 
-const CONTROL_CODES = '\\u0000-\\u0020\\u007f-\\u009f';
-const WEB_LINK_REGEX = new RegExp('(?:[a-zA-Z][a-zA-Z0-9+.-]{2,}:\\/\\/|data:|www\\.)[^\\s' + CONTROL_CODES + '"]{2,}[^\\s' + CONTROL_CODES + '"\')}\\],:;.!?]', 'ug');
+const CONTROL_CODES = "\\u0000-\\u0020\\u007f-\\u009f";
+const WEB_LINK_REGEX = new RegExp(
+  "(?:[a-zA-Z][a-zA-Z0-9+.-]{2,}:\\/\\/|data:|www\\.)[^\\s" + CONTROL_CODES + '"]{2,}[^\\s' + CONTROL_CODES + "\"')}\\],:;.!?]",
+  "ug",
+);
 
 const WIN_ABSOLUTE_PATH = /(?:[a-zA-Z]:(?:(?:\\|\/)[\w\s\.@\-\(\)\[\]{}!#$%^&'`~+=]+)+)/;
 const WIN_RELATIVE_PATH = /(?:(?:\~|\.+)(?:(?:\\|\/)[\w\s\.@\-\(\)\[\]{}!#$%^&'`~+=]+)+)/;
-const WIN_PATH = new RegExp(`(${WIN_ABSOLUTE_PATH.source}|${WIN_RELATIVE_PATH.source})`);
+const WIN_PATH = new RegExp(
+  `(${WIN_ABSOLUTE_PATH.source}|${WIN_RELATIVE_PATH.source})`,
+);
 const POSIX_PATH = /((?:\~|\.+)?(?:\/[\w\s\.@\-\(\)\[\]{}!#$%^&'`~+=]+)+)/;
 // Support both ":line 123" and ":123:45" formats for line/column numbers
 const LINE_COLUMN = /(?::(?:line\s+)?([\d]+))?(?::([\d]+))?/;
-const PATH_LINK_REGEX = new RegExp(`${platform.isWindows ? WIN_PATH.source : POSIX_PATH.source}${LINE_COLUMN.source}`, 'g');
+const PATH_LINK_REGEX = new RegExp(
+  `${platform.isWindows ? WIN_PATH.source : POSIX_PATH.source}${LINE_COLUMN.source}`,
+  "g",
+);
 const LINE_COLUMN_REGEX = /:(?:line\s+)?([\d]+)(?::([\d]+))?$/;
 
 const MAX_LENGTH = 2000;
 
-type LinkKind = 'web' | 'path' | 'text';
+type LinkKind = "web" | "path" | "text";
 type LinkPart = {
 	kind: LinkKind;
 	value: string;
@@ -96,52 +104,90 @@ export class LinkDetector implements ILinkDetector {
 	 * The `hoverBehavior` is required and manages the lifecycle of event listeners.
 	 */
 	linkify(text: string, hoverBehavior: DebugLinkHoverBehaviorTypeData, splitLines?: boolean, workspaceFolder?: IWorkspaceFolder, includeFulltext?: boolean, highlights?: IHighlight[]): HTMLElement {
-		return this._linkify(text, hoverBehavior, splitLines, workspaceFolder, includeFulltext, highlights);
+		return this._linkify(
+      text,
+      hoverBehavior,
+      splitLines,
+      workspaceFolder,
+      includeFulltext,
+      highlights,
+    );
 	}
 
 	private _linkify(text: string, hoverBehavior: DebugLinkHoverBehaviorTypeData, splitLines?: boolean, workspaceFolder?: IWorkspaceFolder, includeFulltext?: boolean, highlights?: IHighlight[], defaultRef?: { locationReference: number; session: IDebugSession }): HTMLElement {
 		if (splitLines) {
-			const lines = text.split('\n');
+			const lines = text.split("\n");
 			for (let i = 0; i < lines.length - 1; i++) {
-				lines[i] = lines[i] + '\n';
+				lines[i] = lines[i] + "\n";
 			}
 			if (!lines[lines.length - 1]) {
 				// Remove the last element ('') that split added.
 				lines.pop();
 			}
-			const elements = lines.map(line => this._linkify(line, hoverBehavior, false, workspaceFolder, includeFulltext, highlights, defaultRef));
+			const elements = lines.map(
+        line => this._linkify(
+          line,
+          hoverBehavior,
+          false,
+          workspaceFolder,
+          includeFulltext,
+          highlights,
+          defaultRef,
+        ),
+      );
 			if (elements.length === 1) {
 				// Do not wrap single line with extra span.
 				return elements[0];
 			}
-			const container = document.createElement('span');
+			const container = document.createElement("span");
 			elements.forEach(e => container.appendChild(e));
 			return container;
 		}
 
-		const container = document.createElement('span');
+		const container = document.createElement("span");
 		for (const part of this.detectLinks(text)) {
 			try {
 				let node: Node;
 				switch (part.kind) {
-					case 'text':
-						node = defaultRef ? this.linkifyLocation(part.value, defaultRef.locationReference, defaultRef.session, hoverBehavior) : document.createTextNode(part.value);
+					case "text":
+						node = defaultRef ? this.linkifyLocation(
+              part.value,
+              defaultRef.locationReference,
+              defaultRef.session,
+              hoverBehavior,
+            ) : document.createTextNode(part.value);
 						break;
-					case 'web':
-						node = this.createWebLink(includeFulltext ? text : undefined, part.value, hoverBehavior);
+					case "web":
+						node = this.createWebLink(
+              includeFulltext ? text : undefined,
+              part.value,
+              hoverBehavior,
+            );
 						break;
-					case 'path': {
+					case "path": {
 						const path = part.captures[0];
 						const lineNumber = part.captures[1] ? Number(part.captures[1]) : 0;
-						const columnNumber = part.captures[2] ? Number(part.captures[2]) : 0;
-						node = this.createPathLink(includeFulltext ? text : undefined, part.value, path, lineNumber, columnNumber, workspaceFolder, hoverBehavior);
+						const columnNumber = part.captures[2] ? Number(
+              part.captures[2],
+            ) : 0;
+						node = this.createPathLink(
+              includeFulltext ? text : undefined,
+              part.value,
+              path,
+              lineNumber,
+              columnNumber,
+              workspaceFolder,
+              hoverBehavior,
+            );
 						break;
 					}
 					default:
 						node = document.createTextNode(part.value);
 				}
 
-				container.append(...this.applyHighlights(node, part.index, part.value.length, highlights));
+				container.append(
+          ...this.applyHighlights(node, part.index, part.value.length, highlights),
+        );
 			} catch (e) {
 				container.appendChild(document.createTextNode(part.value));
 			}
@@ -160,14 +206,22 @@ export class LinkDetector implements ILinkDetector {
 			}
 
 			if (highlight.start > currentIndex) {
-				children.push(node.textContent!.substring(currentIndex - startIndex, highlight.start - startIndex));
+				children.push(
+          node.textContent!.substring(
+            currentIndex - startIndex,
+            highlight.start - startIndex,
+          ),
+        );
 				currentIndex = highlight.start;
 			}
 
 			const highlightEnd = Math.min(highlight.end, endIndex);
-			const highlightedText = node.textContent!.substring(currentIndex - startIndex, highlightEnd - startIndex);
-			const highlightSpan = document.createElement('span');
-			highlightSpan.classList.add('highlight');
+			const highlightedText = node.textContent!.substring(
+        currentIndex - startIndex,
+        highlightEnd - startIndex,
+      );
+			const highlightSpan = document.createElement("span");
+			highlightSpan.classList.add("highlight");
 			if (highlight.extraClasses) {
 				highlightSpan.classList.add(...highlight.extraClasses);
 			}
@@ -232,9 +286,9 @@ export class LinkDetector implements ILinkDetector {
 		const lineCol = LINE_COLUMN_REGEX.exec(uri.path);
 		if (lineCol) {
 			uri = uri.with({
-				path: uri.path.slice(0, lineCol.index),
-				fragment: `L${lineCol[0].slice(1)}`
-			});
+        path: uri.path.slice(0, lineCol.index),
+        fragment: `L${lineCol[0].slice(1)}`,
+      });
 		}
 
 		this.decorateLink(link, uri, fulltext, hoverBehavior, async () => {
@@ -261,34 +315,45 @@ export class LinkDetector implements ILinkDetector {
 				return;
 			}
 
-			this.openerService.open(url, { allowTunneling: (!!this.environmentService.remoteAuthority && this.configurationService.getValue('remote.forwardOnOpen')) });
+			this.openerService.open(url, { allowTunneling: (!!this.environmentService.remoteAuthority && this.configurationService.getValue("remote.forwardOnOpen")) });
 		});
 
 		return link;
 	}
 
 	private createPathLink(fulltext: string | undefined, text: string, path: string, lineNumber: number, columnNumber: number, workspaceFolder: IWorkspaceFolder | undefined, hoverBehavior: DebugLinkHoverBehaviorTypeData): Node {
-		if (path[0] === '/' && path[1] === '/') {
+		if (path[0] === "/" && path[1] === "/") {
 			// Most likely a url part which did not match, for example ftp://path.
 			return document.createTextNode(text);
 		}
 
 		// Only set selection if we have a valid line number (greater than 0)
 		const options = lineNumber > 0
-			? { selection: { startLineNumber: lineNumber, startColumn: columnNumber > 0 ? columnNumber : 1 } }
+			? {
+          selection: { startLineNumber: lineNumber, startColumn: columnNumber > 0 ? columnNumber : 1 },
+        }
 			: {};
 
-		if (path[0] === '.') {
+		if (path[0] === ".") {
 			if (!workspaceFolder) {
 				return document.createTextNode(text);
 			}
 			const uri = workspaceFolder.toResource(path);
 			const link = this.createLink(text);
-			this.decorateLink(link, uri, fulltext, hoverBehavior, (preserveFocus: boolean) => this.editorService.openEditor({ resource: uri, options: { ...options, preserveFocus } }));
+			this.decorateLink(
+        link,
+        uri,
+        fulltext,
+        hoverBehavior,
+        (preserveFocus: boolean) => this.editorService.openEditor({
+          resource: uri,
+          options: { ...options, preserveFocus },
+        }),
+      );
 			return link;
 		}
 
-		if (path[0] === '~') {
+		if (path[0] === "~") {
 			const userHome = this.pathService.resolvedUserHome;
 			if (userHome) {
 				path = osPath.join(userHome.fsPath, path.substring(1));
@@ -310,7 +375,7 @@ export class LinkDetector implements ILinkDetector {
 	}
 
 	private createLink(text: string): HTMLElement {
-		const link = document.createElement('a');
+		const link = document.createElement("a");
 		link.textContent = text;
 		return link;
 	}
@@ -319,29 +384,59 @@ export class LinkDetector implements ILinkDetector {
 		if (hoverBehavior.store.isDisposed) {
 			return;
 		}
-		link.classList.add('link');
-		const followLink = uri && this.tunnelService.canTunnel(uri) ? localize('followForwardedLink', "follow link using forwarded port") : localize('followLink', "follow link");
+		link.classList.add("link");
+		const followLink = uri && this.tunnelService.canTunnel(uri) ? localize(
+      "followForwardedLink",
+      "follow link using forwarded port",
+    ) : localize("followLink", "follow link");
 		const title = link.ariaLabel = fulltext
-			? (platform.isMacintosh ? localize('fileLinkWithPathMac', "Cmd + click to {0}\n{1}", followLink, fulltext) : localize('fileLinkWithPath', "Ctrl + click to {0}\n{1}", followLink, fulltext))
-			: (platform.isMacintosh ? localize('fileLinkMac', "Cmd + click to {0}", followLink) : localize('fileLink', "Ctrl + click to {0}", followLink));
+			? (platform.isMacintosh ? localize(
+          "fileLinkWithPathMac",
+          "Cmd + click to {0}\n{1}",
+          followLink,
+          fulltext,
+        ) : localize(
+          "fileLinkWithPath",
+          "Ctrl + click to {0}\n{1}",
+          followLink,
+          fulltext,
+        ))
+			: (platform.isMacintosh ? localize(
+          "fileLinkMac",
+          "Cmd + click to {0}",
+          followLink,
+        ) : localize("fileLink", "Ctrl + click to {0}", followLink));
 
 		if (hoverBehavior.type === DebugLinkHoverBehavior.Rich) {
-			hoverBehavior.store.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate('element'), link, title));
+			hoverBehavior.store.add(
+        this.hoverService.setupManagedHover(
+          getDefaultHoverDelegate("element"),
+          link,
+          title,
+        ),
+      );
 		} else if (hoverBehavior.type !== DebugLinkHoverBehavior.None) {
 			link.title = title;
 		}
 
-		hoverBehavior.store.add(addDisposableListener(link, 'mousemove', (event: MouseEvent) => {
-			link.classList.toggle('pointer', platform.isMacintosh ? event.metaKey : event.ctrlKey);
-		}));
+		hoverBehavior.store.add(
+      addDisposableListener(link, "mousemove", (event: MouseEvent) => {
+        link.classList.toggle(
+          "pointer",
+          platform.isMacintosh ? event.metaKey : event.ctrlKey,
+        );
+      }),
+    );
 
-		hoverBehavior.store.add(addDisposableListener(link, 'mouseleave', () => {
-			link.classList.remove('pointer');
-		}));
+		hoverBehavior.store.add(
+      addDisposableListener(link, "mouseleave", () => {
+        link.classList.remove("pointer");
+      }),
+    );
 
-		hoverBehavior.store.add(addDisposableListener(link, 'click', (event: MouseEvent) => {
+		hoverBehavior.store.add(addDisposableListener(link, "click", (event: MouseEvent) => {
 			const selection = getWindow(link).getSelection();
-			if (!selection || selection.type === 'Range') {
+			if (!selection || selection.type === "Range") {
 				return; // do not navigate when user is selecting
 			}
 			if (!(platform.isMacintosh ? event.metaKey : event.ctrlKey)) {
@@ -353,7 +448,7 @@ export class LinkDetector implements ILinkDetector {
 			onClick(false);
 		}));
 
-		hoverBehavior.store.add(addDisposableListener(link, 'keydown', (e: KeyboardEvent) => {
+		hoverBehavior.store.add(addDisposableListener(link, "keydown", (e: KeyboardEvent) => {
 			const event = new StandardKeyboardEvent(e);
 			if (event.keyCode === KeyCode.Enter || event.keyCode === KeyCode.Space) {
 				event.preventDefault();
@@ -365,16 +460,21 @@ export class LinkDetector implements ILinkDetector {
 
 	private detectLinks(text: string): LinkPart[] {
 		if (text.length > MAX_LENGTH) {
-			return [{ kind: 'text', value: text, captures: [], index: 0 }];
+			return [{ kind: "text", value: text, captures: [], index: 0 }];
 		}
 
 		const regexes: RegExp[] = [WEB_LINK_REGEX, PATH_LINK_REGEX];
-		const kinds: LinkKind[] = ['web', 'path'];
+		const kinds: LinkKind[] = ["web", "path"];
 		const result: LinkPart[] = [];
 
 		const splitOne = (text: string, regexIndex: number, baseIndex: number) => {
 			if (regexIndex >= regexes.length) {
-				result.push({ value: text, kind: 'text', captures: [], index: baseIndex });
+				result.push({
+          value: text,
+          kind: "text",
+          captures: [],
+          index: baseIndex,
+        });
 				return;
 			}
 			const regex = regexes[regexIndex];
@@ -388,11 +488,11 @@ export class LinkDetector implements ILinkDetector {
 				}
 				const value = match[0];
 				result.push({
-					value: value,
-					kind: kinds[regexIndex],
-					captures: match.slice(1),
-					index: baseIndex + match.index
-				});
+          value: value,
+          kind: kinds[regexIndex],
+          captures: match.slice(1),
+          index: baseIndex + match.index,
+        });
 				currentIndex = match.index + value.length;
 			}
 			const stringAfterMatches = text.substring(currentIndex);

@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Iterable } from '../../../base/common/iterator.js';
-import { toDisposable } from '../../../base/common/lifecycle.js';
-import { LinkedList } from '../../../base/common/linkedList.js';
+import { Iterable } from "../../../base/common/iterator.js";
+import { toDisposable } from "../../../base/common/lifecycle.js";
+import { LinkedList } from "../../../base/common/linkedList.js";
 
-export const USUAL_WORD_SEPARATORS = '`~!@#$%^&*()-=+[{]}\\|;:\'",.<>/?';
+export const USUAL_WORD_SEPARATORS = "`~!@#$%^&*()-=+[{]}\\|;:'\",.<>/?";
 
 /**
  * Word inside a model.
@@ -34,16 +34,16 @@ export interface IWordAtPosition {
  * The default would look like this:
  * /(-?\d*\.\d\w*)|([^\`\~\!\@\#\$\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g
  */
-function createWordRegExp(allowInWords: string = ''): RegExp {
-	let source = '(-?\\d*\\.\\d\\w*)|([^';
+function createWordRegExp(allowInWords: string = ""): RegExp {
+	let source = "(-?\\d*\\.\\d\\w*)|([^";
 	for (const sep of USUAL_WORD_SEPARATORS) {
 		if (allowInWords.indexOf(sep) >= 0) {
 			continue;
 		}
-		source += '\\' + sep;
+		source += "\\" + sep;
 	}
-	source += '\\s]+)';
-	return new RegExp(source, 'g');
+	source += "\\s]+)";
+	return new RegExp(source, "g");
 }
 
 // catches numbers (including floating numbers) in the first group, and alphanum in the second
@@ -54,15 +54,15 @@ export function ensureValidWordDefinition(wordDefinition?: RegExp | null): RegEx
 
 	if (wordDefinition && (wordDefinition instanceof RegExp)) {
 		if (!wordDefinition.global) {
-			let flags = 'g';
+			let flags = "g";
 			if (wordDefinition.ignoreCase) {
-				flags += 'i';
+				flags += "i";
 			}
 			if (wordDefinition.multiline) {
-				flags += 'm';
+				flags += "m";
 			}
 			if (wordDefinition.unicode) {
-				flags += 'u';
+				flags += "u";
 			}
 			result = new RegExp(wordDefinition.source, flags);
 		} else {
@@ -85,9 +85,9 @@ export interface IGetWordAtTextConfig {
 
 const _defaultConfig = new LinkedList<IGetWordAtTextConfig>();
 _defaultConfig.unshift({
-	maxLen: 1000,
-	windowSize: 15,
-	timeBudget: 150
+  maxLen: 1000,
+  windowSize: 15,
+  timeBudget: 150,
 });
 
 export function setDefaultGetWordAtTextConfig(value: IGetWordAtTextConfig) {
@@ -132,7 +132,12 @@ export function getWordAtText(column: number, wordDefinition: RegExp, text: stri
 		// should stop so that subsequent search don't repeat previous searches
 		const regexIndex = pos - config.windowSize * i;
 		wordDefinition.lastIndex = Math.max(0, regexIndex);
-		const thisMatch = _findRegexMatchEnclosingPosition(wordDefinition, text, pos, prevRegexIndex);
+		const thisMatch = _findRegexMatchEnclosingPosition(
+      wordDefinition,
+      text,
+      pos,
+      prevRegexIndex,
+    );
 
 		if (!thisMatch && match) {
 			// stop: we have something
@@ -150,10 +155,10 @@ export function getWordAtText(column: number, wordDefinition: RegExp, text: stri
 
 	if (match) {
 		const result = {
-			word: match[0],
-			startColumn: textOffset + 1 + match.index,
-			endColumn: textOffset + 1 + match.index + match[0].length
-		};
+      word: match[0],
+      startColumn: textOffset + 1 + match.index,
+      endColumn: textOffset + 1 + match.index + match[0].length,
+    };
 		wordDefinition.lastIndex = 0;
 		return result;
 	}

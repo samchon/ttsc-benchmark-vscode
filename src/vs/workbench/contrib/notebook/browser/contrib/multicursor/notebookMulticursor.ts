@@ -3,54 +3,79 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../../../../../nls.js';
-import { Emitter, Event } from '../../../../../../base/common/event.js';
-import { KeyCode, KeyMod } from '../../../../../../base/common/keyCodes.js';
-import { Disposable, DisposableStore } from '../../../../../../base/common/lifecycle.js';
-import { ResourceMap } from '../../../../../../base/common/map.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { EditorConfiguration } from '../../../../../../editor/browser/config/editorConfiguration.js';
-import { CoreEditingCommands } from '../../../../../../editor/browser/coreCommands.js';
-import { ICodeEditor, PastePayload } from '../../../../../../editor/browser/editorBrowser.js';
-import { RedoCommand, UndoCommand } from '../../../../../../editor/browser/editorExtensions.js';
-import { CodeEditorWidget } from '../../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js';
-import { IEditorConfiguration } from '../../../../../../editor/common/config/editorConfiguration.js';
-import { cursorBlinkingStyleFromString, cursorStyleFromString, TextEditorCursorBlinkingStyle, TextEditorCursorStyle } from '../../../../../../editor/common/config/editorOptions.js';
-import { Position } from '../../../../../../editor/common/core/position.js';
-import { Range } from '../../../../../../editor/common/core/range.js';
-import { Selection, SelectionDirection } from '../../../../../../editor/common/core/selection.js';
-import { IWordAtPosition, USUAL_WORD_SEPARATORS } from '../../../../../../editor/common/core/wordHelper.js';
-import { CommandExecutor, CursorsController } from '../../../../../../editor/common/cursor/cursor.js';
-import { DeleteOperations } from '../../../../../../editor/common/cursor/cursorDeleteOperations.js';
-import { CursorConfiguration, ICursorSimpleModel } from '../../../../../../editor/common/cursorCommon.js';
-import { CursorChangeReason } from '../../../../../../editor/common/cursorEvents.js';
-import { CompositionTypePayload, Handler, ITriggerEditorOperationEvent, ReplacePreviousCharPayload } from '../../../../../../editor/common/editorCommon.js';
-import { ILanguageConfigurationService } from '../../../../../../editor/common/languages/languageConfigurationRegistry.js';
-import { IModelDeltaDecoration, ITextModel, PositionAffinity } from '../../../../../../editor/common/model.js';
-import { indentOfLine } from '../../../../../../editor/common/model/textModel.js';
-import { ITextModelService } from '../../../../../../editor/common/services/resolverService.js';
-import { ViewModelEventsCollector } from '../../../../../../editor/common/viewModelEventDispatcher.js';
-import { IAccessibilityService } from '../../../../../../platform/accessibility/common/accessibility.js';
-import { MenuId, registerAction2 } from '../../../../../../platform/actions/common/actions.js';
-import { IConfigurationService } from '../../../../../../platform/configuration/common/configuration.js';
-import { ContextKeyExpr, IContextKeyService, RawContextKey } from '../../../../../../platform/contextkey/common/contextkey.js';
-import { ServicesAccessor } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { KeybindingWeight } from '../../../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { IPastFutureElements, IUndoRedoElement, IUndoRedoService, UndoRedoElementType } from '../../../../../../platform/undoRedo/common/undoRedo.js';
-import { registerWorkbenchContribution2, WorkbenchPhase } from '../../../../../common/contributions.js';
-import { IEditorService } from '../../../../../services/editor/common/editorService.js';
-import { KEYBINDING_CONTEXT_NOTEBOOK_FIND_WIDGET_FOCUSED, NOTEBOOK_CELL_EDITOR_FOCUSED, NOTEBOOK_IS_ACTIVE_EDITOR } from '../../../common/notebookContextKeys.js';
-import { INotebookActionContext, NotebookAction } from '../../controller/coreActions.js';
-import { CellFindMatchWithIndex, getNotebookEditorFromEditorPane, ICellViewModel, INotebookEditor, INotebookEditorContribution } from '../../notebookBrowser.js';
-import { registerNotebookContribution } from '../../notebookEditorExtensions.js';
-import { CellEditorOptions } from '../../view/cellParts/cellEditorOptions.js';
-import { NotebookFindContrib } from '../find/notebookFindWidget.js';
-import { NotebookTextModel } from '../../../common/model/notebookTextModel.js';
-import { NotebookCellTextModel } from '../../../common/model/notebookCellTextModel.js';
-import { ICoordinatesConverter } from '../../../../../../editor/common/coordinatesConverter.js';
+import { localize } from "../../../../../../nls.js";
+import { Emitter, Event } from "../../../../../../base/common/event.js";
+import { KeyCode, KeyMod } from "../../../../../../base/common/keyCodes.js";
+import { Disposable, DisposableStore } from "../../../../../../base/common/lifecycle.js";
+import { ResourceMap } from "../../../../../../base/common/map.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { EditorConfiguration } from "../../../../../../editor/browser/config/editorConfiguration.js";
+import { CoreEditingCommands } from "../../../../../../editor/browser/coreCommands.js";
+import { ICodeEditor, PastePayload } from "../../../../../../editor/browser/editorBrowser.js";
+import { RedoCommand, UndoCommand } from "../../../../../../editor/browser/editorExtensions.js";
+import { CodeEditorWidget } from "../../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import { IEditorConfiguration } from "../../../../../../editor/common/config/editorConfiguration.js";
+import {
+  cursorBlinkingStyleFromString,
+  cursorStyleFromString,
+  TextEditorCursorBlinkingStyle,
+  TextEditorCursorStyle,
+} from "../../../../../../editor/common/config/editorOptions.js";
+import { Position } from "../../../../../../editor/common/core/position.js";
+import { Range } from "../../../../../../editor/common/core/range.js";
+import { Selection, SelectionDirection } from "../../../../../../editor/common/core/selection.js";
+import { IWordAtPosition, USUAL_WORD_SEPARATORS } from "../../../../../../editor/common/core/wordHelper.js";
+import { CommandExecutor, CursorsController } from "../../../../../../editor/common/cursor/cursor.js";
+import { DeleteOperations } from "../../../../../../editor/common/cursor/cursorDeleteOperations.js";
+import { CursorConfiguration, ICursorSimpleModel } from "../../../../../../editor/common/cursorCommon.js";
+import { CursorChangeReason } from "../../../../../../editor/common/cursorEvents.js";
+import {
+  CompositionTypePayload,
+  Handler,
+  ITriggerEditorOperationEvent,
+  ReplacePreviousCharPayload,
+} from "../../../../../../editor/common/editorCommon.js";
+import { ILanguageConfigurationService } from "../../../../../../editor/common/languages/languageConfigurationRegistry.js";
+import { IModelDeltaDecoration, ITextModel, PositionAffinity } from "../../../../../../editor/common/model.js";
+import { indentOfLine } from "../../../../../../editor/common/model/textModel.js";
+import { ITextModelService } from "../../../../../../editor/common/services/resolverService.js";
+import { ViewModelEventsCollector } from "../../../../../../editor/common/viewModelEventDispatcher.js";
+import { IAccessibilityService } from "../../../../../../platform/accessibility/common/accessibility.js";
+import { MenuId, registerAction2 } from "../../../../../../platform/actions/common/actions.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { ContextKeyExpr, IContextKeyService, RawContextKey } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { ServicesAccessor } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingWeight } from "../../../../../../platform/keybinding/common/keybindingsRegistry.js";
+import {
+  IPastFutureElements,
+  IUndoRedoElement,
+  IUndoRedoService,
+  UndoRedoElementType,
+} from "../../../../../../platform/undoRedo/common/undoRedo.js";
+import { registerWorkbenchContribution2, WorkbenchPhase } from "../../../../../common/contributions.js";
+import { IEditorService } from "../../../../../services/editor/common/editorService.js";
+import {
+  KEYBINDING_CONTEXT_NOTEBOOK_FIND_WIDGET_FOCUSED,
+  NOTEBOOK_CELL_EDITOR_FOCUSED,
+  NOTEBOOK_IS_ACTIVE_EDITOR,
+} from "../../../common/notebookContextKeys.js";
+import { INotebookActionContext, NotebookAction } from "../../controller/coreActions.js";
+import {
+  CellFindMatchWithIndex,
+  getNotebookEditorFromEditorPane,
+  ICellViewModel,
+  INotebookEditor,
+  INotebookEditorContribution,
+} from "../../notebookBrowser.js";
+import { registerNotebookContribution } from "../../notebookEditorExtensions.js";
+import { CellEditorOptions } from "../../view/cellParts/cellEditorOptions.js";
+import { NotebookFindContrib } from "../find/notebookFindWidget.js";
+import { NotebookTextModel } from "../../../common/model/notebookTextModel.js";
+import { NotebookCellTextModel } from "../../../common/model/notebookCellTextModel.js";
+import { ICoordinatesConverter } from "../../../../../../editor/common/coordinatesConverter.js";
 
-const NOTEBOOK_ADD_FIND_MATCH_TO_SELECTION_ID = 'notebook.addFindMatchToSelection';
-const NOTEBOOK_SELECT_ALL_FIND_MATCHES_ID = 'notebook.selectAllFindMatches';
+const NOTEBOOK_ADD_FIND_MATCH_TO_SELECTION_ID = "notebook.addFindMatchToSelection";
+const NOTEBOOK_SELECT_ALL_FIND_MATCHES_ID = "notebook.selectAllFindMatches";
 
 export enum NotebookMultiCursorState {
 	Idle,
@@ -61,7 +86,7 @@ export enum NotebookMultiCursorState {
 interface NotebookCursorConfig {
 	cursorStyle: TextEditorCursorStyle;
 	cursorBlinking: TextEditorCursorBlinkingStyle;
-	cursorSmoothCaretAnimation: 'off' | 'explicit' | 'on';
+	cursorSmoothCaretAnimation: "off" | "explicit" | "on";
 }
 
 interface SelectionTranslation {
@@ -82,13 +107,13 @@ interface TrackedCell {
 }
 
 export const NOTEBOOK_MULTI_CURSOR_CONTEXT = {
-	IsNotebookMultiCursor: new RawContextKey<boolean>('isNotebookMultiSelect', false),
-	NotebookMultiSelectCursorState: new RawContextKey<NotebookMultiCursorState>('notebookMultiSelectCursorState', NotebookMultiCursorState.Idle),
+  IsNotebookMultiCursor: new RawContextKey<boolean>("isNotebookMultiSelect", false),
+  NotebookMultiSelectCursorState: new RawContextKey<NotebookMultiCursorState>("notebookMultiSelectCursorState", NotebookMultiCursorState.Idle),
 };
 
 export class NotebookMultiCursorController extends Disposable implements INotebookEditorContribution {
 
-	static readonly id: string = 'notebook.multiCursorController';
+	static readonly id: string = "notebook.multiCursorController";
 
 	private word: string;
 	private startPosition: {
@@ -124,7 +149,7 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 		@IUndoRedoService private readonly undoRedoService: IUndoRedoService,
 	) {
 		super();
-		this.word = '';
+		this.word = "";
 		this.trackedCells = [];
 		this.totalMatchesCount = 0;
 		this._onDidChangeAnchorCell = this._register(new Emitter<void>());
@@ -133,25 +158,31 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 		this.cursorsDisposables = this._register(new DisposableStore());
 		this.cursorsControllers = new ResourceMap<CursorsController>();
 		this.state = NotebookMultiCursorState.Idle;
-		this._nbIsMultiSelectSession = NOTEBOOK_MULTI_CURSOR_CONTEXT.IsNotebookMultiCursor.bindTo(this.contextKeyService);
-		this._nbMultiSelectState = NOTEBOOK_MULTI_CURSOR_CONTEXT.NotebookMultiSelectCursorState.bindTo(this.contextKeyService);
+		this._nbIsMultiSelectSession = NOTEBOOK_MULTI_CURSOR_CONTEXT.IsNotebookMultiCursor.bindTo(
+      this.contextKeyService,
+    );
+		this._nbMultiSelectState = NOTEBOOK_MULTI_CURSOR_CONTEXT.NotebookMultiSelectCursorState.bindTo(
+      this.contextKeyService,
+    );
 
 		this.anchorCell = this.notebookEditor.activeCellAndCodeEditor;
 
 		// anchor cell will catch and relay all type, cut, paste events to the cursors controllers
 		// need to create new controllers when the anchor cell changes, then update their listeners
 		// ** cursor controllers need to happen first, because anchor listeners relay to them
-		this._register(this.onDidChangeAnchorCell(async () => {
-			await this.syncCursorsControllers();
-			this.syncAnchorListeners();
-		}));
+		this._register(
+      this.onDidChangeAnchorCell(async () => {
+        await this.syncCursorsControllers();
+        this.syncAnchorListeners();
+      }),
+    );
 	}
 
 	private syncAnchorListeners() {
 		this.anchorDisposables.clear();
 
 		if (!this.anchorCell) {
-			throw new Error('Anchor cell is undefined');
+			throw new Error("Anchor cell is undefined");
 		}
 
 		// typing
@@ -164,7 +195,7 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 					return;
 				}
 				if (cell.cellViewModel.handle !== this.anchorCell?.[0].handle) { // don't relay to active cell, already has a controller for typing
-					controller.type(collector, input, 'keyboard');
+					controller.type(collector, input, "keyboard");
 				}
 			});
 		}));
@@ -183,7 +214,7 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 			}
 
 			// need to keep anchor cursor controller in sync manually (for delete usage), since we don't relay type event to it
-			anchorController.setSelections(new ViewModelEventsCollector(), 'keyboard', activeSelections, CursorChangeReason.Explicit);
+			anchorController.setSelections(new ViewModelEventsCollector(), "keyboard", activeSelections, CursorChangeReason.Explicit);
 
 			this.trackedCells.forEach(cell => {
 				const controller = this.cursorsControllers.get(cell.cellViewModel.uri);
@@ -202,7 +233,7 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 
 		// arrow key navigation
 		this.anchorDisposables.add(this.anchorCell[1].onDidChangeCursorSelection((e) => {
-			if (e.source === 'mouse') {
+			if (e.source === "mouse") {
 				this.resetToIdleState();
 				return;
 			}
@@ -241,9 +272,11 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 		}));
 
 		// core actions
-		this.anchorDisposables.add(this.anchorCell[1].onWillTriggerEditorOperationEvent((e) => {
-			this.handleEditorOperationEvent(e);
-		}));
+		this.anchorDisposables.add(
+      this.anchorCell[1].onWillTriggerEditorOperationEvent((e) => {
+        this.handleEditorOperationEvent(e);
+      }),
+    );
 
 		// exit mode
 		this.anchorDisposables.add(this.anchorCell[1].onDidBlurEditorWidget(() => {
@@ -270,7 +303,9 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 	}
 
 	private async createCursorController(cell: TrackedCell): Promise<CursorsController | undefined> {
-		const textModelRef = await this.textModelService.createModelReference(cell.cellViewModel.uri);
+		const textModelRef = await this.textModelService.createModelReference(
+      cell.cellViewModel.uri,
+    );
 		const textModel = textModelRef.object.textEditorModel;
 		if (!textModel) {
 			textModelRef.dispose();
@@ -278,18 +313,32 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 		}
 		this.cursorsDisposables.add(textModelRef);
 
-		const cursorSimpleModel = this.constructCursorSimpleModel(cell.cellViewModel);
+		const cursorSimpleModel = this.constructCursorSimpleModel(
+      cell.cellViewModel,
+    );
 		const converter = this.constructCoordinatesConverter();
 		const editorConfig = cell.editorConfig;
 
-		const controller = this.cursorsDisposables.add(new CursorsController(
-			textModel,
-			cursorSimpleModel,
-			converter,
-			new CursorConfiguration(textModel.getLanguageId(), textModel.getOptions(), editorConfig, this.languageConfigurationService)
-		));
+		const controller = this.cursorsDisposables.add(
+      new CursorsController(
+        textModel,
+        cursorSimpleModel,
+        converter,
+        new CursorConfiguration(
+          textModel.getLanguageId(),
+          textModel.getOptions(),
+          editorConfig,
+          this.languageConfigurationService,
+        ),
+      ),
+    );
 
-		controller.setSelections(new ViewModelEventsCollector(), undefined, cell.matchSelections, CursorChangeReason.Explicit);
+		controller.setSelections(
+      new ViewModelEventsCollector(),
+      undefined,
+      cell.matchSelections,
+      CursorChangeReason.Explicit,
+    );
 		return controller;
 	}
 
@@ -321,7 +370,7 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 			},
 			getViewLineNumberOfModelPosition(modelLineNumber: number, modelColumn: number): number {
 				return modelLineNumber;
-			}
+			},
 		};
 	}
 
@@ -350,7 +399,7 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 			},
 			getLineIndentColumn(lineNumber: number): number {
 				return indentOfLine(cell.textBuffer.getLineContent(lineNumber)) + 1;
-			}
+			},
 		};
 	}
 
@@ -379,17 +428,37 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 				break;
 			case Handler.ReplacePreviousChar: {
 				const args = <Partial<ReplacePreviousCharPayload>>e.payload;
-				controller.compositionType(eventsCollector, args.text || '', args.replaceCharCnt || 0, 0, 0, e.source);
+				controller.compositionType(
+          eventsCollector,
+          args.text || "",
+          args.replaceCharCnt || 0,
+          0,
+          0,
+          e.source,
+        );
 				break;
 			}
 			case Handler.CompositionType: {
 				const args = <Partial<CompositionTypePayload>>e.payload;
-				controller.compositionType(eventsCollector, args.text || '', args.replacePrevCharCnt || 0, args.replaceNextCharCnt || 0, args.positionDelta || 0, e.source);
+				controller.compositionType(
+          eventsCollector,
+          args.text || "",
+          args.replacePrevCharCnt || 0,
+          args.replaceNextCharCnt || 0,
+          args.positionDelta || 0,
+          e.source,
+        );
 				break;
 			}
 			case Handler.Paste: {
 				const args = <Partial<PastePayload>>e.payload;
-				controller.paste(eventsCollector, args.text || '', args.pasteOnNewLine || false, args.multicursorText || null, e.source);
+				controller.paste(
+          eventsCollector,
+          args.text || "",
+          args.pasteOnNewLine || false,
+          args.multicursorText || null,
+          e.source,
+        );
 				break;
 			}
 			case Handler.Cut:
@@ -446,8 +515,8 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 		this.undoRedoService.pushElement({
 			type: UndoRedoElementType.Workspace,
 			resources: resources,
-			label: 'Multi Cursor Edit',
-			code: 'multiCursorEdit',
+			label: "Multi Cursor Edit",
+			code: "multiCursorEdit",
 			confirmBeforeUndo: false,
 			undo: async () => {
 				newElementsMap.forEach(async value => {
@@ -462,7 +531,7 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 						await element.redo();
 					});
 				});
-			}
+			},
 		});
 	}
 
@@ -484,7 +553,7 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 		this.trackedCells = [];
 		this.totalMatchesCount = 0;
 		this.startPosition = undefined;
-		this.word = '';
+		this.word = "";
 	}
 
 	public async findAndTrackNextSelection(focusedCell: ICellViewModel): Promise<void> {
@@ -504,8 +573,16 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 			// Record the total number of matches at the beginning of the selection process for performance
 			const notebookTextModel = this.notebookEditor.textModel;
 			if (notebookTextModel) {
-				const allMatches = notebookTextModel.findMatches(this.word, false, true, USUAL_WORD_SEPARATORS);
-				this.totalMatchesCount = allMatches.reduce((sum, cellMatch) => sum + cellMatch.matches.length, 0);
+				const allMatches = notebookTextModel.findMatches(
+          this.word,
+          false,
+          true,
+          USUAL_WORD_SEPARATORS,
+        );
+				this.totalMatchesCount = allMatches.reduce(
+          (sum, cellMatch) => sum + cellMatch.matches.length,
+          0,
+        );
 			}
 
 			const index = this.notebookEditor.getCellIndex(focusedCell);
@@ -514,24 +591,26 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 			}
 
 			this.startPosition = {
-				cellIndex: index,
-				position: new Position(inputSelection.startLineNumber, word.startColumn),
-			};
+        cellIndex: index,
+        position: new Position(inputSelection.startLineNumber, word.startColumn),
+      };
 
 			const newSelection = new Selection(
-				inputSelection.startLineNumber,
-				word.startColumn,
-				inputSelection.startLineNumber,
-				word.endColumn
-			);
+        inputSelection.startLineNumber,
+        word.startColumn,
+        inputSelection.startLineNumber,
+        word.endColumn,
+      );
 			focusedCell.setSelections([newSelection]);
 
 			this.anchorCell = this.notebookEditor.activeCellAndCodeEditor;
 			if (!this.anchorCell || this.anchorCell[0].handle !== focusedCell.handle) {
-				throw new Error('Active cell is not the same as the cell passed as context');
+				throw new Error(
+          "Active cell is not the same as the cell passed as context",
+        );
 			}
 			if (!(this.anchorCell[1] instanceof CodeEditorWidget)) {
-				throw new Error('Active cell is not an instance of CodeEditorWidget');
+				throw new Error("Active cell is not an instance of CodeEditorWidget");
 			}
 
 			await this.updateTrackedCell(focusedCell, [newSelection]);
@@ -558,7 +637,10 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 			}
 
 			// Check if all matches are already covered by selections to avoid infinite looping
-			const totalSelections = this.trackedCells.reduce((sum, trackedCell) => sum + trackedCell.matchSelections.length, 0);
+			const totalSelections = this.trackedCells.reduce(
+        (sum, trackedCell) => sum + trackedCell.matchSelections.length,
+        0,
+      );
 
 			if (totalSelections >= this.totalMatchesCount) {
 				// All matches are already selected, make this a no-op like in regular editors
@@ -566,45 +648,69 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 			}
 
 			const findResult = notebookTextModel.findNextMatch(
-				this.word,
-				{ cellIndex: index, position: focusedCell.getSelections()[focusedCell.getSelections().length - 1].getEndPosition() },
-				false,
-				true,
-				USUAL_WORD_SEPARATORS,
-				this.startPosition,
-			);
+        this.word,
+        {
+          cellIndex: index,
+          position: focusedCell.getSelections()[focusedCell.getSelections().length - 1].getEndPosition(),
+        },
+        false,
+        true,
+        USUAL_WORD_SEPARATORS,
+        this.startPosition,
+      );
 			if (!findResult) {
 				return;
 			}
 
-			const findResultCellViewModel = this.notebookEditor.getCellByHandle(findResult.cell.handle);
+			const findResultCellViewModel = this.notebookEditor.getCellByHandle(
+        findResult.cell.handle,
+      );
 			if (!findResultCellViewModel) {
 				return;
 			}
 
 			if (findResult.cell.handle === focusedCell.handle) { // match is in the same cell, find tracked entry, update and set selections in viewmodel and cursorController
-				const selections = [...focusedCell.getSelections(), Selection.fromRange(findResult.match.range, SelectionDirection.LTR)];
-				const trackedCell = await this.updateTrackedCell(focusedCell, selections);
+				const selections = [
+          ...focusedCell.getSelections(),
+          Selection.fromRange(findResult.match.range, SelectionDirection.LTR),
+        ];
+				const trackedCell = await this.updateTrackedCell(
+          focusedCell,
+          selections,
+        );
 				findResultCellViewModel.setSelections(trackedCell.matchSelections);
 
 
 			} else if (findResult.cell.handle !== focusedCell.handle) {	// result is in a different cell, move focus there and apply selection, then update anchor
-				await this.notebookEditor.revealRangeInViewAsync(findResultCellViewModel, findResult.match.range);
-				await this.notebookEditor.focusNotebookCell(findResultCellViewModel, 'editor');
+				await this.notebookEditor.revealRangeInViewAsync(
+          findResultCellViewModel,
+          findResult.match.range,
+        );
+				await this.notebookEditor.focusNotebookCell(
+          findResultCellViewModel,
+          "editor",
+        );
 
-				const trackedCell = await this.updateTrackedCell(findResultCellViewModel, [Selection.fromRange(findResult.match.range, SelectionDirection.LTR)]);
+				const trackedCell = await this.updateTrackedCell(
+          findResultCellViewModel,
+          [Selection.fromRange(findResult.match.range, SelectionDirection.LTR)],
+        );
 				findResultCellViewModel.setSelections(trackedCell.matchSelections);
 
 				this.anchorCell = this.notebookEditor.activeCellAndCodeEditor;
 				if (!this.anchorCell || !(this.anchorCell[1] instanceof CodeEditorWidget)) {
-					throw new Error('Active cell is not an instance of CodeEditorWidget');
+					throw new Error("Active cell is not an instance of CodeEditorWidget");
 				}
 
 				this._onDidChangeAnchorCell.fire();
 
 				// we set the decorations manually for the cell we have just departed, since it blurs
 				// we can find the match with the handle that the find and track request originated
-				this.initializeMultiSelectDecorations(this.trackedCells.find(trackedCell => trackedCell.cellViewModel.handle === focusedCell.handle));
+				this.initializeMultiSelectDecorations(
+          this.trackedCells.find(
+            trackedCell => trackedCell.cellViewModel.handle === focusedCell.handle,
+          ),
+        );
 			}
 		}
 	}
@@ -618,7 +724,10 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 		if (matches) {
 			await this.handleFindWidgetSelectAllMatches(matches);
 		} else {
-			await this.handleCellEditorSelectAllMatches(notebookTextModel, focusedCell);
+			await this.handleCellEditorSelectAllMatches(
+        notebookTextModel,
+        focusedCell,
+      );
 		}
 
 		await this.syncCursorsControllers();
@@ -636,16 +745,25 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 			return;
 		}
 
-		await this.notebookEditor.focusNotebookCell(matches[0].cell, 'editor');
+		await this.notebookEditor.focusNotebookCell(matches[0].cell, "editor");
 		this.anchorCell = this.notebookEditor.activeCellAndCodeEditor;
 
 		this.trackedCells = [];
 		for (const match of matches) {
-			this.updateTrackedCell(match.cell, match.contentMatches.map(match => Selection.fromRange(match.range, SelectionDirection.LTR)));
+			this.updateTrackedCell(
+        match.cell,
+        match.contentMatches.map(
+          match => Selection.fromRange(match.range, SelectionDirection.LTR),
+        ),
+      );
 
 			if (this.anchorCell && match.cell.handle === this.anchorCell[0].handle) {
 				// only explicitly set the focused cell's selections, the rest are handled by cursor controllers + decorations
-				match.cell.setSelections(match.contentMatches.map(match => Selection.fromRange(match.range, SelectionDirection.LTR)));
+				match.cell.setSelections(
+          match.contentMatches.map(
+            match => Selection.fromRange(match.range, SelectionDirection.LTR),
+          ),
+        );
 			}
 		}
 
@@ -673,30 +791,51 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 				return;
 			}
 			this.startPosition = {
-				cellIndex: index,
-				position: new Position(inputSelection.startLineNumber, word.startColumn),
-			};
+        cellIndex: index,
+        position: new Position(inputSelection.startLineNumber, word.startColumn),
+      };
 
 			this.anchorCell = this.notebookEditor.activeCellAndCodeEditor;
 			if (!this.anchorCell || this.anchorCell[0].handle !== focusedCell.handle) {
-				throw new Error('Active cell is not the same as the cell passed as context');
+				throw new Error(
+          "Active cell is not the same as the cell passed as context",
+        );
 			}
 			if (!(this.anchorCell[1] instanceof CodeEditorWidget)) {
-				throw new Error('Active cell is not an instance of CodeEditorWidget');
+				throw new Error("Active cell is not an instance of CodeEditorWidget");
 			}
 
 			// get all matches in the notebook
-			const findResults = notebookTextModel.findMatches(this.word, false, true, USUAL_WORD_SEPARATORS);
+			const findResults = notebookTextModel.findMatches(
+        this.word,
+        false,
+        true,
+        USUAL_WORD_SEPARATORS,
+      );
 
 			// create the tracked matches for every result, needed for cursor controllers
 			this.trackedCells = [];
 			for (const res of findResults) {
-				await this.updateTrackedCell(res.cell, res.matches.map(match => Selection.fromRange(match.range, SelectionDirection.LTR)));
+				await this.updateTrackedCell(
+          res.cell,
+          res.matches.map(
+            match => Selection.fromRange(match.range, SelectionDirection.LTR),
+          ),
+        );
 
 				if (res.cell.handle === focusedCell.handle) {
-					const cellViewModel = this.notebookEditor.getCellByHandle(res.cell.handle);
+					const cellViewModel = this.notebookEditor.getCellByHandle(
+            res.cell.handle,
+          );
 					if (cellViewModel) {
-						cellViewModel.setSelections(res.matches.map(match => Selection.fromRange(match.range, SelectionDirection.LTR)));
+						cellViewModel.setSelections(
+              res.matches.map(
+                match => Selection.fromRange(
+                  match.range,
+                  SelectionDirection.LTR,
+                ),
+              ),
+            );
 					}
 				}
 			}
@@ -707,22 +846,36 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 
 		} else if (this.state === NotebookMultiCursorState.Selecting) {
 			// we will already have a word + some number of tracked matches, need to update them with the rest given findAllMatches result
-			const findResults = notebookTextModel.findMatches(this.word, false, true, USUAL_WORD_SEPARATORS);
+			const findResults = notebookTextModel.findMatches(
+        this.word,
+        false,
+        true,
+        USUAL_WORD_SEPARATORS,
+      );
 
 			// update existing tracked matches with new selections and create new tracked matches for cells that aren't tracked yet
 			for (const res of findResults) {
-				await this.updateTrackedCell(res.cell, res.matches.map(match => Selection.fromRange(match.range, SelectionDirection.LTR)));
+				await this.updateTrackedCell(
+          res.cell,
+          res.matches.map(
+            match => Selection.fromRange(match.range, SelectionDirection.LTR),
+          ),
+        );
 			}
 		}
 	}
 
 	private async updateTrackedCell(cell: ICellViewModel | NotebookCellTextModel, selections: Selection[]) {
-		const cellViewModel = cell instanceof NotebookCellTextModel ? this.notebookEditor.getCellByHandle(cell.handle) : cell;
+		const cellViewModel = cell instanceof NotebookCellTextModel ? this.notebookEditor.getCellByHandle(
+      cell.handle,
+    ) : cell;
 		if (!cellViewModel) {
-			throw new Error('Cell not found');
+			throw new Error("Cell not found");
 		}
 
-		let trackedMatch = this.trackedCells.find(trackedCell => trackedCell.cellViewModel.handle === cellViewModel.handle);
+		let trackedMatch = this.trackedCells.find(
+      trackedCell => trackedCell.cellViewModel.handle === cellViewModel.handle,
+    );
 
 		if (trackedMatch) {
 			this.clearDecorations(trackedMatch); // need this to avoid leaking decorations -- TODO: just optimize the lazy decorations fn
@@ -735,20 +888,20 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 			const editorConfig = this.constructCellEditorOptions(cellViewModel);
 			const rawEditorOptions = editorConfig.getRawOptions();
 			const cursorConfig: NotebookCursorConfig = {
-				cursorStyle: cursorStyleFromString(rawEditorOptions.cursorStyle!),
-				cursorBlinking: cursorBlinkingStyleFromString(rawEditorOptions.cursorBlinking!),
-				cursorSmoothCaretAnimation: rawEditorOptions.cursorSmoothCaretAnimation!
-			};
+        cursorStyle: cursorStyleFromString(rawEditorOptions.cursorStyle!),
+        cursorBlinking: cursorBlinkingStyleFromString(rawEditorOptions.cursorBlinking!),
+        cursorSmoothCaretAnimation: rawEditorOptions.cursorSmoothCaretAnimation!,
+      };
 
 			trackedMatch = {
-				cellViewModel: cellViewModel,
-				initialSelection: initialSelection,
-				matchSelections: selections,
-				editorConfig: editorConfig,
-				cursorConfig: cursorConfig,
-				decorationIds: [],
-				undoRedoHistory: this.undoRedoService.getElements(cellViewModel.uri)
-			};
+        cellViewModel: cellViewModel,
+        initialSelection: initialSelection,
+        matchSelections: selections,
+        editorConfig: editorConfig,
+        cursorConfig: cursorConfig,
+        decorationIds: [],
+        undoRedoHistory: this.undoRedoService.getElements(cellViewModel.uri),
+      };
 			this.trackedCells.push(trackedMatch);
 		}
 		return trackedMatch;
@@ -838,10 +991,23 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 	}
 
 	private constructCellEditorOptions(cell: ICellViewModel): EditorConfiguration {
-		const cellEditorOptions = new CellEditorOptions(this.notebookEditor.getBaseCellEditorOptions(cell.language), this.notebookEditor.notebookOptions, this.configurationService);
-		const options = cellEditorOptions.getUpdatedValue(cell.internalMetadata, cell.uri);
+		const cellEditorOptions = new CellEditorOptions(
+      this.notebookEditor.getBaseCellEditorOptions(cell.language),
+      this.notebookEditor.notebookOptions,
+      this.configurationService,
+    );
+		const options = cellEditorOptions.getUpdatedValue(
+      cell.internalMetadata,
+      cell.uri,
+    );
 		cellEditorOptions.dispose();
-		return new EditorConfiguration(false, MenuId.EditorContent, options, null, this.accessibilityService);
+		return new EditorConfiguration(
+      false,
+      MenuId.EditorContent,
+      options,
+      null,
+      this.accessibilityService,
+    );
 	}
 
 	/**
@@ -860,16 +1026,16 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 			decorations.push({
 				range: Selection.fromPositions(selection.getEndPosition()),
 				options: {
-					description: '',
+					description: "",
 					className: this.getClassName(cell.cursorConfig, true),
-				}
+				},
 			});
 		});
 
 		cell.decorationIds = cell.cellViewModel.deltaModelDecorations(
-			cell.decorationIds,
-			decorations
-		);
+      cell.decorationIds,
+      decorations,
+    );
 	}
 
 	private updateLazyDecorations() {
@@ -894,9 +1060,9 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 					newDecorations.push({
 						range: selection,
 						options: {
-							description: '',
+							description: "",
 							className: this.getClassName(cell.cursorConfig, false),
-						}
+						},
 					});
 				}
 
@@ -904,25 +1070,25 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 				newDecorations.push({
 					range: Selection.fromPositions(selection.getPosition()),
 					options: {
-						description: '',
+						description: "",
 						zIndex: 10000,
 						className: this.getClassName(cell.cursorConfig, true),
-					}
+					},
 				});
 			});
 
 			cell.decorationIds = cell.cellViewModel.deltaModelDecorations(
 				cell.decorationIds,
-				newDecorations
+				newDecorations,
 			);
 		});
 	}
 
 	private clearDecorations(cell: TrackedCell) {
 		cell.decorationIds = cell.cellViewModel.deltaModelDecorations(
-			cell.decorationIds,
-			[]
-		);
+      cell.decorationIds,
+      [],
+    );
 	}
 
 	private getWord(selection: Selection, model: ITextModel): IWordAtPosition | null {
@@ -934,13 +1100,13 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 		}
 
 		return model.getWordAtPosition({
-			lineNumber: lineNumber,
-			column: startColumn
-		});
+      lineNumber: lineNumber,
+      column: startColumn,
+    });
 	}
 
 	private getClassName(cursorConfig: NotebookCursorConfig, isCursor?: boolean): string {
-		let result = isCursor ? '.nb-multicursor-cursor' : '.nb-multicursor-selection';
+		let result = isCursor ? ".nb-multicursor-cursor" : ".nb-multicursor-selection";
 
 		if (isCursor) {
 			// handle base style
@@ -948,19 +1114,19 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 				case TextEditorCursorStyle.Line:
 					break; // default style, no additional class needed (handled by base css style)
 				case TextEditorCursorStyle.Block:
-					result += '.nb-cursor-block-style';
+					result += ".nb-cursor-block-style";
 					break;
 				case TextEditorCursorStyle.Underline:
-					result += '.nb-cursor-underline-style';
+					result += ".nb-cursor-underline-style";
 					break;
 				case TextEditorCursorStyle.LineThin:
-					result += '.nb-cursor-line-thin-style';
+					result += ".nb-cursor-line-thin-style";
 					break;
 				case TextEditorCursorStyle.BlockOutline:
-					result += '.nb-cursor-block-outline-style';
+					result += ".nb-cursor-block-outline-style";
 					break;
 				case TextEditorCursorStyle.UnderlineThin:
-					result += '.nb-cursor-underline-thin-style';
+					result += ".nb-cursor-underline-thin-style";
 					break;
 				default:
 					break;
@@ -969,28 +1135,28 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 			// handle animation style
 			switch (cursorConfig.cursorBlinking) {
 				case TextEditorCursorBlinkingStyle.Blink:
-					result += '.nb-blink';
+					result += ".nb-blink";
 					break;
 				case TextEditorCursorBlinkingStyle.Smooth:
-					result += '.nb-smooth';
+					result += ".nb-smooth";
 					break;
 				case TextEditorCursorBlinkingStyle.Phase:
-					result += '.nb-phase';
+					result += ".nb-phase";
 					break;
 				case TextEditorCursorBlinkingStyle.Expand:
-					result += '.nb-expand';
+					result += ".nb-expand";
 					break;
 				case TextEditorCursorBlinkingStyle.Solid:
-					result += '.nb-solid';
+					result += ".nb-solid";
 					break;
 				default:
-					result += '.nb-solid';
+					result += ".nb-solid";
 					break;
 			}
 
 			// handle caret animation style
-			if (cursorConfig.cursorSmoothCaretAnimation === 'on' || cursorConfig.cursorSmoothCaretAnimation === 'explicit') {
-				result += '.nb-smooth-caret-animation';
+			if (cursorConfig.cursorSmoothCaretAnimation === "on" || cursorConfig.cursorSmoothCaretAnimation === "explicit") {
+				result += ".nb-smooth-caret-animation";
 			}
 
 		}
@@ -1003,8 +1169,8 @@ export class NotebookMultiCursorController extends Disposable implements INotebo
 		this.cursorsDisposables.dispose();
 
 		this.trackedCells.forEach(cell => {
-			this.clearDecorations(cell);
-		});
+      this.clearDecorations(cell);
+    });
 		this.trackedCells = [];
 	}
 
@@ -1014,32 +1180,34 @@ class NotebookSelectAllFindMatches extends NotebookAction {
 	constructor() {
 		super({
 			id: NOTEBOOK_SELECT_ALL_FIND_MATCHES_ID,
-			title: localize('selectAllFindMatches', "Select All Occurrences of Find Match"),
+			title: localize("selectAllFindMatches", "Select All Occurrences of Find Match"),
 			precondition: ContextKeyExpr.and(
-				ContextKeyExpr.equals('config.notebook.multiCursor.enabled', true),
+				ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true),
 			),
 			keybinding: {
 				when: ContextKeyExpr.or(
 					ContextKeyExpr.and(
-						ContextKeyExpr.equals('config.notebook.multiCursor.enabled', true),
+						ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true),
 						NOTEBOOK_IS_ACTIVE_EDITOR,
 						NOTEBOOK_CELL_EDITOR_FOCUSED,
 					),
 					ContextKeyExpr.and(
-						ContextKeyExpr.equals('config.notebook.multiCursor.enabled', true),
-						KEYBINDING_CONTEXT_NOTEBOOK_FIND_WIDGET_FOCUSED
+						ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true),
+						KEYBINDING_CONTEXT_NOTEBOOK_FIND_WIDGET_FOCUSED,
 					),
 				),
 				primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyL,
-				weight: KeybindingWeight.WorkbenchContrib
-			}
+				weight: KeybindingWeight.WorkbenchContrib,
+			},
 		});
 	}
 
 	override async runWithContext(accessor: ServicesAccessor, context: INotebookActionContext): Promise<void> {
 		const editorService = accessor.get(IEditorService);
 
-		const editor = getNotebookEditorFromEditorPane(editorService.activeEditorPane);
+		const editor = getNotebookEditorFromEditorPane(
+      editorService.activeEditorPane,
+    );
 		if (!editor) {
 			return;
 		}
@@ -1048,8 +1216,12 @@ class NotebookSelectAllFindMatches extends NotebookAction {
 			return;
 		}
 
-		const cursorController = editor.getContribution<NotebookMultiCursorController>(NotebookMultiCursorController.id);
-		const findController = editor.getContribution<NotebookFindContrib>(NotebookFindContrib.id);
+		const cursorController = editor.getContribution<NotebookMultiCursorController>(
+      NotebookMultiCursorController.id,
+    );
+		const findController = editor.getContribution<NotebookFindContrib>(
+      NotebookFindContrib.id,
+    );
 
 		if (findController.widget.isFocused) {
 			const findModel = findController.widget.findModel;
@@ -1065,27 +1237,29 @@ class NotebookAddMatchToMultiSelectionAction extends NotebookAction {
 	constructor() {
 		super({
 			id: NOTEBOOK_ADD_FIND_MATCH_TO_SELECTION_ID,
-			title: localize('addFindMatchToSelection', "Add Selection to Next Find Match"),
+			title: localize("addFindMatchToSelection", "Add Selection to Next Find Match"),
 			precondition: ContextKeyExpr.and(
-				ContextKeyExpr.equals('config.notebook.multiCursor.enabled', true),
+				ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true),
 				NOTEBOOK_IS_ACTIVE_EDITOR,
 				NOTEBOOK_CELL_EDITOR_FOCUSED,
 			),
 			keybinding: {
 				when: ContextKeyExpr.and(
-					ContextKeyExpr.equals('config.notebook.multiCursor.enabled', true),
+					ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true),
 					NOTEBOOK_IS_ACTIVE_EDITOR,
 					NOTEBOOK_CELL_EDITOR_FOCUSED,
 				),
 				primary: KeyMod.CtrlCmd | KeyCode.KeyD,
-				weight: KeybindingWeight.WorkbenchContrib
-			}
+				weight: KeybindingWeight.WorkbenchContrib,
+			},
 		});
 	}
 
 	override async runWithContext(accessor: ServicesAccessor, context: INotebookActionContext): Promise<void> {
 		const editorService = accessor.get(IEditorService);
-		const editor = getNotebookEditorFromEditorPane(editorService.activeEditorPane);
+		const editor = getNotebookEditorFromEditorPane(
+      editorService.activeEditorPane,
+    );
 
 		if (!editor) {
 			return;
@@ -1095,7 +1269,9 @@ class NotebookAddMatchToMultiSelectionAction extends NotebookAction {
 			return;
 		}
 
-		const controller = editor.getContribution<NotebookMultiCursorController>(NotebookMultiCursorController.id);
+		const controller = editor.getContribution<NotebookMultiCursorController>(
+      NotebookMultiCursorController.id,
+    );
 		controller.findAndTrackNextSelection(context.cell);
 	}
 }
@@ -1103,34 +1279,38 @@ class NotebookAddMatchToMultiSelectionAction extends NotebookAction {
 class NotebookExitMultiSelectionAction extends NotebookAction {
 	constructor() {
 		super({
-			id: 'noteMultiCursor.exit',
-			title: localize('exitMultiSelection', "Exit Multi Cursor Mode"),
+			id: "noteMultiCursor.exit",
+			title: localize("exitMultiSelection", "Exit Multi Cursor Mode"),
 			precondition: ContextKeyExpr.and(
-				ContextKeyExpr.equals('config.notebook.multiCursor.enabled', true),
+				ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true),
 				NOTEBOOK_IS_ACTIVE_EDITOR,
 				NOTEBOOK_MULTI_CURSOR_CONTEXT.IsNotebookMultiCursor,
 			),
 			keybinding: {
 				when: ContextKeyExpr.and(
-					ContextKeyExpr.equals('config.notebook.multiCursor.enabled', true),
+					ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true),
 					NOTEBOOK_IS_ACTIVE_EDITOR,
 					NOTEBOOK_MULTI_CURSOR_CONTEXT.IsNotebookMultiCursor,
 				),
 				primary: KeyCode.Escape,
-				weight: KeybindingWeight.WorkbenchContrib
-			}
+				weight: KeybindingWeight.WorkbenchContrib,
+			},
 		});
 	}
 
 	override async runWithContext(accessor: ServicesAccessor, context: INotebookActionContext): Promise<void> {
 		const editorService = accessor.get(IEditorService);
-		const editor = getNotebookEditorFromEditorPane(editorService.activeEditorPane);
+		const editor = getNotebookEditorFromEditorPane(
+      editorService.activeEditorPane,
+    );
 
 		if (!editor) {
 			return;
 		}
 
-		const controller = editor.getContribution<NotebookMultiCursorController>(NotebookMultiCursorController.id);
+		const controller = editor.getContribution<NotebookMultiCursorController>(
+      NotebookMultiCursorController.id,
+    );
 		controller.resetToIdleState();
 	}
 }
@@ -1138,42 +1318,46 @@ class NotebookExitMultiSelectionAction extends NotebookAction {
 class NotebookDeleteLeftMultiSelectionAction extends NotebookAction {
 	constructor() {
 		super({
-			id: 'noteMultiCursor.deleteLeft',
-			title: localize('deleteLeftMultiSelection', "Delete Left"),
+			id: "noteMultiCursor.deleteLeft",
+			title: localize("deleteLeftMultiSelection", "Delete Left"),
 			precondition: ContextKeyExpr.and(
-				ContextKeyExpr.equals('config.notebook.multiCursor.enabled', true),
+				ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true),
 				NOTEBOOK_IS_ACTIVE_EDITOR,
 				NOTEBOOK_MULTI_CURSOR_CONTEXT.IsNotebookMultiCursor,
 				ContextKeyExpr.or(
 					NOTEBOOK_MULTI_CURSOR_CONTEXT.NotebookMultiSelectCursorState.isEqualTo(NotebookMultiCursorState.Selecting),
-					NOTEBOOK_MULTI_CURSOR_CONTEXT.NotebookMultiSelectCursorState.isEqualTo(NotebookMultiCursorState.Editing)
-				)
+					NOTEBOOK_MULTI_CURSOR_CONTEXT.NotebookMultiSelectCursorState.isEqualTo(NotebookMultiCursorState.Editing),
+				),
 			),
 			keybinding: {
 				when: ContextKeyExpr.and(
-					ContextKeyExpr.equals('config.notebook.multiCursor.enabled', true),
+					ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true),
 					NOTEBOOK_IS_ACTIVE_EDITOR,
 					NOTEBOOK_MULTI_CURSOR_CONTEXT.IsNotebookMultiCursor,
 					ContextKeyExpr.or(
 						NOTEBOOK_MULTI_CURSOR_CONTEXT.NotebookMultiSelectCursorState.isEqualTo(NotebookMultiCursorState.Selecting),
-						NOTEBOOK_MULTI_CURSOR_CONTEXT.NotebookMultiSelectCursorState.isEqualTo(NotebookMultiCursorState.Editing)
-					)
+						NOTEBOOK_MULTI_CURSOR_CONTEXT.NotebookMultiSelectCursorState.isEqualTo(NotebookMultiCursorState.Editing),
+					),
 				),
 				primary: KeyCode.Backspace,
-				weight: KeybindingWeight.WorkbenchContrib
-			}
+				weight: KeybindingWeight.WorkbenchContrib,
+			},
 		});
 	}
 
 	override async runWithContext(accessor: ServicesAccessor, context: INotebookActionContext): Promise<void> {
 		const editorService = accessor.get(IEditorService);
-		const editor = getNotebookEditorFromEditorPane(editorService.activeEditorPane);
+		const editor = getNotebookEditorFromEditorPane(
+      editorService.activeEditorPane,
+    );
 
 		if (!editor) {
 			return;
 		}
 
-		const controller = editor.getContribution<NotebookMultiCursorController>(NotebookMultiCursorController.id);
+		const controller = editor.getContribution<NotebookMultiCursorController>(
+      NotebookMultiCursorController.id,
+    );
 		controller.deleteLeft();
 	}
 }
@@ -1181,36 +1365,38 @@ class NotebookDeleteLeftMultiSelectionAction extends NotebookAction {
 class NotebookDeleteRightMultiSelectionAction extends NotebookAction {
 	constructor() {
 		super({
-			id: 'noteMultiCursor.deleteRight',
-			title: localize('deleteRightMultiSelection', "Delete Right"),
+			id: "noteMultiCursor.deleteRight",
+			title: localize("deleteRightMultiSelection", "Delete Right"),
 			precondition: ContextKeyExpr.and(
-				ContextKeyExpr.equals('config.notebook.multiCursor.enabled', true),
+				ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true),
 				NOTEBOOK_IS_ACTIVE_EDITOR,
 				NOTEBOOK_MULTI_CURSOR_CONTEXT.IsNotebookMultiCursor,
 				ContextKeyExpr.or(
 					NOTEBOOK_MULTI_CURSOR_CONTEXT.NotebookMultiSelectCursorState.isEqualTo(NotebookMultiCursorState.Selecting),
-					NOTEBOOK_MULTI_CURSOR_CONTEXT.NotebookMultiSelectCursorState.isEqualTo(NotebookMultiCursorState.Editing)
-				)
+					NOTEBOOK_MULTI_CURSOR_CONTEXT.NotebookMultiSelectCursorState.isEqualTo(NotebookMultiCursorState.Editing),
+				),
 			),
 			keybinding: {
 				when: ContextKeyExpr.and(
-					ContextKeyExpr.equals('config.notebook.multiCursor.enabled', true),
+					ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true),
 					NOTEBOOK_IS_ACTIVE_EDITOR,
 					NOTEBOOK_MULTI_CURSOR_CONTEXT.IsNotebookMultiCursor,
 					ContextKeyExpr.or(
 						NOTEBOOK_MULTI_CURSOR_CONTEXT.NotebookMultiSelectCursorState.isEqualTo(NotebookMultiCursorState.Selecting),
-						NOTEBOOK_MULTI_CURSOR_CONTEXT.NotebookMultiSelectCursorState.isEqualTo(NotebookMultiCursorState.Editing)
-					)
+						NOTEBOOK_MULTI_CURSOR_CONTEXT.NotebookMultiSelectCursorState.isEqualTo(NotebookMultiCursorState.Editing),
+					),
 				),
 				primary: KeyCode.Delete,
-				weight: KeybindingWeight.WorkbenchContrib
-			}
+				weight: KeybindingWeight.WorkbenchContrib,
+			},
 		});
 	}
 
 	override async runWithContext(accessor: ServicesAccessor, context: INotebookActionContext): Promise<void> {
 		const editorService = accessor.get(IEditorService);
-		const nbEditor = getNotebookEditorFromEditorPane(editorService.activeEditorPane);
+		const nbEditor = getNotebookEditorFromEditorPane(
+      editorService.activeEditorPane,
+    );
 		if (!nbEditor) {
 			return;
 		}
@@ -1220,26 +1406,34 @@ class NotebookDeleteRightMultiSelectionAction extends NotebookAction {
 		}
 
 		// need to run the command manually since we are overriding the command, this ensures proper cursor animation behavior
-		CoreEditingCommands.DeleteRight.runEditorCommand(accessor, cellEditor, null);
+		CoreEditingCommands.DeleteRight.runEditorCommand(
+      accessor,
+      cellEditor,
+      null,
+    );
 
-		const controller = nbEditor.getContribution<NotebookMultiCursorController>(NotebookMultiCursorController.id);
+		const controller = nbEditor.getContribution<NotebookMultiCursorController>(
+      NotebookMultiCursorController.id,
+    );
 		controller.deleteRight();
 	}
 }
 
 class NotebookMultiCursorUndoRedoContribution extends Disposable {
 
-	static readonly ID = 'workbench.contrib.notebook.multiCursorUndoRedo';
+	static readonly ID = "workbench.contrib.notebook.multiCursorUndoRedo";
 
 	constructor(@IEditorService private readonly _editorService: IEditorService, @IConfigurationService private readonly configurationService: IConfigurationService) {
 		super();
 
-		if (!this.configurationService.getValue<boolean>('notebook.multiCursor.enabled')) {
+		if (!this.configurationService.getValue<boolean>(
+      "notebook.multiCursor.enabled",
+    )) {
 			return;
 		}
 
 		const PRIORITY = 10005;
-		this._register(UndoCommand.addImplementation(PRIORITY, 'notebook-multicursor-undo-redo', () => {
+		this._register(UndoCommand.addImplementation(PRIORITY, "notebook-multicursor-undo-redo", () => {
 			const editor = getNotebookEditorFromEditorPane(this._editorService.activeEditorPane);
 			if (!editor) {
 				return false;
@@ -1253,12 +1447,12 @@ class NotebookMultiCursorUndoRedoContribution extends Disposable {
 
 			return controller.undo();
 		}, ContextKeyExpr.and(
-			ContextKeyExpr.equals('config.notebook.multiCursor.enabled', true),
+			ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true),
 			NOTEBOOK_IS_ACTIVE_EDITOR,
 			NOTEBOOK_MULTI_CURSOR_CONTEXT.IsNotebookMultiCursor,
 		)));
 
-		this._register(RedoCommand.addImplementation(PRIORITY, 'notebook-multicursor-undo-redo', () => {
+		this._register(RedoCommand.addImplementation(PRIORITY, "notebook-multicursor-undo-redo", () => {
 			const editor = getNotebookEditorFromEditorPane(this._editorService.activeEditorPane);
 			if (!editor) {
 				return false;
@@ -1271,15 +1465,22 @@ class NotebookMultiCursorUndoRedoContribution extends Disposable {
 			const controller = editor.getContribution<NotebookMultiCursorController>(NotebookMultiCursorController.id);
 			return controller.redo();
 		}, ContextKeyExpr.and(
-			ContextKeyExpr.equals('config.notebook.multiCursor.enabled', true),
+			ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true),
 			NOTEBOOK_IS_ACTIVE_EDITOR,
 			NOTEBOOK_MULTI_CURSOR_CONTEXT.IsNotebookMultiCursor,
 		)));
 	}
 }
 
-registerNotebookContribution(NotebookMultiCursorController.id, NotebookMultiCursorController);
-registerWorkbenchContribution2(NotebookMultiCursorUndoRedoContribution.ID, NotebookMultiCursorUndoRedoContribution, WorkbenchPhase.BlockRestore);
+registerNotebookContribution(
+  NotebookMultiCursorController.id,
+  NotebookMultiCursorController,
+);
+registerWorkbenchContribution2(
+  NotebookMultiCursorUndoRedoContribution.ID,
+  NotebookMultiCursorUndoRedoContribution,
+  WorkbenchPhase.BlockRestore,
+);
 
 registerAction2(NotebookSelectAllFindMatches);
 registerAction2(NotebookAddMatchToMultiSelectionAction);

@@ -3,15 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IRange, Range } from '../../../../editor/common/core/range.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IAgentFeedback } from './agentFeedbackService.js';
-import { CodeReviewStateKind, ICodeReviewComment, ICodeReviewState, ICodeReviewSuggestion, IPRReviewComment, IPRReviewState, PRReviewStateKind } from '../../codeReview/browser/codeReviewService.js';
+import { IRange, Range } from "../../../../editor/common/core/range.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IAgentFeedback } from "./agentFeedbackService.js";
+import {
+  CodeReviewStateKind,
+  ICodeReviewComment,
+  ICodeReviewState,
+  ICodeReviewSuggestion,
+  IPRReviewComment,
+  IPRReviewState,
+  PRReviewStateKind,
+} from "../../codeReview/browser/codeReviewService.js";
 
 export const enum SessionEditorCommentSource {
-	AgentFeedback = 'agentFeedback',
-	CodeReview = 'codeReview',
-	PRReview = 'prReview',
+	AgentFeedback = "agentFeedback",
+	CodeReview = "codeReview",
+	PRReview = "prReview",
 }
 
 export interface ISessionEditorComment {
@@ -45,44 +53,44 @@ export function getSessionEditorComments(
 
 	for (const item of agentFeedbackItems) {
 		comments.push({
-			id: toSessionEditorCommentId(SessionEditorCommentSource.AgentFeedback, item.id),
-			sourceId: item.id,
-			source: SessionEditorCommentSource.AgentFeedback,
-			sessionResource,
-			resourceUri: item.resourceUri,
-			range: item.range,
-			text: item.text,
-			suggestion: item.suggestion,
-			canConvertToAgentFeedback: false,
-		});
+      id: toSessionEditorCommentId(SessionEditorCommentSource.AgentFeedback, item.id),
+      sourceId: item.id,
+      source: SessionEditorCommentSource.AgentFeedback,
+      sessionResource,
+      resourceUri: item.resourceUri,
+      range: item.range,
+      text: item.text,
+      suggestion: item.suggestion,
+      canConvertToAgentFeedback: false,
+    });
 	}
 
 	for (const item of getCodeReviewComments(reviewState)) {
 		comments.push({
-			id: toSessionEditorCommentId(SessionEditorCommentSource.CodeReview, item.id),
-			sourceId: item.id,
-			source: SessionEditorCommentSource.CodeReview,
-			sessionResource,
-			resourceUri: item.uri,
-			range: item.range,
-			text: item.body,
-			suggestion: item.suggestion,
-			severity: item.severity,
-			canConvertToAgentFeedback: true,
-		});
+      id: toSessionEditorCommentId(SessionEditorCommentSource.CodeReview, item.id),
+      sourceId: item.id,
+      source: SessionEditorCommentSource.CodeReview,
+      sessionResource,
+      resourceUri: item.uri,
+      range: item.range,
+      text: item.body,
+      suggestion: item.suggestion,
+      severity: item.severity,
+      canConvertToAgentFeedback: true,
+    });
 	}
 
 	for (const item of getPRReviewComments(prReviewState)) {
 		comments.push({
-			id: toSessionEditorCommentId(SessionEditorCommentSource.PRReview, item.id),
-			sourceId: item.id,
-			source: SessionEditorCommentSource.PRReview,
-			sessionResource,
-			resourceUri: item.uri,
-			range: item.range,
-			text: item.body,
-			canConvertToAgentFeedback: true,
-		});
+      id: toSessionEditorCommentId(SessionEditorCommentSource.PRReview, item.id),
+      sourceId: item.id,
+      source: SessionEditorCommentSource.PRReview,
+      sessionResource,
+      resourceUri: item.uri,
+      range: item.range,
+      text: item.body,
+      canConvertToAgentFeedback: true,
+    });
 	}
 
 	comments.sort(compareSessionEditorComments);
@@ -111,7 +119,7 @@ function estimateExpandedCommentLines(comment: ISessionEditorComment): number {
 	let suggestionLines = 0;
 	if (comment.suggestion?.edits.length) {
 		for (const edit of comment.suggestion.edits) {
-			suggestionLines += 2 + Math.max(1, edit.newText.split('\n').length);
+			suggestionLines += 2 + Math.max(1, edit.newText.split("\n").length);
 		}
 	}
 	return textLines + 1 + suggestionLines;
@@ -153,7 +161,9 @@ export function groupNearbySessionEditorComments(items: readonly ISessionEditorC
 
 export function getResourceEditorComments(resourceUri: URI, comments: readonly ISessionEditorComment[]): readonly ISessionEditorComment[] {
 	const resource = resourceUri.toString();
-	return comments.filter(comment => comment.resourceUri.toString() === resource);
+	return comments.filter(
+    comment => comment.resourceUri.toString() === resource,
+  );
 }
 
 export function toSessionEditorCommentId(source: SessionEditorCommentSource, sourceId: string): string {
@@ -161,5 +171,7 @@ export function toSessionEditorCommentId(source: SessionEditorCommentSource, sou
 }
 
 export function hasAgentFeedbackComments(comments: readonly ISessionEditorComment[]): boolean {
-	return comments.some(comment => comment.source === SessionEditorCommentSource.AgentFeedback);
+	return comments.some(
+    comment => comment.source === SessionEditorCommentSource.AgentFeedback,
+  );
 }

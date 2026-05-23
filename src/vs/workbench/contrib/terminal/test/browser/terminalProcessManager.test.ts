@@ -3,28 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { deepStrictEqual, strictEqual } from 'assert';
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { Schemas } from '../../../../../base/common/network.js';
-import { OperatingSystem } from '../../../../../base/common/platform.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { IConfigurationService, type IConfigurationChangeEvent } from '../../../../../platform/configuration/common/configuration.js';
-import { TestConfigurationService } from '../../../../../platform/configuration/test/common/testConfigurationService.js';
-import { ITerminalChildProcess, type ITerminalBackend } from '../../../../../platform/terminal/common/terminal.js';
-import { ITerminalInstanceService, ITerminalService } from '../../browser/terminal.js';
-import { TerminalProcessManager } from '../../browser/terminalProcessManager.js';
-import { workbenchInstantiationService } from '../../../../test/browser/workbenchTestServices.js';
+import { deepStrictEqual, strictEqual } from "assert";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { Schemas } from "../../../../../base/common/network.js";
+import { OperatingSystem } from "../../../../../base/common/platform.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { IConfigurationService, type IConfigurationChangeEvent } from "../../../../../platform/configuration/common/configuration.js";
+import { TestConfigurationService } from "../../../../../platform/configuration/test/common/testConfigurationService.js";
+import { ITerminalChildProcess, type ITerminalBackend } from "../../../../../platform/terminal/common/terminal.js";
+import { ITerminalInstanceService, ITerminalService } from "../../browser/terminal.js";
+import { TerminalProcessManager } from "../../browser/terminalProcessManager.js";
+import { workbenchInstantiationService } from "../../../../test/browser/workbenchTestServices.js";
 
 class TestTerminalChildProcess implements ITerminalChildProcess {
 	id: number = 0;
 	get capabilities() { return []; }
 	constructor(
-		readonly shouldPersist: boolean
+		readonly shouldPersist: boolean,
 	) {
 	}
 	updateProperty(property: any, value: any): Promise<void> {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 
 	readonly onProcessOverrideDimensions?: Event<any> | undefined;
@@ -44,11 +44,11 @@ class TestTerminalChildProcess implements ITerminalChildProcess {
 	resize(cols: number, rows: number): void { }
 	clearBuffer(): void { }
 	acknowledgeDataEvent(charCount: number): void { }
-	async setUnicodeVersion(version: '6' | '11'): Promise<void> { }
-	async getInitialCwd(): Promise<string> { return ''; }
-	async getCwd(): Promise<string> { return ''; }
+	async setUnicodeVersion(version: "6" | "11"): Promise<void> { }
+	async getInitialCwd(): Promise<string> { return ""; }
+	async getCwd(): Promise<string> { return ""; }
 	async processBinary(data: string): Promise<void> { }
-	refreshProperty(property: any): Promise<any> { return Promise.resolve(''); }
+	refreshProperty(property: any): Promise<any> { return Promise.resolve(""); }
 }
 
 class TestTerminalInstanceService implements Partial<ITerminalInstanceService> {
@@ -66,18 +66,18 @@ class TestTerminalInstanceService implements Partial<ITerminalInstanceService> {
 				cwd: string,
 				cols: number,
 				rows: number,
-				unicodeVersion: '6' | '11',
+				unicodeVersion: "6" | "11",
 				env: any,
 				options: any,
-				shouldPersist: boolean
+				shouldPersist: boolean,
 			) => new TestTerminalChildProcess(shouldPersist),
 			getLatency: () => Promise.resolve([]),
-			getShellEnvironment: () => Promise.resolve({})
+			getShellEnvironment: () => Promise.resolve({}),
 		} as unknown as ITerminalBackend;
 	}
 }
 
-suite('Workbench - TerminalProcessManager', () => {
+suite("Workbench - TerminalProcessManager", () => {
 	let manager: TerminalProcessManager;
 	let terminalInstanceService: TestTerminalInstanceService;
 
@@ -86,15 +86,15 @@ suite('Workbench - TerminalProcessManager', () => {
 	setup(async () => {
 		const instantiationService = workbenchInstantiationService(undefined, store);
 		const configurationService = instantiationService.get(IConfigurationService) as TestConfigurationService;
-		await configurationService.setUserConfiguration('editor', { fontFamily: 'foo' });
-		await configurationService.setUserConfiguration('terminal', {
+		await configurationService.setUserConfiguration("editor", { fontFamily: "foo" });
+		await configurationService.setUserConfiguration("terminal", {
 			integrated: {
-				fontFamily: 'bar',
+				fontFamily: "bar",
 				enablePersistentSessions: true,
 				shellIntegration: {
-					enabled: false
-				}
-			}
+					enabled: false,
+				},
+			},
 		});
 		configurationService.onDidChangeConfigurationEmitter.fire({
 			affectsConfiguration: () => true,
@@ -107,39 +107,39 @@ suite('Workbench - TerminalProcessManager', () => {
 		manager = store.add(instantiationService.createInstance(TerminalProcessManager, 1, undefined, undefined, undefined));
 	});
 
-	suite('process persistence', () => {
-		suite('local', () => {
-			test('regular terminal should persist', async () => {
+	suite("process persistence", () => {
+		suite("local", () => {
+			test("regular terminal should persist", async () => {
 				const p = await manager.createProcess({
 				}, 1, 1, false);
 				strictEqual(p, undefined);
 				strictEqual(manager.shouldPersist, true);
 			});
-			test('task terminal should not persist', async () => {
+			test("task terminal should not persist", async () => {
 				const p = await manager.createProcess({
-					isFeatureTerminal: true
+					isFeatureTerminal: true,
 				}, 1, 1, false);
 				strictEqual(p, undefined);
 				strictEqual(manager.shouldPersist, false);
 			});
 		});
-		suite('remote', () => {
+		suite("remote", () => {
 			const remoteCwd = URI.from({
 				scheme: Schemas.vscodeRemote,
-				path: 'test/cwd'
+				path: "test/cwd",
 			});
 
-			test('regular terminal should persist', async () => {
+			test("regular terminal should persist", async () => {
 				const p = await manager.createProcess({
-					cwd: remoteCwd
+					cwd: remoteCwd,
 				}, 1, 1, false);
 				strictEqual(p, undefined);
 				strictEqual(manager.shouldPersist, true);
 			});
-			test('task terminal should not persist', async () => {
+			test("task terminal should not persist", async () => {
 				const p = await manager.createProcess({
 					isFeatureTerminal: true,
-					cwd: remoteCwd
+					cwd: remoteCwd,
 				}, 1, 1, false);
 				strictEqual(p, undefined);
 				strictEqual(manager.shouldPersist, false);
@@ -147,7 +147,7 @@ suite('Workbench - TerminalProcessManager', () => {
 		});
 	});
 
-	suite('pty host restart', () => {
+	suite("pty host restart", () => {
 		async function fireRestartAndCaptureData(os: OperatingSystem, rows: number): Promise<string> {
 			await manager.createProcess({}, 80, rows, false);
 			manager.os = os;
@@ -157,27 +157,27 @@ suite('Workbench - TerminalProcessManager', () => {
 			return captured!;
 		}
 
-		test('appends viewport-clearing newlines and ESC[H on Windows', async () => {
+		test("appends viewport-clearing newlines and ESC[H on Windows", async () => {
 			const data = await fireRestartAndCaptureData(OperatingSystem.Windows, 24);
 			deepStrictEqual(
-				{ endsWithViewportClear: data.endsWith('\r\n'.repeat(23) + '\x1b[H') },
-				{ endsWithViewportClear: true }
+				{ endsWithViewportClear: data.endsWith("\r\n".repeat(23) + "\x1b[H") },
+				{ endsWithViewportClear: true },
 			);
 		});
 
-		test('does not append viewport-clearing sequence on non-Windows', async () => {
+		test("does not append viewport-clearing sequence on non-Windows", async () => {
 			const data = await fireRestartAndCaptureData(OperatingSystem.Linux, 24);
 			deepStrictEqual(
-				{ containsCursorHome: data.includes('\x1b[H') },
-				{ containsCursorHome: false }
+				{ containsCursorHome: data.includes("\x1b[H") },
+				{ containsCursorHome: false },
 			);
 		});
 
-		test('does not append viewport-clearing sequence on Windows when rows is 0', async () => {
+		test("does not append viewport-clearing sequence on Windows when rows is 0", async () => {
 			const data = await fireRestartAndCaptureData(OperatingSystem.Windows, 0);
 			deepStrictEqual(
-				{ containsCursorHome: data.includes('\x1b[H') },
-				{ containsCursorHome: false }
+				{ containsCursorHome: data.includes("\x1b[H") },
+				{ containsCursorHome: false },
 			);
 		});
 	});

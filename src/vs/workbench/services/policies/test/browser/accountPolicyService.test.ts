@@ -3,29 +3,35 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { IDefaultAccount, IDefaultAccountAuthenticationProvider, IPolicyData } from '../../../../../base/common/defaultAccount.js';
-import { Event } from '../../../../../base/common/event.js';
-import { PolicyCategory } from '../../../../../base/common/policy.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { Extensions, IConfigurationNode, IConfigurationRegistry } from '../../../../../platform/configuration/common/configurationRegistry.js';
-import { DefaultConfiguration, PolicyConfiguration } from '../../../../../platform/configuration/common/configurations.js';
-import { IDefaultAccountProvider, IDefaultAccountService } from '../../../../../platform/defaultAccount/common/defaultAccount.js';
-import { NullLogService } from '../../../../../platform/log/common/log.js';
-import { AbstractPolicyService, IPolicyService, PolicyValue } from '../../../../../platform/policy/common/policy.js';
-import { Registry } from '../../../../../platform/registry/common/platform.js';
-import { TestProductService } from '../../../../test/common/workbenchTestServices.js';
-import { DefaultAccountService } from '../../../accounts/browser/defaultAccount.js';
-import { AccountPolicyGateState, AccountPolicyGateUnsatisfiedReason, AccountPolicyService, APPROVED_ACCOUNT_ORGANIZATIONS_POLICY_NAME, IAccountPolicyGateInfo } from '../../common/accountPolicyService.js';
+import assert from "assert";
+import { IDefaultAccount, IDefaultAccountAuthenticationProvider, IPolicyData } from "../../../../../base/common/defaultAccount.js";
+import { Event } from "../../../../../base/common/event.js";
+import { PolicyCategory } from "../../../../../base/common/policy.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { Extensions, IConfigurationNode, IConfigurationRegistry } from "../../../../../platform/configuration/common/configurationRegistry.js";
+import { DefaultConfiguration, PolicyConfiguration } from "../../../../../platform/configuration/common/configurations.js";
+import { IDefaultAccountProvider, IDefaultAccountService } from "../../../../../platform/defaultAccount/common/defaultAccount.js";
+import { NullLogService } from "../../../../../platform/log/common/log.js";
+import { AbstractPolicyService, IPolicyService, PolicyValue } from "../../../../../platform/policy/common/policy.js";
+import { Registry } from "../../../../../platform/registry/common/platform.js";
+import { TestProductService } from "../../../../test/common/workbenchTestServices.js";
+import { DefaultAccountService } from "../../../accounts/browser/defaultAccount.js";
+import {
+  AccountPolicyGateState,
+  AccountPolicyGateUnsatisfiedReason,
+  AccountPolicyService,
+  APPROVED_ACCOUNT_ORGANIZATIONS_POLICY_NAME,
+  IAccountPolicyGateInfo,
+} from "../../common/accountPolicyService.js";
 
 const BASE_DEFAULT_ACCOUNT: IDefaultAccount = {
 	authenticationProvider: {
-		id: 'github',
-		name: 'GitHub',
+		id: "github",
+		name: "GitHub",
 		enterprise: false,
 	},
-	accountName: 'testuser',
-	sessionId: 'abc123',
+	accountName: "testuser",
+	sessionId: "abc123",
 	enterprise: false,
 };
 
@@ -60,7 +66,7 @@ class DefaultAccountProvider implements IDefaultAccountProvider {
 	async signOut(): Promise<void> { }
 }
 
-suite('AccountPolicyService', () => {
+suite("AccountPolicyService", () => {
 
 	const disposables = ensureNoDisposablesAreLeakedInTestSuite();
 
@@ -70,59 +76,59 @@ suite('AccountPolicyService', () => {
 	const logService = new NullLogService();
 
 	const policyConfigurationNode: IConfigurationNode = {
-		'id': 'policyConfiguration',
-		'order': 1,
-		'title': 'a',
-		'type': 'object',
-		'properties': {
-			'setting.A': {
-				'type': 'string',
-				'default': 'defaultValueA',
+		"id": "policyConfiguration",
+		"order": 1,
+		"title": "a",
+		"type": "object",
+		"properties": {
+			"setting.A": {
+				"type": "string",
+				"default": "defaultValueA",
 				policy: {
-					name: 'PolicySettingA',
+					name: "PolicySettingA",
 					category: PolicyCategory.Extensions,
-					minimumVersion: '1.0.0',
-					localization: { description: { key: '', value: '' } }
-				}
+					minimumVersion: "1.0.0",
+					localization: { description: { key: "", value: "" } },
+				},
 			},
-			'setting.B': {
-				'type': 'string',
-				'default': 'defaultValueB',
+			"setting.B": {
+				"type": "string",
+				"default": "defaultValueB",
 				policy: {
-					name: 'PolicySettingB',
+					name: "PolicySettingB",
 					category: PolicyCategory.Extensions,
-					minimumVersion: '1.0.0',
-					localization: { description: { key: '', value: '' } },
-					value: policyData => policyData.chat_preview_features_enabled === false ? 'policyValueB' : undefined,
-				}
+					minimumVersion: "1.0.0",
+					localization: { description: { key: "", value: "" } },
+					value: policyData => policyData.chat_preview_features_enabled === false ? "policyValueB" : undefined,
+				},
 			},
-			'setting.C': {
-				'type': 'array',
-				'default': ['defaultValueC1', 'defaultValueC2'],
+			"setting.C": {
+				"type": "array",
+				"default": ["defaultValueC1", "defaultValueC2"],
 				policy: {
-					name: 'PolicySettingC',
+					name: "PolicySettingC",
 					category: PolicyCategory.Extensions,
-					minimumVersion: '1.0.0',
-					localization: { description: { key: '', value: '' } },
-					value: policyData => policyData.chat_preview_features_enabled === false ? JSON.stringify(['policyValueC1', 'policyValueC2']) : undefined,
-				}
+					minimumVersion: "1.0.0",
+					localization: { description: { key: "", value: "" } },
+					value: policyData => policyData.chat_preview_features_enabled === false ? JSON.stringify(["policyValueC1", "policyValueC2"]) : undefined,
+				},
 			},
-			'setting.D': {
-				'type': 'boolean',
-				'default': true,
+			"setting.D": {
+				"type": "boolean",
+				"default": true,
 				policy: {
-					name: 'PolicySettingD',
+					name: "PolicySettingD",
 					category: PolicyCategory.Extensions,
-					minimumVersion: '1.0.0',
-					localization: { description: { key: '', value: '' } },
+					minimumVersion: "1.0.0",
+					localization: { description: { key: "", value: "" } },
 					value: policyData => policyData.chat_preview_features_enabled === false ? false : undefined,
-				}
+				},
 			},
-			'setting.E': {
-				'type': 'boolean',
-				'default': true,
-			}
-		}
+			"setting.E": {
+				"type": "boolean",
+				"default": true,
+			},
+		},
 	};
 
 
@@ -146,10 +152,10 @@ suite('AccountPolicyService', () => {
 		await policyConfiguration.initialize();
 
 		{
-			const A = policyService.getPolicyValue('PolicySettingA');
-			const B = policyService.getPolicyValue('PolicySettingB');
-			const C = policyService.getPolicyValue('PolicySettingC');
-			const D = policyService.getPolicyValue('PolicySettingD');
+			const A = policyService.getPolicyValue("PolicySettingA");
+			const B = policyService.getPolicyValue("PolicySettingB");
+			const C = policyService.getPolicyValue("PolicySettingC");
+			const D = policyService.getPolicyValue("PolicySettingD");
 
 			// No policy is set
 			assert.strictEqual(A, undefined);
@@ -159,9 +165,9 @@ suite('AccountPolicyService', () => {
 		}
 
 		{
-			const B = policyConfiguration.configurationModel.getValue('setting.B');
-			const C = policyConfiguration.configurationModel.getValue('setting.C');
-			const D = policyConfiguration.configurationModel.getValue('setting.D');
+			const B = policyConfiguration.configurationModel.getValue("setting.B");
+			const C = policyConfiguration.configurationModel.getValue("setting.C");
+			const D = policyConfiguration.configurationModel.getValue("setting.D");
 
 			assert.strictEqual(B, undefined);
 			assert.deepStrictEqual(C, undefined);
@@ -170,15 +176,15 @@ suite('AccountPolicyService', () => {
 	}
 
 
-	test('should initialize with default account', async () => {
+	test("should initialize with default account", async () => {
 		await assertDefaultBehavior(undefined);
 	});
 
-	test('should initialize with default account and preview features enabled', async () => {
+	test("should initialize with default account and preview features enabled", async () => {
 		await assertDefaultBehavior({ chat_preview_features_enabled: true });
 	});
 
-	test('should initialize with default account and preview features disabled', async () => {
+	test("should initialize with default account and preview features disabled", async () => {
 		const policyData: IPolicyData = { chat_preview_features_enabled: false };
 		defaultAccountService.setDefaultAccountProvider(new DefaultAccountProvider(BASE_DEFAULT_ACCOUNT, policyData));
 		await defaultAccountService.refresh();
@@ -187,24 +193,24 @@ suite('AccountPolicyService', () => {
 		const actualConfigurationModel = policyConfiguration.configurationModel;
 
 		{
-			const A = policyService.getPolicyValue('PolicySettingA');
-			const B = policyService.getPolicyValue('PolicySettingB');
-			const C = policyService.getPolicyValue('PolicySettingC');
-			const D = policyService.getPolicyValue('PolicySettingD');
+			const A = policyService.getPolicyValue("PolicySettingA");
+			const B = policyService.getPolicyValue("PolicySettingB");
+			const C = policyService.getPolicyValue("PolicySettingC");
+			const D = policyService.getPolicyValue("PolicySettingD");
 
 			assert.strictEqual(A, undefined); // Not tagged with chat preview tags
-			assert.strictEqual(B, 'policyValueB');
-			assert.strictEqual(C, JSON.stringify(['policyValueC1', 'policyValueC2']));
+			assert.strictEqual(B, "policyValueB");
+			assert.strictEqual(C, JSON.stringify(["policyValueC1", "policyValueC2"]));
 			assert.strictEqual(D, false);
 		}
 
 		{
-			const B = actualConfigurationModel.getValue('setting.B');
-			const C = actualConfigurationModel.getValue('setting.C');
-			const D = actualConfigurationModel.getValue('setting.D');
+			const B = actualConfigurationModel.getValue("setting.B");
+			const C = actualConfigurationModel.getValue("setting.C");
+			const D = actualConfigurationModel.getValue("setting.D");
 
-			assert.strictEqual(B, 'policyValueB');
-			assert.deepStrictEqual(C, ['policyValueC1', 'policyValueC2']);
+			assert.strictEqual(B, "policyValueB");
+			assert.deepStrictEqual(C, ["policyValueC1", "policyValueC2"]);
 			assert.strictEqual(D, false);
 		}
 	});
@@ -216,26 +222,26 @@ suite('AccountPolicyService', () => {
 	const APPROVED_ORG_ACCOUNT: IDefaultAccount = {
 		...BASE_DEFAULT_ACCOUNT,
 		entitlementsData: {
-			access_type_sku: 'sku',
+			access_type_sku: "sku",
 			chat_enabled: true,
-			assigned_date: '',
+			assigned_date: "",
 			can_signup_for_limited: false,
-			copilot_plan: 'pro',
-			organization_login_list: ['ApprovedOrg'],
-			analytics_tracking_id: '',
+			copilot_plan: "pro",
+			organization_login_list: ["ApprovedOrg"],
+			analytics_tracking_id: "",
 		},
 	};
 
 	const UNAPPROVED_ORG_ACCOUNT: IDefaultAccount = {
 		...BASE_DEFAULT_ACCOUNT,
 		entitlementsData: {
-			access_type_sku: 'sku',
+			access_type_sku: "sku",
 			chat_enabled: true,
-			assigned_date: '',
+			assigned_date: "",
 			can_signup_for_limited: false,
-			copilot_plan: 'pro',
-			organization_login_list: ['SomeOtherOrg'],
-			analytics_tracking_id: '',
+			copilot_plan: "pro",
+			organization_login_list: ["SomeOtherOrg"],
+			analytics_tracking_id: "",
 		},
 	};
 
@@ -269,7 +275,7 @@ suite('AccountPolicyService', () => {
 		if (opts.approvedOrgs !== undefined) {
 			// Mirror how the platform delivers array-typed policy values to AbstractPolicyService:
 			// as a JSON-stringified array. Tests can pass a raw string to exercise edge cases.
-			const value = typeof opts.approvedOrgs === 'string' ? opts.approvedOrgs : JSON.stringify(opts.approvedOrgs);
+			const value = typeof opts.approvedOrgs === "string" ? opts.approvedOrgs : JSON.stringify(opts.approvedOrgs);
 			managed.setPolicy(APPROVED_ACCOUNT_ORGANIZATIONS_POLICY_NAME, value);
 		}
 
@@ -288,73 +294,73 @@ suite('AccountPolicyService', () => {
 		return { policyService: service, managed };
 	}
 
-	test('gate inactive (no approved orgs set): behaves identically to today', async () => {
+	test("gate inactive (no approved orgs set): behaves identically to today", async () => {
 		const { policyService } = await setupGate({ account: APPROVED_ORG_ACCOUNT, policyData: { chat_preview_features_enabled: false } });
 		assert.strictEqual(policyService.gateInfo.state, AccountPolicyGateState.Inactive);
-		assert.strictEqual(policyService.getPolicyValue('PolicySettingD'), false); // account policy still flows
+		assert.strictEqual(policyService.getPolicyValue("PolicySettingD"), false); // account policy still flows
 	});
 
-	test('gate active, no account signed in: restricted', async () => {
-		const { policyService } = await setupGate({ approvedOrgs: ['ApprovedOrg'], account: null });
+	test("gate active, no account signed in: restricted", async () => {
+		const { policyService } = await setupGate({ approvedOrgs: ["ApprovedOrg"], account: null });
 		assert.strictEqual(policyService.gateInfo.state, AccountPolicyGateState.Restricted);
 		assert.strictEqual(policyService.gateInfo.reason, AccountPolicyGateUnsatisfiedReason.NoAccount);
 		// Restricted values applied to policies that opt into the gate.
 		// PolicySettingD has a `value` callback → falls back to type-default `false`.
-		assert.strictEqual(policyService.getPolicyValue('PolicySettingD'), false);
+		assert.strictEqual(policyService.getPolicyValue("PolicySettingD"), false);
 		// PolicySettingA does NOT opt in (no `value`, no `restrictedValue`) → unchanged.
-		assert.strictEqual(policyService.getPolicyValue('PolicySettingA'), undefined);
+		assert.strictEqual(policyService.getPolicyValue("PolicySettingA"), undefined);
 	});
 
-	test('gate active, signed in but org not approved: restricted', async () => {
-		const { policyService } = await setupGate({ approvedOrgs: ['ApprovedOrg'], account: UNAPPROVED_ORG_ACCOUNT, policyData: {} });
+	test("gate active, signed in but org not approved: restricted", async () => {
+		const { policyService } = await setupGate({ approvedOrgs: ["ApprovedOrg"], account: UNAPPROVED_ORG_ACCOUNT, policyData: {} });
 		assert.strictEqual(policyService.gateInfo.state, AccountPolicyGateState.Restricted);
 		assert.strictEqual(policyService.gateInfo.reason, AccountPolicyGateUnsatisfiedReason.OrgNotApproved);
 	});
 
-	test('gate active, account in approved org but policyData null (pre-resolution): restricted', async () => {
-		const { policyService } = await setupGate({ approvedOrgs: ['approvedorg'], account: APPROVED_ORG_ACCOUNT, policyData: null });
+	test("gate active, account in approved org but policyData null (pre-resolution): restricted", async () => {
+		const { policyService } = await setupGate({ approvedOrgs: ["approvedorg"], account: APPROVED_ORG_ACCOUNT, policyData: null });
 		assert.strictEqual(policyService.gateInfo.state, AccountPolicyGateState.Restricted);
 		assert.strictEqual(policyService.gateInfo.reason, AccountPolicyGateUnsatisfiedReason.PolicyNotResolved);
 	});
 
-	test('gate active, satisfied (case-insensitive org match): account policy values flow normally', async () => {
-		const { policyService } = await setupGate({ approvedOrgs: [' approvedorg ', ' Other '], account: APPROVED_ORG_ACCOUNT, policyData: { chat_preview_features_enabled: false } });
+	test("gate active, satisfied (case-insensitive org match): account policy values flow normally", async () => {
+		const { policyService } = await setupGate({ approvedOrgs: [" approvedorg ", " Other "], account: APPROVED_ORG_ACCOUNT, policyData: { chat_preview_features_enabled: false } });
 		assert.strictEqual(policyService.gateInfo.state, AccountPolicyGateState.Satisfied);
-		assert.strictEqual(policyService.getPolicyValue('PolicySettingD'), false); // from account policy data, not restricted
-		assert.strictEqual(policyService.getPolicyValue('PolicySettingA'), undefined); // not driven by account
+		assert.strictEqual(policyService.getPolicyValue("PolicySettingD"), false); // from account policy data, not restricted
+		assert.strictEqual(policyService.getPolicyValue("PolicySettingA"), undefined); // not driven by account
 	});
 
 	test('gate active, wildcard "*" satisfies any signed-in account', async () => {
-		const { policyService } = await setupGate({ approvedOrgs: ['*'], account: UNAPPROVED_ORG_ACCOUNT, policyData: {} });
+		const { policyService } = await setupGate({ approvedOrgs: ["*"], account: UNAPPROVED_ORG_ACCOUNT, policyData: {} });
 		assert.strictEqual(policyService.gateInfo.state, AccountPolicyGateState.Satisfied);
 	});
 
-	test('approved org list empty: gate inactive', async () => {
+	test("approved org list empty: gate inactive", async () => {
 		const { policyService } = await setupGate({ approvedOrgs: [], account: APPROVED_ORG_ACCOUNT, policyData: {} });
 		assert.strictEqual(policyService.gateInfo.state, AccountPolicyGateState.Inactive);
 	});
 
-	test('approved orgs raw non-array string from policy service: gate inactive (fail-safe)', async () => {
+	test("approved orgs raw non-array string from policy service: gate inactive (fail-safe)", async () => {
 		// Defensive: if some platform delivers the policy as a non-JSON string, treat it as no-orgs
 		// rather than half-parsing CSV. The platform's array-typed policy contract makes this rare.
-		const { policyService } = await setupGate({ approvedOrgs: 'github', account: APPROVED_ORG_ACCOUNT, policyData: {} });
+		const { policyService } = await setupGate({ approvedOrgs: "github", account: APPROVED_ORG_ACCOUNT, policyData: {} });
 		assert.strictEqual(policyService.gateInfo.state, AccountPolicyGateState.Inactive);
 	});
 
-	test('gate active, signed in with non-GitHub provider: WrongProvider reason', async () => {
+	test("gate active, signed in with non-GitHub provider: WrongProvider reason", async () => {
 		// Custom provider whose configured GitHub provider differs from the account's actual provider.
 		class MismatchedProvider extends DefaultAccountProvider {
 			override getDefaultAccountAuthenticationProvider(): IDefaultAccountAuthenticationProvider {
-				return { id: 'github', name: 'GitHub', enterprise: false };
+				return { id: "github", name: "GitHub", enterprise: false };
 			}
 		}
 		const NON_GITHUB_ACCOUNT: IDefaultAccount = {
 			...APPROVED_ORG_ACCOUNT,
-			authenticationProvider: { id: 'microsoft', name: 'Microsoft', enterprise: false },
+			authenticationProvider: { id: "microsoft", name: "Microsoft", enterprise: false },
 		};
 
 		const managed = disposables.add(new FakeManagedPolicyService());
-		managed.setPolicy(APPROVED_ACCOUNT_ORGANIZATIONS_POLICY_NAME, JSON.stringify(['ApprovedOrg']));
+		managed.setPolicy(APPROVED_ACCOUNT_ORGANIZATIONS_POLICY_NAME, JSON.stringify(["ApprovedOrg"]));
 		const accountService = disposables.add(new DefaultAccountService(TestProductService));
 		accountService.setDefaultAccountProvider(new MismatchedProvider(NON_GITHUB_ACCOUNT, {}));
 		await accountService.refresh();
@@ -368,45 +374,45 @@ suite('AccountPolicyService', () => {
 		assert.strictEqual(service.gateInfo.reason, AccountPolicyGateUnsatisfiedReason.WrongProvider);
 	});
 
-	test('explicit `restrictedValue` is honored when gate is restricted', async () => {
+	test("explicit `restrictedValue` is honored when gate is restricted", async () => {
 		const node: IConfigurationNode = {
-			id: 'restrictedValueConfig',
+			id: "restrictedValueConfig",
 			order: 2,
-			title: 'r',
-			type: 'object',
+			title: "r",
+			type: "object",
 			properties: {
-				'setting.RV': {
-					type: 'string',
-					default: 'open',
+				"setting.RV": {
+					type: "string",
+					default: "open",
 					policy: {
-						name: 'PolicySettingRV',
+						name: "PolicySettingRV",
 						category: PolicyCategory.Extensions,
-						minimumVersion: '1.0.0',
-						localization: { description: { key: '', value: '' } },
-						restrictedValue: 'locked',
-					}
-				}
-			}
+						minimumVersion: "1.0.0",
+						localization: { description: { key: "", value: "" } },
+						restrictedValue: "locked",
+					},
+				},
+			},
 		};
 		Registry.as<IConfigurationRegistry>(Extensions.Configuration).registerConfiguration(node);
 		try {
-			const { policyService } = await setupGate({ approvedOrgs: ['ApprovedOrg'], account: null });
+			const { policyService } = await setupGate({ approvedOrgs: ["ApprovedOrg"], account: null });
 			assert.strictEqual(policyService.gateInfo.state, AccountPolicyGateState.Restricted);
-			assert.strictEqual(policyService.getPolicyValue('PolicySettingRV'), 'locked');
+			assert.strictEqual(policyService.getPolicyValue("PolicySettingRV"), "locked");
 		} finally {
 			Registry.as<IConfigurationRegistry>(Extensions.Configuration).deregisterConfigurations([node]);
 		}
 	});
 
-	test('onDidChangeGateInfo fires on state/reason transitions', async () => {
-		const { policyService, managed } = await setupGate({ approvedOrgs: ['ApprovedOrg'], account: APPROVED_ORG_ACCOUNT, policyData: {} });
+	test("onDidChangeGateInfo fires on state/reason transitions", async () => {
+		const { policyService, managed } = await setupGate({ approvedOrgs: ["ApprovedOrg"], account: APPROVED_ORG_ACCOUNT, policyData: {} });
 		assert.strictEqual(policyService.gateInfo.state, AccountPolicyGateState.Satisfied);
 
 		const events: IAccountPolicyGateInfo[] = [];
 		disposables.add(policyService.onDidChangeGateInfo(info => events.push(info)));
 
 		// Satisfied → Restricted (org no longer approved)
-		managed.setPolicy(APPROVED_ACCOUNT_ORGANIZATIONS_POLICY_NAME, JSON.stringify(['OnlyOtherOrg']));
+		managed.setPolicy(APPROVED_ACCOUNT_ORGANIZATIONS_POLICY_NAME, JSON.stringify(["OnlyOtherOrg"]));
 		await new Promise(resolve => setTimeout(resolve, 0));
 		// Restricted → Inactive (gate disabled)
 		managed.setPolicy(APPROVED_ACCOUNT_ORGANIZATIONS_POLICY_NAME, JSON.stringify([]));
@@ -417,11 +423,11 @@ suite('AccountPolicyService', () => {
 			[
 				{ state: AccountPolicyGateState.Restricted, reason: AccountPolicyGateUnsatisfiedReason.OrgNotApproved },
 				{ state: AccountPolicyGateState.Inactive, reason: undefined },
-			]
+			],
 		);
 	});
 
-	test('boot race: gate is fail-closed until async managed policy service resolves', async () => {
+	test("boot race: gate is fail-closed until async managed policy service resolves", async () => {
 		// Simulate the IPC boundary: managed service only knows about its policies AFTER
 		// `updatePolicyDefinitions` has been called by the MultiplexPolicyService.
 		// Before that, `getPolicyValue` returns undefined.
@@ -447,7 +453,7 @@ suite('AccountPolicyService', () => {
 			}
 		}
 
-		const managed = disposables.add(new AsyncManagedPolicyService(JSON.stringify(['OnlyOtherOrg'])));
+		const managed = disposables.add(new AsyncManagedPolicyService(JSON.stringify(["OnlyOtherOrg"])));
 		const accountService = disposables.add(new DefaultAccountService(TestProductService));
 		accountService.setDefaultAccountProvider(new DefaultAccountProvider(APPROVED_ORG_ACCOUNT, {}));
 		await accountService.refresh();
@@ -471,8 +477,8 @@ suite('AccountPolicyService', () => {
 		assert.strictEqual(service.gateInfo.reason, AccountPolicyGateUnsatisfiedReason.OrgNotApproved);
 	});
 
-	test('managed policy change re-evaluates the gate and fires onDidChange', async () => {
-		const { policyService, managed } = await setupGate({ approvedOrgs: ['ApprovedOrg'], account: APPROVED_ORG_ACCOUNT, policyData: {} });
+	test("managed policy change re-evaluates the gate and fires onDidChange", async () => {
+		const { policyService, managed } = await setupGate({ approvedOrgs: ["ApprovedOrg"], account: APPROVED_ORG_ACCOUNT, policyData: {} });
 		assert.strictEqual(policyService.gateInfo.state, AccountPolicyGateState.Satisfied);
 
 		const changes: string[] = [];
@@ -480,11 +486,11 @@ suite('AccountPolicyService', () => {
 
 		// Change the approved-org list to one the account is NOT in → flip Satisfied → Restricted,
 		// which forces restricted values onto opted-in policies and emits onDidChange.
-		managed.setPolicy(APPROVED_ACCOUNT_ORGANIZATIONS_POLICY_NAME, JSON.stringify(['OnlyOtherOrg']));
+		managed.setPolicy(APPROVED_ACCOUNT_ORGANIZATIONS_POLICY_NAME, JSON.stringify(["OnlyOtherOrg"]));
 		// `_updatePolicyDefinitions` is async — wait one turn for it to resolve.
 		await new Promise(resolve => setTimeout(resolve, 0));
 
 		assert.strictEqual(policyService.gateInfo.state, AccountPolicyGateState.Restricted);
-		assert.ok(changes.length > 0, 'expected onDidChange to fire when gate flips');
+		assert.ok(changes.length > 0, "expected onDidChange to fire when gate flips");
 	});
 });

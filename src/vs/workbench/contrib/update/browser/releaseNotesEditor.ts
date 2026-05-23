@@ -3,39 +3,39 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { Codicon } from '../../../../base/common/codicons.js';
-import { onUnexpectedError } from '../../../../base/common/errors.js';
-import { escapeMarkdownSyntaxTokens } from '../../../../base/common/htmlContent.js';
-import { KeybindingParser } from '../../../../base/common/keybindingParser.js';
-import { escape } from '../../../../base/common/strings.js';
-import { URI } from '../../../../base/common/uri.js';
-import { generateUuid } from '../../../../base/common/uuid.js';
-import { TokenizationRegistry } from '../../../../editor/common/languages.js';
-import { generateTokensCSSForColorMap } from '../../../../editor/common/languages/supports/tokenization.js';
-import { ILanguageService } from '../../../../editor/common/languages/language.js';
-import * as nls from '../../../../nls.js';
-import { IEnvironmentService } from '../../../../platform/environment/common/environment.js';
-import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
-import { IProductService } from '../../../../platform/product/common/productService.js';
-import { asTextOrError, IRequestService } from '../../../../platform/request/common/request.js';
-import { DEFAULT_MARKDOWN_STYLES, renderMarkdownDocument } from '../../markdown/browser/markdownDocumentRenderer.js';
-import { WebviewInput } from '../../webviewPanel/browser/webviewEditorInput.js';
-import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { IEditorGroupsService } from '../../../services/editor/common/editorGroupsService.js';
-import { ACTIVE_GROUP, IEditorService } from '../../../services/editor/common/editorService.js';
-import { IExtensionService } from '../../../services/extensions/common/extensions.js';
-import { getTelemetryLevel, supportsTelemetry } from '../../../../platform/telemetry/common/telemetryUtils.js';
-import { IConfigurationChangeEvent, IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { TelemetryLevel } from '../../../../platform/telemetry/common/telemetry.js';
-import { Disposable, DisposableStore } from '../../../../base/common/lifecycle.js';
-import { SimpleSettingRenderer } from '../../markdown/browser/markdownSettingRenderer.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { Schemas } from '../../../../base/common/network.js';
-import { ICodeEditorService } from '../../../../editor/browser/services/codeEditorService.js';
-import { dirname } from '../../../../base/common/resources.js';
-import { asWebviewUri } from '../../webview/common/webview.js';
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { onUnexpectedError } from "../../../../base/common/errors.js";
+import { escapeMarkdownSyntaxTokens } from "../../../../base/common/htmlContent.js";
+import { KeybindingParser } from "../../../../base/common/keybindingParser.js";
+import { escape } from "../../../../base/common/strings.js";
+import { URI } from "../../../../base/common/uri.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { TokenizationRegistry } from "../../../../editor/common/languages.js";
+import { generateTokensCSSForColorMap } from "../../../../editor/common/languages/supports/tokenization.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import * as nls from "../../../../nls.js";
+import { IEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { asTextOrError, IRequestService } from "../../../../platform/request/common/request.js";
+import { DEFAULT_MARKDOWN_STYLES, renderMarkdownDocument } from "../../markdown/browser/markdownDocumentRenderer.js";
+import { WebviewInput } from "../../webviewPanel/browser/webviewEditorInput.js";
+import { IWebviewWorkbenchService } from "../../webviewPanel/browser/webviewWorkbenchService.js";
+import { IEditorGroupsService } from "../../../services/editor/common/editorGroupsService.js";
+import { ACTIVE_GROUP, IEditorService } from "../../../services/editor/common/editorService.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { getTelemetryLevel, supportsTelemetry } from "../../../../platform/telemetry/common/telemetryUtils.js";
+import { IConfigurationChangeEvent, IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { TelemetryLevel } from "../../../../platform/telemetry/common/telemetry.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { SimpleSettingRenderer } from "../../markdown/browser/markdownSettingRenderer.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { dirname } from "../../../../base/common/resources.js";
+import { asWebviewUri } from "../../webview/common/webview.js";
 
 export class ReleaseNotesManager extends Disposable {
 	private readonly _simpleSettingRenderer: SimpleSettingRenderer;
@@ -61,13 +61,25 @@ export class ReleaseNotesManager extends Disposable {
 	) {
 		super();
 
-		this._register(TokenizationRegistry.onDidChange(() => {
-			return this.updateHtml();
-		}));
+		this._register(
+      TokenizationRegistry.onDidChange(() => {
+        return this.updateHtml();
+      }),
+    );
 
-		this._register(_configurationService.onDidChangeConfiguration((e) => this.onDidChangeConfiguration(e)));
-		this._register(_webviewWorkbenchService.onDidChangeActiveWebviewEditor((e) => this.onDidChangeActiveWebviewEditor(e)));
-		this._simpleSettingRenderer = this._instantiationService.createInstance(SimpleSettingRenderer);
+		this._register(
+      _configurationService.onDidChangeConfiguration(
+        (e) => this.onDidChangeConfiguration(e),
+      ),
+    );
+		this._register(
+      _webviewWorkbenchService.onDidChangeActiveWebviewEditor(
+        (e) => this.onDidChangeActiveWebviewEditor(e),
+      ),
+    );
+		this._simpleSettingRenderer = this._instantiationService.createInstance(
+      SimpleSettingRenderer,
+    );
 	}
 
 	private async updateHtml() {
@@ -87,21 +99,32 @@ export class ReleaseNotesManager extends Disposable {
 				return dirname(currentFileUri);
 			}
 		}
-		return URI.parse('https://code.visualstudio.com/raw');
+		return URI.parse("https://code.visualstudio.com/raw");
 	}
 
 	public async show(version: string, useCurrentFile: boolean): Promise<boolean> {
-		const releaseNoteText = await this.loadReleaseNotes(version, useCurrentFile);
+		const releaseNoteText = await this.loadReleaseNotes(
+      version,
+      useCurrentFile,
+    );
 		const base = await this.getBase(useCurrentFile);
 		this._lastMeta = { text: releaseNoteText, base };
 		const html = await this.renderBody(this._lastMeta);
-		const title = nls.localize('releaseNotesInputName', "Release Notes: {0}", version);
+		const title = nls.localize(
+      "releaseNotesInputName",
+      "Release Notes: {0}",
+      version,
+    );
 
 		const activeEditorPane = this._editorService.activeEditorPane;
 		if (this._currentReleaseNotes) {
 			this._currentReleaseNotes.setWebviewTitle(title);
 			this._currentReleaseNotes.webview.setHtml(html);
-			this._webviewWorkbenchService.revealWebview(this._currentReleaseNotes, activeEditorPane ? activeEditorPane.group : this._editorGroupService.activeGroup, false);
+			this._webviewWorkbenchService.revealWebview(
+        this._currentReleaseNotes,
+        activeEditorPane ? activeEditorPane.group : this._editorGroupService.activeGroup,
+        false,
+      );
 		} else {
 			this._currentReleaseNotes = this._webviewWorkbenchService.openWebview(
 				{
@@ -113,33 +136,39 @@ export class ReleaseNotesManager extends Disposable {
 					},
 					contentOptions: {
 						localResourceRoots: useCurrentFile ? [base] : [],
-						allowScripts: true
+						allowScripts: true,
 					},
-					extension: undefined
+					extension: undefined,
 				},
-				'releaseNotes',
+				"releaseNotes",
 				title,
 				Codicon.vscode,
 				{ group: ACTIVE_GROUP, preserveFocus: false });
 
 			const disposables = new DisposableStore();
 
-			disposables.add(this._currentReleaseNotes.webview.onDidClickLink(uri => this.onDidClickLink(URI.parse(uri))));
+			disposables.add(
+        this._currentReleaseNotes.webview.onDidClickLink(
+          uri => this.onDidClickLink(URI.parse(uri)),
+        ),
+      );
 
 			disposables.add(this._currentReleaseNotes.webview.onMessage(e => {
-				if (e.message.type === 'showReleaseNotes') {
-					this._configurationService.updateValue('update.showReleaseNotes', e.message.value);
-				} else if (e.message.type === 'clickSetting') {
+				if (e.message.type === "showReleaseNotes") {
+					this._configurationService.updateValue("update.showReleaseNotes", e.message.value);
+				} else if (e.message.type === "clickSetting") {
 					const x = this._currentReleaseNotes?.webview.container.offsetLeft + e.message.value.x;
 					const y = this._currentReleaseNotes?.webview.container.offsetTop + e.message.value.y;
 					this._simpleSettingRenderer.updateSetting(URI.parse(e.message.value.uri), x, y);
 				}
 			}));
 
-			disposables.add(this._currentReleaseNotes.onWillDispose(() => {
-				disposables.dispose();
-				this._currentReleaseNotes = undefined;
-			}));
+			disposables.add(
+        this._currentReleaseNotes.onWillDispose(() => {
+          disposables.dispose();
+          this._currentReleaseNotes = undefined;
+        }),
+      );
 
 			this._currentReleaseNotes.webview.setHtml(html);
 		}
@@ -150,16 +179,16 @@ export class ReleaseNotesManager extends Disposable {
 	private async loadReleaseNotes(version: string, useCurrentFile: boolean): Promise<string> {
 		const match = /^(\d+\.\d+)\./.exec(version);
 		if (!match) {
-			throw new Error('not found');
+			throw new Error("not found");
 		}
 
-		const versionLabel = match[1].replace(/\./g, '_');
-		const baseUrl = 'https://code.visualstudio.com/raw';
+		const versionLabel = match[1].replace(/\./g, "_");
+		const baseUrl = "https://code.visualstudio.com/raw";
 		const url = `${baseUrl}/v${versionLabel}.md`;
-		const unassigned = nls.localize('unassigned', "unassigned");
+		const unassigned = nls.localize("unassigned", "unassigned");
 
 		const escapeMdHtml = (text: string): string => {
-			return escape(text).replace(/\\/g, '\\\\');
+			return escape(text).replace(/\\/g, "\\\\");
 		};
 
 		const patchKeybindings = (text: string): string => {
@@ -180,7 +209,9 @@ export class ReleaseNotesManager extends Disposable {
 					return unassigned;
 				}
 
-				const resolvedKeybindings = this._keybindingService.resolveKeybinding(keybinding);
+				const resolvedKeybindings = this._keybindingService.resolveKeybinding(
+          keybinding,
+        );
 
 				if (resolvedKeybindings.length === 0) {
 					return unassigned;
@@ -211,16 +242,18 @@ export class ReleaseNotesManager extends Disposable {
 			try {
 				if (useCurrentFile) {
 					const file = this._codeEditorService.getActiveCodeEditor()?.getModel()?.getValue();
-					text = file ? file.substring(file.indexOf('#')) : undefined;
+					text = file ? file.substring(file.indexOf("#")) : undefined;
 				} else {
-					text = await asTextOrError(await this._requestService.request({ url, callSite: 'releaseNotesEditor.fetchReleaseNotes' }, CancellationToken.None));
+					text = await asTextOrError(
+            await this._requestService.request({ url, callSite: "releaseNotesEditor.fetchReleaseNotes" }, CancellationToken.None),
+          );
 				}
 			} catch {
-				throw new Error('Failed to fetch release notes');
+				throw new Error("Failed to fetch release notes");
 			}
 
 			if (!text || (!/^#\s/.test(text) && !useCurrentFile)) { // release notes always starts with `#` followed by whitespace, except when using the current file
-				throw new Error('Invalid release notes');
+				throw new Error("Invalid release notes");
 			}
 
 			return patchKeybindings(text);
@@ -248,16 +281,23 @@ export class ReleaseNotesManager extends Disposable {
 		if (uri.scheme === Schemas.codeSetting) {
 			// handled in receive message
 		} else {
-			this.addGAParameters(uri, 'ReleaseNotes')
-				.then(updated => this._openerService.open(updated, { allowCommands: ['workbench.action.openSettings', 'summarize.release.notes'] }))
+			this.addGAParameters(uri, "ReleaseNotes")
+				.then(updated => this._openerService.open(updated, { allowCommands: ["workbench.action.openSettings", "summarize.release.notes"] }))
 				.then(undefined, onUnexpectedError);
 		}
 	}
 
-	private async addGAParameters(uri: URI, origin: string, experiment = '1'): Promise<URI> {
-		if (supportsTelemetry(this._productService, this._environmentService) && getTelemetryLevel(this._configurationService) === TelemetryLevel.USAGE) {
-			if (uri.scheme === 'https' && uri.authority === 'code.visualstudio.com') {
-				return uri.with({ query: `${uri.query ? uri.query + '&' : ''}utm_source=VsCode&utm_medium=${encodeURIComponent(origin)}&utm_content=${encodeURIComponent(experiment)}` });
+	private async addGAParameters(uri: URI, origin: string, experiment = "1"): Promise<URI> {
+		if (supportsTelemetry(
+      this._productService,
+      this._environmentService,
+    ) && getTelemetryLevel(
+      this._configurationService,
+    ) === TelemetryLevel.USAGE) {
+			if (uri.scheme === "https" && uri.authority === "code.visualstudio.com") {
+				return uri.with({
+          query: `${uri.query ? uri.query + "&" : ""}utm_source=VsCode&utm_medium=${encodeURIComponent(origin)}&utm_content=${encodeURIComponent(experiment)}`,
+        });
 			}
 		}
 		return uri;
@@ -266,11 +306,19 @@ export class ReleaseNotesManager extends Disposable {
 	private async renderBody(fileContent: { text: string; base: URI }) {
 		const nonce = generateUuid();
 
-		const processedContent = await renderReleaseNotesMarkdown(fileContent.text, this._extensionService, this._languageService, this._simpleSettingRenderer, this._productService.quality);
+		const processedContent = await renderReleaseNotesMarkdown(
+      fileContent.text,
+      this._extensionService,
+      this._languageService,
+      this._simpleSettingRenderer,
+      this._productService.quality,
+    );
 
 		const colorMap = TokenizationRegistry.getColorMap();
-		const css = colorMap ? generateTokensCSSForColorMap(colorMap) : '';
-		const showReleaseNotes = Boolean(this._configurationService.getValue<boolean>('update.showReleaseNotes'));
+		const css = colorMap ? generateTokensCSSForColorMap(colorMap) : "";
+		const showReleaseNotes = Boolean(
+      this._configurationService.getValue<boolean>("update.showReleaseNotes"),
+    );
 
 		return `<!DOCTYPE html>
 		<html>
@@ -550,7 +598,7 @@ export class ReleaseNotesManager extends Disposable {
 
 					const label = document.createElement('label');
 					label.htmlFor = 'showReleaseNotes';
-					label.textContent = '${nls.localize('showOnUpdate', "Show release notes after an update")}';
+					label.textContent = '${nls.localize("showOnUpdate", "Show release notes after an update")}';
 					container.appendChild(label);
 
 					const beforeElement = document.querySelector("body > h1")?.nextElementSibling;
@@ -591,7 +639,7 @@ export class ReleaseNotesManager extends Disposable {
 	}
 
 	private onDidChangeConfiguration(e: IConfigurationChangeEvent): void {
-		if (e.affectsConfiguration('update.showReleaseNotes')) {
+		if (e.affectsConfiguration("update.showReleaseNotes")) {
 			this.updateCheckboxWebview();
 		}
 	}
@@ -605,9 +653,9 @@ export class ReleaseNotesManager extends Disposable {
 	private updateCheckboxWebview() {
 		if (this._currentReleaseNotes) {
 			this._currentReleaseNotes.webview.postMessage({
-				type: 'showReleaseNotes',
-				value: this._configurationService.getValue<boolean>('update.showReleaseNotes')
-			});
+        type: "showReleaseNotes",
+        value: this._configurationService.getValue<boolean>("update.showReleaseNotes"),
+      });
 		}
 	}
 }
@@ -641,8 +689,8 @@ export function processConditionalBlocks(text: string, activeConditions: Readonl
 				return content;
 			}
 			// Remove the entire block
-			return '';
-		}
+			return "";
+		},
 	);
 }
 
@@ -656,15 +704,15 @@ export async function renderReleaseNotesMarkdown(
 	// Remove HTML comment markers around table of contents navigation
 	text = text
 		.toString()
-		.replace(/<!--\s*TOC\s*/gi, '')
-		.replace(/\s*Navigation End\s*-->/gi, '');
+		.replace(/<!--\s*TOC\s*/gi, "")
+		.replace(/\s*Navigation End\s*-->/gi, "");
 
 	// Process conditional blocks based on active conditions
-	const activeConditions = new Set<string>(['IN_PRODUCT']);
-	if (quality === 'stable') {
-		activeConditions.add('STABLE');
-	} else if (quality === 'insider') {
-		activeConditions.add('INSIDERS');
+	const activeConditions = new Set<string>(["IN_PRODUCT"]);
+	if (quality === "stable") {
+		activeConditions.add("STABLE");
+	} else if (quality === "insider") {
+		activeConditions.add("INSIDERS");
 	}
 	text = processConditionalBlocks(text, activeConditions);
 
@@ -672,16 +720,16 @@ export async function renderReleaseNotesMarkdown(
 		sanitizerConfig: {
 			allowRelativeMediaPaths: true,
 			allowedLinkProtocols: {
-				override: [Schemas.http, Schemas.https, Schemas.command, Schemas.codeSetting]
+				override: [Schemas.http, Schemas.https, Schemas.command, Schemas.codeSetting],
 			},
-			allowedTags: { augment: ['nav', 'svg', 'path'] },
-			allowedAttributes: { augment: ['aria-role', 'viewBox', 'fill', 'xmlns', 'd'] }
+			allowedTags: { augment: ["nav", "svg", "path"] },
+			allowedAttributes: { augment: ["aria-role", "viewBox", "fill", "xmlns", "d"] },
 		},
 		markedExtensions: [{
 			renderer: {
 				html: simpleSettingRenderer.getHtmlRenderer(),
 				codespan: simpleSettingRenderer.getCodeSpanRenderer(),
-			}
-		}]
+			},
+		}],
 	});
 }

@@ -3,9 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ILogService } from '../../../log/common/log.js';
-import type { StringOrMarkdown } from '../../common/state/protocol/state.js';
-import { getClaudeInvocationMessage, getClaudeToolDisplayName, getClaudeToolInputString } from './claudeToolDisplay.js';
+import type { ILogService } from "../../../log/common/log.js";
+import type { StringOrMarkdown } from "../../common/state/protocol/state.js";
+import {
+  getClaudeInvocationMessage,
+  getClaudeToolDisplayName,
+  getClaudeToolInputString,
+} from "./claudeToolDisplay.js";
 
 /**
  * Phase 8.5 — per-tool-call info computed at `content_block_stop` and
@@ -70,11 +74,11 @@ export class ClaudeToolCallRegistry {
 	 */
 	begin(toolUseId: string, toolName: string, turnId: string): void {
 		this._entries.set(toolUseId, {
-			toolName,
-			turnId,
-			inputBuffer: '',
-			info: undefined,
-		});
+      toolName,
+      turnId,
+      inputBuffer: "",
+      info: undefined,
+    });
 	}
 
 	/**
@@ -105,7 +109,7 @@ export class ClaudeToolCallRegistry {
 		if (entry.inputBuffer.length > 0) {
 			try {
 				const parsed: unknown = JSON.parse(entry.inputBuffer);
-				if (parsed !== null && typeof parsed === 'object') {
+				if (parsed !== null && typeof parsed === "object") {
 					parsedInput = parsed as Record<string, unknown>;
 				}
 			} catch {
@@ -118,7 +122,7 @@ export class ClaudeToolCallRegistry {
 		const rawFallback = entry.inputBuffer.length > 0 ? entry.inputBuffer : undefined;
 		this._writeInfo(entry, parsedInput, rawFallback);
 		// Buffer is no longer needed once parsed.
-		entry.inputBuffer = '';
+		entry.inputBuffer = "";
 	}
 
 	/**
@@ -136,7 +140,7 @@ export class ClaudeToolCallRegistry {
 		if (!entry) {
 			return;
 		}
-		const normalized = (parsedInput !== null && typeof parsedInput === 'object')
+		const normalized = (parsedInput !== null && typeof parsedInput === "object")
 			? parsedInput as Record<string, unknown>
 			: undefined;
 		this._writeInfo(entry, normalized);
@@ -145,12 +149,12 @@ export class ClaudeToolCallRegistry {
 	private _writeInfo(entry: IRegistryEntry, parsedInput: Record<string, unknown> | undefined, rawFallback?: string): void {
 		const displayName = getClaudeToolDisplayName(entry.toolName);
 		entry.info = {
-			toolName: entry.toolName,
-			displayName,
-			parsedInput,
-			invocationMessage: getClaudeInvocationMessage(entry.toolName, displayName, parsedInput),
-			toolInput: getClaudeToolInputString(entry.toolName, parsedInput) ?? rawFallback,
-		};
+      toolName: entry.toolName,
+      displayName,
+      parsedInput,
+      invocationMessage: getClaudeInvocationMessage(entry.toolName, displayName, parsedInput),
+      toolInput: getClaudeToolInputString(entry.toolName, parsedInput) ?? rawFallback,
+    };
 	}
 
 	/**
@@ -188,7 +192,9 @@ export class ClaudeToolCallRegistry {
 			return;
 		}
 		for (const [toolUseId, entry] of this._entries) {
-			logService.warn(`[claudeToolCallRegistry] turn ${entry.turnId} ended with pending tool_use ${toolUseId} (${entry.toolName}); dropping cross-message state`);
+			logService.warn(
+        `[claudeToolCallRegistry] turn ${entry.turnId} ended with pending tool_use ${toolUseId} (${entry.toolName}); dropping cross-message state`,
+      );
 		}
 		this._entries.clear();
 	}

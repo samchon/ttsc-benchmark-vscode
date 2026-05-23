@@ -3,51 +3,70 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter } from '../../../base/common/event.js';
-import { isJsonRpcResponse } from '../../../base/common/jsonRpcProtocol.js';
-import { Disposable, DisposableStore } from '../../../base/common/lifecycle.js';
-import { hasKey } from '../../../base/common/types.js';
-import { URI } from '../../../base/common/uri.js';
-import { ILogService } from '../../log/common/log.js';
-import { AHPFileSystemProvider } from '../common/agentHostFileSystemProvider.js';
-import { AgentSession, type IAgentService } from '../common/agentService.js';
-import type { CommandMap } from '../common/state/protocol/messages.js';
-import { ActionEnvelope, ActionType, INotification, isSessionAction, isTerminalAction, type SessionAction, type TerminalAction, type IRootConfigChangedAction } from '../common/state/sessionActions.js';
-import { PROTOCOL_VERSION } from '../common/state/protocol/version/registry.js';
-import { negotiateProtocolVersion } from '../common/state/protocol/version/negotiation.js';
-import { VSCODE_UPGRADE_METHOD, type UnsupportedProtocolVersionErrorDataEx } from '../common/state/protocolUpgrade.js';
-import { getAgentHostManagementSocketPath, requestAgentHostUpgrade } from './agentHostUpgradeChannel.js';
+import { Emitter } from "../../../base/common/event.js";
+import { isJsonRpcResponse } from "../../../base/common/jsonRpcProtocol.js";
+import { Disposable, DisposableStore } from "../../../base/common/lifecycle.js";
+import { hasKey } from "../../../base/common/types.js";
+import { URI } from "../../../base/common/uri.js";
+import { ILogService } from "../../log/common/log.js";
+import { AHPFileSystemProvider } from "../common/agentHostFileSystemProvider.js";
+import { AgentSession, type IAgentService } from "../common/agentService.js";
+import type { CommandMap } from "../common/state/protocol/messages.js";
 import {
-	AHP_AUTH_REQUIRED,
-	AHP_PROVIDER_NOT_FOUND,
-	AHP_SESSION_NOT_FOUND,
-	AHP_UNSUPPORTED_PROTOCOL_VERSION,
-	JsonRpcRequest,
-	isJsonRpcNotification,
-	isJsonRpcRequest,
-	JSON_RPC_INTERNAL_ERROR,
-	JsonRpcErrorCodes,
-	ProtocolError,
-	type AhpServerNotification,
-	type InitializeParams,
-	type JsonRpcResponse,
-	type ReconnectParams,
-	type IStateSnapshot,
-} from '../common/state/sessionProtocol.js';
-import { ChangesetOperationScope, ChangesetOperationTargetKind, isAhpRootChannel, ResponsePartKind, SessionStatus, ToolCallConfirmationReason, ToolCallStatus, ToolResultContentType, type SessionState } from '../common/state/sessionState.js';
-import type { IProtocolServer, IProtocolTransport } from '../common/state/sessionTransport.js';
-import { AgentHostStateManager } from './agentHostStateManager.js';
+  ActionEnvelope,
+  ActionType,
+  INotification,
+  isSessionAction,
+  isTerminalAction,
+  type SessionAction,
+  type TerminalAction,
+  type IRootConfigChangedAction,
+} from "../common/state/sessionActions.js";
+import { PROTOCOL_VERSION } from "../common/state/protocol/version/registry.js";
+import { negotiateProtocolVersion } from "../common/state/protocol/version/negotiation.js";
+import { VSCODE_UPGRADE_METHOD, type UnsupportedProtocolVersionErrorDataEx } from "../common/state/protocolUpgrade.js";
+import { getAgentHostManagementSocketPath, requestAgentHostUpgrade } from "./agentHostUpgradeChannel.js";
 import {
-	buildOtlpLogsChannelUri,
-	extractLevelFromOtlpLogsUri,
-	levelToSeverityNumber,
-	OTLP_CHANNEL_SCHEME,
-	OTLP_LOGS_CHANNEL_TEMPLATE,
-	OtlpLogEmitter,
-	toResourceLogsPayload,
-	type IOtlpLogRecord,
-	type OtlpLogLevelName,
-} from '../common/otlp/otlpLogEmitter.js';
+  AHP_AUTH_REQUIRED,
+  AHP_PROVIDER_NOT_FOUND,
+  AHP_SESSION_NOT_FOUND,
+  AHP_UNSUPPORTED_PROTOCOL_VERSION,
+  JsonRpcRequest,
+  isJsonRpcNotification,
+  isJsonRpcRequest,
+  JSON_RPC_INTERNAL_ERROR,
+  JsonRpcErrorCodes,
+  ProtocolError,
+  type AhpServerNotification,
+  type InitializeParams,
+  type JsonRpcResponse,
+  type ReconnectParams,
+  type IStateSnapshot,
+} from "../common/state/sessionProtocol.js";
+import {
+  ChangesetOperationScope,
+  ChangesetOperationTargetKind,
+  isAhpRootChannel,
+  ResponsePartKind,
+  SessionStatus,
+  ToolCallConfirmationReason,
+  ToolCallStatus,
+  ToolResultContentType,
+  type SessionState,
+} from "../common/state/sessionState.js";
+import type { IProtocolServer, IProtocolTransport } from "../common/state/sessionTransport.js";
+import { AgentHostStateManager } from "./agentHostStateManager.js";
+import {
+  buildOtlpLogsChannelUri,
+  extractLevelFromOtlpLogsUri,
+  levelToSeverityNumber,
+  OTLP_CHANNEL_SCHEME,
+  OTLP_LOGS_CHANNEL_TEMPLATE,
+  OtlpLogEmitter,
+  toResourceLogsPayload,
+  type IOtlpLogRecord,
+  type OtlpLogLevelName,
+} from "../common/otlp/otlpLogEmitter.js";
 
 /** Default capacity of the server-side action replay buffer. */
 const REPLAY_BUFFER_CAPACITY = 1000;
@@ -56,12 +75,16 @@ const CLIENT_TOOL_CALL_DISCONNECT_TIMEOUT = 30_000;
 
 /** Build a JSON-RPC success response suitable for transport.send(). */
 function jsonRpcSuccess(id: number, result: unknown): JsonRpcResponse {
-	return { jsonrpc: '2.0', id, result };
+	return { jsonrpc: "2.0", id, result };
 }
 
 /** Build a JSON-RPC error response suitable for transport.send(). */
 function jsonRpcError(id: number, code: number, message: string, data?: unknown): JsonRpcResponse {
-	return { jsonrpc: '2.0', id, error: { code, message, ...(data !== undefined ? { data } : {}) } };
+	return {
+    jsonrpc: "2.0",
+    id,
+    error: { code, message, ...(data !== undefined ? { data } : {}) },
+  };
 }
 
 /** Build a JSON-RPC error response from an unknown thrown value, preserving {@link ProtocolError} fields. */
@@ -69,7 +92,9 @@ function jsonRpcErrorFrom(id: number, err: unknown): JsonRpcResponse {
 	if (err instanceof ProtocolError) {
 		return jsonRpcError(id, err.code, err.message, err.data);
 	}
-	const message = err instanceof Error ? (err.stack ?? err.message) : String(err);
+	const message = err instanceof Error ? (err.stack ?? err.message) : String(
+    err,
+  );
 	return jsonRpcError(id, JSON_RPC_INTERNAL_ERROR, message);
 }
 
@@ -78,7 +103,7 @@ function jsonRpcErrorFrom(id: number, err: unknown): JsonRpcResponse {
  * `reconnect`, and `ping`, which are handled directly during message
  * dispatch without requiring an established client context.
  */
-type RequestMethod = Exclude<keyof CommandMap, 'initialize' | 'reconnect' | 'ping'>;
+type RequestMethod = Exclude<keyof CommandMap, "initialize" | "reconnect" | "ping">;
 
 /**
  * Typed handler map: each key is a request method, each value is a handler
@@ -86,7 +111,7 @@ type RequestMethod = Exclude<keyof CommandMap, 'initialize' | 'reconnect' | 'pin
  * result. The compiler will error if a handler returns the wrong shape.
  */
 type RequestHandlerMap = {
-	[M in RequestMethod]: (client: IConnectedClient, params: CommandMap[M]['params']) => Promise<CommandMap[M]['result']>;
+	[M in RequestMethod]: (client: IConnectedClient, params: CommandMap[M]["params"]) => Promise<CommandMap[M]["result"]>;
 };
 
 /**
@@ -102,14 +127,14 @@ const enum ChannelKind {
 	 * action broadcasts ({@link _broadcastAction}) and reconnect
 	 * snapshot/replay.
 	 */
-	State = 'state',
+	State = "state",
 	/**
 	 * Subscribed against the OTLP logs channel template advertised in
 	 * {@link InitializeResult.telemetry}. Stateless — no snapshot, no
 	 * agent-service refcount. The `level` field records the minimum
 	 * severity the client asked to receive.
 	 */
-	OtlpLogs = 'otlp-logs',
+	OtlpLogs = "otlp-logs",
 }
 
 /**
@@ -159,7 +184,11 @@ function classifyChannel(channel: string): ChannelSubscription | undefined {
 		if (!level) {
 			return undefined;
 		}
-		return { kind: ChannelKind.OtlpLogs, uri: buildOtlpLogsChannelUri(level), level };
+		return {
+      kind: ChannelKind.OtlpLogs,
+      uri: buildOtlpLogsChannelUri(level),
+      level,
+    };
 	}
 	return { kind: ChannelKind.State, uri: channel };
 }
@@ -200,7 +229,9 @@ export class ProtocolServerHandler extends Disposable {
 	private readonly _replayBuffer: ActionEnvelope[] = [];
 	private readonly _clientToolCallDisconnectTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
 
-	private readonly _onDidChangeConnectionCount = this._register(new Emitter<number>());
+	private readonly _onDidChangeConnectionCount = this._register(
+    new Emitter<number>(),
+  );
 
 	/** Fires with the current client count whenever a client connects or disconnects. */
 	readonly onDidChangeConnectionCount = this._onDidChangeConnectionCount.event;
@@ -215,9 +246,11 @@ export class ProtocolServerHandler extends Disposable {
 	) {
 		super();
 
-		this._register(this._server.onConnection(transport => {
-			this._handleNewConnection(transport);
-		}));
+		this._register(
+      this._server.onConnection(transport => {
+        this._handleNewConnection(transport);
+      }),
+    );
 
 		this._register(this._stateManager.onDidEmitEnvelope(envelope => {
 			this._replayBuffer.push(envelope);
@@ -227,12 +260,18 @@ export class ProtocolServerHandler extends Disposable {
 			this._broadcastAction(envelope);
 		}));
 
-		this._register(this._stateManager.onDidEmitNotification(notification => {
-			this._broadcastNotification(notification);
-		}));
+		this._register(
+      this._stateManager.onDidEmitNotification(notification => {
+        this._broadcastNotification(notification);
+      }),
+    );
 
 		if (this._config.otlpLogEmitter) {
-			this._register(this._config.otlpLogEmitter.onDidLog(record => this._broadcastOtlpLog(record)));
+			this._register(
+        this._config.otlpLogEmitter.onDidLog(
+          record => this._broadcastOtlpLog(record),
+        ),
+      );
 		}
 	}
 
@@ -249,13 +288,13 @@ export class ProtocolServerHandler extends Disposable {
 				// Ping is stateless and MUST be answerable regardless of whether
 				// the connection has been initialized. Carries no payload — the
 				// round-trip itself is the liveness signal.
-				if (msg.method === 'ping') {
+				if (msg.method === "ping") {
 					transport.send(jsonRpcSuccess(msg.id, null));
 					return;
 				}
 
 				// Handle initialize/reconnect as requests that set up the client
-				if (!client && msg.method === 'initialize') {
+				if (!client && msg.method === "initialize") {
 					try {
 						const result = this._handleInitialize(msg.params, transport, disposables);
 						client = result.client;
@@ -265,7 +304,7 @@ export class ProtocolServerHandler extends Disposable {
 					}
 					return;
 				}
-				if (!client && msg.method === 'reconnect') {
+				if (!client && msg.method === "reconnect") {
 					let responsePromise: Promise<unknown>;
 					try {
 						const result = this._handleReconnect(msg.params, transport, disposables);
@@ -299,12 +338,12 @@ export class ProtocolServerHandler extends Disposable {
 				this._logService.trace(`[ProtocolServer] notification: method=${msg.method}`);
 				// Notification — fire-and-forget
 				switch (msg.method) {
-					case 'unsubscribe':
+					case "unsubscribe":
 						if (client) {
 							this._removeSubscription(client, msg.params.channel);
 						}
 						break;
-					case 'dispatchAction':
+					case "dispatchAction":
 						if (client) {
 							this._logService.trace(`[ProtocolServer] dispatchAction: ${JSON.stringify(msg.params.action.type)}`);
 							const action = msg.params.action as SessionAction | TerminalAction | IRootConfigChangedAction;
@@ -322,7 +361,7 @@ export class ProtocolServerHandler extends Disposable {
 					if (hasKey(msg, { error: true })) {
 						pending.reject(new ProtocolError(
 							msg.error?.code ?? -32000,
-							msg.error?.message ?? 'Reverse RPC error',
+							msg.error?.message ?? "Reverse RPC error",
 							msg.error?.data,
 						));
 					} else {
@@ -364,8 +403,12 @@ export class ProtocolServerHandler extends Disposable {
 		transport: IProtocolTransport,
 		disposables: DisposableStore,
 	): { client: IConnectedClient; response: unknown } {
-		const offered = Array.isArray(params.protocolVersions) ? params.protocolVersions : [];
-		this._logService.info(`[ProtocolServer] Initialize: clientId=${params.clientId}, protocolVersions=[${offered.join(', ')}]`);
+		const offered = Array.isArray(
+      params.protocolVersions,
+    ) ? params.protocolVersions : [];
+		this._logService.info(
+      `[ProtocolServer] Initialize: clientId=${params.clientId}, protocolVersions=[${offered.join(", ")}]`,
+    );
 
 		const negotiated = negotiateProtocolVersion(offered, PROTOCOL_VERSION);
 		if (!negotiated) {
@@ -381,29 +424,29 @@ export class ProtocolServerHandler extends Disposable {
 					: undefined,
 			};
 			throw new ProtocolError(
-				AHP_UNSUPPORTED_PROTOCOL_VERSION,
-				`Client offered protocol versions [${offered.join(', ')}], none of which are compatible with this server's version ${PROTOCOL_VERSION} (server accepts ^${PROTOCOL_VERSION}).`,
-				data,
-			);
+        AHP_UNSUPPORTED_PROTOCOL_VERSION,
+        `Client offered protocol versions [${offered.join(", ")}], none of which are compatible with this server's version ${PROTOCOL_VERSION} (server accepts ^${PROTOCOL_VERSION}).`,
+        data,
+      );
 		}
 
 		const client: IConnectedClient = {
-			clientId: params.clientId,
-			protocolVersion: negotiated,
-			transport,
-			subscriptions: new Map(),
-			disposables,
-		};
+      clientId: params.clientId,
+      protocolVersion: negotiated,
+      transport,
+      subscriptions: new Map(),
+      disposables,
+    };
 		this._clients.set(params.clientId, client);
 		this._onDidChangeConnectionCount.fire(this._clients.size);
 
 		disposables.add(this._clientFileSystemProvider.registerAuthority(params.clientId, {
-			resourceList: (uri) => this._sendReverseRequest(params.clientId, 'resourceList', { uri: uri.toString() }),
-			resourceRead: (uri) => this._sendReverseRequest(params.clientId, 'resourceRead', { uri: uri.toString() }),
-			resourceWrite: (params_) => this._sendReverseRequest(params.clientId, 'resourceWrite', params_),
-			resourceDelete: (params_) => this._sendReverseRequest(params.clientId, 'resourceDelete', params_),
-			resourceMove: (params_) => this._sendReverseRequest(params.clientId, 'resourceMove', params_),
-			resourceRequest: (params_) => this._sendReverseRequest(params.clientId, 'resourceRequest', params_),
+			resourceList: (uri) => this._sendReverseRequest(params.clientId, "resourceList", { uri: uri.toString() }),
+			resourceRead: (uri) => this._sendReverseRequest(params.clientId, "resourceRead", { uri: uri.toString() }),
+			resourceWrite: (params_) => this._sendReverseRequest(params.clientId, "resourceWrite", params_),
+			resourceDelete: (params_) => this._sendReverseRequest(params.clientId, "resourceDelete", params_),
+			resourceMove: (params_) => this._sendReverseRequest(params.clientId, "resourceMove", params_),
+			resourceRequest: (params_) => this._sendReverseRequest(params.clientId, "resourceRequest", params_),
 		}));
 
 
@@ -453,7 +496,9 @@ export class ProtocolServerHandler extends Disposable {
 		}
 		if (sub.kind === ChannelKind.OtlpLogs) {
 			if (!this._config.otlpLogEmitter) {
-				this._logService.warn(`[ProtocolServer] Ignoring OTLP initialSubscription ${channel}: no OTLP emitter configured.`);
+				this._logService.warn(
+          `[ProtocolServer] Ignoring OTLP initialSubscription ${channel}: no OTLP emitter configured.`,
+        );
 				return undefined;
 			}
 			client.subscriptions.set(sub.uri, sub);
@@ -482,20 +527,24 @@ export class ProtocolServerHandler extends Disposable {
 	private _handleVscodeUpgrade(id: number, transport: IProtocolTransport): void {
 		const socketPath = getAgentHostManagementSocketPath();
 		if (!socketPath) {
-			transport.send(jsonRpcError(
-				id,
-				JsonRpcErrorCodes.MethodNotFound,
-				`No upgrade supervisor is available for this agent host.`,
-			));
+			transport.send(
+        jsonRpcError(
+          id,
+          JsonRpcErrorCodes.MethodNotFound,
+          `No upgrade supervisor is available for this agent host.`,
+        ),
+      );
 			return;
 		}
 		requestAgentHostUpgrade(socketPath).then(
-			(result) => transport.send(jsonRpcSuccess(id, result)),
-			(err: unknown) => {
-				this._logService.warn(`[ProtocolServer] vscodeUpgrade signal failed: ${err instanceof Error ? err.message : String(err)}`);
-				transport.send(jsonRpcErrorFrom(id, err));
-			},
-		);
+      (result) => transport.send(jsonRpcSuccess(id, result)),
+      (err: unknown) => {
+        this._logService.warn(
+          `[ProtocolServer] vscodeUpgrade signal failed: ${err instanceof Error ? err.message : String(err)}`,
+        );
+        transport.send(jsonRpcErrorFrom(id, err));
+      },
+    );
 	}
 
 	private _handleReconnect(
@@ -503,25 +552,31 @@ export class ProtocolServerHandler extends Disposable {
 		transport: IProtocolTransport,
 		disposables: DisposableStore,
 	): { client: IConnectedClient; responsePromise: Promise<unknown> } {
-		this._logService.info(`[ProtocolServer] Reconnect: clientId=${params.clientId}, lastSeenSeq=${params.lastSeenServerSeq}`);
+		this._logService.info(
+      `[ProtocolServer] Reconnect: clientId=${params.clientId}, lastSeenSeq=${params.lastSeenServerSeq}`,
+    );
 
 		// Synchronously install the client so messages arriving on this transport
 		// while we restore subscriptions can find a valid client object. The
 		// reconnect response is only sent once `responsePromise` resolves below.
 		const client: IConnectedClient = {
-			clientId: params.clientId,
-			protocolVersion: PROTOCOL_VERSION,
-			transport,
-			subscriptions: new Map(),
-			disposables,
-		};
+      clientId: params.clientId,
+      protocolVersion: PROTOCOL_VERSION,
+      transport,
+      subscriptions: new Map(),
+      disposables,
+    };
 		this._clients.set(params.clientId, client);
 		this._onDidChangeConnectionCount.fire(this._clients.size);
 
 		const oldestBuffered = this._replayBuffer.length > 0 ? this._replayBuffer[0].serverSeq : this._stateManager.serverSeq;
 		const canReplay = params.lastSeenServerSeq >= oldestBuffered;
 
-		const responsePromise = this._restoreReconnectSubscriptions(client, params, canReplay);
+		const responsePromise = this._restoreReconnectSubscriptions(
+      client,
+      params,
+      canReplay,
+    );
 		return { client, responsePromise };
 	}
 
@@ -575,20 +630,26 @@ export class ProtocolServerHandler extends Disposable {
 					}
 				}
 			}
-			return { type: 'replay', actions, missing };
+			return { type: "replay", actions, missing };
 		}
-		return { type: 'snapshot', snapshots: snapshots.filter((s): s is IStateSnapshot => s !== undefined) };
+		return {
+      type: "snapshot",
+      snapshots: snapshots.filter((s): s is IStateSnapshot => s !== undefined),
+    };
 	}
 
 	private _handleClientDisconnected(clientId: string): void {
 		for (const session of this._stateManager.getSessionUris()) {
 			const state = this._stateManager.getSessionState(session);
-			const ownsPendingToolCall = state ? this._hasPendingClientToolCall(state, clientId) : false;
+			const ownsPendingToolCall = state ? this._hasPendingClientToolCall(
+        state,
+        clientId,
+      ) : false;
 			if (state?.activeClient?.clientId === clientId) {
 				this._stateManager.dispatchServerAction(session, {
-					type: ActionType.SessionActiveClientChanged,
-					activeClient: null,
-				});
+          type: ActionType.SessionActiveClientChanged,
+          activeClient: null,
+        });
 			}
 			if (state?.activeClient?.clientId === clientId || ownsPendingToolCall) {
 				this._startClientToolCallDisconnectTimeout(clientId, session);
@@ -596,7 +657,7 @@ export class ProtocolServerHandler extends Disposable {
 		}
 	}
 
-	private _hasPendingClientToolCall(state: ReturnType<AgentHostStateManager['getSessionState']>, clientId: string): boolean {
+	private _hasPendingClientToolCall(state: ReturnType<AgentHostStateManager["getSessionState"]>, clientId: string): boolean {
 		const activeTurn = state?.activeTurn;
 		if (!activeTurn) {
 			return false;
@@ -616,10 +677,16 @@ export class ProtocolServerHandler extends Disposable {
 	private _startClientToolCallDisconnectTimeout(clientId: string, session: string): void {
 		this._clearClientToolCallDisconnectTimeout(clientId, session);
 		const key = this._clientToolCallDisconnectTimeoutKey(clientId, session);
-		this._clientToolCallDisconnectTimeouts.set(key, setTimeout(() => {
-			this._clientToolCallDisconnectTimeouts.delete(key);
-			this._completeDisconnectedClientToolCalls(clientId, session);
-		}, CLIENT_TOOL_CALL_DISCONNECT_TIMEOUT));
+		this._clientToolCallDisconnectTimeouts.set(
+      key,
+      setTimeout(
+        () => {
+          this._clientToolCallDisconnectTimeouts.delete(key);
+          this._completeDisconnectedClientToolCalls(clientId, session);
+        },
+        CLIENT_TOOL_CALL_DISCONNECT_TIMEOUT,
+      ),
+    );
 	}
 
 	private _clearClientToolCallDisconnectTimeout(clientId: string, session: string): void {
@@ -647,15 +714,19 @@ export class ProtocolServerHandler extends Disposable {
 			}
 			const toolCall = part.toolCall;
 			if (toolCall.toolClientId === clientId && (toolCall.status === ToolCallStatus.Streaming || toolCall.status === ToolCallStatus.Running || toolCall.status === ToolCallStatus.PendingConfirmation)) {
-				const mayRetryWithReplacementClient = this._hasReplacementActiveClientTool(state, clientId, toolCall.toolName);
+				const mayRetryWithReplacementClient = this._hasReplacementActiveClientTool(
+          state,
+          clientId,
+          toolCall.toolName,
+        );
 				if (toolCall.status === ToolCallStatus.Streaming) {
 					this._stateManager.dispatchServerAction(session, {
-						type: ActionType.SessionToolCallReady,
-						turnId: activeTurn.id,
-						toolCallId: toolCall.toolCallId,
-						invocationMessage: toolCall.invocationMessage ?? toolCall.displayName,
-						confirmed: ToolCallConfirmationReason.NotNeeded,
-					});
+            type: ActionType.SessionToolCallReady,
+            turnId: activeTurn.id,
+            toolCallId: toolCall.toolCallId,
+            invocationMessage: toolCall.invocationMessage ?? toolCall.displayName,
+            confirmed: ToolCallConfirmationReason.NotNeeded,
+          });
 				}
 				this._stateManager.dispatchServerAction(session, {
 					type: ActionType.SessionToolCallComplete,
@@ -776,7 +847,7 @@ export class ProtocolServerHandler extends Disposable {
 				return {
 					resource: s.session.toString(),
 					provider,
-					title: s.summary ?? 'Session',
+					title: s.summary ?? "Session",
 					status,
 					activity: s.activity,
 					createdAt: s.startTime,
@@ -888,7 +959,7 @@ export class ProtocolServerHandler extends Disposable {
 					? ChangesetOperationScope.Range
 					: ChangesetOperationScope.Changeset;
 			if (!op.scopes.includes(targetKind)) {
-				throw new ProtocolError(JsonRpcErrorCodes.InvalidParams, `Operation '${params.operationId}' does not support scope '${targetKind}' (allowed: ${op.scopes.join(', ')})`);
+				throw new ProtocolError(JsonRpcErrorCodes.InvalidParams, `Operation '${params.operationId}' does not support scope '${targetKind}' (allowed: ${op.scopes.join(", ")})`);
 			}
 			throw new ProtocolError(JsonRpcErrorCodes.InternalError, `No operation handler registered for '${params.operationId}' on changeset ${params.channel}`);
 		},
@@ -912,10 +983,14 @@ export class ProtocolServerHandler extends Disposable {
 		}
 		const id = ++this._reverseRequestId;
 		return new Promise<T>((resolve, reject) => {
-			this._pendingReverseRequests.set(id, { clientId, resolve: resolve as (value: unknown) => void, reject });
-			const request: JsonRpcRequest = { jsonrpc: '2.0', id, method, params };
-			client.transport.send(request);
-		});
+      this._pendingReverseRequests.set(id, {
+        clientId,
+        resolve: resolve as (value: unknown) => void,
+        reject,
+      });
+      const request: JsonRpcRequest = { jsonrpc: "2.0", id, method, params };
+      client.transport.send(request);
+    });
 	}
 
 	/**
@@ -931,7 +1006,9 @@ export class ProtocolServerHandler extends Disposable {
 	}
 
 	private _handleRequest(client: IConnectedClient, method: string, params: unknown, id: number): void {
-		const handler = this._requestHandlers.hasOwnProperty(method) ? this._requestHandlers[method as RequestMethod] : undefined;
+		const handler = this._requestHandlers.hasOwnProperty(
+      method,
+    ) ? this._requestHandlers[method as RequestMethod] : undefined;
 		if (handler) {
 			(handler as (client: IConnectedClient, params: unknown) => Promise<unknown>)(client, params).then(result => {
 				this._logService.trace(`[ProtocolServer] Request '${method}' id=${id} succeeded`);
@@ -955,7 +1032,9 @@ export class ProtocolServerHandler extends Disposable {
 			return;
 		}
 
-		client.transport.send(jsonRpcError(id, JSON_RPC_INTERNAL_ERROR, `Unknown method: ${method}`));
+		client.transport.send(
+      jsonRpcError(id, JSON_RPC_INTERNAL_ERROR, `Unknown method: ${method}`),
+    );
 	}
 
 	/**
@@ -965,7 +1044,7 @@ export class ProtocolServerHandler extends Disposable {
 	 */
 	private _handleExtensionRequest(method: string, _params: unknown): Promise<unknown> | undefined {
 		switch (method) {
-			case 'shutdown':
+			case "shutdown":
 				return this._agentService.shutdown();
 			default:
 				return undefined;
@@ -975,8 +1054,14 @@ export class ProtocolServerHandler extends Disposable {
 	// ---- Broadcasting -------------------------------------------------------
 
 	private _broadcastAction(envelope: ActionEnvelope): void {
-		this._logService.trace(`[ProtocolServer] Broadcasting action: ${envelope.action.type}`);
-		const msg: AhpServerNotification<'action'> = { jsonrpc: '2.0', method: 'action', params: envelope };
+		this._logService.trace(
+      `[ProtocolServer] Broadcasting action: ${envelope.action.type}`,
+    );
+		const msg: AhpServerNotification<"action"> = {
+      jsonrpc: "2.0",
+      method: "action",
+      params: envelope,
+    };
 		for (const client of this._clients.values()) {
 			if (this._isRelevantToClient(client, envelope)) {
 				client.transport.send(msg);
@@ -990,7 +1075,11 @@ export class ProtocolServerHandler extends Disposable {
 		// the wire-level method name, so we can route it directly.
 		const { type, ...params } = notification;
 		// eslint-disable-next-line local/code-no-dangerous-type-assertions
-		const msg = { jsonrpc: '2.0', method: type, params } as AhpServerNotification;
+		const msg = {
+      jsonrpc: "2.0",
+      method: type,
+      params,
+    } as AhpServerNotification;
 		for (const client of this._clients.values()) {
 			client.transport.send(msg);
 		}
@@ -1036,11 +1125,11 @@ export class ProtocolServerHandler extends Disposable {
 				if (record.severityNumber < levelToSeverityNumber(sub.level)) {
 					continue;
 				}
-				const msg: AhpServerNotification<'otlp/exportLogs'> = {
-					jsonrpc: '2.0',
-					method: 'otlp/exportLogs',
-					params: { channel: sub.uri, payload },
-				};
+				const msg: AhpServerNotification<"otlp/exportLogs"> = {
+          jsonrpc: "2.0",
+          method: "otlp/exportLogs",
+          params: { channel: sub.uri, payload },
+        };
 				client.transport.send(msg);
 			}
 		}
@@ -1070,7 +1159,7 @@ export class ProtocolServerHandler extends Disposable {
 		}
 		this._clients.clear();
 		for (const [, pending] of this._pendingReverseRequests) {
-			pending.reject(new Error('ProtocolServerHandler disposed'));
+			pending.reject(new Error("ProtocolServerHandler disposed"));
 		}
 		this._pendingReverseRequests.clear();
 		for (const timeout of this._clientToolCallDisconnectTimeouts.values()) {

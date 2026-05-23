@@ -3,22 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancelablePromise, RunOnceScheduler } from '../../../../base/common/async.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { ICodeEditor } from '../../../browser/editorBrowser.js';
-import { EditorContributionInstantiation, registerEditorContribution } from '../../../browser/editorExtensions.js';
-import { EditorOption, IEditorMinimapOptions } from '../../../common/config/editorOptions.js';
-import { IEditorContribution, IEditorDecorationsCollection } from '../../../common/editorCommon.js';
-import { StandardTokenType } from '../../../common/encodedTokenAttributes.js';
-import { ILanguageConfigurationService } from '../../../common/languages/languageConfigurationRegistry.js';
-import { IModelDeltaDecoration, MinimapPosition, MinimapSectionHeaderStyle, TrackedRangeStickiness } from '../../../common/model.js';
-import { ModelDecorationOptions } from '../../../common/model/textModel.js';
-import { IEditorWorkerService } from '../../../common/services/editorWorker.js';
-import { FindSectionHeaderOptions, SectionHeader } from '../../../common/services/findSectionHeaders.js';
+import { CancelablePromise, RunOnceScheduler } from "../../../../base/common/async.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { EditorContributionInstantiation, registerEditorContribution } from "../../../browser/editorExtensions.js";
+import { EditorOption, IEditorMinimapOptions } from "../../../common/config/editorOptions.js";
+import { IEditorContribution, IEditorDecorationsCollection } from "../../../common/editorCommon.js";
+import { StandardTokenType } from "../../../common/encodedTokenAttributes.js";
+import { ILanguageConfigurationService } from "../../../common/languages/languageConfigurationRegistry.js";
+import {
+  IModelDeltaDecoration,
+  MinimapPosition,
+  MinimapSectionHeaderStyle,
+  TrackedRangeStickiness,
+} from "../../../common/model.js";
+import { ModelDecorationOptions } from "../../../common/model/textModel.js";
+import { IEditorWorkerService } from "../../../common/services/editorWorker.js";
+import { FindSectionHeaderOptions, SectionHeader } from "../../../common/services/findSectionHeaders.js";
 
 export class SectionHeaderDetector extends Disposable implements IEditorContribution {
 
-	public static readonly ID: string = 'editor.sectionHeaderDetector';
+	public static readonly ID: string = "editor.sectionHeaderDetector";
 
 	private options: FindSectionHeaderOptions | undefined;
 	private decorations: IEditorDecorationsCollection;
@@ -79,9 +84,11 @@ export class SectionHeaderDetector extends Disposable implements IEditorContribu
 			this.computeSectionHeaders.schedule(0);
 		}));
 
-		this._register(this.editor.onDidChangeModelContent(e => {
-			this.computeSectionHeaders.schedule();
-		}));
+		this._register(
+      this.editor.onDidChangeModelContent(e => {
+        this.computeSectionHeaders.schedule();
+      }),
+    );
 
 		this._register(editor.onDidChangeModelTokens((e) => {
 			if (!this.computeSectionHeaders.isScheduled()) {
@@ -89,9 +96,14 @@ export class SectionHeaderDetector extends Disposable implements IEditorContribu
 			}
 		}));
 
-		this.computeSectionHeaders = this._register(new RunOnceScheduler(() => {
-			this.findSectionHeaders();
-		}, 250));
+		this.computeSectionHeaders = this._register(
+      new RunOnceScheduler(
+        () => {
+          this.findSectionHeaders();
+        },
+        250,
+      ),
+    );
 
 		this.computeSectionHeaders.schedule(0);
 	}
@@ -106,19 +118,23 @@ export class SectionHeaderDetector extends Disposable implements IEditorContribu
 			return undefined;
 		}
 
-		const commentsConfiguration = this.languageConfigurationService.getLanguageConfiguration(languageId).comments;
-		const foldingRules = this.languageConfigurationService.getLanguageConfiguration(languageId).foldingRules;
+		const commentsConfiguration = this.languageConfigurationService.getLanguageConfiguration(
+      languageId,
+    ).comments;
+		const foldingRules = this.languageConfigurationService.getLanguageConfiguration(
+      languageId,
+    ).foldingRules;
 
 		if (!commentsConfiguration && !foldingRules?.markers) {
 			return undefined;
 		}
 
 		return {
-			foldingRules,
-			markSectionHeaderRegex: minimap.markSectionHeaderRegex,
-			findMarkSectionHeaders: minimap.showMarkSectionHeaders,
-			findRegionSectionHeaders: minimap.showRegionSectionHeaders,
-		};
+      foldingRules,
+      markSectionHeaderRegex: minimap.markSectionHeaderRegex,
+      findMarkSectionHeaders: minimap.showMarkSectionHeaders,
+      findRegionSectionHeaders: minimap.showRegionSectionHeaders,
+    };
 	}
 
 	private findSectionHeaders() {
@@ -163,8 +179,12 @@ export class SectionHeaderDetector extends Disposable implements IEditorContribu
 			});
 		}
 
-		const oldDecorations = Object.values(this.currentOccurrences).map(occurrence => occurrence.decorationId);
-		const newDecorations = sectionHeaders.map(sectionHeader => decoration(sectionHeader));
+		const oldDecorations = Object.values(this.currentOccurrences).map(
+      occurrence => occurrence.decorationId,
+    );
+		const newDecorations = sectionHeaders.map(
+      sectionHeader => decoration(sectionHeader),
+    );
 
 		this.editor.changeDecorations((changeAccessor) => {
 			const decorations = changeAccessor.deltaDecorations(oldDecorations, newDecorations);
@@ -202,7 +222,7 @@ function decoration(sectionHeader: SectionHeader): IModelDeltaDecoration {
 	return {
 		range: sectionHeader.range,
 		options: ModelDecorationOptions.createDynamic({
-			description: 'section-header',
+			description: "section-header",
 			stickiness: TrackedRangeStickiness.GrowsOnlyWhenTypingAfter,
 			collapseOnReplaceEdit: true,
 			minimap: {
@@ -211,8 +231,12 @@ function decoration(sectionHeader: SectionHeader): IModelDeltaDecoration {
 				sectionHeaderStyle: sectionHeader.hasSeparatorLine ? MinimapSectionHeaderStyle.Underlined : MinimapSectionHeaderStyle.Normal,
 				sectionHeaderText: sectionHeader.text,
 			},
-		})
+		}),
 	};
 }
 
-registerEditorContribution(SectionHeaderDetector.ID, SectionHeaderDetector, EditorContributionInstantiation.AfterFirstRender);
+registerEditorContribution(
+  SectionHeaderDetector.ID,
+  SectionHeaderDetector,
+  EditorContributionInstantiation.AfterFirstRender,
+);

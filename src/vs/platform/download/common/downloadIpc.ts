@@ -3,25 +3,29 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../base/common/event.js';
-import { URI } from '../../../base/common/uri.js';
-import { IURITransformer } from '../../../base/common/uriIpc.js';
-import { IChannel, IServerChannel } from '../../../base/parts/ipc/common/ipc.js';
-import { IDownloadService } from './download.js';
+import { Event } from "../../../base/common/event.js";
+import { URI } from "../../../base/common/uri.js";
+import { IURITransformer } from "../../../base/common/uriIpc.js";
+import { IChannel, IServerChannel } from "../../../base/parts/ipc/common/ipc.js";
+import { IDownloadService } from "./download.js";
 
 export class DownloadServiceChannel implements IServerChannel {
 
 	constructor(private readonly service: IDownloadService) { }
 
 	listen(_: unknown, event: string, arg?: any): Event<any> {
-		throw new Error('Invalid listen');
+		throw new Error("Invalid listen");
 	}
 
 	call(context: any, command: string, args?: any): Promise<any> {
 		switch (command) {
-			case 'download': return this.service.download(URI.revive(args[0]), URI.revive(args[1]), args[2] ?? 'downloadIpc');
+			case "download": return this.service.download(
+        URI.revive(args[0]),
+        URI.revive(args[1]),
+        args[2] ?? "downloadIpc",
+      );
 		}
-		throw new Error('Invalid call');
+		throw new Error("Invalid call");
 	}
 }
 
@@ -37,6 +41,6 @@ export class DownloadServiceChannelClient implements IDownloadService {
 			from = uriTransformer.transformOutgoingURI(from);
 			to = uriTransformer.transformOutgoingURI(to);
 		}
-		await this.channel.call('download', [from, to]);
+		await this.channel.call("download", [from, to]);
 	}
 }

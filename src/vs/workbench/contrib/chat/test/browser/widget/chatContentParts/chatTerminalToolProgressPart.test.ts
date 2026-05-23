@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { Emitter } from '../../../../../../../base/common/event.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../../../base/test/common/utils.js';
-import { runWithFakedTimers } from '../../../../../../../base/test/common/timeTravelScheduler.js';
-import { timeout } from '../../../../../../../base/common/async.js';
-import { TerminalToolAutoExpand, TerminalToolAutoExpandTimeout } from '../../../../browser/widget/chatContentParts/toolInvocationParts/terminalToolAutoExpand.js';
+import assert from "assert";
+import { Emitter } from "../../../../../../../base/common/event.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../../../base/test/common/utils.js";
+import { runWithFakedTimers } from "../../../../../../../base/test/common/timeTravelScheduler.js";
+import { timeout } from "../../../../../../../base/common/async.js";
+import { TerminalToolAutoExpand, TerminalToolAutoExpandTimeout } from "../../../../browser/widget/chatContentParts/toolInvocationParts/terminalToolAutoExpand.js";
 
-suite('ChatTerminalToolProgressPart Auto-Expand Logic', () => {
+suite("ChatTerminalToolProgressPart Auto-Expand Logic", () => {
 	const store = ensureNoDisposablesAreLeakedInTestSuite();
 
 	// Mocked events
@@ -55,7 +55,7 @@ suite('ChatTerminalToolProgressPart Auto-Expand Logic', () => {
 		hasRealOutputValue = false;
 	});
 
-	test('fast command without data should not auto-expand (finishes before timeout)', () => runWithFakedTimers({ useFakeTimers: true }, async () => {
+	test("fast command without data should not auto-expand (finishes before timeout)", () => runWithFakedTimers({ useFakeTimers: true }, async () => {
 		setupAutoExpandLogic();
 
 		// Command executes
@@ -67,17 +67,17 @@ suite('ChatTerminalToolProgressPart Auto-Expand Logic', () => {
 		// Wait past all timeouts (faked timers advance instantly)
 		await timeout(TerminalToolAutoExpandTimeout.NoData + 100);
 
-		assert.strictEqual(isExpanded, false, 'Should NOT expand for fast command without data');
+		assert.strictEqual(isExpanded, false, "Should NOT expand for fast command without data");
 	}));
 
-	test('fast command with quick data should not auto-expand (data + finish before timeout)', () => runWithFakedTimers({ useFakeTimers: true }, async () => {
+	test("fast command with quick data should not auto-expand (data + finish before timeout)", () => runWithFakedTimers({ useFakeTimers: true }, async () => {
 		setupAutoExpandLogic();
 
 		// Command executes
 		onCommandExecuted.fire(undefined);
 
 		// Data arrives
-		onWillData.fire('output');
+		onWillData.fire("output");
 
 		// Command finishes quickly (before timeout)
 		onCommandFinished.fire(undefined);
@@ -85,10 +85,10 @@ suite('ChatTerminalToolProgressPart Auto-Expand Logic', () => {
 		// Wait past all timeouts (faked timers advance instantly)
 		await timeout(TerminalToolAutoExpandTimeout.DataEvent + 100);
 
-		assert.strictEqual(isExpanded, false, 'Should NOT expand when command finishes within timeout of first data');
+		assert.strictEqual(isExpanded, false, "Should NOT expand when command finishes within timeout of first data");
 	}));
 
-	test('long-running command with data should auto-expand (data received, command still running after timeout)', () => runWithFakedTimers({ useFakeTimers: true }, async () => {
+	test("long-running command with data should auto-expand (data received, command still running after timeout)", () => runWithFakedTimers({ useFakeTimers: true }, async () => {
 		hasRealOutputValue = true; // Has real output
 		setupAutoExpandLogic();
 
@@ -96,17 +96,17 @@ suite('ChatTerminalToolProgressPart Auto-Expand Logic', () => {
 		onCommandExecuted.fire(undefined);
 
 		// Data arrives
-		onWillData.fire('output');
+		onWillData.fire("output");
 
 		// Wait for timeout to fire (faked timers advance instantly)
 		await timeout(TerminalToolAutoExpandTimeout.DataEvent + 100);
 
-		assert.strictEqual(isExpanded, true, 'Should expand when command still running after first data timeout');
+		assert.strictEqual(isExpanded, true, "Should expand when command still running after first data timeout");
 
 		onCommandFinished.fire(undefined);
 	}));
 
-	test('long-running command with data but no real output should NOT auto-expand (like sleep with shell sequences)', () => runWithFakedTimers({ useFakeTimers: true }, async () => {
+	test("long-running command with data but no real output should NOT auto-expand (like sleep with shell sequences)", () => runWithFakedTimers({ useFakeTimers: true }, async () => {
 		hasRealOutputValue = false; // Shell integration sequences, not real output
 		setupAutoExpandLogic();
 
@@ -114,17 +114,17 @@ suite('ChatTerminalToolProgressPart Auto-Expand Logic', () => {
 		onCommandExecuted.fire(undefined);
 
 		// Shell integration data arrives (not real output)
-		onWillData.fire('shell-sequence');
+		onWillData.fire("shell-sequence");
 
 		// Wait for timeout to fire (faked timers advance instantly)
 		await timeout(TerminalToolAutoExpandTimeout.DataEvent + 100);
 
-		assert.strictEqual(isExpanded, false, 'Should NOT expand when data is shell sequences, not real output');
+		assert.strictEqual(isExpanded, false, "Should NOT expand when data is shell sequences, not real output");
 
 		onCommandFinished.fire(undefined);
 	}));
 
-	test('long-running command without data should NOT auto-expand if no real output (like sleep)', () => runWithFakedTimers({ useFakeTimers: true }, async () => {
+	test("long-running command without data should NOT auto-expand if no real output (like sleep)", () => runWithFakedTimers({ useFakeTimers: true }, async () => {
 		hasRealOutputValue = false; // No real output like `sleep 1`
 		setupAutoExpandLogic();
 
@@ -134,12 +134,12 @@ suite('ChatTerminalToolProgressPart Auto-Expand Logic', () => {
 		// Wait for timeout to fire (faked timers advance instantly)
 		await timeout(TerminalToolAutoExpandTimeout.NoData + 100);
 
-		assert.strictEqual(isExpanded, false, 'Should NOT expand when no real output even after timeout');
+		assert.strictEqual(isExpanded, false, "Should NOT expand when no real output even after timeout");
 
 		onCommandFinished.fire(undefined);
 	}));
 
-	test('long-running command without data SHOULD auto-expand if real output exists', () => runWithFakedTimers({ useFakeTimers: true }, async () => {
+	test("long-running command without data SHOULD auto-expand if real output exists", () => runWithFakedTimers({ useFakeTimers: true }, async () => {
 		hasRealOutputValue = true; // Has real output in buffer
 		setupAutoExpandLogic();
 
@@ -149,12 +149,12 @@ suite('ChatTerminalToolProgressPart Auto-Expand Logic', () => {
 		// Wait for timeout to fire (faked timers advance instantly)
 		await timeout(TerminalToolAutoExpandTimeout.NoData + 100);
 
-		assert.strictEqual(isExpanded, true, 'Should expand when real output exists after timeout');
+		assert.strictEqual(isExpanded, true, "Should expand when real output exists after timeout");
 
 		onCommandFinished.fire(undefined);
 	}));
 
-	test('data arriving after command finish should not trigger expand', () => runWithFakedTimers({ useFakeTimers: true }, async () => {
+	test("data arriving after command finish should not trigger expand", () => runWithFakedTimers({ useFakeTimers: true }, async () => {
 		setupAutoExpandLogic();
 
 		// Command executes and finishes immediately
@@ -162,15 +162,15 @@ suite('ChatTerminalToolProgressPart Auto-Expand Logic', () => {
 		onCommandFinished.fire(undefined);
 
 		// Data arrives after command finished
-		onWillData.fire('late output');
+		onWillData.fire("late output");
 
 		// Wait past all timeouts (faked timers advance instantly)
 		await timeout(TerminalToolAutoExpandTimeout.NoData + 100);
 
-		assert.strictEqual(isExpanded, false, 'Should NOT expand when data arrives after command finished');
+		assert.strictEqual(isExpanded, false, "Should NOT expand when data arrives after command finished");
 	}));
 
-	test('user toggled output prevents auto-expand', () => runWithFakedTimers({ useFakeTimers: true }, async () => {
+	test("user toggled output prevents auto-expand", () => runWithFakedTimers({ useFakeTimers: true }, async () => {
 		userToggledOutput = true;
 		setupAutoExpandLogic();
 
@@ -178,16 +178,16 @@ suite('ChatTerminalToolProgressPart Auto-Expand Logic', () => {
 		onCommandExecuted.fire(undefined);
 
 		// Data arrives
-		onWillData.fire('output');
+		onWillData.fire("output");
 
 		// Wait past all timeouts (faked timers advance instantly)
 		await timeout(TerminalToolAutoExpandTimeout.NoData + 100);
 
-		assert.strictEqual(isExpanded, false, 'Should NOT expand when user has manually toggled output');
+		assert.strictEqual(isExpanded, false, "Should NOT expand when user has manually toggled output");
 		onCommandFinished.fire(undefined);
 	}));
 
-	test('already expanded output prevents additional auto-expand', () => runWithFakedTimers({ useFakeTimers: true }, async () => {
+	test("already expanded output prevents additional auto-expand", () => runWithFakedTimers({ useFakeTimers: true }, async () => {
 		isExpanded = true;
 
 		// Track if event was fired
@@ -207,16 +207,16 @@ suite('ChatTerminalToolProgressPart Auto-Expand Logic', () => {
 		onCommandExecuted.fire(undefined);
 
 		// Data arrives
-		onWillData.fire('output');
+		onWillData.fire("output");
 
 		// Wait past all timeouts (faked timers advance instantly)
 		await timeout(TerminalToolAutoExpandTimeout.NoData + 100);
 
-		assert.strictEqual(eventFired, false, 'Should NOT fire expand event when already expanded');
+		assert.strictEqual(eventFired, false, "Should NOT fire expand event when already expanded");
 		onCommandFinished.fire(undefined);
 	}));
 
-	test('data arriving cancels no-data timeout', () => runWithFakedTimers({ useFakeTimers: true }, async () => {
+	test("data arriving cancels no-data timeout", () => runWithFakedTimers({ useFakeTimers: true }, async () => {
 		hasRealOutputValue = true; // Would have expanded if no-data timeout fired
 		setupAutoExpandLogic();
 
@@ -224,7 +224,7 @@ suite('ChatTerminalToolProgressPart Auto-Expand Logic', () => {
 		onCommandExecuted.fire(undefined);
 
 		// Data arrives (cancels no-data timeout)
-		onWillData.fire('output');
+		onWillData.fire("output");
 
 		// Command finishes immediately after data (before data timeout would fire)
 		onCommandFinished.fire(undefined);
@@ -232,10 +232,10 @@ suite('ChatTerminalToolProgressPart Auto-Expand Logic', () => {
 		// Wait past all timeouts (faked timers advance instantly)
 		await timeout(TerminalToolAutoExpandTimeout.NoData + 100);
 
-		assert.strictEqual(isExpanded, false, 'No-data timeout should be cancelled when data arrives');
+		assert.strictEqual(isExpanded, false, "No-data timeout should be cancelled when data arrives");
 	}));
 
-	test('multiple data events only trigger one timeout', () => runWithFakedTimers({ useFakeTimers: true }, async () => {
+	test("multiple data events only trigger one timeout", () => runWithFakedTimers({ useFakeTimers: true }, async () => {
 		hasRealOutputValue = true; // Has real output
 		setupAutoExpandLogic();
 
@@ -243,14 +243,14 @@ suite('ChatTerminalToolProgressPart Auto-Expand Logic', () => {
 		onCommandExecuted.fire(undefined);
 
 		// Multiple data events
-		onWillData.fire('output 1');
-		onWillData.fire('output 2');
-		onWillData.fire('output 3');
+		onWillData.fire("output 1");
+		onWillData.fire("output 2");
+		onWillData.fire("output 3");
 
 		// Wait for timeout to fire (faked timers advance instantly)
 		await timeout(TerminalToolAutoExpandTimeout.DataEvent + 100);
 
-		assert.strictEqual(isExpanded, true, 'Should expand exactly once after first data');
+		assert.strictEqual(isExpanded, true, "Should expand exactly once after first data");
 		onCommandFinished.fire(undefined);
 	}));
 });

@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../../../../base/common/uri.js';
-import { normalizeURL } from '../../../../../../platform/url/common/trustedDomains.js';
-import { testUrlMatchesGlob } from '../../../../../../platform/url/common/urlGlob.js';
+import { URI } from "../../../../../../base/common/uri.js";
+import { normalizeURL } from "../../../../../../platform/url/common/trustedDomains.js";
+import { testUrlMatchesGlob } from "../../../../../../platform/url/common/urlGlob.js";
 
 /**
  * Approval settings for a URL pattern
@@ -30,12 +30,14 @@ export function extractUrlPatterns(url: URI): string[] {
 	patterns.add(fullUrl);
 
 	// Domain-only pattern (without trailing slash)
-	const domainOnly = normalized.with({ path: '', query: '', fragment: '' }).toString(true);
+	const domainOnly = normalized.with({ path: "", query: "", fragment: "" }).toString(
+    true,
+  );
 	patterns.add(domainOnly);
 
 	// Wildcard subdomain pattern (*.example.com)
 	const authority = normalized.authority;
-	const domainParts = authority.split('.');
+	const domainParts = authority.split(".");
 
 	// Only add wildcard subdomain if there are at least 2 parts and it's not an IP
 	const isIPv4 = domainParts.length === 4 && domainParts.every((segment: string) =>
@@ -48,33 +50,35 @@ export function extractUrlPatterns(url: URI): string[] {
 		// Create patterns by replacing each subdomain segment with *
 		// For example, foo.bar.example.com -> *.bar.example.com, *.example.com
 		for (let i = 0; i < domainParts.length - 2; i++) {
-			const wildcardAuthority = '*.' + domainParts.slice(i + 1).join('.');
+			const wildcardAuthority = "*." + domainParts.slice(i + 1).join(".");
 			const wildcardPattern = normalized.with({
 				authority: wildcardAuthority,
-				path: '',
-				query: '',
-				fragment: ''
+				path: "",
+				query: "",
+				fragment: "",
 			}).toString(true);
 			patterns.add(wildcardPattern);
 		}
 	}
 
 	// Path patterns (if there's a non-trivial path)
-	const pathSegments = normalized.path.split('/').filter((s: string) => s.length > 0);
+	const pathSegments = normalized.path.split("/").filter(
+    (s: string) => s.length > 0,
+  );
 	if (pathSegments.length > 0) {
 		// Add patterns for each path level with wildcard
 		for (let i = pathSegments.length - 1; i >= 0; i--) {
-			const pathPattern = pathSegments.slice(0, i).join('/');
+			const pathPattern = pathSegments.slice(0, i).join("/");
 			const urlWithPathPattern = normalized.with({
-				path: (i > 0 ? '/' : '') + pathPattern,
-				query: '',
-				fragment: ''
+				path: (i > 0 ? "/" : "") + pathPattern,
+				query: "",
+				fragment: "",
 			}).toString(true);
 			patterns.add(urlWithPathPattern);
 		}
 	}
 
-	return [...patterns].map(p => p.replace(/\/+$/, ''));
+	return [...patterns].map(p => p.replace(/\/+$/, ""));
 }
 
 /**
@@ -86,13 +90,13 @@ export function extractUrlPatterns(url: URI): string[] {
 export function getPatternLabel(url: URI, pattern: string): string {
 	let displayPattern = pattern;
 
-	if (displayPattern.startsWith('https://')) {
+	if (displayPattern.startsWith("https://")) {
 		displayPattern = displayPattern.substring(8);
-	} else if (displayPattern.startsWith('http://')) {
+	} else if (displayPattern.startsWith("http://")) {
 		displayPattern = displayPattern.substring(7);
 	}
 
-	return displayPattern.replace(/\/+$/, ''); // Remove trailing slashes
+	return displayPattern.replace(/\/+$/, ""); // Remove trailing slashes
 }
 
 /**
@@ -105,7 +109,7 @@ export function getPatternLabel(url: URI, pattern: string): string {
 export function isUrlApproved(
 	url: URI,
 	approvedUrls: Record<string, boolean | IUrlApprovalSettings>,
-	checkRequest: boolean
+	checkRequest: boolean,
 ): boolean {
 	const normalizedUrlStr = normalizeURL(url);
 	const normalizedUrl = URI.parse(normalizedUrlStr);
@@ -114,7 +118,7 @@ export function isUrlApproved(
 		// Check if URL matches this pattern
 		if (testUrlMatchesGlob(normalizedUrl, pattern)) {
 			// Handle boolean settings
-			if (typeof settings === 'boolean') {
+			if (typeof settings === "boolean") {
 				return settings;
 			}
 
@@ -140,7 +144,7 @@ export function isUrlApproved(
  */
 export function getMatchingPattern(
 	url: URI,
-	approvedUrls: Record<string, boolean | IUrlApprovalSettings>
+	approvedUrls: Record<string, boolean | IUrlApprovalSettings>,
 ): string | undefined {
 	const normalizedUrlStr = normalizeURL(url);
 	const normalizedUrl = URI.parse(normalizedUrlStr);
@@ -149,7 +153,10 @@ export function getMatchingPattern(
 	// Check patterns in order of specificity (most specific first)
 	for (const pattern of patterns) {
 		for (const approvedPattern of Object.keys(approvedUrls)) {
-			if (testUrlMatchesGlob(normalizedUrl, approvedPattern) && testUrlMatchesGlob(URI.parse(pattern), approvedPattern)) {
+			if (testUrlMatchesGlob(
+        normalizedUrl,
+        approvedPattern,
+      ) && testUrlMatchesGlob(URI.parse(pattern), approvedPattern)) {
 				return approvedPattern;
 			}
 		}

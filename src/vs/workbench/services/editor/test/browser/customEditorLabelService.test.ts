@@ -3,16 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { ConfigurationTarget, IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { TestConfigurationService } from '../../../../../platform/configuration/test/common/testConfigurationService.js';
-import { CustomEditorLabelService } from '../../common/customEditorLabelService.js';
-import { ITestInstantiationService, TestServiceAccessor, workbenchInstantiationService } from '../../../../test/browser/workbenchTestServices.js';
+import assert from "assert";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { ConfigurationTarget, IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { TestConfigurationService } from "../../../../../platform/configuration/test/common/testConfigurationService.js";
+import { CustomEditorLabelService } from "../../common/customEditorLabelService.js";
+import {
+  ITestInstantiationService,
+  TestServiceAccessor,
+  workbenchInstantiationService,
+} from "../../../../test/browser/workbenchTestServices.js";
 
-suite('Custom Editor Label Service', () => {
+suite("Custom Editor Label Service", () => {
 
 	const disposables = new DisposableStore();
 
@@ -41,22 +45,22 @@ suite('Custom Editor Label Service', () => {
 			affectedKeys: new Set(CustomEditorLabelService.SETTING_ID_PATTERNS),
 			change: {
 				keys: [],
-				overrides: []
-			}
+				overrides: [],
+			},
 		});
 	}
 
-	test('Custom Labels: filename.extname', async () => {
+	test("Custom Labels: filename.extname", async () => {
 		const [customLabelService, configService] = await createCustomLabelService();
 
 		await updatePattern(configService, {
-			'**': '${filename}.${extname}'
+			"**": "${filename}.${extname}",
 		});
 
 		const filenames = [
-			'file.txt',
-			'file.txt1.tx2',
-			'.file.txt',
+			"file.txt",
+			"file.txt1.tx2",
+			".file.txt",
 		];
 
 		for (const filename of filenames) {
@@ -64,41 +68,41 @@ suite('Custom Editor Label Service', () => {
 			assert.strictEqual(label, filename);
 		}
 
-		let label = customLabelService.getName(URI.file('file'));
-		assert.strictEqual(label, 'file.${extname}');
+		let label = customLabelService.getName(URI.file("file"));
+		assert.strictEqual(label, "file.${extname}");
 
-		label = customLabelService.getName(URI.file('.file'));
-		assert.strictEqual(label, '.file.${extname}');
+		label = customLabelService.getName(URI.file(".file"));
+		assert.strictEqual(label, ".file.${extname}");
 	});
 
-	test('Custom Labels: filename', async () => {
+	test("Custom Labels: filename", async () => {
 		const [customLabelService, configService] = await createCustomLabelService();
 
 		await updatePattern(configService, {
-			'**': '${filename}',
+			"**": "${filename}",
 		});
 
-		assert.strictEqual(customLabelService.getName(URI.file('file')), 'file');
-		assert.strictEqual(customLabelService.getName(URI.file('file.txt')), 'file');
-		assert.strictEqual(customLabelService.getName(URI.file('file.txt1.txt2')), 'file');
-		assert.strictEqual(customLabelService.getName(URI.file('folder/file.txt1.txt2')), 'file');
+		assert.strictEqual(customLabelService.getName(URI.file("file")), "file");
+		assert.strictEqual(customLabelService.getName(URI.file("file.txt")), "file");
+		assert.strictEqual(customLabelService.getName(URI.file("file.txt1.txt2")), "file");
+		assert.strictEqual(customLabelService.getName(URI.file("folder/file.txt1.txt2")), "file");
 
-		assert.strictEqual(customLabelService.getName(URI.file('.file')), '.file');
-		assert.strictEqual(customLabelService.getName(URI.file('.file.txt')), '.file');
-		assert.strictEqual(customLabelService.getName(URI.file('.file.txt1.txt2')), '.file');
-		assert.strictEqual(customLabelService.getName(URI.file('folder/.file.txt1.txt2')), '.file');
+		assert.strictEqual(customLabelService.getName(URI.file(".file")), ".file");
+		assert.strictEqual(customLabelService.getName(URI.file(".file.txt")), ".file");
+		assert.strictEqual(customLabelService.getName(URI.file(".file.txt1.txt2")), ".file");
+		assert.strictEqual(customLabelService.getName(URI.file("folder/.file.txt1.txt2")), ".file");
 	});
 
-	test('Custom Labels: extname(N)', async () => {
+	test("Custom Labels: extname(N)", async () => {
 		const [customLabelService, configService] = await createCustomLabelService();
 
 		await updatePattern(configService, {
-			'**/ext/**': '${extname}',
-			'**/ext0/**': '${extname(0)}',
-			'**/ext1/**': '${extname(1)}',
-			'**/ext2/**': '${extname(2)}',
-			'**/extMinus1/**': '${extname(-1)}',
-			'**/extMinus2/**': '${extname(-2)}',
+			"**/ext/**": "${extname}",
+			"**/ext0/**": "${extname(0)}",
+			"**/ext1/**": "${extname(1)}",
+			"**/ext2/**": "${extname(2)}",
+			"**/extMinus1/**": "${extname(-1)}",
+			"**/extMinus2/**": "${extname(-2)}",
 		});
 
 		interface IExt {
@@ -111,54 +115,54 @@ suite('Custom Editor Label Service', () => {
 		}
 
 		function assertExtname(filename: string, ext: IExt): void {
-			assert.strictEqual(customLabelService.getName(URI.file(`test/ext/${filename}`)), ext.extname ?? '${extname}', filename);
-			assert.strictEqual(customLabelService.getName(URI.file(`test/ext0/${filename}`)), ext.ext0 ?? '${extname(0)}', filename);
-			assert.strictEqual(customLabelService.getName(URI.file(`test/ext1/${filename}`)), ext.ext1 ?? '${extname(1)}', filename);
-			assert.strictEqual(customLabelService.getName(URI.file(`test/ext2/${filename}`)), ext.ext2 ?? '${extname(2)}', filename);
-			assert.strictEqual(customLabelService.getName(URI.file(`test/extMinus1/${filename}`)), ext.extMinus1 ?? '${extname(-1)}', filename);
-			assert.strictEqual(customLabelService.getName(URI.file(`test/extMinus2/${filename}`)), ext.extMinus2 ?? '${extname(-2)}', filename);
+			assert.strictEqual(customLabelService.getName(URI.file(`test/ext/${filename}`)), ext.extname ?? "${extname}", filename);
+			assert.strictEqual(customLabelService.getName(URI.file(`test/ext0/${filename}`)), ext.ext0 ?? "${extname(0)}", filename);
+			assert.strictEqual(customLabelService.getName(URI.file(`test/ext1/${filename}`)), ext.ext1 ?? "${extname(1)}", filename);
+			assert.strictEqual(customLabelService.getName(URI.file(`test/ext2/${filename}`)), ext.ext2 ?? "${extname(2)}", filename);
+			assert.strictEqual(customLabelService.getName(URI.file(`test/extMinus1/${filename}`)), ext.extMinus1 ?? "${extname(-1)}", filename);
+			assert.strictEqual(customLabelService.getName(URI.file(`test/extMinus2/${filename}`)), ext.extMinus2 ?? "${extname(-2)}", filename);
 		}
 
-		assertExtname('file.txt', {
-			extname: 'txt',
-			ext0: 'txt',
-			extMinus1: 'txt',
+		assertExtname("file.txt", {
+			extname: "txt",
+			ext0: "txt",
+			extMinus1: "txt",
 		});
 
-		assertExtname('file.txt1.txt2', {
-			extname: 'txt1.txt2',
-			ext0: 'txt2',
-			ext1: 'txt1',
-			extMinus1: 'txt1',
-			extMinus2: 'txt2',
+		assertExtname("file.txt1.txt2", {
+			extname: "txt1.txt2",
+			ext0: "txt2",
+			ext1: "txt1",
+			extMinus1: "txt1",
+			extMinus2: "txt2",
 		});
 
-		assertExtname('.file.txt1.txt2', {
-			extname: 'txt1.txt2',
-			ext0: 'txt2',
-			ext1: 'txt1',
-			extMinus1: 'txt1',
-			extMinus2: 'txt2',
+		assertExtname(".file.txt1.txt2", {
+			extname: "txt1.txt2",
+			ext0: "txt2",
+			ext1: "txt1",
+			extMinus1: "txt1",
+			extMinus2: "txt2",
 		});
 
-		assertExtname('.file.txt1.txt2.txt3.txt4', {
-			extname: 'txt1.txt2.txt3.txt4',
-			ext0: 'txt4',
-			ext1: 'txt3',
-			ext2: 'txt2',
-			extMinus1: 'txt1',
-			extMinus2: 'txt2',
+		assertExtname(".file.txt1.txt2.txt3.txt4", {
+			extname: "txt1.txt2.txt3.txt4",
+			ext0: "txt4",
+			ext1: "txt3",
+			ext2: "txt2",
+			extMinus1: "txt1",
+			extMinus2: "txt2",
 		});
 
-		assertExtname('file', {});
-		assertExtname('.file', {});
+		assertExtname("file", {});
+		assertExtname(".file", {});
 	});
 
-	test('Custom Labels: dirname(N)', async () => {
+	test("Custom Labels: dirname(N)", async () => {
 		const [customLabelService, configService] = await createCustomLabelService();
 
 		await updatePattern(configService, {
-			'**': '${dirname},${dirname(0)},${dirname(1)},${dirname(2)},${dirname(-1)},${dirname(-2)}',
+			"**": "${dirname},${dirname(0)},${dirname(1)},${dirname(2)},${dirname(-1)},${dirname(-2)}",
 		});
 
 		interface IDir {
@@ -171,64 +175,64 @@ suite('Custom Editor Label Service', () => {
 		}
 
 		function assertDirname(path: string, dir: IDir): void {
-			assert.strictEqual(customLabelService.getName(URI.file(path))?.split(',')[0], dir.dirname ?? '${dirname}', path);
-			assert.strictEqual(customLabelService.getName(URI.file(path))?.split(',')[1], dir.dir0 ?? '${dirname(0)}', path);
-			assert.strictEqual(customLabelService.getName(URI.file(path))?.split(',')[2], dir.dir1 ?? '${dirname(1)}', path);
-			assert.strictEqual(customLabelService.getName(URI.file(path))?.split(',')[3], dir.dir2 ?? '${dirname(2)}', path);
-			assert.strictEqual(customLabelService.getName(URI.file(path))?.split(',')[4], dir.dirMinus1 ?? '${dirname(-1)}', path);
-			assert.strictEqual(customLabelService.getName(URI.file(path))?.split(',')[5], dir.dirMinus2 ?? '${dirname(-2)}', path);
+			assert.strictEqual(customLabelService.getName(URI.file(path))?.split(",")[0], dir.dirname ?? "${dirname}", path);
+			assert.strictEqual(customLabelService.getName(URI.file(path))?.split(",")[1], dir.dir0 ?? "${dirname(0)}", path);
+			assert.strictEqual(customLabelService.getName(URI.file(path))?.split(",")[2], dir.dir1 ?? "${dirname(1)}", path);
+			assert.strictEqual(customLabelService.getName(URI.file(path))?.split(",")[3], dir.dir2 ?? "${dirname(2)}", path);
+			assert.strictEqual(customLabelService.getName(URI.file(path))?.split(",")[4], dir.dirMinus1 ?? "${dirname(-1)}", path);
+			assert.strictEqual(customLabelService.getName(URI.file(path))?.split(",")[5], dir.dirMinus2 ?? "${dirname(-2)}", path);
 		}
 
-		assertDirname('folder/file.txt', {
-			dirname: 'folder',
-			dir0: 'folder',
-			dirMinus1: 'folder',
+		assertDirname("folder/file.txt", {
+			dirname: "folder",
+			dir0: "folder",
+			dirMinus1: "folder",
 		});
 
-		assertDirname('root/folder/file.txt', {
-			dirname: 'folder',
-			dir0: 'folder',
-			dir1: 'root',
-			dirMinus1: 'root',
-			dirMinus2: 'folder',
+		assertDirname("root/folder/file.txt", {
+			dirname: "folder",
+			dir0: "folder",
+			dir1: "root",
+			dirMinus1: "root",
+			dirMinus2: "folder",
 		});
 
-		assertDirname('root/.folder/file.txt', {
-			dirname: '.folder',
-			dir0: '.folder',
-			dir1: 'root',
-			dirMinus1: 'root',
-			dirMinus2: '.folder',
+		assertDirname("root/.folder/file.txt", {
+			dirname: ".folder",
+			dir0: ".folder",
+			dir1: "root",
+			dirMinus1: "root",
+			dirMinus2: ".folder",
 		});
 
-		assertDirname('root/parent/folder/file.txt', {
-			dirname: 'folder',
-			dir0: 'folder',
-			dir1: 'parent',
-			dir2: 'root',
-			dirMinus1: 'root',
-			dirMinus2: 'parent',
+		assertDirname("root/parent/folder/file.txt", {
+			dirname: "folder",
+			dir0: "folder",
+			dir1: "parent",
+			dir2: "root",
+			dirMinus1: "root",
+			dirMinus2: "parent",
 		});
 
-		assertDirname('file.txt', {});
+		assertDirname("file.txt", {});
 	});
 
-	test('Custom Labels: no pattern match', async () => {
+	test("Custom Labels: no pattern match", async () => {
 		const [customLabelService, configService] = await createCustomLabelService();
 
 		await updatePattern(configService, {
-			'**/folder/**': 'folder',
-			'file': 'file',
+			"**/folder/**": "folder",
+			"file": "file",
 		});
 
-		assert.strictEqual(customLabelService.getName(URI.file('file')), undefined);
-		assert.strictEqual(customLabelService.getName(URI.file('file.txt')), undefined);
-		assert.strictEqual(customLabelService.getName(URI.file('file.txt1.txt2')), undefined);
-		assert.strictEqual(customLabelService.getName(URI.file('folder1/file.txt1.txt2')), undefined);
+		assert.strictEqual(customLabelService.getName(URI.file("file")), undefined);
+		assert.strictEqual(customLabelService.getName(URI.file("file.txt")), undefined);
+		assert.strictEqual(customLabelService.getName(URI.file("file.txt1.txt2")), undefined);
+		assert.strictEqual(customLabelService.getName(URI.file("folder1/file.txt1.txt2")), undefined);
 
-		assert.strictEqual(customLabelService.getName(URI.file('.file')), undefined);
-		assert.strictEqual(customLabelService.getName(URI.file('.file.txt')), undefined);
-		assert.strictEqual(customLabelService.getName(URI.file('.file.txt1.txt2')), undefined);
-		assert.strictEqual(customLabelService.getName(URI.file('folder1/file.txt1.txt2')), undefined);
+		assert.strictEqual(customLabelService.getName(URI.file(".file")), undefined);
+		assert.strictEqual(customLabelService.getName(URI.file(".file.txt")), undefined);
+		assert.strictEqual(customLabelService.getName(URI.file(".file.txt1.txt2")), undefined);
+		assert.strictEqual(customLabelService.getName(URI.file("folder1/file.txt1.txt2")), undefined);
 	});
 });

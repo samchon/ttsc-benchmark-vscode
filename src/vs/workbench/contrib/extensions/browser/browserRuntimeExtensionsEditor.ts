@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Action } from '../../../../base/common/actions.js';
-import { IExtensionHostProfile } from '../../../services/extensions/common/extensions.js';
-import { ExtensionIdentifier } from '../../../../platform/extensions/common/extensions.js';
-import { AbstractRuntimeExtensionsEditor, IRuntimeExtension } from './abstractRuntimeExtensionsEditor.js';
-import { ReportExtensionIssueAction } from '../common/reportExtensionIssueAction.js';
+import { Action } from "../../../../base/common/actions.js";
+import { IExtensionHostProfile } from "../../../services/extensions/common/extensions.js";
+import { ExtensionIdentifier } from "../../../../platform/extensions/common/extensions.js";
+import { AbstractRuntimeExtensionsEditor, IRuntimeExtension } from "./abstractRuntimeExtensionsEditor.js";
+import { ReportExtensionIssueAction } from "../common/reportExtensionIssueAction.js";
 
 export class RuntimeExtensionsEditor extends AbstractRuntimeExtensionsEditor {
 
@@ -25,7 +25,10 @@ export class RuntimeExtensionsEditor extends AbstractRuntimeExtensionsEditor {
 
 	protected _createReportExtensionIssueAction(element: IRuntimeExtension): Action | null {
 		if (element.marketplaceInfo) {
-			return this._instantiationService.createInstance(ReportExtensionIssueAction, element.description);
+			return this._instantiationService.createInstance(
+        ReportExtensionIssueAction,
+        element.description,
+      );
 		}
 		return null;
 	}

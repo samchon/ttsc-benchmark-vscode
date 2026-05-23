@@ -3,55 +3,91 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { KeyChord, KeyCode, KeyMod } from '../../../../../../base/common/keyCodes.js';
-import { Mimes } from '../../../../../../base/common/mime.js';
-import { IBulkEditService, ResourceTextEdit } from '../../../../../../editor/browser/services/bulkEditService.js';
-import { localize, localize2 } from '../../../../../../nls.js';
-import { MenuId, registerAction2 } from '../../../../../../platform/actions/common/actions.js';
-import { ContextKeyExpr } from '../../../../../../platform/contextkey/common/contextkey.js';
-import { InputFocusedContext, InputFocusedContextKey } from '../../../../../../platform/contextkey/common/contextkeys.js';
-import { ServicesAccessor } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { KeybindingWeight } from '../../../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { ResourceNotebookCellEdit } from '../../../../bulkEdit/browser/bulkCellEdits.js';
-import { changeCellToKind, computeCellLinesContents, copyCellRange, joinCellsWithSurrounds, joinSelectedCells, moveCellRange } from '../../controller/cellOperations.js';
-import { cellExecutionArgs, CellOverflowToolbarGroups, CellToolbarOrder, CELL_TITLE_CELL_GROUP_ID, INotebookCellActionContext, INotebookCellToolbarActionContext, INotebookCommandContext, NotebookCellAction, NotebookMultiCellAction, parseMultiCellExecutionArgs } from '../../controller/coreActions.js';
-import { CellFocusMode, EXPAND_CELL_INPUT_COMMAND_ID, EXPAND_CELL_OUTPUT_COMMAND_ID, ICellOutputViewModel, ICellViewModel, INotebookEditor } from '../../notebookBrowser.js';
-import { NOTEBOOK_CELL_EDITABLE, NOTEBOOK_CELL_HAS_OUTPUTS, NOTEBOOK_CELL_INPUT_COLLAPSED, NOTEBOOK_CELL_LIST_FOCUSED, NOTEBOOK_CELL_OUTPUT_COLLAPSED, NOTEBOOK_CELL_TYPE, NOTEBOOK_EDITOR_EDITABLE, NOTEBOOK_EDITOR_FOCUSED, NOTEBOOK_IS_ACTIVE_EDITOR, NOTEBOOK_OUTPUT_FOCUSED } from '../../../common/notebookContextKeys.js';
-import * as icons from '../../notebookIcons.js';
-import { CellEditType, CellKind, NotebookSetting } from '../../../common/notebookCommon.js';
-import { INotificationService } from '../../../../../../platform/notification/common/notification.js';
-import { EditorContextKeys } from '../../../../../../editor/common/editorContextKeys.js';
-import { IConfigurationService } from '../../../../../../platform/configuration/common/configuration.js';
+import { KeyChord, KeyCode, KeyMod } from "../../../../../../base/common/keyCodes.js";
+import { Mimes } from "../../../../../../base/common/mime.js";
+import { IBulkEditService, ResourceTextEdit } from "../../../../../../editor/browser/services/bulkEditService.js";
+import { localize, localize2 } from "../../../../../../nls.js";
+import { MenuId, registerAction2 } from "../../../../../../platform/actions/common/actions.js";
+import { ContextKeyExpr } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { InputFocusedContext, InputFocusedContextKey } from "../../../../../../platform/contextkey/common/contextkeys.js";
+import { ServicesAccessor } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingWeight } from "../../../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { ResourceNotebookCellEdit } from "../../../../bulkEdit/browser/bulkCellEdits.js";
+import {
+  changeCellToKind,
+  computeCellLinesContents,
+  copyCellRange,
+  joinCellsWithSurrounds,
+  joinSelectedCells,
+  moveCellRange,
+} from "../../controller/cellOperations.js";
+import {
+  cellExecutionArgs,
+  CellOverflowToolbarGroups,
+  CellToolbarOrder,
+  CELL_TITLE_CELL_GROUP_ID,
+  INotebookCellActionContext,
+  INotebookCellToolbarActionContext,
+  INotebookCommandContext,
+  NotebookCellAction,
+  NotebookMultiCellAction,
+  parseMultiCellExecutionArgs,
+} from "../../controller/coreActions.js";
+import {
+  CellFocusMode,
+  EXPAND_CELL_INPUT_COMMAND_ID,
+  EXPAND_CELL_OUTPUT_COMMAND_ID,
+  ICellOutputViewModel,
+  ICellViewModel,
+  INotebookEditor,
+} from "../../notebookBrowser.js";
+import {
+  NOTEBOOK_CELL_EDITABLE,
+  NOTEBOOK_CELL_HAS_OUTPUTS,
+  NOTEBOOK_CELL_INPUT_COLLAPSED,
+  NOTEBOOK_CELL_LIST_FOCUSED,
+  NOTEBOOK_CELL_OUTPUT_COLLAPSED,
+  NOTEBOOK_CELL_TYPE,
+  NOTEBOOK_EDITOR_EDITABLE,
+  NOTEBOOK_EDITOR_FOCUSED,
+  NOTEBOOK_IS_ACTIVE_EDITOR,
+  NOTEBOOK_OUTPUT_FOCUSED,
+} from "../../../common/notebookContextKeys.js";
+import * as icons from "../../notebookIcons.js";
+import { CellEditType, CellKind, NotebookSetting } from "../../../common/notebookCommon.js";
+import { INotificationService } from "../../../../../../platform/notification/common/notification.js";
+import { EditorContextKeys } from "../../../../../../editor/common/editorContextKeys.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
 
 //#region Move/Copy cells
-const MOVE_CELL_UP_COMMAND_ID = 'notebook.cell.moveUp';
-const MOVE_CELL_DOWN_COMMAND_ID = 'notebook.cell.moveDown';
-const COPY_CELL_UP_COMMAND_ID = 'notebook.cell.copyUp';
-const COPY_CELL_DOWN_COMMAND_ID = 'notebook.cell.copyDown';
+const MOVE_CELL_UP_COMMAND_ID = "notebook.cell.moveUp";
+const MOVE_CELL_DOWN_COMMAND_ID = "notebook.cell.moveDown";
+const COPY_CELL_UP_COMMAND_ID = "notebook.cell.copyUp";
+const COPY_CELL_DOWN_COMMAND_ID = "notebook.cell.copyDown";
 
 registerAction2(class extends NotebookCellAction {
 	constructor() {
 		super(
 			{
 				id: MOVE_CELL_UP_COMMAND_ID,
-				title: localize2('notebookActions.moveCellUp', "Move Cell Up"),
+				title: localize2("notebookActions.moveCellUp", "Move Cell Up"),
 				icon: icons.moveUpIcon,
 				keybinding: {
 					primary: KeyMod.Alt | KeyCode.UpArrow,
 					when: ContextKeyExpr.and(NOTEBOOK_EDITOR_FOCUSED, InputFocusedContext.toNegated()),
-					weight: KeybindingWeight.WorkbenchContrib
+					weight: KeybindingWeight.WorkbenchContrib,
 				},
 				menu: {
 					id: MenuId.NotebookCellTitle,
-					when: ContextKeyExpr.equals('config.notebook.dragAndDropEnabled', false),
+					when: ContextKeyExpr.equals("config.notebook.dragAndDropEnabled", false),
 					group: CellOverflowToolbarGroups.Edit,
-					order: 14
-				}
+					order: 14,
+				},
 			});
 	}
 
 	async runWithContext(accessor: ServicesAccessor, context: INotebookCellActionContext) {
-		return moveCellRange(context, 'up');
+		return moveCellRange(context, "up");
 	}
 });
 
@@ -60,24 +96,24 @@ registerAction2(class extends NotebookCellAction {
 		super(
 			{
 				id: MOVE_CELL_DOWN_COMMAND_ID,
-				title: localize2('notebookActions.moveCellDown', "Move Cell Down"),
+				title: localize2("notebookActions.moveCellDown", "Move Cell Down"),
 				icon: icons.moveDownIcon,
 				keybinding: {
 					primary: KeyMod.Alt | KeyCode.DownArrow,
 					when: ContextKeyExpr.and(NOTEBOOK_EDITOR_FOCUSED, InputFocusedContext.toNegated()),
-					weight: KeybindingWeight.WorkbenchContrib
+					weight: KeybindingWeight.WorkbenchContrib,
 				},
 				menu: {
 					id: MenuId.NotebookCellTitle,
-					when: ContextKeyExpr.equals('config.notebook.dragAndDropEnabled', false),
+					when: ContextKeyExpr.equals("config.notebook.dragAndDropEnabled", false),
 					group: CellOverflowToolbarGroups.Edit,
-					order: 14
-				}
+					order: 14,
+				},
 			});
 	}
 
 	async runWithContext(accessor: ServicesAccessor, context: INotebookCellActionContext) {
-		return moveCellRange(context, 'down');
+		return moveCellRange(context, "down");
 	}
 });
 
@@ -86,17 +122,17 @@ registerAction2(class extends NotebookCellAction {
 		super(
 			{
 				id: COPY_CELL_UP_COMMAND_ID,
-				title: localize2('notebookActions.copyCellUp', "Copy Cell Up"),
+				title: localize2("notebookActions.copyCellUp", "Copy Cell Up"),
 				keybinding: {
 					primary: KeyMod.Alt | KeyMod.Shift | KeyCode.UpArrow,
 					when: ContextKeyExpr.and(NOTEBOOK_EDITOR_FOCUSED, InputFocusedContext.toNegated()),
-					weight: KeybindingWeight.WorkbenchContrib
-				}
+					weight: KeybindingWeight.WorkbenchContrib,
+				},
 			});
 	}
 
 	async runWithContext(accessor: ServicesAccessor, context: INotebookCellActionContext) {
-		return copyCellRange(context, 'up');
+		return copyCellRange(context, "up");
 	}
 });
 
@@ -105,23 +141,23 @@ registerAction2(class extends NotebookCellAction {
 		super(
 			{
 				id: COPY_CELL_DOWN_COMMAND_ID,
-				title: localize2('notebookActions.copyCellDown', "Copy Cell Down"),
+				title: localize2("notebookActions.copyCellDown", "Copy Cell Down"),
 				keybinding: {
 					primary: KeyMod.Alt | KeyMod.Shift | KeyCode.DownArrow,
 					when: ContextKeyExpr.and(NOTEBOOK_EDITOR_FOCUSED, InputFocusedContext.toNegated()),
-					weight: KeybindingWeight.WorkbenchContrib
+					weight: KeybindingWeight.WorkbenchContrib,
 				},
 				menu: {
 					id: MenuId.NotebookCellTitle,
 					when: ContextKeyExpr.and(NOTEBOOK_EDITOR_FOCUSED, NOTEBOOK_EDITOR_EDITABLE, NOTEBOOK_CELL_EDITABLE),
 					group: CellOverflowToolbarGroups.Edit,
-					order: 13
-				}
+					order: 13,
+				},
 			});
 	}
 
 	async runWithContext(accessor: ServicesAccessor, context: INotebookCellActionContext) {
-		return copyCellRange(context, 'down');
+		return copyCellRange(context, "down");
 	}
 });
 
@@ -130,10 +166,10 @@ registerAction2(class extends NotebookCellAction {
 
 //#region Join/Split
 
-const SPLIT_CELL_COMMAND_ID = 'notebook.cell.split';
-const JOIN_SELECTED_CELLS_COMMAND_ID = 'notebook.cell.joinSelected';
-const JOIN_CELL_ABOVE_COMMAND_ID = 'notebook.cell.joinAbove';
-const JOIN_CELL_BELOW_COMMAND_ID = 'notebook.cell.joinBelow';
+const SPLIT_CELL_COMMAND_ID = "notebook.cell.split";
+const JOIN_SELECTED_CELLS_COMMAND_ID = "notebook.cell.joinSelected";
+const JOIN_CELL_ABOVE_COMMAND_ID = "notebook.cell.joinAbove";
+const JOIN_CELL_BELOW_COMMAND_ID = "notebook.cell.joinBelow";
 
 
 registerAction2(class extends NotebookCellAction {
@@ -141,22 +177,22 @@ registerAction2(class extends NotebookCellAction {
 		super(
 			{
 				id: SPLIT_CELL_COMMAND_ID,
-				title: localize2('notebookActions.splitCell', "Split Cell"),
+				title: localize2("notebookActions.splitCell", "Split Cell"),
 				menu: {
 					id: MenuId.NotebookCellTitle,
 					when: ContextKeyExpr.and(
 						NOTEBOOK_EDITOR_EDITABLE,
 						NOTEBOOK_CELL_EDITABLE,
-						NOTEBOOK_CELL_INPUT_COLLAPSED.toNegated()
+						NOTEBOOK_CELL_INPUT_COLLAPSED.toNegated(),
 					),
 					order: CellToolbarOrder.SplitCell,
-					group: CELL_TITLE_CELL_GROUP_ID
+					group: CELL_TITLE_CELL_GROUP_ID,
 				},
 				icon: icons.splitCellIcon,
 				keybinding: {
 					when: ContextKeyExpr.and(NOTEBOOK_EDITOR_FOCUSED, NOTEBOOK_EDITOR_EDITABLE, NOTEBOOK_CELL_EDITABLE, EditorContextKeys.editorTextFocus),
 					primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.Backslash),
-					weight: KeybindingWeight.WorkbenchContrib
+					weight: KeybindingWeight.WorkbenchContrib,
 				},
 			});
 	}
@@ -198,15 +234,15 @@ registerAction2(class extends NotebookCellAction {
 									mime,
 									source: line,
 									outputs: [],
-									metadata: {}
-								}))
-							}
-						)
+									metadata: {},
+								})),
+							},
+						),
 					],
-					{ quotableLabel: 'Split Notebook Cell' }
+					{ quotableLabel: "Split Notebook Cell" },
 				);
 
-				context.notebookEditor.cellAt(index + 1)?.updateEditState(cell.getEditState(), 'splitCell');
+				context.notebookEditor.cellAt(index + 1)?.updateEditState(cell.getEditState(), "splitCell");
 			}
 		}
 	}
@@ -218,24 +254,24 @@ registerAction2(class extends NotebookCellAction {
 		super(
 			{
 				id: JOIN_CELL_ABOVE_COMMAND_ID,
-				title: localize2('notebookActions.joinCellAbove', "Join With Previous Cell"),
+				title: localize2("notebookActions.joinCellAbove", "Join With Previous Cell"),
 				keybinding: {
 					when: NOTEBOOK_EDITOR_FOCUSED,
 					primary: KeyMod.WinCtrl | KeyMod.Alt | KeyMod.Shift | KeyCode.KeyJ,
-					weight: KeybindingWeight.WorkbenchContrib
+					weight: KeybindingWeight.WorkbenchContrib,
 				},
 				menu: {
 					id: MenuId.NotebookCellTitle,
 					when: ContextKeyExpr.and(NOTEBOOK_EDITOR_FOCUSED, NOTEBOOK_EDITOR_EDITABLE),
 					group: CellOverflowToolbarGroups.Edit,
-					order: 10
-				}
+					order: 10,
+				},
 			});
 	}
 
 	async runWithContext(accessor: ServicesAccessor, context: INotebookCellActionContext) {
 		const bulkEditService = accessor.get(IBulkEditService);
-		return joinCellsWithSurrounds(bulkEditService, context, 'above');
+		return joinCellsWithSurrounds(bulkEditService, context, "above");
 	}
 });
 
@@ -245,24 +281,24 @@ registerAction2(class extends NotebookCellAction {
 		super(
 			{
 				id: JOIN_CELL_BELOW_COMMAND_ID,
-				title: localize2('notebookActions.joinCellBelow', "Join With Next Cell"),
+				title: localize2("notebookActions.joinCellBelow", "Join With Next Cell"),
 				keybinding: {
 					when: NOTEBOOK_EDITOR_FOCUSED,
 					primary: KeyMod.WinCtrl | KeyMod.Alt | KeyCode.KeyJ,
-					weight: KeybindingWeight.WorkbenchContrib
+					weight: KeybindingWeight.WorkbenchContrib,
 				},
 				menu: {
 					id: MenuId.NotebookCellTitle,
 					when: ContextKeyExpr.and(NOTEBOOK_EDITOR_FOCUSED, NOTEBOOK_EDITOR_EDITABLE),
 					group: CellOverflowToolbarGroups.Edit,
-					order: 11
-				}
+					order: 11,
+				},
 			});
 	}
 
 	async runWithContext(accessor: ServicesAccessor, context: INotebookCellActionContext) {
 		const bulkEditService = accessor.get(IBulkEditService);
-		return joinCellsWithSurrounds(bulkEditService, context, 'below');
+		return joinCellsWithSurrounds(bulkEditService, context, "below");
 	}
 });
 
@@ -271,13 +307,13 @@ registerAction2(class extends NotebookCellAction {
 		super(
 			{
 				id: JOIN_SELECTED_CELLS_COMMAND_ID,
-				title: localize2('notebookActions.joinSelectedCells', "Join Selected Cells"),
+				title: localize2("notebookActions.joinSelectedCells", "Join Selected Cells"),
 				menu: {
 					id: MenuId.NotebookCellTitle,
 					when: ContextKeyExpr.and(NOTEBOOK_EDITOR_FOCUSED, NOTEBOOK_EDITOR_EDITABLE),
 					group: CellOverflowToolbarGroups.Edit,
-					order: 12
-				}
+					order: 12,
+				},
 			});
 	}
 
@@ -292,25 +328,25 @@ registerAction2(class extends NotebookCellAction {
 
 //#region Change Cell Type
 
-const CHANGE_CELL_TO_CODE_COMMAND_ID = 'notebook.cell.changeToCode';
-const CHANGE_CELL_TO_MARKDOWN_COMMAND_ID = 'notebook.cell.changeToMarkdown';
+const CHANGE_CELL_TO_CODE_COMMAND_ID = "notebook.cell.changeToCode";
+const CHANGE_CELL_TO_MARKDOWN_COMMAND_ID = "notebook.cell.changeToMarkdown";
 
 registerAction2(class ChangeCellToCodeAction extends NotebookMultiCellAction {
 	constructor() {
 		super({
 			id: CHANGE_CELL_TO_CODE_COMMAND_ID,
-			title: localize2('notebookActions.changeCellToCode', "Change Cell to Code"),
+			title: localize2("notebookActions.changeCellToCode", "Change Cell to Code"),
 			keybinding: {
 				when: ContextKeyExpr.and(NOTEBOOK_EDITOR_FOCUSED, ContextKeyExpr.not(InputFocusedContextKey), NOTEBOOK_OUTPUT_FOCUSED.toNegated()),
 				primary: KeyCode.KeyY,
-				weight: KeybindingWeight.WorkbenchContrib
+				weight: KeybindingWeight.WorkbenchContrib,
 			},
-			precondition: ContextKeyExpr.and(NOTEBOOK_IS_ACTIVE_EDITOR, NOTEBOOK_CELL_TYPE.isEqualTo('markup')),
+			precondition: ContextKeyExpr.and(NOTEBOOK_IS_ACTIVE_EDITOR, NOTEBOOK_CELL_TYPE.isEqualTo("markup")),
 			menu: {
 				id: MenuId.NotebookCellTitle,
-				when: ContextKeyExpr.and(NOTEBOOK_EDITOR_FOCUSED, NOTEBOOK_EDITOR_EDITABLE, NOTEBOOK_CELL_EDITABLE, NOTEBOOK_CELL_TYPE.isEqualTo('markup')),
+				when: ContextKeyExpr.and(NOTEBOOK_EDITOR_FOCUSED, NOTEBOOK_EDITOR_EDITABLE, NOTEBOOK_CELL_EDITABLE, NOTEBOOK_CELL_TYPE.isEqualTo("markup")),
 				group: CellOverflowToolbarGroups.Edit,
-			}
+			},
 		});
 	}
 
@@ -323,23 +359,23 @@ registerAction2(class ChangeCellToMarkdownAction extends NotebookMultiCellAction
 	constructor() {
 		super({
 			id: CHANGE_CELL_TO_MARKDOWN_COMMAND_ID,
-			title: localize2('notebookActions.changeCellToMarkdown', "Change Cell to Markdown"),
+			title: localize2("notebookActions.changeCellToMarkdown", "Change Cell to Markdown"),
 			keybinding: {
 				when: ContextKeyExpr.and(NOTEBOOK_EDITOR_FOCUSED, ContextKeyExpr.not(InputFocusedContextKey), NOTEBOOK_OUTPUT_FOCUSED.toNegated()),
 				primary: KeyCode.KeyM,
-				weight: KeybindingWeight.WorkbenchContrib
+				weight: KeybindingWeight.WorkbenchContrib,
 			},
-			precondition: ContextKeyExpr.and(NOTEBOOK_IS_ACTIVE_EDITOR, NOTEBOOK_CELL_TYPE.isEqualTo('code')),
+			precondition: ContextKeyExpr.and(NOTEBOOK_IS_ACTIVE_EDITOR, NOTEBOOK_CELL_TYPE.isEqualTo("code")),
 			menu: {
 				id: MenuId.NotebookCellTitle,
-				when: ContextKeyExpr.and(NOTEBOOK_EDITOR_FOCUSED, NOTEBOOK_EDITOR_EDITABLE, NOTEBOOK_CELL_EDITABLE, NOTEBOOK_CELL_TYPE.isEqualTo('code')),
+				when: ContextKeyExpr.and(NOTEBOOK_EDITOR_FOCUSED, NOTEBOOK_EDITOR_EDITABLE, NOTEBOOK_CELL_EDITABLE, NOTEBOOK_CELL_TYPE.isEqualTo("code")),
 				group: CellOverflowToolbarGroups.Edit,
-			}
+			},
 		});
 	}
 
 	async runWithContext(accessor: ServicesAccessor, context: INotebookCommandContext | INotebookCellToolbarActionContext): Promise<void> {
-		await changeCellToKind(CellKind.Markup, context, 'markdown', Mimes.markdown);
+		await changeCellToKind(CellKind.Markup, context, "markdown", Mimes.markdown);
 	}
 });
 
@@ -347,25 +383,25 @@ registerAction2(class ChangeCellToMarkdownAction extends NotebookMultiCellAction
 
 //#region Collapse Cell
 
-const COLLAPSE_CELL_INPUT_COMMAND_ID = 'notebook.cell.collapseCellInput';
-const COLLAPSE_CELL_OUTPUT_COMMAND_ID = 'notebook.cell.collapseCellOutput';
-const COLLAPSE_ALL_CELL_INPUTS_COMMAND_ID = 'notebook.cell.collapseAllCellInputs';
-const EXPAND_ALL_CELL_INPUTS_COMMAND_ID = 'notebook.cell.expandAllCellInputs';
-const COLLAPSE_ALL_CELL_OUTPUTS_COMMAND_ID = 'notebook.cell.collapseAllCellOutputs';
-const EXPAND_ALL_CELL_OUTPUTS_COMMAND_ID = 'notebook.cell.expandAllCellOutputs';
-const TOGGLE_CELL_OUTPUTS_COMMAND_ID = 'notebook.cell.toggleOutputs';
-const TOGGLE_CELL_OUTPUT_SCROLLING = 'notebook.cell.toggleOutputScrolling';
+const COLLAPSE_CELL_INPUT_COMMAND_ID = "notebook.cell.collapseCellInput";
+const COLLAPSE_CELL_OUTPUT_COMMAND_ID = "notebook.cell.collapseCellOutput";
+const COLLAPSE_ALL_CELL_INPUTS_COMMAND_ID = "notebook.cell.collapseAllCellInputs";
+const EXPAND_ALL_CELL_INPUTS_COMMAND_ID = "notebook.cell.expandAllCellInputs";
+const COLLAPSE_ALL_CELL_OUTPUTS_COMMAND_ID = "notebook.cell.collapseAllCellOutputs";
+const EXPAND_ALL_CELL_OUTPUTS_COMMAND_ID = "notebook.cell.expandAllCellOutputs";
+const TOGGLE_CELL_OUTPUTS_COMMAND_ID = "notebook.cell.toggleOutputs";
+const TOGGLE_CELL_OUTPUT_SCROLLING = "notebook.cell.toggleOutputScrolling";
 
 registerAction2(class CollapseCellInputAction extends NotebookMultiCellAction {
 	constructor() {
 		super({
 			id: COLLAPSE_CELL_INPUT_COMMAND_ID,
-			title: localize2('notebookActions.collapseCellInput', "Collapse Cell Input"),
+			title: localize2("notebookActions.collapseCellInput", "Collapse Cell Input"),
 			keybinding: {
 				when: ContextKeyExpr.and(NOTEBOOK_CELL_LIST_FOCUSED, NOTEBOOK_CELL_INPUT_COLLAPSED.toNegated(), InputFocusedContext.toNegated()),
 				primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyCode.KeyC),
-				weight: KeybindingWeight.WorkbenchContrib
-			}
+				weight: KeybindingWeight.WorkbenchContrib,
+			},
 		});
 	}
 
@@ -386,12 +422,12 @@ registerAction2(class ExpandCellInputAction extends NotebookMultiCellAction {
 	constructor() {
 		super({
 			id: EXPAND_CELL_INPUT_COMMAND_ID,
-			title: localize2('notebookActions.expandCellInput', "Expand Cell Input"),
+			title: localize2("notebookActions.expandCellInput", "Expand Cell Input"),
 			keybinding: {
 				when: ContextKeyExpr.and(NOTEBOOK_CELL_LIST_FOCUSED, NOTEBOOK_CELL_INPUT_COLLAPSED),
 				primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyCode.KeyC),
-				weight: KeybindingWeight.WorkbenchContrib
-			}
+				weight: KeybindingWeight.WorkbenchContrib,
+			},
 		});
 	}
 
@@ -412,12 +448,12 @@ registerAction2(class CollapseCellOutputAction extends NotebookMultiCellAction {
 	constructor() {
 		super({
 			id: COLLAPSE_CELL_OUTPUT_COMMAND_ID,
-			title: localize2('notebookActions.collapseCellOutput', "Collapse Cell Output"),
+			title: localize2("notebookActions.collapseCellOutput", "Collapse Cell Output"),
 			keybinding: {
 				when: ContextKeyExpr.and(NOTEBOOK_CELL_LIST_FOCUSED, NOTEBOOK_CELL_OUTPUT_COLLAPSED.toNegated(), InputFocusedContext.toNegated(), NOTEBOOK_CELL_HAS_OUTPUTS),
 				primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyCode.KeyT),
-				weight: KeybindingWeight.WorkbenchContrib
-			}
+				weight: KeybindingWeight.WorkbenchContrib,
+			},
 		});
 	}
 
@@ -434,12 +470,12 @@ registerAction2(class ExpandCellOuputAction extends NotebookMultiCellAction {
 	constructor() {
 		super({
 			id: EXPAND_CELL_OUTPUT_COMMAND_ID,
-			title: localize2('notebookActions.expandCellOutput', "Expand Cell Output"),
+			title: localize2("notebookActions.expandCellOutput", "Expand Cell Output"),
 			keybinding: {
 				when: ContextKeyExpr.and(NOTEBOOK_CELL_LIST_FOCUSED, NOTEBOOK_CELL_OUTPUT_COLLAPSED),
 				primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyCode.KeyT),
-				weight: KeybindingWeight.WorkbenchContrib
-			}
+				weight: KeybindingWeight.WorkbenchContrib,
+			},
 		});
 	}
 
@@ -457,11 +493,11 @@ registerAction2(class extends NotebookMultiCellAction {
 		super({
 			id: TOGGLE_CELL_OUTPUTS_COMMAND_ID,
 			precondition: NOTEBOOK_CELL_LIST_FOCUSED,
-			title: localize2('notebookActions.toggleOutputs', "Toggle Outputs"),
+			title: localize2("notebookActions.toggleOutputs", "Toggle Outputs"),
 			metadata: {
-				description: localize('notebookActions.toggleOutputs', "Toggle Outputs"),
-				args: cellExecutionArgs
-			}
+				description: localize("notebookActions.toggleOutputs", "Toggle Outputs"),
+				args: cellExecutionArgs,
+			},
 		});
 	}
 
@@ -487,7 +523,7 @@ registerAction2(class CollapseAllCellInputsAction extends NotebookMultiCellActio
 	constructor() {
 		super({
 			id: COLLAPSE_ALL_CELL_INPUTS_COMMAND_ID,
-			title: localize2('notebookActions.collapseAllCellInput', "Collapse All Cell Inputs"),
+			title: localize2("notebookActions.collapseAllCellInput", "Collapse All Cell Inputs"),
 			f1: true,
 		});
 	}
@@ -501,8 +537,8 @@ registerAction2(class ExpandAllCellInputsAction extends NotebookMultiCellAction 
 	constructor() {
 		super({
 			id: EXPAND_ALL_CELL_INPUTS_COMMAND_ID,
-			title: localize2('notebookActions.expandAllCellInput', "Expand All Cell Inputs"),
-			f1: true
+			title: localize2("notebookActions.expandAllCellInput", "Expand All Cell Inputs"),
+			f1: true,
 		});
 	}
 
@@ -515,7 +551,7 @@ registerAction2(class CollapseAllCellOutputsAction extends NotebookMultiCellActi
 	constructor() {
 		super({
 			id: COLLAPSE_ALL_CELL_OUTPUTS_COMMAND_ID,
-			title: localize2('notebookActions.collapseAllCellOutput', "Collapse All Cell Outputs"),
+			title: localize2("notebookActions.collapseAllCellOutput", "Collapse All Cell Outputs"),
 			f1: true,
 		});
 	}
@@ -529,8 +565,8 @@ registerAction2(class ExpandAllCellOutputsAction extends NotebookMultiCellAction
 	constructor() {
 		super({
 			id: EXPAND_ALL_CELL_OUTPUTS_COMMAND_ID,
-			title: localize2('notebookActions.expandAllCellOutput', "Expand All Cell Outputs"),
-			f1: true
+			title: localize2("notebookActions.expandAllCellOutput", "Expand All Cell Outputs"),
+			f1: true,
 		});
 	}
 
@@ -543,12 +579,12 @@ registerAction2(class ToggleCellOutputScrolling extends NotebookMultiCellAction 
 	constructor() {
 		super({
 			id: TOGGLE_CELL_OUTPUT_SCROLLING,
-			title: localize2('notebookActions.toggleScrolling', "Toggle Scroll Cell Output"),
+			title: localize2("notebookActions.toggleScrolling", "Toggle Scroll Cell Output"),
 			keybinding: {
 				when: ContextKeyExpr.and(NOTEBOOK_CELL_LIST_FOCUSED, InputFocusedContext.toNegated(), NOTEBOOK_CELL_HAS_OUTPUTS),
 				primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyCode.KeyY),
-				weight: KeybindingWeight.WorkbenchContrib
-			}
+				weight: KeybindingWeight.WorkbenchContrib,
+			},
 		});
 	}
 
@@ -556,9 +592,9 @@ registerAction2(class ToggleCellOutputScrolling extends NotebookMultiCellAction 
 		const cellMetadata = viewModel.model.metadata;
 		// TODO: when is cellMetadata undefined? Is that a case we need to support? It is currently a read-only property.
 		if (cellMetadata) {
-			const currentlyEnabled = cellMetadata['scrollable'] !== undefined ? cellMetadata['scrollable'] : globalScrollSetting;
+			const currentlyEnabled = cellMetadata["scrollable"] !== undefined ? cellMetadata["scrollable"] : globalScrollSetting;
 			const shouldEnableScrolling = collapsed || !currentlyEnabled;
-			cellMetadata['scrollable'] = shouldEnableScrolling;
+			cellMetadata["scrollable"] = shouldEnableScrolling;
 			viewModel.resetRenderer();
 		}
 	}

@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IProcessEnvironment, isLinux } from './platform.js';
+import { IProcessEnvironment, isLinux } from "./platform.js";
 
 /**
  * Options to be passed to the external program or shell.
@@ -103,15 +103,15 @@ export interface ProcessItem {
  */
 export function sanitizeProcessEnvironment(env: IProcessEnvironment, ...preserve: string[]): void {
 	const set = preserve.reduce<Record<string, boolean>>((set, key) => {
-		set[key] = true;
-		return set;
-	}, {});
+    set[key] = true;
+    return set;
+  }, {});
 	const keysToRemove = [
-		/^ELECTRON_.+$/,
-		/^VSCODE_(?!(PORTABLE|SHELL_LOGIN|ENV_REPLACE|ENV_APPEND|ENV_PREPEND)).+$/,
-		/^SNAP(|_.*)$/,
-		/^GDK_PIXBUF_.+$/,
-	];
+    /^ELECTRON_.+$/,
+    /^VSCODE_(?!(PORTABLE|SHELL_LOGIN|ENV_REPLACE|ENV_APPEND|ENV_PREPEND)).+$/,
+    /^SNAP(|_.*)$/,
+    /^GDK_PIXBUF_.+$/,
+  ];
 	const envKeys = Object.keys(env);
 	envKeys
 		.filter(key => !set[key])
@@ -138,16 +138,16 @@ export function removeDangerousEnvVariables(env: IProcessEnvironment | undefined
 
 	// Unset `DEBUG`, as an invalid value might lead to process crashes
 	// See https://github.com/microsoft/vscode/issues/130072
-	delete env['DEBUG'];
+	delete env["DEBUG"];
 
 	// Unset `NODE_OPTIONS`, as it can be used to inject arbitrary flags
 	// (e.g. `--require`, `--inspect`) into forked Node processes, which
 	// has caused crashes and unexpected behavior.
-	delete env['NODE_OPTIONS'];
+	delete env["NODE_OPTIONS"];
 
 	if (isLinux) {
 		// Unset `LD_PRELOAD`, as it might lead to process crashes
 		// See https://github.com/microsoft/vscode/issues/134177
-		delete env['LD_PRELOAD'];
+		delete env["LD_PRELOAD"];
 	}
 }

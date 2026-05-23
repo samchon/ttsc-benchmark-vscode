@@ -3,13 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../../nls.js';
-import { Registry } from '../../registry/common/platform.js';
-import { DisposableStore, IDisposable } from '../../../base/common/lifecycle.js';
-import { IContextKeyService } from '../../contextkey/common/contextkey.js';
-import { IKeybindingService } from '../../keybinding/common/keybinding.js';
-import { Extensions, IQuickAccessProvider, IQuickAccessProviderDescriptor, IQuickAccessRegistry } from '../common/quickAccess.js';
-import { IQuickInputService, IQuickPick, IQuickPickItem } from '../common/quickInput.js';
+import { localize } from "../../../nls.js";
+import { Registry } from "../../registry/common/platform.js";
+import { DisposableStore, IDisposable } from "../../../base/common/lifecycle.js";
+import { IContextKeyService } from "../../contextkey/common/contextkey.js";
+import { IKeybindingService } from "../../keybinding/common/keybinding.js";
+import {
+  Extensions,
+  IQuickAccessProvider,
+  IQuickAccessProviderDescriptor,
+  IQuickAccessRegistry,
+} from "../common/quickAccess.js";
+import { IQuickInputService, IQuickPick, IQuickPickItem } from "../common/quickInput.js";
 
 interface IHelpQuickAccessPickItem extends IQuickPickItem {
 	readonly prefix: string;
@@ -17,14 +22,16 @@ interface IHelpQuickAccessPickItem extends IQuickPickItem {
 
 export class HelpQuickAccessProvider implements IQuickAccessProvider {
 
-	static PREFIX = '?';
+	static PREFIX = "?";
 
-	private readonly registry = Registry.as<IQuickAccessRegistry>(Extensions.Quickaccess);
+	private readonly registry = Registry.as<IQuickAccessRegistry>(
+    Extensions.Quickaccess,
+  );
 
 	constructor(
 		@IQuickInputService private readonly quickInputService: IQuickInputService,
 		@IKeybindingService private readonly keybindingService: IKeybindingService,
-		@IContextKeyService private readonly contextKeyService: IContextKeyService
+		@IContextKeyService private readonly contextKeyService: IContextKeyService,
 	) { }
 
 	provide(picker: IQuickPick<IHelpQuickAccessPickItem, { useSeparators: true }>): IDisposable {
@@ -48,7 +55,9 @@ export class HelpQuickAccessProvider implements IQuickAccessProvider {
 		}));
 
 		// Fill in all providers
-		picker.items = this.getQuickAccessProviders().filter(p => p.prefix !== HelpQuickAccessProvider.PREFIX);
+		picker.items = this.getQuickAccessProviders().filter(
+      p => p.prefix !== HelpQuickAccessProvider.PREFIX,
+    );
 
 		return disposables;
 	}
@@ -64,16 +73,16 @@ export class HelpQuickAccessProvider implements IQuickAccessProvider {
 
 	private createPicks(provider: IQuickAccessProviderDescriptor): IHelpQuickAccessPickItem[] {
 		return provider.helpEntries.map(helpEntry => {
-			const prefix = helpEntry.prefix || provider.prefix;
-			const label = prefix || '\u2026' /* ... */;
+      const prefix = helpEntry.prefix || provider.prefix;
+      const label = prefix || "\u2026" /* ... */;
 
-			return {
-				prefix,
-				label,
-				keybinding: helpEntry.commandId ? this.keybindingService.lookupKeybinding(helpEntry.commandId) : undefined,
-				ariaLabel: localize('helpPickAriaLabel', "{0}, {1}", label, helpEntry.description),
-				description: helpEntry.description
-			};
-		});
+      return {
+        prefix,
+        label,
+        keybinding: helpEntry.commandId ? this.keybindingService.lookupKeybinding(helpEntry.commandId) : undefined,
+        ariaLabel: localize("helpPickAriaLabel", "{0}, {1}", label, helpEntry.description),
+        description: helpEntry.description,
+      };
+    });
 	}
 }

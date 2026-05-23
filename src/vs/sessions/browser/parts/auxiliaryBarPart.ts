@@ -3,39 +3,55 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import '../../../workbench/browser/parts/auxiliarybar/media/auxiliaryBarPart.css';
-import './media/auxiliaryBarPart.css';
-import { localize } from '../../../nls.js';
-import { IContextKeyService } from '../../../platform/contextkey/common/contextkey.js';
-import { IContextMenuService } from '../../../platform/contextview/browser/contextView.js';
-import { IInstantiationService } from '../../../platform/instantiation/common/instantiation.js';
-import { IKeybindingService } from '../../../platform/keybinding/common/keybinding.js';
-import { INotificationService } from '../../../platform/notification/common/notification.js';
-import { IStorageService } from '../../../platform/storage/common/storage.js';
-import { IThemeService } from '../../../platform/theme/common/themeService.js';
-import { ActiveAuxiliaryContext, AuxiliaryBarFocusContext } from '../../../workbench/common/contextkeys.js';
-import { ACTIVITY_BAR_TOP_ACTIVE_BORDER, ACTIVITY_BAR_TOP_DRAG_AND_DROP_BORDER, ACTIVITY_BAR_TOP_FOREGROUND, ACTIVITY_BAR_TOP_INACTIVE_FOREGROUND, PANEL_ACTIVE_TITLE_BORDER, PANEL_ACTIVE_TITLE_FOREGROUND, PANEL_DRAG_AND_DROP_BORDER, PANEL_INACTIVE_TITLE_FOREGROUND, SIDE_BAR_TITLE_BORDER } from '../../../workbench/common/theme.js';
-import { agentsPanelBackground, agentsPanelBorder, agentsPanelForeground, agentsBadgeBackground, agentsBadgeForeground } from '../../common/theme.js';
-import { IViewDescriptorService, ViewContainerLocation } from '../../../workbench/common/views.js';
-import { IExtensionService } from '../../../workbench/services/extensions/common/extensions.js';
-import { IWorkbenchLayoutService, Parts } from '../../../workbench/services/layout/browser/layoutService.js';
-import { HoverPosition } from '../../../base/browser/ui/hover/hoverWidget.js';
-import { IAction } from '../../../base/common/actions.js';
-import { assertReturnsDefined } from '../../../base/common/types.js';
-import { LayoutPriority } from '../../../base/browser/ui/splitview/splitview.js';
-import { AbstractPaneCompositePart, CompositeBarPosition } from '../../../workbench/browser/parts/paneCompositePart.js';
-import { Part } from '../../../workbench/browser/part.js';
-import { ActionsOrientation, IActionViewItem } from '../../../base/browser/ui/actionbar/actionbar.js';
-import { IPaneCompositeBarOptions } from '../../../workbench/browser/parts/paneCompositeBar.js';
-import { IMenuService, IMenu, MenuId, MenuItemAction } from '../../../platform/actions/common/actions.js';
-import { Menus } from '../menus.js';
-import { IHoverService } from '../../../platform/hover/browser/hover.js';
-import { DropdownWithPrimaryActionViewItem } from '../../../platform/actions/browser/dropdownWithPrimaryActionViewItem.js';
-import { IBaseActionViewItemOptions } from '../../../base/browser/ui/actionbar/actionViewItems.js';
-import { getFlatContextMenuActions } from '../../../platform/actions/browser/menuEntryActionViewItem.js';
-import { IDisposable, MutableDisposable } from '../../../base/common/lifecycle.js';
-import { Extensions } from '../../../workbench/browser/panecomposite.js';
-import { mainWindow } from '../../../base/browser/window.js';
+import "../../../workbench/browser/parts/auxiliarybar/media/auxiliaryBarPart.css";
+import "./media/auxiliaryBarPart.css";
+import { localize } from "../../../nls.js";
+import { IContextKeyService } from "../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../platform/contextview/browser/contextView.js";
+import { IInstantiationService } from "../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../platform/keybinding/common/keybinding.js";
+import { INotificationService } from "../../../platform/notification/common/notification.js";
+import { IStorageService } from "../../../platform/storage/common/storage.js";
+import { IThemeService } from "../../../platform/theme/common/themeService.js";
+import { ActiveAuxiliaryContext, AuxiliaryBarFocusContext } from "../../../workbench/common/contextkeys.js";
+import {
+  ACTIVITY_BAR_TOP_ACTIVE_BORDER,
+  ACTIVITY_BAR_TOP_DRAG_AND_DROP_BORDER,
+  ACTIVITY_BAR_TOP_FOREGROUND,
+  ACTIVITY_BAR_TOP_INACTIVE_FOREGROUND,
+  PANEL_ACTIVE_TITLE_BORDER,
+  PANEL_ACTIVE_TITLE_FOREGROUND,
+  PANEL_DRAG_AND_DROP_BORDER,
+  PANEL_INACTIVE_TITLE_FOREGROUND,
+  SIDE_BAR_TITLE_BORDER,
+} from "../../../workbench/common/theme.js";
+import {
+  agentsPanelBackground,
+  agentsPanelBorder,
+  agentsPanelForeground,
+  agentsBadgeBackground,
+  agentsBadgeForeground,
+} from "../../common/theme.js";
+import { IViewDescriptorService, ViewContainerLocation } from "../../../workbench/common/views.js";
+import { IExtensionService } from "../../../workbench/services/extensions/common/extensions.js";
+import { IWorkbenchLayoutService, Parts } from "../../../workbench/services/layout/browser/layoutService.js";
+import { HoverPosition } from "../../../base/browser/ui/hover/hoverWidget.js";
+import { IAction } from "../../../base/common/actions.js";
+import { assertReturnsDefined } from "../../../base/common/types.js";
+import { LayoutPriority } from "../../../base/browser/ui/splitview/splitview.js";
+import { AbstractPaneCompositePart, CompositeBarPosition } from "../../../workbench/browser/parts/paneCompositePart.js";
+import { Part } from "../../../workbench/browser/part.js";
+import { ActionsOrientation, IActionViewItem } from "../../../base/browser/ui/actionbar/actionbar.js";
+import { IPaneCompositeBarOptions } from "../../../workbench/browser/parts/paneCompositeBar.js";
+import { IMenuService, IMenu, MenuId, MenuItemAction } from "../../../platform/actions/common/actions.js";
+import { Menus } from "../menus.js";
+import { IHoverService } from "../../../platform/hover/browser/hover.js";
+import { DropdownWithPrimaryActionViewItem } from "../../../platform/actions/browser/dropdownWithPrimaryActionViewItem.js";
+import { IBaseActionViewItemOptions } from "../../../base/browser/ui/actionbar/actionViewItems.js";
+import { getFlatContextMenuActions } from "../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { IDisposable, MutableDisposable } from "../../../base/common/lifecycle.js";
+import { Extensions } from "../../../workbench/browser/panecomposite.js";
+import { mainWindow } from "../../../base/browser/window.js";
 
 /**
  * Auxiliary bar part specifically for agent sessions workbench.
@@ -43,10 +59,10 @@ import { mainWindow } from '../../../base/browser/window.js';
  */
 export class AuxiliaryBarPart extends AbstractPaneCompositePart {
 
-	static readonly activeViewSettingsKey = 'workbench.agentsession.auxiliarybar.activepanelid';
-	static readonly pinnedViewsKey = 'workbench.agentsession.auxiliarybar.pinnedPanels';
-	static readonly placeholderViewContainersKey = 'workbench.agentsession.auxiliarybar.placeholderPanels';
-	static readonly viewContainersWorkspaceStateKey = 'workbench.agentsession.auxiliarybar.viewContainersWorkspaceState';
+	static readonly activeViewSettingsKey = "workbench.agentsession.auxiliarybar.activepanelid";
+	static readonly pinnedViewsKey = "workbench.agentsession.auxiliarybar.pinnedPanels";
+	static readonly placeholderViewContainersKey = "workbench.agentsession.auxiliarybar.placeholderPanels";
+	static readonly viewContainersWorkspaceStateKey = "workbench.agentsession.auxiliarybar.viewContainersWorkspaceState";
 
 	/** Visual margin values for the card-like appearance */
 	static readonly MARGIN_TOP = 0;
@@ -54,14 +70,22 @@ export class AuxiliaryBarPart extends AbstractPaneCompositePart {
 	static readonly MARGIN_LEFT = 5;
 
 	// Action ID for run script - defined here to avoid layering issues
-	private static readonly RUN_SCRIPT_ACTION_ID = 'workbench.action.agentSessions.runScript';
-	private static readonly RUN_SCRIPT_DROPDOWN_MENU_ID = MenuId.for('AgentSessionsRunScriptDropdown');
+	private static readonly RUN_SCRIPT_ACTION_ID = "workbench.action.agentSessions.runScript";
+	private static readonly RUN_SCRIPT_DROPDOWN_MENU_ID = MenuId.for(
+    "AgentSessionsRunScriptDropdown",
+  );
 	private static readonly DEFAULT_MINIMUM_WIDTH = 270;
 
 	// Run script dropdown management
-	private readonly _runScriptDropdown = this._register(new MutableDisposable<DropdownWithPrimaryActionViewItem>());
-	private readonly _runScriptMenu = this._register(new MutableDisposable<IMenu>());
-	private readonly _runScriptMenuListener = this._register(new MutableDisposable<IDisposable>());
+	private readonly _runScriptDropdown = this._register(
+    new MutableDisposable<DropdownWithPrimaryActionViewItem>(),
+  );
+	private readonly _runScriptMenu = this._register(
+    new MutableDisposable<IMenu>(),
+  );
+	private readonly _runScriptMenuListener = this._register(
+    new MutableDisposable<IDisposable>(),
+  );
 
 	// Sessions-specific auxiliary bar dimensions (intentionally not tied to the sessions SidebarPart values)
 	override get minimumWidth(): number {
@@ -86,7 +110,7 @@ export class AuxiliaryBarPart extends AbstractPaneCompositePart {
 		}
 
 		const width = activeComposite.getOptimalWidth();
-		if (typeof width !== 'number') {
+		if (typeof width !== "number") {
 			return undefined;
 		}
 
@@ -110,35 +134,35 @@ export class AuxiliaryBarPart extends AbstractPaneCompositePart {
 		@IMenuService menuService: IMenuService,
 	) {
 		super(
-			Parts.AUXILIARYBAR_PART,
-			{
-				hasTitle: true,
-				trailingSeparator: false,
-				borderWidth: () => 0,
-			},
-			AuxiliaryBarPart.activeViewSettingsKey,
-			ActiveAuxiliaryContext.bindTo(contextKeyService),
-			AuxiliaryBarFocusContext.bindTo(contextKeyService),
-			'auxiliarybar',
-			'auxiliarybar',
-			undefined,
-			SIDE_BAR_TITLE_BORDER,
-			ViewContainerLocation.AuxiliaryBar,
-			Extensions.Auxiliary,
-			Menus.AuxiliaryBarTitle,
-			notificationService,
-			storageService,
-			contextMenuService,
-			layoutService,
-			keybindingService,
-			hoverService,
-			instantiationService,
-			themeService,
-			viewDescriptorService,
-			contextKeyService,
-			extensionService,
-			menuService,
-		);
+      Parts.AUXILIARYBAR_PART,
+      {
+        hasTitle: true,
+        trailingSeparator: false,
+        borderWidth: () => 0,
+      },
+      AuxiliaryBarPart.activeViewSettingsKey,
+      ActiveAuxiliaryContext.bindTo(contextKeyService),
+      AuxiliaryBarFocusContext.bindTo(contextKeyService),
+      "auxiliarybar",
+      "auxiliarybar",
+      undefined,
+      SIDE_BAR_TITLE_BORDER,
+      ViewContainerLocation.AuxiliaryBar,
+      Extensions.Auxiliary,
+      Menus.AuxiliaryBarTitle,
+      notificationService,
+      storageService,
+      contextMenuService,
+      layoutService,
+      keybindingService,
+      hoverService,
+      instantiationService,
+      themeService,
+      viewDescriptorService,
+      contextKeyService,
+      extensionService,
+      menuService,
+    );
 
 		this._register(this.layoutService.onDidChangePartVisibility(e => {
 			if (e.partId === Parts.AUXILIARYBAR_PART || e.partId === Parts.EDITOR_PART) {
@@ -157,8 +181,11 @@ export class AuxiliaryBarPart extends AbstractPaneCompositePart {
 
 	override create(parent: HTMLElement): void {
 		super.create(parent);
-		parent.setAttribute('role', 'complementary');
-		parent.setAttribute('aria-label', localize('auxiliaryBarAriaLabel', "Session Details"));
+		parent.setAttribute("role", "complementary");
+		parent.setAttribute(
+      "aria-label",
+      localize("auxiliaryBarAriaLabel", "Session Details"),
+    );
 	}
 
 	override updateStyles(): void {
@@ -167,24 +194,35 @@ export class AuxiliaryBarPart extends AbstractPaneCompositePart {
 		const container = assertReturnsDefined(this.getContainer());
 
 		// Store background and border as CSS variables for the card styling on .part
-		container.style.setProperty('--part-background', this.getColor(agentsPanelBackground) || '');
-		container.style.setProperty('--part-border-color', this.getColor(agentsPanelBorder) || 'transparent');
-		container.style.setProperty('--part-foreground', this.getColor(agentsPanelForeground) || '');
-		container.style.backgroundColor = this.getColor(agentsPanelBackground) || '';
+		container.style.setProperty(
+      "--part-background",
+      this.getColor(agentsPanelBackground) || "",
+    );
+		container.style.setProperty(
+      "--part-border-color",
+      this.getColor(agentsPanelBorder) || "transparent",
+    );
+		container.style.setProperty(
+      "--part-foreground",
+      this.getColor(agentsPanelForeground) || "",
+    );
+		container.style.backgroundColor = this.getColor(
+      agentsPanelBackground,
+    ) || "";
 
 		// Clear borders - the card appearance uses border-radius instead
-		container.style.borderLeftColor = '';
-		container.style.borderRightColor = '';
-		container.style.borderLeftStyle = '';
-		container.style.borderRightStyle = '';
-		container.style.borderLeftWidth = '';
-		container.style.borderRightWidth = '';
+		container.style.borderLeftColor = "";
+		container.style.borderRightColor = "";
+		container.style.borderLeftStyle = "";
+		container.style.borderRightStyle = "";
+		container.style.borderLeftWidth = "";
+		container.style.borderRightWidth = "";
 	}
 
 	protected getCompositeBarOptions(): IPaneCompositeBarOptions {
 		const $this = this;
 		return {
-			partContainerClass: 'auxiliarybar',
+			partContainerClass: "auxiliarybar",
 			pinnedViewContainersKey: AuxiliaryBarPart.pinnedViewsKey,
 			placeholderViewContainersKey: AuxiliaryBarPart.placeholderViewContainersKey,
 			viewContainersWorkspaceStateKey: AuxiliaryBarPart.viewContainersWorkspaceStateKey,
@@ -206,9 +244,9 @@ export class AuxiliaryBarPart extends AbstractPaneCompositePart {
 				get inactiveForegroundColor() { return $this.getCompositeBarPosition() === CompositeBarPosition.TITLE ? theme.getColor(PANEL_INACTIVE_TITLE_FOREGROUND) : theme.getColor(ACTIVITY_BAR_TOP_INACTIVE_FOREGROUND); },
 				badgeBackground: theme.getColor(agentsBadgeBackground),
 				badgeForeground: theme.getColor(agentsBadgeForeground),
-				get dragAndDropBorder() { return $this.getCompositeBarPosition() === CompositeBarPosition.TITLE ? theme.getColor(PANEL_DRAG_AND_DROP_BORDER) : theme.getColor(ACTIVITY_BAR_TOP_DRAG_AND_DROP_BORDER); }
+				get dragAndDropBorder() { return $this.getCompositeBarPosition() === CompositeBarPosition.TITLE ? theme.getColor(PANEL_DRAG_AND_DROP_BORDER) : theme.getColor(ACTIVITY_BAR_TOP_DRAG_AND_DROP_BORDER); },
 			}),
-			compact: true
+			compact: true,
 		};
 	}
 
@@ -217,32 +255,37 @@ export class AuxiliaryBarPart extends AbstractPaneCompositePart {
 		if (action.id === AuxiliaryBarPart.RUN_SCRIPT_ACTION_ID && action instanceof MenuItemAction) {
 			// Create and store the menu so we can listen for changes
 			if (!this._runScriptMenu.value) {
-				this._runScriptMenu.value = this.menuService.createMenu(AuxiliaryBarPart.RUN_SCRIPT_DROPDOWN_MENU_ID, this.contextKeyService);
-				this._runScriptMenuListener.value = this._runScriptMenu.value.onDidChange(() => this._updateRunScriptDropdown());
+				this._runScriptMenu.value = this.menuService.createMenu(
+          AuxiliaryBarPart.RUN_SCRIPT_DROPDOWN_MENU_ID,
+          this.contextKeyService,
+        );
+				this._runScriptMenuListener.value = this._runScriptMenu.value.onDidChange(
+          () => this._updateRunScriptDropdown(),
+        );
 			}
 
 			const dropdownActions = this._getRunScriptDropdownActions();
 
 			const dropdownAction: IAction = {
-				id: 'runScriptDropdown',
-				label: '',
-				tooltip: '',
-				class: undefined,
-				enabled: true,
-				run: () => { }
-			};
+        id: "runScriptDropdown",
+        label: "",
+        tooltip: "",
+        class: undefined,
+        enabled: true,
+        run: () => { },
+      };
 
 			this._runScriptDropdown.value = this.instantiationService.createInstance(
-				DropdownWithPrimaryActionViewItem,
-				action,
-				dropdownAction,
-				dropdownActions,
-				'',
-				{
-					hoverDelegate: options.hoverDelegate,
-					getKeyBinding: (action: IAction) => this.keybindingService.lookupKeybinding(action.id, this.contextKeyService)
-				}
-			);
+        DropdownWithPrimaryActionViewItem,
+        action,
+        dropdownAction,
+        dropdownActions,
+        "",
+        {
+          hoverDelegate: options.hoverDelegate,
+          getKeyBinding: (action: IAction) => this.keybindingService.lookupKeybinding(action.id, this.contextKeyService),
+        },
+      );
 
 			return this._runScriptDropdown.value;
 		}
@@ -254,20 +297,22 @@ export class AuxiliaryBarPart extends AbstractPaneCompositePart {
 		if (!this._runScriptMenu.value) {
 			return [];
 		}
-		return getFlatContextMenuActions(this._runScriptMenu.value.getActions({ shouldForwardArgs: true }));
+		return getFlatContextMenuActions(
+      this._runScriptMenu.value.getActions({ shouldForwardArgs: true }),
+    );
 	}
 
 	private _updateRunScriptDropdown(): void {
 		if (this._runScriptDropdown.value) {
 			const dropdownActions = this._getRunScriptDropdownActions();
 			const dropdownAction: IAction = {
-				id: 'runScriptDropdown',
-				label: '',
-				tooltip: '',
-				class: undefined,
-				enabled: true,
-				run: () => { }
-			};
+        id: "runScriptDropdown",
+        label: "",
+        tooltip: "",
+        class: undefined,
+        enabled: true,
+        run: () => { },
+      };
 			this._runScriptDropdown.value.update(dropdownAction, dropdownActions);
 		}
 	}
@@ -300,7 +345,10 @@ export class AuxiliaryBarPart extends AbstractPaneCompositePart {
 		// fills its cell; the workbench grid's 10px bottom gutter provides the visible gap).
 		// When the editor is visible, padding-left: 5px keeps the inner content position
 		// invariant (matching the editor-hidden state where margin-left: 5px applies instead).
-		const editorVisible = this.layoutService.isVisible(Parts.EDITOR_PART, mainWindow);
+		const editorVisible = this.layoutService.isVisible(
+      Parts.EDITOR_PART,
+      mainWindow,
+    );
 		const marginLeft = editorVisible ? 0 : AuxiliaryBarPart.MARGIN_LEFT;
 		const paddingLeft = editorVisible ? AuxiliaryBarPart.MARGIN_LEFT : 0;
 		const marginBottom = this.layoutService.isVisible(Parts.PANEL_PART)
@@ -308,10 +356,11 @@ export class AuxiliaryBarPart extends AbstractPaneCompositePart {
 			: 0;
 
 		super.layout(
-			width - marginLeft - borderTotal - paddingLeft,
-			height - AuxiliaryBarPart.MARGIN_TOP - marginBottom - borderTotal,
-			top, left
-		);
+      width - marginLeft - borderTotal - paddingLeft,
+      height - AuxiliaryBarPart.MARGIN_TOP - marginBottom - borderTotal,
+      top,
+      left,
+    );
 
 		// Restore the full grid-allocated dimensions so that Part.relayout() works correctly.
 		// Part.layout() only stores _dimension and _contentPosition - no other side effects.
@@ -320,7 +369,7 @@ export class AuxiliaryBarPart extends AbstractPaneCompositePart {
 
 	override toJSON(): object {
 		return {
-			type: Parts.AUXILIARYBAR_PART
-		};
+      type: Parts.AUXILIARYBAR_PART,
+    };
 	}
 }

@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AstNode, AstNodeKind, ListAstNode } from './ast.js';
+import { AstNode, AstNodeKind, ListAstNode } from "./ast.js";
 
 /**
  * Concatenates a list of (2,3) AstNode's into a single (2,3) AstNode.
@@ -36,7 +36,10 @@ export function concat23Trees(items: AstNode[]): AstNode | null {
 		}
 
 		if (i - start >= 2) {
-			return concat23TreesOfSameHeight(start === 0 && i === items.length ? items : items.slice(start, i), false);
+			return concat23TreesOfSameHeight(
+        start === 0 && i === items.length ? items : items.slice(start, i),
+        false,
+      );
 		} else {
 			return items[start];
 		}
@@ -78,11 +81,21 @@ export function concat23TreesOfSameHeight(items: AstNode[], createImmutableLists
 		const newLength = length >> 1;
 		for (let i = 0; i < newLength; i++) {
 			const j = i << 1;
-			items[i] = ListAstNode.create23(items[j], items[j + 1], j + 3 === length ? items[j + 2] : null, createImmutableLists);
+			items[i] = ListAstNode.create23(
+        items[j],
+        items[j + 1],
+        j + 3 === length ? items[j + 2] : null,
+        createImmutableLists,
+      );
 		}
 		length = newLength;
 	}
-	return ListAstNode.create23(items[0], items[1], length >= 3 ? items[2] : null, createImmutableLists);
+	return ListAstNode.create23(
+    items[0],
+    items[1],
+    length >= 3 ? items[2] : null,
+    createImmutableLists,
+  );
 }
 
 function heightDiff(node1: AstNode, node2: AstNode): number {
@@ -118,7 +131,7 @@ function append(list: ListAstNode, nodeToAppend: AstNode): AstNode {
 		}
 		// assert 0 <= nodeToInsert.listHeight < curNode.listHeight
 		if (curNode.kind !== AstNodeKind.List) {
-			throw new Error('unexpected');
+			throw new Error("unexpected");
 		}
 		parents.push(curNode);
 		// assert 2 <= curNode.childrenLength <= 3
@@ -134,7 +147,12 @@ function append(list: ListAstNode, nodeToAppend: AstNode): AstNode {
 
 				// we need to split to maintain (2,3)-tree property.
 				// Send the third element + the new element to the parent.
-				nodeToAppendOfCorrectHeight = ListAstNode.create23(parent.unappendChild()!, nodeToAppendOfCorrectHeight, null, false);
+				nodeToAppendOfCorrectHeight = ListAstNode.create23(
+          parent.unappendChild()!,
+          nodeToAppendOfCorrectHeight,
+          null,
+          false,
+        );
 			} else {
 				parent.appendChildOfSameHeight(nodeToAppendOfCorrectHeight);
 				nodeToAppendOfCorrectHeight = undefined;
@@ -162,7 +180,7 @@ function prepend(list: ListAstNode, nodeToAppend: AstNode): AstNode {
 	while (nodeToAppend.listHeight !== curNode.listHeight) {
 		// assert 0 <= nodeToInsert.listHeight < curNode.listHeight
 		if (curNode.kind !== AstNodeKind.List) {
-			throw new Error('unexpected');
+			throw new Error("unexpected");
 		}
 		parents.push(curNode);
 		// assert 2 <= curNode.childrenFast.length <= 3
@@ -179,7 +197,12 @@ function prepend(list: ListAstNode, nodeToAppend: AstNode): AstNode {
 
 				// we need to split to maintain (2,3)-tree property.
 				// Send the third element + the new element to the parent.
-				nodeToPrependOfCorrectHeight = ListAstNode.create23(nodeToPrependOfCorrectHeight, parent.unprependChild()!, null, false);
+				nodeToPrependOfCorrectHeight = ListAstNode.create23(
+          nodeToPrependOfCorrectHeight,
+          parent.unprependChild()!,
+          null,
+          false,
+        );
 			} else {
 				parent.prependChildOfSameHeight(nodeToPrependOfCorrectHeight);
 				nodeToPrependOfCorrectHeight = undefined;
@@ -189,7 +212,12 @@ function prepend(list: ListAstNode, nodeToAppend: AstNode): AstNode {
 		}
 	}
 	if (nodeToPrependOfCorrectHeight) {
-		return ListAstNode.create23(nodeToPrependOfCorrectHeight, list, null, false);
+		return ListAstNode.create23(
+      nodeToPrependOfCorrectHeight,
+      list,
+      null,
+      false,
+    );
 	} else {
 		return list;
 	}

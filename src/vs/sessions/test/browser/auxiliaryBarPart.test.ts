@@ -3,22 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { Emitter } from '../../../base/common/event.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../base/test/common/utils.js';
-import { TestInstantiationService } from '../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { IPartVisibilityChangeEvent, IWorkbenchLayoutService, Parts } from '../../../workbench/services/layout/browser/layoutService.js';
-import { IViewDescriptorService } from '../../../workbench/common/views.js';
-import { ViewDescriptorService } from '../../../workbench/services/views/browser/viewDescriptorService.js';
-import { TestLayoutService, workbenchInstantiationService } from '../../../workbench/test/browser/workbenchTestServices.js';
-import { AuxiliaryBarPart } from '../../browser/parts/auxiliaryBarPart.js';
+import assert from "assert";
+import { Emitter } from "../../../base/common/event.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../base/test/common/utils.js";
+import { TestInstantiationService } from "../../../platform/instantiation/test/common/instantiationServiceMock.js";
+import { IPartVisibilityChangeEvent, IWorkbenchLayoutService, Parts } from "../../../workbench/services/layout/browser/layoutService.js";
+import { IViewDescriptorService } from "../../../workbench/common/views.js";
+import { ViewDescriptorService } from "../../../workbench/services/views/browser/viewDescriptorService.js";
+import { TestLayoutService, workbenchInstantiationService } from "../../../workbench/test/browser/workbenchTestServices.js";
+import { AuxiliaryBarPart } from "../../browser/parts/auxiliaryBarPart.js";
 
 class MutableTestLayoutService extends TestLayoutService {
 
 	private readonly _visibleParts = new Map<Parts, boolean>([
-		[Parts.AUXILIARYBAR_PART, true],
-		[Parts.EDITOR_PART, false],
-	]);
+    [Parts.AUXILIARYBAR_PART, true],
+    [Parts.EDITOR_PART, false],
+  ]);
 
 	private readonly _onDidChangePartVisibility = new Emitter<IPartVisibilityChangeEvent>();
 	override readonly onDidChangePartVisibility = this._onDidChangePartVisibility.event;
@@ -37,34 +37,40 @@ class MutableTestLayoutService extends TestLayoutService {
 	}
 }
 
-suite('Sessions - Auxiliary Bar Part', () => {
-	const disposables = ensureNoDisposablesAreLeakedInTestSuite();
+suite("Sessions - Auxiliary Bar Part", () => {
+  const disposables = ensureNoDisposablesAreLeakedInTestSuite();
 
-	let instantiationService: TestInstantiationService;
-	let layoutService: MutableTestLayoutService;
-	let auxiliaryBarPart: AuxiliaryBarPart;
+  let instantiationService: TestInstantiationService;
+  let layoutService: MutableTestLayoutService;
+  let auxiliaryBarPart: AuxiliaryBarPart;
 
-	setup(() => {
-		layoutService = disposables.add(new MutableTestLayoutService());
-		instantiationService = workbenchInstantiationService({}, disposables);
-		instantiationService.stub(IWorkbenchLayoutService, layoutService as IWorkbenchLayoutService);
-		const viewDescriptorService = disposables.add(instantiationService.createInstance(ViewDescriptorService));
-		instantiationService.stub(IViewDescriptorService, viewDescriptorService);
-		auxiliaryBarPart = disposables.add(instantiationService.createInstance(AuxiliaryBarPart));
-	});
+  setup(() => {
+    layoutService = disposables.add(new MutableTestLayoutService());
+    instantiationService = workbenchInstantiationService({}, disposables);
+    instantiationService.stub(
+      IWorkbenchLayoutService,
+      layoutService as IWorkbenchLayoutService,
+    );
+    const viewDescriptorService = disposables.add(instantiationService.createInstance(ViewDescriptorService));
+    instantiationService.stub(IViewDescriptorService, viewDescriptorService);
+    auxiliaryBarPart = disposables.add(instantiationService.createInstance(AuxiliaryBarPart));
+  });
 
-	test('keeps the default minimum width and disables sash snap when the editor part is visible', () => {
-		layoutService.setVisible(Parts.EDITOR_PART, true);
+  test(
+    "keeps the default minimum width and disables sash snap when the editor part is visible",
+    () => {
+      layoutService.setVisible(Parts.EDITOR_PART, true);
 
-		assert.strictEqual(auxiliaryBarPart.minimumWidth, 270);
-		assert.strictEqual(auxiliaryBarPart.snap, false);
-	});
+      assert.strictEqual(auxiliaryBarPart.minimumWidth, 270);
+      assert.strictEqual(auxiliaryBarPart.snap, false);
+    },
+  );
 
-	test('restores sash snap when the editor part is hidden', () => {
-		layoutService.setVisible(Parts.EDITOR_PART, true);
-		assert.strictEqual(auxiliaryBarPart.snap, false);
+  test("restores sash snap when the editor part is hidden", () => {
+    layoutService.setVisible(Parts.EDITOR_PART, true);
+    assert.strictEqual(auxiliaryBarPart.snap, false);
 
-		layoutService.setVisible(Parts.EDITOR_PART, false);
-		assert.strictEqual(auxiliaryBarPart.snap, true);
-	});
+    layoutService.setVisible(Parts.EDITOR_PART, false);
+    assert.strictEqual(auxiliaryBarPart.snap, true);
+  });
 });

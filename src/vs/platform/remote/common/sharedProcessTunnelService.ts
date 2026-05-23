@@ -3,12 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import { IAddress } from './remoteAgentConnection.js';
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { IAddress } from "./remoteAgentConnection.js";
 
-export const ISharedProcessTunnelService = createDecorator<ISharedProcessTunnelService>('sharedProcessTunnelService');
+export const ISharedProcessTunnelService = createDecorator<ISharedProcessTunnelService>(
+  "sharedProcessTunnelService",
+);
 
-export const ipcSharedProcessTunnelChannelName = 'sharedProcessTunnel';
+export const ipcSharedProcessTunnelChannelName = "sharedProcessTunnel";
 
 export interface ISharedProcessTunnel {
 	tunnelLocalPort: number | undefined;

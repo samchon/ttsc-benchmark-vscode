@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../base/common/event.js';
-import { URI } from '../../../base/common/uri.js';
-import { ITextBufferFactory, ITextModel, ITextModelCreationOptions } from '../model.js';
-import { ILanguageSelection } from '../languages/language.js';
-import { createDecorator } from '../../../platform/instantiation/common/instantiation.js';
-import { DocumentSemanticTokensProvider, DocumentRangeSemanticTokensProvider } from '../languages.js';
-import { TextModelEditSource } from '../textModelEditSource.js';
+import { Event } from "../../../base/common/event.js";
+import { URI } from "../../../base/common/uri.js";
+import { ITextBufferFactory, ITextModel, ITextModelCreationOptions } from "../model.js";
+import { ILanguageSelection } from "../languages/language.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { DocumentSemanticTokensProvider, DocumentRangeSemanticTokensProvider } from "../languages.js";
+import { TextModelEditSource } from "../textModelEditSource.js";
 
-export const IModelService = createDecorator<IModelService>('modelService');
+export const IModelService = createDecorator<IModelService>("modelService");
 
 export type DocumentTokensProvider = DocumentSemanticTokensProvider | DocumentRangeSemanticTokensProvider;
 

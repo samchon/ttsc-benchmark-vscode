@@ -3,23 +3,36 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { addDisposableGenericMouseDownListener, addDisposableGenericMouseMoveListener, addDisposableListener, EventType, getWindow, scheduleAtNextAnimationFrame } from '../../../../base/browser/dom.js';
-import { createInstantHoverDelegate } from '../../../../base/browser/ui/hover/hoverDelegateFactory.js';
-import { Codicon } from '../../../../base/common/codicons.js';
-import { Disposable, DisposableStore, IDisposable, MutableDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
-import { localize } from '../../../../nls.js';
-import { IAccessibilityService } from '../../../../platform/accessibility/common/accessibility.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IContextKey, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { IHoverService } from '../../../../platform/hover/browser/hover.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { IWorkbenchLayoutService, Parts } from '../../../../workbench/services/layout/browser/layoutService.js';
-import { SessionsAquariumActiveContext } from '../../../common/contextkeys.js';
-import { disposeSharedFishDefs, Fish, pickRandomSpecies } from './fish.js';
+import {
+  addDisposableGenericMouseDownListener,
+  addDisposableGenericMouseMoveListener,
+  addDisposableListener,
+  EventType,
+  getWindow,
+  scheduleAtNextAnimationFrame,
+} from "../../../../base/browser/dom.js";
+import { createInstantHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import {
+  Disposable,
+  DisposableStore,
+  IDisposable,
+  MutableDisposable,
+  toDisposable,
+} from "../../../../base/common/lifecycle.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { localize } from "../../../../nls.js";
+import { IAccessibilityService } from "../../../../platform/accessibility/common/accessibility.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKey, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IWorkbenchLayoutService, Parts } from "../../../../workbench/services/layout/browser/layoutService.js";
+import { SessionsAquariumActiveContext } from "../../../common/contextkeys.js";
+import { disposeSharedFishDefs, Fish, pickRandomSpecies } from "./fish.js";
 
-export const SESSIONS_DEVELOPER_JOY_ENABLED_SETTING = 'sessions.developerJoy.enabled';
+export const SESSIONS_DEVELOPER_JOY_ENABLED_SETTING = "sessions.developerJoy.enabled";
 
 const FISH_COUNT = 50;
 const FISH_MIN_SIZE = 22;
@@ -49,7 +62,7 @@ const ACTIVE_FRAME_INTERVAL_MS = 1000 / 30;
 const DART_RATE_PER_SECOND = 0.04;
 const DART_IMPULSE = 150;
 
-const ENABLED_STORAGE_KEY = 'sessions.developerJoy.enabled';
+const ENABLED_STORAGE_KEY = "sessions.developerJoy.enabled";
 
 interface IFoodPellet {
 	readonly element: HTMLDivElement;
@@ -64,7 +77,9 @@ interface IFoodPellet {
  * as a child of their container; the active aquarium itself is mounted inside
  * the chat bar part so the chat input naturally paints on top of the water.
  */
-export const IAquariumService = createDecorator<IAquariumService>('aquariumService');
+export const IAquariumService = createDecorator<IAquariumService>(
+  "aquariumService",
+);
 
 export interface IAquariumService {
 	readonly _serviceBrand: undefined;
@@ -102,8 +117,12 @@ export class AquariumService extends Disposable implements IAquariumService {
 	private readonly mainContainer: HTMLElement;
 
 	private readonly mounts = new Set<IMountedToggle>();
-	private readonly activeRef = this._register(new MutableDisposable<IActiveAquarium>());
-	private readonly pendingExit = this._register(new MutableDisposable<IDisposable>());
+	private readonly activeRef = this._register(
+    new MutableDisposable<IActiveAquarium>(),
+  );
+	private readonly pendingExit = this._register(
+    new MutableDisposable<IDisposable>(),
+  );
 	private readonly activeContextKey: IContextKey<boolean>;
 
 	constructor(
@@ -117,7 +136,9 @@ export class AquariumService extends Disposable implements IAquariumService {
 		super();
 
 		this.mainContainer = layoutService.mainContainer;
-		this.activeContextKey = SessionsAquariumActiveContext.bindTo(contextKeyService);
+		this.activeContextKey = SessionsAquariumActiveContext.bindTo(
+      contextKeyService,
+    );
 
 		this._register(this.configurationService.onDidChangeConfiguration(e => {
 			if (e.affectsConfiguration(SESSIONS_DEVELOPER_JOY_ENABLED_SETTING)) {
@@ -128,9 +149,9 @@ export class AquariumService extends Disposable implements IAquariumService {
 
 	mountToggle(parent: HTMLElement): IMountedToggleHandle {
 		const doc = parent.ownerDocument;
-		const button = doc.createElement('button');
-		button.className = 'agents-aquarium-toggle';
-		button.type = 'button';
+		const button = doc.createElement("button");
+		button.className = "agents-aquarium-toggle";
+		button.type = "button";
 		this.updateToggleButtonVisual(button, !!this.activeRef.value);
 
 		const store = new DisposableStore();
@@ -141,11 +162,13 @@ export class AquariumService extends Disposable implements IAquariumService {
 			this.toggle();
 		}));
 		const hoverDelegate = store.add(createInstantHoverDelegate());
-		store.add(this.hoverService.setupManagedHover(
-			hoverDelegate,
-			button,
-			() => this.getToggleLabel(!!this.activeRef.value),
-		));
+		store.add(
+      this.hoverService.setupManagedHover(
+        hoverDelegate,
+        button,
+        () => this.getToggleLabel(!!this.activeRef.value),
+      ),
+    );
 
 		parent.appendChild(button);
 
@@ -201,15 +224,26 @@ export class AquariumService extends Disposable implements IAquariumService {
 	}
 
 	private isFeatureEnabled(): boolean {
-		return this.configurationService.getValue<boolean>(SESSIONS_DEVELOPER_JOY_ENABLED_SETTING) === true;
+		return this.configurationService.getValue<boolean>(
+      SESSIONS_DEVELOPER_JOY_ENABLED_SETTING,
+    ) === true;
 	}
 
 	private isStoredEnabled(): boolean {
-		return this.storageService.getBoolean(ENABLED_STORAGE_KEY, StorageScope.APPLICATION, false);
+		return this.storageService.getBoolean(
+      ENABLED_STORAGE_KEY,
+      StorageScope.APPLICATION,
+      false,
+    );
 	}
 
 	private setStoredEnabled(enabled: boolean): void {
-		this.storageService.store(ENABLED_STORAGE_KEY, enabled, StorageScope.APPLICATION, StorageTarget.USER);
+		this.storageService.store(
+      ENABLED_STORAGE_KEY,
+      enabled,
+      StorageScope.APPLICATION,
+      StorageTarget.USER,
+    );
 	}
 
 	private applyFeatureEnabledState(): void {
@@ -225,26 +259,28 @@ export class AquariumService extends Disposable implements IAquariumService {
 	}
 
 	private applyFeatureEnabledStateForButton(button: HTMLButtonElement): void {
-		button.style.display = this.isFeatureEnabled() ? '' : 'none';
+		button.style.display = this.isFeatureEnabled() ? "" : "none";
 	}
 
 	private updateToggleButtonVisual(button: HTMLButtonElement, active: boolean): void {
-		button.classList.toggle('active', active);
+		button.classList.toggle("active", active);
 		// Build the icon as a real DOM child instead of innerHTML to satisfy Trusted Types.
 		button.replaceChildren();
-		const iconSpan = button.ownerDocument.createElement('span');
+		const iconSpan = button.ownerDocument.createElement("span");
 		if (active) {
-			const iconClasses = ThemeIcon.asClassName(Codicon.close).split(/\s+/).filter(Boolean);
+			const iconClasses = ThemeIcon.asClassName(Codicon.close).split(/\s+/).filter(
+        Boolean,
+      );
 			for (const cls of iconClasses) {
 				iconSpan.classList.add(cls);
 			}
 		} else {
-			iconSpan.classList.add('agents-aquarium-toggle-logo');
+			iconSpan.classList.add("agents-aquarium-toggle-logo");
 		}
 		button.appendChild(iconSpan);
 		const label = this.getToggleLabel(active);
-		button.setAttribute('aria-pressed', String(active));
-		button.setAttribute('aria-label', label);
+		button.setAttribute("aria-pressed", String(active));
+		button.setAttribute("aria-label", label);
 	}
 
 	private getToggleLabel(active: boolean): string {
@@ -275,9 +311,13 @@ export class AquariumService extends Disposable implements IAquariumService {
 		this.pendingExit.clear();
 		let active: IActiveAquarium | undefined;
 		try {
-			active = createActiveAquarium(this.mainContainer, this.layoutService, this.accessibilityService);
+			active = createActiveAquarium(
+        this.mainContainer,
+        this.layoutService,
+        this.accessibilityService,
+      );
 		} catch (e) {
-			console.error('[aquarium] failed to activate', e);
+			console.error("[aquarium] failed to activate", e);
 			return;
 		}
 		// No host (e.g. chat bar isn't visible yet) — leave the toggle
@@ -357,20 +397,20 @@ function createActiveAquarium(mainContainer: HTMLElement, layoutService: IWorkbe
 
 	const store = new DisposableStore();
 	const doc = targetWindow.document;
-	const water = doc.createElement('div');
-	water.className = 'agents-aquarium-water';
+	const water = doc.createElement("div");
+	water.className = "agents-aquarium-water";
 	// Decorative: hide the entire subtree from a11y tree.
-	water.setAttribute('aria-hidden', 'true');
+	water.setAttribute("aria-hidden", "true");
 	// First child so subsequent chat bar content paints over it.
 	chatBar.insertBefore(water, chatBar.firstChild);
 	store.add(toDisposable(() => water.remove()));
 
-	const fishLayer = doc.createElement('div');
-	fishLayer.className = 'agents-aquarium-fish-layer';
+	const fishLayer = doc.createElement("div");
+	fishLayer.className = "agents-aquarium-fish-layer";
 	water.appendChild(fishLayer);
 
-	const foodLayer = doc.createElement('div');
-	foodLayer.className = 'agents-aquarium-food-layer';
+	const foodLayer = doc.createElement("div");
+	foodLayer.className = "agents-aquarium-food-layer";
 	water.appendChild(foodLayer);
 
 	const bounds = { width: 0, height: 0 };
@@ -401,14 +441,17 @@ function createActiveAquarium(mainContainer: HTMLElement, layoutService: IWorkbe
 		const size = randomBetween(FISH_MIN_SIZE, FISH_MAX_SIZE);
 		const angle = Math.random() * Math.PI * 2;
 		const speed = randomBetween(BASE_SPEED * 0.6, BASE_SPEED * 1.2);
-		const f = new Fish({
-			species: pickRandomSpecies(),
-			size,
-			positionX: randomBetween(0, Math.max(1, bounds.width - size)),
-			positionY: randomBetween(0, Math.max(1, bounds.height - size)),
-			velocityX: Math.cos(angle) * speed,
-			velocityY: Math.sin(angle) * speed,
-		}, targetWindow.document);
+		const f = new Fish(
+      {
+        species: pickRandomSpecies(),
+        size,
+        positionX: randomBetween(0, Math.max(1, bounds.width - size)),
+        positionY: randomBetween(0, Math.max(1, bounds.height - size)),
+        velocityX: Math.cos(angle) * speed,
+        velocityY: Math.sin(angle) * speed,
+      },
+      targetWindow.document,
+    );
 		fish.push(f);
 	}
 	// Spawn in two batches: first half synchronous (single layout pass via
@@ -441,7 +484,7 @@ function createActiveAquarium(mainContainer: HTMLElement, layoutService: IWorkbe
 					const localIndex = i - SYNC_BATCH;
 					const delay = Math.min(localIndex * 12, 400);
 					fish[i].element.style.transitionDelay = `${delay}ms`;
-					fish[i].element.classList.add('visible');
+					fish[i].element.classList.add("visible");
 				}
 			});
 			store.add(fadeIn);
@@ -473,8 +516,17 @@ function createActiveAquarium(mainContainer: HTMLElement, layoutService: IWorkbe
 	// dirty here and let the RAF tick refresh at most once per frame.
 	let boundsDirty = false;
 	const markBoundsDirty = () => { boundsDirty = true; };
-	store.add(addDisposableListener(targetWindow, EventType.RESIZE, markBoundsDirty, { passive: true }));
-	store.add(addDisposableListener(targetWindow, 'scroll', markBoundsDirty, { passive: true, capture: true }));
+	store.add(
+    addDisposableListener(targetWindow, EventType.RESIZE, markBoundsDirty, {
+      passive: true,
+    }),
+  );
+	store.add(
+    addDisposableListener(targetWindow, "scroll", markBoundsDirty, {
+      passive: true,
+      capture: true,
+    }),
+  );
 
 	let mouseX = -1e6;
 	let mouseY = -1e6;
@@ -483,13 +535,29 @@ function createActiveAquarium(mainContainer: HTMLElement, layoutService: IWorkbe
 		mouseY = -1e6;
 	};
 	// Generic helpers so this also works under iOS pointer events.
-	store.add(addDisposableGenericMouseMoveListener(mainContainer, (e: MouseEvent) => {
-		mouseX = e.clientX - waterScreenOffset.left;
-		mouseY = e.clientY - waterScreenOffset.top;
-	}));
+	store.add(
+    addDisposableGenericMouseMoveListener(mainContainer, (e: MouseEvent) => {
+      mouseX = e.clientX - waterScreenOffset.left;
+      mouseY = e.clientY - waterScreenOffset.top;
+    }),
+  );
 	// Both mouseleave AND pointerleave so reset works on touch/pointer-only platforms.
-	store.add(addDisposableListener(mainContainer, EventType.MOUSE_LEAVE, resetMousePosition, { passive: true }));
-	store.add(addDisposableListener(mainContainer, EventType.POINTER_LEAVE, resetMousePosition, { passive: true }));
+	store.add(
+    addDisposableListener(
+      mainContainer,
+      EventType.MOUSE_LEAVE,
+      resetMousePosition,
+      { passive: true },
+    ),
+  );
+	store.add(
+    addDisposableListener(
+      mainContainer,
+      EventType.POINTER_LEAVE,
+      resetMousePosition,
+      { passive: true },
+    ),
+  );
 
 	store.add(addDisposableGenericMouseDownListener(mainContainer, (e: MouseEvent) => {
 		// Only spawn food on plain left clicks against background-ish surfaces.
@@ -516,11 +584,16 @@ function createActiveAquarium(mainContainer: HTMLElement, layoutService: IWorkbe
 			const oldest = food[0];
 			removeFood(oldest);
 		}
-		const el = doc.createElement('div');
-		el.className = 'agents-aquarium-food';
+		const el = doc.createElement("div");
+		el.className = "agents-aquarium-food";
 		el.style.transform = `translate(${dropX}px, ${dropY}px)`;
 		foodLayer.appendChild(el);
-		food.push({ element: el, positionX: dropX, positionY: dropY, fallSpeed: randomBetween(20, 35) });
+		food.push({
+      element: el,
+      positionX: dropX,
+      positionY: dropY,
+      fallSpeed: randomBetween(20, 35),
+    });
 	}
 
 	let lastFrame = performance.now();
@@ -557,7 +630,7 @@ function createActiveAquarium(mainContainer: HTMLElement, layoutService: IWorkbe
 		}
 
 		// Skip work when window is hidden (RAF stays alive lazily).
-		if (!accessibilityService.isMotionReduced() && targetWindow.document.visibilityState !== 'hidden') {
+		if (!accessibilityService.isMotionReduced() && targetWindow.document.visibilityState !== "hidden") {
 			updateFood(dt);
 			updateFish(dt);
 		}
@@ -587,12 +660,20 @@ function createActiveAquarium(mainContainer: HTMLElement, layoutService: IWorkbe
 			// Wall steering: turn the heading (not just acceleration) away from
 			// walls, otherwise fish park against the edge with their thrust
 			// pinning them in place.
-			const wallEscapeAngle = computeWallAvoidAngle(centerX, centerY, bounds.width, bounds.height);
+			const wallEscapeAngle = computeWallAvoidAngle(
+        centerX,
+        centerY,
+        bounds.width,
+        bounds.height,
+      );
 			if (wallEscapeAngle !== undefined) {
 				// Turn at up to 4 rad/s toward the safe direction.
 				const turnDelta = shortestAngleDelta(f.wanderAngle, wallEscapeAngle);
 				const maxTurnPerFrame = 4 * dt;
-				f.wanderAngle += Math.max(-maxTurnPerFrame, Math.min(maxTurnPerFrame, turnDelta));
+				f.wanderAngle += Math.max(
+          -maxTurnPerFrame,
+          Math.min(maxTurnPerFrame, turnDelta),
+        );
 			} else {
 				// Free water: drift the heading by a small random delta.
 				f.wanderAngle += (Math.random() - 0.5) * 1.2 * dt + (Math.random() - 0.5) * 0.04;
@@ -672,8 +753,16 @@ function createActiveAquarium(mainContainer: HTMLElement, layoutService: IWorkbe
 			f.positionY += f.velocityY * dt;
 
 			// Hard clamp safety net.
-			f.positionX = clamp(f.positionX, -f.size * 0.25, bounds.width - f.size * 0.75);
-			f.positionY = clamp(f.positionY, -f.size * 0.25, bounds.height - f.size * 0.75);
+			f.positionX = clamp(
+        f.positionX,
+        -f.size * 0.25,
+        bounds.width - f.size * 0.75,
+      );
+			f.positionY = clamp(
+        f.positionY,
+        -f.size * 0.25,
+        bounds.height - f.size * 0.75,
+      );
 
 			f.applyTransform(dt);
 		}
@@ -694,13 +783,13 @@ function createActiveAquarium(mainContainer: HTMLElement, layoutService: IWorkbe
 		if (exiting) {
 			return;
 		}
-		water.classList.add('visible');
+		water.classList.add("visible");
 		for (let i = 0; i < Math.min(SYNC_BATCH, fish.length); i++) {
 			const f = fish[i];
 			// Slight stagger, capped at ~400ms so it doesn't drag on.
 			const delay = Math.min(i * 12, 400);
 			f.element.style.transitionDelay = `${delay}ms`;
-			f.element.classList.add('visible');
+			f.element.classList.add("visible");
 		}
 	});
 	store.add(fadeIn);
@@ -722,9 +811,9 @@ function createActiveAquarium(mainContainer: HTMLElement, layoutService: IWorkbe
 				const f = fish[i];
 				const delay = Math.min(i * 12, 400);
 				f.element.style.transitionDelay = `${delay}ms`;
-				f.element.classList.remove('visible');
+				f.element.classList.remove("visible");
 			}
-			water.classList.remove('visible');
+			water.classList.remove("visible");
 
 			let timer: ReturnType<typeof setTimeout> | undefined = setTimeout(() => {
 				timer = undefined;
@@ -749,7 +838,9 @@ function isBackgroundClick(target: HTMLElement | null): boolean {
 	if (!target) {
 		return false;
 	}
-	if (target.closest('input, textarea, select, button, a, [role="button"], [role="link"], [role="textbox"], [role="combobox"], [role="menuitem"], [role="tab"], .monaco-editor, .scroll-decoration, .monaco-list-row')) {
+	if (target.closest(
+    'input, textarea, select, button, a, [role="button"], [role="link"], [role="textbox"], [role="combobox"], [role="menuitem"], [role="tab"], .monaco-editor, .scroll-decoration, .monaco-list-row',
+  )) {
 		return false;
 	}
 	return true;

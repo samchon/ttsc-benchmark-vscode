@@ -3,45 +3,56 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { $, addDisposableListener, append, EventType, getWindow } from '../../../../base/browser/dom.js';
-import { mainWindow } from '../../../../base/browser/window.js';
-import { Button } from '../../../../base/browser/ui/button/button.js';
-import { renderIcon } from '../../../../base/browser/ui/iconLabel/iconLabels.js';
-import { Codicon } from '../../../../base/common/codicons.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { localize } from '../../../../nls.js';
-import { defaultButtonStyles } from '../../../../platform/theme/browser/defaultStyles.js';
-import { IScreenshot } from './issueReporterOverlay.js';
+import { $, addDisposableListener, append, EventType, getWindow } from "../../../../base/browser/dom.js";
+import { mainWindow } from "../../../../base/browser/window.js";
+import { Button } from "../../../../base/browser/ui/button/button.js";
+import { renderIcon } from "../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { localize } from "../../../../nls.js";
+import { defaultButtonStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { IScreenshot } from "./issueReporterOverlay.js";
 
 const enum AnnotationTool {
-	Select = 'select',
-	Freehand = 'freehand',
-	Rectangle = 'rectangle',
-	Ellipse = 'ellipse',
-	Arrow = 'arrow',
-	Text = 'text',
-	Eraser = 'eraser',
-	Pan = 'pan',
-	Crop = 'crop',
-	Move = 'move',
+	Select = "select",
+	Freehand = "freehand",
+	Rectangle = "rectangle",
+	Ellipse = "ellipse",
+	Arrow = "arrow",
+	Text = "text",
+	Eraser = "eraser",
+	Pan = "pan",
+	Crop = "crop",
+	Move = "move",
 }
 
 const COLORS = [
-	'#ff3b30', // red
-	'#007aff', // blue
-	'#34c759', // green
-	'#ffcc00', // yellow
-	'#000000', // black
-	'#ffffff', // white
+	"#ff3b30", // red
+	"#007aff", // blue
+	"#34c759", // green
+	"#ffcc00", // yellow
+	"#000000", // black
+	"#ffffff", // white
 ];
 
-const LIGHT_SWATCH_COLORS = new Set(['#34c759', '#ffcc00', '#ffffff', 'transparent']);
+const LIGHT_SWATCH_COLORS = new Set([
+  "#34c759",
+  "#ffcc00",
+  "#ffffff",
+  "transparent",
+]);
 
 const FONT_FAMILIES = [
-	{ label: 'Sans-serif', value: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
-	{ label: 'Monospace', value: '"Cascadia Code", "Fira Code", Consolas, monospace' },
-	{ label: 'Serif', value: 'Georgia, "Times New Roman", serif' },
+  {
+    label: "Sans-serif",
+    value: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  },
+  {
+    label: "Monospace",
+    value: '"Cascadia Code", "Fira Code", Consolas, monospace',
+  },
+  { label: "Serif", value: 'Georgia, "Times New Roman", serif' },
 ];
 
 const DEFAULT_TEXT_BOX_WIDTH = 240;
@@ -49,7 +60,7 @@ const MIN_TEXT_BOX_WIDTH = 48;
 const TEXT_DRAG_THRESHOLD = 4;
 /** Padding on each side of the displayed image inside the canvas container at fit-to-window scale. */
 const CANVAS_BREATHING_ROOM = 64;
-const FILL_COLORS = ['transparent', ...COLORS];
+const FILL_COLORS = ["transparent", ...COLORS];
 const STROKE_WIDTHS = [2, 4, 8, 12];
 const TEXT_SIZES = [14, 18, 24, 32, 48];
 
@@ -114,56 +125,61 @@ function cloneDrawAction(action: IAnnotationDrawAction, identityMap: Map<IAnnota
 		return existing;
 	}
 	const clone: IAnnotationDrawAction = {
-		type: action.type,
-		strokeColor: action.strokeColor,
-		fillColor: action.fillColor,
-		opacity: action.opacity,
-		lineWidth: action.lineWidth,
-		fontSize: action.fontSize,
-		fontFamily: action.fontFamily,
-		points: action.points ? action.points.map(p => ({ x: p.x, y: p.y })) : undefined,
-		rect: action.rect ? { ...action.rect } : undefined,
-		ellipseRect: action.ellipseRect ? { ...action.ellipseRect } : undefined,
-		arrowStart: action.arrowStart ? { ...action.arrowStart } : undefined,
-		arrowEnd: action.arrowEnd ? { ...action.arrowEnd } : undefined,
-		text: action.text,
-		textPos: action.textPos ? { ...action.textPos } : undefined,
-		textWidth: action.textWidth,
-		cropFrom: action.cropFrom === undefined ? undefined : action.cropFrom === null ? null : { ...action.cropFrom },
-		cropTo: action.cropTo === undefined ? undefined : action.cropTo === null ? null : { ...action.cropTo },
-		moveBefore: action.moveBefore ? cloneMoveSnapshot(action.moveBefore) : undefined,
-		moveAfter: action.moveAfter ? cloneMoveSnapshot(action.moveAfter) : undefined,
-	};
+    type: action.type,
+    strokeColor: action.strokeColor,
+    fillColor: action.fillColor,
+    opacity: action.opacity,
+    lineWidth: action.lineWidth,
+    fontSize: action.fontSize,
+    fontFamily: action.fontFamily,
+    points: action.points ? action.points.map(p => ({ x: p.x, y: p.y })) : undefined,
+    rect: action.rect ? { ...action.rect } : undefined,
+    ellipseRect: action.ellipseRect ? { ...action.ellipseRect } : undefined,
+    arrowStart: action.arrowStart ? { ...action.arrowStart } : undefined,
+    arrowEnd: action.arrowEnd ? { ...action.arrowEnd } : undefined,
+    text: action.text,
+    textPos: action.textPos ? { ...action.textPos } : undefined,
+    textWidth: action.textWidth,
+    cropFrom: action.cropFrom === undefined ? undefined : action.cropFrom === null ? null : { ...action.cropFrom },
+    cropTo: action.cropTo === undefined ? undefined : action.cropTo === null ? null : { ...action.cropTo },
+    moveBefore: action.moveBefore ? cloneMoveSnapshot(action.moveBefore) : undefined,
+    moveAfter: action.moveAfter ? cloneMoveSnapshot(action.moveAfter) : undefined,
+  };
 	identityMap.set(action, clone);
 	// Resolve references after registering self so cyclic structures don't recurse forever.
-	clone.erasedActions = action.erasedActions ? action.erasedActions.map(a => cloneDrawAction(a, identityMap)) : undefined;
+	clone.erasedActions = action.erasedActions ? action.erasedActions.map(
+    a => cloneDrawAction(a, identityMap),
+  ) : undefined;
 	clone.erasedIndices = action.erasedIndices ? action.erasedIndices.slice() : undefined;
-	clone.moveTarget = action.moveTarget ? cloneDrawAction(action.moveTarget, identityMap) : undefined;
+	clone.moveTarget = action.moveTarget ? cloneDrawAction(
+    action.moveTarget,
+    identityMap,
+  ) : undefined;
 	return clone;
 }
 
 function cloneMoveSnapshot(s: IAnnotationMoveSnapshot): IAnnotationMoveSnapshot {
 	return {
-		points: s.points ? s.points.map(p => ({ x: p.x, y: p.y })) : undefined,
-		rect: s.rect ? { ...s.rect } : undefined,
-		ellipseRect: s.ellipseRect ? { ...s.ellipseRect } : undefined,
-		arrowStart: s.arrowStart ? { ...s.arrowStart } : undefined,
-		arrowEnd: s.arrowEnd ? { ...s.arrowEnd } : undefined,
-		textPos: s.textPos ? { ...s.textPos } : undefined,
-		textWidth: s.textWidth,
-	};
+    points: s.points ? s.points.map(p => ({ x: p.x, y: p.y })) : undefined,
+    rect: s.rect ? { ...s.rect } : undefined,
+    ellipseRect: s.ellipseRect ? { ...s.ellipseRect } : undefined,
+    arrowStart: s.arrowStart ? { ...s.arrowStart } : undefined,
+    arrowEnd: s.arrowEnd ? { ...s.arrowEnd } : undefined,
+    textPos: s.textPos ? { ...s.textPos } : undefined,
+    textWidth: s.textWidth,
+  };
 }
 
 function captureMoveSnapshot(action: IAnnotationDrawAction): IAnnotationMoveSnapshot {
 	return cloneMoveSnapshot({
-		points: action.points,
-		rect: action.rect,
-		ellipseRect: action.ellipseRect,
-		arrowStart: action.arrowStart,
-		arrowEnd: action.arrowEnd,
-		textPos: action.textPos,
-		textWidth: action.textWidth,
-	});
+    points: action.points,
+    rect: action.rect,
+    ellipseRect: action.ellipseRect,
+    arrowStart: action.arrowStart,
+    arrowEnd: action.arrowEnd,
+    textPos: action.textPos,
+    textWidth: action.textWidth,
+  });
 }
 
 function applyMoveSnapshot(action: IAnnotationDrawAction, snapshot: IAnnotationMoveSnapshot): void {
@@ -196,7 +212,7 @@ export class ScreenshotAnnotationEditor {
 
 	private activeTool: AnnotationTool = AnnotationTool.Freehand;
 	private activeStrokeColor = COLORS[0];
-	private activeFillColor = 'transparent';
+	private activeFillColor = "transparent";
 	private activeLineWidth = 4;
 	private activeOpacity = 1;
 	private readonly actions: DrawAction[] = [];
@@ -223,7 +239,7 @@ export class ScreenshotAnnotationEditor {
 	// Crop with handles
 	private cropMode = false;
 	private cropRegion: { x: number; y: number; width: number; height: number } | null = null;
-	private cropDragHandle: 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'move' | null = null;
+	private cropDragHandle: "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w" | "move" | null = null;
 	private cropDragStart = { x: 0, y: 0 };
 	private cropRegionStart: { x: number; y: number; width: number; height: number } | null = null;
 	private hasUserZoomed = false;
@@ -294,51 +310,92 @@ export class ScreenshotAnnotationEditor {
 	}
 
 	private createUI(): void {
-		this.container = append(this.parentElement, $('div.issue-reporter-annotation-overlay'));
+		this.container = append(
+      this.parentElement,
+      $("div.issue-reporter-annotation-overlay"),
+    );
 		this.container.tabIndex = -1;
 
 		// Main toolbar (hidden during crop mode)
-		const toolbar = append(this.container, $('div.annotation-toolbar'));
+		const toolbar = append(this.container, $("div.annotation-toolbar"));
 		this.mainToolbar = toolbar;
 
 		// 1. Drawing tools: Select, Pan, Crop, Draw, Rectangle, Ellipse, Arrow
 		const drawingTools: { tool: AnnotationTool; label: string; icon: HTMLSpanElement }[] = [
-			{ tool: AnnotationTool.Select, label: localize('select', "Select / Move"), icon: renderIcon(Codicon.inspect) },
-			{ tool: AnnotationTool.Pan, label: localize('pan', "Pan"), icon: renderIcon(Codicon.move) },
-		];
+      {
+        tool: AnnotationTool.Select,
+        label: localize("select", "Select / Move"),
+        icon: renderIcon(Codicon.inspect),
+      },
+      {
+        tool: AnnotationTool.Pan,
+        label: localize("pan", "Pan"),
+        icon: renderIcon(Codicon.move),
+      },
+    ];
 		for (const { tool, label, icon } of drawingTools) {
 			this.addToolButton(toolbar, tool, label, icon);
 		}
 
 		// 2. Crop tool
-		const cropBtn = append(toolbar, $('button.tool-btn.crop-btn'));
+		const cropBtn = append(toolbar, $("button.tool-btn.crop-btn"));
 		cropBtn.appendChild(renderIcon(Codicon.screenCut));
-		cropBtn.title = localize('crop', "Crop");
-		cropBtn.setAttribute('aria-label', localize('crop', "Crop"));
+		cropBtn.title = localize("crop", "Crop");
+		cropBtn.setAttribute("aria-label", localize("crop", "Crop"));
 		this.toolButtons.push({ element: cropBtn, tool: AnnotationTool.Crop });
-		this.disposables.add(addDisposableListener(cropBtn, EventType.CLICK, () => {
-			this.setActiveTool(AnnotationTool.Crop);
-		}));
+		this.disposables.add(
+      addDisposableListener(cropBtn, EventType.CLICK, () => {
+        this.setActiveTool(AnnotationTool.Crop);
+      }),
+    );
 
 		// 3. More drawing tools
 		const moreDrawingTools: { tool: AnnotationTool; label: string; icon: HTMLSpanElement }[] = [
-			{ tool: AnnotationTool.Freehand, label: localize('freehand', "Draw"), icon: renderIcon(Codicon.edit) },
-			{ tool: AnnotationTool.Rectangle, label: localize('rectangle', "Rectangle"), icon: renderIcon(Codicon.primitiveSquare) },
-			{ tool: AnnotationTool.Ellipse, label: localize('ellipse', "Ellipse"), icon: renderIcon(Codicon.circle) },
-			{ tool: AnnotationTool.Arrow, label: localize('arrow', "Arrow"), icon: renderIcon(Codicon.arrowRight) },
-			{ tool: AnnotationTool.Eraser, label: localize('eraser', "Eraser"), icon: renderIcon(Codicon.eraser) },
-		];
+      {
+        tool: AnnotationTool.Freehand,
+        label: localize("freehand", "Draw"),
+        icon: renderIcon(Codicon.edit),
+      },
+      {
+        tool: AnnotationTool.Rectangle,
+        label: localize("rectangle", "Rectangle"),
+        icon: renderIcon(Codicon.primitiveSquare),
+      },
+      {
+        tool: AnnotationTool.Ellipse,
+        label: localize("ellipse", "Ellipse"),
+        icon: renderIcon(Codicon.circle),
+      },
+      {
+        tool: AnnotationTool.Arrow,
+        label: localize("arrow", "Arrow"),
+        icon: renderIcon(Codicon.arrowRight),
+      },
+      {
+        tool: AnnotationTool.Eraser,
+        label: localize("eraser", "Eraser"),
+        icon: renderIcon(Codicon.eraser),
+      },
+    ];
 		for (const { tool, label, icon } of moreDrawingTools) {
 			this.addToolButton(toolbar, tool, label, icon);
 		}
 
 		// 4. Text tool
-		this.addToolButton(toolbar, AnnotationTool.Text, localize('text', "Text"), renderIcon(Codicon.symbolString));
+		this.addToolButton(
+      toolbar,
+      AnnotationTool.Text,
+      localize("text", "Text"),
+      renderIcon(Codicon.symbolString),
+    );
 
-		this.toolOptionsPopover = append(this.container, $('div.annotation-tool-options-popover'));
-		this.toolOptionsPopover.style.display = 'none';
+		this.toolOptionsPopover = append(
+      this.container,
+      $("div.annotation-tool-options-popover"),
+    );
+		this.toolOptionsPopover.style.display = "none";
 		this.disposables.add(addDisposableListener(this.container, EventType.CLICK, e => {
-			if (!this.toolOptionsPopover || this.toolOptionsPopover.style.display === 'none') {
+			if (!this.toolOptionsPopover || this.toolOptionsPopover.style.display === "none") {
 				return;
 			}
 			const target = e.target as Node;
@@ -349,86 +406,135 @@ export class ScreenshotAnnotationEditor {
 		this.renderToolOptions();
 
 		// 5. Separator
-		append(toolbar, $('div.toolbar-separator'));
+		append(toolbar, $("div.toolbar-separator"));
 
 		// 6. Undo button
-		const undoBtn = append(toolbar, $('button.tool-btn')) as HTMLButtonElement;
+		const undoBtn = append(toolbar, $("button.tool-btn")) as HTMLButtonElement;
 		undoBtn.appendChild(renderIcon(Codicon.discard));
-		undoBtn.title = localize('undo', "Undo");
-		undoBtn.setAttribute('aria-label', localize('undo', "Undo"));
-		this.disposables.add(addDisposableListener(undoBtn, EventType.CLICK, () => this.undo()));
+		undoBtn.title = localize("undo", "Undo");
+		undoBtn.setAttribute("aria-label", localize("undo", "Undo"));
+		this.disposables.add(
+      addDisposableListener(undoBtn, EventType.CLICK, () => this.undo()),
+    );
 		this.undoBtn = undoBtn;
 
 		// 7. Redo button
-		const redoBtn = append(toolbar, $('button.tool-btn')) as HTMLButtonElement;
+		const redoBtn = append(toolbar, $("button.tool-btn")) as HTMLButtonElement;
 		redoBtn.appendChild(renderIcon(Codicon.redo));
-		redoBtn.title = localize('redo', "Redo");
-		redoBtn.setAttribute('aria-label', localize('redo', "Redo"));
-		this.disposables.add(addDisposableListener(redoBtn, EventType.CLICK, () => this.redo()));
+		redoBtn.title = localize("redo", "Redo");
+		redoBtn.setAttribute("aria-label", localize("redo", "Redo"));
+		this.disposables.add(
+      addDisposableListener(redoBtn, EventType.CLICK, () => this.redo()),
+    );
 		this.redoBtn = redoBtn;
 		this.updateUndoRedoState();
 
 		// 8. Separator
-		append(toolbar, $('div.toolbar-separator'));
+		append(toolbar, $("div.toolbar-separator"));
 
 		// 9. Discard button
-		const discardBtn = this.disposables.add(new Button(toolbar, { ...defaultButtonStyles, secondary: true }));
-		discardBtn.label = localize('discard', "Discard");
-		this.disposables.add(discardBtn.onDidClick(() => {
-			this.cancelTextEdit();
-			this._onDidCancel.fire();
-			this.dispose();
-		}));
+		const discardBtn = this.disposables.add(
+      new Button(toolbar, { ...defaultButtonStyles, secondary: true }),
+    );
+		discardBtn.label = localize("discard", "Discard");
+		this.disposables.add(
+      discardBtn.onDidClick(() => {
+        this.cancelTextEdit();
+        this._onDidCancel.fire();
+        this.dispose();
+      }),
+    );
 
 		// 10. Save button
-		const saveBtn = this.disposables.add(new Button(toolbar, defaultButtonStyles));
-		saveBtn.label = localize('save', "Save");
-		this.disposables.add(saveBtn.onDidClick(() => {
-			this.commitTextEdit();
-			const dataUrl = this.compositeToDataUrl();
-			this._onDidSave.fire({ dataUrl, state: this.captureState() });
-			this.dispose();
-		}));
+		const saveBtn = this.disposables.add(
+      new Button(toolbar, defaultButtonStyles),
+    );
+		saveBtn.label = localize("save", "Save");
+		this.disposables.add(
+      saveBtn.onDidClick(() => {
+        this.commitTextEdit();
+        const dataUrl = this.compositeToDataUrl();
+        this._onDidSave.fire({ dataUrl, state: this.captureState() });
+        this.dispose();
+      }),
+    );
 
 		// Crop toolbar (shown only during crop mode, hidden by default)
-		const cropToolbar = append(this.container, $('div.annotation-toolbar.annotation-crop-toolbar'));
-		cropToolbar.style.display = 'none';
+		const cropToolbar = append(
+      this.container,
+      $("div.annotation-toolbar.annotation-crop-toolbar"),
+    );
+		cropToolbar.style.display = "none";
 		this.cropToolbar = cropToolbar;
 
-		const cropCancelBtn = this.disposables.add(new Button(cropToolbar, { ...defaultButtonStyles, secondary: true }));
-		cropCancelBtn.label = localize('cancel', "Cancel");
-		this.disposables.add(cropCancelBtn.onDidClick(() => {
-			this.cancelCrop();
-		}));
+		const cropCancelBtn = this.disposables.add(
+      new Button(cropToolbar, { ...defaultButtonStyles, secondary: true }),
+    );
+		cropCancelBtn.label = localize("cancel", "Cancel");
+		this.disposables.add(
+      cropCancelBtn.onDidClick(() => {
+        this.cancelCrop();
+      }),
+    );
 
-		const cropApplyBtn = this.disposables.add(new Button(cropToolbar, defaultButtonStyles));
-		cropApplyBtn.label = localize('apply', "Apply");
-		this.disposables.add(cropApplyBtn.onDidClick(() => {
-			this.commitCrop();
-		}));
+		const cropApplyBtn = this.disposables.add(
+      new Button(cropToolbar, defaultButtonStyles),
+    );
+		cropApplyBtn.label = localize("apply", "Apply");
+		this.disposables.add(
+      cropApplyBtn.onDidClick(() => {
+        this.commitCrop();
+      }),
+    );
 
 		// Hint label
-		const hint = append(this.container, $('div.annotation-hint'));
-		hint.textContent = localize('annotationHint', "Edit screenshot to highlight the problem");
+		const hint = append(this.container, $("div.annotation-hint"));
+		hint.textContent = localize(
+      "annotationHint",
+      "Edit screenshot to highlight the problem",
+    );
 
 		// Canvas container
-		const canvasContainer = append(this.container, $('div.annotation-canvas-container'));
-		this.canvas = append(canvasContainer, $('canvas')) as HTMLCanvasElement;
-		const ctx = this.canvas.getContext('2d');
+		const canvasContainer = append(
+      this.container,
+      $("div.annotation-canvas-container"),
+    );
+		this.canvas = append(canvasContainer, $("canvas")) as HTMLCanvasElement;
+		const ctx = this.canvas.getContext("2d");
 		if (!ctx) {
-			throw new Error('Failed to get 2D canvas context');
+			throw new Error("Failed to get 2D canvas context");
 		}
 		this.ctx = ctx;
 
 		// Canvas pointer events
-		this.disposables.add(addDisposableListener(this.canvas, EventType.POINTER_DOWN, e => this.onPointerDown(e)));
-		this.disposables.add(addDisposableListener(this.canvas, EventType.POINTER_MOVE, e => this.onPointerMove(e)));
-		this.disposables.add(addDisposableListener(this.canvas, EventType.POINTER_UP, e => this.onPointerUp(e)));
+		this.disposables.add(
+      addDisposableListener(
+        this.canvas,
+        EventType.POINTER_DOWN,
+        e => this.onPointerDown(e),
+      ),
+    );
+		this.disposables.add(
+      addDisposableListener(
+        this.canvas,
+        EventType.POINTER_MOVE,
+        e => this.onPointerMove(e),
+      ),
+    );
+		this.disposables.add(
+      addDisposableListener(
+        this.canvas,
+        EventType.POINTER_UP,
+        e => this.onPointerUp(e),
+      ),
+    );
 
 		// Double-click to apply crop
-		this.disposables.add(addDisposableListener(this.canvas, EventType.DBLCLICK, () => {
-			this.commitCrop();
-		}));
+		this.disposables.add(
+      addDisposableListener(this.canvas, EventType.DBLCLICK, () => {
+        this.commitCrop();
+      }),
+    );
 
 		// Wheel: touchpad two-finger scroll → pan; Ctrl+wheel or pinch → zoom around cursor
 		this.disposables.add(addDisposableListener(canvasContainer, EventType.WHEEL, (e: WheelEvent) => {
@@ -472,13 +578,13 @@ export class ScreenshotAnnotationEditor {
 			if (this.textEditState) {
 				return;
 			}
-			if (this.textPlacementState && e.key === 'Escape') {
+			if (this.textPlacementState && e.key === "Escape") {
 				e.preventDefault();
 				e.stopPropagation();
 				this.cancelTextPlacement();
 				return;
 			}
-			if (e.key === 'Escape') {
+			if (e.key === "Escape") {
 				if (this.cropMode) {
 					e.preventDefault();
 					e.stopPropagation();
@@ -494,10 +600,10 @@ export class ScreenshotAnnotationEditor {
 				e.stopPropagation();
 				this._onDidCancel.fire();
 				this.dispose();
-			} else if (e.key === 'Enter' && this.cropMode) {
+			} else if (e.key === "Enter" && this.cropMode) {
 				e.preventDefault();
 				this.commitCrop();
-			} else if ((e.key === 'Delete' || e.key === 'Backspace') && this.selectedActionIndex >= 0) {
+			} else if ((e.key === "Delete" || e.key === "Backspace") && this.selectedActionIndex >= 0) {
 				e.preventDefault();
 				const removedIndex = this.selectedActionIndex;
 				const [removed] = this.actions.splice(removedIndex, 1);
@@ -506,7 +612,7 @@ export class ScreenshotAnnotationEditor {
 				// like the eraser tool.
 				this.actions.push({
 					type: AnnotationTool.Eraser,
-					strokeColor: '',
+					strokeColor: "",
 					opacity: 1,
 					lineWidth: 0,
 					erasedActions: [removed],
@@ -541,19 +647,21 @@ export class ScreenshotAnnotationEditor {
 	}
 
 	private addToolButton(toolbar: HTMLElement, tool: AnnotationTool, label: string, icon: HTMLSpanElement): void {
-		const btn = append(toolbar, $('button.tool-btn'));
+		const btn = append(toolbar, $("button.tool-btn"));
 		btn.appendChild(icon);
 		btn.title = label;
-		btn.setAttribute('aria-label', label);
-		btn.setAttribute('aria-pressed', String(tool === this.activeTool));
+		btn.setAttribute("aria-label", label);
+		btn.setAttribute("aria-pressed", String(tool === this.activeTool));
 		if (tool === this.activeTool) {
-			btn.classList.add('active');
+			btn.classList.add("active");
 		}
 		this.toolButtons.push({ element: btn, tool });
-		this.disposables.add(addDisposableListener(btn, EventType.CLICK, e => {
-			e.stopPropagation();
-			this.setActiveTool(tool);
-		}));
+		this.disposables.add(
+      addDisposableListener(btn, EventType.CLICK, e => {
+        e.stopPropagation();
+        this.setActiveTool(tool);
+      }),
+    );
 	}
 
 	private renderToolOptions(): void {
@@ -561,34 +669,37 @@ export class ScreenshotAnnotationEditor {
 			return;
 		}
 		this.toolOptionsDisposables.clear();
-		this.toolOptionsPopover.textContent = '';
-		this.toolOptionsPopover.setAttribute('role', 'group');
-		this.toolOptionsPopover.setAttribute('aria-label', localize('toolOptions', "Tool Options"));
+		this.toolOptionsPopover.textContent = "";
+		this.toolOptionsPopover.setAttribute("role", "group");
+		this.toolOptionsPopover.setAttribute(
+      "aria-label",
+      localize("toolOptions", "Tool Options"),
+    );
 
 		this.appendColorOptions(
-			this.toolOptionsPopover,
-			this.activeTool === AnnotationTool.Text ? localize('textColor', "Text Color") : localize('strokeColor', "Stroke Color"),
-			COLORS,
-			this.activeStrokeColor,
-			localize('setStrokeColor', "Set Stroke Color"),
-			color => {
-				this.activeStrokeColor = color;
-				this.applyToolOptionsToTextEdit();
-			}
-		);
+      this.toolOptionsPopover,
+      this.activeTool === AnnotationTool.Text ? localize("textColor", "Text Color") : localize("strokeColor", "Stroke Color"),
+      COLORS,
+      this.activeStrokeColor,
+      localize("setStrokeColor", "Set Stroke Color"),
+      color => {
+        this.activeStrokeColor = color;
+        this.applyToolOptionsToTextEdit();
+      },
+    );
 
 		if (this.activeTool !== AnnotationTool.Freehand && this.activeTool !== AnnotationTool.Arrow) {
 			this.appendColorOptions(
-				this.toolOptionsPopover,
-				this.activeTool === AnnotationTool.Text ? localize('textBackgroundColor', "Background Color") : localize('fillColor', "Fill Color"),
-				FILL_COLORS,
-				this.activeFillColor,
-				localize('setFillColor', "Set Fill Color"),
-				color => {
-					this.activeFillColor = color;
-					this.applyToolOptionsToTextEdit();
-				}
-			);
+        this.toolOptionsPopover,
+        this.activeTool === AnnotationTool.Text ? localize("textBackgroundColor", "Background Color") : localize("fillColor", "Fill Color"),
+        FILL_COLORS,
+        this.activeFillColor,
+        localize("setFillColor", "Set Fill Color"),
+        color => {
+          this.activeFillColor = color;
+          this.applyToolOptionsToTextEdit();
+        },
+      );
 		}
 
 		this.appendSizeOptions(this.toolOptionsPopover);
@@ -596,24 +707,32 @@ export class ScreenshotAnnotationEditor {
 	}
 
 	private appendColorOptions(container: HTMLElement, label: string, colors: string[], selectedColor: string, ariaLabelPrefix: string, onSelect: (color: string) => void): void {
-		const group = append(container, $('div.annotation-tool-options-group'));
-		append(group, $('span.annotation-tool-options-label')).textContent = label;
-		const swatches = append(group, $('div.annotation-color-swatches'));
+		const group = append(container, $("div.annotation-tool-options-group"));
+		append(group, $("span.annotation-tool-options-label")).textContent = label;
+		const swatches = append(group, $("div.annotation-color-swatches"));
 		for (const color of colors) {
-			const swatch = append(swatches, $('button.annotation-color-swatch')) as HTMLButtonElement;
-			const isTransparent = color === 'transparent';
-			swatch.classList.toggle('transparent', isTransparent);
-			swatch.classList.toggle('light-swatch', LIGHT_SWATCH_COLORS.has(color));
-			swatch.style.backgroundColor = isTransparent ? 'transparent' : color;
-			swatch.setAttribute('aria-label', isTransparent ? localize('transparentColor', "{0}: Transparent", ariaLabelPrefix) : localize('colorValue', "{0}: {1}", ariaLabelPrefix, color));
-			swatch.setAttribute('aria-pressed', String(color === selectedColor));
-			swatch.classList.toggle('active', color === selectedColor);
-			this.toolOptionsDisposables.add(addDisposableListener(swatch, EventType.CLICK, e => {
-				e.stopPropagation();
-				onSelect(color);
-				this.renderToolOptions();
-				this.redraw();
-			}));
+			const swatch = append(
+        swatches,
+        $("button.annotation-color-swatch"),
+      ) as HTMLButtonElement;
+			const isTransparent = color === "transparent";
+			swatch.classList.toggle("transparent", isTransparent);
+			swatch.classList.toggle("light-swatch", LIGHT_SWATCH_COLORS.has(color));
+			swatch.style.backgroundColor = isTransparent ? "transparent" : color;
+			swatch.setAttribute(
+        "aria-label",
+        isTransparent ? localize("transparentColor", "{0}: Transparent", ariaLabelPrefix) : localize("colorValue", "{0}: {1}", ariaLabelPrefix, color),
+      );
+			swatch.setAttribute("aria-pressed", String(color === selectedColor));
+			swatch.classList.toggle("active", color === selectedColor);
+			this.toolOptionsDisposables.add(
+        addDisposableListener(swatch, EventType.CLICK, e => {
+          e.stopPropagation();
+          onSelect(color);
+          this.renderToolOptions();
+          this.redraw();
+        }),
+      );
 		}
 	}
 
@@ -621,15 +740,27 @@ export class ScreenshotAnnotationEditor {
 		const isText = this.activeTool === AnnotationTool.Text;
 		const values = isText ? TEXT_SIZES : STROKE_WIDTHS;
 		const selectedValue = isText ? this.activeFontSize : this.activeLineWidth;
-		const group = append(container, $('div.annotation-tool-options-group'));
-		append(group, $('span.annotation-tool-options-label')).textContent = isText ? localize('textSize', "Text Size") : localize('strokeWidth', "Stroke Width");
-		const buttons = append(group, $('div.annotation-size-buttons'));
+		const group = append(container, $("div.annotation-tool-options-group"));
+		append(
+      group,
+      $("span.annotation-tool-options-label"),
+    ).textContent = isText ? localize(
+      "textSize",
+      "Text Size",
+    ) : localize("strokeWidth", "Stroke Width");
+		const buttons = append(group, $("div.annotation-size-buttons"));
 		for (const value of values) {
-			const button = append(buttons, $('button.annotation-size-button')) as HTMLButtonElement;
+			const button = append(
+        buttons,
+        $("button.annotation-size-button"),
+      ) as HTMLButtonElement;
 			button.textContent = `${value}`;
-			button.setAttribute('aria-label', isText ? localize('setTextSize', "Set Text Size to {0}px", value) : localize('setStrokeWidth', "Set Stroke Width to {0}px", value));
-			button.setAttribute('aria-pressed', String(value === selectedValue));
-			button.classList.toggle('active', value === selectedValue);
+			button.setAttribute(
+        "aria-label",
+        isText ? localize("setTextSize", "Set Text Size to {0}px", value) : localize("setStrokeWidth", "Set Stroke Width to {0}px", value),
+      );
+			button.setAttribute("aria-pressed", String(value === selectedValue));
+			button.classList.toggle("active", value === selectedValue);
 			this.toolOptionsDisposables.add(addDisposableListener(button, EventType.CLICK, e => {
 				e.stopPropagation();
 				if (isText) {
@@ -645,25 +776,33 @@ export class ScreenshotAnnotationEditor {
 	}
 
 	private appendOpacityOptions(container: HTMLElement): void {
-		const group = append(container, $('div.annotation-tool-options-group.annotation-opacity-options'));
-		const label = append(group, $('label.annotation-tool-options-label'));
-		label.textContent = localize('opacity', "Opacity");
-		const input = append(group, $('input.annotation-opacity-slider')) as HTMLInputElement;
-		input.type = 'range';
-		input.min = '20';
-		input.max = '100';
-		input.step = '10';
+		const group = append(
+      container,
+      $("div.annotation-tool-options-group.annotation-opacity-options"),
+    );
+		const label = append(group, $("label.annotation-tool-options-label"));
+		label.textContent = localize("opacity", "Opacity");
+		const input = append(
+      group,
+      $("input.annotation-opacity-slider"),
+    ) as HTMLInputElement;
+		input.type = "range";
+		input.min = "20";
+		input.max = "100";
+		input.step = "10";
 		input.value = `${Math.round(this.activeOpacity * 100)}`;
-		input.setAttribute('aria-label', localize('setOpacity', "Set Opacity"));
-		const value = append(group, $('span.annotation-opacity-value'));
+		input.setAttribute("aria-label", localize("setOpacity", "Set Opacity"));
+		const value = append(group, $("span.annotation-opacity-value"));
 		value.textContent = `${input.value}%`;
-		this.toolOptionsDisposables.add(addDisposableListener(input, EventType.INPUT, e => {
-			e.stopPropagation();
-			this.activeOpacity = Number(input.value) / 100;
-			value.textContent = `${input.value}%`;
-			this.applyToolOptionsToTextEdit();
-			this.redraw();
-		}));
+		this.toolOptionsDisposables.add(
+      addDisposableListener(input, EventType.INPUT, e => {
+        e.stopPropagation();
+        this.activeOpacity = Number(input.value) / 100;
+        value.textContent = `${input.value}%`;
+        this.applyToolOptionsToTextEdit();
+        this.redraw();
+      }),
+    );
 	}
 
 	private applyToolOptionsToTextEdit(): void {
@@ -685,7 +824,7 @@ export class ScreenshotAnnotationEditor {
 		const containerRect = this.container.getBoundingClientRect();
 		const anchorRect = anchor.getBoundingClientRect();
 		this.toolOptionsPopover.style.top = `${anchorRect.bottom - containerRect.top + 6}px`;
-		this.toolOptionsPopover.style.display = 'flex';
+		this.toolOptionsPopover.style.display = "flex";
 		const halfWidth = this.toolOptionsPopover.offsetWidth / 2;
 		const desiredLeft = anchorRect.left + anchorRect.width / 2 - containerRect.left;
 		const minLeft = halfWidth + 8;
@@ -695,7 +834,7 @@ export class ScreenshotAnnotationEditor {
 
 	private hideToolOptions(): void {
 		if (this.toolOptionsPopover) {
-			this.toolOptionsPopover.style.display = 'none';
+			this.toolOptionsPopover.style.display = "none";
 		}
 	}
 
@@ -725,18 +864,20 @@ export class ScreenshotAnnotationEditor {
 		this.activeTool = tool;
 		this.selectedActionIndex = -1;
 		for (const tb of this.toolButtons) {
-			tb.element.classList.toggle('active', tb.tool === tool);
-			tb.element.setAttribute('aria-pressed', String(tb.tool === tool));
+			tb.element.classList.toggle("active", tb.tool === tool);
+			tb.element.setAttribute("aria-pressed", String(tb.tool === tool));
 		}
-		const activeToolButton = this.toolButtons.find(tb => tb.tool === tool)?.element;
+		const activeToolButton = this.toolButtons.find(
+      tb => tb.tool === tool,
+    )?.element;
 		if (activeToolButton && this.hasToolOptions(tool)) {
 			this.showToolOptions(activeToolButton);
 		} else {
 			this.hideToolOptions();
 		}
-		this.canvas.style.cursor = tool === AnnotationTool.Select ? 'default' :
-			tool === AnnotationTool.Pan ? 'grab' :
-				tool === AnnotationTool.Eraser ? 'url("data:image/svg+xml,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewport=\'0 0 24 24\'><circle cx=\'12\' cy=\'12\' r=\'9\' fill=\'none\' stroke=\'%23fff\' stroke-width=\'2\'/><circle cx=\'12\' cy=\'12\' r=\'9\' fill=\'none\' stroke=\'%23000\' stroke-width=\'1\' stroke-dasharray=\'2 2\'/></svg>") 12 12, cell' : 'crosshair';
+		this.canvas.style.cursor = tool === AnnotationTool.Select ? "default" :
+			tool === AnnotationTool.Pan ? "grab" :
+				tool === AnnotationTool.Eraser ? "url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewport='0 0 24 24'><circle cx='12' cy='12' r='9' fill='none' stroke='%23fff' stroke-width='2'/><circle cx='12' cy='12' r='9' fill='none' stroke='%23000' stroke-width='1' stroke-dasharray='2 2'/></svg>\") 12 12, cell" : "crosshair";
 		this.redraw();
 	}
 
@@ -746,11 +887,11 @@ export class ScreenshotAnnotationEditor {
 		}
 		// Save current state for cancel
 		this.preCropState = {
-			element: this.imageElement!,
-			width: this.imageWidth,
-			height: this.imageHeight,
-			currentCrop: this.currentCrop,
-		};
+      element: this.imageElement!,
+      width: this.imageWidth,
+      height: this.imageHeight,
+      currentCrop: this.currentCrop,
+    };
 		// Switch to original image so user can expand crop region
 		this.imageElement = this.originalImage.element;
 		this.imageWidth = this.originalImage.width;
@@ -758,21 +899,26 @@ export class ScreenshotAnnotationEditor {
 		// Initial crop region = current crop (or full original)
 		this.cropRegion = this.currentCrop
 			? { ...this.currentCrop }
-			: { x: 0, y: 0, width: this.originalImage.width, height: this.originalImage.height };
+			: {
+          x: 0,
+          y: 0,
+          width: this.originalImage.width,
+          height: this.originalImage.height,
+        };
 		this.cropMode = true;
 		// Mark crop tool button active
 		for (const tb of this.toolButtons) {
-			tb.element.classList.toggle('active', tb.tool === AnnotationTool.Crop);
+			tb.element.classList.toggle("active", tb.tool === AnnotationTool.Crop);
 		}
 		// Toggle toolbars
-		if (this.mainToolbar) { this.mainToolbar.style.display = 'none'; }
-		if (this.cropToolbar) { this.cropToolbar.style.display = ''; }
+		if (this.mainToolbar) { this.mainToolbar.style.display = "none"; }
+		if (this.cropToolbar) { this.cropToolbar.style.display = ""; }
 		// Reset zoom/pan to fit original
 		this.hasUserZoomed = false;
 		this.panX = 0;
 		this.panY = 0;
-		this.canvas.style.transform = '';
-		this.canvas.style.cursor = 'default';
+		this.canvas.style.transform = "";
+		this.canvas.style.cursor = "default";
 		this.sizeCanvas();
 		this.redraw();
 	}
@@ -784,8 +930,8 @@ export class ScreenshotAnnotationEditor {
 		this.cropRegionStart = null;
 		this.preCropState = null;
 		// Restore main toolbar
-		if (this.mainToolbar) { this.mainToolbar.style.display = ''; }
-		if (this.cropToolbar) { this.cropToolbar.style.display = 'none'; }
+		if (this.mainToolbar) { this.mainToolbar.style.display = ""; }
+		if (this.cropToolbar) { this.cropToolbar.style.display = "none"; }
 		// Reactivate previous tool
 		this.setActiveTool(this.activeTool);
 	}
@@ -802,20 +948,20 @@ export class ScreenshotAnnotationEditor {
 		// Push a Crop sentinel into the linear undo stack so undo/redo treats it
 		// like any other action.
 		const cropAction: DrawAction = {
-			type: AnnotationTool.Crop,
-			strokeColor: '',
-			opacity: 1,
-			lineWidth: 0,
-			cropFrom,
-			cropTo: cr,
-		};
+      type: AnnotationTool.Crop,
+      strokeColor: "",
+      opacity: 1,
+      lineWidth: 0,
+      cropFrom,
+      cropTo: cr,
+    };
 		this.actions.push(cropAction);
 		this.undoneActions.length = 0;
 		this.updateUndoRedoState();
 		this.hasUserZoomed = false;
 		this.panX = 0;
 		this.panY = 0;
-		this.canvas.style.transform = '';
+		this.canvas.style.transform = "";
 		this.exitCropMode();
 		this.applyDisplayedCrop(cr);
 	}
@@ -834,20 +980,24 @@ export class ScreenshotAnnotationEditor {
 		this.hasUserZoomed = false;
 		this.panX = 0;
 		this.panY = 0;
-		this.canvas.style.transform = '';
+		this.canvas.style.transform = "";
 		this.exitCropMode();
 		this.sizeCanvas();
 		this.redraw();
 	}
 
 	private loadImage(): void {
-		const img = mainWindow.document.createElement('img');
+		const img = mainWindow.document.createElement("img");
 		img.onload = () => {
 			this.imageElement = img;
 			this.imageWidth = img.naturalWidth;
 			this.imageHeight = img.naturalHeight;
 			// Preserve the original image so crops can be re-expanded
-			this.originalImage = { element: img, width: img.naturalWidth, height: img.naturalHeight };
+			this.originalImage = {
+        element: img,
+        width: img.naturalWidth,
+        height: img.naturalHeight,
+      };
 			this.currentCrop = null;
 
 			// Restore prior actions (clone so undo/redo state survives reopens).
@@ -856,8 +1006,12 @@ export class ScreenshotAnnotationEditor {
 			// undoneActions[].
 			if (this.initialState && (this.initialState.actions.length || this.initialState.undoneActions.length)) {
 				const identityMap = new Map<IAnnotationDrawAction, IAnnotationDrawAction>();
-				this.actions.push(...this.initialState.actions.map(a => cloneDrawAction(a, identityMap)));
-				this.undoneActions.push(...this.initialState.undoneActions.map(a => cloneDrawAction(a, identityMap)));
+				this.actions.push(
+          ...this.initialState.actions.map(a => cloneDrawAction(a, identityMap)),
+        );
+				this.undoneActions.push(
+          ...this.initialState.undoneActions.map(a => cloneDrawAction(a, identityMap)),
+        );
 				this.updateUndoRedoState();
 			}
 
@@ -888,18 +1042,28 @@ export class ScreenshotAnnotationEditor {
 			return;
 		}
 		const cr = {
-			x: Math.max(0, Math.min(this.originalImage.width, crop.x)),
-			y: Math.max(0, Math.min(this.originalImage.height, crop.y)),
-			width: Math.max(1, Math.min(this.originalImage.width - Math.max(0, crop.x), crop.width)),
-			height: Math.max(1, Math.min(this.originalImage.height - Math.max(0, crop.y), crop.height)),
-		};
-		const cropCanvas = mainWindow.document.createElement('canvas');
+      x: Math.max(0, Math.min(this.originalImage.width, crop.x)),
+      y: Math.max(0, Math.min(this.originalImage.height, crop.y)),
+      width: Math.max(1, Math.min(this.originalImage.width - Math.max(0, crop.x), crop.width)),
+      height: Math.max(1, Math.min(this.originalImage.height - Math.max(0, crop.y), crop.height)),
+    };
+		const cropCanvas = mainWindow.document.createElement("canvas");
 		cropCanvas.width = cr.width;
 		cropCanvas.height = cr.height;
-		const cropCtx = cropCanvas.getContext('2d')!;
-		cropCtx.drawImage(this.originalImage.element, cr.x, cr.y, cr.width, cr.height, 0, 0, cr.width, cr.height);
+		const cropCtx = cropCanvas.getContext("2d")!;
+		cropCtx.drawImage(
+      this.originalImage.element,
+      cr.x,
+      cr.y,
+      cr.width,
+      cr.height,
+      0,
+      0,
+      cr.width,
+      cr.height,
+    );
 
-		const croppedImg = mainWindow.document.createElement('img');
+		const croppedImg = mainWindow.document.createElement("img");
 		croppedImg.onload = () => {
 			this.imageElement = croppedImg;
 			this.imageWidth = croppedImg.naturalWidth;
@@ -908,16 +1072,16 @@ export class ScreenshotAnnotationEditor {
 			this.sizeCanvas();
 			this.redraw();
 		};
-		croppedImg.src = cropCanvas.toDataURL('image/png');
+		croppedImg.src = cropCanvas.toDataURL("image/png");
 	}
 
 	private captureState(): IAnnotationEditorState {
 		const identityMap = new Map<IAnnotationDrawAction, IAnnotationDrawAction>();
 		return {
-			actions: this.actions.map(a => cloneDrawAction(a, identityMap)),
-			undoneActions: this.undoneActions.map(a => cloneDrawAction(a, identityMap)),
-			crop: this.currentCrop ? { ...this.currentCrop } : null,
-		};
+      actions: this.actions.map(a => cloneDrawAction(a, identityMap)),
+      undoneActions: this.undoneActions.map(a => cloneDrawAction(a, identityMap)),
+      crop: this.currentCrop ? { ...this.currentCrop } : null,
+    };
 	}
 
 	private sizeCanvas(): void {
@@ -951,7 +1115,11 @@ export class ScreenshotAnnotationEditor {
 		const MAX_BACKING_DIM = 4096;
 		const naturalW = displayWidth * dpr;
 		const naturalH = displayHeight * dpr;
-		const overage = Math.max(1, naturalW / MAX_BACKING_DIM, naturalH / MAX_BACKING_DIM);
+		const overage = Math.max(
+      1,
+      naturalW / MAX_BACKING_DIM,
+      naturalH / MAX_BACKING_DIM,
+    );
 		const effectiveDpr = dpr / overage;
 		this.canvas.width = Math.max(1, Math.floor(displayWidth * effectiveDpr));
 		this.canvas.height = Math.max(1, Math.floor(displayHeight * effectiveDpr));
@@ -962,9 +1130,9 @@ export class ScreenshotAnnotationEditor {
 	private canvasCoords(e: PointerEvent): { x: number; y: number } {
 		const rect = this.canvas.getBoundingClientRect();
 		return {
-			x: (e.clientX - rect.left) / this.scale + this.cropOffsetX,
-			y: (e.clientY - rect.top) / this.scale + this.cropOffsetY,
-		};
+      x: (e.clientX - rect.left) / this.scale + this.cropOffsetX,
+      y: (e.clientY - rect.top) / this.scale + this.cropOffsetY,
+    };
 	}
 
 	private onPointerDown(e: PointerEvent): void {
@@ -988,18 +1156,24 @@ export class ScreenshotAnnotationEditor {
 			this.selectedActionIndex = hitIndex;
 			if (hitIndex >= 0) {
 				const hitAction = this.actions[hitIndex];
-				this.pendingMove = { target: hitAction, before: captureMoveSnapshot(hitAction) };
-				if (hitAction.type === AnnotationTool.Text && this.isNearTextResizeHandle(pos, hitAction)) {
+				this.pendingMove = {
+          target: hitAction,
+          before: captureMoveSnapshot(hitAction),
+        };
+				if (hitAction.type === AnnotationTool.Text && this.isNearTextResizeHandle(
+          pos,
+          hitAction,
+        )) {
 					this.isResizingSelectedText = true;
 					this.dragStart = { x: pos.x, y: pos.y };
 					this.selectedTextResizeStartWidth = hitAction.textWidth ?? DEFAULT_TEXT_BOX_WIDTH;
 					this.canvas.setPointerCapture(e.pointerId);
-					this.canvas.style.cursor = 'ew-resize';
+					this.canvas.style.cursor = "ew-resize";
 				} else {
 					this.isDraggingSelected = true;
 					this.dragStart = { x: pos.x, y: pos.y };
 					this.canvas.setPointerCapture(e.pointerId);
-					this.canvas.style.cursor = 'move';
+					this.canvas.style.cursor = "move";
 				}
 			}
 			this.redraw();
@@ -1013,10 +1187,10 @@ export class ScreenshotAnnotationEditor {
 		if (this.activeTool === AnnotationTool.Text) {
 			this.commitTextEdit();
 			this.textPlacementState = {
-				start: pos,
-				current: pos,
-				pointerId: e.pointerId,
-			};
+        start: pos,
+        current: pos,
+        pointerId: e.pointerId,
+      };
 			this.canvas.setPointerCapture(e.pointerId);
 			this.redraw();
 			return;
@@ -1035,7 +1209,7 @@ export class ScreenshotAnnotationEditor {
 			this.isPanning = true;
 			this.lastPanPoint = { x: e.clientX, y: e.clientY };
 			this.canvas.setPointerCapture(e.pointerId);
-			this.canvas.style.cursor = 'grabbing';
+			this.canvas.style.cursor = "grabbing";
 			return;
 		}
 
@@ -1045,42 +1219,42 @@ export class ScreenshotAnnotationEditor {
 		switch (this.activeTool) {
 			case AnnotationTool.Freehand:
 				this.currentAction = {
-					type: AnnotationTool.Freehand,
-					strokeColor: this.activeStrokeColor,
-					opacity: this.activeOpacity,
-					lineWidth: this.activeLineWidth,
-					points: [pos],
-				};
+          type: AnnotationTool.Freehand,
+          strokeColor: this.activeStrokeColor,
+          opacity: this.activeOpacity,
+          lineWidth: this.activeLineWidth,
+          points: [pos],
+        };
 				break;
 			case AnnotationTool.Rectangle:
 				this.currentAction = {
-					type: AnnotationTool.Rectangle,
-					strokeColor: this.activeStrokeColor,
-					fillColor: this.activeFillColor,
-					opacity: this.activeOpacity,
-					lineWidth: this.activeLineWidth,
-					rect: { x: pos.x, y: pos.y, width: 0, height: 0 },
-				};
+          type: AnnotationTool.Rectangle,
+          strokeColor: this.activeStrokeColor,
+          fillColor: this.activeFillColor,
+          opacity: this.activeOpacity,
+          lineWidth: this.activeLineWidth,
+          rect: { x: pos.x, y: pos.y, width: 0, height: 0 },
+        };
 				break;
 			case AnnotationTool.Ellipse:
 				this.currentAction = {
-					type: AnnotationTool.Ellipse,
-					strokeColor: this.activeStrokeColor,
-					fillColor: this.activeFillColor,
-					opacity: this.activeOpacity,
-					lineWidth: this.activeLineWidth,
-					ellipseRect: { x: pos.x, y: pos.y, width: 0, height: 0 },
-				};
+          type: AnnotationTool.Ellipse,
+          strokeColor: this.activeStrokeColor,
+          fillColor: this.activeFillColor,
+          opacity: this.activeOpacity,
+          lineWidth: this.activeLineWidth,
+          ellipseRect: { x: pos.x, y: pos.y, width: 0, height: 0 },
+        };
 				break;
 			case AnnotationTool.Arrow:
 				this.currentAction = {
-					type: AnnotationTool.Arrow,
-					strokeColor: this.activeStrokeColor,
-					opacity: this.activeOpacity,
-					lineWidth: this.activeLineWidth,
-					arrowStart: pos,
-					arrowEnd: pos,
-				};
+          type: AnnotationTool.Arrow,
+          strokeColor: this.activeStrokeColor,
+          opacity: this.activeOpacity,
+          lineWidth: this.activeLineWidth,
+          arrowStart: pos,
+          arrowEnd: pos,
+        };
 				break;
 		}
 	}
@@ -1105,7 +1279,10 @@ export class ScreenshotAnnotationEditor {
 			const pos = this.canvasCoords(e);
 			const action = this.actions[this.selectedActionIndex];
 			if (action.type === AnnotationTool.Text) {
-				action.textWidth = Math.max(MIN_TEXT_BOX_WIDTH, this.selectedTextResizeStartWidth + (pos.x - this.dragStart.x));
+				action.textWidth = Math.max(
+          MIN_TEXT_BOX_WIDTH,
+          this.selectedTextResizeStartWidth + (pos.x - this.dragStart.x),
+        );
 				this.redraw();
 			}
 			return;
@@ -1150,10 +1327,13 @@ export class ScreenshotAnnotationEditor {
 		if (this.activeTool === AnnotationTool.Select && this.selectedActionIndex >= 0) {
 			const pos = this.canvasCoords(e);
 			const action = this.actions[this.selectedActionIndex];
-			if (action.type === AnnotationTool.Text && this.isNearTextResizeHandle(pos, action)) {
-				this.canvas.style.cursor = 'ew-resize';
+			if (action.type === AnnotationTool.Text && this.isNearTextResizeHandle(
+        pos,
+        action,
+      )) {
+				this.canvas.style.cursor = "ew-resize";
 			} else if (this.selectedActionIndex >= 0) {
-				this.canvas.style.cursor = 'default';
+				this.canvas.style.cursor = "default";
 			}
 		}
 
@@ -1175,10 +1355,10 @@ export class ScreenshotAnnotationEditor {
 				const rect = this.currentAction.rect!;
 				// Mutate the rect on the current action (this is the in-progress drawing)
 				(this.currentAction as { rect: { x: number; y: number; width: number; height: number } }).rect = {
-					...rect,
-					width: pos.x - rect.x,
-					height: pos.y - rect.y,
-				};
+          ...rect,
+          width: pos.x - rect.x,
+          height: pos.y - rect.y,
+        };
 				break;
 			}
 			case AnnotationTool.Ellipse: {
@@ -1190,7 +1370,11 @@ export class ScreenshotAnnotationEditor {
 					w = Math.sign(w) * size;
 					h = Math.sign(h) * size;
 				}
-				(this.currentAction as { ellipseRect: { x: number; y: number; width: number; height: number } }).ellipseRect = { ...er, width: w, height: h };
+				(this.currentAction as { ellipseRect: { x: number; y: number; width: number; height: number } }).ellipseRect = {
+          ...er,
+          width: w,
+          height: h,
+        };
 				break;
 			}
 			case AnnotationTool.Arrow:
@@ -1214,7 +1398,7 @@ export class ScreenshotAnnotationEditor {
 		if (this.isResizingSelectedText) {
 			this.isResizingSelectedText = false;
 			this.canvas.releasePointerCapture(e.pointerId);
-			this.canvas.style.cursor = 'default';
+			this.canvas.style.cursor = "default";
 			this.commitPendingMove();
 			return;
 		}
@@ -1223,7 +1407,7 @@ export class ScreenshotAnnotationEditor {
 		if (this.isDraggingSelected) {
 			this.isDraggingSelected = false;
 			this.canvas.releasePointerCapture(e.pointerId);
-			this.canvas.style.cursor = 'default';
+			this.canvas.style.cursor = "default";
 			this.commitPendingMove();
 			return;
 		}
@@ -1232,7 +1416,7 @@ export class ScreenshotAnnotationEditor {
 		if (this.isPanning) {
 			this.isPanning = false;
 			this.canvas.releasePointerCapture(e.pointerId);
-			this.canvas.style.cursor = this.activeTool === AnnotationTool.Pan ? 'grab' : 'crosshair';
+			this.canvas.style.cursor = this.activeTool === AnnotationTool.Pan ? "grab" : "crosshair";
 			return;
 		}
 
@@ -1241,13 +1425,13 @@ export class ScreenshotAnnotationEditor {
 			this.canvas.releasePointerCapture(e.pointerId);
 			if (this.pendingEraseActions.length > 0) {
 				this.actions.push({
-					type: AnnotationTool.Eraser,
-					strokeColor: '',
-					opacity: 1,
-					lineWidth: 0,
-					erasedActions: this.pendingEraseActions.slice(),
-					erasedIndices: this.pendingEraseIndices.slice(),
-				});
+          type: AnnotationTool.Eraser,
+          strokeColor: "",
+          opacity: 1,
+          lineWidth: 0,
+          erasedActions: this.pendingEraseActions.slice(),
+          erasedIndices: this.pendingEraseIndices.slice(),
+        });
 				this.pendingEraseActions = [];
 				this.pendingEraseIndices = [];
 				this.undoneActions.length = 0;
@@ -1313,14 +1497,14 @@ export class ScreenshotAnnotationEditor {
 			return;
 		}
 		this.actions.push({
-			type: AnnotationTool.Move,
-			strokeColor: '',
-			opacity: 1,
-			lineWidth: 0,
-			moveTarget: pending.target,
-			moveBefore: pending.before,
-			moveAfter: after,
-		});
+      type: AnnotationTool.Move,
+      strokeColor: "",
+      opacity: 1,
+      lineWidth: 0,
+      moveTarget: pending.target,
+      moveBefore: pending.before,
+      moveAfter: after,
+    });
 		this.undoneActions.length = 0;
 		this.updateUndoRedoState();
 	}
@@ -1352,7 +1536,9 @@ export class ScreenshotAnnotationEditor {
 			// Iterate in reverse because each erase splice was relative to the array state after
 			// the previous one, so unwinding must happen in reverse order to restore positions.
 			const erased = action.erasedActions;
-			const indices = action.erasedIndices ?? erased.map(() => this.actions.length);
+			const indices = action.erasedIndices ?? erased.map(
+        () => this.actions.length,
+      );
 			for (let i = erased.length - 1; i >= 0; i--) {
 				const idx = Math.min(indices[i], this.actions.length);
 				this.actions.splice(idx, 0, erased[i]);
@@ -1404,7 +1590,7 @@ export class ScreenshotAnnotationEditor {
 		}
 	}
 
-	private cropHandleHitTest(pos: { x: number; y: number }): 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'move' | null {
+	private cropHandleHitTest(pos: { x: number; y: number }): "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w" | "move" | null {
 		if (!this.cropRegion) {
 			return null;
 		}
@@ -1414,16 +1600,16 @@ export class ScreenshotAnnotationEditor {
 		const tol = handlePx / this.scale;
 		const cx = r.x + r.width / 2;
 		const cy = r.y + r.height / 2;
-		const handles: { name: 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w'; x: number; y: number }[] = [
-			{ name: 'nw', x: r.x, y: r.y },
-			{ name: 'n', x: cx, y: r.y },
-			{ name: 'ne', x: r.x + r.width, y: r.y },
-			{ name: 'e', x: r.x + r.width, y: cy },
-			{ name: 'se', x: r.x + r.width, y: r.y + r.height },
-			{ name: 's', x: cx, y: r.y + r.height },
-			{ name: 'sw', x: r.x, y: r.y + r.height },
-			{ name: 'w', x: r.x, y: cy },
-		];
+		const handles: { name: "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w"; x: number; y: number }[] = [
+      { name: "nw", x: r.x, y: r.y },
+      { name: "n", x: cx, y: r.y },
+      { name: "ne", x: r.x + r.width, y: r.y },
+      { name: "e", x: r.x + r.width, y: cy },
+      { name: "se", x: r.x + r.width, y: r.y + r.height },
+      { name: "s", x: cx, y: r.y + r.height },
+      { name: "sw", x: r.x, y: r.y + r.height },
+      { name: "w", x: r.x, y: cy },
+    ];
 		for (const h of handles) {
 			if (Math.abs(pos.x - h.x) <= tol && Math.abs(pos.y - h.y) <= tol) {
 				return h.name;
@@ -1431,23 +1617,23 @@ export class ScreenshotAnnotationEditor {
 		}
 		// Inside region → move
 		if (pos.x >= r.x && pos.x <= r.x + r.width && pos.y >= r.y && pos.y <= r.y + r.height) {
-			return 'move';
+			return "move";
 		}
 		return null;
 	}
 
-	private cropCursorFor(handle: 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'move' | null): string {
+	private cropCursorFor(handle: "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w" | "move" | null): string {
 		switch (handle) {
-			case 'nw':
-			case 'se': return 'nwse-resize';
-			case 'ne':
-			case 'sw': return 'nesw-resize';
-			case 'n':
-			case 's': return 'ns-resize';
-			case 'e':
-			case 'w': return 'ew-resize';
-			case 'move': return 'move';
-			default: return 'default';
+			case "nw":
+			case "se": return "nwse-resize";
+			case "ne":
+			case "sw": return "nesw-resize";
+			case "n":
+			case "s": return "ns-resize";
+			case "e":
+			case "w": return "ew-resize";
+			case "move": return "move";
+			default: return "default";
 		}
 	}
 
@@ -1460,37 +1646,43 @@ export class ScreenshotAnnotationEditor {
 		const start = this.cropRegionStart;
 
 		// Translating the entire box: keep dimensions fixed and clamp only the position.
-		if (this.cropDragHandle === 'move') {
-			const x = Math.max(0, Math.min(this.imageWidth - start.width, start.x + dx));
-			const y = Math.max(0, Math.min(this.imageHeight - start.height, start.y + dy));
+		if (this.cropDragHandle === "move") {
+			const x = Math.max(
+        0,
+        Math.min(this.imageWidth - start.width, start.x + dx),
+      );
+			const y = Math.max(
+        0,
+        Math.min(this.imageHeight - start.height, start.y + dy),
+      );
 			this.cropRegion = { x, y, width: start.width, height: start.height };
 			return;
 		}
 
 		let { x, y, width, height } = start;
 		switch (this.cropDragHandle) {
-			case 'nw':
+			case "nw":
 				x += dx; y += dy; width -= dx; height -= dy;
 				break;
-			case 'n':
+			case "n":
 				y += dy; height -= dy;
 				break;
-			case 'ne':
+			case "ne":
 				y += dy; width += dx; height -= dy;
 				break;
-			case 'e':
+			case "e":
 				width += dx;
 				break;
-			case 'se':
+			case "se":
 				width += dx; height += dy;
 				break;
-			case 's':
+			case "s":
 				height += dy;
 				break;
-			case 'sw':
+			case "sw":
 				x += dx; width -= dx; height += dy;
 				break;
-			case 'w':
+			case "w":
 				x += dx; width -= dx;
 				break;
 		}
@@ -1504,45 +1696,45 @@ export class ScreenshotAnnotationEditor {
 
 	private normalizeCropRect(r: { x: number; y: number; width: number; height: number }): { x: number; y: number; width: number; height: number } {
 		return {
-			x: r.width < 0 ? r.x + r.width : r.x,
-			y: r.height < 0 ? r.y + r.height : r.y,
-			width: Math.abs(r.width),
-			height: Math.abs(r.height),
-		};
+      x: r.width < 0 ? r.x + r.width : r.x,
+      y: r.height < 0 ? r.y + r.height : r.y,
+      width: Math.abs(r.width),
+      height: Math.abs(r.height),
+    };
 	}
 
 	private startTextEdit(pos: { x: number; y: number }, width: number, showBoxOutline: boolean): void {
 		this.commitTextEdit();
 
-		const editor = mainWindow.document.createElement('textarea');
-		editor.setAttribute('aria-label', localize('typeText', "Type text"));
-		editor.setAttribute('wrap', 'off');
-		editor.style.position = 'fixed';
-		editor.style.left = '-10000px';
-		editor.style.top = '0';
-		editor.style.width = '1px';
-		editor.style.height = '1px';
-		editor.style.opacity = '0';
-		editor.style.pointerEvents = 'none';
-		editor.style.padding = '0';
-		editor.style.border = '0';
-		editor.style.margin = '0';
-		editor.style.resize = 'none';
-		editor.style.overflow = 'hidden';
+		const editor = mainWindow.document.createElement("textarea");
+		editor.setAttribute("aria-label", localize("typeText", "Type text"));
+		editor.setAttribute("wrap", "off");
+		editor.style.position = "fixed";
+		editor.style.left = "-10000px";
+		editor.style.top = "0";
+		editor.style.width = "1px";
+		editor.style.height = "1px";
+		editor.style.opacity = "0";
+		editor.style.pointerEvents = "none";
+		editor.style.padding = "0";
+		editor.style.border = "0";
+		editor.style.margin = "0";
+		editor.style.resize = "none";
+		editor.style.overflow = "hidden";
 		this.container.appendChild(editor);
 
 		this.textEditState = {
-			pos,
-			text: '',
-			caretIndex: 0,
-			strokeColor: this.activeStrokeColor,
-			fillColor: this.activeFillColor,
-			opacity: this.activeOpacity,
-			fontSize: this.activeFontSize,
-			fontFamily: this.activeFontFamily,
-			width,
-			showBoxOutline,
-		};
+      pos,
+      text: "",
+      caretIndex: 0,
+      strokeColor: this.activeStrokeColor,
+      fillColor: this.activeFillColor,
+      opacity: this.activeOpacity,
+      fontSize: this.activeFontSize,
+      fontFamily: this.activeFontFamily,
+      width,
+      showBoxOutline,
+    };
 		this.textEditor = editor;
 		this.startTextCaretBlink();
 
@@ -1556,21 +1748,21 @@ export class ScreenshotAnnotationEditor {
 			this.redraw();
 		};
 
-		editor.addEventListener('input', sync);
-		editor.addEventListener('keyup', sync);
-		editor.addEventListener('click', sync);
-		editor.addEventListener('select', sync);
-		editor.addEventListener('keydown', e => {
+		editor.addEventListener("input", sync);
+		editor.addEventListener("keyup", sync);
+		editor.addEventListener("click", sync);
+		editor.addEventListener("select", sync);
+		editor.addEventListener("keydown", e => {
 			e.stopPropagation();
-			if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+			if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
 				e.preventDefault();
 				this.commitTextEdit();
-			} else if (e.key === 'Escape') {
+			} else if (e.key === "Escape") {
 				e.preventDefault();
 				this.cancelTextEdit();
 			}
 		});
-		editor.addEventListener('blur', () => {
+		editor.addEventListener("blur", () => {
 			if (this.textEditor === editor) {
 				this.commitTextEdit();
 			}
@@ -1617,17 +1809,17 @@ export class ScreenshotAnnotationEditor {
 		this.cleanupTextEditor();
 		if (text.trim()) {
 			this.actions.push({
-				type: AnnotationTool.Text,
-				strokeColor,
-				fillColor,
-				opacity,
-				lineWidth: 1,
-				fontSize,
-				fontFamily,
-				text,
-				textPos: pos,
-				textWidth: width,
-			});
+        type: AnnotationTool.Text,
+        strokeColor,
+        fillColor,
+        opacity,
+        lineWidth: 1,
+        fontSize,
+        fontFamily,
+        text,
+        textPos: pos,
+        textWidth: width,
+      });
 			this.undoneActions.length = 0;
 			this.updateUndoRedoState();
 		}
@@ -1674,13 +1866,22 @@ export class ScreenshotAnnotationEditor {
 
 		// Draw background image
 		if (this.imageElement) {
-			this.ctx.drawImage(this.imageElement, 0, 0, this.imageWidth * this.scale, this.imageHeight * this.scale);
+			this.ctx.drawImage(
+        this.imageElement,
+        0,
+        0,
+        this.imageWidth * this.scale,
+        this.imageHeight * this.scale,
+      );
 		}
 
 		// Annotations are stored in original-image coords; translate so they appear correctly
 		// over the (possibly cropped) displayed image.
 		this.ctx.save();
-		this.ctx.translate(-this.cropOffsetX * this.scale, -this.cropOffsetY * this.scale);
+		this.ctx.translate(
+      -this.cropOffsetX * this.scale,
+      -this.cropOffsetY * this.scale,
+    );
 
 		// Draw all completed annotations
 		for (const action of this.actions) {
@@ -1720,14 +1921,14 @@ export class ScreenshotAnnotationEditor {
 
 			this.ctx.save();
 			// Dim area outside crop
-			this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+			this.ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
 			this.ctx.fillRect(0, 0, cw, ry);                            // top
 			this.ctx.fillRect(0, ry + rh, cw, ch - (ry + rh));          // bottom
 			this.ctx.fillRect(0, ry, rx, rh);                           // left
 			this.ctx.fillRect(rx + rw, ry, cw - (rx + rw), rh);         // right
 
 			// Draw crop border
-			this.ctx.strokeStyle = '#ffffff';
+			this.ctx.strokeStyle = "#ffffff";
 			this.ctx.lineWidth = 1;
 			this.ctx.strokeRect(rx, ry, rw, rh);
 
@@ -1744,8 +1945,8 @@ export class ScreenshotAnnotationEditor {
 				{ x: rx, y: ry + rh },            // sw
 				{ x: rx, y: ry + rh / 2 },        // w
 			];
-			this.ctx.fillStyle = '#ffffff';
-			this.ctx.strokeStyle = '#000000';
+			this.ctx.fillStyle = "#ffffff";
+			this.ctx.strokeStyle = "#000000";
 			this.ctx.lineWidth = 1;
 			for (const h of handles) {
 				this.ctx.fillRect(h.x - half, h.y - half, handleSize, handleSize);
@@ -1761,21 +1962,29 @@ export class ScreenshotAnnotationEditor {
 			return;
 		}
 		this.ctx.save();
-		const fillColor = action.fillColor ?? 'transparent';
+		const fillColor = action.fillColor ?? "transparent";
 		this.ctx.globalAlpha = action.opacity;
 		this.ctx.strokeStyle = action.strokeColor;
-		this.ctx.fillStyle = this.isTransparent(fillColor) ? action.strokeColor : fillColor;
+		this.ctx.fillStyle = this.isTransparent(
+      fillColor,
+    ) ? action.strokeColor : fillColor;
 		this.ctx.lineWidth = action.lineWidth * this.scale;
-		this.ctx.lineCap = 'round';
-		this.ctx.lineJoin = 'round';
+		this.ctx.lineCap = "round";
+		this.ctx.lineJoin = "round";
 
 		switch (action.type) {
 			case AnnotationTool.Freehand:
 				if (action.points && action.points.length > 0) {
 					this.ctx.beginPath();
-					this.ctx.moveTo(action.points[0].x * this.scale, action.points[0].y * this.scale);
+					this.ctx.moveTo(
+            action.points[0].x * this.scale,
+            action.points[0].y * this.scale,
+          );
 					for (let i = 1; i < action.points.length; i++) {
-						this.ctx.lineTo(action.points[i].x * this.scale, action.points[i].y * this.scale);
+						this.ctx.lineTo(
+              action.points[i].x * this.scale,
+              action.points[i].y * this.scale,
+            );
 					}
 					this.ctx.stroke();
 				}
@@ -1785,18 +1994,18 @@ export class ScreenshotAnnotationEditor {
 				if (action.rect) {
 					if (!this.isTransparent(fillColor)) {
 						this.ctx.fillRect(
-							action.rect.x * this.scale,
-							action.rect.y * this.scale,
-							action.rect.width * this.scale,
-							action.rect.height * this.scale,
-						);
+              action.rect.x * this.scale,
+              action.rect.y * this.scale,
+              action.rect.width * this.scale,
+              action.rect.height * this.scale,
+            );
 					}
 					this.ctx.strokeRect(
-						action.rect.x * this.scale,
-						action.rect.y * this.scale,
-						action.rect.width * this.scale,
-						action.rect.height * this.scale,
-					);
+            action.rect.x * this.scale,
+            action.rect.y * this.scale,
+            action.rect.width * this.scale,
+            action.rect.height * this.scale,
+          );
 				}
 				break;
 
@@ -1819,32 +2028,44 @@ export class ScreenshotAnnotationEditor {
 			case AnnotationTool.Arrow:
 				if (action.arrowStart && action.arrowEnd) {
 					this.drawArrow(
-						action.arrowStart.x * this.scale,
-						action.arrowStart.y * this.scale,
-						action.arrowEnd.x * this.scale,
-						action.arrowEnd.y * this.scale,
-					);
+            action.arrowStart.x * this.scale,
+            action.arrowStart.y * this.scale,
+            action.arrowEnd.x * this.scale,
+            action.arrowEnd.y * this.scale,
+          );
 				}
 				break;
 
 			case AnnotationTool.Text:
 				if (action.text && action.textPos) {
 					const fontSize = (action.fontSize || 16) * this.scale;
-					const fontFamily = action.fontFamily || 'sans-serif';
+					const fontFamily = action.fontFamily || "sans-serif";
 					const width = (action.textWidth ?? DEFAULT_TEXT_BOX_WIDTH) * this.scale;
 					this.ctx.font = `${fontSize}px ${fontFamily}`;
-					this.ctx.textBaseline = 'alphabetic';
+					this.ctx.textBaseline = "alphabetic";
 					if (!this.isTransparent(fillColor)) {
-						const layout = this.measureWrappedText(action.text, width, fontSize, fontFamily);
+						const layout = this.measureWrappedText(
+              action.text,
+              width,
+              fontSize,
+              fontFamily,
+            );
 						this.ctx.fillRect(
-							action.textPos.x * this.scale,
-							action.textPos.y * this.scale - fontSize,
-							width,
-							Math.max(layout.height, fontSize * 1.2),
-						);
+              action.textPos.x * this.scale,
+              action.textPos.y * this.scale - fontSize,
+              width,
+              Math.max(layout.height, fontSize * 1.2),
+            );
 					}
 					this.ctx.fillStyle = action.strokeColor;
-					this.drawWrappedText(action.text, action.textPos.x * this.scale, action.textPos.y * this.scale, width, fontSize, fontFamily);
+					this.drawWrappedText(
+            action.text,
+            action.textPos.x * this.scale,
+            action.textPos.y * this.scale,
+            width,
+            fontSize,
+            fontFamily,
+          );
 				}
 				break;
 		}
@@ -1866,34 +2087,52 @@ export class ScreenshotAnnotationEditor {
 		this.ctx.strokeStyle = strokeColor;
 		this.ctx.lineWidth = Math.max(1, this.scale);
 		this.ctx.font = `${scaledFontSize}px ${fontFamily}`;
-		this.ctx.textBaseline = 'alphabetic';
+		this.ctx.textBaseline = "alphabetic";
 		if (!this.isTransparent(fillColor)) {
-			const layout = this.measureWrappedText(text, scaledWidth, scaledFontSize, fontFamily);
+			const layout = this.measureWrappedText(
+        text,
+        scaledWidth,
+        scaledFontSize,
+        fontFamily,
+      );
 			this.ctx.fillStyle = fillColor;
 			this.ctx.fillRect(
-				pos.x * this.scale,
-				pos.y * this.scale - scaledFontSize,
-				scaledWidth,
-				Math.max(layout.height, scaledFontSize * 1.2),
-			);
+        pos.x * this.scale,
+        pos.y * this.scale - scaledFontSize,
+        scaledWidth,
+        Math.max(layout.height, scaledFontSize * 1.2),
+      );
 			this.ctx.fillStyle = strokeColor;
 		}
-		const layout = this.drawWrappedText(text, pos.x * this.scale, pos.y * this.scale, scaledWidth, scaledFontSize, fontFamily);
+		const layout = this.drawWrappedText(
+      text,
+      pos.x * this.scale,
+      pos.y * this.scale,
+      scaledWidth,
+      scaledFontSize,
+      fontFamily,
+    );
 
 		if (showBoxOutline) {
 			this.ctx.setLineDash([4, 4]);
-			this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+			this.ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
 			this.ctx.strokeRect(
-				pos.x * this.scale,
-				pos.y * this.scale - scaledFontSize,
-				scaledWidth,
-				Math.max(layout.height, scaledFontSize * 1.2),
-			);
+        pos.x * this.scale,
+        pos.y * this.scale - scaledFontSize,
+        scaledWidth,
+        Math.max(layout.height, scaledFontSize * 1.2),
+      );
 			this.ctx.setLineDash([]);
 		}
 
 		if (this.textCaretVisible) {
-			const caret = this.getTextCaretMetrics(text, caretIndex, scaledWidth, scaledFontSize, fontFamily);
+			const caret = this.getTextCaretMetrics(
+        text,
+        caretIndex,
+        scaledWidth,
+        scaledFontSize,
+        fontFamily,
+      );
 			const caretX = pos.x * this.scale + caret.x;
 			const baselineY = pos.y * this.scale + caret.baselineOffsetY;
 			this.ctx.beginPath();
@@ -1905,7 +2144,7 @@ export class ScreenshotAnnotationEditor {
 	}
 
 	private isTransparent(color: string): boolean {
-		return color === 'transparent';
+		return color === "transparent";
 	}
 
 	private drawTextPlacementState(): void {
@@ -1919,12 +2158,15 @@ export class ScreenshotAnnotationEditor {
 			return;
 		}
 		const x = Math.min(start.x, current.x);
-		const width = Math.max(1, Math.min(Math.abs(dx), this.getTextImageRight() - x));
+		const width = Math.max(
+      1,
+      Math.min(Math.abs(dx), this.getTextImageRight() - x),
+    );
 		const y = (start.y - this.activeFontSize) * this.scale;
 		const height = this.activeFontSize * this.scale * 1.2;
 		this.ctx.save();
 		this.ctx.setLineDash([4, 4]);
-		this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+		this.ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
 		this.ctx.lineWidth = Math.max(1, this.scale);
 		this.ctx.strokeRect(x * this.scale, y, width * this.scale, height);
 		this.ctx.setLineDash([]);
@@ -1932,32 +2174,47 @@ export class ScreenshotAnnotationEditor {
 	}
 
 	private drawWrappedText(text: string, x: number, baselineY: number, maxWidth: number, fontSize: number, fontFamily: string): { width: number; height: number; lineHeight: number } {
-		const layout = this.measureWrappedText(text, maxWidth, fontSize, fontFamily);
+		const layout = this.measureWrappedText(
+      text,
+      maxWidth,
+      fontSize,
+      fontFamily,
+    );
 		const lineHeight = layout.lineHeight;
 		for (let i = 0; i < layout.lines.length; i++) {
 			const line = layout.lines[i];
 			this.ctx.fillText(line.text, x, baselineY + i * lineHeight);
 		}
 		return {
-			width: layout.width,
-			height: layout.height,
-			lineHeight,
-		};
+      width: layout.width,
+      height: layout.height,
+      lineHeight,
+    };
 	}
 
 	private getTextCaretMetrics(text: string, caretIndex: number, maxWidth: number, fontSize: number, fontFamily: string): { x: number; baselineOffsetY: number } {
-		const layout = this.measureWrappedText(text, maxWidth, fontSize, fontFamily);
-		const line = [...layout.lines].reverse().find(candidate => candidate.startIndex <= caretIndex) ?? layout.lines[0];
-		const safeCaretIndex = Math.min(Math.max(caretIndex, line.startIndex), line.endIndex);
+		const layout = this.measureWrappedText(
+      text,
+      maxWidth,
+      fontSize,
+      fontFamily,
+    );
+		const line = [...layout.lines].reverse().find(
+      candidate => candidate.startIndex <= caretIndex,
+    ) ?? layout.lines[0];
+		const safeCaretIndex = Math.min(
+      Math.max(caretIndex, line.startIndex),
+      line.endIndex,
+    );
 		const beforeCaret = line.text.slice(0, safeCaretIndex - line.startIndex);
 		this.ctx.save();
 		this.ctx.font = `${fontSize}px ${fontFamily}`;
 		const x = this.ctx.measureText(beforeCaret).width;
 		this.ctx.restore();
 		return {
-			x,
-			baselineOffsetY: line.lineIndex * layout.lineHeight,
-		};
+      x,
+      baselineOffsetY: line.lineIndex * layout.lineHeight,
+    };
 	}
 
 	private measureWrappedText(text: string, maxWidth: number, fontSize: number, fontFamily: string): { lines: { text: string; startIndex: number; endIndex: number; lineIndex: number }[]; width: number; height: number; lineHeight: number } {
@@ -1965,7 +2222,7 @@ export class ScreenshotAnnotationEditor {
 		this.ctx.font = `${fontSize}px ${fontFamily}`;
 		const lineHeight = fontSize * 1.2;
 		const lines: { text: string; startIndex: number; endIndex: number; lineIndex: number }[] = [];
-		const paragraphs = text.split('\n');
+		const paragraphs = text.split("\n");
 		let globalIndex = 0;
 		let lineIndex = 0;
 		let maxLineWidth = 0;
@@ -1976,7 +2233,12 @@ export class ScreenshotAnnotationEditor {
 			const paragraphEnd = paragraphStart + paragraph.length;
 
 			if (paragraph.length === 0) {
-				lines.push({ text: '', startIndex: paragraphStart, endIndex: paragraphStart, lineIndex });
+				lines.push({
+          text: "",
+          startIndex: paragraphStart,
+          endIndex: paragraphStart,
+          lineIndex,
+        });
 				lineIndex++;
 			} else {
 				let lineStart = paragraphStart;
@@ -2004,9 +2266,17 @@ export class ScreenshotAnnotationEditor {
 					}
 
 					const rawLineText = text.slice(lineStart, lineEnd);
-					const lineText = rawLineText.replace(/\s+$/u, '');
-					lines.push({ text: lineText, startIndex: lineStart, endIndex: lineEnd, lineIndex });
-					maxLineWidth = Math.max(maxLineWidth, this.ctx.measureText(lineText).width);
+					const lineText = rawLineText.replace(/\s+$/u, "");
+					lines.push({
+            text: lineText,
+            startIndex: lineStart,
+            endIndex: lineEnd,
+            lineIndex,
+          });
+					maxLineWidth = Math.max(
+            maxLineWidth,
+            this.ctx.measureText(lineText).width,
+          );
 					lineIndex++;
 
 					lineStart = lineEnd;
@@ -2020,21 +2290,24 @@ export class ScreenshotAnnotationEditor {
 		}
 
 		if (lines.length === 0) {
-			lines.push({ text: '', startIndex: 0, endIndex: 0, lineIndex: 0 });
+			lines.push({ text: "", startIndex: 0, endIndex: 0, lineIndex: 0 });
 		}
 
 		if (maxLineWidth === 0) {
 			for (const line of lines) {
-				maxLineWidth = Math.max(maxLineWidth, this.ctx.measureText(line.text).width);
+				maxLineWidth = Math.max(
+          maxLineWidth,
+          this.ctx.measureText(line.text).width,
+        );
 			}
 		}
 		this.ctx.restore();
 		return {
-			lines,
-			width: Math.max(maxLineWidth, maxWidth),
-			height: lines.length * lineHeight,
-			lineHeight,
-		};
+      lines,
+      width: Math.max(maxLineWidth, maxWidth),
+      height: lines.length * lineHeight,
+      lineHeight,
+    };
 	}
 
 	private hitTest(pos: { x: number; y: number }): number {
@@ -2052,7 +2325,11 @@ export class ScreenshotAnnotationEditor {
 			case AnnotationTool.Freehand:
 				if (action.points) {
 					for (let i = 1; i < action.points.length; i++) {
-						if (this.pointToSegmentDist(pos, action.points[i - 1], action.points[i]) < threshold) {
+						if (this.pointToSegmentDist(
+              pos,
+              action.points[i - 1],
+              action.points[i],
+            ) < threshold) {
 							return true;
 						}
 					}
@@ -2083,7 +2360,7 @@ export class ScreenshotAnnotationEditor {
 					const dx = (pos.x - cx) / rx;
 					const dy = (pos.y - cy) / ry;
 					const dist = Math.sqrt(dx * dx + dy * dy);
-					if (!this.isTransparent(action.fillColor ?? 'transparent')) {
+					if (!this.isTransparent(action.fillColor ?? "transparent")) {
 						return dist <= 1 + threshold / Math.min(rx, ry);
 					}
 					// Check if point is near the ellipse border (dist around 1)
@@ -2093,7 +2370,11 @@ export class ScreenshotAnnotationEditor {
 				return false;
 			case AnnotationTool.Arrow:
 				if (action.arrowStart && action.arrowEnd) {
-					return this.pointToSegmentDist(pos, action.arrowStart, action.arrowEnd) < threshold;
+					return this.pointToSegmentDist(
+            pos,
+            action.arrowStart,
+            action.arrowEnd,
+          ) < threshold;
 				}
 				return false;
 			case AnnotationTool.Text:
@@ -2169,24 +2450,29 @@ export class ScreenshotAnnotationEditor {
 
 	private drawSelectionHighlight(action: DrawAction): void {
 		this.ctx.save();
-		this.ctx.strokeStyle = '#007acc';
+		this.ctx.strokeStyle = "#007acc";
 		this.ctx.lineWidth = 1;
 		this.ctx.setLineDash([4, 4]);
 		const pad = 6;
 		const bounds = this.getActionBounds(action);
 		if (bounds) {
 			this.ctx.strokeRect(
-				(bounds.x - pad) * this.scale,
-				(bounds.y - pad) * this.scale,
-				(bounds.width + pad * 2) * this.scale,
-				(bounds.height + pad * 2) * this.scale,
-			);
+        (bounds.x - pad) * this.scale,
+        (bounds.y - pad) * this.scale,
+        (bounds.width + pad * 2) * this.scale,
+        (bounds.height + pad * 2) * this.scale,
+      );
 			if (action.type === AnnotationTool.Text) {
 				const handleSize = 8;
 				const handleX = (bounds.x + bounds.width + pad) * this.scale;
 				const handleY = (bounds.y + bounds.height / 2) * this.scale;
-				this.ctx.fillStyle = '#007acc';
-				this.ctx.fillRect(handleX - handleSize / 2, handleY - handleSize / 2, handleSize, handleSize);
+				this.ctx.fillStyle = "#007acc";
+				this.ctx.fillRect(
+          handleX - handleSize / 2,
+          handleY - handleSize / 2,
+          handleSize,
+          handleSize,
+        );
 			}
 		}
 		this.ctx.setLineDash([]);
@@ -2225,22 +2511,22 @@ export class ScreenshotAnnotationEditor {
 				if (action.rect) {
 					const r = action.rect;
 					return {
-						x: Math.min(r.x, r.x + r.width),
-						y: Math.min(r.y, r.y + r.height),
-						width: Math.abs(r.width),
-						height: Math.abs(r.height),
-					};
+            x: Math.min(r.x, r.x + r.width),
+            y: Math.min(r.y, r.y + r.height),
+            width: Math.abs(r.width),
+            height: Math.abs(r.height),
+          };
 				}
 				return null;
 			case AnnotationTool.Ellipse:
 				if (action.ellipseRect) {
 					const er = action.ellipseRect;
 					return {
-						x: Math.min(er.x, er.x + er.width),
-						y: Math.min(er.y, er.y + er.height),
-						width: Math.abs(er.width),
-						height: Math.abs(er.height),
-					};
+            x: Math.min(er.x, er.x + er.width),
+            y: Math.min(er.y, er.y + er.height),
+            width: Math.abs(er.width),
+            height: Math.abs(er.height),
+          };
 				}
 				return null;
 			case AnnotationTool.Arrow:
@@ -2255,15 +2541,20 @@ export class ScreenshotAnnotationEditor {
 			case AnnotationTool.Text:
 				if (action.text && action.textPos) {
 					const fontSize = action.fontSize || 16;
-					const fontFamily = action.fontFamily || 'sans-serif';
+					const fontFamily = action.fontFamily || "sans-serif";
 					const textWidth = action.textWidth ?? DEFAULT_TEXT_BOX_WIDTH;
-					const layout = this.measureWrappedText(action.text, textWidth, fontSize, fontFamily);
+					const layout = this.measureWrappedText(
+            action.text,
+            textWidth,
+            fontSize,
+            fontFamily,
+          );
 					return {
-						x: action.textPos.x,
-						y: action.textPos.y - fontSize,
-						width: textWidth,
-						height: layout.height,
-					};
+            x: action.textPos.x,
+            y: action.textPos.y - fontSize,
+            width: textWidth,
+            height: layout.height,
+          };
 				}
 				return null;
 		}
@@ -2283,7 +2574,10 @@ export class ScreenshotAnnotationEditor {
 		const normalX = -unitY;
 		const normalY = unitX;
 		const lineWidth = this.ctx.lineWidth;
-		const headLength = Math.min(Math.max(12 * this.scale, lineWidth * 3), length);
+		const headLength = Math.min(
+      Math.max(12 * this.scale, lineWidth * 3),
+      length,
+    );
 		const headWidth = Math.max(10 * this.scale, lineWidth * 2.5);
 		const baseX = toX - unitX * headLength;
 		const baseY = toY - unitY * headLength;
@@ -2295,8 +2589,14 @@ export class ScreenshotAnnotationEditor {
 
 		this.ctx.beginPath();
 		this.ctx.moveTo(toX, toY);
-		this.ctx.lineTo(baseX + normalX * headWidth / 2, baseY + normalY * headWidth / 2);
-		this.ctx.lineTo(baseX - normalX * headWidth / 2, baseY - normalY * headWidth / 2);
+		this.ctx.lineTo(
+      baseX + normalX * headWidth / 2,
+      baseY + normalY * headWidth / 2,
+    );
+		this.ctx.lineTo(
+      baseX - normalX * headWidth / 2,
+      baseY - normalY * headWidth / 2,
+    );
 		this.ctx.closePath();
 		this.ctx.fillStyle = this.ctx.strokeStyle;
 		this.ctx.fill();
@@ -2321,8 +2621,14 @@ export class ScreenshotAnnotationEditor {
 		// pivots on the nearest real image pixel.
 		const halfImgW = (this.imageWidth * this.scale) / 2;
 		const halfImgH = (this.imageHeight * this.scale) / 2;
-		const anchorCx = this.panX + Math.max(-halfImgW, Math.min(halfImgW, pending.cx - this.panX));
-		const anchorCy = this.panY + Math.max(-halfImgH, Math.min(halfImgH, pending.cy - this.panY));
+		const anchorCx = this.panX + Math.max(
+      -halfImgW,
+      Math.min(halfImgW, pending.cx - this.panX),
+    );
+		const anchorCy = this.panY + Math.max(
+      -halfImgH,
+      Math.min(halfImgH, pending.cy - this.panY),
+    );
 		const r = newScale / this.scale;
 		this.panX = anchorCx * (1 - r) + this.panX * r;
 		this.panY = anchorCy * (1 - r) + this.panY * r;
@@ -2351,9 +2657,19 @@ export class ScreenshotAnnotationEditor {
 		if (!container || !this.imageWidth || !this.imageHeight) {
 			return 1;
 		}
-		const maxWidth = Math.max(1, container.clientWidth - CANVAS_BREATHING_ROOM * 2);
-		const maxHeight = Math.max(1, container.clientHeight - CANVAS_BREATHING_ROOM * 2);
-		return Math.min(maxWidth / this.imageWidth, maxHeight / this.imageHeight, 1);
+		const maxWidth = Math.max(
+      1,
+      container.clientWidth - CANVAS_BREATHING_ROOM * 2,
+    );
+		const maxHeight = Math.max(
+      1,
+      container.clientHeight - CANVAS_BREATHING_ROOM * 2,
+    );
+		return Math.min(
+      maxWidth / this.imageWidth,
+      maxHeight / this.imageHeight,
+      1,
+    );
 	}
 
 	private clampPan(): void {
@@ -2378,10 +2694,10 @@ export class ScreenshotAnnotationEditor {
 
 	private compositeToDataUrl(): string {
 		// Create a final canvas at full resolution
-		const finalCanvas = mainWindow.document.createElement('canvas');
+		const finalCanvas = mainWindow.document.createElement("canvas");
 		finalCanvas.width = this.imageWidth;
 		finalCanvas.height = this.imageHeight;
-		const ctx = finalCanvas.getContext('2d')!;
+		const ctx = finalCanvas.getContext("2d")!;
 
 		// Draw background image
 		if (this.imageElement) {
@@ -2407,7 +2723,7 @@ export class ScreenshotAnnotationEditor {
 		this.ctx = savedCtx;
 		this.scale = savedScale;
 
-		return finalCanvas.toDataURL('image/png');
+		return finalCanvas.toDataURL("image/png");
 	}
 
 	dispose(): void {

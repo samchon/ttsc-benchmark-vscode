@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { CancellationToken } from '../../../../../../base/common/cancellation.js';
-import { Emitter, Event } from '../../../../../../base/common/event.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../../base/test/common/utils.js';
-import { enumerateLocalCustomizationsForHarness } from '../../../browser/agentSessions/agentHost/agentHostLocalCustomizations.js';
-import { AICustomizationSources, BUILTIN_STORAGE } from '../../../common/aiCustomizationWorkspaceService.js';
-import { type ICustomizationSyncProvider } from '../../../common/customizationHarnessService.js';
-import { PromptsType } from '../../../common/promptSyntax/promptTypes.js';
-import { type IPromptPath, type IPromptsService, PromptsStorage } from '../../../common/promptSyntax/service/promptsService.js';
-import { SessionType } from '../../../common/chatSessionsService.js';
+import assert from "assert";
+import { CancellationToken } from "../../../../../../base/common/cancellation.js";
+import { Emitter, Event } from "../../../../../../base/common/event.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../../base/test/common/utils.js";
+import { enumerateLocalCustomizationsForHarness } from "../../../browser/agentSessions/agentHost/agentHostLocalCustomizations.js";
+import { AICustomizationSources, BUILTIN_STORAGE } from "../../../common/aiCustomizationWorkspaceService.js";
+import { type ICustomizationSyncProvider } from "../../../common/customizationHarnessService.js";
+import { PromptsType } from "../../../common/promptSyntax/promptTypes.js";
+import { type IPromptPath, type IPromptsService, PromptsStorage } from "../../../common/promptSyntax/service/promptsService.js";
+import { SessionType } from "../../../common/chatSessionsService.js";
 
 function makePromptPath(uri: URI, type: PromptsType, storage: PromptsStorage): IPromptPath {
 	return { uri, type, storage } as IPromptPath;
@@ -37,12 +37,12 @@ class FakeSyncProvider implements ICustomizationSyncProvider {
 	setDisabled(): void { /* no-op */ }
 }
 
-suite('enumerateLocalCustomizationsForHarness', () => {
+suite("enumerateLocalCustomizationsForHarness", () => {
 
 	ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('emits built-in skills with BUILTIN_STORAGE even when no other storage source has files', async () => {
-		const builtin = URI.file('/builtin/create-pr/SKILL.md');
+	test("emits built-in skills with BUILTIN_STORAGE even when no other storage source has files", async () => {
+		const builtin = URI.file("/builtin/create-pr/SKILL.md");
 		const promptsService = makePromptsService(new Map([
 			[`${PromptsType.skill}/${BUILTIN_STORAGE}`, [makePromptPath(builtin, PromptsType.skill, BUILTIN_STORAGE as unknown as PromptsStorage)]],
 		]));
@@ -57,9 +57,9 @@ suite('enumerateLocalCustomizationsForHarness', () => {
 		}]);
 	});
 
-	test('combines extension storage entries with built-in skills', async () => {
-		const userAgent = URI.file('/user/agents/foo.agent.md');
-		const builtinSkill = URI.file('/builtin/merge/SKILL.md');
+	test("combines extension storage entries with built-in skills", async () => {
+		const userAgent = URI.file("/user/agents/foo.agent.md");
+		const builtinSkill = URI.file("/builtin/merge/SKILL.md");
 		const promptsService = makePromptsService(new Map([
 			[`${PromptsType.agent}/${PromptsStorage.extension}`, [makePromptPath(userAgent, PromptsType.agent, PromptsStorage.extension)]],
 			[`${PromptsType.skill}/${BUILTIN_STORAGE}`, [makePromptPath(builtinSkill, PromptsType.skill, BUILTIN_STORAGE as unknown as PromptsStorage)]],
@@ -73,8 +73,8 @@ suite('enumerateLocalCustomizationsForHarness', () => {
 		]);
 	});
 
-	test('marks built-in skills disabled when the sync provider says so', async () => {
-		const builtin = URI.file('/builtin/create-pr/SKILL.md');
+	test("marks built-in skills disabled when the sync provider says so", async () => {
+		const builtin = URI.file("/builtin/create-pr/SKILL.md");
 		const promptsService = makePromptsService(new Map([
 			[`${PromptsType.skill}/${BUILTIN_STORAGE}`, [makePromptPath(builtin, PromptsType.skill, BUILTIN_STORAGE as unknown as PromptsStorage)]],
 		]));
@@ -86,7 +86,7 @@ suite('enumerateLocalCustomizationsForHarness', () => {
 		assert.strictEqual(result[0].disabled, true);
 	});
 
-	test('returns empty when the prompts service exposes no built-in skills (regular workbench)', async () => {
+	test("returns empty when the prompts service exposes no built-in skills (regular workbench)", async () => {
 		// The regular workbench's PromptsServiceImpl throws for unknown
 		// storage values like BUILTIN_STORAGE. Model that here so the
 		// try/catch in enumerateLocalCustomizationsForHarness is covered.

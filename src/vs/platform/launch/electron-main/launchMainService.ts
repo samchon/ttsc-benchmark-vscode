@@ -3,23 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { app } from 'electron';
-import { coalesce } from '../../../base/common/arrays.js';
-import { IProcessEnvironment, isMacintosh } from '../../../base/common/platform.js';
-import { URI } from '../../../base/common/uri.js';
-import { whenDeleted } from '../../../base/node/pfs.js';
-import { IConfigurationService } from '../../configuration/common/configuration.js';
-import { NativeParsedArgs } from '../../environment/common/argv.js';
-import { isLaunchedFromCli } from '../../environment/node/argvHelper.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import { ILogService } from '../../log/common/log.js';
-import { IURLService } from '../../url/common/url.js';
-import { ICodeWindow } from '../../window/electron-main/window.js';
-import { IWindowSettings } from '../../window/common/window.js';
-import { IOpenConfiguration, IWindowsMainService, OpenContext } from '../../windows/electron-main/windows.js';
-import { IProtocolUrl } from '../../url/electron-main/url.js';
+import { app } from "electron";
+import { coalesce } from "../../../base/common/arrays.js";
+import { IProcessEnvironment, isMacintosh } from "../../../base/common/platform.js";
+import { URI } from "../../../base/common/uri.js";
+import { whenDeleted } from "../../../base/node/pfs.js";
+import { IConfigurationService } from "../../configuration/common/configuration.js";
+import { NativeParsedArgs } from "../../environment/common/argv.js";
+import { isLaunchedFromCli } from "../../environment/node/argvHelper.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { ILogService } from "../../log/common/log.js";
+import { IURLService } from "../../url/common/url.js";
+import { ICodeWindow } from "../../window/electron-main/window.js";
+import { IWindowSettings } from "../../window/common/window.js";
+import { IOpenConfiguration, IWindowsMainService, OpenContext } from "../../windows/electron-main/windows.js";
+import { IProtocolUrl } from "../../url/electron-main/url.js";
 
-export const ID = 'launchMainService';
+export const ID = "launchMainService";
 export const ILaunchMainService = createDecorator<ILaunchMainService>(ID);
 
 export interface IStartArguments {
@@ -48,7 +48,7 @@ export class LaunchMainService implements ILaunchMainService {
 	) { }
 
 	async start(args: NativeParsedArgs, userEnv: IProcessEnvironment): Promise<void> {
-		this.logService.trace('Received data from other instance: ', args, userEnv);
+		this.logService.trace("Received data from other instance: ", args, userEnv);
 
 		// macOS: Electron > 7.x changed its behaviour to not
 		// bring the application to the foreground when a window
@@ -70,7 +70,9 @@ export class LaunchMainService implements ILaunchMainService {
 
 			// Create a window if there is none
 			if (this.windowsMainService.getWindowCount() === 0) {
-				const window = (await this.windowsMainService.openEmptyWindow({ context: OpenContext.DESKTOP })).at(0);
+				const window = (await this.windowsMainService.openEmptyWindow({ context: OpenContext.DESKTOP })).at(
+          0,
+        );
 				if (window) {
 					whenWindowReady = window.ready();
 				}
@@ -91,7 +93,7 @@ export class LaunchMainService implements ILaunchMainService {
 	}
 
 	private parseOpenUrl(args: NativeParsedArgs): IProtocolUrl[] {
-		if (args['open-url'] && args._urls && args._urls.length > 0) {
+		if (args["open-url"] && args._urls && args._urls.length > 0) {
 
 			// --open-url must contain -- followed by the url(s)
 			// process.argv is used over args._ as args._ are resolved to file paths at this point
@@ -110,11 +112,15 @@ export class LaunchMainService implements ILaunchMainService {
 	}
 
 	private async startOpenWindow(args: NativeParsedArgs, userEnv: IProcessEnvironment): Promise<void> {
-		const context = isLaunchedFromCli(userEnv) ? OpenContext.CLI : OpenContext.DESKTOP;
+		const context = isLaunchedFromCli(
+      userEnv,
+    ) ? OpenContext.CLI : OpenContext.DESKTOP;
 
 		let usedWindows: ICodeWindow[] = [];
 
-		const waitMarkerFileURI = args.wait && args.waitMarkerFilePath ? URI.file(args.waitMarkerFilePath) : undefined;
+		const waitMarkerFileURI = args.wait && args.waitMarkerFilePath ? URI.file(
+      args.waitMarkerFilePath,
+    ) : undefined;
 		const remoteAuthority = args.remote || undefined;
 
 		const baseConfig: IOpenConfiguration = {
@@ -131,46 +137,51 @@ export class LaunchMainService implements ILaunchMainService {
 			 *
 			 * https://github.com/microsoft/vscode/issues/194736
 			 */
-			userEnv: (args['preserve-env'] || context === OpenContext.CLI) ? userEnv : undefined,
+			userEnv: (args["preserve-env"] || context === OpenContext.CLI) ? userEnv : undefined,
 			waitMarkerFileURI,
 			remoteAuthority,
 			forceProfile: args.profile,
-			forceTempProfile: args['profile-temp']
+			forceTempProfile: args["profile-temp"],
 		};
 
 		// Special case extension development
 		if (args.extensionDevelopmentPath) {
-			await this.windowsMainService.openExtensionDevelopmentHostWindow(args.extensionDevelopmentPath, baseConfig);
+			await this.windowsMainService.openExtensionDevelopmentHostWindow(
+        args.extensionDevelopmentPath,
+        baseConfig,
+      );
 		}
 
 		// Agents window
-		else if (args['agents']) {
+		else if (args["agents"]) {
 			usedWindows = await this.windowsMainService.openAgentsWindow(baseConfig);
 		}
 
 		// Start without file/folder arguments
-		else if (!args._.length && !args['folder-uri'] && !args['file-uri']) {
+		else if (!args._.length && !args["folder-uri"] && !args["file-uri"]) {
 			let openNewWindow = false;
 
 			// Force new window
-			if (args['new-window'] || baseConfig.forceProfile || baseConfig.forceTempProfile) {
+			if (args["new-window"] || baseConfig.forceProfile || baseConfig.forceTempProfile) {
 				openNewWindow = true;
 			}
 
 			// Force reuse window
-			else if (args['reuse-window']) {
+			else if (args["reuse-window"]) {
 				openNewWindow = false;
 			}
 
 			// Otherwise check for settings
 			else {
-				const windowConfig = this.configurationService.getValue<IWindowSettings | undefined>('window');
-				const openWithoutArgumentsInNewWindowConfig = windowConfig?.openWithoutArgumentsInNewWindow || 'default' /* default */;
+				const windowConfig = this.configurationService.getValue<IWindowSettings | undefined>(
+          "window",
+        );
+				const openWithoutArgumentsInNewWindowConfig = windowConfig?.openWithoutArgumentsInNewWindow || "default" /* default */;
 				switch (openWithoutArgumentsInNewWindowConfig) {
-					case 'on':
+					case "on":
 						openNewWindow = true;
 						break;
-					case 'off':
+					case "off":
 						openNewWindow = false;
 						break;
 					default:
@@ -181,10 +192,10 @@ export class LaunchMainService implements ILaunchMainService {
 			// Open new Window
 			if (openNewWindow) {
 				usedWindows = await this.windowsMainService.open({
-					...baseConfig,
-					forceNewWindow: true,
-					forceEmpty: true
-				});
+          ...baseConfig,
+          forceNewWindow: true,
+          forceEmpty: true,
+        });
 			}
 
 			// Focus existing window or open if none opened
@@ -196,9 +207,9 @@ export class LaunchMainService implements ILaunchMainService {
 					usedWindows = [lastActive];
 				} else {
 					usedWindows = await this.windowsMainService.open({
-						...baseConfig,
-						forceEmpty: true
-					});
+            ...baseConfig,
+            forceEmpty: true,
+          });
 				}
 			}
 		}
@@ -206,17 +217,17 @@ export class LaunchMainService implements ILaunchMainService {
 		// Start with file/folder arguments
 		else {
 			usedWindows = await this.windowsMainService.open({
-				...baseConfig,
-				forceNewWindow: args['new-window'],
-				preferNewWindow: !args['reuse-window'] && !args.wait,
-				forceReuseWindow: args['reuse-window'],
-				diffMode: args.diff,
-				mergeMode: args.merge,
-				addMode: args.add,
-				removeMode: args.remove,
-				noRecentEntry: !!args['skip-add-to-recently-opened'],
-				gotoLineMode: args.goto
-			});
+        ...baseConfig,
+        forceNewWindow: args["new-window"],
+        preferNewWindow: !args["reuse-window"] && !args.wait,
+        forceReuseWindow: args["reuse-window"],
+        diffMode: args.diff,
+        mergeMode: args.merge,
+        addMode: args.add,
+        removeMode: args.remove,
+        noRecentEntry: !!args["skip-add-to-recently-opened"],
+        gotoLineMode: args.goto,
+      });
 		}
 
 		// If the other instance is waiting to be killed, we hook up a window listener if one window
@@ -225,13 +236,15 @@ export class LaunchMainService implements ILaunchMainService {
 		if (waitMarkerFileURI && usedWindows.length === 1 && usedWindows[0]) {
 			return Promise.race([
 				usedWindows[0].whenClosedOrLoaded,
-				whenDeleted(waitMarkerFileURI.fsPath)
+				whenDeleted(waitMarkerFileURI.fsPath),
 			]).then(() => undefined, () => undefined);
 		}
 	}
 
 	async getMainProcessId(): Promise<number> {
-		this.logService.trace('Received request for process ID from other instance.');
+		this.logService.trace(
+      "Received request for process ID from other instance.",
+    );
 
 		return process.pid;
 	}

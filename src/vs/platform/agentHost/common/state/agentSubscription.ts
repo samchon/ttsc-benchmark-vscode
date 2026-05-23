@@ -3,19 +3,31 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { assertNever } from '../../../../base/common/assert.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable, IReference } from '../../../../base/common/lifecycle.js';
-import { ResourceMap } from '../../../../base/common/map.js';
-import { IObservable, observableFromEvent } from '../../../../base/common/observable.js';
-import { URI } from '../../../../base/common/uri.js';
-import { ActionEnvelope, ChangesetAction, IRootConfigChangedAction, SessionAction, StateAction, isChangesetAction, isSessionAction } from './sessionActions.js';
-import { changesetReducer, rootReducer, sessionReducer } from './sessionReducers.js';
-import { terminalReducer } from './protocol/reducers.js';
-import type { RootAction, SessionAction as IProtocolSessionAction, TerminalAction } from './protocol/action-origin.generated.js';
-import type { ChangesetState, RootState, SessionState, TerminalState } from './protocol/state.js';
-import type { IStateSnapshot } from './sessionProtocol.js';
-import { isAhpRootChannel, ROOT_STATE_URI, StateComponents } from './sessionState.js';
+import { assertNever } from "../../../../base/common/assert.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable, IReference } from "../../../../base/common/lifecycle.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { IObservable, observableFromEvent } from "../../../../base/common/observable.js";
+import { URI } from "../../../../base/common/uri.js";
+import {
+  ActionEnvelope,
+  ChangesetAction,
+  IRootConfigChangedAction,
+  SessionAction,
+  StateAction,
+  isChangesetAction,
+  isSessionAction,
+} from "./sessionActions.js";
+import { changesetReducer, rootReducer, sessionReducer } from "./sessionReducers.js";
+import { terminalReducer } from "./protocol/reducers.js";
+import type {
+  RootAction,
+  SessionAction as IProtocolSessionAction,
+  TerminalAction,
+} from "./protocol/action-origin.generated.js";
+import type { ChangesetState, RootState, SessionState, TerminalState } from "./protocol/state.js";
+import type { IStateSnapshot } from "./sessionProtocol.js";
+import { isAhpRootChannel, ROOT_STATE_URI, StateComponents } from "./sessionState.js";
 
 // --- Public API --------------------------------------------------------------
 
@@ -71,10 +83,14 @@ abstract class BaseAgentSubscription<T> extends Disposable implements IAgentSubs
 	protected readonly _onDidChange = this._register(new Emitter<T>());
 	readonly onDidChange: Event<T> = this._onDidChange.event;
 
-	protected readonly _onWillApplyAction = this._register(new Emitter<ActionEnvelope>());
+	protected readonly _onWillApplyAction = this._register(
+    new Emitter<ActionEnvelope>(),
+  );
 	readonly onWillApplyAction: Event<ActionEnvelope> = this._onWillApplyAction.event;
 
-	protected readonly _onDidApplyAction = this._register(new Emitter<ActionEnvelope>());
+	protected readonly _onDidApplyAction = this._register(
+    new Emitter<ActionEnvelope>(),
+  );
 	readonly onDidApplyAction: Event<ActionEnvelope> = this._onDidApplyAction.event;
 
 	protected readonly _clientId: string;
@@ -173,7 +189,10 @@ abstract class BaseAgentSubscription<T> extends Disposable implements IAgentSubs
 	 * Session subscriptions override this for write-ahead.
 	 */
 	protected _reconcile(envelope: ActionEnvelope, _isOwnAction: boolean): void {
-		this._confirmedState = this._applyReducer(this._confirmedState!, envelope.action);
+		this._confirmedState = this._applyReducer(
+      this._confirmedState!,
+      envelope.action,
+    );
 		this._onDidChange.fire(this.value as T);
 	}
 }
@@ -191,7 +210,9 @@ export class RootStateSubscription extends BaseAgentSubscription<RootState> {
 	}
 
 	protected override _isRelevantEnvelope(envelope: ActionEnvelope): boolean {
-		return isAhpRootChannel(envelope.channel) && envelope.action.type.startsWith('root/');
+		return isAhpRootChannel(
+      envelope.channel,
+    ) && envelope.action.type.startsWith("root/");
 	}
 }
 
@@ -239,7 +260,11 @@ export class SessionStateSubscription extends BaseAgentSubscription<SessionState
 		// Apply on top of current optimistic
 		const base = this._optimisticState ?? this.verifiedValue;
 		if (base) {
-			this._optimisticState = sessionReducer(base, action as IProtocolSessionAction, this._log);
+			this._optimisticState = sessionReducer(
+        base,
+        action as IProtocolSessionAction,
+        this._log,
+      );
 			this._onDidChange.fire(this._optimisticState);
 		}
 		return clientSeq;
@@ -254,7 +279,9 @@ export class SessionStateSubscription extends BaseAgentSubscription<SessionState
 	}
 
 	protected override _isRelevantEnvelope(envelope: ActionEnvelope): boolean {
-		return isSessionAction(envelope.action) && envelope.channel === this._sessionUri;
+		return isSessionAction(
+      envelope.action,
+    ) && envelope.channel === this._sessionUri;
 	}
 
 	protected override _onSnapshotApplied(fromSeq: number): void {
@@ -266,7 +293,9 @@ export class SessionStateSubscription extends BaseAgentSubscription<SessionState
 
 	protected override _reconcile(envelope: ActionEnvelope, isOwnAction: boolean): void {
 		if (isOwnAction && envelope.origin) {
-			const idx = this._pendingActions.findIndex(p => p.clientSeq === envelope.origin!.clientSeq);
+			const idx = this._pendingActions.findIndex(
+        p => p.clientSeq === envelope.origin!.clientSeq,
+      );
 			if (idx !== -1) {
 				if (envelope.rejectionReason) {
 					this._pendingActions.splice(idx, 1);
@@ -304,7 +333,11 @@ export class SessionStateSubscription extends BaseAgentSubscription<SessionState
 
 		let state = confirmed;
 		for (const pending of this._pendingActions) {
-			state = sessionReducer(state, pending.action as IProtocolSessionAction, this._log);
+			state = sessionReducer(
+        state,
+        pending.action as IProtocolSessionAction,
+        this._log,
+      );
 		}
 		this._optimisticState = state;
 		this._onDidChange.fire(state);
@@ -326,7 +359,11 @@ export class SessionStateSubscription extends BaseAgentSubscription<SessionState
 	 * by the server.
 	 */
 	getPendingActions(): IPendingSessionAction[] {
-		return this._pendingActions.map(p => ({ clientSeq: p.clientSeq, action: p.action, sessionUri: this._sessionUri }));
+		return this._pendingActions.map(p => ({
+      clientSeq: p.clientSeq,
+      action: p.action,
+      sessionUri: this._sessionUri,
+    }));
 	}
 
 	/**
@@ -364,7 +401,9 @@ export class TerminalStateSubscription extends BaseAgentSubscription<TerminalSta
 	}
 
 	protected override _isRelevantEnvelope(envelope: ActionEnvelope): boolean {
-		return envelope.action.type.startsWith('terminal/') && envelope.channel === this._terminalUri;
+		return envelope.action.type.startsWith(
+      "terminal/",
+    ) && envelope.channel === this._terminalUri;
 	}
 }
 
@@ -397,7 +436,9 @@ export class ChangesetStateSubscription extends BaseAgentSubscription<ChangesetS
 	}
 
 	protected override _isRelevantEnvelope(envelope: ActionEnvelope): boolean {
-		return isChangesetAction(envelope.action) && envelope.channel === this._changesetUri;
+		return isChangesetAction(
+      envelope.action,
+    ) && envelope.channel === this._changesetUri;
 	}
 }
 
@@ -472,9 +513,9 @@ export class AgentSubscriptionManager extends Disposable {
 		if (existing) {
 			existing.refCount++;
 			return {
-				object: existing.sub,
-				dispose: () => this._releaseSubscription(resource),
-			};
+        object: existing.sub,
+        dispose: () => this._releaseSubscription(resource),
+      };
 		}
 
 		// Create new subscription based on caller-specified kind
@@ -497,9 +538,9 @@ export class AgentSubscriptionManager extends Disposable {
 		});
 
 		return {
-			object: sub,
-			dispose: () => this._releaseSubscription(resource),
-		};
+      object: sub,
+      dispose: () => this._releaseSubscription(resource),
+    };
 	}
 
 	/**
@@ -610,7 +651,11 @@ export class AgentSubscriptionManager extends Disposable {
 				if (entry.sub instanceof SessionStateSubscription) {
 					entry.sub.clearPending();
 				}
-				entry.sub.setError(new Error(`Subscription no longer available after reconnect: ${resource.toString()}`));
+				entry.sub.setError(
+          new Error(
+            `Subscription no longer available after reconnect: ${resource.toString()}`,
+          ),
+        );
 			}
 		}
 	}
@@ -619,15 +664,25 @@ export class AgentSubscriptionManager extends Disposable {
 	private _createSubscription(kind: StateComponents, key: string): BaseAgentSubscription<any> {
 		switch (kind) {
 			case StateComponents.Session:
-				return new SessionStateSubscription(key, this._clientId, this._seqAllocator, this._log);
+				return new SessionStateSubscription(
+          key,
+          this._clientId,
+          this._seqAllocator,
+          this._log,
+        );
 			case StateComponents.Terminal:
 				return new TerminalStateSubscription(key, this._clientId, this._log);
 			case StateComponents.Changeset:
 				return new ChangesetStateSubscription(key, this._clientId, this._log);
 			case StateComponents.Root:
-				throw new Error('_createSubscription: root subscription is managed separately');
+				throw new Error(
+          "_createSubscription: root subscription is managed separately",
+        );
 			default:
-				assertNever(kind, `_createSubscription: unsupported StateComponents kind: ${kind}`);
+				assertNever(
+          kind,
+          `_createSubscription: unsupported StateComponents kind: ${kind}`,
+        );
 		}
 	}
 
@@ -667,7 +722,7 @@ export class AgentSubscriptionManager extends Disposable {
  */
 export function observableFromSubscription<T>(owner: object | undefined, sub: IAgentSubscription<T>): IObservable<T | undefined> {
 	return observableFromEvent(owner, sub.onDidChange, () => {
-		const v = sub.value;
-		return v instanceof Error ? undefined : v;
-	});
+    const v = sub.value;
+    return v instanceof Error ? undefined : v;
+  });
 }

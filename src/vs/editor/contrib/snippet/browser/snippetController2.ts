@@ -3,29 +3,34 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { KeyCode, KeyMod } from '../../../../base/common/keyCodes.js';
-import { DisposableStore, IDisposable } from '../../../../base/common/lifecycle.js';
-import { assertType } from '../../../../base/common/types.js';
-import { ICodeEditor } from '../../../browser/editorBrowser.js';
-import { EditorCommand, EditorContributionInstantiation, registerEditorCommand, registerEditorContribution } from '../../../browser/editorExtensions.js';
-import { Position } from '../../../common/core/position.js';
-import { Range } from '../../../common/core/range.js';
-import { IEditorContribution } from '../../../common/editorCommon.js';
-import { EditorContextKeys } from '../../../common/editorContextKeys.js';
-import { CompletionItem, CompletionItemKind, CompletionItemProvider } from '../../../common/languages.js';
-import { ILanguageConfigurationService } from '../../../common/languages/languageConfigurationRegistry.js';
-import { ITextModel } from '../../../common/model.js';
-import { ILanguageFeaturesService } from '../../../common/services/languageFeatures.js';
-import { Choice } from './snippetParser.js';
-import { showSimpleSuggestions } from '../../suggest/browser/suggest.js';
-import { OvertypingCapturer } from '../../suggest/browser/suggestOvertypingCapturer.js';
-import { localize } from '../../../../nls.js';
-import { ContextKeyExpr, IContextKey, IContextKeyService, RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
-import { KeybindingsRegistry, KeybindingWeight } from '../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { ISnippetEdit, SnippetSession } from './snippetSession.js';
-import { TextModelEditSource } from '../../../common/textModelEditSource.js';
-import { IObservable, observableValue } from '../../../../base/common/observable.js';
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { DisposableStore, IDisposable } from "../../../../base/common/lifecycle.js";
+import { assertType } from "../../../../base/common/types.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import {
+  EditorCommand,
+  EditorContributionInstantiation,
+  registerEditorCommand,
+  registerEditorContribution,
+} from "../../../browser/editorExtensions.js";
+import { Position } from "../../../common/core/position.js";
+import { Range } from "../../../common/core/range.js";
+import { IEditorContribution } from "../../../common/editorCommon.js";
+import { EditorContextKeys } from "../../../common/editorContextKeys.js";
+import { CompletionItem, CompletionItemKind, CompletionItemProvider } from "../../../common/languages.js";
+import { ILanguageConfigurationService } from "../../../common/languages/languageConfigurationRegistry.js";
+import { ITextModel } from "../../../common/model.js";
+import { ILanguageFeaturesService } from "../../../common/services/languageFeatures.js";
+import { Choice } from "./snippetParser.js";
+import { showSimpleSuggestions } from "../../suggest/browser/suggest.js";
+import { OvertypingCapturer } from "../../suggest/browser/suggestOvertypingCapturer.js";
+import { localize } from "../../../../nls.js";
+import { ContextKeyExpr, IContextKey, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { KeybindingsRegistry, KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { ISnippetEdit, SnippetSession } from "./snippetSession.js";
+import { TextModelEditSource } from "../../../common/textModelEditSource.js";
+import { IObservable, observableValue } from "../../../../base/common/observable.js";
 
 export interface ISnippetInsertOptions {
 	overwriteBefore: number;
@@ -39,27 +44,52 @@ export interface ISnippetInsertOptions {
 }
 
 const _defaultOptions: ISnippetInsertOptions = {
-	overwriteBefore: 0,
-	overwriteAfter: 0,
-	undoStopBefore: true,
-	undoStopAfter: true,
-	adjustWhitespace: true,
-	clipboardText: undefined,
-	overtypingCapturer: undefined
+  overwriteBefore: 0,
+  overwriteAfter: 0,
+  undoStopBefore: true,
+  undoStopAfter: true,
+  adjustWhitespace: true,
+  clipboardText: undefined,
+  overtypingCapturer: undefined,
 };
 
 export class SnippetController2 implements IEditorContribution {
 
-	public static readonly ID = 'snippetController2';
+	public static readonly ID = "snippetController2";
 
 	static get(editor: ICodeEditor): SnippetController2 | null {
 		return editor.getContribution<SnippetController2>(SnippetController2.ID);
 	}
 
-	static readonly InSnippetMode = new RawContextKey('inSnippetMode', false, localize('inSnippetMode', "Whether the editor in current in snippet mode"));
-	static readonly HasNextTabstop = new RawContextKey('hasNextTabstop', false, localize('hasNextTabstop', "Whether there is a next tab stop when in snippet mode"));
-	static readonly HasPrevTabstop = new RawContextKey('hasPrevTabstop', false, localize('hasPrevTabstop', "Whether there is a previous tab stop when in snippet mode"));
-	static readonly InSnippetChoice = new RawContextKey('inSnippetChoice', false, localize('inSnippetChoice', "Whether the current snippet tab stop is a choice"));
+	static readonly InSnippetMode = new RawContextKey(
+    "inSnippetMode",
+    false,
+    localize("inSnippetMode", "Whether the editor in current in snippet mode"),
+  );
+	static readonly HasNextTabstop = new RawContextKey(
+    "hasNextTabstop",
+    false,
+    localize(
+      "hasNextTabstop",
+      "Whether there is a next tab stop when in snippet mode",
+    ),
+  );
+	static readonly HasPrevTabstop = new RawContextKey(
+    "hasPrevTabstop",
+    false,
+    localize(
+      "hasPrevTabstop",
+      "Whether there is a previous tab stop when in snippet mode",
+    ),
+  );
+	static readonly InSnippetChoice = new RawContextKey(
+    "inSnippetChoice",
+    false,
+    localize(
+      "inSnippetChoice",
+      "Whether the current snippet tab stop is a choice",
+    ),
+  );
 
 	private readonly _inSnippet: IContextKey<boolean>;
 	private readonly _inSnippetObservable = observableValue(this, false);
@@ -81,10 +111,18 @@ export class SnippetController2 implements IEditorContribution {
 		@IContextKeyService contextKeyService: IContextKeyService,
 		@ILanguageConfigurationService private readonly _languageConfigurationService: ILanguageConfigurationService,
 	) {
-		this._inSnippet = SnippetController2.InSnippetMode.bindTo(contextKeyService);
-		this._hasNextTabstop = SnippetController2.HasNextTabstop.bindTo(contextKeyService);
-		this._hasPrevTabstop = SnippetController2.HasPrevTabstop.bindTo(contextKeyService);
-		this._inSnippetChoice = SnippetController2.InSnippetChoice.bindTo(contextKeyService);
+		this._inSnippet = SnippetController2.InSnippetMode.bindTo(
+      contextKeyService,
+    );
+		this._hasNextTabstop = SnippetController2.HasNextTabstop.bindTo(
+      contextKeyService,
+    );
+		this._hasPrevTabstop = SnippetController2.HasPrevTabstop.bindTo(
+      contextKeyService,
+    );
+		this._inSnippetChoice = SnippetController2.InSnippetChoice.bindTo(
+      contextKeyService,
+    );
 	}
 
 	dispose(): void {
@@ -99,33 +137,45 @@ export class SnippetController2 implements IEditorContribution {
 
 	apply(edits: ISnippetEdit[], opts?: Partial<ISnippetInsertOptions>) {
 		try {
-			this._doInsert(edits, typeof opts === 'undefined' ? _defaultOptions : { ..._defaultOptions, ...opts });
+			this._doInsert(
+        edits,
+        typeof opts === "undefined" ? _defaultOptions : { ..._defaultOptions, ...opts },
+      );
 
 		} catch (e) {
 			this.cancel();
 			this._logService.error(e);
-			this._logService.error('snippet_error');
-			this._logService.error('insert_edits=', edits);
-			this._logService.error('existing_template=', this._session ? this._session._logInfo() : '<no_session>');
+			this._logService.error("snippet_error");
+			this._logService.error("insert_edits=", edits);
+			this._logService.error(
+        "existing_template=",
+        this._session ? this._session._logInfo() : "<no_session>",
+      );
 		}
 	}
 
 	insert(
 		template: string,
-		opts?: Partial<ISnippetInsertOptions>
+		opts?: Partial<ISnippetInsertOptions>,
 	): void {
 		// this is here to find out more about the yet-not-understood
 		// error that sometimes happens when we fail to inserted a nested
 		// snippet
 		try {
-			this._doInsert(template, typeof opts === 'undefined' ? _defaultOptions : { ..._defaultOptions, ...opts });
+			this._doInsert(
+        template,
+        typeof opts === "undefined" ? _defaultOptions : { ..._defaultOptions, ...opts },
+      );
 
 		} catch (e) {
 			this.cancel();
 			this._logService.error(e);
-			this._logService.error('snippet_error');
-			this._logService.error('insert_template=', template);
-			this._logService.error('existing_template=', this._session ? this._session._logInfo() : '<no_session>');
+			this._logService.error("snippet_error");
+			this._logService.error("insert_template=", template);
+			this._logService.error(
+        "existing_template=",
+        this._session ? this._session._logInfo() : "<no_session>",
+      );
 		}
 	}
 
@@ -146,16 +196,21 @@ export class SnippetController2 implements IEditorContribution {
 		}
 
 		// don't merge
-		if (this._session && typeof template !== 'string') {
+		if (this._session && typeof template !== "string") {
 			this.cancel();
 		}
 
 		if (!this._session) {
 			this._modelVersionId = this._editor.getModel().getAlternativeVersionId();
-			this._session = new SnippetSession(this._editor, template, opts, this._languageConfigurationService);
+			this._session = new SnippetSession(
+        this._editor,
+        template,
+        opts,
+        this._languageConfigurationService,
+      );
 			this._session.insert(opts.reason);
 		} else {
-			assertType(typeof template === 'string');
+			assertType(typeof template === "string");
 			this._session.merge(template, opts);
 		}
 
@@ -166,7 +221,7 @@ export class SnippetController2 implements IEditorContribution {
 		// regster completion item provider when there is any choice element
 		if (this._session?.hasChoice) {
 			const provider: CompletionItemProvider = {
-				_debugDisplayName: 'snippetChoiceCompletions',
+				_debugDisplayName: "snippetChoiceCompletions",
 				provideCompletionItems: (model: ITextModel, position: Position) => {
 					if (!this._session || model !== this._editor.getModel() || !Position.equals(this._editor.getPosition(), position)) {
 						return undefined;
@@ -185,14 +240,14 @@ export class SnippetController2 implements IEditorContribution {
 							kind: CompletionItemKind.Value,
 							label: option.value,
 							insertText: option.value,
-							sortText: 'a'.repeat(i + 1),
+							sortText: "a".repeat(i + 1),
 							range: activeChoice.range,
 							filterText: isAnyOfOptions ? `${word}_${option.value}` : undefined,
-							command: { id: 'jumpToNextSnippetPlaceholder', title: localize('next', 'Go to next placeholder...') }
+							command: { id: "jumpToNextSnippetPlaceholder", title: localize("next", "Go to next placeholder...") },
 						});
 					}
 					return { suggestions };
-				}
+				},
 			};
 
 			const model = this._editor.getModel();
@@ -206,12 +261,15 @@ export class SnippetController2 implements IEditorContribution {
 
 			const enable = () => {
 				if (!isRegistered) {
-					registration = this._languageFeaturesService.completionProvider.register({
-						language: model.getLanguageId(),
-						pattern: model.uri.fsPath,
-						scheme: model.uri.scheme,
-						exclusive: true
-					}, provider);
+					registration = this._languageFeaturesService.completionProvider.register(
+            {
+              language: model.getLanguageId(),
+              pattern: model.uri.fsPath,
+              scheme: model.uri.scheme,
+              exclusive: true,
+            },
+            provider,
+          );
 					this._snippetListener.add(registration);
 					isRegistered = true;
 				}
@@ -222,9 +280,15 @@ export class SnippetController2 implements IEditorContribution {
 
 		this._updateState();
 
-		this._snippetListener.add(this._editor.onDidChangeModelContent(e => e.isFlush && this.cancel()));
-		this._snippetListener.add(this._editor.onDidChangeModel(() => this.cancel()));
-		this._snippetListener.add(this._editor.onDidChangeCursorSelection(() => this._updateState()));
+		this._snippetListener.add(
+      this._editor.onDidChangeModelContent(e => e.isFlush && this.cancel()),
+    );
+		this._snippetListener.add(
+      this._editor.onDidChangeModel(() => this.cancel()),
+    );
+		this._snippetListener.add(
+      this._editor.onDidChangeCursorSelection(() => this._updateState()),
+    );
 	}
 
 	private _updateState(): void {
@@ -282,8 +346,8 @@ export class SnippetController2 implements IEditorContribution {
 
 			// trigger suggest with the special choice completion provider
 			queueMicrotask(() => {
-				showSimpleSuggestions(this._editor, this._choiceCompletions!.provider);
-			});
+        showSimpleSuggestions(this._editor, this._choiceCompletions!.provider);
+      });
 		}
 	}
 
@@ -341,61 +405,64 @@ export class SnippetController2 implements IEditorContribution {
 }
 
 
-registerEditorContribution(SnippetController2.ID, SnippetController2, EditorContributionInstantiation.Lazy);
+registerEditorContribution(
+  SnippetController2.ID,
+  SnippetController2,
+  EditorContributionInstantiation.Lazy,
+);
 
-const CommandCtor = EditorCommand.bindToContribution<SnippetController2>(SnippetController2.get);
+const CommandCtor = EditorCommand.bindToContribution<SnippetController2>(
+  SnippetController2.get,
+);
 
 registerEditorCommand(new CommandCtor({
-	id: 'jumpToNextSnippetPlaceholder',
+	id: "jumpToNextSnippetPlaceholder",
 	precondition: ContextKeyExpr.and(SnippetController2.InSnippetMode, SnippetController2.HasNextTabstop),
 	handler: ctrl => ctrl.next(),
 	kbOpts: {
 		weight: KeybindingWeight.EditorContrib + 30,
 		kbExpr: EditorContextKeys.textInputFocus,
-		primary: KeyCode.Tab
-	}
+		primary: KeyCode.Tab,
+	},
 }));
 
 registerEditorCommand(new CommandCtor({
-	id: 'jumpToPrevSnippetPlaceholder',
+	id: "jumpToPrevSnippetPlaceholder",
 	precondition: ContextKeyExpr.and(SnippetController2.InSnippetMode, SnippetController2.HasPrevTabstop),
 	handler: ctrl => ctrl.prev(),
 	kbOpts: {
 		weight: KeybindingWeight.EditorContrib + 30,
 		kbExpr: EditorContextKeys.textInputFocus,
-		primary: KeyMod.Shift | KeyCode.Tab
-	}
+		primary: KeyMod.Shift | KeyCode.Tab,
+	},
 }));
 
 // When a snippet choice is active, the suggest widget is shown and would normally
 // claim Shift+Tab for `acceptAlternativeSelectedSuggestion`. Register a higher-weight
 // rule so Shift+Tab navigates to the previous snippet placeholder instead. See #236489.
 KeybindingsRegistry.registerKeybindingRule({
-	id: 'jumpToPrevSnippetPlaceholder',
-	weight: KeybindingWeight.EditorContrib + 91,
-	when: ContextKeyExpr.and(SnippetController2.InSnippetMode, SnippetController2.HasPrevTabstop, SnippetController2.InSnippetChoice, EditorContextKeys.textInputFocus),
-	primary: KeyMod.Shift | KeyCode.Tab
+  id: "jumpToPrevSnippetPlaceholder",
+  weight: KeybindingWeight.EditorContrib + 91,
+  when: ContextKeyExpr.and(SnippetController2.InSnippetMode, SnippetController2.HasPrevTabstop, SnippetController2.InSnippetChoice, EditorContextKeys.textInputFocus),
+  primary: KeyMod.Shift | KeyCode.Tab,
 });
 
 registerEditorCommand(new CommandCtor({
-	id: 'leaveSnippet',
+	id: "leaveSnippet",
 	precondition: SnippetController2.InSnippetMode,
 	handler: ctrl => ctrl.cancel(true),
 	kbOpts: {
 		weight: KeybindingWeight.EditorContrib + 30,
 		kbExpr: EditorContextKeys.textInputFocus,
 		primary: KeyCode.Escape,
-		secondary: [KeyMod.Shift | KeyCode.Escape]
-	}
+		secondary: [KeyMod.Shift | KeyCode.Escape],
+	},
 }));
 
-registerEditorCommand(new CommandCtor({
-	id: 'acceptSnippet',
-	precondition: SnippetController2.InSnippetMode,
-	handler: ctrl => ctrl.finish(),
-	// kbOpts: {
-	// 	weight: KeybindingWeight.EditorContrib + 30,
-	// 	kbExpr: EditorContextKeys.textFocus,
-	// 	primary: KeyCode.Enter,
-	// }
-}));
+registerEditorCommand(
+  new CommandCtor({
+    id: "acceptSnippet",
+    precondition: SnippetController2.InSnippetMode,
+    handler: ctrl => ctrl.finish(),
+  }),
+);

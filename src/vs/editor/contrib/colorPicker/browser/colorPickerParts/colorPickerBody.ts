@@ -2,15 +2,15 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import '../colorPicker.css';
-import * as dom from '../../../../../base/browser/dom.js';
-import { Color, HSVA } from '../../../../../base/common/color.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { ColorPickerModel } from '../colorPickerModel.js';
-import { SaturationBox } from './colorPickerSaturationBox.js';
-import { InsertButton } from './colorPickerInsertButton.js';
-import { HueStrip, OpacityStrip, Strip } from './colorPickerStrip.js';
-import { ColorPickerWidgetType } from '../colorPickerParticipantUtils.js';
+import "../colorPicker.css";
+import * as dom from "../../../../../base/browser/dom.js";
+import { Color, HSVA } from "../../../../../base/common/color.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { ColorPickerModel } from "../colorPickerModel.js";
+import { SaturationBox } from "./colorPickerSaturationBox.js";
+import { InsertButton } from "./colorPickerInsertButton.js";
+import { HueStrip, OpacityStrip, Strip } from "./colorPickerStrip.js";
+import { ColorPickerWidgetType } from "../colorPickerParticipantUtils.js";
 
 const $ = dom.$;
 
@@ -25,17 +25,25 @@ export class ColorPickerBody extends Disposable {
 	constructor(container: HTMLElement, private readonly model: ColorPickerModel, private pixelRatio: number, type: ColorPickerWidgetType) {
 		super();
 
-		this._domNode = $('.colorpicker-body');
+		this._domNode = $(".colorpicker-body");
 		dom.append(container, this._domNode);
 
-		this._saturationBox = new SaturationBox(this._domNode, this.model, this.pixelRatio);
+		this._saturationBox = new SaturationBox(
+      this._domNode,
+      this.model,
+      this.pixelRatio,
+    );
 		this._register(this._saturationBox);
-		this._register(this._saturationBox.onDidChange(this.onDidSaturationValueChange, this));
+		this._register(
+      this._saturationBox.onDidChange(this.onDidSaturationValueChange, this),
+    );
 		this._register(this._saturationBox.onColorFlushed(this.flushColor, this));
 
 		this._opacityStrip = new OpacityStrip(this._domNode, this.model, type);
 		this._register(this._opacityStrip);
-		this._register(this._opacityStrip.onDidChange(this.onDidOpacityChange, this));
+		this._register(
+      this._opacityStrip.onDidChange(this.onDidOpacityChange, this),
+    );
 		this._register(this._opacityStrip.onColorFlushed(this.flushColor, this));
 
 		this._hueStrip = new HueStrip(this._domNode, this.model, type);
@@ -45,7 +53,7 @@ export class ColorPickerBody extends Disposable {
 
 		if (type === ColorPickerWidgetType.Standalone) {
 			this._insertButton = this._register(new InsertButton(this._domNode));
-			this._domNode.classList.add('standalone-colorpicker');
+			this._domNode.classList.add("standalone-colorpicker");
 		}
 	}
 
@@ -67,7 +75,9 @@ export class ColorPickerBody extends Disposable {
 		const hsva = this.model.color.hsva;
 		const h = (1 - value) * 360;
 
-		this.model.color = new Color(new HSVA(h === 360 ? 0 : h, hsva.s, hsva.v, hsva.a));
+		this.model.color = new Color(
+      new HSVA(h === 360 ? 0 : h, hsva.s, hsva.v, hsva.a),
+    );
 	}
 
 	get domNode() {

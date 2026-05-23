@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { MaybePromise } from '../../../../../../../base/common/async.js';
-import type { OperatingSystem } from '../../../../../../../base/common/platform.js';
+import type { MaybePromise } from "../../../../../../../base/common/async.js";
+import type { OperatingSystem } from "../../../../../../../base/common/platform.js";
 
 export interface ICommandLinePresenter {
 	/**

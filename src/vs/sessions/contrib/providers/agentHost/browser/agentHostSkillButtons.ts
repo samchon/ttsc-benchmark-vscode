@@ -3,24 +3,33 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../../base/common/cancellation.js';
-import { Codicon } from '../../../../../base/common/codicons.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { localize2 } from '../../../../../nls.js';
-import { ILocalizedString } from '../../../../../platform/action/common/action.js';
-import { Action2, MenuId, registerAction2 } from '../../../../../platform/actions/common/actions.js';
-import { ContextKeyExpr, ContextKeyExpression, IContextKeyService, RawContextKey } from '../../../../../platform/contextkey/common/contextkey.js';
-import { ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
-import { bindContextKey } from '../../../../../platform/observable/common/platformObservableUtils.js';
-import { IsSessionsWindowContext } from '../../../../../workbench/common/contextkeys.js';
-import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../../../workbench/common/contributions.js';
-import { ChatSendResult, IChatService } from '../../../../../workbench/contrib/chat/common/chatService/chatService.js';
-import { ChatAgentLocation } from '../../../../../workbench/contrib/chat/common/constants.js';
-import { ISessionsProvidersService } from '../../../../services/sessions/browser/sessionsProvidersService.js';
-import { ISessionsManagementService } from '../../../../services/sessions/common/sessionsManagement.js';
-import { ActiveSessionContextKeys, IsolationMode } from '../../../changes/common/changes.js';
-import { BaseAgentHostSessionsProvider } from './baseAgentHostSessionsProvider.js';
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { localize2 } from "../../../../../nls.js";
+import { ILocalizedString } from "../../../../../platform/action/common/action.js";
+import { Action2, MenuId, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import {
+  ContextKeyExpr,
+  ContextKeyExpression,
+  IContextKeyService,
+  RawContextKey,
+} from "../../../../../platform/contextkey/common/contextkey.js";
+import { ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
+import { bindContextKey } from "../../../../../platform/observable/common/platformObservableUtils.js";
+import { IsSessionsWindowContext } from "../../../../../workbench/common/contextkeys.js";
+import {
+  IWorkbenchContribution,
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../../../../workbench/common/contributions.js";
+import { ChatSendResult, IChatService } from "../../../../../workbench/contrib/chat/common/chatService/chatService.js";
+import { ChatAgentLocation } from "../../../../../workbench/contrib/chat/common/constants.js";
+import { ISessionsProvidersService } from "../../../../services/sessions/browser/sessionsProvidersService.js";
+import { ISessionsManagementService } from "../../../../services/sessions/common/sessionsManagement.js";
+import { ActiveSessionContextKeys, IsolationMode } from "../../../changes/common/changes.js";
+import { BaseAgentHostSessionsProvider } from "./baseAgentHostSessionsProvider.js";
 
 /**
  * True when the active session (in the Sessions window) is provided by an
@@ -28,7 +37,10 @@ import { BaseAgentHostSessionsProvider } from './baseAgentHostSessionsProvider.j
  * skill toolbar buttons and to suppress the Copilot CLI extension's own
  * buttons for the same sessions.
  */
-export const IsAgentHostSession = new RawContextKey<boolean>('sessions.isAgentHostSession', false);
+export const IsAgentHostSession = new RawContextKey<boolean>(
+  "sessions.isAgentHostSession",
+  false,
+);
 
 /**
  * Binds {@link IsAgentHostSession} to the global context key service based on
@@ -37,7 +49,7 @@ export const IsAgentHostSession = new RawContextKey<boolean>('sessions.isAgentHo
  */
 export class IsAgentHostSessionContextContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'sessions.contrib.agentHost.isAgentHostSession';
+	static readonly ID = "sessions.contrib.agentHost.isAgentHostSession";
 
 	constructor(
 		@IContextKeyService contextKeyService: IContextKeyService,
@@ -57,7 +69,11 @@ export class IsAgentHostSessionContextContribution extends Disposable implements
 	}
 }
 
-registerWorkbenchContribution2(IsAgentHostSessionContextContribution.ID, IsAgentHostSessionContextContribution, WorkbenchPhase.AfterRestored);
+registerWorkbenchContribution2(
+  IsAgentHostSessionContextContribution.ID,
+  IsAgentHostSessionContextContribution,
+  WorkbenchPhase.AfterRestored,
+);
 
 /**
  * Toolbar buttons in the changes view that drive the built-in agent-host skills
@@ -81,15 +97,15 @@ interface IAgentHostSkillButtonSpec {
 	readonly extraWhen: ContextKeyExpression | undefined;
 }
 
-const AGENT_HOST_SKILL_BUTTON_ID_PREFIX = 'workbench.action.agentSessions.runSkill.';
+const AGENT_HOST_SKILL_BUTTON_ID_PREFIX = "workbench.action.agentSessions.runSkill.";
 
 const AGENT_HOST_SKILL_BUTTONS: readonly IAgentHostSkillButtonSpec[] = [
 	{
 		id: `${AGENT_HOST_SKILL_BUTTON_ID_PREFIX}merge`,
-		title: localize2('agentSessions.runSkill.merge', "Merge Changes"),
-		skill: 'merge',
+		title: localize2("agentSessions.runSkill.merge", "Merge Changes"),
+		skill: "merge",
 		icon: Codicon.gitMerge,
-		group: 'merge',
+		group: "merge",
 		order: 1,
 		extraWhen: ContextKeyExpr.and(
 			ActiveSessionContextKeys.IsolationMode.isEqualTo(IsolationMode.Worktree),
@@ -100,10 +116,10 @@ const AGENT_HOST_SKILL_BUTTONS: readonly IAgentHostSkillButtonSpec[] = [
 	},
 	{
 		id: `${AGENT_HOST_SKILL_BUTTON_ID_PREFIX}createPR`,
-		title: localize2('agentSessions.runSkill.createPR', "Create Pull Request"),
-		skill: 'create-pr',
+		title: localize2("agentSessions.runSkill.createPR", "Create Pull Request"),
+		skill: "create-pr",
 		icon: Codicon.gitPullRequestCreate,
-		group: 'pull_request',
+		group: "pull_request",
 		order: 1,
 		extraWhen: ContextKeyExpr.and(
 			ActiveSessionContextKeys.IsolationMode.isEqualTo(IsolationMode.Worktree),
@@ -114,10 +130,10 @@ const AGENT_HOST_SKILL_BUTTONS: readonly IAgentHostSkillButtonSpec[] = [
 	},
 	{
 		id: `${AGENT_HOST_SKILL_BUTTON_ID_PREFIX}createDraftPR`,
-		title: localize2('agentSessions.runSkill.createDraftPR', "Create Draft Pull Request"),
-		skill: 'create-draft-pr',
+		title: localize2("agentSessions.runSkill.createDraftPR", "Create Draft Pull Request"),
+		skill: "create-draft-pr",
 		icon: Codicon.gitPullRequestDraft,
-		group: 'pull_request',
+		group: "pull_request",
 		order: 2,
 		extraWhen: ContextKeyExpr.and(
 			ActiveSessionContextKeys.IsolationMode.isEqualTo(IsolationMode.Worktree),
@@ -128,10 +144,10 @@ const AGENT_HOST_SKILL_BUTTONS: readonly IAgentHostSkillButtonSpec[] = [
 	},
 	{
 		id: `${AGENT_HOST_SKILL_BUTTON_ID_PREFIX}updatePR`,
-		title: localize2('agentSessions.runSkill.updatePR', "Sync Pull Request"),
-		skill: 'update-pr',
+		title: localize2("agentSessions.runSkill.updatePR", "Sync Pull Request"),
+		skill: "update-pr",
 		icon: Codicon.repoPush,
-		group: 'pull_request',
+		group: "pull_request",
 		order: 1,
 		extraWhen: ContextKeyExpr.and(
 			ActiveSessionContextKeys.IsolationMode.isEqualTo(IsolationMode.Worktree),
@@ -202,7 +218,7 @@ function registerAgentHostSkillButton(spec: IAgentHostSkillButtonSpec): void {
 			// agent-host providers, so it is NOT a valid agent id here.
 			const agentId = activeSession.resource.scheme;
 			const prompt = `/${spec.skill}`;
-			const ref = await chatService.acquireOrLoadSession(activeSession.resource, ChatAgentLocation.Chat, CancellationToken.None, 'AgentHostSkillButton');
+			const ref = await chatService.acquireOrLoadSession(activeSession.resource, ChatAgentLocation.Chat, CancellationToken.None, "AgentHostSkillButton");
 			try {
 				let result = await chatService.sendRequest(activeSession.resource, prompt, { agentIdSilent: agentId });
 				if (ChatSendResult.isQueued(result)) {

@@ -3,26 +3,34 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IMcpGalleryManifest, IMcpGalleryManifestService, McpGalleryManifestStatus } from '../../../../platform/mcp/common/mcpGalleryManifest.js';
-import { McpGalleryManifestService } from '../../../../platform/mcp/common/mcpGalleryManifestService.js';
-import { IProductService } from '../../../../platform/product/common/productService.js';
-import { IRemoteAgentService } from '../../remote/common/remoteAgentService.js';
-import { IRequestService } from '../../../../platform/request/common/request.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { Emitter } from '../../../../base/common/event.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IMcpGalleryConfig, mcpGalleryServiceUrlConfig } from '../../../../platform/mcp/common/mcpManagement.js';
+import {
+  IMcpGalleryManifest,
+  IMcpGalleryManifestService,
+  McpGalleryManifestStatus,
+} from "../../../../platform/mcp/common/mcpGalleryManifest.js";
+import { McpGalleryManifestService } from "../../../../platform/mcp/common/mcpGalleryManifestService.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IRemoteAgentService } from "../../remote/common/remoteAgentService.js";
+import { IRequestService } from "../../../../platform/request/common/request.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IMcpGalleryConfig, mcpGalleryServiceUrlConfig } from "../../../../platform/mcp/common/mcpManagement.js";
 
 export class WorkbenchMcpGalleryManifestService extends McpGalleryManifestService implements IMcpGalleryManifestService {
 
 	private mcpGalleryManifest: IMcpGalleryManifest | null = null;
 
-	private _onDidChangeMcpGalleryManifest = this._register(new Emitter<IMcpGalleryManifest | null>());
+	private _onDidChangeMcpGalleryManifest = this._register(
+    new Emitter<IMcpGalleryManifest | null>(),
+  );
 	override readonly onDidChangeMcpGalleryManifest = this._onDidChangeMcpGalleryManifest.event;
 
 	private currentStatus: McpGalleryManifestStatus = McpGalleryManifestStatus.Unavailable;
 	override get mcpGalleryManifestStatus(): McpGalleryManifestStatus { return this.currentStatus; }
-	private _onDidChangeMcpGalleryManifestStatus = this._register(new Emitter<McpGalleryManifestStatus>());
+	private _onDidChangeMcpGalleryManifestStatus = this._register(
+    new Emitter<McpGalleryManifestStatus>(),
+  );
 	override readonly onDidChangeMcpGalleryManifestStatus = this._onDidChangeMcpGalleryManifestStatus.event;
 
 	constructor(
@@ -35,11 +43,15 @@ export class WorkbenchMcpGalleryManifestService extends McpGalleryManifestServic
 		super(productService, requestService, logService);
 		const remoteConnection = remoteAgentService.getConnection();
 		if (remoteConnection) {
-			const channel = remoteConnection.getChannel('mcpGalleryManifest');
+			const channel = remoteConnection.getChannel("mcpGalleryManifest");
 			this.getMcpGalleryManifest().then(manifest => {
-				channel.call('setMcpGalleryManifest', [manifest]);
-				this._register(this.onDidChangeMcpGalleryManifest(manifest => channel.call('setMcpGalleryManifest', [manifest])));
-			});
+        channel.call("setMcpGalleryManifest", [manifest]);
+        this._register(
+          this.onDidChangeMcpGalleryManifest(
+            manifest => channel.call("setMcpGalleryManifest", [manifest]),
+          ),
+        );
+      });
 		}
 	}
 
@@ -56,16 +68,20 @@ export class WorkbenchMcpGalleryManifestService extends McpGalleryManifestServic
 		await this.getAndUpdateMcpGalleryManifest();
 
 		this._register(this.configurationService.onDidChangeConfiguration(e => {
-			if (e.affectsConfiguration(mcpGalleryServiceUrlConfig) || e.affectsConfiguration('chat.mcp.gallery.version')) {
+			if (e.affectsConfiguration(mcpGalleryServiceUrlConfig) || e.affectsConfiguration("chat.mcp.gallery.version")) {
 				this.getAndUpdateMcpGalleryManifest();
 			}
 		}));
 	}
 
 	private async getAndUpdateMcpGalleryManifest(): Promise<void> {
-		const mcpGalleryConfig = this.configurationService.getValue<IMcpGalleryConfig | undefined>('chat.mcp.gallery');
+		const mcpGalleryConfig = this.configurationService.getValue<IMcpGalleryConfig | undefined>(
+      "chat.mcp.gallery",
+    );
 		if (mcpGalleryConfig?.serviceUrl) {
-			this.update(await this.createMcpGalleryManifest(mcpGalleryConfig.serviceUrl, mcpGalleryConfig.version));
+			this.update(
+        await this.createMcpGalleryManifest(mcpGalleryConfig.serviceUrl, mcpGalleryConfig.version),
+      );
 		} else {
 			this.update(await super.getMcpGalleryManifest());
 		}
@@ -78,9 +94,12 @@ export class WorkbenchMcpGalleryManifestService extends McpGalleryManifestServic
 
 		this.mcpGalleryManifest = manifest;
 		if (this.mcpGalleryManifest) {
-			this.logService.trace('MCP Registry configured:', this.mcpGalleryManifest.url);
+			this.logService.trace(
+        "MCP Registry configured:",
+        this.mcpGalleryManifest.url,
+      );
 		} else {
-			this.logService.trace('No MCP Registry configured');
+			this.logService.trace("No MCP Registry configured");
 		}
 		this.currentStatus = this.mcpGalleryManifest ? McpGalleryManifestStatus.Available : McpGalleryManifestStatus.Unavailable;
 		this._onDidChangeMcpGalleryManifest.fire(this.mcpGalleryManifest);

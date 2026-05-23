@@ -3,26 +3,26 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { binarySearch2, equals } from '../../../../base/common/arrays.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { DisposableStore, IDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { LinkedList } from '../../../../base/common/linkedList.js';
-import { compare } from '../../../../base/common/strings.js';
-import { URI } from '../../../../base/common/uri.js';
-import { Position } from '../../../common/core/position.js';
-import { Range } from '../../../common/core/range.js';
-import { ITextModel } from '../../../common/model.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { IMarker, IMarkerService, MarkerSeverity } from '../../../../platform/markers/common/markers.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { isEqual } from '../../../../base/common/resources.js';
+import { binarySearch2, equals } from "../../../../base/common/arrays.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { DisposableStore, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { LinkedList } from "../../../../base/common/linkedList.js";
+import { compare } from "../../../../base/common/strings.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Position } from "../../../common/core/position.js";
+import { Range } from "../../../common/core/range.js";
+import { ITextModel } from "../../../common/model.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IMarker, IMarkerService, MarkerSeverity } from "../../../../platform/markers/common/markers.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { isEqual } from "../../../../base/common/resources.js";
 
 export class MarkerCoordinate {
 	constructor(
 		readonly marker: IMarker,
 		readonly index: number,
-		readonly total: number
+		readonly total: number,
 	) { }
 }
 
@@ -48,14 +48,19 @@ export class MarkerList {
 			this._resourceFilter = resourceFilter;
 		}
 
-		const compareOrder = this._configService.getValue<string>('problems.sortOrder');
+		const compareOrder = this._configService.getValue<string>(
+      "problems.sortOrder",
+    );
 		const compareMarker = (a: IMarker, b: IMarker): number => {
 			let res = compare(a.resource.toString(), b.resource.toString());
 			if (res === 0) {
-				if (compareOrder === 'position') {
+				if (compareOrder === "position") {
 					res = Range.compareRangesUsingStarts(a, b) || MarkerSeverity.compare(a.severity, b.severity);
 				} else {
-					res = MarkerSeverity.compare(a.severity, b.severity) || Range.compareRangesUsingStarts(a, b);
+					res = MarkerSeverity.compare(
+            a.severity,
+            b.severity,
+          ) || Range.compareRangesUsingStarts(a, b);
 				}
 			}
 			return res;
@@ -63,10 +68,10 @@ export class MarkerList {
 
 		const updateMarker = () => {
 			let newMarkers = this._markerService.read({
-				resource: URI.isUri(resourceFilter) ? resourceFilter : undefined,
-				severities: MarkerSeverity.Error | MarkerSeverity.Warning | MarkerSeverity.Info
-			});
-			if (typeof resourceFilter === 'function') {
+        resource: URI.isUri(resourceFilter) ? resourceFilter : undefined,
+        severities: MarkerSeverity.Error | MarkerSeverity.Warning | MarkerSeverity.Info,
+      });
+			if (typeof resourceFilter === "function") {
 				newMarkers = newMarkers.filter(m => this._resourceFilter!(m.resource));
 			}
 			newMarkers.sort(compareMarker);
@@ -78,7 +83,7 @@ export class MarkerList {
 				&& a.endLineNumber === b.endLineNumber
 				&& a.endColumn === b.endColumn
 				&& a.severity === b.severity
-				&& a.message === b.message
+				&& a.message === b.message,
 			)) {
 				return false;
 			}
@@ -116,15 +121,27 @@ export class MarkerList {
 
 	get selected(): MarkerCoordinate | undefined {
 		const marker = this._markers[this._nextIdx];
-		return marker && new MarkerCoordinate(marker, this._nextIdx + 1, this._markers.length);
+		return marker && new MarkerCoordinate(
+      marker,
+      this._nextIdx + 1,
+      this._markers.length,
+    );
 	}
 
 	private _initIdx(model: ITextModel, position: Position, fwd: boolean): void {
 
-		let idx = this._markers.findIndex(marker => isEqual(marker.resource, model.uri));
+		let idx = this._markers.findIndex(
+      marker => isEqual(marker.resource, model.uri),
+    );
 		if (idx < 0) {
 			// ignore model, position because this will be a different file
-			idx = binarySearch2(this._markers.length, idx => compare(this._markers[idx].resource.toString(), model.uri.toString()));
+			idx = binarySearch2(
+        this._markers.length,
+        idx => compare(
+          this._markers[idx].resource.toString(),
+          model.uri.toString(),
+        ),
+      );
 			if (idx < 0) {
 				idx = ~idx;
 			}
@@ -143,11 +160,18 @@ export class MarkerList {
 				if (range.isEmpty()) {
 					const word = model.getWordAtPosition(range.getStartPosition());
 					if (word) {
-						range = new Range(range.startLineNumber, word.startColumn, range.startLineNumber, word.endColumn);
+						range = new Range(
+              range.startLineNumber,
+              word.startColumn,
+              range.startLineNumber,
+              word.endColumn,
+            );
 					}
 				}
 
-				if (position && (range.containsPosition(position) || position.isBeforeOrEqual(range.getStartPosition()))) {
+				if (position && (range.containsPosition(
+          position,
+        ) || position.isBeforeOrEqual(range.getStartPosition()))) {
 					this._nextIdx = i;
 					found = true;
 					wentPast = !range.containsPosition(position);
@@ -198,20 +222,28 @@ export class MarkerList {
 	}
 
 	find(uri: URI, position: Position): MarkerCoordinate | undefined {
-		let idx = this._markers.findIndex(marker => marker.resource.toString() === uri.toString());
+		let idx = this._markers.findIndex(
+      marker => marker.resource.toString() === uri.toString(),
+    );
 		if (idx < 0) {
 			return undefined;
 		}
 		for (; idx < this._markers.length; idx++) {
 			if (Range.containsPosition(this._markers[idx], position)) {
-				return new MarkerCoordinate(this._markers[idx], idx + 1, this._markers.length);
+				return new MarkerCoordinate(
+          this._markers[idx],
+          idx + 1,
+          this._markers.length,
+        );
 			}
 		}
 		return undefined;
 	}
 }
 
-export const IMarkerNavigationService = createDecorator<IMarkerNavigationService>('IMarkerNavigationService');
+export const IMarkerNavigationService = createDecorator<IMarkerNavigationService>(
+  "IMarkerNavigationService",
+);
 
 export interface IMarkerNavigationService {
 	readonly _serviceBrand: undefined;
@@ -251,4 +283,8 @@ class MarkerNavigationService implements IMarkerNavigationService, IMarkerListPr
 	}
 }
 
-registerSingleton(IMarkerNavigationService, MarkerNavigationService, InstantiationType.Delayed);
+registerSingleton(
+  IMarkerNavigationService,
+  MarkerNavigationService,
+  InstantiationType.Delayed,
+);

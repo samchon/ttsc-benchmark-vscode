@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { decodeBase64, VSBuffer } from '../../../base/common/buffer.js';
-import { joinPath } from '../../../base/common/resources.js';
-import { URI } from '../../../base/common/uri.js';
-import { IFileService } from '../../files/common/files.js';
-import { InstantiationType, registerSingleton } from '../../instantiation/common/extensions.js';
-import { ILogService } from '../../log/common/log.js';
-import { IImageResizeService } from '../common/imageResizeService.js';
+import { decodeBase64, VSBuffer } from "../../../base/common/buffer.js";
+import { joinPath } from "../../../base/common/resources.js";
+import { URI } from "../../../base/common/uri.js";
+import { IFileService } from "../../files/common/files.js";
+import { InstantiationType, registerSingleton } from "../../instantiation/common/extensions.js";
+import { ILogService } from "../../log/common/log.js";
+import { IImageResizeService } from "../common/imageResizeService.js";
 
 
 export class ImageResizeService implements IImageResizeService {
@@ -24,9 +24,9 @@ export class ImageResizeService implements IImageResizeService {
 	 */
 
 	async resizeImage(data: Uint8Array | string, mimeType?: string): Promise<Uint8Array> {
-		const isGif = mimeType === 'image/gif';
+		const isGif = mimeType === "image/gif";
 
-		if (typeof data === 'string') {
+		if (typeof data === "string") {
 			data = this.convertStringToUInt8Array(data);
 		}
 
@@ -56,15 +56,15 @@ export class ImageResizeService implements IImageResizeService {
 				width = Math.round(width * scaleFactor);
 				height = Math.round(height * scaleFactor);
 
-				const canvas = document.createElement('canvas');
+				const canvas = document.createElement("canvas");
 				canvas.width = width;
 				canvas.height = height;
-				const ctx = canvas.getContext('2d');
+				const ctx = canvas.getContext("2d");
 				if (ctx) {
 					ctx.drawImage(img, 0, 0, width, height);
 
-					const jpegTypes = ['image/jpeg', 'image/jpg'];
-					const outputMimeType = mimeType && jpegTypes.includes(mimeType) ? 'image/jpeg' : 'image/png';
+					const jpegTypes = ["image/jpeg", "image/jpg"];
+					const outputMimeType = mimeType && jpegTypes.includes(mimeType) ? "image/jpeg" : "image/png";
 
 					canvas.toBlob(blob => {
 						if (blob) {
@@ -75,11 +75,11 @@ export class ImageResizeService implements IImageResizeService {
 							reader.onerror = (error) => reject(error);
 							reader.readAsArrayBuffer(blob);
 						} else {
-							reject(new Error('Failed to create blob from canvas'));
+							reject(new Error("Failed to create blob from canvas"));
 						}
 					}, outputMimeType);
 				} else {
-					reject(new Error('Failed to get canvas context'));
+					reject(new Error("Failed to get canvas context"));
 				}
 			};
 			img.onerror = (error) => {
@@ -90,7 +90,7 @@ export class ImageResizeService implements IImageResizeService {
 	}
 
 	convertStringToUInt8Array(data: string): Uint8Array {
-		const base64Data = data.includes(',') ? data.split(',')[1] : data;
+		const base64Data = data.includes(",") ? data.split(",")[1] : data;
 		if (this.isValidBase64(base64Data)) {
 			return decodeBase64(base64Data).buffer;
 		}
@@ -104,7 +104,7 @@ export class ImageResizeService implements IImageResizeService {
 			const decodedString = decoder.decode(data);
 			return decodedString;
 		} catch {
-			return '';
+			return "";
 		}
 	}
 
@@ -123,7 +123,7 @@ export class ImageResizeService implements IImageResizeService {
 			await fileService.createFolder(imagesFolder);
 		}
 
-		const ext = mimeType.split('/')[1] || 'png';
+		const ext = mimeType.split("/")[1] || "png";
 		const filename = `image-${Date.now()}.${ext}`;
 		const fileUri = joinPath(imagesFolder, filename);
 
@@ -152,7 +152,7 @@ export class ImageResizeService implements IImageResizeService {
 					await fileService.del(file.resource);
 				}
 			} catch (err) {
-				logService.error('Failed to clean up old images', err);
+				logService.error("Failed to clean up old images", err);
 			}
 		}));
 	}
@@ -168,4 +168,8 @@ export class ImageResizeService implements IImageResizeService {
 
 }
 
-registerSingleton(IImageResizeService, ImageResizeService, InstantiationType.Delayed);
+registerSingleton(
+  IImageResizeService,
+  ImageResizeService,
+  InstantiationType.Delayed,
+);

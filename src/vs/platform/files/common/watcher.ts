@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../base/common/event.js';
-import { GLOBSTAR, IRelativePattern, parse, ParsedPattern } from '../../../base/common/glob.js';
-import { Disposable, DisposableStore, IDisposable, MutableDisposable } from '../../../base/common/lifecycle.js';
-import { isAbsolute } from '../../../base/common/path.js';
-import { isLinux } from '../../../base/common/platform.js';
-import { URI } from '../../../base/common/uri.js';
-import { FileChangeFilter, FileChangeType, IFileChange, isParent } from './files.js';
+import { Event } from "../../../base/common/event.js";
+import { GLOBSTAR, IRelativePattern, parse, ParsedPattern } from "../../../base/common/glob.js";
+import { Disposable, DisposableStore, IDisposable, MutableDisposable } from "../../../base/common/lifecycle.js";
+import { isAbsolute } from "../../../base/common/path.js";
+import { isLinux } from "../../../base/common/platform.js";
+import { URI } from "../../../base/common/uri.js";
+import { FileChangeFilter, FileChangeType, IFileChange, isParent } from "./files.js";
 
 interface IWatchRequest {
 
@@ -57,7 +57,7 @@ export interface IWatchRequestWithCorrelation extends IWatchRequest {
 }
 
 export function isWatchRequestWithCorrelation(request: IWatchRequest): request is IWatchRequestWithCorrelation {
-	return typeof request.correlationId === 'number';
+	return typeof request.correlationId === "number";
 }
 
 export interface INonRecursiveWatchRequest extends IWatchRequest {
@@ -197,7 +197,7 @@ export abstract class AbstractWatcherClient extends Disposable {
 		private options: {
 			readonly type: string;
 			readonly restartOnError: boolean;
-		}
+		},
 	) {
 		super();
 	}
@@ -215,9 +215,15 @@ export abstract class AbstractWatcherClient extends Disposable {
 		this.watcher.setVerboseLogging(this.verboseLogging);
 
 		// Wire in event handlers
-		disposables.add(this.watcher.onDidChangeFile(changes => this.onFileChanges(changes)));
-		disposables.add(this.watcher.onDidLogMessage(msg => this.onLogMessage(msg)));
-		disposables.add(this.watcher.onDidError(e => this.onError(e.error, e.request)));
+		disposables.add(
+      this.watcher.onDidChangeFile(changes => this.onFileChanges(changes)),
+    );
+		disposables.add(
+      this.watcher.onDidLogMessage(msg => this.onLogMessage(msg)),
+    );
+		disposables.add(
+      this.watcher.onDidError(e => this.onError(e.error, e.request)),
+    );
 	}
 
 	protected onError(error: string, failedRequest?: IUniversalWatchRequest): void {
@@ -228,7 +234,9 @@ export abstract class AbstractWatcherClient extends Disposable {
 				this.error(`restarting watcher after unexpected error: ${error}`);
 				this.restart(this.requests);
 			} else {
-				this.error(`gave up attempting to restart watcher after unexpected error: ${error}`);
+				this.error(
+          `gave up attempting to restart watcher after unexpected error: ${error}`,
+        );
 			}
 		}
 
@@ -252,8 +260,8 @@ export abstract class AbstractWatcherClient extends Disposable {
 		}
 
 		if (
-			error.indexOf('No space left on device') !== -1 ||
-			error.indexOf('EMFILE') !== -1
+			error.indexOf("No space left on device") !== -1 ||
+			error.indexOf("EMFILE") !== -1
 		) {
 			// do not restart when the error indicates that the system is running
 			// out of handles for file watching. this is not recoverable anyway
@@ -284,11 +292,17 @@ export abstract class AbstractWatcherClient extends Disposable {
 	}
 
 	private error(message: string) {
-		this.onLogMessage({ type: 'error', message: `[File Watcher (${this.options.type})] ${message}` });
+		this.onLogMessage({
+      type: "error",
+      message: `[File Watcher (${this.options.type})] ${message}`,
+    });
 	}
 
 	protected trace(message: string) {
-		this.onLogMessage({ type: 'trace', message: `[File Watcher (${this.options.type})] ${message}` });
+		this.onLogMessage({
+      type: "trace",
+      message: `[File Watcher (${this.options.type})] ${message}`,
+    });
 	}
 
 	override dispose(): void {
@@ -305,9 +319,12 @@ export abstract class AbstractNonRecursiveWatcherClient extends AbstractWatcherC
 	constructor(
 		onFileChanges: (changes: IFileChange[]) => void,
 		onLogMessage: (msg: ILogMessage) => void,
-		verboseLogging: boolean
+		verboseLogging: boolean,
 	) {
-		super(onFileChanges, onLogMessage, verboseLogging, { type: 'node.js', restartOnError: false });
+		super(onFileChanges, onLogMessage, verboseLogging, {
+      type: "node.js",
+      restartOnError: false,
+    });
 	}
 
 	protected abstract override createWatcher(disposables: DisposableStore): INonRecursiveWatcher;
@@ -318,25 +335,28 @@ export abstract class AbstractUniversalWatcherClient extends AbstractWatcherClie
 	constructor(
 		onFileChanges: (changes: IFileChange[]) => void,
 		onLogMessage: (msg: ILogMessage) => void,
-		verboseLogging: boolean
+		verboseLogging: boolean,
 	) {
-		super(onFileChanges, onLogMessage, verboseLogging, { type: 'universal', restartOnError: true });
+		super(onFileChanges, onLogMessage, verboseLogging, {
+      type: "universal",
+      restartOnError: true,
+    });
 	}
 
 	protected abstract override createWatcher(disposables: DisposableStore): IUniversalWatcher;
 }
 
 export interface ILogMessage {
-	readonly type: 'trace' | 'warn' | 'error' | 'info' | 'debug';
+	readonly type: "trace" | "warn" | "error" | "info" | "debug";
 	readonly message: string;
 }
 
 export function reviveFileChanges(changes: IFileChange[]): IFileChange[] {
 	return changes.map(change => ({
-		type: change.type,
-		resource: URI.revive(change.resource),
-		cId: change.cId
-	}));
+    type: change.type,
+    resource: URI.revive(change.resource),
+    cId: change.cId,
+  }));
 }
 
 export function coalesceEvents(changes: IFileChange[]): IFileChange[] {
@@ -358,7 +378,9 @@ export function normalizeWatcherPattern(path: string, pattern: string | IRelativ
 	// `**`, we have to convert it to a relative pattern with
 	// the given `base`
 
-	if (typeof pattern === 'string' && !pattern.startsWith(GLOBSTAR) && !isAbsolute(pattern)) {
+	if (typeof pattern === "string" && !pattern.startsWith(
+    GLOBSTAR,
+  ) && !isAbsolute(pattern)) {
 		return { base: path, pattern };
 	}
 
@@ -369,7 +391,9 @@ export function parseWatcherPatterns(path: string, patterns: Array<string | IRel
 	const parsedPatterns: ParsedPattern[] = [];
 
 	for (const pattern of patterns) {
-		parsedPatterns.push(parse(normalizeWatcherPattern(path, pattern), { ignoreCase }));
+		parsedPatterns.push(
+      parse(normalizeWatcherPattern(path, pattern), { ignoreCase }),
+    );
 	}
 
 	return parsedPatterns;
@@ -470,7 +494,7 @@ class EventCoalescer {
 }
 
 export function isFiltered(event: IFileChange, filter: FileChangeFilter | undefined): boolean {
-	if (typeof filter === 'number') {
+	if (typeof filter === "number") {
 		switch (event.type) {
 			case FileChangeType.ADDED:
 				return (filter & FileChangeFilter.ADDED) === 0;
@@ -485,24 +509,24 @@ export function isFiltered(event: IFileChange, filter: FileChangeFilter | undefi
 }
 
 export function requestFilterToString(filter: FileChangeFilter | undefined): string {
-	if (typeof filter === 'number') {
+	if (typeof filter === "number") {
 		const filters = [];
 		if (filter & FileChangeFilter.ADDED) {
-			filters.push('Added');
+			filters.push("Added");
 		}
 		if (filter & FileChangeFilter.DELETED) {
-			filters.push('Deleted');
+			filters.push("Deleted");
 		}
 		if (filter & FileChangeFilter.UPDATED) {
-			filters.push('Updated');
+			filters.push("Updated");
 		}
 
 		if (filters.length === 0) {
-			return '<all>';
+			return "<all>";
 		}
 
-		return `[${filters.join(', ')}]`;
+		return `[${filters.join(", ")}]`;
 	}
 
-	return '<none>';
+	return "<none>";
 }

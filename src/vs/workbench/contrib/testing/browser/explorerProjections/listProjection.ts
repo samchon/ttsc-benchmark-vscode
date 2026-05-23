@@ -3,19 +3,34 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ObjectTree } from '../../../../../base/browser/ui/tree/objectTree.js';
-import { Emitter } from '../../../../../base/common/event.js';
-import { FuzzyScore } from '../../../../../base/common/filters.js';
-import { Iterable } from '../../../../../base/common/iterator.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { flatTestItemDelimiter } from './display.js';
-import { ITestTreeProjection, TestExplorerTreeElement, TestItemTreeElement, TestTreeErrorMessage, getChildrenForParent, testIdentityProvider } from './index.js';
-import { ISerializedTestTreeCollapseState, isCollapsedInSerializedTestTree } from './testingViewState.js';
-import { TestId } from '../../common/testId.js';
-import { TestResultItemChangeReason } from '../../common/testResult.js';
-import { ITestResultService } from '../../common/testResultService.js';
-import { ITestService } from '../../common/testService.js';
-import { ITestItemUpdate, InternalTestItem, TestDiffOpType, TestItemExpandState, TestResultState, TestsDiff, applyTestItemUpdate } from '../../common/testTypes.js';
+import { ObjectTree } from "../../../../../base/browser/ui/tree/objectTree.js";
+import { Emitter } from "../../../../../base/common/event.js";
+import { FuzzyScore } from "../../../../../base/common/filters.js";
+import { Iterable } from "../../../../../base/common/iterator.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { flatTestItemDelimiter } from "./display.js";
+import {
+  ITestTreeProjection,
+  TestExplorerTreeElement,
+  TestItemTreeElement,
+  TestTreeErrorMessage,
+  getChildrenForParent,
+  testIdentityProvider,
+} from "./index.js";
+import { ISerializedTestTreeCollapseState, isCollapsedInSerializedTestTree } from "./testingViewState.js";
+import { TestId } from "../../common/testId.js";
+import { TestResultItemChangeReason } from "../../common/testResult.js";
+import { ITestResultService } from "../../common/testResultService.js";
+import { ITestService } from "../../common/testService.js";
+import {
+  ITestItemUpdate,
+  InternalTestItem,
+  TestDiffOpType,
+  TestItemExpandState,
+  TestResultState,
+  TestsDiff,
+  applyTestItemUpdate,
+} from "../../common/testTypes.js";
 
 /**
  * Test tree element element that groups be hierarchy.
@@ -72,8 +87,14 @@ export class ListProjection extends Disposable implements ITestTreeProjection {
 	 * Gets root elements of the tree.
 	 */
 	private get rootsWithChildren(): Iterable<ListTestItemElement> {
-		const rootsIt = Iterable.map(this.testService.collection.rootItems, r => this.items.get(r.item.extId));
-		return Iterable.filter(rootsIt, (r): r is ListTestItemElement => !!r?.children.size);
+		const rootsIt = Iterable.map(
+      this.testService.collection.rootItems,
+      r => this.items.get(r.item.extId),
+    );
+		return Iterable.filter(
+      rootsIt,
+      (r): r is ListTestItemElement => !!r?.children.size,
+    );
 	}
 
 	/**
@@ -87,11 +108,13 @@ export class ListProjection extends Disposable implements ITestTreeProjection {
 		@ITestResultService private readonly results: ITestResultService,
 	) {
 		super();
-		this._register(testService.onDidProcessDiff((diff) => this.applyDiff(diff)));
+		this._register(
+      testService.onDidProcessDiff((diff) => this.applyDiff(diff)),
+    );
 
 		// when test results are cleared, recalculate all state
 		this._register(results.onResultsChanged((evt) => {
-			if (!('removed' in evt)) {
+			if (!("removed" in evt)) {
 				return;
 			}
 
@@ -184,10 +207,14 @@ export class ListProjection extends Disposable implements ITestTreeProjection {
 		// We don't bother doing a very specific update like we do in the TreeProjection.
 		// It's a flat list, so chances are we need to render everything anyway.
 		// Let the diffIdentityProvider handle that.
-		tree.setChildren(null, getChildrenForParent(this.lastState, this.rootsWithChildren, null), {
-			diffIdentityProvider: testIdentityProvider,
-			diffDepth: Infinity
-		});
+		tree.setChildren(
+      null,
+      getChildrenForParent(this.lastState, this.rootsWithChildren, null),
+      {
+        diffIdentityProvider: testIdentityProvider,
+        diffDepth: Infinity,
+      },
+    );
 	}
 
 	/**
@@ -227,17 +254,26 @@ export class ListProjection extends Disposable implements ITestTreeProjection {
 	}
 
 	private _storeItem(testId: TestId, item: InternalTestItem) {
-		const displayedParent = testId.isRoot ? null : this.items.get(item.controllerId)!;
-		const chain = [...testId.idsFromRoot()].slice(1, -1).map(id => this.testService.collection.getNodeById(id.toString())!);
+		const displayedParent = testId.isRoot ? null : this.items.get(
+      item.controllerId,
+    )!;
+		const chain = [...testId.idsFromRoot()].slice(1, -1).map(
+      id => this.testService.collection.getNodeById(id.toString())!,
+    );
 		const treeElement = new ListTestItemElement(item, displayedParent, chain);
 		displayedParent?.children.add(treeElement);
 		this.items.set(treeElement.test.item.extId, treeElement);
 
-		if (treeElement.depth === 0 || isCollapsedInSerializedTestTree(this.lastState, treeElement.test.item.extId) === false) {
+		if (treeElement.depth === 0 || isCollapsedInSerializedTestTree(
+      this.lastState,
+      treeElement.test.item.extId,
+    ) === false) {
 			this.expandElement(treeElement, Infinity);
 		}
 
-		const prevState = this.results.getStateById(treeElement.test.item.extId)?.[1];
+		const prevState = this.results.getStateById(
+      treeElement.test.item.extId,
+    )?.[1];
 		if (prevState) {
 			treeElement.retired = !!prevState.retired;
 			treeElement.state = prevState.computedState;

@@ -3,12 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable, toDisposable } from '../../../base/common/lifecycle.js';
-import { ISocket } from '../../../base/parts/ipc/common/ipc.net.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import { RemoteConnectionOfType, RemoteConnectionType, RemoteConnection } from './remoteAuthorityResolver.js';
+import { IDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { ISocket } from "../../../base/parts/ipc/common/ipc.net.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { RemoteConnectionOfType, RemoteConnectionType, RemoteConnection } from "./remoteAuthorityResolver.js";
 
-export const IRemoteSocketFactoryService = createDecorator<IRemoteSocketFactoryService>('remoteSocketFactoryService');
+export const IRemoteSocketFactoryService = createDecorator<IRemoteSocketFactoryService>(
+  "remoteSocketFactoryService",
+);
 
 export interface IRemoteSocketFactoryService {
 	readonly _serviceBrand: undefined;
@@ -39,7 +41,7 @@ export class RemoteSocketFactoryService implements IRemoteSocketFactoryService {
 		this.factories[type]!.push(factory);
 		return toDisposable(() => {
 			const idx = this.factories[type]?.indexOf(factory);
-			if (typeof idx === 'number' && idx >= 0) {
+			if (typeof idx === "number" && idx >= 0) {
 				this.factories[type]?.splice(idx, 1);
 			}
 		});

@@ -3,37 +3,56 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IAction } from '../../../../../base/common/actions.js';
-import { DeferredPromise } from '../../../../../base/common/async.js';
-import { CancellationToken } from '../../../../../base/common/cancellation.js';
-import { Event } from '../../../../../base/common/event.js';
-import { IMarkdownString } from '../../../../../base/common/htmlContent.js';
-import { DisposableStore, IReference } from '../../../../../base/common/lifecycle.js';
-import { autorun, autorunSelfDisposable, IObservable, IReader } from '../../../../../base/common/observable.js';
-import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { hasKey } from '../../../../../base/common/types.js';
-import { URI, UriComponents } from '../../../../../base/common/uri.js';
-import { IRange, Range } from '../../../../../editor/common/core/range.js';
-import { ISelection } from '../../../../../editor/common/core/selection.js';
-import { Command, Location, TextEdit } from '../../../../../editor/common/languages.js';
-import { FileType } from '../../../../../platform/files/common/files.js';
-import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IAutostartResult } from '../../../mcp/common/mcpTypes.js';
-import { ICellEditOperation } from '../../../notebook/common/notebookCommon.js';
-import { IWorkspaceSymbol } from '../../../search/common/search.js';
-import { IChatRequestVariableEntry } from '../attachments/chatVariableEntries.js';
-import { IChatRequestVariableValue } from '../attachments/chatVariables.js';
-import { ReadonlyChatSessionOptionsMap } from '../chatSessionsService.js';
-import { ChatAgentLocation, ChatModeKind } from '../constants.js';
-import { IChatEditingSession } from '../editing/chatEditingService.js';
-import { IChatModel, IChatRequestModeInfo, IChatRequestModel, IChatRequestVariableData, IChatResponseModel, IExportableChatData, ISerializableChatData } from '../model/chatModel.js';
-import type { IChatModelReferenceDebugSnapshot } from '../model/chatModelStore.js';
-import { IChatAgentCommand, IChatAgentData, IChatAgentResult, UserSelectedTools } from '../participants/chatAgents.js';
-import { HookTypeValue } from '../promptSyntax/hookTypes.js';
-import { IParsedChatRequest } from '../requestParser/chatParserTypes.js';
-import { IChatParserContext } from '../requestParser/chatRequestParser.js';
-import { IPreparedToolInvocation, IToolConfirmationMessages, IToolResult, IToolResultInputOutputDetails, ToolDataSource } from '../tools/languageModelToolsService.js';
-import { ConfirmationOptionKind } from '../../../../../platform/agentHost/common/state/protocol/state.js';
+import { IAction } from "../../../../../base/common/actions.js";
+import { DeferredPromise } from "../../../../../base/common/async.js";
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { Event } from "../../../../../base/common/event.js";
+import { IMarkdownString } from "../../../../../base/common/htmlContent.js";
+import { DisposableStore, IReference } from "../../../../../base/common/lifecycle.js";
+import { autorun, autorunSelfDisposable, IObservable, IReader } from "../../../../../base/common/observable.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { hasKey } from "../../../../../base/common/types.js";
+import { URI, UriComponents } from "../../../../../base/common/uri.js";
+import { IRange, Range } from "../../../../../editor/common/core/range.js";
+import { ISelection } from "../../../../../editor/common/core/selection.js";
+import { Command, Location, TextEdit } from "../../../../../editor/common/languages.js";
+import { FileType } from "../../../../../platform/files/common/files.js";
+import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IAutostartResult } from "../../../mcp/common/mcpTypes.js";
+import { ICellEditOperation } from "../../../notebook/common/notebookCommon.js";
+import { IWorkspaceSymbol } from "../../../search/common/search.js";
+import { IChatRequestVariableEntry } from "../attachments/chatVariableEntries.js";
+import { IChatRequestVariableValue } from "../attachments/chatVariables.js";
+import { ReadonlyChatSessionOptionsMap } from "../chatSessionsService.js";
+import { ChatAgentLocation, ChatModeKind } from "../constants.js";
+import { IChatEditingSession } from "../editing/chatEditingService.js";
+import {
+  IChatModel,
+  IChatRequestModeInfo,
+  IChatRequestModel,
+  IChatRequestVariableData,
+  IChatResponseModel,
+  IExportableChatData,
+  ISerializableChatData,
+} from "../model/chatModel.js";
+import type { IChatModelReferenceDebugSnapshot } from "../model/chatModelStore.js";
+import {
+  IChatAgentCommand,
+  IChatAgentData,
+  IChatAgentResult,
+  UserSelectedTools,
+} from "../participants/chatAgents.js";
+import { HookTypeValue } from "../promptSyntax/hookTypes.js";
+import { IParsedChatRequest } from "../requestParser/chatParserTypes.js";
+import { IChatParserContext } from "../requestParser/chatRequestParser.js";
+import {
+  IPreparedToolInvocation,
+  IToolConfirmationMessages,
+  IToolResult,
+  IToolResultInputOutputDetails,
+  ToolDataSource,
+} from "../tools/languageModelToolsService.js";
+import { ConfirmationOptionKind } from "../../../../../platform/agentHost/common/state/protocol/state.js";
 
 export interface IChatRequest {
 	message: string;
@@ -87,23 +106,23 @@ export type IDocumentContext = {
 export function isIDocumentContext(obj: unknown): obj is IDocumentContext {
 	return (
 		!!obj &&
-		typeof obj === 'object' &&
-		'uri' in obj && obj.uri instanceof URI &&
-		'version' in obj && typeof obj.version === 'number' &&
-		'ranges' in obj && Array.isArray(obj.ranges) && obj.ranges.every(Range.isIRange)
+		typeof obj === "object" &&
+		"uri" in obj && obj.uri instanceof URI &&
+		"version" in obj && typeof obj.version === "number" &&
+		"ranges" in obj && Array.isArray(obj.ranges) && obj.ranges.every(Range.isIRange)
 	);
 }
 
 export interface IChatUsedContext {
 	documents: IDocumentContext[];
-	kind: 'usedContext';
+	kind: "usedContext";
 }
 
 export function isIUsedContext(obj: unknown): obj is IChatUsedContext {
 	return (
 		!!obj &&
-		typeof obj === 'object' &&
-		'documents' in obj &&
+		typeof obj === "object" &&
+		"documents" in obj &&
 		Array.isArray(obj.documents) &&
 		obj.documents.every(isIDocumentContext)
 	);
@@ -116,8 +135,8 @@ export interface IChatContentVariableReference {
 
 export function isChatContentVariableReference(obj: unknown): obj is IChatContentVariableReference {
 	return !!obj &&
-		typeof obj === 'object' &&
-		typeof (obj as IChatContentVariableReference).variableName === 'string';
+		typeof obj === "object" &&
+		typeof (obj as IChatContentVariableReference).variableName === "string";
 }
 
 export enum ChatResponseReferencePartStatusKind {
@@ -143,14 +162,14 @@ export interface IChatContentReference {
 		modifiedUri?: URI;
 		isDeletion?: boolean;
 	};
-	kind: 'reference';
+	kind: "reference";
 }
 
 export interface IChatCodeCitation {
 	value: URI;
 	license: string;
 	snippet: string;
-	kind: 'codeCitation';
+	kind: "codeCitation";
 }
 
 export interface IChatUsagePromptTokenDetail {
@@ -164,25 +183,25 @@ export interface IChatUsage {
 	completionTokens: number;
 	outputBuffer?: number;
 	promptTokenDetails?: readonly IChatUsagePromptTokenDetail[];
-	kind: 'usage';
+	kind: "usage";
 }
 
 export interface IChatContentInlineReference {
 	resolveId?: string;
 	inlineReference: URI | Location | IWorkspaceSymbol;
 	name?: string;
-	kind: 'inlineReference';
+	kind: "inlineReference";
 }
 
 export interface IChatMarkdownContent {
-	kind: 'markdownContent';
+	kind: "markdownContent";
 	content: IMarkdownString;
 	inlineReferences?: Record<string, IChatContentInlineReference>;
 }
 
 export interface IChatTreeData {
 	treeData: IChatResponseProgressFileTreeData;
-	kind: 'treeData';
+	kind: "treeData";
 }
 export interface IMultiDiffResource {
 	originalUri?: URI;
@@ -199,7 +218,7 @@ export interface IChatMultiDiffInnerData {
 
 export interface IChatMultiDiffData {
 	multiDiffData: IChatMultiDiffInnerData | IObservable<IChatMultiDiffInnerData>;
-	kind: 'multiDiffData';
+	kind: "multiDiffData";
 	collapsed?: boolean;
 	readOnly?: boolean;
 	toJSON(): IChatMultiDiffDataSerialized;
@@ -207,16 +226,16 @@ export interface IChatMultiDiffData {
 
 export interface IChatMultiDiffDataSerialized {
 	multiDiffData: IChatMultiDiffInnerData;
-	kind: 'multiDiffData';
+	kind: "multiDiffData";
 	collapsed?: boolean;
 	readOnly?: boolean;
 }
 
 export class ChatMultiDiffData implements IChatMultiDiffData {
-	public readonly kind = 'multiDiffData';
+	public readonly kind = "multiDiffData";
 	public readonly collapsed?: boolean | undefined;
 	public readonly readOnly?: boolean | undefined;
-	public readonly multiDiffData: IChatMultiDiffData['multiDiffData'];
+	public readonly multiDiffData: IChatMultiDiffData["multiDiffData"];
 
 	constructor(opts: {
 		multiDiffData: IChatMultiDiffInnerData | IObservable<IChatMultiDiffInnerData>;
@@ -230,17 +249,17 @@ export class ChatMultiDiffData implements IChatMultiDiffData {
 
 	toJSON(): IChatMultiDiffDataSerialized {
 		return {
-			kind: this.kind,
-			multiDiffData: hasKey(this.multiDiffData, { title: true }) ? this.multiDiffData : this.multiDiffData.get(),
-			collapsed: this.collapsed,
-			readOnly: this.readOnly,
-		};
+      kind: this.kind,
+      multiDiffData: hasKey(this.multiDiffData, { title: true }) ? this.multiDiffData : this.multiDiffData.get(),
+      collapsed: this.collapsed,
+      readOnly: this.readOnly,
+    };
 	}
 }
 
 export interface IChatProgressMessage {
 	content: IMarkdownString;
-	kind: 'progressMessage';
+	kind: "progressMessage";
 	shimmer?: boolean;
 }
 
@@ -257,12 +276,12 @@ export interface IChatTask extends IChatTaskDto {
 }
 
 export interface IChatUndoStop {
-	kind: 'undoStop';
+	kind: "undoStop";
 	id: string;
 }
 
 export interface IChatExternalEditsDto {
-	kind: 'externalEdits';
+	kind: "externalEdits";
 	undoStopId: string;
 	start: boolean; /** true=start, false=stop */
 	resources: UriComponents[];
@@ -277,28 +296,28 @@ export interface IChatExternalEditsDto {
 
 export interface IChatTaskDto {
 	content: IMarkdownString;
-	kind: 'progressTask';
+	kind: "progressTask";
 }
 
 export interface IChatTaskSerialized {
 	content: IMarkdownString;
 	progress: (IChatWarningMessage | IChatContentReference)[];
-	kind: 'progressTaskSerialized';
+	kind: "progressTaskSerialized";
 }
 
 export interface IChatTaskResult {
 	content: IMarkdownString | void;
-	kind: 'progressTaskResult';
+	kind: "progressTaskResult";
 }
 
 export interface IChatWarningMessage {
 	content: IMarkdownString;
-	kind: 'warning';
+	kind: "warning";
 }
 
 export interface IChatInfoMessage {
 	content: IMarkdownString;
-	kind: 'info';
+	kind: "info";
 }
 
 export interface IChatAgentVulnerabilityDetails {
@@ -307,7 +326,7 @@ export interface IChatAgentVulnerabilityDetails {
 }
 
 export interface IChatResponseCodeblockUriPart {
-	kind: 'codeblockUri';
+	kind: "codeblockUri";
 	uri: URI;
 	isEdit?: boolean;
 	undoStopId?: string;
@@ -317,38 +336,38 @@ export interface IChatResponseCodeblockUriPart {
 export interface IChatAgentMarkdownContentWithVulnerability {
 	content: IMarkdownString;
 	vulnerabilities: IChatAgentVulnerabilityDetails[];
-	kind: 'markdownVuln';
+	kind: "markdownVuln";
 }
 
 export interface IChatCommandButton {
 	command: Command;
-	kind: 'command';
+	kind: "command";
 	additionalCommands?: Command[]; // rendered as secondary buttons
 }
 
 export interface IChatMoveMessage {
 	uri: URI;
 	range: IRange;
-	kind: 'move';
+	kind: "move";
 }
 
 export interface IChatTextEdit {
 	uri: URI;
 	edits: TextEdit[];
-	kind: 'textEdit';
+	kind: "textEdit";
 	done?: boolean;
 	isExternalEdit?: boolean;
 }
 
 export interface IChatClearToPreviousToolInvocation {
-	kind: 'clearToPreviousToolInvocation';
+	kind: "clearToPreviousToolInvocation";
 	reason: ChatResponseClearToPreviousToolInvocationReason;
 }
 
 export interface IChatNotebookEdit {
 	uri: URI;
 	edits: ICellEditOperation[];
-	kind: 'notebookEdit';
+	kind: "notebookEdit";
 	done?: boolean;
 	isExternalEdit?: boolean;
 }
@@ -359,7 +378,7 @@ export interface IChatWorkspaceFileEdit {
 }
 
 export interface IChatWorkspaceEdit {
-	kind: 'workspaceEdit';
+	kind: "workspaceEdit";
 	edits: IChatWorkspaceFileEdit[];
 }
 
@@ -370,7 +389,7 @@ export interface IChatConfirmation {
 	data: any;
 	buttons?: string[];
 	isUsed?: boolean;
-	kind: 'confirmation';
+	kind: "confirmation";
 }
 
 /**
@@ -379,7 +398,7 @@ export interface IChatConfirmation {
 export interface IChatQuestionValidation {
 	minLength?: number;
 	maxLength?: number;
-	format?: 'email' | 'uri' | 'date' | 'date-time';
+	format?: "email" | "uri" | "date" | "date-time";
 	minimum?: number;
 	maximum?: number;
 	isInteger?: boolean;
@@ -390,7 +409,7 @@ export interface IChatQuestionValidation {
  */
 export interface IChatQuestion {
 	id: string;
-	type: 'text' | 'singleSelect' | 'multiSelect';
+	type: "text" | "singleSelect" | "multiSelect";
 	title: string;
 	message?: string | IMarkdownString;
 	description?: string;
@@ -439,17 +458,17 @@ export interface IChatQuestionCarousel {
 	source?: ToolDataSource;
 	/** Terminal ID when the carousel was triggered by a terminal needing input */
 	terminalId?: string;
-	kind: 'questionCarousel';
+	kind: "questionCarousel";
 }
 
 export const enum ElicitationState {
-	Pending = 'pending',
-	Accepted = 'accepted',
-	Rejected = 'rejected',
+	Pending = "pending",
+	Accepted = "accepted",
+	Rejected = "rejected",
 }
 
 export interface IChatElicitationRequest {
-	kind: 'elicitation2'; // '2' because initially serialized data used the same kind
+	kind: "elicitation2"; // '2' because initially serialized data used the same kind
 	title: string | IMarkdownString;
 	message: string | IMarkdownString;
 	acceptButtonLabel: string;
@@ -468,7 +487,7 @@ export interface IChatElicitationRequest {
 }
 
 export interface IChatElicitationRequestSerialized {
-	kind: 'elicitationSerialized';
+	kind: "elicitationSerialized";
 	title: string | IMarkdownString;
 	message: string | IMarkdownString;
 	subtitle: string | IMarkdownString | undefined;
@@ -479,7 +498,7 @@ export interface IChatElicitationRequestSerialized {
 }
 
 export interface IChatThinkingPart {
-	kind: 'thinking';
+	kind: "thinking";
 	value?: string | string[];
 	id?: string;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -493,7 +512,7 @@ export interface IChatThinkingPart {
  * If {@link stopReason} is set, the hook blocked/denied the operation.
  */
 export interface IChatHookPart {
-	kind: 'hook';
+	kind: "hook";
 	/** The type of hook that was executed */
 	hookType: HookTypeValue;
 	/** If set, the hook blocked processing. This message is shown to the user. */
@@ -508,7 +527,7 @@ export interface IChatHookPart {
 }
 
 export interface IChatTerminalToolInvocationData {
-	kind: 'terminal';
+	kind: "terminal";
 	commandLine: {
 		original: string;
 		userEdited?: string;
@@ -587,17 +606,17 @@ export interface IChatTerminalToolInvocationData {
  * we don't break existing chats
  */
 export interface ILegacyChatTerminalToolInvocationData {
-	kind: 'terminal';
+	kind: "terminal";
 	command: string;
 	language: string;
 }
 
 export function isLegacyChatTerminalToolInvocationData(data: unknown): data is ILegacyChatTerminalToolInvocationData {
-	return !!data && typeof data === 'object' && 'command' in data && 'language' in data;
+	return !!data && typeof data === "object" && "command" in data && "language" in data;
 }
 
 export interface IChatToolInputInvocationData {
-	kind: 'input';
+	kind: "input";
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	rawInput: any;
 	/** Optional MCP App UI metadata for rendering during and after tool execution */
@@ -624,12 +643,12 @@ export type ConfirmedReason =
 	| { type: ToolConfirmKind.Denied }
 	| { type: ToolConfirmKind.ConfirmationNotNeeded; reason?: string | IMarkdownString }
 	| { type: ToolConfirmKind.Setting; id: string }
-	| { type: ToolConfirmKind.LmServicePerTool; scope: 'session' | 'workspace' | 'profile' }
+	| { type: ToolConfirmKind.LmServicePerTool; scope: "session" | "workspace" | "profile" }
 	| { type: ToolConfirmKind.UserAction; selectedButton?: string; selectedButtonKind?: ConfirmationOptionKind }
 	| { type: ToolConfirmKind.Skipped };
 
 export interface IChatToolInvocation {
-	readonly presentation: IPreparedToolInvocation['presentation'];
+	readonly presentation: IPreparedToolInvocation["presentation"];
 	readonly toolSpecificData?: IChatTerminalToolInvocationData | ILegacyChatTerminalToolInvocationData | IChatToolInputInvocationData | IChatExtensionsContent | IChatPullRequestContent | IChatTodoListContent | IChatSubagentToolInvocationData | IChatSimpleToolInvocationData | IChatSearchToolInvocationData | IChatToolResourcesInvocationData | IChatModifiedFilesConfirmationData;
 	/**
 	 * Observable that tracks the `kind` of `toolSpecificData`. Used by the
@@ -649,7 +668,7 @@ export interface IChatToolInvocation {
 	generatedTitle?: string;
 	isAttachedToThinking: boolean;
 
-	kind: 'toolInvocation';
+	kind: "toolInvocation";
 
 	toJSON(): IChatToolInvocationSerialized;
 }
@@ -698,19 +717,19 @@ export namespace IChatToolInvocation {
 	}
 
 	interface IChatToolInvocationPostExecuteState extends IChatToolInvocationPostConfirmState {
-		resultDetails: IToolResult['toolResultDetails'];
+		resultDetails: IToolResult["toolResultDetails"];
 	}
 
 	interface IChatToolWaitingForPostApprovalState extends IChatToolInvocationStateBase, IChatToolInvocationPostExecuteState {
 		type: StateKind.WaitingForPostApproval;
 		confirm(reason: ConfirmedReason): void;
-		contentForModel: IToolResult['content'];
+		contentForModel: IToolResult["content"];
 	}
 
 	interface IChatToolInvocationCompleteState extends IChatToolInvocationStateBase, IChatToolInvocationPostExecuteState {
 		type: StateKind.Completed;
 		postConfirmed: ConfirmedReason | undefined;
-		contentForModel: IToolResult['content'];
+		contentForModel: IToolResult["content"];
 	}
 
 	interface IChatToolInvocationCancelledState extends IChatToolInvocationStateBase, IChatToolInvocationPostStreamState {
@@ -729,9 +748,11 @@ export namespace IChatToolInvocation {
 		| IChatToolInvocationCancelledState;
 
 	export function executionConfirmedOrDenied(invocation: IChatToolInvocation | IChatToolInvocationSerialized, reader?: IReader): ConfirmedReason | undefined {
-		if (invocation.kind === 'toolInvocationSerialized') {
-			if (invocation.isConfirmed === undefined || typeof invocation.isConfirmed === 'boolean') {
-				return { type: invocation.isConfirmed ? ToolConfirmKind.UserAction : ToolConfirmKind.Denied };
+		if (invocation.kind === "toolInvocationSerialized") {
+			if (invocation.isConfirmed === undefined || typeof invocation.isConfirmed === "boolean") {
+				return {
+          type: invocation.isConfirmed ? ToolConfirmKind.UserAction : ToolConfirmKind.Denied,
+        };
 			}
 			return invocation.isConfirmed;
 		}
@@ -776,7 +797,9 @@ export namespace IChatToolInvocation {
 	function postApprovalConfirmedOrDenied(invocation: IChatToolInvocation, reader?: IReader): ConfirmedReason | undefined {
 		const state = invocation.state.read(reader);
 		if (state.type === StateKind.Completed) {
-			return state.postConfirmed || { type: ToolConfirmKind.ConfirmationNotNeeded };
+			return state.postConfirmed || {
+        type: ToolConfirmKind.ConfirmationNotNeeded,
+      };
 		}
 		if (state.type === StateKind.Cancelled) {
 			return { type: state.reason };
@@ -821,7 +844,7 @@ export namespace IChatToolInvocation {
 	}
 
 	export function resultDetails(invocation: IChatToolInvocation | IChatToolInvocationSerialized, reader?: IReader) {
-		if (invocation.kind === 'toolInvocationSerialized') {
+		if (invocation.kind === "toolInvocationSerialized") {
 			return invocation.resultDetails;
 		}
 
@@ -834,7 +857,7 @@ export namespace IChatToolInvocation {
 	}
 
 	export function isComplete(invocation: IChatToolInvocation | IChatToolInvocationSerialized, reader?: IReader): boolean {
-		if (invocation.kind === 'toolInvocationSerialized') {
+		if (invocation.kind === "toolInvocationSerialized") {
 			return true; // always cancelled or complete
 		}
 
@@ -843,17 +866,20 @@ export namespace IChatToolInvocation {
 	}
 
 	export function isEffectivelyHidden(invocation: IChatToolInvocation | IChatToolInvocationSerialized, reader?: IReader): boolean {
-		if (invocation.presentation === 'hidden') {
+		if (invocation.presentation === "hidden") {
 			return true;
 		}
-		if (invocation.presentation === 'hiddenAfterComplete' && isComplete(invocation, reader)) {
+		if (invocation.presentation === "hiddenAfterComplete" && isComplete(
+      invocation,
+      reader,
+    )) {
 			return true;
 		}
 		return false;
 	}
 
 	export function isStreaming(invocation: IChatToolInvocation | IChatToolInvocationSerialized, reader?: IReader): boolean {
-		if (invocation.kind === 'toolInvocationSerialized') {
+		if (invocation.kind === "toolInvocationSerialized") {
 			return false;
 		}
 
@@ -865,7 +891,7 @@ export namespace IChatToolInvocation {
 	 * Get parameters from invocation. Returns undefined during streaming state.
 	 */
 	export function getParameters(invocation: IChatToolInvocation | IChatToolInvocationSerialized, reader?: IReader): unknown | undefined {
-		if (invocation.kind === 'toolInvocationSerialized') {
+		if (invocation.kind === "toolInvocationSerialized") {
 			return undefined; // serialized invocations don't store parameters
 		}
 
@@ -881,7 +907,7 @@ export namespace IChatToolInvocation {
 	 * Get confirmation messages from invocation. Returns undefined during streaming state.
 	 */
 	export function getConfirmationMessages(invocation: IChatToolInvocation | IChatToolInvocationSerialized, reader?: IReader): IToolConfirmationMessages | undefined {
-		if (invocation.kind === 'toolInvocationSerialized') {
+		if (invocation.kind === "toolInvocationSerialized") {
 			return undefined; // serialized invocations don't store confirmation messages
 		}
 
@@ -897,7 +923,7 @@ export namespace IChatToolInvocation {
 
 export interface IToolResultOutputDetailsSerialized {
 	output: {
-		type: 'data';
+		type: "data";
 		mimeType: string;
 		base64Data: string;
 	};
@@ -907,7 +933,7 @@ export interface IToolResultOutputDetailsSerialized {
  * This is a IChatToolInvocation that has been serialized, like after window reload, so it is no longer an active tool invocation.
  */
 export interface IChatToolInvocationSerialized {
-	presentation: IPreparedToolInvocation['presentation'];
+	presentation: IPreparedToolInvocation["presentation"];
 	toolSpecificData?: IChatTerminalToolInvocationData | IChatToolInputInvocationData | IChatExtensionsContent | IChatPullRequestContent | IChatTodoListContent | IChatSubagentToolInvocationData | IChatSimpleToolInvocationData | IChatSearchToolInvocationData | IChatToolResourcesInvocationData | IChatModifiedFilesConfirmationData;
 	invocationMessage: string | IMarkdownString;
 	originMessage: string | IMarkdownString | undefined;
@@ -923,12 +949,12 @@ export interface IChatToolInvocationSerialized {
 	readonly subAgentInvocationId?: string;
 	generatedTitle?: string;
 	isAttachedToThinking?: boolean;
-	kind: 'toolInvocationSerialized';
+	kind: "toolInvocationSerialized";
 }
 
 export interface IChatExtensionsContent {
 	extensions: string[];
-	kind: 'extensions';
+	kind: "extensions";
 }
 
 export interface IChatPullRequestContent {
@@ -941,11 +967,11 @@ export interface IChatPullRequestContent {
 	description: string;
 	author: string;
 	linkTag: string;
-	kind: 'pullRequest';
+	kind: "pullRequest";
 }
 
 export interface IChatSubagentToolInvocationData {
-	kind: 'subagent';
+	kind: "subagent";
 	description?: string;
 	agentName?: string;
 	prompt?: string;
@@ -959,7 +985,7 @@ export interface IChatSubagentToolInvocationData {
  * When isComplete is true, completes an existing tool invocation.
  */
 export interface IChatExternalToolInvocationUpdate {
-	kind: 'externalToolInvocationUpdate';
+	kind: "externalToolInvocationUpdate";
 	toolCallId: string;
 	toolName: string;
 	isComplete: boolean;
@@ -972,31 +998,31 @@ export interface IChatExternalToolInvocationUpdate {
 }
 
 export interface IChatTodoListContent {
-	kind: 'todoList';
+	kind: "todoList";
 	todoList: Array<{
 		id: string;
 		title: string;
-		status: 'not-started' | 'in-progress' | 'completed';
+		status: "not-started" | "in-progress" | "completed";
 	}>;
 }
 
 export interface IChatSimpleToolInvocationData {
-	kind: 'simpleToolInvocation';
+	kind: "simpleToolInvocation";
 	input: string;
 	output: string;
 }
 
 export interface IChatSearchToolInvocationData {
-	readonly kind: 'search';
+	readonly kind: "search";
 }
 
 export interface IChatToolResourcesInvocationData {
-	readonly kind: 'resources';
+	readonly kind: "resources";
 	readonly values: Array<URI | Location>;
 }
 
 export interface IChatModifiedFilesConfirmationData {
-	readonly kind: 'modifiedFilesConfirmation';
+	readonly kind: "modifiedFilesConfirmation";
 	readonly options: readonly string[];
 	readonly modifiedFiles: readonly {
 		readonly uri: UriComponents;
@@ -1019,20 +1045,20 @@ export interface IChatModifiedFilesConfirmationData {
 }
 
 export interface IChatMcpServersStarting {
-	readonly kind: 'mcpServersStarting';
+	readonly kind: "mcpServersStarting";
 	readonly state?: IObservable<IAutostartResult>; // not hydrated when serialized
 	didStartServerIds?: string[];
 	toJSON(): IChatMcpServersStartingSerialized;
 }
 
 export interface IChatMcpServersStartingSerialized {
-	readonly kind: 'mcpServersStarting';
+	readonly kind: "mcpServersStarting";
 	readonly state?: undefined;
 	didStartServerIds?: string[];
 }
 
 export interface IChatDisabledClaudeHooksPart {
-	readonly kind: 'disabledClaudeHooks';
+	readonly kind: "disabledClaudeHooks";
 }
 
 /** A single approval option shown in the plan review dropdown button. */
@@ -1049,7 +1075,7 @@ export interface IChatPlanApprovalAction {
 	description?: string;
 	default?: boolean;
 	/** When set to 'autopilot', a confirmation dialog is shown before proceeding. */
-	permissionLevel?: 'autopilot';
+	permissionLevel?: "autopilot";
 }
 
 /** The result of reviewing a plan. */
@@ -1078,7 +1104,7 @@ export interface IChatPlanReviewResult {
  * button and an optional feedback textarea.
  */
 export interface IChatPlanReview {
-	kind: 'planReview';
+	kind: "planReview";
 	/** Title to display in the widget header. */
 	title: string;
 	/** Markdown content rendered in the body (plan summary or contents). */
@@ -1100,7 +1126,7 @@ export interface IChatPlanReview {
 }
 
 export class ChatMcpServersStarting implements IChatMcpServersStarting {
-	public readonly kind = 'mcpServersStarting';
+	public readonly kind = "mcpServersStarting";
 
 	public didStartServerIds?: string[] = [];
 
@@ -1124,7 +1150,10 @@ export class ChatMcpServersStarting implements IChatMcpServersStarting {
 	}
 
 	toJSON(): IChatMcpServersStartingSerialized {
-		return { kind: 'mcpServersStarting', didStartServerIds: this.didStartServerIds };
+		return {
+      kind: "mcpServersStarting",
+      didStartServerIds: this.didStartServerIds,
+    };
 	}
 }
 
@@ -1170,7 +1199,7 @@ export type IChatProgress =
 	| IChatDisabledClaudeHooksPart;
 
 export interface IChatFollowup {
-	kind: 'reply';
+	kind: "reply";
 	message: string;
 	agentId: string;
 	subCommand?: string;
@@ -1181,9 +1210,9 @@ export interface IChatFollowup {
 export function isChatFollowup(obj: unknown): obj is IChatFollowup {
 	return (
 		!!obj &&
-		(obj as IChatFollowup).kind === 'reply' &&
-		typeof (obj as IChatFollowup).message === 'string' &&
-		typeof (obj as IChatFollowup).agentId === 'string'
+		(obj as IChatFollowup).kind === "reply" &&
+		typeof (obj as IChatFollowup).message === "string" &&
+		typeof (obj as IChatFollowup).agentId === "string"
 	);
 }
 
@@ -1193,7 +1222,7 @@ export enum ChatAgentVoteDirection {
 }
 
 export interface IChatVoteAction {
-	kind: 'vote';
+	kind: "vote";
 	direction: ChatAgentVoteDirection;
 }
 
@@ -1204,7 +1233,7 @@ export enum ChatCopyKind {
 }
 
 export interface IChatCopyAction {
-	kind: 'copy';
+	kind: "copy";
 	codeBlockIndex: number;
 	copyKind: ChatCopyKind;
 	copiedCharacters: number;
@@ -1217,7 +1246,7 @@ export interface IChatCopyAction {
 }
 
 export interface IChatInsertAction {
-	kind: 'insert';
+	kind: "insert";
 	codeBlockIndex: number;
 	totalCharacters: number;
 	totalLines: number;
@@ -1227,7 +1256,7 @@ export interface IChatInsertAction {
 }
 
 export interface IChatApplyAction {
-	kind: 'apply';
+	kind: "apply";
 	codeBlockIndex: number;
 	totalCharacters: number;
 	totalLines: number;
@@ -1240,45 +1269,45 @@ export interface IChatApplyAction {
 
 
 export interface IChatTerminalAction {
-	kind: 'runInTerminal';
+	kind: "runInTerminal";
 	codeBlockIndex: number;
 	languageId?: string;
 }
 
 export interface IChatCommandAction {
-	kind: 'command';
+	kind: "command";
 	commandButton: IChatCommandButton;
 }
 
 export interface IChatFollowupAction {
-	kind: 'followUp';
+	kind: "followUp";
 	followup: IChatFollowup;
 }
 
 export interface IChatBugReportAction {
-	kind: 'bug';
+	kind: "bug";
 }
 
 export interface IChatInlineChatCodeAction {
-	kind: 'inlineChat';
-	action: 'accepted' | 'discarded';
+	kind: "inlineChat";
+	action: "accepted" | "discarded";
 }
 
 
 export interface IChatEditingSessionAction {
-	kind: 'chatEditingSessionAction';
+	kind: "chatEditingSessionAction";
 	uri: URI;
 	hasRemainingEdits: boolean;
-	outcome: 'accepted' | 'rejected' | 'userModified';
+	outcome: "accepted" | "rejected" | "userModified";
 }
 
 export interface IChatEditingHunkAction {
-	kind: 'chatEditingHunkAction';
+	kind: "chatEditingHunkAction";
 	uri: URI;
 	lineCount: number;
 	linesAdded: number;
 	linesRemoved: number;
-	outcome: 'accepted' | 'rejected';
+	outcome: "accepted" | "rejected";
 	hasRemainingEdits: boolean;
 	modeId?: string;
 	modelId?: string;
@@ -1354,10 +1383,10 @@ export function convertLegacyChatSessionTiming(timing: IChatSessionTiming | ILeg
 		return timing;
 	}
 	return {
-		created: timing.startTime,
-		lastRequestStarted: timing.startTime,
-		lastRequestEnded: timing.endTime,
-	};
+    created: timing.startTime,
+    lastRequestStarted: timing.startTime,
+    lastRequestEnded: timing.endTime,
+  };
 }
 
 export const enum ResponseModelState {
@@ -1407,19 +1436,19 @@ export type ChatSendResult =
 	| ChatSendResultQueued;
 
 export interface ChatSendResultRejected {
-	readonly kind: 'rejected';
+	readonly kind: "rejected";
 	readonly reason: string;
 }
 
 export interface ChatSendResultSent {
-	readonly kind: 'sent';
+	readonly kind: "sent";
 	readonly data: IChatSendRequestData;
 	/** Set when the session was replaced by a new one (e.g. untitled -> real contributed session). */
 	readonly newSessionResource?: URI;
 }
 
 export interface ChatSendResultQueued {
-	readonly kind: 'queued';
+	readonly kind: "queued";
 	/**
 	 * Promise that resolves when the queued message is actually processed.
 	 * Will resolve to a 'sent' or 'rejected' result.
@@ -1429,21 +1458,23 @@ export interface ChatSendResultQueued {
 
 export namespace ChatSendResult {
 	export function isSent(result: ChatSendResult): result is ChatSendResultSent {
-		return result.kind === 'sent';
+		return result.kind === "sent";
 	}
 
 	export function isRejected(result: ChatSendResult): result is ChatSendResultRejected {
-		return result.kind === 'rejected';
+		return result.kind === "rejected";
 	}
 
 	export function isQueued(result: ChatSendResult): result is ChatSendResultQueued {
-		return result.kind === 'queued';
+		return result.kind === "queued";
 	}
 
 	/** Assertion function for tests - asserts that the result is a sent result */
 	export function assertSent(result: ChatSendResult): asserts result is ChatSendResultSent {
-		if (result.kind !== 'sent') {
-			throw new Error(`Expected ChatSendResult to be 'sent', but was '${result.kind}'`);
+		if (result.kind !== "sent") {
+			throw new Error(
+        `Expected ChatSendResult to be 'sent', but was '${result.kind}'`,
+      );
 		}
 	}
 }
@@ -1473,9 +1504,9 @@ export type IChatLocationData = IChatEditorLocationData | IChatNotebookLocationD
  */
 export const enum ChatRequestQueueKind {
 	/** Request is queued to be sent after current request completes */
-	Queued = 'queued',
+	Queued = "queued",
 	/** Request is queued and signals the active request to yield */
-	Steering = 'steering'
+	Steering = "steering"
 }
 
 export interface IChatSendRequestOptions {
@@ -1552,7 +1583,7 @@ export interface IChatSendRequestOptions {
 
 export type IChatModelReference = IReference<IChatModel>;
 
-export const IChatService = createDecorator<IChatService>('IChatService');
+export const IChatService = createDecorator<IChatService>("IChatService");
 
 export interface IChatService {
 	_serviceBrand: undefined;
@@ -1666,7 +1697,7 @@ export interface IChatService {
 	readonly onDidReceiveQuestionCarouselAnswer: Event<{ requestId: string; resolveId: string; answers: IChatQuestionAnswers | undefined }>;
 	notifyQuestionCarouselAnswer(requestId: string, resolveId: string, answers: IChatQuestionAnswers | undefined): void;
 
-	readonly onDidDisposeSession: Event<{ readonly sessionResources: readonly URI[]; readonly reason: 'cleared' }>;
+	readonly onDidDisposeSession: Event<{ readonly sessionResources: readonly URI[]; readonly reason: "cleared" }>;
 
 	transferChatSession(transferredSessionResource: URI, toWorkspace: URI): Promise<void>;
 
@@ -1689,7 +1720,7 @@ export interface IChatSessionContext {
 	readonly initialSessionOptions?: ReadonlyChatSessionOptionsMap;
 }
 
-export const KEYWORD_ACTIVIATION_SETTING_ID = 'accessibility.voice.keywordActivation';
+export const KEYWORD_ACTIVIATION_SETTING_ID = "accessibility.voice.keywordActivation";
 
 export interface IChatSessionStartOptions {
 	canUseTools?: boolean;
@@ -1697,12 +1728,12 @@ export interface IChatSessionStartOptions {
 	debugOwner?: string;
 }
 
-export const ChatStopCancellationNoopEventName = 'chat.stopCancellationNoop';
+export const ChatStopCancellationNoopEventName = "chat.stopCancellationNoop";
 
 export type ChatStopCancellationNoopEvent = {
 	source: string;
-	reason: 'noWidget' | 'noViewModel' | 'noPendingRequest' | 'requestAlreadyCanceled' | 'requestIdUnavailable';
-	requestInProgress: 'true' | 'false' | 'unknown';
+	reason: "noWidget" | "noViewModel" | "noPendingRequest" | "requestAlreadyCanceled" | "requestIdUnavailable";
+	requestInProgress: "true" | "false" | "unknown";
 	pendingRequests: number;
 	sessionScheme?: string;
 	lastRequestId?: string;
@@ -1710,31 +1741,31 @@ export type ChatStopCancellationNoopEvent = {
 };
 
 export type ChatStopCancellationNoopClassification = {
-	source: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The layer where stop cancellation no-op occurred.' };
-	reason: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The no-op reason when stop cancellation did not dispatch fully.' };
-	requestInProgress: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Whether request-in-progress was true, false, or unknown at no-op time.' };
-	pendingRequests: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The number of queued pending requests at no-op time when known.'; isMeasurement: true };
-	sessionScheme?: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The URI scheme of the session resource (e.g. vscodeLocalChatSession vs remote).' };
-	lastRequestId?: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The ID of the last request in the session, for correlating with tool invocations.' };
-	chatSessionId?: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The chat session ID.' };
-	owner: 'roblourens';
-	comment: 'Tracks possible no-op stop cancellation paths.';
+	source: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The layer where stop cancellation no-op occurred." };
+	reason: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The no-op reason when stop cancellation did not dispatch fully." };
+	requestInProgress: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Whether request-in-progress was true, false, or unknown at no-op time." };
+	pendingRequests: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The number of queued pending requests at no-op time when known."; isMeasurement: true };
+	sessionScheme?: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The URI scheme of the session resource (e.g. vscodeLocalChatSession vs remote)." };
+	lastRequestId?: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The ID of the last request in the session, for correlating with tool invocations." };
+	chatSessionId?: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The chat session ID." };
+	owner: "roblourens";
+	comment: "Tracks possible no-op stop cancellation paths.";
 };
 
-export const ChatPendingRequestChangeEventName = 'chat.pendingRequestChange';
+export const ChatPendingRequestChangeEventName = "chat.pendingRequestChange";
 
 export type ChatPendingRequestChangeEvent = {
-	action: 'add' | 'remove' | 'notCancelable';
+	action: "add" | "remove" | "notCancelable";
 	source: string;
 	requestId?: string;
 	chatSessionId?: string;
 };
 
 export type ChatPendingRequestChangeClassification = {
-	action: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Whether a pending request was added or removed.' };
-	source: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The method that triggered the pending request change.' };
-	requestId?: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The request ID associated with the pending request change.' };
-	chatSessionId?: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The chat session ID.' };
-	owner: 'roblourens';
-	comment: 'Tracks pending request lifecycle changes in the chat service.';
+	action: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Whether a pending request was added or removed." };
+	source: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The method that triggered the pending request change." };
+	requestId?: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The request ID associated with the pending request change." };
+	chatSessionId?: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The chat session ID." };
+	owner: "roblourens";
+	comment: "Tracks pending request lifecycle changes in the chat service.";
 };

@@ -3,23 +3,46 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { diffSets } from '../../../base/common/collections.js';
-import { Emitter } from '../../../base/common/event.js';
-import { assertReturnsDefined } from '../../../base/common/types.js';
-import { URI } from '../../../base/common/uri.js';
-import { createDecorator } from '../../../platform/instantiation/common/instantiation.js';
-import { IEditorTabDto, IEditorTabGroupDto, IExtHostEditorTabsShape, MainContext, MainThreadEditorTabsShape, TabInputKind, TabModelOperationKind, TabOperation } from './extHost.protocol.js';
-import { IExtHostRpcService } from './extHostRpcService.js';
-import * as typeConverters from './extHostTypeConverters.js';
-import { ChatEditorTabInput, CustomEditorTabInput, InteractiveWindowInput, NotebookDiffEditorTabInput, NotebookEditorTabInput, TerminalEditorTabInput, TextDiffTabInput, TextMergeTabInput, TextTabInput, WebviewEditorTabInput, TextMultiDiffTabInput } from './extHostTypes.js';
-import type * as vscode from 'vscode';
+import { diffSets } from "../../../base/common/collections.js";
+import { Emitter } from "../../../base/common/event.js";
+import { assertReturnsDefined } from "../../../base/common/types.js";
+import { URI } from "../../../base/common/uri.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import {
+  IEditorTabDto,
+  IEditorTabGroupDto,
+  IExtHostEditorTabsShape,
+  MainContext,
+  MainThreadEditorTabsShape,
+  TabInputKind,
+  TabModelOperationKind,
+  TabOperation,
+} from "./extHost.protocol.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
+import * as typeConverters from "./extHostTypeConverters.js";
+import {
+  ChatEditorTabInput,
+  CustomEditorTabInput,
+  InteractiveWindowInput,
+  NotebookDiffEditorTabInput,
+  NotebookEditorTabInput,
+  TerminalEditorTabInput,
+  TextDiffTabInput,
+  TextMergeTabInput,
+  TextTabInput,
+  WebviewEditorTabInput,
+  TextMultiDiffTabInput,
+} from "./extHostTypes.js";
+import type * as vscode from "vscode";
 
 export interface IExtHostEditorTabs extends IExtHostEditorTabsShape {
 	readonly _serviceBrand: undefined;
 	tabGroups: vscode.TabGroups;
 }
 
-export const IExtHostEditorTabs = createDecorator<IExtHostEditorTabs>('IExtHostEditorTabs');
+export const IExtHostEditorTabs = createDecorator<IExtHostEditorTabs>(
+  "IExtHostEditorTabs",
+);
 
 type AnyTabInput = TextTabInput | TextDiffTabInput | TextMultiDiffTabInput | CustomEditorTabInput | NotebookEditorTabInput | NotebookDiffEditorTabInput | WebviewEditorTabInput | TerminalEditorTabInput | InteractiveWindowInput | ChatEditorTabInput;
 
@@ -62,7 +85,7 @@ class ExtHostEditorTab {
 				},
 				get group() {
 					return that._parentGroup.apiObject;
-				}
+				},
 			};
 			this._apiObject = Object.freeze<vscode.Tab>(obj);
 		}
@@ -83,25 +106,53 @@ class ExtHostEditorTab {
 			case TabInputKind.TextInput:
 				return new TextTabInput(URI.revive(this._dto.input.uri));
 			case TabInputKind.TextDiffInput:
-				return new TextDiffTabInput(URI.revive(this._dto.input.original), URI.revive(this._dto.input.modified));
+				return new TextDiffTabInput(
+          URI.revive(this._dto.input.original),
+          URI.revive(this._dto.input.modified),
+        );
 			case TabInputKind.TextMergeInput:
-				return new TextMergeTabInput(URI.revive(this._dto.input.base), URI.revive(this._dto.input.input1), URI.revive(this._dto.input.input2), URI.revive(this._dto.input.result));
+				return new TextMergeTabInput(
+          URI.revive(this._dto.input.base),
+          URI.revive(this._dto.input.input1),
+          URI.revive(this._dto.input.input2),
+          URI.revive(this._dto.input.result),
+        );
 			case TabInputKind.CustomEditorInput:
-				return new CustomEditorTabInput(URI.revive(this._dto.input.uri), this._dto.input.viewType);
+				return new CustomEditorTabInput(
+          URI.revive(this._dto.input.uri),
+          this._dto.input.viewType,
+        );
 			case TabInputKind.WebviewEditorInput:
 				return new WebviewEditorTabInput(this._dto.input.viewType);
 			case TabInputKind.NotebookInput:
-				return new NotebookEditorTabInput(URI.revive(this._dto.input.uri), this._dto.input.notebookType);
+				return new NotebookEditorTabInput(
+          URI.revive(this._dto.input.uri),
+          this._dto.input.notebookType,
+        );
 			case TabInputKind.NotebookDiffInput:
-				return new NotebookDiffEditorTabInput(URI.revive(this._dto.input.original), URI.revive(this._dto.input.modified), this._dto.input.notebookType);
+				return new NotebookDiffEditorTabInput(
+          URI.revive(this._dto.input.original),
+          URI.revive(this._dto.input.modified),
+          this._dto.input.notebookType,
+        );
 			case TabInputKind.TerminalEditorInput:
 				return new TerminalEditorTabInput();
 			case TabInputKind.InteractiveEditorInput:
-				return new InteractiveWindowInput(URI.revive(this._dto.input.uri), URI.revive(this._dto.input.inputBoxUri));
+				return new InteractiveWindowInput(
+          URI.revive(this._dto.input.uri),
+          URI.revive(this._dto.input.inputBoxUri),
+        );
 			case TabInputKind.ChatEditorInput:
 				return new ChatEditorTabInput();
 			case TabInputKind.MultiDiffEditorInput:
-				return new TextMultiDiffTabInput(this._dto.input.diffEditors.map(diff => new TextDiffTabInput(URI.revive(diff.original), URI.revive(diff.modified))));
+				return new TextMultiDiffTabInput(
+          this._dto.input.diffEditors.map(
+            diff => new TextDiffTabInput(
+              URI.revive(diff.original),
+              URI.revive(diff.modified),
+            ),
+          ),
+        );
 			default:
 				return undefined;
 		}
@@ -113,7 +164,7 @@ class ExtHostEditorTabGroup {
 	private _apiObject: vscode.TabGroup | undefined;
 	private _dto: IEditorTabGroupDto;
 	private _tabs: ExtHostEditorTab[] = [];
-	private _activeTabId: string = '';
+	private _activeTabId: string = "";
 	private _activeGroupIdGetter: () => number | undefined;
 
 	constructor(dto: IEditorTabGroupDto, activeGroupIdGetter: () => number | undefined) {
@@ -124,7 +175,9 @@ class ExtHostEditorTabGroup {
 			if (tabDto.isActive) {
 				this._activeTabId = tabDto.id;
 			}
-			this._tabs.push(new ExtHostEditorTab(tabDto, this, () => this.activeTabId()));
+			this._tabs.push(
+        new ExtHostEditorTab(tabDto, this, () => this.activeTabId()),
+      );
 		}
 	}
 
@@ -145,7 +198,7 @@ class ExtHostEditorTabGroup {
 				},
 				get tabs() {
 					return Object.freeze(that._tabs.map(tab => tab.apiObject));
-				}
+				},
 			};
 			this._apiObject = Object.freeze<vscode.TabGroup>(obj);
 		}
@@ -167,7 +220,11 @@ class ExtHostEditorTabGroup {
 	acceptTabOperation(operation: TabOperation): ExtHostEditorTab {
 		// In the open case we add the tab to the group
 		if (operation.kind === TabModelOperationKind.TAB_OPEN) {
-			const tab = new ExtHostEditorTab(operation.tabDto, this, () => this.activeTabId());
+			const tab = new ExtHostEditorTab(
+        operation.tabDto,
+        this,
+        () => this.activeTabId(),
+      );
 			// Insert tab at editor index
 			this._tabs.splice(operation.index, 0, tab);
 			if (operation.tabDto.isActive) {
@@ -177,27 +234,33 @@ class ExtHostEditorTabGroup {
 		} else if (operation.kind === TabModelOperationKind.TAB_CLOSE) {
 			const tab = this._tabs.splice(operation.index, 1)[0];
 			if (!tab) {
-				throw new Error(`Tab close updated received for index ${operation.index} which does not exist`);
+				throw new Error(
+          `Tab close updated received for index ${operation.index} which does not exist`,
+        );
 			}
 			if (tab.tabId === this._activeTabId) {
-				this._activeTabId = '';
+				this._activeTabId = "";
 			}
 			return tab;
 		} else if (operation.kind === TabModelOperationKind.TAB_MOVE) {
 			if (operation.oldIndex === undefined) {
-				throw new Error('Invalid old index on move IPC');
+				throw new Error("Invalid old index on move IPC");
 			}
 			// Splice to remove at old index and insert at new index === moving the tab
 			const tab = this._tabs.splice(operation.oldIndex, 1)[0];
 			if (!tab) {
-				throw new Error(`Tab move updated received for index ${operation.oldIndex} which does not exist`);
+				throw new Error(
+          `Tab move updated received for index ${operation.oldIndex} which does not exist`,
+        );
 			}
 			this._tabs.splice(operation.index, 0, tab);
 			return tab;
 		}
-		const tab = this._tabs.find(extHostTab => extHostTab.tabId === operation.tabDto.id);
+		const tab = this._tabs.find(
+      extHostTab => extHostTab.tabId === operation.tabDto.id,
+    );
 		if (!tab) {
-			throw new Error('INVALID tab');
+			throw new Error("INVALID tab");
 		}
 		if (operation.tabDto.isActive) {
 			this._activeTabId = operation.tabDto.id;
@@ -205,7 +268,7 @@ class ExtHostEditorTabGroup {
 			// Events aren't guaranteed to be in order so if we receive a dto that matches the active tab id
 			// but isn't active we mark the active tab id as empty. This prevent onDidActiveTabChange from
 			// firing incorrectly
-			this._activeTabId = '';
+			this._activeTabId = "";
 		}
 		tab.acceptDtoUpdate(operation.tabDto);
 		return tab;
@@ -280,11 +343,15 @@ export class ExtHostEditorTabs implements IExtHostEditorTabs {
 
 	$acceptEditorTabModel(tabGroups: IEditorTabGroupDto[]): void {
 
-		const groupIdsBefore = new Set(this._extHostTabGroups.map(group => group.groupId));
+		const groupIdsBefore = new Set(
+      this._extHostTabGroups.map(group => group.groupId),
+    );
 		const groupIdsAfter = new Set(tabGroups.map(dto => dto.groupId));
 		const diff = diffSets(groupIdsBefore, groupIdsAfter);
 
-		const closed: vscode.TabGroup[] = this._extHostTabGroups.filter(group => diff.removed.includes(group.groupId)).map(group => group.apiObject);
+		const closed: vscode.TabGroup[] = this._extHostTabGroups.filter(group => diff.removed.includes(group.groupId)).map(
+      group => group.apiObject,
+    );
 		const opened: vscode.TabGroup[] = [];
 		const changed: vscode.TabGroup[] = [];
 
@@ -300,7 +367,9 @@ export class ExtHostEditorTabs implements IExtHostEditorTabs {
 		});
 
 		// Set the active tab group id
-		const activeTabGroupId = assertReturnsDefined(tabGroups.find(group => group.isActive === true)?.groupId);
+		const activeTabGroupId = assertReturnsDefined(
+      tabGroups.find(group => group.isActive === true)?.groupId,
+    );
 		if (activeTabGroupId !== undefined && this._activeGroupId !== activeTabGroupId) {
 			this._activeGroupId = activeTabGroupId;
 		}
@@ -308,47 +377,59 @@ export class ExtHostEditorTabs implements IExtHostEditorTabs {
 	}
 
 	$acceptTabGroupUpdate(groupDto: IEditorTabGroupDto) {
-		const group = this._extHostTabGroups.find(group => group.groupId === groupDto.groupId);
+		const group = this._extHostTabGroups.find(
+      group => group.groupId === groupDto.groupId,
+    );
 		if (!group) {
-			throw new Error('Update Group IPC call received before group creation.');
+			throw new Error("Update Group IPC call received before group creation.");
 		}
 		group.acceptGroupDtoUpdate(groupDto);
 		if (groupDto.isActive) {
 			this._activeGroupId = groupDto.groupId;
 		}
-		this._onDidChangeTabGroups.fire(Object.freeze({ changed: [group.apiObject], opened: [], closed: [] }));
+		this._onDidChangeTabGroups.fire(
+      Object.freeze({ changed: [group.apiObject], opened: [], closed: [] }),
+    );
 	}
 
 	$acceptTabOperation(operation: TabOperation) {
-		const group = this._extHostTabGroups.find(group => group.groupId === operation.groupId);
+		const group = this._extHostTabGroups.find(
+      group => group.groupId === operation.groupId,
+    );
 		if (!group) {
-			throw new Error('Update Tabs IPC call received before group creation.');
+			throw new Error("Update Tabs IPC call received before group creation.");
 		}
 		const tab = group.acceptTabOperation(operation);
 
 		// Construct the tab change event based on the operation
 		switch (operation.kind) {
 			case TabModelOperationKind.TAB_OPEN:
-				this._onDidChangeTabs.fire(Object.freeze({
-					opened: [tab.apiObject],
-					closed: [],
-					changed: []
-				}));
+				this._onDidChangeTabs.fire(
+          Object.freeze({
+            opened: [tab.apiObject],
+            closed: [],
+            changed: [],
+          }),
+        );
 				return;
 			case TabModelOperationKind.TAB_CLOSE:
-				this._onDidChangeTabs.fire(Object.freeze({
-					opened: [],
-					closed: [tab.apiObject],
-					changed: []
-				}));
+				this._onDidChangeTabs.fire(
+          Object.freeze({
+            opened: [],
+            closed: [tab.apiObject],
+            changed: [],
+          }),
+        );
 				return;
 			case TabModelOperationKind.TAB_MOVE:
 			case TabModelOperationKind.TAB_UPDATE:
-				this._onDidChangeTabs.fire(Object.freeze({
-					opened: [],
-					closed: [],
-					changed: [tab.apiObject]
-				}));
+				this._onDidChangeTabs.fire(
+          Object.freeze({
+            opened: [],
+            closed: [],
+            changed: [tab.apiObject],
+          }),
+        );
 				return;
 		}
 	}
@@ -365,7 +446,9 @@ export class ExtHostEditorTabs implements IExtHostEditorTabs {
 	}
 
 	private _findExtHostTabGroupFromApi(apiTabGroup: vscode.TabGroup): ExtHostEditorTabGroup | undefined {
-		return this._extHostTabGroups.find(candidate => candidate.apiObject === apiTabGroup);
+		return this._extHostTabGroups.find(
+      candidate => candidate.apiObject === apiTabGroup,
+    );
 	}
 
 	private async _closeTabs(tabs: vscode.Tab[], preserveFocus?: boolean): Promise<boolean> {
@@ -373,7 +456,7 @@ export class ExtHostEditorTabs implements IExtHostEditorTabs {
 		for (const tab of tabs) {
 			const extHostTab = this._findExtHostTabFromApi(tab);
 			if (!extHostTab) {
-				throw new Error('Tab close: Invalid tab not found!');
+				throw new Error("Tab close: Invalid tab not found!");
 			}
 			extHostTabIds.push(extHostTab.tabId);
 		}
@@ -385,7 +468,7 @@ export class ExtHostEditorTabs implements IExtHostEditorTabs {
 		for (const group of groups) {
 			const extHostGroup = this._findExtHostTabGroupFromApi(group);
 			if (!extHostGroup) {
-				throw new Error('Group close: Invalid group not found!');
+				throw new Error("Group close: Invalid group not found!");
 			}
 			extHostGroupIds.push(extHostGroup.groupId);
 		}

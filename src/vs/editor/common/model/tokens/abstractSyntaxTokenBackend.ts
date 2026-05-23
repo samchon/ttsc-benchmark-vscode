@@ -3,20 +3,30 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { equals } from '../../../../base/common/arrays.js';
-import { RunOnceScheduler } from '../../../../base/common/async.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable, IDisposable } from '../../../../base/common/lifecycle.js';
-import { LineRange } from '../../core/ranges/lineRange.js';
-import { StandardTokenType } from '../../encodedTokenAttributes.js';
-import { ILanguageIdCodec } from '../../languages.js';
-import { IAttachedView } from '../../model.js';
-import { TextModel } from '../textModel.js';
-import { IModelContentChangedEvent, IModelTokensChangedEvent, IModelFontTokensChangedEvent } from '../../textModelEvents.js';
-import { BackgroundTokenizationState } from '../../tokenizationTextModelPart.js';
-import { LineTokens } from '../../tokens/lineTokens.js';
-import { derivedOpts, IObservable, ISettableObservable, observableSignal, observableValueOpts } from '../../../../base/common/observable.js';
-import { equalsIfDefinedC, thisEqualsC, arrayEqualsC } from '../../../../base/common/equals.js';
+import { equals } from "../../../../base/common/arrays.js";
+import { RunOnceScheduler } from "../../../../base/common/async.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable, IDisposable } from "../../../../base/common/lifecycle.js";
+import { LineRange } from "../../core/ranges/lineRange.js";
+import { StandardTokenType } from "../../encodedTokenAttributes.js";
+import { ILanguageIdCodec } from "../../languages.js";
+import { IAttachedView } from "../../model.js";
+import { TextModel } from "../textModel.js";
+import {
+  IModelContentChangedEvent,
+  IModelTokensChangedEvent,
+  IModelFontTokensChangedEvent,
+} from "../../textModelEvents.js";
+import { BackgroundTokenizationState } from "../../tokenizationTextModelPart.js";
+import { LineTokens } from "../../tokens/lineTokens.js";
+import {
+  derivedOpts,
+  IObservable,
+  ISettableObservable,
+  observableSignal,
+  observableValueOpts,
+} from "../../../../base/common/observable.js";
+import { equalsIfDefinedC, thisEqualsC, arrayEqualsC } from "../../../../base/common/equals.js";
 
 /**
  * @internal
@@ -33,11 +43,11 @@ export class AttachedViews implements IDisposable {
 	constructor() {
 		this.visibleLineRanges = derivedOpts({
 			owner: this,
-			equalsFn: arrayEqualsC(thisEqualsC())
+			equalsFn: arrayEqualsC(thisEqualsC()),
 		}, reader => {
 			this._viewsChanged.read(reader);
 			const ranges = LineRange.joinMany(
-				[...this._views].map(view => view.state.read(reader)?.visibleLineRanges ?? [])
+				[...this._views].map(view => view.state.read(reader)?.visibleLineRanges ?? []),
 			);
 			return ranges;
 		});
@@ -45,8 +55,8 @@ export class AttachedViews implements IDisposable {
 
 	public attachView(): IAttachedView {
 		const view = new AttachedViewImpl((state) => {
-			this._onDidChangeVisibleRanges.fire({ view, state });
-		});
+      this._onDidChangeVisibleRanges.fire({ view, state });
+    });
 		this._views.add(view);
 		this._viewsChanged.trigger(undefined);
 		return view;
@@ -76,7 +86,11 @@ export class AttachedViewState {
 		if (this === other) {
 			return true;
 		}
-		if (!equals(this.visibleLineRanges, other.visibleLineRanges, (a, b) => a.equals(b))) {
+		if (!equals(
+      this.visibleLineRanges,
+      other.visibleLineRanges,
+      (a, b) => a.equals(b),
+    )) {
 			return false;
 		}
 		if (this.stabilized !== other.stabilized) {
@@ -91,13 +105,18 @@ class AttachedViewImpl implements IAttachedView {
 	public get state(): IObservable<AttachedViewState | undefined> { return this._state; }
 
 	constructor(
-		private readonly handleStateChange: (state: AttachedViewState) => void
+		private readonly handleStateChange: (state: AttachedViewState) => void,
 	) {
-		this._state = observableValueOpts<AttachedViewState | undefined>({ owner: this, equalsFn: equalsIfDefinedC((a, b) => a.equals(b)) }, undefined);
+		this._state = observableValueOpts<AttachedViewState | undefined>(
+      { owner: this, equalsFn: equalsIfDefinedC((a, b) => a.equals(b)) },
+      undefined,
+    );
 	}
 
 	setVisibleLines(visibleLines: { startLineNumber: number; endLineNumber: number }[], stabilized: boolean): void {
-		const visibleLineRanges = visibleLines.map((line) => new LineRange(line.startLineNumber, line.endLineNumber + 1));
+		const visibleLineRanges = visibleLines.map(
+      (line) => new LineRange(line.startLineNumber, line.endLineNumber + 1),
+    );
 		const state = new AttachedViewState(visibleLineRanges, stabilized);
 		this._state.set(state, undefined, undefined);
 		this.handleStateChange(state);
@@ -106,7 +125,9 @@ class AttachedViewImpl implements IAttachedView {
 
 
 export class AttachedViewHandler extends Disposable {
-	private readonly runner = this._register(new RunOnceScheduler(() => this.update(), 50));
+	private readonly runner = this._register(
+    new RunOnceScheduler(() => this.update(), 50),
+  );
 
 	private _computedLineRanges: readonly LineRange[] = [];
 	private _lineRanges: readonly LineRange[] = [];
@@ -117,7 +138,11 @@ export class AttachedViewHandler extends Disposable {
 	}
 
 	private update(): void {
-		if (equals(this._computedLineRanges, this._lineRanges, (a, b) => a.equals(b))) {
+		if (equals(
+      this._computedLineRanges,
+      this._lineRanges,
+      (a, b) => a.equals(b),
+    )) {
 			return;
 		}
 		this._computedLineRanges = this._lineRanges;
@@ -145,11 +170,15 @@ export abstract class AbstractSyntaxTokenBackend extends Disposable {
 	/** @internal, should not be exposed by the text model! */
 	public abstract readonly onDidChangeBackgroundTokenizationState: Event<void>;
 
-	protected readonly _onDidChangeTokens = this._register(new Emitter<IModelTokensChangedEvent>());
+	protected readonly _onDidChangeTokens = this._register(
+    new Emitter<IModelTokensChangedEvent>(),
+  );
 	/** @internal, should not be exposed by the text model! */
 	public readonly onDidChangeTokens: Event<IModelTokensChangedEvent> = this._onDidChangeTokens.event;
 
-	protected readonly _onDidChangeFontTokens: Emitter<IModelFontTokensChangedEvent> = this._register(new Emitter<IModelFontTokensChangedEvent>());
+	protected readonly _onDidChangeFontTokens: Emitter<IModelFontTokensChangedEvent> = this._register(
+    new Emitter<IModelFontTokensChangedEvent>(),
+  );
 	/** @internal, should not be exposed by the text model! */
 	public readonly onDidChangeFontTokens: Event<IModelFontTokensChangedEvent> = this._onDidChangeFontTokens.event;
 

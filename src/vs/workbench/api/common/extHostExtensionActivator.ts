@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type * as vscode from 'vscode';
-import * as errors from '../../../base/common/errors.js';
-import { Disposable, IDisposable } from '../../../base/common/lifecycle.js';
-import { ExtensionDescriptionRegistry } from '../../services/extensions/common/extensionDescriptionRegistry.js';
-import { ExtensionIdentifier, ExtensionIdentifierMap } from '../../../platform/extensions/common/extensions.js';
-import { ExtensionActivationReason, MissingExtensionDependency } from '../../services/extensions/common/extensions.js';
-import { ILogService } from '../../../platform/log/common/log.js';
-import { Barrier } from '../../../base/common/async.js';
+import type * as vscode from "vscode";
+import * as errors from "../../../base/common/errors.js";
+import { Disposable, IDisposable } from "../../../base/common/lifecycle.js";
+import { ExtensionDescriptionRegistry } from "../../services/extensions/common/extensionDescriptionRegistry.js";
+import { ExtensionIdentifier, ExtensionIdentifierMap } from "../../../platform/extensions/common/extensions.js";
+import { ExtensionActivationReason, MissingExtensionDependency } from "../../services/extensions/common/extensions.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { Barrier } from "../../../base/common/async.js";
 
 /**
  * Represents the source code (module) of an extension.
@@ -28,10 +28,10 @@ export interface IExtensionAPI {
 }
 
 export type ExtensionActivationTimesFragment = {
-	startup?: { classification: 'SystemMetaData'; purpose: 'PerformanceAndHealth'; comment: 'Activation occurred during startup' };
-	codeLoadingTime?: { classification: 'SystemMetaData'; purpose: 'PerformanceAndHealth'; comment: 'Time it took to load the extension\'s code' };
-	activateCallTime?: { classification: 'SystemMetaData'; purpose: 'PerformanceAndHealth'; comment: 'Time it took to call activate' };
-	activateResolvedTime?: { classification: 'SystemMetaData'; purpose: 'PerformanceAndHealth'; comment: 'Time it took for async-activation to finish' };
+	startup?: { classification: "SystemMetaData"; purpose: "PerformanceAndHealth"; comment: "Activation occurred during startup" };
+	codeLoadingTime?: { classification: "SystemMetaData"; purpose: "PerformanceAndHealth"; comment: "Time it took to load the extension's code" };
+	activateCallTime?: { classification: "SystemMetaData"; purpose: "PerformanceAndHealth"; comment: "Time it took to call activate" };
+	activateResolvedTime?: { classification: "SystemMetaData"; purpose: "PerformanceAndHealth"; comment: "Time it took for async-activation to finish" };
 };
 
 export class ExtensionActivationTimes {
@@ -80,11 +80,11 @@ export class ExtensionActivationTimesBuilder {
 
 	public build(): ExtensionActivationTimes {
 		return new ExtensionActivationTimes(
-			this._startup,
-			this._delta(this._codeLoadingStart, this._codeLoadingStop),
-			this._delta(this._activateCallStart, this._activateCallStop),
-			this._delta(this._activateResolveStart, this._activateResolveStop)
-		);
+      this._startup,
+      this._delta(this._codeLoadingStart, this._codeLoadingStop),
+      this._delta(this._activateCallStart, this._activateCallStop),
+      this._delta(this._activateResolveStart, this._activateResolveStop),
+    );
 	}
 
 	public codeLoadingStart(): void {
@@ -127,7 +127,7 @@ export class ActivatedExtension {
 		activationTimes: ExtensionActivationTimes,
 		module: IExtensionModule,
 		exports: IExtensionAPI | undefined,
-		disposable: IDisposable
+		disposable: IDisposable,
 	) {
 		this.activationFailed = activationFailed;
 		this.activationFailedError = activationFailedError;
@@ -140,19 +140,40 @@ export class ActivatedExtension {
 
 export class EmptyExtension extends ActivatedExtension {
 	constructor(activationTimes: ExtensionActivationTimes) {
-		super(false, null, activationTimes, { activate: undefined, deactivate: undefined }, undefined, Disposable.None);
+		super(
+      false,
+      null,
+      activationTimes,
+      { activate: undefined, deactivate: undefined },
+      undefined,
+      Disposable.None,
+    );
 	}
 }
 
 export class HostExtension extends ActivatedExtension {
 	constructor() {
-		super(false, null, ExtensionActivationTimes.NONE, { activate: undefined, deactivate: undefined }, undefined, Disposable.None);
+		super(
+      false,
+      null,
+      ExtensionActivationTimes.NONE,
+      { activate: undefined, deactivate: undefined },
+      undefined,
+      Disposable.None,
+    );
 	}
 }
 
 class FailedExtension extends ActivatedExtension {
 	constructor(activationError: Error) {
-		super(true, activationError, ExtensionActivationTimes.NONE, { activate: undefined, deactivate: undefined }, undefined, Disposable.None);
+		super(
+      true,
+      activationError,
+      ExtensionActivationTimes.NONE,
+      { activate: undefined, deactivate: undefined },
+      undefined,
+      Disposable.None,
+    );
 	}
 }
 
@@ -178,7 +199,7 @@ export class ExtensionsActivator implements IDisposable {
 		registry: ExtensionDescriptionRegistry,
 		globalRegistry: ExtensionDescriptionRegistry,
 		host: IExtensionsActivatorHost,
-		@ILogService private readonly _logService: ILogService
+		@ILogService private readonly _logService: ILogService,
 	) {
 		this._registry = registry;
 		this._globalRegistry = globalRegistry;
@@ -209,7 +230,9 @@ export class ExtensionsActivator implements IDisposable {
 	public getActivatedExtension(extensionId: ExtensionIdentifier): ActivatedExtension {
 		const op = this._operations.get(extensionId);
 		if (!op || !op.value) {
-			throw new Error(`Extension '${extensionId.value}' is not known or not activated`);
+			throw new Error(
+        `Extension '${extensionId.value}' is not known or not activated`,
+      );
 		}
 		return op.value;
 	}
@@ -219,11 +242,15 @@ export class ExtensionsActivator implements IDisposable {
 			return;
 		}
 
-		const activateExtensions = this._registry.getExtensionDescriptionsForActivationEvent(activationEvent);
-		await this._activateExtensions(activateExtensions.map(e => ({
-			id: e.identifier,
-			reason: { startup, extensionId: e.identifier, activationEvent }
-		})));
+		const activateExtensions = this._registry.getExtensionDescriptionsForActivationEvent(
+      activationEvent,
+    );
+		await this._activateExtensions(
+      activateExtensions.map(e => ({
+        id: e.identifier,
+        reason: { startup, extensionId: e.identifier, activationEvent },
+      })),
+    );
 
 		this._alreadyActivatedEvents[activationEvent] = true;
 	}
@@ -256,21 +283,30 @@ export class ExtensionsActivator implements IDisposable {
 			return this._createAndSaveOperation(currentActivation, null, [], null);
 		}
 
-		const currentExtension = this._registry.getExtensionDescription(currentActivation.id);
+		const currentExtension = this._registry.getExtensionDescription(
+      currentActivation.id,
+    );
 		if (!currentExtension) {
 			// Error condition 0: unknown extension
-			const error = new Error(`Cannot activate unknown extension '${currentActivation.id.value}'`);
-			const result = this._createAndSaveOperation(currentActivation, null, [], new FailedExtension(error));
+			const error = new Error(
+        `Cannot activate unknown extension '${currentActivation.id.value}'`,
+      );
+			const result = this._createAndSaveOperation(
+        currentActivation,
+        null,
+        [],
+        new FailedExtension(error),
+      );
 			this._host.onExtensionActivationError(
-				currentActivation.id,
-				error,
-				new MissingExtensionDependency(currentActivation.id.value)
-			);
+        currentActivation.id,
+        error,
+        new MissingExtensionDependency(currentActivation.id.value),
+      );
 			return result;
 		}
 
 		const deps: ActivationOperation[] = [];
-		const depIds = (typeof currentExtension.extensionDependencies === 'undefined' ? [] : currentExtension.extensionDependencies);
+		const depIds = (typeof currentExtension.extensionDependencies === "undefined" ? [] : currentExtension.extensionDependencies);
 		for (const depId of depIds) {
 
 			if (this._isResolvedExtension(depId)) {
@@ -286,10 +322,12 @@ export class ExtensionsActivator implements IDisposable {
 
 			if (this._isHostExtension(depId)) {
 				// must first wait for the dependency to activate
-				deps.push(this._handleActivationRequest({
-					id: this._globalRegistry.getExtensionDescription(depId)!.identifier,
-					reason: currentActivation.reason
-				}));
+				deps.push(
+          this._handleActivationRequest({
+            id: this._globalRegistry.getExtensionDescription(depId)!.identifier,
+            reason: currentActivation.reason,
+          }),
+        );
 				continue;
 			}
 
@@ -301,40 +339,68 @@ export class ExtensionsActivator implements IDisposable {
 				}
 
 				// must first wait for the dependency to activate
-				deps.push(this._handleActivationRequest({
-					id: depDesc.identifier,
-					reason: currentActivation.reason
-				}));
+				deps.push(
+          this._handleActivationRequest({
+            id: depDesc.identifier,
+            reason: currentActivation.reason,
+          }),
+        );
 				continue;
 			}
 
 			// Error condition 1: unknown dependency
 			const currentExtensionFriendlyName = currentExtension.displayName || currentExtension.identifier.value;
-			const error = new Error(`Cannot activate the '${currentExtensionFriendlyName}' extension because it depends on unknown extension '${depId}'`);
-			const result = this._createAndSaveOperation(currentActivation, currentExtension.displayName, [], new FailedExtension(error));
+			const error = new Error(
+        `Cannot activate the '${currentExtensionFriendlyName}' extension because it depends on unknown extension '${depId}'`,
+      );
+			const result = this._createAndSaveOperation(
+        currentActivation,
+        currentExtension.displayName,
+        [],
+        new FailedExtension(error),
+      );
 			this._host.onExtensionActivationError(
-				currentExtension.identifier,
-				error,
-				new MissingExtensionDependency(depId)
-			);
+        currentExtension.identifier,
+        error,
+        new MissingExtensionDependency(depId),
+      );
 			return result;
 		}
 
-		return this._createAndSaveOperation(currentActivation, currentExtension.displayName, deps, null);
+		return this._createAndSaveOperation(
+      currentActivation,
+      currentExtension.displayName,
+      deps,
+      null,
+    );
 	}
 
 	private _createAndSaveOperation(activation: ActivationIdAndReason, displayName: string | null | undefined, deps: ActivationOperation[], value: ActivatedExtension | null): ActivationOperation {
-		const operation = new ActivationOperation(activation.id, displayName, activation.reason, deps, value, this._host, this._logService);
+		const operation = new ActivationOperation(
+      activation.id,
+      displayName,
+      activation.reason,
+      deps,
+      value,
+      this._host,
+      this._logService,
+    );
 		this._operations.set(activation.id, operation);
 		return operation;
 	}
 
 	private _isHostExtension(extensionId: ExtensionIdentifier | string): boolean {
-		return ExtensionDescriptionRegistry.isHostExtension(extensionId, this._registry, this._globalRegistry);
+		return ExtensionDescriptionRegistry.isHostExtension(
+      extensionId,
+      this._registry,
+      this._globalRegistry,
+    );
 	}
 
 	private _isResolvedExtension(extensionId: ExtensionIdentifier | string): boolean {
-		const extensionDescription = this._globalRegistry.getExtensionDescription(extensionId);
+		const extensionDescription = this._globalRegistry.getExtensionDescription(
+      extensionId,
+    );
 		if (!extensionDescription) {
 			// unknown extension
 			return false;
@@ -363,7 +429,7 @@ class ActivationOperation {
 		private readonly _deps: ActivationOperation[],
 		private _value: ActivatedExtension | null,
 		private readonly _host: IExtensionsActivatorHost,
-		@ILogService private readonly _logService: ILogService
+		@ILogService private readonly _logService: ILogService,
 	) {
 		this._initialize();
 	}
@@ -401,7 +467,9 @@ class ActivationOperation {
 
 				if (dep.value && dep.value.activationFailed) {
 					// Error condition 2: a dependency has already failed activation
-					const error = new Error(`Cannot activate the '${this.friendlyName}' extension because its dependency '${dep.friendlyName}' failed to activate`);
+					const error = new Error(
+            `Cannot activate the '${this.friendlyName}' extension because its dependency '${dep.friendlyName}' failed to activate`,
+          );
 					// eslint-disable-next-line local/code-no-any-casts
 					(<any>error).detail = dep.value.activationFailedError;
 					this._value = new FailedExtension(error);
@@ -421,7 +489,10 @@ class ActivationOperation {
 
 	private async _activate(): Promise<void> {
 		try {
-			this._value = await this._host.actualActivateExtension(this._id, this._reason);
+			this._value = await this._host.actualActivateExtension(
+        this._id,
+        this._reason,
+      );
 		} catch (err) {
 
 			const error = new Error();
@@ -447,7 +518,9 @@ class ActivationOperation {
 			}
 
 			this._host.onExtensionActivationError(this._id, error, null);
-			this._logService.error(`Activating extension ${this._id.value} failed due to an error:`);
+			this._logService.error(
+        `Activating extension ${this._id.value} failed due to an error:`,
+      );
 			this._logService.error(err);
 		}
 	}

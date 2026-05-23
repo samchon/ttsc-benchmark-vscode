@@ -3,11 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { getCaseInsensitive } from '../../../base/common/objects.js';
-import { win32 } from '../../../base/common/path.js';
-import { isLinux, isWindows } from '../../../base/common/platform.js';
-import { findExecutable } from '../../../base/node/processes.js';
-import { ISandboxDependencyStatus, ISandboxHelperService, IWindowsMxcFilesystemPolicy } from '../common/sandboxHelperService.js';
+import { getCaseInsensitive } from "../../../base/common/objects.js";
+import { win32 } from "../../../base/common/path.js";
+import { isLinux, isWindows } from "../../../base/common/platform.js";
+import { findExecutable } from "../../../base/node/processes.js";
+import {
+  ISandboxDependencyStatus,
+  ISandboxHelperService,
+  IWindowsMxcFilesystemPolicy,
+} from "../common/sandboxHelperService.js";
 
 type FindCommand = (command: string) => Promise<string | undefined>;
 
@@ -20,14 +24,14 @@ export class SandboxHelperService implements ISandboxHelperService {
 		}
 
 		const [bubblewrapPath, socatPath] = await Promise.all([
-			findCommand('bwrap'),
-			findCommand('socat'),
-		]);
+      findCommand("bwrap"),
+      findCommand("socat"),
+    ]);
 
 		return {
-			bubblewrapInstalled: !!bubblewrapPath,
-			socatInstalled: !!socatPath,
-		};
+      bubblewrapInstalled: !!bubblewrapPath,
+      socatInstalled: !!socatPath,
+    };
 	}
 
 	checkSandboxDependencies(): Promise<ISandboxDependencyStatus | undefined> {
@@ -39,14 +43,18 @@ export class SandboxHelperService implements ISandboxHelperService {
 			return undefined;
 		}
 
-		const { getAvailableToolsPolicy, getUserProfilePolicy } = await import('@microsoft/mxc-sdk');
-		const availableToolsPolicy = getAvailableToolsPolicy(process.env, { containerType: 'processcontainer' });
+		const { getAvailableToolsPolicy, getUserProfilePolicy } = await import(
+      "@microsoft/mxc-sdk",
+    );
+		const availableToolsPolicy = getAvailableToolsPolicy(process.env, {
+      containerType: "processcontainer",
+    });
 		const userProfilePolicy = getUserProfilePolicy();
 		const psHome = await this._getPSHome();
 		return {
-			readonlyPaths: [...new Set([...availableToolsPolicy.readonlyPaths, ...userProfilePolicy.readonlyPaths, ...this._getTempReadPaths(), ...(psHome ? [psHome] : [])])],
-			readwritePaths: [...new Set([...availableToolsPolicy.readwritePaths, ...userProfilePolicy.readwritePaths])],
-		};
+      readonlyPaths: [...new Set([...availableToolsPolicy.readonlyPaths, ...userProfilePolicy.readonlyPaths, ...this._getTempReadPaths(), ...(psHome ? [psHome] : [])])],
+      readwritePaths: [...new Set([...availableToolsPolicy.readwritePaths, ...userProfilePolicy.readwritePaths])],
+    };
 	}
 
 	async getWindowsMxcEnvironment(): Promise<string[] | undefined> {
@@ -55,8 +63,8 @@ export class SandboxHelperService implements ISandboxHelperService {
 		}
 
 		const env: string[] = [];
-		const path = getCaseInsensitive(process.env, 'PATH');
-		if (typeof path === 'string' && path) {
+		const path = getCaseInsensitive(process.env, "PATH");
+		if (typeof path === "string" && path) {
 			env.push(`PATH=${path}`);
 		}
 
@@ -68,8 +76,8 @@ export class SandboxHelperService implements ISandboxHelperService {
 	}
 
 	private async _getPSHome(): Promise<string | undefined> {
-		const psHome = getCaseInsensitive(process.env, 'PSHOME');
-		if (typeof psHome === 'string' && psHome) {
+		const psHome = getCaseInsensitive(process.env, "PSHOME");
+		if (typeof psHome === "string" && psHome) {
 			return psHome;
 		}
 
@@ -79,9 +87,9 @@ export class SandboxHelperService implements ISandboxHelperService {
 
 	private _getTempReadPaths(): string[] {
 		const paths: string[] = [];
-		for (const variable of ['TMP', 'TEMP']) {
+		for (const variable of ["TMP", "TEMP"]) {
 			const path = getCaseInsensitive(process.env, variable);
-			if (typeof path === 'string' && path) {
+			if (typeof path === "string" && path) {
 				paths.push(path);
 			}
 		}

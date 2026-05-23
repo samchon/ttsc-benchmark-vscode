@@ -3,23 +3,31 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { findLast } from '../../../../../base/common/arraysFind.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { derived, derivedObservableWithWritableCache, IObservable, IReader, ITransaction, observableValue, transaction } from '../../../../../base/common/observable.js';
-import { Range } from '../../../../../editor/common/core/range.js';
-import { ScrollType } from '../../../../../editor/common/editorCommon.js';
-import { ITextModel } from '../../../../../editor/common/model.js';
-import { localize } from '../../../../../nls.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { INotificationService } from '../../../../../platform/notification/common/notification.js';
-import { MergeEditorLineRange } from '../model/lineRange.js';
-import { MergeEditorModel } from '../model/mergeEditorModel.js';
-import { InputNumber, ModifiedBaseRange, ModifiedBaseRangeState } from '../model/modifiedBaseRange.js';
-import { observableConfigValue } from '../../../../../platform/observable/common/platformObservableUtils.js';
-import { BaseCodeEditorView } from './editors/baseCodeEditorView.js';
-import { CodeEditorView } from './editors/codeEditorView.js';
-import { InputCodeEditorView } from './editors/inputCodeEditorView.js';
-import { ResultCodeEditorView } from './editors/resultCodeEditorView.js';
+import { findLast } from "../../../../../base/common/arraysFind.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import {
+  derived,
+  derivedObservableWithWritableCache,
+  IObservable,
+  IReader,
+  ITransaction,
+  observableValue,
+  transaction,
+} from "../../../../../base/common/observable.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import { ScrollType } from "../../../../../editor/common/editorCommon.js";
+import { ITextModel } from "../../../../../editor/common/model.js";
+import { localize } from "../../../../../nls.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { INotificationService } from "../../../../../platform/notification/common/notification.js";
+import { MergeEditorLineRange } from "../model/lineRange.js";
+import { MergeEditorModel } from "../model/mergeEditorModel.js";
+import { InputNumber, ModifiedBaseRange, ModifiedBaseRangeState } from "../model/modifiedBaseRange.js";
+import { observableConfigValue } from "../../../../../platform/observable/common/platformObservableUtils.js";
+import { BaseCodeEditorView } from "./editors/baseCodeEditorView.js";
+import { CodeEditorView } from "./editors/codeEditorView.js";
+import { InputCodeEditorView } from "./editors/inputCodeEditorView.js";
+import { ResultCodeEditorView } from "./editors/resultCodeEditorView.js";
 
 export class MergeEditorViewModel extends Disposable {
 	private readonly manuallySetActiveModifiedBaseRange;
@@ -40,12 +48,14 @@ export class MergeEditorViewModel extends Disposable {
 		this.manuallySetActiveModifiedBaseRange = observableValue<
 			{ range: ModifiedBaseRange | undefined; counter: number }
 		>(this, { range: undefined, counter: 0 });
-		this.attachedHistory = this._register(new AttachedHistory(this.model.resultTextModel));
+		this.attachedHistory = this._register(
+      new AttachedHistory(this.model.resultTextModel),
+    );
 		this.shouldUseAppendInsteadOfAccept = observableConfigValue<boolean>(
-			'mergeEditor.shouldUseAppendInsteadOfAccept',
-			false,
-			this.configurationService,
-		);
+      "mergeEditor.shouldUseAppendInsteadOfAccept",
+      false,
+      this.configurationService,
+    );
 		this.counter = 0;
 		this.lastFocusedEditor = derivedObservableWithWritableCache<
 			{ view: CodeEditorView | undefined; counter: number }
@@ -76,13 +86,13 @@ export class MergeEditorViewModel extends Disposable {
 			}
 
 			if (lastFocusedEditor.view === this.inputCodeEditorView1) {
-				return 'input1';
+				return "input1";
 			} else if (lastFocusedEditor.view === this.inputCodeEditorView2) {
-				return 'input2';
+				return "input2";
 			} else if (lastFocusedEditor.view === this.resultCodeEditorView) {
-				return 'result';
+				return "result";
 			} else if (lastFocusedEditor.view === this.baseCodeEditorView.read(reader)) {
-				return 'base';
+				return "base";
 			}
 
 			return undefined;
@@ -110,7 +120,7 @@ export class MergeEditorViewModel extends Disposable {
 
 			return {
 				rangesInBase,
-				sourceEditor
+				sourceEditor,
 			};
 		});
 		this.activeModifiedBaseRange = derived(this,
@@ -137,7 +147,7 @@ export class MergeEditorViewModel extends Disposable {
 						? range.startLineNumber === cursorLineNumber
 						: range.contains(cursorLineNumber);
 				});
-			}
+			},
 		);
 
 		this._register(resultCodeEditorView.editor.onDidChangeModelContent(e => {
@@ -202,7 +212,10 @@ export class MergeEditorViewModel extends Disposable {
 
 	private getRangeOfModifiedBaseRange(editor: CodeEditorView, modifiedBaseRange: ModifiedBaseRange, reader: IReader | undefined): MergeEditorLineRange {
 		if (editor === this.resultCodeEditorView) {
-			return this.model.getLineRangeInResult(modifiedBaseRange.baseRange, reader);
+			return this.model.getLineRangeInResult(
+        modifiedBaseRange.baseRange,
+        reader,
+      );
 		} else if (editor === this.baseCodeEditorView.get()) {
 			return modifiedBaseRange.baseRange;
 		} else {
@@ -214,7 +227,10 @@ export class MergeEditorViewModel extends Disposable {
 	public readonly activeModifiedBaseRange;
 
 	public setActiveModifiedBaseRange(range: ModifiedBaseRange | undefined, tx: ITransaction): void {
-		this.manuallySetActiveModifiedBaseRange.set({ range, counter: this.counter++ }, tx);
+		this.manuallySetActiveModifiedBaseRange.set(
+      { range, counter: this.counter++ },
+      tx,
+    );
 	}
 
 	public setState(
@@ -223,7 +239,10 @@ export class MergeEditorViewModel extends Disposable {
 		tx: ITransaction,
 		inputNumber: InputNumber,
 	): void {
-		this.manuallySetActiveModifiedBaseRange.set({ range: baseRange, counter: this.counter++ }, tx);
+		this.manuallySetActiveModifiedBaseRange.set(
+      { range: baseRange, counter: this.counter++ },
+      tx,
+    );
 		this.model.setState(baseRange, state, inputNumber, tx);
 		this.lastFocusedEditor.clearCache(tx);
 	}
@@ -239,23 +258,31 @@ export class MergeEditorViewModel extends Disposable {
 		}
 		const modifiedBaseRange = getModifiedBaseRange(editor, curLineNumber);
 		if (modifiedBaseRange) {
-			const range = this.getRangeOfModifiedBaseRange(editor, modifiedBaseRange, undefined);
+			const range = this.getRangeOfModifiedBaseRange(
+        editor,
+        modifiedBaseRange,
+        undefined,
+      );
 			editor.editor.focus();
 
 			let startLineNumber = range.startLineNumber;
 			let endLineNumberExclusive = range.endLineNumberExclusive;
 			if (range.startLineNumber > editor.editor.getModel()!.getLineCount()) {
 				transaction(tx => {
-					this.setActiveModifiedBaseRange(modifiedBaseRange, tx);
-				});
+          this.setActiveModifiedBaseRange(modifiedBaseRange, tx);
+        });
 				startLineNumber = endLineNumberExclusive = editor.editor.getModel()!.getLineCount();
 			}
 
 			editor.editor.setPosition({
-				lineNumber: startLineNumber,
-				column: editor.editor.getModel()!.getLineFirstNonWhitespaceColumn(startLineNumber),
-			});
-			editor.editor.revealLinesNearTop(startLineNumber, endLineNumberExclusive, ScrollType.Smooth);
+        lineNumber: startLineNumber,
+        column: editor.editor.getModel()!.getLineFirstNonWhitespaceColumn(startLineNumber),
+      });
+			editor.editor.revealLinesNearTop(
+        startLineNumber,
+        endLineNumberExclusive,
+        ScrollType.Smooth,
+      );
 		}
 	}
 
@@ -267,11 +294,11 @@ export class MergeEditorViewModel extends Disposable {
 					.find(
 						(r) =>
 							predicate(r) &&
-							this.getRangeOfModifiedBaseRange(e, r, undefined).startLineNumber > l
+							this.getRangeOfModifiedBaseRange(e, r, undefined).startLineNumber > l,
 					) ||
 				this.model.modifiedBaseRanges
 					.get()
-					.find((r) => predicate(r))
+					.find((r) => predicate(r)),
 		);
 	}
 
@@ -282,19 +309,24 @@ export class MergeEditorViewModel extends Disposable {
 					this.model.modifiedBaseRanges.get(),
 					(r) =>
 						predicate(r) &&
-						this.getRangeOfModifiedBaseRange(e, r, undefined).endLineNumberExclusive < l
+						this.getRangeOfModifiedBaseRange(e, r, undefined).endLineNumberExclusive < l,
 				) ||
 				findLast(
 					this.model.modifiedBaseRanges.get(),
-					(r) => predicate(r)
-				)
+					(r) => predicate(r),
+				),
 		);
 	}
 
 	public toggleActiveConflict(inputNumber: 1 | 2): void {
 		const activeModifiedBaseRange = this.activeModifiedBaseRange.get();
 		if (!activeModifiedBaseRange) {
-			this.notificationService.error(localize('noConflictMessage', "There is currently no conflict focused that can be toggled."));
+			this.notificationService.error(
+        localize(
+          "noConflictMessage",
+          "There is currently no conflict focused that can be toggled.",
+        ),
+      );
 			return;
 		}
 		transaction(tx => {
@@ -316,7 +348,7 @@ export class MergeEditorViewModel extends Disposable {
 					range,
 					this.model.getState(range).get().withInputValue(inputNumber, true),
 					tx,
-					inputNumber
+					inputNumber,
 				);
 			}
 		});
@@ -369,7 +401,10 @@ class AttachedHistory extends Disposable {
 	 * When the last text edit is undone/redone, so is is this history item.
 	 */
 	public pushAttachedHistoryElement(element: IAttachedHistoryElement): void {
-		this.attachedHistory.push({ altId: this.model.getAlternativeVersionId(), element });
+		this.attachedHistory.push({
+      altId: this.model.getAlternativeVersionId(),
+      element,
+    });
 	}
 }
 
@@ -378,4 +413,4 @@ interface IAttachedHistoryElement {
 	redo(): void;
 }
 
-export type MergeEditorType = 'input1' | 'input2' | 'result' | 'base';
+export type MergeEditorType = "input1" | "input2" | "result" | "base";

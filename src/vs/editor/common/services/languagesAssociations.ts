@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ParsedPattern, parse } from '../../../base/common/glob.js';
-import { Mimes } from '../../../base/common/mime.js';
-import { Schemas } from '../../../base/common/network.js';
-import { basename, posix } from '../../../base/common/path.js';
-import { DataUri } from '../../../base/common/resources.js';
-import { endsWithIgnoreCase, equals, startsWithUTF8BOM } from '../../../base/common/strings.js';
-import { URI } from '../../../base/common/uri.js';
-import { PLAINTEXT_LANGUAGE_ID } from '../languages/modesRegistry.js';
+import { ParsedPattern, parse } from "../../../base/common/glob.js";
+import { Mimes } from "../../../base/common/mime.js";
+import { Schemas } from "../../../base/common/network.js";
+import { basename, posix } from "../../../base/common/path.js";
+import { DataUri } from "../../../base/common/resources.js";
+import { endsWithIgnoreCase, equals, startsWithUTF8BOM } from "../../../base/common/strings.js";
+import { URI } from "../../../base/common/uri.js";
+import { PLAINTEXT_LANGUAGE_ID } from "../languages/modesRegistry.js";
 
 export interface ILanguageAssociation {
 	readonly id: string;
@@ -52,7 +52,10 @@ export function registerConfiguredLanguageAssociation(association: ILanguageAsso
 function _registerLanguageAssociation(association: ILanguageAssociation, userConfigured: boolean, warnOnOverwrite: boolean): void {
 
 	// Register
-	const associationItem = toLanguageAssociationItem(association, userConfigured);
+	const associationItem = toLanguageAssociationItem(
+    association,
+    userConfigured,
+  );
 	registeredAssociations.push(associationItem);
 	if (!associationItem.userConfigured) {
 		nonUserRegisteredAssociations.push(associationItem);
@@ -88,16 +91,16 @@ function _registerLanguageAssociation(association: ILanguageAssociation, userCon
 
 function toLanguageAssociationItem(association: ILanguageAssociation, userConfigured: boolean): ILanguageAssociationItem {
 	return {
-		id: association.id,
-		mime: association.mime,
-		filename: association.filename,
-		extension: association.extension,
-		filepattern: association.filepattern,
-		firstline: association.firstline,
-		userConfigured: userConfigured,
-		filepatternParsed: association.filepattern ? parse(association.filepattern, { ignoreCase: true }) : undefined,
-		filepatternOnPath: association.filepattern ? association.filepattern.indexOf(posix.sep) >= 0 : false
-	};
+    id: association.id,
+    mime: association.mime,
+    filename: association.filename,
+    extension: association.extension,
+    filepattern: association.filepattern,
+    firstline: association.firstline,
+    userConfigured: userConfigured,
+    filepatternParsed: association.filepattern ? parse(association.filepattern, { ignoreCase: true }) : undefined,
+    filepatternOnPath: association.filepattern ? association.filepattern.indexOf(posix.sep) >= 0 : false,
+  };
 }
 
 /**
@@ -112,7 +115,9 @@ export function clearPlatformLanguageAssociations(): void {
  * Clear language associations from the registry (configured).
  */
 export function clearConfiguredLanguageAssociations(): void {
-	registeredAssociations = registeredAssociations.filter(a => !a.userConfigured);
+	registeredAssociations = registeredAssociations.filter(
+    a => !a.userConfigured,
+  );
 	userRegisteredAssociations = [];
 }
 
@@ -158,7 +163,7 @@ function getAssociations(resource: URI | null, firstLine?: string): IdAndMime[] 
 	}
 
 	if (!path) {
-		return [{ id: 'unknown', mime: Mimes.unknown }];
+		return [{ id: "unknown", mime: Mimes.unknown }];
 	}
 
 	path = path.toLowerCase();
@@ -166,26 +171,43 @@ function getAssociations(resource: URI | null, firstLine?: string): IdAndMime[] 
 	const filename = basename(path);
 
 	// 1.) User configured mappings have highest priority
-	const configuredLanguage = getAssociationByPath(path, filename, userRegisteredAssociations);
+	const configuredLanguage = getAssociationByPath(
+    path,
+    filename,
+    userRegisteredAssociations,
+  );
 	if (configuredLanguage) {
-		return [configuredLanguage, { id: PLAINTEXT_LANGUAGE_ID, mime: Mimes.text }];
+		return [
+      configuredLanguage,
+      { id: PLAINTEXT_LANGUAGE_ID, mime: Mimes.text },
+    ];
 	}
 
 	// 2.) Registered mappings have middle priority
-	const registeredLanguage = getAssociationByPath(path, filename, nonUserRegisteredAssociations);
+	const registeredLanguage = getAssociationByPath(
+    path,
+    filename,
+    nonUserRegisteredAssociations,
+  );
 	if (registeredLanguage) {
-		return [registeredLanguage, { id: PLAINTEXT_LANGUAGE_ID, mime: Mimes.text }];
+		return [
+      registeredLanguage,
+      { id: PLAINTEXT_LANGUAGE_ID, mime: Mimes.text },
+    ];
 	}
 
 	// 3.) Firstline has lowest priority
 	if (firstLine) {
 		const firstlineLanguage = getAssociationByFirstline(firstLine);
 		if (firstlineLanguage) {
-			return [firstlineLanguage, { id: PLAINTEXT_LANGUAGE_ID, mime: Mimes.text }];
+			return [
+        firstlineLanguage,
+        { id: PLAINTEXT_LANGUAGE_ID, mime: Mimes.text },
+      ];
 		}
 	}
 
-	return [{ id: 'unknown', mime: Mimes.unknown }];
+	return [{ id: "unknown", mime: Mimes.unknown }];
 }
 
 function getAssociationByPath(path: string, filename: string, associations: ILanguageAssociationItem[]): ILanguageAssociationItem | undefined {

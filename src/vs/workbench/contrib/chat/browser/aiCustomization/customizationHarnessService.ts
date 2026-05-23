@@ -3,17 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { InstantiationType, registerSingleton } from '../../../../../platform/instantiation/common/extensions.js';
+import { InstantiationType, registerSingleton } from "../../../../../platform/instantiation/common/extensions.js";
 import {
-	CustomizationHarnessServiceBase,
-	ICustomizationHarnessService,
-	createVSCodeHarnessDescriptor,
-
-} from '../../common/customizationHarnessService.js';
-import { IPromptsService } from '../../common/promptSyntax/service/promptsService.js';
-import { AICustomizationSources } from '../../common/aiCustomizationWorkspaceService.js';
-import { SessionType } from '../../common/chatSessionsService.js';
-import { URI } from '../../../../../base/common/uri.js';
+  CustomizationHarnessServiceBase,
+  ICustomizationHarnessService,
+  createVSCodeHarnessDescriptor,
+} from "../../common/customizationHarnessService.js";
+import { IPromptsService } from "../../common/promptSyntax/service/promptsService.js";
+import { AICustomizationSources } from "../../common/aiCustomizationWorkspaceService.js";
+import { SessionType } from "../../common/chatSessionsService.js";
+import { URI } from "../../../../../base/common/uri.js";
 
 /**
  * Core implementation of the customization harness service.
@@ -25,12 +24,15 @@ class CustomizationHarnessService extends CustomizationHarnessServiceBase {
 	constructor(
 		@IPromptsService promptsService: IPromptsService,
 	) {
-		const localExtras = [AICustomizationSources.extension, AICustomizationSources.builtin];
+		const localExtras = [
+      AICustomizationSources.extension,
+      AICustomizationSources.builtin,
+    ];
 		super(
-			[createVSCodeHarnessDescriptor(localExtras)],
-			SessionType.Local,
-			promptsService,
-		);
+      [createVSCodeHarnessDescriptor(localExtras)],
+      SessionType.Local,
+      promptsService,
+    );
 	}
 
 	override getSessionResourceForHarness(sessionType: string): URI {
@@ -47,5 +49,9 @@ class CustomizationHarnessService extends CustomizationHarnessServiceBase {
 	}
 }
 
-registerSingleton(ICustomizationHarnessService, CustomizationHarnessService, InstantiationType.Delayed);
+registerSingleton(
+  ICustomizationHarnessService,
+  CustomizationHarnessService,
+  InstantiationType.Delayed,
+);
 

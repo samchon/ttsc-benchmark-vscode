@@ -32,16 +32,16 @@ export interface TimeApi {
 
 export function captureGlobalTimeApi(): TimeApi {
 	return {
-		setTimeout: globalThis.setTimeout.bind(globalThis) as unknown as TimeApi['setTimeout'],
-		clearTimeout: globalThis.clearTimeout.bind(globalThis) as unknown as TimeApi['clearTimeout'],
-		setInterval: globalThis.setInterval.bind(globalThis) as unknown as TimeApi['setInterval'],
-		clearInterval: globalThis.clearInterval.bind(globalThis) as unknown as TimeApi['clearInterval'],
-		setImmediate: globalThis.setImmediate?.bind(globalThis) as unknown as TimeApi['setImmediate'],
-		clearImmediate: globalThis.clearImmediate?.bind(globalThis) as unknown as TimeApi['clearImmediate'],
-		requestAnimationFrame: globalThis.requestAnimationFrame?.bind(globalThis) as unknown as TimeApi['requestAnimationFrame'],
-		cancelAnimationFrame: globalThis.cancelAnimationFrame?.bind(globalThis) as unknown as TimeApi['cancelAnimationFrame'],
-		Date: globalThis.Date,
-	};
+    setTimeout: globalThis.setTimeout.bind(globalThis) as unknown as TimeApi["setTimeout"],
+    clearTimeout: globalThis.clearTimeout.bind(globalThis) as unknown as TimeApi["clearTimeout"],
+    setInterval: globalThis.setInterval.bind(globalThis) as unknown as TimeApi["setInterval"],
+    clearInterval: globalThis.clearInterval.bind(globalThis) as unknown as TimeApi["clearInterval"],
+    setImmediate: globalThis.setImmediate?.bind(globalThis) as unknown as TimeApi["setImmediate"],
+    clearImmediate: globalThis.clearImmediate?.bind(globalThis) as unknown as TimeApi["clearImmediate"],
+    requestAnimationFrame: globalThis.requestAnimationFrame?.bind(globalThis) as unknown as TimeApi["requestAnimationFrame"],
+    cancelAnimationFrame: globalThis.cancelAnimationFrame?.bind(globalThis) as unknown as TimeApi["cancelAnimationFrame"],
+    Date: globalThis.Date,
+  };
 }
 
 /** A snapshot of the real host time API at module-load time. */

@@ -3,11 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { IProgress, IProgressStep } from '../../../../platform/progress/common/progress.js';
-import { ISearchTreeFileMatch, ISearchTreeMatch, FileMatchOrMatch } from './searchTreeModel/searchTreeCommon.js';
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IProgress, IProgressStep } from "../../../../platform/progress/common/progress.js";
+import { ISearchTreeFileMatch, ISearchTreeMatch, FileMatchOrMatch } from "./searchTreeModel/searchTreeCommon.js";
 
-export const IReplaceService = createDecorator<IReplaceService>('replaceService');
+export const IReplaceService = createDecorator<IReplaceService>(
+  "replaceService",
+);
 
 export interface IReplaceService {
 

@@ -3,47 +3,66 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../../base/browser/dom.js';
-import { renderLabelWithIcons } from '../../../../../base/browser/ui/iconLabel/iconLabels.js';
-import { IAction } from '../../../../../base/common/actions.js';
-import { Codicon } from '../../../../../base/common/codicons.js';
-import { Disposable, DisposableStore, IDisposable, MutableDisposable } from '../../../../../base/common/lifecycle.js';
-import { autorun, IObservable, observableValue } from '../../../../../base/common/observable.js';
-import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { URI } from '../../../../../base/common/uri.js';
-import * as nls from '../../../../../nls.js';
-import { IActionViewItemService } from '../../../../../platform/actions/browser/actionViewItemService.js';
-import { getFlatActionBarActions } from '../../../../../platform/actions/browser/menuEntryActionViewItem.js';
-import { Action2, IMenuService, MenuId, registerAction2 } from '../../../../../platform/actions/common/actions.js';
-import { IActionWidgetService } from '../../../../../platform/actionWidget/browser/actionWidget.js';
-import { IActionWidgetDropdownAction, IActionWidgetDropdownActionProvider, IActionWidgetDropdownOptions } from '../../../../../platform/actionWidget/browser/actionWidgetDropdown.js';
-import { ICommandService } from '../../../../../platform/commands/common/commands.js';
-import { ContextKeyExpr, IContextKeyService } from '../../../../../platform/contextkey/common/contextkey.js';
-import { ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IKeybindingService } from '../../../../../platform/keybinding/common/keybinding.js';
-import { IOpenerService } from '../../../../../platform/opener/common/opener.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../../platform/storage/common/storage.js';
-import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
-import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../../../workbench/common/contributions.js';
-import { ChatContextKeyExprs } from '../../../../../workbench/contrib/chat/common/actions/chatContextKeys.js';
-import { AICustomizationManagementCommands } from '../../../../../workbench/contrib/chat/browser/aiCustomization/aiCustomizationManagement.js';
-import { AICustomizationManagementSection } from '../../../../../workbench/contrib/chat/common/aiCustomizationWorkspaceService.js';
-import type { CustomizationAgentRef } from '../../../../../platform/agentHost/common/state/protocol/state.js';
-import { type IChatInputPickerOptions, ChatInputPickerActionViewItem } from '../../../../../workbench/contrib/chat/browser/widget/input/chatInputPickerActionItem.js';
-import { Menus } from '../../../../browser/menus.js';
-import { IAgentHostSessionsProvider, isAgentHostProvider, LOCAL_AGENT_HOST_PROVIDER_ID, REMOTE_AGENT_HOST_PROVIDER_RE } from '../../../../common/agentHostSessionsProvider.js';
-import { ActiveSessionProviderIdContext, IsPhoneLayoutContext } from '../../../../common/contextkeys.js';
-import { IsSessionsWindowContext } from '../../../../../workbench/common/contextkeys.js';
-import { ISessionsProvidersService } from '../../../../services/sessions/browser/sessionsProvidersService.js';
-import { type ISession, SessionStatus } from '../../../../services/sessions/common/session.js';
-import { ISessionsManagementService } from '../../../../services/sessions/common/sessionsManagement.js';
-import { reportNewChatPickerClosed } from '../../../chat/browser/newChatPickerTelemetry.js';
+import * as dom from "../../../../../base/browser/dom.js";
+import { renderLabelWithIcons } from "../../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { IAction } from "../../../../../base/common/actions.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { Disposable, DisposableStore, IDisposable, MutableDisposable } from "../../../../../base/common/lifecycle.js";
+import { autorun, IObservable, observableValue } from "../../../../../base/common/observable.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { URI } from "../../../../../base/common/uri.js";
+import * as nls from "../../../../../nls.js";
+import { IActionViewItemService } from "../../../../../platform/actions/browser/actionViewItemService.js";
+import { getFlatActionBarActions } from "../../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { Action2, IMenuService, MenuId, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { IActionWidgetService } from "../../../../../platform/actionWidget/browser/actionWidget.js";
+import {
+  IActionWidgetDropdownAction,
+  IActionWidgetDropdownActionProvider,
+  IActionWidgetDropdownOptions,
+} from "../../../../../platform/actionWidget/browser/actionWidgetDropdown.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { ContextKeyExpr, IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../../platform/keybinding/common/keybinding.js";
+import { IOpenerService } from "../../../../../platform/opener/common/opener.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
+import {
+  IWorkbenchContribution,
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../../../../workbench/common/contributions.js";
+import { ChatContextKeyExprs } from "../../../../../workbench/contrib/chat/common/actions/chatContextKeys.js";
+import { AICustomizationManagementCommands } from "../../../../../workbench/contrib/chat/browser/aiCustomization/aiCustomizationManagement.js";
+import { AICustomizationManagementSection } from "../../../../../workbench/contrib/chat/common/aiCustomizationWorkspaceService.js";
+import type { CustomizationAgentRef } from "../../../../../platform/agentHost/common/state/protocol/state.js";
+import { type IChatInputPickerOptions, ChatInputPickerActionViewItem } from "../../../../../workbench/contrib/chat/browser/widget/input/chatInputPickerActionItem.js";
+import { Menus } from "../../../../browser/menus.js";
+import {
+  IAgentHostSessionsProvider,
+  isAgentHostProvider,
+  LOCAL_AGENT_HOST_PROVIDER_ID,
+  REMOTE_AGENT_HOST_PROVIDER_RE,
+} from "../../../../common/agentHostSessionsProvider.js";
+import { ActiveSessionProviderIdContext, IsPhoneLayoutContext } from "../../../../common/contextkeys.js";
+import { IsSessionsWindowContext } from "../../../../../workbench/common/contextkeys.js";
+import { ISessionsProvidersService } from "../../../../services/sessions/browser/sessionsProvidersService.js";
+import { type ISession, SessionStatus } from "../../../../services/sessions/common/session.js";
+import { ISessionsManagementService } from "../../../../services/sessions/common/sessionsManagement.js";
+import { reportNewChatPickerClosed } from "../../../chat/browser/newChatPickerTelemetry.js";
 
-const MenuIdAgentHostAgentPicker = new MenuId('sessions.agentHost.agentPicker');
+const MenuIdAgentHostAgentPicker = new MenuId("sessions.agentHost.agentPicker");
 
 const IsActiveSessionAgentHost = ContextKeyExpr.or(
-	ContextKeyExpr.equals(ActiveSessionProviderIdContext.key, LOCAL_AGENT_HOST_PROVIDER_ID),
-	ContextKeyExpr.regex(ActiveSessionProviderIdContext.key, REMOTE_AGENT_HOST_PROVIDER_RE),
+  ContextKeyExpr.equals(
+    ActiveSessionProviderIdContext.key,
+    LOCAL_AGENT_HOST_PROVIDER_ID,
+  ),
+  ContextKeyExpr.regex(
+    ActiveSessionProviderIdContext.key,
+    REMOTE_AGENT_HOST_PROVIDER_RE,
+  ),
 );
 
 // -- Agent Host Agent Picker Action --
@@ -51,12 +70,12 @@ const IsActiveSessionAgentHost = ContextKeyExpr.or(
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'sessions.agentHost.agentPicker',
-			title: nls.localize2('agentHostAgentPicker', "Agent"),
+			id: "sessions.agentHost.agentPicker",
+			title: nls.localize2("agentHostAgentPicker", "Agent"),
 			f1: false,
 			menu: [{
 				id: Menus.NewSessionConfig,
-				group: 'navigation',
+				group: "navigation",
 				order: -1,
 				when: ContextKeyExpr.and(IsActiveSessionAgentHost, IsPhoneLayoutContext.negate()),
 			}, {
@@ -65,7 +84,7 @@ registerAction2(class extends Action2 {
 				// own picker (`agentHostCustomAgentPicker.ts`) gated on
 				// `!isSessionsWindow` so the two surfaces don't double up.
 				id: MenuId.ChatInput,
-				group: 'navigation',
+				group: "navigation",
 				order: 1,
 				when: ContextKeyExpr.and(ChatContextKeyExprs.isAgentHostSession, IsSessionsWindowContext, IsPhoneLayoutContext.negate()),
 			}],
@@ -79,10 +98,10 @@ registerAction2(class extends Action2 {
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
-			id: 'sessions.agentHost.agentPicker.configure',
-			title: nls.localize2('configureCustomAgents', "Configure Custom Agents..."),
+			id: "sessions.agentHost.agentPicker.configure",
+			title: nls.localize2("configureCustomAgents", "Configure Custom Agents..."),
 			f1: false,
-			menu: [{ id: MenuIdAgentHostAgentPicker, group: 'configure', order: 1 }],
+			menu: [{ id: MenuIdAgentHostAgentPicker, group: "configure", order: 1 }],
 		});
 	}
 	override async run(accessor: ServicesAccessor): Promise<void> {
@@ -90,7 +109,7 @@ registerAction2(class extends Action2 {
 		try {
 			await commandService.executeCommand(AICustomizationManagementCommands.OpenEditor, AICustomizationManagementSection.Agents);
 		} catch {
-			await commandService.executeCommand('workbench.action.chat.configure.customagents');
+			await commandService.executeCommand("workbench.action.chat.configure.customagents");
 		}
 	}
 });
@@ -121,7 +140,9 @@ export function resolveAgentHostAgent(
 			return match;
 		}
 	}
-	return storedAgentUri ? agents.find(a => a.uri === storedAgentUri) : undefined;
+	return storedAgentUri ? agents.find(
+    a => a.uri === storedAgentUri,
+  ) : undefined;
 }
 
 interface IAgentPickerDelegate {
@@ -144,18 +165,24 @@ class AgentHostAgentPickerActionItem extends ChatInputPickerActionViewItem {
 		@IOpenerService private readonly openerService: IOpenerService,
 		@IMenuService private readonly menuService: IMenuService,
 	) {
-		const defaultCategory = { label: nls.localize('agentPickerDefaultCategory', "Default"), order: 0 };
-		const customCategory = { label: nls.localize('agentPickerCustomCategory', "Custom Agents"), order: 1 };
+		const defaultCategory = {
+      label: nls.localize("agentPickerDefaultCategory", "Default"),
+      order: 0,
+    };
+		const customCategory = {
+      label: nls.localize("agentPickerCustomCategory", "Custom Agents"),
+      order: 1,
+    };
 
 		const makeDefaultAction = (): IActionWidgetDropdownAction => ({
-			id: 'sessions.agentHost.agentPicker.default',
-			label: nls.localize('agentPickerDefault', "Agent"),
-			tooltip: '',
+			id: "sessions.agentHost.agentPicker.default",
+			label: nls.localize("agentPickerDefault", "Agent"),
+			tooltip: "",
 			class: undefined,
 			enabled: true,
 			icon: ThemeIcon.fromId(Codicon.agent.id),
 			checked: this.delegate.currentAgent.get() === undefined,
-			hover: { content: nls.localize('agentPickerDefaultHover', "Use the default agent.") },
+			hover: { content: nls.localize("agentPickerDefaultHover", "Use the default agent.") },
 			category: defaultCategory,
 			run: async () => {
 				this.delegate.setAgent(undefined);
@@ -170,8 +197,8 @@ class AgentHostAgentPickerActionItem extends ChatInputPickerActionViewItem {
 			const agentUri = URI.parse(agent.uri);
 			const toolbarActions: IAction[] = [{
 				id: `sessions.agentHost.agentPicker.view.${agent.uri}`,
-				label: nls.localize('viewAgent', "View {0} agent", agent.name),
-				tooltip: nls.localize('viewAgent', "View {0} agent", agent.name),
+				label: nls.localize("viewAgent", "View {0} agent", agent.name),
+				tooltip: nls.localize("viewAgent", "View {0} agent", agent.name),
 				class: ThemeIcon.asClassName(Codicon.goToFile),
 				enabled: true,
 				run: async () => {
@@ -181,7 +208,7 @@ class AgentHostAgentPickerActionItem extends ChatInputPickerActionViewItem {
 			return {
 				id: `sessions.agentHost.agentPicker.agent.${agent.uri}`,
 				label: agent.name,
-				tooltip: '',
+				tooltip: "",
 				class: undefined,
 				enabled: true,
 				checked: current?.uri === agent.uri,
@@ -210,16 +237,24 @@ class AgentHostAgentPickerActionItem extends ChatInputPickerActionViewItem {
 			},
 		};
 
-		const widgetOptions: Omit<IActionWidgetDropdownOptions, 'label' | 'labelRenderer'> = {
+		const widgetOptions: Omit<IActionWidgetDropdownOptions, "label" | "labelRenderer"> = {
 			actionProvider,
 			actionBarActionProvider: {
 				getActions: () => this.getFooterActions(),
 			},
 			showItemKeybindings: false,
-			reporter: { id: 'NewChatAgentHostAgentPicker', name: 'NewChatAgentHostAgentPicker', includeOptions: true },
+			reporter: { id: "NewChatAgentHostAgentPicker", name: "NewChatAgentHostAgentPicker", includeOptions: true },
 		};
 
-		super(action, widgetOptions, pickerOptions, actionWidgetService, keybindingService, contextKeyService, telemetryService);
+		super(
+      action,
+      widgetOptions,
+      pickerOptions,
+      actionWidgetService,
+      keybindingService,
+      contextKeyService,
+      telemetryService,
+    );
 
 		this._register(autorun(reader => {
 			this.delegate.currentAgent.read(reader);
@@ -231,7 +266,7 @@ class AgentHostAgentPickerActionItem extends ChatInputPickerActionViewItem {
 
 	override render(container: HTMLElement): void {
 		super.render(container);
-		container.classList.add('chat-agent-picker-item');
+		container.classList.add("chat-agent-picker-item");
 	}
 
 	attachDisposable(d: IDisposable): void {
@@ -239,8 +274,13 @@ class AgentHostAgentPickerActionItem extends ChatInputPickerActionViewItem {
 	}
 
 	private getFooterActions(): IAction[] {
-		const menu = this.menuService.createMenu(MenuIdAgentHostAgentPicker, this.contextKeyService);
-		const actions = getFlatActionBarActions(menu.getActions({ renderShortTitle: true }));
+		const menu = this.menuService.createMenu(
+      MenuIdAgentHostAgentPicker,
+      this.contextKeyService,
+    );
+		const actions = getFlatActionBarActions(
+      menu.getActions({ renderShortTitle: true }),
+    );
 		menu.dispose();
 		return actions;
 	}
@@ -249,7 +289,10 @@ class AgentHostAgentPickerActionItem extends ChatInputPickerActionViewItem {
 		this.setAriaLabelAttributes(element);
 
 		const current = this.delegate.currentAgent.get();
-		const label = current ? current.name : nls.localize('agentPickerDefault', "Agent");
+		const label = current ? current.name : nls.localize(
+      "agentPickerDefault",
+      "Agent",
+    );
 
 		const elements = [];
 		const compact = this.pickerOptions.compact.get();
@@ -259,7 +302,7 @@ class AgentHostAgentPickerActionItem extends ChatInputPickerActionViewItem {
 			elements.push(...renderLabelWithIcons(`$(${Codicon.agent.id})`));
 		}
 		if (!compact || current) {
-			elements.push(dom.$('span.chat-input-picker-label', undefined, label));
+			elements.push(dom.$("span.chat-input-picker-label", undefined, label));
 		}
 		dom.reset(element, ...elements);
 		return null;
@@ -268,7 +311,7 @@ class AgentHostAgentPickerActionItem extends ChatInputPickerActionViewItem {
 
 class AgentHostAgentPickerContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'sessions.contrib.agentHostAgentPicker';
+	static readonly ID = "sessions.contrib.agentHostAgentPicker";
 
 	constructor(
 		@IActionViewItemService actionViewItemService: IActionViewItemService,
@@ -279,15 +322,20 @@ class AgentHostAgentPickerContribution extends Disposable implements IWorkbenchC
 	) {
 		super();
 
-		const factory = (_action: import('../../../../../base/common/actions.js').IAction, _options: import('../../../../../base/browser/ui/actionbar/actionViewItems.js').IActionViewItemOptions, scopedInstantiationService: import('../../../../../platform/instantiation/common/instantiation.js').IInstantiationService) => {
-			const currentAgent = observableValue<CustomizationAgentRef | undefined>('currentAgent', undefined);
+		const factory = (_action: import("../../../../../base/common/actions.js").IAction, _options: import("../../../../../base/browser/ui/actionbar/actionViewItems.js").IActionViewItemOptions, scopedInstantiationService: import("../../../../../platform/instantiation/common/instantiation.js").IInstantiationService) => {
+			const currentAgent = observableValue<CustomizationAgentRef | undefined>(
+        "currentAgent",
+        undefined,
+      );
 			let settingAgentInternally = false;
 
 			const getProvider = (session: ISession | undefined): IAgentHostSessionsProvider | undefined => {
 				if (!session) {
 					return undefined;
 				}
-				const provider = sessionsProvidersService.getProviders().find(p => p.id === session.providerId);
+				const provider = sessionsProvidersService.getProviders().find(
+          p => p.id === session.providerId,
+        );
 				return provider && isAgentHostProvider(provider) ? provider : undefined;
 			};
 
@@ -314,7 +362,7 @@ class AgentHostAgentPickerContribution extends Disposable implements IWorkbenchC
 					}
 					if (!settingAgentInternally) {
 						reportNewChatPickerClosed(telemetryService, {
-							id: 'NewChatAgentHostAgentPicker',
+							id: "NewChatAgentHostAgentPicker",
 							optionIdBefore: previous?.uri,
 							optionIdAfter: agent?.uri,
 							optionLabelBefore: previous?.name,
@@ -327,14 +375,28 @@ class AgentHostAgentPickerContribution extends Disposable implements IWorkbenchC
 			};
 
 			const pickerOptions: IChatInputPickerOptions = {
-				compact: observableValue('compact', false),
-			};
-			const action = { id: 'sessions.agentHost.agentPicker', label: '', enabled: true, class: undefined, tooltip: '', run: () => { } };
-			const picker = scopedInstantiationService.createInstance(AgentHostAgentPickerActionItem, action, delegate, pickerOptions);
+        compact: observableValue("compact", false),
+      };
+			const action = {
+        id: "sessions.agentHost.agentPicker",
+        label: "",
+        enabled: true,
+        class: undefined,
+        tooltip: "",
+        run: () => { },
+      };
+			const picker = scopedInstantiationService.createInstance(
+        AgentHostAgentPickerActionItem,
+        action,
+        delegate,
+        pickerOptions,
+      );
 
 			const initAgent = (session: ISession | undefined, selectedAgentUri: string | undefined, isUntitled: boolean) => {
 				const provider = getProvider(session);
-				const agents = session && provider ? provider.getCustomAgents(session.sessionId) : [];
+				const agents = session && provider ? provider.getCustomAgents(
+          session.sessionId,
+        ) : [];
 
 				if (!session) {
 					currentAgent.set(undefined, undefined);
@@ -342,9 +404,16 @@ class AgentHostAgentPickerContribution extends Disposable implements IWorkbenchC
 				}
 
 				const storedUri = isUntitled
-					? storageService.get(agentHostAgentPickerStorageKey(session.resource.scheme), StorageScope.PROFILE)
+					? storageService.get(
+              agentHostAgentPickerStorageKey(session.resource.scheme),
+              StorageScope.PROFILE,
+            )
 					: undefined;
-				const resolved = resolveAgentHostAgent(agents, selectedAgentUri, storedUri);
+				const resolved = resolveAgentHostAgent(
+          agents,
+          selectedAgentUri,
+          storedUri,
+        );
 				currentAgent.set(resolved, undefined);
 				if (!selectedAgentUri && isUntitled && resolved) {
 					settingAgentInternally = true;
@@ -378,7 +447,11 @@ class AgentHostAgentPickerContribution extends Disposable implements IWorkbenchC
 			};
 			const initFromActiveSession = () => {
 				const session = sessionsManagementService.activeSession.get();
-				initAgent(session, session?.mode.get()?.id, session?.status.get() === SessionStatus.Untitled);
+				initAgent(
+          session,
+          session?.mode.get()?.id,
+          session?.status.get() === SessionStatus.Untitled,
+        );
 			};
 			initFromActiveSession();
 
@@ -416,9 +489,25 @@ class AgentHostAgentPickerContribution extends Disposable implements IWorkbenchC
 			return picker;
 		};
 
-		this._register(actionViewItemService.register(Menus.NewSessionConfig, 'sessions.agentHost.agentPicker', factory));
-		this._register(actionViewItemService.register(MenuId.ChatInput, 'sessions.agentHost.agentPicker', factory));
+		this._register(
+      actionViewItemService.register(
+        Menus.NewSessionConfig,
+        "sessions.agentHost.agentPicker",
+        factory,
+      ),
+    );
+		this._register(
+      actionViewItemService.register(
+        MenuId.ChatInput,
+        "sessions.agentHost.agentPicker",
+        factory,
+      ),
+    );
 	}
 }
 
-registerWorkbenchContribution2(AgentHostAgentPickerContribution.ID, AgentHostAgentPickerContribution, WorkbenchPhase.AfterRestored);
+registerWorkbenchContribution2(
+  AgentHostAgentPickerContribution.ID,
+  AgentHostAgentPickerContribution,
+  WorkbenchPhase.AfterRestored,
+);

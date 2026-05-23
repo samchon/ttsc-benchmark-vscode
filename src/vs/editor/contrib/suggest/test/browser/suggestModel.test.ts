@@ -2,55 +2,64 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import assert from 'assert';
-import { Event } from '../../../../../base/common/event.js';
-import { Disposable, DisposableStore, toDisposable } from '../../../../../base/common/lifecycle.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { mock } from '../../../../../base/test/common/mock.js';
-import { CoreEditingCommands } from '../../../../browser/coreCommands.js';
-import { EditOperation } from '../../../../common/core/editOperation.js';
-import { Position } from '../../../../common/core/position.js';
-import { Range } from '../../../../common/core/range.js';
-import { Selection } from '../../../../common/core/selection.js';
-import { Handler } from '../../../../common/editorCommon.js';
-import { ITextModel } from '../../../../common/model.js';
-import { TextModel } from '../../../../common/model/textModel.js';
-import { CompletionItemKind, CompletionItemProvider, CompletionList, CompletionTriggerKind, EncodedTokenizationResult, InlineCompletionsProvider, IState, TokenizationRegistry } from '../../../../common/languages.js';
-import { MetadataConsts } from '../../../../common/encodedTokenAttributes.js';
-import { ILanguageConfigurationService } from '../../../../common/languages/languageConfigurationRegistry.js';
-import { NullState } from '../../../../common/languages/nullTokenize.js';
-import { ILanguageService } from '../../../../common/languages/language.js';
-import { SnippetController2 } from '../../../snippet/browser/snippetController2.js';
-import { SuggestController } from '../../browser/suggestController.js';
-import { ISuggestMemoryService } from '../../browser/suggestMemory.js';
-import { LineContext, SuggestModel } from '../../browser/suggestModel.js';
-import { ISelectedSuggestion } from '../../browser/suggestWidget.js';
-import { createTestCodeEditor, ITestCodeEditor, withAsyncTestCodeEditor } from '../../../../test/browser/testCodeEditor.js';
-import { createModelServices, createTextModel, instantiateTextModel } from '../../../../test/common/testTextModel.js';
-import { ServiceCollection } from '../../../../../platform/instantiation/common/serviceCollection.js';
-import { IKeybindingService } from '../../../../../platform/keybinding/common/keybinding.js';
-import { MockKeybindingService } from '../../../../../platform/keybinding/test/common/mockKeybindingService.js';
-import { ILabelService } from '../../../../../platform/label/common/label.js';
-import { InMemoryStorageService, IStorageService } from '../../../../../platform/storage/common/storage.js';
-import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
-import { NullTelemetryService } from '../../../../../platform/telemetry/common/telemetryUtils.js';
-import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
-import { LanguageFeaturesService } from '../../../../common/services/languageFeaturesService.js';
-import { ILanguageFeaturesService } from '../../../../common/services/languageFeatures.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { getSnippetSuggestSupport, setSnippetSuggestSupport } from '../../browser/suggest.js';
-import { IEnvironmentService } from '../../../../../platform/environment/common/environment.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { runWithFakedTimers } from '../../../../../base/test/common/timeTravelScheduler.js';
-import { timeout } from '../../../../../base/common/async.js';
-import { InlineCompletionsController } from '../../../inlineCompletions/browser/controller/inlineCompletionsController.js';
-import { InlineSuggestionsView } from '../../../inlineCompletions/browser/view/inlineSuggestionsView.js';
-import { IAccessibilitySignalService } from '../../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js';
-import { IMenuService, IMenu } from '../../../../../platform/actions/common/actions.js';
-import { ILogService, NullLogService } from '../../../../../platform/log/common/log.js';
-import { IEditorWorkerService } from '../../../../common/services/editorWorker.js';
-import { IDefaultAccountService } from '../../../../../platform/defaultAccount/common/defaultAccount.js';
-import { ModifierKeyEmitter } from '../../../../../base/browser/dom.js';
+import assert from "assert";
+import { Event } from "../../../../../base/common/event.js";
+import { Disposable, DisposableStore, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { mock } from "../../../../../base/test/common/mock.js";
+import { CoreEditingCommands } from "../../../../browser/coreCommands.js";
+import { EditOperation } from "../../../../common/core/editOperation.js";
+import { Position } from "../../../../common/core/position.js";
+import { Range } from "../../../../common/core/range.js";
+import { Selection } from "../../../../common/core/selection.js";
+import { Handler } from "../../../../common/editorCommon.js";
+import { ITextModel } from "../../../../common/model.js";
+import { TextModel } from "../../../../common/model/textModel.js";
+import {
+  CompletionItemKind,
+  CompletionItemProvider,
+  CompletionList,
+  CompletionTriggerKind,
+  EncodedTokenizationResult,
+  InlineCompletionsProvider,
+  IState,
+  TokenizationRegistry,
+} from "../../../../common/languages.js";
+import { MetadataConsts } from "../../../../common/encodedTokenAttributes.js";
+import { ILanguageConfigurationService } from "../../../../common/languages/languageConfigurationRegistry.js";
+import { NullState } from "../../../../common/languages/nullTokenize.js";
+import { ILanguageService } from "../../../../common/languages/language.js";
+import { SnippetController2 } from "../../../snippet/browser/snippetController2.js";
+import { SuggestController } from "../../browser/suggestController.js";
+import { ISuggestMemoryService } from "../../browser/suggestMemory.js";
+import { LineContext, SuggestModel } from "../../browser/suggestModel.js";
+import { ISelectedSuggestion } from "../../browser/suggestWidget.js";
+import { createTestCodeEditor, ITestCodeEditor, withAsyncTestCodeEditor } from "../../../../test/browser/testCodeEditor.js";
+import { createModelServices, createTextModel, instantiateTextModel } from "../../../../test/common/testTextModel.js";
+import { ServiceCollection } from "../../../../../platform/instantiation/common/serviceCollection.js";
+import { IKeybindingService } from "../../../../../platform/keybinding/common/keybinding.js";
+import { MockKeybindingService } from "../../../../../platform/keybinding/test/common/mockKeybindingService.js";
+import { ILabelService } from "../../../../../platform/label/common/label.js";
+import { InMemoryStorageService, IStorageService } from "../../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
+import { NullTelemetryService } from "../../../../../platform/telemetry/common/telemetryUtils.js";
+import { IWorkspaceContextService } from "../../../../../platform/workspace/common/workspace.js";
+import { LanguageFeaturesService } from "../../../../common/services/languageFeaturesService.js";
+import { ILanguageFeaturesService } from "../../../../common/services/languageFeatures.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { getSnippetSuggestSupport, setSnippetSuggestSupport } from "../../browser/suggest.js";
+import { IEnvironmentService } from "../../../../../platform/environment/common/environment.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { runWithFakedTimers } from "../../../../../base/test/common/timeTravelScheduler.js";
+import { timeout } from "../../../../../base/common/async.js";
+import { InlineCompletionsController } from "../../../inlineCompletions/browser/controller/inlineCompletionsController.js";
+import { InlineSuggestionsView } from "../../../inlineCompletions/browser/view/inlineSuggestionsView.js";
+import { IAccessibilitySignalService } from "../../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";
+import { IMenuService, IMenu } from "../../../../../platform/actions/common/actions.js";
+import { ILogService, NullLogService } from "../../../../../platform/log/common/log.js";
+import { IEditorWorkerService } from "../../../../common/services/editorWorker.js";
+import { IDefaultAccountService } from "../../../../../platform/defaultAccount/common/defaultAccount.js";
+import { ModifierKeyEmitter } from "../../../../../base/browser/dom.js";
 
 
 function createMockEditor(model: TextModel, languageFeaturesService: ILanguageFeaturesService): ITestCodeEditor {
@@ -78,7 +87,10 @@ function createMockEditor(model: TextModel, languageFeaturesService: ILanguageFe
 			}],
 		),
 	});
-	const ctrl = editor.registerAndInstantiateContribution(SnippetController2.ID, SnippetController2);
+	const ctrl = editor.registerAndInstantiateContribution(
+    SnippetController2.ID,
+    SnippetController2,
+  );
 	editor.hasWidgetFocus = () => true;
 
 	editor.registerDisposable(ctrl);
@@ -86,9 +98,9 @@ function createMockEditor(model: TextModel, languageFeaturesService: ILanguageFe
 	return editor;
 }
 
-suite('SuggestModel - Context', function () {
-	const OUTER_LANGUAGE_ID = 'outerMode';
-	const INNER_LANGUAGE_ID = 'innerMode';
+suite("SuggestModel - Context", function () {
+	const OUTER_LANGUAGE_ID = "outerMode";
+	const INNER_LANGUAGE_ID = "innerMode";
 
 	class OuterMode extends Disposable {
 		public readonly languageId = OUTER_LANGUAGE_ID;
@@ -107,7 +119,7 @@ suite('SuggestModel - Context', function () {
 					const tokensArr: number[] = [];
 					let prevLanguageId: string | undefined = undefined;
 					for (let i = 0; i < line.length; i++) {
-						const languageId = (line.charAt(i) === 'x' ? INNER_LANGUAGE_ID : OUTER_LANGUAGE_ID);
+						const languageId = (line.charAt(i) === "x" ? INNER_LANGUAGE_ID : OUTER_LANGUAGE_ID);
 						const encodedLanguageId = languageService.languageIdCodec.encodeLanguageId(languageId);
 						if (prevLanguageId !== languageId) {
 							tokensArr.push(i);
@@ -121,7 +133,7 @@ suite('SuggestModel - Context', function () {
 						tokens[i] = tokensArr[i];
 					}
 					return new EncodedTokenizationResult(tokens, [], state);
-				}
+				},
 			}));
 		}
 	}
@@ -130,7 +142,7 @@ suite('SuggestModel - Context', function () {
 		public readonly languageId = INNER_LANGUAGE_ID;
 		constructor(
 			@ILanguageService languageService: ILanguageService,
-			@ILanguageConfigurationService languageConfigurationService: ILanguageConfigurationService
+			@ILanguageConfigurationService languageConfigurationService: ILanguageConfigurationService,
 		) {
 			super();
 			this._register(languageService.registerLanguage({ id: this.languageId }));
@@ -158,38 +170,38 @@ suite('SuggestModel - Context', function () {
 
 	ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('Context - shouldAutoTrigger', function () {
-		const model = createTextModel('Das Pferd frisst keinen Gurkensalat - Philipp Reis 1861.\nWer hat\'s erfunden?');
+	test("Context - shouldAutoTrigger", function () {
+		const model = createTextModel("Das Pferd frisst keinen Gurkensalat - Philipp Reis 1861.\nWer hat's erfunden?");
 		disposables.add(model);
 
-		assertAutoTrigger(model, 3, true, 'end of word, Das|');
-		assertAutoTrigger(model, 4, false, 'no word Das |');
-		assertAutoTrigger(model, 1, true, 'typing a single character before a word: D|as');
-		assertAutoTrigger(model, 55, false, 'number, 1861|');
+		assertAutoTrigger(model, 3, true, "end of word, Das|");
+		assertAutoTrigger(model, 4, false, "no word Das |");
+		assertAutoTrigger(model, 1, true, "typing a single character before a word: D|as");
+		assertAutoTrigger(model, 55, false, "number, 1861|");
 		model.dispose();
 	});
 
-	test('shouldAutoTrigger at embedded language boundaries', () => {
+	test("shouldAutoTrigger at embedded language boundaries", () => {
 		const disposables = new DisposableStore();
 		const instantiationService = createModelServices(disposables);
 		const outerMode = disposables.add(instantiationService.createInstance(OuterMode));
 		disposables.add(instantiationService.createInstance(InnerMode));
 
-		const model = disposables.add(instantiateTextModel(instantiationService, 'a<xx>a<x>', outerMode.languageId));
+		const model = disposables.add(instantiateTextModel(instantiationService, "a<xx>a<x>", outerMode.languageId));
 
-		assertAutoTrigger(model, 1, true, 'a|<x — should trigger at end of word');
-		assertAutoTrigger(model, 2, false, 'a<|x — should NOT trigger at start of word');
-		assertAutoTrigger(model, 3, true, 'a<x|x —  should trigger after typing a single character before a word');
-		assertAutoTrigger(model, 4, true, 'a<xx|> — should trigger at boundary between languages');
-		assertAutoTrigger(model, 5, false, 'a<xx>|a — should NOT trigger at start of word');
-		assertAutoTrigger(model, 6, true, 'a<xx>a|< — should trigger at end of word');
-		assertAutoTrigger(model, 8, true, 'a<xx>a<x|> — should trigger at end of word at boundary');
+		assertAutoTrigger(model, 1, true, "a|<x — should trigger at end of word");
+		assertAutoTrigger(model, 2, false, "a<|x — should NOT trigger at start of word");
+		assertAutoTrigger(model, 3, true, "a<x|x —  should trigger after typing a single character before a word");
+		assertAutoTrigger(model, 4, true, "a<xx|> — should trigger at boundary between languages");
+		assertAutoTrigger(model, 5, false, "a<xx>|a — should NOT trigger at start of word");
+		assertAutoTrigger(model, 6, true, "a<xx>a|< — should trigger at end of word");
+		assertAutoTrigger(model, 8, true, "a<xx>a<x|> — should trigger at end of word at boundary");
 
 		disposables.dispose();
 	});
 });
 
-suite('SuggestModel - TriggerAndCancelOracle', function () {
+suite("SuggestModel - TriggerAndCancelOracle", function () {
 
 
 	function getDefaultSuggestRange(model: ITextModel, position: Position) {
@@ -198,28 +210,28 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 	}
 
 	const alwaysEmptySupport: CompletionItemProvider = {
-		_debugDisplayName: 'test',
+		_debugDisplayName: "test",
 		provideCompletionItems(doc, pos): CompletionList {
 			return {
 				incomplete: false,
-				suggestions: []
+				suggestions: [],
 			};
-		}
+		},
 	};
 
 	const alwaysSomethingSupport: CompletionItemProvider = {
-		_debugDisplayName: 'test',
+		_debugDisplayName: "test",
 		provideCompletionItems(doc, pos): CompletionList {
 			return {
 				incomplete: false,
 				suggestions: [{
 					label: doc.getWordUntilPosition(pos).word,
 					kind: CompletionItemKind.Property,
-					insertText: 'foofoo',
-					range: getDefaultSuggestRange(doc, pos)
-				}]
+					insertText: "foofoo",
+					range: getDefaultSuggestRange(doc, pos),
+				}],
 			};
-		}
+		},
 	};
 
 	let disposables: DisposableStore;
@@ -229,7 +241,7 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 
 	setup(function () {
 		disposables = new DisposableStore();
-		model = createTextModel('abc def', undefined, undefined, URI.parse('test:somefile.ttt'));
+		model = createTextModel("abc def", undefined, undefined, URI.parse("test:somefile.ttt"));
 		disposables.add(model);
 	});
 
@@ -274,7 +286,7 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 		});
 	}
 
-	test('events - cancel/trigger', function () {
+	test("events - cancel/trigger", function () {
 		return withOracle(model => {
 
 			return Promise.all([
@@ -301,15 +313,15 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 					model.trigger({ auto: false });
 				}, function (event) {
 					assert.strictEqual(event.auto, false);
-				})
+				}),
 			]);
 		});
 	});
 
 
-	test('events - suggest/empty', function () {
+	test("events - suggest/empty", function () {
 
-		disposables.add(registry.register({ scheme: 'test' }, alwaysEmptySupport));
+		disposables.add(registry.register({ scheme: "test" }, alwaysEmptySupport));
 
 		return withOracle(model => {
 			return Promise.all([
@@ -324,19 +336,19 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 					assert.strictEqual(event.triggerOptions.auto, false);
 					assert.strictEqual(event.isFrozen, false);
 					assert.strictEqual(event.completionModel.items.length, 0);
-				})
+				}),
 			]);
 		});
 	});
 
-	test('trigger - on type', function () {
+	test("trigger - on type", function () {
 
-		disposables.add(registry.register({ scheme: 'test' }, alwaysSomethingSupport));
+		disposables.add(registry.register({ scheme: "test" }, alwaysSomethingSupport));
 
 		return withOracle((model, editor) => {
 			return assertEvent(model.onDidSuggest, () => {
 				editor.setPosition({ lineNumber: 1, column: 4 });
-				editor.trigger('keyboard', Handler.Type, { text: 'd' });
+				editor.trigger("keyboard", Handler.Type, { text: "d" });
 
 			}, event => {
 				assert.strictEqual(event.triggerOptions.auto, true);
@@ -348,24 +360,24 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 		});
 	});
 
-	test('#17400: Keep filtering suggestModel.ts after space', function () {
+	test("#17400: Keep filtering suggestModel.ts after space", function () {
 
-		disposables.add(registry.register({ scheme: 'test' }, {
-			_debugDisplayName: 'test',
+		disposables.add(registry.register({ scheme: "test" }, {
+			_debugDisplayName: "test",
 			provideCompletionItems(doc, pos): CompletionList {
 				return {
 					incomplete: false,
 					suggestions: [{
-						label: 'My Table',
+						label: "My Table",
 						kind: CompletionItemKind.Property,
-						insertText: 'My Table',
-						range: getDefaultSuggestRange(doc, pos)
-					}]
+						insertText: "My Table",
+						range: getDefaultSuggestRange(doc, pos),
+					}],
 				};
-			}
+			},
 		}));
 
-		model.setValue('');
+		model.setValue("");
 
 		return withOracle((model, editor) => {
 
@@ -376,90 +388,90 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 
 				return assertEvent(model.onDidSuggest, () => {
 					editor.setPosition({ lineNumber: 1, column: 1 });
-					editor.trigger('keyboard', Handler.Type, { text: 'My' });
+					editor.trigger("keyboard", Handler.Type, { text: "My" });
 
 				}, event => {
 					assert.strictEqual(event.triggerOptions.auto, true);
 					assert.strictEqual(event.completionModel.items.length, 1);
 					const [first] = event.completionModel.items;
-					assert.strictEqual(first.completion.label, 'My Table');
+					assert.strictEqual(first.completion.label, "My Table");
 
 					return assertEvent(model.onDidSuggest, () => {
 						editor.setPosition({ lineNumber: 1, column: 3 });
-						editor.trigger('keyboard', Handler.Type, { text: ' ' });
+						editor.trigger("keyboard", Handler.Type, { text: " " });
 
 					}, event => {
 						assert.strictEqual(event.triggerOptions.auto, true);
 						assert.strictEqual(event.completionModel.items.length, 1);
 						const [first] = event.completionModel.items;
-						assert.strictEqual(first.completion.label, 'My Table');
+						assert.strictEqual(first.completion.label, "My Table");
 					});
 				});
 			});
 		});
 	});
 
-	test('#21484: Trigger character always force a new completion session', function () {
+	test("#21484: Trigger character always force a new completion session", function () {
 
-		disposables.add(registry.register({ scheme: 'test' }, {
-			_debugDisplayName: 'test',
+		disposables.add(registry.register({ scheme: "test" }, {
+			_debugDisplayName: "test",
 			provideCompletionItems(doc, pos): CompletionList {
 				return {
 					incomplete: false,
 					suggestions: [{
-						label: 'foo.bar',
+						label: "foo.bar",
 						kind: CompletionItemKind.Property,
-						insertText: 'foo.bar',
-						range: Range.fromPositions(pos.with(undefined, 1), pos)
-					}]
+						insertText: "foo.bar",
+						range: Range.fromPositions(pos.with(undefined, 1), pos),
+					}],
 				};
-			}
+			},
 		}));
 
-		disposables.add(registry.register({ scheme: 'test' }, {
-			_debugDisplayName: 'test',
-			triggerCharacters: ['.'],
+		disposables.add(registry.register({ scheme: "test" }, {
+			_debugDisplayName: "test",
+			triggerCharacters: ["."],
 			provideCompletionItems(doc, pos): CompletionList {
 				return {
 					incomplete: false,
 					suggestions: [{
-						label: 'boom',
+						label: "boom",
 						kind: CompletionItemKind.Property,
-						insertText: 'boom',
+						insertText: "boom",
 						range: Range.fromPositions(
-							pos.delta(0, doc.getLineContent(pos.lineNumber)[pos.column - 2] === '.' ? 0 : -1),
-							pos
-						)
-					}]
+							pos.delta(0, doc.getLineContent(pos.lineNumber)[pos.column - 2] === "." ? 0 : -1),
+							pos,
+						),
+					}],
 				};
-			}
+			},
 		}));
 
-		model.setValue('');
+		model.setValue("");
 
 		return withOracle(async (model, editor) => {
 
 			await assertEvent(model.onDidSuggest, () => {
 				editor.setPosition({ lineNumber: 1, column: 1 });
-				editor.trigger('keyboard', Handler.Type, { text: 'foo' });
+				editor.trigger("keyboard", Handler.Type, { text: "foo" });
 
 			}, event => {
 				assert.strictEqual(event.triggerOptions.auto, true);
 				assert.strictEqual(event.completionModel.items.length, 1);
 				const [first] = event.completionModel.items;
-				assert.strictEqual(first.completion.label, 'foo.bar');
+				assert.strictEqual(first.completion.label, "foo.bar");
 
 			});
 
 			await assertEvent(model.onDidSuggest, () => {
-				editor.trigger('keyboard', Handler.Type, { text: '.' });
+				editor.trigger("keyboard", Handler.Type, { text: "." });
 
 			}, event => {
 				// SYNC
 				assert.strictEqual(event.triggerOptions.auto, true);
 				assert.strictEqual(event.completionModel.items.length, 1);
 				const [first] = event.completionModel.items;
-				assert.strictEqual(first.completion.label, 'foo.bar');
+				assert.strictEqual(first.completion.label, "foo.bar");
 			});
 
 			await assertEvent(model.onDidSuggest, () => {
@@ -470,19 +482,19 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 				assert.strictEqual(event.triggerOptions.auto, true);
 				assert.strictEqual(event.completionModel.items.length, 2);
 				const [first, second] = event.completionModel.items;
-				assert.strictEqual(first.completion.label, 'foo.bar');
-				assert.strictEqual(second.completion.label, 'boom');
+				assert.strictEqual(first.completion.label, "foo.bar");
+				assert.strictEqual(second.completion.label, "boom");
 			});
 		});
 	});
 
-	test('Intellisense Completion doesn\'t respect space after equal sign (.html file), #29353 [1/2]', function () {
+	test("Intellisense Completion doesn't respect space after equal sign (.html file), #29353 [1/2]", function () {
 
-		disposables.add(registry.register({ scheme: 'test' }, alwaysSomethingSupport));
+		disposables.add(registry.register({ scheme: "test" }, alwaysSomethingSupport));
 
 		return withOracle((model, editor) => {
 
-			editor.getModel()!.setValue('fo');
+			editor.getModel()!.setValue("fo");
 			editor.setPosition({ lineNumber: 1, column: 3 });
 
 			return assertEvent(model.onDidSuggest, () => {
@@ -493,7 +505,7 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 				assert.strictEqual(event.completionModel.items.length, 1);
 
 				return assertEvent(model.onDidCancel, () => {
-					editor.trigger('keyboard', Handler.Type, { text: '+' });
+					editor.trigger("keyboard", Handler.Type, { text: "+" });
 				}, event => {
 					assert.strictEqual(event.retrigger, false);
 				});
@@ -501,13 +513,13 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 		});
 	});
 
-	test('Intellisense Completion doesn\'t respect space after equal sign (.html file), #29353 [2/2]', function () {
+	test("Intellisense Completion doesn't respect space after equal sign (.html file), #29353 [2/2]", function () {
 
-		disposables.add(registry.register({ scheme: 'test' }, alwaysSomethingSupport));
+		disposables.add(registry.register({ scheme: "test" }, alwaysSomethingSupport));
 
 		return withOracle((model, editor) => {
 
-			editor.getModel()!.setValue('fo');
+			editor.getModel()!.setValue("fo");
 			editor.setPosition({ lineNumber: 1, column: 3 });
 
 			return assertEvent(model.onDidSuggest, () => {
@@ -518,7 +530,7 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 				assert.strictEqual(event.completionModel.items.length, 1);
 
 				return assertEvent(model.onDidCancel, () => {
-					editor.trigger('keyboard', Handler.Type, { text: ' ' });
+					editor.trigger("keyboard", Handler.Type, { text: " " });
 				}, event => {
 					assert.strictEqual(event.retrigger, false);
 				});
@@ -526,26 +538,26 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 		});
 	});
 
-	test('Incomplete suggestion results cause re-triggering when typing w/o further context, #28400 (1/2)', function () {
+	test("Incomplete suggestion results cause re-triggering when typing w/o further context, #28400 (1/2)", function () {
 
-		disposables.add(registry.register({ scheme: 'test' }, {
-			_debugDisplayName: 'test',
+		disposables.add(registry.register({ scheme: "test" }, {
+			_debugDisplayName: "test",
 			provideCompletionItems(doc, pos): CompletionList {
 				return {
 					incomplete: true,
 					suggestions: [{
-						label: 'foo',
+						label: "foo",
 						kind: CompletionItemKind.Property,
-						insertText: 'foo',
-						range: Range.fromPositions(pos.with(undefined, 1), pos)
-					}]
+						insertText: "foo",
+						range: Range.fromPositions(pos.with(undefined, 1), pos),
+					}],
 				};
-			}
+			},
 		}));
 
 		return withOracle((model, editor) => {
 
-			editor.getModel()!.setValue('foo');
+			editor.getModel()!.setValue("foo");
 			editor.setPosition({ lineNumber: 1, column: 4 });
 
 			return assertEvent(model.onDidSuggest, () => {
@@ -556,7 +568,7 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 				assert.strictEqual(event.completionModel.items.length, 1);
 
 				return assertEvent(model.onDidCancel, () => {
-					editor.trigger('keyboard', Handler.Type, { text: ';' });
+					editor.trigger("keyboard", Handler.Type, { text: ";" });
 				}, event => {
 					assert.strictEqual(event.retrigger, false);
 				});
@@ -564,26 +576,26 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 		});
 	});
 
-	test('Incomplete suggestion results cause re-triggering when typing w/o further context, #28400 (2/2)', function () {
+	test("Incomplete suggestion results cause re-triggering when typing w/o further context, #28400 (2/2)", function () {
 
-		disposables.add(registry.register({ scheme: 'test' }, {
-			_debugDisplayName: 'test',
+		disposables.add(registry.register({ scheme: "test" }, {
+			_debugDisplayName: "test",
 			provideCompletionItems(doc, pos): CompletionList {
 				return {
 					incomplete: true,
 					suggestions: [{
-						label: 'foo;',
+						label: "foo;",
 						kind: CompletionItemKind.Property,
-						insertText: 'foo',
-						range: Range.fromPositions(pos.with(undefined, 1), pos)
-					}]
+						insertText: "foo",
+						range: Range.fromPositions(pos.with(undefined, 1), pos),
+					}],
 				};
-			}
+			},
 		}));
 
 		return withOracle((model, editor) => {
 
-			editor.getModel()!.setValue('foo');
+			editor.getModel()!.setValue("foo");
 			editor.setPosition({ lineNumber: 1, column: 4 });
 
 			return assertEvent(model.onDidSuggest, () => {
@@ -597,7 +609,7 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 					// while we cancel incrementally enriching the set of
 					// completions we still filter against those that we have
 					// until now
-					editor.trigger('keyboard', Handler.Type, { text: ';' });
+					editor.trigger("keyboard", Handler.Type, { text: ";" });
 				}, event => {
 					assert.strictEqual(event.triggerOptions.auto, false);
 					assert.strictEqual(event.completionModel.getIncompleteProvider().size, 1);
@@ -608,11 +620,11 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 		});
 	});
 
-	test('Trigger character is provided in suggest context', function () {
-		let triggerCharacter = '';
-		disposables.add(registry.register({ scheme: 'test' }, {
-			_debugDisplayName: 'test',
-			triggerCharacters: ['.'],
+	test("Trigger character is provided in suggest context", function () {
+		let triggerCharacter = "";
+		disposables.add(registry.register({ scheme: "test" }, {
+			_debugDisplayName: "test",
+			triggerCharacters: ["."],
 			provideCompletionItems(doc, pos, context): CompletionList {
 				assert.strictEqual(context.triggerKind, CompletionTriggerKind.TriggerCharacter);
 				triggerCharacter = context.triggerCharacter!;
@@ -620,80 +632,80 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 					incomplete: false,
 					suggestions: [
 						{
-							label: 'foo.bar',
+							label: "foo.bar",
 							kind: CompletionItemKind.Property,
-							insertText: 'foo.bar',
-							range: Range.fromPositions(pos.with(undefined, 1), pos)
-						}
-					]
+							insertText: "foo.bar",
+							range: Range.fromPositions(pos.with(undefined, 1), pos),
+						},
+					],
 				};
-			}
+			},
 		}));
 
-		model.setValue('');
+		model.setValue("");
 
 		return withOracle((model, editor) => {
 
 			return assertEvent(model.onDidSuggest, () => {
 				editor.setPosition({ lineNumber: 1, column: 1 });
-				editor.trigger('keyboard', Handler.Type, { text: 'foo.' });
+				editor.trigger("keyboard", Handler.Type, { text: "foo." });
 			}, event => {
-				assert.strictEqual(triggerCharacter, '.');
+				assert.strictEqual(triggerCharacter, ".");
 			});
 		});
 	});
 
-	test('Mac press and hold accent character insertion does not update suggestions, #35269', function () {
-		disposables.add(registry.register({ scheme: 'test' }, {
-			_debugDisplayName: 'test',
+	test("Mac press and hold accent character insertion does not update suggestions, #35269", function () {
+		disposables.add(registry.register({ scheme: "test" }, {
+			_debugDisplayName: "test",
 			provideCompletionItems(doc, pos): CompletionList {
 				return {
 					incomplete: true,
 					suggestions: [{
-						label: 'abc',
+						label: "abc",
 						kind: CompletionItemKind.Property,
-						insertText: 'abc',
-						range: Range.fromPositions(pos.with(undefined, 1), pos)
+						insertText: "abc",
+						range: Range.fromPositions(pos.with(undefined, 1), pos),
 					}, {
-						label: 'äbc',
+						label: "äbc",
 						kind: CompletionItemKind.Property,
-						insertText: 'äbc',
-						range: Range.fromPositions(pos.with(undefined, 1), pos)
-					}]
+						insertText: "äbc",
+						range: Range.fromPositions(pos.with(undefined, 1), pos),
+					}],
 				};
-			}
+			},
 		}));
 
-		model.setValue('');
+		model.setValue("");
 		return withOracle((model, editor) => {
 
 			return assertEvent(model.onDidSuggest, () => {
 				editor.setPosition({ lineNumber: 1, column: 1 });
-				editor.trigger('keyboard', Handler.Type, { text: 'a' });
+				editor.trigger("keyboard", Handler.Type, { text: "a" });
 			}, event => {
 				assert.strictEqual(event.completionModel.items.length, 1);
-				assert.strictEqual(event.completionModel.items[0].completion.label, 'abc');
+				assert.strictEqual(event.completionModel.items[0].completion.label, "abc");
 
 				return assertEvent(model.onDidSuggest, () => {
-					editor.executeEdits('test', [EditOperation.replace(new Range(1, 1, 1, 2), 'ä')]);
+					editor.executeEdits("test", [EditOperation.replace(new Range(1, 1, 1, 2), "ä")]);
 
 				}, event => {
 					// suggest model changed to äbc
 					assert.strictEqual(event.completionModel.items.length, 1);
-					assert.strictEqual(event.completionModel.items[0].completion.label, 'äbc');
+					assert.strictEqual(event.completionModel.items[0].completion.label, "äbc");
 
 				});
 			});
 		});
 	});
 
-	test('Backspace should not always cancel code completion, #36491', function () {
-		disposables.add(registry.register({ scheme: 'test' }, alwaysSomethingSupport));
+	test("Backspace should not always cancel code completion, #36491", function () {
+		disposables.add(registry.register({ scheme: "test" }, alwaysSomethingSupport));
 
 		return withOracle(async (model, editor) => {
 			await assertEvent(model.onDidSuggest, () => {
 				editor.setPosition({ lineNumber: 1, column: 4 });
-				editor.trigger('keyboard', Handler.Type, { text: 'd' });
+				editor.trigger("keyboard", Handler.Type, { text: "d" });
 
 			}, event => {
 				assert.strictEqual(event.triggerOptions.auto, true);
@@ -716,24 +728,24 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 		});
 	});
 
-	test('Text changes for completion CodeAction are affected by the completion #39893', function () {
-		disposables.add(registry.register({ scheme: 'test' }, {
-			_debugDisplayName: 'test',
+	test("Text changes for completion CodeAction are affected by the completion #39893", function () {
+		disposables.add(registry.register({ scheme: "test" }, {
+			_debugDisplayName: "test",
 			provideCompletionItems(doc, pos): CompletionList {
 				return {
 					incomplete: true,
 					suggestions: [{
-						label: 'bar',
+						label: "bar",
 						kind: CompletionItemKind.Property,
-						insertText: 'bar',
+						insertText: "bar",
 						range: Range.fromPositions(pos.delta(0, -2), pos),
 						additionalTextEdits: [{
-							text: ', bar',
-							range: { startLineNumber: 1, endLineNumber: 1, startColumn: 17, endColumn: 17 }
-						}]
-					}]
+							text: ", bar",
+							range: { startLineNumber: 1, endLineNumber: 1, startColumn: 17, endColumn: 17 },
+						}],
+					}],
 				};
-			}
+			},
 		}));
 
 		model.setValue('ba; import { foo } from "./b"');
@@ -754,27 +766,27 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 
 				assert.strictEqual(event.completionModel.items.length, 1);
 				const [first] = event.completionModel.items;
-				assert.strictEqual(first.completion.label, 'bar');
+				assert.strictEqual(first.completion.label, "bar");
 
 				ctrl._insertSuggestion_publicForTest({ item: first, index: 0, model: event.completionModel });
 			});
 
 			assert.strictEqual(
 				model.getValue(),
-				'bar; import { foo, bar } from "./b"'
+				'bar; import { foo, bar } from "./b"',
 			);
 		});
 	});
 
-	test('Completion unexpectedly triggers on second keypress of an edit group in a snippet #43523', function () {
+	test("Completion unexpectedly triggers on second keypress of an edit group in a snippet #43523", function () {
 
-		disposables.add(registry.register({ scheme: 'test' }, alwaysSomethingSupport));
+		disposables.add(registry.register({ scheme: "test" }, alwaysSomethingSupport));
 
 		return withOracle((model, editor) => {
 			return assertEvent(model.onDidSuggest, () => {
-				editor.setValue('d');
+				editor.setValue("d");
 				editor.setSelection(new Selection(1, 1, 1, 2));
-				editor.trigger('keyboard', Handler.Type, { text: 'e' });
+				editor.trigger("keyboard", Handler.Type, { text: "e" });
 
 			}, event => {
 				assert.strictEqual(event.triggerOptions.auto, true);
@@ -787,40 +799,40 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 	});
 
 
-	test('Fails to render completion details #47988', function () {
+	test("Fails to render completion details #47988", function () {
 
 		let disposeA = 0;
 		let disposeB = 0;
 
-		disposables.add(registry.register({ scheme: 'test' }, {
-			_debugDisplayName: 'test',
+		disposables.add(registry.register({ scheme: "test" }, {
+			_debugDisplayName: "test",
 			provideCompletionItems(doc, pos) {
 				return {
 					incomplete: true,
 					suggestions: [{
 						kind: CompletionItemKind.Folder,
-						label: 'CompleteNot',
-						insertText: 'Incomplete',
-						sortText: 'a',
-						range: getDefaultSuggestRange(doc, pos)
+						label: "CompleteNot",
+						insertText: "Incomplete",
+						sortText: "a",
+						range: getDefaultSuggestRange(doc, pos),
 					}],
-					dispose() { disposeA += 1; }
+					dispose() { disposeA += 1; },
 				};
-			}
+			},
 		}));
-		disposables.add(registry.register({ scheme: 'test' }, {
-			_debugDisplayName: 'test',
+		disposables.add(registry.register({ scheme: "test" }, {
+			_debugDisplayName: "test",
 			provideCompletionItems(doc, pos) {
 				return {
 					incomplete: false,
 					suggestions: [{
 						kind: CompletionItemKind.Folder,
-						label: 'Complete',
-						insertText: 'Complete',
-						sortText: 'z',
-						range: getDefaultSuggestRange(doc, pos)
+						label: "Complete",
+						insertText: "Complete",
+						sortText: "z",
+						range: getDefaultSuggestRange(doc, pos),
 					}],
-					dispose() { disposeB += 1; }
+					dispose() { disposeB += 1; },
 				};
 			},
 			resolveCompletionItem(item) {
@@ -831,9 +843,9 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 		return withOracle(async (model, editor) => {
 
 			await assertEvent(model.onDidSuggest, () => {
-				editor.setValue('');
+				editor.setValue("");
 				editor.setSelection(new Selection(1, 1, 1, 1));
-				editor.trigger('keyboard', Handler.Type, { text: 'c' });
+				editor.trigger("keyboard", Handler.Type, { text: "c" });
 
 			}, event => {
 				assert.strictEqual(event.triggerOptions.auto, true);
@@ -843,7 +855,7 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 			});
 
 			await assertEvent(model.onDidSuggest, () => {
-				editor.trigger('keyboard', Handler.Type, { text: 'o' });
+				editor.trigger("keyboard", Handler.Type, { text: "o" });
 			}, event => {
 				assert.strictEqual(event.triggerOptions.auto, true);
 				assert.strictEqual(event.completionModel.items.length, 2);
@@ -858,40 +870,40 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 	});
 
 
-	test('Trigger (full) completions when (incomplete) completions are already active #99504', function () {
+	test("Trigger (full) completions when (incomplete) completions are already active #99504", function () {
 
 		let countA = 0;
 		let countB = 0;
 
-		disposables.add(registry.register({ scheme: 'test' }, {
-			_debugDisplayName: 'test',
+		disposables.add(registry.register({ scheme: "test" }, {
+			_debugDisplayName: "test",
 			provideCompletionItems(doc, pos) {
 				countA += 1;
 				return {
 					incomplete: false, // doesn't matter if incomplete or not
 					suggestions: [{
 						kind: CompletionItemKind.Class,
-						label: 'Z aaa',
-						insertText: 'Z aaa',
-						range: new Range(1, 1, pos.lineNumber, pos.column)
+						label: "Z aaa",
+						insertText: "Z aaa",
+						range: new Range(1, 1, pos.lineNumber, pos.column),
 					}],
 				};
-			}
+			},
 		}));
-		disposables.add(registry.register({ scheme: 'test' }, {
-			_debugDisplayName: 'test',
+		disposables.add(registry.register({ scheme: "test" }, {
+			_debugDisplayName: "test",
 			provideCompletionItems(doc, pos) {
 				countB += 1;
-				if (!doc.getWordUntilPosition(pos).word.startsWith('a')) {
+				if (!doc.getWordUntilPosition(pos).word.startsWith("a")) {
 					return;
 				}
 				return {
 					incomplete: false,
 					suggestions: [{
 						kind: CompletionItemKind.Folder,
-						label: 'aaa',
-						insertText: 'aaa',
-						range: getDefaultSuggestRange(doc, pos)
+						label: "aaa",
+						insertText: "aaa",
+						range: getDefaultSuggestRange(doc, pos),
 					}],
 				};
 			},
@@ -900,25 +912,25 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 		return withOracle(async (model, editor) => {
 
 			await assertEvent(model.onDidSuggest, () => {
-				editor.setValue('');
+				editor.setValue("");
 				editor.setSelection(new Selection(1, 1, 1, 1));
-				editor.trigger('keyboard', Handler.Type, { text: 'Z' });
+				editor.trigger("keyboard", Handler.Type, { text: "Z" });
 
 			}, event => {
 				assert.strictEqual(event.triggerOptions.auto, true);
 				assert.strictEqual(event.completionModel.items.length, 1);
-				assert.strictEqual(event.completionModel.items[0].textLabel, 'Z aaa');
+				assert.strictEqual(event.completionModel.items[0].textLabel, "Z aaa");
 			});
 
 			await assertEvent(model.onDidSuggest, () => {
 				// started another word: Z a|
 				// item should be: Z aaa, aaa
-				editor.trigger('keyboard', Handler.Type, { text: ' a' });
+				editor.trigger("keyboard", Handler.Type, { text: " a" });
 			}, event => {
 				assert.strictEqual(event.triggerOptions.auto, true);
 				assert.strictEqual(event.completionModel.items.length, 2);
-				assert.strictEqual(event.completionModel.items[0].textLabel, 'Z aaa');
-				assert.strictEqual(event.completionModel.items[1].textLabel, 'aaa');
+				assert.strictEqual(event.completionModel.items[0].textLabel, "Z aaa");
+				assert.strictEqual(event.completionModel.items[1].textLabel, "aaa");
 
 				assert.strictEqual(countA, 1); // should we keep the suggestions from the "active" provider?, Yes! See: #106573
 				assert.strictEqual(countB, 2);
@@ -926,31 +938,31 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 		});
 	});
 
-	test('registerCompletionItemProvider with letters as trigger characters block other completion items to show up #127815', async function () {
+	test("registerCompletionItemProvider with letters as trigger characters block other completion items to show up #127815", async function () {
 
-		disposables.add(registry.register({ scheme: 'test' }, {
-			_debugDisplayName: 'test',
+		disposables.add(registry.register({ scheme: "test" }, {
+			_debugDisplayName: "test",
 			provideCompletionItems(doc, pos) {
 				return {
 					suggestions: [{
 						kind: CompletionItemKind.Class,
-						label: 'AAAA',
-						insertText: 'WordTriggerA',
-						range: new Range(pos.lineNumber, pos.column, pos.lineNumber, pos.column)
+						label: "AAAA",
+						insertText: "WordTriggerA",
+						range: new Range(pos.lineNumber, pos.column, pos.lineNumber, pos.column),
 					}],
 				};
-			}
+			},
 		}));
-		disposables.add(registry.register({ scheme: 'test' }, {
-			_debugDisplayName: 'test',
-			triggerCharacters: ['a', '.'],
+		disposables.add(registry.register({ scheme: "test" }, {
+			_debugDisplayName: "test",
+			triggerCharacters: ["a", "."],
 			provideCompletionItems(doc, pos) {
 				return {
 					suggestions: [{
 						kind: CompletionItemKind.Class,
-						label: 'AAAA',
-						insertText: 'AutoTriggerA',
-						range: new Range(pos.lineNumber, pos.column, pos.lineNumber, pos.column)
+						label: "AAAA",
+						insertText: "AutoTriggerA",
+						range: new Range(pos.lineNumber, pos.column, pos.lineNumber, pos.column),
 					}],
 				};
 			},
@@ -959,9 +971,9 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 		return withOracle(async (model, editor) => {
 
 			await assertEvent(model.onDidSuggest, () => {
-				editor.setValue('');
+				editor.setValue("");
 				editor.setSelection(new Selection(1, 1, 1, 1));
-				editor.trigger('keyboard', Handler.Type, { text: '.' });
+				editor.trigger("keyboard", Handler.Type, { text: "." });
 
 			}, event => {
 				assert.strictEqual(event.triggerOptions.auto, true);
@@ -969,12 +981,12 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 			});
 
 
-			editor.getModel().setValue('');
+			editor.getModel().setValue("");
 
 			await assertEvent(model.onDidSuggest, () => {
-				editor.setValue('');
+				editor.setValue("");
 				editor.setSelection(new Selection(1, 1, 1, 1));
-				editor.trigger('keyboard', Handler.Type, { text: 'a' });
+				editor.trigger("keyboard", Handler.Type, { text: "a" });
 
 			}, event => {
 				assert.strictEqual(event.triggerOptions.auto, true);
@@ -983,32 +995,32 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 		});
 	});
 
-	test('Unexpected suggest scoring #167242', async function () {
-		disposables.add(registry.register('*', {
+	test("Unexpected suggest scoring #167242", async function () {
+		disposables.add(registry.register("*", {
 			// word-based
-			_debugDisplayName: 'test',
+			_debugDisplayName: "test",
 			provideCompletionItems(doc, pos) {
 				const word = doc.getWordUntilPosition(pos);
 				return {
 					suggestions: [{
 						kind: CompletionItemKind.Text,
-						label: 'pull',
-						insertText: 'pull',
-						range: new Range(pos.lineNumber, word.startColumn, pos.lineNumber, word.endColumn)
+						label: "pull",
+						insertText: "pull",
+						range: new Range(pos.lineNumber, word.startColumn, pos.lineNumber, word.endColumn),
 					}],
 				};
-			}
+			},
 		}));
-		disposables.add(registry.register({ scheme: 'test' }, {
+		disposables.add(registry.register({ scheme: "test" }, {
 			// JSON-based
-			_debugDisplayName: 'test',
+			_debugDisplayName: "test",
 			provideCompletionItems(doc, pos) {
 				return {
 					suggestions: [{
 						kind: CompletionItemKind.Class,
-						label: 'git.pull',
-						insertText: 'git.pull',
-						range: new Range(pos.lineNumber, 1, pos.lineNumber, pos.column)
+						label: "git.pull",
+						insertText: "git.pull",
+						range: new Range(pos.lineNumber, 1, pos.lineNumber, pos.column),
 					}],
 				};
 			},
@@ -1017,56 +1029,56 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 		return withOracle(async function (model, editor) {
 
 			await assertEvent(model.onDidSuggest, () => {
-				editor.setValue('gi');
+				editor.setValue("gi");
 				editor.setSelection(new Selection(1, 3, 1, 3));
-				editor.trigger('keyboard', Handler.Type, { text: 't' });
+				editor.trigger("keyboard", Handler.Type, { text: "t" });
 
 			}, event => {
 				assert.strictEqual(event.triggerOptions.auto, true);
 				assert.strictEqual(event.completionModel.items.length, 1);
-				assert.strictEqual(event.completionModel.items[0].textLabel, 'git.pull');
+				assert.strictEqual(event.completionModel.items[0].textLabel, "git.pull");
 			});
 
-			editor.trigger('keyboard', Handler.Type, { text: '.' });
+			editor.trigger("keyboard", Handler.Type, { text: "." });
 
 			await assertEvent(model.onDidSuggest, () => {
-				editor.trigger('keyboard', Handler.Type, { text: 'p' });
+				editor.trigger("keyboard", Handler.Type, { text: "p" });
 
 			}, event => {
 				assert.strictEqual(event.triggerOptions.auto, true);
 				assert.strictEqual(event.completionModel.items.length, 1);
-				assert.strictEqual(event.completionModel.items[0].textLabel, 'git.pull');
+				assert.strictEqual(event.completionModel.items[0].textLabel, "git.pull");
 			});
 		});
 	});
 
-	test('Completion list closes unexpectedly when typing a digit after a word separator #169390', function () {
+	test("Completion list closes unexpectedly when typing a digit after a word separator #169390", function () {
 
 		const requestCounts = [0, 0];
 
-		disposables.add(registry.register({ scheme: 'test' }, {
-			_debugDisplayName: 'test',
+		disposables.add(registry.register({ scheme: "test" }, {
+			_debugDisplayName: "test",
 
 			provideCompletionItems(doc, pos) {
 				requestCounts[0] += 1;
 				return {
 					suggestions: [{
 						kind: CompletionItemKind.Text,
-						label: 'foo-20',
-						insertText: 'foo-20',
-						range: new Range(pos.lineNumber, 1, pos.lineNumber, pos.column)
+						label: "foo-20",
+						insertText: "foo-20",
+						range: new Range(pos.lineNumber, 1, pos.lineNumber, pos.column),
 					}, {
 						kind: CompletionItemKind.Text,
-						label: 'foo-hello',
-						insertText: 'foo-hello',
-						range: new Range(pos.lineNumber, 1, pos.lineNumber, pos.column)
+						label: "foo-hello",
+						insertText: "foo-hello",
+						range: new Range(pos.lineNumber, 1, pos.lineNumber, pos.column),
 					}],
 				};
-			}
+			},
 		}));
-		disposables.add(registry.register({ scheme: 'test' }, {
-			_debugDisplayName: 'test',
-			triggerCharacters: ['2'],
+		disposables.add(registry.register({ scheme: "test" }, {
+			_debugDisplayName: "test",
+			triggerCharacters: ["2"],
 			provideCompletionItems(doc, pos, ctx) {
 				requestCounts[1] += 1;
 				if (ctx.triggerKind !== CompletionTriggerKind.TriggerCharacter) {
@@ -1075,9 +1087,9 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 				return {
 					suggestions: [{
 						kind: CompletionItemKind.Class,
-						label: 'foo-210',
-						insertText: 'foo-210',
-						range: new Range(pos.lineNumber, 1, pos.lineNumber, pos.column)
+						label: "foo-210",
+						insertText: "foo-210",
+						range: new Range(pos.lineNumber, 1, pos.lineNumber, pos.column),
 					}],
 				};
 			},
@@ -1086,46 +1098,46 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 		return withOracle(async function (model, editor) {
 
 			await assertEvent(model.onDidSuggest, () => {
-				editor.setValue('foo');
+				editor.setValue("foo");
 				editor.setSelection(new Selection(1, 4, 1, 4));
 				model.trigger({ auto: false });
 
 			}, event => {
 				assert.strictEqual(event.triggerOptions.auto, false);
 				assert.strictEqual(event.completionModel.items.length, 2);
-				assert.strictEqual(event.completionModel.items[0].textLabel, 'foo-20');
-				assert.strictEqual(event.completionModel.items[1].textLabel, 'foo-hello');
+				assert.strictEqual(event.completionModel.items[0].textLabel, "foo-20");
+				assert.strictEqual(event.completionModel.items[1].textLabel, "foo-hello");
 			});
 
-			editor.trigger('keyboard', Handler.Type, { text: '-' });
+			editor.trigger("keyboard", Handler.Type, { text: "-" });
 
 
 			await assertEvent(model.onDidSuggest, () => {
-				editor.trigger('keyboard', Handler.Type, { text: '2' });
+				editor.trigger("keyboard", Handler.Type, { text: "2" });
 
 			}, event => {
 				assert.strictEqual(event.triggerOptions.auto, true);
 				assert.strictEqual(event.completionModel.items.length, 2);
-				assert.strictEqual(event.completionModel.items[0].textLabel, 'foo-20');
-				assert.strictEqual(event.completionModel.items[1].textLabel, 'foo-210');
+				assert.strictEqual(event.completionModel.items[0].textLabel, "foo-20");
+				assert.strictEqual(event.completionModel.items[1].textLabel, "foo-210");
 				assert.deepStrictEqual(requestCounts, [1, 2]);
 			});
 		});
 	});
 
-	test('Set refilter-flag, keep triggerKind', function () {
+	test("Set refilter-flag, keep triggerKind", function () {
 
-		disposables.add(registry.register({ scheme: 'test' }, {
-			_debugDisplayName: 'test',
-			triggerCharacters: ['.'],
+		disposables.add(registry.register({ scheme: "test" }, {
+			_debugDisplayName: "test",
+			triggerCharacters: ["."],
 			provideCompletionItems(doc, pos, ctx) {
 				return {
 					suggestions: [{
-						label: doc.getWordUntilPosition(pos).word || 'hello',
+						label: doc.getWordUntilPosition(pos).word || "hello",
 						kind: CompletionItemKind.Property,
-						insertText: 'foofoo',
-						range: getDefaultSuggestRange(doc, pos)
-					}]
+						insertText: "foofoo",
+						range: getDefaultSuggestRange(doc, pos),
+					}],
 				};
 			},
 		}));
@@ -1133,9 +1145,9 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 		return withOracle(async function (model, editor) {
 
 			await assertEvent(model.onDidSuggest, () => {
-				editor.setValue('foo');
+				editor.setValue("foo");
 				editor.setSelection(new Selection(1, 4, 1, 4));
-				editor.trigger('keyboard', Handler.Type, { text: 'o' });
+				editor.trigger("keyboard", Handler.Type, { text: "o" });
 
 
 			}, event => {
@@ -1146,43 +1158,43 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 			});
 
 			await assertEvent(model.onDidSuggest, () => {
-				editor.trigger('keyboard', Handler.Type, { text: '.' });
+				editor.trigger("keyboard", Handler.Type, { text: "." });
 
 			}, event => {
 				assert.strictEqual(event.triggerOptions.auto, true);
 				assert.strictEqual(event.triggerOptions.refilter, undefined);
-				assert.strictEqual(event.triggerOptions.triggerCharacter, '.');
+				assert.strictEqual(event.triggerOptions.triggerCharacter, ".");
 				assert.strictEqual(event.triggerOptions.triggerKind, CompletionTriggerKind.TriggerCharacter);
 				assert.strictEqual(event.completionModel.items.length, 1);
 			});
 
 			await assertEvent(model.onDidSuggest, () => {
-				editor.trigger('keyboard', Handler.Type, { text: 'h' });
+				editor.trigger("keyboard", Handler.Type, { text: "h" });
 
 			}, event => {
 				assert.strictEqual(event.triggerOptions.auto, true);
 				assert.strictEqual(event.triggerOptions.refilter, true);
-				assert.strictEqual(event.triggerOptions.triggerCharacter, '.');
+				assert.strictEqual(event.triggerOptions.triggerCharacter, ".");
 				assert.strictEqual(event.triggerOptions.triggerKind, CompletionTriggerKind.TriggerCharacter);
 				assert.strictEqual(event.completionModel.items.length, 1);
 			});
 		});
 	});
 
-	test('Snippets gone from IntelliSense #173244', function () {
+	test("Snippets gone from IntelliSense #173244", function () {
 
 		const snippetProvider: CompletionItemProvider = {
-			_debugDisplayName: 'test',
+			_debugDisplayName: "test",
 			provideCompletionItems(doc, pos, ctx) {
 				return {
 					suggestions: [{
-						label: 'log',
+						label: "log",
 						kind: CompletionItemKind.Snippet,
-						insertText: 'log',
-						range: getDefaultSuggestRange(doc, pos)
-					}]
+						insertText: "log",
+						range: getDefaultSuggestRange(doc, pos),
+					}],
 				};
-			}
+			},
 		};
 		const old = setSnippetSuggestSupport(snippetProvider);
 
@@ -1192,18 +1204,18 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 			}
 		}));
 
-		disposables.add(registry.register({ scheme: 'test' }, {
-			_debugDisplayName: 'test',
-			triggerCharacters: ['.'],
+		disposables.add(registry.register({ scheme: "test" }, {
+			_debugDisplayName: "test",
+			triggerCharacters: ["."],
 			provideCompletionItems(doc, pos, ctx) {
 				return {
 					suggestions: [{
-						label: 'locals',
+						label: "locals",
 						kind: CompletionItemKind.Property,
-						insertText: 'locals',
-						range: getDefaultSuggestRange(doc, pos)
+						insertText: "locals",
+						range: getDefaultSuggestRange(doc, pos),
 					}],
-					incomplete: true
+					incomplete: true,
 				};
 			},
 		}));
@@ -1211,9 +1223,9 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 		return withOracle(async function (model, editor) {
 
 			await assertEvent(model.onDidSuggest, () => {
-				editor.setValue('');
+				editor.setValue("");
 				editor.setSelection(new Selection(1, 1, 1, 1));
-				editor.trigger('keyboard', Handler.Type, { text: 'l' });
+				editor.trigger("keyboard", Handler.Type, { text: "l" });
 
 
 			}, event => {
@@ -1221,60 +1233,60 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 				assert.strictEqual(event.triggerOptions.triggerCharacter, undefined);
 				assert.strictEqual(event.triggerOptions.triggerKind, undefined);
 				assert.strictEqual(event.completionModel.items.length, 2);
-				assert.strictEqual(event.completionModel.items[0].textLabel, 'locals');
-				assert.strictEqual(event.completionModel.items[1].textLabel, 'log');
+				assert.strictEqual(event.completionModel.items[0].textLabel, "locals");
+				assert.strictEqual(event.completionModel.items[1].textLabel, "log");
 			});
 
 			await assertEvent(model.onDidSuggest, () => {
-				editor.trigger('keyboard', Handler.Type, { text: 'o' });
+				editor.trigger("keyboard", Handler.Type, { text: "o" });
 
 			}, event => {
 				assert.strictEqual(event.triggerOptions.triggerKind, CompletionTriggerKind.TriggerForIncompleteCompletions);
 				assert.strictEqual(event.triggerOptions.auto, true);
 				assert.strictEqual(event.completionModel.items.length, 2);
-				assert.strictEqual(event.completionModel.items[0].textLabel, 'locals');
-				assert.strictEqual(event.completionModel.items[1].textLabel, 'log');
+				assert.strictEqual(event.completionModel.items[0].textLabel, "locals");
+				assert.strictEqual(event.completionModel.items[1].textLabel, "log");
 			});
 
 		});
 	});
 
-	test('offWhenInlineCompletions - allows quick suggest when inline provider returns empty results', function () {
+	test("offWhenInlineCompletions - allows quick suggest when inline provider returns empty results", function () {
 
-		disposables.add(registry.register({ scheme: 'test' }, alwaysSomethingSupport));
+		disposables.add(registry.register({ scheme: "test" }, alwaysSomethingSupport));
 
 		// Register a dummy inline completions provider that returns no items
 		const inlineProvider: InlineCompletionsProvider = {
 			provideInlineCompletions: () => ({ items: [] }),
-			disposeInlineCompletions: () => { }
+			disposeInlineCompletions: () => { },
 		};
-		disposables.add(languageFeaturesService.inlineCompletionsProvider.register({ scheme: 'test' }, inlineProvider));
+		disposables.add(languageFeaturesService.inlineCompletionsProvider.register({ scheme: "test" }, inlineProvider));
 
 		return withOracle((suggestOracle, editor) => {
-			editor.updateOptions({ quickSuggestions: { comments: 'off', strings: 'off', other: 'offWhenInlineCompletions' } });
+			editor.updateOptions({ quickSuggestions: { comments: "off", strings: "off", other: "offWhenInlineCompletions" } });
 
 			// Without an InlineCompletionsController, the fallback triggers immediately
 			return assertEvent(suggestOracle.onDidSuggest, () => {
 				editor.setPosition({ lineNumber: 1, column: 4 });
-				editor.trigger('keyboard', Handler.Type, { text: 'd' });
+				editor.trigger("keyboard", Handler.Type, { text: "d" });
 			}, suggestEvent => {
 				assert.strictEqual(suggestEvent.triggerOptions.auto, true);
 			});
 		});
 	});
 
-	test('offWhenInlineCompletions - allows quick suggest when no inline provider exists', function () {
+	test("offWhenInlineCompletions - allows quick suggest when no inline provider exists", function () {
 
-		disposables.add(registry.register({ scheme: 'test' }, alwaysSomethingSupport));
+		disposables.add(registry.register({ scheme: "test" }, alwaysSomethingSupport));
 
 		// No inline completions provider registered for 'test' scheme
 
 		return withOracle((suggestOracle, editor) => {
-			editor.updateOptions({ quickSuggestions: { comments: 'off', strings: 'off', other: 'offWhenInlineCompletions' } });
+			editor.updateOptions({ quickSuggestions: { comments: "off", strings: "off", other: "offWhenInlineCompletions" } });
 
 			return assertEvent(suggestOracle.onDidSuggest, () => {
 				editor.setPosition({ lineNumber: 1, column: 4 });
-				editor.trigger('keyboard', Handler.Type, { text: 'd' });
+				editor.trigger("keyboard", Handler.Type, { text: "d" });
 			}, suggestEvent => {
 				assert.strictEqual(suggestEvent.triggerOptions.auto, true);
 				assert.strictEqual(suggestEvent.completionModel.items.length, 1);
@@ -1282,26 +1294,26 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 		});
 	});
 
-	test('offWhenInlineCompletions - allows quick suggest when inlineSuggest is disabled', function () {
+	test("offWhenInlineCompletions - allows quick suggest when inlineSuggest is disabled", function () {
 		return runWithFakedTimers({ useFakeTimers: true }, () => {
-			disposables.add(registry.register({ scheme: 'test' }, alwaysSomethingSupport));
+			disposables.add(registry.register({ scheme: "test" }, alwaysSomethingSupport));
 
 			// Register a dummy inline completions provider
 			const inlineProvider: InlineCompletionsProvider = {
 				provideInlineCompletions: () => ({ items: [] }),
-				disposeInlineCompletions: () => { }
+				disposeInlineCompletions: () => { },
 			};
-			disposables.add(languageFeaturesService.inlineCompletionsProvider.register({ scheme: 'test' }, inlineProvider));
+			disposables.add(languageFeaturesService.inlineCompletionsProvider.register({ scheme: "test" }, inlineProvider));
 
 			return withOracle((suggestOracle, editor) => {
 				editor.updateOptions({
-					quickSuggestions: { comments: 'off', strings: 'off', other: 'offWhenInlineCompletions' },
-					inlineSuggest: { enabled: false }
+					quickSuggestions: { comments: "off", strings: "off", other: "offWhenInlineCompletions" },
+					inlineSuggest: { enabled: false },
 				});
 
 				return assertEvent(suggestOracle.onDidSuggest, () => {
 					editor.setPosition({ lineNumber: 1, column: 4 });
-					editor.trigger('keyboard', Handler.Type, { text: 'd' });
+					editor.trigger("keyboard", Handler.Type, { text: "d" });
 				}, suggestEvent => {
 					assert.strictEqual(suggestEvent.triggerOptions.auto, true);
 					assert.strictEqual(suggestEvent.completionModel.items.length, 1);
@@ -1313,11 +1325,11 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 	test('string shorthand - "off" disables quick suggestions for all token types', function () {
 		return runWithFakedTimers({ useFakeTimers: true }, () => {
 
-			disposables.add(registry.register({ scheme: 'test' }, alwaysSomethingSupport));
+			disposables.add(registry.register({ scheme: "test" }, alwaysSomethingSupport));
 
 			return withOracle((suggestOracle, editor) => {
 				// Use string shorthand instead of object form
-				editor.updateOptions({ quickSuggestions: 'off' });
+				editor.updateOptions({ quickSuggestions: "off" });
 
 				return new Promise<void>((resolve, reject) => {
 					const sub = suggestOracle.onDidSuggest(() => {
@@ -1326,7 +1338,7 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 					});
 
 					editor.setPosition({ lineNumber: 1, column: 4 });
-					editor.trigger('keyboard', Handler.Type, { text: 'd' });
+					editor.trigger("keyboard", Handler.Type, { text: "d" });
 
 					setTimeout(() => {
 						sub.dispose();
@@ -1339,22 +1351,22 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 
 	test('string shorthand - "offWhenInlineCompletions" allows quick suggest when inline provider returns empty', function () {
 		return runWithFakedTimers({ useFakeTimers: true }, () => {
-			disposables.add(registry.register({ scheme: 'test' }, alwaysSomethingSupport));
+			disposables.add(registry.register({ scheme: "test" }, alwaysSomethingSupport));
 
 			const inlineProvider: InlineCompletionsProvider = {
 				provideInlineCompletions: () => ({ items: [] }),
-				disposeInlineCompletions: () => { }
+				disposeInlineCompletions: () => { },
 			};
-			disposables.add(languageFeaturesService.inlineCompletionsProvider.register({ scheme: 'test' }, inlineProvider));
+			disposables.add(languageFeaturesService.inlineCompletionsProvider.register({ scheme: "test" }, inlineProvider));
 
 			return withOracle((suggestOracle, editor) => {
 				// Use string shorthand - applies to all token types
-				editor.updateOptions({ quickSuggestions: 'offWhenInlineCompletions' });
+				editor.updateOptions({ quickSuggestions: "offWhenInlineCompletions" });
 
 				// Without InlineCompletionsController, the fallback triggers immediately
 				return assertEvent(suggestOracle.onDidSuggest, () => {
 					editor.setPosition({ lineNumber: 1, column: 4 });
-					editor.trigger('keyboard', Handler.Type, { text: 'd' });
+					editor.trigger("keyboard", Handler.Type, { text: "d" });
 				}, suggestEvent => {
 					assert.strictEqual(suggestEvent.triggerOptions.auto, true);
 				});
@@ -1363,12 +1375,12 @@ suite('SuggestModel - TriggerAndCancelOracle', function () {
 	});
 });
 
-suite('SuggestModel - offWhenInlineCompletions with InlineCompletionsController', function () {
+suite("SuggestModel - offWhenInlineCompletions with InlineCompletionsController", function () {
 
 	ensureNoDisposablesAreLeakedInTestSuite();
 
 	const completionProvider: CompletionItemProvider = {
-		_debugDisplayName: 'test',
+		_debugDisplayName: "test",
 		provideCompletionItems(doc, pos): CompletionList {
 			const wordUntil = doc.getWordUntilPosition(pos);
 			return {
@@ -1376,11 +1388,11 @@ suite('SuggestModel - offWhenInlineCompletions with InlineCompletionsController'
 				suggestions: [{
 					label: doc.getWordUntilPosition(pos).word,
 					kind: CompletionItemKind.Property,
-					insertText: 'foofoo',
-					range: new Range(pos.lineNumber, wordUntil.startColumn, pos.lineNumber, wordUntil.endColumn)
-				}]
+					insertText: "foofoo",
+					range: new Range(pos.lineNumber, wordUntil.startColumn, pos.lineNumber, wordUntil.endColumn),
+				}],
 			};
-		}
+		},
 	};
 
 	async function withSuggestModelAndInlineCompletions(
@@ -1392,8 +1404,8 @@ suite('SuggestModel - offWhenInlineCompletions with InlineCompletionsController'
 			const disposableStore = new DisposableStore();
 			try {
 				const languageFeaturesService = new LanguageFeaturesService();
-				disposableStore.add(languageFeaturesService.completionProvider.register({ pattern: '**' }, completionProvider));
-				disposableStore.add(languageFeaturesService.inlineCompletionsProvider.register({ pattern: '**' }, inlineProvider));
+				disposableStore.add(languageFeaturesService.completionProvider.register({ pattern: "**" }, completionProvider));
+				disposableStore.add(languageFeaturesService.inlineCompletionsProvider.register({ pattern: "**" }, inlineProvider));
 
 				const serviceCollection = new ServiceCollection(
 					[ILanguageFeaturesService, languageFeaturesService],
@@ -1437,18 +1449,18 @@ suite('SuggestModel - offWhenInlineCompletions with InlineCompletionsController'
 
 				await withAsyncTestCodeEditor(text, { serviceCollection }, async (editor, _editorViewModel, instantiationService) => {
 					instantiationService.stubInstance(InlineSuggestionsView, {
-						dispose: () => { }
+						dispose: () => { },
 					});
 					editor.registerAndInstantiateContribution(SnippetController2.ID, SnippetController2);
 					editor.registerAndInstantiateContribution(InlineCompletionsController.ID, InlineCompletionsController);
 
 					editor.hasWidgetFocus = () => true;
 					editor.updateOptions({
-						quickSuggestions: { comments: 'off', strings: 'off', other: 'offWhenInlineCompletions' },
+						quickSuggestions: { comments: "off", strings: "off", other: "offWhenInlineCompletions" },
 					});
 
 					const suggestModel = disposableStore.add(
-						editor.invokeWithinContext(accessor => accessor.get(IInstantiationService).createInstance(SuggestModel, editor))
+						editor.invokeWithinContext(accessor => accessor.get(IInstantiationService).createInstance(SuggestModel, editor)),
 					);
 
 					await callback(suggestModel, editor);
@@ -1460,7 +1472,7 @@ suite('SuggestModel - offWhenInlineCompletions with InlineCompletionsController'
 		});
 	}
 
-	test('suppresses quick suggest when inline completions are showing ghost text', async function () {
+	test("suppresses quick suggest when inline completions are showing ghost text", async function () {
 		const inlineProvider: InlineCompletionsProvider = {
 			provideInlineCompletions: (model, pos) => {
 				// Return a completion that extends the current word - must be visible at cursor
@@ -1468,35 +1480,35 @@ suite('SuggestModel - offWhenInlineCompletions with InlineCompletionsController'
 				if (!word) { return { items: [] }; }
 				return {
 					items: [{
-						insertText: word.word + 'Suffix',
+						insertText: word.word + "Suffix",
 						range: new Range(pos.lineNumber, word.startColumn, pos.lineNumber, word.endColumn),
-					}]
+					}],
 				};
 			},
-			disposeInlineCompletions: () => { }
+			disposeInlineCompletions: () => { },
 		};
 
-		await withSuggestModelAndInlineCompletions('abc def', inlineProvider, async (suggestModel, editor) => {
+		await withSuggestModelAndInlineCompletions("abc def", inlineProvider, async (suggestModel, editor) => {
 			let didSuggest = false;
 			const sub = suggestModel.onDidSuggest(() => { didSuggest = true; });
 
 			editor.setPosition({ lineNumber: 1, column: 4 });
-			editor.trigger('keyboard', Handler.Type, { text: 'd' });
+			editor.trigger("keyboard", Handler.Type, { text: "d" });
 
 			await timeout(200);
 
 			sub.dispose();
-			assert.strictEqual(didSuggest, false, 'Quick suggestions should have been suppressed when inline completions are showing');
+			assert.strictEqual(didSuggest, false, "Quick suggestions should have been suppressed when inline completions are showing");
 		});
 	});
 
-	test('allows quick suggest when inline completions resolve with no results', async function () {
+	test("allows quick suggest when inline completions resolve with no results", async function () {
 		const inlineProvider: InlineCompletionsProvider = {
 			provideInlineCompletions: () => ({ items: [] }),
-			disposeInlineCompletions: () => { }
+			disposeInlineCompletions: () => { },
 		};
 
-		await withSuggestModelAndInlineCompletions('abc def', inlineProvider, async (suggestModel, editor) => {
+		await withSuggestModelAndInlineCompletions("abc def", inlineProvider, async (suggestModel, editor) => {
 			let didSuggest = false;
 			const sub = suggestModel.onDidSuggest(e => {
 				didSuggest = true;
@@ -1504,31 +1516,31 @@ suite('SuggestModel - offWhenInlineCompletions with InlineCompletionsController'
 			});
 
 			editor.setPosition({ lineNumber: 1, column: 4 });
-			editor.trigger('keyboard', Handler.Type, { text: 'd' });
+			editor.trigger("keyboard", Handler.Type, { text: "d" });
 
 			await timeout(200);
 
 			sub.dispose();
-			assert.strictEqual(didSuggest, true, 'Quick suggestions should have been triggered after inline completions resolved empty');
+			assert.strictEqual(didSuggest, true, "Quick suggestions should have been triggered after inline completions resolved empty");
 		});
 	});
 
-	test('allows quick suggest when inlineSuggest is disabled even with provider', async function () {
+	test("allows quick suggest when inlineSuggest is disabled even with provider", async function () {
 		const inlineProvider: InlineCompletionsProvider = {
 			provideInlineCompletions: (model, pos) => {
 				const word = model.getWordAtPosition(pos);
 				if (!word) { return { items: [] }; }
 				return {
 					items: [{
-						insertText: word.word + 'Suffix',
+						insertText: word.word + "Suffix",
 						range: new Range(pos.lineNumber, word.startColumn, pos.lineNumber, word.endColumn),
-					}]
+					}],
 				};
 			},
-			disposeInlineCompletions: () => { }
+			disposeInlineCompletions: () => { },
 		};
 
-		await withSuggestModelAndInlineCompletions('abc def', inlineProvider, async (suggestModel, editor) => {
+		await withSuggestModelAndInlineCompletions("abc def", inlineProvider, async (suggestModel, editor) => {
 			editor.updateOptions({ inlineSuggest: { enabled: false } });
 
 			let didSuggest = false;
@@ -1538,12 +1550,12 @@ suite('SuggestModel - offWhenInlineCompletions with InlineCompletionsController'
 			});
 
 			editor.setPosition({ lineNumber: 1, column: 4 });
-			editor.trigger('keyboard', Handler.Type, { text: 'd' });
+			editor.trigger("keyboard", Handler.Type, { text: "d" });
 
 			await timeout(200);
 
 			sub.dispose();
-			assert.strictEqual(didSuggest, true, 'Quick suggestions should have been triggered when inlineSuggest is disabled');
+			assert.strictEqual(didSuggest, true, "Quick suggestions should have been triggered when inlineSuggest is disabled");
 		});
 	});
 });

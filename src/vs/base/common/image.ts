@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from './buffer.js';
+import { VSBuffer } from "./buffer.js";
 
 export interface IImageDimensions {
 	readonly width: number;

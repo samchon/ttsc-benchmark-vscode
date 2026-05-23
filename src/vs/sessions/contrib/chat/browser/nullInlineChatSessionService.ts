@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IActiveCodeEditor, ICodeEditor } from '../../../../editor/browser/editorBrowser.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { IInlineChatSession, IInlineChatSessionService } from '../../../../workbench/contrib/inlineChat/browser/inlineChatSessionService.js';
+import { Event } from "../../../../base/common/event.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IActiveCodeEditor, ICodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IInlineChatSession, IInlineChatSessionService } from "../../../../workbench/contrib/inlineChat/browser/inlineChatSessionService.js";
 
 class NullInlineChatSessionService implements IInlineChatSessionService {
 	declare _serviceBrand: undefined;
@@ -18,7 +18,9 @@ class NullInlineChatSessionService implements IInlineChatSessionService {
 	dispose(): void { }
 
 	createSession(_editor: ICodeEditor): IInlineChatSession {
-		throw new Error('Inline chat sessions are not supported in the sessions window');
+		throw new Error(
+      "Inline chat sessions are not supported in the sessions window",
+    );
 	}
 
 	getSessionByTextModel(_uri: URI): IInlineChatSession | undefined {
@@ -30,4 +32,8 @@ class NullInlineChatSessionService implements IInlineChatSessionService {
 	}
 }
 
-registerSingleton(IInlineChatSessionService, NullInlineChatSessionService, InstantiationType.Delayed);
+registerSingleton(
+  IInlineChatSessionService,
+  NullInlineChatSessionService,
+  InstantiationType.Delayed,
+);

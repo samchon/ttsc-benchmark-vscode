@@ -3,29 +3,36 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { EditorGroupModel, ISerializedEditorGroupModel } from '../../../../common/editor/editorGroupModel.js';
-import { EditorExtensions, IEditorFactoryRegistry, IFileEditorInput, IEditorSerializer, EditorsOrder, GroupModelChangeKind } from '../../../../common/editor.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { TestLifecycleService } from '../../workbenchTestServices.js';
-import { TestConfigurationService } from '../../../../../platform/configuration/test/common/testConfigurationService.js';
-import { TestInstantiationService } from '../../../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { ILifecycleService } from '../../../../services/lifecycle/common/lifecycle.js';
-import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
-import { Registry } from '../../../../../platform/registry/common/platform.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
-import { NullTelemetryService } from '../../../../../platform/telemetry/common/telemetryUtils.js';
-import { IStorageService } from '../../../../../platform/storage/common/storage.js';
-import { DisposableStore, IDisposable, toDisposable } from '../../../../../base/common/lifecycle.js';
-import { TestContextService, TestStorageService } from '../../../common/workbenchTestServices.js';
-import { EditorInput } from '../../../../common/editor/editorInput.js';
-import { isEqual } from '../../../../../base/common/resources.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { StickyEditorGroupModel, UnstickyEditorGroupModel } from '../../../../common/editor/filteredEditorGroupModel.js';
+import assert from "assert";
+import { EditorGroupModel, ISerializedEditorGroupModel } from "../../../../common/editor/editorGroupModel.js";
+import {
+  EditorExtensions,
+  IEditorFactoryRegistry,
+  IFileEditorInput,
+  IEditorSerializer,
+  EditorsOrder,
+  GroupModelChangeKind,
+} from "../../../../common/editor.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { TestLifecycleService } from "../../workbenchTestServices.js";
+import { TestConfigurationService } from "../../../../../platform/configuration/test/common/testConfigurationService.js";
+import { TestInstantiationService } from "../../../../../platform/instantiation/test/common/instantiationServiceMock.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { ILifecycleService } from "../../../../services/lifecycle/common/lifecycle.js";
+import { IWorkspaceContextService } from "../../../../../platform/workspace/common/workspace.js";
+import { Registry } from "../../../../../platform/registry/common/platform.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
+import { NullTelemetryService } from "../../../../../platform/telemetry/common/telemetryUtils.js";
+import { IStorageService } from "../../../../../platform/storage/common/storage.js";
+import { DisposableStore, IDisposable, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { TestContextService, TestStorageService } from "../../../common/workbenchTestServices.js";
+import { EditorInput } from "../../../../common/editor/editorInput.js";
+import { isEqual } from "../../../../../base/common/resources.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { StickyEditorGroupModel, UnstickyEditorGroupModel } from "../../../../common/editor/filteredEditorGroupModel.js";
 
-suite('FilteredEditorGroupModel', () => {
+suite("FilteredEditorGroupModel", () => {
 
 	let testInstService: TestInstantiationService | undefined;
 
@@ -45,7 +52,7 @@ suite('FilteredEditorGroupModel', () => {
 		inst.stub(ITelemetryService, NullTelemetryService);
 
 		const config = new TestConfigurationService();
-		config.setUserConfiguration('workbench', { editor: { openPositioning: 'right', focusRecentEditorAfterClose: true } });
+		config.setUserConfiguration("workbench", { editor: { openPositioning: "right", focusRecentEditorAfterClose: true } });
 		inst.stub(IConfigurationService, config);
 
 		return inst;
@@ -71,7 +78,7 @@ suite('FilteredEditorGroupModel', () => {
 		constructor(public id: string) {
 			super();
 		}
-		override get typeId() { return 'testEditorInputForGroups'; }
+		override get typeId() { return "testEditorInputForGroups"; }
 		override async resolve(): Promise<IDisposable> { return null!; }
 
 		override matches(other: TestEditorInput): boolean {
@@ -94,7 +101,7 @@ suite('FilteredEditorGroupModel', () => {
 		constructor(public id: string) {
 			super();
 		}
-		override get typeId() { return 'testEditorInputForGroups-nonSerializable'; }
+		override get typeId() { return "testEditorInputForGroups-nonSerializable"; }
 		override async resolve(): Promise<IDisposable | null> { return null; }
 
 		override matches(other: NonSerializableTestEditorInput): boolean {
@@ -110,7 +117,7 @@ suite('FilteredEditorGroupModel', () => {
 			super();
 			this.preferredResource = this.resource;
 		}
-		override get typeId() { return 'testFileEditorInputForGroups'; }
+		override get typeId() { return "testFileEditorInputForGroups"; }
 		override get editorId() { return this.id; }
 		override async resolve(): Promise<IDisposable | null> { return null; }
 		setPreferredName(name: string): void { }
@@ -172,7 +179,7 @@ suite('FilteredEditorGroupModel', () => {
 
 			const testEditorInput = <TestEditorInput>editorInput;
 			const testInput: ISerializedTestInput = {
-				id: testEditorInput.id
+				id: testEditorInput.id,
 			};
 
 			return JSON.stringify(testInput);
@@ -195,7 +202,7 @@ suite('FilteredEditorGroupModel', () => {
 		TestEditorInputSerializer.disableSerialize = false;
 		TestEditorInputSerializer.disableDeserialize = false;
 
-		disposables.add(Registry.as<IEditorFactoryRegistry>(EditorExtensions.EditorFactory).registerEditorSerializer('testEditorInputForGroups', TestEditorInputSerializer));
+		disposables.add(Registry.as<IEditorFactoryRegistry>(EditorExtensions.EditorFactory).registerEditorSerializer("testEditorInputForGroups", TestEditorInputSerializer));
 	});
 
 	teardown(() => {
@@ -204,7 +211,7 @@ suite('FilteredEditorGroupModel', () => {
 		index = 1;
 	});
 
-	test('Sticky/Unsticky count', async () => {
+	test("Sticky/Unsticky count", async () => {
 
 		const model = createEditorGroupModel();
 
@@ -232,7 +239,7 @@ suite('FilteredEditorGroupModel', () => {
 		assert.strictEqual(unstickyFilteredEditorGroup.count, 2);
 	});
 
-	test('Sticky/Unsticky stickyCount', async () => {
+	test("Sticky/Unsticky stickyCount", async () => {
 		const model = createEditorGroupModel();
 
 		const stickyFilteredEditorGroup = disposables.add(new StickyEditorGroupModel(model));
@@ -259,7 +266,7 @@ suite('FilteredEditorGroupModel', () => {
 		assert.strictEqual(unstickyFilteredEditorGroup.stickyCount, 0);
 	});
 
-	test('Sticky/Unsticky isEmpty', async () => {
+	test("Sticky/Unsticky isEmpty", async () => {
 		const model = createEditorGroupModel();
 
 		const stickyFilteredEditorGroup = disposables.add(new StickyEditorGroupModel(model));
@@ -286,7 +293,7 @@ suite('FilteredEditorGroupModel', () => {
 		assert.strictEqual(unstickyFilteredEditorGroup.count === 0, true);
 	});
 
-	test('Sticky/Unsticky editors', async () => {
+	test("Sticky/Unsticky editors", async () => {
 		const model = createEditorGroupModel();
 
 		const stickyFilteredEditorGroup = disposables.add(new StickyEditorGroupModel(model));
@@ -315,7 +322,7 @@ suite('FilteredEditorGroupModel', () => {
 		assert.strictEqual(unstickyFilteredEditorGroup.getEditors(EditorsOrder.SEQUENTIAL).length, 2);
 	});
 
-	test('Sticky/Unsticky activeEditor', async () => {
+	test("Sticky/Unsticky activeEditor", async () => {
 		const model = createEditorGroupModel();
 
 		const stickyFilteredEditorGroup = disposables.add(new StickyEditorGroupModel(model));
@@ -345,7 +352,7 @@ suite('FilteredEditorGroupModel', () => {
 		assert.strictEqual(unstickyFilteredEditorGroup.activeEditor, null);
 	});
 
-	test('Sticky/Unsticky previewEditor', async () => {
+	test("Sticky/Unsticky previewEditor", async () => {
 		const model = createEditorGroupModel();
 
 		const stickyFilteredEditorGroup = disposables.add(new StickyEditorGroupModel(model));
@@ -364,7 +371,7 @@ suite('FilteredEditorGroupModel', () => {
 		assert.strictEqual(unstickyFilteredEditorGroup.previewEditor, input1);
 	});
 
-	test('Sticky/Unsticky isSticky()', async () => {
+	test("Sticky/Unsticky isSticky()", async () => {
 		const model = createEditorGroupModel();
 
 		const stickyFilteredEditorGroup = disposables.add(new StickyEditorGroupModel(model));
@@ -387,7 +394,7 @@ suite('FilteredEditorGroupModel', () => {
 		assert.strictEqual(unstickyFilteredEditorGroup.isSticky(input2), false);
 	});
 
-	test('Sticky/Unsticky isPinned()', async () => {
+	test("Sticky/Unsticky isPinned()", async () => {
 		const model = createEditorGroupModel();
 
 		const stickyFilteredEditorGroup = disposables.add(new StickyEditorGroupModel(model));
@@ -409,7 +416,7 @@ suite('FilteredEditorGroupModel', () => {
 		assert.strictEqual(unstickyFilteredEditorGroup.isPinned(input4), false);
 	});
 
-	test('Sticky/Unsticky isActive()', async () => {
+	test("Sticky/Unsticky isActive()", async () => {
 		const model = createEditorGroupModel();
 
 		const stickyFilteredEditorGroup = disposables.add(new StickyEditorGroupModel(model));
@@ -433,7 +440,7 @@ suite('FilteredEditorGroupModel', () => {
 		assert.strictEqual(unstickyFilteredEditorGroup.isActive(input2), true);
 	});
 
-	test('Sticky/Unsticky getEditors()', async () => {
+	test("Sticky/Unsticky getEditors()", async () => {
 		const model = createEditorGroupModel();
 
 		const stickyFilteredEditorGroup = disposables.add(new StickyEditorGroupModel(model));
@@ -485,7 +492,7 @@ suite('FilteredEditorGroupModel', () => {
 		assert.strictEqual(unstickyFilteredEditorGroup.getEditors(EditorsOrder.SEQUENTIAL)[1], input1);
 	});
 
-	test('Sticky/Unsticky getEditorByIndex()', async () => {
+	test("Sticky/Unsticky getEditorByIndex()", async () => {
 		const model = createEditorGroupModel();
 
 		const stickyFilteredEditorGroup = disposables.add(new StickyEditorGroupModel(model));
@@ -521,7 +528,7 @@ suite('FilteredEditorGroupModel', () => {
 		assert.strictEqual(unstickyFilteredEditorGroup.getEditorByIndex(2), undefined);
 	});
 
-	test('Sticky/Unsticky indexOf()', async () => {
+	test("Sticky/Unsticky indexOf()", async () => {
 		const model = createEditorGroupModel();
 
 		const stickyFilteredEditorGroup = disposables.add(new StickyEditorGroupModel(model));
@@ -558,7 +565,7 @@ suite('FilteredEditorGroupModel', () => {
 		assert.strictEqual(unstickyFilteredEditorGroup.indexOf(input3), 1);
 	});
 
-	test('Sticky/Unsticky isFirst()', async () => {
+	test("Sticky/Unsticky isFirst()", async () => {
 		const model = createEditorGroupModel();
 
 		const stickyFilteredEditorGroup = disposables.add(new StickyEditorGroupModel(model));
@@ -592,7 +599,7 @@ suite('FilteredEditorGroupModel', () => {
 		assert.strictEqual(unstickyFilteredEditorGroup.isFirst(input2), false);
 	});
 
-	test('Sticky/Unsticky isLast()', async () => {
+	test("Sticky/Unsticky isLast()", async () => {
 		const model = createEditorGroupModel();
 
 		const stickyFilteredEditorGroup = disposables.add(new StickyEditorGroupModel(model));
@@ -626,7 +633,7 @@ suite('FilteredEditorGroupModel', () => {
 		assert.strictEqual(unstickyFilteredEditorGroup.isLast(input2), true);
 	});
 
-	test('Sticky/Unsticky contains()', async () => {
+	test("Sticky/Unsticky contains()", async () => {
 		const model = createEditorGroupModel();
 
 		const stickyFilteredEditorGroup = disposables.add(new StickyEditorGroupModel(model));
@@ -661,7 +668,7 @@ suite('FilteredEditorGroupModel', () => {
 		assert.strictEqual(unstickyFilteredEditorGroup.contains(input2), true);
 	});
 
-	test('Sticky/Unsticky group information', async () => {
+	test("Sticky/Unsticky group information", async () => {
 		const model = createEditorGroupModel();
 
 		const stickyFilteredEditorGroup = disposables.add(new StickyEditorGroupModel(model));
@@ -686,7 +693,7 @@ suite('FilteredEditorGroupModel', () => {
 		assert.strictEqual(unstickyFilteredEditorGroup.isLocked, model.isLocked);
 	});
 
-	test('Multiple Editors - Editor Emits Dirty and Label Changed', function () {
+	test("Multiple Editors - Editor Emits Dirty and Label Changed", function () {
 		const model1 = createEditorGroupModel();
 		const model2 = createEditorGroupModel();
 
@@ -790,7 +797,7 @@ suite('FilteredEditorGroupModel', () => {
 		assert.strictEqual(label1ChangeCounterUnsticky, 1);
 	});
 
-	test('Sticky/Unsticky isTransient()', async () => {
+	test("Sticky/Unsticky isTransient()", async () => {
 		const model = createEditorGroupModel();
 
 		const stickyFilteredEditorGroup = disposables.add(new StickyEditorGroupModel(model));

@@ -3,40 +3,63 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { n } from '../../../../../../../base/browser/dom.js';
-import { renderIcon } from '../../../../../../../base/browser/ui/iconLabel/iconLabels.js';
-import { Codicon } from '../../../../../../../base/common/codicons.js';
-import { BugIndicatingError } from '../../../../../../../base/common/errors.js';
-import { Disposable, DisposableStore, toDisposable } from '../../../../../../../base/common/lifecycle.js';
-import { IObservable, ISettableObservable, autorun, constObservable, debouncedObservable, derived, observableFromEvent, observableValue, runOnChange } from '../../../../../../../base/common/observable.js';
-import { IAccessibilityService } from '../../../../../../../platform/accessibility/common/accessibility.js';
-import { IHoverService } from '../../../../../../../platform/hover/browser/hover.js';
-import { IInstantiationService } from '../../../../../../../platform/instantiation/common/instantiation.js';
-import { IThemeService } from '../../../../../../../platform/theme/common/themeService.js';
-import { IEditorMouseEvent } from '../../../../../../browser/editorBrowser.js';
-import { ObservableCodeEditor } from '../../../../../../browser/observableCodeEditor.js';
-import { Point } from '../../../../../../common/core/2d/point.js';
-import { Rect } from '../../../../../../common/core/2d/rect.js';
-import { HoverService } from '../../../../../../../platform/hover/browser/hoverService.js';
-import { HoverWidget } from '../../../../../../../platform/hover/browser/hoverWidget.js';
-import { EditorOption, RenderLineNumbersType } from '../../../../../../common/config/editorOptions.js';
-import { LineRange } from '../../../../../../common/core/ranges/lineRange.js';
-import { OffsetRange } from '../../../../../../common/core/ranges/offsetRange.js';
-import { StickyScrollController } from '../../../../../stickyScroll/browser/stickyScrollController.js';
-import { InlineEditTabAction } from '../inlineEditsViewInterface.js';
-import { getEditorBlendedColor, INLINE_EDITS_BORDER_RADIUS, inlineEditIndicatorBackground, inlineEditIndicatorPrimaryBackground, inlineEditIndicatorPrimaryBorder, inlineEditIndicatorPrimaryForeground, inlineEditIndicatorSecondaryBackground, inlineEditIndicatorSecondaryBorder, inlineEditIndicatorSecondaryForeground, inlineEditIndicatorSuccessfulBackground, inlineEditIndicatorSuccessfulBorder, inlineEditIndicatorSuccessfulForeground } from '../theme.js';
-import { mapOutFalsy, rectToProps } from '../utils/utils.js';
-import { GutterIndicatorMenuContent } from './gutterIndicatorMenu.js';
-import { assertNever } from '../../../../../../../base/common/assert.js';
-import { Command, InlineCompletionCommand, IInlineCompletionModelInfo } from '../../../../../../common/languages.js';
-import { InlineSuggestionItem } from '../../../model/inlineSuggestionItem.js';
-import { localize } from '../../../../../../../nls.js';
-import { InlineCompletionsModel } from '../../../model/inlineCompletionsModel.js';
-import { InlineSuggestAlternativeAction } from '../../../model/InlineSuggestAlternativeAction.js';
-import { asCssVariable } from '../../../../../../../platform/theme/common/colorUtils.js';
-import { ThemeIcon } from '../../../../../../../base/common/themables.js';
-import { IUserInteractionService } from '../../../../../../../platform/userInteraction/browser/userInteractionService.js';
-import { Event, Emitter } from '../../../../../../../base/common/event.js';
+import { n } from "../../../../../../../base/browser/dom.js";
+import { renderIcon } from "../../../../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { Codicon } from "../../../../../../../base/common/codicons.js";
+import { BugIndicatingError } from "../../../../../../../base/common/errors.js";
+import { Disposable, DisposableStore, toDisposable } from "../../../../../../../base/common/lifecycle.js";
+import {
+  IObservable,
+  ISettableObservable,
+  autorun,
+  constObservable,
+  debouncedObservable,
+  derived,
+  observableFromEvent,
+  observableValue,
+  runOnChange,
+} from "../../../../../../../base/common/observable.js";
+import { IAccessibilityService } from "../../../../../../../platform/accessibility/common/accessibility.js";
+import { IHoverService } from "../../../../../../../platform/hover/browser/hover.js";
+import { IInstantiationService } from "../../../../../../../platform/instantiation/common/instantiation.js";
+import { IThemeService } from "../../../../../../../platform/theme/common/themeService.js";
+import { IEditorMouseEvent } from "../../../../../../browser/editorBrowser.js";
+import { ObservableCodeEditor } from "../../../../../../browser/observableCodeEditor.js";
+import { Point } from "../../../../../../common/core/2d/point.js";
+import { Rect } from "../../../../../../common/core/2d/rect.js";
+import { HoverService } from "../../../../../../../platform/hover/browser/hoverService.js";
+import { HoverWidget } from "../../../../../../../platform/hover/browser/hoverWidget.js";
+import { EditorOption, RenderLineNumbersType } from "../../../../../../common/config/editorOptions.js";
+import { LineRange } from "../../../../../../common/core/ranges/lineRange.js";
+import { OffsetRange } from "../../../../../../common/core/ranges/offsetRange.js";
+import { StickyScrollController } from "../../../../../stickyScroll/browser/stickyScrollController.js";
+import { InlineEditTabAction } from "../inlineEditsViewInterface.js";
+import {
+  getEditorBlendedColor,
+  INLINE_EDITS_BORDER_RADIUS,
+  inlineEditIndicatorBackground,
+  inlineEditIndicatorPrimaryBackground,
+  inlineEditIndicatorPrimaryBorder,
+  inlineEditIndicatorPrimaryForeground,
+  inlineEditIndicatorSecondaryBackground,
+  inlineEditIndicatorSecondaryBorder,
+  inlineEditIndicatorSecondaryForeground,
+  inlineEditIndicatorSuccessfulBackground,
+  inlineEditIndicatorSuccessfulBorder,
+  inlineEditIndicatorSuccessfulForeground,
+} from "../theme.js";
+import { mapOutFalsy, rectToProps } from "../utils/utils.js";
+import { GutterIndicatorMenuContent } from "./gutterIndicatorMenu.js";
+import { assertNever } from "../../../../../../../base/common/assert.js";
+import { Command, InlineCompletionCommand, IInlineCompletionModelInfo } from "../../../../../../common/languages.js";
+import { InlineSuggestionItem } from "../../../model/inlineSuggestionItem.js";
+import { localize } from "../../../../../../../nls.js";
+import { InlineCompletionsModel } from "../../../model/inlineCompletionsModel.js";
+import { InlineSuggestAlternativeAction } from "../../../model/InlineSuggestAlternativeAction.js";
+import { asCssVariable } from "../../../../../../../platform/theme/common/colorUtils.js";
+import { ThemeIcon } from "../../../../../../../base/common/themables.js";
+import { IUserInteractionService } from "../../../../../../../platform/userInteraction/browser/userInteractionService.js";
+import { Event, Emitter } from "../../../../../../../base/common/event.js";
 
 /**
  * Customization options for the gutter indicator appearance and behavior.
@@ -58,16 +81,16 @@ export class InlineEditsGutterIndicatorData {
 
 export class InlineSuggestionGutterMenuData {
 	public static fromInlineSuggestion(suggestion: InlineSuggestionItem): InlineSuggestionGutterMenuData {
-		const alternativeAction = suggestion.action?.kind === 'edit' ? suggestion.action.alternativeAction : undefined;
+		const alternativeAction = suggestion.action?.kind === "edit" ? suggestion.action.alternativeAction : undefined;
 		const commands = suggestion.source.inlineSuggestions.commands ?? [];
 		return new InlineSuggestionGutterMenuData(
-			suggestion.gutterMenuLinkAction,
-			suggestion.source.provider.displayName ?? localize('inlineSuggestion', "Inline Suggestion"),
-			commands.length > 0 ? [commands] : [],
-			alternativeAction,
-			suggestion.source.provider.modelInfo,
-			suggestion.source.provider.setModelId?.bind(suggestion.source.provider),
-		);
+      suggestion.gutterMenuLinkAction,
+      suggestion.source.provider.displayName ?? localize("inlineSuggestion", "Inline Suggestion"),
+      commands.length > 0 ? [commands] : [],
+      alternativeAction,
+      suggestion.source.provider.modelInfo,
+      suggestion.source.provider.setModelId?.bind(suggestion.source.provider),
+    );
 	}
 
 	constructor(
@@ -85,9 +108,9 @@ export class InlineSuggestionGutterMenuData {
 export class SimpleInlineSuggestModel {
 	public static fromInlineCompletionModel(model: InlineCompletionsModel): SimpleInlineSuggestModel {
 		return new SimpleInlineSuggestModel(
-			() => model.accept(),
-			() => model.jump(),
-		);
+      () => model.accept(),
+      () => model.jump(),
+    );
 	}
 
 	constructor(
@@ -101,7 +124,9 @@ const CODICON_PADDING_PX = 2;
 
 export class InlineEditsGutterIndicator extends Disposable {
 
-	private readonly _onDidCloseWithCommand = this._register(new Emitter<string>());
+	private readonly _onDidCloseWithCommand = this._register(
+    new Emitter<string>(),
+  );
 	readonly onDidCloseWithCommand: Event<string> = this._onDidCloseWithCommand.event;
 
 	constructor(
@@ -116,27 +141,37 @@ export class InlineEditsGutterIndicator extends Disposable {
 		@IInstantiationService private readonly _instantiationService: IInstantiationService,
 		@IAccessibilityService private readonly _accessibilityService: IAccessibilityService,
 		@IThemeService private readonly _themeService: IThemeService,
-		@IUserInteractionService private readonly _userInteractionService: IUserInteractionService
+		@IUserInteractionService private readonly _userInteractionService: IUserInteractionService,
 	) {
 		super();
 
 		this._originalRangeObs = mapOutFalsy(this._data.map(d => d?.originalRange));
 
-		this._stickyScrollController = StickyScrollController.get(this._editorObs.editor);
+		this._stickyScrollController = StickyScrollController.get(
+      this._editorObs.editor,
+    );
 		this._stickyScrollHeight = this._stickyScrollController
-			? observableFromEvent(this._stickyScrollController.onDidChangeStickyScrollHeight, () => this._stickyScrollController!.stickyScrollWidgetHeight)
+			? observableFromEvent(
+          this._stickyScrollController.onDidChangeStickyScrollHeight,
+          () => this._stickyScrollController!.stickyScrollWidgetHeight,
+        )
 			: constObservable(0);
 
-		this._isHoveredOverInlineEditDebounced = debouncedObservable(this._isHoveringOverInlineEdit, 100);
+		this._isHoveredOverInlineEditDebounced = debouncedObservable(
+      this._isHoveringOverInlineEdit,
+      100,
+    );
 
 		const indicator = this._indicator.keepUpdated(this._store);
 
-		this._register(this._editorObs.createOverlayWidget({
-			domNode: indicator.element,
-			position: constObservable(null),
-			allowEditorOverflow: false,
-			minContentWidthInPx: constObservable(0),
-		}));
+		this._register(
+      this._editorObs.createOverlayWidget({
+        domNode: indicator.element,
+        position: constObservable(null),
+        allowEditorOverflow: false,
+        minContentWidthInPx: constObservable(0),
+      }),
+    );
 
 		this._register(this._editorObs.editor.onMouseMove((e: IEditorMouseEvent) => {
 			const state = this._state.get();
@@ -149,9 +184,11 @@ export class InlineEditsGutterIndicator extends Disposable {
 			this._isHoveredOverIcon.set(rectangularArea.containsPoint(point), undefined);
 		}));
 
-		this._register(this._editorObs.editor.onDidScrollChange(() => {
-			this._isHoveredOverIcon.set(false, undefined);
-		}));
+		this._register(
+      this._editorObs.editor.onDidScrollChange(() => {
+        this._isHoveredOverIcon.set(false, undefined);
+      }),
+    );
 
 		// pulse animation when hovering inline edit
 		this._register(runOnChange(this._isHoveredOverInlineEditDebounced, (isHovering) => {
@@ -172,7 +209,7 @@ export class InlineEditsGutterIndicator extends Disposable {
 	private readonly _isHoveredOverInlineEditDebounced: IObservable<boolean>;
 
 	private readonly _modifierPressed = derived(this, reader =>
-		this._userInteractionService.readModifierKeyStatus(this._editorObs.editor.getDomNode()!, reader).shiftKey
+		this._userInteractionService.readModifierKeyStatus(this._editorObs.editor.getDomNode()!, reader).shiftKey,
 	);
 	private readonly _gutterIndicatorStyles = derived(this, reader => {
 		let v = this._tabAction.read(reader);
@@ -193,12 +230,12 @@ export class InlineEditsGutterIndicator extends Disposable {
 			case InlineEditTabAction.Jump: return {
 				background: getEditorBlendedColor(inlineEditIndicatorPrimaryBackground, this._themeService).read(reader).toString(),
 				foreground: getEditorBlendedColor(inlineEditIndicatorPrimaryForeground, this._themeService).read(reader).toString(),
-				border: getEditorBlendedColor(inlineEditIndicatorPrimaryBorder, this._themeService).read(reader).toString()
+				border: getEditorBlendedColor(inlineEditIndicatorPrimaryBorder, this._themeService).read(reader).toString(),
 			};
 			case InlineEditTabAction.Accept: return {
 				background: getEditorBlendedColor(inlineEditIndicatorSuccessfulBackground, this._themeService).read(reader).toString(),
 				foreground: getEditorBlendedColor(inlineEditIndicatorSuccessfulForeground, this._themeService).read(reader).toString(),
-				border: getEditorBlendedColor(inlineEditIndicatorSuccessfulBorder, this._themeService).read(reader).toString()
+				border: getEditorBlendedColor(inlineEditIndicatorSuccessfulBorder, this._themeService).read(reader).toString(),
 			};
 			default:
 				assertNever(v);
@@ -212,17 +249,19 @@ export class InlineEditsGutterIndicator extends Disposable {
 
 		// PULSE ANIMATION:
 		const animation = this._iconRef.element.animate([
-			{
-				outline: `2px solid ${this._gutterIndicatorStyles.map(v => v.border).get()}`,
-				outlineOffset: '-1px',
-				offset: 0
-			},
-			{
-				outline: `2px solid transparent`,
-				outlineOffset: '10px',
-				offset: 1
-			},
-		], { duration: 500 });
+      {
+        outline: `2px solid ${this._gutterIndicatorStyles.map(v => v.border).get()}`,
+        outlineOffset: "-1px",
+        offset: 0,
+      },
+      {
+        outline: `2px solid transparent`,
+        outlineOffset: "10px",
+        offset: 1,
+      },
+    ], {
+      duration: 500,
+    });
 
 		return animation.finished;
 	}
@@ -230,27 +269,27 @@ export class InlineEditsGutterIndicator extends Disposable {
 	private readonly _originalRangeObs;
 
 	private readonly _state = derived(this, reader => {
-		const range = this._originalRangeObs.read(reader);
-		if (!range) { return undefined; }
-		return {
-			range,
-			lineOffsetRange: this._editorObs.observeLineOffsetRange(range, reader.store),
-		};
-	});
+    const range = this._originalRangeObs.read(reader);
+    if (!range) { return undefined; }
+    return {
+      range,
+      lineOffsetRange: this._editorObs.observeLineOffsetRange(range, reader.store),
+    };
+  });
 
 	private readonly _stickyScrollController;
 	private readonly _stickyScrollHeight;
 
 	private readonly _lineNumberToRender = derived(this, reader => {
 		if (this._verticalOffset.read(reader) !== 0) {
-			return '';
+			return "";
 		}
 
 		const lineNumber = this._data.read(reader)?.originalRange.startLineNumber;
 		const lineNumberOptions = this._editorObs.getOption(EditorOption.lineNumbers).read(reader);
 
 		if (lineNumber === undefined || lineNumberOptions.renderType === RenderLineNumbersType.Off) {
-			return '';
+			return "";
 		}
 
 		if (lineNumberOptions.renderType === RenderLineNumbersType.Interval) {
@@ -258,13 +297,13 @@ export class InlineEditsGutterIndicator extends Disposable {
 			if (lineNumber % 10 === 0 || cursorPosition && cursorPosition.lineNumber === lineNumber) {
 				return lineNumber.toString();
 			}
-			return '';
+			return "";
 		}
 
 		if (lineNumberOptions.renderType === RenderLineNumbersType.Relative) {
 			const cursorPosition = this._editorObs.cursorPosition.read(reader);
 			if (!cursorPosition) {
-				return '';
+				return "";
 			}
 			const relativeLineNumber = Math.abs(lineNumber - cursorPosition.lineNumber);
 			if (relativeLineNumber === 0) {
@@ -277,7 +316,7 @@ export class InlineEditsGutterIndicator extends Disposable {
 			if (lineNumberOptions.renderFn) {
 				return lineNumberOptions.renderFn(lineNumber);
 			}
-			return '';
+			return "";
 		}
 
 		return lineNumber.toString();
@@ -330,7 +369,7 @@ export class InlineEditsGutterIndicator extends Disposable {
 					return offsetDigits[i].usableWidthLeftOfLineNumber;
 				}
 			}
-			throw new BugIndicatingError('Could not find avilable width for icon');
+			throw new BugIndicatingError("Could not find avilable width for icon");
 		};
 	});
 
@@ -405,7 +444,7 @@ export class InlineEditsGutterIndicator extends Disposable {
 			return {
 				gutterEditArea,
 				icon: iconDocked,
-				iconDirection: 'right' as const,
+				iconDirection: "right" as const,
 				iconRect,
 				iconVisible,
 				pillRect,
@@ -426,7 +465,7 @@ export class InlineEditsGutterIndicator extends Disposable {
 			return {
 				gutterEditArea,
 				icon: iconDocked,
-				iconDirection: 'right' as const,
+				iconDirection: "right" as const,
 				iconRect,
 				pillRect,
 				iconVisible: true,
@@ -440,8 +479,8 @@ export class InlineEditsGutterIndicator extends Disposable {
 
 		// docked = pill was already in the viewport
 		const iconDirection = pillRect.top < pillFullyDockedRect.top ?
-			'top' as const :
-			'bottom' as const;
+			"top" as const :
+			"bottom" as const;
 
 		return {
 			gutterEditArea,
@@ -462,7 +501,10 @@ export class InlineEditsGutterIndicator extends Disposable {
 	public readonly isHoverVisible: IObservable<boolean> = this._hoverVisible;
 
 	private readonly _isHoveredOverIcon = observableValue(this, false);
-	private readonly _isHoveredOverIconDebounced: IObservable<boolean> = debouncedObservable(this._isHoveredOverIcon, 100);
+	private readonly _isHoveredOverIconDebounced: IObservable<boolean> = debouncedObservable(
+    this._isHoveredOverIcon,
+    100,
+  );
 	public readonly isHoveredOverIcon: IObservable<boolean> = this._isHoveredOverIconDebounced;
 
 	protected _showHover(): void {
@@ -472,7 +514,7 @@ export class InlineEditsGutterIndicator extends Disposable {
 
 		const data = this._data.get();
 		if (!data) {
-			throw new BugIndicatingError('Gutter indicator data not available');
+			throw new BugIndicatingError("Gutter indicator data not available");
 		}
 		const disposableStore = new DisposableStore();
 		const content = disposableStore.add(this._instantiationService.createInstance(
@@ -490,45 +532,56 @@ export class InlineEditsGutterIndicator extends Disposable {
 			},
 		).toDisposableLiveElement());
 
-		const isFocused = this._userInteractionService.createFocusTracker(content.element, disposableStore); // TODO@benibenj should this be removed?
-		disposableStore.add(autorun(reader => {
-			this._focusIsInMenu.set(isFocused.read(reader), undefined);
-		}));
-		disposableStore.add(toDisposable(() => this._focusIsInMenu.set(false, undefined)));
+		const isFocused = this._userInteractionService.createFocusTracker(
+      content.element,
+      disposableStore,
+    ); // TODO@benibenj should this be removed?
+		disposableStore.add(
+      autorun(reader => {
+        this._focusIsInMenu.set(isFocused.read(reader), undefined);
+      }),
+    );
+		disposableStore.add(
+      toDisposable(() => this._focusIsInMenu.set(false, undefined)),
+    );
 
 		const h = this._hoverService.showInstantHover({
-			target: this._iconRef.element,
-			content: content.element,
-		}) as HoverWidget | undefined;
+      target: this._iconRef.element,
+      content: content.element,
+    }) as HoverWidget | undefined;
 		if (h) {
 			this._hoverVisible.set(true, undefined);
-			disposableStore.add(this._editorObs.editor.onDidScrollChange(() => h.dispose()));
-			disposableStore.add(h.onDispose(() => {
-				this._hoverVisible.set(false, undefined);
-				disposableStore.dispose();
-			}));
+			disposableStore.add(
+        this._editorObs.editor.onDidScrollChange(() => h.dispose()),
+      );
+			disposableStore.add(
+        h.onDispose(() => {
+          this._hoverVisible.set(false, undefined);
+          disposableStore.dispose();
+        }),
+      );
 		} else {
 			disposableStore.dispose();
 		}
 	}
 
 	private readonly _indicator = n.div({
-		class: 'inline-edits-view-gutter-indicator',
+		class: "inline-edits-view-gutter-indicator",
 		style: {
-			position: 'absolute',
-			overflow: 'visible',
+			position: "absolute",
+			overflow: "visible",
 		},
 	}, mapOutFalsy(this._layout).map(layout => !layout ? [] : [
 		n.div({
 			style: {
-				position: 'absolute',
+				position: "absolute",
 				background: asCssVariable(inlineEditIndicatorBackground),
 				borderRadius: `${INLINE_EDITS_BORDER_RADIUS}px`,
 				...rectToProps(reader => layout.read(reader).gutterEditArea),
-			}
+			},
 		}),
 		n.div({
-			class: 'icon',
+			class: "icon",
 			ref: this._iconRef,
 
 			tabIndex: 0,
@@ -537,7 +590,7 @@ export class InlineEditsGutterIndicator extends Disposable {
 				const acceptOnClick = layout?.icon.get() === Codicon.check;
 
 				const data = this._data.get();
-				if (!data) { throw new BugIndicatingError('Gutter indicator data not available'); }
+				if (!data) { throw new BugIndicatingError("Gutter indicator data not available"); }
 
 				this._editorObs.editor.focus();
 				if (acceptOnClick) {
@@ -552,62 +605,62 @@ export class InlineEditsGutterIndicator extends Disposable {
 				this._showHover();
 			},
 			style: {
-				cursor: 'pointer',
-				zIndex: '20',
-				position: 'absolute',
+				cursor: "pointer",
+				zIndex: "20",
+				position: "absolute",
 				backgroundColor: this._gutterIndicatorStyles.map(v => v.background),
 				// eslint-disable-next-line local/code-no-any-casts
-				['--vscodeIconForeground' as any]: this._gutterIndicatorStyles.map(v => v.foreground),
+				["--vscodeIconForeground" as any]: this._gutterIndicatorStyles.map(v => v.foreground),
 				border: this._gutterIndicatorStyles.map(v => `1px solid ${v.border}`),
-				boxSizing: 'border-box',
+				boxSizing: "border-box",
 				borderRadius: `${INLINE_EDITS_BORDER_RADIUS}px`,
-				display: 'flex',
-				justifyContent: layout.map(l => l.iconDirection === 'bottom' ? 'flex-start' : 'flex-end'),
-				transition: this._modifierPressed.map(m => m ? '' : 'background-color 0.2s ease-in-out, width 0.2s ease-in-out'),
+				display: "flex",
+				justifyContent: layout.map(l => l.iconDirection === "bottom" ? "flex-start" : "flex-end"),
+				transition: this._modifierPressed.map(m => m ? "" : "background-color 0.2s ease-in-out, width 0.2s ease-in-out"),
 				...rectToProps(reader => layout.read(reader).pillRect),
-			}
+			},
 		}, [
 			n.div({
-				className: 'line-number',
+				className: "line-number",
 				style: {
 					lineHeight: layout.map(l => l.lineNumberRect ? l.lineNumberRect.height : 0),
-					display: layout.map(l => l.lineNumberRect ? 'flex' : 'none'),
-					alignItems: 'center',
-					justifyContent: 'flex-end',
+					display: layout.map(l => l.lineNumberRect ? "flex" : "none"),
+					alignItems: "center",
+					justifyContent: "flex-end",
 					width: layout.map(l => l.lineNumberRect ? l.lineNumberRect.width : 0),
-					height: '100%',
+					height: "100%",
 					color: this._gutterIndicatorStyles.map(v => v.foreground),
-				}
+				},
 			},
-				this._lineNumberToRender
+				this._lineNumberToRender,
 			),
 			n.div({
 				style: {
 					transform: layout.map(l => `rotate(${getRotationFromDirection(l.iconDirection)}deg)`),
-					transition: 'rotate 0.2s ease-in-out, opacity 0.2s ease-in-out',
-					display: 'flex',
-					alignItems: 'center',
-					justifyContent: 'center',
-					height: '100%',
-					opacity: layout.map(l => l.iconVisible ? '1' : '0'),
+					transition: "rotate 0.2s ease-in-out, opacity 0.2s ease-in-out",
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "center",
+					height: "100%",
+					opacity: layout.map(l => l.iconVisible ? "1" : "0"),
 					marginRight: layout.map(l => l.pillRect.width - l.iconRect.width - (l.lineNumberRect?.width ?? 0)),
 					width: layout.map(l => l.iconRect.width),
-					position: 'relative',
-					right: layout.map(l => l.iconDirection === 'top' ? '1px' : '0'),
+					position: "relative",
+					right: layout.map(l => l.iconDirection === "top" ? "1px" : "0"),
 					color: this._data.map(d => d?.customization?.icon?.color ? asCssVariable(d.customization.icon.color.id) : undefined),
-				}
+				},
 			}, [
 				layout.map((l, reader) => withStyles(renderIcon(l.icon.read(reader)), { fontSize: toPx(Math.min(l.iconRect.width - CODICON_PADDING_PX, CODICON_SIZE_PX)) })),
-			])
+			]),
 		]),
 	]));
 }
 
-function getRotationFromDirection(direction: 'top' | 'bottom' | 'right'): number {
+function getRotationFromDirection(direction: "top" | "bottom" | "right"): number {
 	switch (direction) {
-		case 'top': return 90;
-		case 'bottom': return -90;
-		case 'right': return 0;
+		case "top": return 90;
+		case "bottom": return -90;
+		case "right": return 0;
 	}
 }
 

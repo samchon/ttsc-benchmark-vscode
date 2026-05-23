@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter } from '../../../base/common/event.js';
-import { DisposableStore } from '../../../base/common/lifecycle.js';
-import { IExtensionDescription } from '../../../platform/extensions/common/extensions.js';
-import { ExtHostTextEditor } from './extHostTextEditor.js';
-import { ExtHostEditors } from './extHostTextEditors.js';
-import { asWebviewUri, webviewGenericCspSource, WebviewRemoteInfo } from '../../contrib/webview/common/webview.js';
-import type * as vscode from 'vscode';
-import { ExtHostEditorInsetsShape, MainThreadEditorInsetsShape } from './extHost.protocol.js';
+import { Emitter } from "../../../base/common/event.js";
+import { DisposableStore } from "../../../base/common/lifecycle.js";
+import { IExtensionDescription } from "../../../platform/extensions/common/extensions.js";
+import { ExtHostTextEditor } from "./extHostTextEditor.js";
+import { ExtHostEditors } from "./extHostTextEditors.js";
+import { asWebviewUri, webviewGenericCspSource, WebviewRemoteInfo } from "../../contrib/webview/common/webview.js";
+import type * as vscode from "vscode";
+import { ExtHostEditorInsetsShape, MainThreadEditorInsetsShape } from "./extHost.protocol.js";
 
 export class ExtHostEditorInsets implements ExtHostEditorInsetsShape {
 
@@ -21,7 +21,7 @@ export class ExtHostEditorInsets implements ExtHostEditorInsetsShape {
 	constructor(
 		private readonly _proxy: MainThreadEditorInsetsShape,
 		private readonly _editors: ExtHostEditors,
-		private readonly _remoteInfo: WebviewRemoteInfo
+		private readonly _remoteInfo: WebviewRemoteInfo,
 	) {
 
 		// dispose editor inset whenever the hosting editor goes away
@@ -50,7 +50,7 @@ export class ExtHostEditorInsets implements ExtHostEditorInsetsShape {
 			}
 		}
 		if (!apiEditor) {
-			throw new Error('not a visible editor');
+			throw new Error("not a visible editor");
 		}
 
 		const that = this;
@@ -60,7 +60,7 @@ export class ExtHostEditorInsets implements ExtHostEditorInsetsShape {
 
 		const webview = new class implements vscode.Webview {
 
-			private _html: string = '';
+			private _html: string = "";
 			private _options: vscode.WebviewOptions = Object.create(null);
 
 			asWebviewUri(resource: vscode.Uri): vscode.Uri {
@@ -118,7 +118,16 @@ export class ExtHostEditorInsets implements ExtHostEditorInsetsShape {
 			}
 		};
 
-		this._proxy.$createEditorInset(handle, apiEditor.id, apiEditor.value.document.uri, line + 1, height, options || {}, extension.identifier, extension.extensionLocation);
+		this._proxy.$createEditorInset(
+      handle,
+      apiEditor.id,
+      apiEditor.value.document.uri,
+      line + 1,
+      height,
+      options || {},
+      extension.identifier,
+      extension.extensionLocation,
+    );
 		this._insets.set(handle, { editor, inset, onDidReceiveMessage });
 
 		return inset;

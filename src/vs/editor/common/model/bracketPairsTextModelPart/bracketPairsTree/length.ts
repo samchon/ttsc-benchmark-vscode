@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { splitLines } from '../../../../../base/common/strings.js';
-import { Position } from '../../../core/position.js';
-import { Range } from '../../../core/range.js';
-import { TextLength } from '../../../core/text/textLength.js';
+import { splitLines } from "../../../../../base/common/strings.js";
+import { Position } from "../../../core/position.js";
+import { Range } from "../../../core/range.js";
+import { TextLength } from "../../../core/text/textLength.js";
 
 /**
  * The end must be greater than or equal to the start.
@@ -21,7 +21,7 @@ export function lengthDiff(startLineCount: number, startColumnCount: number, end
  * Represents a non-negative length in terms of line and column count.
  * Does not allocate.
 */
-export type Length = { _brand: 'Length' };
+export type Length = { _brand: "Length" };
 
 // eslint-disable-next-line local/code-no-any-casts, @typescript-eslint/no-explicit-any
 export const lengthZero = 0 as any as Length;
@@ -167,7 +167,10 @@ export function lengthOfRange(range: Range): TextLength {
 	if (range.startLineNumber === range.endLineNumber) {
 		return new TextLength(0, range.endColumn - range.startColumn);
 	} else {
-		return new TextLength(range.endLineNumber - range.startLineNumber, range.endColumn - 1);
+		return new TextLength(
+      range.endLineNumber - range.startLineNumber,
+      range.endColumn - 1,
+    );
 	}
 }
 

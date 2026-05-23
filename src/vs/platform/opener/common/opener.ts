@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { IDisposable } from '../../../base/common/lifecycle.js';
-import { URI } from '../../../base/common/uri.js';
-import { IEditorOptions, ITextEditorSelection } from '../../editor/common/editor.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { IDisposable } from "../../../base/common/lifecycle.js";
+import { URI } from "../../../base/common/uri.js";
+import { IEditorOptions, ITextEditorSelection } from "../../editor/common/editor.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
 
-export const IOpenerService = createDecorator<IOpenerService>('openerService');
+export const IOpenerService = createDecorator<IOpenerService>("openerService");
 
 export type OpenInternalOptions = {
 
@@ -125,7 +125,9 @@ export interface IOpenerService {
  * component that is not aware of selections.
  */
 export function withSelection(uri: URI, selection: ITextEditorSelection): URI {
-	return uri.with({ fragment: `${selection.startLineNumber},${selection.startColumn}${selection.endLineNumber ? `-${selection.endLineNumber}${selection.endColumn ? `,${selection.endColumn}` : ''}` : ''}` });
+	return uri.with({
+    fragment: `${selection.startLineNumber},${selection.startColumn}${selection.endLineNumber ? `-${selection.endLineNumber}${selection.endColumn ? `,${selection.endColumn}` : ""}` : ""}`,
+  });
 }
 
 /**
@@ -143,12 +145,12 @@ export function extractSelection(uri: URI): { selection: ITextEditorSelection | 
 	const match = /^L?(\d+)(?:,(\d+))?(-L?(\d+)(?:,(\d+))?)?/.exec(uri.fragment);
 	if (match) {
 		selection = {
-			startLineNumber: parseInt(match[1]),
-			startColumn: match[2] ? parseInt(match[2]) : 1,
-			endLineNumber: match[4] ? parseInt(match[4]) : undefined,
-			endColumn: match[4] ? (match[5] ? parseInt(match[5]) : 1) : undefined
-		};
-		uri = uri.with({ fragment: '' });
+      startLineNumber: parseInt(match[1]),
+      startColumn: match[2] ? parseInt(match[2]) : 1,
+      endLineNumber: match[4] ? parseInt(match[4]) : undefined,
+      endColumn: match[4] ? (match[5] ? parseInt(match[5]) : 1) : undefined,
+    };
+		uri = uri.with({ fragment: "" });
 	}
 	return { selection, uri };
 }

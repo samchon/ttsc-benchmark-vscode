@@ -3,15 +3,29 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { KeyCode, KeyMod } from '../../../../base/common/keyCodes.js';
-import { KeybindingWeight } from '../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { ICodeEditor } from '../../../browser/editorBrowser.js';
-import { EditorCommand, EditorContributionInstantiation, ServicesAccessor, registerEditorCommand, registerEditorContribution } from '../../../browser/editorExtensions.js';
-import { registerEditorFeature } from '../../../common/editorFeatures.js';
-import { DefaultDropProvidersFeature } from './defaultProviders.js';
-import { DropIntoEditorController, changeDropTypeCommandId, dropWidgetVisibleCtx } from './dropIntoEditorController.js';
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import {
+  EditorCommand,
+  EditorContributionInstantiation,
+  ServicesAccessor,
+  registerEditorCommand,
+  registerEditorContribution,
+} from "../../../browser/editorExtensions.js";
+import { registerEditorFeature } from "../../../common/editorFeatures.js";
+import { DefaultDropProvidersFeature } from "./defaultProviders.js";
+import {
+  DropIntoEditorController,
+  changeDropTypeCommandId,
+  dropWidgetVisibleCtx,
+} from "./dropIntoEditorController.js";
 
-registerEditorContribution(DropIntoEditorController.ID, DropIntoEditorController, EditorContributionInstantiation.BeforeFirstInteraction);
+registerEditorContribution(
+  DropIntoEditorController.ID,
+  DropIntoEditorController,
+  EditorContributionInstantiation.BeforeFirstInteraction,
+);
 registerEditorFeature(DefaultDropProvidersFeature);
 
 registerEditorCommand(new class extends EditorCommand {
@@ -22,7 +36,7 @@ registerEditorCommand(new class extends EditorCommand {
 			kbOpts: {
 				weight: KeybindingWeight.EditorContrib,
 				primary: KeyMod.CtrlCmd | KeyCode.Period,
-			}
+			},
 		});
 	}
 
@@ -34,12 +48,12 @@ registerEditorCommand(new class extends EditorCommand {
 registerEditorCommand(new class extends EditorCommand {
 	constructor() {
 		super({
-			id: 'editor.hideDropWidget',
+			id: "editor.hideDropWidget",
 			precondition: dropWidgetVisibleCtx,
 			kbOpts: {
 				weight: KeybindingWeight.EditorContrib,
 				primary: KeyCode.Escape,
-			}
+			},
 		});
 	}
 

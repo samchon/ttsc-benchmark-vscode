@@ -3,17 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IIdentityProvider } from '../../../../../base/browser/ui/list/list.js';
-import { ObjectTree } from '../../../../../base/browser/ui/tree/objectTree.js';
-import { IObjectTreeElement, ObjectTreeElementCollapseState } from '../../../../../base/browser/ui/tree/tree.js';
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { FuzzyScore } from '../../../../../base/common/filters.js';
-import { IMarkdownString } from '../../../../../base/common/htmlContent.js';
-import { Iterable } from '../../../../../base/common/iterator.js';
-import { IDisposable } from '../../../../../base/common/lifecycle.js';
-import { MarshalledId } from '../../../../../base/common/marshallingIds.js';
-import { ISerializedTestTreeCollapseState, isCollapsedInSerializedTestTree } from './testingViewState.js';
-import { ITestItemContext, InternalTestItem, TestItemExpandState, TestResultState } from '../../common/testTypes.js';
+import { IIdentityProvider } from "../../../../../base/browser/ui/list/list.js";
+import { ObjectTree } from "../../../../../base/browser/ui/tree/objectTree.js";
+import { IObjectTreeElement, ObjectTreeElementCollapseState } from "../../../../../base/browser/ui/tree/tree.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { FuzzyScore } from "../../../../../base/common/filters.js";
+import { IMarkdownString } from "../../../../../base/common/htmlContent.js";
+import { Iterable } from "../../../../../base/common/iterator.js";
+import { IDisposable } from "../../../../../base/common/lifecycle.js";
+import { MarshalledId } from "../../../../../base/common/marshallingIds.js";
+import { ISerializedTestTreeCollapseState, isCollapsedInSerializedTestTree } from "./testingViewState.js";
+import {
+  ITestItemContext,
+  InternalTestItem,
+  TestItemExpandState,
+  TestResultState,
+} from "../../common/testTypes.js";
 
 /**
  * Describes a rendering of tests in the explorer view. Different
@@ -114,9 +119,9 @@ export abstract class TestItemTreeElement {
 		}
 
 		const context: ITestItemContext = {
-			$mid: MarshalledId.TestItemContext,
-			tests: [InternalTestItem.serialize(this.test)],
-		};
+      $mid: MarshalledId.TestItemContext,
+      tests: [InternalTestItem.serialize(this.test)],
+    };
 
 		for (let p = this.parent; p && p.depth > 0; p = p.parent) {
 			context.tests.unshift(InternalTestItem.serialize(p.test));
@@ -131,7 +136,7 @@ export class TestTreeErrorMessage {
 	public readonly children = new Set<never>();
 
 	public get description() {
-		return typeof this.message === 'string' ? this.message : this.message.value;
+		return typeof this.message === "string" ? this.message : this.message.value;
 	}
 
 	constructor(
@@ -147,13 +152,13 @@ export const testIdentityProvider: IIdentityProvider<TestExplorerTreeElement> = 
 		// For "not expandable" elements, whether they have children is part of the
 		// ID so they're rerendered if that changes (#204805)
 		const expandComponent = element instanceof TestTreeErrorMessage
-			? 'error'
+			? "error"
 			: element.test.expand === TestItemExpandState.NotExpandable
 				? !!element.children.size
 				: element.test.expand;
 
-		return element.treeId + '\0' + expandComponent;
-	}
+		return element.treeId + "\0" + expandComponent;
+	},
 };
 
 export const getChildrenForParent = (serialized: ISerializedTestTreeCollapseState, rootsWithChildren: Iterable<TestExplorerTreeElement>, node: TestExplorerTreeElement | null): Iterable<IObjectTreeElement<TestExplorerTreeElement>> => {
@@ -161,7 +166,11 @@ export const getChildrenForParent = (serialized: ISerializedTestTreeCollapseStat
 	if (node === null) { // roots
 		const rootsWithChildrenArr = [...rootsWithChildren];
 		if (rootsWithChildrenArr.length === 1) {
-			return getChildrenForParent(serialized, rootsWithChildrenArr, rootsWithChildrenArr[0]);
+			return getChildrenForParent(
+        serialized,
+        rootsWithChildrenArr,
+        rootsWithChildrenArr[0],
+      );
 		}
 		it = rootsWithChildrenArr;
 	} else {

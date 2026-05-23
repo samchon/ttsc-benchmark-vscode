@@ -3,18 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { SparseMultilineTokens } from '../../../common/tokens/sparseMultilineTokens.js';
-import { MetadataConsts } from '../../../common/encodedTokenAttributes.js';
-import { SemanticTokensProviderStyling, toMultilineTokens2 } from '../../../common/services/semanticTokensProviderStyling.js';
-import { createModelServices } from '../testTextModel.js';
-import { TestInstantiationService } from '../../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { IColorTheme, IThemeService, ITokenStyle } from '../../../../platform/theme/common/themeService.js';
-import { ILanguageService } from '../../../common/languages/language.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
+import assert from "assert";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { SparseMultilineTokens } from "../../../common/tokens/sparseMultilineTokens.js";
+import { MetadataConsts } from "../../../common/encodedTokenAttributes.js";
+import { SemanticTokensProviderStyling, toMultilineTokens2 } from "../../../common/services/semanticTokensProviderStyling.js";
+import { createModelServices } from "../testTextModel.js";
+import { TestInstantiationService } from "../../../../platform/instantiation/test/common/instantiationServiceMock.js";
+import { IColorTheme, IThemeService, ITokenStyle } from "../../../../platform/theme/common/themeService.js";
+import { ILanguageService } from "../../../common/languages/language.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
 
-suite('ModelService', () => {
+suite("ModelService", () => {
 	let disposables: DisposableStore;
 	let instantiationService: TestInstantiationService;
 	let languageService: ILanguageService;
@@ -31,12 +31,12 @@ suite('ModelService', () => {
 
 	ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('issue #134973: invalid semantic tokens should be handled better', () => {
-		const languageId = 'java';
+	test("issue #134973: invalid semantic tokens should be handled better", () => {
+		const languageId = "java";
 		disposables.add(languageService.registerLanguage({ id: languageId }));
 		const legend = {
-			tokenTypes: ['st0', 'st1', 'st2', 'st3', 'st4', 'st5', 'st6', 'st7', 'st8', 'st9', 'st10'],
-			tokenModifiers: []
+			tokenTypes: ["st0", "st1", "st2", "st3", "st4", "st5", "st6", "st7", "st8", "st9", "st10"],
+			tokenModifiers: [],
 		};
 		instantiationService.stub(IThemeService, {
 			getColorTheme() {
@@ -47,11 +47,11 @@ suite('ModelService', () => {
 							bold: undefined,
 							underline: undefined,
 							strikethrough: undefined,
-							italic: undefined
+							italic: undefined,
 						};
-					}
+					},
 				};
-			}
+			},
 		});
 		const styling = instantiationService.createInstance(SemanticTokensProviderStyling, legend);
 		const badTokens = {
@@ -65,8 +65,8 @@ suite('ModelService', () => {
 				1, 12, 8, 7, 0,
 				0, 19, 5, 8, 0,
 				0, 7, 1, 9, 0,
-				0, 4294967294, 5, 10, 0
-			])
+				0, 4294967294, 5, 10, 0,
+			]),
 		};
 		const result = toMultilineTokens2(badTokens, styling, languageId);
 		const expected = SparseMultilineTokens.create(1, new Uint32Array([
@@ -83,12 +83,12 @@ suite('ModelService', () => {
 		assert.deepStrictEqual(result.toString(), expected.toString());
 	});
 
-	test('issue #148651: VSCode UI process can hang if a semantic token with negative values is returned by language service', () => {
-		const languageId = 'dockerfile';
+	test("issue #148651: VSCode UI process can hang if a semantic token with negative values is returned by language service", () => {
+		const languageId = "dockerfile";
 		disposables.add(languageService.registerLanguage({ id: languageId }));
 		const legend = {
-			tokenTypes: ['st0', 'st1', 'st2', 'st3', 'st4', 'st5', 'st6', 'st7', 'st8', 'st9'],
-			tokenModifiers: ['stm0', 'stm1', 'stm2']
+			tokenTypes: ["st0", "st1", "st2", "st3", "st4", "st5", "st6", "st7", "st8", "st9"],
+			tokenModifiers: ["stm0", "stm1", "stm2"],
 		};
 		instantiationService.stub(IThemeService, {
 			getColorTheme() {
@@ -99,11 +99,11 @@ suite('ModelService', () => {
 							bold: undefined,
 							underline: undefined,
 							strikethrough: undefined,
-							italic: undefined
+							italic: undefined,
 						};
-					}
+					},
 				};
-			}
+			},
 		});
 		const styling = instantiationService.createInstance(SemanticTokensProviderStyling, legend);
 		const badTokens = {
@@ -122,8 +122,8 @@ suite('ModelService', () => {
 				0, 3, 4294967291, 8, 0,
 				0, 4294967291, 1, 9, 0,
 				0, 1, 1, 10, 0,
-				0, 1, 4, 8, 0
-			])
+				0, 1, 4, 8, 0,
+			]),
 		};
 		const result = toMultilineTokens2(badTokens, styling, languageId);
 		const expected = SparseMultilineTokens.create(1, new Uint32Array([
@@ -135,12 +135,12 @@ suite('ModelService', () => {
 		assert.deepStrictEqual(result.toString(), expected.toString());
 	});
 
-	test('issue #149130: vscode freezes because of Bracket Pair Colorization', () => {
-		const languageId = 'q';
+	test("issue #149130: vscode freezes because of Bracket Pair Colorization", () => {
+		const languageId = "q";
 		disposables.add(languageService.registerLanguage({ id: languageId }));
 		const legend = {
-			tokenTypes: ['st0', 'st1', 'st2', 'st3', 'st4', 'st5'],
-			tokenModifiers: ['stm0', 'stm1', 'stm2']
+			tokenTypes: ["st0", "st1", "st2", "st3", "st4", "st5"],
+			tokenModifiers: ["stm0", "stm1", "stm2"],
 		};
 		instantiationService.stub(IThemeService, {
 			getColorTheme() {
@@ -151,19 +151,19 @@ suite('ModelService', () => {
 							bold: undefined,
 							underline: undefined,
 							strikethrough: undefined,
-							italic: undefined
+							italic: undefined,
 						};
-					}
+					},
 				};
-			}
+			},
 		});
 		const styling = instantiationService.createInstance(SemanticTokensProviderStyling, legend);
 		const badTokens = {
 			data: new Uint32Array([
 				0, 11, 1, 1, 0,
 				0, 4, 1, 1, 0,
-				0, 4294967289, 1, 1, 0
-			])
+				0, 4294967289, 1, 1, 0,
+			]),
 		};
 		const result = toMultilineTokens2(badTokens, styling, languageId);
 		const expected = SparseMultilineTokens.create(1, new Uint32Array([

@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DisposableStore } from '../../../../../../base/common/lifecycle.js';
-import { computeDiff } from '../../../../notebook/common/notebookDiff.js';
-import { INotebookEditorModelResolverService } from '../../../../notebook/common/notebookEditorModelResolverService.js';
-import { INotebookLoggingService } from '../../../../notebook/common/notebookLoggingService.js';
-import { INotebookEditorWorkerService } from '../../../../notebook/common/services/notebookWorkerService.js';
-import { IEditSessionEntryDiff, ISnapshotEntry } from '../../../common/editing/chatEditingService.js';
+import { DisposableStore } from "../../../../../../base/common/lifecycle.js";
+import { computeDiff } from "../../../../notebook/common/notebookDiff.js";
+import { INotebookEditorModelResolverService } from "../../../../notebook/common/notebookEditorModelResolverService.js";
+import { INotebookLoggingService } from "../../../../notebook/common/notebookLoggingService.js";
+import { INotebookEditorWorkerService } from "../../../../notebook/common/services/notebookWorkerService.js";
+import { IEditSessionEntryDiff, ISnapshotEntry } from "../../../common/editing/chatEditingService.js";
 
 
 export class ChatEditingModifiedNotebookDiff {
@@ -31,20 +31,27 @@ export class ChatEditingModifiedNotebookDiff {
 		const disposables = new DisposableStore();
 		try {
 			const [modifiedRef, originalRef] = await Promise.all([
-				this.notebookEditorModelService.resolve(this.modified.snapshotUri),
-				this.notebookEditorModelService.resolve(this.original.snapshotUri)
-			]);
+        this.notebookEditorModelService.resolve(this.modified.snapshotUri),
+        this.notebookEditorModelService.resolve(this.original.snapshotUri),
+      ]);
 			disposables.add(modifiedRef);
 			disposables.add(originalRef);
-			const notebookDiff = await this.notebookEditorWorkerService.computeDiff(this.original.snapshotUri, this.modified.snapshotUri);
-			const result = computeDiff(originalRef.object.notebook, modifiedRef.object.notebook, notebookDiff);
+			const notebookDiff = await this.notebookEditorWorkerService.computeDiff(
+        this.original.snapshotUri,
+        this.modified.snapshotUri,
+      );
+			const result = computeDiff(
+        originalRef.object.notebook,
+        modifiedRef.object.notebook,
+        notebookDiff,
+      );
 			result.cellDiffInfo.forEach(diff => {
 				switch (diff.type) {
-					case 'modified':
-					case 'insert':
+					case "modified":
+					case "insert":
 						added++;
 						break;
-					case 'delete':
+					case "delete":
 						removed++;
 						break;
 					default:
@@ -52,20 +59,23 @@ export class ChatEditingModifiedNotebookDiff {
 				}
 			});
 		} catch (e) {
-			this.notebookLoggingService.error('Notebook Chat', 'Error computing diff:\n' + e);
+			this.notebookLoggingService.error(
+        "Notebook Chat",
+        "Error computing diff:\n" + e,
+      );
 		} finally {
 			disposables.dispose();
 		}
 
 		return {
-			added,
-			removed,
-			identical: added === 0 && removed === 0,
-			quitEarly: false,
-			isFinal: true,
-			modifiedURI: this.modified.snapshotUri,
-			originalURI: this.original.snapshotUri,
-			isBusy: false,
-		};
+      added,
+      removed,
+      identical: added === 0 && removed === 0,
+      quitEarly: false,
+      isFinal: true,
+      modifiedURI: this.modified.snapshotUri,
+      originalURI: this.original.snapshotUri,
+      isBusy: false,
+    };
 	}
 }

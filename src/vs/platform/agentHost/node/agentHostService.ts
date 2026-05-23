@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../base/common/event.js';
-import { Disposable, toDisposable } from '../../../base/common/lifecycle.js';
-import { ILogService, ILoggerService } from '../../log/common/log.js';
-import { RemoteLoggerChannelClient } from '../../log/common/logIpc.js';
-import { IAgentHostStarter } from '../common/agent.js';
-import { AgentHostIpcChannels } from '../common/agentService.js';
+import { Event } from "../../../base/common/event.js";
+import { Disposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { ILogService, ILoggerService } from "../../log/common/log.js";
+import { RemoteLoggerChannelClient } from "../../log/common/logIpc.js";
+import { IAgentHostStarter } from "../common/agent.js";
+import { AgentHostIpcChannels } from "../common/agentService.js";
 
 enum Constants {
 	MaxRestarts = 5,
@@ -37,11 +37,17 @@ export class AgentHostProcessManager extends Disposable {
 
 		// Start lazily when the first window asks for a connection
 		if (this._starter.onRequestConnection) {
-			this._register(Event.once(this._starter.onRequestConnection)(() => this._ensureStarted()));
+			this._register(
+        Event.once(this._starter.onRequestConnection)(
+          () => this._ensureStarted(),
+        ),
+      );
 		}
 
 		if (this._starter.onWillShutdown) {
-			this._register(this._starter.onWillShutdown(() => this._wasQuitRequested = true));
+			this._register(
+        this._starter.onWillShutdown(() => this._wasQuitRequested = true),
+      );
 		}
 	}
 
@@ -61,10 +67,15 @@ export class AgentHostProcessManager extends Disposable {
 				return;
 			}
 
-			this._logService.info('AgentHostProcessManager: agent host started');
+			this._logService.info("AgentHostProcessManager: agent host started");
 
 			// Connect logger channel so agent host logs appear in the output channel
-			this._register(new RemoteLoggerChannelClient(this._loggerService, connection.client.getChannel(AgentHostIpcChannels.Logger)));
+			this._register(
+        new RemoteLoggerChannelClient(
+          this._loggerService,
+          connection.client.getChannel(AgentHostIpcChannels.Logger),
+        ),
+      );
 
 			// Handle unexpected exit
 			this._register(connection.onDidProcessExit(e => {
@@ -84,7 +95,10 @@ export class AgentHostProcessManager extends Disposable {
 			this._register(toDisposable(() => connection.store.dispose()));
 		} catch (error) {
 			this._started = false;
-			this._logService.error('AgentHostProcessManager: failed to start agent host', error);
+			this._logService.error(
+        "AgentHostProcessManager: failed to start agent host",
+        error,
+      );
 		}
 	}
 }

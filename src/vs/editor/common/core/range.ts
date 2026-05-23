@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IPosition, Position } from './position.js';
+import { IPosition, Position } from "./position.js";
 
 /**
  * A range in the editor. This interface is suitable for serialization.
@@ -253,7 +253,12 @@ export class Range {
 		if (resultStartLineNumber === resultEndLineNumber && resultStartColumn > resultEndColumn) {
 			return null;
 		}
-		return new Range(resultStartLineNumber, resultStartColumn, resultEndLineNumber, resultEndColumn);
+		return new Range(
+      resultStartLineNumber,
+      resultStartColumn,
+      resultEndLineNumber,
+      resultEndColumn,
+    );
 	}
 
 	/**
@@ -312,21 +317,31 @@ export class Range {
 	 * Transform to a user presentable string representation.
 	 */
 	public toString(): string {
-		return '[' + this.startLineNumber + ',' + this.startColumn + ' -> ' + this.endLineNumber + ',' + this.endColumn + ']';
+		return "[" + this.startLineNumber + "," + this.startColumn + " -> " + this.endLineNumber + "," + this.endColumn + "]";
 	}
 
 	/**
 	 * Create a new range using this range's start position, and using endLineNumber and endColumn as the end position.
 	 */
 	public setEndPosition(endLineNumber: number, endColumn: number): Range {
-		return new Range(this.startLineNumber, this.startColumn, endLineNumber, endColumn);
+		return new Range(
+      this.startLineNumber,
+      this.startColumn,
+      endLineNumber,
+      endColumn,
+    );
 	}
 
 	/**
 	 * Create a new range using this range's end position, and using startLineNumber and startColumn as the start position.
 	 */
 	public setStartPosition(startLineNumber: number, startColumn: number): Range {
-		return new Range(startLineNumber, startColumn, this.endLineNumber, this.endColumn);
+		return new Range(
+      startLineNumber,
+      startColumn,
+      this.endLineNumber,
+      this.endColumn,
+    );
 	}
 
 	/**
@@ -340,7 +355,12 @@ export class Range {
 	 * Create a new empty range using this range's start position.
 	 */
 	public static collapseToStart(range: IRange): Range {
-		return new Range(range.startLineNumber, range.startColumn, range.startLineNumber, range.startColumn);
+		return new Range(
+      range.startLineNumber,
+      range.startColumn,
+      range.startLineNumber,
+      range.startColumn,
+    );
 	}
 
 	/**
@@ -354,14 +374,24 @@ export class Range {
 	 * Create a new empty range using this range's end position.
 	 */
 	public static collapseToEnd(range: IRange): Range {
-		return new Range(range.endLineNumber, range.endColumn, range.endLineNumber, range.endColumn);
+		return new Range(
+      range.endLineNumber,
+      range.endColumn,
+      range.endLineNumber,
+      range.endColumn,
+    );
 	}
 
 	/**
 	 * Moves the range by the given amount of lines.
 	 */
 	public delta(lineCount: number): Range {
-		return new Range(this.startLineNumber + lineCount, this.startColumn, this.endLineNumber + lineCount, this.endColumn);
+		return new Range(
+      this.startLineNumber + lineCount,
+      this.startColumn,
+      this.endLineNumber + lineCount,
+      this.endColumn,
+    );
 	}
 
 	/**
@@ -374,7 +404,12 @@ export class Range {
 	// ---
 
 	public static fromPositions(start: IPosition, end: IPosition = start): Range {
-		return new Range(start.lineNumber, start.column, end.lineNumber, end.column);
+		return new Range(
+      start.lineNumber,
+      start.column,
+      end.lineNumber,
+      end.column,
+    );
 	}
 
 	/**
@@ -387,7 +422,12 @@ export class Range {
 		if (!range) {
 			return null;
 		}
-		return new Range(range.startLineNumber, range.startColumn, range.endLineNumber, range.endColumn);
+		return new Range(
+      range.startLineNumber,
+      range.startColumn,
+      range.endLineNumber,
+      range.endColumn,
+    );
 	}
 
 	/**
@@ -396,10 +436,10 @@ export class Range {
 	public static isIRange(obj: unknown): obj is IRange {
 		return (
 			!!obj
-			&& (typeof (obj as IRange).startLineNumber === 'number')
-			&& (typeof (obj as IRange).startColumn === 'number')
-			&& (typeof (obj as IRange).endLineNumber === 'number')
-			&& (typeof (obj as IRange).endColumn === 'number')
+			&& (typeof (obj as IRange).startLineNumber === "number")
+			&& (typeof (obj as IRange).startColumn === "number")
+			&& (typeof (obj as IRange).endLineNumber === "number")
+			&& (typeof (obj as IRange).endColumn === "number")
 		);
 	}
 

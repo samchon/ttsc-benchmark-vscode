@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { OffsetRange } from '../ranges/offsetRange.js';
-import { AnyEdit, BaseEdit, BaseReplacement } from './edit.js';
+import { OffsetRange } from "../ranges/offsetRange.js";
+import { AnyEdit, BaseEdit, BaseReplacement } from "./edit.js";
 
 /**
  * Like a normal edit, but only captures the length information.
@@ -13,7 +13,11 @@ export class LengthEdit extends BaseEdit<LengthReplacement, LengthEdit> {
 	public static readonly empty = new LengthEdit([]);
 
 	public static fromEdit(edit: AnyEdit): LengthEdit {
-		return new LengthEdit(edit.replacements.map(r => new LengthReplacement(r.replaceRange, r.getNewLength())));
+		return new LengthEdit(
+      edit.replacements.map(
+        r => new LengthReplacement(r.replaceRange, r.getNewLength()),
+      ),
+    );
 	}
 
 	public static create(replacements: readonly LengthReplacement[]): LengthEdit {
@@ -29,7 +33,9 @@ export class LengthEdit extends BaseEdit<LengthReplacement, LengthEdit> {
 	}
 
 	public static insert(offset: number, newLength: number): LengthEdit {
-		return new LengthEdit([new LengthReplacement(OffsetRange.emptyAt(offset), newLength)]);
+		return new LengthEdit([
+      new LengthReplacement(OffsetRange.emptyAt(offset), newLength),
+    ]);
 	}
 
 	public static delete(range: OffsetRange): LengthEdit {
@@ -51,10 +57,15 @@ export class LengthEdit extends BaseEdit<LengthReplacement, LengthEdit> {
 		const edits: LengthReplacement[] = [];
 		let offset = 0;
 		for (const e of this.replacements) {
-			edits.push(new LengthReplacement(
-				OffsetRange.ofStartAndLength(e.replaceRange.start + offset, e.newLength),
-				e.replaceRange.length,
-			));
+			edits.push(
+        new LengthReplacement(
+          OffsetRange.ofStartAndLength(
+            e.replaceRange.start + offset,
+            e.newLength,
+          ),
+          e.replaceRange.length,
+        ),
+      );
 			offset += e.newLength - e.replaceRange.length;
 		}
 		return new LengthEdit(edits);
@@ -100,7 +111,10 @@ export class LengthReplacement extends BaseReplacement<LengthReplacement> {
 		endOffsetExclusive: number,
 		newLength: number,
 	): LengthReplacement {
-		return new LengthReplacement(new OffsetRange(startOffset, endOffsetExclusive), newLength);
+		return new LengthReplacement(
+      new OffsetRange(startOffset, endOffsetExclusive),
+      newLength,
+    );
 	}
 
 	constructor(
@@ -111,13 +125,18 @@ export class LengthReplacement extends BaseReplacement<LengthReplacement> {
 	}
 
 	override equals(other: LengthReplacement): boolean {
-		return this.replaceRange.equals(other.replaceRange) && this.newLength === other.newLength;
+		return this.replaceRange.equals(
+      other.replaceRange,
+    ) && this.newLength === other.newLength;
 	}
 
 	getNewLength(): number { return this.newLength; }
 
 	tryJoinTouching(other: LengthReplacement): LengthReplacement | undefined {
-		return new LengthReplacement(this.replaceRange.joinRightTouching(other.replaceRange), this.newLength + other.newLength);
+		return new LengthReplacement(
+      this.replaceRange.joinRightTouching(other.replaceRange),
+      this.newLength + other.newLength,
+    );
 	}
 
 	slice(range: OffsetRange, rangeInReplacement: OffsetRange): LengthReplacement {

@@ -3,25 +3,67 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { URI } from '../../../../base/common/uri.js';
-import { runWithFakedTimers } from '../../../../base/test/common/timeTravelScheduler.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
-import { NullLogService } from '../../../log/common/log.js';
-import { type IAgentCreateSessionConfig, type IAgentResolveSessionConfigParams, type IAgentService, type IAgentSessionConfigCompletionsParams, type IAgentSessionMetadata, type AuthenticateParams, type AuthenticateResult } from '../../common/agentService.js';
-import { CompletionsParams, CompletionsResult, ListSessionsResult, ResourceReadResult, ResolveSessionConfigResult, SessionConfigCompletionsResult } from '../../common/state/protocol/commands.js';
-import { ActionType, type IRootConfigChangedAction, type SessionAction, type TerminalAction } from '../../common/state/sessionActions.js';
-import { PROTOCOL_VERSION } from '../../common/state/protocol/version/registry.js';
-import { isJsonRpcNotification, isJsonRpcResponse, JSON_RPC_INTERNAL_ERROR, ProtocolError, AHP_UNSUPPORTED_PROTOCOL_VERSION, type AhpNotification, type InitializeResult, type ProtocolMessage, type ReconnectResult, type ResourceListResult, type ResourceWriteParams, type ResourceWriteResult, type IStateSnapshot } from '../../common/state/sessionProtocol.js';
-import { ResponsePartKind, SessionStatus, ChangesetStatus, ToolCallConfirmationReason, ToolCallStatus, ToolResultContentType, type SessionSummary } from '../../common/state/sessionState.js';
-import type { SessionAddedParams } from '../../common/state/protocol/notifications.js';
-import type { IProtocolServer, IProtocolTransport } from '../../common/state/sessionTransport.js';
-import { ProtocolServerHandler } from '../../node/protocolServerHandler.js';
-import { AgentHostStateManager } from '../../node/agentHostStateManager.js';
-import { AgentHostFileSystemProvider } from '../../common/agentHostFileSystemProvider.js';
-import { iterateOtlpLogRecords, OtlpLogEmitter } from '../../common/otlp/otlpLogEmitter.js';
+import assert from "assert";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import { runWithFakedTimers } from "../../../../base/test/common/timeTravelScheduler.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
+import { NullLogService } from "../../../log/common/log.js";
+import {
+  type IAgentCreateSessionConfig,
+  type IAgentResolveSessionConfigParams,
+  type IAgentService,
+  type IAgentSessionConfigCompletionsParams,
+  type IAgentSessionMetadata,
+  type AuthenticateParams,
+  type AuthenticateResult,
+} from "../../common/agentService.js";
+import {
+  CompletionsParams,
+  CompletionsResult,
+  ListSessionsResult,
+  ResourceReadResult,
+  ResolveSessionConfigResult,
+  SessionConfigCompletionsResult,
+} from "../../common/state/protocol/commands.js";
+import {
+  ActionType,
+  type IRootConfigChangedAction,
+  type SessionAction,
+  type TerminalAction,
+} from "../../common/state/sessionActions.js";
+import { PROTOCOL_VERSION } from "../../common/state/protocol/version/registry.js";
+import {
+  isJsonRpcNotification,
+  isJsonRpcResponse,
+  JSON_RPC_INTERNAL_ERROR,
+  ProtocolError,
+  AHP_UNSUPPORTED_PROTOCOL_VERSION,
+  type AhpNotification,
+  type InitializeResult,
+  type ProtocolMessage,
+  type ReconnectResult,
+  type ResourceListResult,
+  type ResourceWriteParams,
+  type ResourceWriteResult,
+  type IStateSnapshot,
+} from "../../common/state/sessionProtocol.js";
+import {
+  ResponsePartKind,
+  SessionStatus,
+  ChangesetStatus,
+  ToolCallConfirmationReason,
+  ToolCallStatus,
+  ToolResultContentType,
+  type SessionSummary,
+} from "../../common/state/sessionState.js";
+import type { SessionAddedParams } from "../../common/state/protocol/notifications.js";
+import type { IProtocolServer, IProtocolTransport } from "../../common/state/sessionTransport.js";
+import { ProtocolServerHandler } from "../../node/protocolServerHandler.js";
+import { AgentHostStateManager } from "../../node/agentHostStateManager.js";
+import { AgentHostFileSystemProvider } from "../../common/agentHostFileSystemProvider.js";
+import { iterateOtlpLogRecords, OtlpLogEmitter } from "../../common/otlp/otlpLogEmitter.js";
 
 // ---- Mock helpers -----------------------------------------------------------
 
@@ -58,7 +100,7 @@ class MockProtocolTransport implements IProtocolTransport {
 class MockProtocolServer implements IProtocolServer {
 	private readonly _onConnection = new Emitter<IProtocolTransport>();
 	readonly onConnection = this._onConnection.event;
-	readonly address = 'mock://test';
+	readonly address = "mock://test";
 
 	simulateConnection(transport: IProtocolTransport): void {
 		this._onConnection.fire(transport);
@@ -77,9 +119,9 @@ class MockAgentService implements IAgentService {
 	readonly listedSessions: IAgentSessionMetadata[] = [];
 	readonly createSessionConfigs: (IAgentCreateSessionConfig | undefined)[] = [];
 
-	private readonly _onDidAction = new Emitter<import('../../common/state/sessionActions.js').ActionEnvelope>();
+	private readonly _onDidAction = new Emitter<import("../../common/state/sessionActions.js").ActionEnvelope>();
 	readonly onDidAction = this._onDidAction.event;
-	private readonly _onDidNotification = new Emitter<import('../../common/state/sessionActions.js').INotification>();
+	private readonly _onDidNotification = new Emitter<import("../../common/state/sessionActions.js").INotification>();
 	readonly onDidNotification = this._onDidNotification.event;
 
 	private _stateManager!: AgentHostStateManager;
@@ -96,37 +138,48 @@ class MockAgentService implements IAgentService {
 	}
 	async createSession(config?: IAgentCreateSessionConfig): Promise<URI> {
 		this.createSessionConfigs.push(config);
-		const session = config?.session ?? URI.parse('copilot:///new-session');
+		const session = config?.session ?? URI.parse("copilot:///new-session");
 		this._stateManager.createSession({
-			resource: session.toString(),
-			provider: config?.provider ?? 'copilot',
-			title: '',
-			status: SessionStatus.Idle,
-			createdAt: Date.now(),
-			modifiedAt: Date.now(),
-			project: { uri: 'file:///created-project', displayName: 'Created Project' },
-			workingDirectory: config?.workingDirectory?.toString(),
-		});
+      resource: session.toString(),
+      provider: config?.provider ?? "copilot",
+      title: "",
+      status: SessionStatus.Idle,
+      createdAt: Date.now(),
+      modifiedAt: Date.now(),
+      project: { uri: "file:///created-project", displayName: "Created Project" },
+      workingDirectory: config?.workingDirectory?.toString(),
+    });
 		return session;
 	}
 
-	async resolveSessionConfig(_params: IAgentResolveSessionConfigParams): Promise<ResolveSessionConfigResult> { return { schema: { type: 'object', properties: {} }, values: {} }; }
-	async sessionConfigCompletions(_params: IAgentSessionConfigCompletionsParams): Promise<SessionConfigCompletionsResult> { return { items: [] }; }
-	async completions(_params: CompletionsParams): Promise<CompletionsResult> { return { items: [] }; }
+	async resolveSessionConfig(_params: IAgentResolveSessionConfigParams): Promise<ResolveSessionConfigResult> { return {
+    schema: { type: "object", properties: {} },
+    values: {},
+  }; }
+	async sessionConfigCompletions(_params: IAgentSessionConfigCompletionsParams): Promise<SessionConfigCompletionsResult> { return {
+    items: [],
+  }; }
+	async completions(_params: CompletionsParams): Promise<CompletionsResult> { return {
+    items: [],
+  }; }
 	async getCompletionTriggerCharacters(): Promise<readonly string[]> { return []; }
 	async disposeSession(_session: URI): Promise<void> { }
 	async listSessions(): Promise<IAgentSessionMetadata[]> { return this.listedSessions; }
 	async subscribe(resource: URI, _clientId: string): Promise<IStateSnapshot> {
 		const snapshot = this._stateManager.getSnapshot(resource.toString());
 		if (!snapshot) {
-			throw new Error(`Cannot subscribe to unknown resource: ${resource.toString()}`);
+			throw new Error(
+        `Cannot subscribe to unknown resource: ${resource.toString()}`,
+      );
 		}
 		return snapshot;
 	}
 	addSubscriber(_resource: URI, _clientId: string): void { }
 	unsubscribe(_resource: URI, _clientId: string): void { }
 	async shutdown(): Promise<void> { }
-	async authenticate(_params: AuthenticateParams): Promise<AuthenticateResult> { return { authenticated: true }; }
+	async authenticate(_params: AuthenticateParams): Promise<AuthenticateResult> { return {
+    authenticated: true,
+  }; }
 	async resourceWrite(_params: ResourceWriteParams): Promise<ResourceWriteResult> { return {}; }
 	async resourceList(uri: URI): Promise<ResourceListResult> {
 		this.browsedUris.push(uri);
@@ -136,13 +189,13 @@ class MockAgentService implements IAgentService {
 		}
 		return {
 			entries: [
-				{ name: 'src', type: 'directory' },
-				{ name: 'README.md', type: 'file' },
+				{ name: "src", type: "directory" },
+				{ name: "README.md", type: "file" },
 			],
 		};
 	}
 	async resourceRead(_uri: URI): Promise<ResourceReadResult> {
-		throw new Error('Not implemented');
+		throw new Error("Not implemented");
 	}
 	async resourceCopy(): Promise<{}> { return {}; }
 	async resourceDelete(): Promise<{}> { return {}; }
@@ -159,11 +212,11 @@ class MockAgentService implements IAgentService {
 // ---- Helpers ----------------------------------------------------------------
 
 function notification(method: string, params?: unknown): ProtocolMessage {
-	return { jsonrpc: '2.0', method, params } as ProtocolMessage;
+	return { jsonrpc: "2.0", method, params } as ProtocolMessage;
 }
 
 function request(id: number, method: string, params?: unknown): ProtocolMessage {
-	return { jsonrpc: '2.0', id, method, params } as ProtocolMessage;
+	return { jsonrpc: "2.0", id, method, params } as ProtocolMessage;
 }
 
 function findNotifications(sent: ProtocolMessage[], method: string): AhpNotification[] {
@@ -175,12 +228,17 @@ function findResponse(sent: ProtocolMessage[], id: number): ProtocolMessage | un
 }
 
 function waitForResponse(transport: MockProtocolTransport, id: number): Promise<ProtocolMessage> {
-	return Event.toPromise(Event.filter(transport.onDidSend, message => isJsonRpcResponse(message) && message.id === id));
+	return Event.toPromise(
+    Event.filter(
+      transport.onDidSend,
+      message => isJsonRpcResponse(message) && message.id === id,
+    ),
+  );
 }
 
 // ---- Tests ------------------------------------------------------------------
 
-suite('ProtocolServerHandler', () => {
+suite("ProtocolServerHandler", () => {
 
 	let disposables: DisposableStore;
 	let stateManager: AgentHostStateManager;
@@ -188,24 +246,24 @@ suite('ProtocolServerHandler', () => {
 	let agentService: MockAgentService;
 	let handler: ProtocolServerHandler;
 
-	const sessionUri = URI.from({ scheme: 'copilot', path: '/test-session' }).toString();
+	const sessionUri = URI.from({ scheme: "copilot", path: "/test-session" }).toString();
 
 	function makeSessionSummary(resource?: string): SessionSummary {
 		return {
 			resource: resource ?? sessionUri,
-			provider: 'copilot',
-			title: 'Test',
+			provider: "copilot",
+			title: "Test",
 			status: SessionStatus.Idle,
 			createdAt: Date.now(),
 			modifiedAt: Date.now(),
-			project: { uri: 'file:///test-project', displayName: 'Test Project' },
+			project: { uri: "file:///test-project", displayName: "Test Project" },
 		};
 	}
 
 	function connectClient(clientId: string, initialSubscriptions?: readonly string[]): MockProtocolTransport {
 		const transport = new MockProtocolTransport();
 		server.simulateConnection(transport);
-		transport.simulateMessage(request(1, 'initialize', {
+		transport.simulateMessage(request(1, "initialize", {
 			protocolVersions: [PROTOCOL_VERSION],
 			clientId,
 			initialSubscriptions,
@@ -224,7 +282,7 @@ suite('ProtocolServerHandler', () => {
 			agentService,
 			stateManager,
 			server,
-			{ defaultDirectory: URI.file('/home/testuser').toString() },
+			{ defaultDirectory: URI.file("/home/testuser").toString() },
 			disposables.add(new AgentHostFileSystemProvider()),
 			new NullLogService(),
 		));
@@ -236,32 +294,32 @@ suite('ProtocolServerHandler', () => {
 
 	ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('handshake returns initialize response', () => {
-		const transport = connectClient('client-1');
+	test("handshake returns initialize response", () => {
+		const transport = connectClient("client-1");
 
 		const resp = findResponse(transport.sent, 1);
-		assert.ok(resp, 'should have sent initialize response');
+		assert.ok(resp, "should have sent initialize response");
 		const result = (resp as { result: InitializeResult }).result;
 		assert.strictEqual(result.protocolVersion, PROTOCOL_VERSION);
 		assert.strictEqual(result.serverSeq, stateManager.serverSeq);
 	});
 
-	test('handshake rejects unsupported protocol versions', () => {
+	test("handshake rejects unsupported protocol versions", () => {
 		const transport = new MockProtocolTransport();
 		server.simulateConnection(transport);
 		// Offer a single, deliberately-unsupported version. The server should
 		// respond with -32005 and a message naming the offered/supported sets
 		// instead of a result.
-		transport.simulateMessage(request(1, 'initialize', {
-			protocolVersions: ['0.0.0'],
-			clientId: 'client-incompat',
+		transport.simulateMessage(request(1, "initialize", {
+			protocolVersions: ["0.0.0"],
+			clientId: "client-incompat",
 		}));
 
 		const resp = findResponse(transport.sent, 1) as { error?: { code: number; message: string; data?: unknown } } | undefined;
-		assert.ok(resp, 'should have sent error response');
+		assert.ok(resp, "should have sent error response");
 		assert.strictEqual(resp.error?.code, AHP_UNSUPPORTED_PROTOCOL_VERSION);
 		assert.match(resp.error!.message, /0\.0\.0/);
-		assert.match(resp.error!.message, new RegExp(PROTOCOL_VERSION.replace(/\./g, '\\.')));
+		assert.match(resp.error!.message, new RegExp(PROTOCOL_VERSION.replace(/\./g, "\\.")));
 		// Without the upgrade-socket env var, no _meta should be advertised.
 		const data = resp.error!.data as { _meta?: { vscodeUpgradeMethod?: string } } | undefined;
 		assert.strictEqual(data?._meta?.vscodeUpgradeMethod, undefined);
@@ -270,40 +328,40 @@ suite('ProtocolServerHandler', () => {
 		transport.dispose();
 	});
 
-	test('handshake leniently picks the highest compatible offered version', () => {
+	test("handshake leniently picks the highest compatible offered version", () => {
 		// Mix an incompatible version with a compatible one — the server
 		// must pick the compatible one rather than rejecting on the first
 		// unknown entry.
 		const transport = new MockProtocolTransport();
 		server.simulateConnection(transport);
-		transport.simulateMessage(request(1, 'initialize', {
-			protocolVersions: ['0.0.0', PROTOCOL_VERSION, '9.9.9'],
-			clientId: 'client-lenient',
+		transport.simulateMessage(request(1, "initialize", {
+			protocolVersions: ["0.0.0", PROTOCOL_VERSION, "9.9.9"],
+			clientId: "client-lenient",
 		}));
 
 		const resp = findResponse(transport.sent, 1) as { result?: InitializeResult } | undefined;
-		assert.ok(resp?.result, 'should have negotiated successfully');
+		assert.ok(resp?.result, "should have negotiated successfully");
 		assert.strictEqual(resp.result.protocolVersion, PROTOCOL_VERSION);
 
 		transport.simulateClose();
 		transport.dispose();
 	});
 
-	test('upgrade method advertised when management socket env var is set', () => {
+	test("upgrade method advertised when management socket env var is set", () => {
 		const originalEnv = process.env.VSCODE_AGENT_HOST_MANAGEMENT_SOCKET;
-		process.env.VSCODE_AGENT_HOST_MANAGEMENT_SOCKET = '/tmp/mock-supervisor.sock';
+		process.env.VSCODE_AGENT_HOST_MANAGEMENT_SOCKET = "/tmp/mock-supervisor.sock";
 		try {
 			const transport = new MockProtocolTransport();
 			server.simulateConnection(transport);
-			transport.simulateMessage(request(1, 'initialize', {
-				protocolVersions: ['9.9.9'],
-				clientId: 'client-incompat-with-cli',
+			transport.simulateMessage(request(1, "initialize", {
+				protocolVersions: ["9.9.9"],
+				clientId: "client-incompat-with-cli",
 			}));
 
 			const resp = findResponse(transport.sent, 1) as { error?: { code: number; data?: unknown } } | undefined;
 			assert.strictEqual(resp?.error?.code, AHP_UNSUPPORTED_PROTOCOL_VERSION);
 			const data = resp.error!.data as { _meta?: { vscodeUpgradeMethod?: string } } | undefined;
-			assert.strictEqual(data?._meta?.vscodeUpgradeMethod, '_vscodeUpgrade');
+			assert.strictEqual(data?._meta?.vscodeUpgradeMethod, "_vscodeUpgrade");
 
 			transport.simulateClose();
 			transport.dispose();
@@ -316,26 +374,26 @@ suite('ProtocolServerHandler', () => {
 		}
 	});
 
-	test('_vscodeUpgrade RPC returns MethodNotFound when no supervisor is available', async () => {
+	test("_vscodeUpgrade RPC returns MethodNotFound when no supervisor is available", async () => {
 		const transport = new MockProtocolTransport();
 		server.simulateConnection(transport);
 		// Note: NOT going through initialize first — the upgrade method must
 		// also be callable pre-handshake.
 		const responsePromise = waitForResponse(transport, 42);
-		transport.simulateMessage(request(42, '_vscodeUpgrade', {}));
+		transport.simulateMessage(request(42, "_vscodeUpgrade", {}));
 
 		const resp = await responsePromise as { error?: { code: number; message: string } };
-		assert.ok(resp.error, 'should have responded with an error');
+		assert.ok(resp.error, "should have responded with an error");
 		assert.strictEqual(resp.error!.code, -32601 /* MethodNotFound */);
 
 		transport.simulateClose();
 		transport.dispose();
 	});
 
-	test('handshake with initialSubscriptions returns snapshots', () => {
+	test("handshake with initialSubscriptions returns snapshots", () => {
 		stateManager.createSession(makeSessionSummary());
 
-		const transport = connectClient('client-1', [sessionUri]);
+		const transport = connectClient("client-1", [sessionUri]);
 
 		const resp = findResponse(transport.sent, 1);
 		assert.ok(resp);
@@ -344,12 +402,12 @@ suite('ProtocolServerHandler', () => {
 		assert.strictEqual(result.snapshots[0].resource.toString(), sessionUri.toString());
 	});
 
-	test('ping responds before initialize', async () => {
+	test("ping responds before initialize", async () => {
 		const transport = new MockProtocolTransport();
 		disposables.add(transport);
 		server.simulateConnection(transport);
 		const responsePromise = waitForResponse(transport, 7);
-		transport.simulateMessage(request(7, 'ping', {}));
+		transport.simulateMessage(request(7, "ping", {}));
 		const resp = await responsePromise as { id: number; result: null };
 
 		assert.strictEqual(resp.id, 7);
@@ -357,88 +415,88 @@ suite('ProtocolServerHandler', () => {
 		transport.simulateClose();
 	});
 
-	test('ping responds after initialize', async () => {
-		const transport = connectClient('client-1');
+	test("ping responds after initialize", async () => {
+		const transport = connectClient("client-1");
 		transport.sent.length = 0;
 		const responsePromise = waitForResponse(transport, 9);
-		transport.simulateMessage(request(9, 'ping', {}));
+		transport.simulateMessage(request(9, "ping", {}));
 		const resp = await responsePromise as { id: number; result: null };
 
 		assert.strictEqual(resp.id, 9);
 		assert.strictEqual(resp.result, null);
 	});
 
-	test('subscribe request returns snapshot', async () => {
+	test("subscribe request returns snapshot", async () => {
 		stateManager.createSession(makeSessionSummary());
 
-		const transport = connectClient('client-1');
+		const transport = connectClient("client-1");
 		transport.sent.length = 0;
 		const responsePromise = waitForResponse(transport, 1);
 
-		transport.simulateMessage(request(1, 'subscribe', { channel: sessionUri }));
+		transport.simulateMessage(request(1, "subscribe", { channel: sessionUri }));
 		const resp = await responsePromise;
 
-		assert.ok(resp, 'should have sent response');
+		assert.ok(resp, "should have sent response");
 		const result = (resp as unknown as { result: { snapshot: IStateSnapshot } }).result;
 		assert.strictEqual(result.snapshot.resource.toString(), sessionUri.toString());
 	});
 
-	test('client action is dispatched and echoed', () => {
+	test("client action is dispatched and echoed", () => {
 		stateManager.createSession(makeSessionSummary());
 		stateManager.dispatchServerAction(sessionUri, { type: ActionType.SessionReady, });
 
-		const transport = connectClient('client-1', [sessionUri]);
+		const transport = connectClient("client-1", [sessionUri]);
 		transport.sent.length = 0;
 
-		transport.simulateMessage(notification('dispatchAction', {
+		transport.simulateMessage(notification("dispatchAction", {
 			channel: sessionUri,
 			clientSeq: 1,
 			action: {
 				type: ActionType.SessionTurnStarted,
-				turnId: 'turn-1',
-				userMessage: { text: 'hello' },
+				turnId: "turn-1",
+				userMessage: { text: "hello" },
 			},
 		}));
 
-		const actionMsgs = findNotifications(transport.sent, 'action');
+		const actionMsgs = findNotifications(transport.sent, "action");
 		const turnStarted = actionMsgs.find(m => {
 			const envelope = m.params as unknown as { action: { type: string } };
 			return envelope.action.type === ActionType.SessionTurnStarted;
 		});
-		assert.ok(turnStarted, 'should have echoed turnStarted');
+		assert.ok(turnStarted, "should have echoed turnStarted");
 		const envelope = turnStarted!.params as unknown as { origin: { clientId: string; clientSeq: number } };
-		assert.strictEqual(envelope.origin.clientId, 'client-1');
+		assert.strictEqual(envelope.origin.clientId, "client-1");
 		assert.strictEqual(envelope.origin.clientSeq, 1);
 	});
 
-	test('actions are scoped to subscribed sessions', () => {
+	test("actions are scoped to subscribed sessions", () => {
 		stateManager.createSession(makeSessionSummary());
 		stateManager.dispatchServerAction(sessionUri, { type: ActionType.SessionReady, });
 
-		const transportA = connectClient('client-a', [sessionUri]);
-		const transportB = connectClient('client-b');
+		const transportA = connectClient("client-a", [sessionUri]);
+		const transportB = connectClient("client-b");
 
 		transportA.sent.length = 0;
 		transportB.sent.length = 0;
 
 		stateManager.dispatchServerAction(sessionUri, {
 			type: ActionType.SessionTitleChanged,
-			title: 'New Title',
+			title: "New Title",
 		});
 
-		assert.strictEqual(findNotifications(transportA.sent, 'action').length, 1);
-		assert.strictEqual(findNotifications(transportB.sent, 'action').length, 0);
+		assert.strictEqual(findNotifications(transportA.sent, "action").length, 1);
+		assert.strictEqual(findNotifications(transportB.sent, "action").length, 0);
 	});
 
-	test('changeset actions are scoped to subscribed changeset URIs', () => {
+	test("changeset actions are scoped to subscribed changeset URIs", () => {
 		const changesetUri = `${sessionUri}/changeset/session`;
 		stateManager.createSession(makeSessionSummary());
 		stateManager.dispatchServerAction(sessionUri, { type: ActionType.SessionReady, });
 		stateManager.registerChangeset(changesetUri);
 
-		const transportA = connectClient('client-a-cs', [changesetUri]);
+		const transportA = connectClient("client-a-cs", [changesetUri]);
 		// Session-only subscriber: must NOT receive changeset envelopes.
-		const transportB = connectClient('client-b-cs', [sessionUri]);
+		const transportB = connectClient("client-b-cs", [sessionUri]);
 
 		transportA.sent.length = 0;
 		transportB.sent.length = 0;
@@ -446,18 +504,18 @@ suite('ProtocolServerHandler', () => {
 		stateManager.dispatchServerAction(changesetUri, {
 			type: ActionType.ChangesetFileSet,
 			file: {
-				id: 'file:///test/changed.ts',
+				id: "file:///test/changed.ts",
 				edit: {
-					after: { uri: 'file:///test/changed.ts', content: { uri: 'file:///test/changed.ts' } },
-					diff: { added: 1, removed: 0 }
-				}
+					after: { uri: "file:///test/changed.ts", content: { uri: "file:///test/changed.ts" } },
+					diff: { added: 1, removed: 0 },
+				},
 			},
 		});
 
-		const aActions = findNotifications(transportA.sent, 'action');
-		const bActions = findNotifications(transportB.sent, 'action');
-		assert.strictEqual(aActions.length, 1, 'changeset subscriber should receive 1 envelope');
-		assert.strictEqual(bActions.length, 0, 'session-only subscriber should receive 0 changeset envelopes');
+		const aActions = findNotifications(transportA.sent, "action");
+		const bActions = findNotifications(transportB.sent, "action");
+		assert.strictEqual(aActions.length, 1, "changeset subscriber should receive 1 envelope");
+		assert.strictEqual(bActions.length, 0, "session-only subscriber should receive 0 changeset envelopes");
 
 		const params = aActions[0].params as { channel: string; action: { type: string } };
 		assert.deepStrictEqual(
@@ -466,86 +524,86 @@ suite('ProtocolServerHandler', () => {
 		);
 	});
 
-	test('changeset/cleared reaches changeset subscribers', () => {
+	test("changeset/cleared reaches changeset subscribers", () => {
 		const changesetUri = `${sessionUri}/changeset/session`;
 		stateManager.createSession(makeSessionSummary());
 		stateManager.dispatchServerAction(sessionUri, { type: ActionType.SessionReady, });
 		stateManager.registerChangeset(changesetUri);
 
-		const transport = connectClient('client-clear', [changesetUri]);
+		const transport = connectClient("client-clear", [changesetUri]);
 		transport.sent.length = 0;
 
 		stateManager.dispatchServerAction(changesetUri, {
 			type: ActionType.ChangesetCleared,
 		});
 
-		const actions = findNotifications(transport.sent, 'action');
+		const actions = findNotifications(transport.sent, "action");
 		assert.strictEqual(actions.length, 1);
 		const params = actions[0].params as { action: { type: string } };
 		assert.strictEqual(params.action.type, ActionType.ChangesetCleared);
 	});
 
-	test('notifications are broadcast to all clients', () => {
-		const transportA = connectClient('client-a');
-		const transportB = connectClient('client-b');
+	test("notifications are broadcast to all clients", () => {
+		const transportA = connectClient("client-a");
+		const transportB = connectClient("client-b");
 
 		transportA.sent.length = 0;
 		transportB.sent.length = 0;
 
 		stateManager.createSession(makeSessionSummary());
 
-		assert.strictEqual(findNotifications(transportA.sent, 'root/sessionAdded').length, 1);
-		assert.strictEqual(findNotifications(transportB.sent, 'root/sessionAdded').length, 1);
+		assert.strictEqual(findNotifications(transportA.sent, "root/sessionAdded").length, 1);
+		assert.strictEqual(findNotifications(transportB.sent, "root/sessionAdded").length, 1);
 	});
 
-	test('listSessions includes project metadata', async () => {
+	test("listSessions includes project metadata", async () => {
 		agentService.listedSessions.push({
 			session: URI.parse(sessionUri),
 			startTime: 1000,
 			modifiedTime: 2000,
-			project: { uri: URI.file('/workspace/project'), displayName: 'Project' },
-			summary: 'Session Summary',
+			project: { uri: URI.file("/workspace/project"), displayName: "Project" },
+			summary: "Session Summary",
 		});
 
-		const transport = connectClient('client-list');
+		const transport = connectClient("client-list");
 		transport.sent.length = 0;
 		const responsePromise = waitForResponse(transport, 2);
 
-		transport.simulateMessage(request(2, 'listSessions'));
+		transport.simulateMessage(request(2, "listSessions"));
 		const resp = await responsePromise;
 
 		const result = (resp as unknown as { result: ListSessionsResult }).result;
-		assert.deepStrictEqual(result.items.map(item => item.project), [{ uri: URI.file('/workspace/project').toString(), displayName: 'Project' }]);
+		assert.deepStrictEqual(result.items.map(item => item.project), [{ uri: URI.file("/workspace/project").toString(), displayName: "Project" }]);
 	});
 
-	test('listSessions omits project metadata when absent', async () => {
+	test("listSessions omits project metadata when absent", async () => {
 		agentService.listedSessions.push({
 			session: URI.parse(sessionUri),
 			startTime: 1000,
 			modifiedTime: 2000,
-			summary: 'Session Summary',
+			summary: "Session Summary",
 		});
 
-		const transport = connectClient('client-list-no-project');
+		const transport = connectClient("client-list-no-project");
 		transport.sent.length = 0;
 		const responsePromise = waitForResponse(transport, 2);
 
-		transport.simulateMessage(request(2, 'listSessions'));
+		transport.simulateMessage(request(2, "listSessions"));
 		const resp = await responsePromise;
 
 		const result = (resp as unknown as { result: ListSessionsResult }).result;
 		assert.deepStrictEqual(result.items.map(item => item.project), [undefined]);
 	});
 
-	test('listSessions surfaces the changeset catalogue from the agent', async () => {
+	test("listSessions surfaces the changeset catalogue from the agent", async () => {
 		agentService.listedSessions.push({
 			session: URI.parse(sessionUri),
 			startTime: 1000,
 			modifiedTime: 2000,
-			summary: 'Session With Changesets',
+			summary: "Session With Changesets",
 			changesets: [
 				{
-					label: 'Branch Changes',
+					label: "Branch Changes",
 					uriTemplate: `${sessionUri}/changeset/session`,
 					additions: 5,
 					deletions: 2,
@@ -554,17 +612,17 @@ suite('ProtocolServerHandler', () => {
 			],
 		});
 
-		const transport = connectClient('client-list-changesets');
+		const transport = connectClient("client-list-changesets");
 		transport.sent.length = 0;
 		const responsePromise = waitForResponse(transport, 2);
 
-		transport.simulateMessage(request(2, 'listSessions'));
+		transport.simulateMessage(request(2, "listSessions"));
 		const resp = await responsePromise;
 
 		const result = (resp as unknown as { result: ListSessionsResult }).result;
 		assert.deepStrictEqual(result.items[0].changesets, [
 			{
-				label: 'Branch Changes',
+				label: "Branch Changes",
 				uriTemplate: `${sessionUri}/changeset/session`,
 				additions: 5,
 				deletions: 2,
@@ -573,55 +631,55 @@ suite('ProtocolServerHandler', () => {
 		]);
 	});
 
-	test('createSession returns null and broadcasts project in sessionAdded summary', async () => {
-		const transport = connectClient('client-create');
+	test("createSession returns null and broadcasts project in sessionAdded summary", async () => {
+		const transport = connectClient("client-create");
 		transport.sent.length = 0;
 		const responsePromise = waitForResponse(transport, 2);
 
-		const newSession = URI.parse('copilot:///created-session').toString();
-		transport.simulateMessage(request(2, 'createSession', { channel: newSession }));
+		const newSession = URI.parse("copilot:///created-session").toString();
+		transport.simulateMessage(request(2, "createSession", { channel: newSession }));
 		const resp = await responsePromise;
 
-		const added = findNotifications(transport.sent, 'root/sessionAdded')[0];
+		const added = findNotifications(transport.sent, "root/sessionAdded")[0];
 		assert.deepStrictEqual({
 			result: (resp as { result: null }).result,
 			project: (added!.params as SessionAddedParams).summary.project,
 		}, {
 			result: null,
-			project: { uri: 'file:///created-project', displayName: 'Created Project' },
+			project: { uri: "file:///created-project", displayName: "Created Project" },
 		});
 	});
 
-	test('reconnect replays missed actions', async () => {
+	test("reconnect replays missed actions", async () => {
 		stateManager.createSession(makeSessionSummary());
 		stateManager.dispatchServerAction(sessionUri, { type: ActionType.SessionReady, });
 
-		const transport1 = connectClient('client-r', [sessionUri]);
+		const transport1 = connectClient("client-r", [sessionUri]);
 		const resp = findResponse(transport1.sent, 1);
 		const initSeq = (resp as { result: InitializeResult }).result.serverSeq;
 		transport1.simulateClose();
 
-		stateManager.dispatchServerAction(sessionUri, { type: ActionType.SessionTitleChanged, title: 'Title A' });
-		stateManager.dispatchServerAction(sessionUri, { type: ActionType.SessionTitleChanged, title: 'Title B' });
+		stateManager.dispatchServerAction(sessionUri, { type: ActionType.SessionTitleChanged, title: "Title A" });
+		stateManager.dispatchServerAction(sessionUri, { type: ActionType.SessionTitleChanged, title: "Title B" });
 
 		const transport2 = new MockProtocolTransport();
 		server.simulateConnection(transport2);
 		const reconnectRespPromise = waitForResponse(transport2, 1);
-		transport2.simulateMessage(request(1, 'reconnect', {
-			clientId: 'client-r',
+		transport2.simulateMessage(request(1, "reconnect", {
+			clientId: "client-r",
 			lastSeenServerSeq: initSeq,
 			subscriptions: [sessionUri],
 		}));
 
 		const reconnectResp = await reconnectRespPromise;
 		const result = (reconnectResp as { result: ReconnectResult }).result;
-		assert.strictEqual(result.type, 'replay');
-		if (result.type === 'replay') {
+		assert.strictEqual(result.type, "replay");
+		if (result.type === "replay") {
 			assert.strictEqual(result.actions.length, 2);
 		}
 	});
 
-	test('reconnect replays missed changeset actions to changeset subscribers', async () => {
+	test("reconnect replays missed changeset actions to changeset subscribers", async () => {
 		const changesetUri = `${sessionUri}/changeset/session`;
 		stateManager.createSession(makeSessionSummary());
 		stateManager.dispatchServerAction(sessionUri, { type: ActionType.SessionReady, });
@@ -629,7 +687,7 @@ suite('ProtocolServerHandler', () => {
 		// subscription succeeds.
 		stateManager.registerChangeset(changesetUri);
 
-		const transport1 = connectClient('client-rc', [changesetUri]);
+		const transport1 = connectClient("client-rc", [changesetUri]);
 		const resp = findResponse(transport1.sent, 1);
 		const initSeq = (resp as { result: InitializeResult }).result.serverSeq;
 		transport1.simulateClose();
@@ -638,11 +696,11 @@ suite('ProtocolServerHandler', () => {
 		stateManager.dispatchServerAction(changesetUri, {
 			type: ActionType.ChangesetFileSet,
 			file: {
-				id: 'file:///a.ts',
+				id: "file:///a.ts",
 				edit: {
-					after: { uri: 'file:///a.ts', content: { uri: 'file:///a.ts' } },
-					diff: { added: 2, removed: 0 }
-				}
+					after: { uri: "file:///a.ts", content: { uri: "file:///a.ts" } },
+					diff: { added: 2, removed: 0 },
+				},
 			},
 		});
 		stateManager.dispatchServerAction(changesetUri, {
@@ -654,27 +712,27 @@ suite('ProtocolServerHandler', () => {
 		const transport2 = new MockProtocolTransport();
 		server.simulateConnection(transport2);
 		const reconnectRespPromise = waitForResponse(transport2, 1);
-		transport2.simulateMessage(request(1, 'reconnect', {
-			clientId: 'client-rc',
+		transport2.simulateMessage(request(1, "reconnect", {
+			clientId: "client-rc",
 			lastSeenServerSeq: initSeq,
 			subscriptions: [changesetUri],
 		}));
 
 		const reconnectResp = await reconnectRespPromise;
 		const result = (reconnectResp as { result: ReconnectResult }).result;
-		assert.strictEqual(result.type, 'replay');
-		if (result.type === 'replay') {
+		assert.strictEqual(result.type, "replay");
+		if (result.type === "replay") {
 			const replayedTypes = result.actions.map(e => e.action.type);
-			assert.ok(replayedTypes.includes(ActionType.ChangesetFileSet), 'replay should include ChangesetFileSet');
-			assert.ok(replayedTypes.includes(ActionType.ChangesetStatusChanged), 'replay should include ChangesetStatusChanged');
+			assert.ok(replayedTypes.includes(ActionType.ChangesetFileSet), "replay should include ChangesetFileSet");
+			assert.ok(replayedTypes.includes(ActionType.ChangesetStatusChanged), "replay should include ChangesetStatusChanged");
 		}
 	});
 
-	test('reconnect sends fresh snapshots when gap too large', async () => {
+	test("reconnect sends fresh snapshots when gap too large", async () => {
 		stateManager.createSession(makeSessionSummary());
 		stateManager.dispatchServerAction(sessionUri, { type: ActionType.SessionReady, });
 
-		const transport1 = connectClient('client-g', [sessionUri]);
+		const transport1 = connectClient("client-g", [sessionUri]);
 		transport1.simulateClose();
 
 		for (let i = 0; i < 1100; i++) {
@@ -684,21 +742,21 @@ suite('ProtocolServerHandler', () => {
 		const transport2 = new MockProtocolTransport();
 		server.simulateConnection(transport2);
 		const reconnectRespPromise = waitForResponse(transport2, 1);
-		transport2.simulateMessage(request(1, 'reconnect', {
-			clientId: 'client-g',
+		transport2.simulateMessage(request(1, "reconnect", {
+			clientId: "client-g",
 			lastSeenServerSeq: 0,
 			subscriptions: [sessionUri],
 		}));
 
 		const reconnectResp = await reconnectRespPromise;
 		const result = (reconnectResp as { result: ReconnectResult }).result;
-		assert.strictEqual(result.type, 'snapshot');
-		if (result.type === 'snapshot') {
-			assert.ok(result.snapshots.length > 0, 'should contain snapshots');
+		assert.strictEqual(result.type, "snapshot");
+		if (result.type === "snapshot") {
+			assert.ok(result.snapshots.length > 0, "should contain snapshots");
 		}
 	});
 
-	test('reconnect rehydrates server-side state that was evicted while disconnected', async () => {
+	test("reconnect rehydrates server-side state that was evicted while disconnected", async () => {
 		stateManager.createSession(makeSessionSummary());
 		stateManager.dispatchServerAction(sessionUri, { type: ActionType.SessionReady, });
 
@@ -716,7 +774,7 @@ suite('ProtocolServerHandler', () => {
 			return snapshot;
 		};
 
-		const transport1 = connectClient('client-e', [sessionUri]);
+		const transport1 = connectClient("client-e", [sessionUri]);
 		const initResp = findResponse(transport1.sent, 1);
 		const initSeq = (initResp as { result: InitializeResult }).result.serverSeq;
 		transport1.simulateClose();
@@ -725,70 +783,70 @@ suite('ProtocolServerHandler', () => {
 		// was disconnected (this is what `_maybeEvictIdleSession` does in the
 		// real service).
 		stateManager.removeSession(sessionUri);
-		assert.strictEqual(stateManager.getSnapshot(sessionUri), undefined, 'precondition: state evicted');
+		assert.strictEqual(stateManager.getSnapshot(sessionUri), undefined, "precondition: state evicted");
 
 		const transport2 = new MockProtocolTransport();
 		server.simulateConnection(transport2);
 		const reconnectRespPromise = waitForResponse(transport2, 1);
-		transport2.simulateMessage(request(1, 'reconnect', {
-			clientId: 'client-e',
+		transport2.simulateMessage(request(1, "reconnect", {
+			clientId: "client-e",
 			lastSeenServerSeq: initSeq,
 			subscriptions: [sessionUri],
 		}));
 
 		await reconnectRespPromise;
-		assert.deepStrictEqual(subscribeCalls, [sessionUri], 'reconnect should call subscribe to restore evicted state');
-		assert.ok(stateManager.getSnapshot(sessionUri), 'state should have been re-hydrated by reconnect');
+		assert.deepStrictEqual(subscribeCalls, [sessionUri], "reconnect should call subscribe to restore evicted state");
+		assert.ok(stateManager.getSnapshot(sessionUri), "state should have been re-hydrated by reconnect");
 	});
 
-	test('client disconnect cleans up', () => {
+	test("client disconnect cleans up", () => {
 		stateManager.createSession(makeSessionSummary());
 		stateManager.dispatchServerAction(sessionUri, { type: ActionType.SessionReady, });
 
-		const transport = connectClient('client-d', [sessionUri]);
+		const transport = connectClient("client-d", [sessionUri]);
 		transport.sent.length = 0;
 
 		transport.simulateClose();
 
-		stateManager.dispatchServerAction(sessionUri, { type: ActionType.SessionTitleChanged, title: 'After Disconnect' });
+		stateManager.dispatchServerAction(sessionUri, { type: ActionType.SessionTitleChanged, title: "After Disconnect" });
 
 		assert.strictEqual(transport.sent.length, 0);
 	});
 
-	test('client disconnect clears active client and fails owned tool calls after grace period', () => {
+	test("client disconnect clears active client and fails owned tool calls after grace period", () => {
 		return runWithFakedTimers({ useFakeTimers: true }, async () => {
 			stateManager.createSession(makeSessionSummary());
 			stateManager.dispatchServerAction(sessionUri, { type: ActionType.SessionReady, });
 			stateManager.dispatchServerAction(sessionUri, {
 				type: ActionType.SessionActiveClientChanged,
 				activeClient: {
-					clientId: 'client-tools',
-					tools: [{ name: 'runTask', description: 'Runs a task' }]
+					clientId: "client-tools",
+					tools: [{ name: "runTask", description: "Runs a task" }],
 				},
 			});
 			stateManager.dispatchServerAction(sessionUri, {
 				type: ActionType.SessionTurnStarted,
-				turnId: 'turn-1',
-				userMessage: { text: 'run it' },
+				turnId: "turn-1",
+				userMessage: { text: "run it" },
 			});
 			stateManager.dispatchServerAction(sessionUri, {
 				type: ActionType.SessionToolCallStart,
-				turnId: 'turn-1',
-				toolCallId: 'tool-1',
-				toolName: 'runTask',
-				displayName: 'Run Task',
-				toolClientId: 'client-tools',
+				turnId: "turn-1",
+				toolCallId: "tool-1",
+				toolName: "runTask",
+				displayName: "Run Task",
+				toolClientId: "client-tools",
 			});
 			stateManager.dispatchServerAction(sessionUri, {
 				type: ActionType.SessionToolCallReady,
-				turnId: 'turn-1',
-				toolCallId: 'tool-1',
-				invocationMessage: 'Run Task',
-				toolInput: '{}',
+				turnId: "turn-1",
+				toolCallId: "tool-1",
+				invocationMessage: "Run Task",
+				toolInput: "{}",
 				confirmed: ToolCallConfirmationReason.NotNeeded,
 			});
 
-			const transport = connectClient('client-tools', [sessionUri]);
+			const transport = connectClient("client-tools", [sessionUri]);
 			transport.simulateClose();
 
 			assert.strictEqual(stateManager.getSessionState(sessionUri)?.activeClient, undefined);
@@ -807,37 +865,37 @@ suite('ProtocolServerHandler', () => {
 			} : undefined, {
 				status: ToolCallStatus.Completed,
 				success: false,
-				error: 'Client client-tools disconnected before completing Run Task',
+				error: "Client client-tools disconnected before completing Run Task",
 			});
 		});
 	});
 
-	test('client disconnect fails owned streaming tool calls after grace period', () => {
+	test("client disconnect fails owned streaming tool calls after grace period", () => {
 		return runWithFakedTimers({ useFakeTimers: true }, async () => {
 			stateManager.createSession(makeSessionSummary());
 			stateManager.dispatchServerAction(sessionUri, { type: ActionType.SessionReady, });
 			stateManager.dispatchServerAction(sessionUri, {
 				type: ActionType.SessionActiveClientChanged,
 				activeClient: {
-					clientId: 'client-tools',
-					tools: [{ name: 'runTask', description: 'Runs a task' }]
+					clientId: "client-tools",
+					tools: [{ name: "runTask", description: "Runs a task" }],
 				},
 			});
 			stateManager.dispatchServerAction(sessionUri, {
 				type: ActionType.SessionTurnStarted,
-				turnId: 'turn-1',
-				userMessage: { text: 'run it' },
+				turnId: "turn-1",
+				userMessage: { text: "run it" },
 			});
 			stateManager.dispatchServerAction(sessionUri, {
 				type: ActionType.SessionToolCallStart,
-				turnId: 'turn-1',
-				toolCallId: 'tool-1',
-				toolName: 'runTask',
-				displayName: 'Run Task',
-				toolClientId: 'client-tools',
+				turnId: "turn-1",
+				toolCallId: "tool-1",
+				toolName: "runTask",
+				displayName: "Run Task",
+				toolClientId: "client-tools",
 			});
 
-			const transport = connectClient('client-tools', [sessionUri]);
+			const transport = connectClient("client-tools", [sessionUri]);
 			transport.simulateClose();
 
 			let part = stateManager.getSessionState(sessionUri)?.activeTurn?.responseParts[0];
@@ -855,51 +913,51 @@ suite('ProtocolServerHandler', () => {
 			} : undefined, {
 				status: ToolCallStatus.Completed,
 				success: false,
-				error: 'Client client-tools disconnected before completing Run Task',
+				error: "Client client-tools disconnected before completing Run Task",
 			});
 		});
 	});
 
-	test('client reconnect without session subscription does not clear tool call disconnect timeout', () => {
+	test("client reconnect without session subscription does not clear tool call disconnect timeout", () => {
 		return runWithFakedTimers({ useFakeTimers: true }, async () => {
 			stateManager.createSession(makeSessionSummary());
 			stateManager.dispatchServerAction(sessionUri, { type: ActionType.SessionReady, });
 			stateManager.dispatchServerAction(sessionUri, {
 				type: ActionType.SessionActiveClientChanged,
 				activeClient: {
-					clientId: 'client-tools',
-					tools: [{ name: 'runTask', description: 'Runs a task' }]
+					clientId: "client-tools",
+					tools: [{ name: "runTask", description: "Runs a task" }],
 				},
 			});
 			stateManager.dispatchServerAction(sessionUri, {
 				type: ActionType.SessionTurnStarted,
-				turnId: 'turn-1',
-				userMessage: { text: 'run it' },
+				turnId: "turn-1",
+				userMessage: { text: "run it" },
 			});
 			stateManager.dispatchServerAction(sessionUri, {
 				type: ActionType.SessionToolCallStart,
-				turnId: 'turn-1',
-				toolCallId: 'tool-1',
-				toolName: 'runTask',
-				displayName: 'Run Task',
-				toolClientId: 'client-tools',
+				turnId: "turn-1",
+				toolCallId: "tool-1",
+				toolName: "runTask",
+				displayName: "Run Task",
+				toolClientId: "client-tools",
 			});
 			stateManager.dispatchServerAction(sessionUri, {
 				type: ActionType.SessionToolCallReady,
-				turnId: 'turn-1',
-				toolCallId: 'tool-1',
-				invocationMessage: 'Run Task',
-				toolInput: '{}',
+				turnId: "turn-1",
+				toolCallId: "tool-1",
+				invocationMessage: "Run Task",
+				toolInput: "{}",
 				confirmed: ToolCallConfirmationReason.NotNeeded,
 			});
 
-			const transport = connectClient('client-tools', [sessionUri]);
+			const transport = connectClient("client-tools", [sessionUri]);
 			transport.simulateClose();
 
 			const reconnectTransport = new MockProtocolTransport();
 			server.simulateConnection(reconnectTransport);
-			reconnectTransport.simulateMessage(request(1, 'reconnect', {
-				clientId: 'client-tools',
+			reconnectTransport.simulateMessage(request(1, "reconnect", {
+				clientId: "client-tools",
 				lastSeenServerSeq: stateManager.serverSeq,
 				subscriptions: [],
 			}));
@@ -918,46 +976,46 @@ suite('ProtocolServerHandler', () => {
 		});
 	});
 
-	test('client reconnect with session subscription clears tool call disconnect timeout for that session', () => {
+	test("client reconnect with session subscription clears tool call disconnect timeout for that session", () => {
 		return runWithFakedTimers({ useFakeTimers: true }, async () => {
 			stateManager.createSession(makeSessionSummary());
 			stateManager.dispatchServerAction(sessionUri, { type: ActionType.SessionReady, });
 			stateManager.dispatchServerAction(sessionUri, {
 				type: ActionType.SessionActiveClientChanged,
 				activeClient: {
-					clientId: 'client-tools',
-					tools: [{ name: 'runTask', description: 'Runs a task' }]
+					clientId: "client-tools",
+					tools: [{ name: "runTask", description: "Runs a task" }],
 				},
 			});
 			stateManager.dispatchServerAction(sessionUri, {
 				type: ActionType.SessionTurnStarted,
-				turnId: 'turn-1',
-				userMessage: { text: 'run it' },
+				turnId: "turn-1",
+				userMessage: { text: "run it" },
 			});
 			stateManager.dispatchServerAction(sessionUri, {
 				type: ActionType.SessionToolCallStart,
-				turnId: 'turn-1',
-				toolCallId: 'tool-1',
-				toolName: 'runTask',
-				displayName: 'Run Task',
-				toolClientId: 'client-tools',
+				turnId: "turn-1",
+				toolCallId: "tool-1",
+				toolName: "runTask",
+				displayName: "Run Task",
+				toolClientId: "client-tools",
 			});
 			stateManager.dispatchServerAction(sessionUri, {
 				type: ActionType.SessionToolCallReady,
-				turnId: 'turn-1',
-				toolCallId: 'tool-1',
-				invocationMessage: 'Run Task',
-				toolInput: '{}',
+				turnId: "turn-1",
+				toolCallId: "tool-1",
+				invocationMessage: "Run Task",
+				toolInput: "{}",
 				confirmed: ToolCallConfirmationReason.NotNeeded,
 			});
 
-			const transport = connectClient('client-tools', [sessionUri]);
+			const transport = connectClient("client-tools", [sessionUri]);
 			transport.simulateClose();
 
 			const reconnectTransport = new MockProtocolTransport();
 			server.simulateConnection(reconnectTransport);
-			reconnectTransport.simulateMessage(request(1, 'reconnect', {
-				clientId: 'client-tools',
+			reconnectTransport.simulateMessage(request(1, "reconnect", {
+				clientId: "client-tools",
 				lastSeenServerSeq: stateManager.serverSeq,
 				subscriptions: [sessionUri],
 			}));
@@ -970,46 +1028,46 @@ suite('ProtocolServerHandler', () => {
 		});
 	});
 
-	test('client tool timeout tells model it may retry when replacement active client provides the tool', () => {
+	test("client tool timeout tells model it may retry when replacement active client provides the tool", () => {
 		return runWithFakedTimers({ useFakeTimers: true }, async () => {
 			stateManager.createSession(makeSessionSummary());
 			stateManager.dispatchServerAction(sessionUri, { type: ActionType.SessionReady, });
 			stateManager.dispatchServerAction(sessionUri, {
 				type: ActionType.SessionActiveClientChanged,
 				activeClient: {
-					clientId: 'client-tools',
-					tools: [{ name: 'runTask', description: 'Runs a task' }]
+					clientId: "client-tools",
+					tools: [{ name: "runTask", description: "Runs a task" }],
 				},
 			});
 			stateManager.dispatchServerAction(sessionUri, {
 				type: ActionType.SessionTurnStarted,
-				turnId: 'turn-1',
-				userMessage: { text: 'run it' },
+				turnId: "turn-1",
+				userMessage: { text: "run it" },
 			});
 			stateManager.dispatchServerAction(sessionUri, {
 				type: ActionType.SessionToolCallStart,
-				turnId: 'turn-1',
-				toolCallId: 'tool-1',
-				toolName: 'runTask',
-				displayName: 'Run Task',
-				toolClientId: 'client-tools',
+				turnId: "turn-1",
+				toolCallId: "tool-1",
+				toolName: "runTask",
+				displayName: "Run Task",
+				toolClientId: "client-tools",
 			});
 			stateManager.dispatchServerAction(sessionUri, {
 				type: ActionType.SessionToolCallReady,
-				turnId: 'turn-1',
-				toolCallId: 'tool-1',
-				invocationMessage: 'Run Task',
-				toolInput: '{}',
+				turnId: "turn-1",
+				toolCallId: "tool-1",
+				invocationMessage: "Run Task",
+				toolInput: "{}",
 				confirmed: ToolCallConfirmationReason.NotNeeded,
 			});
 
-			const transport = connectClient('client-tools', [sessionUri]);
+			const transport = connectClient("client-tools", [sessionUri]);
 			transport.simulateClose();
 			stateManager.dispatchServerAction(sessionUri, {
 				type: ActionType.SessionActiveClientChanged,
 				activeClient: {
-					clientId: 'client-replacement',
-					tools: [{ name: 'runTask', description: 'Runs a task' }]
+					clientId: "client-replacement",
+					tools: [{ name: "runTask", description: "Runs a task" }],
 				},
 			});
 
@@ -1024,49 +1082,49 @@ suite('ProtocolServerHandler', () => {
 			} : undefined, {
 				status: ToolCallStatus.Completed,
 				success: false,
-				content: [{ type: ToolResultContentType.Text, text: 'The client that was running Run Task disconnected, but another active client now provides Run Task. You may try calling the tool again.' }],
+				content: [{ type: ToolResultContentType.Text, text: "The client that was running Run Task disconnected, but another active client now provides Run Task. You may try calling the tool again." }],
 			});
 		});
 	});
 
-	test('handshake includes defaultDirectory from side effects', () => {
-		const transport = connectClient('client-home');
+	test("handshake includes defaultDirectory from side effects", () => {
+		const transport = connectClient("client-home");
 
 		const resp = findResponse(transport.sent, 1);
 		assert.ok(resp);
 		const result = (resp as { result: InitializeResult }).result;
-		assert.strictEqual(URI.parse(result.defaultDirectory!).path, '/home/testuser');
+		assert.strictEqual(URI.parse(result.defaultDirectory!).path, "/home/testuser");
 	});
 
-	test('resourceList routes to side effect handler', async () => {
-		const transport = connectClient('client-browse');
+	test("resourceList routes to side effect handler", async () => {
+		const transport = connectClient("client-browse");
 		transport.sent.length = 0;
 
-		const dirUri = URI.file('/home/user/project').toString();
+		const dirUri = URI.file("/home/user/project").toString();
 		const responsePromise = waitForResponse(transport, 2);
-		transport.simulateMessage(request(2, 'resourceList', { uri: dirUri }));
+		transport.simulateMessage(request(2, "resourceList", { uri: dirUri }));
 		const resp = await responsePromise;
 
 		assert.strictEqual(agentService.browsedUris.length, 1);
-		assert.strictEqual(agentService.browsedUris[0].path, '/home/user/project');
+		assert.strictEqual(agentService.browsedUris[0].path, "/home/user/project");
 
 		assert.ok(resp);
 		const result = (resp as unknown as { result: { entries: { name: string; uri: unknown; type: string }[] } }).result;
 		assert.strictEqual(result.entries.length, 2);
-		assert.strictEqual(result.entries[0].name, 'src');
-		assert.strictEqual(result.entries[0].type, 'directory');
-		assert.strictEqual(result.entries[1].name, 'README.md');
-		assert.strictEqual(result.entries[1].type, 'file');
+		assert.strictEqual(result.entries[0].name, "src");
+		assert.strictEqual(result.entries[0].type, "directory");
+		assert.strictEqual(result.entries[1].name, "README.md");
+		assert.strictEqual(result.entries[1].type, "file");
 	});
 
-	test('resourceList returns a JSON-RPC error when the target is invalid', async () => {
-		const transport = connectClient('client-browse-error');
+	test("resourceList returns a JSON-RPC error when the target is invalid", async () => {
+		const transport = connectClient("client-browse-error");
 		transport.sent.length = 0;
 
-		const dirUri = URI.file('/missing').toString();
-		agentService.browseErrors.set(URI.file('/missing').toString(), new ProtocolError(JSON_RPC_INTERNAL_ERROR, `Directory not found: ${dirUri}`));
+		const dirUri = URI.file("/missing").toString();
+		agentService.browseErrors.set(URI.file("/missing").toString(), new ProtocolError(JSON_RPC_INTERNAL_ERROR, `Directory not found: ${dirUri}`));
 		const responsePromise = waitForResponse(transport, 2);
-		transport.simulateMessage(request(2, 'resourceList', { uri: dirUri }));
+		transport.simulateMessage(request(2, "resourceList", { uri: dirUri }));
 		const resp = await responsePromise as { error?: { code: number; message: string } };
 
 		assert.ok(resp?.error);
@@ -1076,64 +1134,64 @@ suite('ProtocolServerHandler', () => {
 
 	// ---- Extension methods: auth ----------------------------------------
 
-	test('authenticate returns result via typed request', async () => {
-		const transport = connectClient('client-auth');
+	test("authenticate returns result via typed request", async () => {
+		const transport = connectClient("client-auth");
 		transport.sent.length = 0;
 
 		const responsePromise = waitForResponse(transport, 2);
-		transport.simulateMessage(request(2, 'authenticate', { resource: 'https://api.github.com', token: 'test-token' }));
+		transport.simulateMessage(request(2, "authenticate", { resource: "https://api.github.com", token: "test-token" }));
 		const resp = await responsePromise as { result?: Record<string, unknown>; error?: { code: number; message: string } };
 
 		assert.ok(!resp.error, `unexpected error: ${resp.error?.message}`);
 		assert.deepStrictEqual(resp.result, {});
 	});
 
-	test('extension request preserves ProtocolError code and data', async () => {
+	test("extension request preserves ProtocolError code and data", async () => {
 		// Override authenticate to throw a ProtocolError with data
 		const origHandler = agentService.authenticate;
-		agentService.authenticate = async () => { throw new ProtocolError(-32007, 'Auth required', { hint: 'sign in' }); };
+		agentService.authenticate = async () => { throw new ProtocolError(-32007, "Auth required", { hint: "sign in" }); };
 
-		const transport = connectClient('client-auth-error');
+		const transport = connectClient("client-auth-error");
 		transport.sent.length = 0;
 
 		const responsePromise = waitForResponse(transport, 2);
-		transport.simulateMessage(request(2, 'authenticate', { resource: 'test', token: 'bad' }));
+		transport.simulateMessage(request(2, "authenticate", { resource: "test", token: "bad" }));
 		const resp = await responsePromise as { error?: { code: number; message: string; data?: unknown } };
 
 		assert.ok(resp?.error);
 		assert.strictEqual(resp.error!.code, -32007);
-		assert.strictEqual(resp.error!.message, 'Auth required');
-		assert.deepStrictEqual(resp.error!.data, { hint: 'sign in' });
+		assert.strictEqual(resp.error!.message, "Auth required");
+		assert.deepStrictEqual(resp.error!.data, { hint: "sign in" });
 
 		agentService.authenticate = origHandler;
 	});
 
 	// ---- Connection count event -----------------------------------------
 
-	test('onDidChangeConnectionCount fires on connect and disconnect', () => {
+	test("onDidChangeConnectionCount fires on connect and disconnect", () => {
 		const counts: number[] = [];
 		disposables.add(handler.onDidChangeConnectionCount(c => counts.push(c)));
 
-		const transport = connectClient('client-count-1');
-		connectClient('client-count-2');
+		const transport = connectClient("client-count-1");
+		connectClient("client-count-2");
 		transport.simulateClose();
 
 		assert.deepStrictEqual(counts, [1, 2, 1]);
 	});
 
-	test('onDidChangeConnectionCount is not decremented by stale reconnect close', () => {
+	test("onDidChangeConnectionCount is not decremented by stale reconnect close", () => {
 		const counts: number[] = [];
 		disposables.add(handler.onDidChangeConnectionCount(c => counts.push(c)));
 
 		// Connect
-		const transport1 = connectClient('client-rc');
+		const transport1 = connectClient("client-rc");
 		assert.deepStrictEqual(counts, [1]);
 
 		// Reconnect with same clientId (new transport)
 		const transport2 = new MockProtocolTransport();
 		server.simulateConnection(transport2);
-		transport2.simulateMessage(request(1, 'reconnect', {
-			clientId: 'client-rc',
+		transport2.simulateMessage(request(1, "reconnect", {
+			clientId: "client-rc",
 			lastSeenServerSeq: 0,
 			subscriptions: [],
 		}));
@@ -1151,63 +1209,63 @@ suite('ProtocolServerHandler', () => {
 
 	// ---- createSession activeClient -------------------------------------
 
-	suite('createSession activeClient', () => {
+	suite("createSession activeClient", () => {
 
-		test('forwards activeClient to the agent service', async () => {
-			const newSession = URI.parse('copilot:///eager-session').toString();
+		test("forwards activeClient to the agent service", async () => {
+			const newSession = URI.parse("copilot:///eager-session").toString();
 
-			const transport = connectClient('client-1');
+			const transport = connectClient("client-1");
 			transport.sent.length = 0;
 
 			const responsePromise = waitForResponse(transport, 2);
-			transport.simulateMessage(request(2, 'createSession', {
+			transport.simulateMessage(request(2, "createSession", {
 				session: newSession,
-				provider: 'copilot',
+				provider: "copilot",
 				activeClient: {
-					clientId: 'client-1',
-					tools: [{ name: 't1', description: 'd', inputSchema: { type: 'object' } }],
-					customizations: [{ uri: 'file:///plugin-a', displayName: 'A' }],
+					clientId: "client-1",
+					tools: [{ name: "t1", description: "d", inputSchema: { type: "object" } }],
+					customizations: [{ uri: "file:///plugin-a", displayName: "A" }],
 				},
 			}));
 			const resp = await responsePromise as { result?: unknown; error?: unknown };
 
-			assert.strictEqual(resp.error, undefined, 'createSession should succeed');
+			assert.strictEqual(resp.error, undefined, "createSession should succeed");
 			const config = agentService.createSessionConfigs.at(-1);
 			assert.deepStrictEqual({
 				clientId: config?.activeClient?.clientId,
 				toolName: config?.activeClient?.tools[0]?.name,
 				customizationUri: config?.activeClient?.customizations?.[0].uri,
 			}, {
-				clientId: 'client-1',
-				toolName: 't1',
-				customizationUri: 'file:///plugin-a',
+				clientId: "client-1",
+				toolName: "t1",
+				customizationUri: "file:///plugin-a",
 			});
 		});
 
-		test('rejects createSession when activeClient.clientId mismatches', async () => {
-			const newSession = URI.parse('copilot:///mismatch-session').toString();
+		test("rejects createSession when activeClient.clientId mismatches", async () => {
+			const newSession = URI.parse("copilot:///mismatch-session").toString();
 
-			const transport = connectClient('client-1');
+			const transport = connectClient("client-1");
 			transport.sent.length = 0;
 
 			const responsePromise = waitForResponse(transport, 2);
-			transport.simulateMessage(request(2, 'createSession', {
+			transport.simulateMessage(request(2, "createSession", {
 				session: newSession,
-				provider: 'copilot',
+				provider: "copilot",
 				activeClient: {
-					clientId: 'other-client',
+					clientId: "other-client",
 					tools: [],
 				},
 			}));
 			const resp = await responsePromise as { result?: unknown; error?: { code: number; message: string } };
 
-			assert.ok(resp.error, 'response should be an error');
+			assert.ok(resp.error, "response should be an error");
 			assert.strictEqual(resp.result, undefined);
-			assert.strictEqual(agentService.createSessionConfigs.length, 0, 'agent service should not have been called');
+			assert.strictEqual(agentService.createSessionConfigs.length, 0, "agent service should not have been called");
 		});
 	});
 
-	suite('OTLP logs channel', () => {
+	suite("OTLP logs channel", () => {
 		// We need a separate handler instance that has an OtlpLogEmitter
 		// attached, so spin one up per-test using a private state manager.
 		// The outer-suite handler is left alone and continues to test the
@@ -1230,7 +1288,7 @@ suite('ProtocolServerHandler', () => {
 				otlpAgentService,
 				otlpStateManager,
 				otlpServer,
-				{ defaultDirectory: URI.file('/home/testuser').toString(), otlpLogEmitter: otlpEmitter },
+				{ defaultDirectory: URI.file("/home/testuser").toString(), otlpLogEmitter: otlpEmitter },
 				localDisposables.add(new AgentHostFileSystemProvider()),
 				new NullLogService(),
 			));
@@ -1243,7 +1301,7 @@ suite('ProtocolServerHandler', () => {
 		function connectOtlpClient(clientId: string, initialSubscriptions?: readonly string[]): MockProtocolTransport {
 			const transport = new MockProtocolTransport();
 			otlpServer.simulateConnection(transport);
-			transport.simulateMessage(request(1, 'initialize', {
+			transport.simulateMessage(request(1, "initialize", {
 				protocolVersions: [PROTOCOL_VERSION],
 				clientId,
 				initialSubscriptions,
@@ -1254,66 +1312,66 @@ suite('ProtocolServerHandler', () => {
 		function findOtlpLogs(sent: ProtocolMessage[]): { channel: string; payload: unknown }[] {
 			return sent
 				.filter(isJsonRpcNotification)
-				.filter((m): m is AhpNotification & { method: 'otlp/exportLogs'; params: { channel: string; payload: unknown } } => m.method === 'otlp/exportLogs')
+				.filter((m): m is AhpNotification & { method: "otlp/exportLogs"; params: { channel: string; payload: unknown } } => m.method === "otlp/exportLogs")
 				.map(m => ({ channel: m.params.channel, payload: m.params.payload }));
 		}
 
-		test('handshake advertises the logs channel template', () => {
-			const transport = connectOtlpClient('client-otlp-1');
+		test("handshake advertises the logs channel template", () => {
+			const transport = connectOtlpClient("client-otlp-1");
 			const resp = findResponse(transport.sent, 1) as { result: InitializeResult & { telemetry?: { logs?: string } } };
-			assert.deepStrictEqual(resp.result.telemetry, { logs: 'ahp-otlp://logs/{level}' });
+			assert.deepStrictEqual(resp.result.telemetry, { logs: "ahp-otlp://logs/{level}" });
 		});
 
-		test('subscribe to logs channel returns an empty stateless result and starts forwarding records at-or-above the requested level', async () => {
-			const transport = connectOtlpClient('client-otlp-2');
-			transport.simulateMessage(request(2, 'subscribe', { channel: 'ahp-otlp://logs/warn' }));
+		test("subscribe to logs channel returns an empty stateless result and starts forwarding records at-or-above the requested level", async () => {
+			const transport = connectOtlpClient("client-otlp-2");
+			transport.simulateMessage(request(2, "subscribe", { channel: "ahp-otlp://logs/warn" }));
 			const resp = await waitForResponse(transport, 2);
 			assert.deepStrictEqual((resp as { result: unknown }).result, {});
 
-			otlpEmitter.emit({ timeUnixNano: '1000', severityNumber: 9, severityText: 'info', body: 'info-msg' });
-			otlpEmitter.emit({ timeUnixNano: '1001', severityNumber: 13, severityText: 'warn', body: 'warn-msg' });
-			otlpEmitter.emit({ timeUnixNano: '1002', severityNumber: 17, severityText: 'error', body: 'error-msg' });
+			otlpEmitter.emit({ timeUnixNano: "1000", severityNumber: 9, severityText: "info", body: "info-msg" });
+			otlpEmitter.emit({ timeUnixNano: "1001", severityNumber: 13, severityText: "warn", body: "warn-msg" });
+			otlpEmitter.emit({ timeUnixNano: "1002", severityNumber: 17, severityText: "error", body: "error-msg" });
 
 			const logs = findOtlpLogs(transport.sent);
 			const bodies = logs.flatMap(({ payload }) => [...iterateOtlpLogRecords(payload)].map(r => r.body));
-			assert.deepStrictEqual(bodies, ['warn-msg', 'error-msg']);
+			assert.deepStrictEqual(bodies, ["warn-msg", "error-msg"]);
 			for (const { channel } of logs) {
-				assert.strictEqual(channel, 'ahp-otlp://logs/warn');
+				assert.strictEqual(channel, "ahp-otlp://logs/warn");
 			}
 		});
 
-		test('unsubscribe stops forwarding without affecting other subscribers', async () => {
-			const a = connectOtlpClient('client-otlp-a');
-			const b = connectOtlpClient('client-otlp-b');
+		test("unsubscribe stops forwarding without affecting other subscribers", async () => {
+			const a = connectOtlpClient("client-otlp-a");
+			const b = connectOtlpClient("client-otlp-b");
 
 			const aSubscribed = waitForResponse(a, 2);
 			const bSubscribed = waitForResponse(b, 2);
-			a.simulateMessage(request(2, 'subscribe', { channel: 'ahp-otlp://logs/trace' }));
-			b.simulateMessage(request(2, 'subscribe', { channel: 'ahp-otlp://logs/trace' }));
+			a.simulateMessage(request(2, "subscribe", { channel: "ahp-otlp://logs/trace" }));
+			b.simulateMessage(request(2, "subscribe", { channel: "ahp-otlp://logs/trace" }));
 			await aSubscribed;
 			await bSubscribed;
 
-			otlpEmitter.emit({ timeUnixNano: '1', severityNumber: 9, severityText: 'info', body: 'first' });
+			otlpEmitter.emit({ timeUnixNano: "1", severityNumber: 9, severityText: "info", body: "first" });
 
-			a.simulateMessage(notification('unsubscribe', { channel: 'ahp-otlp://logs/trace' }));
-			otlpEmitter.emit({ timeUnixNano: '2', severityNumber: 9, severityText: 'info', body: 'second' });
+			a.simulateMessage(notification("unsubscribe", { channel: "ahp-otlp://logs/trace" }));
+			otlpEmitter.emit({ timeUnixNano: "2", severityNumber: 9, severityText: "info", body: "second" });
 
 			const aBodies = findOtlpLogs(a.sent).flatMap(({ payload }) => [...iterateOtlpLogRecords(payload)].map(r => r.body));
 			const bBodies = findOtlpLogs(b.sent).flatMap(({ payload }) => [...iterateOtlpLogRecords(payload)].map(r => r.body));
-			assert.deepStrictEqual({ a: aBodies, b: bBodies }, { a: ['first'], b: ['first', 'second'] });
+			assert.deepStrictEqual({ a: aBodies, b: bBodies }, { a: ["first"], b: ["first", "second"] });
 		});
 
-		test('multiple subscriptions to different levels each receive their own band', async () => {
-			const transport = connectOtlpClient('client-otlp-multi');
+		test("multiple subscriptions to different levels each receive their own band", async () => {
+			const transport = connectOtlpClient("client-otlp-multi");
 			const subscribed2 = waitForResponse(transport, 2);
 			const subscribed3 = waitForResponse(transport, 3);
-			transport.simulateMessage(request(2, 'subscribe', { channel: 'ahp-otlp://logs/info' }));
-			transport.simulateMessage(request(3, 'subscribe', { channel: 'ahp-otlp://logs/error' }));
+			transport.simulateMessage(request(2, "subscribe", { channel: "ahp-otlp://logs/info" }));
+			transport.simulateMessage(request(3, "subscribe", { channel: "ahp-otlp://logs/error" }));
 			await subscribed2;
 			await subscribed3;
 
-			otlpEmitter.emit({ timeUnixNano: '1', severityNumber: 9, severityText: 'info', body: 'info-only' });
-			otlpEmitter.emit({ timeUnixNano: '2', severityNumber: 17, severityText: 'error', body: 'both' });
+			otlpEmitter.emit({ timeUnixNano: "1", severityNumber: 9, severityText: "info", body: "info-only" });
+			otlpEmitter.emit({ timeUnixNano: "2", severityNumber: 17, severityText: "error", body: "both" });
 
 			const byChannel = new Map<string, string[]>();
 			for (const { channel, payload } of findOtlpLogs(transport.sent)) {
@@ -1321,18 +1379,18 @@ suite('ProtocolServerHandler', () => {
 				byChannel.set(channel, [...(byChannel.get(channel) ?? []), ...bodies]);
 			}
 			assert.deepStrictEqual(Object.fromEntries(byChannel), {
-				'ahp-otlp://logs/info': ['info-only', 'both'],
-				'ahp-otlp://logs/error': ['both'],
+				"ahp-otlp://logs/info": ["info-only", "both"],
+				"ahp-otlp://logs/error": ["both"],
 			});
 		});
 
-		test('client disconnect drops its OTLP subscriptions', async () => {
-			const transport = connectOtlpClient('client-otlp-disconnect');
-			transport.simulateMessage(request(2, 'subscribe', { channel: 'ahp-otlp://logs/trace' }));
+		test("client disconnect drops its OTLP subscriptions", async () => {
+			const transport = connectOtlpClient("client-otlp-disconnect");
+			transport.simulateMessage(request(2, "subscribe", { channel: "ahp-otlp://logs/trace" }));
 			await waitForResponse(transport, 2);
 
 			transport.simulateClose();
-			otlpEmitter.emit({ timeUnixNano: '1', severityNumber: 9, severityText: 'info', body: 'after-close' });
+			otlpEmitter.emit({ timeUnixNano: "1", severityNumber: 9, severityText: "info", body: "after-close" });
 
 			// After close, no further notifications should land on the
 			// disconnected transport. (Sanity: the only message we expect
@@ -1341,38 +1399,38 @@ suite('ProtocolServerHandler', () => {
 			assert.deepStrictEqual(logs, []);
 		});
 
-		test('unrecognised ahp-otlp URIs do not crash subscribe', async () => {
-			const transport = connectOtlpClient('client-otlp-bad');
-			transport.simulateMessage(request(2, 'subscribe', { channel: 'ahp-otlp://logs/verbose' }));
+		test("unrecognised ahp-otlp URIs do not crash subscribe", async () => {
+			const transport = connectOtlpClient("client-otlp-bad");
+			transport.simulateMessage(request(2, "subscribe", { channel: "ahp-otlp://logs/verbose" }));
 			const resp = await waitForResponse(transport, 2);
-			assert.deepStrictEqual((resp as { result: unknown }).result, {}, 'unknown level should be acknowledged as stateless');
+			assert.deepStrictEqual((resp as { result: unknown }).result, {}, "unknown level should be acknowledged as stateless");
 
-			otlpEmitter.emit({ timeUnixNano: '1', severityNumber: 9, severityText: 'info', body: 'whatever' });
-			assert.deepStrictEqual(findOtlpLogs(transport.sent), [], 'no records should leak to an invalid level');
+			otlpEmitter.emit({ timeUnixNano: "1", severityNumber: 9, severityText: "info", body: "whatever" });
+			assert.deepStrictEqual(findOtlpLogs(transport.sent), [], "no records should leak to an invalid level");
 		});
 
-		test('URI variants that parse to the same level collapse to one canonical subscription', async () => {
-			const transport = connectOtlpClient('client-otlp-canonical');
+		test("URI variants that parse to the same level collapse to one canonical subscription", async () => {
+			const transport = connectOtlpClient("client-otlp-canonical");
 			const r2 = waitForResponse(transport, 2);
 			const r3 = waitForResponse(transport, 3);
 			const r4 = waitForResponse(transport, 4);
-			transport.simulateMessage(request(2, 'subscribe', { channel: 'ahp-otlp://logs/info' }));
-			transport.simulateMessage(request(3, 'subscribe', { channel: 'ahp-otlp://logs/info?dup=1' }));
-			transport.simulateMessage(request(4, 'subscribe', { channel: 'ahp-otlp://logs/info#frag' }));
+			transport.simulateMessage(request(2, "subscribe", { channel: "ahp-otlp://logs/info" }));
+			transport.simulateMessage(request(3, "subscribe", { channel: "ahp-otlp://logs/info?dup=1" }));
+			transport.simulateMessage(request(4, "subscribe", { channel: "ahp-otlp://logs/info#frag" }));
 			await r2; await r3; await r4;
 
-			otlpEmitter.emit({ timeUnixNano: '1', severityNumber: 9, severityText: 'info', body: 'once' });
+			otlpEmitter.emit({ timeUnixNano: "1", severityNumber: 9, severityText: "info", body: "once" });
 
 			const logs = findOtlpLogs(transport.sent);
-			assert.strictEqual(logs.length, 1, 'one record should produce exactly one notification');
-			assert.strictEqual(logs[0].channel, 'ahp-otlp://logs/info', 'channel should be canonicalised');
+			assert.strictEqual(logs.length, 1, "one record should produce exactly one notification");
+			assert.strictEqual(logs[0].channel, "ahp-otlp://logs/info", "channel should be canonicalised");
 
 			// Unsubscribe should remove the canonical entry regardless of
 			// which URI variant the client uses to unsubscribe.
-			transport.simulateMessage(notification('unsubscribe', { channel: 'ahp-otlp://logs/info?dup=1' }));
-			otlpEmitter.emit({ timeUnixNano: '2', severityNumber: 9, severityText: 'info', body: 'after-unsub' });
+			transport.simulateMessage(notification("unsubscribe", { channel: "ahp-otlp://logs/info?dup=1" }));
+			otlpEmitter.emit({ timeUnixNano: "2", severityNumber: 9, severityText: "info", body: "after-unsub" });
 
-			assert.strictEqual(findOtlpLogs(transport.sent).length, 1, 'no further notifications after unsubscribe');
+			assert.strictEqual(findOtlpLogs(transport.sent).length, 1, "no further notifications after unsubscribe");
 		});
 	});
 });

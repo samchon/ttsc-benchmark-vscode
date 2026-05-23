@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable, ReferenceCollection } from '../../../../../../base/common/lifecycle.js';
-import { ChatTreeItem, IChatCodeBlockInfo } from '../../chat.js';
-import { IChatRendererContent, IChatRequestViewModel, IChatResponseViewModel } from '../../../common/model/chatViewModel.js';
-import { DiffEditorPool, EditorPool } from './chatContentCodePools.js';
-import { IObservable } from '../../../../../../base/common/observable.js';
-import { Event } from '../../../../../../base/common/event.js';
-import { ITextModel } from '../../../../../../editor/common/model.js';
-import { ILanguageSelection } from '../../../../../../editor/common/languages/language.js';
-import { IModelService } from '../../../../../../editor/common/services/model.js';
-import { URI } from '../../../../../../base/common/uri.js';
+import { Disposable, IDisposable, ReferenceCollection } from "../../../../../../base/common/lifecycle.js";
+import { ChatTreeItem, IChatCodeBlockInfo } from "../../chat.js";
+import { IChatRendererContent, IChatRequestViewModel, IChatResponseViewModel } from "../../../common/model/chatViewModel.js";
+import { DiffEditorPool, EditorPool } from "./chatContentCodePools.js";
+import { IObservable } from "../../../../../../base/common/observable.js";
+import { Event } from "../../../../../../base/common/event.js";
+import { ITextModel } from "../../../../../../editor/common/model.js";
+import { ILanguageSelection } from "../../../../../../editor/common/languages/language.js";
+import { IModelService } from "../../../../../../editor/common/services/model.js";
+import { URI } from "../../../../../../base/common/uri.js";
 
 export interface IChatContentPart extends IDisposable {
 	domNode: HTMLElement | undefined;
@@ -72,7 +72,13 @@ export class InlineTextModelCollection extends Disposable {
 	}
 
 	acquire(uri: URI, value: string, languageSelection: ILanguageSelection | null, isForSimpleWidget: boolean) {
-		return this._collection.acquire(uri.toString(), uri, value, languageSelection, isForSimpleWidget);
+		return this._collection.acquire(
+      uri.toString(),
+      uri,
+      value,
+      languageSelection,
+      isForSimpleWidget,
+    );
 	}
 }
 
@@ -82,7 +88,12 @@ class InlineTextModelReferenceCollection extends ReferenceCollection<ITextModel>
 	}
 
 	protected override createReferencedObject(key: string, uri: URI, value: string, languageSelection: ILanguageSelection | null, isForSimpleWidget: boolean): ITextModel {
-		return this.modelService.createModel(value, languageSelection, uri, isForSimpleWidget);
+		return this.modelService.createModel(
+      value,
+      languageSelection,
+      uri,
+      isForSimpleWidget,
+    );
 	}
 
 	protected override destroyReferencedObject(_key: string, model: ITextModel): void {

@@ -3,16 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../base/common/uri.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
+import { URI } from "../../../base/common/uri.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
 
-export const IAgentHostCheckpointService = createDecorator<IAgentHostCheckpointService>('agentHostCheckpointService');
+export const IAgentHostCheckpointService = createDecorator<IAgentHostCheckpointService>(
+  "agentHostCheckpointService",
+);
 
 /**
  * `session_metadata` key under which the per-session baseline (turn/0)
  * checkpoint ref is stored.
  */
-export const META_CHECKPOINT_BASE_REF = 'checkpoint.baseRef';
+export const META_CHECKPOINT_BASE_REF = "checkpoint.baseRef";
 
 /**
  * Returns the canonical name for a per-turn checkpoint ref.
@@ -97,9 +99,9 @@ export interface IAgentHostCheckpointService {
  * forced fixture updates.
  */
 export const NULL_CHECKPOINT_SERVICE: IAgentHostCheckpointService = {
-	_serviceBrand: undefined,
-	captureBaseline: async () => undefined,
-	captureTurnCheckpoint: async () => undefined,
-	getTurnCheckpointPair: async () => undefined,
-	disposeSessionData: async () => { },
+  _serviceBrand: undefined,
+  captureBaseline: async () => undefined,
+  captureTurnCheckpoint: async () => undefined,
+  getTurnCheckpointPair: async () => undefined,
+  disposeSessionData: async () => { },
 };

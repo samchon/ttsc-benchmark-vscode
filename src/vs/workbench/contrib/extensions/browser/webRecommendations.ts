@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ExtensionRecommendations, ExtensionRecommendation } from './extensionRecommendations.js';
-import { IProductService } from '../../../../platform/product/common/productService.js';
-import { ExtensionRecommendationReason } from '../../../services/extensionRecommendations/common/extensionRecommendations.js';
-import { localize } from '../../../../nls.js';
-import { IExtensionManagementServerService } from '../../../services/extensionManagement/common/extensionManagement.js';
+import { ExtensionRecommendations, ExtensionRecommendation } from "./extensionRecommendations.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { ExtensionRecommendationReason } from "../../../services/extensionRecommendations/common/extensionRecommendations.js";
+import { localize } from "../../../../nls.js";
+import { IExtensionManagementServerService } from "../../../services/extensionManagement/common/extensionManagement.js";
 
 export class WebRecommendations extends ExtensionRecommendations {
 
@@ -28,8 +28,8 @@ export class WebRecommendations extends ExtensionRecommendations {
 				extension: extensionId.toLowerCase(),
 				reason: {
 					reasonId: ExtensionRecommendationReason.Application,
-					reasonText: localize('reason', "This extension is recommended for {0} for the Web", this.productService.nameLong)
-				}
+					reasonText: localize("reason", "This extension is recommended for {0} for the Web", this.productService.nameLong),
+				},
 			}));
 		}
 	}

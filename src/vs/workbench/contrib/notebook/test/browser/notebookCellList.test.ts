@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { TestConfigurationService } from '../../../../../platform/configuration/test/common/testConfigurationService.js';
-import { TestInstantiationService } from '../../../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { CellKind, NotebookSetting } from '../../common/notebookCommon.js';
-import { createNotebookCellList, setupInstantiationService, withTestNotebook } from './testNotebookEditor.js';
+import assert from "assert";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { TestConfigurationService } from "../../../../../platform/configuration/test/common/testConfigurationService.js";
+import { TestInstantiationService } from "../../../../../platform/instantiation/test/common/instantiationServiceMock.js";
+import { CellKind, NotebookSetting } from "../../common/notebookCommon.js";
+import { createNotebookCellList, setupInstantiationService, withTestNotebook } from "./testNotebookEditor.js";
 
-suite('NotebookCellList', () => {
+suite("NotebookCellList", () => {
 	let testDisposables: DisposableStore;
 	let instantiationService: TestInstantiationService;
 
@@ -30,14 +30,14 @@ suite('NotebookCellList', () => {
 		instantiationService.stub(IConfigurationService, config);
 	});
 
-	test('revealElementsInView: reveal fully visible cell should not scroll', async function () {
+	test("revealElementsInView: reveal fully visible cell should not scroll", async function () {
 		await withTestNotebook(
 			[
-				['# header a', 'markdown', CellKind.Markup, [], {}],
-				['var b = 1;', 'javascript', CellKind.Code, [], {}],
-				['# header b', 'markdown', CellKind.Markup, [], {}],
-				['var b = 2;', 'javascript', CellKind.Code, [], {}],
-				['# header c', 'markdown', CellKind.Markup, [], {}]
+				["# header a", "markdown", CellKind.Markup, [], {}],
+				["var b = 1;", "javascript", CellKind.Code, [], {}],
+				["# header b", "markdown", CellKind.Markup, [], {}],
+				["var b = 2;", "javascript", CellKind.Code, [], {}],
+				["# header c", "markdown", CellKind.Markup, [], {}],
 			],
 			async (editor, viewModel, disposables) => {
 				viewModel.restoreEditorViewState({
@@ -77,14 +77,14 @@ suite('NotebookCellList', () => {
 			});
 	});
 
-	test('revealElementsInView: reveal partially visible cell', async function () {
+	test("revealElementsInView: reveal partially visible cell", async function () {
 		await withTestNotebook(
 			[
-				['# header a', 'markdown', CellKind.Markup, [], {}],
-				['var b = 1;', 'javascript', CellKind.Code, [], {}],
-				['# header b', 'markdown', CellKind.Markup, [], {}],
-				['var b = 2;', 'javascript', CellKind.Code, [], {}],
-				['# header c', 'markdown', CellKind.Markup, [], {}]
+				["# header a", "markdown", CellKind.Markup, [], {}],
+				["var b = 1;", "javascript", CellKind.Code, [], {}],
+				["# header b", "markdown", CellKind.Markup, [], {}],
+				["var b = 2;", "javascript", CellKind.Code, [], {}],
+				["# header c", "markdown", CellKind.Markup, [], {}],
 			],
 			async (editor, viewModel, disposables) => {
 				viewModel.restoreEditorViewState({
@@ -121,14 +121,14 @@ suite('NotebookCellList', () => {
 			});
 	});
 
-	test('revealElementsInView: reveal cell out of viewport', async function () {
+	test("revealElementsInView: reveal cell out of viewport", async function () {
 		await withTestNotebook(
 			[
-				['# header a', 'markdown', CellKind.Markup, [], {}],
-				['var b = 1;', 'javascript', CellKind.Code, [], {}],
-				['# header b', 'markdown', CellKind.Markup, [], {}],
-				['var b = 2;', 'javascript', CellKind.Code, [], {}],
-				['# header c', 'markdown', CellKind.Markup, [], {}]
+				["# header a", "markdown", CellKind.Markup, [], {}],
+				["var b = 1;", "javascript", CellKind.Code, [], {}],
+				["# header b", "markdown", CellKind.Markup, [], {}],
+				["var b = 2;", "javascript", CellKind.Code, [], {}],
+				["# header c", "markdown", CellKind.Markup, [], {}],
 			],
 			async (editor, viewModel, disposables) => {
 				viewModel.restoreEditorViewState({
@@ -158,14 +158,14 @@ suite('NotebookCellList', () => {
 			});
 	});
 
-	test('updateElementHeight', async function () {
+	test("updateElementHeight", async function () {
 		await withTestNotebook(
 			[
-				['# header a', 'markdown', CellKind.Markup, [], {}],
-				['var b = 1;', 'javascript', CellKind.Code, [], {}],
-				['# header b', 'markdown', CellKind.Markup, [], {}],
-				['var b = 2;', 'javascript', CellKind.Code, [], {}],
-				['# header c', 'markdown', CellKind.Markup, [], {}]
+				["# header a", "markdown", CellKind.Markup, [], {}],
+				["var b = 1;", "javascript", CellKind.Code, [], {}],
+				["# header b", "markdown", CellKind.Markup, [], {}],
+				["var b = 2;", "javascript", CellKind.Code, [], {}],
+				["# header c", "markdown", CellKind.Markup, [], {}],
 			],
 			async (editor, viewModel, disposables) => {
 				viewModel.restoreEditorViewState({
@@ -200,14 +200,14 @@ suite('NotebookCellList', () => {
 			});
 	});
 
-	test('updateElementHeight with anchor', async function () {
+	test("updateElementHeight with anchor", async function () {
 		await withTestNotebook(
 			[
-				['# header a', 'markdown', CellKind.Markup, [], {}],
-				['var b = 1;', 'javascript', CellKind.Code, [], {}],
-				['# header b', 'markdown', CellKind.Markup, [], {}],
-				['var b = 2;', 'javascript', CellKind.Code, [], {}],
-				['# header c', 'markdown', CellKind.Markup, [], {}]
+				["# header a", "markdown", CellKind.Markup, [], {}],
+				["var b = 1;", "javascript", CellKind.Code, [], {}],
+				["# header b", "markdown", CellKind.Markup, [], {}],
+				["var b = 2;", "javascript", CellKind.Code, [], {}],
+				["# header c", "markdown", CellKind.Markup, [], {}],
 			],
 			async (editor, viewModel, disposables) => {
 				viewModel.restoreEditorViewState({
@@ -260,15 +260,15 @@ suite('NotebookCellList', () => {
 			});
 	});
 
-	test('updateElementHeight with no scrolling', async function () {
-		config.setUserConfiguration(NotebookSetting.scrollToRevealCell, 'none');
+	test("updateElementHeight with no scrolling", async function () {
+		config.setUserConfiguration(NotebookSetting.scrollToRevealCell, "none");
 		await withTestNotebook(
 			[
-				['# header a', 'markdown', CellKind.Markup, [], {}],
-				['var b = 1;', 'javascript', CellKind.Code, [], {}],
-				['# header b', 'markdown', CellKind.Markup, [], {}],
-				['var b = 2;', 'javascript', CellKind.Code, [], {}],
-				['# header c', 'markdown', CellKind.Markup, [], {}]
+				["# header a", "markdown", CellKind.Markup, [], {}],
+				["var b = 1;", "javascript", CellKind.Code, [], {}],
+				["# header b", "markdown", CellKind.Markup, [], {}],
+				["var b = 2;", "javascript", CellKind.Code, [], {}],
+				["# header c", "markdown", CellKind.Markup, [], {}],
 			],
 			async (editor, viewModel, disposables) => {
 				viewModel.restoreEditorViewState({
@@ -310,15 +310,15 @@ suite('NotebookCellList', () => {
 			});
 	});
 
-	test('updateElementHeight with no scroll setting and cell editor focused', async function () {
-		config.setUserConfiguration(NotebookSetting.scrollToRevealCell, 'none');
+	test("updateElementHeight with no scroll setting and cell editor focused", async function () {
+		config.setUserConfiguration(NotebookSetting.scrollToRevealCell, "none");
 		await withTestNotebook(
 			[
-				['# header a', 'markdown', CellKind.Markup, [], {}],
-				['var b = 1;', 'javascript', CellKind.Code, [], {}],
-				['# header b', 'markdown', CellKind.Markup, [], {}],
-				['var b = 2;', 'javascript', CellKind.Code, [], {}],
-				['# header c', 'markdown', CellKind.Markup, [], {}]
+				["# header a", "markdown", CellKind.Markup, [], {}],
+				["var b = 1;", "javascript", CellKind.Code, [], {}],
+				["# header b", "markdown", CellKind.Markup, [], {}],
+				["var b = 2;", "javascript", CellKind.Code, [], {}],
+				["# header c", "markdown", CellKind.Markup, [], {}],
 			],
 			async (editor, viewModel, disposables) => {
 				viewModel.restoreEditorViewState({
@@ -341,7 +341,7 @@ suite('NotebookCellList', () => {
 
 				cellList.setFocus([1]);
 
-				editor.focusNotebookCell(cellList.viewModel?.cellAt(1)!, 'editor');
+				editor.focusNotebookCell(cellList.viewModel?.cellAt(1)!, "editor");
 				cellList.updateElementHeight2(viewModel.cellAt(0)!, 100);
 				assert.deepStrictEqual(cellList.scrollHeight, 400);
 
@@ -356,14 +356,14 @@ suite('NotebookCellList', () => {
 			});
 	});
 
-	test('updateElementHeight with focused element out of viewport', async function () {
+	test("updateElementHeight with focused element out of viewport", async function () {
 		await withTestNotebook(
 			[
-				['# header a', 'markdown', CellKind.Markup, [], {}],
-				['var b = 1;', 'javascript', CellKind.Code, [], {}],
-				['# header b', 'markdown', CellKind.Markup, [], {}],
-				['var b = 2;', 'javascript', CellKind.Code, [], {}],
-				['# header c', 'markdown', CellKind.Markup, [], {}]
+				["# header a", "markdown", CellKind.Markup, [], {}],
+				["var b = 1;", "javascript", CellKind.Code, [], {}],
+				["# header b", "markdown", CellKind.Markup, [], {}],
+				["var b = 2;", "javascript", CellKind.Code, [], {}],
+				["# header c", "markdown", CellKind.Markup, [], {}],
 			],
 			async (editor, viewModel, disposables) => {
 				viewModel.restoreEditorViewState({
@@ -392,14 +392,14 @@ suite('NotebookCellList', () => {
 			});
 	});
 
-	test('updateElementHeight of cells out of viewport should not trigger scroll #121140', async function () {
+	test("updateElementHeight of cells out of viewport should not trigger scroll #121140", async function () {
 		await withTestNotebook(
 			[
-				['# header a', 'markdown', CellKind.Markup, [], {}],
-				['var b = 1;', 'javascript', CellKind.Code, [], {}],
-				['# header b', 'markdown', CellKind.Markup, [], {}],
-				['var b = 2;', 'javascript', CellKind.Code, [], {}],
-				['# header c', 'markdown', CellKind.Markup, [], {}]
+				["# header a", "markdown", CellKind.Markup, [], {}],
+				["var b = 1;", "javascript", CellKind.Code, [], {}],
+				["# header b", "markdown", CellKind.Markup, [], {}],
+				["var b = 2;", "javascript", CellKind.Code, [], {}],
+				["# header c", "markdown", CellKind.Markup, [], {}],
 			],
 			async (editor, viewModel, disposables) => {
 				viewModel.restoreEditorViewState({
@@ -430,7 +430,7 @@ suite('NotebookCellList', () => {
 			});
 	});
 
-	test('visibleRanges should be exclusive of end', async function () {
+	test("visibleRanges should be exclusive of end", async function () {
 		await withTestNotebook(
 			[
 			],
@@ -445,10 +445,10 @@ suite('NotebookCellList', () => {
 			});
 	});
 
-	test('visibleRanges should be exclusive of end 2', async function () {
+	test("visibleRanges should be exclusive of end 2", async function () {
 		await withTestNotebook(
 			[
-				['# header a', 'markdown', CellKind.Markup, [], {}],
+				["# header a", "markdown", CellKind.Markup, [], {}],
 			],
 			async (editor, viewModel, disposables) => {
 				viewModel.restoreEditorViewState({

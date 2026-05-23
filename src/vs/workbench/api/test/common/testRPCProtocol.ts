@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { isThenable } from '../../../../base/common/async.js';
-import { CharCode } from '../../../../base/common/charCode.js';
-import { IExtHostRpcService } from '../../common/extHostRpcService.js';
-import { IExtHostContext } from '../../../services/extensions/common/extHostCustomers.js';
-import { ExtensionHostKind } from '../../../services/extensions/common/extensionHostKind.js';
-import { Proxied, ProxyIdentifier, SerializableObjectWithBuffers } from '../../../services/extensions/common/proxyIdentifier.js';
-import { parseJsonAndRestoreBufferRefs, stringifyJsonWithBufferRefs } from '../../../services/extensions/common/rpcProtocol.js';
+import { isThenable } from "../../../../base/common/async.js";
+import { CharCode } from "../../../../base/common/charCode.js";
+import { IExtHostRpcService } from "../../common/extHostRpcService.js";
+import { IExtHostContext } from "../../../services/extensions/common/extHostCustomers.js";
+import { ExtensionHostKind } from "../../../services/extensions/common/extensionHostKind.js";
+import { Proxied, ProxyIdentifier, SerializableObjectWithBuffers } from "../../../services/extensions/common/proxyIdentifier.js";
+import { parseJsonAndRestoreBufferRefs, stringifyJsonWithBufferRefs } from "../../../services/extensions/common/rpcProtocol.js";
 
 export function SingleProxyRPCProtocol(thing: any): IExtHostContext & IExtHostRpcService {
 	return {
@@ -24,7 +24,7 @@ export function SingleProxyRPCProtocol(thing: any): IExtHostContext & IExtHostRp
 		dispose: undefined!,
 		assertRegistered: undefined!,
 		drain: undefined!,
-		extensionHostKind: ExtensionHostKind.LocalProcess
+		extensionHostKind: ExtensionHostKind.LocalProcess,
 	};
 }
 
@@ -37,7 +37,7 @@ export function AnyCallRPCProtocol<T>(useCalls?: { [K in keyof T]: T[K] }) {
 				return (useCalls as any)[prop];
 			}
 			return () => Promise.resolve(undefined);
-		}
+		},
 	}));
 }
 
@@ -101,14 +101,14 @@ export class TestRPCProtocol implements IExtHostContext, IExtHostRpcService {
 	private _createProxy<T>(proxyId: string): T {
 		const handler = {
 			get: (target: any, name: PropertyKey) => {
-				if (typeof name === 'string' && !target[name] && name.charCodeAt(0) === CharCode.DollarSign) {
+				if (typeof name === "string" && !target[name] && name.charCodeAt(0) === CharCode.DollarSign) {
 					target[name] = (...myArgs: any[]) => {
 						return this._remoteCall(proxyId, name, myArgs);
 					};
 				}
 
 				return target[name];
-			}
+			},
 		};
 		return new Proxy(Object.create(null), handler);
 	}
@@ -150,7 +150,7 @@ export class TestRPCProtocol implements IExtHostContext, IExtHostRpcService {
 	public dispose() { }
 
 	public assertRegistered(identifiers: ProxyIdentifier<any>[]): void {
-		throw new Error('Not implemented!');
+		throw new Error("Not implemented!");
 	}
 }
 

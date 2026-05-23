@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { ServicesAccessor } from '../../../../editor/browser/editorExtensions.js';
-import { IWorkbenchContribution } from '../../../../workbench/common/contributions.js';
-import { IAgentSession } from '../../../../workbench/contrib/chat/browser/agentSessions/agentSessionsModel.js';
-import { ISessionOpenerParticipant, ISessionOpenOptions, sessionOpenerRegistry } from '../../../../workbench/contrib/chat/browser/agentSessions/agentSessionsOpener.js';
-import { ISessionsManagementService } from '../../../services/sessions/common/sessionsManagement.js';
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { ServicesAccessor } from "../../../../editor/browser/editorExtensions.js";
+import { IWorkbenchContribution } from "../../../../workbench/common/contributions.js";
+import { IAgentSession } from "../../../../workbench/contrib/chat/browser/agentSessions/agentSessionsModel.js";
+import { ISessionOpenerParticipant, ISessionOpenOptions, sessionOpenerRegistry } from "../../../../workbench/contrib/chat/browser/agentSessions/agentSessionsOpener.js";
+import { ISessionsManagementService } from "../../../services/sessions/common/sessionsManagement.js";
 
 /**
  * Routes session open requests in the Agents window through the
@@ -26,17 +26,21 @@ class SessionsOpenerParticipant implements ISessionOpenerParticipant {
 			return false;
 		}
 
-		await sessionsManagementService.openSession(session.resource, { preserveFocus: openOptions?.editorOptions?.preserveFocus });
+		await sessionsManagementService.openSession(session.resource, {
+      preserveFocus: openOptions?.editorOptions?.preserveFocus,
+    });
 		return true;
 	}
 }
 
 export class SessionsOpenerParticipantContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'sessions.sessionOpenerParticipant';
+	static readonly ID = "sessions.sessionOpenerParticipant";
 
 	constructor() {
 		super();
-		this._register(sessionOpenerRegistry.registerParticipant(new SessionsOpenerParticipant()));
+		this._register(
+      sessionOpenerRegistry.registerParticipant(new SessionsOpenerParticipant()),
+    );
 	}
 }

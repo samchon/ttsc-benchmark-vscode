@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { encodeHex, VSBuffer } from './buffer.js';
-import * as strings from './strings.js';
+import { encodeHex, VSBuffer } from "./buffer.js";
+import * as strings from "./strings.js";
 
 type NotSyncHashable = ArrayBufferLike | ArrayBufferView;
 
@@ -20,20 +20,20 @@ export function hash<T>(obj: T extends NotSyncHashable ? never : T): number {
 
 export function doHash(obj: unknown, hashVal: number): number {
 	switch (typeof obj) {
-		case 'object':
+		case "object":
 			if (obj === null) {
 				return numberHash(349, hashVal);
 			} else if (Array.isArray(obj)) {
 				return arrayHash(obj, hashVal);
 			}
 			return objectHash(obj, hashVal);
-		case 'string':
+		case "string":
 			return stringHash(obj, hashVal);
-		case 'boolean':
+		case "boolean":
 			return booleanHash(obj, hashVal);
-		case 'number':
+		case "number":
 			return numberHash(obj, hashVal);
-		case 'undefined':
+		case "undefined":
 			return numberHash(937, hashVal);
 		default:
 			return numberHash(617, hashVal);
@@ -58,15 +58,21 @@ export function stringHash(s: string, hashVal: number) {
 
 function arrayHash(arr: unknown[], initialHashVal: number): number {
 	initialHashVal = numberHash(104579, initialHashVal);
-	return arr.reduce<number>((hashVal, item) => doHash(item, hashVal), initialHashVal);
+	return arr.reduce<number>(
+    (hashVal, item) => doHash(item, hashVal),
+    initialHashVal,
+  );
 }
 
 function objectHash(obj: object, initialHashVal: number): number {
 	initialHashVal = numberHash(181387, initialHashVal);
-	return Object.keys(obj).sort().reduce((hashVal, key) => {
-		hashVal = stringHash(key, hashVal);
-		return doHash((obj as Record<string, unknown>)[key], hashVal);
-	}, initialHashVal);
+	return Object.keys(obj).sort().reduce(
+    (hashVal, key) => {
+      hashVal = stringHash(key, hashVal);
+      return doHash((obj as Record<string, unknown>)[key], hashVal);
+    },
+    initialHashVal,
+  );
 }
 
 
@@ -78,14 +84,14 @@ export const hashAsync = (input: string | ArrayBufferView | VSBuffer) => {
 	// https://github.com/w3c/webcrypto/issues/73
 
 	// StringSHA1 is faster for small string input, use it since we have it:
-	if (typeof input === 'string' && input.length < 250) {
+	if (typeof input === "string" && input.length < 250) {
 		const sha = new StringSHA1();
 		sha.update(input);
 		return Promise.resolve(sha.digest());
 	}
 
 	let buff: ArrayBufferView;
-	if (typeof input === 'string') {
+	if (typeof input === "string") {
 		buff = new TextEncoder().encode(input);
 	} else if (input instanceof VSBuffer) {
 		buff = input.buffer;
@@ -93,7 +99,9 @@ export const hashAsync = (input: string | ArrayBufferView | VSBuffer) => {
 		buff = input;
 	}
 
-	return crypto.subtle.digest('sha-1', buff as ArrayBufferView<ArrayBuffer>).then(toHexString); // CodeQL [SM04514] we use sha1 here for validating old stored client state, not for security
+	return crypto.subtle.digest("sha-1", buff as ArrayBufferView<ArrayBuffer>).then(
+    toHexString,
+  ); // CodeQL [SM04514] we use sha1 here for validating old stored client state, not for security
 };
 
 const enum SHA1Constant {
@@ -119,7 +127,7 @@ function toHexString(bufferOrValue: ArrayBuffer | number, bitsize: number = 32):
 		return encodeHex(VSBuffer.wrap(new Uint8Array(bufferOrValue)));
 	}
 
-	return (bufferOrValue >>> 0).toString(16).padStart(bitsize / 4, '0');
+	return (bufferOrValue >>> 0).toString(16).padStart(bitsize / 4, "0");
 }
 
 /**
@@ -128,7 +136,9 @@ function toHexString(bufferOrValue: ArrayBuffer | number, bitsize: number = 32):
  * Prefer to use {@link hashAsync} in async contexts
  */
 export class StringSHA1 {
-	private static _bigBlock32 = new DataView(new ArrayBuffer(320)); // 80 * 4 = 320
+	private static _bigBlock32 = new DataView(
+    new ArrayBuffer(320),
+  ); // 80 * 4 = 320
 
 	private _h0 = 0x67452301;
 	private _h1 = 0xEFCDAB89;
@@ -244,7 +254,11 @@ export class StringSHA1 {
 			if (this._leftoverHighSurrogate) {
 				// illegal => unicode replacement character
 				this._leftoverHighSurrogate = 0;
-				this._buffLen = this._push(this._buff, this._buffLen, SHA1Constant.UNICODE_REPLACEMENT);
+				this._buffLen = this._push(
+          this._buff,
+          this._buffLen,
+          SHA1Constant.UNICODE_REPLACEMENT,
+        );
 			}
 			this._totalLen += this._buffLen;
 			this._wrapUp();
@@ -280,7 +294,14 @@ export class StringSHA1 {
 		}
 
 		for (let j = 64; j < 320 /* 80*4 */; j += 4) {
-			bigBlock32.setUint32(j, leftRotate((bigBlock32.getUint32(j - 12, false) ^ bigBlock32.getUint32(j - 32, false) ^ bigBlock32.getUint32(j - 56, false) ^ bigBlock32.getUint32(j - 64, false)), 1), false);
+			bigBlock32.setUint32(
+        j,
+        leftRotate(
+          (bigBlock32.getUint32(j - 12, false) ^ bigBlock32.getUint32(j - 32, false) ^ bigBlock32.getUint32(j - 56, false) ^ bigBlock32.getUint32(j - 64, false)),
+          1,
+        ),
+        false,
+      );
 		}
 
 		let a = this._h0;

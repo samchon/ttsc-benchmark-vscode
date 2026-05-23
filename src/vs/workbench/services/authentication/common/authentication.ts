@@ -2,16 +2,20 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { Event } from '../../../../base/common/event.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { IAuthenticationChallenge, IAuthorizationProtectedResourceMetadata, IAuthorizationServerMetadata } from '../../../../base/common/oauth.js';
-import { URI } from '../../../../base/common/uri.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
+import { Event } from "../../../../base/common/event.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import {
+  IAuthenticationChallenge,
+  IAuthorizationProtectedResourceMetadata,
+  IAuthorizationServerMetadata,
+} from "../../../../base/common/oauth.js";
+import { URI } from "../../../../base/common/uri.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
 
 /**
  * Use this if you don't want the onDidChangeSessions event to fire in the extension host
  */
-export const INTERNAL_AUTH_PROVIDER_PREFIX = '__';
+export const INTERNAL_AUTH_PROVIDER_PREFIX = "__";
 
 export interface AuthenticationSessionAccount {
 	label: string;
@@ -83,10 +87,10 @@ export interface IAuthenticationWwwAuthenticateRequest {
 }
 
 export function isAuthenticationWwwAuthenticateRequest(obj: unknown): obj is IAuthenticationWwwAuthenticateRequest {
-	return typeof obj === 'object'
+	return typeof obj === "object"
 		&& obj !== null
-		&& 'wwwAuthenticate' in obj
-		&& (typeof obj.wwwAuthenticate === 'string');
+		&& "wwwAuthenticate" in obj
+		&& (typeof obj.wwwAuthenticate === "string");
 }
 
 /**
@@ -155,7 +159,9 @@ export interface IAuthenticationProviderHostDelegate {
 	create(authorizationServer: URI, serverMetadata: IAuthorizationServerMetadata, resource: IAuthorizationProtectedResourceMetadata | undefined, clientId?: string): Promise<string>;
 }
 
-export const IAuthenticationService = createDecorator<IAuthenticationService>('IAuthenticationService');
+export const IAuthenticationService = createDecorator<IAuthenticationService>(
+  "IAuthenticationService",
+);
 
 export interface IAuthenticationService {
 	readonly _serviceBrand: undefined;
@@ -285,36 +291,38 @@ export interface IAuthenticationService {
 }
 
 export function isAuthenticationSession(thing: unknown): thing is AuthenticationSession {
-	if (typeof thing !== 'object' || !thing) {
+	if (typeof thing !== "object" || !thing) {
 		return false;
 	}
 	const maybe = thing as AuthenticationSession;
-	if (typeof maybe.id !== 'string') {
+	if (typeof maybe.id !== "string") {
 		return false;
 	}
-	if (typeof maybe.accessToken !== 'string') {
+	if (typeof maybe.accessToken !== "string") {
 		return false;
 	}
-	if (typeof maybe.account !== 'object' || !maybe.account) {
+	if (typeof maybe.account !== "object" || !maybe.account) {
 		return false;
 	}
-	if (typeof maybe.account.label !== 'string') {
+	if (typeof maybe.account.label !== "string") {
 		return false;
 	}
-	if (typeof maybe.account.id !== 'string') {
+	if (typeof maybe.account.id !== "string") {
 		return false;
 	}
 	if (!Array.isArray(maybe.scopes)) {
 		return false;
 	}
-	if (maybe.idToken && typeof maybe.idToken !== 'string') {
+	if (maybe.idToken && typeof maybe.idToken !== "string") {
 		return false;
 	}
 	return true;
 }
 
 // TODO: Move this into MainThreadAuthentication
-export const IAuthenticationExtensionsService = createDecorator<IAuthenticationExtensionsService>('IAuthenticationExtensionsService');
+export const IAuthenticationExtensionsService = createDecorator<IAuthenticationExtensionsService>(
+  "IAuthenticationExtensionsService",
+);
 export interface IAuthenticationExtensionsService {
 	readonly _serviceBrand: undefined;
 

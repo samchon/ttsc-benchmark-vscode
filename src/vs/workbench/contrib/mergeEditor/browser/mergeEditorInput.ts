@@ -3,29 +3,40 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { assertFn } from '../../../../base/common/assert.js';
-import { autorun } from '../../../../base/common/observable.js';
-import { isEqual } from '../../../../base/common/resources.js';
-import { isDefined } from '../../../../base/common/types.js';
-import { URI } from '../../../../base/common/uri.js';
-import { ITextResourceConfigurationService } from '../../../../editor/common/services/textResourceConfiguration.js';
-import { localize } from '../../../../nls.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { ILabelService } from '../../../../platform/label/common/label.js';
-import { DEFAULT_EDITOR_ASSOCIATION, EditorInputCapabilities, IResourceMergeEditorInput, IRevertOptions, isResourceMergeEditorInput, IUntypedEditorInput } from '../../../common/editor.js';
-import { EditorInput, IEditorCloseHandler } from '../../../common/editor/editorInput.js';
-import { ICustomEditorLabelService } from '../../../services/editor/common/customEditorLabelService.js';
-import { AbstractTextResourceEditorInput } from '../../../common/editor/textResourceEditorInput.js';
-import { IMergeEditorInputModel, TempFileMergeEditorModeFactory, WorkspaceMergeEditorModeFactory } from './mergeEditorInputModel.js';
-import { MergeEditorTelemetry } from './telemetry.js';
-import { IEditorService } from '../../../services/editor/common/editorService.js';
-import { IFilesConfigurationService } from '../../../services/filesConfiguration/common/filesConfigurationService.js';
-import { ILanguageSupport, ITextFileSaveOptions, ITextFileService } from '../../../services/textfile/common/textfiles.js';
-import { alert } from '../../../../base/browser/ui/aria/aria.js';
-import { MergeEditorType } from './view/viewModel.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
+import { assertFn } from "../../../../base/common/assert.js";
+import { autorun } from "../../../../base/common/observable.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { isDefined } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ITextResourceConfigurationService } from "../../../../editor/common/services/textResourceConfiguration.js";
+import { localize } from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import {
+  DEFAULT_EDITOR_ASSOCIATION,
+  EditorInputCapabilities,
+  IResourceMergeEditorInput,
+  IRevertOptions,
+  isResourceMergeEditorInput,
+  IUntypedEditorInput,
+} from "../../../common/editor.js";
+import { EditorInput, IEditorCloseHandler } from "../../../common/editor/editorInput.js";
+import { ICustomEditorLabelService } from "../../../services/editor/common/customEditorLabelService.js";
+import { AbstractTextResourceEditorInput } from "../../../common/editor/textResourceEditorInput.js";
+import {
+  IMergeEditorInputModel,
+  TempFileMergeEditorModeFactory,
+  WorkspaceMergeEditorModeFactory,
+} from "./mergeEditorInputModel.js";
+import { MergeEditorTelemetry } from "./telemetry.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IFilesConfigurationService } from "../../../services/filesConfiguration/common/filesConfigurationService.js";
+import { ILanguageSupport, ITextFileSaveOptions, ITextFileService } from "../../../services/textfile/common/textfiles.js";
+import { alert } from "../../../../base/browser/ui/aria/aria.js";
+import { MergeEditorType } from "./view/viewModel.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
 
 export class MergeEditorInputData {
 	constructor(
@@ -37,7 +48,7 @@ export class MergeEditorInputData {
 }
 
 export class MergeEditorInput extends AbstractTextResourceEditorInput implements ILanguageSupport {
-	static readonly ID = 'mergeEditor.Input';
+	static readonly ID = "mergeEditor.Input";
 
 	private _inputModel?: IMergeEditorInputModel;
 
@@ -46,7 +57,9 @@ export class MergeEditorInput extends AbstractTextResourceEditorInput implements
 	override closeHandler: IEditorCloseHandler;
 
 	private get useWorkingCopy() {
-		return this.configurationService.getValue('mergeEditor.useWorkingCopy') ?? false;
+		return this.configurationService.getValue(
+      "mergeEditor.useWorkingCopy",
+    ) ?? false;
 	}
 
 	constructor(
@@ -65,8 +78,18 @@ export class MergeEditorInput extends AbstractTextResourceEditorInput implements
 		@ICustomEditorLabelService customEditorLabelService: ICustomEditorLabelService,
 		@ILogService private readonly logService: ILogService,
 	) {
-		super(result, undefined, editorService, textFileService, labelService, fileService, filesConfigurationService, textResourceConfigurationService, customEditorLabelService);
-		this._focusedEditor = 'result';
+		super(
+      result,
+      undefined,
+      editorService,
+      textFileService,
+      labelService,
+      fileService,
+      filesConfigurationService,
+      textResourceConfigurationService,
+      customEditorLabelService,
+    );
+		this._focusedEditor = "result";
 		this.closeHandler = {
 			showConfirm: () => this._inputModel?.shouldConfirmClose() ?? false,
 			confirm: async (editors) => {
@@ -104,7 +127,7 @@ export class MergeEditorInput extends AbstractTextResourceEditorInput implements
 	}
 
 	override getName(): string {
-		return localize('name', "Merging: {0}", super.getName());
+		return localize("name", "Merging: {0}", super.getName());
 	}
 
 	private readonly mergeEditorModeFactory;
@@ -147,8 +170,8 @@ export class MergeEditorInput extends AbstractTextResourceEditorInput implements
 			base: { resource: this.base },
 			result: { resource: this.result },
 			options: {
-				override: this.typeId
-			}
+				override: this.typeId,
+			},
 		};
 	}
 
@@ -193,7 +216,7 @@ export class MergeEditorInput extends AbstractTextResourceEditorInput implements
 	public updateFocusedEditor(editor: MergeEditorType): void {
 		if (this._focusedEditor !== editor) {
 			this._focusedEditor = editor;
-			this.logService.trace('alertFocusedEditor', editor);
+			this.logService.trace("alertFocusedEditor", editor);
 			alertFocusedEditor(editor);
 		}
 	}
@@ -203,14 +226,14 @@ export class MergeEditorInput extends AbstractTextResourceEditorInput implements
 
 function alertFocusedEditor(editor: MergeEditorType) {
 	switch (editor) {
-		case 'input1':
-			alert(localize('mergeEditor.input1', "Incoming, Left Input"));
+		case "input1":
+			alert(localize("mergeEditor.input1", "Incoming, Left Input"));
 			break;
-		case 'input2':
-			alert(localize('mergeEditor.input2', "Current, Right Input"));
+		case "input2":
+			alert(localize("mergeEditor.input2", "Current, Right Input"));
 			break;
-		case 'result':
-			alert(localize('mergeEditor.result', "Merge Result"));
+		case "result":
+			alert(localize("mergeEditor.result", "Merge Result"));
 			break;
 	}
 }

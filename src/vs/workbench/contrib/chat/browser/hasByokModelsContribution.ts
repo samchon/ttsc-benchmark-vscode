@@ -3,18 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IContextKey, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { IWorkbenchContribution } from '../../../common/contributions.js';
-import { ChatEntitlementContextKeys } from '../../../services/chat/common/chatEntitlementService.js';
-import { IExtensionService } from '../../../services/extensions/common/extensions.js';
-import { ChatContextKeys } from '../common/actions/chatContextKeys.js';
-import { ChatConfiguration } from '../common/constants.js';
-import { COPILOT_VENDOR_ID } from '../common/languageModels.js';
-import { ILanguageModelsConfigurationService } from '../common/languageModelsConfiguration.js';
+import { Event } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKey, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { ChatEntitlementContextKeys } from "../../../services/chat/common/chatEntitlementService.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { ChatContextKeys } from "../common/actions/chatContextKeys.js";
+import { ChatConfiguration } from "../common/constants.js";
+import { COPILOT_VENDOR_ID } from "../common/languageModels.js";
+import { ILanguageModelsConfigurationService } from "../common/languageModelsConfiguration.js";
 
 /**
  * Owns the `github.copilot.hasByokModels` context key. The key is true iff:
@@ -46,14 +46,14 @@ import { ILanguageModelsConfigurationService } from '../common/languageModelsCon
  */
 export class HasByokModelsContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'workbench.contrib.hasByokModels';
+	static readonly ID = "workbench.contrib.hasByokModels";
 
-	private static readonly STORAGE_KEY_LAST_KNOWN = 'chat.hasByokModels.lastKnown';
+	private static readonly STORAGE_KEY_LAST_KNOWN = "chat.hasByokModels.lastKnown";
 
 	private static readonly TRACKED_KEYS = new Set([
-		ChatEntitlementContextKeys.clientByokEnabled.key,
-		ChatContextKeys.nonCopilotLanguageModelsAreUserSelectable.key,
-	]);
+    ChatEntitlementContextKeys.clientByokEnabled.key,
+    ChatContextKeys.nonCopilotLanguageModelsAreUserSelectable.key,
+  ]);
 
 	private readonly _hasByokModels: IContextKey<boolean>;
 	private _extensionsRegistered = false;
@@ -67,7 +67,9 @@ export class HasByokModelsContribution extends Disposable implements IWorkbenchC
 	) {
 		super();
 
-		this._hasByokModels = ChatEntitlementContextKeys.hasByokModels.bindTo(this._contextKeyService);
+		this._hasByokModels = ChatEntitlementContextKeys.hasByokModels.bindTo(
+      this._contextKeyService,
+    );
 
 		this._restore();
 		this._update();
@@ -89,9 +91,15 @@ export class HasByokModelsContribution extends Disposable implements IWorkbenchC
 	}
 
 	private _isFeatureEnabled(): boolean {
-		return !this._configurationService.getValue<boolean>(ChatConfiguration.AIDisabled)
-			&& !!this._configurationService.getValue<boolean>(ChatConfiguration.OfflineByok)
-			&& !!this._contextKeyService.getContextKeyValue<boolean>(ChatEntitlementContextKeys.clientByokEnabled.key);
+		return !this._configurationService.getValue<boolean>(
+      ChatConfiguration.AIDisabled,
+    )
+			&& !!this._configurationService.getValue<boolean>(
+        ChatConfiguration.OfflineByok,
+      )
+			&& !!this._contextKeyService.getContextKeyValue<boolean>(
+        ChatEntitlementContextKeys.clientByokEnabled.key,
+      );
 	}
 
 	private _restore(): void {
@@ -99,12 +107,23 @@ export class HasByokModelsContribution extends Disposable implements IWorkbenchC
 			this._hasByokModels.set(false);
 			return;
 		}
-		this._hasByokModels.set(this._storageService.getBoolean(HasByokModelsContribution.STORAGE_KEY_LAST_KNOWN, StorageScope.APPLICATION, false));
+		this._hasByokModels.set(
+      this._storageService.getBoolean(
+        HasByokModelsContribution.STORAGE_KEY_LAST_KNOWN,
+        StorageScope.APPLICATION,
+        false,
+      ),
+    );
 	}
 
 	private _setResult(value: boolean): void {
 		this._hasByokModels.set(value);
-		this._storageService.store(HasByokModelsContribution.STORAGE_KEY_LAST_KNOWN, value, StorageScope.APPLICATION, StorageTarget.MACHINE);
+		this._storageService.store(
+      HasByokModelsContribution.STORAGE_KEY_LAST_KNOWN,
+      value,
+      StorageScope.APPLICATION,
+      StorageTarget.MACHINE,
+    );
 	}
 
 	private _update(): void {
@@ -113,7 +132,9 @@ export class HasByokModelsContribution extends Disposable implements IWorkbenchC
 			return;
 		}
 
-		if (this._contextKeyService.getContextKeyValue<boolean>(ChatContextKeys.nonCopilotLanguageModelsAreUserSelectable.key)) {
+		if (this._contextKeyService.getContextKeyValue<boolean>(
+      ChatContextKeys.nonCopilotLanguageModelsAreUserSelectable.key,
+    )) {
 			this._setResult(true);
 			return;
 		}
@@ -122,7 +143,9 @@ export class HasByokModelsContribution extends Disposable implements IWorkbenchC
 			return;
 		}
 
-		const hasByokVendor = this._languageModelsConfigurationService.getLanguageModelsProviderGroups().some(g => g.vendor !== COPILOT_VENDOR_ID);
+		const hasByokVendor = this._languageModelsConfigurationService.getLanguageModelsProviderGroups().some(
+      g => g.vendor !== COPILOT_VENDOR_ID,
+    );
 		if (!hasByokVendor) {
 			this._setResult(false);
 		}

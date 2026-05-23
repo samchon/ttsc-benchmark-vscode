@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as DOM from '../../../../../base/browser/dom.js';
-import { onUnexpectedError } from '../../../../../base/common/errors.js';
-import { Disposable, DisposableStore, MutableDisposable } from '../../../../../base/common/lifecycle.js';
-import { ICellViewModel } from '../notebookBrowser.js';
-import { CellViewModelStateChangeEvent } from '../notebookViewEvents.js';
-import { ICellExecutionStateChangedEvent } from '../../common/notebookExecutionStateService.js';
+import * as DOM from "../../../../../base/browser/dom.js";
+import { onUnexpectedError } from "../../../../../base/common/errors.js";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../../../base/common/lifecycle.js";
+import { ICellViewModel } from "../notebookBrowser.js";
+import { CellViewModelStateChangeEvent } from "../notebookViewEvents.js";
+import { ICellExecutionStateChangedEvent } from "../../common/notebookExecutionStateService.js";
 
 /**
  * A content part is a non-floating element that is rendered inside a cell.
@@ -133,24 +133,38 @@ function safeInvokeNoArg<T>(func: () => T): T | null {
 }
 
 export class CellPartsCollection extends Disposable {
-	private readonly _scheduledOverlayRendering = this._register(new MutableDisposable());
-	private readonly _scheduledOverlayUpdateState = this._register(new MutableDisposable());
-	private readonly _scheduledOverlayUpdateExecutionState = this._register(new MutableDisposable());
+	private readonly _scheduledOverlayRendering = this._register(
+    new MutableDisposable(),
+  );
+	private readonly _scheduledOverlayUpdateState = this._register(
+    new MutableDisposable(),
+  );
+	private readonly _scheduledOverlayUpdateExecutionState = this._register(
+    new MutableDisposable(),
+  );
 
 	constructor(
 		private readonly targetWindow: Window,
 		private readonly contentParts: readonly CellContentPart[],
-		private readonly overlayParts: readonly CellOverlayPart[]
+		private readonly overlayParts: readonly CellOverlayPart[],
 	) {
 		super();
 	}
 
 	concatContentPart(other: readonly CellContentPart[], targetWindow: Window): CellPartsCollection {
-		return new CellPartsCollection(targetWindow, this.contentParts.concat(other), this.overlayParts);
+		return new CellPartsCollection(
+      targetWindow,
+      this.contentParts.concat(other),
+      this.overlayParts,
+    );
 	}
 
 	concatOverlayPart(other: readonly CellOverlayPart[], targetWindow: Window): CellPartsCollection {
-		return new CellPartsCollection(targetWindow, this.contentParts, this.overlayParts.concat(other));
+		return new CellPartsCollection(
+      targetWindow,
+      this.contentParts,
+      this.overlayParts.concat(other),
+    );
 	}
 
 	scheduleRenderCell(element: ICellViewModel): void {

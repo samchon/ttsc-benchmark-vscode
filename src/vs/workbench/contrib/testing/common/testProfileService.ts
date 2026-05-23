@@ -3,20 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Iterable } from '../../../../base/common/iterator.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { deepClone } from '../../../../base/common/objects.js';
-import { IContextKey, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { StoredValue } from './storedValue.js';
-import { TestId } from './testId.js';
-import { IMainThreadTestController } from './testService.js';
-import { ITestItem, ITestRunProfile, InternalTestItem, TestRunProfileBitset, testRunProfileBitsetList } from './testTypes.js';
-import { TestingContextKeys } from './testingContextKeys.js';
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { deepClone } from "../../../../base/common/objects.js";
+import { IContextKey, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { StoredValue } from "./storedValue.js";
+import { TestId } from "./testId.js";
+import { IMainThreadTestController } from "./testService.js";
+import {
+  ITestItem,
+  ITestRunProfile,
+  InternalTestItem,
+  TestRunProfileBitset,
+  testRunProfileBitsetList,
+} from "./testTypes.js";
+import { TestingContextKeys } from "./testingContextKeys.js";
 
-export const ITestProfileService = createDecorator<ITestProfileService>('testProfileService');
+export const ITestProfileService = createDecorator<ITestProfileService>(
+  "testProfileService",
+);
 
 export interface ITestProfileService {
 	readonly _serviceBrand: undefined;
@@ -87,7 +95,9 @@ export interface ITestProfileService {
  * Gets whether the given profile can be used to run the test.
  */
 export const canUseProfileWithTest = (profile: ITestRunProfile, test: InternalTestItem) =>
-	profile.controllerId === test.controllerId && (TestId.isRoot(test.item.extId) || !profile.tag || test.item.tags.includes(profile.tag));
+	profile.controllerId === test.controllerId && (TestId.isRoot(
+    test.item.extId,
+  ) || !profile.tag || test.item.tags.includes(profile.tag));
 
 const sorter = (a: ITestRunProfile, b: ITestRunProfile) => {
 	if (a.isDefault !== b.isDefault) {
@@ -106,9 +116,18 @@ interface IExtendedTestRunProfile extends ITestRunProfile {
  * them.
  */
 export const capabilityContextKeys = (capabilities: number): [key: string, value: boolean][] => [
-	[TestingContextKeys.hasRunnableTests.key, (capabilities & TestRunProfileBitset.Run) !== 0],
-	[TestingContextKeys.hasDebuggableTests.key, (capabilities & TestRunProfileBitset.Debug) !== 0],
-	[TestingContextKeys.hasCoverableTests.key, (capabilities & TestRunProfileBitset.Coverage) !== 0],
+  [
+    TestingContextKeys.hasRunnableTests.key,
+    (capabilities & TestRunProfileBitset.Run) !== 0,
+  ],
+  [
+    TestingContextKeys.hasDebuggableTests.key,
+    (capabilities & TestRunProfileBitset.Debug) !== 0,
+  ],
+  [
+    TestingContextKeys.hasCoverableTests.key,
+    (capabilities & TestRunProfileBitset.Coverage) !== 0,
+  ],
 ];
 
 type DefaultsMap = { [controllerId: string]: { [profileId: number]: /* isDefault */ boolean } };
@@ -132,21 +151,29 @@ export class TestProfileService extends Disposable implements ITestProfileServic
 	) {
 		super();
 
-		storageService.remove('testingPreferredProfiles', StorageScope.WORKSPACE); // cleanup old format
-		this.userDefaults = this._register(new StoredValue({
-			key: 'testingPreferredProfiles2',
-			scope: StorageScope.WORKSPACE,
-			target: StorageTarget.MACHINE,
-		}, storageService));
+		storageService.remove(
+      "testingPreferredProfiles",
+      StorageScope.WORKSPACE,
+    ); // cleanup old format
+		this.userDefaults = this._register(
+      new StoredValue(
+        {
+          key: "testingPreferredProfiles2",
+          scope: StorageScope.WORKSPACE,
+          target: StorageTarget.MACHINE,
+        },
+        storageService,
+      ),
+    );
 
 		this.capabilitiesContexts = {
-			[TestRunProfileBitset.Run]: TestingContextKeys.hasRunnableTests.bindTo(contextKeyService),
-			[TestRunProfileBitset.Debug]: TestingContextKeys.hasDebuggableTests.bindTo(contextKeyService),
-			[TestRunProfileBitset.Coverage]: TestingContextKeys.hasCoverableTests.bindTo(contextKeyService),
-			[TestRunProfileBitset.HasNonDefaultProfile]: TestingContextKeys.hasNonDefaultProfile.bindTo(contextKeyService),
-			[TestRunProfileBitset.HasConfigurable]: TestingContextKeys.hasConfigurableProfile.bindTo(contextKeyService),
-			[TestRunProfileBitset.SupportsContinuousRun]: TestingContextKeys.supportsContinuousRun.bindTo(contextKeyService),
-		};
+      [TestRunProfileBitset.Run]: TestingContextKeys.hasRunnableTests.bindTo(contextKeyService),
+      [TestRunProfileBitset.Debug]: TestingContextKeys.hasDebuggableTests.bindTo(contextKeyService),
+      [TestRunProfileBitset.Coverage]: TestingContextKeys.hasCoverableTests.bindTo(contextKeyService),
+      [TestRunProfileBitset.HasNonDefaultProfile]: TestingContextKeys.hasNonDefaultProfile.bindTo(contextKeyService),
+      [TestRunProfileBitset.HasConfigurable]: TestingContextKeys.hasConfigurableProfile.bindTo(contextKeyService),
+      [TestRunProfileBitset.SupportsContinuousRun]: TestingContextKeys.supportsContinuousRun.bindTo(contextKeyService),
+    };
 
 		this.refreshContextKeys();
 	}
@@ -155,10 +182,10 @@ export class TestProfileService extends Disposable implements ITestProfileServic
 	public addProfile(controller: IMainThreadTestController, profile: ITestRunProfile): void {
 		const previousExplicitDefaultValue = this.userDefaults.get()?.[controller.id]?.[profile.profileId];
 		const extended: IExtendedTestRunProfile = {
-			...profile,
-			isDefault: previousExplicitDefaultValue ?? profile.isDefault,
-			wasInitiallyDefault: profile.isDefault,
-		};
+      ...profile,
+      isDefault: previousExplicitDefaultValue ?? profile.isDefault,
+      wasInitiallyDefault: profile.isDefault,
+    };
 
 		let record = this.controllerProfiles.get(profile.controllerId);
 		if (record) {
@@ -166,9 +193,9 @@ export class TestProfileService extends Disposable implements ITestProfileServic
 			record.profiles.sort(sorter);
 		} else {
 			record = {
-				profiles: [extended],
-				controller,
-			};
+        profiles: [extended],
+        controller,
+      };
 			this.controllerProfiles.set(profile.controllerId, record);
 		}
 
@@ -183,7 +210,9 @@ export class TestProfileService extends Disposable implements ITestProfileServic
 			return;
 		}
 
-		const profile = ctrl.profiles.find(c => c.controllerId === controllerId && c.profileId === profileId);
+		const profile = ctrl.profiles.find(
+      c => c.controllerId === controllerId && c.profileId === profileId,
+    );
 		if (!profile) {
 			return;
 		}
@@ -204,7 +233,9 @@ export class TestProfileService extends Disposable implements ITestProfileServic
 
 	/** @inheritdoc */
 	public configure(controllerId: string, profileId: number) {
-		this.controllerProfiles.get(controllerId)?.controller.configureRunProfile(profileId);
+		this.controllerProfiles.get(controllerId)?.controller.configureRunProfile(
+      profileId,
+    );
 	}
 
 	/** @inheritdoc */
@@ -261,7 +292,9 @@ export class TestProfileService extends Disposable implements ITestProfileServic
 	public getGroupDefaultProfiles(group: TestRunProfileBitset, controllerId?: string) {
 		const allProfiles = controllerId
 			? (this.controllerProfiles.get(controllerId)?.profiles || [])
-			: [...Iterable.flatMap(this.controllerProfiles.values(), c => c.profiles)];
+			: [
+          ...Iterable.flatMap(this.controllerProfiles.values(), c => c.profiles),
+        ];
 		const defaults = allProfiles.filter(c => c.group === group && c.isDefault);
 
 		// have *some* default profile to run if none are set otherwise
@@ -285,7 +318,11 @@ export class TestProfileService extends Disposable implements ITestProfileServic
 					continue;
 				}
 
-				setIsDefault(next, profile, profiles.some(p => p.profileId === profile.profileId));
+				setIsDefault(
+          next,
+          profile,
+          profiles.some(p => p.profileId === profile.profileId),
+        );
 			}
 
 			// When switching a profile, if the controller has a same-named profile in
@@ -294,7 +331,9 @@ export class TestProfileService extends Disposable implements ITestProfileServic
 				if (profile.group === group) {
 					continue;
 				}
-				const matching = ctrl.profiles.find(p => p.group === group && p.label === profile.label);
+				const matching = ctrl.profiles.find(
+          p => p.group === group && p.label === profile.label,
+        );
 				if (matching) {
 					setIsDefault(next, profile, matching.isDefault);
 				}
@@ -308,7 +347,9 @@ export class TestProfileService extends Disposable implements ITestProfileServic
 	}
 
 	getDefaultProfileForTest(group: TestRunProfileBitset, test: InternalTestItem): ITestRunProfile | undefined {
-		return this.getControllerProfiles(test.controllerId).find(p => (p.group & group) !== 0 && canUseProfileWithTest(p, test));
+		return this.getControllerProfiles(test.controllerId).find(
+      p => (p.group & group) !== 0 && canUseProfileWithTest(p, test),
+    );
 	}
 
 	private refreshContextKeys() {

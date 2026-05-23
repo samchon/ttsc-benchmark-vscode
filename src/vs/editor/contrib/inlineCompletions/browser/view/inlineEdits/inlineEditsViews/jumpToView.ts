@@ -3,37 +3,49 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { n } from '../../../../../../../base/browser/dom.js';
-import { KeybindingLabel } from '../../../../../../../base/browser/ui/keybindingLabel/keybindingLabel.js';
-import { RunOnceScheduler } from '../../../../../../../base/common/async.js';
-import { ResolvedKeybinding } from '../../../../../../../base/common/keybindings.js';
-import { Disposable } from '../../../../../../../base/common/lifecycle.js';
-import { autorun, constObservable, DebugLocation, derived, IObservable, observableFromEvent } from '../../../../../../../base/common/observable.js';
-import { OS } from '../../../../../../../base/common/platform.js';
-import { IContextKeyService } from '../../../../../../../platform/contextkey/common/contextkey.js';
-import { IKeybindingService } from '../../../../../../../platform/keybinding/common/keybinding.js';
-import { defaultKeybindingLabelStyles } from '../../../../../../../platform/theme/browser/defaultStyles.js';
-import { asCssVariable } from '../../../../../../../platform/theme/common/colorUtils.js';
-import { IThemeService } from '../../../../../../../platform/theme/common/themeService.js';
-import { ObservableCodeEditor } from '../../../../../../browser/observableCodeEditor.js';
-import { Rect } from '../../../../../../common/core/2d/rect.js';
-import { Position } from '../../../../../../common/core/position.js';
-import { Range } from '../../../../../../common/core/range.js';
-import { IModelDeltaDecoration } from '../../../../../../common/model.js';
-import { inlineSuggestCommitId } from '../../../controller/commandIds.js';
-import { getEditorBlendedColor, inlineEditIndicatorPrimaryBackground, inlineEditIndicatorPrimaryBorder, inlineEditIndicatorPrimaryForeground } from '../theme.js';
-import { rectToProps } from '../utils/utils.js';
+import { n } from "../../../../../../../base/browser/dom.js";
+import { KeybindingLabel } from "../../../../../../../base/browser/ui/keybindingLabel/keybindingLabel.js";
+import { RunOnceScheduler } from "../../../../../../../base/common/async.js";
+import { ResolvedKeybinding } from "../../../../../../../base/common/keybindings.js";
+import { Disposable } from "../../../../../../../base/common/lifecycle.js";
+import {
+  autorun,
+  constObservable,
+  DebugLocation,
+  derived,
+  IObservable,
+  observableFromEvent,
+} from "../../../../../../../base/common/observable.js";
+import { OS } from "../../../../../../../base/common/platform.js";
+import { IContextKeyService } from "../../../../../../../platform/contextkey/common/contextkey.js";
+import { IKeybindingService } from "../../../../../../../platform/keybinding/common/keybinding.js";
+import { defaultKeybindingLabelStyles } from "../../../../../../../platform/theme/browser/defaultStyles.js";
+import { asCssVariable } from "../../../../../../../platform/theme/common/colorUtils.js";
+import { IThemeService } from "../../../../../../../platform/theme/common/themeService.js";
+import { ObservableCodeEditor } from "../../../../../../browser/observableCodeEditor.js";
+import { Rect } from "../../../../../../common/core/2d/rect.js";
+import { Position } from "../../../../../../common/core/position.js";
+import { Range } from "../../../../../../common/core/range.js";
+import { IModelDeltaDecoration } from "../../../../../../common/model.js";
+import { inlineSuggestCommitId } from "../../../controller/commandIds.js";
+import {
+  getEditorBlendedColor,
+  inlineEditIndicatorPrimaryBackground,
+  inlineEditIndicatorPrimaryBorder,
+  inlineEditIndicatorPrimaryForeground,
+} from "../theme.js";
+import { rectToProps } from "../utils/utils.js";
 
 export class JumpToView extends Disposable {
-	private readonly _style: 'label' | 'cursor';
+	private readonly _style: "label" | "cursor";
 
 	constructor(
 		private readonly _editor: ObservableCodeEditor,
-		options: { style: 'label' | 'cursor' },
+		options: { style: "label" | "cursor" },
 		private readonly _data: IObservable<{ jumpToPosition: Position } | undefined>,
 		@IThemeService private readonly _themeService: IThemeService,
 		@IKeybindingService private readonly _keybindingService: IKeybindingService,
-		@IContextKeyService private readonly _contextKeyService: IContextKeyService
+		@IContextKeyService private readonly _contextKeyService: IContextKeyService,
 	) {
 		super();
 
@@ -42,12 +54,14 @@ export class JumpToView extends Disposable {
 
 		const widget = this._widget.keepUpdated(this._store);
 
-		this._register(this._editor.createOverlayWidget({
-			domNode: widget.element,
-			position: constObservable(null),
-			allowEditorOverflow: false,
-			minContentWidthInPx: constObservable(0),
-		}));
+		this._register(
+      this._editor.createOverlayWidget({
+        domNode: widget.element,
+        position: constObservable(null),
+        allowEditorOverflow: false,
+        minContentWidthInPx: constObservable(0),
+      }),
+    );
 
 		this._register(this._editor.setDecorations(derived<IModelDeltaDecoration[]>(reader => {
 			const data = this._data.read(reader);
@@ -58,26 +72,26 @@ export class JumpToView extends Disposable {
 			return [{
 				range: Range.fromPositions(data.jumpToPosition, data.jumpToPosition),
 				options: {
-					description: 'inline-edit-jump-to-decoration',
+					description: "inline-edit-jump-to-decoration",
 					inlineClassNameAffectsLetterSpacing: true,
 					showIfCollapsed: true,
 					after: {
-						content: this._style === 'label' ? '          ' : '  ',
-					}
+						content: this._style === "label" ? "          " : "  ",
+					},
 				},
 			} satisfies IModelDeltaDecoration];
 		})));
 	}
 
 	private readonly _styles = derived(this, reader => ({
-		background: getEditorBlendedColor(inlineEditIndicatorPrimaryBackground, this._themeService).read(reader).toString(),
-		foreground: getEditorBlendedColor(inlineEditIndicatorPrimaryForeground, this._themeService).read(reader).toString(),
-		border: getEditorBlendedColor(inlineEditIndicatorPrimaryBorder, this._themeService).read(reader).toString(),
-	}));
+    background: getEditorBlendedColor(inlineEditIndicatorPrimaryBackground, this._themeService).read(reader).toString(),
+    foreground: getEditorBlendedColor(inlineEditIndicatorPrimaryForeground, this._themeService).read(reader).toString(),
+    border: getEditorBlendedColor(inlineEditIndicatorPrimaryBorder, this._themeService).read(reader).toString(),
+  }));
 
 	private readonly _pos = derived(this, reader => {
 		return this._editor.observePosition(derived(reader =>
-			this._data.read(reader)?.jumpToPosition || null
+			this._data.read(reader)?.jumpToPosition || null,
 		), reader.store);
 	}).flatten();
 
@@ -85,7 +99,12 @@ export class JumpToView extends Disposable {
 		if (!commandId) {
 			return constObservable(undefined);
 		}
-		return observableFromEvent(this, this._contextKeyService.onDidChangeContext, () => this._keybindingService.lookupKeybinding(commandId), debugLocation);
+		return observableFromEvent(
+      this,
+      this._contextKeyService.onDidChangeContext,
+      () => this._keybindingService.lookupKeybinding(commandId),
+      debugLocation,
+    );
 		// TODO: use contextkeyservice to use different renderings
 	}
 
@@ -113,7 +132,7 @@ export class JumpToView extends Disposable {
 			point.x + layout.contentLeft + 2 - scrollLeft,
 			point.y,
 			100,
-			lineHeight
+			lineHeight,
 		);
 
 		return {
@@ -122,21 +141,21 @@ export class JumpToView extends Disposable {
 	});
 
 	private readonly _blink = animateFixedValues<boolean>([
-		{ value: true, durationMs: 600 },
-		{ value: false, durationMs: 600 },
-	]);
+    { value: true, durationMs: 600 },
+    { value: false, durationMs: 600 },
+  ]);
 
 	private readonly _widget = n.div({
-		class: 'inline-edit-jump-to-widget',
+		class: "inline-edit-jump-to-widget",
 		style: {
-			position: 'absolute',
-			display: this._layout.map(l => l ? 'flex' : 'none'),
+			position: "absolute",
+			display: this._layout.map(l => l ? "flex" : "none"),
 
-			alignItems: 'center',
-			cursor: 'pointer',
-			userSelect: 'none',
+			alignItems: "center",
+			cursor: "pointer",
+			userSelect: "none",
 			...rectToProps(reader => this._layout.read(reader)?.widgetRect),
-		}
+		},
 	},
 		derived(reader => {
 			if (this._data.read(reader) === undefined) {
@@ -146,38 +165,38 @@ export class JumpToView extends Disposable {
 			// Main content container with rounded border
 			return n.div({
 				style: {
-					display: 'flex',
-					alignItems: 'center',
-					gap: '4px',
-					padding: '0 4px',
-					height: '100%',
+					display: "flex",
+					alignItems: "center",
+					gap: "4px",
+					padding: "0 4px",
+					height: "100%",
 					backgroundColor: this._styles.map(s => s.background),
-					['--vscodeIconForeground' as string]: this._styles.map(s => s.foreground),
+					["--vscodeIconForeground" as string]: this._styles.map(s => s.foreground),
 					border: this._styles.map(s => `1px solid ${s.border}`),
-					borderRadius: '3px',
-					boxSizing: 'border-box',
-					fontSize: '11px',
+					borderRadius: "3px",
+					boxSizing: "border-box",
+					fontSize: "11px",
 					color: this._styles.map(s => s.foreground),
-				}
+				},
 			}, [
-				this._style === 'cursor' ?
-					n.elem('div', {
+				this._style === "cursor" ?
+					n.elem("div", {
 						style: {
-							borderLeft: '2px solid',
+							borderLeft: "2px solid",
 							height: 14,
-							opacity: this._blink.map(b => b ? '0' : '1'),
-						}
+							opacity: this._blink.map(b => b ? "0" : "1"),
+						},
 					}) :
 
 					[
-						derived(() => n.elem('div', {}, keybindingLabel(this._keybinding))),
-						n.elem('div', { style: { lineHeight: this._layout.map(l => l?.widgetRect.height), marginTop: '-2px' } },
-							['to jump',]
-						)
+						derived(() => n.elem("div", {}, keybindingLabel(this._keybinding))),
+						n.elem("div", { style: { lineHeight: this._layout.map(l => l?.widgetRect.height), marginTop: "-2px" } },
+							["to jump",],
+						),
 					],
 			]);
 
-		})
+		}),
 	);
 }
 
@@ -207,13 +226,13 @@ function keybindingLabel(keybinding: IObservable<ResolvedKeybinding | undefined>
 				...defaultKeybindingLabelStyles,
 				keybindingLabelShadow: undefined,
 				keybindingLabelForeground: asCssVariable(inlineEditIndicatorPrimaryForeground),
-				keybindingLabelBackground: 'transparent',
+				keybindingLabelBackground: "transparent",
 				keybindingLabelBorder: asCssVariable(inlineEditIndicatorPrimaryForeground),
 				keybindingLabelBottomBorder: undefined,
 			}));
 			_reader.store.add(autorun(reader => {
 				keybindingLabel.set(keybinding.read(reader));
 			}));
-		}
+		},
 	}));
 }

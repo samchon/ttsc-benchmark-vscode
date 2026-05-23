@@ -3,20 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './whitespace.css';
-import { DynamicViewOverlay } from '../../view/dynamicViewOverlay.js';
-import { Selection } from '../../../common/core/selection.js';
-import { RenderingContext } from '../../view/renderingContext.js';
-import { ViewContext } from '../../../common/viewModel/viewContext.js';
-import * as viewEvents from '../../../common/viewEvents.js';
-import { ViewLineRenderingData } from '../../../common/viewModel.js';
-import { EditorOption } from '../../../common/config/editorOptions.js';
-import { IEditorConfiguration } from '../../../common/config/editorConfiguration.js';
-import * as strings from '../../../../base/common/strings.js';
-import { CharCode } from '../../../../base/common/charCode.js';
-import { Position } from '../../../common/core/position.js';
-import { editorWhitespaces } from '../../../common/core/editorColorRegistry.js';
-import { OffsetRange } from '../../../common/core/ranges/offsetRange.js';
+import "./whitespace.css";
+import { DynamicViewOverlay } from "../../view/dynamicViewOverlay.js";
+import { Selection } from "../../../common/core/selection.js";
+import { RenderingContext } from "../../view/renderingContext.js";
+import { ViewContext } from "../../../common/viewModel/viewContext.js";
+import * as viewEvents from "../../../common/viewEvents.js";
+import { ViewLineRenderingData } from "../../../common/viewModel.js";
+import { EditorOption } from "../../../common/config/editorOptions.js";
+import { IEditorConfiguration } from "../../../common/config/editorConfiguration.js";
+import * as strings from "../../../../base/common/strings.js";
+import { CharCode } from "../../../../base/common/charCode.js";
+import { Position } from "../../../common/core/position.js";
+import { editorWhitespaces } from "../../../common/core/editorColorRegistry.js";
+import { OffsetRange } from "../../../common/core/ranges/offsetRange.js";
 
 /**
  * The whitespace overlay will visual certain whitespace depending on the
@@ -56,7 +56,7 @@ export class WhitespaceOverlay extends DynamicViewOverlay {
 	}
 	public override onCursorStateChanged(e: viewEvents.ViewCursorStateChangedEvent): boolean {
 		this._selection = e.selections;
-		if (this._options.renderWhitespace === 'selection') {
+		if (this._options.renderWhitespace === "selection") {
 			return true;
 		}
 		return false;
@@ -85,7 +85,7 @@ export class WhitespaceOverlay extends DynamicViewOverlay {
 	// --- end event handlers
 
 	public prepareRender(ctx: RenderingContext): void {
-		if (this._options.renderWhitespace === 'none') {
+		if (this._options.renderWhitespace === "none") {
 			this._renderResult = null;
 			return;
 		}
@@ -93,10 +93,12 @@ export class WhitespaceOverlay extends DynamicViewOverlay {
 		this._renderResult = [];
 		for (let lineNumber = ctx.viewportData.startLineNumber; lineNumber <= ctx.viewportData.endLineNumber; lineNumber++) {
 			const lineIndex = lineNumber - ctx.viewportData.startLineNumber;
-			const lineData = this._context.viewModel.getViewLineRenderingData(lineNumber);
+			const lineData = this._context.viewModel.getViewLineRenderingData(
+        lineNumber,
+      );
 
 			let selectionsOnLine: OffsetRange[] | null = null;
-			if (this._options.renderWhitespace === 'selection') {
+			if (this._options.renderWhitespace === "selection") {
 				const selections = this._selection;
 				for (const selection of selections) {
 
@@ -112,31 +114,41 @@ export class WhitespaceOverlay extends DynamicViewOverlay {
 						if (!selectionsOnLine) {
 							selectionsOnLine = [];
 						}
-						selectionsOnLine.push(new OffsetRange(startColumn - 1, endColumn - 1));
+						selectionsOnLine.push(
+              new OffsetRange(startColumn - 1, endColumn - 1),
+            );
 					}
 				}
 			}
 
-			this._renderResult[lineIndex] = this._applyRenderWhitespace(ctx, lineNumber, selectionsOnLine, lineData);
+			this._renderResult[lineIndex] = this._applyRenderWhitespace(
+        ctx,
+        lineNumber,
+        selectionsOnLine,
+        lineData,
+      );
 		}
 	}
 
 	private _applyRenderWhitespace(ctx: RenderingContext, lineNumber: number, selections: OffsetRange[] | null, lineData: ViewLineRenderingData): string {
-		if (this._options.renderWhitespace === 'selection' && !selections) {
-			return '';
+		if (this._options.renderWhitespace === "selection" && !selections) {
+			return "";
 		}
-		if (this._options.renderWhitespace === 'trailing' && lineData.continuesWithWrappedLine) {
-			return '';
+		if (this._options.renderWhitespace === "trailing" && lineData.continuesWithWrappedLine) {
+			return "";
 		}
 		const color = this._context.theme.getColor(editorWhitespaces);
 		const USE_SVG = this._options.renderWithSVG;
 
 		const lineContent = lineData.content;
-		const len = (this._options.stopRenderingLineAfter === -1 ? lineContent.length : Math.min(this._options.stopRenderingLineAfter, lineContent.length));
+		const len = (this._options.stopRenderingLineAfter === -1 ? lineContent.length : Math.min(
+      this._options.stopRenderingLineAfter,
+      lineContent.length,
+    ));
 		const continuesWithWrappedLine = lineData.continuesWithWrappedLine;
 		const fauxIndentLength = lineData.minColumn - 1;
-		const onlyBoundary = (this._options.renderWhitespace === 'boundary');
-		const onlyTrailing = (this._options.renderWhitespace === 'trailing');
+		const onlyBoundary = (this._options.renderWhitespace === "boundary");
+		const onlyTrailing = (this._options.renderWhitespace === "trailing");
 		const lineHeight = ctx.getLineHeightForLineNumber(lineNumber);
 		const middotWidth = this._options.middotWidth;
 		const wsmiddotWidth = this._options.wsmiddotWidth;
@@ -150,7 +162,7 @@ export class WhitespaceOverlay extends DynamicViewOverlay {
 
 		const canUseHalfwidthRightwardsArrow = this._options.canUseHalfwidthRightwardsArrow;
 
-		let result: string = '';
+		let result: string = "";
 
 		let lineIsEmptyOrWhitespace = false;
 		let firstNonWhitespaceIndex = strings.firstNonWhitespaceIndex(lineContent);
@@ -186,15 +198,21 @@ export class WhitespaceOverlay extends DynamicViewOverlay {
 
 			if (onlyBoundary && charIndex >= firstNonWhitespaceIndex && charIndex <= lastNonWhitespaceIndex && chCode === CharCode.Space) {
 				// rendering only boundary whitespace
-				const prevChCode = (charIndex - 1 >= 0 ? lineContent.charCodeAt(charIndex - 1) : CharCode.Null);
-				const nextChCode = (charIndex + 1 < len ? lineContent.charCodeAt(charIndex + 1) : CharCode.Null);
+				const prevChCode = (charIndex - 1 >= 0 ? lineContent.charCodeAt(
+          charIndex - 1,
+        ) : CharCode.Null);
+				const nextChCode = (charIndex + 1 < len ? lineContent.charCodeAt(
+          charIndex + 1,
+        ) : CharCode.Null);
 				if (prevChCode !== CharCode.Space && nextChCode !== CharCode.Space) {
 					continue;
 				}
 			}
 
 			if (onlyBoundary && continuesWithWrappedLine && charIndex === len - 1) {
-				const prevCharCode = (charIndex - 1 >= 0 ? lineContent.charCodeAt(charIndex - 1) : CharCode.Null);
+				const prevCharCode = (charIndex - 1 >= 0 ? lineContent.charCodeAt(
+          charIndex - 1,
+        ) : CharCode.Null);
 				const isSingleTrailingSpace = (chCode === CharCode.Space && (prevCharCode !== CharCode.Space && prevCharCode !== CharCode.Tab));
 				if (isSingleTrailingSpace) {
 					continue;
@@ -206,7 +224,9 @@ export class WhitespaceOverlay extends DynamicViewOverlay {
 				continue;
 			}
 
-			const visibleRange = ctx.visibleRangeForPosition(new Position(lineNumber, charIndex + 1));
+			const visibleRange = ctx.visibleRangeForPosition(
+        new Position(lineNumber, charIndex + 1),
+      );
 			if (!visibleRange) {
 				continue;
 			}
@@ -214,7 +234,11 @@ export class WhitespaceOverlay extends DynamicViewOverlay {
 			if (USE_SVG) {
 				maxLeft = Math.max(maxLeft, visibleRange.left);
 				if (chCode === CharCode.Tab) {
-					result += this._renderArrow(lineHeight, spaceWidth, visibleRange.left);
+					result += this._renderArrow(
+            lineHeight,
+            spaceWidth,
+            visibleRange.left,
+          );
 				} else {
 					result += `<circle cx="${(visibleRange.left + spaceWidth / 2).toFixed(2)}" cy="${(lineHeight / 2).toFixed(2)}" r="${(spaceWidth / 7).toFixed(2)}" />`;
 				}
@@ -257,17 +281,19 @@ export class WhitespaceOverlay extends DynamicViewOverlay {
 		const p10 = { x: p1.x, y: -p1.y };
 
 		const p = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10];
-		const parts = p.map((p) => `${(dx + p.x).toFixed(2)} ${(dy + p.y).toFixed(2)}`).join(' L ');
+		const parts = p.map((p) => `${(dx + p.x).toFixed(2)} ${(dy + p.y).toFixed(2)}`).join(
+      " L ",
+    );
 		return `<path d="M ${parts}" />`;
 	}
 
 	public render(startLineNumber: number, lineNumber: number): string {
 		if (!this._renderResult) {
-			return '';
+			return "";
 		}
 		const lineIndex = lineNumber - startLineNumber;
 		if (lineIndex < 0 || lineIndex >= this._renderResult.length) {
-			return '';
+			return "";
 		}
 		return this._renderResult[lineIndex];
 	}
@@ -275,7 +301,7 @@ export class WhitespaceOverlay extends DynamicViewOverlay {
 
 class WhitespaceOptions {
 
-	public readonly renderWhitespace: 'none' | 'boundary' | 'selection' | 'trailing' | 'all';
+	public readonly renderWhitespace: "none" | "boundary" | "selection" | "trailing" | "all";
 	public readonly renderWithSVG: boolean;
 	public readonly spaceWidth: number;
 	public readonly middotWidth: number;
@@ -287,12 +313,14 @@ class WhitespaceOptions {
 	constructor(config: IEditorConfiguration) {
 		const options = config.options;
 		const fontInfo = options.get(EditorOption.fontInfo);
-		const experimentalWhitespaceRendering = options.get(EditorOption.experimentalWhitespaceRendering);
-		if (experimentalWhitespaceRendering === 'off') {
+		const experimentalWhitespaceRendering = options.get(
+      EditorOption.experimentalWhitespaceRendering,
+    );
+		if (experimentalWhitespaceRendering === "off") {
 			// whitespace is rendered in the view line
-			this.renderWhitespace = 'none';
+			this.renderWhitespace = "none";
 			this.renderWithSVG = false;
-		} else if (experimentalWhitespaceRendering === 'svg') {
+		} else if (experimentalWhitespaceRendering === "svg") {
 			this.renderWhitespace = options.get(EditorOption.renderWhitespace);
 			this.renderWithSVG = true;
 		} else {
@@ -304,7 +332,9 @@ class WhitespaceOptions {
 		this.wsmiddotWidth = fontInfo.wsmiddotWidth;
 		this.canUseHalfwidthRightwardsArrow = fontInfo.canUseHalfwidthRightwardsArrow;
 		this.lineHeight = options.get(EditorOption.lineHeight);
-		this.stopRenderingLineAfter = options.get(EditorOption.stopRenderingLineAfter);
+		this.stopRenderingLineAfter = options.get(
+      EditorOption.stopRenderingLineAfter,
+    );
 	}
 
 	public equals(other: WhitespaceOptions): boolean {

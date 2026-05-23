@@ -3,16 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../base/common/event.js';
-import { Iterable } from '../../../base/common/iterator.js';
-import { IJSONSchema } from '../../../base/common/jsonSchema.js';
-import { IDisposable, markAsSingleton, toDisposable } from '../../../base/common/lifecycle.js';
-import { LinkedList } from '../../../base/common/linkedList.js';
-import { TypeConstraint, validateConstraints } from '../../../base/common/types.js';
-import { ILocalizedString } from '../../action/common/action.js';
-import { createDecorator, ServicesAccessor } from '../../instantiation/common/instantiation.js';
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Iterable } from "../../../base/common/iterator.js";
+import { IJSONSchema } from "../../../base/common/jsonSchema.js";
+import { IDisposable, markAsSingleton, toDisposable } from "../../../base/common/lifecycle.js";
+import { LinkedList } from "../../../base/common/linkedList.js";
+import { TypeConstraint, validateConstraints } from "../../../base/common/types.js";
+import { ILocalizedString } from "../../action/common/action.js";
+import { createDecorator, ServicesAccessor } from "../../instantiation/common/instantiation.js";
 
-export const ICommandService = createDecorator<ICommandService>('commandService');
+export const ICommandService = createDecorator<ICommandService>(
+  "commandService",
+);
 
 export interface ICommandEvent {
 	readonly commandId: string;
@@ -77,7 +79,7 @@ export const CommandsRegistry: ICommandRegistry = new class implements ICommandR
 			throw new Error(`invalid command`);
 		}
 
-		if (typeof idOrCommand === 'string') {
+		if (typeof idOrCommand === "string") {
 			if (!handler) {
 				throw new Error(`invalid command`);
 			}
@@ -146,4 +148,4 @@ export const CommandsRegistry: ICommandRegistry = new class implements ICommandR
 	}
 };
 
-CommandsRegistry.registerCommand('noop', () => { });
+CommandsRegistry.registerCommand("noop", () => { });

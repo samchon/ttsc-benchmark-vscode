@@ -3,15 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from '../../../../base/common/buffer.js';
-import { URI } from '../../../../base/common/uri.js';
-import { ExtensionIdentifier } from '../../../../platform/extensions/common/extensions.js';
-import { IRemoteConnectionData, RemoteAuthorityResolverErrorCode, ResolverResult } from '../../../../platform/remote/common/remoteAuthorityResolver.js';
-import { IExtensionDescriptionDelta } from './extensionHostProtocol.js';
-import { ActivationKind, ExtensionActivationReason } from './extensions.js';
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ExtensionIdentifier } from "../../../../platform/extensions/common/extensions.js";
+import {
+  IRemoteConnectionData,
+  RemoteAuthorityResolverErrorCode,
+  ResolverResult,
+} from "../../../../platform/remote/common/remoteAuthorityResolver.js";
+import { IExtensionDescriptionDelta } from "./extensionHostProtocol.js";
+import { ActivationKind, ExtensionActivationReason } from "./extensions.js";
 
 export interface IResolveAuthorityErrorResult {
-	type: 'error';
+	type: "error";
 	error: {
 		message: string | undefined;
 		code: RemoteAuthorityResolverErrorCode;
@@ -20,7 +24,7 @@ export interface IResolveAuthorityErrorResult {
 }
 
 export interface IResolveAuthorityOKResult {
-	type: 'ok';
+	type: "ok";
 	value: ResolverResult;
 }
 

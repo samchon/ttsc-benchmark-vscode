@@ -3,50 +3,50 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from '../../../common/buffer.js';
-import { Emitter, Event } from '../../../common/event.js';
-import { Disposable, DisposableStore, IDisposable } from '../../../common/lifecycle.js';
-import { IIPCLogger, IMessagePassingProtocol, IPCClient } from './ipc.js';
+import { VSBuffer } from "../../../common/buffer.js";
+import { Emitter, Event } from "../../../common/event.js";
+import { Disposable, DisposableStore, IDisposable } from "../../../common/lifecycle.js";
+import { IIPCLogger, IMessagePassingProtocol, IPCClient } from "./ipc.js";
 
 export const enum SocketDiagnosticsEventType {
-	Created = 'created',
-	Read = 'read',
-	Write = 'write',
-	Open = 'open',
-	Error = 'error',
-	Close = 'close',
+	Created = "created",
+	Read = "read",
+	Write = "write",
+	Open = "open",
+	Error = "error",
+	Close = "close",
 
-	BrowserWebSocketBlobReceived = 'browserWebSocketBlobReceived',
+	BrowserWebSocketBlobReceived = "browserWebSocketBlobReceived",
 
-	NodeEndReceived = 'nodeEndReceived',
-	NodeEndSent = 'nodeEndSent',
-	NodeDrainBegin = 'nodeDrainBegin',
-	NodeDrainEnd = 'nodeDrainEnd',
+	NodeEndReceived = "nodeEndReceived",
+	NodeEndSent = "nodeEndSent",
+	NodeDrainBegin = "nodeDrainBegin",
+	NodeDrainEnd = "nodeDrainEnd",
 
-	zlibInflateError = 'zlibInflateError',
-	zlibInflateData = 'zlibInflateData',
-	zlibInflateInitialWrite = 'zlibInflateInitialWrite',
-	zlibInflateInitialFlushFired = 'zlibInflateInitialFlushFired',
-	zlibInflateWrite = 'zlibInflateWrite',
-	zlibInflateFlushFired = 'zlibInflateFlushFired',
-	zlibDeflateError = 'zlibDeflateError',
-	zlibDeflateData = 'zlibDeflateData',
-	zlibDeflateWrite = 'zlibDeflateWrite',
-	zlibDeflateFlushFired = 'zlibDeflateFlushFired',
+	zlibInflateError = "zlibInflateError",
+	zlibInflateData = "zlibInflateData",
+	zlibInflateInitialWrite = "zlibInflateInitialWrite",
+	zlibInflateInitialFlushFired = "zlibInflateInitialFlushFired",
+	zlibInflateWrite = "zlibInflateWrite",
+	zlibInflateFlushFired = "zlibInflateFlushFired",
+	zlibDeflateError = "zlibDeflateError",
+	zlibDeflateData = "zlibDeflateData",
+	zlibDeflateWrite = "zlibDeflateWrite",
+	zlibDeflateFlushFired = "zlibDeflateFlushFired",
 
-	WebSocketNodeSocketWrite = 'webSocketNodeSocketWrite',
-	WebSocketNodeSocketPeekedHeader = 'webSocketNodeSocketPeekedHeader',
-	WebSocketNodeSocketReadHeader = 'webSocketNodeSocketReadHeader',
-	WebSocketNodeSocketReadData = 'webSocketNodeSocketReadData',
-	WebSocketNodeSocketUnmaskedData = 'webSocketNodeSocketUnmaskedData',
-	WebSocketNodeSocketDrainBegin = 'webSocketNodeSocketDrainBegin',
-	WebSocketNodeSocketDrainEnd = 'webSocketNodeSocketDrainEnd',
+	WebSocketNodeSocketWrite = "webSocketNodeSocketWrite",
+	WebSocketNodeSocketPeekedHeader = "webSocketNodeSocketPeekedHeader",
+	WebSocketNodeSocketReadHeader = "webSocketNodeSocketReadHeader",
+	WebSocketNodeSocketReadData = "webSocketNodeSocketReadData",
+	WebSocketNodeSocketUnmaskedData = "webSocketNodeSocketUnmaskedData",
+	WebSocketNodeSocketDrainBegin = "webSocketNodeSocketDrainBegin",
+	WebSocketNodeSocketDrainEnd = "webSocketNodeSocketDrainEnd",
 
-	ProtocolHeaderRead = 'protocolHeaderRead',
-	ProtocolMessageRead = 'protocolMessageRead',
-	ProtocolHeaderWrite = 'protocolHeaderWrite',
-	ProtocolMessageWrite = 'protocolMessageWrite',
-	ProtocolWrite = 'protocolWrite',
+	ProtocolHeaderRead = "protocolHeaderRead",
+	ProtocolMessageRead = "protocolMessageRead",
+	ProtocolHeaderWrite = "protocolHeaderWrite",
+	ProtocolMessageWrite = "protocolMessageWrite",
+	ProtocolWrite = "protocolWrite",
 }
 
 export namespace SocketDiagnostics {
@@ -80,13 +80,27 @@ export namespace SocketDiagnostics {
 		}
 		const id = getSocketId(nativeObject, socketDebugLabel);
 
-		if (data instanceof VSBuffer || data instanceof Uint8Array || data instanceof ArrayBuffer || ArrayBuffer.isView(data)) {
+		if (data instanceof VSBuffer || data instanceof Uint8Array || data instanceof ArrayBuffer || ArrayBuffer.isView(
+      data,
+    )) {
 			const copiedData = VSBuffer.alloc(data.byteLength);
 			copiedData.set(data);
-			records.push({ timestamp: Date.now(), id, label: socketDebugLabel, type, buff: copiedData });
+			records.push({
+        timestamp: Date.now(),
+        id,
+        label: socketDebugLabel,
+        type,
+        buff: copiedData,
+      });
 		} else {
 			// data is a custom object
-			records.push({ timestamp: Date.now(), id, label: socketDebugLabel, type, data: data });
+			records.push({
+        timestamp: Date.now(),
+        id,
+        label: socketDebugLabel,
+        type,
+        data: data,
+      });
 		}
 	}
 }
@@ -137,8 +151,8 @@ export interface WebSocketCloseEvent {
 export type SocketCloseEvent = NodeSocketCloseEvent | WebSocketCloseEvent | undefined;
 
 export const enum SocketTimeoutReason {
-	UNACKNOWLEDGED_MESSAGE = 'unacknowledgedMessage',
-	KEEP_ALIVE = 'keepAlive',
+	UNACKNOWLEDGED_MESSAGE = "unacknowledgedMessage",
+	KEEP_ALIVE = "keepAlive",
 }
 
 export interface SocketTimeoutEvent {
@@ -274,15 +288,15 @@ const enum ProtocolMessageType {
 
 function protocolMessageTypeToString(messageType: ProtocolMessageType) {
 	switch (messageType) {
-		case ProtocolMessageType.None: return 'None';
-		case ProtocolMessageType.Regular: return 'Regular';
-		case ProtocolMessageType.Control: return 'Control';
-		case ProtocolMessageType.Ack: return 'Ack';
-		case ProtocolMessageType.Disconnect: return 'Disconnect';
-		case ProtocolMessageType.ReplayRequest: return 'ReplayRequest';
-		case ProtocolMessageType.Pause: return 'PauseWriting';
-		case ProtocolMessageType.Resume: return 'ResumeWriting';
-		case ProtocolMessageType.KeepAlive: return 'KeepAlive';
+		case ProtocolMessageType.None: return "None";
+		case ProtocolMessageType.Regular: return "Regular";
+		case ProtocolMessageType.Control: return "Control";
+		case ProtocolMessageType.Ack: return "Ack";
+		case ProtocolMessageType.Disconnect: return "Disconnect";
+		case ProtocolMessageType.ReplayRequest: return "ReplayRequest";
+		case ProtocolMessageType.Pause: return "PauseWriting";
+		case ProtocolMessageType.Resume: return "ResumeWriting";
+		case ProtocolMessageType.KeepAlive: return "KeepAlive";
 	}
 }
 
@@ -320,7 +334,7 @@ class ProtocolMessage {
 		public readonly type: ProtocolMessageType,
 		public readonly id: number,
 		public readonly ack: number,
-		public readonly data: VSBuffer
+		public readonly data: VSBuffer,
 	) {
 		this.writtenTime = 0;
 	}
@@ -341,12 +355,12 @@ class ProtocolReader extends Disposable {
 	public readonly onMessage: Event<ProtocolMessage> = this._onMessage.event;
 
 	private readonly _state = {
-		readHead: true,
-		readLen: ProtocolConstants.HeaderLength,
-		messageType: ProtocolMessageType.None,
-		id: 0,
-		ack: 0
-	};
+    readHead: true,
+    readLen: ProtocolConstants.HeaderLength,
+    messageType: ProtocolMessageType.None,
+    id: 0,
+    ack: 0,
+  };
 
 	constructor(socket: ISocket) {
 		super();
@@ -380,7 +394,15 @@ class ProtocolReader extends Disposable {
 				this._state.id = buff.readUInt32BE(1);
 				this._state.ack = buff.readUInt32BE(5);
 
-				this._socket.traceSocketEvent(SocketDiagnosticsEventType.ProtocolHeaderRead, { messageType: protocolMessageTypeToString(this._state.messageType), id: this._state.id, ack: this._state.ack, messageSize: this._state.readLen });
+				this._socket.traceSocketEvent(
+          SocketDiagnosticsEventType.ProtocolHeaderRead,
+          {
+            messageType: protocolMessageTypeToString(this._state.messageType),
+            id: this._state.id,
+            ack: this._state.ack,
+            messageSize: this._state.readLen,
+          },
+        );
 
 			} else {
 				// buff is the body
@@ -395,7 +417,10 @@ class ProtocolReader extends Disposable {
 				this._state.id = 0;
 				this._state.ack = 0;
 
-				this._socket.traceSocketEvent(SocketDiagnosticsEventType.ProtocolMessageRead, buff);
+				this._socket.traceSocketEvent(
+          SocketDiagnosticsEventType.ProtocolMessageRead,
+          buff,
+        );
 
 				this._onMessage.fire(new ProtocolMessage(messageType, id, ack, buff));
 
@@ -477,8 +502,19 @@ class ProtocolWriter {
 		header.writeUInt32BE(msg.ack, 5);
 		header.writeUInt32BE(msg.data.byteLength, 9);
 
-		this._socket.traceSocketEvent(SocketDiagnosticsEventType.ProtocolHeaderWrite, { messageType: protocolMessageTypeToString(msg.type), id: msg.id, ack: msg.ack, messageSize: msg.data.byteLength });
-		this._socket.traceSocketEvent(SocketDiagnosticsEventType.ProtocolMessageWrite, msg.data);
+		this._socket.traceSocketEvent(
+      SocketDiagnosticsEventType.ProtocolHeaderWrite,
+      {
+        messageType: protocolMessageTypeToString(msg.type),
+        id: msg.id,
+        ack: msg.ack,
+        messageSize: msg.data.byteLength,
+      },
+    );
+		this._socket.traceSocketEvent(
+      SocketDiagnosticsEventType.ProtocolMessageWrite,
+      msg.data,
+    );
 
 		this._writeSoon(header, msg.data);
 	}
@@ -509,9 +545,9 @@ class ProtocolWriter {
 			return;
 		}
 		this._writeNowTimeout = setTimeout(() => {
-			this._writeNowTimeout = null;
-			this._writeNow();
-		});
+      this._writeNowTimeout = null;
+      this._writeNow();
+    });
 	}
 
 	private _writeNow(): void {
@@ -522,7 +558,9 @@ class ProtocolWriter {
 			return;
 		}
 		const data = this._bufferTake();
-		this._socket.traceSocketEvent(SocketDiagnosticsEventType.ProtocolWrite, { byteLength: data.byteLength });
+		this._socket.traceSocketEvent(SocketDiagnosticsEventType.ProtocolWrite, {
+      byteLength: data.byteLength,
+    });
 		this._socket.write(data);
 	}
 }
@@ -584,7 +622,9 @@ export class Protocol extends Disposable implements IMessagePassingProtocol {
 	}
 
 	send(buffer: VSBuffer): void {
-		this._socketWriter.write(new ProtocolMessage(ProtocolMessageType.Regular, 0, 0, buffer));
+		this._socketWriter.write(
+      new ProtocolMessage(ProtocolMessageType.Regular, 0, 0, buffer),
+    );
 	}
 }
 
@@ -633,7 +673,7 @@ export class BufferedEmitter<T> {
 			},
 			onDidRemoveLastListener: () => {
 				this._hasListeners = false;
-			}
+			},
 		});
 
 		this.event = this._emitter.event;
@@ -880,19 +920,30 @@ export class PersistentProtocol implements IMessagePassingProtocol {
 
 		this._socketDisposables = new DisposableStore();
 		this._socket = opts.socket;
-		this._socketWriter = this._socketDisposables.add(new ProtocolWriter(this._socket));
-		this._socketReader = this._socketDisposables.add(new ProtocolReader(this._socket));
-		this._socketDisposables.add(this._socketReader.onMessage(msg => this._receiveMessage(msg)));
-		this._socketDisposables.add(this._socket.onClose(e => this._onSocketClose.fire(e)));
+		this._socketWriter = this._socketDisposables.add(
+      new ProtocolWriter(this._socket),
+    );
+		this._socketReader = this._socketDisposables.add(
+      new ProtocolReader(this._socket),
+    );
+		this._socketDisposables.add(
+      this._socketReader.onMessage(msg => this._receiveMessage(msg)),
+    );
+		this._socketDisposables.add(
+      this._socket.onClose(e => this._onSocketClose.fire(e)),
+    );
 
 		if (opts.initialChunk) {
 			this._socketReader.acceptChunk(opts.initialChunk);
 		}
 
 		if (this._shouldSendKeepAlive) {
-			this._keepAliveInterval = setInterval(() => {
-				this._sendKeepAlive();
-			}, ProtocolConstants.KeepAliveSendTime);
+			this._keepAliveInterval = setInterval(
+        () => {
+          this._sendKeepAlive();
+        },
+        ProtocolConstants.KeepAliveSendTime,
+      );
 		} else {
 			this._keepAliveInterval = null;
 		}
@@ -921,19 +972,34 @@ export class PersistentProtocol implements IMessagePassingProtocol {
 	sendDisconnect(): void {
 		if (!this._didSendDisconnect) {
 			this._didSendDisconnect = true;
-			const msg = new ProtocolMessage(ProtocolMessageType.Disconnect, 0, 0, getEmptyBuffer());
+			const msg = new ProtocolMessage(
+        ProtocolMessageType.Disconnect,
+        0,
+        0,
+        getEmptyBuffer(),
+      );
 			this._socketWriter.write(msg);
 			this._socketWriter.flush();
 		}
 	}
 
 	sendPause(): void {
-		const msg = new ProtocolMessage(ProtocolMessageType.Pause, 0, 0, getEmptyBuffer());
+		const msg = new ProtocolMessage(
+      ProtocolMessageType.Pause,
+      0,
+      0,
+      getEmptyBuffer(),
+    );
 		this._socketWriter.write(msg);
 	}
 
 	sendResume(): void {
-		const msg = new ProtocolMessage(ProtocolMessageType.Resume, 0, 0, getEmptyBuffer());
+		const msg = new ProtocolMessage(
+      ProtocolMessageType.Resume,
+      0,
+      0,
+      getEmptyBuffer(),
+    );
 		this._socketWriter.write(msg);
 	}
 
@@ -963,10 +1029,18 @@ export class PersistentProtocol implements IMessagePassingProtocol {
 		this._lastSocketTimeoutTime = Date.now();
 
 		this._socket = socket;
-		this._socketWriter = this._socketDisposables.add(new ProtocolWriter(this._socket));
-		this._socketReader = this._socketDisposables.add(new ProtocolReader(this._socket));
-		this._socketDisposables.add(this._socketReader.onMessage(msg => this._receiveMessage(msg)));
-		this._socketDisposables.add(this._socket.onClose(e => this._onSocketClose.fire(e)));
+		this._socketWriter = this._socketDisposables.add(
+      new ProtocolWriter(this._socket),
+    );
+		this._socketReader = this._socketDisposables.add(
+      new ProtocolReader(this._socket),
+    );
+		this._socketDisposables.add(
+      this._socketReader.onMessage(msg => this._receiveMessage(msg)),
+    );
+		this._socketDisposables.add(
+      this._socket.onClose(e => this._onSocketClose.fire(e)),
+    );
 
 		this._socketReader.acceptChunk(initialDataChunk);
 	}
@@ -977,7 +1051,12 @@ export class PersistentProtocol implements IMessagePassingProtocol {
 		// After a reconnection, let the other party know (again) which messages have been received.
 		// (perhaps the other party didn't receive a previous ACK)
 		this._incomingAckId = this._incomingMsgId;
-		const msg = new ProtocolMessage(ProtocolMessageType.Ack, 0, this._incomingAckId, getEmptyBuffer());
+		const msg = new ProtocolMessage(
+      ProtocolMessageType.Ack,
+      0,
+      this._incomingAckId,
+      getEmptyBuffer(),
+    );
 		this._socketWriter.write(msg);
 
 		// Send again all unacknowledged messages
@@ -1019,7 +1098,14 @@ export class PersistentProtocol implements IMessagePassingProtocol {
 						if (now - this._lastReplayRequestTime > 10000) {
 							// send a replay request at most once every 10s
 							this._lastReplayRequestTime = now;
-							this._socketWriter.write(new ProtocolMessage(ProtocolMessageType.ReplayRequest, 0, 0, getEmptyBuffer()));
+							this._socketWriter.write(
+                new ProtocolMessage(
+                  ProtocolMessageType.ReplayRequest,
+                  0,
+                  0,
+                  getEmptyBuffer(),
+                ),
+              );
 						}
 					} else {
 						this._incomingMsgId = msg.id;
@@ -1077,7 +1163,12 @@ export class PersistentProtocol implements IMessagePassingProtocol {
 	send(buffer: VSBuffer): void {
 		const myId = ++this._outgoingMsgId;
 		this._incomingAckId = this._incomingMsgId;
-		const msg = new ProtocolMessage(ProtocolMessageType.Regular, myId, this._incomingAckId, buffer);
+		const msg = new ProtocolMessage(
+      ProtocolMessageType.Regular,
+      myId,
+      this._incomingAckId,
+      buffer,
+    );
 		this._outgoingUnackMsg.push(msg);
 		if (!this._isReconnecting) {
 			this._socketWriter.write(msg);
@@ -1114,10 +1205,13 @@ export class PersistentProtocol implements IMessagePassingProtocol {
 			return;
 		}
 
-		this._incomingAckTimeout = setTimeout(() => {
-			this._incomingAckTimeout = null;
-			this._sendAckCheck();
-		}, ProtocolConstants.AcknowledgeTime - timeSinceLastIncomingMsg + 5);
+		this._incomingAckTimeout = setTimeout(
+      () => {
+        this._incomingAckTimeout = null;
+        this._sendAckCheck();
+      },
+      ProtocolConstants.AcknowledgeTime - timeSinceLastIncomingMsg + 5,
+    );
 	}
 
 	private _recvAckCheck(): void {
@@ -1155,26 +1249,29 @@ export class PersistentProtocol implements IMessagePassingProtocol {
 				// Trash the socket
 				this._lastSocketTimeoutTime = Date.now();
 				this._onSocketTimeout.fire({
-					reason: SocketTimeoutReason.UNACKNOWLEDGED_MESSAGE,
-					unacknowledgedMsgCount: this._outgoingUnackMsg.length(),
-					timeSinceOldestUnacknowledgedMsg,
-					timeSinceLastReceivedSomeData
-				});
+          reason: SocketTimeoutReason.UNACKNOWLEDGED_MESSAGE,
+          unacknowledgedMsgCount: this._outgoingUnackMsg.length(),
+          timeSinceOldestUnacknowledgedMsg,
+          timeSinceLastReceivedSomeData,
+        });
 				return;
 			}
 		}
 
 		const minimumTimeUntilTimeout = Math.max(
-			ProtocolConstants.TimeoutTime - timeSinceOldestUnacknowledgedMsg,
-			ProtocolConstants.TimeoutTime - timeSinceLastReceivedSomeData,
-			ProtocolConstants.TimeoutTime - timeSinceLastTimeout,
-			500
-		);
+      ProtocolConstants.TimeoutTime - timeSinceOldestUnacknowledgedMsg,
+      ProtocolConstants.TimeoutTime - timeSinceLastReceivedSomeData,
+      ProtocolConstants.TimeoutTime - timeSinceLastTimeout,
+      500,
+    );
 
-		this._outgoingAckTimeout = setTimeout(() => {
-			this._outgoingAckTimeout = null;
-			this._recvAckCheck();
-		}, minimumTimeUntilTimeout);
+		this._outgoingAckTimeout = setTimeout(
+      () => {
+        this._outgoingAckTimeout = null;
+        this._recvAckCheck();
+      },
+      minimumTimeUntilTimeout,
+    );
 	}
 
 	/**
@@ -1203,11 +1300,11 @@ export class PersistentProtocol implements IMessagePassingProtocol {
 				const unacknowledgedMsgCount = this._outgoingUnackMsg.length();
 				const oldestUnacknowledgedMsg = this._outgoingUnackMsg.peek();
 				this._onSocketTimeout.fire({
-					reason: SocketTimeoutReason.KEEP_ALIVE,
-					unacknowledgedMsgCount,
-					timeSinceOldestUnacknowledgedMsg: oldestUnacknowledgedMsg ? now - oldestUnacknowledgedMsg.writtenTime : undefined,
-					timeSinceLastReceivedSomeData
-				});
+          reason: SocketTimeoutReason.KEEP_ALIVE,
+          unacknowledgedMsgCount,
+          timeSinceOldestUnacknowledgedMsg: oldestUnacknowledgedMsg ? now - oldestUnacknowledgedMsg.writtenTime : undefined,
+          timeSinceLastReceivedSomeData,
+        });
 			}
 		}
 	}
@@ -1219,13 +1316,23 @@ export class PersistentProtocol implements IMessagePassingProtocol {
 		}
 
 		this._incomingAckId = this._incomingMsgId;
-		const msg = new ProtocolMessage(ProtocolMessageType.Ack, 0, this._incomingAckId, getEmptyBuffer());
+		const msg = new ProtocolMessage(
+      ProtocolMessageType.Ack,
+      0,
+      this._incomingAckId,
+      getEmptyBuffer(),
+    );
 		this._socketWriter.write(msg);
 	}
 
 	private _sendKeepAlive(): void {
 		this._incomingAckId = this._incomingMsgId;
-		const msg = new ProtocolMessage(ProtocolMessageType.KeepAlive, 0, this._incomingAckId, getEmptyBuffer());
+		const msg = new ProtocolMessage(
+      ProtocolMessageType.KeepAlive,
+      0,
+      this._incomingAckId,
+      getEmptyBuffer(),
+    );
 		this._socketWriter.write(msg);
 		this._keepAliveTimeoutCheck();
 	}

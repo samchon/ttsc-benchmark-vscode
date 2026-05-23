@@ -3,13 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { Disposable, IDisposable, toDisposable } from '../../../base/common/lifecycle.js';
-import { ILogService } from '../../log/common/log.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import type { CompletionItem, CompletionItemKind, CompletionsParams, CompletionsResult } from '../common/state/protocol/commands.js';
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { Disposable, IDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { ILogService } from "../../log/common/log.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import type {
+  CompletionItem,
+  CompletionItemKind,
+  CompletionsParams,
+  CompletionsResult,
+} from "../common/state/protocol/commands.js";
 
-export const IAgentHostCompletions = createDecorator<IAgentHostCompletions>('agentHostCompletions');
+export const IAgentHostCompletions = createDecorator<IAgentHostCompletions>(
+  "agentHostCompletions",
+);
 
 /**
  * Well-known completion trigger characters announced to clients in the
@@ -18,9 +25,9 @@ export const IAgentHostCompletions = createDecorator<IAgentHostCompletions>('age
  */
 export const enum CompletionTriggerCharacter {
 	/** File reference, used for `@`-mentions handled by the file completion provider. */
-	File = '@',
+	File = "@",
 	/** Leading slash command or skill reference. */
-	Slash = '/',
+	Slash = "/",
 }
 
 /**
@@ -115,15 +122,18 @@ export class AgentHostCompletions extends Disposable implements IAgentHostComple
 			return { items: [] };
 		}
 		const settled = await Promise.allSettled(
-			matching.map(p => p.provideCompletionItems(params, token)),
-		);
+      matching.map(p => p.provideCompletionItems(params, token)),
+    );
 		const items: CompletionItem[] = [];
 		for (let i = 0; i < settled.length; i++) {
 			const result = settled[i];
-			if (result.status === 'fulfilled') {
+			if (result.status === "fulfilled") {
 				items.push(...result.value);
 			} else {
-				this._logService.error(result.reason, `[AgentHostCompletions] Provider failed for kind=${params.kind}`);
+				this._logService.error(
+          result.reason,
+          `[AgentHostCompletions] Provider failed for kind=${params.kind}`,
+        );
 			}
 		}
 		return { items };

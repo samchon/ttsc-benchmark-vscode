@@ -3,31 +3,41 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { workbenchInstantiationService, TestServiceAccessor, registerTestEditor, registerTestFileEditor, registerTestResourceEditor, TestFileEditorInput, createEditorPart, registerTestSideBySideEditor, TestEditorInput } from '../../workbenchTestServices.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { SyncDescriptor } from '../../../../../platform/instantiation/common/descriptors.js';
-import { GroupDirection, IEditorGroupsService } from '../../../../services/editor/common/editorGroupsService.js';
-import { EditorService } from '../../../../services/editor/browser/editorService.js';
-import { IEditorService } from '../../../../services/editor/common/editorService.js';
-import { EditorInput } from '../../../../common/editor/editorInput.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { resolveCommandsContext } from '../../../../browser/parts/editor/editorCommandsContext.js';
-import { IEditorCommandsContext } from '../../../../common/editor.js';
-import { IListService, WorkbenchListWidget } from '../../../../../platform/list/browser/listService.js';
+import assert from "assert";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import {
+  workbenchInstantiationService,
+  TestServiceAccessor,
+  registerTestEditor,
+  registerTestFileEditor,
+  registerTestResourceEditor,
+  TestFileEditorInput,
+  createEditorPart,
+  registerTestSideBySideEditor,
+  TestEditorInput,
+} from "../../workbenchTestServices.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { SyncDescriptor } from "../../../../../platform/instantiation/common/descriptors.js";
+import { GroupDirection, IEditorGroupsService } from "../../../../services/editor/common/editorGroupsService.js";
+import { EditorService } from "../../../../services/editor/browser/editorService.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+import { EditorInput } from "../../../../common/editor/editorInput.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { resolveCommandsContext } from "../../../../browser/parts/editor/editorCommandsContext.js";
+import { IEditorCommandsContext } from "../../../../common/editor.js";
+import { IListService, WorkbenchListWidget } from "../../../../../platform/list/browser/listService.js";
 
 class TestListService implements IListService {
 	declare readonly _serviceBrand: undefined;
 	readonly lastFocusedList: WorkbenchListWidget | undefined = undefined;
 }
 
-suite('Resolving Editor Commands Context', () => {
+suite("Resolving Editor Commands Context", () => {
 
 	const disposables = new DisposableStore();
 
-	const TEST_EDITOR_ID = 'MyTestEditorForEditors';
+	const TEST_EDITOR_ID = "MyTestEditorForEditors";
 
 	let instantiationService: IInstantiationService;
 	let accessor: TestServiceAccessor;
@@ -51,7 +61,7 @@ suite('Resolving Editor Commands Context', () => {
 
 	let index = 0;
 	function input(id = String(index++)): EditorInput {
-		return disposables.add(new TestEditorInput(URI.parse(`file://${id}`), 'testInput'));
+		return disposables.add(new TestEditorInput(URI.parse(`file://${id}`), "testInput"));
 	}
 
 	async function createServices(): Promise<TestServiceAccessor> {
@@ -66,7 +76,7 @@ suite('Resolving Editor Commands Context', () => {
 		return instantiationService.createInstance(TestServiceAccessor);
 	}
 
-	test('use editor group selection', async () => {
+	test("use editor group selection", async () => {
 		const accessor = await createServices();
 		const activeGroup = accessor.editorGroupService.activeGroup;
 
@@ -112,7 +122,7 @@ suite('Resolving Editor Commands Context', () => {
 		assert.strictEqual(resolvedContext3.preserveFocus, true);
 	});
 
-	test('don\'t use editor group selection', async () => {
+	test("don't use editor group selection", async () => {
 		const accessor = await createServices();
 		const activeGroup = accessor.editorGroupService.activeGroup;
 
@@ -145,7 +155,7 @@ suite('Resolving Editor Commands Context', () => {
 		assert.strictEqual(resolvedContext2.preserveFocus, false);
 	});
 
-	test('inactive edior group command context', async () => {
+	test("inactive edior group command context", async () => {
 		const accessor = await createServices();
 		const editorGroupService = accessor.editorGroupService;
 
@@ -184,7 +194,7 @@ suite('Resolving Editor Commands Context', () => {
 		assert.strictEqual(resolvedContext2.preserveFocus, true);
 	});
 
-	test('resolves context from right-clicked editor (not active)', async () => {
+	test("resolves context from right-clicked editor (not active)", async () => {
 		const accessor = await createServices();
 		const group = accessor.editorGroupService.activeGroup;
 
@@ -199,7 +209,7 @@ suite('Resolving Editor Commands Context', () => {
 		const editorCommandContext: IEditorCommandsContext = {
 			groupId: group.id,
 			editorIndex: group.getIndexOfEditor(input1),
-			preserveFocus: false
+			preserveFocus: false,
 		};
 		const resolvedContext = resolveCommandsContext([editorCommandContext], accessor.editorService, accessor.editorGroupService, testListService);
 

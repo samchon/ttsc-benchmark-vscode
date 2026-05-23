@@ -3,35 +3,56 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ResourceMap } from '../../../../base/common/map.js';
-import { createDecorator, IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { EncodingMode, IResolvedTextFileEditorModel, isTextFileEditorModel, ITextFileEditorModel, ITextFileService } from '../../../services/textfile/common/textfiles.js';
-import { Disposable, DisposableMap, DisposableStore, IReference, ReferenceCollection } from '../../../../base/common/lifecycle.js';
-import { DiffAlgorithmName, IEditorWorkerService } from '../../../../editor/common/services/editorWorker.js';
-import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IChange } from '../../../../editor/common/diff/legacyLinesDiffComputer.js';
-import { IResolvedTextEditorModel, ITextModelService } from '../../../../editor/common/services/resolverService.js';
-import { ITextModel, shouldSynchronizeModel } from '../../../../editor/common/model.js';
-import { compareChanges, getModifiedEndLineNumber, IQuickDiffService, QuickDiff, QuickDiffChange, QuickDiffResult } from '../common/quickDiff.js';
-import { ThrottledDelayer } from '../../../../base/common/async.js';
-import { ISCMRepository, ISCMService } from '../common/scm.js';
-import { sortedDiff, equals } from '../../../../base/common/arrays.js';
-import { onUnexpectedError } from '../../../../base/common/errors.js';
-import { Iterable } from '../../../../base/common/iterator.js';
-import { ISplice } from '../../../../base/common/sequence.js';
-import { DiffState } from '../../../../editor/browser/widget/diffEditor/diffEditorViewModel.js';
-import { toLineChanges } from '../../../../editor/browser/widget/diffEditor/diffEditorWidget.js';
-import { LineRangeMapping } from '../../../../editor/common/diff/rangeMapping.js';
-import { IDiffEditorModel } from '../../../../editor/common/editorCommon.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IProgressService, ProgressLocation } from '../../../../platform/progress/common/progress.js';
-import { IChatEditingService, ModifiedFileEntryState } from '../../chat/common/editing/chatEditingService.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { autorun } from '../../../../base/common/observable.js';
-import { IWorkbenchEnvironmentService } from '../../../services/environment/common/environmentService.js';
+import { ResourceMap } from "../../../../base/common/map.js";
+import { createDecorator, IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import {
+  EncodingMode,
+  IResolvedTextFileEditorModel,
+  isTextFileEditorModel,
+  ITextFileEditorModel,
+  ITextFileService,
+} from "../../../services/textfile/common/textfiles.js";
+import {
+  Disposable,
+  DisposableMap,
+  DisposableStore,
+  IReference,
+  ReferenceCollection,
+} from "../../../../base/common/lifecycle.js";
+import { DiffAlgorithmName, IEditorWorkerService } from "../../../../editor/common/services/editorWorker.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IChange } from "../../../../editor/common/diff/legacyLinesDiffComputer.js";
+import { IResolvedTextEditorModel, ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import { ITextModel, shouldSynchronizeModel } from "../../../../editor/common/model.js";
+import {
+  compareChanges,
+  getModifiedEndLineNumber,
+  IQuickDiffService,
+  QuickDiff,
+  QuickDiffChange,
+  QuickDiffResult,
+} from "../common/quickDiff.js";
+import { ThrottledDelayer } from "../../../../base/common/async.js";
+import { ISCMRepository, ISCMService } from "../common/scm.js";
+import { sortedDiff, equals } from "../../../../base/common/arrays.js";
+import { onUnexpectedError } from "../../../../base/common/errors.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { ISplice } from "../../../../base/common/sequence.js";
+import { DiffState } from "../../../../editor/browser/widget/diffEditor/diffEditorViewModel.js";
+import { toLineChanges } from "../../../../editor/browser/widget/diffEditor/diffEditorWidget.js";
+import { LineRangeMapping } from "../../../../editor/common/diff/rangeMapping.js";
+import { IDiffEditorModel } from "../../../../editor/common/editorCommon.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IProgressService, ProgressLocation } from "../../../../platform/progress/common/progress.js";
+import { IChatEditingService, ModifiedFileEntryState } from "../../chat/common/editing/chatEditingService.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { autorun } from "../../../../base/common/observable.js";
+import { IWorkbenchEnvironmentService } from "../../../services/environment/common/environmentService.js";
 
-export const IQuickDiffModelService = createDecorator<IQuickDiffModelService>('IQuickDiffModelService');
+export const IQuickDiffModelService = createDecorator<IQuickDiffModelService>(
+  "IQuickDiffModelService",
+);
 
 export interface QuickDiffModelOptions {
 	readonly algorithm: DiffAlgorithmName;
@@ -39,8 +60,8 @@ export interface QuickDiffModelOptions {
 }
 
 const decoratorQuickDiffModelOptions: QuickDiffModelOptions = {
-	algorithm: 'advanced',
-	maxComputationTimeMs: 1000
+  algorithm: "advanced",
+  maxComputationTimeMs: 1000,
 };
 
 export interface IQuickDiffModelService {
@@ -61,7 +82,11 @@ class QuickDiffModelReferenceCollection extends ReferenceCollection<QuickDiffMod
 	}
 
 	protected override createReferencedObject(_key: string, textFileModel: IResolvedTextFileEditorModel, options: QuickDiffModelOptions): QuickDiffModel {
-		return this._instantiationService.createInstance(QuickDiffModel, textFileModel, options);
+		return this._instantiationService.createInstance(
+      QuickDiffModel,
+      textFileModel,
+      options,
+    );
 	}
 
 	protected override destroyReferencedObject(_key: string, object: QuickDiffModel): void {
@@ -77,9 +102,11 @@ export class QuickDiffModelService implements IQuickDiffModelService {
 	constructor(
 		@IInstantiationService private readonly instantiationService: IInstantiationService,
 		@ITextFileService private readonly textFileService: ITextFileService,
-		@IUriIdentityService private readonly uriIdentityService: IUriIdentityService
+		@IUriIdentityService private readonly uriIdentityService: IUriIdentityService,
 	) {
-		this._references = this.instantiationService.createInstance(QuickDiffModelReferenceCollection);
+		this._references = this.instantiationService.createInstance(
+      QuickDiffModelReferenceCollection,
+    );
 	}
 
 	createQuickDiffModelReference(resource: URI, options: QuickDiffModelOptions = decoratorQuickDiffModelOptions): IReference<QuickDiffModel> | undefined {
@@ -88,8 +115,14 @@ export class QuickDiffModelService implements IQuickDiffModelService {
 			return undefined;
 		}
 
-		resource = this.uriIdentityService.asCanonicalUri(resource).with({ query: JSON.stringify(options) });
-		return this._references.acquire(resource.toString(), textFileModel, options);
+		resource = this.uriIdentityService.asCanonicalUri(resource).with({
+      query: JSON.stringify(options),
+    });
+		return this._references.acquire(
+      resource.toString(),
+      textFileModel,
+      options,
+    );
 	}
 }
 
@@ -97,9 +130,14 @@ export class QuickDiffModel extends Disposable {
 
 	private readonly _model: ITextFileEditorModel;
 	private readonly _originalEditorModels = new ResourceMap<IResolvedTextEditorModel>();
-	private readonly _originalEditorModelsDisposables = this._register(new DisposableStore());
+	private readonly _originalEditorModelsDisposables = this._register(
+    new DisposableStore(),
+  );
 	get originalTextModels(): Iterable<ITextModel> {
-		return Iterable.map(this._originalEditorModels.values(), editorModel => editorModel.textEditorModel);
+		return Iterable.map(
+      this._originalEditorModels.values(),
+      editorModel => editorModel.textEditorModel,
+    );
 	}
 
 	private _disposed = false;
@@ -107,7 +145,9 @@ export class QuickDiffModel extends Disposable {
 	private _quickDiffsPromise?: Promise<QuickDiff[]>;
 	private _diffDelayer = this._register(new ThrottledDelayer<void>(200));
 
-	private readonly _onDidChange = this._register(new Emitter<{ changes: QuickDiffChange[]; diff: ISplice<QuickDiffChange>[] }>());
+	private readonly _onDidChange = this._register(
+    new Emitter<{ changes: QuickDiffChange[]; diff: ISplice<QuickDiffChange>[] }>(),
+  );
 	readonly onDidChange: Event<{ changes: QuickDiffChange[]; diff: ISplice<QuickDiffChange>[] }> = this._onDidChange.event;
 
 	private _allChanges: QuickDiffChange[] = [];
@@ -134,32 +174,42 @@ export class QuickDiffModel extends Disposable {
 		@ITextModelService private readonly textModelResolverService: ITextModelService,
 		@IChatEditingService private readonly _chatEditingService: IChatEditingService,
 		@IProgressService private readonly progressService: IProgressService,
-		@IWorkbenchEnvironmentService private readonly environmentService: IWorkbenchEnvironmentService
+		@IWorkbenchEnvironmentService private readonly environmentService: IWorkbenchEnvironmentService,
 	) {
 		super();
 		this._model = textFileModel;
 
-		this._register(textFileModel.textEditorModel.onDidChangeContent(() => this.triggerDiff()));
+		this._register(
+      textFileModel.textEditorModel.onDidChangeContent(() => this.triggerDiff()),
+    );
 		this._register(
 			Event.filter(configurationService.onDidChangeConfiguration,
-				e => e.affectsConfiguration('scm.diffDecorationsIgnoreTrimWhitespace') || e.affectsConfiguration('diffEditor.ignoreTrimWhitespace')
-			)(this.triggerDiff, this)
+				e => e.affectsConfiguration("scm.diffDecorationsIgnoreTrimWhitespace") || e.affectsConfiguration("diffEditor.ignoreTrimWhitespace"),
+			)(this.triggerDiff, this),
 		);
-		this._register(scmService.onDidAddRepository(this.onDidAddRepository, this));
+		this._register(
+      scmService.onDidAddRepository(this.onDidAddRepository, this),
+    );
 		for (const r of scmService.repositories) {
 			this.onDidAddRepository(r);
 		}
 
-		this._register(this._model.onDidChangeEncoding(() => {
-			this._diffDelayer.cancel();
-			this._quickDiffs = [];
-			this._originalEditorModels.clear();
-			this._quickDiffsPromise = undefined;
-			this.setChanges([], [], new Map());
-			this.triggerDiff();
-		}));
+		this._register(
+      this._model.onDidChangeEncoding(() => {
+        this._diffDelayer.cancel();
+        this._quickDiffs = [];
+        this._originalEditorModels.clear();
+        this._quickDiffsPromise = undefined;
+        this.setChanges([], [], new Map());
+        this.triggerDiff();
+      }),
+    );
 
-		this._register(this.quickDiffService.onDidChangeQuickDiffProviders(() => this.triggerDiff()));
+		this._register(
+      this.quickDiffService.onDidChangeQuickDiffProviders(
+        () => this.triggerDiff(),
+      ),
+    );
 
 		this._register(autorun(reader => {
 			for (const session of this._chatEditingService.editingSessionsObs.read(reader)) {
@@ -190,7 +240,7 @@ export class QuickDiffModel extends Disposable {
 				original: quickDiff.originalResource,
 				modified: this._model.resource,
 				changes: changes.map(change => change.change),
-				changes2: changes.map(change => change.change2)
+				changes2: changes.map(change => change.change2),
 			} satisfies QuickDiffResult;
 		});
 	}
@@ -199,18 +249,27 @@ export class QuickDiffModel extends Disposable {
 		const editorModel = this._originalEditorModels.get(originalUri);
 		return editorModel ?
 			{
-				modified: this._model.textEditorModel!,
-				original: editorModel.textEditorModel
-			} : undefined;
+        modified: this._model.textEditorModel!,
+        original: editorModel.textEditorModel,
+      } : undefined;
 	}
 
 	private onDidAddRepository(repository: ISCMRepository): void {
 		const disposables = new DisposableStore();
 
-		disposables.add(repository.provider.onDidChangeResources(this.triggerDiff, this));
+		disposables.add(
+      repository.provider.onDidChangeResources(this.triggerDiff, this),
+    );
 
-		const onDidRemoveRepository = Event.filter(this.scmService.onDidRemoveRepository, r => r === repository);
-		disposables.add(onDidRemoveRepository(() => this._repositoryDisposables.deleteAndDispose(repository)));
+		const onDidRemoveRepository = Event.filter(
+      this.scmService.onDidRemoveRepository,
+      r => r === repository,
+    );
+		disposables.add(
+      onDidRemoveRepository(
+        () => this._repositoryDisposables.deleteAndDispose(repository),
+      ),
+    );
 
 		this._repositoryDisposables.set(repository, disposables);
 
@@ -237,7 +296,11 @@ export class QuickDiffModel extends Disposable {
 	}
 
 	private setChanges(allChanges: QuickDiffChange[], changes: QuickDiffChange[], mapChanges: Map<string, number[]>): void {
-		const diff = sortedDiff(this.changes, changes, (a, b) => compareChanges(a.change, b.change));
+		const diff = sortedDiff(
+      this.changes,
+      changes,
+      (a, b) => compareChanges(a.change, b.change),
+    );
 		this._allChanges = allChanges;
 		this._changes = changes;
 		this._quickDiffChanges = mapChanges;
@@ -260,12 +323,12 @@ export class QuickDiffModel extends Disposable {
 				return Promise.resolve({ allChanges: [], changes: [], mapChanges: new Map() });
 			}
 
-			const quickDiffPrimary = quickDiffs.find(quickDiff => quickDiff.kind === 'primary');
+			const quickDiffPrimary = quickDiffs.find(quickDiff => quickDiff.kind === "primary");
 
-			const ignoreTrimWhitespaceSetting = this.configurationService.getValue<'true' | 'false' | 'inherit'>('scm.diffDecorationsIgnoreTrimWhitespace');
-			const ignoreTrimWhitespace = ignoreTrimWhitespaceSetting === 'inherit'
-				? this.configurationService.getValue<boolean>('diffEditor.ignoreTrimWhitespace')
-				: ignoreTrimWhitespaceSetting !== 'false';
+			const ignoreTrimWhitespaceSetting = this.configurationService.getValue<"true" | "false" | "inherit">("scm.diffDecorationsIgnoreTrimWhitespace");
+			const ignoreTrimWhitespace = ignoreTrimWhitespaceSetting === "inherit"
+				? this.configurationService.getValue<boolean>("diffEditor.ignoreTrimWhitespace")
+				: ignoreTrimWhitespaceSetting !== "false";
 
 			const diffs: QuickDiffChange[] = [];
 			const secondaryDiffs: QuickDiffChange[] = [];
@@ -279,7 +342,7 @@ export class QuickDiffModel extends Disposable {
 						// The secondary diffs are complimentary to the primary diffs, and
 						// they can overlap. We need to remove the secondary quick diffs that
 						// overlap for the UI, but we need to expose all diffs through the API.
-						if (quickDiffPrimary && quickDiff.kind === 'secondary') {
+						if (quickDiffPrimary && quickDiff.kind === "secondary") {
 							// Check whether the:
 							// 1. the modified line range is equal
 							// 2. the original line range length is equal
@@ -300,7 +363,7 @@ export class QuickDiffModel extends Disposable {
 										original: quickDiff.originalResource,
 										modified: this._model.resource,
 										change: diff.changes[index],
-										change2: diff.changes2[index]
+										change2: diff.changes2[index],
 									});
 
 									continue;
@@ -313,7 +376,7 @@ export class QuickDiffModel extends Disposable {
 							original: quickDiff.originalResource,
 							modified: this._model.resource,
 							change: diff.changes[index],
-							change2: diff.changes2[index]
+							change2: diff.changes2[index],
 						});
 					}
 				}
@@ -338,11 +401,21 @@ export class QuickDiffModel extends Disposable {
 	private async _diff(original: URI, modified: URI, ignoreTrimWhitespace: boolean): Promise<{ changes: readonly IChange[] | null; changes2: readonly LineRangeMapping[] | null }> {
 		const maxComputationTimeMs = this.options.maxComputationTimeMs ?? Number.MAX_SAFE_INTEGER;
 
-		const result = await this.editorWorkerService.computeDiff(original, modified, {
-			computeMoves: false, ignoreTrimWhitespace, maxComputationTimeMs
-		}, this.options.algorithm);
+		const result = await this.editorWorkerService.computeDiff(
+      original,
+      modified,
+      {
+        computeMoves: false,
+        ignoreTrimWhitespace,
+        maxComputationTimeMs,
+      },
+      this.options.algorithm,
+    );
 
-		return { changes: result ? toLineChanges(DiffState.fromDiffResult(result)) : null, changes2: result?.changes ?? null };
+		return {
+      changes: result ? toLineChanges(DiffState.fromDiffResult(result)) : null,
+      changes2: result?.changes ?? null,
+    };
 	}
 
 	private getQuickDiffsPromise(): Promise<QuickDiff[]> {
@@ -402,8 +475,8 @@ export class QuickDiffModel extends Disposable {
 		});
 
 		return this._quickDiffsPromise.finally(() => {
-			this._quickDiffsPromise = undefined;
-		});
+      this._quickDiffsPromise = undefined;
+    });
 	}
 
 	private async getOriginalResource(): Promise<QuickDiff[]> {
@@ -419,8 +492,14 @@ export class QuickDiffModel extends Disposable {
 			return Promise.resolve([]);
 		}
 
-		const isSynchronized = this._model.textEditorModel ? shouldSynchronizeModel(this._model.textEditorModel) : undefined;
-		return this.quickDiffService.getQuickDiffs(uri, this._model.getLanguageId(), isSynchronized);
+		const isSynchronized = this._model.textEditorModel ? shouldSynchronizeModel(
+      this._model.textEditorModel,
+    ) : undefined;
+		return this.quickDiffService.getQuickDiffs(
+      uri,
+      this._model.getLanguageId(),
+      isSynchronized,
+    );
 	}
 
 	findNextClosestChange(lineNumber: number, inclusive = true, providerId?: string): number {

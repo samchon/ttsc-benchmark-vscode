@@ -3,23 +3,30 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { autorun, debouncedObservable, derived, observableSignalFromEvent, observableValue, runOnChange } from '../../../../base/common/observable.js';
-import { ICodeEditor } from '../../../../editor/browser/editorBrowser.js';
-import { observableCodeEditor } from '../../../../editor/browser/observableCodeEditor.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { InlineChatConfigKeys, CTX_INLINE_CHAT_AFFORDANCE_VISIBLE } from '../common/inlineChat.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { observableConfigValue } from '../../../../platform/observable/common/platformObservableUtils.js';
-import { IChatEntitlementService } from '../../../services/chat/common/chatEntitlementService.js';
-import { InlineChatAffordanceWidget } from './inlineChatAffordanceWidget.js';
-import { Selection } from '../../../../editor/common/core/selection.js';
-import { CursorChangeReason } from '../../../../editor/common/cursorEvents.js';
-import { IInlineChatSessionService } from './inlineChatSessionService.js';
-import { CodeActionController } from '../../../../editor/contrib/codeAction/browser/codeActionController.js';
-import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
-import { generateUuid } from '../../../../base/common/uuid.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import {
+  autorun,
+  debouncedObservable,
+  derived,
+  observableSignalFromEvent,
+  observableValue,
+  runOnChange,
+} from "../../../../base/common/observable.js";
+import { ICodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { observableCodeEditor } from "../../../../editor/browser/observableCodeEditor.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { InlineChatConfigKeys, CTX_INLINE_CHAT_AFFORDANCE_VISIBLE } from "../common/inlineChat.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { observableConfigValue } from "../../../../platform/observable/common/platformObservableUtils.js";
+import { IChatEntitlementService } from "../../../services/chat/common/chatEntitlementService.js";
+import { InlineChatAffordanceWidget } from "./inlineChatAffordanceWidget.js";
+import { Selection } from "../../../../editor/common/core/selection.js";
+import { CursorChangeReason } from "../../../../editor/common/cursorEvents.js";
+import { IInlineChatSessionService } from "./inlineChatSessionService.js";
+import { CodeActionController } from "../../../../editor/contrib/codeAction/browser/codeActionController.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
 
 type InlineChatAffordanceEvent = {
 	mode: string;
@@ -28,18 +35,21 @@ type InlineChatAffordanceEvent = {
 };
 
 type InlineChatAffordanceClassification = {
-	mode: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The affordance mode: editor.' };
-	id: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'UUID to correlate shown and selected events.' };
-	commandId: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The command that was executed.' };
-	owner: 'jrieken';
-	comment: 'Tracks when the inline chat affordance is shown or selected.';
+	mode: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The affordance mode: editor." };
+	id: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "UUID to correlate shown and selected events." };
+	commandId: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The command that was executed." };
+	owner: "jrieken";
+	comment: "Tracks when the inline chat affordance is shown or selected.";
 };
 
 export class InlineChatAffordance extends Disposable {
 
 	readonly #editor: ICodeEditor;
 	readonly #instantiationService: IInstantiationService;
-	readonly #selectionData = observableValue<Selection | undefined>(this, undefined);
+	readonly #selectionData = observableValue<Selection | undefined>(
+    this,
+    undefined,
+  );
 
 	constructor(
 		editor: ICodeEditor,
@@ -55,12 +65,21 @@ export class InlineChatAffordance extends Disposable {
 		this.#instantiationService = instantiationService;
 
 		const editorObs = observableCodeEditor(this.#editor);
-		const affordance = observableConfigValue<'off' | 'editor'>(InlineChatConfigKeys.Affordance, 'off', configurationService);
-		const debouncedSelection = debouncedObservable(editorObs.cursorSelection, 500);
+		const affordance = observableConfigValue<"off" | "editor">(
+      InlineChatConfigKeys.Affordance,
+      "off",
+      configurationService,
+    );
+		const debouncedSelection = debouncedObservable(
+      editorObs.cursorSelection,
+      500,
+    );
 
 		const selectionData = this.#selectionData;
 
-		const ctxAffordanceVisible = CTX_INLINE_CHAT_AFFORDANCE_VISIBLE.bindTo(contextKeyService);
+		const ctxAffordanceVisible = CTX_INLINE_CHAT_AFFORDANCE_VISIBLE.bindTo(
+      contextKeyService,
+    );
 		this._store.add({ dispose: () => ctxAffordanceVisible.reset() });
 
 		let explicitSelection = false;
@@ -82,8 +101,8 @@ export class InlineChatAffordance extends Disposable {
 			}
 			affordanceId = generateUuid();
 			const mode = affordance.read(undefined);
-			if (mode === 'editor') {
-				telemetryService.publicLog2<InlineChatAffordanceEvent, InlineChatAffordanceClassification>('inlineChatAffordance/shown', { mode, id: affordanceId, commandId: '' });
+			if (mode === "editor") {
+				telemetryService.publicLog2<InlineChatAffordanceEvent, InlineChatAffordanceClassification>("inlineChatAffordance/shown", { mode, id: affordanceId, commandId: "" });
 			}
 			selectionData.set(value, undefined);
 		}));
@@ -95,10 +114,12 @@ export class InlineChatAffordance extends Disposable {
 		}));
 
 		const hasSessionObs = derived(r => {
-			observableSignalFromEvent(this, inlineChatSessionService.onDidChangeSessions).read(r);
-			const model = editorObs.model.read(r);
-			return model ? inlineChatSessionService.getSessionByTextModel(model.uri) !== undefined : false;
-		});
+      observableSignalFromEvent(this, inlineChatSessionService.onDidChangeSessions).read(
+        r,
+      );
+      const model = editorObs.model.read(r);
+      return model ? inlineChatSessionService.getSessionByTextModel(model.uri) !== undefined : false;
+    });
 
 		this._store.add(autorun(r => {
 			if (hasSessionObs.read(r)) {
@@ -107,9 +128,11 @@ export class InlineChatAffordance extends Disposable {
 		}));
 
 		// Hide when the editor context menu shows
-		this._store.add(this.#editor.onContextMenu(() => {
-			selectionData.set(undefined, undefined);
-		}));
+		this._store.add(
+      this.#editor.onContextMenu(() => {
+        selectionData.set(undefined, undefined);
+      }),
+    );
 
 		// Hide when the editor loses focus (e.g., switching tabs in notebooks)
 		this._store.add(autorun(r => {
@@ -118,28 +141,32 @@ export class InlineChatAffordance extends Disposable {
 			}
 		}));
 
-		this._store.add(autorun(r => {
-			const sel = selectionData.read(r);
-			const mode = affordance.read(r);
-			ctxAffordanceVisible.set(sel !== undefined && mode === 'editor');
-		}));
+		this._store.add(
+      autorun(r => {
+        const sel = selectionData.read(r);
+        const mode = affordance.read(r);
+        ctxAffordanceVisible.set(sel !== undefined && mode === "editor");
+      }),
+    );
 
 		const editorAffordance = this.#instantiationService.createInstance(
-			InlineChatAffordanceWidget,
-			this.#editor,
-			derived(r => affordance.read(r) === 'editor' ? selectionData.read(r) : undefined)
-		);
+      InlineChatAffordanceWidget,
+      this.#editor,
+      derived(
+        r => affordance.read(r) === "editor" ? selectionData.read(r) : undefined,
+      ),
+    );
 		this._store.add(editorAffordance);
 
 		this._store.add(editorAffordance.onDidRunAction(commandId => {
 			if (affordanceId) {
-				telemetryService.publicLog2<InlineChatAffordanceEvent, InlineChatAffordanceClassification>('inlineChatAffordance/selected', { mode: affordance.get(), id: affordanceId, commandId });
+				telemetryService.publicLog2<InlineChatAffordanceEvent, InlineChatAffordanceClassification>("inlineChatAffordance/selected", { mode: affordance.get(), id: affordanceId, commandId });
 			}
 		}));
 
 		this._store.add(autorun(r => {
 			const mode = affordance.read(r);
-			const hideWithSelection = mode === 'editor';
+			const hideWithSelection = mode === "editor";
 			const controller = CodeActionController.get(this.#editor);
 			if (controller) {
 				controller.onlyLightBulbWithEmptySelection = hideWithSelection;

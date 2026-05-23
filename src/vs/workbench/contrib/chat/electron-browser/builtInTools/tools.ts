@@ -3,25 +3,25 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { dirname, extUriBiasedIgnorePathCase } from '../../../../../base/common/resources.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { IFileDialogService } from '../../../../../platform/dialogs/common/dialogs.js';
-import { IFileService } from '../../../../../platform/files/common/files.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { ILabelService } from '../../../../../platform/label/common/label.js';
-import { IStorageService } from '../../../../../platform/storage/common/storage.js';
-import { IWorkbenchContribution } from '../../../../common/contributions.js';
-import { ChatExternalPathConfirmationContribution } from '../../common/tools/builtinTools/chatExternalPathConfirmation.js';
-import { ChatUrlFetchingConfirmationContribution } from '../../common/tools/builtinTools/chatUrlFetchingConfirmation.js';
-import { ILanguageModelToolsConfirmationService } from '../../common/tools/languageModelToolsConfirmationService.js';
-import { ILanguageModelToolsService } from '../../common/tools/languageModelToolsService.js';
-import { InternalFetchWebPageToolId } from '../../common/tools/builtinTools/tools.js';
-import { FetchWebPageTool, FetchWebPageToolData, IFetchWebPageToolParams } from './fetchPageTool.js';
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { dirname, extUriBiasedIgnorePathCase } from "../../../../../base/common/resources.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { IFileDialogService } from "../../../../../platform/dialogs/common/dialogs.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ILabelService } from "../../../../../platform/label/common/label.js";
+import { IStorageService } from "../../../../../platform/storage/common/storage.js";
+import { IWorkbenchContribution } from "../../../../common/contributions.js";
+import { ChatExternalPathConfirmationContribution } from "../../common/tools/builtinTools/chatExternalPathConfirmation.js";
+import { ChatUrlFetchingConfirmationContribution } from "../../common/tools/builtinTools/chatUrlFetchingConfirmation.js";
+import { ILanguageModelToolsConfirmationService } from "../../common/tools/languageModelToolsConfirmationService.js";
+import { ILanguageModelToolsService } from "../../common/tools/languageModelToolsService.js";
+import { InternalFetchWebPageToolId } from "../../common/tools/builtinTools/tools.js";
+import { FetchWebPageTool, FetchWebPageToolData, IFetchWebPageToolParams } from "./fetchPageTool.js";
 
 export class NativeBuiltinToolsContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'chat.nativeBuiltinTools';
+	static readonly ID = "chat.nativeBuiltinTools";
 
 	constructor(
 		@ILanguageModelToolsService toolsService: ILanguageModelToolsService,
@@ -37,13 +37,15 @@ export class NativeBuiltinToolsContribution extends Disposable implements IWorkb
 		const editTool = instantiationService.createInstance(FetchWebPageTool);
 		this._register(toolsService.registerTool(FetchWebPageToolData, editTool));
 
-		this._register(confirmationService.registerConfirmationContribution(
-			InternalFetchWebPageToolId,
-			instantiationService.createInstance(
-				ChatUrlFetchingConfirmationContribution,
-				params => (params as IFetchWebPageToolParams).urls
-			)
-		));
+		this._register(
+      confirmationService.registerConfirmationContribution(
+        InternalFetchWebPageToolId,
+        instantiationService.createInstance(
+          ChatUrlFetchingConfirmationContribution,
+          params => (params as IFetchWebPageToolParams).urls,
+        ),
+      ),
+    );
 
 		// Register external path confirmation contribution for read_file and list_dir
 		// They share the same allowlist so approving a folder for reading files also allows listing that directory
@@ -65,7 +67,7 @@ export class NativeBuiltinToolsContribution extends Disposable implements IWorkb
 				let dir = dirname(pathUri);
 				for (let i = 0; i < 100; i++) {
 					try {
-						if (await fileService.exists(URI.joinPath(dir, '.git'))) {
+						if (await fileService.exists(URI.joinPath(dir, ".git"))) {
 							return dir;
 						}
 					} catch {
@@ -87,18 +89,22 @@ export class NativeBuiltinToolsContribution extends Disposable implements IWorkb
 					canSelectMany: false,
 				});
 				return result?.[0];
-			}
+			},
 		);
 		this._register(externalPathConfirmation);
 
-		this._register(confirmationService.registerConfirmationContribution(
-			'copilot_readFile',
-			externalPathConfirmation
-		));
+		this._register(
+      confirmationService.registerConfirmationContribution(
+        "copilot_readFile",
+        externalPathConfirmation,
+      ),
+    );
 
-		this._register(confirmationService.registerConfirmationContribution(
-			'copilot_listDirectory',
-			externalPathConfirmation
-		));
+		this._register(
+      confirmationService.registerConfirmationContribution(
+        "copilot_listDirectory",
+        externalPathConfirmation,
+      ),
+    );
 	}
 }

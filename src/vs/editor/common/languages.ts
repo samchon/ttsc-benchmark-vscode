@@ -3,31 +3,31 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from '../../base/common/buffer.js';
-import { CancellationToken } from '../../base/common/cancellation.js';
-import { Codicon } from '../../base/common/codicons.js';
-import { Color } from '../../base/common/color.js';
-import { IReadonlyVSDataTransfer } from '../../base/common/dataTransfer.js';
-import { Event } from '../../base/common/event.js';
-import { HierarchicalKind } from '../../base/common/hierarchicalKind.js';
-import { IMarkdownString } from '../../base/common/htmlContent.js';
-import { IDisposable } from '../../base/common/lifecycle.js';
-import { ThemeIcon } from '../../base/common/themables.js';
-import { URI, UriComponents } from '../../base/common/uri.js';
-import { EditOperation, ISingleEditOperation } from './core/editOperation.js';
-import { IPosition, Position } from './core/position.js';
-import { IRange, Range } from './core/range.js';
-import { Selection } from './core/selection.js';
-import { LanguageId } from './encodedTokenAttributes.js';
-import { LanguageSelector } from './languageSelector.js';
-import * as model from './model.js';
-import { TokenizationRegistry as TokenizationRegistryImpl } from './tokenizationRegistry.js';
-import { ContiguousMultilineTokens } from './tokens/contiguousMultilineTokens.js';
-import { localize } from '../../nls.js';
-import { ExtensionIdentifier } from '../../platform/extensions/common/extensions.js';
-import { IMarkerData } from '../../platform/markers/common/markers.js';
-import { EditDeltaInfo } from './textModelEditSource.js';
-import { FontTokensUpdate } from './textModelEvents.js';
+import { VSBuffer } from "../../base/common/buffer.js";
+import { CancellationToken } from "../../base/common/cancellation.js";
+import { Codicon } from "../../base/common/codicons.js";
+import { Color } from "../../base/common/color.js";
+import { IReadonlyVSDataTransfer } from "../../base/common/dataTransfer.js";
+import { Event } from "../../base/common/event.js";
+import { HierarchicalKind } from "../../base/common/hierarchicalKind.js";
+import { IMarkdownString } from "../../base/common/htmlContent.js";
+import { IDisposable } from "../../base/common/lifecycle.js";
+import { ThemeIcon } from "../../base/common/themables.js";
+import { URI, UriComponents } from "../../base/common/uri.js";
+import { EditOperation, ISingleEditOperation } from "./core/editOperation.js";
+import { IPosition, Position } from "./core/position.js";
+import { IRange, Range } from "./core/range.js";
+import { Selection } from "./core/selection.js";
+import { LanguageId } from "./encodedTokenAttributes.js";
+import { LanguageSelector } from "./languageSelector.js";
+import * as model from "./model.js";
+import { TokenizationRegistry as TokenizationRegistryImpl } from "./tokenizationRegistry.js";
+import { ContiguousMultilineTokens } from "./tokens/contiguousMultilineTokens.js";
+import { localize } from "../../nls.js";
+import { ExtensionIdentifier } from "../../platform/extensions/common/extensions.js";
+import { IMarkerData } from "../../platform/markers/common/markers.js";
+import { EditDeltaInfo } from "./textModelEditSource.js";
+import { FontTokensUpdate } from "./textModelEvents.js";
 
 /**
  * @internal
@@ -48,7 +48,7 @@ export class Token {
 	}
 
 	public toString(): string {
-		return '(' + this.offset + ', ' + this.type + ')';
+		return "(" + this.offset + ", " + this.type + ")";
 	}
 }
 
@@ -297,7 +297,7 @@ export interface InlineValueContext {
  * @internal
  */
 export interface InlineValueText {
-	type: 'text';
+	type: "text";
 	range: IRange;
 	text: string;
 }
@@ -307,7 +307,7 @@ export interface InlineValueText {
  * @internal
  */
 export interface InlineValueVariableLookup {
-	type: 'variable';
+	type: "variable";
 	range: IRange;
 	variableName?: string;
 	caseSensitiveLookup: boolean;
@@ -318,7 +318,7 @@ export interface InlineValueVariableLookup {
  * @internal
  */
 export interface InlineValueExpression {
-	type: 'expression';
+	type: "expression";
 	range: IRange;
 	expression?: string;
 }
@@ -425,7 +425,7 @@ export namespace CompletionItemKinds {
 	export function toIcon(kind: CompletionItemKind): ThemeIcon {
 		let codicon = byKind.get(kind);
 		if (!codicon) {
-			console.info('No codicon found for CompletionItemKind ' + kind);
+			console.info("No codicon found for CompletionItemKind " + kind);
 			codicon = Codicon.symbolProperty;
 		}
 		return codicon;
@@ -436,71 +436,158 @@ export namespace CompletionItemKinds {
 	 */
 	export function toLabel(kind: CompletionItemKind): string {
 		switch (kind) {
-			case CompletionItemKind.Method: return localize('suggestWidget.kind.method', 'Method');
-			case CompletionItemKind.Function: return localize('suggestWidget.kind.function', 'Function');
-			case CompletionItemKind.Constructor: return localize('suggestWidget.kind.constructor', 'Constructor');
-			case CompletionItemKind.Field: return localize('suggestWidget.kind.field', 'Field');
-			case CompletionItemKind.Variable: return localize('suggestWidget.kind.variable', 'Variable');
-			case CompletionItemKind.Class: return localize('suggestWidget.kind.class', 'Class');
-			case CompletionItemKind.Struct: return localize('suggestWidget.kind.struct', 'Struct');
-			case CompletionItemKind.Interface: return localize('suggestWidget.kind.interface', 'Interface');
-			case CompletionItemKind.Module: return localize('suggestWidget.kind.module', 'Module');
-			case CompletionItemKind.Property: return localize('suggestWidget.kind.property', 'Property');
-			case CompletionItemKind.Event: return localize('suggestWidget.kind.event', 'Event');
-			case CompletionItemKind.Operator: return localize('suggestWidget.kind.operator', 'Operator');
-			case CompletionItemKind.Unit: return localize('suggestWidget.kind.unit', 'Unit');
-			case CompletionItemKind.Value: return localize('suggestWidget.kind.value', 'Value');
-			case CompletionItemKind.Constant: return localize('suggestWidget.kind.constant', 'Constant');
-			case CompletionItemKind.Enum: return localize('suggestWidget.kind.enum', 'Enum');
-			case CompletionItemKind.EnumMember: return localize('suggestWidget.kind.enumMember', 'Enum Member');
-			case CompletionItemKind.Keyword: return localize('suggestWidget.kind.keyword', 'Keyword');
-			case CompletionItemKind.Text: return localize('suggestWidget.kind.text', 'Text');
-			case CompletionItemKind.Color: return localize('suggestWidget.kind.color', 'Color');
-			case CompletionItemKind.File: return localize('suggestWidget.kind.file', 'File');
-			case CompletionItemKind.Reference: return localize('suggestWidget.kind.reference', 'Reference');
-			case CompletionItemKind.Customcolor: return localize('suggestWidget.kind.customcolor', 'Custom Color');
-			case CompletionItemKind.Folder: return localize('suggestWidget.kind.folder', 'Folder');
-			case CompletionItemKind.TypeParameter: return localize('suggestWidget.kind.typeParameter', 'Type Parameter');
-			case CompletionItemKind.User: return localize('suggestWidget.kind.user', 'User');
-			case CompletionItemKind.Issue: return localize('suggestWidget.kind.issue', 'Issue');
-			case CompletionItemKind.Tool: return localize('suggestWidget.kind.tool', 'Tool');
-			case CompletionItemKind.Snippet: return localize('suggestWidget.kind.snippet', 'Snippet');
-			default: return '';
+			case CompletionItemKind.Method: return localize(
+        "suggestWidget.kind.method",
+        "Method",
+      );
+			case CompletionItemKind.Function: return localize(
+        "suggestWidget.kind.function",
+        "Function",
+      );
+			case CompletionItemKind.Constructor: return localize(
+        "suggestWidget.kind.constructor",
+        "Constructor",
+      );
+			case CompletionItemKind.Field: return localize(
+        "suggestWidget.kind.field",
+        "Field",
+      );
+			case CompletionItemKind.Variable: return localize(
+        "suggestWidget.kind.variable",
+        "Variable",
+      );
+			case CompletionItemKind.Class: return localize(
+        "suggestWidget.kind.class",
+        "Class",
+      );
+			case CompletionItemKind.Struct: return localize(
+        "suggestWidget.kind.struct",
+        "Struct",
+      );
+			case CompletionItemKind.Interface: return localize(
+        "suggestWidget.kind.interface",
+        "Interface",
+      );
+			case CompletionItemKind.Module: return localize(
+        "suggestWidget.kind.module",
+        "Module",
+      );
+			case CompletionItemKind.Property: return localize(
+        "suggestWidget.kind.property",
+        "Property",
+      );
+			case CompletionItemKind.Event: return localize(
+        "suggestWidget.kind.event",
+        "Event",
+      );
+			case CompletionItemKind.Operator: return localize(
+        "suggestWidget.kind.operator",
+        "Operator",
+      );
+			case CompletionItemKind.Unit: return localize(
+        "suggestWidget.kind.unit",
+        "Unit",
+      );
+			case CompletionItemKind.Value: return localize(
+        "suggestWidget.kind.value",
+        "Value",
+      );
+			case CompletionItemKind.Constant: return localize(
+        "suggestWidget.kind.constant",
+        "Constant",
+      );
+			case CompletionItemKind.Enum: return localize(
+        "suggestWidget.kind.enum",
+        "Enum",
+      );
+			case CompletionItemKind.EnumMember: return localize(
+        "suggestWidget.kind.enumMember",
+        "Enum Member",
+      );
+			case CompletionItemKind.Keyword: return localize(
+        "suggestWidget.kind.keyword",
+        "Keyword",
+      );
+			case CompletionItemKind.Text: return localize(
+        "suggestWidget.kind.text",
+        "Text",
+      );
+			case CompletionItemKind.Color: return localize(
+        "suggestWidget.kind.color",
+        "Color",
+      );
+			case CompletionItemKind.File: return localize(
+        "suggestWidget.kind.file",
+        "File",
+      );
+			case CompletionItemKind.Reference: return localize(
+        "suggestWidget.kind.reference",
+        "Reference",
+      );
+			case CompletionItemKind.Customcolor: return localize(
+        "suggestWidget.kind.customcolor",
+        "Custom Color",
+      );
+			case CompletionItemKind.Folder: return localize(
+        "suggestWidget.kind.folder",
+        "Folder",
+      );
+			case CompletionItemKind.TypeParameter: return localize(
+        "suggestWidget.kind.typeParameter",
+        "Type Parameter",
+      );
+			case CompletionItemKind.User: return localize(
+        "suggestWidget.kind.user",
+        "User",
+      );
+			case CompletionItemKind.Issue: return localize(
+        "suggestWidget.kind.issue",
+        "Issue",
+      );
+			case CompletionItemKind.Tool: return localize(
+        "suggestWidget.kind.tool",
+        "Tool",
+      );
+			case CompletionItemKind.Snippet: return localize(
+        "suggestWidget.kind.snippet",
+        "Snippet",
+      );
+			default: return "";
 		}
 	}
 
 	const data = new Map<string, CompletionItemKind>();
-	data.set('method', CompletionItemKind.Method);
-	data.set('function', CompletionItemKind.Function);
-	data.set('constructor', CompletionItemKind.Constructor);
-	data.set('field', CompletionItemKind.Field);
-	data.set('variable', CompletionItemKind.Variable);
-	data.set('class', CompletionItemKind.Class);
-	data.set('struct', CompletionItemKind.Struct);
-	data.set('interface', CompletionItemKind.Interface);
-	data.set('module', CompletionItemKind.Module);
-	data.set('property', CompletionItemKind.Property);
-	data.set('event', CompletionItemKind.Event);
-	data.set('operator', CompletionItemKind.Operator);
-	data.set('unit', CompletionItemKind.Unit);
-	data.set('value', CompletionItemKind.Value);
-	data.set('constant', CompletionItemKind.Constant);
-	data.set('enum', CompletionItemKind.Enum);
-	data.set('enum-member', CompletionItemKind.EnumMember);
-	data.set('enumMember', CompletionItemKind.EnumMember);
-	data.set('keyword', CompletionItemKind.Keyword);
-	data.set('snippet', CompletionItemKind.Snippet);
-	data.set('text', CompletionItemKind.Text);
-	data.set('color', CompletionItemKind.Color);
-	data.set('file', CompletionItemKind.File);
-	data.set('reference', CompletionItemKind.Reference);
-	data.set('customcolor', CompletionItemKind.Customcolor);
-	data.set('folder', CompletionItemKind.Folder);
-	data.set('type-parameter', CompletionItemKind.TypeParameter);
-	data.set('typeParameter', CompletionItemKind.TypeParameter);
-	data.set('account', CompletionItemKind.User);
-	data.set('issue', CompletionItemKind.Issue);
-	data.set('tool', CompletionItemKind.Tool);
+	data.set("method", CompletionItemKind.Method);
+	data.set("function", CompletionItemKind.Function);
+	data.set("constructor", CompletionItemKind.Constructor);
+	data.set("field", CompletionItemKind.Field);
+	data.set("variable", CompletionItemKind.Variable);
+	data.set("class", CompletionItemKind.Class);
+	data.set("struct", CompletionItemKind.Struct);
+	data.set("interface", CompletionItemKind.Interface);
+	data.set("module", CompletionItemKind.Module);
+	data.set("property", CompletionItemKind.Property);
+	data.set("event", CompletionItemKind.Event);
+	data.set("operator", CompletionItemKind.Operator);
+	data.set("unit", CompletionItemKind.Unit);
+	data.set("value", CompletionItemKind.Value);
+	data.set("constant", CompletionItemKind.Constant);
+	data.set("enum", CompletionItemKind.Enum);
+	data.set("enum-member", CompletionItemKind.EnumMember);
+	data.set("enumMember", CompletionItemKind.EnumMember);
+	data.set("keyword", CompletionItemKind.Keyword);
+	data.set("snippet", CompletionItemKind.Snippet);
+	data.set("text", CompletionItemKind.Text);
+	data.set("color", CompletionItemKind.Color);
+	data.set("file", CompletionItemKind.File);
+	data.set("reference", CompletionItemKind.Reference);
+	data.set("customcolor", CompletionItemKind.Customcolor);
+	data.set("folder", CompletionItemKind.Folder);
+	data.set("type-parameter", CompletionItemKind.TypeParameter);
+	data.set("typeParameter", CompletionItemKind.TypeParameter);
+	data.set("account", CompletionItemKind.User);
+	data.set("issue", CompletionItemKind.Issue);
+	data.set("tool", CompletionItemKind.Tool);
 
 	/**
 	 * @internal
@@ -515,7 +602,7 @@ export namespace CompletionItemKinds {
 	 */
 	export function fromString(value: string, strict?: boolean): CompletionItemKind | undefined {
 		let res = data.get(value);
-		if (typeof res === 'undefined' && !strict) {
+		if (typeof res === "undefined" && !strict) {
 			res = CompletionItemKind.Property;
 		}
 		return res;
@@ -952,24 +1039,24 @@ export interface InlineCompletionsProvider<T extends InlineCompletions = InlineC
 	 * Will be called when an item is shown.
 	 * @param updatedInsertText Is useful to understand bracket completion.
 	*/
-	handleItemDidShow?(completions: T, item: T['items'][number], updatedInsertText: string, editDeltaInfo: EditDeltaInfo): void;
+	handleItemDidShow?(completions: T, item: T["items"][number], updatedInsertText: string, editDeltaInfo: EditDeltaInfo): void;
 
 	/**
 	 * Will be called when an item is partially accepted. TODO: also handle full acceptance here!
 	 * @param acceptedCharacters Deprecated. Use `info.acceptedCharacters` instead.
 	 */
-	handlePartialAccept?(completions: T, item: T['items'][number], acceptedCharacters: number, info: PartialAcceptInfo): void;
+	handlePartialAccept?(completions: T, item: T["items"][number], acceptedCharacters: number, info: PartialAcceptInfo): void;
 
 	/**
 	 * @deprecated Use `handleEndOfLifetime` instead.
 	*/
-	handleRejection?(completions: T, item: T['items'][number]): void;
+	handleRejection?(completions: T, item: T["items"][number]): void;
 
 	/**
 	 * Is called when an inline completion item is no longer being used.
 	 * Provides a reason of why it is not used anymore.
 	*/
-	handleEndOfLifetime?(completions: T, item: T['items'][number], reason: InlineCompletionEndOfLifeReason<T['items'][number]>, lifetimeSummary: LifetimeSummary): void;
+	handleEndOfLifetime?(completions: T, item: T["items"][number], reason: InlineCompletionEndOfLifeReason<T["items"][number]>, lifetimeSummary: LifetimeSummary): void;
 
 	/**
 	 * Will be called when a completions list is no longer in use and can be garbage-collected.
@@ -1025,12 +1112,12 @@ export class ProviderId {
 	constructor(
 		public readonly extensionId: string | undefined,
 		public readonly extensionVersion: string | undefined,
-		public readonly providerId: string | undefined
+		public readonly providerId: string | undefined,
 	) {
 	}
 
 	toString(): string {
-		let result = '';
+		let result = "";
 		if (this.extensionId) {
 			result += this.extensionId;
 		}
@@ -1041,13 +1128,13 @@ export class ProviderId {
 			result += `:${this.providerId}`;
 		}
 		if (result.length === 0) {
-			result = 'unknown';
+			result = "unknown";
 		}
 		return result;
 	}
 
 	toStringWithoutVersion(): string {
-		let result = '';
+		let result = "";
 		if (this.extensionId) {
 			result += this.extensionId;
 		}
@@ -1077,7 +1164,7 @@ export class VersionedExtensionId {
 	}
 }
 
-export type InlineCompletionsDisposeReason = { kind: 'lostRace' | 'tokenCancellation' | 'other' | 'empty' | 'notTaken' };
+export type InlineCompletionsDisposeReason = { kind: "lostRace" | "tokenCancellation" | "other" | "empty" | "notTaken" };
 
 export enum InlineCompletionEndOfLifeReasonKind {
 	Accepted = 0,
@@ -1528,7 +1615,9 @@ export function isLocationLink(thing: unknown): thing is LocationLink {
 	return !!thing
 		&& URI.isUri((thing as LocationLink).uri)
 		&& Range.isIRange((thing as LocationLink).range)
-		&& (Range.isIRange((thing as LocationLink).originSelectionRange) || Range.isIRange((thing as LocationLink).targetSelectionRange));
+		&& (Range.isIRange(
+      (thing as LocationLink).originSelectionRange,
+    ) || Range.isIRange((thing as LocationLink).targetSelectionRange));
 }
 
 /**
@@ -1625,39 +1714,44 @@ export const enum SymbolKind {
  * @internal
  */
 export const symbolKindNames: { [symbol: number]: string } = {
-	[SymbolKind.Array]: localize('Array', "array"),
-	[SymbolKind.Boolean]: localize('Boolean', "boolean"),
-	[SymbolKind.Class]: localize('Class', "class"),
-	[SymbolKind.Constant]: localize('Constant', "constant"),
-	[SymbolKind.Constructor]: localize('Constructor', "constructor"),
-	[SymbolKind.Enum]: localize('Enum', "enumeration"),
-	[SymbolKind.EnumMember]: localize('EnumMember', "enumeration member"),
-	[SymbolKind.Event]: localize('Event', "event"),
-	[SymbolKind.Field]: localize('Field', "field"),
-	[SymbolKind.File]: localize('File', "file"),
-	[SymbolKind.Function]: localize('Function', "function"),
-	[SymbolKind.Interface]: localize('Interface', "interface"),
-	[SymbolKind.Key]: localize('Key', "key"),
-	[SymbolKind.Method]: localize('Method', "method"),
-	[SymbolKind.Module]: localize('Module', "module"),
-	[SymbolKind.Namespace]: localize('Namespace', "namespace"),
-	[SymbolKind.Null]: localize('Null', "null"),
-	[SymbolKind.Number]: localize('Number', "number"),
-	[SymbolKind.Object]: localize('Object', "object"),
-	[SymbolKind.Operator]: localize('Operator', "operator"),
-	[SymbolKind.Package]: localize('Package', "package"),
-	[SymbolKind.Property]: localize('Property', "property"),
-	[SymbolKind.String]: localize('String', "string"),
-	[SymbolKind.Struct]: localize('Struct', "struct"),
-	[SymbolKind.TypeParameter]: localize('TypeParameter', "type parameter"),
-	[SymbolKind.Variable]: localize('Variable', "variable"),
+  [SymbolKind.Array]: localize("Array", "array"),
+  [SymbolKind.Boolean]: localize("Boolean", "boolean"),
+  [SymbolKind.Class]: localize("Class", "class"),
+  [SymbolKind.Constant]: localize("Constant", "constant"),
+  [SymbolKind.Constructor]: localize("Constructor", "constructor"),
+  [SymbolKind.Enum]: localize("Enum", "enumeration"),
+  [SymbolKind.EnumMember]: localize("EnumMember", "enumeration member"),
+  [SymbolKind.Event]: localize("Event", "event"),
+  [SymbolKind.Field]: localize("Field", "field"),
+  [SymbolKind.File]: localize("File", "file"),
+  [SymbolKind.Function]: localize("Function", "function"),
+  [SymbolKind.Interface]: localize("Interface", "interface"),
+  [SymbolKind.Key]: localize("Key", "key"),
+  [SymbolKind.Method]: localize("Method", "method"),
+  [SymbolKind.Module]: localize("Module", "module"),
+  [SymbolKind.Namespace]: localize("Namespace", "namespace"),
+  [SymbolKind.Null]: localize("Null", "null"),
+  [SymbolKind.Number]: localize("Number", "number"),
+  [SymbolKind.Object]: localize("Object", "object"),
+  [SymbolKind.Operator]: localize("Operator", "operator"),
+  [SymbolKind.Package]: localize("Package", "package"),
+  [SymbolKind.Property]: localize("Property", "property"),
+  [SymbolKind.String]: localize("String", "string"),
+  [SymbolKind.Struct]: localize("Struct", "struct"),
+  [SymbolKind.TypeParameter]: localize("TypeParameter", "type parameter"),
+  [SymbolKind.Variable]: localize("Variable", "variable"),
 };
 
 /**
  * @internal
  */
 export function getAriaLabelForSymbol(symbolName: string, kind: SymbolKind): string {
-	return localize('symbolAriaLabel', '{0} ({1})', symbolName, symbolKindNames[kind]);
+	return localize(
+    "symbolAriaLabel",
+    "{0} ({1})",
+    symbolName,
+    symbolKindNames[kind],
+  );
 }
 
 export const enum SymbolTag {
@@ -1702,7 +1796,7 @@ export namespace SymbolKinds {
 	export function toIcon(kind: SymbolKind): ThemeIcon {
 		let icon = byKind.get(kind);
 		if (!icon) {
-			console.info('No codicon found for SymbolKind ' + kind);
+			console.info("No codicon found for SymbolKind " + kind);
 			icon = Codicon.symbolProperty;
 		}
 		return icon;
@@ -1734,14 +1828,17 @@ export namespace SymbolKinds {
 	byCompletionKind.set(SymbolKind.Struct, CompletionItemKind.Struct);
 	byCompletionKind.set(SymbolKind.Event, CompletionItemKind.Event);
 	byCompletionKind.set(SymbolKind.Operator, CompletionItemKind.Operator);
-	byCompletionKind.set(SymbolKind.TypeParameter, CompletionItemKind.TypeParameter);
+	byCompletionKind.set(
+    SymbolKind.TypeParameter,
+    CompletionItemKind.TypeParameter,
+  );
 	/**
 	 * @internal
 	 */
 	export function toCompletionKind(kind: SymbolKind): CompletionItemKind {
 		let completionKind = byCompletionKind.get(kind);
 		if (completionKind === undefined) {
-			console.info('No completion kind found for SymbolKind ' + kind);
+			console.info("No completion kind found for SymbolKind " + kind);
 			completionKind = CompletionItemKind.File;
 		}
 		return completionKind;
@@ -1784,12 +1881,17 @@ export abstract class TextEdit {
 	static asEditOperation(edit: TextEdit): ISingleEditOperation {
 		const range = Range.lift(edit.range);
 		return range.isEmpty()
-			? EditOperation.insert(range.getStartPosition(), edit.text) // moves marker
+			? EditOperation.insert(
+          range.getStartPosition(),
+          edit.text,
+        ) // moves marker
 			: EditOperation.replace(range, edit.text);
 	}
 	static isTextEdit(thing: unknown): thing is TextEdit {
 		const possibleTextEdit = thing as TextEdit;
-		return typeof possibleTextEdit.text === 'string' && Range.isIRange(possibleTextEdit.range);
+		return typeof possibleTextEdit.text === "string" && Range.isIRange(
+      possibleTextEdit.range,
+    );
 	}
 }
 
@@ -2036,16 +2138,16 @@ export class FoldingRangeKind {
 	/**
 	 * Kind for folding range representing a comment. The value of the kind is 'comment'.
 	 */
-	static readonly Comment = new FoldingRangeKind('comment');
+	static readonly Comment = new FoldingRangeKind("comment");
 	/**
 	 * Kind for folding range representing a import. The value of the kind is 'imports'.
 	 */
-	static readonly Imports = new FoldingRangeKind('imports');
+	static readonly Imports = new FoldingRangeKind("imports");
 	/**
 	 * Kind for folding range representing regions (for example marked by `#region`, `#endregion`).
 	 * The value of the kind is 'region'.
 	 */
-	static readonly Region = new FoldingRangeKind('region');
+	static readonly Region = new FoldingRangeKind("region");
 
 	/**
 	 * Returns a {@link FoldingRangeKind} for the given value.
@@ -2054,9 +2156,9 @@ export class FoldingRangeKind {
 	 */
 	static fromValue(value: string) {
 		switch (value) {
-			case 'comment': return FoldingRangeKind.Comment;
-			case 'imports': return FoldingRangeKind.Imports;
-			case 'region': return FoldingRangeKind.Region;
+			case "comment": return FoldingRangeKind.Comment;
+			case "imports": return FoldingRangeKind.Imports;
+			case "region": return FoldingRangeKind.Region;
 		}
 		return new FoldingRangeKind(value);
 	}
@@ -2170,11 +2272,11 @@ export namespace Command {
 	 * @internal
 	 */
 	export function is(obj: unknown): obj is Command {
-		if (!obj || typeof obj !== 'object') {
+		if (!obj || typeof obj !== "object") {
 			return false;
 		}
-		return typeof (<Command>obj).id === 'string' &&
-			typeof (<Command>obj).title === 'string';
+		return typeof (<Command>obj).id === "string" &&
+			typeof (<Command>obj).title === "string";
 	}
 }
 

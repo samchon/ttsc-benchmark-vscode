@@ -2,11 +2,43 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { Position } from '../../../../common/core/position.js';
-import { StringEdit, StringReplacement } from '../../../../common/core/edits/stringEdit.js';
-import { ITextModel } from '../../../../common/model.js';
+import { Position } from "../../../../common/core/position.js";
+import { StringEdit, StringReplacement } from "../../../../common/core/edits/stringEdit.js";
+import { ITextModel } from "../../../../common/model.js";
 
-const syntacticalChars = new Set([';', ',', '=', '+', '-', '*', '/', '{', '}', '(', ')', '[', ']', '<', '>', ':', '.', '!', '?', '&', '|', '^', '%', '@', '#', '~', '`', '\\', '\'', '"', '$']);
+const syntacticalChars = new Set([
+  ";",
+  ",",
+  "=",
+  "+",
+  "-",
+  "*",
+  "/",
+  "{",
+  "}",
+  "(",
+  ")",
+  "[",
+  "]",
+  "<",
+  ">",
+  ":",
+  ".",
+  "!",
+  "?",
+  "&",
+  "|",
+  "^",
+  "%",
+  "@",
+  "#",
+  "~",
+  "`",
+  "\\",
+  "'",
+  '"',
+  "$",
+]);
 
 function isSyntacticalChar(char: string): boolean {
 	return syntacticalChars.has(char);
@@ -17,13 +49,13 @@ function isIdentifierChar(char: string): boolean {
 }
 
 function isWhitespaceChar(char: string): boolean {
-	return char === ' ' || char === '\t';
+	return char === " " || char === "\t";
 }
 
-type SingleCharacterKind = 'syntactical' | 'identifier' | 'whitespace';
+type SingleCharacterKind = "syntactical" | "identifier" | "whitespace";
 
 interface SingleLineTextShape {
-	readonly kind: 'singleLine';
+	readonly kind: "singleLine";
 	readonly isSingleCharacter: boolean;
 	readonly singleCharacterKind: SingleCharacterKind | undefined;
 	readonly isWord: boolean;
@@ -33,7 +65,7 @@ interface SingleLineTextShape {
 }
 
 interface MultiLineTextShape {
-	readonly kind: 'multiLine';
+	readonly kind: "multiLine";
 	readonly lineCount: number;
 }
 
@@ -43,20 +75,20 @@ function analyzeTextShape(text: string): TextShape {
 	const lines = text.split(/\r\n|\r|\n/);
 	if (lines.length > 1) {
 		return {
-			kind: 'multiLine',
-			lineCount: lines.length,
-		};
+      kind: "multiLine",
+      lineCount: lines.length,
+    };
 	}
 
 	const isSingleChar = text.length === 1;
 	let singleCharKind: SingleCharacterKind | undefined;
 	if (isSingleChar) {
 		if (isSyntacticalChar(text)) {
-			singleCharKind = 'syntactical';
+			singleCharKind = "syntactical";
 		} else if (isIdentifierChar(text)) {
-			singleCharKind = 'identifier';
+			singleCharKind = "identifier";
 		} else if (isWhitespaceChar(text)) {
-			singleCharKind = 'whitespace';
+			singleCharKind = "whitespace";
 		}
 	}
 
@@ -64,26 +96,28 @@ function analyzeTextShape(text: string): TextShape {
 	const whitespaceMatches = text.match(/[ \t]+/g) || [];
 	const isMultipleWhitespace = whitespaceMatches.some(ws => ws.length > 1);
 	const hasDuplicatedWhitespace = whitespaceMatches.some(ws =>
-		(ws.includes('  ') || ws.includes('\t\t'))
+		(ws.includes("  ") || ws.includes("\t\t")),
 	);
 
 	// Analyze word patterns
 	const words = text.split(/\s+/).filter(w => w.length > 0);
-	const isWord = words.length === 1 && /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(words[0]);
+	const isWord = words.length === 1 && /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(
+    words[0],
+  );
 	const isMultipleWords = words.length > 1;
 
 	return {
-		kind: 'singleLine',
-		isSingleCharacter: isSingleChar,
-		singleCharacterKind: singleCharKind,
-		isWord,
-		isMultipleWords,
-		isMultipleWhitespace,
-		hasDuplicatedWhitespace,
-	};
+    kind: "singleLine",
+    isSingleCharacter: isSingleChar,
+    singleCharacterKind: singleCharKind,
+    isWord,
+    isMultipleWords,
+    isMultipleWhitespace,
+    hasDuplicatedWhitespace,
+  };
 }
 
-type InsertLocationShape = 'endOfLine' | 'emptyLine' | 'startOfLine' | 'middleOfLine';
+type InsertLocationShape = "endOfLine" | "emptyLine" | "startOfLine" | "middleOfLine";
 
 interface InsertLocationRelativeToCursor {
 	readonly atCursor: boolean;
@@ -114,7 +148,7 @@ export interface ReplaceProperties {
 	readonly isMultiLineToSingleLine: boolean;
 }
 
-type EditOperation = 'insert' | 'delete' | 'replace';
+type EditOperation = "insert" | "delete" | "replace";
 
 interface IInlineSuggestionEditKindEdit {
 	readonly operation: EditOperation;
@@ -137,7 +171,11 @@ export function computeEditKind(edit: StringEdit, textModel: ITextModel, cursorP
 		return undefined;
 	}
 
-	return new InlineSuggestionEditKind(edit.replacements.map(rep => computeSingleEditKind(rep, textModel, cursorPosition)));
+	return new InlineSuggestionEditKind(
+    edit.replacements.map(
+      rep => computeSingleEditKind(rep, textModel, cursorPosition),
+    ),
+  );
 }
 
 function countLines(text: string): number {
@@ -154,38 +192,44 @@ function computeSingleEditKind(replacement: StringReplacement, textModel: ITextM
 	const insertedLength = newText.length;
 	const linesInserted = countLines(newText);
 
-	const kind = replaceRange.isEmpty ? 'insert' : (newText.length === 0 ? 'delete' : 'replace');
+	const kind = replaceRange.isEmpty ? "insert" : (newText.length === 0 ? "delete" : "replace");
 	switch (kind) {
-		case 'insert':
+		case "insert":
 			return {
-				operation: 'insert',
-				properties: computeInsertProperties(replaceRange.start, newText, textModel, cursorPosition),
-				charactersInserted: insertedLength,
-				charactersDeleted: 0,
-				linesInserted,
-				linesDeleted: 0,
-			};
-		case 'delete': {
-			const deletedText = textModel.getValue().substring(replaceRange.start, replaceRange.endExclusive);
+        operation: "insert",
+        properties: computeInsertProperties(replaceRange.start, newText, textModel, cursorPosition),
+        charactersInserted: insertedLength,
+        charactersDeleted: 0,
+        linesInserted,
+        linesDeleted: 0,
+      };
+		case "delete": {
+			const deletedText = textModel.getValue().substring(
+        replaceRange.start,
+        replaceRange.endExclusive,
+      );
 			return {
-				operation: 'delete',
-				properties: computeDeleteProperties(replaceRange.start, replaceRange.endExclusive, textModel),
-				charactersInserted: 0,
-				charactersDeleted: deletedLength,
-				linesInserted: 0,
-				linesDeleted: countLines(deletedText),
-			};
+        operation: "delete",
+        properties: computeDeleteProperties(replaceRange.start, replaceRange.endExclusive, textModel),
+        charactersInserted: 0,
+        charactersDeleted: deletedLength,
+        linesInserted: 0,
+        linesDeleted: countLines(deletedText),
+      };
 		}
-		case 'replace': {
-			const oldText = textModel.getValue().substring(replaceRange.start, replaceRange.endExclusive);
+		case "replace": {
+			const oldText = textModel.getValue().substring(
+        replaceRange.start,
+        replaceRange.endExclusive,
+      );
 			return {
-				operation: 'replace',
-				properties: computeReplaceProperties(oldText, newText),
-				charactersInserted: insertedLength,
-				charactersDeleted: deletedLength,
-				linesInserted,
-				linesDeleted: countLines(oldText),
-			};
+        operation: "replace",
+        properties: computeReplaceProperties(oldText, newText),
+        charactersInserted: insertedLength,
+        charactersDeleted: deletedLength,
+        linesInserted,
+        linesDeleted: countLines(oldText),
+      };
 		}
 	}
 }
@@ -203,13 +247,13 @@ function computeInsertProperties(offset: number, newText: string, textModel: ITe
 	const isAtStartOfLine = insertPosition.column === 1;
 
 	if (isLineEmpty) {
-		locationShape = 'emptyLine';
+		locationShape = "emptyLine";
 	} else if (isAtEndOfLine) {
-		locationShape = 'endOfLine';
+		locationShape = "endOfLine";
 	} else if (isAtStartOfLine) {
-		locationShape = 'startOfLine';
+		locationShape = "startOfLine";
 	} else {
-		locationShape = 'middleOfLine';
+		locationShape = "middleOfLine";
 	}
 
 	// Compute relative to cursor if cursor position is provided
@@ -227,19 +271,19 @@ function computeInsertProperties(offset: number, newText: string, textModel: ITe
 		const linesBelow = insertLine > cursorLine ? insertLine - cursorLine : undefined;
 
 		relativeToCursor = {
-			atCursor,
-			beforeCursorOnSameLine,
-			afterCursorOnSameLine,
-			linesAbove,
-			linesBelow,
-		};
+      atCursor,
+      beforeCursorOnSameLine,
+      afterCursorOnSameLine,
+      linesAbove,
+      linesBelow,
+    };
 	}
 
 	return {
-		textShape,
-		locationShape,
-		relativeToCursor,
-	};
+    textShape,
+    locationShape,
+    relativeToCursor,
+  };
 }
 
 function computeDeleteProperties(startOffset: number, endOffset: number, textModel: ITextModel): DeleteProperties {
@@ -260,33 +304,33 @@ function computeDeleteProperties(startOffset: number, endOffset: number, textMod
 		endPosition.column > lineContent.length;
 
 	return {
-		textShape,
-		isAtEndOfLine,
-		deletesEntireLineContent,
-	};
+    textShape,
+    isAtEndOfLine,
+    deletesEntireLineContent,
+  };
 }
 
 function computeReplaceProperties(oldText: string, newText: string): ReplaceProperties {
 	const oldShape = analyzeTextShape(oldText);
 	const newShape = analyzeTextShape(newText);
 
-	const oldIsWord = oldShape.kind === 'singleLine' && oldShape.isWord;
-	const newIsWord = newShape.kind === 'singleLine' && newShape.isWord;
+	const oldIsWord = oldShape.kind === "singleLine" && oldShape.isWord;
+	const newIsWord = newShape.kind === "singleLine" && newShape.isWord;
 	const isWordToWordReplacement = oldIsWord && newIsWord;
 
 	const isAdditive = newText.length > oldText.length;
 	const isSubtractive = newText.length < oldText.length;
 
-	const isSingleLineToSingleLine = oldShape.kind === 'singleLine' && newShape.kind === 'singleLine';
-	const isSingleLineToMultiLine = oldShape.kind === 'singleLine' && newShape.kind === 'multiLine';
-	const isMultiLineToSingleLine = oldShape.kind === 'multiLine' && newShape.kind === 'singleLine';
+	const isSingleLineToSingleLine = oldShape.kind === "singleLine" && newShape.kind === "singleLine";
+	const isSingleLineToMultiLine = oldShape.kind === "singleLine" && newShape.kind === "multiLine";
+	const isMultiLineToSingleLine = oldShape.kind === "multiLine" && newShape.kind === "singleLine";
 
 	return {
-		isWordToWordReplacement,
-		isAdditive,
-		isSubtractive,
-		isSingleLineToSingleLine,
-		isSingleLineToMultiLine,
-		isMultiLineToSingleLine,
-	};
+    isWordToWordReplacement,
+    isAdditive,
+    isSubtractive,
+    isSingleLineToSingleLine,
+    isSingleLineToMultiLine,
+    isMultiLineToSingleLine,
+  };
 }

@@ -3,18 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { CustomizationHarnessServiceBase, createVSCodeHarnessDescriptor, IHarnessDescriptor } from '../../../../workbench/contrib/chat/common/customizationHarnessService.js';
-import { IPromptsService } from '../../../../workbench/contrib/chat/common/promptSyntax/service/promptsService.js';
-import { SessionType } from '../../../../workbench/contrib/chat/common/chatSessionsService.js';
-import { ISessionsManagementService } from '../../../services/sessions/common/sessionsManagement.js';
-import { AICustomizationSources } from '../../../../workbench/contrib/chat/common/aiCustomizationWorkspaceService.js';
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import {
+  CustomizationHarnessServiceBase,
+  createVSCodeHarnessDescriptor,
+  IHarnessDescriptor,
+} from "../../../../workbench/contrib/chat/common/customizationHarnessService.js";
+import { IPromptsService } from "../../../../workbench/contrib/chat/common/promptSyntax/service/promptsService.js";
+import { SessionType } from "../../../../workbench/contrib/chat/common/chatSessionsService.js";
+import { ISessionsManagementService } from "../../../services/sessions/common/sessionsManagement.js";
+import { AICustomizationSources } from "../../../../workbench/contrib/chat/common/aiCustomizationWorkspaceService.js";
 
 /**
  * The session type that supports local harness customization.
  * Hardcoded for now — ideally providers would declare harness support explicitly.
  */
-const LOCAL_HARNESS_SESSION_TYPE = 'local';
+const LOCAL_HARNESS_SESSION_TYPE = "local";
 
 /**
  * Sessions-window override of the customization harness service.
@@ -37,16 +41,18 @@ export class SessionsCustomizationHarnessService extends CustomizationHarnessSer
 		@IPromptsService promptsService: IPromptsService,
 		@ISessionsManagementService private readonly sessionsManagementService: ISessionsManagementService,
 	) {
-		const localExtras = [AICustomizationSources.extension, AICustomizationSources.builtin];
+		const localExtras = [
+      AICustomizationSources.extension,
+      AICustomizationSources.builtin,
+    ];
 		const localHarness = createVSCodeHarnessDescriptor(localExtras);
 
-		super(
-			[],
-			SessionType.Local,
-			promptsService,
-		);
+		super([], SessionType.Local, promptsService);
 
-		const sync = () => this._syncLocalHarness(localHarness, this._hasLocalSessionType());
+		const sync = () => this._syncLocalHarness(
+      localHarness,
+      this._hasLocalSessionType(),
+    );
 
 		this.sessionsManagementService.onDidChangeSessionTypes(sync);
 
@@ -56,8 +62,8 @@ export class SessionsCustomizationHarnessService extends CustomizationHarnessSer
 
 	private _hasLocalSessionType(): boolean {
 		return this.sessionsManagementService.getAllSessionTypes().some(
-			t => t.id === LOCAL_HARNESS_SESSION_TYPE
-		);
+      t => t.id === LOCAL_HARNESS_SESSION_TYPE,
+    );
 	}
 
 	private _syncLocalHarness(descriptor: IHarnessDescriptor, enabled: boolean): void {

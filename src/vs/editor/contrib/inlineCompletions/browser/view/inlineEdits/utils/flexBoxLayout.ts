@@ -26,7 +26,7 @@ export interface IFlexBoxPartExtensionRule {
 */
 export function distributeFlexBoxLayout<T extends Record<string, IFlexBoxPartGrowthRule | IFlexBoxPartGrowthRule[]>>(
 	totalSize: number,
-	parts: T & Record<string, IFlexBoxPartGrowthRule | IFlexBoxPartGrowthRule[]>
+	parts: T & Record<string, IFlexBoxPartGrowthRule | IFlexBoxPartGrowthRule[]>,
 ): Record<keyof T, number> | null {
 	// Normalize parts to always have array of rules
 	const normalizedParts: Record<string, { min: number; rules: IFlexBoxPartExtensionRule[] }> = {};
@@ -35,9 +35,9 @@ export function distributeFlexBoxLayout<T extends Record<string, IFlexBoxPartGro
 			normalizedParts[key] = { min: 0, rules: part };
 		} else {
 			normalizedParts[key] = {
-				min: part.min ?? 0,
-				rules: part.rules ?? [{ max: part.max, priority: part.priority, share: part.share }]
-			};
+        min: part.min ?? 0,
+        rules: part.rules ?? [{ max: part.max, priority: part.priority, share: part.share }],
+      };
 		}
 	}
 
@@ -75,12 +75,12 @@ export function distributeFlexBoxLayout<T extends Record<string, IFlexBoxPartGro
 
 				if (currentUsage < maxSize) {
 					candidateRules.push({
-						partKey: key,
-						ruleIndex: i,
-						rule,
-						priority: rule.priority ?? 0,
-						share: rule.share ?? 1
-					});
+            partKey: key,
+            ruleIndex: i,
+            rule,
+            priority: rule.priority ?? 0,
+            share: rule.share ?? 1,
+          });
 				}
 			}
 		}
@@ -92,10 +92,15 @@ export function distributeFlexBoxLayout<T extends Record<string, IFlexBoxPartGro
 
 		// Find the highest priority among candidates
 		const maxPriority = Math.max(...candidateRules.map(c => c.priority));
-		const highestPriorityCandidates = candidateRules.filter(c => c.priority === maxPriority);
+		const highestPriorityCandidates = candidateRules.filter(
+      c => c.priority === maxPriority,
+    );
 
 		// Calculate total share
-		const totalShare = highestPriorityCandidates.reduce((sum, c) => sum + c.share, 0);
+		const totalShare = highestPriorityCandidates.reduce(
+      (sum, c) => sum + c.share,
+      0,
+    );
 
 		// Distribute space proportionally by share
 		let distributedThisRound = 0;
@@ -112,10 +117,10 @@ export function distributeFlexBoxLayout<T extends Record<string, IFlexBoxPartGro
 			const actualAmount = Math.min(idealShare, availableForThisRule);
 
 			distributions.push({
-				partKey: candidate.partKey,
-				ruleIndex: candidate.ruleIndex,
-				amount: actualAmount
-			});
+        partKey: candidate.partKey,
+        ruleIndex: candidate.ruleIndex,
+        amount: actualAmount,
+      });
 
 			distributedThisRound += actualAmount;
 		}

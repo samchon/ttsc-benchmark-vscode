@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Button, ButtonWithDropdown } from '../../../../base/browser/ui/button/button.js';
-import { ActionRunner, IAction } from '../../../../base/common/actions.js';
-import { DisposableStore, IDisposable } from '../../../../base/common/lifecycle.js';
-import { IMenu, SubmenuItemAction } from '../../../../platform/actions/common/actions.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { IContextMenuService } from '../../../../platform/contextview/browser/contextView.js';
-import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
-import { defaultButtonStyles } from '../../../../platform/theme/browser/defaultStyles.js';
-import { CommentCommandId } from '../common/commentCommandIds.js';
+import { Button, ButtonWithDropdown } from "../../../../base/browser/ui/button/button.js";
+import { ActionRunner, IAction } from "../../../../base/common/actions.js";
+import { DisposableStore, IDisposable } from "../../../../base/common/lifecycle.js";
+import { IMenu, SubmenuItemAction } from "../../../../platform/actions/common/actions.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { defaultButtonStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { CommentCommandId } from "../common/commentCommandIds.js";
 
 export class CommentFormActions implements IDisposable {
 	private _buttonElements: HTMLElement[] = [];
@@ -61,19 +61,28 @@ export class CommentFormActions implements IDisposable {
 					title,
 					addPrimaryActionToDropdown: false,
 					small: true,
-					...defaultButtonStyles
-				}) : new Button(this.container, { secondary: !isPrimary, title, small: true, ...defaultButtonStyles });
+					...defaultButtonStyles,
+				}) : new Button(this.container, {
+          secondary: !isPrimary,
+          title,
+          small: true,
+          ...defaultButtonStyles,
+        });
 
 				isPrimary = false;
 				this._buttonElements.push(button.element);
 
 				this._toDispose.add(button);
-				this._toDispose.add(button.onDidClick(() => this.actionHandler(action)));
+				this._toDispose.add(
+          button.onDidClick(() => this.actionHandler(action)),
+        );
 
 				button.enabled = action.enabled;
 				button.label = action.label;
 				if ((this.maxActions !== undefined) && (this._buttonElements.length >= this.maxActions)) {
-					console.warn(`An extension has contributed more than the allowable number of actions to a comments menu.`);
+					console.warn(
+            `An extension has contributed more than the allowable number of actions to a comments menu.`,
+          );
 					return;
 				}
 			}

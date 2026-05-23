@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ExtensionIdentifierMap, IExtensionDescription } from '../../../../platform/extensions/common/extensions.js';
-import { localize } from '../../../../nls.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import * as semver from '../../../../base/common/semver/semver.js';
-import { Mutable } from '../../../../base/common/types.js';
+import { ExtensionIdentifierMap, IExtensionDescription } from "../../../../platform/extensions/common/extensions.js";
+import { localize } from "../../../../nls.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import * as semver from "../../../../base/common/semver/semver.js";
+import { Mutable } from "../../../../base/common/types.js";
 
 // TODO: @sandy081 merge this with deduping in extensionsScannerService.ts
 export function dedupExtensions(system: IExtensionDescription[], user: IExtensionDescription[], workspace: IExtensionDescription[], development: IExtensionDescription[], logService: ILogService): IExtensionDescription[] {
@@ -15,7 +15,7 @@ export function dedupExtensions(system: IExtensionDescription[], user: IExtensio
 	system.forEach((systemExtension) => {
 		const extension = result.get(systemExtension.identifier);
 		if (extension) {
-			logService.warn(localize('overwritingExtension', "Overwriting extension {0} with {1}.", extension.extensionLocation.fsPath, systemExtension.extensionLocation.fsPath));
+			logService.warn(localize("overwritingExtension", "Overwriting extension {0} with {1}.", extension.extensionLocation.fsPath, systemExtension.extensionLocation.fsPath));
 		}
 		result.set(systemExtension.identifier, systemExtension);
 	});
@@ -30,7 +30,7 @@ export function dedupExtensions(system: IExtensionDescription[], user: IExtensio
 				// Overwriting a builtin extension inherits the `isBuiltin` property and it doesn't show a warning
 				(<Mutable<IExtensionDescription>>userExtension).isBuiltin = true;
 			} else {
-				logService.warn(localize('overwritingExtension', "Overwriting extension {0} with {1}.", extension.extensionLocation.fsPath, userExtension.extensionLocation.fsPath));
+				logService.warn(localize("overwritingExtension", "Overwriting extension {0} with {1}.", extension.extensionLocation.fsPath, userExtension.extensionLocation.fsPath));
 			}
 		} else if (userExtension.isBuiltin) {
 			logService.warn(`Skipping obsolete builtin extension ${userExtension.extensionLocation.path}`);
@@ -41,12 +41,12 @@ export function dedupExtensions(system: IExtensionDescription[], user: IExtensio
 	workspace.forEach(workspaceExtension => {
 		const extension = result.get(workspaceExtension.identifier);
 		if (extension) {
-			logService.warn(localize('overwritingWithWorkspaceExtension', "Overwriting {0} with Workspace Extension {1}.", extension.extensionLocation.fsPath, workspaceExtension.extensionLocation.fsPath));
+			logService.warn(localize("overwritingWithWorkspaceExtension", "Overwriting {0} with Workspace Extension {1}.", extension.extensionLocation.fsPath, workspaceExtension.extensionLocation.fsPath));
 		}
 		result.set(workspaceExtension.identifier, workspaceExtension);
 	});
 	development.forEach(developedExtension => {
-		logService.info(localize('extensionUnderDevelopment', "Loading development extension at {0}", developedExtension.extensionLocation.fsPath));
+		logService.info(localize("extensionUnderDevelopment", "Loading development extension at {0}", developedExtension.extensionLocation.fsPath));
 		const extension = result.get(developedExtension.identifier);
 		if (extension) {
 			if (extension.isBuiltin) {

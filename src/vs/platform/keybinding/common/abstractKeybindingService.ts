@@ -3,25 +3,25 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WorkbenchActionExecutedClassification, WorkbenchActionExecutedEvent } from '../../../base/common/actions.js';
-import * as arrays from '../../../base/common/arrays.js';
-import { IntervalTimer, TimeoutTimer } from '../../../base/common/async.js';
-import { illegalState } from '../../../base/common/errors.js';
-import { Emitter, Event } from '../../../base/common/event.js';
-import { IME } from '../../../base/common/ime.js';
-import { KeyCode } from '../../../base/common/keyCodes.js';
-import { Keybinding, ResolvedChord, ResolvedKeybinding, SingleModifierChord } from '../../../base/common/keybindings.js';
-import { Disposable, IDisposable } from '../../../base/common/lifecycle.js';
-import * as nls from '../../../nls.js';
+import { WorkbenchActionExecutedClassification, WorkbenchActionExecutedEvent } from "../../../base/common/actions.js";
+import * as arrays from "../../../base/common/arrays.js";
+import { IntervalTimer, TimeoutTimer } from "../../../base/common/async.js";
+import { illegalState } from "../../../base/common/errors.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { IME } from "../../../base/common/ime.js";
+import { KeyCode } from "../../../base/common/keyCodes.js";
+import { Keybinding, ResolvedChord, ResolvedKeybinding, SingleModifierChord } from "../../../base/common/keybindings.js";
+import { Disposable, IDisposable } from "../../../base/common/lifecycle.js";
+import * as nls from "../../../nls.js";
 
-import { ICommandService } from '../../commands/common/commands.js';
-import { IContextKeyService, IContextKeyServiceTarget } from '../../contextkey/common/contextkey.js';
-import { IKeybindingService, IKeyboardEvent, KeybindingsSchemaContribution } from './keybinding.js';
-import { ResolutionResult, KeybindingResolver, ResultKind, NoMatchingKb } from './keybindingResolver.js';
-import { ResolvedKeybindingItem } from './resolvedKeybindingItem.js';
-import { ILogService } from '../../log/common/log.js';
-import { INotificationService, IStatusHandle } from '../../notification/common/notification.js';
-import { ITelemetryService } from '../../telemetry/common/telemetry.js';
+import { ICommandService } from "../../commands/common/commands.js";
+import { IContextKeyService, IContextKeyServiceTarget } from "../../contextkey/common/contextkey.js";
+import { IKeybindingService, IKeyboardEvent, KeybindingsSchemaContribution } from "./keybinding.js";
+import { ResolutionResult, KeybindingResolver, ResultKind, NoMatchingKb } from "./keybindingResolver.js";
+import { ResolvedKeybindingItem } from "./resolvedKeybindingItem.js";
+import { ILogService } from "../../log/common/log.js";
+import { INotificationService, IStatusHandle } from "../../notification/common/notification.js";
+import { ITelemetryService } from "../../telemetry/common/telemetry.js";
 
 interface CurrentChord {
 	keypress: string;
@@ -34,7 +34,9 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 
 	public _serviceBrand: undefined;
 
-	protected readonly _onDidUpdateKeybindings: Emitter<void> = this._register(new Emitter<void>());
+	protected readonly _onDidUpdateKeybindings: Emitter<void> = this._register(
+    new Emitter<void>(),
+  );
 	get onDidUpdateKeybindings(): Event<void> {
 		return this._onDidUpdateKeybindings ? this._onDidUpdateKeybindings.event : Event.None; // Sinon stubbing walks properties on prototype
 	}
@@ -91,7 +93,7 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 	public abstract _dumpDebugInfoJSON(): string;
 
 	public getDefaultKeybindingsContent(): string {
-		return '';
+		return "";
 	}
 
 	public toggleLogging(): boolean {
@@ -119,12 +121,18 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 
 	public lookupKeybindings(commandId: string): ResolvedKeybinding[] {
 		return arrays.coalesce(
-			this._getResolver().lookupKeybindings(commandId).map(item => item.resolvedKeybinding)
-		);
+      this._getResolver().lookupKeybindings(commandId).map(
+        item => item.resolvedKeybinding,
+      ),
+    );
 	}
 
 	public lookupKeybinding(commandId: string, context?: IContextKeyService, enforceContextCheck = false): ResolvedKeybinding | undefined {
-		const result = this._getResolver().lookupPrimaryKeybinding(commandId, context || this._contextKeyService, enforceContextCheck);
+		const result = this._getResolver().lookupPrimaryKeybinding(
+      commandId,
+      context || this._contextKeyService,
+      enforceContextCheck,
+    );
 		if (!result) {
 			return undefined;
 		}
@@ -141,7 +149,7 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 		this._log(`/ Soft dispatching keyboard event`);
 		const keybinding = this.resolveKeyboardEvent(e);
 		if (keybinding.hasMultipleChords()) {
-			console.warn('keyboard event should not be mapped to multiple chords');
+			console.warn("keyboard event should not be mapped to multiple chords");
 			return NoMatchingKb;
 		}
 		const [firstChord,] = keybinding.getDispatchChords();
@@ -180,14 +188,28 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 
 		switch (this._currentChords.length) {
 			case 0:
-				throw illegalState('impossible');
+				throw illegalState("impossible");
 			case 1:
 				// TODO@ulugbekna: revise this message and the one below (at least, fix terminology)
-				this._currentChordStatusMessage = this._notificationService.status(nls.localize('first.chord', "({0}) was pressed. Waiting for second key of chord...", keypressLabel));
+				this._currentChordStatusMessage = this._notificationService.status(
+          nls.localize(
+            "first.chord",
+            "({0}) was pressed. Waiting for second key of chord...",
+            keypressLabel,
+          ),
+        );
 				break;
 			default: {
-				const fullKeypressLabel = this._currentChords.map(({ label }) => label).join(', ');
-				this._currentChordStatusMessage = this._notificationService.status(nls.localize('next.chord', "({0}) was pressed. Waiting for next key of chord...", fullKeypressLabel));
+				const fullKeypressLabel = this._currentChords.map(({ label }) => label).join(
+          ", ",
+        );
+				this._currentChordStatusMessage = this._notificationService.status(
+          nls.localize(
+            "next.chord",
+            "({0}) was pressed. Waiting for next key of chord...",
+            fullKeypressLabel,
+          ),
+        );
 			}
 		}
 
@@ -209,7 +231,9 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 	}
 
 	public dispatchByUserSettingsLabel(userSettingsLabel: string, target: IContextKeyServiceTarget): void {
-		this._log(`/ Dispatching keybinding triggered via menu entry accelerator - ${userSettingsLabel}`);
+		this._log(
+      `/ Dispatching keybinding triggered via menu entry accelerator - ${userSettingsLabel}`,
+    );
 		const keybindings = this.resolveUserBinding(userSettingsLabel);
 		if (keybindings.length === 0) {
 			this._log(`\\ Could not resolve - ${userSettingsLabel}`);
@@ -229,7 +253,9 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 		if (singleModifier) {
 
 			if (this._ignoreSingleModifiers.has(singleModifier)) {
-				this._log(`+ Ignoring single modifier ${singleModifier} due to it being pressed together with other keys.`);
+				this._log(
+          `+ Ignoring single modifier ${singleModifier} due to it being pressed together with other keys.`,
+        );
 				this._ignoreSingleModifiers = KeybindingModifierSet.EMPTY;
 				this._currentSingleModifierClearTimeout.cancel();
 				this._currentSingleModifier = null;
@@ -240,24 +266,33 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 
 			if (this._currentSingleModifier === null) {
 				// we have a valid `singleModifier`, store it for the next keyup, but clear it in 300ms
-				this._log(`+ Storing single modifier for possible chord ${singleModifier}.`);
+				this._log(
+          `+ Storing single modifier for possible chord ${singleModifier}.`,
+        );
 				this._currentSingleModifier = singleModifier;
-				this._currentSingleModifierClearTimeout.cancelAndSet(() => {
-					this._log(`+ Clearing single modifier due to 300ms elapsed.`);
-					this._currentSingleModifier = null;
-				}, 300);
+				this._currentSingleModifierClearTimeout.cancelAndSet(
+          () => {
+            this._log(`+ Clearing single modifier due to 300ms elapsed.`);
+            this._currentSingleModifier = null;
+          },
+          300,
+        );
 				return false;
 			}
 
 			if (singleModifier === this._currentSingleModifier) {
 				// bingo!
-				this._log(`/ Dispatching single modifier chord ${singleModifier} ${singleModifier}`);
+				this._log(
+          `/ Dispatching single modifier chord ${singleModifier} ${singleModifier}`,
+        );
 				this._currentSingleModifierClearTimeout.cancel();
 				this._currentSingleModifier = null;
 				return this._doDispatch(keybinding, target, /*isSingleModiferChord*/true);
 			}
 
-			this._log(`+ Clearing single modifier due to modifier mismatch: ${this._currentSingleModifier} ${singleModifier}`);
+			this._log(
+        `+ Clearing single modifier due to modifier mismatch: ${this._currentSingleModifier} ${singleModifier}`,
+      );
 			this._currentSingleModifierClearTimeout.cancel();
 			this._currentSingleModifier = null;
 			return false;
@@ -280,7 +315,7 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 		let shouldPreventDefault = false;
 
 		if (userKeypress.hasMultipleChords()) { // warn - because user can press a single chord at a time
-			console.warn('Unexpected keyboard event mapped to multiple chords');
+			console.warn("Unexpected keyboard event mapped to multiple chords");
 			return false;
 		}
 
@@ -308,18 +343,38 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 		const contextValue = this._contextKeyService.getContext(target);
 		const keypressLabel = userKeypress.getLabel();
 
-		const resolveResult = this._getResolver().resolve(contextValue, currentChords, userPressedChord);
+		const resolveResult = this._getResolver().resolve(
+      contextValue,
+      currentChords,
+      userPressedChord,
+    );
 
 		switch (resolveResult.kind) {
 
 			case ResultKind.NoMatchingKb: {
 
-				this._logService.trace('KeybindingService#dispatch', keypressLabel, `[ No matching keybinding ]`);
+				this._logService.trace(
+          "KeybindingService#dispatch",
+          keypressLabel,
+          `[ No matching keybinding ]`,
+        );
 
 				if (this.inChordMode) {
-					const currentChordsLabel = this._currentChords.map(({ label }) => label).join(', ');
-					this._log(`+ Leaving multi-chord mode: Nothing bound to "${currentChordsLabel}, ${keypressLabel}".`);
-					this._notificationService.status(nls.localize('missing.chord', "The key combination ({0}, {1}) is not a command.", currentChordsLabel, keypressLabel), { hideAfter: 10 * 1000 /* 10s */ });
+					const currentChordsLabel = this._currentChords.map(({ label }) => label).join(
+            ", ",
+          );
+					this._log(
+            `+ Leaving multi-chord mode: Nothing bound to "${currentChordsLabel}, ${keypressLabel}".`,
+          );
+					this._notificationService.status(
+            nls.localize(
+              "missing.chord",
+              "The key combination ({0}, {1}) is not a command.",
+              currentChordsLabel,
+              keypressLabel,
+            ),
+            { hideAfter: 10 * 1000 },
+          );
 					this._leaveChordMode();
 
 					shouldPreventDefault = true;
@@ -329,24 +384,46 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 
 			case ResultKind.MoreChordsNeeded: {
 
-				this._logService.trace('KeybindingService#dispatch', keypressLabel, `[ Several keybindings match - more chords needed ]`);
+				this._logService.trace(
+          "KeybindingService#dispatch",
+          keypressLabel,
+          `[ Several keybindings match - more chords needed ]`,
+        );
 
 				shouldPreventDefault = true;
 				this._expectAnotherChord(userPressedChord, keypressLabel);
-				this._log(this._currentChords.length === 1 ? `+ Entering multi-chord mode...` : `+ Continuing multi-chord mode...`);
+				this._log(
+          this._currentChords.length === 1 ? `+ Entering multi-chord mode...` : `+ Continuing multi-chord mode...`,
+        );
 				return shouldPreventDefault;
 			}
 
 			case ResultKind.KbFound: {
 
-				this._logService.trace('KeybindingService#dispatch', keypressLabel, `[ Will dispatch command ${resolveResult.commandId} ]`);
+				this._logService.trace(
+          "KeybindingService#dispatch",
+          keypressLabel,
+          `[ Will dispatch command ${resolveResult.commandId} ]`,
+        );
 
-				if (resolveResult.commandId === null || resolveResult.commandId === '') {
+				if (resolveResult.commandId === null || resolveResult.commandId === "") {
 
 					if (this.inChordMode) {
-						const currentChordsLabel = this._currentChords.map(({ label }) => label).join(', ');
-						this._log(`+ Leaving chord mode: Nothing bound to "${currentChordsLabel}, ${keypressLabel}".`);
-						this._notificationService.status(nls.localize('missing.chord', "The key combination ({0}, {1}) is not a command.", currentChordsLabel, keypressLabel), { hideAfter: 10 * 1000 /* 10s */ });
+						const currentChordsLabel = this._currentChords.map(({ label }) => label).join(
+              ", ",
+            );
+						this._log(
+              `+ Leaving chord mode: Nothing bound to "${currentChordsLabel}, ${keypressLabel}".`,
+            );
+						this._notificationService.status(
+              nls.localize(
+                "missing.chord",
+                "The key combination ({0}, {1}) is not a command.",
+                currentChordsLabel,
+                keypressLabel,
+              ),
+              { hideAfter: 10 * 1000 },
+            );
 						this._leaveChordMode();
 						shouldPreventDefault = true;
 					}
@@ -363,17 +440,30 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 					this._log(`+ Invoking command ${resolveResult.commandId}.`);
 					this._currentlyDispatchingCommandId = resolveResult.commandId;
 					try {
-						if (typeof resolveResult.commandArgs === 'undefined') {
-							this._commandService.executeCommand(resolveResult.commandId).then(undefined, err => this._notificationService.warn(err));
+						if (typeof resolveResult.commandArgs === "undefined") {
+							this._commandService.executeCommand(resolveResult.commandId).then(
+                undefined,
+                err => this._notificationService.warn(err),
+              );
 						} else {
-							this._commandService.executeCommand(resolveResult.commandId, resolveResult.commandArgs).then(undefined, err => this._notificationService.warn(err));
+							this._commandService.executeCommand(resolveResult.commandId, resolveResult.commandArgs).then(
+                undefined,
+                err => this._notificationService.warn(err),
+              );
 						}
 					} finally {
 						this._currentlyDispatchingCommandId = null;
 					}
 
 					if (!HIGH_FREQ_COMMANDS.test(resolveResult.commandId)) {
-						this._telemetryService.publicLog2<WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification>('workbenchActionExecuted', { id: resolveResult.commandId, from: 'keybinding', detail: userKeypress.getUserSettingsLabel() ?? undefined });
+						this._telemetryService.publicLog2<WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification>(
+              "workbenchActionExecuted",
+              {
+                id: resolveResult.commandId,
+                from: "keybinding",
+                detail: userKeypress.getUserSettingsLabel() ?? undefined,
+              },
+            );
 					}
 				}
 
@@ -403,10 +493,14 @@ export abstract class AbstractKeybindingService extends Disposable implements IK
 			const keybindingLabel = this.lookupKeybinding(commandId, context, enforceContextCheck)?.getLabel();
 			if (keybindingLabel) {
 				return nls.localize(
-					{ key: 'keybindingLabel', comment: ['UI element label', 'A keybinding label'] },
-					"{0} ({1})",
-					label,
-					keybindingLabel);
+          {
+            key: "keybindingLabel",
+            comment: ["UI element label", "A keybinding label"],
+          },
+          "{0} ({1})",
+          label,
+          keybindingLabel,
+        );
 			}
 		}
 		return label;
@@ -431,10 +525,10 @@ class KeybindingModifierSet {
 
 	has(modifier: SingleModifierChord) {
 		switch (modifier) {
-			case 'ctrl': return this._ctrlKey;
-			case 'shift': return this._shiftKey;
-			case 'alt': return this._altKey;
-			case 'meta': return this._metaKey;
+			case "ctrl": return this._ctrlKey;
+			case "shift": return this._shiftKey;
+			case "alt": return this._altKey;
+			case "meta": return this._metaKey;
 		}
 	}
 }

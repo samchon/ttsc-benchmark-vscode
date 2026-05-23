@@ -3,59 +3,77 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../nls.js';
-import { Event } from '../../base/common/event.js';
-import { DeepRequiredNonNullable, assertReturnsDefined } from '../../base/common/types.js';
-import { URI } from '../../base/common/uri.js';
-import { Disposable, IDisposable, toDisposable } from '../../base/common/lifecycle.js';
-import { ICodeEditorViewState, IDiffEditor, IDiffEditorViewState, IEditor, IEditorViewState } from '../../editor/common/editorCommon.js';
-import { IEditorOptions, IResourceEditorInput, ITextResourceEditorInput, IBaseTextResourceEditorInput, IBaseUntypedEditorInput, ITextEditorOptions } from '../../platform/editor/common/editor.js';
-import type { EditorInput } from './editor/editorInput.js';
-import { IInstantiationService, IConstructorSignature, ServicesAccessor, BrandedService } from '../../platform/instantiation/common/instantiation.js';
-import { IContextKeyService } from '../../platform/contextkey/common/contextkey.js';
-import { Registry } from '../../platform/registry/common/platform.js';
-import { IEncodingSupport, ILanguageSupport } from '../services/textfile/common/textfiles.js';
-import { IEditorGroup } from '../services/editor/common/editorGroupsService.js';
-import { ICompositeControl, IComposite } from './composite.js';
-import { FileType, IFileReadLimits, IFileService } from '../../platform/files/common/files.js';
-import { IPathData } from '../../platform/window/common/window.js';
-import { IExtUri } from '../../base/common/resources.js';
-import { Schemas } from '../../base/common/network.js';
-import { IEditorService } from '../services/editor/common/editorService.js';
-import { ILogService } from '../../platform/log/common/log.js';
-import { IErrorWithActions, createErrorWithActions, isErrorWithActions } from '../../base/common/errorMessage.js';
-import { IAction, toAction } from '../../base/common/actions.js';
-import Severity from '../../base/common/severity.js';
-import { IPreferencesService } from '../services/preferences/common/preferences.js';
-import { IReadonlyEditorGroupModel } from './editor/editorGroupModel.js';
+import { localize } from "../../nls.js";
+import { Event } from "../../base/common/event.js";
+import { DeepRequiredNonNullable, assertReturnsDefined } from "../../base/common/types.js";
+import { URI } from "../../base/common/uri.js";
+import { Disposable, IDisposable, toDisposable } from "../../base/common/lifecycle.js";
+import {
+  ICodeEditorViewState,
+  IDiffEditor,
+  IDiffEditorViewState,
+  IEditor,
+  IEditorViewState,
+} from "../../editor/common/editorCommon.js";
+import {
+  IEditorOptions,
+  IResourceEditorInput,
+  ITextResourceEditorInput,
+  IBaseTextResourceEditorInput,
+  IBaseUntypedEditorInput,
+  ITextEditorOptions,
+} from "../../platform/editor/common/editor.js";
+import type { EditorInput } from "./editor/editorInput.js";
+import {
+  IInstantiationService,
+  IConstructorSignature,
+  ServicesAccessor,
+  BrandedService,
+} from "../../platform/instantiation/common/instantiation.js";
+import { IContextKeyService } from "../../platform/contextkey/common/contextkey.js";
+import { Registry } from "../../platform/registry/common/platform.js";
+import { IEncodingSupport, ILanguageSupport } from "../services/textfile/common/textfiles.js";
+import { IEditorGroup } from "../services/editor/common/editorGroupsService.js";
+import { ICompositeControl, IComposite } from "./composite.js";
+import { FileType, IFileReadLimits, IFileService } from "../../platform/files/common/files.js";
+import { IPathData } from "../../platform/window/common/window.js";
+import { IExtUri } from "../../base/common/resources.js";
+import { Schemas } from "../../base/common/network.js";
+import { IEditorService } from "../services/editor/common/editorService.js";
+import { ILogService } from "../../platform/log/common/log.js";
+import { IErrorWithActions, createErrorWithActions, isErrorWithActions } from "../../base/common/errorMessage.js";
+import { IAction, toAction } from "../../base/common/actions.js";
+import Severity from "../../base/common/severity.js";
+import { IPreferencesService } from "../services/preferences/common/preferences.js";
+import { IReadonlyEditorGroupModel } from "./editor/editorGroupModel.js";
 
 // Static values for editor contributions
 export const EditorExtensions = {
-	EditorPane: 'workbench.contributions.editors',
-	EditorFactory: 'workbench.contributions.editor.inputFactories'
+  EditorPane: "workbench.contributions.editors",
+  EditorFactory: "workbench.contributions.editor.inputFactories",
 };
 
 // Static information regarding the text editor
 export const DEFAULT_EDITOR_ASSOCIATION = {
-	id: 'default',
-	displayName: localize('promptOpenWith.defaultEditor.displayName', "Text Editor"),
-	providerDisplayName: localize('builtinProviderDisplayName', "Built-in")
+  id: "default",
+  displayName: localize("promptOpenWith.defaultEditor.displayName", "Text Editor"),
+  providerDisplayName: localize("builtinProviderDisplayName", "Built-in"),
 };
 
 /**
  * Side by side editor id.
  */
-export const SIDE_BY_SIDE_EDITOR_ID = 'workbench.editor.sidebysideEditor';
+export const SIDE_BY_SIDE_EDITOR_ID = "workbench.editor.sidebysideEditor";
 
 /**
  * Text diff editor id.
  */
-export const TEXT_DIFF_EDITOR_ID = 'workbench.editors.textDiffEditor';
+export const TEXT_DIFF_EDITOR_ID = "workbench.editors.textDiffEditor";
 
 /**
  * Binary diff editor id.
  */
-export const BINARY_DIFF_EDITOR_ID = 'workbench.editors.binaryResourceDiffEditor';
+export const BINARY_DIFF_EDITOR_ID = "workbench.editors.binaryResourceDiffEditor";
 
 export interface IEditorDescriptor<T extends IEditorPane> {
 
@@ -323,7 +341,7 @@ export interface IEditorPaneWithSelection extends IEditorPane {
 export function isEditorPaneWithSelection(editorPane: IEditorPane | undefined): editorPane is IEditorPaneWithSelection {
 	const candidate = editorPane as IEditorPaneWithSelection | undefined;
 
-	return !!candidate && typeof candidate.getSelection === 'function' && !!candidate.onDidChangeSelection;
+	return !!candidate && typeof candidate.getSelection === "function" && !!candidate.onDidChangeSelection;
 }
 
 export interface IEditorPaneWithScrolling extends IEditorPane {
@@ -338,7 +356,7 @@ export interface IEditorPaneWithScrolling extends IEditorPane {
 export function isEditorPaneWithScrolling(editorPane: IEditorPane | undefined): editorPane is IEditorPaneWithScrolling {
 	const candidate = editorPane as IEditorPaneWithScrolling | undefined;
 
-	return !!candidate && typeof candidate.getScrollPosition === 'function' && typeof candidate.setScrollPosition === 'function' && !!candidate.onDidChangeScroll;
+	return !!candidate && typeof candidate.getScrollPosition === "function" && typeof candidate.setScrollPosition === "function" && !!candidate.onDidChangeScroll;
 }
 
 /**
@@ -504,12 +522,12 @@ export interface IResourceSideBySideEditorInput extends IBaseUntypedEditorInput 
 	/**
 	 * The right hand side editor to open inside a side-by-side editor.
 	 */
-	readonly primary: Omit<IResourceEditorInput, 'options'> | Omit<ITextResourceEditorInput, 'options'> | Omit<IUntitledTextResourceEditorInput, 'options'>;
+	readonly primary: Omit<IResourceEditorInput, "options"> | Omit<ITextResourceEditorInput, "options"> | Omit<IUntitledTextResourceEditorInput, "options">;
 
 	/**
 	 * The left hand side editor to open inside a side-by-side editor.
 	 */
-	readonly secondary: Omit<IResourceEditorInput, 'options'> | Omit<ITextResourceEditorInput, 'options'> | Omit<IUntitledTextResourceEditorInput, 'options'>;
+	readonly secondary: Omit<IResourceEditorInput, "options"> | Omit<ITextResourceEditorInput, "options"> | Omit<IUntitledTextResourceEditorInput, "options">;
 }
 
 /**
@@ -524,12 +542,12 @@ export interface IResourceDiffEditorInput extends IBaseUntypedEditorInput {
 	/**
 	 * The left hand side editor to open inside a diff editor.
 	 */
-	readonly original: Omit<IResourceEditorInput, 'options'> | Omit<ITextResourceEditorInput, 'options'> | Omit<IUntitledTextResourceEditorInput, 'options'>;
+	readonly original: Omit<IResourceEditorInput, "options"> | Omit<ITextResourceEditorInput, "options"> | Omit<IUntitledTextResourceEditorInput, "options">;
 
 	/**
 	 * The right hand side editor to open inside a diff editor.
 	 */
-	readonly modified: Omit<IResourceEditorInput, 'options'> | Omit<ITextResourceEditorInput, 'options'> | Omit<IUntitledTextResourceEditorInput, 'options'>;
+	readonly modified: Omit<IResourceEditorInput, "options"> | Omit<ITextResourceEditorInput, "options"> | Omit<IUntitledTextResourceEditorInput, "options">;
 }
 
 export interface ITextResourceDiffEditorInput extends IBaseTextResourceEditorInput {
@@ -537,12 +555,12 @@ export interface ITextResourceDiffEditorInput extends IBaseTextResourceEditorInp
 	/**
 	 * The left hand side text editor to open inside a diff editor.
 	 */
-	readonly original: Omit<ITextResourceEditorInput, 'options'> | Omit<IUntitledTextResourceEditorInput, 'options'>;
+	readonly original: Omit<ITextResourceEditorInput, "options"> | Omit<IUntitledTextResourceEditorInput, "options">;
 
 	/**
 	 * The right hand side text editor to open inside a diff editor.
 	 */
-	readonly modified: Omit<ITextResourceEditorInput, 'options'> | Omit<IUntitledTextResourceEditorInput, 'options'>;
+	readonly modified: Omit<ITextResourceEditorInput, "options"> | Omit<IUntitledTextResourceEditorInput, "options">;
 }
 
 /**
@@ -571,7 +589,7 @@ export interface IResourceMultiDiffEditorInput extends IBaseUntypedEditorInput {
 export interface IMultiDiffEditorResource extends IResourceDiffEditorInput {
 	readonly goToFileResource?: URI;
 }
-export type IResourceMergeEditorInputSide = (Omit<IResourceEditorInput, 'options'> | Omit<ITextResourceEditorInput, 'options'>) & { detail?: string };
+export type IResourceMergeEditorInputSide = (Omit<IResourceEditorInput, "options"> | Omit<ITextResourceEditorInput, "options">) & { detail?: string };
 
 /**
  * A resource merge editor input compares multiple editors
@@ -595,12 +613,12 @@ export interface IResourceMergeEditorInput extends IBaseUntypedEditorInput {
 	/**
 	 * The base common ancestor of the file to merge.
 	 */
-	readonly base: Omit<IResourceEditorInput, 'options'> | Omit<ITextResourceEditorInput, 'options'>;
+	readonly base: Omit<IResourceEditorInput, "options"> | Omit<ITextResourceEditorInput, "options">;
 
 	/**
 	 * The resulting output of the merge.
 	 */
-	readonly result: Omit<IResourceEditorInput, 'options'> | Omit<ITextResourceEditorInput, 'options'>;
+	readonly result: Omit<IResourceEditorInput, "options"> | Omit<ITextResourceEditorInput, "options">;
 }
 
 export function isResourceEditorInput(editor: unknown): editor is IResourceEditorInput {
@@ -673,7 +691,9 @@ export function isResourceMergeEditorInput(editor: unknown): editor is IResource
 
 	const candidate = editor as IResourceMergeEditorInput | undefined;
 
-	return URI.isUri(candidate?.base?.resource) && URI.isUri(candidate?.input1?.resource) && URI.isUri(candidate?.input2?.resource) && URI.isUri(candidate?.result?.resource);
+	return URI.isUri(candidate?.base?.resource) && URI.isUri(
+    candidate?.input1?.resource,
+  ) && URI.isUri(candidate?.input2?.resource) && URI.isUri(candidate?.result?.resource);
 }
 
 export const enum Verbosity {
@@ -1025,25 +1045,25 @@ export interface IFileEditorInputOptions extends ITextEditorOptions, IFileLimite
 export function createTooLargeFileError(group: IEditorGroup, input: EditorInput, options: IEditorOptions | undefined, message: string, preferencesService: IPreferencesService): Error {
 	return createEditorOpenError(message, [
 		toAction({
-			id: 'workbench.action.openLargeFile', label: localize('openLargeFile', "Open Anyway"), run: () => {
+			id: "workbench.action.openLargeFile", label: localize("openLargeFile", "Open Anyway"), run: () => {
 				const fileEditorOptions: IFileEditorInputOptions = {
 					...options,
 					limits: {
-						size: Number.MAX_VALUE
-					}
+						size: Number.MAX_VALUE,
+					},
 				};
 
 				group.openEditor(input, fileEditorOptions);
-			}
+			},
 		}),
 		toAction({
-			id: 'workbench.action.configureEditorLargeFileConfirmation', label: localize('configureEditorLargeFileConfirmation', "Configure Limit"), run: () => {
-				return preferencesService.openUserSettings({ query: 'workbench.editorLargeFileConfirmation' });
-			}
+			id: "workbench.action.configureEditorLargeFileConfirmation", label: localize("configureEditorLargeFileConfirmation", "Configure Limit"), run: () => {
+				return preferencesService.openUserSettings({ query: "workbench.editorLargeFileConfirmation" });
+			},
 		}),
 	], {
 		forceMessage: true,
-		forceSeverity: Severity.Warning
+		forceSeverity: Severity.Warning,
 	});
 }
 
@@ -1092,7 +1112,9 @@ export interface IEditorIdentifier {
 export function isEditorIdentifier(identifier: unknown): identifier is IEditorIdentifier {
 	const candidate = identifier as IEditorIdentifier | undefined;
 
-	return typeof candidate?.groupId === 'number' && isEditorInput(candidate.editor);
+	return typeof candidate?.groupId === "number" && isEditorInput(
+    candidate.editor,
+  );
 }
 
 /**
@@ -1110,7 +1132,7 @@ export interface IEditorCommandsContext {
 export function isEditorCommandsContext(context: unknown): context is IEditorCommandsContext {
 	const candidate = context as IEditorCommandsContext | undefined;
 
-	return typeof candidate?.groupId === 'number';
+	return typeof candidate?.groupId === "number";
 }
 
 /**
@@ -1246,47 +1268,47 @@ interface IEditorPartDecorationsConfiguration {
 export interface IEditorPartDecorationOptions extends Required<IEditorPartDecorationsConfiguration> { }
 
 interface IEditorPartConfiguration {
-	showTabs?: 'multiple' | 'single' | 'none';
+	showTabs?: "multiple" | "single" | "none";
 	wrapTabs?: boolean;
 	scrollToSwitchTabs?: boolean;
 	highlightModifiedTabs?: boolean;
-	tabActionLocation?: 'left' | 'right';
+	tabActionLocation?: "left" | "right";
 	tabActionCloseVisibility?: boolean;
 	tabActionUnpinVisibility?: boolean;
 	showTabIndex?: boolean;
 	alwaysShowEditorActions?: boolean;
-	tabSizing?: 'fit' | 'shrink' | 'fixed';
+	tabSizing?: "fit" | "shrink" | "fixed";
 	tabSizingFixedMinWidth?: number;
 	tabSizingFixedMaxWidth?: number;
-	pinnedTabSizing?: 'normal' | 'compact' | 'shrink';
+	pinnedTabSizing?: "normal" | "compact" | "shrink";
 	pinnedTabsOnSeparateRow?: boolean;
-	tabHeight?: 'default' | 'compact';
+	tabHeight?: "default" | "compact";
 	preventPinnedEditorClose?: PreventPinnedEditorClose;
-	titleScrollbarSizing?: 'default' | 'large';
-	titleScrollbarVisibility?: 'auto' | 'visible' | 'hidden';
+	titleScrollbarSizing?: "default" | "large";
+	titleScrollbarVisibility?: "auto" | "visible" | "hidden";
 	focusRecentEditorAfterClose?: boolean;
 	showIcons?: boolean;
 	enablePreview?: boolean;
 	enablePreviewFromQuickOpen?: boolean;
 	enablePreviewFromCodeNavigation?: boolean;
 	closeOnFileDelete?: boolean;
-	openPositioning?: 'left' | 'right' | 'first' | 'last';
-	openSideBySideDirection?: 'right' | 'down';
+	openPositioning?: "left" | "right" | "first" | "last";
+	openSideBySideDirection?: "right" | "down";
 	closeEmptyGroups?: boolean;
 	autoLockGroups?: Set<string>;
 	revealIfOpen?: boolean;
 	swipeToNavigate?: boolean;
 	mouseBackForwardToNavigate?: boolean;
-	labelFormat?: 'default' | 'short' | 'medium' | 'long';
+	labelFormat?: "default" | "short" | "medium" | "long";
 	restoreViewState?: boolean;
-	splitInGroupLayout?: 'vertical' | 'horizontal';
-	splitSizing?: 'auto' | 'split' | 'distribute';
+	splitInGroupLayout?: "vertical" | "horizontal";
+	splitSizing?: "auto" | "split" | "distribute";
 	splitOnDragAndDrop?: boolean;
 	allowDropIntoGroup?: boolean;
 	dragToOpenWindow?: boolean;
 	centeredLayoutFixedWidth?: boolean;
-	doubleClickTabToToggleEditorGroupSizes?: 'maximize' | 'expand' | 'off';
-	editorActionsLocation?: 'default' | 'titleBar' | 'hidden';
+	doubleClickTabToToggleEditorGroupSizes?: "maximize" | "expand" | "off";
+	editorActionsLocation?: "default" | "titleBar" | "hidden";
 	limit?: IEditorPartLimitConfiguration;
 	decorations?: IEditorPartDecorationsConfiguration;
 }
@@ -1393,23 +1415,31 @@ class EditorResourceAccessorImpl {
 			if (primary && secondary) {
 				if (options?.supportSideBySide === SideBySideEditor.BOTH) {
 					return {
-						primary: this.getOriginalUri(primary, { filterByScheme: options.filterByScheme }),
-						secondary: this.getOriginalUri(secondary, { filterByScheme: options.filterByScheme })
-					};
+            primary: this.getOriginalUri(primary, { filterByScheme: options.filterByScheme }),
+            secondary: this.getOriginalUri(secondary, { filterByScheme: options.filterByScheme }),
+          };
 				} else if (options?.supportSideBySide === SideBySideEditor.ANY) {
-					return this.getOriginalUri(primary, { filterByScheme: options.filterByScheme }) ?? this.getOriginalUri(secondary, { filterByScheme: options.filterByScheme });
+					return this.getOriginalUri(primary, {
+            filterByScheme: options.filterByScheme,
+          }) ?? this.getOriginalUri(secondary, {
+            filterByScheme: options.filterByScheme,
+          });
 				}
 
 				editor = options.supportSideBySide === SideBySideEditor.PRIMARY ? primary : secondary;
 			}
 		}
 
-		if (isResourceDiffEditorInput(editor) || isResourceMultiDiffEditorInput(editor) || isResourceSideBySideEditorInput(editor) || isResourceMergeEditorInput(editor)) {
+		if (isResourceDiffEditorInput(editor) || isResourceMultiDiffEditorInput(
+      editor,
+    ) || isResourceSideBySideEditorInput(editor) || isResourceMergeEditorInput(editor)) {
 			return undefined;
 		}
 
 		// Original URI is the `preferredResource` of an editor if any
-		const originalResource = isEditorInputWithPreferredResource(editor) ? editor.preferredResource : editor.resource;
+		const originalResource = isEditorInputWithPreferredResource(
+      editor,
+    ) ? editor.preferredResource : editor.resource;
 		if (!originalResource || !options?.filterByScheme) {
 			return originalResource;
 		}
@@ -1462,18 +1492,24 @@ class EditorResourceAccessorImpl {
 			if (primary && secondary) {
 				if (options?.supportSideBySide === SideBySideEditor.BOTH) {
 					return {
-						primary: this.getCanonicalUri(primary, { filterByScheme: options.filterByScheme }),
-						secondary: this.getCanonicalUri(secondary, { filterByScheme: options.filterByScheme })
-					};
+            primary: this.getCanonicalUri(primary, { filterByScheme: options.filterByScheme }),
+            secondary: this.getCanonicalUri(secondary, { filterByScheme: options.filterByScheme }),
+          };
 				} else if (options?.supportSideBySide === SideBySideEditor.ANY) {
-					return this.getCanonicalUri(primary, { filterByScheme: options.filterByScheme }) ?? this.getCanonicalUri(secondary, { filterByScheme: options.filterByScheme });
+					return this.getCanonicalUri(primary, {
+            filterByScheme: options.filterByScheme,
+          }) ?? this.getCanonicalUri(secondary, {
+            filterByScheme: options.filterByScheme,
+          });
 				}
 
 				editor = options.supportSideBySide === SideBySideEditor.PRIMARY ? primary : secondary;
 			}
 		}
 
-		if (isResourceDiffEditorInput(editor) || isResourceMultiDiffEditorInput(editor) || isResourceSideBySideEditorInput(editor) || isResourceMergeEditorInput(editor)) {
+		if (isResourceDiffEditorInput(editor) || isResourceMultiDiffEditorInput(
+      editor,
+    ) || isResourceSideBySideEditorInput(editor) || isResourceMergeEditorInput(editor)) {
 			return undefined;
 		}
 
@@ -1506,7 +1542,7 @@ class EditorResourceAccessorImpl {
 	}
 }
 
-export type PreventPinnedEditorClose = 'keyboardAndMouse' | 'keyboard' | 'mouse' | 'never' | undefined;
+export type PreventPinnedEditorClose = "keyboardAndMouse" | "keyboard" | "mouse" | "never" | undefined;
 
 export enum EditorCloseMethod {
 	UNKNOWN,
@@ -1520,9 +1556,9 @@ export function preventEditorClose(group: IEditorGroup | IReadonlyEditorGroupMod
 	}
 
 	switch (configuration.preventPinnedEditorClose) {
-		case 'keyboardAndMouse': return method === EditorCloseMethod.MOUSE || method === EditorCloseMethod.KEYBOARD;
-		case 'mouse': return method === EditorCloseMethod.MOUSE;
-		case 'keyboard': return method === EditorCloseMethod.KEYBOARD;
+		case "keyboardAndMouse": return method === EditorCloseMethod.MOUSE || method === EditorCloseMethod.KEYBOARD;
+		case "mouse": return method === EditorCloseMethod.MOUSE;
+		case "keyboard": return method === EditorCloseMethod.KEYBOARD;
 	}
 
 	return false;
@@ -1560,7 +1596,9 @@ class EditorFactoryRegistry implements IEditorFactoryRegistry {
 	private readonly editorSerializerInstances = new Map<string /* Type ID */, IEditorSerializer>();
 
 	start(accessor: ServicesAccessor): void {
-		const instantiationService = this.instantiationService = accessor.get(IInstantiationService);
+		const instantiationService = this.instantiationService = accessor.get(
+      IInstantiationService,
+    );
 
 		for (const [key, ctor] of this.editorSerializerConstructors) {
 			this.createEditorSerializer(key, ctor, instantiationService);
@@ -1576,7 +1614,7 @@ class EditorFactoryRegistry implements IEditorFactoryRegistry {
 
 	registerFileEditorFactory(factory: IFileEditorFactory): void {
 		if (this.fileEditorFactory) {
-			throw new Error('Can only register one file editor factory.');
+			throw new Error("Can only register one file editor factory.");
 		}
 
 		this.fileEditorFactory = factory;
@@ -1587,26 +1625,36 @@ class EditorFactoryRegistry implements IEditorFactoryRegistry {
 	}
 
 	registerEditorSerializer(editorTypeId: string, ctor: IConstructorSignature<IEditorSerializer>): IDisposable {
-		if (this.editorSerializerConstructors.has(editorTypeId) || this.editorSerializerInstances.has(editorTypeId)) {
-			throw new Error(`A editor serializer with type ID '${editorTypeId}' was already registered.`);
+		if (this.editorSerializerConstructors.has(
+      editorTypeId,
+    ) || this.editorSerializerInstances.has(editorTypeId)) {
+			throw new Error(
+        `A editor serializer with type ID '${editorTypeId}' was already registered.`,
+      );
 		}
 
 		if (!this.instantiationService) {
 			this.editorSerializerConstructors.set(editorTypeId, ctor);
 		} else {
-			this.createEditorSerializer(editorTypeId, ctor, this.instantiationService);
+			this.createEditorSerializer(
+        editorTypeId,
+        ctor,
+        this.instantiationService,
+      );
 		}
 
 		return toDisposable(() => {
-			this.editorSerializerConstructors.delete(editorTypeId);
-			this.editorSerializerInstances.delete(editorTypeId);
-		});
+      this.editorSerializerConstructors.delete(editorTypeId);
+      this.editorSerializerInstances.delete(editorTypeId);
+    });
 	}
 
 	getEditorSerializer(editor: EditorInput): IEditorSerializer | undefined;
 	getEditorSerializer(editorTypeId: string): IEditorSerializer | undefined;
 	getEditorSerializer(arg1: string | EditorInput): IEditorSerializer | undefined {
-		return this.editorSerializerInstances.get(typeof arg1 === 'string' ? arg1 : arg1.typeId);
+		return this.editorSerializerInstances.get(
+      typeof arg1 === "string" ? arg1 : arg1.typeId,
+    );
 	}
 }
 
@@ -1620,19 +1668,19 @@ export async function pathsToEditors(paths: IPathData[] | undefined, fileService
 	return await Promise.all(paths.map(async path => {
 		const resource = URI.revive(path.fileUri);
 		if (!resource) {
-			logService.info('Cannot resolve the path because it is not valid.', path);
+			logService.info("Cannot resolve the path because it is not valid.", path);
 			return undefined;
 		}
 
 		const canHandleResource = await fileService.canHandleResource(resource);
 		if (!canHandleResource) {
-			logService.info('Cannot resolve the path because it cannot be handled', path);
+			logService.info("Cannot resolve the path because it cannot be handled", path);
 			return undefined;
 		}
 
 		let exists = path.exists;
 		let type = path.type;
-		if (typeof exists !== 'boolean' || typeof type !== 'number') {
+		if (typeof exists !== "boolean" || typeof type !== "number") {
 			try {
 				type = (await fileService.stat(resource)).isDirectory ? FileType.Directory : FileType.Unknown;
 				exists = true;
@@ -1643,18 +1691,18 @@ export async function pathsToEditors(paths: IPathData[] | undefined, fileService
 		}
 
 		if (!exists && path.openOnlyIfExists) {
-			logService.info('Cannot resolve the path because it does not exist', path);
+			logService.info("Cannot resolve the path because it does not exist", path);
 			return undefined;
 		}
 
 		if (type === FileType.Directory) {
-			logService.info('Cannot resolve the path because it is a directory', path);
+			logService.info("Cannot resolve the path because it is a directory", path);
 			return undefined;
 		}
 
 		const options: IEditorOptions = {
 			...path.options,
-			pinned: true
+			pinned: true,
 		};
 
 		if (!exists) {
@@ -1691,7 +1739,9 @@ export function isTextEditorViewState(candidate: unknown): candidate is IEditorV
 
 	const codeEditorViewState = viewState as ICodeEditorViewState;
 
-	return !!(codeEditorViewState.contributionsState && codeEditorViewState.viewState && Array.isArray(codeEditorViewState.cursorState));
+	return !!(codeEditorViewState.contributionsState && codeEditorViewState.viewState && Array.isArray(
+    codeEditorViewState.cursorState,
+  ));
 }
 
 export interface IEditorOpenErrorOptions {
@@ -1724,7 +1774,10 @@ export function isEditorOpenError(obj: unknown): obj is IEditorOpenError {
 }
 
 export function createEditorOpenError(messageOrError: string | Error, actions: IAction[], options?: IEditorOpenErrorOptions): IEditorOpenError {
-	const error: IEditorOpenError = createErrorWithActions(messageOrError, actions);
+	const error: IEditorOpenError = createErrorWithActions(
+    messageOrError,
+    actions,
+  );
 
 	error.forceMessage = options?.forceMessage;
 	error.forceSeverity = options?.forceSeverity;

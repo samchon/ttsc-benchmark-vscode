@@ -3,13 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { constObservable, IObservable, IReader } from '../../../base/common/observable.js';
-import { Disposable, DisposableStore } from '../../../base/common/lifecycle.js';
-import { Emitter } from '../../../base/common/event.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import { IFocusTracker } from '../../../base/browser/dom.js';
+import { constObservable, IObservable, IReader } from "../../../base/common/observable.js";
+import { Disposable, DisposableStore } from "../../../base/common/lifecycle.js";
+import { Emitter } from "../../../base/common/event.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { IFocusTracker } from "../../../base/browser/dom.js";
 
-export const IUserInteractionService = createDecorator<IUserInteractionService>('userInteractionService');
+export const IUserInteractionService = createDecorator<IUserInteractionService>(
+  "userInteractionService",
+);
 
 export interface IModifierKeyStatus {
 	readonly ctrlKey: boolean;
@@ -56,7 +58,12 @@ export class MockUserInteractionService implements IUserInteractionService {
 	constructor(
 		private readonly _simulateFocus: boolean = true,
 		private readonly _simulateHover: boolean = false,
-		private readonly _modifiers: IModifierKeyStatus = { ctrlKey: false, shiftKey: false, altKey: false, metaKey: false }
+		private readonly _modifiers: IModifierKeyStatus = {
+      ctrlKey: false,
+      shiftKey: false,
+      altKey: false,
+      metaKey: false,
+    },
 	) { }
 
 	readModifierKeyStatus(_element: HTMLElement | Window, _reader: IReader | undefined): IModifierKeyStatus {

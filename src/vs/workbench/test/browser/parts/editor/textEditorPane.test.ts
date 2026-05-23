@@ -3,21 +3,32 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { ensureNoDisposablesAreLeakedInTestSuite, toResource } from '../../../../../base/test/common/utils.js';
-import { IEditorService } from '../../../../services/editor/common/editorService.js';
-import { workbenchInstantiationService, TestServiceAccessor, registerTestFileEditor, createEditorPart, TestTextFileEditor } from '../../workbenchTestServices.js';
-import { IResolvedTextFileEditorModel } from '../../../../services/textfile/common/textfiles.js';
-import { IEditorGroupsService } from '../../../../services/editor/common/editorGroupsService.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { EditorService } from '../../../../services/editor/browser/editorService.js';
-import { EditorPaneSelectionChangeReason, EditorPaneSelectionCompareResult, IEditorPaneSelectionChangeEvent, isEditorPaneWithSelection } from '../../../../common/editor.js';
-import { DeferredPromise } from '../../../../../base/common/async.js';
-import { TextEditorPaneSelection } from '../../../../browser/parts/editor/textEditor.js';
-import { Selection } from '../../../../../editor/common/core/selection.js';
-import { IEditorOptions } from '../../../../../platform/editor/common/editor.js';
+import assert from "assert";
+import { ensureNoDisposablesAreLeakedInTestSuite, toResource } from "../../../../../base/test/common/utils.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+import {
+  workbenchInstantiationService,
+  TestServiceAccessor,
+  registerTestFileEditor,
+  createEditorPart,
+  TestTextFileEditor,
+} from "../../workbenchTestServices.js";
+import { IResolvedTextFileEditorModel } from "../../../../services/textfile/common/textfiles.js";
+import { IEditorGroupsService } from "../../../../services/editor/common/editorGroupsService.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { EditorService } from "../../../../services/editor/browser/editorService.js";
+import {
+  EditorPaneSelectionChangeReason,
+  EditorPaneSelectionCompareResult,
+  IEditorPaneSelectionChangeEvent,
+  isEditorPaneWithSelection,
+} from "../../../../common/editor.js";
+import { DeferredPromise } from "../../../../../base/common/async.js";
+import { TextEditorPaneSelection } from "../../../../browser/parts/editor/textEditor.js";
+import { Selection } from "../../../../../editor/common/core/selection.js";
+import { IEditorOptions } from "../../../../../platform/editor/common/editor.js";
 
-suite('TextEditorPane', () => {
+suite("TextEditorPane", () => {
 
 	const disposables = new DisposableStore();
 
@@ -41,10 +52,10 @@ suite('TextEditorPane', () => {
 		return instantiationService.createInstance(TestServiceAccessor);
 	}
 
-	test('editor pane selection', async function () {
+	test("editor pane selection", async function () {
 		const accessor = await createServices();
 
-		const resource = toResource.call(this, '/path/index.txt');
+		const resource = toResource.call(this, "/path/index.txt");
 		let pane = (await accessor.editorService.openEditor({ resource }) as TestTextFileEditor);
 
 		assert.ok(pane && isEditorPaneWithSelection(pane));
@@ -60,7 +71,7 @@ suite('TextEditorPane', () => {
 		// of EDIT kind
 
 		const model = disposables.add(await accessor.textFileService.files.resolve(resource) as IResolvedTextFileEditorModel);
-		model.textEditorModel.setValue('Hello World');
+		model.textEditorModel.setValue("Hello World");
 
 		const event = await onDidFireSelectionEventOfEditType.p;
 		assert.strictEqual(event.reason, EditorPaneSelectionChangeReason.EDIT);
@@ -88,7 +99,7 @@ suite('TextEditorPane', () => {
 		await pane.group.closeAllEditors();
 	});
 
-	test('TextEditorPaneSelection', function () {
+	test("TextEditorPaneSelection", function () {
 		const sel1 = new TextEditorPaneSelection(new Selection(1, 1, 2, 2));
 		const sel2 = new TextEditorPaneSelection(new Selection(5, 5, 6, 6));
 		const sel3 = new TextEditorPaneSelection(new Selection(50, 50, 60, 60));

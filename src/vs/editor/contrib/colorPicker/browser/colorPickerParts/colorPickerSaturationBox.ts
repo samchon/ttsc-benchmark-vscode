@@ -2,13 +2,13 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import '../colorPicker.css';
-import * as dom from '../../../../../base/browser/dom.js';
-import { GlobalPointerMoveMonitor } from '../../../../../base/browser/globalPointerMoveMonitor.js';
-import { Color, HSVA } from '../../../../../base/common/color.js';
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { ColorPickerModel } from '../colorPickerModel.js';
+import "../colorPicker.css";
+import * as dom from "../../../../../base/browser/dom.js";
+import { GlobalPointerMoveMonitor } from "../../../../../base/browser/globalPointerMoveMonitor.js";
+import { Color, HSVA } from "../../../../../base/common/color.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { ColorPickerModel } from "../colorPickerModel.js";
 
 const $ = dom.$;
 
@@ -21,7 +21,9 @@ export class SaturationBox extends Disposable {
 	private height!: number;
 
 	private monitor: GlobalPointerMoveMonitor | null;
-	private readonly _onDidChange = this._register(new Emitter<{ s: number; v: number }>());
+	private readonly _onDidChange = this._register(
+    new Emitter<{ s: number; v: number }>(),
+  );
 	readonly onDidChange: Event<{ s: number; v: number }> = this._onDidChange.event;
 
 	private readonly _onColorFlushed = this._register(new Emitter<void>());
@@ -30,21 +32,27 @@ export class SaturationBox extends Disposable {
 	constructor(container: HTMLElement, private readonly model: ColorPickerModel, private pixelRatio: number) {
 		super();
 
-		this._domNode = $('.saturation-wrap');
+		this._domNode = $(".saturation-wrap");
 		dom.append(container, this._domNode);
 
 		// Create canvas, draw selected color
-		this._canvas = document.createElement('canvas');
-		this._canvas.className = 'saturation-box';
+		this._canvas = document.createElement("canvas");
+		this._canvas.className = "saturation-box";
 		dom.append(this._domNode, this._canvas);
 
 		// Add selection circle
-		this.selection = $('.saturation-selection');
+		this.selection = $(".saturation-selection");
 		dom.append(this._domNode, this.selection);
 
 		this.layout();
 
-		this._register(dom.addDisposableListener(this._domNode, dom.EventType.POINTER_DOWN, e => this.onPointerDown(e)));
+		this._register(
+      dom.addDisposableListener(
+        this._domNode,
+        dom.EventType.POINTER_DOWN,
+        e => this.onPointerDown(e),
+      ),
+    );
 		this._register(this.model.onDidChangeColor(this.onDidChangeColor, this));
 		this.monitor = null;
 	}
@@ -64,7 +72,16 @@ export class SaturationBox extends Disposable {
 			this.onDidChangePosition(e.offsetX, e.offsetY);
 		}
 
-		this.monitor.startMonitoring(e.target, e.pointerId, e.buttons, event => this.onDidChangePosition(event.pageX - origin.left, event.pageY - origin.top), () => null);
+		this.monitor.startMonitoring(
+      e.target,
+      e.pointerId,
+      e.buttons,
+      event => this.onDidChangePosition(
+        event.pageX - origin.left,
+        event.pageY - origin.top,
+      ),
+      () => null,
+    );
 
 		const pointerUpListener = dom.addDisposableListener(e.target.ownerDocument, dom.EventType.POINTER_UP, () => {
 			this._onColorFlushed.fire();
@@ -98,16 +115,21 @@ export class SaturationBox extends Disposable {
 	private paint(): void {
 		const hsva = this.model.color.hsva;
 		const saturatedColor = new Color(new HSVA(hsva.h, 1, 1, 1));
-		const ctx = this._canvas.getContext('2d')!;
+		const ctx = this._canvas.getContext("2d")!;
 
 		const whiteGradient = ctx.createLinearGradient(0, 0, this._canvas.width, 0);
-		whiteGradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-		whiteGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.5)');
-		whiteGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+		whiteGradient.addColorStop(0, "rgba(255, 255, 255, 1)");
+		whiteGradient.addColorStop(0.5, "rgba(255, 255, 255, 0.5)");
+		whiteGradient.addColorStop(1, "rgba(255, 255, 255, 0)");
 
-		const blackGradient = ctx.createLinearGradient(0, 0, 0, this._canvas.height);
-		blackGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-		blackGradient.addColorStop(1, 'rgba(0, 0, 0, 1)');
+		const blackGradient = ctx.createLinearGradient(
+      0,
+      0,
+      0,
+      this._canvas.height,
+    );
+		blackGradient.addColorStop(0, "rgba(0, 0, 0, 0)");
+		blackGradient.addColorStop(1, "rgba(0, 0, 0, 1)");
 
 		ctx.rect(0, 0, this._canvas.width, this._canvas.height);
 		ctx.fillStyle = Color.Format.CSS.format(saturatedColor)!;

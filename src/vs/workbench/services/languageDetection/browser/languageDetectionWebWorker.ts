@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ModelOperations, ModelResult } from '@vscode/vscode-languagedetection';
-import { importAMDNodeModule } from '../../../../amdX.js';
-import { StopWatch } from '../../../../base/common/stopwatch.js';
-import { IWebWorkerServerRequestHandler, IWebWorkerServer } from '../../../../base/common/worker/webWorker.js';
-import { LanguageDetectionWorkerHost, ILanguageDetectionWorker } from './languageDetectionWorker.protocol.js';
-import { WorkerTextModelSyncServer } from '../../../../editor/common/services/textModelSync/textModelSync.impl.js';
+import type { ModelOperations, ModelResult } from "@vscode/vscode-languagedetection";
+import { importAMDNodeModule } from "../../../../amdX.js";
+import { StopWatch } from "../../../../base/common/stopwatch.js";
+import { IWebWorkerServerRequestHandler, IWebWorkerServer } from "../../../../base/common/worker/webWorker.js";
+import { LanguageDetectionWorkerHost, ILanguageDetectionWorker } from "./languageDetectionWorker.protocol.js";
+import { WorkerTextModelSyncServer } from "../../../../editor/common/services/textModelSync/textModelSync.impl.js";
 
 type RegexpModel = { detect: (inp: string, langBiases: Record<string, number>, supportedLangs?: string[]) => string | undefined };
 
@@ -51,12 +51,19 @@ export class LanguageDetectionWorker implements ILanguageDetectionWorker {
 		if (!documentTextSample) { return; }
 
 		const neuralResolver = async () => {
-			for await (const language of this.detectLanguagesImpl(documentTextSample)) {
+			for await (const language of this.detectLanguagesImpl(
+        documentTextSample,
+      )) {
 				if (!this.modelIdToCoreId.has(language.languageId)) {
-					this.modelIdToCoreId.set(language.languageId, await this._host.$getLanguageId(language.languageId));
+					this.modelIdToCoreId.set(
+            language.languageId,
+            await this._host.$getLanguageId(language.languageId),
+          );
 				}
 				const coreId = this.modelIdToCoreId.get(language.languageId);
-				if (coreId && (!supportedLangs?.length || supportedLangs.includes(coreId))) {
+				if (coreId && (!supportedLangs?.length || supportedLangs.includes(
+          coreId,
+        ))) {
 					languages.push(coreId);
 					confidences.push(language.confidence);
 				}
@@ -64,13 +71,21 @@ export class LanguageDetectionWorker implements ILanguageDetectionWorker {
 			stopWatch.stop();
 
 			if (languages.length) {
-				this._host.$sendTelemetryEvent(languages, confidences, stopWatch.elapsed());
+				this._host.$sendTelemetryEvent(
+          languages,
+          confidences,
+          stopWatch.elapsed(),
+        );
 				return languages[0];
 			}
 			return undefined;
 		};
 
-		const historicalResolver = async () => this.runRegexpModel(documentTextSample, langBiases ?? {}, supportedLangs);
+		const historicalResolver = async () => this.runRegexpModel(
+      documentTextSample,
+      langBiases ?? {},
+      supportedLangs,
+    );
 
 		if (preferHistory) {
 			const history = await historicalResolver();
@@ -93,11 +108,11 @@ export class LanguageDetectionWorker implements ILanguageDetectionWorker {
 
 		const end = editorModel.positionAt(10000);
 		const content = editorModel.getValueInRange({
-			startColumn: 1,
-			startLineNumber: 1,
-			endColumn: end.column,
-			endLineNumber: end.lineNumber
-		});
+      startColumn: 1,
+      startLineNumber: 1,
+      endColumn: end.column,
+      endLineNumber: end.lineNumber,
+    });
 		return content;
 	}
 
@@ -110,7 +125,7 @@ export class LanguageDetectionWorker implements ILanguageDetectionWorker {
 		}
 		const uri: string = await this._host.$getRegexpModelUri();
 		try {
-			this._regexpModel = await importAMDNodeModule(uri, '') as RegexpModel;
+			this._regexpModel = await importAMDNodeModule(uri, "") as RegexpModel;
 			return this._regexpModel;
 		} catch (e) {
 			this._regexpLoadFailed = true;
@@ -144,7 +159,10 @@ export class LanguageDetectionWorker implements ILanguageDetectionWorker {
 		}
 
 		const uri: string = await this._host.$getIndexJsUri();
-		const { ModelOperations } = await importAMDNodeModule(uri, '') as typeof import('@vscode/vscode-languagedetection');
+		const { ModelOperations } = await importAMDNodeModule(
+      uri,
+      "",
+    ) as typeof import("@vscode/vscode-languagedetection");
 		this._modelOperations = new ModelOperations({
 			modelJsonLoaderFunc: async () => {
 				const response = await fetch(await this._host.$getModelJsonUri());
@@ -160,7 +178,7 @@ export class LanguageDetectionWorker implements ILanguageDetectionWorker {
 				const response = await fetch(await this._host.$getWeightsUri());
 				const buffer = await response.arrayBuffer();
 				return buffer;
-			}
+			},
 		});
 
 		return this._modelOperations;
@@ -174,22 +192,22 @@ export class LanguageDetectionWorker implements ILanguageDetectionWorker {
 			// For the following languages, we increase the confidence because
 			// these are commonly used languages in VS Code and supported
 			// by the model.
-			case 'js':
-			case 'html':
-			case 'json':
-			case 'ts':
-			case 'css':
-			case 'py':
-			case 'xml':
-			case 'php':
+			case "js":
+			case "html":
+			case "json":
+			case "ts":
+			case "css":
+			case "py":
+			case "xml":
+			case "php":
 				modelResult.confidence += LanguageDetectionWorker.positiveConfidenceCorrectionBucket1;
 				break;
 			// case 'yaml': // YAML has been know to cause incorrect language detection because the language is pretty simple. We don't want to increase the confidence for this.
-			case 'cpp':
-			case 'sh':
-			case 'java':
-			case 'cs':
-			case 'c':
+			case "cpp":
+			case "sh":
+			case "java":
+			case "cs":
+			case "c":
 				modelResult.confidence += LanguageDetectionWorker.positiveConfidenceCorrectionBucket2;
 				break;
 
@@ -198,13 +216,13 @@ export class LanguageDetectionWorker implements ILanguageDetectionWorker {
 			// negativeConfidenceCorrection from the confidence.
 
 			// languages that are provided by default in VS Code
-			case 'bat':
-			case 'ini':
-			case 'makefile':
-			case 'sql':
+			case "bat":
+			case "ini":
+			case "makefile":
+			case "sql":
 			// languages that aren't provided by default in VS Code
-			case 'csv':
-			case 'toml':
+			case "csv":
+			case "toml":
 				// Other considerations for negativeConfidenceCorrection that
 				// aren't built in but suported by the model include:
 				// * Assembly, TeX - These languages didn't have clear language modes in the community

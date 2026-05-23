@@ -3,18 +3,32 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as cp from 'child_process';
-import { Stats, promises } from 'fs';
-import { getCaseInsensitive } from '../common/objects.js';
-import * as path from '../common/path.js';
-import * as Platform from '../common/platform.js';
-import * as processCommon from '../common/process.js';
-import { CommandOptions, ForkOptions, Source, SuccessData, TerminateResponse, TerminateResponseCode } from '../common/processes.js';
-import * as Types from '../common/types.js';
-import * as pfs from './pfs.js';
-import { FileAccess } from '../common/network.js';
-import Stream from 'stream';
-export { Source, TerminateResponseCode, type CommandOptions, type ForkOptions, type SuccessData, type TerminateResponse };
+import * as cp from "child_process";
+import { Stats, promises } from "fs";
+import { getCaseInsensitive } from "../common/objects.js";
+import * as path from "../common/path.js";
+import * as Platform from "../common/platform.js";
+import * as processCommon from "../common/process.js";
+import {
+  CommandOptions,
+  ForkOptions,
+  Source,
+  SuccessData,
+  TerminateResponse,
+  TerminateResponseCode,
+} from "../common/processes.js";
+import * as Types from "../common/types.js";
+import * as pfs from "./pfs.js";
+import { FileAccess } from "../common/network.js";
+import Stream from "stream";
+export {
+  Source,
+  TerminateResponseCode,
+  type CommandOptions,
+  type ForkOptions,
+  type SuccessData,
+  type TerminateResponse,
+};
 
 export type ValueCallback<T> = (value: T | Promise<T>) => void;
 export type ErrorCallback = (error?: any) => void;
@@ -22,7 +36,7 @@ export type ProgressCallback<T> = (progress: T) => void;
 
 
 export function getWindowsShell(env = processCommon.env): string {
-	return env['comspec'] || 'cmd.exe';
+	return env["comspec"] || "cmd.exe";
 }
 
 export interface IQueuedSender {
@@ -40,7 +54,9 @@ export function createQueuedSender(childProcess: cp.ChildProcess): IQueuedSender
 
 	const send = function (msg: any): void {
 		if (useQueue) {
-			msgQueue.push(msg); // add to the queue if the process cannot handle more messages
+			msgQueue.push(
+        msg,
+      ); // add to the queue if the process cannot handle more messages
 			return;
 		}
 
@@ -73,7 +89,7 @@ async function fileExistsDefault(path: string): Promise<boolean> {
 		try {
 			statValue = await promises.stat(path);
 		} catch (e) {
-			if (e.message.startsWith('EACCES')) {
+			if (e.message.startsWith("EACCES")) {
 				// it might be symlink
 				statValue = await promises.lstat(path);
 			}
@@ -92,13 +108,13 @@ export async function findExecutable(command: string, cwd?: string, paths?: stri
 		cwd = processCommon.cwd();
 	}
 	const dir = path.dirname(command);
-	if (dir !== '.') {
+	if (dir !== ".") {
 		// We have a directory and the directory is relative (see above). Make the path absolute
 		// to the current working directory.
 		const fullPath = path.join(cwd, command);
 		return await fileExists(fullPath) ? fullPath : undefined;
 	}
-	const envPath = getCaseInsensitive(env, 'PATH');
+	const envPath = getCaseInsensitive(env, "PATH");
 	if (paths === undefined && Types.isString(envPath)) {
 		paths = envPath.split(path.delimiter);
 	}
@@ -119,11 +135,14 @@ export async function findExecutable(command: string, cwd?: string, paths?: stri
 			fullPath = path.join(cwd, pathEntry, command);
 		}
 		if (Platform.isWindows) {
-			const pathExt = getCaseInsensitive(env, 'PATHEXT') as string || '.COM;.EXE;.BAT;.CMD';
-			const pathExtsFound = pathExt.split(';').map(async ext => {
-				const withExtension = fullPath + ext;
-				return await fileExists(withExtension) ? withExtension : undefined;
-			});
+			const pathExt = getCaseInsensitive(
+        env,
+        "PATHEXT",
+      ) as string || ".COM;.EXE;.BAT;.CMD";
+			const pathExtsFound = pathExt.split(";").map(async ext => {
+        const withExtension = fullPath + ext;
+        return await fileExists(withExtension) ? withExtension : undefined;
+      });
 			for (const foundPromise of pathExtsFound) {
 				const found = await foundPromise;
 				if (found) {
@@ -150,26 +169,32 @@ export async function findExecutable(command: string, cwd?: string, paths?: stri
 export async function killTree(pid: number, forceful = false) {
 	let child: cp.ChildProcessByStdio<null, Stream.Readable, Stream.Readable>;
 	if (Platform.isWindows) {
-		const windir = process.env['WINDIR'] || 'C:\\Windows';
-		const taskKill = path.join(windir, 'System32', 'taskkill.exe');
+		const windir = process.env["WINDIR"] || "C:\\Windows";
+		const taskKill = path.join(windir, "System32", "taskkill.exe");
 
-		const args = ['/T'];
+		const args = ["/T"];
 		if (forceful) {
-			args.push('/F');
+			args.push("/F");
 		}
-		args.push('/PID', String(pid));
-		child = cp.spawn(taskKill, args, { stdio: ['ignore', 'pipe', 'pipe'] });
+		args.push("/PID", String(pid));
+		child = cp.spawn(taskKill, args, { stdio: ["ignore", "pipe", "pipe"] });
 	} else {
-		const killScript = FileAccess.asFileUri('vs/base/node/terminateProcess.sh').fsPath;
-		child = cp.spawn('/bin/sh', [killScript, String(pid), forceful ? '9' : '15'], { stdio: ['ignore', 'pipe', 'pipe'] });
+		const killScript = FileAccess.asFileUri(
+      "vs/base/node/terminateProcess.sh",
+    ).fsPath;
+		child = cp.spawn(
+      "/bin/sh",
+      [killScript, String(pid), forceful ? "9" : "15"],
+      { stdio: ["ignore", "pipe", "pipe"] },
+    );
 	}
 
 	return new Promise<void>((resolve, reject) => {
 		const stdout: Buffer[] = [];
-		child.stdout.on('data', (data) => stdout.push(data));
-		child.stderr.on('data', (data) => stdout.push(data));
-		child.on('error', reject);
-		child.on('exit', (code) => {
+		child.stdout.on("data", (data) => stdout.push(data));
+		child.stderr.on("data", (data) => stdout.push(data));
+		child.on("error", reject);
+		child.on("exit", (code) => {
 			if (code === 0) {
 				resolve();
 			} else {

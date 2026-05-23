@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ILink } from '../../../../editor/common/languages.js';
-import { URI } from '../../../../base/common/uri.js';
-import * as extpath from '../../../../base/common/extpath.js';
-import * as resources from '../../../../base/common/resources.js';
-import * as strings from '../../../../base/common/strings.js';
-import { Range } from '../../../../editor/common/core/range.js';
-import { isWindows } from '../../../../base/common/platform.js';
-import { Schemas } from '../../../../base/common/network.js';
-import { IWebWorkerServerRequestHandler, IWebWorkerServer } from '../../../../base/common/worker/webWorker.js';
-import { WorkerTextModelSyncServer, ICommonModel } from '../../../../editor/common/services/textModelSync/textModelSync.impl.js';
+import { ILink } from "../../../../editor/common/languages.js";
+import { URI } from "../../../../base/common/uri.js";
+import * as extpath from "../../../../base/common/extpath.js";
+import * as resources from "../../../../base/common/resources.js";
+import * as strings from "../../../../base/common/strings.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { isWindows } from "../../../../base/common/platform.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { IWebWorkerServerRequestHandler, IWebWorkerServer } from "../../../../base/common/worker/webWorker.js";
+import { WorkerTextModelSyncServer, ICommonModel } from "../../../../editor/common/services/textModelSync/textModelSync.impl.js";
 
 export interface IResourceCreator {
 	toResource: (folderRelativePath: string) => URI | null;
@@ -64,16 +64,18 @@ export class OutputLinkComputer implements IWebWorkerServerRequestHandler {
 		for (const [folderUri, folderPatterns] of this.patterns) {
 			const resourceCreator: IResourceCreator = {
 				toResource: (folderRelativePath: string): URI | null => {
-					if (typeof folderRelativePath === 'string') {
+					if (typeof folderRelativePath === "string") {
 						return resources.joinPath(folderUri, folderRelativePath);
 					}
 
 					return null;
-				}
+				},
 			};
 
 			for (let i = 0, len = lines.length; i < len; i++) {
-				links.push(...OutputLinkComputer.detectLinks(lines[i], i + 1, folderPatterns, resourceCreator));
+				links.push(
+          ...OutputLinkComputer.detectLinks(lines[i], i + 1, folderPatterns, resourceCreator),
+        );
 			}
 		}
 
@@ -90,28 +92,48 @@ export class OutputLinkComputer implements IWebWorkerServerRequestHandler {
 		}
 
 		for (const workspaceFolderVariant of workspaceFolderVariants) {
-			const validPathCharacterPattern = '[^\\s\\(\\):<>\'"]';
+			const validPathCharacterPattern = "[^\\s\\(\\):<>'\"]";
 			const validPathCharacterOrSpacePattern = `(?:${validPathCharacterPattern}| ${validPathCharacterPattern})`;
 			const pathPattern = `${validPathCharacterOrSpacePattern}+\\.${validPathCharacterPattern}+`;
 			const strictPathPattern = `${validPathCharacterPattern}+`;
 
 			// Example: /workspaces/express/server.js on line 8, column 13
-			patterns.push(new RegExp(strings.escapeRegExpCharacters(workspaceFolderVariant) + `(${pathPattern}) on line ((\\d+)(, column (\\d+))?)`, 'gi'));
+			patterns.push(
+        new RegExp(
+          strings.escapeRegExpCharacters(workspaceFolderVariant) + `(${pathPattern}) on line ((\\d+)(, column (\\d+))?)`,
+          "gi",
+        ),
+      );
 
 			// Example: /workspaces/express/server.js:line 8, column 13
-			patterns.push(new RegExp(strings.escapeRegExpCharacters(workspaceFolderVariant) + `(${pathPattern}):line ((\\d+)(, column (\\d+))?)`, 'gi'));
+			patterns.push(
+        new RegExp(
+          strings.escapeRegExpCharacters(workspaceFolderVariant) + `(${pathPattern}):line ((\\d+)(, column (\\d+))?)`,
+          "gi",
+        ),
+      );
 
 			// Example: /workspaces/mankala/Features.ts(45): error
 			// Example: /workspaces/mankala/Features.ts (45): error
 			// Example: /workspaces/mankala/Features.ts(45,18): error
 			// Example: /workspaces/mankala/Features.ts (45,18): error
 			// Example: /workspaces/mankala/Features Special.ts (45,18): error
-			patterns.push(new RegExp(strings.escapeRegExpCharacters(workspaceFolderVariant) + `(${pathPattern})(\\s?\\((\\d+)(,(\\d+))?)\\)`, 'gi'));
+			patterns.push(
+        new RegExp(
+          strings.escapeRegExpCharacters(workspaceFolderVariant) + `(${pathPattern})(\\s?\\((\\d+)(,(\\d+))?)\\)`,
+          "gi",
+        ),
+      );
 
 			// Example: at /workspaces/mankala/Game.ts
 			// Example: at /workspaces/mankala/Game.ts:336
 			// Example: at /workspaces/mankala/Game.ts:336:9
-			patterns.push(new RegExp(strings.escapeRegExpCharacters(workspaceFolderVariant) + `(${strictPathPattern})(:(\\d+))?(:(\\d+))?`, 'gi'));
+			patterns.push(
+        new RegExp(
+          strings.escapeRegExpCharacters(workspaceFolderVariant) + `(${strictPathPattern})(:(\\d+))?(:(\\d+))?`,
+          "gi",
+        ),
+      );
 		}
 
 		return patterns;
@@ -131,7 +153,7 @@ export class OutputLinkComputer implements IWebWorkerServerRequestHandler {
 			while ((match = pattern.exec(line)) !== null) {
 
 				// Convert the relative path information to a resource that we can use in links
-				const folderRelativePath = strings.rtrim(match[1], '.').replace(/\\/g, '/'); // remove trailing "." that likely indicate end of sentence
+				const folderRelativePath = strings.rtrim(match[1], ".").replace(/\\/g, "/"); // remove trailing "." that likely indicate end of sentence
 				let resourceString: string | undefined;
 				try {
 					const resource = resourceCreator.toResource(folderRelativePath);
@@ -148,13 +170,13 @@ export class OutputLinkComputer implements IWebWorkerServerRequestHandler {
 
 					if (match[5]) {
 						const columnNumber = match[5];
-						resourceString = strings.format('{0}#{1},{2}', resourceString, lineNumber, columnNumber);
+						resourceString = strings.format("{0}#{1},{2}", resourceString, lineNumber, columnNumber);
 					} else {
-						resourceString = strings.format('{0}#{1}', resourceString, lineNumber);
+						resourceString = strings.format("{0}#{1}", resourceString, lineNumber);
 					}
 				}
 
-				const fullMatch = strings.rtrim(match[0], '.'); // remove trailing "." that likely indicate end of sentence
+				const fullMatch = strings.rtrim(match[0], "."); // remove trailing "." that likely indicate end of sentence
 
 				const index = line.indexOf(fullMatch, offset);
 				offset = index + fullMatch.length;
@@ -163,7 +185,7 @@ export class OutputLinkComputer implements IWebWorkerServerRequestHandler {
 					startColumn: index + 1,
 					startLineNumber: lineIndex,
 					endColumn: index + 1 + fullMatch.length,
-					endLineNumber: lineIndex
+					endLineNumber: lineIndex,
 				};
 
 				if (links.some(link => Range.areIntersectingOrTouching(link.range, linkRange))) {
@@ -172,7 +194,7 @@ export class OutputLinkComputer implements IWebWorkerServerRequestHandler {
 
 				links.push({
 					range: linkRange,
-					url: resourceString
+					url: resourceString,
 				});
 			}
 		});

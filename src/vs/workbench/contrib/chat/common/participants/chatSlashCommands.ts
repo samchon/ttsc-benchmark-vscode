@@ -3,19 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../../base/common/cancellation.js';
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { Disposable, IDisposable, toDisposable } from '../../../../../base/common/lifecycle.js';
-import { ContextKeyExpression } from '../../../../../platform/contextkey/common/contextkey.js';
-import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IProgress } from '../../../../../platform/progress/common/progress.js';
-import { IChatMessage } from '../languageModels.js';
-import { IChatFollowup, IChatProgress, IChatResponseProgressFileTreeData, IChatSendRequestOptions } from '../chatService/chatService.js';
-import { IExtensionService } from '../../../../services/extensions/common/extensions.js';
-import { ChatAgentLocation, ChatModeKind } from '../constants.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { getChatSessionType } from '../model/chatUri.js';
-import { matchesSessionType } from '../promptSyntax/service/promptsService.js';
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { Disposable, IDisposable, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { ContextKeyExpression } from "../../../../../platform/contextkey/common/contextkey.js";
+import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IProgress } from "../../../../../platform/progress/common/progress.js";
+import { IChatMessage } from "../languageModels.js";
+import {
+  IChatFollowup,
+  IChatProgress,
+  IChatResponseProgressFileTreeData,
+  IChatSendRequestOptions,
+} from "../chatService/chatService.js";
+import { IExtensionService } from "../../../../services/extensions/common/extensions.js";
+import { ChatAgentLocation, ChatModeKind } from "../constants.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { getChatSessionType } from "../model/chatUri.js";
+import { matchesSessionType } from "../promptSyntax/service/promptsService.js";
 
 //#region slash service, commands etc
 
@@ -54,7 +59,9 @@ export interface IChatSlashFragment {
 }
 export type IChatSlashCallback = { (prompt: string, progress: IProgress<IChatProgress>, history: IChatMessage[], location: ChatAgentLocation, sessionResource: URI, token: CancellationToken, options?: IChatSendRequestOptions): Promise<{ followUp: IChatFollowup[] } | void> };
 
-export const IChatSlashCommandService = createDecorator<IChatSlashCommandService>('chatSlashCommandService');
+export const IChatSlashCommandService = createDecorator<IChatSlashCommandService>(
+  "chatSlashCommandService",
+);
 
 /**
  * This currently only exists to drive /clear and /help
@@ -97,16 +104,22 @@ export class ChatSlashCommandService extends Disposable implements IChatSlashCom
 			return true;
 		}
 
-		return dataA.sessionTypes.some(sessionType => dataB.sessionTypes?.includes(sessionType));
+		return dataA.sessionTypes.some(
+      sessionType => dataB.sessionTypes?.includes(sessionType),
+    );
 	}
 
 	private getCommand(id: string, sessionType: string | undefined): RegisteredSlashCommand | undefined {
-		return this.getSessionScopedCommands(id).find(candidate => matchesSessionType(candidate.data.sessionTypes, sessionType));
+		return this.getSessionScopedCommands(id).find(
+      candidate => matchesSessionType(candidate.data.sessionTypes, sessionType),
+    );
 	}
 
 	registerSlashCommand(data: IChatSlashData, command: IChatSlashCallback): IDisposable {
 		const commandsForId = this.getSessionScopedCommands(data.command);
-		if (commandsForId.some(candidate => this.commandsOverlap(candidate.data, data))) {
+		if (commandsForId.some(
+      candidate => this.commandsOverlap(candidate.data, data),
+    )) {
 			throw new Error(`Already registered a command with id ${data.command}`);
 		}
 
@@ -158,6 +171,14 @@ export class ChatSlashCommandService extends Disposable implements IChatSlashCom
 			throw new Error(`No command with id ${id} NOT resolved`);
 		}
 
-		return await data.command(prompt, progress, history, location, sessionResource, token, options);
+		return await data.command(
+      prompt,
+      progress,
+      history,
+      location,
+      sessionResource,
+      token,
+      options,
+    );
 	}
 }

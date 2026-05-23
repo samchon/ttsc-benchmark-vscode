@@ -3,20 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, DisposableMap, IDisposable } from '../../../base/common/lifecycle.js';
-import { DeferredPromise, disposableTimeout, raceTimeout } from '../../../base/common/async.js';
-import { Emitter, Event } from '../../../base/common/event.js';
-import { ILogService } from '../../log/common/log.js';
-import { IAgentNetworkFilterService } from '../../networkFilter/common/networkFilterService.js';
-import { IInvokeFunctionResult, IPlaywrightService } from '../common/playwrightService.js';
-import { IBrowserViewGroupRemoteService } from '../node/browserViewGroupRemoteService.js';
-import { IBrowserViewGroup } from '../common/browserViewGroup.js';
-import { PlaywrightTab, DialogInterruptedError } from './playwrightTab.js';
-import { CDPEvent, CDPRequest, CDPResponse } from '../common/cdp/types.js';
-import { generateUuid } from '../../../base/common/uuid.js';
+import { Disposable, DisposableMap, IDisposable } from "../../../base/common/lifecycle.js";
+import { DeferredPromise, disposableTimeout, raceTimeout } from "../../../base/common/async.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { ILogService } from "../../log/common/log.js";
+import { IAgentNetworkFilterService } from "../../networkFilter/common/networkFilterService.js";
+import { IInvokeFunctionResult, IPlaywrightService } from "../common/playwrightService.js";
+import { IBrowserViewGroupRemoteService } from "../node/browserViewGroupRemoteService.js";
+import { IBrowserViewGroup } from "../common/browserViewGroup.js";
+import { PlaywrightTab, DialogInterruptedError } from "./playwrightTab.js";
+import { CDPEvent, CDPRequest, CDPResponse } from "../common/cdp/types.js";
+import { generateUuid } from "../../../base/common/uuid.js";
 
 // eslint-disable-next-line local/code-import-patterns
-import type { Browser, BrowserContext, Page } from 'playwright-core';
+import type { Browser, BrowserContext, Page } from "playwright-core";
 
 interface PlaywrightTransport {
 	send(s: CDPRequest): void;
@@ -25,7 +25,7 @@ interface PlaywrightTransport {
 	onclose?: (reason?: string) => void;
 }
 
-declare module 'playwright-core' {
+declare module "playwright-core" {
 	interface BrowserType {
 		_connectOverCDPTransport(transport: PlaywrightTransport): Promise<Browser>;
 	}
@@ -48,18 +48,24 @@ const SESSION_INACTIVITY_MS = 30 * 60_000; // 30 minutes
 export class PlaywrightService extends Disposable implements IPlaywrightService {
 	declare readonly _serviceBrand: undefined;
 
-	private readonly _sessions = this._register(new DisposableMap<string, PlaywrightSession>());
+	private readonly _sessions = this._register(
+    new DisposableMap<string, PlaywrightSession>(),
+  );
 
 	/** In-flight session initializations keyed by session ID. */
 	private readonly _pendingInits = new Map<string, Promise<PlaywrightSession>>();
 
 	/** Inactivity timers keyed by session ID. */
-	private readonly _inactivityTimers = this._register(new DisposableMap<string, IDisposable>());
+	private readonly _inactivityTimers = this._register(
+    new DisposableMap<string, IDisposable>(),
+  );
 
 	/** Global set of tracked page IDs (shared across all sessions). */
 	private readonly _trackedPages = new Set<string>();
 
-	private readonly _onDidChangeTrackedPages = this._register(new Emitter<readonly string[]>());
+	private readonly _onDidChangeTrackedPages = this._register(
+    new Emitter<readonly string[]>(),
+  );
 	readonly onDidChangeTrackedPages: Event<readonly string[]> = this._onDidChangeTrackedPages.event;
 
 	constructor(
@@ -103,13 +109,18 @@ export class PlaywrightService extends Disposable implements IPlaywrightService 
 	 * Playwright CDP connection, and page replay.
 	 */
 	private async _initSession(sessionId: string): Promise<PlaywrightSession> {
-		this.logService.debug(`[PlaywrightService] Initializing session ${sessionId}`);
+		this.logService.debug(
+      `[PlaywrightService] Initializing session ${sessionId}`,
+    );
 
-		const group = await this.browserViewGroupRemoteService.createGroup({ mainWindowId: this.windowId, sessionId });
+		const group = await this.browserViewGroupRemoteService.createGroup({
+      mainWindowId: this.windowId,
+      sessionId,
+    });
 
 		let browser: Browser;
 		try {
-			const playwright = await import('playwright-core');
+			const playwright = await import("playwright-core");
 			const sub = group.onCDPMessage(msg => transport.onmessage?.(msg));
 			const transport: PlaywrightTransport = {
 				close() {
@@ -118,7 +129,7 @@ export class PlaywrightService extends Disposable implements IPlaywrightService 
 				},
 				send(message) {
 					void group.sendCDPMessage(message);
-				}
+				},
 			};
 			browser = await playwright.chromium._connectOverCDPTransport(transport);
 		} catch (e) {
@@ -126,22 +137,24 @@ export class PlaywrightService extends Disposable implements IPlaywrightService 
 			throw e;
 		}
 
-		this.logService.debug(`[PlaywrightService] Connected to browser for session ${sessionId}`);
+		this.logService.debug(
+      `[PlaywrightService] Connected to browser for session ${sessionId}`,
+    );
 
 		// If the service was disposed while we were connecting, clean up.
 		if (this._store.isDisposed) {
 			browser.close().catch(() => { /* ignore */ });
 			group.dispose();
-			throw new Error('PlaywrightService was disposed during initialization');
+			throw new Error("PlaywrightService was disposed during initialization");
 		}
 
 		const session = new PlaywrightSession(
-			sessionId,
-			browser,
-			group,
-			this.logService,
-			this.agentNetworkFilterService,
-		);
+      sessionId,
+      browser,
+      group,
+      this.logService,
+      this.agentNetworkFilterService,
+    );
 
 		// Keep the global tracked set in sync with group events. When a
 		// view is added via external means (e.g. CDP createTarget), the
@@ -168,11 +181,13 @@ export class PlaywrightService extends Disposable implements IPlaywrightService 
 
 		// On browser disconnect, dispose the session so it will be
 		// recreated fresh on the next tool call.
-		browser.on('disconnected', () => {
-			this.logService.debug(`[PlaywrightService] Browser disconnected for session ${sessionId}`);
-			this._sessions.deleteAndDispose(sessionId);
-			this._inactivityTimers.deleteAndDispose(sessionId);
-		});
+		browser.on("disconnected", () => {
+      this.logService.debug(
+        `[PlaywrightService] Browser disconnected for session ${sessionId}`,
+      );
+      this._sessions.deleteAndDispose(sessionId);
+      this._inactivityTimers.deleteAndDispose(sessionId);
+    });
 
 		this._sessions.set(sessionId, session);
 
@@ -183,7 +198,9 @@ export class PlaywrightService extends Disposable implements IPlaywrightService 
 			try {
 				await session.group.addView(viewId);
 			} catch {
-				this.logService.debug(`[PlaywrightService] Stale tracked page ${viewId} removed during replay`);
+				this.logService.debug(
+          `[PlaywrightService] Stale tracked page ${viewId} removed during replay`,
+        );
 				this._trackedPages.delete(viewId);
 				this._fireTrackedPages();
 			}
@@ -271,7 +288,9 @@ export class PlaywrightService extends Disposable implements IPlaywrightService 
 
 	async disposeSession(sessionId: string): Promise<void> {
 		if (this._sessions.has(sessionId)) {
-			this.logService.debug(`[PlaywrightService] Disposing session ${sessionId}`);
+			this.logService.debug(
+        `[PlaywrightService] Disposing session ${sessionId}`,
+      );
 			this._sessions.deleteAndDispose(sessionId);
 			this._inactivityTimers.deleteAndDispose(sessionId);
 		}
@@ -291,13 +310,15 @@ export class PlaywrightService extends Disposable implements IPlaywrightService 
 	private _touchSession(sessionId: string): void {
 		this._inactivityTimers.deleteAndDispose(sessionId);
 		const timer = disposableTimeout(
-			() => {
-				this.logService.debug(`[PlaywrightService] Session ${sessionId} inactive for ${SESSION_INACTIVITY_MS / 60_000}m, disposing`);
-				this._sessions.deleteAndDispose(sessionId);
-				this._inactivityTimers.deleteAndDispose(sessionId);
-			},
-			SESSION_INACTIVITY_MS,
-		);
+      () => {
+        this.logService.debug(
+          `[PlaywrightService] Session ${sessionId} inactive for ${SESSION_INACTIVITY_MS / 60_000}m, disposing`,
+        );
+        this._sessions.deleteAndDispose(sessionId);
+        this._inactivityTimers.deleteAndDispose(sessionId);
+      },
+      SESSION_INACTIVITY_MS,
+    );
 		this._inactivityTimers.set(sessionId, timer);
 	}
 }
@@ -330,10 +351,12 @@ class PlaywrightSession extends Disposable {
 	private _openContext: BrowserContext | undefined = undefined;
 
 	/** In-flight deferred results keyed by their generated ID. */
-	private readonly _deferredResults = this._register(new DisposableMap<string, {
+	private readonly _deferredResults = this._register(
+    new DisposableMap<string, {
 		pageId: string;
 		promise: Promise<unknown>;
-	} & IDisposable>());
+	} & IDisposable>(),
+  );
 
 	constructor(
 		readonly sessionId: string,
@@ -346,7 +369,9 @@ class PlaywrightSession extends Disposable {
 
 		this._register(this.group);
 		this._register(this.group.onDidAddView(e => this._onViewAdded(e.viewId)));
-		this._register(this.group.onDidRemoveView(e => this._onViewRemoved(e.viewId)));
+		this._register(
+      this.group.onDidRemoveView(e => this._onViewRemoved(e.viewId)),
+    );
 
 		this._scanForNewContexts();
 	}
@@ -367,7 +392,7 @@ class PlaywrightSession extends Disposable {
 		const page = await this._openContext.newPage();
 		const viewId = await this._onPageAdded(page);
 
-		await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+		await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
 
 		const summary = await this._getSummary(viewId);
 		return { pageId: viewId, summary };
@@ -383,11 +408,17 @@ class PlaywrightSession extends Disposable {
 	}
 
 	async invokeFunction(pageId: string, fnDef: string, args: unknown[] = [], timeoutMs?: number): Promise<IInvokeFunctionResult> {
-		this.logService.info(`[PlaywrightSession] Invoking function on view ${pageId}`);
+		this.logService.info(
+      `[PlaywrightSession] Invoking function on view ${pageId}`,
+    );
 
 		if (timeoutMs !== undefined) {
 			const fn = await this._compileFunction(fnDef);
-			return this._runWithDeferral(pageId, async (page) => fn(page, args ?? []), timeoutMs);
+			return this._runWithDeferral(
+        pageId,
+        async (page) => fn(page, args ?? []),
+        timeoutMs,
+      );
 		}
 
 		let result, error;
@@ -404,19 +435,26 @@ class PlaywrightSession extends Disposable {
 	async waitForDeferredResult(deferredResultId: string, timeoutMs: number): Promise<IInvokeFunctionResult> {
 		const entry = this._deferredResults.get(deferredResultId);
 		if (!entry) {
-			throw new Error(`No deferred result found with ID "${deferredResultId}". It may have been cleaned up or already consumed.`);
+			throw new Error(
+        `No deferred result found with ID "${deferredResultId}". It may have been cleaned up or already consumed.`,
+      );
 		}
 
 		const { pageId, promise } = entry;
 		this._deferredResults.deleteAndDispose(deferredResultId);
-		return this._runWithDeferral(pageId, () => promise, timeoutMs, deferredResultId);
+		return this._runWithDeferral(
+      pageId,
+      () => promise,
+      timeoutMs,
+      deferredResultId,
+    );
 	}
 
 	async replyToFileChooser(pageId: string, files: string[]): Promise<{ summary: string }> {
 		const page = await this._getPage(pageId);
 		const tab = this._tabs.get(page);
 		if (!tab) {
-			throw new Error('Failed to reply to file chooser');
+			throw new Error("Failed to reply to file chooser");
 		}
 		await tab.replyToFileChooser(files);
 		const summary = await tab.getSummary();
@@ -427,7 +465,7 @@ class PlaywrightSession extends Disposable {
 		const page = await this._getPage(pageId);
 		const tab = this._tabs.get(page);
 		if (!tab) {
-			throw new Error('Failed to reply to dialog');
+			throw new Error("Failed to reply to dialog");
 		}
 		await tab.replyToDialog(accept, promptText);
 		const summary = await tab.getSummary();
@@ -440,7 +478,7 @@ class PlaywrightSession extends Disposable {
 		const page = await this._getPage(pageId);
 		const tab = this._tabs.get(page);
 		if (!tab) {
-			throw new Error('Failed to get page summary');
+			throw new Error("Failed to get page summary");
 		}
 		return tab.getSummary(full);
 	}
@@ -449,7 +487,7 @@ class PlaywrightSession extends Disposable {
 		const page = await this._getPage(pageId);
 		const tab = this._tabs.get(page);
 		if (!tab) {
-			throw new Error('Failed to execute function against page');
+			throw new Error("Failed to execute function against page");
 		}
 		return tab.safeRunAgainstPage(async () => callback(page));
 	}
@@ -457,17 +495,19 @@ class PlaywrightSession extends Disposable {
 	private async _runWithDeferral(pageId: string, callback: (page: Page) => Promise<unknown>, timeoutMs: number, existingDeferredId?: string): Promise<IInvokeFunctionResult> {
 		const deferred = new DeferredPromise();
 		const wrappedPromise = this._runAgainstPage(pageId, async (page) => {
-			const promise = callback(page);
-			promise.catch(() => { /* prevent unhandled rejection if deferred */ });
-			deferred.settleWith(promise);
-			return promise;
-		});
+      const promise = callback(page);
+      promise.catch(() => { /* prevent unhandled rejection if deferred */ });
+      deferred.settleWith(promise);
+      return promise;
+    });
 
 		let result, error;
 		let interrupted = false;
 
 		try {
-			result = await raceTimeout(wrappedPromise, timeoutMs, () => { interrupted = true; });
+			result = await raceTimeout(wrappedPromise, timeoutMs, () => {
+        interrupted = true;
+      });
 		} catch (err: unknown) {
 			if (err instanceof DialogInterruptedError) {
 				interrupted = true;
@@ -478,9 +518,18 @@ class PlaywrightSession extends Disposable {
 		let deferredResultId: string | undefined;
 		if (interrupted) {
 			deferredResultId = existingDeferredId ?? generateUuid();
-			const cleanup = disposableTimeout(() => this._deferredResults.deleteAndDispose(deferredResultId!), DEFERRED_RESULT_CLEANUP_MS);
-			this._deferredResults.set(deferredResultId, { pageId, promise: deferred.p, dispose: () => cleanup.dispose() });
-			this.logService.info(`[PlaywrightSession] Execution interrupted, deferred as ${deferredResultId}`);
+			const cleanup = disposableTimeout(
+        () => this._deferredResults.deleteAndDispose(deferredResultId!),
+        DEFERRED_RESULT_CLEANUP_MS,
+      );
+			this._deferredResults.set(deferredResultId, {
+        pageId,
+        promise: deferred.p,
+        dispose: () => cleanup.dispose(),
+      });
+			this.logService.info(
+        `[PlaywrightSession] Execution interrupted, deferred as ${deferredResultId}`,
+      );
 		}
 
 		const summary = await this._getSummary(pageId);
@@ -488,8 +537,12 @@ class PlaywrightSession extends Disposable {
 	}
 
 	private async _compileFunction(fnDef: string): Promise<(page: Page, args: unknown[]) => unknown> {
-		const vm = await import('vm');
-		return vm.compileFunction(`return (${fnDef})(page, ...args)`, ['page', 'args'], { parsingContext: vm.createContext() }) as (page: Page, args: unknown[]) => unknown;
+		const vm = await import("vm");
+		return vm.compileFunction(
+      `return (${fnDef})(page, ...args)`,
+      ["page", "args"],
+      { parsingContext: vm.createContext() },
+    ) as (page: Page, args: unknown[]) => unknown;
 	}
 
 	// --- Private: page matching (view ↔ page pairing) ---
@@ -517,7 +570,10 @@ class PlaywrightSession extends Disposable {
 		}
 
 		const deferred = new DeferredPromise<Page>();
-		const timeout = setTimeout(() => deferred.error(new Error(`Timed out waiting for page`)), timeoutMs);
+		const timeout = setTimeout(
+      () => deferred.error(new Error(`Timed out waiting for page`)),
+      timeoutMs,
+    );
 
 		deferred.p.finally(() => {
 			clearTimeout(timeout);
@@ -535,7 +591,9 @@ class PlaywrightSession extends Disposable {
 	}
 
 	private _onViewRemoved(viewId: string): void {
-		this._viewIdQueue = this._viewIdQueue.filter(item => item.viewId !== viewId);
+		this._viewIdQueue = this._viewIdQueue.filter(
+      item => item.viewId !== viewId,
+    );
 		const page = this._viewIdToPage.get(viewId);
 		if (page) {
 			this._pageToViewId.delete(page);
@@ -554,16 +612,22 @@ class PlaywrightSession extends Disposable {
 		}
 
 		this._onContextAdded(page.context());
-		page.once('close', () => this._onPageRemoved(page));
+		page.once("close", () => this._onPageRemoved(page));
 		page.setDefaultTimeout(10000);
-		this._tabs.set(page, new PlaywrightTab(page, this.agentNetworkFilterService));
+		this._tabs.set(
+      page,
+      new PlaywrightTab(page, this.agentNetworkFilterService),
+    );
 
 		const deferred = new DeferredPromise<string>();
-		const timeout = setTimeout(() => deferred.error(new Error(`Timed out waiting for browser view`)), timeoutMs);
+		const timeout = setTimeout(
+      () => deferred.error(new Error(`Timed out waiting for browser view`)),
+      timeoutMs,
+    );
 		deferred.p.finally(() => {
-			clearTimeout(timeout);
-			this._pageQueue = this._pageQueue.filter(item => item.page !== page);
-		});
+      clearTimeout(timeout);
+      this._pageQueue = this._pageQueue.filter(item => item.page !== page);
+    });
 
 		this._pageQueue.push({ page, viewId: deferred });
 		this._tryMatch();
@@ -585,8 +649,8 @@ class PlaywrightSession extends Disposable {
 			return;
 		}
 		this._watchedContexts.add(context);
-		context.on('page', (page: Page) => this._onPageAdded(page));
-		context.on('close', () => this._watchedContexts.delete(context));
+		context.on("page", (page: Page) => this._onPageAdded(page));
+		context.on("close", () => this._watchedContexts.delete(context));
 		for (const page of context.pages()) {
 			this._onPageAdded(page);
 		}
@@ -605,7 +669,9 @@ class PlaywrightSession extends Disposable {
 			viewIdItem.page.complete(pageItem.page);
 			pageItem.viewId.complete(viewIdItem.viewId);
 
-			this.logService.debug(`[PlaywrightSession] Matched view ${viewIdItem.viewId} → page`);
+			this.logService.debug(
+        `[PlaywrightSession] Matched view ${viewIdItem.viewId} → page`,
+      );
 		}
 
 		if (this._viewIdQueue.length === 0) {
@@ -638,10 +704,10 @@ class PlaywrightSession extends Disposable {
 		this._stopScanning();
 		this._browser?.close().catch(() => { /* ignore */ });
 		for (const { page } of this._viewIdQueue) {
-			page.error(new Error('PlaywrightSession disposed'));
+			page.error(new Error("PlaywrightSession disposed"));
 		}
 		for (const { viewId } of this._pageQueue) {
-			viewId.error(new Error('PlaywrightSession disposed'));
+			viewId.error(new Error("PlaywrightSession disposed"));
 		}
 		this._viewIdQueue = [];
 		this._pageQueue = [];

@@ -3,15 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../base/common/event.js';
-import { URI } from '../../../base/common/uri.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import { MCP } from './modelContextProtocol.js';
+import { Event } from "../../../base/common/event.js";
+import { URI } from "../../../base/common/uri.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { MCP } from "./modelContextProtocol.js";
 
-export const IMcpGatewayService = createDecorator<IMcpGatewayService>('IMcpGatewayService');
+export const IMcpGatewayService = createDecorator<IMcpGatewayService>(
+  "IMcpGatewayService",
+);
 
-export const McpGatewayChannelName = 'mcpGateway';
-export const McpGatewayToolBrokerChannelName = 'mcpGatewayToolBroker';
+export const McpGatewayChannelName = "mcpGateway";
+export const McpGatewayToolBrokerChannelName = "mcpGatewayToolBroker";
 
 /**
  * Descriptor for an MCP server known to the gateway.

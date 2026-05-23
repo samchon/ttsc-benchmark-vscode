@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from './uri.js';
+import { URI } from "./uri.js";
 
 export function getOrSet<K, V>(map: Map<K, V>, key: K, value: V): V {
 	let result = map.get(key);
@@ -18,19 +18,19 @@ export function getOrSet<K, V>(map: Map<K, V>, key: K, value: V): V {
 export function mapToString<K, V>(map: Map<K, V>): string {
 	const entries: string[] = [];
 	map.forEach((value, key) => {
-		entries.push(`${key} => ${value}`);
-	});
+    entries.push(`${key} => ${value}`);
+  });
 
-	return `Map(${map.size}) {${entries.join(', ')}}`;
+	return `Map(${map.size}) {${entries.join(", ")}}`;
 }
 
 export function setToString<K>(set: Set<K>): string {
 	const entries: K[] = [];
 	set.forEach(value => {
-		entries.push(value);
-	});
+    entries.push(value);
+  });
 
-	return `Set(${set.size}) {${entries.join(', ')}}`;
+	return `Set(${set.size}) {${entries.join(", ")}}`;
 }
 
 interface ResourceMapKeyFn {
@@ -49,7 +49,7 @@ export class ResourceMap<T> implements Map<URI, T> {
 
 	private static readonly defaultToKey = (resource: URI) => resource.toString();
 
-	readonly [Symbol.toStringTag] = 'ResourceMap';
+	readonly [Symbol.toStringTag] = "ResourceMap";
 
 	private readonly map: Map<string, ResourceMapEntry<T>>;
 	private readonly toKey: ResourceMapKeyFn;
@@ -117,7 +117,7 @@ export class ResourceMap<T> implements Map<URI, T> {
 	}
 
 	forEach(clb: (value: T, key: URI, map: Map<URI, T>) => void, thisArg?: object): void {
-		if (typeof thisArg !== 'undefined') {
+		if (typeof thisArg !== "undefined") {
 			clb = clb.bind(thisArg);
 		}
 		for (const [_, entry] of this.map) {
@@ -152,14 +152,14 @@ export class ResourceMap<T> implements Map<URI, T> {
 
 export class ResourceSet implements Set<URI> {
 
-	readonly [Symbol.toStringTag]: string = 'ResourceSet';
+	readonly [Symbol.toStringTag]: string = "ResourceSet";
 
 	private readonly _map: ResourceMap<URI>;
 
 	constructor(toKey?: ResourceMapKeyFn);
 	constructor(entries: readonly URI[], toKey?: ResourceMapKeyFn);
 	constructor(entriesOrKey?: readonly URI[] | ResourceMapKeyFn, toKey?: ResourceMapKeyFn) {
-		if (!entriesOrKey || typeof entriesOrKey === 'function') {
+		if (!entriesOrKey || typeof entriesOrKey === "function") {
 			this._map = new ResourceMap(entriesOrKey);
 		} else {
 			this._map = new ResourceMap(toKey);
@@ -186,7 +186,9 @@ export class ResourceSet implements Set<URI> {
 	}
 
 	forEach(callbackfn: (value: URI, value2: URI, set: Set<URI>) => void, thisArg?: unknown): void {
-		this._map.forEach((_value, key) => callbackfn.call(thisArg, key, key, this));
+		this._map.forEach(
+      (_value, key) => callbackfn.call(thisArg, key, key, this),
+    );
 	}
 
 	has(value: URI): boolean {
@@ -226,7 +228,7 @@ export const enum Touch {
 
 export class LinkedMap<K, V> implements Map<K, V> {
 
-	readonly [Symbol.toStringTag] = 'LinkedMap';
+	readonly [Symbol.toStringTag] = "LinkedMap";
 
 	private _map: Map<K, Item<K, V>>;
 	private _head: Item<K, V> | undefined;
@@ -331,7 +333,7 @@ export class LinkedMap<K, V> implements Map<K, V> {
 			return undefined;
 		}
 		if (!this._head || !this._tail) {
-			throw new Error('Invalid list');
+			throw new Error("Invalid list");
 		}
 		const item = this._head;
 		this._map.delete(item.key);
@@ -375,7 +377,7 @@ export class LinkedMap<K, V> implements Map<K, V> {
 				} else {
 					return { value: undefined, done: true };
 				}
-			}
+			},
 		};
 		return iterator;
 	}
@@ -399,7 +401,7 @@ export class LinkedMap<K, V> implements Map<K, V> {
 				} else {
 					return { value: undefined, done: true };
 				}
-			}
+			},
 		};
 		return iterator;
 	}
@@ -423,7 +425,7 @@ export class LinkedMap<K, V> implements Map<K, V> {
 				} else {
 					return { value: undefined, done: true };
 				}
-			}
+			},
 		};
 		return iterator;
 	}
@@ -483,7 +485,7 @@ export class LinkedMap<K, V> implements Map<K, V> {
 		if (!this._head && !this._tail) {
 			this._tail = item;
 		} else if (!this._head) {
-			throw new Error('Invalid list');
+			throw new Error("Invalid list");
 		} else {
 			item.next = this._head;
 			this._head.previous = item;
@@ -497,7 +499,7 @@ export class LinkedMap<K, V> implements Map<K, V> {
 		if (!this._head && !this._tail) {
 			this._head = item;
 		} else if (!this._tail) {
-			throw new Error('Invalid list');
+			throw new Error("Invalid list");
 		} else {
 			item.previous = this._tail;
 			this._tail.next = item;
@@ -515,7 +517,7 @@ export class LinkedMap<K, V> implements Map<K, V> {
 			// This can only happen if size === 1 which is handled
 			// by the case above.
 			if (!item.next) {
-				throw new Error('Invalid list');
+				throw new Error("Invalid list");
 			}
 			item.next.previous = undefined;
 			this._head = item.next;
@@ -524,7 +526,7 @@ export class LinkedMap<K, V> implements Map<K, V> {
 			// This can only happen if size === 1 which is handled
 			// by the case above.
 			if (!item.previous) {
-				throw new Error('Invalid list');
+				throw new Error("Invalid list");
 			}
 			item.previous.next = undefined;
 			this._tail = item.previous;
@@ -533,7 +535,7 @@ export class LinkedMap<K, V> implements Map<K, V> {
 			const next = item.next;
 			const previous = item.previous;
 			if (!next || !previous) {
-				throw new Error('Invalid list');
+				throw new Error("Invalid list");
 			}
 			next.previous = previous;
 			previous.next = next;
@@ -545,7 +547,7 @@ export class LinkedMap<K, V> implements Map<K, V> {
 
 	private touch(item: Item<K, V>, touch: Touch): void {
 		if (!this._head || !this._tail) {
-			throw new Error('Invalid list');
+			throw new Error("Invalid list");
 		}
 		if ((touch !== Touch.AsOld && touch !== Touch.AsNew)) {
 			return;
@@ -609,8 +611,8 @@ export class LinkedMap<K, V> implements Map<K, V> {
 		const data: [K, V][] = [];
 
 		this.forEach((value, key) => {
-			data.push([key, value]);
-		});
+      data.push([key, value]);
+    });
 
 		return data;
 	}
@@ -791,8 +793,8 @@ export class BidirectionalMap<K, V> {
 
 	forEach(callbackfn: (value: V, key: K, map: BidirectionalMap<K, V>) => void, thisArg?: unknown): void {
 		this._m1.forEach((value, key) => {
-			callbackfn.call(thisArg, value, key, this);
-		});
+      callbackfn.call(thisArg, value, key, this);
+    });
 	}
 
 	keys(): IterableIterator<K> {
@@ -938,11 +940,11 @@ export class NKeyMap<TValue, TKeys extends (string | boolean | number)[]> {
 	 */
 	public toString(): string {
 		const printMap = (map: Map<any, any>, depth: number): string => {
-			let result = '';
+			let result = "";
 			for (const [key, value] of map) {
-				result += `${'  '.repeat(depth)}${key}: `;
+				result += `${"  ".repeat(depth)}${key}: `;
 				if (value instanceof Map) {
-					result += '\n' + printMap(value, depth + 1);
+					result += "\n" + printMap(value, depth + 1);
 				} else {
 					result += `${value}\n`;
 				}

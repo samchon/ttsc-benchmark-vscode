@@ -3,19 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { timeout } from '../../../../base/common/async.js';
-import { VSBuffer } from '../../../../base/common/buffer.js';
-import { joinPath } from '../../../../base/common/resources.js';
-import { generateUuid } from '../../../../base/common/uuid.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { INativeHostService } from '../../../../platform/native/common/native.js';
-import { IV8Profile } from '../../../../platform/profiling/common/profiling.js';
-import { IProfileAnalysisWorkerService, ProfilingOutput } from '../../../../platform/profiling/electron-browser/profileAnalysisWorkerService.js';
-import { INativeWorkbenchEnvironmentService } from '../../../services/environment/electron-browser/environmentService.js';
-import { parseExtensionDevOptions } from '../../../services/extensions/common/extensionDevOptions.js';
-import { ITimerService } from '../../../services/timer/browser/timerService.js';
+import { timeout } from "../../../../base/common/async.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { joinPath } from "../../../../base/common/resources.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { INativeHostService } from "../../../../platform/native/common/native.js";
+import { IV8Profile } from "../../../../platform/profiling/common/profiling.js";
+import { IProfileAnalysisWorkerService, ProfilingOutput } from "../../../../platform/profiling/electron-browser/profileAnalysisWorkerService.js";
+import { INativeWorkbenchEnvironmentService } from "../../../services/environment/electron-browser/environmentService.js";
+import { parseExtensionDevOptions } from "../../../services/extensions/common/extensionDevOptions.js";
+import { ITimerService } from "../../../services/timer/browser/timerService.js";
 
 export class RendererProfiling {
 
@@ -28,7 +28,7 @@ export class RendererProfiling {
 		@INativeHostService nativeHostService: INativeHostService,
 		@ITimerService timerService: ITimerService,
 		@IConfigurationService configService: IConfigurationService,
-		@IProfileAnalysisWorkerService profileAnalysisService: IProfileAnalysisWorkerService
+		@IProfileAnalysisWorkerService profileAnalysisService: IProfileAnalysisWorkerService,
 	) {
 
 		const devOpts = parseExtensionDevOptions(_environmentService);
@@ -59,7 +59,7 @@ export class RendererProfiling {
 					return;
 				}
 
-				if (!configService.getValue('application.experimental.rendererProfiling')) {
+				if (!configService.getValue("application.experimental.rendererProfiling")) {
 					_logService.debug(`[perf] SLOW task detected (${maxDuration}ms) but renderer profiling is disabled via 'application.experimental.rendererProfiling'`);
 					return;
 				}
@@ -76,7 +76,7 @@ export class RendererProfiling {
 
 					try {
 						const profile = await nativeHostService.profileRenderer(sessionId, 5000);
-						const output = await profileAnalysisService.analyseBottomUp(profile, _url => '<<renderer>>', perfBaseline, true);
+						const output = await profileAnalysisService.analyseBottomUp(profile, _url => "<<renderer>>", perfBaseline, true);
 						if (output === ProfilingOutput.Interesting) {
 							this._store(profile, sessionId);
 							break;
@@ -91,10 +91,10 @@ export class RendererProfiling {
 				}
 
 				// reconnect the observer
-				obs.observe({ entryTypes: ['longtask'] });
+				obs.observe({ entryTypes: ["longtask"] });
 			});
 
-			obs.observe({ entryTypes: ['longtask'] });
+			obs.observe({ entryTypes: ["longtask"] });
 			this._observer = obs;
 
 		});
@@ -106,8 +106,14 @@ export class RendererProfiling {
 
 
 	private async _store(profile: IV8Profile, sessionId: string): Promise<void> {
-		const path = joinPath(this._environmentService.tmpDir, `renderer-${Math.random().toString(16).slice(2, 8)}.cpuprofile.json`);
-		await this._fileService.writeFile(path, VSBuffer.fromString(JSON.stringify(profile)));
+		const path = joinPath(
+      this._environmentService.tmpDir,
+      `renderer-${Math.random().toString(16).slice(2, 8)}.cpuprofile.json`,
+    );
+		await this._fileService.writeFile(
+      path,
+      VSBuffer.fromString(JSON.stringify(profile)),
+    );
 		this._logService.info(`[perf] stored profile to DISK '${path}'`, sessionId);
 	}
 }

@@ -3,13 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type * as vscode from 'vscode';
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { ExtHostChatOutputRendererShape, type IChatOutputRenderContextDto, IMainContext, MainContext, MainThreadChatOutputRendererShape } from './extHost.protocol.js';
-import { Disposable } from './extHostTypes.js';
-import { ExtHostWebviews } from './extHostWebview.js';
-import { IExtensionDescription } from '../../../platform/extensions/common/extensions.js';
-import { VSBuffer } from '../../../base/common/buffer.js';
+import type * as vscode from "vscode";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import {
+  ExtHostChatOutputRendererShape,
+  type IChatOutputRenderContextDto,
+  IMainContext,
+  MainContext,
+  MainThreadChatOutputRendererShape,
+} from "./extHost.protocol.js";
+import { Disposable } from "./extHostTypes.js";
+import { ExtHostWebviews } from "./extHostWebview.js";
+import { IExtensionDescription } from "../../../platform/extensions/common/extensions.js";
+import { VSBuffer } from "../../../base/common/buffer.js";
 
 export class ExtHostChatOutputRenderer implements ExtHostChatOutputRendererShape {
 
@@ -24,21 +30,29 @@ export class ExtHostChatOutputRenderer implements ExtHostChatOutputRendererShape
 		mainContext: IMainContext,
 		private readonly webviews: ExtHostWebviews,
 	) {
-		this._proxy = mainContext.getProxy(MainContext.MainThreadChatOutputRenderer);
+		this._proxy = mainContext.getProxy(
+      MainContext.MainThreadChatOutputRenderer,
+    );
 	}
 
 	registerChatOutputRenderer(extension: IExtensionDescription, viewType: string, renderer: vscode.ChatOutputRenderer): vscode.Disposable {
 		if (this._renderers.has(viewType)) {
-			throw new Error(`Chat output renderer already registered for: ${viewType}`);
+			throw new Error(
+        `Chat output renderer already registered for: ${viewType}`,
+      );
 		}
 
 		this._renderers.set(viewType, { extension, renderer });
-		this._proxy.$registerChatOutputRenderer(viewType, extension.identifier, extension.extensionLocation);
+		this._proxy.$registerChatOutputRenderer(
+      viewType,
+      extension.identifier,
+      extension.extensionLocation,
+    );
 
 		return new Disposable(() => {
-			this._renderers.delete(viewType);
-			this._proxy.$unregisterChatOutputRenderer(viewType);
-		});
+      this._renderers.delete(viewType);
+      this._proxy.$unregisterChatOutputRenderer(viewType);
+    });
 	}
 
 	async $renderChatOutput(viewType: string, mime: string, valueData: VSBuffer, webviewHandle: string, context: IChatOutputRenderContextDto, token: CancellationToken): Promise<void> {
@@ -47,11 +61,20 @@ export class ExtHostChatOutputRenderer implements ExtHostChatOutputRendererShape
 			throw new Error(`No chat output renderer registered for: ${viewType}`);
 		}
 
-		const extHostWebview = this.webviews.createNewWebview(webviewHandle, {}, entry.extension);
+		const extHostWebview = this.webviews.createNewWebview(
+      webviewHandle,
+      {},
+      entry.extension,
+    );
 		const chatOutputWebview: vscode.ChatOutputWebview = Object.freeze({
-			webview: extHostWebview,
-			onDidDispose: extHostWebview._onDidDispose,
-		});
-		return entry.renderer.renderChatOutput(Object.freeze({ mime, value: valueData.buffer }), chatOutputWebview, Object.freeze(context), token);
+      webview: extHostWebview,
+      onDidDispose: extHostWebview._onDidDispose,
+    });
+		return entry.renderer.renderChatOutput(
+      Object.freeze({ mime, value: valueData.buffer }),
+      chatOutputWebview,
+      Object.freeze(context),
+      token,
+    );
 	}
 }

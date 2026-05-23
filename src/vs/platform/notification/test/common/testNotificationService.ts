@@ -3,8 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import { INotification, INotificationHandle, INotificationService, INotificationSource, INotificationSourceFilter, IPromptChoice, IPromptOptions, IStatusHandle, IStatusMessageOptions, NoOpNotification, NotificationsFilter, Severity } from '../../common/notification.js';
+import { Event } from "../../../../base/common/event.js";
+import {
+  INotification,
+  INotificationHandle,
+  INotificationService,
+  INotificationSource,
+  INotificationSourceFilter,
+  IPromptChoice,
+  IPromptOptions,
+  IStatusHandle,
+  IStatusMessageOptions,
+  NoOpNotification,
+  NotificationsFilter,
+  Severity,
+} from "../../common/notification.js";
 
 export class TestNotificationService implements INotificationService {
 
@@ -36,8 +49,8 @@ export class TestNotificationService implements INotificationService {
 
 	status(message: string | Error, options?: IStatusMessageOptions): IStatusHandle {
 		return {
-			close: () => { }
-		};
+      close: () => { },
+    };
 	}
 
 	setFilter(): void { }

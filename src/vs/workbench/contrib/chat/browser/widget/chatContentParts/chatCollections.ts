@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable } from '../../../../../../base/common/lifecycle.js';
+import { IDisposable } from "../../../../../../base/common/lifecycle.js";
 
 export interface IResourcePoolOptions {
 	/**
@@ -65,10 +65,13 @@ export class ResourcePool<T extends IDisposable> implements IDisposable {
 			clearTimeout(this._trimTimer);
 		}
 		const delay = this._options?.trimIdleDelay ?? 10_000;
-		this._trimTimer = setTimeout(() => {
-			this._trimTimer = undefined;
-			this._trimIdle();
-		}, delay);
+		this._trimTimer = setTimeout(
+      () => {
+        this._trimTimer = undefined;
+        this._trimIdle();
+      },
+      delay,
+    );
 	}
 
 	private _trimIdle(): void {
@@ -192,10 +195,13 @@ export class KeyedResourcePool<T extends IDisposable> implements IDisposable {
 			clearTimeout(this._trimTimer);
 		}
 		const delay = this._options?.trimIdleDelay ?? 10_000;
-		this._trimTimer = setTimeout(() => {
-			this._trimTimer = undefined;
-			this._trimIdle();
-		}, delay);
+		this._trimTimer = setTimeout(
+      () => {
+        this._trimTimer = undefined;
+        this._trimIdle();
+      },
+      delay,
+    );
 	}
 
 	private _trimIdle(): void {

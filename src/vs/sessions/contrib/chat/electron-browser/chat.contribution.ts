@@ -3,21 +3,25 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ipcRenderer } from '../../../../base/parts/sandbox/electron-browser/globals.js';
-import { URI, UriComponents } from '../../../../base/common/uri.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../../workbench/common/contributions.js';
-import { ISessionsManagementService } from '../../../services/sessions/common/sessionsManagement.js';
-import { ISessionsProvidersService } from '../../../services/sessions/browser/sessionsProvidersService.js';
-import { IViewsService } from '../../../../workbench/services/views/common/viewsService.js';
-import { ILifecycleService, LifecyclePhase } from '../../../../workbench/services/lifecycle/common/lifecycle.js';
-import { NewChatViewPane, SessionsViewId } from '../browser/newChatViewPane.js';
-import { SessionsView, SessionsViewId as SessionsListViewId } from '../../sessions/browser/views/sessionsView.js';
-import { ISessionsSetUpService } from '../../../browser/sessionsSetUpService.js';
+import { ipcRenderer } from "../../../../base/parts/sandbox/electron-browser/globals.js";
+import { URI, UriComponents } from "../../../../base/common/uri.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import {
+  IWorkbenchContribution,
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../../../workbench/common/contributions.js";
+import { ISessionsManagementService } from "../../../services/sessions/common/sessionsManagement.js";
+import { ISessionsProvidersService } from "../../../services/sessions/browser/sessionsProvidersService.js";
+import { IViewsService } from "../../../../workbench/services/views/common/viewsService.js";
+import { ILifecycleService, LifecyclePhase } from "../../../../workbench/services/lifecycle/common/lifecycle.js";
+import { NewChatViewPane, SessionsViewId } from "../browser/newChatViewPane.js";
+import { SessionsView, SessionsViewId as SessionsListViewId } from "../../sessions/browser/views/sessionsView.js";
+import { ISessionsSetUpService } from "../../../browser/sessionsSetUpService.js";
 
 class SelectAgentsFolderContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'sessions.selectAgentsFolder';
+	static readonly ID = "sessions.selectAgentsFolder";
 
 	constructor(
 		@ISessionsManagementService private readonly sessionsManagementService: ISessionsManagementService,
@@ -27,10 +31,13 @@ class SelectAgentsFolderContribution extends Disposable implements IWorkbenchCon
 		@ISessionsSetUpService private readonly sessionsSetUpService: ISessionsSetUpService,
 	) {
 		super();
-		ipcRenderer.on('vscode:selectAgentsFolder', (_: unknown, ...args: unknown[]) => {
-			const folderUri = URI.revive(args[0] as UriComponents);
-			this.selectFolder(folderUri);
-		});
+		ipcRenderer.on(
+      "vscode:selectAgentsFolder",
+      (_: unknown, ...args: unknown[]) => {
+        const folderUri = URI.revive(args[0] as UriComponents);
+        this.selectFolder(folderUri);
+      },
+    );
 	}
 
 	private async selectFolder(folderUri: URI): Promise<void> {
@@ -42,7 +49,9 @@ class SelectAgentsFolderContribution extends Disposable implements IWorkbenchCon
 		// Tell the sessions list this folder is the open-window source folder
 		// so it ranks the matching folder section first. Get the view if it
 		// already exists — do not open it just for this side-effect.
-		const sessionsView = this.viewsService.getViewWithId<SessionsView>(SessionsListViewId);
+		const sessionsView = this.viewsService.getViewWithId<SessionsView>(
+      SessionsListViewId,
+    );
 		sessionsView?.sessionsControl?.setOpenWindowSourceFolder(folderUri);
 
 		if (this.tryResolveAndSelect(folderUri)) {
@@ -55,7 +64,9 @@ class SelectAgentsFolderContribution extends Disposable implements IWorkbenchCon
 				disposable.dispose();
 			}
 		});
-		this.lifecycleService.when(LifecyclePhase.Eventually).then(() => disposable.dispose());
+		this.lifecycleService.when(LifecyclePhase.Eventually).then(
+      () => disposable.dispose(),
+    );
 	}
 
 	private tryResolveAndSelect(folderUri: URI): boolean {
@@ -64,10 +75,14 @@ class SelectAgentsFolderContribution extends Disposable implements IWorkbenchCon
 			return false;
 		}
 		this.viewsService.openView<NewChatViewPane>(SessionsViewId).then(view => {
-			view?.selectWorkspace(folderUri);
-		});
+      view?.selectWorkspace(folderUri);
+    });
 		return true;
 	}
 }
 
-registerWorkbenchContribution2(SelectAgentsFolderContribution.ID, SelectAgentsFolderContribution, WorkbenchPhase.BlockStartup);
+registerWorkbenchContribution2(
+  SelectAgentsFolderContribution.ID,
+  SelectAgentsFolderContribution,
+  WorkbenchPhase.BlockStartup,
+);

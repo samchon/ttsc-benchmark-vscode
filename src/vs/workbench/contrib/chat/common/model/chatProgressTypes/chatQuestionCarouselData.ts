@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DeferredPromise } from '../../../../../../base/common/async.js';
-import { IMarkdownString } from '../../../../../../base/common/htmlContent.js';
-import { IChatQuestion, IChatQuestionAnswers, IChatQuestionCarousel } from '../../chatService/chatService.js';
-import { ToolDataSource } from '../../tools/languageModelToolsService.js';
+import { DeferredPromise } from "../../../../../../base/common/async.js";
+import { IMarkdownString } from "../../../../../../base/common/htmlContent.js";
+import { IChatQuestion, IChatQuestionAnswers, IChatQuestionCarousel } from "../../chatService/chatService.js";
+import { ToolDataSource } from "../../tools/languageModelToolsService.js";
 
 /**
  * Runtime representation of a question carousel with a {@link DeferredPromise}
@@ -14,7 +14,7 @@ import { ToolDataSource } from '../../tools/languageModelToolsService.js';
  * completion so only serialisable data is persisted.
  */
 export class ChatQuestionCarouselData implements IChatQuestionCarousel {
-	public readonly kind = 'questionCarousel' as const;
+	public readonly kind = "questionCarousel" as const;
 	public readonly completion = new DeferredPromise<{ answers: IChatQuestionAnswers | undefined }>();
 	public draftAnswers: IChatQuestionAnswers | undefined;
 	public draftCurrentIndex: number | undefined;
@@ -54,15 +54,15 @@ export class ChatQuestionCarouselData implements IChatQuestionCarousel {
 
 	toJSON(): IChatQuestionCarousel {
 		return {
-			kind: this.kind,
-			questions: this.questions,
-			allowSkip: this.allowSkip,
-			resolveId: this.resolveId,
-			data: this.data,
-			isUsed: this.isUsed,
-			message: this.message,
-			source: this.source,
-			terminalId: this.terminalId,
-		};
+      kind: this.kind,
+      questions: this.questions,
+      allowSkip: this.allowSkip,
+      resolveId: this.resolveId,
+      data: this.data,
+      isUsed: this.isUsed,
+      message: this.message,
+      source: this.source,
+      terminalId: this.terminalId,
+    };
 	}
 }

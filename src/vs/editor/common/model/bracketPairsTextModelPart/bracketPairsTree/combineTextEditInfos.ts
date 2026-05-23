@@ -3,9 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ArrayQueue } from '../../../../../base/common/arrays.js';
-import { TextEditInfo } from './beforeEditPositionMapper.js';
-import { Length, lengthAdd, lengthDiffNonNegative, lengthEquals, lengthIsZero, lengthToObj, lengthZero, sumLengths } from './length.js';
+import { ArrayQueue } from "../../../../../base/common/arrays.js";
+import { TextEditInfo } from "./beforeEditPositionMapper.js";
+import {
+  Length,
+  lengthAdd,
+  lengthDiffNonNegative,
+  lengthEquals,
+  lengthIsZero,
+  lengthToObj,
+  lengthZero,
+  sumLengths,
+} from "./length.js";
 
 export function combineTextEditInfos(textEditInfoFirst: TextEditInfo[], textEditInfoSecond: TextEditInfo[]): TextEditInfo[] {
 	if (textEditInfoFirst.length === 0) {
@@ -19,7 +28,11 @@ export function combineTextEditInfos(textEditInfoFirst: TextEditInfo[], textEdit
 	const s0ToS1Map = new ArrayQueue(toLengthMapping(textEditInfoFirst));
 	// s1: State after first edit, but before second edit
 	const s1ToS2Map = toLengthMapping(textEditInfoSecond) as (LengthMapping | { lengthBefore: undefined; lengthAfter: undefined; modified: false })[];
-	s1ToS2Map.push({ modified: false, lengthBefore: undefined, lengthAfter: undefined }); // Copy everything from old to new
+	s1ToS2Map.push({
+    modified: false,
+    lengthBefore: undefined,
+    lengthAfter: undefined,
+  }); // Copy everything from old to new
 	// s2: State after both edits
 
 	let curItem: LengthMapping | undefined = s0ToS1Map.dequeue();
@@ -52,9 +65,16 @@ export function combineTextEditInfos(textEditInfoFirst: TextEditInfo[], textEdit
 	const result: TextEditInfo[] = [];
 
 	function pushEdit(startOffset: Length, endOffset: Length, newLength: Length): void {
-		if (result.length > 0 && lengthEquals(result[result.length - 1].endOffset, startOffset)) {
+		if (result.length > 0 && lengthEquals(
+      result[result.length - 1].endOffset,
+      startOffset,
+    )) {
 			const lastResult = result[result.length - 1];
-			result[result.length - 1] = new TextEditInfo(lastResult.startOffset, endOffset, lengthAdd(lastResult.newLength, newLength));
+			result[result.length - 1] = new TextEditInfo(
+        lastResult.startOffset,
+        endOffset,
+        lengthAdd(lastResult.newLength, newLength),
+      );
 		} else {
 			result.push({ startOffset, endOffset, newLength });
 		}
@@ -94,24 +114,31 @@ class LengthMapping {
 	}
 
 	splitAt(lengthAfter: Length): [LengthMapping, LengthMapping | undefined] {
-		const remainingLengthAfter = lengthDiffNonNegative(lengthAfter, this.lengthAfter);
+		const remainingLengthAfter = lengthDiffNonNegative(
+      lengthAfter,
+      this.lengthAfter,
+    );
 		if (lengthEquals(remainingLengthAfter, lengthZero)) {
 			return [this, undefined];
 		} else if (this.modified) {
 			return [
-				new LengthMapping(this.modified, this.lengthBefore, lengthAfter),
-				new LengthMapping(this.modified, lengthZero, remainingLengthAfter)
-			];
+        new LengthMapping(this.modified, this.lengthBefore, lengthAfter),
+        new LengthMapping(this.modified, lengthZero, remainingLengthAfter),
+      ];
 		} else {
 			return [
-				new LengthMapping(this.modified, lengthAfter, lengthAfter),
-				new LengthMapping(this.modified, remainingLengthAfter, remainingLengthAfter)
-			];
+        new LengthMapping(this.modified, lengthAfter, lengthAfter),
+        new LengthMapping(
+          this.modified,
+          remainingLengthAfter,
+          remainingLengthAfter,
+        ),
+      ];
 		}
 	}
 
 	toString(): string {
-		return `${this.modified ? 'M' : 'U'}:${lengthToObj(this.lengthBefore)} -> ${lengthToObj(this.lengthAfter)}`;
+		return `${this.modified ? "M" : "U"}:${lengthToObj(this.lengthBefore)} -> ${lengthToObj(this.lengthAfter)}`;
 	}
 }
 
@@ -119,12 +146,18 @@ function toLengthMapping(textEditInfos: TextEditInfo[]): LengthMapping[] {
 	const result: LengthMapping[] = [];
 	let lastOffset = lengthZero;
 	for (const textEditInfo of textEditInfos) {
-		const spaceLength = lengthDiffNonNegative(lastOffset, textEditInfo.startOffset);
+		const spaceLength = lengthDiffNonNegative(
+      lastOffset,
+      textEditInfo.startOffset,
+    );
 		if (!lengthIsZero(spaceLength)) {
 			result.push(new LengthMapping(false, spaceLength, spaceLength));
 		}
 
-		const lengthBefore = lengthDiffNonNegative(textEditInfo.startOffset, textEditInfo.endOffset);
+		const lengthBefore = lengthDiffNonNegative(
+      textEditInfo.startOffset,
+      textEditInfo.endOffset,
+    );
 		result.push(new LengthMapping(true, lengthBefore, textEditInfo.newLength));
 		lastOffset = textEditInfo.endOffset;
 	}

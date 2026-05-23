@@ -3,20 +3,30 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../../base/common/event.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { IObservable } from '../../../../base/common/observable.js';
-import { ConfigurationTarget } from '../../../../platform/configuration/common/configuration.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { ILogger, LogLevel } from '../../../../platform/log/common/log.js';
-import { StorageScope } from '../../../../platform/storage/common/storage.js';
-import { IWorkspaceFolderData } from '../../../../platform/workspace/common/workspace.js';
-import { IResolvedValue } from '../../../services/configurationResolver/common/configurationResolverExpression.js';
-import { McpTaskManager } from './mcpTaskManager.js';
-import { IMcpServerConnection, LazyCollectionState, McpCollectionDefinition, McpCollectionReference, McpConnectionState, McpDefinitionReference, McpServerDefinition, McpServerLaunch, McpStartServerInteraction } from './mcpTypes.js';
-import { MCP } from './modelContextProtocol.js';
+import { Event } from "../../../../base/common/event.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { IObservable } from "../../../../base/common/observable.js";
+import { ConfigurationTarget } from "../../../../platform/configuration/common/configuration.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogger, LogLevel } from "../../../../platform/log/common/log.js";
+import { StorageScope } from "../../../../platform/storage/common/storage.js";
+import { IWorkspaceFolderData } from "../../../../platform/workspace/common/workspace.js";
+import { IResolvedValue } from "../../../services/configurationResolver/common/configurationResolverExpression.js";
+import { McpTaskManager } from "./mcpTaskManager.js";
+import {
+  IMcpServerConnection,
+  LazyCollectionState,
+  McpCollectionDefinition,
+  McpCollectionReference,
+  McpConnectionState,
+  McpDefinitionReference,
+  McpServerDefinition,
+  McpServerLaunch,
+  McpStartServerInteraction,
+} from "./mcpTypes.js";
+import { MCP } from "./modelContextProtocol.js";
 
-export const IMcpRegistry = createDecorator<IMcpRegistry>('mcpRegistry');
+export const IMcpRegistry = createDecorator<IMcpRegistry>("mcpRegistry");
 
 /** Message transport to a single MCP server. */
 export interface IMcpMessageTransport extends IDisposable {
@@ -50,7 +60,7 @@ export interface IMcpResolveConnectionOptions {
 	 * - all-untrusted: prompt for all servers that are not trusted
 	 * - never: don't prompt, fail silently when trying to start an untrusted server
 	 */
-	promptType?: 'only-new' | 'all-untrusted' | 'never';
+	promptType?: "only-new" | "all-untrusted" | "never";
 	/**
 	 * Automatically trust if changed. This should ONLY be set for afforances that
 	 * ensure the user sees the config before it gets started (e.g. code lenses)

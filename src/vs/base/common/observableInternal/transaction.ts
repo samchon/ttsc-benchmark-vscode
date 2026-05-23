@@ -3,9 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { handleBugIndicatingErrorRecovery, IObservable, IObserver, ITransaction } from './base.js';
-import { getFunctionName } from './debugName.js';
-import { getLogger } from './logging/logging.js';
+import {
+  handleBugIndicatingErrorRecovery,
+  IObservable,
+  IObserver,
+  ITransaction,
+} from "./base.js";
+import { getFunctionName } from "./debugName.js";
+import { getLogger } from "./logging/logging.js";
 
 /**
  * Starts a transaction in which many observables can be changed at once.
@@ -77,11 +82,11 @@ export function subtransaction(tx: ITransaction | undefined, fn: (tx: ITransacti
 		if (!this._updatingObservers) {
 			// This happens when a transaction is used in a callback or async function.
 			// If an async transaction is used, make sure the promise awaits all users of the transaction (e.g. no race).
-			handleBugIndicatingErrorRecovery('Transaction already finished!');
+			handleBugIndicatingErrorRecovery("Transaction already finished!");
 			// Error recovery
 			transaction(tx => {
-				tx.updateObserver(observer, observable);
-			});
+        tx.updateObserver(observer, observable);
+      });
 			return;
 		}
 
@@ -93,7 +98,9 @@ export function subtransaction(tx: ITransaction | undefined, fn: (tx: ITransacti
 	public finish(): void {
 		const updatingObservers = this._updatingObservers;
 		if (!updatingObservers) {
-			handleBugIndicatingErrorRecovery('transaction.finish() has already been called!');
+			handleBugIndicatingErrorRecovery(
+        "transaction.finish() has already been called!",
+      );
 			return;
 		}
 

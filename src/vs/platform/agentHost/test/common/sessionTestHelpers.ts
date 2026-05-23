@@ -3,12 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { IReference } from '../../../../base/common/lifecycle.js';
-import { Schemas } from '../../../../base/common/network.js';
-import { URI } from '../../../../base/common/uri.js';
-import { Event } from '../../../../base/common/event.js';
-import type { IDiffComputeService, IDiffCountResult } from '../../common/diffComputeService.js';
-import type { IFileEditContent, IFileEditRecord, ISessionDatabase, ISessionDataService } from '../../common/sessionDataService.js';
+import type { IReference } from "../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Event } from "../../../../base/common/event.js";
+import type { IDiffComputeService, IDiffCountResult } from "../../common/diffComputeService.js";
+import type {
+  IFileEditContent,
+  IFileEditRecord,
+  ISessionDatabase,
+  ISessionDataService,
+} from "../../common/sessionDataService.js";
 
 export class TestSessionDatabase implements ISessionDatabase {
 	private readonly _edits: (IFileEditRecord & IFileEditContent)[] = [];
@@ -32,7 +37,9 @@ export class TestSessionDatabase implements ISessionDatabase {
 	}
 
 	async storeFileEdit(edit: IFileEditRecord & IFileEditContent): Promise<void> {
-		const existingIndex = this._edits.findIndex(e => e.toolCallId === edit.toolCallId && e.filePath === edit.filePath);
+		const existingIndex = this._edits.findIndex(
+      e => e.toolCallId === edit.toolCallId && e.filePath === edit.filePath,
+    );
 		if (existingIndex >= 0) {
 			this._edits[existingIndex] = edit;
 		} else {
@@ -42,7 +49,9 @@ export class TestSessionDatabase implements ISessionDatabase {
 
 	async getFileEdits(toolCallIds: string[]): Promise<IFileEditRecord[]> {
 		const toolCallIdsSet = new Set(toolCallIds);
-		return this._toEditRecords(this._edits.filter(e => toolCallIdsSet.has(e.toolCallId)));
+		return this._toEditRecords(
+      this._edits.filter(e => toolCallIdsSet.has(e.toolCallId)),
+    );
 	}
 
 	async getAllFileEdits(): Promise<IFileEditRecord[]> {
@@ -56,7 +65,9 @@ export class TestSessionDatabase implements ISessionDatabase {
 	}
 
 	async readFileEditContent(toolCallId: string, filePath: string): Promise<IFileEditContent | undefined> {
-		return this._edits.find(e => e.toolCallId === toolCallId && e.filePath === filePath);
+		return this._edits.find(
+      e => e.toolCallId === toolCallId && e.filePath === filePath,
+    );
 	}
 
 	async getMetadata(key: string): Promise<string | undefined> {
@@ -64,7 +75,9 @@ export class TestSessionDatabase implements ISessionDatabase {
 	}
 
 	async getMetadataObject<T extends Record<string, unknown>>(obj: T): Promise<{ [K in keyof T]: string | undefined }> {
-		return Object.fromEntries(Object.keys(obj).map(key => [key, this._metadata.get(key)])) as { [K in keyof T]: string | undefined };
+		return Object.fromEntries(
+      Object.keys(obj).map(key => [key, this._metadata.get(key)]),
+    ) as { [K in keyof T]: string | undefined };
 	}
 
 	async setMetadata(key: string, value: string): Promise<void> {
@@ -104,7 +117,9 @@ export class TestSessionDatabase implements ISessionDatabase {
 	async whenIdle(): Promise<void> { }
 
 	private _toEditRecords(edits: (IFileEditRecord & IFileEditContent)[]): IFileEditRecord[] {
-		return edits.map(({ beforeContent: _, afterContent: _2, ...metadata }) => metadata);
+		return edits.map(
+      ({ beforeContent: _, afterContent: _2, ...metadata }) => metadata,
+    );
 	}
 }
 
@@ -121,12 +136,12 @@ export class TestDiffComputeService implements IDiffComputeService {
 			return this._result;
 		}
 
-		const originalLines = original ? original.split('\n') : [];
-		const modifiedLines = modified ? modified.split('\n') : [];
+		const originalLines = original ? original.split("\n") : [];
+		const modifiedLines = modified ? modified.split("\n") : [];
 		return {
-			added: Math.max(0, modifiedLines.length - originalLines.length),
-			removed: Math.max(0, originalLines.length - modifiedLines.length),
-		};
+      added: Math.max(0, modifiedLines.length - originalLines.length),
+      removed: Math.max(0, originalLines.length - modifiedLines.length),
+    };
 	}
 }
 
@@ -136,30 +151,30 @@ export function createZeroDiffComputeService(): IDiffComputeService {
 
 export function createSessionDataService(database: ISessionDatabase = new TestSessionDatabase()): ISessionDataService {
 	return {
-		_serviceBrand: undefined,
-		getSessionDataDir: session => URI.from({ scheme: Schemas.inMemory, path: `/session-data${session.path}` }),
-		getSessionDataDirById: sessionId => URI.from({ scheme: Schemas.inMemory, path: `/session-data/${sessionId}` }),
-		openDatabase: () => createReference(database),
-		tryOpenDatabase: async () => createReference(database),
-		deleteSessionData: async () => { },
-		onWillDeleteSessionData: Event.None,
-		cleanupOrphanedData: async () => { },
-		whenIdle: async () => { },
-	};
+    _serviceBrand: undefined,
+    getSessionDataDir: session => URI.from({ scheme: Schemas.inMemory, path: `/session-data${session.path}` }),
+    getSessionDataDirById: sessionId => URI.from({ scheme: Schemas.inMemory, path: `/session-data/${sessionId}` }),
+    openDatabase: () => createReference(database),
+    tryOpenDatabase: async () => createReference(database),
+    deleteSessionData: async () => { },
+    onWillDeleteSessionData: Event.None,
+    cleanupOrphanedData: async () => { },
+    whenIdle: async () => { },
+  };
 }
 
 export function createNullSessionDataService(): ISessionDataService {
 	return {
-		_serviceBrand: undefined,
-		getSessionDataDir: session => URI.from({ scheme: Schemas.inMemory, path: `/session-data${session.path}` }),
-		getSessionDataDirById: sessionId => URI.from({ scheme: Schemas.inMemory, path: `/session-data/${sessionId}` }),
-		openDatabase: () => { throw new Error('not implemented'); },
-		tryOpenDatabase: async () => undefined,
-		deleteSessionData: async () => { },
-		onWillDeleteSessionData: Event.None,
-		cleanupOrphanedData: async () => { },
-		whenIdle: async () => { },
-	};
+    _serviceBrand: undefined,
+    getSessionDataDir: session => URI.from({ scheme: Schemas.inMemory, path: `/session-data${session.path}` }),
+    getSessionDataDirById: sessionId => URI.from({ scheme: Schemas.inMemory, path: `/session-data/${sessionId}` }),
+    openDatabase: () => { throw new Error("not implemented"); },
+    tryOpenDatabase: async () => undefined,
+    deleteSessionData: async () => { },
+    onWillDeleteSessionData: Event.None,
+    cleanupOrphanedData: async () => { },
+    whenIdle: async () => { },
+  };
 }
 
 export function encodeString(text: string): Uint8Array {
@@ -171,35 +186,35 @@ export function encodeString(text: string): Uint8Array {
  * exercise the {@link AgentService} but don't care about git state.
  * Tests that DO care about git state should pass their own implementation.
  */
-export function createNoopGitService(): import('../../node/agentHostGitService.js').IAgentHostGitService {
+export function createNoopGitService(): import("../../node/agentHostGitService.js").IAgentHostGitService {
 	return {
-		_serviceBrand: undefined,
-		isInsideWorkTree: async () => false,
-		getCurrentBranch: async () => undefined,
-		getDefaultBranch: async () => undefined,
-		getBranches: async () => [],
-		getRepositoryRoot: async () => undefined,
-		getWorktreeRoots: async () => [],
-		addWorktree: async () => { },
-		addExistingWorktree: async () => { },
-		removeWorktree: async () => { },
-		branchExists: async () => false,
-		hasUncommittedChanges: async () => false,
-		getSessionGitState: async () => undefined,
-		computeSessionFileDiffs: async () => undefined,
-		showBlob: async () => undefined,
-		captureWorkingTreeAsTree: async () => undefined,
-		commitTree: async () => undefined,
-		updateRef: async () => { },
-		deleteRefs: async () => { },
-		revParse: async () => undefined,
-		computeFileDiffsBetweenRefs: async () => undefined,
-	};
+    _serviceBrand: undefined,
+    isInsideWorkTree: async () => false,
+    getCurrentBranch: async () => undefined,
+    getDefaultBranch: async () => undefined,
+    getBranches: async () => [],
+    getRepositoryRoot: async () => undefined,
+    getWorktreeRoots: async () => [],
+    addWorktree: async () => { },
+    addExistingWorktree: async () => { },
+    removeWorktree: async () => { },
+    branchExists: async () => false,
+    hasUncommittedChanges: async () => false,
+    getSessionGitState: async () => undefined,
+    computeSessionFileDiffs: async () => undefined,
+    showBlob: async () => undefined,
+    captureWorkingTreeAsTree: async () => undefined,
+    commitTree: async () => undefined,
+    updateRef: async () => { },
+    deleteRefs: async () => { },
+    revParse: async () => undefined,
+    computeFileDiffsBetweenRefs: async () => undefined,
+  };
 }
 
 function createReference<T>(object: T): IReference<T> {
 	return {
-		object,
-		dispose: () => { },
-	};
+    object,
+    dispose: () => { },
+  };
 }

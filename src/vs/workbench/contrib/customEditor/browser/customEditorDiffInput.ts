@@ -3,23 +3,34 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { basename, isEqual } from '../../../../base/common/resources.js';
-import { IMarkdownString } from '../../../../base/common/htmlContent.js';
-import { IReference, MutableDisposable } from '../../../../base/common/lifecycle.js';
-import { URI } from '../../../../base/common/uri.js';
-import { localize } from '../../../../nls.js';
-import { IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { IThemeService } from '../../../../platform/theme/common/themeService.js';
-import { IUndoRedoService } from '../../../../platform/undoRedo/common/undoRedo.js';
-import { EditorInputCapabilities, GroupIdentifier, IResourceDiffEditorInput, IRevertOptions, ISaveOptions, IUntypedEditorInput, isEditorInput, isResourceEditorInput, isResourceDiffEditorInput, Verbosity } from '../../../common/editor.js';
-import { EditorInput, IUntypedEditorOptions } from '../../../common/editor/editorInput.js';
-import { IEditorGroup } from '../../../services/editor/common/editorGroupsService.js';
-import { IFilesConfigurationService } from '../../../services/filesConfiguration/common/filesConfigurationService.js';
-import { ICustomEditorModel, ICustomEditorService } from '../common/customEditor.js';
-import { IOverlayWebview, IWebviewService } from '../../webview/browser/webview.js';
-import { IWebviewWorkbenchService, LazilyResolvedWebviewEditorInput } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { WebviewIconPath } from '../../webviewPanel/browser/webviewEditorInput.js';
+import { basename, isEqual } from "../../../../base/common/resources.js";
+import { IMarkdownString } from "../../../../base/common/htmlContent.js";
+import { IReference, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import { localize } from "../../../../nls.js";
+import { IFileDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { IUndoRedoService } from "../../../../platform/undoRedo/common/undoRedo.js";
+import {
+  EditorInputCapabilities,
+  GroupIdentifier,
+  IResourceDiffEditorInput,
+  IRevertOptions,
+  ISaveOptions,
+  IUntypedEditorInput,
+  isEditorInput,
+  isResourceEditorInput,
+  isResourceDiffEditorInput,
+  Verbosity,
+} from "../../../common/editor.js";
+import { EditorInput, IUntypedEditorOptions } from "../../../common/editor/editorInput.js";
+import { IEditorGroup } from "../../../services/editor/common/editorGroupsService.js";
+import { IFilesConfigurationService } from "../../../services/filesConfiguration/common/filesConfigurationService.js";
+import { ICustomEditorModel, ICustomEditorService } from "../common/customEditor.js";
+import { IOverlayWebview, IWebviewService } from "../../webview/browser/webview.js";
+import { IWebviewWorkbenchService, LazilyResolvedWebviewEditorInput } from "../../webviewPanel/browser/webviewWorkbenchService.js";
+import { WebviewIconPath } from "../../webviewPanel/browser/webviewEditorInput.js";
 
 interface CustomEditorDiffInputInitInfo {
 	readonly originalResource: URI;
@@ -35,15 +46,17 @@ interface CustomEditorSideBySideDiffInputInitInfo extends CustomEditorDiffInputI
 	readonly side: CustomEditorSideBySideDiffSide;
 }
 
-export type CustomEditorSideBySideDiffSide = 'original' | 'modified';
+export type CustomEditorSideBySideDiffSide = "original" | "modified";
 
 function getCustomEditorSideBySideDiffInputResource(init: CustomEditorSideBySideDiffInputInitInfo): URI {
-	return init.side === 'original' ? init.originalResource : init.modifiedResource;
+	return init.side === "original" ? init.originalResource : init.modifiedResource;
 }
 
 export class CustomEditorDiffInput extends LazilyResolvedWebviewEditorInput {
 
-	private readonly _modelRef = this._register(new MutableDisposable<IReference<ICustomEditorModel>>());
+	private readonly _modelRef = this._register(
+    new MutableDisposable<IReference<ICustomEditorModel>>(),
+  );
 
 	static create(
 		instantiationService: IInstantiationService,
@@ -68,7 +81,7 @@ export class CustomEditorDiffInput extends LazilyResolvedWebviewEditorInput {
 		});
 	}
 
-	public static override readonly typeId = 'workbench.editors.customDiffEditor';
+	public static override readonly typeId = "workbench.editors.customDiffEditor";
 
 	constructor(
 		private readonly init: CustomEditorDiffInputInitInfo,
@@ -81,8 +94,22 @@ export class CustomEditorDiffInput extends LazilyResolvedWebviewEditorInput {
 		@IFileDialogService private readonly fileDialogService: IFileDialogService,
 		@IUndoRedoService private readonly undoRedoService: IUndoRedoService,
 	) {
-		super({ providedId: init.viewType, viewType: init.viewType, name: init.label ?? '', iconPath: init.iconPath }, webview, themeService, webviewWorkbenchService);
-		this._register(this.filesConfigurationService.onDidChangeReadonly(() => this._onDidChangeCapabilities.fire()));
+		super(
+      {
+        providedId: init.viewType,
+        viewType: init.viewType,
+        name: init.label ?? "",
+        iconPath: init.iconPath,
+      },
+      webview,
+      themeService,
+      webviewWorkbenchService,
+    );
+		this._register(
+      this.filesConfigurationService.onDidChangeReadonly(
+        () => this._onDidChangeCapabilities.fire(),
+      ),
+    );
 	}
 
 	override get typeId(): string {
@@ -114,7 +141,12 @@ export class CustomEditorDiffInput extends LazilyResolvedWebviewEditorInput {
 	}
 
 	override getName(): string {
-		return this.init.label ?? localize('customEditorDiffLabel', "{0} - {1}", basename(this.originalResource), basename(this.modifiedResource));
+		return this.init.label ?? localize(
+      "customEditorDiffLabel",
+      "{0} - {1}",
+      basename(this.originalResource),
+      basename(this.modifiedResource),
+    );
 	}
 
 	override getDescription(_verbosity?: Verbosity): string | undefined {
@@ -124,7 +156,12 @@ export class CustomEditorDiffInput extends LazilyResolvedWebviewEditorInput {
 	override getTitle(verbosity?: Verbosity): string {
 		const description = this.getDescription(verbosity);
 		if (description) {
-			return localize('customEditorDiffTitle', "{0} ({1})", this.getName(), description);
+			return localize(
+        "customEditorDiffTitle",
+        "{0} ({1})",
+        this.getName(),
+        description,
+      );
 		}
 
 		return this.getName();
@@ -168,7 +205,11 @@ export class CustomEditorDiffInput extends LazilyResolvedWebviewEditorInput {
 	}
 
 	override copy(): EditorInput {
-		return CustomEditorDiffInput.create(this.instantiationService, this.init, undefined);
+		return CustomEditorDiffInput.create(
+      this.instantiationService,
+      this.init,
+      undefined,
+    );
 	}
 
 	override async save(groupId: GroupIdentifier, options?: ISaveOptions): Promise<EditorInput | IUntypedEditorInput | undefined> {
@@ -195,12 +236,19 @@ export class CustomEditorDiffInput extends LazilyResolvedWebviewEditorInput {
 			return undefined;
 		}
 
-		const target = await this.fileDialogService.pickFileToSave(this.modifiedResource, options?.availableFileSystems);
+		const target = await this.fileDialogService.pickFileToSave(
+      this.modifiedResource,
+      options?.availableFileSystems,
+    );
 		if (!target) {
 			return undefined;
 		}
 
-		if (!await modelRef.object.saveCustomEditorAs(this.modifiedResource, target, options)) {
+		if (!await modelRef.object.saveCustomEditorAs(
+      this.modifiedResource,
+      target,
+      options,
+    )) {
 			return undefined;
 		}
 
@@ -219,7 +267,10 @@ export class CustomEditorDiffInput extends LazilyResolvedWebviewEditorInput {
 		}
 
 		if (!this._modelRef.value) {
-			const modelRef = this.customEditorService.models.tryRetain(this.modifiedResource, this.viewType);
+			const modelRef = this.customEditorService.models.tryRetain(
+        this.modifiedResource,
+        this.viewType,
+      );
 			if (modelRef) {
 				const oldCapabilities = this.capabilities;
 				const retainedModelRef = await modelRef;
@@ -228,8 +279,16 @@ export class CustomEditorDiffInput extends LazilyResolvedWebviewEditorInput {
 					return null;
 				}
 				this._modelRef.value = retainedModelRef;
-				this._register(retainedModelRef.object.onDidChangeDirty(() => this._onDidChangeDirty.fire()));
-				this._register(retainedModelRef.object.onDidChangeReadonly(() => this._onDidChangeCapabilities.fire()));
+				this._register(
+          retainedModelRef.object.onDidChangeDirty(
+            () => this._onDidChangeDirty.fire(),
+          ),
+        );
+				this._register(
+          retainedModelRef.object.onDidChangeReadonly(
+            () => this._onDidChangeCapabilities.fire(),
+          ),
+        );
 				if (this.isDirty()) {
 					this._onDidChangeDirty.fire();
 				}
@@ -262,14 +321,16 @@ export class CustomEditorDiffInput extends LazilyResolvedWebviewEditorInput {
 			description: this.init.description,
 			options: {
 				override: this.viewType,
-			}
+			},
 		};
 	}
 }
 
 export class CustomEditorSideBySideDiffInput extends LazilyResolvedWebviewEditorInput {
 
-	private readonly _modelRef = this._register(new MutableDisposable<IReference<ICustomEditorModel>>());
+	private readonly _modelRef = this._register(
+    new MutableDisposable<IReference<ICustomEditorModel>>(),
+  );
 
 	static create(
 		instantiationService: IInstantiationService,
@@ -294,7 +355,7 @@ export class CustomEditorSideBySideDiffInput extends LazilyResolvedWebviewEditor
 		});
 	}
 
-	public static override readonly typeId = 'workbench.editors.customSideBySideDiffEditor';
+	public static override readonly typeId = "workbench.editors.customSideBySideDiffEditor";
 
 	constructor(
 		private readonly init: CustomEditorSideBySideDiffInputInitInfo,
@@ -307,8 +368,22 @@ export class CustomEditorSideBySideDiffInput extends LazilyResolvedWebviewEditor
 		@IFileDialogService private readonly fileDialogService: IFileDialogService,
 		@IUndoRedoService private readonly undoRedoService: IUndoRedoService,
 	) {
-		super({ providedId: init.viewType, viewType: init.viewType, name: basename(getCustomEditorSideBySideDiffInputResource(init)), iconPath: init.iconPath }, webview, themeService, webviewWorkbenchService);
-		this._register(this.filesConfigurationService.onDidChangeReadonly(() => this._onDidChangeCapabilities.fire()));
+		super(
+      {
+        providedId: init.viewType,
+        viewType: init.viewType,
+        name: basename(getCustomEditorSideBySideDiffInputResource(init)),
+        iconPath: init.iconPath,
+      },
+      webview,
+      themeService,
+      webviewWorkbenchService,
+    );
+		this._register(
+      this.filesConfigurationService.onDidChangeReadonly(
+        () => this._onDidChangeCapabilities.fire(),
+      ),
+    );
 	}
 
 	override get typeId(): string {
@@ -328,7 +403,7 @@ export class CustomEditorSideBySideDiffInput extends LazilyResolvedWebviewEditor
 	}
 
 	override get resource(): URI {
-		return this.side === 'original' ? this.originalResource : this.modifiedResource;
+		return this.side === "original" ? this.originalResource : this.modifiedResource;
 	}
 
 	get originalResource(): URI {
@@ -358,14 +433,19 @@ export class CustomEditorSideBySideDiffInput extends LazilyResolvedWebviewEditor
 	override getTitle(verbosity?: Verbosity): string {
 		const description = this.getDescription(verbosity);
 		if (description) {
-			return localize('customEditorSideBySideDiffTitle', "{0} ({1})", this.getName(), description);
+			return localize(
+        "customEditorSideBySideDiffTitle",
+        "{0} ({1})",
+        this.getName(),
+        description,
+      );
 		}
 
 		return this.getName();
 	}
 
 	override isReadonly(): boolean | IMarkdownString {
-		if (this.side === 'original') {
+		if (this.side === "original") {
 			return true;
 		}
 		const modelRef = this._modelRef.value;
@@ -376,7 +456,7 @@ export class CustomEditorSideBySideDiffInput extends LazilyResolvedWebviewEditor
 	}
 
 	override isDirty(): boolean {
-		return this.side === 'modified' ? this._modelRef.value?.object.isDirty() ?? false : false;
+		return this.side === "modified" ? this._modelRef.value?.object.isDirty() ?? false : false;
 	}
 
 	override matches(otherInput: EditorInput | IUntypedEditorInput): boolean {
@@ -403,7 +483,11 @@ export class CustomEditorSideBySideDiffInput extends LazilyResolvedWebviewEditor
 	}
 
 	override copy(): EditorInput {
-		return CustomEditorSideBySideDiffInput.create(this.instantiationService, this.init, undefined);
+		return CustomEditorSideBySideDiffInput.create(
+      this.instantiationService,
+      this.init,
+      undefined,
+    );
 	}
 
 	override async save(groupId: GroupIdentifier, options?: ISaveOptions): Promise<EditorInput | IUntypedEditorInput | undefined> {
@@ -430,12 +514,19 @@ export class CustomEditorSideBySideDiffInput extends LazilyResolvedWebviewEditor
 			return undefined;
 		}
 
-		const target = await this.fileDialogService.pickFileToSave(this.modifiedResource, options?.availableFileSystems);
+		const target = await this.fileDialogService.pickFileToSave(
+      this.modifiedResource,
+      options?.availableFileSystems,
+    );
 		if (!target) {
 			return undefined;
 		}
 
-		if (!await modelRef.object.saveCustomEditorAs(this.modifiedResource, target, options)) {
+		if (!await modelRef.object.saveCustomEditorAs(
+      this.modifiedResource,
+      target,
+      options,
+    )) {
 			return undefined;
 		}
 
@@ -453,8 +544,11 @@ export class CustomEditorSideBySideDiffInput extends LazilyResolvedWebviewEditor
 			return null;
 		}
 
-		if (this.side === 'modified' && !this._modelRef.value) {
-			const modelRef = this.customEditorService.models.tryRetain(this.modifiedResource, this.viewType);
+		if (this.side === "modified" && !this._modelRef.value) {
+			const modelRef = this.customEditorService.models.tryRetain(
+        this.modifiedResource,
+        this.viewType,
+      );
 			if (modelRef) {
 				const oldCapabilities = this.capabilities;
 				const retainedModelRef = await modelRef;
@@ -463,8 +557,16 @@ export class CustomEditorSideBySideDiffInput extends LazilyResolvedWebviewEditor
 					return null;
 				}
 				this._modelRef.value = retainedModelRef;
-				this._register(retainedModelRef.object.onDidChangeDirty(() => this._onDidChangeDirty.fire()));
-				this._register(retainedModelRef.object.onDidChangeReadonly(() => this._onDidChangeCapabilities.fire()));
+				this._register(
+          retainedModelRef.object.onDidChangeDirty(
+            () => this._onDidChangeDirty.fire(),
+          ),
+        );
+				this._register(
+          retainedModelRef.object.onDidChangeReadonly(
+            () => this._onDidChangeCapabilities.fire(),
+          ),
+        );
 				if (this.isDirty()) {
 					this._onDidChangeDirty.fire();
 				}

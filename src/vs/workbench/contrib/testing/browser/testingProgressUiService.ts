@@ -3,21 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, DisposableStore } from '../../../../base/common/lifecycle.js';
-import { autorun } from '../../../../base/common/observable.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IViewsService } from '../../../services/views/common/viewsService.js';
-import { AutoOpenTesting, getTestingConfiguration, TestingConfigKeys } from '../common/configuration.js';
-import { Testing } from '../common/constants.js';
-import { ITestCoverageService } from '../common/testCoverageService.js';
-import { isFailedState } from '../common/testingStates.js';
-import { LiveTestResult, TestResultItemChangeReason } from '../common/testResult.js';
-import { ITestResultService } from '../common/testResultService.js';
-import { ExplorerTestCoverageBars } from './testCoverageBars.js';
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { autorun } from "../../../../base/common/observable.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import { AutoOpenTesting, getTestingConfiguration, TestingConfigKeys } from "../common/configuration.js";
+import { Testing } from "../common/constants.js";
+import { ITestCoverageService } from "../common/testCoverageService.js";
+import { isFailedState } from "../common/testingStates.js";
+import { LiveTestResult, TestResultItemChangeReason } from "../common/testResult.js";
+import { ITestResultService } from "../common/testResultService.js";
+import { ExplorerTestCoverageBars } from "./testCoverageBars.js";
 
 /** Workbench contribution that triggers updates in the TestingProgressUi service */
 export class TestingProgressTrigger extends Disposable {
-	public static readonly ID = 'workbench.contrib.testing.progressTrigger';
+	public static readonly ID = "workbench.contrib.testing.progressTrigger";
 
 	constructor(
 		@ITestResultService resultService: ITestResultService,
@@ -28,7 +28,7 @@ export class TestingProgressTrigger extends Disposable {
 		super();
 
 		this._register(resultService.onResultsChanged((e) => {
-			if ('started' in e) {
+			if ("started" in e) {
 				this.attachAutoOpenForNewResults(e.started);
 			}
 		}));
@@ -51,7 +51,10 @@ export class TestingProgressTrigger extends Disposable {
 			return;
 		}
 
-		const cfg = getTestingConfiguration(this.configurationService, TestingConfigKeys.OpenResults);
+		const cfg = getTestingConfiguration(
+      this.configurationService,
+      TestingConfigKeys.OpenResults,
+    );
 		if (cfg === AutoOpenTesting.NeverOpen) {
 			return;
 		}

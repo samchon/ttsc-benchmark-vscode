@@ -3,28 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Codicon } from '../../../../../base/common/codicons.js';
-import { TimeoutTimer } from '../../../../../base/common/async.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { localize2 } from '../../../../../nls.js';
-import { Action2, MenuId, registerAction2 } from '../../../../../platform/actions/common/actions.js';
-import { ContextKeyExpr, IContextKey, IContextKeyService, RawContextKey } from '../../../../../platform/contextkey/common/contextkey.js';
-import { IExtensionGalleryService } from '../../../../../platform/extensionManagement/common/extensionManagement.js';
-import { ICommandService, CommandsRegistry } from '../../../../../platform/commands/common/commands.js';
-import { IProductService } from '../../../../../platform/product/common/productService.js';
-import { IWorkbenchContribution } from '../../../../common/contributions.js';
-import { ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IWorkbenchExtensionManagementService } from '../../../../services/extensionManagement/common/extensionManagement.js';
-import { CHAT_CATEGORY } from './chatActions.js';
-import { IChatSessionRecommendation } from '../../../../../base/common/product.js';
-import { ExtensionIdentifier } from '../../../../../platform/extensions/common/extensions.js';
-import { ChatAgentLocation } from '../../common/constants.js';
-import { IChatService } from '../../common/chatService/chatService.js';
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { TimeoutTimer } from "../../../../../base/common/async.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { localize2 } from "../../../../../nls.js";
+import { Action2, MenuId, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { ContextKeyExpr, IContextKey, IContextKeyService, RawContextKey } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IExtensionGalleryService } from "../../../../../platform/extensionManagement/common/extensionManagement.js";
+import { ICommandService, CommandsRegistry } from "../../../../../platform/commands/common/commands.js";
+import { IProductService } from "../../../../../platform/product/common/productService.js";
+import { IWorkbenchContribution } from "../../../../common/contributions.js";
+import { ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IWorkbenchExtensionManagementService } from "../../../../services/extensionManagement/common/extensionManagement.js";
+import { CHAT_CATEGORY } from "./chatActions.js";
+import { IChatSessionRecommendation } from "../../../../../base/common/product.js";
+import { ExtensionIdentifier } from "../../../../../platform/extensions/common/extensions.js";
+import { ChatAgentLocation } from "../../common/constants.js";
+import { IChatService } from "../../common/chatService/chatService.js";
 
-const INSTALL_CONTEXT_PREFIX = 'chat.installRecommendationAvailable';
+const INSTALL_CONTEXT_PREFIX = "chat.installRecommendationAvailable";
 
 export class ChatAgentRecommendation extends Disposable implements IWorkbenchContribution {
-	static readonly ID = 'workbench.contrib.chatAgentRecommendation';
+	static readonly ID = "workbench.contrib.chatAgentRecommendation";
 
 	private readonly availabilityContextKeys = new Map<string, IContextKey<boolean>>();
 	private refreshRequestId = 0;
@@ -46,8 +46,16 @@ export class ChatAgentRecommendation extends Disposable implements IWorkbenchCon
 		}
 
 		const refresh = () => this.refreshInstallAvailability();
-		this._register(this.extensionManagementService.onProfileAwareDidInstallExtensions(refresh));
-		this._register(this.extensionManagementService.onProfileAwareDidUninstallExtension(refresh));
+		this._register(
+      this.extensionManagementService.onProfileAwareDidInstallExtensions(
+        refresh,
+      ),
+    );
+		this._register(
+      this.extensionManagementService.onProfileAwareDidUninstallExtension(
+        refresh,
+      ),
+    );
 		this._register(this.extensionManagementService.onDidChangeProfile(refresh));
 
 		this.refreshInstallAvailability();
@@ -57,10 +65,16 @@ export class ChatAgentRecommendation extends Disposable implements IWorkbenchCon
 		const extensionKey = ExtensionIdentifier.toKey(recommendation.extensionId);
 		const commandId = `chat.installRecommendation.${extensionKey}.${recommendation.name}`;
 		const availabilityContextId = `${INSTALL_CONTEXT_PREFIX}.${extensionKey}`;
-		const availabilityContext = new RawContextKey<boolean>(availabilityContextId, false).bindTo(this.contextKeyService);
+		const availabilityContext = new RawContextKey<boolean>(availabilityContextId, false).bindTo(
+      this.contextKeyService,
+    );
 		this.availabilityContextKeys.set(extensionKey, availabilityContext);
 
-		const title = localize2('chat.installRecommendation', "New {0}", recommendation.displayName);
+		const title = localize2(
+      "chat.installRecommendation",
+      "New {0}",
+      recommendation.displayName,
+    );
 
 		this._register(registerAction2(class extends Action2 {
 			constructor() {
@@ -74,10 +88,10 @@ export class ChatAgentRecommendation extends Disposable implements IWorkbenchCon
 					menu: [
 						{
 							id: MenuId.ChatNewMenu,
-							group: '4_recommendations',
-							when: ContextKeyExpr.equals(availabilityContextId, true)
-						}
-					]
+							group: "4_recommendations",
+							when: ContextKeyExpr.equals(availabilityContextId, true),
+						},
+					],
 				});
 			}
 
@@ -86,9 +100,9 @@ export class ChatAgentRecommendation extends Disposable implements IWorkbenchCon
 				const productService = accessor.get(IProductService);
 				const chatService = accessor.get(IChatService);
 
-				const installPreReleaseVersion = productService.quality !== 'stable';
-				await commandService.executeCommand('workbench.extensions.installExtension', recommendation.extensionId, {
-					installPreReleaseVersion
+				const installPreReleaseVersion = productService.quality !== "stable";
+				await commandService.executeCommand("workbench.extensions.installExtension", recommendation.extensionId, {
+					installPreReleaseVersion,
 				});
 				await runPostInstallCommand(commandService, chatService, recommendation.postInstallCommand);
 			}

@@ -3,18 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { Disposable } from '../../../../../base/common/lifecycle.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../../platform/storage/common/storage.js';
-import { Memento } from '../../../../common/memento.js';
-import { chatSessionResourceToId } from '../model/chatUri.js';
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../../platform/storage/common/storage.js";
+import { Memento } from "../../../../common/memento.js";
+import { chatSessionResourceToId } from "../model/chatUri.js";
 
 export interface IChatTodo {
 	id: number;
 	title: string;
-	status: 'not-started' | 'in-progress' | 'completed';
+	status: "not-started" | "in-progress" | "completed";
 }
 
 export interface IChatTodoListStorage {
@@ -23,7 +23,9 @@ export interface IChatTodoListStorage {
 	migrateTodoList(oldSessionResource: URI, newSessionResource: URI): void;
 }
 
-export const IChatTodoListService = createDecorator<IChatTodoListService>('chatTodoListService');
+export const IChatTodoListService = createDecorator<IChatTodoListService>(
+  "chatTodoListService",
+);
 
 export interface IChatTodoListService {
 	readonly _serviceBrand: undefined;
@@ -37,16 +39,22 @@ export class ChatTodoListStorage implements IChatTodoListStorage {
 	private memento: Memento<Record<string, IChatTodo[]>>;
 
 	constructor(@IStorageService storageService: IStorageService) {
-		this.memento = new Memento('chat-todo-list', storageService);
+		this.memento = new Memento("chat-todo-list", storageService);
 	}
 
 	private getSessionData(sessionResource: URI): IChatTodo[] {
-		const storage = this.memento.getMemento(StorageScope.WORKSPACE, StorageTarget.MACHINE);
+		const storage = this.memento.getMemento(
+      StorageScope.WORKSPACE,
+      StorageTarget.MACHINE,
+    );
 		return storage[this.toKey(sessionResource)] || [];
 	}
 
 	private setSessionData(sessionResource: URI, todoList: IChatTodo[]): void {
-		const storage = this.memento.getMemento(StorageScope.WORKSPACE, StorageTarget.MACHINE);
+		const storage = this.memento.getMemento(
+      StorageScope.WORKSPACE,
+      StorageTarget.MACHINE,
+    );
 		storage[this.toKey(sessionResource)] = todoList;
 		this.memento.saveMemento();
 	}
@@ -64,7 +72,10 @@ export class ChatTodoListStorage implements IChatTodoListStorage {
 		if (todos.length > 0) {
 			this.setSessionData(newSessionResource, todos);
 			// Clear old session data
-			const storage = this.memento.getMemento(StorageScope.WORKSPACE, StorageTarget.MACHINE);
+			const storage = this.memento.getMemento(
+        StorageScope.WORKSPACE,
+        StorageTarget.MACHINE,
+      );
 			delete storage[this.toKey(oldSessionResource)];
 			this.memento.saveMemento();
 		}
@@ -98,7 +109,10 @@ export class ChatTodoListService extends Disposable implements IChatTodoListServ
 	}
 
 	migrateTodos(oldSessionResource: URI, newSessionResource: URI): void {
-		this.todoListStorage.migrateTodoList(oldSessionResource, newSessionResource);
+		this.todoListStorage.migrateTodoList(
+      oldSessionResource,
+      newSessionResource,
+    );
 		this._onDidUpdateTodos.fire(newSessionResource);
 	}
 }

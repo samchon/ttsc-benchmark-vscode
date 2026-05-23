@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { LineTokens } from '../../common/tokens/lineTokens.js';
-import { StandardTokenType, MetadataConsts } from '../../common/encodedTokenAttributes.js';
-import { ScopedLineTokens, createScopedLineTokens } from '../../common/languages/supports.js';
-import { LanguageIdCodec } from '../../common/services/languagesRegistry.js';
+import { LineTokens } from "../../common/tokens/lineTokens.js";
+import { StandardTokenType, MetadataConsts } from "../../common/encodedTokenAttributes.js";
+import { ScopedLineTokens, createScopedLineTokens } from "../../common/languages/supports.js";
+import { LanguageIdCodec } from "../../common/services/languagesRegistry.js";
 
 export interface TokenText {
 	text: string;
@@ -15,7 +15,7 @@ export interface TokenText {
 
 export function createFakeScopedLineTokens(rawTokens: TokenText[]): ScopedLineTokens {
 	const tokens = new Uint32Array(rawTokens.length << 1);
-	let line = '';
+	let line = "";
 
 	for (let i = 0, len = rawTokens.length; i < len; i++) {
 		const rawToken = rawTokens[i];
@@ -31,5 +31,8 @@ export function createFakeScopedLineTokens(rawTokens: TokenText[]): ScopedLineTo
 	}
 
 	LineTokens.convertToEndOffset(tokens, line.length);
-	return createScopedLineTokens(new LineTokens(tokens, line, new LanguageIdCodec()), 0);
+	return createScopedLineTokens(
+    new LineTokens(tokens, line, new LanguageIdCodec()),
+    0,
+  );
 }

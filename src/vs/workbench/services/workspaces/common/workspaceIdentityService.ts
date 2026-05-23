@@ -3,17 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from '../../../../base/common/buffer.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { isEqualOrParent, joinPath, relativePath } from '../../../../base/common/resources.js';
-import { URI } from '../../../../base/common/uri.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { IWorkspaceStateFolder } from '../../../../platform/userDataSync/common/userDataSync.js';
-import { EditSessionIdentityMatch, IEditSessionIdentityService } from '../../../../platform/workspace/common/editSessions.js';
-import { IWorkspaceContextService, IWorkspaceFolder } from '../../../../platform/workspace/common/workspace.js';
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { isEqualOrParent, joinPath, relativePath } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IWorkspaceStateFolder } from "../../../../platform/userDataSync/common/userDataSync.js";
+import { EditSessionIdentityMatch, IEditSessionIdentityService } from "../../../../platform/workspace/common/editSessions.js";
+import { IWorkspaceContextService, IWorkspaceFolder } from "../../../../platform/workspace/common/workspace.js";
 
-export const IWorkspaceIdentityService = createDecorator<IWorkspaceIdentityService>('IWorkspaceIdentityService');
+export const IWorkspaceIdentityService = createDecorator<IWorkspaceIdentityService>(
+  "IWorkspaceIdentityService",
+);
 export interface IWorkspaceIdentityService {
 	_serviceBrand: undefined;
 	matches(folders: IWorkspaceStateFolder[], cancellationToken: CancellationToken): Promise<((obj: unknown) => unknown) | false>;
@@ -25,16 +27,22 @@ export class WorkspaceIdentityService implements IWorkspaceIdentityService {
 
 	constructor(
 		@IWorkspaceContextService private readonly workspaceContextService: IWorkspaceContextService,
-		@IEditSessionIdentityService private readonly editSessionIdentityService: IEditSessionIdentityService
+		@IEditSessionIdentityService private readonly editSessionIdentityService: IEditSessionIdentityService,
 	) { }
 
 	async getWorkspaceStateFolders(cancellationToken: CancellationToken): Promise<IWorkspaceStateFolder[]> {
 		const workspaceStateFolders: IWorkspaceStateFolder[] = [];
 
 		for (const workspaceFolder of this.workspaceContextService.getWorkspace().folders) {
-			const workspaceFolderIdentity = await this.editSessionIdentityService.getEditSessionIdentifier(workspaceFolder, cancellationToken);
+			const workspaceFolderIdentity = await this.editSessionIdentityService.getEditSessionIdentifier(
+        workspaceFolder,
+        cancellationToken,
+      );
 			if (!workspaceFolderIdentity) { continue; }
-			workspaceStateFolders.push({ resourceUri: workspaceFolder.uri.toString(), workspaceFolderIdentity });
+			workspaceStateFolders.push({
+        resourceUri: workspaceFolder.uri.toString(),
+        workspaceFolderIdentity,
+      });
 		}
 
 		return workspaceStateFolders;
@@ -51,9 +59,15 @@ export class WorkspaceIdentityService implements IWorkspaceIdentityService {
 		// Precompute the identities of the current workspace folders
 		const currentWorkspaceFoldersToIdentities = new Map<IWorkspaceFolder, string>();
 		for (const workspaceFolder of this.workspaceContextService.getWorkspace().folders) {
-			const workspaceFolderIdentity = await this.editSessionIdentityService.getEditSessionIdentifier(workspaceFolder, cancellationToken);
+			const workspaceFolderIdentity = await this.editSessionIdentityService.getEditSessionIdentifier(
+        workspaceFolder,
+        cancellationToken,
+      );
 			if (!workspaceFolderIdentity) { continue; }
-			currentWorkspaceFoldersToIdentities.set(workspaceFolder, workspaceFolderIdentity);
+			currentWorkspaceFoldersToIdentities.set(
+        workspaceFolder,
+        workspaceFolderIdentity,
+      );
 		}
 
 		// Match the current workspace folders to the incoming workspace folders
@@ -69,8 +83,15 @@ export class WorkspaceIdentityService implements IWorkspaceIdentityService {
 
 			// Unhappy case: compare the identity of the current workspace folder to all incoming workspace folder identities
 			let hasCompleteMatch = false;
-			for (const [incomingIdentity, incomingFolder] of Object.entries(incomingIdentitiesToIncomingWorkspaceFolders)) {
-				if (await this.editSessionIdentityService.provideEditSessionIdentityMatch(currentWorkspaceFolder, currentWorkspaceFolderIdentity, incomingIdentity, cancellationToken) === EditSessionIdentityMatch.Complete) {
+			for (const [incomingIdentity, incomingFolder] of Object.entries(
+        incomingIdentitiesToIncomingWorkspaceFolders,
+      )) {
+				if (await this.editSessionIdentityService.provideEditSessionIdentityMatch(
+          currentWorkspaceFolder,
+          currentWorkspaceFolderIdentity,
+          incomingIdentity,
+          cancellationToken,
+        ) === EditSessionIdentityMatch.Complete) {
 					incomingToCurrentWorkspaceFolderUris[incomingFolder] = currentWorkspaceFolder.uri.toString();
 					hasCompleteMatch = true;
 					break;
@@ -86,17 +107,25 @@ export class WorkspaceIdentityService implements IWorkspaceIdentityService {
 
 		const convertUri = (uriToConvert: URI) => {
 			// Figure out which current folder the incoming URI is a child of
-			for (const incomingFolderUriKey of Object.keys(incomingToCurrentWorkspaceFolderUris)) {
+			for (const incomingFolderUriKey of Object.keys(
+        incomingToCurrentWorkspaceFolderUris,
+      )) {
 				const incomingFolderUri = URI.parse(incomingFolderUriKey);
 				if (isEqualOrParent(incomingFolderUri, uriToConvert)) {
 					const currentWorkspaceFolderUri = incomingToCurrentWorkspaceFolderUris[incomingFolderUriKey];
 
 					// Compute the relative file path section of the uri to convert relative to the folder it came from
-					const relativeFilePath = relativePath(incomingFolderUri, uriToConvert);
+					const relativeFilePath = relativePath(
+            incomingFolderUri,
+            uriToConvert,
+          );
 
 					// Reparent the relative file path under the current workspace folder it belongs to
 					if (relativeFilePath) {
-						return joinPath(URI.parse(currentWorkspaceFolderUri), relativeFilePath);
+						return joinPath(
+              URI.parse(currentWorkspaceFolderUri),
+              relativeFilePath,
+            );
 					}
 				}
 			}
@@ -128,7 +157,10 @@ export class WorkspaceIdentityService implements IWorkspaceIdentityService {
 				// walk object
 				for (const key in obj) {
 					if (Object.hasOwnProperty.call(obj, key)) {
-						(obj as Record<string, unknown>)[key] = uriReplacer((obj as Record<string, unknown>)[key], depth + 1);
+						(obj as Record<string, unknown>)[key] = uriReplacer(
+              (obj as Record<string, unknown>)[key],
+              depth + 1,
+            );
 					}
 				}
 			}
@@ -140,4 +172,8 @@ export class WorkspaceIdentityService implements IWorkspaceIdentityService {
 	}
 }
 
-registerSingleton(IWorkspaceIdentityService, WorkspaceIdentityService, InstantiationType.Delayed);
+registerSingleton(
+  IWorkspaceIdentityService,
+  WorkspaceIdentityService,
+  InstantiationType.Delayed,
+);

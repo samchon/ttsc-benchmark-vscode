@@ -3,24 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { autorunWithStore, observableFromEvent } from '../../../../base/common/observable.js';
-import { IDiffEditor } from '../../../../editor/browser/editorBrowser.js';
-import { registerDiffEditorContribution } from '../../../../editor/browser/editorExtensions.js';
-import { EmbeddedDiffEditorWidget } from '../../../../editor/browser/widget/diffEditor/embeddedDiffEditorWidget.js';
-import { IDiffEditorContribution } from '../../../../editor/common/editorCommon.js';
-import { ITextResourceConfigurationService } from '../../../../editor/common/services/textResourceConfiguration.js';
-import { localize } from '../../../../nls.js';
-import { AccessibleViewRegistry } from '../../../../platform/accessibility/browser/accessibleViewRegistry.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { INotificationService, Severity } from '../../../../platform/notification/common/notification.js';
-import { Registry } from '../../../../platform/registry/common/platform.js';
-import { FloatingEditorClickWidget } from '../../../browser/codeeditor.js';
-import { Extensions, IConfigurationMigrationRegistry } from '../../../common/configuration.js';
-import { DiffEditorAccessibilityHelp } from './diffEditorAccessibilityHelp.js';
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { autorunWithStore, observableFromEvent } from "../../../../base/common/observable.js";
+import { IDiffEditor } from "../../../../editor/browser/editorBrowser.js";
+import { registerDiffEditorContribution } from "../../../../editor/browser/editorExtensions.js";
+import { EmbeddedDiffEditorWidget } from "../../../../editor/browser/widget/diffEditor/embeddedDiffEditorWidget.js";
+import { IDiffEditorContribution } from "../../../../editor/common/editorCommon.js";
+import { ITextResourceConfigurationService } from "../../../../editor/common/services/textResourceConfiguration.js";
+import { localize } from "../../../../nls.js";
+import { AccessibleViewRegistry } from "../../../../platform/accessibility/browser/accessibleViewRegistry.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { INotificationService, Severity } from "../../../../platform/notification/common/notification.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { FloatingEditorClickWidget } from "../../../browser/codeeditor.js";
+import { Extensions, IConfigurationMigrationRegistry } from "../../../common/configuration.js";
+import { DiffEditorAccessibilityHelp } from "./diffEditorAccessibilityHelp.js";
 
 class DiffEditorHelperContribution extends Disposable implements IDiffEditorContribution {
-	public static readonly ID = 'editor.contrib.diffEditorHelper';
+	public static readonly ID = "editor.contrib.diffEditorHelper";
 
 	constructor(
 		private readonly _diffEditor: IDiffEditor,
@@ -33,8 +33,14 @@ class DiffEditorHelperContribution extends Disposable implements IDiffEditorCont
 		const isEmbeddedDiffEditor = this._diffEditor instanceof EmbeddedDiffEditorWidget;
 
 		if (!isEmbeddedDiffEditor) {
-			const computationResult = observableFromEvent(this, e => this._diffEditor.onDidUpdateDiff(e), () => /** @description diffEditor.diffComputationResult */ this._diffEditor.getDiffComputationResult());
-			const onlyWhiteSpaceChange = computationResult.map(r => r && !r.identical && r.changes2.length === 0);
+			const computationResult = observableFromEvent(
+        this,
+        e => this._diffEditor.onDidUpdateDiff(e),
+        () => /** @description diffEditor.diffComputationResult */ this._diffEditor.getDiffComputationResult(),
+      );
+			const onlyWhiteSpaceChange = computationResult.map(
+        r => r && !r.identical && r.changes2.length === 0,
+      );
 
 			this._register(autorunWithStore((reader, store) => {
 				/** @description update state */
@@ -42,11 +48,11 @@ class DiffEditorHelperContribution extends Disposable implements IDiffEditorCont
 					const helperWidget = store.add(this._instantiationService.createInstance(
 						FloatingEditorClickWidget,
 						this._diffEditor.getModifiedEditor(),
-						localize('hintWhitespace', "Show Whitespace Differences"),
-						null
+						localize("hintWhitespace", "Show Whitespace Differences"),
+						null,
 					));
 					store.add(helperWidget.onClick(() => {
-						this._textResourceConfigurationService.updateValue(this._diffEditor.getModel()!.modified.uri, 'diffEditor.ignoreTrimWhitespace', false);
+						this._textResourceConfigurationService.updateValue(this._diffEditor.getModel()!.modified.uri, "diffEditor.ignoreTrimWhitespace", false);
 					}));
 					helperWidget.render();
 				}
@@ -58,14 +64,14 @@ class DiffEditorHelperContribution extends Disposable implements IDiffEditorCont
 				if (diffComputationResult && diffComputationResult.quitEarly) {
 					this._notificationService.prompt(
 						Severity.Warning,
-						localize('hintTimeout', "The diff algorithm was stopped early (after {0} ms.)", this._diffEditor.maxComputationTime),
+						localize("hintTimeout", "The diff algorithm was stopped early (after {0} ms.)", this._diffEditor.maxComputationTime),
 						[{
-							label: localize('removeTimeout', "Remove Limit"),
+							label: localize("removeTimeout", "Remove Limit"),
 							run: () => {
-								this._textResourceConfigurationService.updateValue(this._diffEditor.getModel()!.modified.uri, 'diffEditor.maxComputationTime', 0);
-							}
+								this._textResourceConfigurationService.updateValue(this._diffEditor.getModel()!.modified.uri, "diffEditor.maxComputationTime", 0);
+							},
 						}],
-						{}
+						{},
 					);
 				}
 			}));
@@ -73,16 +79,19 @@ class DiffEditorHelperContribution extends Disposable implements IDiffEditorCont
 	}
 }
 
-registerDiffEditorContribution(DiffEditorHelperContribution.ID, DiffEditorHelperContribution);
+registerDiffEditorContribution(
+  DiffEditorHelperContribution.ID,
+  DiffEditorHelperContribution,
+);
 
 Registry.as<IConfigurationMigrationRegistry>(Extensions.ConfigurationMigration)
 	.registerConfigurationMigrations([{
-		key: 'diffEditor.experimental.collapseUnchangedRegions',
+		key: "diffEditor.experimental.collapseUnchangedRegions",
 		migrateFn: (value, accessor) => {
 			return [
-				['diffEditor.hideUnchangedRegions.enabled', { value }],
-				['diffEditor.experimental.collapseUnchangedRegions', { value: undefined }]
+				["diffEditor.hideUnchangedRegions.enabled", { value }],
+				["diffEditor.experimental.collapseUnchangedRegions", { value: undefined }],
 			];
-		}
+		},
 	}]);
 AccessibleViewRegistry.register(new DiffEditorAccessibilityHelp());

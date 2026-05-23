@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { joinPath } from '../../../base/common/resources.js';
-import { localize } from '../../../nls.js';
-import { IEnvironmentService } from '../../environment/common/environment.js';
-import { AbstractLogger, ILogger, ILoggerService } from '../../log/common/log.js';
-import { IUserDataSyncLogService, USER_DATA_SYNC_LOG_ID } from './userDataSync.js';
+import { joinPath } from "../../../base/common/resources.js";
+import { localize } from "../../../nls.js";
+import { IEnvironmentService } from "../../environment/common/environment.js";
+import { AbstractLogger, ILogger, ILoggerService } from "../../log/common/log.js";
+import { IUserDataSyncLogService, USER_DATA_SYNC_LOG_ID } from "./userDataSync.js";
 
 export class UserDataSyncLogService extends AbstractLogger implements IUserDataSyncLogService {
 
@@ -19,7 +19,15 @@ export class UserDataSyncLogService extends AbstractLogger implements IUserDataS
 		@IEnvironmentService environmentService: IEnvironmentService,
 	) {
 		super();
-		this.logger = this._register(loggerService.createLogger(joinPath(environmentService.logsHome, `${USER_DATA_SYNC_LOG_ID}.log`), { id: USER_DATA_SYNC_LOG_ID, name: localize('userDataSyncLog', "Settings Sync") }));
+		this.logger = this._register(
+      loggerService.createLogger(
+        joinPath(environmentService.logsHome, `${USER_DATA_SYNC_LOG_ID}.log`),
+        {
+          id: USER_DATA_SYNC_LOG_ID,
+          name: localize("userDataSyncLog", "Settings Sync"),
+        },
+      ),
+    );
 	}
 
 	trace(message: string, ...args: unknown[]): void {

@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Emitter, Event } from '../../../base/common/event.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { createDecorator } from '../../../platform/instantiation/common/instantiation.js';
-import { ExtHostMeteredConnectionShape } from './extHost.protocol.js';
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { ExtHostMeteredConnectionShape } from "./extHost.protocol.js";
 
 export interface IExtHostMeteredConnection extends ExtHostMeteredConnectionShape {
 	readonly _serviceBrand: undefined;
@@ -14,7 +14,9 @@ export interface IExtHostMeteredConnection extends ExtHostMeteredConnectionShape
 	readonly onDidChangeIsConnectionMetered: Event<boolean>;
 }
 
-export const IExtHostMeteredConnection = createDecorator<IExtHostMeteredConnection>('IExtHostMeteredConnection');
+export const IExtHostMeteredConnection = createDecorator<IExtHostMeteredConnection>(
+  "IExtHostMeteredConnection",
+);
 
 export class ExtHostMeteredConnection extends Disposable implements IExtHostMeteredConnection, ExtHostMeteredConnectionShape {
 
@@ -22,7 +24,9 @@ export class ExtHostMeteredConnection extends Disposable implements IExtHostMete
 
 	private _isConnectionMetered: boolean = false;
 
-	private readonly _onDidChangeIsConnectionMetered = this._register(new Emitter<boolean>());
+	private readonly _onDidChangeIsConnectionMetered = this._register(
+    new Emitter<boolean>(),
+  );
 	readonly onDidChangeIsConnectionMetered: Event<boolean> = this._onDidChangeIsConnectionMetered.event;
 
 	constructor() {

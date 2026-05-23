@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../base/common/uri.js';
-import type { IFileEditRecord, ISessionDatabase } from '../common/sessionDataService.js';
-import type { IDiffComputeService } from '../common/diffComputeService.js';
-import { FileEditKind, type ISessionFileDiff } from '../common/state/sessionState.js';
-import { buildSessionDbUri } from './shared/fileEditTracker.js';
+import { URI } from "../../../base/common/uri.js";
+import type { IFileEditRecord, ISessionDatabase } from "../common/sessionDataService.js";
+import type { IDiffComputeService } from "../common/diffComputeService.js";
+import { FileEditKind, type ISessionFileDiff } from "../common/state/sessionState.js";
+import { buildSessionDbUri } from "./shared/fileEditTracker.js";
 
 function getFileEditUri(diff: ISessionFileDiff): string | undefined {
 	return diff.after?.uri ?? diff.before?.uri;
@@ -20,13 +20,13 @@ function createSessionFileDiff(sessionUri: string, identity: IFileIdentity, adde
 		...(hasBefore ? {
 			before: {
 				uri: URI.file(identity.firstFilePath).toString(),
-				content: { uri: buildSessionDbUri(sessionUri, identity.firstToolCallId, identity.firstFilePath, 'before') },
+				content: { uri: buildSessionDbUri(sessionUri, identity.firstToolCallId, identity.firstFilePath, "before") },
 			},
 		} : {}),
 		...(hasAfter ? {
 			after: {
 				uri: URI.file(identity.terminalPath).toString(),
-				content: { uri: buildSessionDbUri(sessionUri, identity.lastToolCallId, identity.lastFilePath, 'after') },
+				content: { uri: buildSessionDbUri(sessionUri, identity.lastToolCallId, identity.lastFilePath, "after") },
 			},
 		} : {}),
 		diff: { added, removed },
@@ -98,10 +98,12 @@ export async function computeSessionDiffs(
 			return [...incremental.previousDiffs];
 		}
 
-		const previousDiffsUris = new Set(incremental.previousDiffs.map(getFileEditUri));
+		const previousDiffsUris = new Set(
+      incremental.previousDiffs.map(getFileEditUri),
+    );
 		const needsFullHistory = turnEdits.some(e =>
 			e.kind === FileEditKind.Rename ||
-			previousDiffsUris.has(URI.file(e.filePath).toString())
+			previousDiffsUris.has(URI.file(e.filePath).toString()),
 		);
 
 		if (needsFullHistory) {
@@ -135,7 +137,9 @@ export async function computeSessionDiffs(
 
 		if (edit.kind === FileEditKind.Rename && edit.originalPath) {
 			// Rename: follow the chain from originalPath to find the identity
-			identityKey = pathToIdentityKey.get(edit.originalPath) ?? edit.originalPath;
+			identityKey = pathToIdentityKey.get(
+        edit.originalPath,
+      ) ?? edit.originalPath;
 			// Update the mapping: the new path now points to the same identity
 			pathToIdentityKey.set(edit.filePath, identityKey);
 			// Remove old path mapping (the file no longer exists at that path)
@@ -154,14 +158,14 @@ export async function computeSessionDiffs(
 		if (!existing) {
 			// First time seeing this file identity
 			identities.set(identityKey, {
-				terminalPath: edit.filePath,
-				firstToolCallId: edit.toolCallId,
-				firstFilePath: edit.kind === FileEditKind.Rename && edit.originalPath ? edit.originalPath : edit.filePath,
-				firstKind: edit.kind,
-				lastToolCallId: edit.toolCallId,
-				lastFilePath: edit.filePath,
-				lastKind: edit.kind,
-			});
+        terminalPath: edit.filePath,
+        firstToolCallId: edit.toolCallId,
+        firstFilePath: edit.kind === FileEditKind.Rename && edit.originalPath ? edit.originalPath : edit.filePath,
+        firstKind: edit.kind,
+        lastToolCallId: edit.toolCallId,
+        lastFilePath: edit.filePath,
+        lastKind: edit.kind,
+      });
 		} else {
 			// Update last snapshot info and terminal path
 			existing.terminalPath = edit.filePath;
@@ -197,19 +201,19 @@ export async function computeSessionDiffs(
 			// Determine "before" text
 			let beforeText: string;
 			if (identity.firstKind === FileEditKind.Create) {
-				beforeText = '';
+				beforeText = "";
 			} else {
 				const content = await db.readFileEditContent(identity.firstToolCallId, identity.firstFilePath);
-				beforeText = content?.beforeContent ? new TextDecoder().decode(content.beforeContent) : '';
+				beforeText = content?.beforeContent ? new TextDecoder().decode(content.beforeContent) : "";
 			}
 
 			// Determine "after" text
 			let afterText: string;
 			if (identity.lastKind === FileEditKind.Delete) {
-				afterText = '';
+				afterText = "";
 			} else {
 				const content = await db.readFileEditContent(identity.lastToolCallId, identity.lastFilePath);
-				afterText = content?.afterContent ? new TextDecoder().decode(content.afterContent) : '';
+				afterText = content?.afterContent ? new TextDecoder().decode(content.afterContent) : "";
 			}
 
 			// Skip files with no net change
@@ -259,7 +263,9 @@ export async function computeTurnDiffs(
 	for (const edit of edits) {
 		let identityKey: string;
 		if (edit.kind === FileEditKind.Rename && edit.originalPath) {
-			identityKey = pathToIdentityKey.get(edit.originalPath) ?? edit.originalPath;
+			identityKey = pathToIdentityKey.get(
+        edit.originalPath,
+      ) ?? edit.originalPath;
 			pathToIdentityKey.set(edit.filePath, identityKey);
 			pathToIdentityKey.delete(edit.originalPath);
 		} else {
@@ -269,14 +275,14 @@ export async function computeTurnDiffs(
 		const existing = identities.get(identityKey);
 		if (!existing) {
 			identities.set(identityKey, {
-				terminalPath: edit.filePath,
-				firstToolCallId: edit.toolCallId,
-				firstFilePath: edit.kind === FileEditKind.Rename && edit.originalPath ? edit.originalPath : edit.filePath,
-				firstKind: edit.kind,
-				lastToolCallId: edit.toolCallId,
-				lastFilePath: edit.filePath,
-				lastKind: edit.kind,
-			});
+        terminalPath: edit.filePath,
+        firstToolCallId: edit.toolCallId,
+        firstFilePath: edit.kind === FileEditKind.Rename && edit.originalPath ? edit.originalPath : edit.filePath,
+        firstKind: edit.kind,
+        lastToolCallId: edit.toolCallId,
+        lastFilePath: edit.filePath,
+        lastKind: edit.kind,
+      });
 		} else {
 			existing.terminalPath = edit.filePath;
 			existing.lastToolCallId = edit.toolCallId;
@@ -291,17 +297,17 @@ export async function computeTurnDiffs(
 		diffPromises.push((async () => {
 			let beforeText: string;
 			if (identity.firstKind === FileEditKind.Create) {
-				beforeText = '';
+				beforeText = "";
 			} else {
 				const content = await db.readFileEditContent(identity.firstToolCallId, identity.firstFilePath);
-				beforeText = content?.beforeContent ? new TextDecoder().decode(content.beforeContent) : '';
+				beforeText = content?.beforeContent ? new TextDecoder().decode(content.beforeContent) : "";
 			}
 			let afterText: string;
 			if (identity.lastKind === FileEditKind.Delete) {
-				afterText = '';
+				afterText = "";
 			} else {
 				const content = await db.readFileEditContent(identity.lastToolCallId, identity.lastFilePath);
-				afterText = content?.afterContent ? new TextDecoder().decode(content.afterContent) : '';
+				afterText = content?.afterContent ? new TextDecoder().decode(content.afterContent) : "";
 			}
 			if (beforeText === afterText) {
 				return;

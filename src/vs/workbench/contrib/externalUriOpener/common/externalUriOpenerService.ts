@@ -3,25 +3,31 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { Iterable } from '../../../../base/common/iterator.js';
-import { Disposable, IDisposable } from '../../../../base/common/lifecycle.js';
-import { LinkedList } from '../../../../base/common/linkedList.js';
-import { isWeb } from '../../../../base/common/platform.js';
-import { URI } from '../../../../base/common/uri.js';
-import * as languages from '../../../../editor/common/languages.js';
-import * as nls from '../../../../nls.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { IExternalOpener, IOpenerService } from '../../../../platform/opener/common/opener.js';
-import { IQuickInputService, IQuickPickItem, IQuickPickSeparator } from '../../../../platform/quickinput/common/quickInput.js';
-import { defaultExternalUriOpenerId, ExternalUriOpenersConfiguration, externalUriOpenersSettingId } from './configuration.js';
-import { testUrlMatchesGlob } from '../../../../platform/url/common/urlGlob.js';
-import { IPreferencesService } from '../../../services/preferences/common/preferences.js';
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { Disposable, IDisposable } from "../../../../base/common/lifecycle.js";
+import { LinkedList } from "../../../../base/common/linkedList.js";
+import { isWeb } from "../../../../base/common/platform.js";
+import { URI } from "../../../../base/common/uri.js";
+import * as languages from "../../../../editor/common/languages.js";
+import * as nls from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IExternalOpener, IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { IQuickInputService, IQuickPickItem, IQuickPickSeparator } from "../../../../platform/quickinput/common/quickInput.js";
+import {
+  defaultExternalUriOpenerId,
+  ExternalUriOpenersConfiguration,
+  externalUriOpenersSettingId,
+} from "./configuration.js";
+import { testUrlMatchesGlob } from "../../../../platform/url/common/urlGlob.js";
+import { IPreferencesService } from "../../../services/preferences/common/preferences.js";
 
 
-export const IExternalUriOpenerService = createDecorator<IExternalUriOpenerService>('externalUriOpenerService');
+export const IExternalUriOpenerService = createDecorator<IExternalUriOpenerService>(
+  "externalUriOpenerService",
+);
 
 
 export interface IExternalOpenerProvider {
@@ -94,10 +100,15 @@ export class ExternalUriOpenerService extends Disposable implements IExternalUri
 		}
 
 		// Check to see if we have a configured opener
-		const configuredOpener = this.getConfiguredOpenerForUri(allOpeners, targetUri);
+		const configuredOpener = this.getConfiguredOpenerForUri(
+      allOpeners,
+      targetUri,
+    );
 		if (configuredOpener) {
 			// Skip the `canOpen` check here since the opener was specifically requested.
-			return configuredOpener === defaultExternalUriOpenerId ? [] : [configuredOpener];
+			return configuredOpener === defaultExternalUriOpenerId ? [] : [
+        configuredOpener,
+      ];
 		}
 
 		// Then check to see if there is a valid opener
@@ -125,13 +136,17 @@ export class ExternalUriOpenerService extends Disposable implements IExternalUri
 		}
 
 		// See if we have a preferred opener first
-		const preferred = validOpeners.filter(x => x.priority === languages.ExternalUriOpenerPriority.Preferred).at(0);
+		const preferred = validOpeners.filter(x => x.priority === languages.ExternalUriOpenerPriority.Preferred).at(
+      0,
+    );
 		if (preferred) {
 			return [preferred.opener];
 		}
 
 		// See if we only have optional openers, use the default opener
-		if (!allowOptional && validOpeners.every(x => x.priority === languages.ExternalUriOpenerPriority.Option)) {
+		if (!allowOptional && validOpeners.every(
+      x => x.priority === languages.ExternalUriOpenerPriority.Option,
+    )) {
 			return [];
 		}
 
@@ -140,7 +155,7 @@ export class ExternalUriOpenerService extends Disposable implements IExternalUri
 
 	async openExternal(href: string, ctx: { sourceUri: URI; preferredOpenerId?: string }, token: CancellationToken): Promise<boolean> {
 
-		const targetUri = typeof href === 'string' ? URI.parse(href) : href;
+		const targetUri = typeof href === "string" ? URI.parse(href) : href;
 
 		const allOpeners = await this.getOpeners(targetUri, false, ctx, token);
 		if (allOpeners.length === 0) {
@@ -171,12 +186,14 @@ export class ExternalUriOpenerService extends Disposable implements IExternalUri
 		return allOpeners;
 	}
 
-	private getConfiguredOpenerForUri(openers: Map<string, IExternalUriOpener>, targetUri: URI): IExternalUriOpener | 'default' | undefined {
-		const config = this.configurationService.getValue<ExternalUriOpenersConfiguration>(externalUriOpenersSettingId) || {};
+	private getConfiguredOpenerForUri(openers: Map<string, IExternalUriOpener>, targetUri: URI): IExternalUriOpener | "default" | undefined {
+		const config = this.configurationService.getValue<ExternalUriOpenersConfiguration>(
+      externalUriOpenersSettingId,
+    ) || {};
 		for (const [uriGlob, id] of Object.entries(config)) {
 			if (testUrlMatchesGlob(targetUri, uriGlob)) {
 				if (id === defaultExternalUriOpenerId) {
-					return 'default';
+					return "default";
 				}
 
 				const entry = openers.get(id);
@@ -192,45 +209,47 @@ export class ExternalUriOpenerService extends Disposable implements IExternalUri
 		openers: ReadonlyArray<IExternalUriOpener>,
 		targetUri: URI,
 		ctx: { sourceUri: URI },
-		token: CancellationToken
+		token: CancellationToken,
 	): Promise<boolean> {
-		type PickItem = IQuickPickItem & { opener?: IExternalUriOpener | 'configureDefault' };
+		type PickItem = IQuickPickItem & { opener?: IExternalUriOpener | "configureDefault" };
 
-		const items: Array<PickItem | IQuickPickSeparator> = openers.map((opener): PickItem => {
-			return {
-				label: opener.label,
-				opener: opener
-			};
-		});
+		const items: Array<PickItem | IQuickPickSeparator> = openers.map(
+      (opener): PickItem => {
+        return {
+          label: opener.label,
+          opener: opener,
+        };
+      },
+    );
 		items.push(
 			{
 				label: isWeb
-					? nls.localize('selectOpenerDefaultLabel.web', 'Open in new browser window')
-					: nls.localize('selectOpenerDefaultLabel', 'Open in default browser'),
-				opener: undefined
+					? nls.localize("selectOpenerDefaultLabel.web", "Open in new browser window")
+					: nls.localize("selectOpenerDefaultLabel", "Open in default browser"),
+				opener: undefined,
 			},
-			{ type: 'separator' },
+			{ type: "separator" },
 			{
-				label: nls.localize('selectOpenerConfigureTitle', "Configure default opener..."),
-				opener: 'configureDefault'
+				label: nls.localize("selectOpenerConfigureTitle", "Configure default opener..."),
+				opener: "configureDefault",
 			});
 
 		const picked = await this.quickInputService.pick(items, {
-			placeHolder: nls.localize('selectOpenerPlaceHolder', "How would you like to open: {0}", targetUri.toString())
-		});
+      placeHolder: nls.localize("selectOpenerPlaceHolder", "How would you like to open: {0}", targetUri.toString()),
+    });
 
 		if (!picked) {
 			// Still cancel the default opener here since we prompted the user
 			return true;
 		}
 
-		if (typeof picked.opener === 'undefined') {
+		if (typeof picked.opener === "undefined") {
 			return false; // Fallback to default opener
-		} else if (picked.opener === 'configureDefault') {
+		} else if (picked.opener === "configureDefault") {
 			await this.preferencesService.openUserSettings({
-				jsonEditor: true,
-				revealSetting: { key: externalUriOpenersSettingId, edit: true }
-			});
+        jsonEditor: true,
+        revealSetting: { key: externalUriOpenersSettingId, edit: true },
+      });
 			return true;
 		} else {
 			return picked.opener.openExternalUri(targetUri, ctx, token);

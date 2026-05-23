@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { BrandedService, IConstructorSignature } from '../../../../platform/instantiation/common/instantiation.js';
-import { ExtensionHostKind } from './extensionHostKind.js';
-import { IExtensionHostProxy } from './extensionHostProxy.js';
-import { IInternalExtensionService } from './extensions.js';
-import { IRPCProtocol, ProxyIdentifier } from './proxyIdentifier.js';
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { BrandedService, IConstructorSignature } from "../../../../platform/instantiation/common/instantiation.js";
+import { ExtensionHostKind } from "./extensionHostKind.js";
+import { IExtensionHostProxy } from "./extensionHostProxy.js";
+import { IInternalExtensionService } from "./extensions.js";
+import { IRPCProtocol, ProxyIdentifier } from "./proxyIdentifier.js";
 
 export interface IExtHostContext extends IRPCProtocol {
 	readonly remoteAuthority: string | null;
@@ -27,12 +27,17 @@ export type IExtHostCustomerCtor<T extends IDisposable> = IConstructorSignature<
 
 export function extHostNamedCustomer<T extends IDisposable>(id: ProxyIdentifier<T>) {
 	return function <Services extends BrandedService[]>(ctor: { new(context: IExtHostContext, ...services: Services): T }): void {
-		ExtHostCustomersRegistryImpl.INSTANCE.registerNamedCustomer(id, ctor as IExtHostCustomerCtor<T>);
+		ExtHostCustomersRegistryImpl.INSTANCE.registerNamedCustomer(
+      id,
+      ctor as IExtHostCustomerCtor<T>,
+    );
 	};
 }
 
 export function extHostCustomer<T extends IDisposable, Services extends BrandedService[]>(ctor: { new(context: IExtHostContext, ...services: Services): T }): void {
-	ExtHostCustomersRegistryImpl.INSTANCE.registerCustomer(ctor as IExtHostCustomerCtor<T>);
+	ExtHostCustomersRegistryImpl.INSTANCE.registerCustomer(
+    ctor as IExtHostCustomerCtor<T>,
+  );
 }
 
 export namespace ExtHostCustomersRegistry {

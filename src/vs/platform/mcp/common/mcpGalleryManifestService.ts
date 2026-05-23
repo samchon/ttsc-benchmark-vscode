@@ -3,18 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { Event } from '../../../base/common/event.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { ILogService } from '../../log/common/log.js';
-import { IProductService } from '../../product/common/productService.js';
-import { IRequestService, isSuccess } from '../../request/common/request.js';
-import { McpGalleryResourceType, IMcpGalleryManifest, IMcpGalleryManifestService, McpGalleryManifestStatus } from './mcpGalleryManifest.js';
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { Event } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { ILogService } from "../../log/common/log.js";
+import { IProductService } from "../../product/common/productService.js";
+import { IRequestService, isSuccess } from "../../request/common/request.js";
+import {
+  McpGalleryResourceType,
+  IMcpGalleryManifest,
+  IMcpGalleryManifestService,
+  McpGalleryManifestStatus,
+} from "./mcpGalleryManifest.js";
 
-const SUPPORTED_VERSIONS = [
-	'v0.1',
-	'v0',
-];
+const SUPPORTED_VERSIONS = ["v0.1", "v0"];
 
 export class McpGalleryManifestService extends Disposable implements IMcpGalleryManifestService {
 
@@ -40,11 +42,14 @@ export class McpGalleryManifestService extends Disposable implements IMcpGallery
 		if (!this.productService.mcpGallery) {
 			return null;
 		}
-		return this.createMcpGalleryManifest(this.productService.mcpGallery.serviceUrl, SUPPORTED_VERSIONS[0]);
+		return this.createMcpGalleryManifest(
+      this.productService.mcpGallery.serviceUrl,
+      SUPPORTED_VERSIONS[0],
+    );
 	}
 
 	protected async createMcpGalleryManifest(url: string, version?: string): Promise<IMcpGalleryManifest> {
-		url = url.endsWith('/') ? url.slice(0, -1) : url;
+		url = url.endsWith("/") ? url.slice(0, -1) : url;
 
 		if (!version) {
 			let versionPromise = this.versionByUrl.get(url);
@@ -57,67 +62,67 @@ export class McpGalleryManifestService extends Disposable implements IMcpGallery
 		const isProductGalleryUrl = this.productService.mcpGallery?.serviceUrl === url;
 		const serversUrl = `${url}/${version}/servers`;
 		const resources = [
-			{
-				id: serversUrl,
-				type: McpGalleryResourceType.McpServersQueryService
-			},
-			{
-				id: `${serversUrl}/{name}/versions/{version}`,
-				type: McpGalleryResourceType.McpServerVersionUri
-			},
-			{
-				id: `${serversUrl}/{name}/versions/latest`,
-				type: McpGalleryResourceType.McpServerLatestVersionUri
-			}
-		];
+      {
+        id: serversUrl,
+        type: McpGalleryResourceType.McpServersQueryService,
+      },
+      {
+        id: `${serversUrl}/{name}/versions/{version}`,
+        type: McpGalleryResourceType.McpServerVersionUri,
+      },
+      {
+        id: `${serversUrl}/{name}/versions/latest`,
+        type: McpGalleryResourceType.McpServerLatestVersionUri,
+      },
+    ];
 
 		if (isProductGalleryUrl) {
 			resources.push({
-				id: `${serversUrl}/by-name/{name}`,
-				type: McpGalleryResourceType.McpServerNamedResourceUri
-			});
+        id: `${serversUrl}/by-name/{name}`,
+        type: McpGalleryResourceType.McpServerNamedResourceUri,
+      });
 			resources.push({
-				id: this.productService.mcpGallery.itemWebUrl,
-				type: McpGalleryResourceType.McpServerWebUri
-			});
+        id: this.productService.mcpGallery.itemWebUrl,
+        type: McpGalleryResourceType.McpServerWebUri,
+      });
 			resources.push({
-				id: this.productService.mcpGallery.publisherUrl,
-				type: McpGalleryResourceType.PublisherUriTemplate
-			});
+        id: this.productService.mcpGallery.publisherUrl,
+        type: McpGalleryResourceType.PublisherUriTemplate,
+      });
 			resources.push({
-				id: this.productService.mcpGallery.supportUrl,
-				type: McpGalleryResourceType.ContactSupportUri
-			});
+        id: this.productService.mcpGallery.supportUrl,
+        type: McpGalleryResourceType.ContactSupportUri,
+      });
 			resources.push({
-				id: this.productService.mcpGallery.supportUrl,
-				type: McpGalleryResourceType.ContactSupportUri
-			});
+        id: this.productService.mcpGallery.supportUrl,
+        type: McpGalleryResourceType.ContactSupportUri,
+      });
 			resources.push({
-				id: this.productService.mcpGallery.privacyPolicyUrl,
-				type: McpGalleryResourceType.PrivacyPolicyUri
-			});
+        id: this.productService.mcpGallery.privacyPolicyUrl,
+        type: McpGalleryResourceType.PrivacyPolicyUri,
+      });
 			resources.push({
-				id: this.productService.mcpGallery.termsOfServiceUrl,
-				type: McpGalleryResourceType.TermsOfServiceUri
-			});
+        id: this.productService.mcpGallery.termsOfServiceUrl,
+        type: McpGalleryResourceType.TermsOfServiceUri,
+      });
 			resources.push({
-				id: this.productService.mcpGallery.reportUrl,
-				type: McpGalleryResourceType.ReportUri
-			});
+        id: this.productService.mcpGallery.reportUrl,
+        type: McpGalleryResourceType.ReportUri,
+      });
 		}
 
-		if (version === 'v0') {
+		if (version === "v0") {
 			resources.push({
-				id: `${serversUrl}/{id}`,
-				type: McpGalleryResourceType.McpServerIdUri
-			});
+        id: `${serversUrl}/{id}`,
+        type: McpGalleryResourceType.McpServerIdUri,
+      });
 		}
 
 		return {
-			version,
-			url,
-			resources
-		};
+      version,
+      url,
+      resources,
+    };
 	}
 
 	private async getVersion(url: string): Promise<string> {
@@ -131,15 +136,20 @@ export class McpGalleryManifestService extends Disposable implements IMcpGallery
 
 	private async checkVersion(url: string, version: string): Promise<boolean> {
 		try {
-			const context = await this.requestService.request({
-				type: 'GET',
-				url: `${url}/${version}/servers?limit=1`,
-				callSite: 'mcpGalleryManifestService.checkVersion'
-			}, CancellationToken.None);
+			const context = await this.requestService.request(
+        {
+          type: "GET",
+          url: `${url}/${version}/servers?limit=1`,
+          callSite: "mcpGalleryManifestService.checkVersion",
+        },
+        CancellationToken.None,
+      );
 			if (isSuccess(context)) {
 				return true;
 			}
-			this.logService.info(`The service at ${url} does not support version ${version}. Service returned status ${context.res.statusCode}.`);
+			this.logService.info(
+        `The service at ${url} does not support version ${version}. Service returned status ${context.res.statusCode}.`,
+      );
 		} catch (error) {
 			this.logService.error(error);
 		}

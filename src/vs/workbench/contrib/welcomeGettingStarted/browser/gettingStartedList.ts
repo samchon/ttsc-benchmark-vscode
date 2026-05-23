@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../base/common/lifecycle.js';
-import { $, Dimension } from '../../../../base/browser/dom.js';
-import { DomScrollableElement } from '../../../../base/browser/ui/scrollbar/scrollableElement.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { ContextKeyExpression, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { equals } from '../../../../base/common/arrays.js';
+import { Disposable, IDisposable } from "../../../../base/common/lifecycle.js";
+import { $, Dimension } from "../../../../base/browser/dom.js";
+import { DomScrollableElement } from "../../../../base/browser/ui/scrollbar/scrollableElement.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { ContextKeyExpression, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { equals } from "../../../../base/common/arrays.js";
 
 type GettingStartedIndexListOptions<T> = {
 	title: string;
@@ -42,7 +42,7 @@ export class GettingStartedIndexList<T extends { id: string; when?: ContextKeyEx
 	private contextKeysToWatch = new Set<string>();
 
 	constructor(
-		private options: GettingStartedIndexListOptions<T>
+		private options: GettingStartedIndexListOptions<T>,
 	) {
 		super();
 
@@ -51,12 +51,15 @@ export class GettingStartedIndexList<T extends { id: string; when?: ContextKeyEx
 		this.entries = undefined;
 
 		this.itemCount = 0;
-		this.list = $('ul');
+		this.list = $("ul");
 		this.scrollbar = this._register(new DomScrollableElement(this.list, {}));
 		this._register(this.onDidChangeEntries(() => this.scrollbar.scanDomNode()));
-		this.domElement = $('.index-list.' + options.klass, {},
-			$('h2', {}, options.title),
-			this.scrollbar.getDomNode());
+		this.domElement = $(
+      ".index-list." + options.klass,
+      {},
+      $("h2", {}, options.title),
+      this.scrollbar.getDomNode(),
+    );
 
 		this._register(this.contextService.onDidChangeContext(e => {
 			if (e.affectsSome(this.contextKeysToWatch)) {
@@ -77,7 +80,9 @@ export class GettingStartedIndexList<T extends { id: string; when?: ContextKeyEx
 		this._register(this.onDidChangeEntries(listener));
 	}
 
-	register(d: IDisposable) { if (this.isDisposed) { d.dispose(); } else { this._register(d); } }
+	register(d: IDisposable) { if (this.isDisposed) { d.dispose(); } else { this._register(
+    d,
+  ); } }
 
 	override dispose() {
 		this.isDisposed = true;
@@ -104,19 +109,24 @@ export class GettingStartedIndexList<T extends { id: string; when?: ContextKeyEx
 			entryList.sort((a, b) => ranker(b)! - ranker(a)!);
 		}
 
-		const activeEntries = entryList.filter(e => !e.when || this.contextService.contextMatchesRules(e.when));
+		const activeEntries = entryList.filter(
+      e => !e.when || this.contextService.contextMatchesRules(e.when),
+    );
 		const limitedEntries = activeEntries.slice(0, this.options.limit);
 
 		const toRender = limitedEntries.map(e => e.id);
 
-		if (this.entries === entries && equals(toRender, this.lastRendered)) { return; }
+		if (this.entries === entries && equals(
+      toRender,
+      this.lastRendered,
+    )) { return; }
 		this.entries = entries;
 
 		this.contextKeysToWatch.clear();
 		entryList.forEach(e => {
-			const keys = e.when?.keys();
-			keys?.forEach(key => this.contextKeysToWatch.add(key));
-		});
+      const keys = e.when?.keys();
+      keys?.forEach(key => this.contextKeysToWatch.add(key));
+    });
 
 		this.lastRendered = toRender;
 		this.itemCount = limitedEntries.length;

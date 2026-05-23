@@ -3,32 +3,36 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from '../../../../base/common/buffer.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { Mutable } from '../../../../base/common/types.js';
-import { URI } from '../../../../base/common/uri.js';
-import { localize } from '../../../../nls.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
-import { IEditorGroupsService } from '../../../services/editor/common/editorGroupsService.js';
-import { IEditorService, MODAL_GROUP } from '../../../services/editor/common/editorService.js';
-import { IUserDataProfileService } from '../../../services/userDataProfile/common/userDataProfile.js';
-import { equals } from '../../../../base/common/objects.js';
-import { IRange } from '../../../../editor/common/core/range.js';
-import { JSONVisitor, visit } from '../../../../base/common/json.js';
-import { ITextModel } from '../../../../editor/common/model.js';
-import { ITextModelService } from '../../../../editor/common/services/resolverService.js';
-import { ITextFileService } from '../../../services/textfile/common/textfiles.js';
-import { getCodeEditor } from '../../../../editor/browser/editorBrowser.js';
-import { SnippetController2 } from '../../../../editor/contrib/snippet/browser/snippetController2.js';
-import { ConfigureLanguageModelsOptions, ILanguageModelsConfigurationService, ILanguageModelsProviderGroup } from '../common/languageModelsConfiguration.js';
-import { IJSONContributionRegistry, Extensions as JSONExtensions } from '../../../../platform/jsonschemas/common/jsonContributionRegistry.js';
-import { Registry } from '../../../../platform/registry/common/platform.js';
-import { IWorkbenchContribution } from '../../../common/contributions.js';
-import { ILanguageModelsService } from '../common/languageModels.js';
-import { IJSONSchema } from '../../../../base/common/jsonSchema.js';
-import { DEFAULT_EDITOR_ASSOCIATION } from '../../../common/editor.js';
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { Mutable } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { localize } from "../../../../nls.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IEditorGroupsService } from "../../../services/editor/common/editorGroupsService.js";
+import { IEditorService, MODAL_GROUP } from "../../../services/editor/common/editorService.js";
+import { IUserDataProfileService } from "../../../services/userDataProfile/common/userDataProfile.js";
+import { equals } from "../../../../base/common/objects.js";
+import { IRange } from "../../../../editor/common/core/range.js";
+import { JSONVisitor, visit } from "../../../../base/common/json.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+import { ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import { ITextFileService } from "../../../services/textfile/common/textfiles.js";
+import { getCodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { SnippetController2 } from "../../../../editor/contrib/snippet/browser/snippetController2.js";
+import {
+  ConfigureLanguageModelsOptions,
+  ILanguageModelsConfigurationService,
+  ILanguageModelsProviderGroup,
+} from "../common/languageModelsConfiguration.js";
+import { IJSONContributionRegistry, Extensions as JSONExtensions } from "../../../../platform/jsonschemas/common/jsonContributionRegistry.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { ILanguageModelsService } from "../common/languageModels.js";
+import { IJSONSchema } from "../../../../base/common/jsonSchema.js";
+import { DEFAULT_EDITOR_ASSOCIATION } from "../../../common/editor.js";
 
 type LanguageModelsProviderGroups = Mutable<ILanguageModelsProviderGroup>[];
 
@@ -39,7 +43,9 @@ export class LanguageModelsConfigurationService extends Disposable implements IL
 	private readonly modelsConfigurationFile: URI;
 	get configurationFile(): URI { return this.modelsConfigurationFile; }
 
-	private readonly _onDidChangeLanguageModelGroups = this._register(new Emitter<readonly ILanguageModelsProviderGroup[]>());
+	private readonly _onDidChangeLanguageModelGroups = this._register(
+    new Emitter<readonly ILanguageModelsProviderGroup[]>(),
+  );
 	readonly onDidChangeLanguageModelGroups: Event<readonly ILanguageModelsProviderGroup[]> = this._onDidChangeLanguageModelGroups.event;
 
 	private languageModelsProviderGroups: LanguageModelsProviderGroups = [];
@@ -58,7 +64,11 @@ export class LanguageModelsConfigurationService extends Disposable implements IL
 		this.updateLanguageModelsConfiguration();
 		// Watch the parent folder for reliable change detection across platforms (especially Windows
 		// where `fs.watch` on individual files can miss in-place writes).
-		this._register(fileService.watch(uriIdentityService.extUri.dirname(this.modelsConfigurationFile)));
+		this._register(
+      fileService.watch(
+        uriIdentityService.extUri.dirname(this.modelsConfigurationFile),
+      ),
+    );
 		this._register(fileService.onDidFilesChange(e => {
 			if (e.contains(this.modelsConfigurationFile)) {
 				this.updateLanguageModelsConfiguration();
@@ -68,8 +78,12 @@ export class LanguageModelsConfigurationService extends Disposable implements IL
 
 	private setLanguageModelsConfiguration(languageModelsConfiguration: LanguageModelsProviderGroups): void {
 		const changedGroups: ILanguageModelsProviderGroup[] = [];
-		const oldGroupMap = new Map(this.languageModelsProviderGroups.map(g => [`${g.vendor}:${g.name}`, g]));
-		const newGroupMap = new Map(languageModelsConfiguration.map(g => [`${g.vendor}:${g.name}`, g]));
+		const oldGroupMap = new Map(
+      this.languageModelsProviderGroups.map(g => [`${g.vendor}:${g.name}`, g]),
+    );
+		const newGroupMap = new Map(
+      languageModelsConfiguration.map(g => [`${g.vendor}:${g.name}`, g]),
+    );
 
 		// Find added or modified groups
 		for (const [key, newGroup] of newGroupMap) {
@@ -111,9 +125,13 @@ export class LanguageModelsConfigurationService extends Disposable implements IL
 		});
 
 		await this.updateLanguageModelsConfiguration();
-		const result = this.getLanguageModelsProviderGroups().find(group => group.name === toAdd.name && group.vendor === toAdd.vendor);
+		const result = this.getLanguageModelsProviderGroups().find(
+      group => group.name === toAdd.name && group.vendor === toAdd.vendor,
+    );
 		if (!result) {
-			throw new Error(`Language model group with name ${toAdd.name} not found for vendor ${toAdd.vendor}`);
+			throw new Error(
+        `Language model group with name ${toAdd.name} not found for vendor ${toAdd.vendor}`,
+      );
 		}
 		return result;
 	}
@@ -132,9 +150,13 @@ export class LanguageModelsConfigurationService extends Disposable implements IL
 		});
 
 		await this.updateLanguageModelsConfiguration();
-		const result = this.getLanguageModelsProviderGroups().find(group => group.name === to.name && group.vendor === to.vendor);
+		const result = this.getLanguageModelsProviderGroups().find(
+      group => group.name === to.name && group.vendor === to.vendor,
+    );
 		if (!result) {
-			throw new Error(`Language model group with name ${to.name} not found for vendor ${to.vendor}`);
+			throw new Error(
+        `Language model group with name ${to.name} not found for vendor ${to.vendor}`,
+      );
 		}
 		return result;
 	}
@@ -157,11 +179,16 @@ export class LanguageModelsConfigurationService extends Disposable implements IL
 		// Mirror the surface that the chat models editor is currently shown in: if
 		// it lives inside the modal editor part, open the JSON in the modal too;
 		// otherwise fall back to the default group resolution (regular editor area).
-		const preferredGroup = this.editorGroupsService.getPart(this.editorGroupsService.activeGroup) === this.editorGroupsService.activeModalEditorPart ? MODAL_GROUP : undefined;
-		const editor = await this.editorService.openEditor({
-			resource: this.modelsConfigurationFile,
-			options: { override: DEFAULT_EDITOR_ASSOCIATION.id }
-		}, preferredGroup);
+		const preferredGroup = this.editorGroupsService.getPart(
+      this.editorGroupsService.activeGroup,
+    ) === this.editorGroupsService.activeModalEditorPart ? MODAL_GROUP : undefined;
+		const editor = await this.editorService.openEditor(
+      {
+        resource: this.modelsConfigurationFile,
+        options: { override: DEFAULT_EDITOR_ASSOCIATION.id },
+      },
+      preferredGroup,
+    );
 		if (!editor || !options?.group) {
 			return;
 		}
@@ -177,31 +204,38 @@ export class LanguageModelsConfigurationService extends Disposable implements IL
 			if (!model) {
 				return;
 			}
-			const targetRange = options.snippetTarget === 'models' ? options.group.modelsRange : options.group.range;
+			const targetRange = options.snippetTarget === "models" ? options.group.modelsRange : options.group.range;
 			if (!targetRange) {
 				return;
 			}
 			const models = options.group.models;
-			const isModelsArray = options.snippetTarget === 'models' && Array.isArray(models);
+			const isModelsArray = options.snippetTarget === "models" && Array.isArray(
+        models,
+      );
 			const emptyModelsArray = isModelsArray && models.length === 0;
 			const insertBeforeModelsArrayEnd = emptyModelsArray || (isModelsArray && targetRange.startLineNumber === targetRange.endLineNumber);
 			const lastPropertyLine = targetRange.endLineNumber - 1;
 			const insertPosition = insertBeforeModelsArrayEnd ? {
-				lineNumber: targetRange.endLineNumber,
-				column: targetRange.endColumn - 1
-			} : {
-				lineNumber: lastPropertyLine,
-				column: model.getLineLength(lastPropertyLine) + 1
-			};
+        lineNumber: targetRange.endLineNumber,
+        column: targetRange.endColumn - 1,
+      } : {
+        lineNumber: lastPropertyLine,
+        column: model.getLineLength(lastPropertyLine) + 1,
+      };
 			codeEditor.setPosition(insertPosition);
 			codeEditor.revealPositionNearTop(insertPosition);
 			codeEditor.focus();
-			SnippetController2.get(codeEditor)?.insert(emptyModelsArray ? options.snippet : ',\n' + options.snippet);
+			SnippetController2.get(codeEditor)?.insert(
+        emptyModelsArray ? options.snippet : ",\n" + options.snippet,
+      );
 		} else {
 			if (!options.group.range) {
 				return;
 			}
-			const position = { lineNumber: options.group.range.startLineNumber, column: options.group.range.startColumn };
+			const position = {
+        lineNumber: options.group.range.startLineNumber,
+        column: options.group.range.startColumn,
+      };
 			codeEditor.setPosition(position);
 			codeEditor.revealPositionNearTop(position);
 			codeEditor.focus();
@@ -211,21 +245,32 @@ export class LanguageModelsConfigurationService extends Disposable implements IL
 	private async withLanguageModelsProviderGroups(update?: (languageModelsProviderGroups: LanguageModelsProviderGroups) => Promise<LanguageModelsProviderGroups>): Promise<LanguageModelsProviderGroups> {
 		const exists = await this.fileService.exists(this.modelsConfigurationFile);
 		if (!exists) {
-			await this.fileService.writeFile(this.modelsConfigurationFile, VSBuffer.fromString(JSON.stringify([], undefined, '\t')));
+			await this.fileService.writeFile(
+        this.modelsConfigurationFile,
+        VSBuffer.fromString(JSON.stringify([], undefined, "\t")),
+      );
 		}
-		const ref = await this.textModelService.createModelReference(this.modelsConfigurationFile);
+		const ref = await this.textModelService.createModelReference(
+      this.modelsConfigurationFile,
+    );
 		const model = ref.object.textEditorModel;
 		try {
-			const languageModelsProviderGroups = parseLanguageModelsProviderGroups(model);
+			const languageModelsProviderGroups = parseLanguageModelsProviderGroups(
+        model,
+      );
 			if (!update) {
 				return languageModelsProviderGroups;
 			}
-			const updatedLanguageModelsProviderGroups = await update(languageModelsProviderGroups);
+			const updatedLanguageModelsProviderGroups = await update(
+        languageModelsProviderGroups,
+      );
 			for (const group of updatedLanguageModelsProviderGroups) {
 				delete group.range;
 				delete group.modelsRange;
 			}
-			model.setValue(JSON.stringify(updatedLanguageModelsProviderGroups, undefined, '\t'));
+			model.setValue(
+        JSON.stringify(updatedLanguageModelsProviderGroups, undefined, "\t"),
+      );
 			await this.textFileService.save(this.modelsConfigurationFile);
 			return updatedLanguageModelsProviderGroups;
 		} finally {
@@ -258,7 +303,7 @@ export function parseLanguageModelsProviderGroups(model: ITextModel): LanguageMo
 					startLineNumber: start.lineNumber,
 					startColumn: start.column,
 					endLineNumber: end.lineNumber,
-					endColumn: end.column
+					endColumn: end.column,
 				};
 			}
 			onValue(object, offset, length);
@@ -277,7 +322,7 @@ export function parseLanguageModelsProviderGroups(model: ITextModel): LanguageMo
 					startLineNumber: parent.range.startLineNumber,
 					startColumn: parent.range.startColumn,
 					endLineNumber: end.lineNumber,
-					endColumn: end.column
+					endColumn: end.column,
 				};
 			}
 			if (parent._parentConfigurationRange) {
@@ -296,14 +341,14 @@ export function parseLanguageModelsProviderGroups(model: ITextModel): LanguageMo
 			}
 			const array: unknown[] & { _parentModelsRange?: Mutable<IRange> } = [];
 			const parent = currentParent as Record<string, unknown> & { range?: IRange; modelsRange?: Mutable<IRange> };
-			if (currentProperty === 'models' && parent.range) {
+			if (currentProperty === "models" && parent.range) {
 				const start = model.getPositionAt(offset);
 				const end = model.getPositionAt(offset + length);
 				parent.modelsRange = {
 					startLineNumber: start.lineNumber,
 					startColumn: start.column,
 					endLineNumber: end.lineNumber,
-					endColumn: end.column
+					endColumn: end.column,
 				};
 				array._parentModelsRange = parent.modelsRange;
 			}
@@ -336,22 +381,33 @@ export function parseLanguageModelsProviderGroups(model: ITextModel): LanguageMo
 	return configuration;
 }
 
-const languageModelsSchemaId = 'vscode://schemas/language-models';
+const languageModelsSchemaId = "vscode://schemas/language-models";
 
 export class ChatLanguageModelsDataContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'workbench.contrib.chatLanguageModelsData';
+	static readonly ID = "workbench.contrib.chatLanguageModelsData";
 
 	constructor(
 		@ILanguageModelsService private readonly languageModelsService: ILanguageModelsService,
 		@ILanguageModelsConfigurationService languageModelsConfigurationService: ILanguageModelsConfigurationService,
 	) {
 		super();
-		const registry = Registry.as<IJSONContributionRegistry>(JSONExtensions.JSONContribution);
-		this._register(registry.registerSchemaAssociation(languageModelsSchemaId, languageModelsConfigurationService.configurationFile.toString()));
+		const registry = Registry.as<IJSONContributionRegistry>(
+      JSONExtensions.JSONContribution,
+    );
+		this._register(
+      registry.registerSchemaAssociation(
+        languageModelsSchemaId,
+        languageModelsConfigurationService.configurationFile.toString(),
+      ),
+    );
 
 		this.updateSchema(registry);
-		this._register(this.languageModelsService.onDidChangeLanguageModels(() => this.updateSchema(registry)));
+		this._register(
+      this.languageModelsService.onDidChangeLanguageModels(
+        () => this.updateSchema(registry),
+      ),
+    );
 	}
 
 	private updateSchema(registry: IJSONContributionRegistry): void {
@@ -366,50 +422,50 @@ export class ChatLanguageModelsDataContribution extends Disposable implements IW
 				modelSchemas.push({
 					if: {
 						properties: {
-							vendor: { const: metadata.vendor }
-						}
+							vendor: { const: metadata.vendor },
+						},
 					},
 					then: {
 						properties: {
 							settings: {
-								type: 'object',
+								type: "object",
 								properties: {
-									[metadata.id]: metadata.configurationSchema
-								}
-							}
-						}
-					}
+									[metadata.id]: metadata.configurationSchema,
+								},
+							},
+						},
+					},
 				});
 			}
 		}
 
 		const schema: IJSONSchema = {
-			type: 'array',
+			type: "array",
 			items: {
 				properties: {
 					vendor: {
-						type: 'string',
-						enum: vendors.map(v => v.vendor)
+						type: "string",
+						enum: vendors.map(v => v.vendor),
 					},
-					name: { type: 'string' },
+					name: { type: "string" },
 					settings: {
-						type: 'object',
-						description: localize('settings.perModelConfig', "Per-model settings"),
-					}
+						type: "object",
+						description: localize("settings.perModelConfig", "Per-model settings"),
+					},
 				},
 				allOf: [
 					...vendors.map(vendor => ({
 						if: {
 							properties: {
-								vendor: { const: vendor.vendor }
-							}
+								vendor: { const: vendor.vendor },
+							},
 						},
-						then: vendor.configuration
+						then: vendor.configuration,
 					})),
-					...modelSchemas
+					...modelSchemas,
 				],
-				required: ['vendor', 'name']
-			}
+				required: ["vendor", "name"],
+			},
 		};
 
 		registry.registerSchema(languageModelsSchemaId, schema);

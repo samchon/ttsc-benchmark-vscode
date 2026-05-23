@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { win32 } from '../../../base/common/path.js';
-import { URI } from '../../../base/common/uri.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import type { ITerminalSandboxResolvedNetworkDomains } from './terminalSandboxService.js';
+import { win32 } from "../../../base/common/path.js";
+import { URI } from "../../../base/common/uri.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import type { ITerminalSandboxResolvedNetworkDomains } from "./terminalSandboxService.js";
 
 export interface IWindowsMxcProcessConfig {
 	commandLine: string;
@@ -22,7 +22,7 @@ export interface IWindowsMxcFilesystemConfig {
 }
 
 export interface IWindowsMxcNetworkConfig {
-	defaultPolicy: 'allow' | 'block';
+	defaultPolicy: "allow" | "block";
 	allowedHosts?: string[];
 	blockedHosts?: string[];
 }
@@ -30,7 +30,7 @@ export interface IWindowsMxcNetworkConfig {
 export interface IWindowsMxcConfig {
 	version: string;
 	containerId: string;
-	containment: 'process';
+	containment: "process";
 	lifecycle: {
 		destroyOnExit: boolean;
 		preservePolicy: boolean;
@@ -40,7 +40,7 @@ export interface IWindowsMxcConfig {
 	network: IWindowsMxcNetworkConfig;
 	ui: {
 		disable: boolean;
-		clipboard: 'none';
+		clipboard: "none";
 		injection: boolean;
 	};
 }
@@ -57,7 +57,9 @@ export interface IWindowsMxcConfigOptions {
 	env: string[];
 }
 
-export const IWindowsMxcTerminalSandboxRuntime = createDecorator<IWindowsMxcTerminalSandboxRuntime>('windowsMxcTerminalSandboxRuntime');
+export const IWindowsMxcTerminalSandboxRuntime = createDecorator<IWindowsMxcTerminalSandboxRuntime>(
+  "windowsMxcTerminalSandboxRuntime",
+);
 
 export interface IWindowsMxcTerminalSandboxRuntime {
 	readonly _serviceBrand: undefined;
@@ -79,11 +81,19 @@ export interface IWindowsMxcTerminalSandboxRuntime {
 export class WindowsMxcTerminalSandboxRuntime implements IWindowsMxcTerminalSandboxRuntime {
 	declare readonly _serviceBrand: undefined;
 
-	private readonly _configVersion = '0.4.0-alpha';
+	private readonly _configVersion = "0.4.0-alpha";
 
 	getExecutablePath(appRoot: string, arch: string | undefined): string {
-		const binArch = arch === 'arm64' ? 'arm64' : 'x64';
-		return win32.join(appRoot, 'node_modules', '@microsoft', 'mxc-sdk', 'bin', binArch, 'wxc-exec.exe');
+		const binArch = arch === "arm64" ? "arm64" : "x64";
+		return win32.join(
+      appRoot,
+      "node_modules",
+      "@microsoft",
+      "mxc-sdk",
+      "bin",
+      binArch,
+      "wxc-exec.exe",
+    );
 	}
 
 	getRuntimeReadPaths(appRoot: string | undefined, executablePath: string | undefined): string[] {
@@ -101,8 +111,8 @@ export class WindowsMxcTerminalSandboxRuntime implements IWindowsMxcTerminalSand
 		const tempDirPath = this.toWindowsPath(options.tempDir);
 		return {
 			version: this._configVersion,
-			containerId: 'vscode-terminal-sandbox',
-			containment: 'process',
+			containerId: "vscode-terminal-sandbox",
+			containment: "process",
 			lifecycle: {
 				destroyOnExit: true,
 				preservePolicy: false,
@@ -111,7 +121,7 @@ export class WindowsMxcTerminalSandboxRuntime implements IWindowsMxcTerminalSand
 				commandLine: options.command,
 				cwd: options.cwd ? this.toWindowsPath(options.cwd) : tempDirPath,
 				env: [
-					...options.env
+					...options.env,
 				],
 				timeout: 0,
 			},
@@ -123,7 +133,7 @@ export class WindowsMxcTerminalSandboxRuntime implements IWindowsMxcTerminalSand
 			network: this._createNetworkConfig(options.allowNetwork, options.networkDomains),
 			ui: {
 				disable: false,
-				clipboard: 'none',
+				clipboard: "none",
 				injection: false,
 			},
 		};
@@ -139,25 +149,25 @@ export class WindowsMxcTerminalSandboxRuntime implements IWindowsMxcTerminalSand
 
 	toWindowsPath(uri: URI): string {
 		let value: string;
-		if (uri.authority && uri.path.length > 1 && uri.scheme === 'file') {
+		if (uri.authority && uri.path.length > 1 && uri.scheme === "file") {
 			value = `\\\\${uri.authority}${uri.path}`;
 		} else if (/^\/[a-zA-Z]:/.test(uri.path)) {
 			value = uri.path.slice(1);
 		} else {
 			value = uri.fsPath;
 		}
-		return value.replace(/\//g, '\\');
+		return value.replace(/\//g, "\\");
 	}
 
 	private _createNetworkConfig(allowNetwork: boolean, networkDomains: ITerminalSandboxResolvedNetworkDomains): IWindowsMxcNetworkConfig {
 		if (allowNetwork) {
-			return { defaultPolicy: 'allow' };
+			return { defaultPolicy: "allow" };
 		}
 		return {
-			defaultPolicy: 'block',
-			allowedHosts: networkDomains.allowedDomains,
-			blockedHosts: networkDomains.deniedDomains
-		};
+      defaultPolicy: "block",
+      allowedHosts: networkDomains.allowedDomains,
+      blockedHosts: networkDomains.deniedDomains,
+    };
 	}
 
 	private _quotePowerShellArgument(value: string): string {

@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ErrorNoTelemetry } from '../../../../base/common/errors.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { ITerminalLogService } from '../../../../platform/terminal/common/terminal.js';
-import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
-import { ITerminalInstanceService } from '../browser/terminal.js';
-import { BaseTerminalProfileResolverService } from '../browser/terminalProfileResolverService.js';
-import { ITerminalProfileService } from '../common/terminal.js';
-import { IConfigurationResolverService } from '../../../services/configurationResolver/common/configurationResolver.js';
-import { IHistoryService } from '../../../services/history/common/history.js';
-import { IRemoteAgentService } from '../../../services/remote/common/remoteAgentService.js';
+import { ErrorNoTelemetry } from "../../../../base/common/errors.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ITerminalLogService } from "../../../../platform/terminal/common/terminal.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { ITerminalInstanceService } from "../browser/terminal.js";
+import { BaseTerminalProfileResolverService } from "../browser/terminalProfileResolverService.js";
+import { ITerminalProfileService } from "../common/terminal.js";
+import { IConfigurationResolverService } from "../../../services/configurationResolver/common/configurationResolver.js";
+import { IHistoryService } from "../../../services/history/common/history.js";
+import { IRemoteAgentService } from "../../../services/remote/common/remoteAgentService.js";
 
 export class ElectronTerminalProfileResolverService extends BaseTerminalProfileResolverService {
 
@@ -24,7 +24,7 @@ export class ElectronTerminalProfileResolverService extends BaseTerminalProfileR
 		@IWorkspaceContextService workspaceContextService: IWorkspaceContextService,
 		@ITerminalProfileService terminalProfileService: ITerminalProfileService,
 		@IRemoteAgentService remoteAgentService: IRemoteAgentService,
-		@ITerminalInstanceService terminalInstanceService: ITerminalInstanceService
+		@ITerminalInstanceService terminalInstanceService: ITerminalInstanceService,
 	) {
 		super(
 			{
@@ -41,7 +41,7 @@ export class ElectronTerminalProfileResolverService extends BaseTerminalProfileR
 						throw new ErrorNoTelemetry(`Cannot get environment when there is no backend for remote authority '${remoteAuthority}'`);
 					}
 					return backend.getEnvironment();
-				}
+				},
 			},
 			configurationService,
 			configurationResolverService,
@@ -49,7 +49,7 @@ export class ElectronTerminalProfileResolverService extends BaseTerminalProfileR
 			logService,
 			terminalProfileService,
 			workspaceContextService,
-			remoteAgentService
+			remoteAgentService,
 		);
 	}
 }

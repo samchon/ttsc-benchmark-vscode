@@ -3,18 +3,43 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { decodeBase64, VSBuffer } from '../../../base/common/buffer.js';
-import { Emitter } from '../../../base/common/event.js';
-import { Disposable, IDisposable, toDisposable } from '../../../base/common/lifecycle.js';
-import { basename, dirname } from '../../../base/common/resources.js';
-import { URI } from '../../../base/common/uri.js';
-import { createFileSystemProviderError, FilePermission, FileSystemProviderCapabilities, FileSystemProviderErrorCode, FileType, IFileChange, IFileDeleteOptions, IFileOverwriteOptions, IFileSystemProvider, IFileWriteOptions, IStat } from '../../files/common/files.js';
-import { fromAgentHostUri, toAgentHostUri } from './agentHostUri.js';
-import { type IAgentConnection } from './agentService.js';
-import { ContentEncoding, type DirectoryEntry, type ResourceDeleteParams, type ResourceDeleteResult, type ResourceListResult, type ResourceMoveParams, type ResourceMoveResult, type ResourceReadResult, type ResourceRequestParams, type ResourceRequestResult, type ResourceWriteParams, type ResourceWriteResult } from './state/protocol/commands.js';
-import { AhpErrorCodes } from './state/protocol/errors.js';
-import { ProtocolError } from './state/sessionProtocol.js';
-import { ROOT_STATE_URI } from './state/sessionState.js';
+import { decodeBase64, VSBuffer } from "../../../base/common/buffer.js";
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable, IDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { basename, dirname } from "../../../base/common/resources.js";
+import { URI } from "../../../base/common/uri.js";
+import {
+  createFileSystemProviderError,
+  FilePermission,
+  FileSystemProviderCapabilities,
+  FileSystemProviderErrorCode,
+  FileType,
+  IFileChange,
+  IFileDeleteOptions,
+  IFileOverwriteOptions,
+  IFileSystemProvider,
+  IFileWriteOptions,
+  IStat,
+} from "../../files/common/files.js";
+import { fromAgentHostUri, toAgentHostUri } from "./agentHostUri.js";
+import { type IAgentConnection } from "./agentService.js";
+import {
+  ContentEncoding,
+  type DirectoryEntry,
+  type ResourceDeleteParams,
+  type ResourceDeleteResult,
+  type ResourceListResult,
+  type ResourceMoveParams,
+  type ResourceMoveResult,
+  type ResourceReadResult,
+  type ResourceRequestParams,
+  type ResourceRequestResult,
+  type ResourceWriteParams,
+  type ResourceWriteResult,
+} from "./state/protocol/commands.js";
+import { AhpErrorCodes } from "./state/protocol/errors.js";
+import { ProtocolError } from "./state/sessionProtocol.js";
+import { ROOT_STATE_URI } from "./state/sessionState.js";
 
 /**
  * Interface for performing resource operations on a remote endpoint.
@@ -69,10 +94,14 @@ export abstract class AHPFileSystemProvider extends Disposable implements IFileS
 		FileSystemProviderCapabilities.PathCaseSensitive |
 		FileSystemProviderCapabilities.FileReadWrite;
 
-	private readonly _onDidChangeCapabilities = this._register(new Emitter<void>());
+	private readonly _onDidChangeCapabilities = this._register(
+    new Emitter<void>(),
+  );
 	readonly onDidChangeCapabilities = this._onDidChangeCapabilities.event;
 
-	private readonly _onDidChangeFile = this._register(new Emitter<readonly IFileChange[]>());
+	private readonly _onDidChangeFile = this._register(
+    new Emitter<readonly IFileChange[]>(),
+  );
 	readonly onDidChangeFile = this._onDidChangeFile.event;
 
 	private readonly _authorityToConnection = new Map<string, IRemoteFilesystemConnection>();
@@ -96,16 +125,34 @@ export abstract class AHPFileSystemProvider extends Disposable implements IFileS
 	async stat(resource: URI): Promise<IStat> {
 		const path = resource.path;
 
-		if (path === '/' || path === '') {
-			return { type: FileType.Directory, mtime: 0, ctime: 0, size: 0, permissions: FilePermission.Readonly };
+		if (path === "/" || path === "") {
+			return {
+        type: FileType.Directory,
+        mtime: 0,
+        ctime: 0,
+        size: 0,
+        permissions: FilePermission.Readonly,
+      };
 		}
 		const decoded = this._decodeUri(resource);
-		if (decoded.scheme === 'session-db' || decoded.scheme === 'git-blob') {
-			return { type: FileType.File, mtime: 0, ctime: 0, size: 0, permissions: FilePermission.Readonly };
+		if (decoded.scheme === "session-db" || decoded.scheme === "git-blob") {
+			return {
+        type: FileType.File,
+        mtime: 0,
+        ctime: 0,
+        size: 0,
+        permissions: FilePermission.Readonly,
+      };
 		}
 
-		if (decoded.path === '/' || decoded.path === '') {
-			return { type: FileType.Directory, mtime: 0, ctime: 0, size: 0, permissions: FilePermission.Readonly };
+		if (decoded.path === "/" || decoded.path === "") {
+			return {
+        type: FileType.Directory,
+        mtime: 0,
+        ctime: 0,
+        size: 0,
+        permissions: FilePermission.Readonly,
+      };
 		}
 
 		const parentUri = dirname(resource);
@@ -114,21 +161,27 @@ export abstract class AHPFileSystemProvider extends Disposable implements IFileS
 		const entries = await this._listDirectory(resource.authority, parentUri);
 		const entry = entries.find(e => e.name === name);
 		if (!entry) {
-			throw createFileSystemProviderError(`File not found: ${path}`, FileSystemProviderErrorCode.FileNotFound);
+			throw createFileSystemProviderError(
+        `File not found: ${path}`,
+        FileSystemProviderErrorCode.FileNotFound,
+      );
 		}
 
 		return {
-			type: entry.type === 'directory' ? FileType.Directory : FileType.File,
-			mtime: 0,
-			ctime: 0,
-			size: 0,
-			permissions: FilePermission.Readonly,
-		};
+      type: entry.type === "directory" ? FileType.Directory : FileType.File,
+      mtime: 0,
+      ctime: 0,
+      size: 0,
+      permissions: FilePermission.Readonly,
+    };
 	}
 
 	async readdir(resource: URI): Promise<[string, FileType][]> {
 		const entries = await this._listDirectory(resource.authority, resource);
-		return entries.map(e => [e.name, e.type === 'directory' ? FileType.Directory : FileType.File]);
+		return entries.map(e => [
+      e.name,
+      e.type === "directory" ? FileType.Directory : FileType.File,
+    ]);
 	}
 
 	async readFile(resource: URI): Promise<Uint8Array> {
@@ -150,25 +203,32 @@ export abstract class AHPFileSystemProvider extends Disposable implements IFileS
 		try {
 			const originalUri = this._decodeUri(resource);
 			await connection.resourceWrite({
-				channel: ROOT_STATE_URI,
-				uri: originalUri.toString(),
-				data: VSBuffer.wrap(content).toString(),
-				encoding: ContentEncoding.Utf8,
-			});
+        channel: ROOT_STATE_URI,
+        uri: originalUri.toString(),
+        data: VSBuffer.wrap(content).toString(),
+        encoding: ContentEncoding.Utf8,
+      });
 		} catch (err) {
 			throw this._mapError(err, FileSystemProviderErrorCode.NoPermissions);
 		}
 	}
 
 	async mkdir(): Promise<void> {
-		throw createFileSystemProviderError('mkdir not supported on remote filesystem', FileSystemProviderErrorCode.NoPermissions);
+		throw createFileSystemProviderError(
+      "mkdir not supported on remote filesystem",
+      FileSystemProviderErrorCode.NoPermissions,
+    );
 	}
 
 	async delete(resource: URI, opts: IFileDeleteOptions): Promise<void> {
 		const connection = this._getConnection(resource.authority);
 		try {
 			const originalUri = this._decodeUri(resource);
-			await connection.resourceDelete({ channel: ROOT_STATE_URI, uri: originalUri.toString(), recursive: opts.recursive });
+			await connection.resourceDelete({
+        channel: ROOT_STATE_URI,
+        uri: originalUri.toString(),
+        recursive: opts.recursive,
+      });
 		} catch (err) {
 			throw this._mapError(err, FileSystemProviderErrorCode.NoPermissions);
 		}
@@ -179,7 +239,12 @@ export abstract class AHPFileSystemProvider extends Disposable implements IFileS
 		try {
 			const originalFrom = this._decodeUri(from);
 			const originalTo = this._decodeUri(to);
-			await connection.resourceMove({ channel: ROOT_STATE_URI, source: originalFrom.toString(), destination: originalTo.toString(), failIfExists: !opts.overwrite });
+			await connection.resourceMove({
+        channel: ROOT_STATE_URI,
+        source: originalFrom.toString(),
+        destination: originalTo.toString(),
+        failIfExists: !opts.overwrite,
+      });
 		} catch (err) {
 			throw this._mapError(err, FileSystemProviderErrorCode.NoPermissions);
 		}
@@ -197,18 +262,18 @@ export abstract class AHPFileSystemProvider extends Disposable implements IFileS
 		const connection = this._getConnection(resource.authority);
 		if (!connection.resourceRequest) {
 			throw createFileSystemProviderError(
-				`Connection for ${resource.authority} does not support resourceRequest`,
-				FileSystemProviderErrorCode.Unavailable,
-			);
+        `Connection for ${resource.authority} does not support resourceRequest`,
+        FileSystemProviderErrorCode.Unavailable,
+      );
 		}
 		const originalUri = this._decodeUri(resource);
 		try {
 			await connection.resourceRequest({
-				channel: ROOT_STATE_URI,
-				uri: originalUri.toString(),
-				read: opts.read,
-				write: opts.write,
-			});
+        channel: ROOT_STATE_URI,
+        uri: originalUri.toString(),
+        read: opts.read,
+        write: opts.write,
+      });
 		} catch (err) {
 			throw this._mapError(err, FileSystemProviderErrorCode.NoPermissions);
 		}
@@ -219,7 +284,10 @@ export abstract class AHPFileSystemProvider extends Disposable implements IFileS
 	private _getConnection(authority: string): IRemoteFilesystemConnection {
 		const connection = this._authorityToConnection.get(authority);
 		if (!connection) {
-			throw createFileSystemProviderError(`No connection for authority: ${authority}`, FileSystemProviderErrorCode.Unavailable);
+			throw createFileSystemProviderError(
+        `No connection for authority: ${authority}`,
+        FileSystemProviderErrorCode.Unavailable,
+      );
 		}
 		return connection;
 	}
@@ -233,12 +301,15 @@ export abstract class AHPFileSystemProvider extends Disposable implements IFileS
 	 */
 	private _mapError(err: unknown, defaultCode: FileSystemProviderErrorCode): Error {
 		if (err instanceof ProtocolError && err.code === AhpErrorCodes.PermissionDenied) {
-			return createFileSystemProviderError(err.message, FileSystemProviderErrorCode.NoPermissions);
+			return createFileSystemProviderError(
+        err.message,
+        FileSystemProviderErrorCode.NoPermissions,
+      );
 		}
 		return createFileSystemProviderError(
-			err instanceof Error ? err.message : String(err),
-			defaultCode,
-		);
+      err instanceof Error ? err.message : String(err),
+      defaultCode,
+    );
 	}
 
 	private async _listDirectory(authority: string, resource: URI): Promise<readonly DirectoryEntry[]> {

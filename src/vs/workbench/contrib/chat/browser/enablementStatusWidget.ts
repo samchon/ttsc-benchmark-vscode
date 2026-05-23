@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { reset } from '../../../../base/browser/dom.js';
-import { Codicon } from '../../../../base/common/codicons.js';
-import { MarkdownString } from '../../../../base/common/htmlContent.js';
-import { Disposable, MutableDisposable } from '../../../../base/common/lifecycle.js';
-import { IObservable, autorun } from '../../../../base/common/observable.js';
-import { localize } from '../../../../nls.js';
-import { IMarkdownRendererService } from '../../../../platform/markdown/browser/markdownRenderer.js';
-import { ContributionEnablementState } from '../common/enablement.js';
+import { reset } from "../../../../base/browser/dom.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { MarkdownString } from "../../../../base/common/htmlContent.js";
+import { Disposable, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { IObservable, autorun } from "../../../../base/common/observable.js";
+import { localize } from "../../../../nls.js";
+import { IMarkdownRendererService } from "../../../../platform/markdown/browser/markdownRenderer.js";
+import { ContributionEnablementState } from "../common/enablement.js";
 
 /**
  * A small reusable widget that renders an enablement status message inside
@@ -32,9 +32,11 @@ export class EnablementStatusWidget extends Disposable {
 		@IMarkdownRendererService private readonly _markdownRendererService: IMarkdownRendererService,
 	) {
 		super();
-		this._register(autorun(reader => {
-			this._render(enablement.read(reader));
-		}));
+		this._register(
+      autorun(reader => {
+        this._render(enablement.read(reader));
+      }),
+    );
 	}
 
 	private _render(state: ContributionEnablementState): void {
@@ -52,7 +54,10 @@ export class EnablementStatusWidget extends Disposable {
 			return;
 		}
 
-		const markdown = new MarkdownString('', { isTrusted: true, supportThemeIcons: true });
+		const markdown = new MarkdownString("", {
+      isTrusted: true,
+      supportThemeIcons: true,
+    });
 		markdown.appendMarkdown(`$(${Codicon.info.id})&nbsp;`);
 		markdown.appendText(message);
 		const rendered = this._markdownRendererService.render(markdown);
@@ -63,12 +68,12 @@ export class EnablementStatusWidget extends Disposable {
 
 /** Default labels for plugin enablement status. */
 export const pluginEnablementLabels = {
-	disabledProfile: localize('pluginDisabled', "This plugin is disabled."),
-	disabledWorkspace: localize('pluginDisabledWorkspace', "This plugin is disabled for this workspace."),
+  disabledProfile: localize("pluginDisabled", "This plugin is disabled."),
+  disabledWorkspace: localize("pluginDisabledWorkspace", "This plugin is disabled for this workspace."),
 };
 
 /** Default labels for MCP server enablement status. */
 export const mcpServerEnablementLabels = {
-	disabledProfile: localize('mcpServerDisabled', "This MCP server is disabled."),
-	disabledWorkspace: localize('mcpServerDisabledWorkspace', "This MCP server is disabled for this workspace."),
+  disabledProfile: localize("mcpServerDisabled", "This MCP server is disabled."),
+  disabledWorkspace: localize("mcpServerDisabledWorkspace", "This MCP server is disabled for this workspace."),
 };

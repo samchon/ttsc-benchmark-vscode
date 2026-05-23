@@ -3,33 +3,41 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../base/browser/dom.js';
-import { ActionBar } from '../../../../base/browser/ui/actionbar/actionbar.js';
-import { BaseActionViewItem, IActionViewItemOptions, IBaseActionViewItemOptions } from '../../../../base/browser/ui/actionbar/actionViewItems.js';
-import { AnchorAlignment } from '../../../../base/browser/ui/contextview/contextview.js';
-import { DropdownMenuActionViewItem } from '../../../../base/browser/ui/dropdown/dropdownActionViewItem.js';
-import { Action, IAction, IActionRunner, Separator } from '../../../../base/common/actions.js';
-import { Delayer } from '../../../../base/common/async.js';
-import { Emitter } from '../../../../base/common/event.js';
-import { Iterable } from '../../../../base/common/iterator.js';
-import { localize } from '../../../../nls.js';
-import { IContextMenuService } from '../../../../platform/contextview/browser/contextView.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
-import { ContextScopedSuggestEnabledInputWithHistory, SuggestEnabledInputWithHistory, SuggestResultsProvider } from '../../codeEditor/browser/suggestEnabledInput/suggestEnabledInput.js';
-import { testingFilterIcon } from './icons.js';
-import { StoredValue } from '../common/storedValue.js';
-import { ITestExplorerFilterState, TestFilterTerm } from '../common/testExplorerFilterState.js';
-import { ITestService } from '../common/testService.js';
-import { denamespaceTestTag } from '../common/testTypes.js';
+import * as dom from "../../../../base/browser/dom.js";
+import { ActionBar } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import {
+  BaseActionViewItem,
+  IActionViewItemOptions,
+  IBaseActionViewItemOptions,
+} from "../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { AnchorAlignment } from "../../../../base/browser/ui/contextview/contextview.js";
+import { DropdownMenuActionViewItem } from "../../../../base/browser/ui/dropdown/dropdownActionViewItem.js";
+import { Action, IAction, IActionRunner, Separator } from "../../../../base/common/actions.js";
+import { Delayer } from "../../../../base/common/async.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { localize } from "../../../../nls.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import {
+  ContextScopedSuggestEnabledInputWithHistory,
+  SuggestEnabledInputWithHistory,
+  SuggestResultsProvider,
+} from "../../codeEditor/browser/suggestEnabledInput/suggestEnabledInput.js";
+import { testingFilterIcon } from "./icons.js";
+import { StoredValue } from "../common/storedValue.js";
+import { ITestExplorerFilterState, TestFilterTerm } from "../common/testExplorerFilterState.js";
+import { ITestService } from "../common/testService.js";
+import { denamespaceTestTag } from "../common/testTypes.js";
 
 const testFilterDescriptions: { [K in TestFilterTerm]: string } = {
-	[TestFilterTerm.Failed]: localize('testing.filters.showOnlyFailed', "Show Only Failed Tests"),
-	[TestFilterTerm.Executed]: localize('testing.filters.showOnlyExecuted', "Show Only Executed Tests"),
-	[TestFilterTerm.CurrentDoc]: localize('testing.filters.currentFile', "Show in Active File Only"),
-	[TestFilterTerm.OpenedFiles]: localize('testing.filters.openedFiles', "Show in Opened Files Only"),
-	[TestFilterTerm.Hidden]: localize('testing.filters.showExcludedTests', "Show Hidden Tests"),
+  [TestFilterTerm.Failed]: localize("testing.filters.showOnlyFailed", "Show Only Failed Tests"),
+  [TestFilterTerm.Executed]: localize("testing.filters.showOnlyExecuted", "Show Only Executed Tests"),
+  [TestFilterTerm.CurrentDoc]: localize("testing.filters.currentFile", "Show in Active File Only"),
+  [TestFilterTerm.OpenedFiles]: localize("testing.filters.openedFiles", "Show in Opened Files Only"),
+  [TestFilterTerm.Hidden]: localize("testing.filters.showExcludedTests", "Show Hidden Tests"),
 };
 
 export class TestingExplorerFilter extends BaseActionViewItem {
@@ -39,7 +47,11 @@ export class TestingExplorerFilter extends BaseActionViewItem {
 	public readonly onDidFocus = this.focusEmitter.event;
 	private readonly history: StoredValue<{ values: string[]; lastValue: string } | string[]>;
 
-	private readonly filtersAction = new Action('markersFiltersAction', localize('testing.filters.menu', "More Filters..."), 'testing-filter-button ' + ThemeIcon.asClassName(testingFilterIcon));
+	private readonly filtersAction = new Action(
+    "markersFiltersAction",
+    localize("testing.filters.menu", "More Filters..."),
+    "testing-filter-button " + ThemeIcon.asClassName(testingFilterIcon),
+  );
 
 	constructor(
 		action: IAction,
@@ -49,39 +61,46 @@ export class TestingExplorerFilter extends BaseActionViewItem {
 		@ITestService private readonly testService: ITestService,
 	) {
 		super(null, action, options);
-		this.history = this._register(instantiationService.createInstance(StoredValue, {
-			key: 'testing.filterHistory2',
-			scope: StorageScope.WORKSPACE,
-			target: StorageTarget.MACHINE
-		}));
+		this.history = this._register(
+      instantiationService.createInstance(StoredValue, {
+        key: "testing.filterHistory2",
+        scope: StorageScope.WORKSPACE,
+        target: StorageTarget.MACHINE,
+      }),
+    );
 		this.updateFilterActiveState();
-		this._register(testService.excluded.onTestExclusionsChanged(this.updateFilterActiveState, this));
+		this._register(
+      testService.excluded.onTestExclusionsChanged(
+        this.updateFilterActiveState,
+        this,
+      ),
+    );
 	}
 
 	/**
 	 * @override
 	 */
 	public override render(container: HTMLElement) {
-		container.classList.add('testing-filter-action-item');
+		container.classList.add("testing-filter-action-item");
 
 		const updateDelayer = this._register(new Delayer<void>(400));
-		const wrapper = this.wrapper = dom.$('.testing-filter-wrapper');
+		const wrapper = this.wrapper = dom.$(".testing-filter-wrapper");
 		container.appendChild(wrapper);
 
-		let history = this.history.get({ lastValue: '', values: [] });
+		let history = this.history.get({ lastValue: "", values: [] });
 		if (history instanceof Array) {
-			history = { lastValue: '', values: history };
+			history = { lastValue: "", values: history };
 		}
 		if (history.lastValue) {
 			this.state.setText(history.lastValue);
 		}
 
 		const input = this.input = this._register(this.instantiationService.createInstance(ContextScopedSuggestEnabledInputWithHistory, {
-			id: 'testing.explorer.filter',
-			ariaLabel: localize('testExplorerFilterLabel', "Filter text for tests in the explorer"),
+			id: "testing.explorer.filter",
+			ariaLabel: localize("testExplorerFilterLabel", "Filter text for tests in the explorer"),
 			parent: wrapper,
 			suggestionProvider: {
-				triggerCharacters: ['@'],
+				triggerCharacters: ["@"],
 				provideResults: () => [
 					...Object.entries(testFilterDescriptions).map(([label, detail]) => ({ label, detail })),
 					...Iterable.map(this.testService.collection.tags.values(), tag => {
@@ -90,17 +109,17 @@ export class TestingExplorerFilter extends BaseActionViewItem {
 						return ({
 							label: `@${ctrlId}:${tagId}`,
 							detail: this.testService.collection.getNodeById(ctrlId)?.item.label,
-							insertText: tagId.includes(' ') ? `@${ctrlId}:"${tagId.replace(/(["\\])/g, '\\$1')}"` : insertText,
+							insertText: tagId.includes(" ") ? `@${ctrlId}:"${tagId.replace(/(["\\])/g, "\\$1")}"` : insertText,
 						});
 					}),
 				].filter(r => !this.state.text.value.includes(r.label)),
 			} satisfies SuggestResultsProvider,
-			resourceHandle: 'testing:filter',
+			resourceHandle: "testing:filter",
 			suggestOptions: {
 				value: this.state.text.value,
-				placeholderText: localize('testExplorerFilter', "Filter (e.g. text, !exclude, @tag)"),
+				placeholderText: localize("testExplorerFilter", "Filter (e.g. text, !exclude, @tag)"),
 			},
-			history: history.values
+			history: history.values,
 		}));
 
 		this._register(this.state.text.onDidChange(newValue => {
@@ -109,18 +128,26 @@ export class TestingExplorerFilter extends BaseActionViewItem {
 			}
 		}));
 
-		this._register(this.state.onDidRequestInputFocus(() => {
-			input.focus();
-		}));
+		this._register(
+      this.state.onDidRequestInputFocus(() => {
+        input.focus();
+      }),
+    );
 
-		this._register(input.onDidFocus(() => {
-			this.focusEmitter.fire();
-		}));
+		this._register(
+      input.onDidFocus(() => {
+        this.focusEmitter.fire();
+      }),
+    );
 
-		this._register(input.onInputDidChange(() => updateDelayer.trigger(() => {
-			input.addToHistory();
-			this.state.setText(input.getValue());
-		})));
+		this._register(
+      input.onInputDidChange(
+        () => updateDelayer.trigger(() => {
+          input.addToHistory();
+          this.state.setText(input.getValue());
+        }),
+      ),
+    );
 
 		const actionbar = this._register(new ActionBar(container, {
 			actionViewItemProvider: (action, options) => {
@@ -154,7 +181,10 @@ export class TestingExplorerFilter extends BaseActionViewItem {
 	 * Persists changes to the input history.
 	 */
 	public saveState() {
-		this.history.store({ lastValue: this.input.getValue(), values: this.input.getHistory() });
+		this.history.store({
+      lastValue: this.input.getValue(),
+      values: this.input.getHistory(),
+    });
 	}
 
 	/**
@@ -184,16 +214,12 @@ class FiltersDropdownMenuActionViewItem extends DropdownMenuActionViewItem {
 		@IContextMenuService contextMenuService: IContextMenuService,
 		@ITestService private readonly testService: ITestService,
 	) {
-		super(action,
-			{ getActions: () => this.getActions() },
-			contextMenuService,
-			{
-				actionRunner,
-				classNames: action.class,
-				anchorAlignmentProvider: () => AnchorAlignment.RIGHT,
-				menuAsChild: true
-			}
-		);
+		super(action, { getActions: () => this.getActions() }, contextMenuService, {
+      actionRunner,
+      classNames: action.class,
+      anchorAlignmentProvider: () => AnchorAlignment.RIGHT,
+      menuAsChild: true,
+    });
 	}
 
 	override render(container: HTMLElement): void {
@@ -210,41 +236,41 @@ class FiltersDropdownMenuActionViewItem extends DropdownMenuActionViewItem {
 				id: term,
 				label: testFilterDescriptions[term],
 				run: () => this.filters.toggleFilteringFor(term),
-				tooltip: '',
-				dispose: () => null
+				tooltip: "",
+				dispose: () => null,
 			})),
 			new Separator(),
 			{
 				checked: this.filters.fuzzy.value,
 				class: undefined,
 				enabled: true,
-				id: 'fuzzy',
-				label: localize('testing.filters.fuzzyMatch', "Fuzzy Match"),
+				id: "fuzzy",
+				label: localize("testing.filters.fuzzyMatch", "Fuzzy Match"),
 				run: () => this.filters.fuzzy.value = !this.filters.fuzzy.value,
-				tooltip: ''
+				tooltip: "",
 			},
 			new Separator(),
 			{
 				checked: this.filters.isFilteringFor(TestFilterTerm.Hidden),
 				class: undefined,
 				enabled: this.testService.excluded.hasAny,
-				id: 'showExcluded',
-				label: localize('testing.filters.showExcludedTests', "Show Hidden Tests"),
+				id: "showExcluded",
+				label: localize("testing.filters.showExcludedTests", "Show Hidden Tests"),
 				run: () => this.filters.toggleFilteringFor(TestFilterTerm.Hidden),
-				tooltip: ''
+				tooltip: "",
 			},
 			{
 				class: undefined,
 				enabled: this.testService.excluded.hasAny,
-				id: 'removeExcluded',
-				label: localize('testing.filters.removeTestExclusions', "Unhide All Tests"),
+				id: "removeExcluded",
+				label: localize("testing.filters.removeTestExclusions", "Unhide All Tests"),
 				run: async () => this.testService.excluded.clear(),
-				tooltip: ''
-			}
+				tooltip: "",
+			},
 		];
 	}
 
 	protected override updateChecked(): void {
-		this.element!.classList.toggle('checked', this._action.checked);
+		this.element!.classList.toggle("checked", this._action.checked);
 	}
 }

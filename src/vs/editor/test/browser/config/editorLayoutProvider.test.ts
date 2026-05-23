@@ -3,10 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
-import { ComputedEditorOptions } from '../../../browser/config/editorConfiguration.js';
-import { EditorLayoutInfo, EditorLayoutInfoComputer, EditorMinimapOptions, EditorOption, EditorOptions, InternalEditorRenderLineNumbersOptions, InternalEditorScrollbarOptions, RenderLineNumbersType, RenderMinimap } from '../../../common/config/editorOptions.js';
+import assert from "assert";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../base/test/common/utils.js";
+import { ComputedEditorOptions } from "../../../browser/config/editorConfiguration.js";
+import {
+  EditorLayoutInfo,
+  EditorLayoutInfoComputer,
+  EditorMinimapOptions,
+  EditorOption,
+  EditorOptions,
+  InternalEditorRenderLineNumbersOptions,
+  InternalEditorScrollbarOptions,
+  RenderLineNumbersType,
+  RenderMinimap,
+} from "../../../common/config/editorOptions.js";
 
 interface IEditorLayoutProviderOpts {
 	readonly outerWidth: number;
@@ -31,14 +41,14 @@ interface IEditorLayoutProviderOpts {
 	readonly horizontalScrollbarHeight: number;
 
 	readonly minimap: boolean;
-	readonly minimapSide: 'left' | 'right';
+	readonly minimapSide: "left" | "right";
 	readonly minimapRenderCharacters: boolean;
 	readonly minimapMaxColumn: number;
-	minimapSize?: 'proportional' | 'fill' | 'fit';
+	minimapSize?: "proportional" | "fill" | "fit";
 	readonly pixelRatio: number;
 }
 
-suite('Editor ViewLayout - EditorLayoutProvider', () => {
+suite("Editor ViewLayout - EditorLayoutProvider", () => {
 
 	ensureNoDisposablesAreLeakedInTestSuite();
 
@@ -51,18 +61,18 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 		options._write(EditorOption.padding, { top: 0, bottom: 0 });
 		const minimapOptions: EditorMinimapOptions = {
 			enabled: input.minimap,
-			autohide: 'none',
-			size: input.minimapSize || 'proportional',
+			autohide: "none",
+			size: input.minimapSize || "proportional",
 			side: input.minimapSide,
 			renderCharacters: input.minimapRenderCharacters,
 			maxColumn: input.minimapMaxColumn,
-			showSlider: 'mouseover',
+			showSlider: "mouseover",
 			scale: 1,
 			showRegionSectionHeaders: true,
 			showMarkSectionHeaders: true,
 			sectionHeaderFontSize: 9,
 			sectionHeaderLetterSpacing: 1,
-			markSectionHeaderRegex: '\\bMARK:\\s*(?<separator>\-?)\\s*(?<label>.*)$',
+			markSectionHeaderRegex: "\\bMARK:\\s*(?<separator>\-?)\\s*(?<label>.*)$",
 		};
 		options._write(EditorOption.minimap, minimapOptions);
 		const scrollbarOptions: InternalEditorScrollbarOptions = {
@@ -84,15 +94,15 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 		options._write(EditorOption.scrollbar, scrollbarOptions);
 		const lineNumbersOptions: InternalEditorRenderLineNumbersOptions = {
 			renderType: input.showLineNumbers ? RenderLineNumbersType.On : RenderLineNumbersType.Off,
-			renderFn: null
+			renderFn: null,
 		};
 		options._write(EditorOption.lineNumbers, lineNumbersOptions);
 
-		options._write(EditorOption.wordWrap, 'off');
+		options._write(EditorOption.wordWrap, "off");
 		options._write(EditorOption.wordWrapColumn, 80);
-		options._write(EditorOption.wordWrapOverride1, 'inherit');
-		options._write(EditorOption.wordWrapOverride2, 'inherit');
-		options._write(EditorOption.accessibilitySupport, 'auto');
+		options._write(EditorOption.wordWrapOverride1, "inherit");
+		options._write(EditorOption.wordWrapOverride2, "inherit");
+		options._write(EditorOption.accessibilitySupport, "auto");
 
 		const actual = EditorLayoutInfoComputer.computeLayout(options, {
 			memory: null,
@@ -110,7 +120,7 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 		assert.deepStrictEqual(actual, expected);
 	}
 
-	test('EditorLayoutProvider 1', () => {
+	test("EditorLayoutProvider 1", () => {
 		doTest({
 			outerWidth: 1000,
 			outerHeight: 800,
@@ -127,7 +137,7 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 			scrollbarArrowSize: 0,
 			verticalScrollbarHasArrows: false,
 			minimap: false,
-			minimapSide: 'right',
+			minimapSide: "right",
 			minimapRenderCharacters: true,
 			minimapMaxColumn: 150,
 			pixelRatio: 1,
@@ -174,12 +184,12 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 				top: 0,
 				width: 0,
 				height: 800,
-				right: 0
-			}
+				right: 0,
+			},
 		});
 	});
 
-	test('EditorLayoutProvider 1.1', () => {
+	test("EditorLayoutProvider 1.1", () => {
 		doTest({
 			outerWidth: 1000,
 			outerHeight: 800,
@@ -196,7 +206,7 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 			scrollbarArrowSize: 13,
 			verticalScrollbarHasArrows: true,
 			minimap: false,
-			minimapSide: 'right',
+			minimapSide: "right",
 			minimapRenderCharacters: true,
 			minimapMaxColumn: 150,
 			pixelRatio: 1,
@@ -243,12 +253,12 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 				top: 13,
 				width: 11,
 				height: (800 - 2 * 13),
-				right: 0
-			}
+				right: 0,
+			},
 		});
 	});
 
-	test('EditorLayoutProvider 2', () => {
+	test("EditorLayoutProvider 2", () => {
 		doTest({
 			outerWidth: 900,
 			outerHeight: 800,
@@ -265,7 +275,7 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 			scrollbarArrowSize: 0,
 			verticalScrollbarHasArrows: false,
 			minimap: false,
-			minimapSide: 'right',
+			minimapSide: "right",
 			minimapRenderCharacters: true,
 			minimapMaxColumn: 150,
 			pixelRatio: 1,
@@ -312,12 +322,12 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 				top: 0,
 				width: 0,
 				height: 800,
-				right: 0
-			}
+				right: 0,
+			},
 		});
 	});
 
-	test('EditorLayoutProvider 3', () => {
+	test("EditorLayoutProvider 3", () => {
 		doTest({
 			outerWidth: 900,
 			outerHeight: 900,
@@ -334,7 +344,7 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 			scrollbarArrowSize: 0,
 			verticalScrollbarHasArrows: false,
 			minimap: false,
-			minimapSide: 'right',
+			minimapSide: "right",
 			minimapRenderCharacters: true,
 			minimapMaxColumn: 150,
 			pixelRatio: 1,
@@ -381,12 +391,12 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 				top: 0,
 				width: 0,
 				height: 900,
-				right: 0
-			}
+				right: 0,
+			},
 		});
 	});
 
-	test('EditorLayoutProvider 4', () => {
+	test("EditorLayoutProvider 4", () => {
 		doTest({
 			outerWidth: 900,
 			outerHeight: 900,
@@ -403,7 +413,7 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 			scrollbarArrowSize: 0,
 			verticalScrollbarHasArrows: false,
 			minimap: false,
-			minimapSide: 'right',
+			minimapSide: "right",
 			minimapRenderCharacters: true,
 			minimapMaxColumn: 150,
 			pixelRatio: 1,
@@ -450,12 +460,12 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 				top: 0,
 				width: 0,
 				height: 900,
-				right: 0
-			}
+				right: 0,
+			},
 		});
 	});
 
-	test('EditorLayoutProvider 5', () => {
+	test("EditorLayoutProvider 5", () => {
 		doTest({
 			outerWidth: 900,
 			outerHeight: 900,
@@ -472,7 +482,7 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 			scrollbarArrowSize: 0,
 			verticalScrollbarHasArrows: false,
 			minimap: false,
-			minimapSide: 'right',
+			minimapSide: "right",
 			minimapRenderCharacters: true,
 			minimapMaxColumn: 150,
 			pixelRatio: 1,
@@ -519,12 +529,12 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 				top: 0,
 				width: 0,
 				height: 900,
-				right: 0
-			}
+				right: 0,
+			},
 		});
 	});
 
-	test('EditorLayoutProvider 6', () => {
+	test("EditorLayoutProvider 6", () => {
 		doTest({
 			outerWidth: 900,
 			outerHeight: 900,
@@ -541,7 +551,7 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 			scrollbarArrowSize: 0,
 			verticalScrollbarHasArrows: false,
 			minimap: false,
-			minimapSide: 'right',
+			minimapSide: "right",
 			minimapRenderCharacters: true,
 			minimapMaxColumn: 150,
 			pixelRatio: 1,
@@ -588,12 +598,12 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 				top: 0,
 				width: 0,
 				height: 900,
-				right: 0
-			}
+				right: 0,
+			},
 		});
 	});
 
-	test('EditorLayoutProvider 7', () => {
+	test("EditorLayoutProvider 7", () => {
 		doTest({
 			outerWidth: 900,
 			outerHeight: 900,
@@ -610,7 +620,7 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 			scrollbarArrowSize: 0,
 			verticalScrollbarHasArrows: false,
 			minimap: false,
-			minimapSide: 'right',
+			minimapSide: "right",
 			minimapRenderCharacters: true,
 			minimapMaxColumn: 150,
 			pixelRatio: 1,
@@ -657,12 +667,12 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 				top: 0,
 				width: 0,
 				height: 900,
-				right: 0
-			}
+				right: 0,
+			},
 		});
 	});
 
-	test('EditorLayoutProvider 8', () => {
+	test("EditorLayoutProvider 8", () => {
 		doTest({
 			outerWidth: 900,
 			outerHeight: 900,
@@ -679,7 +689,7 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 			scrollbarArrowSize: 0,
 			verticalScrollbarHasArrows: false,
 			minimap: false,
-			minimapSide: 'right',
+			minimapSide: "right",
 			minimapRenderCharacters: true,
 			minimapMaxColumn: 150,
 			pixelRatio: 1,
@@ -726,12 +736,12 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 				top: 0,
 				width: 0,
 				height: 900,
-				right: 0
-			}
+				right: 0,
+			},
 		});
 	});
 
-	test('EditorLayoutProvider 8 - rounds floats', () => {
+	test("EditorLayoutProvider 8 - rounds floats", () => {
 		doTest({
 			outerWidth: 900,
 			outerHeight: 900,
@@ -748,7 +758,7 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 			scrollbarArrowSize: 0,
 			verticalScrollbarHasArrows: false,
 			minimap: false,
-			minimapSide: 'right',
+			minimapSide: "right",
 			minimapRenderCharacters: true,
 			minimapMaxColumn: 150,
 			pixelRatio: 1,
@@ -795,12 +805,12 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 				top: 0,
 				width: 0,
 				height: 900,
-				right: 0
-			}
+				right: 0,
+			},
 		});
 	});
 
-	test('EditorLayoutProvider 9 - render minimap', () => {
+	test("EditorLayoutProvider 9 - render minimap", () => {
 		doTest({
 			outerWidth: 1000,
 			outerHeight: 800,
@@ -817,7 +827,7 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 			scrollbarArrowSize: 0,
 			verticalScrollbarHasArrows: false,
 			minimap: true,
-			minimapSide: 'right',
+			minimapSide: "right",
 			minimapRenderCharacters: true,
 			minimapMaxColumn: 150,
 			pixelRatio: 1,
@@ -864,12 +874,12 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 				top: 0,
 				width: 0,
 				height: 800,
-				right: 0
-			}
+				right: 0,
+			},
 		});
 	});
 
-	test('EditorLayoutProvider 9 - render minimap with pixelRatio = 2', () => {
+	test("EditorLayoutProvider 9 - render minimap with pixelRatio = 2", () => {
 		doTest({
 			outerWidth: 1000,
 			outerHeight: 800,
@@ -886,7 +896,7 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 			scrollbarArrowSize: 0,
 			verticalScrollbarHasArrows: false,
 			minimap: true,
-			minimapSide: 'right',
+			minimapSide: "right",
 			minimapRenderCharacters: true,
 			minimapMaxColumn: 150,
 			pixelRatio: 2,
@@ -933,12 +943,12 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 				top: 0,
 				width: 0,
 				height: 800,
-				right: 0
-			}
+				right: 0,
+			},
 		});
 	});
 
-	test('EditorLayoutProvider 9 - render minimap with pixelRatio = 4', () => {
+	test("EditorLayoutProvider 9 - render minimap with pixelRatio = 4", () => {
 		doTest({
 			outerWidth: 1000,
 			outerHeight: 800,
@@ -955,7 +965,7 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 			scrollbarArrowSize: 0,
 			verticalScrollbarHasArrows: false,
 			minimap: true,
-			minimapSide: 'right',
+			minimapSide: "right",
 			minimapRenderCharacters: true,
 			minimapMaxColumn: 150,
 			pixelRatio: 4,
@@ -1002,12 +1012,12 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 				top: 0,
 				width: 0,
 				height: 800,
-				right: 0
-			}
+				right: 0,
+			},
 		});
 	});
 
-	test('EditorLayoutProvider 10 - render minimap to left', () => {
+	test("EditorLayoutProvider 10 - render minimap to left", () => {
 		doTest({
 			outerWidth: 1000,
 			outerHeight: 800,
@@ -1024,7 +1034,7 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 			scrollbarArrowSize: 0,
 			verticalScrollbarHasArrows: false,
 			minimap: true,
-			minimapSide: 'left',
+			minimapSide: "left",
 			minimapRenderCharacters: true,
 			minimapMaxColumn: 150,
 			pixelRatio: 4,
@@ -1071,12 +1081,12 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 				top: 0,
 				width: 0,
 				height: 800,
-				right: 0
-			}
+				right: 0,
+			},
 		});
 	});
 
-	test('EditorLayoutProvider 11 - minimap mode cover without sampling', () => {
+	test("EditorLayoutProvider 11 - minimap mode cover without sampling", () => {
 		doTest({
 			outerWidth: 1000,
 			outerHeight: 800,
@@ -1094,10 +1104,10 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 			scrollbarArrowSize: 0,
 			verticalScrollbarHasArrows: false,
 			minimap: true,
-			minimapSide: 'right',
+			minimapSide: "right",
 			minimapRenderCharacters: true,
 			minimapMaxColumn: 150,
-			minimapSize: 'fill',
+			minimapSize: "fill",
 			pixelRatio: 2,
 		}, {
 			width: 1000,
@@ -1142,12 +1152,12 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 				top: 0,
 				width: 0,
 				height: 800,
-				right: 0
-			}
+				right: 0,
+			},
 		});
 	});
 
-	test('EditorLayoutProvider 12 - minimap mode cover with sampling', () => {
+	test("EditorLayoutProvider 12 - minimap mode cover with sampling", () => {
 		doTest({
 			outerWidth: 1000,
 			outerHeight: 800,
@@ -1165,10 +1175,10 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 			scrollbarArrowSize: 0,
 			verticalScrollbarHasArrows: false,
 			minimap: true,
-			minimapSide: 'right',
+			minimapSide: "right",
 			minimapRenderCharacters: true,
 			minimapMaxColumn: 150,
-			minimapSize: 'fill',
+			minimapSize: "fill",
 			pixelRatio: 2,
 		}, {
 			width: 1000,
@@ -1213,12 +1223,12 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 				top: 0,
 				width: 0,
 				height: 800,
-				right: 0
-			}
+				right: 0,
+			},
 		});
 	});
 
-	test('EditorLayoutProvider 13 - minimap mode contain without sampling', () => {
+	test("EditorLayoutProvider 13 - minimap mode contain without sampling", () => {
 		doTest({
 			outerWidth: 1000,
 			outerHeight: 800,
@@ -1236,10 +1246,10 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 			scrollbarArrowSize: 0,
 			verticalScrollbarHasArrows: false,
 			minimap: true,
-			minimapSide: 'right',
+			minimapSide: "right",
 			minimapRenderCharacters: true,
 			minimapMaxColumn: 150,
-			minimapSize: 'fit',
+			minimapSize: "fit",
 			pixelRatio: 2,
 		}, {
 			width: 1000,
@@ -1284,12 +1294,12 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 				top: 0,
 				width: 0,
 				height: 800,
-				right: 0
-			}
+				right: 0,
+			},
 		});
 	});
 
-	test('EditorLayoutProvider 14 - minimap mode contain with sampling', () => {
+	test("EditorLayoutProvider 14 - minimap mode contain with sampling", () => {
 		doTest({
 			outerWidth: 1000,
 			outerHeight: 800,
@@ -1307,10 +1317,10 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 			scrollbarArrowSize: 0,
 			verticalScrollbarHasArrows: false,
 			minimap: true,
-			minimapSide: 'right',
+			minimapSide: "right",
 			minimapRenderCharacters: true,
 			minimapMaxColumn: 150,
-			minimapSize: 'fit',
+			minimapSize: "fit",
 			pixelRatio: 2,
 		}, {
 			width: 1000,
@@ -1355,12 +1365,12 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 				top: 0,
 				width: 0,
 				height: 800,
-				right: 0
-			}
+				right: 0,
+			},
 		});
 	});
 
-	test('issue #31312: When wrapping, leave 2px for the cursor', () => {
+	test("issue #31312: When wrapping, leave 2px for the cursor", () => {
 		doTest({
 			outerWidth: 1201,
 			outerHeight: 422,
@@ -1377,10 +1387,10 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 			scrollbarArrowSize: 11,
 			verticalScrollbarHasArrows: false,
 			minimap: true,
-			minimapSide: 'right',
+			minimapSide: "right",
 			minimapRenderCharacters: true,
 			minimapMaxColumn: 120,
-			pixelRatio: 2
+			pixelRatio: 2,
 		}, {
 			width: 1201,
 			height: 422,
@@ -1424,8 +1434,8 @@ suite('Editor ViewLayout - EditorLayoutProvider', () => {
 				top: 0,
 				width: 14,
 				height: 422,
-				right: 0
-			}
+				right: 0,
+			},
 		});
 
 	});

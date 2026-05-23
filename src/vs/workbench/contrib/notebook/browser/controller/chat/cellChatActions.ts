@@ -3,28 +3,33 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Codicon } from '../../../../../../base/common/codicons.js';
-import { KeyChord, KeyCode, KeyMod } from '../../../../../../base/common/keyCodes.js';
-import { localize, localize2 } from '../../../../../../nls.js';
-import { MenuId, MenuRegistry, registerAction2 } from '../../../../../../platform/actions/common/actions.js';
-import { ICommandService } from '../../../../../../platform/commands/common/commands.js';
-import { IConfigurationService } from '../../../../../../platform/configuration/common/configuration.js';
-import { ContextKeyExpr } from '../../../../../../platform/contextkey/common/contextkey.js';
-import { InputFocusedContextKey } from '../../../../../../platform/contextkey/common/contextkeys.js';
-import { ServicesAccessor } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { KeybindingWeight } from '../../../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { CTX_INLINE_CHAT_REQUEST_IN_PROGRESS, CTX_INLINE_CHAT_VISIBLE } from '../../../../inlineChat/common/inlineChat.js';
-import { CTX_NOTEBOOK_CHAT_HAS_AGENT } from './notebookChatContext.js';
-import { INotebookActionContext, NotebookAction, getContextFromActiveEditor, getEditorFromArgsOrActivePane } from '../coreActions.js';
-import { insertNewCell } from '../insertCellActions.js';
-import { CellKind, NotebookSetting } from '../../../common/notebookCommon.js';
-import { NOTEBOOK_EDITOR_EDITABLE, NOTEBOOK_EDITOR_FOCUSED } from '../../../common/notebookContextKeys.js';
-import { Iterable } from '../../../../../../base/common/iterator.js';
-import { ICodeEditor } from '../../../../../../editor/browser/editorBrowser.js';
-import { IEditorService } from '../../../../../services/editor/common/editorService.js';
-import { ChatContextKeys } from '../../../../chat/common/actions/chatContextKeys.js';
-import { InlineChatController } from '../../../../inlineChat/browser/inlineChatController.js';
-import { EditorAction2 } from '../../../../../../editor/browser/editorExtensions.js';
+import { Codicon } from "../../../../../../base/common/codicons.js";
+import { KeyChord, KeyCode, KeyMod } from "../../../../../../base/common/keyCodes.js";
+import { localize, localize2 } from "../../../../../../nls.js";
+import { MenuId, MenuRegistry, registerAction2 } from "../../../../../../platform/actions/common/actions.js";
+import { ICommandService } from "../../../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { ContextKeyExpr } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { InputFocusedContextKey } from "../../../../../../platform/contextkey/common/contextkeys.js";
+import { ServicesAccessor } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingWeight } from "../../../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { CTX_INLINE_CHAT_REQUEST_IN_PROGRESS, CTX_INLINE_CHAT_VISIBLE } from "../../../../inlineChat/common/inlineChat.js";
+import { CTX_NOTEBOOK_CHAT_HAS_AGENT } from "./notebookChatContext.js";
+import {
+  INotebookActionContext,
+  NotebookAction,
+  getContextFromActiveEditor,
+  getEditorFromArgsOrActivePane,
+} from "../coreActions.js";
+import { insertNewCell } from "../insertCellActions.js";
+import { CellKind, NotebookSetting } from "../../../common/notebookCommon.js";
+import { NOTEBOOK_EDITOR_EDITABLE, NOTEBOOK_EDITOR_FOCUSED } from "../../../common/notebookContextKeys.js";
+import { Iterable } from "../../../../../../base/common/iterator.js";
+import { ICodeEditor } from "../../../../../../editor/browser/editorBrowser.js";
+import { IEditorService } from "../../../../../services/editor/common/editorService.js";
+import { ChatContextKeys } from "../../../../chat/common/actions/chatContextKeys.js";
+import { InlineChatController } from "../../../../inlineChat/browser/inlineChatController.js";
+import { EditorAction2 } from "../../../../../../editor/browser/editorExtensions.js";
 
 interface IInsertCellWithChatArgs extends INotebookActionContext {
 	input?: string;
@@ -36,17 +41,27 @@ async function startChat(accessor: ServicesAccessor, context: INotebookActionCon
 	const configurationService = accessor.get(IConfigurationService);
 	const commandService = accessor.get(ICommandService);
 
-	if (configurationService.getValue<boolean>(NotebookSetting.cellGenerate) || configurationService.getValue<boolean>(NotebookSetting.cellChat)) {
+	if (configurationService.getValue<boolean>(
+    NotebookSetting.cellGenerate,
+  ) || configurationService.getValue<boolean>(NotebookSetting.cellChat)) {
 		const activeCell = context.notebookEditor.getActiveCell();
-		const targetCell = activeCell?.getTextLength() === 0 && source !== 'insertToolbar' ? activeCell : (await insertNewCell(accessor, context, CellKind.Code, 'below', true));
+		const targetCell = activeCell?.getTextLength() === 0 && source !== "insertToolbar" ? activeCell : (await insertNewCell(
+      accessor,
+      context,
+      CellKind.Code,
+      "below",
+      true,
+    ));
 
 		if (targetCell) {
 			targetCell.enableAutoLanguageDetection();
 			await context.notebookEditor.revealFirstLineIfOutsideViewport(targetCell);
-			const codeEditor = context.notebookEditor.codeEditors.find(ce => ce[0] === targetCell)?.[1];
+			const codeEditor = context.notebookEditor.codeEditors.find(
+        ce => ce[0] === targetCell,
+      )?.[1];
 			if (codeEditor) {
 				codeEditor.focus();
-				commandService.executeCommand('inlineChat.start');
+				commandService.executeCommand("inlineChat.start");
 			}
 		}
 	}
@@ -56,34 +71,34 @@ registerAction2(class extends NotebookAction {
 	constructor() {
 		super(
 			{
-				id: 'notebook.cell.chat.start',
+				id: "notebook.cell.chat.start",
 				title: {
-					value: '$(sparkle) ' + localize('notebookActions.menu.insertCodeCellWithChat', "Generate"),
-					original: '$(sparkle) Generate',
+					value: "$(sparkle) " + localize("notebookActions.menu.insertCodeCellWithChat", "Generate"),
+					original: "$(sparkle) Generate",
 				},
-				tooltip: localize('notebookActions.menu.insertCodeCellWithChat.tooltip', "Start Chat to Generate Code"),
+				tooltip: localize("notebookActions.menu.insertCodeCellWithChat.tooltip", "Start Chat to Generate Code"),
 				metadata: {
-					description: localize('notebookActions.menu.insertCodeCellWithChat.tooltip', "Start Chat to Generate Code"),
+					description: localize("notebookActions.menu.insertCodeCellWithChat.tooltip", "Start Chat to Generate Code"),
 					args: [
 						{
-							name: 'args',
+							name: "args",
 							schema: {
-								type: 'object',
-								required: ['index'],
+								type: "object",
+								required: ["index"],
 								properties: {
-									'index': {
-										type: 'number'
+									"index": {
+										type: "number",
 									},
-									'input': {
-										type: 'string'
+									"input": {
+										type: "string",
 									},
-									'autoSend': {
-										type: 'boolean'
-									}
-								}
-							}
-						}
-					]
+									"autoSend": {
+										type: "boolean",
+									},
+								},
+							},
+						},
+					],
 				},
 				f1: false,
 				keybinding: {
@@ -94,8 +109,8 @@ registerAction2(class extends NotebookAction {
 						CTX_NOTEBOOK_CHAT_HAS_AGENT,
 						ContextKeyExpr.or(
 							ContextKeyExpr.equals(`config.${NotebookSetting.cellChat}`, true),
-							ContextKeyExpr.equals(`config.${NotebookSetting.cellGenerate}`, true)
-						)
+							ContextKeyExpr.equals(`config.${NotebookSetting.cellGenerate}`, true),
+						),
 					),
 					weight: KeybindingWeight.WorkbenchContrib,
 					primary: KeyMod.CtrlCmd | KeyCode.KeyI,
@@ -104,18 +119,18 @@ registerAction2(class extends NotebookAction {
 				menu: [
 					{
 						id: MenuId.NotebookCellBetween,
-						group: 'inline',
+						group: "inline",
 						order: -1,
 						when: ContextKeyExpr.and(
 							NOTEBOOK_EDITOR_EDITABLE.isEqualTo(true),
 							CTX_NOTEBOOK_CHAT_HAS_AGENT,
 							ContextKeyExpr.or(
 								ContextKeyExpr.equals(`config.${NotebookSetting.cellChat}`, true),
-								ContextKeyExpr.equals(`config.${NotebookSetting.cellGenerate}`, true)
-							)
-						)
-					}
-				]
+								ContextKeyExpr.equals(`config.${NotebookSetting.cellGenerate}`, true),
+							),
+						),
+					},
+				],
 			});
 	}
 
@@ -136,11 +151,11 @@ registerAction2(class extends NotebookAction {
 				cell: activeCell,
 				notebookEditor,
 				input: undefined,
-				autoSend: undefined
+				autoSend: undefined,
 			};
 		}
 
-		if (typeof firstArg !== 'object' || typeof firstArg.index !== 'number') {
+		if (typeof firstArg !== "object" || typeof firstArg.index !== "number") {
 			return undefined;
 		}
 
@@ -155,7 +170,7 @@ registerAction2(class extends NotebookAction {
 			cell,
 			notebookEditor,
 			input: firstArg.input,
-			autoSend: firstArg.autoSend
+			autoSend: firstArg.autoSend,
 		};
 	}
 
@@ -169,65 +184,65 @@ registerAction2(class extends NotebookAction {
 	constructor() {
 		super(
 			{
-				id: 'notebook.cell.chat.startAtTop',
+				id: "notebook.cell.chat.startAtTop",
 				title: {
-					value: '$(sparkle) ' + localize('notebookActions.menu.insertCodeCellWithChat', "Generate"),
-					original: '$(sparkle) Generate',
+					value: "$(sparkle) " + localize("notebookActions.menu.insertCodeCellWithChat", "Generate"),
+					original: "$(sparkle) Generate",
 				},
-				tooltip: localize('notebookActions.menu.insertCodeCellWithChat.tooltip', "Start Chat to Generate Code"),
+				tooltip: localize("notebookActions.menu.insertCodeCellWithChat.tooltip", "Start Chat to Generate Code"),
 				f1: false,
 				menu: [
 					{
 						id: MenuId.NotebookCellListTop,
-						group: 'inline',
+						group: "inline",
 						order: -1,
 						when: ContextKeyExpr.and(
 							NOTEBOOK_EDITOR_EDITABLE.isEqualTo(true),
 							CTX_NOTEBOOK_CHAT_HAS_AGENT,
 							ContextKeyExpr.or(
 								ContextKeyExpr.equals(`config.${NotebookSetting.cellChat}`, true),
-								ContextKeyExpr.equals(`config.${NotebookSetting.cellGenerate}`, true)
-							)
-						)
+								ContextKeyExpr.equals(`config.${NotebookSetting.cellGenerate}`, true),
+							),
+						),
 					},
-				]
+				],
 			});
 	}
 
 	async runWithContext(accessor: ServicesAccessor, context: INotebookActionContext) {
-		await startChat(accessor, context, 0, '', false);
+		await startChat(accessor, context, 0, "", false);
 	}
 });
 
 MenuRegistry.appendMenuItem(MenuId.NotebookToolbar, {
 	command: {
-		id: 'notebook.cell.chat.start',
+		id: "notebook.cell.chat.start",
 		icon: Codicon.sparkle,
-		title: localize('notebookActions.menu.insertCode.ontoolbar', "Generate"),
-		tooltip: localize('notebookActions.menu.insertCode.tooltip', "Start Chat to Generate Code")
+		title: localize("notebookActions.menu.insertCode.ontoolbar", "Generate"),
+		tooltip: localize("notebookActions.menu.insertCode.tooltip", "Start Chat to Generate Code"),
 	},
 	order: -10,
-	group: 'navigation/add',
+	group: "navigation/add",
 	when: ContextKeyExpr.and(
 		NOTEBOOK_EDITOR_EDITABLE.isEqualTo(true),
-		ContextKeyExpr.notEquals('config.notebook.insertToolbarLocation', 'betweenCells'),
-		ContextKeyExpr.notEquals('config.notebook.insertToolbarLocation', 'hidden'),
+		ContextKeyExpr.notEquals("config.notebook.insertToolbarLocation", "betweenCells"),
+		ContextKeyExpr.notEquals("config.notebook.insertToolbarLocation", "hidden"),
 		CTX_NOTEBOOK_CHAT_HAS_AGENT,
 		ContextKeyExpr.or(
 			ContextKeyExpr.equals(`config.${NotebookSetting.cellChat}`, true),
-			ContextKeyExpr.equals(`config.${NotebookSetting.cellGenerate}`, true)
-		)
-	)
+			ContextKeyExpr.equals(`config.${NotebookSetting.cellGenerate}`, true),
+		),
+	),
 });
 
 export class AcceptChangesAndRun extends EditorAction2 {
 
 	constructor() {
 		super({
-			id: 'notebook.inlineChat.acceptChangesAndRun',
-			title: localize2('notebook.apply1', "Accept and Run"),
-			shortTitle: localize('notebook.apply2', 'Accept & Run'),
-			tooltip: localize('notebook.apply3', 'Accept the changes and run the cell'),
+			id: "notebook.inlineChat.acceptChangesAndRun",
+			title: localize2("notebook.apply1", "Accept and Run"),
+			shortTitle: localize("notebook.apply2", "Accept & Run"),
+			tooltip: localize("notebook.apply3", "Accept the changes and run the cell"),
 			icon: Codicon.check,
 			f1: true,
 			precondition: ContextKeyExpr.and(
@@ -237,14 +252,14 @@ export class AcceptChangesAndRun extends EditorAction2 {
 			keybinding: undefined,
 			menu: [{
 				id: MenuId.ChatEditorInlineExecute,
-				group: '0_main',
+				group: "0_main",
 				order: 2,
 				when: ContextKeyExpr.and(
 					NOTEBOOK_EDITOR_EDITABLE.isEqualTo(true),
 					ChatContextKeys.inputHasText.toNegated(),
-					CTX_INLINE_CHAT_REQUEST_IN_PROGRESS.toNegated()
-				)
-			}]
+					CTX_INLINE_CHAT_REQUEST_IN_PROGRESS.toNegated(),
+				),
+			}],
 		});
 	}
 
@@ -256,7 +271,9 @@ export class AcceptChangesAndRun extends EditorAction2 {
 			return;
 		}
 
-		const matchedCell = editor.notebookEditor.codeEditors.find(e => e[1] === codeEditor);
+		const matchedCell = editor.notebookEditor.codeEditors.find(
+      e => e[1] === codeEditor,
+    );
 		const cell = matchedCell?.[0];
 
 		if (!cell) {

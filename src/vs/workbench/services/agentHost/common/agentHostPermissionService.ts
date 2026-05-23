@@ -3,27 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DeferredPromise } from '../../../../base/common/async.js';
-import { CancellationError } from '../../../../base/common/errors.js';
-import { Disposable, IDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { IObservable, derived, observableValue } from '../../../../base/common/observable.js';
-import { extUri } from '../../../../base/common/resources.js';
-import { URI } from '../../../../base/common/uri.js';
-import { generateUuid } from '../../../../base/common/uuid.js';
-import { ConfigurationTarget, IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { normalizeRemoteAgentHostAddress } from '../../../../platform/agentHost/common/agentHostUri.js';
+import { DeferredPromise } from "../../../../base/common/async.js";
+import { CancellationError } from "../../../../base/common/errors.js";
+import { Disposable, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { IObservable, derived, observableValue } from "../../../../base/common/observable.js";
+import { extUri } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { ConfigurationTarget, IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { normalizeRemoteAgentHostAddress } from "../../../../platform/agentHost/common/agentHostUri.js";
 import {
-	AgentHostAccessMode,
-	AgentHostPermissionMode,
-	AgentHostPermissionsSetting,
-	IAgentHostPermissionService,
-	IPendingResourceRequest,
-	AgentHostLocalFilePermissionsSettingId,
-} from '../../../../platform/agentHost/common/agentHostPermissionService.js';
-import { ResourceRequestParams } from '../../../../platform/agentHost/common/state/protocol/commands.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
+  AgentHostAccessMode,
+  AgentHostPermissionMode,
+  AgentHostPermissionsSetting,
+  IAgentHostPermissionService,
+  IPendingResourceRequest,
+  AgentHostLocalFilePermissionsSettingId,
+} from "../../../../platform/agentHost/common/agentHostPermissionService.js";
+import { ResourceRequestParams } from "../../../../platform/agentHost/common/state/protocol/commands.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
 
 interface IInternalPendingRequest extends IPendingResourceRequest {
 	readonly deferred: DeferredPromise<void>;
@@ -78,7 +78,10 @@ export class AgentHostPermissionService extends Disposable implements IAgentHost
 	private readonly _inMemoryGrants = new Map<string, IInMemoryGrant>();
 
 	/** All pending requests across every connection. */
-	private readonly _pending = observableValue<readonly IInternalPendingRequest[]>('agentHostPermissions.pending', []);
+	private readonly _pending = observableValue<readonly IInternalPendingRequest[]>(
+    "agentHostPermissions.pending",
+    [],
+  );
 
 	readonly allPending: IObservable<readonly IPendingResourceRequest[]> = this._pending;
 
@@ -103,17 +106,27 @@ export class AgentHostPermissionService extends Disposable implements IAgentHost
 		const wantsWrite = params.write === true;
 		const wantsRead = params.read === true || !wantsWrite;
 
-		if (wantsRead && !await this._isCovered(normalized, canonical, AgentHostPermissionMode.Read)) {
+		if (wantsRead && !await this._isCovered(
+      normalized,
+      canonical,
+      AgentHostPermissionMode.Read,
+    )) {
 			await this._enqueue(normalized, canonical, AgentHostPermissionMode.Read);
 		}
-		if (wantsWrite && !await this._isCovered(normalized, canonical, AgentHostPermissionMode.Write)) {
+		if (wantsWrite && !await this._isCovered(
+      normalized,
+      canonical,
+      AgentHostPermissionMode.Write,
+    )) {
 			await this._enqueue(normalized, canonical, AgentHostPermissionMode.Write);
 		}
 	}
 
 	pendingFor(address: string): IObservable<readonly IPendingResourceRequest[]> {
 		const normalized = normalizeRemoteAgentHostAddress(address);
-		return derived(reader => this._pending.read(reader).filter(r => r.address === normalized));
+		return derived(
+      reader => this._pending.read(reader).filter(r => r.address === normalized),
+    );
 	}
 
 	findPending(id: string): IPendingResourceRequest | undefined {
@@ -128,14 +141,14 @@ export class AgentHostPermissionService extends Disposable implements IAgentHost
 		// covers descendant requests that resolve through the symlink.
 		const lexical = extUri.normalizePath(uri);
 		const realpath = this._fileService.realpath(lexical).then(
-			real => real ?? lexical,
-			() => lexical,
-		);
+      real => real ?? lexical,
+      () => lexical,
+    );
 		this._inMemoryGrants.set(handle, {
-			address: normalizeRemoteAgentHostAddress(address),
-			realpath,
-			mode: AgentHostAccessMode.Read,
-		});
+      address: normalizeRemoteAgentHostAddress(address),
+      realpath,
+      mode: AgentHostAccessMode.Read,
+    });
 		return toDisposable(() => this._inMemoryGrants.delete(handle));
 	}
 
@@ -173,7 +186,9 @@ export class AgentHostPermissionService extends Disposable implements IAgentHost
 	 */
 	private async _canonicalize(uri: URI): Promise<URI> {
 		const normalized = extUri.normalizePath(uri);
-		const real = await this._fileService.realpath(normalized).catch(() => undefined);
+		const real = await this._fileService.realpath(normalized).catch(
+      () => undefined,
+    );
 		if (real) {
 			return real;
 		}
@@ -183,7 +198,9 @@ export class AgentHostPermissionService extends Disposable implements IAgentHost
 		if (extUri.isEqual(parent, normalized)) {
 			return normalized;
 		}
-		const realParent = await this._fileService.realpath(parent).catch(() => undefined);
+		const realParent = await this._fileService.realpath(parent).catch(
+      () => undefined,
+    );
 		return realParent
 			? extUri.joinPath(realParent, extUri.basename(normalized))
 			: normalized;
@@ -238,8 +255,8 @@ export class AgentHostPermissionService extends Disposable implements IAgentHost
 			uri: canonicalUri,
 			mode,
 			deferred,
-			allow: () => this._resolve(request, 'memory'),
-			allowAlways: () => this._resolve(request, 'persist'),
+			allow: () => this._resolve(request, "memory"),
+			allowAlways: () => this._resolve(request, "persist"),
 			deny: () => {
 				this._dropPending(request);
 				deferred.error(new CancellationError());
@@ -249,7 +266,7 @@ export class AgentHostPermissionService extends Disposable implements IAgentHost
 		return deferred.p;
 	}
 
-	private _resolve(request: IInternalPendingRequest, scope: 'memory' | 'persist'): void {
+	private _resolve(request: IInternalPendingRequest, scope: "memory" | "persist"): void {
 		const accessMode = request.mode === AgentHostPermissionMode.Write
 			? AgentHostAccessMode.ReadWrite
 			: AgentHostAccessMode.Read;
@@ -260,15 +277,20 @@ export class AgentHostPermissionService extends Disposable implements IAgentHost
 		// latency in the configuration service propagating the update.
 		// `request.uri` is already canonical (canonicalized in `request()`).
 		this._inMemoryGrants.set(generateUuid(), {
-			address: request.address,
-			realpath: Promise.resolve(request.uri),
-			mode: accessMode,
-		});
+      address: request.address,
+      realpath: Promise.resolve(request.uri),
+      mode: accessMode,
+    });
 
-		if (scope === 'persist') {
-			void this._persistGrant(request.address, request.uri, request.mode).catch(err => {
-				this._logService.warn('[AgentHostPermissionService] Failed to persist grant', err);
-			});
+		if (scope === "persist") {
+			void this._persistGrant(request.address, request.uri, request.mode).catch(
+        err => {
+          this._logService.warn(
+            "[AgentHostPermissionService] Failed to persist grant",
+            err,
+          );
+        },
+      );
 		}
 
 		this._dropPending(request);
@@ -314,7 +336,9 @@ export class AgentHostPermissionService extends Disposable implements IAgentHost
 		}
 
 		const { target, value } = this._inspectScopedSetting();
-		const forAddress: Record<string, AgentHostAccessMode> = { ...(value[address] ?? {}) };
+		const forAddress: Record<string, AgentHostAccessMode> = {
+      ...(value[address] ?? {}),
+    };
 		const uriKey = uri.toString();
 		if (forAddress[uriKey] === AgentHostAccessMode.ReadWrite) {
 			return; // Already at the strongest level.
@@ -322,10 +346,10 @@ export class AgentHostPermissionService extends Disposable implements IAgentHost
 		forAddress[uriKey] = requested;
 
 		await this._configurationService.updateValue(
-			AgentHostLocalFilePermissionsSettingId,
-			{ ...value, [address]: forAddress },
-			target,
-		);
+      AgentHostLocalFilePermissionsSettingId,
+      { ...value, [address]: forAddress },
+      target,
+    );
 	}
 
 	/**
@@ -336,15 +360,26 @@ export class AgentHostPermissionService extends Disposable implements IAgentHost
 	 * fresh writes default to APPLICATION.
 	 */
 	private _inspectScopedSetting(): { target: ConfigurationTarget; value: AgentHostPermissionsSetting } {
-		const inspected = this._configurationService.inspect<AgentHostPermissionsSetting>(AgentHostLocalFilePermissionsSettingId);
+		const inspected = this._configurationService.inspect<AgentHostPermissionsSetting>(
+      AgentHostLocalFilePermissionsSettingId,
+    );
 		if (inspected.applicationValue !== undefined) {
-			return { target: ConfigurationTarget.APPLICATION, value: inspected.applicationValue };
+			return {
+        target: ConfigurationTarget.APPLICATION,
+        value: inspected.applicationValue,
+      };
 		}
 		if (inspected.userLocalValue !== undefined) {
-			return { target: ConfigurationTarget.USER_LOCAL, value: inspected.userLocalValue };
+			return {
+        target: ConfigurationTarget.USER_LOCAL,
+        value: inspected.userLocalValue,
+      };
 		}
 		if (inspected.userRemoteValue !== undefined) {
-			return { target: ConfigurationTarget.USER_REMOTE, value: inspected.userRemoteValue };
+			return {
+        target: ConfigurationTarget.USER_REMOTE,
+        value: inspected.userRemoteValue,
+      };
 		}
 		if (inspected.userValue !== undefined) {
 			return { target: ConfigurationTarget.USER, value: inspected.userValue };
@@ -353,4 +388,8 @@ export class AgentHostPermissionService extends Disposable implements IAgentHost
 	}
 }
 
-registerSingleton(IAgentHostPermissionService, AgentHostPermissionService, InstantiationType.Delayed);
+registerSingleton(
+  IAgentHostPermissionService,
+  AgentHostPermissionService,
+  InstantiationType.Delayed,
+);

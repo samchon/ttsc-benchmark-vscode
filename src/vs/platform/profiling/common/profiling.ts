@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { basename, isAbsolute, join } from '../../../base/common/path.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
+import { basename, isAbsolute, join } from "../../../base/common/path.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
 
 export interface IV8Profile {
 	nodes: IV8ProfileNode[];
@@ -31,7 +31,9 @@ export interface IV8CallFrame {
 	columnNumber: number;
 }
 
-export const IV8InspectProfilingService = createDecorator<IV8InspectProfilingService>('IV8InspectProfilingService');
+export const IV8InspectProfilingService = createDecorator<IV8InspectProfilingService>(
+  "IV8InspectProfilingService",
+);
 
 export interface IV8InspectProfilingService {
 
@@ -49,7 +51,7 @@ export namespace Utils {
 		return Boolean(profile.samples && profile.timeDeltas);
 	}
 
-	export function rewriteAbsolutePaths(profile: IV8Profile, replace: string = 'noAbsolutePaths') {
+	export function rewriteAbsolutePaths(profile: IV8Profile, replace: string = "noAbsolutePaths") {
 		for (const node of profile.nodes) {
 			if (node.callFrame && node.callFrame.url) {
 				if (isAbsolute(node.callFrame.url) || /^\w[\w\d+.-]*:\/\/\/?/.test(node.callFrame.url)) {

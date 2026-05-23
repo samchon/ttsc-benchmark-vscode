@@ -3,9 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IpcMainEvent, Menu, MenuItem } from 'electron';
-import { validatedIpcMain } from '../../ipc/electron-main/ipcMain.js';
-import { CONTEXT_MENU_CHANNEL, CONTEXT_MENU_CLOSE_CHANNEL, IPopupOptions, ISerializableContextMenuItem } from '../common/contextmenu.js';
+import { IpcMainEvent, Menu, MenuItem } from "electron";
+import { validatedIpcMain } from "../../ipc/electron-main/ipcMain.js";
+import {
+  CONTEXT_MENU_CHANNEL,
+  CONTEXT_MENU_CLOSE_CHANNEL,
+  IPopupOptions,
+  ISerializableContextMenuItem,
+} from "../common/contextmenu.js";
 
 export function registerContextMenuListener(): void {
 	validatedIpcMain.on(CONTEXT_MENU_CHANNEL, (event: IpcMainEvent, contextMenuId: number, items: ISerializableContextMenuItem[], onClickChannel: string, options?: IPopupOptions) => {
@@ -22,7 +27,7 @@ export function registerContextMenuListener(): void {
 				if (menu) {
 					event.sender.send(CONTEXT_MENU_CLOSE_CHANNEL, contextMenuId);
 				}
-			}
+			},
 		});
 	});
 }
@@ -34,7 +39,7 @@ function createMenu(event: IpcMainEvent, onClickChannel: string, items: ISeriali
 		let menuitem: MenuItem;
 
 		// Separator
-		if (item.type === 'separator') {
+		if (item.type === "separator") {
 			menuitem = new MenuItem({
 				type: item.type,
 			});
@@ -44,7 +49,7 @@ function createMenu(event: IpcMainEvent, onClickChannel: string, items: ISeriali
 		else if (Array.isArray(item.submenu)) {
 			menuitem = new MenuItem({
 				submenu: createMenu(event, onClickChannel, item.submenu),
-				label: item.label
+				label: item.label,
 			});
 		}
 
@@ -57,7 +62,7 @@ function createMenu(event: IpcMainEvent, onClickChannel: string, items: ISeriali
 				checked: item.checked,
 				enabled: item.enabled,
 				visible: item.visible,
-				click: (menuItem, win, contextmenuEvent) => event.sender.send(onClickChannel, item.id, contextmenuEvent)
+				click: (menuItem, win, contextmenuEvent) => event.sender.send(onClickChannel, item.id, contextmenuEvent),
 			});
 		}
 

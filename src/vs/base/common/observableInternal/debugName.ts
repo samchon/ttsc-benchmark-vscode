@@ -69,12 +69,12 @@ function computeDebugName(self: object, data: DebugNameData): string | undefined
 		return cached;
 	}
 
-	const ownerStr = data.owner ? formatOwner(data.owner) + `.` : '';
+	const ownerStr = data.owner ? formatOwner(data.owner) + `.` : "";
 
 	let result: string | undefined;
 	const debugNameSource = data.debugNameSource;
 	if (debugNameSource !== undefined) {
-		if (typeof debugNameSource === 'function') {
+		if (typeof debugNameSource === "function") {
 			result = debugNameSource();
 			if (result !== undefined) {
 				return ownerStr + result;
@@ -118,7 +118,7 @@ function formatOwner(owner: object): string {
 	if (id) {
 		return id;
 	}
-	const className = getClassName(owner) ?? 'Object';
+	const className = getClassName(owner) ?? "Object";
 	let count = countPerClassName.get(className) ?? 0;
 	count++;
 	countPerClassName.set(className, count);
@@ -130,7 +130,7 @@ function formatOwner(owner: object): string {
 export function getClassName(obj: object): string | undefined {
 	const ctor = obj.constructor;
 	if (ctor) {
-		if (ctor.name === 'Object') {
+		if (ctor.name === "Object") {
 			return undefined;
 		}
 		return ctor.name;

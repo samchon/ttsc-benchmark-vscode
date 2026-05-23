@@ -3,25 +3,36 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as nls from '../../../../nls.js';
-import { isObject } from '../../../../base/common/types.js';
-import { IJSONSchema, IJSONSchemaMap, IJSONSchemaSnippet } from '../../../../base/common/jsonSchema.js';
-import { IWorkspaceFolder } from '../../../../platform/workspace/common/workspace.js';
-import { IConfig, IDebuggerContribution, IDebugAdapter, IDebugger, IDebugSession, IAdapterManager, IDebugService, debuggerDisabledMessage, IDebuggerMetadata, DebugConfigurationProviderTriggerKind } from './debug.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IConfigurationResolverService } from '../../../services/configurationResolver/common/configurationResolver.js';
-import * as ConfigurationResolverUtils from '../../../services/configurationResolver/common/configurationResolverUtils.js';
-import { ITextResourcePropertiesService } from '../../../../editor/common/services/textResourceConfiguration.js';
-import { URI } from '../../../../base/common/uri.js';
-import { Schemas } from '../../../../base/common/network.js';
-import { isDebuggerMainContribution } from './debugUtils.js';
-import { IExtensionDescription } from '../../../../platform/extensions/common/extensions.js';
-import { ITelemetryEndpoint } from '../../../../platform/telemetry/common/telemetry.js';
-import { cleanRemoteAuthority } from '../../../../platform/telemetry/common/telemetryUtils.js';
-import { IWorkbenchEnvironmentService } from '../../../services/environment/common/environmentService.js';
-import { ContextKeyExpr, ContextKeyExpression, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { filter } from '../../../../base/common/objects.js';
-import { IProductService } from '../../../../platform/product/common/productService.js';
+import * as nls from "../../../../nls.js";
+import { isObject } from "../../../../base/common/types.js";
+import { IJSONSchema, IJSONSchemaMap, IJSONSchemaSnippet } from "../../../../base/common/jsonSchema.js";
+import { IWorkspaceFolder } from "../../../../platform/workspace/common/workspace.js";
+import {
+  IConfig,
+  IDebuggerContribution,
+  IDebugAdapter,
+  IDebugger,
+  IDebugSession,
+  IAdapterManager,
+  IDebugService,
+  debuggerDisabledMessage,
+  IDebuggerMetadata,
+  DebugConfigurationProviderTriggerKind,
+} from "./debug.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IConfigurationResolverService } from "../../../services/configurationResolver/common/configurationResolver.js";
+import * as ConfigurationResolverUtils from "../../../services/configurationResolver/common/configurationResolverUtils.js";
+import { ITextResourcePropertiesService } from "../../../../editor/common/services/textResourceConfiguration.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { isDebuggerMainContribution } from "./debugUtils.js";
+import { IExtensionDescription } from "../../../../platform/extensions/common/extensions.js";
+import { ITelemetryEndpoint } from "../../../../platform/telemetry/common/telemetry.js";
+import { cleanRemoteAuthority } from "../../../../platform/telemetry/common/telemetryUtils.js";
+import { IWorkbenchEnvironmentService } from "../../../services/environment/common/environmentService.js";
+import { ContextKeyExpr, ContextKeyExpression, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { filter } from "../../../../base/common/objects.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
 
 export class Debugger implements IDebugger, IDebuggerMetadata {
 
@@ -47,8 +58,12 @@ export class Debugger implements IDebugger, IDebuggerMetadata {
 		this.debuggerContribution = { type: dbgContribution.type };
 		this.merge(dbgContribution, extensionDescription);
 
-		this.debuggerWhen = typeof this.debuggerContribution.when === 'string' ? ContextKeyExpr.deserialize(this.debuggerContribution.when) : undefined;
-		this.debuggerHiddenWhen = typeof this.debuggerContribution.hiddenWhen === 'string' ? ContextKeyExpr.deserialize(this.debuggerContribution.hiddenWhen) : undefined;
+		this.debuggerWhen = typeof this.debuggerContribution.when === "string" ? ContextKeyExpr.deserialize(
+      this.debuggerContribution.when,
+    ) : undefined;
+		this.debuggerHiddenWhen = typeof this.debuggerContribution.hiddenWhen === "string" ? ContextKeyExpr.deserialize(
+      this.debuggerContribution.hiddenWhen,
+    ) : undefined;
 	}
 
 	merge(otherDebuggerContribution: IDebuggerContribution, extensionDescription: IExtensionDescription): void {
@@ -65,13 +80,13 @@ export class Debugger implements IDebugger, IDebuggerMetadata {
 
 			if (isObject(source)) {
 				Object.keys(source).forEach(key => {
-					if (key !== '__proto__') {
+					if (key !== "__proto__") {
 						if (isObject(destination[key]) && isObject(source[key])) {
 							mixin(destination[key], source[key], overwrite, level + 1);
 						} else {
 							if (key in destination) {
 								if (overwrite) {
-									if (level === 0 && key === 'type') {
+									if (level === 0 && key === "type") {
 										// don't merge the 'type' property
 									} else {
 										destination[key] = source[key];
@@ -95,7 +110,11 @@ export class Debugger implements IDebugger, IDebuggerMetadata {
 			this.mergedExtensionDescriptions.push(extensionDescription);
 
 			// merge new debugger contribution into existing contributions (and don't overwrite values in built-in extensions)
-			mixin(this.debuggerContribution, otherDebuggerContribution, extensionDescription.isBuiltin);
+			mixin(
+        this.debuggerContribution,
+        otherDebuggerContribution,
+        extensionDescription.isBuiltin,
+      );
 
 			// remember the extension that is considered the "main" debugger contribution
 			if (isDebuggerMainContribution(otherDebuggerContribution)) {
@@ -105,22 +124,48 @@ export class Debugger implements IDebugger, IDebuggerMetadata {
 	}
 
 	async startDebugging(configuration: IConfig, parentSessionId: string): Promise<boolean> {
-		const parentSession = this.debugService.getModel().getSession(parentSessionId);
-		return await this.debugService.startDebugging(undefined, configuration, { parentSession }, undefined);
+		const parentSession = this.debugService.getModel().getSession(
+      parentSessionId,
+    );
+		return await this.debugService.startDebugging(
+      undefined,
+      configuration,
+      { parentSession },
+      undefined,
+    );
 	}
 
 	async createDebugAdapter(session: IDebugSession): Promise<IDebugAdapter> {
-		await this.adapterManager.activateDebuggers('onDebugAdapterProtocolTracker', this.type);
+		await this.adapterManager.activateDebuggers(
+      "onDebugAdapterProtocolTracker",
+      this.type,
+    );
 		const da = this.adapterManager.createDebugAdapter(session);
 		if (da) {
 			return Promise.resolve(da);
 		}
-		throw new Error(nls.localize('cannot.find.da', "Cannot find debug adapter for type '{0}'.", this.type));
+		throw new Error(
+      nls.localize(
+        "cannot.find.da",
+        "Cannot find debug adapter for type '{0}'.",
+        this.type,
+      ),
+    );
 	}
 
 	async substituteVariables(folder: IWorkspaceFolder | undefined, config: IConfig): Promise<IConfig | undefined> {
-		const substitutedConfig = await this.adapterManager.substituteVariables(this.type, folder, config);
-		return await this.configurationResolverService.resolveWithInteractionReplace(folder, substitutedConfig, 'launch', this.variables, substitutedConfig.__configurationTarget);
+		const substitutedConfig = await this.adapterManager.substituteVariables(
+      this.type,
+      folder,
+      config,
+    );
+		return await this.configurationResolverService.resolveWithInteractionReplace(
+      folder,
+      substitutedConfig,
+      "launch",
+      this.variables,
+      substitutedConfig.__configurationTarget,
+    );
 	}
 
 	runInTerminal(args: DebugProtocol.RunInTerminalRequestArguments, sessionId: string): Promise<number | undefined> {
@@ -156,7 +201,9 @@ export class Debugger implements IDebugger, IDebuggerMetadata {
 	}
 
 	get enabled() {
-		return !this.debuggerWhen || this.contextKeyService.contextMatchesRules(this.debuggerWhen);
+		return !this.debuggerWhen || this.contextKeyService.contextMatchesRules(
+      this.debuggerWhen,
+    );
 	}
 
 	get isHiddenFromDropdown() {
@@ -179,11 +226,16 @@ export class Debugger implements IDebugger, IDebuggerMetadata {
 	}
 
 	hasDynamicConfigurationProviders(): boolean {
-		return this.debugService.getConfigurationManager().hasDebugConfigurationProvider(this.type, DebugConfigurationProviderTriggerKind.Dynamic);
+		return this.debugService.getConfigurationManager().hasDebugConfigurationProvider(
+      this.type,
+      DebugConfigurationProviderTriggerKind.Dynamic,
+    );
 	}
 
 	hasConfigurationProvider(): boolean {
-		return this.debugService.getConfigurationManager().hasDebugConfigurationProvider(this.type);
+		return this.debugService.getConfigurationManager().hasDebugConfigurationProvider(
+      this.type,
+    );
 	}
 
 	getInitialConfigurationContent(initialConfigs?: IConfig[]): Promise<string> {
@@ -193,26 +245,41 @@ export class Debugger implements IDebugger, IDebuggerMetadata {
 			initialConfigurations = initialConfigurations.concat(initialConfigs);
 		}
 
-		const eol = this.resourcePropertiesService.getEOL(URI.from({ scheme: Schemas.untitled, path: '1' })) === '\r\n' ? '\r\n' : '\n';
-		const configs = JSON.stringify(initialConfigurations, null, '\t').split('\n').map(line => '\t' + line).join(eol).trim();
-		const comment1 = nls.localize('launch.config.comment1', "Use IntelliSense to learn about possible attributes.");
-		const comment2 = nls.localize('launch.config.comment2', "Hover to view descriptions of existing attributes.");
-		const comment3 = nls.localize('launch.config.comment3', "For more information, visit: {0}", 'https://go.microsoft.com/fwlink/?linkid=830387');
+		const eol = this.resourcePropertiesService.getEOL(
+      URI.from({ scheme: Schemas.untitled, path: "1" }),
+    ) === "\r\n" ? "\r\n" : "\n";
+		const configs = JSON.stringify(initialConfigurations, null, "\t").split("\n").map(line => "\t" + line).join(eol).trim();
+		const comment1 = nls.localize(
+      "launch.config.comment1",
+      "Use IntelliSense to learn about possible attributes.",
+    );
+		const comment2 = nls.localize(
+      "launch.config.comment2",
+      "Hover to view descriptions of existing attributes.",
+    );
+		const comment3 = nls.localize(
+      "launch.config.comment3",
+      "For more information, visit: {0}",
+      "https://go.microsoft.com/fwlink/?linkid=830387",
+    );
 
 		let content = [
-			'{',
+			"{",
 			`\t// ${comment1}`,
 			`\t// ${comment2}`,
 			`\t// ${comment3}`,
 			`\t"version": "0.2.0",`,
 			`\t"configurations": ${configs}`,
-			'}'
+			"}",
 		].join(eol);
 
 		// fix formatting
 		const editorConfig = this.configurationService.getValue<any>();
 		if (editorConfig.editor && editorConfig.editor.insertSpaces) {
-			content = content.replace(new RegExp('\t', 'g'), ' '.repeat(editorConfig.editor.tabSize));
+			content = content.replace(
+        new RegExp("\t", "g"),
+        " ".repeat(editorConfig.editor.tabSize),
+      );
 		}
 
 		return Promise.resolve(content);
@@ -228,12 +295,15 @@ export class Debugger implements IDebugger, IDebuggerMetadata {
 			return undefined;
 		}
 
-		const sendErrorTelemtry = cleanRemoteAuthority(this.environmentService.remoteAuthority, this.productService) !== 'other';
+		const sendErrorTelemtry = cleanRemoteAuthority(
+      this.environmentService.remoteAuthority,
+      this.productService,
+    ) !== "other";
 		return {
-			id: `${this.getMainExtensionDescriptor().publisher}.${this.type}`,
-			aiKey,
-			sendErrorTelemetry: sendErrorTelemtry
-		};
+      id: `${this.getMainExtensionDescriptor().publisher}.${this.type}`,
+      aiKey,
+      sendErrorTelemetry: sendErrorTelemtry,
+    };
 	}
 
 	getSchemaAttributes(definitions: IJSONSchemaMap): IJSONSchema[] | null {
@@ -246,31 +316,31 @@ export class Debugger implements IDebugger, IDebuggerMetadata {
 		return Object.entries(this.debuggerContribution.configurationAttributes).map(([request, attributes]) => {
 			const definitionId = `${this.type}:${request}`;
 			const platformSpecificDefinitionId = `${this.type}:${request}:platform`;
-			const defaultRequired = ['name', 'type', 'request'];
+			const defaultRequired = ["name", "type", "request"];
 			attributes.required = attributes.required && attributes.required.length ? defaultRequired.concat(attributes.required) : defaultRequired;
 			attributes.additionalProperties = false;
-			attributes.type = 'object';
+			attributes.type = "object";
 			if (!attributes.properties) {
 				attributes.properties = {};
 			}
 			const properties = attributes.properties;
-			properties['type'] = {
+			properties["type"] = {
 				enum: [this.type],
 				enumDescriptions: [this.label],
-				description: nls.localize('debugType', "Type of configuration."),
-				pattern: '^(?!node2)',
+				description: nls.localize("debugType", "Type of configuration."),
+				pattern: "^(?!node2)",
 				deprecationMessage: this.debuggerContribution.deprecated || (this.enabled ? undefined : debuggerDisabledMessage(this.type)),
 				doNotSuggest: !!this.debuggerContribution.deprecated,
-				errorMessage: nls.localize('debugTypeNotRecognised', "The debug type is not recognized. Make sure that you have a corresponding debug extension installed and that it is enabled."),
-				patternErrorMessage: nls.localize('node2NotSupported', "\"node2\" is no longer supported, use \"node\" instead and set the \"protocol\" attribute to \"inspector\".")
+				errorMessage: nls.localize("debugTypeNotRecognised", "The debug type is not recognized. Make sure that you have a corresponding debug extension installed and that it is enabled."),
+				patternErrorMessage: nls.localize("node2NotSupported", "\"node2\" is no longer supported, use \"node\" instead and set the \"protocol\" attribute to \"inspector\"."),
 			};
-			properties['request'] = {
+			properties["request"] = {
 				enum: [request],
-				description: nls.localize('debugRequest', "Request type of configuration. Can be \"launch\" or \"attach\"."),
+				description: nls.localize("debugRequest", "Request type of configuration. Can be \"launch\" or \"attach\"."),
 			};
-			for (const prop in definitions['common'].properties) {
+			for (const prop in definitions["common"].properties) {
 				properties[prop] = {
-					$ref: `#/definitions/common/properties/${prop}`
+					$ref: `#/definitions/common/properties/${prop}`,
 				};
 			}
 			Object.keys(properties).forEach(name => {
@@ -280,9 +350,9 @@ export class Debugger implements IDebugger, IDebuggerMetadata {
 
 			definitions[definitionId] = { ...attributes };
 			definitions[platformSpecificDefinitionId] = {
-				type: 'object',
+				type: "object",
 				additionalProperties: false,
-				properties: filter(properties, key => key !== 'type' && key !== 'request' && key !== 'name')
+				properties: filter(properties, key => key !== "type" && key !== "request" && key !== "name"),
 			};
 
 			// Don't add the OS props to the real attributes object so they don't show up in 'definitions'
@@ -292,17 +362,17 @@ export class Debugger implements IDebugger, IDebuggerMetadata {
 				...{
 					windows: {
 						$ref: `#/definitions/${platformSpecificDefinitionId}`,
-						description: nls.localize('debugWindowsConfiguration', "Windows specific launch configuration attributes."),
+						description: nls.localize("debugWindowsConfiguration", "Windows specific launch configuration attributes."),
 					},
 					osx: {
 						$ref: `#/definitions/${platformSpecificDefinitionId}`,
-						description: nls.localize('debugOSXConfiguration', "OS X specific launch configuration attributes."),
+						description: nls.localize("debugOSXConfiguration", "OS X specific launch configuration attributes."),
 					},
 					linux: {
 						$ref: `#/definitions/${platformSpecificDefinitionId}`,
-						description: nls.localize('debugLinuxConfiguration', "Linux specific launch configuration attributes."),
-					}
-				}
+						description: nls.localize("debugLinuxConfiguration", "Linux specific launch configuration attributes."),
+					},
+				},
 			};
 
 			return attributesCopy;

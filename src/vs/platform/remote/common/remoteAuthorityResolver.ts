@@ -3,12 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ErrorNoTelemetry } from '../../../base/common/errors.js';
-import { Event } from '../../../base/common/event.js';
-import { URI } from '../../../base/common/uri.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
+import { ErrorNoTelemetry } from "../../../base/common/errors.js";
+import { Event } from "../../../base/common/event.js";
+import { URI } from "../../../base/common/uri.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
 
-export const IRemoteAuthorityResolverService = createDecorator<IRemoteAuthorityResolverService>('remoteAuthorityResolverService');
+export const IRemoteAuthorityResolverService = createDecorator<IRemoteAuthorityResolverService>(
+  "remoteAuthorityResolverService",
+);
 
 export const enum RemoteConnectionType {
 	WebSocket,
@@ -19,7 +21,7 @@ export class ManagedRemoteConnection {
 	public readonly type = RemoteConnectionType.Managed;
 
 	constructor(
-		public readonly id: number
+		public readonly id: number,
 	) { }
 
 	public toString(): string {
@@ -89,11 +91,11 @@ export interface IRemoteConnectionData {
 }
 
 export enum RemoteAuthorityResolverErrorCode {
-	Unknown = 'Unknown',
-	NotAvailable = 'NotAvailable',
-	TemporarilyNotAvailable = 'TemporarilyNotAvailable',
-	NoResolverFound = 'NoResolverFound',
-	InvalidAuthority = 'InvalidAuthority'
+	Unknown = "Unknown",
+	NotAvailable = "NotAvailable",
+	TemporarilyNotAvailable = "TemporarilyNotAvailable",
+	NoResolverFound = "NoResolverFound",
+	InvalidAuthority = "InvalidAuthority"
 }
 
 export class RemoteAuthorityResolverError extends ErrorNoTelemetry {
@@ -164,7 +166,7 @@ export interface IRemoteAuthorityResolverService {
 }
 
 export function getRemoteAuthorityPrefix(remoteAuthority: string): string {
-	const plusIndex = remoteAuthority.indexOf('+');
+	const plusIndex = remoteAuthority.indexOf("+");
 	if (plusIndex === -1) {
 		return remoteAuthority;
 	}

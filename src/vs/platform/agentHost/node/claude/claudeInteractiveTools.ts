@@ -3,10 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../../../nls.js';
-import { ConfirmationOptionKind, SessionInputAnswerState, SessionInputAnswerValueKind, SessionInputQuestionKind, ToolCallStatus, type SessionInputOption, type SessionInputQuestion, type ToolCallPendingConfirmationState } from '../../common/state/protocol/state.js';
-import type { SessionInputAnswer } from '../../common/state/sessionState.js';
-import { getClaudeToolDisplayName } from './claudeToolDisplay.js';
+import { localize } from "../../../../nls.js";
+import {
+  ConfirmationOptionKind,
+  SessionInputAnswerState,
+  SessionInputAnswerValueKind,
+  SessionInputQuestionKind,
+  ToolCallStatus,
+  type SessionInputOption,
+  type SessionInputQuestion,
+  type ToolCallPendingConfirmationState,
+} from "../../common/state/protocol/state.js";
+import type { SessionInputAnswer } from "../../common/state/sessionState.js";
+import { getClaudeToolDisplayName } from "./claudeToolDisplay.js";
 
 /**
  * Pure projections between the Claude SDK's interactive built-in tool
@@ -30,18 +39,18 @@ import { getClaudeToolDisplayName } from './claudeToolDisplay.js';
  * `exitPlanModeHandler.ts`.
  */
 export function buildExitPlanModeConfirmationState(input: Record<string, unknown>, toolUseID: string): ToolCallPendingConfirmationState {
-	const plan = typeof input.plan === 'string' ? input.plan : '';
+	const plan = typeof input.plan === "string" ? input.plan : "";
 	return {
 		status: ToolCallStatus.PendingConfirmation,
 		toolCallId: toolUseID,
-		toolName: 'ExitPlanMode',
-		displayName: getClaudeToolDisplayName('ExitPlanMode'),
+		toolName: "ExitPlanMode",
+		displayName: getClaudeToolDisplayName("ExitPlanMode"),
 		invocationMessage: { markdown: plan },
 		toolInput: JSON.stringify(input),
-		confirmationTitle: localize('claude.exitPlanMode.title', "Ready to code?"),
+		confirmationTitle: localize("claude.exitPlanMode.title", "Ready to code?"),
 		options: [
-			{ id: 'approve', label: localize('claude.exitPlanMode.approve', "Approve"), kind: ConfirmationOptionKind.Approve },
-			{ id: 'deny', label: localize('claude.exitPlanMode.deny', "Deny"), kind: ConfirmationOptionKind.Deny },
+			{ id: "approve", label: localize("claude.exitPlanMode.approve", "Approve"), kind: ConfirmationOptionKind.Approve },
+			{ id: "deny", label: localize("claude.exitPlanMode.deny", "Deny"), kind: ConfirmationOptionKind.Deny },
 		],
 	};
 }
@@ -151,7 +160,7 @@ export function flattenAskUserAnswers(askInput: ParsedAskUserQuestionInput, answ
 			parts.push(value.value);
 		}
 		if (parts.length > 0) {
-			result[q.question] = parts.join(', ');
+			result[q.question] = parts.join(", ");
 		}
 	}
 	return result;

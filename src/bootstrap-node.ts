@@ -3,22 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as path from 'node:path';
-import * as fs from 'node:fs';
-import { createRequire } from 'node:module';
-import type { IProductConfiguration } from './vs/base/common/product.js';
+import * as path from "node:path";
+import * as fs from "node:fs";
+import { createRequire } from "node:module";
+import type { IProductConfiguration } from "./vs/base/common/product.js";
 
 const require = createRequire(import.meta.url);
-const isWindows = process.platform === 'win32';
+const isWindows = process.platform === "win32";
 
 // increase number of stack frames(from 10, https://github.com/v8/v8/wiki/Stack-Trace-API)
 Error.stackTraceLimit = 100;
 
-if (!process.env['VSCODE_HANDLES_SIGPIPE']) {
+if (!process.env["VSCODE_HANDLES_SIGPIPE"]) {
 	// Workaround for Electron not installing a handler to ignore SIGPIPE
 	// (https://github.com/electron/electron/issues/13254)
 	let didLogAboutSIGPIPE = false;
-	process.on('SIGPIPE', () => {
+	process.on("SIGPIPE", () => {
 		// See https://github.com/microsoft/vscode-remote-release/issues/6543
 		// In certain situations, the console itself can be in a broken pipe state
 		// so logging SIGPIPE to the console will cause an infinite async loop
@@ -39,12 +39,12 @@ function setupCurrentWorkingDirectory(): void {
 		// for consistent lookups, but make sure to only
 		// do this once unless defined already from e.g.
 		// a parent process.
-		if (typeof process.env['VSCODE_CWD'] !== 'string') {
-			process.env['VSCODE_CWD'] = process.cwd();
+		if (typeof process.env["VSCODE_CWD"] !== "string") {
+			process.env["VSCODE_CWD"] = process.cwd();
 		}
 
 		// Windows: always set application folder as current working dir
-		if (process.platform === 'win32') {
+		if (process.platform === "win32") {
 			process.chdir(path.dirname(process.execPath));
 		}
 	} catch (err) {
@@ -60,25 +60,28 @@ setupCurrentWorkingDirectory();
  * Note: only applies when running out of sources.
  */
 export function devInjectNodeModuleLookupPath(injectPath: string): void {
-	if (!process.env['VSCODE_DEV']) {
+	if (!process.env["VSCODE_DEV"]) {
 		return; // only applies running out of sources
 	}
 
 	if (!injectPath) {
-		throw new Error('Missing injectPath');
+		throw new Error("Missing injectPath");
 	}
 
 	// register a loader hook
-	const Module = require('node:module');
-	Module.register('./bootstrap-import.js', { parentURL: import.meta.url, data: injectPath });
+	const Module = require("node:module");
+	Module.register("./bootstrap-import.js", {
+    parentURL: import.meta.url,
+    data: injectPath,
+  });
 }
 
 export function removeGlobalNodeJsModuleLookupPaths(): void {
-	if (typeof process?.versions?.electron === 'string') {
+	if (typeof process?.versions?.electron === "string") {
 		return; // Electron disables global search paths in https://github.com/electron/electron/blob/3186c2f0efa92d275dc3d57b5a14a60ed3846b0e/shell/common/node_bindings.cc#L653
 	}
 
-	const Module = require('module');
+	const Module = require("module");
 	const globalPaths = Module.globalPaths;
 
 	const originalResolveLookupPaths = Module._resolveLookupPaths;
@@ -106,14 +109,16 @@ export function removeGlobalNodeJsModuleLookupPaths(): void {
 
 		// On Windows, remove drive(s) and users' home directory from search paths,
 		// UNLESS 'from' is explicitly set to one of those.
-		const isDrive = (p: string) => p.length >= 3 && p.endsWith(':\\');
+		const isDrive = (p: string) => p.length >= 3 && p.endsWith(":\\");
 
 		if (!isDrive(from)) {
 			paths = paths.filter(p => !isDrive(path.dirname(p)));
 		}
 
 		if (process.env.HOMEDRIVE && process.env.HOMEPATH) {
-			const userDir = path.dirname(path.join(process.env.HOMEDRIVE, process.env.HOMEPATH));
+			const userDir = path.dirname(
+        path.join(process.env.HOMEDRIVE, process.env.HOMEPATH),
+      );
 
 			const isUsersDir = (p: string) => path.relative(p, userDir).length === 0;
 
@@ -134,16 +139,16 @@ export function configurePortable(product: Partial<IProductConfiguration>): { po
 	const appRoot = path.dirname(import.meta.dirname);
 
 	function getApplicationPath(): string {
-		if (process.env['VSCODE_DEV']) {
+		if (process.env["VSCODE_DEV"]) {
 			return appRoot;
 		}
 
-		if (process.platform === 'darwin') {
+		if (process.platform === "darwin") {
 			return path.dirname(path.dirname(path.dirname(appRoot)));
 		}
 
 		// appRoot = ..\Microsoft VS Code Insiders\<version>\resources\app
-		if (process.platform === 'win32' && product.win32VersionedUpdate) {
+		if (process.platform === "win32" && product.win32VersionedUpdate) {
 			return path.dirname(path.dirname(path.dirname(appRoot)));
 		}
 
@@ -151,12 +156,12 @@ export function configurePortable(product: Partial<IProductConfiguration>): { po
 	}
 
 	function getPortableDataPath(): string {
-		if (process.env['VSCODE_PORTABLE']) {
-			return process.env['VSCODE_PORTABLE'];
+		if (process.env["VSCODE_PORTABLE"]) {
+			return process.env["VSCODE_PORTABLE"];
 		}
 
-		if (process.platform === 'win32' || process.platform === 'linux') {
-			return path.join(getApplicationPath(), 'data');
+		if (process.platform === "win32" || process.platform === "linux") {
+			return path.join(getApplicationPath(), "data");
 		}
 
 		const portableDataName = product.portable || `${product.applicationName}-portable-data`;
@@ -164,27 +169,27 @@ export function configurePortable(product: Partial<IProductConfiguration>): { po
 	}
 
 	const portableDataPath = getPortableDataPath();
-	const isPortable = !('target' in product) && fs.existsSync(portableDataPath);
-	const portableTempPath = path.join(portableDataPath, 'tmp');
+	const isPortable = !("target" in product) && fs.existsSync(portableDataPath);
+	const portableTempPath = path.join(portableDataPath, "tmp");
 	const isTempPortable = isPortable && fs.existsSync(portableTempPath);
 
 	if (isPortable) {
-		process.env['VSCODE_PORTABLE'] = portableDataPath;
+		process.env["VSCODE_PORTABLE"] = portableDataPath;
 	} else {
-		delete process.env['VSCODE_PORTABLE'];
+		delete process.env["VSCODE_PORTABLE"];
 	}
 
 	if (isTempPortable) {
-		if (process.platform === 'win32') {
-			process.env['TMP'] = portableTempPath;
-			process.env['TEMP'] = portableTempPath;
+		if (process.platform === "win32") {
+			process.env["TMP"] = portableTempPath;
+			process.env["TEMP"] = portableTempPath;
 		} else {
-			process.env['TMPDIR'] = portableTempPath;
+			process.env["TMPDIR"] = portableTempPath;
 		}
 	}
 
 	return {
-		portableDataPath,
-		isPortable
-	};
+    portableDataPath,
+    isPortable,
+  };
 }

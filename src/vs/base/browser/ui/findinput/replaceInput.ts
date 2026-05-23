@@ -3,21 +3,26 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../dom.js';
-import { IKeyboardEvent } from '../../keyboardEvent.js';
-import { IMouseEvent } from '../../mouseEvent.js';
-import { IToggleStyles, Toggle } from '../toggle/toggle.js';
-import { IContextViewProvider } from '../contextview/contextview.js';
-import { IFindInputToggleOpts } from './findInputToggles.js';
-import { HistoryInputBox, IInputBoxStyles, IInputValidator, IMessage as InputBoxMessage } from '../inputbox/inputBox.js';
-import { Widget } from '../widget.js';
-import { Codicon } from '../../../common/codicons.js';
-import { Emitter, Event } from '../../../common/event.js';
-import { KeyCode } from '../../../common/keyCodes.js';
-import './findInput.css';
-import * as nls from '../../../../nls.js';
-import { IHistory } from '../../../common/history.js';
-import { type IHoverLifecycleOptions } from '../hover/hover.js';
+import * as dom from "../../dom.js";
+import { IKeyboardEvent } from "../../keyboardEvent.js";
+import { IMouseEvent } from "../../mouseEvent.js";
+import { IToggleStyles, Toggle } from "../toggle/toggle.js";
+import { IContextViewProvider } from "../contextview/contextview.js";
+import { IFindInputToggleOpts } from "./findInputToggles.js";
+import {
+  HistoryInputBox,
+  IInputBoxStyles,
+  IInputValidator,
+  IMessage as InputBoxMessage,
+} from "../inputbox/inputBox.js";
+import { Widget } from "../widget.js";
+import { Codicon } from "../../../common/codicons.js";
+import { Emitter, Event } from "../../../common/event.js";
+import { KeyCode } from "../../../common/keyCodes.js";
+import "./findInput.css";
+import * as nls from "../../../../nls.js";
+import { IHistory } from "../../../common/history.js";
+import { type IHoverLifecycleOptions } from "../hover/hover.js";
 
 
 export interface IReplaceInputOptions {
@@ -37,27 +42,29 @@ export interface IReplaceInputOptions {
 	readonly toggleStyles: IToggleStyles;
 }
 
-const NLS_DEFAULT_LABEL = nls.localize('defaultLabel', "input");
-const NLS_PRESERVE_CASE_LABEL = nls.localize('label.preserveCaseToggle', "Preserve Case");
+const NLS_DEFAULT_LABEL = nls.localize("defaultLabel", "input");
+const NLS_PRESERVE_CASE_LABEL = nls.localize(
+  "label.preserveCaseToggle",
+  "Preserve Case",
+);
 
 class PreserveCaseToggle extends Toggle {
 	constructor(opts: IFindInputToggleOpts) {
 		super({
-			// TODO: does this need its own icon?
-			icon: Codicon.preserveCase,
-			title: NLS_PRESERVE_CASE_LABEL + opts.appendTitle,
-			isChecked: opts.isChecked,
-			hoverLifecycleOptions: opts.hoverLifecycleOptions,
-			inputActiveOptionBorder: opts.inputActiveOptionBorder,
-			inputActiveOptionForeground: opts.inputActiveOptionForeground,
-			inputActiveOptionBackground: opts.inputActiveOptionBackground,
-		});
+      icon: Codicon.preserveCase,
+      title: NLS_PRESERVE_CASE_LABEL + opts.appendTitle,
+      isChecked: opts.isChecked,
+      hoverLifecycleOptions: opts.hoverLifecycleOptions,
+      inputActiveOptionBorder: opts.inputActiveOptionBorder,
+      inputActiveOptionForeground: opts.inputActiveOptionForeground,
+      inputActiveOptionBackground: opts.inputActiveOptionBackground,
+    });
 	}
 }
 
 export class ReplaceInput extends Widget {
 
-	static readonly OPTION_CHANGE: string = 'optionChange';
+	static readonly OPTION_CHANGE: string = "optionChange";
 
 	private contextViewProvider: IContextViewProvider | undefined;
 	private placeholder: string;
@@ -85,45 +92,49 @@ export class ReplaceInput extends Widget {
 	private readonly _onKeyUp = this._register(new Emitter<IKeyboardEvent>());
 	public get onKeyUp(): Event<IKeyboardEvent> { return this._onKeyUp.event; }
 
-	private _onPreserveCaseKeyDown = this._register(new Emitter<IKeyboardEvent>());
+	private _onPreserveCaseKeyDown = this._register(
+    new Emitter<IKeyboardEvent>(),
+  );
 	public get onPreserveCaseKeyDown(): Event<IKeyboardEvent> { return this._onPreserveCaseKeyDown.event; }
 
 	constructor(parent: HTMLElement | null, contextViewProvider: IContextViewProvider | undefined, private readonly _showOptionButtons: boolean, options: IReplaceInputOptions) {
 		super();
 		this.contextViewProvider = contextViewProvider;
-		this.placeholder = options.placeholder || '';
+		this.placeholder = options.placeholder || "";
 		this.validation = options.validation;
 		this.label = options.label || NLS_DEFAULT_LABEL;
 
-		const appendPreserveCaseLabel = options.appendPreserveCaseLabel || '';
+		const appendPreserveCaseLabel = options.appendPreserveCaseLabel || "";
 		const history = options.history || new Set([]);
 		const flexibleHeight = !!options.flexibleHeight;
 		const flexibleWidth = !!options.flexibleWidth;
 		const flexibleMaxHeight = options.flexibleMaxHeight;
 
-		this.domNode = document.createElement('div');
-		this.domNode.classList.add('monaco-findInput');
+		this.domNode = document.createElement("div");
+		this.domNode.classList.add("monaco-findInput");
 
 		this.inputBox = this._register(new HistoryInputBox(this.domNode, this.contextViewProvider, {
-			ariaLabel: this.label || '',
-			placeholder: this.placeholder || '',
+			ariaLabel: this.label || "",
+			placeholder: this.placeholder || "",
 			validationOptions: {
-				validation: this.validation
+				validation: this.validation,
 			},
 			history,
 			showHistoryHint: options.showHistoryHint,
 			flexibleHeight,
 			flexibleWidth,
 			flexibleMaxHeight,
-			inputBoxStyles: options.inputBoxStyles
+			inputBoxStyles: options.inputBoxStyles,
 		}));
 
-		this.preserveCase = this._register(new PreserveCaseToggle({
-			appendTitle: appendPreserveCaseLabel,
-			isChecked: false,
-			hoverLifecycleOptions: options.hoverLifecycleOptions,
-			...options.toggleStyles
-		}));
+		this.preserveCase = this._register(
+      new PreserveCaseToggle({
+        appendTitle: appendPreserveCaseLabel,
+        isChecked: false,
+        hoverLifecycleOptions: options.hoverLifecycleOptions,
+        ...options.toggleStyles,
+      }),
+    );
 		this._register(this.preserveCase.onChange(viaKeyboard => {
 			this._onDidOptionChange.fire(viaKeyboard);
 			if (!viaKeyboard && this.fixFocusOnOptionClickEnabled) {
@@ -131,9 +142,11 @@ export class ReplaceInput extends Widget {
 			}
 			this.validate();
 		}));
-		this._register(this.preserveCase.onKeyDown(e => {
-			this._onPreserveCaseKeyDown.fire(e);
-		}));
+		this._register(
+      this.preserveCase.onKeyDown(e => {
+        this._onPreserveCaseKeyDown.fire(e);
+      }),
+    );
 
 		if (this._showOptionButtons) {
 			this.cachedOptionsWidth = this.preserveCase.width();
@@ -171,9 +184,9 @@ export class ReplaceInput extends Widget {
 		});
 
 
-		const controls = document.createElement('div');
-		controls.className = 'controls';
-		controls.style.display = this._showOptionButtons ? 'block' : 'none';
+		const controls = document.createElement("div");
+		controls.className = "controls";
+		controls.style.display = this._showOptionButtons ? "block" : "none";
 		controls.appendChild(this.preserveCase.domNode);
 
 		this.domNode.appendChild(controls);
@@ -183,17 +196,20 @@ export class ReplaceInput extends Widget {
 		this.onkeydown(this.inputBox.inputElement, (e) => this._onKeyDown.fire(e));
 		this.onkeyup(this.inputBox.inputElement, (e) => this._onKeyUp.fire(e));
 		this.oninput(this.inputBox.inputElement, (e) => this._onInput.fire());
-		this.onmousedown(this.inputBox.inputElement, (e) => this._onMouseDown.fire(e));
+		this.onmousedown(
+      this.inputBox.inputElement,
+      (e) => this._onMouseDown.fire(e),
+    );
 	}
 
 	public enable(): void {
-		this.domNode.classList.remove('disabled');
+		this.domNode.classList.remove("disabled");
 		this.inputBox.enable();
 		this.preserveCase.enable();
 	}
 
 	public disable(): void {
-		this.domNode.classList.add('disabled');
+		this.domNode.classList.add("disabled");
 		this.inputBox.disable();
 		this.preserveCase.disable();
 	}
@@ -212,7 +228,7 @@ export class ReplaceInput extends Widget {
 
 	public clear(): void {
 		this.clearValidation();
-		this.setValue('');
+		this.setValue("");
 		this.focus();
 	}
 
@@ -255,9 +271,11 @@ export class ReplaceInput extends Widget {
 
 	private _lastHighlightFindOptions: number = 0;
 	public highlightFindOptions(): void {
-		this.domNode.classList.remove('highlight-' + (this._lastHighlightFindOptions));
+		this.domNode.classList.remove(
+      "highlight-" + (this._lastHighlightFindOptions),
+    );
 		this._lastHighlightFindOptions = 1 - this._lastHighlightFindOptions;
-		this.domNode.classList.add('highlight-' + (this._lastHighlightFindOptions));
+		this.domNode.classList.add("highlight-" + (this._lastHighlightFindOptions));
 	}
 
 	public validate(): void {
@@ -278,6 +296,6 @@ export class ReplaceInput extends Widget {
 
 	public set width(newWidth: number) {
 		this.inputBox.paddingRight = this.cachedOptionsWidth;
-		this.domNode.style.width = newWidth + 'px';
+		this.domNode.style.width = newWidth + "px";
 	}
 }

@@ -3,8 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BrandedService } from '../../../../platform/instantiation/common/instantiation.js';
-import { INotebookEditor, INotebookEditorContribution, INotebookEditorContributionCtor, INotebookEditorContributionDescription } from './notebookBrowser.js';
+import { BrandedService } from "../../../../platform/instantiation/common/instantiation.js";
+import {
+  INotebookEditor,
+  INotebookEditorContribution,
+  INotebookEditorContributionCtor,
+  INotebookEditorContributionDescription,
+} from "./notebookBrowser.js";
 
 
 class EditorContributionRegistry {
@@ -16,7 +21,10 @@ class EditorContributionRegistry {
 	}
 
 	public registerEditorContribution<Services extends BrandedService[]>(id: string, ctor: { new(editor: INotebookEditor, ...services: Services): INotebookEditorContribution }): void {
-		this.editorContributions.push({ id, ctor: ctor as INotebookEditorContributionCtor });
+		this.editorContributions.push({
+      id,
+      ctor: ctor as INotebookEditorContributionCtor,
+    });
 	}
 
 	public getEditorContributions(): INotebookEditorContributionDescription[] {
@@ -35,6 +43,8 @@ export namespace NotebookEditorExtensionsRegistry {
 	}
 
 	export function getSomeEditorContributions(ids: string[]): INotebookEditorContributionDescription[] {
-		return EditorContributionRegistry.INSTANCE.getEditorContributions().filter(c => ids.indexOf(c.id) >= 0);
+		return EditorContributionRegistry.INSTANCE.getEditorContributions().filter(
+      c => ids.indexOf(c.id) >= 0,
+    );
 	}
 }

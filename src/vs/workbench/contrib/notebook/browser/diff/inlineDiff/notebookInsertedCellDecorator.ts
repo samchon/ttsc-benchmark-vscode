@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, DisposableStore, toDisposable } from '../../../../../../base/common/lifecycle.js';
-import { CellDiffInfo } from '../notebookDiffViewModel.js';
-import { INotebookEditor, NotebookOverviewRulerLane } from '../../notebookBrowser.js';
-import { overviewRulerAddedForeground } from '../../../../scm/common/quickDiff.js';
+import { Disposable, DisposableStore, toDisposable } from "../../../../../../base/common/lifecycle.js";
+import { CellDiffInfo } from "../notebookDiffViewModel.js";
+import { INotebookEditor, NotebookOverviewRulerLane } from "../../notebookBrowser.js";
+import { overviewRulerAddedForeground } from "../../../../scm/common/quickDiff.js";
 
 export class NotebookInsertedCellDecorator extends Disposable {
 	private readonly decorators = this._register(new DisposableStore());
@@ -21,17 +21,19 @@ export class NotebookInsertedCellDecorator extends Disposable {
 		if (!model) {
 			return;
 		}
-		const cells = diffInfo.filter(diff => diff.type === 'insert').map((diff) => model.cells[diff.modifiedCellIndex]);
+		const cells = diffInfo.filter(diff => diff.type === "insert").map(
+      (diff) => model.cells[diff.modifiedCellIndex],
+    );
 		const ids = this.notebookEditor.deltaCellDecorations([], cells.map(cell => ({
 			handle: cell.handle,
 			options: {
-				className: 'nb-insertHighlight', outputClassName: 'nb-insertHighlight', overviewRuler: {
+				className: "nb-insertHighlight", outputClassName: "nb-insertHighlight", overviewRuler: {
 					color: overviewRulerAddedForeground,
 					modelRanges: [],
 					includeOutput: true,
-					position: NotebookOverviewRulerLane.Full
-				}
-			}
+					position: NotebookOverviewRulerLane.Full,
+				},
+			},
 		})));
 		this.clear();
 		this.decorators.add(toDisposable(() => {

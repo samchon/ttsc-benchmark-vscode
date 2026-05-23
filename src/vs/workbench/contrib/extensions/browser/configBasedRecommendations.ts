@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IExtensionTipsService, IConfigBasedExtensionTip } from '../../../../platform/extensionManagement/common/extensionManagement.js';
-import { ExtensionRecommendations, ExtensionRecommendation } from './extensionRecommendations.js';
-import { localize } from '../../../../nls.js';
-import { ExtensionRecommendationReason } from '../../../services/extensionRecommendations/common/extensionRecommendations.js';
-import { IWorkspaceContextService, IWorkspaceFoldersChangeEvent } from '../../../../platform/workspace/common/workspace.js';
-import { Emitter } from '../../../../base/common/event.js';
+import { IExtensionTipsService, IConfigBasedExtensionTip } from "../../../../platform/extensionManagement/common/extensionManagement.js";
+import { ExtensionRecommendations, ExtensionRecommendation } from "./extensionRecommendations.js";
+import { localize } from "../../../../nls.js";
+import { ExtensionRecommendationReason } from "../../../services/extensionRecommendations/common/extensionRecommendations.js";
+import { IWorkspaceContextService, IWorkspaceFoldersChangeEvent } from "../../../../platform/workspace/common/workspace.js";
+import { Emitter } from "../../../../base/common/event.js";
 
 type ConfigBasedExtensionRecommendation = ExtensionRecommendation & { whenNotInstalled: string[] | undefined };
 
@@ -26,7 +26,10 @@ export class ConfigBasedRecommendations extends ExtensionRecommendations {
 	private _importantRecommendations: ConfigBasedExtensionRecommendation[] = [];
 	get importantRecommendations(): ReadonlyArray<ConfigBasedExtensionRecommendation> { return this._importantRecommendations; }
 
-	get recommendations(): ReadonlyArray<ConfigBasedExtensionRecommendation> { return [...this.importantRecommendations, ...this.otherRecommendations]; }
+	get recommendations(): ReadonlyArray<ConfigBasedExtensionRecommendation> { return [
+    ...this.importantRecommendations,
+    ...this.otherRecommendations,
+  ]; }
 
 	constructor(
 		@IExtensionTipsService private readonly extensionTipsService: IExtensionTipsService,
@@ -37,7 +40,11 @@ export class ConfigBasedRecommendations extends ExtensionRecommendations {
 
 	protected async doActivate(): Promise<void> {
 		await this.fetch();
-		this._register(this.workspaceContextService.onDidChangeWorkspaceFolders(e => this.onWorkspaceFoldersChanged(e)));
+		this._register(
+      this.workspaceContextService.onDidChangeWorkspaceFolders(
+        e => this.onWorkspaceFoldersChanged(e),
+      ),
+    );
 	}
 
 	private async fetch(): Promise<void> {
@@ -45,7 +52,9 @@ export class ConfigBasedRecommendations extends ExtensionRecommendations {
 		const importantTips: Map<string, IConfigBasedExtensionTip> = new Map<string, IConfigBasedExtensionTip>();
 		const otherTips: Map<string, IConfigBasedExtensionTip> = new Map<string, IConfigBasedExtensionTip>();
 		for (const folder of workspace.folders) {
-			const configBasedTips = await this.extensionTipsService.getConfigBasedTips(folder.uri);
+			const configBasedTips = await this.extensionTipsService.getConfigBasedTips(
+        folder.uri,
+      );
 			for (const tip of configBasedTips) {
 				if (tip.important) {
 					importantTips.set(tip.extensionId, tip);
@@ -55,9 +64,15 @@ export class ConfigBasedRecommendations extends ExtensionRecommendations {
 			}
 		}
 		this.importantTips = [...importantTips.values()];
-		this.otherTips = [...otherTips.values()].filter(tip => !importantTips.has(tip.extensionId));
-		this._otherRecommendations = this.otherTips.map(tip => this.toExtensionRecommendation(tip));
-		this._importantRecommendations = this.importantTips.map(tip => this.toExtensionRecommendation(tip));
+		this.otherTips = [...otherTips.values()].filter(
+      tip => !importantTips.has(tip.extensionId),
+    );
+		this._otherRecommendations = this.otherTips.map(
+      tip => this.toExtensionRecommendation(tip),
+    );
+		this._importantRecommendations = this.importantTips.map(
+      tip => this.toExtensionRecommendation(tip),
+    );
 	}
 
 	private async onWorkspaceFoldersChanged(event: IWorkspaceFoldersChangeEvent): Promise<void> {
@@ -65,7 +80,11 @@ export class ConfigBasedRecommendations extends ExtensionRecommendations {
 			const oldImportantRecommended = this.importantTips;
 			await this.fetch();
 			// Suggest only if at least one of the newly added recommendations was not suggested before
-			if (this.importantTips.some(current => oldImportantRecommended.every(old => current.extensionId !== old.extensionId))) {
+			if (this.importantTips.some(
+        current => oldImportantRecommended.every(
+          old => current.extensionId !== old.extensionId,
+        ),
+      )) {
 				this._onDidChangeRecommendations.fire();
 			}
 		}
@@ -76,9 +95,9 @@ export class ConfigBasedRecommendations extends ExtensionRecommendations {
 			extension: tip.extensionId,
 			reason: {
 				reasonId: ExtensionRecommendationReason.WorkspaceConfig,
-				reasonText: localize('exeBasedRecommendation', "This extension is recommended because of the current workspace configuration")
+				reasonText: localize("exeBasedRecommendation", "This extension is recommended because of the current workspace configuration"),
 			},
-			whenNotInstalled: tip.whenNotInstalled
+			whenNotInstalled: tip.whenNotInstalled,
 		};
 	}
 

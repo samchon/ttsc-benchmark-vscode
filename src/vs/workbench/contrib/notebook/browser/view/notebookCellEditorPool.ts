@@ -3,18 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as DOM from '../../../../../base/browser/dom.js';
-import { CancelablePromise, createCancelablePromise } from '../../../../../base/common/async.js';
-import { Disposable, DisposableStore, MutableDisposable } from '../../../../../base/common/lifecycle.js';
-import { CodeEditorWidget } from '../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js';
-import { EditorContextKeys } from '../../../../../editor/common/editorContextKeys.js';
-import { ITextModelService } from '../../../../../editor/common/services/resolverService.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { IContextKeyService, IScopedContextKeyService } from '../../../../../platform/contextkey/common/contextkey.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { ServiceCollection } from '../../../../../platform/instantiation/common/serviceCollection.js';
-import { CellFocusMode, ICellViewModel, INotebookEditorDelegate } from '../notebookBrowser.js';
-import { CellEditorOptions } from './cellParts/cellEditorOptions.js';
+import * as DOM from "../../../../../base/browser/dom.js";
+import { CancelablePromise, createCancelablePromise } from "../../../../../base/common/async.js";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../../../base/common/lifecycle.js";
+import { CodeEditorWidget } from "../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import { EditorContextKeys } from "../../../../../editor/common/editorContextKeys.js";
+import { ITextModelService } from "../../../../../editor/common/services/resolverService.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService, IScopedContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ServiceCollection } from "../../../../../platform/instantiation/common/serviceCollection.js";
+import { CellFocusMode, ICellViewModel, INotebookEditorDelegate } from "../notebookBrowser.js";
+import { CellEditorOptions } from "./cellParts/cellEditorOptions.js";
 
 export class NotebookCellEditorPool extends Disposable {
 	private readonly _focusedEditorDOM: HTMLElement;
@@ -34,36 +34,56 @@ export class NotebookCellEditorPool extends Disposable {
 	) {
 		super();
 
-		this._focusedEditorDOM = this.notebookEditor.getDomNode().appendChild(DOM.$('.cell-editor-part-cache'));
-		this._focusedEditorDOM.style.position = 'absolute';
-		this._focusedEditorDOM.style.top = '-50000px';
-		this._focusedEditorDOM.style.width = '1px';
-		this._focusedEditorDOM.style.height = '1px';
+		this._focusedEditorDOM = this.notebookEditor.getDomNode().appendChild(
+      DOM.$(".cell-editor-part-cache"),
+    );
+		this._focusedEditorDOM.style.position = "absolute";
+		this._focusedEditorDOM.style.top = "-50000px";
+		this._focusedEditorDOM.style.width = "1px";
+		this._focusedEditorDOM.style.height = "1px";
 	}
 
 	private _initializeEditor(cell: ICellViewModel) {
-		this._editorContextKeyService = this._register(this.contextKeyServiceProvider(this._focusedEditorDOM));
+		this._editorContextKeyService = this._register(
+      this.contextKeyServiceProvider(this._focusedEditorDOM),
+    );
 
-		const editorContainer = DOM.prepend(this._focusedEditorDOM, DOM.$('.cell-editor-container'));
-		const editorInstaService = this._register(this._instantiationService.createChild(new ServiceCollection([IContextKeyService, this._editorContextKeyService])));
-		EditorContextKeys.inCompositeEditor.bindTo(this._editorContextKeyService).set(true);
-		const editorOptions = new CellEditorOptions(this.notebookEditor.getBaseCellEditorOptions(cell.language), this.notebookEditor.notebookOptions, this._configurationService);
+		const editorContainer = DOM.prepend(
+      this._focusedEditorDOM,
+      DOM.$(".cell-editor-container"),
+    );
+		const editorInstaService = this._register(
+      this._instantiationService.createChild(
+        new ServiceCollection([
+          IContextKeyService,
+          this._editorContextKeyService,
+        ]),
+      ),
+    );
+		EditorContextKeys.inCompositeEditor.bindTo(this._editorContextKeyService).set(
+      true,
+    );
+		const editorOptions = new CellEditorOptions(
+      this.notebookEditor.getBaseCellEditorOptions(cell.language),
+      this.notebookEditor.notebookOptions,
+      this._configurationService,
+    );
 
 		this._editor = this._register(editorInstaService.createInstance(CodeEditorWidget, editorContainer, {
 			...editorOptions.getDefaultValue(),
 			dimension: {
 				width: 0,
-				height: 0
+				height: 0,
 			},
 			scrollbar: {
-				vertical: 'hidden',
-				horizontal: 'auto',
+				vertical: "hidden",
+				horizontal: "auto",
 				handleMouseWheel: false,
 				useShadows: false,
 			},
 			allowVariableLineHeights: false,
 		}, {
-			contributions: this.notebookEditor.creationOptions.cellEditorContributions
+			contributions: this.notebookEditor.creationOptions.cellEditorContributions,
 		}));
 		editorOptions.dispose();
 		this._isInitialized = true;
@@ -107,7 +127,7 @@ export class NotebookCellEditorPool extends Disposable {
 			}));
 
 			editorDisposable.add(this._editor.onDidChangeCursorSelection(e => {
-				if (e.source === 'keyboard' || e.source === 'mouse') {
+				if (e.source === "keyboard" || e.source === "mouse") {
 					_update();
 				}
 			}));

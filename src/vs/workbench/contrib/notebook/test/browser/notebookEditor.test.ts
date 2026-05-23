@@ -3,18 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { mock } from '../../../../../base/test/common/mock.js';
-import { TestInstantiationService } from '../../../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { FoldingModel, updateFoldingStateAtIndex } from '../../browser/viewModel/foldingModel.js';
-import { expandCellRangesWithHiddenCells, INotebookEditor } from '../../browser/notebookBrowser.js';
-import { CellKind } from '../../common/notebookCommon.js';
-import { createNotebookCellList, setupInstantiationService, withTestNotebook } from './testNotebookEditor.js';
-import { ListViewInfoAccessor } from '../../browser/view/notebookCellList.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
+import assert from "assert";
+import { mock } from "../../../../../base/test/common/mock.js";
+import { TestInstantiationService } from "../../../../../platform/instantiation/test/common/instantiationServiceMock.js";
+import { FoldingModel, updateFoldingStateAtIndex } from "../../browser/viewModel/foldingModel.js";
+import { expandCellRangesWithHiddenCells, INotebookEditor } from "../../browser/notebookBrowser.js";
+import { CellKind } from "../../common/notebookCommon.js";
+import { createNotebookCellList, setupInstantiationService, withTestNotebook } from "./testNotebookEditor.js";
+import { ListViewInfoAccessor } from "../../browser/view/notebookCellList.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
 
-suite('ListViewInfoAccessor', () => {
+suite("ListViewInfoAccessor", () => {
 	let disposables: DisposableStore;
 	let instantiationService: TestInstantiationService;
 
@@ -29,14 +29,14 @@ suite('ListViewInfoAccessor', () => {
 		instantiationService = setupInstantiationService(disposables);
 	});
 
-	test('basics', async function () {
+	test("basics", async function () {
 		await withTestNotebook(
 			[
-				['# header a', 'markdown', CellKind.Markup, [], {}],
-				['var b = 1;', 'javascript', CellKind.Code, [], {}],
-				['# header b', 'markdown', CellKind.Markup, [], {}],
-				['var b = 2;', 'javascript', CellKind.Code, [], {}],
-				['var c = 3;', 'javascript', CellKind.Code, [], {}]
+				["# header a", "markdown", CellKind.Markup, [], {}],
+				["var b = 1;", "javascript", CellKind.Code, [], {}],
+				["# header b", "markdown", CellKind.Markup, [], {}],
+				["var b = 2;", "javascript", CellKind.Code, [], {}],
+				["var c = 3;", "javascript", CellKind.Code, [], {}],
 			],
 			(editor, viewModel, ds) => {
 				const foldingModel = ds.add(new FoldingModel());

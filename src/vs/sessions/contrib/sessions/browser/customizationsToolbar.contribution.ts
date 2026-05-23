@@ -3,36 +3,47 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import '../../../browser/media/sidebarActionButton.css';
-import './media/customizationsToolbar.css';
-import { Disposable, DisposableStore } from '../../../../base/common/lifecycle.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
-import { localize, localize2 } from '../../../../nls.js';
-import { Action2, registerAction2 } from '../../../../platform/actions/common/actions.js';
-import { IActionViewItemService } from '../../../../platform/actions/browser/actionViewItemService.js';
-import { ContextKeyExpr, IContextKey, IContextKeyService, RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';
-import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../../workbench/common/contributions.js';
-import { AICustomizationManagementEditor } from '../../../../workbench/contrib/chat/browser/aiCustomization/aiCustomizationManagementEditor.js';
-import { AICustomizationManagementEditorInput } from '../../../../workbench/contrib/chat/browser/aiCustomization/aiCustomizationManagementEditorInput.js';
-import { IAICustomizationItemsModel, ItemsModelSection } from '../../../../workbench/contrib/chat/browser/aiCustomization/aiCustomizationItemsModel.js';
-import { IMcpService } from '../../../../workbench/contrib/mcp/common/mcpTypes.js';
-import { Menus } from '../../../browser/menus.js';
-import { agentIcon, instructionsIcon, mcpServerIcon, pluginIcon, skillIcon, hookIcon } from '../../../../workbench/contrib/chat/browser/aiCustomization/aiCustomizationIcons.js';
-import { ActionViewItem, IBaseActionViewItemOptions } from '../../../../base/browser/ui/actionbar/actionViewItems.js';
-import { IAction } from '../../../../base/common/actions.js';
-import { $, append } from '../../../../base/browser/dom.js';
-import { autorun } from '../../../../base/common/observable.js';
-import { Button } from '../../../../base/browser/ui/button/button.js';
-import { defaultButtonStyles } from '../../../../platform/theme/browser/defaultStyles.js';
-import { IEditorService } from '../../../../workbench/services/editor/common/editorService.js';
-import { AICustomizationManagementSection } from '../../../../workbench/contrib/chat/common/aiCustomizationWorkspaceService.js';
-import { ICustomizationHarnessService } from '../../../../workbench/contrib/chat/common/customizationHarnessService.js';
-import { ISession } from '../../../services/sessions/common/session.js';
-import { ISessionsManagementService } from '../../../services/sessions/common/sessionsManagement.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { Registry } from '../../../../platform/registry/common/platform.js';
-import { Extensions as ConfigurationExtensions, IConfigurationRegistry } from '../../../../platform/configuration/common/configurationRegistry.js';
+import "../../../browser/media/sidebarActionButton.css";
+import "./media/customizationsToolbar.css";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { Action2, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { IActionViewItemService } from "../../../../platform/actions/browser/actionViewItemService.js";
+import { ContextKeyExpr, IContextKey, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import {
+  IWorkbenchContribution,
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../../../workbench/common/contributions.js";
+import { AICustomizationManagementEditor } from "../../../../workbench/contrib/chat/browser/aiCustomization/aiCustomizationManagementEditor.js";
+import { AICustomizationManagementEditorInput } from "../../../../workbench/contrib/chat/browser/aiCustomization/aiCustomizationManagementEditorInput.js";
+import { IAICustomizationItemsModel, ItemsModelSection } from "../../../../workbench/contrib/chat/browser/aiCustomization/aiCustomizationItemsModel.js";
+import { IMcpService } from "../../../../workbench/contrib/mcp/common/mcpTypes.js";
+import { Menus } from "../../../browser/menus.js";
+import {
+  agentIcon,
+  instructionsIcon,
+  mcpServerIcon,
+  pluginIcon,
+  skillIcon,
+  hookIcon,
+} from "../../../../workbench/contrib/chat/browser/aiCustomization/aiCustomizationIcons.js";
+import { ActionViewItem, IBaseActionViewItemOptions } from "../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { IAction } from "../../../../base/common/actions.js";
+import { $, append } from "../../../../base/browser/dom.js";
+import { autorun } from "../../../../base/common/observable.js";
+import { Button } from "../../../../base/browser/ui/button/button.js";
+import { defaultButtonStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { IEditorService } from "../../../../workbench/services/editor/common/editorService.js";
+import { AICustomizationManagementSection } from "../../../../workbench/contrib/chat/common/aiCustomizationWorkspaceService.js";
+import { ICustomizationHarnessService } from "../../../../workbench/contrib/chat/common/customizationHarnessService.js";
+import { ISession } from "../../../services/sessions/common/session.js";
+import { ISessionsManagementService } from "../../../services/sessions/common/sessionsManagement.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { Extensions as ConfigurationExtensions, IConfigurationRegistry } from "../../../../platform/configuration/common/configurationRegistry.js";
 
 /**
  * Setting key that controls how the Customizations section in the Agents
@@ -40,7 +51,7 @@ import { Extensions as ConfigurationExtensions, IConfigurationRegistry } from '.
  *
  * This setting is registered (and only meaningful) in the Agents app.
  */
-export const SESSIONS_CUSTOMIZATIONS_SIDEBAR_MODE_SETTING = 'sessions.customizations.sidebarMode';
+export const SESSIONS_CUSTOMIZATIONS_SIDEBAR_MODE_SETTING = "sessions.customizations.sidebarMode";
 
 /**
  * Presentation/click behavior for the Customizations section in the Agents sidebar.
@@ -48,30 +59,30 @@ export const SESSIONS_CUSTOMIZATIONS_SIDEBAR_MODE_SETTING = 'sessions.customizat
  */
 export enum SessionsCustomizationsSidebarMode {
 	/** One item per category; click opens the welcome page. */
-	Welcome = 'welcome',
+	Welcome = "welcome",
 	/** One item per category; click deep-links to that category. */
-	Section = 'section',
+	Section = "section",
 	/** A single "Customizations" entry that opens the welcome page. */
-	Single = 'single',
+	Single = "single",
 }
 
 Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).registerConfiguration({
-	id: 'sessions',
+	id: "sessions",
 	properties: {
 		[SESSIONS_CUSTOMIZATIONS_SIDEBAR_MODE_SETTING]: {
-			type: 'string',
-			tags: ['preview'],
+			type: "string",
+			tags: ["preview"],
 			enum: [
 				SessionsCustomizationsSidebarMode.Welcome,
 				SessionsCustomizationsSidebarMode.Section,
 				SessionsCustomizationsSidebarMode.Single,
 			],
 			enumDescriptions: [
-				localize('sessions.customizations.sidebarMode.welcome', "Show one item per customization category. Clicking a category opens the Customizations welcome page."),
-				localize('sessions.customizations.sidebarMode.section', "Show one item per customization category. Clicking a category deep-links to that category's section in the Customizations editor."),
-				localize('sessions.customizations.sidebarMode.single', "Show a single \"Customizations\" entry instead of one item per category. Clicking it opens the Customizations welcome page."),
+				localize("sessions.customizations.sidebarMode.welcome", "Show one item per customization category. Clicking a category opens the Customizations welcome page."),
+				localize("sessions.customizations.sidebarMode.section", "Show one item per customization category. Clicking a category deep-links to that category's section in the Customizations editor."),
+				localize("sessions.customizations.sidebarMode.single", "Show a single \"Customizations\" entry instead of one item per category. Clicking it opens the Customizations welcome page."),
 			],
-			description: localize('sessions.customizations.sidebarMode', "Controls how the Customizations section in the Agents sidebar is presented and what happens when an entry is clicked."),
+			description: localize("sessions.customizations.sidebarMode", "Controls how the Customizations section in the Agents sidebar is presented and what happens when an entry is clicked."),
 			default: SessionsCustomizationsSidebarMode.Welcome,
 		},
 	},
@@ -99,48 +110,48 @@ function customizationSectionVisibleKey(section: string): string {
 }
 
 export const CUSTOMIZATION_ITEMS: ICustomizationItemConfig[] = [
-	{
-		id: 'sessions.customization.agents',
-		label: localize('agents', "Agents"),
-		icon: agentIcon,
-		section: AICustomizationManagementSection.Agents,
-		modelSection: AICustomizationManagementSection.Agents,
-	},
-	{
-		id: 'sessions.customization.skills',
-		label: localize('skills', "Skills"),
-		icon: skillIcon,
-		section: AICustomizationManagementSection.Skills,
-		modelSection: AICustomizationManagementSection.Skills,
-	},
-	{
-		id: 'sessions.customization.instructions',
-		label: localize('instructions', "Instructions"),
-		icon: instructionsIcon,
-		section: AICustomizationManagementSection.Instructions,
-		modelSection: AICustomizationManagementSection.Instructions,
-	},
-	{
-		id: 'sessions.customization.hooks',
-		label: localize('hooks', "Hooks"),
-		icon: hookIcon,
-		section: AICustomizationManagementSection.Hooks,
-		modelSection: AICustomizationManagementSection.Hooks,
-	},
-	{
-		id: 'sessions.customization.mcpServers',
-		label: localize('mcpServers', "MCP Servers"),
-		icon: mcpServerIcon,
-		section: AICustomizationManagementSection.McpServers,
-		isMcp: true,
-	},
-	{
-		id: 'sessions.customization.plugins',
-		label: localize('plugins', "Plugins"),
-		icon: pluginIcon,
-		section: AICustomizationManagementSection.Plugins,
-		isPlugins: true,
-	},
+  {
+    id: "sessions.customization.agents",
+    label: localize("agents", "Agents"),
+    icon: agentIcon,
+    section: AICustomizationManagementSection.Agents,
+    modelSection: AICustomizationManagementSection.Agents,
+  },
+  {
+    id: "sessions.customization.skills",
+    label: localize("skills", "Skills"),
+    icon: skillIcon,
+    section: AICustomizationManagementSection.Skills,
+    modelSection: AICustomizationManagementSection.Skills,
+  },
+  {
+    id: "sessions.customization.instructions",
+    label: localize("instructions", "Instructions"),
+    icon: instructionsIcon,
+    section: AICustomizationManagementSection.Instructions,
+    modelSection: AICustomizationManagementSection.Instructions,
+  },
+  {
+    id: "sessions.customization.hooks",
+    label: localize("hooks", "Hooks"),
+    icon: hookIcon,
+    section: AICustomizationManagementSection.Hooks,
+    modelSection: AICustomizationManagementSection.Hooks,
+  },
+  {
+    id: "sessions.customization.mcpServers",
+    label: localize("mcpServers", "MCP Servers"),
+    icon: mcpServerIcon,
+    section: AICustomizationManagementSection.McpServers,
+    isMcp: true,
+  },
+  {
+    id: "sessions.customization.plugins",
+    label: localize("plugins", "Plugins"),
+    icon: pluginIcon,
+    section: AICustomizationManagementSection.Plugins,
+    isPlugins: true,
+  },
 ];
 
 /**
@@ -172,29 +183,42 @@ export class CustomizationLinkViewItem extends ActionViewItem {
 
 	override render(container: HTMLElement): void {
 		super.render(container);
-		container.classList.add('customization-link-widget', 'sidebar-action');
+		container.classList.add("customization-link-widget", "sidebar-action");
 
 		// Button (left) - uses supportIcons to render codicon in label
-		const buttonContainer = append(container, $('.customization-link-button-container'));
-		this._button = this._viewItemDisposables.add(new Button(buttonContainer, {
-			...defaultButtonStyles,
-			secondary: true,
-			title: false,
-			supportIcons: true,
-			buttonSecondaryBackground: 'transparent',
-			buttonSecondaryHoverBackground: undefined,
-			buttonSecondaryForeground: undefined,
-			buttonSecondaryBorder: undefined,
-		}));
-		this._button.element.classList.add('customization-link-button', 'sidebar-action-button');
+		const buttonContainer = append(
+      container,
+      $(".customization-link-button-container"),
+    );
+		this._button = this._viewItemDisposables.add(
+      new Button(buttonContainer, {
+        ...defaultButtonStyles,
+        secondary: true,
+        title: false,
+        supportIcons: true,
+        buttonSecondaryBackground: "transparent",
+        buttonSecondaryHoverBackground: undefined,
+        buttonSecondaryForeground: undefined,
+        buttonSecondaryBorder: undefined,
+      }),
+    );
+		this._button.element.classList.add(
+      "customization-link-button",
+      "sidebar-action-button",
+    );
 		this._button.label = `$(${this._config.icon.id}) ${this._config.label}`;
 
-		this._viewItemDisposables.add(this._button.onDidClick(() => {
-			this._action.run();
-		}));
+		this._viewItemDisposables.add(
+      this._button.onDidClick(() => {
+        this._action.run();
+      }),
+    );
 
 		// Count container (inside button, floating right)
-		this._countContainer = append(this._button.element, $('span.customization-link-counts'));
+		this._countContainer = append(
+      this._button.element,
+      $("span.customization-link-counts"),
+    );
 
 		this._viewItemDisposables.add(autorun(reader => {
 			const count = this._readCount(reader);
@@ -218,11 +242,11 @@ export class CustomizationLinkViewItem extends ActionViewItem {
 	}
 
 	private _renderTotalCount(container: HTMLElement, count: number): void {
-		container.textContent = '';
-		container.classList.toggle('hidden', count === 0);
+		container.textContent = "";
+		container.classList.toggle("hidden", count === 0);
 		if (count > 0) {
-			const badge = append(container, $('span.source-count-badge'));
-			const num = append(badge, $('span.source-count-num'));
+			const badge = append(container, $("span.source-count-badge"));
+			const num = append(badge, $("span.source-count-num"));
 			num.textContent = `${count}`;
 		}
 	}
@@ -232,7 +256,7 @@ export class CustomizationLinkViewItem extends ActionViewItem {
 
 export class CustomizationsToolbarContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'workbench.contrib.sessionsCustomizationsToolbar';
+	static readonly ID = "workbench.contrib.sessionsCustomizationsToolbar";
 
 	constructor(
 		@IActionViewItemService actionViewItemService: IActionViewItemService,
@@ -248,7 +272,9 @@ export class CustomizationsToolbarContribution extends Disposable implements IWo
 		// don't support a customization type don't surface its row.
 		const visibilityKeys = new Map<string, IContextKey<boolean>>();
 		for (const config of CUSTOMIZATION_ITEMS) {
-			const key = new RawContextKey<boolean>(customizationSectionVisibleKey(config.section), true).bindTo(contextKeyService);
+			const key = new RawContextKey<boolean>(customizationSectionVisibleKey(config.section), true).bindTo(
+        contextKeyService,
+      );
 			visibilityKeys.set(config.section, key);
 		}
 		this._register(autorun(reader => {
@@ -263,24 +289,38 @@ export class CustomizationsToolbarContribution extends Disposable implements IWo
 
 		for (const [index, config] of CUSTOMIZATION_ITEMS.entries()) {
 			// Register the custom ActionViewItem for this action
-			this._register(actionViewItemService.register(Menus.SidebarCustomizations, config.id, (action, options) => {
-				return instantiationService.createInstance(CustomizationLinkViewItem, action, options, config);
-			}, undefined));
+			this._register(
+        actionViewItemService.register(
+          Menus.SidebarCustomizations,
+          config.id,
+          (action, options) => {
+            return instantiationService.createInstance(
+              CustomizationLinkViewItem,
+              action,
+              options,
+              config,
+            );
+          },
+          undefined,
+        ),
+      );
 
-			const sectionVisibleWhen = ContextKeyExpr.has(customizationSectionVisibleKey(config.section));
+			const sectionVisibleWhen = ContextKeyExpr.has(
+        customizationSectionVisibleKey(config.section),
+      );
 
 			// Register the action with menu item
 			this._register(registerAction2(class extends Action2 {
 				constructor() {
 					super({
 						id: config.id,
-						title: localize2('customizationAction', '{0}', config.label),
+						title: localize2("customizationAction", "{0}", config.label),
 						menu: {
 							id: Menus.SidebarCustomizations,
-							group: 'navigation',
+							group: "navigation",
 							order: index + 1,
 							when: sectionVisibleWhen,
-						}
+						},
 					});
 				}
 				async run(accessor: ServicesAccessor): Promise<void> {
@@ -309,7 +349,11 @@ export class CustomizationsToolbarContribution extends Disposable implements IWo
 	}
 }
 
-registerWorkbenchContribution2(CustomizationsToolbarContribution.ID, CustomizationsToolbarContribution, WorkbenchPhase.AfterRestored);
+registerWorkbenchContribution2(
+  CustomizationsToolbarContribution.ID,
+  CustomizationsToolbarContribution,
+  WorkbenchPhase.AfterRestored,
+);
 
 /**
  * Returns the harness id that matches a given session, or `undefined` if no
@@ -350,7 +394,7 @@ export function findHarnessIdForSession(session: ISession | undefined, harnessSe
  */
 export class ActiveSessionHarnessSyncContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'workbench.contrib.sessionsActiveHarnessSync';
+	static readonly ID = "workbench.contrib.sessionsActiveHarnessSync";
 
 	constructor(
 		@ISessionsManagementService sessionsManagementService: ISessionsManagementService,
@@ -372,4 +416,8 @@ export class ActiveSessionHarnessSyncContribution extends Disposable implements 
 	}
 }
 
-registerWorkbenchContribution2(ActiveSessionHarnessSyncContribution.ID, ActiveSessionHarnessSyncContribution, WorkbenchPhase.AfterRestored);
+registerWorkbenchContribution2(
+  ActiveSessionHarnessSyncContribution.ID,
+  ActiveSessionHarnessSyncContribution,
+  WorkbenchPhase.AfterRestored,
+);

@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import electron from 'electron';
-import { Event } from '../../../base/common/event.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { isMacintosh } from '../../../base/common/platform.js';
-import { localize } from '../../../nls.js';
-import { IDialogMainService } from '../../dialogs/electron-main/dialogMainService.js';
-import { IUpdateService, StateType } from '../common/update.js';
+import electron from "electron";
+import { Event } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { isMacintosh } from "../../../base/common/platform.js";
+import { localize } from "../../../nls.js";
+import { IDialogMainService } from "../../dialogs/electron-main/dialogMainService.js";
+import { IUpdateService, StateType } from "../common/update.js";
 
 /**
  * Shows a native "no updates available" dialog when an explicit update check
@@ -32,8 +32,16 @@ export class NotAvailableUpdateDialog extends Disposable {
 		super();
 
 		if (isMacintosh) {
-			this._register(Event.fromNodeEventEmitter(electron.app, 'did-become-active')(() => this.macAppActive = true));
-			this._register(Event.fromNodeEventEmitter(electron.app, 'did-resign-active')(() => this.macAppActive = false));
+			this._register(
+        Event.fromNodeEventEmitter(electron.app, "did-become-active")(
+          () => this.macAppActive = true,
+        ),
+      );
+			this._register(
+        Event.fromNodeEventEmitter(electron.app, "did-resign-active")(
+          () => this.macAppActive = false,
+        ),
+      );
 		}
 
 		this._register(updateService.onStateChange(state => {
@@ -50,8 +58,8 @@ export class NotAvailableUpdateDialog extends Disposable {
 		}
 
 		this.dialogMainService.showMessageBox({
-			type: 'info',
-			message: localize('noUpdatesAvailable', "There are currently no updates available."),
+			type: "info",
+			message: localize("noUpdatesAvailable", "There are currently no updates available."),
 		}, focusedWindow ?? undefined);
 	}
 }

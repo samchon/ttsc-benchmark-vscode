@@ -3,32 +3,37 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Codicon } from '../../../../../base/common/codicons.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { autorun } from '../../../../../base/common/observable.js';
-import { localize, localize2 } from '../../../../../nls.js';
-import { Action2, IMenuService, MenuItemAction, registerAction2 } from '../../../../../platform/actions/common/actions.js';
-import { ICommandService } from '../../../../../platform/commands/common/commands.js';
-import { ContextKeyExpr, IContextKeyService } from '../../../../../platform/contextkey/common/contextkey.js';
-import { ServicesAccessor, IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { IRemoteAgentHostService, RemoteAgentHostsEnabledSettingId } from '../../../../../platform/agentHost/common/remoteAgentHostService.js';
-import { TUNNEL_ADDRESS_PREFIX } from '../../../../../platform/agentHost/common/tunnelAgentHost.js';
-import { IQuickInputButton, IQuickInputService, IQuickPickItem, IQuickPickSeparator } from '../../../../../platform/quickinput/common/quickInput.js';
-import { Menus } from '../../../../browser/menus.js';
-import { SessionsCategories } from '../../../../common/categories.js';
-import { IAgentHostSessionsProvider, isAgentHostProvider } from '../../../../common/agentHostSessionsProvider.js';
-import { ISessionsProvidersService } from '../../../../services/sessions/browser/sessionsProvidersService.js';
-import { getStatusLabel, removeRemoteHost, showRemoteHostOptions } from './remoteHostOptions.js';
-import { RemoteAgentHostCommandIds } from './remoteAgentHostActions.js';
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { autorun } from "../../../../../base/common/observable.js";
+import { localize, localize2 } from "../../../../../nls.js";
+import { Action2, IMenuService, MenuItemAction, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { ContextKeyExpr, IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { ServicesAccessor, IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IRemoteAgentHostService, RemoteAgentHostsEnabledSettingId } from "../../../../../platform/agentHost/common/remoteAgentHostService.js";
+import { TUNNEL_ADDRESS_PREFIX } from "../../../../../platform/agentHost/common/tunnelAgentHost.js";
+import {
+  IQuickInputButton,
+  IQuickInputService,
+  IQuickPickItem,
+  IQuickPickSeparator,
+} from "../../../../../platform/quickinput/common/quickInput.js";
+import { Menus } from "../../../../browser/menus.js";
+import { SessionsCategories } from "../../../../common/categories.js";
+import { IAgentHostSessionsProvider, isAgentHostProvider } from "../../../../common/agentHostSessionsProvider.js";
+import { ISessionsProvidersService } from "../../../../services/sessions/browser/sessionsProvidersService.js";
+import { getStatusLabel, removeRemoteHost, showRemoteHostOptions } from "./remoteHostOptions.js";
+import { RemoteAgentHostCommandIds } from "./remoteAgentHostActions.js";
 
 interface IRemoteHostQuickPickItem extends IQuickPickItem {
-	readonly kind: 'remote';
+	readonly kind: "remote";
 	readonly provider: IAgentHostSessionsProvider;
 }
 
 interface IMenuActionQuickPickItem extends IQuickPickItem {
-	readonly kind: 'menu-action';
+	readonly kind: "menu-action";
 	readonly action: MenuItemAction;
 }
 
@@ -38,7 +43,7 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: RemoteAgentHostCommandIds.manageRemoteAgentHosts,
-			title: localize2('manageRemoteAgentHosts', "Manage Remote Agent Hosts..."),
+			title: localize2("manageRemoteAgentHosts", "Manage Remote Agent Hosts..."),
 			category: SessionsCategories.Sessions,
 			f1: true,
 			precondition: ContextKeyExpr.equals(`config.${RemoteAgentHostsEnabledSettingId}`, true),
@@ -56,7 +61,7 @@ registerAction2(class extends Action2 {
 
 		const removeButton: IQuickInputButton = {
 			iconClass: ThemeIcon.asClassName(Codicon.close),
-			tooltip: localize('manageHosts.removeTooltip', "Remove"),
+			tooltip: localize("manageHosts.removeTooltip", "Remove"),
 		};
 
 		const buildItems = (): (ManageHostsPickItem | IQuickPickSeparator)[] => {
@@ -68,9 +73,9 @@ registerAction2(class extends Action2 {
 				const isTunnel = p.remoteAddress?.startsWith(TUNNEL_ADDRESS_PREFIX);
 				const status = p.connectionStatus?.get();
 				const item: IRemoteHostQuickPickItem = {
-					kind: 'remote',
+					kind: "remote",
 					provider: p,
-					label: `$(${isTunnel ? 'cloud' : 'remote'}) ${p.label}`,
+					label: `$(${isTunnel ? "cloud" : "remote"}) ${p.label}`,
 					description: status !== undefined ? getStatusLabel(status) : undefined,
 					detail: p.remoteAddress,
 				};
@@ -85,7 +90,7 @@ registerAction2(class extends Action2 {
 					if (action instanceof MenuItemAction) {
 						const icon = ThemeIcon.isThemeIcon(action.item.icon) ? action.item.icon : undefined;
 						menuActionItems.push({
-							kind: 'menu-action',
+							kind: "menu-action",
 							action,
 							label: icon ? `$(${icon.id}) ${action.label}` : action.label,
 							description: action.tooltip || undefined,
@@ -96,11 +101,11 @@ registerAction2(class extends Action2 {
 
 			const items: (ManageHostsPickItem | IQuickPickSeparator)[] = [];
 			if (remoteItems.length > 0) {
-				items.push({ type: 'separator', label: localize('manageHosts.remoteHostsHeader', "Remote Agent Hosts") });
+				items.push({ type: "separator", label: localize("manageHosts.remoteHostsHeader", "Remote Agent Hosts") });
 				items.push(...remoteItems);
 			}
 			if (menuActionItems.length > 0) {
-				items.push({ type: 'separator', label: localize('manageHosts.actionsHeader', "Add or Manage") });
+				items.push({ type: "separator", label: localize("manageHosts.actionsHeader", "Add or Manage") });
 				items.push(...menuActionItems);
 			}
 			return items;
@@ -110,12 +115,12 @@ registerAction2(class extends Action2 {
 			const store = new DisposableStore();
 			const picker = quickInputService.createQuickPick<ManageHostsPickItem>({ useSeparators: true });
 			store.add(picker);
-			picker.title = localize('manageHosts.title', "Manage Remote Agent Hosts");
-			picker.placeholder = localize('manageHosts.placeholder', "Select a remote to manage or pick an action");
+			picker.title = localize("manageHosts.title", "Manage Remote Agent Hosts");
+			picker.placeholder = localize("manageHosts.placeholder", "Select a remote to manage or pick an action");
 			picker.matchOnDescription = true;
 			picker.matchOnDetail = true;
 
-			let lastFilter = '';
+			let lastFilter = "";
 			const refresh = () => {
 				lastFilter = picker.value;
 				picker.items = buildItems();
@@ -141,7 +146,7 @@ registerAction2(class extends Action2 {
 			store.add(sessionsProvidersService.onDidChangeProviders(() => subscribeToProviders()));
 
 			store.add(picker.onDidTriggerItemButton(async e => {
-				if (e.item.kind === 'remote' && e.button === removeButton) {
+				if (e.item.kind === "remote" && e.button === removeButton) {
 					await removeRemoteHost(e.item.provider, remoteAgentHostService);
 					// onDidChangeProviders will refresh
 				}
@@ -153,13 +158,13 @@ registerAction2(class extends Action2 {
 				if (!selected) {
 					return;
 				}
-				if (selected.kind === 'remote') {
+				if (selected.kind === "remote") {
 					void instantiationService.invokeFunction(a => showRemoteHostOptions(a, selected.provider, { showBackButton: true })).then(result => {
-						if (result === 'back') {
+						if (result === "back") {
 							showManagePicker();
 						}
 					});
-				} else if (selected.kind === 'menu-action') {
+				} else if (selected.kind === "menu-action") {
 					commandService.executeCommand(selected.action.id, () => showManagePicker());
 				}
 			}));

@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as DOM from '../../../../../base/browser/dom.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { Codicon } from '../../../../../base/common/codicons.js';
-import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { IListRenderer } from '../../../../../base/browser/ui/list/list.js';
-import { IHoverService } from '../../../../../platform/hover/browser/hover.js';
+import * as DOM from "../../../../../base/browser/dom.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { IListRenderer } from "../../../../../base/browser/ui/list/list.js";
+import { IHoverService } from "../../../../../platform/hover/browser/hover.js";
 
 const $ = DOM.$;
 
@@ -20,7 +20,7 @@ export const CUSTOMIZATION_GROUP_HEADER_HEIGHT_WITH_SEPARATOR = 40;
  * MCP-server and plugin list widgets.
  */
 export interface ICustomizationGroupHeaderEntry {
-	readonly type: 'group-header';
+	readonly type: "group-header";
 	readonly id: string;
 	readonly label: string;
 	readonly icon: ThemeIcon;
@@ -55,27 +55,40 @@ export class CustomizationGroupHeaderRenderer<T extends ICustomizationGroupHeade
 	renderTemplate(container: HTMLElement): ICustomizationGroupHeaderTemplateData {
 		const disposables = new DisposableStore();
 		const elementDisposables = new DisposableStore();
-		container.classList.add('ai-customization-group-header');
+		container.classList.add("ai-customization-group-header");
 
-		const chevron = DOM.append(container, $('.group-chevron'));
-		const icon = DOM.append(container, $('.group-icon'));
-		const labelGroup = DOM.append(container, $('.group-label-group'));
-		const label = DOM.append(labelGroup, $('.group-label'));
-		const count = DOM.append(container, $('.group-count'));
-		const infoIcon = DOM.append(container, $('.group-info'));
+		const chevron = DOM.append(container, $(".group-chevron"));
+		const icon = DOM.append(container, $(".group-icon"));
+		const labelGroup = DOM.append(container, $(".group-label-group"));
+		const label = DOM.append(labelGroup, $(".group-label"));
+		const count = DOM.append(container, $(".group-count"));
+		const infoIcon = DOM.append(container, $(".group-info"));
 		infoIcon.classList.add(...ThemeIcon.asClassNameArray(Codicon.info));
 
-		return { container, chevron, icon, label, count, infoIcon, disposables, elementDisposables };
+		return {
+      container,
+      chevron,
+      icon,
+      label,
+      count,
+      infoIcon,
+      disposables,
+      elementDisposables,
+    };
 	}
 
 	renderElement(element: T, _index: number, templateData: ICustomizationGroupHeaderTemplateData): void {
 		templateData.elementDisposables.clear();
 
-		templateData.chevron.className = 'group-chevron';
-		templateData.chevron.classList.add(...ThemeIcon.asClassNameArray(element.collapsed ? Codicon.chevronRight : Codicon.chevronDown));
+		templateData.chevron.className = "group-chevron";
+		templateData.chevron.classList.add(
+      ...ThemeIcon.asClassNameArray(element.collapsed ? Codicon.chevronRight : Codicon.chevronDown),
+    );
 
-		templateData.icon.className = 'group-icon';
-		templateData.icon.classList.add(...ThemeIcon.asClassNameArray(element.icon));
+		templateData.icon.className = "group-icon";
+		templateData.icon.classList.add(
+      ...ThemeIcon.asClassNameArray(element.icon),
+    );
 
 		templateData.label.textContent = element.label;
 		templateData.count.textContent = `${element.count}`;
@@ -85,11 +98,14 @@ export class CustomizationGroupHeaderRenderer<T extends ICustomizationGroupHeade
 			appearance: {
 				compact: true,
 				skipFadeInAnimation: true,
-			}
+			},
 		})));
 
-		templateData.container.classList.toggle('collapsed', element.collapsed);
-		templateData.container.classList.toggle('has-previous-group', !element.isFirst);
+		templateData.container.classList.toggle("collapsed", element.collapsed);
+		templateData.container.classList.toggle(
+      "has-previous-group",
+      !element.isFirst,
+    );
 	}
 
 	disposeTemplate(templateData: ICustomizationGroupHeaderTemplateData): void {

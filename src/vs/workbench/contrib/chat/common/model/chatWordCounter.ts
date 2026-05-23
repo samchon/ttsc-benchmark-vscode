@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as markedKatexExtension from '../../../markdown/common/markedKatexExtension.js';
+import * as markedKatexExtension from "../../../markdown/common/markedKatexExtension.js";
 
 export interface IWordCountResult {
 	value: string;
@@ -49,9 +49,12 @@ export function getNWords(str: string, numWordsToCount: number): IWordCountResul
 	// One chinese character
 	// One or more + - =, handled so that code like "a=1+2-3" is broken up better
 	// One or more characters that aren't whitepace or any of the above
-	const backtick = '`';
+	const backtick = "`";
 
-	const wordRegExp = new RegExp('(?:' + linkPattern + ')|(?:' + markedKatexExtension.mathInlineRegExp.source + r`)|\p{sc=Han}|=+|\++|-+|[^\s\|\p{sc=Han}|=|\+|\-|${backtick}]+`, 'gu');
+	const wordRegExp = new RegExp(
+    "(?:" + linkPattern + ")|(?:" + markedKatexExtension.mathInlineRegExp.source + r`)|\p{sc=Han}|=+|\++|-+|[^\s\|\p{sc=Han}|=|\+|\-|${backtick}]+`,
+    "gu",
+  );
 	const allWordMatches = Array.from(str.matchAll(wordRegExp));
 
 	const targetWords = allWordMatches.slice(0, numWordsToCount);
@@ -62,11 +65,11 @@ export function getNWords(str: string, numWordsToCount: number): IWordCountResul
 
 	const value = str.substring(0, endIndex);
 	return {
-		value,
-		returnedWordCount: targetWords.length === 0 ? (value.length ? 1 : 0) : targetWords.length,
-		isFullString: endIndex >= str.length,
-		totalWordCount: allWordMatches.length
-	};
+    value,
+    returnedWordCount: targetWords.length === 0 ? (value.length ? 1 : 0) : targetWords.length,
+    isFullString: endIndex >= str.length,
+    totalWordCount: allWordMatches.length,
+  };
 }
 
 export function countWords(str: string): number {

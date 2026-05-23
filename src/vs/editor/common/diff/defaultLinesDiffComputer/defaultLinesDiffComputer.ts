@@ -3,48 +3,79 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { equals } from '../../../../base/common/arrays.js';
-import { assertFn } from '../../../../base/common/assert.js';
-import { LineRange } from '../../core/ranges/lineRange.js';
-import { OffsetRange } from '../../core/ranges/offsetRange.js';
-import { Position } from '../../core/position.js';
-import { Range } from '../../core/range.js';
-import { ArrayText } from '../../core/text/abstractText.js';
-import { ILinesDiffComputer, ILinesDiffComputerOptions, LinesDiff, MovedText } from '../linesDiffComputer.js';
-import { DetailedLineRangeMapping, LineRangeMapping, lineRangeMappingFromRangeMappings, RangeMapping } from '../rangeMapping.js';
-import { DateTimeout, InfiniteTimeout, ITimeout, SequenceDiff } from './algorithms/diffAlgorithm.js';
-import { DynamicProgrammingDiffing } from './algorithms/dynamicProgrammingDiffing.js';
-import { MyersDiffAlgorithm } from './algorithms/myersDiffAlgorithm.js';
-import { computeMovedLines } from './computeMovedLines.js';
-import { extendDiffsToEntireWordIfAppropriate, optimizeSequenceDiffs, removeShortMatches, removeVeryShortMatchingLinesBetweenDiffs, removeVeryShortMatchingTextBetweenLongDiffs } from './heuristicSequenceOptimizations.js';
-import { LineSequence } from './lineSequence.js';
-import { LinesSliceCharSequence } from './linesSliceCharSequence.js';
+import { equals } from "../../../../base/common/arrays.js";
+import { assertFn } from "../../../../base/common/assert.js";
+import { LineRange } from "../../core/ranges/lineRange.js";
+import { OffsetRange } from "../../core/ranges/offsetRange.js";
+import { Position } from "../../core/position.js";
+import { Range } from "../../core/range.js";
+import { ArrayText } from "../../core/text/abstractText.js";
+import { ILinesDiffComputer, ILinesDiffComputerOptions, LinesDiff, MovedText } from "../linesDiffComputer.js";
+import {
+  DetailedLineRangeMapping,
+  LineRangeMapping,
+  lineRangeMappingFromRangeMappings,
+  RangeMapping,
+} from "../rangeMapping.js";
+import { DateTimeout, InfiniteTimeout, ITimeout, SequenceDiff } from "./algorithms/diffAlgorithm.js";
+import { DynamicProgrammingDiffing } from "./algorithms/dynamicProgrammingDiffing.js";
+import { MyersDiffAlgorithm } from "./algorithms/myersDiffAlgorithm.js";
+import { computeMovedLines } from "./computeMovedLines.js";
+import {
+  extendDiffsToEntireWordIfAppropriate,
+  optimizeSequenceDiffs,
+  removeShortMatches,
+  removeVeryShortMatchingLinesBetweenDiffs,
+  removeVeryShortMatchingTextBetweenLongDiffs,
+} from "./heuristicSequenceOptimizations.js";
+import { LineSequence } from "./lineSequence.js";
+import { LinesSliceCharSequence } from "./linesSliceCharSequence.js";
 
 export class DefaultLinesDiffComputer implements ILinesDiffComputer {
 	private readonly dynamicProgrammingDiffing = new DynamicProgrammingDiffing();
 	private readonly myersDiffingAlgorithm = new MyersDiffAlgorithm();
 
 	computeDiff(originalLines: string[], modifiedLines: string[], options: ILinesDiffComputerOptions): LinesDiff {
-		if (originalLines.length <= 1 && equals(originalLines, modifiedLines, (a, b) => a === b)) {
+		if (originalLines.length <= 1 && equals(
+      originalLines,
+      modifiedLines,
+      (a, b) => a === b,
+    )) {
 			return new LinesDiff([], [], false);
 		}
 
 		if (originalLines.length === 1 && originalLines[0].length === 0 || modifiedLines.length === 1 && modifiedLines[0].length === 0) {
-			return new LinesDiff([
-				new DetailedLineRangeMapping(
-					new LineRange(1, originalLines.length + 1),
-					new LineRange(1, modifiedLines.length + 1),
-					[
-						new RangeMapping(
-							new Range(1, 1, originalLines.length, originalLines[originalLines.length - 1].length + 1),
-							new Range(1, 1, modifiedLines.length, modifiedLines[modifiedLines.length - 1].length + 1),
-						)
-					]
-				)
-			], [], false);
+			return new LinesDiff(
+        [
+          new DetailedLineRangeMapping(
+            new LineRange(1, originalLines.length + 1),
+            new LineRange(1, modifiedLines.length + 1),
+            [
+              new RangeMapping(
+                new Range(
+                  1,
+                  1,
+                  originalLines.length,
+                  originalLines[originalLines.length - 1].length + 1,
+                ),
+                new Range(
+                  1,
+                  1,
+                  modifiedLines.length,
+                  modifiedLines[modifiedLines.length - 1].length + 1,
+                ),
+              ),
+            ],
+          ),
+        ],
+        [],
+        false,
+      );
 		}
 
-		const timeout = options.maxComputationTimeMs === 0 ? InfiniteTimeout.instance : new DateTimeout(options.maxComputationTimeMs);
+		const timeout = options.maxComputationTimeMs === 0 ? InfiniteTimeout.instance : new DateTimeout(
+      options.maxComputationTimeMs,
+    );
 		const considerWhitespaceChanges = !options.ignoreTrimWhitespace;
 
 		const perfectHashes = new Map<string, number>();
@@ -57,8 +88,12 @@ export class DefaultLinesDiffComputer implements ILinesDiffComputer {
 			return hash;
 		}
 
-		const originalLinesHashes = originalLines.map((l) => getOrCreateHash(l.trim()));
-		const modifiedLinesHashes = modifiedLines.map((l) => getOrCreateHash(l.trim()));
+		const originalLinesHashes = originalLines.map(
+      (l) => getOrCreateHash(l.trim()),
+    );
+		const modifiedLinesHashes = modifiedLines.map(
+      (l) => getOrCreateHash(l.trim()),
+    );
 
 		const sequence1 = new LineSequence(originalLinesHashes, originalLines);
 		const sequence2 = new LineSequence(modifiedLinesHashes, modifiedLines);
@@ -75,21 +110,29 @@ export class DefaultLinesDiffComputer implements ILinesDiffComputer {
 							? modifiedLines[offset2].length === 0
 								? 0.1
 								: 1 + Math.log(1 + modifiedLines[offset2].length)
-							: 0.99
+							: 0.99,
 				);
 			}
 
 			return this.myersDiffingAlgorithm.compute(
 				sequence1,
 				sequence2,
-				timeout
+				timeout,
 			);
 		})();
 
 		let lineAlignments = lineAlignmentResult.diffs;
 		let hitTimeout = lineAlignmentResult.hitTimeout;
-		lineAlignments = optimizeSequenceDiffs(sequence1, sequence2, lineAlignments);
-		lineAlignments = removeVeryShortMatchingLinesBetweenDiffs(sequence1, sequence2, lineAlignments);
+		lineAlignments = optimizeSequenceDiffs(
+      sequence1,
+      sequence2,
+      lineAlignments,
+    );
+		lineAlignments = removeVeryShortMatchingLinesBetweenDiffs(
+      sequence1,
+      sequence2,
+      lineAlignments,
+    );
 
 		const alignments: RangeMapping[] = [];
 
@@ -103,10 +146,17 @@ export class DefaultLinesDiffComputer implements ILinesDiffComputer {
 				const seq2Offset = seq2LastStart + i;
 				if (originalLines[seq1Offset] !== modifiedLines[seq2Offset]) {
 					// This is because of whitespace changes, diff these lines
-					const characterDiffs = this.refineDiff(originalLines, modifiedLines, new SequenceDiff(
-						new OffsetRange(seq1Offset, seq1Offset + 1),
-						new OffsetRange(seq2Offset, seq2Offset + 1),
-					), timeout, considerWhitespaceChanges, options);
+					const characterDiffs = this.refineDiff(
+            originalLines,
+            modifiedLines,
+            new SequenceDiff(
+              new OffsetRange(seq1Offset, seq1Offset + 1),
+              new OffsetRange(seq2Offset, seq2Offset + 1),
+            ),
+            timeout,
+            considerWhitespaceChanges,
+            options,
+          );
 					for (const a of characterDiffs.mappings) {
 						alignments.push(a);
 					}
@@ -121,7 +171,9 @@ export class DefaultLinesDiffComputer implements ILinesDiffComputer {
 		let seq2LastStart = 0;
 
 		for (const diff of lineAlignments) {
-			assertFn(() => diff.seq1Range.start - seq1LastStart === diff.seq2Range.start - seq2LastStart);
+			assertFn(
+        () => diff.seq1Range.start - seq1LastStart === diff.seq2Range.start - seq2LastStart,
+      );
 
 			const equalLinesCount = diff.seq1Range.start - seq1LastStart;
 
@@ -130,7 +182,14 @@ export class DefaultLinesDiffComputer implements ILinesDiffComputer {
 			seq1LastStart = diff.seq1Range.endExclusive;
 			seq2LastStart = diff.seq2Range.endExclusive;
 
-			const characterDiffs = this.refineDiff(originalLines, modifiedLines, diff, timeout, considerWhitespaceChanges, options);
+			const characterDiffs = this.refineDiff(
+        originalLines,
+        modifiedLines,
+        diff,
+        timeout,
+        considerWhitespaceChanges,
+        options,
+      );
 			if (characterDiffs.hitTimeout) {
 				hitTimeout = true;
 			}
@@ -144,11 +203,24 @@ export class DefaultLinesDiffComputer implements ILinesDiffComputer {
 		const original = new ArrayText(originalLines);
 		const modified = new ArrayText(modifiedLines);
 
-		const changes = lineRangeMappingFromRangeMappings(alignments, original, modified);
+		const changes = lineRangeMappingFromRangeMappings(
+      alignments,
+      original,
+      modified,
+    );
 
 		let moves: MovedText[] = [];
 		if (options.computeMoves) {
-			moves = this.computeMoves(changes, originalLines, modifiedLines, originalLinesHashes, modifiedLinesHashes, timeout, considerWhitespaceChanges, options);
+			moves = this.computeMoves(
+        changes,
+        originalLines,
+        modifiedLines,
+        originalLinesHashes,
+        modifiedLinesHashes,
+        timeout,
+        considerWhitespaceChanges,
+        options,
+      );
 		}
 
 		// Make sure all ranges are valid
@@ -196,13 +268,13 @@ export class DefaultLinesDiffComputer implements ILinesDiffComputer {
 		options: ILinesDiffComputerOptions,
 	): MovedText[] {
 		const moves = computeMovedLines(
-			changes,
-			originalLines,
-			modifiedLines,
-			hashedOriginalLines,
-			hashedModifiedLines,
-			timeout,
-		);
+      changes,
+      originalLines,
+      modifiedLines,
+      hashedOriginalLines,
+      hashedModifiedLines,
+      timeout,
+    );
 		const movesWithDiffs = moves.map(m => {
 			const moveChanges = this.refineDiff(originalLines, modifiedLines, new SequenceDiff(
 				m.original.toOffsetRange(),
@@ -216,10 +288,21 @@ export class DefaultLinesDiffComputer implements ILinesDiffComputer {
 
 	private refineDiff(originalLines: string[], modifiedLines: string[], diff: SequenceDiff, timeout: ITimeout, considerWhitespaceChanges: boolean, options: ILinesDiffComputerOptions): { mappings: RangeMapping[]; hitTimeout: boolean } {
 		const lineRangeMapping = toLineRangeMapping(diff);
-		const rangeMapping = lineRangeMapping.toRangeMapping2(originalLines, modifiedLines);
+		const rangeMapping = lineRangeMapping.toRangeMapping2(
+      originalLines,
+      modifiedLines,
+    );
 
-		const slice1 = new LinesSliceCharSequence(originalLines, rangeMapping.originalRange, considerWhitespaceChanges);
-		const slice2 = new LinesSliceCharSequence(modifiedLines, rangeMapping.modifiedRange, considerWhitespaceChanges);
+		const slice1 = new LinesSliceCharSequence(
+      originalLines,
+      rangeMapping.originalRange,
+      considerWhitespaceChanges,
+    );
+		const slice2 = new LinesSliceCharSequence(
+      modifiedLines,
+      rangeMapping.modifiedRange,
+      considerWhitespaceChanges,
+    );
 
 		const diffResult = slice1.length + slice2.length < 500
 			? this.dynamicProgrammingDiffing.compute(slice1, slice2, timeout)
@@ -231,11 +314,22 @@ export class DefaultLinesDiffComputer implements ILinesDiffComputer {
 		if (check) { SequenceDiff.assertSorted(diffs); }
 		diffs = optimizeSequenceDiffs(slice1, slice2, diffs);
 		if (check) { SequenceDiff.assertSorted(diffs); }
-		diffs = extendDiffsToEntireWordIfAppropriate(slice1, slice2, diffs, (seq, idx) => seq.findWordContaining(idx));
+		diffs = extendDiffsToEntireWordIfAppropriate(
+      slice1,
+      slice2,
+      diffs,
+      (seq, idx) => seq.findWordContaining(idx),
+    );
 		if (check) { SequenceDiff.assertSorted(diffs); }
 
 		if (options.extendToSubwords) {
-			diffs = extendDiffsToEntireWordIfAppropriate(slice1, slice2, diffs, (seq, idx) => seq.findSubWordContaining(idx), true);
+			diffs = extendDiffsToEntireWordIfAppropriate(
+        slice1,
+        slice2,
+        diffs,
+        (seq, idx) => seq.findSubWordContaining(idx),
+        true,
+      );
 			if (check) { SequenceDiff.assertSorted(diffs); }
 		}
 
@@ -248,8 +342,8 @@ export class DefaultLinesDiffComputer implements ILinesDiffComputer {
 			(d) =>
 				new RangeMapping(
 					slice1.translateRange(d.seq1Range),
-					slice2.translateRange(d.seq2Range)
-				)
+					slice2.translateRange(d.seq2Range),
+				),
 		);
 
 		if (check) { RangeMapping.assertSorted(result); }
@@ -257,15 +351,21 @@ export class DefaultLinesDiffComputer implements ILinesDiffComputer {
 		// Assert: result applied on original should be the same as diff applied to original
 
 		return {
-			mappings: result,
-			hitTimeout: diffResult.hitTimeout,
-		};
+      mappings: result,
+      hitTimeout: diffResult.hitTimeout,
+    };
 	}
 }
 
 function toLineRangeMapping(sequenceDiff: SequenceDiff) {
 	return new LineRangeMapping(
-		new LineRange(sequenceDiff.seq1Range.start + 1, sequenceDiff.seq1Range.endExclusive + 1),
-		new LineRange(sequenceDiff.seq2Range.start + 1, sequenceDiff.seq2Range.endExclusive + 1),
-	);
+    new LineRange(
+      sequenceDiff.seq1Range.start + 1,
+      sequenceDiff.seq1Range.endExclusive + 1,
+    ),
+    new LineRange(
+      sequenceDiff.seq2Range.start + 1,
+      sequenceDiff.seq2Range.endExclusive + 1,
+    ),
+  );
 }

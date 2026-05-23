@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../base/common/lifecycle.js';
-import { observableValue, derived, IObservable } from '../../base/common/observable.js';
-import { isIOS, isMobile } from '../../base/common/platform.js';
-import { isAndroid } from '../../base/browser/browser.js';
-import { Gesture } from '../../base/browser/touch.js';
+import { Disposable } from "../../base/common/lifecycle.js";
+import { observableValue, derived, IObservable } from "../../base/common/observable.js";
+import { isIOS, isMobile } from "../../base/common/platform.js";
+import { isAndroid } from "../../base/browser/browser.js";
+import { Gesture } from "../../base/browser/touch.js";
 
 /** Viewport classification based on container width. */
-export type ViewportClass = 'phone' | 'tablet' | 'desktop';
+export type ViewportClass = "phone" | "tablet" | "desktop";
 
 /** Default visibility for each workbench part. */
 export interface IPartVisibilityDefaults {
@@ -46,15 +46,15 @@ const isMobilePlatform = isMobile;
  */
 function classifyViewport(width: number): ViewportClass {
 	if (!isMobilePlatform) {
-		return 'desktop';
+		return "desktop";
 	}
 	if (width < PHONE_MAX_WIDTH) {
-		return 'phone';
+		return "phone";
 	}
 	if (width < TABLET_MAX_WIDTH) {
-		return 'tablet';
+		return "tablet";
 	}
-	return 'desktop';
+	return "desktop";
 }
 
 /**
@@ -78,15 +78,18 @@ export class SessionsLayoutPolicy extends Disposable {
 
 	// --- Observables ---
 
-	private readonly _viewportClass = observableValue<ViewportClass>(this, 'desktop');
+	private readonly _viewportClass = observableValue<ViewportClass>(
+    this,
+    "desktop",
+  );
 
 	/** Current viewport class derived from the most recent `update()` call. */
 	readonly viewportClass: IObservable<ViewportClass> = this._viewportClass;
 
 	/** `true` when the viewport class is `phone`. */
 	readonly isPhoneLayout: IObservable<boolean> = derived(this, reader => {
-		return this._viewportClass.read(reader) === 'phone';
-	});
+    return this._viewportClass.read(reader) === "phone";
+  });
 
 	constructor() {
 		super();
@@ -117,13 +120,25 @@ export class SessionsLayoutPolicy extends Disposable {
 	getPartVisibilityDefaults(viewportClass?: ViewportClass): IPartVisibilityDefaults {
 		const vc = viewportClass ?? this._viewportClass.get();
 		switch (vc) {
-			case 'phone':
-				return { sidebar: false, auxiliaryBar: false, panel: false, chatBar: true, editor: false };
-			case 'tablet':
-			case 'desktop':
+			case "phone":
+				return {
+          sidebar: false,
+          auxiliaryBar: false,
+          panel: false,
+          chatBar: true,
+          editor: false,
+        };
+			case "tablet":
+			case "desktop":
 				// Tablet and desktop share the standard multi-part workbench defaults.
 				// A dedicated tablet layout has not been designed yet.
-				return { sidebar: true, auxiliaryBar: true, panel: false, chatBar: true, editor: false };
+				return {
+          sidebar: true,
+          auxiliaryBar: true,
+          panel: false,
+          chatBar: true,
+          editor: false,
+        };
 		}
 	}
 
@@ -138,22 +153,22 @@ export class SessionsLayoutPolicy extends Disposable {
 	getPartSizes(width: number, _height: number, viewportClass?: ViewportClass): IPartSizeDefaults {
 		const vc = viewportClass ?? this._viewportClass.get();
 		switch (vc) {
-			case 'phone':
+			case "phone":
 				return {
-					sideBarSize: 0,
-					auxiliaryBarSize: 0,
-					panelSize: 0,
-					chatBarWidth: width,
-				};
-			case 'tablet':
-			case 'desktop':
+          sideBarSize: 0,
+          auxiliaryBarSize: 0,
+          panelSize: 0,
+          chatBarWidth: width,
+        };
+			case "tablet":
+			case "desktop":
 				// Tablet currently falls back to desktop sizing.
 				return {
-					sideBarSize: 300,
-					auxiliaryBarSize: 340,
-					panelSize: 300,
-					chatBarWidth: width - 300,
-				};
+          sideBarSize: 300,
+          auxiliaryBarSize: 340,
+          panelSize: 300,
+          chatBarWidth: width - 300,
+        };
 		}
 	}
 }

@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { StandardTokenType } from '../../../../common/encodedTokenAttributes.js';
-import { BracketElectricCharacterSupport, IElectricAction } from '../../../../common/languages/supports/electricCharacter.js';
-import { RichEditBrackets } from '../../../../common/languages/supports/richEditBrackets.js';
-import { TokenText, createFakeScopedLineTokens } from '../../modesTestUtils.js';
+import assert from "assert";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { StandardTokenType } from "../../../../common/encodedTokenAttributes.js";
+import { BracketElectricCharacterSupport, IElectricAction } from "../../../../common/languages/supports/electricCharacter.js";
+import { RichEditBrackets } from "../../../../common/languages/supports/richEditBrackets.js";
+import { TokenText, createFakeScopedLineTokens } from "../../modesTestUtils.js";
 
-const fakeLanguageId = 'test';
+const fakeLanguageId = "test";
 
-suite('Editor Modes - Auto Indentation', () => {
+suite("Editor Modes - Auto Indentation", () => {
 
 	ensureNoDisposablesAreLeakedInTestSuite();
 
@@ -30,31 +30,31 @@ suite('Editor Modes - Auto Indentation', () => {
 		assert.deepStrictEqual(actual, { matchOpenBracket: matchOpenBracket });
 	}
 
-	test('getElectricCharacters uses all sources and dedups', () => {
+	test("getElectricCharacters uses all sources and dedups", () => {
 		const sup = new BracketElectricCharacterSupport(
 			new RichEditBrackets(fakeLanguageId, [
-				['{', '}'],
-				['(', ')']
-			])
+				["{", "}"],
+				["(", ")"],
+			]),
 		);
 
-		assert.deepStrictEqual(sup.getElectricCharacters(), ['}', ')']);
+		assert.deepStrictEqual(sup.getElectricCharacters(), ["}", ")"]);
 	});
 
-	test('matchOpenBracket', () => {
+	test("matchOpenBracket", () => {
 		const sup = new BracketElectricCharacterSupport(
 			new RichEditBrackets(fakeLanguageId, [
-				['{', '}'],
-				['(', ')']
-			])
+				["{", "}"],
+				["(", ")"],
+			]),
 		);
 
-		testDoesNothing(sup, [{ text: '\t{', type: StandardTokenType.Other }], '\t', 1);
-		testDoesNothing(sup, [{ text: '\t{', type: StandardTokenType.Other }], '\t', 2);
-		testDoesNothing(sup, [{ text: '\t\t', type: StandardTokenType.Other }], '{', 3);
+		testDoesNothing(sup, [{ text: "\t{", type: StandardTokenType.Other }], "\t", 1);
+		testDoesNothing(sup, [{ text: "\t{", type: StandardTokenType.Other }], "\t", 2);
+		testDoesNothing(sup, [{ text: "\t\t", type: StandardTokenType.Other }], "{", 3);
 
-		testDoesNothing(sup, [{ text: '\t}', type: StandardTokenType.Other }], '\t', 1);
-		testDoesNothing(sup, [{ text: '\t}', type: StandardTokenType.Other }], '\t', 2);
-		testMatchBracket(sup, [{ text: '\t\t', type: StandardTokenType.Other }], '}', 3, '}');
+		testDoesNothing(sup, [{ text: "\t}", type: StandardTokenType.Other }], "\t", 1);
+		testDoesNothing(sup, [{ text: "\t}", type: StandardTokenType.Other }], "\t", 2);
+		testMatchBracket(sup, [{ text: "\t\t", type: StandardTokenType.Other }], "}", 3, "}");
 	});
 });

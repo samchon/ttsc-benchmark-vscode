@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../../../../base/common/uri.js';
-import { ExtensionIdentifier } from '../../../../../../platform/extensions/common/extensions.js';
-import { IProductService } from '../../../../../../platform/product/common/productService.js';
-import { IAgentSource, PromptsStorage } from '../service/promptsService.js';
+import { URI } from "../../../../../../base/common/uri.js";
+import { ExtensionIdentifier } from "../../../../../../platform/extensions/common/extensions.js";
+import { IProductService } from "../../../../../../platform/product/common/productService.js";
+import { IAgentSource, PromptsStorage } from "../service/promptsService.js";
 
 /**
  * Checks if a prompt file is organization-provided.
@@ -23,8 +23,11 @@ export function isOrganizationPromptFile(uri: URI, extensionId: ExtensionIdentif
 	if (!chatExtensionId) {
 		return false;
 	}
-	const isFromBuiltinChatExtension = ExtensionIdentifier.equals(extensionId, chatExtensionId);
-	const pathContainsGithub = uri.path.includes('/github/');
+	const isFromBuiltinChatExtension = ExtensionIdentifier.equals(
+    extensionId,
+    chatExtensionId,
+  );
+	const pathContainsGithub = uri.path.includes("/github/");
 	return isFromBuiltinChatExtension && pathContainsGithub;
 }
 
@@ -38,7 +41,10 @@ export function isBuiltinAgent(source: IAgentSource, uri: URI, productService: I
 		return false;
 	}
 	const chatExtensionId = productService.defaultChatAgent?.chatExtensionId;
-	if (!chatExtensionId || !ExtensionIdentifier.equals(source.extensionId, chatExtensionId)) {
+	if (!chatExtensionId || !ExtensionIdentifier.equals(
+    source.extensionId,
+    chatExtensionId,
+  )) {
 		return false;
 	}
 	return !isOrganizationPromptFile(uri, source.extensionId, productService);

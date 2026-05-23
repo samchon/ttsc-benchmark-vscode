@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IEditorPaneService } from '../common/editorPaneService.js';
-import { EditorPaneDescriptor } from '../../../browser/editor.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
+import { IEditorPaneService } from "../common/editorPaneService.js";
+import { EditorPaneDescriptor } from "../../../browser/editor.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
 
 export class EditorPaneService implements IEditorPaneService {
 
@@ -18,4 +18,8 @@ export class EditorPaneService implements IEditorPaneService {
 	}
 }
 
-registerSingleton(IEditorPaneService, EditorPaneService, InstantiationType.Delayed);
+registerSingleton(
+  IEditorPaneService,
+  EditorPaneService,
+  InstantiationType.Delayed,
+);

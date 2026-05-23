@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ITextSearchMatch } from '../../../../services/search/common/search.js';
-import { ICellViewModel } from '../../../notebook/browser/notebookBrowser.js';
-import { NotebookEditorWidget } from '../../../notebook/browser/notebookEditorWidget.js';
-import { INotebookCellMatchNoModel } from '../../common/searchNotebookHelpers.js';
-import { ISearchTreeFileMatch, ISearchTreeMatch, isSearchTreeFileMatch } from '../searchTreeModel/searchTreeCommon.js';
-import { INotebookCellMatchWithModel } from './searchNotebookHelpers.js';
+import { ITextSearchMatch } from "../../../../services/search/common/search.js";
+import { ICellViewModel } from "../../../notebook/browser/notebookBrowser.js";
+import { NotebookEditorWidget } from "../../../notebook/browser/notebookEditorWidget.js";
+import { INotebookCellMatchNoModel } from "../../common/searchNotebookHelpers.js";
+import { ISearchTreeFileMatch, ISearchTreeMatch, isSearchTreeFileMatch } from "../searchTreeModel/searchTreeCommon.js";
+import { INotebookCellMatchWithModel } from "./searchNotebookHelpers.js";
 
 export interface INotebookFileInstanceMatch extends ISearchTreeFileMatch {
 	bindNotebookEditorWidget(editor: NotebookEditorWidget): void;
@@ -23,10 +23,10 @@ export interface INotebookFileInstanceMatch extends ISearchTreeFileMatch {
 
 export function isNotebookFileMatch(obj: any): obj is INotebookFileInstanceMatch {
 	return obj &&
-		typeof obj.bindNotebookEditorWidget === 'function' &&
-		typeof obj.updateMatchesForEditorWidget === 'function' &&
-		typeof obj.unbindNotebookEditorWidget === 'function' &&
-		typeof obj.updateNotebookHighlights === 'function'
+		typeof obj.bindNotebookEditorWidget === "function" &&
+		typeof obj.updateMatchesForEditorWidget === "function" &&
+		typeof obj.unbindNotebookEditorWidget === "function" &&
+		typeof obj.updateNotebookHighlights === "function"
 		&& isSearchTreeFileMatch(obj);
 }
 
@@ -39,14 +39,14 @@ export interface IMatchInNotebook extends ISearchTreeMatch {
 	cell: ICellViewModel | undefined;
 }
 export function isIMatchInNotebook(obj: any): obj is IMatchInNotebook {
-	return typeof obj === 'object' &&
+	return typeof obj === "object" &&
 		obj !== null &&
-		typeof obj.parent === 'function' &&
-		typeof obj.cellParent === 'object' &&
-		typeof obj.isWebviewMatch === 'function' &&
-		typeof obj.cellIndex === 'number' &&
-		(typeof obj.webviewIndex === 'number' || obj.webviewIndex === undefined) &&
-		(typeof obj.cell === 'object' || obj.cell === undefined);
+		typeof obj.parent === "function" &&
+		typeof obj.cellParent === "object" &&
+		typeof obj.isWebviewMatch === "function" &&
+		typeof obj.cellIndex === "number" &&
+		(typeof obj.webviewIndex === "number" || obj.webviewIndex === undefined) &&
+		(typeof obj.cell === "object" || obj.cell === undefined);
 }
 
 export interface ICellMatch {

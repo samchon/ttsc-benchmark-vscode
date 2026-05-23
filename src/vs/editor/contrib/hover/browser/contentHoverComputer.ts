@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { coalesce } from '../../../../base/common/arrays.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { IActiveCodeEditor, ICodeEditor } from '../../../browser/editorBrowser.js';
-import { IModelDecoration } from '../../../common/model.js';
-import { HoverStartSource, IHoverComputer } from './hoverOperation.js';
-import { HoverAnchor, HoverAnchorType, IEditorHoverParticipant, IHoverPart } from './hoverTypes.js';
-import { AsyncIterableProducer } from '../../../../base/common/async.js';
+import { coalesce } from "../../../../base/common/arrays.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { IActiveCodeEditor, ICodeEditor } from "../../../browser/editorBrowser.js";
+import { IModelDecoration } from "../../../common/model.js";
+import { HoverStartSource, IHoverComputer } from "./hoverOperation.js";
+import { HoverAnchor, HoverAnchorType, IEditorHoverParticipant, IHoverPart } from "./hoverTypes.js";
+import { AsyncIterableProducer } from "../../../../base/common/async.js";
 
 export interface ContentHoverComputerOptions {
 	shouldFocus: boolean;
@@ -22,7 +22,7 @@ export class ContentHoverComputer implements IHoverComputer<ContentHoverComputer
 
 	constructor(
 		private readonly _editor: ICodeEditor,
-		private readonly _participants: readonly IEditorHoverParticipant[]
+		private readonly _participants: readonly IEditorHoverParticipant[],
 	) {
 	}
 
@@ -71,7 +71,10 @@ export class ContentHoverComputer implements IHoverComputer<ContentHoverComputer
 			return AsyncIterableProducer.EMPTY;
 		}
 
-		const lineDecorations = ContentHoverComputer._getLineDecorations(this._editor, anchor);
+		const lineDecorations = ContentHoverComputer._getLineDecorations(
+      this._editor,
+      anchor,
+    );
 
 		return AsyncIterableProducer.merge(
 			this._participants.map((participant) => {
@@ -79,7 +82,7 @@ export class ContentHoverComputer implements IHoverComputer<ContentHoverComputer
 					return AsyncIterableProducer.EMPTY;
 				}
 				return participant.computeAsync(anchor, lineDecorations, options.source, token);
-			})
+			}),
 		);
 	}
 
@@ -89,11 +92,16 @@ export class ContentHoverComputer implements IHoverComputer<ContentHoverComputer
 		}
 
 		const anchor = options.anchor;
-		const lineDecorations = ContentHoverComputer._getLineDecorations(this._editor, anchor);
+		const lineDecorations = ContentHoverComputer._getLineDecorations(
+      this._editor,
+      anchor,
+    );
 
 		let result: IHoverPart[] = [];
 		for (const participant of this._participants) {
-			result = result.concat(participant.computeSync(anchor, lineDecorations, options.source));
+			result = result.concat(
+        participant.computeSync(anchor, lineDecorations, options.source),
+      );
 		}
 
 		return coalesce(result);

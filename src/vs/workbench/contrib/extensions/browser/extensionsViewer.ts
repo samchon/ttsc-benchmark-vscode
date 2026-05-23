@@ -3,50 +3,84 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../base/browser/dom.js';
-import { localize } from '../../../../nls.js';
-import { IDisposable, dispose, Disposable, DisposableStore, toDisposable, isDisposable, MutableDisposable } from '../../../../base/common/lifecycle.js';
-import { Action, ActionRunner, IAction, Separator } from '../../../../base/common/actions.js';
-import { IExtensionsWorkbenchService, IExtension, IExtensionsViewState } from '../common/extensions.js';
-import { Event } from '../../../../base/common/event.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { IListService, IWorkbenchPagedListOptions, WorkbenchAsyncDataTree, WorkbenchPagedList } from '../../../../platform/list/browser/listService.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { registerThemingParticipant, IColorTheme, ICssStyleCollector } from '../../../../platform/theme/common/themeService.js';
-import { IAsyncDataSource, ITreeNode } from '../../../../base/browser/ui/tree/tree.js';
-import { IListVirtualDelegate, IListRenderer, IListContextMenuEvent } from '../../../../base/browser/ui/list/list.js';
-import { CancellationToken, CancellationTokenSource } from '../../../../base/common/cancellation.js';
-import { IModalEditorPartOptions } from '../../../../platform/editor/common/editor.js';
-import { isNonEmptyArray } from '../../../../base/common/arrays.js';
-import { Delegate, Renderer } from './extensionsList.js';
-import { listFocusForeground, listFocusBackground, foreground, editorBackground } from '../../../../platform/theme/common/colorRegistry.js';
-import { StandardKeyboardEvent } from '../../../../base/browser/keyboardEvent.js';
-import { StandardMouseEvent } from '../../../../base/browser/mouseEvent.js';
-import { KeyCode } from '../../../../base/common/keyCodes.js';
-import { IListStyles } from '../../../../base/browser/ui/list/listWidget.js';
-import { HoverPosition } from '../../../../base/browser/ui/hover/hoverWidget.js';
-import { IStyleOverride } from '../../../../platform/theme/browser/defaultStyles.js';
-import { IViewDescriptorService, ViewContainerLocation } from '../../../common/views.js';
-import { IWorkbenchLayoutService, Position } from '../../../services/layout/browser/layoutService.js';
-import { areSameExtensions } from '../../../../platform/extensionManagement/common/extensionManagementUtil.js';
-import { ExtensionAction, getContextMenuActions, ManageExtensionAction } from './extensionsActions.js';
-import { IContextMenuService } from '../../../../platform/contextview/browser/contextView.js';
-import { INotificationService } from '../../../../platform/notification/common/notification.js';
-import { getLocationBasedViewColors } from '../../../browser/parts/views/viewPane.js';
-import { DelayedPagedModel, IPagedModel } from '../../../../base/common/paging.js';
-import { ExtensionIconWidget } from './extensionsWidgets.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { isCancellationError } from '../../../../base/common/errors.js';
+import * as dom from "../../../../base/browser/dom.js";
+import { localize } from "../../../../nls.js";
+import {
+  IDisposable,
+  dispose,
+  Disposable,
+  DisposableStore,
+  toDisposable,
+  isDisposable,
+  MutableDisposable,
+} from "../../../../base/common/lifecycle.js";
+import { Action, ActionRunner, IAction, Separator } from "../../../../base/common/actions.js";
+import { IExtensionsWorkbenchService, IExtension, IExtensionsViewState } from "../common/extensions.js";
+import { Event } from "../../../../base/common/event.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import {
+  IListService,
+  IWorkbenchPagedListOptions,
+  WorkbenchAsyncDataTree,
+  WorkbenchPagedList,
+} from "../../../../platform/list/browser/listService.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { registerThemingParticipant, IColorTheme, ICssStyleCollector } from "../../../../platform/theme/common/themeService.js";
+import { IAsyncDataSource, ITreeNode } from "../../../../base/browser/ui/tree/tree.js";
+import { IListVirtualDelegate, IListRenderer, IListContextMenuEvent } from "../../../../base/browser/ui/list/list.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { IModalEditorPartOptions } from "../../../../platform/editor/common/editor.js";
+import { isNonEmptyArray } from "../../../../base/common/arrays.js";
+import { Delegate, Renderer } from "./extensionsList.js";
+import {
+  listFocusForeground,
+  listFocusBackground,
+  foreground,
+  editorBackground,
+} from "../../../../platform/theme/common/colorRegistry.js";
+import { StandardKeyboardEvent } from "../../../../base/browser/keyboardEvent.js";
+import { StandardMouseEvent } from "../../../../base/browser/mouseEvent.js";
+import { KeyCode } from "../../../../base/common/keyCodes.js";
+import { IListStyles } from "../../../../base/browser/ui/list/listWidget.js";
+import { HoverPosition } from "../../../../base/browser/ui/hover/hoverWidget.js";
+import { IStyleOverride } from "../../../../platform/theme/browser/defaultStyles.js";
+import { IViewDescriptorService, ViewContainerLocation } from "../../../common/views.js";
+import { IWorkbenchLayoutService, Position } from "../../../services/layout/browser/layoutService.js";
+import { areSameExtensions } from "../../../../platform/extensionManagement/common/extensionManagementUtil.js";
+import { ExtensionAction, getContextMenuActions, ManageExtensionAction } from "./extensionsActions.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { getLocationBasedViewColors } from "../../../browser/parts/views/viewPane.js";
+import { DelayedPagedModel, IPagedModel } from "../../../../base/common/paging.js";
+import { ExtensionIconWidget } from "./extensionsWidgets.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { isCancellationError } from "../../../../base/common/errors.js";
 
 function getAriaLabelForExtension(extension: IExtension | null): string {
 	if (!extension) {
-		return '';
+		return "";
 	}
-	const publisher = extension.publisherDomain?.verified ? localize('extension.arialabel.verifiedPublisher', "Verified Publisher {0}", extension.publisherDisplayName) : localize('extension.arialabel.publisher', "Publisher {0}", extension.publisherDisplayName);
-	const deprecated = extension?.deprecationInfo ? localize('extension.arialabel.deprecated', "Deprecated") : '';
-	const rating = extension?.rating ? localize('extension.arialabel.rating', "Rated {0} out of 5 stars by {1} users", extension.rating.toFixed(2), extension.ratingCount) : '';
-	return `${extension.displayName}, ${deprecated ? `${deprecated}, ` : ''}${extension.version}, ${publisher}, ${extension.description} ${rating ? `, ${rating}` : ''}`;
+	const publisher = extension.publisherDomain?.verified ? localize(
+    "extension.arialabel.verifiedPublisher",
+    "Verified Publisher {0}",
+    extension.publisherDisplayName,
+  ) : localize(
+    "extension.arialabel.publisher",
+    "Publisher {0}",
+    extension.publisherDisplayName,
+  );
+	const deprecated = extension?.deprecationInfo ? localize(
+    "extension.arialabel.deprecated",
+    "Deprecated",
+  ) : "";
+	const rating = extension?.rating ? localize(
+    "extension.arialabel.rating",
+    "Rated {0} out of 5 stars by {1} users",
+    extension.rating.toFixed(2),
+    extension.ratingCount,
+  ) : "";
+	return `${extension.displayName}, ${deprecated ? `${deprecated}, ` : ""}${extension.version}, ${publisher}, ${extension.description} ${rating ? `, ${rating}` : ""}`;
 }
 
 export class ExtensionsList extends Disposable {
@@ -54,7 +88,9 @@ export class ExtensionsList extends Disposable {
 	readonly list: WorkbenchPagedList<IExtension>;
 	private readonly contextMenuActionRunner = this._register(new ActionRunner());
 
-	private readonly modalNavigationDisposable = this._register(new MutableDisposable());
+	private readonly modalNavigationDisposable = this._register(
+    new MutableDisposable(),
+  );
 
 	constructor(
 		parent: HTMLElement,
@@ -68,10 +104,14 @@ export class ExtensionsList extends Disposable {
 		@IContextMenuService private readonly contextMenuService: IContextMenuService,
 		@IContextKeyService private readonly contextKeyService: IContextKeyService,
 		@IInstantiationService private readonly instantiationService: IInstantiationService,
-		@ILogService private readonly logService: ILogService
+		@ILogService private readonly logService: ILogService,
 	) {
 		super();
-		this._register(this.contextMenuActionRunner.onDidRun(({ error }) => error && notificationService.error(error)));
+		this._register(
+      this.contextMenuActionRunner.onDidRun(
+        ({ error }) => error && notificationService.error(error),
+      ),
+    );
 		const delegate = new Delegate();
 		const renderer = instantiationService.createInstance(Renderer, extensionsViewState, {
 			hoverOptions: {
@@ -84,8 +124,8 @@ export class ExtensionsList extends Disposable {
 						return layoutService.getSideBarPosition() === Position.LEFT ? HoverPosition.LEFT : HoverPosition.RIGHT;
 					}
 					return HoverPosition.RIGHT;
-				}
-			}
+				},
+			},
 		});
 		this.list = instantiationService.createInstance(WorkbenchPagedList, `${viewId}-Extensions`, parent, delegate, [renderer], {
 			multipleSelectionSupport: false,
@@ -96,19 +136,26 @@ export class ExtensionsList extends Disposable {
 					return getAriaLabelForExtension(extension);
 				},
 				getWidgetAriaLabel(): string {
-					return localize('extensions', "Extensions");
-				}
+					return localize("extensions", "Extensions");
+				},
 			},
 			overrideStyles: getLocationBasedViewColors(viewDescriptorService.getViewLocationById(viewId)).listOverrideStyles,
 			openOnSingleClick: true,
-			...options
+			...options,
 		}) as WorkbenchPagedList<IExtension>;
 		this._register(this.list.onContextMenu(e => this.onContextMenu(e), this));
 		this._register(this.list);
 
-		this._register(Event.debounce(Event.filter(this.list.onDidOpen, e => e.element !== null), (_, event) => event, 75, true)(options => {
-			this.openExtension(options.element!, { sideByside: options.sideBySide, ...options.editorOptions });
-		}));
+		this._register(
+      Event.debounce(Event.filter(this.list.onDidOpen, e => e.element !== null), (_, event) => event, 75, true)(
+        options => {
+          this.openExtension(options.element!, {
+            sideByside: options.sideBySide,
+            ...options.editorOptions,
+          });
+        },
+      ),
+    );
 	}
 
 	setModel(model: IPagedModel<IExtension>) {
@@ -120,7 +167,9 @@ export class ExtensionsList extends Disposable {
 	}
 
 	private openExtension(extension: IExtension, options: { sideByside?: boolean; preserveFocus?: boolean; pinned?: boolean }): void {
-		extension = this.extensionsWorkbenchService.local.filter(e => areSameExtensions(e.identifier, extension.identifier))[0] || extension;
+		extension = this.extensionsWorkbenchService.local.filter(
+      e => areSameExtensions(e.identifier, extension.identifier),
+    )[0] || extension;
 		this.extensionsWorkbenchService.open(extension, {
 			...options,
 			modal: options.sideByside ? undefined : buildModalNavigationForPagedList(
@@ -129,7 +178,7 @@ export class ExtensionsList extends Disposable {
 				(extA, extB) => areSameExtensions(extA.identifier, extB.identifier),
 				(ext, modal) => this.extensionsWorkbenchService.open(ext, { pinned: false, modal }),
 				this.modalNavigationDisposable,
-				this.logService
+				this.logService,
 			),
 		});
 	}
@@ -137,15 +186,23 @@ export class ExtensionsList extends Disposable {
 	private async onContextMenu(e: IListContextMenuEvent<IExtension>): Promise<void> {
 		if (e.element) {
 			const disposables = new DisposableStore();
-			const manageExtensionAction = disposables.add(this.instantiationService.createInstance(ManageExtensionAction));
-			const extension = e.element ? this.extensionsWorkbenchService.local.find(local => areSameExtensions(local.identifier, e.element!.identifier) && (!e.element!.server || e.element!.server === local.server)) || e.element
+			const manageExtensionAction = disposables.add(
+        this.instantiationService.createInstance(ManageExtensionAction),
+      );
+			const extension = e.element ? this.extensionsWorkbenchService.local.find(
+        local => areSameExtensions(local.identifier, e.element!.identifier) && (!e.element!.server || e.element!.server === local.server),
+      ) || e.element
 				: e.element;
 			manageExtensionAction.extension = extension;
 			let groups: IAction[][] = [];
 			if (manageExtensionAction.enabled) {
 				groups = await manageExtensionAction.getActionGroups();
 			} else if (extension) {
-				groups = await getContextMenuActions(extension, this.contextKeyService, this.instantiationService);
+				groups = await getContextMenuActions(
+          extension,
+          this.contextKeyService,
+          this.instantiationService,
+        );
 				groups.forEach(group => group.forEach(extensionAction => {
 					if (extensionAction instanceof ExtensionAction) {
 						extensionAction.extension = extension;
@@ -164,11 +221,11 @@ export class ExtensionsList extends Disposable {
 			}
 			actions.pop();
 			this.contextMenuService.showContextMenu({
-				getAnchor: () => e.anchor,
-				getActions: () => actions,
-				actionRunner: this.contextMenuActionRunner,
-				onHide: () => disposables.dispose()
-			});
+        getAnchor: () => e.anchor,
+        getActions: () => actions,
+        actionRunner: this.contextMenuActionRunner,
+        onHide: () => disposables.dispose(),
+      });
 		}
 	}
 }
@@ -183,11 +240,15 @@ export class ExtensionsGridView extends Disposable {
 	constructor(
 		parent: HTMLElement,
 		delegate: Delegate,
-		@IInstantiationService private readonly instantiationService: IInstantiationService
+		@IInstantiationService private readonly instantiationService: IInstantiationService,
 	) {
 		super();
-		this.element = dom.append(parent, dom.$('.extensions-grid-view'));
-		this.renderer = this.instantiationService.createInstance(Renderer, { onFocus: Event.None, onBlur: Event.None, filters: {} }, { hoverOptions: { position() { return HoverPosition.BELOW; } } });
+		this.element = dom.append(parent, dom.$(".extensions-grid-view"));
+		this.renderer = this.instantiationService.createInstance(
+      Renderer,
+      { onFocus: Event.None, onBlur: Event.None, filters: {} },
+      { hoverOptions: { position() { return HoverPosition.BELOW; } } },
+    );
 		this.delegate = delegate;
 		this.disposableStore = this._register(new DisposableStore());
 	}
@@ -198,16 +259,23 @@ export class ExtensionsGridView extends Disposable {
 	}
 
 	private renderExtension(extension: IExtension, index: number): void {
-		const extensionContainer = dom.append(this.element, dom.$('.extension-container'));
+		const extensionContainer = dom.append(
+      this.element,
+      dom.$(".extension-container"),
+    );
 		extensionContainer.style.height = `${this.delegate.getHeight()}px`;
-		extensionContainer.setAttribute('tabindex', '0');
+		extensionContainer.setAttribute("tabindex", "0");
 
 		const template = this.renderer.renderTemplate(extensionContainer);
-		this.disposableStore.add(toDisposable(() => this.renderer.disposeTemplate(template)));
+		this.disposableStore.add(
+      toDisposable(() => this.renderer.disposeTemplate(template)),
+    );
 
-		const openExtensionAction = this.instantiationService.createInstance(OpenExtensionAction);
+		const openExtensionAction = this.instantiationService.createInstance(
+      OpenExtensionAction,
+    );
 		openExtensionAction.extension = extension;
-		template.name.setAttribute('tabindex', '0');
+		template.name.setAttribute("tabindex", "0");
 
 		const handleEvent = (e: StandardMouseEvent | StandardKeyboardEvent) => {
 			if (e instanceof StandardKeyboardEvent && e.keyCode !== KeyCode.Enter) {
@@ -218,9 +286,29 @@ export class ExtensionsGridView extends Disposable {
 			e.preventDefault();
 		};
 
-		this.disposableStore.add(dom.addDisposableListener(template.name, dom.EventType.CLICK, (e: MouseEvent) => handleEvent(new StandardMouseEvent(dom.getWindow(template.name), e))));
-		this.disposableStore.add(dom.addDisposableListener(template.name, dom.EventType.KEY_DOWN, (e: KeyboardEvent) => handleEvent(new StandardKeyboardEvent(e))));
-		this.disposableStore.add(dom.addDisposableListener(extensionContainer, dom.EventType.KEY_DOWN, (e: KeyboardEvent) => handleEvent(new StandardKeyboardEvent(e))));
+		this.disposableStore.add(
+      dom.addDisposableListener(
+        template.name,
+        dom.EventType.CLICK,
+        (e: MouseEvent) => handleEvent(
+          new StandardMouseEvent(dom.getWindow(template.name), e),
+        ),
+      ),
+    );
+		this.disposableStore.add(
+      dom.addDisposableListener(
+        template.name,
+        dom.EventType.KEY_DOWN,
+        (e: KeyboardEvent) => handleEvent(new StandardKeyboardEvent(e)),
+      ),
+    );
+		this.disposableStore.add(
+      dom.addDisposableListener(
+        extensionContainer,
+        dom.EventType.KEY_DOWN,
+        (e: KeyboardEvent) => handleEvent(new StandardKeyboardEvent(e)),
+      ),
+    );
 
 		this.renderer.renderElement(extension, index, template);
 	}
@@ -269,7 +357,7 @@ class VirualDelegate implements IListVirtualDelegate<IExtensionData> {
 
 class ExtensionRenderer implements IListRenderer<ITreeNode<IExtensionData>, IExtensionTemplateData> {
 
-	static readonly TEMPLATE_ID = 'extension-template';
+	static readonly TEMPLATE_ID = "extension-template";
 
 	constructor(@IInstantiationService private readonly instantiationService: IInstantiationService) {
 	}
@@ -279,23 +367,32 @@ class ExtensionRenderer implements IListRenderer<ITreeNode<IExtensionData>, IExt
 	}
 
 	public renderTemplate(container: HTMLElement): IExtensionTemplateData {
-		container.classList.add('extension');
+		container.classList.add("extension");
 
-		const iconWidget = this.instantiationService.createInstance(ExtensionIconWidget, container);
-		const details = dom.append(container, dom.$('.details'));
+		const iconWidget = this.instantiationService.createInstance(
+      ExtensionIconWidget,
+      container,
+    );
+		const details = dom.append(container, dom.$(".details"));
 
-		const header = dom.append(details, dom.$('.header'));
-		const name = dom.append(header, dom.$('span.name'));
-		const openExtensionAction = this.instantiationService.createInstance(OpenExtensionAction);
-		const extensionDisposables = [dom.addDisposableListener(name, 'click', (e: MouseEvent) => {
-			openExtensionAction.run(e.ctrlKey || e.metaKey);
-			e.stopPropagation();
-			e.preventDefault();
-		}), iconWidget, openExtensionAction];
-		const identifier = dom.append(header, dom.$('span.identifier'));
+		const header = dom.append(details, dom.$(".header"));
+		const name = dom.append(header, dom.$("span.name"));
+		const openExtensionAction = this.instantiationService.createInstance(
+      OpenExtensionAction,
+    );
+		const extensionDisposables = [
+      dom.addDisposableListener(name, "click", (e: MouseEvent) => {
+        openExtensionAction.run(e.ctrlKey || e.metaKey);
+        e.stopPropagation();
+        e.preventDefault();
+      }),
+      iconWidget,
+      openExtensionAction,
+    ];
+		const identifier = dom.append(header, dom.$("span.identifier"));
 
-		const footer = dom.append(details, dom.$('.footer'));
-		const author = dom.append(footer, dom.$('.author'));
+		const footer = dom.append(details, dom.$(".footer"));
+		const author = dom.append(footer, dom.$(".author"));
 		return {
 			name,
 			identifier,
@@ -304,7 +401,7 @@ class ExtensionRenderer implements IListRenderer<ITreeNode<IExtensionData>, IExt
 			set extensionData(extensionData: IExtensionData) {
 				iconWidget.extension = extensionData.extension;
 				openExtensionAction.extension = extensionData.extension;
-			}
+			},
 		};
 	}
 
@@ -317,24 +414,32 @@ class ExtensionRenderer implements IListRenderer<ITreeNode<IExtensionData>, IExt
 	}
 
 	public disposeTemplate(templateData: IExtensionTemplateData): void {
-		templateData.extensionDisposables = dispose((<IExtensionTemplateData>templateData).extensionDisposables);
+		templateData.extensionDisposables = dispose(
+      (<IExtensionTemplateData>templateData).extensionDisposables,
+    );
 	}
 }
 
 class UnknownExtensionRenderer implements IListRenderer<ITreeNode<IExtensionData>, IUnknownExtensionTemplateData> {
 
-	static readonly TEMPLATE_ID = 'unknown-extension-template';
+	static readonly TEMPLATE_ID = "unknown-extension-template";
 
 	public get templateId(): string {
 		return UnknownExtensionRenderer.TEMPLATE_ID;
 	}
 
 	public renderTemplate(container: HTMLElement): IUnknownExtensionTemplateData {
-		const messageContainer = dom.append(container, dom.$('div.unknown-extension'));
-		dom.append(messageContainer, dom.$('span.error-marker')).textContent = localize('error', "Error");
+		const messageContainer = dom.append(
+      container,
+      dom.$("div.unknown-extension"),
+    );
+		dom.append(
+      messageContainer,
+      dom.$("span.error-marker"),
+    ).textContent = localize("error", "Error");
 		dom.append(messageContainer, dom.$('span.message')).textContent = localize('Unknown Extension', "Unknown Extension:");
 
-		const identifier = dom.append(messageContainer, dom.$('span.message'));
+		const identifier = dom.append(messageContainer, dom.$("span.message"));
 		return { identifier };
 	}
 
@@ -351,7 +456,7 @@ class OpenExtensionAction extends Action {
 	private _extension: IExtension | undefined;
 
 	constructor(@IExtensionsWorkbenchService private readonly extensionsWorkdbenchService: IExtensionsWorkbenchService) {
-		super('extensions.action.openExtension', '');
+		super("extensions.action.openExtension", "");
 	}
 
 	public set extension(extension: IExtension) {
@@ -360,7 +465,9 @@ class OpenExtensionAction extends Action {
 
 	override run(sideByside: boolean): Promise<any> {
 		if (this._extension) {
-			return this.extensionsWorkdbenchService.open(this._extension, { sideByside });
+			return this.extensionsWorkdbenchService.open(this._extension, {
+        sideByside,
+      });
 		}
 		return Promise.resolve();
 	}
@@ -376,19 +483,22 @@ export class ExtensionsTree extends WorkbenchAsyncDataTree<IExtensionData, IExte
 		@IListService listService: IListService,
 		@IInstantiationService instantiationService: IInstantiationService,
 		@IConfigurationService configurationService: IConfigurationService,
-		@IExtensionsWorkbenchService extensionsWorkdbenchService: IExtensionsWorkbenchService
+		@IExtensionsWorkbenchService extensionsWorkdbenchService: IExtensionsWorkbenchService,
 	) {
 		const delegate = new VirualDelegate();
 		const dataSource = new AsyncDataSource();
-		const renderers = [instantiationService.createInstance(ExtensionRenderer), instantiationService.createInstance(UnknownExtensionRenderer)];
+		const renderers = [
+      instantiationService.createInstance(ExtensionRenderer),
+      instantiationService.createInstance(UnknownExtensionRenderer),
+    ];
 		const identityProvider = {
 			getId({ extension, parent }: IExtensionData): string {
-				return parent ? this.getId(parent) + '/' + extension.identifier.id : extension.identifier.id;
-			}
+				return parent ? this.getId(parent) + "/" + extension.identifier.id : extension.identifier.id;
+			},
 		};
 
 		super(
-			'ExtensionsTree',
+			"ExtensionsTree",
 			container,
 			delegate,
 			renderers,
@@ -403,11 +513,11 @@ export class ExtensionsTree extends WorkbenchAsyncDataTree<IExtensionData, IExte
 						return getAriaLabelForExtension(extensionData.extension);
 					},
 					getWidgetAriaLabel(): string {
-						return localize('extensions', "Extensions");
-					}
-				}
+						return localize("extensions", "Extensions");
+					},
+				},
 			},
-			instantiationService, contextKeyService, listService, configurationService
+			instantiationService, contextKeyService, listService, configurationService,
 		);
 
 		this.setInput(input);
@@ -442,15 +552,31 @@ export class ExtensionData implements IExtensionData {
 
 	async getChildren(): Promise<IExtensionData[] | null> {
 		if (this.hasChildren) {
-			const result: IExtension[] = await getExtensions(this.childrenExtensionIds, this.extensionsWorkbenchService);
-			return result.map(extension => new ExtensionData(extension, this, this.getChildrenExtensionIds, this.extensionsWorkbenchService));
+			const result: IExtension[] = await getExtensions(
+        this.childrenExtensionIds,
+        this.extensionsWorkbenchService,
+      );
+			return result.map(
+        extension => new ExtensionData(
+          extension,
+          this,
+          this.getChildrenExtensionIds,
+          this.extensionsWorkbenchService,
+        ),
+      );
 		}
 		return null;
 	}
 }
 
 export async function getExtensions(extensions: string[], extensionsWorkbenchService: IExtensionsWorkbenchService): Promise<IExtension[]> {
-	const localById = extensionsWorkbenchService.local.reduce((result, e) => { result.set(e.identifier.id.toLowerCase(), e); return result; }, new Map<string, IExtension>());
+	const localById = extensionsWorkbenchService.local.reduce(
+    (result, e) => {
+      result.set(e.identifier.id.toLowerCase(), e);
+      return result;
+    },
+    new Map<string, IExtension>(),
+  );
 	const result: IExtension[] = [];
 	const toQuery: string[] = [];
 	for (const extensionId of extensions) {
@@ -463,7 +589,10 @@ export async function getExtensions(extensions: string[], extensionsWorkbenchSer
 		}
 	}
 	if (toQuery.length) {
-		const galleryResult = await extensionsWorkbenchService.getExtensions(toQuery.map(id => ({ id })), CancellationToken.None);
+		const galleryResult = await extensionsWorkbenchService.getExtensions(
+      toQuery.map(id => ({ id })),
+      CancellationToken.None,
+    );
 		result.push(...galleryResult);
 	}
 	return result;
@@ -478,7 +607,7 @@ export function buildModalNavigationForPagedList<T>(
 	isSame: (a: T, b: T) => boolean,
 	openItem: (item: T, modal: IModalEditorPartOptions) => void,
 	cancellationStore: MutableDisposable<IDisposable>,
-	logService: ILogService
+	logService: ILogService,
 ): IModalEditorPartOptions | undefined {
 	const model = getModel();
 	if (!model) {
@@ -505,7 +634,9 @@ export function buildModalNavigationForPagedList<T>(
 
 	const openAtIndex = (index: number, item: T) => {
 		const currentTotal = getModel()?.length ?? 0;
-		openItem(item, { navigation: { total: currentTotal, current: index, navigate } });
+		openItem(item, {
+      navigation: { total: currentTotal, current: index, navigate },
+    });
 	};
 
 	let cts: CancellationTokenSource | undefined;

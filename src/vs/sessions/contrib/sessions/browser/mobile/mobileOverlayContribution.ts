@@ -3,19 +3,31 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { MutableDisposable } from '../../../../../base/common/lifecycle.js';
-import { Event } from '../../../../../base/common/event.js';
-import { registerAction2, Action2 } from '../../../../../platform/actions/common/actions.js';
-import { ICommandService } from '../../../../../platform/commands/common/commands.js';
-import { ILanguageService } from '../../../../../editor/common/languages/language.js';
-import { IInstantiationService, ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
-import { ILayoutService } from '../../../../../platform/layout/browser/layoutService.js';
-import { ITextFileService } from '../../../../../workbench/services/textfile/common/textfiles.js';
-import { ISessionsManagementService } from '../../../../../sessions/services/sessions/common/sessionsManagement.js';
-import { IFileDiffViewData, IMobileDiffViewData, MobileDiffView, MOBILE_OPEN_DIFF_VIEW_COMMAND_ID, openMobileDiffView } from '../../../../../sessions/browser/parts/mobile/contributions/mobileDiffView.js';
-import { MobileChangesView, MOBILE_OPEN_CHANGES_VIEW_COMMAND_ID, openMobileChangesView, toRow, rowToDiffData } from '../../../../../sessions/browser/parts/mobile/contributions/mobileChangesView.js';
-import { IsPhoneLayoutContext } from '../../../../../sessions/common/contextkeys.js';
-import { localize2 } from '../../../../../nls.js';
+import { MutableDisposable } from "../../../../../base/common/lifecycle.js";
+import { Event } from "../../../../../base/common/event.js";
+import { registerAction2, Action2 } from "../../../../../platform/actions/common/actions.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { ILanguageService } from "../../../../../editor/common/languages/language.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ILayoutService } from "../../../../../platform/layout/browser/layoutService.js";
+import { ITextFileService } from "../../../../../workbench/services/textfile/common/textfiles.js";
+import { ISessionsManagementService } from "../../../../../sessions/services/sessions/common/sessionsManagement.js";
+import {
+  IFileDiffViewData,
+  IMobileDiffViewData,
+  MobileDiffView,
+  MOBILE_OPEN_DIFF_VIEW_COMMAND_ID,
+  openMobileDiffView,
+} from "../../../../../sessions/browser/parts/mobile/contributions/mobileDiffView.js";
+import {
+  MobileChangesView,
+  MOBILE_OPEN_CHANGES_VIEW_COMMAND_ID,
+  openMobileChangesView,
+  toRow,
+  rowToDiffData,
+} from "../../../../../sessions/browser/parts/mobile/contributions/mobileChangesView.js";
+import { IsPhoneLayoutContext } from "../../../../../sessions/common/contextkeys.js";
+import { localize2 } from "../../../../../nls.js";
 
 // Module-level slots for the active overlays so a re-invocation of the
 // command (e.g. rapid double-tap) closes the prior overlay before opening
@@ -29,11 +41,11 @@ const activeChangesView = new MutableDisposable<MobileChangesView>();
 class MobileOpenDiffViewAction extends Action2 {
 	constructor() {
 		super({
-			id: MOBILE_OPEN_DIFF_VIEW_COMMAND_ID,
-			title: localize2('mobileOpenFileDiff', 'Open File Diff'),
-			precondition: IsPhoneLayoutContext,
-			f1: false,
-		});
+      id: MOBILE_OPEN_DIFF_VIEW_COMMAND_ID,
+      title: localize2("mobileOpenFileDiff", "Open File Diff"),
+      precondition: IsPhoneLayoutContext,
+      f1: false,
+    });
 	}
 
 	run(accessor: ServicesAccessor, arg: IFileDiffViewData | IMobileDiffViewData): void {
@@ -48,7 +60,12 @@ class MobileOpenDiffViewAction extends Action2 {
 			? arg
 			: { diff: arg };
 
-		activeDiffView.value = openMobileDiffView(layoutService.mainContainer, data, textFileService, languageService);
+		activeDiffView.value = openMobileDiffView(
+      layoutService.mainContainer,
+      data,
+      textFileService,
+      languageService,
+    );
 		// Clear the slot when the view tears itself down (back-button)
 		// so the slot value tracks "no overlay open" correctly. The
 		// equality guard ensures a newer view that has already replaced
@@ -66,11 +83,11 @@ class MobileOpenDiffViewAction extends Action2 {
 class MobileOpenChangesViewAction extends Action2 {
 	constructor() {
 		super({
-			id: MOBILE_OPEN_CHANGES_VIEW_COMMAND_ID,
-			title: localize2('mobileOpenSessionChanges', 'Open Session Changes'),
-			precondition: IsPhoneLayoutContext,
-			f1: false,
-		});
+      id: MOBILE_OPEN_CHANGES_VIEW_COMMAND_ID,
+      title: localize2("mobileOpenSessionChanges", "Open Session Changes"),
+      precondition: IsPhoneLayoutContext,
+      f1: false,
+    });
 	}
 
 	run(accessor: ServicesAccessor): void {
@@ -109,7 +126,7 @@ class MobileOpenChangesViewAction extends Action2 {
 }
 
 function isMobileDiffViewData(arg: IFileDiffViewData | IMobileDiffViewData): arg is IMobileDiffViewData {
-	return arg && typeof arg === 'object' && 'diff' in arg;
+	return arg && typeof arg === "object" && "diff" in arg;
 }
 
 registerAction2(MobileOpenDiffViewAction);

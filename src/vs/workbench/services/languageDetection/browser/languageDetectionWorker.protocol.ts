@@ -3,15 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IWebWorkerClient, IWebWorkerServer } from '../../../../base/common/worker/webWorker.js';
+import { IWebWorkerClient, IWebWorkerServer } from "../../../../base/common/worker/webWorker.js";
 
 export abstract class LanguageDetectionWorkerHost {
-	public static CHANNEL_NAME = 'languageDetectionWorkerHost';
+	public static CHANNEL_NAME = "languageDetectionWorkerHost";
 	public static getChannel(workerServer: IWebWorkerServer): LanguageDetectionWorkerHost {
-		return workerServer.getChannel<LanguageDetectionWorkerHost>(LanguageDetectionWorkerHost.CHANNEL_NAME);
+		return workerServer.getChannel<LanguageDetectionWorkerHost>(
+      LanguageDetectionWorkerHost.CHANNEL_NAME,
+    );
 	}
 	public static setChannel(workerClient: IWebWorkerClient<unknown>, obj: LanguageDetectionWorkerHost): void {
-		workerClient.setChannel<LanguageDetectionWorkerHost>(LanguageDetectionWorkerHost.CHANNEL_NAME, obj);
+		workerClient.setChannel<LanguageDetectionWorkerHost>(
+      LanguageDetectionWorkerHost.CHANNEL_NAME,
+      obj,
+    );
 	}
 
 	abstract $getIndexJsUri(): Promise<string>;

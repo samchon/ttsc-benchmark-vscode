@@ -3,27 +3,49 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { URI } from '../../../../base/common/uri.js';
-import { CellUri, IResolvedNotebookEditorModel, NotebookEditorModelCreationOptions, NotebookSetting, NotebookWorkingCopyTypeIdentifier } from './notebookCommon.js';
-import { NotebookFileWorkingCopyModel, NotebookFileWorkingCopyModelFactory, SimpleNotebookEditorModel } from './notebookEditorModel.js';
-import { combinedDisposable, DisposableStore, dispose, IDisposable, IReference, ReferenceCollection, toDisposable } from '../../../../base/common/lifecycle.js';
-import { INotebookService } from './notebookService.js';
-import { AsyncEmitter, Emitter, Event } from '../../../../base/common/event.js';
-import { IExtensionService } from '../../../services/extensions/common/extensions.js';
-import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
-import { INotebookConflictEvent, INotebookEditorModelResolverService, IUntitledNotebookResource } from './notebookEditorModelResolverService.js';
-import { ResourceMap } from '../../../../base/common/map.js';
-import { FileWorkingCopyManager, IFileWorkingCopyManager } from '../../../services/workingCopy/common/fileWorkingCopyManager.js';
-import { Schemas } from '../../../../base/common/network.js';
-import { NotebookProviderInfo } from './notebookProvider.js';
-import { assertReturnsDefined } from '../../../../base/common/types.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IFileReadLimits } from '../../../../platform/files/common/files.js';
-import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
-import { INotebookLoggingService } from './notebookLoggingService.js';
-import { parse } from '../../../services/notebook/common/notebookDocumentService.js';
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { URI } from "../../../../base/common/uri.js";
+import {
+  CellUri,
+  IResolvedNotebookEditorModel,
+  NotebookEditorModelCreationOptions,
+  NotebookSetting,
+  NotebookWorkingCopyTypeIdentifier,
+} from "./notebookCommon.js";
+import {
+  NotebookFileWorkingCopyModel,
+  NotebookFileWorkingCopyModelFactory,
+  SimpleNotebookEditorModel,
+} from "./notebookEditorModel.js";
+import {
+  combinedDisposable,
+  DisposableStore,
+  dispose,
+  IDisposable,
+  IReference,
+  ReferenceCollection,
+  toDisposable,
+} from "../../../../base/common/lifecycle.js";
+import { INotebookService } from "./notebookService.js";
+import { AsyncEmitter, Emitter, Event } from "../../../../base/common/event.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import {
+  INotebookConflictEvent,
+  INotebookEditorModelResolverService,
+  IUntitledNotebookResource,
+} from "./notebookEditorModelResolverService.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { FileWorkingCopyManager, IFileWorkingCopyManager } from "../../../services/workingCopy/common/fileWorkingCopyManager.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { NotebookProviderInfo } from "./notebookProvider.js";
+import { assertReturnsDefined } from "../../../../base/common/types.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IFileReadLimits } from "../../../../platform/files/common/files.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { INotebookLoggingService } from "./notebookLoggingService.js";
+import { parse } from "../../../services/notebook/common/notebookDocumentService.js";
 
 class NotebookModelReferenceCollection extends ReferenceCollection<Promise<IResolvedNotebookEditorModel>> {
 
@@ -77,21 +99,39 @@ class NotebookModelReferenceCollection extends ReferenceCollection<Promise<IReso
 
 		const uri = URI.parse(key);
 
-		const workingCopyTypeId = NotebookWorkingCopyTypeIdentifier.create(notebookType, viewType);
+		const workingCopyTypeId = NotebookWorkingCopyTypeIdentifier.create(
+      notebookType,
+      viewType,
+    );
 		let workingCopyManager = this._workingCopyManagers.get(workingCopyTypeId);
 		if (!workingCopyManager) {
-			const factory = new NotebookFileWorkingCopyModelFactory(notebookType, this._notebookService, this._configurationService, this._telemetryService, this._notebookLoggingService);
+			const factory = new NotebookFileWorkingCopyModelFactory(
+        notebookType,
+        this._notebookService,
+        this._configurationService,
+        this._telemetryService,
+        this._notebookLoggingService,
+      );
 			workingCopyManager = this._instantiationService.createInstance(
-				FileWorkingCopyManager<NotebookFileWorkingCopyModel, NotebookFileWorkingCopyModel>,
-				workingCopyTypeId,
-				factory,
-				factory,
-			);
+        FileWorkingCopyManager<NotebookFileWorkingCopyModel, NotebookFileWorkingCopyModel>,
+        workingCopyTypeId,
+        factory,
+        factory,
+      );
 			this._workingCopyManagers.set(workingCopyTypeId, workingCopyManager);
 		}
 
-		const isScratchpadView = isScratchpad || (notebookType === 'interactive' && this._configurationService.getValue<boolean>(NotebookSetting.InteractiveWindowPromptToSave) !== true);
-		const model = this._instantiationService.createInstance(SimpleNotebookEditorModel, uri, hasAssociatedFilePath, notebookType, workingCopyManager, isScratchpadView);
+		const isScratchpadView = isScratchpad || (notebookType === "interactive" && this._configurationService.getValue<boolean>(
+      NotebookSetting.InteractiveWindowPromptToSave,
+    ) !== true);
+		const model = this._instantiationService.createInstance(
+      SimpleNotebookEditorModel,
+      uri,
+      hasAssociatedFilePath,
+      notebookType,
+      workingCopyManager,
+      isScratchpadView,
+    );
 		const result = await model.load({ limits });
 
 
@@ -148,7 +188,7 @@ class NotebookModelReferenceCollection extends ReferenceCollection<Promise<IReso
 				this._modelListener.delete(model);
 				model.dispose();
 			} catch (err) {
-				this._notebookLoggingService.error('NotebookModelCollection', 'FAILED to destory notebook - ' + err);
+				this._notebookLoggingService.error("NotebookModelCollection", "FAILED to destory notebook - " + err);
 			} finally {
 				this.modelsToDispose.delete(key); // Untrack as being disposed
 			}
@@ -174,7 +214,9 @@ export class NotebookModelResolverServiceImpl implements INotebookEditorModelRes
 		@IExtensionService private readonly _extensionService: IExtensionService,
 		@IUriIdentityService private readonly _uriIdentService: IUriIdentityService,
 	) {
-		this._data = instantiationService.createInstance(NotebookModelReferenceCollection);
+		this._data = instantiationService.createInstance(
+      NotebookModelReferenceCollection,
+    );
 		this.onDidSaveNotebook = this._data.onDidSaveNotebook;
 		this.onDidChangeDirty = this._data.onDidChangeDirty;
 	}
@@ -188,15 +230,25 @@ export class NotebookModelResolverServiceImpl implements INotebookEditorModelRes
 	}
 
 	private createUntitledUri(notebookType: string) {
-		const info = this._notebookService.getContributedNotebookType(assertReturnsDefined(notebookType));
+		const info = this._notebookService.getContributedNotebookType(
+      assertReturnsDefined(notebookType),
+    );
 		if (!info) {
-			throw new Error('UNKNOWN notebook type: ' + notebookType);
+			throw new Error("UNKNOWN notebook type: " + notebookType);
 		}
 
-		const suffix = NotebookProviderInfo.possibleFileEnding(info.selectors) ?? '';
+		const suffix = NotebookProviderInfo.possibleFileEnding(
+      info.selectors,
+    ) ?? "";
 		for (let counter = 1; ; counter++) {
-			const candidate = URI.from({ scheme: Schemas.untitled, path: `Untitled-${counter}${suffix}`, query: notebookType });
-			if (!this._notebookService.getNotebookTextModel(candidate) && !this._data.isListeningToModel(candidate)) {
+			const candidate = URI.from({
+        scheme: Schemas.untitled,
+        path: `Untitled-${counter}${suffix}`,
+        query: notebookType,
+      });
+			if (!this._notebookService.getNotebookTextModel(
+        candidate,
+      ) && !this._data.isListeningToModel(candidate)) {
 				return candidate;
 			}
 		}
@@ -204,28 +256,38 @@ export class NotebookModelResolverServiceImpl implements INotebookEditorModelRes
 
 	private async validateResourceViewType(uri: URI | undefined, viewType: string | undefined) {
 		if (!uri && !viewType) {
-			throw new Error('Must provide at least one of resource or viewType');
+			throw new Error("Must provide at least one of resource or viewType");
 		}
 
 		if (uri?.scheme === CellUri.scheme) {
 			const originalUri = uri;
 			uri = parse(uri)?.notebook;
 			if (!uri) {
-				throw new Error(`CANNOT open a cell-uri as notebook. Tried with ${originalUri.toString()}`);
+				throw new Error(
+          `CANNOT open a cell-uri as notebook. Tried with ${originalUri.toString()}`,
+        );
 			}
 		}
 
-		const resource = this._uriIdentService.asCanonicalUri(uri ?? this.createUntitledUri(viewType!));
+		const resource = this._uriIdentService.asCanonicalUri(
+      uri ?? this.createUntitledUri(viewType!),
+    );
 
-		const existingNotebook = this._notebookService.getNotebookTextModel(resource);
+		const existingNotebook = this._notebookService.getNotebookTextModel(
+      resource,
+    );
 		if (!viewType) {
 			if (existingNotebook) {
 				viewType = existingNotebook.viewType;
 			} else {
 				await this._extensionService.whenInstalledExtensionsRegistered();
-				const providers = this._notebookService.getContributedNotebookTypes(resource);
-				viewType = providers.find(provider => provider.priority === 'exclusive')?.id ??
-					providers.find(provider => provider.priority === 'default')?.id ??
+				const providers = this._notebookService.getContributedNotebookTypes(
+          resource,
+        );
+				viewType = providers.find(
+          provider => provider.priority === "exclusive",
+        )?.id ??
+					providers.find(provider => provider.priority === "default")?.id ??
 					providers[0]?.id;
 			}
 		}
@@ -236,21 +298,33 @@ export class NotebookModelResolverServiceImpl implements INotebookEditorModelRes
 
 		if (existingNotebook && existingNotebook.viewType !== viewType) {
 
-			await this._onWillFailWithConflict.fireAsync({ resource: resource, viewType }, CancellationToken.None);
+			await this._onWillFailWithConflict.fireAsync(
+        { resource: resource, viewType },
+        CancellationToken.None,
+      );
 
 			// check again, listener should have done cleanup
-			const existingViewType2 = this._notebookService.getNotebookTextModel(resource)?.viewType;
+			const existingViewType2 = this._notebookService.getNotebookTextModel(
+        resource,
+      )?.viewType;
 			if (existingViewType2 && existingViewType2 !== viewType) {
-				throw new Error(`A notebook with view type '${existingViewType2}' already exists for '${resource}', CANNOT create another notebook with view type ${viewType}`);
+				throw new Error(
+          `A notebook with view type '${existingViewType2}' already exists for '${resource}', CANNOT create another notebook with view type ${viewType}`,
+        );
 			}
 		}
 		return { resource, viewType };
 	}
 
 	public async createUntitledNotebookTextModel(viewType: string) {
-		const resource = this._uriIdentService.asCanonicalUri(this.createUntitledUri(viewType));
+		const resource = this._uriIdentService.asCanonicalUri(
+      this.createUntitledUri(viewType),
+    );
 
-		return (await this._notebookService.createNotebookTextModel(viewType, resource));
+		return (await this._notebookService.createNotebookTextModel(
+      viewType,
+      resource,
+    ));
 	}
 
 	async resolve(resource: URI, viewType?: string, options?: NotebookEditorModelCreationOptions): Promise<IReference<IResolvedNotebookEditorModel>>;
@@ -271,13 +345,20 @@ export class NotebookModelResolverServiceImpl implements INotebookEditorModelRes
 
 		const validated = await this.validateResourceViewType(resource, viewType);
 
-		const reference = this._data.acquire(validated.resource.toString(), validated.viewType, hasAssociatedFilePath, options?.limits, options?.scratchpad, options?.viewType);
+		const reference = this._data.acquire(
+      validated.resource.toString(),
+      validated.viewType,
+      hasAssociatedFilePath,
+      options?.limits,
+      options?.scratchpad,
+      options?.viewType,
+    );
 		try {
 			const model = await reference.object;
 			return {
-				object: model,
-				dispose() { reference.dispose(); }
-			};
+        object: model,
+        dispose() { reference.dispose(); },
+      };
 		} catch (err) {
 			reference.dispose();
 			throw err;

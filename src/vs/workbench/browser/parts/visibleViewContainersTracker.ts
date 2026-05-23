@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, DisposableMap } from '../../../base/common/lifecycle.js';
-import { Emitter, Event } from '../../../base/common/event.js';
-import { IViewDescriptorService, ViewContainerLocation } from '../../common/views.js';
+import { Disposable, DisposableMap } from "../../../base/common/lifecycle.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { IViewDescriptorService, ViewContainerLocation } from "../../common/views.js";
 
 /**
  * Tracks the number of visible view containers at a given location.
@@ -14,16 +14,20 @@ import { IViewDescriptorService, ViewContainerLocation } from '../../common/view
  */
 export class VisibleViewContainersTracker extends Disposable {
 
-	private readonly viewContainerModelListeners = this._register(new DisposableMap<string>());
+	private readonly viewContainerModelListeners = this._register(
+    new DisposableMap<string>(),
+  );
 
-	private readonly _onDidChange = this._register(new Emitter<{ before: number; after: number }>());
+	private readonly _onDidChange = this._register(
+    new Emitter<{ before: number; after: number }>(),
+  );
 	readonly onDidChange: Event<{ before: number; after: number }> = this._onDidChange.event;
 
 	private _visibleCount: number = 0;
 
 	constructor(
 		private readonly location: ViewContainerLocation,
-		@IViewDescriptorService private readonly viewDescriptorService: IViewDescriptorService
+		@IViewDescriptorService private readonly viewDescriptorService: IViewDescriptorService,
 	) {
 		super();
 
@@ -79,24 +83,32 @@ export class VisibleViewContainersTracker extends Disposable {
 
 	private initializeViewContainerListeners(): void {
 		// Initialize listeners for existing view containers
-		for (const container of this.viewDescriptorService.getViewContainersByLocation(this.location)) {
+		for (const container of this.viewDescriptorService.getViewContainersByLocation(
+      this.location,
+    )) {
 			this.addViewContainerModelListener(container.id);
 		}
 	}
 
 	private addViewContainerModelListener(containerId: string): void {
-		const container = this.viewDescriptorService.getViewContainerById(containerId);
+		const container = this.viewDescriptorService.getViewContainerById(
+      containerId,
+    );
 		if (container) {
 			const model = this.viewDescriptorService.getViewContainerModel(container);
-			const listener = model.onDidChangeActiveViewDescriptors(() => this.updateVisibleCount());
+			const listener = model.onDidChangeActiveViewDescriptors(
+        () => this.updateVisibleCount(),
+      );
 			this.viewContainerModelListeners.set(containerId, listener);
 		}
 	}
 
 	private updateVisibleCount(): void {
-		const viewContainers = this.viewDescriptorService.getViewContainersByLocation(this.location);
+		const viewContainers = this.viewDescriptorService.getViewContainersByLocation(
+      this.location,
+    );
 		const visibleViewContainers = viewContainers.filter(container =>
-			this.viewDescriptorService.getViewContainerModel(container).activeViewDescriptors.length > 0
+			this.viewDescriptorService.getViewContainerModel(container).activeViewDescriptors.length > 0,
 		);
 
 		const newCount = visibleViewContainers.length;

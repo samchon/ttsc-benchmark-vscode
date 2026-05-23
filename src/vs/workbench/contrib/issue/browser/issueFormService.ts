@@ -2,41 +2,47 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { safeSetInnerHtml } from '../../../../base/browser/domSanitize.js';
-import { createStyleSheet } from '../../../../base/browser/domStylesheets.js';
-import { getMenuWidgetCSS, Menu, unthemedMenuStyles } from '../../../../base/browser/ui/menu/menu.js';
-import { Disposable, DisposableStore } from '../../../../base/common/lifecycle.js';
-import { isLinux, isWindows } from '../../../../base/common/platform.js';
-import Severity from '../../../../base/common/severity.js';
-import { localize } from '../../../../nls.js';
-import { IMenuService, MenuId } from '../../../../platform/actions/common/actions.js';
-import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
-import { IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
-import { ExtensionIdentifier, ExtensionIdentifierSet } from '../../../../platform/extensions/common/extensions.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { IOpenerService } from '../../../../platform/opener/common/opener.js';
-import product from '../../../../platform/product/common/product.js';
-import { IRectangle } from '../../../../platform/window/common/window.js';
-import { AuxiliaryWindowMode, IAuxiliaryWindowService } from '../../../services/auxiliaryWindow/browser/auxiliaryWindowService.js';
-import { IHostService } from '../../../services/host/browser/host.js';
-import { IIssueFormService, IIssueSubmissionHost, IssueReporterData, IssueReporterExtensionData, IssueSource } from '../common/issue.js';
-import { normalizeGitHubUrl } from '../common/issueReporterUtil.js';
-import BaseHtml from './issueReporterPage.js';
-import { IssueWebReporter } from './issueReporterService.js';
-import { IGitHubUploadService } from './githubUploadService.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { IEditorService } from '../../../services/editor/common/editorService.js';
-import { URI } from '../../../../base/common/uri.js';
-import { LRUCache } from '../../../../base/common/map.js';
-import { hash } from '../../../../base/common/hash.js';
-import { decodeBase64 } from '../../../../base/common/buffer.js';
-import './media/issueReporter.css';
+import { safeSetInnerHtml } from "../../../../base/browser/domSanitize.js";
+import { createStyleSheet } from "../../../../base/browser/domStylesheets.js";
+import { getMenuWidgetCSS, Menu, unthemedMenuStyles } from "../../../../base/browser/ui/menu/menu.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { isLinux, isWindows } from "../../../../base/common/platform.js";
+import Severity from "../../../../base/common/severity.js";
+import { localize } from "../../../../nls.js";
+import { IMenuService, MenuId } from "../../../../platform/actions/common/actions.js";
+import { IClipboardService } from "../../../../platform/clipboard/common/clipboardService.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { ExtensionIdentifier, ExtensionIdentifierSet } from "../../../../platform/extensions/common/extensions.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import product from "../../../../platform/product/common/product.js";
+import { IRectangle } from "../../../../platform/window/common/window.js";
+import { AuxiliaryWindowMode, IAuxiliaryWindowService } from "../../../services/auxiliaryWindow/browser/auxiliaryWindowService.js";
+import { IHostService } from "../../../services/host/browser/host.js";
+import {
+  IIssueFormService,
+  IIssueSubmissionHost,
+  IssueReporterData,
+  IssueReporterExtensionData,
+  IssueSource,
+} from "../common/issue.js";
+import { normalizeGitHubUrl } from "../common/issueReporterUtil.js";
+import BaseHtml from "./issueReporterPage.js";
+import { IssueWebReporter } from "./issueReporterService.js";
+import { IGitHubUploadService } from "./githubUploadService.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { URI } from "../../../../base/common/uri.js";
+import { LRUCache } from "../../../../base/common/map.js";
+import { hash } from "../../../../base/common/hash.js";
+import { decodeBase64 } from "../../../../base/common/buffer.js";
+import "./media/issueReporter.css";
 
 const MAX_URL_LENGTH = 7500;
-const GENERATED_BY_ISSUE_REPORTER_MARKER = '<!-- generated by issue reporter -->';
-const ISSUE_DATA_ATTACHMENT_NAME = 'issue-data.md';
+const GENERATED_BY_ISSUE_REPORTER_MARKER = "<!-- generated by issue reporter -->";
+const ISSUE_DATA_ATTACHMENT_NAME = "issue-data.md";
 
 type IssueUploadFile = { key: string; name: string; bytes: Uint8Array; contentType: string };
 type ExtractedIssueData = { body: string; fileContent: string };
@@ -50,12 +56,14 @@ export class IssueFormService extends Disposable implements IIssueFormService {
 	protected issueReporterWindow: Window | null = null;
 	protected extensionIdentifierSet: ExtensionIdentifierSet = new ExtensionIdentifierSet();
 
-	protected arch: string = '';
-	protected release: string = '';
-	protected type: string = '';
+	protected arch: string = "";
+	protected release: string = "";
+	protected type: string = "";
 
 	/** Bounded cache of already-uploaded attachments to avoid re-uploading on retry within a session. Uses a content hash so large data URLs aren't retained as keys. */
-	private readonly uploadCache = new LRUCache<string, import('./githubUploadService.js').IGitHubUploadResult>(32);
+	private readonly uploadCache = new LRUCache<string, import("./githubUploadService.js").IGitHubUploadResult>(
+    32,
+  );
 
 	constructor(
 		@IInstantiationService protected readonly instantiationService: IInstantiationService,
@@ -106,11 +114,15 @@ export class IssueFormService extends Disposable implements IIssueFormService {
 			if (!gitHubDetails) {
 				return undefined;
 			}
-			repoId ??= await this.githubUploadService.resolveRepositoryId(gitHubDetails.owner, gitHubDetails.repositoryName, data.githubAccessToken);
+			repoId ??= await this.githubUploadService.resolveRepositoryId(
+        gitHubDetails.owner,
+        gitHubDetails.repositoryName,
+        data.githubAccessToken,
+      );
 			return repoId;
 		};
 
-		let mediaMarkdown = '';
+		let mediaMarkdown = "";
 		const hasAttachments = screenshots.length > 0 || recordings.length > 0;
 
 		// Only attempt the Mobile Upload API when the issue target actually resolves to a
@@ -129,61 +141,77 @@ export class IssueFormService extends Disposable implements IIssueFormService {
 					if (bytes) {
 						// Screenshots are either annotated (always PNG via canvas.toDataURL)
 						// or raw native captures (always JPEG); fall back to PNG.
-						const isJpeg = dataUrl.startsWith('data:image/jpeg');
-						const extension = isJpeg ? 'jpg' : 'png';
-						const contentType = isJpeg ? 'image/jpeg' : 'image/png';
-						filesToProcess.push({ key: `screenshot:${hash(dataUrl)}`, name: `screenshot-${i + 1}.${extension}`, bytes, contentType });
+						const isJpeg = dataUrl.startsWith("data:image/jpeg");
+						const extension = isJpeg ? "jpg" : "png";
+						const contentType = isJpeg ? "image/jpeg" : "image/png";
+						filesToProcess.push({
+              key: `screenshot:${hash(dataUrl)}`,
+              name: `screenshot-${i + 1}.${extension}`,
+              bytes,
+              contentType,
+            });
 					}
 				}
 				for (let i = 0; i < recordings.length; i++) {
 					const rec = recordings[i];
-					const fileContent = await this.fileService.readFile(URI.file(rec.filePath));
-					const ext = rec.filePath.endsWith('.mp4') ? 'mp4' : 'webm';
-					const contentType = ext === 'mp4' ? 'video/mp4' : 'video/webm';
-					filesToProcess.push({ key: `recording:${rec.filePath}`, name: `recording-${i + 1}.${ext}`, bytes: fileContent.value.buffer, contentType });
+					const fileContent = await this.fileService.readFile(
+            URI.file(rec.filePath),
+          );
+					const ext = rec.filePath.endsWith(".mp4") ? "mp4" : "webm";
+					const contentType = ext === "mp4" ? "video/mp4" : "video/webm";
+					filesToProcess.push({
+            key: `recording:${rec.filePath}`,
+            name: `recording-${i + 1}.${ext}`,
+            bytes: fileContent.value.buffer,
+            contentType,
+          });
 				}
 
 				if (filesToProcess.length > 0) {
 					for (let i = 0; i < filesToProcess.length; i++) {
-						host.setAttachmentUploadState(i, 'pending');
+						host.setAttachmentUploadState(i, "pending");
 					}
 
-					const uploadResults: import('./githubUploadService.js').IGitHubUploadResult[] = [];
+					const uploadResults: import("./githubUploadService.js").IGitHubUploadResult[] = [];
 					for (let i = 0; i < filesToProcess.length; i++) {
 						const file = filesToProcess[i];
 						const cached = this.uploadCache.get(file.key);
 						if (cached) {
 							uploadResults.push(cached);
-							host.setAttachmentUploadState(i, 'done');
+							host.setAttachmentUploadState(i, "done");
 							continue;
 						}
 
 						const resolvedRepoId = await resolveRepoId();
 						if (!resolvedRepoId) {
-							throw new Error('No GitHub repository resolved for attachment upload.');
+							throw new Error(
+                "No GitHub repository resolved for attachment upload.",
+              );
 						}
-						host.setAttachmentUploadState(i, 'uploading');
+						host.setAttachmentUploadState(i, "uploading");
 						const [result] = await this.githubUploadService.uploadViaMobileApi(
-							data.githubAccessToken, resolvedRepoId, [file]
-						);
+              data.githubAccessToken,
+              resolvedRepoId,
+              [file],
+            );
 						if (!result) {
 							throw new Error(`Upload returned no result for ${file.name}.`);
 						}
 						this.uploadCache.set(file.key, result);
 						uploadResults.push(result);
-						host.setAttachmentUploadState(i, 'done');
+						host.setAttachmentUploadState(i, "done");
 					}
 
-					mediaMarkdown = `\n\n### ${localize('issueReporter.attachmentsHeading', "Attachments")}\n\n`;
+					mediaMarkdown = `\n\n### ${localize("issueReporter.attachmentsHeading", "Attachments")}\n\n`;
 					for (const r of uploadResults) {
-						mediaMarkdown += r.contentType.startsWith('video/')
+						mediaMarkdown += r.contentType.startsWith("video/")
 							? `${r.assetUrl}\n\n`
 							: `![${r.fileName}](${r.assetUrl})\n\n`;
 					}
 				}
 			} catch (err) {
-				this.logService.error('[IssueFormService] Upload failed:', err);
-				mediaMarkdown = `\n\n### ${localize('issueReporter.attachmentsHeading', "Attachments")}\n\n> ${localize('issueReporter.attachmentsUploadFailed', "Upload failed. Please drag and drop attachments manually.")}\n\n`;
+				this.logService.error("[IssueFormService] Upload failed:", err);
+				mediaMarkdown = `\n\n### ${localize("issueReporter.attachmentsHeading", "Attachments")}\n\n> ${localize("issueReporter.attachmentsUploadFailed", "Upload failed. Please drag and drop attachments manually.")}\n\n`;
 			} finally {
 				host.setUploading(false);
 			}
@@ -191,15 +219,37 @@ export class IssueFormService extends Disposable implements IIssueFormService {
 
 		const issueBody = body + mediaMarkdown;
 
-		const baseUrl = this.getIssueUrlWithTitle(title, issueTarget.url, data.issueSource === IssueSource.Extension);
+		const baseUrl = this.getIssueUrlWithTitle(
+      title,
+      issueTarget.url,
+      data.issueSource === IssueSource.Extension,
+    );
 		let previewBody = issueBody;
-		let url = this.createIssuePreviewUrl(baseUrl, previewBody, gitHubDetails, data.issueSource);
+		let url = this.createIssuePreviewUrl(
+      baseUrl,
+      previewBody,
+      gitHubDetails,
+      data.issueSource,
+    );
 
 		if (url.length > MAX_URL_LENGTH && data.githubAccessToken && gitHubDetails) {
-			const shortenedBody = await this.tryCreateBodyWithIssueDataAttachment(host, issueBody, baseUrl, gitHubDetails, data.issueSource, data.githubAccessToken, resolveRepoId);
+			const shortenedBody = await this.tryCreateBodyWithIssueDataAttachment(
+        host,
+        issueBody,
+        baseUrl,
+        gitHubDetails,
+        data.issueSource,
+        data.githubAccessToken,
+        resolveRepoId,
+      );
 			if (shortenedBody) {
 				previewBody = shortenedBody;
-				url = this.createIssuePreviewUrl(baseUrl, previewBody, gitHubDetails, data.issueSource);
+				url = this.createIssuePreviewUrl(
+          baseUrl,
+          previewBody,
+          gitHubDetails,
+          data.issueSource,
+        );
 			}
 		}
 
@@ -211,10 +261,18 @@ export class IssueFormService extends Disposable implements IIssueFormService {
 			try {
 				await this.clipboardService.writeText(issueBody);
 			} catch (error) {
-				this.logService.error('Writing issue data to clipboard failed', error);
+				this.logService.error("Writing issue data to clipboard failed", error);
 				return false;
 			}
-			url = this.createIssuePreviewUrl(baseUrl, localize('pasteData', "We have written the needed data into your clipboard because it was too large to send. Please paste."), gitHubDetails, data.issueSource);
+			url = this.createIssuePreviewUrl(
+        baseUrl,
+        localize(
+          "pasteData",
+          "We have written the needed data into your clipboard because it was too large to send. Please paste.",
+        ),
+        gitHubDetails,
+        data.issueSource,
+      );
 		}
 
 		// Skip the trusted-domains prompt for github.com URLs the issue reporter
@@ -228,7 +286,7 @@ export class IssueFormService extends Disposable implements IIssueFormService {
 		// which double-encodes our already-percent-encoded query (`%23` becomes
 		// `%2523`, so GitHub renders `### Description` as literal `%23%23%23 Description`).
 		const uri = URI.parse(url);
-		const skipValidation = uri.scheme === 'https' && uri.authority === 'github.com';
+		const skipValidation = uri.scheme === "https" && uri.authority === "github.com";
 		return this.openerService.open(url, { openExternal: true, skipValidation });
 	}
 
@@ -239,7 +297,7 @@ export class IssueFormService extends Disposable implements IIssueFormService {
 		gitHubDetails: { owner: string; repositoryName: string },
 		issueSource: IssueSource | undefined,
 		githubAccessToken: string,
-		resolveRepoId: () => Promise<string | undefined>
+		resolveRepoId: () => Promise<string | undefined>,
 	): Promise<string | undefined> {
 		const extracted = this.extractIssueData(issueBody);
 		if (!extracted) {
@@ -252,21 +310,33 @@ export class IssueFormService extends Disposable implements IIssueFormService {
 			if (!repoId) {
 				return undefined;
 			}
-			const result = await this.uploadIssueDataFile(githubAccessToken, repoId, extracted.fileContent);
-			const bodyWithLink = this.createBodyWithIssueDataLink(extracted.body, result.assetUrl);
-			if (this.createIssuePreviewUrl(baseUrl, bodyWithLink, gitHubDetails, issueSource).length > MAX_URL_LENGTH) {
+			const result = await this.uploadIssueDataFile(
+        githubAccessToken,
+        repoId,
+        extracted.fileContent,
+      );
+			const bodyWithLink = this.createBodyWithIssueDataLink(
+        extracted.body,
+        result.assetUrl,
+      );
+			if (this.createIssuePreviewUrl(
+        baseUrl,
+        bodyWithLink,
+        gitHubDetails,
+        issueSource,
+      ).length > MAX_URL_LENGTH) {
 				return undefined;
 			}
 			return bodyWithLink;
 		} catch (error) {
-			this.logService.error('Uploading issue data attachment failed', error);
+			this.logService.error("Uploading issue data attachment failed", error);
 			return undefined;
 		} finally {
 			host.setUploading(false);
 		}
 	}
 
-	private async uploadIssueDataFile(githubAccessToken: string, repoId: string, fileContent: string): Promise<import('./githubUploadService.js').IGitHubUploadResult> {
+	private async uploadIssueDataFile(githubAccessToken: string, repoId: string, fileContent: string): Promise<import("./githubUploadService.js").IGitHubUploadResult> {
 		const key = `${ISSUE_DATA_ATTACHMENT_NAME}:${hash(fileContent)}`;
 		const cached = this.uploadCache.get(key);
 		if (cached) {
@@ -274,14 +344,18 @@ export class IssueFormService extends Disposable implements IIssueFormService {
 		}
 
 		const file: IssueUploadFile = {
-			key,
-			name: ISSUE_DATA_ATTACHMENT_NAME,
-			bytes: new TextEncoder().encode(fileContent),
-			contentType: 'text/plain',
-		};
-		const [result] = await this.githubUploadService.uploadViaMobileApi(githubAccessToken, repoId, [file]);
+      key,
+      name: ISSUE_DATA_ATTACHMENT_NAME,
+      bytes: new TextEncoder().encode(fileContent),
+      contentType: "text/plain",
+    };
+		const [result] = await this.githubUploadService.uploadViaMobileApi(
+      githubAccessToken,
+      repoId,
+      [file],
+    );
 		if (!result) {
-			throw new Error('Issue data upload did not return a result.');
+			throw new Error("Issue data upload did not return a result.");
 		}
 		this.uploadCache.set(key, result);
 		return result;
@@ -291,21 +365,21 @@ export class IssueFormService extends Disposable implements IIssueFormService {
 		const detailsBlocks: string[] = [];
 		const body = issueBody.replace(/\n*<details\b[\s\S]*?<\/details>\n*/gi, match => {
 			detailsBlocks.push(match.trim());
-			return '\n\n';
-		}).replace(/\n{3,}/g, '\n\n').trimEnd();
+			return "\n\n";
+		}).replace(/\n{3,}/g, "\n\n").trimEnd();
 
 		if (!detailsBlocks.length) {
 			return undefined;
 		}
 
 		return {
-			body,
-			fileContent: `# ${localize('issueData', "Issue Data")}\n\n${detailsBlocks.join('\n\n')}\n`,
-		};
+      body,
+      fileContent: `# ${localize("issueData", "Issue Data")}\n\n${detailsBlocks.join("\n\n")}\n`,
+    };
 	}
 
 	private createBodyWithIssueDataLink(body: string, issueDataUrl: string): string {
-		const attachmentMarkdown = `\n\n### ${localize('additionalIssueData', "Additional Issue Data")}\n\n[${ISSUE_DATA_ATTACHMENT_NAME}](${issueDataUrl})`;
+		const attachmentMarkdown = `\n\n### ${localize("additionalIssueData", "Additional Issue Data")}\n\n[${ISSUE_DATA_ATTACHMENT_NAME}](${issueDataUrl})`;
 		const markerIndex = body.indexOf(GENERATED_BY_ISSUE_REPORTER_MARKER);
 		if (markerIndex === -1) {
 			return `${body.trimEnd()}${attachmentMarkdown}\n`;
@@ -316,7 +390,12 @@ export class IssueFormService extends Disposable implements IIssueFormService {
 
 	private createIssuePreviewUrl(baseUrl: string, body: string, gitHubDetails: { owner: string; repositoryName: string } | undefined, issueSource: IssueSource | undefined): string {
 		const url = `${baseUrl}&body=${encodeURIComponent(body)}`;
-		return this.addTemplateToUrl(url, gitHubDetails?.owner, gitHubDetails?.repositoryName, issueSource);
+		return this.addTemplateToUrl(
+      url,
+      gitHubDetails?.owner,
+      gitHubDetails?.repositoryName,
+      issueSource,
+    );
 	}
 
 	private getIssueTarget(data: IssueReporterData): { url: string; external: boolean } | undefined {
@@ -331,7 +410,10 @@ export class IssueFormService extends Disposable implements IIssueFormService {
 
 		if (data.issueSource === IssueSource.Marketplace) {
 			const marketplaceIssueUrl = product.reportMarketplaceIssueUrl ?? product.reportIssueUrl;
-			return marketplaceIssueUrl ? { url: marketplaceIssueUrl, external: false } : undefined;
+			return marketplaceIssueUrl ? {
+        url: marketplaceIssueUrl,
+        external: false,
+      } : undefined;
 		}
 
 		if (data.uri) {
@@ -344,12 +426,17 @@ export class IssueFormService extends Disposable implements IIssueFormService {
 			return { url, external: !this.isGitHubUrl(url) };
 		}
 
-		return product.reportIssueUrl ? { url: product.reportIssueUrl, external: false } : undefined;
+		return product.reportIssueUrl ? {
+      url: product.reportIssueUrl,
+      external: false,
+    } : undefined;
 	}
 
 	private getSelectedExtension(data: IssueReporterData): IssueReporterExtensionData | undefined {
 		return data.extensionId
-			? data.enabledExtensions.find(ext => ext.id.toLowerCase() === data.extensionId?.toLowerCase())
+			? data.enabledExtensions.find(
+          ext => ext.id.toLowerCase() === data.extensionId?.toLowerCase(),
+        )
 			: undefined;
 	}
 
@@ -357,10 +444,14 @@ export class IssueFormService extends Disposable implements IIssueFormService {
 		if (extension.uri) {
 			return URI.revive(extension.uri).toString();
 		}
-		if (extension.bugsUrl && /^https?:\/\/github\.com\/([^\/]*)\/([^\/]*)\/?(\/issues)?\/?$/.test(extension.bugsUrl)) {
+		if (extension.bugsUrl && /^https?:\/\/github\.com\/([^\/]*)\/([^\/]*)\/?(\/issues)?\/?$/.test(
+      extension.bugsUrl,
+    )) {
 			return `${normalizeGitHubUrl(extension.bugsUrl)}/issues/new`;
 		}
-		if (extension.repositoryUrl && /^https?:\/\/github\.com\/([^\/]*)\/([^\/]*)\/?$/.test(extension.repositoryUrl)) {
+		if (extension.repositoryUrl && /^https?:\/\/github\.com\/([^\/]*)\/([^\/]*)\/?$/.test(
+      extension.repositoryUrl,
+    )) {
 			return `${normalizeGitHubUrl(extension.repositoryUrl)}/issues/new`;
 		}
 		return extension.bugsUrl || extension.repositoryUrl;
@@ -371,7 +462,9 @@ export class IssueFormService extends Disposable implements IIssueFormService {
 	}
 
 	private parseGitHubUrl(url: string): { owner: string; repositoryName: string } | undefined {
-		const match = /^https?:\/\/github\.com\/([^\/?#]+)\/([^\/?#]+).*/i.exec(url);
+		const match = /^https?:\/\/github\.com\/([^\/?#]+)\/([^\/?#]+).*/i.exec(
+      url,
+    );
 		if (!match) {
 			return undefined;
 		}
@@ -382,18 +475,18 @@ export class IssueFormService extends Disposable implements IIssueFormService {
 		if (fileOnExtension && !/\/issues\/new(?:[?#].*)?$/i.test(issueUrl)) {
 			issueUrl = `${normalizeGitHubUrl(issueUrl)}/issues/new`;
 		}
-		const queryStringPrefix = issueUrl.indexOf('?') === -1 ? '?' : '&';
+		const queryStringPrefix = issueUrl.indexOf("?") === -1 ? "?" : "&";
 		return `${issueUrl}${queryStringPrefix}title=${encodeURIComponent(issueTitle)}`;
 	}
 
 	private addTemplateToUrl(baseUrl: string, owner?: string, repositoryName?: string, issueSource?: IssueSource): string {
-		const needsTemplate = issueSource === IssueSource.VSCode || (owner?.toLowerCase() === 'microsoft' && repositoryName?.toLowerCase() === 'vscode');
+		const needsTemplate = issueSource === IssueSource.VSCode || (owner?.toLowerCase() === "microsoft" && repositoryName?.toLowerCase() === "vscode");
 		if (!needsTemplate) {
 			return baseUrl;
 		}
 		try {
 			const url = new URL(baseUrl);
-			url.searchParams.set('template', 'bug_report.md');
+			url.searchParams.set("template", "bug_report.md");
 			return url.toString();
 		} catch {
 			return `${baseUrl}&template=bug_report.md`;
@@ -401,7 +494,7 @@ export class IssueFormService extends Disposable implements IIssueFormService {
 	}
 
 	private dataUrlToBytes(dataUrl: string): Uint8Array | undefined {
-		const commaIndex = dataUrl.indexOf(',');
+		const commaIndex = dataUrl.indexOf(",");
 		if (commaIndex === -1) {
 			return undefined;
 		}
@@ -417,7 +510,14 @@ export class IssueFormService extends Disposable implements IIssueFormService {
 		await this.openAuxIssueReporter(data);
 
 		if (this.issueReporterWindow) {
-			const issueReporter = this.instantiationService.createInstance(IssueWebReporter, false, data, { type: this.type, arch: this.arch, release: this.release }, product, this.issueReporterWindow);
+			const issueReporter = this.instantiationService.createInstance(
+        IssueWebReporter,
+        false,
+        data,
+        { type: this.type, arch: this.arch, release: this.release },
+        product,
+        this.issueReporterWindow,
+      );
 			issueReporter.render();
 		}
 	}
@@ -429,23 +529,33 @@ export class IssueFormService extends Disposable implements IIssueFormService {
 		// Center Issue Reporter Window based on bounds from native host service.
 		// Use typeof checks so an active window at x:0 / y:0 (very common on the primary
 		// display) still gets centered — a truthy check would miss that case.
-		if (bounds && typeof bounds.x === 'number' && typeof bounds.y === 'number') {
+		if (bounds && typeof bounds.x === "number" && typeof bounds.y === "number") {
 			const centerX = bounds.x + bounds.width / 2;
 			const centerY = bounds.y + bounds.height / 2;
-			issueReporterBounds = { ...issueReporterBounds, x: centerX - 350, y: centerY - 400 };
+			issueReporterBounds = {
+        ...issueReporterBounds,
+        x: centerX - 350,
+        y: centerY - 400,
+      };
 		}
 
 		const disposables = new DisposableStore();
 
 		// Auxiliary Window
-		const auxiliaryWindow = disposables.add(await this.auxiliaryWindowService.open({ mode: AuxiliaryWindowMode.Normal, bounds: issueReporterBounds, nativeTitlebar: true, disableFullscreen: true }));
+		const auxiliaryWindow = disposables.add(
+      await this.auxiliaryWindowService.open({ mode: AuxiliaryWindowMode.Normal, bounds: issueReporterBounds, nativeTitlebar: true, disableFullscreen: true }),
+    );
 
-		const platformClass = isWindows ? 'windows' : isLinux ? 'linux' : 'mac';
+		const platformClass = isWindows ? "windows" : isLinux ? "linux" : "mac";
 
 		if (auxiliaryWindow) {
 			await auxiliaryWindow.whenStylesHaveLoaded;
-			auxiliaryWindow.window.document.title = 'Issue Reporter';
-			auxiliaryWindow.window.document.body.classList.add('issue-reporter-body', 'monaco-workbench', platformClass);
+			auxiliaryWindow.window.document.title = "Issue Reporter";
+			auxiliaryWindow.window.document.body.classList.add(
+        "issue-reporter-body",
+        "monaco-workbench",
+        platformClass,
+      );
 
 			// removes preset monaco-workbench container
 			auxiliaryWindow.container.remove();
@@ -454,56 +564,66 @@ export class IssueFormService extends Disposable implements IIssueFormService {
 			// Since auxiliary windows clone stylesheets from main window, but Menu.globalStyleSheet
 			// may not exist yet in main window, we need to ensure menu styles are available here.
 			if (!Menu.globalStyleSheet) {
-				const menuStyleSheet = createStyleSheet(auxiliaryWindow.window.document.head);
-				menuStyleSheet.textContent = getMenuWidgetCSS(unthemedMenuStyles, false);
+				const menuStyleSheet = createStyleSheet(
+          auxiliaryWindow.window.document.head,
+        );
+				menuStyleSheet.textContent = getMenuWidgetCSS(
+          unthemedMenuStyles,
+          false,
+        );
 			}
 
 			// custom issue reporter wrapper that preserves critical auxiliary window container styles
-			const div = document.createElement('div');
-			div.classList.add('monaco-workbench');
+			const div = document.createElement("div");
+			div.classList.add("monaco-workbench");
 			auxiliaryWindow.window.document.body.appendChild(div);
 			safeSetInnerHtml(div, BaseHtml(), {
 				// Also allow input elements
 				allowedTags: {
 					augment: [
-						'input',
-						'select',
-						'checkbox',
-						'textarea',
-					]
+						"input",
+						"select",
+						"checkbox",
+						"textarea",
+					],
 				},
 				allowedAttributes: {
 					augment: [
-						'id',
-						'class',
-						'style',
-						'textarea',
-					]
-				}
+						"id",
+						"class",
+						"style",
+						"textarea",
+					],
+				},
 			});
 
 			this.issueReporterWindow = auxiliaryWindow.window;
 		} else {
-			console.error('Failed to open auxiliary window');
+			console.error("Failed to open auxiliary window");
 			disposables.dispose();
 		}
 
 		// handle closing issue reporter
-		this.issueReporterWindow?.addEventListener('beforeunload', () => {
-			auxiliaryWindow.window.close();
-			disposables.dispose();
-			this.issueReporterWindow = null;
-		});
+		this.issueReporterWindow?.addEventListener("beforeunload", () => {
+      auxiliaryWindow.window.close();
+      disposables.dispose();
+      this.issueReporterWindow = null;
+    });
 	}
 
 	async sendReporterMenu(extensionId: string): Promise<IssueReporterData | undefined> {
-		const menu = this.menuService.createMenu(MenuId.IssueReporter, this.contextKeyService);
+		const menu = this.menuService.createMenu(
+      MenuId.IssueReporter,
+      this.contextKeyService,
+    );
 
 		// render menu and dispose
-		const actions = menu.getActions({ renderShortTitle: true }).flatMap(entry => entry[1]);
+		const actions = menu.getActions({ renderShortTitle: true }).flatMap(
+      entry => entry[1],
+    );
 		for (const action of actions) {
 			try {
-				if (action.item && 'source' in action.item && action.item.source?.id.toLowerCase() === extensionId.toLowerCase()) {
+				if (action.item && "source" in action.item && action.item.source?.id.toLowerCase() === extensionId.toLowerCase()) {
 					this.extensionIdentifierSet.add(extensionId.toLowerCase());
 					await action.run();
 				}
@@ -548,20 +668,20 @@ export class IssueFormService extends Disposable implements IIssueFormService {
 	async showConfirmCloseDialog(): Promise<void> {
 		await this.dialogService.prompt({
 			type: Severity.Warning,
-			message: localize('confirmCloseIssueReporter', "Your input will not be saved. Are you sure you want to close this window?"),
+			message: localize("confirmCloseIssueReporter", "Your input will not be saved. Are you sure you want to close this window?"),
 			buttons: [
 				{
-					label: localize({ key: 'yes', comment: ['&& denotes a mnemonic'] }, "&&Yes"),
+					label: localize({ key: "yes", comment: ["&& denotes a mnemonic"] }, "&&Yes"),
 					run: () => {
 						this.closeReporter();
 						this.issueReporterWindow = null;
-					}
+					},
 				},
 				{
-					label: localize('cancel', "Cancel"),
-					run: () => { }
-				}
-			]
+					label: localize("cancel", "Cancel"),
+					run: () => { },
+				},
+			],
 		});
 	}
 
@@ -570,17 +690,17 @@ export class IssueFormService extends Disposable implements IIssueFormService {
 
 		await this.dialogService.prompt({
 			type: Severity.Warning,
-			message: localize('issueReporterWriteToClipboard', "There is too much data to send to GitHub directly. The data will be copied to the clipboard, please paste it into the GitHub issue page that is opened."),
+			message: localize("issueReporterWriteToClipboard", "There is too much data to send to GitHub directly. The data will be copied to the clipboard, please paste it into the GitHub issue page that is opened."),
 			buttons: [
 				{
-					label: localize({ key: 'ok', comment: ['&& denotes a mnemonic'] }, "&&OK"),
-					run: () => { result = true; }
+					label: localize({ key: "ok", comment: ["&& denotes a mnemonic"] }, "&&OK"),
+					run: () => { result = true; },
 				},
 				{
-					label: localize('cancel', "Cancel"),
-					run: () => { result = false; }
-				}
-			]
+					label: localize("cancel", "Cancel"),
+					run: () => { result = false; },
+				},
+			],
 		});
 
 		return result;

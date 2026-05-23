@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { ResourceMap } from '../../../../base/common/map.js';
-import { deepClone } from '../../../../base/common/objects.js';
-import { ITransaction, observableSignal } from '../../../../base/common/observable.js';
-import { IPrefixTreeNode, WellDefinedPrefixTree } from '../../../../base/common/prefixTree.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
-import { TestId } from './testId.js';
-import { LiveTestResult } from './testResult.js';
-import { CoverageDetails, DetailType, ICoverageCount, IFileCoverage } from './testTypes.js';
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { deepClone } from "../../../../base/common/objects.js";
+import { ITransaction, observableSignal } from "../../../../base/common/observable.js";
+import { IPrefixTreeNode, WellDefinedPrefixTree } from "../../../../base/common/prefixTree.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { TestId } from "./testId.js";
+import { LiveTestResult } from "./testResult.js";
+import { CoverageDetails, DetailType, ICoverageCount, IFileCoverage } from "./testTypes.js";
 
 export interface ICoverageAccessor {
 	getCoverageDetails: (id: string, testId: string | undefined, token: CancellationToken) => Promise<CoverageDetails[]>;
@@ -25,7 +25,9 @@ let incId = 0;
  */
 export class TestCoverage {
 	private readonly fileCoverage = new ResourceMap<FileCoverage>();
-	public readonly didAddCoverage = observableSignal<IPrefixTreeNode<AbstractFileCoverage>[]>(this);
+	public readonly didAddCoverage = observableSignal<IPrefixTreeNode<AbstractFileCoverage>[]>(
+    this,
+  );
 	public readonly tree = new WellDefinedPrefixTree<AbstractFileCoverage>();
 	public readonly associatedData = new Map<unknown, unknown>();
 
@@ -54,7 +56,7 @@ export class TestCoverage {
 	public append(coverage: IFileCoverage, tx: ITransaction | undefined) {
 		const previous = this.getComputedForUri(coverage.uri);
 		const result = this.result;
-		const applyDelta = (kind: 'statement' | 'branch' | 'declaration', node: ComputedFileCoverage) => {
+		const applyDelta = (kind: "statement" | "branch" | "declaration", node: ComputedFileCoverage) => {
 			if (!node[kind]) {
 				if (coverage[kind]) {
 					node[kind] = { ...coverage[kind]! };
@@ -68,7 +70,9 @@ export class TestCoverage {
 		// We insert using the non-canonical path to normalize for casing differences
 		// between URIs, but when inserting an intermediate node always use 'a' canonical
 		// version.
-		const canonical = [...this.treePathForUri(coverage.uri, /* canonical = */ true)];
+		const canonical = [
+      ...this.treePathForUri(coverage.uri, /* canonical = */ true),
+    ];
 		const chain: IPrefixTreeNode<AbstractFileCoverage>[] = [];
 
 		this.tree.mutatePath(this.treePathForUri(coverage.uri, /* canonical = */ false), node => {
@@ -98,9 +102,9 @@ export class TestCoverage {
 					intermediate.uri = this.treePathToUri(canonical.slice(0, chain.length));
 					node.value = new ComputedFileCoverage(intermediate, result);
 				} else {
-					applyDelta('statement', node.value);
-					applyDelta('branch', node.value);
-					applyDelta('declaration', node.value);
+					applyDelta("statement", node.value);
+					applyDelta("branch", node.value);
+					applyDelta("declaration", node.value);
 					node.value.didChange.trigger(tx);
 				}
 			}
@@ -129,12 +133,14 @@ export class TestCoverage {
 					continue;
 				}
 
-				const canonical = [...this.treePathForUri(node.uri, /* canonical = */ true)];
+				const canonical = [
+          ...this.treePathForUri(node.uri, /* canonical = */ true),
+        ];
 				const chain: IPrefixTreeNode<AbstractFileCoverage>[] = [];
-				tree.mutatePath(this.treePathForUri(node.uri, /* canonical = */ false), n => {
-					chain.push(n);
-					n.value ??= new BypassedFileCoverage(this.treePathToUri(canonical.slice(0, chain.length)), node.fromResult);
-				});
+				tree.mutatePath(this.treePathForUri(node.uri, false), n => {
+          chain.push(n);
+          n.value ??= new BypassedFileCoverage(this.treePathToUri(canonical.slice(0, chain.length)), node.fromResult);
+        });
 			}
 		}
 
@@ -167,12 +173,18 @@ export class TestCoverage {
 		yield uri.scheme;
 		yield uri.authority;
 
-		const path = !canconicalPath && this.uriIdentityService.extUri.ignorePathCasing(uri) ? uri.path.toLowerCase() : uri.path;
-		yield* path.split('/');
+		const path = !canconicalPath && this.uriIdentityService.extUri.ignorePathCasing(
+      uri,
+    ) ? uri.path.toLowerCase() : uri.path;
+		yield* path.split("/");
 	}
 
 	private treePathToUri(path: string[]) {
-		return URI.from({ scheme: path[0], authority: path[1], path: path.slice(2).join('/') });
+		return URI.from({
+      scheme: path[0],
+      authority: path[1],
+      path: path.slice(2).join("/"),
+    });
 	}
 }
 
@@ -206,7 +218,11 @@ export abstract class AbstractFileCoverage {
 	 * This is based on the Clover total coverage formula
 	 */
 	public get tpc() {
-		return getTotalCoveragePercent(this.statement, this.branch, this.declaration);
+		return getTotalCoveragePercent(
+      this.statement,
+      this.branch,
+      this.declaration,
+    );
 	}
 
 	/**
@@ -234,7 +250,10 @@ export class ComputedFileCoverage extends AbstractFileCoverage { }
  */
 export class BypassedFileCoverage extends ComputedFileCoverage {
 	constructor(uri: URI, result: LiveTestResult) {
-		super({ id: String(incId++), uri, statement: { covered: 0, total: 0 } }, result);
+		super(
+      { id: String(incId++), uri, statement: { covered: 0, total: 0 } },
+      result,
+    );
 	}
 }
 
@@ -280,7 +299,11 @@ export class FileCoverage extends AbstractFileCoverage {
 	 * Gets per-line coverage details.
 	 */
 	public async details(token = CancellationToken.None) {
-		this._details ??= this.accessor.getCoverageDetails(this.id, undefined, token);
+		this._details ??= this.accessor.getCoverageDetails(
+      this.id,
+      undefined,
+      token,
+    );
 
 		try {
 			const d = await this._details;
@@ -295,10 +318,10 @@ export class FileCoverage extends AbstractFileCoverage {
 
 export const totalFromCoverageDetails = (uri: URI, details: CoverageDetails[]): IFileCoverage => {
 	const fc: IFileCoverage = {
-		id: '',
-		uri,
-		statement: ICoverageCount.empty(),
-	};
+    id: "",
+    uri,
+    statement: ICoverageCount.empty(),
+  };
 
 	for (const detail of details) {
 		if (detail.type === DetailType.Statement) {

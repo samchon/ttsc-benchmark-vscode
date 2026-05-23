@@ -3,25 +3,25 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as nls from '../../../../nls.js';
-import { ExtensionsRegistry, IExtensionPointUser } from '../../extensions/common/extensionsRegistry.js';
-import { isProposedApiEnabled } from '../../extensions/common/extensions.js';
-import * as resources from '../../../../base/common/resources.js';
-import { IFileService, FileChangeType } from '../../../../platform/files/common/files.js';
-import { IBrowserWorkbenchEnvironmentService } from '../../environment/browser/environmentService.js';
-import { DisposableStore, IDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
-import { URI } from '../../../../base/common/uri.js';
-import { FileAccess } from '../../../../base/common/network.js';
-import { createLinkElement } from '../../../../base/browser/dom.js';
-import { IWorkbenchThemeService } from '../common/workbenchThemeService.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { ExtensionIdentifier } from '../../../../platform/extensions/common/extensions.js';
+import * as nls from "../../../../nls.js";
+import { ExtensionsRegistry, IExtensionPointUser } from "../../extensions/common/extensionsRegistry.js";
+import { isProposedApiEnabled } from "../../extensions/common/extensions.js";
+import * as resources from "../../../../base/common/resources.js";
+import { IFileService, FileChangeType } from "../../../../platform/files/common/files.js";
+import { IBrowserWorkbenchEnvironmentService } from "../../environment/browser/environmentService.js";
+import { DisposableStore, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import { FileAccess } from "../../../../base/common/network.js";
+import { createLinkElement } from "../../../../base/browser/dom.js";
+import { IWorkbenchThemeService } from "../common/workbenchThemeService.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { ExtensionIdentifier } from "../../../../platform/extensions/common/extensions.js";
 
 interface ICSSExtensionPoint {
 	path: string;
 }
 
-const CSS_CACHE_STORAGE_KEY = 'workbench.contrib.css.cache';
+const CSS_CACHE_STORAGE_KEY = "workbench.contrib.css.cache";
 
 interface ICSSCacheEntry {
 	extensionId: string;
@@ -29,22 +29,22 @@ interface ICSSCacheEntry {
 }
 
 const cssExtensionPoint = ExtensionsRegistry.registerExtensionPoint<ICSSExtensionPoint[]>({
-	extensionPoint: 'css',
+	extensionPoint: "css",
 	jsonSchema: {
-		description: nls.localize('contributes.css', "Contributes CSS files to be loaded in the workbench."),
-		type: 'array',
+		description: nls.localize("contributes.css", "Contributes CSS files to be loaded in the workbench."),
+		type: "array",
 		items: {
-			type: 'object',
+			type: "object",
 			properties: {
 				path: {
-					description: nls.localize('contributes.css.path', "Path to the CSS file. The path is relative to the extension folder."),
-					type: 'string'
-				}
+					description: nls.localize("contributes.css.path", "Path to the CSS file. The path is relative to the extension folder."),
+					type: "string",
+				},
 			},
-			required: ['path']
+			required: ["path"],
 		},
-		defaultSnippets: [{ body: [{ path: '${1:styles.css}' }] }]
-	}
+		defaultSnippets: [{ body: [{ path: "${1:styles.css}" }] }],
+	},
 });
 
 class CSSFileWatcher implements IDisposable {
@@ -54,7 +54,7 @@ class CSSFileWatcher implements IDisposable {
 	constructor(
 		private readonly fileService: IFileService,
 		private readonly environmentService: IBrowserWorkbenchEnvironmentService,
-		private readonly onUpdate: (uri: URI) => void
+		private readonly onUpdate: (uri: URI) => void,
 	) { }
 
 	watch(uri: URI): void {
@@ -105,9 +105,15 @@ export class CSSExtensionPoint {
 		@IFileService fileService: IFileService,
 		@IBrowserWorkbenchEnvironmentService environmentService: IBrowserWorkbenchEnvironmentService,
 		@IWorkbenchThemeService private readonly themeService: IWorkbenchThemeService,
-		@IStorageService private readonly storageService: IStorageService
+		@IStorageService private readonly storageService: IStorageService,
 	) {
-		this.watcher = this.disposables.add(new CSSFileWatcher(fileService, environmentService, uri => this.reloadStylesheet(uri)));
+		this.watcher = this.disposables.add(
+      new CSSFileWatcher(
+        fileService,
+        environmentService,
+        uri => this.reloadStylesheet(uri),
+      ),
+    );
 		this.disposables.add(toDisposable(() => {
 			for (const entries of this.stylesheetsByExtension.values()) {
 				for (const entry of entries) {
@@ -121,9 +127,15 @@ export class CSSExtensionPoint {
 		this.applyCachedCSS();
 
 		// Listen to theme changes to activate/deactivate CSS
-		this.disposables.add(this.themeService.onDidColorThemeChange(() => this.onThemeChange()));
-		this.disposables.add(this.themeService.onDidFileIconThemeChange(() => this.onThemeChange()));
-		this.disposables.add(this.themeService.onDidProductIconThemeChange(() => this.onThemeChange()));
+		this.disposables.add(
+      this.themeService.onDidColorThemeChange(() => this.onThemeChange()),
+    );
+		this.disposables.add(
+      this.themeService.onDidFileIconThemeChange(() => this.onThemeChange()),
+    );
+		this.disposables.add(
+      this.themeService.onDidProductIconThemeChange(() => this.onThemeChange()),
+    );
 
 		cssExtensionPoint.setHandler((extensions, delta) => {
 			// Handle removed extensions
@@ -136,7 +148,7 @@ export class CSSExtensionPoint {
 
 			// Handle added extensions
 			for (const extension of delta.added) {
-				if (!isProposedApiEnabled(extension.description, 'css')) {
+				if (!isProposedApiEnabled(extension.description, "css")) {
 					extension.collector.error(`The '${cssExtensionPoint.name}' contribution point is proposed API.`);
 					continue;
 				}
@@ -145,7 +157,7 @@ export class CSSExtensionPoint {
 				const collector = extension.collector;
 
 				if (!extensionValue || !Array.isArray(extensionValue)) {
-					collector.error(nls.localize('invalid.css.configuration', "'contributes.css' must be an array."));
+					collector.error(nls.localize("invalid.css.configuration", "'contributes.css' must be an array."));
 					continue;
 				}
 
@@ -171,15 +183,26 @@ export class CSSExtensionPoint {
 		const fileIconTheme = this.themeService.getFileIconTheme();
 		const productIconTheme = this.themeService.getProductIconTheme();
 
-		return !!(colorTheme.extensionData && ExtensionIdentifier.equals(colorTheme.extensionData.extensionId, extensionId)) ||
-			!!(fileIconTheme.extensionData && ExtensionIdentifier.equals(fileIconTheme.extensionData.extensionId, extensionId)) ||
-			!!(productIconTheme.extensionData && ExtensionIdentifier.equals(productIconTheme.extensionData.extensionId, extensionId));
+		return !!(colorTheme.extensionData && ExtensionIdentifier.equals(
+      colorTheme.extensionData.extensionId,
+      extensionId,
+    )) ||
+			!!(fileIconTheme.extensionData && ExtensionIdentifier.equals(
+        fileIconTheme.extensionData.extensionId,
+        extensionId,
+      )) ||
+			!!(productIconTheme.extensionData && ExtensionIdentifier.equals(
+        productIconTheme.extensionData.extensionId,
+        extensionId,
+      ));
 	}
 
 	private onThemeChange(): void {
 		// Activate pending extensions whose theme just became active
 		for (const [extensionId, extension] of this.pendingExtensions) {
-			if (!this.stylesheetsByExtension.has(extensionId) && this.isExtensionThemeActive(extensionId)) {
+			if (!this.stylesheetsByExtension.has(
+        extensionId,
+      ) && this.isExtensionThemeActive(extensionId)) {
 				this.activateExtensionCSS(extension);
 			}
 		}
@@ -210,22 +233,45 @@ export class CSSExtensionPoint {
 		const cssLocations: string[] = [];
 
 		for (const cssContribution of extensionValue) {
-			if (!cssContribution.path || typeof cssContribution.path !== 'string') {
-				collector.error(nls.localize('invalid.css.path', "'contributes.css.path' must be a string."));
+			if (!cssContribution.path || typeof cssContribution.path !== "string") {
+				collector.error(
+          nls.localize(
+            "invalid.css.path",
+            "'contributes.css.path' must be a string.",
+          ),
+        );
 				continue;
 			}
 
-			const cssLocation = resources.joinPath(extensionLocation, cssContribution.path);
+			const cssLocation = resources.joinPath(
+        extensionLocation,
+        cssContribution.path,
+      );
 
 			// Validate that the CSS file is within the extension folder
 			if (!resources.isEqualOrParent(cssLocation, extensionLocation)) {
-				collector.warn(nls.localize('invalid.css.path.location', "Expected 'contributes.css.path' ({0}) to be included inside extension's folder ({1}).", cssLocation.path, extensionLocation.path));
+				collector.warn(
+          nls.localize(
+            "invalid.css.path.location",
+            "Expected 'contributes.css.path' ({0}) to be included inside extension's folder ({1}).",
+            cssLocation.path,
+            extensionLocation.path,
+          ),
+        );
 				continue;
 			}
 
 			const entryDisposables = new DisposableStore();
-			const element = this.createCSSLinkElement(cssLocation, extensionId, entryDisposables);
-			entries.push({ uri: cssLocation, element, disposables: entryDisposables });
+			const element = this.createCSSLinkElement(
+        cssLocation,
+        extensionId,
+        entryDisposables,
+      );
+			entries.push({
+        uri: cssLocation,
+        element,
+        disposables: entryDisposables,
+      });
 			cssLocations.push(cssLocation.toString());
 
 			// Watch for changes
@@ -270,8 +316,16 @@ export class CSSExtensionPoint {
 		for (const cssLocationString of cached.cssLocations) {
 			const cssLocation = URI.parse(cssLocationString);
 			const entryDisposables = new DisposableStore();
-			const element = this.createCSSLinkElement(cssLocation, cached.extensionId, entryDisposables);
-			entries.push({ uri: cssLocation, element, disposables: entryDisposables });
+			const element = this.createCSSLinkElement(
+        cssLocation,
+        cached.extensionId,
+        entryDisposables,
+      );
+			entries.push({
+        uri: cssLocation,
+        element,
+        disposables: entryDisposables,
+      });
 
 			// Watch for changes
 			this.watcher.watch(cssLocation);
@@ -283,7 +337,10 @@ export class CSSExtensionPoint {
 	}
 
 	private getCachedCSS(): ICSSCacheEntry | undefined {
-		const raw = this.storageService.get(CSS_CACHE_STORAGE_KEY, StorageScope.PROFILE);
+		const raw = this.storageService.get(
+      CSS_CACHE_STORAGE_KEY,
+      StorageScope.PROFILE,
+    );
 		if (!raw) {
 			return undefined;
 		}
@@ -296,7 +353,12 @@ export class CSSExtensionPoint {
 
 	private cacheExtensionCSS(extensionId: string, cssLocations: string[]): void {
 		const entry: ICSSCacheEntry = { extensionId, cssLocations };
-		this.storageService.store(CSS_CACHE_STORAGE_KEY, JSON.stringify(entry), StorageScope.PROFILE, StorageTarget.MACHINE);
+		this.storageService.store(
+      CSS_CACHE_STORAGE_KEY,
+      JSON.stringify(entry),
+      StorageScope.PROFILE,
+      StorageTarget.MACHINE,
+    );
 	}
 
 	private clearCacheForExtension(extensionId: string): void {
@@ -308,8 +370,8 @@ export class CSSExtensionPoint {
 
 	private createCSSLinkElement(uri: URI, extensionId: string, disposables: DisposableStore): HTMLLinkElement {
 		const element = createLinkElement();
-		element.rel = 'stylesheet';
-		element.type = 'text/css';
+		element.rel = "stylesheet";
+		element.type = "text/css";
 		element.className = `extension-contributed-css ${extensionId}`;
 		element.href = FileAccess.uriToBrowserUri(uri).toString(true);
 		disposables.add(toDisposable(() => element.remove()));
@@ -323,7 +385,9 @@ export class CSSExtensionPoint {
 				if (entry.uri.toString() === uriString) {
 					// Cache-bust by adding a timestamp query parameter
 					const browserUri = FileAccess.uriToBrowserUri(uri);
-					entry.element.href = browserUri.with({ query: `v=${Date.now()}` }).toString(true);
+					entry.element.href = browserUri.with({ query: `v=${Date.now()}` }).toString(
+            true,
+          );
 				}
 			}
 		}

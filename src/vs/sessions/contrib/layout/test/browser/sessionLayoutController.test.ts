@@ -3,33 +3,33 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { constObservable, ISettableObservable, observableValue } from '../../../../../base/common/observable.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { mock } from '../../../../../base/test/common/mock.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { TestConfigurationService } from '../../../../../platform/configuration/test/common/testConfigurationService.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { IStorageService, StorageScope, WillSaveStateReason } from '../../../../../platform/storage/common/storage.js';
-import { IWorkspace, IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
-import { Codicon } from '../../../../../base/common/codicons.js';
-import { IChatService } from '../../../../../workbench/contrib/chat/common/chatService/chatService.js';
-import { ViewContainerLocation } from '../../../../../workbench/common/views.js';
-import { IEditorGroupsService, IEditorWorkingSet } from '../../../../../workbench/services/editor/common/editorGroupsService.js';
-import { IEditorService } from '../../../../../workbench/services/editor/common/editorService.js';
-import { IPartVisibilityChangeEvent, IWorkbenchLayoutService, Parts } from '../../../../../workbench/services/layout/browser/layoutService.js';
-import { IPaneCompositePartService } from '../../../../../workbench/services/panecomposite/browser/panecomposite.js';
-import { IPaneComposite } from '../../../../../workbench/common/panecomposite.js';
-import { IViewsService } from '../../../../../workbench/services/views/common/viewsService.js';
-import { IActiveSession, ISessionsChangeEvent, ISessionsManagementService } from '../../../../services/sessions/common/sessionsManagement.js';
-import { IChat, ISessionFileChange, ISessionWorkspace, SessionStatus } from '../../../../services/sessions/common/session.js';
-import { LayoutController } from '../../browser/sessionLayoutController.js';
-import { CHANGES_VIEW_ID } from '../../../changes/common/changes.js';
-import { SESSIONS_FILES_CONTAINER_ID } from '../../../files/browser/files.contribution.js';
-import { TestInstantiationService } from '../../../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { TestStorageService } from '../../../../../workbench/test/common/workbenchTestServices.js';
+import assert from "assert";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { constObservable, ISettableObservable, observableValue } from "../../../../../base/common/observable.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { mock } from "../../../../../base/test/common/mock.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { TestConfigurationService } from "../../../../../platform/configuration/test/common/testConfigurationService.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IStorageService, StorageScope, WillSaveStateReason } from "../../../../../platform/storage/common/storage.js";
+import { IWorkspace, IWorkspaceContextService } from "../../../../../platform/workspace/common/workspace.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { IChatService } from "../../../../../workbench/contrib/chat/common/chatService/chatService.js";
+import { ViewContainerLocation } from "../../../../../workbench/common/views.js";
+import { IEditorGroupsService, IEditorWorkingSet } from "../../../../../workbench/services/editor/common/editorGroupsService.js";
+import { IEditorService } from "../../../../../workbench/services/editor/common/editorService.js";
+import { IPartVisibilityChangeEvent, IWorkbenchLayoutService, Parts } from "../../../../../workbench/services/layout/browser/layoutService.js";
+import { IPaneCompositePartService } from "../../../../../workbench/services/panecomposite/browser/panecomposite.js";
+import { IPaneComposite } from "../../../../../workbench/common/panecomposite.js";
+import { IViewsService } from "../../../../../workbench/services/views/common/viewsService.js";
+import { IActiveSession, ISessionsChangeEvent, ISessionsManagementService } from "../../../../services/sessions/common/sessionsManagement.js";
+import { IChat, ISessionFileChange, ISessionWorkspace, SessionStatus } from "../../../../services/sessions/common/session.js";
+import { LayoutController } from "../../browser/sessionLayoutController.js";
+import { CHANGES_VIEW_ID } from "../../../changes/common/changes.js";
+import { SESSIONS_FILES_CONTAINER_ID } from "../../../files/browser/files.contribution.js";
+import { TestInstantiationService } from "../../../../../platform/instantiation/test/common/instantiationServiceMock.js";
+import { TestStorageService } from "../../../../../workbench/test/common/workbenchTestServices.js";
 
 function makeChange(filePath: string): ISessionFileChange {
 	return { uri: URI.file(filePath), insertions: 1, deletions: 0 };
@@ -41,36 +41,36 @@ function makeSession(resource: URI, opts?: {
 	workspace?: ISessionWorkspace;
 }): IActiveSession {
 	const chat: IChat = {
-		resource,
-		createdAt: new Date(),
-		title: observableValue('title', 'Test'),
-		updatedAt: observableValue('updatedAt', new Date()),
-		status: observableValue('status', opts?.status ?? SessionStatus.Completed),
-		checkpoints: observableValue('checkpoints', undefined),
-		changes: observableValue('changes', opts?.changes ?? []),
-		modelId: observableValue('modelId', undefined),
-		mode: observableValue('mode', undefined),
-		isArchived: observableValue('isArchived', false),
-		isRead: observableValue('isRead', true),
-		lastTurnEnd: observableValue('lastTurnEnd', undefined),
-		description: observableValue('description', undefined),
-	};
+    resource,
+    createdAt: new Date(),
+    title: observableValue("title", "Test"),
+    updatedAt: observableValue("updatedAt", new Date()),
+    status: observableValue("status", opts?.status ?? SessionStatus.Completed),
+    checkpoints: observableValue("checkpoints", undefined),
+    changes: observableValue("changes", opts?.changes ?? []),
+    modelId: observableValue("modelId", undefined),
+    mode: observableValue("mode", undefined),
+    isArchived: observableValue("isArchived", false),
+    isRead: observableValue("isRead", true),
+    lastTurnEnd: observableValue("lastTurnEnd", undefined),
+    description: observableValue("description", undefined),
+  };
 
 	return {
 		sessionId: `test:${resource.toString()}`,
 		resource,
-		providerId: 'test',
-		sessionType: 'local',
+		providerId: "test",
+		sessionType: "local",
 		icon: Codicon.copilot,
 		createdAt: chat.createdAt,
-		workspace: observableValue('workspace', opts?.workspace ?? {
-			uri: URI.file('/repo'),
-			label: 'test',
+		workspace: observableValue("workspace", opts?.workspace ?? {
+			uri: URI.file("/repo"),
+			label: "test",
 			icon: Codicon.repo,
 			folders: [{
-				root: URI.file('/repo'),
-				workingDirectory: URI.file('/repo'),
-				name: 'repo',
+				root: URI.file("/repo"),
+				workingDirectory: URI.file("/repo"),
+				name: "repo",
 				description: undefined,
 				gitRepository: undefined,
 			}],
@@ -84,19 +84,19 @@ function makeSession(resource: URI, opts?: {
 		changes: chat.changes,
 		modelId: chat.modelId,
 		mode: chat.mode,
-		loading: observableValue('loading', false),
+		loading: observableValue("loading", false),
 		isArchived: chat.isArchived,
 		isRead: chat.isRead,
 		lastTurnEnd: chat.lastTurnEnd,
 		description: chat.description,
-		chats: observableValue('chats', [chat]),
-		activeChat: observableValue('activeChat', chat),
+		chats: observableValue("chats", [chat]),
+		activeChat: observableValue("activeChat", chat),
 		mainChat: constObservable(chat),
 		capabilities: { supportsMultipleChats: false },
 	};
 }
 
-suite('LayoutController', () => {
+suite("LayoutController", () => {
 
 	const store = new DisposableStore();
 	let activeSessionObs: ReturnType<typeof observableValue<IActiveSession | undefined>>;
@@ -117,10 +117,10 @@ suite('LayoutController', () => {
 		instaService.stub(IStorageService, storageService);
 
 		const configService = new TestConfigurationService();
-		configService.setUserConfiguration('workbench.editor.useModal', 'all');
+		configService.setUserConfiguration("workbench.editor.useModal", "all");
 		instaService.stub(IConfigurationService, configService);
 
-		activeSessionObs = observableValue<IActiveSession | undefined>('activeSession', undefined);
+		activeSessionObs = observableValue<IActiveSession | undefined>("activeSession", undefined);
 		onDidChangeSessions = store.add(new Emitter<ISessionsChangeEvent>());
 
 		instaService.stub(ISessionsManagementService, new class extends mock<ISessionsManagementService>() {
@@ -190,7 +190,7 @@ suite('LayoutController', () => {
 
 		instaService.stub(IWorkspaceContextService, new class extends mock<IWorkspaceContextService>() {
 			override readonly onDidChangeWorkspaceFolders = Event.None;
-			override getWorkspace(): IWorkspace { return { id: 'test', folders: [] }; }
+			override getWorkspace(): IWorkspace { return { id: "test", folders: [] }; }
 		});
 
 		return store.add(instaService.createInstance(LayoutController));
@@ -201,36 +201,36 @@ suite('LayoutController', () => {
 
 	// --- Auxiliary bar view state ---
 
-	test('shows files view for session with workspace and no changes', () => {
+	test("shows files view for session with workspace and no changes", () => {
 		createLayoutController();
-		const session = makeSession(URI.parse('session:1'));
+		const session = makeSession(URI.parse("session:1"));
 		activeSessionObs.set(session, undefined);
 
 		assert.ok(openedViewContainers.includes(SESSIONS_FILES_CONTAINER_ID));
 	});
 
-	test('shows changes view for session with changes', () => {
+	test("shows changes view for session with changes", () => {
 		createLayoutController();
-		const session = makeSession(URI.parse('session:1'), {
-			changes: [makeChange('/file.ts')],
+		const session = makeSession(URI.parse("session:1"), {
+			changes: [makeChange("/file.ts")],
 		});
 		activeSessionObs.set(session, undefined);
 
 		assert.ok(openedViews.includes(CHANGES_VIEW_ID));
 	});
 
-	test('shows files view for untitled session', () => {
+	test("shows files view for untitled session", () => {
 		createLayoutController();
-		const session = makeSession(URI.parse('session:1'), { status: SessionStatus.Untitled });
+		const session = makeSession(URI.parse("session:1"), { status: SessionStatus.Untitled });
 		activeSessionObs.set(session, undefined);
 
 		assert.ok(openedViewContainers.includes(SESSIONS_FILES_CONTAINER_ID));
 	});
 
-	test('does not open views when session has no workspace', () => {
+	test("does not open views when session has no workspace", () => {
 		createLayoutController();
-		const session = makeSession(URI.parse('session:1'), {
-			workspace: { uri: URI.file('/repo'), label: 'test', icon: Codicon.repo, folders: [], requiresWorkspaceTrust: false, isVirtualWorkspace: false },
+		const session = makeSession(URI.parse("session:1"), {
+			workspace: { uri: URI.file("/repo"), label: "test", icon: Codicon.repo, folders: [], requiresWorkspaceTrust: false, isVirtualWorkspace: false },
 		});
 		activeSessionObs.set(session, undefined);
 
@@ -238,10 +238,10 @@ suite('LayoutController', () => {
 		assert.ok(!openedViews.includes(CHANGES_VIEW_ID));
 	});
 
-	test('remembers aux bar hidden state on session switch', () => {
+	test("remembers aux bar hidden state on session switch", () => {
 		createLayoutController();
-		const session1 = makeSession(URI.parse('session:1'));
-		const session2 = makeSession(URI.parse('session:2'));
+		const session1 = makeSession(URI.parse("session:1"));
+		const session2 = makeSession(URI.parse("session:2"));
 
 		activeSessionObs.set(session1, undefined);
 		partVisibility.set(Parts.AUXILIARYBAR_PART, false);
@@ -253,17 +253,17 @@ suite('LayoutController', () => {
 
 		assert.ok(
 			setPartHiddenCalls.some(c => c.part === Parts.AUXILIARYBAR_PART && c.hidden === true),
-			'aux bar should be hidden when returning to session 1'
+			"aux bar should be hidden when returning to session 1",
 		);
 	});
 
-	test('remembers active view container on session switch', () => {
+	test("remembers active view container on session switch", () => {
 		createLayoutController();
-		const session1 = makeSession(URI.parse('session:1'));
-		const session2 = makeSession(URI.parse('session:2'));
+		const session1 = makeSession(URI.parse("session:1"));
+		const session2 = makeSession(URI.parse("session:2"));
 
 		activeSessionObs.set(session1, undefined);
-		activePaneCompositeId = 'some.custom.view';
+		activePaneCompositeId = "some.custom.view";
 
 		activeSessionObs.set(session2, undefined);
 
@@ -271,30 +271,30 @@ suite('LayoutController', () => {
 		activeSessionObs.set(session1, undefined);
 
 		assert.ok(
-			openedViewContainers.includes('some.custom.view'),
-			'should restore active view container when returning to session 1'
+			openedViewContainers.includes("some.custom.view"),
+			"should restore active view container when returning to session 1",
 		);
 	});
 
 	// --- Panel visibility ---
 
-	test('hides panel by default when no record exists', () => {
+	test("hides panel by default when no record exists", () => {
 		createLayoutController();
-		const session = makeSession(URI.parse('session:1'));
+		const session = makeSession(URI.parse("session:1"));
 
 		setPartHiddenCalls = [];
 		activeSessionObs.set(session, undefined);
 
 		assert.ok(
 			setPartHiddenCalls.some(c => c.part === Parts.PANEL_PART && c.hidden === true),
-			'panel should be hidden by default'
+			"panel should be hidden by default",
 		);
 	});
 
-	test('remembers panel visibility per session', () => {
+	test("remembers panel visibility per session", () => {
 		createLayoutController();
-		const session1 = makeSession(URI.parse('session:1'));
-		const session2 = makeSession(URI.parse('session:2'));
+		const session1 = makeSession(URI.parse("session:1"));
+		const session2 = makeSession(URI.parse("session:2"));
 
 		activeSessionObs.set(session1, undefined);
 		onDidChangePartVisibility.fire({ partId: Parts.PANEL_PART, visible: true });
@@ -306,31 +306,31 @@ suite('LayoutController', () => {
 
 		const panelCall = setPartHiddenCalls.find(c => c.part === Parts.PANEL_PART);
 		assert.ok(panelCall);
-		assert.strictEqual(panelCall!.hidden, false, 'panel should be visible for session 1');
+		assert.strictEqual(panelCall!.hidden, false, "panel should be visible for session 1");
 	});
 
 	// --- Turn completion ---
 
-	test('shows aux bar when turn completes with new changes', () => {
+	test("shows aux bar when turn completes with new changes", () => {
 		createLayoutController();
-		const session = makeSession(URI.parse('session:1'));
+		const session = makeSession(URI.parse("session:1"));
 		activeSessionObs.set(session, undefined);
 
 		onDidSubmitRequest.fire({ chatSessionResource: session.resource });
 
-		(session.changes as ISettableObservable<readonly ISessionFileChange[]>).set([makeChange('/file.ts')], undefined);
+		(session.changes as ISettableObservable<readonly ISessionFileChange[]>).set([makeChange("/file.ts")], undefined);
 		(session.lastTurnEnd as ISettableObservable<Date | undefined>).set(new Date(), undefined);
 
 		assert.ok(
 			setPartHiddenCalls.some(c => c.part === Parts.AUXILIARYBAR_PART && c.hidden === false),
-			'aux bar should be shown after turn with new changes'
+			"aux bar should be shown after turn with new changes",
 		);
 	});
 
-	test('clears saved state when turn produces new changes', () => {
+	test("clears saved state when turn produces new changes", () => {
 		createLayoutController();
-		const session1 = makeSession(URI.parse('session:1'));
-		const session2 = makeSession(URI.parse('session:2'));
+		const session1 = makeSession(URI.parse("session:1"));
+		const session2 = makeSession(URI.parse("session:2"));
 
 		activeSessionObs.set(session1, undefined);
 		partVisibility.set(Parts.AUXILIARYBAR_PART, false);
@@ -339,7 +339,7 @@ suite('LayoutController', () => {
 		activeSessionObs.set(session1, undefined);
 
 		onDidSubmitRequest.fire({ chatSessionResource: session1.resource });
-		(session1.changes as ISettableObservable<readonly ISessionFileChange[]>).set([makeChange('/new.ts')], undefined);
+		(session1.changes as ISettableObservable<readonly ISessionFileChange[]>).set([makeChange("/new.ts")], undefined);
 		(session1.lastTurnEnd as ISettableObservable<Date | undefined>).set(new Date(), undefined);
 
 		activeSessionObs.set(session2, undefined);
@@ -350,54 +350,54 @@ suite('LayoutController', () => {
 
 		assert.ok(
 			openedViews.includes(CHANGES_VIEW_ID),
-			'should show changes view since saved state was cleared after turn with new changes'
+			"should show changes view since saved state was cleared after turn with new changes",
 		);
 		assert.ok(
 			!setPartHiddenCalls.some(c => c.part === Parts.AUXILIARYBAR_PART && c.hidden === true),
-			'aux bar should not be hidden since saved state was cleared'
+			"aux bar should not be hidden since saved state was cleared",
 		);
 	});
 
 	// --- Storage persistence ---
 
-	test('persists state to sessions.layoutState key', () => {
+	test("persists state to sessions.layoutState key", () => {
 		createLayoutController();
-		const session1 = makeSession(URI.parse('session:1'));
-		const session2 = makeSession(URI.parse('session:2'));
+		const session1 = makeSession(URI.parse("session:1"));
+		const session2 = makeSession(URI.parse("session:2"));
 
 		activeSessionObs.set(session1, undefined);
-		activePaneCompositeId = 'custom.view';
+		activePaneCompositeId = "custom.view";
 
 		activeSessionObs.set(session2, undefined);
 		storageService.testEmitWillSaveState(WillSaveStateReason.SHUTDOWN);
 
-		const stored = storageService.get('sessions.layoutState', StorageScope.WORKSPACE);
-		assert.ok(stored, 'state should be persisted');
+		const stored = storageService.get("sessions.layoutState", StorageScope.WORKSPACE);
+		assert.ok(stored, "state should be persisted");
 
 		const parsed = JSON.parse(stored!);
-		const session1Entry = parsed.find((e: any) => e.sessionResource === 'session:1');
-		assert.ok(session1Entry, 'session 1 entry should exist');
+		const session1Entry = parsed.find((e: any) => e.sessionResource === "session:1");
+		assert.ok(session1Entry, "session 1 entry should exist");
 		assert.deepStrictEqual(session1Entry.viewState, {
 			auxiliaryBarVisible: true,
-			auxiliaryBarActiveViewContainerId: 'custom.view',
+			auxiliaryBarActiveViewContainerId: "custom.view",
 		});
 	});
 
-	test('migrates legacy sessions.workingSets key', () => {
+	test("migrates legacy sessions.workingSets key", () => {
 		const legacyData = JSON.stringify([{
-			sessionResource: 'session:legacy',
-			editorWorkingSet: { id: 'ws-1', name: 'ws-1' },
-			auxiliaryBarState: { visible: false, activeViewContainerId: 'legacy.view' },
+			sessionResource: "session:legacy",
+			editorWorkingSet: { id: "ws-1", name: "ws-1" },
+			auxiliaryBarState: { visible: false, activeViewContainerId: "legacy.view" },
 		}]);
 
 		const tempStorage = store.add(new TestStorageService());
-		tempStorage.store('sessions.workingSets', legacyData, StorageScope.WORKSPACE, 0);
+		tempStorage.store("sessions.workingSets", legacyData, StorageScope.WORKSPACE, 0);
 
 		const instaService = store.add(new TestInstantiationService());
 		instaService.stub(IStorageService, tempStorage);
 		instaService.stub(IConfigurationService, new TestConfigurationService());
 
-		const activeSession = observableValue<IActiveSession | undefined>('active', undefined);
+		const activeSession = observableValue<IActiveSession | undefined>("active", undefined);
 		instaService.stub(ISessionsManagementService, new class extends mock<ISessionsManagementService>() {
 			override activeSession = activeSession;
 			override readonly onDidChangeSessions = Event.None;
@@ -432,39 +432,39 @@ suite('LayoutController', () => {
 		});
 		instaService.stub(IWorkspaceContextService, new class extends mock<IWorkspaceContextService>() {
 			override readonly onDidChangeWorkspaceFolders = Event.None;
-			override getWorkspace(): IWorkspace { return { id: 'test', folders: [] }; }
+			override getWorkspace(): IWorkspace { return { id: "test", folders: [] }; }
 		});
 
 		const controller = store.add(instaService.createInstance(LayoutController));
 
 		assert.strictEqual(
-			tempStorage.get('sessions.workingSets', StorageScope.WORKSPACE),
+			tempStorage.get("sessions.workingSets", StorageScope.WORKSPACE),
 			undefined,
-			'legacy key should be removed after migration'
+			"legacy key should be removed after migration",
 		);
 
 		tempStorage.testEmitWillSaveState(WillSaveStateReason.SHUTDOWN);
 
-		const newStored = tempStorage.get('sessions.layoutState', StorageScope.WORKSPACE);
-		assert.ok(newStored, 'new key should be written after migration');
+		const newStored = tempStorage.get("sessions.layoutState", StorageScope.WORKSPACE);
+		assert.ok(newStored, "new key should be written after migration");
 
 		const parsed = JSON.parse(newStored!);
-		const entry = parsed.find((e: any) => e.sessionResource === 'session:legacy');
+		const entry = parsed.find((e: any) => e.sessionResource === "session:legacy");
 		assert.ok(entry);
 		assert.deepStrictEqual(entry.viewState, {
 			auxiliaryBarVisible: false,
-			auxiliaryBarActiveViewContainerId: 'legacy.view',
+			auxiliaryBarActiveViewContainerId: "legacy.view",
 		});
 
 		controller.dispose();
 	});
 
-	test('no session hides panel', () => {
+	test("no session hides panel", () => {
 		createLayoutController();
 
 		assert.ok(
 			setPartHiddenCalls.some(c => c.part === Parts.PANEL_PART && c.hidden === true),
-			'panel should be hidden when no session'
+			"panel should be hidden when no session",
 		);
 	});
 });

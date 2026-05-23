@@ -2,50 +2,61 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import assert from 'assert';
-import * as sinon from 'sinon';
-import { TestInstantiationService } from '../../../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { SearchModelImpl } from '../../browser/searchTreeModel/searchModel.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { IFileMatch, TextSearchMatch, OneLineRange, ITextSearchMatch, QueryType } from '../../../../services/search/common/search.js';
-import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
-import { NullTelemetryService } from '../../../../../platform/telemetry/common/telemetryUtils.js';
-import { Range } from '../../../../../editor/common/core/range.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { TestConfigurationService } from '../../../../../platform/configuration/test/common/testConfigurationService.js';
-import { ModelService } from '../../../../../editor/common/services/modelService.js';
-import { IModelService } from '../../../../../editor/common/services/model.js';
-import { IReplaceService } from '../../browser/replace.js';
-import { IThemeService } from '../../../../../platform/theme/common/themeService.js';
-import { TestThemeService } from '../../../../../platform/theme/test/common/testThemeService.js';
-import { IUriIdentityService } from '../../../../../platform/uriIdentity/common/uriIdentity.js';
-import { UriIdentityService } from '../../../../../platform/uriIdentity/common/uriIdentityService.js';
-import { FileService } from '../../../../../platform/files/common/fileService.js';
-import { ILogService, NullLogService } from '../../../../../platform/log/common/log.js';
-import { ILabelService } from '../../../../../platform/label/common/label.js';
-import { MockLabelService } from '../../../../services/label/test/common/mockLabelService.js';
-import { INotebookEditorService } from '../../../notebook/browser/services/notebookEditorService.js';
-import { IEditorGroupsService } from '../../../../services/editor/common/editorGroupsService.js';
-import { TestEditorGroupsService, TestEditorService } from '../../../../test/browser/workbenchTestServices.js';
-import { NotebookEditorWidgetService } from '../../../notebook/browser/services/notebookEditorServiceImpl.js';
-import { ICellViewModel } from '../../../notebook/browser/notebookBrowser.js';
-import { CellKind } from '../../../notebook/common/notebookCommon.js';
-import { addToSearchResult, createFileUriFromPathFromRoot, getRootName } from './searchTestCommon.js';
-import { INotebookCellMatchWithModel, INotebookFileMatchWithModel } from '../../browser/notebookSearch/searchNotebookHelpers.js';
-import { IContextKeyService } from '../../../../../platform/contextkey/common/contextkey.js';
-import { MockContextKeyService } from '../../../../../platform/keybinding/test/common/mockKeybindingService.js';
-import { IEditorService } from '../../../../services/editor/common/editorService.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { CellMatch, NotebookCompatibleFileMatch } from '../../browser/notebookSearch/notebookSearchModel.js';
-import { INotebookFileInstanceMatch } from '../../browser/notebookSearch/notebookSearchModelBase.js';
-import { ISearchResult, ISearchTreeFolderMatch, isSearchTreeFolderMatchNoRoot, MATCH_PREFIX } from '../../browser/searchTreeModel/searchTreeCommon.js';
-import { FolderMatchImpl } from '../../browser/searchTreeModel/folderMatch.js';
-import { SearchResultImpl } from '../../browser/searchTreeModel/searchResult.js';
-import { MatchImpl } from '../../browser/searchTreeModel/match.js';
+import assert from "assert";
+import * as sinon from "sinon";
+import { TestInstantiationService } from "../../../../../platform/instantiation/test/common/instantiationServiceMock.js";
+import { SearchModelImpl } from "../../browser/searchTreeModel/searchModel.js";
+import { URI } from "../../../../../base/common/uri.js";
+import {
+  IFileMatch,
+  TextSearchMatch,
+  OneLineRange,
+  ITextSearchMatch,
+  QueryType,
+} from "../../../../services/search/common/search.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
+import { NullTelemetryService } from "../../../../../platform/telemetry/common/telemetryUtils.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { TestConfigurationService } from "../../../../../platform/configuration/test/common/testConfigurationService.js";
+import { ModelService } from "../../../../../editor/common/services/modelService.js";
+import { IModelService } from "../../../../../editor/common/services/model.js";
+import { IReplaceService } from "../../browser/replace.js";
+import { IThemeService } from "../../../../../platform/theme/common/themeService.js";
+import { TestThemeService } from "../../../../../platform/theme/test/common/testThemeService.js";
+import { IUriIdentityService } from "../../../../../platform/uriIdentity/common/uriIdentity.js";
+import { UriIdentityService } from "../../../../../platform/uriIdentity/common/uriIdentityService.js";
+import { FileService } from "../../../../../platform/files/common/fileService.js";
+import { ILogService, NullLogService } from "../../../../../platform/log/common/log.js";
+import { ILabelService } from "../../../../../platform/label/common/label.js";
+import { MockLabelService } from "../../../../services/label/test/common/mockLabelService.js";
+import { INotebookEditorService } from "../../../notebook/browser/services/notebookEditorService.js";
+import { IEditorGroupsService } from "../../../../services/editor/common/editorGroupsService.js";
+import { TestEditorGroupsService, TestEditorService } from "../../../../test/browser/workbenchTestServices.js";
+import { NotebookEditorWidgetService } from "../../../notebook/browser/services/notebookEditorServiceImpl.js";
+import { ICellViewModel } from "../../../notebook/browser/notebookBrowser.js";
+import { CellKind } from "../../../notebook/common/notebookCommon.js";
+import { addToSearchResult, createFileUriFromPathFromRoot, getRootName } from "./searchTestCommon.js";
+import { INotebookCellMatchWithModel, INotebookFileMatchWithModel } from "../../browser/notebookSearch/searchNotebookHelpers.js";
+import { IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { MockContextKeyService } from "../../../../../platform/keybinding/test/common/mockKeybindingService.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { CellMatch, NotebookCompatibleFileMatch } from "../../browser/notebookSearch/notebookSearchModel.js";
+import { INotebookFileInstanceMatch } from "../../browser/notebookSearch/notebookSearchModelBase.js";
+import {
+  ISearchResult,
+  ISearchTreeFolderMatch,
+  isSearchTreeFolderMatchNoRoot,
+  MATCH_PREFIX,
+} from "../../browser/searchTreeModel/searchTreeCommon.js";
+import { FolderMatchImpl } from "../../browser/searchTreeModel/folderMatch.js";
+import { SearchResultImpl } from "../../browser/searchTreeModel/searchResult.js";
+import { MatchImpl } from "../../browser/searchTreeModel/match.js";
 
 const lineOneRange = new OneLineRange(1, 0, 1);
 
-suite('SearchResult', () => {
+suite("SearchResult", () => {
 
 	let instantiationService: TestInstantiationService;
 	const store = ensureNoDisposablesAreLeakedInTestSuite();
@@ -61,7 +72,7 @@ suite('SearchResult', () => {
 		store.add(uriIdentityService);
 		instantiationService.stub(IUriIdentityService, uriIdentityService);
 		instantiationService.stubPromise(IReplaceService, {});
-		instantiationService.stub(IReplaceService, 'replace', () => Promise.resolve(null));
+		instantiationService.stub(IReplaceService, "replace", () => Promise.resolve(null));
 		instantiationService.stub(ILabelService, new MockLabelService());
 		instantiationService.stub(ILogService, new NullLogService());
 	});
@@ -70,57 +81,57 @@ suite('SearchResult', () => {
 		instantiationService.dispose();
 	});
 
-	test('Line Match', function () {
-		const fileMatch = aFileMatch('folder/file.txt', null!);
-		const lineMatch = new MatchImpl(fileMatch, ['0 foo bar'], new OneLineRange(0, 2, 5), new OneLineRange(1, 0, 5), false);
-		assert.strictEqual(lineMatch.text(), '0 foo bar');
+	test("Line Match", function () {
+		const fileMatch = aFileMatch("folder/file.txt", null!);
+		const lineMatch = new MatchImpl(fileMatch, ["0 foo bar"], new OneLineRange(0, 2, 5), new OneLineRange(1, 0, 5), false);
+		assert.strictEqual(lineMatch.text(), "0 foo bar");
 		assert.strictEqual(lineMatch.range().startLineNumber, 2);
 		assert.strictEqual(lineMatch.range().endLineNumber, 2);
 		assert.strictEqual(lineMatch.range().startColumn, 1);
 		assert.strictEqual(lineMatch.range().endColumn, 6);
-		assert.strictEqual(lineMatch.id(), MATCH_PREFIX + 'file:///folder/file.txt>[2,1 -> 2,6]foo');
+		assert.strictEqual(lineMatch.id(), MATCH_PREFIX + "file:///folder/file.txt>[2,1 -> 2,6]foo");
 
-		assert.strictEqual(lineMatch.fullMatchText(), 'foo');
-		assert.strictEqual(lineMatch.fullMatchText(true), '0 foo bar');
+		assert.strictEqual(lineMatch.fullMatchText(), "foo");
+		assert.strictEqual(lineMatch.fullMatchText(true), "0 foo bar");
 	});
 
-	test('Line Match - Remove', function () {
-		const fileMatch = aFileMatch('folder/file.txt', aSearchResult(), new TextSearchMatch('foo bar', new OneLineRange(1, 0, 3)));
+	test("Line Match - Remove", function () {
+		const fileMatch = aFileMatch("folder/file.txt", aSearchResult(), new TextSearchMatch("foo bar", new OneLineRange(1, 0, 3)));
 		const lineMatch = fileMatch.matches()[0];
 		fileMatch.remove(lineMatch);
 		assert.strictEqual(fileMatch.matches().length, 0);
 	});
 
-	test('File Match', function () {
-		let fileMatch = aFileMatch('folder/file.txt', aSearchResult());
+	test("File Match", function () {
+		let fileMatch = aFileMatch("folder/file.txt", aSearchResult());
 		assert.strictEqual(fileMatch.matches().length, 0);
-		assert.strictEqual(fileMatch.resource.toString(), 'file:///folder/file.txt');
-		assert.strictEqual(fileMatch.name(), 'file.txt');
+		assert.strictEqual(fileMatch.resource.toString(), "file:///folder/file.txt");
+		assert.strictEqual(fileMatch.name(), "file.txt");
 
-		fileMatch = aFileMatch('file.txt', aSearchResult());
+		fileMatch = aFileMatch("file.txt", aSearchResult());
 		assert.strictEqual(fileMatch.matches().length, 0);
-		assert.strictEqual(fileMatch.resource.toString(), 'file:///file.txt');
-		assert.strictEqual(fileMatch.name(), 'file.txt');
+		assert.strictEqual(fileMatch.resource.toString(), "file:///file.txt");
+		assert.strictEqual(fileMatch.name(), "file.txt");
 	});
 
-	test('File Match: Select an existing match', function () {
+	test("File Match: Select an existing match", function () {
 		const testObject = aFileMatch(
-			'folder/file.txt',
+			"folder/file.txt",
 			aSearchResult(),
-			new TextSearchMatch('foo', new OneLineRange(1, 0, 3)),
-			new TextSearchMatch('bar', new OneLineRange(1, 5, 3)));
+			new TextSearchMatch("foo", new OneLineRange(1, 0, 3)),
+			new TextSearchMatch("bar", new OneLineRange(1, 5, 3)));
 
 		testObject.setSelectedMatch(testObject.matches()[0]);
 
 		assert.strictEqual(testObject.matches()[0], testObject.getSelectedMatch());
 	});
 
-	test('File Match: Select non existing match', function () {
+	test("File Match: Select non existing match", function () {
 		const testObject = aFileMatch(
-			'folder/file.txt',
+			"folder/file.txt",
 			aSearchResult(),
-			new TextSearchMatch('foo', new OneLineRange(1, 0, 3)),
-			new TextSearchMatch('bar', new OneLineRange(1, 5, 3)));
+			new TextSearchMatch("foo", new OneLineRange(1, 0, 3)),
+			new TextSearchMatch("bar", new OneLineRange(1, 5, 3)));
 		const target = testObject.matches()[0];
 		testObject.remove(target);
 
@@ -129,69 +140,69 @@ suite('SearchResult', () => {
 		assert.strictEqual(testObject.getSelectedMatch(), null);
 	});
 
-	test('File Match: isSelected return true for selected match', function () {
+	test("File Match: isSelected return true for selected match", function () {
 		const testObject = aFileMatch(
-			'folder/file.txt',
+			"folder/file.txt",
 			aSearchResult(),
-			new TextSearchMatch('foo', new OneLineRange(1, 0, 3)),
-			new TextSearchMatch('bar', new OneLineRange(1, 5, 3)));
+			new TextSearchMatch("foo", new OneLineRange(1, 0, 3)),
+			new TextSearchMatch("bar", new OneLineRange(1, 5, 3)));
 		const target = testObject.matches()[0];
 		testObject.setSelectedMatch(target);
 
 		assert.ok(testObject.isMatchSelected(target));
 	});
 
-	test('File Match: isSelected return false for un-selected match', function () {
-		const testObject = aFileMatch('folder/file.txt',
+	test("File Match: isSelected return false for un-selected match", function () {
+		const testObject = aFileMatch("folder/file.txt",
 			aSearchResult(),
-			new TextSearchMatch('foo', new OneLineRange(1, 0, 3)),
-			new TextSearchMatch('bar', new OneLineRange(1, 5, 3)));
+			new TextSearchMatch("foo", new OneLineRange(1, 0, 3)),
+			new TextSearchMatch("bar", new OneLineRange(1, 5, 3)));
 		testObject.setSelectedMatch(testObject.matches()[0]);
 		assert.ok(!testObject.isMatchSelected(testObject.matches()[1]));
 	});
 
-	test('File Match: unselect', function () {
+	test("File Match: unselect", function () {
 		const testObject = aFileMatch(
-			'folder/file.txt',
+			"folder/file.txt",
 			aSearchResult(),
-			new TextSearchMatch('foo', new OneLineRange(1, 0, 3)),
-			new TextSearchMatch('bar', new OneLineRange(1, 5, 3)));
+			new TextSearchMatch("foo", new OneLineRange(1, 0, 3)),
+			new TextSearchMatch("bar", new OneLineRange(1, 5, 3)));
 		testObject.setSelectedMatch(testObject.matches()[0]);
 		testObject.setSelectedMatch(null);
 
 		assert.strictEqual(null, testObject.getSelectedMatch());
 	});
 
-	test('File Match: unselect when not selected', function () {
+	test("File Match: unselect when not selected", function () {
 		const testObject = aFileMatch(
-			'folder/file.txt',
+			"folder/file.txt",
 			aSearchResult(),
-			new TextSearchMatch('foo', new OneLineRange(1, 0, 3)),
-			new TextSearchMatch('bar', new OneLineRange(1, 5, 3)));
+			new TextSearchMatch("foo", new OneLineRange(1, 0, 3)),
+			new TextSearchMatch("bar", new OneLineRange(1, 5, 3)));
 		testObject.setSelectedMatch(null);
 
 		assert.strictEqual(null, testObject.getSelectedMatch());
 	});
 
-	test('Match -> FileMatch -> SearchResult hierarchy exists', function () {
+	test("Match -> FileMatch -> SearchResult hierarchy exists", function () {
 
 		const searchModel = instantiationService.createInstance(SearchModelImpl);
 		store.add(searchModel);
 		const searchResult = instantiationService.createInstance(SearchResultImpl, searchModel);
 		store.add(searchResult);
-		const fileMatch = aFileMatch('far/boo', searchResult);
-		const lineMatch = new MatchImpl(fileMatch, ['foo bar'], new OneLineRange(0, 0, 3), new OneLineRange(1, 0, 3), false);
+		const fileMatch = aFileMatch("far/boo", searchResult);
+		const lineMatch = new MatchImpl(fileMatch, ["foo bar"], new OneLineRange(0, 0, 3), new OneLineRange(1, 0, 3), false);
 
 		assert(lineMatch.parent() === fileMatch);
 		assert(fileMatch.parent() === searchResult.folderMatches()[0]);
 	});
 
-	test('Adding a raw match will add a file match with line matches', function () {
+	test("Adding a raw match will add a file match with line matches", function () {
 		const testObject = aSearchResult();
-		const target = [aRawMatch('/1',
-			new TextSearchMatch('preview 1', new OneLineRange(1, 1, 4)),
-			new TextSearchMatch('preview 1', new OneLineRange(1, 4, 11)),
-			new TextSearchMatch('preview 2', lineOneRange))];
+		const target = [aRawMatch("/1",
+			new TextSearchMatch("preview 1", new OneLineRange(1, 1, 4)),
+			new TextSearchMatch("preview 1", new OneLineRange(1, 4, 11)),
+			new TextSearchMatch("preview 2", lineOneRange))];
 
 		addToSearchResult(testObject, target);
 
@@ -204,24 +215,24 @@ suite('SearchResult', () => {
 		const actuaMatches = actual[0].matches();
 		assert.strictEqual(3, actuaMatches.length);
 
-		assert.strictEqual('preview 1', actuaMatches[0].text());
+		assert.strictEqual("preview 1", actuaMatches[0].text());
 		assert.ok(new Range(2, 2, 2, 5).equalsRange(actuaMatches[0].range()));
 
-		assert.strictEqual('preview 1', actuaMatches[1].text());
+		assert.strictEqual("preview 1", actuaMatches[1].text());
 		assert.ok(new Range(2, 5, 2, 12).equalsRange(actuaMatches[1].range()));
 
-		assert.strictEqual('preview 2', actuaMatches[2].text());
+		assert.strictEqual("preview 2", actuaMatches[2].text());
 		assert.ok(new Range(2, 1, 2, 2).equalsRange(actuaMatches[2].range()));
 	});
 
-	test('Adding multiple raw matches', function () {
+	test("Adding multiple raw matches", function () {
 		const testObject = aSearchResult();
 		const target = [
-			aRawMatch('/1',
-				new TextSearchMatch('preview 1', new OneLineRange(1, 1, 4)),
-				new TextSearchMatch('preview 1', new OneLineRange(1, 4, 11))),
-			aRawMatch('/2',
-				new TextSearchMatch('preview 2', lineOneRange))];
+			aRawMatch("/1",
+				new TextSearchMatch("preview 1", new OneLineRange(1, 1, 4)),
+				new TextSearchMatch("preview 1", new OneLineRange(1, 4, 11))),
+			aRawMatch("/2",
+				new TextSearchMatch("preview 2", lineOneRange))];
 
 		addToSearchResult(testObject, target);
 
@@ -233,48 +244,48 @@ suite('SearchResult', () => {
 
 		let actuaMatches = actual[0].matches();
 		assert.strictEqual(2, actuaMatches.length);
-		assert.strictEqual('preview 1', actuaMatches[0].text());
+		assert.strictEqual("preview 1", actuaMatches[0].text());
 		assert.ok(new Range(2, 2, 2, 5).equalsRange(actuaMatches[0].range()));
-		assert.strictEqual('preview 1', actuaMatches[1].text());
+		assert.strictEqual("preview 1", actuaMatches[1].text());
 		assert.ok(new Range(2, 5, 2, 12).equalsRange(actuaMatches[1].range()));
 
 		actuaMatches = actual[1].matches();
 		assert.strictEqual(1, actuaMatches.length);
-		assert.strictEqual('preview 2', actuaMatches[0].text());
+		assert.strictEqual("preview 2", actuaMatches[0].text());
 		assert.ok(new Range(2, 1, 2, 2).equalsRange(actuaMatches[0].range()));
 	});
 
-	test('Test that notebook matches get added correctly', function () {
+	test("Test that notebook matches get added correctly", function () {
 		const testObject = aSearchResult();
 		const cell1 = { cellKind: CellKind.Code } as ICellViewModel;
 		const cell2 = { cellKind: CellKind.Code } as ICellViewModel;
 
-		sinon.stub(CellMatch.prototype, 'addContext');
+		sinon.stub(CellMatch.prototype, "addContext");
 
-		const addFileMatch = sinon.spy(FolderMatchImpl.prototype, 'addFileMatch');
-		const fileMatch1 = aRawFileMatchWithCells('/1',
+		const addFileMatch = sinon.spy(FolderMatchImpl.prototype, "addFileMatch");
+		const fileMatch1 = aRawFileMatchWithCells("/1",
 			{
 				cell: cell1,
 				index: 0,
 				contentResults: [
-					new TextSearchMatch('preview 1', new OneLineRange(1, 1, 4)),
+					new TextSearchMatch("preview 1", new OneLineRange(1, 1, 4)),
 				],
 				webviewResults: [
-					new TextSearchMatch('preview 1', new OneLineRange(1, 4, 11)),
-					new TextSearchMatch('preview 2', lineOneRange)
-				]
+					new TextSearchMatch("preview 1", new OneLineRange(1, 4, 11)),
+					new TextSearchMatch("preview 2", lineOneRange),
+				],
 			},);
-		const fileMatch2 = aRawFileMatchWithCells('/2',
+		const fileMatch2 = aRawFileMatchWithCells("/2",
 			{
 				cell: cell2,
 				index: 0,
 				contentResults: [
-					new TextSearchMatch('preview 1', new OneLineRange(1, 1, 4)),
+					new TextSearchMatch("preview 1", new OneLineRange(1, 1, 4)),
 				],
 				webviewResults: [
-					new TextSearchMatch('preview 1', new OneLineRange(1, 4, 11)),
-					new TextSearchMatch('preview 2', lineOneRange)
-				]
+					new TextSearchMatch("preview 1", new OneLineRange(1, 4, 11)),
+					new TextSearchMatch("preview 2", lineOneRange),
+				],
 			});
 		const target = [fileMatch1, fileMatch2];
 
@@ -286,16 +297,16 @@ suite('SearchResult', () => {
 		assert.deepStrictEqual(fileMatch2.cellResults[0].webviewResults, (addFileMatch.getCall(0).args[0][1] as INotebookFileMatchWithModel).cellResults[0].webviewResults);
 	});
 
-	test('Dispose disposes matches', function () {
+	test("Dispose disposes matches", function () {
 		const target1 = sinon.spy();
 		const target2 = sinon.spy();
 
 		const testObject = aSearchResult();
 		addToSearchResult(testObject, [
-			aRawMatch('/1',
-				new TextSearchMatch('preview 1', lineOneRange)),
-			aRawMatch('/2',
-				new TextSearchMatch('preview 2', lineOneRange))]);
+			aRawMatch("/1",
+				new TextSearchMatch("preview 1", lineOneRange)),
+			aRawMatch("/2",
+				new TextSearchMatch("preview 2", lineOneRange))]);
 
 		store.add(testObject.matches()[0].onDispose(target1));
 		store.add(testObject.matches()[1].onDispose(target2));
@@ -307,12 +318,12 @@ suite('SearchResult', () => {
 		assert.ok(target2.calledOnce);
 	});
 
-	test('remove triggers change event', function () {
+	test("remove triggers change event", function () {
 		const target = sinon.spy();
 		const testObject = aSearchResult();
 		addToSearchResult(testObject, [
-			aRawMatch('/1',
-				new TextSearchMatch('preview 1', lineOneRange))]);
+			aRawMatch("/1",
+				new TextSearchMatch("preview 1", lineOneRange))]);
 		const objectToRemove = testObject.matches()[0];
 		store.add(testObject.onChange(target));
 
@@ -322,14 +333,14 @@ suite('SearchResult', () => {
 		assert.deepStrictEqual([{ elements: [objectToRemove], removed: true }], target.args[0]);
 	});
 
-	test('remove array triggers change event', function () {
+	test("remove array triggers change event", function () {
 		const target = sinon.spy();
 		const testObject = aSearchResult();
 		addToSearchResult(testObject, [
-			aRawMatch('/1',
-				new TextSearchMatch('preview 1', lineOneRange)),
-			aRawMatch('/2',
-				new TextSearchMatch('preview 2', lineOneRange))]);
+			aRawMatch("/1",
+				new TextSearchMatch("preview 1", lineOneRange)),
+			aRawMatch("/2",
+				new TextSearchMatch("preview 2", lineOneRange))]);
 		const arrayToRemove = testObject.matches();
 		store.add(testObject.onChange(target));
 
@@ -339,11 +350,11 @@ suite('SearchResult', () => {
 		assert.deepStrictEqual([{ elements: arrayToRemove, removed: true }], target.args[0]);
 	});
 
-	test('Removing all line matches and adding back will add file back to result', function () {
+	test("Removing all line matches and adding back will add file back to result", function () {
 		const testObject = aSearchResult();
 		addToSearchResult(testObject, [
-			aRawMatch('/1',
-				new TextSearchMatch('preview 1', lineOneRange))]);
+			aRawMatch("/1",
+				new TextSearchMatch("preview 1", lineOneRange))]);
 		const target = testObject.matches()[0];
 		const matchToRemove = target.matches()[0];
 		target.remove(matchToRemove);
@@ -355,27 +366,27 @@ suite('SearchResult', () => {
 		assert.strictEqual(target, testObject.matches()[0]);
 	});
 
-	test('replace should remove the file match', function () {
+	test("replace should remove the file match", function () {
 		const voidPromise = Promise.resolve(null);
-		instantiationService.stub(IReplaceService, 'replace', voidPromise);
+		instantiationService.stub(IReplaceService, "replace", voidPromise);
 		const testObject = aSearchResult();
 		addToSearchResult(testObject, [
-			aRawMatch('/1',
-				new TextSearchMatch('preview 1', lineOneRange))]);
+			aRawMatch("/1",
+				new TextSearchMatch("preview 1", lineOneRange))]);
 
 		testObject.replace(testObject.matches()[0]);
 
 		return voidPromise.then(() => assert.ok(testObject.isEmpty()));
 	});
 
-	test('replace should trigger the change event', function () {
+	test("replace should trigger the change event", function () {
 		const target = sinon.spy();
 		const voidPromise = Promise.resolve(null);
-		instantiationService.stub(IReplaceService, 'replace', voidPromise);
+		instantiationService.stub(IReplaceService, "replace", voidPromise);
 		const testObject = aSearchResult();
 		addToSearchResult(testObject, [
-			aRawMatch('/1',
-				new TextSearchMatch('preview 1', lineOneRange))]);
+			aRawMatch("/1",
+				new TextSearchMatch("preview 1", lineOneRange))]);
 
 		store.add(testObject.onChange(target));
 		const objectToRemove = testObject.matches()[0];
@@ -388,22 +399,22 @@ suite('SearchResult', () => {
 		});
 	});
 
-	test('replaceAll should remove all file matches', function () {
+	test("replaceAll should remove all file matches", function () {
 		const voidPromise = Promise.resolve(null);
-		instantiationService.stubPromise(IReplaceService, 'replace', voidPromise);
+		instantiationService.stubPromise(IReplaceService, "replace", voidPromise);
 		const testObject = aSearchResult();
 		addToSearchResult(testObject, [
-			aRawMatch('/1',
-				new TextSearchMatch('preview 1', lineOneRange)),
-			aRawMatch('/2',
-				new TextSearchMatch('preview 2', lineOneRange))]);
+			aRawMatch("/1",
+				new TextSearchMatch("preview 1", lineOneRange)),
+			aRawMatch("/2",
+				new TextSearchMatch("preview 2", lineOneRange))]);
 
 		testObject.replaceAll(null!);
 
 		return voidPromise.then(() => assert.ok(testObject.isEmpty()));
 	});
 
-	test('batchRemove should trigger the onChange event correctly', function () {
+	test("batchRemove should trigger the onChange event correctly", function () {
 		const target = sinon.spy();
 		const testObject = getPopulatedSearchResult();
 
@@ -421,28 +432,28 @@ suite('SearchResult', () => {
 		assert.deepStrictEqual([{ elements: expectedArrayResult, removed: true, added: false }], target.args[0]);
 	});
 
-	test('batchRemove should remove FolderMatchNoRoot (Other files) correctly', function () {
+	test("batchRemove should remove FolderMatchNoRoot (Other files) correctly", function () {
 		const target = sinon.spy();
 		const testObject = aSearchResult();
 
 		testObject.query = {
 			type: QueryType.Text,
-			contentPattern: { pattern: 'foo' },
+			contentPattern: { pattern: "foo" },
 			folderQueries: [{
-				folder: createFileUriFromPathFromRoot('/workspace')
-			}]
+				folder: createFileUriFromPathFromRoot("/workspace"),
+			}],
 		};
 
 		// Add a file inside the workspace folder
 		addToSearchResult(testObject, [
-			aRawMatch('/workspace/file.txt',
-				new TextSearchMatch('preview 1', lineOneRange)),
+			aRawMatch("/workspace/file.txt",
+				new TextSearchMatch("preview 1", lineOneRange)),
 		]);
 
 		// Add a file outside of the workspace folder (goes to "Other files")
 		addToSearchResult(testObject, [
-			aRawMatch('/other/outside.txt',
-				new TextSearchMatch('preview 2', lineOneRange)),
+			aRawMatch("/other/outside.txt",
+				new TextSearchMatch("preview 2", lineOneRange)),
 		]);
 
 		// Should have 2 folder matches: workspace root and "Other files"
@@ -451,7 +462,7 @@ suite('SearchResult', () => {
 
 		// Find the "Other files" folder match (FolderMatchNoRoot)
 		const otherFilesMatch = folderMatches.find(fm => isSearchTreeFolderMatchNoRoot(fm));
-		assert.ok(otherFilesMatch, 'Should have an Other files folder match');
+		assert.ok(otherFilesMatch, "Should have an Other files folder match");
 		assert.strictEqual(otherFilesMatch.allDownstreamFileMatches().length, 1);
 
 		store.add(testObject.onChange(target));
@@ -462,9 +473,9 @@ suite('SearchResult', () => {
 		assert.strictEqual(otherFilesMatch.allDownstreamFileMatches().length, 0);
 	});
 
-	test('batchReplace should trigger the onChange event correctly', async function () {
+	test("batchReplace should trigger the onChange event correctly", async function () {
 		const replaceSpy = sinon.spy();
-		instantiationService.stub(IReplaceService, 'replace', (arg: any) => {
+		instantiationService.stub(IReplaceService, "replace", (arg: any) => {
 			if (Array.isArray(arg)) {
 				replaceSpy(arg[0]);
 			} else {
@@ -494,7 +505,7 @@ suite('SearchResult', () => {
 		sinon.assert.calledWith(replaceSpy.thirdCall, match);
 	});
 
-	test('Creating a model with nested folders should create the correct structure', function () {
+	test("Creating a model with nested folders should create the correct structure", function () {
 		const testObject = getPopulatedSearchResultForTreeTesting();
 
 		const root0 = testObject.folderMatches()[0];
@@ -539,7 +550,7 @@ suite('SearchResult', () => {
 		});
 	});
 
-	test('Removing an intermediate folder should call OnChange() on all downstream file matches', function () {
+	test("Removing an intermediate folder should call OnChange() on all downstream file matches", function () {
 		const target = sinon.spy();
 		const testObject = getPopulatedSearchResultForTreeTesting();
 
@@ -553,7 +564,7 @@ suite('SearchResult', () => {
 		assert.deepStrictEqual([{ elements: expectedArrayResult, removed: true, added: false, clearingAll: false }], target.args[0]);
 	});
 
-	test('Replacing an intermediate folder should remove all downstream folders and file matches', async function () {
+	test("Replacing an intermediate folder should remove all downstream folders and file matches", async function () {
 		const target = sinon.spy();
 		const testObject = getPopulatedSearchResultForTreeTesting();
 
@@ -572,13 +583,13 @@ suite('SearchResult', () => {
 			searchResult = aSearchResult();
 		}
 		const rawMatch: IFileMatch = {
-			resource: URI.file('/' + path),
-			results: lineMatches
+			resource: URI.file("/" + path),
+			results: lineMatches,
 		};
 		const root = searchResult?.folderMatches()[0];
 		const fileMatch = instantiationService.createInstance(NotebookCompatibleFileMatch, {
-			pattern: ''
-		}, undefined, undefined, root, rawMatch, null, '');
+			pattern: "",
+		}, undefined, undefined, root, rawMatch, null, "");
 		fileMatch.createMatches();
 
 		store.add(fileMatch);
@@ -590,8 +601,8 @@ suite('SearchResult', () => {
 		store.add(searchModel);
 		searchModel.searchResult.query = {
 			type: QueryType.Text, folderQueries: [{ folder: createFileUriFromPathFromRoot() }], contentPattern: {
-				pattern: ''
-			}
+				pattern: "",
+			},
 		};
 		return searchModel.searchResult;
 	}
@@ -603,14 +614,14 @@ suite('SearchResult', () => {
 	function aRawFileMatchWithCells(resource: string, ...cellMatches: INotebookCellMatchWithModel[]): INotebookFileMatchWithModel {
 		return {
 			resource: createFileUriFromPathFromRoot(resource),
-			cellResults: cellMatches
+			cellResults: cellMatches,
 		};
 	}
 
 	function stubModelService(instantiationService: TestInstantiationService): IModelService {
 		instantiationService.stub(IThemeService, new TestThemeService());
 		const config = new TestConfigurationService();
-		config.setUserConfiguration('search', { searchOnType: true });
+		config.setUserConfiguration("search", { searchOnType: true });
 		instantiationService.stub(IConfigurationService, config);
 		const modelService = instantiationService.createInstance(ModelService);
 		store.add(modelService);
@@ -631,21 +642,21 @@ suite('SearchResult', () => {
 
 		testObject.query = {
 			type: QueryType.Text,
-			contentPattern: { pattern: 'foo' },
+			contentPattern: { pattern: "foo" },
 			folderQueries: [{
-				folder: createFileUriFromPathFromRoot('/voo')
+				folder: createFileUriFromPathFromRoot("/voo"),
 			},
-			{ folder: createFileUriFromPathFromRoot('/with') },
-			]
+			{ folder: createFileUriFromPathFromRoot("/with") },
+			],
 		};
 
 		addToSearchResult(testObject, [
-			aRawMatch('/voo/foo.a',
-				new TextSearchMatch('preview 1', lineOneRange), new TextSearchMatch('preview 2', lineOneRange)),
-			aRawMatch('/with/path/bar.b',
-				new TextSearchMatch('preview 3', lineOneRange)),
-			aRawMatch('/with/path.c',
-				new TextSearchMatch('preview 4', lineOneRange), new TextSearchMatch('preview 5', lineOneRange)),
+			aRawMatch("/voo/foo.a",
+				new TextSearchMatch("preview 1", lineOneRange), new TextSearchMatch("preview 2", lineOneRange)),
+			aRawMatch("/with/path/bar.b",
+				new TextSearchMatch("preview 3", lineOneRange)),
+			aRawMatch("/with/path.c",
+				new TextSearchMatch("preview 4", lineOneRange), new TextSearchMatch("preview 5", lineOneRange)),
 		]);
 		return testObject;
 	}
@@ -655,20 +666,20 @@ suite('SearchResult', () => {
 
 		testObject.query = {
 			type: QueryType.Text,
-			contentPattern: { pattern: 'foo' },
+			contentPattern: { pattern: "foo" },
 			folderQueries: [{
-				folder: createFileUriFromPathFromRoot('/voo')
+				folder: createFileUriFromPathFromRoot("/voo"),
 			},
 			{
-				folder: createFileUriFromPathFromRoot('/with')
+				folder: createFileUriFromPathFromRoot("/with"),
 			},
 			{
-				folder: createFileUriFromPathFromRoot('/with/test')
+				folder: createFileUriFromPathFromRoot("/with/test"),
 			},
 			{
-				folder: createFileUriFromPathFromRoot('/eep')
+				folder: createFileUriFromPathFromRoot("/eep"),
 			},
-			]
+			],
 		};
 		/***
 		 * file structure looks like:
@@ -694,24 +705,24 @@ suite('SearchResult', () => {
 		 */
 
 		addToSearchResult(testObject, [
-			aRawMatch('/voo/foo.a',
-				new TextSearchMatch('preview 1', lineOneRange), new TextSearchMatch('preview 2', lineOneRange)),
-			aRawMatch('/voo/beep/foo.c',
-				new TextSearchMatch('preview 1', lineOneRange), new TextSearchMatch('preview 2', lineOneRange)),
-			aRawMatch('/voo/beep/boop.c',
-				new TextSearchMatch('preview 3', lineOneRange)),
-			aRawMatch('/with/path.c',
-				new TextSearchMatch('preview 4', lineOneRange), new TextSearchMatch('preview 5', lineOneRange)),
-			aRawMatch('/with/path/bar.b',
-				new TextSearchMatch('preview 3', lineOneRange)),
-			aRawMatch('/with/test/woo.c',
-				new TextSearchMatch('preview 3', lineOneRange)),
-			aRawMatch('/eep/bar/goo/foo/here.txt',
-				new TextSearchMatch('preview 6', lineOneRange), new TextSearchMatch('preview 7', lineOneRange)),
-			aRawMatch('/eep/bar/goo/ooo/there.txt',
-				new TextSearchMatch('preview 6', lineOneRange), new TextSearchMatch('preview 7', lineOneRange)),
-			aRawMatch('/eep/eyy.y',
-				new TextSearchMatch('preview 6', lineOneRange), new TextSearchMatch('preview 7', lineOneRange))
+			aRawMatch("/voo/foo.a",
+				new TextSearchMatch("preview 1", lineOneRange), new TextSearchMatch("preview 2", lineOneRange)),
+			aRawMatch("/voo/beep/foo.c",
+				new TextSearchMatch("preview 1", lineOneRange), new TextSearchMatch("preview 2", lineOneRange)),
+			aRawMatch("/voo/beep/boop.c",
+				new TextSearchMatch("preview 3", lineOneRange)),
+			aRawMatch("/with/path.c",
+				new TextSearchMatch("preview 4", lineOneRange), new TextSearchMatch("preview 5", lineOneRange)),
+			aRawMatch("/with/path/bar.b",
+				new TextSearchMatch("preview 3", lineOneRange)),
+			aRawMatch("/with/test/woo.c",
+				new TextSearchMatch("preview 3", lineOneRange)),
+			aRawMatch("/eep/bar/goo/foo/here.txt",
+				new TextSearchMatch("preview 6", lineOneRange), new TextSearchMatch("preview 7", lineOneRange)),
+			aRawMatch("/eep/bar/goo/ooo/there.txt",
+				new TextSearchMatch("preview 6", lineOneRange), new TextSearchMatch("preview 7", lineOneRange)),
+			aRawMatch("/eep/eyy.y",
+				new TextSearchMatch("preview 6", lineOneRange), new TextSearchMatch("preview 7", lineOneRange)),
 		]);
 		return testObject;
 	}

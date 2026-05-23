@@ -74,7 +74,7 @@ export interface IUtilityProcessWorkerCreateConfiguration extends IUtilityProces
 	};
 }
 
-export const ipcUtilityProcessWorkerChannelName = 'utilityProcessWorker';
+export const ipcUtilityProcessWorkerChannelName = "utilityProcessWorker";
 
 export interface IUtilityProcessWorkerService {
 

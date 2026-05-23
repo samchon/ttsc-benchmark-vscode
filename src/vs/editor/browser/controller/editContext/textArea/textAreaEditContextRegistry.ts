@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IDisposable } from '../../../../../base/common/lifecycle.js';
-import { TextAreaEditContext } from './textAreaEditContext.js';
+import { IDisposable } from "../../../../../base/common/lifecycle.js";
+import { TextAreaEditContext } from "./textAreaEditContext.js";
 
 class TextAreaEditContextRegistryImpl {
 
@@ -15,7 +15,7 @@ class TextAreaEditContextRegistryImpl {
 		return {
 			dispose: () => {
 				this._textAreaEditContextMapping.delete(ownerID);
-			}
+			},
 		};
 	}
 

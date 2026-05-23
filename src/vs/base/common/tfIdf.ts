@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from './cancellation.js';
+import { CancellationToken } from "./cancellation.js";
 
 type SparseEmbedding = Record</* word */ string, /* weight */number>;
 type TermFrequencies = Map</* word */ string, /*occurrences*/ number>;
@@ -88,7 +88,7 @@ export class TfIdfCalculator {
 		for (const [word] of input.matchAll(/\b\p{Letter}[\p{Letter}\d]{2,}\b/gu)) {
 			yield normalize(word);
 
-			const camelParts = word.replace(/([a-z])([A-Z])/g, '$1 $2').split(/\s+/g);
+			const camelParts = word.replace(/([a-z])([A-Z])/g, "$1 $2").split(/\s+/g);
 			if (camelParts.length > 1) {
 				for (const part of camelParts) {
 					// Require at least 3 letters in the parts of a camel case word
@@ -127,7 +127,10 @@ export class TfIdfCalculator {
 
 				// Update occurrences list
 				for (const term of tf.keys()) {
-					this.chunkOccurrences.set(term, (this.chunkOccurrences.get(term) ?? 0) + 1);
+					this.chunkOccurrences.set(
+            term,
+            (this.chunkOccurrences.get(term) ?? 0) + 1,
+          );
 				}
 
 				chunks.push({ text, tf });
@@ -152,7 +155,7 @@ export class TfIdfCalculator {
 		for (const chunk of doc.chunks) {
 			for (const term of chunk.tf.keys()) {
 				const currentOccurrences = this.chunkOccurrences.get(term);
-				if (typeof currentOccurrences === 'number') {
+				if (typeof currentOccurrences === "number") {
 					const newOccurrences = currentOccurrences - 1;
 					if (newOccurrences <= 0) {
 						this.chunkOccurrences.delete(term);
@@ -180,7 +183,7 @@ export class TfIdfCalculator {
 			}
 
 			let chunkIdf = idfCache.get(term);
-			if (typeof chunkIdf !== 'number') {
+			if (typeof chunkIdf !== "number") {
 				chunkIdf = this.computeIdf(term);
 				idfCache.set(term, chunkIdf);
 			}

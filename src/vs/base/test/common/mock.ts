@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SinonStub, stub } from 'sinon';
-import { DeepPartial } from '../../common/types.js';
+import { SinonStub, stub } from "sinon";
+import { DeepPartial } from "../../common/types.js";
 
 export interface Ctor<T> {
 	new(): T;

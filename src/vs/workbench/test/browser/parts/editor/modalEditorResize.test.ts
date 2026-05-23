@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { Emitter } from '../../../../../base/common/event.js';
-import { Disposable, DisposableStore } from '../../../../../base/common/lifecycle.js';
+import assert from "assert";
+import { Emitter } from "../../../../../base/common/event.js";
+import { Disposable, DisposableStore } from "../../../../../base/common/lifecycle.js";
 
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
 
 interface ISize {
 	readonly width: number;
@@ -20,7 +20,9 @@ interface ISize {
  */
 class TestModalEditorResizeHost extends Disposable {
 
-	private readonly _onDidChangeMaximized = this._register(new Emitter<boolean>());
+	private readonly _onDidChangeMaximized = this._register(
+    new Emitter<boolean>(),
+  );
 	readonly onDidChangeMaximized = this._onDidChangeMaximized.event;
 
 	private readonly _onDidRequestLayout = this._register(new Emitter<void>());
@@ -72,7 +74,7 @@ class TestModalEditorResizeHost extends Disposable {
 
 }
 
-suite('Modal Editor Resize', () => {
+suite("Modal Editor Resize", () => {
 
 	const disposables = new DisposableStore();
 
@@ -80,7 +82,7 @@ suite('Modal Editor Resize', () => {
 
 	ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('double-click from default size maximizes', () => {
+	test("double-click from default size maximizes", () => {
 		const host = disposables.add(new TestModalEditorResizeHost());
 
 		const events: boolean[] = [];
@@ -90,11 +92,11 @@ suite('Modal Editor Resize', () => {
 
 		assert.deepStrictEqual(
 			{ maximized: host.maximized, size: host.size, events },
-			{ maximized: true, size: undefined, events: [true] }
+			{ maximized: true, size: undefined, events: [true] },
 		);
 	});
 
-	test('double-click from maximized restores default', () => {
+	test("double-click from maximized restores default", () => {
 		const host = disposables.add(new TestModalEditorResizeHost());
 
 		host.handleHeaderDoubleClick(); // maximize
@@ -106,11 +108,11 @@ suite('Modal Editor Resize', () => {
 
 		assert.deepStrictEqual(
 			{ maximized: host.maximized, size: host.size, events },
-			{ maximized: false, size: undefined, events: [false] }
+			{ maximized: false, size: undefined, events: [false] },
 		);
 	});
 
-	test('double-click from custom size restores default without firing maximized event', () => {
+	test("double-click from custom size restores default without firing maximized event", () => {
 		const host = disposables.add(new TestModalEditorResizeHost());
 
 		host.size = { width: 800, height: 600 };
@@ -124,11 +126,11 @@ suite('Modal Editor Resize', () => {
 
 		assert.deepStrictEqual(
 			{ maximized: host.maximized, size: host.size, maximizedEvents, layoutRequested },
-			{ maximized: false, size: undefined, maximizedEvents: [], layoutRequested: true }
+			{ maximized: false, size: undefined, maximizedEvents: [], layoutRequested: true },
 		);
 	});
 
-	test('double-click cycle: custom → default → maximized → default', () => {
+	test("double-click cycle: custom → default → maximized → default", () => {
 		const host = disposables.add(new TestModalEditorResizeHost());
 
 		const events: boolean[] = [];
@@ -155,7 +157,7 @@ suite('Modal Editor Resize', () => {
 		assert.deepStrictEqual(events, [true, false]);
 	});
 
-	test('toggleMaximized preserves custom state through maximize/un-maximize cycle', () => {
+	test("toggleMaximized preserves custom state through maximize/un-maximize cycle", () => {
 		const host = disposables.add(new TestModalEditorResizeHost());
 
 		host.size = { width: 800, height: 600 };
@@ -167,11 +169,11 @@ suite('Modal Editor Resize', () => {
 		host.toggleMaximized();
 		assert.deepStrictEqual(
 			{ maximized: host.maximized, size: host.size, position: host.position },
-			{ maximized: false, size: { width: 800, height: 600 }, position: { left: 100, top: 50 } }
+			{ maximized: false, size: { width: 800, height: 600 }, position: { left: 100, top: 50 } },
 		);
 	});
 
-	test('double-click from maximized clears saved custom state', () => {
+	test("double-click from maximized clears saved custom state", () => {
 		const host = disposables.add(new TestModalEditorResizeHost());
 
 		// Set custom size then maximize via toggleMaximized (saves state)
@@ -183,11 +185,11 @@ suite('Modal Editor Resize', () => {
 		host.handleHeaderDoubleClick();
 		assert.deepStrictEqual(
 			{ maximized: host.maximized, size: host.size },
-			{ maximized: false, size: undefined }
+			{ maximized: false, size: undefined },
 		);
 	});
 
-	test('double-click clears custom position along with size', () => {
+	test("double-click clears custom position along with size", () => {
 		const host = disposables.add(new TestModalEditorResizeHost());
 
 		host.size = { width: 800, height: 600 };
@@ -197,11 +199,11 @@ suite('Modal Editor Resize', () => {
 
 		assert.deepStrictEqual(
 			{ size: host.size, position: host.position, maximized: host.maximized },
-			{ size: undefined, position: undefined, maximized: false }
+			{ size: undefined, position: undefined, maximized: false },
 		);
 	});
 
-	test('session persistence: state can be saved and restored across instances', () => {
+	test("session persistence: state can be saved and restored across instances", () => {
 		const host1 = disposables.add(new TestModalEditorResizeHost());
 
 		host1.size = { width: 900, height: 700 };
@@ -224,7 +226,7 @@ suite('Modal Editor Resize', () => {
 
 		assert.deepStrictEqual(
 			{ size: host2.size, position: host2.position, maximized: host2.maximized },
-			{ size: { width: 900, height: 700 }, position: { left: 200, top: 100 }, maximized: false }
+			{ size: { width: 900, height: 700 }, position: { left: 200, top: 100 }, maximized: false },
 		);
 	});
 });

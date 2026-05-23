@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { INativeHostService } from '../../../../platform/native/common/native.js';
-import { IRectangle } from '../../../../platform/window/common/window.js';
-import { IScreenshotService } from '../browser/screenshotService.js';
-import { encodeBase64 } from '../../../../base/common/buffer.js';
+import { INativeHostService } from "../../../../platform/native/common/native.js";
+import { IRectangle } from "../../../../platform/window/common/window.js";
+import { IScreenshotService } from "../browser/screenshotService.js";
+import { encodeBase64 } from "../../../../base/common/buffer.js";
 
 export class NativeScreenshotService implements IScreenshotService {
 	readonly _serviceBrand: undefined;

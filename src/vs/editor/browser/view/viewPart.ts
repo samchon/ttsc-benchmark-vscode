@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { FastDomNode } from '../../../base/browser/fastDomNode.js';
-import { RenderingContext, RestrictedRenderingContext } from './renderingContext.js';
-import { ViewContext } from '../../common/viewModel/viewContext.js';
-import { ViewEventHandler } from '../../common/viewEventHandler.js';
-import { ViewportData } from '../../common/viewLayout/viewLinesViewportData.js';
+import { FastDomNode } from "../../../base/browser/fastDomNode.js";
+import { RenderingContext, RestrictedRenderingContext } from "./renderingContext.js";
+import { ViewContext } from "../../common/viewModel/viewContext.js";
+import { ViewEventHandler } from "../../common/viewEventHandler.js";
+import { ViewportData } from "../../common/viewLayout/viewLinesViewportData.js";
 
 export abstract class ViewPart extends ViewEventHandler {
 
@@ -48,11 +48,11 @@ export const enum PartFingerprint {
 export class PartFingerprints {
 
 	public static write(target: Element | FastDomNode<HTMLElement>, partId: PartFingerprint) {
-		target.setAttribute('data-mprt', String(partId));
+		target.setAttribute("data-mprt", String(partId));
 	}
 
 	public static read(target: Element): PartFingerprint {
-		const r = target.getAttribute('data-mprt');
+		const r = target.getAttribute("data-mprt");
 		if (r === null) {
 			return PartFingerprint.None;
 		}

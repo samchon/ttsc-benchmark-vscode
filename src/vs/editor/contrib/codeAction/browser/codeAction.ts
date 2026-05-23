@@ -3,40 +3,49 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { coalesce, equals, isNonEmptyArray } from '../../../../base/common/arrays.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { illegalArgument, isCancellationError, onUnexpectedExternalError } from '../../../../base/common/errors.js';
-import { HierarchicalKind } from '../../../../base/common/hierarchicalKind.js';
-import { Disposable, DisposableStore } from '../../../../base/common/lifecycle.js';
-import { URI } from '../../../../base/common/uri.js';
-import * as nls from '../../../../nls.js';
-import { AccessibilitySignal, IAccessibilitySignalService } from '../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js';
-import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
-import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
-import { INotificationService } from '../../../../platform/notification/common/notification.js';
-import { IProgress, Progress } from '../../../../platform/progress/common/progress.js';
-import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
-import { ICodeEditor } from '../../../browser/editorBrowser.js';
-import { IBulkEditService } from '../../../browser/services/bulkEditService.js';
-import { Range } from '../../../common/core/range.js';
-import { Selection } from '../../../common/core/selection.js';
-import { LanguageFeatureRegistry } from '../../../common/languageFeatureRegistry.js';
-import * as languages from '../../../common/languages.js';
-import { ITextModel } from '../../../common/model.js';
-import { ILanguageFeaturesService } from '../../../common/services/languageFeatures.js';
-import { IModelService } from '../../../common/services/model.js';
-import { EditSources } from '../../../common/textModelEditSource.js';
-import { TextModelCancellationTokenSource } from '../../editorState/browser/editorState.js';
-import { CodeActionFilter, CodeActionItem, CodeActionKind, CodeActionSet, CodeActionTrigger, CodeActionTriggerSource, filtersAction, mayIncludeActionsOfKind } from '../common/types.js';
+import { coalesce, equals, isNonEmptyArray } from "../../../../base/common/arrays.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { illegalArgument, isCancellationError, onUnexpectedExternalError } from "../../../../base/common/errors.js";
+import { HierarchicalKind } from "../../../../base/common/hierarchicalKind.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import * as nls from "../../../../nls.js";
+import { AccessibilitySignal, IAccessibilitySignalService } from "../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";
+import { CommandsRegistry, ICommandService } from "../../../../platform/commands/common/commands.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { IProgress, Progress } from "../../../../platform/progress/common/progress.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { IBulkEditService } from "../../../browser/services/bulkEditService.js";
+import { Range } from "../../../common/core/range.js";
+import { Selection } from "../../../common/core/selection.js";
+import { LanguageFeatureRegistry } from "../../../common/languageFeatureRegistry.js";
+import * as languages from "../../../common/languages.js";
+import { ITextModel } from "../../../common/model.js";
+import { ILanguageFeaturesService } from "../../../common/services/languageFeatures.js";
+import { IModelService } from "../../../common/services/model.js";
+import { EditSources } from "../../../common/textModelEditSource.js";
+import { TextModelCancellationTokenSource } from "../../editorState/browser/editorState.js";
+import {
+  CodeActionFilter,
+  CodeActionItem,
+  CodeActionKind,
+  CodeActionSet,
+  CodeActionTrigger,
+  CodeActionTriggerSource,
+  filtersAction,
+  mayIncludeActionsOfKind,
+} from "../common/types.js";
 
-export const codeActionCommandId = 'editor.action.codeAction';
-export const quickFixCommandId = 'editor.action.quickFix';
-export const autoFixCommandId = 'editor.action.autoFix';
-export const refactorCommandId = 'editor.action.refactor';
-export const refactorPreviewCommandId = 'editor.action.refactor.preview';
-export const sourceActionCommandId = 'editor.action.sourceAction';
-export const organizeImportsCommandId = 'editor.action.organizeImports';
-export const fixAllCommandId = 'editor.action.fixAll';
+export const codeActionCommandId = "editor.action.codeAction";
+export const quickFixCommandId = "editor.action.quickFix";
+export const autoFixCommandId = "editor.action.autoFix";
+export const refactorCommandId = "editor.action.refactor";
+export const refactorPreviewCommandId = "editor.action.refactor.preview";
+export const sourceActionCommandId = "editor.action.sourceAction";
+export const organizeImportsCommandId = "editor.action.organizeImports";
+export const fixAllCommandId = "editor.action.fixAll";
 const CODE_ACTION_SOUND_APPLIED_DURATION = 1000;
 
 class ManagedCodeActionSet extends Disposable implements CodeActionSet {
@@ -58,11 +67,16 @@ class ManagedCodeActionSet extends Disposable implements CodeActionSet {
 			return -1;
 		}
 		if (isNonEmptyArray(a.diagnostics)) {
-			return isNonEmptyArray(b.diagnostics) ? ManagedCodeActionSet.codeActionsPreferredComparator(a, b) : -1;
+			return isNonEmptyArray(
+        b.diagnostics,
+      ) ? ManagedCodeActionSet.codeActionsPreferredComparator(a, b) : -1;
 		} else if (isNonEmptyArray(b.diagnostics)) {
 			return 1;
 		} else {
-			return ManagedCodeActionSet.codeActionsPreferredComparator(a, b); // both have no diagnostics
+			return ManagedCodeActionSet.codeActionsPreferredComparator(
+        a,
+        b,
+      ); // both have no diagnostics
 		}
 	}
 
@@ -78,12 +92,18 @@ class ManagedCodeActionSet extends Disposable implements CodeActionSet {
 
 		this._register(disposables);
 
-		this.allActions = [...actions].sort(ManagedCodeActionSet.codeActionsComparator);
-		this.validActions = this.allActions.filter(({ action }) => !action.disabled);
+		this.allActions = [...actions].sort(
+      ManagedCodeActionSet.codeActionsComparator,
+    );
+		this.validActions = this.allActions.filter(
+      ({ action }) => !action.disabled,
+    );
 	}
 
 	public get hasAutoFix() {
-		return this.validActions.some(({ action: fix }) => !!fix.kind && CodeActionKind.QuickFix.contains(new HierarchicalKind(fix.kind)) && !!fix.isPreferred);
+		return this.validActions.some(
+      ({ action: fix }) => !!fix.kind && CodeActionKind.QuickFix.contains(new HierarchicalKind(fix.kind)) && !!fix.isPreferred,
+    );
 	}
 
 	public get hasAIFix() {
@@ -95,7 +115,10 @@ class ManagedCodeActionSet extends Disposable implements CodeActionSet {
 	}
 }
 
-const emptyCodeActionsResponse = { actions: [] as CodeActionItem[], documentation: undefined };
+const emptyCodeActionsResponse = {
+  actions: [] as CodeActionItem[],
+  documentation: undefined,
+};
 
 export async function getCodeActions(
 	registry: LanguageFeatureRegistry<languages.CodeActionProvider>,
@@ -107,19 +130,23 @@ export async function getCodeActions(
 ): Promise<CodeActionSet> {
 	const filter = trigger.filter || {};
 	const notebookFilter: CodeActionFilter = {
-		...filter,
-		excludes: [...(filter.excludes || []), CodeActionKind.Notebook],
-	};
+    ...filter,
+    excludes: [...(filter.excludes || []), CodeActionKind.Notebook],
+  };
 
 	const codeActionContext: languages.CodeActionContext = {
-		only: filter.include?.value,
-		trigger: trigger.type,
-	};
+    only: filter.include?.value,
+    trigger: trigger.type,
+  };
 
 	const cts = new TextModelCancellationTokenSource(model, token);
 	// if the trigger is auto (autosave, lightbulb, etc), we should exclude notebook codeActions
 	const excludeNotebookCodeActions = (trigger.type === languages.CodeActionTriggerType.Auto);
-	const providers = getCodeActionProviders(registry, model, (excludeNotebookCodeActions) ? notebookFilter : filter);
+	const providers = getCodeActionProviders(
+    registry,
+    model,
+    (excludeNotebookCodeActions) ? notebookFilter : filter,
+  );
 
 	const disposables = new DisposableStore();
 	const promises = providers.map(async provider => {
@@ -139,7 +166,7 @@ export async function getCodeActions(
 			const documentation = getDocumentationFromProvider(provider, filteredActions, filter.include);
 			return {
 				actions: filteredActions.map(action => new CodeActionItem(action, provider)),
-				documentation
+				documentation,
 			};
 		} catch (err) {
 			if (isCancellationError(err)) {
@@ -163,10 +190,14 @@ export async function getCodeActions(
 		const actions = await Promise.all(promises);
 		const allActions = actions.map(x => x.actions).flat();
 		const allDocumentation = [
-			...coalesce(actions.map(x => x.documentation)),
-			...getAdditionalDocumentationForShowingActions(registry, model, trigger, allActions)
-		];
-		const managedCodeActionSet = new ManagedCodeActionSet(allActions, allDocumentation, disposables);
+      ...coalesce(actions.map(x => x.documentation)),
+      ...getAdditionalDocumentationForShowingActions(registry, model, trigger, allActions),
+    ];
+		const managedCodeActionSet = new ManagedCodeActionSet(
+      allActions,
+      allDocumentation,
+      disposables,
+    );
 		disposables.add(managedCodeActionSet);
 		return managedCodeActionSet;
 	} catch (err) {
@@ -181,7 +212,7 @@ export async function getCodeActions(
 function getCodeActionProviders(
 	registry: LanguageFeatureRegistry<languages.CodeActionProvider>,
 	model: ITextModel,
-	filter: CodeActionFilter
+	filter: CodeActionFilter,
 ) {
 	return registry.all(model)
 		// Don't include providers that we know will not return code actions of interest
@@ -203,7 +234,10 @@ function* getAdditionalDocumentationForShowingActions(
 	if (model && actionsToShow.length) {
 		for (const provider of registry.all(model)) {
 			if (provider._getAdditionalMenuItems) {
-				yield* provider._getAdditionalMenuItems?.({ trigger: trigger.type, only: trigger.filter?.include?.value }, actionsToShow.map(item => item.action));
+				yield* provider._getAdditionalMenuItems?.(
+          { trigger: trigger.type, only: trigger.filter?.include?.value },
+          actionsToShow.map(item => item.action),
+        );
 			}
 		}
 	}
@@ -212,13 +246,16 @@ function* getAdditionalDocumentationForShowingActions(
 function getDocumentationFromProvider(
 	provider: languages.CodeActionProvider,
 	providedCodeActions: readonly languages.CodeAction[],
-	only?: HierarchicalKind
+	only?: HierarchicalKind,
 ): languages.Command | undefined {
 	if (!provider.documentation) {
 		return undefined;
 	}
 
-	const documentation = provider.documentation.map(entry => ({ kind: new HierarchicalKind(entry.kind), command: entry.command }));
+	const documentation = provider.documentation.map(entry => ({
+    kind: new HierarchicalKind(entry.kind),
+    command: entry.command,
+  }));
 
 	if (only) {
 		let currentBest: { readonly kind: HierarchicalKind; readonly command: languages.Command } | undefined;
@@ -255,11 +292,11 @@ function getDocumentationFromProvider(
 }
 
 export enum ApplyCodeActionReason {
-	OnSave = 'onSave',
-	FromProblemsView = 'fromProblemsView',
-	FromCodeActions = 'fromCodeActions',
-	FromAILightbulb = 'fromAILightbulb', // direct invocation when clicking on the AI lightbulb
-	FromProblemsHover = 'fromProblemsHover'
+	OnSave = "onSave",
+	FromProblemsView = "fromProblemsView",
+	FromCodeActions = "fromCodeActions",
+	FromAILightbulb = "fromAILightbulb", // direct invocation when clicking on the AI lightbulb
+	FromProblemsHover = "fromProblemsHover"
 }
 
 export async function applyCodeAction(
@@ -282,21 +319,26 @@ export async function applyCodeAction(
 		reason: ApplyCodeActionReason;
 	};
 	type ApplyCodeEventClassification = {
-		codeActionTitle: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The display label of the applied code action' };
-		codeActionKind: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The kind (refactor, quickfix) of the applied code action' };
-		codeActionIsPreferred: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Was the code action marked as being a preferred action?' };
-		reason: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The kind of action used to trigger apply code action.' };
-		owner: 'justschen';
-		comment: 'Event used to gain insights into which code actions are being triggered';
+		codeActionTitle: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The display label of the applied code action" };
+		codeActionKind: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The kind (refactor, quickfix) of the applied code action" };
+		codeActionIsPreferred: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "Was the code action marked as being a preferred action?" };
+		reason: { classification: "SystemMetaData"; purpose: "FeatureInsight"; comment: "The kind of action used to trigger apply code action." };
+		owner: "justschen";
+		comment: "Event used to gain insights into which code actions are being triggered";
 	};
 
-	telemetryService.publicLog2<ApplyCodeActionEvent, ApplyCodeEventClassification>('codeAction.applyCodeAction', {
-		codeActionTitle: item.action.title,
-		codeActionKind: item.action.kind,
-		codeActionIsPreferred: !!item.action.isPreferred,
-		reason: codeActionReason,
-	});
-	accessibilitySignalService.playSignal(AccessibilitySignal.codeActionTriggered);
+	telemetryService.publicLog2<ApplyCodeActionEvent, ApplyCodeEventClassification>(
+    "codeAction.applyCodeAction",
+    {
+      codeActionTitle: item.action.title,
+      codeActionKind: item.action.kind,
+      codeActionIsPreferred: !!item.action.isPreferred,
+      reason: codeActionReason,
+    },
+  );
+	accessibilitySignalService.playSignal(
+    AccessibilitySignal.codeActionTriggered,
+  );
 	await item.resolve(token);
 	if (token.isCancellationRequested) {
 		return;
@@ -304,14 +346,14 @@ export async function applyCodeAction(
 
 	if (item.action.edit?.edits.length) {
 		const result = await bulkEditService.apply(item.action.edit, {
-			editor: options?.editor,
-			label: item.action.title,
-			quotableLabel: item.action.title,
-			code: 'undoredo.codeAction',
-			respectAutoSaveConfig: codeActionReason !== ApplyCodeActionReason.OnSave,
-			showPreview: options?.preview,
-			reason: EditSources.codeAction({ kind: item.action.kind, providerId: languages.ProviderId.fromExtensionId(item.provider?.extensionId) }),
-		});
+      editor: options?.editor,
+      label: item.action.title,
+      quotableLabel: item.action.title,
+      code: "undoredo.codeAction",
+      respectAutoSaveConfig: codeActionReason !== ApplyCodeActionReason.OnSave,
+      showPreview: options?.preview,
+      reason: EditSources.codeAction({ kind: item.action.kind, providerId: languages.ProviderId.fromExtensionId(item.provider?.extensionId) }),
+    });
 
 		if (!result.isApplied) {
 			return;
@@ -320,30 +362,38 @@ export async function applyCodeAction(
 
 	if (item.action.command) {
 		try {
-			await commandService.executeCommand(item.action.command.id, ...(item.action.command.arguments || []));
+			await commandService.executeCommand(
+        item.action.command.id,
+        ...(item.action.command.arguments || []),
+      );
 		} catch (err) {
 			const message = asMessage(err);
 			notificationService.error(
-				typeof message === 'string'
+				typeof message === "string"
 					? message
-					: nls.localize('applyCodeActionFailed', "An unknown error occurred while applying the code action"));
+					: nls.localize("applyCodeActionFailed", "An unknown error occurred while applying the code action"));
 		}
 	}
 	// ensure the start sound and end sound do not overlap
-	setTimeout(() => accessibilitySignalService.playSignal(AccessibilitySignal.codeActionApplied), CODE_ACTION_SOUND_APPLIED_DURATION);
+	setTimeout(
+    () => accessibilitySignalService.playSignal(
+      AccessibilitySignal.codeActionApplied,
+    ),
+    CODE_ACTION_SOUND_APPLIED_DURATION,
+  );
 }
 
 function asMessage(err: any): string | undefined {
-	if (typeof err === 'string') {
+	if (typeof err === "string") {
 		return err;
-	} else if (err instanceof Error && typeof err.message === 'string') {
+	} else if (err instanceof Error && typeof err.message === "string") {
 		return err.message;
 	} else {
 		return undefined;
 	}
 }
 
-CommandsRegistry.registerCommand('_executeCodeActionProvider', async function (accessor, resource: URI, rangeOrSelection: Range | Selection, kind?: string, itemResolveCount?: number): Promise<ReadonlyArray<languages.CodeAction>> {
+CommandsRegistry.registerCommand("_executeCodeActionProvider", async function (accessor, resource: URI, rangeOrSelection: Range | Selection, kind?: string, itemResolveCount?: number): Promise<ReadonlyArray<languages.CodeAction>> {
 	if (!(resource instanceof URI)) {
 		throw illegalArgument();
 	}
@@ -364,7 +414,7 @@ CommandsRegistry.registerCommand('_executeCodeActionProvider', async function (a
 		throw illegalArgument();
 	}
 
-	const include = typeof kind === 'string' ? new HierarchicalKind(kind) : undefined;
+	const include = typeof kind === "string" ? new HierarchicalKind(kind) : undefined;
 	const codeActionSet = await getCodeActions(
 		codeActionProvider,
 		model,
@@ -374,7 +424,7 @@ CommandsRegistry.registerCommand('_executeCodeActionProvider', async function (a
 		CancellationToken.None);
 
 	const resolving: Promise<any>[] = [];
-	const resolveCount = Math.min(codeActionSet.validActions.length, typeof itemResolveCount === 'number' ? itemResolveCount : 0);
+	const resolveCount = Math.min(codeActionSet.validActions.length, typeof itemResolveCount === "number" ? itemResolveCount : 0);
 	for (let i = 0; i < resolveCount; i++) {
 		resolving.push(codeActionSet.validActions[i].resolve(CancellationToken.None));
 	}

@@ -3,26 +3,30 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IDialogHandler, IDialogResult, IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { INativeHostService } from '../../../../platform/native/common/native.js';
-import { IProductService } from '../../../../platform/product/common/productService.js';
-import { IWorkbenchContribution, WorkbenchPhase, registerWorkbenchContribution2 } from '../../../common/contributions.js';
-import { IDialogsModel, IDialogViewItem } from '../../../common/dialogs.js';
-import { BrowserDialogHandler } from '../../../browser/parts/dialogs/dialogHandler.js';
-import { NativeDialogHandler } from './dialogHandler.js';
-import { DialogService } from '../../../services/dialogs/common/dialogService.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { Lazy } from '../../../../base/common/lazy.js';
-import { createNativeAboutDialogDetails } from '../../../../platform/dialogs/electron-browser/dialog.js';
-import { IWorkbenchEnvironmentService } from '../../../services/environment/common/environmentService.js';
+import { IClipboardService } from "../../../../platform/clipboard/common/clipboardService.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IDialogHandler, IDialogResult, IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { INativeHostService } from "../../../../platform/native/common/native.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import {
+  IWorkbenchContribution,
+  WorkbenchPhase,
+  registerWorkbenchContribution2,
+} from "../../../common/contributions.js";
+import { IDialogsModel, IDialogViewItem } from "../../../common/dialogs.js";
+import { BrowserDialogHandler } from "../../../browser/parts/dialogs/dialogHandler.js";
+import { NativeDialogHandler } from "./dialogHandler.js";
+import { DialogService } from "../../../services/dialogs/common/dialogService.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { Lazy } from "../../../../base/common/lazy.js";
+import { createNativeAboutDialogDetails } from "../../../../platform/dialogs/electron-browser/dialog.js";
+import { IWorkbenchEnvironmentService } from "../../../services/environment/common/environmentService.js";
 
 export class DialogHandlerContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'workbench.contrib.dialogHandler';
+	static readonly ID = "workbench.contrib.dialogHandler";
 
 	private nativeImpl: Lazy<IDialogHandler>;
 	private browserImpl: Lazy<IDialogHandler>;
@@ -42,8 +46,16 @@ export class DialogHandlerContribution extends Disposable implements IWorkbenchC
 	) {
 		super();
 
-		this.browserImpl = new Lazy(() => instantiationService.createInstance(BrowserDialogHandler));
-		this.nativeImpl = new Lazy(() => new NativeDialogHandler(logService, nativeHostService, clipboardService));
+		this.browserImpl = new Lazy(
+      () => instantiationService.createInstance(BrowserDialogHandler),
+    );
+		this.nativeImpl = new Lazy(
+      () => new NativeDialogHandler(
+        logService,
+        nativeHostService,
+        clipboardService,
+      ),
+    );
 
 		this.model = (this.dialogService as DialogService).model;
 
@@ -87,12 +99,23 @@ export class DialogHandlerContribution extends Disposable implements IWorkbenchC
 
 				// About
 				else {
-					const aboutDialogDetails = createNativeAboutDialogDetails(this.productService, await this.nativeHostService.getOSProperties());
+					const aboutDialogDetails = createNativeAboutDialogDetails(
+            this.productService,
+            await this.nativeHostService.getOSProperties(),
+          );
 
 					if (this.useCustomDialog) {
-						await this.browserImpl.value.about(aboutDialogDetails.title, aboutDialogDetails.details, aboutDialogDetails.detailsToCopy);
+						await this.browserImpl.value.about(
+              aboutDialogDetails.title,
+              aboutDialogDetails.details,
+              aboutDialogDetails.detailsToCopy,
+            );
 					} else {
-						await this.nativeImpl.value.about(aboutDialogDetails.title, aboutDialogDetails.details, aboutDialogDetails.detailsToCopy);
+						await this.nativeImpl.value.about(
+              aboutDialogDetails.title,
+              aboutDialogDetails.details,
+              aboutDialogDetails.detailsToCopy,
+            );
 					}
 				}
 			} catch (error) {
@@ -105,7 +128,9 @@ export class DialogHandlerContribution extends Disposable implements IWorkbenchC
 	}
 
 	private get useCustomDialog(): boolean {
-		return this.configurationService.getValue('window.dialogStyle') === 'custom' ||
+		return this.configurationService.getValue(
+      "window.dialogStyle",
+    ) === "custom" ||
 			// Use the custom dialog while driven so that the driver can interact with it
 			!!this.environmentService.enableSmokeTestDriver;
 	}
@@ -114,5 +139,5 @@ export class DialogHandlerContribution extends Disposable implements IWorkbenchC
 registerWorkbenchContribution2(
 	DialogHandlerContribution.ID,
 	DialogHandlerContribution,
-	WorkbenchPhase.BlockStartup // Block to allow for dialogs to show before restore finished
+	WorkbenchPhase.BlockStartup, // Block to allow for dialogs to show before restore finished
 );

@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { getWindow, IFocusTracker, ModifierKeyEmitter, trackFocus } from '../../../base/browser/dom.js';
-import { DisposableStore } from '../../../base/common/lifecycle.js';
-import { IObservable, IReader, observableFromEvent, observableValue } from '../../../base/common/observable.js';
-import { InstantiationType, registerSingleton } from '../../instantiation/common/extensions.js';
-import { IModifierKeyStatus, IUserInteractionService } from './userInteractionService.js';
+import { getWindow, IFocusTracker, ModifierKeyEmitter, trackFocus } from "../../../base/browser/dom.js";
+import { DisposableStore } from "../../../base/common/lifecycle.js";
+import { IObservable, IReader, observableFromEvent, observableValue } from "../../../base/common/observable.js";
+import { InstantiationType, registerSingleton } from "../../instantiation/common/extensions.js";
+import { IModifierKeyStatus, IUserInteractionService } from "./userInteractionService.js";
 
 export class UserInteractionService implements IUserInteractionService {
 	readonly _serviceBrand: undefined;
@@ -20,15 +20,15 @@ export class UserInteractionService implements IUserInteractionService {
 		if (!obs) {
 			const emitter = ModifierKeyEmitter.getInstance();
 			obs = observableFromEvent<IModifierKeyStatus>(
-				this,
-				emitter.event,
-				() => ({
-					ctrlKey: emitter.keyStatus.ctrlKey,
-					shiftKey: emitter.keyStatus.shiftKey,
-					altKey: emitter.keyStatus.altKey,
-					metaKey: emitter.keyStatus.metaKey,
-				})
-			);
+        this,
+        emitter.event,
+        () => ({
+          ctrlKey: emitter.keyStatus.ctrlKey,
+          shiftKey: emitter.keyStatus.shiftKey,
+          altKey: emitter.keyStatus.altKey,
+          metaKey: emitter.keyStatus.metaKey,
+        }),
+      );
 			this._modifierObservables.set(win, obs);
 		}
 		return obs.read(reader);
@@ -45,23 +45,26 @@ export class UserInteractionService implements IUserInteractionService {
 			return el.contains(activeElement);
 		};
 
-		const value = observableValue<boolean>('isFocused', hasFocusWithin(element));
+		const value = observableValue<boolean>(
+      "isFocused",
+      hasFocusWithin(element),
+    );
 		store.add(tracker.onDidFocus(() => value.set(true, undefined)));
 		store.add(tracker.onDidBlur(() => value.set(false, undefined)));
 		return value;
 	}
 
 	createHoverTracker(element: Element, store: DisposableStore): IObservable<boolean> {
-		const value = observableValue<boolean>('isHovered', false);
+		const value = observableValue<boolean>("isHovered", false);
 		const onEnter = () => value.set(true, undefined);
 		const onLeave = () => value.set(false, undefined);
-		element.addEventListener('mouseenter', onEnter);
-		element.addEventListener('mouseleave', onLeave);
+		element.addEventListener("mouseenter", onEnter);
+		element.addEventListener("mouseleave", onLeave);
 		store.add({
 			dispose: () => {
-				element.removeEventListener('mouseenter', onEnter);
-				element.removeEventListener('mouseleave', onLeave);
-			}
+				element.removeEventListener("mouseenter", onEnter);
+				element.removeEventListener("mouseleave", onLeave);
+			},
 		});
 		return value;
 	}
@@ -71,4 +74,8 @@ export class UserInteractionService implements IUserInteractionService {
 	}
 }
 
-registerSingleton(IUserInteractionService, UserInteractionService, InstantiationType.Delayed);
+registerSingleton(
+  IUserInteractionService,
+  UserInteractionService,
+  InstantiationType.Delayed,
+);

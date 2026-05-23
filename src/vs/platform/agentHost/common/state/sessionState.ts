@@ -10,112 +10,112 @@
 // (synced from the agent-host-protocol repo). This file adds VS Code-specific
 // helpers and re-exports.
 
-import { hasKey } from '../../../../base/common/types.js';
-import { URI as ResourceURI } from '../../../../base/common/uri.js';
+import { hasKey } from "../../../../base/common/types.js";
+import { URI as ResourceURI } from "../../../../base/common/uri.js";
 import {
-	SessionLifecycle,
-	ToolResultContentType,
-	ToolResultFileEditContent,
-	type ActiveTurn,
-	type ChangesetState,
-	type RootState,
-	type SessionState,
-	type SessionSummary,
-	type ToolCallCancelledState,
-	type ToolCallCompletedState,
-	type ToolCallResult,
-	type ToolCallState,
-	type ToolResultContent,
-	type ToolResultSubagentContent,
-	type ToolResultTextContent,
-	type URI as ProtocolURI,
-	type UserMessage,
-	TerminalState,
-} from './protocol/state.js';
+  SessionLifecycle,
+  ToolResultContentType,
+  ToolResultFileEditContent,
+  type ActiveTurn,
+  type ChangesetState,
+  type RootState,
+  type SessionState,
+  type SessionSummary,
+  type ToolCallCancelledState,
+  type ToolCallCompletedState,
+  type ToolCallResult,
+  type ToolCallState,
+  type ToolResultContent,
+  type ToolResultSubagentContent,
+  type ToolResultTextContent,
+  type URI as ProtocolURI,
+  type UserMessage,
+  TerminalState,
+} from "./protocol/state.js";
 
 // Re-export everything from the protocol state module
 export {
-	type ActiveTurn,
-	type AgentInfo,
-	type ConfigPropertySchema,
-	type ConfigSchema,
-	type ContentRef,
-	type ErrorInfo,
-	type ProjectInfo,
-	type MarkdownResponsePart,
-	type MessageAttachment,
-	type MessageResourceAttachment,
-	type ReasoningResponsePart,
-	type ResponsePart,
-	type RootState,
-	type SessionActiveClient,
-	type SessionConfigState,
-	type FileEdit as ISessionFileDiff,
-	type ModelSelection,
-	type AgentSelection,
-	type CustomizationAgentRef,
-	type SessionModelInfo,
-	type SessionState,
-	type SessionSummary,
-	type Snapshot,
-	type TerminalState,
-	type ToolAnnotations,
-	type ToolCallCancelledState,
-	type ToolCallCompletedState,
-	type ToolCallPendingConfirmationState,
-	type ToolCallPendingResultConfirmationState,
-	type ToolCallResponsePart,
-	type ToolCallResult,
-	type ToolCallRunningState,
-	type ToolCallState,
-	type ToolCallStreamingState,
-	type ToolDefinition,
-	type CustomizationRef,
-	type SessionCustomization,
-	type ToolResultEmbeddedResourceContent as IToolResultBinaryContent,
-	type ToolResultContent,
-	type ToolResultFileEditContent,
-	type ToolResultSubagentContent,
-	type ToolResultTextContent,
-	type Turn,
-	type UsageInfo,
-	type UserMessage,
-	type PendingMessage,
-	type StringOrMarkdown,
-	type URI,
-	type SessionInputRequest,
-	type SessionInputQuestion,
-	type SessionInputAnswer,
-	type SessionInputOption,
-	type ChangesetSummary,
-	type ChangesetState,
-	type ChangesetFile,
-	type ChangesetOperation,
-	CustomizationStatus,
-	MessageAttachmentKind,
-	PendingMessageKind,
-	PolicyState,
-	ResponsePartKind,
-	SessionInputAnswerState,
-	SessionInputAnswerValueKind,
-	SessionInputQuestionKind,
-	SessionInputResponseKind,
-	SessionLifecycle,
-	SessionStatus,
-	ToolCallConfirmationReason,
-	ToolCallCancellationReason,
-	ToolCallStatus,
-	ToolResultContentType,
-	TurnState,
-	ChangesetStatus,
-	ChangesetOperationScope,
-} from './protocol/state.js';
+  type ActiveTurn,
+  type AgentInfo,
+  type ConfigPropertySchema,
+  type ConfigSchema,
+  type ContentRef,
+  type ErrorInfo,
+  type ProjectInfo,
+  type MarkdownResponsePart,
+  type MessageAttachment,
+  type MessageResourceAttachment,
+  type ReasoningResponsePart,
+  type ResponsePart,
+  type RootState,
+  type SessionActiveClient,
+  type SessionConfigState,
+  type FileEdit as ISessionFileDiff,
+  type ModelSelection,
+  type AgentSelection,
+  type CustomizationAgentRef,
+  type SessionModelInfo,
+  type SessionState,
+  type SessionSummary,
+  type Snapshot,
+  type TerminalState,
+  type ToolAnnotations,
+  type ToolCallCancelledState,
+  type ToolCallCompletedState,
+  type ToolCallPendingConfirmationState,
+  type ToolCallPendingResultConfirmationState,
+  type ToolCallResponsePart,
+  type ToolCallResult,
+  type ToolCallRunningState,
+  type ToolCallState,
+  type ToolCallStreamingState,
+  type ToolDefinition,
+  type CustomizationRef,
+  type SessionCustomization,
+  type ToolResultEmbeddedResourceContent as IToolResultBinaryContent,
+  type ToolResultContent,
+  type ToolResultFileEditContent,
+  type ToolResultSubagentContent,
+  type ToolResultTextContent,
+  type Turn,
+  type UsageInfo,
+  type UserMessage,
+  type PendingMessage,
+  type StringOrMarkdown,
+  type URI,
+  type SessionInputRequest,
+  type SessionInputQuestion,
+  type SessionInputAnswer,
+  type SessionInputOption,
+  type ChangesetSummary,
+  type ChangesetState,
+  type ChangesetFile,
+  type ChangesetOperation,
+  CustomizationStatus,
+  MessageAttachmentKind,
+  PendingMessageKind,
+  PolicyState,
+  ResponsePartKind,
+  SessionInputAnswerState,
+  SessionInputAnswerValueKind,
+  SessionInputQuestionKind,
+  SessionInputResponseKind,
+  SessionLifecycle,
+  SessionStatus,
+  ToolCallConfirmationReason,
+  ToolCallCancellationReason,
+  ToolCallStatus,
+  ToolResultContentType,
+  TurnState,
+  ChangesetStatus,
+  ChangesetOperationScope,
+} from "./protocol/state.js";
 
 export {
-	type ChangesetOperationTarget,
-	type ChangesetOperationFollowUp,
-	ChangesetOperationTargetKind,
-} from './protocol/commands.js';
+  type ChangesetOperationTarget,
+  type ChangesetOperationFollowUp,
+  ChangesetOperationTargetKind,
+} from "./protocol/commands.js";
 
 // ---- File edit kind ---------------------------------------------------------
 
@@ -125,22 +125,22 @@ export {
  */
 export const enum FileEditKind {
 	/** Content edit (same file URI, different content). */
-	Edit = 'edit',
+	Edit = "edit",
 	/** File creation (no before state). */
-	Create = 'create',
+	Create = "create",
 	/** File deletion (no after state). */
-	Delete = 'delete',
+	Delete = "delete",
 	/** File rename/move (different before and after URIs). */
-	Rename = 'rename',
+	Rename = "rename",
 }
 
 // ---- Well-known URIs --------------------------------------------------------
 
 /** URI for the root state subscription. */
-export const ROOT_STATE_URI = 'ahp-root://';
+export const ROOT_STATE_URI = "ahp-root://";
 
 /** Scheme used by {@link ROOT_STATE_URI}. */
-export const AHP_ROOT_SCHEME = 'ahp-root';
+export const AHP_ROOT_SCHEME = "ahp-root";
 
 /**
  * Returns `true` when `uri` identifies the root channel, regardless of
@@ -171,7 +171,7 @@ export type ICompletedToolCall = ToolCallCompletedState | ToolCallCancelledState
 /**
  * Derived status type for the tool call lifecycle.
  */
-export type ToolCallStatusString = ToolCallState['status'];
+export type ToolCallStatusString = ToolCallState["status"];
 
 // ---- Tool output helper -----------------------------------------------------
 
@@ -194,7 +194,7 @@ export function getToolOutputText(result: ToolCallResult): string | undefined {
 	if (textParts.length === 0) {
 		return undefined;
 	}
-	return textParts.map(p => p.text).join('\n');
+	return textParts.map(p => p.text).join("\n");
 }
 
 /**
@@ -207,7 +207,9 @@ export function getToolFileEdits(result: ToolCallResult): ToolResultFileEditCont
 	}
 	const edits: ToolResultFileEditContent[] = [];
 	for (const c of result.content) {
-		if (hasKey(c, { type: true }) && c.type === ToolResultContentType.FileEdit) {
+		if (hasKey(c, {
+      type: true,
+    }) && c.type === ToolResultContentType.FileEdit) {
 			edits.push(c);
 		}
 	}
@@ -224,7 +226,9 @@ export function getToolSubagentContent(result: { content?: readonly ToolResultCo
 		return undefined;
 	}
 	for (const c of result.content) {
-		if (hasKey(c, { type: true }) && c.type === ToolResultContentType.Subagent) {
+		if (hasKey(c, {
+      type: true,
+    }) && c.type === ToolResultContentType.Subagent) {
 			return c as ToolResultSubagentContent;
 		}
 	}
@@ -233,12 +237,12 @@ export function getToolSubagentContent(result: { content?: readonly ToolResultCo
 
 // ---- Subagent URI helpers ---------------------------------------------------
 
-const SUBAGENT_URI_SEGMENT = 'subagent';
+const SUBAGENT_URI_SEGMENT = "subagent";
 const SUBAGENT_URI_MARKER = `/${SUBAGENT_URI_SEGMENT}/`;
 const SUBAGENT_URI_PATH_REGEX = /^(?<parentPath>.+)\/subagent\/(?<toolCallId>.+)$/;
 
 function asResourceUri(uri: ProtocolURI | ResourceURI): ResourceURI {
-	return typeof uri === 'string' ? ResourceURI.parse(uri) : uri;
+	return typeof uri === "string" ? ResourceURI.parse(uri) : uri;
 }
 
 function getSubagentBasePath(parentSession: ProtocolURI | ResourceURI): { parent: ResourceURI; path: string } {
@@ -267,9 +271,9 @@ export function parseSubagentSessionUri(uri: ProtocolURI | ResourceURI): { paren
 		return undefined;
 	}
 	return {
-		parentSession: resource.with({ path: match.groups.parentPath }),
-		toolCallId: match.groups.toolCallId,
-	};
+    parentSession: resource.with({ path: match.groups.parentPath }),
+    toolCallId: match.groups.toolCallId,
+  };
 }
 
 /**
@@ -291,27 +295,27 @@ export function buildSubagentSessionUriPrefix(parentSession: ProtocolURI | Resou
 
 export function createRootState(): RootState {
 	return {
-		agents: [],
-		activeSessions: 0,
-	};
+    agents: [],
+    activeSessions: 0,
+  };
 }
 
 export function createSessionState(summary: SessionSummary): SessionState {
 	return {
-		summary,
-		lifecycle: SessionLifecycle.Creating,
-		turns: [],
-		activeTurn: undefined,
-	};
+    summary,
+    lifecycle: SessionLifecycle.Creating,
+    turns: [],
+    activeTurn: undefined,
+  };
 }
 
 export function createActiveTurn(id: string, userMessage: UserMessage): ActiveTurn {
 	return {
-		id,
-		userMessage,
-		responseParts: [],
-		usage: undefined,
-	};
+    id,
+    userMessage,
+    responseParts: [],
+    usage: undefined,
+  };
 }
 
 export const enum StateComponents {
@@ -344,7 +348,7 @@ export type SessionMeta = Record<string, unknown>;
  * on top of the protocol's generic `_meta` bag — the protocol itself does
  * not know about git state.
  */
-export const SESSION_META_GIT_KEY = 'git';
+export const SESSION_META_GIT_KEY = "git";
 
 /**
  * Git state of a session's working directory, carried under
@@ -386,7 +390,7 @@ export interface ISessionGitState {
  */
 export function readSessionGitState(meta: SessionMeta | undefined): ISessionGitState | undefined {
 	const value = meta?.[SESSION_META_GIT_KEY];
-	if (!value || typeof value !== 'object' || Array.isArray(value)) {
+	if (!value || typeof value !== "object" || Array.isArray(value)) {
 		return undefined;
 	}
 	const raw = value as Record<string, unknown>;
@@ -401,15 +405,15 @@ export function readSessionGitState(meta: SessionMeta | undefined): ISessionGitS
 		githubOwner?: string;
 		githubRepo?: string;
 	} = {};
-	if (typeof raw['hasGitHubRemote'] === 'boolean') { result.hasGitHubRemote = raw['hasGitHubRemote']; }
-	if (typeof raw['branchName'] === 'string') { result.branchName = raw['branchName']; }
-	if (typeof raw['baseBranchName'] === 'string') { result.baseBranchName = raw['baseBranchName']; }
-	if (typeof raw['upstreamBranchName'] === 'string') { result.upstreamBranchName = raw['upstreamBranchName']; }
-	if (typeof raw['incomingChanges'] === 'number') { result.incomingChanges = raw['incomingChanges']; }
-	if (typeof raw['outgoingChanges'] === 'number') { result.outgoingChanges = raw['outgoingChanges']; }
-	if (typeof raw['uncommittedChanges'] === 'number') { result.uncommittedChanges = raw['uncommittedChanges']; }
-	if (typeof raw['githubOwner'] === 'string') { result.githubOwner = raw['githubOwner']; }
-	if (typeof raw['githubRepo'] === 'string') { result.githubRepo = raw['githubRepo']; }
+	if (typeof raw["hasGitHubRemote"] === "boolean") { result.hasGitHubRemote = raw["hasGitHubRemote"]; }
+	if (typeof raw["branchName"] === "string") { result.branchName = raw["branchName"]; }
+	if (typeof raw["baseBranchName"] === "string") { result.baseBranchName = raw["baseBranchName"]; }
+	if (typeof raw["upstreamBranchName"] === "string") { result.upstreamBranchName = raw["upstreamBranchName"]; }
+	if (typeof raw["incomingChanges"] === "number") { result.incomingChanges = raw["incomingChanges"]; }
+	if (typeof raw["outgoingChanges"] === "number") { result.outgoingChanges = raw["outgoingChanges"]; }
+	if (typeof raw["uncommittedChanges"] === "number") { result.uncommittedChanges = raw["uncommittedChanges"]; }
+	if (typeof raw["githubOwner"] === "string") { result.githubOwner = raw["githubOwner"]; }
+	if (typeof raw["githubRepo"] === "string") { result.githubRepo = raw["githubRepo"]; }
 	return result;
 }
 

@@ -3,28 +3,40 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { n } from '../../../../../../../../base/browser/dom.js';
-import { Disposable } from '../../../../../../../../base/common/lifecycle.js';
-import { clamp } from '../../../../../../../../base/common/numbers.js';
-import { IObservable, derived, constObservable, IReader, autorun, observableValue } from '../../../../../../../../base/common/observable.js';
-import { IInstantiationService } from '../../../../../../../../platform/instantiation/common/instantiation.js';
-import { ICodeEditor } from '../../../../../../../browser/editorBrowser.js';
-import { ObservableCodeEditor, observableCodeEditor } from '../../../../../../../browser/observableCodeEditor.js';
-import { EmbeddedCodeEditorWidget } from '../../../../../../../browser/widget/codeEditor/embeddedCodeEditorWidget.js';
-import { IDimension } from '../../../../../../../common/core/2d/dimension.js';
-import { Position } from '../../../../../../../common/core/position.js';
-import { Range } from '../../../../../../../common/core/range.js';
-import { LineRange } from '../../../../../../../common/core/ranges/lineRange.js';
-import { OffsetRange } from '../../../../../../../common/core/ranges/offsetRange.js';
-import { DetailedLineRangeMapping } from '../../../../../../../common/diff/rangeMapping.js';
-import { IModelDeltaDecoration, ITextModel } from '../../../../../../../common/model.js';
-import { ModelDecorationOptions } from '../../../../../../../common/model/textModel.js';
-import { InlineCompletionContextKeys } from '../../../../controller/inlineCompletionContextKeys.js';
-import { InlineEditsGutterIndicator, InlineEditsGutterIndicatorData, InlineSuggestionGutterMenuData, SimpleInlineSuggestModel } from '../../components/gutterIndicatorView.js';
-import { InlineEditTabAction } from '../../inlineEditsViewInterface.js';
-import { classNames, maxContentWidthInRange } from '../../utils/utils.js';
-import { JumpToView } from '../jumpToView.js';
-import { TextModelValueReference } from '../../../../model/textModelValueReference.js';
+import { n } from "../../../../../../../../base/browser/dom.js";
+import { Disposable } from "../../../../../../../../base/common/lifecycle.js";
+import { clamp } from "../../../../../../../../base/common/numbers.js";
+import {
+  IObservable,
+  derived,
+  constObservable,
+  IReader,
+  autorun,
+  observableValue,
+} from "../../../../../../../../base/common/observable.js";
+import { IInstantiationService } from "../../../../../../../../platform/instantiation/common/instantiation.js";
+import { ICodeEditor } from "../../../../../../../browser/editorBrowser.js";
+import { ObservableCodeEditor, observableCodeEditor } from "../../../../../../../browser/observableCodeEditor.js";
+import { EmbeddedCodeEditorWidget } from "../../../../../../../browser/widget/codeEditor/embeddedCodeEditorWidget.js";
+import { IDimension } from "../../../../../../../common/core/2d/dimension.js";
+import { Position } from "../../../../../../../common/core/position.js";
+import { Range } from "../../../../../../../common/core/range.js";
+import { LineRange } from "../../../../../../../common/core/ranges/lineRange.js";
+import { OffsetRange } from "../../../../../../../common/core/ranges/offsetRange.js";
+import { DetailedLineRangeMapping } from "../../../../../../../common/diff/rangeMapping.js";
+import { IModelDeltaDecoration, ITextModel } from "../../../../../../../common/model.js";
+import { ModelDecorationOptions } from "../../../../../../../common/model/textModel.js";
+import { InlineCompletionContextKeys } from "../../../../controller/inlineCompletionContextKeys.js";
+import {
+  InlineEditsGutterIndicator,
+  InlineEditsGutterIndicatorData,
+  InlineSuggestionGutterMenuData,
+  SimpleInlineSuggestModel,
+} from "../../components/gutterIndicatorView.js";
+import { InlineEditTabAction } from "../../inlineEditsViewInterface.js";
+import { classNames, maxContentWidthInRange } from "../../utils/utils.js";
+import { JumpToView } from "../jumpToView.js";
+import { TextModelValueReference } from "../../../../model/textModelValueReference.js";
 
 export interface ILongDistancePreviewProps {
 	nextCursorPosition: Position | null; // assert: nextCursorPosition !== null  xor  diff.length > 0
@@ -43,7 +55,11 @@ export class LongDistancePreviewEditor extends Disposable {
 	private readonly _previewEditorObs;
 
 	private readonly _previewRef = n.ref<HTMLDivElement>();
-	public readonly element = n.div({ class: 'preview', style: { /*pointerEvents: 'none'*/ }, ref: this._previewRef });
+	public readonly element = n.div({
+    class: "preview",
+    style: { /*pointerEvents: 'none'*/ },
+    ref: this._previewRef,
+  });
 
 	private _parentEditorObs: ObservableCodeEditor;
 
@@ -72,13 +88,13 @@ export class LongDistancePreviewEditor extends Disposable {
 		this._register(this._previewEditorObs.setDecorations(derived(reader => {
 			const state = this._state.read(reader);
 			const decorations = this._editorDecorations.read(reader);
-			return (state?.mode === 'original' ? decorations?.originalDecorations : decorations?.modifiedDecorations) ?? [];
+			return (state?.mode === "original" ? decorations?.originalDecorations : decorations?.modifiedDecorations) ?? [];
 		})));
 
 		const showJumpToDecoration = false;
 
 		if (showJumpToDecoration) {
-			this._register(this._instantiationService.createInstance(JumpToView, this._previewEditorObs, { style: 'cursor' }, derived(reader => {
+			this._register(this._instantiationService.createInstance(JumpToView, this._previewEditorObs, { style: "cursor" }, derived(reader => {
 				const p = this._properties.read(reader);
 				if (!p || !p.nextCursorPosition) {
 					return undefined;
@@ -97,7 +113,7 @@ export class LongDistancePreviewEditor extends Disposable {
 			}
 			const cursorPosition = this._parentEditorObs.cursorPosition.read(reader);
 			if (cursorPosition) {
-				this.previewEditor.setPosition(this._previewTextModel.validatePosition(cursorPosition), 'longDistanceHintPreview');
+				this.previewEditor.setPosition(this._previewTextModel.validatePosition(cursorPosition), "longDistanceHintPreview");
 			}
 		}));
 
@@ -111,32 +127,34 @@ export class LongDistancePreviewEditor extends Disposable {
 			this.previewEditor.updateOptions({ lineNumbersMinChars: lineNumberDigets + 1 });
 		}));
 
-		this._register(this._instantiationService.createInstance(
-			InlineEditsGutterIndicator,
-			this._previewEditorObs,
-			derived(reader => {
-				const state = this._state.read(reader);
-				if (!state) { return undefined; }
-				const props = this._properties.read(reader);
-				if (!props) { return undefined; }
-				return new InlineEditsGutterIndicatorData(
-					props.inlineSuggestInfo,
-					LineRange.ofLength(state.visibleLineRange.startLineNumber, 1),
-					props.model,
-					undefined,
-				);
-			}),
-			this._tabAction,
-			constObservable(0),
-			constObservable(false),
-			observableValue(this, false),
-		));
+		this._register(
+      this._instantiationService.createInstance(
+        InlineEditsGutterIndicator,
+        this._previewEditorObs,
+        derived(reader => {
+          const state = this._state.read(reader);
+          if (!state) { return undefined; }
+          const props = this._properties.read(reader);
+          if (!props) { return undefined; }
+          return new InlineEditsGutterIndicatorData(
+            props.inlineSuggestInfo,
+            LineRange.ofLength(state.visibleLineRange.startLineNumber, 1),
+            props.model,
+            undefined,
+          );
+        }),
+        this._tabAction,
+        constObservable(0),
+        constObservable(false),
+        observableValue(this, false),
+      ),
+    );
 
 		this.updatePreviewEditorEffect.recomputeInitiallyAndOnChange(this._store);
 	}
 
 	private readonly _state = derived<{
-		mode: 'original' | 'modified';
+		mode: "original" | "modified";
 		visibleLineRange: LineRange;
 		textModel: TextModelValueReference | undefined;
 		diff: DetailedLineRangeMapping[];
@@ -146,23 +164,23 @@ export class LongDistancePreviewEditor extends Disposable {
 			return undefined;
 		}
 
-		let mode: 'original' | 'modified';
+		let mode: "original" | "modified";
 		let visibleRange: LineRange;
 
 		if (props.nextCursorPosition !== null) {
-			mode = 'original';
+			mode = "original";
 			visibleRange = LineRange.ofLength(props.nextCursorPosition.lineNumber, 1);
 		} else {
 			if (props.diff[0].innerChanges?.every(c => c.modifiedRange.isEmpty())) {
-				mode = 'original';
+				mode = "original";
 				visibleRange = LineRange.ofLength(props.diff[0].original.startLineNumber, 1);
 			} else {
-				mode = 'modified';
+				mode = "modified";
 				visibleRange = LineRange.ofLength(props.diff[0].modified.startLineNumber, 1);
 			}
 		}
 
-		const textModel = mode === 'modified'
+		const textModel = mode === "modified"
 			? TextModelValueReference.snapshot(this._previewTextModel)
 			: props.target;
 
@@ -180,7 +198,7 @@ export class LongDistancePreviewEditor extends Disposable {
 			this._previewRef.element,
 			{
 				glyphMargin: false,
-				lineNumbers: 'on',
+				lineNumbers: "on",
 				minimap: { enabled: false },
 				guides: {
 					indentation: false,
@@ -203,14 +221,14 @@ export class LongDistancePreviewEditor extends Disposable {
 				bracketPairColorization: { enabled: true, independentColorPoolPerBracketType: false },
 				scrollBeyondLastLine: false,
 				scrollbar: {
-					vertical: 'hidden',
-					horizontal: 'hidden',
+					vertical: "hidden",
+					horizontal: "hidden",
 					handleMouseWheel: false,
 				},
 				readOnly: true,
-				wordWrap: 'off',
-				wordWrapOverride1: 'off',
-				wordWrapOverride2: 'off',
+				wordWrap: "off",
+				wordWrapOverride1: "off",
+				wordWrapOverride2: "off",
 			},
 			{
 				contextKeyValues: {
@@ -218,7 +236,7 @@ export class LongDistancePreviewEditor extends Disposable {
 				},
 				contributions: [],
 			},
-			this._parentEditor
+			this._parentEditor,
 		);
 	}
 
@@ -240,9 +258,15 @@ export class LongDistancePreviewEditor extends Disposable {
 		this.previewEditor.setHiddenAreas(hiddenAreas, undefined, true);
 	});
 
-	public readonly horizontalContentRangeInPreviewEditorToShow = derived(this, reader => {
-		return this._getHorizontalContentRangeInPreviewEditorToShow(this.previewEditor, reader);
-	});
+	public readonly horizontalContentRangeInPreviewEditorToShow = derived(
+    this,
+    reader => {
+      return this._getHorizontalContentRangeInPreviewEditorToShow(
+        this.previewEditor,
+        reader,
+      );
+    },
+  );
 
 	public readonly contentHeight = derived(this, (reader) => {
 		const viewState = this._state.read(reader);
@@ -263,28 +287,47 @@ export class LongDistancePreviewEditor extends Disposable {
 
 		const visibleRange = state.visibleLineRange;
 		const l = this._previewEditorObs.layoutInfo.read(reader);
-		const trueContentWidth = maxContentWidthInRange(this._previewEditorObs, visibleRange, reader);
+		const trueContentWidth = maxContentWidthInRange(
+      this._previewEditorObs,
+      visibleRange,
+      reader,
+    );
 
 		let firstCharacterChange: Range;
 		if (jumpToPos) {
 			firstCharacterChange = Range.fromPositions(jumpToPos);
 		} else if (diff[0].innerChanges) {
-			firstCharacterChange = state.mode === 'modified' ? diff[0].innerChanges[0].modifiedRange : diff[0].innerChanges[0].originalRange;
+			firstCharacterChange = state.mode === "modified" ? diff[0].innerChanges[0].modifiedRange : diff[0].innerChanges[0].originalRange;
 		} else {
 			return undefined;
 		}
 
 
 		// find the horizontal range we want to show.
-		const preferredRange = growUntilVariableBoundaries(editor.getModel()!, firstCharacterChange, 5);
-		const leftOffset = this._previewEditorObs.getLeftOfPosition(preferredRange.getStartPosition(), reader);
-		const rightOffset = this._previewEditorObs.getLeftOfPosition(preferredRange.getEndPosition(), reader);
+		const preferredRange = growUntilVariableBoundaries(
+      editor.getModel()!,
+      firstCharacterChange,
+      5,
+    );
+		const leftOffset = this._previewEditorObs.getLeftOfPosition(
+      preferredRange.getStartPosition(),
+      reader,
+    );
+		const rightOffset = this._previewEditorObs.getLeftOfPosition(
+      preferredRange.getEndPosition(),
+      reader,
+    );
 
 		const left = clamp(leftOffset, 0, trueContentWidth);
 		const right = clamp(rightOffset, left, trueContentWidth);
 
-		const indentCol = editor.getModel()!.getLineFirstNonWhitespaceColumn(preferredRange.startLineNumber);
-		const indentationEnd = this._previewEditorObs.getLeftOfPosition(new Position(preferredRange.startLineNumber, indentCol), reader);
+		const indentCol = editor.getModel()!.getLineFirstNonWhitespaceColumn(
+      preferredRange.startLineNumber,
+    );
+		const indentationEnd = this._previewEditorObs.getLeftOfPosition(
+      new Position(preferredRange.startLineNumber, indentCol),
+      reader,
+    );
 
 		const preferredRangeToReveal = new OffsetRange(left, right);
 
@@ -307,28 +350,28 @@ export class LongDistancePreviewEditor extends Disposable {
 		if (!state) { return undefined; }
 
 		const diff = {
-			mode: 'insertionInline' as const,
+			mode: "insertionInline" as const,
 			diff: state.diff,
 		};
 		const originalDecorations: IModelDeltaDecoration[] = [];
 		const modifiedDecorations: IModelDeltaDecoration[] = [];
 
 		const diffWholeLineDeleteDecoration = ModelDecorationOptions.register({
-			className: 'inlineCompletions-char-delete',
-			description: 'char-delete',
+			className: "inlineCompletions-char-delete",
+			description: "char-delete",
 			isWholeLine: false,
 			zIndex: 1, // be on top of diff background decoration
 		});
 
 		const diffWholeLineAddDecoration = ModelDecorationOptions.register({
-			className: 'inlineCompletions-char-insert',
-			description: 'char-insert',
+			className: "inlineCompletions-char-insert",
+			description: "char-insert",
 			isWholeLine: true,
 		});
 
 		const diffAddDecoration = ModelDecorationOptions.register({
-			className: 'inlineCompletions-char-insert',
-			description: 'char-insert',
+			className: "inlineCompletions-char-insert",
+			description: "char-insert",
 			shouldFillLineOnLineBreak: true,
 		});
 
@@ -348,21 +391,21 @@ export class LongDistancePreviewEditor extends Disposable {
 						originalDecorations.push({
 							range: i.originalRange,
 							options: {
-								description: 'char-delete',
+								description: "char-delete",
 								shouldFillLineOnLineBreak: false,
 								className: classNames(
-									'inlineCompletions-char-delete',
+									"inlineCompletions-char-delete",
 									// i.originalRange.isSingleLine() && diff.mode === 'insertionInline' && 'single-line-inline',
-									i.originalRange.isEmpty() && 'empty',
+									i.originalRange.isEmpty() && "empty",
 								),
-								zIndex: 1
-							}
+								zIndex: 1,
+							},
 						});
 					}
 					if (m.modified.contains(i.modifiedRange.startLineNumber)) {
 						modifiedDecorations.push({
 							range: i.modifiedRange,
-							options: diffAddDecoration
+							options: diffAddDecoration,
 						});
 					}
 				}
@@ -390,18 +433,31 @@ function growUntilVariableBoundaries(textModel: ITextModel, range: Range, maxGro
 
 	function isWhitespace(col: number): boolean {
 		const char = line.charAt(col - 1);
-		return char === ' ' || char === '\t';
+		return char === " " || char === "\t";
 	}
 
 	let startColumn = startPosition.column;
-	while (startColumn > 1 && isVariableNameCharacter(startColumn) && !isWhitespace(startColumn - 1) && startPosition.column - startColumn < maxGrow) {
+	while (startColumn > 1 && isVariableNameCharacter(
+    startColumn,
+  ) && !isWhitespace(
+    startColumn - 1,
+  ) && startPosition.column - startColumn < maxGrow) {
 		startColumn--;
 	}
 
 	let endColumn = endPosition.column - 1;
-	while (endColumn <= line.length && isVariableNameCharacter(endColumn) && !isWhitespace(endColumn + 1) && endColumn - endPosition.column < maxGrow) {
+	while (endColumn <= line.length && isVariableNameCharacter(
+    endColumn,
+  ) && !isWhitespace(
+    endColumn + 1,
+  ) && endColumn - endPosition.column < maxGrow) {
 		endColumn++;
 	}
 
-	return new Range(startPosition.lineNumber, startPosition.column, endPosition.lineNumber, endColumn + 1);
+	return new Range(
+    startPosition.lineNumber,
+    startPosition.column,
+    endPosition.lineNumber,
+    endColumn + 1,
+  );
 }

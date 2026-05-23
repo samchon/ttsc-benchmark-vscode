@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../../../../nls.js';
-import { IActionWidgetService } from '../../../../../platform/actionWidget/browser/actionWidget.js';
-import { IStorageService } from '../../../../../platform/storage/common/storage.js';
-import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
-import { IWorkbenchLayoutService } from '../../../../../workbench/services/layout/browser/layoutService.js';
-import { ISessionsManagementService } from '../../../../services/sessions/common/sessionsManagement.js';
-import { ISessionsProvidersService } from '../../../../services/sessions/browser/sessionsProvidersService.js';
-import { SessionTypePicker } from '../sessionTypePicker.js';
-import { isPhoneLayout } from '../../../../browser/parts/mobile/mobileLayout.js';
-import { IMobilePickerSheetItem, showMobilePickerSheet } from '../../../../browser/parts/mobile/mobilePickerSheet.js';
+import { localize } from "../../../../../nls.js";
+import { IActionWidgetService } from "../../../../../platform/actionWidget/browser/actionWidget.js";
+import { IStorageService } from "../../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
+import { IWorkbenchLayoutService } from "../../../../../workbench/services/layout/browser/layoutService.js";
+import { ISessionsManagementService } from "../../../../services/sessions/common/sessionsManagement.js";
+import { ISessionsProvidersService } from "../../../../services/sessions/browser/sessionsProvidersService.js";
+import { SessionTypePicker } from "../sessionTypePicker.js";
+import { isPhoneLayout } from "../../../../browser/parts/mobile/mobileLayout.js";
+import { IMobilePickerSheetItem, showMobilePickerSheet } from "../../../../browser/parts/mobile/mobilePickerSheet.js";
 
 /**
  * Phone variant of {@link SessionTypePicker} that renders the picker as
@@ -35,7 +35,13 @@ export class MobileSessionTypePicker extends SessionTypePicker {
 		@ITelemetryService telemetryService: ITelemetryService,
 		@IWorkbenchLayoutService private readonly layoutService: IWorkbenchLayoutService,
 	) {
-		super(actionWidgetService, sessionsManagementService, _sessionsProvidersService, storageService, telemetryService);
+		super(
+      actionWidgetService,
+      sessionsManagementService,
+      _sessionsProvidersService,
+      storageService,
+      telemetryService,
+    );
 	}
 
 	override render(container: HTMLElement, options?: { className?: string }): void {
@@ -71,25 +77,25 @@ export class MobileSessionTypePicker extends SessionTypePicker {
 			const isFirstInGroup = providerId !== lastProviderId;
 			lastProviderId = providerId;
 			sheetItems.push({
-				id: `${providerId}\u0000${sessionType.id}`,
-				label: sessionType.label,
-				icon: sessionType.icon,
-				checked: providerId === this._picked?.providerId && sessionType.id === this._picked?.sessionTypeId,
-				sectionTitle: isFirstInGroup ? (this._sessionsProvidersService.getProvider(providerId)?.label ?? providerId) : undefined,
-			});
+        id: `${providerId}\u0000${sessionType.id}`,
+        label: sessionType.label,
+        icon: sessionType.icon,
+        checked: providerId === this._picked?.providerId && sessionType.id === this._picked?.sessionTypeId,
+        sectionTitle: isFirstInGroup ? (this._sessionsProvidersService.getProvider(providerId)?.label ?? providerId) : undefined,
+      });
 		}
 
 		const trigger = this._triggerElement;
-		trigger.setAttribute('aria-expanded', 'true');
+		trigger.setAttribute("aria-expanded", "true");
 		showMobilePickerSheet(
 			this.layoutService.mainContainer,
-			localize('mobileSessionTypePicker.title', "Session Type"),
+			localize("mobileSessionTypePicker.title", "Session Type"),
 			sheetItems,
 		).then(id => {
-			trigger.setAttribute('aria-expanded', 'false');
+			trigger.setAttribute("aria-expanded", "false");
 			trigger.focus();
 			if (id !== undefined) {
-				const [providerId, sessionTypeId] = id.split('\u0000');
+				const [providerId, sessionTypeId] = id.split("\u0000");
 				if (providerId && sessionTypeId) {
 					this._handleSelectedSessionType({ providerId, sessionTypeId });
 				}

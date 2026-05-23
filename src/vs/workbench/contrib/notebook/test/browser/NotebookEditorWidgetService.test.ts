@@ -4,31 +4,36 @@
  *--------------------------------------------------------------------------------------------*/
 
 
-import assert from 'assert';
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { mock } from '../../../../../base/test/common/mock.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { IContextKeyService } from '../../../../../platform/contextkey/common/contextkey.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { TestInstantiationService } from '../../../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { GroupIdentifier, IEditorCloseEvent, IEditorWillMoveEvent } from '../../../../common/editor.js';
-import { NotebookEditorWidget } from '../../browser/notebookEditorWidget.js';
-import { NotebookEditorWidgetService } from '../../browser/services/notebookEditorServiceImpl.js';
-import { NotebookEditorInput } from '../../common/notebookEditorInput.js';
-import { setupInstantiationService } from './testNotebookEditor.js';
-import { IEditorGroup, IEditorGroupsService, IEditorPart } from '../../../../services/editor/common/editorGroupsService.js';
-import { IEditorService } from '../../../../services/editor/common/editorService.js';
+import assert from "assert";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { mock } from "../../../../../base/test/common/mock.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { TestInstantiationService } from "../../../../../platform/instantiation/test/common/instantiationServiceMock.js";
+import { GroupIdentifier, IEditorCloseEvent, IEditorWillMoveEvent } from "../../../../common/editor.js";
+import { NotebookEditorWidget } from "../../browser/notebookEditorWidget.js";
+import { NotebookEditorWidgetService } from "../../browser/services/notebookEditorServiceImpl.js";
+import { NotebookEditorInput } from "../../common/notebookEditorInput.js";
+import { setupInstantiationService } from "./testNotebookEditor.js";
+import { IEditorGroup, IEditorGroupsService, IEditorPart } from "../../../../services/editor/common/editorGroupsService.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
 
 class TestNotebookEditorWidgetService extends NotebookEditorWidgetService {
 	constructor(
 		@IEditorGroupsService editorGroupService: IEditorGroupsService,
 		@IEditorService editorService: IEditorService,
 		@IContextKeyService contextKeyService: IContextKeyService,
-		@IInstantiationService instantiationService: IInstantiationService
+		@IInstantiationService instantiationService: IInstantiationService,
 	) {
-		super(editorGroupService, editorService, contextKeyService, instantiationService);
+		super(
+      editorGroupService,
+      editorService,
+      contextKeyService,
+      instantiationService,
+    );
 	}
 
 	protected override createWidget(): NotebookEditorWidget {
@@ -47,7 +52,7 @@ function createNotebookInput(path: string, editorType: string) {
 	};
 }
 
-suite('NotebookEditorWidgetService', () => {
+suite("NotebookEditorWidgetService", () => {
 	let disposables: DisposableStore;
 	let instantiationService: TestInstantiationService;
 	let editorGroup1: IEditorGroup;
@@ -95,36 +100,36 @@ suite('NotebookEditorWidgetService', () => {
 		});
 	});
 
-	test('Retrieve widget within group', async function () {
-		const notebookEditorInput = createNotebookInput('/test.np', 'type1');
+	test("Retrieve widget within group", async function () {
+		const notebookEditorInput = createNotebookInput("/test.np", "type1");
 		const notebookEditorService = disposables.add(instantiationService.createInstance(TestNotebookEditorWidgetService));
 		const widget = notebookEditorService.retrieveWidget(instantiationService, 1, notebookEditorInput);
 		const value = widget.value;
 		const widget2 = notebookEditorService.retrieveWidget(instantiationService, 1, notebookEditorInput);
 
-		assert.notStrictEqual(widget2.value, undefined, 'should create a widget');
-		assert.strictEqual(value, widget2.value, 'should return the same widget');
-		assert.strictEqual(widget.value, undefined, 'initial borrow should no longer have widget');
+		assert.notStrictEqual(widget2.value, undefined, "should create a widget");
+		assert.strictEqual(value, widget2.value, "should return the same widget");
+		assert.strictEqual(widget.value, undefined, "initial borrow should no longer have widget");
 	});
 
-	test('Retrieve independent widgets', async function () {
-		const inputType1 = createNotebookInput('/test.np', 'type1');
-		const inputType2 = createNotebookInput('/test.np', 'type2');
+	test("Retrieve independent widgets", async function () {
+		const inputType1 = createNotebookInput("/test.np", "type1");
+		const inputType2 = createNotebookInput("/test.np", "type2");
 		const notebookEditorService = disposables.add(instantiationService.createInstance(TestNotebookEditorWidgetService));
 		const widget = notebookEditorService.retrieveWidget(instantiationService, 1, inputType1);
 		const widgetDiffGroup = notebookEditorService.retrieveWidget(instantiationService, 2, inputType1);
 		const widgetDiffType = notebookEditorService.retrieveWidget(instantiationService, 1, inputType2);
 
-		assert.notStrictEqual(widget.value, undefined, 'should create a widget');
-		assert.notStrictEqual(widgetDiffGroup.value, undefined, 'should create a widget');
-		assert.notStrictEqual(widgetDiffType.value, undefined, 'should create a widget');
-		assert.notStrictEqual(widget.value, widgetDiffGroup.value, 'should return a different widget');
-		assert.notStrictEqual(widget.value, widgetDiffType.value, 'should return a different widget');
+		assert.notStrictEqual(widget.value, undefined, "should create a widget");
+		assert.notStrictEqual(widgetDiffGroup.value, undefined, "should create a widget");
+		assert.notStrictEqual(widgetDiffType.value, undefined, "should create a widget");
+		assert.notStrictEqual(widget.value, widgetDiffGroup.value, "should return a different widget");
+		assert.notStrictEqual(widget.value, widgetDiffType.value, "should return a different widget");
 	});
 
-	test('Only relevant widgets get disposed', async function () {
-		const inputType1 = createNotebookInput('/test.np', 'type1');
-		const inputType2 = createNotebookInput('/test.np', 'type2');
+	test("Only relevant widgets get disposed", async function () {
+		const inputType1 = createNotebookInput("/test.np", "type1");
+		const inputType2 = createNotebookInput("/test.np", "type2");
 		const notebookEditorService = disposables.add(instantiationService.createInstance(TestNotebookEditorWidgetService));
 		const widget = notebookEditorService.retrieveWidget(instantiationService, 1, inputType1);
 		const widgetDiffType = notebookEditorService.retrieveWidget(instantiationService, 1, inputType2);
@@ -132,15 +137,15 @@ suite('NotebookEditorWidgetService', () => {
 
 		ondidRemoveGroup.fire(editorGroup1);
 
-		assert.strictEqual(widget.value, undefined, 'widgets in group should get disposed');
-		assert.strictEqual(widgetDiffType.value, undefined, 'widgets in group should get disposed');
-		assert.notStrictEqual(widgetDiffGroup.value, undefined, 'other group should not be disposed');
+		assert.strictEqual(widget.value, undefined, "widgets in group should get disposed");
+		assert.strictEqual(widgetDiffType.value, undefined, "widgets in group should get disposed");
+		assert.notStrictEqual(widgetDiffGroup.value, undefined, "other group should not be disposed");
 
 		notebookEditorService.dispose();
 	});
 
-	test('Widget should move between groups when editor is moved', async function () {
-		const inputType1 = createNotebookInput('/test.np', NotebookEditorInput.ID);
+	test("Widget should move between groups when editor is moved", async function () {
+		const inputType1 = createNotebookInput("/test.np", NotebookEditorInput.ID);
 		const notebookEditorService = disposables.add(instantiationService.createInstance(TestNotebookEditorWidgetService));
 		const initialValue = notebookEditorService.retrieveWidget(instantiationService, 1, inputType1).value;
 
@@ -155,9 +160,9 @@ suite('NotebookEditorWidgetService', () => {
 		const widgetDiffGroup = notebookEditorService.retrieveWidget(instantiationService, 2, inputType1);
 		const widgetFirstGroup = notebookEditorService.retrieveWidget(instantiationService, 1, inputType1);
 
-		assert.notStrictEqual(initialValue, undefined, 'valid widget');
-		assert.strictEqual(widgetDiffGroup.value, initialValue, 'widget should be reused in new group');
-		assert.notStrictEqual(widgetFirstGroup.value, initialValue, 'should create a new widget in the first group');
+		assert.notStrictEqual(initialValue, undefined, "valid widget");
+		assert.strictEqual(widgetDiffGroup.value, initialValue, "widget should be reused in new group");
+		assert.notStrictEqual(widgetFirstGroup.value, initialValue, "should create a new widget in the first group");
 	});
 
 });

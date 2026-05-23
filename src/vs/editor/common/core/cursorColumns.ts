@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CharCode } from '../../../base/common/charCode.js';
-import * as strings from '../../../base/common/strings.js';
+import { CharCode } from "../../../base/common/charCode.js";
+import * as strings from "../../../base/common/strings.js";
 
 /**
  * A column in a position is the gap between two adjacent characters. The methods here
@@ -45,7 +45,11 @@ export class CursorColumns {
 
 		let result = 0;
 		while (!iterator.eol()) {
-			const codePoint = strings.getNextCodePoint(text, textLen, iterator.offset);
+			const codePoint = strings.getNextCodePoint(
+        text,
+        textLen,
+        iterator.offset,
+      );
 			iterator.nextGraphemeLength();
 
 			result = this._nextVisibleColumn(codePoint, result, tabSize);
@@ -59,7 +63,10 @@ export class CursorColumns {
 	 * @see {@link CursorColumns}
 	 */
 	public static toStatusbarColumn(lineContent: string, column: number, tabSize: number): number {
-		const text = lineContent.substring(0, Math.min(column - 1, lineContent.length));
+		const text = lineContent.substring(
+      0,
+      Math.min(column - 1, lineContent.length),
+    );
 		const iterator = new strings.CodePointIterator(text);
 
 		let result = 0;
@@ -91,10 +98,18 @@ export class CursorColumns {
 		let beforeVisibleColumn = 0;
 		let beforeColumn = 1;
 		while (!iterator.eol()) {
-			const codePoint = strings.getNextCodePoint(lineContent, lineContentLength, iterator.offset);
+			const codePoint = strings.getNextCodePoint(
+        lineContent,
+        lineContentLength,
+        iterator.offset,
+      );
 			iterator.nextGraphemeLength();
 
-			const afterVisibleColumn = this._nextVisibleColumn(codePoint, beforeVisibleColumn, tabSize);
+			const afterVisibleColumn = this._nextVisibleColumn(
+        codePoint,
+        beforeVisibleColumn,
+        tabSize,
+      );
 			const afterColumn = iterator.offset + 1;
 
 			if (afterVisibleColumn >= visibleColumn) {

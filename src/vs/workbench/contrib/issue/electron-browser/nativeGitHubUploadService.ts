@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { VSBuffer } from '../../../../base/common/buffer.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { INativeHostService } from '../../../../platform/native/common/native.js';
-import { IGitHubUploadResult, IGitHubUploadService } from '../browser/githubUploadService.js';
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { INativeHostService } from "../../../../platform/native/common/native.js";
+import { IGitHubUploadResult, IGitHubUploadService } from "../browser/githubUploadService.js";
 
 /**
  * GitHub upload service using the Mobile Upload API.
@@ -26,14 +26,22 @@ export class NativeGitHubUploadService extends Disposable implements IGitHubUplo
 	}
 
 	async resolveRepositoryId(owner: string, repo: string, token?: string): Promise<string> {
-		const headers: Record<string, string> = { 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+		const headers: Record<string, string> = {
+      "Accept": "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+    };
 		if (token) {
-			headers['Authorization'] = `Bearer ${token}`;
+			headers["Authorization"] = `Bearer ${token}`;
 		}
-		const r = await fetch(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`, { headers });
+		const r = await fetch(
+      `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,
+      { headers },
+    );
 		if (!r.ok) {
-			const body = await r.text().catch(() => '');
-			throw new Error(`Repo ID lookup failed for ${owner}/${repo}: ${r.status} ${r.statusText}${body ? ` — ${body.substring(0, 300)}` : ''}`);
+			const body = await r.text().catch(() => "");
+			throw new Error(
+        `Repo ID lookup failed for ${owner}/${repo}: ${r.status} ${r.statusText}${body ? ` — ${body.substring(0, 300)}` : ""}`,
+      );
 		}
 		const json = await r.json();
 		return String(json.id);
@@ -43,9 +51,15 @@ export class NativeGitHubUploadService extends Disposable implements IGitHubUplo
 		const results: IGitHubUploadResult[] = [];
 		for (const file of files) {
 			const result = await this.nativeHostService.uploadFileViaMobileApi(
-				token, repoId, file.name, VSBuffer.wrap(file.bytes), file.contentType
-			);
-			this.logService.info(`[GitHubUpload] Uploaded ${file.name} (${file.bytes.length} bytes) -> ${result.assetUrl}`);
+        token,
+        repoId,
+        file.name,
+        VSBuffer.wrap(file.bytes),
+        file.contentType,
+      );
+			this.logService.info(
+        `[GitHubUpload] Uploaded ${file.name} (${file.bytes.length} bytes) -> ${result.assetUrl}`,
+      );
 			results.push(result);
 		}
 		return results;

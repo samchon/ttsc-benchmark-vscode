@@ -3,37 +3,46 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as nls from '../../../../nls.js';
-import { Event, Emitter } from '../../../../base/common/event.js';
-import { IInstantiationService, createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
-import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
-import { ITunnelService, RemoteTunnel, TunnelProtocol } from '../../../../platform/tunnel/common/tunnel.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { IEditableData } from '../../../common/views.js';
-import { TunnelInformation, TunnelPrivacy } from '../../../../platform/remote/common/remoteAuthorityResolver.js';
-import { URI } from '../../../../base/common/uri.js';
-import { Attributes, CandidatePort, TunnelCloseReason, TunnelModel, TunnelProperties, TunnelSource } from './tunnelModel.js';
-import { ExtensionsRegistry, IExtensionPointUser } from '../../extensions/common/extensionsRegistry.js';
-import { IExtensionDescription } from '../../../../platform/extensions/common/extensions.js';
-import { IJSONSchema } from '../../../../base/common/jsonSchema.js';
+import * as nls from "../../../../nls.js";
+import { Event, Emitter } from "../../../../base/common/event.js";
+import { IInstantiationService, createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { ITunnelService, RemoteTunnel, TunnelProtocol } from "../../../../platform/tunnel/common/tunnel.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { IEditableData } from "../../../common/views.js";
+import { TunnelInformation, TunnelPrivacy } from "../../../../platform/remote/common/remoteAuthorityResolver.js";
+import { URI } from "../../../../base/common/uri.js";
+import {
+  Attributes,
+  CandidatePort,
+  TunnelCloseReason,
+  TunnelModel,
+  TunnelProperties,
+  TunnelSource,
+} from "./tunnelModel.js";
+import { ExtensionsRegistry, IExtensionPointUser } from "../../extensions/common/extensionsRegistry.js";
+import { IExtensionDescription } from "../../../../platform/extensions/common/extensions.js";
+import { IJSONSchema } from "../../../../base/common/jsonSchema.js";
 
-export const IRemoteExplorerService = createDecorator<IRemoteExplorerService>('remoteExplorerService');
-export const REMOTE_EXPLORER_TYPE_KEY: string = 'remote.explorerType';
-export const TUNNEL_VIEW_ID = '~remote.forwardedPorts';
-export const TUNNEL_VIEW_CONTAINER_ID = '~remote.forwardedPortsContainer';
-export const PORT_AUTO_FORWARD_SETTING = 'remote.autoForwardPorts';
-export const PORT_AUTO_SOURCE_SETTING = 'remote.autoForwardPortsSource';
-export const PORT_AUTO_FALLBACK_SETTING = 'remote.autoForwardPortsFallback';
-export const PORT_AUTO_SOURCE_SETTING_PROCESS = 'process';
-export const PORT_AUTO_SOURCE_SETTING_OUTPUT = 'output';
-export const PORT_AUTO_SOURCE_SETTING_HYBRID = 'hybrid';
+export const IRemoteExplorerService = createDecorator<IRemoteExplorerService>(
+  "remoteExplorerService",
+);
+export const REMOTE_EXPLORER_TYPE_KEY: string = "remote.explorerType";
+export const TUNNEL_VIEW_ID = "~remote.forwardedPorts";
+export const TUNNEL_VIEW_CONTAINER_ID = "~remote.forwardedPortsContainer";
+export const PORT_AUTO_FORWARD_SETTING = "remote.autoForwardPorts";
+export const PORT_AUTO_SOURCE_SETTING = "remote.autoForwardPortsSource";
+export const PORT_AUTO_FALLBACK_SETTING = "remote.autoForwardPortsFallback";
+export const PORT_AUTO_SOURCE_SETTING_PROCESS = "process";
+export const PORT_AUTO_SOURCE_SETTING_OUTPUT = "output";
+export const PORT_AUTO_SOURCE_SETTING_HYBRID = "hybrid";
 
 export enum TunnelType {
-	Candidate = 'Candidate',
-	Detected = 'Detected',
-	Forwarded = 'Forwarded',
-	Add = 'Add'
+	Candidate = "Candidate",
+	Detected = "Detected",
+	Forwarded = "Forwarded",
+	Add = "Add"
 }
 
 export interface ITunnelItem {
@@ -73,48 +82,48 @@ export interface HelpInformation {
 }
 
 const getStartedWalkthrough: IJSONSchema = {
-	type: 'object',
-	required: ['id'],
+	type: "object",
+	required: ["id"],
 	properties: {
 		id: {
-			description: nls.localize('getStartedWalkthrough.id', 'The ID of a Get Started walkthrough to open.'),
-			type: 'string'
+			description: nls.localize("getStartedWalkthrough.id", "The ID of a Get Started walkthrough to open."),
+			type: "string",
 		},
-	}
+	},
 };
 
 const remoteHelpExtPoint = ExtensionsRegistry.registerExtensionPoint<HelpInformation>({
-	extensionPoint: 'remoteHelp',
+	extensionPoint: "remoteHelp",
 	jsonSchema: {
-		description: nls.localize('RemoteHelpInformationExtPoint', 'Contributes help information for Remote'),
-		type: 'object',
+		description: nls.localize("RemoteHelpInformationExtPoint", "Contributes help information for Remote"),
+		type: "object",
 		properties: {
-			'getStarted': {
-				description: nls.localize('RemoteHelpInformationExtPoint.getStarted', "The url, or a command that returns the url, to your project's Getting Started page, or a walkthrough ID contributed by your project's extension"),
+			"getStarted": {
+				description: nls.localize("RemoteHelpInformationExtPoint.getStarted", "The url, or a command that returns the url, to your project's Getting Started page, or a walkthrough ID contributed by your project's extension"),
 				oneOf: [
-					{ type: 'string' },
-					getStartedWalkthrough
-				]
+					{ type: "string" },
+					getStartedWalkthrough,
+				],
 			},
-			'documentation': {
-				description: nls.localize('RemoteHelpInformationExtPoint.documentation', "The url, or a command that returns the url, to your project's documentation page"),
-				type: 'string'
+			"documentation": {
+				description: nls.localize("RemoteHelpInformationExtPoint.documentation", "The url, or a command that returns the url, to your project's documentation page"),
+				type: "string",
 			},
-			'feedback': {
-				description: nls.localize('RemoteHelpInformationExtPoint.feedback', "The url, or a command that returns the url, to your project's feedback reporter"),
-				type: 'string',
-				markdownDeprecationMessage: nls.localize('RemoteHelpInformationExtPoint.feedback.deprecated', "Use {0} instead", '`reportIssue`')
+			"feedback": {
+				description: nls.localize("RemoteHelpInformationExtPoint.feedback", "The url, or a command that returns the url, to your project's feedback reporter"),
+				type: "string",
+				markdownDeprecationMessage: nls.localize("RemoteHelpInformationExtPoint.feedback.deprecated", "Use {0} instead", "`reportIssue`"),
 			},
-			'reportIssue': {
-				description: nls.localize('RemoteHelpInformationExtPoint.reportIssue', "The url, or a command that returns the url, to your project's issue reporter"),
-				type: 'string'
+			"reportIssue": {
+				description: nls.localize("RemoteHelpInformationExtPoint.reportIssue", "The url, or a command that returns the url, to your project's issue reporter"),
+				type: "string",
 			},
-			'issues': {
-				description: nls.localize('RemoteHelpInformationExtPoint.issues', "The url, or a command that returns the url, to your project's issues list"),
-				type: 'string'
-			}
-		}
-	}
+			"issues": {
+				description: nls.localize("RemoteHelpInformationExtPoint.issues", "The url, or a command that returns the url, to your project's issues list"),
+				type: "string",
+			},
+		},
+	},
 });
 
 export enum PortsEnablement {
@@ -170,9 +179,9 @@ class RemoteExplorerService implements IRemoteExplorerService {
 		this._tunnelModel = instantiationService.createInstance(TunnelModel);
 
 		remoteHelpExtPoint.setHandler((extensions) => {
-			this._helpInformation.push(...extensions);
-			this._onDidChangeHelpInformation.fire(extensions);
-		});
+      this._helpInformation.push(...extensions);
+      this._onDidChangeHelpInformation.fire(extensions);
+    });
 	}
 
 	get helpInformation(): IExtensionPointUser<HelpInformation>[] {
@@ -181,12 +190,22 @@ class RemoteExplorerService implements IRemoteExplorerService {
 
 	set targetType(name: string[]) {
 		// Can just compare the first element of the array since there are no target overlaps
-		const current: string = this._targetType.length > 0 ? this._targetType[0] : '';
-		const newName: string = name.length > 0 ? name[0] : '';
+		const current: string = this._targetType.length > 0 ? this._targetType[0] : "";
+		const newName: string = name.length > 0 ? name[0] : "";
 		if (current !== newName) {
 			this._targetType = name;
-			this.storageService.store(REMOTE_EXPLORER_TYPE_KEY, this._targetType.toString(), StorageScope.WORKSPACE, StorageTarget.MACHINE);
-			this.storageService.store(REMOTE_EXPLORER_TYPE_KEY, this._targetType.toString(), StorageScope.PROFILE, StorageTarget.USER);
+			this.storageService.store(
+        REMOTE_EXPLORER_TYPE_KEY,
+        this._targetType.toString(),
+        StorageScope.WORKSPACE,
+        StorageTarget.MACHINE,
+      );
+			this.storageService.store(
+        REMOTE_EXPLORER_TYPE_KEY,
+        this._targetType.toString(),
+        StorageScope.PROFILE,
+        StorageTarget.USER,
+      );
 			this._onDidChangeTargetType.fire(this._targetType);
 		}
 	}
@@ -210,7 +229,9 @@ class RemoteExplorerService implements IRemoteExplorerService {
 		if (tunnelInformation?.features) {
 			this.tunnelService.setTunnelFeatures(tunnelInformation.features);
 		}
-		this.tunnelModel.addEnvironmentTunnels(tunnelInformation?.environmentTunnels);
+		this.tunnelModel.addEnvironmentTunnels(
+      tunnelInformation?.environmentTunnels,
+    );
 	}
 
 	setEditable(tunnelItem: ITunnelItem | undefined, editId: TunnelEditId, data: IEditableData | null): void {
@@ -219,7 +240,9 @@ class RemoteExplorerService implements IRemoteExplorerService {
 		} else {
 			this._editable = { tunnelItem, data, editId };
 		}
-		this._onDidChangeEditable.fire(tunnelItem ? { tunnel: tunnelItem, editId } : undefined);
+		this._onDidChangeEditable.fire(
+      tunnelItem ? { tunnel: tunnelItem, editId } : undefined,
+    );
 	}
 
 	getEditableData(tunnelItem: ITunnelItem | undefined, editId: TunnelEditId): IEditableData | undefined {
@@ -233,14 +256,14 @@ class RemoteExplorerService implements IRemoteExplorerService {
 	setCandidateFilter(filter: (candidates: CandidatePort[]) => Promise<CandidatePort[]>): IDisposable {
 		if (!filter) {
 			return {
-				dispose: () => { }
-			};
+        dispose: () => { },
+      };
 		}
 		this.tunnelModel.setCandidateFilter(filter);
 		return {
 			dispose: () => {
 				this.tunnelModel.setCandidateFilter(undefined);
-			}
+			},
 		};
 	}
 
@@ -262,4 +285,8 @@ class RemoteExplorerService implements IRemoteExplorerService {
 	}
 }
 
-registerSingleton(IRemoteExplorerService, RemoteExplorerService, InstantiationType.Delayed);
+registerSingleton(
+  IRemoteExplorerService,
+  RemoteExplorerService,
+  InstantiationType.Delayed,
+);

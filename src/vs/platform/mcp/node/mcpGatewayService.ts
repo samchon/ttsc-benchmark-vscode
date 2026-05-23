@@ -3,16 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type * as http from 'http';
-import { DeferredPromise } from '../../../base/common/async.js';
-import { Emitter } from '../../../base/common/event.js';
-import { JsonRpcMessage, JsonRpcProtocol } from '../../../base/common/jsonRpcProtocol.js';
-import { Disposable, DisposableStore } from '../../../base/common/lifecycle.js';
-import { URI } from '../../../base/common/uri.js';
-import { generateUuid } from '../../../base/common/uuid.js';
-import { ILogger, ILoggerService } from '../../log/common/log.js';
-import { IMcpGatewayInfo, IMcpGatewayServerDescriptor, IMcpGatewayServerInfo, IMcpGatewayService, IMcpGatewaySingleServerInvoker, IMcpGatewayToolInvoker } from '../common/mcpGateway.js';
-import { isInitializeMessage, McpGatewaySession } from './mcpGatewaySession.js';
+import type * as http from "http";
+import { DeferredPromise } from "../../../base/common/async.js";
+import { Emitter } from "../../../base/common/event.js";
+import { JsonRpcMessage, JsonRpcProtocol } from "../../../base/common/jsonRpcProtocol.js";
+import { Disposable, DisposableStore } from "../../../base/common/lifecycle.js";
+import { URI } from "../../../base/common/uri.js";
+import { generateUuid } from "../../../base/common/uuid.js";
+import { ILogger, ILoggerService } from "../../log/common/log.js";
+import {
+  IMcpGatewayInfo,
+  IMcpGatewayServerDescriptor,
+  IMcpGatewayServerInfo,
+  IMcpGatewayService,
+  IMcpGatewaySingleServerInvoker,
+  IMcpGatewayToolInvoker,
+} from "../common/mcpGateway.js";
+import { isInitializeMessage, McpGatewaySession } from "./mcpGatewaySession.js";
 
 /**
  * Node.js implementation of the MCP Gateway Service.
@@ -42,8 +49,13 @@ export class McpGatewayService extends Disposable implements IMcpGatewayService 
 		@ILoggerService loggerService: ILoggerService,
 	) {
 		super();
-		this._logger = this._register(loggerService.createLogger('mcpGateway', { name: 'MCP Gateway', logLevel: 'always' }));
-		this._logger.info('[McpGatewayService] Initialized');
+		this._logger = this._register(
+      loggerService.createLogger("mcpGateway", {
+        name: "MCP Gateway",
+        logLevel: "always",
+      }),
+    );
+		this._logger.info("[McpGatewayService] Initialized");
 	}
 
 	async createGateway(clientId: unknown, toolInvoker?: IMcpGatewayToolInvoker): Promise<IMcpGatewayInfo> {
@@ -51,11 +63,15 @@ export class McpGatewayService extends Disposable implements IMcpGatewayService 
 		await this._ensureServer();
 
 		if (this._port === undefined) {
-			throw new Error('[McpGatewayService] Server failed to start, port is undefined');
+			throw new Error(
+        "[McpGatewayService] Server failed to start, port is undefined",
+      );
 		}
 
 		if (!toolInvoker) {
-			throw new Error('[McpGatewayService] Tool invoker is required to create gateway');
+			throw new Error(
+        "[McpGatewayService] Tool invoker is required to create gateway",
+      );
 		}
 
 		const gatewayId = generateUuid();
@@ -72,29 +88,51 @@ export class McpGatewayService extends Disposable implements IMcpGatewayService 
 			const serverDescriptors = toolInvoker.listServers();
 			const servers: IMcpGatewayServerInfo[] = [];
 			for (const descriptor of serverDescriptors) {
-				const serverInfo = this._createRouteForServer(gatewayId, descriptor.id, descriptor.label, toolInvoker, routeIds, serverRouteMap);
+				const serverInfo = this._createRouteForServer(
+          gatewayId,
+          descriptor.id,
+          descriptor.label,
+          toolInvoker,
+          routeIds,
+          serverRouteMap,
+        );
 				servers.push(serverInfo);
 			}
 
 			// Track client ownership
 			if (clientId) {
 				this._gatewayToClient.set(gatewayId, clientId);
-				this._logger.info(`[McpGatewayService] Created gateway ${gatewayId} with ${servers.length} server(s) for client ${clientId}`);
+				this._logger.info(
+          `[McpGatewayService] Created gateway ${gatewayId} with ${servers.length} server(s) for client ${clientId}`,
+        );
 			} else {
-				this._logger.warn(`[McpGatewayService] Created gateway ${gatewayId} with ${servers.length} server(s) without client tracking`);
+				this._logger.warn(
+          `[McpGatewayService] Created gateway ${gatewayId} with ${servers.length} server(s) without client tracking`,
+        );
 			}
 
 			// Listen for server changes to dynamically add/remove routes
-			const onDidChangeServers = disposables.add(new Emitter<readonly IMcpGatewayServerInfo[]>());
-			disposables.add(toolInvoker.onDidChangeServers(newDescriptors => {
-				this._refreshGatewayServers(gatewayId, newDescriptors, toolInvoker, routeIds, serverRouteMap, onDidChangeServers);
-			}));
+			const onDidChangeServers = disposables.add(
+        new Emitter<readonly IMcpGatewayServerInfo[]>(),
+      );
+			disposables.add(
+        toolInvoker.onDidChangeServers(newDescriptors => {
+          this._refreshGatewayServers(
+            gatewayId,
+            newDescriptors,
+            toolInvoker,
+            routeIds,
+            serverRouteMap,
+            onDidChangeServers,
+          );
+        }),
+      );
 
 			return {
-				servers,
-				onDidChangeServers: onDidChangeServers.event,
-				gatewayId,
-			};
+        servers,
+        onDidChangeServers: onDidChangeServers.event,
+        gatewayId,
+      };
 		} catch (error) {
 			// Clean up partially-created state on failure
 			this._cleanupGateway(gatewayId);
@@ -133,7 +171,14 @@ export class McpGatewayService extends Disposable implements IMcpGatewayService 
 		// Add routes for new servers, and update labels for existing ones.
 		for (const descriptor of newDescriptors) {
 			if (!existingServerIds.has(descriptor.id)) {
-				this._createRouteForServer(gatewayId, descriptor.id, descriptor.label, toolInvoker, routeIds, serverRouteMap);
+				this._createRouteForServer(
+          gatewayId,
+          descriptor.id,
+          descriptor.label,
+          toolInvoker,
+          routeIds,
+          serverRouteMap,
+        );
 				continue;
 			}
 
@@ -145,7 +190,9 @@ export class McpGatewayService extends Disposable implements IMcpGatewayService 
 		}
 
 		const updatedServers = this._getGatewayServers(gatewayId);
-		this._logger.info(`[McpGatewayService] Gateway ${gatewayId} servers changed: ${updatedServers.length} server(s)`);
+		this._logger.info(
+      `[McpGatewayService] Gateway ${gatewayId} servers changed: ${updatedServers.length} server(s)`,
+    );
 		onDidChangeServers.fire(updatedServers);
 	}
 
@@ -175,22 +222,31 @@ export class McpGatewayService extends Disposable implements IMcpGatewayService 
 
 		// Create a single-server invoker that delegates to the aggregating invoker
 		const singleServerInvoker: IMcpGatewaySingleServerInvoker = {
-			onDidChangeTools: toolInvoker.onDidChangeTools,
-			onDidChangeResources: toolInvoker.onDidChangeResources,
-			listTools: () => toolInvoker.listToolsForServer(serverId),
-			callTool: (name, args) => toolInvoker.callToolForServer(serverId, name, args),
-			listResources: () => toolInvoker.listResourcesForServer(serverId),
-			readResource: uri => toolInvoker.readResourceForServer(serverId, uri),
-			listResourceTemplates: () => toolInvoker.listResourceTemplatesForServer(serverId),
-		};
+      onDidChangeTools: toolInvoker.onDidChangeTools,
+      onDidChangeResources: toolInvoker.onDidChangeResources,
+      listTools: () => toolInvoker.listToolsForServer(serverId),
+      callTool: (name, args) => toolInvoker.callToolForServer(serverId, name, args),
+      listResources: () => toolInvoker.listResourcesForServer(serverId),
+      readResource: uri => toolInvoker.readResourceForServer(serverId, uri),
+      listResourceTemplates: () => toolInvoker.listResourceTemplatesForServer(serverId),
+    };
 
-		const route = new McpGatewayRoute(routeId, this._logger, singleServerInvoker, label);
+		const route = new McpGatewayRoute(
+      routeId,
+      this._logger,
+      singleServerInvoker,
+      label,
+    );
 		this._routes.set(routeId, route);
 		routeIds.add(routeId);
 		serverRouteMap.set(serverId, routeId);
 
-		const address = URI.parse(`http://127.0.0.1:${this._port}/gateway/${routeId}`);
-		this._logger.info(`[McpGatewayService] Created route ${routeId} for server '${label}' (${serverId}) at ${address}`);
+		const address = URI.parse(
+      `http://127.0.0.1:${this._port}/gateway/${routeId}`,
+    );
+		this._logger.info(
+      `[McpGatewayService] Created route ${routeId} for server '${label}' (${serverId}) at ${address}`,
+    );
 
 		return { label, address };
 	}
@@ -205,9 +261,9 @@ export class McpGatewayService extends Disposable implements IMcpGatewayService 
 			const route = this._routes.get(routeId);
 			if (route) {
 				servers.push({
-					label: route.label,
-					address: URI.parse(`http://127.0.0.1:${this._port}/gateway/${routeId}`),
-				});
+          label: route.label,
+          address: URI.parse(`http://127.0.0.1:${this._port}/gateway/${routeId}`),
+        });
 			}
 		}
 		return servers;
@@ -224,12 +280,16 @@ export class McpGatewayService extends Disposable implements IMcpGatewayService 
 
 	async disposeGateway(gatewayId: string): Promise<void> {
 		if (!this._gatewayRoutes.has(gatewayId)) {
-			this._logger.warn(`[McpGatewayService] Attempted to dispose unknown gateway: ${gatewayId}`);
+			this._logger.warn(
+        `[McpGatewayService] Attempted to dispose unknown gateway: ${gatewayId}`,
+      );
 			return;
 		}
 
 		this._cleanupGateway(gatewayId);
-		this._logger.info(`[McpGatewayService] Disposed gateway: ${gatewayId} (remaining routes: ${this._routes.size})`);
+		this._logger.info(
+      `[McpGatewayService] Disposed gateway: ${gatewayId} (remaining routes: ${this._routes.size})`,
+    );
 
 		// If no more routes, shut down the server
 		if (this._routes.size === 0) {
@@ -247,7 +307,9 @@ export class McpGatewayService extends Disposable implements IMcpGatewayService 
 		}
 
 		if (gatewaysToDispose.length > 0) {
-			this._logger.info(`[McpGatewayService] Disposing ${gatewaysToDispose.length} gateway(s) for disconnected client ${clientId}`);
+			this._logger.info(
+        `[McpGatewayService] Disposing ${gatewaysToDispose.length} gateway(s) for disconnected client ${clientId}`,
+      );
 
 			for (const gatewayId of gatewaysToDispose) {
 				this._cleanupGateway(gatewayId);
@@ -279,26 +341,33 @@ export class McpGatewayService extends Disposable implements IMcpGatewayService 
 	}
 
 	private async _startServer(): Promise<void> {
-		const { createServer } = await import('http'); // Lazy due to https://github.com/nodejs/node/issues/59686
+		const { createServer } = await import(
+      "http",
+    ); // Lazy due to https://github.com/nodejs/node/issues/59686
 		const deferredPromise = new DeferredPromise<void>();
 
 		this._server = createServer((req, res) => {
-			this._handleRequest(req, res);
-		});
+      this._handleRequest(req, res);
+    });
 
-		const portTimeout = setTimeout(() => {
-			deferredPromise.error(new Error('[McpGatewayService] Timeout waiting for server to start'));
-		}, 5000);
+		const portTimeout = setTimeout(
+      () => {
+        deferredPromise.error(
+          new Error("[McpGatewayService] Timeout waiting for server to start"),
+        );
+      },
+      5000,
+    );
 
-		this._server.on('listening', () => {
+		this._server.on("listening", () => {
 			const address = this._server!.address();
-			if (typeof address === 'string') {
+			if (typeof address === "string") {
 				this._port = parseInt(address);
 			} else if (address instanceof Object) {
 				this._port = address.port;
 			} else {
 				clearTimeout(portTimeout);
-				deferredPromise.error(new Error('[McpGatewayService] Unable to determine port'));
+				deferredPromise.error(new Error("[McpGatewayService] Unable to determine port"));
 				return;
 			}
 
@@ -307,11 +376,11 @@ export class McpGatewayService extends Disposable implements IMcpGatewayService 
 			deferredPromise.complete();
 		});
 
-		this._server.on('error', (err: NodeJS.ErrnoException) => {
-			if (err.code === 'EADDRINUSE') {
-				this._logger.warn('[McpGatewayService] Port in use, retrying with random port...');
+		this._server.on("error", (err: NodeJS.ErrnoException) => {
+			if (err.code === "EADDRINUSE") {
+				this._logger.warn("[McpGatewayService] Port in use, retrying with random port...");
 				// Try with a random port
-				this._server!.listen(0, '127.0.0.1');
+				this._server!.listen(0, "127.0.0.1");
 				return;
 			}
 			clearTimeout(portTimeout);
@@ -320,7 +389,7 @@ export class McpGatewayService extends Disposable implements IMcpGatewayService 
 		});
 
 		// Use dynamic port assignment (port 0)
-		this._server.listen(0, '127.0.0.1');
+		this._server.listen(0, "127.0.0.1");
 
 		return deferredPromise.p;
 	}
@@ -330,13 +399,13 @@ export class McpGatewayService extends Disposable implements IMcpGatewayService 
 			return;
 		}
 
-		this._logger.info('[McpGatewayService] Stopping server (no more routes)');
+		this._logger.info("[McpGatewayService] Stopping server (no more routes)");
 
 		this._server.close(err => {
 			if (err) {
 				this._logger.error(`[McpGatewayService] Error closing server: ${err}`);
 			} else {
-				this._logger.info('[McpGatewayService] Server stopped');
+				this._logger.info("[McpGatewayService] Server stopped");
 			}
 		});
 
@@ -346,12 +415,14 @@ export class McpGatewayService extends Disposable implements IMcpGatewayService 
 
 	private _handleRequest(req: http.IncomingMessage, res: http.ServerResponse): void {
 		const url = new URL(req.url!, `http://${req.headers.host}`);
-		const pathParts = url.pathname.split('/').filter(Boolean);
+		const pathParts = url.pathname.split("/").filter(Boolean);
 
-		this._logger.debug(`[McpGatewayService] ${req.method} ${url.pathname} (active routes: ${this._routes.size})`);
+		this._logger.debug(
+      `[McpGatewayService] ${req.method} ${url.pathname} (active routes: ${this._routes.size})`,
+    );
 
 		// Expected path: /gateway/{routeId}
-		if (pathParts.length >= 2 && pathParts[0] === 'gateway') {
+		if (pathParts.length >= 2 && pathParts[0] === "gateway") {
 			const routeId = pathParts[1];
 			const route = this._routes.get(routeId);
 
@@ -362,13 +433,17 @@ export class McpGatewayService extends Disposable implements IMcpGatewayService 
 		}
 
 		// Not found
-		this._logger.warn(`[McpGatewayService] ${req.method} ${url.pathname}: route not found`);
-		res.writeHead(404, { 'Content-Type': 'application/json' });
-		res.end(JSON.stringify({ error: 'Gateway not found' }));
+		this._logger.warn(
+      `[McpGatewayService] ${req.method} ${url.pathname}: route not found`,
+    );
+		res.writeHead(404, { "Content-Type": "application/json" });
+		res.end(JSON.stringify({ error: "Gateway not found" }));
 	}
 
 	override dispose(): void {
-		this._logger.info(`[McpGatewayService] Disposing service (routes: ${this._routes.size})`);
+		this._logger.info(
+      `[McpGatewayService] Disposing service (routes: ${this._routes.size})`,
+    );
 		this._stopServer();
 		for (const route of this._routes.values()) {
 			route.dispose();
@@ -391,40 +466,44 @@ export class McpGatewayService extends Disposable implements IMcpGatewayService 
 class McpGatewayRoute extends Disposable {
 	private readonly _sessions = new Map<string, McpGatewaySession>();
 
-	private static readonly SessionHeaderName = 'mcp-session-id';
+	private static readonly SessionHeaderName = "mcp-session-id";
 
 	constructor(
 		public readonly routeId: string,
 		private readonly _logger: ILogger,
 		private readonly _serverInvoker: IMcpGatewaySingleServerInvoker,
-		public label: string = '',
+		public label: string = "",
 	) {
 		super();
 	}
 
 	handleRequest(req: http.IncomingMessage, res: http.ServerResponse): void {
-		this._logger.debug(`[McpGateway][route ${this.routeId}] ${req.method} request (sessions: ${this._sessions.size})`);
+		this._logger.debug(
+      `[McpGateway][route ${this.routeId}] ${req.method} request (sessions: ${this._sessions.size})`,
+    );
 
-		if (req.method === 'POST') {
+		if (req.method === "POST") {
 			void this._handlePost(req, res);
 			return;
 		}
 
-		if (req.method === 'GET') {
+		if (req.method === "GET") {
 			this._handleGet(req, res);
 			return;
 		}
 
-		if (req.method === 'DELETE') {
+		if (req.method === "DELETE") {
 			this._handleDelete(req, res);
 			return;
 		}
 
-		this._respondHttpError(res, 405, 'Method not allowed');
+		this._respondHttpError(res, 405, "Method not allowed");
 	}
 
 	public override dispose(): void {
-		this._logger.info(`[McpGateway][route ${this.routeId}] Disposing route (sessions: ${this._sessions.size})`);
+		this._logger.info(
+      `[McpGateway][route ${this.routeId}] Disposing route (sessions: ${this._sessions.size})`,
+    );
 		for (const session of this._sessions.values()) {
 			session.dispose();
 		}
@@ -435,17 +514,19 @@ class McpGatewayRoute extends Disposable {
 	private _handleDelete(req: http.IncomingMessage, res: http.ServerResponse): void {
 		const sessionId = this._getSessionId(req);
 		if (!sessionId) {
-			this._respondHttpError(res, 400, 'Missing Mcp-Session-Id header');
+			this._respondHttpError(res, 400, "Missing Mcp-Session-Id header");
 			return;
 		}
 
 		const session = this._sessions.get(sessionId);
 		if (!session) {
-			this._respondHttpError(res, 404, 'Session not found');
+			this._respondHttpError(res, 404, "Session not found");
 			return;
 		}
 
-		this._logger.info(`[McpGateway][route ${this.routeId}] Deleting session ${sessionId}`);
+		this._logger.info(
+      `[McpGateway][route ${this.routeId}] Deleting session ${sessionId}`,
+    );
 		session.dispose();
 		this._sessions.delete(sessionId);
 		res.writeHead(204);
@@ -455,24 +536,26 @@ class McpGatewayRoute extends Disposable {
 	private _handleGet(req: http.IncomingMessage, res: http.ServerResponse): void {
 		const sessionId = this._getSessionId(req);
 		if (!sessionId) {
-			this._respondHttpError(res, 400, 'Missing Mcp-Session-Id header');
+			this._respondHttpError(res, 400, "Missing Mcp-Session-Id header");
 			return;
 		}
 
 		const session = this._sessions.get(sessionId);
 		if (!session) {
-			this._respondHttpError(res, 404, 'Session not found');
+			this._respondHttpError(res, 404, "Session not found");
 			return;
 		}
 
-		this._logger.info(`[McpGateway][route ${this.routeId}] SSE connection requested for session ${sessionId}`);
+		this._logger.info(
+      `[McpGateway][route ${this.routeId}] SSE connection requested for session ${sessionId}`,
+    );
 		session.attachSseClient(req, res);
 	}
 
 	private async _handlePost(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
 		const body = await this._readRequestBody(req);
 		if (body === undefined) {
-			this._respondHttpError(res, 413, 'Payload too large');
+			this._respondHttpError(res, 413, "Payload too large");
 			return;
 		}
 
@@ -482,9 +565,18 @@ class McpGatewayRoute extends Disposable {
 		try {
 			message = JSON.parse(body) as JsonRpcMessage | JsonRpcMessage[];
 		} catch (error) {
-			this._logger.warn(`[McpGateway][route ${this.routeId}] JSON parse error: ${error instanceof Error ? error.message : String(error)}`);
-			res.writeHead(400, { 'Content-Type': 'application/json' });
-			res.end(JSON.stringify(JsonRpcProtocol.createParseError('Parse error', error instanceof Error ? error.message : String(error))));
+			this._logger.warn(
+        `[McpGateway][route ${this.routeId}] JSON parse error: ${error instanceof Error ? error.message : String(error)}`,
+      );
+			res.writeHead(400, { "Content-Type": "application/json" });
+			res.end(
+        JSON.stringify(
+          JsonRpcProtocol.createParseError(
+            "Parse error",
+            error instanceof Error ? error.message : String(error),
+          ),
+        ),
+      );
 			return;
 		}
 
@@ -498,24 +590,33 @@ class McpGatewayRoute extends Disposable {
 			const responses = await session.handleIncoming(message);
 
 			const headers: Record<string, string> = {
-				'Content-Type': 'application/json',
-				'Mcp-Session-Id': session.id,
-			};
+        "Content-Type": "application/json",
+        "Mcp-Session-Id": session.id,
+      };
 
 			if (responses.length === 0) {
-				this._logger.debug(`[McpGateway][route ${this.routeId}] POST response: 202 (no content)`);
+				this._logger.debug(
+          `[McpGateway][route ${this.routeId}] POST response: 202 (no content)`,
+        );
 				res.writeHead(202, headers);
 				res.end();
 				return;
 			}
 
-			const responseBody = JSON.stringify(Array.isArray(message) ? responses : responses[0]);
-			this._logger.debug(`[McpGateway][route ${this.routeId}] POST response: 200, body: ${responseBody}`);
+			const responseBody = JSON.stringify(
+        Array.isArray(message) ? responses : responses[0],
+      );
+			this._logger.debug(
+        `[McpGateway][route ${this.routeId}] POST response: 200, body: ${responseBody}`,
+      );
 			res.writeHead(200, headers);
 			res.end(responseBody);
 		} catch (error) {
-			this._logger.error('[McpGatewayService] Failed handling gateway request', error);
-			this._respondHttpError(res, 500, 'Internal server error');
+			this._logger.error(
+        "[McpGatewayService] Failed handling gateway request",
+        error,
+      );
+			this._respondHttpError(res, 500, "Internal server error");
 		}
 	}
 
@@ -523,8 +624,10 @@ class McpGatewayRoute extends Disposable {
 		if (headerSessionId) {
 			const existing = this._sessions.get(headerSessionId);
 			if (!existing) {
-				this._logger.warn(`[McpGateway][route ${this.routeId}] Session not found: ${headerSessionId}`);
-				this._respondHttpError(res, 404, 'Session not found');
+				this._logger.warn(
+          `[McpGateway][route ${this.routeId}] Session not found: ${headerSessionId}`,
+        );
+				this._respondHttpError(res, 404, "Session not found");
 				return undefined;
 			}
 
@@ -532,23 +635,36 @@ class McpGatewayRoute extends Disposable {
 		}
 
 		if (!isInitializeMessage(message)) {
-			this._respondHttpError(res, 400, 'Missing Mcp-Session-Id header');
+			this._respondHttpError(res, 400, "Missing Mcp-Session-Id header");
 			return undefined;
 		}
 
 		const sessionId = generateUuid();
-		this._logger.info(`[McpGateway][route ${this.routeId}] Creating new session ${sessionId}`);
-		const session = new McpGatewaySession(sessionId, this._logger, () => {
-			this._sessions.delete(sessionId);
-		}, this._serverInvoker);
+		this._logger.info(
+      `[McpGateway][route ${this.routeId}] Creating new session ${sessionId}`,
+    );
+		const session = new McpGatewaySession(
+      sessionId,
+      this._logger,
+      () => {
+        this._sessions.delete(sessionId);
+      },
+      this._serverInvoker,
+    );
 		this._sessions.set(sessionId, session);
 		return session;
 	}
 
 	private _respondHttpError(res: http.ServerResponse, statusCode: number, error: string): void {
-		this._logger.debug(`[McpGateway][route ${this.routeId}] HTTP error response: ${statusCode} ${error}`);
-		res.writeHead(statusCode, { 'Content-Type': 'application/json' });
-		res.end(JSON.stringify({ jsonrpc: '2.0', error: { code: statusCode, message: error } } satisfies JsonRpcMessage));
+		this._logger.debug(
+      `[McpGateway][route ${this.routeId}] HTTP error response: ${statusCode} ${error}`,
+    );
+		res.writeHead(statusCode, { "Content-Type": "application/json" });
+		res.end(
+      JSON.stringify(
+        { jsonrpc: "2.0", error: { code: statusCode, message: error } } satisfies JsonRpcMessage,
+      ),
+    );
 	}
 
 	private _getSessionId(req: http.IncomingMessage): string | undefined {
@@ -574,6 +690,6 @@ class McpGatewayRoute extends Disposable {
 			chunks.push(asBuffer);
 		}
 
-		return Buffer.concat(chunks).toString('utf8');
+		return Buffer.concat(chunks).toString("utf8");
 	}
 }

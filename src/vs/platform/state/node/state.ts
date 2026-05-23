@@ -3,9 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createDecorator } from '../../instantiation/common/instantiation.js';
+import { createDecorator } from "../../instantiation/common/instantiation.js";
 
-export const IStateReadService = createDecorator<IStateReadService>('stateReadService');
+export const IStateReadService = createDecorator<IStateReadService>(
+  "stateReadService",
+);
 export interface IStateReadService {
 
 	readonly _serviceBrand: undefined;
@@ -15,7 +17,7 @@ export interface IStateReadService {
 
 }
 
-export const IStateService = createDecorator<IStateService>('stateService');
+export const IStateService = createDecorator<IStateService>("stateService");
 export interface IStateService extends IStateReadService {
 
 	readonly _serviceBrand: undefined;

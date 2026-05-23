@@ -2,7 +2,7 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { BugIndicatingError } from './errors.js';
+import { BugIndicatingError } from "./errors.js";
 
 /*
  * This file contains helper classes to manage control flow.
@@ -36,7 +36,9 @@ export class ReentrancyBarrier {
 	 */
 	public runExclusivelyOrThrow(runner: () => void): void {
 		if (this._isOccupied) {
-			throw new BugIndicatingError(`ReentrancyBarrier: reentrant call detected!`);
+			throw new BugIndicatingError(
+        `ReentrancyBarrier: reentrant call detected!`,
+      );
 		}
 		this._isOccupied = true;
 		try {

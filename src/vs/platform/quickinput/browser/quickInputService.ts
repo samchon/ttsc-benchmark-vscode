@@ -3,23 +3,60 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { Emitter } from '../../../base/common/event.js';
-import { IContextKey, IContextKeyService, RawContextKey } from '../../contextkey/common/contextkey.js';
-import { IInstantiationService } from '../../instantiation/common/instantiation.js';
-import { ILayoutService } from '../../layout/browser/layoutService.js';
-import { IOpenerService } from '../../opener/common/opener.js';
-import { QuickAccessController } from './quickAccess.js';
-import { IQuickAccessController } from '../common/quickAccess.js';
-import { IInputBox, IInputOptions, IKeyMods, IPickOptions, IQuickInputButton, IQuickInputService, IQuickNavigateConfiguration, IQuickPick, IQuickPickItem, IQuickTree, IQuickTreeItem, IQuickWidget, QuickInputAlignment, QuickInputHideReason, QuickPickInput } from '../common/quickInput.js';
-import { defaultButtonStyles, defaultCountBadgeStyles, defaultInputBoxStyles, defaultKeybindingLabelStyles, defaultProgressBarStyles, defaultToggleStyles, getListStyles } from '../../theme/browser/defaultStyles.js';
-import { activeContrastBorder, asCssVariable, pickerGroupBorder, pickerGroupForeground, quickInputBackground, quickInputForeground, quickInputListFocusBackground, quickInputListFocusForeground, quickInputListFocusIconForeground, quickInputTitleBackground, widgetBorder, widgetShadow } from '../../theme/common/colorRegistry.js';
-import { IThemeService, Themable } from '../../theme/common/themeService.js';
-import { IQuickInputOptions, IQuickInputStyles, QuickInputHoverDelegate } from './quickInput.js';
-import { QuickInputController, IQuickInputControllerHost } from './quickInputController.js';
-import { IConfigurationService } from '../../configuration/common/configuration.js';
-import { getWindow } from '../../../base/browser/dom.js';
-import { IObservable, autorun, observableValue } from '../../../base/common/observable.js';
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { Emitter } from "../../../base/common/event.js";
+import { IContextKey, IContextKeyService, RawContextKey } from "../../contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../instantiation/common/instantiation.js";
+import { ILayoutService } from "../../layout/browser/layoutService.js";
+import { IOpenerService } from "../../opener/common/opener.js";
+import { QuickAccessController } from "./quickAccess.js";
+import { IQuickAccessController } from "../common/quickAccess.js";
+import {
+  IInputBox,
+  IInputOptions,
+  IKeyMods,
+  IPickOptions,
+  IQuickInputButton,
+  IQuickInputService,
+  IQuickNavigateConfiguration,
+  IQuickPick,
+  IQuickPickItem,
+  IQuickTree,
+  IQuickTreeItem,
+  IQuickWidget,
+  QuickInputAlignment,
+  QuickInputHideReason,
+  QuickPickInput,
+} from "../common/quickInput.js";
+import {
+  defaultButtonStyles,
+  defaultCountBadgeStyles,
+  defaultInputBoxStyles,
+  defaultKeybindingLabelStyles,
+  defaultProgressBarStyles,
+  defaultToggleStyles,
+  getListStyles,
+} from "../../theme/browser/defaultStyles.js";
+import {
+  activeContrastBorder,
+  asCssVariable,
+  pickerGroupBorder,
+  pickerGroupForeground,
+  quickInputBackground,
+  quickInputForeground,
+  quickInputListFocusBackground,
+  quickInputListFocusForeground,
+  quickInputListFocusIconForeground,
+  quickInputTitleBackground,
+  widgetBorder,
+  widgetShadow,
+} from "../../theme/common/colorRegistry.js";
+import { IThemeService, Themable } from "../../theme/common/themeService.js";
+import { IQuickInputOptions, IQuickInputStyles, QuickInputHoverDelegate } from "./quickInput.js";
+import { QuickInputController, IQuickInputControllerHost } from "./quickInputController.js";
+import { IConfigurationService } from "../../configuration/common/configuration.js";
+import { getWindow } from "../../../base/browser/dom.js";
+import { IObservable, autorun, observableValue } from "../../../base/common/observable.js";
 
 export class QuickInputService extends Themable implements IQuickInputService {
 
@@ -27,7 +64,10 @@ export class QuickInputService extends Themable implements IQuickInputService {
 
 	get backButton(): IQuickInputButton { return this.controller.backButton; }
 
-	private readonly _alignment = observableValue<QuickInputAlignment>(this, 'top');
+	private readonly _alignment = observableValue<QuickInputAlignment>(
+    this,
+    "top",
+  );
 	readonly alignment: IObservable<QuickInputAlignment> = this._alignment;
 
 	private readonly _onShow = this._register(new Emitter<void>());
@@ -51,7 +91,9 @@ export class QuickInputService extends Themable implements IQuickInputService {
 	private _quickAccess: IQuickAccessController | undefined;
 	get quickAccess(): IQuickAccessController {
 		if (!this._quickAccess) {
-			this._quickAccess = this._register(this.instantiationService.createInstance(QuickAccessController));
+			this._quickAccess = this._register(
+        this.instantiationService.createInstance(QuickAccessController),
+      );
 		}
 
 		return this._quickAccess;
@@ -71,7 +113,7 @@ export class QuickInputService extends Themable implements IQuickInputService {
 
 	protected createController(host: IQuickInputControllerHost = this.layoutService, options?: Partial<IQuickInputOptions>): QuickInputController {
 		const defaultOptions: IQuickInputOptions = {
-			idPrefix: 'quickInput_',
+			idPrefix: "quickInput_",
 			container: host.activeContainer,
 			ignoreFocusOut: () => false,
 			backKeybindingLabel: () => undefined,
@@ -85,18 +127,20 @@ export class QuickInputService extends Themable implements IQuickInputService {
 			},
 			returnFocus: () => host.focus(),
 			styles: this.computeStyles(),
-			hoverDelegate: this._register(this.instantiationService.createInstance(QuickInputHoverDelegate))
+			hoverDelegate: this._register(this.instantiationService.createInstance(QuickInputHoverDelegate)),
 		};
 
-		const controller = this._register(this.instantiationService.createInstance(
-			QuickInputController,
-			{
-				...defaultOptions,
-				...options
-			}
-		));
+		const controller = this._register(
+      this.instantiationService.createInstance(QuickInputController, {
+        ...defaultOptions,
+        ...options,
+      }),
+    );
 
-		controller.layout(host.activeContainerDimension, host.activeContainerOffset.quickPickTop);
+		controller.layout(
+      host.activeContainerDimension,
+      host.activeContainerOffset.quickPickTop,
+    );
 
 		// Layout changes
 		this._register(host.onDidLayoutActiveContainer(dimension => {
@@ -113,19 +157,25 @@ export class QuickInputService extends Themable implements IQuickInputService {
 		}));
 
 		// Context keys
-		this._register(controller.onShow(() => {
-			this.resetContextKeys();
-			this._onShow.fire();
-		}));
-		this._register(controller.onHide(() => {
-			this.resetContextKeys();
-			this._onHide.fire();
-		}));
+		this._register(
+      controller.onShow(() => {
+        this.resetContextKeys();
+        this._onShow.fire();
+      }),
+    );
+		this._register(
+      controller.onHide(() => {
+        this.resetContextKeys();
+        this._onHide.fire();
+      }),
+    );
 
 		// Mirror alignment from controller
-		this._register(autorun(reader => {
-			this._alignment.set(controller.alignment.read(reader), undefined);
-		}));
+		this._register(
+      autorun(reader => {
+        this._alignment.set(controller.alignment.read(reader), undefined);
+      }),
+    );
 
 		return controller;
 	}
@@ -168,7 +218,9 @@ export class QuickInputService extends Themable implements IQuickInputService {
 
 	createQuickPick<T extends IQuickPickItem>(options: { useSeparators: true }): IQuickPick<T, { useSeparators: true }>;
 	createQuickPick<T extends IQuickPickItem>(options?: { useSeparators: boolean }): IQuickPick<T, { useSeparators: false }>;
-	createQuickPick<T extends IQuickPickItem>(options: { useSeparators: boolean } = { useSeparators: false }): IQuickPick<T, { useSeparators: boolean }> {
+	createQuickPick<T extends IQuickPickItem>(options: { useSeparators: boolean } = {
+    useSeparators: false,
+  }): IQuickPick<T, { useSeparators: boolean }> {
 		return this.controller.createQuickPick(options);
 	}
 
@@ -208,7 +260,7 @@ export class QuickInputService extends Themable implements IQuickInputService {
 		return this.controller.cancel(reason);
 	}
 
-	setAlignment(alignment: 'top' | 'center' | { top: number; left: number }): void {
+	setAlignment(alignment: "top" | "center" | { top: number; left: number }): void {
 		this.controller.setAlignment(alignment);
 	}
 
@@ -256,7 +308,7 @@ export class QuickInputService extends Themable implements IQuickInputService {
 			pickerGroup: {
 				pickerGroupBorder: asCssVariable(pickerGroupBorder),
 				pickerGroupForeground: asCssVariable(pickerGroupForeground),
-			}
+			},
 		};
 	}
 }

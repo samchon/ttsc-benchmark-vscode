@@ -3,42 +3,63 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../../../nls.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Promises } from '../../../../base/common/async.js';
-import { VSBufferReadableStream } from '../../../../base/common/buffer.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { toLocalResource, joinPath, isEqual, basename, dirname } from '../../../../base/common/resources.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IFileDialogService, IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
-import { IFileService } from '../../../../platform/files/common/files.js';
-import { ISaveOptions, SaveSourceRegistry } from '../../../common/editor.js';
-import { IWorkbenchEnvironmentService } from '../../environment/common/environmentService.js';
-import { IPathService } from '../../path/common/pathService.js';
-import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
-import { IStoredFileWorkingCopy, IStoredFileWorkingCopyModel, IStoredFileWorkingCopyModelFactory, IStoredFileWorkingCopyResolveOptions, StoredFileWorkingCopyState } from './storedFileWorkingCopy.js';
-import { StoredFileWorkingCopyManager, IStoredFileWorkingCopyManager, IStoredFileWorkingCopyManagerResolveOptions } from './storedFileWorkingCopyManager.js';
-import { IUntitledFileWorkingCopy, IUntitledFileWorkingCopyModel, IUntitledFileWorkingCopyModelFactory, UntitledFileWorkingCopy } from './untitledFileWorkingCopy.js';
-import { INewOrExistingUntitledFileWorkingCopyOptions, INewUntitledFileWorkingCopyOptions, INewUntitledFileWorkingCopyWithAssociatedResourceOptions, IUntitledFileWorkingCopyManager, UntitledFileWorkingCopyManager } from './untitledFileWorkingCopyManager.js';
-import { IWorkingCopyFileService } from './workingCopyFileService.js';
-import { IBaseFileWorkingCopyManager } from './abstractFileWorkingCopyManager.js';
-import { IFileWorkingCopy, SnapshotContext } from './fileWorkingCopy.js';
-import { ILabelService } from '../../../../platform/label/common/label.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { INotificationService } from '../../../../platform/notification/common/notification.js';
-import { IEditorService } from '../../editor/common/editorService.js';
-import { IElevatedFileService } from '../../files/common/elevatedFileService.js';
-import { IFilesConfigurationService } from '../../filesConfiguration/common/filesConfigurationService.js';
-import { ILifecycleService } from '../../lifecycle/common/lifecycle.js';
-import { IWorkingCopyBackupService } from './workingCopyBackup.js';
-import { IWorkingCopyEditorService } from './workingCopyEditorService.js';
-import { IWorkingCopyService } from './workingCopyService.js';
-import { Schemas } from '../../../../base/common/network.js';
-import { IDecorationData, IDecorationsProvider, IDecorationsService } from '../../decorations/common/decorations.js';
-import { Codicon } from '../../../../base/common/codicons.js';
-import { listErrorForeground } from '../../../../platform/theme/common/colorRegistry.js';
-import { IProgressService } from '../../../../platform/progress/common/progress.js';
+import { localize } from "../../../../nls.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Promises } from "../../../../base/common/async.js";
+import { VSBufferReadableStream } from "../../../../base/common/buffer.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { toLocalResource, joinPath, isEqual, basename, dirname } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IFileDialogService, IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { ISaveOptions, SaveSourceRegistry } from "../../../common/editor.js";
+import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
+import { IPathService } from "../../path/common/pathService.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import {
+  IStoredFileWorkingCopy,
+  IStoredFileWorkingCopyModel,
+  IStoredFileWorkingCopyModelFactory,
+  IStoredFileWorkingCopyResolveOptions,
+  StoredFileWorkingCopyState,
+} from "./storedFileWorkingCopy.js";
+import {
+  StoredFileWorkingCopyManager,
+  IStoredFileWorkingCopyManager,
+  IStoredFileWorkingCopyManagerResolveOptions,
+} from "./storedFileWorkingCopyManager.js";
+import {
+  IUntitledFileWorkingCopy,
+  IUntitledFileWorkingCopyModel,
+  IUntitledFileWorkingCopyModelFactory,
+  UntitledFileWorkingCopy,
+} from "./untitledFileWorkingCopy.js";
+import {
+  INewOrExistingUntitledFileWorkingCopyOptions,
+  INewUntitledFileWorkingCopyOptions,
+  INewUntitledFileWorkingCopyWithAssociatedResourceOptions,
+  IUntitledFileWorkingCopyManager,
+  UntitledFileWorkingCopyManager,
+} from "./untitledFileWorkingCopyManager.js";
+import { IWorkingCopyFileService } from "./workingCopyFileService.js";
+import { IBaseFileWorkingCopyManager } from "./abstractFileWorkingCopyManager.js";
+import { IFileWorkingCopy, SnapshotContext } from "./fileWorkingCopy.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { IEditorService } from "../../editor/common/editorService.js";
+import { IElevatedFileService } from "../../files/common/elevatedFileService.js";
+import { IFilesConfigurationService } from "../../filesConfiguration/common/filesConfigurationService.js";
+import { ILifecycleService } from "../../lifecycle/common/lifecycle.js";
+import { IWorkingCopyBackupService } from "./workingCopyBackup.js";
+import { IWorkingCopyEditorService } from "./workingCopyEditorService.js";
+import { IWorkingCopyService } from "./workingCopyService.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { IDecorationData, IDecorationsProvider, IDecorationsService } from "../../decorations/common/decorations.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { listErrorForeground } from "../../../../platform/theme/common/colorRegistry.js";
+import { IProgressService } from "../../../../platform/progress/common/progress.js";
 
 export interface IFileWorkingCopyManager<S extends IStoredFileWorkingCopyModel, U extends IUntitledFileWorkingCopyModel> extends IBaseFileWorkingCopyManager<S | U, IFileWorkingCopy<S | U>> {
 
@@ -136,8 +157,14 @@ export class FileWorkingCopyManager<S extends IStoredFileWorkingCopyModel, U ext
 
 	readonly onDidCreate: Event<IFileWorkingCopy<S | U>>;
 
-	private static readonly FILE_WORKING_COPY_SAVE_CREATE_SOURCE = SaveSourceRegistry.registerSource('fileWorkingCopyCreate.source', localize('fileWorkingCopyCreate.source', "File Created"));
-	private static readonly FILE_WORKING_COPY_SAVE_REPLACE_SOURCE = SaveSourceRegistry.registerSource('fileWorkingCopyReplace.source', localize('fileWorkingCopyReplace.source', "File Replaced"));
+	private static readonly FILE_WORKING_COPY_SAVE_CREATE_SOURCE = SaveSourceRegistry.registerSource(
+    "fileWorkingCopyCreate.source",
+    localize("fileWorkingCopyCreate.source", "File Created"),
+  );
+	private static readonly FILE_WORKING_COPY_SAVE_REPLACE_SOURCE = SaveSourceRegistry.registerSource(
+    "fileWorkingCopyReplace.source",
+    localize("fileWorkingCopyReplace.source", "File Replaced"),
+  );
 
 	readonly stored: IStoredFileWorkingCopyManager<S>;
 	readonly untitled: IUntitledFileWorkingCopyManager<U>;
@@ -164,33 +191,55 @@ export class FileWorkingCopyManager<S extends IStoredFileWorkingCopyModel, U ext
 		@IWorkbenchEnvironmentService private readonly environmentService: IWorkbenchEnvironmentService,
 		@IDialogService private readonly dialogService: IDialogService,
 		@IDecorationsService private readonly decorationsService: IDecorationsService,
-		@IProgressService progressService: IProgressService
+		@IProgressService progressService: IProgressService,
 	) {
 		super();
 
 		// Stored file working copies manager
-		this.stored = this._register(new StoredFileWorkingCopyManager(
-			this.workingCopyTypeId,
-			this.storedWorkingCopyModelFactory,
-			fileService, lifecycleService, labelService, logService, workingCopyFileService,
-			workingCopyBackupService, uriIdentityService, filesConfigurationService, workingCopyService,
-			notificationService, workingCopyEditorService, editorService, elevatedFileService, progressService
-		));
+		this.stored = this._register(
+      new StoredFileWorkingCopyManager(
+        this.workingCopyTypeId,
+        this.storedWorkingCopyModelFactory,
+        fileService,
+        lifecycleService,
+        labelService,
+        logService,
+        workingCopyFileService,
+        workingCopyBackupService,
+        uriIdentityService,
+        filesConfigurationService,
+        workingCopyService,
+        notificationService,
+        workingCopyEditorService,
+        editorService,
+        elevatedFileService,
+        progressService,
+      ),
+    );
 
 		// Untitled file working copies manager
-		this.untitled = this._register(new UntitledFileWorkingCopyManager(
-			this.workingCopyTypeId,
-			this.untitledWorkingCopyModelFactory,
-			async (workingCopy, options) => {
-				const result = await this.saveAs(workingCopy.resource, undefined, options);
+		this.untitled = this._register(
+      new UntitledFileWorkingCopyManager(
+        this.workingCopyTypeId,
+        this.untitledWorkingCopyModelFactory,
+        async (workingCopy, options) => {
+          const result = await this.saveAs(workingCopy.resource, undefined, options);
 
-				return !!result;
-			},
-			fileService, labelService, logService, workingCopyBackupService, workingCopyService
-		));
+          return !!result;
+        },
+        fileService,
+        labelService,
+        logService,
+        workingCopyBackupService,
+        workingCopyService,
+      ),
+    );
 
 		// Events
-		this.onDidCreate = Event.any<IFileWorkingCopy<S | U>>(this.stored.onDidCreate, this.untitled.onDidCreate);
+		this.onDidCreate = Event.any<IFileWorkingCopy<S | U>>(
+      this.stored.onDidCreate,
+      this.untitled.onDidCreate,
+    );
 
 		// Decorations
 		this.provideDecorations();
@@ -203,7 +252,7 @@ export class FileWorkingCopyManager<S extends IStoredFileWorkingCopyModel, U ext
 		// File working copy decorations
 		const provider = this._register(new class extends Disposable implements IDecorationsProvider {
 
-			readonly label = localize('fileWorkingCopyDecorations', "File Working Copy Decorations");
+			readonly label = localize("fileWorkingCopyDecorations", "File Working Copy Decorations");
 
 			private readonly _onDidChange = this._register(new Emitter<URI[]>());
 			readonly onDidChange = this._onDidChange.event;
@@ -249,7 +298,7 @@ export class FileWorkingCopyManager<S extends IStoredFileWorkingCopyModel, U ext
 						color: listErrorForeground,
 						letter: Codicon.lockSmall,
 						strikethrough: true,
-						tooltip: localize('readonlyAndDeleted', "Deleted, Read-only"),
+						tooltip: localize("readonlyAndDeleted", "Deleted, Read-only"),
 					};
 				}
 
@@ -257,7 +306,7 @@ export class FileWorkingCopyManager<S extends IStoredFileWorkingCopyModel, U ext
 				else if (isReadonly) {
 					return {
 						letter: Codicon.lockSmall,
-						tooltip: localize('readonly', "Read-only"),
+						tooltip: localize("readonly", "Read-only"),
 					};
 				}
 
@@ -266,7 +315,7 @@ export class FileWorkingCopyManager<S extends IStoredFileWorkingCopyModel, U ext
 					return {
 						color: listErrorForeground,
 						strikethrough: true,
-						tooltip: localize('deleted', "Deleted"),
+						tooltip: localize("deleted", "Deleted"),
 					};
 				}
 
@@ -274,7 +323,9 @@ export class FileWorkingCopyManager<S extends IStoredFileWorkingCopyModel, U ext
 			}
 		}(this.stored));
 
-		this._register(this.decorationsService.registerDecorationsProvider(provider));
+		this._register(
+      this.decorationsService.registerDecorationsProvider(provider),
+    );
 	}
 
 	//#endregion
@@ -326,7 +377,10 @@ export class FileWorkingCopyManager<S extends IStoredFileWorkingCopyModel, U ext
 			if (workingCopy instanceof UntitledFileWorkingCopy && workingCopy.hasAssociatedFilePath) {
 				target = await this.suggestSavePath(source);
 			} else {
-				target = await this.fileDialogService.pickFileToSave(await this.suggestSavePath(options?.suggestedTarget ?? source), options?.availableFileSystems);
+				target = await this.fileDialogService.pickFileToSave(
+          await this.suggestSavePath(options?.suggestedTarget ?? source),
+          options?.availableFileSystems,
+        );
 			}
 		}
 
@@ -347,7 +401,7 @@ export class FileWorkingCopyManager<S extends IStoredFileWorkingCopyModel, U ext
 		// Just save if target is same as working copies own resource
 		// and we are not saving an untitled file working copy
 		if (this.fileService.hasProvider(source) && isEqual(source, target)) {
-			return this.doSave(source, { ...options, force: true  /* force to save, even if not dirty (https://github.com/microsoft/vscode/issues/99619) */ });
+			return this.doSave(source, { ...options, force: true });
 		}
 
 		// If the target is different but of same identity, we
@@ -355,10 +409,18 @@ export class FileWorkingCopyManager<S extends IStoredFileWorkingCopyModel, U ext
 		// underlying file system cannot have both and then save.
 		// However, this will only work if the source exists
 		// and is not orphaned, so we need to check that too.
-		if (this.fileService.hasProvider(source) && this.uriIdentityService.extUri.isEqual(source, target) && (await this.fileService.exists(source))) {
+		if (this.fileService.hasProvider(
+      source,
+    ) && this.uriIdentityService.extUri.isEqual(
+      source,
+      target,
+    ) && (await this.fileService.exists(source))) {
 
 			// Move via working copy file service to enable participants
-			await this.workingCopyFileService.move([{ file: { source, target } }], CancellationToken.None);
+			await this.workingCopyFileService.move(
+        [{ file: { source, target } }],
+        CancellationToken.None,
+      );
 
 			// At this point we don't know whether we have a
 			// working copy for the source or the target URI so we
@@ -392,7 +454,10 @@ export class FileWorkingCopyManager<S extends IStoredFileWorkingCopyModel, U ext
 		// use that to copy the contents to the target destination
 		const sourceWorkingCopy = this.get(source);
 		if (sourceWorkingCopy?.isResolved()) {
-			sourceContents = await sourceWorkingCopy.model.snapshot(SnapshotContext.Save, CancellationToken.None);
+			sourceContents = await sourceWorkingCopy.model.snapshot(
+        SnapshotContext.Save,
+        CancellationToken.None,
+      );
 		}
 
 		// Otherwise we resolve the contents from the underlying file
@@ -401,7 +466,10 @@ export class FileWorkingCopyManager<S extends IStoredFileWorkingCopyModel, U ext
 		}
 
 		// Resolve target
-		const { targetFileExists, targetStoredFileWorkingCopy } = await this.doResolveSaveTarget(source, target);
+		const { targetFileExists, targetStoredFileWorkingCopy } = await this.doResolveSaveTarget(
+      source,
+      target,
+    );
 
 		// Confirm to overwrite if we have an untitled file working copy with associated path where
 		// the file actually exists on disk and we are instructed to save to that file path.
@@ -411,7 +479,14 @@ export class FileWorkingCopyManager<S extends IStoredFileWorkingCopyModel, U ext
 			sourceWorkingCopy instanceof UntitledFileWorkingCopy &&
 			sourceWorkingCopy.hasAssociatedFilePath &&
 			targetFileExists &&
-			this.uriIdentityService.extUri.isEqual(target, toLocalResource(sourceWorkingCopy.resource, this.environmentService.remoteAuthority, this.pathService.defaultUriScheme))
+			this.uriIdentityService.extUri.isEqual(
+        target,
+        toLocalResource(
+          sourceWorkingCopy.resource,
+          this.environmentService.remoteAuthority,
+          this.pathService.defaultUriScheme,
+        ),
+      )
 		) {
 			const overwrite = await this.confirmOverwrite(target);
 			if (!overwrite) {
@@ -420,22 +495,25 @@ export class FileWorkingCopyManager<S extends IStoredFileWorkingCopyModel, U ext
 		}
 
 		// Take over content from source to target
-		await targetStoredFileWorkingCopy.model?.update(sourceContents, CancellationToken.None);
+		await targetStoredFileWorkingCopy.model?.update(
+      sourceContents,
+      CancellationToken.None,
+    );
 
 		// Set source options depending on target exists or not
 		if (!options?.source) {
 			options = {
-				...options,
-				source: targetFileExists ? FileWorkingCopyManager.FILE_WORKING_COPY_SAVE_REPLACE_SOURCE : FileWorkingCopyManager.FILE_WORKING_COPY_SAVE_CREATE_SOURCE
-			};
+        ...options,
+        source: targetFileExists ? FileWorkingCopyManager.FILE_WORKING_COPY_SAVE_REPLACE_SOURCE : FileWorkingCopyManager.FILE_WORKING_COPY_SAVE_CREATE_SOURCE,
+      };
 		}
 
 		// Save target
 		const success = await targetStoredFileWorkingCopy.save({
-			...options,
-			from: source,
-			force: true  /* force to save, even if not dirty (https://github.com/microsoft/vscode/issues/99619) */
-		});
+      ...options,
+      from: source,
+      force: true,
+    });
 		if (!success) {
 			return undefined;
 		}
@@ -478,7 +556,10 @@ export class FileWorkingCopyManager<S extends IStoredFileWorkingCopyModel, U ext
 
 			// Create target file adhoc if it does not exist yet
 			if (!targetFileExists) {
-				await this.workingCopyFileService.create([{ resource: target }], CancellationToken.None);
+				await this.workingCopyFileService.create(
+          [{ resource: target }],
+          CancellationToken.None,
+        );
 			}
 
 			// At this point we need to resolve the target working copy
@@ -499,22 +580,22 @@ export class FileWorkingCopyManager<S extends IStoredFileWorkingCopyModel, U ext
 
 	private async confirmOverwrite(resource: URI): Promise<boolean> {
 		const { confirmed } = await this.dialogService.confirm({
-			type: 'warning',
-			message: localize('confirmOverwrite', "'{0}' already exists. Do you want to replace it?", basename(resource)),
-			detail: localize('overwriteIrreversible', "A file or folder with the name '{0}' already exists in the folder '{1}'. Replacing it will overwrite its current contents.", basename(resource), basename(dirname(resource))),
-			primaryButton: localize({ key: 'replaceButtonLabel', comment: ['&& denotes a mnemonic'] }, "&&Replace")
-		});
+      type: "warning",
+      message: localize("confirmOverwrite", "'{0}' already exists. Do you want to replace it?", basename(resource)),
+      detail: localize("overwriteIrreversible", "A file or folder with the name '{0}' already exists in the folder '{1}'. Replacing it will overwrite its current contents.", basename(resource), basename(dirname(resource))),
+      primaryButton: localize({ key: "replaceButtonLabel", comment: ["&& denotes a mnemonic"] }, "&&Replace"),
+    });
 
 		return confirmed;
 	}
 
 	private async confirmMakeWriteable(resource: URI): Promise<boolean> {
 		const { confirmed } = await this.dialogService.confirm({
-			type: 'warning',
-			message: localize('confirmMakeWriteable', "'{0}' is marked as read-only. Do you want to save anyway?", basename(resource)),
-			detail: localize('confirmMakeWriteableDetail', "Paths can be configured as read-only via settings."),
-			primaryButton: localize({ key: 'makeWriteableButtonLabel', comment: ['&& denotes a mnemonic'] }, "&&Save Anyway")
-		});
+      type: "warning",
+      message: localize("confirmMakeWriteable", "'{0}' is marked as read-only. Do you want to save anyway?", basename(resource)),
+      detail: localize("confirmMakeWriteableDetail", "Paths can be configured as read-only via settings."),
+      primaryButton: localize({ key: "makeWriteableButtonLabel", comment: ["&& denotes a mnemonic"] }, "&&Save Anyway"),
+    });
 
 		return confirmed;
 	}
@@ -529,7 +610,11 @@ export class FileWorkingCopyManager<S extends IStoredFileWorkingCopyModel, U ext
 		// 2.) Pick the associated file path for untitled working copies if any
 		const workingCopy = this.get(resource);
 		if (workingCopy instanceof UntitledFileWorkingCopy && workingCopy.hasAssociatedFilePath) {
-			return toLocalResource(resource, this.environmentService.remoteAuthority, this.pathService.defaultUriScheme);
+			return toLocalResource(
+        resource,
+        this.environmentService.remoteAuthority,
+        this.pathService.defaultUriScheme,
+      );
 		}
 
 		const defaultFilePath = await this.fileDialogService.defaultFilePath();
@@ -537,7 +622,10 @@ export class FileWorkingCopyManager<S extends IStoredFileWorkingCopyModel, U ext
 		// 3.) Pick the working copy name if valid joined with default path
 		if (workingCopy) {
 			const candidatePath = joinPath(defaultFilePath, workingCopy.name);
-			if (await this.pathService.hasValidBasename(candidatePath, workingCopy.name)) {
+			if (await this.pathService.hasValidBasename(
+        candidatePath,
+        workingCopy.name,
+      )) {
 				return candidatePath;
 			}
 		}
@@ -551,10 +639,7 @@ export class FileWorkingCopyManager<S extends IStoredFileWorkingCopyModel, U ext
 	//#region Lifecycle
 
 	async destroy(): Promise<void> {
-		await Promises.settled([
-			this.stored.destroy(),
-			this.untitled.destroy()
-		]);
+		await Promises.settled([this.stored.destroy(), this.untitled.destroy()]);
 	}
 
 	//#endregion

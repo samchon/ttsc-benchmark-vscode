@@ -3,20 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../../base/common/lifecycle.js';
-import { autorun, derived, IObservable, observableValue } from '../../../../base/common/observable.js';
-import { ICodeEditor } from '../../../../editor/browser/editorBrowser.js';
-import { observableCodeEditor } from '../../../../editor/browser/observableCodeEditor.js';
-import { ICodeEditorService } from '../../../../editor/browser/services/codeEditorService.js';
-import { IRenameSymbolTrackerService, type ITrackedWord } from '../../../../editor/browser/services/renameSymbolTrackerService.js';
-import { Position } from '../../../../editor/common/core/position.js';
-import { Range } from '../../../../editor/common/core/range.js';
-import { StandardTokenType } from '../../../../editor/common/encodedTokenAttributes.js';
-import { ITextModel } from '../../../../editor/common/model.js';
-import { IModelContentChangedEvent } from '../../../../editor/common/textModelEvents.js';
-import { TextModelEditSource } from '../../../../editor/common/textModelEditSource.js';
-import { IModelService } from '../../../../editor/common/services/model.js';
-import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
+import { Disposable, IDisposable } from "../../../../base/common/lifecycle.js";
+import { autorun, derived, IObservable, observableValue } from "../../../../base/common/observable.js";
+import { ICodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { observableCodeEditor } from "../../../../editor/browser/observableCodeEditor.js";
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { IRenameSymbolTrackerService, type ITrackedWord } from "../../../../editor/browser/services/renameSymbolTrackerService.js";
+import { Position } from "../../../../editor/common/core/position.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { StandardTokenType } from "../../../../editor/common/encodedTokenAttributes.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+import { IModelContentChangedEvent } from "../../../../editor/common/textModelEvents.js";
+import { TextModelEditSource } from "../../../../editor/common/textModelEditSource.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
 
 /**
  * Checks if a model content change event was caused only by typing or pasting.
@@ -36,10 +36,18 @@ function isUserEdit(event: IModelContentChangedEvent): boolean {
 	return event.detailedReasons.length > 0;
 }
 
-const userEditKinds = new Set(['type', 'paste', 'cut', 'executeCommands', 'executeCommand', 'compositionType', 'compositionEnd']);
+const userEditKinds = new Set([
+  "type",
+  "paste",
+  "cut",
+  "executeCommands",
+  "executeCommand",
+  "compositionType",
+  "compositionEnd",
+]);
 function isUserEditSource(source: TextModelEditSource): boolean {
 	const metadata = source.metadata;
-	if (metadata.source !== 'cursor') {
+	if (metadata.source !== "cursor") {
 		return false;
 	}
 	const kind = metadata.kind;
@@ -60,7 +68,10 @@ type WordState = {
  * - A non-typing/paste edit occurs (AI, refactoring, undo/redo, etc.)
  */
 class ModelSymbolRenameTracker extends Disposable {
-	private readonly _trackedWord = observableValue<ITrackedWord | undefined>(this, undefined);
+	private readonly _trackedWord = observableValue<ITrackedWord | undefined>(
+    this,
+    undefined,
+  );
 	public readonly trackedWord: IObservable<ITrackedWord | undefined> = this._trackedWord;
 
 	private _capturedWord: WordState | undefined = undefined;
@@ -69,7 +80,7 @@ class ModelSymbolRenameTracker extends Disposable {
 	private _lastCursorPosition: Position | undefined = undefined;
 
 	constructor(
-		private readonly _model: ITextModel
+		private readonly _model: ITextModel,
 	) {
 		super();
 
@@ -117,9 +128,9 @@ class ModelSymbolRenameTracker extends Disposable {
 				position.lineNumber,
 				wordAtPosition.startColumn,
 				position.lineNumber,
-				wordAtPosition.endColumn
+				wordAtPosition.endColumn,
 			),
-			position
+			position,
 		};
 
 		const contentChanged = this._pendingContentChange;
@@ -136,45 +147,57 @@ class ModelSymbolRenameTracker extends Disposable {
 			// First edit on a word - use the word from before the edit as original
 			const originalWord = this._lastWordBeforeEdit ?? currentWord;
 			this._capturedWord = { ...originalWord };
-			this._trackedWord.set({
-				model: this._model,
-				originalWord: originalWord.word,
-				originalPosition: originalWord.position,
-				originalRange: originalWord.range,
-				currentWord: currentWord.word,
-				currentRange: currentWord.range,
-			}, undefined);
+			this._trackedWord.set(
+        {
+          model: this._model,
+          originalWord: originalWord.word,
+          originalPosition: originalWord.position,
+          originalRange: originalWord.range,
+          currentWord: currentWord.word,
+          currentRange: currentWord.range,
+        },
+        undefined,
+      );
 			this._lastWordBeforeEdit = currentWord;
 			return;
 		}
 
 		const capturedWord = this._capturedWord;
 		// Check if we're still on the same word (by position overlap or adjacency)
-		const isOnSameWord = this._rangesOverlap(capturedWord.range, currentWord.range) ||
+		const isOnSameWord = this._rangesOverlap(
+      capturedWord.range,
+      currentWord.range,
+    ) ||
 			this._isAdjacent(capturedWord.range, currentWord.range);
 
 		if (isOnSameWord) {
 			// Word has been edited - update the tracked word
-			this._trackedWord.set({
-				model: this._model,
-				originalWord: capturedWord.word,
-				originalPosition: capturedWord.position,
-				originalRange: capturedWord.range,
-				currentWord: currentWord.word,
-				currentRange: currentWord.range,
-			}, undefined);
+			this._trackedWord.set(
+        {
+          model: this._model,
+          originalWord: capturedWord.word,
+          originalPosition: capturedWord.position,
+          originalRange: capturedWord.range,
+          currentWord: currentWord.word,
+          currentRange: currentWord.range,
+        },
+        undefined,
+      );
 		} else {
 			// User started typing in a different word - use the word from before the edit as original
 			const originalWord = this._lastWordBeforeEdit ?? currentWord;
 			this._capturedWord = { ...originalWord };
-			this._trackedWord.set({
-				model: this._model,
-				originalWord: originalWord.word,
-				originalPosition: originalWord.position,
-				originalRange: originalWord.range,
-				currentWord: currentWord.word,
-				currentRange: currentWord.range,
-			}, undefined);
+			this._trackedWord.set(
+        {
+          model: this._model,
+          originalWord: originalWord.word,
+          originalPosition: originalWord.position,
+          originalRange: originalWord.range,
+          currentWord: currentWord.word,
+          currentRange: currentWord.range,
+        },
+        undefined,
+      );
 		}
 		// Update lastWordBeforeEdit for the next iteration
 		this._lastWordBeforeEdit = currentWord;
@@ -217,16 +240,22 @@ class RenameSymbolTrackerService extends Disposable implements IRenameSymbolTrac
 	private readonly _modelTrackers = new Map<ITextModel, ModelSymbolRenameTracker>();
 	private readonly _editorFocusTrackingDisposables = new Map<ICodeEditor, IDisposable>();
 
-	private readonly _focusedModelTracker = observableValue<ModelSymbolRenameTracker | undefined>(this, undefined);
+	private readonly _focusedModelTracker = observableValue<ModelSymbolRenameTracker | undefined>(
+    this,
+    undefined,
+  );
 
-	public readonly trackedWord: IObservable<ITrackedWord | undefined> = derived(this, reader => {
-		const tracker = this._focusedModelTracker.read(reader);
-		return tracker?.trackedWord.read(reader);
-	});
+	public readonly trackedWord: IObservable<ITrackedWord | undefined> = derived(
+    this,
+    reader => {
+      const tracker = this._focusedModelTracker.read(reader);
+      return tracker?.trackedWord.read(reader);
+    },
+  );
 
 	constructor(
 		@ICodeEditorService private readonly _codeEditorService: ICodeEditorService,
-		@IModelService private readonly _modelService: IModelService
+		@IModelService private readonly _modelService: IModelService,
 	) {
 		super();
 
@@ -236,9 +265,11 @@ class RenameSymbolTrackerService extends Disposable implements IRenameSymbolTrac
 		}
 
 		// Track editor additions
-		this._register(this._codeEditorService.onCodeEditorAdd(editor => {
-			this._setupEditorTracking(editor);
-		}));
+		this._register(
+      this._codeEditorService.onCodeEditorAdd(editor => {
+        this._setupEditorTracking(editor);
+      }),
+    );
 
 		// Clean up editor focus tracking when editors are removed
 		this._register(this._codeEditorService.onCodeEditorRemove(editor => {
@@ -313,4 +344,8 @@ class RenameSymbolTrackerService extends Disposable implements IRenameSymbolTrac
 	}
 }
 
-registerSingleton(IRenameSymbolTrackerService, RenameSymbolTrackerService, InstantiationType.Delayed);
+registerSingleton(
+  IRenameSymbolTrackerService,
+  RenameSymbolTrackerService,
+  InstantiationType.Delayed,
+);

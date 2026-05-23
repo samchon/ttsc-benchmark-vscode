@@ -150,5 +150,5 @@ export class SetWithKey<T> implements Set<T> {
 		return this.values();
 	}
 
-	[Symbol.toStringTag]: string = 'SetWithKey';
+	[Symbol.toStringTag]: string = "SetWithKey";
 }

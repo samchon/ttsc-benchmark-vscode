@@ -3,21 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AutorunObserver, AutorunState } from '../../reactions/autorunImpl.js';
-import { TransactionImpl } from '../../transaction.js';
-import { IChangeInformation, IObservableLogger } from '../logging.js';
-import { formatValue } from '../consoleObservableLogger.js';
-import { ObsDebuggerApi, IObsDeclaration, ObsInstanceId, ObsStateUpdate, ITransactionState, ObserverInstanceState } from './debuggerApi.js';
-import { registerDebugChannel } from './debuggerRpc.js';
-import { deepAssign, deepAssignDeleteNulls, Throttler } from './utils.js';
-import { isDefined } from '../../../types.js';
-import { FromEventObservable } from '../../observables/observableFromEvent.js';
-import { BugIndicatingError, onUnexpectedError } from '../../../errors.js';
-import { IObservable, IObserver } from '../../base.js';
-import { BaseObservable } from '../../observables/baseObservable.js';
-import { Derived, DerivedState } from '../../observables/derivedImpl.js';
-import { ObservableValue } from '../../observables/observableValue.js';
-import { DebugLocation } from '../../debugLocation.js';
+import { AutorunObserver, AutorunState } from "../../reactions/autorunImpl.js";
+import { TransactionImpl } from "../../transaction.js";
+import { IChangeInformation, IObservableLogger } from "../logging.js";
+import { formatValue } from "../consoleObservableLogger.js";
+import {
+  ObsDebuggerApi,
+  IObsDeclaration,
+  ObsInstanceId,
+  ObsStateUpdate,
+  ITransactionState,
+  ObserverInstanceState,
+} from "./debuggerApi.js";
+import { registerDebugChannel } from "./debuggerRpc.js";
+import { deepAssign, deepAssignDeleteNulls, Throttler } from "./utils.js";
+import { isDefined } from "../../../types.js";
+import { FromEventObservable } from "../../observables/observableFromEvent.js";
+import { BugIndicatingError, onUnexpectedError } from "../../../errors.js";
+import { IObservable, IObserver } from "../../base.js";
+import { BaseObservable } from "../../observables/baseObservable.js";
+import { Derived, DerivedState } from "../../observables/derivedImpl.js";
+import { ObservableValue } from "../../observables/observableValue.js";
+import { DebugLocation } from "../../debugLocation.js";
 
 interface IInstanceInfo {
 	declarationId: number;
@@ -53,14 +60,14 @@ export class DevToolsLogger implements IObservableLogger {
 	private readonly _aliveInstances = new Map<ObsInstanceId, IObservable<any> | AutorunObserver>();
 	private readonly _activeTransactions = new Set<TransactionImpl>();
 
-	private readonly _channel = registerDebugChannel<ObsDebuggerApi>('observableDevTools', () => {
+	private readonly _channel = registerDebugChannel<ObsDebuggerApi>("observableDevTools", () => {
 		return {
 			notifications: {
 				setDeclarationIdFilter: declarationIds => {
 
 				},
 				logObservableValue: (observableId) => {
-					console.log('logObservableValue', observableId);
+					console.log("logObservableValue", observableId);
 				},
 				flushUpdates: () => {
 					this._flushUpdates();
@@ -113,7 +120,7 @@ export class DevToolsLogger implements IObservableLogger {
 					} else if (obs instanceof FromEventObservable) {
 						obs.debugSetValue(jsonValue);
 					} else {
-						throw new BugIndicatingError('Observable is not supported');
+						throw new BugIndicatingError("Observable is not supported");
 					}
 
 					const observers = [...obs.debugGetObservers()];
@@ -139,10 +146,10 @@ export class DevToolsLogger implements IObservableLogger {
 				},
 				logValue: (instanceId) => {
 					const obs = this._aliveInstances.get(instanceId);
-					if (obs && 'get' in obs) {
-						console.log('Logged Value:', obs.get());
+					if (obs && "get" in obs) {
+						console.log("Logged Value:", obs.get());
 					} else {
-						throw new BugIndicatingError('Observable is not supported');
+						throw new BugIndicatingError("Observable is not supported");
 					}
 				},
 				rerun: (instanceId) => {
@@ -152,10 +159,10 @@ export class DevToolsLogger implements IObservableLogger {
 					} else if (obs instanceof AutorunObserver) {
 						obs.debugRerun();
 					} else {
-						throw new BugIndicatingError('Observable is not supported');
+						throw new BugIndicatingError("Observable is not supported");
 					}
 				},
-			}
+			},
 		};
 	});
 
@@ -165,7 +172,9 @@ export class DevToolsLogger implements IObservableLogger {
 		if (txs.length === 0) {
 			return undefined;
 		}
-		const observerQueue = txs.flatMap(t => t.debugGetUpdatingObservers() ?? []).map(o => o.observer);
+		const observerQueue = txs.flatMap(t => t.debugGetUpdatingObservers() ?? []).map(
+      o => o.observer,
+    );
 		const processedObservers = new Set<IObserver>();
 		while (observerQueue.length > 0) {
 			const observer = observerQueue.shift()!;
@@ -185,13 +194,13 @@ export class DevToolsLogger implements IObservableLogger {
 			}
 		}
 
-		return { names: txs.map(t => t.getDebugName() ?? 'tx'), affected };
+		return { names: txs.map(t => t.getDebugName() ?? "tx"), affected };
 	}
 
 	private _getObservableInfo(observable: IObservable<any>): IObservableInfo | undefined {
 		const info = this._instanceInfos.get(observable);
 		if (!info) {
-			onUnexpectedError(new BugIndicatingError('No info found'));
+			onUnexpectedError(new BugIndicatingError("No info found"));
 			return undefined;
 		}
 		return info as IObservableInfo;
@@ -200,7 +209,7 @@ export class DevToolsLogger implements IObservableLogger {
 	private _getAutorunInfo(autorun: AutorunObserver): IAutorunInfo | undefined {
 		const info = this._instanceInfos.get(autorun);
 		if (!info) {
-			onUnexpectedError(new BugIndicatingError('No info found'));
+			onUnexpectedError(new BugIndicatingError("No info found"));
 			return undefined;
 		}
 		return info as IAutorunInfo;
@@ -218,37 +227,74 @@ export class DevToolsLogger implements IObservableLogger {
 
 			const observerState = observer.debugGetState();
 
-			const base = { name: observer.debugName, instanceId: info.instanceId, updateCount: observerState.updateCount };
-			const changedDependencies = [...info.changedObservables].map(o => this._instanceInfos.get(o)?.instanceId).filter(isDefined);
+			const base = {
+        name: observer.debugName,
+        instanceId: info.instanceId,
+        updateCount: observerState.updateCount,
+      };
+			const changedDependencies = [...info.changedObservables].map(o => this._instanceInfos.get(o)?.instanceId).filter(
+        isDefined,
+      );
 			if (observerState.isComputing) {
-				return { ...base, type: 'observable/derived', state: 'updating', changedDependencies, initialComputation: false };
+				return {
+          ...base,
+          type: "observable/derived",
+          state: "updating",
+          changedDependencies,
+          initialComputation: false,
+        };
 			}
 			switch (observerState.state) {
 				case DerivedState.initial:
-					return { ...base, type: 'observable/derived', state: 'noValue' };
+					return { ...base, type: "observable/derived", state: "noValue" };
 				case DerivedState.upToDate:
-					return { ...base, type: 'observable/derived', state: 'upToDate' };
+					return { ...base, type: "observable/derived", state: "upToDate" };
 				case DerivedState.stale:
-					return { ...base, type: 'observable/derived', state: 'stale', changedDependencies };
+					return {
+            ...base,
+            type: "observable/derived",
+            state: "stale",
+            changedDependencies,
+          };
 				case DerivedState.dependenciesMightHaveChanged:
-					return { ...base, type: 'observable/derived', state: 'possiblyStale' };
+					return {
+            ...base,
+            type: "observable/derived",
+            state: "possiblyStale",
+          };
 			}
 		} else if (observer instanceof AutorunObserver) {
 			const info = this._getAutorunInfo(observer);
 			if (!info) { return undefined; }
 
-			const base = { name: observer.debugName, instanceId: info.instanceId, updateCount: info.updateCount };
-			const changedDependencies = [...info.changedObservables].map(o => this._instanceInfos.get(o)!.instanceId);
+			const base = {
+        name: observer.debugName,
+        instanceId: info.instanceId,
+        updateCount: info.updateCount,
+      };
+			const changedDependencies = [...info.changedObservables].map(
+        o => this._instanceInfos.get(o)!.instanceId,
+      );
 			if (observer.debugGetState().isRunning) {
-				return { ...base, type: 'autorun', state: 'updating', changedDependencies };
+				return {
+          ...base,
+          type: "autorun",
+          state: "updating",
+          changedDependencies,
+        };
 			}
 			switch (observer.debugGetState().state) {
 				case AutorunState.upToDate:
-					return { ...base, type: 'autorun', state: 'upToDate' };
+					return { ...base, type: "autorun", state: "upToDate" };
 				case AutorunState.stale:
-					return { ...base, type: 'autorun', state: 'stale', changedDependencies };
+					return {
+            ...base,
+            type: "autorun",
+            state: "stale",
+            changedDependencies,
+          };
 				case AutorunState.dependenciesMightHaveChanged:
-					return { ...base, type: 'autorun', state: 'possiblyStale' };
+					return { ...base, type: "autorun", state: "possiblyStale" };
 			}
 
 		}
@@ -263,7 +309,10 @@ export class DevToolsLogger implements IObservableLogger {
 
 	private _formatObserver(obs: IObserver): { name: string; instanceId: ObsInstanceId } | undefined {
 		if (obs instanceof Derived) {
-			return { name: obs.toString(), instanceId: this._getObservableInfo(obs)?.instanceId! };
+			return {
+        name: obs.toString(),
+        instanceId: this._getObservableInfo(obs)?.instanceId!,
+      };
 		}
 		const autorunInfo = this._getAutorunInfo(obs as AutorunObserver);
 		if (autorunInfo) {
@@ -301,7 +350,7 @@ export class DevToolsLogger implements IObservableLogger {
 		}
 	};
 
-	private _getDeclarationId(type: IObsDeclaration['type'], location: DebugLocation): number {
+	private _getDeclarationId(type: IObsDeclaration["type"], location: DebugLocation): number {
 		if (!location) {
 			return -1;
 		}
@@ -309,12 +358,12 @@ export class DevToolsLogger implements IObservableLogger {
 		let decInfo = this._declarations.get(location.id);
 		if (decInfo === undefined) {
 			decInfo = {
-				id: this._declarationId++,
-				type,
-				url: location.fileName,
-				line: location.line,
-				column: location.column,
-			};
+        id: this._declarationId++,
+        type,
+        url: location.fileName,
+        line: location.line,
+        column: location.column,
+      };
 			this._declarations.set(location.id, decInfo);
 
 			this._handleChange({ decls: { [decInfo.id]: decInfo } });
@@ -323,16 +372,16 @@ export class DevToolsLogger implements IObservableLogger {
 	}
 
 	handleObservableCreated(observable: IObservable<any>, location: DebugLocation): void {
-		const declarationId = this._getDeclarationId('observable/value', location);
+		const declarationId = this._getDeclarationId("observable/value", location);
 
 		const info: IObservableInfo = {
-			declarationId,
-			instanceId: this._instanceId++,
-			listenerCount: 0,
-			lastValue: undefined,
-			updateCount: 0,
-			changedObservables: new Set(),
-		};
+      declarationId,
+      instanceId: this._instanceId++,
+      listenerCount: 0,
+      lastValue: undefined,
+      updateCount: 0,
+      changedObservables: new Set(),
+    };
 		this._instanceInfos.set(observable, info);
 	}
 
@@ -341,8 +390,8 @@ export class DevToolsLogger implements IObservableLogger {
 		if (!info) { return; }
 
 		if (info.listenerCount === 0 && newCount > 0) {
-			const type: IObsDeclaration['type'] =
-				observable instanceof Derived ? 'observable/derived' : 'observable/value';
+			const type: IObsDeclaration["type"] =
+				observable instanceof Derived ? "observable/derived" : "observable/value";
 			this._aliveInstances.set(info.instanceId, observable);
 			this._handleChange({
 				instances: {
@@ -352,13 +401,13 @@ export class DevToolsLogger implements IObservableLogger {
 						formattedValue: info.lastValue,
 						type,
 						name: observable.debugName,
-					}
-				}
+					},
+				},
 			});
 		} else if (info.listenerCount > 0 && newCount === 0) {
 			this._handleChange({
-				instances: { [info.instanceId]: null }
-			});
+        instances: { [info.instanceId]: null },
+      });
 			this._aliveInstances.delete(info.instanceId);
 		}
 		info.listenerCount = newCount;
@@ -376,21 +425,21 @@ export class DevToolsLogger implements IObservableLogger {
 				info.lastValue = formatValue(changeInfo.newValue, 30);
 				if (info.listenerCount > 0) {
 					this._handleChange({
-						instances: { [info.instanceId]: { formattedValue: info.lastValue } }
-					});
+            instances: { [info.instanceId]: { formattedValue: info.lastValue } },
+          });
 				}
 			}
 		}
 	}
 
 	handleAutorunCreated(autorun: AutorunObserver, location: DebugLocation): void {
-		const declarationId = this._getDeclarationId('autorun', location);
+		const declarationId = this._getDeclarationId("autorun", location);
 		const info: IAutorunInfo = {
-			declarationId,
-			instanceId: this._instanceId++,
-			updateCount: 0,
-			changedObservables: new Set(),
-		};
+      declarationId,
+      instanceId: this._instanceId++,
+      updateCount: 0,
+      changedObservables: new Set(),
+    };
 		this._instanceInfos.set(autorun, info);
 		this._aliveInstances.set(info.instanceId, autorun);
 		if (info) {
@@ -400,10 +449,10 @@ export class DevToolsLogger implements IObservableLogger {
 						instanceId: info.instanceId,
 						declarationId: info.declarationId,
 						runCount: 0,
-						type: 'autorun',
+						type: "autorun",
 						name: autorun.debugName,
-					}
-				}
+					},
+				},
 			});
 		}
 	}
@@ -412,8 +461,8 @@ export class DevToolsLogger implements IObservableLogger {
 		if (!info) { return; }
 
 		this._handleChange({
-			instances: { [info.instanceId]: null }
-		});
+      instances: { [info.instanceId]: null },
+    });
 		this._instanceInfos.delete(autorun);
 		this._aliveInstances.delete(info.instanceId);
 	}
@@ -433,8 +482,8 @@ export class DevToolsLogger implements IObservableLogger {
 		info.changedObservables.clear();
 		info.updateCount++;
 		this._handleChange({
-			instances: { [info.instanceId]: { runCount: info.updateCount } }
-		});
+      instances: { [info.instanceId]: { runCount: info.updateCount } },
+    });
 	}
 
 	handleDerivedDependencyChanged(derived: Derived<any>, observable: IObservable<any>, change: unknown): void {
@@ -454,8 +503,8 @@ export class DevToolsLogger implements IObservableLogger {
 		info.lastValue = formattedValue;
 		if (info.listenerCount > 0) {
 			this._handleChange({
-				instances: { [info.instanceId]: { formattedValue: formattedValue, recomputationCount: info.updateCount } }
-			});
+        instances: { [info.instanceId]: { formattedValue: formattedValue, recomputationCount: info.updateCount } },
+      });
 		}
 	}
 	handleDerivedCleared(observable: Derived<any>): void {
@@ -469,8 +518,8 @@ export class DevToolsLogger implements IObservableLogger {
 				instances: {
 					[info.instanceId]: {
 						formattedValue: undefined,
-					}
-				}
+					},
+				},
 			});
 		}
 	}

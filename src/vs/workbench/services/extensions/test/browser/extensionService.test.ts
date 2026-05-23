@@ -3,136 +3,660 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { Event } from '../../../../../base/common/event.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { mock } from '../../../../../base/test/common/mock.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { TestConfigurationService } from '../../../../../platform/configuration/test/common/testConfigurationService.js';
-import { TestDialogService } from '../../../../../platform/dialogs/test/common/testDialogService.js';
-import { ExtensionKind, IEnvironmentService } from '../../../../../platform/environment/common/environment.js';
-import { ExtensionIdentifier, IExtension, IExtensionDescription } from '../../../../../platform/extensions/common/extensions.js';
-import { IFileService } from '../../../../../platform/files/common/files.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { TestInstantiationService, createServices } from '../../../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { ILogService, NullLogService } from '../../../../../platform/log/common/log.js';
-import { INotificationService } from '../../../../../platform/notification/common/notification.js';
-import { TestNotificationService } from '../../../../../platform/notification/test/common/testNotificationService.js';
-import product from '../../../../../platform/product/common/product.js';
-import { IProductService } from '../../../../../platform/product/common/productService.js';
-import { RemoteAuthorityResolverService } from '../../../../../platform/remote/browser/remoteAuthorityResolverService.js';
-import { IRemoteAuthorityResolverService, ResolverResult } from '../../../../../platform/remote/common/remoteAuthorityResolver.js';
-import { IRemoteExtensionsScannerService } from '../../../../../platform/remote/common/remoteExtensionsScanner.js';
-import { ITelemetryService } from '../../../../../platform/telemetry/common/telemetry.js';
-import { NullTelemetryService } from '../../../../../platform/telemetry/common/telemetryUtils.js';
-import { IUriIdentityService } from '../../../../../platform/uriIdentity/common/uriIdentity.js';
-import { UriIdentityService } from '../../../../../platform/uriIdentity/common/uriIdentityService.js';
-import { IUserDataProfilesService, UserDataProfilesService } from '../../../../../platform/userDataProfile/common/userDataProfile.js';
-import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
-import { IWorkspaceTrustEnablementService } from '../../../../../platform/workspace/common/workspaceTrust.js';
-import { IWorkbenchEnvironmentService } from '../../../environment/common/environmentService.js';
-import { IWebExtensionsScannerService, IWorkbenchExtensionEnablementService, IWorkbenchExtensionManagementService } from '../../../extensionManagement/common/extensionManagement.js';
-import { BrowserExtensionHostKindPicker } from '../../browser/extensionService.js';
-import { AbstractExtensionService, IExtensionHostFactory, ResolvedExtensions } from '../../common/abstractExtensionService.js';
-import { ExtensionHostKind, ExtensionRunningPreference } from '../../common/extensionHostKind.js';
-import { IExtensionHostManager } from '../../common/extensionHostManagers.js';
-import { ExtensionManifestPropertiesService, IExtensionManifestPropertiesService } from '../../common/extensionManifestPropertiesService.js';
-import { ExtensionRunningLocation } from '../../common/extensionRunningLocation.js';
-import { ExtensionRunningLocationTracker } from '../../common/extensionRunningLocationTracker.js';
-import { ActivationKind, IExtensionHost, IExtensionService, IWillActivateEvent } from '../../common/extensions.js';
-import { ExtensionsProposedApi } from '../../common/extensionsProposedApi.js';
-import { ILifecycleService } from '../../../lifecycle/common/lifecycle.js';
-import { IRemoteAgentService } from '../../../remote/common/remoteAgentService.js';
-import { IUserDataProfileService } from '../../../userDataProfile/common/userDataProfile.js';
-import { WorkspaceTrustEnablementService } from '../../../workspaces/common/workspaceTrust.js';
-import { TestEnvironmentService, TestLifecycleService, TestRemoteAgentService, TestRemoteExtensionsScannerService, TestWebExtensionsScannerService, TestWorkbenchExtensionEnablementService, TestWorkbenchExtensionManagementService } from '../../../../test/browser/workbenchTestServices.js';
-import { TestContextService, TestFileService, TestUserDataProfileService } from '../../../../test/common/workbenchTestServices.js';
+import assert from "assert";
+import { Event } from "../../../../../base/common/event.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { mock } from "../../../../../base/test/common/mock.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { TestConfigurationService } from "../../../../../platform/configuration/test/common/testConfigurationService.js";
+import { TestDialogService } from "../../../../../platform/dialogs/test/common/testDialogService.js";
+import { ExtensionKind, IEnvironmentService } from "../../../../../platform/environment/common/environment.js";
+import { ExtensionIdentifier, IExtension, IExtensionDescription } from "../../../../../platform/extensions/common/extensions.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { TestInstantiationService, createServices } from "../../../../../platform/instantiation/test/common/instantiationServiceMock.js";
+import { ILogService, NullLogService } from "../../../../../platform/log/common/log.js";
+import { INotificationService } from "../../../../../platform/notification/common/notification.js";
+import { TestNotificationService } from "../../../../../platform/notification/test/common/testNotificationService.js";
+import product from "../../../../../platform/product/common/product.js";
+import { IProductService } from "../../../../../platform/product/common/productService.js";
+import { RemoteAuthorityResolverService } from "../../../../../platform/remote/browser/remoteAuthorityResolverService.js";
+import { IRemoteAuthorityResolverService, ResolverResult } from "../../../../../platform/remote/common/remoteAuthorityResolver.js";
+import { IRemoteExtensionsScannerService } from "../../../../../platform/remote/common/remoteExtensionsScanner.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
+import { NullTelemetryService } from "../../../../../platform/telemetry/common/telemetryUtils.js";
+import { IUriIdentityService } from "../../../../../platform/uriIdentity/common/uriIdentity.js";
+import { UriIdentityService } from "../../../../../platform/uriIdentity/common/uriIdentityService.js";
+import { IUserDataProfilesService, UserDataProfilesService } from "../../../../../platform/userDataProfile/common/userDataProfile.js";
+import { IWorkspaceContextService } from "../../../../../platform/workspace/common/workspace.js";
+import { IWorkspaceTrustEnablementService } from "../../../../../platform/workspace/common/workspaceTrust.js";
+import { IWorkbenchEnvironmentService } from "../../../environment/common/environmentService.js";
+import {
+  IWebExtensionsScannerService,
+  IWorkbenchExtensionEnablementService,
+  IWorkbenchExtensionManagementService,
+} from "../../../extensionManagement/common/extensionManagement.js";
+import { BrowserExtensionHostKindPicker } from "../../browser/extensionService.js";
+import { AbstractExtensionService, IExtensionHostFactory, ResolvedExtensions } from "../../common/abstractExtensionService.js";
+import { ExtensionHostKind, ExtensionRunningPreference } from "../../common/extensionHostKind.js";
+import { IExtensionHostManager } from "../../common/extensionHostManagers.js";
+import {
+  ExtensionManifestPropertiesService,
+  IExtensionManifestPropertiesService,
+} from "../../common/extensionManifestPropertiesService.js";
+import { ExtensionRunningLocation } from "../../common/extensionRunningLocation.js";
+import { ExtensionRunningLocationTracker } from "../../common/extensionRunningLocationTracker.js";
+import { ActivationKind, IExtensionHost, IExtensionService, IWillActivateEvent } from "../../common/extensions.js";
+import { ExtensionsProposedApi } from "../../common/extensionsProposedApi.js";
+import { ILifecycleService } from "../../../lifecycle/common/lifecycle.js";
+import { IRemoteAgentService } from "../../../remote/common/remoteAgentService.js";
+import { IUserDataProfileService } from "../../../userDataProfile/common/userDataProfile.js";
+import { WorkspaceTrustEnablementService } from "../../../workspaces/common/workspaceTrust.js";
+import {
+  TestEnvironmentService,
+  TestLifecycleService,
+  TestRemoteAgentService,
+  TestRemoteExtensionsScannerService,
+  TestWebExtensionsScannerService,
+  TestWorkbenchExtensionEnablementService,
+  TestWorkbenchExtensionManagementService,
+} from "../../../../test/browser/workbenchTestServices.js";
+import { TestContextService, TestFileService, TestUserDataProfileService } from "../../../../test/common/workbenchTestServices.js";
 
-suite('BrowserExtensionService', () => {
+suite("BrowserExtensionService", () => {
+  ensureNoDisposablesAreLeakedInTestSuite();
 
-	ensureNoDisposablesAreLeakedInTestSuite();
+  test("pickRunningLocation", () => {
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        [],
+        false,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      null,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        [],
+        false,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      null,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        [],
+        true,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      null,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        [],
+        true,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      null,
+    );
 
-	test('pickRunningLocation', () => {
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation([], false, false, ExtensionRunningPreference.None), null);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation([], false, true, ExtensionRunningPreference.None), null);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation([], true, false, ExtensionRunningPreference.None), null);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation([], true, true, ExtensionRunningPreference.None), null);
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["ui"],
+        false,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      null,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["ui"],
+        false,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.Remote,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["ui"],
+        true,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      null,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["ui"],
+        true,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.Remote,
+    );
 
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['ui'], false, false, ExtensionRunningPreference.None), null);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['ui'], false, true, ExtensionRunningPreference.None), ExtensionHostKind.Remote);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['ui'], true, false, ExtensionRunningPreference.None), null);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['ui'], true, true, ExtensionRunningPreference.None), ExtensionHostKind.Remote);
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["workspace"],
+        false,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      null,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["workspace"],
+        false,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.Remote,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["workspace"],
+        true,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      null,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["workspace"],
+        true,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.Remote,
+    );
 
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['workspace'], false, false, ExtensionRunningPreference.None), null);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['workspace'], false, true, ExtensionRunningPreference.None), ExtensionHostKind.Remote);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['workspace'], true, false, ExtensionRunningPreference.None), null);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['workspace'], true, true, ExtensionRunningPreference.None), ExtensionHostKind.Remote);
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["web"],
+        false,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      null,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["web"],
+        false,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.LocalWebWorker,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["web"],
+        true,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.LocalWebWorker,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["web"],
+        true,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.LocalWebWorker,
+    );
 
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['web'], false, false, ExtensionRunningPreference.None), null);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['web'], false, true, ExtensionRunningPreference.None), ExtensionHostKind.LocalWebWorker);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['web'], true, false, ExtensionRunningPreference.None), ExtensionHostKind.LocalWebWorker);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['web'], true, true, ExtensionRunningPreference.None), ExtensionHostKind.LocalWebWorker);
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["ui", "workspace"],
+        false,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      null,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["ui", "workspace"],
+        false,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.Remote,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["ui", "workspace"],
+        true,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      null,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["ui", "workspace"],
+        true,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.Remote,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["workspace", "ui"],
+        false,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      null,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["workspace", "ui"],
+        false,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.Remote,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["workspace", "ui"],
+        true,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      null,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["workspace", "ui"],
+        true,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.Remote,
+    );
 
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["web", "workspace"],
+        false,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      null,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["web", "workspace"],
+        false,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.LocalWebWorker,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["web", "workspace"],
+        true,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.LocalWebWorker,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["web", "workspace"],
+        true,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.LocalWebWorker,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["workspace", "web"],
+        false,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      null,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["workspace", "web"],
+        false,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.Remote,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["workspace", "web"],
+        true,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.LocalWebWorker,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["workspace", "web"],
+        true,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.Remote,
+    );
 
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['ui', 'workspace'], false, false, ExtensionRunningPreference.None), null);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['ui', 'workspace'], false, true, ExtensionRunningPreference.None), ExtensionHostKind.Remote);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['ui', 'workspace'], true, false, ExtensionRunningPreference.None), null);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['ui', 'workspace'], true, true, ExtensionRunningPreference.None), ExtensionHostKind.Remote);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['workspace', 'ui'], false, false, ExtensionRunningPreference.None), null);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['workspace', 'ui'], false, true, ExtensionRunningPreference.None), ExtensionHostKind.Remote);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['workspace', 'ui'], true, false, ExtensionRunningPreference.None), null);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['workspace', 'ui'], true, true, ExtensionRunningPreference.None), ExtensionHostKind.Remote);
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["ui", "web"],
+        false,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      null,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["ui", "web"],
+        false,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.LocalWebWorker,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["ui", "web"],
+        true,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.LocalWebWorker,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["ui", "web"],
+        true,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.LocalWebWorker,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["web", "ui"],
+        false,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      null,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["web", "ui"],
+        false,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.LocalWebWorker,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["web", "ui"],
+        true,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.LocalWebWorker,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["web", "ui"],
+        true,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.LocalWebWorker,
+    );
 
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['web', 'workspace'], false, false, ExtensionRunningPreference.None), null);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['web', 'workspace'], false, true, ExtensionRunningPreference.None), ExtensionHostKind.LocalWebWorker);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['web', 'workspace'], true, false, ExtensionRunningPreference.None), ExtensionHostKind.LocalWebWorker);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['web', 'workspace'], true, true, ExtensionRunningPreference.None), ExtensionHostKind.LocalWebWorker);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['workspace', 'web'], false, false, ExtensionRunningPreference.None), null);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['workspace', 'web'], false, true, ExtensionRunningPreference.None), ExtensionHostKind.Remote);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['workspace', 'web'], true, false, ExtensionRunningPreference.None), ExtensionHostKind.LocalWebWorker);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['workspace', 'web'], true, true, ExtensionRunningPreference.None), ExtensionHostKind.Remote);
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["ui", "web", "workspace"],
+        false,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      null,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["ui", "web", "workspace"],
+        false,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.LocalWebWorker,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["ui", "web", "workspace"],
+        true,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.LocalWebWorker,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["ui", "web", "workspace"],
+        true,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.LocalWebWorker,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["ui", "workspace", "web"],
+        false,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      null,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["ui", "workspace", "web"],
+        false,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.Remote,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["ui", "workspace", "web"],
+        true,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.LocalWebWorker,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["ui", "workspace", "web"],
+        true,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.Remote,
+    );
 
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['ui', 'web'], false, false, ExtensionRunningPreference.None), null);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['ui', 'web'], false, true, ExtensionRunningPreference.None), ExtensionHostKind.LocalWebWorker);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['ui', 'web'], true, false, ExtensionRunningPreference.None), ExtensionHostKind.LocalWebWorker);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['ui', 'web'], true, true, ExtensionRunningPreference.None), ExtensionHostKind.LocalWebWorker);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['web', 'ui'], false, false, ExtensionRunningPreference.None), null);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['web', 'ui'], false, true, ExtensionRunningPreference.None), ExtensionHostKind.LocalWebWorker);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['web', 'ui'], true, false, ExtensionRunningPreference.None), ExtensionHostKind.LocalWebWorker);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['web', 'ui'], true, true, ExtensionRunningPreference.None), ExtensionHostKind.LocalWebWorker);
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["web", "ui", "workspace"],
+        false,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      null,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["web", "ui", "workspace"],
+        false,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.LocalWebWorker,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["web", "ui", "workspace"],
+        true,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.LocalWebWorker,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["web", "ui", "workspace"],
+        true,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.LocalWebWorker,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["web", "workspace", "ui"],
+        false,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      null,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["web", "workspace", "ui"],
+        false,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.LocalWebWorker,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["web", "workspace", "ui"],
+        true,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.LocalWebWorker,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["web", "workspace", "ui"],
+        true,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.LocalWebWorker,
+    );
 
-
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['ui', 'web', 'workspace'], false, false, ExtensionRunningPreference.None), null);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['ui', 'web', 'workspace'], false, true, ExtensionRunningPreference.None), ExtensionHostKind.LocalWebWorker);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['ui', 'web', 'workspace'], true, false, ExtensionRunningPreference.None), ExtensionHostKind.LocalWebWorker);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['ui', 'web', 'workspace'], true, true, ExtensionRunningPreference.None), ExtensionHostKind.LocalWebWorker);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['ui', 'workspace', 'web'], false, false, ExtensionRunningPreference.None), null);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['ui', 'workspace', 'web'], false, true, ExtensionRunningPreference.None), ExtensionHostKind.Remote);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['ui', 'workspace', 'web'], true, false, ExtensionRunningPreference.None), ExtensionHostKind.LocalWebWorker);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['ui', 'workspace', 'web'], true, true, ExtensionRunningPreference.None), ExtensionHostKind.Remote);
-
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['web', 'ui', 'workspace'], false, false, ExtensionRunningPreference.None), null);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['web', 'ui', 'workspace'], false, true, ExtensionRunningPreference.None), ExtensionHostKind.LocalWebWorker);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['web', 'ui', 'workspace'], true, false, ExtensionRunningPreference.None), ExtensionHostKind.LocalWebWorker);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['web', 'ui', 'workspace'], true, true, ExtensionRunningPreference.None), ExtensionHostKind.LocalWebWorker);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['web', 'workspace', 'ui'], false, false, ExtensionRunningPreference.None), null);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['web', 'workspace', 'ui'], false, true, ExtensionRunningPreference.None), ExtensionHostKind.LocalWebWorker);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['web', 'workspace', 'ui'], true, false, ExtensionRunningPreference.None), ExtensionHostKind.LocalWebWorker);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['web', 'workspace', 'ui'], true, true, ExtensionRunningPreference.None), ExtensionHostKind.LocalWebWorker);
-
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['workspace', 'ui', 'web'], false, false, ExtensionRunningPreference.None), null);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['workspace', 'ui', 'web'], false, true, ExtensionRunningPreference.None), ExtensionHostKind.Remote);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['workspace', 'ui', 'web'], true, false, ExtensionRunningPreference.None), ExtensionHostKind.LocalWebWorker);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['workspace', 'ui', 'web'], true, true, ExtensionRunningPreference.None), ExtensionHostKind.Remote);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['workspace', 'web', 'ui'], false, false, ExtensionRunningPreference.None), null);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['workspace', 'web', 'ui'], false, true, ExtensionRunningPreference.None), ExtensionHostKind.Remote);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['workspace', 'web', 'ui'], true, false, ExtensionRunningPreference.None), ExtensionHostKind.LocalWebWorker);
-		assert.deepStrictEqual(BrowserExtensionHostKindPicker.pickRunningLocation(['workspace', 'web', 'ui'], true, true, ExtensionRunningPreference.None), ExtensionHostKind.Remote);
-	});
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["workspace", "ui", "web"],
+        false,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      null,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["workspace", "ui", "web"],
+        false,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.Remote,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["workspace", "ui", "web"],
+        true,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.LocalWebWorker,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["workspace", "ui", "web"],
+        true,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.Remote,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["workspace", "web", "ui"],
+        false,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      null,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["workspace", "web", "ui"],
+        false,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.Remote,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["workspace", "web", "ui"],
+        true,
+        false,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.LocalWebWorker,
+    );
+    assert.deepStrictEqual(
+      BrowserExtensionHostKindPicker.pickRunningLocation(
+        ["workspace", "web", "ui"],
+        true,
+        true,
+        ExtensionRunningPreference.None,
+      ),
+      ExtensionHostKind.Remote,
+    );
+  });
 });
 
-suite('ExtensionService', () => {
+suite("ExtensionService", () => {
 
 	class MyTestExtensionService extends AbstractExtensionService {
 
@@ -183,7 +707,7 @@ suite('ExtensionService', () => {
 				remoteExtensionsScannerService,
 				lifecycleService,
 				remoteAuthorityResolverService,
-				new TestDialogService()
+				new TestDialogService(),
 			);
 
 			this._initializeIfNeeded();
@@ -195,7 +719,7 @@ suite('ExtensionService', () => {
 		public remoteExtHostIsReady = true;
 		public localExtHostIsReady = true;
 		protected _pickExtensionHostKind(extensionId: ExtensionIdentifier, extensionKinds: ExtensionKind[], isInstalledLocally: boolean, isInstalledRemotely: boolean, preference: ExtensionRunningPreference): ExtensionHostKind | null {
-			throw new Error('Method not implemented.');
+			throw new Error("Method not implemented.");
 		}
 		protected override _doCreateExtensionHostManager(extensionHost: IExtensionHost, initialActivationEvents: string[]): IExtensionHostManager {
 			const order = this.order;
@@ -234,13 +758,13 @@ suite('ExtensionService', () => {
 			// Return empty iterable - no extensions to resolve in tests
 		}
 		protected _scanSingleExtension(extension: IExtension): Promise<IExtensionDescription | null> {
-			throw new Error('Method not implemented.');
+			throw new Error("Method not implemented.");
 		}
 		protected _onExtensionHostExit(code: number): Promise<void> {
-			throw new Error('Method not implemented.');
+			throw new Error("Method not implemented.");
 		}
 		protected _resolveAuthority(remoteAuthority: string): Promise<ResolverResult> {
-			throw new Error('Method not implemented.');
+			throw new Error("Method not implemented.");
 		}
 	}
 
@@ -274,7 +798,7 @@ suite('ExtensionService', () => {
 			[IUserDataProfileService, TestUserDataProfileService],
 			[IUriIdentityService, UriIdentityService],
 			[IRemoteExtensionsScannerService, TestRemoteExtensionsScannerService],
-			[IRemoteAuthorityResolverService, new RemoteAuthorityResolverService(false, undefined, undefined, undefined, testProductService, new NullLogService())]
+			[IRemoteAuthorityResolverService, new RemoteAuthorityResolverService(false, undefined, undefined, undefined, testProductService, new NullLogService())],
 		]));
 		extService = <MyTestExtensionService>instantiationService.get(IExtensionService);
 	});
@@ -285,105 +809,105 @@ suite('ExtensionService', () => {
 
 	ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('issue #152204: Remote extension host not disposed after closing vscode client', async () => {
-		await extService.stopExtensionHosts('foo');
-		assert.deepStrictEqual(extService.order, (['create 1', 'create 2', 'create 3', 'dispose 3', 'dispose 2', 'dispose 1']));
+	test("issue #152204: Remote extension host not disposed after closing vscode client", async () => {
+		await extService.stopExtensionHosts("foo");
+		assert.deepStrictEqual(extService.order, (["create 1", "create 2", "create 3", "dispose 3", "dispose 2", "dispose 1"]));
 	});
 
-	test('Extension host disposed when awaited', async () => {
-		await extService.stopExtensionHosts('foo');
-		assert.deepStrictEqual(extService.order, (['create 1', 'create 2', 'create 3', 'dispose 3', 'dispose 2', 'dispose 1']));
+	test("Extension host disposed when awaited", async () => {
+		await extService.stopExtensionHosts("foo");
+		assert.deepStrictEqual(extService.order, (["create 1", "create 2", "create 3", "dispose 3", "dispose 2", "dispose 1"]));
 	});
 
-	test('Extension host not disposed when vetoed (sync)', async () => {
+	test("Extension host not disposed when vetoed (sync)", async () => {
 
-		disposables.add(extService.onWillStop(e => e.veto(true, 'test 1')));
-		disposables.add(extService.onWillStop(e => e.veto(false, 'test 2')));
+		disposables.add(extService.onWillStop(e => e.veto(true, "test 1")));
+		disposables.add(extService.onWillStop(e => e.veto(false, "test 2")));
 
-		await extService.stopExtensionHosts('foo');
-		assert.deepStrictEqual(extService.order, (['create 1', 'create 2', 'create 3']));
+		await extService.stopExtensionHosts("foo");
+		assert.deepStrictEqual(extService.order, (["create 1", "create 2", "create 3"]));
 	});
 
-	test('Extension host not disposed when vetoed (async)', async () => {
+	test("Extension host not disposed when vetoed (async)", async () => {
 
-		disposables.add(extService.onWillStop(e => e.veto(false, 'test 1')));
-		disposables.add(extService.onWillStop(e => e.veto(Promise.resolve(true), 'test 2')));
-		disposables.add(extService.onWillStop(e => e.veto(Promise.resolve(false), 'test 3')));
+		disposables.add(extService.onWillStop(e => e.veto(false, "test 1")));
+		disposables.add(extService.onWillStop(e => e.veto(Promise.resolve(true), "test 2")));
+		disposables.add(extService.onWillStop(e => e.veto(Promise.resolve(false), "test 3")));
 
-		await extService.stopExtensionHosts('foo');
-		assert.deepStrictEqual(extService.order, (['create 1', 'create 2', 'create 3']));
+		await extService.stopExtensionHosts("foo");
+		assert.deepStrictEqual(extService.order, (["create 1", "create 2", "create 3"]));
 	});
 
-	test('onWillActivateByEvent includes activationKind for Normal activation', async () => {
+	test("onWillActivateByEvent includes activationKind for Normal activation", async () => {
 
 		const events: IWillActivateEvent[] = [];
 		disposables.add(extService.onWillActivateByEvent(e => events.push(e)));
 
-		await extService.activateByEvent('onTest', ActivationKind.Normal);
+		await extService.activateByEvent("onTest", ActivationKind.Normal);
 
 		assert.strictEqual(events.length, 1);
-		assert.strictEqual(events[0].event, 'onTest');
+		assert.strictEqual(events[0].event, "onTest");
 		assert.strictEqual(events[0].activationKind, ActivationKind.Normal);
 	});
 
-	test('onWillActivateByEvent includes activationKind for Immediate activation', async () => {
+	test("onWillActivateByEvent includes activationKind for Immediate activation", async () => {
 
 		const events: IWillActivateEvent[] = [];
 		disposables.add(extService.onWillActivateByEvent(e => events.push(e)));
 
-		await extService.activateByEvent('onTest', ActivationKind.Immediate);
+		await extService.activateByEvent("onTest", ActivationKind.Immediate);
 
 		assert.strictEqual(events.length, 1);
-		assert.strictEqual(events[0].event, 'onTest');
+		assert.strictEqual(events[0].event, "onTest");
 		assert.strictEqual(events[0].activationKind, ActivationKind.Immediate);
 	});
 
-	test('Immediate activation includes ready remote extension hosts (issue #297019)', async () => {
+	test("Immediate activation includes ready remote extension hosts (issue #297019)", async () => {
 		extService.activationEvents.length = 0; // Clear any initial activations
 
-		await extService.activateByEvent('onTest', ActivationKind.Immediate);
+		await extService.activateByEvent("onTest", ActivationKind.Immediate);
 
 		// When remote host is ready, Immediate activation should include it
 		const activatedKinds = extService.activationEvents.map(e => e.kind);
-		assert.ok(activatedKinds.includes(ExtensionHostKind.LocalProcess), 'Should activate on LocalProcess');
-		assert.ok(activatedKinds.includes(ExtensionHostKind.LocalWebWorker), 'Should activate on LocalWebWorker');
-		assert.ok(activatedKinds.includes(ExtensionHostKind.Remote), 'Should activate on ready Remote host');
+		assert.ok(activatedKinds.includes(ExtensionHostKind.LocalProcess), "Should activate on LocalProcess");
+		assert.ok(activatedKinds.includes(ExtensionHostKind.LocalWebWorker), "Should activate on LocalWebWorker");
+		assert.ok(activatedKinds.includes(ExtensionHostKind.Remote), "Should activate on ready Remote host");
 	});
 
-	test('Immediate activation excludes not-ready remote extension hosts', async () => {
+	test("Immediate activation excludes not-ready remote extension hosts", async () => {
 		extService.remoteExtHostIsReady = false;
 		extService.activationEvents.length = 0; // Clear any initial activations
 
-		await extService.activateByEvent('onTest', ActivationKind.Immediate);
+		await extService.activateByEvent("onTest", ActivationKind.Immediate);
 
 		// When remote host is not ready, Immediate activation should skip it
 		const activatedKinds = extService.activationEvents.map(e => e.kind);
-		assert.ok(activatedKinds.includes(ExtensionHostKind.LocalProcess), 'Should activate on LocalProcess');
-		assert.ok(activatedKinds.includes(ExtensionHostKind.LocalWebWorker), 'Should activate on LocalWebWorker');
-		assert.ok(!activatedKinds.includes(ExtensionHostKind.Remote), 'Should NOT activate on not-ready Remote host');
+		assert.ok(activatedKinds.includes(ExtensionHostKind.LocalProcess), "Should activate on LocalProcess");
+		assert.ok(activatedKinds.includes(ExtensionHostKind.LocalWebWorker), "Should activate on LocalWebWorker");
+		assert.ok(!activatedKinds.includes(ExtensionHostKind.Remote), "Should NOT activate on not-ready Remote host");
 	});
 
-	test('Immediate activation still activates local extension hosts even when not ready', async () => {
+	test("Immediate activation still activates local extension hosts even when not ready", async () => {
 		extService.localExtHostIsReady = false;
 		extService.activationEvents.length = 0; // Clear any initial activations
 
-		await extService.activateByEvent('onTest', ActivationKind.Immediate);
+		await extService.activateByEvent("onTest", ActivationKind.Immediate);
 
 		// Local hosts should always be activated for Immediate, regardless of isReady
 		const activatedKinds = extService.activationEvents.map(e => e.kind);
-		assert.ok(activatedKinds.includes(ExtensionHostKind.LocalProcess), 'Should activate on LocalProcess even when not ready');
-		assert.ok(activatedKinds.includes(ExtensionHostKind.LocalWebWorker), 'Should activate on LocalWebWorker even when not ready');
+		assert.ok(activatedKinds.includes(ExtensionHostKind.LocalProcess), "Should activate on LocalProcess even when not ready");
+		assert.ok(activatedKinds.includes(ExtensionHostKind.LocalWebWorker), "Should activate on LocalWebWorker even when not ready");
 	});
 
-	test('Normal activation activates all extension hosts', async () => {
+	test("Normal activation activates all extension hosts", async () => {
 		extService.activationEvents.length = 0; // Clear any initial activations
 
-		await extService.activateByEvent('onTest', ActivationKind.Normal);
+		await extService.activateByEvent("onTest", ActivationKind.Normal);
 
 		// Should activate on all hosts
 		const activatedKinds = extService.activationEvents.map(e => e.kind);
-		assert.ok(activatedKinds.includes(ExtensionHostKind.LocalProcess), 'Should activate on LocalProcess');
-		assert.ok(activatedKinds.includes(ExtensionHostKind.LocalWebWorker), 'Should activate on LocalWebWorker');
-		assert.ok(activatedKinds.includes(ExtensionHostKind.Remote), 'Should activate on Remote');
+		assert.ok(activatedKinds.includes(ExtensionHostKind.LocalProcess), "Should activate on LocalProcess");
+		assert.ok(activatedKinds.includes(ExtensionHostKind.LocalWebWorker), "Should activate on LocalWebWorker");
+		assert.ok(activatedKinds.includes(ExtensionHostKind.Remote), "Should activate on Remote");
 	});
 });

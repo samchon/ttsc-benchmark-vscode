@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SetWithKey } from './collections.js';
-import { Event } from './event.js';
-import { IDisposable } from './lifecycle.js';
-import { ArrayNavigator, INavigator } from './navigator.js';
+import { SetWithKey } from "./collections.js";
+import { Event } from "./event.js";
+import { IDisposable } from "./lifecycle.js";
+import { ArrayNavigator, INavigator } from "./navigator.js";
 
 export interface IHistory<T> {
 	delete(t: T): boolean;
@@ -92,7 +92,12 @@ export class HistoryNavigator<T> implements INavigator<T> {
 	private _onChange() {
 		this._reduceToLimit();
 		const elements = this._elements;
-		this._navigator = new ArrayNavigator(elements, 0, elements.length, elements.length);
+		this._navigator = new ArrayNavigator(
+      elements,
+      0,
+      elements.length,
+      elements.length,
+    );
 	}
 
 	private _reduceToLimit() {
@@ -151,15 +156,15 @@ export class HistoryNavigator2<T> {
 
 	constructor(history: readonly T[], private capacity: number = 10, private identityFn: (t: T) => unknown = t => t) {
 		if (history.length < 1) {
-			throw new Error('not supported');
+			throw new Error("not supported");
 		}
 
 		this._size = 1;
 		this.head = this.tail = this.cursor = {
-			value: history[0],
-			previous: undefined,
-			next: undefined
-		};
+      value: history[0],
+      previous: undefined,
+      next: undefined,
+    };
 
 		this.valueSet = new SetWithKey<T>([history[0]], identityFn);
 		for (let i = 1; i < history.length; i++) {
@@ -169,10 +174,10 @@ export class HistoryNavigator2<T> {
 
 	add(value: T): void {
 		const node: HistoryNode<T> = {
-			value,
-			previous: this.tail,
-			next: undefined
-		};
+      value,
+      previous: this.tail,
+      next: undefined,
+    };
 
 		this.tail.next = node;
 		this.tail = node;
@@ -221,10 +226,10 @@ export class HistoryNavigator2<T> {
 		}
 
 		const node: HistoryNode<T> = {
-			value,
-			previous: undefined,
-			next: this.head
-		};
+      value,
+      previous: undefined,
+      next: this.head,
+    };
 
 		this.head.previous = node;
 		this.head = node;

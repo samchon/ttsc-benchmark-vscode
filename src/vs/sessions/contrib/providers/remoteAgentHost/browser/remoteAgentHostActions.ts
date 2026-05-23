@@ -3,54 +3,66 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize, localize2 } from '../../../../../nls.js';
-import { Action2, registerAction2 } from '../../../../../platform/actions/common/actions.js';
-import { Codicon } from '../../../../../base/common/codicons.js';
-import { isCancellationError } from '../../../../../base/common/errors.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { ICommandService } from '../../../../../platform/commands/common/commands.js';
-import { IFileService } from '../../../../../platform/files/common/files.js';
-import { ITextEditorOptions } from '../../../../../platform/editor/common/editor.js';
-import { ICodeEditor, isCodeEditor } from '../../../../../editor/browser/editorBrowser.js';
-import { EndOfLinePreference } from '../../../../../editor/common/model.js';
-import { Range } from '../../../../../editor/common/core/range.js';
-import { SnippetController2 } from '../../../../../editor/contrib/snippet/browser/snippetController2.js';
-import { IEditorService } from '../../../../../workbench/services/editor/common/editorService.js';
-import { IRemoteAgentHostService, parseRemoteAgentHostInput, RemoteAgentHostEntryType, RemoteAgentHostInputValidationError, RemoteAgentHostsEnabledSettingId } from '../../../../../platform/agentHost/common/remoteAgentHostService.js';
-import { ISSHRemoteAgentHostService, SSHAuthMethod, type ISSHAgentHostConfig, type ISSHAgentHostConnection, type ISSHResolvedConfig } from '../../../../../platform/agentHost/common/sshRemoteAgentHost.js';
-import { ITunnelAgentHostService, TUNNEL_ADDRESS_PREFIX, type ITunnelInfo } from '../../../../../platform/agentHost/common/tunnelAgentHost.js';
-import { ContextKeyExpr } from '../../../../../platform/contextkey/common/contextkey.js';
-import { IInstantiationService, ServicesAccessor } from '../../../../../platform/instantiation/common/instantiation.js';
-import { INotificationService, Severity } from '../../../../../platform/notification/common/notification.js';
-import { IQuickInputService, IQuickPickItem } from '../../../../../platform/quickinput/common/quickInput.js';
-import { IViewsService } from '../../../../../workbench/services/views/common/viewsService.js';
-import { IAuthenticationService } from '../../../../../workbench/services/authentication/common/authentication.js';
-import { IProductService } from '../../../../../platform/product/common/productService.js';
-import { SessionsCategories } from '../../../../common/categories.js';
-import { SessionWorkspacePickerGroupContext } from '../../../../common/contextkeys.js';
-import { Menus } from '../../../../browser/menus.js';
-import { NewChatViewPane, SessionsViewId } from '../../../chat/browser/newChatViewPane.js';
-import { ISessionsManagementService } from '../../../../services/sessions/common/sessionsManagement.js';
-import { ISessionsProvidersService } from '../../../../services/sessions/browser/sessionsProvidersService.js';
-import { IAgentHostSessionsProvider, isAgentHostProvider } from '../../../../common/agentHostSessionsProvider.js';
-import { SESSION_WORKSPACE_GROUP_REMOTE } from '../../../../services/sessions/common/session.js';
+import { localize, localize2 } from "../../../../../nls.js";
+import { Action2, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { isCancellationError } from "../../../../../base/common/errors.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { ITextEditorOptions } from "../../../../../platform/editor/common/editor.js";
+import { ICodeEditor, isCodeEditor } from "../../../../../editor/browser/editorBrowser.js";
+import { EndOfLinePreference } from "../../../../../editor/common/model.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import { SnippetController2 } from "../../../../../editor/contrib/snippet/browser/snippetController2.js";
+import { IEditorService } from "../../../../../workbench/services/editor/common/editorService.js";
+import {
+  IRemoteAgentHostService,
+  parseRemoteAgentHostInput,
+  RemoteAgentHostEntryType,
+  RemoteAgentHostInputValidationError,
+  RemoteAgentHostsEnabledSettingId,
+} from "../../../../../platform/agentHost/common/remoteAgentHostService.js";
+import {
+  ISSHRemoteAgentHostService,
+  SSHAuthMethod,
+  type ISSHAgentHostConfig,
+  type ISSHAgentHostConnection,
+  type ISSHResolvedConfig,
+} from "../../../../../platform/agentHost/common/sshRemoteAgentHost.js";
+import { ITunnelAgentHostService, TUNNEL_ADDRESS_PREFIX, type ITunnelInfo } from "../../../../../platform/agentHost/common/tunnelAgentHost.js";
+import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
+import { INotificationService, Severity } from "../../../../../platform/notification/common/notification.js";
+import { IQuickInputService, IQuickPickItem } from "../../../../../platform/quickinput/common/quickInput.js";
+import { IViewsService } from "../../../../../workbench/services/views/common/viewsService.js";
+import { IAuthenticationService } from "../../../../../workbench/services/authentication/common/authentication.js";
+import { IProductService } from "../../../../../platform/product/common/productService.js";
+import { SessionsCategories } from "../../../../common/categories.js";
+import { SessionWorkspacePickerGroupContext } from "../../../../common/contextkeys.js";
+import { Menus } from "../../../../browser/menus.js";
+import { NewChatViewPane, SessionsViewId } from "../../../chat/browser/newChatViewPane.js";
+import { ISessionsManagementService } from "../../../../services/sessions/common/sessionsManagement.js";
+import { ISessionsProvidersService } from "../../../../services/sessions/browser/sessionsProvidersService.js";
+import { IAgentHostSessionsProvider, isAgentHostProvider } from "../../../../common/agentHostSessionsProvider.js";
+import { SESSION_WORKSPACE_GROUP_REMOTE } from "../../../../services/sessions/common/session.js";
 
 /** Action / command IDs registered by this file. */
 export const RemoteAgentHostCommandIds = {
-	addRemoteAgentHost: 'sessions.remoteAgentHost.add',
-	connectViaSSH: 'workbench.action.sessions.connectViaSSH',
-	addNewSSHHost: 'workbench.action.sessions.addNewSSHHost',
-	configureSSHHosts: 'workbench.action.sessions.configureSSHHosts',
-	connectViaTunnel: 'workbench.action.sessions.connectViaTunnel',
-	manageRemoteAgentHosts: 'workbench.action.sessions.manageRemoteAgentHosts',
+  addRemoteAgentHost: "sessions.remoteAgentHost.add",
+  connectViaSSH: "workbench.action.sessions.connectViaSSH",
+  addNewSSHHost: "workbench.action.sessions.addNewSSHHost",
+  configureSSHHosts: "workbench.action.sessions.configureSSHHosts",
+  connectViaTunnel: "workbench.action.sessions.connectViaTunnel",
+  manageRemoteAgentHosts: "workbench.action.sessions.manageRemoteAgentHosts",
 } as const;
 
 registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: RemoteAgentHostCommandIds.addRemoteAgentHost,
-			title: localize2('addRemoteAgentHost', "Add Remote Agent Host..."),
+			title: localize2("addRemoteAgentHost", "Add Remote Agent Host..."),
 			category: SessionsCategories.Sessions,
 			f1: true,
 			precondition: ContextKeyExpr.equals(`config.${RemoteAgentHostsEnabledSettingId}`, true),
@@ -64,17 +76,17 @@ registerAction2(class extends Action2 {
 
 		// Prompt for address
 		const address = await quickInputService.input({
-			title: localize('addRemoteTitle', "Add Remote Agent Host"),
-			prompt: localize('addRemotePrompt', "Paste a host, host:port, or WebSocket URL. Example: {0}", 'ws://127.0.0.1:8089'),
-			placeHolder: 'ws://127.0.0.1:8080?tkn=abc-123',
+			title: localize("addRemoteTitle", "Add Remote Agent Host"),
+			prompt: localize("addRemotePrompt", "Paste a host, host:port, or WebSocket URL. Example: {0}", "ws://127.0.0.1:8089"),
+			placeHolder: "ws://127.0.0.1:8080?tkn=abc-123",
 			ignoreFocusLost: true,
 			validateInput: async value => {
 				const result = parseRemoteAgentHostInput(value);
 				if (result.error === RemoteAgentHostInputValidationError.Empty) {
-					return localize('addRemoteValidationEmpty', "Enter a remote agent host address.");
+					return localize("addRemoteValidationEmpty", "Enter a remote agent host address.");
 				}
 				if (result.error === RemoteAgentHostInputValidationError.Invalid) {
-					return localize('addRemoteValidationInvalid', "Enter a valid host, host:port, or WebSocket URL.");
+					return localize("addRemoteValidationInvalid", "Enter a valid host, host:port, or WebSocket URL.");
 				}
 				return undefined;
 			},
@@ -90,13 +102,13 @@ registerAction2(class extends Action2 {
 		// Prompt for display name
 		const defaultName = parsed.parsed.suggestedName;
 		const name = await quickInputService.input({
-			title: localize('nameRemoteTitle', "Name Remote Agent Host"),
-			prompt: localize('nameRemotePrompt', "Enter a display name for this remote agent host."),
-			placeHolder: localize('nameRemotePlaceholder', "My Remote"),
+			title: localize("nameRemoteTitle", "Name Remote Agent Host"),
+			prompt: localize("nameRemotePrompt", "Enter a display name for this remote agent host."),
+			placeHolder: localize("nameRemotePlaceholder", "My Remote"),
 			value: defaultName,
 			valueSelection: [0, defaultName.length],
 			ignoreFocusLost: true,
-			validateInput: async value => value.trim() ? undefined : localize('nameRemoteValidationEmpty', "Enter a name for this remote agent host."),
+			validateInput: async value => value.trim() ? undefined : localize("nameRemoteValidationEmpty", "Enter a name for this remote agent host."),
 		});
 		if (!name?.trim()) {
 			return;
@@ -113,7 +125,7 @@ registerAction2(class extends Action2 {
 				},
 			});
 		} catch {
-			notificationService.error(localize('addRemoteFailed', "Failed to connect to remote agent host {0}.", parsed.parsed.address));
+			notificationService.error(localize("addRemoteFailed", "Failed to connect to remote agent host {0}.", parsed.parsed.address));
 		}
 	}
 });
@@ -133,7 +145,7 @@ export function parseSSHHostInput(value: string): { host: string; username?: str
 	if (!trimmed) {
 		return undefined;
 	}
-	const atIdx = trimmed.indexOf('@');
+	const atIdx = trimmed.indexOf("@");
 	if (atIdx === 0 || atIdx === trimmed.length - 1) {
 		return undefined;
 	}
@@ -150,7 +162,7 @@ export function parseSSHHostInput(value: string): { host: string; username?: str
 	}
 	let host: string;
 	let port: number | undefined;
-	const colonIdx = hostPart.lastIndexOf(':');
+	const colonIdx = hostPart.lastIndexOf(":");
 	if (colonIdx !== -1) {
 		host = hostPart.substring(0, colonIdx);
 		const portStr = hostPart.substring(colonIdx + 1);
@@ -176,30 +188,30 @@ export function parseSSHHostInput(value: string): { host: string; username?: str
 function validateSSHHostInput(value: string): string | undefined {
 	const v = value.trim();
 	if (!v) {
-		return localize('sshHostEmpty', "Enter an SSH host.");
+		return localize("sshHostEmpty", "Enter an SSH host.");
 	}
-	const atIdx = v.indexOf('@');
+	const atIdx = v.indexOf("@");
 	if (atIdx === 0) {
-		return localize('sshUsernameMissingInHost', "Enter a username before '@'.");
+		return localize("sshUsernameMissingInHost", "Enter a username before '@'.");
 	}
 	if (atIdx === v.length - 1) {
-		return localize('sshHostMissingAfterAt', "Enter a host name after '@'.");
+		return localize("sshHostMissingAfterAt", "Enter a host name after '@'.");
 	}
 	const hostPart = atIdx !== -1 ? v.substring(atIdx + 1) : v;
 	if (!hostPart) {
-		return localize('sshHostMissingAfterAt', "Enter a host name after '@'.");
+		return localize("sshHostMissingAfterAt", "Enter a host name after '@'.");
 	}
-	const colonIdx = hostPart.lastIndexOf(':');
+	const colonIdx = hostPart.lastIndexOf(":");
 	if (colonIdx !== -1) {
 		const hostName = hostPart.substring(0, colonIdx);
 		const portStr = hostPart.substring(colonIdx + 1);
 		if (!hostName) {
-			return localize('sshHostMissingAfterAt', "Enter a host name after '@'.");
+			return localize("sshHostMissingAfterAt", "Enter a host name after '@'.");
 		}
 		if (portStr) {
 			const portNum = Number(portStr);
 			if (!Number.isInteger(portNum) || portNum <= 0 || portNum > 65535) {
-				return localize('sshHostInvalidPort', "Enter a valid port number.");
+				return localize("sshHostInvalidPort", "Enter a valid port number.");
 			}
 		}
 	}
@@ -207,17 +219,17 @@ function validateSSHHostInput(value: string): string | undefined {
 }
 
 interface ISSHAliasPickItem extends IQuickPickItem {
-	readonly kind: 'alias';
+	readonly kind: "alias";
 	readonly hostAlias: string;
 }
 
 interface ISSHNewHostPickItem extends IQuickPickItem {
-	kind: 'new-host';
+	kind: "new-host";
 	hostInput: string;
 }
 
 interface ISSHFooterPickItem extends IQuickPickItem {
-	readonly kind: 'add-config' | 'configure';
+	readonly kind: "add-config" | "configure";
 }
 
 type SSHHostPickerItem = ISSHAliasPickItem | ISSHNewHostPickItem | ISSHFooterPickItem;
@@ -225,42 +237,44 @@ type SSHHostPickerItem = ISSHAliasPickItem | ISSHNewHostPickItem | ISSHFooterPic
 async function promptToConnectViaSSH(
 	accessor: ServicesAccessor,
 	options: { showBackButton?: boolean } = {},
-): Promise<'back' | void> {
+): Promise<"back" | void> {
 	const sshService = accessor.get(ISSHRemoteAgentHostService);
 	const quickInputService = accessor.get(IQuickInputService);
 	const notificationService = accessor.get(INotificationService);
 	const instantiationService = accessor.get(IInstantiationService);
 	const commandService = accessor.get(ICommandService);
 
-	const configHosts = await sshService.listSSHConfigHosts().catch(() => [] as string[]);
+	const configHosts = await sshService.listSSHConfigHosts().catch(
+    () => [] as string[],
+  );
 
 	const aliasItems: ISSHAliasPickItem[] = configHosts.map(h => ({
-		kind: 'alias',
-		hostAlias: h,
-		label: h,
-	}));
+    kind: "alias",
+    hostAlias: h,
+    label: h,
+  }));
 	const addHostItem: ISSHFooterPickItem = {
-		kind: 'add-config',
-		label: '$(plus) ' + localize('sshAddNewHost', "Add New SSH Host..."),
-		alwaysShow: true,
-	};
+    kind: "add-config",
+    label: "$(plus) " + localize("sshAddNewHost", "Add New SSH Host..."),
+    alwaysShow: true,
+  };
 	const configureHostsItem: ISSHFooterPickItem = {
-		kind: 'configure',
-		label: localize('sshConfigureHosts', "Configure SSH Hosts..."),
-		alwaysShow: true,
-	};
+    kind: "configure",
+    label: localize("sshConfigureHosts", "Configure SSH Hosts..."),
+    alwaysShow: true,
+  };
 	const newHostItem: ISSHNewHostPickItem = {
-		kind: 'new-host',
-		hostInput: '',
-		label: '',
-		alwaysShow: true,
-	};
+    kind: "new-host",
+    hostInput: "",
+    label: "",
+    alwaysShow: true,
+  };
 
-	const result = await new Promise<'back' | SSHHostPickerItem | undefined>((resolve) => {
+	const result = await new Promise<"back" | SSHHostPickerItem | undefined>((resolve) => {
 		const store = new DisposableStore();
 		const picker = store.add(quickInputService.createQuickPick<SSHHostPickerItem>());
-		picker.title = localize('sshHostTitle', "Connect via SSH");
-		picker.placeholder = localize('sshHostPickerPlaceholder', "Select configured SSH host or enter user@host");
+		picker.title = localize("sshHostTitle", "Connect via SSH");
+		picker.placeholder = localize("sshHostPickerPlaceholder", "Select configured SSH host or enter user@host");
 		picker.ignoreFocusOut = true;
 		picker.matchOnDescription = true;
 		if (options.showBackButton) {
@@ -299,7 +313,7 @@ async function promptToConnectViaSSH(
 
 		store.add(picker.onDidTriggerButton(button => {
 			if (button === quickInputService.backButton) {
-				resolve('back');
+				resolve("back");
 				picker.hide();
 			}
 		}));
@@ -315,27 +329,29 @@ async function promptToConnectViaSSH(
 		picker.show();
 	});
 
-	if (result === 'back') {
-		return 'back';
+	if (result === "back") {
+		return "back";
 	}
 
 	if (!result) {
 		return;
 	}
 
-	if (result.kind === 'add-config' || result.kind === 'configure') {
-		const cmdId = result.kind === 'add-config'
+	if (result.kind === "add-config" || result.kind === "configure") {
+		const cmdId = result.kind === "add-config"
 			? RemoteAgentHostCommandIds.addNewSSHHost
 			: RemoteAgentHostCommandIds.configureSSHHosts;
 		// Pass back callback so sub-picker can navigate back to this SSH picker
-		const onBackToSSH = () => instantiationService.invokeFunction(a => promptToConnectViaSSH(a, options));
+		const onBackToSSH = () => instantiationService.invokeFunction(
+      a => promptToConnectViaSSH(a, options),
+    );
 		await commandService.executeCommand(cmdId, onBackToSSH);
 		return;
 	}
 
-	if (result.kind === 'alias') {
+	if (result.kind === "alias") {
 		await instantiationService.invokeFunction(accessor =>
-			connectToConfiguredSSHHost(accessor, result.hostAlias)
+			connectToConfiguredSSHHost(accessor, result.hostAlias),
 		);
 		return;
 	}
@@ -344,11 +360,13 @@ async function promptToConnectViaSSH(
 	const newHost = result as ISSHNewHostPickItem;
 	const parsed = parseSSHHostInput(newHost.hostInput);
 	if (!parsed) {
-		notificationService.error(validateSSHHostInput(newHost.hostInput) ?? localize('sshHostInvalid', "Invalid SSH host."));
+		notificationService.error(
+      validateSSHHostInput(newHost.hostInput) ?? localize("sshHostInvalid", "Invalid SSH host."),
+    );
 		return;
 	}
 	await instantiationService.invokeFunction(accessor =>
-		promptForCredentialsAndConnect(accessor, parsed.host, parsed.username, parsed.port)
+		promptForCredentialsAndConnect(accessor, parsed.host, parsed.username, parsed.port),
 	);
 }
 
@@ -364,7 +382,14 @@ async function connectToConfiguredSSHHost(
 	try {
 		resolvedConfig = await sshService.resolveSSHConfig(hostAlias);
 	} catch (err) {
-		notificationService.error(localize('sshResolveConfigFailed', "Failed to resolve SSH config for {0}: {1}", hostAlias, String(err)));
+		notificationService.error(
+      localize(
+        "sshResolveConfigFailed",
+        "Failed to resolve SSH config for {0}: {1}",
+        hostAlias,
+        String(err),
+      ),
+    );
 		return;
 	}
 
@@ -376,7 +401,13 @@ async function connectToConfiguredSSHHost(
 	let defaultKeyPath: string | undefined;
 	if (resolvedConfig.identityFile.length > 0) {
 		const firstKey = resolvedConfig.identityFile[0];
-		const defaultKeys = ['~/.ssh/id_rsa', '~/.ssh/id_ecdsa', '~/.ssh/id_ed25519', '~/.ssh/id_dsa', '~/.ssh/id_xmss'];
+		const defaultKeys = [
+      "~/.ssh/id_rsa",
+      "~/.ssh/id_ecdsa",
+      "~/.ssh/id_ed25519",
+      "~/.ssh/id_dsa",
+      "~/.ssh/id_xmss",
+    ];
 		if (!defaultKeys.includes(firstKey)) {
 			defaultKeyPath = firstKey;
 		}
@@ -384,27 +415,29 @@ async function connectToConfiguredSSHHost(
 
 	if (username) {
 		const config: ISSHAgentHostConfig = {
-			host,
-			port,
-			username,
-			authMethod: SSHAuthMethod.Agent,
-			privateKeyPath: defaultKeyPath,
-			agentForward: resolvedConfig.forwardAgent || undefined,
-			name: suggestedName,
-			sshConfigHost: hostAlias,
-		};
+      host,
+      port,
+      username,
+      authMethod: SSHAuthMethod.Agent,
+      privateKeyPath: defaultKeyPath,
+      agentForward: resolvedConfig.forwardAgent || undefined,
+      name: suggestedName,
+      sshConfigHost: hostAlias,
+    };
 		const connection = await instantiationService.invokeFunction(accessor =>
-			connectWithProgress(accessor, config, suggestedName)
+			connectWithProgress(accessor, config, suggestedName),
 		);
 		if (connection) {
-			await instantiationService.invokeFunction(accessor => promptForRemoteFolder(accessor, connection));
+			await instantiationService.invokeFunction(
+        accessor => promptForRemoteFolder(accessor, connection),
+      );
 		}
 		return;
 	}
 
 	// Fallback: alias resolved without a user — fall through to manual flow
 	await instantiationService.invokeFunction(accessor =>
-		promptForCredentialsAndConnect(accessor, host, undefined, port, suggestedName, defaultKeyPath)
+		promptForCredentialsAndConnect(accessor, host, undefined, port, suggestedName, defaultKeyPath),
 	);
 }
 
@@ -421,12 +454,12 @@ async function promptForCredentialsAndConnect(
 
 	if (!username) {
 		const usernameInput = await quickInputService.input({
-			title: localize('sshUsernameTitle', "SSH Username"),
-			prompt: localize('sshUsernamePrompt', "Enter the username for {0}.", host),
-			placeHolder: 'root',
-			ignoreFocusLost: true,
-			validateInput: async value => value.trim() ? undefined : localize('sshUsernameEmpty', "Enter a username."),
-		});
+      title: localize("sshUsernameTitle", "SSH Username"),
+      prompt: localize("sshUsernamePrompt", "Enter the username for {0}.", host),
+      placeHolder: "root",
+      ignoreFocusLost: true,
+      validateInput: async value => value.trim() ? undefined : localize("sshUsernameEmpty", "Enter a username."),
+    });
 		if (!usernameInput) {
 			return;
 		}
@@ -434,27 +467,27 @@ async function promptForCredentialsAndConnect(
 	}
 
 	const authPicks: ISSHAuthMethodPickItem[] = [
-		{
-			method: SSHAuthMethod.Agent,
-			label: localize('sshAuthAgent', "SSH Agent"),
-			description: localize('sshAuthAgentDesc', "Use the running SSH agent for authentication"),
-		},
-		{
-			method: SSHAuthMethod.KeyFile,
-			label: localize('sshAuthKey', "Private Key File"),
-			description: localize('sshAuthKeyDesc', "Authenticate with a private key file"),
-		},
-		{
-			method: SSHAuthMethod.Password,
-			label: localize('sshAuthPassword', "Password"),
-			description: localize('sshAuthPasswordDesc', "Authenticate with a password"),
-		},
-	];
+    {
+      method: SSHAuthMethod.Agent,
+      label: localize("sshAuthAgent", "SSH Agent"),
+      description: localize("sshAuthAgentDesc", "Use the running SSH agent for authentication"),
+    },
+    {
+      method: SSHAuthMethod.KeyFile,
+      label: localize("sshAuthKey", "Private Key File"),
+      description: localize("sshAuthKeyDesc", "Authenticate with a private key file"),
+    },
+    {
+      method: SSHAuthMethod.Password,
+      label: localize("sshAuthPassword", "Password"),
+      description: localize("sshAuthPasswordDesc", "Authenticate with a password"),
+    },
+  ];
 
 	const authPicked = await quickInputService.pick(authPicks, {
-		title: localize('sshAuthTitle', "Authentication Method"),
-		placeHolder: localize('sshAuthPlaceholder', "Choose how to authenticate with {0}", host),
-	});
+    title: localize("sshAuthTitle", "Authentication Method"),
+    placeHolder: localize("sshAuthPlaceholder", "Choose how to authenticate with {0}", host),
+  });
 	if (!authPicked) {
 		return;
 	}
@@ -465,25 +498,25 @@ async function promptForCredentialsAndConnect(
 
 	if (authMethod === SSHAuthMethod.KeyFile) {
 		const keyPath = await quickInputService.input({
-			title: localize('sshKeyTitle', "Private Key Path"),
-			prompt: localize('sshKeyPrompt', "Enter the path to your SSH private key."),
-			placeHolder: '~/.ssh/id_rsa',
-			value: defaultKeyPath ?? '~/.ssh/id_rsa',
-			ignoreFocusLost: true,
-			validateInput: async value => value.trim() ? undefined : localize('sshKeyEmpty', "Enter a key file path."),
-		});
+      title: localize("sshKeyTitle", "Private Key Path"),
+      prompt: localize("sshKeyPrompt", "Enter the path to your SSH private key."),
+      placeHolder: "~/.ssh/id_rsa",
+      value: defaultKeyPath ?? "~/.ssh/id_rsa",
+      ignoreFocusLost: true,
+      validateInput: async value => value.trim() ? undefined : localize("sshKeyEmpty", "Enter a key file path."),
+    });
 		if (!keyPath) {
 			return;
 		}
 		privateKeyPath = keyPath.trim();
 	} else if (authMethod === SSHAuthMethod.Password) {
 		const pw = await quickInputService.input({
-			title: localize('sshPasswordTitle', "SSH Password"),
-			prompt: localize('sshPasswordPrompt', "Enter the password for {0}@{1}.", username, host),
-			password: true,
-			ignoreFocusLost: true,
-			validateInput: async value => value ? undefined : localize('sshPasswordEmpty', "Enter a password."),
-		});
+      title: localize("sshPasswordTitle", "SSH Password"),
+      prompt: localize("sshPasswordPrompt", "Enter the password for {0}@{1}.", username, host),
+      password: true,
+      ignoreFocusLost: true,
+      validateInput: async value => value ? undefined : localize("sshPasswordEmpty", "Enter a password."),
+    });
 		if (!pw) {
 			return;
 		}
@@ -492,33 +525,35 @@ async function promptForCredentialsAndConnect(
 
 	const defaultName = suggestedName ?? `${username}@${host}`;
 	const name = await quickInputService.input({
-		title: localize('sshNameTitle', "Name Remote"),
-		prompt: localize('sshNamePrompt', "Enter a display name for this SSH remote."),
-		placeHolder: localize('sshNamePlaceholder', "My Remote"),
-		value: defaultName,
-		valueSelection: [0, defaultName.length],
-		ignoreFocusLost: true,
-		validateInput: async value => value.trim() ? undefined : localize('sshNameEmpty', "Enter a name."),
-	});
+    title: localize("sshNameTitle", "Name Remote"),
+    prompt: localize("sshNamePrompt", "Enter a display name for this SSH remote."),
+    placeHolder: localize("sshNamePlaceholder", "My Remote"),
+    value: defaultName,
+    valueSelection: [0, defaultName.length],
+    ignoreFocusLost: true,
+    validateInput: async value => value.trim() ? undefined : localize("sshNameEmpty", "Enter a name."),
+  });
 	if (!name) {
 		return;
 	}
 
 	const config: ISSHAgentHostConfig = {
-		host,
-		port,
-		username,
-		authMethod,
-		privateKeyPath,
-		password,
-		name: name.trim(),
-	};
+    host,
+    port,
+    username,
+    authMethod,
+    privateKeyPath,
+    password,
+    name: name.trim(),
+  };
 
 	const connection = await instantiationService.invokeFunction(accessor =>
-		connectWithProgress(accessor, config, host)
+		connectWithProgress(accessor, config, host),
 	);
 	if (connection) {
-		await instantiationService.invokeFunction(accessor => promptForRemoteFolder(accessor, connection));
+		await instantiationService.invokeFunction(
+      accessor => promptForRemoteFolder(accessor, connection),
+    );
 	}
 }
 
@@ -531,10 +566,10 @@ async function connectWithProgress(
 	const notificationService = accessor.get(INotificationService);
 
 	const handle = notificationService.notify({
-		severity: Severity.Info,
-		message: localize('sshConnecting', "Connecting to {0} via SSH...", displayHost),
-		progress: { infinite: true },
-	});
+    severity: Severity.Info,
+    message: localize("sshConnecting", "Connecting to {0} via SSH...", displayHost),
+    progress: { infinite: true },
+  });
 
 	// Build the expected connection key to filter progress events.
 	// Must match the key logic in the shared process service.
@@ -557,7 +592,14 @@ async function connectWithProgress(
 		if (isCancellationError(err)) {
 			return undefined;
 		}
-		notificationService.error(localize('sshConnectFailed', "Failed to connect via SSH to {0}: {1}", displayHost, String(err)));
+		notificationService.error(
+      localize(
+        "sshConnectFailed",
+        "Failed to connect via SSH to {0}: {1}",
+        displayHost,
+        String(err),
+      ),
+    );
 		return undefined;
 	} finally {
 		progressListener?.dispose();
@@ -578,7 +620,9 @@ async function promptForRemoteFolder(
 
 	// The provider is created synchronously during addManagedConnection's
 	// onDidChangeConnections event, so it should exist by now.
-	const provider = sessionsProvidersService.getProviders().find((p): p is IAgentHostSessionsProvider => isAgentHostProvider(p) && p.remoteAddress === connection.localAddress);
+	const provider = sessionsProvidersService.getProviders().find(
+    (p): p is IAgentHostSessionsProvider => isAgentHostProvider(p) && p.remoteAddress === connection.localAddress,
+  );
 	if (!provider) {
 		return;
 	}
@@ -599,7 +643,10 @@ async function promptForRemoteFolder(
 	}
 
 	sessionsManagementService.openNewSessionView();
-	const view = await viewsService.openView<NewChatViewPane>(SessionsViewId, true);
+	const view = await viewsService.openView<NewChatViewPane>(
+    SessionsViewId,
+    true,
+  );
 	view?.selectWorkspace(folderUri);
 }
 
@@ -607,8 +654,8 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: RemoteAgentHostCommandIds.connectViaSSH,
-			title: localize2('connectViaSSH', "Connect to Remote Agent Host via SSH"),
-			shortTitle: localize2('connectViaSSHShort', "SSH..."),
+			title: localize2("connectViaSSH", "Connect to Remote Agent Host via SSH"),
+			shortTitle: localize2("connectViaSSHShort", "SSH..."),
 			category: SessionsCategories.Sessions,
 			f1: true,
 			icon: Codicon.remote,
@@ -623,7 +670,7 @@ registerAction2(class extends Action2 {
 
 	override async run(accessor: ServicesAccessor, onBack?: () => void): Promise<void> {
 		const result = await promptToConnectViaSSH(accessor, { showBackButton: !!onBack });
-		if (result === 'back') {
+		if (result === "back") {
 			onBack?.();
 		}
 	}
@@ -633,7 +680,7 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: RemoteAgentHostCommandIds.addNewSSHHost,
-			title: localize2('addNewSSHHost', "Add New SSH Host..."),
+			title: localize2("addNewSSHHost", "Add New SSH Host..."),
 			category: SessionsCategories.Sessions,
 			f1: true,
 			precondition: ContextKeyExpr.equals(`config.${RemoteAgentHostsEnabledSettingId}`, true),
@@ -650,7 +697,7 @@ registerAction2(class extends Action2 {
 		try {
 			configUri = await sshService.ensureUserSSHConfig();
 		} catch (err) {
-			notificationService.error(localize('sshConfigCreateFailed', "Failed to create SSH config file: {0}", String(err)));
+			notificationService.error(localize("sshConfigCreateFailed", "Failed to create SSH config file: {0}", String(err)));
 			return;
 		}
 
@@ -675,7 +722,7 @@ registerAction2(class extends Action2 {
 			const stat = await fileService.stat(configUri);
 			if (stat.size > 0) {
 				const content = model.getValueInRange(model.getFullModelRange(), EndOfLinePreference.LF);
-				appendNewline = content.length > 0 && !content.endsWith('\n');
+				appendNewline = content.length > 0 && !content.endsWith("\n");
 			}
 		} catch {
 			// ignore
@@ -684,7 +731,7 @@ registerAction2(class extends Action2 {
 		const lastCol = model.getLineMaxColumn(lastLine);
 		editor.setSelection(new Range(lastLine, lastCol, lastLine, lastCol));
 
-		const snippet = (appendNewline ? '\n' : '') + 'Host ${1:alias}\n    HostName ${2:hostname}\n    User ${3:user}\n';
+		const snippet = (appendNewline ? "\n" : "") + "Host ${1:alias}\n    HostName ${2:hostname}\n    User ${3:user}\n";
 		SnippetController2.get(editor)?.insert(snippet);
 		editor.focus();
 	}
@@ -694,7 +741,7 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: RemoteAgentHostCommandIds.configureSSHHosts,
-			title: localize2('configureSSHHosts', "Configure SSH Hosts..."),
+			title: localize2("configureSSHHosts", "Configure SSH Hosts..."),
 			category: SessionsCategories.Sessions,
 			f1: true,
 			precondition: ContextKeyExpr.equals(`config.${RemoteAgentHostsEnabledSettingId}`, true),
@@ -711,7 +758,7 @@ registerAction2(class extends Action2 {
 		try {
 			configFiles = await sshService.listSSHConfigFiles();
 		} catch (err) {
-			notificationService.error(localize('sshConfigListFailed', "Failed to list SSH config files: {0}", String(err)));
+			notificationService.error(localize("sshConfigListFailed", "Failed to list SSH config files: {0}", String(err)));
 			return;
 		}
 
@@ -721,7 +768,7 @@ registerAction2(class extends Action2 {
 				const uri = await sshService.ensureUserSSHConfig();
 				await editorService.openEditor({ resource: uri, options: { pinned: true } satisfies ITextEditorOptions });
 			} catch (err) {
-				notificationService.error(localize('sshConfigOpenFailed', "Failed to open SSH config file: {0}", String(err)));
+				notificationService.error(localize("sshConfigOpenFailed", "Failed to open SSH config file: {0}", String(err)));
 			}
 			return;
 		}
@@ -747,23 +794,23 @@ registerAction2(class extends Action2 {
 					: picked.uri;
 				await editorService.openEditor({ resource: uri, options: { pinned: true } satisfies ITextEditorOptions });
 			} catch (err) {
-				notificationService.error(localize('sshConfigOpenFailed', "Failed to open SSH config file: {0}", String(err)));
+				notificationService.error(localize("sshConfigOpenFailed", "Failed to open SSH config file: {0}", String(err)));
 			}
 			return;
 		}
 
-		const picked = await new Promise<'back' | ISSHConfigFilePickItem | undefined>(resolve => {
+		const picked = await new Promise<"back" | ISSHConfigFilePickItem | undefined>(resolve => {
 			const store = new DisposableStore();
 			const picker = store.add(quickInputService.createQuickPick<ISSHConfigFilePickItem>());
-			picker.title = localize('sshConfigPickTitle', "Select SSH configuration file to edit");
-			picker.placeholder = localize('sshConfigPickPlaceholder', "Select an SSH configuration file");
+			picker.title = localize("sshConfigPickTitle", "Select SSH configuration file to edit");
+			picker.placeholder = localize("sshConfigPickPlaceholder", "Select an SSH configuration file");
 			picker.items = items;
 			if (onBack) {
 				picker.buttons = [quickInputService.backButton];
 			}
 			store.add(picker.onDidTriggerButton(button => {
 				if (button === quickInputService.backButton) {
-					resolve('back');
+					resolve("back");
 					picker.hide();
 				}
 			}));
@@ -778,7 +825,7 @@ registerAction2(class extends Action2 {
 			picker.show();
 		});
 
-		if (picked === 'back') {
+		if (picked === "back") {
 			onBack?.();
 			return;
 		}
@@ -794,7 +841,7 @@ registerAction2(class extends Action2 {
 				: picked.uri;
 			await editorService.openEditor({ resource: uri, options: { pinned: true } satisfies ITextEditorOptions });
 		} catch (err) {
-			notificationService.error(localize('sshConfigOpenFailed', "Failed to open SSH config file: {0}", String(err)));
+			notificationService.error(localize("sshConfigOpenFailed", "Failed to open SSH config file: {0}", String(err)));
 		}
 	}
 });
@@ -808,7 +855,7 @@ interface ITunnelPickItem extends IQuickPickItem {
 async function promptToConnectViaTunnel(
 	accessor: ServicesAccessor,
 	options: { showBackButton?: boolean } = {},
-): Promise<'back' | void> {
+): Promise<"back" | void> {
 	const tunnelService = accessor.get(ITunnelAgentHostService);
 	const quickInputService = accessor.get(IQuickInputService);
 	const notificationService = accessor.get(INotificationService);
@@ -819,24 +866,36 @@ async function promptToConnectViaTunnel(
 	// Step 1: Determine auth provider — try cached sessions first, then prompt
 	// This used to call tunnelService.getAuthProvider, but for now we're Github-
 	// only for the remote AH connection.
-	const authProvider = 'github';
+	const authProvider = "github";
 
 	// Trigger interactive auth for the chosen provider
 	const scopes = productService.tunnelApplicationConfig?.authenticationProviders?.[authProvider]?.scopes ?? [];
 	try {
-		if (!(await authenticationService.getSessions(authProvider, scopes)).length) {
-			await authenticationService.createSession(authProvider, scopes, { activateImmediate: true });
+		if (!(await authenticationService.getSessions(
+      authProvider,
+      scopes,
+    )).length) {
+			await authenticationService.createSession(authProvider, scopes, {
+        activateImmediate: true,
+      });
 		}
 	} catch {
-		notificationService.error(localize('tunnelAuthFailed', "Authentication failed. Please try again."));
+		notificationService.error(
+      localize("tunnelAuthFailed", "Authentication failed. Please try again."),
+    );
 		return;
 	}
 
 	// Step 2: Show tunnel picker immediately in busy state while enumerating
 	const store = new DisposableStore();
-	const tunnelPicker = store.add(quickInputService.createQuickPick<ITunnelPickItem>());
-	tunnelPicker.title = localize('tunnelPickTitle', "Connect via Dev Tunnel");
-	tunnelPicker.placeholder = localize('tunnelPickPlaceholder', "Select a dev tunnel to connect to");
+	const tunnelPicker = store.add(
+    quickInputService.createQuickPick<ITunnelPickItem>(),
+  );
+	tunnelPicker.title = localize("tunnelPickTitle", "Connect via Dev Tunnel");
+	tunnelPicker.placeholder = localize(
+    "tunnelPickPlaceholder",
+    "Select a dev tunnel to connect to",
+  );
 	tunnelPicker.busy = true;
 	if (options.showBackButton) {
 		tunnelPicker.buttons = [quickInputService.backButton];
@@ -848,28 +907,39 @@ async function promptToConnectViaTunnel(
 		tunnels = await tunnelService.listTunnels();
 	} catch (err) {
 		store.dispose();
-		notificationService.error(localize('tunnelListFailed', "Failed to list dev tunnels: {0}", err instanceof Error ? err.message : String(err)));
+		notificationService.error(
+      localize(
+        "tunnelListFailed",
+        "Failed to list dev tunnels: {0}",
+        err instanceof Error ? err.message : String(err),
+      ),
+    );
 		return;
 	}
 
 	if (tunnels.length === 0) {
 		store.dispose();
-		notificationService.info(localize('tunnelNoneFound', "No dev tunnels with agent host support were found. Start a tunnel with 'code tunnel' on another machine."));
+		notificationService.info(
+      localize(
+        "tunnelNoneFound",
+        "No dev tunnels with agent host support were found. Start a tunnel with 'code tunnel' on another machine.",
+      ),
+    );
 		return;
 	}
 
 	tunnelPicker.items = tunnels.map(t => ({
-		label: t.name,
-		description: `${t.tunnelId} · protocol v${t.protocolVersion}`,
-		tunnel: t,
-	}));
+    label: t.name,
+    description: `${t.tunnelId} · protocol v${t.protocolVersion}`,
+    tunnel: t,
+  }));
 	tunnelPicker.busy = false;
 
 	// Step 3: Wait for user selection
-	const picked = await new Promise<'back' | ITunnelPickItem | undefined>(resolve => {
+	const picked = await new Promise<"back" | ITunnelPickItem | undefined>(resolve => {
 		store.add(tunnelPicker.onDidTriggerButton(button => {
 			if (button === quickInputService.backButton) {
-				resolve('back');
+				resolve("back");
 				tunnelPicker.hide();
 			}
 		}));
@@ -883,8 +953,8 @@ async function promptToConnectViaTunnel(
 		}));
 	});
 
-	if (picked === 'back') {
-		return 'back';
+	if (picked === "back") {
+		return "back";
 	}
 	if (!picked) {
 		return;
@@ -892,10 +962,10 @@ async function promptToConnectViaTunnel(
 
 	// Step 4: Connect to the tunnel with progress notification
 	const handle = notificationService.notify({
-		severity: Severity.Info,
-		message: localize('tunnelConnecting', "Connecting to tunnel '{0}'...", picked.tunnel.name),
-		progress: { infinite: true },
-	});
+    severity: Severity.Info,
+    message: localize("tunnelConnecting", "Connecting to tunnel '{0}'...", picked.tunnel.name),
+    progress: { infinite: true },
+  });
 
 	try {
 		// `connect` caches the tunnel internally before wiring the live
@@ -904,12 +974,21 @@ async function promptToConnectViaTunnel(
 		handle.close();
 	} catch (err) {
 		handle.close();
-		notificationService.error(localize('tunnelConnectFailed', "Failed to connect to tunnel '{0}': {1}", picked.tunnel.name, err instanceof Error ? err.message : String(err)));
+		notificationService.error(
+      localize(
+        "tunnelConnectFailed",
+        "Failed to connect to tunnel '{0}': {1}",
+        picked.tunnel.name,
+        err instanceof Error ? err.message : String(err),
+      ),
+    );
 		return;
 	}
 
 	// Step 5: Open folder picker (same pattern as SSH)
-	await instantiationService.invokeFunction(accessor => promptForTunnelFolder(accessor, picked.tunnel));
+	await instantiationService.invokeFunction(
+    accessor => promptForTunnelFolder(accessor, picked.tunnel),
+  );
 }
 
 /**
@@ -928,7 +1007,9 @@ async function promptForTunnelFolder(
 
 	// The provider is created by TunnelAgentHostContribution when the
 	// tunnel is cached (via onDidChangeTunnels / _reconcileProviders).
-	const provider = sessionsProvidersService.getProviders().find((p): p is IAgentHostSessionsProvider => isAgentHostProvider(p) && p.remoteAddress === tunnelAddress);
+	const provider = sessionsProvidersService.getProviders().find(
+    (p): p is IAgentHostSessionsProvider => isAgentHostProvider(p) && p.remoteAddress === tunnelAddress,
+  );
 	if (!provider) {
 		return;
 	}
@@ -949,7 +1030,10 @@ async function promptForTunnelFolder(
 	}
 
 	sessionsManagementService.openNewSessionView();
-	const view = await viewsService.openView<NewChatViewPane>(SessionsViewId, true);
+	const view = await viewsService.openView<NewChatViewPane>(
+    SessionsViewId,
+    true,
+  );
 	view?.selectWorkspace(folderUri);
 }
 
@@ -957,8 +1041,8 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: RemoteAgentHostCommandIds.connectViaTunnel,
-			title: localize2('connectViaTunnel', "Connect to Remote Agent Host via Dev Tunnel"),
-			shortTitle: localize2('connectViaTunnelShort', "Tunnels..."),
+			title: localize2("connectViaTunnel", "Connect to Remote Agent Host via Dev Tunnel"),
+			shortTitle: localize2("connectViaTunnelShort", "Tunnels..."),
 			category: SessionsCategories.Sessions,
 			f1: true,
 			icon: Codicon.cloud,
@@ -973,7 +1057,7 @@ registerAction2(class extends Action2 {
 
 	override async run(accessor: ServicesAccessor, onBack?: () => void): Promise<void> {
 		const result = await promptToConnectViaTunnel(accessor, { showBackButton: !!onBack });
-		if (result === 'back') {
+		if (result === "back") {
 			onBack?.();
 		}
 	}

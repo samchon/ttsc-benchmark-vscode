@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { userInfo } from 'os';
-import * as platform from '../common/platform.js';
-import { getFirstAvailablePowerShellInstallation } from './powershell.js';
-import * as processes from './processes.js';
+import { userInfo } from "os";
+import * as platform from "../common/platform.js";
+import { getFirstAvailablePowerShellInstallation } from "./powershell.js";
+import * as processes from "./processes.js";
 
 /**
  * Gets the detected default shell for the _system_, not to be confused with VS Code's _default_
@@ -29,15 +29,15 @@ let _TERMINAL_DEFAULT_SHELL_UNIX_LIKE: string | null = null;
 function getSystemShellUnixLike(os: platform.OperatingSystem, env: platform.IProcessEnvironment): string {
 	// Only use $SHELL for the current OS
 	if (platform.isLinux && os === platform.OperatingSystem.Macintosh || platform.isMacintosh && os === platform.OperatingSystem.Linux) {
-		return '/bin/bash';
+		return "/bin/bash";
 	}
 
 	if (!_TERMINAL_DEFAULT_SHELL_UNIX_LIKE) {
 		let unixLikeTerminal: string | undefined | null;
 		if (platform.isWindows) {
-			unixLikeTerminal = '/bin/bash'; // for WSL
+			unixLikeTerminal = "/bin/bash"; // for WSL
 		} else {
-			unixLikeTerminal = env['SHELL'];
+			unixLikeTerminal = env["SHELL"];
 
 			if (!unixLikeTerminal) {
 				try {
@@ -48,12 +48,12 @@ function getSystemShellUnixLike(os: platform.OperatingSystem, env: platform.IPro
 			}
 
 			if (!unixLikeTerminal) {
-				unixLikeTerminal = 'sh';
+				unixLikeTerminal = "sh";
 			}
 
 			// Some systems have $SHELL set to /bin/false which breaks the terminal
-			if (unixLikeTerminal === '/bin/false') {
-				unixLikeTerminal = '/bin/bash';
+			if (unixLikeTerminal === "/bin/false") {
+				unixLikeTerminal = "/bin/bash";
 			}
 		}
 		_TERMINAL_DEFAULT_SHELL_UNIX_LIKE = unixLikeTerminal;

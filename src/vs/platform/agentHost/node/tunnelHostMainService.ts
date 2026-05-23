@@ -3,29 +3,29 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { Tunnel } from '@microsoft/dev-tunnels-contracts';
-import type { TunnelManagementHttpClient } from '@microsoft/dev-tunnels-management';
-import { connect } from 'net';
-import { hostname } from 'os';
-import { Emitter, Event } from '../../../base/common/event.js';
-import { Disposable, MutableDisposable } from '../../../base/common/lifecycle.js';
-import { joinPath } from '../../../base/common/resources.js';
-import { IConfigurationService } from '../../configuration/common/configuration.js';
-import { INativeEnvironmentService } from '../../environment/common/environment.js';
-import { ILogger, ILoggerService } from '../../log/common/log.js';
-import { localize } from '../../../nls.js';
-import { CONFIGURATION_KEY_HOST_NAME } from '../../remoteTunnel/common/remoteTunnel.js';
+import type { Tunnel } from "@microsoft/dev-tunnels-contracts";
+import type { TunnelManagementHttpClient } from "@microsoft/dev-tunnels-management";
+import { connect } from "net";
+import { hostname } from "os";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable, MutableDisposable } from "../../../base/common/lifecycle.js";
+import { joinPath } from "../../../base/common/resources.js";
+import { IConfigurationService } from "../../configuration/common/configuration.js";
+import { INativeEnvironmentService } from "../../environment/common/environment.js";
+import { ILogger, ILoggerService } from "../../log/common/log.js";
+import { localize } from "../../../nls.js";
+import { CONFIGURATION_KEY_HOST_NAME } from "../../remoteTunnel/common/remoteTunnel.js";
 import {
-	ITunnelAgentHostHostingService,
-	PROTOCOL_VERSION_TAG_PREFIX,
-	TUNNEL_AGENT_HOST_PORT,
-	TUNNEL_HOST_LOG_ID,
-	TUNNEL_LAUNCHER_LABEL,
-	TUNNEL_MIN_PROTOCOL_VERSION,
-	type ITunnelHostInfo,
-	type TunnelHostStatus,
-} from '../common/tunnelAgentHost.js';
-import type { IAgentHostSocketInfo } from '../common/agentService.js';
+  ITunnelAgentHostHostingService,
+  PROTOCOL_VERSION_TAG_PREFIX,
+  TUNNEL_AGENT_HOST_PORT,
+  TUNNEL_HOST_LOG_ID,
+  TUNNEL_LAUNCHER_LABEL,
+  TUNNEL_MIN_PROTOCOL_VERSION,
+  type ITunnelHostInfo,
+  type TunnelHostStatus,
+} from "../common/tunnelAgentHost.js";
+import type { IAgentHostSocketInfo } from "../common/agentService.js";
 
 /** State of a currently hosted tunnel. */
 interface IActiveTunnel {
@@ -38,7 +38,9 @@ interface IActiveTunnel {
 export class TunnelHostMainService extends Disposable implements ITunnelAgentHostHostingService {
 	declare readonly _serviceBrand: undefined;
 
-	private readonly _onDidChangeStatus = this._register(new Emitter<TunnelHostStatus>());
+	private readonly _onDidChangeStatus = this._register(
+    new Emitter<TunnelHostStatus>(),
+  );
 	readonly onDidChangeStatus: Event<TunnelHostStatus> = this._onDidChangeStatus.event;
 
 	private readonly _activeTunnel = this._register(new MutableDisposable());
@@ -53,13 +55,18 @@ export class TunnelHostMainService extends Disposable implements ITunnelAgentHos
 	) {
 		super();
 
-		this._logger = this._register(loggerService.createLogger(
-			joinPath(environmentService.logsHome, `${TUNNEL_HOST_LOG_ID}.log`),
-			{ id: TUNNEL_HOST_LOG_ID, name: localize('tunnelHost.log', "Remote Connections") },
-		));
+		this._logger = this._register(
+      loggerService.createLogger(
+        joinPath(environmentService.logsHome, `${TUNNEL_HOST_LOG_ID}.log`),
+        {
+          id: TUNNEL_HOST_LOG_ID,
+          name: localize("tunnelHost.log", "Remote Connections"),
+        },
+      ),
+    );
 	}
 
-	async startHosting(token: string, authProvider: 'github' | 'microsoft', socketInfo: IAgentHostSocketInfo): Promise<ITunnelHostInfo> {
+	async startHosting(token: string, authProvider: "github" | "microsoft", socketInfo: IAgentHostSocketInfo): Promise<ITunnelHostInfo> {
 		// Stop any existing tunnel first
 		if (this._active) {
 			await this.stopHosting();
@@ -76,24 +83,31 @@ export class TunnelHostMainService extends Disposable implements ITunnelAgentHos
 		const newTunnel: Tunnel = {
 			ports: [{
 				portNumber: TUNNEL_AGENT_HOST_PORT,
-				protocol: 'https',
+				protocol: "https",
 			}],
 			labels: [TUNNEL_LAUNCHER_LABEL, tunnelName, protocolVersionTag],
 		};
 
 		const tunnelRequestOptions = {
-			tokenScopes: ['host', 'connect'],
-			includePorts: true,
-		};
+      tokenScopes: ["host", "connect"],
+      includePorts: true,
+    };
 
-		const tunnel = await client.createOrUpdateTunnel(newTunnel, tunnelRequestOptions);
-		this._logger.info(`Tunnel created: ${tunnel.tunnelId} in cluster ${tunnel.clusterId}`);
+		const tunnel = await client.createOrUpdateTunnel(
+      newTunnel,
+      tunnelRequestOptions,
+    );
+		this._logger.info(
+      `Tunnel created: ${tunnel.tunnelId} in cluster ${tunnel.clusterId}`,
+    );
 
 		// Host the tunnel using TunnelRelayTunnelHost.
 		// We disable automatic local port forwarding so that we can capture
 		// the raw data stream and pipe it into the agent host process
 		// directly, without needing a physical TCP listener on port 31546.
-		const { TunnelRelayTunnelHost } = await import('@microsoft/dev-tunnels-connections');
+		const { TunnelRelayTunnelHost } = await import(
+      "@microsoft/dev-tunnels-connections",
+    );
 		const host = new TunnelRelayTunnelHost(client);
 		host.forwardConnectionsToLocalPorts = false;
 		host.trace = (_level: unknown, _eventId: unknown, msg: string) => {
@@ -121,18 +135,18 @@ export class TunnelHostMainService extends Disposable implements ITunnelAgentHos
 
 		const domain = tunnel.ports?.[0]?.portForwardingUris?.[0] ?? `${tunnel.tunnelId}.${tunnel.clusterId}.devtunnels.ms`;
 		const info: ITunnelHostInfo = {
-			tunnelName,
-			tunnelId: tunnel.tunnelId!,
-			clusterId: tunnel.clusterId!,
-			domain: typeof domain === 'string' ? domain : `${tunnel.tunnelId}.${tunnel.clusterId}.devtunnels.ms`,
-		};
+      tunnelName,
+      tunnelId: tunnel.tunnelId!,
+      clusterId: tunnel.clusterId!,
+      domain: typeof domain === "string" ? domain : `${tunnel.tunnelId}.${tunnel.clusterId}.devtunnels.ms`,
+    };
 
 		this._active = { info, tunnel, host, client };
 		this._activeTunnel.value = {
 			dispose: () => {
 				host.dispose();
 				this._active = undefined;
-			}
+			},
 		};
 
 		this._onDidChangeStatus.fire({ active: true, info });
@@ -172,20 +186,22 @@ export class TunnelHostMainService extends Disposable implements ITunnelAgentHos
 	 * Get the sanitized tunnel name from configuration or OS hostname.
 	 */
 	private _getTunnelName(): string {
-		let name = this._configurationService.getValue<string>(CONFIGURATION_KEY_HOST_NAME) || hostname();
-		name = name.replace(/^-+/g, '').replace(/[^\w-]/g, '').substring(0, 20);
-		return name || 'vscode';
+		let name = this._configurationService.getValue<string>(
+      CONFIGURATION_KEY_HOST_NAME,
+    ) || hostname();
+		name = name.replace(/^-+/g, "").replace(/[^\w-]/g, "").substring(0, 20);
+		return name || "vscode";
 	}
 
-	private async _createManagementClient(token: string, authProvider: 'github' | 'microsoft'): Promise<TunnelManagementHttpClient> {
-		const mgmt = await import('@microsoft/dev-tunnels-management');
-		const authHeader = authProvider === 'github' ? `github ${token}` : `Bearer ${token}`;
+	private async _createManagementClient(token: string, authProvider: "github" | "microsoft"): Promise<TunnelManagementHttpClient> {
+		const mgmt = await import("@microsoft/dev-tunnels-management");
+		const authHeader = authProvider === "github" ? `github ${token}` : `Bearer ${token}`;
 
 		return new mgmt.TunnelManagementHttpClient(
-			'vscode-sessions',
-			mgmt.ManagementApiVersions.Version20230927preview,
-			async () => authHeader,
-		);
+      "vscode-sessions",
+      mgmt.ManagementApiVersions.Version20230927preview,
+      async () => authHeader,
+    );
 	}
 
 	/**
@@ -196,20 +212,20 @@ export class TunnelHostMainService extends Disposable implements ITunnelAgentHos
 	private _pipeToLocalAgentHost(incomingStream: NodeJS.ReadWriteStream, socketPath: string): void {
 		const socket = connect(socketPath);
 
-		socket.on('connect', () => {
-			this._logger.debug(`Connected to local agent host socket`);
-			incomingStream.pipe(socket);
-			socket.pipe(incomingStream);
-		});
+		socket.on("connect", () => {
+      this._logger.debug(`Connected to local agent host socket`);
+      incomingStream.pipe(socket);
+      socket.pipe(incomingStream);
+    });
 
-		socket.on('error', (err) => {
-			this._logger.error(`Socket error`, err);
-			incomingStream.end?.();
-		});
+		socket.on("error", (err) => {
+      this._logger.error(`Socket error`, err);
+      incomingStream.end?.();
+    });
 
-		incomingStream.on('error', () => {
-			socket.destroy();
-		});
+		incomingStream.on("error", () => {
+      socket.destroy();
+    });
 	}
 
 	override dispose(): void {

@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './media/chatIncrementalRendering.css';
-import { getWindow } from '../../../../../../../base/browser/dom.js';
-import { Disposable } from '../../../../../../../base/common/lifecycle.js';
-import { IConfigurationService } from '../../../../../../../platform/configuration/common/configuration.js';
-import { ChatConfiguration } from '../../../../common/constants.js';
-import { IIncrementalRenderingBuffer } from './buffers/buffer.js';
-import { WordBuffer } from './buffers/wordBuffer.js';
-import { BUFFER_MODES, BufferModeName } from './buffers/bufferRegistry.js';
-import { IIncrementalRenderingAnimation } from './animations/animation.js';
-import { ANIMATION_STYLES, AnimationStyleName } from './animations/animationRegistry.js';
-import { ANIMATION_DURATION_MS } from './animations/blockAnimations.js';
+import "./media/chatIncrementalRendering.css";
+import { getWindow } from "../../../../../../../base/browser/dom.js";
+import { Disposable } from "../../../../../../../base/common/lifecycle.js";
+import { IConfigurationService } from "../../../../../../../platform/configuration/common/configuration.js";
+import { ChatConfiguration } from "../../../../common/constants.js";
+import { IIncrementalRenderingBuffer } from "./buffers/buffer.js";
+import { WordBuffer } from "./buffers/wordBuffer.js";
+import { BUFFER_MODES, BufferModeName } from "./buffers/bufferRegistry.js";
+import { IIncrementalRenderingAnimation } from "./animations/animation.js";
+import { ANIMATION_STYLES, AnimationStyleName } from "./animations/animationRegistry.js";
+import { ANIMATION_DURATION_MS } from "./animations/blockAnimations.js";
 
 /**
  * Incremental markdown streaming renderer — rAF-batched, append-only.
@@ -31,13 +31,13 @@ import { ANIMATION_DURATION_MS } from './animations/blockAnimations.js';
  */
 export class IncrementalDOMMorpher extends Disposable {
 
-	private _lastMarkdown: string = '';
+	private _lastMarkdown: string = "";
 
 	/**
 	 * The markdown that was last rendered to the DOM. May lag behind
 	 * `_lastMarkdown` while content is being buffered.
 	 */
-	private _renderedMarkdown: string = '';
+	private _renderedMarkdown: string = "";
 
 	/**
 	 * High-water mark: the number of top-level children that have been
@@ -88,7 +88,9 @@ export class IncrementalDOMMorpher extends Disposable {
 	// ---- strategy factories ----
 
 	private _createBuffer(): IIncrementalRenderingBuffer {
-		const raw = this._configService.getValue<string>(ChatConfiguration.IncrementalRenderingBuffering);
+		const raw = this._configService.getValue<string>(
+      ChatConfiguration.IncrementalRenderingBuffering,
+    );
 		const factory = Object.prototype.hasOwnProperty.call(BUFFER_MODES, raw)
 			? BUFFER_MODES[raw as BufferModeName]
 			: BUFFER_MODES.paragraph;
@@ -96,7 +98,9 @@ export class IncrementalDOMMorpher extends Disposable {
 	}
 
 	private _createAnimation(): IIncrementalRenderingAnimation {
-		const raw = this._configService.getValue<string>(ChatConfiguration.IncrementalRenderingStyle);
+		const raw = this._configService.getValue<string>(
+      ChatConfiguration.IncrementalRenderingStyle,
+    );
 		const factory = Object.prototype.hasOwnProperty.call(ANIMATION_STYLES, raw)
 			? ANIMATION_STYLES[raw as AnimationStyleName]
 			: ANIMATION_STYLES.fade;
@@ -148,7 +152,7 @@ export class IncrementalDOMMorpher extends Disposable {
 		// doRenderMarkdown() ran to initialize pipeline state but
 		// the visible content should be built up by the buffer.
 		if (this._buffer.handlesFlush && markdown.length > 0) {
-			this._renderedMarkdown = '';
+			this._renderedMarkdown = "";
 			this._revealedChildCount = 0;
 			// Clear the DOM so the buffer starts from empty.
 			while (this._domNode.firstChild) {
@@ -192,7 +196,10 @@ export class IncrementalDOMMorpher extends Disposable {
 			return true;
 		}
 
-		const renderable = this._buffer.getRenderable(newMarkdown, this._renderedMarkdown);
+		const renderable = this._buffer.getRenderable(
+      newMarkdown,
+      this._renderedMarkdown,
+    );
 
 		if (renderable.length > this._renderedMarkdown.length) {
 			this._renderedMarkdown = renderable;
@@ -212,10 +219,10 @@ export class IncrementalDOMMorpher extends Disposable {
 		this._rafScheduled = true;
 		const win = getWindow(this._domNode);
 		this._rafHandle = win.requestAnimationFrame(() => {
-			this._rafScheduled = false;
-			this._rafHandle = undefined;
-			this._flushRender();
-		});
+      this._rafScheduled = false;
+      this._rafHandle = undefined;
+      this._flushRender();
+    });
 	}
 
 	private _flushRender(): void {
@@ -283,7 +290,12 @@ export class IncrementalDOMMorpher extends Disposable {
 		this._batchChildCount = currentCount;
 		const elapsed = now - this._animationStartTime;
 
-		this._animation.animate(children, this._revealedChildCount, currentCount, elapsed);
+		this._animation.animate(
+      children,
+      this._revealedChildCount,
+      currentCount,
+      elapsed,
+    );
 	}
 
 	// ---- lifecycle ----

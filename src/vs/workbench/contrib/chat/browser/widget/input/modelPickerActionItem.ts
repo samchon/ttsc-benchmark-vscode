@@ -3,21 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { getActiveWindow } from '../../../../../../base/browser/dom.js';
-import { IManagedHoverContent } from '../../../../../../base/browser/ui/hover/hover.js';
-import { getBaseLayerHoverDelegate } from '../../../../../../base/browser/ui/hover/hoverDelegate2.js';
-import { getDefaultHoverDelegate } from '../../../../../../base/browser/ui/hover/hoverDelegateFactory.js';
-import { BaseActionViewItem } from '../../../../../../base/browser/ui/actionbar/actionViewItems.js';
-import { IAction } from '../../../../../../base/common/actions.js';
-import { MutableDisposable } from '../../../../../../base/common/lifecycle.js';
-import { autorun, IObservable } from '../../../../../../base/common/observable.js';
-import { localize } from '../../../../../../nls.js';
-import { IContextKeyService } from '../../../../../../platform/contextkey/common/contextkey.js';
-import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { IKeybindingService } from '../../../../../../platform/keybinding/common/keybinding.js';
-import { ILanguageModelChatMetadataAndIdentifier } from '../../../common/languageModels.js';
-import { IChatInputPickerOptions } from './chatInputPickerActionItem.js';
-import { ModelPickerWidget } from './chatModelPicker.js';
+import { getActiveWindow } from "../../../../../../base/browser/dom.js";
+import { IManagedHoverContent } from "../../../../../../base/browser/ui/hover/hover.js";
+import { getBaseLayerHoverDelegate } from "../../../../../../base/browser/ui/hover/hoverDelegate2.js";
+import { getDefaultHoverDelegate } from "../../../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { BaseActionViewItem } from "../../../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { IAction } from "../../../../../../base/common/actions.js";
+import { MutableDisposable } from "../../../../../../base/common/lifecycle.js";
+import { autorun, IObservable } from "../../../../../../base/common/observable.js";
+import { localize } from "../../../../../../nls.js";
+import { IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../../../platform/keybinding/common/keybinding.js";
+import { ILanguageModelChatMetadataAndIdentifier } from "../../../common/languageModels.js";
+import { IChatInputPickerOptions } from "./chatInputPickerActionItem.js";
+import { ModelPickerWidget } from "./chatModelPicker.js";
 
 export interface IModelPickerDelegate {
 	readonly currentModel: IObservable<ILanguageModelChatMetadataAndIdentifier | undefined>;
@@ -49,26 +49,32 @@ export class ModelPickerActionItem extends BaseActionViewItem {
 	) {
 		super(undefined, action);
 
-		this._pickerWidget = this._register(instantiationService.createInstance(ModelPickerWidget, delegate));
+		this._pickerWidget = this._register(
+      instantiationService.createInstance(ModelPickerWidget, delegate),
+    );
 		this._pickerWidget.setSelectedModel(delegate.currentModel.get());
 		this._pickerWidget.setCompact(pickerOptions.compact);
 
 		// Sync delegate → widget when model list or selection changes externally
-		this._register(autorun(t => {
-			const model = delegate.currentModel.read(t);
-			this._pickerWidget.setSelectedModel(model);
-			this._updateTooltip();
-		}));
+		this._register(
+      autorun(t => {
+        const model = delegate.currentModel.read(t);
+        this._pickerWidget.setSelectedModel(model);
+        this._updateTooltip();
+      }),
+    );
 
 		// Sync widget → delegate when user picks a model
-		this._register(this._pickerWidget.onDidChangeSelection(model => delegate.setModel(model)));
+		this._register(
+      this._pickerWidget.onDidChangeSelection(model => delegate.setModel(model)),
+    );
 	}
 
 	override render(container: HTMLElement): void {
 		this._pickerWidget.render(container);
 		this.element = this._pickerWidget.domNode;
 		this._updateTooltip();
-		container.classList.add('chat-input-picker-item');
+		container.classList.add("chat-input-picker-item");
 	}
 
 	private _getAnchorElement(): HTMLElement {
@@ -100,19 +106,19 @@ export class ModelPickerActionItem extends BaseActionViewItem {
 			return;
 		}
 		const hoverContent = this._getHoverContents();
-		if (typeof hoverContent === 'string' && hoverContent) {
+		if (typeof hoverContent === "string" && hoverContent) {
 			this._managedHover.value = getBaseLayerHoverDelegate().setupManagedHover(
-				getDefaultHoverDelegate('mouse'),
-				target,
-				hoverContent
-			);
+        getDefaultHoverDelegate("mouse"),
+        target,
+        hoverContent,
+      );
 		} else {
 			this._managedHover.clear();
 		}
 	}
 
 	private _getHoverContents(): IManagedHoverContent | undefined {
-		let label = localize('chat.modelPicker.label', "Pick Model");
+		let label = localize("chat.modelPicker.label", "Pick Model");
 		const keybindingLabel = this.keybindingService.lookupKeybinding(this._action.id, this._contextKeyService)?.getLabel();
 		if (keybindingLabel) {
 			label += ` (${keybindingLabel})`;

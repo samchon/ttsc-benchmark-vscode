@@ -3,43 +3,53 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../../../workbench/common/contributions.js';
-import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
-import { CopilotChatSessionsProvider, COPILOT_MULTI_CHAT_SETTING, CLAUDE_CODE_ENABLED_SETTING, LOCAL_SESSION_ENABLED_SETTING, LocalSessionType } from '../../copilotChatSessions/browser/copilotChatSessionsProvider.js';
-import '../../copilotChatSessions/browser/copilotChatSessionsActions.js';
-import { ISessionsProvidersService } from '../../../../services/sessions/browser/sessionsProvidersService.js';
-import { Registry } from '../../../../../platform/registry/common/platform.js';
-import { IConfigurationRegistry, Extensions as ConfigurationExtensions } from '../../../../../platform/configuration/common/configurationRegistry.js';
-import { localize } from '../../../../../nls.js';
-import { ISessionsManagementService } from '../../../../services/sessions/common/sessionsManagement.js';
-import { ForkConversationAction } from '../../../../../workbench/contrib/chat/browser/actions/chatForkActions.js';
-import { registerAction2 } from '../../../../../platform/actions/common/actions.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { ILogService } from '../../../../../platform/log/common/log.js';
-import { raceTimeout } from '../../../../../base/common/async.js';
+import {
+  IWorkbenchContribution,
+  registerWorkbenchContribution2,
+  WorkbenchPhase,
+} from "../../../../../workbench/common/contributions.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { Disposable, IDisposable } from "../../../../../base/common/lifecycle.js";
+import {
+  CopilotChatSessionsProvider,
+  COPILOT_MULTI_CHAT_SETTING,
+  CLAUDE_CODE_ENABLED_SETTING,
+  LOCAL_SESSION_ENABLED_SETTING,
+  LocalSessionType,
+} from "../../copilotChatSessions/browser/copilotChatSessionsProvider.js";
+import "../../copilotChatSessions/browser/copilotChatSessionsActions.js";
+import { ISessionsProvidersService } from "../../../../services/sessions/browser/sessionsProvidersService.js";
+import { Registry } from "../../../../../platform/registry/common/platform.js";
+import { IConfigurationRegistry, Extensions as ConfigurationExtensions } from "../../../../../platform/configuration/common/configurationRegistry.js";
+import { localize } from "../../../../../nls.js";
+import { ISessionsManagementService } from "../../../../services/sessions/common/sessionsManagement.js";
+import { ForkConversationAction } from "../../../../../workbench/contrib/chat/browser/actions/chatForkActions.js";
+import { registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { raceTimeout } from "../../../../../base/common/async.js";
 
 Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).registerConfiguration({
-	id: 'sessions',
+	id: "sessions",
 	properties: {
 		[COPILOT_MULTI_CHAT_SETTING]: {
-			type: 'boolean',
+			type: "boolean",
 			default: true,
-			tags: ['preview'],
-			description: localize('sessions.github.copilot.multiChatSessions', "Whether to enable multiple chats within a single session in the Copilot Chat sessions provider."),
+			tags: ["preview"],
+			description: localize("sessions.github.copilot.multiChatSessions", "Whether to enable multiple chats within a single session in the Copilot Chat sessions provider."),
 		},
 		[CLAUDE_CODE_ENABLED_SETTING]: {
-			type: 'boolean',
+			type: "boolean",
 			default: true,
-			experiment: { mode: 'startup' },
-			description: localize('sessions.chat.claudeAgent.enabled', "Enable Claude Agent sessions in the Agents window. Start and resume agentic coding sessions powered by Anthropic's Claude Agent SDK directly. Uses your existing Copilot subscription."),
+			experiment: { mode: "startup" },
+			description: localize("sessions.chat.claudeAgent.enabled", "Enable Claude Agent sessions in the Agents window. Start and resume agentic coding sessions powered by Anthropic's Claude Agent SDK directly. Uses your existing Copilot subscription."),
 		},
 		[LOCAL_SESSION_ENABLED_SETTING]: {
-			type: 'boolean',
+			type: "boolean",
 			default: true,
-			tags: ['experimental'],
-			experiment: { mode: 'startup' },
-			description: localize('sessions.chat.localAgent.enabled', "Enable Local VS Code chat sessions in the Agents Window."),
+			tags: ["experimental"],
+			experiment: { mode: "startup" },
+			description: localize("sessions.chat.localAgent.enabled", "Enable Local VS Code chat sessions in the Agents Window."),
 		},
 	},
 });
@@ -55,7 +65,7 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
  *   metadata file's `origin` field, which the local agent host never writes.
  */
 class DefaultSessionsProviderContribution extends Disposable implements IWorkbenchContribution {
-	static readonly ID = 'sessions.defaultSessionsProvider';
+	static readonly ID = "sessions.defaultSessionsProvider";
 
 	constructor(
 		@IInstantiationService instantiationService: IInstantiationService,
@@ -63,12 +73,18 @@ class DefaultSessionsProviderContribution extends Disposable implements IWorkben
 	) {
 		super();
 
-		const provider = this._register(instantiationService.createInstance(CopilotChatSessionsProvider));
+		const provider = this._register(
+      instantiationService.createInstance(CopilotChatSessionsProvider),
+    );
 		this._register(sessionsProvidersService.registerProvider(provider));
 	}
 }
 
-registerWorkbenchContribution2(DefaultSessionsProviderContribution.ID, DefaultSessionsProviderContribution, WorkbenchPhase.AfterRestored);
+registerWorkbenchContribution2(
+  DefaultSessionsProviderContribution.ID,
+  DefaultSessionsProviderContribution,
+  WorkbenchPhase.AfterRestored,
+);
 
 registerAction2(class extends ForkConversationAction {
 	protected override _openForkedSession(instantiationService: IInstantiationService, parentSessionResource: URI, forkedSessionResource: URI): Promise<void> {

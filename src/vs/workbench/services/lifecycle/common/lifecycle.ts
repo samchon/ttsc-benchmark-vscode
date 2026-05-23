@@ -3,11 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { Event } from '../../../../base/common/event.js';
-import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Event } from "../../../../base/common/event.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
 
-export const ILifecycleService = createDecorator<ILifecycleService>('lifecycleService');
+export const ILifecycleService = createDecorator<ILifecycleService>(
+  "lifecycleService",
+);
 
 /**
  * An event that is send out when the window is about to close. Clients have a chance to veto
@@ -179,9 +181,9 @@ export const enum StartupKind {
 
 export function StartupKindToString(startupKind: StartupKind): string {
 	switch (startupKind) {
-		case StartupKind.NewWindow: return 'NewWindow';
-		case StartupKind.ReloadedWindow: return 'ReloadedWindow';
-		case StartupKind.ReopenedWindow: return 'ReopenedWindow';
+		case StartupKind.NewWindow: return "NewWindow";
+		case StartupKind.ReloadedWindow: return "ReloadedWindow";
+		case StartupKind.ReopenedWindow: return "ReopenedWindow";
 	}
 }
 
@@ -218,10 +220,10 @@ export const enum LifecyclePhase {
 
 export function LifecyclePhaseToString(phase: LifecyclePhase): string {
 	switch (phase) {
-		case LifecyclePhase.Starting: return 'Starting';
-		case LifecyclePhase.Ready: return 'Ready';
-		case LifecyclePhase.Restored: return 'Restored';
-		case LifecyclePhase.Eventually: return 'Eventually';
+		case LifecyclePhase.Starting: return "Starting";
+		case LifecyclePhase.Ready: return "Ready";
+		case LifecyclePhase.Restored: return "Restored";
+		case LifecyclePhase.Eventually: return "Eventually";
 	}
 }
 

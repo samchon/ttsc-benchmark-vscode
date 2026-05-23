@@ -3,26 +3,38 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../base/common/lifecycle.js';
-import { getIEditor } from '../../editor/browser/editorBrowser.js';
-import { ICodeEditorViewState, IDiffEditorViewState } from '../../editor/common/editorCommon.js';
-import { localize } from '../../nls.js';
-import { ICommandHandler } from '../../platform/commands/common/commands.js';
-import { ContextKeyExpr, RawContextKey } from '../../platform/contextkey/common/contextkey.js';
-import { IResourceEditorInput, ITextResourceEditorInput } from '../../platform/editor/common/editor.js';
-import { IKeybindingService } from '../../platform/keybinding/common/keybinding.js';
-import { IQuickInputService } from '../../platform/quickinput/common/quickInput.js';
-import { IEditorPane, IUntitledTextResourceEditorInput, IUntypedEditorInput } from '../common/editor.js';
-import { EditorInput } from '../common/editor/editorInput.js';
-import { IEditorGroup, IEditorGroupsService } from '../services/editor/common/editorGroupsService.js';
-import { PreferredGroup, IEditorService } from '../services/editor/common/editorService.js';
+import { Disposable } from "../../base/common/lifecycle.js";
+import { getIEditor } from "../../editor/browser/editorBrowser.js";
+import { ICodeEditorViewState, IDiffEditorViewState } from "../../editor/common/editorCommon.js";
+import { localize } from "../../nls.js";
+import { ICommandHandler } from "../../platform/commands/common/commands.js";
+import { ContextKeyExpr, RawContextKey } from "../../platform/contextkey/common/contextkey.js";
+import { IResourceEditorInput, ITextResourceEditorInput } from "../../platform/editor/common/editor.js";
+import { IKeybindingService } from "../../platform/keybinding/common/keybinding.js";
+import { IQuickInputService } from "../../platform/quickinput/common/quickInput.js";
+import { IEditorPane, IUntitledTextResourceEditorInput, IUntypedEditorInput } from "../common/editor.js";
+import { EditorInput } from "../common/editor/editorInput.js";
+import { IEditorGroup, IEditorGroupsService } from "../services/editor/common/editorGroupsService.js";
+import { PreferredGroup, IEditorService } from "../services/editor/common/editorService.js";
 
-export const inQuickPickContextKeyValue = 'inQuickOpen';
-export const InQuickPickContextKey = new RawContextKey<boolean>(inQuickPickContextKeyValue, false, localize('inQuickOpen', "Whether keyboard focus is inside the quick open control"));
-export const inQuickPickContext = ContextKeyExpr.has(inQuickPickContextKeyValue);
+export const inQuickPickContextKeyValue = "inQuickOpen";
+export const InQuickPickContextKey = new RawContextKey<boolean>(
+  inQuickPickContextKeyValue,
+  false,
+  localize(
+    "inQuickOpen",
+    "Whether keyboard focus is inside the quick open control",
+  ),
+);
+export const inQuickPickContext = ContextKeyExpr.has(
+  inQuickPickContextKeyValue,
+);
 
-export const defaultQuickAccessContextKeyValue = 'inFilesPicker';
-export const defaultQuickAccessContext = ContextKeyExpr.and(inQuickPickContext, ContextKeyExpr.has(defaultQuickAccessContextKeyValue));
+export const defaultQuickAccessContextKeyValue = "inFilesPicker";
+export const defaultQuickAccessContext = ContextKeyExpr.and(
+  inQuickPickContext,
+  ContextKeyExpr.has(defaultQuickAccessContextKeyValue),
+);
 
 export interface IWorkbenchQuickAccessConfiguration {
 	readonly workbench: {
@@ -33,7 +45,7 @@ export interface IWorkbenchQuickAccessConfiguration {
 			readonly experimental: {
 				readonly suggestCommands: boolean;
 				readonly enableNaturalLanguageSearch: boolean;
-				readonly askChatLocation: 'quickChat' | 'chatView';
+				readonly askChatLocation: "quickChat" | "chatView";
 			};
 		};
 		readonly quickOpen: {
@@ -67,7 +79,7 @@ export class PickerEditorState extends Disposable {
 
 	constructor(
 		@IEditorService private readonly editorService: IEditorService,
-		@IEditorGroupsService private readonly editorGroupsService: IEditorGroupsService
+		@IEditorGroupsService private readonly editorGroupsService: IEditorGroupsService,
 	) {
 		super();
 	}
@@ -80,10 +92,10 @@ export class PickerEditorState extends Disposable {
 		const activeEditorPane = this.editorService.activeEditorPane;
 		if (activeEditorPane) {
 			this.editorViewState = {
-				group: activeEditorPane.group,
-				editor: activeEditorPane.input,
-				state: getIEditor(activeEditorPane.getControl())?.saveViewState() ?? undefined,
-			};
+        group: activeEditorPane.group,
+        editor: activeEditorPane.input,
+        state: getIEditor(activeEditorPane.getControl())?.saveViewState() ?? undefined,
+      };
 		}
 	}
 
@@ -95,7 +107,9 @@ export class PickerEditorState extends Disposable {
 		editor.options = { ...editor.options, transient: true };
 
 		const editorPane = await this.editorService.openEditor(editor, group);
-		if (editorPane?.input && editorPane.input !== this.editorViewState?.editor && editorPane.group.isTransient(editorPane.input)) {
+		if (editorPane?.input && editorPane.input !== this.editorViewState?.editor && editorPane.group.isTransient(
+      editorPane.input,
+    )) {
 			this.openedTransientEditors.add(editorPane.input);
 		}
 
@@ -117,9 +131,9 @@ export class PickerEditorState extends Disposable {
 			}
 
 			await this.editorViewState.group.openEditor(this.editorViewState.editor, {
-				viewState: this.editorViewState.state,
-				preserveFocus: true // important to not close the picker as a result
-			});
+        viewState: this.editorViewState.state,
+        preserveFocus: true,
+      });
 
 			this.reset();
 		}

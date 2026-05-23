@@ -3,12 +3,24 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable, IDisposable } from '../../../../base/common/lifecycle.js';
-import { ReadableStreamEvents } from '../../../../base/common/stream.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IFileDeleteOptions, IFileOpenOptions, IFileOverwriteOptions, FileSystemProviderCapabilities, FileType, IFileWriteOptions, IFileChange, IFileSystemProvider, IStat, IWatchOptions, IFileReadStreamOptions } from '../../common/files.js';
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable, IDisposable } from "../../../../base/common/lifecycle.js";
+import { ReadableStreamEvents } from "../../../../base/common/stream.js";
+import { URI } from "../../../../base/common/uri.js";
+import {
+  IFileDeleteOptions,
+  IFileOpenOptions,
+  IFileOverwriteOptions,
+  FileSystemProviderCapabilities,
+  FileType,
+  IFileWriteOptions,
+  IFileChange,
+  IFileSystemProvider,
+  IStat,
+  IWatchOptions,
+  IFileReadStreamOptions,
+} from "../../common/files.js";
 
 export class NullFileSystemProvider implements IFileSystemProvider {
 

@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI, UriComponents } from '../../../../base/common/uri.js';
-import { ExtensionIdentifier } from '../../../../platform/extensions/common/extensions.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { IEditorSerializer } from '../../../common/editor.js';
-import { WebviewContentOptions, WebviewExtensionDescription, WebviewOptions } from '../../webview/browser/webview.js';
-import { WebviewIconPath, WebviewInput } from './webviewEditorInput.js';
-import { IWebviewWorkbenchService } from './webviewWorkbenchService.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
+import { URI, UriComponents } from "../../../../base/common/uri.js";
+import { ExtensionIdentifier } from "../../../../platform/extensions/common/extensions.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IEditorSerializer } from "../../../common/editor.js";
+import { WebviewContentOptions, WebviewExtensionDescription, WebviewOptions } from "../../webview/browser/webview.js";
+import { WebviewIconPath, WebviewInput } from "./webviewEditorInput.js";
+import { IWebviewWorkbenchService } from "./webviewWorkbenchService.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
 
 export type SerializedWebviewOptions = WebviewOptions & WebviewContentOptions;
 
@@ -50,7 +50,7 @@ export class WebviewEditorInputSerializer implements IEditorSerializer {
 	public static readonly ID = WebviewInput.typeId;
 
 	public constructor(
-		@IWebviewWorkbenchService private readonly _webviewWorkbenchService: IWebviewWorkbenchService
+		@IWebviewWorkbenchService private readonly _webviewWorkbenchService: IWebviewWorkbenchService,
 	) { }
 
 	public canSerialize(input: WebviewInput): boolean {
@@ -72,7 +72,7 @@ export class WebviewEditorInputSerializer implements IEditorSerializer {
 
 	public deserialize(
 		_instantiationService: IInstantiationService,
-		serializedEditorInput: string
+		serializedEditorInput: string,
 	): WebviewInput {
 		const data = this.fromJson(JSON.parse(serializedEditorInput));
 		return this._webviewWorkbenchService.openRevivedWebview({
@@ -88,19 +88,19 @@ export class WebviewEditorInputSerializer implements IEditorSerializer {
 			title: data.title,
 			iconPath: data.iconPath,
 			state: data.state,
-			group: data.group
+			group: data.group,
 		});
 	}
 
 	protected fromJson(data: SerializedWebview): DeserializedWebview {
 		return {
-			...data,
-			extension: reviveWebviewExtensionDescription(data.extensionId, data.extensionLocation),
-			iconPath: reviveWebviewIconPath(data.iconPath),
-			state: reviveState(data.state),
-			webviewOptions: restoreWebviewOptions(data.options),
-			contentOptions: restoreWebviewContentOptions(data.options),
-		};
+      ...data,
+      extension: reviveWebviewExtensionDescription(data.extensionId, data.extensionLocation),
+      iconPath: reviveWebviewIconPath(data.iconPath),
+      state: reviveState(data.state),
+      webviewOptions: restoreWebviewOptions(data.options),
+      contentOptions: restoreWebviewContentOptions(data.options),
+    };
 	}
 
 	protected toJson(input: WebviewInput): SerializedWebview {
@@ -118,7 +118,7 @@ export class WebviewEditorInputSerializer implements IEditorSerializer {
 					? input.iconPath
 					: { light: input.iconPath.light, dark: input.iconPath.dark, }
 				: undefined,
-			group: input.group
+			group: input.group,
 		};
 	}
 }
@@ -137,9 +137,9 @@ export function reviveWebviewExtensionDescription(
 	}
 
 	return {
-		id: new ExtensionIdentifier(extensionId),
-		location,
-	};
+    id: new ExtensionIdentifier(extensionId),
+    location,
+  };
 }
 
 export function reviveWebviewIconPath(data: SerializedIconPath | undefined): WebviewIconPath | undefined {
@@ -164,7 +164,7 @@ function reviveUri(data: string | UriComponents | undefined): URI | undefined {
 	}
 
 	try {
-		if (typeof data === 'string') {
+		if (typeof data === "string") {
 			return URI.parse(data);
 		}
 		return URI.from(data);
@@ -174,7 +174,7 @@ function reviveUri(data: string | UriComponents | undefined): URI | undefined {
 }
 
 function reviveState(state: unknown | undefined): undefined | string {
-	return typeof state === 'string' ? state : undefined;
+	return typeof state === "string" ? state : undefined;
 }
 
 export function restoreWebviewOptions(options: SerializedWebviewOptions): WebviewOptions {
@@ -183,7 +183,7 @@ export function restoreWebviewOptions(options: SerializedWebviewOptions): Webvie
 
 export function restoreWebviewContentOptions(options: SerializedWebviewOptions): WebviewContentOptions {
 	return {
-		...options,
-		localResourceRoots: options.localResourceRoots?.map(uri => reviveUri(uri)),
-	};
+    ...options,
+    localResourceRoots: options.localResourceRoots?.map(uri => reviveUri(uri)),
+  };
 }

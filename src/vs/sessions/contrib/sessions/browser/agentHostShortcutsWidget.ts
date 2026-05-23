@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import './media/agentHostToolbar.css';
-import * as DOM from '../../../../base/browser/dom.js';
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { HiddenItemStrategy, MenuWorkbenchToolBar } from '../../../../platform/actions/browser/toolbar.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { Menus } from '../../../browser/menus.js';
+import "./media/agentHostToolbar.css";
+import * as DOM from "../../../../base/browser/dom.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { HiddenItemStrategy, MenuWorkbenchToolBar } from "../../../../platform/actions/browser/toolbar.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { Menus } from "../../../browser/menus.js";
 
 const $ = DOM.$;
 
@@ -37,20 +37,32 @@ export class AgentHostShortcutsWidget extends Disposable {
 	}
 
 	private _render(parent: HTMLElement, options: IAgentHostShortcutsWidgetOptions | undefined): void {
-		const container = DOM.append(parent, $('.agent-host-toolbar'));
+		const container = DOM.append(parent, $(".agent-host-toolbar"));
 
-		const toolbarContainer = DOM.append(container, $('.agent-host-toolbar-content'));
+		const toolbarContainer = DOM.append(
+      container,
+      $(".agent-host-toolbar-content"),
+    );
 
-		const toolbar = this._register(this.instantiationService.createInstance(MenuWorkbenchToolBar, toolbarContainer, Menus.SidebarAgentHost, {
-			hiddenItemStrategy: HiddenItemStrategy.NoHide,
-			toolbarOptions: { primaryGroup: () => true },
-			telemetrySource: 'sidebarAgentHost',
-		}));
+		const toolbar = this._register(
+      this.instantiationService.createInstance(
+        MenuWorkbenchToolBar,
+        toolbarContainer,
+        Menus.SidebarAgentHost,
+        {
+          hiddenItemStrategy: HiddenItemStrategy.NoHide,
+          toolbarOptions: { primaryGroup: () => true },
+          telemetrySource: "sidebarAgentHost",
+        },
+      ),
+    );
 
 		// Re-layout when toolbar items change (e.g. once host discovery
 		// completes and the picker swaps from "Searching…" to a real host).
-		this._register(toolbar.onDidChangeMenuItems(() => {
-			options?.onDidChangeLayout?.();
-		}));
+		this._register(
+      toolbar.onDidChangeMenuItems(() => {
+        options?.onDidChangeLayout?.();
+      }),
+    );
 	}
 }

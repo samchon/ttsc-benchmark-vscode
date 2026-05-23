@@ -3,22 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { IWorkbenchContribution } from '../../../../workbench/common/contributions.js';
-import { ISessionsManagementService } from '../../../services/sessions/common/sessionsManagement.js';
-import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
-import { IWorkspaceEditingService } from '../../../../workbench/services/workspaces/common/workspaceEditing.js';
-import { IWorkspaceTrustManagementService } from '../../../../platform/workspace/common/workspaceTrust.js';
-import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
-import { URI } from '../../../../base/common/uri.js';
-import { autorun } from '../../../../base/common/observable.js';
-import { IWorkspaceFolderCreationData } from '../../../../platform/workspaces/common/workspaces.js';
-import { Queue } from '../../../../base/common/async.js';
-import { ISession } from '../../../services/sessions/common/session.js';
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IWorkbenchContribution } from "../../../../workbench/common/contributions.js";
+import { ISessionsManagementService } from "../../../services/sessions/common/sessionsManagement.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { IWorkspaceEditingService } from "../../../../workbench/services/workspaces/common/workspaceEditing.js";
+import { IWorkspaceTrustManagementService } from "../../../../platform/workspace/common/workspaceTrust.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { URI } from "../../../../base/common/uri.js";
+import { autorun } from "../../../../base/common/observable.js";
+import { IWorkspaceFolderCreationData } from "../../../../platform/workspaces/common/workspaces.js";
+import { Queue } from "../../../../base/common/async.js";
+import { ISession } from "../../../services/sessions/common/session.js";
 
 export class WorkspaceFolderManagementContribution extends Disposable implements IWorkbenchContribution {
 
-	static readonly ID = 'workbench.contrib.workspaceFolderManagement';
+	static readonly ID = "workbench.contrib.workspaceFolderManagement";
 	private queue = this._register(new Queue<void>());
 
 	constructor(
@@ -49,15 +49,26 @@ export class WorkspaceFolderManagementContribution extends Disposable implements
 		}
 
 		if (!currentRepo) {
-			await this.workspaceEditingService.addFolders([activeSessionFolderData], true);
+			await this.workspaceEditingService.addFolders(
+        [activeSessionFolderData],
+        true,
+      );
 			return;
 		}
 
-		if (this.uriIdentityService.extUri.isEqual(currentRepo, activeSessionFolderData.uri)) {
+		if (this.uriIdentityService.extUri.isEqual(
+      currentRepo,
+      activeSessionFolderData.uri,
+    )) {
 			return;
 		}
 
-		await this.workspaceEditingService.updateFolders(0, 1, [activeSessionFolderData], true);
+		await this.workspaceEditingService.updateFolders(
+      0,
+      1,
+      [activeSessionFolderData],
+      true,
+    );
 	}
 
 	private getActiveSessionFolderData(session: ISession | undefined): IWorkspaceFolderCreationData | undefined {
@@ -73,9 +84,9 @@ export class WorkspaceFolderManagementContribution extends Disposable implements
 		}
 
 		return {
-			uri: folder.workingDirectory,
-			name: this.uriIdentityService.extUri.isEqual(folder.root, folder.workingDirectory) ? workspace.label : `${this.uriIdentityService.extUri.basename(folder.root)} (${folder.gitRepository?.branchName ?? this.uriIdentityService.extUri.basename(folder.workingDirectory)})`
-		};
+      uri: folder.workingDirectory,
+      name: this.uriIdentityService.extUri.isEqual(folder.root, folder.workingDirectory) ? workspace.label : `${this.uriIdentityService.extUri.basename(folder.root)} (${folder.gitRepository?.branchName ?? this.uriIdentityService.extUri.basename(folder.workingDirectory)})`,
+    };
 	}
 
 	private async manageTrustWorkspaceForSession(session: ISession | undefined): Promise<void> {
@@ -90,11 +101,16 @@ export class WorkspaceFolderManagementContribution extends Disposable implements
 		}
 
 		if (!this.isUriTrusted(folder.workingDirectory)) {
-			await this.workspaceTrustManagementService.setUrisTrust([folder.workingDirectory], true);
+			await this.workspaceTrustManagementService.setUrisTrust(
+        [folder.workingDirectory],
+        true,
+      );
 		}
 	}
 
 	private isUriTrusted(uri: URI): boolean {
-		return this.workspaceTrustManagementService.getTrustedUris().some(trustedUri => this.uriIdentityService.extUri.isEqual(trustedUri, uri));
+		return this.workspaceTrustManagementService.getTrustedUris().some(
+      trustedUri => this.uriIdentityService.extUri.isEqual(trustedUri, uri),
+    );
 	}
 }

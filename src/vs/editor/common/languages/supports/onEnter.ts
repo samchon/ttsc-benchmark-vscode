@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { onUnexpectedError } from '../../../../base/common/errors.js';
-import * as strings from '../../../../base/common/strings.js';
-import { CharacterPair, EnterAction, IndentAction, OnEnterRule } from '../languageConfiguration.js';
-import { EditorAutoIndentStrategy } from '../../config/editorOptions.js';
+import { onUnexpectedError } from "../../../../base/common/errors.js";
+import * as strings from "../../../../base/common/strings.js";
+import { CharacterPair, EnterAction, IndentAction, OnEnterRule } from "../languageConfiguration.js";
+import { EditorAutoIndentStrategy } from "../../config/editorOptions.js";
 
 export interface IOnEnterSupportOptions {
 	brackets?: CharacterPair[];
@@ -27,11 +27,7 @@ export class OnEnterSupport {
 
 	constructor(opts: IOnEnterSupportOptions) {
 		opts = opts || {};
-		opts.brackets = opts.brackets || [
-			['(', ')'],
-			['{', '}'],
-			['[', ']']
-		];
+		opts.brackets = opts.brackets || [["(", ")"], ["{", "}"], ["[", "]"]];
 
 		this._brackets = [];
 		opts.brackets.forEach((bracket) => {
@@ -56,13 +52,13 @@ export class OnEnterSupport {
 				const rule = this._regExpRules[i];
 				const regResult = [{
 					reg: rule.beforeText,
-					text: beforeEnterText
+					text: beforeEnterText,
 				}, {
 					reg: rule.afterText,
-					text: afterEnterText
+					text: afterEnterText,
 				}, {
 					reg: rule.previousLineText,
-					text: previousLineText
+					text: previousLineText,
 				}].every((obj): boolean => {
 					if (!obj.reg) {
 						return true;
@@ -83,7 +79,9 @@ export class OnEnterSupport {
 			if (beforeEnterText.length > 0 && afterEnterText.length > 0) {
 				for (let i = 0, len = this._brackets.length; i < len; i++) {
 					const bracket = this._brackets[i];
-					if (bracket.openRegExp.test(beforeEnterText) && bracket.closeRegExp.test(afterEnterText)) {
+					if (bracket.openRegExp.test(
+            beforeEnterText,
+          ) && bracket.closeRegExp.test(afterEnterText)) {
 						return { indentAction: IndentAction.IndentOutdent };
 					}
 				}
@@ -109,18 +107,18 @@ export class OnEnterSupport {
 	private static _createOpenBracketRegExp(bracket: string): RegExp | null {
 		let str = strings.escapeRegExpCharacters(bracket);
 		if (!/\B/.test(str.charAt(0))) {
-			str = '\\b' + str;
+			str = "\\b" + str;
 		}
-		str += '\\s*$';
+		str += "\\s*$";
 		return OnEnterSupport._safeRegExp(str);
 	}
 
 	private static _createCloseBracketRegExp(bracket: string): RegExp | null {
 		let str = strings.escapeRegExpCharacters(bracket);
 		if (!/\B/.test(str.charAt(str.length - 1))) {
-			str = str + '\\b';
+			str = str + "\\b";
 		}
-		str = '^\\s*' + str;
+		str = "^\\s*" + str;
 		return OnEnterSupport._safeRegExp(str);
 	}
 

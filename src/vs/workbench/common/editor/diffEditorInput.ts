@@ -3,18 +3,30 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { localize } from '../../../nls.js';
-import { AbstractSideBySideEditorInputSerializer, SideBySideEditorInput } from './sideBySideEditorInput.js';
-import { EditorInput, IUntypedEditorOptions } from './editorInput.js';
-import { EditorModel } from './editorModel.js';
-import { TEXT_DIFF_EDITOR_ID, BINARY_DIFF_EDITOR_ID, Verbosity, IEditorDescriptor, IEditorPane, IResourceDiffEditorInput, IUntypedEditorInput, isResourceDiffEditorInput, IDiffEditorInput, IResourceSideBySideEditorInput, EditorInputCapabilities } from '../editor.js';
-import { BaseTextEditorModel } from './textEditorModel.js';
-import { DiffEditorModel } from './diffEditorModel.js';
-import { TextDiffEditorModel } from './textDiffEditorModel.js';
-import { IInstantiationService } from '../../../platform/instantiation/common/instantiation.js';
-import { IEditorService } from '../../services/editor/common/editorService.js';
-import { shorten } from '../../../base/common/labels.js';
-import { isResolvedEditorModel } from '../../../platform/editor/common/editor.js';
+import { localize } from "../../../nls.js";
+import { AbstractSideBySideEditorInputSerializer, SideBySideEditorInput } from "./sideBySideEditorInput.js";
+import { EditorInput, IUntypedEditorOptions } from "./editorInput.js";
+import { EditorModel } from "./editorModel.js";
+import {
+  TEXT_DIFF_EDITOR_ID,
+  BINARY_DIFF_EDITOR_ID,
+  Verbosity,
+  IEditorDescriptor,
+  IEditorPane,
+  IResourceDiffEditorInput,
+  IUntypedEditorInput,
+  isResourceDiffEditorInput,
+  IDiffEditorInput,
+  IResourceSideBySideEditorInput,
+  EditorInputCapabilities,
+} from "../editor.js";
+import { BaseTextEditorModel } from "./textEditorModel.js";
+import { DiffEditorModel } from "./diffEditorModel.js";
+import { TextDiffEditorModel } from "./textDiffEditorModel.js";
+import { IInstantiationService } from "../../../platform/instantiation/common/instantiation.js";
+import { IEditorService } from "../../services/editor/common/editorService.js";
+import { shorten } from "../../../base/common/labels.js";
+import { isResolvedEditorModel } from "../../../platform/editor/common/editor.js";
 
 interface IDiffEditorInputLabels {
 	readonly name: string;
@@ -36,7 +48,7 @@ interface IDiffEditorInputLabels {
  */
 export class DiffEditorInput extends SideBySideEditorInput implements IDiffEditorInput {
 
-	static override readonly ID: string = 'workbench.editors.diffEditorInput';
+	static override readonly ID: string = "workbench.editors.diffEditorInput";
 
 	override get typeId(): string {
 		return DiffEditorInput.ID;
@@ -67,9 +79,15 @@ export class DiffEditorInput extends SideBySideEditorInput implements IDiffEdito
 		readonly original: EditorInput,
 		readonly modified: EditorInput,
 		private readonly forceOpenAsBinary: boolean | undefined,
-		@IEditorService editorService: IEditorService
+		@IEditorService editorService: IEditorService,
 	) {
-		super(preferredName, preferredDescription, original, modified, editorService);
+		super(
+      preferredName,
+      preferredDescription,
+      original,
+      modified,
+      editorService,
+    );
 
 		this.labels = this.computeLabels();
 	}
@@ -85,7 +103,12 @@ export class DiffEditorInput extends SideBySideEditorInput implements IDiffEdito
 			const originalName = this.original.getName();
 			const modifiedName = this.modified.getName();
 
-			name = localize('sideBySideLabels', "{0} ↔ {1}", originalName, modifiedName);
+			name = localize(
+        "sideBySideLabels",
+        "{0} ↔ {1}",
+        originalName,
+        modifiedName,
+      );
 
 			// Enforce description when the names are identical
 			forceDescription = originalName === modifiedName;
@@ -100,26 +123,53 @@ export class DiffEditorInput extends SideBySideEditorInput implements IDiffEdito
 			mediumDescription = this.preferredDescription;
 			longDescription = this.preferredDescription;
 		} else {
-			shortDescription = this.computeLabel(this.original.getDescription(Verbosity.SHORT), this.modified.getDescription(Verbosity.SHORT));
-			longDescription = this.computeLabel(this.original.getDescription(Verbosity.LONG), this.modified.getDescription(Verbosity.LONG));
+			shortDescription = this.computeLabel(
+        this.original.getDescription(Verbosity.SHORT),
+        this.modified.getDescription(Verbosity.SHORT),
+      );
+			longDescription = this.computeLabel(
+        this.original.getDescription(Verbosity.LONG),
+        this.modified.getDescription(Verbosity.LONG),
+      );
 
 			// Medium Description: try to be verbose by computing
 			// a label that resembles the difference between the two
-			const originalMediumDescription = this.original.getDescription(Verbosity.MEDIUM);
-			const modifiedMediumDescription = this.modified.getDescription(Verbosity.MEDIUM);
+			const originalMediumDescription = this.original.getDescription(
+        Verbosity.MEDIUM,
+      );
+			const modifiedMediumDescription = this.modified.getDescription(
+        Verbosity.MEDIUM,
+      );
 			if (
-				(typeof originalMediumDescription === 'string' && typeof modifiedMediumDescription === 'string') && // we can only `shorten` when both sides are strings...
+				(typeof originalMediumDescription === "string" && typeof modifiedMediumDescription === "string") && // we can only `shorten` when both sides are strings...
 				(originalMediumDescription || modifiedMediumDescription) 											// ...however never when both sides are empty strings
 			) {
-				const [shortenedOriginalMediumDescription, shortenedModifiedMediumDescription] = shorten([originalMediumDescription, modifiedMediumDescription]);
-				mediumDescription = this.computeLabel(shortenedOriginalMediumDescription, shortenedModifiedMediumDescription);
+				const [shortenedOriginalMediumDescription, shortenedModifiedMediumDescription] = shorten(
+          [originalMediumDescription, modifiedMediumDescription],
+        );
+				mediumDescription = this.computeLabel(
+          shortenedOriginalMediumDescription,
+          shortenedModifiedMediumDescription,
+        );
 			}
 		}
 
 		// Title
-		let shortTitle = this.computeLabel(this.original.getTitle(Verbosity.SHORT) ?? this.original.getName(), this.modified.getTitle(Verbosity.SHORT) ?? this.modified.getName(), ' ↔ ');
-		let mediumTitle = this.computeLabel(this.original.getTitle(Verbosity.MEDIUM) ?? this.original.getName(), this.modified.getTitle(Verbosity.MEDIUM) ?? this.modified.getName(), ' ↔ ');
-		let longTitle = this.computeLabel(this.original.getTitle(Verbosity.LONG) ?? this.original.getName(), this.modified.getTitle(Verbosity.LONG) ?? this.modified.getName(), ' ↔ ');
+		let shortTitle = this.computeLabel(
+      this.original.getTitle(Verbosity.SHORT) ?? this.original.getName(),
+      this.modified.getTitle(Verbosity.SHORT) ?? this.modified.getName(),
+      " ↔ ",
+    );
+		let mediumTitle = this.computeLabel(
+      this.original.getTitle(Verbosity.MEDIUM) ?? this.original.getName(),
+      this.modified.getTitle(Verbosity.MEDIUM) ?? this.modified.getName(),
+      " ↔ ",
+    );
+		let longTitle = this.computeLabel(
+      this.original.getTitle(Verbosity.LONG) ?? this.original.getName(),
+      this.modified.getTitle(Verbosity.LONG) ?? this.modified.getName(),
+      " ↔ ",
+    );
 
 		const preferredTitle = this.getPreferredTitle();
 		if (preferredTitle) {
@@ -128,12 +178,21 @@ export class DiffEditorInput extends SideBySideEditorInput implements IDiffEdito
 			longTitle = `${preferredTitle} (${longTitle})`;
 		}
 
-		return { name, shortDescription, mediumDescription, longDescription, forceDescription, shortTitle, mediumTitle, longTitle };
+		return {
+      name,
+      shortDescription,
+      mediumDescription,
+      longDescription,
+      forceDescription,
+      shortTitle,
+      mediumTitle,
+      longTitle,
+    };
 	}
 
 	private computeLabel(originalLabel: string, modifiedLabel: string, separator?: string): string;
 	private computeLabel(originalLabel: string | undefined, modifiedLabel: string | undefined, separator?: string): string | undefined;
-	private computeLabel(originalLabel: string | undefined, modifiedLabel: string | undefined, separator = ' - '): string | undefined {
+	private computeLabel(originalLabel: string | undefined, modifiedLabel: string | undefined, separator = " - "): string | undefined {
 		if (!originalLabel || !modifiedLabel) {
 			return undefined;
 		}
@@ -189,19 +248,23 @@ export class DiffEditorInput extends SideBySideEditorInput implements IDiffEdito
 
 	override prefersEditorPane<T extends IEditorDescriptor<IEditorPane>>(editorPanes: T[]): T | undefined {
 		if (this.forceOpenAsBinary) {
-			return editorPanes.find(editorPane => editorPane.typeId === BINARY_DIFF_EDITOR_ID);
+			return editorPanes.find(
+        editorPane => editorPane.typeId === BINARY_DIFF_EDITOR_ID,
+      );
 		}
 
-		return editorPanes.find(editorPane => editorPane.typeId === TEXT_DIFF_EDITOR_ID);
+		return editorPanes.find(
+      editorPane => editorPane.typeId === TEXT_DIFF_EDITOR_ID,
+    );
 	}
 
 	private async createModel(): Promise<DiffEditorModel> {
 
 		// Join resolve call over two inputs and build diff editor model
 		const [originalEditorModel, modifiedEditorModel] = await Promise.all([
-			this.original.resolve(),
-			this.modified.resolve()
-		]);
+      this.original.resolve(),
+      this.modified.resolve(),
+    ]);
 
 		// If both are text models, return textdiffeditor model
 		if (modifiedEditorModel instanceof BaseTextEditorModel && originalEditorModel instanceof BaseTextEditorModel) {
@@ -209,17 +272,20 @@ export class DiffEditorInput extends SideBySideEditorInput implements IDiffEdito
 		}
 
 		// Otherwise return normal diff model
-		return new DiffEditorModel(isResolvedEditorModel(originalEditorModel) ? originalEditorModel : undefined, isResolvedEditorModel(modifiedEditorModel) ? modifiedEditorModel : undefined);
+		return new DiffEditorModel(
+      isResolvedEditorModel(originalEditorModel) ? originalEditorModel : undefined,
+      isResolvedEditorModel(modifiedEditorModel) ? modifiedEditorModel : undefined,
+    );
 	}
 
 	override toUntyped(options?: IUntypedEditorOptions): (IResourceDiffEditorInput & IResourceSideBySideEditorInput) | undefined {
 		const untyped = super.toUntyped(options);
 		if (untyped) {
 			return {
-				...untyped,
-				modified: untyped.primary,
-				original: untyped.secondary
-			};
+        ...untyped,
+        modified: untyped.primary,
+        original: untyped.secondary,
+      };
 		}
 
 		return undefined;
@@ -231,11 +297,17 @@ export class DiffEditorInput extends SideBySideEditorInput implements IDiffEdito
 		}
 
 		if (otherInput instanceof DiffEditorInput) {
-			return this.modified.matches(otherInput.modified) && this.original.matches(otherInput.original) && otherInput.forceOpenAsBinary === this.forceOpenAsBinary;
+			return this.modified.matches(
+        otherInput.modified,
+      ) && this.original.matches(
+        otherInput.original,
+      ) && otherInput.forceOpenAsBinary === this.forceOpenAsBinary;
 		}
 
 		if (isResourceDiffEditorInput(otherInput)) {
-			return this.modified.matches(otherInput.modified) && this.original.matches(otherInput.original);
+			return this.modified.matches(
+        otherInput.modified,
+      ) && this.original.matches(otherInput.original);
 		}
 
 		return false;
@@ -258,6 +330,13 @@ export class DiffEditorInput extends SideBySideEditorInput implements IDiffEdito
 export class DiffEditorInputSerializer extends AbstractSideBySideEditorInputSerializer {
 
 	protected createEditorInput(instantiationService: IInstantiationService, name: string | undefined, description: string | undefined, secondaryInput: EditorInput, primaryInput: EditorInput): EditorInput {
-		return instantiationService.createInstance(DiffEditorInput, name, description, secondaryInput, primaryInput, undefined);
+		return instantiationService.createInstance(
+      DiffEditorInput,
+      name,
+      description,
+      secondaryInput,
+      primaryInput,
+      undefined,
+    );
 	}
 }

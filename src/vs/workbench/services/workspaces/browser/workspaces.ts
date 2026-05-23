@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ISingleFolderWorkspaceIdentifier, IWorkspaceIdentifier } from '../../../../platform/workspace/common/workspace.js';
-import { URI } from '../../../../base/common/uri.js';
-import { hash } from '../../../../base/common/hash.js';
+import { ISingleFolderWorkspaceIdentifier, IWorkspaceIdentifier } from "../../../../platform/workspace/common/workspace.js";
+import { URI } from "../../../../base/common/uri.js";
+import { hash } from "../../../../base/common/hash.js";
 
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // NOTE: DO NOT CHANGE. IDENTIFIERS HAVE TO REMAIN STABLE
@@ -13,9 +13,9 @@ import { hash } from '../../../../base/common/hash.js';
 
 export function getWorkspaceIdentifier(workspaceUri: URI): IWorkspaceIdentifier {
 	return {
-		id: getWorkspaceId(workspaceUri),
-		configPath: workspaceUri
-	};
+    id: getWorkspaceId(workspaceUri),
+    configPath: workspaceUri,
+  };
 }
 
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -24,9 +24,9 @@ export function getWorkspaceIdentifier(workspaceUri: URI): IWorkspaceIdentifier 
 
 export function getSingleFolderWorkspaceIdentifier(folderUri: URI): ISingleFolderWorkspaceIdentifier {
 	return {
-		id: getWorkspaceId(folderUri),
-		uri: folderUri
-	};
+    id: getWorkspaceId(folderUri),
+    uri: folderUri,
+  };
 }
 
 function getWorkspaceId(uri: URI): string {

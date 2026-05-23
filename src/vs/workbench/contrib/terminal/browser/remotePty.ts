@@ -3,12 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Barrier } from '../../../../base/common/async.js';
-import { ITerminalLaunchResult, IProcessPropertyMap, ITerminalChildProcess, ITerminalLaunchError, ITerminalLogService, ProcessPropertyType } from '../../../../platform/terminal/common/terminal.js';
-import { BasePty } from '../common/basePty.js';
-import { RemoteTerminalChannelClient } from '../common/remote/remoteTerminalChannel.js';
-import { IRemoteAgentService } from '../../../services/remote/common/remoteAgentService.js';
-import { hasKey } from '../../../../base/common/types.js';
+import { Barrier } from "../../../../base/common/async.js";
+import {
+  ITerminalLaunchResult,
+  IProcessPropertyMap,
+  ITerminalChildProcess,
+  ITerminalLaunchError,
+  ITerminalLogService,
+  ProcessPropertyType,
+} from "../../../../platform/terminal/common/terminal.js";
+import { BasePty } from "../common/basePty.js";
+import { RemoteTerminalChannelClient } from "../common/remote/remoteTerminalChannel.js";
+import { IRemoteAgentService } from "../../../services/remote/common/remoteAgentService.js";
+import { hasKey } from "../../../../base/common/types.js";
 
 export class RemotePty extends BasePty implements ITerminalChildProcess {
 	private readonly _startBarrier: Barrier;
@@ -18,7 +25,7 @@ export class RemotePty extends BasePty implements ITerminalChildProcess {
 		shouldPersist: boolean,
 		private readonly _remoteTerminalChannel: RemoteTerminalChannelClient,
 		@IRemoteAgentService private readonly _remoteAgentService: IRemoteAgentService,
-		@ITerminalLogService private readonly _logService: ITerminalLogService
+		@ITerminalLogService private readonly _logService: ITerminalLogService,
 	) {
 		super(id, shouldPersist);
 		this._startBarrier = new Barrier();
@@ -29,10 +36,12 @@ export class RemotePty extends BasePty implements ITerminalChildProcess {
 		const env = await this._remoteAgentService.getEnvironment();
 		if (!env) {
 			// Extension host processes are only allowed in remote extension hosts currently
-			throw new Error('Could not fetch remote environment');
+			throw new Error("Could not fetch remote environment");
 		}
 
-		this._logService.trace('Spawning remote agent process', { terminalId: this.id });
+		this._logService.trace("Spawning remote agent process", {
+      terminalId: this.id,
+    });
 
 		const startResult = await this._remoteTerminalChannel.start(this.id);
 
@@ -52,8 +61,8 @@ export class RemotePty extends BasePty implements ITerminalChildProcess {
 
 	shutdown(immediate: boolean): void {
 		this._startBarrier.wait().then(_ => {
-			this._remoteTerminalChannel.shutdown(this.id, immediate);
-		});
+      this._remoteTerminalChannel.shutdown(this.id, immediate);
+    });
 	}
 
 	input(data: string): void {
@@ -62,8 +71,8 @@ export class RemotePty extends BasePty implements ITerminalChildProcess {
 		}
 
 		this._startBarrier.wait().then(_ => {
-			this._remoteTerminalChannel.input(this.id, data);
-		});
+      this._remoteTerminalChannel.input(this.id, data);
+    });
 	}
 
 	sendSignal(signal: string): void {
@@ -72,8 +81,8 @@ export class RemotePty extends BasePty implements ITerminalChildProcess {
 		}
 
 		this._startBarrier.wait().then(_ => {
-			this._remoteTerminalChannel.sendSignal(this.id, signal);
-		});
+      this._remoteTerminalChannel.sendSignal(this.id, signal);
+    });
 	}
 
 	processBinary(e: string): Promise<void> {
@@ -85,10 +94,16 @@ export class RemotePty extends BasePty implements ITerminalChildProcess {
 			return;
 		}
 		this._startBarrier.wait().then(_ => {
-			this._lastDimensions.cols = cols;
-			this._lastDimensions.rows = rows;
-			this._remoteTerminalChannel.resize(this.id, cols, rows, pixelWidth, pixelHeight);
-		});
+      this._lastDimensions.cols = cols;
+      this._lastDimensions.rows = rows;
+      this._remoteTerminalChannel.resize(
+        this.id,
+        cols,
+        rows,
+        pixelWidth,
+        pixelHeight,
+      );
+    });
 	}
 
 	async clearBuffer(): Promise<void> {
@@ -97,7 +112,9 @@ export class RemotePty extends BasePty implements ITerminalChildProcess {
 
 	freePortKillProcess(port: string): Promise<{ port: string; processId: string }> {
 		if (!this._remoteTerminalChannel.freePortKillProcess) {
-			throw new Error('freePortKillProcess does not exist on the local pty service');
+			throw new Error(
+        "freePortKillProcess does not exist on the local pty service",
+      );
 		}
 		return this._remoteTerminalChannel.freePortKillProcess(port);
 	}
@@ -109,11 +126,11 @@ export class RemotePty extends BasePty implements ITerminalChildProcess {
 		}
 
 		this._startBarrier.wait().then(_ => {
-			this._remoteTerminalChannel.acknowledgeDataEvent(this.id, charCount);
-		});
+      this._remoteTerminalChannel.acknowledgeDataEvent(this.id, charCount);
+    });
 	}
 
-	async setUnicodeVersion(version: '6' | '11'): Promise<void> {
+	async setUnicodeVersion(version: "6" | "11"): Promise<void> {
 		return this._remoteTerminalChannel.setUnicodeVersion(this.id, version);
 	}
 

@@ -3,10 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import { ClassifiedEvent, IGDPRProperty, OmitMetadata, StrictPropertyCheck } from './gdprTypings.js';
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { ClassifiedEvent, IGDPRProperty, OmitMetadata, StrictPropertyCheck } from "./gdprTypings.js";
 
-export const ITelemetryService = createDecorator<ITelemetryService>('telemetryService');
+export const ITelemetryService = createDecorator<ITelemetryService>(
+  "telemetryService",
+);
 
 export interface ITelemetryData {
 	from?: string;
@@ -68,7 +70,7 @@ export function telemetryLevelEnabled(service: ITelemetryService, level: Telemet
  * telemetry pipeline from redacting them as file paths.
  */
 export function escapeModelIdForTelemetry(modelId: string | undefined): string | undefined {
-	return modelId?.replace(/[\/\\]/g, '|');
+	return modelId?.replace(/[\/\\]/g, "|");
 }
 
 export interface ITelemetryEndpoint {
@@ -77,7 +79,9 @@ export interface ITelemetryEndpoint {
 	sendErrorTelemetry: boolean;
 }
 
-export const ICustomEndpointTelemetryService = createDecorator<ICustomEndpointTelemetryService>('customEndpointTelemetryService');
+export const ICustomEndpointTelemetryService = createDecorator<ICustomEndpointTelemetryService>(
+  "customEndpointTelemetryService",
+);
 
 export interface ICustomEndpointTelemetryService {
 	readonly _serviceBrand: undefined;
@@ -87,18 +91,18 @@ export interface ICustomEndpointTelemetryService {
 }
 
 // Keys
-export const currentSessionDateStorageKey = 'telemetry.currentSessionDate';
-export const firstSessionDateStorageKey = 'telemetry.firstSessionDate';
-export const lastSessionDateStorageKey = 'telemetry.lastSessionDate';
-export const machineIdKey = 'telemetry.machineId';
-export const sqmIdKey = 'telemetry.sqmId';
-export const devDeviceIdKey = 'telemetry.devDeviceId';
+export const currentSessionDateStorageKey = "telemetry.currentSessionDate";
+export const firstSessionDateStorageKey = "telemetry.firstSessionDate";
+export const lastSessionDateStorageKey = "telemetry.lastSessionDate";
+export const machineIdKey = "telemetry.machineId";
+export const sqmIdKey = "telemetry.sqmId";
+export const devDeviceIdKey = "telemetry.devDeviceId";
 
 // Configuration Keys
-export const TELEMETRY_SECTION_ID = 'telemetry';
-export const TELEMETRY_SETTING_ID = 'telemetry.telemetryLevel';
-export const TELEMETRY_CRASH_REPORTER_SETTING_ID = 'telemetry.enableCrashReporter';
-export const TELEMETRY_OLD_SETTING_ID = 'telemetry.enableTelemetry';
+export const TELEMETRY_SECTION_ID = "telemetry";
+export const TELEMETRY_SETTING_ID = "telemetry.telemetryLevel";
+export const TELEMETRY_CRASH_REPORTER_SETTING_ID = "telemetry.enableCrashReporter";
+export const TELEMETRY_OLD_SETTING_ID = "telemetry.enableTelemetry";
 
 export const enum TelemetryLevel {
 	NONE = 0,
@@ -108,10 +112,10 @@ export const enum TelemetryLevel {
 }
 
 export const enum TelemetryConfiguration {
-	OFF = 'off',
-	CRASH = 'crash',
-	ERROR = 'error',
-	ON = 'all'
+	OFF = "off",
+	CRASH = "crash",
+	ERROR = "error",
+	ON = "all"
 }
 
 export interface ICommonProperties {

@@ -3,19 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { doHash } from '../../../base/common/hash.js';
-import { LRUCache } from '../../../base/common/map.js';
-import { clamp, MovingAverage, SlidingWindowAverage } from '../../../base/common/numbers.js';
-import { LanguageFeatureRegistry } from '../languageFeatureRegistry.js';
-import { ITextModel } from '../model.js';
-import { IEnvironmentService } from '../../../platform/environment/common/environment.js';
-import { InstantiationType, registerSingleton } from '../../../platform/instantiation/common/extensions.js';
-import { createDecorator } from '../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../platform/log/common/log.js';
-import { matchesScheme } from '../../../base/common/network.js';
+import { doHash } from "../../../base/common/hash.js";
+import { LRUCache } from "../../../base/common/map.js";
+import { clamp, MovingAverage, SlidingWindowAverage } from "../../../base/common/numbers.js";
+import { LanguageFeatureRegistry } from "../languageFeatureRegistry.js";
+import { ITextModel } from "../model.js";
+import { IEnvironmentService } from "../../../platform/environment/common/environment.js";
+import { InstantiationType, registerSingleton } from "../../../platform/instantiation/common/extensions.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { matchesScheme } from "../../../base/common/network.js";
 
 
-export const ILanguageFeatureDebounceService = createDecorator<ILanguageFeatureDebounceService>('ILanguageFeatureDebounceService');
+export const ILanguageFeatureDebounceService = createDecorator<ILanguageFeatureDebounceService>(
+  "ILanguageFeatureDebounceService",
+);
 
 export interface ILanguageFeatureDebounceService {
 
@@ -72,7 +74,10 @@ class FeatureDebounceInformation implements IFeatureDebounceInformation {
 	) { }
 
 	private _key(model: ITextModel): string {
-		return model.id + this._registry.all(model).reduce((hashVal, obj) => doHash(IdentityHash.of(obj), hashVal), 0);
+		return model.id + this._registry.all(model).reduce(
+      (hashVal, obj) => doHash(IdentityHash.of(obj), hashVal),
+      0,
+    );
 	}
 
 	get(model: ITextModel): number {
@@ -91,8 +96,10 @@ class FeatureDebounceInformation implements IFeatureDebounceInformation {
 			this._cache.set(key, avg);
 		}
 		const newValue = clamp(avg.update(value), this._min, this._max);
-		if (!matchesScheme(model.uri, 'output')) {
-			this._logService.trace(`[DEBOUNCE: ${this._name}] for ${model.uri.toString()} is ${newValue}ms`);
+		if (!matchesScheme(model.uri, "output")) {
+			this._logService.trace(
+        `[DEBOUNCE: ${this._name}] for ${model.uri.toString()} is ${newValue}ms`,
+      );
 		}
 		return newValue;
 	}
@@ -131,11 +138,13 @@ export class LanguageFeatureDebounceService implements ILanguageFeatureDebounceS
 		const min = config?.min ?? 50;
 		const max = config?.max ?? min ** 2;
 		const extra = config?.key ?? undefined;
-		const key = `${IdentityHash.of(feature)},${min}${extra ? ',' + extra : ''}`;
+		const key = `${IdentityHash.of(feature)},${min}${extra ? "," + extra : ""}`;
 		let info = this._data.get(key);
 		if (!info) {
 			if (this._isDev) {
-				this._logService.debug(`[DEBOUNCE: ${name}] is disabled in developed mode`);
+				this._logService.debug(
+          `[DEBOUNCE: ${name}] is disabled in developed mode`,
+        );
 				info = new NullDebounceInformation(min * 1.5);
 			} else {
 				info = new FeatureDebounceInformation(
@@ -144,7 +153,7 @@ export class LanguageFeatureDebounceService implements ILanguageFeatureDebounceS
 					feature,
 					(this._overallAverage() | 0) || (min * 1.5), // default is overall default or derived from min-value
 					min,
-					max
+					max,
 				);
 			}
 			this._data.set(key, info);
@@ -162,4 +171,8 @@ export class LanguageFeatureDebounceService implements ILanguageFeatureDebounceS
 	}
 }
 
-registerSingleton(ILanguageFeatureDebounceService, LanguageFeatureDebounceService, InstantiationType.Delayed);
+registerSingleton(
+  ILanguageFeatureDebounceService,
+  LanguageFeatureDebounceService,
+  InstantiationType.Delayed,
+);

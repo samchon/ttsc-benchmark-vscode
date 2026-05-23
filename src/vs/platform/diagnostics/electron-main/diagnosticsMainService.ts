@@ -3,22 +3,33 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { app, BrowserWindow, Event as IpcEvent } from 'electron';
-import { validatedIpcMain } from '../../../base/parts/ipc/electron-main/ipcMain.js';
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { URI } from '../../../base/common/uri.js';
-import { IDiagnosticInfo, IDiagnosticInfoOptions, IGPULogMessage, IMainProcessDiagnostics, IProcessDiagnostics, IRemoteDiagnosticError, IRemoteDiagnosticInfo, IWindowDiagnostics } from '../common/diagnostics.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import { ICodeWindow } from '../../window/electron-main/window.js';
-import { getAllWindowsExcludingOffscreen, IWindowsMainService } from '../../windows/electron-main/windows.js';
-import { isSingleFolderWorkspaceIdentifier, isWorkspaceIdentifier } from '../../workspace/common/workspace.js';
-import { IWorkspacesManagementMainService } from '../../workspaces/electron-main/workspacesManagementMainService.js';
-import { assertReturnsDefined } from '../../../base/common/types.js';
-import { ILogService } from '../../log/common/log.js';
-import { UtilityProcess } from '../../utilityProcess/electron-main/utilityProcess.js';
+import { app, BrowserWindow, Event as IpcEvent } from "electron";
+import { validatedIpcMain } from "../../../base/parts/ipc/electron-main/ipcMain.js";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { URI } from "../../../base/common/uri.js";
+import {
+  IDiagnosticInfo,
+  IDiagnosticInfoOptions,
+  IGPULogMessage,
+  IMainProcessDiagnostics,
+  IProcessDiagnostics,
+  IRemoteDiagnosticError,
+  IRemoteDiagnosticInfo,
+  IWindowDiagnostics,
+} from "../common/diagnostics.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { ICodeWindow } from "../../window/electron-main/window.js";
+import { getAllWindowsExcludingOffscreen, IWindowsMainService } from "../../windows/electron-main/windows.js";
+import { isSingleFolderWorkspaceIdentifier, isWorkspaceIdentifier } from "../../workspace/common/workspace.js";
+import { IWorkspacesManagementMainService } from "../../workspaces/electron-main/workspacesManagementMainService.js";
+import { assertReturnsDefined } from "../../../base/common/types.js";
+import { ILogService } from "../../log/common/log.js";
+import { UtilityProcess } from "../../utilityProcess/electron-main/utilityProcess.js";
 
-export const ID = 'diagnosticsMainService';
-export const IDiagnosticsMainService = createDecorator<IDiagnosticsMainService>(ID);
+export const ID = "diagnosticsMainService";
+export const IDiagnosticsMainService = createDecorator<IDiagnosticsMainService>(
+  ID,
+);
 
 export interface IRemoteDiagnosticOptions {
 	includeProcesses?: boolean;
@@ -38,7 +49,7 @@ export class DiagnosticsMainService implements IDiagnosticsMainService {
 	constructor(
 		@IWindowsMainService private readonly windowsMainService: IWindowsMainService,
 		@IWorkspacesManagementMainService private readonly workspacesManagementMainService: IWorkspacesManagementMainService,
-		@ILogService private readonly logService: ILogService
+		@ILogService private readonly logService: ILogService,
 	) { }
 
 	async getRemoteDiagnostics(options: IRemoteDiagnosticOptions): Promise<(IRemoteDiagnosticInfo | IRemoteDiagnosticError)[]> {
@@ -52,11 +63,11 @@ export class DiagnosticsMainService implements IDiagnosticsMainService {
 			const replyChannel = `vscode:getDiagnosticInfoResponse${window.id}`;
 			const args: IDiagnosticInfoOptions = {
 				includeProcesses: options.includeProcesses,
-				folders: options.includeWorkspaceMetadata ? await this.getFolderURIs(window) : undefined
+				folders: options.includeWorkspaceMetadata ? await this.getFolderURIs(window) : undefined,
 			};
 
 			return new Promise<IDiagnosticInfo | IRemoteDiagnosticError>(resolve => {
-				window.sendWhenReady('vscode:getDiagnosticInfo', CancellationToken.None, { replyChannel, args });
+				window.sendWhenReady("vscode:getDiagnosticInfo", CancellationToken.None, { replyChannel, args });
 
 				validatedIpcMain.once(replyChannel, (_: IpcEvent, data: IRemoteDiagnosticInfo) => {
 					// No data is returned if getting the connection fails.
@@ -73,11 +84,15 @@ export class DiagnosticsMainService implements IDiagnosticsMainService {
 			});
 		}));
 
-		return diagnostics.filter((x): x is IRemoteDiagnosticInfo | IRemoteDiagnosticError => !!x);
+		return diagnostics.filter(
+      (x): x is IRemoteDiagnosticInfo | IRemoteDiagnosticError => !!x,
+    );
 	}
 
 	async getMainDiagnostics(): Promise<IMainProcessDiagnostics> {
-		this.logService.trace('Received request for main process info from other instance.');
+		this.logService.trace(
+      "Received request for main process info from other instance.",
+    );
 
 		const windows: IWindowDiagnostics[] = [];
 		for (const window of getAllWindowsExcludingOffscreen()) {
@@ -100,19 +115,19 @@ export class DiagnosticsMainService implements IDiagnosticsMainService {
 
 		let gpuLogMessages: IGPULogMessage[] = [];
 		const customApp = app as AppWithGPULogMethod;
-		if (typeof customApp.getGPULogMessages === 'function') {
+		if (typeof customApp.getGPULogMessages === "function") {
 			gpuLogMessages = customApp.getGPULogMessages();
 		}
 
 		return {
-			mainPID: process.pid,
-			mainArguments: process.argv.slice(1),
-			windows,
-			pidToNames,
-			screenReader: !!app.accessibilitySupportEnabled,
-			gpuFeatureStatus: app.getGPUFeatureStatus(),
-			gpuLogMessages
-		};
+      mainPID: process.pid,
+      mainArguments: process.argv.slice(1),
+      windows,
+      pidToNames,
+      screenReader: !!app.accessibilitySupportEnabled,
+      gpuFeatureStatus: app.getGPUFeatureStatus(),
+      gpuLogMessages,
+    };
 	}
 
 	private async codeWindowToInfo(window: ICodeWindow): Promise<IWindowDiagnostics> {
@@ -124,12 +139,12 @@ export class DiagnosticsMainService implements IDiagnosticsMainService {
 
 	private browserWindowToInfo(window: BrowserWindow, folderURIs: URI[] = [], remoteAuthority?: string): IWindowDiagnostics {
 		return {
-			id: window.id,
-			pid: window.webContents.getOSProcessId(),
-			title: window.getTitle(),
-			folderURIs,
-			remoteAuthority
-		};
+      id: window.id,
+      pid: window.webContents.getOSProcessId(),
+      title: window.getTitle(),
+      folderURIs,
+      remoteAuthority,
+    };
 	}
 
 	private async getFolderURIs(window: ICodeWindow): Promise<URI[]> {
@@ -139,12 +154,14 @@ export class DiagnosticsMainService implements IDiagnosticsMainService {
 		if (isSingleFolderWorkspaceIdentifier(workspace)) {
 			folderURIs.push(workspace.uri);
 		} else if (isWorkspaceIdentifier(workspace)) {
-			const resolvedWorkspace = await this.workspacesManagementMainService.resolveLocalWorkspace(workspace.configPath); // workspace folders can only be shown for local (resolved) workspaces
+			const resolvedWorkspace = await this.workspacesManagementMainService.resolveLocalWorkspace(
+        workspace.configPath,
+      ); // workspace folders can only be shown for local (resolved) workspaces
 			if (resolvedWorkspace) {
 				const rootFolders = resolvedWorkspace.folders;
 				rootFolders.forEach(root => {
-					folderURIs.push(root.uri);
-				});
+          folderURIs.push(root.uri);
+        });
 			}
 		}
 

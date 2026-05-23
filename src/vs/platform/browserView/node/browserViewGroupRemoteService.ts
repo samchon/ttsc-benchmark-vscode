@@ -3,13 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../base/common/event.js';
-import { Disposable } from '../../../base/common/lifecycle.js';
-import { ProxyChannel } from '../../../base/parts/ipc/common/ipc.js';
-import { IMainProcessService } from '../../ipc/common/mainProcessService.js';
-import { IBrowserViewGroup, IBrowserViewGroupService, IBrowserViewGroupViewEvent, ipcBrowserViewGroupChannelName } from '../common/browserViewGroup.js';
-import { IBrowserViewOwner } from '../common/browserView.js';
-import { CDPEvent, CDPRequest, CDPResponse } from '../common/cdp/types.js';
+import { Event } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { ProxyChannel } from "../../../base/parts/ipc/common/ipc.js";
+import { IMainProcessService } from "../../ipc/common/mainProcessService.js";
+import {
+  IBrowserViewGroup,
+  IBrowserViewGroupService,
+  IBrowserViewGroupViewEvent,
+  ipcBrowserViewGroupChannelName,
+} from "../common/browserViewGroup.js";
+import { IBrowserViewOwner } from "../common/browserView.js";
+import { CDPEvent, CDPRequest, CDPResponse } from "../common/cdp/types.js";
 
 /**
  * Remote-process service for managing browser view groups.
@@ -87,8 +92,12 @@ export class BrowserViewGroupRemoteService implements IBrowserViewGroupRemoteSer
 	constructor(
 		mainProcessService: IMainProcessService,
 	) {
-		const channel = mainProcessService.getChannel(ipcBrowserViewGroupChannelName);
-		this._groupService = ProxyChannel.toService<IBrowserViewGroupService>(channel);
+		const channel = mainProcessService.getChannel(
+      ipcBrowserViewGroupChannelName,
+    );
+		this._groupService = ProxyChannel.toService<IBrowserViewGroupService>(
+      channel,
+    );
 	}
 
 	async createGroup(owner: IBrowserViewOwner): Promise<IBrowserViewGroup> {
@@ -101,8 +110,8 @@ export class BrowserViewGroupRemoteService implements IBrowserViewGroupRemoteSer
 		this._groups.set(id, group);
 
 		Event.once(group.onDidDestroy)(() => {
-			this._groups.delete(id);
-		});
+      this._groups.delete(id);
+    });
 
 		return group;
 	}

@@ -3,26 +3,39 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as arrays from '../../base/common/arrays.js';
-import { IScrollPosition, Scrollable } from '../../base/common/scrollable.js';
-import * as strings from '../../base/common/strings.js';
-import { ISimpleModel } from './viewModel/screenReaderSimpleModel.js';
-import { ICoordinatesConverter } from './coordinatesConverter.js';
-import { IPosition, Position } from './core/position.js';
-import { Range } from './core/range.js';
-import { CursorConfiguration, CursorState, EditOperationType, IColumnSelectData, ICursorSimpleModel, PartialCursorState } from './cursorCommon.js';
-import { CursorChangeReason } from './cursorEvents.js';
-import { INewScrollPosition, ScrollType } from './editorCommon.js';
-import { EditorTheme } from './editorTheme.js';
-import { EndOfLinePreference, IGlyphMarginLanesModel, IModelDecorationOptions, ITextModel, TextDirection } from './model.js';
-import { ILineBreaksComputer, ILineBreaksComputerContext, InjectedText } from './modelLineProjectionData.js';
-import { InternalModelContentChangeEvent, ModelInjectedTextChangedEvent } from './textModelEvents.js';
-import { BracketGuideOptions, IActiveIndentGuideInfo, IndentGuide } from './textModelGuides.js';
-import { IViewLineTokens } from './tokens/lineTokens.js';
-import { ViewEventHandler } from './viewEventHandler.js';
-import { VerticalRevealType } from './viewEvents.js';
-import { InlineDecoration } from './viewModel/inlineDecorations.js';
-import { EditorOption, FindComputedEditorOptionValueById } from './config/editorOptions.js';
+import * as arrays from "../../base/common/arrays.js";
+import { IScrollPosition, Scrollable } from "../../base/common/scrollable.js";
+import * as strings from "../../base/common/strings.js";
+import { ISimpleModel } from "./viewModel/screenReaderSimpleModel.js";
+import { ICoordinatesConverter } from "./coordinatesConverter.js";
+import { IPosition, Position } from "./core/position.js";
+import { Range } from "./core/range.js";
+import {
+  CursorConfiguration,
+  CursorState,
+  EditOperationType,
+  IColumnSelectData,
+  ICursorSimpleModel,
+  PartialCursorState,
+} from "./cursorCommon.js";
+import { CursorChangeReason } from "./cursorEvents.js";
+import { INewScrollPosition, ScrollType } from "./editorCommon.js";
+import { EditorTheme } from "./editorTheme.js";
+import {
+  EndOfLinePreference,
+  IGlyphMarginLanesModel,
+  IModelDecorationOptions,
+  ITextModel,
+  TextDirection,
+} from "./model.js";
+import { ILineBreaksComputer, ILineBreaksComputerContext, InjectedText } from "./modelLineProjectionData.js";
+import { InternalModelContentChangeEvent, ModelInjectedTextChangedEvent } from "./textModelEvents.js";
+import { BracketGuideOptions, IActiveIndentGuideInfo, IndentGuide } from "./textModelGuides.js";
+import { IViewLineTokens } from "./tokens/lineTokens.js";
+import { ViewEventHandler } from "./viewEventHandler.js";
+import { VerticalRevealType } from "./viewEvents.js";
+import { InlineDecoration } from "./viewModel/inlineDecorations.js";
+import { EditorOption, FindComputedEditorOptionValueById } from "./config/editorOptions.js";
 
 export interface IViewModel extends ICursorSimpleModel, ISimpleModel {
 
@@ -240,7 +253,7 @@ export class MinimapLinesRenderingData {
 
 	constructor(
 		tabSize: number,
-		data: Array<ViewLineData | null>
+		data: Array<ViewLineData | null>,
 	) {
 		this.tabSize = tabSize;
 		this.data = data;
@@ -287,7 +300,7 @@ export class ViewLineData {
 		maxColumn: number,
 		startVisibleColumn: number,
 		tokens: IViewLineTokens,
-		inlineDecorations: readonly InlineDecoration[] | null
+		inlineDecorations: readonly InlineDecoration[] | null,
 	) {
 		this.content = content;
 		this.continuesWithWrappedLine = continuesWithWrappedLine;
@@ -361,15 +374,22 @@ export class ViewLineRenderingData {
 		tabSize: number,
 		startVisibleColumn: number,
 		textDirection: TextDirection,
-		hasVariableFonts: boolean
+		hasVariableFonts: boolean,
 	) {
 		this.minColumn = minColumn;
 		this.maxColumn = maxColumn;
 		this.content = content;
 		this.continuesWithWrappedLine = continuesWithWrappedLine;
 
-		this.isBasicASCII = ViewLineRenderingData.isBasicASCII(content, mightContainNonBasicASCII);
-		this.containsRTL = ViewLineRenderingData.containsRTL(content, this.isBasicASCII, mightContainRTL);
+		this.isBasicASCII = ViewLineRenderingData.isBasicASCII(
+      content,
+      mightContainNonBasicASCII,
+    );
+		this.containsRTL = ViewLineRenderingData.containsRTL(
+      content,
+      this.isBasicASCII,
+      mightContainRTL,
+    );
 
 		this.tokens = tokens;
 		this.inlineDecorations = inlineDecorations;
@@ -417,7 +437,7 @@ export class OverviewRulerDecorationsGroup {
 		 *  - 3*i+1 = startLineNumber
 		 *  - 3*i+2 = endLineNumber
 		 */
-		public readonly data: number[]
+		public readonly data: number[],
 	) { }
 
 	public static compareByRenderingProps(a: OverviewRulerDecorationsGroup, b: OverviewRulerDecorationsGroup): number {

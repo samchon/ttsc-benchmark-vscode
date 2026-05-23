@@ -3,25 +3,44 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { Schemas } from '../../../../base/common/network.js';
-import { isEqual } from '../../../../base/common/resources.js';
-import { URI, UriComponents } from '../../../../base/common/uri.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { IWorkbenchContribution } from '../../../common/contributions.js';
-import { IEditorSerializer } from '../../../common/editor.js';
-import { EditorInput } from '../../../common/editor/editorInput.js';
-import { CustomEditorInput } from './customEditorInput.js';
-import { CustomEditorDiffInput, CustomEditorSideBySideDiffInput, CustomEditorSideBySideDiffSide } from './customEditorDiffInput.js';
-import { ICustomEditorService } from '../common/customEditor.js';
-import { NotebookEditorInput } from '../../notebook/common/notebookEditorInput.js';
-import { IWebviewService, WebviewContentOptions, WebviewContentPurpose, WebviewExtensionDescription, WebviewOptions } from '../../webview/browser/webview.js';
-import { DeserializedWebview, restoreWebviewContentOptions, restoreWebviewOptions, reviveWebviewExtensionDescription, reviveWebviewIconPath, SerializedWebview, SerializedWebviewOptions, WebviewEditorInputSerializer } from '../../webviewPanel/browser/webviewEditorInputSerializer.js';
-import { IWebviewWorkbenchService } from '../../webviewPanel/browser/webviewWorkbenchService.js';
-import { IWorkingCopyBackupMeta, IWorkingCopyIdentifier } from '../../../services/workingCopy/common/workingCopy.js';
-import { IWorkingCopyBackupService } from '../../../services/workingCopy/common/workingCopyBackup.js';
-import { IWorkingCopyEditorHandler, IWorkingCopyEditorService } from '../../../services/workingCopy/common/workingCopyEditorService.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { URI, UriComponents } from "../../../../base/common/uri.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { IEditorSerializer } from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { CustomEditorInput } from "./customEditorInput.js";
+import {
+  CustomEditorDiffInput,
+  CustomEditorSideBySideDiffInput,
+  CustomEditorSideBySideDiffSide,
+} from "./customEditorDiffInput.js";
+import { ICustomEditorService } from "../common/customEditor.js";
+import { NotebookEditorInput } from "../../notebook/common/notebookEditorInput.js";
+import {
+  IWebviewService,
+  WebviewContentOptions,
+  WebviewContentPurpose,
+  WebviewExtensionDescription,
+  WebviewOptions,
+} from "../../webview/browser/webview.js";
+import {
+  DeserializedWebview,
+  restoreWebviewContentOptions,
+  restoreWebviewOptions,
+  reviveWebviewExtensionDescription,
+  reviveWebviewIconPath,
+  SerializedWebview,
+  SerializedWebviewOptions,
+  WebviewEditorInputSerializer,
+} from "../../webviewPanel/browser/webviewEditorInputSerializer.js";
+import { IWebviewWorkbenchService } from "../../webviewPanel/browser/webviewWorkbenchService.js";
+import { IWorkingCopyBackupMeta, IWorkingCopyIdentifier } from "../../../services/workingCopy/common/workingCopy.js";
+import { IWorkingCopyBackupService } from "../../../services/workingCopy/common/workingCopyBackup.js";
+import { IWorkingCopyEditorHandler, IWorkingCopyEditorService } from "../../../services/workingCopy/common/workingCopyEditorService.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
 
 export interface CustomDocumentBackupData extends IWorkingCopyBackupMeta {
 	readonly viewType: string;
@@ -71,11 +90,11 @@ export class CustomEditorInputSerializer extends WebviewEditorInputSerializer {
 	public override serialize(input: CustomEditorInput): string | undefined {
 		const dirty = input.isDirty();
 		const data: SerializedCustomEditor = {
-			...this.toJson(input),
-			editorResource: input.resource.toJSON(),
-			dirty,
-			backupId: dirty ? input.backupId : undefined,
-		};
+      ...this.toJson(input),
+      editorResource: input.resource.toJSON(),
+      dirty,
+      backupId: dirty ? input.backupId : undefined,
+    };
 
 		try {
 			return JSON.stringify(data);
@@ -86,27 +105,32 @@ export class CustomEditorInputSerializer extends WebviewEditorInputSerializer {
 
 	protected override fromJson(data: SerializedCustomEditor): DeserializedCustomEditor {
 		return {
-			...super.fromJson(data),
-			editorResource: URI.from(data.editorResource),
-			dirty: data.dirty,
-		};
+      ...super.fromJson(data),
+      editorResource: URI.from(data.editorResource),
+      dirty: data.dirty,
+    };
 	}
 
 	public override deserialize(
 		_instantiationService: IInstantiationService,
-		serializedEditorInput: string
+		serializedEditorInput: string,
 	): CustomEditorInput {
 		const data = this.fromJson(JSON.parse(serializedEditorInput));
 
 		const webview = reviveWebview(this._webviewService, data);
-		const customInput = this._instantiationService.createInstance(CustomEditorInput, {
-			resource: data.editorResource,
-			viewType: data.viewType,
-			webviewTitle: data.title,
-			preferredName: undefined,
-			iconPath: data.iconPath,
-		}, webview, { startsDirty: data.dirty, backupId: data.backupId });
-		if (typeof data.group === 'number') {
+		const customInput = this._instantiationService.createInstance(
+      CustomEditorInput,
+      {
+        resource: data.editorResource,
+        viewType: data.viewType,
+        webviewTitle: data.title,
+        preferredName: undefined,
+        iconPath: data.iconPath,
+      },
+      webview,
+      { startsDirty: data.dirty, backupId: data.backupId },
+    );
+		if (typeof data.group === "number") {
 			customInput.updateGroup(data.group);
 		}
 		return customInput;
@@ -136,13 +160,13 @@ export class CustomEditorDiffInputSerializer implements IEditorSerializer {
 
 	serialize(input: CustomEditorDiffInput): string | undefined {
 		const data: SerializedCustomEditorDiff = {
-			originalResource: input.originalResource.toJSON(),
-			modifiedResource: input.modifiedResource.toJSON(),
-			viewType: input.viewType,
-			label: input.getName(),
-			description: input.getDescription(),
-			dirty: input.isDirty(),
-		};
+      originalResource: input.originalResource.toJSON(),
+      modifiedResource: input.modifiedResource.toJSON(),
+      viewType: input.viewType,
+      label: input.getName(),
+      description: input.getDescription(),
+      dirty: input.isDirty(),
+    };
 		try {
 			return JSON.stringify(data);
 		} catch {
@@ -152,14 +176,18 @@ export class CustomEditorDiffInputSerializer implements IEditorSerializer {
 
 	deserialize(_instantiationService: IInstantiationService, serializedEditorInput: string): EditorInput {
 		const data: SerializedCustomEditorDiff = JSON.parse(serializedEditorInput);
-		return CustomEditorDiffInput.create(this._instantiationService, {
-			originalResource: URI.revive(data.originalResource),
-			modifiedResource: URI.revive(data.modifiedResource),
-			viewType: data.viewType,
-			label: data.label,
-			description: data.description,
-			iconPath: undefined,
-		}, undefined);
+		return CustomEditorDiffInput.create(
+      this._instantiationService,
+      {
+        originalResource: URI.revive(data.originalResource),
+        modifiedResource: URI.revive(data.modifiedResource),
+        viewType: data.viewType,
+        label: data.label,
+        description: data.description,
+        iconPath: undefined,
+      },
+      undefined,
+    );
 	}
 }
 
@@ -182,15 +210,15 @@ export class CustomEditorSideBySideDiffInputSerializer implements IEditorSeriali
 
 	serialize(input: CustomEditorSideBySideDiffInput): string | undefined {
 		const data: SerializedCustomEditorSideBySideDiff = {
-			originalResource: input.originalResource.toJSON(),
-			modifiedResource: input.modifiedResource.toJSON(),
-			viewType: input.viewType,
-			label: input.getName(),
-			description: input.getDescription(),
-			dirty: input.isDirty(),
-			diffId: input.diffId,
-			side: input.side,
-		};
+      originalResource: input.originalResource.toJSON(),
+      modifiedResource: input.modifiedResource.toJSON(),
+      viewType: input.viewType,
+      label: input.getName(),
+      description: input.getDescription(),
+      dirty: input.isDirty(),
+      diffId: input.diffId,
+      side: input.side,
+    };
 		try {
 			return JSON.stringify(data);
 		} catch {
@@ -199,17 +227,23 @@ export class CustomEditorSideBySideDiffInputSerializer implements IEditorSeriali
 	}
 
 	deserialize(_instantiationService: IInstantiationService, serializedEditorInput: string): EditorInput {
-		const data: SerializedCustomEditorSideBySideDiff = JSON.parse(serializedEditorInput);
-		return CustomEditorSideBySideDiffInput.create(this._instantiationService, {
-			originalResource: URI.revive(data.originalResource),
-			modifiedResource: URI.revive(data.modifiedResource),
-			viewType: data.viewType,
-			label: data.label,
-			description: data.description,
-			iconPath: undefined,
-			diffId: data.diffId,
-			side: data.side,
-		}, undefined);
+		const data: SerializedCustomEditorSideBySideDiff = JSON.parse(
+      serializedEditorInput,
+    );
+		return CustomEditorSideBySideDiffInput.create(
+      this._instantiationService,
+      {
+        originalResource: URI.revive(data.originalResource),
+        modifiedResource: URI.revive(data.modifiedResource),
+        viewType: data.viewType,
+        label: data.label,
+        description: data.description,
+        iconPath: undefined,
+        diffId: data.diffId,
+        side: data.side,
+      },
+      undefined,
+    );
 	}
 }
 
@@ -232,14 +266,14 @@ function reviveWebview(webviewService: IWebviewService, data: { origin: string |
 
 export class ComplexCustomWorkingCopyEditorHandler extends Disposable implements IWorkbenchContribution, IWorkingCopyEditorHandler {
 
-	static readonly ID = 'workbench.contrib.complexCustomWorkingCopyEditorHandler';
+	static readonly ID = "workbench.contrib.complexCustomWorkingCopyEditorHandler";
 
 	constructor(
 		@IInstantiationService private readonly _instantiationService: IInstantiationService,
 		@IWorkingCopyEditorService _workingCopyEditorService: IWorkingCopyEditorService,
 		@IWorkingCopyBackupService private readonly _workingCopyBackupService: IWorkingCopyBackupService,
 		@IWebviewService private readonly _webviewService: IWebviewService,
-		@ICustomEditorService _customEditorService: ICustomEditorService // DO NOT REMOVE (needed on startup to register overrides properly)
+		@ICustomEditorService _customEditorService: ICustomEditorService, // DO NOT REMOVE (needed on startup to register overrides properly)
 	) {
 		super();
 
@@ -255,7 +289,7 @@ export class ComplexCustomWorkingCopyEditorHandler extends Disposable implements
 			return false;
 		}
 
-		if (workingCopy.resource.authority === 'jupyter-notebook-ipynb' && editor instanceof NotebookEditorInput) {
+		if (workingCopy.resource.authority === "jupyter-notebook-ipynb" && editor instanceof NotebookEditorInput) {
 			try {
 				const data = JSON.parse(workingCopy.resource.query);
 				const workingCopyResource = URI.from(data);
@@ -269,7 +303,7 @@ export class ComplexCustomWorkingCopyEditorHandler extends Disposable implements
 			return false;
 		}
 
-		if (workingCopy.resource.authority !== editor.viewType.replace(/[^a-z0-9\-_]/gi, '-').toLowerCase()) {
+		if (workingCopy.resource.authority !== editor.viewType.replace(/[^a-z0-9\-_]/gi, "-").toLowerCase()) {
 			return false;
 		}
 
@@ -284,30 +318,42 @@ export class ComplexCustomWorkingCopyEditorHandler extends Disposable implements
 	}
 
 	async createEditor(workingCopy: IWorkingCopyIdentifier): Promise<EditorInput> {
-		const backup = await this._workingCopyBackupService.resolve<CustomDocumentBackupData>(workingCopy);
+		const backup = await this._workingCopyBackupService.resolve<CustomDocumentBackupData>(
+      workingCopy,
+    );
 		if (!backup?.meta) {
-			throw new Error(`No backup found for custom editor: ${workingCopy.resource}`);
+			throw new Error(
+        `No backup found for custom editor: ${workingCopy.resource}`,
+      );
 		}
 
 		const backupData = backup.meta;
-		const extension = reviveWebviewExtensionDescription(backupData.extension?.id, backupData.extension?.location);
+		const extension = reviveWebviewExtensionDescription(
+      backupData.extension?.id,
+      backupData.extension?.location,
+    );
 		const webview = reviveWebview(this._webviewService, {
-			viewType: backupData.viewType,
-			origin: backupData.webview.origin,
-			webviewOptions: restoreWebviewOptions(backupData.webview.options),
-			contentOptions: restoreWebviewContentOptions(backupData.webview.options),
-			state: backupData.webview.state,
-			extension,
-			title: backupData.customTitle,
-		});
+      viewType: backupData.viewType,
+      origin: backupData.webview.origin,
+      webviewOptions: restoreWebviewOptions(backupData.webview.options),
+      contentOptions: restoreWebviewContentOptions(backupData.webview.options),
+      state: backupData.webview.state,
+      extension,
+      title: backupData.customTitle,
+    });
 
-		const editor = this._instantiationService.createInstance(CustomEditorInput, {
-			resource: URI.revive(backupData.editorResource),
-			viewType: backupData.viewType,
-			webviewTitle: backupData.customTitle,
-			preferredName: undefined,
-			iconPath: reviveWebviewIconPath(backupData.iconPath)
-		}, webview, { backupId: backupData.backupId });
+		const editor = this._instantiationService.createInstance(
+      CustomEditorInput,
+      {
+        resource: URI.revive(backupData.editorResource),
+        viewType: backupData.viewType,
+        webviewTitle: backupData.customTitle,
+        preferredName: undefined,
+        iconPath: reviveWebviewIconPath(backupData.iconPath),
+      },
+      webview,
+      { backupId: backupData.backupId },
+    );
 		editor.updateGroup(0);
 		return editor;
 	}

@@ -41,7 +41,7 @@ export class DomReadingContext {
 
 	constructor(
 		private readonly _domNode: HTMLElement,
-		public readonly endNode: HTMLElement
+		public readonly endNode: HTMLElement,
 	) {
 	}
 

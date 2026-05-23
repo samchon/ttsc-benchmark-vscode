@@ -3,25 +3,25 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { mkdirSync } from 'fs';
+import { mkdirSync } from "fs";
 // The 'node:module' specifier is unresolvable by the Electron renderer
 // ESM loader (used by the unit test harness), so use the bare form.
 // eslint-disable-next-line local/code-import-patterns
-import { createRequire } from 'module';
+import { createRequire } from "module";
 // eslint-disable-next-line local/code-import-patterns
-import type { DatabaseSync, StatementSync } from 'node:sqlite';
-import { dirname } from '../../../../base/common/path.js';
-import { createDecorator } from '../../../instantiation/common/instantiation.js';
-import { CopilotChatAttr, GenAiAttr } from '../../common/genAiAttributes.js';
-import type { ICompletedSpanData } from '../../common/spanData.js';
+import type { DatabaseSync, StatementSync } from "node:sqlite";
+import { dirname } from "../../../../base/common/path.js";
+import { createDecorator } from "../../../instantiation/common/instantiation.js";
+import { CopilotChatAttr, GenAiAttr } from "../../common/genAiAttributes.js";
+import type { ICompletedSpanData } from "../../common/spanData.js";
 
 // `node:sqlite` is currently an experimental Node module and is not
 // reachable via a static `import` under our layer rules (it would also
 // load synchronously on startup). Use createRequire so the binding is
 // only resolved when the store is actually opened.
 const nodeRequire = createRequire(import.meta.url);
-function loadSqlite(): typeof import('node:sqlite') {
-	return nodeRequire('node:sqlite') as typeof import('node:sqlite');
+function loadSqlite(): typeof import("node:sqlite") {
+	return nodeRequire("node:sqlite") as typeof import("node:sqlite");
 }
 
 /** Schema version — bump when altering tables so existing DBs get migrated. */
@@ -40,27 +40,29 @@ const DEFAULT_MAX_SESSIONS = 100;
  * for indexed query access. The key is the SQL column name, the value is the OTel attribute key.
  */
 const DENORMALIZED_ATTRS: Record<string, string> = {
-	operation_name: GenAiAttr.OPERATION_NAME,
-	provider_name: GenAiAttr.PROVIDER_NAME,
-	agent_name: GenAiAttr.AGENT_NAME,
-	conversation_id: GenAiAttr.CONVERSATION_ID,
-	request_model: GenAiAttr.REQUEST_MODEL,
-	response_model: GenAiAttr.RESPONSE_MODEL,
-	input_tokens: GenAiAttr.USAGE_INPUT_TOKENS,
-	output_tokens: GenAiAttr.USAGE_OUTPUT_TOKENS,
-	cached_tokens: GenAiAttr.USAGE_CACHE_READ_INPUT_TOKENS,
-	reasoning_tokens: GenAiAttr.USAGE_REASONING_TOKENS,
-	tool_name: GenAiAttr.TOOL_NAME,
-	tool_call_id: GenAiAttr.TOOL_CALL_ID,
-	tool_type: GenAiAttr.TOOL_TYPE,
-	chat_session_id: CopilotChatAttr.CHAT_SESSION_ID,
-	turn_index: CopilotChatAttr.TURN_INDEX,
-	ttft_ms: CopilotChatAttr.TIME_TO_FIRST_TOKEN,
+  operation_name: GenAiAttr.OPERATION_NAME,
+  provider_name: GenAiAttr.PROVIDER_NAME,
+  agent_name: GenAiAttr.AGENT_NAME,
+  conversation_id: GenAiAttr.CONVERSATION_ID,
+  request_model: GenAiAttr.REQUEST_MODEL,
+  response_model: GenAiAttr.RESPONSE_MODEL,
+  input_tokens: GenAiAttr.USAGE_INPUT_TOKENS,
+  output_tokens: GenAiAttr.USAGE_OUTPUT_TOKENS,
+  cached_tokens: GenAiAttr.USAGE_CACHE_READ_INPUT_TOKENS,
+  reasoning_tokens: GenAiAttr.USAGE_REASONING_TOKENS,
+  tool_name: GenAiAttr.TOOL_NAME,
+  tool_call_id: GenAiAttr.TOOL_CALL_ID,
+  tool_type: GenAiAttr.TOOL_TYPE,
+  chat_session_id: CopilotChatAttr.CHAT_SESSION_ID,
+  turn_index: CopilotChatAttr.TURN_INDEX,
+  ttft_ms: CopilotChatAttr.TIME_TO_FIRST_TOKEN,
 };
 
 // -- Service identifier ----------------------------------------------------------
 
-export const IOTelSqliteStore = createDecorator<OTelSqliteStore>('otelSqliteStore');
+export const IOTelSqliteStore = createDecorator<OTelSqliteStore>(
+  "otelSqliteStore",
+);
 
 // -- Row types -------------------------------------------------------------------
 
@@ -159,25 +161,31 @@ export class OTelSqliteStore {
 			this._beginTx!.run();
 
 			this._insertSpanStmt!.run(
-				span.spanId, span.traceId, span.parentSpanId ?? null, span.name,
-				span.startTime, span.endTime, span.status.code, span.status.message ?? null,
-				this._attr(span, DENORMALIZED_ATTRS.operation_name),
-				this._attr(span, DENORMALIZED_ATTRS.provider_name),
-				this._attr(span, DENORMALIZED_ATTRS.agent_name),
-				this._attr(span, DENORMALIZED_ATTRS.conversation_id),
-				this._attr(span, DENORMALIZED_ATTRS.request_model),
-				this._attr(span, DENORMALIZED_ATTRS.response_model),
-				this._attr(span, DENORMALIZED_ATTRS.input_tokens),
-				this._attr(span, DENORMALIZED_ATTRS.output_tokens),
-				this._attr(span, DENORMALIZED_ATTRS.cached_tokens),
-				this._attr(span, DENORMALIZED_ATTRS.reasoning_tokens),
-				this._attr(span, DENORMALIZED_ATTRS.tool_name),
-				this._attr(span, DENORMALIZED_ATTRS.tool_call_id),
-				this._attr(span, DENORMALIZED_ATTRS.tool_type),
-				this._attr(span, DENORMALIZED_ATTRS.chat_session_id),
-				this._attr(span, DENORMALIZED_ATTRS.turn_index),
-				this._ttftMs(span),
-			);
+        span.spanId,
+        span.traceId,
+        span.parentSpanId ?? null,
+        span.name,
+        span.startTime,
+        span.endTime,
+        span.status.code,
+        span.status.message ?? null,
+        this._attr(span, DENORMALIZED_ATTRS.operation_name),
+        this._attr(span, DENORMALIZED_ATTRS.provider_name),
+        this._attr(span, DENORMALIZED_ATTRS.agent_name),
+        this._attr(span, DENORMALIZED_ATTRS.conversation_id),
+        this._attr(span, DENORMALIZED_ATTRS.request_model),
+        this._attr(span, DENORMALIZED_ATTRS.response_model),
+        this._attr(span, DENORMALIZED_ATTRS.input_tokens),
+        this._attr(span, DENORMALIZED_ATTRS.output_tokens),
+        this._attr(span, DENORMALIZED_ATTRS.cached_tokens),
+        this._attr(span, DENORMALIZED_ATTRS.reasoning_tokens),
+        this._attr(span, DENORMALIZED_ATTRS.tool_name),
+        this._attr(span, DENORMALIZED_ATTRS.tool_call_id),
+        this._attr(span, DENORMALIZED_ATTRS.tool_type),
+        this._attr(span, DENORMALIZED_ATTRS.chat_session_id),
+        this._attr(span, DENORMALIZED_ATTRS.turn_index),
+        this._ttftMs(span),
+      );
 
 			for (const [key, value] of Object.entries(span.attributes)) {
 				const serialized = Array.isArray(value) ? JSON.stringify(value) : String(value);
@@ -185,8 +193,15 @@ export class OTelSqliteStore {
 			}
 
 			for (const event of span.events) {
-				const eventAttrs = event.attributes ? JSON.stringify(event.attributes) : null;
-				this._insertEventStmt!.run(span.spanId, event.name, event.timestamp, eventAttrs);
+				const eventAttrs = event.attributes ? JSON.stringify(
+          event.attributes,
+        ) : null;
+				this._insertEventStmt!.run(
+          span.spanId,
+          event.name,
+          event.timestamp,
+          eventAttrs,
+        );
 			}
 
 			this._commitTx!.run();
@@ -198,32 +213,32 @@ export class OTelSqliteStore {
 
 	getSpansByTraceId(traceId: string): SpanRow[] {
 		return this._ensureDb()
-			.prepare('SELECT * FROM spans WHERE trace_id = ? ORDER BY start_time_ms')
+			.prepare("SELECT * FROM spans WHERE trace_id = ? ORDER BY start_time_ms")
 			.all(traceId) as unknown as SpanRow[];
 	}
 
 	getSpansByConversationId(conversationId: string): SpanRow[] {
 		return this._ensureDb()
-			.prepare('SELECT * FROM spans WHERE conversation_id = ? OR chat_session_id = ? ORDER BY start_time_ms')
+			.prepare("SELECT * FROM spans WHERE conversation_id = ? OR chat_session_id = ? ORDER BY start_time_ms")
 			.all(conversationId, conversationId) as unknown as SpanRow[];
 	}
 
 	getSpanAttributes(spanId: string): Array<{ key: string; value: string | null }> {
 		return this._ensureDb()
-			.prepare('SELECT key, value FROM span_attributes WHERE span_id = ?')
+			.prepare("SELECT key, value FROM span_attributes WHERE span_id = ?")
 			.all(spanId) as unknown as Array<{ key: string; value: string | null }>;
 	}
 
 	getSpanAttribute(spanId: string, key: string): string | null {
 		const row = this._ensureDb()
-			.prepare('SELECT value FROM span_attributes WHERE span_id = ? AND key = ?')
+			.prepare("SELECT value FROM span_attributes WHERE span_id = ? AND key = ?")
 			.get(spanId, key) as unknown as { value: string | null } | undefined;
 		return row?.value ?? null;
 	}
 
 	getSpanEvents(spanId: string): SpanEventRow[] {
 		return this._ensureDb()
-			.prepare('SELECT * FROM span_events WHERE span_id = ? ORDER BY timestamp_ms')
+			.prepare("SELECT * FROM span_events WHERE span_id = ? ORDER BY timestamp_ms")
 			.all(spanId) as unknown as SpanEventRow[];
 	}
 
@@ -231,11 +246,11 @@ export class OTelSqliteStore {
 		const db = this._ensureDb();
 		if (conversationId) {
 			const rows = db.prepare(
-				'SELECT DISTINCT trace_id FROM spans WHERE conversation_id = ? OR chat_session_id = ?'
+				"SELECT DISTINCT trace_id FROM spans WHERE conversation_id = ? OR chat_session_id = ?",
 			).all(conversationId, conversationId) as unknown as Array<{ trace_id: string }>;
 			return rows.map(r => r.trace_id);
 		}
-		return (db.prepare('SELECT DISTINCT trace_id FROM spans').all() as unknown as Array<{ trace_id: string }>)
+		return (db.prepare("SELECT DISTINCT trace_id FROM spans").all() as unknown as Array<{ trace_id: string }>)
 			.map(r => r.trace_id);
 	}
 
@@ -245,8 +260,8 @@ export class OTelSqliteStore {
 	 */
 	getSessions(limit?: number): SessionRow[] {
 		const sql = limit
-			? 'SELECT * FROM sessions ORDER BY started_at DESC LIMIT ?'
-			: 'SELECT * FROM sessions ORDER BY started_at DESC';
+			? "SELECT * FROM sessions ORDER BY started_at DESC LIMIT ?"
+			: "SELECT * FROM sessions ORDER BY started_at DESC";
 		return limit
 			? this._ensureDb().prepare(sql).all(limit) as unknown as SessionRow[]
 			: this._ensureDb().prepare(sql).all() as unknown as SessionRow[];
@@ -258,13 +273,15 @@ export class OTelSqliteStore {
 	 */
 	getSessionsSince(sinceMs: number): SessionRow[] {
 		return this._ensureDb().prepare(
-			'SELECT * FROM sessions WHERE started_at >= ? ORDER BY started_at DESC'
+			"SELECT * FROM sessions WHERE started_at >= ? ORDER BY started_at DESC",
 		).all(sinceMs) as unknown as SessionRow[];
 	}
 
 	cleanup(maxAgeMs: number = DEFAULT_MAX_AGE_MS): number {
 		const cutoffMs = Date.now() - maxAgeMs;
-		const result = this._ensureDb().prepare('DELETE FROM spans WHERE start_time_ms < ?').run(cutoffMs);
+		const result = this._ensureDb().prepare("DELETE FROM spans WHERE start_time_ms < ?").run(
+      cutoffMs,
+    );
 		return Number(result.changes);
 	}
 
@@ -274,7 +291,7 @@ export class OTelSqliteStore {
 	 * will be missing data that lives only in the -wal file.
 	 */
 	checkpoint(): void {
-		this._ensureDb().exec('PRAGMA wal_checkpoint(TRUNCATE)');
+		this._ensureDb().exec("PRAGMA wal_checkpoint(TRUNCATE)");
 	}
 
 	close(): void {
@@ -296,7 +313,7 @@ export class OTelSqliteStore {
 		const val = span.attributes[attrKey];
 		if (val === undefined) { return null; }
 		if (Array.isArray(val)) { return JSON.stringify(val); }
-		if (typeof val === 'boolean') { return val ? 1 : 0; }
+		if (typeof val === "boolean") { return val ? 1 : 0; }
 		return val as string | number;
 	}
 
@@ -312,26 +329,26 @@ export class OTelSqliteStore {
 	private _ttftMs(span: ICompletedSpanData): number | null {
 		const foreground = this._attr(span, CopilotChatAttr.TIME_TO_FIRST_TOKEN);
 		if (foreground !== null) { return foreground as number; }
-		const cli = span.attributes['gen_ai.response.time_to_first_chunk']
-			?? span.attributes['github.copilot.time_to_first_chunk'];
+		const cli = span.attributes["gen_ai.response.time_to_first_chunk"]
+			?? span.attributes["github.copilot.time_to_first_chunk"];
 		if (cli === undefined) { return null; }
-		const sec = typeof cli === 'number' ? cli : parseFloat(String(cli));
+		const sec = typeof cli === "number" ? cli : parseFloat(String(cli));
 		return isNaN(sec) ? null : Math.round(sec * 1000);
 	}
 
 	private _ensureDb(): DatabaseSync {
 		if (this._db) { return this._db; }
 
-		if (this._dbPath !== ':memory:') {
+		if (this._dbPath !== ":memory:") {
 			mkdirSync(dirname(this._dbPath), { recursive: true });
 		}
 
 		const { DatabaseSync: DatabaseSyncCtor } = loadSqlite();
 		const db = new DatabaseSyncCtor(this._dbPath);
 		try {
-			db.exec('PRAGMA journal_mode = WAL');
-			db.exec('PRAGMA busy_timeout = 3000');
-			db.exec('PRAGMA foreign_keys = ON');
+			db.exec("PRAGMA journal_mode = WAL");
+			db.exec("PRAGMA busy_timeout = 3000");
+			db.exec("PRAGMA foreign_keys = ON");
 			this._db = db;
 			this._ensureSchema();
 			this._prepareStatements(db);
@@ -360,21 +377,21 @@ export class OTelSqliteStore {
 			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`);
 		this._insertAttrStmt = db.prepare(
-			'INSERT OR REPLACE INTO span_attributes (span_id, key, value) VALUES (?, ?, ?)'
-		);
+      "INSERT OR REPLACE INTO span_attributes (span_id, key, value) VALUES (?, ?, ?)",
+    );
 		this._insertEventStmt = db.prepare(
-			'INSERT INTO span_events (span_id, name, timestamp_ms, attributes) VALUES (?, ?, ?, ?)'
-		);
-		this._beginTx = db.prepare('BEGIN');
-		this._commitTx = db.prepare('COMMIT');
-		this._rollbackTx = db.prepare('ROLLBACK');
+      "INSERT INTO span_events (span_id, name, timestamp_ms, attributes) VALUES (?, ?, ?, ?)",
+    );
+		this._beginTx = db.prepare("BEGIN");
+		this._commitTx = db.prepare("COMMIT");
+		this._rollbackTx = db.prepare("ROLLBACK");
 	}
 
 	private _ensureSchema(): void {
 		const db = this._db!;
 		const versionRow = (() => {
 			try {
-				return db.prepare('SELECT version FROM schema_version LIMIT 1').get() as { version: number } | undefined;
+				return db.prepare("SELECT version FROM schema_version LIMIT 1").get() as { version: number } | undefined;
 			} catch { return undefined; }
 		})();
 
@@ -439,7 +456,7 @@ export class OTelSqliteStore {
 	private _cleanupOnStartup(db: DatabaseSync): void {
 		// 1. Time-based: delete spans older than DEFAULT_MAX_AGE_MS
 		const cutoffMs = Date.now() - DEFAULT_MAX_AGE_MS;
-		db.prepare('DELETE FROM spans WHERE start_time_ms < ?').run(cutoffMs);
+		db.prepare("DELETE FROM spans WHERE start_time_ms < ?").run(cutoffMs);
 
 		// 2. Session-count cap: keep only the most recent DEFAULT_MAX_SESSIONS sessions.
 		// A "session" is identified by conversation_id (or chat_session_id as fallback).

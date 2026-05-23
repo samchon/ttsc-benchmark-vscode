@@ -3,25 +3,25 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Schemas, matchesScheme } from '../../../../base/common/network.js';
-import Severity from '../../../../base/common/severity.js';
-import { URI } from '../../../../base/common/uri.js';
-import { localize } from '../../../../nls.js';
-import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { IOpenerService, OpenOptions } from '../../../../platform/opener/common/opener.js';
-import { IProductService } from '../../../../platform/product/common/productService.js';
-import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
-import { IStorageService } from '../../../../platform/storage/common/storage.js';
-import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
-import { IWorkspaceTrustManagementService } from '../../../../platform/workspace/common/workspaceTrust.js';
-import { IWorkbenchContribution } from '../../../common/contributions.js';
-import { ITrustedDomainService } from './trustedDomainService.js';
-import { isURLDomainTrusted } from '../../../../platform/url/common/trustedDomains.js';
-import { configureOpenerTrustedDomainsHandler, readStaticTrustedDomains } from './trustedDomains.js';
-import { IEditorService } from '../../../services/editor/common/editorService.js';
+import { Schemas, matchesScheme } from "../../../../base/common/network.js";
+import Severity from "../../../../base/common/severity.js";
+import { URI } from "../../../../base/common/uri.js";
+import { localize } from "../../../../nls.js";
+import { IClipboardService } from "../../../../platform/clipboard/common/clipboardService.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IOpenerService, OpenOptions } from "../../../../platform/opener/common/opener.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IWorkspaceTrustManagementService } from "../../../../platform/workspace/common/workspaceTrust.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { ITrustedDomainService } from "./trustedDomainService.js";
+import { isURLDomainTrusted } from "../../../../platform/url/common/trustedDomains.js";
+import { configureOpenerTrustedDomainsHandler, readStaticTrustedDomains } from "./trustedDomains.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
 
 export class OpenerValidatorContributions implements IWorkbenchContribution {
 
@@ -39,7 +39,9 @@ export class OpenerValidatorContributions implements IWorkbenchContribution {
 		@IWorkspaceTrustManagementService private readonly _workspaceTrustService: IWorkspaceTrustManagementService,
 		@ITrustedDomainService private readonly _trustedDomainService: ITrustedDomainService,
 	) {
-		this._openerService.registerValidator({ shouldOpen: (uri, options) => this.validateLink(uri, options) });
+		this._openerService.registerValidator({
+      shouldOpen: (uri, options) => this.validateLink(uri, options),
+    });
 	}
 
 	async validateLink(resource: URI | string, openOptions?: OpenOptions): Promise<boolean> {
@@ -47,13 +49,15 @@ export class OpenerValidatorContributions implements IWorkbenchContribution {
 			return true;
 		}
 
-		if (openOptions?.fromWorkspace && this._workspaceTrustService.isWorkspaceTrusted() && !this._configurationService.getValue('workbench.trustedDomains.promptInTrustedWorkspace')) {
+		if (openOptions?.fromWorkspace && this._workspaceTrustService.isWorkspaceTrusted() && !this._configurationService.getValue(
+      "workbench.trustedDomains.promptInTrustedWorkspace",
+    )) {
 			return true;
 		}
 
 		const originalResource = resource;
 		let resourceUri: URI;
-		if (typeof resource === 'string') {
+		if (typeof resource === "string") {
 			resourceUri = URI.parse(resource);
 		} else {
 			resourceUri = resource;
@@ -65,42 +69,47 @@ export class OpenerValidatorContributions implements IWorkbenchContribution {
 			const { scheme, authority, path, query, fragment } = resourceUri;
 			let formattedLink = `${scheme}://${authority}${path}`;
 
-			const linkTail = `${query ? '?' + query : ''}${fragment ? '#' + fragment : ''}`;
+			const linkTail = `${query ? "?" + query : ""}${fragment ? "#" + fragment : ""}`;
 
 
 			const remainingLength = Math.max(0, 60 - formattedLink.length);
-			const linkTailLengthToKeep = Math.min(Math.max(5, remainingLength), linkTail.length);
+			const linkTailLengthToKeep = Math.min(
+        Math.max(5, remainingLength),
+        linkTail.length,
+      );
 
 			if (linkTailLengthToKeep === linkTail.length) {
 				formattedLink += linkTail;
 			} else {
 				// keep the first char ? or #
 				// add ... and keep the tail end as much as possible
-				formattedLink += linkTail.charAt(0) + '...' + linkTail.substring(linkTail.length - linkTailLengthToKeep + 1);
+				formattedLink += linkTail.charAt(0) + "..." + linkTail.substring(
+          linkTail.length - linkTailLengthToKeep + 1,
+        );
 			}
 
 			const { result } = await this._dialogService.prompt<boolean>({
 				type: Severity.Info,
 				message: localize(
-					'openExternalLinkAt',
-					'Do you want {0} to open the external website?',
-					this._productService.nameShort
+					"openExternalLinkAt",
+					"Do you want {0} to open the external website?",
+					this._productService.nameShort,
 				),
-				detail: typeof originalResource === 'string' ? originalResource : formattedLink,
+				detail: typeof originalResource === "string" ? originalResource : formattedLink,
 				buttons: [
 					{
-						label: localize({ key: 'open', comment: ['&& denotes a mnemonic'] }, '&&Open'),
-						run: () => true
+						label: localize({ key: "open", comment: ["&& denotes a mnemonic"] }, "&&Open"),
+						run: () => true,
 					},
 					{
-						label: localize({ key: 'copy', comment: ['&& denotes a mnemonic'] }, '&&Copy'),
+						label: localize({ key: "copy", comment: ["&& denotes a mnemonic"] }, "&&Copy"),
 						run: () => {
-							this._clipboardService.writeText(typeof originalResource === 'string' ? originalResource : resourceUri.toString(true));
+							this._clipboardService.writeText(typeof originalResource === "string" ? originalResource : resourceUri.toString(true));
 							return false;
-						}
+						},
 					},
 					{
-						label: localize({ key: 'configureTrustedDomains', comment: ['&& denotes a mnemonic'] }, 'Configure &&Trusted Domains'),
+						label: localize({ key: "configureTrustedDomains", comment: ["&& denotes a mnemonic"] }, "Configure &&Trusted Domains"),
 						run: async () => {
 							const { trustedDomains, } = this._instantiationService.invokeFunction(readStaticTrustedDomains);
 							const domainToOpen = `${scheme}://${authority}`;
@@ -114,7 +123,7 @@ export class OpenerValidatorContributions implements IWorkbenchContribution {
 								this._telemetryService,
 							);
 							// Trust all domains
-							if (pickedDomains.indexOf('*') !== -1) {
+							if (pickedDomains.indexOf("*") !== -1) {
 								return true;
 							}
 							// Trust current domain
@@ -122,12 +131,12 @@ export class OpenerValidatorContributions implements IWorkbenchContribution {
 								return true;
 							}
 							return false;
-						}
-					}
+						},
+					},
 				],
 				cancelButton: {
-					run: () => false
-				}
+					run: () => false,
+				},
 			});
 
 			return result;

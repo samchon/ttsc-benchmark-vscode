@@ -3,18 +3,33 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { SDKMessage } from '@anthropic-ai/claude-agent-sdk';
-import type { URI } from '../../../../base/common/uri.js';
-import { LogLevel, type ILogService } from '../../../log/common/log.js';
-import type { AgentSignal } from '../../common/agentService.js';
-import { ActionType } from '../../common/state/sessionActions.js';
-import { ResponsePartKind, ToolResultContentType, type ToolResultContent, type ToolResultFileEditContent } from '../../common/state/sessionState.js';
-import { buildTopLevelSubagentReadyAction, emitInnerAssistantSignals, mapSubagentSystemMessage, SUBAGENT_SPAWNING_TOOL_NAMES, tagWithParent } from './claudeSubagentSignals.js';
-import type { SubagentRegistry } from './claudeSubagentRegistry.js';
-import { stripClientToolNamePrefix, hasClientToolNamePrefix } from './clientTools/claudeClientToolMcpServer.js';
-import { buildClaudeToolMeta, getClaudePastTenseMessage, getClaudeToolDisplayName } from './claudeToolDisplay.js';
-import { ClaudeToolCallRegistry } from './claudeToolCallRegistry.js';
-import { ToolCallConfirmationReason, type StringOrMarkdown } from '../../common/state/protocol/state.js';
+import type { SDKMessage } from "@anthropic-ai/claude-agent-sdk";
+import type { URI } from "../../../../base/common/uri.js";
+import { LogLevel, type ILogService } from "../../../log/common/log.js";
+import type { AgentSignal } from "../../common/agentService.js";
+import { ActionType } from "../../common/state/sessionActions.js";
+import {
+  ResponsePartKind,
+  ToolResultContentType,
+  type ToolResultContent,
+  type ToolResultFileEditContent,
+} from "../../common/state/sessionState.js";
+import {
+  buildTopLevelSubagentReadyAction,
+  emitInnerAssistantSignals,
+  mapSubagentSystemMessage,
+  SUBAGENT_SPAWNING_TOOL_NAMES,
+  tagWithParent,
+} from "./claudeSubagentSignals.js";
+import type { SubagentRegistry } from "./claudeSubagentRegistry.js";
+import { stripClientToolNamePrefix, hasClientToolNamePrefix } from "./clientTools/claudeClientToolMcpServer.js";
+import {
+  buildClaudeToolMeta,
+  getClaudePastTenseMessage,
+  getClaudeToolDisplayName,
+} from "./claudeToolDisplay.js";
+import { ClaudeToolCallRegistry } from "./claudeToolCallRegistry.js";
+import { ToolCallConfirmationReason, type StringOrMarkdown } from "../../common/state/protocol/state.js";
 
 /**
  * Cross-call state for {@link mapSDKMessageToAgentSignals}. One instance
@@ -133,7 +148,10 @@ export class ClaudeMapperState {
 	 */
 	lookupToolCall(toolUseId: string): { turnId: string; toolName: string } | undefined {
 		const entry = this.toolCalls.lookup(toolUseId);
-		return entry ? { turnId: entry.turnId, toolName: entry.toolName } : undefined;
+		return entry ? {
+      turnId: entry.turnId,
+      toolName: entry.toolName,
+    } : undefined;
 	}
 
 	/** Drain cross-message tracking once a `tool_result` is delivered. */
@@ -222,39 +240,62 @@ export function mapSDKMessageToAgentSignals(
 ): AgentSignal[] {
 	if (logService.getLevel() <= LogLevel.Trace) {
 		try {
-			const snippet = JSON.stringify(message, (k, v) => typeof v === 'string' && v.length > 200 ? v.slice(0, 200) + '…' : v);
-			logService.trace(`[claudeMapSessionEvents] SDK message type=${message.type}: ${snippet?.slice(0, 2000) ?? '<unserializable>'}`);
+			const snippet = JSON.stringify(
+        message,
+        (k, v) => typeof v === "string" && v.length > 200 ? v.slice(0, 200) + "…" : v,
+      );
+			logService.trace(
+        `[claudeMapSessionEvents] SDK message type=${message.type}: ${snippet?.slice(0, 2000) ?? "<unserializable>"}`,
+      );
 		} catch {
-			logService.trace(`[claudeMapSessionEvents] SDK message type=${message.type} (unserializable)`);
+			logService.trace(
+        `[claudeMapSessionEvents] SDK message type=${message.type} (unserializable)`,
+      );
 		}
 	}
 	switch (message.type) {
-		case 'stream_event':
+		case "stream_event":
 			return tagWithParent(
-				mapStreamEvent(message.event, session, turnId, state, logService, message.parent_tool_use_id, registry, clientId),
-				session,
-				message.parent_tool_use_id,
-				registry,
-			);
-		case 'result':
+        mapStreamEvent(
+          message.event,
+          session,
+          turnId,
+          state,
+          logService,
+          message.parent_tool_use_id,
+          registry,
+          clientId,
+        ),
+        session,
+        message.parent_tool_use_id,
+        registry,
+      );
+		case "result":
 			return mapResult(message, session, turnId, state, logService, registry);
-		case 'assistant':
+		case "assistant":
 			return tagWithParent(
-				mapAssistantCanonical(message, session, turnId, state, message.parent_tool_use_id, registry),
-				session,
-				message.parent_tool_use_id,
-				registry,
-			);
-		case 'user':
+        mapAssistantCanonical(
+          message,
+          session,
+          turnId,
+          state,
+          message.parent_tool_use_id,
+          registry,
+        ),
+        session,
+        message.parent_tool_use_id,
+        registry,
+      );
+		case "user":
 			return tagWithParent(
-				mapUserMessage(message, session, state, logService, registry),
-				session,
-				message.parent_tool_use_id,
-				registry,
-			);
+        mapUserMessage(message, session, state, logService, registry),
+        session,
+        message.parent_tool_use_id,
+        registry,
+      );
 		default:
 			// Phase 12 step 7 — system subtypes for subagent task discrimination.
-			if (message.type === 'system') {
+			if (message.type === "system") {
 				return mapSubagentSystemMessage(message, session, registry);
 			}
 			return [];
@@ -282,7 +323,7 @@ export function mapSDKMessageToAgentSignals(
  * the subagent session.
  */
 function mapAssistantCanonical(
-	message: Extract<SDKMessage, { type: 'assistant' }>,
+	message: Extract<SDKMessage, { type: "assistant" }>,
 	session: URI,
 	turnId: string,
 	state: ClaudeMapperState,
@@ -292,14 +333,25 @@ function mapAssistantCanonical(
 	if (parentToolUseId === null) {
 		const top: AgentSignal[] = [];
 		for (const block of message.message.content) {
-			if (block.type !== 'tool_use' || !SUBAGENT_SPAWNING_TOOL_NAMES.has(block.name)) {
+			if (block.type !== "tool_use" || !SUBAGENT_SPAWNING_TOOL_NAMES.has(
+        block.name,
+      )) {
 				continue;
 			}
-			top.push(buildTopLevelSubagentReadyAction(block, session, turnId, registry));
+			top.push(
+        buildTopLevelSubagentReadyAction(block, session, turnId, registry),
+      );
 		}
 		return top;
 	}
-	return emitInnerAssistantSignals(message, session, turnId, state, parentToolUseId, registry);
+	return emitInnerAssistantSignals(
+    message,
+    session,
+    turnId,
+    state,
+    parentToolUseId,
+    registry,
+  );
 }
 
 /**
@@ -314,7 +366,7 @@ function mapAssistantCanonical(
  * Phase 7 plan S3.3.5 directive).
  */
 function mapUserMessage(
-	message: Extract<SDKMessage, { type: 'user' }>,
+	message: Extract<SDKMessage, { type: "user" }>,
 	session: URI,
 	state: ClaudeMapperState,
 	logService: ILogService,
@@ -327,26 +379,35 @@ function mapUserMessage(
 
 	const signals: AgentSignal[] = [];
 	for (const block of content) {
-		if (block.type !== 'tool_result') {
+		if (block.type !== "tool_result") {
 			continue;
 		}
 		const tracked = state.lookupToolCall(block.tool_use_id);
 		if (!tracked) {
-			logService.warn(`[claudeMapSessionEvents] tool_result for unknown tool_use_id ${block.tool_use_id}`);
+			logService.warn(
+        `[claudeMapSessionEvents] tool_result for unknown tool_use_id ${block.tool_use_id}`,
+      );
 			continue;
 		}
 		const isError = block.is_error === true;
-		const content: ToolResultContent[] = extractToolResultContent(block.content) ?? [];
+		const content: ToolResultContent[] = extractToolResultContent(
+      block.content,
+    ) ?? [];
 		const fileEdit = state.takeFileEdit(block.tool_use_id);
 		if (fileEdit) {
 			content.push(fileEdit);
 		}
 		const info = state.toolCalls.lookup(block.tool_use_id)?.info;
 		const pastTenseMessage: StringOrMarkdown = info
-			? getClaudePastTenseMessage(info.toolName, info.displayName, info.parsedInput, !isError)
+			? getClaudePastTenseMessage(
+          info.toolName,
+          info.displayName,
+          info.parsedInput,
+          !isError,
+        )
 			: `${getClaudeToolDisplayName(tracked.toolName)} finished`;
 		signals.push({
-			kind: 'action',
+			kind: "action",
 			session,
 			action: {
 				type: ActionType.SessionToolCallComplete,
@@ -367,10 +428,10 @@ function mapUserMessage(
 		const spawn = registry.getSpawn(block.tool_use_id);
 		if (spawn && !spawn.background && spawn.markCompleted()) {
 			signals.push({
-				kind: 'subagent_completed',
-				session,
-				toolCallId: block.tool_use_id,
-			});
+        kind: "subagent_completed",
+        session,
+        toolCallId: block.tool_use_id,
+      });
 			registry.removeSpawn(block.tool_use_id);
 		}
 	}
@@ -385,7 +446,7 @@ function mapUserMessage(
  * {@link mapUserMessage} from {@link ClaudeMapperState.takeFileEdit}.
  */
 function extractToolResultContent(content: unknown): { type: ToolResultContentType.Text; text: string }[] | undefined {
-	if (typeof content === 'string') {
+	if (typeof content === "string") {
 		return [{ type: ToolResultContentType.Text, text: content }];
 	}
 	if (!Array.isArray(content)) {
@@ -400,16 +461,16 @@ function extractToolResultContent(content: unknown): { type: ToolResultContentTy
 	return out.length > 0 ? out : undefined;
 }
 
-function isToolResultTextBlock(block: unknown): block is { type: 'text'; text: string } {
-	if (block === null || typeof block !== 'object') {
+function isToolResultTextBlock(block: unknown): block is { type: "text"; text: string } {
+	if (block === null || typeof block !== "object") {
 		return false;
 	}
 	const candidate = block as { type?: unknown; text?: unknown };
-	return candidate.type === 'text' && typeof candidate.text === 'string';
+	return candidate.type === "text" && typeof candidate.text === "string";
 }
 
 function mapResult(
-	message: Extract<SDKMessage, { type: 'result' }>,
+	message: Extract<SDKMessage, { type: "result" }>,
 	session: URI,
 	turnId: string,
 	state: ClaudeMapperState,
@@ -417,13 +478,13 @@ function mapResult(
 	registry: SubagentRegistry,
 ): AgentSignal[] {
 	const signals: AgentSignal[] = [];
-	if (message.subtype === 'success') {
+	if (message.subtype === "success") {
 		// `modelUsage` is keyed by model name; pick the first key as the
 		// reported model. Phase 6 turns are single-model; multi-model
 		// attribution is a Phase 7+ concern.
 		const modelKey = Object.keys(message.modelUsage)[0];
 		signals.push({
-			kind: 'action',
+			kind: "action",
 			session,
 			action: {
 				type: ActionType.SessionUsage,
@@ -447,13 +508,15 @@ function mapResult(
 	// only; background entries survive across turns by design). The
 	// registry owns this state; the mapper drives the drain at turn end.
 	for (const orphan of registry.drainForegroundSpawns()) {
-		logService.warn(`[claudeMapSessionEvents] turn ended with pending subagent-spawning tool_use ${orphan.toolUseId} (agentId=${orphan.agentId ?? '<unresolved>'}); dropping cross-message state`);
+		logService.warn(
+      `[claudeMapSessionEvents] turn ended with pending subagent-spawning tool_use ${orphan.toolUseId} (agentId=${orphan.agentId ?? "<unresolved>"}); dropping cross-message state`,
+    );
 	}
 	return signals;
 }
 
 function mapStreamEvent(
-	event: Extract<SDKMessage, { type: 'stream_event' }>['event'],
+	event: Extract<SDKMessage, { type: "stream_event" }>["event"],
 	session: URI,
 	turnId: string,
 	state: ClaudeMapperState,
@@ -463,15 +526,15 @@ function mapStreamEvent(
 	clientId: string | undefined,
 ): AgentSignal[] {
 	switch (event.type) {
-		case 'message_start':
+		case "message_start":
 			state.resetMessage(event.message.id);
 			return [];
 
-		case 'content_block_start': {
+		case "content_block_start": {
 			const block = event.content_block;
-			if (block.type === 'text') {
+			if (block.type === "text") {
 				return [{
-					kind: 'action',
+					kind: "action",
 					session,
 					action: {
 						type: ActionType.SessionResponsePart,
@@ -479,14 +542,14 @@ function mapStreamEvent(
 						part: {
 							kind: ResponsePartKind.Markdown,
 							id: makeContentBlockPartId(turnId, state, event.index, logService),
-							content: '',
+							content: "",
 						},
 					},
 				}];
 			}
-			if (block.type === 'thinking') {
+			if (block.type === "thinking") {
 				return [{
-					kind: 'action',
+					kind: "action",
 					session,
 					action: {
 						type: ActionType.SessionResponsePart,
@@ -494,12 +557,12 @@ function mapStreamEvent(
 						part: {
 							kind: ResponsePartKind.Reasoning,
 							id: makeContentBlockPartId(turnId, state, event.index, logService),
-							content: '',
+							content: "",
 						},
 					},
 				}];
 			}
-			if (block.type === 'tool_use') {
+			if (block.type === "tool_use") {
 				// Phase 10 — strip the SDK's `mcp__<server>__` prefix for
 				// our in-process client-tool MCP server. The SDK surfaces
 				// in-process MCP tools to the model with that prefix, but
@@ -522,7 +585,9 @@ function mapStreamEvent(
 				// handles nested spawns by following the parent chain).
 				// Gated on `!isClientTool` so a workbench tool named `Task` /
 				// `Agent` cannot impersonate the SDK's subagent-spawn tools.
-				const isSubagentSpawn = !isClientTool && SUBAGENT_SPAWNING_TOOL_NAMES.has(toolName);
+				const isSubagentSpawn = !isClientTool && SUBAGENT_SPAWNING_TOOL_NAMES.has(
+          toolName,
+        );
 				if (parentToolUseId === null) {
 					if (isSubagentSpawn) {
 						registry.recordSpawn(block.id);
@@ -539,7 +604,7 @@ function mapStreamEvent(
 				const meta = buildClaudeToolMeta(toolName);
 				const toolClientId = isClientTool ? clientId : undefined;
 				return [{
-					kind: 'action',
+					kind: "action",
 					session,
 					action: {
 						type: ActionType.SessionToolCallStart,
@@ -555,10 +620,10 @@ function mapStreamEvent(
 			return [];
 		}
 
-		case 'content_block_delta': {
-			if (event.delta.type === 'text_delta') {
+		case "content_block_delta": {
+			if (event.delta.type === "text_delta") {
 				return [{
-					kind: 'action',
+					kind: "action",
 					session,
 					action: {
 						type: ActionType.SessionDelta,
@@ -568,9 +633,9 @@ function mapStreamEvent(
 					},
 				}];
 			}
-			if (event.delta.type === 'thinking_delta') {
+			if (event.delta.type === "thinking_delta") {
 				return [{
-					kind: 'action',
+					kind: "action",
 					session,
 					action: {
 						type: ActionType.SessionReasoning,
@@ -580,15 +645,17 @@ function mapStreamEvent(
 					},
 				}];
 			}
-			if (event.delta.type === 'input_json_delta') {
+			if (event.delta.type === "input_json_delta") {
 				const tracked = state.getActiveToolBlock(event.index);
 				if (!tracked) {
-					logService.warn(`[claudeMapSessionEvents] input_json_delta for unknown content-block index ${event.index}`);
+					logService.warn(
+            `[claudeMapSessionEvents] input_json_delta for unknown content-block index ${event.index}`,
+          );
 					return [];
 				}
 				state.appendToolBlockInputDelta(event.index, event.delta.partial_json);
 				return [{
-					kind: 'action',
+					kind: "action",
 					session,
 					action: {
 						type: ActionType.SessionToolCallDelta,
@@ -601,7 +668,7 @@ function mapStreamEvent(
 			return [];
 		}
 
-		case 'content_block_stop': {
+		case "content_block_stop": {
 			const tracked = state.getActiveToolBlock(event.index);
 			state.finalizeToolBlock(event.index);
 			state.endToolBlock(event.index);
@@ -615,7 +682,7 @@ function mapStreamEvent(
 			}
 			const meta = buildClaudeToolMeta(tracked.toolName);
 			return [{
-				kind: 'action',
+				kind: "action",
 				session,
 				action: {
 					type: ActionType.SessionToolCallReady,
@@ -629,8 +696,8 @@ function mapStreamEvent(
 			}];
 		}
 
-		case 'message_delta':
-		case 'message_stop':
+		case "message_delta":
+		case "message_stop":
 			return [];
 
 		default:
@@ -661,7 +728,9 @@ function makeContentBlockPartId(
 ): string {
 	const messageId = state.getCurrentMessageId();
 	if (messageId === undefined) {
-		logService.warn(`[claudeMapSessionEvents] content block at index ${index} arrived before message_start; using turn-scoped id`);
+		logService.warn(
+      `[claudeMapSessionEvents] content block at index ${index} arrived before message_start; using turn-scoped id`,
+    );
 		return `${turnId}#${index}`;
 	}
 	return `${turnId}#${messageId}#${index}`;

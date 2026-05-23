@@ -3,8 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { InstantiationType, registerSingleton } from '../../instantiation/common/extensions.js';
-import { ISandboxDependencyStatus, ISandboxHelperService, IWindowsMxcFilesystemPolicy } from '../common/sandboxHelperService.js';
+import { InstantiationType, registerSingleton } from "../../instantiation/common/extensions.js";
+import {
+  ISandboxDependencyStatus,
+  ISandboxHelperService,
+  IWindowsMxcFilesystemPolicy,
+} from "../common/sandboxHelperService.js";
 
 class NullSandboxHelperService implements ISandboxHelperService {
 	declare readonly _serviceBrand: undefined;
@@ -14,9 +18,9 @@ class NullSandboxHelperService implements ISandboxHelperService {
 		// Treat them as satisfied so browser workbench targets do not fail DI
 		// or block sandbox flows on an unavailable host-side capability.
 		return {
-			bubblewrapInstalled: true,
-			socatInstalled: true,
-		};
+      bubblewrapInstalled: true,
+      socatInstalled: true,
+    };
 	}
 
 	async getWindowsMxcFilesystemPolicy(): Promise<IWindowsMxcFilesystemPolicy | undefined> {
@@ -28,4 +32,8 @@ class NullSandboxHelperService implements ISandboxHelperService {
 	}
 }
 
-registerSingleton(ISandboxHelperService, NullSandboxHelperService, InstantiationType.Delayed);
+registerSingleton(
+  ISandboxHelperService,
+  NullSandboxHelperService,
+  InstantiationType.Delayed,
+);

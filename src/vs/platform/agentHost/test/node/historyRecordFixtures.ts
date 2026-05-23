@@ -3,15 +3,45 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../../base/common/uri.js';
-import { generateUuid } from '../../../../base/common/uuid.js';
-import { isString } from '../../../../base/common/types.js';
-import { stripRedundantCdPrefix } from '../../common/commandLineHelpers.js';
-import { IFileEditRecord, ISessionDatabase } from '../../common/sessionDataService.js';
-import { ResponsePartKind, ToolCallConfirmationReason, ToolCallStatus, ToolResultContentType, TurnState, buildSubagentSessionUri, type ResponsePart, type StringOrMarkdown, type ToolCallCompletedState, type ToolResultContent, type Turn } from '../../common/state/sessionState.js';
-import { getInvocationMessage, getPastTenseMessage, getShellLanguage, getSubagentMetadata, getToolDisplayName, getToolInputString, getToolKind, isEditTool, isHiddenTool, synthesizeSkillToolCall } from '../../node/copilot/copilotToolDisplay.js';
-import { buildSessionDbUri } from '../../node/shared/fileEditTracker.js';
-import type { ISessionEvent, ISessionEventMessage, ISessionEventSkillInvoked, ISessionEventSubagentStarted, ISessionEventToolComplete, ISessionEventToolStart } from '../../node/copilot/mapSessionEvents.js';
+import { URI } from "../../../../base/common/uri.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { isString } from "../../../../base/common/types.js";
+import { stripRedundantCdPrefix } from "../../common/commandLineHelpers.js";
+import { IFileEditRecord, ISessionDatabase } from "../../common/sessionDataService.js";
+import {
+  ResponsePartKind,
+  ToolCallConfirmationReason,
+  ToolCallStatus,
+  ToolResultContentType,
+  TurnState,
+  buildSubagentSessionUri,
+  type ResponsePart,
+  type StringOrMarkdown,
+  type ToolCallCompletedState,
+  type ToolResultContent,
+  type Turn,
+} from "../../common/state/sessionState.js";
+import {
+  getInvocationMessage,
+  getPastTenseMessage,
+  getShellLanguage,
+  getSubagentMetadata,
+  getToolDisplayName,
+  getToolInputString,
+  getToolKind,
+  isEditTool,
+  isHiddenTool,
+  synthesizeSkillToolCall,
+} from "../../node/copilot/copilotToolDisplay.js";
+import { buildSessionDbUri } from "../../node/shared/fileEditTracker.js";
+import type {
+  ISessionEvent,
+  ISessionEventMessage,
+  ISessionEventSkillInvoked,
+  ISessionEventSubagentStarted,
+  ISessionEventToolComplete,
+  ISessionEventToolStart,
+} from "../../node/copilot/mapSessionEvents.js";
 
 // =============================================================================
 // History-record test fixtures
@@ -32,15 +62,15 @@ interface IHistoryRecordBase {
 }
 
 interface IHistoryMessageRecord extends IHistoryRecordBase {
-	readonly type: 'message';
-	readonly role: 'user' | 'assistant';
+	readonly type: "message";
+	readonly role: "user" | "assistant";
 	readonly messageId: string;
 	readonly content: string;
 	readonly toolRequests?: readonly {
 		readonly toolCallId: string;
 		readonly name: string;
 		readonly arguments?: string;
-		readonly type?: 'function' | 'custom';
+		readonly type?: "function" | "custom";
 	}[];
 	readonly reasoningOpaque?: string;
 	readonly reasoningText?: string;
@@ -49,13 +79,13 @@ interface IHistoryMessageRecord extends IHistoryRecordBase {
 }
 
 export interface IHistoryToolStartRecord extends IHistoryRecordBase {
-	readonly type: 'tool_start';
+	readonly type: "tool_start";
 	readonly toolCallId: string;
 	readonly toolName: string;
 	readonly displayName: string;
 	readonly invocationMessage: StringOrMarkdown;
 	readonly toolInput?: string;
-	readonly toolKind?: 'terminal' | 'subagent' | 'search';
+	readonly toolKind?: "terminal" | "subagent" | "search";
 	readonly language?: string;
 	readonly toolArguments?: string;
 	readonly subagentAgentName?: string;
@@ -66,7 +96,7 @@ export interface IHistoryToolStartRecord extends IHistoryRecordBase {
 }
 
 interface IHistoryToolCompleteRecord extends IHistoryRecordBase {
-	readonly type: 'tool_complete';
+	readonly type: "tool_complete";
 	readonly toolCallId: string;
 	readonly result: {
 		readonly success: boolean;
@@ -80,7 +110,7 @@ interface IHistoryToolCompleteRecord extends IHistoryRecordBase {
 }
 
 interface IHistorySubagentStartedRecord extends IHistoryRecordBase {
-	readonly type: 'subagent_started';
+	readonly type: "subagent_started";
 	readonly toolCallId: string;
 	readonly agentName: string;
 	readonly agentDisplayName: string;
@@ -99,9 +129,9 @@ function extractSubagentMeta(start: IHistoryToolStartRecord | undefined): { suba
 		return {};
 	}
 	return {
-		subagentDescription: start.subagentDescription,
-		subagentAgentName: start.subagentAgentName,
-	};
+    subagentDescription: start.subagentDescription,
+    subagentAgentName: start.subagentAgentName,
+  };
 }
 
 /**
@@ -124,60 +154,60 @@ export function buildTurnsFromHistory(messages: readonly IHistoryRecord[]): Turn
 
 	const finalizeTurn = (turn: NonNullable<typeof currentTurn>, state: TurnState): void => {
 		turns.push({
-			id: turn.id,
-			userMessage: turn.userMessage,
-			responseParts: turn.responseParts,
-			usage: undefined,
-			state,
-		});
+      id: turn.id,
+      userMessage: turn.userMessage,
+      responseParts: turn.responseParts,
+      usage: undefined,
+      state,
+    });
 	};
 
 	const startTurn = (id: string, text: string): NonNullable<typeof currentTurn> => ({
-		id,
-		userMessage: { text },
-		responseParts: [],
-		pendingTools: new Map(),
-	});
+    id,
+    userMessage: { text },
+    responseParts: [],
+    pendingTools: new Map(),
+  });
 
 	for (const msg of messages) {
-		if (msg.type === 'message' && msg.role === 'user') {
+		if (msg.type === "message" && msg.role === "user") {
 			if (currentTurn) {
 				finalizeTurn(currentTurn, TurnState.Cancelled);
 			}
 			currentTurn = startTurn(msg.messageId, msg.content);
-		} else if (msg.type === 'message' && msg.role === 'assistant') {
+		} else if (msg.type === "message" && msg.role === "assistant") {
 			if (msg.parentToolCallId) {
 				continue;
 			}
 			if (!currentTurn) {
-				currentTurn = startTurn(msg.messageId, '');
+				currentTurn = startTurn(msg.messageId, "");
 			}
 			if (msg.reasoningText) {
 				currentTurn.responseParts.push({
-					kind: ResponsePartKind.Reasoning,
-					id: generateUuid(),
-					content: msg.reasoningText,
-				});
+          kind: ResponsePartKind.Reasoning,
+          id: generateUuid(),
+          content: msg.reasoningText,
+        });
 			}
 			if (msg.content) {
 				currentTurn.responseParts.push({
-					kind: ResponsePartKind.Markdown,
-					id: generateUuid(),
-					content: msg.content,
-				});
+          kind: ResponsePartKind.Markdown,
+          id: generateUuid(),
+          content: msg.content,
+        });
 			}
 			if (!msg.toolRequests || msg.toolRequests.length === 0) {
 				finalizeTurn(currentTurn, TurnState.Complete);
 				currentTurn = undefined;
 			}
-		} else if (msg.type === 'subagent_started') {
+		} else if (msg.type === "subagent_started") {
 			subagentsByToolCallId.set(msg.toolCallId, msg);
-		} else if (msg.type === 'tool_start') {
+		} else if (msg.type === "tool_start") {
 			if (msg.parentToolCallId) {
 				continue;
 			}
 			currentTurn?.pendingTools.set(msg.toolCallId, msg);
-		} else if (msg.type === 'tool_complete') {
+		} else if (msg.type === "tool_complete") {
 			if (msg.parentToolCallId) {
 				continue;
 			}
@@ -186,24 +216,26 @@ export function buildTurnsFromHistory(messages: readonly IHistoryRecord[]): Turn
 				currentTurn.pendingTools.delete(msg.toolCallId);
 
 				const subagentEvent = subagentsByToolCallId.get(msg.toolCallId);
-				const contentWithSubagent = msg.result.content ? [...msg.result.content] : [];
+				const contentWithSubagent = msg.result.content ? [
+          ...msg.result.content,
+        ] : [];
 				if (subagentEvent) {
 					const parentSessionStr = msg.session.toString();
 					contentWithSubagent.push({
-						type: ToolResultContentType.Subagent,
-						resource: buildSubagentSessionUri(parentSessionStr, msg.toolCallId),
-						title: subagentEvent.agentDisplayName,
-						agentName: subagentEvent.agentName,
-						description: subagentEvent.agentDescription,
-					});
+            type: ToolResultContentType.Subagent,
+            resource: buildSubagentSessionUri(parentSessionStr, msg.toolCallId),
+            title: subagentEvent.agentDisplayName,
+            agentName: subagentEvent.agentName,
+            description: subagentEvent.agentDescription,
+          });
 				}
 
 				const tc: ToolCallCompletedState = {
 					status: ToolCallStatus.Completed,
 					toolCallId: msg.toolCallId,
-					toolName: start?.toolName ?? 'unknown',
-					displayName: start?.displayName ?? 'Unknown Tool',
-					invocationMessage: start?.invocationMessage ?? 'Unknown tool',
+					toolName: start?.toolName ?? "unknown",
+					displayName: start?.displayName ?? "Unknown Tool",
+					invocationMessage: start?.invocationMessage ?? "Unknown tool",
 					toolInput: start?.toolInput,
 					success: msg.result.success,
 					pastTenseMessage: msg.result.pastTenseMessage,
@@ -217,9 +249,9 @@ export function buildTurnsFromHistory(messages: readonly IHistoryRecord[]): Turn
 					},
 				};
 				currentTurn.responseParts.push({
-					kind: ResponsePartKind.ToolCall,
-					toolCall: tc,
-				});
+          kind: ResponsePartKind.ToolCall,
+          toolCall: tc,
+        });
 			}
 		}
 	}
@@ -244,23 +276,25 @@ export function buildSubagentTurnsFromHistory(
 ): Turn[] {
 	const innerToolCallIds = new Set<string>();
 	for (const msg of parentMessages) {
-		if ((msg.type === 'tool_start' || msg.type === 'tool_complete') && msg.parentToolCallId === parentToolCallId) {
+		if ((msg.type === "tool_start" || msg.type === "tool_complete") && msg.parentToolCallId === parentToolCallId) {
 			innerToolCallIds.add(msg.toolCallId);
 		}
 	}
 
 	const subagentsByToolCallId = new Map<string, IHistorySubagentStartedRecord>();
 	for (const msg of parentMessages) {
-		if (msg.type === 'subagent_started' && innerToolCallIds.has(msg.toolCallId)) {
+		if (msg.type === "subagent_started" && innerToolCallIds.has(
+      msg.toolCallId,
+    )) {
 			subagentsByToolCallId.set(msg.toolCallId, msg);
 		}
 	}
 
 	const innerMessages = parentMessages.filter(msg => {
-		if (msg.type === 'tool_start' || msg.type === 'tool_complete') {
+		if (msg.type === "tool_start" || msg.type === "tool_complete") {
 			return msg.parentToolCallId === parentToolCallId;
 		}
-		if (msg.type === 'message') {
+		if (msg.type === "message") {
 			return msg.parentToolCallId === parentToolCallId;
 		}
 		return false;
@@ -274,30 +308,32 @@ export function buildSubagentTurnsFromHistory(
 	const pendingTools = new Map<string, IHistoryToolStartRecord>();
 
 	for (const msg of innerMessages) {
-		if (msg.type === 'tool_start') {
+		if (msg.type === "tool_start") {
 			pendingTools.set(msg.toolCallId, msg);
-		} else if (msg.type === 'tool_complete') {
+		} else if (msg.type === "tool_complete") {
 			const start = pendingTools.get(msg.toolCallId);
 			pendingTools.delete(msg.toolCallId);
 
 			const subagentEvent = subagentsByToolCallId.get(msg.toolCallId);
-			const contentWithSubagent = msg.result.content ? [...msg.result.content] : [];
+			const contentWithSubagent = msg.result.content ? [
+        ...msg.result.content,
+      ] : [];
 			if (subagentEvent) {
 				contentWithSubagent.push({
-					type: ToolResultContentType.Subagent,
-					resource: buildSubagentSessionUri(childSessionUri, msg.toolCallId),
-					title: subagentEvent.agentDisplayName,
-					agentName: subagentEvent.agentName,
-					description: subagentEvent.agentDescription,
-				});
+          type: ToolResultContentType.Subagent,
+          resource: buildSubagentSessionUri(childSessionUri, msg.toolCallId),
+          title: subagentEvent.agentDisplayName,
+          agentName: subagentEvent.agentName,
+          description: subagentEvent.agentDescription,
+        });
 			}
 
 			const tc: ToolCallCompletedState = {
 				status: ToolCallStatus.Completed,
 				toolCallId: msg.toolCallId,
-				toolName: start?.toolName ?? 'unknown',
-				displayName: start?.displayName ?? 'Unknown Tool',
-				invocationMessage: start?.invocationMessage ?? 'Unknown tool',
+				toolName: start?.toolName ?? "unknown",
+				displayName: start?.displayName ?? "Unknown Tool",
+				invocationMessage: start?.invocationMessage ?? "Unknown tool",
 				toolInput: start?.toolInput,
 				success: msg.result.success,
 				pastTenseMessage: msg.result.pastTenseMessage,
@@ -311,23 +347,23 @@ export function buildSubagentTurnsFromHistory(
 				},
 			};
 			responseParts.push({
-				kind: ResponsePartKind.ToolCall,
-				toolCall: tc,
-			});
-		} else if (msg.type === 'message' && msg.role === 'assistant') {
+        kind: ResponsePartKind.ToolCall,
+        toolCall: tc,
+      });
+		} else if (msg.type === "message" && msg.role === "assistant") {
 			if (msg.reasoningText) {
 				responseParts.push({
-					kind: ResponsePartKind.Reasoning,
-					id: generateUuid(),
-					content: msg.reasoningText,
-				});
+          kind: ResponsePartKind.Reasoning,
+          id: generateUuid(),
+          content: msg.reasoningText,
+        });
 			}
 			if (msg.content) {
 				responseParts.push({
-					kind: ResponsePartKind.Markdown,
-					id: generateUuid(),
-					content: msg.content,
-				});
+          kind: ResponsePartKind.Markdown,
+          id: generateUuid(),
+          content: msg.content,
+        });
 			}
 		}
 	}
@@ -336,13 +372,15 @@ export function buildSubagentTurnsFromHistory(
 		return [];
 	}
 
-	return [{
-		id: generateUuid(),
-		userMessage: { text: '' },
-		responseParts,
-		usage: undefined,
-		state: TurnState.Complete,
-	}];
+	return [
+    {
+      id: generateUuid(),
+      userMessage: { text: "" },
+      responseParts,
+      usage: undefined,
+      state: TurnState.Complete,
+    },
+  ];
 }
 
 // =============================================================================
@@ -364,11 +402,11 @@ function tryStringify(value: unknown): string | undefined {
 }
 
 function isSyntheticUserMessage(event: ISessionEvent): boolean {
-	if (event.type !== 'user.message') {
+	if (event.type !== "user.message") {
 		return false;
 	}
 	const source = (event as ISessionEventMessage).data?.source;
-	return !!source && source.toLowerCase() !== 'user';
+	return !!source && source.toLowerCase() !== "user";
 }
 
 /**
@@ -387,19 +425,33 @@ export async function mapSessionEventsToHistoryRecords(
 	const editToolCallIds: string[] = [];
 
 	for (const e of events) {
-		if (e.type === 'tool.execution_start') {
+		if (e.type === "tool.execution_start") {
 			const d = (e as ISessionEventToolStart).data;
 			if (isHiddenTool(d.toolName)) {
 				continue;
 			}
-			const toolArgs = d.arguments !== undefined ? tryStringify(d.arguments) : undefined;
+			const toolArgs = d.arguments !== undefined ? tryStringify(
+        d.arguments,
+      ) : undefined;
 			let parameters: Record<string, unknown> | undefined;
 			if (toolArgs) {
-				try { parameters = JSON.parse(toolArgs) as Record<string, unknown>; } catch { /* ignore */ }
+				try { parameters = JSON.parse(
+          toolArgs,
+        ) as Record<string, unknown>; } catch { /* ignore */ }
 			}
-			const rewrittenArgs = stripRedundantCdPrefix(d.toolName, parameters, workingDirectory) ? tryStringify(parameters) : undefined;
-			toolInfoByCallId.set(d.toolCallId, { toolName: d.toolName, parameters, rewrittenArgs });
-			const command = isString(parameters?.command) ? parameters.command : undefined;
+			const rewrittenArgs = stripRedundantCdPrefix(
+        d.toolName,
+        parameters,
+        workingDirectory,
+      ) ? tryStringify(parameters) : undefined;
+			toolInfoByCallId.set(d.toolCallId, {
+        toolName: d.toolName,
+        parameters,
+        rewrittenArgs,
+      });
+			const command = isString(
+        parameters?.command,
+      ) ? parameters.command : undefined;
 			if (isEditTool(d.toolName, command)) {
 				editToolCallIds.push(d.toolCallId);
 			}
@@ -429,17 +481,17 @@ export async function mapSessionEventsToHistoryRecords(
 	const sessionUriStr = session.toString();
 
 	for (const e of events) {
-		if (e.type === 'assistant.message' || e.type === 'user.message') {
+		if (e.type === "assistant.message" || e.type === "user.message") {
 			if (isSyntheticUserMessage(e)) {
 				continue;
 			}
 			const d = (e as ISessionEventMessage).data;
 			result.push({
 				session,
-				type: 'message',
-				role: e.type === 'user.message' ? 'user' : 'assistant',
-				messageId: d?.messageId ?? d?.interactionId ?? '',
-				content: d?.content ?? '',
+				type: "message",
+				role: e.type === "user.message" ? "user" : "assistant",
+				messageId: d?.messageId ?? d?.interactionId ?? "",
+				content: d?.content ?? "",
 				toolRequests: d?.toolRequests?.map(tr => ({
 					toolCallId: tr.toolCallId,
 					name: tr.name,
@@ -451,7 +503,7 @@ export async function mapSessionEventsToHistoryRecords(
 				encryptedContent: d?.encryptedContent,
 				parentToolCallId: d?.parentToolCallId,
 			});
-		} else if (e.type === 'tool.execution_start') {
+		} else if (e.type === "tool.execution_start") {
 			const d = (e as ISessionEventToolStart).data;
 			if (isHiddenTool(d.toolName)) {
 				continue;
@@ -459,26 +511,30 @@ export async function mapSessionEventsToHistoryRecords(
 			const info = toolInfoByCallId.get(d.toolCallId);
 			const displayName = getToolDisplayName(d.toolName);
 			const toolKind = getToolKind(d.toolName);
-			const toolArgs = info?.rewrittenArgs ?? (d.arguments !== undefined ? tryStringify(d.arguments) : undefined);
-			const subagentMeta = toolKind === 'subagent' ? getSubagentMetadata(info?.parameters) : undefined;
+			const toolArgs = info?.rewrittenArgs ?? (d.arguments !== undefined ? tryStringify(
+        d.arguments,
+      ) : undefined);
+			const subagentMeta = toolKind === "subagent" ? getSubagentMetadata(
+        info?.parameters,
+      ) : undefined;
 			result.push({
-				session,
-				type: 'tool_start',
-				toolCallId: d.toolCallId,
-				toolName: d.toolName,
-				displayName,
-				invocationMessage: getInvocationMessage(d.toolName, displayName, info?.parameters),
-				toolInput: getToolInputString(d.toolName, info?.parameters, toolArgs),
-				toolKind,
-				language: toolKind === 'terminal' ? getShellLanguage(d.toolName) : undefined,
-				toolArguments: toolArgs,
-				subagentAgentName: subagentMeta?.agentName,
-				subagentDescription: subagentMeta?.description,
-				mcpServerName: d.mcpServerName,
-				mcpToolName: d.mcpToolName,
-				parentToolCallId: d.parentToolCallId,
-			});
-		} else if (e.type === 'tool.execution_complete') {
+        session,
+        type: "tool_start",
+        toolCallId: d.toolCallId,
+        toolName: d.toolName,
+        displayName,
+        invocationMessage: getInvocationMessage(d.toolName, displayName, info?.parameters),
+        toolInput: getToolInputString(d.toolName, info?.parameters, toolArgs),
+        toolKind,
+        language: toolKind === "terminal" ? getShellLanguage(d.toolName) : undefined,
+        toolArguments: toolArgs,
+        subagentAgentName: subagentMeta?.agentName,
+        subagentDescription: subagentMeta?.description,
+        mcpServerName: d.mcpServerName,
+        mcpToolName: d.mcpToolName,
+        parentToolCallId: d.parentToolCallId,
+      });
+		} else if (e.type === "tool.execution_complete") {
 			const d = (e as ISessionEventToolComplete).data;
 			const info = toolInfoByCallId.get(d.toolCallId);
 			if (!info) {
@@ -494,21 +550,21 @@ export async function mapSessionEventsToHistoryRecords(
 			const edits = storedEdits?.get(d.toolCallId);
 			if (edits) {
 				for (const edit of edits) {
-					const beforeUri = edit.kind === 'rename' && edit.originalPath
+					const beforeUri = edit.kind === "rename" && edit.originalPath
 						? URI.file(edit.originalPath).toString()
 						: URI.file(edit.filePath).toString();
 					const afterUri = URI.file(edit.filePath).toString();
-					const hasBefore = edit.kind !== 'create';
-					const hasAfter = edit.kind !== 'delete';
+					const hasBefore = edit.kind !== "create";
+					const hasAfter = edit.kind !== "delete";
 					content.push({
 						type: ToolResultContentType.FileEdit,
 						before: hasBefore ? {
 							uri: beforeUri,
-							content: { uri: buildSessionDbUri(sessionUriStr, edit.toolCallId, edit.filePath, 'before') },
+							content: { uri: buildSessionDbUri(sessionUriStr, edit.toolCallId, edit.filePath, "before") },
 						} : undefined,
 						after: hasAfter ? {
 							uri: afterUri,
-							content: { uri: buildSessionDbUri(sessionUriStr, edit.toolCallId, edit.filePath, 'after') },
+							content: { uri: buildSessionDbUri(sessionUriStr, edit.toolCallId, edit.filePath, "after") },
 						} : undefined,
 						diff: (edit.addedLines !== undefined || edit.removedLines !== undefined)
 							? { added: edit.addedLines, removed: edit.removedLines }
@@ -518,7 +574,7 @@ export async function mapSessionEventsToHistoryRecords(
 			}
 			result.push({
 				session,
-				type: 'tool_complete',
+				type: "tool_complete",
 				toolCallId: d.toolCallId,
 				result: {
 					success: d.success,
@@ -530,23 +586,32 @@ export async function mapSessionEventsToHistoryRecords(
 				toolTelemetry: d.toolTelemetry !== undefined ? tryStringify(d.toolTelemetry) : undefined,
 				parentToolCallId: d.parentToolCallId,
 			});
-		} else if (e.type === 'subagent.started') {
+		} else if (e.type === "subagent.started") {
 			const d = (e as ISessionEventSubagentStarted).data;
 			result.push({
-				session,
-				type: 'subagent_started',
-				toolCallId: d.toolCallId,
-				agentName: d.agentName,
-				agentDisplayName: d.agentDisplayName,
-				agentDescription: d.agentDescription,
-			});
-		} else if (e.type === 'skill.invoked') {
+        session,
+        type: "subagent_started",
+        toolCallId: d.toolCallId,
+        agentName: d.agentName,
+        agentDisplayName: d.agentDisplayName,
+        agentDescription: d.agentDescription,
+      });
+		} else if (e.type === "skill.invoked") {
 			const skillEvent = e as ISessionEventSkillInvoked;
 			const synth = synthesizeSkillToolCall(skillEvent.data, skillEvent.id);
-			result.push(
-				{ session, type: 'tool_start', toolCallId: synth.toolCallId, toolName: synth.toolName, displayName: synth.displayName, invocationMessage: synth.invocationMessage },
-				{ session, type: 'tool_complete', toolCallId: synth.toolCallId, result: { success: true, pastTenseMessage: synth.pastTenseMessage } },
-			);
+			result.push({
+        session,
+        type: "tool_start",
+        toolCallId: synth.toolCallId,
+        toolName: synth.toolName,
+        displayName: synth.displayName,
+        invocationMessage: synth.invocationMessage,
+      }, {
+        session,
+        type: "tool_complete",
+        toolCallId: synth.toolCallId,
+        result: { success: true, pastTenseMessage: synth.pastTenseMessage },
+      });
 		}
 	}
 

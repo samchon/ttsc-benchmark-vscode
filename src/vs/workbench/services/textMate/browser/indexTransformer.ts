@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AnyEdit } from '../../../../editor/common/core/edits/edit.js';
+import { AnyEdit } from "../../../../editor/common/core/edits/edit.js";
 
 export interface IIndexTransformer {
 	transform(index: number): number | undefined;
@@ -15,7 +15,9 @@ export interface IIndexTransformer {
 export class MonotonousIndexTransformer implements IIndexTransformer {
 	public static fromMany(transformations: AnyEdit[]): IIndexTransformer {
 		// TODO improve performance by combining transformations first
-		const transformers = transformations.map(t => new MonotonousIndexTransformer(t));
+		const transformers = transformations.map(
+      t => new MonotonousIndexTransformer(t),
+    );
 		return new CombinedIndexTransformer(transformers);
 	}
 
@@ -48,7 +50,7 @@ export class MonotonousIndexTransformer implements IIndexTransformer {
 
 export class CombinedIndexTransformer implements IIndexTransformer {
 	constructor(
-		private readonly transformers: IIndexTransformer[]
+		private readonly transformers: IIndexTransformer[],
 	) { }
 
 	transform(index: number): number | undefined {

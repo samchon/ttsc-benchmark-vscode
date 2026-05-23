@@ -3,16 +3,18 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AsyncReferenceCollection, IReference, ReferenceCollection } from '../../../../../../base/common/lifecycle.js';
-import { IModifiedFileEntry } from '../../../../chat/common/editing/chatEditingService.js';
-import { INotebookService } from '../../../common/notebookService.js';
-import { bufferToStream, VSBuffer } from '../../../../../../base/common/buffer.js';
-import { NotebookTextModel } from '../../../common/model/notebookTextModel.js';
-import { createDecorator, IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { ITextModelService } from '../../../../../../editor/common/services/resolverService.js';
+import { AsyncReferenceCollection, IReference, ReferenceCollection } from "../../../../../../base/common/lifecycle.js";
+import { IModifiedFileEntry } from "../../../../chat/common/editing/chatEditingService.js";
+import { INotebookService } from "../../../common/notebookService.js";
+import { bufferToStream, VSBuffer } from "../../../../../../base/common/buffer.js";
+import { NotebookTextModel } from "../../../common/model/notebookTextModel.js";
+import { createDecorator, IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { ITextModelService } from "../../../../../../editor/common/services/resolverService.js";
 
 
-export const INotebookOriginalModelReferenceFactory = createDecorator<INotebookOriginalModelReferenceFactory>('INotebookOriginalModelReferenceFactory');
+export const INotebookOriginalModelReferenceFactory = createDecorator<INotebookOriginalModelReferenceFactory>(
+  "INotebookOriginalModelReferenceFactory",
+);
 
 export interface INotebookOriginalModelReferenceFactory {
 	readonly _serviceBrand: undefined;
@@ -23,7 +25,7 @@ export interface INotebookOriginalModelReferenceFactory {
 export class OriginalNotebookModelReferenceCollection extends ReferenceCollection<Promise<NotebookTextModel>> {
 	private readonly modelsToDispose = new Set<string>();
 	constructor(@INotebookService private readonly notebookService: INotebookService,
-		@ITextModelService private readonly modelService: ITextModelService
+		@ITextModelService private readonly modelService: ITextModelService,
 	) {
 		super();
 	}
@@ -36,7 +38,9 @@ export class OriginalNotebookModelReferenceCollection extends ReferenceCollectio
 			return model;
 		}
 		const modelRef = await this.modelService.createModelReference(uri);
-		const bytes = VSBuffer.fromString(modelRef.object.textEditorModel.getValue());
+		const bytes = VSBuffer.fromString(
+      modelRef.object.textEditorModel.getValue(),
+    );
 		const stream = bufferToStream(bytes);
 		modelRef.dispose();
 
@@ -70,7 +74,9 @@ export class NotebookOriginalModelReferenceFactory implements INotebookOriginalM
 	private _resourceModelCollection: OriginalNotebookModelReferenceCollection & ReferenceCollection<Promise<NotebookTextModel>> /* TS Fail */ | undefined = undefined;
 	private get resourceModelCollection() {
 		if (!this._resourceModelCollection) {
-			this._resourceModelCollection = this.instantiationService.createInstance(OriginalNotebookModelReferenceCollection);
+			this._resourceModelCollection = this.instantiationService.createInstance(
+        OriginalNotebookModelReferenceCollection,
+      );
 		}
 
 		return this._resourceModelCollection;
@@ -79,7 +85,9 @@ export class NotebookOriginalModelReferenceFactory implements INotebookOriginalM
 	private _asyncModelCollection: AsyncReferenceCollection<NotebookTextModel> | undefined = undefined;
 	private get asyncModelCollection() {
 		if (!this._asyncModelCollection) {
-			this._asyncModelCollection = new AsyncReferenceCollection(this.resourceModelCollection);
+			this._asyncModelCollection = new AsyncReferenceCollection(
+        this.resourceModelCollection,
+      );
 		}
 
 		return this._asyncModelCollection;
@@ -89,6 +97,10 @@ export class NotebookOriginalModelReferenceFactory implements INotebookOriginalM
 	}
 
 	getOrCreate(fileEntry: IModifiedFileEntry, viewType: string): Promise<IReference<NotebookTextModel>> {
-		return this.asyncModelCollection.acquire(fileEntry.originalURI.toString(), fileEntry, viewType);
+		return this.asyncModelCollection.acquire(
+      fileEntry.originalURI.toString(),
+      fileEntry,
+      viewType,
+    );
 	}
 }

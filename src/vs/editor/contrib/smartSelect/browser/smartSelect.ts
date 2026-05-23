@@ -3,38 +3,45 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as arrays from '../../../../base/common/arrays.js';
-import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { onUnexpectedExternalError } from '../../../../base/common/errors.js';
-import { KeyCode, KeyMod } from '../../../../base/common/keyCodes.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import { ICodeEditor } from '../../../browser/editorBrowser.js';
-import { EditorAction, EditorContributionInstantiation, IActionOptions, registerEditorAction, registerEditorContribution, ServicesAccessor } from '../../../browser/editorExtensions.js';
-import { EditorOption } from '../../../common/config/editorOptions.js';
-import { Position } from '../../../common/core/position.js';
-import { Range } from '../../../common/core/range.js';
-import { Selection } from '../../../common/core/selection.js';
-import { IEditorContribution } from '../../../common/editorCommon.js';
-import { EditorContextKeys } from '../../../common/editorContextKeys.js';
-import { ITextModel } from '../../../common/model.js';
-import * as languages from '../../../common/languages.js';
-import { BracketSelectionRangeProvider } from './bracketSelections.js';
-import { WordSelectionRangeProvider } from './wordSelections.js';
-import * as nls from '../../../../nls.js';
-import { MenuId } from '../../../../platform/actions/common/actions.js';
-import { CommandsRegistry } from '../../../../platform/commands/common/commands.js';
-import { KeybindingWeight } from '../../../../platform/keybinding/common/keybindingsRegistry.js';
-import { ILanguageFeaturesService } from '../../../common/services/languageFeatures.js';
-import { LanguageFeatureRegistry } from '../../../common/languageFeatureRegistry.js';
-import { ITextModelService } from '../../../common/services/resolverService.js';
-import { assertType, isArrayOf } from '../../../../base/common/types.js';
-import { URI } from '../../../../base/common/uri.js';
+import * as arrays from "../../../../base/common/arrays.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { onUnexpectedExternalError } from "../../../../base/common/errors.js";
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import {
+  EditorAction,
+  EditorContributionInstantiation,
+  IActionOptions,
+  registerEditorAction,
+  registerEditorContribution,
+  ServicesAccessor,
+} from "../../../browser/editorExtensions.js";
+import { EditorOption } from "../../../common/config/editorOptions.js";
+import { Position } from "../../../common/core/position.js";
+import { Range } from "../../../common/core/range.js";
+import { Selection } from "../../../common/core/selection.js";
+import { IEditorContribution } from "../../../common/editorCommon.js";
+import { EditorContextKeys } from "../../../common/editorContextKeys.js";
+import { ITextModel } from "../../../common/model.js";
+import * as languages from "../../../common/languages.js";
+import { BracketSelectionRangeProvider } from "./bracketSelections.js";
+import { WordSelectionRangeProvider } from "./wordSelections.js";
+import * as nls from "../../../../nls.js";
+import { MenuId } from "../../../../platform/actions/common/actions.js";
+import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { ILanguageFeaturesService } from "../../../common/services/languageFeatures.js";
+import { LanguageFeatureRegistry } from "../../../common/languageFeatureRegistry.js";
+import { ITextModelService } from "../../../common/services/resolverService.js";
+import { assertType, isArrayOf } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
 
 class SelectionRanges {
 
 	constructor(
 		readonly index: number,
-		readonly ranges: Range[]
+		readonly ranges: Range[],
 	) { }
 
 	mov(fwd: boolean): SelectionRanges {
@@ -53,10 +60,12 @@ class SelectionRanges {
 
 export class SmartSelectController implements IEditorContribution {
 
-	static readonly ID = 'editor.contrib.smartSelectController';
+	static readonly ID = "editor.contrib.smartSelectController";
 
 	static get(editor: ICodeEditor): SmartSelectController | null {
-		return editor.getContribution<SmartSelectController>(SmartSelectController.ID);
+		return editor.getContribution<SmartSelectController>(
+      SmartSelectController.ID,
+    );
 	}
 
 	private _state?: SelectionRanges[];
@@ -120,7 +129,12 @@ export class SmartSelectController implements IEditorContribution {
 			return;
 		}
 		this._state = this._state.map(state => state.mov(forward));
-		const newSelections = this._state.map(state => Selection.fromPositions(state.ranges[state.index].getStartPosition(), state.ranges[state.index].getEndPosition()));
+		const newSelections = this._state.map(
+      state => Selection.fromPositions(
+        state.ranges[state.index].getStartPosition(),
+        state.ranges[state.index].getEndPosition(),
+      ),
+    );
 		this._ignoreSelection = true;
 		try {
 			this._editor.setSelections(newSelections);
@@ -150,8 +164,8 @@ abstract class AbstractSmartSelect extends EditorAction {
 class GrowSelectionAction extends AbstractSmartSelect {
 	constructor() {
 		super(true, {
-			id: 'editor.action.smartSelect.expand',
-			label: nls.localize2('smartSelect.expand', "Expand Selection"),
+			id: "editor.action.smartSelect.expand",
+			label: nls.localize2("smartSelect.expand", "Expand Selection"),
 			precondition: undefined,
 			kbOpts: {
 				kbExpr: EditorContextKeys.editorTextFocus,
@@ -160,26 +174,29 @@ class GrowSelectionAction extends AbstractSmartSelect {
 					primary: KeyMod.CtrlCmd | KeyMod.WinCtrl | KeyMod.Shift | KeyCode.RightArrow,
 					secondary: [KeyMod.WinCtrl | KeyMod.Shift | KeyCode.RightArrow],
 				},
-				weight: KeybindingWeight.EditorContrib
+				weight: KeybindingWeight.EditorContrib,
 			},
 			menuOpts: {
 				menuId: MenuId.MenubarSelectionMenu,
-				group: '1_basic',
-				title: nls.localize({ key: 'miSmartSelectGrow', comment: ['&& denotes a mnemonic'] }, "&&Expand Selection"),
-				order: 2
-			}
+				group: "1_basic",
+				title: nls.localize({ key: "miSmartSelectGrow", comment: ["&& denotes a mnemonic"] }, "&&Expand Selection"),
+				order: 2,
+			},
 		});
 	}
 }
 
 // renamed command id
-CommandsRegistry.registerCommandAlias('editor.action.smartSelect.grow', 'editor.action.smartSelect.expand');
+CommandsRegistry.registerCommandAlias(
+  "editor.action.smartSelect.grow",
+  "editor.action.smartSelect.expand",
+);
 
 class ShrinkSelectionAction extends AbstractSmartSelect {
 	constructor() {
 		super(false, {
-			id: 'editor.action.smartSelect.shrink',
-			label: nls.localize2('smartSelect.shrink', "Shrink Selection"),
+			id: "editor.action.smartSelect.shrink",
+			label: nls.localize2("smartSelect.shrink", "Shrink Selection"),
 			precondition: undefined,
 			kbOpts: {
 				kbExpr: EditorContextKeys.editorTextFocus,
@@ -188,19 +205,23 @@ class ShrinkSelectionAction extends AbstractSmartSelect {
 					primary: KeyMod.CtrlCmd | KeyMod.WinCtrl | KeyMod.Shift | KeyCode.LeftArrow,
 					secondary: [KeyMod.WinCtrl | KeyMod.Shift | KeyCode.LeftArrow],
 				},
-				weight: KeybindingWeight.EditorContrib
+				weight: KeybindingWeight.EditorContrib,
 			},
 			menuOpts: {
 				menuId: MenuId.MenubarSelectionMenu,
-				group: '1_basic',
-				title: nls.localize({ key: 'miSmartSelectShrink', comment: ['&& denotes a mnemonic'] }, "&&Shrink Selection"),
-				order: 3
-			}
+				group: "1_basic",
+				title: nls.localize({ key: "miSmartSelectShrink", comment: ["&& denotes a mnemonic"] }, "&&Shrink Selection"),
+				order: 3,
+			},
 		});
 	}
 }
 
-registerEditorContribution(SmartSelectController.ID, SmartSelectController, EditorContributionInstantiation.Lazy);
+registerEditorContribution(
+  SmartSelectController.ID,
+  SmartSelectController,
+  EditorContributionInstantiation.Lazy,
+);
 registerEditorAction(GrowSelectionAction);
 registerEditorAction(ShrinkSelectionAction);
 
@@ -303,7 +324,7 @@ export async function provideSelectionRanges(registry: LanguageFeatureRegistry<l
 }
 
 
-CommandsRegistry.registerCommand('_executeSelectionRangeProvider', async function (accessor, ...args) {
+CommandsRegistry.registerCommand("_executeSelectionRangeProvider", async function (accessor, ...args) {
 
 	const [resource, positions] = args;
 	assertType(URI.isUri(resource));

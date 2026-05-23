@@ -3,42 +3,42 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../base/browser/dom.js';
-import { ActionBar } from '../../../../base/browser/ui/actionbar/actionbar.js';
-import { HoverStyle, IDelayedHoverOptions } from '../../../../base/browser/ui/hover/hover.js';
-import { HoverPosition } from '../../../../base/browser/ui/hover/hoverWidget.js';
-import { IListVirtualDelegate } from '../../../../base/browser/ui/list/list.js';
-import { IObjectTreeElement, ITreeNode, ITreeRenderer } from '../../../../base/browser/ui/tree/tree.js';
-import { Action } from '../../../../base/common/actions.js';
-import { Codicon } from '../../../../base/common/codicons.js';
-import { MarkdownString } from '../../../../base/common/htmlContent.js';
-import { Disposable, DisposableStore, IDisposable, MutableDisposable } from '../../../../base/common/lifecycle.js';
-import { basename } from '../../../../base/common/path.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
-import { URI } from '../../../../base/common/uri.js';
-import { ILanguageService } from '../../../../editor/common/languages/language.js';
-import { localize } from '../../../../nls.js';
-import { FileKind } from '../../../../platform/files/common/files.js';
-import { IHoverService } from '../../../../platform/hover/browser/hover.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { WorkbenchObjectTree } from '../../../../platform/list/browser/listService.js';
-import { DEFAULT_LABELS_CONTAINER, IResourceLabel, ResourceLabels } from '../../../../workbench/browser/labels.js';
-import { IAgentFeedbackService } from './agentFeedbackService.js';
-import { IAgentFeedbackVariableEntry } from '../../../../workbench/contrib/chat/common/attachments/chatVariableEntries.js';
-import { editorHoverBackground } from '../../../../platform/theme/common/colorRegistry.js';
+import * as dom from "../../../../base/browser/dom.js";
+import { ActionBar } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { HoverStyle, IDelayedHoverOptions } from "../../../../base/browser/ui/hover/hover.js";
+import { HoverPosition } from "../../../../base/browser/ui/hover/hoverWidget.js";
+import { IListVirtualDelegate } from "../../../../base/browser/ui/list/list.js";
+import { IObjectTreeElement, ITreeNode, ITreeRenderer } from "../../../../base/browser/ui/tree/tree.js";
+import { Action } from "../../../../base/common/actions.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { MarkdownString } from "../../../../base/common/htmlContent.js";
+import { Disposable, DisposableStore, IDisposable, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { basename } from "../../../../base/common/path.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { localize } from "../../../../nls.js";
+import { FileKind } from "../../../../platform/files/common/files.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { WorkbenchObjectTree } from "../../../../platform/list/browser/listService.js";
+import { DEFAULT_LABELS_CONTAINER, IResourceLabel, ResourceLabels } from "../../../../workbench/browser/labels.js";
+import { IAgentFeedbackService } from "./agentFeedbackService.js";
+import { IAgentFeedbackVariableEntry } from "../../../../workbench/contrib/chat/common/attachments/chatVariableEntries.js";
+import { editorHoverBackground } from "../../../../platform/theme/common/colorRegistry.js";
 
 const $ = dom.$;
 
 // --- Tree Element Types ---
 
 interface IFeedbackFileElement {
-	readonly type: 'file';
+	readonly type: "file";
 	readonly uri: URI;
 	readonly items: ReadonlyArray<IFeedbackCommentElement>;
 }
 
 interface IFeedbackCommentElement {
-	readonly type: 'comment';
+	readonly type: "comment";
 	readonly id: string;
 	readonly text: string;
 	readonly resourceUri: URI;
@@ -49,7 +49,7 @@ interface IFeedbackCommentElement {
 type FeedbackTreeElement = IFeedbackFileElement | IFeedbackCommentElement;
 
 function isFeedbackFileElement(element: FeedbackTreeElement): element is IFeedbackFileElement {
-	return element.type === 'file';
+	return element.type === "file";
 }
 
 // --- Tree Delegate ---
@@ -75,7 +75,7 @@ interface IFeedbackFileTemplate {
 }
 
 class FeedbackFileRenderer implements ITreeRenderer<IFeedbackFileElement, void, IFeedbackFileTemplate> {
-	static readonly TEMPLATE_ID = 'feedbackFile';
+	static readonly TEMPLATE_ID = "feedbackFile";
 	readonly templateId = FeedbackFileRenderer.TEMPLATE_ID;
 
 	constructor(
@@ -87,41 +87,47 @@ class FeedbackFileRenderer implements ITreeRenderer<IFeedbackFileElement, void, 
 	renderTemplate(container: HTMLElement): IFeedbackFileTemplate {
 		const templateDisposables = new DisposableStore();
 
-		const label = templateDisposables.add(this._labels.create(container, { supportHighlights: true, supportIcons: true }));
+		const label = templateDisposables.add(
+      this._labels.create(container, {
+        supportHighlights: true,
+        supportIcons: true,
+      }),
+    );
 
-		const actionBarContainer = $('div.agent-feedback-hover-action-bar');
+		const actionBarContainer = $("div.agent-feedback-hover-action-bar");
 		label.element.appendChild(actionBarContainer);
-		const actionBar = templateDisposables.add(new ActionBar(actionBarContainer));
+		const actionBar = templateDisposables.add(
+      new ActionBar(actionBarContainer),
+    );
 
 		return { label, actionBar, templateDisposables };
 	}
 
 	renderElement(node: ITreeNode<IFeedbackFileElement, void>, _index: number, templateData: IFeedbackFileTemplate): void {
 		const element = node.element;
-		templateData.label.element.style.display = 'flex';
+		templateData.label.element.style.display = "flex";
 
 		const name = basename(element.uri.path);
 
 
-		templateData.label.setResource(
-			{ resource: element.uri, name },
-			{ fileKind: FileKind.FILE },
-		);
+		templateData.label.setResource({ resource: element.uri, name }, {
+      fileKind: FileKind.FILE,
+    });
 
 		templateData.actionBar.clear();
 		if (this._agentFeedbackService) {
 			const service = this._agentFeedbackService;
 			const sessionResource = this._sessionResource;
 			templateData.actionBar.push(new Action(
-				'agentFeedback.removeFileComments',
-				localize('agentFeedbackHover.removeAll', "Remove All"),
+				"agentFeedback.removeFileComments",
+				localize("agentFeedbackHover.removeAll", "Remove All"),
 				ThemeIcon.asClassName(Codicon.close),
 				true,
 				() => {
 					for (const item of element.items) {
 						service.removeFeedback(sessionResource, item.id);
 					}
-				}
+				},
 			), { icon: true, label: false });
 		}
 	}
@@ -143,7 +149,7 @@ interface IFeedbackCommentTemplate {
 }
 
 class FeedbackCommentRenderer implements ITreeRenderer<IFeedbackCommentElement, void, IFeedbackCommentTemplate> {
-	static readonly TEMPLATE_ID = 'feedbackComment';
+	static readonly TEMPLATE_ID = "feedbackComment";
 	readonly templateId = FeedbackCommentRenderer.TEMPLATE_ID;
 
 	constructor(
@@ -156,16 +162,34 @@ class FeedbackCommentRenderer implements ITreeRenderer<IFeedbackCommentElement, 
 	renderTemplate(container: HTMLElement): IFeedbackCommentTemplate {
 		const templateDisposables = new DisposableStore();
 
-		const row = dom.append(container, $('div.agent-feedback-hover-comment-row'));
+		const row = dom.append(
+      container,
+      $("div.agent-feedback-hover-comment-row"),
+    );
 
-		const textElement = dom.append(row, $('div.agent-feedback-hover-comment-text'));
+		const textElement = dom.append(
+      row,
+      $("div.agent-feedback-hover-comment-text"),
+    );
 
-		const actionBarContainer = dom.append(row, $('div.agent-feedback-hover-action-bar'));
-		const actionBar = templateDisposables.add(new ActionBar(actionBarContainer));
+		const actionBarContainer = dom.append(
+      row,
+      $("div.agent-feedback-hover-action-bar"),
+    );
+		const actionBar = templateDisposables.add(
+      new ActionBar(actionBarContainer),
+    );
 
 		const hoverDisposable = templateDisposables.add(new MutableDisposable());
 
-		const templateData: IFeedbackCommentTemplate = { textElement, row, actionBar, templateDisposables, hoverDisposable, element: undefined };
+		const templateData: IFeedbackCommentTemplate = {
+      textElement,
+      row,
+      actionBar,
+      templateDisposables,
+      hoverDisposable,
+      element: undefined,
+    };
 
 		if (this._agentFeedbackService) {
 			const service = this._agentFeedbackService;
@@ -192,25 +216,28 @@ class FeedbackCommentRenderer implements ITreeRenderer<IFeedbackCommentElement, 
 		// In read-only mode, set up a rich markdown hover with comment + code snippet
 		if (!this._agentFeedbackService) {
 			templateData.hoverDisposable.value = this._hoverService.setupDelayedHover(
-				templateData.row,
-				() => this._buildCommentHover(element),
-				{ groupId: 'agent-feedback-comment' }
-			);
+        templateData.row,
+        () => this._buildCommentHover(element),
+        { groupId: "agent-feedback-comment" },
+      );
 		}
 
 		templateData.actionBar.clear();
 		if (this._agentFeedbackService) {
 			const service = this._agentFeedbackService;
 			const sessionResource = this._sessionResource;
-			templateData.actionBar.push(new Action(
-				'agentFeedback.removeComment',
-				localize('agentFeedbackHover.remove', "Remove"),
-				ThemeIcon.asClassName(Codicon.close),
-				true,
-				() => {
-					service.removeFeedback(sessionResource, element.id);
-				}
-			), { icon: true, label: false });
+			templateData.actionBar.push(
+        new Action(
+          "agentFeedback.removeComment",
+          localize("agentFeedbackHover.remove", "Remove"),
+          ThemeIcon.asClassName(Codicon.close),
+          true,
+          () => {
+            service.removeFeedback(sessionResource, element.id);
+          },
+        ),
+        { icon: true, label: false },
+      );
 		}
 	}
 
@@ -219,18 +246,23 @@ class FeedbackCommentRenderer implements ITreeRenderer<IFeedbackCommentElement, 
 	}
 
 	private _buildCommentHover(element: IFeedbackCommentElement): IDelayedHoverOptions {
-		const markdown = new MarkdownString('', { isTrusted: true, supportThemeIcons: true });
+		const markdown = new MarkdownString("", {
+      isTrusted: true,
+      supportThemeIcons: true,
+    });
 		markdown.appendText(element.text);
 
 		if (element.codeSelection) {
-			const languageId = this._languageService.guessLanguageIdByFilepathOrFirstLine(element.resourceUri);
-			markdown.appendMarkdown('\n\n');
-			markdown.appendCodeblock(languageId ?? '', element.codeSelection);
+			const languageId = this._languageService.guessLanguageIdByFilepathOrFirstLine(
+        element.resourceUri,
+      );
+			markdown.appendMarkdown("\n\n");
+			markdown.appendCodeblock(languageId ?? "", element.codeSelection);
 		}
 
 		if (element.diffHunks) {
-			markdown.appendMarkdown('\n\n');
-			markdown.appendCodeblock('diff', element.diffHunks);
+			markdown.appendMarkdown("\n\n");
+			markdown.appendCodeblock("diff", element.diffHunks);
 		}
 
 		return {
@@ -264,38 +296,52 @@ export class AgentFeedbackHover extends Disposable {
 		super();
 
 		// Show on hover (delayed)
-		this._store.add(this._hoverService.setupDelayedHover(
-			this._element,
-			() => this._store.add(this._buildHoverContent()),
-			{ groupId: 'chat-attachments' }
-		));
+		this._store.add(
+      this._hoverService.setupDelayedHover(
+        this._element,
+        () => this._store.add(this._buildHoverContent()),
+        { groupId: "chat-attachments" },
+      ),
+    );
 
 		// Show immediately on click
-		this._store.add(dom.addDisposableListener(this._element, dom.EventType.CLICK, (e) => {
-			e.preventDefault();
-			e.stopPropagation();
-			this._showHoverNow();
-		}));
+		this._store.add(
+      dom.addDisposableListener(this._element, dom.EventType.CLICK, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this._showHoverNow();
+      }),
+    );
 	}
 
 	private _showHoverNow(): void {
 		const opts = this._buildHoverContent();
 		this._register(opts);
 		this._hoverService.showInstantHover({
-			...opts,
-			target: this._element,
-		});
+      ...opts,
+      target: this._element,
+    });
 	}
 
 	private _buildHoverContent(): IDelayedHoverOptions & IDisposable {
 		const disposables = new DisposableStore();
-		const hoverElement = $('div.agent-feedback-hover');
+		const hoverElement = $("div.agent-feedback-hover");
 
 		// Tree container
-		const treeContainer = dom.append(hoverElement, $('.results.show-file-icons.file-icon-themable-tree.agent-feedback-hover-tree'));
+		const treeContainer = dom.append(
+      hoverElement,
+      $(
+        ".results.show-file-icons.file-icon-themable-tree.agent-feedback-hover-tree",
+      ),
+    );
 
 		// Resource labels (shared across all file renderers)
-		const resourceLabels = disposables.add(this._instantiationService.createInstance(ResourceLabels, DEFAULT_LABELS_CONTAINER));
+		const resourceLabels = disposables.add(
+      this._instantiationService.createInstance(
+        ResourceLabels,
+        DEFAULT_LABELS_CONTAINER,
+      ),
+    );
 
 		// Build tree data
 		const { children, commentElements } = this._buildTreeData();
@@ -303,7 +349,7 @@ export class AgentFeedbackHover extends Disposable {
 		// Create tree
 		const tree = disposables.add(this._instantiationService.createInstance(
 			WorkbenchObjectTree<FeedbackTreeElement>,
-			'AgentFeedbackHoverTree',
+			"AgentFeedbackHoverTree",
 			treeContainer,
 			new FeedbackTreeDelegate(),
 			[
@@ -320,7 +366,7 @@ export class AgentFeedbackHover extends Disposable {
 						}
 						return element.text;
 					},
-					getWidgetAriaLabel: () => localize('agentFeedbackHover.tree', "Feedback Comments"),
+					getWidgetAriaLabel: () => localize("agentFeedbackHover.tree", "Feedback Comments"),
 				},
 				identityProvider: {
 					getId: (element: FeedbackTreeElement) => {
@@ -328,7 +374,7 @@ export class AgentFeedbackHover extends Disposable {
 							return `file:${element.uri.toString()}`;
 						}
 						return `comment:${element.id}`;
-					}
+					},
 				},
 				overrideStyles: {
 					listFocusBackground: undefined,
@@ -339,8 +385,8 @@ export class AgentFeedbackHover extends Disposable {
 					listBackground: editorHoverBackground,
 					listFocusForeground: undefined,
 					treeStickyScrollBackground: editorHoverBackground,
-				}
-			}
+				},
+			},
 		));
 
 		// Set tree data
@@ -355,15 +401,15 @@ export class AgentFeedbackHover extends Disposable {
 		treeContainer.style.height = `${treeHeight}px`;
 
 		return {
-			content: hoverElement,
-			style: HoverStyle.Pointer,
-			persistence: { hideOnHover: false },
-			position: { hoverPosition: HoverPosition.ABOVE },
-			trapFocus: true,
-			appearance: { compact: true },
-			additionalClasses: ['agent-feedback-hover-container'],
-			dispose: () => disposables.dispose(),
-		};
+      content: hoverElement,
+      style: HoverStyle.Pointer,
+      persistence: { hideOnHover: false },
+      position: { hoverPosition: HoverPosition.ABOVE },
+      trapFocus: true,
+      appearance: { compact: true },
+      additionalClasses: ["agent-feedback-hover-container"],
+      dispose: () => disposables.dispose(),
+    };
 	}
 
 	private _buildTreeData(): { children: IObjectTreeElement<FeedbackTreeElement>[]; commentElements: IFeedbackCommentElement[] } {
@@ -378,13 +424,13 @@ export class AgentFeedbackHover extends Disposable {
 				byFile.set(key, group);
 			}
 			group.comments.push({
-				type: 'comment',
-				id: item.id,
-				text: item.text,
-				resourceUri: item.resourceUri,
-				codeSelection: item.codeSelection,
-				diffHunks: item.diffHunks,
-			});
+        type: "comment",
+        id: item.id,
+        text: item.text,
+        resourceUri: item.resourceUri,
+        codeSelection: item.codeSelection,
+        diffHunks: item.diffHunks,
+      });
 		}
 
 		const children: IObjectTreeElement<FeedbackTreeElement>[] = [];
@@ -392,10 +438,10 @@ export class AgentFeedbackHover extends Disposable {
 
 		for (const [, group] of byFile) {
 			const fileElement: IFeedbackFileElement = {
-				type: 'file',
-				uri: group.uri,
-				items: group.comments,
-			};
+        type: "file",
+        uri: group.uri,
+        items: group.comments,
+      };
 
 			allComments.push(...group.comments);
 

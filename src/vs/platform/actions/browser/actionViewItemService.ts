@@ -3,17 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IActionViewItem } from '../../../base/browser/ui/actionbar/actionbar.js';
-import { IActionViewItemOptions } from '../../../base/browser/ui/actionbar/actionViewItems.js';
-import { IAction } from '../../../base/common/actions.js';
-import { Emitter, Event } from '../../../base/common/event.js';
-import { Disposable, IDisposable, toDisposable } from '../../../base/common/lifecycle.js';
-import { InstantiationType, registerSingleton } from '../../instantiation/common/extensions.js';
-import { createDecorator, IInstantiationService } from '../../instantiation/common/instantiation.js';
-import { MenuId } from '../common/actions.js';
+import { IActionViewItem } from "../../../base/browser/ui/actionbar/actionbar.js";
+import { IActionViewItemOptions } from "../../../base/browser/ui/actionbar/actionViewItems.js";
+import { IAction } from "../../../base/common/actions.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable, IDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { InstantiationType, registerSingleton } from "../../instantiation/common/extensions.js";
+import { createDecorator, IInstantiationService } from "../../instantiation/common/instantiation.js";
+import { MenuId } from "../common/actions.js";
 
 
-export const IActionViewItemService = createDecorator<IActionViewItemService>('IActionViewItemService');
+export const IActionViewItemService = createDecorator<IActionViewItemService>(
+  "IActionViewItemService",
+);
 
 
 export interface IActionViewItemFactory {
@@ -63,18 +65,20 @@ class ActionViewItemService implements IActionViewItemService {
 	register(menu: MenuId, commandOrSubmenuId: string | MenuId, provider: IActionViewItemFactory, event?: Event<unknown>): IDisposable {
 		const id = this._makeKey(menu, commandOrSubmenuId);
 		if (this._providers.has(id)) {
-			throw new Error(`A provider for the command ${commandOrSubmenuId} and menu ${menu} is already registered.`);
+			throw new Error(
+        `A provider for the command ${commandOrSubmenuId} and menu ${menu} is already registered.`,
+      );
 		}
 		this._providers.set(id, provider);
 
 		const listener = event?.(() => {
-			this._onDidChange.fire(menu);
-		});
+      this._onDidChange.fire(menu);
+    });
 
 		return toDisposable(() => {
-			listener?.dispose();
-			this._providers.delete(id);
-		});
+      listener?.dispose();
+      this._providers.delete(id);
+    });
 	}
 
 	lookUp(menu: MenuId, commandOrMenuId: string | MenuId): IActionViewItemFactory | undefined {
@@ -86,4 +90,8 @@ class ActionViewItemService implements IActionViewItemService {
 	}
 }
 
-registerSingleton(IActionViewItemService, ActionViewItemService, InstantiationType.Delayed);
+registerSingleton(
+  IActionViewItemService,
+  ActionViewItemService,
+  InstantiationType.Delayed,
+);

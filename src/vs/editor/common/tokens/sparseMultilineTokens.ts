@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CharCode } from '../../../base/common/charCode.js';
-import { Position } from '../core/position.js';
-import { IRange, Range } from '../core/range.js';
-import { countEOL } from '../core/misc/eolCounter.js';
-import { ITextModel } from '../model.js';
-import { RateLimiter } from './common.js';
+import { CharCode } from "../../../base/common/charCode.js";
+import { Position } from "../core/position.js";
+import { IRange, Range } from "../core/range.js";
+import { countEOL } from "../core/misc/eolCounter.js";
+import { ITextModel } from "../model.js";
+import { RateLimiter } from "./common.js";
 
 /**
  * Represents sparse tokens over a contiguous range of lines.
@@ -16,7 +16,10 @@ import { RateLimiter } from './common.js';
 export class SparseMultilineTokens {
 
 	public static create(startLineNumber: number, tokens: Uint32Array): SparseMultilineTokens {
-		return new SparseMultilineTokens(startLineNumber, new SparseMultilineTokensStorage(tokens));
+		return new SparseMultilineTokens(
+      startLineNumber,
+      new SparseMultilineTokensStorage(tokens),
+    );
 	}
 
 	private _startLineNumber: number;
@@ -67,14 +70,24 @@ export class SparseMultilineTokens {
 		if (!deltaRange) {
 			return deltaRange;
 		}
-		return new Range(this._startLineNumber + deltaRange.startLineNumber, deltaRange.startColumn, this._startLineNumber + deltaRange.endLineNumber, deltaRange.endColumn);
+		return new Range(
+      this._startLineNumber + deltaRange.startLineNumber,
+      deltaRange.startColumn,
+      this._startLineNumber + deltaRange.endLineNumber,
+      deltaRange.endColumn,
+    );
 	}
 
 	public removeTokens(range: Range): void {
 		const startLineIndex = range.startLineNumber - this._startLineNumber;
 		const endLineIndex = range.endLineNumber - this._startLineNumber;
 
-		this._startLineNumber += this._tokens.removeTokens(startLineIndex, range.startColumn - 1, endLineIndex, range.endColumn - 1);
+		this._startLineNumber += this._tokens.removeTokens(
+      startLineIndex,
+      range.startColumn - 1,
+      endLineIndex,
+      range.endColumn - 1,
+    );
 		this._updateEndLineNumber();
 	}
 
@@ -85,18 +98,38 @@ export class SparseMultilineTokens {
 		const startLineIndex = range.startLineNumber - this._startLineNumber;
 		const endLineIndex = range.endLineNumber - this._startLineNumber;
 
-		const [a, b, bDeltaLine] = this._tokens.split(startLineIndex, range.startColumn - 1, endLineIndex, range.endColumn - 1);
-		return [new SparseMultilineTokens(this._startLineNumber, a), new SparseMultilineTokens(this._startLineNumber + bDeltaLine, b)];
+		const [a, b, bDeltaLine] = this._tokens.split(
+      startLineIndex,
+      range.startColumn - 1,
+      endLineIndex,
+      range.endColumn - 1,
+    );
+		return [
+      new SparseMultilineTokens(this._startLineNumber, a),
+      new SparseMultilineTokens(this._startLineNumber + bDeltaLine, b),
+    ];
 	}
 
 	public applyEdit(range: IRange, text: string): void {
 		const [eolCount, firstLineLength, lastLineLength] = countEOL(text);
-		this.acceptEdit(range, eolCount, firstLineLength, lastLineLength, text.length > 0 ? text.charCodeAt(0) : CharCode.Null);
+		this.acceptEdit(
+      range,
+      eolCount,
+      firstLineLength,
+      lastLineLength,
+      text.length > 0 ? text.charCodeAt(0) : CharCode.Null,
+    );
 	}
 
 	public acceptEdit(range: IRange, eolCount: number, firstLineLength: number, lastLineLength: number, firstCharCode: number): void {
 		this._acceptDeleteRange(range);
-		this._acceptInsertText(new Position(range.startLineNumber, range.startColumn), eolCount, firstLineLength, lastLineLength, firstCharCode);
+		this._acceptInsertText(
+      new Position(range.startLineNumber, range.startColumn),
+      eolCount,
+      firstLineLength,
+      lastLineLength,
+      firstCharCode,
+    );
 		this._updateEndLineNumber();
 	}
 
@@ -134,9 +167,21 @@ export class SparseMultilineTokens {
 			const deletedBefore = -firstLineIndex;
 			this._startLineNumber -= deletedBefore;
 
-			this._tokens.acceptDeleteRange(range.startColumn - 1, 0, 0, lastLineIndex, range.endColumn - 1);
+			this._tokens.acceptDeleteRange(
+        range.startColumn - 1,
+        0,
+        0,
+        lastLineIndex,
+        range.endColumn - 1,
+      );
 		} else {
-			this._tokens.acceptDeleteRange(0, firstLineIndex, range.startColumn - 1, lastLineIndex, range.endColumn - 1);
+			this._tokens.acceptDeleteRange(
+        0,
+        firstLineIndex,
+        range.startColumn - 1,
+        lastLineIndex,
+        range.endColumn - 1,
+      );
 		}
 	}
 
@@ -162,7 +207,14 @@ export class SparseMultilineTokens {
 			return;
 		}
 
-		this._tokens.acceptInsertText(lineIndex, position.column - 1, eolCount, firstLineLength, lastLineLength, firstCharCode);
+		this._tokens.acceptInsertText(
+      lineIndex,
+      position.column - 1,
+      eolCount,
+      firstLineLength,
+      lastLineLength,
+      firstCharCode,
+    );
 	}
 
 	public reportIfInvalid(model: ITextModel): void {
@@ -189,9 +241,11 @@ class SparseMultilineTokensStorage {
 	public toString(startLineNumber: number): string {
 		const pieces: string[] = [];
 		for (let i = 0; i < this._tokenCount; i++) {
-			pieces.push(`(${this._getDeltaLine(i) + startLineNumber},${this._getStartCharacter(i)}-${this._getEndCharacter(i)})`);
+			pieces.push(
+        `(${this._getDeltaLine(i) + startLineNumber},${this._getStartCharacter(i)}-${this._getEndCharacter(i)})`,
+      );
 		}
-		return `[${pieces.join(',')}]`;
+		return `[${pieces.join(",")}]`;
 	}
 
 	public getMaxDeltaLine(): number {
@@ -254,7 +308,9 @@ class SparseMultilineTokensStorage {
 				while (max < high && this._getDeltaLine(max + 1) === deltaLine) {
 					max++;
 				}
-				return new SparseLineTokens(this._tokens.subarray(4 * min, 4 * max + 4));
+				return new SparseLineTokens(
+          this._tokens.subarray(4 * min, 4 * max + 4),
+        );
 			}
 		}
 
@@ -347,7 +403,11 @@ class SparseMultilineTokensStorage {
 			destTokens[destOffset++] = tokenMetadata;
 		}
 
-		return [new SparseMultilineTokensStorage(new Uint32Array(aTokens)), new SparseMultilineTokensStorage(new Uint32Array(bTokens)), destFirstDeltaLine];
+		return [
+      new SparseMultilineTokensStorage(new Uint32Array(aTokens)),
+      new SparseMultilineTokensStorage(new Uint32Array(bTokens)),
+      destFirstDeltaLine,
+    ];
 	}
 
 	public acceptDeleteRange(horizontalShiftForFirstLineTokens: number, startDeltaLine: number, startCharacter: number, endDeltaLine: number, endCharacter: number): void {
@@ -568,7 +628,9 @@ class SparseMultilineTokensStorage {
 		}
 	}
 
-	private static _rateLimiter = new RateLimiter(10 / 60); // limit to 10 times per minute
+	private static _rateLimiter = new RateLimiter(
+    10 / 60,
+  ); // limit to 10 times per minute
 
 	public reportIfInvalid(model: ITextModel, startLineNumber: number): void {
 		for (let i = 0; i < this._tokenCount; i++) {
@@ -576,16 +638,22 @@ class SparseMultilineTokensStorage {
 
 			if (lineNumber < 1) {
 				SparseMultilineTokensStorage._rateLimiter.runIfNotLimited(() => {
-					console.error('Invalid Semantic Tokens Data From Extension: lineNumber < 1');
-				});
+          console.error(
+            "Invalid Semantic Tokens Data From Extension: lineNumber < 1",
+          );
+        });
 			} else if (lineNumber > model.getLineCount()) {
 				SparseMultilineTokensStorage._rateLimiter.runIfNotLimited(() => {
-					console.error('Invalid Semantic Tokens Data From Extension: lineNumber > model.getLineCount()');
-				});
+          console.error(
+            "Invalid Semantic Tokens Data From Extension: lineNumber > model.getLineCount()",
+          );
+        });
 			} else if (this._getEndCharacter(i) > model.getLineLength(lineNumber)) {
 				SparseMultilineTokensStorage._rateLimiter.runIfNotLimited(() => {
-					console.error('Invalid Semantic Tokens Data From Extension: end character > model.getLineLength(lineNumber)');
-				});
+          console.error(
+            "Invalid Semantic Tokens Data From Extension: end character > model.getLineLength(lineNumber)",
+          );
+        });
 			}
 		}
 	}

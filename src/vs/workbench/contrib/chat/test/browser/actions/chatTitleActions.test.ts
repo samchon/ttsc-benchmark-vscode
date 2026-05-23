@@ -3,29 +3,29 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { DisposableStore } from '../../../../../../base/common/lifecycle.js';
-import { observableValue } from '../../../../../../base/common/observable.js';
-import { URI } from '../../../../../../base/common/uri.js';
-import { mock } from '../../../../../../base/test/common/mock.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../../base/test/common/utils.js';
-import { IConfigurationService } from '../../../../../../platform/configuration/common/configuration.js';
-import { TestConfigurationService } from '../../../../../../platform/configuration/test/common/testConfigurationService.js';
-import { IDialogService, IConfirmation, IConfirmationResult } from '../../../../../../platform/dialogs/common/dialogs.js';
-import { ServiceIdentifier } from '../../../../../../platform/instantiation/common/instantiation.js';
-import { TestInstantiationService } from '../../../../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { IChatWidgetService, IChatWidget, IChatAccessibilityService } from '../../../browser/chat.js';
-import { IChatEditingSession, IModifiedFileEntry } from '../../../common/editing/chatEditingService.js';
-import { IChatService } from '../../../common/chatService/chatService.js';
-import { IChatModel, IChatRequestModel } from '../../../common/model/chatModel.js';
-import { IChatResponseViewModel } from '../../../common/model/chatViewModel.js';
-import { ChatModeKind } from '../../../common/constants.js';
-import { CommandsRegistry } from '../../../../../../platform/commands/common/commands.js';
-import { registerChatTitleActions } from '../../../browser/actions/chatTitleActions.js';
-import { MockChatWidgetService } from '../widget/mockChatWidget.js';
-import { MockChatService } from '../../common/chatService/mockChatService.js';
+import assert from "assert";
+import { DisposableStore } from "../../../../../../base/common/lifecycle.js";
+import { observableValue } from "../../../../../../base/common/observable.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { mock } from "../../../../../../base/test/common/mock.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../../base/test/common/utils.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { TestConfigurationService } from "../../../../../../platform/configuration/test/common/testConfigurationService.js";
+import { IDialogService, IConfirmation, IConfirmationResult } from "../../../../../../platform/dialogs/common/dialogs.js";
+import { ServiceIdentifier } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { TestInstantiationService } from "../../../../../../platform/instantiation/test/common/instantiationServiceMock.js";
+import { IChatWidgetService, IChatWidget, IChatAccessibilityService } from "../../../browser/chat.js";
+import { IChatEditingSession, IModifiedFileEntry } from "../../../common/editing/chatEditingService.js";
+import { IChatService } from "../../../common/chatService/chatService.js";
+import { IChatModel, IChatRequestModel } from "../../../common/model/chatModel.js";
+import { IChatResponseViewModel } from "../../../common/model/chatViewModel.js";
+import { ChatModeKind } from "../../../common/constants.js";
+import { CommandsRegistry } from "../../../../../../platform/commands/common/commands.js";
+import { registerChatTitleActions } from "../../../browser/actions/chatTitleActions.js";
+import { MockChatWidgetService } from "../widget/mockChatWidget.js";
+import { MockChatService } from "../../common/chatService/mockChatService.js";
 
-suite('RetryChatAction', () => {
+suite("RetryChatAction", () => {
 	const store = new DisposableStore();
 	let instantiationService: TestInstantiationService;
 
@@ -66,7 +66,7 @@ suite('RetryChatAction', () => {
 
 	function createMockEditingSession(entriesModifiedByRequest: IModifiedFileEntry[]): IChatEditingSession {
 		return {
-			entries: observableValue('entries', entriesModifiedByRequest),
+			entries: observableValue("entries", entriesModifiedByRequest),
 			restoreSnapshot: async (_requestId: string, _undoIndex: number | undefined) => { },
 		} as unknown as IChatEditingSession;
 	}
@@ -75,21 +75,21 @@ suite('RetryChatAction', () => {
 		return {
 			input: {
 				currentModeKind: mode,
-				currentLanguageModel: 'test-model',
-			} as IChatWidget['input'],
+				currentLanguageModel: "test-model",
+			} as IChatWidget["input"],
 			viewModel: {
 				model: {
 					editingSession,
 				},
 				getItems: () => lastResponseItem ? [lastResponseItem] : [],
-			} as unknown as IChatWidget['viewModel'],
+			} as unknown as IChatWidget["viewModel"],
 			getModeRequestOptions: () => ({}),
 		};
 	}
 
-	test('retry action should not throw when using accessor synchronously', async () => {
-		const sessionResource = URI.parse('test://session');
-		const requestId = 'test-request-1';
+	test("retry action should not throw when using accessor synchronously", async () => {
+		const sessionResource = URI.parse("test://session");
+		const requestId = "test-request-1";
 		const mockRequest = createMockRequest(requestId);
 		const mockResponse = createMockResponseVM(sessionResource, requestId);
 
@@ -119,7 +119,7 @@ suite('RetryChatAction', () => {
 		};
 
 		const mockConfigService = new TestConfigurationService();
-		await mockConfigService.setUserConfiguration('chat.editing.confirmEditRequestRetry', false);
+		await mockConfigService.setUserConfiguration("chat.editing.confirmEditRequestRetry", false);
 
 		const mockDialogService = new class extends mock<IDialogService>() {
 			override async confirm(_confirmation: IConfirmation): Promise<IConfirmationResult> {
@@ -142,25 +142,25 @@ suite('RetryChatAction', () => {
 		instantiationService.set(IChatAccessibilityService, mockChatAccessibilityService);
 
 		// Get the action handler
-		const commandHandler = CommandsRegistry.getCommand('workbench.action.chat.retry')?.handler;
-		assert.ok(commandHandler, 'Command handler should be registered');
+		const commandHandler = CommandsRegistry.getCommand("workbench.action.chat.retry")?.handler;
+		assert.ok(commandHandler, "Command handler should be registered");
 
 		// Run the action with the instantiation service acting as accessor
 		await commandHandler(instantiationService, mockResponse);
 
-		assert.ok(resendCalled, 'resendRequest should have been called');
-		assert.ok(acceptRequestCalled, 'acceptRequest should have been called');
+		assert.ok(resendCalled, "resendRequest should have been called");
+		assert.ok(acceptRequestCalled, "acceptRequest should have been called");
 	});
 
-	test('retry action should work with confirmation dialog (accessor used after await)', async () => {
-		const sessionResource = URI.parse('test://session');
-		const requestId = 'test-request-1';
+	test("retry action should work with confirmation dialog (accessor used after await)", async () => {
+		const sessionResource = URI.parse("test://session");
+		const requestId = "test-request-1";
 		const mockRequest = createMockRequest(requestId);
 		const mockResponse = createMockResponseVM(sessionResource, requestId);
 
 		// Create an entry that was modified by this request to trigger confirmation
 		const modifiedEntry: IModifiedFileEntry = {
-			modifiedURI: URI.parse('test://file.ts'),
+			modifiedURI: URI.parse("test://file.ts"),
 			lastModifyingRequestId: requestId,
 		} as IModifiedFileEntry;
 
@@ -191,7 +191,7 @@ suite('RetryChatAction', () => {
 
 		// Enable confirmation dialog - this will trigger an await
 		const mockConfigService = new TestConfigurationService();
-		await mockConfigService.setUserConfiguration('chat.editing.confirmEditRequestRetry', true);
+		await mockConfigService.setUserConfiguration("chat.editing.confirmEditRequestRetry", true);
 
 		let dialogShown = false;
 		const mockDialogService = new class extends mock<IDialogService>() {
@@ -218,8 +218,8 @@ suite('RetryChatAction', () => {
 		instantiationService.set(IChatAccessibilityService, mockChatAccessibilityService);
 
 		// Get the action handler
-		const commandHandler = CommandsRegistry.getCommand('workbench.action.chat.retry')?.handler;
-		assert.ok(commandHandler, 'Command handler should be registered');
+		const commandHandler = CommandsRegistry.getCommand("workbench.action.chat.retry")?.handler;
+		assert.ok(commandHandler, "Command handler should be registered");
 
 		// Create a strict accessor that throws when used after dispose
 		// This simulates the behavior of the real ServicesAccessor which becomes
@@ -231,7 +231,7 @@ suite('RetryChatAction', () => {
 					throw new Error(`Accessor was used after being disposed. Tried to get service: ${id.toString()}`);
 				}
 				return instantiationService.get(id);
-			}
+			},
 		};
 
 		// Create a wrapper that disposes the accessor after the first await
@@ -246,7 +246,7 @@ suite('RetryChatAction', () => {
 
 		// Run the action - this should throw if accessor is used after the confirm await
 		let threwError = false;
-		let errorMessage = '';
+		let errorMessage = "";
 		try {
 			await commandHandler(strictAccessor, mockResponse);
 		} catch (e) {
@@ -254,7 +254,7 @@ suite('RetryChatAction', () => {
 			errorMessage = (e as Error).message;
 		}
 
-		assert.ok(dialogShown, 'Dialog should have been shown');
+		assert.ok(dialogShown, "Dialog should have been shown");
 
 		// The bug is that accessor.get(IChatAccessibilityService) is called after the await
 		// This test should fail until the bug is fixed
@@ -262,7 +262,7 @@ suite('RetryChatAction', () => {
 			assert.fail(`Action threw an error because accessor was used after await: ${errorMessage}`);
 		}
 
-		assert.ok(resendCalled, 'resendRequest should have been called');
-		assert.ok(acceptRequestCalled, 'acceptRequest should have been called');
+		assert.ok(resendCalled, "resendRequest should have been called");
+		assert.ok(acceptRequestCalled, "acceptRequest should have been called");
 	});
 });

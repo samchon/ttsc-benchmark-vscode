@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../base/browser/dom.js';
-import { IListAccessibilityProvider } from '../../../base/browser/ui/list/listWidget.js';
-import { Radio } from '../../../base/browser/ui/radio/radio.js';
-import { KeyCode } from '../../../base/common/keyCodes.js';
-import { Emitter } from '../../../base/common/event.js';
-import { Disposable, DisposableStore, MutableDisposable, toDisposable } from '../../../base/common/lifecycle.js';
-import { ThemeIcon } from '../../../base/common/themables.js';
-import { IContextViewService } from '../../contextview/browser/contextView.js';
-import { IInstantiationService } from '../../instantiation/common/instantiation.js';
-import { ActionList, IActionListDelegate, IActionListItem, IActionListOptions } from './actionList.js';
-import './tabbedActionListWidget.css';
+import * as dom from "../../../base/browser/dom.js";
+import { IListAccessibilityProvider } from "../../../base/browser/ui/list/listWidget.js";
+import { Radio } from "../../../base/browser/ui/radio/radio.js";
+import { KeyCode } from "../../../base/common/keyCodes.js";
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable, DisposableStore, MutableDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { ThemeIcon } from "../../../base/common/themables.js";
+import { IContextViewService } from "../../contextview/browser/contextView.js";
+import { IInstantiationService } from "../../instantiation/common/instantiation.js";
+import { ActionList, IActionListDelegate, IActionListItem, IActionListOptions } from "./actionList.js";
+import "./tabbedActionListWidget.css";
 
 /**
  * Result of {@link ITabbedActionListShowOptions.createActionList}. The list
@@ -118,9 +118,11 @@ export class TabbedActionListWidget extends Disposable {
 		// triggered during render (e.g. an immediate selection) finds the
 		// expected disposable to clear.
 		this._activePopup.value = popupDisposables;
-		popupDisposables.add(toDisposable(() => {
-			this._contextViewService.hideContextView();
-		}));
+		popupDisposables.add(
+      toDisposable(() => {
+        this._contextViewService.hideContextView();
+      }),
+    );
 
 		let listRef: ActionList<T> | undefined;
 
@@ -129,9 +131,9 @@ export class TabbedActionListWidget extends Disposable {
 			render: (container: HTMLElement) => {
 				const renderDisposables = new DisposableStore();
 
-				const widget = dom.append(container, dom.$('.action-widget'));
+				const widget = dom.append(container, dom.$(".action-widget"));
 
-				const tabBar = dom.append(widget, dom.$('.tabbed-action-list-tabbar'));
+				const tabBar = dom.append(widget, dom.$(".tabbed-action-list-tabbar"));
 				if (options.tabBarClassName) {
 					tabBar.classList.add(options.tabBarClassName);
 				}
@@ -184,9 +186,9 @@ export class TabbedActionListWidget extends Disposable {
 
 				// Keyboard nav. Bound to the popup widget so we don't
 				// observe unrelated document-wide keypresses.
-				renderDisposables.add(dom.addStandardDisposableListener(widget, 'keydown', e => {
+				renderDisposables.add(dom.addStandardDisposableListener(widget, "keydown", e => {
 					const target = e.target as HTMLElement | null;
-					const onTabBar = !!target?.closest('.tabbed-action-list-tabbar');
+					const onTabBar = !!target?.closest(".tabbed-action-list-tabbar");
 					const onEditable = !!target?.closest('input, textarea, [contenteditable="true"]');
 
 					if (e.keyCode === KeyCode.Escape) {
@@ -235,7 +237,7 @@ export class TabbedActionListWidget extends Disposable {
 						return;
 					}
 					const activeElement = dom.getActiveElement();
-					if (activeElement && (activeElement.closest('.action-widget-hover') || activeElement.closest('.action-list-submenu-panel'))) {
+					if (activeElement && (activeElement.closest(".action-widget-hover") || activeElement.closest(".action-list-submenu-panel"))) {
 						return;
 					}
 					hide();

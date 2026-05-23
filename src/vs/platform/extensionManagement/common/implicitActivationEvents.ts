@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IStringDictionary } from '../../../base/common/collections.js';
-import { onUnexpectedError } from '../../../base/common/errors.js';
-import { ExtensionIdentifier, IExtensionDescription } from '../../extensions/common/extensions.js';
+import { IStringDictionary } from "../../../base/common/collections.js";
+import { onUnexpectedError } from "../../../base/common/errors.js";
+import { ExtensionIdentifier, IExtensionDescription } from "../../extensions/common/extensions.js";
 
 export interface IActivationEventsGenerator<T> {
 	(contributions: readonly T[]): Iterable<string>;
@@ -17,7 +17,10 @@ export class ImplicitActivationEventsImpl {
 	private readonly _cache = new WeakMap<IExtensionDescription, string[]>();
 
 	public register<T>(extensionPointName: string, generator: IActivationEventsGenerator<T>): void {
-		this._generators.set(extensionPointName, generator as IActivationEventsGenerator<unknown>);
+		this._generators.set(
+      extensionPointName,
+      generator as IActivationEventsGenerator<unknown>,
+    );
 	}
 
 	/**
@@ -26,7 +29,10 @@ export class ImplicitActivationEventsImpl {
 	 */
 	public readActivationEvents(extensionDescription: IExtensionDescription): string[] {
 		if (!this._cache.has(extensionDescription)) {
-			this._cache.set(extensionDescription, this._readActivationEvents(extensionDescription));
+			this._cache.set(
+        extensionDescription,
+        this._readActivationEvents(extensionDescription),
+      );
 		}
 		return this._cache.get(extensionDescription)!;
 	}
@@ -40,22 +46,26 @@ export class ImplicitActivationEventsImpl {
 		for (const extensionDescription of extensionDescriptions) {
 			const activationEvents = this.readActivationEvents(extensionDescription);
 			if (activationEvents.length > 0) {
-				result[ExtensionIdentifier.toKey(extensionDescription.identifier)] = activationEvents;
+				result[ExtensionIdentifier.toKey(
+          extensionDescription.identifier,
+        )] = activationEvents;
 			}
 		}
 		return result;
 	}
 
 	private _readActivationEvents(desc: IExtensionDescription): string[] {
-		if (typeof desc.main === 'undefined' && typeof desc.browser === 'undefined') {
+		if (typeof desc.main === "undefined" && typeof desc.browser === "undefined") {
 			return [];
 		}
 
-		const activationEvents: string[] = (Array.isArray(desc.activationEvents) ? desc.activationEvents.slice(0) : []);
+		const activationEvents: string[] = (Array.isArray(
+      desc.activationEvents,
+    ) ? desc.activationEvents.slice(0) : []);
 
 		for (let i = 0; i < activationEvents.length; i++) {
 			// TODO@joao: there's no easy way to contribute this
-			if (activationEvents[i] === 'onUri') {
+			if (activationEvents[i] === "onUri") {
 				activationEvents[i] = `onUri:${ExtensionIdentifier.toKey(desc.identifier)}`;
 			}
 		}

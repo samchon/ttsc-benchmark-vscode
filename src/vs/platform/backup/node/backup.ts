@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../base/common/uri.js';
-import { IBaseBackupInfo, IFolderBackupInfo, IWorkspaceBackupInfo } from '../common/backup.js';
+import { URI } from "../../../base/common/uri.js";
+import { IBaseBackupInfo, IFolderBackupInfo, IWorkspaceBackupInfo } from "../common/backup.js";
 
 export interface IEmptyWindowBackupInfo extends IBaseBackupInfo {
 	readonly backupFolder: string;
@@ -13,7 +13,7 @@ export interface IEmptyWindowBackupInfo extends IBaseBackupInfo {
 export function isEmptyWindowBackupInfo(obj: unknown): obj is IEmptyWindowBackupInfo {
 	const candidate = obj as IEmptyWindowBackupInfo | undefined;
 
-	return typeof candidate?.backupFolder === 'string';
+	return typeof candidate?.backupFolder === "string";
 }
 
 export interface ISerializedWorkspaceBackupInfo {
@@ -30,9 +30,9 @@ export function deserializeWorkspaceInfos(serializedBackupWorkspaces: ISerialize
 				{
 					workspace: {
 						id: workspace.id,
-						configPath: URI.parse(workspace.configURIPath)
+						configPath: URI.parse(workspace.configURIPath),
 					},
-					remoteAuthority: workspace.remoteAuthority
+					remoteAuthority: workspace.remoteAuthority,
 				}
 			));
 		}
@@ -52,12 +52,10 @@ export function deserializeFolderInfos(serializedBackupWorkspaces: ISerializedBa
 	let folderBackupInfos: IFolderBackupInfo[] = [];
 	try {
 		if (Array.isArray(serializedBackupWorkspaces.folders)) {
-			folderBackupInfos = serializedBackupWorkspaces.folders.map(folder => (
-				{
-					folderUri: URI.parse(folder.folderUri),
-					remoteAuthority: folder.remoteAuthority
-				}
-			));
+			folderBackupInfos = serializedBackupWorkspaces.folders.map(folder => ({
+        folderUri: URI.parse(folder.folderUri),
+        remoteAuthority: folder.remoteAuthority,
+      }));
 		}
 	} catch {
 		// ignore URI parsing exceptions

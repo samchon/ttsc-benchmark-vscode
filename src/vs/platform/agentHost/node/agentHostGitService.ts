@@ -3,17 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as cp from 'child_process';
-import { URI } from '../../../base/common/uri.js';
-import { VSBuffer } from '../../../base/common/buffer.js';
-import { generateUuid } from '../../../base/common/uuid.js';
-import { INativeEnvironmentService } from '../../environment/common/environment.js';
-import { IFileService } from '../../files/common/files.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import { FileEditKind, type ISessionFileDiff, type ISessionGitState } from '../common/state/sessionState.js';
-import { buildGitBlobUri } from './gitDiffContent.js';
+import * as cp from "child_process";
+import { URI } from "../../../base/common/uri.js";
+import { VSBuffer } from "../../../base/common/buffer.js";
+import { generateUuid } from "../../../base/common/uuid.js";
+import { INativeEnvironmentService } from "../../environment/common/environment.js";
+import { IFileService } from "../../files/common/files.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { FileEditKind, type ISessionFileDiff, type ISessionGitState } from "../common/state/sessionState.js";
+import { buildGitBlobUri } from "./gitDiffContent.js";
 
-export const IAgentHostGitService = createDecorator<IAgentHostGitService>('agentHostGitService');
+export const IAgentHostGitService = createDecorator<IAgentHostGitService>(
+  "agentHostGitService",
+);
 
 export interface IAgentHostGitService {
 	readonly _serviceBrand: undefined;
@@ -134,7 +136,7 @@ export interface IAgentHostGitService {
  * {@link IAgentHostChangesetService} when computing per-session file diffs; absent
  * value means the diff falls back to anchoring at HEAD.
  */
-export const META_DIFF_BASE_BRANCH = 'agentHost.diffBaseBranch';
+export const META_DIFF_BASE_BRANCH = "agentHost.diffBaseBranch";
 
 /** Options for {@link IAgentHostGitService.computeSessionFileDiffs}. */
 export interface IComputeSessionFileDiffsOptions {
@@ -154,10 +156,10 @@ export interface IComputeSessionFileDiffsOptions {
 }
 
 function getCommonBranchPriority(branch: string): number {
-	if (branch === 'main') {
+	if (branch === "main") {
 		return 0;
 	}
-	if (branch === 'master') {
+	if (branch === "master") {
 		return 1;
 	}
 	return 2;
@@ -169,7 +171,9 @@ export function getBranchCompletions(branches: readonly string[], options?: { re
 		? branches.filter(branch => branch.toLowerCase().includes(normalizedQuery))
 		: [...branches];
 
-	filtered.sort((a, b) => getCommonBranchPriority(a) - getCommonBranchPriority(b));
+	filtered.sort(
+    (a, b) => getCommonBranchPriority(a) - getCommonBranchPriority(b),
+  );
 	return options?.limit ? filtered.slice(0, options.limit) : filtered;
 }
 
@@ -182,24 +186,24 @@ export class AgentHostGitService implements IAgentHostGitService {
 	) { }
 
 	async isInsideWorkTree(workingDirectory: URI): Promise<boolean> {
-		return (await this._runGit(workingDirectory, ['rev-parse', '--is-inside-work-tree']))?.trim() === 'true';
+		return (await this._runGit(workingDirectory, ["rev-parse", "--is-inside-work-tree"]))?.trim() === "true";
 	}
 
 	async getCurrentBranch(workingDirectory: URI): Promise<string | undefined> {
-		return (await this._runGit(workingDirectory, ['branch', '--show-current']))?.trim()
-			|| (await this._runGit(workingDirectory, ['rev-parse', '--short', 'HEAD']))?.trim()
+		return (await this._runGit(workingDirectory, ["branch", "--show-current"]))?.trim()
+			|| (await this._runGit(workingDirectory, ["rev-parse", "--short", "HEAD"]))?.trim()
 			|| undefined;
 	}
 
 	async getDefaultBranch(workingDirectory: URI): Promise<string | undefined> {
 		// Try to read the default branch from the remote HEAD reference
-		const remoteRef = (await this._runGit(workingDirectory, ['symbolic-ref', 'refs/remotes/origin/HEAD']))?.trim();
+		const remoteRef = (await this._runGit(workingDirectory, ["symbolic-ref", "refs/remotes/origin/HEAD"]))?.trim();
 		if (remoteRef) {
-			if (!remoteRef.startsWith('refs/remotes/origin/')) {
+			if (!remoteRef.startsWith("refs/remotes/origin/")) {
 				return remoteRef;
 			}
 
-			const branch = remoteRef.substring('refs/remotes/origin/'.length);
+			const branch = remoteRef.substring("refs/remotes/origin/".length);
 			// Prefer the remote-tracking ref ('origin/<branch>') over the local
 			// branch when both exist, so worktrees are based on the most
 			// up-to-date commit rather than a possibly stale local branch.
@@ -207,84 +211,138 @@ export class AgentHostGitService implements IAgentHostGitService {
 			// upstream and uses that as the worktree start point. Falls back
 			// to the local branch when the remote-tracking ref is missing
 			// (e.g. fresh clone with no remote-tracking refs yet).
-			const hasRemoteRef = (await this._runGit(workingDirectory, ['show-ref', '--verify', '--quiet', `refs/remotes/origin/${branch}`])) !== undefined;
+			const hasRemoteRef = (await this._runGit(workingDirectory, [
+        "show-ref",
+        "--verify",
+        "--quiet",
+        `refs/remotes/origin/${branch}`,
+      ])) !== undefined;
 			if (hasRemoteRef) {
 				return `origin/${branch}`;
 			}
-			const hasLocalBranch = (await this._runGit(workingDirectory, ['show-ref', '--verify', '--quiet', `refs/heads/${branch}`])) !== undefined;
+			const hasLocalBranch = (await this._runGit(workingDirectory, [
+        "show-ref",
+        "--verify",
+        "--quiet",
+        `refs/heads/${branch}`,
+      ])) !== undefined;
 			return hasLocalBranch ? branch : undefined;
 		}
 		return undefined;
 	}
 
 	async getBranches(workingDirectory: URI, options?: { readonly query?: string; readonly limit?: number }): Promise<string[]> {
-		const args = ['for-each-ref', '--format=%(refname:short)', '--sort=-committerdate'];
-		args.push('refs/heads');
+		const args = [
+      "for-each-ref",
+      "--format=%(refname:short)",
+      "--sort=-committerdate",
+    ];
+		args.push("refs/heads");
 
 		const output = await this._runGit(workingDirectory, args);
 		if (!output) {
 			return [];
 		}
-		const branches = output.split(/\r?\n/g).map(line => line.trim()).filter(branch => branch.length > 0);
+		const branches = output.split(/\r?\n/g).map(line => line.trim()).filter(
+      branch => branch.length > 0,
+    );
 		return getBranchCompletions(branches, options);
 	}
 
 	async getRepositoryRoot(workingDirectory: URI): Promise<URI | undefined> {
-		const repositoryRootPath = (await this._runGit(workingDirectory, ['rev-parse', '--show-toplevel']))?.trim();
+		const repositoryRootPath = (await this._runGit(workingDirectory, ["rev-parse", "--show-toplevel"]))?.trim();
 		return repositoryRootPath ? URI.file(repositoryRootPath) : undefined;
 	}
 
 	async getWorktreeRoots(workingDirectory: URI): Promise<URI[]> {
-		const output = await this._runGit(workingDirectory, ['worktree', 'list', '--porcelain']);
+		const output = await this._runGit(workingDirectory, [
+      "worktree",
+      "list",
+      "--porcelain",
+    ]);
 		if (!output) {
 			return [];
 		}
 		return output.split(/\r?\n/g)
-			.filter(line => line.startsWith('worktree '))
-			.map(line => URI.file(line.substring('worktree '.length)));
+			.filter(line => line.startsWith("worktree "))
+			.map(line => URI.file(line.substring("worktree ".length)));
 	}
 
 	async addWorktree(repositoryRoot: URI, worktree: URI, branchName: string, startPoint: string): Promise<void> {
-		const resolvedStartPoint = await this._resolveRemoteTrackingBranch(repositoryRoot, startPoint) ?? startPoint;
+		const resolvedStartPoint = await this._resolveRemoteTrackingBranch(
+      repositoryRoot,
+      startPoint,
+    ) ?? startPoint;
 		// Pass --no-track so the new agent branch never picks up upstream
 		// tracking from the start point (e.g. when starting from
 		// 'origin/main', without --no-track git would set the new branch's
 		// upstream to origin/main, which would mis-attribute pushes/pulls).
-		await this._runGit(repositoryRoot, ['worktree', 'add', '--no-track', '-b', branchName, worktree.fsPath, resolvedStartPoint], { timeout: 30_000, throwOnError: true });
+		await this._runGit(
+      repositoryRoot,
+      [
+        "worktree",
+        "add",
+        "--no-track",
+        "-b",
+        branchName,
+        worktree.fsPath,
+        resolvedStartPoint,
+      ],
+      { timeout: 30_000, throwOnError: true },
+    );
 	}
 
 	async addExistingWorktree(repositoryRoot: URI, worktree: URI, branchName: string): Promise<void> {
-		await this._runGit(repositoryRoot, ['worktree', 'add', worktree.fsPath, branchName], { timeout: 30_000, throwOnError: true });
+		await this._runGit(
+      repositoryRoot,
+      ["worktree", "add", worktree.fsPath, branchName],
+      { timeout: 30_000, throwOnError: true },
+    );
 	}
 
 	async removeWorktree(repositoryRoot: URI, worktree: URI): Promise<void> {
-		await this._runGit(repositoryRoot, ['worktree', 'remove', '--force', worktree.fsPath], { timeout: 30_000, throwOnError: true });
+		await this._runGit(
+      repositoryRoot,
+      ["worktree", "remove", "--force", worktree.fsPath],
+      { timeout: 30_000, throwOnError: true },
+    );
 	}
 
 	async branchExists(repositoryRoot: URI, branchName: string): Promise<boolean> {
 		// `show-ref --verify --quiet` exits 0 when the ref exists and 1 otherwise.
 		// `_runGit` returns undefined on non-zero exit, so `!== undefined` is the existence signal.
-		const output = await this._runGit(repositoryRoot, ['show-ref', '--verify', '--quiet', `refs/heads/${branchName}`]);
+		const output = await this._runGit(repositoryRoot, [
+      "show-ref",
+      "--verify",
+      "--quiet",
+      `refs/heads/${branchName}`,
+    ]);
 		return output !== undefined;
 	}
 
 	async hasUncommittedChanges(workingDirectory: URI): Promise<boolean> {
-		const output = await this._runGit(workingDirectory, ['status', '--porcelain']);
+		const output = await this._runGit(workingDirectory, [
+      "status",
+      "--porcelain",
+    ]);
 		return !!output && output.trim().length > 0;
 	}
 
 	async computeSessionFileDiffs(workingDirectory: URI, options: IComputeSessionFileDiffsOptions): Promise<readonly ISessionFileDiff[] | undefined> {
 		// Bail fast if not inside a git work tree so callers can fall back
 		// to other diff sources.
-		const inside = await this._runGit(workingDirectory, ['rev-parse', '--is-inside-work-tree']);
-		if (inside?.trim() !== 'true') {
+		const inside = await this._runGit(workingDirectory, [
+      "rev-parse",
+      "--is-inside-work-tree",
+    ]);
+		if (inside?.trim() !== "true") {
 			return undefined;
 		}
 
 		// All git invocations run from the working tree's repository root so
 		// `--raw` paths are repo-relative — that's what `git show <sha>:<path>`
 		// expects when we resolve `git-blob:` URIs later.
-		const repositoryRootPath = (await this._runGit(workingDirectory, ['rev-parse', '--show-toplevel']))?.trim();
+		const repositoryRootPath = (await this._runGit(workingDirectory, ["rev-parse", "--show-toplevel"]))?.trim();
 		if (!repositoryRootPath) {
 			return undefined;
 		}
@@ -299,11 +357,14 @@ export class AgentHostGitService implements IAgentHostGitService {
 		// fall back to the well-known empty-tree object.
 		let mergeBaseCommit: string | undefined;
 		if (options.baseBranch) {
-			const baseBranch = await this._resolveRemoteTrackingBranch(repositoryRoot, options.baseBranch) ?? options.baseBranch;
-			mergeBaseCommit = (await this._runGit(repositoryRoot, ['merge-base', 'HEAD', baseBranch]))?.trim();
+			const baseBranch = await this._resolveRemoteTrackingBranch(
+        repositoryRoot,
+        options.baseBranch,
+      ) ?? options.baseBranch;
+			mergeBaseCommit = (await this._runGit(repositoryRoot, ["merge-base", "HEAD", baseBranch]))?.trim();
 		}
 		if (!mergeBaseCommit) {
-			mergeBaseCommit = (await this._runGit(repositoryRoot, ['rev-parse', 'HEAD']))?.trim();
+			mergeBaseCommit = (await this._runGit(repositoryRoot, ["rev-parse", "HEAD"]))?.trim();
 		}
 		if (!mergeBaseCommit) {
 			mergeBaseCommit = EMPTY_TREE_OBJECT;
@@ -313,21 +374,42 @@ export class AgentHostGitService implements IAgentHostGitService {
 		// have to use the temp-index trick so the untracked content is
 		// included in `--cached --raw` output; otherwise a plain `git diff`
 		// is sufficient and avoids the temp-dir overhead.
-		const statusOut = await this._runGit(repositoryRoot, ['status', '--porcelain=v1', '-z', '--untracked-files=all']);
+		const statusOut = await this._runGit(repositoryRoot, [
+      "status",
+      "--porcelain=v1",
+      "-z",
+      "--untracked-files=all",
+    ]);
 		const untracked = parseUntrackedPaths(statusOut);
 
 		let rawDiffOutput: string | undefined;
 		if (untracked.length === 0) {
-			rawDiffOutput = await this._runGit(repositoryRoot, ['diff', '--raw', '--numstat', '--diff-filter=ADMR', '-z', mergeBaseCommit, '--']);
+			rawDiffOutput = await this._runGit(repositoryRoot, [
+        "diff",
+        "--raw",
+        "--numstat",
+        "--diff-filter=ADMR",
+        "-z",
+        mergeBaseCommit,
+        "--",
+      ]);
 		} else {
-			rawDiffOutput = await this._runWithTempIndex(repositoryRoot, mergeBaseCommit);
+			rawDiffOutput = await this._runWithTempIndex(
+        repositoryRoot,
+        mergeBaseCommit,
+      );
 		}
 
 		if (rawDiffOutput === undefined) {
 			return undefined;
 		}
 
-		return parseGitDiffRawNumstat(rawDiffOutput, repositoryRoot, options.sessionUri, mergeBaseCommit);
+		return parseGitDiffRawNumstat(
+      rawDiffOutput,
+      repositoryRoot,
+      options.sessionUri,
+      mergeBaseCommit,
+    );
 	}
 
 	private async _runWithTempIndex(repositoryRoot: URI, mergeBaseCommit: string): Promise<string | undefined> {
@@ -335,36 +417,64 @@ export class AgentHostGitService implements IAgentHostGitService {
 		// (including untracked files) without disturbing the user's real
 		// index. `read-tree HEAD` seeds it; in empty repos that fails so we
 		// fall back to the empty tree, leaving everything as "added".
-		const tempDir = URI.joinPath(this._environmentService.tmpDir, `agent-host-git-diff-${generateUuid()}`);
+		const tempDir = URI.joinPath(
+      this._environmentService.tmpDir,
+      `agent-host-git-diff-${generateUuid()}`,
+    );
 		await this._fileService.createFolder(tempDir);
 		// `GIT_INDEX_FILE` is consumed by the `git` subprocess so it must be
 		// a real OS path string, not a URI.
-		const indexFile = URI.joinPath(tempDir, 'index').fsPath;
+		const indexFile = URI.joinPath(tempDir, "index").fsPath;
 		const env: Record<string, string> = { GIT_INDEX_FILE: indexFile };
 		// GVFS (Virtual File System) repos use a hook that acquires a lock around
 		// git commands. Setting COMMAND_HOOK_LOCK=1 prevents the temp-index
 		// operations from blocking the main working-tree lock. This mirrors what
 		// the extension's `buildTempIndexEnv` does for the same reason.
-		env.COMMAND_HOOK_LOCK = '1';
+		env.COMMAND_HOOK_LOCK = "1";
 		try {
-			const seeded = await this._runGit(repositoryRoot, ['read-tree', 'HEAD'], { env });
+			const seeded = await this._runGit(repositoryRoot, ["read-tree", "HEAD"], {
+        env,
+      });
 			if (seeded === undefined) {
 				// Empty repo (no HEAD yet) - `read-tree` of the empty tree always succeeds.
-				await this._runGit(repositoryRoot, ['read-tree', EMPTY_TREE_OBJECT], { env });
+				await this._runGit(repositoryRoot, ["read-tree", EMPTY_TREE_OBJECT], {
+          env,
+        });
 			}
 			// Stage every change in the working tree (modified, deleted,
 			// untracked, renamed). `add -A` plus an explicit `:/` pathspec
 			// covers the entire repo from any cwd.
-			await this._runGit(repositoryRoot, ['add', '-A', '--', ':/'], { env });
-			return await this._runGit(repositoryRoot, ['diff', '--cached', '--raw', '--numstat', '--diff-filter=ADMR', '-z', mergeBaseCommit, '--'], { env });
+			await this._runGit(repositoryRoot, ["add", "-A", "--", ":/"], { env });
+			return await this._runGit(
+        repositoryRoot,
+        [
+          "diff",
+          "--cached",
+          "--raw",
+          "--numstat",
+          "--diff-filter=ADMR",
+          "-z",
+          mergeBaseCommit,
+          "--",
+        ],
+        { env },
+      );
 		} finally {
-			try { await this._fileService.del(tempDir, { recursive: true, useTrash: false }); } catch { /* best-effort */ }
+			try { await this._fileService.del(tempDir, {
+        recursive: true,
+        useTrash: false,
+      }); } catch { /* best-effort */ }
 		}
 	}
 
 	private async _resolveRemoteTrackingBranch(repositoryRoot: URI, branch: string): Promise<string | undefined> {
 		const remoteBranch = `origin/${branch}`;
-		const output = await this._runGit(repositoryRoot, ['show-ref', '--verify', '--quiet', `refs/remotes/${remoteBranch}`]);
+		const output = await this._runGit(repositoryRoot, [
+      "show-ref",
+      "--verify",
+      "--quiet",
+      `refs/remotes/${remoteBranch}`,
+    ]);
 		return output !== undefined ? remoteBranch : undefined;
 	}
 
@@ -376,15 +486,18 @@ export class AgentHostGitService implements IAgentHostGitService {
 		if (!/^[0-9a-f]{4,64}$/.test(sha)) {
 			return undefined;
 		}
-		const inside = await this._runGit(workingDirectory, ['rev-parse', '--is-inside-work-tree']);
-		if (inside?.trim() !== 'true') {
+		const inside = await this._runGit(workingDirectory, [
+      "rev-parse",
+      "--is-inside-work-tree",
+    ]);
+		if (inside?.trim() !== "true") {
 			return undefined;
 		}
 		// `git show` exits non-zero when the path didn't exist at that
 		// commit; `_runGit` swallows that into `undefined` which is exactly
 		// the contract callers want.
 		return new Promise((resolve) => {
-			cp.execFile('git', ['show', `${sha}:${repoRelativePath}`], { cwd: workingDirectory.fsPath, timeout: 5000, encoding: 'buffer', maxBuffer: 32 * 1024 * 1024 }, (error, stdout) => {
+			cp.execFile("git", ["show", `${sha}:${repoRelativePath}`], { cwd: workingDirectory.fsPath, timeout: 5000, encoding: "buffer", maxBuffer: 32 * 1024 * 1024 }, (error, stdout) => {
 				if (error) {
 					resolve(undefined);
 					return;
@@ -399,46 +512,66 @@ export class AgentHostGitService implements IAgentHostGitService {
 	}
 
 	async captureWorkingTreeAsTree(workingDirectory: URI): Promise<string | undefined> {
-		const inside = await this._runGit(workingDirectory, ['rev-parse', '--is-inside-work-tree']);
-		if (inside?.trim() !== 'true') {
+		const inside = await this._runGit(workingDirectory, [
+      "rev-parse",
+      "--is-inside-work-tree",
+    ]);
+		if (inside?.trim() !== "true") {
 			return undefined;
 		}
-		const repoRoot = (await this._runGit(workingDirectory, ['rev-parse', '--show-toplevel']))?.trim();
+		const repoRoot = (await this._runGit(workingDirectory, ["rev-parse", "--show-toplevel"]))?.trim();
 		if (!repoRoot) {
 			return undefined;
 		}
 		const repositoryRoot = URI.file(repoRoot);
-		const tempDir = URI.joinPath(this._environmentService.tmpDir, `agent-host-checkpoint-${generateUuid()}`);
+		const tempDir = URI.joinPath(
+      this._environmentService.tmpDir,
+      `agent-host-checkpoint-${generateUuid()}`,
+    );
 		await this._fileService.createFolder(tempDir);
-		const indexFile = URI.joinPath(tempDir, 'index').fsPath;
-		const env: Record<string, string> = { GIT_INDEX_FILE: indexFile, COMMAND_HOOK_LOCK: '1' };
+		const indexFile = URI.joinPath(tempDir, "index").fsPath;
+		const env: Record<string, string> = {
+      GIT_INDEX_FILE: indexFile,
+      COMMAND_HOOK_LOCK: "1",
+    };
 		try {
 			// Seed the temp index from HEAD; for empty repos seed from the empty tree.
-			const seeded = await this._runGit(repositoryRoot, ['read-tree', 'HEAD'], { env });
+			const seeded = await this._runGit(repositoryRoot, ["read-tree", "HEAD"], {
+        env,
+      });
 			if (seeded === undefined) {
-				await this._runGit(repositoryRoot, ['read-tree', EMPTY_TREE_OBJECT], { env });
+				await this._runGit(repositoryRoot, ["read-tree", EMPTY_TREE_OBJECT], {
+          env,
+        });
 			}
 			// Stage the entire working tree (including untracked, excluding ignored).
-			await this._runGit(repositoryRoot, ['add', '-A', '--', ':/'], { env });
-			const tree = (await this._runGit(repositoryRoot, ['write-tree'], { env }))?.trim();
+			await this._runGit(repositoryRoot, ["add", "-A", "--", ":/"], { env });
+			const tree = (await this._runGit(repositoryRoot, ["write-tree"], { env }))?.trim();
 			return tree || undefined;
 		} finally {
-			try { await this._fileService.del(tempDir, { recursive: true, useTrash: false }); } catch { /* best-effort */ }
+			try { await this._fileService.del(tempDir, {
+        recursive: true,
+        useTrash: false,
+      }); } catch { /* best-effort */ }
 		}
 	}
 
 	async commitTree(repositoryRoot: URI, treeOid: string, parentOid: string | undefined, message: string): Promise<string | undefined> {
-		const args = ['commit-tree', treeOid];
+		const args = ["commit-tree", treeOid];
 		if (parentOid) {
-			args.push('-p', parentOid);
+			args.push("-p", parentOid);
 		}
-		args.push('-m', message);
-		const out = await this._runGit(repositoryRoot, args, { throwOnError: true });
+		args.push("-m", message);
+		const out = await this._runGit(repositoryRoot, args, {
+      throwOnError: true,
+    });
 		return out?.trim() || undefined;
 	}
 
 	async updateRef(repositoryRoot: URI, ref: string, newOid: string): Promise<void> {
-		await this._runGit(repositoryRoot, ['update-ref', ref, newOid], { throwOnError: true });
+		await this._runGit(repositoryRoot, ["update-ref", ref, newOid], {
+      throwOnError: true,
+    });
 	}
 
 	async deleteRefs(repositoryRoot: URI, refs: readonly string[]): Promise<void> {
@@ -448,9 +581,9 @@ export class AgentHostGitService implements IAgentHostGitService {
 		// Use `update-ref --stdin -z` so all deletions go through a single git
 		// invocation. Each command is `delete SP <ref> NUL [<expected_oid>] NUL`;
 		// we omit the expected oid so already-missing refs don't fail the batch.
-		const stdin = refs.map(ref => `delete ${ref}\x00\x00`).join('');
+		const stdin = refs.map(ref => `delete ${ref}\x00\x00`).join("");
 		await new Promise<void>((resolve) => {
-			const proc = cp.execFile('git', ['update-ref', '--stdin', '-z'], { cwd: repositoryRoot.fsPath, timeout: 10_000 }, () => {
+			const proc = cp.execFile("git", ["update-ref", "--stdin", "-z"], { cwd: repositoryRoot.fsPath, timeout: 10_000 }, () => {
 				// Tolerate non-zero exits — missing refs are not fatal for cleanup.
 				resolve();
 			});
@@ -459,34 +592,57 @@ export class AgentHostGitService implements IAgentHostGitService {
 	}
 
 	async revParse(repositoryRoot: URI, expression: string): Promise<string | undefined> {
-		const out = await this._runGit(repositoryRoot, ['rev-parse', '--verify', '--quiet', expression]);
+		const out = await this._runGit(repositoryRoot, [
+      "rev-parse",
+      "--verify",
+      "--quiet",
+      expression,
+    ]);
 		return out?.trim() || undefined;
 	}
 
 	async computeFileDiffsBetweenRefs(workingDirectory: URI, options: { readonly sessionUri: string; readonly fromRef: string; readonly toRef: string }): Promise<readonly ISessionFileDiff[] | undefined> {
-		const repoRoot = (await this._runGit(workingDirectory, ['rev-parse', '--show-toplevel']))?.trim();
+		const repoRoot = (await this._runGit(workingDirectory, ["rev-parse", "--show-toplevel"]))?.trim();
 		if (!repoRoot) {
 			return undefined;
 		}
 		const repositoryRoot = URI.file(repoRoot);
 		// Validate both refs resolve before invoking `git diff` so a missing
 		// ref returns undefined rather than producing a confusing error.
-		const fromOid = (await this._runGit(repositoryRoot, ['rev-parse', '--verify', '--quiet', options.fromRef]))?.trim();
-		const toOid = (await this._runGit(repositoryRoot, ['rev-parse', '--verify', '--quiet', options.toRef]))?.trim();
+		const fromOid = (await this._runGit(repositoryRoot, ["rev-parse", "--verify", "--quiet", options.fromRef]))?.trim();
+		const toOid = (await this._runGit(repositoryRoot, ["rev-parse", "--verify", "--quiet", options.toRef]))?.trim();
 		if (!fromOid || !toOid) {
 			return undefined;
 		}
-		const raw = await this._runGit(repositoryRoot, ['diff', '--raw', '--numstat', '--diff-filter=ADMR', '-z', fromOid, toOid, '--']);
+		const raw = await this._runGit(repositoryRoot, [
+      "diff",
+      "--raw",
+      "--numstat",
+      "--diff-filter=ADMR",
+      "-z",
+      fromOid,
+      toOid,
+      "--",
+    ]);
 		if (raw === undefined) {
 			return undefined;
 		}
-		return parseGitDiffRawNumstat(raw, repositoryRoot, options.sessionUri, fromOid, toOid);
+		return parseGitDiffRawNumstat(
+      raw,
+      repositoryRoot,
+      options.sessionUri,
+      fromOid,
+      toOid,
+    );
 	}
 
 	private async _computeSessionGitState(workingDirectory: URI): Promise<ISessionGitState | undefined> {
 		// Bail fast if not inside a git work tree.
-		const inside = await this._runGit(workingDirectory, ['rev-parse', '--is-inside-work-tree']);
-		if (inside?.trim() !== 'true') {
+		const inside = await this._runGit(workingDirectory, [
+      "rev-parse",
+      "--is-inside-work-tree",
+    ]);
+		if (inside?.trim() !== "true") {
 			return undefined;
 		}
 
@@ -497,10 +653,14 @@ export class AgentHostGitService implements IAgentHostGitService {
 			remotesOutput,
 			defaultBranchRef,
 		] = await Promise.all([
-			this._runGit(workingDirectory, ['status', '-b', '--porcelain=v2']),
-			this._runGit(workingDirectory, ['remote', '-v']),
-			this._runGit(workingDirectory, ['symbolic-ref', '--quiet', 'refs/remotes/origin/HEAD']),
-		]);
+      this._runGit(workingDirectory, ["status", "-b", "--porcelain=v2"]),
+      this._runGit(workingDirectory, ["remote", "-v"]),
+      this._runGit(workingDirectory, [
+        "symbolic-ref",
+        "--quiet",
+        "refs/remotes/origin/HEAD",
+      ]),
+    ]);
 
 		const status = parseGitStatusV2(statusOutput);
 		const hasGitHubRemote = parseHasGitHubRemote(remotesOutput);
@@ -516,7 +676,11 @@ export class AgentHostGitService implements IAgentHostGitService {
 		// actually cares about for "is there work to PR?".
 		let outgoingChanges = status.outgoingChanges;
 		if (outgoingChanges === undefined && baseBranchName && status.branchName && status.branchName !== baseBranchName) {
-			const ahead = await this._runGit(workingDirectory, ['rev-list', '--count', `${baseBranchName}..HEAD`]);
+			const ahead = await this._runGit(workingDirectory, [
+        "rev-list",
+        "--count",
+        `${baseBranchName}..HEAD`,
+      ]);
 			const parsed = ahead === undefined ? NaN : Number(ahead.trim());
 			if (Number.isFinite(parsed)) {
 				outgoingChanges = parsed;
@@ -524,16 +688,16 @@ export class AgentHostGitService implements IAgentHostGitService {
 		}
 
 		const result: ISessionGitState = {
-			hasGitHubRemote,
-			branchName: status.branchName,
-			baseBranchName,
-			upstreamBranchName: status.upstreamBranchName,
-			incomingChanges: status.incomingChanges,
-			outgoingChanges,
-			uncommittedChanges: status.uncommittedChanges,
-			githubOwner: githubRepo?.owner,
-			githubRepo: githubRepo?.repo,
-		};
+      hasGitHubRemote,
+      branchName: status.branchName,
+      baseBranchName,
+      upstreamBranchName: status.upstreamBranchName,
+      incomingChanges: status.incomingChanges,
+      outgoingChanges,
+      uncommittedChanges: status.uncommittedChanges,
+      githubOwner: githubRepo?.owner,
+      githubRepo: githubRepo?.repo,
+    };
 		// Strip undefined fields so the resulting object is the same regardless
 		// of which probes succeeded — easier to compare in tests.
 		return stripUndefined(result);
@@ -545,7 +709,7 @@ export class AgentHostGitService implements IAgentHostGitService {
 			// Default maxBuffer is 32MB — Node's default is ~1MB, which is
 			// easy to exceed for diff output in large repos. Exceeding it
 			// causes execFile to error and we'd silently drop the diff.
-			cp.execFile('git', [...args], { cwd: workingDirectory.fsPath, timeout: options?.timeout ?? 5000, env, maxBuffer: options?.maxBuffer ?? 32 * 1024 * 1024 }, (error, stdout, stderr) => {
+			cp.execFile("git", [...args], { cwd: workingDirectory.fsPath, timeout: options?.timeout ?? 5000, env, maxBuffer: options?.maxBuffer ?? 32 * 1024 * 1024 }, (error, stdout, stderr) => {
 				if (error) {
 					if (options?.throwOnError) {
 						reject(new Error(stderr || error.message));
@@ -564,7 +728,7 @@ export class AgentHostGitService implements IAgentHostGitService {
  * The well-known SHA-1 of git's empty tree, used as a fallback when a
  * repository has no commits (no `HEAD` to read into the temp index).
  */
-export const EMPTY_TREE_OBJECT = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
+export const EMPTY_TREE_OBJECT = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";
 
 /**
  * Parses NUL-separated `git status --porcelain=v1 -z --untracked-files=all`
@@ -579,7 +743,7 @@ export function parseUntrackedPaths(output: string | undefined): string[] {
 		return [];
 	}
 	const result: string[] = [];
-	const segments = output.split('\x00');
+	const segments = output.split("\x00");
 	for (let i = 0; i < segments.length; i++) {
 		const seg = segments[i];
 		if (!seg) { continue; }
@@ -587,9 +751,9 @@ export function parseUntrackedPaths(output: string | undefined): string[] {
 		// "from" path that we have to skip. We only care about untracked here.
 		const status = seg.substring(0, 2);
 		const path = seg.substring(3);
-		if (status === '??') {
+		if (status === "??") {
 			result.push(path);
-		} else if (status[0] === 'R' || status[0] === 'C') {
+		} else if (status[0] === "R" || status[0] === "C") {
 			// Skip the "from" path for renames/copies.
 			i++;
 		}
@@ -624,7 +788,7 @@ export function parseUntrackedPaths(output: string | undefined): string[] {
  * Exported for tests.
  */
 export function parseGitDiffRawNumstat(output: string, repositoryRoot: URI, sessionUri: string, beforeRef: string, afterRef?: string): ISessionFileDiff[] {
-	const segments = output.split('\x00');
+	const segments = output.split("\x00");
 	const changes: { kind: FileEditKind; oldPath?: string; newPath?: string }[] = [];
 	const numStats = new Map<string, { added: number; removed: number }>();
 
@@ -633,28 +797,36 @@ export function parseGitDiffRawNumstat(output: string, repositoryRoot: URI, sess
 		const segment = segments[i++];
 		if (!segment) { continue; }
 
-		if (segment.startsWith(':')) {
+		if (segment.startsWith(":")) {
 			// Raw line: ":<srcMode> <dstMode> <srcSha> <dstSha> <status>"
 			// followed by NUL-separated path(s).
-			const fields = segment.split(' ');
-			const status = fields[4] ?? '';
+			const fields = segment.split(" ");
+			const status = fields[4] ?? "";
 			const path1 = segments[i++];
 			if (!path1) { continue; }
 
 			switch (status[0]) {
-				case 'A':
+				case "A":
 					changes.push({ kind: FileEditKind.Create, newPath: path1 });
 					break;
-				case 'M':
-					changes.push({ kind: FileEditKind.Edit, oldPath: path1, newPath: path1 });
+				case "M":
+					changes.push({
+            kind: FileEditKind.Edit,
+            oldPath: path1,
+            newPath: path1,
+          });
 					break;
-				case 'D':
+				case "D":
 					changes.push({ kind: FileEditKind.Delete, oldPath: path1 });
 					break;
-				case 'R': {
+				case "R": {
 					const path2 = segments[i++];
 					if (!path2) { continue; }
-					changes.push({ kind: FileEditKind.Rename, oldPath: path1, newPath: path2 });
+					changes.push({
+            kind: FileEditKind.Rename,
+            oldPath: path1,
+            newPath: path2,
+          });
 					break;
 				}
 				default:
@@ -663,25 +835,25 @@ export function parseGitDiffRawNumstat(output: string, repositoryRoot: URI, sess
 		} else {
 			// Numstat line: "<added>\t<removed>\t<path>" or, for renames,
 			// "<added>\t<removed>\t" followed by NUL-separated old/new paths.
-			const [addedStr, removedStr, filePath] = segment.split('\t');
+			const [addedStr, removedStr, filePath] = segment.split("\t");
 			let key: string;
-			if (filePath === '' || filePath === undefined) {
+			if (filePath === "" || filePath === undefined) {
 				const oldPath = segments[i++];
 				const newPath = segments[i++];
-				key = newPath ?? oldPath ?? '';
+				key = newPath ?? oldPath ?? "";
 			} else {
 				key = filePath;
 			}
 			if (!key) { continue; }
 			numStats.set(key, {
-				added: addedStr === '-' ? 0 : Number(addedStr) || 0,
-				removed: removedStr === '-' ? 0 : Number(removedStr) || 0,
-			});
+        added: addedStr === "-" ? 0 : Number(addedStr) || 0,
+        removed: removedStr === "-" ? 0 : Number(removedStr) || 0,
+      });
 		}
 	}
 
 	return changes.map(change => {
-		const stats = numStats.get(change.newPath ?? change.oldPath ?? '');
+		const stats = numStats.get(change.newPath ?? change.oldPath ?? "");
 		const hasBefore = change.kind !== FileEditKind.Create;
 		const hasAfter = change.kind !== FileEditKind.Delete;
 		return {
@@ -737,23 +909,29 @@ export function parseGitStatusV2(output: string | undefined): {
 	for (const rawLine of output.split(/\r?\n/g)) {
 		const line = rawLine.trimEnd();
 		if (!line) { continue; }
-		if (line.startsWith('# branch.head ')) {
-			const head = line.substring('# branch.head '.length).trim();
+		if (line.startsWith("# branch.head ")) {
+			const head = line.substring("# branch.head ".length).trim();
 			// `(detached)` is what git emits for a detached HEAD. Treat as no branch.
-			branchName = head === '(detached)' ? undefined : head;
-		} else if (line.startsWith('# branch.upstream ')) {
-			upstreamBranchName = line.substring('# branch.upstream '.length).trim();
-		} else if (line.startsWith('# branch.ab ')) {
+			branchName = head === "(detached)" ? undefined : head;
+		} else if (line.startsWith("# branch.upstream ")) {
+			upstreamBranchName = line.substring("# branch.upstream ".length).trim();
+		} else if (line.startsWith("# branch.ab ")) {
 			const m = /^# branch\.ab \+(\d+) -(\d+)$/.exec(line);
 			if (m) {
 				outgoingChanges = Number(m[1]);
 				incomingChanges = Number(m[2]);
 			}
-		} else if (!line.startsWith('#')) {
+		} else if (!line.startsWith("#")) {
 			uncommittedChanges++;
 		}
 	}
-	return { branchName, upstreamBranchName, outgoingChanges, incomingChanges, uncommittedChanges };
+	return {
+    branchName,
+    upstreamBranchName,
+    outgoingChanges,
+    incomingChanges,
+    uncommittedChanges,
+  };
 }
 
 /** Exported for tests. */
@@ -794,9 +972,9 @@ export function parseGitHubRepoFromRemote(remotesOutput: string | undefined): { 
 	}
 	// Prefer `origin`, otherwise first matching remote.
 	const ordered = [
-		...candidates.filter(c => c.name === 'origin'),
-		...candidates.filter(c => c.name !== 'origin'),
-	];
+    ...candidates.filter(c => c.name === "origin"),
+    ...candidates.filter(c => c.name !== "origin"),
+  ];
 	for (const { url } of ordered) {
 		const parsed = parseGitHubOwnerRepoFromUrl(url);
 		if (parsed) {
@@ -818,7 +996,9 @@ function parseGitHubOwnerRepoFromUrl(url: string): { owner: string; repo: string
 		return { owner: m[1], repo: m[2] };
 	}
 	// URL-form: <scheme>://[user@]github.com[:port]/owner/repo(.git)?
-	m = /^[a-z+]+:\/\/(?:[^@\/\s]+@)?github\.com(?::\d+)?\/([^/\s]+)\/([^/\s]+?)(?:\.git)?$/i.exec(url);
+	m = /^[a-z+]+:\/\/(?:[^@\/\s]+@)?github\.com(?::\d+)?\/([^/\s]+)\/([^/\s]+?)(?:\.git)?$/i.exec(
+    url,
+  );
 	if (m) {
 		return { owner: m[1], repo: m[2] };
 	}
@@ -829,7 +1009,7 @@ function parseGitHubOwnerRepoFromUrl(url: string): { owner: string; repo: string
 export function parseDefaultBranchRef(symbolicRefOutput: string | undefined): string | undefined {
 	const ref = symbolicRefOutput?.trim();
 	if (!ref) { return undefined; }
-	const prefix = 'refs/remotes/origin/';
+	const prefix = "refs/remotes/origin/";
 	return ref.startsWith(prefix) ? ref.substring(prefix.length) : ref;
 }
 

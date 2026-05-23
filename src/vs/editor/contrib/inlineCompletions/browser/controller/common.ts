@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ICodeEditor } from '../../../../browser/editorBrowser.js';
-import type { InlineCompletionsController } from './inlineCompletionsController.js';
+import { ICodeEditor } from "../../../../browser/editorBrowser.js";
+import type { InlineCompletionsController } from "./inlineCompletionsController.js";
 
 let _getInlineCompletionsController: ((editor: ICodeEditor) => InlineCompletionsController | null) | undefined;
 

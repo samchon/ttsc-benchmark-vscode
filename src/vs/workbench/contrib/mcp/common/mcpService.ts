@@ -3,22 +3,48 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { RunOnceScheduler } from '../../../../base/common/async.js';
-import { CancellationToken, CancellationTokenSource } from '../../../../base/common/cancellation.js';
-import { Disposable, DisposableStore, toDisposable } from '../../../../base/common/lifecycle.js';
-import { autorun, derived, IObservable, IReader, ISettableObservable, ITransaction, observableValue, transaction } from '../../../../base/common/observable.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { ILogService } from '../../../../platform/log/common/log.js';
-import { mcpAutoStartConfig, McpAutoStartValue } from '../../../../platform/mcp/common/mcpManagement.js';
-import { observableConfigValue } from '../../../../platform/observable/common/platformObservableUtils.js';
-import { IStorageService, StorageScope } from '../../../../platform/storage/common/storage.js';
-import { ContributionEnablementState, EnablementModel, IEnablementModel, isContributionEnabled } from '../../chat/common/enablement.js';
-import { McpCollisionBehavior, mcpServerCollisionBehaviorSection } from './mcpConfiguration.js';
-import { IMcpRegistry } from './mcpRegistryTypes.js';
-import { McpServer, McpServerMetadataCache } from './mcpServer.js';
-import { IAutostartResult, IMcpServer, IMcpService, McpCollectionDefinition, McpConnectionState, McpDefinitionReference, McpServerCacheState, McpServerDefinition, McpStartServerInteraction, McpToolName, UserInteractionRequiredError } from './mcpTypes.js';
-import { startServerAndWaitForLiveTools } from './mcpTypesUtils.js';
+import { RunOnceScheduler } from "../../../../base/common/async.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { Disposable, DisposableStore, toDisposable } from "../../../../base/common/lifecycle.js";
+import {
+  autorun,
+  derived,
+  IObservable,
+  IReader,
+  ISettableObservable,
+  ITransaction,
+  observableValue,
+  transaction,
+} from "../../../../base/common/observable.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { mcpAutoStartConfig, McpAutoStartValue } from "../../../../platform/mcp/common/mcpManagement.js";
+import { observableConfigValue } from "../../../../platform/observable/common/platformObservableUtils.js";
+import { IStorageService, StorageScope } from "../../../../platform/storage/common/storage.js";
+import {
+  ContributionEnablementState,
+  EnablementModel,
+  IEnablementModel,
+  isContributionEnabled,
+} from "../../chat/common/enablement.js";
+import { McpCollisionBehavior, mcpServerCollisionBehaviorSection } from "./mcpConfiguration.js";
+import { IMcpRegistry } from "./mcpRegistryTypes.js";
+import { McpServer, McpServerMetadataCache } from "./mcpServer.js";
+import {
+  IAutostartResult,
+  IMcpServer,
+  IMcpService,
+  McpCollectionDefinition,
+  McpConnectionState,
+  McpDefinitionReference,
+  McpServerCacheState,
+  McpServerDefinition,
+  McpStartServerInteraction,
+  McpToolName,
+  UserInteractionRequiredError,
+} from "./mcpTypes.js";
+import { startServerAndWaitForLiveTools } from "./mcpTypesUtils.js";
 
 type IMcpServerRec = { object: IMcpServer; toolPrefix: string };
 
@@ -27,8 +53,13 @@ export class McpService extends Disposable implements IMcpService {
 	declare _serviceBrand: undefined;
 
 	private readonly _currentAutoStarts = new Set<CancellationTokenSource>();
-	private readonly _servers = observableValue<readonly IMcpServerRec[]>(this, []);
-	public readonly servers: IObservable<readonly IMcpServer[]> = this._servers.map(servers => servers.map(s => s.object));
+	private readonly _servers = observableValue<readonly IMcpServerRec[]>(
+    this,
+    [],
+  );
+	public readonly servers: IObservable<readonly IMcpServer[]> = this._servers.map(
+    servers => servers.map(s => s.object),
+  );
 
 	public get lazyCollectionState() { return this._mcpRegistry.lazyCollectionState; }
 
@@ -46,14 +77,36 @@ export class McpService extends Disposable implements IMcpService {
 	) {
 		super();
 
-		const baseEnablement = this._register(new EnablementModel('mcp.enablement', storageService));
-		const collisionBehavior = observableConfigValue(mcpServerCollisionBehaviorSection, McpCollisionBehavior.Disable, configurationService);
-		this.enablementModel = new McpCollisionEnablementModel(baseEnablement, this._mcpRegistry, collisionBehavior);
+		const baseEnablement = this._register(
+      new EnablementModel("mcp.enablement", storageService),
+    );
+		const collisionBehavior = observableConfigValue(
+      mcpServerCollisionBehaviorSection,
+      McpCollisionBehavior.Disable,
+      configurationService,
+    );
+		this.enablementModel = new McpCollisionEnablementModel(
+      baseEnablement,
+      this._mcpRegistry,
+      collisionBehavior,
+    );
 
-		this.userCache = this._register(_instantiationService.createInstance(McpServerMetadataCache, StorageScope.PROFILE));
-		this.workspaceCache = this._register(_instantiationService.createInstance(McpServerMetadataCache, StorageScope.WORKSPACE));
+		this.userCache = this._register(
+      _instantiationService.createInstance(
+        McpServerMetadataCache,
+        StorageScope.PROFILE,
+      ),
+    );
+		this.workspaceCache = this._register(
+      _instantiationService.createInstance(
+        McpServerMetadataCache,
+        StorageScope.WORKSPACE,
+      ),
+    );
 
-		const updateThrottle = this._store.add(new RunOnceScheduler(() => this.updateCollectedServers(), 500));
+		const updateThrottle = this._store.add(
+      new RunOnceScheduler(() => this.updateCollectedServers(), 500),
+    );
 
 		// Throttle changes so that if a collection is changed, or a server is
 		// unregistered/registered, we don't stop servers unnecessarily.
@@ -72,26 +125,36 @@ export class McpService extends Disposable implements IMcpService {
 	}
 
 	public autostart(_token?: CancellationToken): IObservable<IAutostartResult> {
-		const autoStartConfig = this.configurationService.getValue<McpAutoStartValue>(mcpAutoStartConfig);
+		const autoStartConfig = this.configurationService.getValue<McpAutoStartValue>(
+      mcpAutoStartConfig,
+    );
 		if (autoStartConfig === McpAutoStartValue.Never) {
 			return observableValue<IAutostartResult>(this, IAutostartResult.Empty);
 		}
 
-		const state = observableValue<IAutostartResult>(this, { working: true, starting: [], serversRequiringInteraction: [] });
+		const state = observableValue<IAutostartResult>(this, {
+      working: true,
+      starting: [],
+      serversRequiringInteraction: [],
+    });
 		const store = new DisposableStore();
 
 		const cts = store.add(new CancellationTokenSource(_token));
 		this._currentAutoStarts.add(cts);
-		store.add(toDisposable(() => {
-			this._currentAutoStarts.delete(cts);
-		}));
-		store.add(cts.token.onCancellationRequested(() => {
-			state.set(IAutostartResult.Empty, undefined);
-		}));
+		store.add(
+      toDisposable(() => {
+        this._currentAutoStarts.delete(cts);
+      }),
+    );
+		store.add(
+      cts.token.onCancellationRequested(() => {
+        state.set(IAutostartResult.Empty, undefined);
+      }),
+    );
 
 		this._autostart(autoStartConfig, state, cts.token)
 			.catch(err => {
-				this._logService.error('Error during MCP autostart:', err);
+				this._logService.error("Error during MCP autostart:", err);
 				state.set(IAutostartResult.Empty, undefined);
 			})
 			.finally(() => store.dispose());
@@ -109,12 +172,16 @@ export class McpService extends Disposable implements IMcpService {
 		// don't try re-running errored servers or disabled servers
 		const candidates = this.servers.get().filter(s =>
 			s.connectionState.get().state !== McpConnectionState.Kind.Error
-			&& isContributionEnabled(s.enablement.get())
+			&& isContributionEnabled(s.enablement.get()),
 		);
 
 		let todo = new Set<IMcpServer>();
 		if (autoStartConfig === McpAutoStartValue.OnlyNew) {
-			todo = new Set(candidates.filter(s => s.cacheState.get() === McpServerCacheState.Unknown));
+			todo = new Set(
+        candidates.filter(
+          s => s.cacheState.get() === McpServerCacheState.Unknown,
+        ),
+      );
 		} else if (autoStartConfig === McpAutoStartValue.NewAndOutdated) {
 			todo = new Set(candidates.filter(s => {
 				const c = s.cacheState.get();
@@ -130,11 +197,14 @@ export class McpService extends Disposable implements IMcpService {
 		const interaction = new McpStartServerInteraction();
 		const requiringInteraction: (McpDefinitionReference & { errorMessage?: string })[] = [];
 
-		const update = () => state.set({
-			working: todo.size > 0,
-			starting: [...todo].map(t => t.definition),
-			serversRequiringInteraction: requiringInteraction,
-		}, undefined);
+		const update = () => state.set(
+      {
+        working: todo.size > 0,
+        starting: [...todo].map(t => t.definition),
+        serversRequiringInteraction: requiringInteraction,
+      },
+      undefined,
+    );
 
 		update();
 
@@ -179,7 +249,7 @@ export class McpService extends Disposable implements IMcpService {
 			collectionDefinition.serverDefinitions.get().map(serverDefinition => {
 				const toolPrefix = prefixGenerator.generate(serverDefinition.label);
 				return { serverDefinition, collectionDefinition, toolPrefix };
-			})
+			}),
 		);
 
 		const nextDefinitions = new Set(definitions);
@@ -190,15 +260,22 @@ export class McpService extends Disposable implements IMcpService {
 			nextServers.push(rec);
 			const connection = rec.object.connection.get();
 			// if the definition was modified, stop the server; it'll be restarted again on-demand
-			if (connection && !McpServerDefinition.equals(connection.definition, match.serverDefinition)) {
+			if (connection && !McpServerDefinition.equals(
+        connection.definition,
+        match.serverDefinition,
+      )) {
 				rec.object.stop();
-				this._logService.debug(`MCP server ${rec.object.definition.id} stopped because the definition changed`);
+				this._logService.debug(
+          `MCP server ${rec.object.definition.id} stopped because the definition changed`,
+        );
 			}
 		};
 
 		// Transfer over any servers that are still valid.
 		for (const server of currentServers) {
-			const match = definitions.find(d => defsEqual(server.object, d) && server.toolPrefix === d.toolPrefix);
+			const match = definitions.find(
+        d => defsEqual(server.object, d) && server.toolPrefix === d.toolPrefix,
+      );
 			if (match) {
 				pushMatch(match, server);
 			} else {
@@ -209,22 +286,22 @@ export class McpService extends Disposable implements IMcpService {
 		// Create any new servers that are needed.
 		for (const def of nextDefinitions) {
 			const object = this._instantiationService.createInstance(
-				McpServer,
-				def.collectionDefinition,
-				def.serverDefinition,
-				def.serverDefinition.roots,
-				!!def.collectionDefinition.lazy,
-				def.collectionDefinition.scope === StorageScope.WORKSPACE ? this.workspaceCache : this.userCache,
-				def.toolPrefix,
-				this.enablementModel,
-			);
+        McpServer,
+        def.collectionDefinition,
+        def.serverDefinition,
+        def.serverDefinition.roots,
+        !!def.collectionDefinition.lazy,
+        def.collectionDefinition.scope === StorageScope.WORKSPACE ? this.workspaceCache : this.userCache,
+        def.toolPrefix,
+        this.enablementModel,
+      );
 
 			nextServers.push({ object, toolPrefix: def.toolPrefix });
 		}
 
 		transaction(tx => {
-			this._servers.set(nextServers, tx);
-		});
+      this._servers.set(nextServers, tx);
+    });
 	}
 
 	public override dispose(): void {
@@ -242,10 +319,13 @@ class McpPrefixGenerator {
 	private readonly seenPrefixes = new Set<string>();
 
 	generate(label: string): string {
-		const baseToolPrefix = McpToolName.Prefix + label.toLowerCase().replace(/[^a-z0-9_.-]+/g, '_').slice(0, McpToolName.MaxPrefixLen - McpToolName.Prefix.length - 1);
-		let toolPrefix = baseToolPrefix + '_';
+		const baseToolPrefix = McpToolName.Prefix + label.toLowerCase().replace(/[^a-z0-9_.-]+/g, "_").slice(
+      0,
+      McpToolName.MaxPrefixLen - McpToolName.Prefix.length - 1,
+    );
+		let toolPrefix = baseToolPrefix + "_";
 		for (let i = 2; this.seenPrefixes.has(toolPrefix); i++) {
-			toolPrefix = baseToolPrefix + i + '_';
+			toolPrefix = baseToolPrefix + i + "_";
 		}
 		this.seenPrefixes.add(toolPrefix);
 		return toolPrefix;
@@ -351,7 +431,11 @@ export class McpCollisionEnablementModel implements IEnablementModel {
 			this._base.setEnabled(key, state, innerTx);
 			for (const otherId of group) {
 				if (otherId !== key) {
-					this._base.setEnabled(otherId, ContributionEnablementState.DisabledWorkspace, innerTx);
+					this._base.setEnabled(
+            otherId,
+            ContributionEnablementState.DisabledWorkspace,
+            innerTx,
+          );
 				}
 			}
 		};

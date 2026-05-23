@@ -3,38 +3,43 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../base/browser/dom.js';
-import { getDefaultHoverDelegate } from '../../../../base/browser/ui/hover/hoverDelegateFactory.js';
-import { MOUSE_CURSOR_TEXT_CSS_CLASS_NAME } from '../../../../base/browser/ui/mouseCursor/mouseCursor.js';
-import { IAction } from '../../../../base/common/actions.js';
-import { Disposable, IDisposable, dispose } from '../../../../base/common/lifecycle.js';
-import { MarshalledId } from '../../../../base/common/marshallingIds.js';
-import { FileAccess, Schemas } from '../../../../base/common/network.js';
-import { URI } from '../../../../base/common/uri.js';
-import { generateUuid } from '../../../../base/common/uuid.js';
-import { ICodeEditor } from '../../../../editor/browser/editorBrowser.js';
-import { IRange } from '../../../../editor/common/core/range.js';
-import * as languages from '../../../../editor/common/languages.js';
-import { ITextModel } from '../../../../editor/common/model.js';
-import { ITextModelService } from '../../../../editor/common/services/resolverService.js';
-import * as nls from '../../../../nls.js';
-import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IContextKey, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
-import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
-import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
-import { CommentFormActions } from './commentFormActions.js';
-import { CommentMenus } from './commentMenus.js';
-import { ICommentService } from './commentService.js';
-import { CommentContextKeys } from '../common/commentContextKeys.js';
-import { ICommentThreadWidget } from '../common/commentThreadWidget.js';
-import { ICellRange } from '../../notebook/common/notebookRange.js';
-import { LayoutableEditor, MIN_EDITOR_HEIGHT, SimpleCommentEditor, calculateEditorHeight } from './simpleCommentEditor.js';
-import { IHoverService } from '../../../../platform/hover/browser/hover.js';
-import { IContextMenuService } from '../../../../platform/contextview/browser/contextView.js';
-import { Position } from '../../../../editor/common/core/position.js';
+import * as dom from "../../../../base/browser/dom.js";
+import { getDefaultHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { MOUSE_CURSOR_TEXT_CSS_CLASS_NAME } from "../../../../base/browser/ui/mouseCursor/mouseCursor.js";
+import { IAction } from "../../../../base/common/actions.js";
+import { Disposable, IDisposable, dispose } from "../../../../base/common/lifecycle.js";
+import { MarshalledId } from "../../../../base/common/marshallingIds.js";
+import { FileAccess, Schemas } from "../../../../base/common/network.js";
+import { URI } from "../../../../base/common/uri.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { ICodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { IRange } from "../../../../editor/common/core/range.js";
+import * as languages from "../../../../editor/common/languages.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+import { ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import * as nls from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKey, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { CommentFormActions } from "./commentFormActions.js";
+import { CommentMenus } from "./commentMenus.js";
+import { ICommentService } from "./commentService.js";
+import { CommentContextKeys } from "../common/commentContextKeys.js";
+import { ICommentThreadWidget } from "../common/commentThreadWidget.js";
+import { ICellRange } from "../../notebook/common/notebookRange.js";
+import {
+  LayoutableEditor,
+  MIN_EDITOR_HEIGHT,
+  SimpleCommentEditor,
+  calculateEditorHeight,
+} from "./simpleCommentEditor.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { Position } from "../../../../editor/common/core/position.js";
 
 let INMEM_MODEL_ID = 0;
-export const COMMENTEDITOR_DECORATION_KEY = 'commenteditordecoration';
+export const COMMENTEDITOR_DECORATION_KEY = "commenteditordecoration";
 
 export class CommentReply<T extends IRange | ICellRange> extends Disposable {
 	commentEditor: ICodeEditor;
@@ -69,39 +74,51 @@ export class CommentReply<T extends IRange | ICellRange> extends Disposable {
 		@IKeybindingService private keybindingService: IKeybindingService,
 		@IContextMenuService private contextMenuService: IContextMenuService,
 		@IHoverService private hoverService: IHoverService,
-		@ITextModelService private readonly textModelService: ITextModelService
+		@ITextModelService private readonly textModelService: ITextModelService,
 	) {
 		super();
-		this._container = dom.append(container, dom.$('.comment-form-container'));
-		this._form = dom.append(this._container, dom.$('.comment-form'));
-		this.commentEditor = this._register(this._scopedInstatiationService.createInstance(SimpleCommentEditor, this._form, SimpleCommentEditor.getEditorOptions(configurationService), _contextKeyService, this._parentThread));
-		this.commentEditorIsEmpty = CommentContextKeys.commentIsEmpty.bindTo(this._contextKeyService);
+		this._container = dom.append(container, dom.$(".comment-form-container"));
+		this._form = dom.append(this._container, dom.$(".comment-form"));
+		this.commentEditor = this._register(
+      this._scopedInstatiationService.createInstance(
+        SimpleCommentEditor,
+        this._form,
+        SimpleCommentEditor.getEditorOptions(configurationService),
+        _contextKeyService,
+        this._parentThread,
+      ),
+    );
+		this.commentEditorIsEmpty = CommentContextKeys.commentIsEmpty.bindTo(
+      this._contextKeyService,
+    );
 		this.commentEditorIsEmpty.set(!this._pendingComment);
 
 		this.initialize(focus);
 	}
 
 	private async initialize(focus: boolean) {
-		this.avatar = dom.append(this._form, dom.$('.avatar-container'));
+		this.avatar = dom.append(this._form, dom.$(".avatar-container"));
 		this.updateAuthorInfo();
 		const hasExistingComments = this._commentThread.comments && this._commentThread.comments.length > 0;
-		const modeId = generateUuid() + '-' + (hasExistingComments ? this._commentThread.threadId : ++INMEM_MODEL_ID);
+		const modeId = generateUuid() + "-" + (hasExistingComments ? this._commentThread.threadId : ++INMEM_MODEL_ID);
 		const params = JSON.stringify({
-			extensionId: this._commentThread.extensionId,
-			commentThreadId: this._commentThread.threadId
-		});
+      extensionId: this._commentThread.extensionId,
+      commentThreadId: this._commentThread.threadId,
+    });
 
 		let resource = URI.from({
-			scheme: Schemas.commentsInput,
-			path: `/${this._commentThread.extensionId}/commentinput-${modeId}.md?${params}` // TODO. Remove params once extensions adopt authority.
-		});
-		const commentController = this.commentService.getCommentController(this.owner);
+      scheme: Schemas.commentsInput,
+      path: `/${this._commentThread.extensionId}/commentinput-${modeId}.md?${params}`,
+    });
+		const commentController = this.commentService.getCommentController(
+      this.owner,
+    );
 		if (commentController) {
 			resource = resource.with({ authority: commentController.id });
 		}
 
 		const model = await this.textModelService.createModelReference(resource);
-		model.object.textEditorModel.setValue(this._pendingComment?.body || '');
+		model.object.textEditorModel.setValue(this._pendingComment?.body || "");
 
 		this._register(model);
 		this.commentEditor.setModel(model.object.textEditorModel);
@@ -131,16 +148,29 @@ export class CommentReply<T extends IRange | ICellRange> extends Disposable {
 		} else if (this._commentThread.comments && this._commentThread.comments.length === 0) {
 			this.expandReplyArea(focus);
 		}
-		this._error = dom.append(this._container, dom.$('.validation-error.hidden'));
-		const formActions = dom.append(this._container, dom.$('.form-actions'));
-		this._formActions = dom.append(formActions, dom.$('.other-actions'));
-		this.createCommentWidgetFormActions(this._formActions, model.object.textEditorModel);
-		this._editorActions = dom.append(formActions, dom.$('.editor-actions'));
-		this.createCommentWidgetEditorActions(this._editorActions, model.object.textEditorModel);
+		this._error = dom.append(
+      this._container,
+      dom.$(".validation-error.hidden"),
+    );
+		const formActions = dom.append(this._container, dom.$(".form-actions"));
+		this._formActions = dom.append(formActions, dom.$(".other-actions"));
+		this.createCommentWidgetFormActions(
+      this._formActions,
+      model.object.textEditorModel,
+    );
+		this._editorActions = dom.append(formActions, dom.$(".editor-actions"));
+		this.createCommentWidgetEditorActions(
+      this._editorActions,
+      model.object.textEditorModel,
+    );
 	}
 
 	private calculateEditorHeight(): boolean {
-		const newEditorHeight = calculateEditorHeight(this._parentEditor, this.commentEditor, this._editorHeight);
+		const newEditorHeight = calculateEditorHeight(
+      this._parentEditor,
+      this.commentEditor,
+      this._editorHeight,
+    );
 		if (newEditorHeight !== this._editorHeight) {
 			this._editorHeight = newEditorHeight;
 			return true;
@@ -169,7 +199,10 @@ export class CommentReply<T extends IRange | ICellRange> extends Disposable {
 		const model = this.commentEditor.getModel();
 
 		if (model && model.getValueLength() > 0) { // checking length is cheap
-			return { body: model.getValue(), cursor: this.commentEditor.getPosition() ?? new Position(1, 1) };
+			return {
+        body: model.getValue(),
+        cursor: this.commentEditor.getPosition() ?? new Position(1, 1),
+      };
 		}
 
 		return undefined;
@@ -183,7 +216,10 @@ export class CommentReply<T extends IRange | ICellRange> extends Disposable {
 	}
 
 	public layout(widthInPixel: number) {
-		this.commentEditor.layout({ height: this._editorHeight, width: widthInPixel - 54 /* margin 20px * 10 + scrollbar 14px*/ });
+		this.commentEditor.layout({
+      height: this._editorHeight,
+      width: widthInPixel - 54,
+    });
 	}
 
 	public focusIfNeeded() {
@@ -208,22 +244,27 @@ export class CommentReply<T extends IRange | ICellRange> extends Disposable {
 	}
 
 	private updateAuthorInfo() {
-		this.avatar.textContent = '';
-		if (typeof this._commentThread.canReply !== 'boolean' && this._commentThread.canReply.iconPath) {
-			this.avatar.style.display = 'block';
-			const img = dom.append(this.avatar, dom.$('img.avatar')) as HTMLImageElement;
-			img.src = FileAccess.uriToBrowserUri(URI.revive(this._commentThread.canReply.iconPath)).toString(true);
+		this.avatar.textContent = "";
+		if (typeof this._commentThread.canReply !== "boolean" && this._commentThread.canReply.iconPath) {
+			this.avatar.style.display = "block";
+			const img = dom.append(
+        this.avatar,
+        dom.$("img.avatar"),
+      ) as HTMLImageElement;
+			img.src = FileAccess.uriToBrowserUri(URI.revive(this._commentThread.canReply.iconPath)).toString(
+        true,
+      );
 		} else {
-			this.avatar.style.display = 'none';
+			this.avatar.style.display = "none";
 		}
 	}
 
 	public updateCanReply() {
 		this.updateAuthorInfo();
 		if (!this._commentThread.canReply) {
-			this._container.style.display = 'none';
+			this._container.style.display = "none";
 		} else {
-			this._container.style.display = 'block';
+			this._container.style.display = "block";
 		}
 	}
 
@@ -235,8 +276,11 @@ export class CommentReply<T extends IRange | ICellRange> extends Disposable {
 	setCommentEditorDecorations() {
 		const hasExistingComments = this._commentThread.comments && this._commentThread.comments.length > 0;
 		const placeholder = hasExistingComments
-			? (this._commentOptions?.placeHolder || nls.localize('reply', "Reply..."))
-			: (this._commentOptions?.placeHolder || nls.localize('newComment', "Type a new comment"));
+			? (this._commentOptions?.placeHolder || nls.localize("reply", "Reply..."))
+			: (this._commentOptions?.placeHolder || nls.localize(
+          "newComment",
+          "Type a new comment",
+        ));
 
 		this.commentEditor.updateOptions({ placeholder });
 	}
@@ -245,7 +289,7 @@ export class CommentReply<T extends IRange | ICellRange> extends Disposable {
 		this._commentThreadDisposables.push(commentEditor.onDidFocusEditorWidget(() => {
 			this._commentThread.input = {
 				uri: commentEditor.getModel()!.uri,
-				value: commentEditor.getValue()
+				value: commentEditor.getValue(),
 			};
 			this.commentService.setActiveEditingCommentThread(this._commentThread);
 			this.commentService.setActiveCommentAndThread(this.owner, { thread: this._commentThread });
@@ -274,12 +318,12 @@ export class CommentReply<T extends IRange | ICellRange> extends Disposable {
 			if (commentEditor.getValue() !== input.value) {
 				commentEditor.setValue(input.value);
 
-				if (input.value === '') {
-					this._pendingComment = { body: '', cursor: new Position(1, 1) };
-					commentForm.classList.remove('expand');
-					commentEditor.getDomNode()!.style.outline = '';
-					this._error.textContent = '';
-					this._error.classList.add('hidden');
+				if (input.value === "") {
+					this._pendingComment = { body: "", cursor: new Position(1, 1) };
+					commentForm.classList.remove("expand");
+					commentEditor.getDomNode()!.style.outline = "";
+					this._error.textContent = "";
+					this._error.classList.add("hidden");
 				}
 			}
 		}));
@@ -289,12 +333,16 @@ export class CommentReply<T extends IRange | ICellRange> extends Disposable {
 	 * Command based actions.
 	 */
 	private createCommentWidgetFormActions(container: HTMLElement, model: ITextModel) {
-		const menu = this._commentMenus.getCommentThreadActions(this._contextKeyService);
+		const menu = this._commentMenus.getCommentThreadActions(
+      this._contextKeyService,
+    );
 
 		this._register(menu);
-		this._register(menu.onDidChange(() => {
-			this._commentFormActions.setActions(menu);
-		}));
+		this._register(
+      menu.onDidChange(() => {
+        this._commentFormActions.setActions(menu);
+      }),
+    );
 
 		this._commentFormActions = new CommentFormActions(this.keybindingService, this._contextKeyService, this.contextMenuService, container, async (action: IAction) => {
 			await this._actionRunDelegate?.();
@@ -302,7 +350,7 @@ export class CommentReply<T extends IRange | ICellRange> extends Disposable {
 			await action.run({
 				thread: this._commentThread,
 				text: this.commentEditor.getValue(),
-				$mid: MarshalledId.CommentThreadReply
+				$mid: MarshalledId.CommentThreadReply,
 			});
 
 			this.hideReplyArea();
@@ -313,35 +361,45 @@ export class CommentReply<T extends IRange | ICellRange> extends Disposable {
 	}
 
 	private createCommentWidgetEditorActions(container: HTMLElement, model: ITextModel) {
-		const editorMenu = this._commentMenus.getCommentEditorActions(this._contextKeyService);
+		const editorMenu = this._commentMenus.getCommentEditorActions(
+      this._contextKeyService,
+    );
 		this._register(editorMenu);
-		this._register(editorMenu.onDidChange(() => {
-			this._commentEditorActions.setActions(editorMenu, true);
-		}));
+		this._register(
+      editorMenu.onDidChange(() => {
+        this._commentEditorActions.setActions(editorMenu, true);
+      }),
+    );
 
-		this._commentEditorActions = new CommentFormActions(this.keybindingService, this._contextKeyService, this.contextMenuService, container, async (action: IAction) => {
-			this._actionRunDelegate?.();
+		this._commentEditorActions = new CommentFormActions(
+      this.keybindingService,
+      this._contextKeyService,
+      this.contextMenuService,
+      container,
+      async (action: IAction) => {
+        this._actionRunDelegate?.();
 
-			action.run({
-				thread: this._commentThread,
-				text: this.commentEditor.getValue(),
-				$mid: MarshalledId.CommentThreadReply
-			});
+        action.run({
+          thread: this._commentThread,
+          text: this.commentEditor.getValue(),
+          $mid: MarshalledId.CommentThreadReply,
+        });
 
-			this.focusCommentEditor();
-		});
+        this.focusCommentEditor();
+      },
+    );
 
 		this._register(this._commentEditorActions);
 		this._commentEditorActions.setActions(editorMenu, true);
 	}
 
 	private get isReplyExpanded(): boolean {
-		return this._container.classList.contains('expand');
+		return this._container.classList.contains("expand");
 	}
 
 	private expandReplyArea(focus: boolean = true) {
 		if (!this.isReplyExpanded) {
-			this._container.classList.add('expand');
+			this._container.classList.add("expand");
 			if (focus) {
 				this.commentEditor.focus();
 			}
@@ -351,7 +409,7 @@ export class CommentReply<T extends IRange | ICellRange> extends Disposable {
 
 	private clearAndExpandReplyArea() {
 		if (!this.isReplyExpanded) {
-			this.commentEditor.setValue('');
+			this.commentEditor.setValue("");
 			this.expandReplyArea();
 		}
 	}
@@ -359,27 +417,53 @@ export class CommentReply<T extends IRange | ICellRange> extends Disposable {
 	private hideReplyArea() {
 		const domNode = this.commentEditor.getDomNode();
 		if (domNode) {
-			domNode.style.outline = '';
+			domNode.style.outline = "";
 		}
-		this.commentEditor.setValue('');
-		this._pendingComment = { body: '', cursor: new Position(1, 1) };
-		this._container.classList.remove('expand');
-		this._error.textContent = '';
-		this._error.classList.add('hidden');
+		this.commentEditor.setValue("");
+		this._pendingComment = { body: "", cursor: new Position(1, 1) };
+		this._container.classList.remove("expand");
+		this._error.textContent = "";
+		this._error.classList.add("hidden");
 	}
 
 	private createReplyButton(commentEditor: ICodeEditor, commentForm: HTMLElement) {
-		this._reviewThreadReplyButton = <HTMLButtonElement>dom.append(commentForm, dom.$(`button.review-thread-reply-button.${MOUSE_CURSOR_TEXT_CSS_CLASS_NAME}`));
-		this._register(this.hoverService.setupManagedHover(getDefaultHoverDelegate('mouse'), this._reviewThreadReplyButton, this._commentOptions?.prompt || nls.localize('reply', "Reply...")));
+		this._reviewThreadReplyButton = <HTMLButtonElement>dom.append(
+      commentForm,
+      dom.$(
+        `button.review-thread-reply-button.${MOUSE_CURSOR_TEXT_CSS_CLASS_NAME}`,
+      ),
+    );
+		this._register(
+      this.hoverService.setupManagedHover(
+        getDefaultHoverDelegate("mouse"),
+        this._reviewThreadReplyButton,
+        this._commentOptions?.prompt || nls.localize("reply", "Reply..."),
+      ),
+    );
 
-		this._reviewThreadReplyButton.textContent = this._commentOptions?.prompt || nls.localize('reply', "Reply...");
+		this._reviewThreadReplyButton.textContent = this._commentOptions?.prompt || nls.localize(
+      "reply",
+      "Reply...",
+    );
 		// bind click/escape actions for reviewThreadReplyButton and textArea
-		this._register(dom.addDisposableListener(this._reviewThreadReplyButton, 'click', _ => this.clearAndExpandReplyArea()));
-		this._register(dom.addDisposableListener(this._reviewThreadReplyButton, 'focus', _ => this.clearAndExpandReplyArea()));
+		this._register(
+      dom.addDisposableListener(
+        this._reviewThreadReplyButton,
+        "click",
+        _ => this.clearAndExpandReplyArea(),
+      ),
+    );
+		this._register(
+      dom.addDisposableListener(
+        this._reviewThreadReplyButton,
+        "focus",
+        _ => this.clearAndExpandReplyArea(),
+      ),
+    );
 
 		this._register(commentEditor.onDidBlurEditorWidget(() => {
-			if (commentEditor.getModel()!.getValueLength() === 0 && commentForm.classList.contains('expand')) {
-				commentForm.classList.remove('expand');
+			if (commentEditor.getModel()!.getValueLength() === 0 && commentForm.classList.contains("expand")) {
+				commentForm.classList.remove("expand");
 			}
 		}));
 	}

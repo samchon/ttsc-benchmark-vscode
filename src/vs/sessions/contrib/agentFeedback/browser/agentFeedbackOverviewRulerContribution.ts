@@ -3,30 +3,33 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable } from '../../../../base/common/lifecycle.js';
-import { ICodeEditor } from '../../../../editor/browser/editorBrowser.js';
-import { IEditorContribution, IEditorDecorationsCollection } from '../../../../editor/common/editorCommon.js';
-import { EditorContributionInstantiation, registerEditorContribution } from '../../../../editor/browser/editorExtensions.js';
-import { overviewRulerInfo } from '../../../../editor/common/core/editorColorRegistry.js';
-import { OverviewRulerLane } from '../../../../editor/common/model.js';
-import { themeColorFromId } from '../../../../platform/theme/common/themeService.js';
-import { registerColor } from '../../../../platform/theme/common/colorRegistry.js';
-import { localize } from '../../../../nls.js';
-import { URI } from '../../../../base/common/uri.js';
-import { IAgentFeedbackService } from './agentFeedbackService.js';
-import { IChatEditingService } from '../../../../workbench/contrib/chat/common/editing/chatEditingService.js';
-import { getSessionForResource } from './agentFeedbackEditorUtils.js';
-import { ISessionsManagementService } from '../../../services/sessions/common/sessionsManagement.js';
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { ICodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { IEditorContribution, IEditorDecorationsCollection } from "../../../../editor/common/editorCommon.js";
+import { EditorContributionInstantiation, registerEditorContribution } from "../../../../editor/browser/editorExtensions.js";
+import { overviewRulerInfo } from "../../../../editor/common/core/editorColorRegistry.js";
+import { OverviewRulerLane } from "../../../../editor/common/model.js";
+import { themeColorFromId } from "../../../../platform/theme/common/themeService.js";
+import { registerColor } from "../../../../platform/theme/common/colorRegistry.js";
+import { localize } from "../../../../nls.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IAgentFeedbackService } from "./agentFeedbackService.js";
+import { IChatEditingService } from "../../../../workbench/contrib/chat/common/editing/chatEditingService.js";
+import { getSessionForResource } from "./agentFeedbackEditorUtils.js";
+import { ISessionsManagementService } from "../../../services/sessions/common/sessionsManagement.js";
 
 const overviewRulerAgentFeedbackForeground = registerColor(
-	'editorOverviewRuler.agentFeedbackForeground',
-	overviewRulerInfo,
-	localize('editorOverviewRuler.agentFeedbackForeground', 'Editor overview ruler decoration color for agent feedback. This color should be opaque.')
+  "editorOverviewRuler.agentFeedbackForeground",
+  overviewRulerInfo,
+  localize(
+    "editorOverviewRuler.agentFeedbackForeground",
+    "Editor overview ruler decoration color for agent feedback. This color should be opaque.",
+  ),
 );
 
 export class AgentFeedbackOverviewRulerContribution extends Disposable implements IEditorContribution {
 
-	static readonly ID = 'agentFeedback.overviewRulerContribution';
+	static readonly ID = "agentFeedback.overviewRulerContribution";
 
 	private readonly _decorations: IEditorDecorationsCollection;
 	private _sessionResource: URI | undefined;
@@ -41,11 +44,17 @@ export class AgentFeedbackOverviewRulerContribution extends Disposable implement
 
 		this._decorations = this._editor.createDecorationsCollection();
 
-		this._store.add(this._agentFeedbackService.onDidChangeFeedback(() => this._updateDecorations()));
-		this._store.add(this._editor.onDidChangeModel(() => {
-			this._resolveSession();
-			this._updateDecorations();
-		}));
+		this._store.add(
+      this._agentFeedbackService.onDidChangeFeedback(
+        () => this._updateDecorations(),
+      ),
+    );
+		this._store.add(
+      this._editor.onDidChangeModel(() => {
+        this._resolveSession();
+        this._updateDecorations();
+      }),
+    );
 
 		this._resolveSession();
 		this._updateDecorations();
@@ -57,7 +66,11 @@ export class AgentFeedbackOverviewRulerContribution extends Disposable implement
 			this._sessionResource = undefined;
 			return;
 		}
-		this._sessionResource = getSessionForResource(model.uri, this._chatEditingService, this._sessionsManagementService);
+		this._sessionResource = getSessionForResource(
+      model.uri,
+      this._chatEditingService,
+      this._sessionsManagementService,
+    );
 	}
 
 	private _updateDecorations(): void {
@@ -72,7 +85,9 @@ export class AgentFeedbackOverviewRulerContribution extends Disposable implement
 			return;
 		}
 
-		const feedbackItems = this._agentFeedbackService.getFeedback(this._sessionResource);
+		const feedbackItems = this._agentFeedbackService.getFeedback(
+      this._sessionResource,
+    );
 		const modelUri = model.uri.toString();
 
 		this._decorations.set(
@@ -81,13 +96,13 @@ export class AgentFeedbackOverviewRulerContribution extends Disposable implement
 				.map(item => ({
 					range: item.range,
 					options: {
-						description: 'agent-feedback-overview-ruler',
+						description: "agent-feedback-overview-ruler",
 						overviewRuler: {
 							color: themeColorFromId(overviewRulerAgentFeedbackForeground),
 							position: OverviewRulerLane.Center,
-						}
-					}
-				}))
+						},
+					},
+				})),
 		);
 	}
 
@@ -97,4 +112,8 @@ export class AgentFeedbackOverviewRulerContribution extends Disposable implement
 	}
 }
 
-registerEditorContribution(AgentFeedbackOverviewRulerContribution.ID, AgentFeedbackOverviewRulerContribution, EditorContributionInstantiation.Eventually);
+registerEditorContribution(
+  AgentFeedbackOverviewRulerContribution.ID,
+  AgentFeedbackOverviewRulerContribution,
+  EditorContributionInstantiation.Eventually,
+);

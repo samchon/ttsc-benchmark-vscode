@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { assertNever } from '../../../../../base/common/assert.js';
-import { VSBuffer } from '../../../../../base/common/buffer.js';
-import { isUndefinedOrNull } from '../../../../../base/common/types.js';
+import { assertNever } from "../../../../../base/common/assert.js";
+import { VSBuffer } from "../../../../../base/common/buffer.js";
+import { isUndefinedOrNull } from "../../../../../base/common/types.js";
 
 /**
  * Updates an error's message and stack trace with a prefix. In V8 the stack
@@ -15,7 +15,7 @@ import { isUndefinedOrNull } from '../../../../../base/common/types.js';
 function prefixError(e: Error, prefix: string): void {
 	e.message = prefix + e.message;
 	if (e.stack) {
-		const nlIdx = e.stack.indexOf('\n');
+		const nlIdx = e.stack.indexOf("\n");
 		e.stack = nlIdx !== -1
 			? `${e.name}: ${e.message}${e.stack.slice(nlIdx)}`
 			: `${e.name}: ${e.message}`;
@@ -29,9 +29,9 @@ function prefixError(e: Error, prefix: string): void {
  */
 function rethrowWithPathSegment(e: unknown, segment: string | number): never {
 	if (e instanceof Error) {
-		const part = typeof segment === 'number' ? `[${segment}]` : `.${segment}`;
-		const needsSep = !e.message.startsWith('[') && !e.message.startsWith('.');
-		prefixError(e, part + (needsSep ? ': ' : ''));
+		const part = typeof segment === "number" ? `[${segment}]` : `.${segment}`;
+		const needsSep = !e.message.startsWith("[") && !e.message.startsWith(".");
+		prefixError(e, part + (needsSep ? ": " : ""));
 	}
 	throw e;
 }
@@ -91,10 +91,10 @@ export type Schema<TFrom, TTo> = {
  */
 export function key<T, R = T>(comparator?: (a: R, b: R) => boolean): TransformValue<T, R> {
 	return {
-		kind: TransformKind.Key,
-		extract: (from: T) => from as unknown as R,
-		equals: comparator ?? ((a, b) => a === b),
-	};
+    kind: TransformKind.Key,
+    extract: (from: T) => from as unknown as R,
+    equals: comparator ?? ((a, b) => a === b),
+  };
 }
 
 /** A value that will be tracked and replaced if the comparator is not equal. */
@@ -109,7 +109,7 @@ export function value<T, R>(comparator?: (a: R, b: R) => boolean): TransformValu
 			// mutable type that could be held internally in the LogAdapter and (b) to make
 			// object comparison work with the data we re-hydrate from disk (e.g. if using
 			// objectsEqual, a hydrated URI is not equal to the serialized UriComponents)
-			if (!!value && typeof value === 'object') {
+			if (!!value && typeof value === "object") {
 				value = JSON.parse(JSON.stringify(value));
 			}
 
@@ -146,7 +146,9 @@ export interface ObjectOptions<R> {
 /** An object schema. */
 export function object<T, R extends object>(schema: Schema<T, R>, options?: ObjectOptions<R>): TransformObject<T, R> {
 	// Sort entries with key properties first for fast key checking
-	const entries = (Object.entries(schema) as [string, Transform<T, R[keyof R]>][]).sort(([, a], [, b]) => a.kind - b.kind);
+	const entries = (Object.entries(schema) as [string, Transform<T, R[keyof R]>][]).sort(
+    ([, a], [, b]) => a.kind - b.kind,
+  );
 	return {
 		kind: TransformKind.Object,
 		children: entries as SchemaEntries,
@@ -175,9 +177,9 @@ export function object<T, R extends object>(schema: Schema<T, R>, options?: Obje
  */
 export function t<T, O, R>(getter: (obj: T) => O, schema: Transform<O, R>): Transform<T, R> {
 	return {
-		...schema,
-		extract: (from: T) => schema.extract(getter(from)),
-	};
+    ...schema,
+    extract: (from: T) => schema.extract(getter(from)),
+  };
 }
 
 /** Shortcut for t(fn, value()) */
@@ -186,9 +188,9 @@ export function v<T, R>(getter: (obj: T) => R, comparator: (a: R, b: R) => boole
 export function v<T, R>(getter: (obj: T) => R, comparator?: (a: R, b: R) => boolean): TransformValue<T, R> {
 	const inner = value(comparator!);
 	return {
-		...inner,
-		extract: (from: T) => inner.extract(getter(from)),
-	};
+    ...inner,
+    extract: (from: T) => inner.extract(getter(from)),
+  };
 }
 
 
@@ -214,7 +216,7 @@ type Entry =
 	/** Pushes 0 or more new entries to an array. If `i` is set, everything after that index is removed */
 	| { kind: EntryKind.Push; k: ObjectPath; v?: unknown[]; i?: number };
 
-const LF = VSBuffer.fromString('\n');
+const LF = VSBuffer.fromString("\n");
 
 /**
  * An implementation of an append-based mutation logger. Given a `Transform`
@@ -255,7 +257,7 @@ export class ObjectMutationLog<TFrom, TTo> {
 		this._entryCount = 1;
 		this._clearPending();
 		const entry: Entry = { kind: EntryKind.Initial, v: value };
-		return VSBuffer.fromString(JSON.stringify(entry) + '\n');
+		return VSBuffer.fromString(JSON.stringify(entry) + "\n");
 	}
 
 	/**
@@ -284,19 +286,19 @@ export class ObjectMutationLog<TFrom, TTo> {
 							break;
 						case EntryKind.Set:
 							if (state === undefined) {
-								throw new Error('Log file is missing an initial entry');
+								throw new Error("Log file is missing an initial entry");
 							}
 							this._applySet(state, entry.k, entry.v);
 							break;
 						case EntryKind.Push:
 							if (state === undefined) {
-								throw new Error('Log file is missing an initial entry');
+								throw new Error("Log file is missing an initial entry");
 							}
 							this._applyPush(state, entry.k, entry.v, entry.i);
 							break;
 						case EntryKind.Delete:
 							if (state === undefined) {
-								throw new Error('Log file is missing an initial entry');
+								throw new Error("Log file is missing an initial entry");
 							}
 							this._applySet(state, entry.k, undefined);
 							break;
@@ -309,7 +311,7 @@ export class ObjectMutationLog<TFrom, TTo> {
 		}
 
 		if (lineCount === 0) {
-			throw new Error('Empty log file');
+			throw new Error("Empty log file");
 		}
 
 		this._previous = state as TTo;
@@ -326,7 +328,7 @@ export class ObjectMutationLog<TFrom, TTo> {
 	 * produce a full initial entry when no confirmed state exists, preventing
 	 * corrupted log files when a write fails.
 	 */
-	write(current: TFrom): { op: 'append' | 'replace'; data: VSBuffer } {
+	write(current: TFrom): { op: "append" | "replace"; data: VSBuffer } {
 		const currentValue = this._transform.extract(current);
 
 		if (!this._previous || this._entryCount > this._compactAfterEntries) {
@@ -335,7 +337,10 @@ export class ObjectMutationLog<TFrom, TTo> {
 			this._pendingPrevious = currentValue;
 			this._pendingEntryCount = 1;
 			const entry: Entry = { kind: EntryKind.Initial, v: currentValue };
-			return { op: 'replace', data: VSBuffer.fromString(JSON.stringify(entry) + '\n') };
+			return {
+        op: "replace",
+        data: VSBuffer.fromString(JSON.stringify(entry) + "\n"),
+      };
 		}
 
 		// Generate diff entries
@@ -345,7 +350,9 @@ export class ObjectMutationLog<TFrom, TTo> {
 			this._diff(this._transform, path, this._previous, currentValue, entries);
 		} catch (e) {
 			if (e instanceof Error) {
-				const pathStr = path.map(s => typeof s === 'number' ? `[${s}]` : `.${s}`).join('') || '<root>';
+				const pathStr = path.map(s => typeof s === "number" ? `[${s}]` : `.${s}`).join(
+          "",
+        ) || "<root>";
 				prefixError(e, `error diffing at ${pathStr}: `);
 			}
 			throw e;
@@ -354,7 +361,7 @@ export class ObjectMutationLog<TFrom, TTo> {
 		if (entries.length === 0) {
 			// No changes
 			this._clearPending();
-			return { op: 'append', data: VSBuffer.fromString('') };
+			return { op: "append", data: VSBuffer.fromString("") };
 		}
 
 		this._hasPendingWrite = true;
@@ -362,11 +369,11 @@ export class ObjectMutationLog<TFrom, TTo> {
 		this._pendingPrevious = currentValue;
 
 		// Append entries - build string directly
-		let data = '';
+		let data = "";
 		for (const e of entries) {
-			data += JSON.stringify(e) + '\n';
+			data += JSON.stringify(e) + "\n";
 		}
-		return { op: 'append', data: VSBuffer.fromString(data) };
+		return { op: "append", data: VSBuffer.fromString(data) };
 	}
 
 	/**
@@ -424,7 +431,7 @@ export class ObjectMutationLog<TFrom, TTo> {
 		path: ObjectPath,
 		prev: R,
 		curr: R,
-		entries: Entry[]
+		entries: Entry[],
 	): void {
 		if (transform.kind === TransformKind.Key || transform.kind === TransformKind.Primitive) {
 			// Simple value change - copy path since we're storing it
@@ -442,9 +449,22 @@ export class ObjectMutationLog<TFrom, TTo> {
 				}
 			}
 		} else if (transform.kind === TransformKind.Array) {
-			this._diffArray(transform, path, prev as unknown[], curr as unknown[], entries);
+			this._diffArray(
+        transform,
+        path,
+        prev as unknown[],
+        curr as unknown[],
+        entries,
+      );
 		} else if (transform.kind === TransformKind.Object) {
-			this._diffObject(transform.children, path, prev, curr, entries, transform.sealed as ((obj: unknown, wasSerialized: boolean) => boolean) | undefined);
+			this._diffObject(
+        transform.children,
+        path,
+        prev,
+        curr,
+        entries,
+        transform.sealed as ((obj: unknown, wasSerialized: boolean) => boolean) | undefined,
+      );
 		} else {
 			throw new Error(`Unknown transform kind ${JSON.stringify(transform)}`);
 		}
@@ -495,7 +515,7 @@ export class ObjectMutationLog<TFrom, TTo> {
 		path: ObjectPath,
 		prev: unknown[] | undefined,
 		curr: unknown[] | undefined,
-		entries: Entry[]
+		entries: Entry[],
 	): void {
 		const prevArr = prev || [];
 		const currArr = curr || [];
@@ -518,21 +538,41 @@ export class ObjectMutationLog<TFrom, TTo> {
 				if (this._hasKeyMismatch(childEntries, prevItem, currItem)) {
 					// Key mismatch: replace from this point onward
 					const newItems = currArr.slice(i);
-					entries.push({ kind: EntryKind.Push, k: path.slice(), v: newItems.length > 0 ? newItems : undefined, i });
+					entries.push({
+            kind: EntryKind.Push,
+            k: path.slice(),
+            v: newItems.length > 0 ? newItems : undefined,
+            i,
+          });
 					return;
 				}
 
 				// Keys match, recurse into the object
 				path.push(i);
-				this._diffObject(childEntries, path, prevItem, currItem, entries, itemSchema.sealed);
+				this._diffObject(
+          childEntries,
+          path,
+          prevItem,
+          currItem,
+          entries,
+          itemSchema.sealed,
+        );
 				path.pop();
 			}
 
 			// Handle length changes
 			if (currArr.length > prevArr.length) {
-				entries.push({ kind: EntryKind.Push, k: path.slice(), v: currArr.slice(prevArr.length) });
+				entries.push({
+          kind: EntryKind.Push,
+          k: path.slice(),
+          v: currArr.slice(prevArr.length),
+        });
 			} else if (currArr.length < prevArr.length) {
-				entries.push({ kind: EntryKind.Push, k: path.slice(), i: currArr.length });
+				entries.push({
+          kind: EntryKind.Push,
+          k: path.slice(),
+          i: currArr.length,
+        });
 			}
 		} else {
 			// No children schema, use the original positional comparison
@@ -549,16 +589,29 @@ export class ObjectMutationLog<TFrom, TTo> {
 				// All common elements match
 				if (currArr.length > prevArr.length) {
 					// New items appended
-					entries.push({ kind: EntryKind.Push, k: path.slice(), v: currArr.slice(prevArr.length) });
+					entries.push({
+            kind: EntryKind.Push,
+            k: path.slice(),
+            v: currArr.slice(prevArr.length),
+          });
 				} else if (currArr.length < prevArr.length) {
 					// Items removed from end
-					entries.push({ kind: EntryKind.Push, k: path.slice(), i: currArr.length });
+					entries.push({
+            kind: EntryKind.Push,
+            k: path.slice(),
+            i: currArr.length,
+          });
 				}
 				// else: same length, all match - no change
 			} else {
 				// Mismatch found, rewrite from that point
 				const newItems = currArr.slice(firstMismatch);
-				entries.push({ kind: EntryKind.Push, k: path.slice(), v: newItems.length > 0 ? newItems : undefined, i: firstMismatch });
+				entries.push({
+          kind: EntryKind.Push,
+          k: path.slice(),
+          v: newItems.length > 0 ? newItems : undefined,
+          i: firstMismatch,
+        });
 			}
 		}
 	}

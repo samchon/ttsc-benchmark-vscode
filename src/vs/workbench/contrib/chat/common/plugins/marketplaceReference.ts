@@ -3,12 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { URI } from '../../../../../base/common/uri.js';
+import { URI } from "../../../../../base/common/uri.js";
 
 export const enum MarketplaceReferenceKind {
-	GitHubShorthand = 'githubShorthand',
-	GitUri = 'gitUri',
-	LocalFileUri = 'localFileUri',
+	GitHubShorthand = "githubShorthand",
+	GitUri = "gitUri",
+	LocalFileUri = "localFileUri",
 }
 
 export interface IMarketplaceReference {
@@ -26,7 +26,7 @@ export function parseMarketplaceReferences(values: readonly unknown[]): IMarketp
 	const byCanonicalId = new Map<string, IMarketplaceReference>();
 
 	for (const value of values) {
-		if (typeof value !== 'string') {
+		if (typeof value !== "string") {
 			continue;
 		}
 
@@ -76,19 +76,21 @@ export function parseMarketplaceReference(value: string): IMarketplaceReference 
 		return scpReference;
 	}
 
-	const shorthandMatch = /^([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)$/.exec(rawValue);
+	const shorthandMatch = /^([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)$/.exec(
+    rawValue,
+  );
 	if (shorthandMatch) {
 		const owner = shorthandMatch[1];
 		const repo = shorthandMatch[2];
 		return {
-			rawValue,
-			displayLabel: `${owner}/${repo}`,
-			cloneUrl: `https://github.com/${owner}/${repo}.git`,
-			canonicalId: getGitHubCanonicalId(owner, repo),
-			cacheSegments: ['github.com', owner, repo],
-			kind: MarketplaceReferenceKind.GitHubShorthand,
-			githubRepo: `${owner}/${repo}`,
-		};
+      rawValue,
+      displayLabel: `${owner}/${repo}`,
+      cloneUrl: `https://github.com/${owner}/${repo}.git`,
+      canonicalId: getGitHubCanonicalId(owner, repo),
+      cacheSegments: ["github.com", owner, repo],
+      kind: MarketplaceReferenceKind.GitHubShorthand,
+      githubRepo: `${owner}/${repo}`,
+    };
 	}
 
 	return undefined;
@@ -103,20 +105,20 @@ function parseUriMarketplaceReference(rawValue: string): IMarketplaceReference |
 	}
 
 	const scheme = uri.scheme.toLowerCase();
-	if (scheme === 'file' && /^file:\/\//i.test(rawValue)) {
+	if (scheme === "file" && /^file:\/\//i.test(rawValue)) {
 		const localRepositoryUri = URI.file(uri.fsPath);
 		return {
-			rawValue,
-			displayLabel: localRepositoryUri.fsPath,
-			cloneUrl: rawValue,
-			canonicalId: `file:${localRepositoryUri.toString().toLowerCase()}`,
-			cacheSegments: [],
-			kind: MarketplaceReferenceKind.LocalFileUri,
-			localRepositoryUri,
-		};
+      rawValue,
+      displayLabel: localRepositoryUri.fsPath,
+      cloneUrl: rawValue,
+      canonicalId: `file:${localRepositoryUri.toString().toLowerCase()}`,
+      cacheSegments: [],
+      kind: MarketplaceReferenceKind.LocalFileUri,
+      localRepositoryUri,
+    };
 	}
 
-	if (scheme !== 'http' && scheme !== 'https' && scheme !== 'ssh') {
+	if (scheme !== "http" && scheme !== "https" && scheme !== "ssh") {
 		return undefined;
 	}
 
@@ -129,11 +131,14 @@ function parseUriMarketplaceReference(rawValue: string): IMarketplaceReference |
 		return undefined;
 	}
 
-	const gitSuffix = '.git';
+	const gitSuffix = ".git";
 	const sanitizedAuthority = sanitizePathSegment(uri.authority.toLowerCase());
 	const pathHasGitSuffix = normalizedPath.toLowerCase().endsWith(gitSuffix);
-	const pathWithoutGit = pathHasGitSuffix ? normalizedPath.slice(1, normalizedPath.length - gitSuffix.length) : normalizedPath.slice(1);
-	const pathSegments = pathWithoutGit.split('/').map(sanitizePathSegment);
+	const pathWithoutGit = pathHasGitSuffix ? normalizedPath.slice(
+    1,
+    normalizedPath.length - gitSuffix.length,
+  ) : normalizedPath.slice(1);
+	const pathSegments = pathWithoutGit.split("/").map(sanitizePathSegment);
 	// Always normalize the canonical path to include .git so that URLs with and without the suffix deduplicate.
 	const canonicalPath = pathHasGitSuffix ? normalizedPath.slice(1).toLowerCase() : `${normalizedPath.slice(1).toLowerCase()}${gitSuffix}`;
 
@@ -141,14 +146,14 @@ function parseUriMarketplaceReference(rawValue: string): IMarketplaceReference |
 	const githubRepo = extractGitHubRepo(uri.authority, pathWithoutGit);
 
 	return {
-		rawValue,
-		displayLabel: rawValue,
-		cloneUrl: rawValue,
-		canonicalId: `git:${uri.authority.toLowerCase()}/${canonicalPath}`,
-		cacheSegments: [sanitizedAuthority, ...pathSegments],
-		kind: MarketplaceReferenceKind.GitUri,
-		githubRepo,
-	};
+    rawValue,
+    displayLabel: rawValue,
+    cloneUrl: rawValue,
+    canonicalId: `git:${uri.authority.toLowerCase()}/${canonicalPath}`,
+    cacheSegments: [sanitizedAuthority, ...pathSegments],
+    kind: MarketplaceReferenceKind.GitUri,
+    githubRepo,
+  };
 }
 
 function parseScpMarketplaceReference(rawValue: string): IMarketplaceReference | undefined {
@@ -157,26 +162,26 @@ function parseScpMarketplaceReference(rawValue: string): IMarketplaceReference |
 		return undefined;
 	}
 
-	const gitSuffix = '.git';
+	const gitSuffix = ".git";
 	const authority = match[2];
-	const pathWithGit = match[3].replace(/^\/+/, '');
+	const pathWithGit = match[3].replace(/^\/+/, "");
 	if (!pathWithGit.toLowerCase().endsWith(gitSuffix)) {
 		return undefined;
 	}
 
 	const pathWithoutGit = pathWithGit.slice(0, -gitSuffix.length);
-	const pathSegments = pathWithoutGit.split('/').map(sanitizePathSegment);
+	const pathSegments = pathWithoutGit.split("/").map(sanitizePathSegment);
 	const githubRepo = extractGitHubRepo(authority, pathWithoutGit);
 
 	return {
-		rawValue,
-		displayLabel: rawValue,
-		cloneUrl: rawValue,
-		canonicalId: `git:${authority.toLowerCase()}/${pathWithGit.toLowerCase()}`,
-		cacheSegments: [sanitizePathSegment(authority.toLowerCase()), ...pathSegments],
-		kind: MarketplaceReferenceKind.GitUri,
-		githubRepo,
-	};
+    rawValue,
+    displayLabel: rawValue,
+    cloneUrl: rawValue,
+    canonicalId: `git:${authority.toLowerCase()}/${pathWithGit.toLowerCase()}`,
+    cacheSegments: [sanitizePathSegment(authority.toLowerCase()), ...pathSegments],
+    kind: MarketplaceReferenceKind.GitUri,
+    githubRepo,
+  };
 }
 
 /**
@@ -186,15 +191,15 @@ function parseScpMarketplaceReference(rawValue: string): IMarketplaceReference |
  * how to treat it.
  */
 function normalizeGitRepoPath(path: string): string | undefined {
-	const gitSuffix = '.git';
-	const trimmed = path.replace(/\/+/g, '/').replace(/\/+$/g, '');
+	const gitSuffix = ".git";
+	const trimmed = path.replace(/\/+/g, "/").replace(/\/+$/g, "");
 
-	const withLeadingSlash = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+	const withLeadingSlash = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
 	// Strip .git suffix (if present) only for the purposes of validating path depth.
 	const pathWithoutGit = withLeadingSlash.toLowerCase().endsWith(gitSuffix)
 		? withLeadingSlash.slice(1, withLeadingSlash.length - gitSuffix.length)
 		: withLeadingSlash.slice(1);
-	if (!pathWithoutGit || !pathWithoutGit.includes('/')) {
+	if (!pathWithoutGit || !pathWithoutGit.includes("/")) {
 		return undefined;
 	}
 
@@ -202,10 +207,10 @@ function normalizeGitRepoPath(path: string): string | undefined {
 }
 
 function extractGitHubRepo(authority: string, pathWithoutGit: string): string | undefined {
-	if (authority.toLowerCase() !== 'github.com') {
+	if (authority.toLowerCase() !== "github.com") {
 		return undefined;
 	}
-	const parts = pathWithoutGit.split('/');
+	const parts = pathWithoutGit.split("/");
 	if (parts.length >= 2 && parts[0] && parts[1]) {
 		return `${parts[0]}/${parts[1]}`;
 	}
@@ -217,5 +222,5 @@ function getGitHubCanonicalId(owner: string, repo: string): string {
 }
 
 function sanitizePathSegment(value: string): string {
-	return value.replace(/[\\/:*?"<>|]/g, '_');
+	return value.replace(/[\\/:*?"<>|]/g, "_");
 }

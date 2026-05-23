@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { LineTokens } from './lineTokens.js';
+import { LineTokens } from "./lineTokens.js";
 
 export const EMPTY_LINE_TOKENS = (new Uint32Array(0)).buffer;
 
@@ -23,7 +23,11 @@ export class ContiguousTokensEditing {
 
 		const tokens = toUint32Array(lineTokens);
 		const lineTextLength = tokens[tokens.length - 2];
-		return ContiguousTokensEditing.delete(lineTokens, fromChIndex, lineTextLength);
+		return ContiguousTokensEditing.delete(
+      lineTokens,
+      fromChIndex,
+      lineTextLength,
+    );
 	}
 
 	public static delete(lineTokens: Uint32Array | ArrayBuffer | null, fromChIndex: number, toChIndex: number): Uint32Array | ArrayBuffer | null {
@@ -39,7 +43,10 @@ export class ContiguousTokensEditing {
 			return EMPTY_LINE_TOKENS;
 		}
 
-		const fromTokenIndex = LineTokens.findIndexInTokensArray(tokens, fromChIndex);
+		const fromTokenIndex = LineTokens.findIndexInTokensArray(
+      tokens,
+      fromChIndex,
+    );
 		const fromTokenStartOffset = (fromTokenIndex > 0 ? tokens[(fromTokenIndex - 1) << 1] : 0);
 		const fromTokenEndOffset = tokens[fromTokenIndex << 1];
 

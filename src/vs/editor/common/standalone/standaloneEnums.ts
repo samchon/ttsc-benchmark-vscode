@@ -868,9 +868,9 @@ export enum SelectionDirection {
 }
 
 export enum ShowLightbulbIconMode {
-	Off = 'off',
-	OnCode = 'onCode',
-	On = 'on'
+	Off = "off",
+	OnCode = "onCode",
+	On = "on"
 }
 
 export enum SignatureHelpTriggerKind {

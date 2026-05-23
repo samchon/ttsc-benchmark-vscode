@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { mainWindow } from './window.js';
-import { getErrorMessage } from '../common/errors.js';
-import { Emitter } from '../common/event.js';
-import { Disposable, toDisposable } from '../common/lifecycle.js';
+import { mainWindow } from "./window.js";
+import { getErrorMessage } from "../common/errors.js";
+import { Emitter } from "../common/event.js";
+import { Disposable, toDisposable } from "../common/lifecycle.js";
 
 export class BroadcastDataChannel<T> extends Disposable {
 
@@ -19,21 +19,24 @@ export class BroadcastDataChannel<T> extends Disposable {
 		super();
 
 		// Use BroadcastChannel
-		if ('BroadcastChannel' in mainWindow) {
+		if ("BroadcastChannel" in mainWindow) {
 			try {
 				this.broadcastChannel = new BroadcastChannel(channelName);
 				const listener = (event: MessageEvent) => {
 					this._onDidReceiveData.fire(event.data);
 				};
-				this.broadcastChannel.addEventListener('message', listener);
+				this.broadcastChannel.addEventListener("message", listener);
 				this._register(toDisposable(() => {
 					if (this.broadcastChannel) {
-						this.broadcastChannel.removeEventListener('message', listener);
+						this.broadcastChannel.removeEventListener("message", listener);
 						this.broadcastChannel.close();
 					}
 				}));
 			} catch (error) {
-				console.warn('Error while creating broadcast channel. Falling back to localStorage.', getErrorMessage(error));
+				console.warn(
+          "Error while creating broadcast channel. Falling back to localStorage.",
+          getErrorMessage(error),
+        );
 			}
 		}
 
@@ -50,8 +53,10 @@ export class BroadcastDataChannel<T> extends Disposable {
 				this._onDidReceiveData.fire(JSON.parse(event.newValue));
 			}
 		};
-		mainWindow.addEventListener('storage', listener);
-		this._register(toDisposable(() => mainWindow.removeEventListener('storage', listener)));
+		mainWindow.addEventListener("storage", listener);
+		this._register(
+      toDisposable(() => mainWindow.removeEventListener("storage", listener)),
+    );
 	}
 
 	/**

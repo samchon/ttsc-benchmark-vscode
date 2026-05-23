@@ -3,29 +3,39 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { RunOnceScheduler } from '../../../../../base/common/async.js';
-import { CancellationToken } from '../../../../../base/common/cancellation.js';
-import { onUnexpectedError } from '../../../../../base/common/errors.js';
-import { Disposable, MutableDisposable } from '../../../../../base/common/lifecycle.js';
-import { autorun, derived, IObservable, ISettableObservable, observableValue } from '../../../../../base/common/observable.js';
-import { basename, isEqual } from '../../../../../base/common/resources.js';
-import { createDecorator } from '../../../../../platform/instantiation/common/instantiation.js';
-import { InstantiationType, registerSingleton } from '../../../../../platform/instantiation/common/extensions.js';
-import { IFileService } from '../../../../../platform/files/common/files.js';
-import { ILabelService } from '../../../../../platform/label/common/label.js';
-import { IProductService } from '../../../../../platform/product/common/productService.js';
-import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
-import { IPathService } from '../../../../services/path/common/pathService.js';
-import { IAICustomizationWorkspaceService, AICustomizationManagementSection } from '../../common/aiCustomizationWorkspaceService.js';
-import { ICustomizationHarnessService, ICustomizationItemProvider, isPluginCustomizationItem } from '../../common/customizationHarnessService.js';
-import { IAgentPluginService } from '../../common/plugins/agentPluginService.js';
-import { PromptsType } from '../../common/promptSyntax/promptTypes.js';
-import { IPromptsService } from '../../common/promptSyntax/service/promptsService.js';
-import { AICustomizationItemNormalizer, IAICustomizationItemSource, IAICustomizationListItem, ItemProviderItemSource, PureItemProviderItemSource } from './aiCustomizationItemSource.js';
-import { PromptsServiceCustomizationItemProvider } from './promptsServiceCustomizationItemProvider.js';
-import { URI } from '../../../../../base/common/uri.js';
-import { getChatSessionType } from '../../common/model/chatUri.js';
-import { isAgentHostTarget } from '../agentSessions/agentSessions.js';
+import { RunOnceScheduler } from "../../../../../base/common/async.js";
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { onUnexpectedError } from "../../../../../base/common/errors.js";
+import { Disposable, MutableDisposable } from "../../../../../base/common/lifecycle.js";
+import { autorun, derived, IObservable, ISettableObservable, observableValue } from "../../../../../base/common/observable.js";
+import { basename, isEqual } from "../../../../../base/common/resources.js";
+import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
+import { InstantiationType, registerSingleton } from "../../../../../platform/instantiation/common/extensions.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { ILabelService } from "../../../../../platform/label/common/label.js";
+import { IProductService } from "../../../../../platform/product/common/productService.js";
+import { IWorkspaceContextService } from "../../../../../platform/workspace/common/workspace.js";
+import { IPathService } from "../../../../services/path/common/pathService.js";
+import { IAICustomizationWorkspaceService, AICustomizationManagementSection } from "../../common/aiCustomizationWorkspaceService.js";
+import {
+  ICustomizationHarnessService,
+  ICustomizationItemProvider,
+  isPluginCustomizationItem,
+} from "../../common/customizationHarnessService.js";
+import { IAgentPluginService } from "../../common/plugins/agentPluginService.js";
+import { PromptsType } from "../../common/promptSyntax/promptTypes.js";
+import { IPromptsService } from "../../common/promptSyntax/service/promptsService.js";
+import {
+  AICustomizationItemNormalizer,
+  IAICustomizationItemSource,
+  IAICustomizationListItem,
+  ItemProviderItemSource,
+  PureItemProviderItemSource,
+} from "./aiCustomizationItemSource.js";
+import { PromptsServiceCustomizationItemProvider } from "./promptsServiceCustomizationItemProvider.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { getChatSessionType } from "../../common/model/chatUri.js";
+import { isAgentHostTarget } from "../agentSessions/agentSessions.js";
 
 /**
  * The set of sections whose items are sourced from the customization
@@ -36,16 +46,18 @@ import { isAgentHostTarget } from '../agentSessions/agentSessions.js';
  * plugin rows through the same provider pipeline.
  */
 export const ITEMS_MODEL_SECTIONS = [
-	AICustomizationManagementSection.Agents,
-	AICustomizationManagementSection.Skills,
-	AICustomizationManagementSection.Instructions,
-	AICustomizationManagementSection.Prompts,
-	AICustomizationManagementSection.Hooks,
+  AICustomizationManagementSection.Agents,
+  AICustomizationManagementSection.Skills,
+  AICustomizationManagementSection.Instructions,
+  AICustomizationManagementSection.Prompts,
+  AICustomizationManagementSection.Hooks,
 ] as const;
 
 export type ItemsModelSection = typeof ITEMS_MODEL_SECTIONS[number];
 
-export const IAICustomizationItemsModel = createDecorator<IAICustomizationItemsModel>('aiCustomizationItemsModel');
+export const IAICustomizationItemsModel = createDecorator<IAICustomizationItemsModel>(
+  "aiCustomizationItemsModel",
+);
 
 /**
  * Single source of truth for the items rendered by the AI Customizations
@@ -112,7 +124,9 @@ export class AICustomizationItemsModel extends Disposable implements IAICustomiz
 	 * fresh source bound to the new provider. Pruned when its descriptor is no longer
 	 * present in `availableHarnesses`.
 	 */
-	private readonly sourceCache = this._register(new MutableDisposable<IAICustomizationItemSource>());
+	private readonly sourceCache = this._register(
+    new MutableDisposable<IAICustomizationItemSource>(),
+  );
 	private pendingRefetchSource: IAICustomizationItemSource | undefined;
 	private readonly refetchObservedScheduler = this._register(new RunOnceScheduler(() => {
 		const source = this.pendingRefetchSource;
@@ -127,7 +141,10 @@ export class AICustomizationItemsModel extends Disposable implements IAICustomiz
 	private readonly fetchSeq = new Map<ItemsModelSection, number>();
 	/** Promise of the most recent fetch per section (resolves regardless of stale-discard). */
 	private readonly perSectionPending = new Map<ItemsModelSection, Promise<void>>();
-	private readonly remotePluginNames = observableValue<readonly string[]>('aiCustomizationRemotePluginNames', []);
+	private readonly remotePluginNames = observableValue<readonly string[]>(
+    "aiCustomizationRemotePluginNames",
+    [],
+  );
 	private readonly pluginCount = derived(reader => {
 		const installed = this.agentPluginService.plugins.read(reader);
 		// Match PluginListWidget's installed-name derivation
@@ -162,18 +179,27 @@ export class AICustomizationItemsModel extends Disposable implements IAICustomiz
 	) {
 		super();
 
-		this.itemNormalizer = new AICustomizationItemNormalizer(labelService, productService);
+		this.itemNormalizer = new AICustomizationItemNormalizer(
+      labelService,
+      productService,
+    );
 		this.promptsServiceItemProvider = new PromptsServiceCustomizationItemProvider(
-			() => this.harnessService.getActiveDescriptor(),
-			this.promptsService,
-			this.workspaceService,
-			productService,
-		);
+      () => this.harnessService.getActiveDescriptor(),
+      this.promptsService,
+      this.workspaceService,
+      productService,
+    );
 
 		for (const section of ITEMS_MODEL_SECTIONS) {
-			const items = observableValue<readonly IAICustomizationListItem[]>(`aiCustomizationItems:${section}`, []);
+			const items = observableValue<readonly IAICustomizationListItem[]>(
+        `aiCustomizationItems:${section}`,
+        [],
+      );
 			this.perSection.set(section, items);
-			this.perSectionCount.set(section, derived(reader => items.read(reader).length));
+			this.perSectionCount.set(
+        section,
+        derived(reader => items.read(reader).length),
+      );
 			this.fetchSeq.set(section, 0);
 		}
 
@@ -192,11 +218,17 @@ export class AICustomizationItemsModel extends Disposable implements IAICustomiz
 
 		// Workspace folder changes / active project root changes affect the items the
 		// prompts service surfaces (e.g. workspace vs. user classification).
-		this._register(workspaceContextService.onDidChangeWorkspaceFolders(() => this.scheduleRefetchObserved(this.getActiveItemSource())));
-		this._register(autorun(reader => {
-			this.workspaceService.activeProjectRoot.read(reader);
-			this.scheduleRefetchObserved(this.getActiveItemSource());
-		}));
+		this._register(
+      workspaceContextService.onDidChangeWorkspaceFolders(
+        () => this.scheduleRefetchObserved(this.getActiveItemSource()),
+      ),
+    );
+		this._register(
+      autorun(reader => {
+        this.workspaceService.activeProjectRoot.read(reader);
+        this.scheduleRefetchObserved(this.getActiveItemSource());
+      }),
+    );
 	}
 
 	getItems(section: ItemsModelSection): IObservable<readonly IAICustomizationListItem[]> {
@@ -215,7 +247,9 @@ export class AICustomizationItemsModel extends Disposable implements IAICustomiz
 	}
 
 	getActiveItemSource(): IAICustomizationItemSource {
-		return this.getOrCreateSource(this.harnessService.activeSessionResource.get());
+		return this.getOrCreateSource(
+      this.harnessService.activeSessionResource.get(),
+    );
 	}
 
 	getPromptsServiceItemProvider(): ICustomizationItemProvider {
@@ -244,7 +278,10 @@ export class AICustomizationItemsModel extends Disposable implements IAICustomiz
 	}
 
 	private getOrCreateSource(sessionResource: URI): IAICustomizationItemSource {
-		if (this.sourceCache.value && isEqual(sessionResource, this.sourceCache.value.sessionResource)) {
+		if (this.sourceCache.value && isEqual(
+      sessionResource,
+      this.sourceCache.value.sessionResource,
+    )) {
 			return this.sourceCache.value;
 		}
 		const sessionType = getChatSessionType(sessionResource);
@@ -255,18 +292,22 @@ export class AICustomizationItemsModel extends Disposable implements IAICustomiz
 				if (!descriptor?.itemProvider) {
 					throw new Error(`Agent host targets must have an item provider`);
 				}
-				return new PureItemProviderItemSource(sessionResource, descriptor.itemProvider, this.itemNormalizer);
+				return new PureItemProviderItemSource(
+          sessionResource,
+          descriptor.itemProvider,
+          this.itemNormalizer,
+        );
 			} else {
 				const itemProvider = descriptor?.itemProvider ?? this.promptsServiceItemProvider;
 				return new ItemProviderItemSource(
-					sessionResource,
-					itemProvider,
-					this.promptsService,
-					this.workspaceService,
-					this.fileService,
-					this.pathService,
-					this.itemNormalizer,
-				);
+          sessionResource,
+          itemProvider,
+          this.promptsService,
+          this.workspaceService,
+          this.fileService,
+          this.pathService,
+          this.itemNormalizer,
+        );
 			}
 		};
 		const source = getItemSource();
@@ -323,8 +364,8 @@ export class AICustomizationItemsModel extends Disposable implements IAICustomiz
 		const pending: Promise<readonly string[]> = provider
 			? provider.provideChatSessionCustomizations(sessionRessource, CancellationToken.None).then(items => {
 				return (items ?? [])
-					.filter(item => isPluginCustomizationItem(item) && item.groupKey !== 'remote-client')
-					.map(item => item.name ?? '');
+					.filter(item => isPluginCustomizationItem(item) && item.groupKey !== "remote-client")
+					.map(item => item.name ?? "");
 			})
 			: Promise.resolve<readonly string[]>([]);
 
@@ -358,4 +399,8 @@ function sectionToPromptType(section: ItemsModelSection): PromptsType {
 	}
 }
 
-registerSingleton(IAICustomizationItemsModel, AICustomizationItemsModel, InstantiationType.Delayed);
+registerSingleton(
+  IAICustomizationItemsModel,
+  AICustomizationItemsModel,
+  InstantiationType.Delayed,
+);

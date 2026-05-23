@@ -3,19 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken } from '../../../base/common/cancellation.js';
-import { Event } from '../../../base/common/event.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import { IQuickAccessController } from './quickAccess.js';
-import { IMatch } from '../../../base/common/filters.js';
-import { IItemAccessor } from '../../../base/common/fuzzyScorer.js';
-import { ResolvedKeybinding } from '../../../base/common/keybindings.js';
-import { IDisposable } from '../../../base/common/lifecycle.js';
-import { Schemas } from '../../../base/common/network.js';
-import { IObservable } from '../../../base/common/observable.js';
-import Severity from '../../../base/common/severity.js';
-import { URI } from '../../../base/common/uri.js';
-import { IMarkdownString } from '../../../base/common/htmlContent.js';
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { Event } from "../../../base/common/event.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { IQuickAccessController } from "./quickAccess.js";
+import { IMatch } from "../../../base/common/filters.js";
+import { IItemAccessor } from "../../../base/common/fuzzyScorer.js";
+import { ResolvedKeybinding } from "../../../base/common/keybindings.js";
+import { IDisposable } from "../../../base/common/lifecycle.js";
+import { Schemas } from "../../../base/common/network.js";
+import { IObservable } from "../../../base/common/observable.js";
+import Severity from "../../../base/common/severity.js";
+import { URI } from "../../../base/common/uri.js";
+import { IMarkdownString } from "../../../base/common/htmlContent.js";
 
 export interface IQuickItemHighlights {
 	label?: IMatch[];
@@ -70,7 +70,7 @@ export interface IQuickPickItem extends IQuickItem {
 	/**
 	 * The type of the quick pick item. Used to distinguish between 'item' and 'separator'
 	 */
-	type?: 'item';
+	type?: "item";
 	/**
 	 * The detail text of the quick pick item. Shown as the second line.
 	 */
@@ -104,7 +104,7 @@ export interface IQuickPickSeparator {
 	/**
 	 * The type of the quick pick item. Used to distinguish between 'item' and 'separator'
 	 */
-	type: 'separator';
+	type: "separator";
 	id?: string;
 	label?: string;
 	description?: string;
@@ -123,7 +123,11 @@ export function isKeyModified(keyMods: IKeyMods): boolean {
 	return keyMods.ctrlCmd || keyMods.alt || keyMods.shift;
 }
 
-export const NO_KEY_MODS: IKeyMods = { ctrlCmd: false, alt: false, shift: false };
+export const NO_KEY_MODS: IKeyMods = {
+  ctrlCmd: false,
+  alt: false,
+  shift: false,
+};
 
 export interface IQuickNavigateConfiguration {
 	keybindings: readonly ResolvedKeybinding[];
@@ -283,10 +287,10 @@ export interface IQuickInputHideEvent {
  * A collection of the different types of QuickInput
  */
 export const enum QuickInputType {
-	QuickPick = 'quickPick',
-	InputBox = 'inputBox',
-	QuickWidget = 'quickWidget',
-	QuickTree = 'quickTree'
+	QuickPick = "quickPick",
+	InputBox = "inputBox",
+	QuickWidget = "quickWidget",
+	QuickTree = "quickTree"
 }
 
 /**
@@ -549,7 +553,7 @@ export interface IQuickPick<T extends IQuickPickItem, O extends { useSeparators:
 	/**
 	 * The OK button state. It can be a boolean value or the string 'default'.
 	 */
-	ok: boolean | 'default';
+	ok: boolean | "default";
 
 	/**
 	 * The OK button label.
@@ -619,7 +623,7 @@ export interface IQuickPick<T extends IQuickPickItem, O extends { useSeparators:
 	/**
 	 * The mode to filter the label with. It can be 'fuzzy' or 'contiguous'. Defaults to 'fuzzy'.
 	 */
-	matchOnLabelMode: 'fuzzy' | 'contiguous';
+	matchOnLabelMode: "fuzzy" | "contiguous";
 
 	/**
 	 * Whether to sort the items by label.
@@ -931,11 +935,13 @@ export const quickPickItemScorerAccessor = new QuickPickItemScorerAccessor();
 
 //#endregion
 
-export const IQuickInputService = createDecorator<IQuickInputService>('quickInputService');
+export const IQuickInputService = createDecorator<IQuickInputService>(
+  "quickInputService",
+);
 
 export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 
-export type QuickInputAlignment = 'top' | 'center' | 'custom';
+export type QuickInputAlignment = "top" | "center" | "custom";
 
 export interface IQuickInputService {
 
@@ -972,7 +978,7 @@ export interface IQuickInputService {
 	 */
 	pick<T extends IQuickPickItem>(picks: Promise<QuickPickInput<T>[]> | QuickPickInput<T>[], options?: IPickOptions<T> & { canPickMany: true }, token?: CancellationToken): Promise<T[] | undefined>;
 	pick<T extends IQuickPickItem>(picks: Promise<QuickPickInput<T>[]> | QuickPickInput<T>[], options?: IPickOptions<T> & { canPickMany: false }, token?: CancellationToken): Promise<T | undefined>;
-	pick<T extends IQuickPickItem>(picks: Promise<QuickPickInput<T>[]> | QuickPickInput<T>[], options?: Omit<IPickOptions<T>, 'canPickMany'>, token?: CancellationToken): Promise<T | undefined>;
+	pick<T extends IQuickPickItem>(picks: Promise<QuickPickInput<T>[]> | QuickPickInput<T>[], options?: Omit<IPickOptions<T>, "canPickMany">, token?: CancellationToken): Promise<T | undefined>;
 
 	/**
 	 * Opens the quick input box for text input and returns a promise with the user typed value if any.
@@ -1048,7 +1054,7 @@ export interface IQuickInputService {
 	 * Set the alignment of the quick input.
 	 * @param alignment either a preset or a custom alignment
 	 */
-	setAlignment(alignment: 'top' | 'center' | { top: number; left: number }): void;
+	setAlignment(alignment: "top" | "center" | { top: number; left: number }): void;
 }
 
 //#region Quick Tree
@@ -1214,7 +1220,7 @@ export interface IQuickTreeItem extends IQuickItem {
 	 * When canSelectMany is true, this indicates the checkbox state of the item.
 	 * If undefined, the item is unchecked by default.
 	 */
-	checked?: boolean | 'mixed';
+	checked?: boolean | "mixed";
 
 	/**
 	 * The collapsible state of the tree item. Defaults to 'Expanded' if children are present.
@@ -1246,7 +1252,7 @@ export interface IQuickTreeCheckboxEvent<T extends IQuickTreeItem> {
 	/**
 	 * The new checked state.
 	 */
-	checked: boolean | 'mixed';
+	checked: boolean | "mixed";
 }
 
 /**

@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ITerminalExternalLinkProvider } from '../../../terminal/browser/terminal.js';
-import { ITerminalLinkProviderService } from './links.js';
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { IDisposable } from '../../../../../base/common/lifecycle.js';
+import { ITerminalExternalLinkProvider } from "../../../terminal/browser/terminal.js";
+import { ITerminalLinkProviderService } from "./links.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { IDisposable } from "../../../../../base/common/lifecycle.js";
 
 export class TerminalLinkProviderService implements ITerminalLinkProviderService {
 	declare _serviceBrand: undefined;
@@ -30,7 +30,7 @@ export class TerminalLinkProviderService implements ITerminalLinkProviderService
 				}
 				this._linkProviders.delete(linkProvider);
 				this._onDidRemoveLinkProvider.fire(linkProvider);
-			}
+			},
 		};
 	}
 }

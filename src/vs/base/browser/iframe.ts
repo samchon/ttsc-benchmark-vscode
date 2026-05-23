@@ -28,7 +28,7 @@ function getParentWindowIfSameOrigin(w: Window): Window | null {
 	try {
 		const location = w.location;
 		const parentLocation = w.parent.location;
-		if (location.origin !== 'null' && parentLocation.origin !== 'null' && location.origin !== parentLocation.origin) {
+		if (location.origin !== "null" && parentLocation.origin !== "null" && location.origin !== parentLocation.origin) {
 			return null;
 		}
 	} catch (e) {
@@ -55,14 +55,14 @@ export class IframeUtils {
 				parent = getParentWindowIfSameOrigin(w);
 				if (parent) {
 					windowChainCache.push({
-						window: new WeakRef(w),
-						iframeElement: w.frameElement || null
-					});
+            window: new WeakRef(w),
+            iframeElement: w.frameElement || null,
+          });
 				} else {
 					windowChainCache.push({
-						window: new WeakRef(w),
-						iframeElement: null
-					});
+            window: new WeakRef(w),
+            iframeElement: null,
+          });
 				}
 				w = parent;
 			} while (w);
@@ -77,9 +77,9 @@ export class IframeUtils {
 
 		if (!ancestorWindow || childWindow === ancestorWindow) {
 			return {
-				top: 0,
-				left: 0
-			};
+        top: 0,
+        left: 0,
+      };
 		}
 
 		let top = 0, left = 0;
@@ -105,9 +105,9 @@ export class IframeUtils {
 		}
 
 		return {
-			top: top,
-			left: left
-		};
+      top: top,
+      left: left,
+    };
 	}
 }
 
@@ -117,19 +117,21 @@ export class IframeUtils {
 export async function parentOriginHash(parentOrigin: string, salt: string): Promise<string> {
 	// This same code is also inlined at `src/vs/workbench/services/extensions/worker/webWorkerExtensionHostIframe.html`
 	if (!crypto.subtle) {
-		throw new Error(`'crypto.subtle' is not available so webviews will not work. This is likely because the editor is not running in a secure context (https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts).`);
+		throw new Error(
+      `'crypto.subtle' is not available so webviews will not work. This is likely because the editor is not running in a secure context (https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts).`,
+    );
 	}
 
 	const strData = JSON.stringify({ parentOrigin, salt });
 	const encoder = new TextEncoder();
 	const arrData = encoder.encode(strData);
-	const hash = await crypto.subtle.digest('sha-256', arrData);
+	const hash = await crypto.subtle.digest("sha-256", arrData);
 	return sha256AsBase32(hash);
 }
 
 function sha256AsBase32(bytes: ArrayBuffer): string {
 	const array = Array.from(new Uint8Array(bytes));
-	const hexArray = array.map(b => b.toString(16).padStart(2, '0')).join('');
+	const hexArray = array.map(b => b.toString(16).padStart(2, "0")).join("");
 	// sha256 has 256 bits, so we need at most ceil(lg(2^256-1)/lg(32)) = 52 chars to represent it in base 32
-	return BigInt(`0x${hexArray}`).toString(32).padStart(52, '0');
+	return BigInt(`0x${hexArray}`).toString(32).padStart(52, "0");
 }

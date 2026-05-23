@@ -20,11 +20,11 @@ export interface ICellRange {
 
 
 export function isICellRange(candidate: unknown): candidate is ICellRange {
-	if (!candidate || typeof candidate !== 'object') {
+	if (!candidate || typeof candidate !== "object") {
 		return false;
 	}
-	return typeof (candidate as ICellRange).start === 'number'
-		&& typeof (candidate as ICellRange).end === 'number';
+	return typeof (candidate as ICellRange).start === "number"
+		&& typeof (candidate as ICellRange).end === "number";
 }
 
 export function cellIndexesToRanges(indexes: number[]) {
@@ -77,7 +77,9 @@ export function reduceCellRanges(ranges: ICellRange[]): ICellRange[] {
 
 	if (reduced.length > 1) {
 		// remove the (0, 0) range
-		return reduced.filter(range => !(range.start === range.end && range.start === 0));
+		return reduced.filter(
+      range => !(range.start === range.end && range.start === 0),
+    );
 	}
 
 	return reduced;

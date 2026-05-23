@@ -3,10 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from '../../../base/common/event.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
+import { Event } from "../../../base/common/event.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
 
-export const IPlaywrightService = createDecorator<IPlaywrightService>('playwrightService');
+export const IPlaywrightService = createDecorator<IPlaywrightService>(
+  "playwrightService",
+);
 
 export interface IInvokeFunctionResult {
 	result?: unknown;

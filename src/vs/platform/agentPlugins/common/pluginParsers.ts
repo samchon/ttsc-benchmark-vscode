@@ -3,17 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { parse as parseJSONC } from '../../../base/common/json.js';
-import { cloneAndChange } from '../../../base/common/objects.js';
-import { isAbsolute } from '../../../base/common/path.js';
-import { untildify } from '../../../base/common/labels.js';
-import { basename, extname, isEqualOrParent, joinPath, normalizePath } from '../../../base/common/resources.js';
-import { escapeRegExpCharacters } from '../../../base/common/strings.js';
-import { hasKey, Mutable } from '../../../base/common/types.js';
-import { URI } from '../../../base/common/uri.js';
-import { IFileService } from '../../files/common/files.js';
-import { parseFrontMatter } from '../../../base/common/yaml.js';
-import { IMcpRemoteServerConfiguration, IMcpServerConfiguration, IMcpStdioServerConfiguration, McpServerType } from '../../mcp/common/mcpPlatformTypes.js';
+import { parse as parseJSONC } from "../../../base/common/json.js";
+import { cloneAndChange } from "../../../base/common/objects.js";
+import { isAbsolute } from "../../../base/common/path.js";
+import { untildify } from "../../../base/common/labels.js";
+import { basename, extname, isEqualOrParent, joinPath, normalizePath } from "../../../base/common/resources.js";
+import { escapeRegExpCharacters } from "../../../base/common/strings.js";
+import { hasKey, Mutable } from "../../../base/common/types.js";
+import { URI } from "../../../base/common/uri.js";
+import { IFileService } from "../../files/common/files.js";
+import { parseFrontMatter } from "../../../base/common/yaml.js";
+import {
+  IMcpRemoteServerConfiguration,
+  IMcpServerConfiguration,
+  IMcpStdioServerConfiguration,
+  McpServerType,
+} from "../../mcp/common/mcpPlatformTypes.js";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -98,8 +103,8 @@ export interface IPluginFormatConfig {
 
 const COPILOT_FORMAT: IPluginFormatConfig = {
 	format: PluginFormat.Copilot,
-	manifestPath: 'plugin.json',
-	hookConfigPath: 'hooks.json',
+	manifestPath: "plugin.json",
+	hookConfigPath: "hooks.json",
 	pluginRootToken: undefined,
 	pluginRootEnvVar: undefined,
 	parseHooks(hookUri, json, _pluginUri, workspaceRoot, userHome) {
@@ -109,33 +114,39 @@ const COPILOT_FORMAT: IPluginFormatConfig = {
 
 const CLAUDE_FORMAT: IPluginFormatConfig = {
 	format: PluginFormat.Claude,
-	manifestPath: '.claude-plugin/plugin.json',
-	hookConfigPath: 'hooks/hooks.json',
-	pluginRootToken: '${CLAUDE_PLUGIN_ROOT}',
-	pluginRootEnvVar: 'CLAUDE_PLUGIN_ROOT',
+	manifestPath: ".claude-plugin/plugin.json",
+	hookConfigPath: "hooks/hooks.json",
+	pluginRootToken: "${CLAUDE_PLUGIN_ROOT}",
+	pluginRootEnvVar: "CLAUDE_PLUGIN_ROOT",
 	parseHooks(hookUri, json, pluginUri, workspaceRoot, userHome) {
-		return interpolateHookPluginRoot(hookUri, json, pluginUri, workspaceRoot, userHome, '${CLAUDE_PLUGIN_ROOT}', 'CLAUDE_PLUGIN_ROOT');
+		return interpolateHookPluginRoot(hookUri, json, pluginUri, workspaceRoot, userHome, "${CLAUDE_PLUGIN_ROOT}", "CLAUDE_PLUGIN_ROOT");
 	},
 };
 
 const OPEN_PLUGIN_FORMAT: IPluginFormatConfig = {
 	format: PluginFormat.OpenPlugin,
-	manifestPath: '.plugin/plugin.json',
-	hookConfigPath: 'hooks/hooks.json',
-	pluginRootToken: '${PLUGIN_ROOT}',
-	pluginRootEnvVar: 'PLUGIN_ROOT',
+	manifestPath: ".plugin/plugin.json",
+	hookConfigPath: "hooks/hooks.json",
+	pluginRootToken: "${PLUGIN_ROOT}",
+	pluginRootEnvVar: "PLUGIN_ROOT",
 	parseHooks(hookUri, json, pluginUri, workspaceRoot, userHome) {
-		return interpolateHookPluginRoot(hookUri, json, pluginUri, workspaceRoot, userHome, '${PLUGIN_ROOT}', 'PLUGIN_ROOT');
+		return interpolateHookPluginRoot(hookUri, json, pluginUri, workspaceRoot, userHome, "${PLUGIN_ROOT}", "PLUGIN_ROOT");
 	},
 };
 
 export async function detectPluginFormat(pluginUri: URI, fileService: IFileService): Promise<IPluginFormatConfig> {
-	if (await pathExists(joinPath(pluginUri, '.plugin', 'plugin.json'), fileService)) {
+	if (await pathExists(
+    joinPath(pluginUri, ".plugin", "plugin.json"),
+    fileService,
+  )) {
 		return OPEN_PLUGIN_FORMAT;
 	}
 
-	const isInClaudeDirectory = pluginUri.path.split('/').includes('.claude');
-	if (isInClaudeDirectory || await pathExists(joinPath(pluginUri, '.claude-plugin', 'plugin.json'), fileService)) {
+	const isInClaudeDirectory = pluginUri.path.split("/").includes(".claude");
+	if (isInClaudeDirectory || await pathExists(
+    joinPath(pluginUri, ".claude-plugin", "plugin.json"),
+    fileService,
+  )) {
 		return CLAUDE_FORMAT;
 	}
 
@@ -151,7 +162,10 @@ export interface IComponentPathConfig {
 	readonly exclusive: boolean;
 }
 
-const emptyComponentPathConfig: IComponentPathConfig = { paths: [], exclusive: false };
+const emptyComponentPathConfig: IComponentPathConfig = {
+  paths: [],
+  exclusive: false,
+};
 
 /**
  * Parses a manifest component path field into a normalized config.
@@ -162,27 +176,30 @@ export function parseComponentPathConfig(raw: unknown): IComponentPathConfig {
 		return emptyComponentPathConfig;
 	}
 
-	if (typeof raw === 'string') {
+	if (typeof raw === "string") {
 		const trimmed = raw.trim();
-		return trimmed ? { paths: [trimmed], exclusive: false } : emptyComponentPathConfig;
+		return trimmed ? {
+      paths: [trimmed],
+      exclusive: false,
+    } : emptyComponentPathConfig;
 	}
 
 	if (Array.isArray(raw)) {
 		const paths = raw
-			.filter(v => typeof v === 'string')
+			.filter(v => typeof v === "string")
 			.map(v => v.trim())
 			.filter(v => v.length > 0);
 		return { paths, exclusive: false };
 	}
 
-	if (typeof raw === 'object') {
+	if (typeof raw === "object") {
 		const obj = raw as Record<string, unknown>;
-		if (Array.isArray(obj['paths'])) {
-			const paths = (obj['paths'] as unknown[])
-				.filter(v => typeof v === 'string')
+		if (Array.isArray(obj["paths"])) {
+			const paths = (obj["paths"] as unknown[])
+				.filter(v => typeof v === "string")
 				.map(v => v.trim())
 				.filter(v => v.length > 0);
-			const exclusive = obj['exclusive'] === true;
+			const exclusive = obj["exclusive"] === true;
 			return { paths, exclusive };
 		}
 	}
@@ -197,7 +214,10 @@ export function parseComponentPathConfig(raw: unknown): IComponentPathConfig {
  * @param boundaryUri The outermost directory that resolved paths must stay within. Defaults to {@link pluginUri}.
  */
 export function resolveComponentDirs(pluginUri: URI, defaultDir: string, config: IComponentPathConfig, boundaryUri?: URI): readonly URI[] {
-	const boundary = (boundaryUri && isEqualOrParent(pluginUri, boundaryUri)) ? boundaryUri : pluginUri;
+	const boundary = (boundaryUri && isEqualOrParent(
+    pluginUri,
+    boundaryUri,
+  )) ? boundaryUri : pluginUri;
 	const dirs: URI[] = [];
 	if (!config.exclusive) {
 		dirs.push(joinPath(pluginUri, defaultDir));
@@ -220,11 +240,11 @@ export function resolveComponentDirs(pluginUri: URI, defaultDir: string, config:
  * wrapped format `{ mcpServers: { … } }` and the flat format.
  */
 export function resolveMcpServersMap(raw: unknown): Record<string, unknown> | undefined {
-	if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+	if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
 		return undefined;
 	}
 	const obj = raw as Record<string, unknown>;
-	return Object.hasOwn(obj, 'mcpServers')
+	return Object.hasOwn(obj, "mcpServers")
 		? (obj.mcpServers as Record<string, unknown>)
 		: obj;
 }
@@ -233,31 +253,33 @@ export function resolveMcpServersMap(raw: unknown): Record<string, unknown> | un
  * Normalizes a raw JSON value into a typed MCP server configuration.
  */
 export function normalizeMcpServerConfiguration(rawConfig: unknown): IMcpServerConfiguration | undefined {
-	if (!rawConfig || typeof rawConfig !== 'object') {
+	if (!rawConfig || typeof rawConfig !== "object") {
 		return undefined;
 	}
 
 	const candidate = rawConfig as Record<string, unknown>;
-	const type = typeof candidate['type'] === 'string' ? candidate['type'] : undefined;
+	const type = typeof candidate["type"] === "string" ? candidate["type"] : undefined;
 
-	const command = typeof candidate['command'] === 'string' ? candidate['command'] : undefined;
-	const url = typeof candidate['url'] === 'string' ? candidate['url'] : undefined;
-	const args = Array.isArray(candidate['args']) ? candidate['args'].filter((value): value is string => typeof value === 'string') : undefined;
-	const env = candidate['env'] && typeof candidate['env'] === 'object'
-		? Object.fromEntries(Object.entries(candidate['env'] as Record<string, unknown>)
-			.filter(([, value]) => typeof value === 'string' || typeof value === 'number' || value === null)
+	const command = typeof candidate["command"] === "string" ? candidate["command"] : undefined;
+	const url = typeof candidate["url"] === "string" ? candidate["url"] : undefined;
+	const args = Array.isArray(candidate["args"]) ? candidate["args"].filter(
+    (value): value is string => typeof value === "string",
+  ) : undefined;
+	const env = candidate["env"] && typeof candidate["env"] === "object"
+		? Object.fromEntries(Object.entries(candidate["env"] as Record<string, unknown>)
+			.filter(([, value]) => typeof value === "string" || typeof value === "number" || value === null)
 			.map(([key, value]) => [key, value as string | number | null]))
 		: undefined;
-	const envFile = typeof candidate['envFile'] === 'string' ? candidate['envFile'] : undefined;
-	const cwd = typeof candidate['cwd'] === 'string' ? candidate['cwd'] : undefined;
-	const headers = candidate['headers'] && typeof candidate['headers'] === 'object'
-		? Object.fromEntries(Object.entries(candidate['headers'] as Record<string, unknown>)
-			.filter(([, value]) => typeof value === 'string')
+	const envFile = typeof candidate["envFile"] === "string" ? candidate["envFile"] : undefined;
+	const cwd = typeof candidate["cwd"] === "string" ? candidate["cwd"] : undefined;
+	const headers = candidate["headers"] && typeof candidate["headers"] === "object"
+		? Object.fromEntries(Object.entries(candidate["headers"] as Record<string, unknown>)
+			.filter(([, value]) => typeof value === "string")
 			.map(([key, value]) => [key, value as string]))
 		: undefined;
-	const dev = candidate['dev'] && typeof candidate['dev'] === 'object' ? candidate['dev'] as IMcpStdioServerConfiguration['dev'] : undefined;
+	const dev = candidate["dev"] && typeof candidate["dev"] === "object" ? candidate["dev"] as IMcpStdioServerConfiguration["dev"] : undefined;
 
-	if (type === 'ws') {
+	if (type === "ws") {
 		return undefined;
 	}
 
@@ -268,7 +290,7 @@ export function normalizeMcpServerConfiguration(rawConfig: unknown): IMcpServerC
 		return { type: McpServerType.LOCAL, command, args, env, envFile, cwd, dev };
 	}
 
-	if (type === McpServerType.REMOTE || type === 'sse' || (!type && url)) {
+	if (type === McpServerType.REMOTE || type === "sse" || (!type && url)) {
 		if (!url) {
 			return undefined;
 		}
@@ -299,9 +321,9 @@ export function shellQuotePluginRootInCommand(command: string, fsPath: string, t
 
 	const escapedToken = escapeRegExpCharacters(token);
 	const pattern = new RegExp(
-		`(["']?)` + escapedToken + `([\\w./\\\\~:-]*)`,
-		'g',
-	);
+    `(["']?)` + escapedToken + `([\\w./\\\\~:-]*)`,
+    "g",
+  );
 
 	return command.replace(pattern, (_match, leadingQuote: string, suffix: string) => {
 		const fullPath = fsPath + suffix;
@@ -338,7 +360,7 @@ export function interpolateMcpPluginRoot(
 		}
 		local.env = { ...local.env };
 		for (const [k, v] of Object.entries(local.env)) {
-			if (typeof v === 'string') {
+			if (typeof v === "string") {
 				local.env[k] = replace(v);
 			}
 		}
@@ -352,8 +374,8 @@ export function interpolateMcpPluginRoot(
 		remote.url = replace(remote.url);
 		if (remote.headers) {
 			remote.headers = Object.fromEntries(
-				Object.entries(remote.headers).map(([k, v]) => [k, replace(v)])
-			);
+        Object.entries(remote.headers).map(([k, v]) => [k, replace(v)]),
+      );
 		}
 		interpolated = remote;
 	}
@@ -377,8 +399,8 @@ export function convertBareEnvVarsToVsCodeSyntax(
 		if (URI.isUri(value)) {
 			return value;
 		}
-		if (typeof value === 'string') {
-			const replaced = value.replace(BARE_ENV_VAR_RE, '${env:$1}');
+		if (typeof value === "string") {
+			const replaced = value.replace(BARE_ENV_VAR_RE, "${env:$1}");
 			return replaced !== value ? replaced : undefined;
 		}
 		return undefined;
@@ -395,25 +417,25 @@ export function convertBareEnvVarsToVsCodeSyntax(
  */
 const HOOK_TYPE_MAP: Record<string, string> = {
 	// PascalCase (VS Code / Claude)
-	'SessionStart': 'SessionStart',
-	'SessionEnd': 'SessionEnd',
-	'UserPromptSubmit': 'UserPromptSubmit',
-	'PreToolUse': 'PreToolUse',
-	'PostToolUse': 'PostToolUse',
-	'PreCompact': 'PreCompact',
-	'SubagentStart': 'SubagentStart',
-	'SubagentStop': 'SubagentStop',
-	'Stop': 'Stop',
-	'ErrorOccurred': 'ErrorOccurred',
+	"SessionStart": "SessionStart",
+	"SessionEnd": "SessionEnd",
+	"UserPromptSubmit": "UserPromptSubmit",
+	"PreToolUse": "PreToolUse",
+	"PostToolUse": "PostToolUse",
+	"PreCompact": "PreCompact",
+	"SubagentStart": "SubagentStart",
+	"SubagentStop": "SubagentStop",
+	"Stop": "Stop",
+	"ErrorOccurred": "ErrorOccurred",
 	// camelCase (GitHub Copilot CLI)
-	'sessionStart': 'SessionStart',
-	'sessionEnd': 'SessionEnd',
-	'userPromptSubmitted': 'UserPromptSubmit',
-	'preToolUse': 'PreToolUse',
-	'postToolUse': 'PostToolUse',
-	'agentStop': 'Stop',
-	'subagentStop': 'SubagentStop',
-	'errorOccurred': 'ErrorOccurred',
+	"sessionStart": "SessionStart",
+	"sessionEnd": "SessionEnd",
+	"userPromptSubmitted": "UserPromptSubmit",
+	"preToolUse": "PreToolUse",
+	"postToolUse": "PostToolUse",
+	"agentStop": "Stop",
+	"subagentStop": "SubagentStop",
+	"errorOccurred": "ErrorOccurred",
 };
 
 /**
@@ -422,16 +444,16 @@ const HOOK_TYPE_MAP: Record<string, string> = {
  */
 function normalizeHookCommand(raw: Record<string, unknown>): IParsedHookCommand | undefined {
 	// Allow omitted type (Claude compatibility) — treat as 'command'
-	if (raw.type !== undefined && raw.type !== 'command') {
+	if (raw.type !== undefined && raw.type !== "command") {
 		return undefined;
 	}
 
-	const hasCommand = typeof raw.command === 'string' && raw.command.length > 0;
-	const hasBash = typeof raw.bash === 'string' && (raw.bash as string).length > 0;
-	const hasPowerShell = typeof raw.powershell === 'string' && (raw.powershell as string).length > 0;
-	const hasWindows = typeof raw.windows === 'string' && (raw.windows as string).length > 0;
-	const hasLinux = typeof raw.linux === 'string' && (raw.linux as string).length > 0;
-	const hasOsx = typeof raw.osx === 'string' && (raw.osx as string).length > 0;
+	const hasCommand = typeof raw.command === "string" && raw.command.length > 0;
+	const hasBash = typeof raw.bash === "string" && (raw.bash as string).length > 0;
+	const hasPowerShell = typeof raw.powershell === "string" && (raw.powershell as string).length > 0;
+	const hasWindows = typeof raw.windows === "string" && (raw.windows as string).length > 0;
+	const hasLinux = typeof raw.linux === "string" && (raw.linux as string).length > 0;
+	const hasOsx = typeof raw.osx === "string" && (raw.osx as string).length > 0;
 
 	if (!hasCommand && !hasBash && !hasPowerShell && !hasWindows && !hasLinux && !hasOsx) {
 		return undefined;
@@ -441,18 +463,18 @@ function normalizeHookCommand(raw: Record<string, unknown>): IParsedHookCommand 
 	const linux = hasLinux ? raw.linux as string : (hasBash ? raw.bash as string : undefined);
 	const osx = hasOsx ? raw.osx as string : (hasBash ? raw.bash as string : undefined);
 
-	const timeout = typeof raw.timeout === 'number'
+	const timeout = typeof raw.timeout === "number"
 		? raw.timeout
-		: (typeof raw.timeoutSec === 'number' ? raw.timeoutSec : undefined);
+		: (typeof raw.timeoutSec === "number" ? raw.timeoutSec : undefined);
 
 	return {
-		...(hasCommand && { command: raw.command as string }),
-		...(windows && { windows }),
-		...(linux && { linux }),
-		...(osx && { osx }),
-		...(typeof raw.env === 'object' && raw.env !== null && { env: raw.env as Record<string, string> }),
-		...(timeout !== undefined && { timeout }),
-	};
+    ...(hasCommand && { command: raw.command as string }),
+    ...(windows && { windows }),
+    ...(linux && { linux }),
+    ...(osx && { osx }),
+    ...(typeof raw.env === "object" && raw.env !== null && { env: raw.env as Record<string, string> }),
+    ...(timeout !== undefined && { timeout }),
+  };
 }
 
 /**
@@ -466,7 +488,7 @@ function resolveHookCommand(raw: Record<string, unknown>, workspaceRoot: URI | u
 	}
 
 	let cwdUri: URI | undefined;
-	const rawCwd = typeof raw.cwd === 'string' ? raw.cwd : undefined;
+	const rawCwd = typeof raw.cwd === "string" ? raw.cwd : undefined;
 	if (rawCwd) {
 		const expanded = untildify(rawCwd, userHome);
 		if (isAbsolute(expanded)) {
@@ -486,7 +508,7 @@ function resolveHookCommand(raw: Record<string, unknown>, workspaceRoot: URI | u
  * or a nested structure with a `matcher` (Claude format).
  */
 function extractHookCommands(item: unknown, workspaceRoot: URI | undefined, userHome: string): IParsedHookCommand[] {
-	if (!item || typeof item !== 'object') {
+	if (!item || typeof item !== "object") {
 		return [];
 	}
 
@@ -497,10 +519,14 @@ function extractHookCommands(item: unknown, workspaceRoot: URI | undefined, user
 	const nestedHooks = itemObj.hooks;
 	if (nestedHooks !== undefined && Array.isArray(nestedHooks)) {
 		for (const nested of nestedHooks) {
-			if (!nested || typeof nested !== 'object') {
+			if (!nested || typeof nested !== "object") {
 				continue;
 			}
-			const resolved = resolveHookCommand(nested as Record<string, unknown>, workspaceRoot, userHome);
+			const resolved = resolveHookCommand(
+        nested as Record<string, unknown>,
+        workspaceRoot,
+        userHome,
+      );
 			if (resolved) {
 				commands.push(resolved);
 			}
@@ -524,7 +550,7 @@ function parseHooksJson(
 	workspaceRoot: URI | undefined,
 	userHome: string,
 ): IParsedHookGroup[] {
-	if (!json || typeof json !== 'object') {
+	if (!json || typeof json !== "object") {
 		return [];
 	}
 
@@ -536,7 +562,7 @@ function parseHooksJson(
 	}
 
 	const hooks = root.hooks;
-	if (!hooks || typeof hooks !== 'object') {
+	if (!hooks || typeof hooks !== "object") {
 		return [];
 	}
 
@@ -584,13 +610,17 @@ export function interpolateHookPluginRoot(
 	const typedJson = json as { hooks?: Record<string, unknown[]> };
 
 	const mutateHookCommand = (hook: Record<string, unknown>): void => {
-		for (const field of ['command', 'windows', 'linux', 'osx'] as const) {
-			if (typeof hook[field] === 'string') {
-				hook[field] = shellQuotePluginRootInCommand(hook[field] as string, fsPath, token);
+		for (const field of ["command", "windows", "linux", "osx"] as const) {
+			if (typeof hook[field] === "string") {
+				hook[field] = shellQuotePluginRootInCommand(
+          hook[field] as string,
+          fsPath,
+          token,
+        );
 			}
 		}
 
-		if (!hook.env || typeof hook.env !== 'object') {
+		if (!hook.env || typeof hook.env !== "object") {
 			hook.env = {};
 		}
 		(hook.env as Record<string, string>)[envVar] = fsPath;
@@ -601,7 +631,7 @@ export function interpolateHookPluginRoot(
 			continue;
 		}
 		for (const lifecycleEntry of lifecycle) {
-			if (!lifecycleEntry || typeof lifecycleEntry !== 'object') {
+			if (!lifecycleEntry || typeof lifecycleEntry !== "object") {
 				continue;
 			}
 			const entry = lifecycleEntry as { hooks?: Record<string, unknown>[] } & Record<string, unknown>;
@@ -616,12 +646,17 @@ export function interpolateHookPluginRoot(
 	}
 
 	const replacer = (v: unknown): unknown => {
-		return typeof v === 'string'
+		return typeof v === "string"
 			? v.replaceAll(token, pluginUri.fsPath)
 			: undefined;
 	};
 
-	return parseHooksJson(hookUri, cloneAndChange(json, replacer), workspaceRoot, userHome);
+	return parseHooksJson(
+    hookUri,
+    cloneAndChange(json, replacer),
+    workspaceRoot,
+    userHome,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -650,7 +685,7 @@ export async function pathExists(resource: URI, fileService: IFileService): Prom
 // Component readers
 // ---------------------------------------------------------------------------
 
-const COMMAND_FILE_SUFFIX = '.md';
+const COMMAND_FILE_SUFFIX = ".md";
 
 export async function readSkills(pluginRoot: URI, dirs: readonly URI[], fileService: IFileService): Promise<readonly INamedPluginResource[]> {
 	const seen = new Set<string>();
@@ -664,7 +699,7 @@ export async function readSkills(pluginRoot: URI, dirs: readonly URI[], fileServ
 	};
 
 	for (const dir of dirs) {
-		const skillMd = URI.joinPath(dir, 'SKILL.md');
+		const skillMd = URI.joinPath(dir, "SKILL.md");
 		if (await pathExists(skillMd, fileService)) {
 			addSkill(basename(dir), skillMd);
 			continue;
@@ -682,7 +717,7 @@ export async function readSkills(pluginRoot: URI, dirs: readonly URI[], fileServ
 		}
 
 		for (const child of stat.children) {
-			const childSkillMd = URI.joinPath(child.resource, 'SKILL.md');
+			const childSkillMd = URI.joinPath(child.resource, "SKILL.md");
 			if (await pathExists(childSkillMd, fileService)) {
 				addSkill(basename(child.resource), childSkillMd);
 			}
@@ -690,7 +725,7 @@ export async function readSkills(pluginRoot: URI, dirs: readonly URI[], fileServ
 	}
 
 	if (skills.length === 0) {
-		const rootSkillMd = URI.joinPath(pluginRoot, 'SKILL.md');
+		const rootSkillMd = URI.joinPath(pluginRoot, "SKILL.md");
 		if (await pathExists(rootSkillMd, fileService)) {
 			addSkill(basename(pluginRoot), rootSkillMd);
 		}
@@ -732,7 +767,10 @@ export async function readMarkdownComponents(dirs: readonly URI[], fileService: 
 			if (!child.isFile || extname(child.resource).toLowerCase() !== COMMAND_FILE_SUFFIX) {
 				continue;
 			}
-			addItem(basename(child.resource).slice(0, -COMMAND_FILE_SUFFIX.length), child.resource);
+			addItem(
+        basename(child.resource).slice(0, -COMMAND_FILE_SUFFIX.length),
+        child.resource,
+      );
 		}
 	}
 
@@ -754,8 +792,8 @@ export async function readAgentComponents(dirs: readonly URI[], fileService: IFi
 		try {
 			const content = await fileService.readFile(file.uri);
 			const frontmatter = parseFrontMatter(content.value.toString());
-			const fmName = frontmatter?.getStringValue('name')?.trim();
-			const fmDescription = frontmatter?.getStringValue('description')?.trim();
+			const fmName = frontmatter?.getStringValue("name")?.trim();
+			const fmDescription = frontmatter?.getStringValue("description")?.trim();
 			return {
 				uri: file.uri,
 				name: fmName || file.name,
@@ -793,7 +831,13 @@ async function readHooks(
 			continue;
 		}
 
-		return formatConfig.parseHooks(hookPath, json, pluginUri, workspaceRoot, userHome);
+		return formatConfig.parseHooks(
+      hookPath,
+      json,
+      pluginUri,
+      workspaceRoot,
+      userHome,
+    );
 	}
 	return [];
 }
@@ -807,7 +851,12 @@ async function readMcpServers(
 	const merged = new Map<string, IMcpServerDefinition>();
 	for (const mcpPath of paths) {
 		const json = await readJsonFile(mcpPath, fileService);
-		for (const def of parseMcpServerDefinitionMap(mcpPath, json, pluginFsPath, formatConfig)) {
+		for (const def of parseMcpServerDefinitionMap(
+      mcpPath,
+      json,
+      pluginFsPath,
+      formatConfig,
+    )) {
 			if (!merged.has(def.name)) {
 				merged.set(def.name, def);
 			}
@@ -836,7 +885,12 @@ export function parseMcpServerDefinitionMap(
 
 		let def: IMcpServerDefinition = { name, configuration, uri: definitionURI };
 		if (formatConfig.pluginRootToken && formatConfig.pluginRootEnvVar) {
-			def = interpolateMcpPluginRoot(def, pluginFsPath, formatConfig.pluginRootToken, formatConfig.pluginRootEnvVar);
+			def = interpolateMcpPluginRoot(
+        def,
+        pluginFsPath,
+        formatConfig.pluginRootToken,
+        formatConfig.pluginRootEnvVar,
+      );
 		}
 		def = convertBareEnvVarsToVsCodeSyntax(def);
 		definitions.push(def);
@@ -863,33 +917,66 @@ export async function parsePlugin(
 	const formatConfig = await detectPluginFormat(pluginUri, fileService);
 
 	// Read manifest
-	const manifestJson = await readJsonFile(joinPath(pluginUri, formatConfig.manifestPath), fileService);
-	const manifest = (manifestJson && typeof manifestJson === 'object') ? manifestJson as Record<string, unknown> : undefined;
+	const manifestJson = await readJsonFile(
+    joinPath(pluginUri, formatConfig.manifestPath),
+    fileService,
+  );
+	const manifest = (manifestJson && typeof manifestJson === "object") ? manifestJson as Record<string, unknown> : undefined;
 
 	// Resolve component directories from manifest
-	const hookDirs = resolveComponentDirs(pluginUri, formatConfig.hookConfigPath, parseComponentPathConfig(manifest?.['hooks']), boundaryUri);
-	const mcpDirs = resolveComponentDirs(pluginUri, '.mcp.json', parseComponentPathConfig(manifest?.['mcpServers']), boundaryUri);
-	const skillDirs = resolveComponentDirs(pluginUri, 'skills', parseComponentPathConfig(manifest?.['skills']), boundaryUri);
-	const agentDirs = resolveComponentDirs(pluginUri, 'agents', parseComponentPathConfig(manifest?.['agents']), boundaryUri);
+	const hookDirs = resolveComponentDirs(
+    pluginUri,
+    formatConfig.hookConfigPath,
+    parseComponentPathConfig(manifest?.["hooks"]),
+    boundaryUri,
+  );
+	const mcpDirs = resolveComponentDirs(
+    pluginUri,
+    ".mcp.json",
+    parseComponentPathConfig(manifest?.["mcpServers"]),
+    boundaryUri,
+  );
+	const skillDirs = resolveComponentDirs(
+    pluginUri,
+    "skills",
+    parseComponentPathConfig(manifest?.["skills"]),
+    boundaryUri,
+  );
+	const agentDirs = resolveComponentDirs(
+    pluginUri,
+    "agents",
+    parseComponentPathConfig(manifest?.["agents"]),
+    boundaryUri,
+  );
 
 	// Handle embedded MCP servers in manifest
 	let embeddedMcp: IMcpServerDefinition[] = [];
-	const mcpSection = manifest?.['mcpServers'];
-	if (mcpSection && typeof mcpSection === 'object' && !Array.isArray(mcpSection) && !(hasKey(mcpSection, { paths: true }))) {
+	const mcpSection = manifest?.["mcpServers"];
+	if (mcpSection && typeof mcpSection === "object" && !Array.isArray(
+    mcpSection,
+  ) && !(hasKey(mcpSection, { paths: true }))) {
 		embeddedMcp = parseMcpServerDefinitionMap(
-			joinPath(pluginUri, formatConfig.manifestPath),
-			{ mcpServers: mcpSection },
-			pluginUri.fsPath,
-			formatConfig,
-		);
+      joinPath(pluginUri, formatConfig.manifestPath),
+      { mcpServers: mcpSection },
+      pluginUri.fsPath,
+      formatConfig,
+    );
 	}
 
 	// Handle embedded hooks in manifest
 	let embeddedHooks: IParsedHookGroup[] = [];
-	const hooksSection = manifest?.['hooks'];
-	if (hooksSection && typeof hooksSection === 'object' && !Array.isArray(hooksSection) && !(hasKey(hooksSection, { paths: true }))) {
+	const hooksSection = manifest?.["hooks"];
+	if (hooksSection && typeof hooksSection === "object" && !Array.isArray(
+    hooksSection,
+  ) && !(hasKey(hooksSection, { paths: true }))) {
 		const manifestUri = joinPath(pluginUri, formatConfig.manifestPath);
-		embeddedHooks = formatConfig.parseHooks(manifestUri, { hooks: hooksSection }, pluginUri, workspaceRoot, userHome);
+		embeddedHooks = formatConfig.parseHooks(
+      manifestUri,
+      { hooks: hooksSection },
+      pluginUri,
+      workspaceRoot,
+      userHome,
+    );
 	}
 
 	const [hooks, mcpServers, skills, agents] = await Promise.all([

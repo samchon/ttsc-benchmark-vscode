@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CharCode } from '../../../../base/common/charCode.js';
-import { buildReplaceStringWithCasePreserved } from '../../../../base/common/search.js';
+import { CharCode } from "../../../../base/common/charCode.js";
+import { buildReplaceStringWithCasePreserved } from "../../../../base/common/search.js";
 
 const enum ReplacePatternKind {
 	StaticValue = 0,
@@ -41,7 +41,7 @@ export class ReplacePattern {
 
 	constructor(pieces: ReplacePiece[] | null) {
 		if (!pieces || pieces.length === 0) {
-			this._state = new StaticValueReplacePattern('');
+			this._state = new StaticValueReplacePattern("");
 		} else if (pieces.length === 1 && pieces[0].staticValue !== null) {
 			this._state = new StaticValueReplacePattern(pieces[0].staticValue);
 		} else {
@@ -52,13 +52,16 @@ export class ReplacePattern {
 	public buildReplaceString(matches: string[] | null, preserveCase?: boolean): string {
 		if (this._state.kind === ReplacePatternKind.StaticValue) {
 			if (preserveCase) {
-				return buildReplaceStringWithCasePreserved(matches, this._state.staticValue);
+				return buildReplaceStringWithCasePreserved(
+          matches,
+          this._state.staticValue,
+        );
 			} else {
 				return this._state.staticValue;
 			}
 		}
 
-		let result = '';
+		let result = "";
 		for (let i = 0, len = this._state.pieces.length; i < len; i++) {
 			const piece = this._state.pieces[i];
 			if (piece.staticValue !== null) {
@@ -79,17 +82,17 @@ export class ReplacePattern {
 						break;
 					}
 					switch (piece.caseOps[opIdx]) {
-						case 'U':
+						case "U":
 							repl.push(match[idx].toUpperCase());
 							break;
-						case 'u':
+						case "u":
 							repl.push(match[idx].toUpperCase());
 							opIdx++;
 							break;
-						case 'L':
+						case "L":
 							repl.push(match[idx].toLowerCase());
 							break;
-						case 'l':
+						case "l":
 							repl.push(match[idx].toLowerCase());
 							opIdx++;
 							break;
@@ -97,7 +100,7 @@ export class ReplacePattern {
 							repl.push(match[idx]);
 					}
 				}
-				match = repl.join('');
+				match = repl.join("");
 			}
 			result += match;
 		}
@@ -107,23 +110,23 @@ export class ReplacePattern {
 
 	private static _substitute(matchIndex: number, matches: string[] | null): string {
 		if (matches === null) {
-			return '';
+			return "";
 		}
 		if (matchIndex === 0) {
 			return matches[0];
 		}
 
-		let remainder = '';
+		let remainder = "";
 		while (matchIndex > 0) {
 			if (matchIndex < matches.length) {
 				// A match can be undefined
-				const match = (matches[matchIndex] || '');
+				const match = (matches[matchIndex] || "");
 				return match + remainder;
 			}
 			remainder = String(matchIndex % 10) + remainder;
 			matchIndex = Math.floor(matchIndex / 10);
 		}
-		return '$' + remainder;
+		return "$" + remainder;
 	}
 }
 
@@ -172,7 +175,7 @@ class ReplacePieceBuilder {
 		this._lastCharIndex = 0;
 		this._result = [];
 		this._resultLen = 0;
-		this._currentStaticPiece = '';
+		this._currentStaticPiece = "";
 	}
 
 	public emitUnchanged(toCharIndex: number): void {
@@ -194,8 +197,10 @@ class ReplacePieceBuilder {
 
 	public emitMatchIndex(index: number, toCharIndex: number, caseOps: string[]): void {
 		if (this._currentStaticPiece.length !== 0) {
-			this._result[this._resultLen++] = ReplacePiece.staticValue(this._currentStaticPiece);
-			this._currentStaticPiece = '';
+			this._result[this._resultLen++] = ReplacePiece.staticValue(
+        this._currentStaticPiece,
+      );
+			this._currentStaticPiece = "";
 		}
 		this._result[this._resultLen++] = ReplacePiece.caseOps(index, caseOps);
 		this._lastCharIndex = toCharIndex;
@@ -205,8 +210,10 @@ class ReplacePieceBuilder {
 	public finalize(): ReplacePattern {
 		this.emitUnchanged(this._source.length);
 		if (this._currentStaticPiece.length !== 0) {
-			this._result[this._resultLen++] = ReplacePiece.staticValue(this._currentStaticPiece);
-			this._currentStaticPiece = '';
+			this._result[this._resultLen++] = ReplacePiece.staticValue(
+        this._currentStaticPiece,
+      );
+			this._currentStaticPiece = "";
 		}
 		return new ReplacePattern(this._result);
 	}
@@ -255,17 +262,17 @@ export function parseReplaceString(replaceString: string): ReplacePattern {
 				case CharCode.Backslash:
 					// \\ => inserts a "\"
 					result.emitUnchanged(i - 1);
-					result.emitStatic('\\', i + 1);
+					result.emitStatic("\\", i + 1);
 					break;
 				case CharCode.n:
 					// \n => inserts a LF
 					result.emitUnchanged(i - 1);
-					result.emitStatic('\n', i + 1);
+					result.emitStatic("\n", i + 1);
 					break;
 				case CharCode.t:
 					// \t => inserts a TAB
 					result.emitUnchanged(i - 1);
-					result.emitStatic('\t', i + 1);
+					result.emitStatic("\t", i + 1);
 					break;
 				// Case modification of string replacements, patterned after Boost, but only applied
 				// to the replacement text, not subsequent content.
@@ -278,7 +285,7 @@ export function parseReplaceString(replaceString: string): ReplacePattern {
 				case CharCode.L:
 					// \L => lower-cases ALL following characters.
 					result.emitUnchanged(i - 1);
-					result.emitStatic('', i + 1);
+					result.emitStatic("", i + 1);
 					caseOps.push(String.fromCharCode(nextChCode));
 					break;
 			}
@@ -301,7 +308,7 @@ export function parseReplaceString(replaceString: string): ReplacePattern {
 			if (nextChCode === CharCode.DollarSign) {
 				// $$ => inserts a "$"
 				result.emitUnchanged(i - 1);
-				result.emitStatic('$', i + 1);
+				result.emitStatic("$", i + 1);
 				continue;
 			}
 

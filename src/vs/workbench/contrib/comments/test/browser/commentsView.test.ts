@@ -3,25 +3,45 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import assert from 'assert';
-import { workbenchInstantiationService } from '../../../../test/browser/workbenchTestServices.js';
-import { IRange, Range } from '../../../../../editor/common/core/range.js';
-import { CommentsPanel } from '../../browser/commentsView.js';
-import { CommentService, ICommentController, ICommentInfo, ICommentService, INotebookCommentInfo } from '../../browser/commentService.js';
-import { Comment, CommentInput, CommentReaction, CommentThread, CommentThreadCollapsibleState, CommentThreadState } from '../../../../../editor/common/languages.js';
-import { Emitter, Event } from '../../../../../base/common/event.js';
-import { TestInstantiationService } from '../../../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { IViewContainerModel, IViewDescriptor, IViewDescriptorService, IViewPaneContainer, ViewContainer, ViewContainerLocation } from '../../../../common/views.js';
-import { IConfigurationService } from '../../../../../platform/configuration/common/configuration.js';
-import { TestConfigurationService } from '../../../../../platform/configuration/test/common/testConfigurationService.js';
-import { IContextViewService } from '../../../../../platform/contextview/browser/contextView.js';
-import { DisposableStore } from '../../../../../base/common/lifecycle.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
-import { CancellationToken } from '../../../../../base/common/cancellation.js';
-import { URI, UriComponents } from '../../../../../base/common/uri.js';
-import { IHoverService } from '../../../../../platform/hover/browser/hover.js';
-import { NullHoverService } from '../../../../../platform/hover/test/browser/nullHoverService.js';
-import { SyncDescriptor } from '../../../../../platform/instantiation/common/descriptors.js';
+import assert from "assert";
+import { workbenchInstantiationService } from "../../../../test/browser/workbenchTestServices.js";
+import { IRange, Range } from "../../../../../editor/common/core/range.js";
+import { CommentsPanel } from "../../browser/commentsView.js";
+import {
+  CommentService,
+  ICommentController,
+  ICommentInfo,
+  ICommentService,
+  INotebookCommentInfo,
+} from "../../browser/commentService.js";
+import {
+  Comment,
+  CommentInput,
+  CommentReaction,
+  CommentThread,
+  CommentThreadCollapsibleState,
+  CommentThreadState,
+} from "../../../../../editor/common/languages.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { TestInstantiationService } from "../../../../../platform/instantiation/test/common/instantiationServiceMock.js";
+import {
+  IViewContainerModel,
+  IViewDescriptor,
+  IViewDescriptorService,
+  IViewPaneContainer,
+  ViewContainer,
+  ViewContainerLocation,
+} from "../../../../common/views.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { TestConfigurationService } from "../../../../../platform/configuration/test/common/testConfigurationService.js";
+import { IContextViewService } from "../../../../../platform/contextview/browser/contextView.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { ensureNoDisposablesAreLeakedInTestSuite } from "../../../../../base/test/common/utils.js";
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { URI, UriComponents } from "../../../../../base/common/uri.js";
+import { IHoverService } from "../../../../../platform/hover/browser/hover.js";
+import { NullHoverService } from "../../../../../platform/hover/test/browser/nullHoverService.js";
+import { SyncDescriptor } from "../../../../../platform/instantiation/common/descriptors.js";
 
 class TestCommentThread implements CommentThread<IRange> {
 	isDocumentCommentThread(): this is CommentThread<IRange> {
@@ -51,30 +71,30 @@ class TestCommentThread implements CommentThread<IRange> {
 
 class TestCommentController implements ICommentController {
 	activeComment: { thread: CommentThread; comment?: Comment } | undefined;
-	id: string = 'test';
-	label: string = 'Test Comments';
-	owner: string = 'test';
+	id: string = "test";
+	label: string = "Test Comments";
+	owner: string = "test";
 	features = {};
 	createCommentThreadTemplate(resource: UriComponents, range: IRange | undefined): Promise<void> {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 	updateCommentThreadTemplate(threadHandle: number, range: IRange): Promise<void> {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 	deleteCommentThreadMain(commentThreadId: string): void {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 	toggleReaction(uri: URI, thread: CommentThread<IRange>, comment: Comment, reaction: CommentReaction, token: CancellationToken): Promise<void> {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 	getDocumentComments(resource: URI, token: CancellationToken): Promise<ICommentInfo> {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 	getNotebookComments(resource: URI, token: CancellationToken): Promise<INotebookCommentInfo> {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 	setActiveCommentAndThread(commentInfo: { thread: CommentThread; comment: Comment } | undefined): Promise<void> {
-		throw new Error('Method not implemented.');
+		throw new Error("Method not implemented.");
 	}
 
 }
@@ -89,15 +109,15 @@ export class TestViewDescriptorService implements Partial<IViewDescriptorService
 	}
 	getViewContainerByViewId(id: string): ViewContainer | null {
 		return {
-			id: 'comments',
-			title: { value: 'Comments', original: 'Comments' },
-			ctorDescriptor: {} as SyncDescriptor<IViewPaneContainer>
-		};
+      id: "comments",
+      title: { value: "Comments", original: "Comments" },
+      ctorDescriptor: {} as SyncDescriptor<IViewPaneContainer>,
+    };
 	}
 	getViewContainerModel(viewContainer: ViewContainer): IViewContainerModel {
 		const partialViewContainerModel: Partial<IViewContainerModel> = {
-			onDidChangeContainerInfo: new Emitter<{ title?: boolean; icon?: boolean; keybindingId?: boolean }>().event
-		};
+      onDidChangeContainerInfo: new Emitter<{ title?: boolean; icon?: boolean; keybindingId?: boolean }>().event,
+    };
 		return partialViewContainerModel as IViewContainerModel;
 	}
 	getDefaultContainerById(id: string): ViewContainer | null {
@@ -105,7 +125,7 @@ export class TestViewDescriptorService implements Partial<IViewDescriptorService
 	}
 }
 
-suite('Comments View', function () {
+suite("Comments View", function () {
 	teardown(() => {
 		instantiationService.dispose();
 		commentService.dispose();
@@ -127,17 +147,17 @@ suite('Comments View', function () {
 		instantiationService.stub(IViewDescriptorService, new TestViewDescriptorService());
 		commentService = instantiationService.createInstance(CommentService);
 		instantiationService.stub(ICommentService, commentService);
-		commentService.registerCommentController('test', new TestCommentController());
+		commentService.registerCommentController("test", new TestCommentController());
 	});
 
 
 
-	test('collapse all', async function () {
-		const view = instantiationService.createInstance(CommentsPanel, { id: 'comments', title: 'Comments' });
+	test("collapse all", async function () {
+		const view = instantiationService.createInstance(CommentsPanel, { id: "comments", title: "Comments" });
 		view.render();
-		commentService.setWorkspaceComments('test', [
-			new TestCommentThread(1, 1, '1', 'test1', new Range(1, 1, 1, 1), [{ body: 'test', uniqueIdInThread: 1, userName: 'alex' }]),
-			new TestCommentThread(2, 1, '1', 'test2', new Range(1, 1, 1, 1), [{ body: 'test', uniqueIdInThread: 1, userName: 'alex' }]),
+		commentService.setWorkspaceComments("test", [
+			new TestCommentThread(1, 1, "1", "test1", new Range(1, 1, 1, 1), [{ body: "test", uniqueIdInThread: 1, userName: "alex" }]),
+			new TestCommentThread(2, 1, "1", "test2", new Range(1, 1, 1, 1), [{ body: "test", uniqueIdInThread: 1, userName: "alex" }]),
 		]);
 		assert.strictEqual(view.getFilterStats().total, 2);
 		assert.strictEqual(view.areAllCommentsExpanded(), true);
@@ -146,12 +166,12 @@ suite('Comments View', function () {
 		view.dispose();
 	});
 
-	test('expand all', async function () {
-		const view = instantiationService.createInstance(CommentsPanel, { id: 'comments', title: 'Comments' });
+	test("expand all", async function () {
+		const view = instantiationService.createInstance(CommentsPanel, { id: "comments", title: "Comments" });
 		view.render();
-		commentService.setWorkspaceComments('test', [
-			new TestCommentThread(1, 1, '1', 'test1', new Range(1, 1, 1, 1), [{ body: 'test', uniqueIdInThread: 1, userName: 'alex' }]),
-			new TestCommentThread(2, 1, '1', 'test2', new Range(1, 1, 1, 1), [{ body: 'test', uniqueIdInThread: 1, userName: 'alex' }]),
+		commentService.setWorkspaceComments("test", [
+			new TestCommentThread(1, 1, "1", "test1", new Range(1, 1, 1, 1), [{ body: "test", uniqueIdInThread: 1, userName: "alex" }]),
+			new TestCommentThread(2, 1, "1", "test2", new Range(1, 1, 1, 1), [{ body: "test", uniqueIdInThread: 1, userName: "alex" }]),
 		]);
 		assert.strictEqual(view.getFilterStats().total, 2);
 		view.collapseAll();
@@ -161,17 +181,17 @@ suite('Comments View', function () {
 		view.dispose();
 	});
 
-	test('filter by text', async function () {
-		const view = instantiationService.createInstance(CommentsPanel, { id: 'comments', title: 'Comments' });
+	test("filter by text", async function () {
+		const view = instantiationService.createInstance(CommentsPanel, { id: "comments", title: "Comments" });
 		view.setVisible(true);
 		view.render();
-		commentService.setWorkspaceComments('test', [
-			new TestCommentThread(1, 1, '1', 'test1', new Range(1, 1, 1, 1), [{ body: 'This comment is a cat.', uniqueIdInThread: 1, userName: 'alex' }]),
-			new TestCommentThread(2, 1, '1', 'test2', new Range(1, 1, 1, 1), [{ body: 'This comment is a dog.', uniqueIdInThread: 1, userName: 'alex' }]),
+		commentService.setWorkspaceComments("test", [
+			new TestCommentThread(1, 1, "1", "test1", new Range(1, 1, 1, 1), [{ body: "This comment is a cat.", uniqueIdInThread: 1, userName: "alex" }]),
+			new TestCommentThread(2, 1, "1", "test2", new Range(1, 1, 1, 1), [{ body: "This comment is a dog.", uniqueIdInThread: 1, userName: "alex" }]),
 		]);
 		assert.strictEqual(view.getFilterStats().total, 2);
 		assert.strictEqual(view.getFilterStats().filtered, 2);
-		view.getFilterWidget().setFilterText('cat');
+		view.getFilterWidget().setFilterText("cat");
 		// Setting showResolved causes the filter to trigger for the purposes of this test.
 		view.filters.showResolved = false;
 
